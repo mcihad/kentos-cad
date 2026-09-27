@@ -175,6 +175,144 @@ pub fn split_join(s: &str, a: &str, b: &str) -> Option<String> {
     Some(text(&out))
 }
 
+// ── Written at the end of a buffer ───────────────────────────────────────
+// The expression engine writes the text it makes into one buffer per batch
+// of objects (docs/adr/0100): the same results as the functions above,
+// without text of their own. The functions above stay as they were; the
+// engine's differential test holds these to them.
+
+/// `upper_tr` written at the end of `out`.
+pub fn push_upper_tr(out: &mut String, s: &str) {
+    if s.is_ascii() && !s.contains('i') {
+        let from = out.len();
+        out.push_str(s);
+        out[from..].make_ascii_uppercase();
+        return;
+    }
+    for c in s.chars() {
+        // `str::to_uppercase` is the characters' own mapping, one by one.
+        out.extend(if c == 'i' { 'İ' } else { c }.to_uppercase());
+    }
+}
+
+/// `lower_tr` written at the end of `out`.
+pub fn push_lower_tr(out: &mut String, s: &str) {
+    if s.contains('Σ') {
+        // The final sigma looks at its neighbours (`str::to_lowercase`): rare, as it was.
+        out.push_str(&lower_tr(s));
+        return;
+    }
+    let mut chars = s.chars().peekable();
+    while let Some(c) = chars.next() {
+        match c {
+            'I' if chars.peek() == Some(&'\u{307}') => {
+                chars.next();
+                out.push('i');
+            }
+            'I' => out.push('ı'),
+            'İ' => out.push('i'),
+            // Without Σ, `str::to_lowercase` is the characters' own mapping.
+            c => out.extend(c.to_lowercase()),
+        }
+    }
+}
+
+/// `fold_turkish` written at the end of `out`.
+pub fn push_fold_turkish(out: &mut String, s: &str) {
+    for c in trim(s).chars() {
+        for u in if c == 'i' { 'İ' } else { c }.to_uppercase() {
+            out.push(match u {
+                'Ç' => 'C',
+                'Ğ' => 'G',
+                'İ' => 'I',
+                'Ö' => 'O',
+                'Ş' => 'S',
+                'Ü' => 'U',
+                u => u,
+            });
+        }
+    }
+}
+
+/// `slice` written at the end of `out`: a character cut in half by `start`
+/// or `end` leaves U+FFFD for each of its units in the slice.
+pub fn push_slice(out: &mut String, s: &str, start: usize, end: Option<usize>) {
+    let end = end.unwrap_or(usize::MAX);
+    if start >= end {
+        return;
+    }
+    let mut at = 0;
+    for c in s.chars() {
+        let (a, b) = (at, at + c.len_utf16());
+        at = b;
+        if b <= start {
+            continue;
+        }
+        if a >= end {
+            break;
+        }
+        if a >= start && b <= end {
+            out.push(c);
+        } else {
+            for _ in a.max(start)..b.min(end) {
+                out.push('\u{fffd}');
+            }
+        }
+    }
+}
+
+/// `pad_start` written at the end of `out`; false where JavaScript throws.
+pub fn push_pad_start(out: &mut String, s: &str, target: usize, fill: u16) -> bool {
+    let n = utf16_len(s);
+    if target > n {
+        if target > MAX_STRING_UNITS {
+            return false;
+        }
+        // A lone surrogate as the fill is U+FFFD each time (it pairs with
+        // neither another fill nor the first unit of valid text).
+        let c = char::from_u32(u32::from(fill)).unwrap_or('\u{fffd}');
+        out.extend(std::iter::repeat_n(c, target - n));
+    }
+    out.push_str(s);
+    true
+}
+
+/// `split_join` written at the end of `out`; false where JavaScript throws.
+pub fn push_split_join(out: &mut String, s: &str, a: &str, b: &str) -> bool {
+    if !a.is_empty() {
+        for (i, part) in s.split(a).enumerate() {
+            if i > 0 {
+                out.push_str(b);
+            }
+            out.push_str(part);
+        }
+        return true;
+    }
+    let units = utf16_len(s);
+    let len = units + units.saturating_sub(1) * utf16_len(b);
+    if len > MAX_STRING_UNITS {
+        return false;
+    }
+    if b.is_empty() {
+        out.push_str(s);
+        return true;
+    }
+    // Between every two code units: the halves of a pair become U+FFFD each.
+    for (i, c) in s.chars().enumerate() {
+        if i > 0 {
+            out.push_str(b);
+        }
+        if c.len_utf16() == 1 {
+            out.push(c);
+        } else {
+            out.push('\u{fffd}');
+            out.push_str(b);
+            out.push('\u{fffd}');
+        }
+    }
+    true
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -236,5 +374,93 @@ mod tests {
         assert_eq!(split_join("1245/12", "/", "-").as_deref(), Some("1245-12"));
         assert_eq!(split_join("abc", "", "-").as_deref(), Some("a-b-c"));
         assert_eq!(split_join("", "", "-").as_deref(), Some(""));
+    }
+
+    /// The appending functions give the old functions' text, on awkward text.
+    #[test]
+    fn appending_matches_the_old_functions() {
+        let texts = [
+            "",
+            "a",
+            "i",
+            "I",
+            "İ",
+            "ı",
+            "kadıköy",
+            "IŞIK",
+            "I\u{307}x",
+            "ΟΔΟΣ",
+            "ΣΑΣ",
+            "ß",
+            "ǅ",
+            "a😀b",
+            "😀",
+            "😀😀",
+            " \u{feff}Çizgi\u{a0} ",
+            "istanbul",
+            "1e21",
+            "x\u{200b}y",
+        ];
+        let with = |f: &dyn Fn(&mut String)| {
+            let mut out = String::from("<");
+            f(&mut out);
+            out
+        };
+        for t in texts {
+            assert_eq!(
+                with(&|o| push_upper_tr(o, t)),
+                format!("<{}", upper_tr(t)),
+                "{t:?}"
+            );
+            assert_eq!(
+                with(&|o| push_lower_tr(o, t)),
+                format!("<{}", lower_tr(t)),
+                "{t:?}"
+            );
+            assert_eq!(
+                with(&|o| push_fold_turkish(o, t)),
+                format!("<{}", fold_turkish(t)),
+                "{t:?}"
+            );
+            let n = utf16_len(t);
+            for start in 0..=n + 1 {
+                for end in (start..=n + 1).map(Some).chain([None]) {
+                    assert_eq!(
+                        with(&|o| push_slice(o, t, start, end)),
+                        format!("<{}", slice(t, start, end)),
+                        "{t:?} {start} {end:?}"
+                    );
+                }
+            }
+            for target in 0..n + 3 {
+                for fill in [u16::from(b'0'), 0x011f, 0xd83d, 0xde00] {
+                    assert_eq!(
+                        with(&|o| {
+                            push_pad_start(o, t, target, fill);
+                        }),
+                        format!("<{}", pad_start(t, target, fill).unwrap_or_default()),
+                        "{t:?} {target} {fill:x}"
+                    );
+                }
+            }
+            for (a, b) in [
+                ("", "-"),
+                ("", ""),
+                ("a", "xy"),
+                ("😀", "-"),
+                ("", "😀"),
+                ("I", ""),
+            ] {
+                assert_eq!(
+                    with(&|o| {
+                        push_split_join(o, t, a, b);
+                    }),
+                    format!("<{}", split_join(t, a, b).unwrap_or_default()),
+                    "{t:?} {a:?} {b:?}"
+                );
+            }
+        }
+        let mut out = String::new();
+        assert!(!push_pad_start(&mut out, "", MAX_STRING_UNITS + 1, 48));
     }
 }

@@ -9,7 +9,7 @@ use super::library::{Func, FuncDef, Var, find_function, find_variable};
 use super::value::Value;
 use crate::js::text::fold_turkish;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum BinOp {
     Or,
     And,

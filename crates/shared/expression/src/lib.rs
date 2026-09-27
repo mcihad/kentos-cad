@@ -1,7 +1,10 @@
 //! İfadeler: a small, safe expression language for processing tools
 //! (select by expression, field calculator, filters) and the style engine
 //! (data-defined values, rule and category renderers). No eval: the source
-//! is tokenized, parsed (precedence climbing) and evaluated as a tree.
+//! is tokenized, parsed (precedence climbing) and compiled once into a flat
+//! program the column engine runs a batch of objects at a time (`program`,
+//! `exec`, docs/adr/0100); one object walks the tree with the same rules
+//! (`walk`, `scalar`).
 //!
 //!   Nitelik = 'Arsa' ve $alan > 500
 //!   'P' || doldur($sıra, 5)
@@ -25,21 +28,24 @@
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+pub mod exec;
+pub mod functions;
 pub mod js;
+mod kernels;
 pub mod lexer;
 pub mod library;
 pub mod parser;
+pub mod program;
+pub mod read;
 pub mod rows;
+pub mod scalar;
 pub mod value;
+pub mod walk;
 
-use std::borrow::Cow;
-
-use library::{Thrown, Var, call};
-use parser::{BinOp, Node, Parser};
+use library::Var;
+use parser::{Node, Parser};
+use program::Program;
 pub use value::Value;
-use value::{compare, equals, into_text, to_number, truthy};
-
-use crate::js::text::{MAX_STRING_UNITS, utf16_len};
 
 /// What an expression that does not compile says: a message for the dialog
 /// and the 1-based position (in UTF-16 code units) it is about.
@@ -103,7 +109,10 @@ pub struct Expr {
     /// Attribute names the expression reads, in order of appearance.
     pub fields: Vec<String>,
     pub needs: Needs,
+    /// The expression's tree, walked for one object (`walk`).
     root: Node,
+    /// The expression compiled for the column engine (docs/adr/0100).
+    program: Program,
 }
 
 pub fn compile(source: &str) -> Result<Expr, CompileError> {
@@ -115,6 +124,7 @@ pub fn compile(source: &str) -> Result<Expr, CompileError> {
         source: source.to_string(),
         fields: parser.fields,
         needs,
+        program: Program::compile(&root),
         root,
     })
 }
@@ -142,142 +152,23 @@ fn uses(n: &Node, needs: &mut Needs) {
 }
 
 impl Expr {
+    /// The compiled program, for the column engine's callers (`rows`).
+    pub fn program(&self) -> &Program {
+        &self.program
+    }
+
     /// The value for one object: empty where JavaScript would have thrown,
     /// and for a number that is not finite. Text borrows from the source
-    /// and from the object where it can.
+    /// and from the object where it can. Many objects are faster through
+    /// the column engine (`rows::evaluate_rows`, `exec`): one call per batch.
     pub fn evaluate<'a>(&'a self, s: &'a dyn Scope) -> Value<'a> {
-        match eval(&self.root, s) {
+        // The rules' buffers are made only when an operation needs them.
+        match walk::walk(&self.root, s, &mut None) {
             Ok(Value::Num(x)) if !x.is_finite() => Value::Null,
             Ok(v) => v,
-            Err(Thrown) => Value::Null,
+            Err(walk::Thrown) => Value::Null,
         }
     }
-}
-
-fn opt(x: Option<f64>) -> Value<'static> {
-    x.map_or(Value::Null, Value::Num)
-}
-
-fn borrowed(t: &str) -> Value<'_> {
-    Value::Text(Cow::Borrowed(t))
-}
-
-fn variable(v: Var, s: &dyn Scope) -> Value<'_> {
-    match v {
-        Var::Area => opt(s.measured().area),
-        Var::Length => opt(s.measured().length),
-        Var::Y => opt(s.measured().anchor.map(|a| a.0)),
-        Var::X => opt(s.measured().anchor.map(|a| a.1)),
-        Var::Vertices => opt(s.vertices()),
-        Var::Kind => borrowed(s.kind()),
-        Var::Layer => borrowed(s.layer()),
-        Var::Label => s.label().map_or(Value::Null, borrowed),
-        Var::Index => Value::Num(s.index()),
-        Var::Id => Value::Num(s.id()),
-        Var::Scale => opt(s.scale()),
-    }
-}
-
-/// Joined text, where JavaScript throws past its longest string. Text
-/// either side made already (a join, a number, a padding) is extended in
-/// place rather than copied.
-fn joined<'a>(a: Cow<'_, str>, b: Cow<'_, str>) -> Result<Value<'a>, Thrown> {
-    if a.len() + b.len() > MAX_STRING_UNITS && utf16_len(&a) + utf16_len(&b) > MAX_STRING_UNITS {
-        return Err(Thrown);
-    }
-    let out = match (a, b) {
-        (Cow::Owned(mut a), b) => {
-            a.push_str(&b);
-            a
-        }
-        (Cow::Borrowed(a), Cow::Owned(mut b)) => {
-            b.insert_str(0, a);
-            b
-        }
-        (Cow::Borrowed(a), Cow::Borrowed(b)) => {
-            let mut out = String::with_capacity(a.len() + b.len());
-            out.push_str(a);
-            out.push_str(b);
-            out
-        }
-    };
-    Ok(Value::Text(Cow::Owned(out)))
-}
-
-fn binary<'a>(op: BinOp, a: Value<'a>, b: Value<'a>) -> Result<Value<'a>, Thrown> {
-    Ok(match op {
-        BinOp::Or => Value::Bool(truthy(&a) || truthy(&b)),
-        BinOp::And => Value::Bool(truthy(&a) && truthy(&b)),
-        BinOp::Eq => Value::Bool(equals(&a, &b)),
-        BinOp::Ne => Value::Bool(!equals(&a, &b)),
-        BinOp::Lt | BinOp::Le | BinOp::Gt | BinOp::Ge => match compare(&a, &b) {
-            None => Value::Bool(false),
-            Some(c) => Value::Bool(match op {
-                BinOp::Lt => c < 0.0,
-                BinOp::Le => c <= 0.0,
-                BinOp::Gt => c > 0.0,
-                _ => c >= 0.0,
-            }),
-        },
-        BinOp::Join => joined(into_text(a), into_text(b))?,
-        BinOp::Add => {
-            if a == Value::Null || b == Value::Null {
-                return Ok(Value::Null);
-            }
-            match (to_number(&a), to_number(&b)) {
-                (Some(na), Some(nb)) => Value::Num(na + nb),
-                _ => joined(into_text(a), into_text(b))?,
-            }
-        }
-        BinOp::Sub | BinOp::Mul | BinOp::Div | BinOp::Rem => {
-            let (Some(na), Some(nb)) = (to_number(&a), to_number(&b)) else {
-                return Ok(Value::Null);
-            };
-            if matches!(op, BinOp::Div | BinOp::Rem) && nb == 0.0 {
-                return Ok(Value::Null);
-            }
-            Value::Num(match op {
-                BinOp::Sub => na - nb,
-                BinOp::Mul => na * nb,
-                BinOp::Div => na / nb,
-                _ => na % nb,
-            })
-        }
-    })
-}
-
-fn eval<'a>(n: &'a Node, s: &'a dyn Scope) -> Result<Value<'a>, Thrown> {
-    Ok(match n {
-        Node::Lit(Value::Text(t)) => borrowed(t),
-        Node::Lit(v) => v.clone(),
-        Node::Field(i) => s.field(*i).map_or(Value::Null, borrowed),
-        Node::Var(v) => variable(*v, s),
-        Node::Call(f, args) if args.len() <= 4 => {
-            // Most calls take a few arguments: they stay on the stack.
-            let mut values: [Value<'a>; 4] = Default::default();
-            for (slot, a) in values.iter_mut().zip(args) {
-                *slot = eval(a, s)?;
-            }
-            call(*f, &mut values[..args.len()])?
-        }
-        Node::Call(f, args) => {
-            let mut values = args
-                .iter()
-                .map(|a| eval(a, s))
-                .collect::<Result<Vec<_>, _>>()?;
-            call(*f, &mut values)?
-        }
-        Node::Not(a) => Value::Bool(!truthy(&eval(a, s)?)),
-        Node::Neg(a) => match to_number(&eval(a, s)?) {
-            Some(v) => Value::Num(-v),
-            None => Value::Null,
-        },
-        Node::Bin(op, a, b) => {
-            let a = eval(a, s)?;
-            let b = eval(b, s)?;
-            binary(*op, a, b)?
-        }
-    })
 }
 
 #[cfg(test)]

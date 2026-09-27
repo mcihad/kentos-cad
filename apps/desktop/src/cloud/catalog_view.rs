@@ -159,7 +159,12 @@ impl App {
             container(self.catalog_nav(c))
                 .width(Length::Fixed(typography::from_default(NAV)))
                 .height(Fill)
-                .padding([12, 10])
+                .padding(iced::Padding {
+                    top: 12.0,
+                    right: 10.0,
+                    bottom: 12.0,
+                    left: 0.0,
+                })
                 .style(style::container::header),
             container(self.catalog_main(c))
                 .width(Fill)
@@ -230,39 +235,78 @@ impl App {
     fn catalog_nav<'a>(&'a self, c: &'a Catalog) -> Element<'a, Message> {
         let online = self.cloud.me.is_some();
         let held = self.cloud.opening.is_some() || c.busy();
+        // The web's `catalog-nav__item`: 34 px tall, 10 px in from both sides,
+        // the icon and the name 10 px apart and centred on the row; the chosen
+        // list in the pressed shade, its name strong, its icon in the accent,
+        // and its bar on the column's edge, 8 px short of the row's ends.
+        let height = typography::from_default(34.0);
         let item = |caption: &'static str, glyph: Icon, list: List, enabled: bool| {
             let selected = c.list == list;
-            let face = row![
-                // The chosen list's bar (the web's `::before`).
-                container(Space::new().width(3).height(18)).style(move |theme: &Theme| {
-                    container::Style {
-                        background: selected.then(|| Background::Color(Tokens::of(theme).accent)),
-                        border: Border {
-                            radius: 2.0.into(),
-                            ..Border::default()
-                        },
-                        ..container::Style::default()
-                    }
-                }),
-                icon(glyph)
-                    .size(16.0)
-                    .tone(if selected { Tone::Accent } else { Tone::Muted }),
-                label::body(caption)
-                    .wrapping(Wrapping::None)
-                    .font(if selected {
-                        typography::ui_strong()
-                    } else {
-                        typography::ui()
-                    }),
-            ]
-            .spacing(9)
-            .align_y(Center);
-            button(face)
+            let bar = container(container(Space::new().width(3).height(Fill)).style(
+                move |theme: &Theme| container::Style {
+                    background: selected.then(|| Background::Color(Tokens::of(theme).accent)),
+                    border: Border {
+                        radius: iced::border::Radius::default().right(2.0),
+                        ..Border::default()
+                    },
+                    ..container::Style::default()
+                },
+            ))
+            .height(Length::Fixed(height))
+            .padding([8, 0]);
+            let face = container(
+                row![
+                    icon(glyph)
+                        .size(16.0)
+                        .tone(if selected { Tone::Accent } else { Tone::Muted }),
+                    label::body(caption)
+                        .wrapping(Wrapping::None)
+                        .font(if selected {
+                            typography::ui_strong()
+                        } else {
+                            typography::ui()
+                        })
+                        .style(move |theme: &Theme| {
+                            let t = Tokens::of(theme);
+                            iced::widget::text::Style {
+                                color: Some(if selected { t.text } else { t.muted }),
+                            }
+                        }),
+                ]
+                .spacing(10)
+                .align_y(Center),
+            )
+            .height(Fill)
+            .center_y(Fill);
+            let button = button(face)
                 .on_press_maybe((enabled && !held).then(|| cloud(Event::CatalogView(list))))
                 .width(Fill)
-                .height(Length::Fixed(typography::scaled(34.0)))
-                .padding([0, 6])
-                .style(style::button::navigation(selected))
+                .height(Length::Fixed(height))
+                .padding([0, 10])
+                .style(move |theme: &Theme, status| {
+                    let t = Tokens::of(theme);
+                    let background = match (selected, status) {
+                        (true, _) => Some(t.layer(0.095)),
+                        (false, button::Status::Hovered | button::Status::Pressed) => {
+                            Some(t.layer(0.055))
+                        }
+                        _ => None,
+                    };
+                    button::Style {
+                        background: background.map(Background::Color),
+                        text_color: if status == button::Status::Disabled {
+                            t.disabled()
+                        } else {
+                            t.text
+                        },
+                        border: Border {
+                            radius: 6.0.into(),
+                            ..Border::default()
+                        },
+                        ..button::Style::default()
+                    }
+                });
+            row![bar, Space::new().width(7), button].align_y(Center)
         };
         let icons = [
             (CatalogView::Recent, "history"),
@@ -305,7 +349,8 @@ impl App {
                         .padding([5, 10])
                         .style(style::button::secondary),
                 ]
-                .spacing(6),
+                .spacing(6)
+                .padding(iced::padding::left(20)),
             );
         }
         scrollable(nav)

@@ -12,12 +12,34 @@ pnpm perf:kcad --label after                     # KCAD v2 kaydet/aç: Vite + ba
 KENTOS_PERF_LABEL=after KENTOS_PERF_OUT=docs/perf \
   cargo test --release -p kentos-desktop perf::kcad -- --ignored --nocapture --test-threads=1   # aynısı masaüstünde
 EXPRESSION_PERF_OUT=$PWD/docs/perf EXPRESSION_PERF_LABEL=yeni \
-  cargo test --release -p kentos-expression --test perf -- --ignored --nocapture   # ifade motoru native, 10⁵ ve 10⁶ nesne
+  cargo test --release -p kentos-expression --test perf -- --ignored --nocapture   # ifade motoru native: eski ve yeni, 10⁵ ve 10⁶ nesne
 EXPRESSION_BENCH=1 EXPRESSION_N=100000,1000000 EXPRESSION_PERF_OUT=docs/perf EXPRESSION_PERF_LABEL=yeni \
   pnpm -C apps/web exec vitest run scripts/perf/expression.test.ts --disable-console-intercept   # aynısı web'in WASM yolunda
 ```
 
 Ölçüm sırasında makinede başka ağır süreç (Vite, e2e, cargo) çalışmaz.
+
+## İfade motoru: sütun motoru (2026-09-27, `23cc8f7` → `4d2060a`)
+
+- **Kaynak:** [expression-native-yeni-2026-09-27.md](expression-native-yeni-2026-09-27.md), [expression-web-yeni-2026-09-27.md](expression-web-yeni-2026-09-27.md); taban aşağıda. Karar [ADR 0100](../adr/0100-expression-engine.md) §2'dedir.
+- **Ortam:** tabanla aynı makine ve ayarlar.
+- **Native:** eski ağaç değerlendiricisi (`tests/reference`, 23cc8f7'nin kodu) ve sütun motoru aynı koşuda, sırayla ölçüldü. İkisi aynı tabloda aynı sütunu verir.
+- **Web:** eski satırı taban dosyasından, yeni satırı `4d2060a`'nın WASM paketinden. Web süresi tabloyu kurmayı, 48 MB'lık ölçü yanıtının WASM'a kopyalanmasını ve değerlerin okunmasını da kapsar. Geometri değerlerinin sınırdan geçmemesi dilim 3'ün işidir.
+
+| 10⁶ nesne, p50 | Native eski → yeni | Web eski → yeni |
+|---|---|---|
+| `Nitelik = 'Arsa' ve $alan > 500` | 72,4 → 15,1 ms (4,8×) | 169,5 → 84,5 ms (2,0×) |
+| `'P' \|\| doldur($sıra, 5)` | 111,3 → 74,3 ms (1,5×) | 179,7 → 135,3 ms (1,3×) |
+| `metin($alan, 2) \|\| ' m²'` | 112,7 → 85,4 ms (1,3×) | 196,2 → 179,3 ms (1,1×) |
+| `yuvarla($alan, 2)` | 55,5 → 9,9 ms (5,6×) | 71,5 → 31,4 ms (2,3×) |
+| `$alan / 10000 > 0.05 ve $uzunluk < 400` | 73,5 → 10,6 ms (7,0×) | 116,7 → 39,5 ms (3,0×) |
+| `Parsel * 2 + 1` | 62,8 → 33,2 ms (1,9×) | 176,8 → 151,3 ms (1,2×) |
+
+- **Tek nesne** (`Expr::evaluate`, stil motorunun yolu, 10⁵ nesne): eskiyle aynı ya da hızlı (1,0–1,4×). Eskinin girişi de başka bir crate'ten çağrılır gibi satır içine alınmadan ölçülür.
+- **Neden kat farkları:**
+  - Sayı ve koşullarda iş sütun döngüsündedir.
+  - Metin üreten ifadelerde süre metnin kendisidir: sayıdan metne, kopyalar, UTF-16 uzunlukları.
+  - `Parsel * 2 + 1` her nesnede bir metni sayıya okur. Tipli sayı alanı (dilim 3) bunu kaldırır.
 
 ## İfade motoru: bugünkü motorun tabanı (2026-09-27, `23cc8f7`)
 

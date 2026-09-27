@@ -36,17 +36,35 @@
   - WASM bağlayıcısı (`geometry-wasm`) crate'i doğrudan kullanır.
 - **WASM:** kod aynıdır; paketin yapısı ve işlemleri değişmedi (başlangıç WASM'ı taşımadan sonra 1 207 133 bayt, gzip 421 397).
 
-### 2. Sütunla değerlendirme (plan, dilim 2)
+### 2. Sütunla değerlendirme (uygulandı)
 
-- **Derleme:** ifade bir kez, düz ve tipli bir programa derlenir.
-  - Sabitler katlanır.
-  - Her alan, değişken ve geometri değeri nesne başına bir kez okunur.
-- **Değerlendirme:** nesneler 256'lık partilerle değerlendirilir.
-  - Sayılar `f64` sütunlarında kalır.
-  - Üretilen metin partinin tek arenasına yazılır.
-  - Nesne başına bellek ayırma ve dinamik çağrı yoktur.
-- **Doğrulama:** eski ağaç değerlendiricisi yalnız testte kalır. Rastgele kaynak ve nesnelerle yeni motorla karşılaştırılır: değerler, hata iletileri ve konumları, UTF-16 uzunlukları.
-- **Tek nesne:** `Expr::evaluate(&dyn Scope)` tek nesne için kalır.
+- **Derleme** (`program.rs`): ifade bir kez, düz bir komut listesine derlenir. Her komut bir yazmaca yazar; işlenenleri kendinden önceki yazmaçlar ya da sabitlerdir.
+  - **Sabitler katlanır:** `yuvarla(2.5)`, `'P' || '-'` derlenirken hesaplanır. Fırlatan bir sabit (`doldur('x', 1e12)`) onu okuyan işlemi de fırlatmış yapar, eskisinde olduğu gibi.
+  - **Aynı iş bir yazmaçtır:** bir alan, bir değişken ya da tekrarlanan bir alt ifade, ifadede kaç kez geçerse geçsin nesne başına bir kez hesaplanır.
+  - Katlamadan artan sabitler atılır. Yazmaçların başında sabitler durur; bunlar çalıştırma başına bir kez doldurulur.
+- **Değerlendirme** (`exec.rs`): nesneler 256'lık partilerle değerlendirilir.
+  - Bir yazmaç, partinin her nesnesi için bir değerdir; sütunlar hâlinde tutulur: tür, sayı, metin. Bir komut parti üzerinde tek bir döngüdür.
+  - Sayılar `f64` sütunlarında kalır. Bir komutun yaptığı metin yazmacın kendi arabelleğine yazılır.
+  - Nesne başına bellek ayırma, trait çağrısı ya da özyineleme yoktur. Nesnelerin değerleri `Source` üzerinden parti başına bir çağrıyla gelir.
+- **Hızlı yollar, kuralların yerine geçmeden:** işleçler ve sayı işlevleri önce partinin tamamında, her değer sonlu bir sayıymış gibi çalışır. Sonra dilin kuralları (`scalar.rs`) öyle olmayan nesnelere uygulanır: boş, metin, doğru/yanlış, ∞. Kurallar karar verir; hızlı döngü yalnız aynı sonucu verdikleri yerde işi kısaltır.
+  - Sabit bir metne `=` (`Nitelik = 'Arsa'`): sabit boş ya da sayı değilse, metin değerlerde iki metnin karşılaştırılmasıdır.
+  - Metin olarak yazılmış sayılar (öznitelikler) tek geçişte okunur: dilbilgisi denetimi ve değer bir arada. 15 anlamlı basamağa ve double'ın tam tuttuğu bir 10 kuvvetine kadar değer, iki tam double'ın tek bir doğru yuvarlanan çarpımı ya da bölümüdür (Clinger'in hızlı yolu); bu, çözümleyicinin verdiği double'ın ta kendisidir. Gerisi çözümleyiciye gider.
+  - `yuvarla(x, 2)` gibi sabit basamakla yuvarlamada 10 kuvveti bir kez hesaplanır.
+- **Metin:** metin işlevleri aynı sonuçları bir arabelleğin sonuna yazar (`js::text::push_*`, `js::number::push_*`). Eski işlevler olduğu gibi kaldı; test onları başvuru alır.
+  - Türkçe sıralama iki metnin ağırlıklarını toplamadan, düzey düzey yürüyerek karşılaştırır. Eski toplayan yolla 50 000 çift bir birim testinde karşılaştırılır.
+  - Tamsayılar (|x| < 10¹⁵) doğrudan basamaklarıyla yazılır.
+- **Tek nesne** (`walk.rs`): `Expr::evaluate(&dyn Scope)` bir parti kurmaz. Ağacı aynı kurallarla (`scalar`) yürür; iki sonlu sayı ve `ve`/`veya` doğrudan, soldaki yapılmış metne birleştirme yerinde yapılır.
+  - Bir argümanın parçası olan sonuç (`kırp`, `eğer`, `varsayılan`) o argümandan, ödünç alındıysa ödünç olarak alınır; bellek yalnız ifadenin yaptığı metin için ayrılır.
+  - Stil motoru ve masaüstü İşlemler bugün bu yoldan gider. Sütun yoluna geçmeleri sahipleriyle konuşulur.
+- **Web sınırı değişmedi:** `exprEvaluate` aynı tabloyu alıp aynı sütunu döndürür. Tablonun metinleri ASCII ise UTF-16 uzunlukları bayt uzunluğudur; yuvalar artık dilim yerine bayt aralığı (8 bayt) tutar.
+- **Doğrulama:**
+  - Eski ağaç değerlendiricisi testte donmuş bir kopya olarak durur (`tests/reference`, 23cc8f7'nin kodu, kendi tablosuyla).
+  - `tests/differential.rs` web'in üretecini (`cases.ts`) Rust'ta yeniden kurar: geçerli ve bozuk kaynaklar, Türkçe harfler, emoji, Yunanca sigma, sonlu olmayan geometri değerleri, eşit sayılar, fırlatan metinler, parça döndüren metin işlevleri.
+  - Her kaynakta şunlar karşılaştırılır: hata iletisi ve konumu, okunan alanlar ve değişkenler; beş biçimin her birinde her değerin türü, biti biti sayısı, metni ve UTF-16 uzunluğu; tek nesne yolunun değerleri.
+  - Hata ayıklamada her koşuda 20 000 kaynak koşulur; `EXPRESSION_DIFF_CASES=300000` ile iki farklı tohumda 600 000 kaynak temiz geçti.
+  - **Tuzak denetimi:** motora tek tek 22 hata yerleştirildi, testler hepsini yakaladı. Hatalar: karşılaştırma yönleri, eşitlik toleransı, doğruluk, eksi, metin eşitliği, metinden sayıda çıkarma, sabit basamaklı yuvarlama, tek nesne yolunun birleştirmesi ve argüman parçası, hızlı sayı okuma sınırı, yerinde doldurma, tamsayı yazımı, `başlar`, ASCII bölme, `Bool` biçimi, sabit numaralama, fırlatan sabit, Türkçe küçük harf, sıralama.
+  - `fixtures/expression/v1` iki platformda değişmeden geçer. Stil motorunun dondurulmuş katmanları ve İşlemler'in ortak durumları da yeni motorla geçer.
+- **WASM:** başlangıç WASM'ı 1 207 133 → 1 252 250 bayt, gzip 421 397 → 437 961 (+16,5 KB). Nedeni derleyici, komut döngüleri, tek nesne yürüyüşü ve arabelleğe yazan metin işlevleridir.
 
 ### 3. Şema ve tipli sütunlar (plan, dilim 3)
 
@@ -83,7 +101,24 @@
 
 ## Ölçüm
 
-`docs/perf/expression-native-eski-2026-09-27.md` ve `docs/perf/expression-web-eski-2026-09-27.md`: bugünkü motor, taşımadan sonra aynı kodla, 10⁵ ve 10⁶ nesnede. Yeni motor aynı betiklerle ölçülür (dilim 2).
+i5-11300H, 15 GB, Ubuntu 26.04.1; native `--release`, web Node 24 ve `--profile wasm`. Nesneler: Parsel 1…n, Nitelik (her üçüncüsü Tarla), 0…1000 m² alan. p50.
+
+- **Kaynak:** taban `docs/perf/expression-{native,web}-eski-2026-09-27.md` (23cc8f7, ağaç değerlendiricisi), sütun motoru `docs/perf/expression-{native,web}-yeni-2026-09-27.md` (4d2060a). Native'de eski ve yeni aynı koşuda ölçülür (`tests/perf.rs`, eski `tests/reference`).
+- **Native süre** yalnız değerlendirmedir: tablo verilir, bütün değerler okunur.
+- **Web süresi** sayfanın tabloyu kurmasını, WASM çağrısını ve değerlerin okunmasını kapsar.
+
+| 10⁶ nesne | Native eski → yeni | Web eski → yeni |
+|---|---|---|
+| `Nitelik = 'Arsa' ve $alan > 500` | 72,4 → 15,1 ms (4,8×) | 169,5 → 84,5 ms (2,0×) |
+| `'P' \|\| doldur($sıra, 5)` | 111,3 → 74,3 ms (1,5×) | 179,7 → 135,3 ms (1,3×) |
+| `metin($alan, 2) \|\| ' m²'` | 112,7 → 85,4 ms (1,3×) | 196,2 → 179,3 ms (1,1×) |
+| `yuvarla($alan, 2)` | 55,5 → 9,9 ms (5,6×) | 71,5 → 31,4 ms (2,3×) |
+| `$alan / 10000 > 0.05 ve $uzunluk < 400` | 73,5 → 10,6 ms (7,0×) | 116,7 → 39,5 ms (3,0×) |
+| `Parsel * 2 + 1` | 62,8 → 33,2 ms (1,9×) | 176,8 → 151,3 ms (1,2×) |
+
+- **10⁵ nesnede** kat farkları aynıdır; örneğin ilk satır native 7,19 → 1,47 ms.
+- **Tek nesne yolu** (`Expr::evaluate`, 10⁵ nesne) eskiyle aynı ya da hızlıdır (1,0–1,4×).
+- **Web'de kalan süre sınırdadır:** tabloyu kurmak, ölçü yanıtını (10⁶ nesnede 48 MB) WASM'a kopyalamak, sonucu okumak. Dilim 3'te değerlendirme deponun içinde, geometri değerleri sınırdan geçmeden yapılır.
 
 ## Sonuçlar
 

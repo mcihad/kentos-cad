@@ -1,14 +1,12 @@
-//! Values of the expression language and their rules (the TypeScript's
-//! `expressionLib.ts`): attribute values are text, so arithmetic reads
-//! numbers out of text ("452.13" → 452.13, the decimal separator is the
-//! dot) and an empty or missing value is empty (null).
+//! Values of the expression language (the TypeScript's `expressionLib.ts`):
+//! attribute values are text, so arithmetic reads numbers out of text
+//! ("452.13" → 452.13, the decimal separator is the dot) and an empty or
+//! missing value is empty (null). The rules themselves are `scalar`'s, on a
+//! borrowed view of the value; these are their forms for a `Value`.
 
 use std::borrow::Cow;
-use std::cmp::Ordering;
 
-use kentos_geometry_core::jsmath::js_max;
-
-use crate::js::{collate, number, text};
+use crate::scalar::{self, Scratch, V};
 
 /// A value. Text borrows where it can (an attribute from the table, a
 /// literal from the source), so evaluating an object allocates only for
@@ -36,88 +34,38 @@ impl<'a> Value<'a> {
             Value::Bool(b) => Value::Bool(b),
         }
     }
-}
 
-/// `^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$` on ASCII digits.
-fn numeric(s: &str) -> bool {
-    let b = s.as_bytes();
-    let mut i = 0;
-    let digits = |i: &mut usize| {
-        let start = *i;
-        while *i < b.len() && b[*i].is_ascii_digit() {
-            *i += 1;
-        }
-        *i - start
-    };
-    if i < b.len() && (b[i] == b'+' || b[i] == b'-') {
-        i += 1;
-    }
-    let whole = digits(&mut i);
-    if whole > 0 {
-        if i < b.len() && b[i] == b'.' {
-            i += 1;
-            digits(&mut i);
-        }
-    } else {
-        if !(i < b.len() && b[i] == b'.') {
-            return false;
-        }
-        i += 1;
-        if digits(&mut i) == 0 {
-            return false;
+    /// The value as the rules read it (`scalar::V`).
+    pub fn view(&self) -> V<'_> {
+        match self {
+            Value::Null => V::Null,
+            Value::Num(x) => V::Num(*x),
+            Value::Text(s) => V::Text(s),
+            Value::Bool(b) => V::Bool(*b),
         }
     }
-    if i < b.len() && (b[i] == b'e' || b[i] == b'E') {
-        i += 1;
-        if i < b.len() && (b[i] == b'+' || b[i] == b'-') {
-            i += 1;
-        }
-        if digits(&mut i) == 0 {
-            return false;
-        }
-    }
-    i == b.len()
 }
 
 /// A number, or None when the value is empty or not a number. A number
 /// written in text passes as it is (even "1e400", which is infinite).
 pub fn to_number(v: &Value) -> Option<f64> {
-    match v {
-        Value::Num(x) => x.is_finite().then_some(*x),
-        Value::Bool(b) => Some(if *b { 1.0 } else { 0.0 }),
-        Value::Text(s) => {
-            let t = text::trim(s);
-            if numeric(t) { t.parse().ok() } else { None }
-        }
-        Value::Null => None,
-    }
+    scalar::to_number(v.view())
 }
 
 pub fn is_empty(v: &Value) -> bool {
-    match v {
-        Value::Null => true,
-        Value::Text(s) => s.is_empty(),
-        _ => false,
-    }
+    scalar::is_empty(v.view())
 }
 
 pub fn truthy(v: &Value) -> bool {
-    match v {
-        Value::Null => false,
-        Value::Bool(b) => *b,
-        // NaN is not 0.
-        Value::Num(x) => *x != 0.0,
-        Value::Text(s) => !s.is_empty(),
-    }
+    scalar::truthy(v.view())
 }
 
 /// Number to text for attributes: integers as they are, others to 12
 /// significant digits, so float noise is dropped (0.1 + 0.2 → "0.3").
 pub fn number_text(x: f64) -> String {
-    if !x.is_finite() || x.trunc() == x {
-        return number::to_string(x);
-    }
-    number::to_string_precision(x, 12)
+    let mut out = String::with_capacity(24);
+    crate::read::push_number_text(&mut out, x);
+    out
 }
 
 /// Text for writing into an attribute (borrowed from a text value).
@@ -141,32 +89,13 @@ pub fn into_text(v: Value<'_>) -> Cow<'_, str> {
 /// Equality: numbers by value (within 1e-9, relative above 1), text exactly,
 /// and "empty" equals only "empty".
 pub fn equals(a: &Value, b: &Value) -> bool {
-    if is_empty(a) || is_empty(b) {
-        return is_empty(a) && is_empty(b);
-    }
-    if matches!(a, Value::Bool(_)) || matches!(b, Value::Bool(_)) {
-        return truthy(a) == truthy(b);
-    }
-    if let (Some(na), Some(nb)) = (to_number(a), to_number(b)) {
-        return (na - nb).abs() <= 1e-9 * js_max(js_max(1.0, na.abs()), nb.abs());
-    }
-    to_text(a) == to_text(b)
+    scalar::equals(a.view(), b.view(), &mut Scratch::default())
 }
 
 /// Order of two values: numbers numerically (their difference, NaN for ∞ − ∞),
 /// text in Turkish order; None when one is empty.
 pub fn compare(a: &Value, b: &Value) -> Option<f64> {
-    if is_empty(a) || is_empty(b) {
-        return None;
-    }
-    if let (Some(na), Some(nb)) = (to_number(a), to_number(b)) {
-        return Some(na - nb);
-    }
-    Some(match collate::compare_tr(&to_text(a), &to_text(b)) {
-        Ordering::Less => -1.0,
-        Ordering::Equal => 0.0,
-        Ordering::Greater => 1.0,
-    })
+    scalar::compare(a.view(), b.view(), &mut Scratch::default())
 }
 
 #[cfg(test)]
