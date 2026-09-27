@@ -6,7 +6,7 @@ import { entityBounds, type DrawingEntity, type Entity, type NewEntity } from '.
 import type { CrsDef } from '../geo/crs';
 import { ProjectSettings, type ProjectSettingsData } from './projectSettings';
 import { emptyBounds, isEmptyBounds, type Bounds, type Vec2 } from './geometry';
-import type { LayerInit, LayerStyle } from './layers';
+import type { LayerInit, LayerNode, LayerStyle } from './layers';
 import { LayerStore } from './layers';
 import { sameJson } from './sameJson';
 import type { ProjectStyles } from './style';
@@ -16,7 +16,27 @@ type Op =
   | { type: 'remove'; entity: DrawingEntity }
   | { type: 'update'; before: DrawingEntity; after: DrawingEntity }
   /** A layer's look (colour, line type, renderer …) is project data: undoable like objects. */
-  | { type: 'layerStyle'; layerId: string; before: LayerStyle; after: LayerStyle };
+  | { type: 'layerStyle'; layerId: string; before: LayerStyle; after: LayerStyle }
+  /**
+   * A layer or a group taken out of the tree with everything under it
+   * (`removeLayer`), and its inverse: `node` is a copy as it was (children,
+   * flags, style), `parent` and `index` its place (null parent: the top).
+   */
+  | ({ type: 'layerRemove' } & LayerPlace)
+  | ({ type: 'layerAdd' } & LayerPlace);
+
+/** A layer tree node as a history step keeps it, and its place: the parent group (null: the top) and the index there. */
+interface LayerPlace {
+  node: LayerNode;
+  parent: string | null;
+  index: number;
+}
+
+/** Whether an op changes the layer tree rather than an object. */
+const isLayerTreeOp = (o: Op): o is Extract<Op, { type: 'layerRemove' | 'layerAdd' }> => o.type === 'layerRemove' || o.type === 'layerAdd';
+
+/** An edit the document refuses, with the reason for people; nothing was changed. */
+export class Refusal extends Error {}
 
 interface Transaction {
   label: string;
@@ -130,8 +150,8 @@ export class CadDocument {
   /** The place of the object last appended; one put back before it makes the document unsorted. */
   private tailPlace = 0;
   private unsorted = false;
-  /** While the document itself sets a layer style (an op), the layer store's event is not an edit of its own. */
-  private applyingStyle = false;
+  /** While the document itself changes a layer's style or the tree (an op), the layer store's event is not an edit of its own. */
+  private applyingLayers = false;
   private anchor: Vec2;
   /**
    * Counts every change to what a saved file holds. A save records the
@@ -160,10 +180,12 @@ export class CadDocument {
     this.settings.changed.subscribe(() => this.markEdited());
     this.name.subscribe(() => this.markEdited());
     this.styles.subscribe(() => this.markEdited());
-    this.layers.events.on('structure', () => this.markEdited());
-    // A layer style set by an op is an edit when its step commits, not when applied (ADR 0003).
+    // A layer style or a tree change made by an op is an edit when its step commits, not when applied (ADR 0003).
+    this.layers.events.on('structure', () => {
+      if (!this.applyingLayers) this.markEdited();
+    });
     this.layers.events.on('state', () => {
-      if (!this.applyingStyle) this.markEdited();
+      if (!this.applyingLayers) this.markEdited();
     });
   }
 
@@ -371,6 +393,57 @@ export class CadDocument {
     this.record({ type: 'layerStyle', layerId, before, after }, label);
   }
 
+  /**
+   * Deletes a layer, or a group with everything under it, and the objects on
+   * them, as one undo step “Katman sil” (into the open transaction or group,
+   * if one is). Undo puts the node back in its place with its children,
+   * flags and style, then the objects in their slots with their persistent
+   * ids. Refused with a `Refusal` and nothing changed, in this order: the
+   * last layer (or a group holding every layer), the active layer (or a
+   * group holding it), a locked node (by itself or a group above it), a
+   * group with a locked layer under it. Returns how many objects went; an
+   * unknown id changes nothing and returns 0.
+   */
+  removeLayer(id: string): number {
+    const layers = this.layers;
+    const node = layers.get(id);
+    const place = layers.placeOf(id);
+    if (!node || !place) return 0;
+    const refused = this.layerRemovalRefused(id);
+    if (refused) throw new Refusal(refused);
+    const kept = new Set(layers.leavesOf(id).map((l) => l.id));
+    const gone = [...this.entities.values()].filter((e) => kept.has(e.layerId)).map((e) => e.id);
+    this.transact('Katman sil', () => {
+      this.remove(gone);
+      this.record({ type: 'layerRemove', node: structuredClone(node), parent: place.parent, index: place.index }, 'Katman sil');
+    });
+    return gone.length;
+  }
+
+  /**
+   * Why `removeLayer(id)` would refuse, in its words, or null when it would
+   * not: the interface asks before it asks its own question.
+   */
+  layerRemovalRefused(id: string): string | null {
+    const layers = this.layers;
+    const node = layers.get(id);
+    if (!node) return null;
+    const group = node.type === 'group';
+    const leaves = layers.leavesOf(id);
+    const kept = new Set(leaves.map((l) => l.id));
+    if (layers.leaves().every((l) => kept.has(l.id)))
+      return group
+        ? `“${node.name}” grubu çizimin bütün katmanlarını içeriyor; silinemez. Çizimde en az bir katman olmalı.`
+        : `“${node.name}” çizimin son katmanı; silinemez. Çizimde en az bir katman olmalı.`;
+    const active = layers.active.value;
+    if (id === active) return `“${node.name}” etkin katman; silinemez. Önce başka bir katmanı etkinleştirin.`;
+    if (kept.has(active)) return `“${node.name}” grubu etkin katmanı (“${layers.get(active)?.name ?? active}”) içeriyor; silinemez. Önce grubun dışındaki bir katmanı etkinleştirin.`;
+    if (layers.isLocked(id)) return `“${node.name}” ${group ? 'grubu' : 'katmanı'} kilitli; silinemez. Kilidi Katmanlar panelinden açın.`;
+    const locked = leaves.find((l) => layers.isLocked(l.id));
+    if (locked) return `“${node.name}” grubu kilitli bir katman (“${locked.name}”) içeriyor; silinemez. Kilidi Katmanlar panelinden açın.`;
+    return null;
+  }
+
   /** Changes an object; it keeps its slot and persistent id, whatever the patch holds. */
   update(id: number, patch: Partial<Entity>): void {
     const op = updateOp(this.entities.get(id), patch);
@@ -536,12 +609,19 @@ export class CadDocument {
     const slots = new Set<number>();
     const uids = new Set<string>();
     for (const o of ops) {
-      if (o.type === 'layerStyle') continue;
+      if (o.type === 'layerStyle' || isLayerTreeOp(o)) continue;
       const e = o.type === 'update' ? o.after : o.entity;
       slots.add(e.id);
       uids.add(e.uid);
     }
     this.forgetHistoryOf(slots, uids);
+    // Another editor's tree: a removed layer's recorded place may no longer fit it, so those steps go.
+    if (changes.meta?.layers) {
+      const touchesTree = (tx: Transaction) => tx.ops.some(isLayerTreeOp);
+      this.undoStack = this.undoStack.filter((tx) => !touchesTree(tx));
+      this.redoStack = this.redoStack.filter((tx) => !touchesTree(tx));
+      this.syncHistory();
+    }
   }
 
   /**
@@ -552,7 +632,7 @@ export class CadDocument {
   forgetHistoryOf(ids: ReadonlySet<number>, uids: ReadonlySet<string> = new Set()): void {
     if (!ids.size && !uids.size) return;
     const hit = (e: DrawingEntity) => ids.has(e.id) || uids.has(e.uid);
-    const touches = (tx: Transaction) => tx.ops.some((o) => (o.type === 'update' ? hit(o.before) : o.type === 'layerStyle' ? false : hit(o.entity)));
+    const touches = (tx: Transaction) => tx.ops.some((o) => (o.type === 'update' ? hit(o.before) : o.type === 'layerStyle' || isLayerTreeOp(o) ? false : hit(o.entity)));
     this.undoStack = this.undoStack.filter((tx) => !touches(tx));
     this.redoStack = this.redoStack.filter((tx) => !touches(tx));
     this.syncHistory();
@@ -621,14 +701,16 @@ export class CadDocument {
     const uids: string[] = [];
     let layerStyles = false;
     for (const op of ops) {
-      if (op.type === 'layerStyle') {
-        this.applyingStyle = true;
+      if (op.type === 'layerStyle' || isLayerTreeOp(op)) {
+        this.applyingLayers = true;
         try {
-          this.layers.replaceStyle(op.layerId, op.after);
+          if (op.type === 'layerStyle') this.layers.replaceStyle(op.layerId, op.after);
+          else if (op.type === 'layerRemove') this.layers.detach(op.node.id);
+          else this.layers.attach(op.node, op.parent, op.index);
         } finally {
-          this.applyingStyle = false;
+          this.applyingLayers = false;
         }
-        layerStyles = true;
+        if (op.type === 'layerStyle') layerStyles = true;
         continue;
       }
       const e = op.type === 'update' ? op.after : op.entity;
@@ -730,6 +812,8 @@ function updateOp(before: DrawingEntity | undefined, patch: Partial<Entity>): Ex
 
 function invert(op: Op): Op {
   if (op.type === 'layerStyle') return { ...op, before: op.after, after: op.before };
+  if (op.type === 'layerRemove') return { ...op, type: 'layerAdd' };
+  if (op.type === 'layerAdd') return { ...op, type: 'layerRemove' };
   if (op.type === 'add') return { type: 'remove', entity: op.entity };
   if (op.type === 'remove') return { type: 'add', entity: op.entity };
   return { type: 'update', before: op.after, after: op.before };

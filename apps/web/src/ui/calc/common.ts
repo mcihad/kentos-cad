@@ -140,9 +140,12 @@ export class Grid {
             'aria-label': `${r + 1}. satır ${c.label}`,
             dataset: { row: String(r), key: c.key },
           });
+          // Marked when built too: a paste, an added or removed row and a kind change build the table again.
+          const mark = () => input.toggleAttribute('data-bad', !!c.numeric && Number.isNaN(readNumber(input.value) ?? 0));
+          mark();
           input.addEventListener('input', () => {
             row[c.key] = input.value;
-            input.toggleAttribute('data-bad', !!c.numeric && Number.isNaN(readNumber(input.value) ?? 0));
+            mark();
             this.onChange();
           });
           input.addEventListener('keydown', (e) => this.key(e, r, c.key));

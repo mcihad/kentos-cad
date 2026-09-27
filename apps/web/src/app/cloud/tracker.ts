@@ -108,6 +108,54 @@ export function metaParts(doc: CadDocument): MetaParts {
   };
 }
 
+type TreeNode = { id: string; children: readonly unknown[] };
+
+/** Every node id of a layer tree. */
+function nodeIds(nodes: readonly TreeNode[], out = new Set<string>()): Set<string> {
+  for (const n of nodes) {
+    out.add(n.id);
+    nodeIds(n.children as TreeNode[], out);
+  }
+  return out;
+}
+
+/** The layer an object's text (`Tracked.json`) puts it on; undefined when the text says nothing readable. */
+function layerOf(json: string): string | undefined {
+  try {
+    return (JSON.parse(json) as { layerId?: unknown }).layerId as string | undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * When `tree` removes nodes the sent tree had (`base`, as `metaParts` wrote
+ * it): the objects of `dirty` whose change the server must have before or
+ * with that tree. Its guard refuses a tree while an object it holds on a
+ * removed layer is neither deleted nor moved off by the same command. They
+ * are every delete (a delete never needs the new tree) and every change of
+ * an object the server holds on a removed layer (or where, it cannot be
+ * read). Null when the tree removes nothing.
+ */
+export function leavingObjects(doc: CadDocument, tracker: Tracker, dirty: Iterable<string>, base: string, tree: readonly TreeNode[]): Set<string> | null {
+  const kept = nodeIds(tree);
+  const dropped = [...nodeIds(JSON.parse(base) as TreeNode[])].filter((id) => !kept.has(id));
+  if (!dropped.length) return null;
+  const removed = new Set(dropped);
+  const out = new Set<string>();
+  for (const id of dirty) {
+    const t = tracker.get(id);
+    // Not on the server: a create, which may need the new tree.
+    if (!t) continue;
+    if (!doc.byUid(id)) out.add(id);
+    else {
+      const layer = layerOf(t.json);
+      if (layer === undefined || removed.has(layer)) out.add(id);
+    }
+  }
+  return out;
+}
+
 /** The metadata that differs from `base`, or null. A new layer tree carries the active layer, which must exist in it. */
 export function metaPatch(doc: CadDocument, base: MetaParts): ProjectPatch | null {
   const cur = metaParts(doc);

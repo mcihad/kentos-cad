@@ -9,7 +9,7 @@ import { DRAFT_VERSION, keptDraftKey, readDraft, type Draft } from './drafts';
 import { BATCH, PROJECT_ACCESS, PROJECT_ARCHIVED, PROJECT_DELETED, SyncCore, uuid, type Inflight, type SaveState, type SyncConflict, type SyncOptions } from './syncCore';
 import { applyEvents } from './syncRemote';
 import { restoreDraft } from './syncRestore';
-import { changeOf, entityJson, metaParts, metaPatch, type Planned } from './tracker';
+import { changeOf, entityJson, leavingObjects, metaParts, metaPatch, type Planned } from './tracker';
 
 export type { SaveState, SyncConflict, SyncOptions } from './syncCore';
 
@@ -256,15 +256,24 @@ export class ProjectSync {
     for (;;) {
       // Left, ended, or the role lowered while the last batch went out: what is left stays on the device.
       if (this.disposed || this.ended || !this.writable) return false;
+      const full = core.sendsMeta() ? metaPatch(doc, core.metaBase) : null;
+      if (!full) core.metaDirty = core.metaDirty && !core.canEditMeta && metaPatch(doc, core.metaBase) !== null;
+      // A tree without a removed layer is refused while the server holds an object on that layer that the same
+      // command neither deletes nor moves off. Those changes go first and the tree with the last of them;
+      // objects on a layer the tree adds go with it or after it.
+      const leaving = full?.layers ? leavingObjects(doc, core.tracker, core.dirty, core.metaBase.layers, full.layers) : null;
+      const order = leaving?.size ? [...leaving, ...[...core.dirty].filter((id) => !leaving.has(id))] : [...core.dirty];
       const planned: Planned[] = [];
-      for (const id of [...core.dirty]) {
+      let seen = 0;
+      for (const id of order) {
+        if (planned.length >= BATCH) break;
+        seen++;
         const p = core.tracker.plan(doc, id);
         if (p) planned.push(p);
         else core.dirty.delete(id);
-        if (planned.length >= BATCH) break;
       }
-      const patch = core.sendsMeta() ? metaPatch(doc, core.metaBase) : null;
-      if (!patch) core.metaDirty = core.metaDirty && !core.canEditMeta && metaPatch(doc, core.metaBase) !== null;
+      const held = !!leaving && seen < leaving.size;
+      const patch = held ? null : full;
       if (!planned.length && !patch) break;
       const expectedVersions: Record<string, string> = {};
       for (const p of planned) if (p.op !== 'create') expectedVersions[p.id] = p.expected;

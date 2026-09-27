@@ -895,6 +895,54 @@ try {
     JSON.stringify(virtualTree),
   );
 
+  // Katmanlar → Sil: a layer with objects asks first and goes with them in one step “Katman sil”, which undo
+  // brings back; Delete on an empty layer's row removes it at once; the active layer is refused in its words.
+  {
+    const made = await b.eval(`(() => {
+      const k = window.kentos, layers = k.doc.layers;
+      const full = layers.add({ id: 'e2e-sil', name: 'Silinecek' }, null);
+      const empty = layers.add({ id: 'e2e-bos', name: 'Boş' }, null);
+      k.doc.addMany([0, 1].map((i) => ({ kind: 'point', layerId: full.id, p: { x: ${E} + i, y: ${N} - 320 }, attrs: {} })));
+      return { size: k.doc.size, active: layers.active.value };
+    })()`);
+    await sleep(200);
+    const openMenu = (id) =>
+      b.eval(`(() => { const r = document.querySelector('.panel--layers .tree__row[data-id=' + JSON.stringify(${JSON.stringify(id)}) + ']'); r.scrollIntoView({ block: 'nearest' }); const box = r.getBoundingClientRect(); r.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: box.left + 40, clientY: box.top + box.height / 2 })); })()`);
+    const at = (sel, text) => b.eval(`(() => { const e = [...document.querySelectorAll(${JSON.stringify(sel)})].find((x) => x.textContent.trim() === ${JSON.stringify(text)}); if (!e) return null; const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    const said = () => b.eval(`window.kentos.log.entries.value.at(-1)?.text ?? ''`);
+    const menuAt = (label) => b.eval(`(() => { const e = [...document.querySelectorAll('.menu__item')].find((x) => x.querySelector('.menu__label')?.textContent === ${JSON.stringify(label)}); if (!e) return null; e.scrollIntoView({ block: 'nearest' }); const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    await openMenu('e2e-sil');
+    await sleep(150);
+    await b.click(...(await menuAt('Sil')));
+    await sleep(150);
+    const asked = await b.eval(`document.querySelector('.dialog')?.innerText ?? ''`);
+    await b.click(...(await at('.dialog button', 'Sil')));
+    await sleep(150);
+    // The drawing drops the layer's buffers too (the backend's own layers), and draws them again after undo.
+    const drawn = () => b.eval(`window.kentos.view.backend.layers.has('e2e-sil')`);
+    const removed = { gone: await b.eval(`!window.kentos.doc.layers.get('e2e-sil')`), size: await b.eval('window.kentos.doc.size'), said: await said(), drawn: await drawn() };
+    const step = await b.eval('window.kentos.doc.undo()');
+    await sleep(150);
+    const back = { layer: await b.eval(`!!window.kentos.doc.layers.get('e2e-sil')`), size: await b.eval('window.kentos.doc.size'), drawn: await drawn() };
+    const row = await b.eval(`(() => { const r = document.querySelector('.panel--layers .tree__row[data-id="e2e-bos"]'); r.scrollIntoView({ block: 'nearest' }); const box = r.getBoundingClientRect(); return [Math.round(box.left + 60), Math.round(box.top + box.height / 2)]; })()`);
+    await b.click(...row);
+    await b.key('Delete');
+    await sleep(150);
+    const emptied = { gone: await b.eval(`!window.kentos.doc.layers.get('e2e-bos')`), said: await said() };
+    await openMenu(made.active);
+    await sleep(150);
+    await b.click(...(await menuAt('Sil')));
+    await sleep(150);
+    const refused = await said();
+    await b.eval(`(() => { const k = window.kentos; k.doc.removeLayer('e2e-sil'); k.view.focus(); })()`);
+    check(
+      'Katmanlar → Sil asks for a layer with objects, removes it with them and its drawing in one step “Katman sil”, undo brings them back; Delete removes an empty row; the active layer is refused',
+      asked.includes('“Silinecek” katmanı üzerindeki 2 nesneyle birlikte silinsin mi?') && removed.gone && removed.size === made.size - 2 && removed.said === '“Silinecek” katmanı ve üzerindeki 2 nesne silindi.' && !removed.drawn &&
+        step === 'Katman sil' && back.layer && back.size === made.size && back.drawn && emptied.gone && emptied.said === '“Boş” katmanı silindi.' && refused.endsWith('etkin katman; silinemez. Önce başka bir katmanı etkinleştirin.'),
+      JSON.stringify({ asked, removed, step, back, emptied, refused }),
+    );
+  }
+
   // Area operations (Alan işlemleri) on fresh squares east of everything else.
   const AX = E + 400;
   await b.eval(`window.kentos.view.camera.fit({ minX: ${AX - 10}, minY: ${N - 60}, maxX: ${AX + 140}, maxY: ${N + 60} }, 20)`);
@@ -1724,6 +1772,13 @@ try {
     await typeAt('.dialog--calc input[aria-label="İstasyon kotu (m)"]', '12a');
     await sleep(150);
     const heightSaid = await summaryText();
+    // A cell that is not a number stays marked when the table is built again (Satır ekle).
+    const badCell = `.dialog--calc input[data-row="1"][data-key="distance"]`;
+    await typeAt(badCell, 'abc');
+    const marked = [await b.eval(`document.querySelector(${JSON.stringify(badCell)}).hasAttribute('data-bad')`)];
+    await b.eval(`document.querySelector('.dialog--calc .calc-grid__add').click()`);
+    await sleep(100);
+    marked.push(await b.eval(`document.querySelector(${JSON.stringify(badCell)}).hasAttribute('data-bad')`));
     await b.key('Escape');
     await sleep(100);
     await b.eval(`window.kentos.commands.execute('calc.stakeout')`);
@@ -1736,9 +1791,9 @@ try {
     await b.key('Escape');
     await sleep(100);
     check(
-      'Hesap: Kutupsal alım names the table row and refuses a station height that is not a number; Aplikasyon refuses a target at the station',
-      rowSaid.includes('3. noktanın uzunluğu sıfırdan büyük olmalı.') && heightSaid.includes('İstasyon kotu bir sayı değil.') && stationSaid.includes('1. satırdaki nokta durulan noktayla aynı yerde; semt tanımsız.'),
-      JSON.stringify({ rowSaid, heightSaid, stationSaid }),
+      'Hesap: Kutupsal alım names the table row, refuses a station height that is not a number and keeps a bad cell marked when its table is built again; Aplikasyon refuses a target at the station',
+      rowSaid.includes('3. noktanın uzunluğu sıfırdan büyük olmalı.') && heightSaid.includes('İstasyon kotu bir sayı değil.') && marked.join() === 'true,true' && stationSaid.includes('1. satırdaki nokta durulan noktayla aynı yerde; semt tanımsız.'),
+      JSON.stringify({ rowSaid, heightSaid, marked, stationSaid }),
     );
   }
 

@@ -73,6 +73,7 @@ const ITEMS = [
   { id: 'processing-tool', open: (ui) => ui.run('map.edgeLengths') },
   { id: 'model-designer', open: (ui) => ui.run('processing.newModel') },
   { id: 'cloud-login', open: (ui) => ui.run('cloud.signIn') },
+  { id: 'question-layer-remove', open: async (ui) => (await ui.rightClick('.panel--layers .tree__row[data-id="parsel"] .tree__name'), await ui.clickText('.menu__item', 'Sil')), ready: '.dialog--confirm' },
   // Last: it leaves the drawing unsaved.
   { id: 'question-unsaved', open: async (ui) => (await ui.eval(`window.kentos.doc.name.set('Soru')`), await ui.run('file.new'), await ui.clickText('.dialog__foot .btn--primary', 'Oluştur')), ready: '.dialog--confirm' },
 ];

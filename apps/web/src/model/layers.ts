@@ -268,6 +268,61 @@ export class LayerStore {
     return node;
   }
 
+  /** Where a node sits: its parent group (null at the top) and its place among the parent's nodes. Null for an unknown id. */
+  placeOf(id: string): { parent: string | null; index: number } | null {
+    const node = this.get(id);
+    if (!node) return null;
+    const parent = this.parentOf(id);
+    return { parent: parent?.id ?? null, index: (parent ? parent.children : this.roots).indexOf(node) };
+  }
+
+  /**
+   * Takes a node out of the tree with everything under it (the document's
+   * undoable layer removal, `CadDocument.removeLayer`; nothing else calls
+   * it). An unknown id changes nothing.
+   */
+  detach(id: string): void {
+    const node = this.get(id);
+    if (!node) return;
+    const parent = this.parentOf(id);
+    const list = parent ? parent.children : this.roots;
+    list.splice(list.indexOf(node), 1);
+    const leaves: string[] = [];
+    const forget = (n: LayerNode): void => {
+      this.index.delete(n.id);
+      this.parents.delete(n.id);
+      if (n.type === 'layer') leaves.push(n.id);
+      n.children.forEach(forget);
+    };
+    forget(node);
+    this.events.emit('structure', undefined);
+    this.events.emit('state', { ids: leaves });
+    this.version.update((v) => v + 1);
+  }
+
+  /**
+   * Puts a node back where `detach` took it from (undo): a copy of `node`, so
+   * the one a history step keeps stays as it was, with its children, flags and
+   * style. A parent that is gone puts it at the top.
+   */
+  attach(node: LayerNode, parent: string | null, index: number): void {
+    const container = parent ? (this.get(parent) ?? null) : null;
+    const copy = structuredClone(node);
+    const leaves: string[] = [];
+    const enter = (n: LayerNode, p: LayerNode | null): void => {
+      this.index.set(n.id, n);
+      this.parents.set(n.id, p);
+      if (n.type === 'layer') leaves.push(n.id);
+      n.children.forEach((c) => enter(c, n));
+    };
+    enter(copy, container);
+    const list = container ? container.children : this.roots;
+    list.splice(Math.min(index, list.length), 0, copy);
+    this.events.emit('structure', undefined);
+    this.events.emit('state', { ids: leaves });
+    this.version.update((v) => v + 1);
+  }
+
   uniqueName(base: string): string {
     const names = new Set([...this.index.values()].map((n) => n.name));
     if (!names.has(base)) return base;

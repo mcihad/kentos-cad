@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { isUuid } from '../core/uuid';
-import { CadDocument } from './document';
+import { CadDocument, Refusal } from './document';
 import type { Entity, NewEntity } from './entities';
 import { LayerStore, type LayerInit, type LayerStyle } from './layers';
 import type { ProjectSettingsData } from './projectSettings';
@@ -112,7 +112,8 @@ class Run {
     try {
       result = this.apply(step, where);
     } catch (e) {
-      if (step.catch === undefined || !(e instanceof Thrown)) throw e;
+      // A fixture's own `throw`, or an edit the document refuses (removeLayer).
+      if (step.catch === undefined || !(e instanceof Thrown || e instanceof Refusal)) throw e;
       expect(e.message, `${where}: yakalanan hata`).toBe(step.catch);
       this.check(step.expect, before, where);
       return;
@@ -208,6 +209,8 @@ class Run {
         return doc.setLayerStyle(layerId, patchOf(s.patch) as Partial<LayerStyle>, s.label as string | undefined);
       case 'addLayer':
         return layers.add(s.layer as LayerInit, (s.parent as string | null | undefined) ?? null).id;
+      case 'removeLayer':
+        return doc.removeLayer(layerId);
       case 'uniqueLayerName':
         return layers.uniqueName(s.base as string);
       case 'setName':

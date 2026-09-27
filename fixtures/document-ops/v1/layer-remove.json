@@ -1,0 +1,538 @@
+{
+  "format": "kentos.document-ops",
+  "version": 1,
+  "title": "Katman silme: katman ya da grup, nesneleriyle, tek geri alma adımında",
+  "note": "removeLayer katmanı ya da grubu, altındaki bütün katmanlarla ve onların nesneleriyle siler; adım “Katman sil” (açık işlemde işleme katılır). Geri alma düğümü yerine (üst grubu ve sırası), bayraklarıyla (görünür, kilitli, açık), stiliyle ve alt düğümleriyle, sonra nesneleri yuvalarına ve kalıcı kimlikleriyle getirir. Sırayla reddedilenler (catch, hiçbir şey değişmez): çizimin son katmanı ya da bütün katmanları içeren grup; etkin katman ya da onu içeren grup; kilitli katman ya da grup (kendisi ya da üstündeki grup), kilitli katman içeren grup. Bilinmeyen kimlik 0 döndürür, hiçbir şey olmaz. Dönen değer silinen nesne sayısıdır. Etkin katman silinmediği için değişmez.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Katman silme",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "hybrid",
+      "drawingFont": "barlow"
+    },
+    "origin": {"x": 486500, "y": 4420100},
+    "layers": [
+      {
+        "id": "g",
+        "name": "Yapılar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+        "children": [
+          {
+            "id": "a",
+            "name": "Bina",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+            "children": []
+          },
+          {
+            "id": "b",
+            "name": "Yol",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {"color": "#E5484D", "lineType": "dashed", "lineWeight": 0.35},
+            "children": []
+          },
+          {
+            "id": "d",
+            "name": "Duvar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": false,
+            "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "c",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+        "children": []
+      },
+      {
+        "id": "k",
+        "name": "Arşiv",
+        "type": "group",
+        "visible": true,
+        "locked": true,
+        "expanded": false,
+        "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+        "children": [
+          {
+            "id": "e",
+            "name": "Eski",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "m",
+        "name": "Harita",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+        "children": [
+          {
+            "id": "f",
+            "name": "Pafta",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+            "children": []
+          },
+          {
+            "id": "l",
+            "name": "Kilitli pafta",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "t",
+        "name": "Taslak",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+        "children": []
+      }
+    ],
+    "activeLayer": "t",
+    "entities": [
+      {"id": 1, "kind": "point", "layerId": "a", "p": {"x": 486510, "y": 4420110}, "attrs": {}},
+      {"id": 2, "kind": "point", "layerId": "b", "p": {"x": 486520, "y": 4420110}, "attrs": {}},
+      {"id": 3, "kind": "point", "layerId": "c", "p": {"x": 486530, "y": 4420110}, "attrs": {}},
+      {"id": 4, "kind": "line", "layerId": "a", "a": {"x": 486510, "y": 4420120}, "b": {"x": 486520, "y": 4420120}, "attrs": {"Tür": "Duvar"}},
+      {"id": 5, "kind": "point", "layerId": "e", "p": {"x": 486540, "y": 4420110}, "attrs": {}},
+      {"id": 6, "kind": "point", "layerId": "f", "p": {"x": 486550, "y": 4420110}, "attrs": {}},
+      {"id": 7, "kind": "point", "layerId": "l", "p": {"x": 486560, "y": 4420110}, "attrs": {}},
+      {"id": 8, "kind": "point", "layerId": "t", "p": {"x": 486570, "y": 4420110}, "attrs": {}}
+    ],
+    "styles": {"items": [], "categories": []}
+  },
+  "scenarios": [
+    {
+      "name": "Boş katman silinir: tek adım “Katman sil”; geri alma onu yerine, bayraklarıyla ve stiliyle getirir; yineleme yeniden siler",
+      "steps": [
+        {
+          "op": "removeLayer",
+          "id": "d",
+          "returns": 0,
+          "expect": {
+            "tree": {"g": ["a", "b"]},
+            "ids": [1, 2, 3, 4, 5, 6, 7, 8],
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "activeLayer": "t"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Katman sil",
+          "expect": {
+            "tree": {"g": ["a", "b", "d"]},
+            "layers": {
+              "d": {
+                "name": "Duvar",
+                "visible": true,
+                "locked": false,
+                "expanded": false,
+                "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+                "isVisible": true,
+                "isLocked": false
+              }
+            },
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        },
+        {"op": "redo", "returns": "Katman sil", "expect": {"tree": {"g": ["a", "b"]}, "canUndo": true, "canRedo": false, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "Nesneli katman: nesneleri de silinir; geri alma önce katmanı, sonra nesneleri yuvalarına ve kalıcı kimlikleriyle, belge sırasıyla getirir",
+      "steps": [
+        {"op": "captureUid", "id": 1, "as": "nokta"},
+        {"op": "captureUid", "id": 4, "as": "duvar"},
+        {
+          "op": "removeLayer",
+          "id": "a",
+          "returns": 2,
+          "expect": {"tree": {"g": ["b", "d"]}, "ids": [2, 3, 5, 6, 7, 8], "count": 6, "canUndo": true, "dirty": true, "revision": "changed"}
+        },
+        {
+          "op": "undo",
+          "returns": "Katman sil",
+          "expect": {
+            "tree": {"g": ["a", "b", "d"]},
+            "layers": {
+              "a": {
+                "name": "Bina",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+                "isVisible": true,
+                "isLocked": false
+              }
+            },
+            "ids": [1, 2, 3, 4, 5, 6, 7, 8],
+            "byLayer": {"a": [1, 4]},
+            "uids": {"1": "nokta", "4": "duvar"},
+            "entities": {
+              "4": {"id": 4, "kind": "line", "layerId": "a", "a": {"x": 486510, "y": 4420120}, "b": {"x": 486520, "y": 4420120}, "attrs": {"Tür": "Duvar"}}
+            },
+            "canUndo": false,
+            "canRedo": true
+          }
+        },
+        {"op": "redo", "returns": "Katman sil", "expect": {"tree": {"g": ["b", "d"]}, "ids": [2, 3, 5, 6, 7, 8]}}
+      ]
+    },
+    {
+      "name": "Grup: altındaki katmanlar ve onların nesneleri tek adımda silinir; geri alma ağacı, bayrakları, stili ve nesneleri getirir",
+      "steps": [
+        {"op": "captureUid", "id": 2, "as": "yol"},
+        {
+          "op": "removeLayer",
+          "id": "g",
+          "returns": 3,
+          "expect": {"tree": {"": ["c", "k", "m", "t"]}, "ids": [3, 5, 6, 7, 8], "canUndo": true, "dirty": true, "revision": "changed"}
+        },
+        {
+          "op": "undo",
+          "returns": "Katman sil",
+          "expect": {
+            "tree": {"": ["g", "c", "k", "m", "t"], "g": ["a", "b", "d"]},
+            "layers": {
+              "g": {
+                "name": "Yapılar",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+                "isVisible": true,
+                "isLocked": false
+              },
+              "a": {
+                "name": "Bina",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+                "isVisible": true,
+                "isLocked": false
+              },
+              "b": {
+                "name": "Yol",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {"color": "#E5484D", "lineType": "dashed", "lineWeight": 0.35},
+                "isVisible": false,
+                "isLocked": false
+              },
+              "d": {
+                "name": "Duvar",
+                "visible": true,
+                "locked": false,
+                "expanded": false,
+                "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+                "isVisible": true,
+                "isLocked": false
+              }
+            },
+            "ids": [1, 2, 3, 4, 5, 6, 7, 8],
+            "byLayer": {"a": [1, 4], "b": [2]},
+            "uids": {"2": "yol"},
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yeri korunur: grubun ortadaki katmanı ve en üstteki ortadaki katman iki komşusunun arasına döner",
+      "steps": [
+        {"op": "removeLayer", "id": "b", "returns": 1, "expect": {"tree": {"g": ["a", "d"]}}},
+        {"op": "removeLayer", "id": "c", "returns": 1, "expect": {"tree": {"": ["g", "k", "m", "t"]}}},
+        {"op": "undo", "returns": "Katman sil", "expect": {"tree": {"": ["g", "c", "k", "m", "t"], "g": ["a", "d"]}}},
+        {
+          "op": "undo",
+          "returns": "Katman sil",
+          "expect": {
+            "tree": {"": ["g", "c", "k", "m", "t"], "g": ["a", "b", "d"]},
+            "layers": {
+              "b": {
+                "name": "Yol",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {"color": "#E5484D", "lineType": "dashed", "lineWeight": 0.35},
+                "isVisible": false,
+                "isLocked": false
+              }
+            },
+            "ids": [1, 2, 3, 4, 5, 6, 7, 8],
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizimin son katmanı silinmez; bütün katmanları içeren grup da: hiçbir şey değişmez",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Katman silme",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "hybrid",
+          "drawingFont": "barlow"
+        },
+        "origin": {"x": 486500, "y": 4420100},
+        "layers": [
+          {
+            "id": "g",
+            "name": "Yapılar",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+            "children": [
+              {
+                "id": "a",
+                "name": "Bina",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+                "children": []
+              },
+              {
+                "id": "b",
+                "name": "Yol",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "a",
+        "entities": [{"id": 1, "kind": "point", "layerId": "a", "p": {"x": 486510, "y": 4420110}, "attrs": {}}],
+        "styles": {"items": [], "categories": []}
+      },
+      "steps": [
+        {
+          "op": "removeLayer",
+          "id": "g",
+          "catch": "“Yapılar” grubu çizimin bütün katmanlarını içeriyor; silinemez. Çizimde en az bir katman olmalı.",
+          "expect": {"tree": {"": ["g"], "g": ["a", "b"]}, "ids": [1], "canUndo": false, "dirty": false, "revision": "same"}
+        },
+        {"op": "removeLayer", "id": "b", "returns": 0, "expect": {"tree": {"g": ["a"]}}},
+        {
+          "op": "removeLayer",
+          "id": "a",
+          "catch": "“Bina” çizimin son katmanı; silinemez. Çizimde en az bir katman olmalı.",
+          "expect": {"tree": {"g": ["a"]}, "ids": [1], "revision": "same"}
+        }
+      ]
+    },
+    {
+      "name": "Etkin katman ve onu içeren grup silinmez: hiçbir şey değişmez",
+      "steps": [
+        {
+          "op": "removeLayer",
+          "id": "t",
+          "catch": "“Taslak” etkin katman; silinemez. Önce başka bir katmanı etkinleştirin.",
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [1, 2, 3, 4, 5, 6, 7, 8],
+            "tree": {"": ["g", "c", "k", "m", "t"]}
+          }
+        },
+        {"op": "setActive", "id": "f", "expect": {"activeLayer": "f", "dirty": false}},
+        {
+          "op": "removeLayer",
+          "id": "m",
+          "catch": "“Harita” grubu etkin katmanı (“Pafta”) içeriyor; silinemez. Önce grubun dışındaki bir katmanı etkinleştirin.",
+          "note": "Grubun kilitli katmanı da var; etkin katman önce söylenir.",
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [1, 2, 3, 4, 5, 6, 7, 8],
+            "tree": {"": ["g", "c", "k", "m", "t"], "m": ["f", "l"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kilitli olan silinmez: kilitli katman, kilitli grubun katmanı, kilitli grup ve kilitli katman içeren grup; hiçbir şey değişmez",
+      "steps": [
+        {
+          "op": "removeLayer",
+          "id": "l",
+          "catch": "“Kilitli pafta” katmanı kilitli; silinemez. Kilidi Katmanlar panelinden açın.",
+          "expect": {"canUndo": false, "canRedo": false, "dirty": false, "revision": "same", "ids": [1, 2, 3, 4, 5, 6, 7, 8]}
+        },
+        {
+          "op": "removeLayer",
+          "id": "e",
+          "catch": "“Eski” katmanı kilitli; silinemez. Kilidi Katmanlar panelinden açın.",
+          "note": "Kilit üst gruptan gelir.",
+          "expect": {"canUndo": false, "canRedo": false, "dirty": false, "revision": "same", "ids": [1, 2, 3, 4, 5, 6, 7, 8]}
+        },
+        {
+          "op": "removeLayer",
+          "id": "k",
+          "catch": "“Arşiv” grubu kilitli; silinemez. Kilidi Katmanlar panelinden açın.",
+          "expect": {"canUndo": false, "canRedo": false, "dirty": false, "revision": "same", "ids": [1, 2, 3, 4, 5, 6, 7, 8]}
+        },
+        {
+          "op": "removeLayer",
+          "id": "m",
+          "catch": "“Harita” grubu kilitli bir katman (“Kilitli pafta”) içeriyor; silinemez. Kilidi Katmanlar panelinden açın.",
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [1, 2, 3, 4, 5, 6, 7, 8],
+            "tree": {"": ["g", "c", "k", "m", "t"], "m": ["f", "l"]}
+          }
+        },
+        {
+          "op": "removeLayer",
+          "id": "yok",
+          "returns": 0,
+          "note": "Bilinmeyen kimlik: hiçbir şey olmaz.",
+          "expect": {"canUndo": false, "canRedo": false, "dirty": false, "revision": "same", "ids": [1, 2, 3, 4, 5, 6, 7, 8]}
+        }
+      ]
+    },
+    {
+      "name": "Gizli katman silinir; işlemin içinde silme işlemin adıyla tek adımdır, hata veren işlemde geri döner",
+      "steps": [
+        {
+          "op": "transact",
+          "label": "Vazgeçilen",
+          "throw": "vazgeçildi",
+          "catch": "vazgeçildi",
+          "steps": [{"op": "removeLayer", "id": "b", "returns": 1}],
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [1, 2, 3, 4, 5, 6, 7, 8],
+            "tree": {"g": ["a", "b", "d"]},
+            "layers": {
+              "b": {
+                "name": "Yol",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {"color": "#E5484D", "lineType": "dashed", "lineWeight": 0.35},
+                "isVisible": false,
+                "isLocked": false
+              }
+            }
+          }
+        },
+        {
+          "op": "transact",
+          "label": "Temizlik",
+          "steps": [{"op": "update", "id": 8, "patch": {"attrs": {"Not": "taşındı"}}}, {"op": "removeLayer", "id": "b", "returns": 1}],
+          "expect": {
+            "tree": {"g": ["a", "d"]},
+            "ids": [1, 3, 4, 5, 6, 7, 8],
+            "entities": {"8": {"id": 8, "kind": "point", "layerId": "t", "p": {"x": 486570, "y": 4420110}, "attrs": {"Not": "taşındı"}}},
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Temizlik",
+          "expect": {
+            "tree": {"g": ["a", "b", "d"]},
+            "ids": [1, 2, 3, 4, 5, 6, 7, 8],
+            "entities": {"8": {"id": 8, "kind": "point", "layerId": "t", "p": {"x": 486570, "y": 4420110}, "attrs": {}}},
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kayıt: silme belgeyi kirletir; kaydedildikten sonra geri alma da kirletir",
+      "steps": [
+        {"op": "removeLayer", "id": "d", "returns": 0, "expect": {"dirty": true, "revision": "changed"}},
+        {"op": "captureRevision", "as": "r1"},
+        {"op": "markSaved", "revision": "r1", "expect": {"dirty": false}},
+        {"op": "undo", "returns": "Katman sil", "expect": {"dirty": true, "revision": "changed", "tree": {"g": ["a", "b", "d"]}}}
+      ]
+    },
+    {
+      "name": "Silinen katmanın adı yeniden kullanılabilir",
+      "steps": [
+        {"op": "uniqueLayerName", "base": "Duvar", "returns": "Duvar 2"},
+        {"op": "removeLayer", "id": "d", "returns": 0},
+        {"op": "uniqueLayerName", "base": "Duvar", "returns": "Duvar"}
+      ]
+    }
+  ]
+}

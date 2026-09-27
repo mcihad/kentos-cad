@@ -20,6 +20,15 @@ import { ApiFailure, type CloudApi, type Transfer } from './api';
 import { FakeFiles } from './fakeFiles';
 import { FakeInvites } from './fakeInvites';
 
+/** Every node id of a layer tree. */
+function nodeIds(nodes: readonly { id: string; children: readonly unknown[] }[], out = new Set<string>()): Set<string> {
+  for (const n of nodes) {
+    out.add(n.id);
+    nodeIds(n.children as { id: string; children: readonly unknown[] }[], out);
+  }
+  return out;
+}
+
 /** Every project permission: the fake's caller owns the project unless a test lowers it. */
 const ALL: ProjectPermission[] = ['project.read', 'feature.write', 'project.edit', 'project.delete', 'project.comment', 'project.download', 'project.history', 'project.share', 'project.transfer', 'project.jobs.run'];
 
@@ -240,6 +249,26 @@ export class FakeServer implements CloudApi {
         if (!have) conflicts.push({ id: c.id, reason: 'deleted', expected: want });
         else if (String(have.version) !== want) conflicts.push({ id: c.id, reason: 'changed', expected: want, actual: String(have.version), current: this.record(c.id) });
       }
+    }
+    // As the server's layer checks (crates/server/application/src/changes.rs, writable_layer): an object is
+    // written onto a layer of the tree after this command. (One changed or deleted also leaves its current
+    // layer, judged in the tree as it was when this command removes that layer; the fake has no locks.)
+    const tree = nodeIds(input.project?.layers ?? this.meta.layers);
+    for (const c of input.features) {
+      const layerId = c.op === 'delete' ? null : (c.entity as { layerId: string }).layerId;
+      if (layerId !== null && !tree.has(layerId)) throw new ApiFailure(400, { error: 'invalid', message: `“${layerId}” katmanı projede yok.` }, 'Geçersiz istek.');
+    }
+    // As the server's guard on a removed layer: a tree without a layer is refused while an object is left on it
+    // once this command's changes are written (neither deleted nor moved off by it).
+    if (input.project?.layers && !conflicts.some((c) => c.id === '@project')) {
+      const dropped = new Set([...nodeIds(this.meta.layers)].filter((id) => !tree.has(id)));
+      const change = new Map(input.features.map((c) => [c.id, c]));
+      const left = [...this.store].some(([id, f]) => {
+        const c = change.get(id);
+        if (c?.op === 'delete') return false;
+        return dropped.has(((c ?? f).entity as { layerId: string }).layerId);
+      });
+      if (left) conflicts.push({ id: '@project', reason: 'project', expected: envelope.expectedVersions['@project'], actual: String(this.metaVersion) });
     }
     if (conflicts.length) throw new ApiFailure(409, { error: 'conflict', message: 'Çakışma', conflicts }, 'Çakışma');
     const event = this.commitAs(envelope.requestId, input.features, input.project ? (input.project as Partial<FakeServer['meta']>) : undefined);

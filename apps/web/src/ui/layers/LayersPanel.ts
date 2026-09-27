@@ -7,6 +7,7 @@ import { icon } from '../icons';
 import { Panel } from '../dock/Panel';
 import { DRAW_COLORS, LINE_WEIGHTS } from '../toolbar/fields';
 import { commandButton } from '../widgets/CommandButton';
+import { askRemove } from '../widgets/confirm';
 import { PopupMenu, type MenuItem } from '../widgets/PopupMenu';
 import { TreeView } from '../widgets/TreeView';
 import { colorSwatch, layerSwatch } from './swatch';
@@ -81,6 +82,7 @@ export class LayersPanel extends Panel {
         onActivate: (n) => (n.type === 'layer' ? layers.setActive(n.id) : layers.setExpanded(n.id, !n.expanded)),
         onToggle: (n) => layers.toggleVisible(n.id),
         onRename: (n) => this.rename(n),
+        onDelete: (n) => void this.remove(n),
         onContextMenu: (n, e) => PopupMenu.open(this.menuFor(n), { x: e.clientX, y: e.clientY }),
       },
       'Katman ağacı',
@@ -307,8 +309,41 @@ export class LayersPanel extends Panel {
     items.push(
       { label: 'Yeniden adlandır', shortcut: 'F2', run: () => this.rename(n) },
       { label: isLayer ? 'Yanına yeni katman' : 'İçine yeni katman', icon: 'layerAdd', run: () => layers.setActive(layers.add({ name: layers.uniqueName('Yeni katman') }, n.id).id) },
+      { kind: 'separator' },
+      { label: 'Sil', icon: 'trash', shortcut: 'Delete', run: () => void this.remove(n) },
     );
     return items;
+  }
+
+  /**
+   * Sil: the layer, or the group with everything under it, and their objects,
+   * in one undo step (CadDocument.removeLayer). What it refuses (the last or
+   * the active layer, a lock) is said first, in its words; with objects on it
+   * the user is asked.
+   */
+  private async remove(n: LayerNode): Promise<void> {
+    const { doc, log } = this.ctx;
+    const refused = doc.layerRemovalRefused(n.id);
+    if (refused) return log.warn(refused);
+    const group = n.type === 'group';
+    const leaves = doc.layers.leavesOf(n.id);
+    const count = leaves.reduce((sum, l) => sum + doc.byLayer(l.id).length, 0);
+    if (count) {
+      const yes = await askRemove({
+        title: group ? 'Grubu sil' : 'Katmanı sil',
+        message: group ? `“${n.name}” grubu, içindeki ${leaves.length} katman ve ${count} nesneyle birlikte silinsin mi?` : `“${n.name}” katmanı üzerindeki ${count} nesneyle birlikte silinsin mi?`,
+        details: ['Geri al (Ctrl+Z) katmanı nesneleriyle geri getirir.'],
+        action: 'Sil',
+      });
+      // Answered after a while: the drawing may have changed meanwhile, so its refusal is asked again.
+      if (!yes || !doc.layers.get(n.id)) return;
+      const now = doc.layerRemovalRefused(n.id);
+      if (now) return log.warn(now);
+    }
+    const gone = doc.removeLayer(n.id);
+    if (!group) log.success(gone ? `“${n.name}” katmanı ve üzerindeki ${gone} nesne silindi.` : `“${n.name}” katmanı silindi.`);
+    else if (gone) log.success(`“${n.name}” grubu, içindeki ${leaves.length} katman ve ${gone} nesne silindi.`);
+    else log.success(leaves.length ? `“${n.name}” grubu ve içindeki ${leaves.length} katman silindi.` : `“${n.name}” grubu silindi.`);
   }
 
   private rename(n: LayerNode): void {
