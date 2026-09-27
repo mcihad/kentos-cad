@@ -1181,6 +1181,18 @@ impl shader::Primitive for Frame {
 /// service log (`make desktop` → .run/desktop.log).
 pub struct Pipeline(Result<Renderer, RenderError>);
 
+impl Pipeline {
+    /// The renderer, when its pipelines could be built: the symbol pictures
+    /// (style/thumbs.rs) draw with the drawing's pipelines and atlas.
+    pub(crate) fn renderer(&self) -> Option<&Renderer> {
+        self.0.as_ref().ok()
+    }
+
+    pub(crate) fn renderer_mut(&mut self) -> Option<&mut Renderer> {
+        self.0.as_mut().ok()
+    }
+}
+
 impl shader::Pipeline for Pipeline {
     fn new(device: &wgpu::Device, _queue: &wgpu::Queue, format: wgpu::TextureFormat) -> Self {
         let renderer = Renderer::new(device, format);

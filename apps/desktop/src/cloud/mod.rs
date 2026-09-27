@@ -591,6 +591,7 @@ impl App {
             Some(Dialog::Exchange) => self.exchange = None,
             Some(Dialog::Project) => self.project = None,
             Some(Dialog::Processing) => self.processing.dialog = None,
+            Some(Dialog::LayerStyle) => self.styles.layer_style = None,
             _ => {}
         }
     }

@@ -48,7 +48,7 @@ Yok.
 
 ## Masaüstü
 
-Masaüstü kabuğu (apps/desktop) 137 / 167 komutu çalıştırıyor; öbürleri şeritte soluk durur ve “masaüstüne henüz taşınmadı” der (docs/adr/0017). Liste: apps/desktop/ported.json.
+Masaüstü kabuğu (apps/desktop) 138 / 167 komutu çalıştırıyor; öbürleri şeritte soluk durur ve “masaüstüne henüz taşınmadı” der (docs/adr/0017). Liste: apps/desktop/ported.json.
 
 ## Test başvurusu
 
