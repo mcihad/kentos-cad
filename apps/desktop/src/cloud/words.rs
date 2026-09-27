@@ -48,66 +48,75 @@ pub fn storage_title(storage: ProjectStorage) -> &'static str {
     }
 }
 
-/// A list of the catalog: its name, its own order and what it says empty.
+/// A list of the catalog: its name, its orders (the first is its own) and
+/// what it says empty (the web's `VIEWS`).
 pub struct ViewText {
     pub label: &'static str,
-    pub sort: CatalogSort,
+    pub sorts: &'static [CatalogSort],
     pub empty: &'static str,
     pub note: &'static str,
 }
 
-/// The lists the desktop shows, in the web's order (the trash is the web's only).
-pub const VIEWS: [CatalogView; 6] = [
+/// The lists, in the web's order.
+pub const VIEWS: [CatalogView; 7] = [
     CatalogView::Recent,
     CatalogView::Favorites,
     CatalogView::Mine,
     CatalogView::Organization,
     CatalogView::Shared,
     CatalogView::Archived,
+    CatalogView::Trash,
+];
+
+const BY_CHANGE: &[CatalogSort] = &[
+    CatalogSort::Updated,
+    CatalogSort::Name,
+    CatalogSort::Created,
 ];
 
 pub fn view(view: CatalogView) -> ViewText {
     match view {
         CatalogView::Recent => ViewText {
             label: "Son kullanılanlar",
-            sort: CatalogSort::Opened,
+            sorts: &[CatalogSort::Opened, CatalogSort::Updated, CatalogSort::Name],
             empty: "Henüz açtığınız bir bulut projesi yok. Açtığınız ve oluşturduğunuz projeler burada, en yenisi üstte durur.",
             note: "",
         },
         CatalogView::Favorites => ViewText {
             label: "Favoriler",
-            sort: CatalogSort::Updated,
-            empty: "Favori projeniz yok. Favorileriniz yalnız size görünür; web'de bir projenin yıldızına tıklayarak ekleyin.",
+            sorts: BY_CHANGE,
+            empty: "Favori projeniz yok. Bir projeyi yıldızına tıklayarak buraya ekleyin; favorileriniz yalnız size görünür.",
             note: "Favorileriniz yalnız size görünür.",
         },
         CatalogView::Mine => ViewText {
             label: "Projelerim",
-            sort: CatalogSort::Updated,
-            empty: "Sahibi olduğunuz bir proje yok. Açık çizimi Buluta yükle ile gönderebilirsiniz.",
+            sorts: BY_CHANGE,
+            empty: "Sahibi olduğunuz bir proje yok. Açık çizimi Dosya → Buluta yükle ile gönderebilirsiniz.",
             note: "",
         },
         CatalogView::Organization => ViewText {
             label: "Kurum projeleri",
-            sort: CatalogSort::Updated,
+            sorts: BY_CHANGE,
             empty: "Bu kurumda size açık bir proje yok: sizin açtıklarınız ve sizinle paylaşılanlar burada görünür.",
             note: "",
         },
         CatalogView::Shared => ViewText {
             label: "Benimle paylaşılanlar",
-            sort: CatalogSort::Updated,
+            sorts: BY_CHANGE,
             empty: "Sizinle paylaşılmış bir proje yok. Biri bir projeyi sizinle paylaşınca burada, sahibinin adı ve rolünüzle görünür.",
             note: "Başkalarının sizinle paylaştığı projeler; sahibi ve rolünüz yanında yazar.",
         },
         CatalogView::Archived => ViewText {
             label: "Arşivlenmişler",
-            sort: CatalogSort::Updated,
+            sorts: BY_CHANGE,
             empty: "Arşivlenmiş bir proje yok. Arşivlenen proje salt okunur olur ve burada durur.",
             note: "Arşivlenmiş projeler salt okunurdur: açılır, kopyalanır; arşivden çıkarmak proje sahibinin ya da yöneticisinindir.",
         },
+        // Its note says how long the trash keeps a project (plan.rs `trash_note`).
         CatalogView::Trash => ViewText {
             label: "Çöp kutusu",
-            sort: CatalogSort::Trashed,
-            empty: "Çöp kutusu boş.",
+            sorts: &[CatalogSort::Trashed, CatalogSort::Name],
+            empty: "Çöp kutusu boş. Geri yükleyebileceğiniz (sahibi ya da kurum yöneticisi olduğunuz) silinmiş projeler burada durur.",
             note: "",
         },
     }
@@ -151,6 +160,36 @@ pub fn ago_ms(ms: u64) -> String {
         3600..86_400 => format!("{} saat önce", (now - then) / 3600),
         86_400..604_800 => format!("{} gün önce", (now - then) / 86_400),
         _ => date(then),
+    }
+}
+
+/// A size as the web writes it (`sizeText`, tr-TR): “512 bayt”, “1,5 KB”, “12,3 MB”.
+pub fn size_text(bytes: usize) -> String {
+    // tr-TR: “.” groups thousands, “,” is the decimal mark; one decimal at most, half away from zero.
+    fn number(v: f64) -> String {
+        let tenths = (v * 10.0).round() as u64;
+        let (whole, tenth) = (tenths / 10, tenths % 10);
+        let digits = whole.to_string();
+        let mut grouped = String::new();
+        for (i, d) in digits.chars().enumerate() {
+            if i > 0 && (digits.len() - i).is_multiple_of(3) {
+                grouped.push('.');
+            }
+            grouped.push(d);
+        }
+        if tenth == 0 {
+            grouped
+        } else {
+            format!("{grouped},{tenth}")
+        }
+    }
+    let b = bytes as f64;
+    if bytes < 1024 {
+        format!("{} bayt", number(b))
+    } else if bytes < 1024 * 1024 {
+        format!("{} KB", number(b / 1024.0))
+    } else {
+        format!("{} MB", number(b / (1024.0 * 1024.0)))
     }
 }
 
@@ -260,25 +299,15 @@ pub fn ago_from(text: &str, now: i64) -> String {
     }
 }
 
-/// A server's time as a date (the web's `day`: 26.09.2026); none for anything else.
+/// A server's time as a date in the device's time (the web's `day`:
+/// 26.09.2026); none for anything else.
 pub fn day(text: &str) -> Option<String> {
-    epoch(text).map(date)
+    super::local_time::day(text, super::local_time::Zone::system())
 }
 
-/// The date of a time, as the lists write it (26.09.2026; the server's day, UTC).
+/// The date of a time in the device's time, as the lists write it (26.09.2026).
 fn date(seconds: i64) -> String {
-    let days = seconds.div_euclid(86_400);
-    // Civil date from days (Howard Hinnant's algorithm).
-    let z = days + 719_468;
-    let era = z.div_euclid(146_097);
-    let doe = z - era * 146_097;
-    let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
-    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
-    let mp = (5 * doy + 2) / 153;
-    let day = doy - (153 * mp + 2) / 5 + 1;
-    let month = if mp < 10 { mp + 3 } else { mp - 9 };
-    let year = yoe + era * 400 + i64::from(month <= 2);
-    format!("{day:02}.{month:02}.{year}")
+    super::local_time::date_of(seconds, super::local_time::Zone::system())
 }
 
 #[cfg(test)]
@@ -314,6 +343,16 @@ mod tests {
         assert_eq!(say("2026-09-24T12:00:00Z"), "2 gün önce");
         assert_eq!(say("2026-08-01T08:00:00Z"), "01.08.2026");
         assert_eq!(say("bozuk"), "");
+    }
+
+    #[test]
+    fn sizes_are_written_as_on_the_web() {
+        assert_eq!(size_text(0), "0 bayt");
+        assert_eq!(size_text(1000), "1.000 bayt");
+        assert_eq!(size_text(1536), "1,5 KB");
+        assert_eq!(size_text(2048), "2 KB");
+        assert_eq!(size_text(5 * 1024 * 1024 + 300 * 1024), "5,3 MB");
+        assert_eq!(size_text(1500 * 1024 * 1024), "1.500 MB");
     }
 
     #[test]

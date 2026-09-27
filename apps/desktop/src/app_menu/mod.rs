@@ -311,7 +311,7 @@ impl App {
             return Task::none();
         };
         let mut query = CatalogQuery::new(CatalogView::Recent);
-        query.sort = Some(words::view(CatalogView::Recent).sort);
+        query.sort = Some(words::view(CatalogView::Recent).sorts[0]);
         query.limit = Some(PROJECTS);
         s.projects = Projects::Loading;
         s.request = id;

@@ -75,17 +75,22 @@ pub enum Status {
 
 /// What waits for the open database project's autosave to send everything
 /// first (the web's `flush`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Settle {
     /// The new name, said once the server has it (or once sending stops).
     Rename(String),
     /// The trash, sent after (whether everything went or not, as the web's `settle`).
     Trash,
+    /// The catalog's archive or trash of the open project (catalog_actions.rs).
+    Catalog(
+        crate::cloud::catalog_actions::Act,
+        Box<kentos_contracts::ProjectSummary>,
+    ),
 }
 
 /// A failed request as a sentence: the server's words, or what to do when it
 /// gave none (the web's `reason`).
-fn reason(failure: &ApiFailure) -> String {
+pub(super) fn reason(failure: &ApiFailure) -> String {
     match failure.code.as_str() {
         "conflict" => {
             return "Proje bilgileri bu arada başka biri tarafından değiştirildi. Listeyi yenileyip yeniden deneyin.".to_owned();
@@ -296,7 +301,7 @@ impl App {
     }
 
     /// What waits goes now (the web's `flush`); `settled` says when it went.
-    fn flush(&mut self) -> Task<Message> {
+    pub(super) fn flush(&mut self) -> Task<Message> {
         // The autosave looks at the drawing first: a name just given differs now.
         self.live_observe(Instant::now());
         let Some(live) = self.cloud.live.as_mut() else {
@@ -348,6 +353,7 @@ impl App {
                 Task::none()
             }
             Some(Settle::Trash) => self.send_trash(),
+            Some(Settle::Catalog(act, p)) => self.catalog_send(act, *p),
             None => Task::none(),
         }
     }

@@ -1,11 +1,13 @@
-//! “Bulut projesi aç” (docs/adr/0041; the web's CatalogDialog.ts, docs/adr/0028):
-//! the account's lists — recently opened, favourites, its own, each
-//! organisation's, shared with it, archived — searched and paged by the
-//! server after its access check, and “Bu cihazdaki projeler”: the projects
-//! this device keeps a copy of, which open without a connection
-//! (docs/adr/0043). Without a session, or when the server does not answer,
-//! the window shows that list. A row says the project's name, where it is
-//! and whose, when it last changed, how it is kept and the account's role.
+//! “Bulut projeleri” (docs/adr/0041, 0086; the web's CatalogDialog.ts,
+//! docs/adr/0028): the account's lists — recently opened, favourites, its
+//! own, an organisation's, shared with it, archived, the trash — searched,
+//! filtered by type, sorted and paged by the server after its access check;
+//! the selected project on the right with its facts and every action on it
+//! (catalog_actions.rs); and “Bu cihazdaki projeler”: the projects this
+//! device keeps a copy of, which open without a connection (docs/adr/0043).
+//! Without a session, or when the server does not answer, the window shows
+//! that list. What a row, the pane and the main button say comes from the
+//! plan (plan.rs), pinned with the web by fixtures/cloud/v1/catalog.json.
 //! Opening asks about the drawing on screen first (leaving.rs), then shows
 //! its progress here and can be stopped (opening.rs).
 
@@ -14,24 +16,99 @@ use std::time::{Duration, Instant};
 use iced::Task;
 use iced::task::Handle;
 use kentos_cloud::{ApiFailure, CatalogQuery, Kept};
-use kentos_contracts::{CatalogView, ProjectPage, ProjectSummary, TenantKind};
+use kentos_contracts::{
+    CatalogSort, CatalogView, ProjectDetails, ProjectPage, ProjectState, ProjectStorage,
+    ProjectSummary, ProjectType, TenantKind,
+};
 
 use crate::app::{App, Dialog, Message, Then};
-use crate::cloud::{Event, uuid, words};
+use crate::cloud::catalog_actions::{Act, Acting};
+use crate::cloud::{Event, plan, uuid, words};
 
 /// Projects asked for at once (the web's page).
 pub const PAGE: u32 = 50;
 /// How long typing rests before the server is asked (the web's).
 pub const SEARCH_DELAY: Duration = Duration::from_millis(250);
+/// How long a selection rests before its counts are asked (the web's `DETAILS_MS`).
+pub const DETAILS_DELAY: Duration = Duration::from_millis(120);
 
-/// A list of the catalog: a view, one organisation's projects, or this device's copies.
+/// A list of the catalog: one of the server's, or this device's copies.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum List {
     View(CatalogView),
-    /// “Kurum projeleri” of one organisation (its tenant id).
-    Organization(String),
     /// “Bu cihazdaki projeler”: the copies kept on this device.
     Device,
+}
+
+/// What the server worked out on asking about the selected project (the
+/// web's `DetailsState`).
+#[derive(Debug, Clone, PartialEq)]
+pub enum Details {
+    /// Nothing to ask: no project, or one in the trash (it is not counted).
+    None,
+    Loading,
+    /// A database project's objects, layers and extent.
+    Database(Box<ProjectDetails>),
+    /// A file project's content as its newest revision holds it: the server
+    /// counts rows of a database project only.
+    File {
+        project: String,
+        /// None before the first Kaydet.
+        revision: Option<String>,
+        objects: Option<String>,
+    },
+    Failed(String),
+}
+
+impl Details {
+    /// The project these are about, once they are there.
+    fn about(&self) -> Option<&str> {
+        match self {
+            Self::Database(d) => Some(&d.project.id),
+            Self::File { project, .. } => Some(project),
+            _ => None,
+        }
+    }
+}
+
+/// A move of the selection by the list's keys.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Step {
+    Up,
+    Down,
+    Home,
+    End,
+}
+
+/// The selected project's two tabs.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Tab {
+    #[default]
+    Info,
+    History,
+}
+
+/// The line under the list: what an action did, or why it failed.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Said {
+    pub text: String,
+    pub error: bool,
+}
+
+impl Said {
+    pub fn info(text: impl Into<String>) -> Self {
+        Self {
+            text: text.into(),
+            error: false,
+        }
+    }
+
+    pub fn error(text: impl Into<String>) -> Self {
+        Self {
+            text: text.into(),
+            error: true,
+        }
+    }
 }
 
 /// The catalog window.
@@ -40,19 +117,37 @@ pub struct Catalog {
     pub search: String,
     /// When the typed search goes to the server.
     pub search_at: Option<Instant>,
+    /// The type filter (“Tüm türler” when none).
+    pub kind: Option<ProjectType>,
+    /// The list's order: one of its view's (the first when a list is chosen).
+    pub sort: CatalogSort,
+    /// “Kurum projeleri”'s organisation (its tenant id).
+    pub org: Option<String>,
     pub projects: Vec<ProjectSummary>,
     /// The copies on this device (“Bu cihazdaki projeler”).
     pub device: Vec<Kept>,
     pub total: u32,
     pub next: Option<String>,
+    /// How long the trash keeps a project, in days (the server's answer).
+    pub retention: u32,
     /// The page on its way: its id (an older answer is dropped) and request.
     loading: Option<(u64, Handle)>,
     /// Why the list could not be read.
     pub error: Option<String>,
-    /// The selected project's id.
+    /// The selected project's id, and the row under the pointer.
     pub picked: Option<String>,
-    /// What the last open said (its failure), or why the list changed.
-    pub status: Option<String>,
+    pub hovered: Option<String>,
+    /// The selected project's counts, and when they are asked.
+    pub details: Details,
+    pub details_at: Option<Instant>,
+    details_asked: Option<(u64, Handle)>,
+    pub tab: Tab,
+    /// What the last action or open said.
+    pub status: Option<Said>,
+    /// A question over the window, about this project (catalog_actions.rs).
+    pub asking: Option<(Act, ProjectSummary)>,
+    /// The action on its way.
+    pub(super) acting: Option<Acting>,
 }
 
 impl Catalog {
@@ -66,6 +161,12 @@ impl Catalog {
         self.loading.as_ref().map(|(id, _)| *id)
     }
 
+    /// The details request on its way (tests answer it).
+    #[cfg(test)]
+    pub(super) fn details_request(&self) -> Option<u64> {
+        self.details_asked.as_ref().map(|(id, _)| *id)
+    }
+
     pub fn picked(&self) -> Option<&ProjectSummary> {
         let id = self.picked.as_deref()?;
         self.projects.iter().find(|p| p.id == id)
@@ -74,6 +175,44 @@ impl Catalog {
     pub fn picked_kept(&self) -> Option<&Kept> {
         let id = self.picked.as_deref()?;
         self.device.iter().find(|k| k.info.id == id)
+    }
+
+    /// Whether an action or a question holds the window.
+    pub fn busy(&self) -> bool {
+        self.acting.is_some() || self.asking.is_some()
+    }
+
+    /// The selection moved (or the list changed under it): its counts are
+    /// asked a moment after it settles, unless they are already here.
+    fn select(&mut self, id: Option<String>) {
+        let changed = self.picked != id;
+        self.picked = id;
+        let picked = self.picked().cloned();
+        match picked {
+            None => self.forget_details(),
+            Some(p) if p.state == ProjectState::Trashed => self.forget_details(),
+            Some(p) => {
+                if self.details.about() == Some(p.id.as_str()) {
+                    // Already here: the list's newer summary goes with them.
+                    if let Details::Database(d) = &mut self.details {
+                        d.project = p;
+                    }
+                } else if changed || !matches!(self.details, Details::Loading) {
+                    self.details_asked = None;
+                    self.details = Details::Loading;
+                    self.details_at = Some(Instant::now() + DETAILS_DELAY);
+                }
+            }
+        }
+        if changed {
+            self.tab = Tab::Info;
+        }
+    }
+
+    fn forget_details(&mut self) {
+        self.details = Details::None;
+        self.details_at = None;
+        self.details_asked = None;
     }
 }
 
@@ -92,6 +231,14 @@ impl App {
         })
     }
 
+    /// Whether `id` is the project open here.
+    pub(crate) fn is_open_project(&self, id: &str) -> bool {
+        self.document
+            .as_ref()
+            .and_then(|d| d.cloud_source())
+            .is_some_and(|s| s.info.id == id)
+    }
+
     /// Opens the window on the last list (on this device's copies without a
     /// session) and asks for its first page.
     pub(crate) fn open_catalog(&mut self) -> Task<Message> {
@@ -103,18 +250,45 @@ impl App {
                 .and_then(|l| l.clone())
                 .unwrap_or(List::View(CatalogView::Mine))
         };
+        // “Kurum projeleri” shows the open project's organisation, else the first.
+        let orgs = self.organizations();
+        let open_tenant = self
+            .document
+            .as_ref()
+            .and_then(|d| d.cloud_source())
+            .map(|s| s.info.tenant_id.clone());
+        let org = orgs
+            .iter()
+            .find(|(id, _)| Some(id) == open_tenant.as_ref())
+            .or(orgs.first())
+            .map(|(id, _)| id.clone());
+        let sort = match &list {
+            List::View(v) => words::view(*v).sorts[0],
+            List::Device => CatalogSort::Updated,
+        };
         self.cloud.catalog = Some(Catalog {
             list,
             search: String::new(),
             search_at: None,
+            kind: None,
+            sort,
+            org,
             projects: Vec::new(),
             device: Vec::new(),
             total: 0,
             next: None,
+            retention: 0,
             loading: None,
             error: None,
             picked: None,
+            hovered: None,
+            details: Details::None,
+            details_at: None,
+            details_asked: None,
+            tab: Tab::Info,
             status: None,
+            asking: None,
+            acting: None,
         });
         self.dialog = Some(Dialog::Catalog);
         self.catalog_load(false)
@@ -142,23 +316,30 @@ impl App {
             c.list = List::Device;
             return self.catalog_load(false);
         };
-        let (view, tenant) = match &c.list {
-            List::View(view) => (*view, None),
-            List::Organization(tenant) => (CatalogView::Organization, uuid(tenant)),
-            List::Device => return Task::none(),
-        };
-        if view == CatalogView::Organization && tenant.is_none() {
-            // No organisation to list: the window says so.
-            c.loading = None;
-            c.projects.clear();
-            c.total = 0;
-            c.next = None;
+        let List::View(view) = c.list else {
             return Task::none();
-        }
+        };
+        let tenant = if view == CatalogView::Organization {
+            match c.org.as_deref().and_then(uuid) {
+                Some(t) => Some(t),
+                None => {
+                    // No organisation to list: the window says so.
+                    c.loading = None;
+                    c.projects.clear();
+                    c.total = 0;
+                    c.next = None;
+                    c.select(None);
+                    return Task::none();
+                }
+            }
+        } else {
+            None
+        };
         let mut query = CatalogQuery::new(view);
         query.tenant = tenant;
         query.text = Some(c.search.trim().to_owned()).filter(|t| !t.is_empty());
-        query.sort = Some(words::view(view).sort);
+        query.project_type = c.kind;
+        query.sort = Some(c.sort);
         query.limit = Some(PAGE);
         query.after = if more { c.next.clone() } else { None };
         if !more {
@@ -183,22 +364,85 @@ impl App {
         }
     }
 
+    /// The selected project's counts, once the selection rested (the web's `loadDetails`).
+    pub(crate) fn catalog_details_tick(&mut self, now: Instant) -> Task<Message> {
+        let id = self.cloud.next_id();
+        let client = self.cloud.signed_in().cloned();
+        let Some(c) = self.cloud.catalog.as_mut() else {
+            return Task::none();
+        };
+        if c.details_at.is_none_or(|at| now < at) {
+            return Task::none();
+        }
+        c.details_at = None;
+        let (Some(client), Some(p)) = (client, c.picked().cloned()) else {
+            c.details = Details::None;
+            return Task::none();
+        };
+        let (Some(tenant), Some(project)) = (uuid(&p.tenant_id), uuid(&p.id)) else {
+            c.details = Details::Failed("Sunucunun verdiği kimlik okunamadı.".to_owned());
+            return Task::none();
+        };
+        let (task, handle) = if p.storage == ProjectStorage::File {
+            // A file project's content is its newest revision (the server counts no rows of it).
+            let asked = client.file_revisions(tenant, project);
+            Task::perform(
+                async move {
+                    asked.await.map(|r| {
+                        let objects = r
+                            .revisions
+                            .iter()
+                            .find(|x| Some(&x.revision) == r.current.as_ref())
+                            .and_then(|x| x.objects.clone());
+                        Details::File {
+                            project: p.id,
+                            revision: r.current,
+                            objects,
+                        }
+                    })
+                },
+                move |result| crate::cloud::msg(Event::CatalogDetails { id, result }),
+            )
+            .abortable()
+        } else {
+            let asked = client.details(tenant, project);
+            Task::perform(
+                async move { asked.await.map(|d| Details::Database(Box::new(d))) },
+                move |result| crate::cloud::msg(Event::CatalogDetails { id, result }),
+            )
+            .abortable()
+        };
+        c.details_asked = Some((id, handle.abort_on_drop()));
+        task
+    }
+
     pub(crate) fn catalog_event(&mut self, event: Event) -> Task<Message> {
         let opening = self.cloud.opening.is_some();
         let Some(c) = self.cloud.catalog.as_mut() else {
             return Task::none();
         };
+        // While a project opens, or an action or a question holds the window, the list stays as it is.
+        let held = opening || c.busy();
         match event {
-            // While a project opens, the list stays as it is.
-            Event::CatalogView(_) | Event::CatalogSearch(_) | Event::CatalogPick(_) if opening => {}
+            Event::CatalogView(_)
+            | Event::CatalogSearch(_)
+            | Event::CatalogPick(_)
+            | Event::CatalogKind(_)
+            | Event::CatalogSort(_)
+            | Event::CatalogOrg(_)
+            | Event::CatalogStep(_)
+                if held => {}
             Event::CatalogView(list) => {
                 if list != List::Device
                     && let Ok(mut last) = LAST.lock()
                 {
                     *last = Some(list.clone());
                 }
+                if let List::View(v) = &list {
+                    c.sort = words::view(*v).sorts[0];
+                }
                 c.list = list;
-                c.picked = None;
+                c.select(None);
                 c.status = None;
                 return self.catalog_load(false);
             }
@@ -206,19 +450,66 @@ impl App {
                 c.search = text;
                 c.search_at = Some(Instant::now() + SEARCH_DELAY);
             }
-            Event::CatalogPick(id) => {
-                c.picked = Some(id);
-                c.status = None;
+            Event::CatalogKind(kind) => {
+                c.kind = kind;
+                return self.catalog_load(false);
             }
+            Event::CatalogSort(sort) => {
+                c.sort = sort;
+                return self.catalog_load(false);
+            }
+            Event::CatalogOrg(org) => {
+                c.org = Some(org);
+                return self.catalog_load(false);
+            }
+            Event::CatalogPick(id) => c.select(Some(id)),
+            // ↑ ↓ Home End in the list (the web's list keys).
+            Event::CatalogStep(step) => {
+                let ids: Vec<String> = match c.list {
+                    List::Device => c.device.iter().map(|k| k.info.id.clone()).collect(),
+                    List::View(_) => c.projects.iter().map(|p| p.id.clone()).collect(),
+                };
+                if ids.is_empty() {
+                    return Task::none();
+                }
+                let at = c
+                    .picked
+                    .as_ref()
+                    .and_then(|id| ids.iter().position(|x| x == id));
+                let last = ids.len() - 1;
+                let next = match (step, at) {
+                    (Step::Home, _) | (_, None) => 0,
+                    (Step::End, _) => last,
+                    (Step::Down, Some(i)) => (i + 1).min(last),
+                    (Step::Up, Some(i)) => i.saturating_sub(1),
+                };
+                c.select(Some(ids[next].clone()));
+            }
+            Event::CatalogTab(tab) => c.tab = tab,
+            Event::CatalogHover(id) => c.hovered = id,
             Event::CatalogMore => {
                 if c.next.is_some() && c.loading.is_none() {
                     return self.catalog_load(true);
                 }
             }
             Event::CatalogRetry => return self.catalog_load(false),
-            Event::CatalogOpen => {
-                if opening {
+            Event::CatalogDetails { id, result } => {
+                if c.details_asked.as_ref().is_none_or(|(d, _)| *d != id) {
                     return Task::none();
+                }
+                c.details_asked = None;
+                c.details = match result {
+                    Ok(d) => d,
+                    Err(failure) => Details::Failed(failure.message.clone()),
+                };
+            }
+            Event::CatalogOpen => {
+                if opening || c.busy() {
+                    return Task::none();
+                }
+                // In the trash the main button restores (catalog_actions.rs).
+                if c.list == List::View(CatalogView::Trash) {
+                    return self.catalog_act(Act::Restore);
                 }
                 let picked = match &c.list {
                     List::Device => c.picked_kept().map(|k| {
@@ -229,16 +520,18 @@ impl App {
                             k.info.storage,
                         )
                     }),
-                    _ => c
+                    List::View(_) => c
                         .picked()
                         .map(|p| (p.tenant_id.clone(), p.id.clone(), p.name.clone(), p.storage)),
                 };
                 let Some((tenant, project, name, storage)) = picked else {
-                    c.status = Some("Önce listeden bir proje seçin.".to_owned());
+                    c.status = Some(Said::info("Önce listeden bir proje seçin."));
                     return Task::none();
                 };
                 let (Some(tenant), Some(project)) = (uuid(&tenant), uuid(&project)) else {
-                    c.status = Some(format!("“{name}”: sunucunun verdiği kimlik okunamadı."));
+                    c.status = Some(Said::error(format!(
+                        "“{name}”: sunucunun verdiği kimlik okunamadı."
+                    )));
                     return Task::none();
                 };
                 self.cloud.open_hint = Some((name, storage));
@@ -246,7 +539,7 @@ impl App {
             }
             Event::CatalogRemove => {
                 let Some(k) = c.picked_kept() else {
-                    c.status = Some("Önce listeden bu cihazdaki bir projeyi seçin.".to_owned());
+                    c.status = Some(Said::info("Önce listeden bu cihazdaki bir projeyi seçin."));
                     return Task::none();
                 };
                 let (Some(tenant), Some(project)) = (uuid(&k.info.tenant_id), uuid(&k.info.id))
@@ -287,10 +580,10 @@ impl App {
                     && failure.transient()
                 {
                     c.list = List::Device;
-                    c.status = Some(format!(
+                    c.status = Some(Said::error(format!(
                         "{} Bu cihazdaki projeler gösteriliyor; bağlantısız açılırlar.",
                         failure.message
-                    ));
+                    )));
                     self.went_offline();
                     return self.catalog_load(false);
                 }
@@ -346,18 +639,21 @@ impl App {
                 if with_draft && let Some(drafts) = &self.cloud.drafts {
                     let _ = drafts.remove(&drafts.key(&server, &user, tenant, project));
                 }
-                format!("“{name}” bu cihazdan kaldırıldı; proje sunucuda olduğu gibi duruyor.")
+                Said::info(format!(
+                    "“{name}” bu cihazdan kaldırıldı; proje sunucuda olduğu gibi duruyor."
+                ))
             }
-            Err(e) => e.to_string(),
+            Err(e) => Said::error(e.to_string()),
         };
         match self.cloud.catalog.as_mut() {
             Some(c) => c.status = Some(text),
-            None => self.output(text),
+            None => self.output(text.text),
         }
     }
 }
 
 /// A page into the list: the first replaces it, a next one is added below.
+/// The selection stays while its project is listed.
 fn page(c: &mut Catalog, more: bool, result: Result<ProjectPage, ApiFailure>) {
     match result {
         Ok(page) => {
@@ -368,13 +664,42 @@ fn page(c: &mut Catalog, more: bool, result: Result<ProjectPage, ApiFailure>) {
             }
             c.total = page.total;
             c.next = page.next;
-            if c.picked
-                .as_ref()
-                .is_some_and(|id| !c.projects.iter().any(|p| &p.id == id))
-            {
-                c.picked = None;
+            c.retention = page.trash_retention_days;
+            let keep = c
+                .picked
+                .clone()
+                .filter(|id| c.projects.iter().any(|p| &p.id == id));
+            c.select(keep);
+        }
+        Err(failure) => {
+            c.error = Some(failure.message.clone());
+            c.select(None);
+        }
+    }
+}
+
+/// The row's `place`: where a project is, as the account names it (the web's `placeOf`).
+pub(crate) fn place_of(app: &App, p: &ProjectSummary) -> String {
+    let own = app.cloud.membership(&p.tenant_id).is_some();
+    words::workspace(p.tenant_kind, &p.tenant_name, own)
+}
+
+/// What the list says with no rows.
+pub(crate) fn empty_text(c: &Catalog, orgs: usize) -> String {
+    if c.loading() {
+        return "Projeler yükleniyor…".to_owned();
+    }
+    let filtered = !c.search.trim().is_empty() || c.kind.is_some();
+    match &c.list {
+        List::Device => {
+            if filtered {
+                plan::EMPTY_SEARCH.to_owned()
+            } else {
+                "Bu bilgisayarda kopyası tutulan bir proje yok. Bir bulut projesini bir kez açınca kopyası burada tutulur.".to_owned()
             }
         }
-        Err(failure) => c.error = Some(failure.message.clone()),
+        _ if filtered => plan::EMPTY_SEARCH.to_owned(),
+        List::View(CatalogView::Organization) if orgs == 0 => plan::NO_ORGANIZATION.to_owned(),
+        List::View(v) => words::view(*v).empty.to_owned(),
     }
 }

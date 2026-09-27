@@ -339,6 +339,26 @@ impl App {
                 {
                     return self.processing_event(crate::processing::Event::Run);
                 }
+                // The catalog's list keys (the web's): ↑ ↓ Home End move the
+                // selection, Enter does the main action; not under its question.
+                Some(key @ (Named::ArrowUp | Named::ArrowDown | Named::Home | Named::End))
+                    if self.dialog == Some(crate::app::Dialog::Catalog) =>
+                {
+                    use crate::cloud::catalog::Step;
+                    let step = match key {
+                        Named::ArrowUp => Step::Up,
+                        Named::ArrowDown => Step::Down,
+                        Named::Home => Step::Home,
+                        _ => Step::End,
+                    };
+                    return self.cloud_event(crate::cloud::Event::CatalogStep(step));
+                }
+                Some(Named::Enter)
+                    if self.dialog == Some(crate::app::Dialog::Catalog)
+                        && !self.cloud.catalog.as_ref().is_some_and(|c| c.busy()) =>
+                {
+                    return self.cloud_event(crate::cloud::Event::CatalogOpen);
+                }
                 // ↑ ↓ in a Hesap window's table go to the row above or below (calc/grid.rs).
                 Some(key @ (Named::ArrowUp | Named::ArrowDown))
                     if self.dialog == Some(crate::app::Dialog::Calc) =>

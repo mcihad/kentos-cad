@@ -21,7 +21,7 @@ use std::time::Duration;
 use kentos_contracts::{
     ApiError, AuthConfig, CatalogSort, CatalogView, CommandEnvelope, EventPage, FeaturePage,
     FileRevisions, FileUpload, FileUploadBegin, Health, LoginRequest, Me, ProjectCreate,
-    ProjectInfo, ProjectPage, ProjectType,
+    ProjectDetails, ProjectInfo, ProjectPage, ProjectType,
 };
 use reqwest::header::{self, HeaderMap};
 use reqwest::{Method, RequestBuilder, Response, Url};
@@ -557,6 +557,16 @@ impl Cloud {
             url
         });
         self.get(url)
+    }
+
+    /// One project's catalog entry with what is worked out on asking: its
+    /// objects, layers and extent (`GET …/projects/{project}/details`, docs/adr/0028).
+    pub fn details(
+        &self,
+        tenant: Uuid,
+        project: Uuid,
+    ) -> impl Future<Output = Result<ProjectDetails, ApiFailure>> + Send + 'static {
+        self.get(self.inner.project_url(tenant, project, "/details"))
     }
 
     /// What opening a project needs before its objects (`GET …/projects/{project}`).

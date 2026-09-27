@@ -45,6 +45,9 @@ pub struct Opening {
     was: Option<(u64, u64)>,
     /// The project's copy, locked for this program; in a task while it is read or written.
     replica: Option<Replica>,
+    /// The catalog stays on screen once it is open (the open project again,
+    /// unarchived in the catalog).
+    keep_catalog: bool,
     _request: Option<Handle>,
 }
 
@@ -147,6 +150,8 @@ impl App {
             .document
             .as_ref()
             .map(|d| (d.session, d.model.revision()));
+        // A project archived from the catalog was the one before this.
+        self.cloud.archived_by_me = false;
         let mut opening = Opening {
             id,
             name,
@@ -157,6 +162,7 @@ impl App {
             offline: false,
             was,
             replica,
+            keep_catalog: std::mem::take(&mut self.cloud.reopen_keeps_catalog),
             _request: None,
         };
         let task = match self.cloud.signed_in().cloned() {
@@ -224,7 +230,9 @@ impl App {
     fn open_failed(&mut self, name: &str, why: String) {
         let text = format!("“{name}” açılamadı: {why}");
         match self.cloud.catalog.as_mut() {
-            Some(c) if self.dialog == Some(Dialog::Catalog) => c.status = Some(text),
+            Some(c) if self.dialog == Some(Dialog::Catalog) => {
+                c.status = Some(crate::cloud::catalog::Said::error(text));
+            }
             _ => self.say(kentos_interaction::Level::Error, text),
         }
     }
@@ -434,10 +442,12 @@ impl App {
                 "“{name}” arşivlenmiş bir proje: salt okunur açıldı; değişiklikler buluta kaydedilmez. Düzenlemek için arşivden çıkarılmalı ya da kopyası oluşturulmalı."
             ));
         }
-        if self.dialog == Some(Dialog::Catalog) {
-            self.dialog = None;
+        if !o.keep_catalog {
+            if self.dialog == Some(Dialog::Catalog) {
+                self.dialog = None;
+            }
+            self.cloud.catalog = None;
         }
-        self.cloud.catalog = None;
         let kept_goes = if storage == ProjectStorage::File && !o.offline {
             self.send_kept_save()
         } else {
