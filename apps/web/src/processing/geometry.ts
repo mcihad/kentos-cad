@@ -1,20 +1,26 @@
 import type { Entity } from '../model/entities';
+import type { ExprGeometry } from '../model/expression/expression';
 import type { Bounds, Vec2 } from '../model/geometry';
-import { CoreStore, cornerTexts } from '../wasm/core';
+import { CoreStore, cornerTexts, type ExprColumnData } from '../wasm/core';
 import { packEntities } from '../wasm/pack';
 
 /**
  * The geometry processing tools ask for, from the Rust geometry store
  * (docs/adr/0008, S4). A run packs the objects it reads into a store of its
  * own, in the page and in the processing worker alike, so both run the same
- * code, and tools ask it by id: the expressions' geometry values, corner
+ * code, and tools ask it by id: expressions evaluated with the objects'
+ * geometry values (`$alan`, `$merkez_y`, `$genişlik` …; docs/adr/0100), corner
  * numbering, the texts beside numbered corners, edge-length labels. The
  * dialog asks the drawing's store the host keeps (the viewport's). This only
  * packs and reads: no coordinate is computed here.
  */
 
-/** What the drawing's own geometry store answers for processing (the "visible" scope, the dialog's previews). */
-export interface DocumentGeometry {
+/**
+ * What the drawing's own geometry store answers for processing (the "visible"
+ * scope, the dialog's previews); as an ExprGeometry it evaluates an expression
+ * over objects by id, reading their geometry values from its shapes.
+ */
+export interface DocumentGeometry extends ExprGeometry {
   /** Ids of objects on every layer whose box overlaps `r`, in the document's order. */
   inBox(r: Bounds): readonly number[];
   /** Geometry values of these objects for expressions, one record each (`measuredAt`). */
@@ -52,8 +58,11 @@ export interface CoreEdgeLabel {
   length: number;
 }
 
-/** The geometry a run asks for: the objects of its features inputs, by id. */
-export interface RunGeometry {
+/**
+ * The geometry a run asks for: the objects of its features inputs, by id. As
+ * an ExprGeometry it evaluates the run's expressions over them.
+ */
+export interface RunGeometry extends ExprGeometry {
   /** Geometry values of these objects for expressions, one record each (`measuredAt`). */
   measures(ids: readonly number[]): Float64Array;
   /**
@@ -101,6 +110,10 @@ export class ObjectStore implements RunGeometry, DocumentGeometry {
 
   measures(ids: readonly number[]): Float64Array {
     return this.core.measures(Float64Array.from(ids));
+  }
+
+  evaluateExpression(source: string, ids: Float64Array, texts: string, textLens: Int32Array, numbers: Float64Array, scale: number, want: number): ExprColumnData {
+    return this.core.evaluateExpression(source, ids, texts, textLens, numbers, scale, want);
   }
 
   numberCorners(ids: readonly number[], walk: CornerWalk, existing: readonly Vec2[]): CoreCorner[] {
