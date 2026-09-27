@@ -130,3 +130,77 @@ export function plainSymbols(color: Color, present: Record<GeometryClass, number
 /** Label for a numeric class: "12.5 – 30". */
 export const classLabel = (c: NumericClass, digits = 2) => `${round(c.min, digits)} – ${round(c.max, digits)}`;
 const round = (v: number, d: number) => String(Math.round(v * 10 ** d) / 10 ** d);
+
+// ── What the layer style window makes of them ─────────────────────────
+// Pinned for both platforms by fixtures/style/v1/classify.json.
+
+/** Colour of the “Diğer değerler” set when it is switched on. */
+export const OTHER_COLOR: Color = '#BAB0AC';
+
+/** Classes “Sınıfla” makes unless told otherwise, and the range the field keeps to. */
+export const CLASS_COUNT = { default: 5, min: 1, max: 20 } as const;
+
+/** The ramp a graduated style starts with. */
+export const DEFAULT_RAMP = 'sariKirmizi';
+
+/** The class count typed in the field: a whole number from 1 to 20; anything else is the default. */
+export const classCount = (typed: string): number => Math.min(CLASS_COUNT.max, Math.max(CLASS_COUNT.min, Math.round(Number(typed)) || CLASS_COUNT.default));
+
+/** What the classify controls say. */
+export const CLASSIFY_TEXTS = {
+  noValues: 'Bu ifade nesnelerde değer vermiyor.',
+  found: (n: number) => `${n} değer bulundu.`,
+  noNumbers: 'Bu ifade nesnelerde sayı vermiyor.',
+  classified: (classes: number, values: number) => `${classes} sınıf, ${values} sayısal değerden.`,
+  newCategory: 'Yeni kategori',
+  other: 'Diğer değerler',
+  categoriesHelp: 'Bir alan adı yazıp “Değerlerden sınıfla”ya basın: her farklı değer bir kategori olur.',
+  classesHelp: 'Bir değer alt sınıra eşitse o sınıfa girer; son sınıf üst sınırını da içerir.',
+  classesEmptyHelp: 'Sayı veren bir ifade yazıp “Sınıfla”ya basın.',
+} as const;
+
+export interface Category {
+  readonly value: string;
+  readonly label: string;
+  readonly symbols: SymbolSet;
+  readonly enabled?: boolean;
+}
+
+/**
+ * The categories “Değerlerden sınıfla” makes of the distinct values: one
+ * each, labelled with the value, in QUALITATIVE's colours in turn; a value
+ * that already has a category keeps it (its label and symbols).
+ */
+export function categoriesOf(found: readonly ValueCount[], present: Record<GeometryClass, number>, old: readonly Category[] = []): Category[] {
+  const kept = new Map(old.map((k) => [k.value, k]));
+  return found.map((v, i) => kept.get(v.value) ?? { value: v.value, label: v.value, symbols: plainSymbols(QUALITATIVE[i % QUALITATIVE.length], present) });
+}
+
+/** The category “Kategori ekle” adds after `count` others. */
+export const newCategory = (count: number, present: Record<GeometryClass, number>): Category => ({
+  value: '',
+  label: CLASSIFY_TEXTS.newCategory,
+  symbols: plainSymbols(QUALITATIVE[count % QUALITATIVE.length], present),
+});
+
+/** How many objects each category takes, and how many are left for “Diğer değerler”. */
+export function categoryCounts(values: readonly (string | null)[], categories: readonly Category[]): { counts: number[]; rest: number } {
+  const counts = new Map(uniqueValues(values).map((v) => [v.value, v.count]));
+  const each = categories.map((k) => counts.get(k.value) ?? 0);
+  return { counts: each, rest: values.length - each.reduce((s, n) => s + n, 0) };
+}
+
+export interface GraduatedClass extends NumericClass {
+  readonly label: string;
+  readonly symbols: SymbolSet;
+}
+
+/** The classes “Sınıfla” makes: `n` by equal interval or equal count, coloured along the ramp, labelled by their bounds. */
+export function graduatedOf(numbers: readonly number[], method: 'interval' | 'count', n: number, ramp: string, present: Record<GeometryClass, number>): GraduatedClass[] {
+  const classes = method === 'interval' ? equalInterval(numbers, n) : equalCount(numbers, n);
+  const colors = rampColors(RAMPS[ramp].stops, classes.length);
+  return classes.map((c, i) => ({ ...c, label: classLabel(c), symbols: plainSymbols(colors[i], present) }));
+}
+
+/** Objects a class takes: from its lower bound (included) to its upper bound (excluded; the last class includes it). */
+export const countIn = (numbers: readonly number[], min: number, max: number, last: boolean): number => numbers.filter((v) => v >= min && (v < max || (last && v <= max))).length;
