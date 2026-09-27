@@ -445,7 +445,7 @@ pub async fn commit(
     if expected != current {
         return Err(AppError::Conflict {
             message: format!(
-                "Dosya siz kaydederken başka biri tarafından kaydedildi (şimdiki revizyon {current}, sizinki {expected}'e dayanıyor); hiçbir şey yazılmadı. Son revizyonu açıp değişikliklerinizi yeniden uygulayın ya da dosyanızı ayrı bir kopya olarak saklayın."
+                "Dosya siz kaydederken başka biri tarafından kaydedildi (şimdiki revizyon {current}; kaydınızın dayandığı revizyon {expected}); hiçbir şey yazılmadı. Son revizyonu açıp değişikliklerinizi yeniden uygulayın ya da dosyanızı ayrı bir kopya olarak saklayın."
             ),
             conflicts: vec![FeatureConflict {
                 id: PROJECT_FILE_KEY.into(),
