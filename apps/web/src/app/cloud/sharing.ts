@@ -80,11 +80,18 @@ export function revokeEnvelope(tenantId: string, projectId: string, userId: stri
 /** A date as the interface writes it: 31.12.2026. */
 export const dateText = (iso: string): string => new Date(iso).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-/** The end of a day picked in a date field (`YYYY-MM-DD`), in local time, for `expiresAt`; null for none or nonsense. */
+/**
+ * The end of a day picked in a date field (`YYYY-MM-DD`), in local time,
+ * for `expiresAt`; null for none or nonsense. A day its month does not have
+ * (30 February, 31 April) is refused, not moved into the next month as the
+ * browser's own reading would.
+ */
 export function endOfDay(date: string): string | null {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+  if (!m) return null;
   const t = new Date(`${date}T23:59:59`);
-  return Number.isNaN(t.getTime()) ? null : t.toISOString();
+  if (Number.isNaN(t.getTime()) || t.getFullYear() !== Number(m[1]) || t.getMonth() + 1 !== Number(m[2]) || t.getDate() !== Number(m[3])) return null;
+  return t.toISOString();
 }
 
 /** One row of the share dialog's list. */

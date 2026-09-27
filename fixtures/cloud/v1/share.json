@@ -1,0 +1,2365 @@
+{
+ "format": "kentos.share",
+ "version": 1,
+ "timeZone": "Europe/Istanbul",
+ "roles": {
+  "labels": {
+   "owner": "Sahip",
+   "manager": "Yönetici",
+   "editor": "Düzenleyici",
+   "commenter": "Yorumcu",
+   "viewer": "Görüntüleyici"
+  },
+  "grant": [
+   "viewer",
+   "commenter",
+   "editor",
+   "manager"
+  ],
+  "invite": [
+   "viewer",
+   "commenter",
+   "editor"
+  ],
+  "hints": {
+   "viewer": "Projeyi açar, görür, indirir ve geçmişine bakar; değiştiremez.",
+   "commenter": "Görüntüleyicinin yapabildikleri ve yorum.",
+   "editor": "Nesneleri çizer, değiştirir ve siler.",
+   "manager": "Düzenleyicinin yapabildikleri; ad, ayar ve katmanları değiştirir, projeyi paylaşır."
+  }
+ },
+ "blocks": {
+  "expired": "Paylaşımın süresi doldu",
+  "notMember": "Kurumun üyesi değil",
+  "inactive": "Hesabı ya da kurum üyeliği etkin değil",
+  "noSeat": "Kurumda koltuğu yok",
+  "guestsOff": "Misafir; kurum dışarıdan misafir kabul etmiyor"
+ },
+ "storage": {
+  "database": {
+   "title": "Yönetilen PostGIS veritabanı",
+   "detail": "Nesneler sunucudaki veritabanında tek tek saklanır; her kayıt tek işlemde yazılır ve erişimi olan herkes hemen görür. Paylaşım alıcıya veritabanı hesabı ya da parolası vermez."
+  },
+  "file": {
+   "title": "Dosya (KCAD revizyonları)",
+   "detail": "Proje sunucuda değişmez .kcad revizyonları olarak saklanır; her kayıt yeni bir revizyondur ve dayandığı revizyonla karşılaştırılır, arada başkası kaydettiyse üzerine yazılmaz. Paylaşım alıcıya dosya deposuna ayrı bir erişim vermez."
+  }
+ },
+ "invitationStates": {
+  "pending": "Bekliyor",
+  "accepted": "Kabul edildi",
+  "revoked": "Geri alındı",
+  "expired": "Süresi doldu"
+ },
+ "inviteDays": {
+  "default": 14,
+  "max": 90,
+  "choices": [
+   {
+    "days": 1,
+    "text": "1 gün"
+   },
+   {
+    "days": 3,
+    "text": "3 gün"
+   },
+   {
+    "days": 7,
+    "text": "7 gün"
+   },
+   {
+    "days": 14,
+    "text": "14 gün (varsayılan)"
+   },
+   {
+    "days": 30,
+    "text": "30 gün"
+   },
+   {
+    "days": 60,
+    "text": "60 gün"
+   },
+   {
+    "days": 90,
+    "text": "90 gün"
+   }
+  ]
+ },
+ "texts": {
+  "title": "Projeyi paylaş",
+  "tabs": {
+   "label": "Paylaşım",
+   "people": "Kişiler",
+   "invites": "Davetler"
+  },
+  "close": "Kapat",
+  "people": {
+   "add": "Kişi ekle",
+   "role": "Rol",
+   "until": "Bitiş (isteğe bağlı)",
+   "untilLabel": "Bitiş tarihi (isteğe bağlı)",
+   "share": "Paylaş",
+   "title": "Erişimi olanlar",
+   "listLabel": "Erişimi olanlar",
+   "loading": "Erişimi olanlar yükleniyor…",
+   "you": " (siz)",
+   "remove": "Kaldır",
+   "removeLabel": {
+    "sample": "Mehmet Demir",
+    "text": "Mehmet Demir erişimini kaldır"
+   },
+   "roleLabel": {
+    "sample": "Mehmet Demir",
+    "text": "Mehmet Demir için rol"
+   },
+   "count": {
+    "sample": 3,
+    "text": "3 kişi erişebiliyor"
+   },
+   "adding": {
+    "sample": "Mehmet Demir",
+    "text": "Mehmet Demir ekleniyor…"
+   },
+   "changing": {
+    "sample": "Mehmet Demir",
+    "text": "Mehmet Demir için rol değiştiriliyor…"
+   },
+   "revoking": {
+    "sample": "Mehmet Demir",
+    "text": "Mehmet Demir için erişim kaldırılıyor…"
+   },
+   "badDate": "Bitiş tarihi okunamadı: takvimden bir gün seçin ya da alanı boş bırakın.",
+   "readFailed": "Erişim listesi okunamadı",
+   "shareFailed": "Paylaşılamadı",
+   "changeFailed": "Rol değiştirilemedi",
+   "revokeFailed": "Erişim kaldırılamadı",
+   "guestRole": "Misafirin rolü davetle verilir. Değiştirmek için erişimini kaldırıp yeni rolle yeniden davet edin.",
+   "storage": {
+    "sample": "Yönetilen PostGIS veritabanı",
+    "text": "Saklama: Yönetilen PostGIS veritabanı. "
+   }
+  },
+  "find": {
+   "placeholder": "Ad ya da e-posta yazın",
+   "label": "Paylaşılacak kişi",
+   "list": "Bulunan kişiler",
+   "has": {
+    "sample": "Düzenleyici",
+    "text": "şu an Düzenleyici"
+   },
+   "failed": "Kişi aranamadı"
+  },
+  "invites": {
+   "email": "E-postayla davet et",
+   "emailLabel": "Davet edilecek e-posta",
+   "placeholder": "ad@kurum.gov.tr",
+   "role": "Rol",
+   "roleLabel": "Davetin rolü",
+   "wait": "Geçerlilik",
+   "waitLabel": "Davetin geçerlilik süresi",
+   "send": "Davet et",
+   "title": "Davetler",
+   "listLabel": "Davetler",
+   "loading": "Davetler yükleniyor…",
+   "empty": "Bekleyen ya da son 30 günde sonuçlanmış davet yok. Kurum dışından biriyle çalışmak için yukarıdan e-postayla davet edin.",
+   "noRight": "Davetleri görmek ve göndermek için bu projede paylaşım yetkiniz olmalı (project.share).",
+   "count": {
+    "sample": 2,
+    "text": "2 bekliyor"
+   },
+   "revoke": "Geri al",
+   "revokeLabel": {
+    "sample": "ali@ornek.org",
+    "text": "ali@ornek.org davetini geri al"
+   },
+   "inviting": {
+    "sample": "ali@ornek.org",
+    "text": "“ali@ornek.org” davet ediliyor…"
+   },
+   "revoking": {
+    "sample": "ali@ornek.org",
+    "text": "“ali@ornek.org” için davet geri alınıyor…"
+   },
+   "created": "Davet oluşturuldu. Bağlantıyı kopyalayıp davet ettiğiniz kişiye iletin.",
+   "readFailed": "Davetler okunamadı",
+   "sendFailed": "Davet gönderilemedi",
+   "revokeFailed": "Davet geri alınamadı",
+   "linkLabel": "Davet bağlantısı",
+   "copy": "Kopyala",
+   "copied": "Kopyalandı",
+   "copiedSay": "Bağlantı panoya kopyalandı; davet ettiğiniz kişiye iletin.",
+   "copyFailed": "Bağlantı panoya kopyalanamadı: alandaki bağlantı seçildi, Ctrl+C ile kopyalayın.",
+   "noLink": "Ancak bağlantı bu yanıtta yok; sunucu onu yalnız ilk yanıtta verir.",
+   "noLinkWarn": "Bağlantıyı almak için aynı adrese yeniden davet gönderin; bu davetin bağlantısı artık çalışmaz."
+  }
+ },
+ "access": {
+  "tenantKind": "organization",
+  "storage": "database",
+  "adminsAccessAllProjects": true,
+  "ownerId": "ayse",
+  "ownerName": "Ayşe Yılmaz",
+  "people": [
+   {
+    "expired": false,
+    "guest": false,
+    "userId": "ayse",
+    "displayName": "Ayşe Yılmaz",
+    "email": "ayse@buro.com.tr",
+    "role": "owner",
+    "via": "owner"
+   },
+   {
+    "expired": false,
+    "guest": false,
+    "userId": "zeynep",
+    "displayName": "Zeynep Kaya",
+    "role": "manager",
+    "via": "policy",
+    "grant": "viewer"
+   },
+   {
+    "expired": false,
+    "guest": false,
+    "userId": "dilek",
+    "displayName": "Dilek Er",
+    "role": "manager",
+    "via": "grant",
+    "grant": "manager"
+   },
+   {
+    "expired": false,
+    "guest": false,
+    "userId": "mehmet",
+    "displayName": "Mehmet Demir",
+    "email": "mehmet@ornek.com.tr",
+    "role": "editor",
+    "via": "grant",
+    "grant": "editor",
+    "expiresAt": "2026-12-31T20:59:59Z"
+   },
+   {
+    "expired": true,
+    "guest": false,
+    "userId": "bora",
+    "displayName": "Bora Tan",
+    "blocked": "expired",
+    "grant": "viewer",
+    "expiresAt": "2026-01-01T12:00:00Z"
+   },
+   {
+    "expired": false,
+    "guest": false,
+    "userId": "can",
+    "displayName": "Çağla Öz",
+    "blocked": "noSeat",
+    "grant": "editor"
+   },
+   {
+    "expired": false,
+    "guest": false,
+    "userId": "irem",
+    "displayName": "İrem Işık",
+    "role": "manager",
+    "via": "policy"
+   },
+   {
+    "expired": false,
+    "guest": true,
+    "userId": "misafir",
+    "displayName": "Işıl Nur",
+    "email": "isil@disari.org",
+    "role": "editor",
+    "via": "grant",
+    "grant": "editor"
+   },
+   {
+    "expired": false,
+    "guest": false,
+    "userId": "adsiz",
+    "displayName": "",
+    "role": "viewer",
+    "via": "grant",
+    "grant": "viewer"
+   }
+  ]
+ },
+ "people": [
+  {
+   "id": "manager",
+   "title": "Yönetici olarak (Dilek): başkalarının paylaşımları değişir ve kaldırılır; sahip, kendisi ve politika kilitli; misafirin rolü davetle",
+   "me": "dilek",
+   "mayShare": true,
+   "list": {},
+   "expect": {
+    "storage": {
+     "lead": "Saklama: Yönetilen PostGIS veritabanı. ",
+     "detail": "Nesneler sunucudaki veritabanında tek tek saklanır; her kayıt tek işlemde yazılır ve erişimi olan herkes hemen görür. Paylaşım alıcıya veritabanı hesabı ya da parolası vermez."
+    },
+    "rows": [
+     {
+      "userId": "ayse",
+      "name": "Ayşe Yılmaz",
+      "roleLabel": "Sahip",
+      "source": "Proje sahibi",
+      "blocked": false,
+      "you": false,
+      "owner": true,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": false,
+      "email": "ayse@buro.com.tr",
+      "initials": "AY",
+      "sub": "ayse@buro.com.tr · Proje sahibi",
+      "roleTip": null,
+      "fixed": "Proje sahibinin erişimi paylaşımla değişmez."
+     },
+     {
+      "userId": "adsiz",
+      "name": "Adı görünmeyen hesap",
+      "roleLabel": "Görüntüleyici",
+      "source": "Paylaşım",
+      "blocked": false,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": true,
+      "canRevoke": true,
+      "grant": "viewer",
+      "initials": "AG",
+      "sub": "Paylaşım",
+      "roleTip": null,
+      "fixed": null
+     },
+     {
+      "userId": "bora",
+      "name": "Bora Tan",
+      "roleLabel": "Erişemiyor",
+      "source": "Paylaşımın süresi doldu · paylaşım: Görüntüleyici, 01.01.2026 tarihine kadar",
+      "blocked": true,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": true,
+      "grant": "viewer",
+      "expiresAt": "2026-01-01T12:00:00Z",
+      "initials": "BT",
+      "sub": "Paylaşımın süresi doldu · paylaşım: Görüntüleyici, 01.01.2026 tarihine kadar",
+      "roleTip": null,
+      "fixed": null
+     },
+     {
+      "userId": "can",
+      "name": "Çağla Öz",
+      "roleLabel": "Erişemiyor",
+      "source": "Kurumda koltuğu yok · paylaşım: Düzenleyici",
+      "blocked": true,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": true,
+      "grant": "editor",
+      "initials": "ÇÖ",
+      "sub": "Kurumda koltuğu yok · paylaşım: Düzenleyici",
+      "roleTip": null,
+      "fixed": null
+     },
+     {
+      "userId": "dilek",
+      "name": "Dilek Er",
+      "roleLabel": "Yönetici",
+      "source": "Paylaşım",
+      "blocked": false,
+      "you": true,
+      "owner": false,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": false,
+      "grant": "manager",
+      "initials": "DE",
+      "sub": "Paylaşım",
+      "roleTip": null,
+      "fixed": "Kendi erişiminizi buradan değiştiremezsiniz; proje sahibine ya da başka bir yöneticiye başvurun."
+     },
+     {
+      "userId": "misafir",
+      "name": "Işıl Nur",
+      "roleLabel": "Düzenleyici",
+      "source": "Misafir (davetle)",
+      "blocked": false,
+      "you": false,
+      "owner": false,
+      "guest": true,
+      "canChange": false,
+      "canRevoke": true,
+      "email": "isil@disari.org",
+      "grant": "editor",
+      "initials": "IN",
+      "sub": "isil@disari.org · Misafir (davetle)",
+      "roleTip": "Misafirin rolü davetle verilir. Değiştirmek için erişimini kaldırıp yeni rolle yeniden davet edin.",
+      "fixed": null
+     },
+     {
+      "userId": "irem",
+      "name": "İrem Işık",
+      "roleLabel": "Yönetici",
+      "source": "Kurum politikası: kurum yöneticisi",
+      "blocked": false,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": false,
+      "initials": "İI",
+      "sub": "Kurum politikası: kurum yöneticisi",
+      "roleTip": null,
+      "fixed": "Kurum politikasından gelen erişim paylaşımla değişmez."
+     },
+     {
+      "userId": "mehmet",
+      "name": "Mehmet Demir",
+      "roleLabel": "Düzenleyici",
+      "source": "Paylaşım, 31.12.2026 tarihine kadar",
+      "blocked": false,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": true,
+      "canRevoke": true,
+      "email": "mehmet@ornek.com.tr",
+      "grant": "editor",
+      "expiresAt": "2026-12-31T20:59:59Z",
+      "initials": "MD",
+      "sub": "mehmet@ornek.com.tr · Paylaşım, 31.12.2026 tarihine kadar",
+      "roleTip": null,
+      "fixed": null
+     },
+     {
+      "userId": "zeynep",
+      "name": "Zeynep Kaya",
+      "roleLabel": "Yönetici",
+      "source": "Kurum politikası: kurum yöneticisi · paylaşım: Görüntüleyici",
+      "blocked": false,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": true,
+      "grant": "viewer",
+      "initials": "ZK",
+      "sub": "Kurum politikası: kurum yöneticisi · paylaşım: Görüntüleyici",
+      "roleTip": null,
+      "fixed": null
+     }
+    ],
+    "count": "7 kişi erişebiliyor",
+    "policy": "Kurumun politikası açık: kurum sahibi ve yöneticileri paylaşılmamış kurum projelerine de yönetici olarak erişir. Paylaşım kurumun üyeleriyledir; Kurum dışından biri “Davetler”den e-postayla davet edilir ve misafir olur."
+   }
+  },
+  {
+   "id": "owner",
+   "title": "Sahip olarak (Ayşe)",
+   "me": "ayse",
+   "mayShare": true,
+   "list": {},
+   "expect": {
+    "storage": {
+     "lead": "Saklama: Yönetilen PostGIS veritabanı. ",
+     "detail": "Nesneler sunucudaki veritabanında tek tek saklanır; her kayıt tek işlemde yazılır ve erişimi olan herkes hemen görür. Paylaşım alıcıya veritabanı hesabı ya da parolası vermez."
+    },
+    "rows": [
+     {
+      "userId": "ayse",
+      "name": "Ayşe Yılmaz",
+      "roleLabel": "Sahip",
+      "source": "Proje sahibi",
+      "blocked": false,
+      "you": true,
+      "owner": true,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": false,
+      "email": "ayse@buro.com.tr",
+      "initials": "AY",
+      "sub": "ayse@buro.com.tr · Proje sahibi",
+      "roleTip": null,
+      "fixed": "Kendi erişiminizi buradan değiştiremezsiniz; proje sahibine ya da başka bir yöneticiye başvurun."
+     },
+     {
+      "userId": "adsiz",
+      "name": "Adı görünmeyen hesap",
+      "roleLabel": "Görüntüleyici",
+      "source": "Paylaşım",
+      "blocked": false,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": true,
+      "canRevoke": true,
+      "grant": "viewer",
+      "initials": "AG",
+      "sub": "Paylaşım",
+      "roleTip": null,
+      "fixed": null
+     },
+     {
+      "userId": "bora",
+      "name": "Bora Tan",
+      "roleLabel": "Erişemiyor",
+      "source": "Paylaşımın süresi doldu · paylaşım: Görüntüleyici, 01.01.2026 tarihine kadar",
+      "blocked": true,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": true,
+      "grant": "viewer",
+      "expiresAt": "2026-01-01T12:00:00Z",
+      "initials": "BT",
+      "sub": "Paylaşımın süresi doldu · paylaşım: Görüntüleyici, 01.01.2026 tarihine kadar",
+      "roleTip": null,
+      "fixed": null
+     },
+     {
+      "userId": "can",
+      "name": "Çağla Öz",
+      "roleLabel": "Erişemiyor",
+      "source": "Kurumda koltuğu yok · paylaşım: Düzenleyici",
+      "blocked": true,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": true,
+      "grant": "editor",
+      "initials": "ÇÖ",
+      "sub": "Kurumda koltuğu yok · paylaşım: Düzenleyici",
+      "roleTip": null,
+      "fixed": null
+     },
+     {
+      "userId": "dilek",
+      "name": "Dilek Er",
+      "roleLabel": "Yönetici",
+      "source": "Paylaşım",
+      "blocked": false,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": true,
+      "canRevoke": true,
+      "grant": "manager",
+      "initials": "DE",
+      "sub": "Paylaşım",
+      "roleTip": null,
+      "fixed": null
+     },
+     {
+      "userId": "misafir",
+      "name": "Işıl Nur",
+      "roleLabel": "Düzenleyici",
+      "source": "Misafir (davetle)",
+      "blocked": false,
+      "you": false,
+      "owner": false,
+      "guest": true,
+      "canChange": false,
+      "canRevoke": true,
+      "email": "isil@disari.org",
+      "grant": "editor",
+      "initials": "IN",
+      "sub": "isil@disari.org · Misafir (davetle)",
+      "roleTip": "Misafirin rolü davetle verilir. Değiştirmek için erişimini kaldırıp yeni rolle yeniden davet edin.",
+      "fixed": null
+     },
+     {
+      "userId": "irem",
+      "name": "İrem Işık",
+      "roleLabel": "Yönetici",
+      "source": "Kurum politikası: kurum yöneticisi",
+      "blocked": false,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": false,
+      "initials": "İI",
+      "sub": "Kurum politikası: kurum yöneticisi",
+      "roleTip": null,
+      "fixed": "Kurum politikasından gelen erişim paylaşımla değişmez."
+     },
+     {
+      "userId": "mehmet",
+      "name": "Mehmet Demir",
+      "roleLabel": "Düzenleyici",
+      "source": "Paylaşım, 31.12.2026 tarihine kadar",
+      "blocked": false,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": true,
+      "canRevoke": true,
+      "email": "mehmet@ornek.com.tr",
+      "grant": "editor",
+      "expiresAt": "2026-12-31T20:59:59Z",
+      "initials": "MD",
+      "sub": "mehmet@ornek.com.tr · Paylaşım, 31.12.2026 tarihine kadar",
+      "roleTip": null,
+      "fixed": null
+     },
+     {
+      "userId": "zeynep",
+      "name": "Zeynep Kaya",
+      "roleLabel": "Yönetici",
+      "source": "Kurum politikası: kurum yöneticisi · paylaşım: Görüntüleyici",
+      "blocked": false,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": true,
+      "grant": "viewer",
+      "initials": "ZK",
+      "sub": "Kurum politikası: kurum yöneticisi · paylaşım: Görüntüleyici",
+      "roleTip": null,
+      "fixed": null
+     }
+    ],
+    "count": "7 kişi erişebiliyor",
+    "policy": "Kurumun politikası açık: kurum sahibi ve yöneticileri paylaşılmamış kurum projelerine de yönetici olarak erişir. Paylaşım kurumun üyeleriyledir; Kurum dışından biri “Davetler”den e-postayla davet edilir ve misafir olur."
+   }
+  },
+  {
+   "id": "no-right",
+   "title": "Paylaşma yetkisi olmayan (listeyi görse de): her satır kilitli",
+   "me": "mehmet",
+   "mayShare": false,
+   "list": {},
+   "expect": {
+    "storage": {
+     "lead": "Saklama: Yönetilen PostGIS veritabanı. ",
+     "detail": "Nesneler sunucudaki veritabanında tek tek saklanır; her kayıt tek işlemde yazılır ve erişimi olan herkes hemen görür. Paylaşım alıcıya veritabanı hesabı ya da parolası vermez."
+    },
+    "rows": [
+     {
+      "userId": "ayse",
+      "name": "Ayşe Yılmaz",
+      "roleLabel": "Sahip",
+      "source": "Proje sahibi",
+      "blocked": false,
+      "you": false,
+      "owner": true,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": false,
+      "email": "ayse@buro.com.tr",
+      "initials": "AY",
+      "sub": "ayse@buro.com.tr · Proje sahibi",
+      "roleTip": null,
+      "fixed": "Proje sahibinin erişimi paylaşımla değişmez."
+     },
+     {
+      "userId": "adsiz",
+      "name": "Adı görünmeyen hesap",
+      "roleLabel": "Görüntüleyici",
+      "source": "Paylaşım",
+      "blocked": false,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": false,
+      "grant": "viewer",
+      "initials": "AG",
+      "sub": "Paylaşım",
+      "roleTip": null,
+      "fixed": "Bu erişimi değiştirme yetkiniz yok."
+     },
+     {
+      "userId": "bora",
+      "name": "Bora Tan",
+      "roleLabel": "Erişemiyor",
+      "source": "Paylaşımın süresi doldu · paylaşım: Görüntüleyici, 01.01.2026 tarihine kadar",
+      "blocked": true,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": false,
+      "grant": "viewer",
+      "expiresAt": "2026-01-01T12:00:00Z",
+      "initials": "BT",
+      "sub": "Paylaşımın süresi doldu · paylaşım: Görüntüleyici, 01.01.2026 tarihine kadar",
+      "roleTip": null,
+      "fixed": "Bu erişimi değiştirme yetkiniz yok."
+     },
+     {
+      "userId": "can",
+      "name": "Çağla Öz",
+      "roleLabel": "Erişemiyor",
+      "source": "Kurumda koltuğu yok · paylaşım: Düzenleyici",
+      "blocked": true,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": false,
+      "grant": "editor",
+      "initials": "ÇÖ",
+      "sub": "Kurumda koltuğu yok · paylaşım: Düzenleyici",
+      "roleTip": null,
+      "fixed": "Bu erişimi değiştirme yetkiniz yok."
+     },
+     {
+      "userId": "dilek",
+      "name": "Dilek Er",
+      "roleLabel": "Yönetici",
+      "source": "Paylaşım",
+      "blocked": false,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": false,
+      "grant": "manager",
+      "initials": "DE",
+      "sub": "Paylaşım",
+      "roleTip": null,
+      "fixed": "Bu erişimi değiştirme yetkiniz yok."
+     },
+     {
+      "userId": "misafir",
+      "name": "Işıl Nur",
+      "roleLabel": "Düzenleyici",
+      "source": "Misafir (davetle)",
+      "blocked": false,
+      "you": false,
+      "owner": false,
+      "guest": true,
+      "canChange": false,
+      "canRevoke": false,
+      "email": "isil@disari.org",
+      "grant": "editor",
+      "initials": "IN",
+      "sub": "isil@disari.org · Misafir (davetle)",
+      "roleTip": "Misafirin rolü davetle verilir. Değiştirmek için erişimini kaldırıp yeni rolle yeniden davet edin.",
+      "fixed": "Bu erişimi değiştirme yetkiniz yok."
+     },
+     {
+      "userId": "irem",
+      "name": "İrem Işık",
+      "roleLabel": "Yönetici",
+      "source": "Kurum politikası: kurum yöneticisi",
+      "blocked": false,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": false,
+      "initials": "İI",
+      "sub": "Kurum politikası: kurum yöneticisi",
+      "roleTip": null,
+      "fixed": "Kurum politikasından gelen erişim paylaşımla değişmez."
+     },
+     {
+      "userId": "mehmet",
+      "name": "Mehmet Demir",
+      "roleLabel": "Düzenleyici",
+      "source": "Paylaşım, 31.12.2026 tarihine kadar",
+      "blocked": false,
+      "you": true,
+      "owner": false,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": false,
+      "email": "mehmet@ornek.com.tr",
+      "grant": "editor",
+      "expiresAt": "2026-12-31T20:59:59Z",
+      "initials": "MD",
+      "sub": "mehmet@ornek.com.tr · Paylaşım, 31.12.2026 tarihine kadar",
+      "roleTip": null,
+      "fixed": "Kendi erişiminizi buradan değiştiremezsiniz; proje sahibine ya da başka bir yöneticiye başvurun."
+     },
+     {
+      "userId": "zeynep",
+      "name": "Zeynep Kaya",
+      "roleLabel": "Yönetici",
+      "source": "Kurum politikası: kurum yöneticisi · paylaşım: Görüntüleyici",
+      "blocked": false,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": false,
+      "grant": "viewer",
+      "initials": "ZK",
+      "sub": "Kurum politikası: kurum yöneticisi · paylaşım: Görüntüleyici",
+      "roleTip": null,
+      "fixed": "Bu erişimi değiştirme yetkiniz yok."
+     }
+    ],
+    "count": "7 kişi erişebiliyor",
+    "policy": "Kurumun politikası açık: kurum sahibi ve yöneticileri paylaşılmamış kurum projelerine de yönetici olarak erişir. Paylaşım kurumun üyeleriyledir; Kurum dışından biri “Davetler”den e-postayla davet edilir ve misafir olur."
+   }
+  },
+  {
+   "id": "file-personal",
+   "title": "Kişisel alanda dosya projesi",
+   "me": "ayse",
+   "mayShare": true,
+   "list": {
+    "tenantKind": "personal",
+    "storage": "file",
+    "adminsAccessAllProjects": false
+   },
+   "expect": {
+    "storage": {
+     "lead": "Saklama: Dosya (KCAD revizyonları). ",
+     "detail": "Proje sunucuda değişmez .kcad revizyonları olarak saklanır; her kayıt yeni bir revizyondur ve dayandığı revizyonla karşılaştırılır, arada başkası kaydettiyse üzerine yazılmaz. Paylaşım alıcıya dosya deposuna ayrı bir erişim vermez."
+    },
+    "rows": [
+     {
+      "userId": "ayse",
+      "name": "Ayşe Yılmaz",
+      "roleLabel": "Sahip",
+      "source": "Proje sahibi",
+      "blocked": false,
+      "you": true,
+      "owner": true,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": false,
+      "email": "ayse@buro.com.tr",
+      "initials": "AY",
+      "sub": "ayse@buro.com.tr · Proje sahibi",
+      "roleTip": null,
+      "fixed": "Kendi erişiminizi buradan değiştiremezsiniz; proje sahibine ya da başka bir yöneticiye başvurun."
+     },
+     {
+      "userId": "adsiz",
+      "name": "Adı görünmeyen hesap",
+      "roleLabel": "Görüntüleyici",
+      "source": "Paylaşım",
+      "blocked": false,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": true,
+      "canRevoke": true,
+      "grant": "viewer",
+      "initials": "AG",
+      "sub": "Paylaşım",
+      "roleTip": null,
+      "fixed": null
+     },
+     {
+      "userId": "bora",
+      "name": "Bora Tan",
+      "roleLabel": "Erişemiyor",
+      "source": "Paylaşımın süresi doldu · paylaşım: Görüntüleyici, 01.01.2026 tarihine kadar",
+      "blocked": true,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": true,
+      "grant": "viewer",
+      "expiresAt": "2026-01-01T12:00:00Z",
+      "initials": "BT",
+      "sub": "Paylaşımın süresi doldu · paylaşım: Görüntüleyici, 01.01.2026 tarihine kadar",
+      "roleTip": null,
+      "fixed": null
+     },
+     {
+      "userId": "can",
+      "name": "Çağla Öz",
+      "roleLabel": "Erişemiyor",
+      "source": "Kurumda koltuğu yok · paylaşım: Düzenleyici",
+      "blocked": true,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": true,
+      "grant": "editor",
+      "initials": "ÇÖ",
+      "sub": "Kurumda koltuğu yok · paylaşım: Düzenleyici",
+      "roleTip": null,
+      "fixed": null
+     },
+     {
+      "userId": "dilek",
+      "name": "Dilek Er",
+      "roleLabel": "Yönetici",
+      "source": "Paylaşım",
+      "blocked": false,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": true,
+      "canRevoke": true,
+      "grant": "manager",
+      "initials": "DE",
+      "sub": "Paylaşım",
+      "roleTip": null,
+      "fixed": null
+     },
+     {
+      "userId": "misafir",
+      "name": "Işıl Nur",
+      "roleLabel": "Düzenleyici",
+      "source": "Misafir (davetle)",
+      "blocked": false,
+      "you": false,
+      "owner": false,
+      "guest": true,
+      "canChange": false,
+      "canRevoke": true,
+      "email": "isil@disari.org",
+      "grant": "editor",
+      "initials": "IN",
+      "sub": "isil@disari.org · Misafir (davetle)",
+      "roleTip": "Misafirin rolü davetle verilir. Değiştirmek için erişimini kaldırıp yeni rolle yeniden davet edin.",
+      "fixed": null
+     },
+     {
+      "userId": "irem",
+      "name": "İrem Işık",
+      "roleLabel": "Yönetici",
+      "source": "Kurum politikası: kurum yöneticisi",
+      "blocked": false,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": false,
+      "initials": "İI",
+      "sub": "Kurum politikası: kurum yöneticisi",
+      "roleTip": null,
+      "fixed": "Kurum politikasından gelen erişim paylaşımla değişmez."
+     },
+     {
+      "userId": "mehmet",
+      "name": "Mehmet Demir",
+      "roleLabel": "Düzenleyici",
+      "source": "Paylaşım, 31.12.2026 tarihine kadar",
+      "blocked": false,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": true,
+      "canRevoke": true,
+      "email": "mehmet@ornek.com.tr",
+      "grant": "editor",
+      "expiresAt": "2026-12-31T20:59:59Z",
+      "initials": "MD",
+      "sub": "mehmet@ornek.com.tr · Paylaşım, 31.12.2026 tarihine kadar",
+      "roleTip": null,
+      "fixed": null
+     },
+     {
+      "userId": "zeynep",
+      "name": "Zeynep Kaya",
+      "roleLabel": "Yönetici",
+      "source": "Kurum politikası: kurum yöneticisi · paylaşım: Görüntüleyici",
+      "blocked": false,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": true,
+      "grant": "viewer",
+      "initials": "ZK",
+      "sub": "Kurum politikası: kurum yöneticisi · paylaşım: Görüntüleyici",
+      "roleTip": null,
+      "fixed": null
+     }
+    ],
+    "count": "7 kişi erişebiliyor",
+    "policy": "Kişisel alanınızdaki bu proje yalnız paylaştığınız ve davet ettiğiniz kişilere açıktır."
+   }
+  },
+  {
+   "id": "policy-off",
+   "title": "Kurum politikası kapalı",
+   "me": "dilek",
+   "mayShare": true,
+   "list": {
+    "adminsAccessAllProjects": false
+   },
+   "expect": {
+    "storage": {
+     "lead": "Saklama: Yönetilen PostGIS veritabanı. ",
+     "detail": "Nesneler sunucudaki veritabanında tek tek saklanır; her kayıt tek işlemde yazılır ve erişimi olan herkes hemen görür. Paylaşım alıcıya veritabanı hesabı ya da parolası vermez."
+    },
+    "rows": [
+     {
+      "userId": "ayse",
+      "name": "Ayşe Yılmaz",
+      "roleLabel": "Sahip",
+      "source": "Proje sahibi",
+      "blocked": false,
+      "you": false,
+      "owner": true,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": false,
+      "email": "ayse@buro.com.tr",
+      "initials": "AY",
+      "sub": "ayse@buro.com.tr · Proje sahibi",
+      "roleTip": null,
+      "fixed": "Proje sahibinin erişimi paylaşımla değişmez."
+     },
+     {
+      "userId": "adsiz",
+      "name": "Adı görünmeyen hesap",
+      "roleLabel": "Görüntüleyici",
+      "source": "Paylaşım",
+      "blocked": false,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": true,
+      "canRevoke": true,
+      "grant": "viewer",
+      "initials": "AG",
+      "sub": "Paylaşım",
+      "roleTip": null,
+      "fixed": null
+     },
+     {
+      "userId": "bora",
+      "name": "Bora Tan",
+      "roleLabel": "Erişemiyor",
+      "source": "Paylaşımın süresi doldu · paylaşım: Görüntüleyici, 01.01.2026 tarihine kadar",
+      "blocked": true,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": true,
+      "grant": "viewer",
+      "expiresAt": "2026-01-01T12:00:00Z",
+      "initials": "BT",
+      "sub": "Paylaşımın süresi doldu · paylaşım: Görüntüleyici, 01.01.2026 tarihine kadar",
+      "roleTip": null,
+      "fixed": null
+     },
+     {
+      "userId": "can",
+      "name": "Çağla Öz",
+      "roleLabel": "Erişemiyor",
+      "source": "Kurumda koltuğu yok · paylaşım: Düzenleyici",
+      "blocked": true,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": true,
+      "grant": "editor",
+      "initials": "ÇÖ",
+      "sub": "Kurumda koltuğu yok · paylaşım: Düzenleyici",
+      "roleTip": null,
+      "fixed": null
+     },
+     {
+      "userId": "dilek",
+      "name": "Dilek Er",
+      "roleLabel": "Yönetici",
+      "source": "Paylaşım",
+      "blocked": false,
+      "you": true,
+      "owner": false,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": false,
+      "grant": "manager",
+      "initials": "DE",
+      "sub": "Paylaşım",
+      "roleTip": null,
+      "fixed": "Kendi erişiminizi buradan değiştiremezsiniz; proje sahibine ya da başka bir yöneticiye başvurun."
+     },
+     {
+      "userId": "misafir",
+      "name": "Işıl Nur",
+      "roleLabel": "Düzenleyici",
+      "source": "Misafir (davetle)",
+      "blocked": false,
+      "you": false,
+      "owner": false,
+      "guest": true,
+      "canChange": false,
+      "canRevoke": true,
+      "email": "isil@disari.org",
+      "grant": "editor",
+      "initials": "IN",
+      "sub": "isil@disari.org · Misafir (davetle)",
+      "roleTip": "Misafirin rolü davetle verilir. Değiştirmek için erişimini kaldırıp yeni rolle yeniden davet edin.",
+      "fixed": null
+     },
+     {
+      "userId": "irem",
+      "name": "İrem Işık",
+      "roleLabel": "Yönetici",
+      "source": "Kurum politikası: kurum yöneticisi",
+      "blocked": false,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": false,
+      "initials": "İI",
+      "sub": "Kurum politikası: kurum yöneticisi",
+      "roleTip": null,
+      "fixed": "Kurum politikasından gelen erişim paylaşımla değişmez."
+     },
+     {
+      "userId": "mehmet",
+      "name": "Mehmet Demir",
+      "roleLabel": "Düzenleyici",
+      "source": "Paylaşım, 31.12.2026 tarihine kadar",
+      "blocked": false,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": true,
+      "canRevoke": true,
+      "email": "mehmet@ornek.com.tr",
+      "grant": "editor",
+      "expiresAt": "2026-12-31T20:59:59Z",
+      "initials": "MD",
+      "sub": "mehmet@ornek.com.tr · Paylaşım, 31.12.2026 tarihine kadar",
+      "roleTip": null,
+      "fixed": null
+     },
+     {
+      "userId": "zeynep",
+      "name": "Zeynep Kaya",
+      "roleLabel": "Yönetici",
+      "source": "Kurum politikası: kurum yöneticisi · paylaşım: Görüntüleyici",
+      "blocked": false,
+      "you": false,
+      "owner": false,
+      "guest": false,
+      "canChange": false,
+      "canRevoke": true,
+      "grant": "viewer",
+      "initials": "ZK",
+      "sub": "Kurum politikası: kurum yöneticisi · paylaşım: Görüntüleyici",
+      "roleTip": null,
+      "fixed": null
+     }
+    ],
+    "count": "7 kişi erişebiliyor",
+    "policy": "Kurumun politikası kapalı: kurum yöneticileri de yalnız kendileriyle paylaşılan projelere erişir. Paylaşım kurumun üyeleriyledir; Kurum dışından biri “Davetler”den e-postayla davet edilir ve misafir olur."
+   }
+  }
+ ],
+ "sources": [
+  {
+   "holder": {
+    "expired": false,
+    "guest": false,
+    "userId": "a",
+    "displayName": "A",
+    "role": "owner",
+    "via": "owner"
+   },
+   "text": "Proje sahibi"
+  },
+  {
+   "holder": {
+    "expired": false,
+    "guest": false,
+    "userId": "b",
+    "displayName": "B",
+    "role": "manager",
+    "via": "policy"
+   },
+   "text": "Kurum politikası: kurum yöneticisi"
+  },
+  {
+   "holder": {
+    "expired": false,
+    "guest": false,
+    "userId": "c",
+    "displayName": "C",
+    "role": "manager",
+    "via": "policy",
+    "grant": "viewer",
+    "expiresAt": "2026-06-30T12:00:00Z"
+   },
+   "text": "Kurum politikası: kurum yöneticisi · paylaşım: Görüntüleyici, 30.06.2026 tarihine kadar"
+  },
+  {
+   "holder": {
+    "expired": false,
+    "guest": false,
+    "userId": "d",
+    "displayName": "D",
+    "role": "editor",
+    "via": "grant",
+    "grant": "editor"
+   },
+   "text": "Paylaşım"
+  },
+  {
+   "holder": {
+    "expired": false,
+    "guest": false,
+    "userId": "e",
+    "displayName": "E",
+    "role": "editor",
+    "via": "grant",
+    "grant": "editor",
+    "expiresAt": "2026-12-31T20:59:59Z"
+   },
+   "text": "Paylaşım, 31.12.2026 tarihine kadar"
+  },
+  {
+   "holder": {
+    "expired": false,
+    "guest": true,
+    "userId": "f",
+    "displayName": "F",
+    "role": "viewer",
+    "via": "grant",
+    "grant": "viewer"
+   },
+   "text": "Misafir (davetle)"
+  },
+  {
+   "holder": {
+    "expired": false,
+    "guest": true,
+    "userId": "g",
+    "displayName": "G",
+    "role": "viewer",
+    "via": "grant",
+    "grant": "viewer",
+    "expiresAt": "2027-01-15T09:00:00Z"
+   },
+   "text": "Misafir (davetle), 15.01.2027 tarihine kadar"
+  },
+  {
+   "holder": {
+    "expired": true,
+    "guest": false,
+    "userId": "h",
+    "displayName": "H",
+    "blocked": "expired",
+    "grant": "viewer",
+    "expiresAt": "2026-01-01T12:00:00Z"
+   },
+   "text": "Paylaşımın süresi doldu · paylaşım: Görüntüleyici, 01.01.2026 tarihine kadar"
+  },
+  {
+   "holder": {
+    "expired": false,
+    "guest": false,
+    "userId": "i",
+    "displayName": "I",
+    "blocked": "notMember",
+    "grant": "editor"
+   },
+   "text": "Kurumun üyesi değil · paylaşım: Düzenleyici"
+  },
+  {
+   "holder": {
+    "expired": false,
+    "guest": false,
+    "userId": "j",
+    "displayName": "J",
+    "blocked": "inactive"
+   },
+   "text": "Hesabı ya da kurum üyeliği etkin değil"
+  },
+  {
+   "holder": {
+    "expired": false,
+    "guest": true,
+    "userId": "k",
+    "displayName": "K",
+    "blocked": "guestsOff",
+    "grant": "commenter"
+   },
+   "text": "Misafir; kurum dışarıdan misafir kabul etmiyor · paylaşım: Yorumcu"
+  }
+ ],
+ "shareTips": [
+  {
+   "mayShare": false,
+   "chosen": false,
+   "text": "Bu projede paylaşım yetkiniz yok (project.share)."
+  },
+  {
+   "mayShare": false,
+   "chosen": true,
+   "text": "Bu projede paylaşım yetkiniz yok (project.share)."
+  },
+  {
+   "mayShare": true,
+   "chosen": false,
+   "text": "Önce “Kişi ekle” alanında bir kişi arayıp listeden seçin."
+  },
+  {
+   "mayShare": true,
+   "chosen": true,
+   "text": ""
+  }
+ ],
+ "shared": [
+  {
+   "name": "Mehmet Demir",
+   "role": "editor",
+   "changed": false,
+   "had": true,
+   "text": "Mehmet Demir zaten Düzenleyici rolündeydi; değişen bir şey yok."
+  },
+  {
+   "name": "Mehmet Demir",
+   "role": "viewer",
+   "changed": true,
+   "had": true,
+   "text": "Mehmet Demir artık Görüntüleyici."
+  },
+  {
+   "name": "Mehmet Demir",
+   "role": "manager",
+   "changed": true,
+   "had": false,
+   "text": "Mehmet Demir projeye Yönetici olarak eklendi."
+  },
+  {
+   "name": "Mehmet Demir",
+   "role": "commenter",
+   "changed": true,
+   "had": false,
+   "text": "Mehmet Demir projeye Yorumcu olarak eklendi."
+  }
+ ],
+ "revokeQuestions": [
+  {
+   "name": "Mehmet Demir",
+   "project": "Ada 101",
+   "guest": false,
+   "expect": {
+    "title": "Erişimi kaldır",
+    "message": "Mehmet Demir, “Ada 101” projesine artık erişemesin mi?",
+    "details": [
+     "Projeyi şu anda açık tutuyorsa kaydı hemen durur; gönderilmemiş değişiklikleri kendi cihazında kalır.",
+     "Daha önce indirdiği kopyalar ve ekranında gördükleri geri alınamaz.",
+     "Yeniden paylaşarak erişimini geri verebilirsiniz."
+    ],
+    "action": "Erişimi kaldır"
+   }
+  },
+  {
+   "name": "Işıl Nur",
+   "project": "Ada 101",
+   "guest": true,
+   "expect": {
+    "title": "Erişimi kaldır",
+    "message": "Işıl Nur, “Ada 101” projesine artık erişemesin mi?",
+    "details": [
+     "Projeyi şu anda açık tutuyorsa kaydı hemen durur; gönderilmemiş değişiklikleri kendi cihazında kalır.",
+     "Daha önce indirdiği kopyalar ve ekranında gördükleri geri alınamaz.",
+     "Kurum dışından olduğu için erişimini yeniden davetle geri verebilirsiniz."
+    ],
+    "action": "Erişimi kaldır"
+   }
+  }
+ ],
+ "finder": {
+  "nobody": [
+   {
+    "query": "zz",
+    "personal": false,
+    "expect": {
+     "text": "“zz” ile eşleşen etkin bir kurum üyesi yok. Kurum dışından biri “Davetler”den e-postayla davet edilir ve misafir olur.",
+     "invite": null
+    }
+   },
+   {
+    "query": "ali@ornek.org",
+    "personal": false,
+    "expect": {
+     "text": "“ali@ornek.org” ile eşleşen etkin bir kurum üyesi yok. Kurum dışından biri “Davetler”den e-postayla davet edilir ve misafir olur.",
+     "invite": "“ali@ornek.org” adresine e-postayla davet gönder…"
+    }
+   },
+   {
+    "query": "ali@ornek.org",
+    "personal": true,
+    "expect": {
+     "text": "“ali@ornek.org” ile eşleşen kimse yok. Kurumlarınızın dışından biriyle “Davetler”den e-postayla paylaşabilirsiniz.",
+     "invite": "“ali@ornek.org” adresine e-postayla davet gönder…"
+    }
+   },
+   {
+    "query": "ali@ornek",
+    "personal": true,
+    "expect": {
+     "text": "“ali@ornek” ile eşleşen kimse yok. Kurumlarınızın dışından biriyle “Davetler”den e-postayla paylaşabilirsiniz.",
+     "invite": null
+    }
+   }
+  ],
+  "notes": [
+   {
+    "role": null,
+    "text": null
+   },
+   {
+    "role": "owner",
+    "text": "şu an Sahip"
+   },
+   {
+    "role": "viewer",
+    "text": "şu an Görüntüleyici"
+   },
+   {
+    "role": "manager",
+    "text": "şu an Yönetici"
+   }
+  ],
+  "searches": [
+   {
+    "query": "",
+    "searches": false
+   },
+   {
+    "query": "a",
+    "searches": false
+   },
+   {
+    "query": " a ",
+    "searches": false
+   },
+   {
+    "query": "a b",
+    "searches": true
+   },
+   {
+    "query": "ab",
+    "searches": true
+   },
+   {
+    "query": "Ay",
+    "searches": true
+   }
+  ]
+ },
+ "emails": [
+  {
+   "email": "",
+   "problem": "Davet edilecek kişinin e-posta adresini yazın."
+  },
+  {
+   "email": "   ",
+   "problem": "Davet edilecek kişinin e-posta adresini yazın."
+  },
+  {
+   "email": "ali@ornek.org",
+   "problem": null
+  },
+  {
+   "email": " Ali@Ornek.ORG ",
+   "problem": null
+  },
+  {
+   "email": "ali",
+   "problem": "Davet için geçerli bir e-posta adresi yazın (ör. ad@kurum.gov.tr)."
+  },
+  {
+   "email": "@ornek.org",
+   "problem": "Davet için geçerli bir e-posta adresi yazın (ör. ad@kurum.gov.tr)."
+  },
+  {
+   "email": "ali@ornek",
+   "problem": "Davet için geçerli bir e-posta adresi yazın (ör. ad@kurum.gov.tr)."
+  },
+  {
+   "email": "ali@.org",
+   "problem": "Davet için geçerli bir e-posta adresi yazın (ör. ad@kurum.gov.tr)."
+  },
+  {
+   "email": "ali@ornek.",
+   "problem": "Davet için geçerli bir e-posta adresi yazın (ör. ad@kurum.gov.tr)."
+  },
+  {
+   "email": "ali@ornek@org",
+   "problem": "Davet için geçerli bir e-posta adresi yazın (ör. ad@kurum.gov.tr)."
+  },
+  {
+   "email": "ali veli@ornek.org",
+   "problem": "Davet için geçerli bir e-posta adresi yazın (ör. ad@kurum.gov.tr)."
+  },
+  {
+   "email": "ali@ornek.org\t",
+   "problem": null
+  },
+  {
+   "email": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@ornek.org",
+   "problem": null
+  },
+  {
+   "email": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@ornek.org",
+   "problem": "Davet için geçerli bir e-posta adresi yazın (ör. ad@kurum.gov.tr)."
+  },
+  {
+   "email": "ayşe@ornek.com.tr",
+   "problem": null
+  }
+ ],
+ "expiry": [
+  {
+   "days": 1,
+   "now": "2026-09-27T09:30:00.000Z",
+   "expiresAt": "2026-09-28T09:30:00.000Z"
+  },
+  {
+   "days": 3,
+   "now": "2026-09-27T09:30:00.000Z",
+   "expiresAt": "2026-09-30T09:30:00.000Z"
+  },
+  {
+   "days": 7,
+   "now": "2026-09-27T09:30:00.000Z",
+   "expiresAt": "2026-10-04T09:30:00.000Z"
+  },
+  {
+   "days": 14,
+   "now": "2026-09-27T09:30:00.000Z",
+   "expiresAt": null
+  },
+  {
+   "days": 30,
+   "now": "2026-09-27T09:30:00.000Z",
+   "expiresAt": "2026-10-27T09:30:00.000Z"
+  },
+  {
+   "days": 60,
+   "now": "2026-09-27T09:30:00.000Z",
+   "expiresAt": "2026-11-26T09:30:00.000Z"
+  },
+  {
+   "days": 90,
+   "now": "2026-09-27T09:30:00.000Z",
+   "expiresAt": "2026-12-26T09:20:00.000Z"
+  },
+  {
+   "days": 2,
+   "now": "2026-09-27T09:30:00.000Z",
+   "expiresAt": "2026-09-29T09:30:00.000Z"
+  },
+  {
+   "days": 91,
+   "now": "2026-09-27T09:30:00.000Z",
+   "expiresAt": "2026-12-26T09:20:00.000Z"
+  }
+ ],
+ "endOfDay": [
+  {
+   "date": "2026-12-31",
+   "expiresAt": "2026-12-31T20:59:59.000Z"
+  },
+  {
+   "date": "2026-03-29",
+   "expiresAt": "2026-03-29T20:59:59.000Z"
+  },
+  {
+   "date": "2026-10-25",
+   "expiresAt": "2026-10-25T20:59:59.000Z"
+  },
+  {
+   "date": "2028-02-29",
+   "expiresAt": "2028-02-29T20:59:59.000Z"
+  },
+  {
+   "date": "2026-02-29",
+   "expiresAt": null
+  },
+  {
+   "date": "2026-02-30",
+   "expiresAt": null
+  },
+  {
+   "date": "2026-04-31",
+   "expiresAt": null
+  },
+  {
+   "date": "2026-13-01",
+   "expiresAt": null
+  },
+  {
+   "date": "31.12.2026",
+   "expiresAt": null
+  },
+  {
+   "date": "",
+   "expiresAt": null
+  },
+  {
+   "date": "yarın",
+   "expiresAt": null
+  }
+ ],
+ "dates": [
+  {
+   "iso": "2026-12-31T20:59:59Z",
+   "text": "31.12.2026"
+  },
+  {
+   "iso": "2026-12-31T21:00:00Z",
+   "text": "01.01.2027"
+  },
+  {
+   "iso": "2026-01-01T12:00:00Z",
+   "text": "01.01.2026"
+  },
+  {
+   "iso": "2026-06-30T23:30:00Z",
+   "text": "01.07.2026"
+  }
+ ],
+ "inviteTips": [
+  {
+   "mayShare": false,
+   "email": "ali@ornek.org",
+   "text": "Bu projede davet yetkiniz yok (project.share)."
+  },
+  {
+   "mayShare": true,
+   "email": "",
+   "text": "Önce davet edilecek e-posta adresini yazın."
+  },
+  {
+   "mayShare": true,
+   "email": "  ",
+   "text": "Önce davet edilecek e-posta adresini yazın."
+  },
+  {
+   "mayShare": true,
+   "email": "ali@ornek.org",
+   "text": ""
+  }
+ ],
+ "invitations": {
+  "sorted": {
+   "list": [
+    {
+     "id": "a",
+     "email": "a@ornek.org",
+     "role": "viewer",
+     "state": "accepted",
+     "createdBy": "dilek",
+     "createdByName": "Dilek Er",
+     "createdAt": "2026-09-25T12:00:00Z",
+     "expiresAt": "2026-10-04T09:00:00Z",
+     "acceptedByName": "Ali Veli",
+     "acceptedAt": "2026-09-26T08:00:00Z"
+    },
+    {
+     "id": "b",
+     "email": "b@ornek.org",
+     "role": "viewer",
+     "state": "pending",
+     "createdBy": "dilek",
+     "createdByName": "Dilek Er",
+     "createdAt": "2026-09-21T12:00:00Z",
+     "expiresAt": "2026-10-05T12:00:00Z"
+    },
+    {
+     "id": "c",
+     "email": "c@ornek.org",
+     "role": "viewer",
+     "state": "revoked",
+     "createdBy": "dilek",
+     "createdByName": "Dilek Er",
+     "createdAt": "2026-09-26T12:00:00Z",
+     "expiresAt": "2026-10-04T09:00:00Z"
+    },
+    {
+     "id": "d",
+     "email": "d@ornek.org",
+     "role": "editor",
+     "state": "pending",
+     "createdBy": "dilek",
+     "createdByName": "Dilek Er",
+     "createdAt": "2026-09-24T12:00:00Z",
+     "expiresAt": "2026-10-08T12:00:00Z"
+    },
+    {
+     "id": "e",
+     "email": "e@ornek.org",
+     "role": "viewer",
+     "state": "expired",
+     "createdBy": "dilek",
+     "createdByName": "Dilek Er",
+     "createdAt": "2026-08-01T12:00:00Z",
+     "expiresAt": "2026-08-15T12:00:00Z"
+    }
+   ],
+   "order": [
+    "d",
+    "b",
+    "c",
+    "a",
+    "e"
+   ]
+  },
+  "counts": [
+   {
+    "states": [],
+    "text": ""
+   },
+   {
+    "states": [
+     "accepted"
+    ],
+    "text": "0 bekliyor"
+   },
+   {
+    "states": [
+     "pending",
+     "accepted",
+     "pending"
+    ],
+    "text": "2 bekliyor"
+   }
+  ],
+  "subs": [
+   {
+    "invitation": {
+     "id": "inv-1",
+     "email": "ali@ornek.org",
+     "role": "viewer",
+     "state": "pending",
+     "createdBy": "dilek",
+     "createdByName": "Dilek Er",
+     "createdAt": "2026-09-20T09:00:00Z",
+     "expiresAt": "2026-10-04T09:00:00Z"
+    },
+    "text": "Davet eden: Dilek Er, 20.09.2026 · 04.10.2026 tarihine kadar bekler"
+   },
+   {
+    "invitation": {
+     "id": "inv-1",
+     "email": "ali@ornek.org",
+     "role": "viewer",
+     "state": "accepted",
+     "createdBy": "dilek",
+     "createdByName": "Dilek Er",
+     "createdAt": "2026-09-20T09:00:00Z",
+     "expiresAt": "2026-10-04T09:00:00Z",
+     "acceptedByName": "Ali Veli",
+     "acceptedAt": "2026-09-21T10:00:00Z"
+    },
+    "text": "Davet eden: Dilek Er, 20.09.2026 · Kabul eden: Ali Veli, 21.09.2026"
+   },
+   {
+    "invitation": {
+     "id": "inv-1",
+     "email": "ali@ornek.org",
+     "role": "viewer",
+     "state": "accepted",
+     "createdBy": "dilek",
+     "createdByName": "Dilek Er",
+     "createdAt": "2026-09-20T09:00:00Z",
+     "expiresAt": "2026-10-04T09:00:00Z",
+     "acceptedByName": ""
+    },
+    "text": "Davet eden: Dilek Er, 20.09.2026 · Kabul eden: görünmüyor"
+   },
+   {
+    "invitation": {
+     "id": "inv-1",
+     "email": "ali@ornek.org",
+     "role": "viewer",
+     "state": "expired",
+     "createdBy": "dilek",
+     "createdByName": "Dilek Er",
+     "createdAt": "2026-09-20T09:00:00Z",
+     "expiresAt": "2026-10-04T09:00:00Z"
+    },
+    "text": "Davet eden: Dilek Er, 20.09.2026 · Süresi 04.10.2026 tarihinde doldu"
+   },
+   {
+    "invitation": {
+     "id": "inv-1",
+     "email": "ali@ornek.org",
+     "role": "viewer",
+     "state": "revoked",
+     "createdBy": "dilek",
+     "createdByName": "Dilek Er",
+     "createdAt": "2026-09-20T09:00:00Z",
+     "expiresAt": "2026-10-04T09:00:00Z"
+    },
+    "text": "Davet eden: Dilek Er, 20.09.2026"
+   },
+   {
+    "invitation": {
+     "id": "inv-1",
+     "email": "ali@ornek.org",
+     "role": "viewer",
+     "state": "pending",
+     "createdBy": "dilek",
+     "createdByName": "",
+     "createdAt": "2026-09-20T09:00:00Z",
+     "expiresAt": "2026-10-04T09:00:00Z"
+    },
+    "text": "Davet eden: görünmüyor, 20.09.2026 · 04.10.2026 tarihine kadar bekler"
+   }
+  ],
+  "questions": [
+   {
+    "id": "nothing",
+    "email": "yeni@ornek.org",
+    "expect": null
+   },
+   {
+    "id": "waiting",
+    "email": " B@Ornek.org ",
+    "expect": {
+     "question": {
+      "waiting": {
+       "id": "b",
+       "email": "b@ornek.org",
+       "role": "viewer",
+       "state": "pending",
+       "createdBy": "dilek",
+       "createdByName": "Dilek Er",
+       "createdAt": "2026-09-21T12:00:00Z",
+       "expiresAt": "2026-10-05T12:00:00Z"
+      }
+     },
+     "ask": {
+      "title": "Bekleyen davet var",
+      "message": "“B@Ornek.org” için yeni bir davet gönderilsin mi?",
+      "details": [
+       "21.09.2026 tarihli bekleyen davet geri alınır; onun bağlantısı artık çalışmaz. Yeni bağlantıyı yeniden iletmeniz gerekir."
+      ],
+      "go": "Yeni davet gönder",
+      "cancel": "Vazgeç"
+     }
+    }
+   },
+   {
+    "id": "holder",
+    "email": "mehmet@ornek.com.tr",
+    "expect": {
+     "question": {
+      "holder": {
+       "name": "Mehmet Demir",
+       "role": "Düzenleyici"
+      }
+     },
+     "ask": {
+      "title": "Zaten erişebiliyor",
+      "message": "“mehmet@ornek.com.tr” için yeni bir davet gönderilsin mi?",
+      "details": [
+       "Mehmet Demir projeye zaten Düzenleyici olarak erişebiliyor. Davet ancak daha güçlü bir rol verir; rolü düşürmez."
+      ],
+      "go": "Yeni davet gönder",
+      "cancel": "Vazgeç"
+     }
+    }
+   },
+   {
+    "id": "both",
+    "email": "isil@disari.org",
+    "expect": {
+     "question": {
+      "waiting": {
+       "id": "f",
+       "email": "isil@disari.org",
+       "role": "viewer",
+       "state": "pending",
+       "createdBy": "dilek",
+       "createdByName": "Dilek Er",
+       "createdAt": "2026-09-22T12:00:00Z",
+       "expiresAt": "2026-10-04T09:00:00Z"
+      },
+      "holder": {
+       "name": "Işıl Nur",
+       "role": "Düzenleyici"
+      }
+     },
+     "ask": {
+      "title": "Bekleyen davet var",
+      "message": "“isil@disari.org” için yeni bir davet gönderilsin mi?",
+      "details": [
+       "22.09.2026 tarihli bekleyen davet geri alınır; onun bağlantısı artık çalışmaz. Yeni bağlantıyı yeniden iletmeniz gerekir.",
+       "Işıl Nur projeye zaten Düzenleyici olarak erişebiliyor. Davet ancak daha güçlü bir rol verir; rolü düşürmez."
+      ],
+      "go": "Yeni davet gönder",
+      "cancel": "Vazgeç"
+     }
+    }
+   },
+   {
+    "id": "ended-invitation",
+    "email": "e@ornek.org",
+    "expect": null
+   }
+  ],
+  "questionInvitations": [
+   {
+    "id": "a",
+    "email": "a@ornek.org",
+    "role": "viewer",
+    "state": "accepted",
+    "createdBy": "dilek",
+    "createdByName": "Dilek Er",
+    "createdAt": "2026-09-25T12:00:00Z",
+    "expiresAt": "2026-10-04T09:00:00Z",
+    "acceptedByName": "Ali Veli",
+    "acceptedAt": "2026-09-26T08:00:00Z"
+   },
+   {
+    "id": "b",
+    "email": "b@ornek.org",
+    "role": "viewer",
+    "state": "pending",
+    "createdBy": "dilek",
+    "createdByName": "Dilek Er",
+    "createdAt": "2026-09-21T12:00:00Z",
+    "expiresAt": "2026-10-05T12:00:00Z"
+   },
+   {
+    "id": "c",
+    "email": "c@ornek.org",
+    "role": "viewer",
+    "state": "revoked",
+    "createdBy": "dilek",
+    "createdByName": "Dilek Er",
+    "createdAt": "2026-09-26T12:00:00Z",
+    "expiresAt": "2026-10-04T09:00:00Z"
+   },
+   {
+    "id": "d",
+    "email": "d@ornek.org",
+    "role": "editor",
+    "state": "pending",
+    "createdBy": "dilek",
+    "createdByName": "Dilek Er",
+    "createdAt": "2026-09-24T12:00:00Z",
+    "expiresAt": "2026-10-08T12:00:00Z"
+   },
+   {
+    "id": "e",
+    "email": "e@ornek.org",
+    "role": "viewer",
+    "state": "expired",
+    "createdBy": "dilek",
+    "createdByName": "Dilek Er",
+    "createdAt": "2026-08-01T12:00:00Z",
+    "expiresAt": "2026-08-15T12:00:00Z"
+   },
+   {
+    "id": "f",
+    "email": "isil@disari.org",
+    "role": "viewer",
+    "state": "pending",
+    "createdBy": "dilek",
+    "createdByName": "Dilek Er",
+    "createdAt": "2026-09-22T12:00:00Z",
+    "expiresAt": "2026-10-04T09:00:00Z"
+   }
+  ],
+  "rules": {
+   "personal": "Davet edilen, bağlantıyı açıp davetin gönderildiği e-postanın hesabıyla girince projeye paylaşımla erişir. Bağlantıyı siz iletirsiniz; KentOS e-posta göndermez.",
+   "organization": "Davet edilen, bağlantıyı açıp davetin gönderildiği e-postanın hesabıyla girince projeye erişir: kurumun üyesiyse paylaşımla, değilse misafir olarak (yalnız bu projeyi görür; rolü en çok Düzenleyici; kurum misafir almıyorsa kabul edilmez). Bağlantıyı siz iletirsiniz; KentOS e-posta göndermez."
+  },
+  "links": [
+   {
+    "change": {
+     "invitation": {
+      "id": "inv-1",
+      "email": "ali@ornek.org",
+      "role": "editor",
+      "state": "pending",
+      "createdBy": "dilek",
+      "createdByName": "Dilek Er",
+      "createdAt": "2026-09-20T09:00:00Z",
+      "expiresAt": "2026-10-04T09:00:00Z"
+     },
+     "token": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+     "replayed": false
+    },
+    "days": 14,
+    "expect": {
+     "what": "“ali@ornek.org” davet edildi: Düzenleyici, 04.10.2026 tarihine kadar bekler.",
+     "warn": "Bu bağlantı yalnız şimdi gösterilir: sunucu onu saklamaz, pencere kapanınca yeniden gösterilemez. Kopyalayıp davet ettiğiniz kişiye kendiniz iletin; 14 gün içinde, bir kez kullanılabilir. Kaybederseniz yeniden davet edin (eski bağlantı çalışmaz olur).",
+     "link": true
+    }
+   },
+   {
+    "change": {
+     "invitation": {
+      "id": "inv-1",
+      "email": "ali@ornek.org",
+      "role": "viewer",
+      "state": "pending",
+      "createdBy": "dilek",
+      "createdByName": "Dilek Er",
+      "createdAt": "2026-09-20T09:00:00Z",
+      "expiresAt": "2026-10-04T09:00:00Z"
+     },
+     "replayed": true
+    },
+    "days": 7,
+    "expect": {
+     "what": "“ali@ornek.org” davet edildi: Görüntüleyici, 04.10.2026 tarihine kadar bekler. Ancak bağlantı bu yanıtta yok; sunucu onu yalnız ilk yanıtta verir.",
+     "warn": "Bağlantıyı almak için aynı adrese yeniden davet gönderin; bu davetin bağlantısı artık çalışmaz.",
+     "link": false
+    }
+   }
+  ],
+  "revokeQuestion": {
+   "email": "ali@ornek.org",
+   "expect": {
+    "title": "Daveti geri al",
+    "message": "“ali@ornek.org” adresine gönderilen davet geri alınsın mı?",
+    "details": [
+     "Davetin bağlantısı artık çalışmaz; açan kişi projeye erişemez.",
+     "Kişiye ayrıca haber vermeniz gerekmez; isterseniz daha sonra yeniden davet edebilirsiniz."
+    ],
+    "action": "Daveti geri al",
+    "cancel": "Vazgeç"
+   }
+  },
+  "initials": [
+   {
+    "email": "ali@ornek.org",
+    "text": "A"
+   },
+   {
+    "email": "isil@disari.org",
+    "text": "İ"
+   },
+   {
+    "email": "",
+    "text": "?"
+   }
+  ],
+  "link": {
+   "token": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+   "base": "https://kentos.example/app/",
+   "link": "https://kentos.example/app/?davet=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+  }
+ },
+ "accepted": [
+  {
+   "accepted": {
+    "tenantId": "t",
+    "tenantName": "Büro",
+    "projectId": "p",
+    "projectName": "Ada 101",
+    "role": "owner",
+    "guest": false,
+    "tenantKind": "organization"
+   },
+   "text": "Projenin sahibisiniz; davet bir şey değiştirmedi."
+  },
+  {
+   "accepted": {
+    "tenantId": "t",
+    "tenantName": "Büro",
+    "projectId": "p",
+    "projectName": "Ada 101",
+    "role": "editor",
+    "guest": true,
+    "tenantKind": "organization"
+   },
+   "text": "Misafir olarak: kurumun dışındasınız ve yalnız bu projeyi görürsünüz."
+  },
+  {
+   "accepted": {
+    "tenantId": "t",
+    "tenantName": "Büro",
+    "projectId": "p",
+    "projectName": "Ada 101",
+    "role": "viewer",
+    "guest": false,
+    "tenantKind": "personal"
+   },
+   "text": "Paylaşımla: proje bir kişisel alanda."
+  },
+  {
+   "accepted": {
+    "tenantId": "t",
+    "tenantName": "Büro",
+    "projectId": "p",
+    "projectName": "Ada 101",
+    "role": "manager",
+    "guest": false,
+    "tenantKind": "organization"
+   },
+   "text": "Kurum üyesi olarak paylaşımla."
+  }
+ ],
+ "envelopes": [
+  {
+   "command": "share",
+   "args": [
+    "t1",
+    "p1",
+    "u1",
+    "editor"
+   ],
+   "expect": {
+    "commandName": "project.share",
+    "version": 1,
+    "tenantId": "t1",
+    "projectId": "p1",
+    "expectedVersions": {},
+    "input": {
+     "userId": "u1",
+     "role": "editor"
+    }
+   }
+  },
+  {
+   "command": "share",
+   "args": [
+    "t1",
+    "p1",
+    "u1",
+    "viewer",
+    "2026-12-31T20:59:59.000Z"
+   ],
+   "expect": {
+    "commandName": "project.share",
+    "version": 1,
+    "tenantId": "t1",
+    "projectId": "p1",
+    "expectedVersions": {},
+    "input": {
+     "userId": "u1",
+     "role": "viewer",
+     "expiresAt": "2026-12-31T20:59:59.000Z"
+    }
+   }
+  },
+  {
+   "command": "revoke",
+   "args": [
+    "t1",
+    "p1",
+    "u1"
+   ],
+   "expect": {
+    "commandName": "project.access.revoke",
+    "version": 1,
+    "tenantId": "t1",
+    "projectId": "p1",
+    "expectedVersions": {},
+    "input": {
+     "userId": "u1"
+    }
+   }
+  },
+  {
+   "command": "invite",
+   "args": [
+    "t1",
+    "p1",
+    " ali@ornek.org ",
+    "commenter"
+   ],
+   "expect": {
+    "commandName": "project.invite",
+    "version": 1,
+    "tenantId": "t1",
+    "projectId": "p1",
+    "expectedVersions": {},
+    "input": {
+     "email": "ali@ornek.org",
+     "role": "commenter"
+    }
+   }
+  },
+  {
+   "command": "invite",
+   "args": [
+    "t1",
+    "p1",
+    "ali@ornek.org",
+    "editor",
+    "2026-10-04T09:30:00.000Z"
+   ],
+   "expect": {
+    "commandName": "project.invite",
+    "version": 1,
+    "tenantId": "t1",
+    "projectId": "p1",
+    "expectedVersions": {},
+    "input": {
+     "email": "ali@ornek.org",
+     "role": "editor",
+     "expiresAt": "2026-10-04T09:30:00.000Z"
+    }
+   }
+  },
+  {
+   "command": "invitationRevoke",
+   "args": [
+    "t1",
+    "p1",
+    "inv-1"
+   ],
+   "expect": {
+    "commandName": "project.invitation.revoke",
+    "version": 1,
+    "tenantId": "t1",
+    "projectId": "p1",
+    "expectedVersions": {},
+    "input": {
+     "invitationId": "inv-1"
+    }
+   }
+  }
+ ],
+ "failures": [
+  {
+   "error": {
+    "status": 0,
+    "fallback": "x"
+   },
+   "failed": "Paylaşılamadı",
+   "text": "Paylaşılamadı: sunucuya ulaşılamadı. Bağlantınızı denetleyip yeniden deneyin."
+  },
+  {
+   "error": {
+    "status": 401,
+    "error": "unauthenticated",
+    "message": "Oturum yok."
+   },
+   "failed": "Paylaşılamadı",
+   "text": "Paylaşılamadı: oturumunuz sona erdi. Yeniden giriş yapıp tekrar deneyin."
+  },
+  {
+   "error": {
+    "status": 404,
+    "error": "not_found",
+    "message": "Proje bulunamadı."
+   },
+   "failed": "Erişim listesi okunamadı",
+   "text": "Erişim listesi okunamadı: proje bulunamadı; silinmiş ya da size erişimi kaldırılmış olabilir. Pencereyi kapatıp proje listesini yenileyin."
+  },
+  {
+   "error": {
+    "status": 404,
+    "error": "not_found",
+    "message": "Davet bulunamadı."
+   },
+   "failed": "Davet geri alınamadı",
+   "text": "Davet geri alınamadı: Davet bulunamadı."
+  },
+  {
+   "error": {
+    "status": 422,
+    "error": "invalid",
+    "message": "Bu kişi “Büro” kurumunun üyesi değil."
+   },
+   "failed": "Paylaşılamadı",
+   "text": "Paylaşılamadı: Bu kişi “Büro” kurumunun üyesi değil."
+  },
+  {
+   "error": {
+    "status": 503,
+    "error": "unavailable",
+    "message": "x"
+   },
+   "failed": "Rol değiştirilemedi",
+   "text": "Rol değiştirilemedi: sunucu şu an yanıt vermiyor. Birazdan yeniden deneyin."
+  },
+  {
+   "error": {
+    "status": 429,
+    "error": "rate_limited",
+    "message": "Çok sık.",
+    "retryable": true
+   },
+   "failed": "Davet gönderilemedi",
+   "text": "Davet gönderilemedi: sunucu şu an yanıt vermiyor. Birazdan yeniden deneyin."
+  },
+  {
+   "error": {
+    "status": 408,
+    "fallback": "Zaman aşımı."
+   },
+   "failed": "Kişi aranamadı",
+   "text": "Kişi aranamadı: sunucu şu an yanıt vermiyor. Birazdan yeniden deneyin."
+  },
+  {
+   "error": {
+    "status": 403,
+    "error": "forbidden",
+    "message": "Bu projede paylaşım yetkiniz yok."
+   },
+   "failed": "Erişim listesi okunamadı",
+   "text": "Erişim listesi okunamadı: Bu projede paylaşım yetkiniz yok."
+  },
+  {
+   "error": {
+    "plain": "bozuk"
+   },
+   "failed": "Paylaşılamadı",
+   "text": "Paylaşılamadı: bozuk"
+  }
+ ],
+ "lines": [
+  {
+   "line": "shareLog",
+   "args": [
+    "Ada 101",
+    "Mehmet Demir artık Yönetici."
+   ],
+   "text": "“Ada 101”: Mehmet Demir artık Yönetici."
+  },
+  {
+   "line": "roleChanged",
+   "args": [
+    "Mehmet Demir",
+    "manager"
+   ],
+   "text": "Mehmet Demir artık Yönetici."
+  },
+  {
+   "line": "revoked",
+   "args": [
+    "Mehmet Demir"
+   ],
+   "text": "Mehmet Demir artık projeye erişemiyor."
+  },
+  {
+   "line": "invitedLog",
+   "args": [
+    "Ada 101",
+    "ali@ornek.org",
+    "editor"
+   ],
+   "text": "“Ada 101”: “ali@ornek.org” Düzenleyici olarak davet edildi."
+  },
+  {
+   "line": "invitationRevokedLog",
+   "args": [
+    "Ada 101",
+    "ali@ornek.org"
+   ],
+   "text": "“Ada 101”: “ali@ornek.org” için davet geri alındı."
+  },
+  {
+   "line": "invitationRevokedSay",
+   "args": [
+    "ali@ornek.org"
+   ],
+   "text": "“ali@ornek.org” için davet geri alındı; bağlantısı artık çalışmaz."
+  }
+ ]
+}

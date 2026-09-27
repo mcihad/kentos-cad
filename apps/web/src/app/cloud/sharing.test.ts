@@ -118,7 +118,8 @@ describe('the share dialog’s words', () => {
     const end = endOfDay('2026-12-31')!;
     const local = new Date(end);
     expect([local.getFullYear(), local.getMonth(), local.getDate(), local.getHours(), local.getMinutes()]).toEqual([2026, 11, 31, 23, 59]);
-    for (const bad of ['', '31.12.2026', '2026-13-45', 'yarın']) expect(endOfDay(bad)).toBeNull();
+    for (const bad of ['', '31.12.2026', '2026-13-45', 'yarın', '2026-02-30', '2026-02-29', '2026-04-31']) expect(endOfDay(bad), bad).toBeNull();
+    expect(endOfDay('2028-02-29')).not.toBeNull();
   });
 
   it('says what failed, why, and what to do', () => {
