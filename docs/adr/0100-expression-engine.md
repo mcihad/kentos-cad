@@ -101,7 +101,24 @@
 
 ## Ölçüm
 
-`docs/perf/expression-native-eski-2026-09-27.md` ve `docs/perf/expression-web-eski-2026-09-27.md`: bugünkü motor, taşımadan sonra aynı kodla, 10⁵ ve 10⁶ nesnede. Yeni motor aynı betiklerle ölçülür (dilim 2).
+i5-11300H, 15 GB, Ubuntu 26.04.1; native `--release`, web Node 24 ve `--profile wasm`. Nesneler: Parsel 1…n, Nitelik (her üçüncüsü Tarla), 0…1000 m² alan. p50.
+
+- **Kaynak:** taban `docs/perf/expression-{native,web}-eski-2026-09-27.md` (23cc8f7, ağaç değerlendiricisi), sütun motoru `docs/perf/expression-{native,web}-yeni-2026-09-27.md` (4d2060a). Native'de eski ve yeni aynı koşuda ölçülür (`tests/perf.rs`, eski `tests/reference`).
+- **Native süre** yalnız değerlendirmedir: tablo verilir, bütün değerler okunur.
+- **Web süresi** sayfanın tabloyu kurmasını, WASM çağrısını ve değerlerin okunmasını kapsar.
+
+| 10⁶ nesne | Native eski → yeni | Web eski → yeni |
+|---|---|---|
+| `Nitelik = 'Arsa' ve $alan > 500` | 72,4 → 15,1 ms (4,8×) | 169,5 → 84,5 ms (2,0×) |
+| `'P' \|\| doldur($sıra, 5)` | 111,3 → 74,3 ms (1,5×) | 179,7 → 135,3 ms (1,3×) |
+| `metin($alan, 2) \|\| ' m²'` | 112,7 → 85,4 ms (1,3×) | 196,2 → 179,3 ms (1,1×) |
+| `yuvarla($alan, 2)` | 55,5 → 9,9 ms (5,6×) | 71,5 → 31,4 ms (2,3×) |
+| `$alan / 10000 > 0.05 ve $uzunluk < 400` | 73,5 → 10,6 ms (7,0×) | 116,7 → 39,5 ms (3,0×) |
+| `Parsel * 2 + 1` | 62,8 → 33,2 ms (1,9×) | 176,8 → 151,3 ms (1,2×) |
+
+- **10⁵ nesnede** kat farkları aynıdır; örneğin ilk satır native 7,19 → 1,47 ms.
+- **Tek nesne yolu** (`Expr::evaluate`, 10⁵ nesne) eskiyle aynı ya da hızlıdır (1,0–1,4×).
+- **Web'de kalan süre sınırdadır:** tabloyu kurmak, ölçü yanıtını (10⁶ nesnede 48 MB) WASM'a kopyalamak, sonucu okumak. Dilim 3'te değerlendirme deponun içinde, geometri değerleri sınırdan geçmeden yapılır.
 
 ## Sonuçlar
 
