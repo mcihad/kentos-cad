@@ -25,8 +25,6 @@ use super::{Event, Field, ImportDraft, Manager, ev};
 use crate::app::Message;
 use crate::style::thumbs::{Look, Thumbs};
 
-/// Why an edit that needs the symbol designer waits.
-pub const NOT_YET: &str = "Sembol tasarımcısı web'de var; masaüstüne henüz taşınmadı.";
 /// Why an edit that needs the SVG editor waits.
 pub const SVG_NOT_YET: &str = "SVG çizim düzenleyicisi web'de var; masaüstüne henüz taşınmadı.";
 
@@ -321,20 +319,28 @@ pub fn details<'a>(
     }
     let id = item.id().to_owned();
     let mut actions = Row::new().spacing(6);
-    // Symbols open in the symbol designer, SVG drawings in the SVG editor; both are the web's for now.
-    let editor_note = match item.kind() {
-        ItemKind::Symbol => Some(NOT_YET),
-        ItemKind::Asset if item.format() == Some("svg") => Some(SVG_NOT_YET),
+    // Symbols open in Sembol tasarımcısı (a system one's copy in Kitaplığım);
+    // SVG drawings in the SVG editor, the web's for now.
+    let edit_label = if editable {
+        "Düzenle"
+    } else {
+        "Kopyasını düzenle"
+    };
+    let editor = match item.kind() {
+        ItemKind::Symbol => Some((
+            if editable {
+                "Sembol tasarımcısında açar"
+            } else {
+                "Kitaplığım'a bir kopya alır ve onu açar"
+            },
+            Some(ev(Event::Edit(id.clone()))),
+        )),
+        ItemKind::Asset if item.format() == Some("svg") => Some((SVG_NOT_YET, None)),
         ItemKind::Asset => None,
     };
-    if let Some(note) = editor_note {
-        let edit_label = if editable {
-            "Düzenle"
-        } else {
-            "Kopyasını düzenle"
-        };
+    if let Some((note, press)) = editor {
         actions = actions.push(tip(
-            small_button("edit", edit_label.into(), None, false),
+            small_button("edit", edit_label.into(), press, false),
             Tip::new(edit_label).body(note),
             iced::widget::tooltip::Position::Top,
         ));
@@ -407,7 +413,7 @@ pub fn details<'a>(
         ));
     }
     let mut buttons = Column::new().spacing(6);
-    if editor_note.is_some() || item.kind() == ItemKind::Symbol {
+    if item.kind() == ItemKind::Symbol || item.format() == Some("svg") {
         buttons = buttons.push(actions.wrap());
     }
     column![

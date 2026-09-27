@@ -4,6 +4,7 @@ import type { GeometryClass } from '../../style/geometry';
 import { newItemId } from '../../style/library';
 import { h } from '../dom';
 import { PopupMenu } from '../widgets/PopupMenu';
+import { defaultFor } from './designerModel';
 import { drawNow } from './thumbs';
 
 /**
@@ -53,7 +54,8 @@ export function symbolSlot(ctx: AppContext, ref: SymbolRef | undefined, cls: Geo
           label: ref && 'ref' in ref ? 'Kopyasını burada düzenle…' : 'Düzenle…',
           icon: 'edit',
           disabled: !sym && !!ref,
-          run: () => editHere(sym ? structuredClone(sym) : defaultFor(cls)),
+          // What the slot shows: its symbol, or the plain look it falls back to (a default only without one).
+          run: () => editHere(structuredClone(sym ?? shown ?? defaultFor(cls))),
         },
         {
           label: 'Kitaplığıma kaydet',
@@ -83,10 +85,4 @@ export function symbolSetSlots(ctx: AppContext, set: SymbolSet, classes: readonl
     { class: 'slots' },
     classes.map((c) => symbolSlot(ctx, set[c], c, (ref) => onChange({ ...set, [c]: ref }), `${title} (${CLASS_LABEL[c].toLocaleLowerCase('tr')})`, simple?.[c])),
   );
-}
-
-function defaultFor(cls: GeometryClass): Symbol {
-  if (cls === 'fill') return { type: 'fill', layers: [{ id: '0', type: 'simpleFill', color: '#C9D6E3' }, { id: '1', type: 'simpleLine', color: 'ink', width: 0.2 }] };
-  if (cls === 'line') return { type: 'line', layers: [{ id: '0', type: 'simpleLine', color: 'ink', width: 0.35 }] };
-  return { type: 'marker', layers: [{ id: '0', type: 'shape', shape: 'circle', size: 2.4, fill: 'ink' }] };
 }

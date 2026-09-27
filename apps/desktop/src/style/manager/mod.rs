@@ -18,7 +18,7 @@
 
 mod assign;
 mod details;
-mod files;
+pub(crate) mod files;
 #[cfg(test)]
 mod tests;
 mod update;
@@ -171,6 +171,10 @@ pub enum Event {
     DeleteCancelled,
     /// Seçili nesnelere uygula.
     Apply(String),
+    /// Düzenle: a symbol opens in Sembol tasarımcısı (a system one's copy in Kitaplığım).
+    Edit(String),
+    /// Yeni sembol: a new symbol of a kind (fill, line, marker) in the designer.
+    NewSymbol(&'static str),
     ImportFile,
     ImportClipboard,
     Picked(Option<(String, Vec<u8>)>),

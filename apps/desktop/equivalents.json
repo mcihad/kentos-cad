@@ -205,7 +205,8 @@
     "apps/web/src/ui/style/StyleManager.ts#openStyleManager": {
       "desktop": "partial",
       "where": "apps/desktop/src/style/manager/ (ADR 0092)",
-      "reason": "Düzenle ve Yeni sembol sembol tasarımcısını, SVG çizimi SVG düzenleyicisini açar; ikisi masaüstüne henüz taşınmadı, düğmeleri soluk ve nedenini söyler."
-    }
+      "reason": "SVG çizimi SVG düzenleyicisini açar; masaüstüne henüz taşınmadı, düğmesi soluk ve nedenini söyler. Düzenle ve Yeni sembol Sembol tasarımcısını açar (ADR 0094)."
+    },
+    "apps/web/src/ui/style/SymbolDesigner.ts#openSymbolDesigner": { "desktop": "implemented", "where": "apps/desktop/src/style/designer/ (ADR 0094)" }
   }
 }

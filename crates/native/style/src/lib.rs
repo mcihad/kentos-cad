@@ -17,6 +17,8 @@
 //!   atlas images and how far they reach: what the renderer draws.
 //! - [`file`]: the .kstil style file (read, checked, cleaned, exported, taken in).
 //! - [`legend`]: the drawing's legend, layer by layer, and the picture Lejant saves.
+//! - [`designer`]: the symbol designer's model: layer types, new layers,
+//!   summaries, form patches and the layer list's edits.
 //! - [`preview`]: a symbol on a sample object, built as a styled layer for its picture.
 //! - [`renderer`]: a layer's renderer as the layer style window edits it,
 //!   [`classify`]: the classes the window makes of the objects' values, and
@@ -34,6 +36,7 @@
 pub mod batches;
 pub mod classify;
 pub mod color;
+pub mod designer;
 pub mod file;
 pub mod legend;
 pub mod library;
