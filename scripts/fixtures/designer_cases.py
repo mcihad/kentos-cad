@@ -86,6 +86,7 @@ PARAM_TYPES = ['features', 'number', 'string', 'boolean', 'enum', 'layer', 'poin
 CANVAS = {
     'inputW': 190, 'inputH': 52, 'stepW': 240, 'stepH': 60, 'grid': 10, 'zoomMin': 0.35, 'zoomMax': 2, 'zoomStep': 1.25,
     'wheel': 0.0015, 'fitPad': 48, 'empty': {'x': 24, 'y': 24, 'k': 1}, 'drag': 3, 'paletteDrag': 5, 'column': 290, 'row': 100, 'bend': 40,
+    'labelGap': 8, 'labelRise': 6, 'labelRow': 13,
 }
 HISTORY = {'depth': 100, 'coalesceMs': 1200}
 
@@ -505,9 +506,36 @@ def curve(a, b):
     return {'c1': {'x': a['x'] + dx, 'y': a['y']}, 'c2': {'x': b['x'] - dx, 'y': b['y']}}
 
 
-def curve_mid(a, b):
-    c = curve(a, b)
-    return {'x': 0.125 * a['x'] + 0.375 * c['c1']['x'] + 0.375 * c['c2']['x'] + 0.125 * b['x'], 'y': 0.5 * a['y'] + 0.5 * b['y']}
+def edge_labels(model):
+    """Each edge's label at its target step: right-aligned left of the entry, one row per incoming edge upward, the
+    lowest source nearest the entry (ties: the edges' order)."""
+    edges = edges_of(model)
+
+    def source_y(frm):
+        if frm['kind'] == 'input':
+            return model.get('inputPositions', {}).get(frm['name'], {'x': 40, 'y': 40})['y'] + CANVAS['inputH'] / 2
+        step = next((s for s in model['steps'] if s['id'] == frm['id']), None)
+        return (step.get('position') if step and step.get('position') else {'x': 0, 'y': 0})['y'] + CANVAS['stepH'] / 2
+    rows = {}
+    into = {}
+    for i, e in enumerate(edges):
+        into.setdefault(e['to'], []).append(i)
+    for indices in into.values():
+        # Python's sort is stable: descending source y, ties in the edges' order.
+        for row, i in enumerate(sorted(indices, key=lambda k: -source_y(edges[k]['from']))):
+            rows[i] = row
+    out = []
+    for i, e in enumerate(edges):
+        step = next((s for s in model['steps'] if s['id'] == e['to']), None)
+        if not step:
+            continue
+        tool = TOOL.get(step['tool'])
+        names = [next((d['label'] for d in (tool or {}).get('parameters', []) if d['name'] == p), p) for p in e['params']]
+        pos = step.get('position') or {'x': 0, 'y': 0}
+        entry = {'x': pos['x'], 'y': pos['y'] + CANVAS['stepH'] / 2}
+        out.append({'from': e['from'], 'to': e['to'], 'text': edge_label(names), 'title': ', '.join(names),
+                    'at': {'x': entry['x'] - CANVAS['labelGap'], 'y': entry['y'] - CANVAS['labelRise'] - rows[i] * CANVAS['labelRow']}})
+    return out
 
 
 def bounds(model):
@@ -528,8 +556,12 @@ def fit_view(b, width, height):
     return {'k': k, 'x': (width - b['w'] * k) / 2 - b['x'] * k, 'y': (height - b['h'] * k) / 2 - b['y'] * k}
 
 
-def zoom_at(view, p, f):
-    k = min(CANVAS['zoomMax'], max(CANVAS['zoomMin'], view['k'] * f))
+def zoom_floor(fitted_k):
+    return min(CANVAS['zoomMin'], fitted_k)
+
+
+def zoom_at(view, p, f, floor=None):
+    k = min(CANVAS['zoomMax'], max(CANVAS['zoomMin'] if floor is None else floor, view['k'] * f))
     wx = (p['x'] - view['x']) / view['k']
     wy = (p['y'] - view['y']) / view['k']
     return {'k': k, 'x': p['x'] - wx * k, 'y': p['y'] - wy * k}
@@ -628,6 +660,7 @@ SEQUENCES = [
         {'op': 'setSource', 'step': 'oznitelikHesapla', 'param': 'value', 'src': {'kind': 'input', 'name': 'metin'}},
         {'op': 'addStep', 'tool': 't.select', 'at': {'x': 330, 'y': 160}, 'from': {'kind': 'input', 'name': 'metin2'}},
         {'op': 'addStep', 'tool': 't.calc', 'from': {'kind': 'step', 'id': 'ifadeyleSec'}},
+        {'op': 'setSource', 'step': 'oznitelikHesapla', 'param': 'input', 'src': {'kind': 'output', 'step': 'ifadeyleSec', 'output': 'selected'}},
         {'op': 'caption', 'step': 'ifadeyleSec', 'caption': '  Seçim  '},
         {'op': 'setSource', 'step': 'ifadeyleSec', 'param': 'note', 'src': {'kind': 'value', 'value': 'kontrol'}},
         {'op': 'caption', 'step': 'oznitelikHesapla', 'caption': 'Ada alanı'},
@@ -672,11 +705,6 @@ def model_facts(title, model):
                 continue
             wires.append({'from': frm, 'to': s['id'], 'choices': connect_choices(model, frm, s['id'])})
     edges = edges_of(model)
-    labels = []
-    for e in edges:
-        tool = TOOL.get(next(s for s in model['steps'] if s['id'] == e['to'])['tool'])
-        names = [next((d['label'] for d in (tool or {}).get('parameters', []) if d['name'] == p), p) for p in e['params']]
-        labels.append(edge_label(names))
     order = order_steps(model)
     return {
         'title': title,
@@ -684,7 +712,7 @@ def model_facts(title, model):
         'status': status(problems, len(model['steps']), len(model['inputs'])),
         'order': order,
         'edges': edges,
-        'edgeLabels': labels,
+        'edgeLabels': edge_labels(model),
         'stepMeta': [{'step': s['id'], 'meta': step_meta(s, first.get(s['id']))} for s in model['steps']],
         'sources': sources,
         'wires': wires,
@@ -695,6 +723,14 @@ def model_facts(title, model):
 A = {'x': 230, 'y': 66}
 POINTS = [(A, {'x': 330, 'y': 70}), (A, {'x': 830, 'y': 190}), ({'x': 520, 'y': 90}, {'x': 300, 'y': 400}), (A, A), ({'x': 12.5, 'y': 7}, {'x': 101.25, 'y': -33})]
 FITS = [(None, 1000, 600), ({'x': 40, 'y': 40, 'w': 530, 'h': 160}, 1000, 600), ({'x': 40, 'y': 40, 'w': 2000, 'h': 900}, 1000, 600), ({'x': -200, 'y': 10, 'w': 900, 'h': 1400}, 820, 560), ({'x': 40, 'y': 40, 'w': 190, 'h': 52}, 0, 0)]
+FLOORS = [1, 0.8, 0.35, 0.3314285714285714, 0.12]
+# With the floor a fit left: a big model's fitted view zoomed out stays, zoomed in grows; above zoomMin the floor is zoomMin.
+FLOOR_ZOOMS = [
+    ({'x': 30, 'y': 20, 'k': 0.3314285714285714}, {'x': 410, 'y': 280}, 1 / 1.25, 0.3314285714285714),
+    ({'x': 30, 'y': 20, 'k': 0.3314285714285714}, {'x': 410, 'y': 280}, 1.25, 0.3314285714285714),
+    ({'x': 30, 'y': 20, 'k': 0.4}, {'x': 410, 'y': 280}, 1 / 1.25, 0.3314285714285714),
+    ({'x': 0, 'y': 0, 'k': 0.5}, {'x': 100, 'y': 100}, 0.5, 0.35),
+]
 ZOOMS = [({'x': 0, 'y': 0, 'k': 1}, {'x': 500, 'y': 300}, 1.25), ({'x': 24, 'y': 24, 'k': 1.9}, {'x': 100, 'y': 100}, 1.25), ({'x': -30, 'y': 12, 'k': 0.4}, {'x': 400, 'y': 250}, 1 / 1.25), ({'x': 10, 'y': 10, 'k': 1}, {'x': 0, 'y': 0}, math.exp(-120 * CANVAS['wheel'])), ({'x': 10, 'y': 10, 'k': 1}, {'x': 250, 'y': 125}, math.exp(480 * CANVAS['wheel']))]
 SNAPS = [0, 4, 5, 14.99, 15, -15, -16, 123.4, 1234.5]
 SLUGS = ['Nokta öneki', 'Parseller', 'Köşe noktalarını numarala', 'İfadeyle seç', '3 nokta', '', '  Çıktı katmanı  ', 'ALAN (m²)', 'a_b-c', 'Işık ve ıslak', 'Kâğıt', 'Öznitelik hesapla']
@@ -805,10 +841,12 @@ file = {
     'savedLabels': [{'label': s, 'saved': s if s.strip() else 'Adsız model'} for s in SAVED_LABELS],
     'joins': joins_script(JOINS),
     'geometry': {
-        'curves': [{'a': a, 'b': b, 'curve': curve(a, b), 'mid': curve_mid(a, b)} for a, b in POINTS],
+        'curves': [{'a': a, 'b': b, 'curve': curve(a, b)} for a, b in POINTS],
         'ports': {'input': {'at': {'x': 40, 'y': 130}, 'port': {'x': 230, 'y': 156}}, 'step': {'at': {'x': 330, 'y': 40}, 'port': {'x': 570, 'y': 70}, 'entry': {'x': 330, 'y': 70}}},
         'fits': [{'bounds': b, 'width': w, 'height': h, 'view': fit_view(b, w, h)} for b, w, h in FITS],
-        'zooms': [{'view': v, 'at': p, 'factor': f, 'result': zoom_at(v, p, f)} for v, p, f in ZOOMS],
+        'zooms': [{'view': v, 'at': p, 'factor': f, 'result': zoom_at(v, p, f)} for v, p, f in ZOOMS]
+        + [{'view': v, 'at': p, 'factor': f, 'floor': fl, 'result': zoom_at(v, p, f, fl)} for v, p, f, fl in FLOOR_ZOOMS],
+        'floors': [{'fitted': k, 'floor': zoom_floor(k)} for k in FLOORS],
         'snaps': [{'value': v, 'snapped': snap(v)} for v in SNAPS],
     },
 }

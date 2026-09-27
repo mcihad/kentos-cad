@@ -1,7 +1,7 @@
 import { listen, type Disposable } from '../../../core/disposable';
 import type { ProcessingModel } from '../../../processing/model';
 import { stepName } from '../../../processing/model';
-import { edgesOf, INPUT_TYPES } from '../../../processing/modelEdit';
+import { INPUT_TYPES } from '../../../processing/modelEdit';
 import type { ProcessingTool } from '../../../processing/types';
 import { h } from '../../dom';
 import { icon } from '../../icons';
@@ -9,9 +9,8 @@ import {
   boxesBounds,
   CANVAS,
   curve as edgeCurve,
-  curveMid,
   DESIGNER_TEXTS,
-  edgeLabel,
+  edgeLabels,
   fitView,
   inputPort,
   snap,
@@ -19,6 +18,7 @@ import {
   stepMeta,
   stepPort,
   zoomAt,
+  zoomFloor,
   type NodeRef,
   type Pt,
   type View,
@@ -56,6 +56,8 @@ export class ModelCanvas {
   private readonly events: CanvasEvents;
   private readonly lookup: (id: string) => ProcessingTool | undefined;
   private view: View = { x: 0, y: 0, k: 1 };
+  /** Zooming's lowest scale: the last fit's when that was below `zoomMin` (designerPlan.ts `zoomFloor`). */
+  private floor: number = CANVAS.zoomMin;
   private model: ProcessingModel | null = null;
   private selected: NodeRef | null = null;
   private problems = new Map<string, string>();
@@ -122,6 +124,7 @@ export class ModelCanvas {
   fit(): void {
     const r = this.el.getBoundingClientRect();
     this.view = fitView(this.model && boxesBounds(this.model), r.width, r.height);
+    this.floor = zoomFloor(this.view.k);
     this.applyView();
   }
 
@@ -132,7 +135,7 @@ export class ModelCanvas {
   }
 
   private zoomAt(p: Pt, f: number): void {
-    this.view = zoomAt(this.view, p, f);
+    this.view = zoomAt(this.view, p, f, this.floor);
     this.applyView();
   }
 
@@ -202,7 +205,9 @@ export class ModelCanvas {
   private drawEdges(): void {
     const m = this.model!;
     this.edges.replaceChildren();
-    for (const e of edgesOf(m)) {
+    // The curves first, then every label over them, at its target step (designerPlan.ts `edgeLabels`).
+    const texts: SVGTextElement[] = [];
+    for (const e of edgeLabels(m, this.lookup)) {
       const a = this.portOf(e.from);
       const target = m.steps.find((s) => s.id === e.to);
       if (!a || !target) continue;
@@ -211,21 +216,19 @@ export class ModelCanvas {
       path.setAttribute('d', curve(a, b));
       path.classList.add('medge');
       if (sameRef(e.from, this.selected) || sameRef({ kind: 'step', id: e.to }, this.selected)) path.classList.add('medge--on');
-      const tool = this.lookup(target.tool);
-      const labels = e.params.map((p) => tool?.parameters.find((d) => d.name === p)?.label ?? p);
       const title = document.createElementNS(SVG, 'title');
-      title.textContent = labels.join(', ');
+      title.textContent = e.title;
       path.append(title);
-      // Label at the middle of the curve: edges into the same box do not stack their labels.
-      const mid = curveMid(a, b);
+      this.edges.append(path);
       const text = document.createElementNS(SVG, 'text');
       text.classList.add('medge__label');
-      text.setAttribute('x', String(mid.x));
-      text.setAttribute('y', String(mid.y - 6));
-      text.setAttribute('text-anchor', 'middle');
-      text.textContent = edgeLabel(labels);
-      this.edges.append(path, text);
+      text.setAttribute('x', String(e.at.x));
+      text.setAttribute('y', String(e.at.y));
+      text.setAttribute('text-anchor', 'end');
+      text.textContent = e.text;
+      texts.push(text);
     }
+    this.edges.append(...texts);
   }
 
   private refOf(node: HTMLElement): NodeRef {

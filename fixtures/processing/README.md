@@ -174,16 +174,16 @@ Dosya kendi araçlarıyla çalışır (`tools`, kimlikleri `t.` önekli). Web'in
 | `format`, `version` | `"kentos.modelDesigner"`, `1` |
 | `texts` | Tasarımcının sözleri: başlık, alt çubuk, durum, kaydetme, kapatma sorusu, silme, çizimden nokta, tel menüsü, diyagram, parçalar, ayarlar. Bir değerden yapılan söz `{ sample, text }` |
 | `inputTypes` | “Girdi ekle”nin türleri sırasıyla: tür, ad, simge, ipucu |
-| `canvas` | Diyagramın sayıları: kutu boyları, ızgara (10), ölçek sınırları (0,35–2), düğmelerin katı (1,25), tekerleğin katsayısı, sığdırma payı (48), boş diyagramın görünümü, sürüklemenin başlama uzaklıkları (diyagramda 3, parçalarda 5), yeni kutunun sağa ve aşağı uzaklığı (290, 100), eğrinin en kısa kolu (40) |
+| `canvas` | Diyagramın sayıları: kutu boyları, ızgara (10), ölçek sınırları (0,35–2), düğmelerin katı (1,25), tekerleğin katsayısı, sığdırma payı (48), boş diyagramın görünümü, sürüklemenin başlama uzaklıkları (diyagramda 3, parçalarda 5), yeni kutunun sağa ve aşağı uzaklığı (290, 100), eğrinin en kısa kolu (40), kenar yazılarının yeri (girişin 8 px solunda biter, ilk satır 6 px üstte, her satır 13 px) |
 | `history` | Geri alma: en çok 100 adım; aynı alana 1200 ms içinde yazmak aynı adım |
 | `tools`, `defaults` | Dosyanın araçları ve varsayılanları hesaplamanın bağlamı (`DefaultsContext`) |
 | `canFeed` | Her türün besleyebildiği parametre türleri |
 | `slugs` | Bir addan türeyen kimlik: Türkçe büyük harf, Ç Ğ İ Ö Ş Ü düz harfe, küçük harf, harf ve rakam dışı ayırıcı, sonraki sözcüklerin baş harfi büyük; harfle başlamayana `g` |
 | `newModel`, `copyLabel` | Yeni modelin alanları (kimlik dışında); kopyanın adı |
 | `sequences` | Boş bir modelden (kimliği `m-fixture`) başlayan düzenleme dizileri. Her adım: işlem (`op`: `addInput`, `addStep`, `setSource`, `removeInput`, `removeStep`, `inputFromParam`, `addOutput`, `caption`, `autoLayout`), sonucu (verilen ad ya da kimlik; yoksa `null`), sonraki model (JSON'u) ve modelin sorunları (`step`, `message`) |
-| `models` | Her dizinin son modeli ve tasarımcının ondan okudukları: durum satırı, adımların sırası (ya da döngünün iletisi), kenarlar ve yazıları, kutuların ikinci satırı, her adımın her parametresinin uygun kaynakları ve kaynak listesinin sözü, her kaynaktan her adıma çekilen telin menüsü, kutuların kapladığı alan |
+| `models` | Her dizinin son modeli ve tasarımcının ondan okudukları: durum satırı, adımların sırası (ya da döngünün iletisi), kenarlar ve yazıları (sözü, ipucu ve hedef adımın yanındaki yeri), kutuların ikinci satırı, her adımın her parametresinin uygun kaynakları ve kaynak listesinin sözü, her kaynaktan her adıma çekilen telin menüsü, kutuların kapladığı alan |
 | `spots` | Yeni kutunun yeri: seçili kutunun sağı, yoksa en alttaki kutunun altı; boş modelde (40, 40) |
 | `titles`, `savedLabels` | Pencere başlığı; kaydedilen ad (boşken “Adsız model”) |
 | `joins` | Bir değişikliğin önceki geri alma adımına katılıp katılmadığı, sırayla: alanın anahtarı (yoksa `null`), zaman (ms) |
-| `geometry` | Kenarların denetim noktaları ve ortası, kutuların çıkış ve giriş noktaları, sığdırma, yakınlaştırma, ızgaraya oturtma (JavaScript'in yuvarlamasıyla, yarım yukarı) |
+| `geometry` | Kenarların denetim noktaları, kutuların çıkış ve giriş noktaları, sığdırma, yakınlaştırma (`floor`: en az ölçek; yoksa 0,35), sığdırmanın bıraktığı en az ölçek (`floors`: 0,35 ya da sığdırmanın ölçeği, hangisi küçükse), ızgaraya oturtma (JavaScript'in yuvarlamasıyla, yarım yukarı) |
 

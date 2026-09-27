@@ -25,11 +25,10 @@ import {
   COALESCE_MS,
   connectChoices,
   curve,
-  curveMid,
   DESIGNER_HISTORY,
   DESIGNER_TEXTS,
   designerStatus,
-  edgeLabel,
+  edgeLabels,
   fitView,
   inputPort,
   joins,
@@ -41,6 +40,7 @@ import {
   stepMeta,
   stepPort,
   zoomAt,
+  zoomFloor,
   type NodeRef,
   type Pt,
   type View,
@@ -88,7 +88,7 @@ const F = JSON.parse(Object.values(files)[0]) as {
     status: unknown;
     order: unknown;
     edges: unknown;
-    edgeLabels: string[];
+    edgeLabels: unknown;
     stepMeta: { step: string; meta: unknown }[];
     sources: { step: string; param: string; options: unknown; text: string }[];
     wires: { from: NodeRef; to: string; choices: unknown }[];
@@ -99,10 +99,11 @@ const F = JSON.parse(Object.values(files)[0]) as {
   savedLabels: { label: string; saved: string }[];
   joins: { key: string | null; at: number; joins: boolean }[];
   geometry: {
-    curves: { a: Pt; b: Pt; curve: unknown; mid: unknown }[];
+    curves: { a: Pt; b: Pt; curve: unknown }[];
     ports: { input: { at: Pt; port: Pt }; step: { at: Pt; port: Pt; entry: Pt } };
     fits: { bounds: { x: number; y: number; w: number; h: number } | null; width: number; height: number; view: View }[];
-    zooms: { view: View; at: Pt; factor: number; result: View }[];
+    zooms: { view: View; at: Pt; factor: number; floor?: number; result: View }[];
+    floors: { fitted: number; floor: number }[];
     snaps: { value: number; snapped: number }[];
   };
 };
@@ -213,13 +214,7 @@ describe('the model designer (fixtures/processing/v1/designer.json)', () => {
       expect(plain(orderSteps(model)), m.title).toEqual(m.order);
       const edges = edgesOf(model);
       expect(plain(edges), m.title).toEqual(m.edges);
-      expect(
-        edges.map((e) => {
-          const tool = lookup(model.steps.find((s) => s.id === e.to)!.tool);
-          return edgeLabel(e.params.map((p) => tool?.parameters.find((d) => d.name === p)?.label ?? p));
-        }),
-        m.title,
-      ).toEqual(m.edgeLabels);
+      expect(plain(edgeLabels(model, lookup)), m.title).toEqual(m.edgeLabels);
       expect(model.steps.map((s) => ({ step: s.id, meta: stepMeta(s, lookup(s.tool), first.get(s.id)) })), m.title).toEqual(m.stepMeta);
       for (const c of m.sources) {
         const step = model.steps.find((s) => s.id === c.step)!;
@@ -248,11 +243,11 @@ describe('the model designer (fixtures/processing/v1/designer.json)', () => {
     const G = F.geometry;
     for (const c of G.curves) {
       expect(plain(curve(c.a, c.b)), JSON.stringify(c)).toEqual(c.curve);
-      expect(plain(curveMid(c.a, c.b)), JSON.stringify(c)).toEqual(c.mid);
     }
     expect([inputPort(G.ports.input.at), stepPort(G.ports.step.at), stepEntry(G.ports.step.at)]).toEqual([G.ports.input.port, G.ports.step.port, G.ports.step.entry]);
     for (const c of G.fits) expect(plain(fitView(c.bounds, c.width, c.height)), JSON.stringify(c)).toEqual(c.view);
-    for (const c of G.zooms) expect(plain(zoomAt(c.view, c.at, c.factor)), JSON.stringify(c)).toEqual(c.result);
+    for (const c of G.zooms) expect(plain(zoomAt(c.view, c.at, c.factor, c.floor)), JSON.stringify(c)).toEqual(c.result);
+    for (const c of G.floors) expect(zoomFloor(c.fitted), String(c.fitted)).toBe(c.floor);
     for (const c of G.snaps) expect(plain(snap(c.value)), String(c.value)).toBe(c.snapped);
   });
 });

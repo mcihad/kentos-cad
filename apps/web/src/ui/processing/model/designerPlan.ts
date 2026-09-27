@@ -1,5 +1,5 @@
 import { stepName, type ModelIssue, type ModelStep, type ProcessingModel, type ValueSource } from '../../../processing/model';
-import { sourcesFor } from '../../../processing/modelEdit';
+import { edgesOf, sourcesFor } from '../../../processing/modelEdit';
 import type { ProcessingTool } from '../../../processing/types';
 
 /**
@@ -256,6 +256,11 @@ export const CANVAS = {
   row: 100,
   /** An edge's control points stand at least this far out. */
   bend: 40,
+  /** Edge labels at their target: they end this far left of the step's entry point, the first row's baseline this far
+   * above it, and each further row this much higher. */
+  labelGap: 8,
+  labelRise: 6,
+  labelRow: 13,
 } as const;
 
 export type View = { x: number; y: number; k: number };
@@ -269,18 +274,50 @@ export function curve(a: Pt, b: Pt): { c1: Pt; c2: Pt } {
   return { c1: { x: a.x + dx, y: a.y }, c2: { x: b.x - dx, y: b.y } };
 }
 
-/** The point halfway along the edge (t = 0.5): where its label stands (6 px above). */
-export function curveMid(a: Pt, b: Pt): Pt {
-  const { c1, c2 } = curve(a, b);
-  return { x: 0.125 * a.x + 0.375 * c1.x + 0.375 * c2.x + 0.125 * b.x, y: 0.5 * a.y + 0.5 * b.y };
-}
-
 /** Where an input's port is (its right side, halfway down). */
 export const inputPort = (at: Pt): Pt => ({ x: at.x + CANVAS.inputW, y: at.y + CANVAS.inputH / 2 });
 /** Where a step's port is (its right side, halfway down; only a step whose tool has outputs shows one). */
 export const stepPort = (at: Pt): Pt => ({ x: at.x + CANVAS.stepW, y: at.y + CANVAS.stepH / 2 });
 /** Where an edge ends on a step (its left side, halfway down). */
 export const stepEntry = (at: Pt): Pt => ({ x: at.x, y: at.y + CANVAS.stepH / 2 });
+
+/** An edge's label: its text, the tip naming every parameter it feeds, and where it stands. */
+export interface EdgeLabel {
+  from: NodeRef;
+  to: string;
+  text: string;
+  title: string;
+  /** The label's right end on its baseline (world px). */
+  at: Pt;
+}
+
+/**
+ * Every edge's label, at its target step: right-aligned, ending `labelGap`
+ * px left of the step's entry point, the first row's baseline `labelRise`
+ * px above it, each further edge into the step one row (`labelRow` px)
+ * higher. The edge whose source port is lowest on the diagram takes the row
+ * nearest the entry (ties: the edges' order), so read top to bottom the
+ * labels follow their sources top to bottom. An edge into a step that is not
+ * in the model has none.
+ */
+export function edgeLabels(model: ProcessingModel, lookup: Lookup): EdgeLabel[] {
+  const edges = edgesOf(model);
+  const sourceY = (from: NodeRef) =>
+    from.kind === 'input' ? inputPort(model.inputPositions?.[from.name] ?? { x: 40, y: 40 }).y : stepPort(model.steps.find((s) => s.id === from.id)?.position ?? { x: 0, y: 0 }).y;
+  const rows = new Map<number, number>();
+  const into = new Map<string, number[]>();
+  edges.forEach((e, i) => into.set(e.to, [...(into.get(e.to) ?? []), i]));
+  for (const indices of into.values()) [...indices].sort((a, b) => sourceY(edges[b].from) - sourceY(edges[a].from) || a - b).forEach((i, row) => rows.set(i, row));
+  return edges.flatMap((e, i) => {
+    const step = model.steps.find((s) => s.id === e.to);
+    if (!step) return [];
+    const tool = lookup(step.tool);
+    const names = e.params.map((p) => tool?.parameters.find((d) => d.name === p)?.label ?? p);
+    const entry = stepEntry(step.position ?? { x: 0, y: 0 });
+    const at = { x: entry.x - CANVAS.labelGap, y: entry.y - CANVAS.labelRise - (rows.get(i) ?? 0) * CANVAS.labelRow };
+    return [{ from: e.from, to: e.to, text: edgeLabel(names), title: names.join(', '), at }];
+  });
+}
 
 /** Every box's extent (an input without a place at 40,40; a step without one at 0,0), or null for an empty model. */
 export function boxesBounds(model: ProcessingModel): { x: number; y: number; w: number; h: number } | null {
@@ -302,9 +339,16 @@ export function fitView(bounds: { x: number; y: number; w: number; h: number } |
   return { k, x: (width - bounds.w * k) / 2 - bounds.x * k, y: (height - bounds.h * k) / 2 - bounds.y * k };
 }
 
-/** The view zoomed by `f` about a canvas point, which stays over the same world point; the scale stays within its limits. */
-export function zoomAt(view: View, p: Pt, f: number): View {
-  const k = Math.min(CANVAS.zoomMax, Math.max(CANVAS.zoomMin, view.k * f));
+/**
+ * The lowest scale zooming reaches: `zoomMin`, or the last fit's scale when
+ * that is lower, so a model too big to see whole at `zoomMin` is seen whole
+ * after fitting and the first wheel step does not jump.
+ */
+export const zoomFloor = (fittedK: number): number => Math.min(CANVAS.zoomMin, fittedK);
+
+/** The view zoomed by `f` about a canvas point, which stays over the same world point; the scale stays between `floor` and `zoomMax`. */
+export function zoomAt(view: View, p: Pt, f: number, floor: number = CANVAS.zoomMin): View {
+  const k = Math.min(CANVAS.zoomMax, Math.max(floor, view.k * f));
   const wx = (p.x - view.x) / view.k;
   const wy = (p.y - view.y) / view.k;
   return { k, x: p.x - wx * k, y: p.y - wy * k };

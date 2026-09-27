@@ -111,9 +111,9 @@ Sütunun en altında şu not durur: “Bir aracı tıklayın ya da tuvale sürü
 - Dünya koordinatlarında kutular ve bağlantılar vardır. Görünüm bir kaydırma ve bir ölçektir (`x`, `y`, `k`): ekran = dünya × k + (x, y).
 - Zemin alanın rengindedir. Üstünde `2 × 10 × k` px aralıklı nokta ızgarası vardır; ızgara görünümle birlikte kayar.
 - **Tekerlek:** imlecin altındaki noktayı yerinde tutarak `exp(−deltaY × 0,0015)` katı yakınlaştırır (`zoomAt`).
-- **Ölçek sınırları:** 0,35 ile 2 arası.
+- **Ölçek sınırları:** en çok 2. En az 0,35; son sığdırmanın ölçeği bundan küçükse o (`zoomFloor`). Böylece 0,35'te sığmayan büyük bir model sığdırılınca bütün görünür ve tekerleğin ilk adımı sıçramaz.
 - **Sağ alttaki üç düğme:** “Uzaklaş” (÷1,25), “Yakınlaş” (×1,25), “Tümünü göster (çift tık)”. Uzaklaş ile Yakınlaş tuvalin ortasına göre çalışır.
-- **Tümünü göster** (`fitView`) her kutuyu 48 px payla ortalar ve yalnız uzaklaşır: ölçek en çok 1'dir.
+- **Tümünü göster** (`fitView`) her kutuyu 48 px payla ortalar ve yalnız uzaklaşır: ölçek en çok 1'dir, 0,35'in altına da inebilir (en az sınırı onunla iner).
   - Boş modelde görünüm `(24, 24, 1)` olur.
   - Pencere açılınca bir kez yapılır; Düzenle'den sonra da yapılır.
 - **Boş alanda:**
@@ -149,7 +149,13 @@ Kutuyla yapılabilenler:
 - Bir adımın parametresi bir girdiden ya da önceki bir adımın çıktısından besleniyorsa kaynak kutudan hedef adıma bir eğri çizilir. Aynı kaynaktan aynı adıma giden bütün parametreler tek eğridir (`edgesOf`).
 - Eğri kaynağın çıkış noktasından (`inputPort`, `stepPort`: kutunun sağ kenarının ortası) hedef adımın sol kenarının ortasına (`stepEntry`) gider. Kübik Bézier'dir: denetim noktaları başlangıçtan ve bitişten yatay olarak `max(40, |Δx| / 2)` dışarıdadır (`curve`).
 - Eğri 1,6 px, `text-3` rengindedir. Seçili kutuya giren ya da ondan çıkan eğriler vurgu renginde ve 2 px'tir.
-- Eğrinin ortasının (t = 0,5, `curveMid`) 6 px üstünde beslediği parametrenin adı yazar. Birden çoksa ilkinin adı ve “+<kalan>” yazar (`edgeLabel`). Yazı 11 px'tir, zemin renginde 4 px halesi vardır. Eğrinin ipucu bütün parametre adlarıdır.
+- Her eğrinin yazısı hedef adımın yanında durur (`edgeLabels`):
+  - Yazı sağa yaslıdır ve adımın giriş noktasının 8 px solunda biter.
+  - İlk satırın taban çizgisi giriş noktasının 6 px üstündedir. Adıma giren her eğri bir satır (13 px) daha yukarıdadır.
+  - Kaynağının çıkış noktası diyagramda en aşağıda olan eğri girişe en yakın satırı alır; eşitlikte eğrilerin sırası (`edgesOf`) geçerlidir. Böylece yukarıdan aşağı okununca yazılar kaynaklarının sırasındadır.
+  - Aynı kaynaktan başka adımlara giden eğrilerin yazıları kendi adımlarının yanında olduğundan üst üste binmez.
+  - Yazı beslediği parametrenin adıdır. Birden çoksa ilkinin adı ve “+<kalan>” yazar (`edgeLabel`).
+  - Yazı 11 px'tir, zemin renginde 4 px halesi vardır, bütün eğrilerin üstünde çizilir. Eğrinin ipucu bütün parametre adlarıdır.
 
 ### 4.4 Tel çekmek
 
@@ -316,7 +322,7 @@ Bir sözün tam hâli `texts.inspector`'dadır.
 
 Masaüstünün İfade oluşturucusunda Akış tuvali (`apps/desktop/src/expression/flow_canvas.rs`) ve KentOS UI'ın `TreeView::on_carry`'si vardır. Web'deki karşılıkları şunlardır; bu bölüm yalnız web'i anlatır, neyin paylaşılacağı masaüstünün kararıdır.
 
-- **Görünüm:** kaydırma ve tekerlekle yakınlaştırma, ızgara, Bézier kenarlar. Web'in sayıları §4.1 ve §4.3'tedir: 0,35–2, ×1,25, 48 px pay, 1:1 üstü yok, `max(40, |Δx|/2)`.
+- **Görünüm:** kaydırma ve tekerlekle yakınlaştırma, ızgara, Bézier kenarlar. Web'in sayıları §4.1 ve §4.3'tedir: 0,35–2, ×1,25, 48 px pay, 1:1 üstü yok, `max(40, |Δx|/2)`. Kenar yazıları eğrinin üstünde değil, hedef adımın girişinin solunda üst üste dizilir.
 - **Tel:** web'de tel bir kutunun **çıkış noktasından** çıkar ve **adım kutusunun tamamına** bırakılır. Hangi parametrenin bağlanacağını bırakınca açılan menü sorar. Akış tuvalindeki gibi tek tek giriş iğneleri yoktur. Bağlantıyı koparmak telle değil, kaynak listesinden “Aracın varsayılanı” ile olur.
 - **Kutu taşımak:** 10 px ızgaraya oturur ve tek geri alma adımıdır.
 - **Paletten taşımak:** web'de 5 px'ten sonra başlar, hayalet imleci izler, diyagramda bırakılınca oraya ekler. Tıklamak seçili kutunun yanına ekleyip bağlar. Bu, `TreeView::on_carry`'nin ağaçtan taşıma hareketine karşılık gelir.
