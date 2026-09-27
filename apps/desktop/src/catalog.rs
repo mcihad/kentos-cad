@@ -98,6 +98,8 @@ pub const PORTED: &[&str] = &[
     // revizyonu aç (cloud/actions.rs, docs/adr/0073).
     "cloud.uploadFile",
     "cloud.openNewest",
+    // Proje geçmişi…: the catalog's Geçmiş tab on the open project (docs/adr/0087).
+    "cloud.history",
     "cloud.rename",
     "cloud.delete",
     // New layers and groups (layering.rs): edits that are not undone, as on the web.

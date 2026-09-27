@@ -52,7 +52,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Anlamsız | Toplam |
 |---|---|---|---|---|---|
-| Komutlar | 138 | 0 | 29 | 0 | 167 |
+| Komutlar | 139 | 0 | 28 | 0 | 167 |
 | Araçlar | 56 | 0 | 2 | 0 | 58 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 1 |
@@ -70,11 +70,10 @@ Yok.
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (29 / 167)
+#### Komutlar (28 / 167)
 
 - `analysis.slope` Eğim analizi…
 - `analysis.volume` Hacim hesabı…
-- `cloud.history` Proje geçmişi…
 - `cloud.share` Bulut projesini paylaş…
 - `crs.query` Koordinat sorgula
 - `crs.transform` Datum dönüşümü (ED50 ↔ TUREF)…

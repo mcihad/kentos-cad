@@ -74,6 +74,13 @@ Sekme kapanınca, proje değişince ya da pencere kapanınca istekler bırakıl�
 
 Başarı ve ret satırları web'inkidir. Formun reddi formun içinde söylenir, silmenin reddi günlükte.
 
+### Komut: Proje geçmişi… (`cloud.history`)
+
+Web'in komutudur (`hooks.projects('open', pick, 'history')`); uygulama menüsünün Bulut bölümündeki “Geçmiş” düğmesi de onu çağırır.
+
+- Katalog “Son kullanılanlar”da açılır; açık proje seçilir (yeniden açılmaz) ve Geçmiş sekmesi gösterilir.
+- Açık bulut projesinde `project.history` yetkisi yoksa kapalıdır (web'in `openMay`'i).
+
 ### İndirme
 
 Katalogdaki indirme (ADR 0086) genelleşti: projenin kendisi, bir revizyon ya da bir kontrol noktasının dosyası.
@@ -91,7 +98,8 @@ Katalogdaki indirme (ADR 0086) genelleşti: projenin kendisi, bir revizyon ya da
   - kontrol noktası formu: adsız gitmez, ret formda, başarı satırı ve yeniden sorma;
   - geri yükleme formu: projenin alanı önce; yeni proje Projelerim'de açılır;
   - silme sorusu, Esc ve reddin adıyla satırı;
-  - indirmelerin adı, listenin SHA-256'sı ve yetkisi.
+  - indirmelerin adı, listenin SHA-256'sı ve yetkisi;
+  - Proje geçmişi… katalogu açık projenin Geçmiş sekmesinde açar, yetkisizken kapalıdır (`the_history_command_opens_the_open_projects_history_in_the_catalog`).
 - **Gerçek sunucu** (`apps/desktop/scripts/cloud-live.sh`, adım 16–22):
   - çöp kutusundan geri yükleme;
   - veritabanı projesinin bilgileri (13 nesne);
