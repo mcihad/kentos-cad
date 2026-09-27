@@ -361,7 +361,7 @@ export class CoreFaceIndex {
   }
 }
 
-/** One expression's values for a table of objects (crates/shared/style-core/src/expr/rows.rs). */
+/** One expression's values for a table of objects (crates/shared/expression/src/rows.rs). */
 export interface ExprColumnData {
   /** Per object: 0 empty, 1 number, 2 text, 3 true/false. */
   readonly kinds: Uint8Array;
