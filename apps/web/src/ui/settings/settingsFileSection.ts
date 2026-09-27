@@ -91,7 +91,7 @@ export function settingsFile(api: DraftApi<AppDraft>, ctx: AppContext, state: Fi
   return [
     group(
       'Dışa ve içe aktarma',
-      settingRow('Dışa aktar', 'Kaydedilmiş uygulama ayarlarını bir kentos.settings dosyasına yazar. Masaüstü uygulaması da aynı dosyayı okur.', button('Dışa aktar…', () => void exportFile())),
+      settingRow('Dışa aktar', 'Kaydedilmiş uygulama ayarlarını bir kentos.settings dosyasına yazar. Masaüstü uygulaması da aynı dosyayı okur; görünüş tercihleri (vurgu rengi, yazı tipi, yazı boyutu) masaüstünde ayrı tutulur, ona taşınmaz.', button('Dışa aktar…', () => void exportFile())),
       settingRow('İçe aktar', 'Bir ayar dosyasının değerleri bu pencereye gelir; Kaydet ile uygulanır. Geçersiz değerler alınmaz ve adıyla söylenir.', button('İçe aktar…', () => void importFile())),
       pending,
       problem,

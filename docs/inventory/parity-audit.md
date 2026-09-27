@@ -19,6 +19,7 @@ Denetim yalnız okur; masaüstünün kodu değişmedi. Masaüstünün resimleri 
 
 - 28 Eylül: 1., 2. madde ve B1–B4 ([ADR 0119](../adr/0119-desktop-file-revisions.md)); reddedilen yüklemeden sonra istek anahtarı.
 - 28 Eylül: 3. madde (N1), web'in `newProjectNote.ts` kuralıyla (`apps/desktop/src/project/new.rs`).
+- 28 Eylül: 4. maddenin yanlış sözü (A1): web'in Ayar dosyası görünüş tercihlerinin masaüstüne taşınmadığını söyler; masaüstü, dosyadaki web'e özgü değerleri sessizce atlamaz, adlarıyla söyler. Anahtarların birleşmesi TODOS.md UX-13'ün Görünüş maddesindedir.
 
 ## Yöntem
 

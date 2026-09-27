@@ -12,7 +12,7 @@ use iced::widget::{button, container, row, space, text, text_input};
 use iced::{Center, Element, Fill, Task};
 use serde_json::Value;
 
-use kentos_contracts::{ResolvedSetting, SettingErrorCode, SettingScope, same_value};
+use kentos_contracts::{ResolvedSetting, SettingErrorCode, SettingHost, SettingScope, same_value};
 use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::widget::number::Unit;
@@ -218,6 +218,16 @@ impl App {
                 draft.note = Some((true, format!("“{name}” alınamadı. {}", code.message())));
             }
             Ok((file, diagnostics)) => {
+                // The web's own values (its appearance) have nothing to go to here:
+                // said by name, never dropped in silence (docs/inventory/parity-audit.md A1).
+                let web_only: Vec<String> = file
+                    .user
+                    .keys()
+                    .chain(file.device.keys())
+                    .filter_map(|key| schema().get(key))
+                    .filter(|d| !d.hosts.contains(&SettingHost::Desktop))
+                    .map(|d| d.title.clone())
+                    .collect();
                 let layers = kentos_contracts::SettingsLayers {
                     user: file.user,
                     device: file.device,
@@ -243,16 +253,25 @@ impl App {
                     .filter(|d| d.code != SettingErrorCode::UnknownKey)
                     .map(|d| d.key.clone())
                     .collect();
+                let web = if web_only.is_empty() {
+                    String::new()
+                } else {
+                    format!(
+                        " Web uygulamasına özgü {} değerin masaüstünde karşılığı yok, alınmadı: {}. Görünüş tercihleri masaüstünde ayrı tutulur.",
+                        web_only.len(),
+                        web_only.join(", ")
+                    )
+                };
                 draft.note = Some(if left.is_empty() {
                     (
                         false,
-                        format!("“{name}” okundu. Değerleri pencerede; Kaydet ile uygulanır."),
+                        format!("“{name}” okundu. Değerleri pencerede; Kaydet ile uygulanır.{web}"),
                     )
                 } else {
                     (
                         true,
                         format!(
-                            "“{name}” okundu; geçersiz {} değer alınmadı: {}.",
+                            "“{name}” okundu; geçersiz {} değer alınmadı: {}.{web}",
                             left.len(),
                             left.join(", ")
                         ),
@@ -874,6 +893,34 @@ mod tests {
         let _ = app.update(Message::DialogClosed);
         assert_eq!(app.draft.snap_aperture, 18.0);
         assert_eq!(app.settings.requested("drafting.snapAperture"), 18);
+    }
+
+    /// A web settings file: its values the desktop has are taken; its own
+    /// (the web's appearance) are said by name, not dropped in silence
+    /// (docs/inventory/parity-audit.md A1).
+    #[test]
+    fn a_web_settings_file_says_what_has_no_place_here() {
+        let (mut app, _) = App::boot(None);
+        let _ = app.run("tools.options");
+        let body = r#"{"format":"kentos.settings","version":1,"user":{"drafting.snapAperture":16,"appearance.accent":"teal","appearance.uiFont":"inter"}}"#;
+        edit(
+            &mut app,
+            Edit::Imported(Some(Ok((
+                "kentos-ayarlar.json".to_owned(),
+                body.to_owned(),
+            )))),
+        );
+        let draft = app.settings_draft.clone().expect("open");
+        assert_eq!(
+            draft.values.get("drafting.snapAperture"),
+            Some(&Value::from(16))
+        );
+        let (warn, note) = draft.note.expect("said");
+        assert!(!warn, "nothing invalid");
+        assert_eq!(
+            note,
+            "“kentos-ayarlar.json” okundu. Değerleri pencerede; Kaydet ile uygulanır. Web uygulamasına özgü 2 değerin masaüstünde karşılığı yok, alınmadı: Vurgu rengi, Yazı tipi. Görünüş tercihleri masaüstünde ayrı tutulur."
+        );
     }
 
     #[test]
