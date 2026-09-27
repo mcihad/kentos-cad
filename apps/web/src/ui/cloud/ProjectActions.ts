@@ -1,6 +1,6 @@
 import type { AppContext } from '../../app/context';
 import { ApiFailure } from '../../app/cloud/api';
-import { day } from '../../app/cloud/catalog';
+import { archiveQuestion, CATALOG_LINES, purgeQuestion, trashQuestion } from '../../app/cloud/catalogPlan';
 import type { ProjectSummary } from '../../contracts/generated/ProjectSummary';
 import { h } from '../dom';
 import { askRemove, confirmDialog } from '../widgets/confirm';
@@ -97,25 +97,15 @@ export function openRenameDialog(ctx: AppContext, target: ProjectTarget, done?: 
  */
 export async function trashProject(ctx: AppContext, target: ProjectTarget, retentionDays?: number): Promise<boolean> {
   const isOpen = ctx.cloud.project.value?.projectId === target.projectId;
-  const ok = await askRemove({
-    title: 'Çöp kutusuna taşı',
-    message: `“${target.name}” projesi (${target.tenantName}) erişimi olan herkes için çöp kutusuna taşınsın mı?`,
-    details: [
-      'Proje listelerden kalkar; kimse açamaz ve değiştiremez.',
-      'Projeyi şu anda açık tutanların kaydı durur; gönderilmemiş değişiklikleri kendi cihazlarında kalır.',
-      `Hiçbir şey silinmez: proje sahibi ya da kurum yöneticisi ${retentionDays ? `${retentionDays} gün` : 'saklama süresi dolana kadar'} içinde Çöp kutusu’ndan geri yükleyebilir; sonra proje kalıcı olarak silinir.`,
-      isOpen ? 'Proje şu anda sizde açık: çizim ekranda kalır, dilerseniz yerel bir dosyaya kaydedin.' : null,
-    ].filter((x): x is string => !!x),
-    action: 'Çöpe taşı',
-  });
+  const ok = await askRemove(trashQuestion(target.name, target.tenantName, retentionDays, isOpen));
   if (!ok) return false;
   try {
     const done = await ctx.cloud.lifecycle.trash(ref(target));
     // The open project's own message (the drawing stays on screen) comes from the session.
-    if (!isOpen) ctx.log.success(`“${target.name}” çöp kutusuna taşındı${done.project.purgeAfter ? `; ${day(done.project.purgeAfter)} tarihine kadar geri yüklenebilir` : ''}.`);
+    if (!isOpen) ctx.log.success(CATALOG_LINES.trashed(target.name, done.project.purgeAfter));
     return true;
   } catch (e) {
-    ctx.log.error(`“${target.name}” çöp kutusuna taşınamadı: ${reason(e)}`);
+    ctx.log.error(CATALOG_LINES.trashFailed(target.name, reason(e)));
     return false;
   }
 }
@@ -127,49 +117,38 @@ export function openDeleteDialog(ctx: AppContext, target: ProjectTarget, done?: 
 
 /** Asks, then removes a project in the trash for good (`project.purge`, naming it). */
 export async function purgeProject(ctx: AppContext, target: ProjectTarget): Promise<boolean> {
-  const ok = await askRemove({
-    title: 'Kalıcı olarak sil',
-    message: `“${target.name}” projesi kalıcı olarak silinsin mi? Bu işlem geri alınamaz.`,
-    details: [
-      'Nesneler, katmanlar, paylaşımlar, komut günlüğü ve olaylar silinir; yalnız kimin ne zaman sildiğini söyleyen denetim kaydı kalır.',
-      'Önceden indirilmiş kopyalar ve sunucu yedekleri bu işlemle silinmez.',
-    ],
-    action: 'Kalıcı olarak sil',
-  });
+  const ok = await askRemove(purgeQuestion(target.name));
   if (!ok) return false;
   try {
     const gone = await ctx.cloud.lifecycle.purge(ref(target));
-    ctx.log.success(`“${gone.name}” kalıcı olarak silindi (${gone.objects} nesne).`);
+    ctx.log.success(CATALOG_LINES.purged(gone.name, gone.objects));
     return true;
   } catch (e) {
-    ctx.log.error(`“${target.name}” kalıcı olarak silinemedi: ${reason(e)}`);
+    ctx.log.error(CATALOG_LINES.purgeFailed(target.name, reason(e)));
     return false;
   }
 }
 
 /** Asks, then archives the project (`project.archive`): read-only for everyone until it is unarchived. */
 export async function archiveProject(ctx: AppContext, target: ProjectTarget): Promise<boolean> {
+  const q = archiveQuestion(target.name);
   const answer = await confirmDialog({
-    title: 'Projeyi arşivle',
-    message: `“${target.name}” projesi arşivlensin mi?`,
-    details: [
-      'Proje salt okunur olur: nesneleri, adı ve bilgileri değişmez; açılabilir, paylaşımı değiştirilebilir, kopyası oluşturulabilir.',
-      'Projeyi şu anda açık tutanların kaydı durur; gönderilmemiş değişiklikleri kendi cihazlarında kalır.',
-      'Arşivlenmişler listesinde durur; proje sahibi ya da yöneticisi arşivden çıkarabilir.',
-    ],
+    title: q.title,
+    message: q.message,
+    details: q.details,
     answers: [
       { value: 'stay', label: 'Vazgeç' },
-      { value: 'archive', label: 'Arşivle', kind: 'primary' },
+      { value: 'archive', label: q.action, kind: 'primary' },
     ],
     cancel: 'stay',
   });
   if (answer !== 'archive') return false;
   try {
     await ctx.cloud.lifecycle.archive(ref(target));
-    if (ctx.cloud.project.value?.projectId !== target.projectId) ctx.log.success(`“${target.name}” arşivlendi.`);
+    if (ctx.cloud.project.value?.projectId !== target.projectId) ctx.log.success(CATALOG_LINES.archived(target.name));
     return true;
   } catch (e) {
-    ctx.log.error(`“${target.name}” arşivlenemedi: ${reason(e)}`);
+    ctx.log.error(CATALOG_LINES.archiveFailed(target.name, reason(e)));
     return false;
   }
 }

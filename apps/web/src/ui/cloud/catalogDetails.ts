@@ -1,8 +1,8 @@
 import type { AppContext } from '../../app/context';
-import { STATE_LABEL, TYPE_LABEL, day, when } from '../../app/cloud/catalog';
+import { day, when } from '../../app/cloud/catalog';
+import { detailPlan } from '../../app/cloud/catalogPlan';
 import { ROLE_LABEL, STORAGE_TEXT } from '../../app/cloud/sharing';
 import type { ProjectDetails } from '../../contracts/generated/ProjectDetails';
-import type { ProjectPermission } from '../../contracts/generated/ProjectPermission';
 import type { ProjectSummary } from '../../contracts/generated/ProjectSummary';
 import { crsBySrid } from '../../geo/crs';
 import { h, replaceChildren, type Child } from '../dom';
@@ -65,8 +65,6 @@ export type DetailsState = ProjectDetails | FileDetails | 'loading' | 'none' | E
 
 const AREA_UNIT = { m2: 'm²', donum: 'dönüm', ha: 'hektar' } as const;
 
-const may = (p: ProjectSummary, permission: ProjectPermission) => p.access.permissions.includes(permission);
-
 export function renderDetails(ctx: AppContext, host: HTMLElement, p: ProjectSummary | null, d: DetailsState, actions: DetailActions, view: DetailsView): void {
   if (!p) {
     replaceChildren(host, h('div', { class: 'catalog-details__body' }, h('p', { class: 'catalog-details__empty' }, 'Bilgilerini görmek ve üzerinde işlem yapmak için listeden bir proje seçin.')));
@@ -77,30 +75,25 @@ export function renderDetails(ctx: AppContext, host: HTMLElement, p: ProjectSumm
     b.addEventListener('click', run);
     return b;
   };
-  // Why an action cannot be taken: the right it needs, or the archive.
-  const needs = (permission: ProjectPermission, what: string): string | null =>
-    may(p, permission) ? null : `“${p.name}” projesinde ${what} yetkiniz yok (${permission}); proje sahibine ya da yöneticisine başvurun.`;
-  const writable = (permission: ProjectPermission, what: string): string | null =>
-    p.state === 'archived' ? 'Arşivlenmiş proje değiştirilemez; önce arşivden çıkarın.' : needs(permission, what);
-
+  // What shows and what can be done comes from the plan (app/cloud/catalogPlan.ts, pinned by fixtures/cloud/v1/catalog.json); here it is drawn.
+  const plan = detailPlan(p, ctx.cloud.project.value?.projectId === p.id);
   const favorite =
-    p.state === 'trashed'
+    plan.favorite === null
       ? null
       : (() => {
           const b = h(
             'button',
             { class: 'btn btn--ghost btn--small catalog-details__fav', type: 'button', 'aria-pressed': String(p.favorite), title: 'Favorileriniz yalnız size görünür.' },
             icon(p.favorite ? 'starOn' : 'star', 14),
-            p.favorite ? 'Favorilerde' : 'Favorilere ekle',
+            plan.favorite,
           );
           b.addEventListener('click', () => actions.favorite());
           return b;
         })();
-  const chips = [
-    h('span', { class: 'catalog-chip catalog-chip--type' }, TYPE_LABEL[p.projectType]),
-    p.state !== 'active' ? h('span', { class: `catalog-chip catalog-chip--${p.state}` }, STATE_LABEL[p.state]) : null,
-    ctx.cloud.project.value?.projectId === p.id ? h('span', { class: 'catalog-chip catalog-chip--open' }, 'Şu anda açık') : null,
-  ];
+  // The type first, then the state (when not active), then “Şu anda açık”.
+  const chips = plan.chips.map((text, i) =>
+    h('span', { class: `catalog-chip ${i === 0 ? 'catalog-chip--type' : text === 'Şu anda açık' ? 'catalog-chip--open' : `catalog-chip--${p.state}`}` }, text),
+  );
   const crs = crsBySrid(p.srid);
   const row = (term: string, value: Child) => [h('dt', null, term), h('dd', null, value)];
   const muted = (text: string) => h('span', { class: 'catalog-details__muted' }, text);
@@ -116,57 +109,56 @@ export function renderDetails(ctx: AppContext, host: HTMLElement, p: ProjectSumm
     const f = ctx.format;
     return h('span', { class: 'num catalog-details__extent' }, h('span', null, `Y ${f.coord(b.minX)}–${f.coord(b.maxX)}`), h('span', null, `X ${f.coord(b.minY)}–${f.coord(b.maxY)}`));
   };
-  const facts: Child[] = [
-    row('Çalışma alanı', placeOf(ctx, p)),
-    row('Sahibi', p.ownerName || h('span', { class: 'catalog-details__muted' }, 'görünmüyor')),
-    row('Rolünüz', `${ROLE_LABEL[p.access.role]}${p.access.via === 'policy' ? ' (kurum politikası)' : ''}`),
-    row('Koordinat sistemi', crs ? `${crs.name} (EPSG:${p.srid})` : `EPSG:${p.srid}`),
-    row('Alan birimi', AREA_UNIT[p.areaUnit]),
-    // Nothing of a project in the trash is counted (it does not open).
-    p.state === 'trashed' ? null : row('Nesne', counted((x) => h('span', { class: 'num' }, `${x.featureCount} nesne, ${x.layerCount} katman`), fileObjects)),
-    p.state === 'trashed' ? null : row('Kapsam', counted(extent, () => muted('Dosya projesinde hesaplanmaz'))),
-    row('Oluşturan', `${p.creatorName || 'görünmüyor'}, ${when(p.createdAt)}`),
-    row('Son değişiklik', when(p.updatedAt)),
-    row('Revizyon', h('span', { class: 'num' }, p.dataRevision)),
-    row('Saklama', STORAGE_TEXT[p.storage].title),
-    p.archivedAt ? row('Arşivlenme', when(p.archivedAt)) : null,
-    p.trashedAt ? row('Çöpe taşınma', `${when(p.trashedAt)}${p.trashedByName ? `, ${p.trashedByName}` : ''}`) : null,
-    p.state === 'trashed' ? row('Kalıcı silinme', p.purgeAfter ? day(p.purgeAfter) : 'Elle silinene kadar kalır') : null,
-  ];
-  const toDatabase = p.storage === 'file';
-  const buttons =
-    p.state === 'trashed'
-      ? [button('Kalıcı olarak sil…', 'trash', actions.purge, needs('project.delete', 'kalıcı olarak silme'), true)]
-      : [
-          button('Paylaş…', 'share', actions.share, needs('project.share', 'paylaşma')),
-          button('Bilgileri düzenle…', 'edit', actions.edit, writable('project.edit', 'bilgileri değiştirme')),
-          button('.kcad olarak indir', 'export', actions.download, needs('project.download', 'indirme')),
-          button('Kopyasını oluştur…', 'copy', actions.duplicate, needs('project.download', 'kopyalama')),
-          button(toDatabase ? "PostGIS'e aktar…" : 'Dosya projesine çevir…', toDatabase ? 'server' : 'save', actions.convert, needs('project.download', 'dönüştürme')),
-          p.state === 'archived'
-            ? button('Arşivden çıkar', 'archive', actions.unarchive, needs('project.edit', 'arşivden çıkarma'))
-            : button('Arşivle…', 'archive', actions.archive, needs('project.edit', 'arşivleme')),
-          button('Çöpe taşı…', 'trash', actions.trash, needs('project.delete', 'çöpe taşıma'), true),
-        ];
+  // Each fact the plan shows, by its name.
+  const value = (term: string): Child => {
+    switch (term) {
+      case 'Çalışma alanı':
+        return placeOf(ctx, p);
+      case 'Sahibi':
+        return p.ownerName || muted('görünmüyor');
+      case 'Rolünüz':
+        return `${ROLE_LABEL[p.access.role]}${p.access.via === 'policy' ? ' (kurum politikası)' : ''}`;
+      case 'Koordinat sistemi':
+        return crs ? `${crs.name} (EPSG:${p.srid})` : `EPSG:${p.srid}`;
+      case 'Alan birimi':
+        return AREA_UNIT[p.areaUnit];
+      case 'Nesne':
+        return counted((x) => h('span', { class: 'num' }, `${x.featureCount} nesne, ${x.layerCount} katman`), fileObjects);
+      case 'Kapsam':
+        return counted(extent, () => muted('Dosya projesinde hesaplanmaz'));
+      case 'Oluşturan':
+        return `${p.creatorName || 'görünmüyor'}, ${when(p.createdAt)}`;
+      case 'Son değişiklik':
+        return when(p.updatedAt);
+      case 'Revizyon':
+        return h('span', { class: 'num' }, p.dataRevision);
+      case 'Saklama':
+        return STORAGE_TEXT[p.storage].title;
+      case 'Arşivlenme':
+        return p.archivedAt ? when(p.archivedAt) : '';
+      case 'Çöpe taşınma':
+        return p.trashedAt ? `${when(p.trashedAt)}${p.trashedByName ? `, ${p.trashedByName}` : ''}` : '';
+      default:
+        return p.purgeAfter ? day(p.purgeAfter) : 'Elle silinene kadar kalır';
+    }
+  };
+  const facts: Child[] = plan.facts.map((term) => row(term, value(term)));
+  const buttons = plan.actions.map((a) => button(a.label, a.icon, () => actions[a.id](), a.why, a.danger));
   // Nothing of a project in the trash has a history to show (it does not open).
-  const tabs =
-    p.state === 'trashed'
-      ? null
-      : h(
-          'div',
-          { class: 'catalog-details__tabs', role: 'tablist', 'aria-label': 'Proje bilgileri' },
-          (
-            [
-              ['info', 'Bilgiler'],
-              ['history', 'Geçmiş'],
-            ] as const
-          ).map(([id, text]) => {
-            const b = h('button', { class: 'catalog-details__tab', type: 'button', role: 'tab', 'aria-selected': String(view.tab === id), dataset: { tab: id } }, text);
-            b.addEventListener('click', () => view.onTab(id));
-            return b;
-          }),
-        );
-  const history = view.tab === 'history' && p.state !== 'trashed';
+  const TAB_IDS: readonly DetailsTab[] = ['info', 'history'];
+  const tabs = plan.tabs
+    ? h(
+        'div',
+        { class: 'catalog-details__tabs', role: 'tablist', 'aria-label': 'Proje bilgileri' },
+        plan.tabs.map((text, i) => {
+          const id = TAB_IDS[i];
+          const b = h('button', { class: 'catalog-details__tab', type: 'button', role: 'tab', 'aria-selected': String(view.tab === id), dataset: { tab: id } }, text);
+          b.addEventListener('click', () => view.onTab(id));
+          return b;
+        }),
+      )
+    : null;
+  const history = view.tab === 'history' && !!plan.tabs;
   // The facts scroll; the actions stay in view below them.
   replaceChildren(
     host,

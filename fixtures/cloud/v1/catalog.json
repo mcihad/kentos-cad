@@ -1,0 +1,672 @@
+{
+  "format": "kentos.catalog",
+  "version": 1,
+  "timeZone": "Europe/Istanbul",
+  "views": [
+    {
+      "id": "recent",
+      "label": "Son kullanılanlar",
+      "sorts": ["opened", "updated", "name"],
+      "empty": "Henüz açtığınız bir bulut projesi yok. Açtığınız ve oluşturduğunuz projeler burada, en yenisi üstte durur."
+    },
+    {
+      "id": "favorites",
+      "label": "Favoriler",
+      "sorts": ["updated", "name", "created"],
+      "empty": "Favori projeniz yok. Bir projeyi yıldızına tıklayarak buraya ekleyin; favorileriniz yalnız size görünür.",
+      "note": "Favorileriniz yalnız size görünür."
+    },
+    {
+      "id": "mine",
+      "label": "Projelerim",
+      "sorts": ["updated", "name", "created"],
+      "empty": "Sahibi olduğunuz bir proje yok. Açık çizimi Dosya → Buluta yükle ile gönderebilirsiniz."
+    },
+    {
+      "id": "organization",
+      "label": "Kurum projeleri",
+      "sorts": ["updated", "name", "created"],
+      "empty": "Bu kurumda size açık bir proje yok: sizin açtıklarınız ve sizinle paylaşılanlar burada görünür."
+    },
+    {
+      "id": "shared",
+      "label": "Benimle paylaşılanlar",
+      "sorts": ["updated", "name", "created"],
+      "empty": "Sizinle paylaşılmış bir proje yok. Biri bir projeyi sizinle paylaşınca burada, sahibinin adı ve rolünüzle görünür.",
+      "note": "Başkalarının sizinle paylaştığı projeler; sahibi ve rolünüz yanında yazar."
+    },
+    {
+      "id": "archived",
+      "label": "Arşivlenmişler",
+      "sorts": ["updated", "name", "created"],
+      "empty": "Arşivlenmiş bir proje yok. Arşivlenen proje salt okunur olur ve burada durur.",
+      "note": "Arşivlenmiş projeler salt okunurdur: açılır, kopyalanır; arşivden çıkarmak proje sahibinin ya da yöneticisinindir."
+    },
+    {
+      "id": "trash",
+      "label": "Çöp kutusu",
+      "sorts": ["trashed", "name"],
+      "empty": "Çöp kutusu boş. Geri yükleyebileceğiniz (sahibi ya da kurum yöneticisi olduğunuz) silinmiş projeler burada durur."
+    }
+  ],
+  "sorts": {"updated": "Son değişiklik", "name": "Ad", "created": "Oluşturulma", "opened": "Son açılma", "trashed": "Çöpe taşınma"},
+  "states": {"active": "Etkin", "archived": "Arşivde", "trashed": "Çöp kutusunda"},
+  "types": {
+    "cad": "Genel CAD",
+    "gis": "CBS",
+    "landReadjustment": "18 uygulaması",
+    "zoningPlan": "İmar planı",
+    "subdivision": "İfraz / tevhit",
+    "road": "Yol",
+    "architecture": "Mimari"
+  },
+  "typeHint": "Tür yalnız projeleri bulmak ve düzenlemek içindir: bir modül açmaz, mevzuata uygunluk ya da resmî onay anlamına gelmez, projenin nasıl saklandığını değiştirmez.",
+  "emptySearch": "Aramanıza uyan proje yok. Başka sözcüklerle ya da tür süzgeci olmadan deneyin.",
+  "noOrganization": "Etkin üyeliğiniz olan bir kurum yok; kurum projeleri burada görünür.",
+  "tips": {
+    "denied": "“{name}” projesinde {what} yetkiniz yok ({permission}); proje sahibine ya da yöneticisine başvurun.",
+    "archived": "Arşivlenmiş proje değiştirilemez; önce arşivden çıkarın."
+  },
+  "project": {
+    "id": "0192a5b4-7c3d-7e21-9a10-2b3c4d5e6f70",
+    "name": "Ada 101",
+    "srid": 5256,
+    "dataRevision": "42",
+    "updatedAt": "2026-09-26T11:05:00Z",
+    "tenantId": "0192a5b4-0000-7000-8000-000000000001",
+    "tenantName": "Büro",
+    "tenantKind": "organization",
+    "ownerName": "Ayşe Yılmaz",
+    "access": {
+      "role": "owner",
+      "via": "owner",
+      "permissions": [
+        "project.read",
+        "feature.write",
+        "project.edit",
+        "project.delete",
+        "project.comment",
+        "project.download",
+        "project.history",
+        "project.share",
+        "project.transfer",
+        "project.jobs.run"
+      ]
+    },
+    "projectType": "cad",
+    "description": "",
+    "tags": [],
+    "state": "active",
+    "catalogVersion": "7",
+    "createdAt": "2026-09-20T09:00:00Z",
+    "creatorName": "Ayşe Yılmaz",
+    "areaUnit": "m2",
+    "favorite": false,
+    "storage": "database"
+  },
+  "details": [
+    {
+      "id": "active-owner",
+      "project": {},
+      "open": false,
+      "expect": {
+        "favorite": "Favorilere ekle",
+        "chips": ["Genel CAD"],
+        "tabs": ["Bilgiler", "Geçmiş"],
+        "facts": ["Çalışma alanı", "Sahibi", "Rolünüz", "Koordinat sistemi", "Alan birimi", "Nesne", "Kapsam", "Oluşturan", "Son değişiklik", "Revizyon", "Saklama"],
+        "actions": [
+          {"id": "share", "label": "Paylaş…", "icon": "share", "why": null, "danger": false},
+          {"id": "edit", "label": "Bilgileri düzenle…", "icon": "edit", "why": null, "danger": false},
+          {"id": "download", "label": ".kcad olarak indir", "icon": "export", "why": null, "danger": false},
+          {"id": "duplicate", "label": "Kopyasını oluştur…", "icon": "copy", "why": null, "danger": false},
+          {"id": "convert", "label": "Dosya projesine çevir…", "icon": "save", "why": null, "danger": false},
+          {"id": "archive", "label": "Arşivle…", "icon": "archive", "why": null, "danger": false},
+          {"id": "trash", "label": "Çöpe taşı…", "icon": "trash", "why": null, "danger": true}
+        ]
+      }
+    },
+    {
+      "id": "active-editor",
+      "project": {"access": {"role": "editor", "via": "share", "permissions": ["project.read", "feature.write", "project.comment", "project.download", "project.history"]}},
+      "open": false,
+      "expect": {
+        "favorite": "Favorilere ekle",
+        "chips": ["Genel CAD"],
+        "tabs": ["Bilgiler", "Geçmiş"],
+        "facts": ["Çalışma alanı", "Sahibi", "Rolünüz", "Koordinat sistemi", "Alan birimi", "Nesne", "Kapsam", "Oluşturan", "Son değişiklik", "Revizyon", "Saklama"],
+        "actions": [
+          {
+            "id": "share",
+            "label": "Paylaş…",
+            "icon": "share",
+            "why": "“Ada 101” projesinde paylaşma yetkiniz yok (project.share); proje sahibine ya da yöneticisine başvurun.",
+            "danger": false
+          },
+          {
+            "id": "edit",
+            "label": "Bilgileri düzenle…",
+            "icon": "edit",
+            "why": "“Ada 101” projesinde bilgileri değiştirme yetkiniz yok (project.edit); proje sahibine ya da yöneticisine başvurun.",
+            "danger": false
+          },
+          {"id": "download", "label": ".kcad olarak indir", "icon": "export", "why": null, "danger": false},
+          {"id": "duplicate", "label": "Kopyasını oluştur…", "icon": "copy", "why": null, "danger": false},
+          {"id": "convert", "label": "Dosya projesine çevir…", "icon": "save", "why": null, "danger": false},
+          {
+            "id": "archive",
+            "label": "Arşivle…",
+            "icon": "archive",
+            "why": "“Ada 101” projesinde arşivleme yetkiniz yok (project.edit); proje sahibine ya da yöneticisine başvurun.",
+            "danger": false
+          },
+          {
+            "id": "trash",
+            "label": "Çöpe taşı…",
+            "icon": "trash",
+            "why": "“Ada 101” projesinde çöpe taşıma yetkiniz yok (project.delete); proje sahibine ya da yöneticisine başvurun.",
+            "danger": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "active-viewer",
+      "project": {"access": {"role": "viewer", "via": "share", "permissions": ["project.read", "project.download", "project.history"]}},
+      "open": false,
+      "expect": {
+        "favorite": "Favorilere ekle",
+        "chips": ["Genel CAD"],
+        "tabs": ["Bilgiler", "Geçmiş"],
+        "facts": ["Çalışma alanı", "Sahibi", "Rolünüz", "Koordinat sistemi", "Alan birimi", "Nesne", "Kapsam", "Oluşturan", "Son değişiklik", "Revizyon", "Saklama"],
+        "actions": [
+          {
+            "id": "share",
+            "label": "Paylaş…",
+            "icon": "share",
+            "why": "“Ada 101” projesinde paylaşma yetkiniz yok (project.share); proje sahibine ya da yöneticisine başvurun.",
+            "danger": false
+          },
+          {
+            "id": "edit",
+            "label": "Bilgileri düzenle…",
+            "icon": "edit",
+            "why": "“Ada 101” projesinde bilgileri değiştirme yetkiniz yok (project.edit); proje sahibine ya da yöneticisine başvurun.",
+            "danger": false
+          },
+          {"id": "download", "label": ".kcad olarak indir", "icon": "export", "why": null, "danger": false},
+          {"id": "duplicate", "label": "Kopyasını oluştur…", "icon": "copy", "why": null, "danger": false},
+          {"id": "convert", "label": "Dosya projesine çevir…", "icon": "save", "why": null, "danger": false},
+          {
+            "id": "archive",
+            "label": "Arşivle…",
+            "icon": "archive",
+            "why": "“Ada 101” projesinde arşivleme yetkiniz yok (project.edit); proje sahibine ya da yöneticisine başvurun.",
+            "danger": false
+          },
+          {
+            "id": "trash",
+            "label": "Çöpe taşı…",
+            "icon": "trash",
+            "why": "“Ada 101” projesinde çöpe taşıma yetkiniz yok (project.delete); proje sahibine ya da yöneticisine başvurun.",
+            "danger": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "viewer-without-download",
+      "project": {"access": {"role": "viewer", "via": "policy", "permissions": ["project.read"]}},
+      "open": false,
+      "expect": {
+        "favorite": "Favorilere ekle",
+        "chips": ["Genel CAD"],
+        "tabs": ["Bilgiler", "Geçmiş"],
+        "facts": ["Çalışma alanı", "Sahibi", "Rolünüz", "Koordinat sistemi", "Alan birimi", "Nesne", "Kapsam", "Oluşturan", "Son değişiklik", "Revizyon", "Saklama"],
+        "actions": [
+          {
+            "id": "share",
+            "label": "Paylaş…",
+            "icon": "share",
+            "why": "“Ada 101” projesinde paylaşma yetkiniz yok (project.share); proje sahibine ya da yöneticisine başvurun.",
+            "danger": false
+          },
+          {
+            "id": "edit",
+            "label": "Bilgileri düzenle…",
+            "icon": "edit",
+            "why": "“Ada 101” projesinde bilgileri değiştirme yetkiniz yok (project.edit); proje sahibine ya da yöneticisine başvurun.",
+            "danger": false
+          },
+          {
+            "id": "download",
+            "label": ".kcad olarak indir",
+            "icon": "export",
+            "why": "“Ada 101” projesinde indirme yetkiniz yok (project.download); proje sahibine ya da yöneticisine başvurun.",
+            "danger": false
+          },
+          {
+            "id": "duplicate",
+            "label": "Kopyasını oluştur…",
+            "icon": "copy",
+            "why": "“Ada 101” projesinde kopyalama yetkiniz yok (project.download); proje sahibine ya da yöneticisine başvurun.",
+            "danger": false
+          },
+          {
+            "id": "convert",
+            "label": "Dosya projesine çevir…",
+            "icon": "save",
+            "why": "“Ada 101” projesinde dönüştürme yetkiniz yok (project.download); proje sahibine ya da yöneticisine başvurun.",
+            "danger": false
+          },
+          {
+            "id": "archive",
+            "label": "Arşivle…",
+            "icon": "archive",
+            "why": "“Ada 101” projesinde arşivleme yetkiniz yok (project.edit); proje sahibine ya da yöneticisine başvurun.",
+            "danger": false
+          },
+          {
+            "id": "trash",
+            "label": "Çöpe taşı…",
+            "icon": "trash",
+            "why": "“Ada 101” projesinde çöpe taşıma yetkiniz yok (project.delete); proje sahibine ya da yöneticisine başvurun.",
+            "danger": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "archived-owner",
+      "project": {"state": "archived", "archivedAt": "2026-09-24T07:15:00Z"},
+      "open": false,
+      "expect": {
+        "favorite": "Favorilere ekle",
+        "chips": ["Genel CAD", "Arşivde"],
+        "tabs": ["Bilgiler", "Geçmiş"],
+        "facts": [
+          "Çalışma alanı",
+          "Sahibi",
+          "Rolünüz",
+          "Koordinat sistemi",
+          "Alan birimi",
+          "Nesne",
+          "Kapsam",
+          "Oluşturan",
+          "Son değişiklik",
+          "Revizyon",
+          "Saklama",
+          "Arşivlenme"
+        ],
+        "actions": [
+          {"id": "share", "label": "Paylaş…", "icon": "share", "why": null, "danger": false},
+          {"id": "edit", "label": "Bilgileri düzenle…", "icon": "edit", "why": "Arşivlenmiş proje değiştirilemez; önce arşivden çıkarın.", "danger": false},
+          {"id": "download", "label": ".kcad olarak indir", "icon": "export", "why": null, "danger": false},
+          {"id": "duplicate", "label": "Kopyasını oluştur…", "icon": "copy", "why": null, "danger": false},
+          {"id": "convert", "label": "Dosya projesine çevir…", "icon": "save", "why": null, "danger": false},
+          {"id": "unarchive", "label": "Arşivden çıkar", "icon": "archive", "why": null, "danger": false},
+          {"id": "trash", "label": "Çöpe taşı…", "icon": "trash", "why": null, "danger": true}
+        ]
+      }
+    },
+    {
+      "id": "archived-viewer",
+      "project": {
+        "state": "archived",
+        "archivedAt": "2026-09-24T07:15:00Z",
+        "access": {"role": "viewer", "via": "share", "permissions": ["project.read", "project.download", "project.history"]}
+      },
+      "open": false,
+      "expect": {
+        "favorite": "Favorilere ekle",
+        "chips": ["Genel CAD", "Arşivde"],
+        "tabs": ["Bilgiler", "Geçmiş"],
+        "facts": [
+          "Çalışma alanı",
+          "Sahibi",
+          "Rolünüz",
+          "Koordinat sistemi",
+          "Alan birimi",
+          "Nesne",
+          "Kapsam",
+          "Oluşturan",
+          "Son değişiklik",
+          "Revizyon",
+          "Saklama",
+          "Arşivlenme"
+        ],
+        "actions": [
+          {
+            "id": "share",
+            "label": "Paylaş…",
+            "icon": "share",
+            "why": "“Ada 101” projesinde paylaşma yetkiniz yok (project.share); proje sahibine ya da yöneticisine başvurun.",
+            "danger": false
+          },
+          {"id": "edit", "label": "Bilgileri düzenle…", "icon": "edit", "why": "Arşivlenmiş proje değiştirilemez; önce arşivden çıkarın.", "danger": false},
+          {"id": "download", "label": ".kcad olarak indir", "icon": "export", "why": null, "danger": false},
+          {"id": "duplicate", "label": "Kopyasını oluştur…", "icon": "copy", "why": null, "danger": false},
+          {"id": "convert", "label": "Dosya projesine çevir…", "icon": "save", "why": null, "danger": false},
+          {
+            "id": "unarchive",
+            "label": "Arşivden çıkar",
+            "icon": "archive",
+            "why": "“Ada 101” projesinde arşivden çıkarma yetkiniz yok (project.edit); proje sahibine ya da yöneticisine başvurun.",
+            "danger": false
+          },
+          {
+            "id": "trash",
+            "label": "Çöpe taşı…",
+            "icon": "trash",
+            "why": "“Ada 101” projesinde çöpe taşıma yetkiniz yok (project.delete); proje sahibine ya da yöneticisine başvurun.",
+            "danger": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "trashed-owner",
+      "project": {"state": "trashed", "trashedAt": "2026-09-25T13:00:00Z", "trashedByName": "Mehmet Kaya", "purgeAfter": "2026-10-25T13:00:00Z"},
+      "open": false,
+      "expect": {
+        "favorite": null,
+        "chips": ["Genel CAD", "Çöp kutusunda"],
+        "tabs": null,
+        "facts": [
+          "Çalışma alanı",
+          "Sahibi",
+          "Rolünüz",
+          "Koordinat sistemi",
+          "Alan birimi",
+          "Oluşturan",
+          "Son değişiklik",
+          "Revizyon",
+          "Saklama",
+          "Çöpe taşınma",
+          "Kalıcı silinme"
+        ],
+        "actions": [{"id": "purge", "label": "Kalıcı olarak sil…", "icon": "trash", "why": null, "danger": true}]
+      }
+    },
+    {
+      "id": "trashed-viewer",
+      "project": {
+        "state": "trashed",
+        "trashedAt": "2026-09-25T13:00:00Z",
+        "trashedByName": "Mehmet Kaya",
+        "purgeAfter": "2026-10-25T13:00:00Z",
+        "access": {"role": "viewer", "via": "share", "permissions": ["project.read", "project.download", "project.history"]}
+      },
+      "open": false,
+      "expect": {
+        "favorite": null,
+        "chips": ["Genel CAD", "Çöp kutusunda"],
+        "tabs": null,
+        "facts": [
+          "Çalışma alanı",
+          "Sahibi",
+          "Rolünüz",
+          "Koordinat sistemi",
+          "Alan birimi",
+          "Oluşturan",
+          "Son değişiklik",
+          "Revizyon",
+          "Saklama",
+          "Çöpe taşınma",
+          "Kalıcı silinme"
+        ],
+        "actions": [
+          {
+            "id": "purge",
+            "label": "Kalıcı olarak sil…",
+            "icon": "trash",
+            "why": "“Ada 101” projesinde kalıcı olarak silme yetkiniz yok (project.delete); proje sahibine ya da yöneticisine başvurun.",
+            "danger": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "file-project",
+      "project": {"storage": "file", "projectType": "zoningPlan"},
+      "open": false,
+      "expect": {
+        "favorite": "Favorilere ekle",
+        "chips": ["İmar planı"],
+        "tabs": ["Bilgiler", "Geçmiş"],
+        "facts": ["Çalışma alanı", "Sahibi", "Rolünüz", "Koordinat sistemi", "Alan birimi", "Nesne", "Kapsam", "Oluşturan", "Son değişiklik", "Revizyon", "Saklama"],
+        "actions": [
+          {"id": "share", "label": "Paylaş…", "icon": "share", "why": null, "danger": false},
+          {"id": "edit", "label": "Bilgileri düzenle…", "icon": "edit", "why": null, "danger": false},
+          {"id": "download", "label": ".kcad olarak indir", "icon": "export", "why": null, "danger": false},
+          {"id": "duplicate", "label": "Kopyasını oluştur…", "icon": "copy", "why": null, "danger": false},
+          {"id": "convert", "label": "PostGIS'e aktar…", "icon": "server", "why": null, "danger": false},
+          {"id": "archive", "label": "Arşivle…", "icon": "archive", "why": null, "danger": false},
+          {"id": "trash", "label": "Çöpe taşı…", "icon": "trash", "why": null, "danger": true}
+        ]
+      }
+    },
+    {
+      "id": "open-favorite",
+      "project": {"favorite": true},
+      "open": true,
+      "expect": {
+        "favorite": "Favorilerde",
+        "chips": ["Genel CAD", "Şu anda açık"],
+        "tabs": ["Bilgiler", "Geçmiş"],
+        "facts": ["Çalışma alanı", "Sahibi", "Rolünüz", "Koordinat sistemi", "Alan birimi", "Nesne", "Kapsam", "Oluşturan", "Son değişiklik", "Revizyon", "Saklama"],
+        "actions": [
+          {"id": "share", "label": "Paylaş…", "icon": "share", "why": null, "danger": false},
+          {"id": "edit", "label": "Bilgileri düzenle…", "icon": "edit", "why": null, "danger": false},
+          {"id": "download", "label": ".kcad olarak indir", "icon": "export", "why": null, "danger": false},
+          {"id": "duplicate", "label": "Kopyasını oluştur…", "icon": "copy", "why": null, "danger": false},
+          {"id": "convert", "label": "Dosya projesine çevir…", "icon": "save", "why": null, "danger": false},
+          {"id": "archive", "label": "Arşivle…", "icon": "archive", "why": null, "danger": false},
+          {"id": "trash", "label": "Çöpe taşı…", "icon": "trash", "why": null, "danger": true}
+        ]
+      }
+    }
+  ],
+  "primary": [
+    {"id": "nothing-selected", "view": "mine", "project": null, "expect": {"label": "Aç", "enabled": false, "why": "Önce listeden bir proje seçin."}},
+    {"id": "open", "view": "mine", "project": {}, "expect": {"label": "Aç", "enabled": true, "why": ""}},
+    {
+      "id": "archived-opens-read-only",
+      "view": "archived",
+      "project": {"state": "archived", "archivedAt": "2026-09-24T07:15:00Z"},
+      "expect": {"label": "Aç", "enabled": true, "why": "Arşivlenmiş proje salt okunur açılır."}
+    },
+    {
+      "id": "trash-nothing-selected",
+      "view": "trash",
+      "project": null,
+      "expect": {"label": "Geri yükle", "enabled": false, "why": "Önce listeden bir proje seçin."}
+    },
+    {
+      "id": "trash-restore",
+      "view": "trash",
+      "project": {"state": "trashed", "trashedAt": "2026-09-25T13:00:00Z", "trashedByName": "Mehmet Kaya", "purgeAfter": "2026-10-25T13:00:00Z"},
+      "expect": {"label": "Geri yükle", "enabled": true, "why": ""}
+    },
+    {
+      "id": "trash-no-right",
+      "view": "trash",
+      "project": {
+        "state": "trashed",
+        "trashedAt": "2026-09-25T13:00:00Z",
+        "trashedByName": "Mehmet Kaya",
+        "purgeAfter": "2026-10-25T13:00:00Z",
+        "access": {"role": "viewer", "via": "share", "permissions": ["project.read", "project.download", "project.history"]}
+      },
+      "expect": {"label": "Geri yükle", "enabled": false, "why": "“Ada 101” projesini geri yükleme yetkiniz yok (project.delete)."}
+    }
+  ],
+  "rows": [
+    {
+      "id": "mine-favorite-open",
+      "view": "mine",
+      "sort": "updated",
+      "open": true,
+      "place": "Kişisel",
+      "project": {"favorite": true},
+      "expect": {"marks": ["Favorilerinizde", "Açık"], "sub": ["Genel CAD", "Kişisel"], "side": ["26.09.2026 14:05"]}
+    },
+    {
+      "id": "shared-role-owner",
+      "view": "shared",
+      "sort": "updated",
+      "open": false,
+      "place": "Büro",
+      "project": {"access": {"role": "editor", "via": "share", "permissions": ["project.read", "feature.write", "project.comment", "project.download", "project.history"]}},
+      "expect": {"marks": [], "sub": ["Genel CAD", "Sahibi: Ayşe Yılmaz"], "side": ["Düzenleyici", "26.09.2026 14:05"]}
+    },
+    {
+      "id": "organization-archived-owner-unseen",
+      "view": "organization",
+      "sort": "name",
+      "open": false,
+      "place": "Büro",
+      "project": {"state": "archived", "archivedAt": "2026-09-24T07:15:00Z", "ownerName": ""},
+      "expect": {"marks": ["Arşivde"], "sub": ["Genel CAD", "Sahibi: görünmüyor"], "side": ["26.09.2026 14:05"]}
+    },
+    {
+      "id": "archived-list-no-mark",
+      "view": "archived",
+      "sort": "created",
+      "open": false,
+      "place": "Büro",
+      "project": {"state": "archived", "archivedAt": "2026-09-24T07:15:00Z"},
+      "expect": {"marks": [], "sub": ["Genel CAD", "Büro"], "side": ["20.09.2026 12:00"]}
+    },
+    {
+      "id": "recent-opened",
+      "view": "recent",
+      "sort": "opened",
+      "open": false,
+      "place": "Büro",
+      "project": {"openedAt": "2026-09-27T06:30:00Z"},
+      "expect": {"marks": [], "sub": ["Genel CAD", "Büro"], "side": ["27.09.2026 09:30"]}
+    },
+    {
+      "id": "recent-never-opened",
+      "view": "recent",
+      "sort": "opened",
+      "open": false,
+      "place": "Büro",
+      "project": {},
+      "expect": {"marks": [], "sub": ["Genel CAD", "Büro"], "side": [""]}
+    },
+    {
+      "id": "trash-trasher-purge",
+      "view": "trash",
+      "sort": "trashed",
+      "open": false,
+      "place": "Büro",
+      "project": {"state": "trashed", "trashedAt": "2026-09-25T13:00:00Z", "trashedByName": "Mehmet Kaya", "purgeAfter": "2026-10-25T13:00:00Z"},
+      "expect": {"marks": [], "sub": ["Çöpe taşıyan: Mehmet Kaya"], "side": ["25.10.2026 tarihinde silinir", "Silinme: 25.09.2026"]}
+    },
+    {
+      "id": "trash-by-name-no-retention",
+      "view": "trash",
+      "sort": "name",
+      "open": false,
+      "place": "Büro",
+      "project": {"state": "trashed", "trashedAt": "2026-09-25T13:00:00Z"},
+      "expect": {"marks": [], "sub": ["Büro"], "side": ["26.09.2026 14:05"]}
+    }
+  ],
+  "questions": {
+    "trash": [
+      {
+        "id": "with-retention",
+        "args": {"name": "Ada 101", "tenant": "Büro", "days": 30, "open": false},
+        "expect": {
+          "title": "Çöp kutusuna taşı",
+          "message": "“Ada 101” projesi (Büro) erişimi olan herkes için çöp kutusuna taşınsın mı?",
+          "details": [
+            "Proje listelerden kalkar; kimse açamaz ve değiştiremez.",
+            "Projeyi şu anda açık tutanların kaydı durur; gönderilmemiş değişiklikleri kendi cihazlarında kalır.",
+            "Hiçbir şey silinmez: proje sahibi ya da kurum yöneticisi 30 gün içinde Çöp kutusu’ndan geri yükleyebilir; sonra proje kalıcı olarak silinir."
+          ],
+          "action": "Çöpe taşı"
+        }
+      },
+      {
+        "id": "open-here-unknown-retention",
+        "args": {"name": "Ada 101", "tenant": "Kişisel", "days": null, "open": true},
+        "expect": {
+          "title": "Çöp kutusuna taşı",
+          "message": "“Ada 101” projesi (Kişisel) erişimi olan herkes için çöp kutusuna taşınsın mı?",
+          "details": [
+            "Proje listelerden kalkar; kimse açamaz ve değiştiremez.",
+            "Projeyi şu anda açık tutanların kaydı durur; gönderilmemiş değişiklikleri kendi cihazlarında kalır.",
+            "Hiçbir şey silinmez: proje sahibi ya da kurum yöneticisi saklama süresi dolana kadar içinde Çöp kutusu’ndan geri yükleyebilir; sonra proje kalıcı olarak silinir.",
+            "Proje şu anda sizde açık: çizim ekranda kalır, dilerseniz yerel bir dosyaya kaydedin."
+          ],
+          "action": "Çöpe taşı"
+        }
+      }
+    ],
+    "purge": [
+      {
+        "id": "purge",
+        "args": {"name": "Ada 101"},
+        "expect": {
+          "title": "Kalıcı olarak sil",
+          "message": "“Ada 101” projesi kalıcı olarak silinsin mi? Bu işlem geri alınamaz.",
+          "details": [
+            "Nesneler, katmanlar, paylaşımlar, komut günlüğü ve olaylar silinir; yalnız kimin ne zaman sildiğini söyleyen denetim kaydı kalır.",
+            "Önceden indirilmiş kopyalar ve sunucu yedekleri bu işlemle silinmez."
+          ],
+          "action": "Kalıcı olarak sil"
+        }
+      }
+    ],
+    "archive": [
+      {
+        "id": "archive",
+        "args": {"name": "Ada 101"},
+        "expect": {
+          "title": "Projeyi arşivle",
+          "message": "“Ada 101” projesi arşivlensin mi?",
+          "details": [
+            "Proje salt okunur olur: nesneleri, adı ve bilgileri değişmez; açılabilir, paylaşımı değiştirilebilir, kopyası oluşturulabilir.",
+            "Projeyi şu anda açık tutanların kaydı durur; gönderilmemiş değişiklikleri kendi cihazlarında kalır.",
+            "Arşivlenmişler listesinde durur; proje sahibi ya da yöneticisi arşivden çıkarabilir."
+          ],
+          "action": "Arşivle"
+        }
+      }
+    ]
+  },
+  "lines": [
+    {"line": "trashed", "args": ["Ada 101", "2026-10-25T13:00:00Z"], "text": "“Ada 101” çöp kutusuna taşındı; 25.10.2026 tarihine kadar geri yüklenebilir."},
+    {"line": "trashed", "args": ["Ada 101", null], "text": "“Ada 101” çöp kutusuna taşındı."},
+    {
+      "line": "trashFailed",
+      "args": ["Ada 101", "Sunucuya ulaşılamadı; bağlantınızı denetleyip yeniden deneyin."],
+      "text": "“Ada 101” çöp kutusuna taşınamadı: Sunucuya ulaşılamadı; bağlantınızı denetleyip yeniden deneyin."
+    },
+    {"line": "trashedStatus", "args": ["Ada 101"], "text": "“Ada 101” çöp kutusuna taşındı."},
+    {"line": "purged", "args": ["Ada 101", "1284"], "text": "“Ada 101” kalıcı olarak silindi (1284 nesne)."},
+    {
+      "line": "purgeFailed",
+      "args": ["Ada 101", "Sunucuya ulaşılamadı; bağlantınızı denetleyip yeniden deneyin."],
+      "text": "“Ada 101” kalıcı olarak silinemedi: Sunucuya ulaşılamadı; bağlantınızı denetleyip yeniden deneyin."
+    },
+    {"line": "purgedStatus", "args": ["Ada 101"], "text": "“Ada 101” kalıcı olarak silindi."},
+    {"line": "archived", "args": ["Ada 101"], "text": "“Ada 101” arşivlendi."},
+    {
+      "line": "archiveFailed",
+      "args": ["Ada 101", "Sunucuya ulaşılamadı; bağlantınızı denetleyip yeniden deneyin."],
+      "text": "“Ada 101” arşivlenemedi: Sunucuya ulaşılamadı; bağlantınızı denetleyip yeniden deneyin."
+    },
+    {"line": "archivedStatus", "args": ["Ada 101"], "text": "“Ada 101” arşivlendi; Arşivlenmişler listesinde duruyor."},
+    {"line": "unarchived", "args": ["Ada 101"], "text": "“Ada 101” arşivden çıkarıldı."},
+    {"line": "unarchivedStatus", "args": ["Ada 101"], "text": "“Ada 101” arşivden çıkarıldı; yeniden düzenlenebilir."},
+    {"line": "restored", "args": ["Ada 101"], "text": "“Ada 101” çöp kutusundan geri yüklendi."},
+    {"line": "restoredStatus", "args": ["Ada 101"], "text": "“Ada 101” geri yüklendi; listelerinde yeniden görünür."},
+    {"line": "favoriteAdded", "args": ["Ada 101"], "text": "“Ada 101” favorilere eklendi."},
+    {"line": "favoriteRemoved", "args": ["Ada 101"], "text": "“Ada 101” favorilerden çıkarıldı."},
+    {"line": "downloaded", "args": ["Ada 101"], "text": "“Ada 101” indirildi."}
+  ]
+}
