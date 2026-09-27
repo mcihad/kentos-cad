@@ -430,6 +430,8 @@ pub struct App {
     pub processing: crate::processing::Processing,
     /// İfade oluşturucu, while it is open over the window that asked for it (expression/).
     pub(crate) builder: Option<crate::expression::Builder>,
+    /// Whether İfade oluşturucu was left in Akış (for as long as the program runs).
+    pub(crate) builder_flow: bool,
     /// The layer or group Katmanlar → Sil asks about (`Dialog::RemoveLayer`).
     pub removing_layer: Option<String>,
     /// The typed settings (docs/adr/0023): kept in `ayarlar.json` when opened by `main`.
@@ -574,6 +576,7 @@ impl App {
             dwell_on_time: true,
             processing: crate::processing::Processing::default(),
             builder: None,
+            builder_flow: false,
             removing_layer: None,
             settings,
             settings_draft: None,
