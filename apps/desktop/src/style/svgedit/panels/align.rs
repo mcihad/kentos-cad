@@ -28,19 +28,35 @@ pub(super) fn tab<'a>(ed: &SvgEditor, count: usize) -> Element<'a, Message> {
         act_sized(Icon::Svg(svg_icon(name)), tip_text, press, false, 20.0)
     };
     let a = |side: &'static str, name: &'static str, tip_text: &str| {
-        big(name, tip_text, (count > 0).then(|| change(move |ed| ed.align(side))))
+        big(
+            name,
+            tip_text,
+            (count > 0).then(|| change(move |ed| ed.align(side))),
+        )
     };
     let d = |how: &'static str, name: &'static str, tip_text: &str| {
-        big(name, tip_text, (count >= 3).then(|| change(move |ed| ed.distribute(how))))
+        big(
+            name,
+            tip_text,
+            (count >= 3).then(|| change(move |ed| ed.distribute(how))),
+        )
     };
     column![
         title("Hizala ve dağıt".to_owned(), None),
         fields::labelled(
             "Göre",
-            fields::select(&TO, ed.ui.align_to, |v| change(move |ed| ed.ui.align_to = v)),
+            fields::select(
+                &TO,
+                ed.ui.align_to,
+                |v| change(move |ed| ed.ui.align_to = v)
+            ),
             None,
         ),
-        check(ed.ui.align_as_one, "Seçimi tek parça olarak taşı", |ed, v| ed.ui.align_as_one = v),
+        check(
+            ed.ui.align_as_one,
+            "Seçimi tek parça olarak taşı",
+            |ed, v| ed.ui.align_as_one = v
+        ),
         group(
             "Hizala",
             vec![

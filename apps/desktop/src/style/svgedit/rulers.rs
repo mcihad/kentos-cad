@@ -51,9 +51,7 @@ impl Rulers {
 
     /// The guide being dragged back onto a ruler (drawn red, dashed).
     fn deleting(&self, id: &str) -> bool {
-        self.op
-            .as_ref()
-            .is_some_and(|o| o.id == id && o.over_ruler)
+        self.op.as_ref().is_some_and(|o| o.id == id && o.over_ruler)
     }
 }
 
@@ -288,10 +286,7 @@ pub fn draw_guides(frame: &mut Frame, ed: &SvgEditor, size: Size, c: &RulerColor
                     .with_color(if deleting {
                         c.danger
                     } else {
-                        Color {
-                            a: 0.85,
-                            ..c.info
-                        }
+                        Color { a: 0.85, ..c.info }
                     })
                     .with_width(1.0)
             },

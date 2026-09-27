@@ -40,27 +40,36 @@
   min-width: 20px;
 }
 
-/* Canvas overlay */
-.svge__tag {
-  fill: var(--c-text);
-  font-family: var(--font-ui);
-  font-size: var(--fs-2xs);
-  paint-order: stroke;
-  stroke: var(--c-panel);
-  stroke-width: 3px;
-  stroke-linejoin: round;
+/* Canvas overlay. A label is a chip whose bottom sits at the point it is given (--below: its top). */
+.svge__tagbox {
+  overflow: visible;
   pointer-events: none;
 }
+.svge__tag {
+  display: block;
+  width: max-content;
+  transform: translateY(-100%);
+  padding: 0 3px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--c-panel) 90%, transparent);
+  color: var(--c-text);
+  font: 400 var(--fs-2xs) / 1.35 var(--font-ui);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.svge__tag--below {
+  transform: translateY(1px);
+}
 .svge__tag--snap {
-  fill: var(--canvas-snap);
+  color: var(--canvas-snap);
   font-weight: 600;
 }
 .svge__tag--measure {
-  fill: var(--c-accent-text);
+  color: var(--c-accent-text);
   font-weight: 600;
 }
 .svge__tag--seg {
-  fill: var(--c-text-2);
+  color: var(--c-text-2);
 }
 .svge__snap {
   stroke: var(--canvas-snap);

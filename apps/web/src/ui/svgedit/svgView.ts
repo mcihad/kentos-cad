@@ -95,9 +95,19 @@ export const el = (tag: string, attrs: Record<string, string | number> = {}): SV
 
 export { fmtNum } from './svgEditModel';
 
-/** A label in screen space with a halo (overlay text). */
-export function tag(x: number, y: number, text: string, cls = 'svge__tag'): SVGElement {
-  const t = el('text', { x, y, class: cls });
-  t.textContent = text;
-  return t;
+const XHTML = 'http://www.w3.org/1999/xhtml';
+
+/**
+ * A label in screen space on a chip of the panel's colour (overlay text), readable over any fill:
+ * the chip's bottom-left corner sits at (x - 3, y), or with `below` its top-left, so a second line
+ * hangs under the first at any text size. HTML in a `foreignObject` sizes the chip to its text
+ * without a layout read. The desktop draws the same chip (`svgedit/snap.rs`, `tag`).
+ */
+export function tag(x: number, y: number, text: string, cls = 'svge__tag', below = false): SVGElement {
+  const box = el('foreignObject', { x: x - 3, y, width: 1, height: 1, class: 'svge__tagbox' });
+  const chip = document.createElementNS(XHTML, 'span') as HTMLElement;
+  chip.className = below ? `${cls} svge__tag--below` : cls;
+  chip.textContent = text;
+  box.append(chip);
+  return box;
 }

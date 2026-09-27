@@ -233,7 +233,9 @@ impl canvas::Program<Message> for Stage<'_> {
             }
             canvas::Event::Mouse(mouse::Event::WheelScrolled { delta }) if inside => {
                 let dy = match delta {
-                    mouse::ScrollDelta::Lines { y, .. } | mouse::ScrollDelta::Pixels { y, .. } => *y,
+                    mouse::ScrollDelta::Lines { y, .. } | mouse::ScrollDelta::Pixels { y, .. } => {
+                        *y
+                    }
                 };
                 if dy == 0.0 {
                     return None;
@@ -408,7 +410,11 @@ fn draw_base(frame: &mut Frame, ed: &SvgEditor, o: &Options, pal: &Palette) {
         && ed.ui.array.preview
         && let Some(ms) = array_matrices(ed)
     {
-        let src: Vec<_> = ed.chosen().into_iter().filter(|s| !s.is("hidden")).collect();
+        let src: Vec<_> = ed
+            .chosen()
+            .into_iter()
+            .filter(|s| !s.is("hidden"))
+            .collect();
         let mut count = 0;
         'all: for m in &ms {
             for s in &src {
@@ -424,7 +430,9 @@ fn draw_base(frame: &mut Frame, ed: &SvgEditor, o: &Options, pal: &Palette) {
     }
     frame.stroke(
         &paper,
-        Stroke::default().with_color(pal.line_strong).with_width(1.0),
+        Stroke::default()
+            .with_color(pal.line_strong)
+            .with_width(1.0),
     );
 }
 
@@ -452,7 +460,13 @@ fn draw_overlay(frame: &mut Frame, ed: &SvgEditor, o: &Options, pal: &Palette, s
             Point::new(a.x.min(b.x), a.y.min(b.y)),
             Size::new((a.x - b.x).abs(), (a.y - b.y).abs()),
         );
-        frame.fill(&r, Color { a: 0.12, ..pal.accent });
+        frame.fill(
+            &r,
+            Color {
+                a: 0.12,
+                ..pal.accent
+            },
+        );
         frame.stroke(&r, Stroke::default().with_color(pal.accent).with_width(1.0));
     }
     if ed.node_edit.is_some() && ed.node_shape().is_some() {

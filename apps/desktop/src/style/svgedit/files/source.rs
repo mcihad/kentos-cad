@@ -13,10 +13,12 @@
 
 use std::ops::Range;
 
-use iced::keyboard::{self, key::Named};
 use iced::advanced::text::highlighter::{self, Format};
+use iced::keyboard::{self, key::Named};
 use iced::widget::text_editor::{self, Action, Binding, Content};
-use iced::widget::{Column, button, column, container, row, scrollable, space, text_editor as editor};
+use iced::widget::{
+    Column, button, column, container, row, scrollable, space, text_editor as editor,
+};
 use iced::{Center, Color, Element, Fill, Font, Length, Theme};
 use kentos_svg_core::export::{SvgTextOptions, write};
 use kentos_ui::icon::{Icon, Tone, icon};
@@ -137,8 +139,15 @@ impl SvgEditor {
         let text = s.content.text();
         s.edited = text != s.generated;
         if s.edited {
-            s.note = Some(("Düzenlendi: Uygula (Ctrl+Enter) ya da Geri al.".to_owned(), false));
-        } else if s.note.as_ref().is_some_and(|n| n.0.starts_with("Düzenlendi")) {
+            s.note = Some((
+                "Düzenlendi: Uygula (Ctrl+Enter) ya da Geri al.".to_owned(),
+                false,
+            ));
+        } else if s
+            .note
+            .as_ref()
+            .is_some_and(|n| n.0.starts_with("Düzenlendi"))
+        {
             s.note = None;
         }
         // A click on an element selects its shape (while the text follows the drawing).
@@ -310,7 +319,9 @@ impl highlighter::Highlighter for Xml {
                 out.push((start..i, Kind::Value));
             } else if in_tag && (c.is_ascii_alphabetic() || c == b':' || c == b'-') {
                 let start = i;
-                while i < bytes.len() && (bytes[i].is_ascii_alphanumeric() || matches!(bytes[i], b':' | b'-' | b'_')) {
+                while i < bytes.len()
+                    && (bytes[i].is_ascii_alphanumeric() || matches!(bytes[i], b':' | b'-' | b'_'))
+                {
                     i += 1;
                 }
                 out.push((start..i, Kind::Attr));
@@ -440,7 +451,10 @@ pub fn view<'a>(ed: &'a SvgEditor, s: &'a SourcePanel) -> Element<'a, Message> {
                     Some(Binding::Custom(source_change(|ed| ed.source_apply())))
                 }
                 keyboard::Key::Named(Named::Tab) if !k.modifiers.shift() => {
-                    Some(Binding::Sequence(vec![Binding::Insert(' '), Binding::Insert(' ')]))
+                    Some(Binding::Sequence(vec![
+                        Binding::Insert(' '),
+                        Binding::Insert(' '),
+                    ]))
                 }
                 keyboard::Key::Named(Named::Escape) => Some(Binding::Unfocus),
                 _ => Binding::from_key_press(k),
@@ -454,13 +468,15 @@ pub fn view<'a>(ed: &'a SvgEditor, s: &'a SourcePanel) -> Element<'a, Message> {
             value: Tokens::of(t).text,
             selection: Tokens::of(t).accent.scale_alpha(0.3),
         });
-    let body = scrollable(row![gutter, container(code).width(Length::Shrink)].align_y(iced::Alignment::Start))
-        .direction(scrollable::Direction::Both {
-            vertical: scrollable::Scrollbar::new().width(6).scroller_width(6),
-            horizontal: scrollable::Scrollbar::new().width(6).scroller_width(6),
-        })
-        .width(Fill)
-        .height(Fill);
+    let body = scrollable(
+        row![gutter, container(code).width(Length::Shrink)].align_y(iced::Alignment::Start),
+    )
+    .direction(scrollable::Direction::Both {
+        vertical: scrollable::Scrollbar::new().width(6).scroller_width(6),
+        horizontal: scrollable::Scrollbar::new().width(6).scroller_width(6),
+    })
+    .width(Fill)
+    .height(Fill);
     let note: Element<'a, Message> = match &s.note {
         Some((t, warn)) => {
             let warn = *warn;

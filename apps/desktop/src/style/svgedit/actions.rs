@@ -117,14 +117,25 @@ pub enum Same {
 pub enum NodeCmd {
     Type(&'static str),
     Insert,
-    Delete { keep_shape: bool },
-    Join { merge: bool },
+    Delete {
+        keep_shape: bool,
+    },
+    Join {
+        merge: bool,
+    },
     Break,
     DeleteSegment,
-    Segments { line: bool },
+    Segments {
+        line: bool,
+    },
     Corner(CornerMode),
-    Align { axis: &'static str, to: &'static str },
-    Distribute { axis: &'static str },
+    Align {
+        axis: &'static str,
+        to: &'static str,
+    },
+    Distribute {
+        axis: &'static str,
+    },
 }
 
 fn node_type_name(t: &str) -> &'static str {
@@ -138,7 +149,12 @@ fn node_type_name(t: &str) -> &'static str {
 
 /// An operation's new shapes' ids made here (the core names them `\u{1}k`).
 fn with_ids(r: OpResult, ids: &Ids) -> OpResult {
-    let OpResult::Done { mut add, remove, note } = r else {
+    let OpResult::Done {
+        mut add,
+        remove,
+        note,
+    } = r
+    else {
         return r;
     };
     if ids.count > 0 {
@@ -283,7 +299,9 @@ impl SvgEditor {
                 let mut first_error = None;
                 for s in &sel {
                     match break_apart(s, op == PathOp::Split, &mut ids) {
-                        Ok(OpResult::Done { add: a, remove: r, .. }) => {
+                        Ok(OpResult::Done {
+                            add: a, remove: r, ..
+                        }) => {
                             add.extend(a);
                             remove.extend(r);
                         }
@@ -295,7 +313,11 @@ impl SvgEditor {
                 if add.is_empty() && remove.is_empty() {
                     Ok(OpResult::Error(first_error.unwrap_or_default()))
                 } else {
-                    Ok(OpResult::Done { add, remove, note: None })
+                    Ok(OpResult::Done {
+                        add,
+                        remove,
+                        note: None,
+                    })
                 }
             }
             PathOp::ToPath => Ok(shapes_to_path(&sel)),
@@ -357,7 +379,9 @@ impl SvgEditor {
         let refs = self.node_refs();
         if refs.len() < need {
             self.warn(if need > 1 {
-                format!("Bu işlem için en az {need} düğüm seçin (Shift ile ekleyin ya da kutu çizin).")
+                format!(
+                    "Bu işlem için en az {need} düğüm seçin (Shift ile ekleyin ya da kutu çizin)."
+                )
             } else {
                 "Önce düğüm seçin: düğüme tıklayın ya da boşlukta sürükleyip kutu çizin.".to_owned()
             });
@@ -388,11 +412,11 @@ impl SvgEditor {
             Joined::Error(e) => Err(e),
         };
         match cmd {
-            NodeCmd::Type(t) => {
-                self.nodes_op(&format!("Düğüm türü: {}", node_type_name(t)), 1, |subs, refs| {
-                    Ok((set_node_type(subs, refs, t), None))
-                })
-            }
+            NodeCmd::Type(t) => self.nodes_op(
+                &format!("Düğüm türü: {}", node_type_name(t)),
+                1,
+                |subs, refs| Ok((set_node_type(subs, refs, t), None)),
+            ),
             NodeCmd::Insert => self.nodes_op("Düğüm ekle", 2, |subs, refs| {
                 let (subs, out) = insert_mid_nodes(subs, refs);
                 if out.len() > refs.len() {
@@ -420,7 +444,11 @@ impl SvgEditor {
                 delete_segments(subs, refs).map(|s| (s, Some(Vec::new())))
             }),
             NodeCmd::Segments { line } => self.nodes_op(
-                if line { "Parçalar düz" } else { "Parçalar eğri" },
+                if line {
+                    "Parçalar düz"
+                } else {
+                    "Parçalar eğri"
+                },
                 2,
                 |subs, refs| Ok((segments_to(subs, refs, line), None)),
             ),
@@ -433,9 +461,14 @@ impl SvgEditor {
                         kentos_expression::js::number::to_string(size)
                     )
                 } else {
-                    format!("Pah kır ({})", kentos_expression::js::number::to_string(size))
+                    format!(
+                        "Pah kır ({})",
+                        kentos_expression::js::number::to_string(size)
+                    )
                 };
-                self.nodes_op(&label, 1, |subs, refs| joined(corner_nodes(subs, refs, fillet, size)))
+                self.nodes_op(&label, 1, |subs, refs| {
+                    joined(corner_nodes(subs, refs, fillet, size))
+                })
             }
             NodeCmd::Align { axis, to } => self.nodes_op("Düğümleri hizala", 2, |subs, refs| {
                 Ok((align_nodes(subs, refs, axis, to), None))
@@ -524,7 +557,9 @@ impl SvgEditor {
                 .any(|id| self.doc.shape(id).is_some_and(|s| s.is("locked")))
         });
         if locked {
-            self.warn("Seçimde kilitli şekil var: önce kilidini açın (şekil listesinde kilit düğmesi).");
+            self.warn(
+                "Seçimde kilitli şekil var: önce kilidini açın (şekil listesinde kilit düğmesi).",
+            );
             return None;
         }
         Some(units)
@@ -632,7 +667,9 @@ impl SvgEditor {
             return;
         }
         let chosen = self.selection.clone();
-        self.run("Sıra", |ed| ed.doc.shapes = restack(&ed.doc.shapes, &chosen, op));
+        self.run("Sıra", |ed| {
+            ed.doc.shapes = restack(&ed.doc.shapes, &chosen, op)
+        });
     }
 
     // ── Arrays ───────────────────────────────────────────────────────────
@@ -714,7 +751,11 @@ impl SvgEditor {
                 Same::Stroke => format!(
                     "{}|{}",
                     paint("stroke"),
-                    if paint("stroke") == "none" { String::new() } else { width }
+                    if paint("stroke") == "none" {
+                        String::new()
+                    } else {
+                        width
+                    }
                 ),
                 Same::Kind => s.kind().to_owned(),
                 Same::Both => format!("{}|{}|{}", paint("fill"), paint("stroke"), width),
@@ -750,7 +791,11 @@ impl SvgEditor {
                 ed.node_edit = None;
             }),
             Action::Duplicate => {
-                let step = if self.options.grid > 0.0 { self.options.grid } else { 2.0 };
+                let step = if self.options.grid > 0.0 {
+                    self.options.grid
+                } else {
+                    2.0
+                };
                 let mut groups: Vec<(String, String)> = Vec::new();
                 let copies: Vec<Obj> = sel
                     .iter()
@@ -787,8 +832,10 @@ impl SvgEditor {
                     }
                     // Group members sit together in the stack (the file writes them in one <g>).
                     let at = ed.doc.shapes.iter().position(on).unwrap_or(0);
-                    let members: Vec<Obj> = ed.doc.shapes.iter().filter(|s| on(s)).cloned().collect();
-                    let mut rest: Vec<Obj> = ed.doc.shapes.iter().filter(|s| !on(s)).cloned().collect();
+                    let members: Vec<Obj> =
+                        ed.doc.shapes.iter().filter(|s| on(s)).cloned().collect();
+                    let mut rest: Vec<Obj> =
+                        ed.doc.shapes.iter().filter(|s| !on(s)).cloned().collect();
                     let at = at.min(rest.len());
                     rest.splice(at..at, members);
                     ed.doc.shapes = rest;

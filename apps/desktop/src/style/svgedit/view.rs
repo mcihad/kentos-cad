@@ -8,8 +8,8 @@
 //! properties, tracing, the library, save as) stand over it.
 
 use iced::widget::{
-    Column, button, canvas, column, container, pin, responsive, row, scrollable, shader,
-    space, stack, text_input,
+    Column, button, canvas, column, container, pin, responsive, row, scrollable, shader, space,
+    stack, text_input,
 };
 use iced::{Center, Element, Fill, Length, Rectangle, Renderer, Theme};
 use kentos_ui::icon::{Icon, Tone, icon};
@@ -56,7 +56,12 @@ impl canvas::Program<Message> for Backdrop<'_> {
         let c = &self.ed.camera;
         let a = c.to_screen([0.0, 0.0]);
         let b = c.to_screen([self.ed.doc.width, self.ed.doc.height]);
-        let (x, y, w, h) = (a[0] as f32, a[1] as f32, (b[0] - a[0]) as f32, (b[1] - a[1]) as f32);
+        let (x, y, w, h) = (
+            a[0] as f32,
+            a[1] as f32,
+            (b[0] - a[0]) as f32,
+            (b[1] - a[1]) as f32,
+        );
         // A soft shadow under the paper (the web's drop shadow).
         for (i, alpha) in [(3.0, 0.10), (2.0, 0.14), (1.0, 0.18)] {
             frame.fill_rectangle(
@@ -111,7 +116,9 @@ fn tool_button<'a>(ed: &SvgEditor, t: &'static super::ToolDef) -> Element<'a, Me
     let face = row![
         icon(crate::icons::from_web(Some(t.icon))).size(16.0),
         label::body(t.label).width(Fill),
-        label::caption(t.key).font(typography::mono()).style(style::text::muted),
+        label::caption(t.key)
+            .font(typography::mono())
+            .style(style::text::muted),
     ]
     .spacing(8)
     .align_y(Center);
@@ -344,7 +351,9 @@ fn question<'a>(ed: &SvgEditor, q: &Question) -> Element<'a, Message> {
         .center_x(36)
         .center_y(36)
         .style(|t: &Theme| container::Style {
-            background: Some(iced::Background::Color(Tokens::of(t).warning.scale_alpha(0.14))),
+            background: Some(iced::Background::Color(
+                Tokens::of(t).warning.scale_alpha(0.14),
+            )),
             border: iced::border::rounded(18.0),
             ..container::Style::default()
         });
@@ -514,7 +523,11 @@ impl App {
         }
         let (ink, paper) = {
             let t = self.style_palette();
-            let ink = if ed.options.ink_auto { t.ink } else { ed.options.ink.clone() };
+            let ink = if ed.options.ink_auto {
+                t.ink
+            } else {
+                ed.options.ink.clone()
+            };
             let paper = ed.doc.background.clone().unwrap_or(t.paper);
             (ink, paper)
         };
@@ -563,7 +576,10 @@ impl App {
                 .into(),
                 FileDialog::SaveAs(form) => save_as(form),
                 FileDialog::Library(p) => responsive(move |room| {
-                    self.svgedit_library_view(p, typography::from_default(760.0).min(room.width - 60.0))
+                    self.svgedit_library_view(
+                        p,
+                        typography::from_default(760.0).min(room.width - 60.0),
+                    )
                 })
                 .into(),
                 FileDialog::Place => files::reference::place_view(ed),
@@ -597,9 +613,15 @@ impl App {
             container(center(ed, paper, ink)).width(Fill).height(Fill),
             vertical_divider(),
             container(
-                scrollable(container(super::panels::panel(ed)).padding([10, 14]))
-                    .direction(style::field::body_scrollbar())
-                    .height(Fill)
+                // Inside: the sides' padding (2 × 14) and the scrollbar with its gap (6 + 8).
+                scrollable(
+                    container(super::panels::with_room(right_w - 42.0, || {
+                        super::panels::panel(ed)
+                    }))
+                    .padding([10, 14])
+                )
+                .direction(style::field::body_scrollbar())
+                .height(Fill)
             )
             .width(Length::Fixed(right_w))
             .height(Fill)

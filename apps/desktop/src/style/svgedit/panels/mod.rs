@@ -14,17 +14,18 @@ pub(crate) mod props;
 mod style;
 mod transform;
 
+use std::cell::Cell;
 use std::fmt::Display;
 use std::sync::Arc;
 
 use iced::widget::tooltip::Position;
-use iced::widget::{Id, button, column, container, row};
-use iced::{Border, Center, Element, Fill, Theme};
+use iced::widget::{Id, Row, button, column, container, row};
+use iced::{Border, Center, Element, Fill, Length, Theme};
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::label;
 use kentos_ui::style as ui_style;
 use kentos_ui::theme::{Tokens, typography};
-use kentos_ui::widget::{Segmented, Tip, tip};
+use kentos_ui::widget::{Tip, tip};
 
 use super::state::{SvgEditor, Tab};
 use super::{Event, change, ev};
@@ -41,23 +42,69 @@ impl Display for Opt {
     }
 }
 
-/// A segmented control (`liveSeg`): the value's segment lit (none when mixed).
+thread_local! {
+    /// The width a segmented control may take where it is built: the right
+    /// column's inside while the window builds the panels (`with_room`),
+    /// unbounded elsewhere.
+    static ROOM: Cell<f32> = const { Cell::new(f32::INFINITY) };
+}
+
+/// Builds the panels knowing their column's inside is `room` pixels wide.
+pub fn with_room<T>(room: f32, build: impl FnOnce() -> T) -> T {
+    ROOM.with(|r| r.set(room));
+    let built = build();
+    ROOM.with(|r| r.set(f32::INFINITY));
+    built
+}
+
+/// A segmented control (`liveSeg`, KentOS UI's `Segmented` look): the
+/// value's segment lit (none when mixed). The parts share the width equally
+/// while every name fits its part on one line; else each part's share follows
+/// its name (the web's `flex: 1` with `white-space: nowrap`), with narrower
+/// sides when even that is too wide. A larger text neither breaks a name in
+/// two (“Satır-sütun”) nor pushes the last part out of the column (“Matris”).
 pub fn seg<'a>(
     options: &[Opt],
     value: Option<&str>,
     hints: &[&str],
     on: impl Fn(&'static str) -> Message + 'a,
 ) -> Element<'a, Message> {
-    let chosen = options
+    let room = ROOM.with(Cell::get);
+    let names: Vec<f32> = options
         .iter()
-        .copied()
-        .find(|o| Some(o.0) == value)
-        .unwrap_or(Opt("", ""));
-    let mut s = Segmented::new(options.iter().copied(), chosen, move |o: Opt| on(o.0)).width(Fill);
-    if !hints.is_empty() {
-        s = s.hints(hints.iter().copied());
-    }
-    s.into()
+        .map(|o| typography::text_width(o.1, typography::body()))
+        .collect();
+    let parts = names.len() as f32;
+    let widest = names.iter().copied().fold(0.0, f32::max);
+    // The frame and the pixel between parts.
+    let gaps = parts + 1.0;
+    let equal = (widest + 24.0) * parts + gaps <= room;
+    let side: u16 = if equal || names.iter().sum::<f32>() + 24.0 * parts + gaps <= room {
+        12
+    } else {
+        6
+    };
+    let parts = options.iter().zip(&names).enumerate().map(|(i, (o, w))| {
+        let share = if equal {
+            1
+        } else {
+            (w + 2.0 * f32::from(side)).round().max(1.0) as u16
+        };
+        let part = button(container(label::body(o.1)).center_x(Fill))
+            .on_press(on(o.0))
+            .padding([3, side])
+            .width(Length::FillPortion(share))
+            .style(ui_style::button::segment(Some(o.0) == value));
+        match hints.get(i) {
+            Some(hint) => tip(part, Tip::new(*hint), Position::Bottom),
+            None => part.into(),
+        }
+    });
+    container(Row::with_children(parts).spacing(1))
+        .padding(1)
+        .width(Fill)
+        .style(ui_style::container::segmented)
+        .into()
 }
 
 /// A number field's step (↑ ↓, ×10 with Shift) and bounds.
@@ -179,11 +226,19 @@ pub fn num<'a>(
     spec: NumSpec,
     apply: impl Fn(&mut SvgEditor, f64) + Send + Sync + 'static,
 ) -> Element<'a, Message> {
-    fields::labelled(label_text, num_bare(ed, key, value, unit, spec, apply), None)
+    fields::labelled(
+        label_text,
+        num_bare(ed, key, value, unit, spec, apply),
+        None,
+    )
 }
 
 /// A check box with its words (`checkbox`).
-pub fn check<'a>(on: bool, words: &str, f: impl Fn(&mut SvgEditor, bool) + Send + Sync + 'static) -> Element<'a, Message> {
+pub fn check<'a>(
+    on: bool,
+    words: &str,
+    f: impl Fn(&mut SvgEditor, bool) + Send + Sync + 'static,
+) -> Element<'a, Message> {
     let f = Arc::new(f);
     fields::check(
         if on {
@@ -210,7 +265,9 @@ pub fn act_sized<'a>(
     size: f32,
 ) -> Element<'a, Message> {
     let side = typography::scaled(size + 12.0);
-    let face = container(icon(glyph).size(size)).center_x(side).center_y(side);
+    let face = container(icon(glyph).size(size))
+        .center_x(side)
+        .center_y(side);
     tip(
         button(face)
             .padding(0)

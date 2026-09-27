@@ -5,7 +5,9 @@
 //! system's serif for Times) turned about their anchor; the symbol's colour
 //! and its second colour as the preview's, the shape's opacity on both.
 
-use iced::widget::canvas::{Fill, Frame, LineCap, LineDash, LineJoin, Path, Stroke, Style, Text, fill};
+use iced::widget::canvas::{
+    Fill, Frame, LineCap, LineDash, LineJoin, Path, Stroke, Style, Text, fill,
+};
 use iced::{Color, Pixels, Point, Radians, Vector};
 use kentos_svg_core::model::to_path;
 use kentos_svg_core::shape::{Obj, Pt, SubPath};
@@ -103,7 +105,13 @@ fn with_alpha(c: Color, a: f32) -> Color {
 }
 
 /// The stroke a shape draws with at this zoom, or none.
-fn stroke_of<'a>(s: &Obj, o: &Options, zoom: f64, alpha: f32, dash: &'a [f32]) -> Option<Stroke<'a>> {
+fn stroke_of<'a>(
+    s: &Obj,
+    o: &Options,
+    zoom: f64,
+    alpha: f32,
+    dash: &'a [f32],
+) -> Option<Stroke<'a>> {
     let color = paint_color(s.text("stroke").unwrap_or("none"), o)?;
     let width = s.num("strokeWidth");
     if !(width > 0.0) {
@@ -115,7 +123,10 @@ fn stroke_of<'a>(s: &Obj, o: &Options, zoom: f64, alpha: f32, dash: &'a [f32]) -
         "square" => LineCap::Square,
         _ => LineCap::Butt,
     };
-    let join = match s.text("join").unwrap_or(if path { "round" } else { "miter" }) {
+    let join = match s
+        .text("join")
+        .unwrap_or(if path { "round" } else { "miter" })
+    {
         "round" => LineJoin::Round,
         "bevel" => LineJoin::Bevel,
         _ => LineJoin::Miter,

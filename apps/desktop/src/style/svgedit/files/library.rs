@@ -36,7 +36,8 @@ impl App {
             library: lib,
             images: &self.styles.images,
         };
-        let q = kentos_expression::js::text::lower_tr(kentos_processing::text::js_trim(&picker.query));
+        let q =
+            kentos_expression::js::text::lower_tr(kentos_processing::text::js_trim(&picker.query));
         let current = self
             .styles
             .svg_editor
@@ -68,7 +69,9 @@ impl App {
                     Source::Project => "Proje",
                 };
                 let card = column![
-                    self.styles.thumbs.picture(&symbol_of_item(item), None, PICTURE, None, &look),
+                    self.styles
+                        .thumbs
+                        .picture(&symbol_of_item(item), None, PICTURE, None, &look),
                     container(
                         label::caption(item.name().to_owned())
                             .align_x(iced::alignment::Horizontal::Center)
@@ -128,7 +131,8 @@ impl App {
             .push(list)
             .push(
                 row![
-                    label::caption("Sistem çizimi açılınca kopyası Kitaplığım’a alınır.").style(ui_style::text::muted),
+                    label::caption("Sistem çizimi açılınca kopyası Kitaplığım’a alınır.")
+                        .style(ui_style::text::muted),
                     space::horizontal(),
                     button(label::body("Vazgeç"))
                         .padding([5, 14])

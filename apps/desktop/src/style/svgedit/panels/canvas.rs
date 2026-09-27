@@ -32,7 +32,13 @@ pub(super) fn canvas_props<'a>(ed: &SvgEditor) -> Element<'a, Message> {
                     let mut next: Vec<_> = SNAP_KINDS
                         .iter()
                         .map(|(x, _)| *x)
-                        .filter(|x| if *x == k { v } else { ed.options.snap_kinds.contains(x) })
+                        .filter(|x| {
+                            if *x == k {
+                                v
+                            } else {
+                                ed.options.snap_kinds.contains(x)
+                            }
+                        })
                         .collect();
                     next.dedup();
                     ed.options.snap_kinds = next;

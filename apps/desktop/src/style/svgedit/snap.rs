@@ -182,22 +182,43 @@ fn mark_path(kind: Kind, x: f32, y: f32) -> Path {
     })
 }
 
-/// A label in screen space (the web's `svge__tag`): `color` on a chip of the
-/// panel's colour, its bottom left at `at`. A chip reads better over shapes
-/// and lines than the web's halo, which blurred small bold letters.
-pub fn tag(frame: &mut Frame, content: &str, at: Point, color: Color, halo: Color, strong: bool) {
+/// Where a label's chip sits against its point.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Hang {
+    /// The chip's bottom left at the point.
+    Above,
+    /// Its top left just under the point: a second line under an `Above` one, at any text size.
+    Below,
+}
+
+/// A label in screen space (the web's `svge__tag`, a chip on both platforms):
+/// `color` on a chip of the panel's colour. A chip reads over shapes and lines,
+/// where a halo blurred small bold letters.
+pub fn tag(
+    frame: &mut Frame,
+    content: &str,
+    at: Point,
+    hang: Hang,
+    color: Color,
+    halo: Color,
+    strong: bool,
+) {
     let size = typography::scaled(10.5);
     let width = typography::current().text_width(content, size, strong);
     let height = (size * 1.35).round();
+    let top = match hang {
+        Hang::Above => at.y - height,
+        Hang::Below => at.y + 1.0,
+    };
     let chip = iced::widget::canvas::Path::rounded_rectangle(
-        Point::new(at.x - 3.0, at.y - height),
+        Point::new(at.x - 3.0, top),
         iced::Size::new(width + 6.0, height),
         3.0.into(),
     );
     frame.fill(&chip, Color { a: 0.9, ..halo });
     frame.fill_text(Text {
         content: content.to_owned(),
-        position: Point::new(at.x, at.y - height / 2.0),
+        position: Point::new(at.x, top + height / 2.0),
         color,
         size: Pixels(size),
         font: if strong {
@@ -221,5 +242,13 @@ pub fn draw_snap(frame: &mut Frame, ed: &SvgEditor, snap: Color, halo: Color) {
         &mark_path(hit.kind, x, y),
         Stroke::default().with_color(snap).with_width(1.6),
     );
-    tag(frame, hit.label, Point::new(x + 9.0, y - 9.0), snap, halo, true);
+    tag(
+        frame,
+        hit.label,
+        Point::new(x + 9.0, y - 9.0),
+        Hang::Above,
+        snap,
+        halo,
+        true,
+    );
 }

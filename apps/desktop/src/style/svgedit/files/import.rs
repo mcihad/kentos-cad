@@ -75,14 +75,18 @@ impl ImportDialog {
 
     /// The drawing with the chosen colours mapped.
     pub fn mapped(&self) -> Drawing {
-        map_colors(&self.raw.to_obj(), self.symbol.as_arg(), self.second.as_deref())
-            .ok()
-            .and_then(|o| Drawing::from_obj(&o).ok())
-            .map(|mut d| {
-                d.guides.clone_from(&self.raw.guides);
-                d
-            })
-            .unwrap_or_else(|| self.raw.clone())
+        map_colors(
+            &self.raw.to_obj(),
+            self.symbol.as_arg(),
+            self.second.as_deref(),
+        )
+        .ok()
+        .and_then(|o| Drawing::from_obj(&o).ok())
+        .map(|mut d| {
+            d.guides.clone_from(&self.raw.guides);
+            d
+        })
+        .unwrap_or_else(|| self.raw.clone())
     }
 }
 
@@ -149,7 +153,9 @@ fn apply(ed: &mut SvgEditor) {
             reference: None,
         };
         if ed.may_replace(pending.clone()).is_ok()
-            && let Pending::Doc { doc, name, said, .. } = pending
+            && let Pending::Doc {
+                doc, name, said, ..
+            } = pending
         {
             ed.open(*doc, None, name, None);
             ed.files.reference = None;
@@ -161,7 +167,11 @@ fn apply(ed: &mut SvgEditor) {
             format!(
                 "{}{}{tail}.",
                 d.done,
-                if ids.is_empty() { "" } else { " ve çizime eklendi" }
+                if ids.is_empty() {
+                    ""
+                } else {
+                    " ve çizime eklendi"
+                }
             ),
             warn,
         );
@@ -169,7 +179,13 @@ fn apply(ed: &mut SvgEditor) {
 }
 
 /// A colour chip: a swatch and its name, lit when chosen.
-fn chip<'a>(words: &str, on: bool, color: Option<Color>, tip_text: &str, press: Message) -> Element<'a, Message> {
+fn chip<'a>(
+    words: &str,
+    on: bool,
+    color: Option<Color>,
+    tip_text: &str,
+    press: Message,
+) -> Element<'a, Message> {
     let mut face = Row::new().spacing(6).align_y(Center);
     if let Some(c) = color {
         face = face.push(
@@ -210,7 +226,13 @@ fn num2(v: f64) -> String {
     kentos_native_style::classify::rounded(v, 2)
 }
 
-pub fn view<'a>(ed: &'a SvgEditor, d: &'a ImportDialog, ink: &str, width: f32, height: f32) -> Element<'a, Message> {
+pub fn view<'a>(
+    ed: &'a SvgEditor,
+    d: &'a ImportDialog,
+    ink: &str,
+    width: f32,
+    height: f32,
+) -> Element<'a, Message> {
     let mapped = d.mapped();
     let mut options = ed.options.clone();
     options.ink = ink.to_owned();

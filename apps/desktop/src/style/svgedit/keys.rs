@@ -9,8 +9,8 @@
 use iced::keyboard::Key;
 use iced::keyboard::key::Named;
 
-use super::ToolId;
 use super::TOOLS;
+use super::ToolId;
 use super::actions::{Action, NodeCmd, PathOp, Restack};
 use super::files::FileCmd;
 use super::state::{SvgEditor, Tab};
@@ -98,7 +98,11 @@ impl SvgEditor {
         }
         let nodes = self.node_edit.is_some() && self.tool == ToolId::Node;
         if ctrl && low == "z" {
-            return if shift { KeyOutcome::Redo } else { KeyOutcome::Undo };
+            return if shift {
+                KeyOutcome::Redo
+            } else {
+                KeyOutcome::Undo
+            };
         }
         if ctrl && low == "y" {
             return KeyOutcome::Redo;
@@ -108,7 +112,11 @@ impl SvgEditor {
             return KeyOutcome::Nothing;
         }
         if ctrl && low == "g" {
-            self.action(if shift { Action::Ungroup } else { Action::Group });
+            self.action(if shift {
+                Action::Ungroup
+            } else {
+                Action::Group
+            });
             return KeyOutcome::Nothing;
         }
         if ctrl && !shift && low == "a" {

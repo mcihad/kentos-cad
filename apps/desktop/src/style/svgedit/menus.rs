@@ -34,7 +34,13 @@ fn face<'a>(glyph: Icon, words: &str, chevron: bool) -> Element<'a, Message> {
     container(r).padding([3, 8]).into()
 }
 
-fn bar_button<'a>(glyph: Icon, words: &str, tip_text: &str, press: Message, pressed: bool) -> Element<'a, Message> {
+fn bar_button<'a>(
+    glyph: Icon,
+    words: &str,
+    tip_text: &str,
+    press: Message,
+    pressed: bool,
+) -> Element<'a, Message> {
     tip(
         button(face(glyph, words, false))
             .padding(0)
@@ -75,36 +81,115 @@ fn menu_button<'a>(
 fn path_menu(ed: &SvgEditor) -> Menu<Message> {
     let offset = kentos_expression::js::number::to_string(ed.ui.offset);
     let simplify = kentos_expression::js::number::to_string(ed.ui.simplify);
-    let p = |m: Menu<Message>, op: PathOp, words: &str, keys: Option<&str>, detail: Option<&str>| {
-        // Every entry with its icon: the names line up whether or not a line of detail follows.
-        let mut m = m
-            .item(words.to_owned(), change(move |ed| ed.path_op(op)))
-            .icon(Icon::Svg(svg_icon(op_icon(op))));
-        if let Some(k) = keys {
-            m = m.shortcut(k.to_owned());
-        }
-        if let Some(d) = detail {
-            m = m.detail(d.to_owned());
-        }
-        m
-    };
+    let p =
+        |m: Menu<Message>, op: PathOp, words: &str, keys: Option<&str>, detail: Option<&str>| {
+            // Every entry with its icon: the names line up whether or not a line of detail follows.
+            let mut m = m
+                .item(words.to_owned(), change(move |ed| ed.path_op(op)))
+                .icon(Icon::Svg(svg_icon(op_icon(op))));
+            if let Some(k) = keys {
+                m = m.shortcut(k.to_owned());
+            }
+            if let Some(d) = detail {
+                m = m.detail(d.to_owned());
+            }
+            m
+        };
     let mut m = Menu::new();
-    m = p(m, PathOp::Union, "Birleşim", Some("Ctrl++"), Some("Seçilenlerin kapladığı her yer tek yol"));
-    m = p(m, PathOp::Difference, "Fark", Some("Ctrl+-"), Some("Alttakinden üsttekiler çıkar"));
-    m = p(m, PathOp::Intersection, "Kesişim", Some("Ctrl+*"), Some("Yalnızca hepsinin ortak yeri"));
-    m = p(m, PathOp::Exclusion, "Dışlama", Some("Ctrl+^"), Some("Ortak yerler boşalır"));
-    m = p(m, PathOp::Division, "Bölme", Some("Ctrl+/"), Some("Alttaki, üsttekilerin çizgileriyle parçalara bölünür"));
-    m = p(m, PathOp::Cut, "Yolu kes", Some("Ctrl+Alt+/"), Some("Alttakinin çizgisi kesişimlerde açık parçalara ayrılır"));
+    m = p(
+        m,
+        PathOp::Union,
+        "Birleşim",
+        Some("Ctrl++"),
+        Some("Seçilenlerin kapladığı her yer tek yol"),
+    );
+    m = p(
+        m,
+        PathOp::Difference,
+        "Fark",
+        Some("Ctrl+-"),
+        Some("Alttakinden üsttekiler çıkar"),
+    );
+    m = p(
+        m,
+        PathOp::Intersection,
+        "Kesişim",
+        Some("Ctrl+*"),
+        Some("Yalnızca hepsinin ortak yeri"),
+    );
+    m = p(
+        m,
+        PathOp::Exclusion,
+        "Dışlama",
+        Some("Ctrl+^"),
+        Some("Ortak yerler boşalır"),
+    );
+    m = p(
+        m,
+        PathOp::Division,
+        "Bölme",
+        Some("Ctrl+/"),
+        Some("Alttaki, üsttekilerin çizgileriyle parçalara bölünür"),
+    );
+    m = p(
+        m,
+        PathOp::Cut,
+        "Yolu kes",
+        Some("Ctrl+Alt+/"),
+        Some("Alttakinin çizgisi kesişimlerde açık parçalara ayrılır"),
+    );
     m = m.separator();
     m = p(m, PathOp::Combine, "Tek yolda topla", Some("Ctrl+K"), None);
-    m = p(m, PathOp::BreakApart, "Parçalara ayır", Some("Ctrl+Shift+K"), None);
-    m = p(m, PathOp::Split, "Parçalara ayır, delikler kalsın", None, None);
+    m = p(
+        m,
+        PathOp::BreakApart,
+        "Parçalara ayır",
+        Some("Ctrl+Shift+K"),
+        None,
+    );
+    m = p(
+        m,
+        PathOp::Split,
+        "Parçalara ayır, delikler kalsın",
+        None,
+        None,
+    );
     m = m.separator();
-    m = p(m, PathOp::ToPath, "Nesneyi yola çevir", Some("Ctrl+Shift+C"), Some("Dikdörtgen ve elips düğümlü yol olur"));
-    m = p(m, PathOp::StrokeToPath, "Çizgiyi yola çevir", Some("Ctrl+Alt+C"), Some("Çizginin boyadığı alan dolgulu yol olur"));
-    m = p(m, PathOp::Inset, &format!("İçe küçült ({offset})"), Some("Ctrl+("), None);
-    m = p(m, PathOp::Outset, &format!("Dışa büyüt ({offset})"), Some("Ctrl+)"), None);
-    m = p(m, PathOp::Simplify, &format!("Sadeleştir (%{simplify})"), Some("Ctrl+L"), Some("Daha az düğüm; mesafe ve tolerans Özellikler’de"));
+    m = p(
+        m,
+        PathOp::ToPath,
+        "Nesneyi yola çevir",
+        Some("Ctrl+Shift+C"),
+        Some("Dikdörtgen ve elips düğümlü yol olur"),
+    );
+    m = p(
+        m,
+        PathOp::StrokeToPath,
+        "Çizgiyi yola çevir",
+        Some("Ctrl+Alt+C"),
+        Some("Çizginin boyadığı alan dolgulu yol olur"),
+    );
+    m = p(
+        m,
+        PathOp::Inset,
+        &format!("İçe küçült ({offset})"),
+        Some("Ctrl+("),
+        None,
+    );
+    m = p(
+        m,
+        PathOp::Outset,
+        &format!("Dışa büyüt ({offset})"),
+        Some("Ctrl+)"),
+        None,
+    );
+    m = p(
+        m,
+        PathOp::Simplify,
+        &format!("Sadeleştir (%{simplify})"),
+        Some("Ctrl+L"),
+        Some("Daha az düğüm; mesafe ve tolerans Özellikler’de"),
+    );
     m = m.separator();
     m = p(m, PathOp::Reverse, "Yönü çevir", None, None);
     m = p(m, PathOp::Close, "Yolu kapat", None, None);
@@ -249,10 +334,14 @@ pub fn bar<'a>(ed: &'a SvgEditor) -> Element<'a, Message> {
     .align_y(Center);
     let zoom_btn = |glyph: Icon, words: &str, press: Message| {
         tip(
-            button(container(icon(glyph).size(14.0)).center_x(typography::scaled(26.0)).center_y(typography::scaled(26.0)))
-                .padding(0)
-                .style(ui_style::button::ghost)
-                .on_press(press),
+            button(
+                container(icon(glyph).size(14.0))
+                    .center_x(typography::scaled(26.0))
+                    .center_y(typography::scaled(26.0)),
+            )
+            .padding(0)
+            .style(ui_style::button::ghost)
+            .on_press(press),
             Tip::new(words.to_owned()),
             iced::widget::tooltip::Position::Bottom,
         )
@@ -315,17 +404,29 @@ pub fn bar<'a>(ed: &'a SvgEditor) -> Element<'a, Message> {
     ];
     let history = |glyph: Icon, words: &str, press: Option<Message>| {
         tip(
-            button(container(icon(glyph).size(14.0)).center_x(typography::scaled(26.0)).center_y(typography::scaled(26.0)))
-                .padding(0)
-                .style(ui_style::button::ghost)
-                .on_press_maybe(press),
+            button(
+                container(icon(glyph).size(14.0))
+                    .center_x(typography::scaled(26.0))
+                    .center_y(typography::scaled(26.0)),
+            )
+            .padding(0)
+            .style(ui_style::button::ghost)
+            .on_press_maybe(press),
             Tip::new(words.to_owned()),
             iced::widget::tooltip::Position::Bottom,
         )
     };
     let view_group: Vec<Element<'a, Message>> = vec![
-        history(Icon::Undo, "Geri al (Ctrl+Z)", ed.can_undo().then(|| ev(Event::Undo))),
-        history(Icon::Redo, "Yinele (Ctrl+Y)", ed.can_redo().then(|| ev(Event::Redo))),
+        history(
+            Icon::Undo,
+            "Geri al (Ctrl+Z)",
+            ed.can_undo().then(|| ev(Event::Undo)),
+        ),
+        history(
+            Icon::Redo,
+            "Yinele (Ctrl+Y)",
+            ed.can_redo().then(|| ev(Event::Redo)),
+        ),
         snap.into(),
         bar_button(
             Icon::Svg(svg_icon("rulers")),

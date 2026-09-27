@@ -15,6 +15,7 @@ use kentos_svg_core::shape::{Obj, Pt};
 use kentos_svg_core::snap::Kind;
 use kentos_svg_core::stroke::Join;
 
+use super::ToolId;
 use super::camera::Camera;
 use super::doc::Drawing;
 use super::draw_tool::DrawTool;
@@ -24,7 +25,6 @@ use super::node_tool::NodeTool;
 use super::pointer::{Click, Op, Pick, Press};
 use super::rulers::Rulers;
 use super::snap::Snapper;
-use super::ToolId;
 use crate::app::Dialog;
 
 /// Steps the history keeps.
@@ -498,7 +498,8 @@ impl SvgEditor {
     /// Nothing is kept when `f` changes nothing (the web kept an empty step).
     pub fn edit(&mut self, key: &str, f: impl FnOnce(&mut SvgEditor)) {
         let now = Instant::now();
-        let merge = matches!(&self.last_key, Some((k, at)) if k == key && now.duration_since(*at) <= MERGE);
+        let merge =
+            matches!(&self.last_key, Some((k, at)) if k == key && now.duration_since(*at) <= MERGE);
         let before = self.doc.text();
         f(self);
         if self.doc.text() == before {
@@ -563,7 +564,13 @@ impl SvgEditor {
     }
 
     /// Another drawing in the window (a file opened as new, a library drawing): history starts anew.
-    pub fn open(&mut self, doc: Drawing, original: Option<Original>, name: String, path: Option<Vec<String>>) {
+    pub fn open(
+        &mut self,
+        doc: Drawing,
+        original: Option<Original>,
+        name: String,
+        path: Option<Vec<String>>,
+    ) {
         self.options.grid = super::state::default_grid(doc.width);
         self.doc = doc;
         self.past.clear();

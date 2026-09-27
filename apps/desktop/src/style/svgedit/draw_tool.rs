@@ -141,12 +141,23 @@ pub fn shape_from_drag(spec: &DragSpec, p0: Pt, p1: Pt, id: &str) -> Option<Obj>
     if spec.shift {
         let k = js_max(dx.abs(), dy.abs());
         // `Math.sign(d || 1)`: zero (either sign) and NaN count as 1.
-        let sign = |d: f64| if d == 0.0 || d.is_nan() { 1.0 } else { d.signum() };
+        let sign = |d: f64| {
+            if d == 0.0 || d.is_nan() {
+                1.0
+            } else {
+                d.signum()
+            }
+        };
         dx = sign(dx) * k;
         dy = sign(dy) * k;
     }
     let (x0, y0, w, h) = if spec.from_centre {
-        (p0[0] - dx.abs(), p0[1] - dy.abs(), 2.0 * dx.abs(), 2.0 * dy.abs())
+        (
+            p0[0] - dx.abs(),
+            p0[1] - dy.abs(),
+            2.0 * dx.abs(),
+            2.0 * dy.abs(),
+        )
     } else {
         (
             js_min(p0[0], p0[0] + dx),
@@ -267,10 +278,7 @@ pub fn draw_draft(frame: &mut Frame, ed: &SvgEditor, view: &View, accent: Color,
         line,
     );
     if let (Some(c), Some(last)) = (d.cursor, d.draft.last()) {
-        frame.stroke(
-            &Path::line(view.point(last.pt()), view.point(c)),
-            line,
-        );
+        frame.stroke(&Path::line(view.point(last.pt()), view.point(c)), line);
     }
     for n in &d.draft {
         let s = view.point(n.pt());

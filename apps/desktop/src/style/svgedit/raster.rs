@@ -297,7 +297,18 @@ impl shader::Primitive for Primitive {
         let q = self.quad.0;
         let (tl, tr, bl, br) = (clip(q[0]), clip(q[1]), clip(q[2]), clip(q[3]));
         let data: [f32; 12] = [
-            tl[0], tl[1], tr[0], tr[1], bl[0], bl[1], br[0], br[1], self.opacity, 0.0, 0.0, 0.0,
+            tl[0],
+            tl[1],
+            tr[0],
+            tr[1],
+            bl[0],
+            bl[1],
+            br[0],
+            br[1],
+            self.opacity,
+            0.0,
+            0.0,
+            0.0,
         ];
         let bytes: Vec<u8> = data.iter().flat_map(|v| v.to_le_bytes()).collect();
         queue.write_buffer(&slot.uniform, 0, &bytes);

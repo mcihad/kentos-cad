@@ -19,7 +19,10 @@ use super::rulers::nice_step;
 use super::state::{default_grid, panel_unit};
 
 fn fixture() -> Json {
-    Json::parse(include_str!("../../../../../fixtures/style/v1/svgedit.json")).expect("the fixture reads")
+    Json::parse(include_str!(
+        "../../../../../fixtures/style/v1/svgedit.json"
+    ))
+    .expect("the fixture reads")
 }
 
 fn num(v: &Json) -> f64 {
@@ -121,7 +124,12 @@ fn measures_steps_names_and_defaults_are_the_webs() {
             Json::Null => None,
             v => Some(num(v)),
         };
-        let (main, more) = readout(pt(case.get("a")), pt(case.get("b")), num(case.get("width")), size);
+        let (main, more) = readout(
+            pt(case.get("a")),
+            pt(case.get("b")),
+            num(case.get("width")),
+            size,
+        );
         assert_eq!(main, text(case.get("main")));
         assert_eq!(more, text(case.get("more")));
     }

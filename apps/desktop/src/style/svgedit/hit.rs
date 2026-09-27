@@ -71,7 +71,10 @@ pub fn shape_hit(s: &Obj, p: Pt, px: f64) -> bool {
         let mut flat = s.clone();
         flat.remove("rotate");
         return shape_box(&flat).is_ok_and(|b| {
-            q[0] >= b.min_x - px && q[0] <= b.max_x + px && q[1] >= b.min_y - px && q[1] <= b.max_y + px
+            q[0] >= b.min_x - px
+                && q[0] <= b.max_x + px
+                && q[1] >= b.min_y - px
+                && q[1] <= b.max_y + px
         });
     }
     let Some(subs) = outline(s) else {

@@ -54,7 +54,11 @@ impl Reference {
 }
 
 /// A picture file's bytes as a data URL, its picture and its natural size; the reason when it is none of them.
-pub fn picture_of(name: &str, bytes: &[u8], images: &Images) -> Result<(String, Picture, f64, f64), String> {
+pub fn picture_of(
+    name: &str,
+    bytes: &[u8],
+    images: &Images,
+) -> Result<(String, Picture, f64, f64), String> {
     let lower = name.to_ascii_lowercase();
     let is_png = bytes.starts_with(&[0x89, b'P', b'N', b'G']);
     let is_jpeg = bytes.starts_with(&[0xFF, 0xD8]);
@@ -95,7 +99,9 @@ pub fn picture_of(name: &str, bytes: &[u8], images: &Images) -> Result<(String, 
         );
         return Ok((href, picture, w, h));
     }
-    Err(format!("“{name}” altlık olamaz: PNG, JPEG ya da SVG seçin."))
+    Err(format!(
+        "“{name}” altlık olamaz: PNG, JPEG ya da SVG seçin."
+    ))
 }
 
 /// The pixels the screen shows of a picture: a bitmap as it is, a vector drawn at up to 2048 a side.
@@ -200,12 +206,21 @@ fn fit(ed: &mut SvgEditor) {
     }
 }
 
-fn icon_button<'a>(glyph: Icon, words: &str, pressed: Option<bool>, press: Message) -> Element<'a, Message> {
+fn icon_button<'a>(
+    glyph: Icon,
+    words: &str,
+    pressed: Option<bool>,
+    press: Message,
+) -> Element<'a, Message> {
     tip(
-        button(container(icon(glyph).size(15.0)).center_x(typography::scaled(26.0)).center_y(typography::scaled(26.0)))
-            .padding(0)
-            .style(ui_style::button::tool(pressed == Some(true)))
-            .on_press(press),
+        button(
+            container(icon(glyph).size(15.0))
+                .center_x(typography::scaled(26.0))
+                .center_y(typography::scaled(26.0)),
+        )
+        .padding(0)
+        .style(ui_style::button::tool(pressed == Some(true)))
+        .on_press(press),
         Tip::new(words.to_owned()),
         iced::widget::tooltip::Position::Bottom,
     )
@@ -213,10 +228,14 @@ fn icon_button<'a>(glyph: Icon, words: &str, pressed: Option<bool>, press: Messa
 
 fn small<'a>(glyph: Icon, words: &str, tip_text: &str, press: Message) -> Element<'a, Message> {
     tip(
-        button(row![icon(glyph).size(14.0), label::body(words.to_owned())].spacing(6).align_y(Center))
-            .padding([3, 9])
-            .style(ui_style::button::secondary)
-            .on_press(press),
+        button(
+            row![icon(glyph).size(14.0), label::body(words.to_owned())]
+                .spacing(6)
+                .align_y(Center),
+        )
+        .padding([3, 9])
+        .style(ui_style::button::secondary)
+        .on_press(press),
         Tip::new(tip_text.to_owned()),
         iced::widget::tooltip::Position::Bottom,
     )
@@ -244,11 +263,17 @@ pub fn bar<'a>(ed: &'a SvgEditor) -> Option<Element<'a, Message>> {
         }
     });
     let bar = row![
-        icon(crate::icons::from_web(Some("layers"))).size(14.0).tone(Tone::Muted),
+        icon(crate::icons::from_web(Some("layers")))
+            .size(14.0)
+            .tone(Tone::Muted),
         label::body(format!("Altlık: {}", r.spec.name)).width(iced::Length::Shrink),
         icon_button(
             if visible { Icon::Eye } else { Icon::EyeOff },
-            if visible { "Altlığı gizle" } else { "Altlığı göster" },
+            if visible {
+                "Altlığı gizle"
+            } else {
+                "Altlığı göster"
+            },
             Some(visible),
             with(move |r| r.visible = !visible),
         ),
@@ -265,7 +290,9 @@ pub fn bar<'a>(ed: &'a SvgEditor) -> Option<Element<'a, Message>> {
                     r.spec.locked = !locked;
                 }
                 if locked {
-                    ed.say("Altlık kilitsiz: Konum… ile yerini ve boyunu verin; bitince kilitleyin.");
+                    ed.say(
+                        "Altlık kilitsiz: Konum… ile yerini ve boyunu verin; bitince kilitleyin.",
+                    );
                 } else {
                     ed.say("Altlık kilitlendi.");
                 }
@@ -273,8 +300,10 @@ pub fn bar<'a>(ed: &'a SvgEditor) -> Option<Element<'a, Message>> {
         ),
         label::caption("Saydamlık").style(ui_style::text::muted),
         container(
-            slider(5.0..=100.0, pct as f32, |v| with(move |r| r.spec.opacity = f64::from(v) / 100.0))
-                .step(5.0)
+            slider(5.0..=100.0, pct as f32, |v| with(
+                move |r| r.spec.opacity = f64::from(v) / 100.0
+            ))
+            .step(5.0)
         )
         .width(typography::scaled(110.0)),
         label::caption(format!("%{pct}")).font(typography::mono()),
@@ -284,7 +313,12 @@ pub fn bar<'a>(ed: &'a SvgEditor) -> Option<Element<'a, Message>> {
             "Konum ve boyut (X, Y, genişlik)",
             change(|ed| ed.files.dialog = Some(FileDialog::Place)),
         ),
-        small(Icon::ZoomExtents, "Sığdır", "Tuvale sığdır (oran korunur)", change(fit)),
+        small(
+            Icon::ZoomExtents,
+            "Sığdır",
+            "Tuvale sığdır (oran korunur)",
+            change(fit)
+        ),
         keep_box,
         small(
             crate::icons::from_web(Some("spline")),
@@ -309,7 +343,9 @@ pub fn bar<'a>(ed: &'a SvgEditor) -> Option<Element<'a, Message>> {
             .padding([6, 10])
             .width(Fill)
             .style(|t: &Theme| container::Style {
-                background: Some(iced::Background::Color(Tokens::of(t).accent.scale_alpha(0.08))),
+                background: Some(iced::Background::Color(
+                    Tokens::of(t).accent.scale_alpha(0.08),
+                )),
                 border: iced::Border {
                     color: Tokens::of(t).border,
                     width: 0.0,
@@ -329,23 +365,47 @@ pub fn place_view<'a>(ed: &SvgEditor) -> Element<'a, Message> {
     let aspect = r.spec.height / r.spec.width.max(1e-9);
     let body = iced::widget::column![
         fields::pair(
-            num(ed, "refx", "X", r.spec.x, None, spec(1.0, f64::NEG_INFINITY, f64::INFINITY), |ed, v| {
-                if let Some(r) = &mut ed.files.reference {
-                    r.spec.x = v;
+            num(
+                ed,
+                "refx",
+                "X",
+                r.spec.x,
+                None,
+                spec(1.0, f64::NEG_INFINITY, f64::INFINITY),
+                |ed, v| {
+                    if let Some(r) = &mut ed.files.reference {
+                        r.spec.x = v;
+                    }
                 }
-            }),
-            num(ed, "refy", "Y", r.spec.y, None, spec(1.0, f64::NEG_INFINITY, f64::INFINITY), |ed, v| {
-                if let Some(r) = &mut ed.files.reference {
-                    r.spec.y = v;
+            ),
+            num(
+                ed,
+                "refy",
+                "Y",
+                r.spec.y,
+                None,
+                spec(1.0, f64::NEG_INFINITY, f64::INFINITY),
+                |ed, v| {
+                    if let Some(r) = &mut ed.files.reference {
+                        r.spec.y = v;
+                    }
                 }
-            }),
+            ),
         ),
-        num(ed, "refw", "Genişlik", r.spec.width, None, spec(1.0, 0.01, f64::INFINITY), move |ed, v| {
-            if let Some(r) = &mut ed.files.reference {
-                r.spec.width = v.max(0.01);
-                r.spec.height = v.max(0.01) * aspect;
+        num(
+            ed,
+            "refw",
+            "Genişlik",
+            r.spec.width,
+            None,
+            spec(1.0, 0.01, f64::INFINITY),
+            move |ed, v| {
+                if let Some(r) = &mut ed.files.reference {
+                    r.spec.width = v.max(0.01);
+                    r.spec.height = v.max(0.01) * aspect;
+                }
             }
-        }),
+        ),
         fields::hint("Yükseklik oranla değişir. Birim çizimin birimidir."),
     ]
     .spacing(10);

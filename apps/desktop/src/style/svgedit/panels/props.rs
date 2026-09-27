@@ -15,7 +15,7 @@ use kentos_ui::style as ui_style;
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::color::{ColorPicker, parse_hex, to_hex};
 
-use super::{Opt, acts, act, check, group, num, small, spec, title};
+use super::{Opt, act, acts, check, group, num, small, spec, title};
 use crate::app::Message;
 use crate::style::fields;
 use crate::style::svgedit::actions::{Action, PathOp, Restack, Same};
@@ -52,11 +52,17 @@ pub fn swatch<'a>(value: Color, on: impl Fn(String) -> Message + 'a) -> Element<
             },
             ..container::Style::default()
         });
-    ColorPicker::new(value, move |c| on(to_hex(c))).anchor(face).into()
+    ColorPicker::new(value, move |c| on(to_hex(c)))
+        .anchor(face)
+        .into()
 }
 
 /// Dolgu or Çizgi: none, the symbol's colour, the second colour or a fixed colour; mixed says so.
-fn paint_field<'a>(label_text: &str, key: &'static str, value: Option<String>) -> Element<'a, Message> {
+fn paint_field<'a>(
+    label_text: &str,
+    key: &'static str,
+    value: Option<String>,
+) -> Element<'a, Message> {
     let kind = match value.as_deref() {
         None => "none",
         Some(v @ ("none" | "fill" | "stroke")) => v,
@@ -79,7 +85,9 @@ fn paint_field<'a>(label_text: &str, key: &'static str, value: Option<String>) -
             ed.set_chosen(key, move |s| s.set_text(key, &p));
         })
     });
-    let mut r = row![container(select).width(Fill)].spacing(6).align_y(Center);
+    let mut r = row![container(select).width(Fill)]
+        .spacing(6)
+        .align_y(Center);
     if kind == "fixed" {
         let shown = parse_hex(&fixed).unwrap_or(Color::BLACK);
         r = r.push(swatch(shown, move |hex| {
@@ -101,10 +109,18 @@ fn polygon_options<'a>(ed: &SvgEditor) -> Element<'a, Message> {
     tool_box(
         "Çokgen aracı",
         vec![fields::pair(
-            num(ed, "sides", "Kenar sayısı", ed.options.sides, None, spec(1.0, 3.0, 24.0), |ed, v| {
-                ed.options.sides = kentos_native_style::classify::js_round(v).max(3.0);
-                ed.touch();
-            }),
+            num(
+                ed,
+                "sides",
+                "Kenar sayısı",
+                ed.options.sides,
+                None,
+                spec(1.0, 3.0, 24.0),
+                |ed, v| {
+                    ed.options.sides = kentos_native_style::classify::js_round(v).max(3.0);
+                    ed.touch();
+                },
+            ),
             fields::labelled(
                 "Biçim",
                 check(ed.options.star, "Yıldız", |ed, v| {
@@ -196,18 +212,34 @@ fn selection_props<'a>(ed: &'a SvgEditor, sel: &[Obj]) -> Element<'a, Message> {
         paint_field("Dolgu", "fill", same(&fills)),
         paint_field("Çizgi", "stroke", same(&strokes)),
         fields::pair(
-            num(ed, "sw", "Çizgi kalınlığı", width, None, spec(0.5, 0.0, f64::INFINITY), |ed, v| {
-                ed.set_chosen("sw", move |s| s.set_num("strokeWidth", v.max(0.0)));
-            }),
-            num(ed, "op", "Saydamlık", transparency, Some("%"), spec(5.0, 0.0, 100.0), |ed, v| {
-                ed.set_chosen("op", move |s| {
-                    if v > 0.0 {
-                        s.set_num("opacity", 1.0 - v.min(100.0) / 100.0);
-                    } else {
-                        s.set_undefined("opacity");
-                    }
-                });
-            }),
+            num(
+                ed,
+                "sw",
+                "Çizgi kalınlığı",
+                width,
+                None,
+                spec(0.5, 0.0, f64::INFINITY),
+                |ed, v| {
+                    ed.set_chosen("sw", move |s| s.set_num("strokeWidth", v.max(0.0)));
+                },
+            ),
+            num(
+                ed,
+                "op",
+                "Saydamlık",
+                transparency,
+                Some("%"),
+                spec(5.0, 0.0, 100.0),
+                |ed, v| {
+                    ed.set_chosen("op", move |s| {
+                        if v > 0.0 {
+                            s.set_num("opacity", 1.0 - v.min(100.0) / 100.0);
+                        } else {
+                            s.set_undefined("opacity");
+                        }
+                    });
+                },
+            ),
         ),
         super::style::stroke_style(ed, sel),
         super::style::box_fields(ed, sel),
@@ -223,9 +255,12 @@ fn selection_props<'a>(ed: &'a SvgEditor, sel: &[Obj]) -> Element<'a, Message> {
         let id = id_of(&sel[0]).to_owned();
         buttons.push(
             button(
-                row![icon(crate::icons::from_web(Some("vertex"))).size(14.0), label::body("Düğümleri düzenle")]
-                    .spacing(6)
-                    .align_y(Center),
+                row![
+                    icon(crate::icons::from_web(Some("vertex"))).size(14.0),
+                    label::body("Düğümleri düzenle")
+                ]
+                .spacing(6)
+                .align_y(Center),
             )
             .padding([3, 10])
             .style(ui_style::button::secondary)
@@ -234,21 +269,28 @@ fn selection_props<'a>(ed: &'a SvgEditor, sel: &[Obj]) -> Element<'a, Message> {
         );
     }
     if sel.len() == 1 && matches!(sel[0].kind(), "rect" | "ellipse") {
-        buttons.push(iced::widget::tooltip(
-            button(
-                row![icon(Icon::Svg(svg_icon("toPath"))).size(14.0), label::body("Yola çevir")]
+        buttons.push(
+            iced::widget::tooltip(
+                button(
+                    row![
+                        icon(Icon::Svg(svg_icon("toPath"))).size(14.0),
+                        label::body("Yola çevir")
+                    ]
                     .spacing(6)
                     .align_y(Center),
-            )
-            .padding([3, 10])
-            .style(ui_style::button::secondary)
-            .on_press(change(|ed| ed.path_op(PathOp::ToPath))),
-            container(label::caption("Düğümleri düzenlemek ya da köşe yuvarlamak için (Ctrl+Shift+C)"))
+                )
+                .padding([3, 10])
+                .style(ui_style::button::secondary)
+                .on_press(change(|ed| ed.path_op(PathOp::ToPath))),
+                container(label::caption(
+                    "Düğümleri düzenlemek ya da köşe yuvarlamak için (Ctrl+Shift+C)",
+                ))
                 .padding([4, 8])
                 .style(ui_style::container::popover),
-            iced::widget::tooltip::Position::Top,
-        )
-        .into());
+                iced::widget::tooltip::Position::Top,
+            )
+            .into(),
+        );
     }
     if !buttons.is_empty() {
         parts.push(iced::widget::Row::with_children(buttons).spacing(6).into());
@@ -278,34 +320,97 @@ fn path_group<'a>(ed: &SvgEditor, count: usize) -> Element<'a, Message> {
         kentos_svg_core::stroke::Join::Miter => "miter",
         kentos_svg_core::stroke::Join::Bevel => "bevel",
     };
-    let join_choices: Vec<(&'static str, &'static str)> = joins.iter().map(|o| (o.0, o.1)).collect();
+    let join_choices: Vec<(&'static str, &'static str)> =
+        joins.iter().map(|o| (o.0, o.1)).collect();
     group(
         "Yol",
         vec![
             acts(vec![
                 p(PathOp::Union, "pathUnion", "Birleşim (Ctrl++)", 2),
-                p(PathOp::Difference, "pathDifference", "Fark: alttakinden üsttekiler çıkar (Ctrl+-)", 2),
-                p(PathOp::Intersection, "pathIntersection", "Kesişim (Ctrl+*)", 2),
-                p(PathOp::Exclusion, "pathExclusion", "Dışlama: ortak yerler boşalır (Ctrl+^)", 2),
-                p(PathOp::Division, "pathDivision", "Bölme: alttaki üsttekilerin çizgileriyle bölünür (Ctrl+/)", 2),
-                p(PathOp::Cut, "pathCut", "Yolu kes: alttakinin çizgisi kesişimlerde kesilir (Ctrl+Alt+/)", 2),
+                p(
+                    PathOp::Difference,
+                    "pathDifference",
+                    "Fark: alttakinden üsttekiler çıkar (Ctrl+-)",
+                    2,
+                ),
+                p(
+                    PathOp::Intersection,
+                    "pathIntersection",
+                    "Kesişim (Ctrl+*)",
+                    2,
+                ),
+                p(
+                    PathOp::Exclusion,
+                    "pathExclusion",
+                    "Dışlama: ortak yerler boşalır (Ctrl+^)",
+                    2,
+                ),
+                p(
+                    PathOp::Division,
+                    "pathDivision",
+                    "Bölme: alttaki üsttekilerin çizgileriyle bölünür (Ctrl+/)",
+                    2,
+                ),
+                p(
+                    PathOp::Cut,
+                    "pathCut",
+                    "Yolu kes: alttakinin çizgisi kesişimlerde kesilir (Ctrl+Alt+/)",
+                    2,
+                ),
             ]),
             acts(vec![
-                p(PathOp::Combine, "pathCombine", "Tek yolda topla (Ctrl+K)", 2),
-                p(PathOp::BreakApart, "pathBreak", "Parçalara ayır (Ctrl+Shift+K)", 1),
-                p(PathOp::Split, "pathSplit", "Parçalara ayır, delikler yerinde kalsın", 1),
-                p(PathOp::ToPath, "toPath", "Nesneyi yola çevir (Ctrl+Shift+C)", 1),
-                p(PathOp::StrokeToPath, "strokeToPath", "Çizgiyi yola çevir (Ctrl+Alt+C)", 1),
+                p(
+                    PathOp::Combine,
+                    "pathCombine",
+                    "Tek yolda topla (Ctrl+K)",
+                    2,
+                ),
+                p(
+                    PathOp::BreakApart,
+                    "pathBreak",
+                    "Parçalara ayır (Ctrl+Shift+K)",
+                    1,
+                ),
+                p(
+                    PathOp::Split,
+                    "pathSplit",
+                    "Parçalara ayır, delikler yerinde kalsın",
+                    1,
+                ),
+                p(
+                    PathOp::ToPath,
+                    "toPath",
+                    "Nesneyi yola çevir (Ctrl+Shift+C)",
+                    1,
+                ),
+                p(
+                    PathOp::StrokeToPath,
+                    "strokeToPath",
+                    "Çizgiyi yola çevir (Ctrl+Alt+C)",
+                    1,
+                ),
                 p(PathOp::Reverse, "reverse", "Yönü çevir", 1),
                 p(PathOp::Close, "closePath", "Yolu kapat", 1),
-                p(PathOp::Open, "openPath", "Yolu aç (kapanış parçası kalır)", 1),
+                p(
+                    PathOp::Open,
+                    "openPath",
+                    "Yolu aç (kapanış parçası kalır)",
+                    1,
+                ),
             ]),
             row![
                 p(PathOp::Inset, "inset", "İçe küçült (Ctrl+()", 1),
                 p(PathOp::Outset, "outset", "Dışa büyüt (Ctrl+))", 1),
-                container(super::num_bare(ed, "offset", ed.ui.offset, None, spec(0.5, 0.0, f64::INFINITY), |ed, v| {
-                    ed.ui.offset = v.max(0.0);
-                }))
+                container(super::num_bare(
+                    ed,
+                    "offset",
+                    ed.ui.offset,
+                    None,
+                    spec(0.5, 0.0, f64::INFINITY),
+                    |ed, v| {
+                        ed.ui.offset = v.max(0.0);
+                    }
+                ))
                 .width(Fill),
                 container(fields::select(&join_choices, join_now, |v| {
                     change(move |ed| {
@@ -336,16 +441,24 @@ fn path_group<'a>(ed: &SvgEditor, count: usize) -> Element<'a, Message> {
             .spacing(4)
             .align_y(Center)
             .into(),
-            fields::hint("Sonuç alttaki şeklin boyasını alır; eğriler eğri kalır. Mesafe çizim biriminde, tolerans seçimin boyuna göre %."),
+            fields::hint(
+                "Sonuç alttaki şeklin boyasını alır; eğriler eğri kalır. Mesafe çizim biriminde, tolerans seçimin boyuna göre %.",
+            ),
         ],
     )
 }
 
 fn order_group<'a>() -> Element<'a, Message> {
     let r = |op: Restack, name: &'static str, tip_text: &str| {
-        act(Icon::Svg(svg_icon(name)), tip_text, Some(change(move |ed| ed.restack(op))))
+        act(
+            Icon::Svg(svg_icon(name)),
+            tip_text,
+            Some(change(move |ed| ed.restack(op))),
+        )
     };
-    let a = |name: Action, glyph: Icon, tip_text: &str| act(glyph, tip_text, Some(change(move |ed| ed.action(name))));
+    let a = |name: Action, glyph: Icon, tip_text: &str| {
+        act(glyph, tip_text, Some(change(move |ed| ed.action(name))))
+    };
     group(
         "Düzen",
         vec![
@@ -354,15 +467,35 @@ fn order_group<'a>() -> Element<'a, Message> {
                 r(Restack::Raise, "raise", "Bir öne (Page Up)"),
                 r(Restack::Lower, "lower", "Bir arkaya (Page Down)"),
                 r(Restack::Bottom, "toBottom", "En arkaya (End)"),
-                a(Action::FlipH, Icon::Svg(svg_icon("flipH")), "Yatay çevir (H)"),
-                a(Action::FlipV, Icon::Svg(svg_icon("flipV")), "Dikey çevir (Shift+H)"),
-                a(Action::Rot90, crate::icons::from_web(Some("rotate")), "90° döndür"),
+                a(
+                    Action::FlipH,
+                    Icon::Svg(svg_icon("flipH")),
+                    "Yatay çevir (H)",
+                ),
+                a(
+                    Action::FlipV,
+                    Icon::Svg(svg_icon("flipV")),
+                    "Dikey çevir (Shift+H)",
+                ),
+                a(
+                    Action::Rot90,
+                    crate::icons::from_web(Some("rotate")),
+                    "90° döndür",
+                ),
             ]),
             row![
                 small("Grupla", Some(change(|ed| ed.action(Action::Group)))),
                 small("Çöz", Some(change(|ed| ed.action(Action::Ungroup)))),
-                act(crate::icons::from_web(Some("copy")), "Çoğalt (Ctrl+D)", Some(change(|ed| ed.action(Action::Duplicate)))),
-                act(crate::icons::from_web(Some("trash")), "Sil (Delete)", Some(change(|ed| ed.action(Action::Delete)))),
+                act(
+                    crate::icons::from_web(Some("copy")),
+                    "Çoğalt (Ctrl+D)",
+                    Some(change(|ed| ed.action(Action::Duplicate)))
+                ),
+                act(
+                    crate::icons::from_web(Some("trash")),
+                    "Sil (Delete)",
+                    Some(change(|ed| ed.action(Action::Delete)))
+                ),
             ]
             .spacing(4)
             .align_y(Center)
@@ -373,7 +506,11 @@ fn order_group<'a>() -> Element<'a, Message> {
 
 fn pick_group<'a>() -> Element<'a, Message> {
     let s = |what: Same, tip_text: &str| {
-        act(Icon::Svg(svg_icon("selectSame")), tip_text, Some(change(move |ed| ed.select_same(what))))
+        act(
+            Icon::Svg(svg_icon("selectSame")),
+            tip_text,
+            Some(change(move |ed| ed.select_same(what))),
+        )
     };
     group(
         "Seç",
@@ -393,12 +530,25 @@ fn pick_group<'a>() -> Element<'a, Message> {
 /// A single shape's geometry: corner radius and turn, centre and radii, a text's words and type, a path's parts.
 fn geometry<'a>(ed: &SvgEditor, s: &Obj) -> Element<'a, Message> {
     let id = id_of(s).to_owned();
-    let n = |key: &'static str, label_text: &str, value: f64, unit: Option<&str>, min: f64, apply: fn(&mut Obj, f64)| {
+    let n = |key: &'static str,
+             label_text: &str,
+             value: f64,
+             unit: Option<&str>,
+             min: f64,
+             apply: fn(&mut Obj, f64)| {
         let id = id.clone();
-        num(ed, key, label_text, value, unit, spec(1.0, min, f64::INFINITY), move |ed, v| {
-            let id = id.clone();
-            ed.set_shape(key, &id, move |s| apply(s, v));
-        })
+        num(
+            ed,
+            key,
+            label_text,
+            value,
+            unit,
+            spec(1.0, min, f64::INFINITY),
+            move |ed, v| {
+                let id = id.clone();
+                ed.set_shape(key, &id, move |s| apply(s, v));
+            },
+        )
     };
     let turn = |s: &mut Obj, v: f64| {
         if v == 0.0 {
@@ -410,29 +560,72 @@ fn geometry<'a>(ed: &SvgEditor, s: &Obj) -> Element<'a, Message> {
     let mut parts: Vec<Element<'a, Message>> = Vec::new();
     match s.kind() {
         "rect" => parts.push(fields::pair(
-            n("r", "Köşe yarıçapı", s.opt_num("r").unwrap_or(0.0), None, 0.0, |s, v| {
-                if v > 0.0 {
-                    s.set_num("r", v);
-                } else {
-                    s.set_undefined("r");
-                }
-            }),
-            n("rot", "Döndürme", s.opt_num("rotate").unwrap_or(0.0), Some("°"), f64::NEG_INFINITY, turn),
+            n(
+                "r",
+                "Köşe yarıçapı",
+                s.opt_num("r").unwrap_or(0.0),
+                None,
+                0.0,
+                |s, v| {
+                    if v > 0.0 {
+                        s.set_num("r", v);
+                    } else {
+                        s.set_undefined("r");
+                    }
+                },
+            ),
+            n(
+                "rot",
+                "Döndürme",
+                s.opt_num("rotate").unwrap_or(0.0),
+                Some("°"),
+                f64::NEG_INFINITY,
+                turn,
+            ),
         )),
         "ellipse" => {
             parts.push(fields::pair(
-                n("cx", "Merkez X", s.num("cx"), None, f64::NEG_INFINITY, |s, v| s.set_num("cx", v)),
-                n("cy", "Merkez Y", s.num("cy"), None, f64::NEG_INFINITY, |s, v| s.set_num("cy", v)),
+                n(
+                    "cx",
+                    "Merkez X",
+                    s.num("cx"),
+                    None,
+                    f64::NEG_INFINITY,
+                    |s, v| s.set_num("cx", v),
+                ),
+                n(
+                    "cy",
+                    "Merkez Y",
+                    s.num("cy"),
+                    None,
+                    f64::NEG_INFINITY,
+                    |s, v| s.set_num("cy", v),
+                ),
             ));
             parts.push(fields::pair(
-                n("rx", "Yarıçap X", s.num("rx"), None, 0.01, |s, v| s.set_num("rx", v.max(0.01))),
-                n("ry", "Yarıçap Y", s.num("ry"), None, 0.01, |s, v| s.set_num("ry", v.max(0.01))),
+                n("rx", "Yarıçap X", s.num("rx"), None, 0.01, |s, v| {
+                    s.set_num("rx", v.max(0.01))
+                }),
+                n("ry", "Yarıçap Y", s.num("ry"), None, 0.01, |s, v| {
+                    s.set_num("ry", v.max(0.01))
+                }),
             ));
-            parts.push(n("rot", "Döndürme", s.opt_num("rotate").unwrap_or(0.0), Some("°"), f64::NEG_INFINITY, turn));
+            parts.push(n(
+                "rot",
+                "Döndürme",
+                s.opt_num("rotate").unwrap_or(0.0),
+                Some("°"),
+                f64::NEG_INFINITY,
+                turn,
+            ));
         }
         "text" => {
             let tid = id.clone();
-            let words = ed.typed.get("text").cloned().unwrap_or_else(|| s.text("text").unwrap_or("").to_owned());
+            let words = ed
+                .typed
+                .get("text")
+                .cloned()
+                .unwrap_or_else(|| s.text("text").unwrap_or("").to_owned());
             parts.push(fields::labelled(
                 "Metin",
                 fields::text(super::field_id("text"), &words, "", false, move |t| {
@@ -446,12 +639,30 @@ fn geometry<'a>(ed: &SvgEditor, s: &Obj) -> Element<'a, Message> {
                 None,
             ));
             parts.push(fields::pair(
-                n("x", "X", s.num("x"), None, f64::NEG_INFINITY, |s, v| s.set_num("x", v)),
-                n("y", "Y (taban çizgisi)", s.num("y"), None, f64::NEG_INFINITY, |s, v| s.set_num("y", v)),
+                n("x", "X", s.num("x"), None, f64::NEG_INFINITY, |s, v| {
+                    s.set_num("x", v)
+                }),
+                n(
+                    "y",
+                    "Y (taban çizgisi)",
+                    s.num("y"),
+                    None,
+                    f64::NEG_INFINITY,
+                    |s, v| s.set_num("y", v),
+                ),
             ));
             parts.push(fields::pair(
-                n("size", "Boyut", s.num("size"), None, 0.1, |s, v| s.set_num("size", v.max(0.1))),
-                n("rot", "Döndürme", s.opt_num("rotate").unwrap_or(0.0), Some("°"), f64::NEG_INFINITY, turn),
+                n("size", "Boyut", s.num("size"), None, 0.1, |s, v| {
+                    s.set_num("size", v.max(0.1))
+                }),
+                n(
+                    "rot",
+                    "Döndürme",
+                    s.opt_num("rotate").unwrap_or(0.0),
+                    Some("°"),
+                    f64::NEG_INFINITY,
+                    turn,
+                ),
             ));
             let fid = id.clone();
             let wid = id.clone();
@@ -459,10 +670,16 @@ fn geometry<'a>(ed: &SvgEditor, s: &Obj) -> Element<'a, Message> {
             parts.push(fields::pair(
                 fields::labelled(
                     "Yazı tipi",
-                    fields::select(&[("sans", "Arial"), ("serif", "Times")], s.text("font").unwrap_or("sans"), move |v| {
-                        let fid = fid.clone();
-                        change(move |ed| ed.set_shape("font", &fid, move |s| s.set_text("font", v)))
-                    }),
+                    fields::select(
+                        &[("sans", "Arial"), ("serif", "Times")],
+                        s.text("font").unwrap_or("sans"),
+                        move |v| {
+                            let fid = fid.clone();
+                            change(move |ed| {
+                                ed.set_shape("font", &fid, move |s| s.set_text("font", v))
+                            })
+                        },
+                    ),
                     None,
                 ),
                 fields::labelled(
@@ -473,7 +690,9 @@ fn geometry<'a>(ed: &SvgEditor, s: &Obj) -> Element<'a, Message> {
                         move |v| {
                             let wid = wid.clone();
                             let w: f64 = v.parse().unwrap_or(400.0);
-                            change(move |ed| ed.set_shape("weight", &wid, move |s| s.set_num("weight", w)))
+                            change(move |ed| {
+                                ed.set_shape("weight", &wid, move |s| s.set_num("weight", w))
+                            })
                         },
                     ),
                     None,
@@ -482,11 +701,17 @@ fn geometry<'a>(ed: &SvgEditor, s: &Obj) -> Element<'a, Message> {
             parts.push(fields::labelled(
                 "Hizalama",
                 fields::select(
-                    &[("start", "Soldan"), ("middle", "Ortadan"), ("end", "Sağdan")],
+                    &[
+                        ("start", "Soldan"),
+                        ("middle", "Ortadan"),
+                        ("end", "Sağdan"),
+                    ],
                     s.text("anchor").unwrap_or("start"),
                     move |v| {
                         let aid = aid.clone();
-                        change(move |ed| ed.set_shape("anchor", &aid, move |s| s.set_text("anchor", v)))
+                        change(move |ed| {
+                            ed.set_shape("anchor", &aid, move |s| s.set_text("anchor", v))
+                        })
                     },
                 ),
                 None,

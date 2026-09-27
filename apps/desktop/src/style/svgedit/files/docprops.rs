@@ -3,7 +3,7 @@
 //! the content with a margin), a unit scale for drawing and canvas together,
 //! the symbol's intended width in mm ("1 birim = … mm", written into the file
 //! and used by exports), and the preview's paper colour. One undo step. The
-//! guides move with the drawing (the web left them where they were).
+//! guides move with the drawing, on both platforms (the web used to leave them).
 
 use iced::widget::{button, column, row, space};
 use iced::{Center, Color, Element, Length};
@@ -15,10 +15,10 @@ use kentos_ui::theme::typography;
 use kentos_ui::widget::Dialog;
 use kentos_ui::widget::color::parse_hex;
 
-use super::super::panels::{check, num, spec};
-use super::super::panels::props::swatch;
-use super::super::state::SvgEditor;
 use super::super::change;
+use super::super::panels::props::swatch;
+use super::super::panels::{check, num, spec};
+use super::super::state::SvgEditor;
 use super::{FileDialog, scale_stroke};
 use crate::app::Message;
 use crate::style::fields;
@@ -67,7 +67,13 @@ fn with(f: impl Fn(&mut DocProps) + Send + Sync + 'static) -> Message {
 
 /// İçeriğe sığdır: the box round what is drawn (strokes and the margin included).
 fn fit(ed: &mut SvgEditor) {
-    let shown: Vec<_> = ed.doc.shapes.iter().filter(|s| !s.is("hidden")).cloned().collect();
+    let shown: Vec<_> = ed
+        .doc
+        .shapes
+        .iter()
+        .filter(|s| !s.is("hidden"))
+        .cloned()
+        .collect();
     let Some(b) = shapes_box(&shown).ok().flatten() else {
         return;
     };
@@ -139,17 +145,33 @@ pub fn apply(ed: &mut SvgEditor) {
         "Belge özellikleri uygulandı: {} × {} birim{}.",
         n3(ed.doc.width),
         n3(ed.doc.height),
-        ed.doc.size_mm.map_or_else(String::new, |mm| format!(", {} mm", n3(mm)))
+        ed.doc
+            .size_mm
+            .map_or_else(String::new, |mm| format!(", {} mm", n3(mm)))
     ));
 }
 
 pub fn view<'a>(ed: &SvgEditor, d: &DocProps) -> Element<'a, Message> {
-    let field = |key: &'static str, label_text: &str, value: f64, unit: Option<&str>, min: f64, step: f64, set: fn(&mut DocProps, f64)| {
-        num(ed, key, label_text, value, unit, spec(step, min, f64::INFINITY), move |ed, v| {
-            if let Some(FileDialog::DocProps(d)) = &mut ed.files.dialog {
-                set(d, v);
-            }
-        })
+    let field = |key: &'static str,
+                 label_text: &str,
+                 value: f64,
+                 unit: Option<&str>,
+                 min: f64,
+                 step: f64,
+                 set: fn(&mut DocProps, f64)| {
+        num(
+            ed,
+            key,
+            label_text,
+            value,
+            unit,
+            spec(step, min, f64::INFINITY),
+            move |ed, v| {
+                if let Some(FileDialog::DocProps(d)) = &mut ed.files.dialog {
+                    set(d, v);
+                }
+            },
+        )
     };
     let w = d.w * d.scale;
     let hgt = d.h * d.scale;

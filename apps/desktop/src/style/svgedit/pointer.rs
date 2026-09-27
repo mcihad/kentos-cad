@@ -7,7 +7,7 @@
 //! nodes open, a draft ends, a guide's window opens).
 //!
 //! Esc during a move, a scale or a turn puts the shapes back where they
-//! were (the web let the drag go on).
+//! were, on both platforms (the web used to let the drag go on).
 
 use std::time::{Duration, Instant};
 
@@ -194,7 +194,8 @@ impl SvgEditor {
             Input::Move { s, shift, alt } => self.moved(s, shift, alt),
             Input::Up { alt } => self.up(alt),
             Input::Wheel { s, up } => {
-                self.camera.zoom_by(if up { 1.15 } else { 1.0 / 1.15 }, Some(s));
+                self.camera
+                    .zoom_by(if up { 1.15 } else { 1.0 / 1.15 }, Some(s));
                 self.touch();
             }
             Input::Resized(w, h) => {
@@ -488,7 +489,12 @@ impl SvgEditor {
                 };
                 self.replace(&orig, &box_to_box(&bx, &b));
             }
-            Op::Rotate { p0, orig, bx, moved } => {
+            Op::Rotate {
+                p0,
+                orig,
+                bx,
+                moved,
+            } => {
                 if !self.travelled(p0, moved, p) {
                     return;
                 }
@@ -565,7 +571,10 @@ impl SvgEditor {
         for o in orig {
             let id = id_of(o);
             if let Some(slot) = self.doc.shapes.iter_mut().find(|s| id_of(s) == id) {
-                *slot = transform_shape(o, m).ok().flatten().unwrap_or_else(|| o.clone());
+                *slot = transform_shape(o, m)
+                    .ok()
+                    .flatten()
+                    .unwrap_or_else(|| o.clone());
             }
         }
         self.touch();
@@ -656,7 +665,11 @@ impl SvgEditor {
                         })
                         .map(|s| id_of(s).to_owned())
                         .collect();
-                    let mut ids = if add { self.selection.clone() } else { Vec::new() };
+                    let mut ids = if add {
+                        self.selection.clone()
+                    } else {
+                        Vec::new()
+                    };
                     for id in inside {
                         for m in self.group_of(&id) {
                             if !ids.contains(&m) {

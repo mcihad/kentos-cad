@@ -110,7 +110,7 @@ export class Measure {
         const mx = (x1 + x2) / 2 + 10;
         const my = (y1 + y2) / 2 - 10;
         g.append(tag(mx, my, txt.main, 'svge__tag svge__tag--measure'));
-        g.append(tag(mx, my + 15, txt.more, 'svge__tag svge__tag--measure'));
+        g.append(tag(mx, my, txt.more, 'svge__tag svge__tag--measure', true));
       }
       return;
     }

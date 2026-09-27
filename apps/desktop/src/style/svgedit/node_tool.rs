@@ -21,7 +21,7 @@ use super::doc::id_of;
 use super::hit::Hit;
 use super::measure::fmt_num;
 use super::paint::{View, subs_path};
-use super::snap::{SnapOpts, tag};
+use super::snap::{Hang, SnapOpts, tag};
 use super::state::SvgEditor;
 
 /// Pixels round a segment that still take a click.
@@ -105,7 +105,10 @@ fn refs(list: &[(usize, usize)]) -> Vec<NodeRef> {
 }
 
 fn from_ref(r: &NodeRef) -> Option<(usize, usize)> {
-    Some((kentos_svg_core::nodes::at(r.sub)?, kentos_svg_core::nodes::at(r.index)?))
+    Some((
+        kentos_svg_core::nodes::at(r.sub)?,
+        kentos_svg_core::nodes::at(r.index)?,
+    ))
 }
 
 impl NodeTool {
@@ -355,7 +358,11 @@ impl SvgEditor {
             }
             return true;
         }
-        self.nodes.op = Some(NodeOp::Box { p0: p, p1: p, add: shift });
+        self.nodes.op = Some(NodeOp::Box {
+            p0: p,
+            p1: p,
+            add: shift,
+        });
         true
     }
 
@@ -377,8 +384,17 @@ impl SvgEditor {
         let zoom = self.camera.zoom;
         let sid = self.node_edit.clone().unwrap_or_default();
         match op {
-            NodeOp::Nodes { grab, p0, orig, moved } => {
-                let Some(o) = orig.get(grab.0).and_then(|sp| sp.nodes.get(grab.1)).cloned() else {
+            NodeOp::Nodes {
+                grab,
+                p0,
+                orig,
+                moved,
+            } => {
+                let Some(o) = orig
+                    .get(grab.0)
+                    .and_then(|sp| sp.nodes.get(grab.1))
+                    .cloned()
+                else {
                     return true;
                 };
                 if !moved && (p[0] - p0[0]).hypot(p[1] - p0[1]) * zoom < 3.0 {
@@ -399,7 +415,13 @@ impl SvgEditor {
                 self.set_subs_of_edited(&subs);
                 true
             }
-            NodeOp::Handle { at, part, p0, orig, moved } => {
+            NodeOp::Handle {
+                at,
+                part,
+                p0,
+                orig,
+                moved,
+            } => {
                 // As with nodes: a click on a handle does not snap it anywhere.
                 if !moved && (p[0] - p0[0]).hypot(p[1] - p0[1]) * zoom < 3.0 {
                     return true;
@@ -424,7 +446,9 @@ impl SvgEditor {
                 self.touch();
                 true
             }
-            NodeOp::Corner { at, corner, orig, .. } => {
+            NodeOp::Corner {
+                at, corner, orig, ..
+            } => {
                 let Some(n) = orig.get(at.0).and_then(|sp| sp.nodes.get(at.1)) else {
                     return true;
                 };
@@ -433,7 +457,10 @@ impl SvgEditor {
                     .max(v[0] * corner.ahead[0] + v[1] * corner.ahead[1]);
                 let d = along.min(corner.max).max(0.0);
                 let fillet = self.nodes.mode == Some(CornerMode::Fillet);
-                let size = nice_round(if fillet { fillet_radius(&corner, d) } else { d }, 2.0 / zoom);
+                let size = nice_round(
+                    if fillet { fillet_radius(&corner, d) } else { d },
+                    2.0 / zoom,
+                );
                 let sel = self.node_refs();
                 let r = (size > 0.0).then(|| corner_nodes(&orig, &sel, fillet, size));
                 self.nodes.preview = match &r {
@@ -448,7 +475,11 @@ impl SvgEditor {
                             "{} {}{}",
                             if fillet { "Yarıçap" } else { "Pah" },
                             fmt_num(size, 3),
-                            if n > 1 { format!(" ({n} köşe)") } else { String::new() }
+                            if n > 1 {
+                                format!(" ({n} köşe)")
+                            } else {
+                                String::new()
+                            }
                         ));
                     }
                 }
@@ -488,7 +519,11 @@ impl SvgEditor {
                         }
                     }
                 }
-                let mut next = if add { self.node_selected() } else { Vec::new() };
+                let mut next = if add {
+                    self.node_selected()
+                } else {
+                    Vec::new()
+                };
                 for r in inside {
                     if !next.contains(&r) {
                         next.push(r);
@@ -510,7 +545,11 @@ impl SvgEditor {
                     }
                     Joined::Done(subs, chosen) => {
                         let chosen = chosen.iter().filter_map(from_ref).collect();
-                        self.node_apply(if fillet { "Köşe yuvarla" } else { "Pah kır" }, subs, chosen);
+                        self.node_apply(
+                            if fillet { "Köşe yuvarla" } else { "Pah kır" },
+                            subs,
+                            chosen,
+                        );
                         self.say(format!(
                             "{} {} uygulandı. Sonraki köşeye basın ya da Esc.",
                             if fillet { "Yarıçap" } else { "Pah" },
@@ -591,7 +630,9 @@ impl SvgEditor {
     pub fn node_cancel(&mut self) -> bool {
         if let Some(op) = self.nodes.op.take() {
             match op {
-                NodeOp::Nodes { orig, .. } | NodeOp::Handle { orig, .. } | NodeOp::Corner { orig, .. } => {
+                NodeOp::Nodes { orig, .. }
+                | NodeOp::Handle { orig, .. }
+                | NodeOp::Corner { orig, .. } => {
                     self.set_subs_of_edited(&orig);
                 }
                 NodeOp::Box { .. } => {}
@@ -625,8 +666,14 @@ impl SvgEditor {
                 let c = segment_cubic(sp, i);
                 let xs = [c[0][0], c[1][0], c[2][0], c[3][0]];
                 let ys = [c[0][1], c[1][1], c[2][1], c[3][1]];
-                let (min_x, max_x) = (xs.iter().copied().fold(f64::INFINITY, f64::min) - tol, xs.iter().copied().fold(f64::NEG_INFINITY, f64::max) + tol);
-                let (min_y, max_y) = (ys.iter().copied().fold(f64::INFINITY, f64::min) - tol, ys.iter().copied().fold(f64::NEG_INFINITY, f64::max) + tol);
+                let (min_x, max_x) = (
+                    xs.iter().copied().fold(f64::INFINITY, f64::min) - tol,
+                    xs.iter().copied().fold(f64::NEG_INFINITY, f64::max) + tol,
+                );
+                let (min_y, max_y) = (
+                    ys.iter().copied().fold(f64::INFINITY, f64::min) - tol,
+                    ys.iter().copied().fold(f64::NEG_INFINITY, f64::max) + tol,
+                );
                 if p[0] < min_x || p[0] > max_x || p[1] < min_y || p[1] > max_y {
                     continue;
                 }
@@ -664,7 +711,13 @@ impl SvgEditor {
 }
 
 /// A handle dragged to q, the other one kept as the node's type says.
-fn drag_handle(orig: &[SubPath], at: (usize, usize), part: Part, q: Pt, free: bool) -> Vec<SubPath> {
+fn drag_handle(
+    orig: &[SubPath],
+    at: (usize, usize),
+    part: Part,
+    q: Pt,
+    free: bool,
+) -> Vec<SubPath> {
     let mut subs = orig.to_vec();
     let Some(ty) = orig.get(at.0).map(|sp| node_type_of(sp, at.1)) else {
         return subs;
@@ -802,7 +855,13 @@ pub fn draw_nodes(frame: &mut Frame, ed: &SvgEditor, view: &View, c: &NodeColors
             Point::new(a.x.min(b.x), a.y.min(b.y)),
             Size::new((a.x - b.x).abs(), (a.y - b.y).abs()),
         );
-        frame.fill(&r, Color { a: 0.12, ..c.accent });
+        frame.fill(
+            &r,
+            Color {
+                a: 0.12,
+                ..c.accent
+            },
+        );
         frame.stroke(&r, Stroke::default().with_color(c.accent).with_width(1.0));
     }
     let ring = match &ed.nodes.op {
@@ -825,7 +884,15 @@ pub fn draw_nodes(frame: &mut Frame, ed: &SvgEditor, view: &View, c: &NodeColors
                 if mode == CornerMode::Fillet { "R " } else { "" },
                 fmt_num(*size, 3)
             );
-            tag(frame, &text, Point::new(p.x + 14.0, p.y - 12.0), c.text, c.panel, false);
+            tag(
+                frame,
+                &text,
+                Point::new(p.x + 14.0, p.y - 12.0),
+                Hang::Above,
+                c.text,
+                c.panel,
+                false,
+            );
         }
     }
 }

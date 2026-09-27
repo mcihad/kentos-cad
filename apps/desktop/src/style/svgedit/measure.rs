@@ -17,7 +17,7 @@ use kentos_svg_core::bezier::{bez, segment_count, segment_cubic, segment_length}
 use kentos_svg_core::shape::Pt;
 
 use super::paint::{View, outline};
-use super::snap::{SnapOpts, tag};
+use super::snap::{Hang, SnapOpts, tag};
 use super::state::SvgEditor;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -56,7 +56,8 @@ pub fn readout(a: Pt, b: Pt, width: f64, size_mm: Option<f64>) -> (String, Strin
     let d = kentos_geometry_core::jsmath::js_hypot(dx, dy);
     // As the drawing counts it: y runs down, so the angle grows clockwise, as a
     // shape's Döndürme does; −180° … 180°, so a line slightly up reads −20°.
-    let ang = (kentos_geometry_core::jsmath::atan2(dy, dx) * 180.0) / kentos_geometry_core::jsmath::PI;
+    let ang =
+        (kentos_geometry_core::jsmath::atan2(dy, dx) * 180.0) / kentos_geometry_core::jsmath::PI;
     let mm = mm_of(d, width, size_mm);
     let main = format!(
         "{} birim{} · açı {}°",
@@ -68,7 +69,10 @@ pub fn readout(a: Pt, b: Pt, width: f64, size_mm: Option<f64>) -> (String, Strin
         },
         fmt_num(ang, 2)
     );
-    (main, format!("ΔX {}, ΔY {}", fmt_num(dx, 3), fmt_num(dy, 3)))
+    (
+        main,
+        format!("ΔX {}, ΔY {}", fmt_num(dx, 3), fmt_num(dy, 3)),
+    )
 }
 
 /// A length at the symbol's size, or nothing when the drawing has no size in mm.
@@ -169,7 +173,12 @@ impl SvgEditor {
 
     /// The hovered path's length in the status line.
     fn measure_hover_status(&mut self) {
-        let Some(s) = self.measure.hover.as_deref().and_then(|id| self.doc.shape(id)) else {
+        let Some(s) = self
+            .measure
+            .hover
+            .as_deref()
+            .and_then(|id| self.doc.shape(id))
+        else {
             return;
         };
         let Some(subs) = outline(s) else {
@@ -197,7 +206,14 @@ impl SvgEditor {
 }
 
 /// The measure's line and labels, or the hovered path's segment lengths.
-pub fn draw_measure(frame: &mut Frame, ed: &SvgEditor, view: &View, accent: Color, text: Color, halo: Color) {
+pub fn draw_measure(
+    frame: &mut Frame,
+    ed: &SvgEditor,
+    view: &View,
+    accent: Color,
+    text: Color,
+    halo: Color,
+) {
     let m = &ed.measure;
     if let (Some(a), Some(b)) = (m.a, m.b)
         && m.stage != Stage::Idle
@@ -213,8 +229,24 @@ pub fn draw_measure(frame: &mut Frame, ed: &SvgEditor, view: &View, accent: Colo
         let (main, more) = readout(a, b, ed.doc.width, ed.doc.size_mm);
         let mx = (p1.x + p2.x) / 2.0 + 10.0;
         let my = (p1.y + p2.y) / 2.0 - 10.0;
-        tag(frame, &main, Point::new(mx, my), accent, halo, true);
-        tag(frame, &more, Point::new(mx, my + 15.0), accent, halo, true);
+        tag(
+            frame,
+            &main,
+            Point::new(mx, my),
+            Hang::Above,
+            accent,
+            halo,
+            true,
+        );
+        tag(
+            frame,
+            &more,
+            Point::new(mx, my),
+            Hang::Below,
+            accent,
+            halo,
+            true,
+        );
         return;
     }
     let Some(s) = m.hover.as_deref().and_then(|id| ed.doc.shape(id)) else {
@@ -239,6 +271,7 @@ pub fn draw_measure(frame: &mut Frame, ed: &SvgEditor, view: &View, accent: Colo
                 frame,
                 &fmt_num(len, 2),
                 Point::new(at.x + 4.0, at.y - 4.0),
+                Hang::Above,
                 text,
                 halo,
                 false,

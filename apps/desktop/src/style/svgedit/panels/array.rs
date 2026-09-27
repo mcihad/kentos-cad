@@ -51,7 +51,11 @@ fn centre<'a>(at: At, point: Option<[f64; 2]>, pick: Pick) -> Element<'a, Messag
             .width(Fill),
             button(label::body(words))
                 .padding([3, 10])
-                .style(move |t: &iced::Theme, s| if picked { ui_style::button::primary(t, s) } else { ui_style::button::secondary(t, s) })
+                .style(move |t: &iced::Theme, s| if picked {
+                    ui_style::button::primary(t, s)
+                } else {
+                    ui_style::button::secondary(t, s)
+                })
                 .on_press(change(move |ed| ed.pick_point(pick))),
         ]
         .spacing(8)
@@ -68,40 +72,82 @@ pub(super) fn tab<'a>(ed: &SvgEditor, count: usize) -> Element<'a, Message> {
         ArrayKind::Rect => {
             let r = &a.rect;
             body.push(fields::pair(
-                num(ed, "rows", "Satır", r.rows, None, spec(1.0, 1.0, f64::INFINITY), |ed, v| {
-                    ed.ui.array.rect.rows = kentos_native_style::classify::js_round(v).max(1.0);
-                }),
-                num(ed, "cols", "Sütun", r.cols, None, spec(1.0, 1.0, f64::INFINITY), |ed, v| {
-                    ed.ui.array.rect.cols = kentos_native_style::classify::js_round(v).max(1.0);
-                }),
+                num(
+                    ed,
+                    "rows",
+                    "Satır",
+                    r.rows,
+                    None,
+                    spec(1.0, 1.0, f64::INFINITY),
+                    |ed, v| {
+                        ed.ui.array.rect.rows = kentos_native_style::classify::js_round(v).max(1.0);
+                    },
+                ),
+                num(
+                    ed,
+                    "cols",
+                    "Sütun",
+                    r.cols,
+                    None,
+                    spec(1.0, 1.0, f64::INFINITY),
+                    |ed, v| {
+                        ed.ui.array.rect.cols = kentos_native_style::classify::js_round(v).max(1.0);
+                    },
+                ),
             ));
             body.push(fields::labelled(
                 "Aralık",
                 seg(
                     &[Opt("gap", "Boşluk"), Opt("step", "Adım")],
                     Some(if r.gap { "gap" } else { "step" }),
-                    &["Kopyaların kutuları arası", "Bir kopyadan ötekine (merkezden merkeze)"],
+                    &[
+                        "Kopyaların kutuları arası",
+                        "Bir kopyadan ötekine (merkezden merkeze)",
+                    ],
                     |v| change(move |ed| ed.ui.array.rect.gap = v == "gap"),
                 ),
                 None,
             ));
             body.push(fields::pair(
-                num(ed, "adx", "Yatay", r.dx, None, any, |ed, v| ed.ui.array.rect.dx = v),
-                num(ed, "ady", "Dikey", r.dy, None, any, |ed, v| ed.ui.array.rect.dy = v),
+                num(ed, "adx", "Yatay", r.dx, None, any, |ed, v| {
+                    ed.ui.array.rect.dx = v
+                }),
+                num(ed, "ady", "Dikey", r.dy, None, any, |ed, v| {
+                    ed.ui.array.rect.dy = v
+                }),
             ));
         }
         ArrayKind::Polar => {
             let p = &a.polar;
             body.push(fields::pair(
-                num(ed, "count", "Adet", p.count, None, spec(1.0, 1.0, f64::INFINITY), |ed, v| {
-                    ed.ui.array.polar.count = kentos_native_style::classify::js_round(v).max(1.0);
-                }),
-                num(ed, "angle", "Açı", p.angle, Some("°"), spec(15.0, f64::NEG_INFINITY, f64::INFINITY), |ed, v| {
-                    ed.ui.array.polar.angle = v;
-                }),
+                num(
+                    ed,
+                    "count",
+                    "Adet",
+                    p.count,
+                    None,
+                    spec(1.0, 1.0, f64::INFINITY),
+                    |ed, v| {
+                        ed.ui.array.polar.count =
+                            kentos_native_style::classify::js_round(v).max(1.0);
+                    },
+                ),
+                num(
+                    ed,
+                    "angle",
+                    "Açı",
+                    p.angle,
+                    Some("°"),
+                    spec(15.0, f64::NEG_INFINITY, f64::INFINITY),
+                    |ed, v| {
+                        ed.ui.array.polar.angle = v;
+                    },
+                ),
             ));
             body.push(centre(p.at, p.point, Pick::Polar));
-            body.push(check(p.rotate, "Kopyalar da dönsün", |ed, v| ed.ui.array.polar.rotate = v));
+            body.push(check(p.rotate, "Kopyalar da dönsün", |ed, v| {
+                ed.ui.array.polar.rotate = v
+            }));
             body.push(fields::labelled(
                 "Yön",
                 seg(
@@ -129,9 +175,17 @@ pub(super) fn tab<'a>(ed: &SvgEditor, count: usize) -> Element<'a, Message> {
                 None,
             ));
             if m.axis == "angle" {
-                body.push(num(ed, "mdeg", "Eksen açısı", m.deg, Some("°"), spec(15.0, f64::NEG_INFINITY, f64::INFINITY), |ed, v| {
-                    ed.ui.array.mirror.deg = v;
-                }));
+                body.push(num(
+                    ed,
+                    "mdeg",
+                    "Eksen açısı",
+                    m.deg,
+                    Some("°"),
+                    spec(15.0, f64::NEG_INFINITY, f64::INFINITY),
+                    |ed, v| {
+                        ed.ui.array.mirror.deg = v;
+                    },
+                ));
             }
             body.push(centre(m.at, m.point, Pick::Mirror));
         }
@@ -143,7 +197,11 @@ pub(super) fn tab<'a>(ed: &SvgEditor, count: usize) -> Element<'a, Message> {
     column![
         title("Dizi ve aynalı kopya".to_owned(), None),
         seg(
-            &[Opt("rect", "Satır-sütun"), Opt("polar", "Dairesel"), Opt("mirror", "Aynalı")],
+            &[
+                Opt("rect", "Satır-sütun"),
+                Opt("polar", "Dairesel"),
+                Opt("mirror", "Aynalı")
+            ],
             Some(match a.kind {
                 ArrayKind::Rect => "rect",
                 ArrayKind::Polar => "polar",
@@ -163,7 +221,11 @@ pub(super) fn tab<'a>(ed: &SvgEditor, count: usize) -> Element<'a, Message> {
             },
         ),
         Column::with_children(body).spacing(8),
-        check(a.preview, "Önizleme (kopyalar soluk görünür)", |ed, v| ed.ui.array.preview = v),
+        check(
+            a.preview,
+            "Önizleme (kopyalar soluk görünür)",
+            |ed, v| ed.ui.array.preview = v
+        ),
         row![
             apply,
             label::caption(if count > 0 {

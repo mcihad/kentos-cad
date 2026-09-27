@@ -36,7 +36,10 @@ impl canvas::Program<Message> for Preview {
         let mut frame = Frame::new(renderer, bounds.size());
         let pad = 12.0;
         let [x, y, w, h] = self.view;
-        let (bw, bh) = (f64::from(bounds.width) - 2.0 * pad, f64::from(bounds.height) - 2.0 * pad);
+        let (bw, bh) = (
+            f64::from(bounds.width) - 2.0 * pad,
+            f64::from(bounds.height) - 2.0 * pad,
+        );
         let k = if w > 0.0 && h > 0.0 {
             (bw / w).min(bh / h).max(0.0)
         } else {

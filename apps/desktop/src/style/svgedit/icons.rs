@@ -191,14 +191,8 @@ const ICONS: [(&str, &str); 53] = [
         "toTop",
         "<path d=\"M4 3h12M10 16V6M6.5 9.5 10 6l3.5 3.5\"/>",
     ),
-    (
-        "raise",
-        "<path d=\"M10 16V5M6.5 8.5 10 5l3.5 3.5\"/>",
-    ),
-    (
-        "lower",
-        "<path d=\"M10 4v11M6.5 11.5 10 15l3.5-3.5\"/>",
-    ),
+    ("raise", "<path d=\"M10 16V5M6.5 8.5 10 5l3.5 3.5\"/>"),
+    ("lower", "<path d=\"M10 4v11M6.5 11.5 10 15l3.5-3.5\"/>"),
     (
         "toBottom",
         "<path d=\"M4 17h12M10 4v10M6.5 10.5 10 14l3.5-3.5\"/>",
@@ -235,8 +229,15 @@ mod tests {
     fn every_icon_is_drawn_whole() {
         for (name, markup) in super::ICONS {
             let open = markup.matches('<').count();
-            assert!(kentos_ui::icon::svg_elements(markup) >= open.min(1), "{name}");
-            assert_eq!(kentos_ui::icon::svg_elements(markup), open, "{name}: every element is drawn");
+            assert!(
+                kentos_ui::icon::svg_elements(markup) >= open.min(1),
+                "{name}"
+            );
+            assert_eq!(
+                kentos_ui::icon::svg_elements(markup),
+                open,
+                "{name}: every element is drawn"
+            );
         }
     }
 }

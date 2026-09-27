@@ -11,7 +11,9 @@ use std::sync::Arc;
 
 use iced::mouse::Cursor;
 use iced::widget::canvas::{self, Fill, Frame, Geometry, fill};
-use iced::widget::{button, canvas as canvas_widget, column, container, row, shader, slider, space, stack};
+use iced::widget::{
+    button, canvas as canvas_widget, column, container, row, shader, slider, space, stack,
+};
 use iced::{Center, Color, Element, Length, Rectangle, Renderer, Task, Theme};
 use kentos_geometry_core::api::json::Json;
 use kentos_render_wgpu::styled::picture::Picture;
@@ -210,7 +212,11 @@ pub fn add(ed: &mut SvgEditor) {
         result
             .shapes
             .iter()
-            .map(|s| std::iter::once(s.outer.clone()).chain(s.holes.iter().cloned()).collect())
+            .map(|s| {
+                std::iter::once(s.outer.clone())
+                    .chain(s.holes.iter().cloned())
+                    .collect()
+            })
             .collect()
     } else {
         vec![
@@ -238,7 +244,10 @@ pub fn add(ed: &mut SvgEditor) {
             s
         })
         .collect();
-    let ids: Vec<String> = shapes.iter().map(|s| super::super::doc::id_of(s).to_owned()).collect();
+    let ids: Vec<String> = shapes
+        .iter()
+        .map(|s| super::super::doc::id_of(s).to_owned())
+        .collect();
     ed.edit("trace", |ed| ed.doc.shapes.extend(shapes));
     ed.settle();
     ed.select(ids);
@@ -270,7 +279,14 @@ fn fit_view(bounds: Rectangle, (w, h): (f64, f64)) -> View {
 impl canvas::Program<Message> for Paths {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &Renderer, _: &Theme, bounds: Rectangle, _: Cursor) -> Vec<Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        _: &Theme,
+        bounds: Rectangle,
+        _: Cursor,
+    ) -> Vec<Geometry> {
         let mut frame = Frame::new(renderer, bounds.size());
         if let Some(r) = &self.result {
             let view = fit_view(bounds, self.size);
@@ -300,7 +316,14 @@ struct Paper(Color);
 impl canvas::Program<Message> for Paper {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &Renderer, _: &Theme, bounds: Rectangle, _: Cursor) -> Vec<Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        _: &Theme,
+        bounds: Rectangle,
+        _: Cursor,
+    ) -> Vec<Geometry> {
         let mut frame = Frame::new(renderer, bounds.size());
         frame.fill_rectangle(iced::Point::ORIGIN, bounds.size(), self.0);
         vec![frame.into_geometry()]
@@ -356,11 +379,15 @@ fn slide<'a>(
         label_text,
         row![
             container(
-                slider(min..=max, value, move |v| with(move |d| set(&mut d.set.opts, v)))
-                    .step(step)
+                slider(min..=max, value, move |v| with(move |d| set(
+                    &mut d.set.opts,
+                    v
+                )))
+                .step(step)
             )
             .width(Length::Fill),
-            container(label::caption(shown).font(typography::mono())).width(typography::scaled(64.0)),
+            container(label::caption(shown).font(typography::mono()))
+                .width(typography::scaled(64.0)),
         ]
         .spacing(10)
         .align_y(Center),
@@ -368,7 +395,12 @@ fn slide<'a>(
     )
 }
 
-pub fn view<'a>(ed: &'a SvgEditor, d: &'a TraceDialog, width: f32, height: f32) -> Element<'a, Message> {
+pub fn view<'a>(
+    ed: &'a SvgEditor,
+    d: &'a TraceDialog,
+    width: f32,
+    height: f32,
+) -> Element<'a, Message> {
     let ink = parse_hex(&ed.ink()).unwrap_or(Color::BLACK);
     let paper = parse_hex(&ed.paper()).unwrap_or(Color::WHITE);
     let stage: Element<'a, Message> = match &d.bitmap {
@@ -432,33 +464,78 @@ pub fn view<'a>(ed: &'a SvgEditor, d: &'a TraceDialog, width: f32, height: f32) 
     .width(Length::FillPortion(6));
     let o = &d.set.opts;
     let form = column![
-        slide("Parlaklık eşiği", o.threshold, (1.0, 254.0, 1.0), kentos_expression::js::number::to_string(o.threshold), "Bundan koyu pikseller mürekkeptir.", |o, v| o.threshold = v),
-        check(o.invert, "Ters çevir (açık renkler mürekkep)", |ed, v| {
-            if let Some(FileDialog::Trace(d)) = &mut ed.files.dialog {
-                d.set.opts.invert = v;
-                ed.trace_last = d.set.clone();
+        slide(
+            "Parlaklık eşiği",
+            o.threshold,
+            (1.0, 254.0, 1.0),
+            kentos_expression::js::number::to_string(o.threshold),
+            "Bundan koyu pikseller mürekkeptir.",
+            |o, v| o.threshold = v
+        ),
+        check(
+            o.invert,
+            "Ters çevir (açık renkler mürekkep)",
+            |ed, v| {
+                if let Some(FileDialog::Trace(d)) = &mut ed.files.dialog {
+                    d.set.opts.invert = v;
+                    ed.trace_last = d.set.clone();
+                }
+                ed.pending_trace = true;
             }
-            ed.pending_trace = true;
-        }),
-        slide("Benek temizliği", o.speckle, (0.0, 400.0, 1.0), format!("{} px²", kentos_expression::js::number::to_string(o.speckle)), "Bundan küçük lekeler ve delikler atılır.", |o, v| o.speckle = v),
-        slide("Köşe eşiği", o.corner, (10.0, 170.0, 5.0), format!("{}°", kentos_expression::js::number::to_string(o.corner)), "Bundan keskin dönüşler köşe kalır, gerisi eğri olur.", |o, v| o.corner = v),
+        ),
+        slide(
+            "Benek temizliği",
+            o.speckle,
+            (0.0, 400.0, 1.0),
+            format!(
+                "{} px²",
+                kentos_expression::js::number::to_string(o.speckle)
+            ),
+            "Bundan küçük lekeler ve delikler atılır.",
+            |o, v| o.speckle = v
+        ),
+        slide(
+            "Köşe eşiği",
+            o.corner,
+            (10.0, 170.0, 5.0),
+            format!("{}°", kentos_expression::js::number::to_string(o.corner)),
+            "Bundan keskin dönüşler köşe kalır, gerisi eğri olur.",
+            |o, v| o.corner = v
+        ),
         slide(
             "Yumuşatma",
             o.smooth * 100.0,
             (0.0, 100.0, 5.0),
             if o.smooth > 0.0 {
-                format!("%{}", kentos_native_style::classify::js_round(o.smooth * 100.0))
+                format!(
+                    "%{}",
+                    kentos_native_style::classify::js_round(o.smooth * 100.0)
+                )
             } else {
                 "kapalı".to_owned()
             },
             "Kapalıyken düz kenarlı çokgen; arttıkça daha az düğüm, daha yuvarlak eğri.",
             |o, v| o.smooth = v / 100.0
         ),
-        slide("Sadeleştirme", o.tolerance, (0.2, 5.0, 0.1), format!("{} px", kentos_expression::js::number::to_fixed(o.tolerance, 1)), "Çizginin pikselden en çok ne kadar sapabileceği.", |o, v| o.tolerance = v),
+        slide(
+            "Sadeleştirme",
+            o.tolerance,
+            (0.2, 5.0, 0.1),
+            format!(
+                "{} px",
+                kentos_expression::js::number::to_fixed(o.tolerance, 1)
+            ),
+            "Çizginin pikselden en çok ne kadar sapabileceği.",
+            |o, v| o.tolerance = v
+        ),
         fields::labelled(
             "Çözünürlük (uzun kenar)",
             seg(
-                &[Opt("300", "300 px"), Opt("600", "600 px"), Opt("1000", "1000 px")],
+                &[
+                    Opt("300", "300 px"),
+                    Opt("600", "600 px"),
+                    Opt("1000", "1000 px")
+                ],
                 Some(match d.set.max_side as u32 {
                     300 => "300",
                     1000 => "1000",
@@ -476,20 +553,28 @@ pub fn view<'a>(ed: &'a SvgEditor, d: &'a TraceDialog, width: f32, height: f32) 
             ),
             None,
         ),
-        check(d.set.separate, "Her parça ayrı şekil (grupta)", |ed, v| {
-            if let Some(FileDialog::Trace(d)) = &mut ed.files.dialog {
-                d.set.separate = v;
-                ed.trace_last = d.set.clone();
+        check(
+            d.set.separate,
+            "Her parça ayrı şekil (grupta)",
+            |ed, v| {
+                if let Some(FileDialog::Trace(d)) = &mut ed.files.dialog {
+                    d.set.separate = v;
+                    ed.trace_last = d.set.clone();
+                }
             }
-        }),
+        ),
     ]
     .spacing(12);
     let can_add = d.result.as_ref().is_some_and(|r| !r.shapes.is_empty());
     let foot = row![
-        button(row![icon(Icon::Folder).size(14.0), label::body("Görüntü seç…")].spacing(6).align_y(Center))
-            .padding([5, 12])
-            .style(ui_style::button::secondary)
-            .on_press(ev(EdEvent::File(Event::Pick(Purpose::Trace)))),
+        button(
+            row![icon(Icon::Folder).size(14.0), label::body("Görüntü seç…")]
+                .spacing(6)
+                .align_y(Center)
+        )
+        .padding([5, 12])
+        .style(ui_style::button::secondary)
+        .on_press(ev(EdEvent::File(Event::Pick(Purpose::Trace)))),
         space::horizontal(),
         button(label::body("Vazgeç"))
             .padding([5, 14])

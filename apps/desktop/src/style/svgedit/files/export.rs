@@ -87,7 +87,9 @@ fn only(ed: &SvgEditor, st: &ExportDialog) -> Option<HashSet<String>> {
 fn area(ed: &SvgEditor, st: &ExportDialog) -> [f64; 4] {
     let o = only(ed, st);
     export_box(ed.doc.width, ed.doc.height, &ed.doc.shapes, o.as_ref())
-        .map_or([0.0, 0.0, ed.doc.width, ed.doc.height], |b| [b.x, b.y, b.w, b.h])
+        .map_or([0.0, 0.0, ed.doc.width, ed.doc.height], |b| {
+            [b.x, b.y, b.w, b.h]
+        })
 }
 
 fn width_mm(ed: &SvgEditor, st: &ExportDialog) -> Option<f64> {
@@ -126,7 +128,11 @@ fn file_name(ed: &SvgEditor, st: &ExportDialog) -> String {
         "{}{}.{}",
         file_slug(&ed.save_name()),
         if st.only { "-secim" } else { "" },
-        if st.format == Format::Png { "png" } else { "svg" }
+        if st.format == Format::Png {
+            "png"
+        } else {
+            "svg"
+        }
     )
 }
 
@@ -148,7 +154,8 @@ impl App {
         let glyphs = |t: &str, f: Option<&str>, weight: f64, italic: bool| {
             kentos_render_wgpu::styled::picture::ImageSource::text(&**images, t, f, weight, italic)
         };
-        let picture = crate::style::svg::picture(&svg, &glyphs).ok_or("Çizim resme çevrilemedi.")?;
+        let picture =
+            crate::style::svg::picture(&svg, &glyphs).ok_or("Çizim resme çevrilemedi.")?;
         let background = st
             .paper
             .then(|| parse_hex(&ed.paper()))
@@ -214,7 +221,8 @@ impl App {
                 Some(match std::fs::write(&path, &bytes) {
                     Ok(()) => format!(
                         "{} yazıldı.",
-                        path.file_name().map_or_else(String::new, |n| n.to_string_lossy().into_owned())
+                        path.file_name()
+                            .map_or_else(String::new, |n| n.to_string_lossy().into_owned())
                     ),
                     Err(e) => format!("Dışa aktarılamadı: {e}"),
                 })
@@ -249,7 +257,12 @@ fn with_dialog(f: impl Fn(&mut ExportDialog) + Send + Sync + 'static) -> Message
     })
 }
 
-pub fn view<'a>(ed: &'a SvgEditor, st: &'a ExportDialog, width: f32, height: f32) -> Element<'a, Message> {
+pub fn view<'a>(
+    ed: &'a SvgEditor,
+    st: &'a ExportDialog,
+    width: f32,
+    height: f32,
+) -> Element<'a, Message> {
     let chosen = visible_chosen(ed).len();
     let b = area(ed, st);
     let mm = width_mm(ed, st);
@@ -349,25 +362,42 @@ pub fn view<'a>(ed: &'a SvgEditor, st: &'a ExportDialog, width: f32, height: f32
     .width(Length::FillPortion(6));
     if st.format == Format::Png {
         let size_field: Element<'a, Message> = if st.by_px {
-            num_bare(ed, "exppx", st.px, Some("px"), spec(64.0, 1.0, 8192.0), |ed, v| {
-                if let Some(FileDialog::Export(d)) = &mut ed.files.dialog {
-                    d.px = kentos_native_style::classify::js_round(v).clamp(1.0, 8192.0);
-                    ed.export_last = d.clone();
-                }
-            })
+            num_bare(
+                ed,
+                "exppx",
+                st.px,
+                Some("px"),
+                spec(64.0, 1.0, 8192.0),
+                |ed, v| {
+                    if let Some(FileDialog::Export(d)) = &mut ed.files.dialog {
+                        d.px = kentos_native_style::classify::js_round(v).clamp(1.0, 8192.0);
+                        ed.export_last = d.clone();
+                    }
+                },
+            )
         } else {
-            num_bare(ed, "expdpi", st.dpi, Some("dpi"), spec(50.0, 1.0, 2400.0), |ed, v| {
-                if let Some(FileDialog::Export(d)) = &mut ed.files.dialog {
-                    d.dpi = v.clamp(1.0, 2400.0);
-                    ed.export_last = d.clone();
-                }
-            })
+            num_bare(
+                ed,
+                "expdpi",
+                st.dpi,
+                Some("dpi"),
+                spec(50.0, 1.0, 2400.0),
+                |ed, v| {
+                    if let Some(FileDialog::Export(d)) = &mut ed.files.dialog {
+                        d.dpi = v.clamp(1.0, 2400.0);
+                        ed.export_last = d.clone();
+                    }
+                },
+            )
         };
         let mut size_rows = column![
             seg(
                 &[Opt("px", "Piksel genişlik"), Opt("dpi", "DPI")],
                 Some(if st.by_px { "px" } else { "dpi" }),
-                &["", "Belge özelliklerindeki sembol boyuyla (mm); yoksa 1 birim = 1 px (96 dpi)"],
+                &[
+                    "",
+                    "Belge özelliklerindeki sembol boyuyla (mm); yoksa 1 birim = 1 px (96 dpi)"
+                ],
                 |v| with_dialog(move |d| d.by_px = v == "px"),
             ),
             size_field,
@@ -392,9 +422,12 @@ pub fn view<'a>(ed: &'a SvgEditor, st: &'a ExportDialog, width: f32, height: f32
     }
     let png = st.format == Format::Png;
     let copy_btn = button(
-        row![icon(crate::icons::from_web(Some("copy"))).size(14.0), label::body("Panoya kopyala")]
-            .spacing(6)
-            .align_y(Center),
+        row![
+            icon(crate::icons::from_web(Some("copy"))).size(14.0),
+            label::body("Panoya kopyala")
+        ]
+        .spacing(6)
+        .align_y(Center),
     )
     .padding([5, 14])
     .style(ui_style::button::secondary)
@@ -402,7 +435,10 @@ pub fn view<'a>(ed: &'a SvgEditor, st: &'a ExportDialog, width: f32, height: f32
     let copy_el: Element<'a, Message> = if png {
         tip(
             copy_btn,
-            Tip::new("PNG panoya kopyalanamaz: pano yalnız metin tutar; Kaydet ile dosyaya yazın.".to_owned()),
+            Tip::new(
+                "PNG panoya kopyalanamaz: pano yalnız metin tutar; Kaydet ile dosyaya yazın."
+                    .to_owned(),
+            ),
             iced::widget::tooltip::Position::Top,
         )
     } else {

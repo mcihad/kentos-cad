@@ -70,12 +70,18 @@ pub(super) fn stroke_style<'a>(ed: &SvgEditor, sel: &[Obj]) -> Element<'a, Messa
         Some(d) => DASHES
             .iter()
             .find(|(_, _, k)| {
-                !k.is_empty() && k.iter().map(|x| fmt_num(x * width, 3)).collect::<Vec<_>>().join(" ") == d
+                !k.is_empty()
+                    && k.iter()
+                        .map(|x| fmt_num(x * width, 3))
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                        == d
             })
             .map_or("custom", |(v, _, _)| v),
         None => "custom",
     };
-    let mut choices: Vec<(&'static str, &'static str)> = DASHES.iter().map(|(v, l, _)| (*v, *l)).collect();
+    let mut choices: Vec<(&'static str, &'static str)> =
+        DASHES.iter().map(|(v, l, _)| (*v, *l)).collect();
     choices.push(("custom", "Özel"));
     let presets = fields::select(&choices, preset, |v| {
         change(move |ed| {
@@ -94,7 +100,10 @@ pub(super) fn stroke_style<'a>(ed: &SvgEditor, sel: &[Obj]) -> Element<'a, Messa
                         Json::Arr(
                             k.iter()
                                 .map(|x| {
-                                    Json::Num(kentos_native_style::classify::js_round(x * w * 1000.0) / 1000.0)
+                                    Json::Num(
+                                        kentos_native_style::classify::js_round(x * w * 1000.0)
+                                            / 1000.0,
+                                    )
                                 })
                                 .collect(),
                         ),
@@ -106,29 +115,49 @@ pub(super) fn stroke_style<'a>(ed: &SvgEditor, sel: &[Obj]) -> Element<'a, Messa
             });
         })
     });
-    let typed = ed.typed.get("dash").cloned().unwrap_or_else(|| dash.clone().unwrap_or_default());
+    let typed = ed
+        .typed
+        .get("dash")
+        .cloned()
+        .unwrap_or_else(|| dash.clone().unwrap_or_default());
     let invalid = read_dash(&typed).is_none();
-    let typed_field = fields::input(Some(super::field_id("dash")), "sürekli (ör. 4 1.5)", &typed, false, invalid)
-        .on_input(|t| {
-            change(move |ed| {
-                ed.typed.insert("dash".to_owned(), t.clone());
-                if let Some(d) = read_dash(&t) {
-                    ed.set_chosen("dash", move |s| match &d {
-                        Some(d) => s.set("dash", Json::Arr(d.iter().map(|x| Json::Num(*x)).collect())),
-                        None => s.set_undefined("dash"),
-                    });
-                }
-            })
+    let typed_field = fields::input(
+        Some(super::field_id("dash")),
+        "sürekli (ör. 4 1.5)",
+        &typed,
+        false,
+        invalid,
+    )
+    .on_input(|t| {
+        change(move |ed| {
+            ed.typed.insert("dash".to_owned(), t.clone());
+            if let Some(d) = read_dash(&t) {
+                ed.set_chosen("dash", move |s| match &d {
+                    Some(d) => s.set("dash", Json::Arr(d.iter().map(|x| Json::Num(*x)).collect())),
+                    None => s.set_undefined("dash"),
+                });
+            }
         })
-        .on_submit(crate::style::svgedit::ev(crate::style::svgedit::Event::Settle("dash".to_owned())));
+    })
+    .on_submit(crate::style::svgedit::ev(
+        crate::style::svgedit::Event::Settle("dash".to_owned()),
+    ));
     let is_path = |s: &Obj| s.kind() == "path";
     let caps: Vec<String> = sel
         .iter()
-        .map(|s| s.text("cap").unwrap_or(if is_path(s) { "round" } else { "butt" }).to_owned())
+        .map(|s| {
+            s.text("cap")
+                .unwrap_or(if is_path(s) { "round" } else { "butt" })
+                .to_owned()
+        })
         .collect();
     let joins: Vec<String> = sel
         .iter()
-        .map(|s| s.text("join").unwrap_or(if is_path(s) { "round" } else { "miter" }).to_owned())
+        .map(|s| {
+            s.text("join")
+                .unwrap_or(if is_path(s) { "round" } else { "miter" })
+                .to_owned()
+        })
         .collect();
     let rules: Vec<String> = sel
         .iter()
@@ -146,15 +175,22 @@ pub(super) fn stroke_style<'a>(ed: &SvgEditor, sel: &[Obj]) -> Element<'a, Messa
         vec![
             fields::labelled(
                 "Kesik",
-                row![container(presets).width(Fill), container(typed_field).width(Fill)]
-                    .spacing(6)
-                    .align_y(Center),
+                row![
+                    container(presets).width(Fill),
+                    container(typed_field).width(Fill)
+                ]
+                .spacing(6)
+                .align_y(Center),
                 Some("Boyları çizim biriminde: çizgi, boşluk … (hazırlar kalınlığa göre)"),
             ),
             fields::labelled(
                 "Uçlar",
                 seg(
-                    &[Opt("butt", "Düz"), Opt("round", "Yuvarlak"), Opt("square", "Kare")],
+                    &[
+                        Opt("butt", "Düz"),
+                        Opt("round", "Yuvarlak"),
+                        Opt("square", "Kare"),
+                    ],
                     same(&caps).as_deref(),
                     &["Uçta biter", "Yarım daire", "Yarım kalınlık uzar"],
                     set("cap", "cap"),
@@ -164,7 +200,11 @@ pub(super) fn stroke_style<'a>(ed: &SvgEditor, sel: &[Obj]) -> Element<'a, Messa
             fields::labelled(
                 "Köşeler",
                 seg(
-                    &[Opt("miter", "Sivri"), Opt("round", "Yuvarlak"), Opt("bevel", "Pah")],
+                    &[
+                        Opt("miter", "Sivri"),
+                        Opt("round", "Yuvarlak"),
+                        Opt("bevel", "Pah"),
+                    ],
                     same(&joins).as_deref(),
                     &["Gönyeli köşe", "Yuvarlak köşe", "Kesik köşe"],
                     set("join", "join"),
@@ -176,7 +216,10 @@ pub(super) fn stroke_style<'a>(ed: &SvgEditor, sel: &[Obj]) -> Element<'a, Messa
                 seg(
                     &[Opt("evenodd", "Tek-çift"), Opt("nonzero", "Sıfır olmayan")],
                     same(&rules).as_deref(),
-                    &["İç içe parçalar delik olur", "Yönleri aynı parçalar dolu kalır"],
+                    &[
+                        "İç içe parçalar delik olur",
+                        "Yönleri aynı parçalar dolu kalır",
+                    ],
                     set("rule", "fillRule"),
                 ),
                 None,
@@ -191,9 +234,17 @@ pub(super) fn box_fields<'a>(ed: &SvgEditor, sel: &[Obj]) -> Element<'a, Message
         return iced::widget::space().into();
     };
     let n = |key: &'static str, label_text: &str, value: f64, min: f64| {
-        num(ed, key, label_text, value, None, spec(1.0, min, f64::INFINITY), move |ed, v| {
-            ed.set_box(key, v);
-        })
+        num(
+            ed,
+            key,
+            label_text,
+            value,
+            None,
+            spec(1.0, min, f64::INFINITY),
+            move |ed, v| {
+                ed.set_box(key, v);
+            },
+        )
     };
     let lock = ed.ui.box_lock;
     let lock_btn = act_sized(
@@ -223,12 +274,27 @@ pub(super) fn box_fields<'a>(ed: &SvgEditor, sel: &[Obj]) -> Element<'a, Message
             fields::labelled(
                 "Döndür",
                 row![
-                    container(super::num_bare(ed, "turn", ed.ui.turn, Some("°"), spec(15.0, f64::NEG_INFINITY, f64::INFINITY), |ed, v| {
-                        ed.ui.turn = v;
-                    }))
+                    container(super::num_bare(
+                        ed,
+                        "turn",
+                        ed.ui.turn,
+                        Some("°"),
+                        spec(15.0, f64::NEG_INFINITY, f64::INFINITY),
+                        |ed, v| {
+                            ed.ui.turn = v;
+                        }
+                    ))
                     .width(Fill),
-                    act(Icon::Svg(ROT_CCW), "Saat yönünün tersine döndür", Some(change(|ed| ed.turn_box(true)))),
-                    act(Icon::Svg(ROT_CW), "Saat yönünde döndür", Some(change(|ed| ed.turn_box(false)))),
+                    act(
+                        Icon::Svg(ROT_CCW),
+                        "Saat yönünün tersine döndür",
+                        Some(change(|ed| ed.turn_box(true)))
+                    ),
+                    act(
+                        Icon::Svg(ROT_CW),
+                        "Saat yönünde döndür",
+                        Some(change(|ed| ed.turn_box(false)))
+                    ),
                 ]
                 .spacing(4)
                 .align_y(Center),

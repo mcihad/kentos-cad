@@ -218,13 +218,19 @@ pub fn file_slug(s: &str) -> String {
     while out.ends_with('-') {
         out.pop();
     }
-    if out.is_empty() { "cizim".to_owned() } else { out }
+    if out.is_empty() {
+        "cizim".to_owned()
+    } else {
+        out
+    }
 }
 
 /// The name a file gives a drawing: its stem.
 pub fn base_name(name: &str) -> String {
     match name.rsplit_once('.') {
-        Some((stem, ext)) if !stem.is_empty() && ext.chars().all(|c| c.is_ascii_alphanumeric()) => stem.to_owned(),
+        Some((stem, ext)) if !stem.is_empty() && ext.chars().all(|c| c.is_ascii_alphanumeric()) => {
+            stem.to_owned()
+        }
         _ if name.is_empty() => "Çizim".to_owned(),
         _ => name.to_owned(),
     }
@@ -254,7 +260,9 @@ impl SvgEditor {
             .shapes
             .iter()
             .filter_map(|s| {
-                let t = transform_shape(s, &[k, 0.0, 0.0, k, dx, dy]).ok().flatten()?;
+                let t = transform_shape(s, &[k, 0.0, 0.0, k, dx, dy])
+                    .ok()
+                    .flatten()?;
                 let mut t = scale_stroke(t, k);
                 t.set_text("id", &shape_id());
                 let g = s.text("group").filter(|g| !g.is_empty()).map(|g| {
@@ -297,7 +305,6 @@ impl SvgEditor {
     }
 }
 
-
 impl App {
     /// The files' events (`SvgFiles`).
     pub(crate) fn svgedit_file(&mut self, e: Event) -> Task<Message> {
@@ -308,7 +315,9 @@ impl App {
             Event::Cmd(cmd) => return self.svgedit_cmd(cmd),
             Event::Pick(purpose) => return pick_file(purpose),
             Event::Picked(_, None) => {}
-            Event::Picked(purpose, Some((name, bytes))) => return self.svgedit_picked(purpose, &name, bytes),
+            Event::Picked(purpose, Some((name, bytes))) => {
+                return self.svgedit_picked(purpose, &name, bytes);
+            }
             Event::Pasted(text) => {
                 let text = text.unwrap_or_default();
                 if !read::looks_like_svg(&text) {
@@ -436,7 +445,9 @@ impl App {
         } else if bytes.starts_with(&[0x89, b'P', b'N', b'G']) || bytes.starts_with(&[0xFF, 0xD8]) {
             ed.files.dialog = Some(FileDialog::Dropped(name.to_owned(), bytes));
         } else {
-            ed.warn(format!("“{name}” alınamadı: SVG, PNG ya da JPEG dosyası bırakın."));
+            ed.warn(format!(
+                "“{name}” alınamadı: SVG, PNG ya da JPEG dosyası bırakın."
+            ));
         }
         ed.touch();
         Task::none()
@@ -459,7 +470,11 @@ impl App {
                 }
                 p
             });
-            match self.styles.library.copy(id, Source::User, None, path.as_deref()) {
+            match self
+                .styles
+                .library
+                .copy(id, Source::User, None, path.as_deref())
+            {
                 Ok(item) => {
                     asset_id = item.id().to_owned();
                     note = " Sistem çizimi: kopyası Kitaplığım’a alındı.".to_owned();
@@ -478,7 +493,10 @@ impl App {
         };
         let (name, path) = (
             item.name().to_owned(),
-            item.path().into_iter().map(str::to_owned).collect::<Vec<_>>(),
+            item.path()
+                .into_iter()
+                .map(str::to_owned)
+                .collect::<Vec<_>>(),
         );
         let Some(ed) = self.styles.svg_editor.as_mut() else {
             return;
@@ -519,7 +537,11 @@ impl App {
         let form = form.clone();
         let name = {
             let t = kentos_processing::text::js_trim(&form.name);
-            if t.is_empty() { "Adsız çizim".to_owned() } else { t.to_owned() }
+            if t.is_empty() {
+                "Adsız çizim".to_owned()
+            } else {
+                t.to_owned()
+            }
         };
         let mut parts: Vec<String> = form
             .path
@@ -555,7 +577,11 @@ impl App {
                 ed.saved();
                 ed.say(format!(
                     "“{name}” {} kitaplığına kaydedildi.",
-                    if form.to == Source::User { "Kitaplığım" } else { "Proje" }
+                    if form.to == Source::User {
+                        "Kitaplığım"
+                    } else {
+                        "Proje"
+                    }
                 ));
                 self.svgedit_saved(&id);
             }
@@ -579,7 +605,12 @@ pub fn editor_options() -> ImportOptions {
 
 /// A blank 100 × 100 drawing in the window (`newDrawing`).
 pub fn new_drawing(ed: &mut SvgEditor) {
-    ed.open(Drawing::new(100.0, 100.0), None, "Yeni çizim".to_owned(), None);
+    ed.open(
+        Drawing::new(100.0, 100.0),
+        None,
+        "Yeni çizim".to_owned(),
+        None,
+    );
     ed.files.reference = None;
     ed.say("Yeni çizim: soldaki araçlarla çizin ya da bir SVG dosyasını pencereye bırakın.");
 }

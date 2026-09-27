@@ -11,9 +11,9 @@ use kentos_ui::label;
 use kentos_ui::style as ui_style;
 use kentos_ui::theme::{Tokens, typography};
 
+use super::change;
 use super::doc::{id_of, shape_name};
 use super::state::SvgEditor;
-use super::change;
 use crate::app::Message;
 
 /// A row's height at the default text size.
@@ -167,9 +167,11 @@ fn flag_button<'a>(glyph: Icon, words: &str, on: bool, press: Message) -> Elemen
 /// The list's rows, front on top.
 pub fn shape_list<'a>(ed: &'a SvgEditor) -> Element<'a, Message> {
     if ed.doc.shapes.is_empty() {
-        return label::caption("Henüz şekil yok: soldaki araçlarla çizin ya da bir SVG dosyası ekleyin.")
-            .style(ui_style::text::muted)
-            .into();
+        return label::caption(
+            "Henüz şekil yok: soldaki araçlarla çizin ya da bir SVG dosyası ekleyin.",
+        )
+        .style(ui_style::text::muted)
+        .into();
     }
     let n = ed.doc.shapes.len();
     let drop = ed
@@ -206,17 +208,22 @@ pub fn shape_list<'a>(ed: &'a SvgEditor) -> Element<'a, Message> {
             )
         };
         let name: Element<'a, Message> = match &ed.renaming {
-            Some((rid, text)) if *rid == id => text_input(&shape_name(&{
-                let mut c = s.clone();
-                c.remove("name");
-                c
-            }), text)
+            Some((rid, text)) if *rid == id => text_input(
+                &shape_name(&{
+                    let mut c = s.clone();
+                    c.remove("name");
+                    c
+                }),
+                text,
+            )
             .id(iced::widget::Id::from("svge:rename"))
-            .on_input(|t| change(move |ed| {
-                if let Some(r) = &mut ed.renaming {
-                    r.1 = t.clone();
-                }
-            }))
+            .on_input(|t| {
+                change(move |ed| {
+                    if let Some(r) = &mut ed.renaming {
+                        r.1 = t.clone();
+                    }
+                })
+            })
             .on_submit(change(|ed| ed.finish_rename(true)))
             .padding([2, 6])
             .size(typography::body())
@@ -234,12 +241,12 @@ pub fn shape_list<'a>(ed: &'a SvgEditor) -> Element<'a, Message> {
                 .width(Fill)
                 .into(),
         };
-        let mut line = row![eye, lock, name].spacing(2).align_y(Center).height(row_height());
+        let mut line = row![eye, lock, name]
+            .spacing(2)
+            .align_y(Center)
+            .height(row_height());
         if s.is("group") {
-            line = line.push(
-                label::caption("▣")
-                    .style(ui_style::text::muted),
-            );
+            line = line.push(label::caption("▣").style(ui_style::text::muted));
         }
         let face = container(line.padding([0, 4]))
             .width(Fill)
@@ -291,7 +298,9 @@ fn drop_line<'a>(on: bool) -> Element<'a, Message> {
 /// The left column's list with its title.
 pub fn list_column<'a>(ed: &'a SvgEditor) -> Element<'a, Message> {
     column![
-        label::caption("Şekiller (öndeki üstte)").font(typography::ui_strong()).style(ui_style::text::muted),
+        label::caption("Şekiller (öndeki üstte)")
+            .font(typography::ui_strong())
+            .style(ui_style::text::muted),
         shape_list(ed),
     ]
     .spacing(6)

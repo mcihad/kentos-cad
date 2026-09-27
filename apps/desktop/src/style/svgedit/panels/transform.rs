@@ -33,7 +33,10 @@ pub const ANCHORS: [(&str, &str); 9] = [
 ];
 
 /// Nine buttons of the box's points; `value` none: none lit (a picked point).
-pub fn anchor_picker<'a>(value: Option<&str>, on: impl Fn(&'static str) -> Message + 'a) -> Element<'a, Message> {
+pub fn anchor_picker<'a>(
+    value: Option<&str>,
+    on: impl Fn(&'static str) -> Message + 'a,
+) -> Element<'a, Message> {
     let side = typography::scaled(16.0);
     let mut grid = Column::new().spacing(3);
     for r in ANCHORS.chunks(3) {
@@ -103,8 +106,24 @@ pub(super) fn tab<'a>(ed: &SvgEditor, count: usize) -> Element<'a, Message> {
                 |v| change(move |ed| ed.ui.transform.relative = v == "rel"),
             ));
             body.push(fields::pair(
-                num(ed, "tx", if t.relative { "Yatay (X)" } else { "X" }, t.x, None, ANY, |ed, v| ed.ui.transform.x = v),
-                num(ed, "ty", if t.relative { "Dikey (Y)" } else { "Y" }, t.y, None, ANY, |ed, v| ed.ui.transform.y = v),
+                num(
+                    ed,
+                    "tx",
+                    if t.relative { "Yatay (X)" } else { "X" },
+                    t.x,
+                    None,
+                    ANY,
+                    |ed, v| ed.ui.transform.x = v,
+                ),
+                num(
+                    ed,
+                    "ty",
+                    if t.relative { "Dikey (Y)" } else { "Y" },
+                    t.y,
+                    None,
+                    ANY,
+                    |ed, v| ed.ui.transform.y = v,
+                ),
             ));
         }
         TransformKind::Scale => {
@@ -125,10 +144,14 @@ pub(super) fn tab<'a>(ed: &SvgEditor, count: usize) -> Element<'a, Message> {
                     }
                 }),
             ));
-            body.push(check(t.lock, "Oranı koru", |ed, v| ed.ui.transform.lock = v));
+            body.push(check(t.lock, "Oranı koru", |ed, v| {
+                ed.ui.transform.lock = v
+            }));
             body.push(fields::labelled(
                 "Sabit nokta",
-                anchor_picker(Some(t.anchor), |a| change(move |ed| ed.ui.transform.anchor = a)),
+                anchor_picker(Some(t.anchor), |a| {
+                    change(move |ed| ed.ui.transform.anchor = a)
+                }),
                 None,
             ));
         }
@@ -139,9 +162,17 @@ pub(super) fn tab<'a>(ed: &SvgEditor, count: usize) -> Element<'a, Message> {
                 _ => "Tuvalde göster…".to_owned(),
             };
             body.push(fields::pair(
-                num(ed, "deg", "Açı", t.deg, Some("°"), spec(15.0, f64::NEG_INFINITY, f64::INFINITY), |ed, v| {
-                    ed.ui.transform.deg = v;
-                }),
+                num(
+                    ed,
+                    "deg",
+                    "Açı",
+                    t.deg,
+                    Some("°"),
+                    spec(15.0, f64::NEG_INFINITY, f64::INFINITY),
+                    |ed, v| {
+                        ed.ui.transform.deg = v;
+                    },
+                ),
                 fields::labelled(
                     "Yön",
                     seg(
@@ -163,7 +194,11 @@ pub(super) fn tab<'a>(ed: &SvgEditor, count: usize) -> Element<'a, Message> {
                     })),
                     button(label::body(pick_words))
                         .padding([3, 10])
-                        .style(move |t: &iced::Theme, s| if picked { ui_style::button::primary(t, s) } else { ui_style::button::secondary(t, s) })
+                        .style(move |t: &iced::Theme, s| if picked {
+                            ui_style::button::primary(t, s)
+                        } else {
+                            ui_style::button::secondary(t, s)
+                        })
                         .on_press(change(|ed| ed.pick_point(Pick::Rotate))),
                 ]
                 .spacing(10)
@@ -174,20 +209,34 @@ pub(super) fn tab<'a>(ed: &SvgEditor, count: usize) -> Element<'a, Message> {
         TransformKind::Skew => {
             let deg = spec(5.0, f64::NEG_INFINITY, f64::INFINITY);
             body.push(fields::pair(
-                num(ed, "ax", "Yatay eğim", t.ax, Some("°"), deg, |ed, v| ed.ui.transform.ax = v),
-                num(ed, "ay", "Dikey eğim", t.ay, Some("°"), deg, |ed, v| ed.ui.transform.ay = v),
+                num(ed, "ax", "Yatay eğim", t.ax, Some("°"), deg, |ed, v| {
+                    ed.ui.transform.ax = v
+                }),
+                num(ed, "ay", "Dikey eğim", t.ay, Some("°"), deg, |ed, v| {
+                    ed.ui.transform.ay = v
+                }),
             ));
             body.push(fields::labelled(
                 "Sabit nokta",
-                anchor_picker(Some(t.anchor), |a| change(move |ed| ed.ui.transform.anchor = a)),
+                anchor_picker(Some(t.anchor), |a| {
+                    change(move |ed| ed.ui.transform.anchor = a)
+                }),
                 None,
             ));
         }
         TransformKind::Matrix => {
             let cell = |i: usize, name: &'static str| {
-                num(ed, &format!("m{i}"), name, t.m[i], None, spec(0.1, f64::NEG_INFINITY, f64::INFINITY), move |ed, v| {
-                    ed.ui.transform.m[i] = v;
-                })
+                num(
+                    ed,
+                    &format!("m{i}"),
+                    name,
+                    t.m[i],
+                    None,
+                    spec(0.1, f64::NEG_INFINITY, f64::INFINITY),
+                    move |ed, v| {
+                        ed.ui.transform.m[i] = v;
+                    },
+                )
             };
             body.push(fields::pair(cell(0, "a"), cell(2, "c")));
             body.push(fields::pair(cell(1, "b"), cell(3, "d")));

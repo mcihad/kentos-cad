@@ -198,11 +198,20 @@
     "apps/web/src/ui/statusbar/StatusBar.ts#StatusBar": { "desktop": "partial", "where": "apps/desktop/src/view.rs, cloud/cells.rs (ADR 0058, 0080, 0113)", "reason": "Web'in son iletiyi birkaç saniye gösteren hücresi yok; iletiler alt paneldedir. Dosya projesinde başkasının yeni revizyonu henüz izlenmediği için “Yeni revizyon” durumu gösterilmez. Çizim motoru hücresi masaüstünde anlamsızdır (wgpu)." },
     "apps/web/src/ui/style/LayerStyleDialog.ts#openLayerStyle": { "desktop": "implemented", "where": "apps/desktop/src/style/layer_style/ (ADR 0091)" },
     "apps/web/src/ui/style/LegendDialog.ts#openLegend": { "desktop": "implemented", "where": "apps/desktop/src/style/legend/ (ADR 0093)" },
-    "apps/web/src/ui/style/StyleManager.ts#openStyleManager": {
+    "apps/web/src/ui/style/StyleManager.ts#openStyleManager": { "desktop": "implemented", "where": "apps/desktop/src/style/manager/ (ADR 0092; Düzenle ve Yeni sembol Sembol tasarımcısını, SVG çizimi SVG düzenleyicisini açar, ADR 0094, 0095)" },
+    "apps/web/src/ui/style/SymbolDesigner.ts#openSymbolDesigner": { "desktop": "implemented", "where": "apps/desktop/src/style/designer/ (ADR 0094)" },
+    "apps/web/src/ui/svgedit/SvgEditor.ts#openSvgEditor": { "desktop": "implemented", "where": "apps/desktop/src/style/svgedit/ (ADR 0095)" },
+    "apps/web/src/ui/svgedit/svgDocProps.ts#openDocProps": { "desktop": "implemented", "where": "apps/desktop/src/style/svgedit/files/docprops.rs (ADR 0095)" },
+    "apps/web/src/ui/svgedit/svgExport.ts#openExportDialog": {
       "desktop": "partial",
-      "where": "apps/desktop/src/style/manager/ (ADR 0092)",
-      "reason": "SVG çizimi SVG düzenleyicisini açar; masaüstüne henüz taşınmadı, düğmesi soluk ve nedenini söyler. Düzenle ve Yeni sembol Sembol tasarımcısını açar (ADR 0094)."
+      "where": "apps/desktop/src/style/svgedit/files/export.rs (ADR 0095)",
+      "reason": "PNG panoya kopyalanamaz: masaüstünün panosu yalnız metin tutar (SVG kopyalanır). PNG dosyaya yazılır."
     },
-    "apps/web/src/ui/style/SymbolDesigner.ts#openSymbolDesigner": { "desktop": "implemented", "where": "apps/desktop/src/style/designer/ (ADR 0094)" }
+    "apps/web/src/ui/svgedit/svgImport.ts#openImportDialog": {
+      "desktop": "partial",
+      "where": "apps/desktop/src/style/svgedit/files/import.rs, read.rs (ADR 0095)",
+      "reason": "Katı XML olarak okunamayan ve onarılamayan dosya ayrıştırıcının nedeniyle (satır, sütun) reddedilir; web'in son çaresi tarayıcının hoşgörülü HTML ayrıştırıcısıdır."
+    },
+    "apps/web/src/ui/svgedit/svgTrace.ts#openTraceDialog": { "desktop": "implemented", "where": "apps/desktop/src/style/svgedit/files/trace.rs (ADR 0095)" }
   }
 }

@@ -44,7 +44,9 @@ impl App {
                     return;
                 };
                 if item.kind() != ItemKind::Asset || item.format() != Some("svg") {
-                    self.warn("Yalnızca SVG çizimleri düzenlenebilir; görüntüler (PNG, JPEG) değişmez.");
+                    self.warn(
+                        "Yalnızca SVG çizimleri düzenlenebilir; görüntüler (PNG, JPEG) değişmez.",
+                    );
                     return;
                 }
                 let read = match read::read_svg(item.data().unwrap_or(""), &library_options()) {
@@ -73,7 +75,9 @@ impl App {
                 let path: Vec<String> = if editable {
                     item.path().into_iter().map(str::to_owned).collect()
                 } else {
-                    o.path.clone().unwrap_or_else(|| vec!["Çizimlerim".to_owned()])
+                    o.path
+                        .clone()
+                        .unwrap_or_else(|| vec!["Çizimlerim".to_owned()])
                 };
                 (
                     read.doc,
@@ -90,7 +94,9 @@ impl App {
                 super::Drawing::new(100.0, 100.0),
                 None,
                 "Yeni çizim".to_owned(),
-                o.path.clone().unwrap_or_else(|| vec!["Çizimlerim".to_owned()]),
+                o.path
+                    .clone()
+                    .unwrap_or_else(|| vec!["Çizimlerim".to_owned()]),
             ),
         };
         let mut ed = SvgEditor::new(

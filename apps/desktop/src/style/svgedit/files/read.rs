@@ -114,7 +114,11 @@ fn mend(text: &str) -> String {
             continue;
         }
         let prefix = &t[start..i];
-        if !prefix.chars().next().is_some_and(|c| c.is_ascii_alphabetic()) {
+        if !prefix
+            .chars()
+            .next()
+            .is_some_and(|c| c.is_ascii_alphabetic())
+        {
             continue;
         }
         let name_end = t[i + 1..]
@@ -162,13 +166,21 @@ fn attr_name(node: roxmltree::Node<'_, '_>, a: &roxmltree::Attribute<'_, '_>) ->
     }
 }
 
-fn flatten(node: roxmltree::Node<'_, '_>, parent: Option<usize>, keep_text: bool, tree: &mut XmlTree) {
+fn flatten(
+    node: roxmltree::Node<'_, '_>,
+    parent: Option<usize>,
+    keep_text: bool,
+    tree: &mut XmlTree,
+) {
     let tag = node.tag_name().name().to_owned();
     let in_text = keep_text || TEXTUAL.contains(&tag.as_str());
     let at = tree.nodes.len();
     tree.nodes.push(XmlNode {
         tag,
-        attrs: node.attributes().map(|a| (attr_name(node, &a), a.value().to_owned())).collect(),
+        attrs: node
+            .attributes()
+            .map(|a| (attr_name(node, &a), a.value().to_owned()))
+            .collect(),
         children: Vec::new(),
         text: None,
     });
@@ -213,9 +225,14 @@ fn parse_tree(text: &str) -> Result<XmlTree, String> {
 
 /// Does this text look like SVG markup (clipboard, dropped text)?
 pub fn looks_like_svg(text: &str) -> bool {
-    let head: String = text.chars().take(4000).collect::<String>().to_ascii_lowercase();
-    head.find("<svg")
-        .is_some_and(|i| matches!(head[i + 4..].chars().next(), Some(c) if c.is_whitespace() || c == '>'))
+    let head: String = text
+        .chars()
+        .take(4000)
+        .collect::<String>()
+        .to_ascii_lowercase();
+    head.find("<svg").is_some_and(
+        |i| matches!(head[i + 4..].chars().next(), Some(c) if c.is_whitespace() || c == '>'),
+    )
 }
 
 /// A read drawing: the core's import with its new ids made here.
@@ -226,11 +243,14 @@ pub struct Read {
 
 /// SVG text as a drawing (`readSvg`), or why it cannot be read.
 pub fn read_svg(text: &str, opts: &ImportOptions) -> Result<Read, String> {
-    let tree = parse_tree(text).map_err(|why| format!("Dosya okunabilir bir SVG çizimi değil ({why})."))?;
+    let tree = parse_tree(text)
+        .map_err(|why| format!("Dosya okunabilir bir SVG çizimi değil ({why})."))?;
     let imported = doc_from_svg_tree(&tree, opts)?;
     let mut doc = Drawing::from_obj(&imported.doc)?;
     let ids: Vec<String> = (0..imported.ids).map(|_| shape_id()).collect();
-    let groups: Vec<String> = (0..imported.groups).map(|_| format!("g{}", &shape_id()[1..])).collect();
+    let groups: Vec<String> = (0..imported.groups)
+        .map(|_| format!("g{}", &shape_id()[1..]))
+        .collect();
     let fresh = |v: &str| -> Option<String> {
         let mut chars = v.chars();
         let c = chars.next()?;
@@ -287,8 +307,13 @@ mod tests {
 
     #[test]
     fn mends_entities_and_undeclared_prefixes() {
-        let t = mend(r#"<svg viewBox="0 0 10 10"><use xlink:href="\#a"/><text>a&nbsp;b &foo;</text></svg>"#);
-        assert!(t.contains("xmlns:xlink=\"http://www.w3.org/1999/xlink\""), "{t}");
+        let t = mend(
+            r#"<svg viewBox="0 0 10 10"><use xlink:href="\#a"/><text>a&nbsp;b &foo;</text></svg>"#,
+        );
+        assert!(
+            t.contains("xmlns:xlink=\"http://www.w3.org/1999/xlink\""),
+            "{t}"
+        );
         assert!(t.contains("xmlns=\"http://www.w3.org/2000/svg\""), "{t}");
         assert!(t.contains("a&#160;b &amp;foo;"), "{t}");
         assert!(roxmltree::Document::parse(&t).is_ok(), "{t}");
@@ -308,7 +333,12 @@ mod tests {
         .expect("reads");
         assert_eq!((r.doc.width, r.doc.height), (20.0, 10.0));
         assert_eq!(r.doc.shapes.len(), 3);
-        assert!(r.doc.shapes.iter().all(|s| s.text("id").is_some_and(|id| id.starts_with('s'))));
+        assert!(
+            r.doc
+                .shapes
+                .iter()
+                .all(|s| s.text("id").is_some_and(|id| id.starts_with('s')))
+        );
         assert!(read_svg("<svg><rect", &opts).is_err());
         assert!(looks_like_svg("  <svg viewBox='0 0 1 1'/>"));
         assert!(!looks_like_svg("<svgx>"));
