@@ -736,6 +736,8 @@ impl App {
             Some(Dialog::LayerStyle) if !self.layer_style_may_close() => {
                 self.dialog = Some(Dialog::LayerStyle);
             }
+            // A question or a rename closes first; picking for Katman stili goes back to it.
+            Some(Dialog::StyleManager) => self.style_manager_close_request(),
             _ => {}
         }
     }

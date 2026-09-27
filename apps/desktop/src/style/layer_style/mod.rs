@@ -151,6 +151,10 @@ pub enum Event {
     AddElse,
     /// A slot's symbol chosen: a set's class takes a symbol, or none (Basit görünüşe dön).
     Symbol(SetAt, GeometryClass, Option<Value>),
+    /// A slot's “Kitaplıktan seç…”: Stil yöneticisi picks for it (its title, its library symbol).
+    Pick(SetAt, GeometryClass, String, Option<String>),
+    /// A slot's “Kitaplığıma kaydet”: its own symbol goes to Kitaplığım (its title, the symbol).
+    Keep(SetAt, GeometryClass, String, Value),
 }
 
 /// What each rule takes, by its path.
@@ -362,7 +366,7 @@ impl LayerStyleWindow {
         self.said.clone()
     }
 
-    fn say(&mut self, text: impl Into<String>, warn: bool) {
+    pub(crate) fn say(&mut self, text: impl Into<String>, warn: bool) {
         self.said = Some((text.into(), warn));
     }
 
@@ -614,7 +618,9 @@ impl LayerStyleWindow {
             | Event::Apply
             | Event::Done
             | Event::Discard
-            | Event::Stay => {}
+            | Event::Stay
+            | Event::Pick(..)
+            | Event::Keep(..) => {}
         }
     }
 
@@ -853,10 +859,21 @@ impl App {
     }
 
     pub(crate) fn layer_style_event(&mut self, event: Event) -> Task<Message> {
-        if let Event::Open(id) = event {
-            self.open_layer_style(id);
-            return Task::none();
-        }
+        let event = match event {
+            Event::Open(id) => {
+                self.open_layer_style(id);
+                return Task::none();
+            }
+            // The library's windows (style/manager/).
+            Event::Pick(at, class, title, current) => {
+                return self.pick_for_slot(at, class, &title, current);
+            }
+            Event::Keep(at, class, title, symbol) => {
+                self.keep_slot_symbol(at, class, &title, symbol);
+                return Task::none();
+            }
+            other => other,
+        };
         let (Some(window), Some(doc)) = (&mut self.styles.layer_style, &mut self.document) else {
             return Task::none();
         };

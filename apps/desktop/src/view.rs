@@ -944,6 +944,7 @@ impl App {
             Asking::Calc => self.calc_view(),
             Asking::Processing => self.processing_view(),
             Asking::LayerStyle => self.layer_style_view(),
+            Asking::StyleManager => self.style_manager_view(),
         }
     }
 }
