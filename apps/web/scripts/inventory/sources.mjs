@@ -151,8 +151,9 @@ export function testIndex(root, web) {
   return textIndex(root, [
     ...tsFiles(join(web, 'src'), { tests: true }),
     ...tsFiles(join(web, 'scripts'), { tests: true }),
+    // Scripts that only take pictures (shots.mjs, cloud-shots.mjs) test nothing.
     ...readdirSync(e2e)
-      .filter((f) => f.endsWith('.mjs') && f !== 'cdp.mjs')
+      .filter((f) => f.endsWith('.mjs') && f !== 'cdp.mjs' && !f.endsWith('shots.mjs'))
       .sort()
       .map((f) => join(e2e, f)),
     ...readdirSync(traces)

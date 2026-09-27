@@ -66,20 +66,31 @@ const sections = {
 for (const list of Object.values(sections)) list.sort(byId);
 
 // ── Desktop column ───────────────────────────────────────────────────
-// The commands the desktop shell runs (apps/desktop/ported.json, kept equal to
-// its catalog::PORTED by a test; docs/adr/0017). The others stay `none`.
+// In this order, each over the one before: a whole section from the desktop's table
+// (apps/desktop/equivalents.json `sections`); the commands the desktop shell runs
+// (apps/desktop/ported.json, kept equal to its catalog::PORTED by a test; docs/adr/0017),
+// and through them its tools, processing tools, models and work modes; the typed settings whose
+// schema hosts the desktop; an item of the table (its desktop place or why it does not
+// apply there); last a hand note (annotations.json, below). Anything else stays `none`.
 const portedFile = join(ROOT, 'apps/desktop/ported.json');
 const ported = new Set(existsSync(portedFile) ? JSON.parse(readFileSync(portedFile, 'utf8')).commands : []);
-for (const c of sections.commands) if (ported.has(c.id)) c.platforms.desktop = 'implemented';
 const unknownPorted = [...ported].filter((id) => !sections.commands.some((c) => c.id === id));
 if (unknownPorted.length) {
   console.error(`apps/desktop/ported.json web'de olmayan komutlar içeriyor: ${unknownPorted.join(', ')}`);
   process.exit(1);
 }
+const equivalents = readEquivalents(join(ROOT, 'apps/desktop/equivalents.json'), sections, PLATFORM);
+// A whole section's word goes on each item; its place and reason are said once, in the summary.
+for (const [name, e] of Object.entries(equivalents.sections ?? {})) for (const i of sections[name]) i.platforms.desktop = e.desktop;
+for (const c of sections.commands) if (ported.has(c.id)) c.platforms.desktop = 'implemented';
+for (const t of sections.tools) if (ported.has(`tool.${t.id}`)) t.platforms.desktop = 'implemented';
+for (const p of [...sections.processing, ...sections.models]) if (ported.has(p.command)) p.platforms.desktop = 'implemented';
+for (const w of sections.workspaces) if (ported.has(`workspace.${w.id}`)) w.platforms.desktop = 'implemented';
 // Typed settings the desktop uses too: the schema's hosts (docs/adr/0023).
 const settingsSchema = JSON.parse(readFileSync(join(WEB, 'src/contracts/generated/settingsSchema.json'), 'utf8'));
 const settingHosts = new Map(settingsSchema.settings.map((d) => [d.key, d.hosts]));
 for (const s of sections.settings) if (s.setting && settingHosts.get(s.setting)?.includes('desktop')) s.platforms.desktop = 'implemented';
+for (const [name, list] of Object.entries(sections)) for (const [id, e] of Object.entries(equivalents[name] ?? {})) desktopFrom(list.find((i) => i.id === id), e);
 
 // ── Hand-written notes ───────────────────────────────────────────────
 /** Section of an annotation key `section:id` → the inventory section. */
@@ -109,6 +120,7 @@ if (problems.length) {
 
 // ── Output ───────────────────────────────────────────────────────────
 const count = (list) => Object.fromEntries([['total', list.length], ...STATUS.map((s) => [s, list.filter((i) => i.status === s).length])]);
+const desktopCount = (list) => Object.fromEntries([['total', list.length], ...PLATFORM.map((p) => [p, list.filter((i) => i.platforms.desktop === p).length])]);
 const commands = sections.commands;
 const inventory = {
   format: 'kentos.inventory',
@@ -121,6 +133,10 @@ const inventory = {
     commandsWithoutPlace: commands.filter((c) => !c.menus.length && !c.ribbon.length && !c.quickAccess && !c.toolbox && !c.uiSources.length).map((c) => c.id),
     commandsWithoutTests: commands.filter((c) => !c.tests.length).length,
     commandsOnDesktop: commands.filter((c) => c.platforms.desktop === 'implemented').length,
+    // Per section, how many items the desktop has, partly has, lacks, or has no use for.
+    desktop: Object.fromEntries(Object.entries(sections).map(([name, list]) => [name, desktopCount(list)])),
+    // Whole sections the desktop's table speaks for (apps/desktop/equivalents.json `sections`).
+    desktopSections: equivalents.sections ?? {},
   },
   ...sections,
   // Menus and ribbon in the web's order (the desktop shell mirrors them, docs/adr/0017).
@@ -147,6 +163,60 @@ if (check) {
   const s = inventory.summary;
   console.log(Object.keys(sections).map((n) => `${n} ${s[n].total} (${STATUS.map((st) => `${st} ${s[n][st]}`).join(', ')})`).join('\n'));
   console.log('docs/inventory/web.json ve web.md yazıldı.');
+}
+
+/**
+ * The desktop's table (apps/desktop/equivalents.json, kentos.desktop-equivalents v1): per
+ * inventory section, items by their id → { desktop, where?, reason? }, and `sections`, one
+ * such entry for a whole section. A missing file is an empty table. An id or section the
+ * inventory does not have, an unknown word or field, or `n/a` without its reason stops the
+ * script, so the table cannot go stale unseen.
+ */
+function readEquivalents(file, sections, platform) {
+  if (!existsSync(file)) return {};
+  const table = JSON.parse(readFileSync(file, 'utf8'));
+  const problems = [];
+  if (table.format !== 'kentos.desktop-equivalents' || table.version !== 1) problems.push('biçim kentos.desktop-equivalents, sürüm 1 olmalı');
+  const entry = (where, e) => {
+    if (!e || typeof e !== 'object') return problems.push(`${where}: bir nesne olmalı`);
+    for (const f of Object.keys(e)) if (!['desktop', 'where', 'reason'].includes(f)) problems.push(`${where}: bilinmeyen alan “${f}” (desktop, where, reason)`);
+    if (!platform.includes(e.desktop)) problems.push(`${where}: desktop ${platform.join(' | ')} olmalı`);
+    if (e.desktop === 'n/a' && !e.reason) problems.push(`${where}: n/a nedeniyle (reason) yazılır`);
+    for (const f of ['where', 'reason']) if (e[f] !== undefined && (typeof e[f] !== 'string' || !e[f].trim())) problems.push(`${where}: ${f} boş olmayan bir metin olmalı`);
+  };
+  for (const [key, value] of Object.entries(table)) {
+    if (['format', 'version'].includes(key) || key.startsWith('$')) continue;
+    if (key === 'sections') {
+      for (const [name, e] of Object.entries(value)) {
+        if (!sections[name]) problems.push(`sections.${name}: envanterde böyle bir bölüm yok`);
+        entry(`sections.${name}`, e);
+      }
+      continue;
+    }
+    if (!sections[key]) {
+      problems.push(`${key}: envanterde böyle bir bölüm yok (${Object.keys(sections).join(', ')}, sections)`);
+      continue;
+    }
+    for (const [id, e] of Object.entries(value)) {
+      if (!sections[key].some((i) => i.id === id)) problems.push(`${key}:${id}: envanterde böyle bir öğe yok (silindi ya da adı değişti; equivalents.json'ı düzeltin)`);
+      entry(`${key}:${id}`, e);
+    }
+  }
+  if (problems.length) {
+    console.error(`apps/desktop/equivalents.json:\n${problems.join('\n')}`);
+    process.exit(1);
+  }
+  return table;
+}
+
+/** An item's desktop column from a table entry: its word, where it is there, why. */
+function desktopFrom(item, e) {
+  if (!item) return;
+  item.platforms.desktop = e.desktop;
+  if (e.where) item.desktopWhere = e.where;
+  else delete item.desktopWhere;
+  if (e.reason) item.desktopNote = e.reason;
+  else delete item.desktopNote;
 }
 
 /** Ids added, removed or changed in one section, for the --check report. */
