@@ -159,6 +159,7 @@
     "apps/web/src/ui/cloud/ProjectActions.ts#openDeleteDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/actions.rs (ADR 0073)" },
     "apps/web/src/ui/cloud/ProjectActions.ts#openRenameDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/actions.rs (ADR 0073)" },
     "apps/web/src/ui/cloud/ProjectsDialog.ts#openProjectsDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/mod.rs (cloud.open, cloud.upload, cloud.uploadFile)" },
+    "apps/web/src/ui/cloud/ShareDialog.ts#openShareDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/share*.rs (ADR 0111)" },
     "apps/web/src/ui/cloud/UploadDialog.ts#openUploadDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/upload.rs (ADR 0041, 0073)" },
     "apps/web/src/ui/dialogs.ts#openAboutDialog": { "desktop": "implemented", "where": "apps/desktop/src/view.rs (Dialog::About)" },
     "apps/web/src/ui/dialogs.ts#openShortcutsDialog": { "desktop": "implemented", "where": "apps/desktop/src/view.rs (Dialog::Shortcuts)" },
@@ -196,6 +197,7 @@
       "reason": "Web'in sunucu hücresi ve onun hesap menüsü yok; masaüstünde hesabın adı ve Çıkış ayrı hücrelerdir (ADR 0041). Çizim motoru hücresi masaüstünde anlamsızdır (wgpu)."
     },
     "apps/web/src/ui/style/LayerStyleDialog.ts#openLayerStyle": { "desktop": "implemented", "where": "apps/desktop/src/style/layer_style/ (ADR 0091)" },
+    "apps/web/src/ui/style/LegendDialog.ts#openLegend": { "desktop": "implemented", "where": "apps/desktop/src/style/legend/ (ADR 0093)" },
     "apps/web/src/ui/style/StyleManager.ts#openStyleManager": {
       "desktop": "partial",
       "where": "apps/desktop/src/style/manager/ (ADR 0092)",

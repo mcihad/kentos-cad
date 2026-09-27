@@ -117,6 +117,8 @@ pub enum Dialog {
     LayerStyle,
     /// Stil yöneticisi (style/manager/); the window is `App::styles.manager`.
     StyleManager,
+    /// Lejant (style/legend/); the window is `App::styles.legend`.
+    Legend,
     /// Katmanlar → Sil on a layer or group with objects (layering.rs); the
     /// node is `App::removing_layer`.
     RemoveLayer,
@@ -126,6 +128,9 @@ pub enum Dialog {
     CloudTrash,
     OpenNewest,
     OpenNewestUnsaved,
+    /// Projeyi paylaş for the open project (cloud/share.rs); over the
+    /// catalog the window is the catalog's.
+    Share,
 }
 
 /// Where the app goes once the drawing on screen is left (cloud/leaving.rs).
@@ -210,6 +215,8 @@ pub enum Message {
     Builder(crate::expression::Event),
     /// Stil yöneticisi (style/manager/).
     StyleManager(Box<crate::style::manager::Event>),
+    /// Lejant (style/legend/).
+    Legend(crate::style::legend::Event),
     /// Esc in the empty command line: the running command ends.
     CommandCancelled,
     /// The command line's text box took or let go of the keyboard.
@@ -748,6 +755,7 @@ impl App {
             Message::Builder(event) => return self.builder_event(event),
             Message::LayerStyle(event) => return self.layer_style_event(event),
             Message::StyleManager(event) => return self.style_manager_event(*event),
+            Message::Legend(event) => return self.legend_event(event),
             // The layer tree's changes go through the document, as on the web: visibility
             // and lock are edits (unsaved) but not undo steps.
             Message::LayerVisible(id) => {
@@ -1063,6 +1071,7 @@ impl App {
             "style.layerStyle" => self.open_layer_style(None),
             // The style library (style/manager/, docs/adr/0092).
             "style.manager" => return self.open_style_manager(None, None),
+            "style.legend" => self.open_legend(),
             "style.assign" => return self.pick_for_selection(),
             "style.clearSymbol" => {
                 let said = self.assign_symbol(None);
@@ -1179,6 +1188,7 @@ impl App {
             }),
             // Symbols for the selected objects; taking them away when one has its own.
             "style.assign" => doc.is_some() && !self.selection.is_empty(),
+            "style.legend" => doc.is_some(),
             "style.clearSymbol" => doc.is_some_and(|d| {
                 self.selection
                     .ids()

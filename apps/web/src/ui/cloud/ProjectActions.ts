@@ -1,6 +1,6 @@
 import type { AppContext } from '../../app/context';
-import { ApiFailure } from '../../app/cloud/api';
 import { archiveQuestion, CATALOG_LINES, purgeQuestion, trashQuestion } from '../../app/cloud/catalogPlan';
+import { FORM_TEXTS, NAME_MAX, failureReason, renameSavable } from '../../app/cloud/formsPlan';
 import type { ProjectSummary } from '../../contracts/generated/ProjectSummary';
 import { h } from '../dom';
 import { askRemove, confirmDialog } from '../widgets/confirm';
@@ -29,47 +29,43 @@ export function targetOf(ctx: AppContext, p: ProjectSummary): ProjectTarget {
   return { tenantId: p.tenantId, tenantName: placeOf(ctx, p), projectId: p.id, name: p.name };
 }
 
-/** A failed request as a sentence: the server's words, or what to do when it gave none. */
-export const reason = (e: unknown): string => {
-  if (e instanceof ApiFailure && e.code === 'conflict') return 'Proje bilgileri bu arada başka biri tarafından değiştirildi. Listeyi yenileyip yeniden deneyin.';
-  if (e instanceof ApiFailure && e.code === 'network') return 'Sunucuya ulaşılamadı; bağlantınızı denetleyip yeniden deneyin.';
-  return e instanceof Error ? e.message : 'İşlem tamamlanamadı.';
-};
+/** A failed request as a sentence: the server's words, or what to do when it gave none (formsPlan.ts `failureReason`). */
+export const reason = failureReason;
 
 const ref = (t: ProjectTarget) => ({ tenantId: t.tenantId, projectId: t.projectId, name: t.name });
 
 export function openRenameDialog(ctx: AppContext, target: ProjectTarget, done?: (name: string) => void): void {
-  const field = h('input', { class: 'field', value: target.name, 'aria-label': 'Yeni ad', spellcheck: 'false', maxlength: '200' });
+  const R = FORM_TEXTS.rename;
+  const field = h('input', { class: 'field', value: target.name, 'aria-label': R.name, spellcheck: 'false', maxlength: String(NAME_MAX) });
   const status = h('p', { class: 'cloud-status', role: 'alert' });
-  const save = h('button', { class: 'btn btn--primary', type: 'button', disabled: true }, 'Yeniden adlandır');
-  const cancel = h('button', { class: 'btn', type: 'button' }, 'Vazgeç');
+  const save = h('button', { class: 'btn btn--primary', type: 'button', disabled: true }, R.save);
+  const cancel = h('button', { class: 'btn', type: 'button' }, FORM_TEXTS.cancel);
   const dialog = new Dialog({
-    title: 'Bulut projesini yeniden adlandır',
+    title: R.title,
     width: 460,
     className: 'dialog--cloud',
     stack: true,
     content: [
-      h('label', { class: 'cloud-field' }, h('span', null, 'Yeni ad'), field),
-      h('p', { class: 'cloud-hint' }, 'Projeye erişimi olan herkes yeni adı görür.'),
+      h('label', { class: 'cloud-field' }, h('span', null, R.name), field),
+      h('p', { class: 'cloud-hint' }, R.hint),
       status,
     ],
     footer: [h('div', { class: 'dialog__spacer' }), cancel, save],
   });
   const refresh = () => {
-    const v = field.value.trim();
-    save.disabled = !v || v === target.name;
+    save.disabled = !renameSavable(field.value, target.name);
   };
   const run = async () => {
     if (save.disabled) return;
     save.disabled = true;
     const name = field.value.trim();
     status.dataset.kind = 'info';
-    status.textContent = 'Kaydediliyor…';
+    status.textContent = FORM_TEXTS.saving;
     try {
       const saved = await ctx.cloud.rename(target.tenantId, target.projectId, name);
       dialog.close();
-      if (saved) ctx.log.success(`Proje “${name}” olarak yeniden adlandırıldı.`);
-      else ctx.log.warn(`Yeni ad (“${name}”) bu cihazda bekliyor; sunucuya ulaşılınca kaydedilir.`);
+      if (saved) ctx.log.success(R.saved(name));
+      else ctx.log.warn(R.waiting(name));
       done?.(name);
     } catch (e) {
       status.dataset.kind = 'error';

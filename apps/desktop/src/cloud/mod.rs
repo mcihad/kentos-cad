@@ -33,6 +33,9 @@
 //! | `view.rs` | the windows and the status bar cells |
 //! | `plan.rs` | what the catalog shows and offers: rows, the selected project, questions, lines |
 //! | `history.rs` | the history's rules: who may name, remove, download and restore |
+//! | `share.rs` | “Projeyi paylaş”: the people, their roles, the invitations |
+//! | `share_view.rs` | the share window: its tabs, forms, lists, the new link, its questions |
+//! | `share_plan.rs` | what the share window says and offers (fixtures/cloud/v1/share.json) |
 //! | `local_time.rs` | the device's local time for the lists' dates |
 //! | `words.rs` | the interface's words: roles, lists, states, times |
 
@@ -53,6 +56,13 @@ mod live;
 pub mod local_time;
 mod opening;
 pub mod plan;
+pub mod share;
+pub mod share_plan;
+#[cfg(test)]
+mod share_plan_tests;
+#[cfg(test)]
+mod share_tests;
+mod share_view;
 mod upload;
 mod view;
 pub mod words;
@@ -317,6 +327,8 @@ pub enum Event {
     Close,
     /// “Yerel kopya kaydet…” on an ended project's notice: Farklı kaydet.
     SaveLocal,
+    /// Projeyi paylaş (share.rs).
+    Share(share::Event),
 }
 
 /// The cloud's part of the app.
@@ -366,6 +378,8 @@ pub struct CloudState {
     pub reopen_keeps_catalog: bool,
     /// The open project was archived from this window: its end is not announced again.
     pub archived_by_me: bool,
+    /// Projeyi paylaş, over the catalog or alone (share.rs).
+    pub share: Option<share::Share>,
     next: u64,
 }
 
@@ -393,6 +407,7 @@ impl CloudState {
             || self.catalog.as_ref().is_some_and(|c| {
                 c.search_at.is_some() || c.details_at.is_some() || c.history.waits()
             })
+            || self.share.as_ref().is_some_and(|s| s.search_at.is_some())
     }
 
     /// The connection, when signed in.
@@ -528,6 +543,7 @@ impl App {
             | Event::TrashConfirm
             | Event::Trashed { .. }
             | Event::NewestOpen => self.actions_event(event),
+            Event::Share(event) => self.share_event(event),
             Event::Left { leave, result } => self.left(leave, result),
             Event::Probed(result) => self.probed(result),
             Event::Close => {
@@ -589,6 +605,7 @@ impl App {
                 self.leave(Leave::Upload(storage))
             }
             "cloud.rename" => self.open_rename(),
+            "cloud.share" => self.share_open_project(),
             "cloud.delete" => {
                 self.ask_trash();
                 Task::none()
@@ -622,6 +639,7 @@ impl App {
             // The open project's own actions (the web's `openMay`).
             "cloud.rename" => self.open_may(ProjectPermission::Edit, true),
             "cloud.delete" => self.open_may(ProjectPermission::Delete, false),
+            "cloud.share" => self.open_may(ProjectPermission::Share, false),
             "cloud.history" => self.open_may(ProjectPermission::History, false),
             "cloud.openNewest" => {
                 self.document
@@ -662,6 +680,7 @@ impl App {
             search,
             details,
             history,
+            self.share_tick(now),
             self.live_tick(now),
             self.probe_tick(now),
         ])
@@ -703,6 +722,23 @@ impl App {
         use crate::app::Dialog;
         match self.dialog.take() {
             Some(Dialog::SignIn) => self.cloud.sign_in = None,
+            Some(Dialog::Catalog) if self.cloud.share.is_some() => {
+                // The share window over the catalog goes first, its question before it.
+                if let Some(s) = self.cloud.share.as_mut().filter(|s| s.asking.is_some()) {
+                    s.asking = None;
+                } else {
+                    self.cloud.share = None;
+                }
+                self.dialog = Some(Dialog::Catalog);
+            }
+            Some(Dialog::Share) => {
+                if let Some(s) = self.cloud.share.as_mut().filter(|s| s.asking.is_some()) {
+                    s.asking = None;
+                    self.dialog = Some(Dialog::Share);
+                } else {
+                    self.cloud.share = None;
+                }
+            }
             Some(Dialog::Catalog) => {
                 // A question over the window goes first (its Vazgeç); an open
                 // under way is stopped by its own Vazgeç, the window stays until then.
@@ -751,6 +787,7 @@ impl App {
             }
             // A question or a rename closes first; picking for Katman stili goes back to it.
             Some(Dialog::StyleManager) => self.style_manager_close_request(),
+            Some(Dialog::Legend) => self.styles.legend = None,
             _ => {}
         }
     }

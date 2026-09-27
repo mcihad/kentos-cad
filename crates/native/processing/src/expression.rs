@@ -9,7 +9,7 @@ use kentos_native_application::geometry::shape;
 /// field's Değişkenler and İşlevler menus (the web's `exprCatalog`).
 pub use kentos_style_core::expr::library::{FUNCTIONS, FuncDef, VARIABLES, VarDef};
 use kentos_style_core::expr::rows::{As, MEASURE_STRIDE};
-use kentos_style_core::expr::{Expr, Measured, Scope, Value};
+use kentos_style_core::expr::{Expr, Geometry, Measured, Scope, Value};
 
 use crate::features::kind_label;
 use crate::types::Returns;
@@ -93,6 +93,25 @@ impl Scope for Row<'_> {
 
     fn scale(&self) -> Option<f64> {
         None
+    }
+
+    /// The store's values for length, area and the anchor; the centroid
+    /// and the box (`$merkez_y`, `$genişlik` …) from the object's shape, as
+    /// the web's store reads them (docs/adr/0100 §3).
+    fn geometry(&self, what: Geometry) -> Option<f64> {
+        match what {
+            Geometry::Length | Geometry::Area | Geometry::AnchorY | Geometry::AnchorX => {
+                let m = self.measured();
+                match what {
+                    Geometry::Length => m.length,
+                    Geometry::Area => m.area,
+                    Geometry::AnchorY => m.anchor.map(|a| a.0),
+                    _ => m.anchor.map(|a| a.1),
+                }
+            }
+            Geometry::Vertices => self.vertices(),
+            _ => kentos_style_core::expr::geometry::value(&shape(self.e), what),
+        }
     }
 }
 

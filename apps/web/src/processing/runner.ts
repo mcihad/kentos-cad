@@ -150,7 +150,12 @@ export class ProcessingRunner {
     if (input?.type !== 'features' || !values[input.name]) return null;
     const set = resolveFeatures(values[input.name] as FeaturesValue, input, this.host);
     const layers = this.host.doc.layers;
-    return previewExpression(r.expr, set.entities, def.returns, (id) => layers.get(id)?.name ?? id, (list) => this.measures(list));
+    const layerName = (id: string) => layers.get(id)?.name ?? id;
+    // Evaluated in the drawing's store the host keeps, else in a store of the previewed objects: the geometry values are read there.
+    const geometry = this.host.geometry;
+    return geometry
+      ? previewExpression(r.expr, set.entities, def.returns, layerName, undefined, geometry)
+      : withObjects(set.entities, (s) => previewExpression(r.expr, set.entities, def.returns, layerName, undefined, s));
   }
 
   /**

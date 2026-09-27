@@ -62,6 +62,7 @@
     "cloud.history",
     "cloud.rename",
     "cloud.delete",
+    "cloud.share",
     "layer.new",
     "layer.newGroup",
     "file.import.dxf",
@@ -141,7 +142,8 @@
     "style.layerStyle",
     "style.manager",
     "style.assign",
-    "style.clearSymbol"
+    "style.clearSymbol",
+    "style.legend"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

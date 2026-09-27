@@ -498,6 +498,105 @@ fn manager_screens() {
     }
 }
 
+/// Lejant in the states of the web's pictures (`shots.mjs legend`), and the
+/// picture it saves: `.run/shots/lejant-*.png`. The saved picture is drawn
+/// by the GPU when `KENTOS_SNAPSHOT_BACKEND=wgpu` names it.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn legend_screens() {
+    use crate::style::legend::Event;
+    let Some(doc) = demo() else {
+        eprintln!("the web's demo drawing is not written: see the module's comment");
+        return;
+    };
+    let out = root().join(".run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    fn first_layer(app: &App) -> String {
+        let model = &app.document.as_ref().expect("open").model;
+        let window = app.styles.legend.as_ref().expect("open");
+        window.groups(model, &app.styles.library)[0]
+            .layer_id
+            .clone()
+    }
+    /// A state's events, read from the app once the window is open.
+    type Events = fn(&App) -> Vec<Event>;
+    let states: [(&str, Events); 4] = [
+        ("acik", |_| vec![]),
+        ("hepsi", |_| vec![Event::VisibleOnly(false)]),
+        ("katman-disarida", |app| {
+            vec![Event::Layer(first_layer(app), false)]
+        }),
+        ("basliksiz", |_| vec![Event::Headings(false)]),
+    ];
+    let sizes: [(f32, f32, &str, &str, i64); 5] = [
+        (1440.0, 900.0, "dark", "", 13),
+        (1100.0, 650.0, "dark", "", 13),
+        (1440.0, 900.0, "light", "-acik", 13),
+        (1100.0, 650.0, "light", "-acik", 13),
+        (1100.0, 650.0, "light", "-acik-buyuk", 16),
+    ];
+    for (name, events) in &states {
+        for (width, height, mode, suffix, text) in sizes {
+            let (mut app, _) = App::boot(None);
+            let _ = app.update(Message::Opened(Some(Ok(Box::new(doc.clone())))));
+            let _ = app.settings.choose(&[
+                ("appearance.theme", serde_json::Value::from(mode)),
+                ("appearance.textSize", serde_json::Value::from(text)),
+            ]);
+            app.apply_settings();
+            let _ = app.update(Message::Run("style.legend"));
+            for e in events(&app) {
+                let _ = app.update(Message::Legend(e));
+            }
+            let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+            let mut update = |app: &mut App, message| {
+                let _ = app.update(message);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            for _ in 0..8 {
+                let _ = snapshot.render(app.view(), &app.theme());
+            }
+            let file = out.join(format!("lejant-{name}-{width}x{height}{suffix}.png"));
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
+            println!("{}", file.display());
+        }
+    }
+    // The saved picture of the sample project's layers (the showcase's are left
+    // out: 800 rows are more than a PNG holds), with and without headings.
+    let (mut app, _) = App::boot(None);
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc.clone())))));
+    let _ = app.update(Message::Run("style.legend"));
+    let showcase: Vec<String> = {
+        let model = &app.document.as_ref().expect("open").model;
+        let window = app.styles.legend.as_ref().expect("open");
+        window
+            .groups(model, &app.styles.library)
+            .iter()
+            .filter(|g| g.layer_id.starts_with("vitrin"))
+            .map(|g| g.layer_id.clone())
+            .collect()
+    };
+    for id in showcase {
+        let _ = app.update(Message::Legend(Event::Layer(id, false)));
+    }
+    for (headings, name) in [(true, "resim"), (false, "resim-basliksiz")] {
+        let window = app.styles.legend.as_mut().expect("open");
+        window.headings = headings;
+        let file = out.join(format!("lejant-{name}.png"));
+        match crate::style::legend::picture(&app) {
+            Some(Ok(bytes)) => {
+                std::fs::write(&file, bytes).expect("writes the picture");
+                println!("{}", file.display());
+            }
+            Some(Err(why)) => println!("{name}: {why}"),
+            None => println!("{name}: nothing to draw"),
+        }
+    }
+}
+
 #[test]
 #[ignore = "pictures for the owner, run by hand"]
 fn screens() {

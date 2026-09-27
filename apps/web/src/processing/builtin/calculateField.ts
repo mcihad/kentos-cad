@@ -62,9 +62,8 @@ export const calculateField = defineTool({
     let filtered = 0;
     const list = v.input.entities;
     feedback.progress(0, 'Değerler hesaplanıyor');
-    // One call to the core per expression; $alan, $uzunluk, $y, $x from the geometry store, asked once.
-    let measures: Float64Array | null = null;
-    const objects = { entities: list, layerName: ctx.layerName, measures: () => (measures ??= ctx.geometry.measures(list.map((e) => e.id))) };
+    // One call to the run's geometry store per expression: the geometry values ($alan, $merkez_y, $genişlik …) are read there.
+    const objects = { entities: list, layerName: ctx.layerName, geometry: ctx.geometry };
     const where = v.where?.evaluateAll(objects, 'bool');
     const values = v.value.evaluateAll(objects, 'text');
     for (let i = 0; i < list.length; i++) {

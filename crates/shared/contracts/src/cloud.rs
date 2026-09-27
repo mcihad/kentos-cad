@@ -45,6 +45,12 @@ pub struct AuthConfig {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub oidc: Option<OidcLoginInfo>,
+    /// Where people open the web app (`KENTOS_PUBLIC_URL`, ending in `/`):
+    /// the base of an invitation's link from a desktop, which has no address
+    /// of its own (docs/adr/0111). The web uses its own address.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub public_url: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

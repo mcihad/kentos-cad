@@ -8,7 +8,7 @@ import type { LayerNode, LayerStore } from '../model/layers';
 import { transformedFrom } from '../model/ops/transform';
 import type { ExtendResult, TrimResult } from '../model/ops/trim';
 import type { ExprTable } from '../model/expression/expression';
-import { CoreStore, type CoreStyleProgram } from '../wasm/core';
+import { CoreStore, type CoreStyleProgram, type ExprColumnData } from '../wasm/core';
 import { packEntities } from '../wasm/pack';
 import { DEFAULT_LABELS, labelRule, readGrips, type GripSet } from './storeRecords';
 
@@ -312,6 +312,12 @@ export class PickIndex {
   measures(ids: readonly number[]): Float64Array {
     this.sync();
     return this.store.measures(Float64Array.from(ids));
+  }
+
+  /** An expression over these objects, their geometry values read from the store's shapes (model/expression/expression.ts `ExprGeometry`). */
+  evaluateExpression(source: string, ids: Float64Array, texts: string, textLens: Int32Array, numbers: Float64Array, scale: number, want: number): ExprColumnData {
+    this.sync();
+    return this.store.evaluateExpression(source, ids, texts, textLens, numbers, scale, want);
   }
 
   /** A layer through the style engine, next to its geometry (render/styledLayer.ts). */

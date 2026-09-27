@@ -145,9 +145,10 @@ impl App {
                 .center(Fill)
                 .into()
         }));
-        // A question or a form over the window (the web's stacked dialogs).
+        // Projeyi paylaş, a question or a form over the window (the web's stacked dialogs).
         match self
-            .catalog_question_view()
+            .share_window()
+            .or_else(|| self.catalog_question_view())
             .or_else(|| self.history_overlay())
         {
             Some(over) => stack![window, over].into(),

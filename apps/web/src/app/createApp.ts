@@ -84,7 +84,7 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
     format: new Formatter(doc.settings),
     clipboard: new Clipboard(),
     // The visible area and the geometry store are read lazily: the viewport exists only after the context.
-    processing: createProcessing(doc, selection, () => ctx.view.camera.visibleBounds(), { inBox: (r) => ctx.view.inBox(r), measures: (ids) => ctx.view.measures(ids) }),
+    processing: createProcessing(doc, selection, () => ctx.view.camera.visibleBounds(), { inBox: (r) => ctx.view.inBox(r), measures: (ids) => ctx.view.measures(ids), evaluateExpression: (...a) => ctx.view.evaluateExpression(...a) }),
     styles: createStyles(doc, system),
     server: new ServerStatus(),
   } as AppContext & { tools: ToolManager; view: ViewportController; files: DocumentFiles; cloud: CloudSession; recovery: RecoveryCopies };

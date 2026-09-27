@@ -307,6 +307,37 @@ pub fn when(text: &str, zone: &Zone) -> String {
     )
 }
 
+/// Seconds since 1970 of a day's midnight, the day read as if in UTC (a
+/// local time before [`from_local`] takes the zone off).
+pub fn seconds_of(year: i64, month: i64, day: i64) -> i64 {
+    days_from_civil(year, month, day) * 86_400
+}
+
+/// The moment a local time `t` (seconds, read as if UTC) is in `zone`: its
+/// offset taken off, the offset of the moment itself around a DST change.
+pub fn from_local(t: i64, zone: &Zone) -> i64 {
+    let guess = t - i64::from(zone.offset_at(t));
+    t - i64::from(zone.offset_at(guess))
+}
+
+/// A moment as the server's RFC 3339 in UTC with milliseconds, as
+/// JavaScript's `toISOString` writes it: “2026-12-31T20:59:59.000Z”.
+pub fn iso_utc(t: i64) -> String {
+    iso_utc_ms(t * 1000)
+}
+
+/// [`iso_utc`] of milliseconds since 1970.
+pub fn iso_utc_ms(ms: i64) -> String {
+    let (year, month, day, secs) = civil(ms.div_euclid(1000));
+    format!(
+        "{year:04}-{month:02}-{day:02}T{:02}:{:02}:{:02}.{:03}Z",
+        secs / 3600,
+        secs % 3600 / 60,
+        secs % 60,
+        ms.rem_euclid(1000)
+    )
+}
+
 /// A server's time as a date in the device's time: “26.09.2026”.
 pub fn day(text: &str, zone: &Zone) -> Option<String> {
     super::words::epoch(text).map(|t| date_of(t, zone))
