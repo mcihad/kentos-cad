@@ -110,7 +110,7 @@ impl SvgEditor {
             }
         }
         let opt = &self.options;
-        if o.no_grid || !opt.snap_grid || !(opt.grid > 0.0) {
+        if o.no_grid || !opt.snap_grid || opt.grid.is_nan() || opt.grid <= 0.0 {
             return p;
         }
         let g = opt.grid;

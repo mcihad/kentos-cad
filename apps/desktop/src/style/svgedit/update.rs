@@ -106,11 +106,9 @@ impl App {
             path,
             o.after,
             self.dialog,
-            &ink,
-            &paper,
+            (ink, paper),
         );
         ed.images = self.styles.images.clone();
-        *ed.theme.borrow_mut() = (ink, paper);
         files::reference::restore(&mut ed, reference, &self.styles.images);
         if let Some((text, warn)) = note {
             ed.status(text, warn);

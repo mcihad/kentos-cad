@@ -114,7 +114,7 @@ fn stroke_of<'a>(
 ) -> Option<Stroke<'a>> {
     let color = paint_color(s.text("stroke").unwrap_or("none"), o)?;
     let width = s.num("strokeWidth");
-    if !(width > 0.0) {
+    if width.is_nan() || width <= 0.0 {
         return None;
     }
     let path = s.kind() == "path";
@@ -200,7 +200,7 @@ const BASELINE: f32 = 0.8465;
 /// A text shape: its anchor, size, weight and typeface, turned about (x, y).
 fn paint_text(frame: &mut Frame, s: &Obj, view: &View, o: &Options, alpha: f32) {
     let size = (s.num("size") * view.zoom) as f32;
-    if !(size > 0.1) {
+    if size.is_nan() || size <= 0.1 {
         return;
     }
     let at = view.point([s.num("x"), s.num("y")]);

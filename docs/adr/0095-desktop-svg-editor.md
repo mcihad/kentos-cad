@@ -26,7 +26,7 @@
   - Stil yöneticisinde açık kategori ne olursa olsun yeni çizim Çizimlerim'e kaydoluyordu;
   - tuvalin etiketleri (kenetin adı, ölçü, parça boyları, köşe boyu) koyu haleyle yazılıyordu: beyaz şeklin üstünde küçük kalın harfler bulanıklaşıyordu. Ölçünün ikinci satırı sabit 15 piksel aşağıdaydı, büyük yazıda birincisine biniyordu;
   - yazının metni ya da boyu değişince Kutu alanları eski değerde kalıyordu;
-  - 1100 piksellik pencerede uzun durum yazısı alt çubuğu büyütüyordu;
+  - 1100 piksellik pencerede durum yazısı Kategori ile düğmeler arasında sıkışıyor, uzunsa alt çubuğu büyütüyordu;
   - Ölç'le sürüklerken etiketlerin yazısı seçiliyordu.
 
 ## Karar
@@ -77,7 +77,7 @@
 - **Okuma ve çizme:**
   - SVG metni kitaplığın temizliğinden geçer ve roxmltree ile okunur; HTML varlıkları ve bildirimsiz ön ekler onarılır. SVG çekirdeğinin içe alıcısına öğe listesi olarak verilir.
   - PNG'yi stil motorunun raster çizicisi çizimin kendi SVG'sinden çizer (`kentos-render-wgpu` `styled::raster::picture_pixels`), web'in tuvalinin çizdiği gibi; DPI pHYs parçasına yazılır.
-  - XML kaynağının düzenleyicisi Iced'in `text_editor`'üdür; etiketler, öznitelikler ve değerler renklidir, satır numaraları düzenleyiciyle birlikte kayar.
+  - XML kaynağının düzenleyicisi Iced'in `text_editor`'üdür; etiketler, öznitelikler ve değerler renklidir, satır numaraları düzenleyiciyle birlikte kayar. Üst kenarı (KentOS UI'ın `Sash`'i) web'in tutamacı gibi sürüklenerek yüksekliği değiştirir; tuval ve kaynak en az 120 piksel kalır. Çift tık ilk payı (ortanın beşte ikisi) geri verir.
   - Bitmap izleme pencerenin iş parçacığında çalışmaz; son ayar kazanır.
 - **Açılış:**
   - `style.svgEditor` (Araçlar › Stil);
@@ -97,6 +97,7 @@
   - Belge özellikleri kılavuzları da çizimle birlikte kaydırır ve ölçekler;
   - Stil yöneticisinde yeni çizim, arama yokken açık Kitaplığım kategorisine kaydedilir;
   - tuvalin etiketleri panelin renginde bir çipin üstündedir. Ölçünün ikinci satırı birincinin altına asılır, yazı boyu ne olursa olsun;
+  - dar pencerede durum yazısı alanların üstünde kendi satırındadır. Satır boşken de durur: iletiler gelip giderken tuval zıplamaz;
   - sürüklemenin şekli, tutamaç, döndürme, ölçü, cetvel, köşe boyu, dosya adı ve başlangıç değerleri tek modelde, `svgedit.json` ile.
 - **Masaüstünde:**
   - Kutu'nun oran kilidi yeniden çizimde unutulmaz;
@@ -106,7 +107,7 @@
   - Kitaplıktan aç'ın kendi penceresi: kartlar resimleriyle, ad ya da kategoriyle arama. Düzenleyici Stil yöneticisinin üstünde de durabildiği için onu seçme kipinde yeniden açmaz;
   - parçalı seçimler dar sütunda büyük yazıyla da tek satırdadır: parçaların payı adlarına göre ayrılır, gerekirse yanları daralır (web'in `flex: 1` ile `nowrap`'ı gibi).
 - **Web'de:**
-  - uzun durum yazısı alt çubukta iki satırda kesilir, tamamı imlecin ipucundadır;
+  - uzun durum yazısı iki satırda kesilir, tamamı imlecin ipucundadır;
   - tuvalde sürüklemek yazı seçmez;
   - yazının metni ya da boyu değişince Kutu alanları yeni değerleri gösterir. Masaüstünde panel her çizimde durumdan kurulur.
 

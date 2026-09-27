@@ -289,12 +289,12 @@ impl SvgEditor {
     }
 
     /// Asks before another drawing replaces unsaved work (`confirmReplace`); true when it may go on now.
-    pub fn may_replace(&mut self, pending: Pending) -> Result<(), Pending> {
+    pub fn may_replace(&mut self, pending: Pending) -> bool {
         if !self.dirty() || !self.doc.has_visible() {
-            return Ok(());
+            return true;
         }
-        self.question = Some(Question::Replace(Box::new(pending.clone())));
-        Err(pending)
+        self.question = Some(Question::Replace(Box::new(pending)));
+        false
     }
 
     pub fn toggle_source(&mut self) {
@@ -339,9 +339,8 @@ impl App {
             Event::SaveAs => self.svgedit_save_as(),
             Event::OpenAsset(id) => {
                 ed.files.dialog = None;
-                match ed.may_replace(Pending::Asset(id.clone())) {
-                    Ok(()) => self.svgedit_open_asset(&id),
-                    Err(_) => {}
+                if ed.may_replace(Pending::Asset(id.clone())) {
+                    self.svgedit_open_asset(&id);
                 }
             }
             Event::ExportSave => return self.svgedit_export_save(),
@@ -370,7 +369,7 @@ impl App {
         };
         match cmd {
             FileCmd::New => {
-                if ed.may_replace(Pending::New).is_ok() {
+                if ed.may_replace(Pending::New) {
                     new_drawing(ed);
                 }
             }

@@ -152,7 +152,7 @@ fn apply(ed: &mut SvgEditor) {
             said,
             reference: None,
         };
-        if ed.may_replace(pending.clone()).is_ok()
+        if ed.may_replace(pending.clone())
             && let Pending::Doc {
                 doc, name, said, ..
             } = pending

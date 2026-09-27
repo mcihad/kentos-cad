@@ -393,6 +393,7 @@ pub struct SvgEditor {
 }
 
 impl SvgEditor {
+    /// `theme`: the theme's preview ink and paper when the editor opens.
     pub fn new(
         doc: Drawing,
         original: Option<Original>,
@@ -400,10 +401,9 @@ impl SvgEditor {
         path: Vec<String>,
         after: After,
         under: Option<Dialog>,
-        ink: &str,
-        paper: &str,
+        theme: (String, String),
     ) -> SvgEditor {
-        let options = Options::new(&doc, ink, paper);
+        let options = Options::new(&doc, &theme.0, &theme.1);
         let ui = PanelState::new(&doc);
         let saved_json = doc.text();
         let path_text = path.join(" / ");
@@ -445,7 +445,7 @@ impl SvgEditor {
             trace_last: super::files::trace::TraceSettings::default(),
             pending_trace: false,
             images: std::sync::Arc::new(crate::style::images::Images::new()),
-            theme: RefCell::new((ink.to_owned(), paper.to_owned())),
+            theme: RefCell::new(theme),
             shift_held: false,
             list_drag: None,
             fields: RefCell::new(HashMap::new()),

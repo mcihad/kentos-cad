@@ -17,6 +17,20 @@
   line-clamp: 2;
   overflow: hidden;
 }
+/* Below the window's full width the status takes its own line above the fields, as on the desktop:
+   squeezed between Kategori and the buttons it showed a word or two. The line stays when the status
+   is empty, so the canvas does not jump as messages come and go. */
+@media (max-width: 1359px) {
+  .dialog--svge .dialog__foot {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+  .dialog--svge .sdes__status {
+    order: -1;
+    flex: 1 0 100%;
+    min-height: 1lh;
+  }
+}
 .svge__barsep {
   width: 1px;
   height: 18px;

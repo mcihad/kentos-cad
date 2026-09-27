@@ -9,7 +9,8 @@
 //! The editor grows with its text inside one scroll area with the line
 //! numbers, so the two scroll together; tags, attributes and values are
 //! coloured, and the chosen elements take the accent (Iced's editor paints
-//! no backgrounds behind text).
+//! no backgrounds behind text). The panel's top edge is dragged to give it
+//! another height (a double click gives it its first share of the middle).
 
 use std::ops::Range;
 
@@ -42,6 +43,9 @@ pub struct SourcePanel {
     spans: Vec<(String, usize, usize)>,
     pub edited: bool,
     pub note: Option<(String, bool)>,
+    /// Its height once its top edge was dragged (the web's grip); until then
+    /// it has two parts of the middle to the canvas's three.
+    pub height: Option<f32>,
 }
 
 fn source_text(ed: &SvgEditor) -> (String, Vec<(String, usize, usize)>) {
@@ -101,6 +105,7 @@ impl SourcePanel {
             spans,
             edited: false,
             note: None,
+            height: None,
         }
     }
 

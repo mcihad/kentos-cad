@@ -55,7 +55,7 @@ fn read_dash(text: &str) -> Option<Option<Vec<f64>>> {
     let parts: Vec<f64> = t
         .split(|c: char| c == ',' || c.is_whitespace())
         .filter(|p| !p.is_empty())
-        .map(|p| kentos_native_style::classify::js_number(p))
+        .map(kentos_native_style::classify::js_number)
         .collect();
     (!parts.is_empty() && parts.iter().all(|v| v.is_finite() && *v >= 0.0)).then_some(Some(parts))
 }

@@ -69,7 +69,7 @@ enum NodeOp {
     },
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct NodeTool {
     op: Option<NodeOp>,
     for_shape: Option<String>,
@@ -78,19 +78,6 @@ pub struct NodeTool {
     pub mode: Option<CornerMode>,
     hover: Option<(usize, usize)>,
     preview: Option<Vec<SubPath>>,
-}
-
-impl Default for NodeTool {
-    fn default() -> NodeTool {
-        NodeTool {
-            op: None,
-            for_shape: None,
-            chosen: Vec::new(),
-            mode: None,
-            hover: None,
-            preview: None,
-        }
-    }
 }
 
 pub fn node_ref((sub, index): (usize, usize)) -> NodeRef {
@@ -533,7 +520,7 @@ impl SvgEditor {
             }
             NodeOp::Corner { orig, size, .. } => {
                 self.nodes.preview = None;
-                if !(size > 0.0) || self.node_shape().is_none() {
+                if size.is_nan() || size <= 0.0 || self.node_shape().is_none() {
                     self.touch();
                     return true;
                 }

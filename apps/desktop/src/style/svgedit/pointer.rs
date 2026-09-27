@@ -784,7 +784,7 @@ pub fn scaled_box(bx: &Bounds, h: u8, q: Pt, shift: bool) -> Option<Bounds> {
     if matches!(h, 4..=6) {
         b.max_y = q[1];
     }
-    if shift && h % 2 == 0 {
+    if shift && h.is_multiple_of(2) {
         // Corners keep the proportions.
         let k = ((b.max_x - b.min_x) / (bx.max_x - bx.min_x))
             .max((b.max_y - b.min_y) / (bx.max_y - bx.min_y));

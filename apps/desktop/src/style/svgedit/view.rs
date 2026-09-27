@@ -16,7 +16,7 @@ use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::theme::{Tokens, typography};
-use kentos_ui::widget::{Dialog, Tip, horizontal_divider, overlay, tip, vertical_divider};
+use kentos_ui::widget::{Dialog, Sash, Tip, horizontal_divider, overlay, tip, vertical_divider};
 
 use super::files::{self, FileDialog};
 use super::list::list_column;
@@ -244,21 +244,66 @@ fn center<'a>(ed: &'a SvgEditor, paper: String, ink: String) -> Element<'a, Mess
     if let Some(b) = files::reference::bar(ed) {
         c = c.push(b);
     }
-    // The source shares the middle with the canvas, two parts to three.
+    // The source shares the middle with the canvas, two parts to three, until
+    // its edge is dragged; then it keeps its own height.
+    let source = ed.files.source.as_ref();
     c = c.push(
         container(stack(layers))
-            .height(Length::FillPortion(3))
+            .height(match source {
+                Some(s) if s.height.is_none() => Length::FillPortion(3),
+                _ => Fill,
+            })
             .width(Fill)
             .clip(true),
     );
-    if let Some(s) = &ed.files.source {
-        c = c.push(container(files::source::view(ed, s)).height(Length::FillPortion(2)));
+    if let Some(s) = source {
+        let (_, _, most) = source_room(ed, s);
+        c = c.push(source_sash(ed, s));
+        c = c.push(
+            container(files::source::view(ed, s)).height(match s.height {
+                Some(h) => Length::Fixed(h.min(most)),
+                None => Length::FillPortion(2),
+            }),
+        );
     }
     c.height(Fill).width(Fill).into()
 }
 
+/// The source's height now (its own, or two thirds of the canvas's while they
+/// share the middle), the least and the most it may take: the canvas and the
+/// source keep 120 pixels each at the default text size.
+fn source_room(ed: &SvgEditor, s: &files::source::SourcePanel) -> (f32, f32, f32) {
+    let canvas = ed.camera.size.map_or(400.0, |(_, h)| h as f32);
+    let now = s.height.unwrap_or(canvas * 2.0 / 3.0);
+    let least = typography::from_default(120.0);
+    (now, least, (canvas + now - least).max(least))
+}
+
+/// The source's top edge (the web's grip): dragged, the source takes that
+/// height; a double click gives the first share back.
+fn source_sash<'a>(ed: &SvgEditor, s: &files::source::SourcePanel) -> Element<'a, Message> {
+    let (now, least, most) = source_room(ed, s);
+    Sash::horizontal(now, |px| {
+        change(move |ed| {
+            if let Some(s) = ed.files.source.as_mut() {
+                s.height = Some(px);
+            }
+        })
+    })
+    .reverse()
+    .range(least..=most)
+    .on_double_click(change(|ed| {
+        if let Some(s) = ed.files.source.as_mut() {
+            s.height = None;
+        }
+    }))
+    .into()
+}
+
 /// The foot: name and category, what the window said, Vazgeç, Farklı kaydet… and Kaydet.
-/// On a narrow window what it said takes its own line above (the web's foot grew instead).
+/// On a narrow window what it said takes its own line above, on both platforms (the web's
+/// foot squeezed it to a word or two); the line stays while nothing is said, so the canvas
+/// does not jump as messages come and go.
 fn footer<'a>(ed: &'a SvgEditor, narrow: bool) -> Element<'a, Message> {
     let field = |id: &str, hint: &str, value: &str, width: f32, on: fn(String) -> Event| {
         text_input(hint, value)
@@ -290,9 +335,10 @@ fn footer<'a>(ed: &'a SvgEditor, narrow: bool) -> Element<'a, Message> {
             .align_y(Center)
             .into()
         }
+        // A blank line's height.
+        None if narrow => label::body(" ").into(),
         None => space().into(),
     };
-    let said = ed.said.is_some();
     let (inline, above): (Element<'a, Message>, Option<Element<'a, Message>>) = if narrow {
         (space::horizontal().into(), Some(status))
     } else {
@@ -339,8 +385,8 @@ fn footer<'a>(ed: &'a SvgEditor, narrow: bool) -> Element<'a, Message> {
     .spacing(10)
     .align_y(Center);
     match above {
-        Some(status) if said => column![status, foot].spacing(8).into(),
-        _ => foot.into(),
+        Some(status) => column![status, foot].spacing(8).into(),
+        None => foot.into(),
     }
 }
 

@@ -642,6 +642,62 @@ fn the_source_is_edited_and_read_back_as_one_step() {
 }
 
 #[test]
+fn the_sources_top_edge_is_dragged_and_a_double_click_gives_the_first_share() {
+    use iced::{Point, Size};
+    use kentos_ui::snapshot::{Input as Gesture, Snapshot};
+
+    let (mut app, _dir) = open("kaynak-pay");
+    send(
+        &mut app,
+        Event::File(files::Event::Cmd(FileCmd::ToggleSource)),
+    );
+    let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
+    let mut update = |app: &mut App, message| {
+        let _ = app.update(message);
+    };
+    // Twice: the canvas tells its size, the edge knows the source's height.
+    snapshot.settle(&mut app, App::view, &mut update);
+    snapshot.settle(&mut app, App::view, &mut update);
+    let head = |snapshot: &mut Snapshot, app: &App| {
+        crate::point_calc::texts(snapshot, app)
+            .into_iter()
+            .find(|(t, _)| t == "SVG kaynağı")
+            .map(|(_, at)| at)
+            .expect("the source's head")
+    };
+    let first = head(&mut snapshot, &app);
+    // The edge lies over the panel's padding and the head's button row.
+    let edge = Point::new(first.x + 40.0, first.y - 13.0);
+    let up = Point::new(edge.x, edge.y - 120.0);
+    snapshot.input(&mut app, App::view, &mut update, Gesture::Drag(edge, up));
+    snapshot.settle(&mut app, App::view, &mut update);
+    assert!(
+        ed(&app)
+            .files
+            .source
+            .as_ref()
+            .expect("open")
+            .height
+            .is_some()
+    );
+    // The panel grew by the drag, from where it was: the head went up with the edge.
+    let grown = head(&mut snapshot, &app);
+    assert!(
+        (first.y - grown.y - 120.0).abs() <= 3.0,
+        "{first:?} → {grown:?}"
+    );
+    // Nothing of the drawing changed: no undo step.
+    assert!(!ed(&app).can_undo());
+    // A double click on the edge gives the first share back.
+    snapshot.input(&mut app, App::view, &mut update, Gesture::Click(up));
+    snapshot.input(&mut app, App::view, &mut update, Gesture::Click(up));
+    snapshot.settle(&mut app, App::view, &mut update);
+    assert_eq!(ed(&app).files.source.as_ref().expect("open").height, None);
+    let back = head(&mut snapshot, &app);
+    assert!((back.y - first.y).abs() <= 1.0, "{first:?} → {back:?}");
+}
+
+#[test]
 fn document_properties_crop_scale_and_carry_the_guides() {
     let (mut app, _dir) = open("belge");
     {

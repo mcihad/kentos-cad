@@ -1411,9 +1411,18 @@ mod tests {
 
     #[test]
     fn a_command_not_ported_says_so_and_changes_nothing() {
+        // One the web runs and the desktop not yet, whichever is left as they are ported.
+        let Some(id) = catalog()
+            .commands()
+            .iter()
+            .find(|c| c.standing == Standing::OnTheWeb)
+            .map(|c| c.id)
+        else {
+            return;
+        };
         let (mut app, _) = App::boot(None);
         let before = app.history.len();
-        let _ = app.run("analysis.volume");
+        let _ = app.run(id);
         assert_eq!(app.history.len(), before + 1);
         assert!(
             matches!(app.history.last(), Some(Entry::Output(text)) if text.contains("masaüstüne henüz taşınmadı"))
