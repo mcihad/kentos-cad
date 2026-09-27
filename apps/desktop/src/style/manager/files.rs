@@ -54,25 +54,14 @@ pub fn raster_asset(name: &str, bytes: &[u8]) -> Option<Result<Value, String>> {
     })))
 }
 
-/// A JPEG's width and height from its frame header.
-fn jpeg_size(b: &[u8]) -> Option<(u32, u32)> {
-    let mut k = 2;
-    while k + 9 < b.len() {
-        if b[k] != 0xFF {
-            k += 1;
-            continue;
+/// A JPEG's width and height, when the whole file decodes as the drawing will decode it.
+fn jpeg_size(bytes: &[u8]) -> Option<(u32, u32)> {
+    match crate::style::images::jpeg(bytes)? {
+        kentos_render_wgpu::styled::picture::Picture::Bitmap { width, height, .. } => {
+            Some((width, height))
         }
-        let marker = b[k + 1];
-        let len = usize::from(u16::from_be_bytes([b[k + 2], b[k + 3]]));
-        // Start of frame: every SOFn but DHT (C4), JPG (C8) and DAC (CC).
-        if (0xC0..=0xCF).contains(&marker) && !matches!(marker, 0xC4 | 0xC8 | 0xCC) {
-            let h = u32::from(u16::from_be_bytes([b[k + 5], b[k + 6]]));
-            let w = u32::from(u16::from_be_bytes([b[k + 7], b[k + 8]]));
-            return (w > 0 && h > 0).then_some((w, h));
-        }
-        k += 2 + len;
+        kentos_render_wgpu::styled::picture::Picture::Vector { .. } => None,
     }
-    None
 }
 
 /// Base64 of bytes (the standard alphabet, padded), for `data:` addresses.
@@ -167,36 +156,25 @@ impl App {
     /// A picked file: a picture comes in as an image of Kitaplığım, a .kstil is offered for import.
     pub(super) fn take_file(&mut self, name: &str, bytes: &[u8]) {
         match raster_asset(name, bytes) {
-            Some(Ok(asset)) => {
-                let jpeg = asset["format"] == "jpeg";
-                match self.styles.library.add(Source::User, asset) {
-                    Ok(item) => {
-                        self.library_changed(Source::User);
-                        let lib = &self.styles.library;
-                        if let Some(m) = &mut self.styles.manager {
-                            m.at = (
-                                Source::User,
-                                item.path().into_iter().map(str::to_owned).collect(),
-                            );
-                            m.query.clear();
-                            m.choose_item(lib, Some(item.id().to_owned()));
-                            if jpeg {
-                                // No JPEG decoder on the desktop yet: say so rather than draw nothing silently.
-                                m.say(
-                                    format!("“{}” Kitaplığım'a alındı; JPEG görüntüleri masaüstünde henüz çizilmez (web'de çizilir). PNG olarak kaydedip alırsanız burada da çizilir.", item.name()),
-                                    true,
-                                );
-                            } else {
-                                m.say(
-                                    format!("“{}” Kitaplığım'a alındı: görüntü dolgusunda ya da görüntü işaretinde kullanılabilir.", item.name()),
-                                    false,
-                                );
-                            }
-                        }
+            Some(Ok(asset)) => match self.styles.library.add(Source::User, asset) {
+                Ok(item) => {
+                    self.library_changed(Source::User);
+                    let lib = &self.styles.library;
+                    if let Some(m) = &mut self.styles.manager {
+                        m.at = (
+                            Source::User,
+                            item.path().into_iter().map(str::to_owned).collect(),
+                        );
+                        m.query.clear();
+                        m.choose_item(lib, Some(item.id().to_owned()));
+                        m.say(
+                            format!("“{}” Kitaplığım'a alındı: görüntü dolgusunda ya da görüntü işaretinde kullanılabilir.", item.name()),
+                            false,
+                        );
                     }
-                    Err(e) => self.manager_say(e, true),
                 }
-            }
+                Err(e) => self.manager_say(e, true),
+            },
             Some(Err(why)) => self.manager_say(why, true),
             None => {
                 let text = String::from_utf8_lossy(bytes);

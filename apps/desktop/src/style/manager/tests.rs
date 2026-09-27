@@ -617,29 +617,36 @@ fn pictures_come_in_as_images_of_kitapligim() {
         (Source::User, vec!["Görüntülerim".to_owned()])
     );
 
-    // A broken picture says so; a JPEG is taken, and said not to draw here yet.
+    // A broken picture says so, a JPEG as a PNG does.
     app.take_file("bozuk.png", b"\x89PNG\r\n\x1a\nbozuk");
     assert_eq!(
         said(&app),
         "“bozuk.png” okunamadı: PNG dosyası bozuk görünüyor."
     );
-    let jpeg = [
-        0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x04, 0x00, 0x00, 0xFF, 0xC0, 0x00, 0x11, 0x08, 0x00, 0x20,
-        0x00, 0x40, 0x03, 0x01, 0x22, 0x00, 0x02, 0x11, 0x01, 0x03, 0x11, 0x01, 0xFF, 0xD9,
-    ];
-    let asset = raster_asset("foto.jpg", &jpeg)
+    let jpeg = crate::style::images::test_jpeg();
+    app.take_file("yarım.jpg", &jpeg[..60]);
+    assert_eq!(
+        said(&app),
+        "“yarım.jpg” okunamadı: JPEG dosyası bozuk görünüyor."
+    );
+    // A whole JPEG comes in with its size, and the atlas draws it (images.rs).
+    let asset = raster_asset("Foto.JPEG", &jpeg)
         .expect("a picture")
         .expect("read");
     assert_eq!(
         (asset["width"].clone(), asset["height"].clone()),
-        (json!(64), json!(32))
+        (json!(16), json!(8))
     );
-    assert_eq!(asset["name"], "foto");
-    app.take_file("foto.jpg", &jpeg);
+    assert_eq!(asset["name"], "Foto");
     assert!(
-        said(&app).contains("JPEG görüntüleri masaüstünde henüz çizilmez"),
-        "{}",
-        said(&app)
+        asset["data"]
+            .as_str()
+            .is_some_and(|d| d.starts_with("data:image/jpeg;base64,/9j/"))
+    );
+    app.take_file("foto.jpg", &jpeg);
+    assert_eq!(
+        said(&app),
+        "“foto” Kitaplığım'a alındı: görüntü dolgusunda ya da görüntü işaretinde kullanılabilir."
     );
     assert!(raster_asset("notlar.txt", b"merhaba").is_none());
 }

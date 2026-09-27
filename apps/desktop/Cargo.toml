@@ -33,12 +33,14 @@ kentos-formats = { path = "../../crates/shared/formats" }
 # The style engine (style/, docs/adr/0090): the library, each layer's program and
 # batches; the store they are built next to; SVG drawings read for the atlas with
 # the SVG core's readers, parsed by roxmltree (the owner's approval, 2026-09-27;
-# locked already through fontdb); PNG images decoded with the workspace's png.
+# locked already through fontdb); PNG images decoded with the workspace's png, JPEG
+# images with zune-jpeg (the owner's approval, 2026-09-27; docs/adr/0092).
 kentos-native-style = { path = "../../crates/native/style" }
 kentos-geometry-core = { path = "../../crates/shared/geometry-core" }
 kentos-svg-core = { path = "../../crates/shared/svg-core" }
 roxmltree = { workspace = true }
 png = { workspace = true }
+zune-jpeg = { workspace = true }
 iced = { workspace = true, features = ["canvas"] }
 # The trace player (traces.rs) runs the app's own tasks (save, open) without a
 # window: Iced's runtime crate, already in the binary through Iced and KentOS UI's

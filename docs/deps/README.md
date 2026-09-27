@@ -1,6 +1,6 @@
 # Bağımlılık kaydı
 
-Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.md `BASE-06`'nın karşılığıdır. Bugünkü 34 Rust bağımlılığı aşağıdadır (26 Eylül'de `miniz_oxide`; 27 Eylül'de `tiny-skia` ve `roxmltree` eklendi). Lisans taramasını ve SBOM'u CI'a bağlamak ayrı iştir (`OPS-13`).
+Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.md `BASE-06`'nın karşılığıdır. Bugünkü 35 Rust bağımlılığı aşağıdadır (26 Eylül'de `miniz_oxide`; 27 Eylül'de `tiny-skia`, `roxmltree` ve `zune-jpeg` eklendi). Lisans taramasını ve SBOM'u CI'a bağlamak ayrı iştir (`OPS-13`).
 
 ## Kurallar
 
@@ -29,6 +29,7 @@ Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.
 | png | 0.18.1 (isteğe bağlı: `snapshot`) | MIT OR Apache-2.0 | native | ui; desktop (stil kitaplığının PNG görüntüleri) | ADR 0016, 0090 |
 | tiny-skia | 0.11.4, varsayılan özellikler kapalı, `std`, `simd` | BSD-3-Clause | native (masaüstü) | render-wgpu (stilli çizimin atlası: SVG ve raster işaretler, yazılar, desen döşemeleri) | ADR 0090 (sahibin onayı, 27 Eylül); iced_tiny_skia üzerinden aynı özelliklerle ikilideydi, kilide yeni paket girmedi |
 | roxmltree | 0.20.0 (varsayılan özellikler) | MIT OR Apache-2.0 | native (masaüstü) | desktop (kitaplığın SVG çizimleri; web'de tarayıcı okur) | ADR 0090 (sahibin onayı, 27 Eylül); fontdb (fontconfig-parser) üzerinden aynı özelliklerle kilitliydi, kilide yeni paket girmedi |
+| zune-jpeg | 0.5.15, varsayılan özellikler kapalı, yalnız `std` (SIMD yolları `x86`, `neon` kapalı) | MIT OR Apache-2.0 OR Zlib | native (masaüstü) | desktop (kitaplığın JPEG görüntüleri: stilli çizimin atlası ve Stil yöneticisinin içe alması; web'de tarayıcı çözer) | ADR 0092 (sahibin onayı, 27 Eylül). Saf Rust, bakımda; image crate'inin JPEG çözücüsüdür, bakım kipindeki `jpeg-decoder`'ın yerini almıştır. Kilide iki paket girdi: `zune-jpeg` ve `zune-core` 0.5.3 (aynı lisans). Kenar başına 16 384 piksel sınırı çözücünündür |
 | rfd | 0.17.2 (varsayılan: `xdg-portal`, `wayland`) | MIT | native (masaüstü) | desktop | ADR 0017 (sahibin onayı, 25 Eylül). Getirdiği tek yeni paket `pollster` (Apache-2.0 OR MIT) |
 | wgpu | 27.0.1 (Iced'in kilitlediği sürüm, varsayılan özellikler) | MIT OR Apache-2.0 | native (masaüstü) | render-wgpu | ADR 0019; kilide yeni paket girmedi |
 | naga | 27.0.3, `wgsl-in` (yalnız test) | MIT OR Apache-2.0 | native (test) | render-wgpu | ADR 0019 |
@@ -50,7 +51,7 @@ Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.
 | tracing-subscriber | 0.3.23 | MIT | native | api | ADR 0007 |
 | miniz_oxide | 0.9.1, varsayılan özellikler kapalı, `with-alloc` (yalnız inflate kullanılır) | MIT OR Zlib OR Apache-2.0 | native, wasm32 (saf Rust) | formats (zip'li Shapefile, `zip.rs`) | ADR 0046 soru 4 (sahibin onayı, 26 Eylül), ADR 0053; `flate2` üzerinden zaten kilitliydi (`adler2` ile), kilide yeni paket girmedi. Biçim WASM modülü zip okumaz: +183 bayt |
 
-**Geçişli bağımlılıklar** (`Cargo.lock`): 635 paket, 21'i çalışma alanının kendi crate'leri (27 Eylül; `kentos-processing` eklendi, kilide yeni dış paket girmedi).
+**Geçişli bağımlılıklar** (`Cargo.lock`): 639 paket, 23'ü çalışma alanının kendi crate'leri (27 Eylül; `zune-jpeg` ve `zune-core` girdi).
 
 - Masaüstü arayüzü (Iced, wgpu, winit, cosmic-text, tiny-skia …) 291 paket getirdi (ADR 0016). Hepsi taranmıştır.
 - Yalnız masaüstü derlemesine girerler; web ve sunucu derlemesi (`default-members`) onları derlemez.
