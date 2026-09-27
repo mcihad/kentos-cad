@@ -1,7 +1,7 @@
 import type { AppContext } from '../../app/context';
 import type { CanvasPalette } from '../../render/color';
 import { drawSymbolPreview } from '../../render/symbolPreview';
-import { LEGEND_PAPER, LEGEND_TEXTS, legendLayers, legendLayout, legendOf, type LegendGroup, type LegendText } from '../../style/legend';
+import { LEGEND_PAPER, LEGEND_TEXTS, legendLayers, legendLayout, legendOf, type LegendGroup, type LegendLayout, type LegendText } from '../../style/legend';
 import { h, replaceChildren } from '../dom';
 import { icon } from '../icons';
 import { Dialog } from '../widgets/Dialog';
@@ -88,7 +88,6 @@ class LegendDialog {
   private async savePng(): Promise<void> {
     const groups = this.groups.filter((g) => !this.left.has(g.layerId));
     if (!groups.length) return void (this.status.textContent = LEGEND_TEXTS.noRows);
-    const paper: CanvasPalette = { ...this.ctx.view.palette, ...LEGEND_PAPER, background: [...LEGEND_PAPER.background] };
     const layout = legendLayout(groups, this.headings, this.ctx.doc.name.value);
     const S = layout.scale;
     // Taller than a browser draws (32 767 px): the canvas would stay empty and nothing be saved.
@@ -96,37 +95,7 @@ class LegendDialog {
       const most = Math.floor((MAX_PICTURE / S - 72) / 30);
       return void (this.status.textContent = `Lejant PNG için çok uzun: ${layout.rows.length} satır, en çok ${most} satır olur. Bazı katmanları dışarıda bırakın ya da başlıkları kapatın.`);
     }
-    const c = document.createElement('canvas');
-    c.width = layout.width * S;
-    c.height = layout.height * S;
-    const g = c.getContext('2d')!;
-    g.scale(S, S);
-    g.fillStyle = layout.background;
-    g.fillRect(0, 0, layout.width, layout.height);
-    const text = (t: LegendText) => {
-      g.font = t.font;
-      g.fillStyle = t.color;
-      g.fillText(t.text, t.align === 'right' ? t.x - g.measureText(t.text).width : t.x, t.y);
-    };
-    text(layout.heading);
-    text(layout.name);
-    const entries = groups.flatMap((grp) => grp.entries);
-    let entry = 0;
-    for (const row of layout.rows) {
-      const symbol = row.kind === 'entry' ? entries[entry++].symbol : null;
-      const p = row.picture;
-      if (symbol && p) {
-        const pic = document.createElement('canvas');
-        pic.width = p.w;
-        pic.height = p.h;
-        drawSymbolPreview(pic, symbol, { palette: paper, library: this.ctx.styles.library, background: layout.background });
-        g.drawImage(pic, p.x, p.y, p.w, p.h);
-        g.strokeStyle = p.frame;
-        g.lineWidth = p.frameWidth;
-        g.strokeRect(p.x, p.y, p.w, p.h);
-      }
-      text(row.label);
-    }
+    const c = legendPicture(this.ctx, groups, layout);
     const blob = await new Promise<Blob | null>((ok) => c.toBlob(ok, 'image/png'));
     if (!blob) return;
     const url = URL.createObjectURL(blob);
@@ -139,4 +108,46 @@ class LegendDialog {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     this.status.textContent = LEGEND_TEXTS.saved;
   }
+}
+
+/**
+ * The legend picture on white paper at the layout's scale; where everything goes is legendLayout's.
+ * The symbols are drawn at that scale too (not the screen's pixel ratio), so they stay sharp.
+ */
+export function legendPicture(ctx: AppContext, groups: readonly LegendGroup[], layout: LegendLayout): HTMLCanvasElement {
+  const paper: CanvasPalette = { ...ctx.view.palette, ...LEGEND_PAPER, background: [...LEGEND_PAPER.background] };
+  const S = layout.scale;
+  const c = document.createElement('canvas');
+  c.width = layout.width * S;
+  c.height = layout.height * S;
+  const g = c.getContext('2d')!;
+  g.scale(S, S);
+  g.fillStyle = layout.background;
+  g.fillRect(0, 0, layout.width, layout.height);
+  const text = (t: LegendText) => {
+    g.font = t.font;
+    g.fillStyle = t.color;
+    g.fillText(t.text, t.align === 'right' ? t.x - g.measureText(t.text).width : t.x, t.y);
+  };
+  text(layout.heading);
+  text(layout.name);
+  const entries = groups.flatMap((grp) => grp.entries);
+  let entry = 0;
+  for (const row of layout.rows) {
+    const symbol = row.kind === 'entry' ? entries[entry++].symbol : null;
+    const p = row.picture;
+    if (symbol && p) {
+      // A fresh canvas each time: the preview sets its size from the width attribute.
+      const pic = document.createElement('canvas');
+      pic.width = p.w;
+      pic.height = p.h;
+      drawSymbolPreview(pic, symbol, { palette: paper, library: ctx.styles.library, background: layout.background, pixelRatio: S });
+      g.drawImage(pic, p.x, p.y, p.w, p.h);
+      g.strokeStyle = p.frame;
+      g.lineWidth = p.frameWidth;
+      g.strokeRect(p.x, p.y, p.w, p.h);
+    }
+    text(row.label);
+  }
+  return c;
 }

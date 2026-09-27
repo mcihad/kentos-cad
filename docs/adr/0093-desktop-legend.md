@@ -26,7 +26,7 @@
 - **Web penceresinin kusurları:**
   - açılışta her satırın resmi hemen çiziliyordu; örnek çizimde bu 862 tuvaldir;
   - 543 satırdan uzun lejant tarayıcının tuval sınırını (2×'te 32 767 piksel) aşıyordu. Resim boş kalıyor, hiçbir şey kaydedilmiyor, pencere bir şey demiyordu;
-  - resimdeki semboller ekranın piksel oranıyla çiziliyordu. Oran 1 olan ekranda 56 × 24 piksellik resim iki kat büyütülüp bulanıklaşıyordu. Bu `render/symbolPreview.ts`'tedir; web ajanına önerildi (`pixelRatio`).
+  - resimdeki semboller ekranın piksel oranıyla çiziliyordu. Oran 1 olan ekranda 56 × 24 piksellik resim iki kat büyütülüp bulanıklaşıyordu. Web ajanı `render/symbolPreview.ts`'e `pixelRatio` seçeneğini ekledi (1df41cb).
 
 ## Karar
 
@@ -69,10 +69,10 @@
 
 - **İki platformda:**
   - PNG'ye sığmayacak lejant nedenini söyler;
-  - satırların resimleri görünür oldukça çizilir (web `Thumbs`; masaüstünde sanal liste).
-- **Masaüstünde:**
-  - resimdeki semboller iki kat çözünürlükte çizilir, büyütülmez;
-  - resim pencereyi dondurmaz.
+  - satırların resimleri görünür oldukça çizilir (web `Thumbs`; masaüstünde sanal liste);
+  - resimdeki semboller resmin ölçeğinde çizilir, büyütülmez. Web'de `legendPicture` önizlemeye `pixelRatio: layout.scale` verir; masaüstünde ekransız çizici 2× çizer.
+- **Masaüstünde:** resim pencereyi dondurmaz.
+- İki platformun PNG'si aynı boydadır (1040 × 1464, örnek çizimin kendi katmanları); yazılar ve çerçeveler bir piksel içinde üst üste gelir.
 
 ## Sonuçlar
 
@@ -83,4 +83,5 @@
   - PNG sınırı sınanır.
 - **Resimler:** `KENTOS_SNAPSHOT_BACKEND=wgpu cargo test -p kentos-desktop style::screens::legend_screens -- --ignored --nocapture` çeker (`.run/shots/lejant-*.png`):
   - dört durum; iki boy, iki tema ve büyük yazıyla bir boy daha;
-  - kaydedilen resim, başlıklı ve başlıksız (`lejant-resim*.png`).
+  - kaydedilen resim, başlıklı ve başlıksız (`lejant-resim*.png`);
+  - `node apps/web/scripts/style/legend-png.mjs` web'in aynı resmini piksel oranı 1 olan tarayıcıda çizer (`web-lejant-resim*.png`).
