@@ -2,6 +2,7 @@ import { DisposableStore, listen } from '../../core/disposable';
 import { exprBuilderCatalog, type ExprField, type ExprItem, type ExprSection } from '../../model/expression/builder';
 import { h } from '../dom';
 import { icon } from '../icons';
+import { FLOW_DRAG_TYPE } from './FlowView';
 import { KIND_STYLE } from './highlight';
 
 /**
@@ -14,6 +15,8 @@ export interface BuilderTreeOptions {
   readonly fields: () => readonly ExprField[];
   readonly onSelect: (item: ExprItem) => void;
   readonly onInsert: (item: ExprItem) => void;
+  /** Groups before the core's (the flow's values to write). */
+  readonly extra?: () => readonly ExprSection[];
 }
 
 type Row = { readonly group: ExprSection; readonly item?: ExprItem };
@@ -58,8 +61,14 @@ export class BuilderTree {
     return this.search.value.trim() !== '';
   }
 
-  private refresh(): void {
-    this.sections = exprBuilderCatalog(this.opts.fields(), this.search.value.trim());
+  /** Reads the groups again (the search, or the builder's view changed). */
+  refresh(): void {
+    const q = this.search.value.trim().toLocaleLowerCase('tr');
+    const extra = (this.opts.extra?.() ?? [])
+      .map((s) => ({ ...s, items: s.items.filter((i) => !q || i.label.toLocaleLowerCase('tr').includes(q)) }))
+      .filter((s) => s.items.length);
+    for (const s of extra) this.open.add(s.group);
+    this.sections = [...extra, ...exprBuilderCatalog(this.opts.fields(), this.search.value.trim())];
     this.render();
   }
 
@@ -101,14 +110,21 @@ export class BuilderTree {
       return el;
     }
     const item = r.item;
+    const style = item.key === 'lit:number' ? 'x-literal' : item.key === 'lit:text' ? 'x-text' : KIND_STYLE[item.kind];
     const el = h(
       'div',
-      { class: 'xtree__row xtree__item', role: 'treeitem', id: `xtree-row-${i}`, 'aria-selected': selected, title: item.detail },
-      h('span', { class: `xtree__label ${KIND_STYLE[item.kind]}` }, item.label),
+      { class: 'xtree__row xtree__item', role: 'treeitem', id: `xtree-row-${i}`, 'aria-selected': selected, title: item.detail, draggable: 'true' },
+      h('span', { class: `xtree__label ${style}` }, item.label),
       item.kind === 'field' ? h('span', { class: 'xtree__detail' }, item.detail.split(' · ')[0]) : null,
     );
     el.addEventListener('click', () => this.select(key, true));
     el.addEventListener('dblclick', () => this.opts.onInsert(item));
+    // Dragged: onto the flow as a node, into the text as it is written.
+    el.addEventListener('dragstart', (e) => {
+      e.dataTransfer?.setData(FLOW_DRAG_TYPE, item.key);
+      e.dataTransfer?.setData('text/plain', item.insert);
+      if (e.dataTransfer) e.dataTransfer.effectAllowed = 'copy';
+    });
     return el;
   }
 

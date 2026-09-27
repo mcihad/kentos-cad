@@ -1083,6 +1083,23 @@
     },
     {
       "args": [
+        "yuvarla(?, 2)",
+        "@fields"
+      ],
+      "note": "Akışın boş girişi (ADR 0101)",
+      "op": "exprCheck",
+      "result": {
+        "error": {
+          "end": 9,
+          "message": "Boş giriş (?): buraya bir değer bağlayın ya da yazın.",
+          "start": 8,
+          "text": "9. karakterde: Boş giriş (?): buraya bir değer bağlayın ya da yazın."
+        },
+        "warnings": []
+      }
+    },
+    {
+      "args": [
         "yuv",
         3,
         "@fields",

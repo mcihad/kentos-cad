@@ -41,10 +41,16 @@ pub fn check(src: &str, schema: &Schema) -> Check {
     let pieces = lex(&u);
     let error = compile_with(src, schema).err().map(|e| {
         let (start, end) = error_span(e.at, &pieces, &u);
+        // A `?` is the flow's empty input (docs/adr/0101): say so.
+        let message = if u.get(start) == Some(&u16::from(b'?')) && end == start + 1 {
+            EMPTY_INPUT.to_string()
+        } else {
+            e.message
+        };
         Diagnostic {
             start,
             end,
-            message: e.message,
+            message,
         }
     });
     let warnings = if schema.fields.is_empty() {
@@ -72,6 +78,9 @@ pub fn check(src: &str, schema: &Schema) -> Check {
     };
     Check { error, warnings }
 }
+
+/// The error of a `?`: an input of the flow with nothing connected.
+pub const EMPTY_INPUT: &str = "Boş giriş (?): buraya bir değer bağlayın ya da yazın.";
 
 /// The span of an error at `at` (1-based): the piece that starts there, else
 /// the character there, else the end of the text.

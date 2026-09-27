@@ -10,7 +10,8 @@
 //!   the one at the cursor;
 //! - `catalog`: the builder's tree; `help` and `help_at`: an entry's
 //!   signature, description, arguments and examples; `values`: a field's
-//!   values as the builder lists and inserts them.
+//!   values as the builder lists and inserts them;
+//! - `flow`: the same text as a flow of nodes, and its changes (docs/adr/0101).
 //!
 //! Positions are UTF-16 code units from 0, as the web's text fields count;
 //! `units` converts for the desktop's editor. Everything works on text that
@@ -19,6 +20,7 @@
 mod catalog;
 mod check;
 mod complete;
+pub mod flow;
 mod lex;
 mod place;
 pub mod units;

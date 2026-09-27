@@ -110,6 +110,17 @@ const ITEMS = [
     },
     ready: '.xhelp__value',
   },
+  // Akış (docs/adr/0101): the same expression as nodes; a node selected, with its inspector over the help.
+  {
+    id: 'expression-flow',
+    open: async (ui) => (await ui.builder("durum eğer Nitelik = 'Arsa' ve $alan > 500 ise yuvarla($alan / 1000, 2) yoksa 0 son"), await ui.clickText('.exprb__tab', 'Akış')),
+    ready: '.xfn[data-id="0"]',
+  },
+  {
+    id: 'expression-flow-node',
+    open: async (ui) => (await ui.builder("yuvarla(Nitelik || ' ' || ?, 2)"), await ui.clickText('.exprb__tab', 'Akış'), await ui.click('.xfn[data-id="0"] .xfn__title')),
+    ready: '.xfi:not([hidden])',
+  },
   { id: 'model-designer', open: (ui) => ui.run('processing.newModel') },
   { id: 'cloud-login', open: (ui) => ui.run('cloud.signIn') },
   { id: 'question-layer-remove', open: async (ui) => (await ui.rightClick('.panel--layers .tree__row[data-id="parsel"] .tree__name'), await ui.clickText('.menu__item', 'Sil')), ready: '.dialog--confirm' },
@@ -334,6 +345,9 @@ function helpers(b, w, h) {
       await ui.click('.exprb-open');
       await b.waitFor(`document.querySelector('.dialog--exprb .xed__input')`, 8000);
       await sleep(300);
+      // The builder opens in the view it was last in: the text first.
+      await b.eval(`(() => { const t = document.querySelector('.dialog--exprb .exprb__tab'); if (t && t.getAttribute('aria-selected') !== 'true') t.click(); })()`);
+      await sleep(100);
       await ui.click('.dialog--exprb .xed__input');
       await b.eval(`document.querySelector('.dialog--exprb .xed__input').select()`);
       await b.type(text);

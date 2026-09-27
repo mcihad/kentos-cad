@@ -170,7 +170,8 @@ export class ProcessingRunner {
     if (input?.type !== 'features' || !values[input.name]) return undefined;
     const set = resolveFeatures(values[input.name] as FeaturesValue, input, this.host);
     const layers = this.host.doc.layers;
-    return entityObjects(set.entities, (id) => layers.get(id)?.name ?? id, { measures: (list) => this.measures(list) });
+    // The drawing's store the host keeps gives every geometry value ($genişlik, $merkez_y …); the measures are the fallback.
+    return entityObjects(set.entities, (id) => layers.get(id)?.name ?? id, { geometry: this.host.geometry, measures: (list) => this.measures(list) });
   }
 
   /** The expressions' geometry values of these objects: from the drawing's store the host keeps, else from a store of their own. */

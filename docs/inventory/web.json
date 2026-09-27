@@ -2389,6 +2389,7 @@
       },
       "tests": [
         "apps/web/scripts/e2e/builder.mjs",
+        "apps/web/scripts/e2e/flow.mjs",
         "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
@@ -7634,6 +7635,7 @@
         "apps/web/src/processing/runs.test.ts",
         "apps/web/scripts/fixtures/record-processing-dialog.test.ts",
         "apps/web/scripts/e2e/builder.mjs",
+        "apps/web/scripts/e2e/flow.mjs",
         "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
@@ -11712,7 +11714,7 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "desktopWhere": "apps/desktop/src/expression/ (ADR 0100 §5; İşlemler'in ifade alanındaki ε)"
+      "desktopWhere": "apps/desktop/src/expression/ (ADR 0100 §5; Metin | Akış, ADR 0101; İşlemler'in ifade alanındaki ε)"
     },
     {
       "id": "apps/web/src/ui/io/CoordExportDialog.ts#openCoordExport",

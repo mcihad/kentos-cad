@@ -1,11 +1,12 @@
 import '../../styles/expression.css';
-import { exprHelp, exprHelpAt, exprPlace, exprPreview, type ExprCheck, type ExprItem, type ExprItemKind } from '../../model/expression/builder';
+import { exprBuilderCatalog, exprHelp, exprHelpAt, exprPlace, exprPreview, type ExprCheck, type ExprItem, type ExprItemKind, type ExprSection } from '../../model/expression/builder';
 import { h } from '../dom';
 import { icon } from '../icons';
 import { Dialog } from '../widgets/Dialog';
 import { BuilderTree } from './BuilderTree';
 import type { ExpressionBuilderOptions } from './builderApi';
 import { CodeEditor } from './CodeEditor';
+import { FlowMode } from './FlowMode';
 import { HelpPane } from './HelpPane';
 
 /**
@@ -18,10 +19,23 @@ import { HelpPane } from './HelpPane';
  * window it was opened from; Tamam writes the text back, Vazgeç (Esc, ×)
  * leaves the field as it was. The desktop's builder is the same (the
  * language services are one core).
+ *
+ * Two views of one text (docs/adr/0101): Metin, the editor; Akış, the same
+ * expression as nodes (FlowMode). A change in either is the other's at once.
  */
 export function showBuilder(opts: ExpressionBuilderOptions): void {
   new ExpressionBuilder(opts);
 }
+
+/** The values the flow's palette offers besides the tree's entries: a number and a text to write. */
+const VALUES: ExprSection = {
+  group: 'values',
+  title: 'Sabit değerler',
+  items: [
+    { kind: 'operator', label: 'Sayı', detail: 'Yazılacak bir sayı: 0', insert: '0', caret: 1, key: 'lit:number' },
+    { kind: 'operator', label: 'Metin', detail: "Yazılacak bir metin: ''", insert: "''", caret: 1, key: 'lit:text' },
+  ],
+};
 
 /** The operator buttons over the editor: what they insert and how the core places it. */
 const OPERATORS: readonly { label: string; key?: string; insert: string; kind: ExprItemKind }[] = [
@@ -42,6 +56,9 @@ const OPERATORS: readonly { label: string; key?: string; insert: string; kind: E
   { label: 'değil', key: 'op:değil', insert: ' değil ', kind: 'keyword' },
 ];
 
+/** The view the builder opened in last (for as long as the page is open). */
+let lastMode: 'text' | 'flow' = 'text';
+
 class ExpressionBuilder {
   private readonly opts: ExpressionBuilderOptions;
   private readonly dialog: Dialog;
@@ -55,6 +72,12 @@ class ExpressionBuilder {
   private readonly prev: HTMLButtonElement;
   private readonly next: HTMLButtonElement;
   private readonly ok: HTMLButtonElement;
+  private readonly flow: FlowMode;
+  private readonly tabs: HTMLButtonElement[];
+  private readonly parens: HTMLButtonElement[] = [];
+  /** The keys note at the foot: the text's or the flow's. */
+  private readonly hint = h('span', { class: 'exprb__hint' });
+  private mode: 'text' | 'flow' = 'text';
   private index = 0;
   private error = false;
 
@@ -73,9 +96,19 @@ class ExpressionBuilder {
     this.tree = new BuilderTree({
       fields,
       onSelect: (item) => this.help.show(exprHelp(item.key, fields())),
-      onInsert: (item) => this.insert(item),
+      onInsert: (item) => (this.mode === 'flow' ? this.flow.add(item.key) : this.insert(item)),
+      extra: () => (this.mode === 'flow' ? [VALUES] : []),
     });
-    this.help = new HelpPane({ objects: opts.objects, onInsert: (text) => this.put(text, 'field', text.length) });
+    this.help = new HelpPane({ objects: opts.objects, onInsert: (text) => (this.mode === 'flow' ? this.flow.addText(text) : this.put(text, 'field', text.length)) });
+    this.flow = new FlowMode({
+      fields,
+      catalog: () => exprBuilderCatalog(fields(), ''),
+      text: () => this.editor.value,
+      setText: (text) => this.editor.setValue(text),
+      value: (text) => this.previewOf(text),
+      showHelp: (key) => this.help.show(key ? exprHelp(key, fields()) : null),
+      fail: (message) => this.fail(message),
+    });
     this.status = h('div', { class: 'exprb__status', role: 'status' });
     this.value = h('span', { class: 'exprb__pvalue' });
     this.count = h('span', { class: 'exprb__stepn' });
@@ -97,10 +130,26 @@ class ExpressionBuilder {
         const b = h('button', { class: `exprb__op${o.kind === 'keyword' ? ' exprb__op--word' : ''}`, type: 'button', title: tip ?? o.label }, o.label);
         // The editor keeps the focus and its selection.
         b.addEventListener('mousedown', (e) => e.preventDefault());
-        b.addEventListener('click', () => this.put(o.insert, o.kind, o.insert.length));
+        b.addEventListener('click', () => {
+          if (this.mode === 'text') this.put(o.insert, o.kind, o.insert.length);
+          else if (o.key) this.flow.add(o.key);
+        });
+        if (!o.key) this.parens.push(b);
         return b;
       }),
     );
+    // Metin | Akış: the same text, written or as nodes.
+    this.tabs = (['text', 'flow'] as const).map((m) => {
+      const b = h(
+        'button',
+        { class: 'exprb__tab', type: 'button', role: 'tab', 'aria-selected': 'false', title: m === 'text' ? 'İfadeyi yazarak düzenle' : 'İfadeyi düğümlerle düzenle' },
+        icon(m === 'text' ? 'expression' : 'modelNew', 15),
+        m === 'text' ? 'Metin' : 'Akış',
+      );
+      b.addEventListener('click', () => this.setMode(m));
+      return b;
+    });
+    const modes = h('div', { class: 'exprb__modes', role: 'tablist', 'aria-label': 'Görünüm' }, ...this.tabs);
     const objects = opts.objects;
     const preview = h(
       'div',
@@ -109,26 +158,73 @@ class ExpressionBuilder {
       this.value,
       objects && objects.count > 0 ? h('div', { class: 'exprb__step' }, h('span', { class: 'exprb__steplabel' }, 'Nesne'), this.prev, this.count, this.next, this.who) : null,
     );
-    const main = h('div', { class: 'exprb__main' }, ops, this.editor.el, this.status, preview);
+    this.flow.view.el.hidden = true;
+    this.flow.view.el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        this.accept();
+      }
+    });
+    const main = h('div', { class: 'exprb__main' }, modes, ops, this.editor.el, this.flow.view.el, this.status, preview);
     const title = opts.context ? `İfade oluşturucu · ${opts.context}` : 'İfade oluşturucu';
     this.dialog = new Dialog({
       title,
       className: 'dialog--exprb',
       stack: true,
-      content: [h('div', { class: 'exprb' }, main, this.tree.el, this.help.el)],
-      footer: [h('span', { class: 'exprb__hint' }, 'Ctrl+Boşluk: öneriler · Ctrl+Enter: Tamam'), h('div', { class: 'dialog__spacer' }), cancel, this.ok],
+      content: [h('div', { class: 'exprb' }, main, this.tree.el, h('div', { class: 'exprb__side' }, this.flow.inspector.el, this.help.el))],
+      footer: [this.hint, h('div', { class: 'dialog__spacer' }), cancel, this.ok],
       onClose: () => this.dispose(),
     });
     this.changed(this.editor.checked);
-    const end = this.editor.value.length;
-    this.editor.focus();
-    this.editor.input.setSelectionRange(end, end);
+    this.setMode(lastMode);
+    if (this.mode === 'text') {
+      const end = this.editor.value.length;
+      this.editor.focus();
+      this.editor.input.setSelectionRange(end, end);
+    }
   }
 
   private dispose(): void {
     this.editor.dispose();
     this.tree.dispose();
     this.help.dispose();
+    this.flow.dispose();
+  }
+
+  /** Shows the text or the flow of the same expression. */
+  private setMode(mode: 'text' | 'flow'): void {
+    this.mode = lastMode = mode;
+    this.dialog.el.querySelector('.dialog')?.classList.toggle('dialog--exprb-flow', mode === 'flow');
+    this.tabs.forEach((t, i) => t.setAttribute('aria-selected', String((i === 0) === (mode === 'text'))));
+    this.editor.el.hidden = mode !== 'text';
+    this.flow.view.el.hidden = mode !== 'flow';
+    this.parens.forEach((b) => (b.disabled = mode === 'flow'));
+    this.hint.textContent = mode === 'flow' ? 'Sürükle: bağla · Delete: düğümü sil · Ctrl+Z: geri al · Ctrl+Enter: Tamam' : 'Ctrl+Boşluk: öneriler · Ctrl+Enter: Tamam';
+    this.flow.inspector.el.hidden = true;
+    this.tree.refresh();
+    this.help.flow = mode === 'flow';
+    this.help.show(null);
+    if (mode === 'flow') {
+      this.flow.view.refit();
+      this.flow.refresh();
+      this.flow.view.focus();
+    } else {
+      this.editor.focus();
+    }
+  }
+
+  /** A change the flow could not make: in the status line until the next change. */
+  private fail(message: string): void {
+    this.status.className = 'exprb__status exprb__status--error';
+    this.status.replaceChildren(icon('error', 14), h('span', null, message));
+  }
+
+  /** An expression's value on the previewed object, as the preview writes it. */
+  private previewOf(text: string): string | undefined {
+    const objects = this.opts.objects;
+    if (!objects || objects.count === 0) return undefined;
+    const r = objects.value(text, this.index);
+    return 'error' in r ? undefined : exprPreview(r.value);
   }
 
   private changed(check: ExprCheck): void {
@@ -147,6 +243,7 @@ class ExpressionBuilder {
     }
     this.ok.disabled = this.error;
     this.refreshPreview();
+    if (this.mode === 'flow') this.flow.refresh();
   }
 
   private cursor(at: number): void {
@@ -161,6 +258,7 @@ class ExpressionBuilder {
     if (!n) return;
     this.index = (this.index + by + n) % n;
     this.refreshPreview();
+    if (this.mode === 'flow') this.flow.preview();
   }
 
   private refreshPreview(): void {
