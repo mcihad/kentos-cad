@@ -280,7 +280,7 @@ Temel kabul senaryosu: kullanıcı polygon aracını seçer, çizim alanında no
     - ~~Yeni proje notu, kaydedilmeyen veritabanı projesi üstünde “gönderilir” diyor (N1)~~: 28 Eylül'de düzeldi, web'in kuralıyla (`project/new.rs` `note`);
     - görünüş tercihleri (tema, vurgu, yazı tipi, yazı boyu) iki platformda başka anahtarlarda (A1, A6): 28 Eylül'de yanlış söz düzeldi (web'in ayar dosyası bunların masaüstüne taşınmadığını söyler; masaüstü dosyadaki web'e özgü değerleri adlarıyla söyler). Anahtarların birleşmesi aşağıdaki **Görünüş** maddesiyle birlikte;
     - ~~reddedilen yüklemeden sonra aynı istek anahtarı~~: 28 Eylül'de düzeldi; kalıcı retten sonra yeni anahtar, yanıt gelmeyince aynısı (ADR 0119);
-    - Buluta yükle'de proje türü, açıklama ve etiketler (Y1); sözler ve yüzdeli ilerleme (Y2–Y4);
+    - ~~Buluta yükle'de proje türü, açıklama ve etiketler (Y1); sözler ve yüzdeli ilerleme (Y2–Y4)~~: 28 Eylül'de bitti;
     - ayar pencerelerinde bölüm bölüm varsayılana döndürme (A2, P1), birbirine yol veren düğmeler (A3, P2), kaydedince varsayılanların açık projeyi değiştirmediği notu (A4), Uygulama ayarları'nın bölümlü düzeni (A5);
     - Fare ve klavye kısayolları penceresi: arama, fare tablosu, kategoriler, takma adlar, Türkçe klavye notu (H1, H2);
     - ~~küçük sözler ve ipuçları: veritabanı çakışması (Ç1), Katmanlar'da adın yolu ve menüdeki tuşlar (K1, K2), İşlemler (İ1–İ4), Başlangıç'ta ×'in ipucu (S1), Nokta hesabı çipinin ipucu, Koordinat listesi al'da virgülün ipucu~~ ve kaydedince varsayılanların notu (A4): 28 Eylül'de bitti.

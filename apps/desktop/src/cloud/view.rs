@@ -2,14 +2,19 @@
 //! “Bulut projeleri”, “Buluta yükle”, the conflict windows and an open's
 //! progress. The status bar's cells are cells.rs's.
 
-use iced::widget::{Column, button, column, container, row, scrollable, text, text_input};
-use iced::{Element, Fill};
+use iced::widget::{
+    Column, button, column, container, row, scrollable, text, text_editor, text_input,
+};
+use iced::{Element, Fill, Length};
 
 use kentos_contracts::ProjectStorage;
-use kentos_ui::widget::{Banner, Dialog, Form, RadioGroup, overlay, progress};
+use kentos_ui::theme::typography;
+use kentos_ui::widget::{Banner, Choice, Dialog, Form, RadioGroup, Select, overlay, progress};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Message};
+use crate::cloud::forms_plan::fields;
+use crate::cloud::plan::{PROJECT_TYPES, TYPE_HINT, type_label};
 use crate::cloud::revisions::AnswerKind;
 use crate::cloud::{Event, words};
 
@@ -159,7 +164,9 @@ impl App {
         ))
     }
 
-    /// “Buluta yükle”.
+    /// “Buluta yükle” (the web's UploadDialog.ts): the workspace, the name,
+    /// the storage mode for good, the catalog's type, description and tags,
+    /// what goes up, and how far it is.
     pub(crate) fn upload_view(&self) -> Element<'_, Message> {
         let (Some(u), Some(doc)) = (&self.cloud.upload, &self.document) else {
             return text("").into();
@@ -186,31 +193,61 @@ impl App {
         let name = text_input("Proje adı", &u.name)
             .on_input_maybe((!working).then_some(|t| cloud(Event::UploadName(t))))
             .on_submit(cloud(Event::UploadSubmit))
+            .size(typography::body())
             .padding([5, 8])
             .style(style::field::input);
-        let storage = RadioGroup::new(u.storage, |s| cloud(Event::UploadStorage(s)))
-            .option(
-                ProjectStorage::File,
-                "Dosya (her kayıt bir revizyon)",
-                "Proje sunucuda değişmez .kcad revizyonları olarak saklanır; Kaydet yeni bir revizyon yazar ve arada başkası kaydettiyse üzerine yazmaz.",
-            )
-            .option(
-                ProjectStorage::Database,
-                "Veritabanı (PostGIS)",
-                "Nesneler sunucudaki veritabanında tek tek saklanır; her değişiklik kendiliğinden kaydedilir ve erişimi olan herkes hemen görür.",
+        // The storage mode, for good (docs/adr/0031): each option says what it means.
+        let storage = [ProjectStorage::Database, ProjectStorage::File]
+            .into_iter()
+            .fold(
+                RadioGroup::new(u.storage, |s| cloud(Event::UploadStorage(s))),
+                |g, s| g.option(s, words::storage_title(s), words::storage_detail(s)),
             );
+        let kind = Select::new(
+            PROJECT_TYPES.map(|t| Choice::new(type_label(t))),
+            PROJECT_TYPES.iter().position(|t| *t == u.project_type),
+            |i| cloud(Event::UploadType(PROJECT_TYPES[i])),
+        )
+        .searchable(false);
+        let description = text_editor(&u.description)
+            .placeholder(fields::DESCRIPTION_PLACEHOLDER)
+            .on_action(|a| cloud(Event::UploadDescription(a)))
+            .height(Length::Fixed(typography::from_default(66.0)))
+            .size(typography::body())
+            .padding([5, 8])
+            .style(style::field::text_area);
+        let tags = text_input(fields::TAGS_PLACEHOLDER, &u.tags)
+            .on_input_maybe((!working).then_some(|t| cloud(Event::UploadTags(t))))
+            .on_submit(cloud(Event::UploadSubmit))
+            .size(typography::body())
+            .padding([5, 8])
+            .style(style::field::input);
+        let count = doc.entity_count();
+        let hint = match u.storage {
+            ProjectStorage::File => format!(
+                "{count} nesne, katman ağacı, proje ayarları ve proje stilleri tek bir .kcad dosyası olarak yüklenir ve projenin 1. revizyonu olur. Proje sizin olur; başkaları paylaşımla eklenir. Sonra Kaydet (Ctrl+S) yeni bir revizyon yazar; kendiliğinden kaydedilmez."
+            ),
+            ProjectStorage::Database => format!(
+                "{count} nesne, katman ağacı, proje ayarları ve proje stilleri yüklenir ve veritabanına tek işlemde aktarılır. Proje sizin olur; başkaları paylaşımla eklenir. Sonra her değişiklik kendiliğinden kaydedilir."
+            ),
+        };
         form = form
             .field("Proje adı", name)
-            .field("Saklama", storage)
-            .row(label::caption(format!(
-                "{} nesne, katman ağacı, proje ayarları ve proje stilleri yüklenir. Proje sizin olur; başkaları paylaşımla eklenir. Yüklenen proje sunucudan açılır.",
-                doc.entity_count()
-            )));
+            .row(label::body("Saklama biçimi (sonradan değişmez)").font(typography::ui_strong()))
+            .row(storage)
+            .field(fields::TYPE, kind)
+            .row(label::caption(TYPE_HINT).style(style::text::muted))
+            .field(fields::DESCRIPTION, description)
+            .field(fields::TAGS, tags)
+            .row(label::caption(hint));
+        // How far it is and what went wrong stay in view under the scrolling fields.
+        let mut status = Column::new().spacing(8);
         if let Some(stage) = &u.stage {
-            form = form.row(column![progress::bar(None), label::caption(stage.clone())].spacing(6));
+            status = status
+                .push(column![progress::bar(u.fraction), label::caption(stage.clone())].spacing(6));
         }
         if let Some(error) = &u.error {
-            form = form.row(Banner::error(error.as_str()));
+            status = status.push(Banner::error(error.as_str()));
         }
         let cancel = if working {
             cloud(Event::UploadStop)
@@ -219,13 +256,18 @@ impl App {
         };
         overlay::blocking(
             Dialog::new("Buluta yükle")
-                .push(form)
+                // The fields scroll in a low window; the stage and the buttons stay in view.
+                .scroll(form)
+                .push(status)
                 .action(secondary(
                     if working { "Durdur" } else { "Vazgeç" },
                     Some(cancel),
                 ))
                 .action(primary(
-                    "Buluta yükle",
+                    match u.storage {
+                        ProjectStorage::File => "Buluta dosya olarak kaydet",
+                        ProjectStorage::Database => "Buluta yükle",
+                    },
                     (!working && !u.tenants.is_empty()).then(|| cloud(Event::UploadSubmit)),
                 ))
                 .width(600.0),

@@ -41,7 +41,7 @@ pub use open::{Opened, Revision, Source, open};
 pub use replica::{Ended, Kept, Replica, ReplicaError, ReplicaStore};
 pub use saving::{
     Uploaded, conflicting_revision, project_create, save_revision, save_revision_watched,
-    upload_new,
+    upload_new, upload_new_watched,
 };
 pub use sync::{
     After, BaseMeta, BaseObject, BaseSnapshot, BaseStep, Conflict, Draft, DraftChange, DraftMeta,

@@ -1585,6 +1585,44 @@ fn the_upload_offers_only_workspaces_where_projects_can_be_opened() {
     assert!(!u.working());
 }
 
+/// The catalog's fields go with the new project (the web's `catalogFields`,
+/// parity-audit Y1): a change to them is a new upload, with a new key.
+#[test]
+fn the_upload_takes_the_catalog_s_type_description_and_tags() {
+    let mut app = signed_in();
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(
+        crate::files_testing::drawing(0),
+    )))));
+    let _ = app.run("cloud.upload");
+    let u = app.cloud.upload.as_ref().expect("the window");
+    assert_eq!(
+        u.project_type,
+        kentos_contracts::ProjectType::Cad,
+        "the web's default"
+    );
+    let key = |app: &App| {
+        app.cloud
+            .upload
+            .as_ref()
+            .map(|u| format!("{:?}", u.key_for_tests()))
+    };
+    let before = key(&app);
+    cloud(
+        &mut app,
+        Event::UploadType(kentos_contracts::ProjectType::Subdivision),
+    );
+    assert_ne!(key(&app), before, "a new upload");
+    let before = key(&app);
+    cloud(&mut app, Event::UploadTags("Kadıköy, 2026".into()));
+    assert_ne!(key(&app), before);
+    let u = app.cloud.upload.as_ref().expect("the window");
+    assert_eq!(u.project_type, kentos_contracts::ProjectType::Subdivision);
+    assert_eq!(
+        crate::cloud::forms_plan::parse_tags(&u.tags),
+        ["Kadıköy", "2026"]
+    );
+}
+
 #[test]
 fn a_refused_upload_names_the_object_and_a_good_one_opens_the_project() {
     let mut app = signed_in();
@@ -1609,11 +1647,29 @@ fn a_refused_upload_names_the_object_and_a_good_one_opens_the_project() {
         },
     );
     let u = app.cloud.upload.as_ref().expect("the window");
-    assert!(
-        u.stage
-            .as_deref()
-            .is_some_and(|s| s.starts_with("Buluta gönderiliyor"))
+    assert_eq!(u.stage.as_deref(), Some("Proje oluşturuluyor…"));
+    // How far the file is, then what the server does with it (the web's words).
+    cloud(
+        &mut app,
+        Event::UploadProgress {
+            id,
+            done: 4 * 1024 * 1024,
+            total: 10 * 1024 * 1024,
+        },
     );
+    let u = app.cloud.upload.as_ref().expect("the window");
+    assert_eq!(u.stage.as_deref(), Some("Yükleniyor: %40 (4 MB / 10 MB)"));
+    assert_eq!(u.fraction, Some(0.4));
+    cloud(
+        &mut app,
+        Event::UploadProgress {
+            id,
+            done: 10 * 1024 * 1024,
+            total: 10 * 1024 * 1024,
+        },
+    );
+    let u = app.cloud.upload.as_ref().expect("the window");
+    assert_eq!(u.stage.as_deref(), Some("Sunucu dosyayı doğruluyor…"));
     let mut refused = ApiFailure::new(
         422,
         "invalid",
@@ -2522,6 +2578,80 @@ fn tree_locked_screens() {
                 .save(&file)
                 .expect("writes the picture");
             println!("{}", file.display());
+        }
+    }
+}
+
+/// Buluta yükle for the owner (the web's UploadDialog, parity-audit Y1–Y4):
+/// a database project, a file project with the catalog's fields filled, and
+/// a file going up; `.run/shots/bulut-yukle-*`.
+/// `cargo test -p kentos-desktop cloud::tests::upload_screens -- --ignored --nocapture`
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn upload_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
+        for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
+            for name in ["veritabani", "dosya", "yukleniyor"] {
+                let mut app = signed_in();
+                let _ = app
+                    .settings
+                    .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+                app.apply_settings();
+                let _ = app.update(Message::Opened(Some(Ok(Box::new(
+                    crate::files_testing::drawing(0),
+                )))));
+                let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+                let mut update = |app: &mut App, message| {
+                    let _ = app.update(message);
+                };
+                snapshot.settle(&mut app, App::view, &mut update);
+                let _ = app.run("cloud.upload");
+                if name != "veritabani" {
+                    cloud(&mut app, Event::UploadStorage(ProjectStorage::File));
+                    cloud(&mut app, Event::UploadName("Kadıköy 1244 ada".into()));
+                    cloud(
+                        &mut app,
+                        Event::UploadType(kentos_contracts::ProjectType::Subdivision),
+                    );
+                    cloud(&mut app, Event::UploadTags("Kadıköy, 2026".into()));
+                }
+                if name == "yukleniyor" {
+                    let _ = app.update(crate::cloud::msg(Event::UploadSubmit));
+                    let (id, _) = app
+                        .cloud
+                        .upload
+                        .as_ref()
+                        .and_then(|u| u.request())
+                        .expect("working");
+                    cloud(
+                        &mut app,
+                        Event::UploadEncoded {
+                            id,
+                            result: Ok(Once::new(vec![1, 2, 3])),
+                        },
+                    );
+                    cloud(
+                        &mut app,
+                        Event::UploadProgress {
+                            id,
+                            done: 3 * 1024 * 1024,
+                            total: 7 * 1024 * 1024,
+                        },
+                    );
+                }
+                snapshot.settle(&mut app, App::view, &mut update);
+                let file = out.join(format!("bulut-yukle-{name}-{width}x{height}{suffix}.png"));
+                snapshot
+                    .render(app.view(), &app.theme())
+                    .save(&file)
+                    .expect("writes the picture");
+                println!("{}", file.display());
+            }
         }
     }
 }

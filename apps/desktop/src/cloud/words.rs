@@ -47,6 +47,18 @@ pub fn storage_title(storage: ProjectStorage) -> &'static str {
     }
 }
 
+/// What a storage mode means (the web's `STORAGE_TEXT` detail).
+pub fn storage_detail(storage: ProjectStorage) -> &'static str {
+    match storage {
+        ProjectStorage::File => {
+            "Proje sunucuda değişmez .kcad revizyonları olarak saklanır; her kayıt yeni bir revizyondur ve dayandığı revizyonla karşılaştırılır, arada başkası kaydettiyse üzerine yazılmaz. Paylaşım alıcıya dosya deposuna ayrı bir erişim vermez."
+        }
+        ProjectStorage::Database => {
+            "Nesneler sunucudaki veritabanında tek tek saklanır; her kayıt tek işlemde yazılır ve erişimi olan herkes hemen görür. Paylaşım alıcıya veritabanı hesabı ya da parolası vermez."
+        }
+    }
+}
+
 /// A list of the catalog: its name, its orders (the first is its own) and
 /// what it says empty (the web's `VIEWS`).
 pub struct ViewText {

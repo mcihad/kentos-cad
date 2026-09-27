@@ -158,17 +158,8 @@ async fn send_in_parts(
 }
 
 /// The file's bytes in an upload of the project, received and verified by
-/// the server. Only its own caller can commit or import it.
-async fn upload(
-    cloud: &Cloud,
-    tenant: Uuid,
-    project: Uuid,
-    bytes: Bytes,
-) -> Result<FileUpload, ApiFailure> {
-    upload_parted(cloud, tenant, project, bytes, PART, None).await
-}
-
-/// `upload`, a file larger than `part` in parts of that size.
+/// the server, a file larger than `part` in parts of that size. Only its
+/// own caller can commit or import it.
 async fn upload_parted(
     cloud: &Cloud,
     tenant: Uuid,
@@ -367,6 +358,19 @@ pub fn upload_new(
     bytes: Vec<u8>,
     key: Uuid,
 ) -> impl Future<Output = Result<(ProjectInfo, Uploaded), ApiFailure>> + Send + 'static {
+    upload_new_watched(cloud, tenant, create, bytes, key, None)
+}
+
+/// `upload_new`, reporting the bytes the server has, of all of them, to
+/// `progress` while the file goes up (the project is made by then).
+pub fn upload_new_watched(
+    cloud: &Cloud,
+    tenant: Uuid,
+    create: ProjectCreate,
+    bytes: Vec<u8>,
+    key: Uuid,
+    progress: Option<Progress>,
+) -> impl Future<Output = Result<(ProjectInfo, Uploaded), ApiFailure>> + Send + 'static {
     let cloud = cloud.clone();
     run(async move {
         // A file the server would never take creates no project.
@@ -380,7 +384,16 @@ pub fn upload_new(
                 format!("“{}” bir proje kimliği değil", made.id),
             )
         })?;
-        match fill(&cloud, tenant, project, storage, Bytes::from(bytes)).await {
+        match fill(
+            &cloud,
+            tenant,
+            project,
+            storage,
+            Bytes::from(bytes),
+            progress.as_ref(),
+        )
+        .await
+        {
             Ok(uploaded) => Ok((retrying(|| cloud.project(tenant, project)).await?, uploaded)),
             Err(failure) => {
                 // Refused for good: the empty project is not left behind. A passing failure keeps
@@ -410,6 +423,7 @@ async fn fill(
     project: Uuid,
     storage: ProjectStorage,
     bytes: Bytes,
+    progress: Option<&Progress>,
 ) -> Result<Uploaded, ApiFailure> {
     match storage {
         ProjectStorage::File => {
@@ -423,7 +437,7 @@ async fn fill(
                     replayed: true,
                 }));
             }
-            let sent = upload(cloud, tenant, project, bytes).await?;
+            let sent = upload_parted(cloud, tenant, project, bytes, PART, progress).await?;
             Ok(Uploaded::File(
                 commit(cloud, tenant, project, &sent, 0, &request_id()).await?,
             ))
@@ -438,7 +452,7 @@ async fn fill(
                     replayed: true,
                 }));
             }
-            let sent = upload(cloud, tenant, project, bytes).await?;
+            let sent = upload_parted(cloud, tenant, project, bytes, PART, progress).await?;
             let command = envelope(
                 tenant,
                 project,

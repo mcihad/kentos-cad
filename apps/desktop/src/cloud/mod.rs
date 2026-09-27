@@ -338,6 +338,16 @@ pub enum Event {
     UploadTenant(usize),
     UploadName(String),
     UploadStorage(kentos_contracts::ProjectStorage),
+    /// The catalog's fields of the new project: its type, description and tags.
+    UploadType(kentos_contracts::ProjectType),
+    UploadDescription(iced::widget::text_editor::Action),
+    UploadTags(String),
+    /// How much of the file the server has, of all of it.
+    UploadProgress {
+        id: u64,
+        done: u64,
+        total: u64,
+    },
     UploadSubmit,
     UploadStop,
     UploadEncoded {
@@ -601,6 +611,10 @@ impl App {
             Event::UploadTenant(_)
             | Event::UploadName(_)
             | Event::UploadStorage(_)
+            | Event::UploadType(_)
+            | Event::UploadDescription(_)
+            | Event::UploadTags(_)
+            | Event::UploadProgress { .. }
             | Event::UploadSubmit
             | Event::UploadStop
             | Event::UploadEncoded { .. }

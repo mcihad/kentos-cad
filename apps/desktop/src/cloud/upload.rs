@@ -13,15 +13,29 @@
 //! with the same project instead of making a second one. A refusal for good
 //! trashed the empty project, so the next try is a new upload with a new key.
 
+use std::sync::Arc;
+
 use iced::Task;
 use iced::futures::channel::mpsc;
+use iced::futures::stream;
 use iced::task::Handle;
-use kentos_cloud::{ApiFailure, Uploaded, project_create, upload_new};
-use kentos_contracts::{MembershipView, ProjectInfo, ProjectStorage};
+use iced::widget::text_editor;
+use kentos_cloud::{ApiFailure, Uploaded, project_create, upload_new_watched};
+use kentos_contracts::{MembershipView, ProjectInfo, ProjectStorage, ProjectType};
 use kentos_domain::{Slot, Uuid};
+use kentos_expression::js::text::trim;
 
 use crate::app::{App, Dialog, Message};
+use crate::cloud::forms_plan::parse_tags;
 use crate::cloud::{Event, Once, uuid, words};
+
+/// The stages the window says (the web's UploadDialog `STAGE_TEXT`).
+pub(crate) mod stages {
+    pub(crate) const CREATING: &str = "Proje oluşturuluyor…";
+    pub(crate) const ENCODING: &str = "Çizim KCAD v2 olarak hazırlanıyor…";
+    pub(crate) const VERIFYING: &str = "Sunucu dosyayı doğruluyor…";
+    pub(crate) const IMPORTING: &str = "Çizim veritabanına aktarılıyor (tek işlemde)…";
+}
 
 /// The upload window.
 pub struct Upload {
@@ -30,10 +44,15 @@ pub struct Upload {
     pub tenant: usize,
     pub name: String,
     pub storage: ProjectStorage,
+    /// The catalog's fields of the new project (the web's `catalogFields`).
+    pub project_type: ProjectType,
+    pub description: text_editor::Content,
+    pub tags: String,
     /// One per upload the user asked for; a retry after a failure keeps it.
     key: Uuid,
-    /// What it is doing now, and how far.
+    /// What it is doing now, and how far (0…1, when known).
     pub stage: Option<String>,
+    pub fraction: Option<f32>,
     pub error: Option<String>,
     /// The step on its way: its id and request.
     work: Option<(u64, Option<Handle>)>,
@@ -53,6 +72,12 @@ impl Upload {
     #[cfg(test)]
     pub(super) fn request(&self) -> Option<(u64, Uuid)> {
         self.work.as_ref().map(|(id, _)| (*id, self.key))
+    }
+
+    /// The upload's idempotency key (tests).
+    #[cfg(test)]
+    pub(super) fn key_for_tests(&self) -> Uuid {
+        self.key
     }
 
     /// Chooses the workspace, name and storage (Ayrı proje olarak kaydet);
@@ -111,8 +136,12 @@ impl App {
             tenant,
             name: doc.name().to_owned(),
             storage,
+            project_type: ProjectType::Cad,
+            description: text_editor::Content::new(),
+            tags: String::new(),
             key: Uuid::new_v4(),
             stage: None,
+            fraction: None,
             error: None,
             work: None,
             drawing: None,
@@ -143,6 +172,29 @@ impl App {
                     u.changed();
                 }
             }
+            // The catalog's fields are part of what the upload asks for: a change is a new upload.
+            Event::UploadType(kind) => {
+                if let Some(u) = self.cloud.upload.as_mut().filter(|u| !u.working()) {
+                    u.project_type = kind;
+                    u.changed();
+                }
+            }
+            Event::UploadDescription(action) => {
+                if let Some(u) = self.cloud.upload.as_mut().filter(|u| !u.working()) {
+                    let edits = action.is_edit();
+                    u.description.perform(action);
+                    if edits {
+                        u.changed();
+                    }
+                }
+            }
+            Event::UploadTags(tags) => {
+                if let Some(u) = self.cloud.upload.as_mut().filter(|u| !u.working()) {
+                    u.tags = tags;
+                    u.changed();
+                }
+            }
+            Event::UploadProgress { id, done, total } => self.upload_progress(id, done, total),
             Event::UploadSubmit => return self.upload_submit(),
             Event::UploadStop => self.upload_stop(),
             Event::UploadEncoded { id, result } => return self.upload_encoded(id, result),
@@ -171,7 +223,8 @@ impl App {
             return Task::none();
         }
         u.error = None;
-        u.stage = Some(format!("Çizim hazırlanıyor: {} nesne", doc.entity_count()));
+        u.stage = Some(stages::ENCODING.to_owned());
+        u.fraction = None;
         u.drawing = Some((doc.session, doc.model.revision()));
         u.work = Some((id, None));
         let model = doc.model.clone();
@@ -191,12 +244,47 @@ impl App {
         })
     }
 
+    /// How far the file is: a percentage and the sizes, then what the server
+    /// does with it (the web's `onProgress` and `STAGE_TEXT`).
+    fn upload_progress(&mut self, id: u64, done: u64, total: u64) {
+        let Some(u) = self
+            .cloud
+            .upload
+            .as_mut()
+            .filter(|u| u.work.as_ref().is_some_and(|(w, _)| *w == id))
+        else {
+            return;
+        };
+        if total > 0 && done < total {
+            #[allow(clippy::cast_precision_loss)]
+            let fraction = done as f64 / total as f64;
+            // JavaScript's Math.round: halves up.
+            let percent = (fraction * 100.0 + 0.5).floor();
+            u.fraction = Some(fraction as f32);
+            u.stage = Some(format!(
+                "Yükleniyor: %{percent} ({} / {})",
+                words::size_text(usize::try_from(done).unwrap_or(usize::MAX)),
+                words::size_text(usize::try_from(total).unwrap_or(usize::MAX))
+            ));
+        } else {
+            u.fraction = Some(1.0);
+            u.stage = Some(
+                match u.storage {
+                    ProjectStorage::File => stages::VERIFYING,
+                    ProjectStorage::Database => stages::IMPORTING,
+                }
+                .to_owned(),
+            );
+        }
+    }
+
     /// Vazgeç while it runs: the request is dropped.
     pub(crate) fn upload_stop(&mut self) {
         if let Some(u) = self.cloud.upload.as_mut()
             && u.work.take().is_some()
         {
             u.stage = None;
+            u.fraction = None;
             u.error = Some("Yükleme durduruldu. Sunucuda yarım bir proje kaldıysa Projelerim'de görünür; yeniden yükleyince aynı proje kullanılır.".to_owned());
         }
     }
@@ -218,6 +306,7 @@ impl App {
             Err(why) => {
                 u.work = None;
                 u.stage = None;
+                u.fraction = None;
                 u.error = Some(format!("Çizim yazılamadı: {why}"));
                 return Task::none();
             }
@@ -225,6 +314,7 @@ impl App {
         let Some(client) = client else {
             u.work = None;
             u.stage = None;
+            u.fraction = None;
             u.error = Some("Bulut oturumu kapandı; yeniden giriş yapın.".to_owned());
             return Task::none();
         };
@@ -232,17 +322,29 @@ impl App {
             u.work = None;
             return Task::none();
         };
-        let create = project_create(&doc.model, &u.name, u.storage);
-        u.stage = Some(format!(
-            "Buluta gönderiliyor: {} nesne, {:.1} MB",
-            doc.entity_count(),
-            bytes.len() as f64 / 1e6
-        ));
-        let (task, handle) = Task::perform(
-            upload_new(&client, tenant, create, bytes, u.key),
-            move |result| crate::cloud::msg(Event::Uploaded { id, result }),
-        )
-        .abortable();
+        // The catalog's fields go with the project (the web's `createInput`).
+        let mut create = project_create(&doc.model, &u.name, u.storage);
+        create.project_type = Some(u.project_type);
+        let description = trim(&u.description.text()).to_owned();
+        create.description = (!description.is_empty()).then_some(description);
+        let tags = parse_tags(&u.tags);
+        create.tags = (!tags.is_empty()).then_some(tags);
+        u.stage = Some(stages::CREATING.to_owned());
+        u.fraction = None;
+        // How far the file is: the project is made by the first part.
+        let (tell, told) = mpsc::unbounded();
+        let progress: kentos_cloud::Progress = Arc::new(move |done, total| {
+            let _ =
+                tell.unbounded_send(crate::cloud::msg(Event::UploadProgress { id, done, total }));
+        });
+        let upload = upload_new_watched(&client, tenant, create, bytes, u.key, Some(progress));
+        let done = stream::once(async move {
+            crate::cloud::msg(Event::Uploaded {
+                id,
+                result: upload.await,
+            })
+        });
+        let (task, handle) = Task::stream(stream::select(told, done)).abortable();
         u.work = Some((id, Some(handle.abort_on_drop())));
         task
     }
@@ -262,6 +364,7 @@ impl App {
         };
         u.work = None;
         u.stage = None;
+        u.fraction = None;
         let drawing = u.drawing;
         match result {
             Err(failure) => {
