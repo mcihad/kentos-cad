@@ -6,7 +6,10 @@
 //   node scripts/e2e/shots.mjs <group> [--only a,b] [--sizes 1440x900,1100x650] [--themes dark,light]
 //
 // Groups: processing (İşlemler: the dock, the menu, the tool and model dialogs and their states); layerstyle (Katman
-// stili: each renderer, its classes, the symbol slot, errors, applied).
+// stili: each renderer, its classes, the symbol slot, errors, applied); stylemanager (Stil yöneticisi: the tree, a
+// search, the kinds, system and own items, the menus, a delete question, applying to a selection, pick mode); legend
+// (Lejant: its options, a layer left out, a categorized layer); symboldesigner (Sembol tasarımcısı: every layer type's
+// form, the add menus, a child marker, ƒ on, the preview geometry, the unsaved question, inline and library symbols).
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { createServer } from 'vite';
@@ -252,6 +255,303 @@ const SCENES = {
   ],
 };
 
+SCENES.stylemanager = [
+  { id: 'open', open: (ui) => openManager(ui) },
+  {
+    id: 'mpyy-expanded',
+    open: async (ui) => {
+      await openManager(ui);
+      await ui.eval(treeCaret('MPYY'));
+      await ui.sleep(300);
+      await ui.clickText('.dialog--styles .tree__row', 'Piktogramlar');
+      await ui.sleep(700);
+    },
+  },
+  {
+    id: 'search',
+    open: async (ui) => {
+      await openManager(ui);
+      await ui.clickSel('.dialog--styles .smgr__search');
+      await ui.type('konut');
+      await ui.sleep(700);
+    },
+  },
+  {
+    id: 'kind-marker',
+    open: async (ui) => {
+      await openManager(ui);
+      await ui.clickText('.dialog--styles .smgr__kinds .seg__opt', 'İşaret');
+      await ui.sleep(700);
+    },
+  },
+  {
+    id: 'kind-drawings',
+    open: async (ui) => {
+      await openManager(ui);
+      await ui.clickText('.dialog--styles .smgr__kinds .seg__opt', 'Çizim');
+      await ui.sleep(500);
+      await ui.clickSel('.dialog--styles .scard');
+      await ui.sleep(500);
+    },
+  },
+  {
+    id: 'system-symbol-selected',
+    open: async (ui) => {
+      await openManager(ui);
+      await ui.clickSel('.dialog--styles .scard');
+      await ui.sleep(500);
+    },
+  },
+  {
+    id: 'copy-menu',
+    open: async (ui) => {
+      await openManager(ui);
+      await ui.clickSel('.dialog--styles .scard');
+      await ui.clickText('.dialog--styles .smgr__actions .btn', 'Kopyala');
+      await ui.sleep(300);
+    },
+  },
+  {
+    id: 'user-symbol-selected',
+    open: async (ui) => {
+      await openManager(ui);
+      await copyFirstToMine(ui);
+    },
+    close: async (ui) => (await ui.escapeAll(2), await ui.eval(REMOVE_MINE)),
+  },
+  {
+    id: 'delete-question',
+    open: async (ui) => {
+      await openManager(ui);
+      await copyFirstToMine(ui);
+      await ui.clickText('.dialog--styles .smgr__actions .btn', 'Sil');
+      await ui.waitFor(`document.querySelectorAll('.dialog').length >= 2`);
+      await ui.sleep(300);
+    },
+    close: async (ui) => (await ui.escapeAll(3), await ui.eval(REMOVE_MINE)),
+  },
+  {
+    id: 'user-category-menu',
+    open: async (ui) => {
+      await openManager(ui);
+      await copyFirstToMine(ui);
+      const at = await ui.eval(`(() => { const r = [...document.querySelectorAll('.dialog--styles .tree__row')].find((e) => e.textContent.trim().startsWith('Kitaplığım')); const b = r.getBoundingClientRect(); return [Math.round(b.left + b.width / 2), Math.round(b.top + b.height / 2)]; })()`);
+      await ui.contextClick(...at);
+      await ui.sleep(300);
+    },
+    close: async (ui) => (await ui.escapeAll(3), await ui.eval(REMOVE_MINE)),
+  },
+  {
+    id: 'new-menu',
+    open: async (ui) => {
+      await openManager(ui);
+      await ui.clickText('.dialog--styles .btn', 'Yeni sembol');
+      await ui.sleep(300);
+    },
+  },
+  {
+    id: 'import-menu',
+    open: async (ui) => {
+      await openManager(ui);
+      await ui.clickText('.dialog--styles .btn', 'İçe aktar');
+      await ui.sleep(300);
+    },
+  },
+  {
+    id: 'export-menu',
+    open: async (ui) => {
+      await openManager(ui);
+      await ui.clickText('.dialog--styles .btn', 'Dışa aktar');
+      await ui.sleep(300);
+    },
+  },
+  {
+    id: 'apply-to-selection',
+    open: async (ui) => {
+      await ui.eval(SELECT_PARCELS);
+      await openManager(ui);
+      await ui.clickText('.dialog--styles .smgr__kinds .seg__opt', 'Alan');
+      await ui.sleep(400);
+      await ui.clickSel('.dialog--styles .scard');
+      await ui.clickText('.dialog--styles .smgr__actions .btn', 'Seçili nesnelere uygula');
+      await ui.sleep(600);
+    },
+    close: async (ui) => (await ui.escapeAll(2), await ui.eval(`(() => { const d = window.kentos.doc; while (d.canUndo.value) d.undo(); })()`)),
+  },
+  {
+    id: 'pick-marker',
+    open: async (ui) => {
+      await ui.eval(`import('/src/ui/style/StyleManager.ts').then((m) => m.openStyleManager(window.kentos, { pick: { kind: 'marker', title: 'Nokta sembolü seçin', onPick: () => {} } }))`);
+      await ui.waitFor(`!!document.querySelector('.dialog--styles .scard')`);
+      await ui.sleep(700);
+      await ui.clickSel('.dialog--styles .scard');
+      await ui.sleep(400);
+    },
+  },
+];
+
+SCENES.legend = [
+  { id: 'open', open: (ui) => openLegend(ui) },
+  { id: 'all-layers', open: async (ui) => (await openLegend(ui), await ui.clickText('.dialog--legend label', 'Yalnızca görünen katmanlar'), await ui.sleep(500)) },
+  { id: 'no-headings', open: async (ui) => (await openLegend(ui), await ui.clickText('.dialog--legend label', 'Katman adlarını başlık yaz'), await ui.sleep(500)) },
+  {
+    id: 'layer-left-out',
+    open: async (ui) => (await openLegend(ui), await ui.eval(`document.querySelector('.dialog--legend .leg__head input')?.click()`), await ui.sleep(500)),
+  },
+  {
+    id: 'categorized-layer',
+    open: async (ui) => {
+      await ui.eval(`(() => {
+        const k = window.kentos;
+        const fill = (c) => ({ type: 'fill', layers: [{ id: '0', type: 'simpleFill', color: c }, { id: '1', type: 'simpleLine', color: 'ink', width: 0.2 }] });
+        k.doc.setLayerStyle('parsel', { renderer: { type: 'categorized', expr: 'Nitelik', categories: [
+          { value: 'Arsa', label: 'Arsa', symbols: { fill: fill('#EDC948') } },
+          { value: 'Kargir ev ve arsası', label: 'Kargir ev ve arsası', symbols: { fill: fill('#E15759') } },
+        ] } });
+      })()`);
+      await openLegend(ui);
+    },
+    close: async (ui) => (await ui.escapeAll(2), await ui.eval(`(() => { const d = window.kentos.doc; while (d.canUndo.value) d.undo(); })()`)),
+  },
+];
+
+SCENES.symboldesigner = [
+  ...[
+    ['fill', 'Dolgu', 'layer-simple-fill'],
+    ['fill', 'Tarama', 'layer-hatch-fill'],
+    ['fill', 'Desen', 'layer-pattern-fill'],
+    ['fill', 'Görüntü dolgusu', 'layer-image-fill'],
+    ['fill', 'İç noktada işaret', 'layer-centroid-marker'],
+    ['line', 'Çizgi', 'layer-simple-line'],
+    ['line', 'Çizgi boyunca işaret', 'layer-marker-line'],
+    ['marker', 'Şekil', 'layer-shape'],
+    ['marker', 'Yazı', 'layer-text'],
+    ['marker', 'SVG çizimi', 'layer-svg'],
+    ['marker', 'Görüntü', 'layer-raster'],
+  ].map(([kind, label, id]) => ({
+    id,
+    open: async (ui) => {
+      await openDesigner(ui, kind);
+      // The new symbol starts with its kind's first layer; any other is added and shown.
+      if (!(await ui.eval(`document.querySelector('.dialog--sdesign .sdes__row[aria-selected="true"]')?.textContent.includes(${JSON.stringify(label)})`))) {
+        await ui.clickText('.dialog--sdesign .btn', 'Katman ekle');
+        await ui.clickText('.menu .menu__item', label);
+        await ui.sleep(500);
+      }
+    },
+    close: closeDesigner,
+  })),
+  {
+    id: 'add-layer-menu',
+    open: async (ui) => (await openDesigner(ui, 'fill'), await ui.clickText('.dialog--sdesign .btn', 'Katman ekle'), await ui.sleep(300)),
+    close: closeDesigner,
+  },
+  {
+    id: 'add-layer-menu-into-marker',
+    open: async (ui) => {
+      await openDesigner(ui, 'line');
+      await ui.clickText('.dialog--sdesign .btn', 'Katman ekle');
+      await ui.clickText('.menu .menu__item', 'Çizgi boyunca işaret');
+      await ui.sleep(400);
+      await ui.clickText('.dialog--sdesign .btn', 'Katman ekle');
+      await ui.sleep(300);
+    },
+    close: closeDesigner,
+  },
+  {
+    id: 'child-marker-layer',
+    open: async (ui) => {
+      await openDesigner(ui, 'line');
+      await ui.clickText('.dialog--sdesign .btn', 'Katman ekle');
+      await ui.clickText('.menu .menu__item', 'Çizgi boyunca işaret');
+      await ui.sleep(400);
+      await ui.clickSel('.dialog--sdesign .sdes__row--child');
+      await ui.sleep(500);
+    },
+    close: closeDesigner,
+  },
+  {
+    id: 'data-defined-on',
+    open: async (ui) => (await openDesigner(ui, 'fill'), await ui.clickSel('.dialog--sdesign .sdf__fx'), await ui.sleep(500)),
+    close: closeDesigner,
+  },
+  {
+    id: 'preview-area-with-hole',
+    open: async (ui) => (await openDesigner(ui, 'fill'), await ui.clickText('.dialog--sdesign .seg__opt', 'Adalı alan'), await ui.sleep(500)),
+    close: closeDesigner,
+  },
+  {
+    id: 'unsaved-close-question',
+    open: async (ui) => {
+      await openDesigner(ui, 'fill');
+      await ui.eval(`(() => { const i = document.querySelector('.dialog--sdesign input[aria-label="Sembol adı"]'); i.value = 'Bahçe alanı'; i.dispatchEvent(new Event('input')); })()`);
+      await ui.sleep(200);
+      await ui.escapeAll(1);
+      await ui.waitFor(`document.querySelectorAll('.dialog').length >= 2`);
+      await ui.sleep(300);
+    },
+    close: closeDesigner,
+  },
+  {
+    id: 'inline-from-layer-style',
+    open: async (ui) => {
+      await ui.eval(
+        `import('/src/ui/style/SymbolDesigner.ts').then((m) => m.openSymbolDesigner(window.kentos, { inline: { symbol: { type: 'fill', layers: [{ id: '0', type: 'hatchFill', color: '#4E79A7', spacing: 2, angle: 45, width: 0.2 }, { id: '1', type: 'simpleLine', color: 'ink', width: 0.35 }] }, title: 'Tek sembol (alan)', onDone: () => {} } }))`,
+      );
+      await ui.waitFor(`!!document.querySelector('.dialog--sdesign .sdes__row')`);
+      await ui.sleep(700);
+    },
+    close: closeDesigner,
+  },
+  {
+    id: 'library-symbol',
+    open: async (ui) => {
+      await ui.eval(`(() => { const lib = window.kentos.styles.library; const c = lib.copy('temel.alan.capraz', 'user'); window.__shotCopy = c.id; })()`);
+      await ui.eval(`import('/src/ui/style/SymbolDesigner.ts').then((m) => m.openSymbolDesigner(window.kentos, { id: window.__shotCopy }))`);
+      await ui.waitFor(`!!document.querySelector('.dialog--sdesign .sdes__row')`);
+      await ui.sleep(700);
+    },
+    close: async (ui) => (await closeDesigner(ui), await ui.eval(REMOVE_MINE)),
+  },
+];
+
+async function openLegend(ui) {
+  await ui.eval(`window.kentos.commands.execute('style.legend')`);
+  await ui.waitFor(`!!document.querySelector('.dialog--legend')`);
+  await ui.sleep(700);
+}
+async function openDesigner(ui, kind) {
+  await ui.eval(`import('/src/ui/style/SymbolDesigner.ts').then((m) => m.openSymbolDesigner(window.kentos, { newKind: ${JSON.stringify(kind)} }))`);
+  await ui.waitFor(`!!document.querySelector('.dialog--sdesign .sdes__row')`);
+  await ui.sleep(600);
+}
+/** The designer closed without saving: Esc, and the unsaved question's "don't save" when it asks. */
+async function closeDesigner(ui) {
+  for (let i = 0; i < 4 && (await ui.eval(`!!document.querySelector('.dialog')`)); i++) {
+    const asked = await ui.eval(`[...document.querySelectorAll('.dialog .btn')].find((b) => /Kaydetmeden|Uygulamadan/.test(b.textContent))`);
+    if (asked) await ui.eval(`[...document.querySelectorAll('.dialog .btn')].find((b) => /Kaydetmeden|Uygulamadan/.test(b.textContent)).click()`);
+    else await ui.escapeAll(1);
+    await ui.sleep(250);
+  }
+}
+
+async function openManager(ui) {
+  await ui.eval(`window.kentos.commands.execute('style.manager')`);
+  await ui.waitFor(`!!document.querySelector('.dialog--styles .scard')`);
+  await ui.sleep(700);
+}
+/** Clicks the expand caret of a tree row by its leading text. */
+const treeCaret = (text) => `[...document.querySelectorAll('.dialog--styles .tree__row')].find((e) => e.textContent.trim().startsWith(${JSON.stringify(text)}))?.querySelector('.tree__caret')?.click()`;
+/** The first system symbol copied to Kitaplığım and shown (its fields become editable). */
+async function copyFirstToMine(ui) {
+  await ui.clickSel('.dialog--styles .scard');
+  await ui.clickText('.dialog--styles .smgr__actions .btn', 'Kopyala');
+  await ui.clickText('.menu .menu__item', 'Kitaplığıma');
+  await ui.sleep(700);
+}
+/** Kitaplığım emptied again after a scene that copied into it. */
+const REMOVE_MINE = `(() => { const lib = window.kentos.styles.library; for (const i of lib.items('user')) lib.remove(i.id); })()`;
+
 /** Katman stili on a layer of the demo drawing, on one kind of renderer. */
 async function openStyled(ui, layerId, kind) {
   await ui.eval(`import('/src/ui/style/LayerStyleDialog.ts').then((m) => m.openLayerStyle(window.kentos, ${JSON.stringify(layerId)}))`);
@@ -316,7 +616,9 @@ process.exit(failed.length ? 1 : 0);
 
 /** Actions the scenes use on page `b`. */
 function helpers(b) {
-  const centre = (expr) => b.eval(`(() => { const el = ${expr}; if (!el) return null; const r = el.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+  // Scrolled into view first, as a user would: a button below a pane's fold is clicked where it shows.
+  const centre = (expr) =>
+    b.eval(`(() => { const el = ${expr}; if (!el) return null; el.scrollIntoView({ block: 'nearest' }); const r = el.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
   const bySel = (sel) => `document.querySelector(${JSON.stringify(sel)})`;
   const byText = (sel, text) => `[...document.querySelectorAll(${JSON.stringify(sel)})].find((e) => e.textContent.includes(${JSON.stringify(text)}))`;
   const ui = {
@@ -342,6 +644,13 @@ function helpers(b) {
       if (!at) throw new Error(`yok: ${sel} “${text}”`);
       await b.move(...at);
       await sleep(500);
+    },
+    /** A right click (a context menu). */
+    contextClick: async (x, y) => {
+      await b.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y });
+      await b.send('Input.dispatchMouseEvent', { type: 'mousePressed', x, y, button: 'right', buttons: 2, clickCount: 1 });
+      await b.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: 'right', buttons: 0, clickCount: 1 });
+      await sleep(250);
     },
     escapeAll: async (times) => {
       for (let i = 0; i < times; i++) {
