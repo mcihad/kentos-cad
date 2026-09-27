@@ -300,3 +300,27 @@ fn the_store_follows_the_document_as_a_fresh_one_would() {
         "the hidden layer's area is not picked"
     );
 }
+
+#[test]
+fn the_pointer_is_a_pick_for_objects_and_a_cross_for_points() {
+    use kentos_interaction::Cursor;
+    let mut b = objects();
+    assert_eq!(
+        b.session.cursor(),
+        Cursor::Pick,
+        "the select tool picks (the web's)"
+    );
+    for (tool, cursor) in [
+        ("line", Cursor::Cross),
+        ("erase", Cursor::Pick),
+        ("trim", Cursor::Pick),
+        ("offset", Cursor::Pick),
+        ("hatch", Cursor::Pick),
+        ("move", Cursor::Cross),
+        ("pan", Cursor::Grab),
+    ] {
+        b.start(tool);
+        assert_eq!(b.session.cursor(), cursor, "{tool}");
+        b.run(|s, cx| s.cancel(cx));
+    }
+}

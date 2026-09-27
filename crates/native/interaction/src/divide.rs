@@ -27,7 +27,9 @@ use crate::format::Format;
 use crate::log::Level;
 use crate::points::{self, wire};
 use crate::prompt::{Prompt, upper_tr};
-use crate::tool::{Context, Flow, Marker, MarkerShape, Memory, Pointer, Preview, Tone, Tool};
+use crate::tool::{
+    Context, Cursor, Flow, Marker, MarkerShape, Memory, Pointer, Preview, Tone, Tool,
+};
 
 /// The divide tool's id: its command is `tool.divide`.
 pub const ID: &str = "divide";
@@ -146,6 +148,11 @@ impl Divide {
 }
 
 impl Tool for Divide {
+    /// An object is picked (the web's `cursor = 'pick'`).
+    fn cursor(&self) -> Cursor {
+        Cursor::Pick
+    }
+
     fn id(&self) -> &'static str {
         ID
     }

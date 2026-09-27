@@ -21,7 +21,7 @@ use crate::Vec2;
 use crate::format::Format;
 use crate::prompt::Prompt;
 use crate::select::SelectBox;
-use crate::tool::{Context, Flow, Pointer, Preview, Tool, ViewChange};
+use crate::tool::{Context, Cursor, Flow, Pointer, Preview, Tool, ViewChange};
 
 /// The tool's id, as the traces would read it.
 pub const ID: &str = "pickObjects";
@@ -107,6 +107,11 @@ impl PickObjects {
 }
 
 impl Tool for PickObjects {
+    /// An object is picked (the web's `cursor = 'pick'`).
+    fn cursor(&self) -> Cursor {
+        Cursor::Pick
+    }
+
     fn id(&self) -> &'static str {
         ID
     }

@@ -27,7 +27,7 @@ use crate::edge::{self, Outline};
 use crate::format::Format;
 use crate::log::Level;
 use crate::prompt::{Prompt, upper_tr};
-use crate::tool::{Context, Flow, Memory, Pointer, Preview, Tag, Tone, Tool};
+use crate::tool::{Context, Cursor, Flow, Memory, Pointer, Preview, Tag, Tone, Tool};
 
 /// The offset tool's id: its command is `tool.offset`.
 pub const ID: &str = "offset";
@@ -104,6 +104,11 @@ impl Offset {
 }
 
 impl Tool for Offset {
+    /// An object is picked (the web's `cursor = 'pick'`).
+    fn cursor(&self) -> Cursor {
+        Cursor::Pick
+    }
+
     fn id(&self) -> &'static str {
         ID
     }
