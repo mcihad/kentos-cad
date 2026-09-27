@@ -177,7 +177,38 @@ pub struct Viewport {
     scene: RefCell<Option<Cached>>,
     /// The highlight parts as last built, and what they were built from.
     highlight: RefCell<highlight::Highlighted>,
+    /// Whether the grid is drawn (Izgara, F7; docs/adr/0080), and the
+    /// grid as last built.
+    pub grid_shown: bool,
+    grid: RefCell<Option<Grid>>,
     status: Arc<Mutex<Status>>,
+}
+
+/// The grid lines on the GPU and what they were built for: the world box
+/// they span (three views wide around the view then), their spacing, the
+/// origin and the drawing area's ground (the web's `GridExtent`).
+struct Grid {
+    area: Bounds,
+    spacing: (f64, f64),
+    origin: Vec2,
+    canvas: Canvas,
+    part: Arc<ScenePart>,
+}
+
+/// How far apart minor grid lines stay on screen, at least (the web's `minPx`).
+const GRID_MIN_PX: f64 = 14.0;
+
+/// The grid's minor and major lines on a ground (the web's
+/// `--canvas-grid-minor` and `--canvas-grid-major`): a trace of the ink.
+fn grid_colors(canvas: Canvas) -> [Rgba8; 2] {
+    let ink = match canvas {
+        Canvas::Paper => Rgba8::rgb(0, 0, 0),
+        _ => Rgba8::rgb(0xff, 0xff, 0xff),
+    };
+    [
+        Rgba8([ink.0[0], ink.0[1], ink.0[2], 0x0a]),
+        Rgba8([ink.0[0], ink.0[1], ink.0[2], 0x17]),
+    ]
 }
 
 /// The scene as last built, and what it was built from.
@@ -236,8 +267,51 @@ impl Viewport {
             id: NEXT_VIEW.fetch_add(1, Ordering::Relaxed),
             scene: RefCell::new(None),
             highlight: RefCell::new(highlight::Highlighted::default()),
+            grid_shown: true,
+            grid: RefCell::new(None),
             status: Arc::new(Mutex::new(Status::default())),
         }
+    }
+
+    /// The grid for the view now: the one built while it still covers the
+    /// view with this zoom's spacing, origin and ground, so panning and
+    /// zooming inside it upload nothing; else new lines three views wide
+    /// around the view (the web's `gridExtent`).
+    fn grid(&self, canvas: Canvas, origin: Vec2) -> Arc<ScenePart> {
+        let view = self.camera.visible_bounds();
+        let spacing = scene::grid_spacing(self.camera.scale, GRID_MIN_PX);
+        let mut cache = self.grid.borrow_mut();
+        let covers = cache.as_ref().is_some_and(|g| {
+            g.spacing == spacing
+                && g.origin == origin
+                && g.canvas == canvas
+                && view.min_x >= g.area.min_x
+                && view.min_y >= g.area.min_y
+                && view.max_x <= g.area.max_x
+                && view.max_y <= g.area.max_y
+        });
+        if !covers {
+            let (w, h) = (view.max_x - view.min_x, view.max_y - view.min_y);
+            let area = Bounds {
+                min_x: view.min_x - w,
+                min_y: view.min_y - h,
+                max_x: view.max_x + w,
+                max_y: view.max_y + h,
+            };
+            *cache = Some(Grid {
+                area,
+                spacing,
+                origin,
+                canvas,
+                part: Arc::new(scene::build_grid(
+                    &area,
+                    spacing,
+                    origin,
+                    grid_colors(canvas),
+                )),
+            });
+        }
+        cache.as_ref().map_or_else(Arc::default, |g| g.part.clone())
     }
 
     /// A drawing was opened: its scene is built afresh and the view goes to
@@ -343,9 +417,15 @@ impl Viewport {
         let (origin, fixed, curves, construction, clip) =
             self.scene(doc, canvas, &palette, &settings);
         let (selected, hovered) = self.highlights(doc, selection, accent, &fixed, &curves, &clip);
+        // The grid under everything (Izgara, F7).
+        let grid = if self.grid_shown {
+            self.grid(canvas, origin)
+        } else {
+            Arc::default()
+        };
         let area: Element<'a, Message> = shader(Program {
             id: self.id,
-            parts: [fixed, curves, construction, selected, hovered],
+            parts: [grid, fixed, curves, construction, selected, hovered],
             origin,
             camera: self.camera,
             settings,
@@ -578,7 +658,8 @@ pub fn mark_colors(canvas: impl Into<Canvas>) -> MarkColors {
 /// The shader widget's program: a frame's inputs, and the pointer's gestures.
 struct Program {
     id: ViewId,
-    parts: [Arc<ScenePart>; 5],
+    /// The grid, the drawing's parts and the highlights, bottom first.
+    parts: [Arc<ScenePart>; 6],
     origin: Vec2,
     camera: Camera,
     settings: RenderSettings,
@@ -801,7 +882,7 @@ pub fn gesture(
 /// One frame of the drawing area, handed to the renderer.
 pub struct Frame {
     id: ViewId,
-    parts: [Arc<ScenePart>; 5],
+    parts: [Arc<ScenePart>; 6],
     origin: Vec2,
     camera: Camera,
     settings: RenderSettings,

@@ -206,6 +206,68 @@ fn construction_line(b: &mut Builder, entity: &Entity, clip: &Bounds, color: Rgb
     }
 }
 
+/// The grid's line spacing at `scale` (pixels per world unit), minor and
+/// major: the smallest 1-2-5 step that keeps minor lines at least `min_px`
+/// apart on screen; a major every five minors, four after a 5, so majors
+/// land on round values (the web's `gridSpacing`, render/grid.ts).
+pub fn grid_spacing(scale: f64, min_px: f64) -> (f64, f64) {
+    let target = min_px / scale;
+    let p = 10f64.powf(target.log10().floor());
+    let m = [1.0, 2.0, 5.0, 10.0]
+        .into_iter()
+        .find(|k| k * p >= target)
+        .unwrap_or(10.0);
+    let minor = m * p;
+    (minor, minor * if m == 5.0 { 4.0 } else { 5.0 })
+}
+
+/// Grid lines across `area` (absolute world coordinates), on round world
+/// values so that they fall on round TM values, relative to `origin` (the
+/// web's `buildGrid`): the minor lines one drawn layer, the major lines the
+/// next, in `colors` (minor, major).
+pub fn build_grid(
+    area: &Bounds,
+    spacing: (f64, f64),
+    origin: Vec2,
+    colors: [Rgba8; 2],
+) -> ScenePart {
+    let (minor, major) = spacing;
+    let mut b = Builder::new(origin);
+    if !(minor > 0.0 && minor.is_finite()) {
+        return b.into_part(0.0, BTreeMap::new());
+    }
+    let is_major = |v: f64| (v / major - (v / major).round()).abs() < 1e-6;
+    let x0 = (area.min_x / minor).floor() * minor;
+    let y0 = (area.min_y / minor).floor() * minor;
+    for (major_layer, color) in [(false, colors[0]), (true, colors[1])] {
+        let start = b.start();
+        let mut i = 0u32;
+        loop {
+            let x = x0 + f64::from(i) * minor;
+            if x > area.max_x {
+                break;
+            }
+            if is_major(x) == major_layer {
+                b.segment(Vec2::new(x, area.min_y), Vec2::new(x, area.max_y), color);
+            }
+            i += 1;
+        }
+        let mut i = 0u32;
+        loop {
+            let y = y0 + f64::from(i) * minor;
+            if y > area.max_y {
+                break;
+            }
+            if is_major(y) == major_layer {
+                b.segment(Vec2::new(area.min_x, y), Vec2::new(area.max_x, y), color);
+            }
+            i += 1;
+        }
+        b.finish(start);
+    }
+    b.into_part(0.0, BTreeMap::new())
+}
+
 /// Infinite lines and rays, clipped to `clip` (the web clips them to the
 /// view; a host keeps a box around the view and builds this part again when
 /// the view leaves it). Layers as the other parts list them.

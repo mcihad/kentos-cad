@@ -618,7 +618,24 @@ impl App {
             })
     }
 
+    /// The status bar, giving way in a narrow window as the web's does
+    /// (`StatusBar.ts` STEPS, DESIGN.md §7.7): the least needed cell first:
+    /// the engine's name, the coordinate system (also in the tab row), the
+    /// screen and plot scales, the cloud cells' words (their dots stay), the
+    /// mode's name, the drafting aids' padding. Every cell keeps its tip.
     fn status_bar(&self) -> Element<'_, Message> {
+        container(iced::widget::responsive(move |size| {
+            let fit = (0..=STATUS_STEPS)
+                .find(|&level| self.status_width(level) <= size.width)
+                .unwrap_or(STATUS_STEPS);
+            self.status_bar_at(fit)
+        }))
+        .height(kentos_ui::widget::status_bar::height())
+        .into()
+    }
+
+    /// The status bar with `fit` of its narrow-window steps taken.
+    fn status_bar_at(&self, fit: u8) -> Element<'_, Message> {
         let coordinates = match (&self.document, self.viewport.cursor) {
             (Some(doc), Some(p)) => {
                 // Display only (CLAUDE.md §5): the project's length decimals, Y (east)
@@ -645,6 +662,11 @@ impl App {
                 .tip("Seçili nesne sayısı; Esc seçimi kaldırır"),
             );
         }
+        // The drafting aids (the web's `status__toggles`): a lamp each, lit while on.
+        bar = bar.separator();
+        for (id, name) in STATUS_AIDS {
+            bar = bar.push(self.status_aid(id, name, fit >= 6));
+        }
         if let Some(doc) = &self.document {
             let settings = doc.settings();
             let crs = match crs_name(settings.srid) {
@@ -652,27 +674,28 @@ impl App {
                 None => format!("EPSG:{}", settings.srid),
             };
             let objects = format!("{} nesne", doc.entity_count());
-            bar = bar
-                .separator()
-                .push(
-                    Readout::new(label::muted(format!(
-                        "Ekran 1:{}",
-                        thousands(self.viewport.camera.screen_scale())
-                    )))
-                    .tip(Tip::new("Ekran ölçeği").body(
-                        "Görünümün 96 dpi ekrandaki yaklaşık ölçeği. Pafta ölçeği proje ayarıdır.",
-                    )),
-                )
-                .separator()
-                .push(
-                    Readout::new(label::muted(format!("1:{}", settings.plot_scale)))
-                        .tip("Pafta ölçeği (proje ayarı)"),
-                )
-                .separator()
-                .push(self.mode_cell())
-                .separator()
+            if fit < 3 {
+                bar = bar
+                    .separator()
+                    .push(
+                        Readout::new(label::muted(format!(
+                            "Ekran 1:{}",
+                            thousands(self.viewport.camera.screen_scale())
+                        )))
+                        .tip(Tip::new("Ekran ölçeği").body(
+                            "Görünümün 96 dpi ekrandaki yaklaşık ölçeği. Pafta ölçeği proje ayarıdır.",
+                        )),
+                    )
+                    .separator()
+                    .push(
+                        Readout::new(label::muted(format!("1:{}", settings.plot_scale)))
+                            .tip("Pafta ölçeği (proje ayarı)"),
+                    );
+            }
+            bar = bar.separator().push(self.mode_cell(fit < 5));
+            if fit < 2 {
                 // Clicked, Proje ayarları on its coordinate system page (the web's cell).
-                .push(
+                bar = bar.separator().push(
                     Readout::new(label::muted(crs))
                         .icon(crate::icons::from_web(Some("crs")))
                         .on_press(Message::Run("crs.set"))
@@ -680,26 +703,99 @@ impl App {
                             "EPSG:{}. Y sağa, X yukarı değerdir. Değiştirmek için tıklayın.",
                             settings.srid
                         ))),
-                )
-                .spacer()
-                .push(
-                    Readout::new(label::muted(objects.clone()))
-                        .tip(Tip::new(objects).body(kinds_text(doc))),
                 );
+            }
+            bar = bar.spacer().push(
+                Readout::new(label::muted(objects.clone()))
+                    .tip(Tip::new(objects).body(kinds_text(doc))),
+            );
         } else {
             bar = bar.spacer();
         }
         // The cloud: the open project and its save, the account with Çıkış (docs/adr/0041).
-        for cell in self.cloud_cells() {
+        for cell in self.cloud_cells(fit < 4) {
             bar = bar.separator().push(cell);
         }
+        let engine = if fit < 1 { "wgpu" } else { "" };
         bar.separator()
             .push(
-                Readout::new(label::muted("wgpu"))
+                Readout::new(label::muted(engine))
                     .icon(Icon::Cube)
                     .tip(self.engine_tip()),
             )
             .into()
+    }
+
+    /// A drafting aid's toggle: its lamp lit while on; one the desktop does
+    /// not run yet is off, dimmed, and its tip says so.
+    fn status_aid(
+        &self,
+        id: &'static str,
+        name: &'static str,
+        compact: bool,
+    ) -> Element<'_, Message> {
+        let command = catalog().get(id);
+        let runs = command.is_some_and(|c| c.standing == Standing::Ported);
+        let mut toggle = kentos_ui::widget::status_bar::Toggle::new(
+            name,
+            runs && self.checked(id).unwrap_or(false),
+        )
+        .compact(compact);
+        if let Some(command) = command {
+            if let Some(keys) = command.shortcuts.first() {
+                toggle = toggle.shortcut(*keys);
+            }
+            toggle = toggle.description(command.note());
+        }
+        if runs {
+            toggle = toggle.on_press(Message::Run(id));
+        }
+        toggle.into()
+    }
+
+    /// About how wide the status bar is with `fit` of its steps taken:
+    /// from its texts at the interface's type size (the cells hold text,
+    /// an icon and their padding), as the tab row estimates its own.
+    fn status_width(&self, fit: u8) -> f32 {
+        let size = kentos_ui::theme::typography::body();
+        // The interface's face averages about half its size a letter; the
+        // coordinates' figures, 0.6 (measured on the pictures).
+        let text = |s: &str| s.chars().count() as f32 * size * 0.52;
+        let cell = |s: &str, icon: bool| text(s) + 16.0 + if icon { 19.0 } else { 0.0 };
+        const SEPARATOR: f32 = 9.0;
+        let mut width = 28.0 * size * 0.6 + 35.0;
+        if !self.selection.is_empty() {
+            width += SEPARATOR + cell(&format!("{} seçili", self.selection.len()), false);
+        }
+        // A lamp and its gap, and the padding (less once the bar is tight).
+        let pad = if fit >= 6 { 12.0 } else { 18.0 };
+        width += SEPARATOR
+            + STATUS_AIDS
+                .iter()
+                .map(|(_, name)| text(name) + 7.0 + pad)
+                .sum::<f32>();
+        if let Some(doc) = &self.document {
+            let settings = doc.settings();
+            if fit < 3 {
+                let zoom = format!("Ekran 1:{}", thousands(self.viewport.camera.screen_scale()));
+                width += 2.0 * SEPARATOR
+                    + cell(&zoom, false)
+                    + cell(&format!("1:{}", settings.plot_scale), false);
+            }
+            let mode = crate::catalog::effective_mode(Some(self.work_mode())).label;
+            // Its icon, its name and the menu's chevron.
+            width += SEPARATOR + if fit < 5 { text(mode) + 50.0 } else { 51.0 };
+            if fit < 2 {
+                let crs = match crs_name(settings.srid) {
+                    Some(name) => format!("EPSG:{} · {name}", settings.srid),
+                    None => format!("EPSG:{}", settings.srid),
+                };
+                width += SEPARATOR + cell(&crs, true);
+            }
+            width += 24.0 + cell(&format!("{} nesne", doc.entity_count()), false);
+        }
+        width += self.cloud_cells_width(fit < 4, size);
+        width + SEPARATOR + if fit < 1 { cell("wgpu", true) } else { 35.0 }
     }
 
     /// What the drawing engine did in the last frame, or why it could not draw.
@@ -886,6 +982,19 @@ fn menu_of(ids: &[&'static str], checked: &[Option<bool>]) -> Menu<Message> {
             }
         })
 }
+
+/// The status bar's drafting aids, as the web's (`StatusBar.ts`).
+const STATUS_AIDS: [(&str, &str); 6] = [
+    ("draft.snap", "Kenet"),
+    ("draft.grid", "Izgara"),
+    ("draft.ortho", "Orto"),
+    ("draft.polar", "Kutupsal"),
+    ("draft.tracking", "İzleme"),
+    ("view.lineWeights", "Kalınlık"),
+];
+
+/// The status bar's narrow-window steps (the web's `STEPS`).
+const STATUS_STEPS: u8 = 6;
 
 /// A launcher's message: another tab, or a command the desktop runs.
 fn launch(launcher: &Launcher) -> Option<Message> {

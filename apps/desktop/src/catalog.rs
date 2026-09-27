@@ -56,6 +56,7 @@ pub const PORTED: &[&str] = &[
     "tool.select",
     "tool.erase",
     "draft.snap",
+    "draft.grid",
     "edit.deselect",
     "edit.selectAll",
     "edit.invertSelection",

@@ -790,6 +790,7 @@ impl App {
         self.cursor_input = s.bool("drafting.cursorInput");
         self.command_bar = s.bool("drafting.commandBar");
         self.hover_info = s.bool("drafting.hoverInfo");
+        self.viewport.grid_shown = s.bool("drafting.grid");
         self.apply_appearance();
     }
 
@@ -959,6 +960,7 @@ impl App {
             "draft.ortho" => self.toggle_session("drafting.ortho", "Orto"),
             "draft.polar" => self.toggle_session("drafting.polar", "Kutupsal izleme"),
             "draft.snap" => self.toggle_session("drafting.snap", "Kenetleme"),
+            "draft.grid" => self.toggle_session("drafting.grid", "Izgara"),
             // Selecting (docs/adr/0029): the pointer selects while no command runs.
             "tool.select" => self.leave_tool(),
             "edit.deselect" => self.selection.clear(),
@@ -1031,6 +1033,7 @@ impl App {
             "draft.ortho" => self.draft.ortho,
             "draft.polar" => self.draft.polar.is_some(),
             "draft.snap" => self.draft.snap,
+            "draft.grid" => self.settings.bool("drafting.grid"),
             "view.theme.dark" => self.mode == Mode::Dark,
             "view.theme.light" => self.mode == Mode::Light,
             "view.bottomPanel" => self.command_expanded,

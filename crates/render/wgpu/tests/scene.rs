@@ -517,3 +517,33 @@ fn a_highlight_draws_after_the_scene_in_one_colour() {
             .is_empty()
     );
 }
+
+/// The grid's spacing as the web's `gridSpacing`: the smallest 1-2-5 step
+/// keeping minor lines 14 px apart, a major every five (four after a 5);
+/// its lines on round world values, minor and major one layer each.
+#[test]
+fn the_grid_spaces_its_lines_as_the_webs() {
+    assert_eq!(scene::grid_spacing(1.0, 14.0), (20.0, 100.0));
+    assert_eq!(scene::grid_spacing(0.5, 14.0), (50.0, 200.0));
+    let (minor, major) = scene::grid_spacing(100.0, 14.0);
+    assert!((minor - 0.2).abs() < 1e-12 && (major - 1.0).abs() < 1e-12);
+    let area = kentos_render_wgpu::Bounds {
+        min_x: 486_503.0,
+        min_y: 4_420_101.0,
+        max_x: 486_603.0,
+        max_y: 4_420_151.0,
+    };
+    let colors = [Rgba8([255, 255, 255, 0x0a]), Rgba8([255, 255, 255, 0x17])];
+    let part = scene::build_grid(
+        &area,
+        (20.0, 100.0),
+        Vec2::new(486_500.0, 4_420_100.0),
+        colors,
+    );
+    assert_eq!(part.layers.len(), 2, "minor, then major");
+    let segments = |i: usize| part.layers[i].segments.end - part.layers[i].segments.start;
+    // From the round value at or below the area (the web's `x0`): x 486500…486600
+    // every 20 (486500 and 486600 major), y 4420100…4420140 (4420100 major).
+    assert_eq!((segments(0), segments(1)), (6, 3));
+    assert!(part.segments[..6].iter().all(|s| s.color == colors[0].0));
+}
