@@ -20,7 +20,7 @@ use crate::cloud::catalog::{Catalog, Details, List, Tab, place_of};
 use crate::cloud::catalog_actions::Act;
 use crate::cloud::local_time::{Zone, day, when};
 use crate::cloud::plan::{self, DetailAction};
-use crate::cloud::{Event, share, words};
+use crate::cloud::{Event, catalog_forms, share, words};
 
 impl App {
     /// The selected project (the web's `renderDetails`): its name and
@@ -181,7 +181,11 @@ impl App {
                 DetailAction::Trash => Some(cloud(Event::CatalogAct(Act::Trash))),
                 DetailAction::Purge => Some(cloud(Event::CatalogAct(Act::Purge))),
                 DetailAction::Share => Some(share::msg(share::Event::Open)),
-                DetailAction::Edit | DetailAction::Duplicate | DetailAction::Convert => None,
+                DetailAction::Edit => Some(catalog_forms::msg(catalog_forms::Event::Edit)),
+                DetailAction::Duplicate => {
+                    Some(catalog_forms::msg(catalog_forms::Event::Duplicate))
+                }
+                DetailAction::Convert => Some(catalog_forms::msg(catalog_forms::Event::Convert)),
             };
             let why = a
                 .why

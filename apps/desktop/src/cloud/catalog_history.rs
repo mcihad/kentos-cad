@@ -157,23 +157,10 @@ impl History {
 
 /// The workspaces the account may open projects in, `first` first (the web's `creatableWorkspaces`).
 pub(crate) fn creatable(app: &App, first: &str) -> Vec<(String, String)> {
-    let Some(me) = &app.cloud.me else {
-        return Vec::new();
-    };
-    let mut places: Vec<_> = me
-        .memberships
-        .iter()
-        .filter(|m| m.active && m.seat && m.capabilities.iter().any(|c| c == "project.create"))
-        .collect();
-    places.sort_by_key(|m| m.tenant_id != first);
-    places
+    // The forms' rule (forms_plan.rs, fixtures/cloud/v1/forms.json).
+    app.creatable_places(first)
         .into_iter()
-        .map(|m| {
-            (
-                m.tenant_id.clone(),
-                words::workspace(m.tenant_kind, &m.tenant_name, true),
-            )
-        })
+        .map(|p| (p.tenant_id, p.label))
         .collect()
 }
 

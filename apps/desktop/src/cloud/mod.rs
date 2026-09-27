@@ -21,6 +21,9 @@
 //! | `catalog_view.rs` | the catalog window: its lists, the chosen list's rows, the questions |
 //! | `catalog_pane.rs` | the catalog's selected project: facts, tabs, actions |
 //! | `catalog_actions.rs` | the selected project's actions: favourite, archive, trash, restore, purge, download |
+//! | `catalog_forms.rs` | the selected project's forms: Proje bilgileri, Kopyasını oluştur, the other storage mode |
+//! | `catalog_forms_view.rs` | those forms drawn over the catalog |
+//! | `forms_plan.rs` | what the forms say and decide (fixtures/cloud/v1/forms.json) |
 //! | `catalog_history.rs` | the Geçmiş tab: revisions and checkpoints, followed; its forms and removal |
 //! | `catalog_history_view.rs` | the Geçmiş tab's rows, its forms and its question |
 //! | `opening.rs` | a project opened into the drawing, its progress |
@@ -43,6 +46,8 @@ mod account;
 mod actions;
 pub mod catalog;
 mod catalog_actions;
+mod catalog_forms;
+mod catalog_forms_view;
 mod catalog_history;
 mod catalog_history_view;
 mod catalog_pane;
@@ -50,6 +55,9 @@ mod catalog_view;
 pub mod copy;
 mod file;
 mod follow;
+pub mod forms_plan;
+#[cfg(test)]
+mod forms_plan_tests;
 pub mod history;
 mod leaving;
 mod live;
@@ -67,6 +75,8 @@ mod upload;
 mod view;
 pub mod words;
 
+#[cfg(test)]
+mod catalog_forms_tests;
 #[cfg(test)]
 mod catalog_history_tests;
 #[cfg(test)]
@@ -329,6 +339,8 @@ pub enum Event {
     SaveLocal,
     /// Projeyi paylaş (share.rs).
     Share(share::Event),
+    /// The catalog's project forms (catalog_forms.rs).
+    Form(catalog_forms::Event),
 }
 
 /// The cloud's part of the app.
@@ -544,6 +556,7 @@ impl App {
             | Event::Trashed { .. }
             | Event::NewestOpen => self.actions_event(event),
             Event::Share(event) => self.share_event(event),
+            Event::Form(event) => self.project_form_event(event),
             Event::Left { leave, result } => self.left(leave, result),
             Event::Probed(result) => self.probed(result),
             Event::Close => {
@@ -738,6 +751,17 @@ impl App {
                 } else {
                     self.cloud.share = None;
                 }
+            }
+            Some(Dialog::Catalog)
+                if self
+                    .cloud
+                    .catalog
+                    .as_ref()
+                    .is_some_and(|c| c.form.is_some()) =>
+            {
+                // A project form goes first, unless its request is on its way.
+                self.project_form_close();
+                self.dialog = Some(Dialog::Catalog);
             }
             Some(Dialog::Catalog) => {
                 // A question over the window goes first (its Vazgeç); an open

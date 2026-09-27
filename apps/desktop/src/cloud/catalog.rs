@@ -154,6 +154,9 @@ pub struct Catalog {
     /// A project made here to select once the list shows it, and whether to
     /// open it then (the web's `wanted` and `openAfter`).
     pub(super) wanted: Option<(String, bool)>,
+    /// A project form over the window (catalog_forms.rs), and its request on its way.
+    pub form: Option<crate::cloud::catalog_forms::Form>,
+    pub(super) form_asked: Option<crate::cloud::catalog_forms::Asked>,
 }
 
 impl Catalog {
@@ -185,7 +188,7 @@ impl Catalog {
 
     /// Whether an action, a question or a form holds the window.
     pub fn busy(&self) -> bool {
-        self.acting.is_some() || self.asking.is_some() || self.history.busy()
+        self.acting.is_some() || self.asking.is_some() || self.history.busy() || self.form.is_some()
     }
 
     /// The selection moved (or the list changed under it): its counts are
@@ -303,6 +306,8 @@ impl App {
             acting: None,
             history: History::default(),
             wanted: pick.map(|(id, _)| (id, false)),
+            form: None,
+            form_asked: None,
         });
         self.dialog = Some(Dialog::Catalog);
         self.catalog_load(false)

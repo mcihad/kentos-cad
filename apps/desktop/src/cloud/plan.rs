@@ -26,8 +26,7 @@ pub const NO_ORGANIZATION: &str =
     "Etkin üyeliğiniz olan bir kurum yok; kurum projeleri burada görünür.";
 
 /// What choosing a type means, and does not (said wherever one is chosen:
-/// the project forms, not ported yet).
-#[cfg(test)]
+/// Proje bilgileri, catalog_forms_view.rs).
 pub const TYPE_HINT: &str = "Tür yalnız projeleri bulmak ve düzenlemek içindir: bir modül açmaz, mevzuata uygunluk ya da resmî onay anlamına gelmez, projenin nasıl saklandığını değiştirmez.";
 
 /// The types a project can have, in the web's order (`PROJECT_TYPES`).

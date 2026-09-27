@@ -148,6 +148,7 @@ impl App {
         // Projeyi paylaş, a question or a form over the window (the web's stacked dialogs).
         match self
             .share_window()
+            .or_else(|| self.project_form_overlay())
             .or_else(|| self.catalog_question_view())
             .or_else(|| self.history_overlay())
         {

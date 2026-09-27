@@ -60,18 +60,19 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 | Ayarlar | 42 | 12 | 10 | 0 | 1 | 65 |
 | Tarayıcı depoları | 7 | 1 | 1 | 0 | 1 | 10 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 192 | 0 | 0 | 0 | 0 | 192 |
-| Pencereler ve paneller | 45 | 4 | 14 | 0 | 0 | 63 |
+| Pencereler ve paneller | 48 | 4 | 10 | 0 | 1 | 63 |
 
 Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
 
 - `.kcad` alanları (v1 okunur, v2 yazılır), bütünüyle: implemented — Masaüstü .kcad'i web'le aynı Rust kodeğiyle (crates/shared/kcad) okur ve yazar: v2 yazılır, v1 okunur; belge (kentos-domain) göçü web'in örnek dosyasıyla aynı çıkarır (crates/native/domain/tests/snapshot_v2.rs, ADR 0025).
 
-### Masaüstünde anlamsız (4)
+### Masaüstünde anlamsız (5)
 
 - Komutlar: `view.renderer.webgl2` WebGL2 — Masaüstü çizimi wgpu ile yapar; arka ucu (Vulkan, Metal, DirectX 12, OpenGL) wgpu seçer (ADR 0019). WebGL2 ile WebGPU tarayıcının seçenekleridir.
 - Komutlar: `view.renderer.webgpu` WebGPU — Masaüstü çizimi wgpu ile yapar; arka ucu (Vulkan, Metal, DirectX 12, OpenGL) wgpu seçer (ADR 0019). WebGL2 ile WebGPU tarayıcının seçenekleridir.
 - Ayarlar: `device.rendererPreference`  — WebGL2 ya da WebGPU seçimi tarayıcınındır; masaüstünün arka ucunu wgpu seçer (ADR 0019).
 - Tarayıcı depoları: `kentos.prefs.v1`  — Web'in tipli ayarlardan önceki deposudur; masaüstünün böyle eski bir deposu olmadı, ayarları baştan ayarlar.json'dadır.
+- Pencereler ve paneller: `apps/web/src/ui/cloud/InvitationDialog.ts#openInvitationDialog` openInvitationDialog — Davet bağlantısı web uygulamasının adresidir: açılır ve orada kabul edilir; kabul edilen proje masaüstünün kataloğunda da görünür. Masaüstü davet eder, bağlantı açmaz.
 
 ### Web'de olup masaüstünde olmayanlar
 
@@ -153,13 +154,9 @@ Yok.
 
 Yok.
 
-#### Pencereler ve paneller (18 / 63)
+#### Pencereler ve paneller (14 / 63)
 
 - `apps/web/src/ui/bottom/BottomPanel.ts#BottomPanel` BottomPanel (kısmi) (masaüstünde: apps/desktop/src/bottom.rs (ADR 0058)) — Komut geçmişinin satırlarında saat yazmaz.
-- `apps/web/src/ui/cloud/InvitationDialog.ts#openInvitationDialog` openInvitationDialog
-- `apps/web/src/ui/cloud/ProjectForms.ts#openConvertDialog` openConvertDialog
-- `apps/web/src/ui/cloud/ProjectForms.ts#openDuplicateDialog` openDuplicateDialog
-- `apps/web/src/ui/cloud/ProjectForms.ts#openMetadataDialog` openMetadataDialog
 - `apps/web/src/ui/menu/MenuBar.ts#MenuBar` MenuBar
 - `apps/web/src/ui/processing/model/ModelDesigner.ts#openModelDesigner` openModelDesigner
 - `apps/web/src/ui/ribbon/Ribbon.ts#Ribbon` Ribbon (kısmi) (masaüstünde: apps/desktop/src/view.rs, catalog.rs, ribbon_panels.rs (ADR 0017, 0051, 0089)) — Yöntem düğmesi son seçimi göstermez; hızlı erişime ekleme, şeridin sağ tık menüsü ve harf ipuçları yok.

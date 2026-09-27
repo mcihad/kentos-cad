@@ -757,6 +757,111 @@ fn share_live(r: &mut Runner, mehmet: &str, stamp: &str) {
     });
 }
 
+/// The catalog's project forms on the real server (docs/adr/0112): the
+/// database project's description and tags, a copy of it, and the file
+/// project into PostGIS, which opens. The projects it made, for the end's
+/// cleaning up.
+fn forms_live(r: &mut Runner, file_project: &str, db_project: &str, stamp: &str) -> Vec<String> {
+    use crate::cloud::catalog::List;
+    use crate::cloud::catalog_forms::{Event as FormEvent, Form};
+    use kentos_contracts::CatalogView;
+
+    let listed = |id: String| {
+        move |a: &App| {
+            a.cloud.catalog.as_ref().is_some_and(|c| {
+                !c.loading() && c.form.is_none() && c.projects.iter().any(|p| p.id == id)
+            })
+        }
+    };
+    // Proje bilgileri: what changed goes, with the version shown.
+    r.cloud(Event::CatalogPick(db_project.to_owned()));
+    r.cloud(Event::Form(FormEvent::Edit));
+    assert!(matches!(
+        r.app.cloud.catalog.as_ref().and_then(|c| c.form.as_ref()),
+        Some(Form::Metadata(_))
+    ));
+    r.cloud(Event::Form(FormEvent::Tags("canlı, masaüstü".into())));
+    r.shot("34-form-bilgiler");
+    r.cloud(Event::Form(FormEvent::Submit));
+    r.until("proje bilgileri", Duration::from_secs(15), |a| {
+        last(a).ends_with("projesinin bilgileri kaydedildi.")
+    });
+    r.until(
+        "bilgilerden sonra liste",
+        Duration::from_secs(15),
+        listed(db_project.to_owned()),
+    );
+    let tags = r
+        .app
+        .cloud
+        .catalog
+        .as_ref()
+        .and_then(|c| c.projects.iter().find(|p| p.id == db_project))
+        .map(|p| p.tags.clone())
+        .unwrap_or_default();
+    assert_eq!(tags, ["canlı", "masaüstü"]);
+    // Kopyasını oluştur: shown selected in Projelerim.
+    r.cloud(Event::CatalogPick(db_project.to_owned()));
+    r.cloud(Event::Form(FormEvent::Duplicate));
+    let copy = format!("Masaüstü canlı kopya {stamp}");
+    r.cloud(Event::Form(FormEvent::Name(copy.clone())));
+    r.shot("35-form-kopya");
+    r.cloud(Event::Form(FormEvent::Submit));
+    r.until("kopya", Duration::from_secs(30), |a| {
+        last(a).ends_with("nesne kopyalandı.")
+    });
+    r.until("kopya listede", Duration::from_secs(15), |a| {
+        a.cloud
+            .catalog
+            .as_ref()
+            .is_some_and(|c| !c.loading() && c.picked().is_some_and(|p| p.name == copy))
+    });
+    let copy_id = r
+        .app
+        .cloud
+        .catalog
+        .as_ref()
+        .and_then(|c| c.picked().map(|p| p.id.clone()))
+        .expect("the copy");
+    assert!(
+        r.app.cloud.opening.is_none(),
+        "a copy does not open by itself"
+    );
+    // PostGIS'e aktar: the file project's newest revision as a database project, opened.
+    r.cloud(Event::CatalogView(List::View(CatalogView::Mine)));
+    r.until(
+        "projelerim",
+        Duration::from_secs(15),
+        listed(file_project.to_owned()),
+    );
+    r.cloud(Event::CatalogPick(file_project.to_owned()));
+    r.cloud(Event::Form(FormEvent::Convert));
+    r.shot("36-form-postgise-aktar");
+    r.cloud(Event::Form(FormEvent::Submit));
+    r.until("PostGIS'e aktarma", Duration::from_secs(60), |a| {
+        last(a).ends_with("nesne veritabanına aktarıldı.")
+    });
+    r.until("aktarılan proje açıldı", Duration::from_secs(60), |a| {
+        a.cloud.opening.is_none()
+            && a.document
+                .as_ref()
+                .and_then(|d| d.cloud_source())
+                .is_some_and(|s| s.info.name.ends_with("(PostGIS)"))
+    });
+    r.shot("37-aktarilan-proje");
+    let (_, converted) = ids(&r.app);
+    // Back to the catalog with the database project selected, for the steps after.
+    r.send(Message::Run("cloud.open"));
+    r.cloud(Event::CatalogView(List::View(CatalogView::Mine)));
+    r.until(
+        "projelerim yeniden",
+        Duration::from_secs(15),
+        listed(db_project.to_owned()),
+    );
+    r.cloud(Event::CatalogPick(db_project.to_owned()));
+    vec![copy_id, converted]
+}
+
 /// The last line said.
 fn last(app: &App) -> String {
     said(app).pop().unwrap_or_default()
@@ -818,6 +923,7 @@ fn catalog_live(
     });
     r.shot("24-katalog-bilgiler");
     share_live(r, mehmet, stamp);
+    let made = forms_live(r, file_project, db_project, stamp);
 
     // 18. The favourite, on and off.
     r.cloud(Event::CatalogAct(Act::Favorite));
@@ -897,7 +1003,9 @@ fn catalog_live(
     let (_, restored) = ids(&r.app);
 
     // 22. What this run made goes: the restored project and the file project, to the trash and for good.
-    for project in [restored.as_str(), file_project] {
+    let mut gone = vec![restored.as_str(), file_project];
+    gone.extend(made.iter().map(String::as_str));
+    for project in gone {
         r.send(Message::Run("cloud.open"));
         r.cloud(Event::CatalogView(List::View(CatalogView::Mine)));
         r.until(
