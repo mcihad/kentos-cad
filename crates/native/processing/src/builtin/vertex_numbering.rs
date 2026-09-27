@@ -119,7 +119,8 @@ pub fn tool() -> Tool {
                 },
             )
             .describe("Numaralamanın başlayacağı köşe.")
-            .default_value(json!("northwest")),
+            .default_value(json!("northwest"))
+            .picks_point("point", "startPoint"),
             ParamDef::new("startPoint", "Başlangıç noktası", ParamKind::Point)
                 .describe("Her alanda bu noktaya en yakın köşeden başlanır.")
                 .shown_when(|v| v.get("start").and_then(Value::as_str) == Some("point")),

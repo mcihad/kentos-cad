@@ -100,6 +100,10 @@ impl App {
                         self.calc_picked(p);
                     }
                 }
+                // Sahneden seç's objects: the processing window opens again (processing/).
+                ViewChange::PickedObjects(keep) => {
+                    let _ = self.processing_picked_objects(keep);
+                }
                 change => self.viewport.change(change),
             }
         }

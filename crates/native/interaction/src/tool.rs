@@ -89,6 +89,9 @@ pub enum ViewChange {
     /// The point a window asked for (Çizimden, [`crate::pick::PickPoint`],
     /// docs/adr/0070), or none when the user left without one.
     Picked(Option<Vec2>),
+    /// Objects picked for a window's field ([`crate::pick_objects::PickObjects`],
+    /// docs/adr/0088): kept (the selection holds them), or left (Esc).
+    PickedObjects(bool),
 }
 
 /// Where a text field opens and how its text will look: its start, height in

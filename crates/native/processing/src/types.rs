@@ -204,6 +204,10 @@ pub struct ParamDef {
     pub visible_when: Option<fn(&Values) -> bool>,
     pub default: Option<DefaultValue>,
     pub kind: ParamKind,
+    /// A choice one of whose options is a point picked on the drawing (the
+    /// numbering's start vertex, docs/adr/0088): the option, and the point
+    /// parameter the pick fills. The window offers “Sahneden seç” beside it.
+    pub picks: Option<(String, String)>,
 }
 
 impl ParamDef {
@@ -217,7 +221,14 @@ impl ParamDef {
             visible_when: None,
             default: None,
             kind,
+            picks: None,
         }
+    }
+
+    /// Picking a point on the drawing chooses `option` and fills `point`.
+    pub fn picks_point(mut self, option: &str, point: &str) -> Self {
+        self.picks = Some((option.into(), point.into()));
+        self
     }
 
     pub fn describe(mut self, text: &str) -> Self {

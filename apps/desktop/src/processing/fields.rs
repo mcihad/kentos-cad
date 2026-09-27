@@ -89,7 +89,28 @@ pub(super) fn control<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, M
             let on = env.value(&def.name).as_bool().unwrap_or(false);
             Switch::new(on, move |v| ev(Event::Value(name.clone(), json!(v)))).into()
         }
-        ParamKind::Choice { options } => choice(def, options, env),
+        ParamKind::Choice { options } => {
+            let control = choice(def, options, env);
+            // One of its options is a point picked on the drawing (the numbering's start vertex).
+            match &def.picks {
+                Some((option, _)) => {
+                    let chosen = env.value(&def.name).as_str() == Some(option.as_str());
+                    row![
+                        container(control).width(Fill),
+                        tip(
+                            pick_button(None, ev(Event::PickChoice(def.name.clone())), chosen),
+                            Tip::new("Sahneden seç")
+                                .body("Başlangıcı çizimde gösterin: her nesnede o noktaya en yakın köşeden başlanır."),
+                            iced::widget::tooltip::Position::Top,
+                        ),
+                    ]
+                    .spacing(6)
+                    .align_y(Center)
+                    .into()
+                }
+                None => control,
+            }
+        }
         ParamKind::Layer { .. } => layer(def, env),
         ParamKind::Point => point_field(def, env),
         ParamKind::Field { of, allow_new } => field(def, of, *allow_new, env),
@@ -132,12 +153,23 @@ fn features<'a>(
     let name = def.name.clone();
     let mut parts = Column::new().spacing(8).width(Fill);
     parts = parts.push(
-        Segmented::new(
-            offered.iter().copied().map(ScopeButton),
-            ScopeButton(chosen),
-            move |s| ev(Event::Scope(name.clone(), s.0.id().into())),
-        )
-        .width(Fill),
+        row![
+            Segmented::new(
+                offered.iter().copied().map(ScopeButton),
+                ScopeButton(chosen),
+                move |s| ev(Event::Scope(name.clone(), s.0.id().into())),
+            )
+            .width(Fill),
+            tip(
+                pick_button(Some("Sahneden seç"), ev(Event::PickObjects(def.name.clone())), false),
+                Tip::new("Sahneden seç").body(
+                    "Nesneleri çizimde tıklayarak ya da pencereyle seçin; Enter bitirir, Esc vazgeçer.",
+                ),
+                iced::widget::tooltip::Position::Top,
+            ),
+        ]
+        .spacing(6)
+        .align_y(Center),
     );
     if let Scope::Layer(id) = &value.scope {
         let leaves = env.doc.layers().leaves();
@@ -372,26 +404,41 @@ fn point_field<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, Message>
     let p = point(env.value(&def.name));
     let coord = match p {
         Some(p) => label::mono(env.format.point(kentos_interaction::Vec2::new(p.x, p.y))),
-        None => label::body("Henüz gösterilmedi").style(style::text::muted),
+        None => label::body("Henüz seçilmedi").style(style::text::muted),
     };
-    let pick = button(
-        row![
-            icon(Icon::Magnet).size(14.0),
-            label::body(if p.is_some() {
-                "Yeniden göster"
-            } else {
-                "Haritadan göster"
-            })
-        ]
-        .spacing(6)
-        .align_y(Center),
-    )
-    .padding([5, 10])
-    .style(style::button::secondary)
-    .on_press(ev(Event::Pick(def.name.clone())));
+    let pick = pick_button(
+        Some(if p.is_some() {
+            "Yeniden seç"
+        } else {
+            "Sahneden seç"
+        }),
+        ev(Event::Pick(def.name.clone())),
+        false,
+    );
     row![container(coord).width(Fill), pick]
         .spacing(10)
         .align_y(Center)
+        .into()
+}
+
+/// Sahneden seç: the KentOS UI inspector's pick (its target icon), for a
+/// point or objects picked on the drawing (docs/adr/0088); `on` when what it
+/// picks is in use.
+fn pick_button<'a>(caption: Option<&'a str>, on_press: Message, on: bool) -> Element<'a, Message> {
+    let glyph = icon(Icon::Target)
+        .size(14.0)
+        .tone(if on { Tone::Accent } else { Tone::Inherit });
+    let face: Element<'a, Message> = match caption {
+        Some(text) => row![glyph, label::body(text)]
+            .spacing(6)
+            .align_y(Center)
+            .into(),
+        None => glyph.into(),
+    };
+    button(face)
+        .padding(if caption.is_some() { [5, 10] } else { [5, 8] })
+        .style(style::button::secondary)
+        .on_press(on_press)
         .into()
 }
 
