@@ -3,8 +3,9 @@
 //! whose objects have no command of their own write through
 //! `cad.entities.create` on the web (`apps/web/src/product`) and on the
 //! desktop (`crates/native/application`): Elips, Eğri, Yardımcı çizgi, Işın,
-//! Halka, Paralel çizgi, Dik in, Dik çık and Böl. Both pass the shared cases
-//! in `fixtures/commands/v1`.
+//! Halka, Paralel çizgi, Dik in, Dik çık and Böl; so do the Hesap windows'
+//! “Çizime ekle” (Poligon hesabı, Kutupsal alım, Önden and Geriden kestirme).
+//! Both pass the shared cases in `fixtures/commands/v1`.
 //!
 //! The geometry is given, not computed here: the tools compute it with the
 //! shared geometry core from what was clicked and typed (an ellipse from its
@@ -28,8 +29,8 @@ use crate::entity::Entity;
 pub const CAD_ENTITIES_CREATE: &str = "cad.entities.create";
 pub const CAD_ENTITIES_CREATE_VERSION: u32 = 1;
 
-/// The drawing tool whose step has its own name; without one the step is
-/// “Ekle”, as for every object a drawing tool adds.
+/// The drawing tool or Hesap window whose step has its own name; without
+/// one the step is “Ekle”, as for every object a drawing tool adds.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -48,6 +49,14 @@ pub enum CreateOperation {
     Hatch,
     /// İçine tıklayarak alan: the region clicked inside, as an area. The step is “Alan oluştur”.
     Boundary,
+    /// Poligon hesabı: the traverse's new points (Hesap menu).
+    Traverse,
+    /// Kutupsal alım: the points measured from a station (Hesap menu).
+    PolarSurvey,
+    /// Önden kestirme: the point found from two known points (Hesap menu).
+    ForwardIntersection,
+    /// Geriden kestirme: the station found from three known points (Hesap menu).
+    Resection,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the
@@ -101,8 +110,10 @@ pub struct EntitiesCreate {
     pub layer_id: String,
     /// What is written, at least one, in this order.
     pub objects: Vec<NewObject>,
-    /// The drawing tool the objects come from, when its step has its own
-    /// name: Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan oluştur. Absent: “Ekle”.
+    /// The drawing tool or Hesap window the objects come from, when its step
+    /// has its own name: Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan
+    /// oluştur, Poligon hesabı, Kutupsal alım, Önden kestirme, Geriden
+    /// kestirme. Absent: “Ekle”.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub operation: Option<CreateOperation>,

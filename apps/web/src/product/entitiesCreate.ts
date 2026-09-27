@@ -36,6 +36,10 @@ export const CREATE_LABEL: Record<CreateOperation, string> = {
   divide: 'Böl',
   hatch: 'Tarama',
   boundary: 'Alan oluştur',
+  traverse: 'Poligon hesabı',
+  polarSurvey: 'Kutupsal alım',
+  forwardIntersection: 'Önden kestirme',
+  resection: 'Geriden kestirme',
 };
 
 /** The checks in the contract's order: why nothing may be written, or the warnings when it may. */

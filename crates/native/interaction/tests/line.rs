@@ -99,6 +99,53 @@ fn geri_takes_the_last_line_back_as_an_undo() {
     assert!(!first.type_text("G"));
 }
 
+/// Geri (G) once the drawing has changed deletes the line through
+/// `cad.entities.delete`: a line on a layer locked since stays, with the
+/// command's refusal, and so does the chain (the web's lineGeri.test.ts).
+#[test]
+fn geri_leaves_a_line_on_a_layer_locked_since() {
+    let mut b = Bench::new("line");
+    for (de, dn) in [(0.0, 0.0), (10.0, 0.0), (10.0, 10.0)] {
+        b.click(de, dn);
+    }
+    b.doc.toggle_layer_locked("cizim");
+    assert!(b.type_text("G"));
+    assert_eq!(
+        (b.points(), b.doc.len()),
+        (3, 2),
+        "the line and the chain stay"
+    );
+    assert_eq!(b.last_level(), Some(Level::Warn));
+    assert_eq!(
+        b.last_text(),
+        Some(
+            "1 nesne kilitli katmanda olduğu için silinmedi. Silmek için katmanın kilidini Katmanlar panelinden açın."
+        )
+    );
+}
+
+/// Once G has deleted a line (not undone it), the chain's earlier lines can
+/// only be deleted too: a new line, then G twice, takes the new line back
+/// and deletes the first one; the deleted line never comes back (the web's
+/// lineGeri.test.ts).
+#[test]
+fn geri_after_a_deletion_deletes_the_earlier_lines_too() {
+    let mut b = Bench::new("line");
+    for (de, dn) in [(0.0, 0.0), (10.0, 0.0), (10.0, 10.0)] {
+        b.click(de, dn);
+    }
+    b.doc.toggle_layer_visible("cizim");
+    assert!(b.type_text("G"), "the second line, deleted");
+    assert_eq!((b.points(), b.doc.len()), (2, 1));
+    b.click(20.0, 0.0);
+    assert!(b.type_text("G"), "the new line, undone");
+    assert_eq!((b.points(), b.doc.len()), (2, 1));
+    assert!(b.type_text("G"), "the first line, deleted");
+    assert_eq!((b.points(), b.doc.len()), (1, 0));
+    assert_eq!(b.doc.undo().as_deref(), Some("Sil"));
+    assert_eq!(b.doc.len(), 1, "the undo brings back the first line alone");
+}
+
 #[test]
 fn ctrl_z_takes_the_newest_step_first() {
     let mut b = Bench::new("line");

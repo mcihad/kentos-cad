@@ -16,7 +16,7 @@ Aynı dosyaları iki uygulama koşar: web `apps/web/src/product/fixtures.test.ts
 | `v1/cad.entities.transform.json` | `cad.entities.transform` v1 (ADR 0037; hizalama ADR 0047) | 38 |
 | `v1/cad.entities.edit.json` | `cad.entities.edit` v1 (ADR 0047; `properties` işlemi, Öznitelikler; alan işlemleri, ADR 0065) | 42 |
 | `v1/cad.entities.array.json` | `cad.entities.array` v1 (ADR 0047) | 25 |
-| `v1/cad.entities.create.json` | `cad.entities.create` v1 (ADR 0057; `hatch` işlemi ADR 0062; `boundary`, ADR 0065) | 30 |
+| `v1/cad.entities.create.json` | `cad.entities.create` v1 (ADR 0057; `hatch` işlemi ADR 0062; `boundary`, ADR 0065; Hesap pencerelerinin `traverse`, `polarSurvey`, `forwardIntersection`, `resection` işlemleri) | 32 |
 | `v1/cad.entities.set.json` | `cad.entities.set` v1 (Öznitelikler: katman, renk, sembol, öznitelik, etiket) | 30 |
 
 ## Dosya
@@ -91,6 +91,7 @@ Yalnız yazılan alanlar denetlenir.
 - Yazının metni boş olamaz (`empty_text`): boş ya da yalnız boşluktan oluşan metin, boşluk Unicode'un `White_Space`'idir (Rust'ın `char::is_whitespace`'i; JavaScript'in `trim`'i değil: U+FEFF'i alır, U+0085'i bırakır). Düzenlemenin ve eklemenin durumları bunu sekme, satır sonu, U+0085, bölünmez boşluk ve ideografik boşlukla sınar; dosyada bu boşluklar `\u0085` gibi kaçışla yazılır.
 - Öznitelikler'in geometri satırları `cad.entities.edit`'in `properties` işlemiyle yazar (adımı “Değiştir”); bu durumların kendi kurulumu (`setup`) vardır: nokta, yazı, ölçü, tarama.
 - Alan araçları (ADR 0065) `cad.entities.edit`'le kendi adlarıyla yazar: Alan birleştir, Alan kesiştir, Alan çıkar, Alan böl, Alana çevir, Çizgiye çevir; İçine tıklayarak alan `cad.entities.create`'le, adımı “Alan oluştur”.
+- Hesap pencerelerinin “Çizime ekle”si (Poligon hesabı, Kutupsal alım, Önden ve Geriden kestirme) noktaları `cad.entities.create`'le yazar: adı etiket ve öznitelik (Ad, Tür, kot bulunduysa Z (m)), adım pencerenin adı.
 - Kapalı alanın halkası (dış halka ya da delik) en az 3 köşelidir; iki kenarından biri yaysa (yay değeri 0 değil; verilmeyen 0 sayılır) 2 köşeli olabilir: alana çevrilen daire, mercek ve dairesel kesit böyledir. Taramanın halkası en az 3 köşelidir. `cad.polygon.create` en az 3 köşe ister.
 - Bir özellik değişikliğinin (`cad.entities.set`) beklenen nesnesini sözleşmenin kuralı kurar: verilen katman, renk, sembol ve etiket nesnenin kendisinin yerine geçer, null onu kaldırır; öznitelik adıyla yazılır, null ile silinir, adı geçmeyenler kalır; başka hiçbir alanı değişmez. Zaten istendiği gibi olan nesne çıktıda yoktur; hiçbiri değişmezse adım yazılmaz. Dosyayı `scripts/fixtures/set_command_cases.py` yazar; `--check` onu yeniden kurup karşılaştırır.
 - −0 dosyada yazılmaz: JavaScript'in yazdığı JSON onu 0 yapar. −0'ın korunduğu iki koşucunun kendi testlerindedir (`apps/web/src/wasm/transform.wasm.test.ts`, `crates/native/application/tests/transform.rs`).

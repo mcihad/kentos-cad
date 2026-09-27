@@ -26,12 +26,10 @@ pub mod read;
 pub mod stakeout;
 pub mod traverse;
 
-use std::collections::BTreeMap;
-
 use iced::widget::column;
 use iced::{Element, Task};
-use kentos_contracts::{Entity, EntityBase, PointEntity, Vec2 as Wire};
-use kentos_domain::Slot;
+use kentos_contracts::{CreateOperation, Entity};
+use kentos_interaction::calc::SurveyPoint;
 use kentos_interaction::pick::PickPoint;
 use kentos_interaction::{Format, Level, Vec2, fixed};
 
@@ -425,13 +423,19 @@ impl App {
         };
         let model = &doc.model;
         let calc = &self.calc;
-        let (points, kind, layer) = match window {
+        let (points, kind, operation, layer) = match window {
             Window::Traverse => (
                 calc.traverse.points(model),
                 "Poligon noktası",
+                CreateOperation::Traverse,
                 &calc.traverse.layer,
             ),
-            Window::Polar => (calc.polar.points(model), "Alım noktası", &calc.polar.layer),
+            Window::Polar => (
+                calc.polar.points(model),
+                "Alım noktası",
+                CreateOperation::PolarSurvey,
+                &calc.polar.layer,
+            ),
             Window::Intersection => {
                 let Some(found) = calc.intersection.compute(model).result else {
                     return;
@@ -441,7 +445,16 @@ impl App {
                     p: found.p,
                     z: None,
                 };
-                (vec![point], "Kestirme noktası", &calc.intersection.layer)
+                let operation = match calc.intersection.kind {
+                    intersection::Kind::Forward => CreateOperation::ForwardIntersection,
+                    intersection::Kind::Resection => CreateOperation::Resection,
+                };
+                (
+                    vec![point],
+                    "Kestirme noktası",
+                    operation,
+                    &calc.intersection.layer,
+                )
             }
             Window::Stakeout => return,
         };
@@ -449,7 +462,7 @@ impl App {
             return;
         };
         let step = self.calc_title(window);
-        if !self.add_points(&layer, &points, kind, step) {
+        if !self.add_points(&layer, &points, kind, operation) {
             return;
         }
         let n = points.len();
@@ -495,16 +508,17 @@ impl App {
         self.calc.stakeout.append(picked);
     }
 
-    /// Adds points to `layer` as one undo step named `step`, with their names
-    /// as labels and Ad, Tür and Z (m) as attributes, and selects them (the
-    /// web's `addPoints`). False, with the reason said, when the layer cannot
-    /// take them.
+    /// Adds points to `layer` through `cad.entities.create`, one undo step
+    /// named after the window (`operation`), with their names as labels and
+    /// Ad, Tür and Z (m) as attributes, and selects them (the web's
+    /// `addPoints`). A locked or hidden layer is said in the window's own
+    /// words. False, with the reason said, when the layer cannot take them.
     pub(crate) fn add_points(
         &mut self,
         layer: &str,
         points: &[NewPoint],
         kind: &str,
-        step: &str,
+        operation: CreateOperation,
     ) -> bool {
         let Some(doc) = &mut self.document else {
             return false;
@@ -519,47 +533,27 @@ impl App {
             ));
             return false;
         }
-        let entities: Vec<Entity> = points
+        let points: Vec<SurveyPoint> = points
             .iter()
-            .map(|pt| {
-                let mut attrs = BTreeMap::from([
-                    ("Ad".to_owned(), pt.name.clone()),
-                    ("Tür".to_owned(), kind.to_owned()),
-                ]);
-                if let Some(z) = pt.z {
-                    attrs.insert("Z (m)".to_owned(), fixed(z, 3));
-                }
-                Entity::Point(PointEntity {
-                    base: EntityBase {
-                        id: 0,
-                        layer_id: layer.to_owned(),
-                        color: None,
-                        attrs,
-                        label: Some(pt.name.clone()),
-                        symbol: None,
-                    },
-                    p: Wire {
-                        x: pt.p.x,
-                        y: pt.p.y,
-                    },
-                    z: pt.z,
-                })
+            .map(|pt| SurveyPoint {
+                name: pt.name.clone(),
+                p: pt.p,
+                z: pt.z,
             })
             .collect();
-        let added = model.transact(step, |doc| {
-            entities
-                .into_iter()
-                .map(|e| doc.add(e))
-                .collect::<Result<Vec<Slot>, _>>()
-        });
+        let written = kentos_interaction::calc::add_points(model, layer, &points, kind, operation);
         let hidden = !model.layers().is_visible(layer);
-        match added {
-            Ok(slots) => self.selection.set(slots),
-            Err(e) => {
-                self.error(e.to_string());
+        let (slots, warnings) = match written {
+            Ok(done) => done,
+            Err(reason) => {
+                self.warn(reason);
                 return false;
             }
+        };
+        for warning in warnings {
+            self.warn(warning);
         }
+        self.selection.set(slots);
         if hidden {
             self.warn(format!(
                 "“{name}” katmanı gizli; eklenen noktalar görünmüyor."

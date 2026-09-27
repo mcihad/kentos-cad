@@ -69,6 +69,7 @@ pub mod area;
 pub mod array;
 pub mod boundary;
 pub mod breaking;
+pub mod calc;
 pub mod circle;
 pub mod clipboard;
 pub mod construction;

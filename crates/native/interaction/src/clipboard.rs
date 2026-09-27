@@ -8,21 +8,23 @@
 //!   stays in the app. The system clipboard is not used, as on the web.
 //! - It holds copies of the objects without their ids, in the order they
 //!   were selected, and a base point: the lower left corner of their box.
-//! - Kes and Yapıştır write through the document, as the web's commands do
-//!   (no product command has them yet): one undo step each, “Kes” and
-//!   “Yapıştır”. Objects on locked layers are not cut. Pasted objects are new
-//!   ones with new persistent ids (docs/adr/0014), however often they are
-//!   pasted; each keeps its layer when the drawing has it unlocked, else
-//!   goes to the active layer.
+//! - Kes deletes through the product command `cad.entities.delete`
+//!   (docs/adr/0029) inside one undo step “Kes”, as the web's command does
+//!   since f860b5f; Yapıştır writes through the document (no product command
+//!   has it yet), one undo step “Yapıştır”. Objects on locked layers are not
+//!   cut. Pasted objects are new ones with new persistent ids
+//!   (docs/adr/0014), however often they are pasted; each keeps its layer
+//!   when the drawing has it unlocked, else goes to the active layer.
 
 use std::convert::Infallible;
 
-use kentos_contracts::Entity;
+use kentos_contracts::{EntitiesDelete, Entity};
 use kentos_domain::Slot;
 use kentos_geometry_core::geom::affine::translation;
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::ops::transform::transform_shape;
 use kentos_native_application::geometry::{shape, with_shape};
+use kentos_native_application::{ExecutionContext, delete};
 
 use crate::Vec2;
 use crate::log::Level;
@@ -140,14 +142,23 @@ pub fn cut(clipboard: &mut Clipboard, cx: &mut Context<'_>) -> usize {
     }
     let slots: Vec<Slot> = editable.iter().map(|(s, _)| *s).collect();
     let n = editable.len();
-    clipboard.set(
-        editable.into_iter().map(|(_, e)| e).collect(),
-        extent(cx, &slots),
-    );
-    let _ = cx.doc.transact(CUT_LABEL, |doc| {
-        doc.remove(&slots);
-        Ok::<(), Infallible>(())
+    let base = extent(cx, &slots);
+    // Deleted through cad.entities.delete (docs/adr/0029), as Sil deletes; the step keeps the name “Kes”.
+    let input = EntitiesDelete {
+        uids: slots
+            .iter()
+            .filter_map(|slot| cx.doc.uid(*slot))
+            .map(|uid| uid.to_string())
+            .collect(),
+        expected_revision: None,
+    };
+    let Ok(result) = cx.doc.transact(CUT_LABEL, |doc| {
+        Ok::<_, Infallible>(delete::execute(&mut ExecutionContext::new(doc), input))
     });
+    if crate::points::written(result, cx).is_none() {
+        return 0;
+    }
+    clipboard.set(editable.into_iter().map(|(_, e)| e).collect(), base);
     let doc = &*cx.doc;
     cx.selection.retain(|slot| doc.get(slot).is_some());
     cx.say(Level::Success, format!("{n} nesne panoya kesildi."));

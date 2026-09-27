@@ -115,3 +115,7 @@ Her bozma çalıştırıldıktan sonra geri alındı (`.run/breaks-0056.log`):
   - `gorunum-kaydir-*`: Kaydır etkin, görünüm kaymış;
   - `gorunum-secime-*`: seçime yakınlaştırılmış görünüm;
   - `gorunum-pencere-*`: sürüklenen kutu, düğme basılı.
+
+## Sonra
+
+- 27 Eylül: Kes iki platformda `cad.entities.delete` ile siler (web `f860b5f`). Silme “Kes” adlı işlemin içindedir; adım adı, kilit uyarısı, ileti ve pano aynı kalır. Çizgi'nin Geri (G) yedeği de, çizim değiştikten sonra, çizgiyi aynı komutla siler. Sonradan kilitlenen katmandaki çizgi kalır ve komutun reddi söylenir; silinen çizgi sonraki G'lerle geri gelmez (`crates/native/interaction/tests/line.rs`).

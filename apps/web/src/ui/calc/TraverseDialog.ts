@@ -285,7 +285,7 @@ class TraverseDialog implements Picker {
   private addToDrawing(): void {
     const pts = this.points();
     if (!pts.length || !state.layer) return;
-    const n = addPoints(this.ctx, state.layer, pts, 'Poligon noktası', TITLE);
+    const n = addPoints(this.ctx, state.layer, pts, 'Poligon noktası', 'traverse');
     if (n === null) return;
     this.ctx.log.success(`${TITLE}: ${n} poligon noktası çizime eklendi (Ctrl+Z geri alır).`);
     this.dialog.close();

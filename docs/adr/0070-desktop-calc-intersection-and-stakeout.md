@@ -42,7 +42,7 @@
   - her nokta adını etiket olarak, Ad, Tür ve Z (m) özniteliklerini taşır;
   - noktalar seçilir, pencere kapanır.
   - Kilitli katman: "“X” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katman seçin." Gizli katman yazıldıktan sonra söylenir: "“X” katmanı gizli; eklenen noktalar görünmüyor."
-  - Web gibi belgeye doğrudan yazılır; ürün komutu yoktur (web'de B5 önerisi açık).
+  - Başta web gibi belgeye doğrudan yazılıyordu. 27 Eylül'den beri iki platformda `cad.entities.create` ile yazılır (web `dbdacc1`). İşlemi pencerenin adını taşır: `forwardIntersection`, `resection`; Poligon hesabı ve Kutupsal alım için `traverse`, `polarSurvey` (ADR 0071). Kilitli ve gizli katman pencerenin kendi sözleriyle söylenir.
 - **Yazılanlar** uygulama açık kaldıkça kalır; hangi çizim açık olursa olsun paylaşılır, kaydedilmez. Web'de de sayfa oturumu boyuncadır.
 
 ### Kestirme (`calc.forward`, `calc.resection`)

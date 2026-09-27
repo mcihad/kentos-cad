@@ -167,7 +167,7 @@ class PolarDialog implements Picker {
   private addToDrawing(): void {
     const pts = this.points();
     if (!pts.length || !state.layer) return;
-    const n = addPoints(this.ctx, state.layer, pts, 'Alım noktası', TITLE);
+    const n = addPoints(this.ctx, state.layer, pts, 'Alım noktası', 'polarSurvey');
     if (n === null) return;
     this.ctx.log.success(`${TITLE}: ${n} nokta çizime eklendi (Ctrl+Z geri alır).`);
     this.dialog.close();

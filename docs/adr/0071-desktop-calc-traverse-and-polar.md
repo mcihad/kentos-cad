@@ -75,7 +75,7 @@
 - **Rapor:** vY ve vX sütunlarıyla, kapanma satırları sonda.
 - **Çizime ekle:**
   - Varsayılan katman `poligon`'dur, yoksa etkin katmandır.
-  - Tür "Poligon noktası", adım "Poligon hesabı".
+  - Tür "Poligon noktası", adım "Poligon hesabı": `cad.entities.create`, işlem `traverse` (web `dbdacc1`).
   - İleti: "Poligon hesabı: 3 poligon noktası çizime eklendi (Ctrl+Z geri alır)."
   - Yeni nokta yoksa kapalıdır.
 
@@ -100,7 +100,7 @@
 - **Sonuç tablosu:** Nokta, Semt, Yatay uzunluk, Y, X, Z. Z kot, "Δ fark" ya da "—" olabilir.
 - **Çizime ekle:**
   - Varsayılan katman etkin katmandır.
-  - Tür "Alım noktası"; kot noktanın Z'si ve "Z (m)" özniteliği olur.
+  - Tür "Alım noktası"; kot noktanın Z'si ve "Z (m)" özniteliği olur. `cad.entities.create`, işlem `polarSurvey`, adım "Kutupsal alım".
   - İleti: "Kutupsal alım: 3 nokta çizime eklendi (Ctrl+Z geri alır)."
 
 ### Ortak parçalar web'in yerleşimine getirildi (dört pencere)
