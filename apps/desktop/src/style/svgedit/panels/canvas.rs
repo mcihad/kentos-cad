@@ -74,7 +74,8 @@ pub(super) fn canvas_props<'a>(ed: &SvgEditor) -> Element<'a, Message> {
             .into(),
         );
     }
-    let ink = if o.ink_auto { None } else { parse_hex(&o.ink) };
+    // The colour the preview paints with: the theme's ink while it follows the theme.
+    let ink = parse_hex(&ed.ink()).unwrap_or(Color::BLACK);
     let second = parse_hex(&o.second).unwrap_or(Color::from_rgb8(0x2b, 0x83, 0xba));
     Column::with_children(vec![
         title("Tuval".to_owned(), None),
@@ -108,7 +109,7 @@ pub(super) fn canvas_props<'a>(ed: &SvgEditor) -> Element<'a, Message> {
                 fields::pair(
                     fields::labelled(
                         "Sembol rengi",
-                        swatch(ink.unwrap_or(Color::BLACK), |hex| {
+                        swatch(ink, |hex| {
                             change(move |ed| {
                                 // Picking a symbol colour stops it following the theme.
                                 ed.options.ink = hex.clone();
