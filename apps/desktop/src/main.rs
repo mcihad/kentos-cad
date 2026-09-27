@@ -103,6 +103,12 @@ fn main() -> iced::Result {
                 // Each processing tool's last values (islemler.json), beside them.
                 app.processing.memory = processing::memory::Memory::open(&folder);
             }
+            // Kitaplığım, the user's own symbols (kitaplik.kstil, docs/adr/0092).
+            if let Some(folder) = style::user_library::default_folder()
+                && let Some(problem) = app.styles.open_user_library(&folder)
+            {
+                app.warn(problem);
+            }
             // Without a drawing named, the start screen (when the preference wants it).
             if path.is_none() {
                 app.start_at_launch();

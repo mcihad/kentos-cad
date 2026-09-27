@@ -74,14 +74,14 @@
     },
     "commandsWithoutPlace": [],
     "commandsWithoutTests": 52,
-    "commandsOnDesktop": 139,
+    "commandsOnDesktop": 142,
     "desktop": {
       "commands": {
         "total": 167,
-        "implemented": 139,
+        "implemented": 142,
         "partial": 0,
         "pending": 15,
-        "none": 11,
+        "none": 8,
         "n/a": 2
       },
       "tools": {
@@ -126,10 +126,10 @@
       },
       "storage": {
         "total": 10,
-        "implemented": 6,
+        "implemented": 7,
         "partial": 1,
         "pending": 0,
-        "none": 2,
+        "none": 1,
         "n/a": 1
       },
       "fileFields": {
@@ -143,9 +143,9 @@
       "screens": {
         "total": 63,
         "implemented": 42,
-        "partial": 3,
+        "partial": 4,
         "pending": 0,
-        "none": 18,
+        "none": 17,
         "n/a": 0
       }
     },
@@ -2488,7 +2488,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/ribbon.test.ts",
@@ -2523,7 +2523,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/ribbon.test.ts"
@@ -2622,7 +2622,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/scripts/e2e/layout.mjs",
@@ -8807,8 +8807,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "$XDG_DATA_HOME/kentos-cad/kitaplik.kstil, okunamayan kitaplik-okunamadi-<zaman>.kstil olarak ayrılır (ADR 0092)"
     },
     {
       "id": "kentos.ui.v1",
@@ -12050,8 +12051,10 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "partial"
+      },
+      "desktopWhere": "apps/desktop/src/style/manager/ (ADR 0092)",
+      "desktopNote": "Düzenle ve Yeni sembol sembol tasarımcısını, SVG çizimi SVG düzenleyicisini açar; ikisi masaüstüne henüz taşınmadı, düğmeleri soluk ve nedenini söyler."
     },
     {
       "id": "apps/web/src/ui/style/SymbolDesigner.ts#openSymbolDesigner",

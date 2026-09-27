@@ -4,7 +4,7 @@
 //! pipelines and atlas in a small shader widget, so a picture is exactly
 //! what the map draws (the web paints its pictures with Canvas2D). Built
 //! pictures are kept by what they show: the symbol, the sample, the size,
-//! the palette and the library's version. The GPU keeps a picture's
+//! the palette and the library's drawings (`assets_version`). The GPU keeps a picture's
 //! buffers while it is on the screen and lets them go two frames after.
 
 use std::collections::HashMap;
@@ -127,7 +127,8 @@ impl Thumbs {
             size: (size.0.to_bits(), size.1.to_bits()),
             px_per_mm: px_per_mm.map(f64::to_bits),
             palette: format!("{}{}{}{}", p.fg, p.fg_dim, p.ink, p.paper),
-            library: look.library.version(),
+            // A picture depends on its own JSON and on the drawings it uses, not on names or categories.
+            library: look.library.assets_version(),
         };
         let mut built = self.built.lock().unwrap_or_else(PoisonError::into_inner);
         if let Some(hit) = built.get(&key) {

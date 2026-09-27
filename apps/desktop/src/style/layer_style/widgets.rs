@@ -39,8 +39,8 @@ pub(super) struct Env<'a> {
     pub name_of: &'a dyn Fn(&str) -> Option<String>,
 }
 
-/// Why a menu item that leads to another style window is off for now.
-const NOT_YET: &str = "Web'de var; masaüstüne henüz taşınmadı.";
+/// Why editing a slot's symbol is off for now.
+const NOT_YET: &str = "Sembol tasarımcısı web'de var; masaüstüne henüz taşınmadı.";
 
 /// A symbol in a style: its picture (a class without one shows the layer's
 /// simple look it falls back to) and its name; the menu picks another, edits
@@ -96,14 +96,24 @@ fn slot<'a>(
         }
         s
     });
-    let linked = symbol.is_some_and(|s| ref_id(s).is_some());
+    let linked_id = symbol.and_then(ref_id).map(str::to_owned);
+    let linked = linked_id.is_some();
+    // A symbol written into the style (not a library reference) can be kept in Kitaplığım.
+    let own = symbol.filter(|s| ref_id(s).is_none()).cloned();
     let has = symbol.is_some();
-    let back_at = at.clone();
+    let title_owned = title.to_owned();
     let menu = move || {
         Menu::new()
-            .item("Kitaplıktan seç…", None)
+            .item(
+                "Kitaplıktan seç…",
+                ev(Event::Pick(
+                    at.clone(),
+                    class,
+                    title_owned.clone(),
+                    linked_id.clone(),
+                )),
+            )
             .icon(crate::icons::from_web(Some("styles")))
-            .detail(NOT_YET)
             .item(
                 if linked {
                     "Kopyasını burada düzenle…"
@@ -114,13 +124,16 @@ fn slot<'a>(
             )
             .icon(crate::icons::from_web(Some("edit")))
             .detail(NOT_YET)
-            .item("Kitaplığıma kaydet", None)
+            .item(
+                "Kitaplığıma kaydet",
+                own.clone()
+                    .map(|s| ev(Event::Keep(at.clone(), class, title_owned.clone(), s))),
+            )
             .icon(crate::icons::from_web(Some("save")))
-            .detail(NOT_YET)
             .separator()
             .item(
                 "Basit görünüşe dön",
-                has.then(|| ev(Event::Symbol(back_at.clone(), class, None))),
+                has.then(|| ev(Event::Symbol(at.clone(), class, None))),
             )
     };
     tip(

@@ -221,6 +221,10 @@ pub const PORTED: &[&str] = &[
     "view.symbols.screen",
     // Katman stili: the active layer's renderer (docs/adr/0091).
     "style.layerStyle",
+    // Stil yöneticisi, and symbols given to the selected objects or taken away (docs/adr/0092).
+    "style.manager",
+    "style.assign",
+    "style.clearSymbol",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the
