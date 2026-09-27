@@ -46,8 +46,9 @@ Bir iz, kullanıcının çizim alanında yaptıklarını adım adım yazar: komu
 | `v1/areas.json` | Alan işlemleri ([ADR 0065](../../docs/adr/0065-desktop-area-tools.md)): iki parseli tıklayarak seçip birleştirme, tek adımda geri alma; alanı tıklanan noktalarla bölme, oluşacak parçaların önizlemesi, geri alınan bölmenin ilk parçası parselin kendisidir; iki seçimle alan çıkarma; çizgilerin kapattığı karenin içine tıklayarak alan (geri alınan yazmaların kimlikleri yeniden verilmez); delikli parseli çoklu çizgilere çevirme |
 | `v1/measure-parcel.json` | Mesafe ölç, Alan hesapla ve Parsel oluştur ([ADR 0067](../../docs/adr/0067-desktop-measure-and-parcel.md)): yolun noktaları, Uzunluk (U) beklerken Ctrl+Z, Geri (G) gibi, noktayı alır ve beklemeyi bitirir, Enter ile toplam uzunluk (hiçbir şey yazılmaz); dört köşe ve ilk köşeye tıklayarak kapanan alanın alanı ve çevresi; parsel katmanına numarasıyla yazılan, seçilen ve tek adımda geri alınan parsel (`areas.kcad` üstünde) |
 | `v1/grips.json` | Tutamaçlar ([ADR 0068](../../docs/adr/0068-desktop-grips-and-hover-card.md)): seçili çizginin ucunu sürükleyerek taşıma ve tek adımda geri alma; sürüklenmeden tıklanan tutamaç sıcak kalır, sonraki tık yerleştirir; Esc tutamacı bırakır (seçim kalır), Enter imlecin olduğu yere koyar; kapalı alanın kenar ortası yeni köşe olur; kilitli katmandaki nesnenin tutamacı alınmaz, basmak seçim kutusudur (`objects.kcad` üstünde) |
+| `v1/point-calc.json` | Nokta hesapla, çalışan Çizgi'nin içinde (`UX-07`): nokta beklenirken komut satırına yazılan takma ad (`YAN`, `KKES`, `DKES`, `HAT`, `AM`, `ORTA`) hesaplayıcıyı açar, Çizgi askıda kalır; referanslar kenetlenir (kilitli katmandaki çizgi de); hesaplanan nokta Çizgi'ye tıklanmış gibi gider ve iletisi projenin ondalıklarıyla yazılır; iki çözümden tıklanan, paralel doğruların uyarısı, `1/4` oranı, grad açı; okunamayan değer reddedilir, hesaplayıcı bekler; Esc askıdaki komuta hiçbir şey eklemeden döner; Ctrl+Z hesaplayıcının son referansını geri alır, çizimi geri almaz (`objects.kcad` üstünde) |
 | `v1/empty.kcad` | İzlerin başladığı boş çizim (`.kcad` v1) |
-| `v1/objects.kcad` | Seçim ve kenet izlerinin çizimi: çizgiler (1–3; 2 ile 3 (9,6; 8,8)'de kesişir), kapalı alan (4), nokta (5), kilitli katmanda çizgi (6), gizli katmanda çizgi (7) |
+| `v1/objects.kcad` | Seçim, kenet ve nokta hesabı izlerinin çizimi: çizgiler (1–3; 2 ile 3 (9,6; 8,8)'de kesişir), kapalı alan (4), nokta (5), kilitli katmanda çizgi (6), gizli katmanda çizgi (7) |
 | `v1/edits.kcad` | Değiştirme izlerinin çizimi (ADR 0047): (−20, 12)'de kesişen 1 ve 2, x = −4'te sınır 3, köşesi (0, 4)'te L biçimli çoklu çizgi 4, (14, 4)'te birleşen 5 ve 6, kırılacak 7, (8, −4)'te uç uca gelen 8 ve 9, kapalı alan 10, 10 m'lik 11, 12, 9'un ucundan devam eden, kilitli katmandaki 13 |
 | `v1/hatch.kcad` | Tarama izinin çizimi (ADR 0062): (−28…−8, −6…10)'da 20 × 16 m parsel 1, içinde 8 × 6 m yapı 2 (Yapılar); x = 2, 14, 26 ve y = −6, 10'da iki 12 × 16 m yüz kapatan çizgiler 3–7; soldaki yüzde (6…10, 0…4) Yapılar'da kapalı çoklu çizgi 8 |
 | `v1/areas.kcad` | Alan işlemleri izinin çizimi (ADR 0065): Parseller'de (0…10, 0…10)'da parsel 1 ve (6…16, 4…14)'te parsel 2 (24 m² örtüşür); (−20, 8)'de 3 m'lik daire 3; (−28…−18, −15…−5)'te bir kare kapatan çizgiler 4–7; (18…28, −15…−5)'te (21…25, −12…−8) delikli parsel 8; kilitli katmanda (−10…−4, −18…−12) kare 9; y = 2'de çizgi 10 |
@@ -89,15 +90,17 @@ Adımlardaki koordinatlar, `view.center`'a göre doğu ve kuzey farklarıdır, m
 
 | Alan | Anlamı |
 |---|---|
-| `tool` | Etkin araç; komut yokken `select` |
-| `points` | Çalışan komutun aldığı nokta sayısı |
+| `tool` | Etkin araç; komut yokken `select`. Nokta hesabı çalışırken askıdaki komut (`line`) |
+| `points` | Çalışan komutun aldığı nokta sayısı; nokta hesabı çalışırken onun aldığı referans noktaları |
 | `options` | İstemdeki seçenek tuşları, sırasıyla (`["Y", "U", "G", "Enter"]`) |
+| `prompt` | İstemin tam metni: komutun adı, adımı ve seçenekleri (`Çizgi: sonraki noktayı belirtin [Geri (G) / Bitir (Enter)]`); nokta hesabı çalışırken onun istemi |
 | `dynamicInput` | İmleç yanındaki değer alanının metni; kapalıysa `null` |
 | `commandLine` | Komut satırının metni |
 | `entities` | Çizimdeki nesne sayısı |
 | `newest` | En son oluşturulan nesne: `kind`, köşeler `points` (çizginin iki ucu: başlangıç, bitiş; noktanın yeri; yayın saat yönünün tersine başlangıcı ve bitişi), ardışık köşe farkları `edges`, yaylı kenar sayısı `arcs`, dairenin ya da yayın merkezi `center` ve yarıçapı `radius` (ikisi de `clickTolerance` içinde). Eğrinin köşeleri geçtiği noktalardır; elipsin `points`'i eksen uçlarıdır (büyük, küçük, saat yönünün tersine; eliptik yayda başlangıç ve bitiş), `center`'ı merkezidir; yardımcı çizginin ve ışının `points`'i geçtiği nokta ve doğrultusunda bir metre ötesidir (ADR 0057) |
 | `canUndo`, `canRedo`, `dirty` | Geri al, yinele ve kaydedilmemiş değişiklik |
 | `log` | Son iletinin düzeyi: `success`, `info`, `warn`, `error` |
+| `logged` | Adımın yazdığı iletiler arasında, bu sırayla ve tam metinleriyle bulunması gerekenler (her düzeyde; araya başka iletiler girebilir): sayıların projenin ondalıklarıyla yazılışı, ret iletileri |
 | `metresPerPixel` | Görünümün ölçeği |
 | `viewCenter` | Görünümün merkezi, `view.center`'a göre doğu ve kuzey farkı: Kaydır'ın ve yakınlaştırmaların bıraktığı yer (ADR 0056) |
 | `selected` | Seçili nesnelerin kimlikleri, seçildikleri sırayla (`[1, 4]`) |
@@ -136,7 +139,7 @@ Web oynatıcısı her izi üç varyantta oynatır. Masaüstü de aynısını yap
 | Varyant | Anlamı |
 |---|---|
 | `us` | US klavye, 1× ekran |
-| `tr-q` | Türkçe Q klavye. `+` Shift+4'le, `-` `*`'ın sağındaki tuşla, `@` AltGr+Q ile yazılır; AltGr Windows'taki gibi Ctrl+Alt olarak gelir |
+| `tr-q` | Türkçe Q klavye. `+` Shift+4'le, `-` `*`'ın sağındaki tuşla, `/` Shift+7'yle, `@` AltGr+Q ile yazılır; AltGr Windows'taki gibi Ctrl+Alt olarak gelir |
 | `hidpi` | US klavye, 2× ekran (HiDPI) |
 
 Bir varyantı seçmek için: `pnpm e2e:interaction -- --variant=tr-q`.

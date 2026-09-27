@@ -70,9 +70,10 @@ const LAYOUTS = {
     '+': { code: 'NumpadAdd', vk: 107 },
     '@': { code: 'Digit2', vk: 50, shift: true },
     '<': { code: 'IntlBackslash', vk: 226 },
+    '/': { code: 'Slash', vk: 191 },
     ' ': { code: 'Space', vk: 32 },
   },
-  // Turkish Q: + is Shift+4, - sits right of *, @ is AltGr+Q. Windows
+  // Turkish Q: + is Shift+4, - sits right of *, / is Shift+7, @ is AltGr+Q. Windows
   // reports AltGr as Ctrl+Alt, so that is what the page receives.
   'tr-q': {
     '.': { code: 'Slash', vk: 191 },
@@ -82,6 +83,7 @@ const LAYOUTS = {
     '+': { code: 'Digit4', vk: 52, shift: true },
     '@': { code: 'KeyQ', vk: 81, altGr: true },
     '<': { code: 'IntlBackslash', vk: 226 },
+    '/': { code: 'Digit7', vk: 55, shift: true },
     ' ': { code: 'Space', vk: 32 },
     ı: { code: 'KeyI', vk: 73 },
     i: { code: 'Quote', vk: 222 },
@@ -250,8 +252,8 @@ async function act(step) {
   if (!step.expect) throw new Error(`unknown step ${JSON.stringify(step)}`);
 }
 
-/** What a trace can observe, read the way the app itself reads it. */
-const observe = () =>
+/** What a trace can observe, read the way the app itself reads it; `mark`: the newest message before the step. */
+const observe = (mark) =>
   b.eval(`(async () => {
     const k = window.kentos;
     const { parsePrompt } = await import('/src/ui/promptOptions.ts');
@@ -270,6 +272,7 @@ const observe = () =>
       tool: k.tools.activeId.value,
       points: k.tools.active.pointCount ?? 0,
       options: parsePrompt(k.tools.prompt.value).options.map((o) => o.key),
+      prompt: k.tools.prompt.value,
       dynamicInput: field && !field.hidden ? field.querySelector('input').value : null,
       commandLine: document.querySelector('.cmdline__input')?.value ?? null,
       entities: k.doc.size,
@@ -280,6 +283,8 @@ const observe = () =>
       canRedo: k.doc.canRedo.value,
       dirty: k.doc.dirty.value,
       log: k.log.entries.value.at(-1)?.level ?? null,
+      // The texts of the messages the step wrote (the \`logged\` expectation).
+      logged: k.log.entries.value.filter((e) => e.id > ${mark}).map((e) => e.text),
       metresPerPixel: 1 / k.view.camera.scale,
       viewCenter: [k.view.camera.center.x, k.view.camera.center.y],
       selected: [...k.selection.ids.value],
@@ -334,6 +339,12 @@ function compare(expect, got, t) {
         bad.push(`${key}: ${JSON.stringify(c)}, beklenen ${JSON.stringify(want)} (±${t.clickTolerance} m)`);
     } else if (key === 'newest') bad.push(...compareShape('newest', have, want, t));
     else if (key === 'objects') for (const w of want) bad.push(...compareShape(`objects[${w.id}]`, have[w.id] ?? null, w, t));
+    else if (key === 'logged') {
+      // Each text, whole, in this order among the step's messages; others may come between.
+      let n = 0;
+      for (const text of have) if (n < want.length && text === want[n]) n++;
+      if (n < want.length) bad.push(`logged: ${JSON.stringify(have)}, beklenen sırasıyla ${JSON.stringify(want)}`);
+    }
     else if (!same(have, want)) bad.push(`${key}: ${JSON.stringify(have)}, beklenen ${JSON.stringify(want)}`);
   }
   return bad;
@@ -354,6 +365,7 @@ try {
       const problems = [];
       for (const [i, step] of t.steps.entries()) {
         const label = `  adım ${i + 1} ${JSON.stringify(Object.fromEntries(Object.entries(step).filter(([k]) => k !== 'expect' && k !== 'note')))}`;
+        const mark = await b.eval('window.kentos.log.entries.value.at(-1)?.id ?? 0');
         try {
           await act(step);
         } catch (e) {
@@ -362,7 +374,7 @@ try {
           break;
         }
         if (!step.expect) continue;
-        const bad = compare(step.expect, await observe(), t);
+        const bad = compare(step.expect, await observe(mark), t);
         if (bad.length) problems.push(`${label}: ${bad.join('; ')}`);
       }
       // The end state of each trace, to look at (scripts/e2e/out, not committed).

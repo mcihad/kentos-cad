@@ -126,6 +126,24 @@ class PointCalcTool implements Tool {
     return this.pts.at(-1) ?? null;
   }
 
+  /** References picked so far. */
+  get pointCount(): number {
+    return this.pts.length;
+  }
+
+  /**
+   * Ctrl+Z while the calculator runs: newest first, the choice between two
+   * solutions (back to typing the values), else the last reference picked.
+   * True even with nothing to take back: the drawing is never undone under
+   * the suspended command; Esc leaves the calculator.
+   */
+  undoStep(): boolean {
+    if (this.candidates.length) this.candidates = [];
+    else this.pts.pop();
+    this.refresh();
+    return true;
+  }
+
   pointerMove(p: ToolPointer): void {
     this.hover = p.world;
     this.ctx.view.requestOverlay();

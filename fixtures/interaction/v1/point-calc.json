@@ -1,0 +1,162 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "point-calc",
+  "title": "Nokta hesapla, çalışan Çizgi'nin içinde, kenetlenen referanslarla: yan nokta (hesaplanan noktanın iletisi), kenar kesişimi (iki çözümden tıklanan), doğru kesişimi (paralel uyarısı, kilitli katmandaki çizgi), hat üzerinde oran, açı ve mesafe, iki nokta ortası; okunamayan değer reddedilir, hesaplayıcı bekler; Esc askıdaki komuta döner; Ctrl+Z hesaplayıcının son referansını geri alır, çizimi değil",
+  "source": "tools/pointCalc.ts; ToolManager.nest/unnest; TODOS UX-01, UX-07",
+  "covers": ["UX-01", "UX-07"],
+  "document": "objects.kcad",
+  "view": {"center": [487000, 4420000], "metresPerPixel": 0.125},
+  "draft": {"snap": true, "grid": false, "ortho": false, "polar": false, "tracking": false},
+  "prefs": {"cursorInput": true},
+  "clickTolerance": 0.125,
+  "steps": [
+    {"run": "tool.line", "expect": {"tool": "line", "points": 0, "prompt": "Çizgi: ilk noktayı belirtin"}},
+    {"click": [-24, -12], "note": "Çizginin ilk noktası 1'in ucuna kenetlenir.", "expect": {"points": 1, "entities": 7}},
+    {"focus": "commandLine"},
+    {"text": "YAN"},
+    {"key": "Enter", "expect": {"tool": "line", "points": 0, "prompt": "Yan nokta (dik ayak, dik boy): hattın başlangıç noktası (A) gösterin"}},
+    {"click": [-24, -12], "expect": {"points": 1, "prompt": "Yan nokta (dik ayak, dik boy): hattın doğrultu noktası (B) gösterin"}},
+    {"click": [-8, -12], "expect": {"points": 2, "prompt": "Yan nokta (dik ayak, dik boy): dik ayak ve dik boyu yazın: absis,ordinat (ordinat sağa artı)"}},
+    {"text": "12.5,3"},
+    {
+      "key": "Enter",
+      "note": "Hesaplanan nokta Çizgi'ye tıklanmış gibi gider; iletisi projenin ondalıklarıyla yazılır.",
+      "expect": {
+        "tool": "line",
+        "points": 2,
+        "entities": 8,
+        "prompt": "Çizgi: sonraki noktayı belirtin [Geri (G) / Bitir (Enter)]",
+        "newest": {"kind": "line", "points": [[-24, -12], [-11.5, -15]]},
+        "logged": ["Hesaplanan nokta: Y 486988.500  X 4419985.000"]
+      }
+    },
+    {"focus": "commandLine"},
+    {"text": "KKES"},
+    {"key": "Enter", "expect": {"points": 0, "prompt": "Kenar kesişimi: birinci nokta (A) gösterin"}},
+    {"click": [0, 4]},
+    {"click": [16, 4], "expect": {"points": 2, "prompt": "Kenar kesişimi: A ve B noktalarına uzaklıkları yazın: d1,d2"}},
+    {"text": "10,10"},
+    {
+      "key": "Enter",
+      "note": "İki çözüm: A→B'nin sağındaki önce; Enter onu alır, tıklama en yakınını.",
+      "expect": {"points": 2, "entities": 8, "options": ["Enter"], "prompt": "Kenar kesişimi: iki çözümden istediğinize tıklayın [Sağdaki (Enter)]"}
+    },
+    {
+      "click": [8, 10],
+      "expect": {
+        "tool": "line",
+        "points": 3,
+        "entities": 9,
+        "prompt": "Çizgi: sonraki noktayı belirtin [Geri (G) / Kapat (K) / Bitir (Enter)]",
+        "newest": {"kind": "line", "points": [[-11.5, -15], [8, 10]]}
+      }
+    },
+    {"focus": "commandLine"},
+    {"text": "DKES"},
+    {"key": "Enter", "expect": {"points": 0, "prompt": "Doğru kesişimi (4 nokta): birinci doğrunun ilk noktası (A) gösterin"}},
+    {"click": [-24, -12]},
+    {"click": [-8, -12]},
+    {
+      "click": [4, -16],
+      "note": "Kilitli katmandaki çizgi de referans olur.",
+      "expect": {"points": 3, "prompt": "Doğru kesişimi (4 nokta): ikinci doğrunun ikinci noktası (D) gösterin"}
+    },
+    {
+      "click": [16, -16],
+      "note": "Paralel doğrular: uyarı; birinci doğru kalır, ikinci doğru yeniden istenir.",
+      "expect": {
+        "points": 2,
+        "entities": 9,
+        "log": "warn",
+        "logged": ["Doğrular paralel; kesişim yok. Başka iki nokta gösterin."],
+        "prompt": "Doğru kesişimi (4 nokta): ikinci doğrunun ilk noktası (C) gösterin"
+      }
+    },
+    {"click": [-12, 4]},
+    {
+      "click": [-12, 14],
+      "expect": {
+        "tool": "line",
+        "points": 4,
+        "entities": 10,
+        "prompt": "Çizgi: sonraki noktayı belirtin [Geri (G) / Kapat (K) / Bitir (Enter)]",
+        "newest": {"kind": "line", "points": [[8, 10], [-12, -12]]}
+      }
+    },
+    {"focus": "commandLine"},
+    {"text": "HAT"},
+    {"key": "Enter", "expect": {"points": 0, "prompt": "Hat üzerinde nokta: hattın başlangıcı (A) gösterin"}},
+    {"click": [0, 4]},
+    {"click": [24, 16], "expect": {"points": 2, "prompt": "Hat üzerinde nokta: A’dan uzaklığı yazın ya da a/b oranı (ör. 1/3); ya da hat üzerinde tıklayın"}},
+    {"text": "1/4"},
+    {"key": "Enter", "expect": {"tool": "line", "points": 5, "entities": 11, "newest": {"kind": "line", "points": [[-12, -12], [6, 7]]}}},
+    {"focus": "commandLine"},
+    {"text": "AM"},
+    {"key": "Enter", "expect": {"points": 0, "prompt": "Açı ve mesafe: durulan nokta (S) gösterin"}},
+    {"click": [0, 4]},
+    {"click": [0, 16], "expect": {"points": 2, "prompt": "Açı ve mesafe: açı (grad, saat yönünde) ve mesafeyi yazın: açı,mesafe"}},
+    {"text": "100,6"},
+    {"key": "Enter", "expect": {"tool": "line", "points": 6, "entities": 12, "newest": {"kind": "line", "points": [[6, 7], [6, 4]]}}},
+    {"focus": "commandLine"},
+    {"text": "ORTA"},
+    {"key": "Enter", "expect": {"points": 0, "prompt": "İki nokta ortası: birinci nokta gösterin"}},
+    {"click": [-24, 4], "expect": {"points": 1, "prompt": "İki nokta ortası: ikinci nokta gösterin"}},
+    {
+      "click": [-12, 14],
+      "expect": {
+        "tool": "line",
+        "points": 7,
+        "entities": 13,
+        "prompt": "Çizgi: sonraki noktayı belirtin [Geri (G) / Kapat (K) / Bitir (Enter)]",
+        "newest": {"kind": "line", "points": [[6, 4], [-18, 9]]}
+      }
+    },
+    {"focus": "commandLine"},
+    {"text": "HAT"},
+    {"key": "Enter", "expect": {"points": 0}},
+    {"click": [0, 4]},
+    {"click": [0, 16], "expect": {"points": 2, "prompt": "Hat üzerinde nokta: A’dan uzaklığı yazın ya da a/b oranı (ör. 1/3); ya da hat üzerinde tıklayın"}},
+    {"focus": "commandLine"},
+    {"text": "abc"},
+    {
+      "key": "Enter",
+      "note": "Okunamayan değer reddedilir; hesaplayıcı değeri beklemeyi sürdürür.",
+      "expect": {
+        "tool": "line",
+        "points": 2,
+        "entities": 13,
+        "log": "warn",
+        "logged": ["“abc” anlaşılamadı. Koordinatı Y,X ya da @dY,dX biçiminde yazın."],
+        "prompt": "Hat üzerinde nokta: A’dan uzaklığı yazın ya da a/b oranı (ör. 1/3); ya da hat üzerinde tıklayın"
+      }
+    },
+    {"text": "5"},
+    {"key": "Enter", "expect": {"tool": "line", "points": 8, "entities": 14, "newest": {"kind": "line", "points": [[-18, 9], [0, 9]]}}},
+    {"focus": "commandLine"},
+    {"text": "YAN"},
+    {"key": "Enter", "expect": {"points": 0}},
+    {"click": [-24, -12], "expect": {"points": 1}},
+    {
+      "key": "Esc",
+      "note": "Esc hesaplayıcıdan çıkar; Çizgi kaldığı yerden sürer, çizgi eklenmez.",
+      "expect": {"tool": "line", "points": 8, "entities": 14, "prompt": "Çizgi: sonraki noktayı belirtin [Geri (G) / Kapat (K) / Bitir (Enter)]"}
+    },
+    {"focus": "commandLine"},
+    {"text": "HAT"},
+    {"key": "Enter", "expect": {"points": 0}},
+    {"click": [0, 4], "expect": {"points": 1, "prompt": "Hat üzerinde nokta: hattın sonu (B) gösterin"}},
+    {
+      "key": "Ctrl+Z",
+      "note": "Hesaplayıcının son referansı geri alınır; çizim geri alınmaz.",
+      "expect": {"points": 0, "entities": 14, "prompt": "Hat üzerinde nokta: hattın başlangıcı (A) gösterin"}
+    },
+    {
+      "key": "Ctrl+Z",
+      "note": "Geri alınacak referans yoksa hiçbir şey olmaz; Esc hesaplayıcıdan çıkar.",
+      "expect": {"points": 0, "entities": 14, "canUndo": true, "prompt": "Hat üzerinde nokta: hattın başlangıcı (A) gösterin"}
+    },
+    {"key": "Esc", "expect": {"tool": "line", "points": 8, "entities": 14, "prompt": "Çizgi: sonraki noktayı belirtin [Geri (G) / Kapat (K) / Bitir (Enter)]"}},
+    {"key": "Enter", "note": "Enter zinciri bitirir: her hesaplanan nokta bir çizgi verdi.", "expect": {"tool": "line", "points": 0, "entities": 14, "log": "success"}}
+  ]
+}
