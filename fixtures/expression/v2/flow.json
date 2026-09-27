@@ -14,12 +14,12 @@
       "op": "exprFlow",
       "result": {
         "bounds": [
-          -600,
+          -540,
           0,
-          152,
+          140,
           138
         ],
-        "column": 200,
+        "column": 180,
         "head": 26,
         "nodes": [
           {
@@ -40,7 +40,7 @@
             "text": "yuvarla($alan * 2, 1)",
             "title": "Sonuç",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
             "x": 0,
@@ -73,10 +73,10 @@
             "text": "yuvarla($alan * 2, 1)",
             "title": "yuvarla",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -200,
+            "x": -180,
             "y": 24
           },
           {
@@ -106,10 +106,10 @@
             "text": "$alan * 2",
             "title": "*",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -400,
+            "x": -360,
             "y": 2
           },
           {
@@ -122,10 +122,10 @@
             "text": "$alan",
             "title": "$alan",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": 2
           },
           {
@@ -137,10 +137,10 @@
             "text": "2",
             "title": "2",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": 64
           },
           {
@@ -152,10 +152,10 @@
             "text": "1",
             "title": "1",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -400,
+            "x": -360,
             "y": 108
           }
         ],
@@ -178,12 +178,12 @@
       "op": "exprFlow",
       "result": {
         "bounds": [
-          -600,
+          -540,
           -62,
-          152,
+          140,
           268
         ],
-        "column": 200,
+        "column": 180,
         "head": 26,
         "nodes": [
           {
@@ -204,7 +204,7 @@
             "text": "durum eğer Kat > 4 ise 'yüksek' eğer Kat > 2 ise 'orta' yoksa 'alçak' son",
             "title": "Sonuç",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
             "x": 0,
@@ -261,10 +261,10 @@
             "text": "durum eğer Kat > 4 ise 'yüksek' eğer Kat > 2 ise 'orta' yoksa 'alçak' son",
             "title": "durum",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -200,
+            "x": -180,
             "y": 24
           },
           {
@@ -294,10 +294,10 @@
             "text": "Kat > 4",
             "title": ">",
             "type": "bool",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -400,
+            "x": -360,
             "y": -62
           },
           {
@@ -310,10 +310,10 @@
             "text": "Kat",
             "title": "Kat",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": -62
           },
           {
@@ -325,10 +325,10 @@
             "text": "4",
             "title": "4",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": 0
           },
           {
@@ -340,10 +340,10 @@
             "text": "'yüksek'",
             "title": "'yüksek'",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -400,
+            "x": -360,
             "y": 44
           },
           {
@@ -373,10 +373,10 @@
             "text": "Kat > 2",
             "title": ">",
             "type": "bool",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -400,
+            "x": -360,
             "y": 88
           },
           {
@@ -389,10 +389,10 @@
             "text": "Kat",
             "title": "Kat",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": 88
           },
           {
@@ -404,10 +404,10 @@
             "text": "2",
             "title": "2",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": 150
           },
           {
@@ -419,10 +419,10 @@
             "text": "'orta'",
             "title": "'orta'",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -400,
+            "x": -360,
             "y": 194
           },
           {
@@ -434,10 +434,10 @@
             "text": "'alçak'",
             "title": "'alçak'",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -400,
+            "x": -360,
             "y": 238
           }
         ],
@@ -460,12 +460,12 @@
       "op": "exprFlow",
       "result": {
         "bounds": [
-          -600,
+          -540,
           -73,
-          152,
+          140,
           213
         ],
-        "column": 200,
+        "column": 180,
         "head": 26,
         "nodes": [
           {
@@ -486,7 +486,7 @@
             "text": "Nitelik değil içinde ('Arsa', 'Tarla') ve Kat arasında 3 ve 5",
             "title": "Sonuç",
             "type": "bool",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
             "x": 0,
@@ -519,10 +519,10 @@
             "text": "Nitelik değil içinde ('Arsa', 'Tarla') ve Kat arasında 3 ve 5",
             "title": "ve",
             "type": "bool",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -200,
+            "x": -180,
             "y": 24
           },
           {
@@ -561,10 +561,10 @@
             "text": "Nitelik değil içinde ('Arsa', 'Tarla')",
             "title": "değil içinde",
             "type": "bool",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -400,
+            "x": -360,
             "y": -62
           },
           {
@@ -577,10 +577,10 @@
             "text": "Nitelik",
             "title": "Nitelik",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": -73
           },
           {
@@ -592,10 +592,10 @@
             "text": "'Arsa'",
             "title": "'Arsa'",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": -11
           },
           {
@@ -607,10 +607,10 @@
             "text": "'Tarla'",
             "title": "'Tarla'",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": 33
           },
           {
@@ -649,10 +649,10 @@
             "text": "Kat arasında 3 ve 5",
             "title": "arasında",
             "type": "bool",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -400,
+            "x": -360,
             "y": 88
           },
           {
@@ -665,10 +665,10 @@
             "text": "Kat",
             "title": "Kat",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": 77
           },
           {
@@ -680,10 +680,10 @@
             "text": "3",
             "title": "3",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": 139
           },
           {
@@ -695,10 +695,10 @@
             "text": "5",
             "title": "5",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": 183
           }
         ],
@@ -721,12 +721,12 @@
       "op": "exprFlow",
       "result": {
         "bounds": [
-          -800,
+          -720,
           -60,
-          152,
+          140,
           222
         ],
-        "column": 200,
+        "column": 180,
         "head": 26,
         "nodes": [
           {
@@ -747,7 +747,7 @@
             "text": "eğer(boş(Ada), 'yok', Ada || '/' || Parsel)",
             "title": "Sonuç",
             "type": "any",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
             "x": 0,
@@ -788,10 +788,10 @@
             "text": "eğer(boş(Ada), 'yok', Ada || '/' || Parsel)",
             "title": "eğer",
             "type": "any",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -200,
+            "x": -180,
             "y": 24
           },
           {
@@ -813,10 +813,10 @@
             "text": "boş(Ada)",
             "title": "boş",
             "type": "bool",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -400,
+            "x": -360,
             "y": -60
           },
           {
@@ -829,10 +829,10 @@
             "text": "Ada",
             "title": "Ada",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": -49
           },
           {
@@ -844,10 +844,10 @@
             "text": "'yok'",
             "title": "'yok'",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -400,
+            "x": -360,
             "y": 24
           },
           {
@@ -877,10 +877,10 @@
             "text": "Ada || '/' || Parsel",
             "title": "||",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -400,
+            "x": -360,
             "y": 99
           },
           {
@@ -910,10 +910,10 @@
             "text": "Ada || '/'",
             "title": "||",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": 68
           },
           {
@@ -926,10 +926,10 @@
             "text": "Ada",
             "title": "Ada",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -800,
+            "x": -720,
             "y": 68
           },
           {
@@ -941,10 +941,10 @@
             "text": "'/'",
             "title": "'/'",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -800,
+            "x": -720,
             "y": 130
           },
           {
@@ -957,10 +957,10 @@
             "text": "Parsel",
             "title": "Parsel",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": 174
           }
         ],
@@ -984,12 +984,12 @@
       "op": "exprFlow",
       "result": {
         "bounds": [
-          -400,
+          -360,
           -7,
-          152,
+          140,
           147
         ],
-        "column": 200,
+        "column": 180,
         "head": 26,
         "nodes": [
           {
@@ -1010,7 +1010,7 @@
             "text": "yuvarla(?) + Pafta",
             "title": "Sonuç",
             "type": "any",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": false,
             "x": 0,
@@ -1043,10 +1043,10 @@
             "text": "yuvarla(?) + Pafta",
             "title": "+",
             "type": "any",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": false,
-            "x": -200,
+            "x": -180,
             "y": 24
           },
           {
@@ -1075,10 +1075,10 @@
             "text": "yuvarla(?)",
             "title": "yuvarla",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": false,
-            "x": -400,
+            "x": -360,
             "y": -7
           },
           {
@@ -1091,12 +1091,12 @@
             "text": "Pafta",
             "title": "Pafta",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [
               "Bu nesnelerde “Pafta” alanı yok, boş okunur."
             ],
             "whole": true,
-            "x": -400,
+            "x": -360,
             "y": 99
           }
         ],
@@ -1122,10 +1122,10 @@
         "bounds": [
           0,
           0,
-          152,
+          140,
           70
         ],
-        "column": 200,
+        "column": 180,
         "error": {
           "end": 9,
           "message": "yuvarla(…) kapanmamış: “)” bekleniyordu.",
@@ -1151,7 +1151,7 @@
             "text": "",
             "title": "Sonuç",
             "type": "any",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": false,
             "x": 0,
@@ -1185,12 +1185,12 @@
       "op": "exprFlow",
       "result": {
         "bounds": [
-          -800,
+          -780,
           0,
-          152,
+          140,
           392
         ],
-        "column": 200,
+        "column": 180,
         "head": 26,
         "nodes": [
           {
@@ -1210,7 +1210,7 @@
             "text": "",
             "title": "Sonuç",
             "type": "any",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": false,
             "x": 0,
@@ -1243,7 +1243,7 @@
             "text": "min(1, ?)",
             "title": "min",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": false,
             "x": -600,
@@ -1258,10 +1258,10 @@
             "text": "1",
             "title": "1",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -800,
+            "x": -780,
             "y": 331
           }
         ],
@@ -1286,12 +1286,12 @@
       "op": "exprFlow",
       "result": {
         "bounds": [
-          -600,
+          -540,
           -29,
-          152,
+          140,
           169
         ],
-        "column": 200,
+        "column": 180,
         "head": 26,
         "nodes": [
           {
@@ -1312,7 +1312,7 @@
             "text": "yuvarla($alan, 2) ve x != 1",
             "title": "Sonuç",
             "type": "bool",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
             "x": 0,
@@ -1346,10 +1346,10 @@
             "text": "yuvarla($alan, 2) ve x != 1",
             "title": "ve",
             "type": "bool",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -200,
+            "x": -180,
             "y": 24
           },
           {
@@ -1379,10 +1379,10 @@
             "text": "yuvarla($alan, 2)",
             "title": "yuvarla",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -400,
+            "x": -360,
             "y": -29
           },
           {
@@ -1395,10 +1395,10 @@
             "text": "$alan",
             "title": "$alan",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": -29
           },
           {
@@ -1410,10 +1410,10 @@
             "text": "2",
             "title": "2",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": 33
           },
           {
@@ -1443,10 +1443,10 @@
             "text": "x != 1",
             "title": "!=",
             "type": "bool",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -400,
+            "x": -360,
             "y": 77
           },
           {
@@ -1459,12 +1459,12 @@
             "text": "x",
             "title": "x",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [
               "Bu nesnelerde “x” alanı yok, boş okunur."
             ],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": 77
           },
           {
@@ -1476,10 +1476,10 @@
             "text": "1",
             "title": "1",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": 139
           }
         ],
@@ -1502,12 +1502,12 @@
       "op": "exprFlow",
       "result": {
         "bounds": [
-          -800,
+          -720,
           -29,
-          152,
+          140,
           169
         ],
-        "column": 200,
+        "column": 180,
         "head": 26,
         "nodes": [
           {
@@ -1528,7 +1528,7 @@
             "text": "-2 ^ 2 + (-2) ^ 2",
             "title": "Sonuç",
             "type": "any",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
             "x": 0,
@@ -1561,10 +1561,10 @@
             "text": "-2 ^ 2 + (-2) ^ 2",
             "title": "+",
             "type": "any",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -200,
+            "x": -180,
             "y": 24
           },
           {
@@ -1586,10 +1586,10 @@
             "text": "-2 ^ 2",
             "title": "−",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -400,
+            "x": -360,
             "y": -18
           },
           {
@@ -1619,10 +1619,10 @@
             "text": "2 ^ 2",
             "title": "^",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": -29
           },
           {
@@ -1634,10 +1634,10 @@
             "text": "2",
             "title": "2",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -800,
+            "x": -720,
             "y": -20
           },
           {
@@ -1649,10 +1649,10 @@
             "text": "2",
             "title": "2",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -800,
+            "x": -720,
             "y": 24
           },
           {
@@ -1682,10 +1682,10 @@
             "text": "(-2) ^ 2",
             "title": "^",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -400,
+            "x": -360,
             "y": 77
           },
           {
@@ -1697,10 +1697,10 @@
             "text": "-2",
             "title": "-2",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": 86
           },
           {
@@ -1712,10 +1712,10 @@
             "text": "2",
             "title": "2",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": 130
           }
         ],
@@ -1738,12 +1738,12 @@
       "op": "exprFlow",
       "result": {
         "bounds": [
-          -600,
+          -540,
           -18,
-          152,
+          140,
           158
         ],
-        "column": 200,
+        "column": 180,
         "head": 26,
         "nodes": [
           {
@@ -1764,7 +1764,7 @@
             "text": "Ada gibi '12%' veya Ada boş değil",
             "title": "Sonuç",
             "type": "bool",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
             "x": 0,
@@ -1797,10 +1797,10 @@
             "text": "Ada gibi '12%' veya Ada boş değil",
             "title": "veya",
             "type": "bool",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -200,
+            "x": -180,
             "y": 24
           },
           {
@@ -1831,10 +1831,10 @@
             "text": "Ada gibi '12%'",
             "title": "gibi",
             "type": "bool",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -400,
+            "x": -360,
             "y": -18
           },
           {
@@ -1847,10 +1847,10 @@
             "text": "Ada",
             "title": "Ada",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": -18
           },
           {
@@ -1862,10 +1862,10 @@
             "text": "'12%'",
             "title": "'12%'",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": 44
           },
           {
@@ -1888,10 +1888,10 @@
             "text": "Ada boş değil",
             "title": "boş değil mi",
             "type": "bool",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -400,
+            "x": -360,
             "y": 88
           },
           {
@@ -1904,10 +1904,10 @@
             "text": "Ada",
             "title": "Ada",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": 99
           }
         ],
@@ -1931,12 +1931,12 @@
       "op": "exprFlow",
       "result": {
         "bounds": [
-          -600,
+          -540,
           -7,
-          152,
+          140,
           147
         ],
-        "column": 200,
+        "column": 180,
         "head": 26,
         "nodes": [
           {
@@ -1957,7 +1957,7 @@
             "text": "yuvarla(Ada) || Kat",
             "title": "Sonuç",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
             "x": 0,
@@ -1990,10 +1990,10 @@
             "text": "yuvarla(Ada) || Kat",
             "title": "||",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -200,
+            "x": -180,
             "y": 24
           },
           {
@@ -2023,10 +2023,10 @@
             "text": "yuvarla(Ada)",
             "title": "yuvarla",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -400,
+            "x": -360,
             "y": -7
           },
           {
@@ -2039,10 +2039,10 @@
             "text": "Ada",
             "title": "Ada",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": 15
           },
           {
@@ -2055,10 +2055,10 @@
             "text": "Kat",
             "title": "Kat",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -400,
+            "x": -360,
             "y": 99
           }
         ],
@@ -2081,12 +2081,12 @@
       "op": "exprFlow",
       "result": {
         "bounds": [
-          -600,
+          -540,
           -62,
-          152,
+          140,
           224
         ],
-        "column": 200,
+        "column": 180,
         "head": 26,
         "nodes": [
           {
@@ -2107,7 +2107,7 @@
             "text": "birleştir(sol(Ada, 2), '/', sağdoldur(Parsel, 4, '0'))",
             "title": "Sonuç",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
             "x": 0,
@@ -2148,10 +2148,10 @@
             "text": "birleştir(sol(Ada, 2), '/', sağdoldur(Parsel, 4, '0'))",
             "title": "birleştir",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -200,
+            "x": -180,
             "y": 24
           },
           {
@@ -2181,10 +2181,10 @@
             "text": "sol(Ada, 2)",
             "title": "sol",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -400,
+            "x": -360,
             "y": -62
           },
           {
@@ -2197,10 +2197,10 @@
             "text": "Ada",
             "title": "Ada",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": -62
           },
           {
@@ -2212,10 +2212,10 @@
             "text": "2",
             "title": "2",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": 0
           },
           {
@@ -2227,10 +2227,10 @@
             "text": "'/'",
             "title": "'/'",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -400,
+            "x": -360,
             "y": 44
           },
           {
@@ -2268,10 +2268,10 @@
             "text": "sağdoldur(Parsel, 4, '0')",
             "title": "sağdoldur",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -400,
+            "x": -360,
             "y": 99
           },
           {
@@ -2284,10 +2284,10 @@
             "text": "Parsel",
             "title": "Parsel",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": 88
           },
           {
@@ -2299,10 +2299,10 @@
             "text": "4",
             "title": "4",
             "type": "number",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": 150
           },
           {
@@ -2314,10 +2314,10 @@
             "text": "'0'",
             "title": "'0'",
             "type": "text",
-            "w": 152,
+            "w": 140,
             "warnings": [],
             "whole": true,
-            "x": -600,
+            "x": -540,
             "y": 194
           }
         ],
@@ -2492,7 +2492,7 @@
           },
           {
             "at": [
-              -400,
+              -360,
               86
             ],
             "text": "1"
@@ -2525,7 +2525,7 @@
           },
           {
             "at": [
-              -200,
+              -180,
               24
             ],
             "text": "eğer(?, Ada, 'x')"
@@ -2578,7 +2578,7 @@
           },
           {
             "at": [
-              -400,
+              -360,
               86
             ],
             "text": "2"
@@ -2610,7 +2610,7 @@
           },
           {
             "at": [
-              -400,
+              -360,
               24
             ],
             "text": "$alan"
@@ -2640,14 +2640,14 @@
           },
           {
             "at": [
-              -600,
+              -540,
               2
             ],
             "text": "Kat"
           },
           {
             "at": [
-              -600,
+              -540,
               64
             ],
             "text": "2"
@@ -2960,7 +2960,7 @@
           },
           {
             "at": [
-              -400,
+              -360,
               33
             ],
             "text": "1"
@@ -3014,7 +3014,7 @@
           },
           {
             "at": [
-              -400,
+              -360,
               141
             ],
             "text": "'b'"

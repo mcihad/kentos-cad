@@ -15,7 +15,7 @@ use crate::editor::check::check;
 use crate::parser::BinOp;
 
 /// A node's width.
-pub const NODE_W: f64 = 152.0;
+pub const NODE_W: f64 = 140.0;
 /// The title's row.
 pub const HEAD: f64 = 26.0;
 /// An input's row.
@@ -23,7 +23,7 @@ pub const ROW: f64 = 22.0;
 /// The value's row at the bottom.
 pub const VALUE: f64 = 22.0;
 /// Between two columns.
-pub const GAP: f64 = 48.0;
+pub const GAP: f64 = 40.0;
 /// A column: a node and the gap after it.
 pub const COLUMN: f64 = NODE_W + GAP;
 /// Between two subtrees stacked in a column.

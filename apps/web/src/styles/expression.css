@@ -602,7 +602,7 @@
   height: min(calc(880px * var(--ui-scale)), 100%);
 }
 .dialog--exprb-flow .exprb {
-  grid-template-columns: minmax(0, 1fr) calc(224px * var(--ui-scale)) calc(276px * var(--ui-scale));
+  grid-template-columns: minmax(0, 1fr) calc(224px * var(--ui-scale)) calc(256px * var(--ui-scale));
 }
 .exprb__side {
   display: flex;

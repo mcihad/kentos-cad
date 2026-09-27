@@ -76,6 +76,7 @@ export class FlowMode {
     if (this.selected && !this.node(this.selected)) this.selected = null;
     this.view.render(this.flow, this.selected, this.values());
     this.inspector.show(this.selected ? (this.node(this.selected) ?? null) : null);
+    if (this.selected) this.view.reveal(this.selected);
   }
 
   /** The previewed object changed: the nodes' values. */
@@ -119,17 +120,18 @@ export class FlowMode {
 
   /**
    * Where a new node goes when nothing says: left of the selected node's
-   * empty input, else in the middle of the view.
+   * empty input, else under everything, below the middle of the view.
    */
   private free(): [number, number] {
+    const f = this.flow!;
     const target = this.target();
     if (target) {
       const n = this.node(target.node)!;
-      const f = this.flow!;
       return [n.x - f.column, n.y + n.ports[target.port].y - f.head / 2];
     }
     const c = this.view.centre();
-    return [Math.round(c.x - 88), Math.round(c.y - 40)];
+    const width = f.nodes[0]?.w ?? 140;
+    return [Math.round(c.x - width / 2), Math.round(f.bounds[3] + 24)];
   }
 
   /** The input a new node goes into: the selected node's first empty one, else the result's when empty. */

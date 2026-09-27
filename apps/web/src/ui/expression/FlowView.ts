@@ -24,6 +24,9 @@ import { icon } from '../icons';
 type Pt = { x: number; y: number };
 const SVG = 'http://www.w3.org/2000/svg';
 
+/** The smallest scale the flow first opens at: node text stays readable. */
+const READABLE = 0.72;
+
 /** What a palette entry carries when dragged onto the flow. */
 export const FLOW_DRAG_TYPE = 'application/x-kentos-expr';
 
@@ -125,7 +128,7 @@ export class FlowView {
       requestAnimationFrame(() => {
         if (this.el.getBoundingClientRect().width > 0 && !this.fitted) {
           this.fitted = true;
-          this.fit();
+          this.fit(true);
         }
       });
     }
@@ -146,17 +149,39 @@ export class FlowView {
     });
   }
 
-  /** Frames every node; not larger than the dialog's size. */
-  fit(): void {
+  /**
+   * Frames every node, not larger than their size; `readable`: not smaller
+   * than can be read either, the result's side in view when it does not all fit.
+   */
+  fit(readable = false): void {
     const r = this.el.getBoundingClientRect();
     const f = this.flow;
     if (!f || !r.width) return;
     const [l, t, rt, b] = f.bounds;
-    const pad = 36;
+    const pad = 28;
     const w = Math.max(1, rt - l);
     const hh = Math.max(1, b - t);
-    const k = Math.max(0.3, Math.min(1, (r.width - pad * 2) / w, (r.height - pad * 2) / hh));
-    this.view = { k, x: (r.width - w * k) / 2 - l * k, y: (r.height - hh * k) / 2 - t * k };
+    const k = Math.max(readable ? READABLE : 0.3, Math.min(1, (r.width - pad * 2) / w, (r.height - pad * 2) / hh));
+    // Too wide at a readable size: the right edge (the result) in view, the rest to the left.
+    const x = w * k <= r.width - pad * 2 ? (r.width - w * k) / 2 - l * k : r.width - pad - rt * k;
+    const y = hh * k <= r.height - pad * 2 ? (r.height - hh * k) / 2 - t * k : pad - t * k;
+    this.view = { k, x, y };
+    this.applyView();
+  }
+
+  /** Pans as little as needed for a node to be in view (after a change put it somewhere). */
+  reveal(id: string): void {
+    const n = this.node(id);
+    const r = this.el.getBoundingClientRect();
+    if (!n || !r.width) return;
+    const pad = 16;
+    const k = this.view.k;
+    const left = n.x * k + this.view.x;
+    const top = n.y * k + this.view.y;
+    const dx = left < pad ? pad - left : left + n.w * k > r.width - pad ? r.width - pad - (left + n.w * k) : 0;
+    const dy = top < pad ? pad - top : top + n.h * k > r.height - pad ? r.height - pad - (top + n.h * k) : 0;
+    if (!dx && !dy) return;
+    this.view = { ...this.view, x: this.view.x + dx, y: this.view.y + dy };
     this.applyView();
   }
 
