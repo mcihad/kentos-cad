@@ -38,7 +38,7 @@
   - Tek adım: "Tutamaçla düzenle". Nesnenin yuvası ve kalıcı kimliği kalır.
   - Yerinde kalan tutamaç adım yazmaz.
   - Şekli bozan konum yazılmaz: "Bu konum geçersiz bir şekil oluşturuyor; tutamaç yerinde bırakıldı."
-  - Web gibi belgeye doğrudan yazılır; ürün komutu yoktur.
+  - Web gibi belgeye doğrudan yazılır; ürün komutu yoktur. (27 Eylül: iki platformda `cad.entities.edit`'in `grip` işlemiyle yazar; web `dd39864`, masaüstü [ADR 0074](0074-grips-menu-and-paste-through-commands.md).)
 - **Kenar ortası:** düz kenarda yeni köşe olur, yaylı kenarda yayı yeni noktadan geçirir. Deliklerin köşeleri de tutamaçtır.
 - **İstem:** "Tutamaç: yeni konumu belirtin ya da koordinat yazın (Esc: vazgeç)". Komut satırı onu komutun istemi gibi gösterir.
 - **Önizleme:**

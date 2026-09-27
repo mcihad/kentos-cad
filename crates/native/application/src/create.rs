@@ -103,6 +103,11 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         Some(CreateOperation::Hatch) => "Tarama",
         // İçine tıklayarak alan (docs/adr/0065, 0069).
         Some(CreateOperation::Boundary) => "Alan oluştur",
+        // The Hesap windows' “Çizime ekle”, named after the windows (docs/adr/0070, 0071).
+        Some(CreateOperation::Traverse) => "Poligon hesabı",
+        Some(CreateOperation::PolarSurvey) => "Kutupsal alım",
+        Some(CreateOperation::ForwardIntersection) => "Önden kestirme",
+        Some(CreateOperation::Resection) => "Geriden kestirme",
     }
 }
 

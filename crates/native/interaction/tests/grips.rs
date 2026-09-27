@@ -178,3 +178,122 @@ fn a_grip_snaps_from_where_it_was() {
     b.click(0.3, 4.2);
     assert_eq!(ends(&b, 1), [[-24.0, -12.0], [0.0, 4.0]]);
 }
+
+/// A point on the area as the traces' view shows it.
+fn on_screen(de: f64, dn: f64) -> [f64; 2] {
+    use kentos_interaction::View;
+    common::Camera.to_screen(Vec2::new(E + de, N + dn))
+}
+
+fn corners(b: &Bench) -> (Vec<[f64; 2]>, Option<Vec<f64>>) {
+    match b.doc.get(Slot(4)) {
+        Some(Entity::Polygon(p)) => (p.pts.iter().map(|&q| rel(q)).collect(), p.bulges.clone()),
+        _ => panic!("the area"),
+    }
+}
+
+/// A grip left waiting while its layer is locked from the panel is refused
+/// in the command's words; one whose object is deleted meanwhile is said
+/// (the web's dd39864: the grip writes through `cad.entities.edit`).
+#[test]
+fn a_waiting_grip_meets_a_lock_or_a_deletion() {
+    let mut b = bench(&[1]);
+    b.click(-8.0, -12.0);
+    assert!(b.session.grip_active());
+    b.doc.toggle_layer_locked("cizim");
+    b.move_to(-8.0, -6.0);
+    b.click(-8.0, -6.0);
+    assert_eq!(
+        ends(&b, 1),
+        [[-24.0, -12.0], [-8.0, -12.0]],
+        "nothing written"
+    );
+    assert_eq!(b.last_level(), Some(Level::Warn));
+    assert_eq!(
+        b.last_text(),
+        Some(
+            "“Çizim” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın."
+        )
+    );
+    b.doc.toggle_layer_locked("cizim");
+    b.click(-8.0, -12.0);
+    assert!(b.session.grip_active());
+    b.doc.remove(&[Slot(1)]);
+    b.move_to(-8.0, -6.0);
+    b.click(-8.0, -6.0);
+    assert_eq!(
+        b.last_text(),
+        Some(
+            "Tutamacın nesnesi artık çizimde yok (silinmiş ya da geri alınmış); tutamaç bırakıldı."
+        )
+    );
+}
+
+/// The grip menu (docs/adr/0074, the web's `gripItems`) on the 12 × 10 m
+/// area 4, a counter-clockwise ring from (−24, 4): a corner offers Köşeyi
+/// sil; the bottom edge's middle Ortasına köşe ekle and Yaya dönüştür, which
+/// bows it out of the ring (bulge 0.5, sagitta 3 m, the mid grip at
+/// (−18, 1)); there Düz kenar yap makes it straight again. Each is one step
+/// through `cad.entities.edit`, named after its operation.
+#[test]
+fn the_grip_menu_edits_a_vertex_or_an_edge_through_the_command() {
+    use kentos_interaction::grip_menu::{self, GripAction};
+    let mut b = bench(&[4]);
+    let corner = b
+        .run(|_, cx| grip_menu::at(on_screen(-24.0, 4.0), cx))
+        .expect("a corner's grip");
+    assert_eq!(corner.header(), "Köşe 1");
+    assert_eq!(corner.actions(), [GripAction::RemoveVertex]);
+    let edge = b
+        .run(|_, cx| grip_menu::at(on_screen(-18.0, 4.0), cx))
+        .expect("the bottom edge's middle");
+    assert_eq!(edge.header(), "Kenar 1");
+    assert_eq!(edge.actions(), [GripAction::AddVertex, GripAction::ArcEdge]);
+    b.run(|_, cx| grip_menu::apply(edge, GripAction::ArcEdge, cx));
+    assert_eq!(b.last_text(), Some("Yaya dönüştür: tamam."));
+    assert_eq!(corners(&b).1, Some(vec![0.5, 0.0, 0.0, 0.0]));
+    let arc = b
+        .run(|_, cx| grip_menu::at(on_screen(-18.0, 1.0), cx))
+        .expect("the arc's middle");
+    assert_eq!(
+        arc.actions(),
+        [GripAction::AddVertex, GripAction::StraightEdge]
+    );
+    b.run(|_, cx| grip_menu::apply(arc, GripAction::StraightEdge, cx));
+    assert_eq!(b.last_text(), Some("Düz kenar yap: tamam."));
+    assert_eq!(corners(&b).1, None, "no arc left: no bulges");
+    assert_eq!(b.doc.undo().as_deref(), Some("Düz kenar yap"));
+    assert_eq!(b.doc.undo().as_deref(), Some("Yaya dönüştür"));
+
+    b.run(|_, cx| grip_menu::apply(edge, GripAction::AddVertex, cx));
+    assert_eq!(b.last_text(), Some("Köşe ekle: tamam."));
+    assert_eq!(
+        corners(&b).0,
+        [
+            [-24.0, 4.0],
+            [-18.0, 4.0],
+            [-12.0, 4.0],
+            [-12.0, 14.0],
+            [-24.0, 14.0]
+        ]
+    );
+    assert_eq!(b.doc.undo().as_deref(), Some("Köşe ekle"));
+
+    b.run(|_, cx| grip_menu::apply(corner, GripAction::RemoveVertex, cx));
+    assert_eq!(b.last_text(), Some("Köşe sil: tamam."));
+    assert_eq!(corners(&b).0, [[-12.0, 4.0], [-12.0, 14.0], [-24.0, 14.0]]);
+    // A triangle keeps its corners: the core's refusal, nothing written.
+    let revision = b.doc.revision();
+    let triangle = b
+        .run(|_, cx| grip_menu::at(on_screen(-12.0, 4.0), cx))
+        .expect("a corner's grip");
+    b.run(|_, cx| grip_menu::apply(triangle, GripAction::RemoveVertex, cx));
+    assert_eq!(b.last_text(), Some("Kapalı alanda en az üç köşe kalmalı."));
+    assert_eq!(b.doc.revision(), revision);
+    // A line's grips have no menu.
+    let mut line = bench(&[1]);
+    assert_eq!(
+        line.run(|_, cx| grip_menu::at(on_screen(-8.0, -12.0), cx)),
+        None
+    );
+}

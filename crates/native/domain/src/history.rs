@@ -10,12 +10,13 @@
 //!   cancel reverts them;
 //! - the undo history keeps the last 200 steps; a new step clears redo.
 //!
-//! Only undoable data are ops: objects and layer styles. Layer visibility,
-//! lock, names and fold are changed at once and never recorded (web).
+//! Only undoable data are ops: objects, layer styles and a layer's removal
+//! (with the objects on it). Layer visibility, lock, names and fold are
+//! changed at once and never recorded (web).
 
 use std::collections::{HashSet, VecDeque};
 
-use kentos_contracts::LayerStyle;
+use kentos_contracts::{LayerNode, LayerStyle};
 
 use crate::changes::Journal;
 use crate::document::Document;
@@ -40,6 +41,26 @@ pub(crate) enum Op {
         before: Box<LayerStyle>,
         after: Box<LayerStyle>,
     },
+    /// A layer or a group taken out of the tree with everything under it
+    /// (`Document::remove_layer`), and its inverse, which puts it back.
+    LayerRemove(Box<LayerPlace>),
+    LayerAdd(Box<LayerPlace>),
+}
+
+/// A tree node as a step keeps it (children, flags, style), and where it
+/// was: its group (none: the top of the tree) and its place there.
+#[derive(Clone, Debug)]
+pub(crate) struct LayerPlace {
+    pub(crate) node: LayerNode,
+    pub(crate) parent: Option<String>,
+    pub(crate) index: usize,
+}
+
+impl Op {
+    /// Whether the op changes the layer tree rather than an object.
+    fn is_tree(&self) -> bool {
+        matches!(self, Op::LayerRemove(_) | Op::LayerAdd(_))
+    }
 }
 
 impl Op {
@@ -60,6 +81,8 @@ impl Op {
                 before: after.clone(),
                 after: before.clone(),
             },
+            Op::LayerRemove(place) => Op::LayerAdd(place.clone()),
+            Op::LayerAdd(place) => Op::LayerRemove(place.clone()),
         }
     }
 }
@@ -295,9 +318,17 @@ impl Document {
             step.ops.iter().any(|op| match op {
                 Op::Add(s) | Op::Remove(s) => hit(s),
                 Op::Update { before, .. } => hit(before),
-                Op::LayerStyle { .. } => false,
+                Op::LayerStyle { .. } | Op::LayerRemove(_) | Op::LayerAdd(_) => false,
             })
         };
+        self.history.undo.retain(|step| !touches(step));
+        self.history.redo.retain(|step| !touches(step));
+    }
+
+    /// Drops the undo and redo steps that change the layer tree: another
+    /// editor's tree came, and a removed layer's place may not fit it (web).
+    pub(crate) fn forget_tree_history(&mut self) {
+        let touches = |step: &Step| step.ops.iter().any(Op::is_tree);
         self.history.undo.retain(|step| !touches(step));
         self.history.redo.retain(|step| !touches(step));
     }
@@ -318,6 +349,15 @@ impl Document {
             }
             Op::LayerStyle { layer, after, .. } => {
                 self.layers.replace_style(layer, after);
+                return;
+            }
+            Op::LayerRemove(place) => {
+                self.layers.detach(&place.node.id);
+                return;
+            }
+            Op::LayerAdd(place) => {
+                self.layers
+                    .attach(&place.node, place.parent.as_deref(), place.index);
                 return;
             }
         };

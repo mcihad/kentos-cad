@@ -202,6 +202,14 @@ fn same(a: &Entity, b: &Entity) -> bool {
     *a == b
 }
 
+/// Every node id of a layer tree.
+fn node_ids<'a>(nodes: &'a [LayerNode], out: &mut HashSet<&'a str>) {
+    for node in nodes {
+        out.insert(node.id.as_str());
+        node_ids(&node.children, out);
+    }
+}
+
 /// The object with this persistent id in the drawing, if it is there.
 fn current(doc: &Document, id: Uuid) -> Option<&Entity> {
     doc.slot_of(id).and_then(|slot| doc.get(slot))
@@ -411,6 +419,33 @@ impl ProjectSync {
         }
     }
 
+    /// When `tree` drops nodes the server's tree has: the objects waiting to
+    /// be sent whose change the server must have before or with that tree,
+    /// in id order (the web's `leavingObjects`). They are every deletion (a
+    /// deletion never needs the new tree) and every change of an object the
+    /// server holds on a dropped layer. Empty when the tree drops nothing.
+    fn leaving(&self, doc: &Document, tree: &[LayerNode]) -> BTreeSet<Uuid> {
+        let mut kept = HashSet::new();
+        node_ids(tree, &mut kept);
+        let mut had = HashSet::new();
+        node_ids(&self.meta_base.layers, &mut had);
+        let dropped: HashSet<&str> = had.difference(&kept).copied().collect();
+        if dropped.is_empty() {
+            return BTreeSet::new();
+        }
+        self.dirty
+            .iter()
+            .copied()
+            .filter(|id| {
+                // Not on the server: a creation, which may need the new tree.
+                self.known.get(id).is_some_and(|t| {
+                    current(doc, *id).is_none()
+                        || dropped.contains(t.entity.base().layer_id.as_str())
+                })
+            })
+            .collect()
+    }
+
     /// Whether the object has changes here the server does not have: not sent
     /// yet, or in the command on its way.
     fn busy_locally(&self, doc: &Document, id: Uuid) -> bool {
@@ -433,25 +468,40 @@ impl ProjectSync {
             return Some(f.envelope.clone());
         }
         self.observe(doc);
+        let full = if self.sends_meta() {
+            self.meta_base.patch(doc)
+        } else {
+            None
+        };
+        // A tree without a removed layer is refused while the server holds an
+        // object on that layer that the same command neither deletes nor
+        // moves off: those changes go first and the tree with the last of
+        // them; objects on a layer the tree adds go with it or after it (the
+        // web's `leavingObjects`).
+        let leaving = full
+            .as_ref()
+            .and_then(|patch| patch.layers.as_deref())
+            .map_or_else(BTreeSet::new, |tree| self.leaving(doc, tree));
+        let order = leaving
+            .iter()
+            .chain(self.dirty.iter().filter(|id| !leaving.contains(id)));
         let mut planned = Vec::new();
         let mut settled = Vec::new();
-        for &id in &self.dirty {
+        let mut seen = 0;
+        for &id in order {
+            if planned.len() >= BATCH {
+                break;
+            }
+            seen += 1;
             match self.plan(doc, id) {
                 Some(p) => planned.push(p),
                 None => settled.push(id),
-            }
-            if planned.len() >= BATCH {
-                break;
             }
         }
         for id in settled {
             self.dirty.remove(&id);
         }
-        let patch = if self.sends_meta() {
-            self.meta_base.patch(doc)
-        } else {
-            None
-        };
+        let patch = if seen < leaving.len() { None } else { full };
         if planned.is_empty() && patch.is_none() {
             if self.state != SaveState::ReadOnly {
                 self.state = SaveState::Saved;

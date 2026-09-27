@@ -129,6 +129,26 @@ impl LayerTree {
         out
     }
 
+    /// The layers under a node, in tree order: the node itself when it is a
+    /// layer (the web's `leavesOf`); none for an unknown id.
+    pub fn leaves_of(&self, id: &str) -> Vec<&LayerNode> {
+        let mut out = Vec::new();
+        if let Some(node) = self.get(id) {
+            leaves(std::slice::from_ref(node), &mut out);
+        }
+        out
+    }
+
+    /// Where a node sits: its group (none at the top of the tree) and its
+    /// place among the group's nodes (the web's `placeOf`).
+    pub fn place_of(&self, id: &str) -> Option<(Option<String>, usize)> {
+        let (&index, above) = self.paths.get(id)?.split_last()?;
+        Some((
+            node(&self.roots, above).map(|group| group.id.clone()),
+            index,
+        ))
+    }
+
     /// Whether the node and every group above it are shown. An unknown id is shown (web).
     pub fn is_visible(&self, id: &str) -> bool {
         self.along(id).all(|node| node.visible)
@@ -227,6 +247,43 @@ impl LayerTree {
         false
     }
 
+    /// Takes a node out of the tree with everything under it (the document's
+    /// undoable layer removal; nothing else calls it). An unknown id changes
+    /// nothing. The active layer is never taken: the document refuses that.
+    pub(crate) fn detach(&mut self, id: &str) {
+        let Some(path) = self.paths.get(id).cloned() else {
+            return;
+        };
+        let Some((&index, above)) = path.split_last() else {
+            return;
+        };
+        if let Some(list) = list_mut(&mut self.roots, above)
+            && index < list.len()
+        {
+            list.remove(index);
+        }
+        self.reindex();
+    }
+
+    /// Puts a node back where `detach` took it from (undo): a copy of it
+    /// with its children, flags and style, at `index` in `parent` (or last
+    /// there); a group that is gone puts it at the top (the web's `attach`).
+    pub(crate) fn attach(&mut self, node: &LayerNode, parent: Option<&str>, index: usize) {
+        let group = parent
+            .and_then(|id| self.paths.get(id).cloned())
+            .unwrap_or_default();
+        if let Some(list) = list_mut(&mut self.roots, &group) {
+            let at = index.min(list.len());
+            list.insert(at, node.clone());
+        }
+        self.reindex();
+    }
+
+    fn reindex(&mut self) {
+        self.paths.clear();
+        index(&self.roots, &mut Vec::new(), &mut self.paths);
+    }
+
     pub(crate) fn replace_style(&mut self, id: &str, style: &LayerStyle) {
         if let Some(node) = self.node_mut(id) {
             node.style.clone_from(style);
@@ -274,8 +331,7 @@ impl LayerTree {
             }
             None => self.roots.push(node),
         }
-        self.paths.clear();
-        index(&self.roots, &mut Vec::new(), &mut self.paths);
+        self.reindex();
         id
     }
 
@@ -331,6 +387,14 @@ fn node_mut<'a>(roots: &'a mut [LayerNode], path: &[usize]) -> Option<&'a mut La
     let (first, rest) = path.split_first()?;
     rest.iter()
         .try_fold(roots.get_mut(*first)?, |node, i| node.children.get_mut(*i))
+}
+
+/// The nodes of the group at `path`, or the top of the tree for an empty path.
+fn list_mut<'a>(roots: &'a mut Vec<LayerNode>, path: &[usize]) -> Option<&'a mut Vec<LayerNode>> {
+    if path.is_empty() {
+        return Some(roots);
+    }
+    node_mut(roots, path).map(|group| &mut group.children)
 }
 
 fn leaves<'a>(nodes: &'a [LayerNode], out: &mut Vec<&'a LayerNode>) {

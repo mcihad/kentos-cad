@@ -304,6 +304,67 @@ fn many_objects_go_in_batches() {
     assert!(sync.all_sent());
 }
 
+/// A layer removed with more objects than a command takes (Katmanlar →
+/// Sil): the deletions go first, the tree with the last of them, since the
+/// server keeps a layer that still holds an object; a new object on a layer
+/// the tree adds goes with the tree (the web's `leavingObjects`).
+#[test]
+fn a_removed_layer_goes_after_its_objects() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    let on_cizim = |x: f64| {
+        let mut e = point(x);
+        e.base_mut().layer_id = "cizim".into();
+        e
+    };
+    let many: Vec<Entity> = (0..BATCH + 2)
+        .map(|i| on_cizim(486000.0 + i as f64))
+        .collect();
+    o.document.add_many(many, "ekle").unwrap();
+    let mut revision = 2;
+    while let Some(env) = sync.next(&o.document) {
+        sync.answered(&o.document, &committed(&env, revision));
+        revision += 1;
+    }
+    let on_cizim_now = o.document.by_layer("cizim").count();
+    let new = o
+        .document
+        .add_layer(kentos_domain::NewLayer::layer("Yeni"), None);
+    let mut e = point(486700.0);
+    e.base_mut().layer_id = new.clone();
+    o.document.add(e).unwrap();
+    assert_eq!(o.document.remove_layer("cizim"), Ok(on_cizim_now));
+
+    let first = sync.next(&o.document).unwrap();
+    let c = input(&first);
+    assert_eq!(c.features.len(), BATCH);
+    assert!(
+        c.features
+            .iter()
+            .all(|f| matches!(f, FeatureChange::Delete { .. }))
+    );
+    assert!(c.project.is_none() && !first.expected_versions.contains_key(PROJECT_KEY));
+    sync.answered(&o.document, &committed(&first, revision));
+
+    let second = sync.next(&o.document).unwrap();
+    let c = input(&second);
+    let deletes = c
+        .features
+        .iter()
+        .filter(|f| matches!(f, FeatureChange::Delete { .. }))
+        .count();
+    assert_eq!(deletes, on_cizim_now - BATCH);
+    assert!(matches!(
+        c.features.last(),
+        Some(FeatureChange::Create { .. })
+    ));
+    let tree = c.project.and_then(|p| p.layers).expect("the tree");
+    assert!(tree.iter().all(|n| n.id != "cizim") && tree.iter().any(|n| n.id == new));
+    assert_eq!(second.expected_versions[PROJECT_KEY], "4");
+    sync.answered(&o.document, &committed(&second, revision + 1));
+    assert!(sync.all_sent());
+}
+
 #[test]
 fn refusals_end_or_stop_as_on_the_web() {
     let refused = |code: &str, status: u16| ApiFailure::new(status, code, "Reddedildi.");

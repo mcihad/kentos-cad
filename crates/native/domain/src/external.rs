@@ -128,6 +128,8 @@ impl Document {
             if let Some(layers) = meta.layers {
                 let active = self.layers.active().to_owned();
                 self.layers = LayerTree::new(layers, &active);
+                // A removed layer's recorded place may no longer fit this tree.
+                self.forget_tree_history();
             }
             if let Some(settings) = meta.settings {
                 self.settings = settings;

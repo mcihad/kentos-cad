@@ -408,7 +408,7 @@ impl App {
         };
         let tenant = source.info.tenant_id.clone();
         let name = format!("{} (kopya)", source.info.name);
-        self.open_upload();
+        self.open_upload(ProjectStorage::File);
         // Straight up when the account may open projects in that workspace; else the window asks where.
         let chosen = self.cloud.upload.as_mut().is_some_and(|u| {
             u.from_conflict = true;

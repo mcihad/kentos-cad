@@ -29,6 +29,7 @@
 //! | `words.rs` | the interface's words: roles, lists, states, times |
 
 mod account;
+mod actions;
 mod catalog;
 pub mod copy;
 mod file;
@@ -53,7 +54,9 @@ use iced::Task;
 use iced::futures::channel::mpsc;
 use iced::futures::{SinkExt as _, Stream};
 use kentos_cloud::{ApiFailure, Cloud as Client, DraftStore};
-use kentos_contracts::{Me, MembershipView, ProjectInfo, ProjectPermission, ProjectState};
+use kentos_contracts::{
+    Me, MembershipView, ProjectInfo, ProjectPermission, ProjectState, ProjectStorage,
+};
 use kentos_domain::Uuid;
 
 use crate::app::{App, Message};
@@ -213,6 +216,20 @@ pub enum Event {
         leave: Leave,
         result: Result<usize, ApiFailure>,
     },
+    // ── The open project's actions (actions.rs) ─────────────────────────
+    RenameInput(String),
+    RenameSubmit,
+    Renamed {
+        id: u64,
+        result: Result<kentos_contracts::ProjectCatalogChange, ApiFailure>,
+    },
+    TrashConfirm,
+    Trashed {
+        id: u64,
+        result: Result<kentos_contracts::ProjectCatalogChange, ApiFailure>,
+    },
+    /// Son revizyonu aç, answered yes.
+    NewestOpen,
     /// A window's Vazgeç or ×.
     Close,
     /// “Yerel kopya kaydet…” on an ended project's notice: Farklı kaydet.
@@ -255,6 +272,12 @@ pub struct CloudState {
     pub leave_failure: Option<String>,
     /// The name and storage of the project about to be opened (its progress says them).
     pub open_hint: Option<(String, kentos_contracts::ProjectStorage)>,
+    /// Yeniden adlandır's window (actions.rs).
+    pub rename: Option<actions::Rename>,
+    /// What waits for the open database project's autosave to send everything first.
+    pub settling: Option<actions::Settle>,
+    /// The trash request on its way.
+    pub trashing: Option<u64>,
     next: u64,
 }
 
@@ -377,6 +400,12 @@ impl App {
             | Event::UploadStop
             | Event::UploadEncoded { .. }
             | Event::Uploaded { .. } => self.upload_event(event),
+            Event::RenameInput(_)
+            | Event::RenameSubmit
+            | Event::Renamed { .. }
+            | Event::TrashConfirm
+            | Event::Trashed { .. }
+            | Event::NewestOpen => self.actions_event(event),
             Event::Left { leave, result } => self.left(leave, result),
             Event::Probed(result) => self.probed(result),
             Event::Close => {
@@ -420,17 +449,29 @@ impl App {
                 }
                 self.open_catalog()
             }
-            "cloud.upload" => {
+            "cloud.upload" | "cloud.uploadFile" => {
+                // Buluta dosya olarak kaydet: the same window, on file storage (the web's).
+                let storage = if id == "cloud.uploadFile" {
+                    ProjectStorage::File
+                } else {
+                    ProjectStorage::Database
+                };
                 if self.document.is_none() {
                     self.output("Buluta yüklenecek çizim yok. Önce bir çizim açın (Ctrl+O).");
                     return Task::none();
                 }
                 if self.cloud.me.is_none() {
-                    self.open_sign_in(Some(account::Next::Upload));
+                    self.open_sign_in(Some(account::Next::Upload(storage)));
                     return Task::none();
                 }
-                self.leave(Leave::Upload)
+                self.leave(Leave::Upload(storage))
             }
+            "cloud.rename" => self.open_rename(),
+            "cloud.delete" => {
+                self.ask_trash();
+                Task::none()
+            }
+            "cloud.openNewest" => self.offer_newest(),
             "cloud.conflicts" => {
                 self.show_conflicts();
                 Task::none()
@@ -444,6 +485,16 @@ impl App {
         match id {
             "cloud.signIn" => self.cloud.me.is_none(),
             "cloud.signOut" => self.cloud.me.is_some(),
+            // The open project's own actions (the web's `openMay`).
+            "cloud.rename" => self.open_may(ProjectPermission::Edit, true),
+            "cloud.delete" => self.open_may(ProjectPermission::Delete, false),
+            "cloud.openNewest" => {
+                self.document
+                    .as_ref()
+                    .and_then(|d| d.cloud_source())
+                    .is_some_and(|c| c.storage() == ProjectStorage::File)
+                    && self.open_may(ProjectPermission::Read, false)
+            }
             "cloud.conflicts" => {
                 self.cloud.file_conflict.is_some()
                     || self

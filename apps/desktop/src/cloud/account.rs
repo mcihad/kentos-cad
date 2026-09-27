@@ -23,7 +23,7 @@ use crate::document::Source;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Next {
     Catalog,
-    Upload,
+    Upload(kentos_contracts::ProjectStorage),
 }
 
 /// The sign-in window.
@@ -178,7 +178,7 @@ impl App {
                 let online = self.resume();
                 let next = match next {
                     Some(Next::Catalog) => self.open_catalog(),
-                    Some(Next::Upload) => self.leave(Then::Upload),
+                    Some(Next::Upload(storage)) => self.leave(Then::Upload(storage)),
                     None => Task::none(),
                 };
                 Task::batch([online, next])

@@ -143,6 +143,10 @@ pub fn label(operation: EditOperation) -> &'static str {
         EditOperation::AreaSplit => "Alan böl",
         EditOperation::ToArea => "Alana çevir",
         EditOperation::ToPolyline => "Çizgiye çevir",
+        // The grips and their menu (docs/adr/0068; the web's dd39864).
+        EditOperation::Grip => "Tutamaçla düzenle",
+        EditOperation::StraightEdge => "Düz kenar yap",
+        EditOperation::ArcEdge => "Yaya dönüştür",
     }
 }
 

@@ -460,8 +460,9 @@ impl Viewport {
         match change {
             ViewChange::Pan { dx, dy } => self.camera.pan_by(dx, dy),
             ViewChange::Fit { bounds, padding } => self.camera.fit(&bounds, padding),
-            // The app opens the text field (text_field.rs); the camera stays.
-            ViewChange::Text(_) => {}
+            // The app opens the text field (text_field.rs), or its window again
+            // with the picked point (calc/); the camera stays.
+            ViewChange::Text(_) | ViewChange::Picked(_) => {}
         }
         self.cursor = at.map(|[x, y]| self.camera.screen_to_world(x, y));
     }

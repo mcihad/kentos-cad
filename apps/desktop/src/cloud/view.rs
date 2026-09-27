@@ -25,7 +25,7 @@ fn cloud(event: Event) -> Message {
     crate::cloud::msg(event)
 }
 
-fn primary(caption: &'static str, on: Option<Message>) -> Element<'static, Message> {
+pub(super) fn primary(caption: &'static str, on: Option<Message>) -> Element<'static, Message> {
     button(label::body(caption))
         .on_press_maybe(on)
         .padding([5, 16])
@@ -33,7 +33,7 @@ fn primary(caption: &'static str, on: Option<Message>) -> Element<'static, Messa
         .into()
 }
 
-fn secondary(caption: &'static str, on: Option<Message>) -> Element<'static, Message> {
+pub(super) fn secondary(caption: &'static str, on: Option<Message>) -> Element<'static, Message> {
     button(label::body(caption))
         .on_press_maybe(on)
         .padding([5, 16])

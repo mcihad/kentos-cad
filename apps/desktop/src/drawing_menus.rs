@@ -12,12 +12,15 @@
 //! with running snaps off (F3). A left press or another command drops it;
 //! the command line shows it with a × until then.
 //!
-//! The web's grip actions (a vertex or an edge under the cursor) wait for
-//! grips on the desktop, and its Nokta hesapla submenu for the point
+//! Over a grip of a selected path, the idle menu starts with the grip's
+//! actions (kentos_interaction::grip_menu, docs/adr/0074): Köşe N with
+//! Köşeyi sil, or Kenar N with Ortasına köşe ekle and Düz kenar yap or Yaya
+//! dönüştür. The web's Nokta hesapla submenu waits for the point
 //! calculator (TODOS.md UX-07).
 
 use iced::Point;
 use kentos_interaction::SnapKind;
+use kentos_interaction::grip_menu::{self, GripAction, GripMenu};
 use kentos_ui::icon::Icon;
 use kentos_ui::widget::Menu;
 
@@ -84,6 +87,8 @@ pub enum Kind {
 pub struct Open {
     pub kind: Kind,
     pub at: Point,
+    /// The grip under the pointer when the idle menu opened, if any.
+    pub grip: Option<GripMenu>,
 }
 
 #[derive(Debug, Clone)]
@@ -92,6 +97,8 @@ pub enum Event {
     Closed,
     /// A one-shot snap chosen, or dropped (the command line's ×).
     SnapOnce(Option<SnapKind>),
+    /// An action of the grip menu.
+    Grip(GripAction),
 }
 
 impl App {
@@ -100,6 +107,7 @@ impl App {
         self.drawing_menu = self.modifiers.shift().then_some(Open {
             kind: Kind::Snap,
             at,
+            grip: None,
         });
     }
 
@@ -114,7 +122,8 @@ impl App {
         } else {
             Kind::Idle
         };
-        self.drawing_menu = Some(Open { kind, at });
+        let grip = self.grip_under(kind, at);
+        self.drawing_menu = Some(Open { kind, at, grip });
     }
 
     /// The right button came up sooner than the hold.
@@ -128,9 +137,11 @@ impl App {
         if self.session.confirms() {
             self.with_tool(|s, cx| s.confirm(cx));
         } else {
+            let grip = self.grip_under(Kind::Idle, at);
             self.drawing_menu = Some(Open {
                 kind: Kind::Idle,
                 at,
+                grip,
             });
         }
     }
@@ -141,7 +152,21 @@ impl App {
             Event::SnapOnce(kind) => {
                 self.snap_once = kind.map(|kind| (kind, self.session.tool_id()));
             }
+            Event::Grip(action) => {
+                if let Some(grip) = self.drawing_menu.take().and_then(|open| open.grip) {
+                    self.with_tool(|_, cx| grip_menu::apply(grip, action, cx));
+                }
+            }
         }
+    }
+
+    /// The grip menu's grip under `at`, for the idle menu (the web's `gripItems`).
+    fn grip_under(&mut self, kind: Kind, at: Point) -> Option<GripMenu> {
+        if kind != Kind::Idle {
+            return None;
+        }
+        let screen = [f64::from(at.x), f64::from(at.y)];
+        self.with_tool(|_, cx| grip_menu::at(screen, cx)).flatten()
     }
 
     /// The one-shot snap, while the command it was chosen in runs.
@@ -178,9 +203,19 @@ impl App {
         }
     }
 
-    /// No command running (the web's `idleItems`).
+    /// No command running (the web's `idleItems`), after the grip's actions
+    /// when the menu opened over one (the web's `gripItems`).
     fn idle_menu(&self) -> Menu<Message> {
         let mut menu = Menu::new();
+        if let Some(grip) = self.drawing_menu.and_then(|open| open.grip) {
+            menu = menu.header(grip.header());
+            for action in grip.actions() {
+                menu = menu
+                    .item(action.label(), Message::DrawingMenu(Event::Grip(action)))
+                    .icon(crate::icons::from_web(Some(action.icon())));
+            }
+            menu = menu.separator();
+        }
         if let Some(last) = self.session.last() {
             let title = catalog()
                 .get(&format!("tool.{last}"))
@@ -300,6 +335,51 @@ mod tests {
         assert!(!app.session.is_running(), "Enter with no point leaves the line tool");
     }
 
+    /// A quick right click on a grip of the selected parcel opens the idle
+    /// menu with the grip's actions first (the web's `gripItems`); Köşeyi
+    /// sil takes the corner away in one step, “Köşe sil”. Away from the
+    /// grips, the plain idle menu.
+    #[test]
+    fn a_right_click_on_a_grip_offers_its_actions() {
+        use kentos_domain::Slot;
+        use kentos_interaction::grip_menu::GripAction;
+
+        fn corners(app: &App) -> usize {
+            match app.document.as_ref().and_then(|d| d.model.get(Slot(4))) {
+                Some(kentos_contracts::Entity::Polygon(p)) => p.pts.len(),
+                _ => 0,
+            }
+        }
+        let mut app = app_with_drawing();
+        let parcel = Slot(4);
+        app.selection.set([parcel]);
+        let doc = app.document.as_ref().expect("open");
+        app.spatial.sync(&doc.model);
+        let corner = app.spatial.grips(&[parcel])[0].points[0];
+        let [x, y] = app.viewport.camera.world_to_screen(corner);
+        let at = Point::new(x as f32, y as f32);
+        let before = corners(&app);
+        view(&mut app, viewport::Event::RightPressed(at));
+        view(&mut app, viewport::Event::RightClick(at));
+        let open = app.drawing_menu.expect("a menu");
+        assert_eq!(open.kind, Kind::Idle);
+        assert_eq!(open.grip.map(|g| g.header()).as_deref(), Some("Köşe 1"));
+        let _ = app.update(Message::DrawingMenu(Event::Grip(GripAction::RemoveVertex)));
+        assert!(app.drawing_menu.is_none());
+        assert_eq!(corners(&app), before - 1);
+        assert_eq!(crate::files_testing::last_said(&app), "Köşe sil: tamam.");
+        let doc = app.document.as_mut().expect("open");
+        assert_eq!(doc.model.undo().as_deref(), Some("Köşe sil"));
+
+        let away = Point::new(5.0, 5.0);
+        view(&mut app, viewport::Event::RightPressed(away));
+        view(&mut app, viewport::Event::RightClick(away));
+        assert_eq!(
+            app.drawing_menu.map(|m| (m.kind, m.grip)),
+            Some((Kind::Idle, None))
+        );
+    }
+
     #[test]
     fn held_it_opens_the_command_menu_and_shift_the_snap_menu() {
         let mut app = app_with_drawing();
@@ -334,7 +414,8 @@ mod tests {
 }
 
 /// Pictures for the owner: the idle menu, the command menu (Çizgi running),
-/// the one-shot snap menu and its chip in the command line;
+/// the one-shot snap menu and its chip in the command line, and the grip
+/// menu over the selected parcel's first corner and its first edge's middle;
 /// `.run/shots/sag-tik-*`.
 /// `cargo test -p kentos-desktop drawing_menus::screens -- --ignored --nocapture`
 #[cfg(test)]
@@ -348,7 +429,14 @@ fn screens() {
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
-            for name in ["bosta", "komut", "kenet", "sonraki-tik"] {
+            for name in [
+                "bosta",
+                "komut",
+                "kenet",
+                "sonraki-tik",
+                "tutamac-kose",
+                "tutamac-kenar",
+            ] {
                 let mut app = crate::files_testing::app_with_drawing();
                 let _ = app
                     .settings
@@ -378,6 +466,33 @@ fn screens() {
                         app.modifiers = iced::keyboard::Modifiers::SHIFT;
                         app.right_pressed(at);
                         app.modifiers = iced::keyboard::Modifiers::default();
+                    }
+                    "tutamac-kose" | "tutamac-kenar" => {
+                        // The parcel selected; a right click on its first
+                        // corner's grip or on its first edge's middle one
+                        // (its corners' grips come first, then the middles).
+                        let parcel = kentos_domain::Slot(4);
+                        app.selection.set([parcel]);
+                        let doc = app.document.as_ref().expect("open");
+                        let Some(kentos_contracts::Entity::Polygon(p)) = doc.model.get(parcel)
+                        else {
+                            panic!("the parcel");
+                        };
+                        let corners = p.pts.len();
+                        app.spatial.sync(&doc.model);
+                        let grips = app.spatial.grips(&[parcel])[0].points.clone();
+                        let grip = if name == "tutamac-kose" {
+                            grips[0]
+                        } else {
+                            grips[corners]
+                        };
+                        let [x, y] = app.viewport.camera.world_to_screen(grip);
+                        let screen = Point::new(area.x + x as f32, area.y + y as f32);
+                        snapshot.input(&mut app, App::view, &mut update, Input::RightClick(screen));
+                        assert!(
+                            app.drawing_menu.is_some_and(|m| m.grip.is_some()),
+                            "{name}: the grip menu opens"
+                        );
                     }
                     _ => {
                         let _ = app.update(Message::Run("tool.line"));

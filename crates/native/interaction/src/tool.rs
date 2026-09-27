@@ -71,6 +71,9 @@ pub enum ViewChange {
     /// web's `view.requestTextInput`); the host gives back what was typed
     /// with [`Tool::text_typed`].
     Text(TextField),
+    /// The point a window asked for (Çizimden, [`crate::pick::PickPoint`],
+    /// docs/adr/0070), or none when the user left without one.
+    Picked(Option<Vec2>),
 }
 
 /// Where a text field opens and how its text will look: its start, height in

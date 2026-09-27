@@ -70,6 +70,8 @@ pub enum Event {
     RenameCancel,
     /// Yanına yeni katman (a layer) or İçine yeni katman (a group).
     AddBeside(String),
+    /// Sil: the layer, or the group with everything under it, and their objects.
+    Remove(String),
 }
 
 impl App {
@@ -139,6 +141,10 @@ impl App {
     }
 
     pub(crate) fn layer_event(&mut self, event: Event) -> Task<Message> {
+        if let Event::Remove(id) = event {
+            self.ask_remove_layer(id);
+            return Task::none();
+        }
         if let Event::Rename(id) = &event {
             let name = self
                 .document
@@ -202,9 +208,96 @@ impl App {
                 let new = model.add_layer(NewLayer::layer(name), Some(&id));
                 model.set_active_layer(&new);
             }
-            Event::Rename(_) => {}
+            Event::Rename(_) | Event::Remove(_) => {}
         }
         Task::none()
+    }
+
+    /// Sil (the web's `LayersPanel.remove`): what the drawing refuses (the
+    /// last or the active layer, a lock) is said in its words; a layer or
+    /// group with objects on it is asked about first (`Dialog::RemoveLayer`).
+    fn ask_remove_layer(&mut self, id: String) {
+        let Some(doc) = &self.document else {
+            return;
+        };
+        let model = &doc.model;
+        if let Some(refused) = model.layer_removal_refused(&id) {
+            self.warn(refused);
+            return;
+        }
+        if removal_counts(model, &id).1 > 0 {
+            self.removing_layer = Some(id);
+            self.dialog = Some(crate::app::Dialog::RemoveLayer);
+        } else {
+            self.remove_layer(&id);
+        }
+    }
+
+    /// The question before a layer or group goes with its objects (the web's `askRemove`).
+    pub(crate) fn remove_layer_question(&self) -> Element<'_, Message> {
+        let id = self.removing_layer.as_deref().unwrap_or_default();
+        let (title, message) = match self.document.as_ref().and_then(|doc| {
+            let node = doc.model.layers().get(id)?;
+            Some((node, removal_counts(&doc.model, id)))
+        }) {
+            Some((node, (layers, objects))) if node.kind == LayerNodeType::Group => (
+                "Grubu sil",
+                format!(
+                    "“{}” grubu, içindeki {layers} katman ve {objects} nesneyle birlikte silinsin mi?",
+                    node.name
+                ),
+            ),
+            Some((node, (_, objects))) => (
+                "Katmanı sil",
+                format!(
+                    "“{}” katmanı üzerindeki {objects} nesneyle birlikte silinsin mi?",
+                    node.name
+                ),
+            ),
+            None => ("Katmanı sil", String::new()),
+        };
+        kentos_ui::widget::overlay::modal(
+            kentos_ui::widget::Confirm::new(title, Message::DialogConfirmed, Message::DialogClosed)
+                .message(message)
+                .detail("Geri al (Ctrl+Z) katmanı nesneleriyle geri getirir.")
+                .confirm("Sil")
+                .destructive(),
+            Message::DialogClosed,
+        )
+    }
+
+    /// Removes the layer or group with its objects as one undo step and says
+    /// what went. Answered a while after the question: the drawing may have
+    /// changed meanwhile, so a node that is gone is left and a refusal is
+    /// asked again (by the document).
+    pub(crate) fn remove_layer(&mut self, id: &str) {
+        let Some(doc) = &mut self.document else {
+            return;
+        };
+        let Some(node) = doc.model.layers().get(id) else {
+            return;
+        };
+        let name = node.name.clone();
+        let group = node.kind == LayerNodeType::Group;
+        let layers = doc.model.layers().leaves_of(id).len();
+        match doc.model.remove_layer(id) {
+            Err(refusal) => self.warn(refusal.to_string()),
+            Ok(gone) => {
+                if self.selected_layer.as_deref() == Some(id) {
+                    self.selected_layer = None;
+                }
+                let said = match (group, gone, layers) {
+                    (false, 0, _) => format!("“{name}” katmanı silindi."),
+                    (false, n, _) => format!("“{name}” katmanı ve üzerindeki {n} nesne silindi."),
+                    (true, 0, 0) => format!("“{name}” grubu silindi."),
+                    (true, 0, k) => format!("“{name}” grubu ve içindeki {k} katman silindi."),
+                    (true, n, k) => {
+                        format!("“{name}” grubu, içindeki {k} katman ve {n} nesne silindi.")
+                    }
+                };
+                self.say(Level::Success, said);
+            }
+        }
     }
 
     /// A row's context menu, the web's `LayersPanel.menuFor` item by item.
@@ -284,9 +377,13 @@ impl App {
                 } else {
                     "İçine yeni katman"
                 },
-                event(Event::AddBeside(id)),
+                event(Event::AddBeside(id.clone())),
             )
             .icon(Icon::Layers)
+            .separator()
+            // Always offered: what cannot go says why (the web's).
+            .item("Sil", event(Event::Remove(id)))
+            .icon(crate::icons::from_web(Some("trash")))
     }
 
     /// The layer's colour menu, from its swatch (the web's `colorItems`): the ink colours,
@@ -383,6 +480,13 @@ impl App {
     }
 }
 
+/// How many layers a removal takes and how many objects are on them.
+fn removal_counts(model: &kentos_domain::Document, id: &str) -> (usize, usize) {
+    let layers = model.layers().leaves_of(id);
+    let objects = layers.iter().map(|l| model.count(&l.id)).sum();
+    (layers.len(), objects)
+}
+
 /// The layers of a node: itself, or every layer below a group.
 fn leaves<'a>(node: &'a LayerNode, out: &mut Vec<&'a str>) {
     match node.kind {
@@ -442,6 +546,53 @@ mod tests {
             model.layers().get(second).map(|n| n.name.as_str()),
             Some("Yeni katman 2")
         );
+    }
+
+    /// Katmanlar → Sil (task 12, fixtures/document-ops/v1/layer-remove.json
+    /// for the document's side): the active layer and a group holding it are
+    /// refused in their words; a layer with objects is asked about, then goes
+    /// with them in one step that undo brings back; an empty layer goes at once.
+    #[test]
+    fn a_layer_goes_with_its_objects_after_the_question() {
+        use super::Event;
+        use crate::app::Dialog;
+        let mut app = app_with_drawing();
+        let _ = app.update(Message::Layer(Event::Remove("parsel".into())));
+        assert_eq!(
+            last_said(&app),
+            "“Parsel” etkin katman; silinemez. Önce başka bir katmanı etkinleştirin."
+        );
+        let _ = app.update(Message::Layer(Event::Remove("layer-g".into())));
+        assert_eq!(
+            last_said(&app),
+            "“Kadastro” grubu etkin katmanı (“Parsel”) içeriyor; silinemez. Önce grubun dışındaki bir katmanı etkinleştirin."
+        );
+        let objects = app.document.as_ref().expect("open").model.count("cizim");
+        assert!(objects > 0);
+        let _ = app.update(Message::Layer(Event::Remove("cizim".into())));
+        assert_eq!(app.dialog, Some(Dialog::RemoveLayer));
+        assert_eq!(app.removing_layer.as_deref(), Some("cizim"));
+        // Vazgeç leaves it.
+        let _ = app.update(Message::DialogClosed);
+        let layers =
+            |app: &crate::app::App| app.document.as_ref().expect("open").model.layers().clone();
+        assert!(layers(&app).get("cizim").is_some());
+        let _ = app.update(Message::Layer(Event::Remove("cizim".into())));
+        let _ = app.update(Message::DialogConfirmed);
+        assert_eq!(app.dialog, None);
+        assert_eq!(
+            last_said(&app),
+            format!("“Çizim” katmanı ve üzerindeki {objects} nesne silindi.")
+        );
+        let model = &mut app.document.as_mut().expect("open").model;
+        assert!(model.layers().get("cizim").is_none());
+        assert_eq!(model.undo().as_deref(), Some("Katman sil"));
+        assert_eq!(model.count("cizim"), objects);
+        let empty = model.add_layer(kentos_domain::NewLayer::layer("Boş"), None);
+        let _ = app.update(Message::Layer(Event::Remove(empty.clone())));
+        assert_eq!(app.dialog, None, "nothing to ask");
+        assert_eq!(last_said(&app), "“Boş” katmanı silindi.");
+        assert!(layers(&app).get(&empty).is_none());
     }
 
     #[test]
@@ -632,7 +783,7 @@ fn screens() {
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
-            for name in ["tek", "cok", "menu", "renk", "ad"] {
+            for name in ["tek", "cok", "menu", "renk", "ad", "sil"] {
                 let mut app = crate::files_testing::app_with_drawing();
                 let _ = app
                     .settings
@@ -680,6 +831,9 @@ fn screens() {
                         let _ = app.update(Message::Layer(Event::Rename("bina".into())));
                         let _ = app
                             .update(Message::Layer(Event::RenameInput("Bina ve yapılar".into())));
+                    }
+                    "sil" => {
+                        let _ = app.update(Message::Layer(Event::Remove("cizim".into())));
                     }
                     _ => {}
                 }

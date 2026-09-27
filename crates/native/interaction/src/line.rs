@@ -9,8 +9,9 @@
 //!   `cad.line.create`; a refused line (a locked layer) adds no point;
 //! - Geri (G) takes the chain's last line back: as an undo when the drawing
 //!   has not changed since it was written, so a later Ctrl+Z cannot bring it
-//!   back, else by removing it; Kapat (K), with three points or more, draws
-//!   a line back to the first point and ends the chain;
+//!   back, else by deleting it through `cad.entities.delete` (a line on a
+//!   layer locked since stays, and so does the chain); Kapat (K), with three
+//!   points or more, draws a line back to the first point and ends the chain;
 //! - a confirm ends the chain (saying how many lines it wrote) and the tool
 //!   stays for the next one; with no point it leaves;
 //! - Ctrl+Z takes back the newest step (ADR 0018): the chain's last line,
@@ -19,12 +20,12 @@
 //! The web's messages are kept word for word. Every calculation is the
 //! shared core's (`kentos-geometry-core`); none is written here.
 
-use kentos_contracts::LineCreate;
+use kentos_contracts::{EntitiesDelete, LineCreate};
 use kentos_domain::Slot;
 use kentos_geometry_core::geometry::{bearing_grad, dist};
 use kentos_geometry_core::tools::point_input::Tracking;
 use kentos_geometry_core::tools::point_text::{js_trim, point_from_text};
-use kentos_native_application::{ExecutionContext, line};
+use kentos_native_application::{ExecutionContext, delete, line};
 
 use crate::Vec2;
 use crate::format::Format;
@@ -121,16 +122,40 @@ impl Line {
         true
     }
 
+    /// A line of the chain deleted through the product command
+    /// `cad.entities.delete` (docs/adr/0029), as the erase tool deletes: one
+    /// undo step, “Sil”. Its lock rule holds: a line on a locked layer is not
+    /// deleted and the refusal is said. A line already gone counts as
+    /// deleted. Whether it is gone (the web's `eraseLine`).
+    fn erase_line(&mut self, slot: Slot, cx: &mut Context<'_>) -> bool {
+        let Some(uid) = cx.doc.uid(slot) else {
+            return true;
+        };
+        let input = EntitiesDelete {
+            uids: vec![uid.to_string()],
+            expected_revision: None,
+        };
+        let result = delete::execute(&mut ExecutionContext::new(cx.doc), input);
+        if points::written(result, cx).is_none() {
+            return false;
+        }
+        // The deletion is the newest step now: what the chain wrote before it can only be deleted too.
+        self.made.clear();
+        true
+    }
+
     /// Option letters: G (Geri) while the chain has a line, K (Kapat) with
     /// three points or more. False when the key is neither now.
     fn option(&mut self, key: &str, cx: &mut Context<'_>) -> bool {
         if key == "G"
-            && let Some(slot) = self.created.pop()
+            && let Some(&slot) = self.created.last()
         {
-            // Taken back as an undo when nothing changed since, so a later Ctrl+Z cannot bring the line back.
-            if !self.undo_last_made(cx) {
-                cx.doc.remove(&[slot]);
+            // Taken back as an undo when nothing changed since, so a later Ctrl+Z cannot bring the line back;
+            // else deleted. A line it may not delete (on a layer locked since) stays, and so does the chain.
+            if !self.undo_last_made(cx) && !self.erase_line(slot, cx) {
+                return true;
             }
+            self.created.pop();
             self.pts.pop();
             return true;
         }

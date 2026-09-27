@@ -93,6 +93,12 @@ pub const PORTED: &[&str] = &[
     "cloud.open",
     "cloud.upload",
     "cloud.conflicts",
+    // The open project's own actions, Buluta dosya olarak kaydet and Son
+    // revizyonu aç (cloud/actions.rs, docs/adr/0073).
+    "cloud.uploadFile",
+    "cloud.openNewest",
+    "cloud.rename",
+    "cloud.delete",
     // New layers and groups (layering.rs): edits that are not undone, as on the web.
     "layer.new",
     "layer.newGroup",
@@ -177,6 +183,14 @@ pub const PORTED: &[&str] = &[
     "tool.measure",
     "tool.area",
     "tool.parcel",
+    // Hesap: Önden and Geriden kestirme, Aplikasyon; Çizimden picks a point
+    // with the pick tool (calc/, docs/adr/0070). Poligon hesabı and Kutupsal
+    // alım with the measurements table (docs/adr/0071).
+    "calc.forward",
+    "calc.resection",
+    "calc.stakeout",
+    "calc.traverse",
+    "calc.polar",
     "tool.areaUnion",
     "tool.areaIntersect",
     "tool.areaSubtract",

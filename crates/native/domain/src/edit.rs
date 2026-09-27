@@ -15,10 +15,10 @@ use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::sync::Arc;
 
-use kentos_contracts::{Entity, EntityBase, LayerStyle, ProjectSettings};
+use kentos_contracts::{Entity, EntityBase, LayerNodeType, LayerStyle, ProjectSettings};
 
 use crate::document::Document;
-use crate::history::Op;
+use crate::history::{LayerPlace, Op};
 use crate::identity::{Slot, new_uid};
 use crate::layers::NewLayer;
 use crate::store::Stored;
@@ -29,6 +29,7 @@ pub mod labels {
     pub const REMOVE: &str = "Sil";
     pub const CHANGE: &str = "Değiştir";
     pub const LAYER_STYLE: &str = "Katman stili";
+    pub const LAYER_REMOVE: &str = "Katman sil";
 }
 
 /// Every slot (`u32`) has been given out in this document; nothing was added.
@@ -44,6 +45,19 @@ impl fmt::Display for SlotsExhausted {
 }
 
 impl std::error::Error for SlotsExhausted {}
+
+/// An edit the document refuses, with the reason for people; nothing was
+/// changed (the web's `Refusal`).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Refusal(pub String);
+
+impl fmt::Display for Refusal {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+
+impl std::error::Error for Refusal {}
 
 impl Document {
     /// Adds an object (its `id` is replaced by the slot it gets) as one undo step.
@@ -145,6 +159,97 @@ impl Document {
         };
         self.record(vec![op], label);
         true
+    }
+
+    /// Deletes a layer, or a group with everything under it, and the objects
+    /// on them, as one undo step “Katman sil” (into the open transaction or
+    /// group, if one is). Undo puts the node back in its place with its
+    /// children, flags and style, then the objects in their slots with their
+    /// persistent ids. Refused, with nothing changed, as
+    /// [`Document::layer_removal_refused`] says. Returns how many objects
+    /// went; an unknown id changes nothing and returns 0 (web `removeLayer`).
+    pub fn remove_layer(&mut self, id: &str) -> Result<usize, Refusal> {
+        let (Some(node), Some((parent, index))) =
+            (self.layers.get(id).cloned(), self.layers.place_of(id))
+        else {
+            return Ok(0);
+        };
+        if let Some(reason) = self.layer_removal_refused(id) {
+            return Err(Refusal(reason));
+        }
+        let kept: HashSet<&str> = self
+            .layers
+            .leaves_of(id)
+            .into_iter()
+            .map(|layer| layer.id.as_str())
+            .collect();
+        let gone: Vec<Slot> = self
+            .entities()
+            .filter(|e| kept.contains(e.base().layer_id.as_str()))
+            .map(|e| Slot(e.base().id))
+            .collect();
+        let place = LayerPlace {
+            node,
+            parent,
+            index,
+        };
+        let _ = self.transact(labels::LAYER_REMOVE, |doc| {
+            doc.remove(&gone);
+            doc.record(vec![Op::LayerRemove(Box::new(place))], labels::LAYER_REMOVE);
+            Ok::<(), Refusal>(())
+        });
+        Ok(gone.len())
+    }
+
+    /// Why [`Document::remove_layer`] would refuse, in its words, or none
+    /// when it would not: the interface asks this before its own question
+    /// (the web's `layerRemovalRefused`). In this order: the last layer (or a
+    /// group holding every layer), the active layer (or a group holding it),
+    /// a locked node (by itself or a group above it), a group with a locked
+    /// layer under it.
+    pub fn layer_removal_refused(&self, id: &str) -> Option<String> {
+        let layers = &self.layers;
+        let node = layers.get(id)?;
+        let name = &node.name;
+        let group = node.kind == LayerNodeType::Group;
+        let leaves = layers.leaves_of(id);
+        let kept: HashSet<&str> = leaves.iter().map(|l| l.id.as_str()).collect();
+        if layers.leaves().iter().all(|l| kept.contains(l.id.as_str())) {
+            return Some(if group {
+                format!(
+                    "“{name}” grubu çizimin bütün katmanlarını içeriyor; silinemez. Çizimde en az bir katman olmalı."
+                )
+            } else {
+                format!("“{name}” çizimin son katmanı; silinemez. Çizimde en az bir katman olmalı.")
+            });
+        }
+        let active = layers.active();
+        if id == active {
+            return Some(format!(
+                "“{name}” etkin katman; silinemez. Önce başka bir katmanı etkinleştirin."
+            ));
+        }
+        if kept.contains(active) {
+            let held = layers.get(active).map_or(active, |l| l.name.as_str());
+            return Some(format!(
+                "“{name}” grubu etkin katmanı (“{held}”) içeriyor; silinemez. Önce grubun dışındaki bir katmanı etkinleştirin."
+            ));
+        }
+        if layers.is_locked(id) {
+            let what = if group { "grubu" } else { "katmanı" };
+            return Some(format!(
+                "“{name}” {what} kilitli; silinemez. Kilidi Katmanlar panelinden açın."
+            ));
+        }
+        leaves
+            .iter()
+            .find(|l| layers.is_locked(&l.id))
+            .map(|locked| {
+                format!(
+                    "“{name}” grubu kilitli bir katman (“{}”) içeriyor; silinemez. Kilidi Katmanlar panelinden açın.",
+                    locked.name
+                )
+            })
     }
 
     // ── The layer tree's own changes (not undoable) ─────────────────────────

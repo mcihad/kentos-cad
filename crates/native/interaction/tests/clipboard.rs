@@ -7,7 +7,7 @@
 mod common;
 
 use common::{Bench, E, N, rel};
-use kentos_contracts::Entity;
+use kentos_contracts::{Entity, EntityBase, TextEntity};
 use kentos_domain::Slot;
 use kentos_interaction::clipboard::{self, Clipboard};
 use kentos_interaction::paste::Paste;
@@ -291,4 +291,74 @@ fn the_paste_tool_is_not_repeated() {
     b.draft.snap = true;
     let p = b.snapped(-7.9, -12.1);
     assert_eq!(p.world, Vec2::new(E - 8.0, N - 12.0), "line 1's end");
+}
+
+/// Yapıştır writes through `cad.entities.create` and `cad.entities.set` in
+/// one step “Yapıştır” (the web's 7a5ca22): each object keeps its layer
+/// when that is a layer and unlocked, else goes to the active one (a group's
+/// id too); a hidden layer that takes some is said once; what the commands
+/// refuse (a blank text) takes all of it back and is said.
+#[test]
+fn a_paste_goes_through_the_commands_in_one_step() {
+    let mut b = bench(&[1, 7]);
+    let board = copy(&mut b);
+    let count = b.doc.len();
+    let before = b.log.len();
+    let slots = b.run(|_, cx| clipboard::paste_in_place(&board, cx));
+    assert_eq!(slots.len(), 2);
+    assert_eq!(
+        b.said(before),
+        [
+            (
+                Level::Warn,
+                "“Gizli katman” katmanı gizli; yapıştırılan nesneler görünmeyecek."
+            ),
+            (Level::Success, "2 nesne yapıştırıldı."),
+        ]
+    );
+    assert_eq!(b.doc.len(), count + 2);
+    assert_eq!(b.doc.undo().as_deref(), Some("Yapıştır"));
+    assert_eq!(b.doc.len(), count);
+
+    // A group's id is no layer: the object goes to the active one.
+    let group = b
+        .doc
+        .add_layer(kentos_domain::NewLayer::group("Grup"), None);
+    let mut item = board.items()[0].clone();
+    item.base_mut().layer_id = group;
+    let mut grouped = Clipboard::new();
+    grouped.set(vec![item], None);
+    let slots = b.run(|_, cx| clipboard::paste_in_place(&grouped, cx));
+    let pasted = b.doc.get(slots[0]).expect("pasted");
+    assert_eq!(pasted.base().layer_id, "cizim");
+
+    // A blank text: the create command refuses and nothing is written.
+    let text = Entity::Text(TextEntity {
+        base: EntityBase {
+            id: 0,
+            layer_id: "cizim".to_owned(),
+            color: None,
+            attrs: Default::default(),
+            label: None,
+            symbol: None,
+        },
+        p: kentos_contracts::Vec2 { x: E, y: N },
+        text: "   ".to_owned(),
+        height: 2.0,
+        rotation: 0.0,
+    });
+    let mut blank = Clipboard::new();
+    blank.set(vec![board.items()[0].clone(), text], None);
+    let count = b.doc.len();
+    let revision = b.doc.revision();
+    let slots = b.run(|_, cx| clipboard::paste_in_place(&blank, cx));
+    assert!(slots.is_empty());
+    assert_eq!((b.doc.len(), b.doc.revision()), (count, revision));
+    assert_eq!(b.last_level(), Some(Level::Warn));
+    assert_eq!(
+        b.last_text(),
+        Some(
+            "Yazının metni boş olamaz; yalnız boşluktan oluşan metin de boştur. Yazıya bir metin verin."
+        )
+    );
 }

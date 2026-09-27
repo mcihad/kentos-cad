@@ -582,5 +582,61 @@ fn cloud_live() {
     });
     assert_eq!(r.app.dialog, Some(Dialog::FileConflict));
     r.shot("19-dosya-cakismasi");
+
+    // 13. The conflict's Son revizyonu aç: the other editor's revision 3, the move dropped.
+    r.cloud(Event::OpenLatest);
+    assert!(
+        matches!(r.app.dialog, Some(Dialog::Unsaved(_))),
+        "{:?}",
+        r.app.dialog
+    );
+    r.send(Message::DialogConfirmed);
+    let reopened = |a: &App| {
+        a.cloud.opening.is_none()
+            && a.cloud.file_conflict.is_none()
+            && revision(a) == Some(3)
+            && a.document.as_ref().is_some_and(|d| !d.dirty())
+    };
+    r.until("son revizyon", Duration::from_secs(30), reopened);
+    // Son revizyonu aç over a new unsaved move: the web's question, then revision 3 again.
+    move_point(&mut r, uid, 4.0);
+    r.send(Message::Run("cloud.openNewest"));
+    assert_eq!(r.app.dialog, Some(Dialog::OpenNewestUnsaved));
+    r.shot("20-son-revizyon");
+    r.cloud(Event::NewestOpen);
+    r.until("son revizyon yeniden", Duration::from_secs(30), reopened);
+
+    // 14. Yeniden adlandır: the catalog's project.rename; the drawing takes the name quietly.
+    let renamed = format!("{file} (yeni ad)");
+    r.send(Message::Run("cloud.rename"));
+    r.cloud(Event::RenameInput(renamed.clone()));
+    r.shot("21-yeniden-adlandir");
+    r.cloud(Event::RenameSubmit);
+    r.until("yeniden adlandırma", Duration::from_secs(30), |a| {
+        a.dialog.is_none() && a.document.as_ref().is_some_and(|d| d.name() == renamed)
+    });
+    assert_eq!(
+        said(&r.app).last().map(String::as_str),
+        Some(format!("Proje “{renamed}” olarak yeniden adlandırıldı.").as_str())
+    );
+
+    // 15. Çöpe taşı: asked, then the drawing stays as a local one.
+    r.send(Message::Run("cloud.delete"));
+    assert_eq!(r.app.dialog, Some(Dialog::CloudTrash));
+    r.shot("22-cope-tasi");
+    r.cloud(Event::TrashConfirm);
+    r.until("çöpe taşıma", Duration::from_secs(30), |a| {
+        a.cloud.trashing.is_none()
+            && a.document
+                .as_ref()
+                .is_some_and(|d| d.cloud_source().is_none())
+    });
+    assert!(
+        said(&r.app).last().is_some_and(
+            |t| t.starts_with(&format!("“{renamed}” bulut projesi çöp kutusuna taşındı"))
+        ),
+        "{:?}",
+        said(&r.app).last()
+    );
     println!("{}", said(&r.app).join("\n"));
 }

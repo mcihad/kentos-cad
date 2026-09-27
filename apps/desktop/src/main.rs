@@ -8,6 +8,7 @@ mod app;
 mod app_menu;
 mod appearance;
 mod bottom;
+mod calc;
 mod catalog;
 mod clipboard;
 mod cloud;

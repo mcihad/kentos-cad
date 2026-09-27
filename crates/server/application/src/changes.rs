@@ -88,6 +88,16 @@ fn writable_layer(tree: &[LayerNode], id: &str) -> AppResult<()> {
     }
 }
 
+/// The layers (not groups) of a tree, in tree order.
+fn leaf_ids<'a>(nodes: &'a [LayerNode], out: &mut Vec<&'a str>) {
+    for n in nodes {
+        match n.kind {
+            LayerNodeType::Layer => out.push(&n.id),
+            LayerNodeType::Group => leaf_ids(&n.children, out),
+        }
+    }
+}
+
 struct Planned {
     id: Uuid,
     op: FeatureOp,
@@ -343,7 +353,14 @@ pub async fn commit(
             });
         } else if p.op != FeatureOp::Create {
             // Changing or deleting takes the object off its current layer, which must not be locked either.
-            writable_layer(&tree, &existing[&p.id].1)?;
+            // A layer this command's tree removes is judged as it was: its objects go with it.
+            let layer = &existing[&p.id].1;
+            let judged = if find_layer(&tree, layer).is_some() {
+                &tree
+            } else {
+                &current_tree
+            };
+            writable_layer(judged, layer)?;
         }
     }
     if !conflicts.is_empty() {
@@ -424,6 +441,45 @@ pub async fn commit(
                 });
             }
             (_, None) => unreachable!("creates and updates carry an object"),
+        }
+    }
+    // A layer the new tree drops must be empty once this command's objects
+    // are written: an object still on it (someone else's, or one not sent)
+    // keeps the layer, and nothing of the command is written.
+    if patch.layers.is_some() {
+        let mut layers = Vec::new();
+        leaf_ids(&current_tree, &mut layers);
+        let dropped: Vec<&str> = layers
+            .into_iter()
+            .filter(|id| find_layer(&tree, id).is_none())
+            .collect();
+        if !dropped.is_empty() {
+            let held: Option<String> = sqlx::query_scalar(
+                "select layer_id from kentos.feature where tenant_id = $1 and project_id = $2 and layer_id = any($3) limit 1",
+            )
+            .bind(access.tenant)
+            .bind(project)
+            .bind(&dropped)
+            .fetch_optional(&mut *tx)
+            .await?;
+            if let Some(layer) = held {
+                drop(tx);
+                let name = find_layer(&current_tree, &layer)
+                    .map_or(layer.as_str(), |(n, _)| n.name.as_str());
+                return Err(AppError::Conflict {
+                    message: format!(
+                        "“{name}” katmanında hâlâ nesne var (başka biri eklemiş ya da taşımış olabilir); katman silinmedi. Sunucudaki hâli ile sizinkini karşılaştırın."
+                    ),
+                    conflicts: vec![FeatureConflict {
+                        id: PROJECT_META_KEY.into(),
+                        reason: ConflictReason::Project,
+                        expected: envelope.expected_versions.get(PROJECT_META_KEY).cloned(),
+                        actual: Some(meta_version.to_string()),
+                        current: None,
+                    }],
+                    revision: Some(data_revision),
+                });
+            }
         }
     }
     let meta_changed = input.project.is_some();

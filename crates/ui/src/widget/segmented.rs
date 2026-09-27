@@ -3,16 +3,19 @@
 
 use std::fmt::Display;
 
+use iced::widget::tooltip::Position;
 use iced::widget::{button, container};
 use iced::{Element, Length};
 
 use crate::label;
 use crate::style;
 use crate::theme::typography;
+use crate::widget::tip::{Tip, tip};
 
 /// Parçalı seçim.
 pub struct Segmented<'a, Message> {
     segments: Vec<(String, bool, Option<Message>)>,
+    hints: Vec<String>,
     width: Length,
     _lifetime: std::marker::PhantomData<&'a ()>,
 }
@@ -49,6 +52,7 @@ impl<'a, Message: Clone + 'a> Segmented<'a, Message> {
                     (option.to_string(), option == selected, press)
                 })
                 .collect(),
+            hints: Vec::new(),
             width: Length::Shrink,
             _lifetime: std::marker::PhantomData,
         }
@@ -60,11 +64,19 @@ impl<'a, Message: Clone + 'a> Segmented<'a, Message> {
         self.width = width.into();
         self
     }
+
+    /// Seçeneklerin ipuçları, sırayla: imleç parçanın üstünde durunca ne
+    /// olduğunu söyler (ör. "Başladığı noktaya döner.").
+    pub fn hints(mut self, hints: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        self.hints = hints.into_iter().map(Into::into).collect();
+        self
+    }
 }
 
 impl<'a, Message: Clone + 'a> From<Segmented<'a, Message>> for Element<'a, Message> {
     fn from(segmented: Segmented<'a, Message>) -> Self {
         let fill = segmented.width != Length::Shrink;
+        let mut hints = segmented.hints.into_iter();
 
         let segments = segmented
             .segments
@@ -82,10 +94,15 @@ impl<'a, Message: Clone + 'a> From<Segmented<'a, Message>> for Element<'a, Messa
                     .padding([3, 12])
                     .style(style::button::segment(selected));
 
-                if fill {
+                let segment: Element<'a, Message> = if fill {
                     segment.width(Length::Fill).into()
                 } else {
                     segment.into()
+                };
+
+                match hints.next() {
+                    Some(hint) => tip(segment, Tip::new(hint), Position::Bottom),
+                    None => segment,
                 }
             });
 
