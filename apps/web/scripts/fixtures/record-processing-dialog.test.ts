@@ -181,6 +181,67 @@ const SESSIONS: SessionSpec[] = [
     available: ['client'],
     steps: [{ do: { type: { name: 'prefix', text: 'K' } } }, { do: { run: true } }, { do: { undo: true } }],
   },
+  {
+    id: 'pick-scene',
+    title:
+      'Sahneden seç (ADR 0088): başlangıç köşesinin yanındaki düğmeyle nokta (seçenek ve nokta birlikte) ve vazgeçilen nokta; girdi nesneleri: alınmayan türe tıklama, noktanın üstüne tıklayınca oradaki alan, alan içi, sağdan sola kutuda yalnız alınan tür, yeniden tıklayınca çıkan, Enter ile Seçili; alınmayan türe tıklayınca kenarı en yakın alan ve Esc ile önceki seçim; tür çipiyle daraltılan türler ve korunan süzgeç; hiçbir şey seçmeden Enter Esc gibi; erimde kenar yokken noktaya tıklayınca içinde olduğu alan',
+    open: { tool: 'points.numberVertices' },
+    selection: [1],
+    available: ['client'],
+    steps: [
+      { do: { pickChoice: { name: 'start', point: { x: 487052, y: 4420031 } } } },
+      { do: { pickChoice: { name: 'start', point: null } } },
+      { do: { scope: { name: 'input', scope: 'all' } } },
+      {
+        do: {
+          pickObjects: {
+            name: 'input',
+            tolerance: 0.5,
+            actions: [
+              // The line: not a kind the numbering takes, and no area's edge within reach.
+              { click: { x: 487050, y: 4420040 } },
+              // A point on the corner of parcels 1 and 2: the parcel there (the first in the drawing's order), not the point.
+              { click: { x: 487020, y: 4420000 } },
+              // Inside parcel 3.
+              { click: { x: 487052, y: 4420015 } },
+              // Right to left, a crossing: it touches the polyline and the line; only the polyline is taken.
+              { box: { from: { x: 487062, y: 4420058 }, to: { x: 486995, y: 4420035 } } },
+              // Parcel 3 again: out.
+              { click: { x: 487052, y: 4420015 } },
+            ],
+            end: 'done',
+          },
+        },
+      },
+      // Zoomed out (a 12 m aperture): a click on the line, whose kind is not taken, takes the parcel whose edge is nearest; then Esc.
+      { do: { pickObjects: { name: 'input', tolerance: 12, actions: [{ click: { x: 487050, y: 4420040 } }], end: 'cancel' } } },
+      { do: { scope: { name: 'input', scope: 'all' } } },
+      { do: { kind: { name: 'input', kind: 'polyline' } } },
+      {
+        do: {
+          pickObjects: {
+            name: 'input',
+            tolerance: 0.5,
+            actions: [
+              { box: { from: { x: 487062, y: 4420058 }, to: { x: 486995, y: 4420035 } } },
+              { click: { x: 487030, y: 4420015 } },
+            ],
+            end: 'done',
+          },
+        },
+      },
+      { do: { scope: { name: 'input', scope: 'all' } } },
+      { do: { pickObjects: { name: 'input', tolerance: 0.5, actions: [], end: 'done' } } },
+      // Inside parcel 1, 1.04 m from both its edges: point 8 on its corner is under the pointer (a point reaches 1.5 m),
+      // no edge is within the 1 m aperture, so the parcel the click is in is taken.
+      { do: { pickObjects: { name: 'input', tolerance: 1, actions: [{ click: { x: 487001.04, y: 4420028.96 } }], end: 'done' } } },
+      // Only polylines taken: a click inside parcel 2, away from its edges, takes nothing (the area it is in is not of a taken kind).
+      { do: { scope: { name: 'input', scope: 'all' } } },
+      { do: { kind: { name: 'input', kind: 'polyline' } } },
+      { do: { kind: { name: 'input', kind: 'polygon' } } },
+      { do: { pickObjects: { name: 'input', tolerance: 0.5, actions: [{ click: { x: 487032, y: 4420015 } }], end: 'done' } } },
+    ],
+  },
 ];
 
 /** Status lines: the run's state, whether Çalıştır was pressed, the problems. */
@@ -324,8 +385,8 @@ it.runIf(!!process.env.GOLDEN_WRITE)('records the processing dialog', async () =
 
   const sessions = [];
   for (const s of SESSIONS) {
-    const views = await playSession(s, kcad);
-    sessions.push({ ...s, opened: views[0], steps: s.steps.map((st, i) => ({ do: st.do, expect: viewDelta(views[i], views[i + 1]) })) });
+    const { views, picks } = await playSession(s, kcad);
+    sessions.push({ ...s, opened: views[0], steps: s.steps.map((st, i) => ({ do: st.do, ...(picks[i] ?? {}), expect: viewDelta(views[i], views[i + 1]) })) });
   }
 
   const file = {

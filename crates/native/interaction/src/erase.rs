@@ -20,7 +20,7 @@ use crate::format::Format;
 use crate::log::Level;
 use crate::points;
 use crate::prompt::Prompt;
-use crate::tool::{Context, Flow, Pointer, Preview, Tool};
+use crate::tool::{Context, Cursor, Flow, Pointer, Preview, Tool};
 
 /// The erase tool's id: its command is `tool.erase`.
 pub const ID: &str = "erase";
@@ -62,6 +62,11 @@ impl Erase {
 }
 
 impl Tool for Erase {
+    /// An object is picked (the web's `cursor = 'pick'`).
+    fn cursor(&self) -> Cursor {
+        Cursor::Pick
+    }
+
     fn id(&self) -> &'static str {
         ID
     }

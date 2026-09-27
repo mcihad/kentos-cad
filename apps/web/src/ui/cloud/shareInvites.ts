@@ -14,7 +14,19 @@ import {
   inviteQuestion,
   sortInvitations,
 } from '../../app/cloud/invitations';
-import { ROLE_HINT, ROLE_LABEL, dateText, failureText } from '../../app/cloud/sharing';
+import {
+  INVITE_LINES,
+  SHARE_TEXTS,
+  dayText,
+  invitationInitial,
+  invitationRevokeQuestion,
+  invitedLink,
+  inviteAsk,
+  inviteRules,
+  inviteTip,
+  invitesCount,
+} from '../../app/cloud/sharePlan';
+import { ROLE_HINT, ROLE_LABEL, failureText } from '../../app/cloud/sharing';
 import type { GrantRole } from '../../contracts/generated/GrantRole';
 import type { InvitationChange } from '../../contracts/generated/InvitationChange';
 import type { ProjectAccessList } from '../../contracts/generated/ProjectAccessList';
@@ -34,6 +46,7 @@ import type { ProjectTarget } from './ProjectActions';
  * shown here once, with a copy button: the server keeps only its hash, and
  * the link is kept nowhere else (not in the log, not in any storage); the
  * inviter sends it. Every request is the server's to decide (`project.share`).
+ * Its words and small rules are sharePlan.ts's.
  */
 
 export interface InvitePanelOptions {
@@ -54,7 +67,7 @@ export interface InvitePanel {
   focus(): void;
 }
 
-const dayText = (d: number) => (d === INVITE_DAYS ? `${d} gün (varsayılan)` : `${d} gün`);
+const T = SHARE_TEXTS.invites;
 
 export function createInvitePanel(ctx: AppContext, target: ProjectTarget, o: InvitePanelOptions): InvitePanel {
   const api = ctx.cloud.api;
@@ -63,37 +76,37 @@ export function createInvitePanel(ctx: AppContext, target: ProjectTarget, o: Inv
   let invitations: ProjectInvitation[] = [];
   let busy = false;
 
-  const email = h('input', { class: 'field', type: 'email', placeholder: 'ad@kurum.gov.tr', 'aria-label': 'Davet edilecek e-posta', autocomplete: 'off', spellcheck: 'false', disabled: true });
+  const email = h('input', { class: 'field', type: 'email', placeholder: T.placeholder, 'aria-label': T.emailLabel, autocomplete: 'off', spellcheck: 'false', disabled: true });
   const role = h(
     'select',
-    { class: 'field', 'aria-label': 'Davetin rolü', disabled: true },
+    { class: 'field', 'aria-label': T.roleLabel, disabled: true },
     INVITE_ROLES.map((r) => h('option', { value: r, selected: r === 'viewer', title: ROLE_HINT[r] }, ROLE_LABEL[r])),
   );
   const wait = h(
     'select',
-    { class: 'field', 'aria-label': 'Davetin geçerlilik süresi', disabled: true },
+    { class: 'field', 'aria-label': T.waitLabel, disabled: true },
     INVITE_DAY_CHOICES.map((d) => h('option', { value: String(d), selected: d === INVITE_DAYS }, dayText(d))),
   );
-  const send = h('button', { class: 'btn btn--primary', type: 'button', disabled: true }, 'Davet et');
+  const send = h('button', { class: 'btn btn--primary', type: 'button', disabled: true }, T.send);
   const roleHint = h('p', { class: 'cloud-hint share-rolehint' }, ROLE_HINT.viewer);
   const link = h('div', { class: 'invite-link', hidden: true });
   const count = h('span', { class: 'share-count' });
-  const list = h('div', { class: 'share-list invite-list', role: 'list', 'aria-label': 'Davetler' }, h('p', { class: 'cloud-empty' }, 'Davetler yükleniyor…'));
+  const list = h('div', { class: 'share-list invite-list', role: 'list', 'aria-label': T.listLabel }, h('p', { class: 'cloud-empty' }, T.loading));
   const rules = h('p', { class: 'cloud-hint share-policy' });
   const el = h(
     'div',
-    { class: 'share-panel', role: 'tabpanel', 'aria-label': 'Davetler' },
+    { class: 'share-panel', role: 'tabpanel', 'aria-label': SHARE_TEXTS.tabs.invites },
     h(
       'div',
       { class: 'share-add share-add--invite' },
-      h('label', { class: 'cloud-field' }, h('span', null, 'E-postayla davet et'), email),
-      h('label', { class: 'cloud-field' }, h('span', null, 'Rol'), role),
-      h('label', { class: 'cloud-field' }, h('span', null, 'Geçerlilik'), wait),
+      h('label', { class: 'cloud-field' }, h('span', null, T.email), email),
+      h('label', { class: 'cloud-field' }, h('span', null, T.role), role),
+      h('label', { class: 'cloud-field' }, h('span', null, T.wait), wait),
       send,
     ),
     roleHint,
     link,
-    h('h3', { class: 'share-title' }, h('span', null, 'Davetler'), count),
+    h('h3', { class: 'share-title' }, h('span', null, T.title), count),
     list,
     rules,
   );
@@ -101,54 +114,40 @@ export function createInvitePanel(ctx: AppContext, target: ProjectTarget, o: Inv
   const refresh = () => {
     for (const c of [email, role, wait]) c.disabled = !mayShare || busy;
     send.disabled = !mayShare || busy || !email.value.trim();
-    send.title = !mayShare ? 'Bu projede davet yetkiniz yok (project.share).' : !email.value.trim() ? 'Önce davet edilecek e-posta adresini yazın.' : '';
+    send.title = inviteTip(mayShare, email.value);
   };
 
   // ── The one-time link ───────────────────────────────────────────────
 
   /** A new invitation's link, shown once: kept in this panel's field only. */
   const showLink = (change: InvitationChange, days: number) => {
-    const i = change.invitation;
-    const what = `“${i.email}” davet edildi: ${ROLE_LABEL[i.role]}, ${dateText(i.expiresAt)} tarihine kadar bekler.`;
+    const said = invitedLink(change, days);
     if (!change.token) {
       // A retry's stored answer: the link was in an answer that never arrived.
-      replaceChildren(
-        link,
-        h('p', { class: 'invite-link__head' }, icon('warning', 16), h('span', null, `${what} Ancak bağlantı bu yanıtta yok; sunucu onu yalnız ilk yanıtta verir.`)),
-        h('p', { class: 'invite-link__warn' }, 'Bağlantıyı almak için aynı adrese yeniden davet gönderin; bu davetin bağlantısı artık çalışmaz.'),
-      );
+      replaceChildren(link, h('p', { class: 'invite-link__head' }, icon('warning', 16), h('span', null, said.what)), h('p', { class: 'invite-link__warn' }, said.warn));
       link.hidden = false;
       return;
     }
-    const url = h('input', { class: 'field invite-link__url', readonly: true, value: invitationLink(change.token), 'aria-label': 'Davet bağlantısı', spellcheck: 'false' });
-    const copy = h('button', { class: 'btn', type: 'button' }, icon('copy', 14), 'Kopyala');
+    const url = h('input', { class: 'field invite-link__url', readonly: true, value: invitationLink(change.token), 'aria-label': T.linkLabel, spellcheck: 'false' });
+    const copy = h('button', { class: 'btn', type: 'button' }, icon('copy', 14), T.copy);
     copy.addEventListener('click', () => {
       navigator.clipboard.writeText(url.value).then(
         () => {
-          copy.replaceChildren(icon('check', 14), 'Kopyalandı');
-          o.say('Bağlantı panoya kopyalandı; davet ettiğiniz kişiye iletin.');
+          copy.replaceChildren(icon('check', 14), T.copied);
+          o.say(T.copiedSay);
         },
         () => {
           url.select();
-          o.say('Bağlantı panoya kopyalanamadı: alandaki bağlantı seçildi, Ctrl+C ile kopyalayın.', 'error');
+          o.say(T.copyFailed, 'error');
         },
       );
     });
     url.addEventListener('focus', () => url.select());
     replaceChildren(
       link,
-      h('p', { class: 'invite-link__head' }, icon('success', 16), h('span', null, what)),
+      h('p', { class: 'invite-link__head' }, icon('success', 16), h('span', null, said.what)),
       h('div', { class: 'invite-link__row' }, url, copy),
-      h(
-        'p',
-        { class: 'invite-link__warn' },
-        icon('warning', 14),
-        h(
-          'span',
-          null,
-          `Bu bağlantı yalnız şimdi gösterilir: sunucu onu saklamaz, pencere kapanınca yeniden gösterilemez. Kopyalayıp davet ettiğiniz kişiye kendiniz iletin; ${days} gün içinde, bir kez kullanılabilir. Kaybederseniz yeniden davet edin (eski bağlantı çalışmaz olur).`,
-        ),
-      ),
+      h('p', { class: 'invite-link__warn' }, icon('warning', 14), h('span', null, said.warn)),
     );
     link.hidden = false;
     copy.focus();
@@ -160,16 +159,14 @@ export function createInvitePanel(ctx: AppContext, target: ProjectTarget, o: Inv
   const mayGo = async (address: string): Promise<boolean> => {
     const q = inviteQuestion(address, invitations, access);
     if (!q) return true;
-    const details: string[] = [];
-    if (q.waiting) details.push(`${dateText(q.waiting.createdAt)} tarihli bekleyen davet geri alınır; onun bağlantısı artık çalışmaz. Yeni bağlantıyı yeniden iletmeniz gerekir.`);
-    if (q.holder) details.push(`${q.holder.name} projeye zaten ${q.holder.role} olarak erişebiliyor. Davet ancak daha güçlü bir rol verir; rolü düşürmez.`);
+    const ask = inviteAsk(address, q);
     const answer = await confirmDialog({
-      title: q.waiting ? 'Bekleyen davet var' : 'Zaten erişebiliyor',
-      message: `“${address}” için yeni bir davet gönderilsin mi?`,
-      details,
+      title: ask.title,
+      message: ask.message,
+      details: ask.details,
       answers: [
-        { value: 'cancel', label: 'Vazgeç' },
-        { value: 'go', label: 'Yeni davet gönder', kind: 'primary' },
+        { value: 'cancel', label: ask.cancel },
+        { value: 'go', label: ask.go, kind: 'primary' },
       ],
       cancel: 'cancel',
     });
@@ -190,18 +187,18 @@ export function createInvitePanel(ctx: AppContext, target: ProjectTarget, o: Inv
     const grant = role.value as GrantRole;
     busy = true;
     refresh();
-    o.say(`“${address}” davet ediliyor…`);
+    o.say(T.inviting(address));
     try {
       const change = await api.lifecycle<InvitationChange>(inviteEnvelope(target.tenantId, target.projectId, address, grant, inviteExpiry(days)));
       if (!o.open()) return;
       // The log says who was invited, never the link.
-      ctx.log.success(`“${target.name}”: “${change.invitation.email}” ${ROLE_LABEL[change.invitation.role]} olarak davet edildi.`);
+      ctx.log.success(INVITE_LINES.invitedLog(target.name, change.invitation.email, change.invitation.role));
       showLink(change, days);
       email.value = '';
-      o.say('Davet oluşturuldu. Bağlantıyı kopyalayıp davet ettiğiniz kişiye iletin.');
+      o.say(T.created);
       await load();
     } catch (e) {
-      o.say(failureText(e, 'Davet gönderilemedi'), 'error');
+      o.say(failureText(e, T.sendFailed), 'error');
       if ((e as { path?: string }).path === 'email') email.focus();
     } finally {
       busy = false;
@@ -210,25 +207,26 @@ export function createInvitePanel(ctx: AppContext, target: ProjectTarget, o: Inv
   };
 
   const revoke = async (i: ProjectInvitation) => {
+    const ask = invitationRevokeQuestion(i.email);
     const sure = await confirmDialog({
-      title: 'Daveti geri al',
-      message: `“${i.email}” adresine gönderilen davet geri alınsın mı?`,
-      details: ['Davetin bağlantısı artık çalışmaz; açan kişi projeye erişemez.', 'Kişiye ayrıca haber vermeniz gerekmez; isterseniz daha sonra yeniden davet edebilirsiniz.'],
+      title: ask.title,
+      message: ask.message,
+      details: ask.details,
       answers: [
-        { value: 'cancel', label: 'Vazgeç' },
-        { value: 'revoke', label: 'Daveti geri al', kind: 'danger' },
+        { value: 'cancel', label: ask.cancel },
+        { value: 'revoke', label: ask.action, kind: 'danger' },
       ],
       cancel: 'cancel',
     });
     if (sure !== 'revoke' || !o.open()) return;
-    o.say(`“${i.email}” için davet geri alınıyor…`);
+    o.say(T.revoking(i.email));
     try {
       await api.lifecycle<InvitationChange>(invitationRevokeEnvelope(target.tenantId, target.projectId, i.id));
-      ctx.log.success(`“${target.name}”: “${i.email}” için davet geri alındı.`);
-      o.say(`“${i.email}” için davet geri alındı; bağlantısı artık çalışmaz.`);
+      ctx.log.success(INVITE_LINES.revokedLog(target.name, i.email));
+      o.say(INVITE_LINES.revokedSay(i.email));
       await load();
     } catch (e) {
-      o.say(failureText(e, 'Davet geri alınamadı'), 'error');
+      o.say(failureText(e, T.revokeFailed), 'error');
       await load();
     }
   };
@@ -238,14 +236,14 @@ export function createInvitePanel(ctx: AppContext, target: ProjectTarget, o: Inv
   const row = (i: ProjectInvitation): HTMLElement => {
     let action: HTMLElement;
     if (i.state === 'pending' && mayShare) {
-      const b = h('button', { class: 'btn btn--ghost btn--small share-remove', type: 'button', 'aria-label': `${i.email} davetini geri al` }, 'Geri al');
+      const b = h('button', { class: 'btn btn--ghost btn--small share-remove', type: 'button', 'aria-label': T.revokeLabel(i.email) }, T.revoke);
       b.addEventListener('click', () => void revoke(i));
       action = b;
     } else action = h('span', { class: 'invite-state', dataset: { state: i.state } }, INVITATION_STATE_LABEL[i.state]);
     return h(
       'div',
       { class: 'share-row invite-row', role: 'listitem', dataset: { invitation: i.id, state: i.state } },
-      h('span', { class: 'share-avatar', 'aria-hidden': 'true' }, i.email[0]?.toLocaleUpperCase('tr') ?? '?'),
+      h('span', { class: 'share-avatar', 'aria-hidden': 'true' }, invitationInitial(i.email)),
       h('div', { class: 'share-who' }, h('span', { class: 'share-name' }, i.email), h('span', { class: 'share-sub', title: invitationSub(i) }, invitationSub(i))),
       h('span', { class: 'share-role' }, ROLE_LABEL[i.role], i.state === 'pending' ? h('span', { class: 'invite-state', dataset: { state: 'pending' } }, INVITATION_STATE_LABEL.pending) : null),
       action,
@@ -253,19 +251,18 @@ export function createInvitePanel(ctx: AppContext, target: ProjectTarget, o: Inv
   };
 
   const render = () => {
-    const waiting = invitations.filter((i) => i.state === 'pending').length;
-    count.textContent = invitations.length ? `${waiting} bekliyor` : '';
+    count.textContent = invitesCount(invitations);
     replaceChildren(
       list,
       invitations.length
         ? sortInvitations(invitations).map(row)
-        : h('p', { class: 'cloud-empty' }, 'Bekleyen ya da son 30 günde sonuçlanmış davet yok. Kurum dışından biriyle çalışmak için yukarıdan e-postayla davet edin.'),
+        : h('p', { class: 'cloud-empty' }, T.empty),
     );
   };
 
   const load = async () => {
     if (!mayShare) {
-      replaceChildren(list, h('p', { class: 'cloud-empty' }, 'Davetleri görmek ve göndermek için bu projede paylaşım yetkiniz olmalı (project.share).'));
+      replaceChildren(list, h('p', { class: 'cloud-empty' }, T.noRight));
       return;
     }
     try {
@@ -274,7 +271,7 @@ export function createInvitePanel(ctx: AppContext, target: ProjectTarget, o: Inv
       invitations = r.invitations;
       render();
     } catch (e) {
-      if (o.open()) replaceChildren(list, h('p', { class: 'cloud-empty', role: 'alert' }, failureText(e, 'Davetler okunamadı')));
+      if (o.open()) replaceChildren(list, h('p', { class: 'cloud-empty', role: 'alert' }, failureText(e, T.readFailed)));
     }
   };
 
@@ -292,10 +289,7 @@ export function createInvitePanel(ctx: AppContext, target: ProjectTarget, o: Inv
     setAccess(may, list) {
       mayShare = may;
       access = list;
-      rules.textContent =
-        list?.tenantKind === 'personal'
-          ? 'Davet edilen, bağlantıyı açıp davetin gönderildiği e-postanın hesabıyla girince projeye paylaşımla erişir. Bağlantıyı siz iletirsiniz; KentOS e-posta göndermez.'
-          : 'Davet edilen, bağlantıyı açıp davetin gönderildiği e-postanın hesabıyla girince projeye erişir: kurumun üyesiyse paylaşımla, değilse misafir olarak (yalnız bu projeyi görür; rolü en çok Düzenleyici; kurum misafir almıyorsa kabul edilmez). Bağlantıyı siz iletirsiniz; KentOS e-posta göndermez.';
+      rules.textContent = inviteRules(list?.tenantKind === 'personal');
       refresh();
     },
     load,

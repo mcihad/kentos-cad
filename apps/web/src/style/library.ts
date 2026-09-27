@@ -178,9 +178,16 @@ export class StyleLibrary {
   }
 
   /** Changes an item's content, name, path, tags … (never its id or kind). */
+  /**
+   * Changes an item's fields. A field given as undefined is removed (a
+   * cleared Kaynak or Açıklama), as the desktop's `update` removes one given
+   * as null; copying the patch through JSON alone would keep the old text.
+   */
   update(id: string, patch: Partial<Omit<LibrarySymbol, 'id' | 'kind'>> | Partial<Omit<LibraryAsset, 'id' | 'kind'>>): void {
     const { source, item } = this.editable(id);
-    this.stores[source].set(id, { ...item, ...clone(patch), id, kind: item.kind } as LibraryItem);
+    const next: Record<string, unknown> = { ...item, ...clone(patch), id, kind: item.kind };
+    for (const [k, v] of Object.entries(patch)) if (v === undefined) delete next[k];
+    this.stores[source].set(id, next as unknown as LibraryItem);
     this.touched(source);
   }
 

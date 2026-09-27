@@ -26,7 +26,7 @@ use crate::edge;
 use crate::format::Format;
 use crate::log::Level;
 use crate::prompt::Prompt;
-use crate::tool::{Context, Flow, Marker, MarkerShape, Pointer, Preview, Tag, Tone, Tool};
+use crate::tool::{Context, Cursor, Flow, Marker, MarkerShape, Pointer, Preview, Tag, Tone, Tool};
 
 /// The vertex tool's id: its command is `tool.vertex`.
 pub const ID: &str = "vertex";
@@ -92,6 +92,11 @@ impl Vertex {
 }
 
 impl Tool for Vertex {
+    /// An object is picked (the web's `cursor = 'pick'`).
+    fn cursor(&self) -> Cursor {
+        Cursor::Pick
+    }
+
     fn id(&self) -> &'static str {
         ID
     }

@@ -1,6 +1,7 @@
 import { ENTITY_KIND_LABEL, type EntityKind } from '../../model/entities';
 import { WORKER_THRESHOLD } from '../../processing/runner';
 import type { ExecutionTarget, FeaturesValue } from '../../processing/types';
+import { pickObjectsPrompt } from '../../tools/pickObjectsTool';
 import { TARGET_SHORT } from './targets';
 
 /**
@@ -60,7 +61,16 @@ export const DIALOG_TEXTS = {
     existing: '(mevcut)',
     fresh: '(yeni)',
   },
-  point: { none: 'Henüz gösterilmedi', show: 'Haritadan göster', again: 'Yeniden göster' },
+  point: { none: 'Henüz seçilmedi', show: 'Sahneden seç', again: 'Yeniden seç' },
+  /** Sahneden seç beside a choice that picks a point, and beside the input objects' scope (docs/adr/0088). */
+  pick: {
+    choice: 'Sahneden seç',
+    choiceTip: 'Başlangıcı çizimde gösterin: her nesnede o noktaya en yakın köşeden başlanır.',
+    objects: 'Sahneden seç',
+    objectsTip: 'Nesneleri çizimde tıklayarak ya da pencereyle seçin; Enter bitirir, Esc vazgeçer.',
+    prompt: pickObjectsPrompt,
+    picked: (n: number) => `${n} nesne seçildi.`,
+  },
   field: {
     none: 'Bu nesnelerde öznitelik alanı yok',
     choose: 'Alan seçin',

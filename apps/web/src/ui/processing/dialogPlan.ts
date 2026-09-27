@@ -44,7 +44,8 @@ export type ControlForm =
   | { type: 'number'; unit?: ParamUnit }
   | { type: 'string'; short: boolean; maxLength?: number; placeholder?: string }
   | { type: 'boolean' }
-  | { type: 'enum'; control: 'segmented' | 'dropdown'; options: EnumOption[] }
+  /** picks: one option is a point picked on the drawing, beside the choice (Sahneden seç, docs/adr/0088). */
+  | { type: 'enum'; control: 'segmented' | 'dropdown'; options: EnumOption[]; picks?: { option: string; point: string } }
   | { type: 'layer' }
   | { type: 'point' }
   /** combo: a name field with the list beside it (allowNew); dropdown: only the list. */
@@ -77,7 +78,7 @@ export function controlForm(def: ParamDef): ControlForm {
     case 'boolean':
       return { type: 'boolean' };
     case 'enum':
-      return { type: 'enum', control: enumControl(def), options: def.options.map((o) => ({ ...o })) };
+      return { type: 'enum', control: enumControl(def), options: def.options.map((o) => ({ ...o })), ...(def.picks ? { picks: { ...def.picks } } : {}) };
     case 'layer':
       return { type: 'layer' };
     case 'point':
@@ -388,6 +389,29 @@ export const undone = (state: DialogState): DialogState => ({ ...state, status: 
 export function picked(state: DialogState, name: string, point: Vec2 | null): DialogState {
   const back = state.status.kind === 'running' ? { ...state, status: IDLE } : state;
   return point ? edited(back, name, point) : back;
+}
+
+/**
+ * Back from Sahneden seç beside a choice (the numbering's start vertex):
+ * the point fills its parameter and the choice takes the option, both
+ * touched; null (Esc) changes nothing.
+ */
+export function pickedChoice(state: DialogState, choice: string, option: string, pointName: string, point: Vec2 | null): DialogState {
+  const back = state.status.kind === 'running' ? { ...state, status: IDLE } : state;
+  return point ? edited(edited(back, pointName, point, true), choice, option, true) : back;
+}
+
+/**
+ * Back from Sahneden seç for input objects: kept with `count` objects
+ * selected, the field is the selection, its kinds as they were chosen,
+ * touched; left (Esc) or with nothing picked, nothing changes.
+ */
+export function pickedObjects(state: DialogState, name: string, keep: boolean, count: number): DialogState {
+  const back = state.status.kind === 'running' ? { ...state, status: IDLE } : state;
+  if (!keep || count === 0) return back;
+  const kinds = (state.values[name] as FeaturesValue | undefined)?.kinds;
+  const value: FeaturesValue = kinds ? { scope: 'selection', kinds: [...kinds] } : { scope: 'selection' };
+  return edited(back, name, value, true);
 }
 
 // ── What the dialog shows ────────────────────────────────────────────

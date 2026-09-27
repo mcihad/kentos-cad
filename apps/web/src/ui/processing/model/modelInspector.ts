@@ -30,6 +30,8 @@ export interface InspectorHost {
   change(fn: () => void, opts?: { rerender?: boolean; key?: string }): void;
   select(ref: NodeRef | null): void;
   pickPoint(stepId: string, param: string): void;
+  /** Sahneden seç beside a step's choice that picks a point: the point and the choice's option, both fixed. */
+  pickChoice(stepId: string, param: string): void;
   deleteModel(): void;
 }
 
@@ -275,6 +277,7 @@ function stepInspector(host: InspectorHost, stepId: string): HTMLElement {
     previewExpression: (name) => runner.previewExpression(tool, fixed(), name),
     builderObjects: (name) => runner.builderObjects(tool, fixed(), name),
     pickPoint: (name) => host.pickPoint(stepId, name),
+    pickChoice: (name) => host.pickChoice(stepId, name),
   };
 
   const paramRow = (p: ParamDef) => {

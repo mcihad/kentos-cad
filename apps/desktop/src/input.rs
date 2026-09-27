@@ -236,6 +236,13 @@ impl App {
         }
         let doc = self.document.as_ref();
         self.viewport.update(event.clone(), doc);
+        // No crosshair while the middle button pans (the web's `panFrom`): a
+        // pan reports itself, and the first plain move after it ends it.
+        match event {
+            viewport::Event::Panned { .. } => self.panning = true,
+            viewport::Event::Moved(_) | viewport::Event::Left => self.panning = false,
+            _ => {}
+        }
         match event {
             viewport::Event::Moved(at) => {
                 let world = self.viewport.world(at);

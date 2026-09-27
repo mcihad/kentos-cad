@@ -123,6 +123,13 @@ export interface EnumParam<N extends string = string, V extends string = string>
   readonly type: 'enum';
   readonly options: readonly EnumOption<V>[];
   readonly default: Default<V>;
+  /**
+   * One of the options is a point picked on the drawing (the numbering's
+   * start vertex, docs/adr/0088): that option, and the point parameter the
+   * pick fills. The dialog puts “Sahneden seç” beside the choice; a picked
+   * point sets both.
+   */
+  readonly picks?: { readonly option: V; readonly point: string };
 }
 
 export interface LayerParam<N extends string = string> extends ParamBase<N> {

@@ -23,7 +23,7 @@ use crate::app::{App, Message};
 use crate::settings::schema;
 
 /// The settings the window shows, in its order.
-pub const KEYS: [&str; 31] = [
+pub const KEYS: [&str; 32] = [
     "drafting.ortho",
     "drafting.polar",
     "drafting.polarIncrement",
@@ -48,6 +48,7 @@ pub const KEYS: [&str; 31] = [
     "appearance.theme",
     "appearance.accentColor",
     "appearance.drawingBackground",
+    "appearance.crosshair",
     "appearance.typeface",
     "appearance.monoTypeface",
     "appearance.textSize",
@@ -441,6 +442,11 @@ impl App {
                 ),
             )
             .help(help("appearance.drawingBackground"))
+            .field(
+                title("appearance.crosshair"),
+                choices("appearance.crosshair", &value("appearance.crosshair")),
+            )
+            .help(help("appearance.crosshair"))
             .field(
                 title("appearance.typeface"),
                 listed("appearance.typeface", &value("appearance.typeface")),

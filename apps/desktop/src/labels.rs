@@ -290,6 +290,8 @@ impl Labels<'_> {
                 }
             }
         }
+        // Grid north and the scale bar over the text, as the web's overlay (map_marks.rs).
+        crate::map_marks::paint(frame, &self.camera, &self.colors);
     }
 
     /// An object's label where its style places it, unless one is already there.

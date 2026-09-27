@@ -50,17 +50,19 @@ Yok.
 
 Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/desktop/equivalents.json`'ın bütün bir bölüm için dediği; masaüstü kabuğunun çalıştırdığı komutlar (`apps/desktop/ported.json`) ve onlarla araçları (`tool.<kimlik>`), işlem araçları ve modelleri (`processing.run.…`, `processing.model.…`), çalışma modları (`workspace.<kimlik>`); şeması masaüstünü de barındıran tipli ayarlar; tablonun öğe öğe dediği (masaüstündeki yeri ya da orada neden anlamsız olduğu); en son `annotations.json`. Bilinmeyen `none`dır. Masaüstünde komutu olmayanlar şeritte soluk durur ve “masaüstüne henüz taşınmadı” der (docs/adr/0017).
 
-| Bölüm | Masaüstünde | Kısmi | Yok | Anlamsız | Toplam |
-|---|---|---|---|---|---|
-| Komutlar | 142 | 0 | 23 | 2 | 167 |
-| Araçlar | 56 | 0 | 2 | 0 | 58 |
-| İşlem araçları | 4 | 0 | 0 | 0 | 4 |
-| İşlem modelleri | 1 | 0 | 0 | 0 | 1 |
-| Çalışma modları | 3 | 0 | 2 | 0 | 5 |
-| Ayarlar | 41 | 12 | 11 | 1 | 65 |
-| Tarayıcı depoları | 7 | 1 | 1 | 1 | 10 |
-| `.kcad` alanları (v1 okunur, v2 yazılır) | 192 | 0 | 0 | 0 | 192 |
-| Pencereler ve paneller | 43 | 4 | 16 | 0 | 63 |
+| Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
+|---|---|---|---|---|---|---|
+| Komutlar | 142 | 0 | 8 | 15 | 2 | 167 |
+| Araçlar | 56 | 0 | 0 | 2 | 0 | 58 |
+| İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
+| İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
+| Çalışma modları | 3 | 0 | 0 | 2 | 0 | 5 |
+| Ayarlar | 42 | 12 | 10 | 0 | 1 | 65 |
+| Tarayıcı depoları | 7 | 1 | 1 | 0 | 1 | 10 |
+| `.kcad` alanları (v1 okunur, v2 yazılır) | 192 | 0 | 0 | 0 | 0 | 192 |
+| Pencereler ve paneller | 43 | 4 | 16 | 0 | 0 | 63 |
+
+Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
 
 - `.kcad` alanları (v1 okunur, v2 yazılır), bütünüyle: implemented — Masaüstü .kcad'i web'le aynı Rust kodeğiyle (crates/shared/kcad) okur ve yazar: v2 yazılır, v1 okunur; belge (kentos-domain) göçü web'in örnek dosyasıyla aynı çıkarır (crates/native/domain/tests/snapshot_v2.rs, ADR 0025).
 
@@ -75,36 +77,36 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (23 / 167)
+#### Komutlar (8 / 167; ayrıca 15 iki platformda da bekliyor)
 
-- `analysis.slope` Eğim analizi… (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
-- `analysis.volume` Hacim hesabı… (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `cloud.share` Bulut projesini paylaş…
-- `crs.query` Koordinat sorgula (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
-- `crs.transform` Datum dönüşümü (ED50 ↔ TUREF)… (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
-- `file.export.pdf` PDF pafta… (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
-- `file.import.ncz` Netcad NCZ… (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
-- `file.print` Yazdır ve pafta çıktısı… (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
-- `map.contours` Eşyükselti üret… (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
-- `map.parcelReport` Parsel alan çizelgesi (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
-- `map.profile` Boy kesit al… (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
-- `map.sheet` Pafta bölümlemesi… (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `processing.newModel` Yeni model…
 - `style.legend` Lejant…
 - `style.svgEditor` SVG çizim düzenleyicisi…
-- `tool.stakeout` Aplikasyon (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
-- `tool.subdivide` İfraz (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `view.keyTips` Şerit harf ipuçları
 - `view.ribbon` Şerit arayüzü
 - `view.toolbox` Araç kutusu
 - `view.toolboxDock` Araç kutusunu kenara sabitle
-- `workspace.disaster` Afet Analizi (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
-- `workspace.plan3d` 3D Plan (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
+- `analysis.slope` Eğim analizi… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
+- `analysis.volume` Hacim hesabı… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
+- `crs.query` Koordinat sorgula (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
+- `crs.transform` Datum dönüşümü (ED50 ↔ TUREF)… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
+- `file.export.pdf` PDF pafta… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
+- `file.import.ncz` Netcad NCZ… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
+- `file.print` Yazdır ve pafta çıktısı… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
+- `map.contours` Eşyükselti üret… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
+- `map.parcelReport` Parsel alan çizelgesi (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
+- `map.profile` Boy kesit al… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
+- `map.sheet` Pafta bölümlemesi… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
+- `tool.stakeout` Aplikasyon (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
+- `tool.subdivide` İfraz (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
+- `workspace.disaster` Afet Analizi (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
+- `workspace.plan3d` 3D Plan (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 
-#### Araçlar (2 / 58)
+#### Araçlar (0 / 58; ayrıca 2 iki platformda da bekliyor)
 
-- `stakeout` Aplikasyon (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)) — Aplikasyon aracı hazır değil. Hesap menüsündeki `calc.stakeout` penceresi ayrıdır ve çalışır.
-- `subdivide` İfraz (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)) — İfraz hesabı henüz yok. Alan ve hisse kuralları bağımsız referans ve kurum kabulü ister (CLAUDE.md §7, §23; TODOS.md GIS-06, GIS-13).
+- `stakeout` Aplikasyon (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)) — Aplikasyon aracı hazır değil. Hesap menüsündeki `calc.stakeout` penceresi ayrıdır ve çalışır.
+- `subdivide` İfraz (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)) — İfraz hesabı henüz yok. Alan ve hisse kuralları bağımsız referans ve kurum kabulü ister (CLAUDE.md §7, §23; TODOS.md GIS-06, GIS-13).
 
 #### İşlem araçları (0 / 4)
 
@@ -114,12 +116,12 @@ Yok.
 
 Yok.
 
-#### Çalışma modları (2 / 5)
+#### Çalışma modları (0 / 5; ayrıca 2 iki platformda da bekliyor)
 
-- `disaster` Afet ve risk analizi (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
-- `plan3d` İmar planından 3D kent tasarımı (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
+- `disaster` Afet ve risk analizi (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
+- `plan3d` İmar planından 3D kent tasarımı (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 
-#### Ayarlar (23 / 65)
+#### Ayarlar (22 / 65)
 
 - `layout.bottomExpanded`  (kısmi) (masaüstünde: apps/desktop/src/bottom.rs) — Alt panel F2 ile açılıp kapanır; yeniden açılışta hatırlanmaz.
 - `layout.bottomHeight`  (kısmi) (masaüstünde: apps/desktop/src/bottom.rs) — Boyu sürükleyerek değişir; yeniden açılışta hatırlanmaz.
@@ -141,7 +143,6 @@ Yok.
 - `layout.toolboxVisible`
 - `layout.toolboxX`
 - `layout.toolboxY`
-- `user.crosshair`
 - `user.shell`
 - `user.uiFont`  (kısmi) (masaüstünde: ayarlar.json appearance.typeface (Görünüm sekmesi, ADR 0051)) — Masaüstünde KentOS UI'ın üç yazı tipi var (IBM Plex Sans, Inter, Plus Jakarta Sans); web yedi seçenek sunar.
 

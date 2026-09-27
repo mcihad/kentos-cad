@@ -53,6 +53,7 @@ Nesne alanının kapsam seçiminin yanında hedef ikonlu “Sahneden seç” dü
   - İmlecin altındaki nesneyi seçime ekler ya da çıkarır.
   - Yalnız alanın türleri alınır: aracın `kinds`'i, kullanıcı tür çipleriyle daralttıysa onlar.
   - İmlecin altında başka türden bir nesne varsa, alınan türlerden kenarı en yakın olan seçilir: noktanın üstünde tıklamak alanı değil, yakındaki parseli alır.
+  - İmlecin altında alınan türden kenar da yoksa, içinde tıklanan en küçük alan alınır.
   - Kenet yoktur.
 - **Sürükleme:** 4 pikselden sonra kutu çizer; seçim aracının kuralıyla soldan sağa pencere, sağdan sola kesişim. Kutudakilerden alanın türleri eklenir.
 - **Enter, Boşluk ya da hızlı sağ tık:**
