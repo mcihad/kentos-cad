@@ -62,6 +62,7 @@
     "cloud.history",
     "cloud.rename",
     "cloud.delete",
+    "cloud.share",
     "layer.new",
     "layer.newGroup",
     "file.import.dxf",

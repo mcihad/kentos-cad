@@ -126,7 +126,8 @@ async fn the_desktop_signs_in_with_its_own_header_and_forgets_the_session() {
         cloud.auth_config().await.unwrap(),
         AuthConfig {
             local: true,
-            oidc: None
+            oidc: None,
+            public_url: Some("http://app.test/".into()),
         }
     );
     let wrong = cloud.sign_in("ayse", "yanlis-parola").await.unwrap_err();

@@ -159,6 +159,7 @@
     "apps/web/src/ui/cloud/ProjectActions.ts#openDeleteDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/actions.rs (ADR 0073)" },
     "apps/web/src/ui/cloud/ProjectActions.ts#openRenameDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/actions.rs (ADR 0073)" },
     "apps/web/src/ui/cloud/ProjectsDialog.ts#openProjectsDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/mod.rs (cloud.open, cloud.upload, cloud.uploadFile)" },
+    "apps/web/src/ui/cloud/ShareDialog.ts#openShareDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/share*.rs (ADR 0111)" },
     "apps/web/src/ui/cloud/UploadDialog.ts#openUploadDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/upload.rs (ADR 0041, 0073)" },
     "apps/web/src/ui/dialogs.ts#openAboutDialog": { "desktop": "implemented", "where": "apps/desktop/src/view.rs (Dialog::About)" },
     "apps/web/src/ui/dialogs.ts#openShortcutsDialog": { "desktop": "implemented", "where": "apps/desktop/src/view.rs (Dialog::Shortcuts)" },

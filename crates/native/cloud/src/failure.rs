@@ -66,6 +66,12 @@ impl ApiFailure {
         Self::new(status, code, message)
     }
 
+    /// The same failure, which the server says may go again unchanged or not.
+    pub fn with_retryable(mut self, retryable: bool) -> Self {
+        self.0.retryable = retryable;
+        self
+    }
+
     /// The same failure with these objects in conflict.
     pub fn with_conflicts(mut self, conflicts: Vec<FeatureConflict>) -> Self {
         self.0.conflicts = conflicts;

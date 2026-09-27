@@ -102,6 +102,8 @@ pub const PORTED: &[&str] = &[
     "cloud.history",
     "cloud.rename",
     "cloud.delete",
+    // Projeyi paylaş: the people, their roles and the invitations (cloud/share.rs, docs/adr/0111).
+    "cloud.share",
     // New layers and groups (layering.rs): edits that are not undone, as on the web.
     "layer.new",
     "layer.newGroup",

@@ -20,7 +20,7 @@ use crate::cloud::catalog::{Catalog, Details, List, Tab, place_of};
 use crate::cloud::catalog_actions::Act;
 use crate::cloud::local_time::{Zone, day, when};
 use crate::cloud::plan::{self, DetailAction};
-use crate::cloud::{Event, words};
+use crate::cloud::{Event, share, words};
 
 impl App {
     /// The selected project (the web's `renderDetails`): its name and
@@ -175,23 +175,19 @@ impl App {
         let actions = plan.actions.iter().fold(Row::new().spacing(6), |r, a| {
             // What the desktop cannot do yet says so; what the account may not do, which right it needs.
             let act = match a.id {
-                DetailAction::Download => Some(Act::Download),
-                DetailAction::Archive => Some(Act::Archive),
-                DetailAction::Unarchive => Some(Act::Unarchive),
-                DetailAction::Trash => Some(Act::Trash),
-                DetailAction::Purge => Some(Act::Purge),
-                DetailAction::Share
-                | DetailAction::Edit
-                | DetailAction::Duplicate
-                | DetailAction::Convert => None,
+                DetailAction::Download => Some(cloud(Event::CatalogAct(Act::Download))),
+                DetailAction::Archive => Some(cloud(Event::CatalogAct(Act::Archive))),
+                DetailAction::Unarchive => Some(cloud(Event::CatalogAct(Act::Unarchive))),
+                DetailAction::Trash => Some(cloud(Event::CatalogAct(Act::Trash))),
+                DetailAction::Purge => Some(cloud(Event::CatalogAct(Act::Purge))),
+                DetailAction::Share => Some(share::msg(share::Event::Open)),
+                DetailAction::Edit | DetailAction::Duplicate | DetailAction::Convert => None,
             };
             let why = a
                 .why
                 .clone()
                 .or_else(|| act.is_none().then(|| NOT_YET.to_owned()));
-            let on = act
-                .filter(|_| why.is_none() && !held)
-                .map(|act| cloud(Event::CatalogAct(act)));
+            let on = act.filter(|_| why.is_none() && !held);
             let b = small_button(a.label, web(a.icon), on, a.danger);
             r.push(match why {
                 Some(why) => tip(b, Tip::new(why), iced::widget::tooltip::Position::Top),

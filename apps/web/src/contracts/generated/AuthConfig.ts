@@ -4,4 +4,10 @@ import type { OidcLoginInfo } from "./OidcLoginInfo";
 /**
  * `GET /v1/auth/config`: which ways of signing in this server offers.
  */
-export type AuthConfig = { local: boolean, oidc?: OidcLoginInfo, };
+export type AuthConfig = { local: boolean, oidc?: OidcLoginInfo, 
+/**
+ * Where people open the web app (`KENTOS_PUBLIC_URL`, ending in `/`):
+ * the base of an invitation's link from a desktop, which has no address
+ * of its own (docs/adr/0111). The web uses its own address.
+ */
+publicUrl?: string, };
