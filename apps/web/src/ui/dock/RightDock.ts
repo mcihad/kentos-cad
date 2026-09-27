@@ -1,4 +1,5 @@
 import type { AppContext } from '../../app/context';
+import { LAYERS_FRACTION, draggedLayersFraction } from '../../app/layoutPlan';
 import { watchAll } from '../../core/signal';
 import { Component } from '../Component';
 import { h } from '../dom';
@@ -39,8 +40,8 @@ export class RightDock extends Component {
         startFrac = ui.layersFraction.value;
         height = this.el.clientHeight || 1;
       },
-      onDrag: (dy) => ui.layersFraction.set(Math.min(0.85, Math.max(0.15, startFrac + dy / height))),
-      onReset: () => ui.layersFraction.set(0.5),
+      onDrag: (dy) => ui.layersFraction.set(draggedLayersFraction(startFrac, dy, height)),
+      onReset: () => ui.layersFraction.set(LAYERS_FRACTION.reset),
     });
     this.d.add(split.dispose);
 

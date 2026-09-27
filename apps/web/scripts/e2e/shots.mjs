@@ -14,7 +14,8 @@
 // node editing, measuring, the XML source, document properties, export, the unsaved question);
 // shell (the classic shell: the bars, and the toolbox docked, in two columns, folded, widened, its tip, a snapping drag);
 // log (the bottom panel's lines with their times and levels, Uyarılar with its badge, a warning in the status bar, the
-// empty history).
+// empty history); layout (panels, sizes and toolbox as kept, sizes kept larger than the window shown within it, the
+// ribbon's kept tab, quick access and split choices, folded).
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { createServer } from 'vite';
@@ -720,6 +721,53 @@ SCENES.log = [
     },
   },
 ].map((s) => ({ close: async (ui) => (await ui.escapeAll(1), await ui.eval(LOG_RESTORE), await ui.sleep(200)), ...s }));
+
+// The kept layout (app/layoutPlan.ts, fixtures/shell/v1/layout.json): panels, sizes and the toolbox as kept; a dock and
+// a bottom panel kept larger than this window allows, shown within it; the ribbon with its kept tab, quick access
+// commands and split choices, and folded. Each scene sets the live layout and puts it back after.
+const LAYOUT_KEEP = `window.__shotLayout = Object.fromEntries(Object.entries(window.kentos.ui).map(([k, s]) => [k, s.value]))`;
+const LAYOUT_BACK = `(() => { const ui = window.kentos.ui; for (const [k, v] of Object.entries(window.__shotLayout ?? {})) ui[k].set(v); })()`;
+/** Layout fields set on the live layout (the kept ones first saved aside). */
+const layoutSet = (fields) => `(() => { ${LAYOUT_KEEP}; const ui = window.kentos.ui; for (const [k, v] of Object.entries(${JSON.stringify(fields)})) ui[k].set(v); })()`;
+/** The shell as Uygulama ayarları sets it; the ribbon loads on first use. */
+async function shellTo(ui, kind) {
+  await ui.eval(`window.kentos.prefs.shell.set(${JSON.stringify(kind)})`);
+  await ui.waitFor(kind === 'ribbon' ? `!!document.querySelector('.ribbon__strip .rpanel')` : `!!document.querySelector('.menubar')`, 10000);
+  await ui.sleep(500);
+}
+const RIBBON_KEPT = { ribbonTab: 'draw', ribbonQuickAccess: ['view.zoomExtents', 'tool.line'], ribbonSplits: { circle: 'tool.circle|3N', rectangle: 'tool.regularPolygon|' } };
+SCENES.layout = [
+  {
+    id: 'kept',
+    open: async (ui) => {
+      await ui.eval(layoutSet({ dockWidth: 400, layersFraction: 0.35, bottomExpanded: true, bottomTab: 'coords', toolboxDocked: true, toolboxColumns: 2, toolboxFolded: ['annotate'] }));
+      await ui.sleep(500);
+    },
+  },
+  {
+    id: 'window-limits',
+    open: async (ui) => {
+      await ui.eval(layoutSet({ dockWidth: 560, bottomExpanded: true, bottomHeight: 600 }));
+      await ui.sleep(500);
+    },
+  },
+  {
+    id: 'ribbon-kept',
+    open: async (ui) => {
+      await ui.eval(layoutSet(RIBBON_KEPT));
+      await shellTo(ui, 'ribbon');
+    },
+    close: async (ui) => (await shellTo(ui, 'classic'), await ui.eval(LAYOUT_BACK)),
+  },
+  {
+    id: 'ribbon-collapsed',
+    open: async (ui) => {
+      await ui.eval(layoutSet({ ...RIBBON_KEPT, ribbonCollapsed: true }));
+      await shellTo(ui, 'ribbon');
+    },
+    close: async (ui) => (await shellTo(ui, 'classic'), await ui.eval(LAYOUT_BACK)),
+  },
+].map((s) => ({ close: async (ui) => (await ui.escapeAll(1), await ui.eval(LAYOUT_BACK), await ui.sleep(300)), ...s }));
 
 SCENES.svgedit = [
   { id: 'new', open: (ui) => openSvg(ui) },
