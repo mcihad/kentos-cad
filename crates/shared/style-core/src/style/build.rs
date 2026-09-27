@@ -189,16 +189,7 @@ pub struct Program {
 }
 
 fn union(a: Needs, b: Needs) -> Needs {
-    Needs {
-        measured: a.measured || b.measured,
-        vertices: a.vertices || b.vertices,
-        kind: a.kind || b.kind,
-        layer: a.layer || b.layer,
-        label: a.label || b.label,
-        index: a.index || b.index,
-        id: a.id || b.id,
-        scale: a.scale || b.scale,
-    }
+    a.union(b)
 }
 
 /// Image assets' proportions (height over width) from their sizes, `{id: [width, height]}`.

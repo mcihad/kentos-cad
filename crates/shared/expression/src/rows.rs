@@ -22,7 +22,11 @@
 //! `Table::row` gives one object as a `Scope`, for the style engine's
 //! per-object path.
 
+use kentos_geometry_core::entity::Shape;
+
 use super::exec::{self, BATCH, Col, Regs, Slot, Source, Txt};
+use super::geometry::Shapes;
+use super::host::Geometry;
 use super::program::Load;
 use super::scalar::{self, Scratch, V};
 use super::value::{into_text, to_number, to_text, truthy};
@@ -378,6 +382,17 @@ impl<'a> Source<'a> for TableSource<'_, 'a> {
             Load::Y => measure(4, 3, &mut slot),
             Load::X => measure(4, 4, &mut slot),
             Load::Index => slot.numbers(|i| (true, (start + i + 1) as f64)),
+            // The table carries length, area and anchor (the store's `measures`);
+            // the other geometry values come from a host that holds the shapes
+            // (`host::Objects`, `geometry::Shapes`).
+            Load::CentroidY
+            | Load::CentroidX
+            | Load::MinY
+            | Load::MaxY
+            | Load::MinX
+            | Load::MaxX
+            | Load::Width
+            | Load::Height => (0..n).for_each(|i| slot.number(i, None)),
             Load::Scale => {
                 let s = t.input.scale;
                 (0..n).for_each(|i| slot.number(i, (!s.is_nan()).then_some(s)));
@@ -388,22 +403,82 @@ impl<'a> Source<'a> for TableSource<'_, 'a> {
 
 /// Evaluates `e` for every object of the table, each value as `want` asks.
 pub fn evaluate_rows(e: &Expr, input: &RowsInput, want: As) -> Result<Column, String> {
-    let n = input.n;
-    let table = Table::new(
-        RowsInput {
-            n,
-            texts: input.texts,
-            text_lens: input.text_lens,
-            numbers: input.numbers,
-            measures: input.measures,
-            scale: input.scale,
-        },
-        Layout::of(e),
-    )?;
+    let table = Table::new(copy(input), Layout::of(e))?;
     let source = TableSource {
         table: &table,
         slots: None,
     };
+    Ok(column(e, &source, input.n, want))
+}
+
+/// `evaluate_rows` for objects whose shapes the caller holds (the web's
+/// geometry store, docs/adr/0100 §3): the geometry values are read from the
+/// shapes (`shape(i)`: object `i`'s), only those the expression reads, and
+/// the table carries no `measures`.
+pub fn evaluate_rows_on<'s>(
+    e: &Expr,
+    input: &RowsInput,
+    want: As,
+    shape: impl Fn(usize) -> Option<&'s Shape>,
+) -> Result<Column, String> {
+    let layout = Layout::new(
+        e.fields.len(),
+        Needs {
+            measured: false,
+            ..e.needs
+        },
+    );
+    let table = Table::new(copy(input), layout)?;
+    let source = TableShapes {
+        table: TableSource {
+            table: &table,
+            slots: None,
+        },
+        shapes: Shapes::new(shape),
+    };
+    Ok(column(e, &source, input.n, want))
+}
+
+fn copy<'a>(input: &RowsInput<'a>) -> RowsInput<'a> {
+    RowsInput {
+        n: input.n,
+        texts: input.texts,
+        text_lens: input.text_lens,
+        numbers: input.numbers,
+        measures: input.measures,
+        scale: input.scale,
+    }
+}
+
+/// The table's text and numbers, the geometry values from shapes.
+struct TableShapes<'t, 'a, 's, F: Fn(usize) -> Option<&'s Shape>> {
+    table: TableSource<'t, 'a>,
+    shapes: Shapes<'s, F>,
+}
+
+impl<'a, 's, F: Fn(usize) -> Option<&'s Shape>> Source<'a> for TableShapes<'_, 'a, 's, F> {
+    fn fill(&self, load: Load, start: usize, slot: Slot<'_, 'a>) {
+        let geometry = match load {
+            Load::Length => Geometry::Length,
+            Load::Area => Geometry::Area,
+            Load::Y => Geometry::AnchorY,
+            Load::X => Geometry::AnchorX,
+            Load::CentroidY => Geometry::CentroidY,
+            Load::CentroidX => Geometry::CentroidX,
+            Load::MinY => Geometry::MinY,
+            Load::MaxY => Geometry::MaxY,
+            Load::MinX => Geometry::MinX,
+            Load::MaxX => Geometry::MaxX,
+            Load::Width => Geometry::Width,
+            Load::Height => Geometry::Height,
+            _ => return self.table.fill(load, start, slot),
+        };
+        self.shapes.fill(geometry, start, slot);
+    }
+}
+
+/// One expression over `n` objects of a source, a batch at a time, into a column.
+pub(crate) fn column<'a>(e: &Expr, source: &dyn Source<'a>, n: usize, want: As) -> Column {
     let mut out = Column {
         kinds: Vec::with_capacity(n),
         numbers: Vec::with_capacity(n),
@@ -429,15 +504,15 @@ pub fn evaluate_rows(e: &Expr, input: &RowsInput, want: As) -> Result<Column, St
     let mut tmp = String::new();
     for start in (0..n).step_by(BATCH) {
         let len = BATCH.min(n - start);
-        exec::run(p, &source, start, len, &mut regs, &mut scratch);
+        exec::run(p, source, start, len, &mut regs, &mut scratch);
         emit(&mut out, exec::result(p, &regs, len), want, &mut tmp);
     }
-    Ok(out)
+    out
 }
 
 /// A batch's values into the column, as `want` asks: numbers and
 /// true/false directly, text and the text modes by `put`.
-fn emit(out: &mut Column, col: Col, want: As, tmp: &mut String) {
+pub(crate) fn emit(out: &mut Column, col: Col, want: As, tmp: &mut String) {
     let n = col.k.len();
     let texts = matches!(want, As::Text | As::TextNumber) || col.k.contains(&exec::TEXT);
     if !texts {

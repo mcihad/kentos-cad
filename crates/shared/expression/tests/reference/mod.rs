@@ -50,6 +50,8 @@ fn uses(n: &Node, needs: &mut Needs) {
             Var::Index => needs.index = true,
             Var::Id => needs.id = true,
             Var::Scale => needs.scale = true,
+            // Variables after 23cc8f7 (the differential test's sources do not use them).
+            _ => {}
         },
         Node::Call(_, args) => args.iter().for_each(|a| uses(a, needs)),
         Node::Not(a) | Node::Neg(a) => uses(a, needs),
@@ -620,6 +622,8 @@ fn variable(v: Var, s: &dyn Scope) -> Value<'_> {
         Var::Index => Value::Num(s.index()),
         Var::Id => Value::Num(s.id()),
         Var::Scale => opt(s.scale()),
+        // Variables after 23cc8f7 (the differential test's sources do not use them).
+        _ => Value::Null,
     }
 }
 

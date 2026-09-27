@@ -30,6 +30,8 @@
 
 pub mod exec;
 pub mod functions;
+pub mod geometry;
+pub mod host;
 pub mod js;
 mod kernels;
 pub mod lexer;
@@ -42,6 +44,7 @@ pub mod scalar;
 pub mod value;
 pub mod walk;
 
+pub use host::{Builtin, FieldDef, FieldRef, FieldSource, FieldType, Geometry, Objects, Schema};
 use library::Var;
 use parser::{Node, Parser};
 use program::Program;
@@ -69,6 +72,7 @@ impl CompileError {
 /// The variables an expression reads, so a caller computes only those.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Needs {
+    /// Length, area or the anchor (`$uzunluk`, `$alan`, `$y`, `$x`: the store's `measures`).
     pub measured: bool,
     pub vertices: bool,
     pub kind: bool,
@@ -77,6 +81,28 @@ pub struct Needs {
     pub index: bool,
     pub id: bool,
     pub scale: bool,
+    /// The area's centroid (`$merkez_y`, `$merkez_x`).
+    pub centroid: bool,
+    /// The bounding box (`$min_y` … `$genişlik`, `$yükseklik`).
+    pub bounds: bool,
+}
+
+impl Needs {
+    /// What either of two expressions reads.
+    pub fn union(self, b: Needs) -> Needs {
+        Needs {
+            measured: self.measured || b.measured,
+            vertices: self.vertices || b.vertices,
+            kind: self.kind || b.kind,
+            layer: self.layer || b.layer,
+            label: self.label || b.label,
+            index: self.index || b.index,
+            id: self.id || b.id,
+            scale: self.scale || b.scale,
+            centroid: self.centroid || b.centroid,
+            bounds: self.bounds || b.bounds,
+        }
+    }
 }
 
 /// An object's geometry values: `$uzunluk`, `$alan`, and the anchor behind `$y` and `$x`.
@@ -87,7 +113,8 @@ pub struct Measured {
     pub anchor: Option<(f64, f64)>,
 }
 
-/// What an expression sees of one object.
+/// What an expression sees of one object (one-object evaluation; many
+/// objects are read through `host::Objects`, a batch at a time).
 pub trait Scope {
     /// Attribute `i` of the expression's field list (None: the object has no such attribute).
     fn field(&self, i: usize) -> Option<&str>;
@@ -101,6 +128,21 @@ pub trait Scope {
     fn id(&self) -> f64;
     /// Denominator of the plot scale while drawing a symbol; None elsewhere.
     fn scale(&self) -> Option<f64>;
+
+    /// A geometry value. By default the ones `measured` and `vertices` give;
+    /// a scope that holds the object's shape gives the others too
+    /// (`geometry::value`).
+    fn geometry(&self, what: Geometry) -> Option<f64> {
+        let m = || self.measured();
+        match what {
+            Geometry::Length => m().length,
+            Geometry::Area => m().area,
+            Geometry::AnchorY => m().anchor.map(|a| a.0),
+            Geometry::AnchorX => m().anchor.map(|a| a.1),
+            Geometry::Vertices => self.vertices(),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -109,21 +151,33 @@ pub struct Expr {
     /// Attribute names the expression reads, in order of appearance.
     pub fields: Vec<String>,
     pub needs: Needs,
+    /// What each field is (the same order as `fields`): a user-defined typed
+    /// field of the schema it was compiled with, else a text attribute.
+    pub types: Vec<FieldRef>,
     /// The expression's tree, walked for one object (`walk`).
     root: Node,
     /// The expression compiled for the column engine (docs/adr/0100).
     program: Program,
 }
 
+/// An expression whose names are all today's text attributes (no schema).
 pub fn compile(source: &str) -> Result<Expr, CompileError> {
+    compile_with(source, &Schema::default())
+}
+
+/// An expression whose names resolve against the host's fields: a
+/// user-defined field of `schema` with its type, else a text attribute.
+pub fn compile_with(source: &str, schema: &Schema) -> Result<Expr, CompileError> {
     let mut parser = Parser::new(lexer::tokenize(source)?);
     let root = parser.parse()?;
     let mut needs = Needs::default();
     uses(&root, &mut needs);
+    let types = parser.fields.iter().map(|f| schema.resolve(f)).collect();
     Ok(Expr {
         source: source.to_string(),
         fields: parser.fields,
         needs,
+        types,
         program: Program::compile(&root),
         root,
     })
@@ -140,6 +194,10 @@ fn uses(n: &Node, needs: &mut Needs) {
             Var::Index => needs.index = true,
             Var::Id => needs.id = true,
             Var::Scale => needs.scale = true,
+            Var::CentroidY | Var::CentroidX => needs.centroid = true,
+            Var::MinY | Var::MaxY | Var::MinX | Var::MaxX | Var::Width | Var::Height => {
+                needs.bounds = true
+            }
         },
         Node::Call(_, args) => args.iter().for_each(|a| uses(a, needs)),
         Node::Not(a) | Node::Neg(a) => uses(a, needs),

@@ -116,12 +116,18 @@ pub fn expr_evaluate(
         rows::As::from_code(want),
     )
     .map_err(|e| JsError::new(&e))?;
-    Ok(ExprColumn {
-        kinds: c.kinds,
-        numbers: c.numbers,
-        texts: c.texts,
-        text_lens: c.text_lens,
-    })
+    Ok(ExprColumn::from(c))
+}
+
+impl From<kentos_expression::rows::Column> for ExprColumn {
+    fn from(c: kentos_expression::rows::Column) -> ExprColumn {
+        ExprColumn {
+            kinds: c.kinds,
+            numbers: c.numbers,
+            texts: c.texts,
+            text_lens: c.text_lens,
+        }
+    }
 }
 
 /// Version of the core, to tell a stale WASM build from the app.
