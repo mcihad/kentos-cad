@@ -1,4 +1,4 @@
-# ADR 0084: Masaüstünde İşlemler — çekirdek ve araç penceresi
+# ADR 0084: Masaüstünde İşlemler — çekirdek, araç penceresi ve araç kutusu
 
 - **Durum:** kabul edildi (2026-09-27).
 - **Tarih:** 2026-09-27
@@ -73,9 +73,26 @@
   - `Select`'e seçilemeyen satır eklendi (`Choice::disabled`; kilitli katman);
   - istemin başlıksız biçimi eklendi (`Prompt::untitled`).
 
+### 2. kısım: dokta İşlemler sekmesi (`apps/desktop/src/processing/panel.rs`)
+
+- **Yer:** sağ dokun üst yuvasında Katmanlar'ın yanında sekme, web'inki gibi; Katmanlar önde açılır. F4 onu da gizler ve gösterir.
+- **Başlık notu:** "4 araç" ya da "3 kayıt".
+- **Araçlar:**
+  - "İşlem ara: numara, kenar, parsel…" araması; Türkçe harfler katlanır, "kose" "köşe"yi bulur;
+  - kategori ağacı sayılarıyla, Modeller dalı en üstte (modeller ve Yeni model…);
+  - bir araca tek tık penceresini açar (araç kutusu seçim listesi değil, başlatıcıdır);
+  - kapatılan kategoriler oturum boyunca kapalı kalır, arama hepsini açar.
+- **Geçmiş:** bu oturumun çalıştırmaları, en yenisi üstte. Her kartta:
+  - durum simgesi, ad, ne zaman ("az önce", "3 dakika önce");
+  - özet, süre;
+  - "n nesneyi seç" (çalıştırmanın eklediği, yoksa değiştirdiği nesnelerden hâlâ çizimde olanlar; seçer ve yakınlaştırır);
+  - "Yeniden aç" (aynı değerlerle pencere).
+- **Zaman:** web saat yazar (10:53:52). Masaüstünde yerel saat için kütüphane olmadığından geçmiş, bulut kataloğu gibi göreli zaman yazar.
+- **Komutlar:** `processing.toolbox` sekmeyi Araçlar'da, `processing.history` Geçmiş'te öne getirir.
+- **Envanter:** masaüstünde 133 / 167 komut.
+
 ### Açık
 
-- **Sağ dokta İşlemler sekmesi:** araç kutusu (arama, kategoriler, Modeller dalı) ve geçmiş. Bu ADR'nin 2. kısmı olacak.
 - **Pencerenin davranış durumları:** web ajanının (e) fixture'ı gelince iki platform onu oynar.
 - **Model tasarımcısı:** web ajanının (f) fixture'ıyla gelir; o zamana kadar "Kopyasını düzenle" standart "masaüstüne henüz taşınmadı" notunu verir.
 - **Arka planda çalışma:** yerli iş parçacığı (`JOB-03`).
@@ -91,6 +108,13 @@
   - Haritadan göster'de pencere yazılan noktayla dönüyor;
   - takma ad pencereyi açıyor, son değerler geri geliyor.
 - **Son değerlerin dosyası:** okunamayan dosya boş bellek sayılıyor (`memory::tests`).
+- **Sekme testi:**
+  - araç kutusu Katmanlar'ın yanında;
+  - arama "kose"yi buluyor;
+  - çalıştırma Geçmiş'e giriyor;
+  - "n nesneyi seç" yeni köşe noktalarını seçiyor;
+  - "Yeniden aç" değerleri getiriyor.
+- **Sekmenin görüntüleri** (`processing::tests::panel_screens`, `islemler-*`): araçlar, arama ve üç çalıştırmalı geçmiş; iki boyut, iki tema.
 - **Görüntüler** (`processing::tests::screens`, `islem-*`):
   - dört araç, model, çalıştırma sonrası ve seçim yokken;
   - 1440×900 ve 1100×650, koyu ve açık, bütün olarak incelendi.

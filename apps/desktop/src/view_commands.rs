@@ -21,7 +21,7 @@ pub const COMMANDS: [&str; 4] = [
 ];
 
 /// The side panels F4 hides and shows together (the web's right panel).
-const SIDE_PANELS: [Panel; 2] = [Panel::Layers, Panel::Properties];
+const SIDE_PANELS: [Panel; 3] = [Panel::Layers, Panel::Processing, Panel::Properties];
 
 impl App {
     pub(crate) fn view_command(&mut self, id: &'static str) -> Task<Message> {

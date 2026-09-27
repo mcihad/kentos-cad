@@ -44,6 +44,8 @@ const DOCK_WIDTH: f32 = 320.0;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Panel {
     Layers,
+    /// İşlemler: the processing toolbox and this session's runs, a tab beside Katmanlar (processing/panel.rs).
+    Processing,
     Properties,
 }
 
@@ -51,6 +53,7 @@ impl Panel {
     pub fn title(self) -> &'static str {
         match self {
             Panel::Layers => "Katmanlar",
+            Panel::Processing => "İşlemler",
             Panel::Properties => "Öznitelikler",
         }
     }
@@ -58,6 +61,7 @@ impl Panel {
     pub fn icon(self) -> Icon {
         match self {
             Panel::Layers => Icon::Layers,
+            Panel::Processing => crate::icons::from_web(Some("processing")),
             Panel::Properties => Icon::Properties,
         }
     }
@@ -65,6 +69,9 @@ impl Panel {
     fn layout() -> Docks<Panel> {
         let mut docks = Docks::new();
         docks.dock(Panel::Layers, Side::Right);
+        // İşlemler shares the top slot with Katmanlar, as the web's tabs; Katmanlar in front.
+        docks.dock(Panel::Processing, Side::Right);
+        docks.update(kentos_ui::widget::docking::Event::Selected(Panel::Layers));
         docks.split(Panel::Properties, Side::Right);
         docks.set_size(Side::Right, DOCK_WIDTH);
         docks

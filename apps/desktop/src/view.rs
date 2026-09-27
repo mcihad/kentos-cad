@@ -56,6 +56,10 @@ impl App {
                         pane.actions(self.layers_actions(doc.layer_count()))
                     }
                     // The header's meta: “#12”, “3 nesne” (the web's panel meta).
+                    // “4 araç”, “3 kayıt” (the web's panel meta); the tab scrolls its own lists.
+                    (Panel::Processing, Some(_)) => {
+                        pane.actions(label::caption(self.processing_meta()))
+                    }
                     (Panel::Properties, Some(doc)) => match self.properties_meta(doc) {
                         Some(meta) => pane.actions(label::caption(meta)).scrollable(),
                         None => pane.scrollable(),
@@ -473,6 +477,8 @@ impl App {
                 .height(Fill);
                 column![self.layer_search_view(), tree].into()
             }
+            // İşlemler: the toolbox and this session's runs (processing/panel.rs, docs/adr/0084).
+            Panel::Processing => self.processing_panel(),
             // Öznitelikler, editable as the web's (properties/, docs/adr/0063).
             Panel::Properties => self.properties_view(doc),
         }

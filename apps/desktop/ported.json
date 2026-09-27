@@ -130,7 +130,9 @@
     "processing.run.attributes.calculate",
     "processing.run.selection.byExpression",
     "processing.model.builtin.parcelSheet",
-    "map.edgeLengths"
+    "map.edgeLengths",
+    "processing.toolbox",
+    "processing.history"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

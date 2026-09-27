@@ -74,7 +74,7 @@
     },
     "commandsWithoutPlace": [],
     "commandsWithoutTests": 52,
-    "commandsOnDesktop": 131
+    "commandsOnDesktop": 133
   },
   "commands": [
     {
@@ -2110,7 +2110,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/scripts/e2e/smoke.mjs"
@@ -2325,7 +2325,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts"
