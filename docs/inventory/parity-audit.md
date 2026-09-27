@@ -316,10 +316,15 @@ Hakkında penceresinin satırları aynı (sürüm, çizim motoru, sistem, sunucu
 
 ## Web'de düzeltilecekler
 
-Denetim sırasında web'in kendi hataları da bulundu. Bunlar web'in işidir, masaüstünün değil:
+Denetim sırasında web'in kendi hataları da bulundu. İkisi de 28 Eylül'de web'de düzeltildi:
 
-- **Yeni proje notu (`ui/settings/NewProjectDialog.ts:83–91`):** kaydedilmemiş değişikliği olan açık bir dosya projesinde “(salt okunur)” diyor. Nedeni, `cloud.autosaves()`'ın dosya projesinde her zaman false olmasıdır. Dosya projesi yazılabilir; doğru not yerel çizimdeki gibi “kaydedilmemiş değişiklikler var; Oluştur'a basınca önce sorulur”dur. Masaüstü bu dalda doğru.
-- **Başarısız yükleme (`ui/cloud/UploadDialog.ts:139–181`):** sunucuda boş bir proje bırakıp silmeyi soruyor. Masaüstünün yolu bunu hiç yaşatmıyor; web ona uymalı.
+- **Yeni proje notu (`ui/settings/NewProjectDialog.ts:83–91`):** kaydedilmemiş değişikliği olan açık bir dosya projesinde “(salt okunur)” diyordu. Nedeni, `cloud.autosaves()`'ın dosya projesinde her zaman false olmasıydı. Dosya projesi yazılabilir; doğru not yerel çizimdeki gibi “kaydedilmemiş değişiklikler var; Oluştur'a basınca önce sorulur”dur.
+  - Kural artık `ui/settings/newProjectNote.ts`'te ve sınanıyor.
+  - Veritabanı projesi kaydetmiyorsa (salt okunur, arşiv, silinmiş) not “değişiklikleriniz buluta kaydedilmiyor; Oluştur'a basınca ne yapılacağı sorulur” der. Masaüstünün N1'i bu kurala uyacak.
+- **Başarısız yükleme (`ui/cloud/UploadDialog.ts:139–181`):** sunucuda boş bir proje bırakıp silmeyi soruyordu. Artık masaüstünün yolundadır:
+  - kesin retde boş proje çöp kutusuna gider;
+  - yanıt gelmezse proje kalır ve aynı anahtarla yeniden denenir;
+  - önceki denemenin içeriği yeniden gönderilmez (ADR 0038'in 28 Eylül notu).
 
 ## Denetlenmeyenler
 

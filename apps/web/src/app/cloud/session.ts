@@ -679,10 +679,12 @@ export class CloudSession {
    * its catalog metadata (docs/adr/0028): the project is created, the
    * drawing's `.kcad` uploaded and imported in one transaction (importing.ts,
    * docs/adr/0036). A refused import leaves the new project empty and the
-   * drawing local (`UploadFailed`). `stage` hears where it is.
+   * drawing local (`UploadFailed`). `stage` hears where it is; `key`, the
+   * upload's idempotency key, is passed again when the same upload is tried
+   * again (it finds the project it made).
    */
-  upload(tenantId: string, name: string, progress: Progress = () => {}, catalog: UploadCatalog = {}, stage?: (s: FileStage) => void): Promise<boolean> {
-    return uploadAsDatabaseProject(this, tenantId, name, progress, catalog, stage);
+  upload(tenantId: string, name: string, progress: Progress = () => {}, catalog: UploadCatalog = {}, stage?: (s: FileStage) => void, key?: string): Promise<boolean> {
+    return uploadAsDatabaseProject(this, tenantId, name, progress, catalog, stage, key);
   }
 
   /**
@@ -690,8 +692,8 @@ export class CloudSession {
    * dosya olarak kaydet”, docs/adr/0031): created with `storage: file`, the
    * drawing's `.kcad` uploaded and committed as revision 1.
    */
-  uploadFile(tenantId: string, name: string, progress: Progress = () => {}, catalog: UploadCatalog = {}, stage?: (s: FileStage) => void): Promise<boolean> {
-    return uploadAsFileProject(this, tenantId, name, progress, catalog, stage);
+  uploadFile(tenantId: string, name: string, progress: Progress = () => {}, catalog: UploadCatalog = {}, stage?: (s: FileStage) => void, key?: string): Promise<boolean> {
+    return uploadAsFileProject(this, tenantId, name, progress, catalog, stage, key);
   }
 
 }

@@ -6,14 +6,19 @@ import type { ProjectStorage } from '../../contracts/generated/ProjectStorage';
 import type { CadDocument } from '../../model/document';
 import { encodeDrawing, type DrawingCodec, type EncodedDrawing } from '../drawingFile';
 import { ApiFailure, type CloudApi, type Transfer } from './api';
+import { catalogEnvelope } from './catalog';
 import { sha256Hex, uploadBytes, type UploadTarget } from './transfer';
+import { again } from './upload';
 
 /**
  * What a new cloud project made from the drawing on screen needs, whatever
  * it is kept as (docs/adr/0031, 0036, 0038): the project's metadata from the
  * drawing, the drawing's `.kcad` bytes sent as an upload with its stages
- * said, and the failure that leaves the new project empty and the drawing
- * local (the user deletes the project or keeps it).
+ * said, and the failure that keeps the drawing local. As on the desktop
+ * (kentos-cloud `upload_new`), a drawing refused for good leaves no project
+ * behind: the empty project goes to the trash. With no answer it is kept,
+ * so the same upload tried again (the same idempotency key) finds it and
+ * fills it.
  */
 
 /** Where an upload of the drawing is: the stages the upload window says. */
@@ -49,25 +54,48 @@ export function createInput(doc: CadDocument, name: string, catalog: NewProjectC
   };
 }
 
+/** What became of the new project the drawing did not get into: moved to the trash, or kept on the server (empty). */
+export type LeftProject = 'trashed' | 'kept';
+
 /**
- * The new project was created, but the drawing did not get into it: it is
- * still empty on the server, and the drawing on screen is still local.
- * `refused`: the object the server did not take (`entities[i]` of the file,
- * the drawing's objects in order), when that was the reason.
+ * The new project was created, but the drawing did not get into it; the
+ * drawing on screen is still local. `refused`: the object the server did
+ * not take (`entities[i]` of the file, the drawing's objects in order),
+ * when that was the reason. `left`: what became of the project.
  */
 export class UploadFailed extends Error {
   readonly project: ProjectInfo;
   /** The failure itself (the server's refusal, a dead network). */
   readonly failure: unknown;
   readonly refused: { index: number; path: string } | null;
+  readonly left: LeftProject;
 
-  constructor(project: ProjectInfo, failure: unknown) {
+  constructor(project: ProjectInfo, failure: unknown, left: LeftProject = 'kept') {
     super(failure instanceof Error ? failure.message : String(failure));
     this.project = project;
     this.failure = failure;
+    this.left = left;
     const path = failure instanceof ApiFailure ? failure.path : undefined;
     const m = /^entities\[(\d+)\]/.exec(path ?? '');
     this.refused = m && path ? { index: Number(m[1]), path } : null;
+  }
+}
+
+/**
+ * The drawing did not get into the new project `info`: refused for good
+ * (or failing here, as an encoding can), the empty project is moved to the
+ * trash; with no answer from the server it is kept, for the same upload
+ * tried again. A trash that does not go through keeps it too.
+ */
+export async function failedUpload(api: CloudApi, info: ProjectInfo, failure: unknown, waits?: readonly number[]): Promise<UploadFailed> {
+  if (failure instanceof ApiFailure && failure.transient) return new UploadFailed(info, failure, 'kept');
+  // Built once: its tries keep the idempotency key.
+  const trash = catalogEnvelope('project.trash', info.tenantId, info.id, {});
+  try {
+    await again(() => api.lifecycle(trash), waits);
+    return new UploadFailed(info, failure, 'trashed');
+  } catch {
+    return new UploadFailed(info, failure, 'kept');
   }
 }
 
