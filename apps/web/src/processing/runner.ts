@@ -66,6 +66,16 @@ export interface RunProgress {
 
 const HISTORY_LIMIT = 100;
 
+/**
+ * The layer a new-layer name writes to when a layer of that name exists:
+ * names compare trimmed and Turkish-folded ("kose noktalari" is "Köşe
+ * noktaları"). The dialog says "(mevcut)" by the same rule.
+ */
+export function sameNamedLayer<L extends { readonly name: string }>(leaves: readonly L[], name: string): L | undefined {
+  const key = foldTurkish(name);
+  return key ? leaves.find((l) => foldTurkish(l.name) === key) : undefined;
+}
+
 /** Where a scope looked, as the refusal of an input whose objects are all on locked layers says it. */
 const LOCKED_WHERE: Record<Exclude<FeaturesValue['scope'], 'ids'>, string> = {
   selection: 'seçili nesnelerin',
@@ -309,7 +319,7 @@ export class ProcessingRunner {
     const layers = this.host.doc.layers;
     if ('layerId' in v) return { id: v.layerId, name: layers.get(v.layerId)?.name ?? v.layerId, isNew: false };
     const name = v.newName.trim();
-    const same = layers.leaves().find((l) => foldTurkish(l.name) === foldTurkish(name));
+    const same = sameNamedLayer(layers.leaves(), name);
     if (same) return { id: same.id, name: same.name, isNew: false };
     let id = `islem-${foldTurkish(name).toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
     for (let k = 2; layers.get(id); k++) id = `${id}-${k}`;

@@ -11,6 +11,7 @@
 |---|---|
 | `v1/parcels.kcad` | Durumların çizimi (`.kcad` v1): Parsel katmanında yan yana üç parsel (1: 0…20, 2: 20…45, 3: 45…60 doğu; 0…30 kuzey; 1 ile 2 x = 20'yi, 2 ile 3 x = 45'i paylaşır; Ada, Parsel, Nitelik öznitelikleri, etiketleri parsel numarası), kilitli katmanda parsel 4, gizli katmanda parsel 5, Çizim'de çoklu çizgi 6 (30 m ve 15 m) ve 20 m'lik çizgi 7, Mevcut noktalar katmanında parsel 1'in üç köşesinde P00001–P00003 (8–10). Koordinatlar (487000, 4420000)'e göre verilmiştir |
 | `v1/cases.json` | Durumlar |
+| `v1/dialog.json` | İşlem penceresinin davranışı: formlar, oturumlar ve saf kuralların tabloları ([aşağıda](#pencere-kentosprocessing-dialog-sürüm-1)) |
 
 ## Biçim (`kentos.processing-cases`, sürüm 1)
 
@@ -66,3 +67,84 @@ Sayılar, adlar, özetler ve ret iletileri araçların kuralından okunur ([docs
 - Durumlar web'in bugünkü davranışını yazar; web geçmeden durum eklenmez.
 - Bir araç değişince durumu, iki çalıştırıcı ve bu belge birlikte değişir. Beklenen değeri hataya göre yenilemek yasaktır (CLAUDE.md §9.4).
 - Yeni bir yerleşik araç ya da model en az bir başarılı durum ve bir ret durumuyla gelir.
+
+## Pencere (`kentos.processing-dialog`, sürüm 1)
+
+`v1/dialog.json`, işlem penceresinin (web: `ui/processing/ToolDialog.ts` ve `paramFields.ts`) ne gösterdiğini ve kullanıcının her işinde nasıl değiştiğini tutar. Kurallar sayfasızdır: `apps/web/src/ui/processing/dialogPlan.ts` (form, bölümler, sorunlar, alt satır, yerler, durum), `fieldPlan.ts` (alanlar) ve `dialogTexts.ts` (sözler); pencere onlardan çizer.
+
+- **Web**: `apps/web/src/ui/processing/dialogFixture.test.ts` oynatır (oynatıcı `dialogFixture.ts`). Kaydedici `apps/web/scripts/fixtures/record-processing-dialog.test.ts`, yalnız bilerek: `GOLDEN_WRITE=1 pnpm -C apps/web exec vitest run scripts/fixtures/record-processing-dialog.test.ts`. Kaydedilen cevaplar okunmuştur; yeniden yazmak farkı okunacak bilinçli bir değişikliktir.
+- **Masaüstü**: araç penceresi (ADR 0084) aynı dosyayı oynatır.
+
+| Alan | Anlamı |
+|---|---|
+| `document` | Oturumların çizimi (`parcels.kcad`) |
+| `texts` | Pencerenin metinleri; bir değerden yapılan metin `{ sample, text }` (ör. `fixFields`: 2 → "Çalıştırmadan önce 2 alanı düzeltin.") |
+| `scopes` | Kapsam düğmelerinin adları (Seçili, Görünen, Tümü, Katman) |
+| `targetLabels`, `targetShort` | Web'in yer adları ("Bu tarayıcıda", "arka planda"). Masaüstü yerleri kendi sözüyle adlandırır (ADR 0084: "Bu bilgisayarda", "Arka planda"); seçeneklerin `value`, `note`, `disabled` ve `checked`'i ortaktır |
+| `forms` | Her yerleşik aracın ve modelin formu, pencerenin açıldığı kimlikle (`model:` önekli): `title`; `rows` (her parametre: `name`, `label`, `description`, `optional` "isteğe bağlı", `stacked` denetim etiketin altında mı, `control`); `side` (kategori yolu ve simgesi, aracın simgesi, açıklaması, yardım paragrafları, modelde sırasıyla adımlar ve düzenleme düğmesi, Önizleme bloğu var mı, takma adlar) |
+| `sessions` | Oturumlar |
+| `status` | Alt satır ve düğmeler: çalıştırmanın durumu, Çalıştır'a basıldı mı, sorunlar → `status`, `footer` |
+| `targets` | Nerede çalışır: aracın bildirdiği yerler, bu evde olanlar, Otomatik'in şimdi seçeceği, model mi, saklanan seçim → seçenekler, ipucu, çalıştırmanın alacağı seçim |
+| `restore` | Saklanan değerlerin (son çalıştırma) varsayılanların üstüne geri yüklenmesi: değerler, Gelişmiş'in açık başlaması ve doğrulamanın iletileri |
+| `kinds` | Tür çipleri: önce, tıklanan türle yeni değer, sonra |
+| `tokens` | Alan adının ifadede yazılışı: çıplak (`Ada`) ya da köşeli parantezde (`[Tapu alanı]`, ayrılmış sözcükler Türkçe katlanarak: `[ve]`, `[Değil]`) |
+| `inserts` | İmleçte ekleme (alan çipi, değişken, işlev): metin, seçim, eklenen → yeni metin ve imleç. Önündeki metin boşluk, "(" ya da "," ile bitmiyorsa araya boşluk girer |
+| `numbers` | Sayı alanının metni → değer: nokta ya da virgül ondalık; okunamayan `null` (web'de NaN; doğrulama "için geçersiz değer." der) |
+| `icons` | İfade satırının simgesi: satır " yok." ya da " boş." içeriyorsa `info`, değilse `check` |
+
+Formdaki denetimler (`control.type` parametrenin türüdür): `features` kapsam düğmeleriyle; `number` birimiyle; `string` (`short`: en çok 2 karakter); `boolean` anahtar; `enum` en çok üç seçenek ve her etiket en çok 22 karakterse düğmeler (`segmented`), yoksa açıklamalı liste (`dropdown`); `layer`; `point`; `field` yeni ad yazılabiliyorsa yazı ve liste (`combo`, "Alan adı"), yoksa yalnız liste (`dropdown`, "Alan seçin"); `expression`.
+
+### Oturum
+
+| Alan | Anlamı |
+|---|---|
+| `id`, `title` | Kimlik ve Türkçe açıklama |
+| `open` | `{ "tool": … }` ya da `{ "model": … }` |
+| `selection` | Pencere açılmadan önceki seçim |
+| `view` | İsteğe bağlı: görünen alan `[minX, minY, maxX, maxY]`, mutlak metre |
+| `available` | Bu evin çalıştırabildiği yerler: masaüstü bugün `["client"]`, web `["client", "worker"]` |
+| `given` | Pencereye verilen değerler (geçmişin "Yeniden aç"ı); varsa son değerlerin yerine geçer |
+| `last` | Aracın son çalıştırmasının değerleri |
+| `choice` | Saklanan yer seçimi; yoksa Otomatik |
+| `opened` | Açılınca görünen (bütün görünüş) |
+| `steps` | Adımlar: `do` (kullanıcının işi) ve `expect` (bir önceki görünüşten değişenler) |
+
+Kullanıcının işleri (`do`):
+
+| İş | Anlamı |
+|---|---|
+| `choose` `{ name, value }` | Seçmek: düğme, anahtar, listeden satır. Seçili olanı yeniden seçmek hiçbir şeyi değiştirmez |
+| `type` `{ name, text }` | Yazmak: sayı alanı metni sayı okur (`numbers`), hedef katman alanı yeni katmanın adı olarak (`{ newName }`), öbürleri metin olarak. Değer aynı kalsa da alana dokunulmuş sayılır |
+| `scope` `{ name, scope }` | Kapsam düğmesi; Katman etkin katmanla başlar; tür süzgeci kalır; seçili kapsama basmak değiştirmez |
+| `scopeLayer` `{ name, layerId }` | Katman kapsamının listesinden bir katman |
+| `kind` `{ name, kind }` | Tür çipi: tür çıkar ya da girer; kapsamdaki bütün türler yeniden alınınca süzgeç kalkar |
+| `toggleAdvanced` | Gelişmiş ayarlar'ı açıp kapamak |
+| `target` | Nerede çalışır'da bir seçenek |
+| `reset` | Varsayılanlar |
+| `run` | Çalıştır; sorun yoksa çalıştırma bitene kadar sürer |
+| `undo` | Çalıştırmadan sonra alt satırdaki "Geri al": çizimin son adımı geri alınır |
+| `pick` `{ name, point }` | Haritadan göster: gösterilen nokta ya da `null` (vazgeçti). Pencere olduğu gibi döner; nokta bir seçim gibi yazılır |
+
+Görünüş:
+
+| Alan | Anlamı |
+|---|---|
+| `values` | Değerler, çalıştırmanın alacağı gibi |
+| `sections` | `groups`: Girdi (`features`), Ayarlar (öbürleri), Çıktı (`layer`); satırı olanlar, bu sırayla, satırlar parametre adları. `advanced`: Gelişmiş ayarlar'ın satırları ve açık mı (kullanıcı açtıysa ya da satırlarından birinde sorun görünüyorsa açık); görünen gelişmiş parametre yoksa `null` |
+| `fields` | Görünen alanların (Gelişmiş'inkiler açıkken) değişen parçaları; sayı, metin, anahtar ve seçim alanları yalnız değerlerini gösterir. Kapsam alanı: seçili düğme (`scope`; önceki adımın çıktısı ilk kapsam görünür), Katman kapsamında katman listesi ve yazısı (olmayan katman "—"), ne okunduğu (`count.text`, boşsa `count.empty` ve uyarı simgesi), tür çipleri (`chips`: tür, ad, sayı, basılı mı, ipucu; kapsamda iki ya da daha çok tür varsa ya da süzgeç varken) ya da aracın uygun türleri notu. Hedef katman: yazısı (seçili katman; yeni adda "(mevcut)" var olan katmanın adıyla, ya da "(yeni)"), yeni katman adı alanı (`name`; mevcut katman seçiliyken `null`), liste (başlıklar, "Yeni: …", katmanlar yollarıyla; kilitliler kapalı ve "kilitli"). Nokta: `text`, `button`, `shown`. Öznitelik alanı: `text`, not (`note`: "n nesnede var; değeri değişir.", "Yeni alan: nesnelere eklenir.", "Bu nesnelerde böyle bir alan yok.", boş ad için boş), liste (alanlar en çok bulunandan; alan yoksa kapalı tek satır). İfade: alan çipleri (ilk 6: ad, yazılışı, ipucu), kalanlar `more` ("+n"), satır (`preview`: simge ve metin; ifade boşken ya da hatalıyken `null`) |
+| `issues` | Alanların altındaki sorunlar: dokunulmuş alanınki hemen, Çalıştır'dan sonra bütün alanlarınki (başarılı çalıştırmaya ya da Varsayılanlar'a kadar). Çalıştırıcının çalıştırmadan önce bulduğu (seçim boş, girdinin hepsi kilitli) bir değer değişene ya da yeni çalıştırmaya kadar alanında durur |
+| `preview` | Yan paneldeki Önizleme: aracın önizlemesi, bir alanda sorun varken (görünmese de) "Önizleme için alanları düzeltin."; önizlemesi olmayan araçta `null`. `muted`: gösterecek önizleme yok |
+| `status` | Alt satır: `kind` (`idle`, `running`, `ok`, `warn`, `error`), `icon`, `text`; çalışırken `progress` (0–100); başarıda `actions`: `zoom` "Seçime yakınlaştır" (araç seçti), `select` "Sonuçları seç" (`pick`: eklenenler, yoksa değişenler ya da seçilenler), `undo` "Geri al" (çizim değişti). Uyarı: Çalıştır'dan sonra aracın kendi kuralı, yoksa "Çalıştırmadan önce n alanı düzeltin.", yoksa çalıştırıcının iletisi |
+| `footer` | Çalıştır (çalışırken "Çalışıyor…" ve kapalı), Kapat (çalışırken "Durdur": çalıştırmayı durdurur), Varsayılanlar (çalışırken kapalı) |
+| `targets` | `options` (`value`, `label`, `note`, `disabled`, `checked`), `hint` (Otomatik seçiliyken ipucu), `choice` (çalıştırmanın alacağı seçim). Birden çok yer varsa önce Otomatik ("şimdi: …"; modelde "adım adım"); sonra aracın bildirdiği her yer: bu evde varsa seçenek (tek yerse "bu çalıştırmada" notuyla, işaretli), yoksa "yakında" ve kapalı. Modelde bildirilen yerler adımlarının bu evdeki yerleridir. Saklanan seçim bu evde yoksa Otomatik (tek yerde o yer) |
+
+`expect` yalnız değişenleri yazar: bir parça değiştiyse bütünü; `values` ve `fields` ad ad, artık görünmeyen alan `null`. Beklenen görünüş, bir öncekinin üstüne bunlar konarak bulunur.
+
+Pencerenin öbür kuralları (görünüşte yok):
+
+- **Açılış:** verilen değerler, yoksa son değerler, varsayılanların üstüne; uymayan değer varsayılana döner (`restore`). Gelişmiş ayarlar, görünen bir gelişmiş değer varsayılanından farklıysa açık başlar.
+- **Klavye:** metin alanında Enter, her yerde Ctrl+Enter çalıştırır. Açılışta ilk metin ya da sayı alanı (yoksa seçili düğme) odaklanır; başarısız denemeden sonra ilk sorunlu alan, çalıştırmadan sonra Çalıştır.
+- **Sonuçları seç** seçimi `pick` yapar, pencereyi kapatır ve seçime yakınlaştırır; **Seçime yakınlaştır** seçime dokunmadan aynısını yapar.
+- **Durdur** çalıştırmayı durdurur; iptal edilen çalıştırmanın satırı `error`'dur ("İşlem iptal edildi; çizim değişmedi.").
+- Oturumların çalıştırmaları `cases.json`'daki gibi gerçek çalıştırmalardır; özetleri ve seçtikleri iki platformda aynı çalıştırıcıdan gelir.
+- İfade satırlarının metinleri ve ifade hataları dilin çekirdeğindendir (`model/expression`); dil değişince bu dosya kaydediciyle yeniden yazılır ve farkı okunur.

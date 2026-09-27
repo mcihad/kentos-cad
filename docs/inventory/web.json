@@ -6875,6 +6875,7 @@
         "apps/web/src/app/workspaces.test.ts",
         "apps/web/scripts/e2e/interaction.mjs",
         "apps/web/scripts/e2e/layout.mjs",
+        "apps/web/scripts/e2e/shots.mjs",
         "fixtures/interaction/v1/select-delete.json"
       ]
     },
@@ -7278,7 +7279,9 @@
       },
       "tests": [
         "apps/web/src/processing/processing.test.ts",
-        "apps/web/src/processing/runs.test.ts"
+        "apps/web/src/processing/runs.test.ts",
+        "apps/web/scripts/fixtures/record-processing-dialog.test.ts",
+        "apps/web/scripts/e2e/shots.mjs"
       ]
     },
     {
@@ -7351,6 +7354,8 @@
       "tests": [
         "apps/web/src/processing/processing.test.ts",
         "apps/web/src/processing/runs.test.ts",
+        "apps/web/scripts/fixtures/record-processing-dialog.test.ts",
+        "apps/web/scripts/e2e/shots.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
     },
@@ -7474,7 +7479,9 @@
       },
       "tests": [
         "apps/web/src/processing/processing.test.ts",
-        "apps/web/src/processing/runs.test.ts"
+        "apps/web/src/processing/runs.test.ts",
+        "apps/web/scripts/fixtures/record-processing-dialog.test.ts",
+        "apps/web/scripts/e2e/shots.mjs"
       ]
     },
     {
@@ -7528,6 +7535,8 @@
       },
       "tests": [
         "apps/web/src/processing/runs.test.ts",
+        "apps/web/scripts/fixtures/record-processing-dialog.test.ts",
+        "apps/web/scripts/e2e/shots.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
     }
@@ -7560,6 +7569,8 @@
         "desktop": "none"
       },
       "tests": [
+        "apps/web/scripts/fixtures/record-processing-dialog.test.ts",
+        "apps/web/scripts/e2e/shots.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
     }

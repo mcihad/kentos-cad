@@ -1763,6 +1763,8 @@ try {
     const center = (sel, text = '') =>
       b.eval(`(() => { const e = [...document.querySelectorAll(${JSON.stringify(sel)})].find((x) => x.textContent.trim().startsWith(${JSON.stringify(text)})); if (!e) return null; const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
     const press = async (sel, text) => {
+      // A field the dialog's form scrolled away from is brought into view first.
+      await b.eval(`[...document.querySelectorAll(${JSON.stringify(sel)})].find((x) => x.textContent.trim().startsWith(${JSON.stringify(text ?? '')}))?.scrollIntoView({ block: 'nearest' })`);
       const p = await center(sel, text);
       if (!p) throw new Error(`bulunamadı: ${sel} ${text ?? ''}`);
       await b.click(...p);
@@ -1785,6 +1787,20 @@ try {
     const made = await b.eval(`(() => { const k = window.kentos; const l = k.doc.layers.leaves().find((x) => x.name === 'Köşe noktaları'); return l ? k.doc.byLayer(l.id).map((e) => e.label) : []; })()`);
     check('processing: corners numbered into a new layer', made.length > 4 && made[0] === 'K00001' && (await b.eval('window.kentos.doc.size')) === size0 + made.length, `${made.length} nokta, ${made[0]}`);
     await b.shot('smoke-processing');
+    // The new layer's name: the list's text follows the typing; a name an existing layer has (Turkish letters folded, as the run reads it) says "(mevcut)" with that layer's name
+    await b.eval(`(() => { const i = document.querySelector('[data-param="layer"] input'); i.focus(); i.select(); })()`);
+    await b.type('kose noktalari');
+    const layerText = await b.eval(`document.querySelector('[data-param="layer"] .dropdown__text')?.textContent ?? ''`);
+    check('processing: a typed layer name finds the existing layer as the run will', layerText === 'Köşe noktaları (mevcut)', layerText);
+    // Haritadan göster brings the dialog back as it was (Gelişmiş ayarlar still open, the typed name kept), with the point
+    await press('[data-param="start"] .dropdown');
+    await press('.menu__item', 'Seçilen noktaya en yakın');
+    await press('.pgroup__toggle');
+    await press('.pfield__pick');
+    await b.click(...(await b.eval(`(() => { const r = window.kentos.view.clientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`)));
+    await b.waitFor(`!!document.querySelector('.dialog--ptool [data-param="startPoint"] .pfield__coord.num')`, 3000).catch(() => {});
+    const back = await b.eval(`({ open: document.querySelector('.pgroup__toggle')?.getAttribute('aria-expanded'), point: document.querySelector('[data-param="startPoint"] .pfield__coord')?.textContent ?? '', layer: document.querySelector('[data-param="layer"] input')?.value ?? '' })`);
+    check('processing: Haritadan göster brings the dialog back as it was, with the point', back.open === 'true' && /^Y /.test(back.point) && back.layer === 'kose noktalari', JSON.stringify(back));
     await press('.dialog__foot .btn', 'Kapat');
     await b.eval(`window.kentos.commands.execute('processing.history')`);
     await sleep(120);
