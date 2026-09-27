@@ -1,0 +1,3295 @@
+{
+  "about": "İfadenin akış görünümü (docs/adr/0101): ağaçların metinlerinden düğümler, yerleri ve değişiklikler. Rust (crates/shared/expression/tests/flow.rs) ve web (apps/web/src/model/expression/flow.test.ts) aynı yanıtları verir. \"@fields\" argümanı aşağıdaki alan listesidir. Yanıtları yeniden yazmak: KENTOS_WRITE_FLOW=1 cargo test -p kentos-expression --test flow; farkı okuyun.",
+  "cases": [
+    {
+      "args": [
+        [
+          {
+            "text": "yuvarla($alan * 2, 1)"
+          }
+        ],
+        "@fields"
+      ],
+      "note": "İşlev, girişleri soldan; kök sonucun girişiyle aynı hizada",
+      "op": "exprFlow",
+      "result": {
+        "bounds": [
+          -744,
+          -23,
+          176,
+          181
+        ],
+        "head": 30,
+        "nodes": [
+          {
+            "grows": false,
+            "h": 80,
+            "id": "r",
+            "kind": "result",
+            "ports": [
+              {
+                "from": "0",
+                "name": "değer",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 42
+              }
+            ],
+            "text": "yuvarla($alan * 2, 1)",
+            "title": "Sonuç",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "grows": false,
+            "h": 104,
+            "id": "0",
+            "key": "func:yuvarla",
+            "kind": "function",
+            "ports": [
+              {
+                "from": "0.0",
+                "name": "sayı",
+                "optional": false,
+                "removable": false,
+                "type": "number",
+                "y": 42
+              },
+              {
+                "from": "0.1",
+                "name": "basamak",
+                "optional": true,
+                "removable": false,
+                "type": "number",
+                "y": 66
+              }
+            ],
+            "text": "yuvarla($alan * 2, 1)",
+            "title": "yuvarla",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -248,
+            "y": 27
+          },
+          {
+            "grows": false,
+            "h": 104,
+            "id": "0.0",
+            "key": "op:*",
+            "kind": "operator",
+            "ports": [
+              {
+                "from": "0.0.0",
+                "name": "a",
+                "optional": false,
+                "removable": false,
+                "type": "number",
+                "y": 42
+              },
+              {
+                "from": "0.0.1",
+                "name": "b",
+                "optional": false,
+                "removable": false,
+                "type": "number",
+                "y": 66
+              }
+            ],
+            "text": "$alan * 2",
+            "title": "*",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -496,
+            "y": -10
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.0.0",
+            "key": "var:alan",
+            "kind": "variable",
+            "ports": [],
+            "text": "$alan",
+            "title": "$alan",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": -23
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.0.1",
+            "kind": "number",
+            "ports": [],
+            "text": "2",
+            "title": "2",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": 51
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.1",
+            "kind": "number",
+            "ports": [],
+            "text": "1",
+            "title": "1",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -496,
+            "y": 125
+          }
+        ],
+        "row": 24,
+        "texts": [
+          "yuvarla($alan * 2, 1)"
+        ],
+        "value": 26
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "durum eğer Kat > 4 ise 'yüksek' eğer Kat > 2 ise 'orta' yoksa 'alçak' son"
+          }
+        ],
+        "@fields"
+      ],
+      "op": "exprFlow",
+      "result": {
+        "bounds": [
+          -744,
+          -135,
+          176,
+          365
+        ],
+        "head": 30,
+        "nodes": [
+          {
+            "grows": false,
+            "h": 80,
+            "id": "r",
+            "kind": "result",
+            "ports": [
+              {
+                "from": "0",
+                "name": "değer",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 42
+              }
+            ],
+            "text": "durum eğer Kat > 4 ise 'yüksek' eğer Kat > 2 ise 'orta' yoksa 'alçak' son",
+            "title": "Sonuç",
+            "type": "text",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "grows": true,
+            "h": 176,
+            "id": "0",
+            "key": "op:durum",
+            "kind": "keyword",
+            "ports": [
+              {
+                "from": "0.0",
+                "name": "eğer 1",
+                "optional": false,
+                "removable": false,
+                "type": "bool",
+                "y": 42
+              },
+              {
+                "from": "0.1",
+                "name": "ise 1",
+                "optional": false,
+                "removable": true,
+                "type": "any",
+                "y": 66
+              },
+              {
+                "from": "0.2",
+                "name": "eğer 2",
+                "optional": false,
+                "removable": true,
+                "type": "bool",
+                "y": 90
+              },
+              {
+                "from": "0.3",
+                "name": "ise 2",
+                "optional": false,
+                "removable": true,
+                "type": "any",
+                "y": 114
+              },
+              {
+                "from": "0.4",
+                "name": "yoksa",
+                "optional": true,
+                "removable": false,
+                "type": "any",
+                "y": 138
+              }
+            ],
+            "text": "durum eğer Kat > 4 ise 'yüksek' eğer Kat > 2 ise 'orta' yoksa 'alçak' son",
+            "title": "durum",
+            "type": "text",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -248,
+            "y": 27
+          },
+          {
+            "grows": false,
+            "h": 104,
+            "id": "0.0",
+            "key": "op:>",
+            "kind": "operator",
+            "ports": [
+              {
+                "from": "0.0.0",
+                "name": "a",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 42
+              },
+              {
+                "from": "0.0.1",
+                "name": "b",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 66
+              }
+            ],
+            "text": "Kat > 4",
+            "title": ">",
+            "type": "bool",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -496,
+            "y": -122
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.0.0",
+            "key": "field:Kat",
+            "kind": "field",
+            "ports": [],
+            "text": "Kat",
+            "title": "Kat",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": -135
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.0.1",
+            "kind": "number",
+            "ports": [],
+            "text": "4",
+            "title": "4",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": -61
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.1",
+            "kind": "text",
+            "ports": [],
+            "text": "'yüksek'",
+            "title": "'yüksek'",
+            "type": "text",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -496,
+            "y": 13
+          },
+          {
+            "grows": false,
+            "h": 104,
+            "id": "0.2",
+            "key": "op:>",
+            "kind": "operator",
+            "ports": [
+              {
+                "from": "0.2.0",
+                "name": "a",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 42
+              },
+              {
+                "from": "0.2.1",
+                "name": "b",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 66
+              }
+            ],
+            "text": "Kat > 2",
+            "title": ">",
+            "type": "bool",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -496,
+            "y": 100
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.2.0",
+            "key": "field:Kat",
+            "kind": "field",
+            "ports": [],
+            "text": "Kat",
+            "title": "Kat",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": 87
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.2.1",
+            "kind": "number",
+            "ports": [],
+            "text": "2",
+            "title": "2",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": 161
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.3",
+            "kind": "text",
+            "ports": [],
+            "text": "'orta'",
+            "title": "'orta'",
+            "type": "text",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -496,
+            "y": 235
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.4",
+            "kind": "text",
+            "ports": [],
+            "text": "'alçak'",
+            "title": "'alçak'",
+            "type": "text",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -496,
+            "y": 309
+          }
+        ],
+        "row": 24,
+        "texts": [
+          "durum eğer Kat > 4 ise 'yüksek' eğer Kat > 2 ise 'orta' yoksa 'alçak' son"
+        ],
+        "value": 26
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "Nitelik değil içinde ('Arsa', 'Tarla') ve Kat arasında 3 ve 5"
+          }
+        ],
+        "@fields"
+      ],
+      "op": "exprFlow",
+      "result": {
+        "bounds": [
+          -744,
+          -134,
+          176,
+          292
+        ],
+        "head": 30,
+        "nodes": [
+          {
+            "grows": false,
+            "h": 80,
+            "id": "r",
+            "kind": "result",
+            "ports": [
+              {
+                "from": "0",
+                "name": "değer",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 42
+              }
+            ],
+            "text": "Nitelik değil içinde ('Arsa', 'Tarla') ve Kat arasında 3 ve 5",
+            "title": "Sonuç",
+            "type": "bool",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "grows": false,
+            "h": 104,
+            "id": "0",
+            "key": "op:ve",
+            "kind": "keyword",
+            "ports": [
+              {
+                "from": "0.0",
+                "name": "a",
+                "optional": false,
+                "removable": false,
+                "type": "bool",
+                "y": 42
+              },
+              {
+                "from": "0.1",
+                "name": "b",
+                "optional": false,
+                "removable": false,
+                "type": "bool",
+                "y": 66
+              }
+            ],
+            "text": "Nitelik değil içinde ('Arsa', 'Tarla') ve Kat arasında 3 ve 5",
+            "title": "ve",
+            "type": "bool",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -248,
+            "y": 27
+          },
+          {
+            "grows": true,
+            "h": 128,
+            "id": "0.0",
+            "key": "op:içinde",
+            "kind": "keyword",
+            "negated": true,
+            "ports": [
+              {
+                "from": "0.0.0",
+                "name": "değer",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 42
+              },
+              {
+                "from": "0.0.1",
+                "name": "öğe 1",
+                "optional": false,
+                "removable": true,
+                "type": "any",
+                "y": 66
+              },
+              {
+                "from": "0.0.2",
+                "name": "öğe 2",
+                "optional": false,
+                "removable": true,
+                "type": "any",
+                "y": 90
+              }
+            ],
+            "text": "Nitelik değil içinde ('Arsa', 'Tarla')",
+            "title": "değil içinde",
+            "type": "bool",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -496,
+            "y": -96
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.0.0",
+            "key": "field:Nitelik",
+            "kind": "field",
+            "ports": [],
+            "text": "Nitelik",
+            "title": "Nitelik",
+            "type": "text",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": -134
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.0.1",
+            "kind": "text",
+            "ports": [],
+            "text": "'Arsa'",
+            "title": "'Arsa'",
+            "type": "text",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": -60
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.0.2",
+            "kind": "text",
+            "ports": [],
+            "text": "'Tarla'",
+            "title": "'Tarla'",
+            "type": "text",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": 14
+          },
+          {
+            "grows": false,
+            "h": 128,
+            "id": "0.1",
+            "key": "op:arasında",
+            "kind": "keyword",
+            "negated": false,
+            "ports": [
+              {
+                "from": "0.1.0",
+                "name": "değer",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 42
+              },
+              {
+                "from": "0.1.1",
+                "name": "alt",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 66
+              },
+              {
+                "from": "0.1.2",
+                "name": "üst",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 90
+              }
+            ],
+            "text": "Kat arasında 3 ve 5",
+            "title": "arasında",
+            "type": "bool",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -496,
+            "y": 126
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.1.0",
+            "key": "field:Kat",
+            "kind": "field",
+            "ports": [],
+            "text": "Kat",
+            "title": "Kat",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": 88
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.1.1",
+            "kind": "number",
+            "ports": [],
+            "text": "3",
+            "title": "3",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": 162
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.1.2",
+            "kind": "number",
+            "ports": [],
+            "text": "5",
+            "title": "5",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": 236
+          }
+        ],
+        "row": 24,
+        "texts": [
+          "Nitelik değil içinde ('Arsa', 'Tarla') ve Kat arasında 3 ve 5"
+        ],
+        "value": 26
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "eğer(boş(Ada), 'yok', Ada || '/' || Parsel)"
+          }
+        ],
+        "@fields"
+      ],
+      "op": "exprFlow",
+      "result": {
+        "bounds": [
+          -992,
+          -97,
+          176,
+          279
+        ],
+        "head": 30,
+        "nodes": [
+          {
+            "grows": false,
+            "h": 80,
+            "id": "r",
+            "kind": "result",
+            "ports": [
+              {
+                "from": "0",
+                "name": "değer",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 42
+              }
+            ],
+            "text": "eğer(boş(Ada), 'yok', Ada || '/' || Parsel)",
+            "title": "Sonuç",
+            "type": "any",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "grows": false,
+            "h": 128,
+            "id": "0",
+            "key": "func:eğer",
+            "kind": "function",
+            "ports": [
+              {
+                "from": "0.0",
+                "name": "koşul",
+                "optional": false,
+                "removable": false,
+                "type": "bool",
+                "y": 42
+              },
+              {
+                "from": "0.1",
+                "name": "doğruysa",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 66
+              },
+              {
+                "from": "0.2",
+                "name": "yanlışsa",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 90
+              }
+            ],
+            "text": "eğer(boş(Ada), 'yok', Ada || '/' || Parsel)",
+            "title": "eğer",
+            "type": "any",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -248,
+            "y": 27
+          },
+          {
+            "grows": false,
+            "h": 80,
+            "id": "0.0",
+            "key": "func:boş",
+            "kind": "function",
+            "ports": [
+              {
+                "from": "0.0.0",
+                "name": "değer",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 42
+              }
+            ],
+            "text": "boş(Ada)",
+            "title": "boş",
+            "type": "bool",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -496,
+            "y": -97
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.0.0",
+            "key": "field:Ada",
+            "kind": "field",
+            "ports": [],
+            "text": "Ada",
+            "title": "Ada",
+            "type": "text",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": -85
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.1",
+            "kind": "text",
+            "ports": [],
+            "text": "'yok'",
+            "title": "'yok'",
+            "type": "text",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -496,
+            "y": 1
+          },
+          {
+            "grows": false,
+            "h": 104,
+            "id": "0.2",
+            "key": "op:||",
+            "kind": "operator",
+            "ports": [
+              {
+                "from": "0.2.0",
+                "name": "a",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 42
+              },
+              {
+                "from": "0.2.1",
+                "name": "b",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 66
+              }
+            ],
+            "text": "Ada || '/' || Parsel",
+            "title": "||",
+            "type": "text",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -496,
+            "y": 125
+          },
+          {
+            "grows": false,
+            "h": 104,
+            "id": "0.2.0",
+            "key": "op:||",
+            "kind": "operator",
+            "ports": [
+              {
+                "from": "0.2.0.0",
+                "name": "a",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 42
+              },
+              {
+                "from": "0.2.0.1",
+                "name": "b",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 66
+              }
+            ],
+            "text": "Ada || '/'",
+            "title": "||",
+            "type": "text",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": 88
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.2.0.0",
+            "key": "field:Ada",
+            "kind": "field",
+            "ports": [],
+            "text": "Ada",
+            "title": "Ada",
+            "type": "text",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -992,
+            "y": 75
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.2.0.1",
+            "kind": "text",
+            "ports": [],
+            "text": "'/'",
+            "title": "'/'",
+            "type": "text",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -992,
+            "y": 149
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.2.1",
+            "key": "field:Parsel",
+            "kind": "field",
+            "ports": [],
+            "text": "Parsel",
+            "title": "Parsel",
+            "type": "text",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": 223
+          }
+        ],
+        "row": 24,
+        "texts": [
+          "eğer(boş(Ada), 'yok', Ada || '/' || Parsel)"
+        ],
+        "value": 26
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "yuvarla(?) + Pafta"
+          }
+        ],
+        "@fields"
+      ],
+      "note": "Boş giriş: düğümün hatası; olmayan alan: uyarısı",
+      "op": "exprFlow",
+      "result": {
+        "bounds": [
+          -496,
+          -10,
+          176,
+          168
+        ],
+        "head": 30,
+        "nodes": [
+          {
+            "grows": false,
+            "h": 80,
+            "id": "r",
+            "kind": "result",
+            "ports": [
+              {
+                "from": "0",
+                "name": "değer",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 42
+              }
+            ],
+            "text": "yuvarla(?) + Pafta",
+            "title": "Sonuç",
+            "type": "any",
+            "w": 176,
+            "warnings": [],
+            "whole": false,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "grows": false,
+            "h": 104,
+            "id": "0",
+            "key": "op:+",
+            "kind": "operator",
+            "ports": [
+              {
+                "from": "0.0",
+                "name": "a",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 42
+              },
+              {
+                "from": "0.1",
+                "name": "b",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 66
+              }
+            ],
+            "text": "yuvarla(?) + Pafta",
+            "title": "+",
+            "type": "any",
+            "w": 176,
+            "warnings": [],
+            "whole": false,
+            "x": -248,
+            "y": 27
+          },
+          {
+            "error": "Boş giriş (?): buraya bir değer bağlayın ya da yazın.",
+            "grows": false,
+            "h": 104,
+            "id": "0.0",
+            "key": "func:yuvarla",
+            "kind": "function",
+            "ports": [
+              {
+                "name": "sayı",
+                "optional": false,
+                "removable": false,
+                "type": "number",
+                "y": 42
+              },
+              {
+                "name": "basamak",
+                "optional": true,
+                "removable": false,
+                "type": "number",
+                "y": 66
+              }
+            ],
+            "text": "yuvarla(?)",
+            "title": "yuvarla",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": false,
+            "x": -496,
+            "y": -10
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.1",
+            "key": "field:Pafta",
+            "kind": "field",
+            "ports": [],
+            "text": "Pafta",
+            "title": "Pafta",
+            "type": "text",
+            "w": 176,
+            "warnings": [
+              "Bu nesnelerde “Pafta” alanı yok, boş okunur."
+            ],
+            "whole": true,
+            "x": -496,
+            "y": 112
+          }
+        ],
+        "row": 24,
+        "texts": [
+          "yuvarla(?) + Pafta"
+        ],
+        "value": 26
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "yuvarla(1"
+          }
+        ],
+        "@fields"
+      ],
+      "note": "Okunmayan metin: yalnız sonuç ve dilin hatası",
+      "op": "exprFlow",
+      "result": {
+        "bounds": [
+          0,
+          0,
+          176,
+          80
+        ],
+        "error": {
+          "end": 9,
+          "message": "yuvarla(…) kapanmamış: “)” bekleniyordu.",
+          "start": 9,
+          "text": "10. karakterde: yuvarla(…) kapanmamış: “)” bekleniyordu."
+        },
+        "head": 30,
+        "nodes": [
+          {
+            "grows": false,
+            "h": 80,
+            "id": "r",
+            "kind": "result",
+            "ports": [
+              {
+                "name": "değer",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 42
+              }
+            ],
+            "text": "",
+            "title": "Sonuç",
+            "type": "any",
+            "w": 176,
+            "warnings": [],
+            "whole": false,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "row": 24,
+        "texts": [
+          "yuvarla(1"
+        ],
+        "value": 26
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": ""
+          },
+          {
+            "at": [
+              -600,
+              300
+            ],
+            "text": "min(1, ?)"
+          }
+        ],
+        "@fields"
+      ],
+      "note": "Sonuca bağlanmamış ağaç, konduğu yerde",
+      "op": "exprFlow",
+      "result": {
+        "bounds": [
+          -848,
+          0,
+          176,
+          404
+        ],
+        "head": 30,
+        "nodes": [
+          {
+            "grows": false,
+            "h": 80,
+            "id": "r",
+            "kind": "result",
+            "ports": [
+              {
+                "name": "değer",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 42
+              }
+            ],
+            "text": "",
+            "title": "Sonuç",
+            "type": "any",
+            "w": 176,
+            "warnings": [],
+            "whole": false,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "error": "Boş giriş (?): buraya bir değer bağlayın ya da yazın.",
+            "grows": true,
+            "h": 104,
+            "id": "1",
+            "key": "func:min",
+            "kind": "function",
+            "ports": [
+              {
+                "from": "1.0",
+                "name": "a",
+                "optional": false,
+                "removable": false,
+                "type": "number",
+                "y": 42
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "removable": true,
+                "type": "number",
+                "y": 66
+              }
+            ],
+            "text": "min(1, ?)",
+            "title": "min",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": false,
+            "x": -600,
+            "y": 300
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "1.0",
+            "kind": "number",
+            "ports": [],
+            "text": "1",
+            "title": "1",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -848,
+            "y": 324
+          }
+        ],
+        "row": 24,
+        "texts": [
+          "",
+          "min(1, ?)"
+        ],
+        "value": 26
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "ROUND($ALAN, 2) AND x <> 1"
+          }
+        ],
+        "@fields"
+      ],
+      "note": "Metin, akışın yazdığı gibi",
+      "op": "exprFlow",
+      "result": {
+        "bounds": [
+          -744,
+          -60,
+          176,
+          218
+        ],
+        "head": 30,
+        "nodes": [
+          {
+            "grows": false,
+            "h": 80,
+            "id": "r",
+            "kind": "result",
+            "ports": [
+              {
+                "from": "0",
+                "name": "değer",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 42
+              }
+            ],
+            "text": "yuvarla($alan, 2) ve x != 1",
+            "title": "Sonuç",
+            "type": "bool",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "grows": false,
+            "h": 104,
+            "id": "0",
+            "key": "op:ve",
+            "kind": "keyword",
+            "ports": [
+              {
+                "from": "0.0",
+                "name": "a",
+                "note": "Koşul olarak 0 yanlış, öbür sayılar doğru sayılır.",
+                "optional": false,
+                "removable": false,
+                "type": "bool",
+                "y": 42
+              },
+              {
+                "from": "0.1",
+                "name": "b",
+                "optional": false,
+                "removable": false,
+                "type": "bool",
+                "y": 66
+              }
+            ],
+            "text": "yuvarla($alan, 2) ve x != 1",
+            "title": "ve",
+            "type": "bool",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -248,
+            "y": 27
+          },
+          {
+            "grows": false,
+            "h": 104,
+            "id": "0.0",
+            "key": "func:yuvarla",
+            "kind": "function",
+            "ports": [
+              {
+                "from": "0.0.0",
+                "name": "sayı",
+                "optional": false,
+                "removable": false,
+                "type": "number",
+                "y": 42
+              },
+              {
+                "from": "0.0.1",
+                "name": "basamak",
+                "optional": true,
+                "removable": false,
+                "type": "number",
+                "y": 66
+              }
+            ],
+            "text": "yuvarla($alan, 2)",
+            "title": "yuvarla",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -496,
+            "y": -47
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.0.0",
+            "key": "var:alan",
+            "kind": "variable",
+            "ports": [],
+            "text": "$alan",
+            "title": "$alan",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": -60
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.0.1",
+            "kind": "number",
+            "ports": [],
+            "text": "2",
+            "title": "2",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": 14
+          },
+          {
+            "grows": false,
+            "h": 104,
+            "id": "0.1",
+            "key": "op:!=",
+            "kind": "operator",
+            "ports": [
+              {
+                "from": "0.1.0",
+                "name": "a",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 42
+              },
+              {
+                "from": "0.1.1",
+                "name": "b",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 66
+              }
+            ],
+            "text": "x != 1",
+            "title": "!=",
+            "type": "bool",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -496,
+            "y": 101
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.1.0",
+            "key": "field:x",
+            "kind": "field",
+            "ports": [],
+            "text": "x",
+            "title": "x",
+            "type": "text",
+            "w": 176,
+            "warnings": [
+              "Bu nesnelerde “x” alanı yok, boş okunur."
+            ],
+            "whole": true,
+            "x": -744,
+            "y": 88
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.1.1",
+            "kind": "number",
+            "ports": [],
+            "text": "1",
+            "title": "1",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": 162
+          }
+        ],
+        "row": 24,
+        "texts": [
+          "yuvarla($alan, 2) ve x != 1"
+        ],
+        "value": 26
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "-2 ^ 2 + (-2) ^ 2"
+          }
+        ],
+        "@fields"
+      ],
+      "op": "exprFlow",
+      "result": {
+        "bounds": [
+          -992,
+          -60,
+          176,
+          218
+        ],
+        "head": 30,
+        "nodes": [
+          {
+            "grows": false,
+            "h": 80,
+            "id": "r",
+            "kind": "result",
+            "ports": [
+              {
+                "from": "0",
+                "name": "değer",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 42
+              }
+            ],
+            "text": "-2 ^ 2 + (-2) ^ 2",
+            "title": "Sonuç",
+            "type": "any",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "grows": false,
+            "h": 104,
+            "id": "0",
+            "key": "op:+",
+            "kind": "operator",
+            "ports": [
+              {
+                "from": "0.0",
+                "name": "a",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 42
+              },
+              {
+                "from": "0.1",
+                "name": "b",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 66
+              }
+            ],
+            "text": "-2 ^ 2 + (-2) ^ 2",
+            "title": "+",
+            "type": "any",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -248,
+            "y": 27
+          },
+          {
+            "grows": false,
+            "h": 80,
+            "id": "0.0",
+            "key": "op:-",
+            "kind": "operator",
+            "ports": [
+              {
+                "from": "0.0.0",
+                "name": "sayı",
+                "optional": false,
+                "removable": false,
+                "type": "number",
+                "y": 42
+              }
+            ],
+            "text": "-2 ^ 2",
+            "title": "−",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -496,
+            "y": -35
+          },
+          {
+            "grows": false,
+            "h": 104,
+            "id": "0.0.0",
+            "key": "op:^",
+            "kind": "operator",
+            "ports": [
+              {
+                "from": "0.0.0.0",
+                "name": "a",
+                "optional": false,
+                "removable": false,
+                "type": "number",
+                "y": 42
+              },
+              {
+                "from": "0.0.0.1",
+                "name": "b",
+                "optional": false,
+                "removable": false,
+                "type": "number",
+                "y": 66
+              }
+            ],
+            "text": "2 ^ 2",
+            "title": "^",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": -47
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.0.0.0",
+            "kind": "number",
+            "ports": [],
+            "text": "2",
+            "title": "2",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -992,
+            "y": -60
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.0.0.1",
+            "kind": "number",
+            "ports": [],
+            "text": "2",
+            "title": "2",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -992,
+            "y": 14
+          },
+          {
+            "grows": false,
+            "h": 104,
+            "id": "0.1",
+            "key": "op:^",
+            "kind": "operator",
+            "ports": [
+              {
+                "from": "0.1.0",
+                "name": "a",
+                "optional": false,
+                "removable": false,
+                "type": "number",
+                "y": 42
+              },
+              {
+                "from": "0.1.1",
+                "name": "b",
+                "optional": false,
+                "removable": false,
+                "type": "number",
+                "y": 66
+              }
+            ],
+            "text": "(-2) ^ 2",
+            "title": "^",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -496,
+            "y": 101
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.1.0",
+            "kind": "number",
+            "ports": [],
+            "text": "-2",
+            "title": "-2",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": 88
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.1.1",
+            "kind": "number",
+            "ports": [],
+            "text": "2",
+            "title": "2",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": 162
+          }
+        ],
+        "row": 24,
+        "texts": [
+          "-2 ^ 2 + (-2) ^ 2"
+        ],
+        "value": 26
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "Ada gibi '12%' veya Ada boş değil"
+          }
+        ],
+        "@fields"
+      ],
+      "op": "exprFlow",
+      "result": {
+        "bounds": [
+          -744,
+          -35,
+          176,
+          193
+        ],
+        "head": 30,
+        "nodes": [
+          {
+            "grows": false,
+            "h": 80,
+            "id": "r",
+            "kind": "result",
+            "ports": [
+              {
+                "from": "0",
+                "name": "değer",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 42
+              }
+            ],
+            "text": "Ada gibi '12%' veya Ada boş değil",
+            "title": "Sonuç",
+            "type": "bool",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "grows": false,
+            "h": 104,
+            "id": "0",
+            "key": "op:veya",
+            "kind": "keyword",
+            "ports": [
+              {
+                "from": "0.0",
+                "name": "a",
+                "optional": false,
+                "removable": false,
+                "type": "bool",
+                "y": 42
+              },
+              {
+                "from": "0.1",
+                "name": "b",
+                "optional": false,
+                "removable": false,
+                "type": "bool",
+                "y": 66
+              }
+            ],
+            "text": "Ada gibi '12%' veya Ada boş değil",
+            "title": "veya",
+            "type": "bool",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -248,
+            "y": 27
+          },
+          {
+            "grows": false,
+            "h": 104,
+            "id": "0.0",
+            "key": "op:gibi",
+            "kind": "keyword",
+            "negated": false,
+            "ports": [
+              {
+                "from": "0.0.0",
+                "name": "değer",
+                "optional": false,
+                "removable": false,
+                "type": "text",
+                "y": 42
+              },
+              {
+                "from": "0.0.1",
+                "name": "kalıp",
+                "optional": false,
+                "removable": false,
+                "type": "text",
+                "y": 66
+              }
+            ],
+            "text": "Ada gibi '12%'",
+            "title": "gibi",
+            "type": "bool",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -496,
+            "y": -22
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.0.0",
+            "key": "field:Ada",
+            "kind": "field",
+            "ports": [],
+            "text": "Ada",
+            "title": "Ada",
+            "type": "text",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": -35
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.0.1",
+            "kind": "text",
+            "ports": [],
+            "text": "'12%'",
+            "title": "'12%'",
+            "type": "text",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": 39
+          },
+          {
+            "grows": false,
+            "h": 80,
+            "id": "0.1",
+            "key": "op:boş değil",
+            "kind": "keyword",
+            "negated": true,
+            "ports": [
+              {
+                "from": "0.1.0",
+                "name": "değer",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 42
+              }
+            ],
+            "text": "Ada boş değil",
+            "title": "boş değil mi",
+            "type": "bool",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -496,
+            "y": 113
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.1.0",
+            "key": "field:Ada",
+            "kind": "field",
+            "ports": [],
+            "text": "Ada",
+            "title": "Ada",
+            "type": "text",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": 125
+          }
+        ],
+        "row": 24,
+        "texts": [
+          "Ada gibi '12%' veya Ada boş değil"
+        ],
+        "value": 26
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "yuvarla(Ada) || Kat"
+          }
+        ],
+        "@fields"
+      ],
+      "note": "Başka türde değer: girişin notu",
+      "op": "exprFlow",
+      "result": {
+        "bounds": [
+          -744,
+          -10,
+          176,
+          168
+        ],
+        "head": 30,
+        "nodes": [
+          {
+            "grows": false,
+            "h": 80,
+            "id": "r",
+            "kind": "result",
+            "ports": [
+              {
+                "from": "0",
+                "name": "değer",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 42
+              }
+            ],
+            "text": "yuvarla(Ada) || Kat",
+            "title": "Sonuç",
+            "type": "text",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "grows": false,
+            "h": 104,
+            "id": "0",
+            "key": "op:||",
+            "kind": "operator",
+            "ports": [
+              {
+                "from": "0.0",
+                "name": "a",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 42
+              },
+              {
+                "from": "0.1",
+                "name": "b",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 66
+              }
+            ],
+            "text": "yuvarla(Ada) || Kat",
+            "title": "||",
+            "type": "text",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -248,
+            "y": 27
+          },
+          {
+            "grows": false,
+            "h": 104,
+            "id": "0.0",
+            "key": "func:yuvarla",
+            "kind": "function",
+            "ports": [
+              {
+                "from": "0.0.0",
+                "name": "sayı",
+                "note": "Metin sayıya çevrilir; sayı değilse boş olur.",
+                "optional": false,
+                "removable": false,
+                "type": "number",
+                "y": 42
+              },
+              {
+                "name": "basamak",
+                "optional": true,
+                "removable": false,
+                "type": "number",
+                "y": 66
+              }
+            ],
+            "text": "yuvarla(Ada)",
+            "title": "yuvarla",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -496,
+            "y": -10
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.0.0",
+            "key": "field:Ada",
+            "kind": "field",
+            "ports": [],
+            "text": "Ada",
+            "title": "Ada",
+            "type": "text",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": 14
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.1",
+            "key": "field:Kat",
+            "kind": "field",
+            "ports": [],
+            "text": "Kat",
+            "title": "Kat",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -496,
+            "y": 112
+          }
+        ],
+        "row": 24,
+        "texts": [
+          "yuvarla(Ada) || Kat"
+        ],
+        "value": 26
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "birleştir(sol(Ada, 2), '/', sağdoldur(Parsel, 4, '0'))"
+          }
+        ],
+        "@fields"
+      ],
+      "op": "exprFlow",
+      "result": {
+        "bounds": [
+          -744,
+          -122,
+          176,
+          304
+        ],
+        "head": 30,
+        "nodes": [
+          {
+            "grows": false,
+            "h": 80,
+            "id": "r",
+            "kind": "result",
+            "ports": [
+              {
+                "from": "0",
+                "name": "değer",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 42
+              }
+            ],
+            "text": "birleştir(sol(Ada, 2), '/', sağdoldur(Parsel, 4, '0'))",
+            "title": "Sonuç",
+            "type": "text",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "grows": true,
+            "h": 128,
+            "id": "0",
+            "key": "func:birleştir",
+            "kind": "function",
+            "ports": [
+              {
+                "from": "0.0",
+                "name": "a",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 42
+              },
+              {
+                "from": "0.1",
+                "name": "b",
+                "optional": false,
+                "removable": true,
+                "type": "any",
+                "y": 66
+              },
+              {
+                "from": "0.2",
+                "name": "c",
+                "optional": false,
+                "removable": true,
+                "type": "any",
+                "y": 90
+              }
+            ],
+            "text": "birleştir(sol(Ada, 2), '/', sağdoldur(Parsel, 4, '0'))",
+            "title": "birleştir",
+            "type": "text",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -248,
+            "y": 27
+          },
+          {
+            "grows": false,
+            "h": 104,
+            "id": "0.0",
+            "key": "func:sol",
+            "kind": "function",
+            "ports": [
+              {
+                "from": "0.0.0",
+                "name": "metin",
+                "optional": false,
+                "removable": false,
+                "type": "text",
+                "y": 42
+              },
+              {
+                "from": "0.0.1",
+                "name": "uzunluk",
+                "optional": false,
+                "removable": false,
+                "type": "number",
+                "y": 66
+              }
+            ],
+            "text": "sol(Ada, 2)",
+            "title": "sol",
+            "type": "text",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -496,
+            "y": -109
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.0.0",
+            "key": "field:Ada",
+            "kind": "field",
+            "ports": [],
+            "text": "Ada",
+            "title": "Ada",
+            "type": "text",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": -122
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.0.1",
+            "kind": "number",
+            "ports": [],
+            "text": "2",
+            "title": "2",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": -48
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.1",
+            "kind": "text",
+            "ports": [],
+            "text": "'/'",
+            "title": "'/'",
+            "type": "text",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -496,
+            "y": 26
+          },
+          {
+            "grows": false,
+            "h": 128,
+            "id": "0.2",
+            "key": "func:sağdoldur",
+            "kind": "function",
+            "ports": [
+              {
+                "from": "0.2.0",
+                "name": "değer",
+                "optional": false,
+                "removable": false,
+                "type": "any",
+                "y": 42
+              },
+              {
+                "from": "0.2.1",
+                "name": "uzunluk",
+                "optional": false,
+                "removable": false,
+                "type": "number",
+                "y": 66
+              },
+              {
+                "from": "0.2.2",
+                "name": "karakter",
+                "optional": true,
+                "removable": false,
+                "type": "text",
+                "y": 90
+              }
+            ],
+            "text": "sağdoldur(Parsel, 4, '0')",
+            "title": "sağdoldur",
+            "type": "text",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -496,
+            "y": 138
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.2.0",
+            "key": "field:Parsel",
+            "kind": "field",
+            "ports": [],
+            "text": "Parsel",
+            "title": "Parsel",
+            "type": "text",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": 100
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.2.1",
+            "kind": "number",
+            "ports": [],
+            "text": "4",
+            "title": "4",
+            "type": "number",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": 174
+          },
+          {
+            "grows": false,
+            "h": 56,
+            "id": "0.2.2",
+            "kind": "text",
+            "ports": [],
+            "text": "'0'",
+            "title": "'0'",
+            "type": "text",
+            "w": 176,
+            "warnings": [],
+            "whole": true,
+            "x": -744,
+            "y": 248
+          }
+        ],
+        "row": 24,
+        "texts": [
+          "birleştir(sol(Ada, 2), '/', sağdoldur(Parsel, 4, '0'))"
+        ],
+        "value": 26
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": ""
+          }
+        ],
+        {
+          "at": [
+            -500,
+            200
+          ],
+          "key": "func:yuvarla",
+          "op": "add"
+        },
+        "@fields"
+      ],
+      "note": "Paletten: gerekli girişleri boş",
+      "op": "exprFlowEdit",
+      "result": {
+        "focus": "1",
+        "trees": [
+          {
+            "text": ""
+          },
+          {
+            "at": [
+              -500,
+              200
+            ],
+            "text": "yuvarla(?)"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": ""
+          },
+          {
+            "at": [
+              -500,
+              200
+            ],
+            "text": "yuvarla(?)"
+          }
+        ],
+        {
+          "from": "1",
+          "op": "connect",
+          "port": 0,
+          "to": "r"
+        },
+        "@fields"
+      ],
+      "op": "exprFlowEdit",
+      "result": {
+        "focus": "0",
+        "trees": [
+          {
+            "text": "yuvarla(?)"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "yuvarla(?)"
+          },
+          {
+            "at": [
+              -800,
+              0
+            ],
+            "text": "$alan"
+          }
+        ],
+        {
+          "from": "1",
+          "op": "connect",
+          "port": 0,
+          "to": "0"
+        },
+        "@fields"
+      ],
+      "op": "exprFlowEdit",
+      "result": {
+        "focus": "0.0",
+        "trees": [
+          {
+            "text": "yuvarla($alan)"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "yuvarla($alan)"
+          },
+          {
+            "at": [
+              -800,
+              100
+            ],
+            "text": "2"
+          }
+        ],
+        {
+          "from": "1",
+          "op": "connect",
+          "port": 1,
+          "to": "0"
+        },
+        "@fields"
+      ],
+      "note": "İsteğe bağlı giriş bağlanınca yazılır",
+      "op": "exprFlowEdit",
+      "result": {
+        "focus": "0.1",
+        "trees": [
+          {
+            "text": "yuvarla($alan, 2)"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "Kat + 1"
+          },
+          {
+            "at": [
+              0,
+              300
+            ],
+            "text": "Ada"
+          }
+        ],
+        {
+          "from": "1",
+          "op": "connect",
+          "port": 1,
+          "to": "0"
+        },
+        "@fields"
+      ],
+      "note": "Dolu girişteki değer ayrılır, durduğu yerde",
+      "op": "exprFlowEdit",
+      "result": {
+        "focus": "0.1",
+        "trees": [
+          {
+            "text": "Kat + Ada"
+          },
+          {
+            "at": [
+              -496,
+              88
+            ],
+            "text": "1"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "eğer(Kat > 1, Ada, 'x')"
+          }
+        ],
+        {
+          "from": "0.0",
+          "op": "connect",
+          "port": 0,
+          "to": "r"
+        },
+        "@fields"
+      ],
+      "note": "Ağacın içinden, alt ağacıyla",
+      "op": "exprFlowEdit",
+      "result": {
+        "focus": "0",
+        "trees": [
+          {
+            "text": "Kat > 1"
+          },
+          {
+            "at": [
+              -248,
+              27
+            ],
+            "text": "eğer(?, Ada, 'x')"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "Kat + 1"
+          }
+        ],
+        {
+          "from": "0",
+          "op": "connect",
+          "port": 0,
+          "to": "0"
+        },
+        "@fields"
+      ],
+      "note": "Kendi girişine bağlanamaz",
+      "op": "exprFlowEdit",
+      "result": {
+        "thrown": "Bir düğüm kendi girişine bağlanamaz."
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "yuvarla($alan, 2)"
+          }
+        ],
+        {
+          "op": "disconnect",
+          "port": 1,
+          "to": "0"
+        },
+        "@fields"
+      ],
+      "note": "İsteğe bağlı son giriş gider",
+      "op": "exprFlowEdit",
+      "result": {
+        "focus": "0",
+        "trees": [
+          {
+            "text": "yuvarla($alan)"
+          },
+          {
+            "at": [
+              -496,
+              88
+            ],
+            "text": "2"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "yuvarla($alan, 2)"
+          }
+        ],
+        {
+          "op": "disconnect",
+          "port": 0,
+          "to": "0"
+        },
+        "@fields"
+      ],
+      "note": "Gerekli giriş boş kalır",
+      "op": "exprFlowEdit",
+      "result": {
+        "focus": "0",
+        "trees": [
+          {
+            "text": "yuvarla(?, 2)"
+          },
+          {
+            "at": [
+              -496,
+              14
+            ],
+            "text": "$alan"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "yuvarla(Kat * 2, 1)"
+          }
+        ],
+        {
+          "node": "0.0",
+          "op": "remove"
+        },
+        "@fields"
+      ],
+      "note": "Silinen düğümün girişleri ayrılır",
+      "op": "exprFlowEdit",
+      "result": {
+        "trees": [
+          {
+            "text": "yuvarla(?, 1)"
+          },
+          {
+            "at": [
+              -744,
+              -23
+            ],
+            "text": "Kat"
+          },
+          {
+            "at": [
+              -744,
+              51
+            ],
+            "text": "2"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "Kat + 1"
+          }
+        ],
+        {
+          "node": "0",
+          "op": "setOperator",
+          "symbol": "*"
+        },
+        "@fields"
+      ],
+      "op": "exprFlowEdit",
+      "result": {
+        "focus": "0",
+        "trees": [
+          {
+            "text": "Kat * 1"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "Kat + 1"
+          }
+        ],
+        {
+          "node": "0.1",
+          "op": "setText",
+          "value": "it's"
+        },
+        "@fields"
+      ],
+      "op": "exprFlowEdit",
+      "result": {
+        "focus": "0.1",
+        "trees": [
+          {
+            "text": "Kat + 'it''s'"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "Kat + 1"
+          }
+        ],
+        {
+          "node": "0.1",
+          "op": "setNumber",
+          "value": -2.5
+        },
+        "@fields"
+      ],
+      "op": "exprFlowEdit",
+      "result": {
+        "focus": "0.1",
+        "trees": [
+          {
+            "text": "Kat + -2.5"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "Kat + 1"
+          }
+        ],
+        {
+          "name": "Tapu alanı",
+          "node": "0.1",
+          "op": "setField"
+        },
+        "@fields"
+      ],
+      "op": "exprFlowEdit",
+      "result": {
+        "focus": "0.1",
+        "trees": [
+          {
+            "text": "Kat + [Tapu alanı]"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "Kat + 1"
+          }
+        ],
+        {
+          "name": "alan",
+          "node": "0.1",
+          "op": "setVariable"
+        },
+        "@fields"
+      ],
+      "op": "exprFlowEdit",
+      "result": {
+        "focus": "0.1",
+        "trees": [
+          {
+            "text": "Kat + $alan"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "Kat + 1"
+          }
+        ],
+        {
+          "node": "0.1",
+          "op": "setBool",
+          "value": false
+        },
+        "@fields"
+      ],
+      "op": "exprFlowEdit",
+      "result": {
+        "focus": "0.1",
+        "trees": [
+          {
+            "text": "Kat + yanlış"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "Kat + 1"
+          }
+        ],
+        {
+          "node": "0.1",
+          "op": "setNull"
+        },
+        "@fields"
+      ],
+      "op": "exprFlowEdit",
+      "result": {
+        "focus": "0.1",
+        "trees": [
+          {
+            "text": "Kat + boş"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "Kat + 1"
+          }
+        ],
+        {
+          "node": "0",
+          "op": "setNumber",
+          "value": 1
+        },
+        "@fields"
+      ],
+      "note": "Girişleri olan düğüm değer olamaz",
+      "op": "exprFlowEdit",
+      "result": {
+        "thrown": "Girişleri olan bir düğüm değer olamaz; önce girişlerini ayırın."
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "Kat içinde (1)"
+          }
+        ],
+        {
+          "node": "0",
+          "op": "setNegated",
+          "value": true
+        },
+        "@fields"
+      ],
+      "op": "exprFlowEdit",
+      "result": {
+        "focus": "0",
+        "trees": [
+          {
+            "text": "Kat değil içinde (1)"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "Ada gibi 'a%'"
+          }
+        ],
+        {
+          "node": "0",
+          "op": "setFold",
+          "value": true
+        },
+        "@fields"
+      ],
+      "op": "exprFlowEdit",
+      "result": {
+        "focus": "0",
+        "trees": [
+          {
+            "text": "Ada benzer 'a%'"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "tavan(Kat)"
+          }
+        ],
+        {
+          "name": "yuvarla",
+          "node": "0",
+          "op": "setFunction"
+        },
+        "@fields"
+      ],
+      "op": "exprFlowEdit",
+      "result": {
+        "focus": "0",
+        "trees": [
+          {
+            "text": "yuvarla(Kat)"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "min(1, 2)"
+          }
+        ],
+        {
+          "node": "0",
+          "op": "addPort"
+        },
+        "@fields"
+      ],
+      "op": "exprFlowEdit",
+      "result": {
+        "focus": "0",
+        "trees": [
+          {
+            "text": "min(1, 2, ?)"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "min(1, 2)"
+          }
+        ],
+        {
+          "node": "0",
+          "op": "removePort",
+          "port": 0
+        },
+        "@fields"
+      ],
+      "op": "exprFlowEdit",
+      "result": {
+        "focus": "0",
+        "trees": [
+          {
+            "text": "min(2)"
+          },
+          {
+            "at": [
+              -496,
+              14
+            ],
+            "text": "1"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "durum eğer Kat > 1 ise 'a' son"
+          }
+        ],
+        {
+          "node": "0",
+          "op": "addPort"
+        },
+        "@fields"
+      ],
+      "op": "exprFlowEdit",
+      "result": {
+        "focus": "0",
+        "trees": [
+          {
+            "text": "durum eğer Kat > 1 ise 'a' eğer ? ise ? son"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "durum eğer Kat > 1 ise 'a' yoksa 'b' son"
+          }
+        ],
+        {
+          "node": "0",
+          "op": "removePort",
+          "port": 2
+        },
+        "@fields"
+      ],
+      "op": "exprFlowEdit",
+      "result": {
+        "focus": "0",
+        "trees": [
+          {
+            "text": "durum eğer Kat > 1 ise 'a' son"
+          },
+          {
+            "at": [
+              -496,
+              174
+            ],
+            "text": "'b'"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "Kat"
+          },
+          {
+            "at": [
+              0,
+              0
+            ],
+            "text": "1"
+          }
+        ],
+        {
+          "at": [
+            -300,
+            400
+          ],
+          "op": "move",
+          "tree": 1
+        },
+        "@fields"
+      ],
+      "op": "exprFlowEdit",
+      "result": {
+        "focus": "1",
+        "trees": [
+          {
+            "text": "Kat"
+          },
+          {
+            "at": [
+              -300,
+              400
+            ],
+            "text": "1"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "Kat"
+          }
+        ],
+        {
+          "at": [
+            0,
+            0
+          ],
+          "op": "move",
+          "tree": 0
+        },
+        "@fields"
+      ],
+      "note": "Sonucun ağacı taşınmaz: yeri sonuca göre",
+      "op": "exprFlowEdit",
+      "result": {
+        "thrown": "Yalnız sonuca bağlanmamış bir düğüm taşınır."
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": ""
+          }
+        ],
+        {
+          "at": [
+            0,
+            0
+          ],
+          "key": "op:durum",
+          "op": "add"
+        },
+        "@fields"
+      ],
+      "op": "exprFlowEdit",
+      "result": {
+        "focus": "1",
+        "trees": [
+          {
+            "text": ""
+          },
+          {
+            "at": [
+              0,
+              0
+            ],
+            "text": "durum eğer ? ise ? yoksa ? son"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": ""
+          }
+        ],
+        {
+          "at": [
+            0,
+            0
+          ],
+          "key": "op:içinde",
+          "op": "add"
+        },
+        "@fields"
+      ],
+      "op": "exprFlowEdit",
+      "result": {
+        "focus": "1",
+        "trees": [
+          {
+            "text": ""
+          },
+          {
+            "at": [
+              0,
+              0
+            ],
+            "text": "? içinde (?)"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": ""
+          }
+        ],
+        {
+          "at": [
+            0,
+            0
+          ],
+          "key": "op:boş değil",
+          "op": "add"
+        },
+        "@fields"
+      ],
+      "op": "exprFlowEdit",
+      "result": {
+        "focus": "1",
+        "trees": [
+          {
+            "text": ""
+          },
+          {
+            "at": [
+              0,
+              0
+            ],
+            "text": "? boş değil"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": ""
+          }
+        ],
+        {
+          "at": [
+            0,
+            0
+          ],
+          "key": "lit:text",
+          "op": "add"
+        },
+        "@fields"
+      ],
+      "op": "exprFlowEdit",
+      "result": {
+        "focus": "1",
+        "trees": [
+          {
+            "text": ""
+          },
+          {
+            "at": [
+              0,
+              0
+            ],
+            "text": "''"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": ""
+          }
+        ],
+        {
+          "at": [
+            0,
+            0
+          ],
+          "key": "field:Tapu alanı",
+          "op": "add"
+        },
+        "@fields"
+      ],
+      "op": "exprFlowEdit",
+      "result": {
+        "focus": "1",
+        "trees": [
+          {
+            "text": ""
+          },
+          {
+            "at": [
+              0,
+              0
+            ],
+            "text": "[Tapu alanı]"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        [
+          {
+            "text": "yuvarla(1"
+          }
+        ],
+        {
+          "node": "0",
+          "op": "remove"
+        },
+        "@fields"
+      ],
+      "note": "Okunmayan metin akışta değişmez",
+      "op": "exprFlowEdit",
+      "result": {
+        "thrown": "İfade okunamadı (10. karakterde: yuvarla(…) kapanmamış: “)” bekleniyordu.); akışta değiştirmek için önce metni düzeltin."
+      }
+    }
+  ],
+  "fields": [
+    {
+      "name": "Ada",
+      "source": "attribute",
+      "type": "text"
+    },
+    {
+      "name": "Parsel",
+      "source": "attribute",
+      "type": "text"
+    },
+    {
+      "name": "Nitelik",
+      "source": "attribute",
+      "type": "text"
+    },
+    {
+      "name": "Kat",
+      "source": "user",
+      "type": "number"
+    },
+    {
+      "name": "Tapu alanı",
+      "source": "user",
+      "type": "number"
+    }
+  ],
+  "version": 1
+}

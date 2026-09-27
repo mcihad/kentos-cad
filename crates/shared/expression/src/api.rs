@@ -2,12 +2,14 @@
 //! (docs/adr/0100 §5): `kentos-geometry-wasm` looks a name up here after the
 //! geometry core's and the style core's tables. Arguments and results are
 //! JSON; positions are UTF-16 units from 0. `fixtures/expression/v2/builder.json`
-//! pins every operation's answers on both platforms.
+//! pins every operation's answers on both platforms, `flow.json` the flow's
+//! (`exprFlow`, `exprFlowEdit`; docs/adr/0101).
 
 use kentos_geometry_core::api::Op;
 use kentos_geometry_core::api::json::Json;
 use kentos_geometry_core::{json_struct, op};
 
+use crate::editor::flow::{self, Edit, Flow, FlowNode, Port, Tree};
 use crate::editor::{self, Arg, Diagnostic, Help, Item, Section, ValueItem};
 use crate::{FieldDef, FieldSource, FieldType, Schema, Value};
 
@@ -324,6 +326,243 @@ fn signature(source: &str, cursor: usize) -> Option<SignatureJson> {
     })
 }
 
+/// A tree of the flow as the page keeps it: `{ text, at? }`.
+struct TreeJson {
+    text: String,
+    at: Option<[f64; 2]>,
+}
+json_struct!(TreeJson { text, at });
+
+impl From<TreeJson> for Tree {
+    fn from(t: TreeJson) -> Tree {
+        Tree::new(t.text, t.at.map(|[x, y]| (x, y)))
+    }
+}
+
+impl From<Tree> for TreeJson {
+    fn from(t: Tree) -> TreeJson {
+        TreeJson {
+            text: t.text,
+            at: t.at.map(|(x, y)| [x, y]),
+        }
+    }
+}
+
+struct PortJson {
+    name: String,
+    ty: &'static str,
+    optional: bool,
+    from: Option<String>,
+    note: Option<String>,
+    removable: bool,
+    y: f64,
+}
+json_struct!(out PortJson { name, ty => "type", optional, from, note, removable, y });
+
+impl From<Port> for PortJson {
+    fn from(p: Port) -> PortJson {
+        PortJson {
+            name: p.name,
+            ty: p.ty.id(),
+            optional: p.optional,
+            from: p.from,
+            note: p.note,
+            removable: p.removable,
+            y: p.y,
+        }
+    }
+}
+
+struct NodeJson {
+    id: String,
+    kind: &'static str,
+    title: String,
+    key: Option<String>,
+    ty: &'static str,
+    ports: Vec<PortJson>,
+    grows: bool,
+    negated: Option<bool>,
+    text: String,
+    whole: bool,
+    error: Option<String>,
+    warnings: Vec<String>,
+    x: f64,
+    y: f64,
+    w: f64,
+    h: f64,
+}
+json_struct!(out NodeJson { id, kind, title, key, ty => "type", ports, grows, negated, text, whole, error, warnings, x, y, w, h });
+
+impl From<FlowNode> for NodeJson {
+    fn from(n: FlowNode) -> NodeJson {
+        NodeJson {
+            id: n.id,
+            kind: n.kind.id(),
+            title: n.title,
+            key: n.key,
+            ty: n.ty.id(),
+            ports: n.ports.into_iter().map(PortJson::from).collect(),
+            grows: n.grows,
+            negated: n.negated,
+            text: n.text,
+            whole: n.whole,
+            error: n.error,
+            warnings: n.warnings,
+            x: n.x,
+            y: n.y,
+            w: n.w,
+            h: n.h,
+        }
+    }
+}
+
+/// A flow as the page draws it; `head`, `row`, `value`: the rows of a node.
+struct FlowJson {
+    nodes: Vec<NodeJson>,
+    texts: Vec<String>,
+    error: Option<DiagnosticJson>,
+    bounds: [f64; 4],
+    head: f64,
+    row: f64,
+    value: f64,
+}
+json_struct!(out FlowJson { nodes, texts, error, bounds, head, row, value });
+
+impl From<Flow> for FlowJson {
+    fn from(f: Flow) -> FlowJson {
+        let (l, t, r, b) = f.bounds;
+        FlowJson {
+            nodes: f.nodes.into_iter().map(NodeJson::from).collect(),
+            texts: f.texts,
+            error: f.error.map(DiagnosticJson::from),
+            bounds: [l, t, r, b],
+            head: flow::HEAD,
+            row: flow::ROW,
+            value: flow::VALUE,
+        }
+    }
+}
+
+/// A change as the page sends it, `{ op: "connect", from, to, port }` …
+enum EditJson {
+    Add {
+        key: String,
+        at: [f64; 2],
+    },
+    Connect {
+        from: String,
+        to: String,
+        port: usize,
+    },
+    Disconnect {
+        to: String,
+        port: usize,
+    },
+    Remove {
+        node: String,
+    },
+    SetNumber {
+        node: String,
+        value: f64,
+    },
+    SetText {
+        node: String,
+        value: String,
+    },
+    SetBool {
+        node: String,
+        value: bool,
+    },
+    SetNull {
+        node: String,
+    },
+    SetField {
+        node: String,
+        name: String,
+    },
+    SetVariable {
+        node: String,
+        name: String,
+    },
+    SetOperator {
+        node: String,
+        symbol: String,
+    },
+    SetFunction {
+        node: String,
+        name: String,
+    },
+    SetNegated {
+        node: String,
+        value: bool,
+    },
+    SetFold {
+        node: String,
+        value: bool,
+    },
+    AddPort {
+        node: String,
+    },
+    RemovePort {
+        node: String,
+        port: usize,
+    },
+    Move {
+        tree: usize,
+        at: [f64; 2],
+    },
+}
+kentos_geometry_core::json_tagged!(EditJson, "op",
+    Add => "add" { key, at },
+    Connect => "connect" { from, to, port },
+    Disconnect => "disconnect" { to, port },
+    Remove => "remove" { node },
+    SetNumber => "setNumber" { node, value },
+    SetText => "setText" { node, value },
+    SetBool => "setBool" { node, value },
+    SetNull => "setNull" { node },
+    SetField => "setField" { node, name },
+    SetVariable => "setVariable" { node, name },
+    SetOperator => "setOperator" { node, symbol },
+    SetFunction => "setFunction" { node, name },
+    SetNegated => "setNegated" { node, value },
+    SetFold => "setFold" { node, value },
+    AddPort => "addPort" { node },
+    RemovePort => "removePort" { node, port },
+    Move => "move" { tree, at },
+);
+
+impl From<EditJson> for Edit {
+    fn from(e: EditJson) -> Edit {
+        match e {
+            EditJson::Add { key, at: [x, y] } => Edit::Add { key, at: (x, y) },
+            EditJson::Connect { from, to, port } => Edit::Connect { from, to, port },
+            EditJson::Disconnect { to, port } => Edit::Disconnect { to, port },
+            EditJson::Remove { node } => Edit::Remove { node },
+            EditJson::SetNumber { node, value } => Edit::SetNumber { node, value },
+            EditJson::SetText { node, value } => Edit::SetText { node, value },
+            EditJson::SetBool { node, value } => Edit::SetBool { node, value },
+            EditJson::SetNull { node } => Edit::SetNull { node },
+            EditJson::SetField { node, name } => Edit::SetField { node, name },
+            EditJson::SetVariable { node, name } => Edit::SetVariable { node, name },
+            EditJson::SetOperator { node, symbol } => Edit::SetOperator { node, symbol },
+            EditJson::SetFunction { node, name } => Edit::SetFunction { node, name },
+            EditJson::SetNegated { node, value } => Edit::SetNegated { node, value },
+            EditJson::SetFold { node, value } => Edit::SetFold { node, value },
+            EditJson::AddPort { node } => Edit::AddPort { node },
+            EditJson::RemovePort { node, port } => Edit::RemovePort { node, port },
+            EditJson::Move { tree, at: [x, y] } => Edit::Move { tree, at: (x, y) },
+        }
+    }
+}
+
+/// The trees after a change, and the node to select.
+struct EditedJson {
+    trees: Vec<TreeJson>,
+    focus: Option<String>,
+}
+json_struct!(out EditedJson { trees, focus });
+
 /// A JSON value as the language's value (the preview's input).
 fn value_of(v: &Json) -> Value<'_> {
     match v {
@@ -395,6 +634,25 @@ pub static OPS: &[Op] = &[
                 .collect::<Vec<_>>()
         })
     }),
+    op!("exprFlow", |trees: Vec<TreeJson>,
+                     fields: Vec<FieldJson>| {
+        schema(fields).map(|s| {
+            let trees: Vec<Tree> = trees.into_iter().map(Tree::from).collect();
+            FlowJson::from(flow::flow(&trees, &s))
+        })
+    }),
+    op!(
+        "exprFlowEdit",
+        |trees: Vec<TreeJson>, change: EditJson, fields: Vec<FieldJson>| {
+            schema(fields).and_then(|s| {
+                let trees: Vec<Tree> = trees.into_iter().map(Tree::from).collect();
+                flow::edit(&trees, &Edit::from(change), &s).map(|(trees, focus)| EditedJson {
+                    trees: trees.into_iter().map(TreeJson::from).collect(),
+                    focus,
+                })
+            })
+        }
+    ),
     // Any JSON value: written out, as op! reads typed arguments.
     Op {
         name: "exprPreview",
