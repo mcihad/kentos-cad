@@ -65,6 +65,7 @@
 //! })
 //! ```
 
+use iced::advanced::Renderer as _;
 use iced::advanced::layout::{self, Layout};
 use iced::advanced::widget::{self, Tree, Widget, tree};
 use iced::advanced::{Clipboard, Shell, overlay, renderer};
