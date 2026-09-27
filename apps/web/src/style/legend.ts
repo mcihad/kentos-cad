@@ -84,3 +84,91 @@ export function legendOf(layers: readonly LegendLayer[], src: LegendSources): Le
   }
   return out;
 }
+
+// ── The legend window and its picture ──────────────────────────────────
+// Pinned for both platforms by fixtures/style/v1/legend.json.
+
+/** What the legend window says. */
+export const LEGEND_TEXTS = {
+  title: 'Lejant',
+  save: 'PNG olarak kaydet',
+  close: 'Kapat',
+  visibleOnly: 'Yalnızca görünen katmanlar',
+  headings: 'Katman adlarını başlık yaz',
+  rows: (n: number) => `${n} satır`,
+  nothing: 'Lejanta girecek çizilmiş nesne yok.',
+  noRows: 'Lejantta satır yok.',
+  saved: 'Lejant PNG olarak kaydedildi (beyaz kâğıt, 2× çözünürlük).',
+  file: 'lejant.png',
+  heading: 'LEJANT',
+} as const;
+
+/** The layers a legend reads: top of the list first, only the visible ones when asked. */
+export function legendLayers(leaves: readonly (LegendLayer & { visible: boolean })[], visibleOnly: boolean): LegendLayer[] {
+  return leaves.filter((l) => !visibleOnly || l.visible).map(({ id, name, style }) => ({ id, name, style }));
+}
+
+/** The picture's palette over the screen's: white paper, black ink, whatever the theme. */
+export const LEGEND_PAPER = { background: [1, 1, 1, 1] as const, ink: '#000000', paper: '#FFFFFF', fg: '#111111', fgDim: '#555555' };
+
+const FONT = 'Arial, "Liberation Sans", sans-serif';
+
+/** A line of text on the legend picture: `align` right means `x` is where it ends. */
+export interface LegendText {
+  text: string;
+  font: string;
+  color: string;
+  x: number;
+  y: number;
+  align: 'left' | 'right';
+}
+
+export interface LegendRow {
+  kind: 'heading' | 'entry';
+  label: LegendText;
+  /** Where an entry's symbol is drawn (on white, framed); none for a heading or a symbol that is not there. */
+  picture: { x: number; y: number; w: number; h: number; frame: string; frameWidth: number } | null;
+}
+
+/** The legend picture, in logical pixels (drawn at `scale` for print): its size, heading, the drawing's name and rows. */
+export interface LegendLayout {
+  scale: number;
+  width: number;
+  height: number;
+  background: string;
+  heading: LegendText;
+  name: LegendText;
+  rows: LegendRow[];
+}
+
+/** Where everything of the legend picture goes: the groups shown, with or without layer headings. */
+export function legendLayout(groups: readonly LegendGroup[], headings: boolean, drawingName: string): LegendLayout {
+  const W = 520;
+  const ROW = 30;
+  const count = groups.reduce((n, g) => n + g.entries.length + (headings ? 1 : 0), 0);
+  const rows: LegendRow[] = [];
+  let y = 56;
+  for (const grp of groups) {
+    if (headings) {
+      rows.push({ kind: 'heading', label: { text: grp.layerName, font: `700 12px ${FONT}`, color: '#000000', x: 20, y: y + 19, align: 'left' }, picture: null });
+      y += ROW;
+    }
+    for (const e of grp.entries) {
+      rows.push({
+        kind: 'entry',
+        label: { text: e.label, font: `400 12px ${FONT}`, color: '#000000', x: 90, y: y + 19, align: 'left' },
+        picture: e.symbol ? { x: 20, y: y + 3, w: 56, h: 24, frame: '#BBBBBB', frameWidth: 0.5 } : null,
+      });
+      y += ROW;
+    }
+  }
+  return {
+    scale: 2,
+    width: W,
+    height: 56 + count * ROW + 16,
+    background: '#FFFFFF',
+    heading: { text: LEGEND_TEXTS.heading, font: `700 18px ${FONT}`, color: '#000000', x: 20, y: 34, align: 'left' },
+    name: { text: drawingName, font: `400 11px ${FONT}`, color: '#555555', x: W - 20, y: 34, align: 'right' },
+    rows,
+  };
+}

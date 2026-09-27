@@ -205,12 +205,35 @@ export function parseStyleFile(text: string): { file?: StyleFile; issues: string
     return { issues: ['Dosya okunamadı: JSON değil.'] };
   }
   if (!isObj(data) || data.format !== STYLE_FORMAT) return { issues: ['Bu bir KentOS stil dosyası (.kstil) değil.'] };
-  if (typeof data.version !== 'number' || data.version > STYLE_VERSION) return { issues: [`Dosya daha yeni bir KentOS sürümüyle yazılmış (sürüm ${String(data.version)}); güncelleyip yeniden deneyin.`] };
+  // A version is a whole number from 1: without one the file is broken, not newer.
+  if (typeof data.version !== 'number' || !Number.isInteger(data.version) || data.version < 1) return { issues: ['Dosyada sürüm yok; dosya bozuk olabilir.'] };
+  if (data.version > STYLE_VERSION) return { issues: [`Dosya daha yeni bir KentOS sürümüyle yazılmış (sürüm ${data.version}); güncelleyip yeniden deneyin.`] };
   if (!Array.isArray(data.items)) return { issues: ['Dosyada öğe listesi yok.'] };
-  const issues = data.items.flatMap(validateItem);
+  const issues = [...data.items.flatMap(validateItem), ...validateCategories(data.categories)];
   if (issues.length) return { issues };
   const items = (data.items as LibraryItem[]).map((it) => (it.kind === 'asset' && it.format === 'svg' ? { ...it, data: sanitizeSvg(it.data) } : it));
-  return { file: { ...(data as unknown as StyleFile), items }, issues: [] };
+  // Only what a category is: its path, order and description (a file may carry anything else).
+  const categories = (data.categories as LibraryCategory[] | undefined)?.map((c) => ({
+    path: [...c.path],
+    ...(c.order !== undefined ? { order: c.order } : {}),
+    ...(c.description !== undefined ? { description: c.description } : {}),
+  }));
+  return { file: { ...(data as unknown as StyleFile), items, ...(categories ? { categories } : {}) }, issues: [] };
+}
+
+/** Problems in a file's categories (absent is fine): a list of paths of text, each with an optional order and description. */
+function validateCategories(list: unknown): string[] {
+  if (list === undefined) return [];
+  if (!Array.isArray(list)) return ['Dosyadaki kategoriler bir liste değil.'];
+  return list.flatMap((c, i) => {
+    const w = `kategori ${i + 1}`;
+    if (!isObj(c)) return [`${w}: nesne değil`];
+    const issues: string[] = [];
+    if (!Array.isArray(c.path) || c.path.some((p) => typeof p !== 'string')) issues.push(`${w}: yol metin listesi olmalı`);
+    if (c.order !== undefined && (typeof c.order !== 'number' || !Number.isFinite(c.order))) issues.push(`${w}: sıra bir sayı olmalı`);
+    if (c.description !== undefined && typeof c.description !== 'string') issues.push(`${w}: açıklama metin olmalı`);
+    return issues;
+  });
 }
 
 export type ConflictMode = 'replace' | 'copy' | 'skip';

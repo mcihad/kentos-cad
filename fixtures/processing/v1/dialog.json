@@ -1,0 +1,7558 @@
+{
+ "format": "kentos.processing-dialog",
+ "version": 1,
+ "document": "parcels.kcad",
+ "texts": {
+  "sections": {
+   "input": "Girdi",
+   "main": "Ayarlar",
+   "output": "Çıktı",
+   "advanced": "Gelişmiş ayarlar"
+  },
+  "optional": "isteğe bağlı",
+  "footer": {
+   "run": "Çalıştır",
+   "running": "Çalışıyor…",
+   "close": "Kapat",
+   "stop": "Durdur",
+   "reset": "Varsayılanlar",
+   "resetTitle": "Bütün alanları varsayılan değerlerine döndürür"
+  },
+  "actions": {
+   "zoom": "Seçime yakınlaştır",
+   "select": "Sonuçları seç",
+   "undo": "Geri al"
+  },
+  "side": {
+   "preview": "Önizleme",
+   "targets": "Nerede çalışır",
+   "aliases": "Komut satırından",
+   "steps": "Adımlar",
+   "editModel": "Modeli düzenle",
+   "editCopy": "Kopyasını düzenle",
+   "models": "Modeller",
+   "noCategory": "Genel"
+  },
+  "previewBlocked": "Önizleme için alanları düzeltin.",
+  "running": {
+   "here": "Çalışıyor…",
+   "worker": "Arka planda çalışıyor; sayfayı kullanmaya devam edebilirsiniz."
+  },
+  "fixFields": {
+   "sample": 2,
+   "text": "Çalıştırmadan önce 2 alanı düzeltin."
+  },
+  "targets": {
+   "auto": "Otomatik",
+   "autoNow": {
+    "sample": "worker",
+    "text": "şimdi: arka planda"
+   },
+   "autoModel": "adım adım",
+   "hint": "2.000 ya da daha çok nesneli işler arka planda çalışır; sayfa donmaz.",
+   "thisRun": "bu çalıştırmada",
+   "soon": "yakında"
+  },
+  "features": {
+   "kinds": "Türler",
+   "kindOff": "Bu türü dışarıda bırak",
+   "kindOn": "Bu türü de al",
+   "kindsNote": {
+    "sample": [
+     "polygon",
+     "polyline"
+    ],
+    "text": "Uygun nesneler: kapalı alan, çoklu çizgi"
+   },
+   "noLayer": "—"
+  },
+  "layer": {
+   "newHeader": "Yeni katman",
+   "existingHeader": "Mevcut katmanlar",
+   "newItem": {
+    "sample": "Köşe noktaları",
+    "text": "Yeni: Köşe noktaları"
+   },
+   "suggested": "Yeni katman",
+   "locked": "kilitli",
+   "existing": "(mevcut)",
+   "fresh": "(yeni)"
+  },
+  "point": {
+   "none": "Henüz gösterilmedi",
+   "show": "Haritadan göster",
+   "again": "Yeniden göster"
+  },
+  "field": {
+   "none": "Bu nesnelerde öznitelik alanı yok",
+   "choose": "Alan seçin",
+   "placeholder": "Alan adı",
+   "count": {
+    "sample": 3,
+    "text": "3 nesne"
+   },
+   "has": {
+    "sample": 3,
+    "text": "3 nesnede var; değeri değişir."
+   },
+   "fresh": "Yeni alan: nesnelere eklenir.",
+   "missing": "Bu nesnelerde böyle bir alan yok."
+  },
+  "expression": {
+   "fields": "Alanlar",
+   "variables": "Değişkenler",
+   "functions": "İşlevler",
+   "chipTitle": {
+    "sample": 3,
+    "text": "3 nesnede var; ifadeye ekle"
+   },
+   "more": {
+    "sample": 2,
+    "text": "+2"
+   }
+  }
+ },
+ "scopes": {
+  "selection": "Seçili",
+  "visible": "Görünen",
+  "all": "Tümü",
+  "layer": "Katman"
+ },
+ "targetLabels": {
+  "client": "Bu tarayıcıda",
+  "worker": "Arka planda (worker)",
+  "server": "KentOS sunucusunda",
+  "postgis": "PostGIS veritabanında"
+ },
+ "targetShort": {
+  "client": "bu tarayıcıda",
+  "worker": "arka planda",
+  "server": "sunucuda",
+  "postgis": "PostGIS’te"
+ },
+ "forms": {
+  "points.numberVertices": {
+   "title": "Köşe noktalarını numarala",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Alanlar",
+     "description": "Köşeleri numaralanacak kapalı alanlar ve çoklu çizgiler.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "direction",
+     "label": "Yön",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "cw",
+        "label": "Saat yönünde"
+       },
+       {
+        "value": "ccw",
+        "label": "Saat yönünün tersine"
+       }
+      ]
+     }
+    },
+    {
+     "name": "start",
+     "label": "Başlangıç köşesi",
+     "description": "Numaralamanın başlayacağı köşe.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "northwest",
+        "label": "Kuzeybatı",
+        "hint": "Kuzeybatı yönüne en yakın köşe"
+       },
+       {
+        "value": "north",
+        "label": "En kuzey",
+        "hint": "Kuzeyi en büyük köşe"
+       },
+       {
+        "value": "first",
+        "label": "İlk çizilen",
+        "hint": "Nesnenin ilk köşesi"
+       },
+       {
+        "value": "point",
+        "label": "Seçilen noktaya en yakın",
+        "hint": "Haritada gösterdiğiniz noktaya en yakın köşe"
+       }
+      ]
+     }
+    },
+    {
+     "name": "startPoint",
+     "label": "Başlangıç noktası",
+     "description": "Her alanda bu noktaya en yakın köşeden başlanır.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "point"
+     }
+    },
+    {
+     "name": "prefix",
+     "label": "Önek",
+     "description": "Numaranın başındaki yazı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "maxLength": 12
+     }
+    },
+    {
+     "name": "length",
+     "label": "Toplam uzunluk",
+     "description": "Önek dahil karakter sayısı: P00001 için 6.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "pad",
+     "label": "Doldurma karakteri",
+     "description": "Önek ile rakamlar arasını doldurur; boş bırakılırsa doldurulmaz.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": true,
+      "maxLength": 1
+     }
+    },
+    {
+     "name": "first",
+     "label": "İlk numara",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "step",
+     "label": "Artış",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "shared",
+     "label": "Ortak köşelere tek numara",
+     "description": "Komşu alanların aynı yerdeki köşeleri tek nokta olur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "tolerance",
+     "label": "Aynı nokta toleransı",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "output",
+     "label": "Oluşturulacak",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "points",
+        "label": "Nokta",
+        "hint": "Adı etiket olarak görünen nokta nesnesi"
+       },
+       {
+        "value": "text",
+        "label": "Yazı",
+        "hint": "Köşenin dışına yazı"
+       },
+       {
+        "value": "both",
+        "label": "Nokta ve yazı"
+       }
+      ]
+     }
+    },
+    {
+     "name": "textHeight",
+     "label": "Yazı yüksekliği",
+     "description": "Kâğıt üzerinde, çizim ölçeğine göre.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "mm"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Hedef katman",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "point",
+     "text": "Nokta işlemleri"
+    },
+    "icon": "numberVertices",
+    "about": "Alanların köşelerine belirlediğiniz biçimde numaralı nokta koyar (P00001, P00002 …); yön ve başlangıç köşesi seçilir.",
+    "help": [
+     "Her alanın köşeleri seçilen yönde, seçilen başlangıç köşesinden itibaren numaralanır; delikli alanlarda önce dış halka, sonra delikler.",
+     "Birden çok alan varsa sıra başlangıç köşelerine göredir: kuzeybatıdakiler önce. “Seçilen noktaya en yakın” başlangıçta noktaya yakın olan alan önce gelir.",
+     "Komşu parsellerin ortak köşesi tek numara alır. Hedef katmanda aynı biçimde numaralanmış noktalar varsa onların adı korunur ve numara kaldığı yerden devam eder."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": true,
+    "aliases": [
+     "KOSENUMARA",
+     "KNUM",
+     "NUMARALA"
+    ]
+   }
+  },
+  "annotation.edgeLengths": {
+   "title": "Kenar uzunluklarını yaz",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Kenar uzunlukları yazılacak alanlar, çoklu çizgiler ve çizgiler.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "decimals",
+     "label": "Ondalık basamak",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "side",
+     "label": "Yazının yeri",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "outside",
+        "label": "Dışa",
+        "hint": "Kapalı alanın dışına; açık çizgide soluna"
+       },
+       {
+        "value": "inside",
+        "label": "İçe",
+        "hint": "Kapalı alanın içine; açık çizgide sağına"
+       }
+      ]
+     }
+    },
+    {
+     "name": "textHeight",
+     "label": "Yazı yüksekliği",
+     "description": "Kâğıt üzerinde, çizim ölçeğine göre.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "mm"
+     }
+    },
+    {
+     "name": "prefix",
+     "label": "Önek",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "maxLength": 12
+     }
+    },
+    {
+     "name": "suffix",
+     "label": "Sonek",
+     "description": "Örneğin “ m”.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "maxLength": 12
+     }
+    },
+    {
+     "name": "minLength",
+     "label": "En kısa kenar",
+     "description": "Bundan kısa kenarlar yazılmaz.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "shared",
+     "label": "Ortak kenarlara bir kez yaz",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Hedef katman",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "text",
+     "text": "Yazı ve etiket"
+    },
+    "icon": "edgeLengths",
+    "about": "Alan, çoklu çizgi ve çizgilerin her kenarına uzunluğunu yazar; ortak kenarlar bir kez yazılır.",
+    "help": [
+     "Yazı kenarın ortasına, kenar boyunca okunur biçimde konur: kapalı alanlarda dışa (ya da içe), açık çizgilerde sola (ya da sağa).",
+     "Yay kenarlarında yay boyu yazılır. Komşu parsellerin ortak kenarı bir kez yazılır; bunu kapatırsanız her alan kendi kenarını yazar."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": true,
+    "aliases": [
+     "KENARYAZ",
+     "KENARUZUNLUK"
+    ]
+   }
+  },
+  "attributes.calculate": {
+   "title": "Öznitelik hesapla",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Özniteliği yazılacak nesneler; kilitli katmandakiler alınmaz.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "field",
+     "label": "Yazılacak alan",
+     "description": "Listeden var olan bir alanı seçin ya da yeni bir ad yazın.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "combo",
+      "placeholder": "Alan adı"
+     }
+    },
+    {
+     "name": "value",
+     "label": "Değer",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "expression",
+      "returns": "value",
+      "placeholder": "yuvarla($alan, 2)"
+     }
+    },
+    {
+     "name": "where",
+     "label": "Yalnızca şu koşulda",
+     "description": "Boş bırakılırsa bütün nesnelere yazılır.",
+     "optional": true,
+     "stacked": true,
+     "control": {
+      "type": "expression",
+      "returns": "condition",
+      "placeholder": "Nitelik = 'Arsa'"
+     }
+    },
+    {
+     "name": "empty",
+     "label": "Sonuç boşsa",
+     "description": "Değer hesaplanamadığında (eksik alan, sayı olmayan metin) ne yapılacağı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "keep",
+        "label": "Dokunma",
+        "hint": "Alanın eski değeri kalır"
+       },
+       {
+        "value": "clear",
+        "label": "Boşalt",
+        "hint": "Alan boş metin olur"
+       }
+      ]
+     }
+    },
+    {
+     "name": "label",
+     "label": "Etiketi de güncelle",
+     "description": "Etiket bu alanın eski değerini gösteriyorsa yeni değeri gösterir.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "table",
+     "text": "Öznitelik"
+    },
+    "icon": "fieldCalc",
+    "about": "Seçtiğiniz alana her nesne için bir ifadenin değerini yazar; alan yoksa oluşturur.",
+    "help": [
+     "Değer bir ifadedir: sabit bir metin ('Arsa'), başka alanlardan hesap (Ada || '/' || Parsel) ya da geometri ($alan, $uzunluk, $y, $x).",
+     "Örnekler: metin($alan, 2) hesaplanan alanı iki ondalıkla; yuvarla([Tapu alanı] - $alan, 2) tapu farkını; 'P' || doldur($sıra, 5) sıra numarasını (P00001) yazar.",
+     "Etiket o alanın eski değerini gösteriyorsa (parsel numarası gibi) yeni değeri gösterir. İşlem tek adımda geri alınır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": true,
+    "aliases": [
+     "OZHESAP",
+     "ALANHESAP"
+    ]
+   }
+  },
+  "selection.byExpression": {
+   "title": "İfadeyle seç",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Aranacak nesneler",
+     "description": "Koşulun denendiği nesneler.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "all",
+        "label": "Tümü"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       }
+      ]
+     }
+    },
+    {
+     "name": "condition",
+     "label": "Koşul",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "expression",
+      "returns": "condition",
+      "placeholder": "Nitelik = 'Arsa' ve $alan > 500"
+     }
+    },
+    {
+     "name": "mode",
+     "label": "Seçim biçimi",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "new",
+        "label": "Yeni seçim",
+        "hint": "Mevcut seçim bırakılır"
+       },
+       {
+        "value": "add",
+        "label": "Seçime ekle",
+        "hint": "Koşulu sağlayanlar mevcut seçime eklenir"
+       },
+       {
+        "value": "remove",
+        "label": "Seçimden çıkar",
+        "hint": "Koşulu sağlayanlar mevcut seçimden çıkar"
+       },
+       {
+        "value": "within",
+        "label": "Seçim içinde ara",
+        "hint": "Seçili olanlardan yalnızca koşulu sağlayanlar kalır"
+       }
+      ]
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "select",
+     "text": "Seçim"
+    },
+    "icon": "selectExpression",
+    "about": "Özniteliklere ve geometriye göre yazdığınız koşulu sağlayan nesneleri seçer.",
+    "help": [
+     "Koşulda alan adları doğrudan (Nitelik) ya da köşeli parantezle ([Tapu alanı]) yazılır, metinler tırnak içindedir ('Arsa'). Geometri için $alan, $uzunluk, $köşe, $katman gibi değişkenler vardır.",
+     "Örnekler: Nitelik = 'Arsa' ve $alan > 500; boş(Parsel); içerir(Mahalle, 'cumhuriyet'); $katman = 'Yapı' veya $alan < 50.",
+     "Seçim biçimi sonucun mevcut seçimle nasıl birleşeceğini belirler: yeni seçim, seçime ekle, seçimden çıkar ya da yalnızca şu an seçili olanlar arasında ara."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "IFADESEC",
+     "SORGU"
+    ]
+   }
+  },
+  "model:builtin.parcelSheet": {
+   "title": "Parsel ölçü yazıları",
+   "rows": [
+    {
+     "name": "parcels",
+     "label": "Parseller",
+     "description": "Ölçü yazıları hazırlanacak parseller.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "prefix",
+     "label": "Nokta öneki",
+     "description": "Köşe numaralarının başındaki yazı: P00001.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "maxLength": 12
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "processing",
+     "text": "Modeller › Kadastro"
+    },
+    "icon": "processing",
+    "about": "Parsellerin köşelerini numaralar, kenar uzunluklarını yazar ve hesaplanan alanı özniteliğe yazar; hepsi tek adımda geri alınır.",
+    "help": [],
+    "steps": [
+     {
+      "icon": "numberVertices",
+      "name": "Köşe noktalarını numarala"
+     },
+     {
+      "icon": "edgeLengths",
+      "name": "Kenar uzunluklarını yaz"
+     },
+     {
+      "icon": "fieldCalc",
+      "name": "Öznitelik hesapla"
+     }
+    ],
+    "edit": "Kopyasını düzenle",
+    "preview": false,
+    "aliases": []
+   }
+  }
+ },
+ "sessions": [
+  {
+   "id": "numbering",
+   "title": "Köşe noktalarını numarala: başlangıç noktası istenince görünür, çalıştırınca eksik olduğu söylenir; nokta gösterilince pencere olduğu gibi döner; yazı yüksekliği ve gelişmiş ayarlar, hatalı ve düzeltilen uzunluk, çalıştırma, seçili olanı yeniden seçmek, geri alma, vazgeçilen nokta",
+   "open": {
+    "tool": "points.numberVertices"
+   },
+   "selection": [
+    1,
+    2
+   ],
+   "available": [
+    "client"
+   ],
+   "steps": [
+    {
+     "do": {
+      "choose": {
+       "name": "start",
+       "value": "point"
+      }
+     },
+     "expect": {
+      "values": {
+       "start": "point"
+      },
+      "sections": {
+       "groups": [
+        {
+         "title": "Girdi",
+         "rows": [
+          "input"
+         ]
+        },
+        {
+         "title": "Ayarlar",
+         "rows": [
+          "direction",
+          "start",
+          "startPoint",
+          "prefix",
+          "length",
+          "pad",
+          "first",
+          "shared",
+          "output"
+         ]
+        },
+        {
+         "title": "Çıktı",
+         "rows": [
+          "layer"
+         ]
+        }
+       ],
+       "advanced": {
+        "rows": [
+         "step",
+         "tolerance"
+        ],
+        "open": false
+       }
+      },
+      "preview": {
+       "text": "Önizleme için alanları düzeltin.",
+       "muted": true
+      },
+      "fields": {
+       "startPoint": {
+        "text": "Henüz gösterilmedi",
+        "button": "Haritadan göster",
+        "shown": false
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "run": true
+     },
+     "expect": {
+      "issues": {
+       "startPoint": "“Başlangıç noktası” boş bırakılamaz."
+      },
+      "status": {
+       "kind": "warn",
+       "icon": "warning",
+       "text": "Çalıştırmadan önce 1 alanı düzeltin.",
+       "actions": []
+      }
+     }
+    },
+    {
+     "do": {
+      "pick": {
+       "name": "startPoint",
+       "point": {
+        "x": 487045,
+        "y": 4420030
+       }
+      }
+     },
+     "expect": {
+      "values": {
+       "startPoint": {
+        "x": 487045,
+        "y": 4420030
+       }
+      },
+      "issues": {},
+      "preview": {
+       "text": "P00001, P00002, P00003 …",
+       "muted": false
+      },
+      "status": {
+       "kind": "idle",
+       "icon": null,
+       "text": "",
+       "actions": []
+      },
+      "fields": {
+       "startPoint": {
+        "text": "Y 487045.000  X 4420030.000",
+        "button": "Yeniden göster",
+        "shown": true
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "choose": {
+       "name": "output",
+       "value": "text"
+      }
+     },
+     "expect": {
+      "values": {
+       "output": "text"
+      },
+      "sections": {
+       "groups": [
+        {
+         "title": "Girdi",
+         "rows": [
+          "input"
+         ]
+        },
+        {
+         "title": "Ayarlar",
+         "rows": [
+          "direction",
+          "start",
+          "startPoint",
+          "prefix",
+          "length",
+          "pad",
+          "first",
+          "shared",
+          "output",
+          "textHeight"
+         ]
+        },
+        {
+         "title": "Çıktı",
+         "rows": [
+          "layer"
+         ]
+        }
+       ],
+       "advanced": {
+        "rows": [
+         "step",
+         "tolerance"
+        ],
+        "open": false
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "choose": {
+       "name": "shared",
+       "value": false
+      }
+     },
+     "expect": {
+      "values": {
+       "shared": false
+      },
+      "sections": {
+       "groups": [
+        {
+         "title": "Girdi",
+         "rows": [
+          "input"
+         ]
+        },
+        {
+         "title": "Ayarlar",
+         "rows": [
+          "direction",
+          "start",
+          "startPoint",
+          "prefix",
+          "length",
+          "pad",
+          "first",
+          "shared",
+          "output",
+          "textHeight"
+         ]
+        },
+        {
+         "title": "Çıktı",
+         "rows": [
+          "layer"
+         ]
+        }
+       ],
+       "advanced": {
+        "rows": [
+         "step"
+        ],
+        "open": false
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "toggleAdvanced": true
+     },
+     "expect": {
+      "sections": {
+       "groups": [
+        {
+         "title": "Girdi",
+         "rows": [
+          "input"
+         ]
+        },
+        {
+         "title": "Ayarlar",
+         "rows": [
+          "direction",
+          "start",
+          "startPoint",
+          "prefix",
+          "length",
+          "pad",
+          "first",
+          "shared",
+          "output",
+          "textHeight"
+         ]
+        },
+        {
+         "title": "Çıktı",
+         "rows": [
+          "layer"
+         ]
+        }
+       ],
+       "advanced": {
+        "rows": [
+         "step"
+        ],
+        "open": true
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "type": {
+       "name": "length",
+       "text": "99"
+      }
+     },
+     "expect": {
+      "values": {
+       "length": 99
+      },
+      "issues": {
+       "length": "“Toplam uzunluk” en çok 30 olmalı."
+      },
+      "preview": {
+       "text": "Önizleme için alanları düzeltin.",
+       "muted": true
+      },
+      "status": {
+       "kind": "warn",
+       "icon": "warning",
+       "text": "Çalıştırmadan önce 1 alanı düzeltin.",
+       "actions": []
+      }
+     }
+    },
+    {
+     "do": {
+      "run": true
+     },
+     "expect": {}
+    },
+    {
+     "do": {
+      "type": {
+       "name": "length",
+       "text": "8"
+      }
+     },
+     "expect": {
+      "values": {
+       "length": 8
+      },
+      "issues": {},
+      "preview": {
+       "text": "P0000001, P0000002, P0000003 …",
+       "muted": false
+      },
+      "status": {
+       "kind": "idle",
+       "icon": null,
+       "text": "",
+       "actions": []
+      }
+     }
+    },
+    {
+     "do": {
+      "run": true
+     },
+     "expect": {
+      "status": {
+       "kind": "ok",
+       "icon": "success",
+       "text": "2 nesnede 8 köşe numaralandı: P0000001 – P0000008.",
+       "actions": [
+        "select",
+        "undo"
+       ],
+       "pick": [
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18
+       ]
+      },
+      "fields": {
+       "layer": {
+        "text": "Köşe noktaları (mevcut)",
+        "name": "Köşe noktaları",
+        "items": [
+         {
+          "header": "Yeni katman"
+         },
+         {
+          "label": "Yeni: Köşe noktaları",
+          "value": {
+           "newName": "Köşe noktaları"
+          },
+          "checked": true,
+          "disabled": false,
+          "icon": "layerAdd"
+         },
+         {
+          "header": "Mevcut katmanlar"
+         },
+         {
+          "label": "Çizim",
+          "value": {
+           "layerId": "cizim"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Parsel",
+          "value": {
+           "layerId": "parsel"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Kilitli katman",
+          "value": {
+           "layerId": "kilitli"
+          },
+          "checked": false,
+          "disabled": true,
+          "hint": "kilitli"
+         },
+         {
+          "label": "Gizli katman",
+          "value": {
+           "layerId": "gizli"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Mevcut noktalar",
+          "value": {
+           "layerId": "mevcut"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Köşe noktaları",
+          "value": {
+           "layerId": "islem-kose-noktalari"
+          },
+          "checked": false,
+          "disabled": false
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "choose": {
+       "name": "output",
+       "value": "text"
+      }
+     },
+     "expect": {}
+    },
+    {
+     "do": {
+      "undo": true
+     },
+     "expect": {
+      "status": {
+       "kind": "idle",
+       "icon": null,
+       "text": "",
+       "actions": []
+      },
+      "fields": {
+       "layer": {
+        "text": "Köşe noktaları (yeni)",
+        "name": "Köşe noktaları",
+        "items": [
+         {
+          "header": "Yeni katman"
+         },
+         {
+          "label": "Yeni: Köşe noktaları",
+          "value": {
+           "newName": "Köşe noktaları"
+          },
+          "checked": true,
+          "disabled": false,
+          "icon": "layerAdd"
+         },
+         {
+          "header": "Mevcut katmanlar"
+         },
+         {
+          "label": "Çizim",
+          "value": {
+           "layerId": "cizim"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Parsel",
+          "value": {
+           "layerId": "parsel"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Kilitli katman",
+          "value": {
+           "layerId": "kilitli"
+          },
+          "checked": false,
+          "disabled": true,
+          "hint": "kilitli"
+         },
+         {
+          "label": "Gizli katman",
+          "value": {
+           "layerId": "gizli"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Mevcut noktalar",
+          "value": {
+           "layerId": "mevcut"
+          },
+          "checked": false,
+          "disabled": false
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "pick": {
+       "name": "startPoint",
+       "point": null
+      }
+     },
+     "expect": {}
+    }
+   ],
+   "opened": {
+    "values": {
+     "input": {
+      "scope": "selection"
+     },
+     "direction": "cw",
+     "start": "northwest",
+     "startPoint": null,
+     "prefix": "P",
+     "length": 6,
+     "pad": "0",
+     "first": 1,
+     "step": 1,
+     "shared": true,
+     "tolerance": 0.001,
+     "output": "points",
+     "textHeight": 2,
+     "layer": {
+      "newName": "Köşe noktaları"
+     }
+    },
+    "sections": {
+     "groups": [
+      {
+       "title": "Girdi",
+       "rows": [
+        "input"
+       ]
+      },
+      {
+       "title": "Ayarlar",
+       "rows": [
+        "direction",
+        "start",
+        "prefix",
+        "length",
+        "pad",
+        "first",
+        "shared",
+        "output"
+       ]
+      },
+      {
+       "title": "Çıktı",
+       "rows": [
+        "layer"
+       ]
+      }
+     ],
+     "advanced": {
+      "rows": [
+       "step",
+       "tolerance"
+      ],
+      "open": false
+     }
+    },
+    "issues": {},
+    "preview": {
+     "text": "P00001, P00002, P00003 …",
+     "muted": false
+    },
+    "status": {
+     "kind": "idle",
+     "icon": null,
+     "text": "",
+     "actions": []
+    },
+    "footer": {
+     "run": {
+      "label": "Çalıştır",
+      "disabled": false
+     },
+     "close": "Kapat",
+     "reset": {
+      "disabled": false
+     }
+    },
+    "targets": {
+     "options": [
+      {
+       "value": "client",
+       "label": "Bu tarayıcıda",
+       "note": "bu çalıştırmada",
+       "disabled": false,
+       "checked": true
+      },
+      {
+       "value": "worker",
+       "label": "Arka planda (worker)",
+       "note": "yakında",
+       "disabled": true,
+       "checked": false
+      }
+     ],
+     "hint": null,
+     "choice": "client"
+    },
+    "fields": {
+     "input": {
+      "scope": "selection",
+      "layer": null,
+      "count": {
+       "text": "2 kapalı alan; seçili nesneler",
+       "empty": false
+      },
+      "kinds": {
+       "note": "Uygun nesneler: kapalı alan, çoklu çizgi"
+      }
+     },
+     "layer": {
+      "text": "Köşe noktaları (yeni)",
+      "name": "Köşe noktaları",
+      "items": [
+       {
+        "header": "Yeni katman"
+       },
+       {
+        "label": "Yeni: Köşe noktaları",
+        "value": {
+         "newName": "Köşe noktaları"
+        },
+        "checked": true,
+        "disabled": false,
+        "icon": "layerAdd"
+       },
+       {
+        "header": "Mevcut katmanlar"
+       },
+       {
+        "label": "Çizim",
+        "value": {
+         "layerId": "cizim"
+        },
+        "checked": false,
+        "disabled": false
+       },
+       {
+        "label": "Parsel",
+        "value": {
+         "layerId": "parsel"
+        },
+        "checked": false,
+        "disabled": false
+       },
+       {
+        "label": "Kilitli katman",
+        "value": {
+         "layerId": "kilitli"
+        },
+        "checked": false,
+        "disabled": true,
+        "hint": "kilitli"
+       },
+       {
+        "label": "Gizli katman",
+        "value": {
+         "layerId": "gizli"
+        },
+        "checked": false,
+        "disabled": false
+       },
+       {
+        "label": "Mevcut noktalar",
+        "value": {
+         "layerId": "mevcut"
+        },
+        "checked": false,
+        "disabled": false
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "numbering-inputs",
+   "title": "Girdi: seçim boşken çalıştırma sorunu alanda gösterir; kapsamlar, tür çipleri, katman listesi, seçili kapsama yeniden basmak",
+   "open": {
+    "tool": "points.numberVertices"
+   },
+   "selection": [],
+   "available": [
+    "client"
+   ],
+   "steps": [
+    {
+     "do": {
+      "run": true
+     },
+     "expect": {
+      "issues": {
+       "input": "“Alanlar”: seçili nesneler arasında uygun nesne yok. Önce nesneleri seçin ya da kapsamı değiştirin."
+      },
+      "status": {
+       "kind": "warn",
+       "icon": "warning",
+       "text": "Çalıştırmadan önce 1 alanı düzeltin.",
+       "actions": []
+      }
+     }
+    },
+    {
+     "do": {
+      "toggleAdvanced": true
+     },
+     "expect": {
+      "sections": {
+       "groups": [
+        {
+         "title": "Girdi",
+         "rows": [
+          "input"
+         ]
+        },
+        {
+         "title": "Ayarlar",
+         "rows": [
+          "direction",
+          "start",
+          "prefix",
+          "length",
+          "pad",
+          "first",
+          "shared",
+          "output"
+         ]
+        },
+        {
+         "title": "Çıktı",
+         "rows": [
+          "layer"
+         ]
+        }
+       ],
+       "advanced": {
+        "rows": [
+         "step",
+         "tolerance"
+        ],
+        "open": true
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "scope": {
+       "name": "input",
+       "scope": "all"
+      }
+     },
+     "expect": {
+      "values": {
+       "input": {
+        "scope": "all"
+       }
+      },
+      "issues": {},
+      "status": {
+       "kind": "idle",
+       "icon": null,
+       "text": "",
+       "actions": []
+      },
+      "fields": {
+       "input": {
+        "scope": "all",
+        "layer": null,
+        "count": {
+         "text": "5 nesne (kapalı alan, çoklu çizgi); tümü (görünen katmanlar)",
+         "empty": false
+        },
+        "kinds": {
+         "chips": [
+          {
+           "kind": "polygon",
+           "label": "Kapalı alan",
+           "count": 4,
+           "pressed": true,
+           "title": "Bu türü dışarıda bırak"
+          },
+          {
+           "kind": "polyline",
+           "label": "Çoklu çizgi",
+           "count": 1,
+           "pressed": true,
+           "title": "Bu türü dışarıda bırak"
+          }
+         ]
+        }
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "kind": {
+       "name": "input",
+       "kind": "polyline"
+      }
+     },
+     "expect": {
+      "values": {
+       "input": {
+        "scope": "all",
+        "kinds": [
+         "polygon"
+        ]
+       }
+      },
+      "fields": {
+       "input": {
+        "scope": "all",
+        "layer": null,
+        "count": {
+         "text": "4 kapalı alan; tümü (görünen katmanlar)",
+         "empty": false
+        },
+        "kinds": {
+         "chips": [
+          {
+           "kind": "polygon",
+           "label": "Kapalı alan",
+           "count": 4,
+           "pressed": true,
+           "title": "Bu türü dışarıda bırak"
+          },
+          {
+           "kind": "polyline",
+           "label": "Çoklu çizgi",
+           "count": 1,
+           "pressed": false,
+           "title": "Bu türü de al"
+          }
+         ]
+        }
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "scope": {
+       "name": "input",
+       "scope": "layer"
+      }
+     },
+     "expect": {
+      "values": {
+       "input": {
+        "scope": "layer",
+        "layerId": "cizim",
+        "kinds": [
+         "polygon"
+        ]
+       }
+      },
+      "fields": {
+       "input": {
+        "scope": "layer",
+        "layer": {
+         "text": "Çizim",
+         "items": [
+          {
+           "id": "cizim",
+           "label": "Çizim",
+           "checked": true
+          },
+          {
+           "id": "parsel",
+           "label": "Parsel",
+           "checked": false
+          },
+          {
+           "id": "kilitli",
+           "label": "Kilitli katman",
+           "checked": false
+          },
+          {
+           "id": "gizli",
+           "label": "Gizli katman",
+           "checked": false
+          },
+          {
+           "id": "mevcut",
+           "label": "Mevcut noktalar",
+           "checked": false
+          }
+         ]
+        },
+        "count": {
+         "text": "“Çizim” katmanında uygun nesne yok",
+         "empty": true
+        },
+        "kinds": {
+         "chips": [
+          {
+           "kind": "polyline",
+           "label": "Çoklu çizgi",
+           "count": 1,
+           "pressed": false,
+           "title": "Bu türü de al"
+          }
+         ]
+        }
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "scopeLayer": {
+       "name": "input",
+       "layerId": "parsel"
+      }
+     },
+     "expect": {
+      "values": {
+       "input": {
+        "scope": "layer",
+        "layerId": "parsel",
+        "kinds": [
+         "polygon"
+        ]
+       }
+      },
+      "fields": {
+       "input": {
+        "scope": "layer",
+        "layer": {
+         "text": "Parsel",
+         "items": [
+          {
+           "id": "cizim",
+           "label": "Çizim",
+           "checked": false
+          },
+          {
+           "id": "parsel",
+           "label": "Parsel",
+           "checked": true
+          },
+          {
+           "id": "kilitli",
+           "label": "Kilitli katman",
+           "checked": false
+          },
+          {
+           "id": "gizli",
+           "label": "Gizli katman",
+           "checked": false
+          },
+          {
+           "id": "mevcut",
+           "label": "Mevcut noktalar",
+           "checked": false
+          }
+         ]
+        },
+        "count": {
+         "text": "3 kapalı alan; “Parsel” katmanında",
+         "empty": false
+        },
+        "kinds": {
+         "chips": [
+          {
+           "kind": "polygon",
+           "label": "Kapalı alan",
+           "count": 3,
+           "pressed": true,
+           "title": "Bu türü dışarıda bırak"
+          }
+         ]
+        }
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "kind": {
+       "name": "input",
+       "kind": "polygon"
+      }
+     },
+     "expect": {
+      "values": {
+       "input": {
+        "scope": "layer",
+        "layerId": "parsel",
+        "kinds": []
+       }
+      },
+      "issues": {
+       "input": "“Alanlar”: en az bir nesne türü seçin."
+      },
+      "preview": {
+       "text": "Önizleme için alanları düzeltin.",
+       "muted": true
+      },
+      "status": {
+       "kind": "warn",
+       "icon": "warning",
+       "text": "Çalıştırmadan önce 1 alanı düzeltin.",
+       "actions": []
+      },
+      "fields": {
+       "input": {
+        "scope": "layer",
+        "layer": {
+         "text": "Parsel",
+         "items": [
+          {
+           "id": "cizim",
+           "label": "Çizim",
+           "checked": false
+          },
+          {
+           "id": "parsel",
+           "label": "Parsel",
+           "checked": true
+          },
+          {
+           "id": "kilitli",
+           "label": "Kilitli katman",
+           "checked": false
+          },
+          {
+           "id": "gizli",
+           "label": "Gizli katman",
+           "checked": false
+          },
+          {
+           "id": "mevcut",
+           "label": "Mevcut noktalar",
+           "checked": false
+          }
+         ]
+        },
+        "count": {
+         "text": "“Parsel” katmanında uygun nesne yok",
+         "empty": true
+        },
+        "kinds": {
+         "chips": [
+          {
+           "kind": "polygon",
+           "label": "Kapalı alan",
+           "count": 3,
+           "pressed": false,
+           "title": "Bu türü de al"
+          }
+         ]
+        }
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "kind": {
+       "name": "input",
+       "kind": "polygon"
+      }
+     },
+     "expect": {
+      "values": {
+       "input": {
+        "scope": "layer",
+        "layerId": "parsel"
+       }
+      },
+      "issues": {},
+      "preview": {
+       "text": "P00001, P00002, P00003 …",
+       "muted": false
+      },
+      "status": {
+       "kind": "idle",
+       "icon": null,
+       "text": "",
+       "actions": []
+      },
+      "fields": {
+       "input": {
+        "scope": "layer",
+        "layer": {
+         "text": "Parsel",
+         "items": [
+          {
+           "id": "cizim",
+           "label": "Çizim",
+           "checked": false
+          },
+          {
+           "id": "parsel",
+           "label": "Parsel",
+           "checked": true
+          },
+          {
+           "id": "kilitli",
+           "label": "Kilitli katman",
+           "checked": false
+          },
+          {
+           "id": "gizli",
+           "label": "Gizli katman",
+           "checked": false
+          },
+          {
+           "id": "mevcut",
+           "label": "Mevcut noktalar",
+           "checked": false
+          }
+         ]
+        },
+        "count": {
+         "text": "3 kapalı alan; “Parsel” katmanında",
+         "empty": false
+        },
+        "kinds": {
+         "note": "Uygun nesneler: kapalı alan, çoklu çizgi"
+        }
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "scope": {
+       "name": "input",
+       "scope": "layer"
+      }
+     },
+     "expect": {}
+    },
+    {
+     "do": {
+      "run": true
+     },
+     "expect": {
+      "status": {
+       "kind": "ok",
+       "icon": "success",
+       "text": "3 nesnede 8 köşe numaralandı: P00001 – P00008; 4 ortak köşe komşularıyla tek numara aldı.",
+       "actions": [
+        "select",
+        "undo"
+       ],
+       "pick": [
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18
+       ]
+      },
+      "fields": {
+       "input": {
+        "scope": "layer",
+        "layer": {
+         "text": "Parsel",
+         "items": [
+          {
+           "id": "cizim",
+           "label": "Çizim",
+           "checked": false
+          },
+          {
+           "id": "parsel",
+           "label": "Parsel",
+           "checked": true
+          },
+          {
+           "id": "kilitli",
+           "label": "Kilitli katman",
+           "checked": false
+          },
+          {
+           "id": "gizli",
+           "label": "Gizli katman",
+           "checked": false
+          },
+          {
+           "id": "mevcut",
+           "label": "Mevcut noktalar",
+           "checked": false
+          },
+          {
+           "id": "islem-kose-noktalari",
+           "label": "Köşe noktaları",
+           "checked": false
+          }
+         ]
+        },
+        "count": {
+         "text": "3 kapalı alan; “Parsel” katmanında",
+         "empty": false
+        },
+        "kinds": {
+         "note": "Uygun nesneler: kapalı alan, çoklu çizgi"
+        }
+       },
+       "layer": {
+        "text": "Köşe noktaları (mevcut)",
+        "name": "Köşe noktaları",
+        "items": [
+         {
+          "header": "Yeni katman"
+         },
+         {
+          "label": "Yeni: Köşe noktaları",
+          "value": {
+           "newName": "Köşe noktaları"
+          },
+          "checked": true,
+          "disabled": false,
+          "icon": "layerAdd"
+         },
+         {
+          "header": "Mevcut katmanlar"
+         },
+         {
+          "label": "Çizim",
+          "value": {
+           "layerId": "cizim"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Parsel",
+          "value": {
+           "layerId": "parsel"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Kilitli katman",
+          "value": {
+           "layerId": "kilitli"
+          },
+          "checked": false,
+          "disabled": true,
+          "hint": "kilitli"
+         },
+         {
+          "label": "Gizli katman",
+          "value": {
+           "layerId": "gizli"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Mevcut noktalar",
+          "value": {
+           "layerId": "mevcut"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Köşe noktaları",
+          "value": {
+           "layerId": "islem-kose-noktalari"
+          },
+          "checked": false,
+          "disabled": false
+         }
+        ]
+       }
+      }
+     }
+    }
+   ],
+   "opened": {
+    "values": {
+     "input": {
+      "scope": "selection"
+     },
+     "direction": "cw",
+     "start": "northwest",
+     "startPoint": null,
+     "prefix": "P",
+     "length": 6,
+     "pad": "0",
+     "first": 1,
+     "step": 1,
+     "shared": true,
+     "tolerance": 0.001,
+     "output": "points",
+     "textHeight": 2,
+     "layer": {
+      "newName": "Köşe noktaları"
+     }
+    },
+    "sections": {
+     "groups": [
+      {
+       "title": "Girdi",
+       "rows": [
+        "input"
+       ]
+      },
+      {
+       "title": "Ayarlar",
+       "rows": [
+        "direction",
+        "start",
+        "prefix",
+        "length",
+        "pad",
+        "first",
+        "shared",
+        "output"
+       ]
+      },
+      {
+       "title": "Çıktı",
+       "rows": [
+        "layer"
+       ]
+      }
+     ],
+     "advanced": {
+      "rows": [
+       "step",
+       "tolerance"
+      ],
+      "open": false
+     }
+    },
+    "issues": {},
+    "preview": {
+     "text": "P00001, P00002, P00003 …",
+     "muted": false
+    },
+    "status": {
+     "kind": "idle",
+     "icon": null,
+     "text": "",
+     "actions": []
+    },
+    "footer": {
+     "run": {
+      "label": "Çalıştır",
+      "disabled": false
+     },
+     "close": "Kapat",
+     "reset": {
+      "disabled": false
+     }
+    },
+    "targets": {
+     "options": [
+      {
+       "value": "client",
+       "label": "Bu tarayıcıda",
+       "note": "bu çalıştırmada",
+       "disabled": false,
+       "checked": true
+      },
+      {
+       "value": "worker",
+       "label": "Arka planda (worker)",
+       "note": "yakında",
+       "disabled": true,
+       "checked": false
+      }
+     ],
+     "hint": null,
+     "choice": "client"
+    },
+    "fields": {
+     "input": {
+      "scope": "selection",
+      "layer": null,
+      "count": {
+       "text": "Seçili nesneler arasında uygun nesne yok",
+       "empty": true
+      },
+      "kinds": {
+       "note": "Uygun nesneler: kapalı alan, çoklu çizgi"
+      }
+     },
+     "layer": {
+      "text": "Köşe noktaları (yeni)",
+      "name": "Köşe noktaları",
+      "items": [
+       {
+        "header": "Yeni katman"
+       },
+       {
+        "label": "Yeni: Köşe noktaları",
+        "value": {
+         "newName": "Köşe noktaları"
+        },
+        "checked": true,
+        "disabled": false,
+        "icon": "layerAdd"
+       },
+       {
+        "header": "Mevcut katmanlar"
+       },
+       {
+        "label": "Çizim",
+        "value": {
+         "layerId": "cizim"
+        },
+        "checked": false,
+        "disabled": false
+       },
+       {
+        "label": "Parsel",
+        "value": {
+         "layerId": "parsel"
+        },
+        "checked": false,
+        "disabled": false
+       },
+       {
+        "label": "Kilitli katman",
+        "value": {
+         "layerId": "kilitli"
+        },
+        "checked": false,
+        "disabled": true,
+        "hint": "kilitli"
+       },
+       {
+        "label": "Gizli katman",
+        "value": {
+         "layerId": "gizli"
+        },
+        "checked": false,
+        "disabled": false
+       },
+       {
+        "label": "Mevcut noktalar",
+        "value": {
+         "layerId": "mevcut"
+        },
+        "checked": false,
+        "disabled": false
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "layer-field",
+   "title": "Hedef katman: mevcut katman seçmek, yeniye dönmek, yazılan adın mevcut bir katmanın adı olup olmadığı (Türkçe katlamalı), boş ad; mevcut adla yazılan katmana çalıştırma",
+   "open": {
+    "tool": "points.numberVertices"
+   },
+   "selection": [
+    1
+   ],
+   "available": [
+    "client"
+   ],
+   "steps": [
+    {
+     "do": {
+      "choose": {
+       "name": "layer",
+       "value": {
+        "layerId": "mevcut"
+       }
+      }
+     },
+     "expect": {
+      "values": {
+       "layer": {
+        "layerId": "mevcut"
+       }
+      },
+      "fields": {
+       "layer": {
+        "text": "Mevcut noktalar",
+        "name": null,
+        "items": [
+         {
+          "header": "Yeni katman"
+         },
+         {
+          "label": "Yeni: Köşe noktaları",
+          "value": {
+           "newName": "Köşe noktaları"
+          },
+          "checked": false,
+          "disabled": false,
+          "icon": "layerAdd"
+         },
+         {
+          "header": "Mevcut katmanlar"
+         },
+         {
+          "label": "Çizim",
+          "value": {
+           "layerId": "cizim"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Parsel",
+          "value": {
+           "layerId": "parsel"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Kilitli katman",
+          "value": {
+           "layerId": "kilitli"
+          },
+          "checked": false,
+          "disabled": true,
+          "hint": "kilitli"
+         },
+         {
+          "label": "Gizli katman",
+          "value": {
+           "layerId": "gizli"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Mevcut noktalar",
+          "value": {
+           "layerId": "mevcut"
+          },
+          "checked": true,
+          "disabled": false
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "choose": {
+       "name": "layer",
+       "value": {
+        "newName": "Köşe noktaları"
+       }
+      }
+     },
+     "expect": {
+      "values": {
+       "layer": {
+        "newName": "Köşe noktaları"
+       }
+      },
+      "fields": {
+       "layer": {
+        "text": "Köşe noktaları (yeni)",
+        "name": "Köşe noktaları",
+        "items": [
+         {
+          "header": "Yeni katman"
+         },
+         {
+          "label": "Yeni: Köşe noktaları",
+          "value": {
+           "newName": "Köşe noktaları"
+          },
+          "checked": true,
+          "disabled": false,
+          "icon": "layerAdd"
+         },
+         {
+          "header": "Mevcut katmanlar"
+         },
+         {
+          "label": "Çizim",
+          "value": {
+           "layerId": "cizim"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Parsel",
+          "value": {
+           "layerId": "parsel"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Kilitli katman",
+          "value": {
+           "layerId": "kilitli"
+          },
+          "checked": false,
+          "disabled": true,
+          "hint": "kilitli"
+         },
+         {
+          "label": "Gizli katman",
+          "value": {
+           "layerId": "gizli"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Mevcut noktalar",
+          "value": {
+           "layerId": "mevcut"
+          },
+          "checked": false,
+          "disabled": false
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "type": {
+       "name": "layer",
+       "text": "parsel "
+      }
+     },
+     "expect": {
+      "values": {
+       "layer": {
+        "newName": "parsel "
+       }
+      },
+      "fields": {
+       "layer": {
+        "text": "Parsel (mevcut)",
+        "name": "parsel ",
+        "items": [
+         {
+          "header": "Yeni katman"
+         },
+         {
+          "label": "Yeni: parsel",
+          "value": {
+           "newName": "parsel "
+          },
+          "checked": true,
+          "disabled": false,
+          "icon": "layerAdd"
+         },
+         {
+          "header": "Mevcut katmanlar"
+         },
+         {
+          "label": "Çizim",
+          "value": {
+           "layerId": "cizim"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Parsel",
+          "value": {
+           "layerId": "parsel"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Kilitli katman",
+          "value": {
+           "layerId": "kilitli"
+          },
+          "checked": false,
+          "disabled": true,
+          "hint": "kilitli"
+         },
+         {
+          "label": "Gizli katman",
+          "value": {
+           "layerId": "gizli"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Mevcut noktalar",
+          "value": {
+           "layerId": "mevcut"
+          },
+          "checked": false,
+          "disabled": false
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "type": {
+       "name": "layer",
+       "text": "cizim"
+      }
+     },
+     "expect": {
+      "values": {
+       "layer": {
+        "newName": "cizim"
+       }
+      },
+      "fields": {
+       "layer": {
+        "text": "Çizim (mevcut)",
+        "name": "cizim",
+        "items": [
+         {
+          "header": "Yeni katman"
+         },
+         {
+          "label": "Yeni: cizim",
+          "value": {
+           "newName": "cizim"
+          },
+          "checked": true,
+          "disabled": false,
+          "icon": "layerAdd"
+         },
+         {
+          "header": "Mevcut katmanlar"
+         },
+         {
+          "label": "Çizim",
+          "value": {
+           "layerId": "cizim"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Parsel",
+          "value": {
+           "layerId": "parsel"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Kilitli katman",
+          "value": {
+           "layerId": "kilitli"
+          },
+          "checked": false,
+          "disabled": true,
+          "hint": "kilitli"
+         },
+         {
+          "label": "Gizli katman",
+          "value": {
+           "layerId": "gizli"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Mevcut noktalar",
+          "value": {
+           "layerId": "mevcut"
+          },
+          "checked": false,
+          "disabled": false
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "type": {
+       "name": "layer",
+       "text": "Kose noktalari"
+      }
+     },
+     "expect": {
+      "values": {
+       "layer": {
+        "newName": "Kose noktalari"
+       }
+      },
+      "fields": {
+       "layer": {
+        "text": "Kose noktalari (yeni)",
+        "name": "Kose noktalari",
+        "items": [
+         {
+          "header": "Yeni katman"
+         },
+         {
+          "label": "Yeni: Kose noktalari",
+          "value": {
+           "newName": "Kose noktalari"
+          },
+          "checked": true,
+          "disabled": false,
+          "icon": "layerAdd"
+         },
+         {
+          "header": "Mevcut katmanlar"
+         },
+         {
+          "label": "Çizim",
+          "value": {
+           "layerId": "cizim"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Parsel",
+          "value": {
+           "layerId": "parsel"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Kilitli katman",
+          "value": {
+           "layerId": "kilitli"
+          },
+          "checked": false,
+          "disabled": true,
+          "hint": "kilitli"
+         },
+         {
+          "label": "Gizli katman",
+          "value": {
+           "layerId": "gizli"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Mevcut noktalar",
+          "value": {
+           "layerId": "mevcut"
+          },
+          "checked": false,
+          "disabled": false
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "type": {
+       "name": "layer",
+       "text": "  "
+      }
+     },
+     "expect": {
+      "values": {
+       "layer": {
+        "newName": "  "
+       }
+      },
+      "issues": {
+       "layer": "“Hedef katman”: yeni katmanın adını yazın."
+      },
+      "preview": {
+       "text": "Önizleme için alanları düzeltin.",
+       "muted": true
+      },
+      "fields": {
+       "layer": {
+        "text": "(yeni)",
+        "name": "  ",
+        "items": [
+         {
+          "header": "Yeni katman"
+         },
+         {
+          "label": "Yeni: ",
+          "value": {
+           "newName": "  "
+          },
+          "checked": true,
+          "disabled": false,
+          "icon": "layerAdd"
+         },
+         {
+          "header": "Mevcut katmanlar"
+         },
+         {
+          "label": "Çizim",
+          "value": {
+           "layerId": "cizim"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Parsel",
+          "value": {
+           "layerId": "parsel"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Kilitli katman",
+          "value": {
+           "layerId": "kilitli"
+          },
+          "checked": false,
+          "disabled": true,
+          "hint": "kilitli"
+         },
+         {
+          "label": "Gizli katman",
+          "value": {
+           "layerId": "gizli"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Mevcut noktalar",
+          "value": {
+           "layerId": "mevcut"
+          },
+          "checked": false,
+          "disabled": false
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "type": {
+       "name": "layer",
+       "text": "MEVCUT NOKTALAR"
+      }
+     },
+     "expect": {
+      "values": {
+       "layer": {
+        "newName": "MEVCUT NOKTALAR"
+       }
+      },
+      "issues": {},
+      "preview": {
+       "text": "P00001, P00002, P00003 …",
+       "muted": false
+      },
+      "fields": {
+       "layer": {
+        "text": "Mevcut noktalar (mevcut)",
+        "name": "MEVCUT NOKTALAR",
+        "items": [
+         {
+          "header": "Yeni katman"
+         },
+         {
+          "label": "Yeni: MEVCUT NOKTALAR",
+          "value": {
+           "newName": "MEVCUT NOKTALAR"
+          },
+          "checked": true,
+          "disabled": false,
+          "icon": "layerAdd"
+         },
+         {
+          "header": "Mevcut katmanlar"
+         },
+         {
+          "label": "Çizim",
+          "value": {
+           "layerId": "cizim"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Parsel",
+          "value": {
+           "layerId": "parsel"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Kilitli katman",
+          "value": {
+           "layerId": "kilitli"
+          },
+          "checked": false,
+          "disabled": true,
+          "hint": "kilitli"
+         },
+         {
+          "label": "Gizli katman",
+          "value": {
+           "layerId": "gizli"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Mevcut noktalar",
+          "value": {
+           "layerId": "mevcut"
+          },
+          "checked": false,
+          "disabled": false
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "run": true
+     },
+     "expect": {
+      "status": {
+       "kind": "ok",
+       "icon": "success",
+       "text": "1 nesnede 1 köşe numaralandı: P00004 – P00004; 3 köşe mevcut numarasını korudu.",
+       "actions": [
+        "select",
+        "undo"
+       ],
+       "pick": [
+        11
+       ]
+      }
+     }
+    }
+   ],
+   "opened": {
+    "values": {
+     "input": {
+      "scope": "selection"
+     },
+     "direction": "cw",
+     "start": "northwest",
+     "startPoint": null,
+     "prefix": "P",
+     "length": 6,
+     "pad": "0",
+     "first": 1,
+     "step": 1,
+     "shared": true,
+     "tolerance": 0.001,
+     "output": "points",
+     "textHeight": 2,
+     "layer": {
+      "newName": "Köşe noktaları"
+     }
+    },
+    "sections": {
+     "groups": [
+      {
+       "title": "Girdi",
+       "rows": [
+        "input"
+       ]
+      },
+      {
+       "title": "Ayarlar",
+       "rows": [
+        "direction",
+        "start",
+        "prefix",
+        "length",
+        "pad",
+        "first",
+        "shared",
+        "output"
+       ]
+      },
+      {
+       "title": "Çıktı",
+       "rows": [
+        "layer"
+       ]
+      }
+     ],
+     "advanced": {
+      "rows": [
+       "step",
+       "tolerance"
+      ],
+      "open": false
+     }
+    },
+    "issues": {},
+    "preview": {
+     "text": "P00001, P00002, P00003 …",
+     "muted": false
+    },
+    "status": {
+     "kind": "idle",
+     "icon": null,
+     "text": "",
+     "actions": []
+    },
+    "footer": {
+     "run": {
+      "label": "Çalıştır",
+      "disabled": false
+     },
+     "close": "Kapat",
+     "reset": {
+      "disabled": false
+     }
+    },
+    "targets": {
+     "options": [
+      {
+       "value": "client",
+       "label": "Bu tarayıcıda",
+       "note": "bu çalıştırmada",
+       "disabled": false,
+       "checked": true
+      },
+      {
+       "value": "worker",
+       "label": "Arka planda (worker)",
+       "note": "yakında",
+       "disabled": true,
+       "checked": false
+      }
+     ],
+     "hint": null,
+     "choice": "client"
+    },
+    "fields": {
+     "input": {
+      "scope": "selection",
+      "layer": null,
+      "count": {
+       "text": "1 kapalı alan; seçili nesneler",
+       "empty": false
+      },
+      "kinds": {
+       "note": "Uygun nesneler: kapalı alan, çoklu çizgi"
+      }
+     },
+     "layer": {
+      "text": "Köşe noktaları (yeni)",
+      "name": "Köşe noktaları",
+      "items": [
+       {
+        "header": "Yeni katman"
+       },
+       {
+        "label": "Yeni: Köşe noktaları",
+        "value": {
+         "newName": "Köşe noktaları"
+        },
+        "checked": true,
+        "disabled": false,
+        "icon": "layerAdd"
+       },
+       {
+        "header": "Mevcut katmanlar"
+       },
+       {
+        "label": "Çizim",
+        "value": {
+         "layerId": "cizim"
+        },
+        "checked": false,
+        "disabled": false
+       },
+       {
+        "label": "Parsel",
+        "value": {
+         "layerId": "parsel"
+        },
+        "checked": false,
+        "disabled": false
+       },
+       {
+        "label": "Kilitli katman",
+        "value": {
+         "layerId": "kilitli"
+        },
+        "checked": false,
+        "disabled": true,
+        "hint": "kilitli"
+       },
+       {
+        "label": "Gizli katman",
+        "value": {
+         "layerId": "gizli"
+        },
+        "checked": false,
+        "disabled": false
+       },
+       {
+        "label": "Mevcut noktalar",
+        "value": {
+         "layerId": "mevcut"
+        },
+        "checked": false,
+        "disabled": false
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "layer-locked",
+   "title": "Geçmişten açılış: kilitli hedef katman çalıştırınca söylenir; başka katman seçilince düzelir; verilen değerlerde gelişmiş bir değer varsayılandan farklı olduğu için Gelişmiş açık başlar; saklanan yer seçimi",
+   "open": {
+    "tool": "points.numberVertices"
+   },
+   "selection": [
+    1
+   ],
+   "available": [
+    "client",
+    "worker"
+   ],
+   "given": {
+    "input": {
+     "scope": "selection"
+    },
+    "prefix": "K",
+    "step": 2,
+    "start": "first",
+    "layer": {
+     "layerId": "kilitli"
+    }
+   },
+   "choice": "worker",
+   "steps": [
+    {
+     "do": {
+      "run": true
+     },
+     "expect": {
+      "issues": {
+       "layer": "“Hedef katman”: katman kilitli. Kilidi Katmanlar panelinden açın ya da yeni katman seçin."
+      },
+      "status": {
+       "kind": "warn",
+       "icon": "warning",
+       "text": "Çalıştırmadan önce 1 alanı düzeltin.",
+       "actions": []
+      }
+     }
+    },
+    {
+     "do": {
+      "choose": {
+       "name": "layer",
+       "value": {
+        "layerId": "mevcut"
+       }
+      }
+     },
+     "expect": {
+      "values": {
+       "layer": {
+        "layerId": "mevcut"
+       }
+      },
+      "issues": {},
+      "preview": {
+       "text": "K00001, K00003, K00005 …",
+       "muted": false
+      },
+      "status": {
+       "kind": "idle",
+       "icon": null,
+       "text": "",
+       "actions": []
+      },
+      "fields": {
+       "layer": {
+        "text": "Mevcut noktalar",
+        "name": null,
+        "items": [
+         {
+          "header": "Yeni katman"
+         },
+         {
+          "label": "Yeni: Köşe noktaları",
+          "value": {
+           "newName": "Köşe noktaları"
+          },
+          "checked": false,
+          "disabled": false,
+          "icon": "layerAdd"
+         },
+         {
+          "header": "Mevcut katmanlar"
+         },
+         {
+          "label": "Çizim",
+          "value": {
+           "layerId": "cizim"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Parsel",
+          "value": {
+           "layerId": "parsel"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Kilitli katman",
+          "value": {
+           "layerId": "kilitli"
+          },
+          "checked": false,
+          "disabled": true,
+          "hint": "kilitli"
+         },
+         {
+          "label": "Gizli katman",
+          "value": {
+           "layerId": "gizli"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Mevcut noktalar",
+          "value": {
+           "layerId": "mevcut"
+          },
+          "checked": true,
+          "disabled": false
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "target": "auto"
+     },
+     "expect": {
+      "targets": {
+       "options": [
+        {
+         "value": "auto",
+         "label": "Otomatik",
+         "note": "şimdi: bu tarayıcıda",
+         "disabled": false,
+         "checked": true
+        },
+        {
+         "value": "client",
+         "label": "Bu tarayıcıda",
+         "note": null,
+         "disabled": false,
+         "checked": false
+        },
+        {
+         "value": "worker",
+         "label": "Arka planda (worker)",
+         "note": null,
+         "disabled": false,
+         "checked": false
+        }
+       ],
+       "hint": "2.000 ya da daha çok nesneli işler arka planda çalışır; sayfa donmaz.",
+       "choice": "auto"
+      }
+     }
+    },
+    {
+     "do": {
+      "toggleAdvanced": true
+     },
+     "expect": {
+      "sections": {
+       "groups": [
+        {
+         "title": "Girdi",
+         "rows": [
+          "input"
+         ]
+        },
+        {
+         "title": "Ayarlar",
+         "rows": [
+          "direction",
+          "start",
+          "prefix",
+          "length",
+          "pad",
+          "first",
+          "shared",
+          "output"
+         ]
+        },
+        {
+         "title": "Çıktı",
+         "rows": [
+          "layer"
+         ]
+        }
+       ],
+       "advanced": {
+        "rows": [
+         "step",
+         "tolerance"
+        ],
+        "open": false
+       }
+      }
+     }
+    }
+   ],
+   "opened": {
+    "values": {
+     "input": {
+      "scope": "selection"
+     },
+     "direction": "cw",
+     "start": "first",
+     "startPoint": null,
+     "prefix": "K",
+     "length": 6,
+     "pad": "0",
+     "first": 1,
+     "step": 2,
+     "shared": true,
+     "tolerance": 0.001,
+     "output": "points",
+     "textHeight": 2,
+     "layer": {
+      "layerId": "kilitli"
+     }
+    },
+    "sections": {
+     "groups": [
+      {
+       "title": "Girdi",
+       "rows": [
+        "input"
+       ]
+      },
+      {
+       "title": "Ayarlar",
+       "rows": [
+        "direction",
+        "start",
+        "prefix",
+        "length",
+        "pad",
+        "first",
+        "shared",
+        "output"
+       ]
+      },
+      {
+       "title": "Çıktı",
+       "rows": [
+        "layer"
+       ]
+      }
+     ],
+     "advanced": {
+      "rows": [
+       "step",
+       "tolerance"
+      ],
+      "open": true
+     }
+    },
+    "issues": {},
+    "preview": {
+     "text": "Önizleme için alanları düzeltin.",
+     "muted": true
+    },
+    "status": {
+     "kind": "idle",
+     "icon": null,
+     "text": "",
+     "actions": []
+    },
+    "footer": {
+     "run": {
+      "label": "Çalıştır",
+      "disabled": false
+     },
+     "close": "Kapat",
+     "reset": {
+      "disabled": false
+     }
+    },
+    "targets": {
+     "options": [
+      {
+       "value": "auto",
+       "label": "Otomatik",
+       "note": "şimdi: bu tarayıcıda",
+       "disabled": false,
+       "checked": false
+      },
+      {
+       "value": "client",
+       "label": "Bu tarayıcıda",
+       "note": null,
+       "disabled": false,
+       "checked": false
+      },
+      {
+       "value": "worker",
+       "label": "Arka planda (worker)",
+       "note": null,
+       "disabled": false,
+       "checked": true
+      }
+     ],
+     "hint": null,
+     "choice": "worker"
+    },
+    "fields": {
+     "input": {
+      "scope": "selection",
+      "layer": null,
+      "count": {
+       "text": "1 kapalı alan; seçili nesneler",
+       "empty": false
+      },
+      "kinds": {
+       "note": "Uygun nesneler: kapalı alan, çoklu çizgi"
+      }
+     },
+     "layer": {
+      "text": "Kilitli katman",
+      "name": null,
+      "items": [
+       {
+        "header": "Yeni katman"
+       },
+       {
+        "label": "Yeni: Köşe noktaları",
+        "value": {
+         "newName": "Köşe noktaları"
+        },
+        "checked": false,
+        "disabled": false,
+        "icon": "layerAdd"
+       },
+       {
+        "header": "Mevcut katmanlar"
+       },
+       {
+        "label": "Çizim",
+        "value": {
+         "layerId": "cizim"
+        },
+        "checked": false,
+        "disabled": false
+       },
+       {
+        "label": "Parsel",
+        "value": {
+         "layerId": "parsel"
+        },
+        "checked": false,
+        "disabled": false
+       },
+       {
+        "label": "Kilitli katman",
+        "value": {
+         "layerId": "kilitli"
+        },
+        "checked": true,
+        "disabled": true,
+        "hint": "kilitli"
+       },
+       {
+        "label": "Gizli katman",
+        "value": {
+         "layerId": "gizli"
+        },
+        "checked": false,
+        "disabled": false
+       },
+       {
+        "label": "Mevcut noktalar",
+        "value": {
+         "layerId": "mevcut"
+        },
+        "checked": false,
+        "disabled": false
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "missing-layers",
+   "title": "Artık olmayan katmanlar: kapsamın ve hedefin katmanı “—”, girdi boş; çalıştırınca ikisi de söylenir",
+   "open": {
+    "tool": "points.numberVertices"
+   },
+   "selection": [],
+   "available": [
+    "client"
+   ],
+   "given": {
+    "input": {
+     "scope": "layer",
+     "layerId": "yok"
+    },
+    "layer": {
+     "layerId": "yok"
+    }
+   },
+   "steps": [
+    {
+     "do": {
+      "run": true
+     },
+     "expect": {
+      "issues": {
+       "input": "“Alanlar”: seçilen katman artık yok.",
+       "layer": "“Hedef katman”: seçilen katman artık yok."
+      },
+      "status": {
+       "kind": "warn",
+       "icon": "warning",
+       "text": "Çalıştırmadan önce 2 alanı düzeltin.",
+       "actions": []
+      }
+     }
+    },
+    {
+     "do": {
+      "scopeLayer": {
+       "name": "input",
+       "layerId": "kilitli"
+      }
+     },
+     "expect": {
+      "values": {
+       "input": {
+        "scope": "layer",
+        "layerId": "kilitli"
+       }
+      },
+      "issues": {
+       "layer": "“Hedef katman”: seçilen katman artık yok."
+      },
+      "status": {
+       "kind": "warn",
+       "icon": "warning",
+       "text": "Çalıştırmadan önce 1 alanı düzeltin.",
+       "actions": []
+      },
+      "fields": {
+       "input": {
+        "scope": "layer",
+        "layer": {
+         "text": "Kilitli katman",
+         "items": [
+          {
+           "id": "cizim",
+           "label": "Çizim",
+           "checked": false
+          },
+          {
+           "id": "parsel",
+           "label": "Parsel",
+           "checked": false
+          },
+          {
+           "id": "kilitli",
+           "label": "Kilitli katman",
+           "checked": true
+          },
+          {
+           "id": "gizli",
+           "label": "Gizli katman",
+           "checked": false
+          },
+          {
+           "id": "mevcut",
+           "label": "Mevcut noktalar",
+           "checked": false
+          }
+         ]
+        },
+        "count": {
+         "text": "1 kapalı alan; “Kilitli katman” katmanında",
+         "empty": false
+        },
+        "kinds": {
+         "note": "Uygun nesneler: kapalı alan, çoklu çizgi"
+        }
+       }
+      }
+     }
+    }
+   ],
+   "opened": {
+    "values": {
+     "input": {
+      "scope": "layer",
+      "layerId": "yok"
+     },
+     "direction": "cw",
+     "start": "northwest",
+     "startPoint": null,
+     "prefix": "P",
+     "length": 6,
+     "pad": "0",
+     "first": 1,
+     "step": 1,
+     "shared": true,
+     "tolerance": 0.001,
+     "output": "points",
+     "textHeight": 2,
+     "layer": {
+      "layerId": "yok"
+     }
+    },
+    "sections": {
+     "groups": [
+      {
+       "title": "Girdi",
+       "rows": [
+        "input"
+       ]
+      },
+      {
+       "title": "Ayarlar",
+       "rows": [
+        "direction",
+        "start",
+        "prefix",
+        "length",
+        "pad",
+        "first",
+        "shared",
+        "output"
+       ]
+      },
+      {
+       "title": "Çıktı",
+       "rows": [
+        "layer"
+       ]
+      }
+     ],
+     "advanced": {
+      "rows": [
+       "step",
+       "tolerance"
+      ],
+      "open": false
+     }
+    },
+    "issues": {},
+    "preview": {
+     "text": "Önizleme için alanları düzeltin.",
+     "muted": true
+    },
+    "status": {
+     "kind": "idle",
+     "icon": null,
+     "text": "",
+     "actions": []
+    },
+    "footer": {
+     "run": {
+      "label": "Çalıştır",
+      "disabled": false
+     },
+     "close": "Kapat",
+     "reset": {
+      "disabled": false
+     }
+    },
+    "targets": {
+     "options": [
+      {
+       "value": "client",
+       "label": "Bu tarayıcıda",
+       "note": "bu çalıştırmada",
+       "disabled": false,
+       "checked": true
+      },
+      {
+       "value": "worker",
+       "label": "Arka planda (worker)",
+       "note": "yakında",
+       "disabled": true,
+       "checked": false
+      }
+     ],
+     "hint": null,
+     "choice": "client"
+    },
+    "fields": {
+     "input": {
+      "scope": "layer",
+      "layer": {
+       "text": "—",
+       "items": [
+        {
+         "id": "cizim",
+         "label": "Çizim",
+         "checked": false
+        },
+        {
+         "id": "parsel",
+         "label": "Parsel",
+         "checked": false
+        },
+        {
+         "id": "kilitli",
+         "label": "Kilitli katman",
+         "checked": false
+        },
+        {
+         "id": "gizli",
+         "label": "Gizli katman",
+         "checked": false
+        },
+        {
+         "id": "mevcut",
+         "label": "Mevcut noktalar",
+         "checked": false
+        }
+       ]
+      },
+      "count": {
+       "text": "“?” katmanında uygun nesne yok",
+       "empty": true
+      },
+      "kinds": {
+       "note": "Uygun nesneler: kapalı alan, çoklu çizgi"
+      }
+     },
+     "layer": {
+      "text": "—",
+      "name": null,
+      "items": [
+       {
+        "header": "Yeni katman"
+       },
+       {
+        "label": "Yeni: Köşe noktaları",
+        "value": {
+         "newName": "Köşe noktaları"
+        },
+        "checked": false,
+        "disabled": false,
+        "icon": "layerAdd"
+       },
+       {
+        "header": "Mevcut katmanlar"
+       },
+       {
+        "label": "Çizim",
+        "value": {
+         "layerId": "cizim"
+        },
+        "checked": false,
+        "disabled": false
+       },
+       {
+        "label": "Parsel",
+        "value": {
+         "layerId": "parsel"
+        },
+        "checked": false,
+        "disabled": false
+       },
+       {
+        "label": "Kilitli katman",
+        "value": {
+         "layerId": "kilitli"
+        },
+        "checked": false,
+        "disabled": true,
+        "hint": "kilitli"
+       },
+       {
+        "label": "Gizli katman",
+        "value": {
+         "layerId": "gizli"
+        },
+        "checked": false,
+        "disabled": false
+       },
+       {
+        "label": "Mevcut noktalar",
+        "value": {
+         "layerId": "mevcut"
+        },
+        "checked": false,
+        "disabled": false
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "last-values",
+   "title": "Son çalıştırmanın değerleri: uymayanlar varsayılana döner, uyanlar kalır; gelişmişteki değişmiş değer bölümü açar; burada olmayan yer seçimi; Varsayılanlar",
+   "open": {
+    "tool": "points.numberVertices"
+   },
+   "selection": [
+    1
+   ],
+   "available": [
+    "client"
+   ],
+   "last": {
+    "direction": "left",
+    "prefix": 5,
+    "length": 40,
+    "tolerance": 0.01,
+    "input": {
+     "scope": "all",
+     "kinds": [
+      "circle"
+     ]
+    },
+    "layer": {
+     "newName": 3
+    },
+    "extra": true
+   },
+   "choice": "worker",
+   "steps": [
+    {
+     "do": {
+      "run": true
+     },
+     "expect": {
+      "issues": {
+       "length": "“Toplam uzunluk” en çok 30 olmalı."
+      },
+      "status": {
+       "kind": "warn",
+       "icon": "warning",
+       "text": "Çalıştırmadan önce 1 alanı düzeltin.",
+       "actions": []
+      }
+     }
+    },
+    {
+     "do": {
+      "reset": true
+     },
+     "expect": {
+      "values": {
+       "length": 6,
+       "tolerance": 0.001
+      },
+      "issues": {},
+      "preview": {
+       "text": "P00001, P00002, P00003 …",
+       "muted": false
+      },
+      "status": {
+       "kind": "idle",
+       "icon": null,
+       "text": "",
+       "actions": []
+      }
+     }
+    }
+   ],
+   "opened": {
+    "values": {
+     "input": {
+      "scope": "selection"
+     },
+     "direction": "cw",
+     "start": "northwest",
+     "startPoint": null,
+     "prefix": "P",
+     "length": 40,
+     "pad": "0",
+     "first": 1,
+     "step": 1,
+     "shared": true,
+     "tolerance": 0.01,
+     "output": "points",
+     "textHeight": 2,
+     "layer": {
+      "newName": "Köşe noktaları"
+     }
+    },
+    "sections": {
+     "groups": [
+      {
+       "title": "Girdi",
+       "rows": [
+        "input"
+       ]
+      },
+      {
+       "title": "Ayarlar",
+       "rows": [
+        "direction",
+        "start",
+        "prefix",
+        "length",
+        "pad",
+        "first",
+        "shared",
+        "output"
+       ]
+      },
+      {
+       "title": "Çıktı",
+       "rows": [
+        "layer"
+       ]
+      }
+     ],
+     "advanced": {
+      "rows": [
+       "step",
+       "tolerance"
+      ],
+      "open": true
+     }
+    },
+    "issues": {},
+    "preview": {
+     "text": "Önizleme için alanları düzeltin.",
+     "muted": true
+    },
+    "status": {
+     "kind": "idle",
+     "icon": null,
+     "text": "",
+     "actions": []
+    },
+    "footer": {
+     "run": {
+      "label": "Çalıştır",
+      "disabled": false
+     },
+     "close": "Kapat",
+     "reset": {
+      "disabled": false
+     }
+    },
+    "targets": {
+     "options": [
+      {
+       "value": "client",
+       "label": "Bu tarayıcıda",
+       "note": "bu çalıştırmada",
+       "disabled": false,
+       "checked": true
+      },
+      {
+       "value": "worker",
+       "label": "Arka planda (worker)",
+       "note": "yakında",
+       "disabled": true,
+       "checked": false
+      }
+     ],
+     "hint": null,
+     "choice": "client"
+    },
+    "fields": {
+     "input": {
+      "scope": "selection",
+      "layer": null,
+      "count": {
+       "text": "1 kapalı alan; seçili nesneler",
+       "empty": false
+      },
+      "kinds": {
+       "note": "Uygun nesneler: kapalı alan, çoklu çizgi"
+      }
+     },
+     "layer": {
+      "text": "Köşe noktaları (yeni)",
+      "name": "Köşe noktaları",
+      "items": [
+       {
+        "header": "Yeni katman"
+       },
+       {
+        "label": "Yeni: Köşe noktaları",
+        "value": {
+         "newName": "Köşe noktaları"
+        },
+        "checked": true,
+        "disabled": false,
+        "icon": "layerAdd"
+       },
+       {
+        "header": "Mevcut katmanlar"
+       },
+       {
+        "label": "Çizim",
+        "value": {
+         "layerId": "cizim"
+        },
+        "checked": false,
+        "disabled": false
+       },
+       {
+        "label": "Parsel",
+        "value": {
+         "layerId": "parsel"
+        },
+        "checked": false,
+        "disabled": false
+       },
+       {
+        "label": "Kilitli katman",
+        "value": {
+         "layerId": "kilitli"
+        },
+        "checked": false,
+        "disabled": true,
+        "hint": "kilitli"
+       },
+       {
+        "label": "Gizli katman",
+        "value": {
+         "layerId": "gizli"
+        },
+        "checked": false,
+        "disabled": false
+       },
+       {
+        "label": "Mevcut noktalar",
+        "value": {
+         "layerId": "mevcut"
+        },
+        "checked": false,
+        "disabled": false
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "calculate",
+   "title": "Öznitelik hesapla: alan adının notları ve listesi, ifadenin alan çipleri ve satırı, koşul, yer seçimi, arka planda çalıştırma ve geri alma",
+   "open": {
+    "tool": "attributes.calculate"
+   },
+   "selection": [
+    1,
+    2,
+    3
+   ],
+   "available": [
+    "client",
+    "worker"
+   ],
+   "steps": [
+    {
+     "do": {
+      "type": {
+       "name": "field",
+       "text": "Ada "
+      }
+     },
+     "expect": {
+      "values": {
+       "field": "Ada "
+      },
+      "preview": {
+       "text": "“Ada” alanına yazılacak",
+       "muted": false
+      },
+      "fields": {
+       "field": {
+        "text": "Ada ",
+        "note": "3 nesnede var; değeri değişir.",
+        "items": [
+         {
+          "label": "Ada",
+          "hint": "3 nesne",
+          "checked": true
+         },
+         {
+          "label": "Nitelik",
+          "hint": "3 nesne",
+          "checked": false
+         },
+         {
+          "label": "Parsel",
+          "hint": "3 nesne",
+          "checked": false
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "type": {
+       "name": "field",
+       "text": "Mahalle"
+      }
+     },
+     "expect": {
+      "values": {
+       "field": "Mahalle"
+      },
+      "preview": {
+       "text": "“Mahalle” alanına yazılacak",
+       "muted": false
+      },
+      "fields": {
+       "field": {
+        "text": "Mahalle",
+        "note": "Yeni alan: nesnelere eklenir.",
+        "items": [
+         {
+          "label": "Ada",
+          "hint": "3 nesne",
+          "checked": false
+         },
+         {
+          "label": "Nitelik",
+          "hint": "3 nesne",
+          "checked": false
+         },
+         {
+          "label": "Parsel",
+          "hint": "3 nesne",
+          "checked": false
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "type": {
+       "name": "field",
+       "text": ""
+      }
+     },
+     "expect": {
+      "values": {
+       "field": ""
+      },
+      "issues": {
+       "field": "“Yazılacak alan”: bir alan adı seçin ya da yazın."
+      },
+      "preview": {
+       "text": "Önizleme için alanları düzeltin.",
+       "muted": true
+      },
+      "fields": {
+       "field": {
+        "text": "",
+        "note": "",
+        "items": [
+         {
+          "label": "Ada",
+          "hint": "3 nesne",
+          "checked": false
+         },
+         {
+          "label": "Nitelik",
+          "hint": "3 nesne",
+          "checked": false
+         },
+         {
+          "label": "Parsel",
+          "hint": "3 nesne",
+          "checked": false
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "type": {
+       "name": "field",
+       "text": "Ada "
+      }
+     },
+     "expect": {
+      "values": {
+       "field": "Ada "
+      },
+      "issues": {},
+      "preview": {
+       "text": "“Ada” alanına yazılacak",
+       "muted": false
+      },
+      "fields": {
+       "field": {
+        "text": "Ada ",
+        "note": "3 nesnede var; değeri değişir.",
+        "items": [
+         {
+          "label": "Ada",
+          "hint": "3 nesne",
+          "checked": true
+         },
+         {
+          "label": "Nitelik",
+          "hint": "3 nesne",
+          "checked": false
+         },
+         {
+          "label": "Parsel",
+          "hint": "3 nesne",
+          "checked": false
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "type": {
+       "name": "value",
+       "text": "Ada || '/' || Parsel"
+      }
+     },
+     "expect": {
+      "values": {
+       "value": "Ada || '/' || Parsel"
+      },
+      "fields": {
+       "value": {
+        "chips": [
+         {
+          "name": "Ada",
+          "token": "Ada",
+          "title": "3 nesnede var; ifadeye ekle"
+         },
+         {
+          "name": "Nitelik",
+          "token": "Nitelik",
+          "title": "3 nesnede var; ifadeye ekle"
+         },
+         {
+          "name": "Parsel",
+          "token": "Parsel",
+          "title": "3 nesnede var; ifadeye ekle"
+         }
+        ],
+        "more": null,
+        "preview": {
+         "icon": "check",
+         "text": "İlk nesnede (1): “101/1”."
+        }
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "toggleAdvanced": true
+     },
+     "expect": {
+      "sections": {
+       "groups": [
+        {
+         "title": "Girdi",
+         "rows": [
+          "input"
+         ]
+        },
+        {
+         "title": "Ayarlar",
+         "rows": [
+          "field",
+          "value",
+          "label"
+         ]
+        }
+       ],
+       "advanced": {
+        "rows": [
+         "where",
+         "empty"
+        ],
+        "open": true
+       }
+      },
+      "fields": {
+       "where": {
+        "chips": [
+         {
+          "name": "Ada",
+          "token": "Ada",
+          "title": "3 nesnede var; ifadeye ekle"
+         },
+         {
+          "name": "Nitelik",
+          "token": "Nitelik",
+          "title": "3 nesnede var; ifadeye ekle"
+         },
+         {
+          "name": "Parsel",
+          "token": "Parsel",
+          "title": "3 nesnede var; ifadeye ekle"
+         }
+        ],
+        "more": null,
+        "preview": null
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "type": {
+       "name": "where",
+       "text": "Mahalle = 'x'"
+      }
+     },
+     "expect": {
+      "values": {
+       "where": "Mahalle = 'x'"
+      },
+      "fields": {
+       "where": {
+        "chips": [
+         {
+          "name": "Ada",
+          "token": "Ada",
+          "title": "3 nesnede var; ifadeye ekle"
+         },
+         {
+          "name": "Nitelik",
+          "token": "Nitelik",
+          "title": "3 nesnede var; ifadeye ekle"
+         },
+         {
+          "name": "Parsel",
+          "token": "Parsel",
+          "title": "3 nesnede var; ifadeye ekle"
+         }
+        ],
+        "more": null,
+        "preview": {
+         "icon": "info",
+         "text": "0 / 3 nesne koşulu sağlıyor. “Mahalle” alanı bu nesnelerde yok."
+        }
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "type": {
+       "name": "where",
+       "text": "Nitelik = 'Arsa'"
+      }
+     },
+     "expect": {
+      "values": {
+       "where": "Nitelik = 'Arsa'"
+      },
+      "fields": {
+       "where": {
+        "chips": [
+         {
+          "name": "Ada",
+          "token": "Ada",
+          "title": "3 nesnede var; ifadeye ekle"
+         },
+         {
+          "name": "Nitelik",
+          "token": "Nitelik",
+          "title": "3 nesnede var; ifadeye ekle"
+         },
+         {
+          "name": "Parsel",
+          "token": "Parsel",
+          "title": "3 nesnede var; ifadeye ekle"
+         }
+        ],
+        "more": null,
+        "preview": {
+         "icon": "check",
+         "text": "2 / 3 nesne koşulu sağlıyor."
+        }
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "target": "worker"
+     },
+     "expect": {
+      "targets": {
+       "options": [
+        {
+         "value": "auto",
+         "label": "Otomatik",
+         "note": "şimdi: bu tarayıcıda",
+         "disabled": false,
+         "checked": false
+        },
+        {
+         "value": "client",
+         "label": "Bu tarayıcıda",
+         "note": null,
+         "disabled": false,
+         "checked": false
+        },
+        {
+         "value": "worker",
+         "label": "Arka planda (worker)",
+         "note": null,
+         "disabled": false,
+         "checked": true
+        }
+       ],
+       "hint": null,
+       "choice": "worker"
+      }
+     }
+    },
+    {
+     "do": {
+      "run": true
+     },
+     "expect": {
+      "status": {
+       "kind": "ok",
+       "icon": "success",
+       "text": "2 nesnede “Ada” yazıldı; 1 nesne koşulu sağlamadı.",
+       "actions": [
+        "select",
+        "undo"
+       ],
+       "pick": [
+        1,
+        2
+       ]
+      },
+      "fields": {
+       "value": {
+        "chips": [
+         {
+          "name": "Ada",
+          "token": "Ada",
+          "title": "3 nesnede var; ifadeye ekle"
+         },
+         {
+          "name": "Nitelik",
+          "token": "Nitelik",
+          "title": "3 nesnede var; ifadeye ekle"
+         },
+         {
+          "name": "Parsel",
+          "token": "Parsel",
+          "title": "3 nesnede var; ifadeye ekle"
+         }
+        ],
+        "more": null,
+        "preview": {
+         "icon": "check",
+         "text": "İlk nesnede (1): “101/1/1”."
+        }
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "undo": true
+     },
+     "expect": {
+      "status": {
+       "kind": "idle",
+       "icon": null,
+       "text": "",
+       "actions": []
+      },
+      "fields": {
+       "value": {
+        "chips": [
+         {
+          "name": "Ada",
+          "token": "Ada",
+          "title": "3 nesnede var; ifadeye ekle"
+         },
+         {
+          "name": "Nitelik",
+          "token": "Nitelik",
+          "title": "3 nesnede var; ifadeye ekle"
+         },
+         {
+          "name": "Parsel",
+          "token": "Parsel",
+          "title": "3 nesnede var; ifadeye ekle"
+         }
+        ],
+        "more": null,
+        "preview": {
+         "icon": "check",
+         "text": "İlk nesnede (1): “101/1”."
+        }
+       }
+      }
+     }
+    }
+   ],
+   "opened": {
+    "values": {
+     "input": {
+      "scope": "selection"
+     },
+     "field": "Hesap alanı",
+     "value": "metin($alan, 2)",
+     "where": "",
+     "empty": "keep",
+     "label": true
+    },
+    "sections": {
+     "groups": [
+      {
+       "title": "Girdi",
+       "rows": [
+        "input"
+       ]
+      },
+      {
+       "title": "Ayarlar",
+       "rows": [
+        "field",
+        "value",
+        "label"
+       ]
+      }
+     ],
+     "advanced": {
+      "rows": [
+       "where",
+       "empty"
+      ],
+      "open": false
+     }
+    },
+    "issues": {},
+    "preview": {
+     "text": "“Hesap alanı” alanına yazılacak",
+     "muted": false
+    },
+    "status": {
+     "kind": "idle",
+     "icon": null,
+     "text": "",
+     "actions": []
+    },
+    "footer": {
+     "run": {
+      "label": "Çalıştır",
+      "disabled": false
+     },
+     "close": "Kapat",
+     "reset": {
+      "disabled": false
+     }
+    },
+    "targets": {
+     "options": [
+      {
+       "value": "auto",
+       "label": "Otomatik",
+       "note": "şimdi: bu tarayıcıda",
+       "disabled": false,
+       "checked": true
+      },
+      {
+       "value": "client",
+       "label": "Bu tarayıcıda",
+       "note": null,
+       "disabled": false,
+       "checked": false
+      },
+      {
+       "value": "worker",
+       "label": "Arka planda (worker)",
+       "note": null,
+       "disabled": false,
+       "checked": false
+      }
+     ],
+     "hint": "2.000 ya da daha çok nesneli işler arka planda çalışır; sayfa donmaz.",
+     "choice": "auto"
+    },
+    "fields": {
+     "input": {
+      "scope": "selection",
+      "layer": null,
+      "count": {
+       "text": "3 kapalı alan; seçili nesneler",
+       "empty": false
+      },
+      "kinds": null
+     },
+     "field": {
+      "text": "Hesap alanı",
+      "note": "Yeni alan: nesnelere eklenir.",
+      "items": [
+       {
+        "label": "Ada",
+        "hint": "3 nesne",
+        "checked": false
+       },
+       {
+        "label": "Nitelik",
+        "hint": "3 nesne",
+        "checked": false
+       },
+       {
+        "label": "Parsel",
+        "hint": "3 nesne",
+        "checked": false
+       }
+      ]
+     },
+     "value": {
+      "chips": [
+       {
+        "name": "Ada",
+        "token": "Ada",
+        "title": "3 nesnede var; ifadeye ekle"
+       },
+       {
+        "name": "Nitelik",
+        "token": "Nitelik",
+        "title": "3 nesnede var; ifadeye ekle"
+       },
+       {
+        "name": "Parsel",
+        "token": "Parsel",
+        "title": "3 nesnede var; ifadeye ekle"
+       }
+      ],
+      "more": null,
+      "preview": {
+       "icon": "check",
+       "text": "İlk nesnede (1): “600.00”."
+      }
+     }
+    }
+   }
+  },
+  {
+   "id": "calculate-locked",
+   "title": "Öznitelik hesapla: seçilenlerin hepsi kilitli katmandayken çalıştırma durur, sorun girdinin altında",
+   "open": {
+    "tool": "attributes.calculate"
+   },
+   "selection": [
+    4
+   ],
+   "available": [
+    "client"
+   ],
+   "steps": [
+    {
+     "do": {
+      "run": true
+     },
+     "expect": {
+      "issues": {
+       "input": "“Nesneler”: seçili nesnelerin hepsi kilitli katmanda. Kilidi Katmanlar panelinden açın."
+      },
+      "status": {
+       "kind": "warn",
+       "icon": "warning",
+       "text": "Çalıştırmadan önce 1 alanı düzeltin.",
+       "actions": []
+      }
+     }
+    },
+    {
+     "do": {
+      "choose": {
+       "name": "label",
+       "value": false
+      }
+     },
+     "expect": {
+      "values": {
+       "label": false
+      },
+      "issues": {},
+      "status": {
+       "kind": "idle",
+       "icon": null,
+       "text": "",
+       "actions": []
+      }
+     }
+    }
+   ],
+   "opened": {
+    "values": {
+     "input": {
+      "scope": "selection"
+     },
+     "field": "Hesap alanı",
+     "value": "metin($alan, 2)",
+     "where": "",
+     "empty": "keep",
+     "label": true
+    },
+    "sections": {
+     "groups": [
+      {
+       "title": "Girdi",
+       "rows": [
+        "input"
+       ]
+      },
+      {
+       "title": "Ayarlar",
+       "rows": [
+        "field",
+        "value",
+        "label"
+       ]
+      }
+     ],
+     "advanced": {
+      "rows": [
+       "where",
+       "empty"
+      ],
+      "open": false
+     }
+    },
+    "issues": {},
+    "preview": {
+     "text": "“Hesap alanı” alanına yazılacak",
+     "muted": false
+    },
+    "status": {
+     "kind": "idle",
+     "icon": null,
+     "text": "",
+     "actions": []
+    },
+    "footer": {
+     "run": {
+      "label": "Çalıştır",
+      "disabled": false
+     },
+     "close": "Kapat",
+     "reset": {
+      "disabled": false
+     }
+    },
+    "targets": {
+     "options": [
+      {
+       "value": "client",
+       "label": "Bu tarayıcıda",
+       "note": "bu çalıştırmada",
+       "disabled": false,
+       "checked": true
+      },
+      {
+       "value": "worker",
+       "label": "Arka planda (worker)",
+       "note": "yakında",
+       "disabled": true,
+       "checked": false
+      }
+     ],
+     "hint": null,
+     "choice": "client"
+    },
+    "fields": {
+     "input": {
+      "scope": "selection",
+      "layer": null,
+      "count": {
+       "text": "1 kapalı alan; seçili nesneler",
+       "empty": false
+      },
+      "kinds": null
+     },
+     "field": {
+      "text": "Hesap alanı",
+      "note": "Yeni alan: nesnelere eklenir.",
+      "items": [
+       {
+        "label": "Ada",
+        "hint": "1 nesne",
+        "checked": false
+       },
+       {
+        "label": "Nitelik",
+        "hint": "1 nesne",
+        "checked": false
+       },
+       {
+        "label": "Parsel",
+        "hint": "1 nesne",
+        "checked": false
+       }
+      ]
+     },
+     "value": {
+      "chips": [
+       {
+        "name": "Ada",
+        "token": "Ada",
+        "title": "1 nesnede var; ifadeye ekle"
+       },
+       {
+        "name": "Nitelik",
+        "token": "Nitelik",
+        "title": "1 nesnede var; ifadeye ekle"
+       },
+       {
+        "name": "Parsel",
+        "token": "Parsel",
+        "title": "1 nesnede var; ifadeye ekle"
+       }
+      ],
+      "more": null,
+      "preview": {
+       "icon": "check",
+       "text": "İlk nesnede (1): “400.00”."
+      }
+     }
+    }
+   }
+  },
+  {
+   "id": "select",
+   "title": "İfadeyle seç: kapsamın ilk seçeneği Tümü, tür çipleri, görünen alan, yazarken hatalı ifade, seçime ekleyen çalıştırma (geri alınacak adım yok)",
+   "open": {
+    "tool": "selection.byExpression"
+   },
+   "selection": [
+    3
+   ],
+   "view": [
+    487000,
+    4420000,
+    487030,
+    4420035
+   ],
+   "available": [
+    "client"
+   ],
+   "steps": [
+    {
+     "do": {
+      "kind": {
+       "name": "input",
+       "kind": "point"
+      }
+     },
+     "expect": {
+      "values": {
+       "input": {
+        "scope": "all",
+        "kinds": [
+         "polygon",
+         "polyline",
+         "line"
+        ]
+       }
+      },
+      "fields": {
+       "input": {
+        "scope": "all",
+        "layer": null,
+        "count": {
+         "text": "6 nesne (kapalı alan, çoklu çizgi, çizgi); tümü (görünen katmanlar)",
+         "empty": false
+        },
+        "kinds": {
+         "chips": [
+          {
+           "kind": "polygon",
+           "label": "Kapalı alan",
+           "count": 4,
+           "pressed": true,
+           "title": "Bu türü dışarıda bırak"
+          },
+          {
+           "kind": "point",
+           "label": "Nokta",
+           "count": 3,
+           "pressed": false,
+           "title": "Bu türü de al"
+          },
+          {
+           "kind": "polyline",
+           "label": "Çoklu çizgi",
+           "count": 1,
+           "pressed": true,
+           "title": "Bu türü dışarıda bırak"
+          },
+          {
+           "kind": "line",
+           "label": "Çizgi",
+           "count": 1,
+           "pressed": true,
+           "title": "Bu türü dışarıda bırak"
+          }
+         ]
+        }
+       },
+       "condition": {
+        "chips": [
+         {
+          "name": "Ada",
+          "token": "Ada",
+          "title": "4 nesnede var; ifadeye ekle"
+         },
+         {
+          "name": "Nitelik",
+          "token": "Nitelik",
+          "title": "4 nesnede var; ifadeye ekle"
+         },
+         {
+          "name": "Parsel",
+          "token": "Parsel",
+          "title": "4 nesnede var; ifadeye ekle"
+         }
+        ],
+        "more": null,
+        "preview": {
+         "icon": "check",
+         "text": "2 / 6 nesne koşulu sağlıyor."
+        }
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "scope": {
+       "name": "input",
+       "scope": "visible"
+      }
+     },
+     "expect": {
+      "values": {
+       "input": {
+        "scope": "visible",
+        "kinds": [
+         "polygon",
+         "polyline",
+         "line"
+        ]
+       }
+      },
+      "fields": {
+       "input": {
+        "scope": "visible",
+        "layer": null,
+        "count": {
+         "text": "2 kapalı alan; görünen alandakiler",
+         "empty": false
+        },
+        "kinds": {
+         "chips": [
+          {
+           "kind": "point",
+           "label": "Nokta",
+           "count": 3,
+           "pressed": false,
+           "title": "Bu türü de al"
+          },
+          {
+           "kind": "polygon",
+           "label": "Kapalı alan",
+           "count": 2,
+           "pressed": true,
+           "title": "Bu türü dışarıda bırak"
+          }
+         ]
+        }
+       },
+       "condition": {
+        "chips": [
+         {
+          "name": "Ada",
+          "token": "Ada",
+          "title": "2 nesnede var; ifadeye ekle"
+         },
+         {
+          "name": "Nitelik",
+          "token": "Nitelik",
+          "title": "2 nesnede var; ifadeye ekle"
+         },
+         {
+          "name": "Parsel",
+          "token": "Parsel",
+          "title": "2 nesnede var; ifadeye ekle"
+         }
+        ],
+        "more": null,
+        "preview": {
+         "icon": "check",
+         "text": "2 / 2 nesne koşulu sağlıyor."
+        }
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "type": {
+       "name": "condition",
+       "text": "Nitelik = "
+      }
+     },
+     "expect": {
+      "values": {
+       "condition": "Nitelik = "
+      },
+      "issues": {
+       "condition": "“Koşul”: 10. karakterde: İfade yarım kalmış: sonunda bir değer eksik."
+      },
+      "fields": {
+       "condition": {
+        "chips": [
+         {
+          "name": "Ada",
+          "token": "Ada",
+          "title": "2 nesnede var; ifadeye ekle"
+         },
+         {
+          "name": "Nitelik",
+          "token": "Nitelik",
+          "title": "2 nesnede var; ifadeye ekle"
+         },
+         {
+          "name": "Parsel",
+          "token": "Parsel",
+          "title": "2 nesnede var; ifadeye ekle"
+         }
+        ],
+        "more": null,
+        "preview": null
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "type": {
+       "name": "condition",
+       "text": "Nitelik = 'Arsa'"
+      }
+     },
+     "expect": {
+      "values": {
+       "condition": "Nitelik = 'Arsa'"
+      },
+      "issues": {},
+      "fields": {
+       "condition": {
+        "chips": [
+         {
+          "name": "Ada",
+          "token": "Ada",
+          "title": "2 nesnede var; ifadeye ekle"
+         },
+         {
+          "name": "Nitelik",
+          "token": "Nitelik",
+          "title": "2 nesnede var; ifadeye ekle"
+         },
+         {
+          "name": "Parsel",
+          "token": "Parsel",
+          "title": "2 nesnede var; ifadeye ekle"
+         }
+        ],
+        "more": null,
+        "preview": {
+         "icon": "check",
+         "text": "2 / 2 nesne koşulu sağlıyor."
+        }
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "choose": {
+       "name": "mode",
+       "value": "add"
+      }
+     },
+     "expect": {
+      "values": {
+       "mode": "add"
+      }
+     }
+    },
+    {
+     "do": {
+      "run": true
+     },
+     "expect": {
+      "status": {
+       "kind": "ok",
+       "icon": "success",
+       "text": "2 / 2 nesne koşulu sağladı; seçimde 3 nesne var.",
+       "actions": [
+        "zoom"
+       ]
+      }
+     }
+    }
+   ],
+   "opened": {
+    "values": {
+     "input": {
+      "scope": "all"
+     },
+     "condition": "$alan > 500",
+     "mode": "new"
+    },
+    "sections": {
+     "groups": [
+      {
+       "title": "Girdi",
+       "rows": [
+        "input"
+       ]
+      },
+      {
+       "title": "Ayarlar",
+       "rows": [
+        "condition",
+        "mode"
+       ]
+      }
+     ],
+     "advanced": null
+    },
+    "issues": {},
+    "preview": null,
+    "status": {
+     "kind": "idle",
+     "icon": null,
+     "text": "",
+     "actions": []
+    },
+    "footer": {
+     "run": {
+      "label": "Çalıştır",
+      "disabled": false
+     },
+     "close": "Kapat",
+     "reset": {
+      "disabled": false
+     }
+    },
+    "targets": {
+     "options": [
+      {
+       "value": "client",
+       "label": "Bu tarayıcıda",
+       "note": "bu çalıştırmada",
+       "disabled": false,
+       "checked": true
+      },
+      {
+       "value": "worker",
+       "label": "Arka planda (worker)",
+       "note": "yakında",
+       "disabled": true,
+       "checked": false
+      }
+     ],
+     "hint": null,
+     "choice": "client"
+    },
+    "fields": {
+     "input": {
+      "scope": "all",
+      "layer": null,
+      "count": {
+       "text": "9 nesne (kapalı alan, çoklu çizgi, çizgi, nokta); tümü (görünen katmanlar)",
+       "empty": false
+      },
+      "kinds": {
+       "chips": [
+        {
+         "kind": "polygon",
+         "label": "Kapalı alan",
+         "count": 4,
+         "pressed": true,
+         "title": "Bu türü dışarıda bırak"
+        },
+        {
+         "kind": "point",
+         "label": "Nokta",
+         "count": 3,
+         "pressed": true,
+         "title": "Bu türü dışarıda bırak"
+        },
+        {
+         "kind": "polyline",
+         "label": "Çoklu çizgi",
+         "count": 1,
+         "pressed": true,
+         "title": "Bu türü dışarıda bırak"
+        },
+        {
+         "kind": "line",
+         "label": "Çizgi",
+         "count": 1,
+         "pressed": true,
+         "title": "Bu türü dışarıda bırak"
+        }
+       ]
+      }
+     },
+     "condition": {
+      "chips": [
+       {
+        "name": "Ada",
+        "token": "Ada",
+        "title": "4 nesnede var; ifadeye ekle"
+       },
+       {
+        "name": "Nitelik",
+        "token": "Nitelik",
+        "title": "4 nesnede var; ifadeye ekle"
+       },
+       {
+        "name": "Parsel",
+        "token": "Parsel",
+        "title": "4 nesnede var; ifadeye ekle"
+       },
+       {
+        "name": "Nokta",
+        "token": "Nokta",
+        "title": "3 nesnede var; ifadeye ekle"
+       },
+       {
+        "name": "Tür",
+        "token": "Tür",
+        "title": "3 nesnede var; ifadeye ekle"
+       }
+      ],
+      "more": null,
+      "preview": {
+       "icon": "check",
+       "text": "2 / 9 nesne koşulu sağlıyor."
+      }
+     }
+    }
+   }
+  },
+  {
+   "id": "edge-lengths",
+   "title": "Kenar uzunluklarını yaz: önizleme, sınırı aşan ondalık, çalıştırma denemesi, Varsayılanlar, virgüllü sayı, çizgide çalıştırma",
+   "open": {
+    "tool": "annotation.edgeLengths"
+   },
+   "selection": [
+    7
+   ],
+   "available": [
+    "client",
+    "worker"
+   ],
+   "steps": [
+    {
+     "do": {
+      "type": {
+       "name": "decimals",
+       "text": "9"
+      }
+     },
+     "expect": {
+      "values": {
+       "decimals": 9
+      },
+      "issues": {
+       "decimals": "“Ondalık basamak” en çok 6 olmalı."
+      },
+      "preview": {
+       "text": "Önizleme için alanları düzeltin.",
+       "muted": true
+      }
+     }
+    },
+    {
+     "do": {
+      "run": true
+     },
+     "expect": {
+      "status": {
+       "kind": "warn",
+       "icon": "warning",
+       "text": "Çalıştırmadan önce 1 alanı düzeltin.",
+       "actions": []
+      }
+     }
+    },
+    {
+     "do": {
+      "reset": true
+     },
+     "expect": {
+      "values": {
+       "decimals": 3
+      },
+      "issues": {},
+      "preview": {
+       "text": "12.346",
+       "muted": false
+      },
+      "status": {
+       "kind": "idle",
+       "icon": null,
+       "text": "",
+       "actions": []
+      }
+     }
+    },
+    {
+     "do": {
+      "type": {
+       "name": "decimals",
+       "text": "1,"
+      }
+     },
+     "expect": {
+      "values": {
+       "decimals": 1
+      },
+      "preview": {
+       "text": "12.3",
+       "muted": false
+      }
+     }
+    },
+    {
+     "do": {
+      "type": {
+       "name": "decimals",
+       "text": ""
+      }
+     },
+     "expect": {
+      "values": {
+       "decimals": null
+      },
+      "issues": {
+       "decimals": "“Ondalık basamak” için geçersiz değer."
+      },
+      "preview": {
+       "text": "Önizleme için alanları düzeltin.",
+       "muted": true
+      }
+     }
+    },
+    {
+     "do": {
+      "type": {
+       "name": "decimals",
+       "text": "1"
+      }
+     },
+     "expect": {
+      "values": {
+       "decimals": 1
+      },
+      "issues": {},
+      "preview": {
+       "text": "12.3",
+       "muted": false
+      }
+     }
+    },
+    {
+     "do": {
+      "choose": {
+       "name": "side",
+       "value": "inside"
+      }
+     },
+     "expect": {
+      "values": {
+       "side": "inside"
+      }
+     }
+    },
+    {
+     "do": {
+      "run": true
+     },
+     "expect": {
+      "status": {
+       "kind": "ok",
+       "icon": "success",
+       "text": "1 nesneye 1 kenar uzunluğu yazıldı.",
+       "actions": [
+        "select",
+        "undo"
+       ],
+       "pick": [
+        11
+       ]
+      },
+      "fields": {
+       "layer": {
+        "text": "Kenar ölçüleri (mevcut)",
+        "name": "Kenar ölçüleri",
+        "items": [
+         {
+          "header": "Yeni katman"
+         },
+         {
+          "label": "Yeni: Kenar ölçüleri",
+          "value": {
+           "newName": "Kenar ölçüleri"
+          },
+          "checked": true,
+          "disabled": false,
+          "icon": "layerAdd"
+         },
+         {
+          "header": "Mevcut katmanlar"
+         },
+         {
+          "label": "Çizim",
+          "value": {
+           "layerId": "cizim"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Parsel",
+          "value": {
+           "layerId": "parsel"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Kilitli katman",
+          "value": {
+           "layerId": "kilitli"
+          },
+          "checked": false,
+          "disabled": true,
+          "hint": "kilitli"
+         },
+         {
+          "label": "Gizli katman",
+          "value": {
+           "layerId": "gizli"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Mevcut noktalar",
+          "value": {
+           "layerId": "mevcut"
+          },
+          "checked": false,
+          "disabled": false
+         },
+         {
+          "label": "Kenar ölçüleri",
+          "value": {
+           "layerId": "islem-kenar-olculeri"
+          },
+          "checked": false,
+          "disabled": false
+         }
+        ]
+       }
+      }
+     }
+    }
+   ],
+   "opened": {
+    "values": {
+     "input": {
+      "scope": "selection"
+     },
+     "decimals": 3,
+     "side": "outside",
+     "textHeight": 2,
+     "prefix": "",
+     "suffix": "",
+     "minLength": 0,
+     "shared": true,
+     "layer": {
+      "newName": "Kenar ölçüleri"
+     }
+    },
+    "sections": {
+     "groups": [
+      {
+       "title": "Girdi",
+       "rows": [
+        "input"
+       ]
+      },
+      {
+       "title": "Ayarlar",
+       "rows": [
+        "decimals",
+        "side",
+        "textHeight",
+        "shared"
+       ]
+      },
+      {
+       "title": "Çıktı",
+       "rows": [
+        "layer"
+       ]
+      }
+     ],
+     "advanced": {
+      "rows": [
+       "prefix",
+       "suffix",
+       "minLength"
+      ],
+      "open": false
+     }
+    },
+    "issues": {},
+    "preview": {
+     "text": "12.346",
+     "muted": false
+    },
+    "status": {
+     "kind": "idle",
+     "icon": null,
+     "text": "",
+     "actions": []
+    },
+    "footer": {
+     "run": {
+      "label": "Çalıştır",
+      "disabled": false
+     },
+     "close": "Kapat",
+     "reset": {
+      "disabled": false
+     }
+    },
+    "targets": {
+     "options": [
+      {
+       "value": "auto",
+       "label": "Otomatik",
+       "note": "şimdi: bu tarayıcıda",
+       "disabled": false,
+       "checked": true
+      },
+      {
+       "value": "client",
+       "label": "Bu tarayıcıda",
+       "note": null,
+       "disabled": false,
+       "checked": false
+      },
+      {
+       "value": "worker",
+       "label": "Arka planda (worker)",
+       "note": null,
+       "disabled": false,
+       "checked": false
+      }
+     ],
+     "hint": "2.000 ya da daha çok nesneli işler arka planda çalışır; sayfa donmaz.",
+     "choice": "auto"
+    },
+    "fields": {
+     "input": {
+      "scope": "selection",
+      "layer": null,
+      "count": {
+       "text": "1 çizgi; seçili nesneler",
+       "empty": false
+      },
+      "kinds": {
+       "note": "Uygun nesneler: kapalı alan, çoklu çizgi, çizgi"
+      }
+     },
+     "layer": {
+      "text": "Kenar ölçüleri (yeni)",
+      "name": "Kenar ölçüleri",
+      "items": [
+       {
+        "header": "Yeni katman"
+       },
+       {
+        "label": "Yeni: Kenar ölçüleri",
+        "value": {
+         "newName": "Kenar ölçüleri"
+        },
+        "checked": true,
+        "disabled": false,
+        "icon": "layerAdd"
+       },
+       {
+        "header": "Mevcut katmanlar"
+       },
+       {
+        "label": "Çizim",
+        "value": {
+         "layerId": "cizim"
+        },
+        "checked": false,
+        "disabled": false
+       },
+       {
+        "label": "Parsel",
+        "value": {
+         "layerId": "parsel"
+        },
+        "checked": false,
+        "disabled": false
+       },
+       {
+        "label": "Kilitli katman",
+        "value": {
+         "layerId": "kilitli"
+        },
+        "checked": false,
+        "disabled": true,
+        "hint": "kilitli"
+       },
+       {
+        "label": "Gizli katman",
+        "value": {
+         "layerId": "gizli"
+        },
+        "checked": false,
+        "disabled": false
+       },
+       {
+        "label": "Mevcut noktalar",
+        "value": {
+         "layerId": "mevcut"
+        },
+        "checked": false,
+        "disabled": false
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "model",
+   "title": "Parsel ölçü yazıları modeli: girdileri, adım adım çalıştırma, özet ve geri alma",
+   "open": {
+    "model": "builtin.parcelSheet"
+   },
+   "selection": [
+    1,
+    2,
+    3
+   ],
+   "available": [
+    "client"
+   ],
+   "steps": [
+    {
+     "do": {
+      "type": {
+       "name": "prefix",
+       "text": "K"
+      }
+     },
+     "expect": {
+      "values": {
+       "prefix": "K"
+      }
+     }
+    },
+    {
+     "do": {
+      "run": true
+     },
+     "expect": {
+      "status": {
+       "kind": "ok",
+       "icon": "success",
+       "text": "3 adım çalıştı. 3 nesnede 8 köşe numaralandı: K00001 – K00008; 4 ortak köşe komşularıyla tek numara aldı. 3 nesneye 10 kenar uzunluğu yazıldı; 2 ortak kenar bir kez yazıldı. 3 nesnede “Hesap alanı” yazıldı.",
+       "actions": [
+        "select",
+        "undo"
+       ],
+       "pick": [
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28
+       ]
+      }
+     }
+    },
+    {
+     "do": {
+      "undo": true
+     },
+     "expect": {
+      "status": {
+       "kind": "idle",
+       "icon": null,
+       "text": "",
+       "actions": []
+      }
+     }
+    }
+   ],
+   "opened": {
+    "values": {
+     "parcels": {
+      "scope": "selection"
+     },
+     "prefix": "P"
+    },
+    "sections": {
+     "groups": [
+      {
+       "title": "Girdi",
+       "rows": [
+        "parcels"
+       ]
+      },
+      {
+       "title": "Ayarlar",
+       "rows": [
+        "prefix"
+       ]
+      }
+     ],
+     "advanced": null
+    },
+    "issues": {},
+    "preview": null,
+    "status": {
+     "kind": "idle",
+     "icon": null,
+     "text": "",
+     "actions": []
+    },
+    "footer": {
+     "run": {
+      "label": "Çalıştır",
+      "disabled": false
+     },
+     "close": "Kapat",
+     "reset": {
+      "disabled": false
+     }
+    },
+    "targets": {
+     "options": [
+      {
+       "value": "client",
+       "label": "Bu tarayıcıda",
+       "note": "bu çalıştırmada",
+       "disabled": false,
+       "checked": true
+      }
+     ],
+     "hint": null,
+     "choice": "client"
+    },
+    "fields": {
+     "parcels": {
+      "scope": "selection",
+      "layer": null,
+      "count": {
+       "text": "3 kapalı alan; seçili nesneler",
+       "empty": false
+      },
+      "kinds": {
+       "note": "Uygun nesneler: kapalı alan"
+      }
+     }
+    }
+   }
+  }
+ ],
+ "status": [
+  {
+   "title": "boşta",
+   "status": {
+    "kind": "idle"
+   },
+   "attempted": false,
+   "issues": [],
+   "expect": {
+    "status": {
+     "kind": "idle",
+     "icon": null,
+     "text": "",
+     "actions": []
+    },
+    "footer": {
+     "run": {
+      "label": "Çalıştır",
+      "disabled": false
+     },
+     "close": "Kapat",
+     "reset": {
+      "disabled": false
+     }
+    }
+   }
+  },
+  {
+   "title": "sorun var ama çalıştırılmadı",
+   "status": {
+    "kind": "idle"
+   },
+   "attempted": false,
+   "issues": [
+    {
+     "param": "length",
+     "message": "“Toplam uzunluk” en çok 30 olmalı."
+    }
+   ],
+   "expect": {
+    "status": {
+     "kind": "idle",
+     "icon": null,
+     "text": "",
+     "actions": []
+    },
+    "footer": {
+     "run": {
+      "label": "Çalıştır",
+      "disabled": false
+     },
+     "close": "Kapat",
+     "reset": {
+      "disabled": false
+     }
+    }
+   }
+  },
+  {
+   "title": "çalıştırma denemesinden sonra iki alan",
+   "status": {
+    "kind": "idle"
+   },
+   "attempted": true,
+   "issues": [
+    {
+     "param": "length",
+     "message": "“Toplam uzunluk” en çok 30 olmalı."
+    },
+    {
+     "param": "pad",
+     "message": "“Doldurma karakteri” en çok 1 karakter olabilir."
+    }
+   ],
+   "expect": {
+    "status": {
+     "kind": "warn",
+     "icon": "warning",
+     "text": "Çalıştırmadan önce 2 alanı düzeltin.",
+     "actions": []
+    },
+    "footer": {
+     "run": {
+      "label": "Çalıştır",
+      "disabled": false
+     },
+     "close": "Kapat",
+     "reset": {
+      "disabled": false
+     }
+    }
+   }
+  },
+  {
+   "title": "aracın kendi kuralı",
+   "status": {
+    "kind": "idle"
+   },
+   "attempted": true,
+   "issues": [
+    {
+     "message": "Toplam uzunluk önekten uzun olmalı; yoksa doldurma yapılamaz."
+    }
+   ],
+   "expect": {
+    "status": {
+     "kind": "warn",
+     "icon": "warning",
+     "text": "Toplam uzunluk önekten uzun olmalı; yoksa doldurma yapılamaz.",
+     "actions": []
+    },
+    "footer": {
+     "run": {
+      "label": "Çalıştır",
+      "disabled": false
+     },
+     "close": "Kapat",
+     "reset": {
+      "disabled": false
+     }
+    }
+   }
+  },
+  {
+   "title": "bu uygulamada çalışıyor",
+   "status": {
+    "kind": "running",
+    "fraction": 0,
+    "label": "",
+    "where": "client"
+   },
+   "attempted": true,
+   "issues": [],
+   "expect": {
+    "status": {
+     "kind": "running",
+     "icon": null,
+     "text": "Çalışıyor…",
+     "progress": 0,
+     "actions": []
+    },
+    "footer": {
+     "run": {
+      "label": "Çalışıyor…",
+      "disabled": true
+     },
+     "close": "Durdur",
+     "reset": {
+      "disabled": true
+     }
+    }
+   }
+  },
+  {
+   "title": "arka planda çalışıyor",
+   "status": {
+    "kind": "running",
+    "fraction": 0.425,
+    "label": "",
+    "where": "worker"
+   },
+   "attempted": true,
+   "issues": [],
+   "expect": {
+    "status": {
+     "kind": "running",
+     "icon": null,
+     "text": "Arka planda çalışıyor; sayfayı kullanmaya devam edebilirsiniz.",
+     "progress": 43,
+     "actions": []
+    },
+    "footer": {
+     "run": {
+      "label": "Çalışıyor…",
+      "disabled": true
+     },
+     "close": "Durdur",
+     "reset": {
+      "disabled": true
+     }
+    }
+   }
+  },
+  {
+   "title": "aracın adım yazısıyla",
+   "status": {
+    "kind": "running",
+    "fraction": 0.5,
+    "label": "Değerler hesaplanıyor",
+    "where": "worker"
+   },
+   "attempted": true,
+   "issues": [],
+   "expect": {
+    "status": {
+     "kind": "running",
+     "icon": null,
+     "text": "Değerler hesaplanıyor",
+     "progress": 50,
+     "actions": []
+    },
+    "footer": {
+     "run": {
+      "label": "Çalışıyor…",
+      "disabled": true
+     },
+     "close": "Durdur",
+     "reset": {
+      "disabled": true
+     }
+    }
+   }
+  },
+  {
+   "title": "modelin adımı",
+   "status": {
+    "kind": "running",
+    "fraction": 0.3333333333333333,
+    "label": "2. adım (Kenar uzunluklarını yaz) çalışıyor"
+   },
+   "attempted": true,
+   "issues": [],
+   "expect": {
+    "status": {
+     "kind": "running",
+     "icon": null,
+     "text": "2. adım (Kenar uzunluklarını yaz) çalışıyor",
+     "progress": 33,
+     "actions": []
+    },
+    "footer": {
+     "run": {
+      "label": "Çalışıyor…",
+      "disabled": true
+     },
+     "close": "Durdur",
+     "reset": {
+      "disabled": true
+     }
+    }
+   }
+  },
+  {
+   "title": "ekleyen çalıştırma",
+   "status": {
+    "kind": "ok",
+    "text": "2 nesnede 6 köşe numaralandı: P00001 – P00006; 2 ortak köşe komşularıyla tek numara aldı.",
+    "pick": [
+     11,
+     12,
+     13,
+     14,
+     15,
+     16
+    ],
+    "selected": false,
+    "undo": true
+   },
+   "attempted": false,
+   "issues": [],
+   "expect": {
+    "status": {
+     "kind": "ok",
+     "icon": "success",
+     "text": "2 nesnede 6 köşe numaralandı: P00001 – P00006; 2 ortak köşe komşularıyla tek numara aldı.",
+     "actions": [
+      "select",
+      "undo"
+     ],
+     "pick": [
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+     ]
+    },
+    "footer": {
+     "run": {
+      "label": "Çalıştır",
+      "disabled": false
+     },
+     "close": "Kapat",
+     "reset": {
+      "disabled": false
+     }
+    }
+   }
+  },
+  {
+   "title": "değiştiren çalıştırma",
+   "status": {
+    "kind": "ok",
+    "text": "3 nesnede “Ada” yazıldı.",
+    "pick": [
+     1,
+     2,
+     3
+    ],
+    "selected": false,
+    "undo": true
+   },
+   "attempted": false,
+   "issues": [],
+   "expect": {
+    "status": {
+     "kind": "ok",
+     "icon": "success",
+     "text": "3 nesnede “Ada” yazıldı.",
+     "actions": [
+      "select",
+      "undo"
+     ],
+     "pick": [
+      1,
+      2,
+      3
+     ]
+    },
+    "footer": {
+     "run": {
+      "label": "Çalıştır",
+      "disabled": false
+     },
+     "close": "Kapat",
+     "reset": {
+      "disabled": false
+     }
+    }
+   }
+  },
+  {
+   "title": "seçen çalıştırma",
+   "status": {
+    "kind": "ok",
+    "text": "2 / 9 nesne koşulu sağladı; seçimde 2 nesne var.",
+    "pick": [
+     1,
+     2
+    ],
+    "selected": true,
+    "undo": false
+   },
+   "attempted": false,
+   "issues": [],
+   "expect": {
+    "status": {
+     "kind": "ok",
+     "icon": "success",
+     "text": "2 / 9 nesne koşulu sağladı; seçimde 2 nesne var.",
+     "actions": [
+      "zoom"
+     ]
+    },
+    "footer": {
+     "run": {
+      "label": "Çalıştır",
+      "disabled": false
+     },
+     "close": "Kapat",
+     "reset": {
+      "disabled": false
+     }
+    }
+   }
+  },
+  {
+   "title": "hiçbir şey değiştirmeyen çalıştırma",
+   "status": {
+    "kind": "ok",
+    "text": "Yeni numara gerekmedi: bütün köşelerin numarası zaten var.",
+    "pick": [],
+    "selected": false,
+    "undo": false
+   },
+   "attempted": false,
+   "issues": [],
+   "expect": {
+    "status": {
+     "kind": "ok",
+     "icon": "success",
+     "text": "Yeni numara gerekmedi: bütün köşelerin numarası zaten var.",
+     "actions": []
+    },
+    "footer": {
+     "run": {
+      "label": "Çalıştır",
+      "disabled": false
+     },
+     "close": "Kapat",
+     "reset": {
+      "disabled": false
+     }
+    }
+   }
+  },
+  {
+   "title": "çalışamadı",
+   "status": {
+    "kind": "error",
+    "text": "“Köşe noktalarını numarala” bu ortamda çalıştırılamıyor (server gerekli)."
+   },
+   "attempted": true,
+   "issues": [],
+   "expect": {
+    "status": {
+     "kind": "error",
+     "icon": "error",
+     "text": "“Köşe noktalarını numarala” bu ortamda çalıştırılamıyor (server gerekli).",
+     "actions": []
+    },
+    "footer": {
+     "run": {
+      "label": "Çalıştır",
+      "disabled": false
+     },
+     "close": "Kapat",
+     "reset": {
+      "disabled": false
+     }
+    }
+   }
+  },
+  {
+   "title": "durduruldu",
+   "status": {
+    "kind": "error",
+    "text": "İşlem iptal edildi; çizim değişmedi."
+   },
+   "attempted": true,
+   "issues": [],
+   "expect": {
+    "status": {
+     "kind": "error",
+     "icon": "error",
+     "text": "İşlem iptal edildi; çizim değişmedi.",
+     "actions": []
+    },
+    "footer": {
+     "run": {
+      "label": "Çalıştır",
+      "disabled": false
+     },
+     "close": "Kapat",
+     "reset": {
+      "disabled": false
+     }
+    }
+   }
+  },
+  {
+   "title": "başlamadan durdu, sorun alanında",
+   "status": {
+    "kind": "invalid",
+    "text": "“Alanlar”: seçili nesneler arasında uygun nesne yok. Önce nesneleri seçin ya da kapsamı değiştirin."
+   },
+   "attempted": true,
+   "issues": [
+    {
+     "param": "input",
+     "message": "“Alanlar”: seçili nesneler arasında uygun nesne yok. Önce nesneleri seçin ya da kapsamı değiştirin."
+    }
+   ],
+   "expect": {
+    "status": {
+     "kind": "warn",
+     "icon": "warning",
+     "text": "Çalıştırmadan önce 1 alanı düzeltin.",
+     "actions": []
+    },
+    "footer": {
+     "run": {
+      "label": "Çalıştır",
+      "disabled": false
+     },
+     "close": "Kapat",
+     "reset": {
+      "disabled": false
+     }
+    }
+   }
+  },
+  {
+   "title": "başlamadan durdu, sorun artık alanda değil",
+   "status": {
+    "kind": "invalid",
+    "text": "“Alanlar”: seçili nesneler arasında uygun nesne yok. Önce nesneleri seçin ya da kapsamı değiştirin."
+   },
+   "attempted": true,
+   "issues": [],
+   "expect": {
+    "status": {
+     "kind": "warn",
+     "icon": "warning",
+     "text": "“Alanlar”: seçili nesneler arasında uygun nesne yok. Önce nesneleri seçin ya da kapsamı değiştirin.",
+     "actions": []
+    },
+    "footer": {
+     "run": {
+      "label": "Çalıştır",
+      "disabled": false
+     },
+     "close": "Kapat",
+     "reset": {
+      "disabled": false
+     }
+    }
+   }
+  }
+ ],
+ "targets": [
+  {
+   "title": "yalnız uygulamada; Otomatik",
+   "declared": [
+    "client",
+    "worker"
+   ],
+   "available": [
+    "client"
+   ],
+   "auto": "client",
+   "model": false,
+   "choice": "auto",
+   "expect": {
+    "options": [
+     {
+      "value": "client",
+      "label": "Bu tarayıcıda",
+      "note": "bu çalıştırmada",
+      "disabled": false,
+      "checked": true
+     },
+     {
+      "value": "worker",
+      "label": "Arka planda (worker)",
+      "note": "yakında",
+      "disabled": true,
+      "checked": false
+     }
+    ],
+    "hint": null,
+    "choice": "client"
+   }
+  },
+  {
+   "title": "yalnız uygulamada; saklanan yer burada yok",
+   "declared": [
+    "client",
+    "worker"
+   ],
+   "available": [
+    "client"
+   ],
+   "auto": "client",
+   "model": false,
+   "choice": "worker",
+   "expect": {
+    "options": [
+     {
+      "value": "client",
+      "label": "Bu tarayıcıda",
+      "note": "bu çalıştırmada",
+      "disabled": false,
+      "checked": true
+     },
+     {
+      "value": "worker",
+      "label": "Arka planda (worker)",
+      "note": "yakında",
+      "disabled": true,
+      "checked": false
+     }
+    ],
+    "hint": null,
+    "choice": "client"
+   }
+  },
+  {
+   "title": "yalnız uygulamada; sunucu yakında",
+   "declared": [
+    "client",
+    "server"
+   ],
+   "available": [
+    "client"
+   ],
+   "auto": "client",
+   "model": false,
+   "choice": "client",
+   "expect": {
+    "options": [
+     {
+      "value": "client",
+      "label": "Bu tarayıcıda",
+      "note": "bu çalıştırmada",
+      "disabled": false,
+      "checked": true
+     },
+     {
+      "value": "server",
+      "label": "KentOS sunucusunda",
+      "note": "yakında",
+      "disabled": true,
+      "checked": false
+     }
+    ],
+    "hint": null,
+    "choice": "client"
+   }
+  },
+  {
+   "title": "hiçbir yerde çalışamaz",
+   "declared": [
+    "server",
+    "postgis"
+   ],
+   "available": [],
+   "auto": null,
+   "model": false,
+   "choice": "auto",
+   "expect": {
+    "options": [
+     {
+      "value": "server",
+      "label": "KentOS sunucusunda",
+      "note": "yakında",
+      "disabled": true,
+      "checked": false
+     },
+     {
+      "value": "postgis",
+      "label": "PostGIS veritabanında",
+      "note": "yakında",
+      "disabled": true,
+      "checked": false
+     }
+    ],
+    "hint": null,
+    "choice": null
+   }
+  },
+  {
+   "title": "model, yalnız uygulamada",
+   "declared": [
+    "client"
+   ],
+   "available": [
+    "client"
+   ],
+   "auto": null,
+   "model": true,
+   "choice": "auto",
+   "expect": {
+    "options": [
+     {
+      "value": "client",
+      "label": "Bu tarayıcıda",
+      "note": "bu çalıştırmada",
+      "disabled": false,
+      "checked": true
+     }
+    ],
+    "hint": null,
+    "choice": "client"
+   }
+  },
+  {
+   "title": "sayfa ve worker; Otomatik küçük girdide",
+   "declared": [
+    "client",
+    "worker"
+   ],
+   "available": [
+    "client",
+    "worker"
+   ],
+   "auto": "client",
+   "model": false,
+   "choice": "auto",
+   "expect": {
+    "options": [
+     {
+      "value": "auto",
+      "label": "Otomatik",
+      "note": "şimdi: bu tarayıcıda",
+      "disabled": false,
+      "checked": true
+     },
+     {
+      "value": "client",
+      "label": "Bu tarayıcıda",
+      "note": null,
+      "disabled": false,
+      "checked": false
+     },
+     {
+      "value": "worker",
+      "label": "Arka planda (worker)",
+      "note": null,
+      "disabled": false,
+      "checked": false
+     }
+    ],
+    "hint": "2.000 ya da daha çok nesneli işler arka planda çalışır; sayfa donmaz.",
+    "choice": "auto"
+   }
+  },
+  {
+   "title": "sayfa ve worker; Otomatik büyük girdide",
+   "declared": [
+    "client",
+    "worker"
+   ],
+   "available": [
+    "client",
+    "worker"
+   ],
+   "auto": "worker",
+   "model": false,
+   "choice": "auto",
+   "expect": {
+    "options": [
+     {
+      "value": "auto",
+      "label": "Otomatik",
+      "note": "şimdi: arka planda",
+      "disabled": false,
+      "checked": true
+     },
+     {
+      "value": "client",
+      "label": "Bu tarayıcıda",
+      "note": null,
+      "disabled": false,
+      "checked": false
+     },
+     {
+      "value": "worker",
+      "label": "Arka planda (worker)",
+      "note": null,
+      "disabled": false,
+      "checked": false
+     }
+    ],
+    "hint": "2.000 ya da daha çok nesneli işler arka planda çalışır; sayfa donmaz.",
+    "choice": "auto"
+   }
+  },
+  {
+   "title": "sayfa ve worker; worker seçili",
+   "declared": [
+    "client",
+    "worker"
+   ],
+   "available": [
+    "client",
+    "worker"
+   ],
+   "auto": "client",
+   "model": false,
+   "choice": "worker",
+   "expect": {
+    "options": [
+     {
+      "value": "auto",
+      "label": "Otomatik",
+      "note": "şimdi: bu tarayıcıda",
+      "disabled": false,
+      "checked": false
+     },
+     {
+      "value": "client",
+      "label": "Bu tarayıcıda",
+      "note": null,
+      "disabled": false,
+      "checked": false
+     },
+     {
+      "value": "worker",
+      "label": "Arka planda (worker)",
+      "note": null,
+      "disabled": false,
+      "checked": true
+     }
+    ],
+    "hint": null,
+    "choice": "worker"
+   }
+  },
+  {
+   "title": "sayfa ve worker; saklanan yer burada yok",
+   "declared": [
+    "client",
+    "worker",
+    "server"
+   ],
+   "available": [
+    "client",
+    "worker"
+   ],
+   "auto": "client",
+   "model": false,
+   "choice": "server",
+   "expect": {
+    "options": [
+     {
+      "value": "auto",
+      "label": "Otomatik",
+      "note": "şimdi: bu tarayıcıda",
+      "disabled": false,
+      "checked": true
+     },
+     {
+      "value": "client",
+      "label": "Bu tarayıcıda",
+      "note": null,
+      "disabled": false,
+      "checked": false
+     },
+     {
+      "value": "worker",
+      "label": "Arka planda (worker)",
+      "note": null,
+      "disabled": false,
+      "checked": false
+     },
+     {
+      "value": "server",
+      "label": "KentOS sunucusunda",
+      "note": "yakında",
+      "disabled": true,
+      "checked": false
+     }
+    ],
+    "hint": "2.000 ya da daha çok nesneli işler arka planda çalışır; sayfa donmaz.",
+    "choice": "auto"
+   }
+  },
+  {
+   "title": "model, sayfa ve worker",
+   "declared": [
+    "client",
+    "worker"
+   ],
+   "available": [
+    "client",
+    "worker"
+   ],
+   "auto": null,
+   "model": true,
+   "choice": "auto",
+   "expect": {
+    "options": [
+     {
+      "value": "auto",
+      "label": "Otomatik",
+      "note": "adım adım",
+      "disabled": false,
+      "checked": true
+     },
+     {
+      "value": "client",
+      "label": "Bu tarayıcıda",
+      "note": null,
+      "disabled": false,
+      "checked": false
+     },
+     {
+      "value": "worker",
+      "label": "Arka planda (worker)",
+      "note": null,
+      "disabled": false,
+      "checked": false
+     }
+    ],
+    "hint": "2.000 ya da daha çok nesneli işler arka planda çalışır; sayfa donmaz.",
+    "choice": "auto"
+   }
+  }
+ ],
+ "restore": [
+  {
+   "title": "hiçbiri uymuyor",
+   "tool": "points.numberVertices",
+   "stored": {
+    "input": "selection",
+    "direction": "left",
+    "start": "center",
+    "startPoint": {
+     "x": 1
+    },
+    "prefix": 5,
+    "length": "6",
+    "pad": null,
+    "first": null,
+    "shared": "true",
+    "tolerance": null,
+    "output": "lines",
+    "textHeight": false,
+    "layer": {
+     "name": "Köşe noktaları"
+    },
+    "unknown": 1
+   },
+   "expect": {
+    "values": {
+     "input": {
+      "scope": "selection"
+     },
+     "direction": "cw",
+     "start": "northwest",
+     "startPoint": null,
+     "prefix": "P",
+     "length": 6,
+     "pad": "0",
+     "first": 1,
+     "step": 1,
+     "shared": true,
+     "tolerance": 0.001,
+     "output": "points",
+     "textHeight": 2,
+     "layer": {
+      "newName": "Köşe noktaları"
+     }
+    },
+    "advancedOpen": false,
+    "issues": []
+   }
+  },
+  {
+   "title": "uyuyor ama sorunlu",
+   "tool": "points.numberVertices",
+   "stored": {
+    "input": {
+     "scope": "ids",
+     "ids": [
+      1,
+      2
+     ]
+    },
+    "startPoint": null,
+    "prefix": "ABCDEFGHIJKLMNOPQ",
+    "length": 40,
+    "step": 1.5,
+    "textHeight": -1,
+    "layer": {
+     "layerId": "yok"
+    }
+   },
+   "expect": {
+    "values": {
+     "input": {
+      "scope": "ids",
+      "ids": [
+       1,
+       2
+      ]
+     },
+     "direction": "cw",
+     "start": "northwest",
+     "startPoint": null,
+     "prefix": "ABCDEFGHIJKLMNOPQ",
+     "length": 40,
+     "pad": "0",
+     "first": 1,
+     "step": 1.5,
+     "shared": true,
+     "tolerance": 0.001,
+     "output": "points",
+     "textHeight": -1,
+     "layer": {
+      "layerId": "yok"
+     }
+    },
+    "advancedOpen": true,
+    "issues": [
+     {
+      "param": "prefix",
+      "message": "“Önek” en çok 12 karakter olabilir."
+     },
+     {
+      "param": "length",
+      "message": "“Toplam uzunluk” en çok 30 olmalı."
+     },
+     {
+      "param": "step",
+      "message": "“Artış” bir tam sayı olmalı."
+     },
+     {
+      "param": "layer",
+      "message": "“Hedef katman”: seçilen katman artık yok."
+     }
+    ]
+   }
+  },
+  {
+   "title": "girdi türleri: aracın almadığı tür",
+   "tool": "annotation.edgeLengths",
+   "stored": {
+    "input": {
+     "scope": "all",
+     "kinds": [
+      "circle"
+     ]
+    },
+    "suffix": " m",
+    "minLength": 0.5
+   },
+   "expect": {
+    "values": {
+     "input": {
+      "scope": "selection"
+     },
+     "decimals": 3,
+     "side": "outside",
+     "textHeight": 2,
+     "prefix": "",
+     "suffix": " m",
+     "minLength": 0.5,
+     "shared": true,
+     "layer": {
+      "newName": "Kenar ölçüleri"
+     }
+    },
+    "advancedOpen": true,
+    "issues": []
+   }
+  },
+  {
+   "title": "girdi türleri: aracın aldığı tür",
+   "tool": "annotation.edgeLengths",
+   "stored": {
+    "input": {
+     "scope": "all",
+     "kinds": [
+      "line"
+     ]
+    }
+   },
+   "expect": {
+    "values": {
+     "input": {
+      "scope": "all",
+      "kinds": [
+       "line"
+      ]
+     },
+     "decimals": 3,
+     "side": "outside",
+     "textHeight": 2,
+     "prefix": "",
+     "suffix": "",
+     "minLength": 0,
+     "shared": true,
+     "layer": {
+      "newName": "Kenar ölçüleri"
+     }
+    },
+    "advancedOpen": false,
+    "issues": []
+   }
+  },
+  {
+   "title": "kapsamı olmayan katman",
+   "tool": "annotation.edgeLengths",
+   "stored": {
+    "input": {
+     "scope": "layer"
+    }
+   },
+   "expect": {
+    "values": {
+     "input": {
+      "scope": "selection"
+     },
+     "decimals": 3,
+     "side": "outside",
+     "textHeight": 2,
+     "prefix": "",
+     "suffix": "",
+     "minLength": 0,
+     "shared": true,
+     "layer": {
+      "newName": "Kenar ölçüleri"
+     }
+    },
+    "advancedOpen": false,
+    "issues": []
+   }
+  },
+  {
+   "title": "isteğe bağlı boş, zorunlu boş",
+   "tool": "attributes.calculate",
+   "stored": {
+    "where": null,
+    "value": null,
+    "field": 7,
+    "empty": "drop",
+    "label": 0
+   },
+   "expect": {
+    "values": {
+     "input": {
+      "scope": "selection"
+     },
+     "field": "Hesap alanı",
+     "value": "metin($alan, 2)",
+     "where": null,
+     "empty": "keep",
+     "label": true
+    },
+    "advancedOpen": true,
+    "issues": []
+   }
+  },
+  {
+   "title": "türü belirtmeyen girdi",
+   "tool": "selection.byExpression",
+   "stored": {
+    "input": {
+     "scope": "visible",
+     "kinds": [
+      "point",
+      "text"
+     ]
+    },
+    "mode": "within",
+    "condition": ""
+   },
+   "expect": {
+    "values": {
+     "input": {
+      "scope": "visible",
+      "kinds": [
+       "point",
+       "text"
+      ]
+     },
+     "condition": "",
+     "mode": "within"
+    },
+    "advancedOpen": false,
+    "issues": [
+     {
+      "param": "condition",
+      "message": "“Koşul”: bir ifade yazın."
+     }
+    ]
+   }
+  },
+  {
+   "title": "model girdisi",
+   "tool": "model:builtin.parcelSheet",
+   "stored": {
+    "parcels": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "prefix": ""
+   },
+   "expect": {
+    "values": {
+     "parcels": {
+      "scope": "layer",
+      "layerId": "parsel"
+     },
+     "prefix": ""
+    },
+    "advancedOpen": false,
+    "issues": []
+   }
+  }
+ ],
+ "kinds": [
+  {
+   "title": "süzgeç yok, iki tür",
+   "tool": "points.numberVertices",
+   "value": {
+    "scope": "all"
+   },
+   "present": [
+    {
+     "kind": "polygon",
+     "count": 4
+    },
+    {
+     "kind": "polyline",
+     "count": 1
+    }
+   ],
+   "click": "polyline",
+   "expect": {
+    "before": {
+     "chips": [
+      {
+       "kind": "polygon",
+       "label": "Kapalı alan",
+       "count": 4,
+       "pressed": true,
+       "title": "Bu türü dışarıda bırak"
+      },
+      {
+       "kind": "polyline",
+       "label": "Çoklu çizgi",
+       "count": 1,
+       "pressed": true,
+       "title": "Bu türü dışarıda bırak"
+      }
+     ]
+    },
+    "after": {
+     "scope": "all",
+     "kinds": [
+      "polygon"
+     ]
+    },
+    "afterView": {
+     "chips": [
+      {
+       "kind": "polygon",
+       "label": "Kapalı alan",
+       "count": 4,
+       "pressed": true,
+       "title": "Bu türü dışarıda bırak"
+      },
+      {
+       "kind": "polyline",
+       "label": "Çoklu çizgi",
+       "count": 1,
+       "pressed": false,
+       "title": "Bu türü de al"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "title": "bırakılan tür geri alınınca süzgeç kalkar",
+   "tool": "points.numberVertices",
+   "value": {
+    "scope": "all",
+    "kinds": [
+     "polygon"
+    ]
+   },
+   "present": [
+    {
+     "kind": "polygon",
+     "count": 4
+    },
+    {
+     "kind": "polyline",
+     "count": 1
+    }
+   ],
+   "click": "polyline",
+   "expect": {
+    "before": {
+     "chips": [
+      {
+       "kind": "polygon",
+       "label": "Kapalı alan",
+       "count": 4,
+       "pressed": true,
+       "title": "Bu türü dışarıda bırak"
+      },
+      {
+       "kind": "polyline",
+       "label": "Çoklu çizgi",
+       "count": 1,
+       "pressed": false,
+       "title": "Bu türü de al"
+      }
+     ]
+    },
+    "after": {
+     "scope": "all"
+    },
+    "afterView": {
+     "chips": [
+      {
+       "kind": "polygon",
+       "label": "Kapalı alan",
+       "count": 4,
+       "pressed": true,
+       "title": "Bu türü dışarıda bırak"
+      },
+      {
+       "kind": "polyline",
+       "label": "Çoklu çizgi",
+       "count": 1,
+       "pressed": true,
+       "title": "Bu türü dışarıda bırak"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "title": "tek tür, süzgeçte: bırakılınca hiçbiri",
+   "tool": "points.numberVertices",
+   "value": {
+    "scope": "layer",
+    "layerId": "parsel",
+    "kinds": [
+     "polygon"
+    ]
+   },
+   "present": [
+    {
+     "kind": "polygon",
+     "count": 3
+    }
+   ],
+   "click": "polygon",
+   "expect": {
+    "before": {
+     "chips": [
+      {
+       "kind": "polygon",
+       "label": "Kapalı alan",
+       "count": 3,
+       "pressed": true,
+       "title": "Bu türü dışarıda bırak"
+      }
+     ]
+    },
+    "after": {
+     "scope": "layer",
+     "layerId": "parsel",
+     "kinds": []
+    },
+    "afterView": {
+     "chips": [
+      {
+       "kind": "polygon",
+       "label": "Kapalı alan",
+       "count": 3,
+       "pressed": false,
+       "title": "Bu türü de al"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "title": "hiçbiri seçiliyken",
+   "tool": "points.numberVertices",
+   "value": {
+    "scope": "layer",
+    "layerId": "parsel",
+    "kinds": []
+   },
+   "present": [
+    {
+     "kind": "polygon",
+     "count": 3
+    }
+   ],
+   "click": "polygon",
+   "expect": {
+    "before": {
+     "chips": [
+      {
+       "kind": "polygon",
+       "label": "Kapalı alan",
+       "count": 3,
+       "pressed": false,
+       "title": "Bu türü de al"
+      }
+     ]
+    },
+    "after": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "afterView": {
+     "note": "Uygun nesneler: kapalı alan, çoklu çizgi"
+    }
+   }
+  },
+  {
+   "title": "süzgeçteki tür kapsamda yok",
+   "tool": "points.numberVertices",
+   "value": {
+    "scope": "selection",
+    "kinds": [
+     "polyline"
+    ]
+   },
+   "present": [
+    {
+     "kind": "polygon",
+     "count": 3
+    }
+   ],
+   "click": "polygon",
+   "expect": {
+    "before": {
+     "chips": [
+      {
+       "kind": "polygon",
+       "label": "Kapalı alan",
+       "count": 3,
+       "pressed": false,
+       "title": "Bu türü de al"
+      }
+     ]
+    },
+    "after": {
+     "scope": "selection"
+    },
+    "afterView": {
+     "note": "Uygun nesneler: kapalı alan, çoklu çizgi"
+    }
+   }
+  },
+  {
+   "title": "türü belirtmeyen araç, tek tür",
+   "tool": "selection.byExpression",
+   "value": {
+    "scope": "selection"
+   },
+   "present": [
+    {
+     "kind": "point",
+     "count": 3
+    }
+   ],
+   "click": "point",
+   "expect": {
+    "before": null,
+    "after": {
+     "scope": "selection",
+     "kinds": []
+    },
+    "afterView": {
+     "chips": [
+      {
+       "kind": "point",
+       "label": "Nokta",
+       "count": 3,
+       "pressed": false,
+       "title": "Bu türü de al"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "title": "kapsamdaki sırayla",
+   "tool": "selection.byExpression",
+   "value": {
+    "scope": "all"
+   },
+   "present": [
+    {
+     "kind": "point",
+     "count": 3
+    },
+    {
+     "kind": "polygon",
+     "count": 2
+    },
+    {
+     "kind": "line",
+     "count": 1
+    }
+   ],
+   "click": "polygon",
+   "expect": {
+    "before": {
+     "chips": [
+      {
+       "kind": "point",
+       "label": "Nokta",
+       "count": 3,
+       "pressed": true,
+       "title": "Bu türü dışarıda bırak"
+      },
+      {
+       "kind": "polygon",
+       "label": "Kapalı alan",
+       "count": 2,
+       "pressed": true,
+       "title": "Bu türü dışarıda bırak"
+      },
+      {
+       "kind": "line",
+       "label": "Çizgi",
+       "count": 1,
+       "pressed": true,
+       "title": "Bu türü dışarıda bırak"
+      }
+     ]
+    },
+    "after": {
+     "scope": "all",
+     "kinds": [
+      "point",
+      "line"
+     ]
+    },
+    "afterView": {
+     "chips": [
+      {
+       "kind": "point",
+       "label": "Nokta",
+       "count": 3,
+       "pressed": true,
+       "title": "Bu türü dışarıda bırak"
+      },
+      {
+       "kind": "polygon",
+       "label": "Kapalı alan",
+       "count": 2,
+       "pressed": false,
+       "title": "Bu türü de al"
+      },
+      {
+       "kind": "line",
+       "label": "Çizgi",
+       "count": 1,
+       "pressed": true,
+       "title": "Bu türü dışarıda bırak"
+      }
+     ]
+    }
+   }
+  }
+ ],
+ "tokens": [
+  {
+   "name": "Ada",
+   "token": "Ada"
+  },
+  {
+   "name": "Tapu alanı",
+   "token": "[Tapu alanı]"
+  },
+  {
+   "name": "ve",
+   "token": "[ve]"
+  },
+  {
+   "name": "Veya",
+   "token": "[Veya]"
+  },
+  {
+   "name": "Değil",
+   "token": "[Değil]"
+  },
+  {
+   "name": "boş",
+   "token": "[boş]"
+  },
+  {
+   "name": "NULL",
+   "token": "[NULL]"
+  },
+  {
+   "name": "true",
+   "token": "[true]"
+  },
+  {
+   "name": "Doğru",
+   "token": "[Doğru]"
+  },
+  {
+   "name": "_x1",
+   "token": "_x1"
+  },
+  {
+   "name": "1a",
+   "token": "[1a]"
+  },
+  {
+   "name": "ÇİZGİ",
+   "token": "ÇİZGİ"
+  },
+  {
+   "name": "Nitelik2",
+   "token": "Nitelik2"
+  },
+  {
+   "name": "a-b",
+   "token": "[a-b]"
+  },
+  {
+   "name": "İl",
+   "token": "İl"
+  },
+  {
+   "name": "x.y",
+   "token": "[x.y]"
+  }
+ ],
+ "inserts": [
+  {
+   "text": "",
+   "start": 0,
+   "end": 0,
+   "insert": "Ada",
+   "expect": {
+    "text": "Ada",
+    "caret": 3
+   }
+  },
+  {
+   "text": "x",
+   "start": 1,
+   "end": 1,
+   "insert": "Ada",
+   "expect": {
+    "text": "x Ada",
+    "caret": 5
+   }
+  },
+  {
+   "text": "x ",
+   "start": 2,
+   "end": 2,
+   "insert": "Ada",
+   "expect": {
+    "text": "x Ada",
+    "caret": 5
+   }
+  },
+  {
+   "text": "metin(",
+   "start": 6,
+   "end": 6,
+   "insert": "$alan",
+   "expect": {
+    "text": "metin($alan",
+    "caret": 11
+   }
+  },
+  {
+   "text": "yuvarla($alan,",
+   "start": 14,
+   "end": 14,
+   "insert": "2",
+   "expect": {
+    "text": "yuvarla($alan,2",
+    "caret": 15
+   }
+  },
+  {
+   "text": "Ada = 1",
+   "start": 0,
+   "end": 3,
+   "insert": "[Tapu alanı]",
+   "expect": {
+    "text": "[Tapu alanı] = 1",
+    "caret": 12
+   }
+  },
+  {
+   "text": "Ada = 1",
+   "start": 3,
+   "end": 3,
+   "insert": "ve",
+   "expect": {
+    "text": "Ada ve = 1",
+    "caret": 6
+   }
+  },
+  {
+   "text": "a\tb",
+   "start": 2,
+   "end": 2,
+   "insert": "c",
+   "expect": {
+    "text": "a\tcb",
+    "caret": 3
+   }
+  },
+  {
+   "text": "Ada Parsel",
+   "start": 4,
+   "end": 10,
+   "insert": "Nitelik",
+   "expect": {
+    "text": "Ada Nitelik",
+    "caret": 11
+   }
+  }
+ ],
+ "numbers": [
+  {
+   "text": "12",
+   "value": 12
+  },
+  {
+   "text": "12.5",
+   "value": 12.5
+  },
+  {
+   "text": "12,5",
+   "value": 12.5
+  },
+  {
+   "text": " 7 ",
+   "value": 7
+  },
+  {
+   "text": "",
+   "value": null
+  },
+  {
+   "text": " ",
+   "value": null
+  },
+  {
+   "text": "abc",
+   "value": null
+  },
+  {
+   "text": "1 000",
+   "value": null
+  },
+  {
+   "text": "12,5,3",
+   "value": null
+  },
+  {
+   "text": "-3",
+   "value": -3
+  },
+  {
+   "text": "0",
+   "value": 0
+  },
+  {
+   "text": "1,",
+   "value": 1
+  },
+  {
+   "text": "Infinity",
+   "value": null
+  }
+ ],
+ "icons": [
+  {
+   "text": "2 / 3 nesne koşulu sağlıyor.",
+   "icon": "check"
+  },
+  {
+   "text": "0 / 3 nesne koşulu sağlıyor. “Mahalle” alanı bu nesnelerde yok.",
+   "icon": "info"
+  },
+  {
+   "text": "İlk nesnede (1): “600.00”.",
+   "icon": "check"
+  },
+  {
+   "text": "İlk nesnede (1): boş. 3 nesnede sonuç boş.",
+   "icon": "info"
+  },
+  {
+   "text": "İlk nesnede: “101/1”.",
+   "icon": "check"
+  },
+  {
+   "text": "Önizleme için uygun nesne yok.",
+   "icon": "info"
+  }
+ ]
+}

@@ -68,6 +68,11 @@ apps/web/src/app/processing.ts         ProcessingService (registry + runner + so
 apps/web/src/ui/processing/
   ToolDialog.ts      Tanımdan üretilen araç penceresi
   paramFields.ts     Parametre türü başına kontrol
+  dialogPlan.ts      Pencerenin sayfasız kuralları: form, bölümler, sorunlar, önizleme, alt satır, Nerede çalışır,
+                     pencerenin durumu ve gösterdiği (fixtures/processing/v1/dialog.json)
+  fieldPlan.ts       Alanların sayfasız kuralları: kapsam, türler, hedef katman, nokta, öznitelik adı, ifade yardımcıları
+  dialogTexts.ts     Pencerenin sözleri
+  dialogFixture.ts   dialog.json'un oturumlarını oynatan (denetleyici ve kaydedici; uygulama yüklemez)
   ProcessingPanel.ts Sağ doktaki araç kutusu (Modeller dalı dahil) ve geçmiş
   model/             Model tasarımcısı: ModelDesigner, ModelCanvas, modelPalette, modelInspector
 apps/web/src/tools/pickPointTool.ts    Nokta parametresi için "Haritadan göster"
@@ -133,7 +138,7 @@ sağlanınca gösterilir ve denetlenir), `default` (sabit ya da
 - **Kapsamlar:** "Seçili" seçimdeki nesneler; "Görünen" kutusu ekrandaki görünür alanla kesişen, görünür katmanlardaki nesneler (yardımcı çizgiler hariç; kutu testini görünümün geometri deposu yapar); "Tümü" görünür katmanlardaki bütün nesneler; "Katman" bir katman ya da grubun altındaki bütün katmanlar (gizli olsa bile); "ids" modellerde önceki adımın çıktısıdır ve pencerede sunulmaz. `kinds` dışındaki nesneler sessizce elenir; pencere ne kadar nesne okunacağını canlı gösterir.
 - **Boş girdi:** zorunlu bir `features` parametresi hiç nesneye çözülmezse çalıştırıcı aracı çalıştırmaz ve alanın altına yönlendiren bir mesaj yazar ("Önce nesneleri seçin ya da kapsamı değiştirin"). Model içinde (`ids`) boş çıktı hata değildir.
 - **Değiştirilen girdi (`writes`):** araç girdisinin nesnelerini değiştiriyorsa (Öznitelik hesapla) kilitli katmandaki nesneler girdiye alınmaz ve çalıştırma başında söylenir: "“Nesneler”: 1 nesne kilitli katmanda olduğu için işleme alınmadı." Özet, çıktılar ve modelin sonraki adımı yalnız yazılanı sayar. Nesnelerin hepsi kilitliyse araç çalışmaz: "“Nesneler”: seçili nesnelerin hepsi kilitli katmanda. Kilidi Katmanlar panelinden açın." (kapsamın sözüyle: görünen alandaki, görünen katmanlardaki, bu katmandaki). Uygulamadaki kilitli katman atlaması güvenlik ağı olarak kalır.
-- **Hedef katman:** `{ newName }` aynı adlı bir katman varsa onu kullanır (araç ikinci kez çalışınca aynı "Köşe noktaları" katmanına yazar); yoksa katman yalnızca araç gerçekten ona yazarsa oluşturulur. Kilitli katman seçilemez; kilitli katmana düşen değişiklikler atlanır ve sayısı bildirilir.
+- **Hedef katman:** `{ newName }` aynı adlı bir katman varsa onu kullanır (araç ikinci kez çalışınca aynı "Köşe noktaları" katmanına yazar); adlar kırpılmış ve Türkçe harfler katlanarak karşılaştırılır ("kose noktalari" = "Köşe noktaları", `sameNamedLayer`), pencere de "(mevcut)" demeyi bu kuralla, var olan katmanın adıyla söyler. Yoksa katman yalnızca araç gerçekten ona yazarsa oluşturulur. Kilitli katman seçilemez; kilitli katmana düşen değişiklikler atlanır ve sayısı bildirilir.
 
 ### 4.3 Çalışma bağlamı ve değişiklik kümesi
 
@@ -219,7 +224,7 @@ interface Executor {
 | `server` | Planlı | Aynı `RunJob` KentOS servisine gider (belge sürümüyle); ilerleme bir akıştan (SSE/WebSocket) gelir. Sonuç yine `ChangeSet`'tir. Aynı TypeScript araçları Node'da çalışabilir (`handleJob` sunucuda da kullanılabilir). |
 | `postgis` | Planlı | Araç, `run`'a ek olarak bir `sql` üreticisi verir; sunucu bunu PostGIS'te parametreli sorgu olarak çalıştırır. Sonuç `ChangeSet`'e çevrilir ya da veritabanında kalır. |
 
-- **Seçim:** kullanıcı pencerenin sağ panelindeki "Nerede çalışır" listesinden seçer ve seçim araç başına hatırlanır (`kentos.processing.v1`). **Otomatik** (varsayılan), girdiler `WORKER_THRESHOLD` (2 000) nesne ve üstündeyse worker'ı, değilse aracın ilk tercihini kullanır; pencere o anki kararı yazar ("şimdi: bu tarayıcıda"). Aracın bildirdiği ama bu ortamda olmayan yerler "yakında" diye, seçilemez olarak listelenir.
+- **Seçim:** kullanıcı pencerenin sağ panelindeki "Nerede çalışır" listesinden seçer ve seçim araç başına hatırlanır (`kentos.processing.v1`). **Otomatik** (varsayılan), girdiler `WORKER_THRESHOLD` (2 000) nesne ve üstündeyse worker'ı, değilse aracın ilk tercihini kullanır; pencere o anki kararı yazar ("şimdi: bu tarayıcıda"). Aracın bildirdiği ama bu ortamda olmayan yerler "yakında" diye, seçilemez olarak listelenir. Yalnız bir yer varsa Otomatik sunulmaz, o yer "bu çalıştırmada" notuyla işaretlidir; saklanan seçim bu ortamda yoksa çalıştırma Otomatik'le (tek yerde o yerle) yapılır.
 - **Kural:** `run` DOM'a, `ctx` dışındaki servislere ve modül düzeyinde değişen duruma dokunmaz; sonuç `RunResult` yapılandırılmış kopyayla taşınabilir olmalıdır (işlev, sınıf örneği yok). Yalnızca yerleşik araçlar worker'dadır; eklenti araçları `targets`'ta `worker` bildirse de worker onları bilmedikçe (`supports`) sayfada çalışır.
 - Geçmiş, her çalıştırmanın nerede çalıştığını saklar ve gösterir ("130 ms, arka planda").
 
@@ -255,8 +260,8 @@ ProcessingModel { id, label, category, description, inputs: ParamDef[], steps, o
 - **Menü:** üst menüde **İşlemler**: İşlem araç kutusu, İşlem geçmişi, **Modeller** (kitaplıktaki modeller ve "Yeni model…"; `'@models'`) ve her kategori için bir alt menü (`'@processing'`); hepsi kayıttan üretilir (`app/menus.ts`).
 - **Araç kutusunda Modeller dalı** en üsttedir: her model bir satır (tıklayınca çalıştırma penceresi; kalem düğmesi tasarımcıyı açar, yerleşik modelde kopyasını) ve "Yeni model…".
 - **Komutlar:** her araç `processing.run.<id>` komutudur; takma adları komut satırından yazılabilir (`KOSENUMARA`). `processing.toolbox`, `processing.history` ve eski `map.edgeLengths` (Harita menüsü) de komuttur.
-- **Pencere** (`ui/processing/ToolDialog.ts`): solda Girdi, Ayarlar, Çıktı ve katlanır "Gelişmiş ayarlar"; sağda kategori, açıklama, yardım, canlı önizleme, çalışma yerleri ve komut satırı takma adları; altta Varsayılanlar, durum, Kapat ve Çalıştır. Hatalar dokunulan alanda anında, Çalıştır'dan sonra hepsi görünür. Enter (metin alanında) ya da Ctrl+Enter çalıştırır. Başarılı çalıştırmada "Sonuçları seç" ve "Geri al" sunulur; pencere açık kalır, değer değiştirip yeniden çalıştırılabilir.
-- **Nokta parametresi:** "Haritadan göster" pencereyi kapatır, `PickPointTool` ile tek nokta ister (kenet ve `Y,X` yazımı çalışır; Esc vazgeçer) ve pencereyi değerlerle yeniden açar.
+- **Pencere** (`ui/processing/ToolDialog.ts`): solda Girdi, Ayarlar, Çıktı ve katlanır "Gelişmiş ayarlar"; sağda kategori, açıklama, yardım, canlı önizleme, çalışma yerleri ve komut satırı takma adları; altta Varsayılanlar, durum, Kapat ve Çalıştır. Hatalar dokunulan alanda anında, Çalıştır'dan sonra hepsi görünür. Enter (metin alanında) ya da Ctrl+Enter çalıştırır. Başarılı çalıştırmada "Sonuçları seç" ve "Geri al" sunulur; pencere açık kalır, değer değiştirip yeniden çalıştırılabilir. Gelişmiş ayarlar, görünen değerlerinden biri varsayılanından farklıysa (son çalıştırmadan ya da geçmişten) açık başlar; seçili olanı yeniden seçmek hiçbir şeyi değiştirmez; çalışırken Varsayılanlar kapalıdır. Kurallar `dialogPlan.ts`, `fieldPlan.ts` ve `dialogTexts.ts`'tedir; `fixtures/processing/v1/dialog.json` onları sabitler; masaüstünün penceresi aynı dosyayı oynatır ([fixtures/processing/README.md](../fixtures/processing/README.md)).
+- **Nokta parametresi:** "Haritadan göster" pencereyi kapatır, `PickPointTool` ile tek nokta ister (kenet ve `Y,X` yazımı çalışır; Esc vazgeçer) ve pencereyi olduğu gibi (dokunulan alanlar, çalıştırma denemesi, açık bölümler) noktayla geri getirir.
 - **Geçmiş:** her çalıştırmanın durumu, saati, süresi ve özeti; "Yeniden aç" aynı değerlerle pencereyi açar, "n nesneyi seç" çalıştırmanın eklediği ve hâlâ var olan nesneleri seçip yakınlaştırır.
 
 ### 8.1 Durum kapsamları

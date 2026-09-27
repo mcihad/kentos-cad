@@ -181,6 +181,24 @@
       }
     },
     {
+      "id": "calculate-trimmed-name",
+      "title": "Öznitelik hesapla, alan adı boşluklarla yazılmışken: araç adı kırpılmış alır (pencerenin notu ve önizlemesi gibi), var olan alana yazılır ve etiket onu izler",
+      "document": "parcels.kcad",
+      "selection": [1, 2],
+      "run": {"tool": "attributes.calculate"},
+      "values": {"field": " Parsel ", "value": "'P-' || Parsel"},
+      "expect": {
+        "status": "ok",
+        "summary": "2 nesnede “Parsel” yazıldı.",
+        "undo": "Öznitelik hesapla",
+        "updated": [
+          {"id": 1, "attrs": {"Ada": "101", "Parsel": "P-1", "Nitelik": "Arsa"}, "label": "P-1"},
+          {"id": 2, "attrs": {"Ada": "101", "Parsel": "P-2", "Nitelik": "Arsa"}, "label": "P-2"}
+        ],
+        "outputs": {"count": 2, "changed": [1, 2]}
+      }
+    },
+    {
       "id": "calculate-locked",
       "title": "Öznitelik hesapla, kilitli katmandaki parsel de seçiliyken: o parsel işleme alınmaz ve söylenir; özet ve çıktılar yalnız yazılanı sayar",
       "document": "parcels.kcad",

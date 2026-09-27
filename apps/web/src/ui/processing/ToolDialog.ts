@@ -1,34 +1,47 @@
 import type { AppContext } from '../../app/context';
 import { DisposableStore } from '../../core/disposable';
 import type { Vec2 } from '../../model/geometry';
-import { defaultValues, isVisible, restoreValues, type ValidationIssue } from '../../processing/parameters';
-import { orderSteps, stepName, type ProcessingModel } from '../../processing/model';
+import type { ProcessingModel } from '../../processing/model';
 import { MODEL_PREFIX, modelAsTool, runModel } from '../../processing/modelRunner';
-import { WORKER_THRESHOLD, type InputSummary, type RunOptions, type RunOutcome, type TargetChoice } from '../../processing/runner';
-import type { ExecutionTarget, ParamDef, ProcessingTool } from '../../processing/types';
+import type { RunOptions, RunOutcome } from '../../processing/runner';
+import type { ProcessingTool } from '../../processing/types';
 import { PickPointTool } from '../../tools/pickPointTool';
 import { h, replaceChildren, type Child } from '../dom';
 import { icon } from '../icons';
 import { Dialog } from '../widgets/Dialog';
+import {
+  attempted,
+  chosenTarget,
+  dialogFrame,
+  dialogForm,
+  edited,
+  effectiveChoice,
+  finished,
+  hostEnv,
+  modelSteps,
+  startState,
+  picked,
+  progressed,
+  resetState,
+  rowForm,
+  started,
+  toggledAdvanced,
+  undone,
+  type DialogFrame,
+  type DialogState,
+  type SideForm,
+  type ViewEnv,
+} from './dialogPlan';
+import { DIALOG_TEXTS as T } from './dialogTexts';
 import { paramControl, type FieldEnv } from './paramFields';
-import { TARGET_SHORT } from './targets';
-
-export { TARGET_SHORT };
 
 /**
  * The dialog of one processing tool, generated from its definition: the
  * form on the left (Girdi, Ayarlar, Çıktı, Gelişmiş), what the tool does
  * and a live preview on the right, run status in the footer. It stays open
- * after a run so the user can adjust and run again, like QGIS.
+ * after a run so the user can adjust and run again, like QGIS. What it
+ * shows and how its state changes are dialogPlan's; this file draws them.
  */
-
-export const TARGET_LABEL: Record<ExecutionTarget, string> = {
-  client: 'Bu tarayıcıda',
-  worker: 'Arka planda (worker)',
-  server: 'KentOS sunucusunda',
-  postgis: 'PostGIS veritabanında',
-};
-
 
 export function openToolDialog(ctx: AppContext, toolId: string, values?: Record<string, unknown>): void {
   if (toolId.startsWith(MODEL_PREFIX)) return openModelDialog(ctx, toolId.slice(MODEL_PREFIX.length), values);
@@ -56,67 +69,56 @@ interface DialogOptions {
   model?: ProcessingModel;
   /** Runs the subject; a tool runs through the runner by default. */
   run?(values: Record<string, unknown>, opts: RunOptions): Promise<RunOutcome>;
+  /** The state to go on from: the dialog coming back after a point was shown on the map. */
+  resume?: DialogState;
 }
-
-type Status =
-  | { kind: 'idle' }
-  | { kind: 'running'; fraction: number; label: string; where?: ExecutionTarget }
-  /** `pick`: objects "Sonuçları seç" selects; `selected`: the run set the selection itself; `undo`: it edited the drawing. */
-  | { kind: 'ok'; text: string; pick: readonly number[]; selected: boolean; undo: boolean }
-  | { kind: 'error' | 'invalid'; text: string };
 
 class ToolDialog {
   private readonly ctx: AppContext;
   private readonly tool: ProcessingTool;
-  private values: Record<string, unknown>;
-  private readonly touched = new Set<string>();
-  /** After a run attempt every problem shows, not only the ones in fields the user touched. */
-  private attempted = false;
-  private advancedOpen = false;
-  private issues: ValidationIssue[] = [];
-  private inputs: Record<string, InputSummary> = {};
-  private status: Status = { kind: 'idle' };
+  private readonly opts: DialogOptions;
+  /** A model's step tools: "Nerede çalışır" offers every place one of them can go. */
+  private readonly modelTools?: readonly ProcessingTool[];
+  private state: DialogState;
+  /** What the values read on the drawing now: problems, inputs, places (recomputed on each full render). */
+  private env!: ViewEnv;
 
   private readonly d = new DisposableStore();
   private readonly dialog: Dialog;
   private readonly form = h('div', { class: 'ptool__form' });
   private readonly preview = h('div', { class: 'ptool__preview-value num' });
   private readonly statusEl = h('div', { class: 'ptool__status', role: 'status', 'aria-live': 'polite' });
-  private readonly targetsEl = h('div', { class: 'ptool__targets', role: 'radiogroup', 'aria-label': 'Nerede çalışır' });
-  private choice: TargetChoice;
+  private readonly targetsEl = h('div', { class: 'ptool__targets', role: 'radiogroup', 'aria-label': T.side.targets });
   private readonly runBtn: HTMLButtonElement;
   private readonly closeBtn: HTMLButtonElement;
-
-  private readonly opts: DialogOptions;
+  private readonly resetBtn: HTMLButtonElement;
 
   constructor(ctx: AppContext, tool: ProcessingTool, values?: Record<string, unknown>, opts: DialogOptions = {}) {
     this.ctx = ctx;
     this.tool = tool;
     this.opts = opts;
-    const runner = ctx.processing.runner;
-    this.values = restoreValues(tool, values ?? ctx.processing.lastValues(tool.id), runner.defaults());
-    this.choice = ctx.processing.targetChoice(tool.id);
-    this.advancedOpen = tool.parameters.some((p) => p.advanced && values && p.name in values && JSON.stringify(values[p.name]) !== JSON.stringify(defaultValues(tool, runner.defaults())[p.name]));
+    const { runner, registry } = ctx.processing;
+    this.modelTools = opts.model ? opts.model.steps.flatMap((s) => registry.get(s.tool) ?? []) : undefined;
+    this.state = opts.resume ?? startState(tool, values, ctx.processing.lastValues(tool.id), runner.defaults(), ctx.processing.targetChoice(tool.id));
 
-    const reset = h('button', { class: 'btn btn--ghost', type: 'button', title: 'Bütün alanları varsayılan değerlerine döndürür' }, 'Varsayılanlar');
-    this.closeBtn = h('button', { class: 'btn', type: 'button' }, 'Kapat');
-    this.runBtn = h('button', { class: 'btn btn--primary ptool__run', type: 'button' }, icon('play', 14), 'Çalıştır');
-    reset.addEventListener('click', () => {
-      this.values = defaultValues(tool, runner.defaults());
-      this.touched.clear();
-      this.attempted = false;
-      this.status = { kind: 'idle' };
+    this.resetBtn = h('button', { class: 'btn btn--ghost', type: 'button', title: T.footer.resetTitle }, T.footer.reset);
+    this.closeBtn = h('button', { class: 'btn', type: 'button' }, T.footer.close);
+    this.runBtn = h('button', { class: 'btn btn--primary ptool__run', type: 'button' }, icon('play', 14), T.footer.run);
+    this.resetBtn.addEventListener('click', () => {
+      this.state = resetState(this.state, tool, runner.defaults());
       this.render();
     });
-    this.closeBtn.addEventListener('click', () => (this.status.kind === 'running' ? runner.cancel() : this.dialog.close()));
+    this.closeBtn.addEventListener('click', () => (this.state.status.kind === 'running' ? runner.cancel() : this.dialog.close()));
     this.runBtn.addEventListener('click', () => void this.run());
 
+    const lookup = (id: string) => registry.get(id);
+    const form = dialogForm(tool, { categoryPath: (id) => registry.categoryPath(id), categoryIcon: (id) => registry.category(id)?.icon }, opts.model ? { steps: modelSteps(opts.model, lookup), builtin: ctx.processing.isBuiltinModel(opts.model.id) } : undefined);
     this.dialog = new Dialog({
-      title: tool.label,
+      title: form.title,
       width: 940,
       className: 'dialog--ptool',
-      content: [h('div', { class: 'ptool' }, h('div', { class: 'ptool__main' }, this.form), this.side())],
-      footer: [reset, this.statusEl, this.closeBtn, this.runBtn],
+      content: [h('div', { class: 'ptool' }, h('div', { class: 'ptool__main' }, this.form), this.side(form.side))],
+      footer: [this.resetBtn, this.statusEl, this.closeBtn, this.runBtn],
       onClose: () => this.d.dispose(),
     });
     // Enter in a text field runs the tool; Ctrl+Enter runs from anywhere.
@@ -129,9 +131,9 @@ class ToolDialog {
     });
     this.d.add(
       runner.running.subscribe((r) => {
-        if (!r || r.toolId !== tool.id || this.status.kind !== 'running') return;
-        this.status = { ...this.status, fraction: r.fraction, label: r.label };
-        this.renderStatus();
+        if (!r || r.toolId !== tool.id || this.state.status.kind !== 'running') return;
+        this.state = progressed(this.state, r.fraction, r.label);
+        this.paintStatus(this.frame());
       }),
     );
     this.render();
@@ -139,12 +141,19 @@ class ToolDialog {
     queueMicrotask(() => this.form.querySelector<HTMLElement>('input, .seg [aria-checked="true"]')?.focus());
   }
 
+  private envNow(): ViewEnv {
+    return hostEnv(this.ctx.processing.runner, this.tool, this.state.values, this.ctx.doc.layers, (p) => this.ctx.format.point(p), this.modelTools);
+  }
+
+  private frame(): DialogFrame {
+    return dialogFrame(this.tool, this.state, this.env);
+  }
+
   // ── Rendering ────────────────────────────────────────────────────────
 
   private render(): void {
-    const runner = this.ctx.processing.runner;
-    this.issues = runner.validate(this.tool, this.values);
-    this.inputs = runner.describeInputs(this.tool, this.values);
+    this.env = this.envNow();
+    const frame = this.frame();
 
     // Keep keyboard focus on the same control across the rebuild.
     const active = document.activeElement as HTMLElement | null;
@@ -152,31 +161,26 @@ class ToolDialog {
     const focusName = row?.dataset.param;
     const focusIndex = row ? focusables(row).indexOf(active!) : -1;
 
-    const shown = this.tool.parameters.filter((p) => isVisible(p, this.values));
-    const input = shown.filter((p) => !p.advanced && p.type === 'features');
-    const output = shown.filter((p) => !p.advanced && p.type === 'layer');
-    const main = shown.filter((p) => !p.advanced && p.type !== 'features' && p.type !== 'layer');
-    const advanced = shown.filter((p) => p.advanced);
-    const advancedIssue = advanced.some((p) => this.issueOf(p.name));
-
-    const toggle = h(
-      'button',
-      { class: 'pgroup__toggle', type: 'button', 'aria-expanded': String(this.advancedOpen || advancedIssue) },
-      icon(this.advancedOpen || advancedIssue ? 'chevronDown' : 'chevronRight', 14),
-      'Gelişmiş ayarlar',
-      h('span', { class: 'pgroup__count' }, String(advanced.length)),
-    );
-    toggle.addEventListener('click', () => {
-      this.advancedOpen = !this.advancedOpen;
-      this.render();
-    });
-
+    const adv = frame.sections.advanced;
+    let advanced: HTMLElement | null = null;
+    if (adv) {
+      const toggle = h(
+        'button',
+        { class: 'pgroup__toggle', type: 'button', 'aria-expanded': String(adv.open) },
+        icon(adv.open ? 'chevronDown' : 'chevronRight', 14),
+        T.sections.advanced,
+        h('span', { class: 'pgroup__count' }, String(adv.rows.length)),
+      );
+      toggle.addEventListener('click', () => {
+        this.state = toggledAdvanced(this.state);
+        this.render();
+      });
+      advanced = h('section', { class: 'pgroup pgroup--advanced' }, toggle, adv.open ? h('div', { class: 'pgroup__rows' }, adv.rows.map((n) => this.row(n))) : null);
+    }
     replaceChildren(
       this.form,
-      input.length ? this.group('Girdi', input) : null,
-      main.length ? this.group('Ayarlar', main) : null,
-      output.length ? this.group('Çıktı', output) : null,
-      advanced.length ? h('section', { class: 'pgroup pgroup--advanced' }, toggle, this.advancedOpen || advancedIssue ? h('div', { class: 'pgroup__rows' }, advanced.map((p) => this.row(p))) : null) : null,
+      frame.sections.groups.map((g) => h('section', { class: 'pgroup' }, h('div', { class: 'pgroup__title' }, g.title), h('div', { class: 'pgroup__rows' }, g.rows.map((n) => this.row(n))))),
+      advanced,
     );
 
     if (focusName) {
@@ -184,9 +188,58 @@ class ToolDialog {
       const list = again ? focusables(again) : [];
       (list[Math.max(0, Math.min(focusIndex, list.length - 1))] as HTMLElement | undefined)?.focus();
     }
-    this.renderPreview();
-    this.renderStatus();
-    this.renderTargets();
+    this.paint(frame);
+    this.paintTargets(frame);
+  }
+
+  /** What changes as the user types: preview, problems under fields, status and footer. */
+  private paint(frame: DialogFrame): void {
+    const p = frame.preview;
+    if (p) {
+      this.preview.textContent = p.text;
+      this.preview.toggleAttribute('data-muted', p.muted);
+    }
+    for (const row of this.form.querySelectorAll<HTMLElement>('[data-param]')) {
+      const issue = frame.issues[row.dataset.param!];
+      row.toggleAttribute('data-invalid', issue !== undefined);
+      const slot = row.querySelector('.prow__issue')!;
+      if (issue !== undefined) replaceChildren(slot, icon('error', 14), h('span', null, issue));
+      else slot.replaceChildren();
+    }
+    this.paintStatus(frame);
+  }
+
+  private paintStatus(frame: DialogFrame): void {
+    const { status: s, footer } = frame;
+    this.runBtn.disabled = footer.run.disabled;
+    replaceChildren(this.runBtn, icon('play', 14), footer.run.label);
+    this.closeBtn.textContent = footer.close;
+    this.resetBtn.disabled = footer.reset.disabled;
+    const content: Child[] = [];
+    if (s.kind === 'running') content.push(h('div', { class: 'ptool__progress' }, h('span', { style: `width:${s.progress ?? 0}%` })));
+    else if (s.icon) content.push(icon(s.icon, 16));
+    if (s.text) content.push(h('span', { class: 'ptool__status-text', title: s.kind === 'running' ? null : s.text }, s.text));
+    for (const a of s.actions) {
+      const b = h('button', { class: 'btn btn--ghost btn--small', type: 'button' }, T.actions[a]);
+      b.addEventListener('click', () => this.act(a, s.pick ?? []));
+      content.push(b);
+    }
+    this.statusEl.dataset.kind = s.kind;
+    replaceChildren(this.statusEl, content);
+  }
+
+  /** The status line's buttons after a run. */
+  private act(action: 'zoom' | 'select' | 'undo', pick: readonly number[]): void {
+    if (action === 'undo') {
+      this.ctx.commands.execute('edit.undo');
+      this.state = undone(this.state);
+      this.render();
+      return;
+    }
+    // A selection result is already applied: look at it; otherwise select what the run made or changed.
+    if (action === 'select') this.ctx.selection.set(pick);
+    this.dialog.close();
+    if (this.ctx.selection.size) this.ctx.view.zoomToSelection();
   }
 
   /**
@@ -194,243 +247,140 @@ class ToolDialog {
    * each place the tool declares. Places without an executor here are
    * listed as coming, so the user sees what the tool will be able to do.
    */
-  private renderTargets(): void {
-    const { runner, registry } = this.ctx.processing;
-    const model = this.opts.model;
-    // A model runs each step where it can: offer every place one of its steps can go.
-    const tools = model ? model.steps.flatMap((s) => registry.get(s.tool) ?? []) : [this.tool];
-    const available = new Set(tools.flatMap((t) => runner.executorsFor(t).map((e) => e.target)));
-    const declared = model ? [...available] : this.tool.targets;
-    const auto = model ? null : runner.executorFor(this.tool, 'auto', runner.inputSize(this.tool, this.values))?.target;
-    const option = (value: TargetChoice, label: string, note: string | null, disabled = false) => {
-      const checked = this.choice === value;
-      const b = h(
-        'button',
-        { class: 'ptool__target', type: 'button', role: 'radio', 'aria-checked': String(checked), disabled, tabindex: checked ? '0' : '-1' },
-        h('span', { class: 'ptool__radio' }),
-        h('span', { class: 'ptool__target-label' }, label),
-        note ? h('span', { class: 'ptool__target-note' }, note) : null,
-      );
-      b.addEventListener('click', () => {
-        this.choice = value;
-        this.ctx.processing.setTargetChoice(this.tool.id, value);
-        this.renderTargets();
-      });
-      return b;
-    };
-    const several = available.size > 1;
+  private paintTargets(frame: DialogFrame): void {
+    const t = frame.targets;
     replaceChildren(
       this.targetsEl,
-      several ? option('auto', 'Otomatik', auto ? `şimdi: ${TARGET_SHORT[auto]}` : model ? 'adım adım' : null) : null,
-      several && this.choice === 'auto' ? h('div', { class: 'ptool__target-hint' }, `${WORKER_THRESHOLD.toLocaleString('tr-TR')} nesneden büyük işler arka planda çalışır; sayfa donmaz.`) : null,
-      declared.map((t) =>
-        available.has(t) ? option(t, TARGET_LABEL[t], !several ? 'bu çalıştırmada' : null) : option(t, TARGET_LABEL[t], 'yakında', true),
-      ),
+      t.options.map((o, i) => {
+        const b = h(
+          'button',
+          { class: 'ptool__target', type: 'button', role: 'radio', 'aria-checked': String(o.checked), disabled: o.disabled, tabindex: o.checked ? '0' : '-1' },
+          h('span', { class: 'ptool__radio' }),
+          h('span', { class: 'ptool__target-label' }, o.label),
+          o.note ? h('span', { class: 'ptool__target-note' }, o.note) : null,
+        );
+        b.addEventListener('click', () => {
+          this.state = chosenTarget(this.state, o.value);
+          this.ctx.processing.setTargetChoice(this.tool.id, o.value);
+          this.paintTargets(this.frame());
+        });
+        // The hint about Otomatik sits under it.
+        return i === 0 && t.hint ? [b, h('div', { class: 'ptool__target-hint' }, t.hint)] : b;
+      }),
     );
   }
 
-  private group(title: string, params: ParamDef[]): HTMLElement {
-    return h('section', { class: 'pgroup' }, h('div', { class: 'pgroup__title' }, title), h('div', { class: 'pgroup__rows' }, params.map((p) => this.row(p))));
-  }
-
-  private row(def: ParamDef): HTMLElement {
+  private row(name: string): HTMLElement {
+    const def = this.tool.parameters.find((p) => p.name === name)!;
+    const f = rowForm(def);
+    const runner = this.ctx.processing.runner;
     const env: FieldEnv = {
       ctx: this.ctx,
-      describe: (name) => this.inputs[name],
-      previewExpression: (name) => this.ctx.processing.runner.previewExpression(this.tool, this.values, name),
-      pickPoint: (name) => this.pickPoint(name),
+      describe: (n) => this.env.inputs[n],
+      previewExpression: (n) => runner.previewExpression(this.tool, this.state.values, n),
+      pickPoint: (n) => this.pickPoint(n),
     };
-    const control = paramControl(def, this.values[def.name], (v, rebuild) => this.set(def.name, v, rebuild), env);
-    const stacked = def.type === 'features' || def.type === 'expression';
+    const control = paramControl(def, this.state.values[name], (v, rebuild) => this.set(name, v, rebuild), env);
     return h(
       'div',
-      { class: `prow${stacked ? ' prow--stacked' : ''}`, 'data-param': def.name },
+      { class: `prow${f.stacked ? ' prow--stacked' : ''}`, 'data-param': name },
       h(
         'div',
         { class: 'prow__text' },
-        h('div', { class: 'prow__label' }, def.label, def.optional ? h('span', { class: 'prow__opt' }, 'isteğe bağlı') : null),
-        def.description ? h('div', { class: 'prow__desc' }, def.description) : null,
+        h('div', { class: 'prow__label' }, f.label, f.optional ? h('span', { class: 'prow__opt' }, T.optional) : null),
+        f.description ? h('div', { class: 'prow__desc' }, f.description) : null,
       ),
       h('div', { class: 'prow__control' }, control, h('div', { class: 'prow__issue', role: 'alert' })),
     );
   }
 
-  /** Issue shown under a field: live for touched fields, all of them after a run attempt. */
-  private issueOf(name: string): ValidationIssue | undefined {
-    if (!this.attempted && !this.touched.has(name)) return undefined;
-    return this.issues.find((i) => i.param === name);
-  }
-
-  private renderIssues(): void {
-    for (const row of this.form.querySelectorAll<HTMLElement>('[data-param]')) {
-      const issue = this.issueOf(row.dataset.param!);
-      row.toggleAttribute('data-invalid', !!issue);
-      const slot = row.querySelector('.prow__issue')!;
-      if (issue) replaceChildren(slot, icon('error', 14), h('span', null, issue.message));
-      else slot.replaceChildren();
-    }
-  }
-
-  private renderPreview(): void {
-    const valid = !this.issues.some((i) => i.param);
-    const text = valid ? this.tool.preview?.(this.values as never) : null;
-    this.preview.textContent = text ?? (valid ? '' : 'Önizleme için alanları düzeltin.');
-    this.preview.toggleAttribute('data-muted', !text);
-    this.renderIssues();
-  }
-
-  private renderStatus(): void {
-    const s = this.status;
-    const running = s.kind === 'running';
-    this.runBtn.disabled = running;
-    replaceChildren(this.runBtn, icon('play', 14), running ? 'Çalışıyor…' : 'Çalıştır');
-    this.closeBtn.textContent = running ? 'Durdur' : 'Kapat';
-    const toolIssue = this.attempted ? this.issues.find((i) => !i.param) : undefined;
-    const fieldIssues = this.attempted ? this.issues.filter((i) => i.param).length : 0;
-    let content: Child[] = [];
-    if (running) {
-      content = [h('div', { class: 'ptool__progress' }, h('span', { style: `width:${Math.round(s.fraction * 100)}%` })), h('span', { class: 'ptool__status-text' }, s.label || (s.where === 'worker' ? 'Arka planda çalışıyor; sayfayı kullanmaya devam edebilirsiniz.' : 'Çalışıyor…'))];
-    } else if (s.kind === 'ok') {
-      // A selection result is already applied: offer to look at it; otherwise to select what changed.
-      const show = s.selected || s.pick.length ? h('button', { class: 'btn btn--ghost btn--small', type: 'button' }, s.selected ? 'Seçime yakınlaştır' : 'Sonuçları seç') : null;
-      show?.addEventListener('click', () => {
-        if (!s.selected) this.ctx.selection.set(s.pick);
-        this.dialog.close();
-        if (this.ctx.selection.size) this.ctx.view.zoomToSelection();
-      });
-      const undo = s.undo ? h('button', { class: 'btn btn--ghost btn--small', type: 'button' }, 'Geri al') : null;
-      undo?.addEventListener('click', () => {
-        this.ctx.commands.execute('edit.undo');
-        this.status = { kind: 'idle' };
-        this.render();
-      });
-      content = [icon('success', 16), h('span', { class: 'ptool__status-text', title: s.text }, s.text), show, undo];
-    } else if (fieldIssues || toolIssue || s.kind === 'invalid') {
-      const text = toolIssue?.message ?? (fieldIssues ? `Çalıştırmadan önce ${fieldIssues} alanı düzeltin.` : s.kind === 'invalid' ? s.text : '');
-      content = [icon('warning', 16), h('span', { class: 'ptool__status-text', title: text }, text)];
-    } else if (s.kind === 'error') {
-      content = [icon('error', 16), h('span', { class: 'ptool__status-text', title: s.text }, s.text)];
-    }
-    this.statusEl.dataset.kind = running ? 'running' : s.kind === 'ok' ? 'ok' : content.length ? (s.kind === 'error' ? 'error' : 'warn') : 'idle';
-    replaceChildren(this.statusEl, content);
-  }
-
-  private side(): HTMLElement {
-    const { registry } = this.ctx.processing;
-    const cat = registry.category(this.tool.category);
+  private side(side: SideForm): HTMLElement {
     const model = this.opts.model;
-    const help = model ? [] : (this.tool.help ?? '').split(/\n\s*\n/).filter(Boolean);
+    let edit: HTMLElement | null = null;
+    if (model && side.edit) {
+      edit = h('button', { class: 'btn btn--small', type: 'button' }, icon('edit', 14), side.edit);
+      edit.addEventListener('click', () => {
+        this.dialog.close();
+        this.ctx.commands.execute('processing.newModel', model.id);
+      });
+    }
     return h(
       'aside',
       { class: 'ptool__side' },
-      h('div', { class: 'ptool__crumb' }, icon(model ? 'processing' : (cat?.icon ?? 'processing'), 14), model ? `Modeller › ${registry.categoryPath(this.tool.category) || 'Genel'}` : registry.categoryPath(this.tool.category)),
-      h('div', { class: 'ptool__heading' }, h('span', { class: 'ptool__icon' }, icon(this.tool.icon ?? 'processing', 20)), h('p', { class: 'ptool__about' }, this.tool.description)),
-      help.map((p) => h('p', { class: 'ptool__help' }, p)),
-      model ? this.modelSteps(model) : null,
-      this.tool.preview ? h('div', { class: 'ptool__preview' }, h('div', { class: 'ptool__side-title' }, 'Önizleme'), this.preview) : null,
+      h('div', { class: 'ptool__crumb' }, icon(side.crumb.icon, 14), side.crumb.text),
+      h('div', { class: 'ptool__heading' }, h('span', { class: 'ptool__icon' }, icon(side.icon, 20)), h('p', { class: 'ptool__about' }, side.about)),
+      side.help.map((p) => h('p', { class: 'ptool__help' }, p)),
+      side.steps
+        ? h(
+            'div',
+            { class: 'ptool__steps' },
+            h('div', { class: 'ptool__side-title' }, T.side.steps),
+            h('ol', null, side.steps.map((s) => h('li', null, h('span', { class: 'ptool__step-icon' }, icon(s.icon, 14)), s.name))),
+            edit,
+          )
+        : null,
+      side.preview ? h('div', { class: 'ptool__preview' }, h('div', { class: 'ptool__side-title' }, T.side.preview), this.preview) : null,
       h(
         'div',
         { class: 'ptool__facts' },
-        h('div', { class: 'ptool__side-title' }, 'Nerede çalışır'),
+        h('div', { class: 'ptool__side-title' }, T.side.targets),
         this.targetsEl,
-        this.tool.aliases?.length ? h('div', { class: 'ptool__side-title' }, 'Komut satırından') : null,
-        this.tool.aliases?.length ? h('div', { class: 'ptool__aliases' }, this.tool.aliases.map((a) => h('code', null, a))) : null,
+        side.aliases.length ? h('div', { class: 'ptool__side-title' }, T.side.aliases) : null,
+        side.aliases.length ? h('div', { class: 'ptool__aliases' }, side.aliases.map((a) => h('code', null, a))) : null,
       ),
-    );
-  }
-
-  /** The steps of a model in run order, and the way into the designer. */
-  private modelSteps(model: ProcessingModel): HTMLElement {
-    const { registry } = this.ctx.processing;
-    const lookup = (id: string) => registry.get(id);
-    const ids = orderSteps(model);
-    const order = Array.isArray(ids) ? ids.map((id) => model.steps.find((s) => s.id === id)!) : model.steps;
-    const builtin = this.ctx.processing.isBuiltinModel(model.id);
-    const edit = h('button', { class: 'btn btn--small', type: 'button' }, icon('edit', 14), builtin ? 'Kopyasını düzenle' : 'Modeli düzenle');
-    edit.addEventListener('click', () => {
-      this.dialog.close();
-      this.ctx.commands.execute('processing.newModel', model.id);
-    });
-    return h(
-      'div',
-      { class: 'ptool__steps' },
-      h('div', { class: 'ptool__side-title' }, 'Adımlar'),
-      h(
-        'ol',
-        null,
-        order.map((s) => h('li', null, h('span', { class: 'ptool__step-icon' }, icon(lookup(s.tool)?.icon ?? 'processing', 14)), stepName(s, lookup))),
-      ),
-      edit,
     );
   }
 
   // ── Editing and running ──────────────────────────────────────────────
 
+  /** `rebuild`: a choice (the form is built again); otherwise typing (the field keeps focus, what depends on it is repainted). */
   private set(name: string, value: unknown, rebuild = true): void {
-    this.values = { ...this.values, [name]: value };
-    this.touched.add(name);
-    if (this.status.kind === 'ok' || this.status.kind === 'error' || this.status.kind === 'invalid') this.status = { kind: 'idle' };
+    const next = edited(this.state, name, value, !rebuild);
+    if (next === this.state) return;
+    this.state = next;
     if (rebuild) {
       this.render();
       return;
     }
-    // Typing: keep the field, refresh only what depends on it.
-    this.issues = this.ctx.processing.runner.validate(this.tool, this.values);
-    this.renderPreview();
-    this.renderStatus();
+    this.env = { ...this.env, issues: this.ctx.processing.runner.validate(this.tool, this.state.values) };
+    this.paint(this.frame());
   }
 
-  /** Hides the dialog while the user shows a point, then opens it again with the point filled in. */
+  /** Hides the dialog while the user shows a point, then brings it back as it was, with the point filled in. */
   private pickPoint(name: string): void {
     const def = this.tool.parameters.find((p) => p.name === name)!;
-    const values = this.values;
-    const reopen = (p: Vec2 | null) => queueMicrotask(() => openToolDialog(this.ctx, this.tool.id, p ? { ...values, [name]: p } : values));
+    const state = this.state;
+    const back = (p: Vec2 | null) => queueMicrotask(() => new ToolDialog(this.ctx, this.tool, undefined, { ...this.opts, resume: picked(state, name, p) }));
     this.dialog.close();
-    this.ctx.tools.run(new PickPointTool(this.ctx, def.label, reopen), `${this.tool.label}: ${def.label}`);
+    this.ctx.tools.run(new PickPointTool(this.ctx, def.label, back), `${this.tool.label}: ${def.label}`);
   }
 
   private async run(): Promise<void> {
-    if (this.status.kind === 'running') return;
+    if (this.state.status.kind === 'running') return;
     const { runner } = this.ctx.processing;
-    this.attempted = true;
-    this.issues = runner.validate(this.tool, this.values);
-    if (this.issues.length) {
-      this.advancedOpen ||= this.issues.some((i) => this.tool.parameters.find((p) => p.name === i.param)?.advanced);
+    const tried = attempted(this.state, this.tool, runner.validate(this.tool, this.state.values));
+    this.state = tried.state;
+    if (!tried.run) {
       this.render();
       this.focusFirstIssue();
       return;
     }
-    this.ctx.processing.remember(this.tool.id, this.values);
-    const where = this.opts.model ? undefined : runner.executorFor(this.tool, this.choice, runner.inputSize(this.tool, this.values))?.target;
-    this.status = { kind: 'running', fraction: 0, label: '', where };
-    this.renderStatus();
+    const values = this.state.values;
+    this.ctx.processing.remember(this.tool.id, values);
+    const target = effectiveChoice(this.state.choice, this.env.targets.available) ?? 'auto';
+    const where = this.opts.model ? undefined : runner.executorFor(this.tool, target, runner.inputSize(this.tool, values))?.target;
+    this.state = started(this.state, where);
+    this.paintStatus(this.frame());
     const log = (level: 'info' | 'warn', m: string) => (level === 'warn' ? this.ctx.log.warn(m) : this.ctx.log.info(m));
-    const out: RunOutcome = this.opts.run ? await this.opts.run(this.values, { log, target: this.choice }) : await runner.run(this.tool, this.values, { log, target: this.choice });
-    switch (out.status) {
-      case 'ok': {
-        this.status = { kind: 'ok', text: out.record.summary, pick: out.added.length ? out.added : out.touched, selected: !!out.result.select, undo: out.edited };
-        this.ctx.log.success(`${this.tool.label}: ${out.record.summary}`);
-        this.attempted = false;
-        break;
-      }
-      case 'invalid':
-        this.issues = out.issues;
-        this.status = { kind: 'invalid', text: out.issues[0]?.message ?? '' };
-        break;
-      default:
-        this.status = { kind: 'error', text: out.message };
-        this.ctx.log.warn(out.message);
-    }
+    const out: RunOutcome = this.opts.run ? await this.opts.run(values, { log, target }) : await runner.run(this.tool, values, { log, target });
+    this.state = finished(this.state, out);
+    if (out.status === 'ok') this.ctx.log.success(`${this.tool.label}: ${out.record.summary}`);
+    else if (out.status !== 'invalid') this.ctx.log.warn(out.message);
     this.ctx.view.requestRender();
-    if (out.status === 'invalid') {
-      // Stopped before running (e.g. nothing selected): show it on the field.
-      this.renderIssues();
-      this.renderStatus();
-      this.focusFirstIssue();
-      return;
-    }
     this.render();
-    this.runBtn.focus();
+    // Stopped before running (e.g. nothing selected): the problem is on its field.
+    if (out.status === 'invalid') this.focusFirstIssue();
+    else this.runBtn.focus();
   }
 
   private focusFirstIssue(): void {
