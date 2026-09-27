@@ -17,6 +17,7 @@ import { SvgFiles, type FileHost } from './svgFile';
 import { editMenus, viewSwitches, type MenuHost } from './svgMenus';
 import { objectRows, type ListHost } from './svgObjects';
 import { actionMatrix, renderProps, type ActionName, type PropsHost } from './svgProps';
+import { defaultGrid } from './svgEditModel';
 import { defaultOptions } from './svgView';
 
 /**
@@ -98,6 +99,8 @@ class SvgEditor implements CanvasHost, PropsHost, FileHost, ActionsHost, MenuHos
   private readonly propsEl: HTMLElement;
   private readonly statusEl: HTMLElement;
   private readonly zoomEl: HTMLElement;
+  private readonly undoBtn: HTMLButtonElement;
+  private readonly redoBtn: HTMLButtonElement;
   private readonly nameInput: HTMLInputElement;
   private readonly pathInput: HTMLInputElement;
   private readonly past: string[] = [];
@@ -139,6 +142,14 @@ class SvgEditor implements CanvasHost, PropsHost, FileHost, ActionsHost, MenuHos
       b.addEventListener('click', run);
       return b;
     };
+    // Geri al and Yinele by the mouse too (the keys are Ctrl+Z and Ctrl+Y).
+    const history = (label: string, iconName: string, run: () => void) => {
+      const b = h('button', { class: 'ibtn', type: 'button', title: label, 'aria-label': label, disabled: true }, icon(iconName, 16));
+      b.addEventListener('click', () => (run(), this.canvas.el.focus()));
+      return b;
+    };
+    this.undoBtn = history('Geri al (Ctrl+Z)', 'undo', () => this.undo());
+    this.redoBtn = history('Yinele (Ctrl+Y)', 'redo', () => this.redo());
     const cancel = h('button', { class: 'btn', type: 'button' }, 'Vazgeç');
     cancel.addEventListener('click', () => this.dialog.request());
     const save = h('button', { class: 'btn btn--primary', type: 'button' }, icon('check', 16), 'Kaydet');
@@ -150,7 +161,7 @@ class SvgEditor implements CanvasHost, PropsHost, FileHost, ActionsHost, MenuHos
       h(
         'section',
         { class: 'svge__center' },
-        h('div', { class: 'sdes__pbar svge__pbar' }, ...this.files.buttons, h('span', { class: 'svge__barsep' }), ...editMenus(this), h('div', { class: 'dialog__foot-spacer' }), ...this.switches.els, bar('Uzaklaş', '−', () => this.canvas.zoomBy(1 / 1.25)), this.zoomEl, bar('Yakınlaş', '+', () => this.canvas.zoomBy(1.25)), bar('Tuvale sığdır (0)', '⤢', () => this.canvas.fit())),
+        h('div', { class: 'sdes__pbar svge__pbar' }, ...this.files.buttons, h('span', { class: 'svge__barsep' }), ...editMenus(this), h('div', { class: 'dialog__foot-spacer' }), this.undoBtn, this.redoBtn, ...this.switches.els, bar('Uzaklaş', '−', () => this.canvas.zoomBy(1 / 1.25)), this.zoomEl, bar('Yakınlaş', '+', () => this.canvas.zoomBy(1.25)), bar('Tuvale sığdır (0)', '⤢', () => this.canvas.fit())),
         this.files.reference.bar,
         this.canvas.el,
         this.files.source.el,
@@ -238,7 +249,7 @@ class SvgEditor implements CanvasHost, PropsHost, FileHost, ActionsHost, MenuHos
       const shape = this.doc.shapes.find((s) => this.selection.has(s.id) && (s.kind === 'rect' || s.kind === 'ellipse'));
       if (!path) this.status(shape ? 'Dikdörtgen ve elips düğümle düzenlenmez: önce Yol → Nesneyi yola çevir (Ctrl+Shift+C).' : 'Düğüm düzenlemek için bir yol seçin ya da yola çift tıklayın.', shape ? 'warn' : 'ok');
     }
-    if (t === 'measure') this.status('Ölç: iki noktayı tıklayın ya da sürükleyin (kenetlenir); bir yolun üstünde durunca parça boyları görünür.');
+    if (t === 'measure') this.status('Ölç: iki noktayı tıklayın ya da sürükleyin (kenetlenir); bir yolun üstünde durunca parça boyları görünür. Açı, Döndürme gibi saat yönünde artar.');
     this.refresh();
   }
 
@@ -252,6 +263,8 @@ class SvgEditor implements CanvasHost, PropsHost, FileHost, ActionsHost, MenuHos
 
   status(text: string, kind: 'ok' | 'warn' = 'ok'): void {
     this.statusEl.textContent = text;
+    // Two lines at most in the foot (it no longer grows); the whole text on hover.
+    this.statusEl.title = text;
     this.statusEl.dataset.kind = kind;
   }
 
@@ -341,8 +354,15 @@ class SvgEditor implements CanvasHost, PropsHost, FileHost, ActionsHost, MenuHos
     this.files.refresh();
   }
 
+  private renderHistory(): void {
+    if (!this.undoBtn) return;
+    this.undoBtn.disabled = !this.past.length;
+    this.redoBtn.disabled = !this.future.length;
+  }
+
   private renderTitle(): void {
     this.dialog?.el.querySelector('.dialog__title')?.replaceChildren(`SVG çizim düzenleyicisi${this.dirty ? ' •' : ''}`);
+    this.renderHistory();
   }
 
   private renderTools(): void {
@@ -533,7 +553,7 @@ class SvgEditor implements CanvasHost, PropsHost, FileHost, ActionsHost, MenuHos
     this.savedMeta = this.meta();
     this.selection = new Set();
     this.nodeEdit = null;
-    this.options = { ...this.options, grid: Math.max(1, Math.round(doc.width / 20)) };
+    this.options = { ...this.options, grid: defaultGrid(doc.width) };
     this.refresh();
     this.canvas.fit();
   }

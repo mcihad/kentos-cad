@@ -237,9 +237,15 @@ fn center<'a>(ed: &'a SvgEditor, paper: String, ink: String) -> Element<'a, Mess
     if let Some(b) = files::reference::bar(ed) {
         c = c.push(b);
     }
-    c = c.push(container(stack(layers)).height(Fill).width(Fill).clip(true));
+    // The source shares the middle with the canvas, two parts to three.
+    c = c.push(
+        container(stack(layers))
+            .height(Length::FillPortion(3))
+            .width(Fill)
+            .clip(true),
+    );
     if let Some(s) = &ed.files.source {
-        c = c.push(files::source::view(ed, s));
+        c = c.push(container(files::source::view(ed, s)).height(Length::FillPortion(2)));
     }
     c.height(Fill).width(Fill).into()
 }
@@ -527,16 +533,32 @@ impl App {
         if let Some(d) = &ed.files.dialog {
             let over: Element<'_, Message> = match d {
                 FileDialog::Import(d) => responsive(move |room| {
-                    files::import::view(ed, d, &ed.ink(), typography::from_default(820.0).min(room.width - 60.0))
+                    files::import::view(
+                        ed,
+                        d,
+                        &ed.ink(),
+                        typography::from_default(820.0).min(room.width - 60.0),
+                        room.height * 0.92,
+                    )
                 })
                 .into(),
                 FileDialog::Export(st) => responsive(move |room| {
-                    files::export::view(ed, st, typography::from_default(760.0).min(room.width - 60.0))
+                    files::export::view(
+                        ed,
+                        st,
+                        typography::from_default(760.0).min(room.width - 60.0),
+                        room.height * 0.92,
+                    )
                 })
                 .into(),
                 FileDialog::DocProps(d) => files::docprops::view(ed, d),
                 FileDialog::Trace(d) => responsive(move |room| {
-                    files::trace::view(ed, d, typography::from_default(1000.0).min(room.width - 60.0))
+                    files::trace::view(
+                        ed,
+                        d,
+                        typography::from_default(1000.0).min(room.width - 60.0),
+                        typography::from_default(640.0).min(room.height * 0.92),
+                    )
                 })
                 .into(),
                 FileDialog::SaveAs(form) => save_as(form),

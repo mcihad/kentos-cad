@@ -7,6 +7,7 @@ use iced::mouse::Cursor;
 use iced::widget::canvas::{self, Frame, Geometry, Path};
 use iced::{Color, Point, Rectangle, Renderer, Size, Theme};
 use kentos_svg_core::shape::Obj;
+use kentos_ui::theme::Tokens;
 
 use super::super::paint::{View, paint_shape};
 use super::super::state::Options;
@@ -28,7 +29,7 @@ impl canvas::Program<Message> for Preview {
         &self,
         _state: &(),
         renderer: &Renderer,
-        _theme: &Theme,
+        theme: &Theme,
         bounds: Rectangle,
         _cursor: Cursor,
     ) -> Vec<Geometry> {
@@ -70,18 +71,23 @@ impl canvas::Program<Message> for Preview {
                 }
             }
         }
-        // The picture is the canvas's box: what lies outside it is not in the file's picture.
-        let clip = Rectangle::new(a, Size::new(b.x - a.x, b.y - a.y));
-        frame.with_clip(clip, |f| {
-            let inner = View {
-                zoom: view.zoom,
-                ox: view.ox - f64::from(a.x),
-                oy: view.oy - f64::from(a.y),
-            };
-            for s in self.shapes.iter().filter(|s| !s.is("hidden")) {
-                paint_shape(f, s, &inner, &self.options, 1.0);
+        for s in self.shapes.iter().filter(|s| !s.is("hidden")) {
+            paint_shape(&mut frame, s, &view, &self.options, 1.0);
+        }
+        // The picture is the canvas's box: what lies outside it is not in the
+        // file's picture, so the margins are laid over it in the box's colour.
+        let back = Tokens::of(theme).surface;
+        let (fw, fh) = (bounds.width, bounds.height);
+        for (p, s) in [
+            (Point::ORIGIN, Size::new(fw, a.y)),
+            (Point::new(0.0, b.y), Size::new(fw, fh - b.y)),
+            (Point::new(0.0, a.y), Size::new(a.x, b.y - a.y)),
+            (Point::new(b.x, a.y), Size::new(fw - b.x, b.y - a.y)),
+        ] {
+            if s.width > 0.0 && s.height > 0.0 {
+                frame.fill_rectangle(p, s, back);
             }
-        });
+        }
         vec![frame.into_geometry()]
     }
 }

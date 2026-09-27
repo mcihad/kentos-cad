@@ -27,6 +27,8 @@ mod camera;
 mod doc;
 mod draw_tool;
 mod files;
+#[cfg(test)]
+mod fixture;
 mod hit;
 mod icons;
 mod keys;

@@ -415,6 +415,30 @@ fn an_svg_is_imported_as_new_or_into_the_drawing_with_its_colours_chosen() {
 }
 
 #[test]
+fn a_dropped_svg_opens_the_import_window_and_a_picture_asks_what_it_is_for() {
+    let (mut app, dir) = open("birak");
+    let svg = dir.join("isaret.svg");
+    std::fs::write(&svg, r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10"/></svg>"#)
+        .expect("a file");
+    send(&mut app, Event::File(files::Event::Dropped(svg)));
+    let Some(FileDialog::Import(d)) = &ed(&app).files.dialog else {
+        panic!("the import window");
+    };
+    assert_eq!(d.name, "isaret");
+    ed_mut(&mut app).files.dialog = None;
+    let png = dir.join("resim.png");
+    std::fs::write(&png, super::screens::sample_png()).expect("a file");
+    send(&mut app, Event::File(files::Event::Dropped(png)));
+    assert!(matches!(&ed(&app).files.dialog, Some(FileDialog::Dropped(name, _)) if name == "resim.png"));
+    // Anything else is refused with the reason.
+    let txt = dir.join("not.txt");
+    std::fs::write(&txt, "merhaba").expect("a file");
+    ed_mut(&mut app).files.dialog = None;
+    send(&mut app, Event::File(files::Event::Dropped(txt)));
+    assert!(ed(&app).said.as_ref().is_some_and(|s| s.1 && s.0.contains("SVG, PNG ya da JPEG")));
+}
+
+#[test]
 fn the_source_is_edited_and_read_back_as_one_step() {
     let (mut app, _dir) = open("kaynak");
     {

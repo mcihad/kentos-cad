@@ -7,6 +7,7 @@
 use iced::widget::canvas::{Frame, Path, Stroke};
 use iced::{Color, Point, Size};
 use kentos_geometry_core::api::json::Json;
+use kentos_geometry_core::jsmath::{PI, atan2, js_hypot, js_max, js_min};
 use kentos_svg_core::model::{regular_polygon, rotate_about, transform_shape};
 use kentos_svg_core::shape::{Obj, PathNode, Pt, SubPath};
 
@@ -73,14 +74,101 @@ fn label(tool: ToolId) -> &'static str {
     }
 }
 
-/// A new shape's fields in the web's order: `{ id, fill, stroke, strokeWidth, kind, … }`.
-fn base(width: f64) -> Obj {
-    let mut o = Obj::default();
-    o.set("id", Json::Str(shape_id()));
-    o.set_text("fill", "fill");
-    o.set_text("stroke", "none");
-    o.set_num("strokeWidth", (width / 50.0).max(1.0));
-    o
+/// A new shape's stroke width: a fiftieth of the canvas (a drawn line's a twenty-fifth), at least 1.
+pub fn shape_stroke_width(width: f64) -> f64 {
+    js_max(1.0, width / 50.0)
+}
+
+pub fn line_stroke_width(width: f64) -> f64 {
+    js_max(1.0, width / 25.0)
+}
+
+/// What a drag needs besides its two points (the web's `DragSpec`).
+#[derive(Clone, Debug, PartialEq)]
+pub struct DragSpec {
+    pub tool: ToolId,
+    pub width: f64,
+    pub height: f64,
+    pub sides: f64,
+    pub star: bool,
+    /// Shift: a square or a circle.
+    pub shift: bool,
+    /// Alt: from the centre.
+    pub from_centre: bool,
+}
+
+/// The shape a drag from p0 to p1 makes (`shapeFromDrag`); none for a drag too short to draw.
+/// Fields in the web's order: `{ id, fill, stroke, strokeWidth, kind, … }`.
+pub fn shape_from_drag(spec: &DragSpec, p0: Pt, p1: Pt, id: &str) -> Option<Obj> {
+    let mut s = Obj::default();
+    s.set("id", Json::Str(id.to_owned()));
+    s.set_text("fill", "fill");
+    s.set_text("stroke", "none");
+    s.set_num("strokeWidth", shape_stroke_width(spec.width));
+    if spec.tool == ToolId::Text {
+        s.set_text("kind", "text");
+        s.set_num("x", p0[0]);
+        s.set_num("y", p0[1]);
+        s.set_text("text", "Aa");
+        s.set_num("size", spec.height / 5.0);
+        s.set_num("weight", 700.0);
+        s.set_text("font", "sans");
+        s.set_text("anchor", "start");
+        return Some(s);
+    }
+    let mut dx = p1[0] - p0[0];
+    let mut dy = p1[1] - p0[1];
+    if js_hypot(dx, dy) < 0.5 {
+        return None;
+    }
+    if spec.tool == ToolId::Polygon {
+        let r = js_hypot(dx, dy);
+        let sp = regular_polygon(
+            p0[0],
+            p0[1],
+            r,
+            js_max(3.0, spec.sides),
+            spec.star.then_some(r * 0.45),
+        );
+        s.set_text("kind", "path");
+        s.set_subs(&[sp]);
+        // The first corner points at the pointer.
+        let turn = atan2(dy, dx) + PI / 2.0;
+        return transform_shape(&s, &rotate_about((turn * 180.0) / PI, p0[0], p0[1]))
+            .ok()
+            .flatten();
+    }
+    if spec.shift {
+        let k = js_max(dx.abs(), dy.abs());
+        // `Math.sign(d || 1)`: zero (either sign) and NaN count as 1.
+        let sign = |d: f64| if d == 0.0 || d.is_nan() { 1.0 } else { d.signum() };
+        dx = sign(dx) * k;
+        dy = sign(dy) * k;
+    }
+    let (x0, y0, w, h) = if spec.from_centre {
+        (p0[0] - dx.abs(), p0[1] - dy.abs(), 2.0 * dx.abs(), 2.0 * dy.abs())
+    } else {
+        (
+            js_min(p0[0], p0[0] + dx),
+            js_min(p0[1], p0[1] + dy),
+            dx.abs(),
+            dy.abs(),
+        )
+    };
+    if spec.tool == ToolId::Rect {
+        s.set_text("kind", "rect");
+        s.set_num("x", x0);
+        s.set_num("y", y0);
+        s.set_num("w", w);
+        s.set_num("h", h);
+    } else {
+        s.set_text("kind", "ellipse");
+        s.set_num("cx", x0 + w / 2.0);
+        s.set_num("cy", y0 + h / 2.0);
+        s.set_num("rx", w / 2.0);
+        s.set_num("ry", h / 2.0);
+    }
+    Some(s)
 }
 
 impl SvgEditor {
@@ -110,7 +198,7 @@ impl SvgEditor {
             s.set_subs(&[SubPath { closed, nodes }]);
             s.set_text("fill", if closed { "fill" } else { "none" });
             s.set_text("stroke", if closed { "none" } else { "fill" });
-            s.set_num("strokeWidth", (self.doc.width / 25.0).max(1.0));
+            s.set_num("strokeWidth", line_stroke_width(self.doc.width));
             self.begin();
             self.doc.shapes.push(s);
             self.commit(if self.tool == ToolId::Pen {
@@ -126,72 +214,22 @@ impl SvgEditor {
 
     /// The shape a drag from p0 to p1 makes with the current tool (Alt: from the centre).
     pub fn shape_from_drag(&self, p0: Pt, p1: Pt, from_centre: bool) -> Option<Obj> {
-        let mut s = base(self.doc.width);
-        let tool = self.tool;
-        if tool == ToolId::Text {
-            s.set_text("kind", "text");
-            s.set_num("x", p0[0]);
-            s.set_num("y", p0[1]);
-            s.set_text("text", "Aa");
-            s.set_num("size", self.doc.height / 5.0);
-            s.set_num("weight", 700.0);
-            s.set_text("font", "sans");
-            s.set_text("anchor", "start");
-            return Some(s);
-        }
-        let mut dx = p1[0] - p0[0];
-        let mut dy = p1[1] - p0[1];
-        if dx.hypot(dy) < 0.5 {
+        if !matches!(
+            self.tool,
+            ToolId::Rect | ToolId::Ellipse | ToolId::Polygon | ToolId::Text
+        ) {
             return None;
         }
-        if tool == ToolId::Polygon {
-            let r = dx.hypot(dy);
-            let sp = regular_polygon(
-                p0[0],
-                p0[1],
-                r,
-                self.options.sides.max(3.0),
-                self.options.star.then_some(r * 0.45),
-            );
-            s.set_text("kind", "path");
-            s.set_subs(&[sp]);
-            // The first corner points at the pointer.
-            let turn = dy.atan2(dx) + std::f64::consts::FRAC_PI_2;
-            return transform_shape(&s, &rotate_about(turn.to_degrees(), p0[0], p0[1]))
-                .ok()
-                .flatten();
-        }
-        if self.draw.shift {
-            let k = dx.abs().max(dy.abs());
-            dx = if dx == 0.0 { 1.0 } else { dx.signum() } * k;
-            dy = if dy == 0.0 { 1.0 } else { dy.signum() } * k;
-        }
-        let x0 = if from_centre {
-            p0[0] - dx.abs()
-        } else {
-            p0[0].min(p0[0] + dx)
+        let spec = DragSpec {
+            tool: self.tool,
+            width: self.doc.width,
+            height: self.doc.height,
+            sides: self.options.sides,
+            star: self.options.star,
+            shift: self.draw.shift,
+            from_centre,
         };
-        let y0 = if from_centre {
-            p0[1] - dy.abs()
-        } else {
-            p0[1].min(p0[1] + dy)
-        };
-        let w = if from_centre { 2.0 * dx.abs() } else { dx.abs() };
-        let h = if from_centre { 2.0 * dy.abs() } else { dy.abs() };
-        if tool == ToolId::Rect {
-            s.set_text("kind", "rect");
-            s.set_num("x", x0);
-            s.set_num("y", y0);
-            s.set_num("w", w);
-            s.set_num("h", h);
-        } else {
-            s.set_text("kind", "ellipse");
-            s.set_num("cx", x0 + w / 2.0);
-            s.set_num("cy", y0 + h / 2.0);
-            s.set_num("rx", w / 2.0);
-            s.set_num("ry", h / 2.0);
-        }
-        Some(s)
+        shape_from_drag(&spec, p0, p1, &shape_id())
     }
 
     /// A finished drag: the shape goes in as one undo step and is chosen (back to Seç, except for text).

@@ -497,11 +497,7 @@ impl SvgEditor {
                 }
                 let cx = (bx.min_x + bx.max_x) / 2.0;
                 let cy = (bx.min_y + bx.max_y) / 2.0;
-                let mut deg = ((p[1] - cy).atan2(p[0] - cx) - (p0[1] - cy).atan2(p0[0] - cx))
-                    .to_degrees();
-                if shift {
-                    deg = kentos_native_style::classify::js_round(deg / 15.0) * 15.0;
-                }
+                let deg = knob_turn(&bx, p0, p, shift);
                 self.replace(&orig, &rotate_about(deg, cx, cy));
                 self.say(format!(
                     "Döndürme: {}°",
@@ -744,6 +740,19 @@ impl SvgEditor {
             self.touch();
         }
         done
+    }
+}
+
+/// The turn of a drag on the rotation knob about the box's centre, in degrees; Shift in 15° steps (`knobTurn`).
+pub fn knob_turn(bx: &Bounds, p0: Pt, p: Pt, shift: bool) -> f64 {
+    use kentos_geometry_core::jsmath::{PI, atan2, js_round};
+    let cx = (bx.min_x + bx.max_x) / 2.0;
+    let cy = (bx.min_y + bx.max_y) / 2.0;
+    let deg = ((atan2(p[1] - cy, p[0] - cx) - atan2(p0[1] - cy, p0[0] - cx)) * 180.0) / PI;
+    if shift {
+        js_round(deg / 15.0) * 15.0
+    } else {
+        deg
     }
 }
 

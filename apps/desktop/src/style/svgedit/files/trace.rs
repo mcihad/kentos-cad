@@ -368,7 +368,7 @@ fn slide<'a>(
     )
 }
 
-pub fn view<'a>(ed: &'a SvgEditor, d: &'a TraceDialog, width: f32) -> Element<'a, Message> {
+pub fn view<'a>(ed: &'a SvgEditor, d: &'a TraceDialog, width: f32, height: f32) -> Element<'a, Message> {
     let ink = parse_hex(&ed.ink()).unwrap_or(Color::BLACK);
     let paper = parse_hex(&ed.paper()).unwrap_or(Color::WHITE);
     let stage: Element<'a, Message> = match &d.bitmap {
@@ -422,12 +422,13 @@ pub fn view<'a>(ed: &'a SvgEditor, d: &'a TraceDialog, width: f32) -> Element<'a
     };
     let left = column![
         container(stage)
-            .height(typography::scaled(420.0))
+            .height(Length::Fill)
             .width(Length::Fill)
             .style(ui_style::container::bordered),
         label::caption(stats).style(ui_style::text::muted),
     ]
     .spacing(6)
+    .height(Length::Fill)
     .width(Length::FillPortion(6));
     let o = &d.set.opts;
     let form = column![
@@ -482,8 +483,7 @@ pub fn view<'a>(ed: &'a SvgEditor, d: &'a TraceDialog, width: f32) -> Element<'a
             }
         }),
     ]
-    .spacing(12)
-    .width(Length::FillPortion(4));
+    .spacing(12);
     let can_add = d.result.as_ref().is_some_and(|r| !r.shapes.is_empty());
     let foot = row![
         button(row![icon(Icon::Folder).size(14.0), label::body("Görüntü seç…")].spacing(6).align_y(Center))
@@ -510,8 +510,22 @@ pub fn view<'a>(ed: &'a SvgEditor, d: &'a TraceDialog, width: f32) -> Element<'a
     .spacing(8)
     .align_y(Center);
     Dialog::new("Bitmap izle")
-        .push(row![left, form].spacing(18))
+        .push(
+            row![
+                left,
+                iced::widget::scrollable(container(form).padding(iced::Padding {
+                    right: 12.0,
+                    ..iced::Padding::ZERO
+                }))
+                .direction(ui_style::field::body_scrollbar())
+                .height(Length::Fill)
+                .width(Length::FillPortion(4)),
+            ]
+            .spacing(18)
+            .height(Length::Fill),
+        )
         .push(foot)
         .width(typography::unscaled(width))
+        .max_height(typography::unscaled(height))
         .into()
 }

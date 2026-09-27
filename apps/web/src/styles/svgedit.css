@@ -3,6 +3,20 @@
 .svge__stage {
   position: relative;
 }
+/* A drag on the canvas (Ölç above all) never selects its labels' text. */
+.svge__svg {
+  user-select: none;
+  -webkit-user-select: none;
+}
+/* The foot's status: two lines at most, the whole text as its title (the foot grew at 1100 px). */
+.dialog--svge .sdes__status {
+  flex: 1 1 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
 .svge__barsep {
   width: 1px;
   height: 18px;

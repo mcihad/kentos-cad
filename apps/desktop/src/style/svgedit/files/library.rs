@@ -36,7 +36,7 @@ impl App {
             library: lib,
             images: &self.styles.images,
         };
-        let q = kentos_interaction::upper_tr(kentos_processing::text::js_trim(&picker.query)).to_lowercase();
+        let q = kentos_expression::js::text::lower_tr(kentos_processing::text::js_trim(&picker.query));
         let current = self
             .styles
             .svg_editor
@@ -48,11 +48,11 @@ impl App {
             .filter(|(item, _)| item.kind() == ItemKind::Asset && item.format() == Some("svg"))
             .filter(|(item, _)| {
                 q.is_empty()
-                    || kentos_interaction::upper_tr(item.name()).to_lowercase().contains(&q)
+                    || kentos_expression::js::text::lower_tr(item.name()).contains(&q)
                     || item
                         .path()
                         .iter()
-                        .any(|p| kentos_interaction::upper_tr(p).to_lowercase().contains(&q))
+                        .any(|p| kentos_expression::js::text::lower_tr(p).contains(&q))
             })
             .collect();
         let count = items.len();

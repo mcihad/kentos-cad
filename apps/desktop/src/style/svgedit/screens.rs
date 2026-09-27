@@ -328,11 +328,12 @@ fn screens() {
             }
             snapshot.settle(&mut app, App::view, &mut update);
             if let Some(label) = scene.click {
+                // The editor's bar: the highest match under the application's own menu bar.
                 let at = crate::point_calc::texts(&mut snapshot, &app)
                     .into_iter()
-                    .filter(|(t, _)| t == label)
+                    .filter(|(t, at)| t == label && at.y > 50.0)
                     .map(|(_, at)| at)
-                    .next_back()
+                    .min_by(|a, b| a.y.total_cmp(&b.y))
                     .unwrap_or_else(|| panic!("“{label}” is not shown"));
                 snapshot.input(&mut app, App::view, &mut update, Input::Click(at.center()));
             }

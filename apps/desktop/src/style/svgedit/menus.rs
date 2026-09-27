@@ -76,7 +76,10 @@ fn path_menu(ed: &SvgEditor) -> Menu<Message> {
     let offset = kentos_expression::js::number::to_string(ed.ui.offset);
     let simplify = kentos_expression::js::number::to_string(ed.ui.simplify);
     let p = |m: Menu<Message>, op: PathOp, words: &str, keys: Option<&str>, detail: Option<&str>| {
-        let mut m = m.item(words.to_owned(), change(move |ed| ed.path_op(op)));
+        // Every entry with its icon: the names line up whether or not a line of detail follows.
+        let mut m = m
+            .item(words.to_owned(), change(move |ed| ed.path_op(op)))
+            .icon(Icon::Svg(svg_icon(op_icon(op))));
         if let Some(k) = keys {
             m = m.shortcut(k.to_owned());
         }
@@ -106,6 +109,29 @@ fn path_menu(ed: &SvgEditor) -> Menu<Message> {
     m = p(m, PathOp::Reverse, "Yönü çevir", None, None);
     m = p(m, PathOp::Close, "Yolu kapat", None, None);
     p(m, PathOp::Open, "Yolu aç", None, None)
+}
+
+/// A path operation's icon (the web's `svgIcons.ts`).
+fn op_icon(op: PathOp) -> &'static str {
+    match op {
+        PathOp::Union => "pathUnion",
+        PathOp::Difference => "pathDifference",
+        PathOp::Intersection => "pathIntersection",
+        PathOp::Exclusion => "pathExclusion",
+        PathOp::Division => "pathDivision",
+        PathOp::Cut => "pathCut",
+        PathOp::Combine => "pathCombine",
+        PathOp::BreakApart => "pathBreak",
+        PathOp::Split => "pathSplit",
+        PathOp::ToPath => "toPath",
+        PathOp::StrokeToPath => "strokeToPath",
+        PathOp::Inset => "inset",
+        PathOp::Outset => "outset",
+        PathOp::Simplify => "simplify",
+        PathOp::Reverse => "reverse",
+        PathOp::Close => "closePath",
+        PathOp::Open => "openPath",
+    }
 }
 
 fn object_menu() -> Menu<Message> {

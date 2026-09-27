@@ -210,7 +210,7 @@ fn num2(v: f64) -> String {
     kentos_native_style::classify::rounded(v, 2)
 }
 
-pub fn view<'a>(ed: &'a SvgEditor, d: &'a ImportDialog, ink: &str, width: f32) -> Element<'a, Message> {
+pub fn view<'a>(ed: &'a SvgEditor, d: &'a ImportDialog, ink: &str, width: f32, height: f32) -> Element<'a, Message> {
     let mapped = d.mapped();
     let mut options = ed.options.clone();
     options.ink = ink.to_owned();
@@ -350,8 +350,7 @@ pub fn view<'a>(ed: &'a SvgEditor, d: &'a ImportDialog, ink: &str, width: f32) -
         ),
         report,
     ]
-    .spacing(14)
-    .width(Length::FillPortion(6));
+    .spacing(14);
     let primary = button(
         row![
             icon(Icon::Check).size(14.0).tone(Tone::OnAccent),
@@ -380,8 +379,20 @@ pub fn view<'a>(ed: &'a SvgEditor, d: &'a ImportDialog, ink: &str, width: f32) -
     .align_y(Center);
     let _ = ev;
     Dialog::new(format!("SVG içe al: {}", d.name))
-        .push(row![preview, form].spacing(18))
+        .push(
+            row![
+                preview,
+                iced::widget::scrollable(container(form).padding(iced::Padding {
+                    right: 12.0,
+                    ..iced::Padding::ZERO
+                }))
+                .direction(ui_style::field::body_scrollbar())
+                .width(Length::FillPortion(6)),
+            ]
+            .spacing(18),
+        )
         .push(foot)
         .width(typography::unscaled(width))
+        .max_height(typography::unscaled(height))
         .into()
 }

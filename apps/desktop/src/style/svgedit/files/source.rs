@@ -30,9 +30,6 @@ use super::read::{read_svg, summary, xml_error};
 use super::{Event, FileCmd};
 use crate::app::Message;
 
-/// The panel's height at the default text size; dragged taller or shorter within bounds.
-const HEIGHT: f32 = 240.0;
-
 pub struct SourcePanel {
     pub content: Content,
     /// The text the drawing gave (what an edit is compared with).
@@ -43,7 +40,6 @@ pub struct SourcePanel {
     spans: Vec<(String, usize, usize)>,
     pub edited: bool,
     pub note: Option<(String, bool)>,
-    pub height: f32,
 }
 
 fn source_text(ed: &SvgEditor) -> (String, Vec<(String, usize, usize)>) {
@@ -103,7 +99,6 @@ impl SourcePanel {
             spans,
             edited: false,
             note: None,
-            height: HEIGHT,
         }
     }
 
@@ -514,7 +509,7 @@ pub fn view<'a>(ed: &'a SvgEditor, s: &'a SourcePanel) -> Element<'a, Message> {
     container(column![head, body].spacing(6))
         .padding([6, 8])
         .width(Fill)
-        .height(Length::Fixed(typography::from_default(s.height)))
+        .height(Length::Fill)
         .style(|t: &Theme| container::Style {
             background: Some(iced::Background::Color(Tokens::of(t).surface)),
             border: iced::Border {

@@ -5,6 +5,7 @@ import { applyResult, booleanShapes, breakApart, closeShapes, combineShapes, cut
 import type { Join } from '../../style/svg/pathStroke';
 import { shapesBox, transformShape, type SvgDoc, type SvgShape } from '../../style/svg/svgModel';
 import type { SvgCanvas } from './svgCanvas';
+import { panelUnit } from './svgEditModel';
 import type { CanvasOptions, ToolId } from './svgView';
 
 /**
@@ -94,7 +95,7 @@ export class EditActions {
 
   constructor(host: ActionsHost) {
     this.host = host;
-    const unit = Math.max(0.1, Math.round((host.doc.width / 50) * 100) / 100);
+    const unit = panelUnit(host.doc.width);
     this.ui = {
       tab: 'props',
       alignTo: 'selection',

@@ -715,7 +715,7 @@ fn drag_handle(orig: &[SubPath], at: (usize, usize), part: Part, q: Pt, free: bo
 }
 
 /// A size rounded to a 1-2-5 step near `unit` (what a pixel is worth), so dragging gives tidy values.
-fn nice_round(v: f64, unit: f64) -> f64 {
+pub fn nice_round(v: f64, unit: f64) -> f64 {
     let e = 10f64.powf(unit.log10().floor());
     let step = if unit / e < 2.0 {
         e

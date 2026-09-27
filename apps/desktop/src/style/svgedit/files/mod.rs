@@ -194,7 +194,7 @@ pub fn scale_stroke(mut s: Obj, k: f64) -> Obj {
 
 /// A file name from a drawing's name (`fileSlug`).
 pub fn file_slug(s: &str) -> String {
-    let lower = kentos_interaction::upper_tr(s).to_lowercase();
+    let lower = kentos_expression::js::text::lower_tr(s);
     let mut out = String::new();
     let mut dash = false;
     for c in lower.chars() {

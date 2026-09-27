@@ -103,6 +103,12 @@ impl Options {
     }
 }
 
+/// The panels' starting distance (offset, corner, array gaps): a fiftieth of the width, at least 0.1 (`panelUnit`).
+pub fn panel_unit(width: f64) -> f64 {
+    use kentos_native_style::classify::js_round;
+    (js_round(width / 50.0 * 100.0) / 100.0).max(0.1)
+}
+
 /// `Math.max(1, Math.round(width / 20))`.
 pub fn default_grid(width: f64) -> f64 {
     kentos_native_style::classify::js_round(width / 20.0).max(1.0)
@@ -223,8 +229,7 @@ pub struct PanelState {
 
 impl PanelState {
     pub fn new(doc: &Drawing) -> PanelState {
-        use kentos_native_style::classify::js_round;
-        let unit = (js_round(doc.width / 50.0 * 100.0) / 100.0).max(0.1);
+        let unit = panel_unit(doc.width);
         PanelState {
             tab: Tab::Props,
             align_to: "selection",

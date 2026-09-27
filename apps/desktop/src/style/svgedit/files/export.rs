@@ -249,7 +249,7 @@ fn with_dialog(f: impl Fn(&mut ExportDialog) + Send + Sync + 'static) -> Message
     })
 }
 
-pub fn view<'a>(ed: &'a SvgEditor, st: &'a ExportDialog, width: f32) -> Element<'a, Message> {
+pub fn view<'a>(ed: &'a SvgEditor, st: &'a ExportDialog, width: f32, height: f32) -> Element<'a, Message> {
     let chosen = visible_chosen(ed).len();
     let b = area(ed, st);
     let mm = width_mm(ed, st);
@@ -433,5 +433,6 @@ pub fn view<'a>(ed: &'a SvgEditor, st: &'a ExportDialog, width: f32) -> Element<
         .push(row![preview, form].spacing(18))
         .push(foot)
         .width(typography::unscaled(width))
+        .max_height(typography::unscaled(height))
         .into()
 }

@@ -53,10 +53,10 @@ pub fn fmt_num(v: f64, digits: u32) -> String {
 pub fn readout(a: Pt, b: Pt, width: f64, size_mm: Option<f64>) -> (String, String) {
     let dx = b[0] - a[0];
     let dy = b[1] - a[1];
-    let d = dx.hypot(dy);
+    let d = kentos_geometry_core::jsmath::js_hypot(dx, dy);
     // As the drawing counts it: y runs down, so the angle grows clockwise, as a
     // shape's Döndürme does; −180° … 180°, so a line slightly up reads −20°.
-    let ang = dy.atan2(dx).to_degrees();
+    let ang = (kentos_geometry_core::jsmath::atan2(dy, dx) * 180.0) / kentos_geometry_core::jsmath::PI;
     let mm = mm_of(d, width, size_mm);
     let main = format!(
         "{} birim{} · açı {}°",

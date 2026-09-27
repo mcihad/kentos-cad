@@ -353,26 +353,14 @@ pub fn array_matrices(ed: &SvgEditor) -> Option<Vec<Matrix>> {
     }
 }
 
-/// The paper with its grid and reference, the shapes, the tile preview, the ghosts and the canvas's frame.
+/// The grid, the shapes, the tile preview, the ghosts and the canvas's frame.
 fn draw_base(frame: &mut Frame, ed: &SvgEditor, o: &Options, pal: &Palette) {
     let view = view_of(ed);
     let doc = &ed.doc;
-    frame.fill_rectangle(Point::ORIGIN, frame.size(), pal.field);
+    // The field and the paper are the backdrop's, under the reference (view.rs).
     let a = view.point([0.0, 0.0]);
     let b = view.point([doc.width, doc.height]);
     let paper = Path::rectangle(a, Size::new(b.x - a.x, b.y - a.y));
-    // A soft shadow under the paper (the web's drop shadow).
-    for (i, alpha) in [(3.0, 0.10), (2.0, 0.14), (1.0, 0.18)] {
-        frame.fill(
-            &Path::rectangle(
-                Point::new(a.x - i + 1.0, a.y - i + 2.0),
-                Size::new(b.x - a.x + 2.0 * i - 2.0, b.y - a.y + 2.0 * i - 2.0),
-            ),
-            Color::from_rgba(0.0, 0.0, 0.0, alpha),
-        );
-    }
-    let paper_color = kentos_ui::widget::color::parse_hex(&o.paper).unwrap_or(pal.panel);
-    frame.fill(&paper, paper_color);
     if o.grid > 0.0 && o.grid * view.zoom >= 5.0 {
         let grid = Path::new(|p| {
             let mut x = 0.0;
