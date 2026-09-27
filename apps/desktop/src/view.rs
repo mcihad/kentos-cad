@@ -85,6 +85,8 @@ impl App {
         if let Some(dialog) = self.dialog {
             layers.push(self.dialog_view(dialog));
         }
+        // İfade oluşturucu over the window whose field opened it (expression/).
+        layers.extend(self.builder_view());
         // A save's panel and an open's window (saving.rs, opening.rs), over everything else.
         layers.extend(self.saving_view());
         layers.extend(self.opening_view());

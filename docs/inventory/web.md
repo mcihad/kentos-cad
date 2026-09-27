@@ -60,7 +60,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 | Ayarlar | 38 | 12 | 14 | 1 | 65 |
 | Tarayıcı depoları | 6 | 1 | 2 | 1 | 10 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 192 | 0 | 0 | 0 | 192 |
-| Pencereler ve paneller | 42 | 3 | 18 | 0 | 63 |
+| Pencereler ve paneller | 43 | 3 | 17 | 0 | 63 |
 
 - `.kcad` alanları (v1 okunur, v2 yazılır), bütünüyle: implemented — Masaüstü .kcad'i web'le aynı Rust kodeğiyle (crates/shared/kcad) okur ve yazar: v2 yazılır, v1 okunur; belge (kentos-domain) göçü web'in örnek dosyasıyla aynı çıkarır (crates/native/domain/tests/snapshot_v2.rs, ADR 0025).
 
@@ -161,7 +161,7 @@ Yok.
 
 Yok.
 
-#### Pencereler ve paneller (21 / 63)
+#### Pencereler ve paneller (20 / 63)
 
 - `apps/web/src/ui/bottom/BottomPanel.ts#BottomPanel` BottomPanel (kısmi) (masaüstünde: apps/desktop/src/bottom.rs (ADR 0058)) — Komut geçmişinin satırlarında saat yazmaz.
 - `apps/web/src/ui/cloud/InvitationDialog.ts#openInvitationDialog` openInvitationDialog
@@ -169,7 +169,6 @@ Yok.
 - `apps/web/src/ui/cloud/ProjectForms.ts#openDuplicateDialog` openDuplicateDialog
 - `apps/web/src/ui/cloud/ProjectForms.ts#openMetadataDialog` openMetadataDialog
 - `apps/web/src/ui/cloud/ShareDialog.ts#openShareDialog` openShareDialog
-- `apps/web/src/ui/expression/builderApi.ts#openExpressionBuilder` openExpressionBuilder
 - `apps/web/src/ui/menu/MenuBar.ts#MenuBar` MenuBar
 - `apps/web/src/ui/processing/model/ModelDesigner.ts#openModelDesigner` openModelDesigner
 - `apps/web/src/ui/ribbon/Ribbon.ts#Ribbon` Ribbon (kısmi) (masaüstünde: apps/desktop/src/view.rs, catalog.rs (ADR 0017, 0051)) — Giriş'in Katmanlar ve Özellikler panelleri ile Seçim sekmesinin paneli yok (etkin katman, yeni nesnelerin rengi, çizgi tipi ve kalınlığı, çizim ölçeği, seçimin özeti); yöntem düğmesi son seçimi göstermez; hızlı erişime ekleme ve harf ipuçları yok.

@@ -159,6 +159,7 @@
     "apps/web/src/ui/dialogs.ts#openAboutDialog": { "desktop": "implemented", "where": "apps/desktop/src/view.rs (Dialog::About)" },
     "apps/web/src/ui/dialogs.ts#openShortcutsDialog": { "desktop": "implemented", "where": "apps/desktop/src/view.rs (Dialog::Shortcuts)" },
     "apps/web/src/ui/dock/RightDock.ts#RightDock": { "desktop": "implemented", "where": "apps/desktop/src/view.rs, app.rs (KentOS UI DockSpace)" },
+    "apps/web/src/ui/expression/builderApi.ts#openExpressionBuilder": { "desktop": "implemented", "where": "apps/desktop/src/expression/ (ADR 0100 §5; İşlemler'in ifade alanındaki ε)" },
     "apps/web/src/ui/io/CoordExportDialog.ts#openCoordExport": { "desktop": "implemented", "where": "apps/desktop/src/exchange/coord_export.rs (ADR 0048)" },
     "apps/web/src/ui/io/CoordImportDialog.ts#openCoordImport": { "desktop": "implemented", "where": "apps/desktop/src/exchange/coord_import.rs (ADR 0048)" },
     "apps/web/src/ui/io/DxfExportDialog.ts#openDxfExport": { "desktop": "implemented", "where": "apps/desktop/src/exchange/dxf_export.rs (ADR 0048)" },

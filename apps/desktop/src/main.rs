@@ -18,6 +18,7 @@ mod document;
 mod drawing_fonts;
 mod drawing_menus;
 mod exchange;
+mod expression;
 #[cfg(test)]
 mod files_testing;
 mod hover_card;

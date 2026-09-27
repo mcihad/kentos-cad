@@ -8,6 +8,10 @@
 //! quick right click keep what is selected; Esc leaves it. Either way the
 //! host hears [`ViewChange::PickedObjects`]. The tool is not in the catalog
 //! and is not repeated ([`crate::Session::run`]).
+//!
+//! [`PickObjects::one`] picks a single object (the expression builder's
+//! preview object): a click on one takes it and ends the pick; there is no
+//! box.
 
 use kentos_domain::Slot;
 use kentos_geometry_core::jsmath::js_hypot;
@@ -43,6 +47,8 @@ pub struct PickObjects {
     press: Option<Press>,
     /// How many are selected, for the prompt.
     count: usize,
+    /// One object only: a click takes it and ends the pick.
+    one: bool,
     done: bool,
 }
 
@@ -53,7 +59,16 @@ impl PickObjects {
             kinds: kinds.filter(|k| !k.is_empty()),
             press: None,
             count: 0,
+            one: false,
             done: false,
+        }
+    }
+
+    /// A single object: the first click on one of the field's kinds takes it.
+    pub fn one(field: impl Into<String>, kinds: Option<Vec<String>>) -> Self {
+        Self {
+            one: true,
+            ..Self::new(field, kinds)
         }
     }
 
@@ -97,6 +112,10 @@ impl Tool for PickObjects {
     /// “Alanlar: nesneleri tıklayın ya da pencereyle seçin (3 seçili) [Bitti
     /// (Enter) / Vazgeç (Esc)]”.
     fn prompt(&self) -> Prompt {
+        if self.one {
+            return Prompt::untitled(format!("{}: bir nesne tıklayın", self.field))
+                .option("Vazgeç", "Esc");
+        }
         Prompt::untitled(format!(
             "{}: nesneleri tıklayın ya da pencereyle seçin ({} seçili)",
             self.field, self.count
@@ -152,6 +171,15 @@ impl Tool for PickObjects {
         let Some(press) = self.press.take() else {
             return;
         };
+        if self.one {
+            // One object: a click on it takes it; a drag takes nothing.
+            if let (false, Some(hit)) = (press.dragging, self.hit(p.raw, cx)) {
+                cx.selection.set([hit]);
+                self.count = 1;
+                self.finish(true, cx);
+            }
+            return;
+        }
         if press.dragging {
             // The box as it was drawn decides: one rule for the look and the query.
             let crossing = SelectBox {
@@ -197,7 +225,7 @@ impl Tool for PickObjects {
     }
 
     fn select_box(&self) -> Option<SelectBox> {
-        let press = self.press.filter(|press| press.dragging)?;
+        let press = self.press.filter(|press| press.dragging && !self.one)?;
         Some(SelectBox {
             from: press.from,
             to: press.to,
