@@ -15,7 +15,6 @@ use kentos_interaction::clipboard;
 use kentos_interaction::paste::{self, Paste};
 
 use crate::app::{App, Message};
-use crate::catalog::catalog;
 
 /// The web command ids this module runs.
 pub const COMMANDS: &[&str] = &["edit.cut", "edit.copy", "edit.paste", "edit.pasteOriginal"];
@@ -75,11 +74,8 @@ impl App {
         self.field = None;
         let tool = Paste::new(self.clipboard.items().to_vec(), self.clipboard.base());
         self.session.run(Box::new(tool));
-        // Named as the tools are (`start_tool`): the command's name, shown with its title.
-        let name = catalog()
-            .get("edit.paste")
-            .map_or(paste::LABEL, |command| command.name());
-        self.say(Level::Command, name);
+        // Named as the web's `tools.run(…, 'Yapıştır')`.
+        self.say(Level::Command, paste::LABEL);
         self.with_tool(|s, cx| s.activate(cx));
         Task::none()
     }
@@ -102,7 +98,6 @@ mod tests {
     use iced::{Point, Rectangle, Size};
     use kentos_contracts::DocumentSnapshotV1;
     use kentos_interaction::{Cursor, Vec2};
-    use kentos_ui::widget::command_line::Entry;
 
     use super::COMMANDS;
     use crate::app::{App, Message};
@@ -164,12 +159,7 @@ mod tests {
     }
 
     fn said(app: &App) -> Option<&str> {
-        match app.history.last() {
-            Some(Entry::Input(t) | Entry::Value(t) | Entry::Output(t) | Entry::Warning(t) | Entry::Error(t)) => {
-                Some(t.as_str())
-            }
-            None => None,
-        }
+        app.log.last().map(|l| l.text.as_str())
     }
 
     #[test]
@@ -177,10 +167,10 @@ mod tests {
         let mut app = app();
         // Nothing selected, nothing put aside: every one of them is off and does nothing.
         assert!(COMMANDS.iter().all(|id| !app.available(id)));
-        let before = app.history.len();
+        let before = app.log.len();
         chord(&mut app, Modifiers::CTRL, "c", Code::KeyC);
         chord(&mut app, Modifiers::CTRL, "v", Code::KeyV);
-        assert_eq!(app.history.len(), before);
+        assert_eq!(app.log.len(), before);
         assert!(!app.session.is_running());
 
         click(&mut app, -16.0, -12.0);
@@ -193,7 +183,8 @@ mod tests {
         // Ctrl+V: the paste tool, named in the command line as the tools are.
         chord(&mut app, Modifiers::CTRL, "v", Code::KeyV);
         assert_eq!(app.session.tool_id(), "paste");
-        assert_eq!(said(&app), Some("YAPISTIR"));
+        // Named as the web's paste tool (`tools.run(…, 'Yapıştır')`).
+        assert_eq!(said(&app), Some("Yapıştır"));
         click(&mut app, -4.0, -18.0);
         assert_eq!(
             (app.session.tool_id(), count(&app), selected(&app)),

@@ -83,22 +83,11 @@ mod tests {
     use iced::keyboard::key::Named;
     use kentos_interaction::point_calc::CalcKind;
     use kentos_ui::snapshot::{Input, Snapshot};
-    use kentos_ui::widget::command_line::Entry;
-
     use crate::app::{App, Message};
     use crate::files_testing::app_with_drawing;
 
     fn said(app: &crate::app::App) -> Vec<String> {
-        app.history
-            .iter()
-            .map(|e| match e {
-                Entry::Input(t)
-                | Entry::Value(t)
-                | Entry::Output(t)
-                | Entry::Warning(t)
-                | Entry::Error(t) => t.clone(),
-            })
-            .collect()
+        app.log.lines().map(|l| l.text.clone()).collect()
     }
 
     /// Only over a command waiting for a point; then the command waits

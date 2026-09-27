@@ -29,10 +29,9 @@ pub(super) fn run(app: &mut App, id: &'static str) {
 
 /// Whether the command line said a line starting so.
 pub(super) fn said(app: &App, start: &str) -> bool {
-    use kentos_ui::widget::command_line::Entry;
-    app.history.iter().any(|e| {
-        matches!(e, Entry::Output(t) | Entry::Warning(t) | Entry::Error(t) if t.starts_with(start))
-    })
+    app.log
+        .lines()
+        .any(|l| l.level != kentos_interaction::Level::Command && l.text.starts_with(start))
 }
 
 pub(super) fn count(app: &App) -> usize {
@@ -181,7 +180,11 @@ fn a_dxf_export_writes_what_the_reader_reads_back() {
     send(&mut app, Event::DxfExport(dxf_export::Event::Run));
     assert_eq!(app.dialog, None);
     // The writer's notes follow the line that says the file was written.
-    assert!(said(&app, "“cizim.dxf” yazıldı:"), "{:?}", app.history);
+    assert!(
+        said(&app, "“cizim.dxf” yazıldı:"),
+        "{:?}",
+        app.log.lines().collect::<Vec<_>>()
+    );
     let bytes = std::fs::read(&path).expect("written");
     let back = kentos_formats::dxf::read(&bytes, &Default::default()).expect("reads");
     assert_eq!(back.entities.len(), count(&app));

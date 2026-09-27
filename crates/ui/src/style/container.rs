@@ -237,6 +237,30 @@ pub fn count(theme: &Theme) -> Style {
     }
 }
 
+/// Uyarı sayısı rozeti (ör. alt panelin Uyarılar sekmesi): amber zemin,
+/// üzerinde okunur koyu ya da açık yazı, yuvarlak (web'in `.badge`'i).
+pub fn warning_count(theme: &Theme) -> Style {
+    let t = Tokens::of(theme);
+    let dark = crate::theme::accent::mix(Color::BLACK, t.warning, 0.1);
+    let ink = if crate::theme::accent::contrast(t.warning, dark)
+        >= crate::theme::accent::contrast(t.warning, Color::WHITE)
+    {
+        dark
+    } else {
+        Color::WHITE
+    };
+
+    Style {
+        text_color: Some(ink),
+        background: Some(Background::Color(t.warning)),
+        border: Border {
+            radius: 8.0.into(),
+            ..Border::default()
+        },
+        ..Style::default()
+    }
+}
+
 /// Kalıcı iletişim kutusunun arkasındaki karartma.
 pub fn scrim(theme: &Theme) -> Style {
     fill(Tokens::of(theme).scrim())

@@ -386,8 +386,7 @@ mod tests {
             last_said(&app),
             "Proje ayarları kaydedildi. Proje dosyasıyla birlikte saklanacak."
         );
-        assert!(app.history.iter().any(|e| matches!(e,
-            kentos_ui::widget::command_line::Entry::Output(t)
-                if t == "Proje koordinat sistemi TUREF / TM33 (EPSG:5255) olarak atandı. Koordinat değerleri değiştirilmedi.")));
+        assert!(app.log.lines().any(|l| l.text
+            == "Proje koordinat sistemi TUREF / TM33 (EPSG:5255) olarak atandı. Koordinat değerleri değiştirilmedi."));
     }
 }

@@ -140,12 +140,8 @@
   },
   "screens": {
     "apps/web/src/ui/appmenu/AppMenu.ts#openAppMenu": { "desktop": "implemented", "where": "apps/desktop/src/app_menu/ (ADR 0050)" },
-    "apps/web/src/ui/bottom/BottomPanel.ts#BottomPanel": {
-      "desktop": "partial",
-      "where": "apps/desktop/src/bottom.rs (ADR 0058)",
-      "reason": "Komut geçmişinin satırlarında saat yazmaz."
-    },
-    "apps/web/src/ui/bottom/CommandLine.ts#CommandLine": { "desktop": "implemented", "where": "apps/desktop/src/view.rs, input.rs (KentOS UI CommandLine)" },
+    "apps/web/src/ui/bottom/BottomPanel.ts#BottomPanel": { "desktop": "implemented", "where": "apps/desktop/src/bottom.rs, message_log.rs, log_plan.rs (ADR 0058, 0114)" },
+    "apps/web/src/ui/bottom/CommandLine.ts#CommandLine": { "desktop": "implemented", "where": "apps/desktop/src/view.rs, input.rs, message_log.rs (KentOS UI CommandLine, tek satır; ADR 0114)" },
     "apps/web/src/ui/calc/IntersectionDialog.ts#openIntersection": { "desktop": "implemented", "where": "apps/desktop/src/calc/intersection.rs (ADR 0071)" },
     "apps/web/src/ui/calc/PolarDialog.ts#openPolar": { "desktop": "implemented", "where": "apps/desktop/src/calc/polar.rs (ADR 0071)" },
     "apps/web/src/ui/calc/StakeoutDialog.ts#openStakeout": { "desktop": "implemented", "where": "apps/desktop/src/calc/stakeout.rs (ADR 0071)" },
@@ -195,7 +191,7 @@
     "apps/web/src/ui/shell/HoverCard.ts#HoverCard": { "desktop": "implemented", "where": "apps/desktop/src/hover_card.rs (ADR 0068, 0082)" },
     "apps/web/src/ui/shell/InlineTextEditor.ts#InlineTextEditor": { "desktop": "implemented", "where": "apps/desktop/src/text_field.rs (ADR 0060)" },
     "apps/web/src/ui/start/StartScreen.ts#openStartScreen": { "desktop": "implemented", "where": "apps/desktop/src/start.rs (ADR 0050)" },
-    "apps/web/src/ui/statusbar/StatusBar.ts#StatusBar": { "desktop": "partial", "where": "apps/desktop/src/view.rs, cloud/cells.rs (ADR 0058, 0080, 0113)", "reason": "Web'in son iletiyi birkaç saniye gösteren hücresi yok; iletiler alt paneldedir. Dosya projesinde başkasının yeni revizyonu henüz izlenmediği için “Yeni revizyon” durumu gösterilmez. Çizim motoru hücresi masaüstünde anlamsızdır (wgpu)." },
+    "apps/web/src/ui/statusbar/StatusBar.ts#StatusBar": { "desktop": "partial", "where": "apps/desktop/src/view.rs, message_log.rs, cloud/cells.rs (ADR 0058, 0080, 0113, 0114)", "reason": "Dosya projesinde başkasının yeni revizyonu henüz izlenmediği için “Yeni revizyon” durumu gösterilmez. Çizim motoru hücresi masaüstünde anlamsızdır (wgpu)." },
     "apps/web/src/ui/style/LayerStyleDialog.ts#openLayerStyle": { "desktop": "implemented", "where": "apps/desktop/src/style/layer_style/ (ADR 0091)" },
     "apps/web/src/ui/style/LegendDialog.ts#openLegend": { "desktop": "implemented", "where": "apps/desktop/src/style/legend/ (ADR 0093)" },
     "apps/web/src/ui/style/StyleManager.ts#openStyleManager": {

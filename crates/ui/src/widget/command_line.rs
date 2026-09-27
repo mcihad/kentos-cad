@@ -14,6 +14,8 @@
 //!   yazıyla, uygulamanın yanıtları düz yazıyla gösterilir; hatalar
 //!   kırmızıdır. Bütün satırlar aynı sol kenardan başlar. Kapalıyken son
 //!   satırlar görünür ve eskiler soluklaşır; açıkken bütün geçmiş kaydırılır.
+//!   [`CommandLine::lines`] 0 ise kutu yalnız giriş satırıdır: geçmişi
+//!   uygulama başka yerde gösterir (ör. KentOS CAD'in alt paneli).
 //! - **İstem** ([`Prompt`]). Etkin komutun adı, beklenen adım ve tıklanabilir
 //!   seçenekler (ör. "Geri al"). Seçenekler adları yazılarak da seçilir.
 //! - **Giriş.** Yazarken üstte öneriler açılır. [`Command`] kataloğundaki
@@ -133,8 +135,13 @@ fn input_height() -> f32 {
 
 /// Komut kutusunun yüksekliği: geçmiş kapalıyken `lines` satır ya da açık
 /// geçmiş, altında giriş satırı. Kutunun üstünde duracak öğeler için (ör.
-/// bildirimler).
+/// bildirimler). `lines` 0 ise geçmiş yoktur: yalnız giriş satırı
+/// ([`CommandLine::lines`]).
 pub fn height(lines: usize, expanded: bool) -> f32 {
+    if lines == 0 {
+        return 1.0 + input_height();
+    }
+
     let log = if expanded {
         expanded_log_height()
     } else {
@@ -488,9 +495,13 @@ impl<'a, Message: Clone + 'a> CommandLine<'a, Message> {
         self
     }
 
-    /// Geçmiş kapalıyken gösterilen satır sayısı.
+    /// Geçmiş kapalıyken gösterilen satır sayısı. 0: kutunun kendi geçmişi
+    /// yoktur, yalnız giriş satırı görünür; geçmişi uygulama başka yerde
+    /// gösterir (ör. bir alt panelde, web'deki gibi). "Geçmiş" düğmesi onu
+    /// açıp kapatır; [`CommandLine::expanded`] o zaman yalnız düğmenin okunu
+    /// çevirir. Geçmiş yine ↑ ile geri getirilen komutların kaynağıdır.
     pub fn lines(mut self, lines: usize) -> Self {
-        self.lines = lines.max(1);
+        self.lines = lines;
         self
     }
 
@@ -551,7 +562,12 @@ impl<'a, Message: Clone + 'a> From<CommandLine<'a, Message>> for Element<'a, Mes
         let log_height = expanded_height.unwrap_or_else(expanded_log_height);
 
         Element::new(Console {
-            log: log(history, &commands, lines, expanded.then_some(log_height)),
+            log: if lines == 0 {
+                // The application shows the history elsewhere.
+                space::vertical().height(0).into()
+            } else {
+                log(history, &commands, lines, expanded.then_some(log_height))
+            },
             input: input_row(
                 prompt,
                 value,
@@ -1634,8 +1650,9 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Console<'a, M
             ),
         );
 
-        // Üstte ve geçmişle giriş arasında birer piksellik çizgi.
-        let input_y = 1.0 + log_height + 1.0;
+        // Üstte ve geçmişle giriş arasında birer piksellik çizgi; geçmiş
+        // yoksa yalnız üstteki.
+        let input_y = 1.0 + log_height + if log_height > 0.0 { 1.0 } else { 0.0 };
 
         layout::Node::with_children(
             Size::new(width, input_y + input_height()),
@@ -1899,15 +1916,17 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Console<'a, M
             },
             t.border,
         );
-        fill(
-            renderer,
-            Rectangle {
-                y: input_y - 1.0,
-                height: 1.0,
-                ..bounds
-            },
-            t.border.scale_alpha(0.55),
-        );
+        if log_layout.bounds().height > 0.0 {
+            fill(
+                renderer,
+                Rectangle {
+                    y: input_y - 1.0,
+                    height: 1.0,
+                    ..bounds
+                },
+                t.border.scale_alpha(0.55),
+            );
+        }
 
         // Odaktaki giriş satırı hafifçe aydınlanır; solunda vurgu çizgisi.
         if state.focused {
@@ -2322,6 +2341,13 @@ mod tests {
         assert_eq!(height_with_log(default_log_height()), height(LINES, true));
         // The name column never gets narrower than its least width.
         assert_eq!(name_width(&[]), typography::scaled(ROW_NAME));
+    }
+
+    #[test]
+    fn a_command_line_without_lines_is_its_input_row() {
+        assert_eq!(height(0, false), 1.0 + input_height());
+        // Open or not: the history is the application's.
+        assert_eq!(height(0, true), height(0, false));
     }
 
     #[test]

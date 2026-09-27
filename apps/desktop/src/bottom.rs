@@ -1,13 +1,15 @@
 //! The bottom panel (the web's `BottomPanel`, ui/bottom/BottomPanel.ts): the
-//! command line is always there; F2 (`view.bottomPanel`) opens a panel over
-//! it with three tabs:
+//! command line is always there, one row; F2 (`view.bottomPanel`) opens a
+//! panel over it with three tabs:
 //!
-//! - Komut geçmişi: the whole history (the command line's own, open);
+//! - Komut geçmişi: every line of the log with its time and level
+//!   (message_log.rs, docs/adr/0114);
 //! - Koordinat listesi (`view.coords` opens it on this tab): the selection's
 //!   points with Y, X, Z and layer, or the first object's vertices with each
 //!   edge's length and bearing, and the outline's area or length; rows are
 //!   built only as they scroll into view (a contour has thousands);
-//! - Uyarılar: the warnings and errors; the tab counts the ones not seen yet.
+//! - Uyarılar: the warnings and errors; the tab's badge counts the ones not
+//!   seen yet.
 //!
 //! As on the web, the tab row ends with Geçmişi temizle and Paneli kapat,
 //! and the panel's top edge is dragged to size it (a double click puts the
@@ -15,19 +17,20 @@
 //!
 //! Numbers are the project's formats; the geometry is the shared core's.
 
-use iced::widget::{Column, button, column, container, row};
+use iced::widget::{button, column, container, row};
 use iced::{Element, Fill, Length};
 use kentos_contracts::Entity;
 use kentos_interaction::{Format, bearing_grad, dist, measures, vertices};
-use kentos_ui::icon::Icon;
 use kentos_ui::label;
-use kentos_ui::widget::command_line::{self, Entry};
+use kentos_ui::widget::command_line;
 use kentos_ui::widget::sash::Sash;
 use kentos_ui::widget::table::{Column as TableColumn, Row as TableRow, Table};
 use kentos_ui::widget::tabs::{self, Tab, Tabs};
 use kentos_ui::widget::{Tip, horizontal_divider, tip};
 
 use crate::app::{App, Message};
+use crate::icons::from_web;
+use crate::log_plan::{self as plan, Listing as LogListing};
 
 /// The panel's tabs, in the web's order.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -96,22 +99,20 @@ impl App {
     /// The command line, and the panel over it while it is open.
     pub(crate) fn bottom(&self) -> Element<'_, Message> {
         if !self.command_expanded {
-            return self.command_line_as(false, None);
+            return self.command_line();
         }
-        let unseen = self.warning_count().saturating_sub(self.seen_warnings);
         let tabs = Tabs::new(
             [
-                Tab::new("Komut geçmişi").icon(Icon::Clock).closable(false),
-                Tab::new("Koordinat listesi")
-                    .icon(Icon::Table)
+                Tab::new(plan::TAB_HISTORY)
+                    .icon(from_web(Some("history")))
                     .closable(false),
-                Tab::new(if unseen > 0 && self.bottom_tab != BottomTab::Messages {
-                    format!("Uyarılar ({unseen})")
-                } else {
-                    "Uyarılar".to_owned()
-                })
-                .icon(Icon::Warning)
-                .closable(false),
+                Tab::new(plan::TAB_COORDS)
+                    .icon(from_web(Some("table")))
+                    .closable(false),
+                Tab::new(plan::TAB_MESSAGES)
+                    .icon(from_web(Some("warning")))
+                    .closable(false)
+                    .badge(self.log.unseen()),
             ],
             BottomTab::ALL
                 .iter()
@@ -128,26 +129,22 @@ impl App {
             .on_double_click(Message::BottomReset);
         let bar = row![container(tabs).width(Fill), self.bottom_actions()].width(Fill);
         let panel = match self.bottom_tab {
-            BottomTab::History => {
-                return column![sash, bar, self.command_line_as(true, None)].into();
-            }
+            BottomTab::History => self.log_list(LogListing::History),
             BottomTab::Coords => self.coordinate_list(),
-            BottomTab::Messages => self.messages(),
+            BottomTab::Messages => self.log_list(LogListing::Messages),
         };
-        // As tall as the open history, so switching tabs does not move the drawing.
-        let height = command_line::height_with_log(log) - command_line::height(0, false);
         column![
             sash,
             bar,
-            // On the command line's own ground, so a tab reads as part of it.
+            // On the panels' ground, as the web's `.bottom`.
             container(panel)
                 .width(Fill)
-                .height(Length::Fixed(height))
+                .height(Length::Fixed(log))
                 .style(|theme: &iced::Theme| container::Style {
-                    background: Some(kentos_ui::theme::Tokens::of(theme).field.into()),
+                    background: Some(kentos_ui::theme::Tokens::of(theme).surface.into()),
                     ..container::Style::default()
                 }),
-            self.command_line_as(false, Some(0)),
+            self.command_line(),
         ]
         .into()
     }
@@ -173,11 +170,11 @@ impl App {
             )
         };
         let buttons = row![
-            action("clear", Message::HistoryCleared, Tip::new("Geçmişi temizle")),
+            action("clear", Message::HistoryCleared, Tip::new(plan::CLEAR)),
             action(
                 "chevronDown",
                 Message::CommandHistoryToggled,
-                Tip::new("Paneli kapat").detail("F2"),
+                Tip::new(plan::CLOSE).detail("F2"),
             ),
         ]
         .spacing(2)
@@ -195,25 +192,19 @@ impl App {
             .into()
     }
 
-    /// Geçmişi temizle: the history goes, and with it the warnings' count.
+    /// Geçmişi temizle: the lines go; the badge counts what comes after.
     pub(crate) fn clear_history(&mut self) {
-        self.history.clear();
-        self.warnings_total = 0;
-        self.seen_warnings = 0;
+        self.log.clear();
         self.last_level = None;
     }
 
-    /// Warnings and errors said since the history was last cleared.
-    fn warning_count(&self) -> usize {
-        self.warnings_total
-    }
-
-    /// Opens the panel on a tab (`view.coords`, a tab clicked).
+    /// Opens the panel on a tab (`view.coords`, a tab clicked); Uyarılar on
+    /// screen has its lines seen.
     pub(crate) fn show_bottom(&mut self, tab: BottomTab) {
         self.bottom_tab = tab;
         self.command_expanded = true;
         if tab == BottomTab::Messages {
-            self.seen_warnings = self.warning_count();
+            self.log.look();
         }
     }
 
@@ -224,36 +215,6 @@ impl App {
         } else {
             self.show_bottom(self.bottom_tab);
         }
-    }
-
-    fn messages(&self) -> Element<'_, Message> {
-        let list: Vec<Element<'_, Message>> = self
-            .history
-            .iter()
-            .filter_map(|e| match e {
-                Entry::Warning(t) => Some(
-                    label::body(t.as_str())
-                        .style(|theme: &iced::Theme| iced::widget::text::Style {
-                            color: Some(kentos_ui::theme::Tokens::of(theme).warning),
-                        })
-                        .into(),
-                ),
-                Entry::Error(t) => Some(
-                    label::body(t.as_str())
-                        .style(kentos_ui::style::text::danger)
-                        .into(),
-                ),
-                _ => None,
-            })
-            .collect();
-        if list.is_empty() {
-            return container(label::muted("Uyarı yok.")).padding(12).into();
-        }
-        iced::widget::scrollable(Column::with_children(list).spacing(4).padding([6, 12]))
-            .direction(kentos_ui::style::field::body_scrollbar())
-            .anchor_bottom()
-            .height(Fill)
-            .into()
     }
 
     fn listing(&self) -> Listing {
@@ -512,9 +473,18 @@ mod tests {
         let mut app = app_with_drawing();
         app.warn("Bir uyarı.");
         app.error("Bir hata.");
-        assert_eq!(app.warning_count() - app.seen_warnings, 2);
+        assert_eq!(app.log.unseen(), 2);
         let _ = app.update(Message::BottomTab(BottomTab::Messages));
-        assert_eq!(app.warning_count() - app.seen_warnings, 0);
+        assert_eq!(app.log.unseen(), 0);
+        // Said while the tab is on screen: seen at once.
+        app.warn("Bir uyarı daha.");
+        assert_eq!(app.log.unseen(), 0);
+        // Closed and opened again with F2: the tab is seen again.
+        let _ = app.update(Message::CommandHistoryToggled);
+        app.warn("Kapalıyken bir uyarı.");
+        assert_eq!(app.log.unseen(), 1);
+        let _ = app.update(Message::CommandHistoryToggled);
+        assert_eq!(app.log.unseen(), 0);
     }
 
     #[test]
@@ -524,10 +494,10 @@ mod tests {
         let _ = app.update(Message::BottomTab(BottomTab::Messages));
         let _ = app.update(Message::BottomTab(BottomTab::History));
         let _ = app.update(Message::HistoryCleared);
-        assert!(app.history.is_empty());
-        // Cleared from another tab: the next warning is counted (the web's badge missed it).
+        assert_eq!(app.log.len(), 0);
+        // Cleared from another tab: the next warning is counted.
         app.warn("Yeni bir uyarı.");
-        assert_eq!(app.warning_count() - app.seen_warnings, 1);
+        assert_eq!(app.log.unseen(), 1);
     }
 
     #[test]

@@ -14,7 +14,6 @@ use iced::{Point, Rectangle, Task, event, mouse, window};
 use kentos_contracts::{DocumentSnapshotV1, Entity};
 use kentos_render_wgpu::Vec2;
 
-use kentos_ui::widget::command_line::Entry;
 
 use crate::app::{App, Message, Picker};
 use crate::document::Document;
@@ -245,22 +244,19 @@ impl<'a> Player<'a> {
                 break;
             }
             let label = format!("adım {} {}", i + 1, describe(step));
-            let said = self.app.history.len();
+            let said = self.app.log.last_id();
             if let Err(error) = self.act(step) {
                 problems.push(format!("{label}: {error}"));
                 break;
             }
             if let Some(expect) = &step.expect {
                 let mut seen = self.observe();
-                seen.messages = self.app.history[said.min(self.app.history.len())..]
-                    .iter()
-                    .map(|entry| match entry {
-                        Entry::Input(t)
-                        | Entry::Value(t)
-                        | Entry::Output(t)
-                        | Entry::Warning(t)
-                        | Entry::Error(t) => t.clone(),
-                    })
+                seen.messages = self
+                    .app
+                    .log
+                    .lines()
+                    .filter(|line| line.id > said)
+                    .map(|line| line.text.clone())
                     .collect();
                 let bad = compare(expect, &seen, self.trace);
                 if !bad.is_empty() {

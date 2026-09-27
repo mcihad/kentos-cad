@@ -16,7 +16,6 @@ use kentos_contracts::{
     TenantKind, TenantRole, UserView,
 };
 use kentos_domain::{Slot, Uuid};
-use kentos_ui::widget::command_line::Entry;
 
 use crate::app::{App, Dialog, Message, Then};
 use crate::cloud::catalog::List;
@@ -77,12 +76,7 @@ pub(crate) fn cloud(app: &mut App, event: Event) {
 }
 
 pub(crate) fn said(app: &App) -> Vec<String> {
-    app.history
-        .iter()
-        .map(|e| match e {
-            Entry::Input(t) | Entry::Value(t) | Entry::Output(t) | Entry::Warning(t) | Entry::Error(t) => t.clone(),
-        })
-        .collect()
+    app.log.lines().map(|l| l.text.clone()).collect()
 }
 
 /// The status bar's save cell's words (cells.rs).

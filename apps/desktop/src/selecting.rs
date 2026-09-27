@@ -179,10 +179,10 @@ pub(crate) mod tests {
         let _ = app.run("draft.grid");
         assert_eq!(app.checked("draft.grid"), Some(false));
         assert!(!app.viewport.grid_shown, "the drawing area follows");
-        assert!(matches!(
-            app.history.last(),
-            Some(kentos_ui::widget::command_line::Entry::Output(t)) if t == "Izgara kapalı"
-        ));
+        assert_eq!(
+            app.log.last().map(|l| l.text.as_str()),
+            Some("Izgara kapalı")
+        );
         let _ = app.run("draft.grid");
         assert!(app.settings.bool("drafting.grid"));
     }
@@ -194,10 +194,10 @@ pub(crate) mod tests {
         assert!(app.draft.snap);
         let _ = app.run("draft.snap");
         assert!(!app.draft.snap);
-        assert!(matches!(
-            app.history.last(),
-            Some(kentos_ui::widget::command_line::Entry::Output(t)) if t == "Kenetleme kapalı"
-        ));
+        assert_eq!(
+            app.log.last().map(|l| l.text.as_str()),
+            Some("Kenetleme kapalı")
+        );
         let _ = app.run("draft.snap");
         let _ = app.settings.choose(&[
             ("snap.endpoint", Value::Bool(false)),

@@ -753,11 +753,10 @@ mod tests {
         );
         assert!(!app.recovery.on());
         assert!(
-            app.history.iter().any(|e| matches!(
-                e,
-                kentos_ui::widget::command_line::Entry::Warning(t)
-                    if t.contains("kurtarma kopyaları tutulamıyor (/salt/okunur: izin yok)")
-            )),
+            app.log.said(
+                kentos_interaction::Level::Warn,
+                "kurtarma kopyaları tutulamıyor (/salt/okunur: izin yok)"
+            ),
             "{}",
             last_said(&app)
         );
