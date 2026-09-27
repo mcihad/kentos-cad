@@ -205,6 +205,41 @@ cases.append({
     ],
 })
 
+# The grips (ADR 0068): a grip dragged, and the grip menu's edge edits. The whole geometry is given, the area's
+# hole with it; every other field of the object stays.
+GRIPPED = {"kind": "polygon", "pts": [P(487030, 4420000), P(487052, 4419998), P(487050, 4420020), P(487030, 4420020)], "holes": [HOLE]}
+ARCED = {"kind": "polygon", "pts": BY_ID[3]["pts"], "bulges": [-0.5, 0, 0, 0], "holes": [HOLE]}
+STRAIGHTENED = {"kind": "polygon", "pts": BY_ID[3]["pts"], "holes": [HOLE]}
+cases.append({
+    "name": "Tutamaçla düzenle: sürüklenen köşe; nesne yerinde ve kimliğiyle, deliği ve verisiyle kalır; tek adım",
+    "steps": [
+        {"op": "captureUid", "id": 3, "as": "ada"},
+        {"op": "execute", "input": {"operation": "grip", "changes": [{"kind": "update", "uid": uid(3), "geometry": GRIPPED}]}, "result": done(changed=[uid(3)]),
+         "expect": {"ids": IDS, "entities": {"3": updated(3, GRIPPED)}, "uids": {"3": "ada"}, "canUndo": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Tutamaçla düzenle", "expect": {"entities": {"3": E(3)}, "uids": {"3": "ada"}, "canUndo": False}},
+    ],
+})
+
+cases.append({
+    "name": "Yaya dönüştür ve Düz kenar yap: kenarın yay değeri verilir, sonra kaldırılır; her biri tek adım, adı işlemin",
+    "steps": [
+        {"op": "execute", "input": {"operation": "arcEdge", "changes": [{"kind": "update", "uid": uid(3), "geometry": ARCED}]}, "result": done(changed=[uid(3)]),
+         "expect": {"entities": {"3": updated(3, ARCED)}, "revision": "changed"}},
+        {"op": "execute", "input": {"operation": "straightEdge", "changes": [{"kind": "update", "uid": uid(3), "geometry": STRAIGHTENED}]}, "result": done(changed=[uid(3)]),
+         "note": "Yay değeri kalmayan kapalı alan yay değerleri olmadan yazılır.", "expect": {"entities": {"3": updated(3, STRAIGHTENED)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Düz kenar yap", "expect": {"entities": {"3": updated(3, ARCED)}}},
+        {"op": "undo", "returns": "Yaya dönüştür", "expect": {"entities": {"3": E(3)}, "canUndo": False}},
+    ],
+})
+
+cases.append({
+    "name": "tutamaç kilitli katmandaki nesneyi düzenlemez (katman, tutamaç beklerken kilitlenmişse): hiçbir şey yazılmaz",
+    "steps": [
+        {"op": "execute", "input": {"operation": "grip", "changes": [{"kind": "update", "uid": uid(5), "geometry": line(487000, 4420030, 487012, 4420030)}]},
+         "result": failed("layer_locked", locked_message("Kilitli katman"), "changes[0].uid"), "expect": {**NOTHING, "entities": {"5": E(5)}}},
+    ],
+})
+
 chain = {"kind": "polyline", "pts": [P(487020, 4420000), P(487000, 4420000), P(487000, 4420010), P(487010, 4420010), P(487010, 4420020)]}
 cases.append({
     "name": "Birleştir: zincir ilk nesnesinin yerinde, kimliğiyle ve verisiyle (keepData) yazılır; öbürü silinir; tek adım",

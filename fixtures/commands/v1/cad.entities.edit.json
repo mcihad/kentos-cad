@@ -65,6 +65,29 @@
       ]
     },
     {
+      "name": "Tutamaçla düzenle: sürüklenen köşe; nesne yerinde ve kimliğiyle, deliği ve verisiyle kalır; tek adım",
+      "steps": [
+        {"op": "captureUid", "id": 3, "as": "ada"},
+        {"op": "execute", "input": {"operation": "grip", "changes": [{"kind": "update", "uid": "$uidOf:3", "geometry": {"kind": "polygon", "pts": [{"x": 487030, "y": 4420000}, {"x": 487052, "y": 4419998}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}], "holes": [{"pts": [{"x": 487038, "y": 4420008}, {"x": 487042, "y": 4420008}, {"x": 487042, "y": 4420012}, {"x": 487038, "y": 4420012}]}]}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:3"], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "entities": {"3": {"id": 3, "layerId": "yapi", "attrs": {"Ada": "101"}, "kind": "polygon", "pts": [{"x": 487030, "y": 4420000}, {"x": 487052, "y": 4419998}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}], "holes": [{"pts": [{"x": 487038, "y": 4420008}, {"x": 487042, "y": 4420008}, {"x": 487042, "y": 4420012}, {"x": 487038, "y": 4420012}]}]}}, "uids": {"3": "ada"}, "canUndo": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Tutamaçla düzenle", "expect": {"entities": {"3": {"kind": "polygon", "id": 3, "layerId": "yapi", "attrs": {"Ada": "101"}, "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}], "holes": [{"pts": [{"x": 487038, "y": 4420008}, {"x": 487042, "y": 4420008}, {"x": 487042, "y": 4420012}, {"x": 487038, "y": 4420012}]}]}}, "uids": {"3": "ada"}, "canUndo": false}}
+      ]
+    },
+    {
+      "name": "Yaya dönüştür ve Düz kenar yap: kenarın yay değeri verilir, sonra kaldırılır; her biri tek adım, adı işlemin",
+      "steps": [
+        {"op": "execute", "input": {"operation": "arcEdge", "changes": [{"kind": "update", "uid": "$uidOf:3", "geometry": {"kind": "polygon", "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}], "bulges": [-0.5, 0, 0, 0], "holes": [{"pts": [{"x": 487038, "y": 4420008}, {"x": 487042, "y": 4420008}, {"x": 487042, "y": 4420012}, {"x": 487038, "y": 4420012}]}]}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:3"], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"3": {"id": 3, "layerId": "yapi", "attrs": {"Ada": "101"}, "kind": "polygon", "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}], "bulges": [-0.5, 0, 0, 0], "holes": [{"pts": [{"x": 487038, "y": 4420008}, {"x": 487042, "y": 4420008}, {"x": 487042, "y": 4420012}, {"x": 487038, "y": 4420012}]}]}}, "revision": "changed"}},
+        {"op": "execute", "input": {"operation": "straightEdge", "changes": [{"kind": "update", "uid": "$uidOf:3", "geometry": {"kind": "polygon", "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}], "holes": [{"pts": [{"x": 487038, "y": 4420008}, {"x": 487042, "y": 4420008}, {"x": 487042, "y": 4420012}, {"x": 487038, "y": 4420012}]}]}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:3"], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "note": "Yay değeri kalmayan kapalı alan yay değerleri olmadan yazılır.", "expect": {"entities": {"3": {"id": 3, "layerId": "yapi", "attrs": {"Ada": "101"}, "kind": "polygon", "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}], "holes": [{"pts": [{"x": 487038, "y": 4420008}, {"x": 487042, "y": 4420008}, {"x": 487042, "y": 4420012}, {"x": 487038, "y": 4420012}]}]}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Düz kenar yap", "expect": {"entities": {"3": {"id": 3, "layerId": "yapi", "attrs": {"Ada": "101"}, "kind": "polygon", "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}], "bulges": [-0.5, 0, 0, 0], "holes": [{"pts": [{"x": 487038, "y": 4420008}, {"x": 487042, "y": 4420008}, {"x": 487042, "y": 4420012}, {"x": 487038, "y": 4420012}]}]}}}},
+        {"op": "undo", "returns": "Yaya dönüştür", "expect": {"entities": {"3": {"kind": "polygon", "id": 3, "layerId": "yapi", "attrs": {"Ada": "101"}, "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}], "holes": [{"pts": [{"x": 487038, "y": 4420008}, {"x": 487042, "y": 4420008}, {"x": 487042, "y": 4420012}, {"x": 487038, "y": 4420012}]}]}}, "canUndo": false}}
+      ]
+    },
+    {
+      "name": "tutamaç kilitli katmandaki nesneyi düzenlemez (katman, tutamaç beklerken kilitlenmişse): hiçbir şey yazılmaz",
+      "steps": [
+        {"op": "execute", "input": {"operation": "grip", "changes": [{"kind": "update", "uid": "$uidOf:5", "geometry": {"kind": "line", "a": {"x": 487000, "y": 4420030}, "b": {"x": 487012, "y": 4420030}}}]}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "“Kilitli katman” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın.", "path": "changes[0].uid"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same", "entities": {"5": {"kind": "line", "id": 5, "layerId": "kilitli", "attrs": {}, "a": {"x": 487000, "y": 4420030}, "b": {"x": 487010, "y": 4420030}}}}}
+      ]
+    },
+    {
       "name": "Birleştir: zincir ilk nesnesinin yerinde, kimliğiyle ve verisiyle (keepData) yazılır; öbürü silinir; tek adım",
       "steps": [
         {"op": "captureUid", "id": 1, "as": "cizgi"},

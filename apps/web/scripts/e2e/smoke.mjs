@@ -660,6 +660,39 @@ try {
   const delRow = await menuRow('Köşeyi sil');
   if (delRow) await b.click(...delRow);
   check('grip menu deletes a vertex', (await b.eval(`window.kentos.doc.get(${box2.id})`)).pts.length === gripBefore - 1);
+  // Through cad.entities.edit: Köşeyi sil is the step “Köşe sil”; an edge's middle offers Yaya dönüştür, then
+  // Düz kenar yap, each its own step and log.
+  {
+    const saidLast = () => b.eval(`window.kentos.log.entries.value.at(-1)?.text ?? ''`);
+    const vertexSaid = await saidLast();
+    const vertexStep = await b.eval('(() => { const d = window.kentos.doc; const s = d.undo(); d.redo(); return s; })()');
+    await b.eval(`window.kentos.selection.set([${box2.id}])`);
+    await sleep(60);
+    const seg = await b.eval(`(() => { const e = window.kentos.doc.get(${box2.id}); return [...e.pts.keys()].find((j) => ((e.bulges ?? [])[j] ?? 0) === 0); })()`);
+    // The edge's middle grip: on an arc edge, the arc's middle (a positive bulge bows right of travel).
+    const midAt = () =>
+      b.eval(`(() => { const e = window.kentos.doc.get(${box2.id}); const i = ${seg}, n = e.pts.length; const a = e.pts[i], c = e.pts[(i + 1) % n], bu = (e.bulges ?? [])[i] ?? 0; const dx = c.x - a.x, dy = c.y - a.y; return { x: (a.x + c.x) / 2 + (dy * bu) / 2, y: (a.y + c.y) / 2 - (dx * bu) / 2, bu }; })()`);
+    const straightMid = await midAt();
+    await pressRight(...(await toScreen(straightMid.x, straightMid.y)), 30);
+    const arcRow = await menuRow('Yaya dönüştür');
+    if (arcRow) await b.click(...arcRow);
+    await sleep(60);
+    const arced = await midAt();
+    const arcSaid = await saidLast();
+    await pressRight(...(await toScreen(arced.x, arced.y)), 30);
+    const lineRow = await menuRow('Düz kenar yap');
+    if (lineRow) await b.click(...lineRow);
+    await sleep(60);
+    const straight = await midAt();
+    const lineSaid = await saidLast();
+    const steps = await b.eval('(() => { const d = window.kentos.doc; const s = [d.undo(), d.undo()]; d.redo(); d.redo(); return s; })()');
+    check(
+      'grip menu: Köşeyi sil is the step “Köşe sil”; an edge’s middle offers Yaya dönüştür, then Düz kenar yap, each its own step',
+      vertexSaid === 'Köşe sil: tamam.' && vertexStep === 'Köşe sil' && !!arcRow && Math.abs(arced.bu) > 0.1 && arcSaid === 'Yaya dönüştür: tamam.' &&
+        !!lineRow && straight.bu === 0 && lineSaid === 'Düz kenar yap: tamam.' && steps.join() === 'Düz kenar yap,Yaya dönüştür',
+      JSON.stringify({ vertexSaid, vertexStep, seg, arced, arcSaid, straight, lineSaid, steps }),
+    );
+  }
   await b.eval('window.kentos.selection.clear()');
 
   // A clicked grip waits for its new place and its prompt asks for a coordinate: typed text reaches it, beside
