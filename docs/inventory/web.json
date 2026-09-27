@@ -73,7 +73,7 @@
       "pending": 0
     },
     "commandsWithoutPlace": [],
-    "commandsWithoutTests": 54,
+    "commandsWithoutTests": 53,
     "commandsOnDesktop": 115
   },
   "commands": [
@@ -1897,7 +1897,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/scripts/e2e/smoke.mjs"
+      ]
     },
     {
       "id": "layer.newGroup",

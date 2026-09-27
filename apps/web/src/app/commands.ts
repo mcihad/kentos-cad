@@ -515,10 +515,9 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       title: 'Yeni katman',
       category: 'Katman',
       icon: 'layerAdd',
+      // One undo step, “Katman ekle”: undo takes the layer away and makes the one before active again.
       run: () => {
-        const active = doc.layers.active.value;
-        const node = doc.layers.add({ name: doc.layers.uniqueName('Yeni katman') }, active);
-        doc.layers.setActive(node.id);
+        const node = doc.addLayer({ name: doc.layers.uniqueName('Yeni katman') }, doc.layers.active.value, { activate: true });
         log.success(`“${node.name}” katmanı eklendi ve etkin yapıldı.`);
       },
     },
@@ -527,8 +526,9 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       title: 'Yeni grup',
       category: 'Katman',
       icon: 'folderAdd',
+      // One undo step, “Grup ekle”.
       run: () => {
-        const node = doc.layers.add({ name: doc.layers.uniqueName('Yeni grup'), type: 'group', children: [] }, null);
+        const node = doc.addLayer({ name: doc.layers.uniqueName('Yeni grup'), type: 'group', children: [] }, null);
         log.success(`“${node.name}” grubu eklendi.`);
       },
     },

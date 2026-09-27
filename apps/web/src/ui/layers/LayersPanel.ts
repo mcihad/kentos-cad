@@ -308,7 +308,15 @@ export class LayersPanel extends Panel {
     }
     items.push(
       { label: 'Yeniden adlandır', shortcut: 'F2', run: () => this.rename(n) },
-      { label: isLayer ? 'Yanına yeni katman' : 'İçine yeni katman', icon: 'layerAdd', run: () => layers.setActive(layers.add({ name: layers.uniqueName('Yeni katman') }, n.id).id) },
+      {
+        label: isLayer ? 'Yanına yeni katman' : 'İçine yeni katman',
+        icon: 'layerAdd',
+        // As Yeni katman: one undo step, “Katman ekle”, the new layer made active.
+        run: () => {
+          const node = this.ctx.doc.addLayer({ name: layers.uniqueName('Yeni katman') }, n.id, { activate: true });
+          this.ctx.log.success(`“${node.name}” katmanı eklendi ve etkin yapıldı.`);
+        },
+      },
       { kind: 'separator' },
       { label: 'Sil', icon: 'trash', shortcut: 'Delete', run: () => void this.remove(n) },
     );

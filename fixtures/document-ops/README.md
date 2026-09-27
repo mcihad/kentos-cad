@@ -34,7 +34,7 @@ Her adımda `op` ve işleme göre alanlar bulunur. Bütün adımlarda şu alanla
 
 - `expect`: adımdan sonraki durum (aşağıda);
 - `returns`: işlemin döndürdüğü değer;
-- `catch`: adım bu iletiyle hata vermeli (bir `transact`'ın `throw`'u ya da belgenin reddettiği düzenleme, `removeLayer`). Hata orada yakalanır, sonra `expect` denetlenir;
+- `catch`: adım bu iletiyle hata vermeli (bir `transact`'ın `throw`'u ya da belgenin reddettiği düzenleme, `removeLayer`, `addLayer`). Hata orada yakalanır, sonra `expect` denetlenir;
 - `note`.
 
 | `op` | Alanlar | Web | Masaüstü (`kentos_domain::Document`) | Döndürdüğü |
@@ -64,7 +64,7 @@ Her adımda `op` ve işleme göre alanlar bulunur. Bütün adımlarda şu alanla
 | `setActive` | `id` | `layers.setActive` | `set_active_layer` | |
 | `rename` | `id`, `name` | `layers.rename` | `rename_layer` | |
 | `setLayerStyle` | `id`, `patch`, `label`? | `setLayerStyle` | `set_layer_style` (yamalı tam stil) | |
-| `addLayer` | `layer`: `{ id, name, type?, visible?, locked?, style? }`, `parent`: kimlik ya da `null` | `layers.add` | `add_layer` (`NewLayer`; verilmeyen stil alanı varsayılandır) | yeni düğümün kimliği |
+| `addLayer` | `layer`: `{ id, name, type?, visible?, locked?, style? }`, `parent`: kimlik ya da `null`, `activate?` | `addLayer` (reddi Refusal; geri alınabilir adım “Katman ekle” / “Grup ekle”) | `add_layer` (`NewLayer`; verilmeyen stil alanı varsayılandır) | yeni düğümün kimliği |
 | `removeLayer` | `id` | `removeLayer` (reddi `Refusal`) | `remove_layer` | silinen nesne sayısı |
 | `uniqueLayerName` | `base` | `layers.uniqueName` | `LayerTree::unique_name` | ad |
 | `setName` | `name` | `name.set` | `set_name` | |

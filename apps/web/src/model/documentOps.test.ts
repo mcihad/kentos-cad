@@ -208,7 +208,7 @@ class Run {
       case 'setLayerStyle':
         return doc.setLayerStyle(layerId, patchOf(s.patch) as Partial<LayerStyle>, s.label as string | undefined);
       case 'addLayer':
-        return layers.add(s.layer as LayerInit, (s.parent as string | null | undefined) ?? null).id;
+        return doc.addLayer(s.layer as LayerInit, (s.parent as string | null | undefined) ?? null, { activate: s.activate === true }).id;
       case 'removeLayer':
         return doc.removeLayer(layerId);
       case 'uniqueLayerName':

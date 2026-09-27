@@ -1,0 +1,409 @@
+{
+  "format": "kentos.document-ops",
+  "version": 1,
+  "title": "Katman ekleme: katman ya da grup, geri alınabilir tek adımda",
+  "note": "addLayer katmanı ya da grubu LayerStore.add'in koyduğu yere koyar: verilen grubun içine, katmanın grubuna ya da en üste (bilinmeyen üst: en üste), sona; girdiği grup açılır ve geri alma onu kapatmaz. Adım katman için “Katman ekle”, grup için “Grup ekle” (açık işlemde işleme katılır, adı işlemin). activate ile yeni katman aynı adımda etkin olur; geri alma önceki etkin katmanı etkin yapar, yineleme yenisini (etkin katman o arada elle değiştiyse adım ona dokunmaz). Geri alınan düğümle giden etkin katmanın yerine ağacın ilk katmanı etkin olur. Ağaçta olan kimlik reddedilir (catch, hiçbir şey değişmez). Kimlik verilmezse deponun sayacından gelir; bu durumlar hep kimlik verir.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Katman ekleme",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "hybrid",
+      "drawingFont": "barlow"
+    },
+    "origin": {"x": 486500, "y": 4420100},
+    "layers": [
+      {
+        "id": "g",
+        "name": "Yapılar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+        "children": [
+          {
+            "id": "a",
+            "name": "Bina",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+            "children": []
+          },
+          {
+            "id": "b",
+            "name": "Yol",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "c",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+        "children": []
+      },
+      {
+        "id": "k",
+        "name": "Arşiv",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": false,
+        "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+        "children": [
+          {
+            "id": "e",
+            "name": "Eski",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "a",
+    "entities": [
+      {"id": 1, "kind": "point", "layerId": "a", "p": {"x": 486510, "y": 4420110}, "attrs": {}},
+      {"id": 2, "kind": "point", "layerId": "c", "p": {"x": 486520, "y": 4420110}, "attrs": {}}
+    ],
+    "styles": {"items": [], "categories": []}
+  },
+  "scenarios": [
+    {
+      "name": "Katman ekle: tek adım; geri alma katmanı kaldırır, yineleme aynı kimlikle aynı yerine, bayraklarıyla ve stiliyle geri getirir",
+      "steps": [
+        {
+          "op": "addLayer",
+          "layer": {"id": "d", "name": "Duvar", "visible": false, "locked": true, "style": {"color": "#E5484D", "lineWeight": 0.35}},
+          "parent": "g",
+          "returns": "d",
+          "expect": {
+            "tree": {"": ["g", "c", "k"], "g": ["a", "b", "d"]},
+            "layers": {
+              "d": {
+                "name": "Duvar",
+                "visible": false,
+                "locked": true,
+                "expanded": true,
+                "style": {"color": "#E5484D", "lineType": "continuous", "lineWeight": 0.35},
+                "isVisible": false,
+                "isLocked": true
+              }
+            },
+            "ids": [1, 2],
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "activeLayer": "a"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Katman ekle",
+          "expect": {"tree": {"": ["g", "c", "k"], "g": ["a", "b"]}, "canUndo": false, "canRedo": true, "revision": "changed", "activeLayer": "a"}
+        },
+        {
+          "op": "redo",
+          "returns": "Katman ekle",
+          "expect": {
+            "tree": {"g": ["a", "b", "d"]},
+            "layers": {
+              "d": {
+                "name": "Duvar",
+                "visible": false,
+                "locked": true,
+                "expanded": true,
+                "style": {"color": "#E5484D", "lineType": "continuous", "lineWeight": 0.35},
+                "isVisible": false,
+                "isLocked": true
+              }
+            },
+            "canUndo": true,
+            "canRedo": false,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Grup ekle: grubun adımı “Grup ekle”; içine katman eklemek ayrı adımdır; ikisi sırayla geri alınır ve yinelenir",
+      "steps": [
+        {
+          "op": "addLayer",
+          "layer": {"id": "h", "name": "Harita", "type": "group"},
+          "parent": null,
+          "returns": "h",
+          "expect": {
+            "tree": {"": ["g", "c", "k", "h"], "h": []},
+            "layers": {
+              "h": {
+                "name": "Harita",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+                "isVisible": true,
+                "isLocked": false
+              }
+            },
+            "canUndo": true
+          }
+        },
+        {"op": "addLayer", "layer": {"id": "i", "name": "Pafta"}, "parent": "h", "returns": "i", "expect": {"tree": {"h": ["i"]}}},
+        {"op": "undo", "returns": "Katman ekle", "expect": {"tree": {"": ["g", "c", "k", "h"], "h": []}}},
+        {"op": "undo", "returns": "Grup ekle", "expect": {"tree": {"": ["g", "c", "k"]}, "canUndo": false}},
+        {"op": "redo", "returns": "Grup ekle", "expect": {"tree": {"": ["g", "c", "k", "h"], "h": []}}},
+        {"op": "redo", "returns": "Katman ekle", "expect": {"tree": {"h": ["i"]}, "canRedo": false}}
+      ]
+    },
+    {
+      "name": "Etkin yaparak ekleme (Yeni katman): yeni katman aynı adımda etkin olur; geri alma önceki etkin katmanı, yineleme yenisini etkin yapar",
+      "steps": [
+        {
+          "op": "addLayer",
+          "layer": {"id": "n", "name": "Yeni katman"},
+          "parent": "a",
+          "activate": true,
+          "returns": "n",
+          "note": "Katmanın yanına: onun grubuna, en sona.",
+          "expect": {"tree": {"g": ["a", "b", "n"]}, "activeLayer": "n", "canUndo": true}
+        },
+        {"op": "undo", "returns": "Katman ekle", "expect": {"tree": {"g": ["a", "b"]}, "activeLayer": "a"}},
+        {"op": "redo", "returns": "Katman ekle", "expect": {"tree": {"g": ["a", "b", "n"]}, "activeLayer": "n"}}
+      ]
+    },
+    {
+      "name": "Etkin katman adımdan sonra elle değiştiyse geri alma onu bozmaz; elle etkin yapılmış yeni katman geri alınınca ağacın ilk katmanı etkin olur",
+      "steps": [
+        {
+          "op": "addLayer",
+          "layer": {"id": "n", "name": "Yeni katman"},
+          "parent": "a",
+          "activate": true,
+          "returns": "n",
+          "expect": {"activeLayer": "n"}
+        },
+        {"op": "setActive", "id": "c", "expect": {"activeLayer": "c"}},
+        {
+          "op": "undo",
+          "returns": "Katman ekle",
+          "note": "Adımın etkin yaptığı katman artık etkin değil: etkin katmana dokunulmaz.",
+          "expect": {"tree": {"g": ["a", "b"]}, "activeLayer": "c"}
+        },
+        {
+          "op": "addLayer",
+          "layer": {"id": "p", "name": "Pafta"},
+          "parent": null,
+          "returns": "p",
+          "expect": {"tree": {"": ["g", "c", "k", "p"]}, "activeLayer": "c"}
+        },
+        {"op": "setActive", "id": "p", "expect": {"activeLayer": "p"}},
+        {
+          "op": "undo",
+          "returns": "Katman ekle",
+          "note": "Etkin katman kaldırılan katmandı: ağacın ilk katmanı etkin olur.",
+          "expect": {"tree": {"": ["g", "c", "k"]}, "activeLayer": "a"}
+        }
+      ]
+    },
+    {
+      "name": "Kapalı gruba ekleme grubu açar; geri alma grubu açık bırakır (açık olmak görünüm durumudur)",
+      "steps": [
+        {
+          "op": "addLayer",
+          "layer": {"id": "f", "name": "Fener"},
+          "parent": "k",
+          "returns": "f",
+          "expect": {
+            "tree": {"k": ["e", "f"]},
+            "layers": {
+              "k": {"expanded": true},
+              "f": {
+                "name": "Fener",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+                "isVisible": true,
+                "isLocked": false
+              }
+            }
+          }
+        },
+        {"op": "undo", "returns": "Katman ekle", "expect": {"tree": {"k": ["e"]}, "layers": {"k": {"expanded": true}}}}
+      ]
+    },
+    {
+      "name": "İşlemin içinde, üzerine yazılan nesneyle (içe aktarma gibi): tek adım, işlemin adıyla; geri alma önce nesneyi sonra katmanı alır, yineleme ikisini kimlikleriyle getirir",
+      "steps": [
+        {
+          "op": "transact",
+          "label": "DXF: plan.dxf",
+          "steps": [
+            {"op": "addLayer", "layer": {"id": "x", "name": "Plan"}, "parent": null, "returns": "x"},
+            {"op": "add", "entity": {"kind": "point", "layerId": "x", "p": {"x": 486530, "y": 4420110}, "attrs": {"Ad": "N1"}}, "returns": 3}
+          ],
+          "expect": {"tree": {"": ["g", "c", "k", "x"]}, "ids": [1, 2, 3], "canUndo": true, "dirty": true, "revision": "changed"}
+        },
+        {"op": "captureUid", "id": 3, "as": "yeni"},
+        {"op": "undo", "returns": "DXF: plan.dxf", "expect": {"tree": {"": ["g", "c", "k"]}, "ids": [1, 2], "canUndo": false, "canRedo": true}},
+        {
+          "op": "redo",
+          "returns": "DXF: plan.dxf",
+          "expect": {
+            "tree": {"": ["g", "c", "k", "x"]},
+            "ids": [1, 2, 3],
+            "uids": {"3": "yeni"},
+            "entities": {"3": {"id": 3, "kind": "point", "layerId": "x", "p": {"x": 486530, "y": 4420110}, "attrs": {"Ad": "N1"}}},
+            "layers": {
+              "x": {
+                "name": "Plan",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+                "isVisible": true,
+                "isLocked": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bir grup ve içindeki katman tek işlemde: geri alma ikisini de alır, yineleme iç içe yapıyı geri getirir",
+      "steps": [
+        {
+          "op": "transact",
+          "label": "İçe aktar",
+          "steps": [
+            {"op": "addLayer", "layer": {"id": "q", "name": "Kadastro", "type": "group"}, "parent": null, "returns": "q"},
+            {"op": "addLayer", "layer": {"id": "r", "name": "Parsel sınırı"}, "parent": "q", "returns": "r"}
+          ],
+          "expect": {"tree": {"": ["g", "c", "k", "q"], "q": ["r"]}}
+        },
+        {"op": "undo", "returns": "İçe aktar", "expect": {"tree": {"": ["g", "c", "k"]}, "canUndo": false}},
+        {
+          "op": "redo",
+          "returns": "İçe aktar",
+          "expect": {
+            "tree": {"": ["g", "c", "k", "q"], "q": ["r"]},
+            "layers": {
+              "q": {
+                "name": "Kadastro",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+                "isVisible": true,
+                "isLocked": false
+              },
+              "r": {
+                "name": "Parsel sınırı",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+                "isVisible": true,
+                "isLocked": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hata veren işlemde eklenen katman geri döner; hiçbir adım yazılmaz",
+      "steps": [
+        {
+          "op": "transact",
+          "label": "Vazgeçilen",
+          "throw": "vazgeçildi",
+          "catch": "vazgeçildi",
+          "steps": [{"op": "addLayer", "layer": {"id": "x", "name": "Plan"}, "parent": null, "returns": "x"}],
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [1, 2],
+            "tree": {"": ["g", "c", "k"], "g": ["a", "b"], "k": ["e"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ağaçta olan kimlik reddedilir (katman da grup da); hiçbir şey değişmez",
+      "steps": [
+        {
+          "op": "addLayer",
+          "layer": {"id": "a", "name": "Başka"},
+          "parent": null,
+          "catch": "“a” kimlikli katman zaten var; katman eklenmedi.",
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [1, 2],
+            "tree": {"": ["g", "c", "k"], "g": ["a", "b"], "k": ["e"]}
+          }
+        },
+        {
+          "op": "addLayer",
+          "layer": {"id": "g", "name": "Başka grup", "type": "group"},
+          "parent": null,
+          "catch": "“g” kimlikli katman zaten var; katman eklenmedi.",
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [1, 2],
+            "tree": {"": ["g", "c", "k"], "g": ["a", "b"], "k": ["e"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kayıt: ekleme belgeyi kirletir; kaydedildikten sonra geri alma da kirletir",
+      "steps": [
+        {"op": "addLayer", "layer": {"id": "d", "name": "Duvar"}, "parent": "g", "returns": "d", "expect": {"dirty": true}},
+        {"op": "captureRevision", "as": "r1"},
+        {"op": "markSaved", "revision": "r1", "expect": {"dirty": false}},
+        {"op": "undo", "returns": "Katman ekle", "expect": {"dirty": true, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "Geri alınan katmanın adı yeniden kullanılabilir",
+      "steps": [
+        {"op": "addLayer", "layer": {"id": "n1", "name": "Yeni katman"}, "parent": null, "returns": "n1"},
+        {"op": "uniqueLayerName", "base": "Yeni katman", "returns": "Yeni katman 2"},
+        {"op": "undo", "returns": "Katman ekle"},
+        {"op": "uniqueLayerName", "base": "Yeni katman", "returns": "Yeni katman"}
+      ]
+    }
+  ]
+}

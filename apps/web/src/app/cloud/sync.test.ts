@@ -6,6 +6,20 @@ import { disposeAll, layers, pt, reopen, setup, storedDraft, wire, xOf } from '.
 afterEach(disposeAll);
 
 describe('cloud autosave', () => {
+  it('a layer added with objects in one step (an import) goes as the tree with the creates; its undo as the deletes and the tree without it', async () => {
+    const { doc, server, sync } = setup();
+    doc.transact('İçe aktar', () => {
+      doc.addLayer({ id: 'yeni', name: 'Yeni' }, null);
+      doc.addMany([pt(1, 'yeni'), pt(2, 'yeni')]);
+    });
+    expect(await sync.flush()).toBe(true);
+    expect([server.store.size, server.meta.layers.map((n) => n.id)]).toEqual([2, ['cizim', 'parsel', 'yeni']]);
+    expect(doc.undo()).toBe('İçe aktar');
+    expect(await sync.flush()).toBe(true);
+    expect([server.store.size, server.meta.layers.map((n) => n.id)]).toEqual([0, ['cizim', 'parsel']]);
+    expect(sync.conflicts.value).toEqual([]);
+  });
+
   it('sends a removed layer as its objects’ deletes and the tree in one command; undo sends them back', async () => {
     const { doc, server, sync } = setup();
     doc.add(pt(1, 'parsel'));
