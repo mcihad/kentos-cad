@@ -169,6 +169,24 @@ pub(crate) mod tests {
         assert_eq!((app.session.tool_id(), selected(&app)), ("select", vec![1]));
     }
 
+    /// Izgara (F7; docs/adr/0080): a session setting, on by default, its
+    /// command's check and the status bar's lamp follow it.
+    #[test]
+    fn f7_turns_the_grid_on_and_off() {
+        let mut app = objects();
+        assert_eq!(app.shortcut("F7"), Some("draft.grid"));
+        assert_eq!(app.checked("draft.grid"), Some(true));
+        let _ = app.run("draft.grid");
+        assert_eq!(app.checked("draft.grid"), Some(false));
+        assert!(!app.viewport.grid_shown, "the drawing area follows");
+        assert!(matches!(
+            app.history.last(),
+            Some(kentos_ui::widget::command_line::Entry::Output(t)) if t == "Izgara kapalı"
+        ));
+        let _ = app.run("draft.grid");
+        assert!(app.settings.bool("drafting.grid"));
+    }
+
     #[test]
     fn f3_and_the_settings_reach_the_snap() {
         let mut app = objects();

@@ -153,6 +153,9 @@ impl App {
                     .fold(menu.separator(), |menu, id| self.command_item(menu, id))
             });
         let full = self.fullscreen;
+        // Komut ara between the name and the coordinate system (ribbon_search.rs).
+        let query = self.ribbon_search.clone();
+        let found = self.search_rows();
         iced::widget::responsive(move |size| {
             let name = title
                 .as_ref()
@@ -175,13 +178,47 @@ impl App {
             } else {
                 0.0
             };
-            let needed = text(&name) + 12.0 + crs_icon + crs_name_width + buttons;
-            let crs_named = needed <= size.width;
+            let base = text(&name) + 12.0 + crs_icon + buttons;
+            let search_width = kentos_ui::theme::typography::scaled(206.0) + 4.0;
+            // The web's steps (`Ribbon.fitBar`): the search's key hint goes
+            // first, then the coordinate system's name, then the search folds
+            // to its magnifier; the drawing's name is cut last. Hiding the
+            // hint frees no width, so the first two go together.
+            let roomy = base + crs_name_width + search_width <= size.width;
+            let crs_named = roomy;
+            let compact = base + search_width > size.width;
+            // Focused in a tight row, the box takes the name's room, never the buttons'.
+            let named_crs = if crs_named { crs_name_width } else { 0.0 };
+            let room = size.width - crs_icon - named_crs - buttons - 8.0;
+            let search = kentos_ui::widget::SearchBox::new(
+                query.clone(),
+                "Komut ara…",
+                Message::RibbonSearch,
+            )
+            .id(crate::ribbon_search::SEARCH_INPUT)
+            .results(found.clone())
+            .empty(format!(
+                "“{}” ile eşleşen komut yok. Komut satırındaki takma adlar da aranır (ör. L, CIZGI).",
+                query.trim()
+            ))
+            .on_run(Message::RibbonSearchRun)
+            .on_reveal(Message::RibbonSearchReveal)
+            .compact(compact)
+            .room(room);
+            let search = if roomy { search.hint("Alt+Q") } else { search };
+            let search = kentos_ui::widget::tip(
+                search,
+                Tip::new("Komut ara").detail("Alt+Q").body(
+                    "Bir komutu adıyla ya da komut satırı takma adıyla (ör. L, CIZGI) bulun; Enter çalıştırır, Alt+Enter şeritteki yerini gösterir.",
+                ),
+                iced::widget::tooltip::Position::Bottom,
+            );
             let mut row = row![
                 container(document_title(&name, title.as_ref().is_some_and(|t| t.1)))
                     .width(Fill)
                     .align_x(iced::alignment::Horizontal::Right)
-                    .clip(true)
+                    .clip(true),
+                search,
             ]
             .width(Fill)
             .spacing(4)
@@ -209,7 +246,13 @@ impl App {
         tab: &str,
         panel: &RibbonPanel,
     ) -> Option<Group<'static, Message>> {
-        let mut group = Group::new(panel.label).icon(panel.icon).keep(panel.keep);
+        // A command Komut ara shows: its panel's ▾, or the folded panel (ribbon_search.rs).
+        let (flash_here, flash_more) = self.flash_in(panel);
+        let mut group = Group::new(panel.label)
+            .icon(panel.icon)
+            .keep(panel.keep)
+            .flash_more(flash_more)
+            .flash_folded(flash_here);
         let mut any = false;
         for item in &panel.items {
             // The Görünüm tab's own groups replace the web's Tema menu; the web's
@@ -251,20 +294,28 @@ impl App {
             } else {
                 Button::small(command.icon, command.short)
             };
+            // An off command that says why has the reason in its tip (the web's `whyDisabled`).
+            let tip_of = match self.why_disabled(command.id) {
+                Some(why) => Tip::new(command.title).body(why),
+                None => tip(command),
+            };
             button
                 .on_press_maybe(enabled(command).filter(|_| self.available(command.id)))
-                .tip(tip(command))
+                .tip(tip_of)
                 .on(self.checked(command.id).unwrap_or(false))
                 .active(self.running(command.id))
+                .flash(self.ribbon_flash == Some(command.id))
         };
         match item {
             Item::Command { id, large } => Some(make(catalog.get(id)?, *large)),
             Item::Split { entries, large } => {
                 let first = catalog.get(entries.first()?.id)?;
                 let ids: Vec<&'static str> = entries.iter().map(|e| e.id).collect();
-                // One of the family running lights the split's action (DESIGN.md §7.3.1).
+                // One of the family running lights the split's action (DESIGN.md §7.3.1);
+                // one of it shown by Komut ara outlines the split.
                 let running = ids.iter().any(|id| self.running(id));
-                let button = make(first, *large).active(running);
+                let flash = self.ribbon_flash.is_some_and(|id| ids.contains(&id));
+                let button = make(first, *large).active(running).flash(flash);
                 let entries = entries.clone();
                 let menu = move || split_menu(&entries);
                 Some(with_family(button, &ids, first.title, menu))
@@ -278,7 +329,8 @@ impl App {
                     Button::large(icon, *label)
                 } else {
                     Button::small(icon, *label)
-                };
+                }
+                .flash(self.ribbon_flash.is_some_and(|id| ids.contains(&id)));
                 let members = ids.clone();
                 let checked = self.checks(&members);
                 let menu = move || menu_of(&members, &checked);
@@ -385,15 +437,27 @@ impl App {
             Panel::Layers => {
                 // The open tree as flat rows, built only as they scroll into view
                 // (the web's VirtualRows): a DXF can bring hundreds of layers.
-                let rows = open_rows(doc.layers());
-                // The selection's one layer is brought into view (layering.rs).
-                let reveal = match self.selection_layers.as_slice() {
-                    [layer] if self.layers_follow => {
-                        rows.iter().position(|row| row.node.id == *layer)
+                // Katman ara keeps what it finds (layer_tree.rs).
+                let query = crate::layer_tree::query(&self.layer_query);
+                let rows = crate::layer_tree::open_rows(doc.layers(), &query);
+                // The selection's one layer is brought into view (layering.rs);
+                // else the row the tree's keys chose (layer_tree.rs).
+                let reveal = if self.layers_follow {
+                    match self.selection_layers.as_slice() {
+                        [layer] => rows.iter().position(|row| row.node.id == *layer),
+                        _ => None,
                     }
-                    _ => None,
+                } else {
+                    self.layer_reveal
+                        .as_ref()
+                        .and_then(|id| rows.iter().position(|row| row.node.id == *id))
                 };
-                TreeView::new([
+                let empty = if query.is_empty() {
+                    "Katman yok."
+                } else {
+                    "Aramayla eşleşen katman yok."
+                };
+                let tree = TreeView::new([
                     TreeColumn::new("Ad").width(Fill),
                     TreeColumn::new("Öğe").width(44).align_right(),
                 ])
@@ -405,8 +469,9 @@ impl App {
                     )
                 })
                 .reveal(reveal)
-                .height(Fill)
-                .into()
+                .empty(empty)
+                .height(Fill);
+                column![self.layer_search_view(), tree].into()
             }
             // Öznitelikler, editable as the web's (properties/, docs/adr/0063).
             Panel::Properties => self.properties_view(doc),
@@ -417,7 +482,7 @@ impl App {
     /// group's folder or a layer's colour (a click opens its colours), the
     /// name (a text box while renamed), the eye and the lock, the object
     /// count; the active layer's accent bar; the row's menu. Its children are
-    /// rows of their own (open_rows).
+    /// rows of their own (layer_tree::open_rows).
     fn layer_node<'a>(
         &'a self,
         doc: &'a Document,
@@ -553,7 +618,24 @@ impl App {
             })
     }
 
+    /// The status bar, giving way in a narrow window as the web's does
+    /// (`StatusBar.ts` STEPS, DESIGN.md §7.7): the least needed cell first:
+    /// the engine's name, the coordinate system (also in the tab row), the
+    /// screen and plot scales, the cloud cells' words (their dots stay), the
+    /// mode's name, the drafting aids' padding. Every cell keeps its tip.
     fn status_bar(&self) -> Element<'_, Message> {
+        container(iced::widget::responsive(move |size| {
+            let fit = (0..=STATUS_STEPS)
+                .find(|&level| self.status_width(level) <= size.width)
+                .unwrap_or(STATUS_STEPS);
+            self.status_bar_at(fit)
+        }))
+        .height(kentos_ui::widget::status_bar::height())
+        .into()
+    }
+
+    /// The status bar with `fit` of its narrow-window steps taken.
+    fn status_bar_at(&self, fit: u8) -> Element<'_, Message> {
         let coordinates = match (&self.document, self.viewport.cursor) {
             (Some(doc), Some(p)) => {
                 // Display only (CLAUDE.md §5): the project's length decimals, Y (east)
@@ -580,6 +662,11 @@ impl App {
                 .tip("Seçili nesne sayısı; Esc seçimi kaldırır"),
             );
         }
+        // The drafting aids (the web's `status__toggles`): a lamp each, lit while on.
+        bar = bar.separator();
+        for (id, name) in STATUS_AIDS {
+            bar = bar.push(self.status_aid(id, name, fit >= 6));
+        }
         if let Some(doc) = &self.document {
             let settings = doc.settings();
             let crs = match crs_name(settings.srid) {
@@ -587,27 +674,28 @@ impl App {
                 None => format!("EPSG:{}", settings.srid),
             };
             let objects = format!("{} nesne", doc.entity_count());
-            bar = bar
-                .separator()
-                .push(
-                    Readout::new(label::muted(format!(
-                        "Ekran 1:{}",
-                        thousands(self.viewport.camera.screen_scale())
-                    )))
-                    .tip(Tip::new("Ekran ölçeği").body(
-                        "Görünümün 96 dpi ekrandaki yaklaşık ölçeği. Pafta ölçeği proje ayarıdır.",
-                    )),
-                )
-                .separator()
-                .push(
-                    Readout::new(label::muted(format!("1:{}", settings.plot_scale)))
-                        .tip("Pafta ölçeği (proje ayarı)"),
-                )
-                .separator()
-                .push(self.mode_cell())
-                .separator()
+            if fit < 3 {
+                bar = bar
+                    .separator()
+                    .push(
+                        Readout::new(label::muted(format!(
+                            "Ekran 1:{}",
+                            thousands(self.viewport.camera.screen_scale())
+                        )))
+                        .tip(Tip::new("Ekran ölçeği").body(
+                            "Görünümün 96 dpi ekrandaki yaklaşık ölçeği. Pafta ölçeği proje ayarıdır.",
+                        )),
+                    )
+                    .separator()
+                    .push(
+                        Readout::new(label::muted(format!("1:{}", settings.plot_scale)))
+                            .tip("Pafta ölçeği (proje ayarı)"),
+                    );
+            }
+            bar = bar.separator().push(self.mode_cell(fit < 5));
+            if fit < 2 {
                 // Clicked, Proje ayarları on its coordinate system page (the web's cell).
-                .push(
+                bar = bar.separator().push(
                     Readout::new(label::muted(crs))
                         .icon(crate::icons::from_web(Some("crs")))
                         .on_press(Message::Run("crs.set"))
@@ -615,26 +703,99 @@ impl App {
                             "EPSG:{}. Y sağa, X yukarı değerdir. Değiştirmek için tıklayın.",
                             settings.srid
                         ))),
-                )
-                .spacer()
-                .push(
-                    Readout::new(label::muted(objects.clone()))
-                        .tip(Tip::new(objects).body(kinds_text(doc))),
                 );
+            }
+            bar = bar.spacer().push(
+                Readout::new(label::muted(objects.clone()))
+                    .tip(Tip::new(objects).body(kinds_text(doc))),
+            );
         } else {
             bar = bar.spacer();
         }
         // The cloud: the open project and its save, the account with Çıkış (docs/adr/0041).
-        for cell in self.cloud_cells() {
+        for cell in self.cloud_cells(fit < 4) {
             bar = bar.separator().push(cell);
         }
+        let engine = if fit < 1 { "wgpu" } else { "" };
         bar.separator()
             .push(
-                Readout::new(label::muted("wgpu"))
+                Readout::new(label::muted(engine))
                     .icon(Icon::Cube)
                     .tip(self.engine_tip()),
             )
             .into()
+    }
+
+    /// A drafting aid's toggle: its lamp lit while on; one the desktop does
+    /// not run yet is off, dimmed, and its tip says so.
+    fn status_aid(
+        &self,
+        id: &'static str,
+        name: &'static str,
+        compact: bool,
+    ) -> Element<'_, Message> {
+        let command = catalog().get(id);
+        let runs = command.is_some_and(|c| c.standing == Standing::Ported);
+        let mut toggle = kentos_ui::widget::status_bar::Toggle::new(
+            name,
+            runs && self.checked(id).unwrap_or(false),
+        )
+        .compact(compact);
+        if let Some(command) = command {
+            if let Some(keys) = command.shortcuts.first() {
+                toggle = toggle.shortcut(*keys);
+            }
+            toggle = toggle.description(command.note());
+        }
+        if runs {
+            toggle = toggle.on_press(Message::Run(id));
+        }
+        toggle.into()
+    }
+
+    /// About how wide the status bar is with `fit` of its steps taken:
+    /// from its texts at the interface's type size (the cells hold text,
+    /// an icon and their padding), as the tab row estimates its own.
+    fn status_width(&self, fit: u8) -> f32 {
+        let size = kentos_ui::theme::typography::body();
+        // The interface's face averages about half its size a letter; the
+        // coordinates' figures, 0.6 (measured on the pictures).
+        let text = |s: &str| s.chars().count() as f32 * size * 0.52;
+        let cell = |s: &str, icon: bool| text(s) + 16.0 + if icon { 19.0 } else { 0.0 };
+        const SEPARATOR: f32 = 9.0;
+        let mut width = 28.0 * size * 0.6 + 35.0;
+        if !self.selection.is_empty() {
+            width += SEPARATOR + cell(&format!("{} seçili", self.selection.len()), false);
+        }
+        // A lamp and its gap, and the padding (less once the bar is tight).
+        let pad = if fit >= 6 { 12.0 } else { 18.0 };
+        width += SEPARATOR
+            + STATUS_AIDS
+                .iter()
+                .map(|(_, name)| text(name) + 7.0 + pad)
+                .sum::<f32>();
+        if let Some(doc) = &self.document {
+            let settings = doc.settings();
+            if fit < 3 {
+                let zoom = format!("Ekran 1:{}", thousands(self.viewport.camera.screen_scale()));
+                width += 2.0 * SEPARATOR
+                    + cell(&zoom, false)
+                    + cell(&format!("1:{}", settings.plot_scale), false);
+            }
+            let mode = crate::catalog::effective_mode(Some(self.work_mode())).label;
+            // Its icon, its name and the menu's chevron.
+            width += SEPARATOR + if fit < 5 { text(mode) + 50.0 } else { 51.0 };
+            if fit < 2 {
+                let crs = match crs_name(settings.srid) {
+                    Some(name) => format!("EPSG:{} · {name}", settings.srid),
+                    None => format!("EPSG:{}", settings.srid),
+                };
+                width += SEPARATOR + cell(&crs, true);
+            }
+            width += 24.0 + cell(&format!("{} nesne", doc.entity_count()), false);
+        }
+        width += self.cloud_cells_width(fit < 4, size);
+        width + SEPARATOR + if fit < 1 { cell("wgpu", true) } else { 35.0 }
     }
 
     /// What the drawing engine did in the last frame, or why it could not draw.
@@ -677,23 +838,40 @@ impl App {
                 .style(style::button::secondary)
         };
         match dialog {
-            Asking::About => overlay::modal(
-                Dialog::new("KentOS CAD hakkında")
-                    .push(label::body(
-                        "Harita mühendisliği, kadastro ve imar için CAD/CBS. Bu masaüstü uygulaması web \
-                         uygulamasıyla aynı Rust hesap çekirdeğini ve sözleşmelerini kullanır; komutları web'den \
-                         adım adım taşınır.",
-                    ))
-                    .push(label::caption(format!(
-                        "Sürüm {} · masaüstüne taşınan komut: {} / {}",
-                        env!("CARGO_PKG_VERSION"),
-                        catalog().commands().iter().filter(|c| c.standing == Standing::Ported).count(),
-                        catalog().commands().len()
-                    )))
-                    .action(close())
-                    .width(460.0),
-                Message::DialogClosed,
-            ),
+            // The web's rows (dialogs.ts, 653b550): the version, the engine, the
+            // project's coordinate system and the server, then how far the port is.
+            Asking::About => {
+                let crs = self.document.as_ref().map_or_else(
+                    || "Açık çizim yok".to_owned(),
+                    |doc| {
+                        let srid = doc.settings().srid;
+                        format!(
+                            "{} (EPSG:{srid})",
+                            crs_name(srid).unwrap_or("Bilinmeyen sistem")
+                        )
+                    },
+                );
+                let rows = kentos_ui::widget::PropertySheet::new()
+                    .row("Sürüm", label::body(env!("CARGO_PKG_VERSION")))
+                    .row("Çizim motoru", label::body("KentOS'un wgpu hattı"))
+                    .row("Koordinat sistemi", label::body(crs))
+                    .row("Sunucu", label::body(self.server_text()));
+                overlay::modal(
+                    Dialog::new("KentOS CAD")
+                        .push(label::body(
+                            "Harita, kadastro ve imar için CAD/CBS masaüstü uygulaması.",
+                        ))
+                        .push(rows)
+                        .push(label::caption(format!(
+                            "Masaüstüne taşınan komut: {} / {}. Web uygulamasıyla aynı Rust hesap çekirdeğini ve sözleşmelerini kullanır.",
+                            catalog().commands().iter().filter(|c| c.standing == Standing::Ported).count(),
+                            catalog().commands().len()
+                        )))
+                        .action(close())
+                        .width(440.0),
+                    Message::DialogClosed,
+                )
+            }
             Asking::Shortcuts => {
                 let list = catalog()
                     .commands()
@@ -822,33 +1000,18 @@ fn menu_of(ids: &[&'static str], checked: &[Option<bool>]) -> Menu<Message> {
         })
 }
 
-/// A row of the open layer tree: its depth, its node and whether the groups
-/// above it are shown.
-struct OpenRow<'a> {
-    depth: usize,
-    node: &'a LayerNode,
-    parent_visible: bool,
-}
+/// The status bar's drafting aids, as the web's (`StatusBar.ts`).
+const STATUS_AIDS: [(&str, &str); 6] = [
+    ("draft.snap", "Kenet"),
+    ("draft.grid", "Izgara"),
+    ("draft.ortho", "Orto"),
+    ("draft.polar", "Kutupsal"),
+    ("draft.tracking", "İzleme"),
+    ("view.lineWeights", "Kalınlık"),
+];
 
-/// The layer tree's rows as shown: every node, and the children of the open
-/// groups, depth first.
-fn open_rows(nodes: &[LayerNode]) -> Vec<OpenRow<'_>> {
-    fn walk<'a>(nodes: &'a [LayerNode], depth: usize, visible: bool, rows: &mut Vec<OpenRow<'a>>) {
-        for node in nodes {
-            rows.push(OpenRow {
-                depth,
-                node,
-                parent_visible: visible,
-            });
-            if node.kind == LayerNodeType::Group && node.expanded {
-                walk(&node.children, depth + 1, visible && node.visible, rows);
-            }
-        }
-    }
-    let mut rows = Vec::new();
-    walk(nodes, 0, true, &mut rows);
-    rows
-}
+/// The status bar's narrow-window steps (the web's `STEPS`).
+const STATUS_STEPS: u8 = 6;
 
 /// A launcher's message: another tab, or a command the desktop runs.
 fn launch(launcher: &Launcher) -> Option<Message> {

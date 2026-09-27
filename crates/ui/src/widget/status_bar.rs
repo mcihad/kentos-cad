@@ -214,12 +214,16 @@ impl<'a, Message: Clone + 'a> From<Readout<'a, Message>> for Element<'a, Message
 
 /// Durum çubuğundaki açık/kapalı anahtar (ör. Izgara, Yakalama). Açıkken
 /// ikonu vurgu renginde, adı tam renkte yazılır; kapalıyken ikisi de
-/// sönüktür. İpucu anahtarın durumunu ve kısayolunu gösterir.
+/// sönüktür. İkonu verilmeyen anahtarın adının önünde küçük bir lamba durur:
+/// kapalıyken çerçeveli, açıkken vurgu renginde (web'in `.status__toggle`'ı).
+/// İpucu anahtarın durumunu, kısayolunu ve açıklamasını gösterir.
 pub struct Toggle<'a, Message> {
     label: Fragment<'a>,
     active: bool,
     icon: Option<Icon>,
     shortcut: Option<Fragment<'a>>,
+    description: Option<String>,
+    compact: bool,
     on_press: Option<Message>,
 }
 
@@ -230,8 +234,22 @@ impl<'a, Message: Clone + 'a> Toggle<'a, Message> {
             active,
             icon: None,
             shortcut: None,
+            description: None,
+            compact: false,
             on_press: None,
         }
+    }
+
+    /// İpucunun gövdesi: anahtarın ne yaptığı.
+    pub fn description(mut self, text: impl Into<String>) -> Self {
+        self.description = Some(text.into());
+        self
+    }
+
+    /// Dar çubukta daha az iç boşluk (web'in `data-fit-toggles`'ı).
+    pub fn compact(mut self, compact: bool) -> Self {
+        self.compact = compact;
+        self
     }
 
     pub fn icon(mut self, glyph: Icon) -> Self {
@@ -258,21 +276,60 @@ impl<'a, Message: Clone + 'a> From<Toggle<'a, Message>> for Element<'a, Message>
         if let Some(shortcut) = &toggle.shortcut {
             description = description.detail(shortcut.to_string());
         }
-
-        let mut content = row![].spacing(6).height(Fill).align_y(Center);
-
-        if let Some(glyph) = toggle.icon {
-            content = content.push(icon(glyph).size(14.0).tone(if toggle.active {
-                Tone::Accent
-            } else {
-                Tone::Inherit
-            }));
+        if let Some(body) = toggle.description {
+            description = description.body(body);
         }
 
+        let gap = if toggle.compact { 4 } else { 6 };
+        let mut content = row![].spacing(gap).height(Fill).align_y(Center);
+
+        match toggle.icon {
+            Some(glyph) => {
+                content = content.push(icon(glyph).size(14.0).tone(if toggle.active {
+                    Tone::Accent
+                } else {
+                    Tone::Inherit
+                }));
+            }
+            None => {
+                let active = toggle.active;
+                content = content.push(
+                    container(space::horizontal().width(0))
+                        .width(6)
+                        .height(6)
+                        .style(move |theme: &iced::Theme| {
+                            let t = crate::theme::Tokens::of(theme);
+                            if active {
+                                container::Style {
+                                    background: Some(t.accent.into()),
+                                    border: iced::border::rounded(1),
+                                    ..container::Style::default()
+                                }
+                            } else {
+                                container::Style {
+                                    border: iced::Border {
+                                        color: t.muted,
+                                        width: 1.0,
+                                        radius: 1.0.into(),
+                                    },
+                                    ..container::Style::default()
+                                }
+                            }
+                        }),
+                );
+            }
+        }
+
+        // The web's lamp toggles have 9 px each side; icon toggles keep 8.
+        let padding = match (toggle.compact, toggle.icon) {
+            (true, _) => 6,
+            (false, None) => 9,
+            (false, Some(_)) => 8,
+        };
         tip(
             button(content.push(label::body(toggle.label)))
                 .on_press_maybe(toggle.on_press)
-                .padding([0, 8])
+                .padding([0, padding])
                 .height(item_height())
                 .style(style::button::status_toggle(toggle.active)),
             description,

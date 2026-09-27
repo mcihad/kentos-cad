@@ -196,6 +196,15 @@ pub enum Message {
     Modifiers(keyboard::Modifiers),
     Dock(docking::Event<Panel>),
     LayerSelected(String),
+    /// Katman ara typed in; ↓ in it.
+    LayerSearch(String),
+    LayerSearchDown,
+    /// Komut ara typed in; a found command run or its ribbon place shown;
+    /// the outline's moment over (ribbon_search.rs).
+    RibbonSearch(String),
+    RibbonSearchRun(usize),
+    RibbonSearchReveal(usize),
+    RibbonFlashEnd(&'static str),
     LayerVisible(String),
     LayerLocked(String),
     LayerExpanded(String),
@@ -261,6 +270,17 @@ pub struct App {
     pub(crate) renaming: Option<(String, String)>,
     /// The tree's last row press and when: a second one soon is a double click.
     pub(crate) last_layer_press: Option<(String, Instant)>,
+    /// Katman ara's text (layer_tree.rs).
+    pub(crate) layer_query: String,
+    /// Komut ara's text, and the command whose ribbon place is outlined
+    /// for a moment (ribbon_search.rs).
+    pub(crate) ribbon_search: String,
+    pub(crate) ribbon_flash: Option<&'static str>,
+    /// The layer tree has the keyboard: a row was pressed and nothing else
+    /// took the keyboard since (layer_tree.rs).
+    pub(crate) layers_keyboard: bool,
+    /// The row the tree's keys chose, kept in view.
+    pub(crate) layer_reveal: Option<String>,
     /// Warnings and errors said so far (the Uyarılar tab counts the unseen).
     pub(crate) warnings_total: usize,
     /// The menu open over the drawing (drawing_menus.rs).
@@ -368,6 +388,9 @@ pub struct App {
     pub(crate) hidden_docks: Option<Docks<Panel>>,
     /// A server check is on its way (`server.check` waits for it).
     pub server_checking: bool,
+    /// The last server check's answer: its health, or why there was none
+    /// (KentOS CAD hakkında names the server by it).
+    pub(crate) server_health: Option<Result<kentos_contracts::Health, String>>,
 }
 
 impl App {
@@ -404,6 +427,11 @@ impl App {
             followed_selection: 0,
             renaming: None,
             last_layer_press: None,
+            layer_query: String::new(),
+            ribbon_search: String::new(),
+            ribbon_flash: None,
+            layers_keyboard: false,
+            layer_reveal: None,
             warnings_total: 0,
             drawing_menu: None,
             snap_once: None,
@@ -462,6 +490,7 @@ impl App {
             fullscreen: false,
             hidden_docks: None,
             server_checking: false,
+            server_health: None,
         };
         if !app.recovery.offers.is_empty() {
             app.dialog = Some(Dialog::Recovery);
@@ -580,9 +609,11 @@ impl App {
         if let Some(task) = self.while_opening(&message) {
             return task;
         }
-        // A command from the ribbon or a menu keeps the text field's text first (the web's blur).
+        // A command from the ribbon or a menu keeps the text field's text first (the web's blur),
+        // and takes the keyboard from the layer tree (the web's button takes the focus).
         if matches!(message, Message::Run(_) | Message::RunMethod { .. }) {
             self.close_text_field(true);
+            self.layers_keyboard = false;
         }
         match message {
             Message::Run(id) => return self.run(id),
@@ -610,9 +641,10 @@ impl App {
             }
             Message::CommandFocus(focused) => {
                 self.line_focused = focused;
-                // The value field loses the keyboard to the command line (web: its blur).
+                // The value field and the layer tree lose the keyboard to the command line (web: their blur).
                 if focused {
                     self.field = None;
+                    self.layers_keyboard = false;
                 }
             }
             Message::PromptOption(key) => return self.prompt_option(key),
@@ -620,6 +652,12 @@ impl App {
             Message::Modifiers(modifiers) => self.modifiers = modifiers,
             Message::Dock(event) => self.docks.update(event),
             Message::LayerSelected(id) => self.layer_pressed(id),
+            Message::LayerSearch(text) => self.layer_search(text),
+            Message::LayerSearchDown => return self.layer_search_down(),
+            Message::RibbonSearch(text) => self.search_typed(text),
+            Message::RibbonSearchRun(index) => return self.search_run(index),
+            Message::RibbonSearchReveal(index) => return self.search_reveal(index),
+            Message::RibbonFlashEnd(id) => self.search_flash_end(id),
             Message::Layer(event) => return self.layer_event(event),
             Message::DrawingMenu(event) => self.drawing_menu_event(event),
             Message::TextField(event) => self.text_field_event(event),
@@ -756,6 +794,7 @@ impl App {
         self.cursor_input = s.bool("drafting.cursorInput");
         self.command_bar = s.bool("drafting.commandBar");
         self.hover_info = s.bool("drafting.hoverInfo");
+        self.viewport.grid_shown = s.bool("drafting.grid");
         self.apply_appearance();
     }
 
@@ -925,6 +964,7 @@ impl App {
             "draft.ortho" => self.toggle_session("drafting.ortho", "Orto"),
             "draft.polar" => self.toggle_session("drafting.polar", "Kutupsal izleme"),
             "draft.snap" => self.toggle_session("drafting.snap", "Kenetleme"),
+            "draft.grid" => self.toggle_session("drafting.grid", "Izgara"),
             // Selecting (docs/adr/0029): the pointer selects while no command runs.
             "tool.select" => self.leave_tool(),
             "edit.deselect" => self.selection.clear(),
@@ -997,6 +1037,7 @@ impl App {
             "draft.ortho" => self.draft.ortho,
             "draft.polar" => self.draft.polar.is_some(),
             "draft.snap" => self.draft.snap,
+            "draft.grid" => self.settings.bool("drafting.grid"),
             "view.theme.dark" => self.mode == Mode::Dark,
             "view.theme.light" => self.mode == Mode::Light,
             "view.bottomPanel" => self.command_expanded,
@@ -1021,7 +1062,17 @@ impl App {
             id if crate::clipboard::COMMANDS.contains(&id) => self.clipboard_available(id),
             "server.check" => !self.server_checking,
             id if id.starts_with("cloud.") => self.cloud_available(id),
+            "layer.new" | "layer.newGroup" => self.tree_locked().is_none(),
             _ => true,
+        }
+    }
+
+    /// Why a command is off, when it says (the web's `whyDisabled`): its tip
+    /// shows it.
+    pub fn why_disabled(&self, id: &str) -> Option<&'static str> {
+        match id {
+            "layer.new" | "layer.newGroup" => self.tree_locked(),
+            _ => None,
         }
     }
 

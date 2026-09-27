@@ -376,7 +376,16 @@ fn apply(doc: &mut Document, state: &mut State, step: &Value, at: &str) -> Outco
                     .unwrap_or(false),
                 style,
             };
-            json!(doc.add_layer(new, step.get("parent").and_then(Value::as_str)))
+            let parent = step.get("parent").and_then(Value::as_str);
+            let activate = step
+                .get("activate")
+                .and_then(Value::as_bool)
+                .unwrap_or(false);
+            // A refusal is caught as a fixture's own `throw` is (`catch`).
+            match doc.add_layer(new, parent, activate) {
+                Ok(id) => json!(id),
+                Err(refusal) => return Err(Stop::Thrown(refusal.0)),
+            }
         }
         "uniqueLayerName" => json!(doc.layers().unique_name(text(step, "base", at)?)),
         "setName" => {

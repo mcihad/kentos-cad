@@ -78,7 +78,8 @@ impl App {
     }
 
     /// The status bar's mode: its mark and name; a click lists the modes.
-    pub(crate) fn mode_cell(&self) -> Element<'static, Message> {
+    /// The mode's cell; in a narrow window (`named` false) its icon only.
+    pub(crate) fn mode_cell(&self, named: bool) -> Element<'static, Message> {
         let current = self.work_mode();
         let mode = effective_mode(Some(current));
         let set = self.document.as_ref().and_then(|d| d.settings().workspace);
@@ -92,14 +93,16 @@ impl App {
             }
             _ => String::new(),
         };
-        let face = row![
+        let mut face = row![
             icon(mode_icon(current))
                 .size(13.0)
-                .tone(kentos_ui::icon::Tone::Accent),
-            kentos_ui::label::strong(mode.label),
+                .tone(kentos_ui::icon::Tone::Accent)
         ]
         .spacing(5)
         .align_y(iced::Center);
+        if named {
+            face = face.push(kentos_ui::label::strong(mode.label));
+        }
         let menu = move || {
             let modes = catalog().modes();
             let ready = modes.iter().filter(|m| m.ready).fold(

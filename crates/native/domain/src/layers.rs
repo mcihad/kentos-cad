@@ -22,11 +22,11 @@ pub struct LayerTree {
     counter: u64,
 }
 
-/// A layer or group to add (the web's `LayerInit` for `LayerStore.add`).
+/// A layer or group to add (the web's `LayerInit` for `CadDocument.addLayer`).
 #[derive(Clone, Debug, PartialEq)]
 pub struct NewLayer {
-    /// Kept when the tree has no node with it (an import's `import-parsel`);
-    /// otherwise the node gets the next `layer-N`.
+    /// The node's id (an import's `import-parsel`); the document refuses one
+    /// the tree already has. None gives the next `layer-N`.
     pub id: Option<String>,
     pub name: String,
     pub kind: LayerNodeType,
@@ -248,8 +248,10 @@ impl LayerTree {
     }
 
     /// Takes a node out of the tree with everything under it (the document's
-    /// undoable layer removal; nothing else calls it). An unknown id changes
-    /// nothing. The active layer is never taken: the document refuses that.
+    /// undoable layer ops: a removal, and the undo of an addition; nothing
+    /// else calls it). When the active layer goes with it, the first layer
+    /// of the tree becomes active, as a new tree's does (the web's
+    /// `detach`). An unknown id changes nothing.
     pub(crate) fn detach(&mut self, id: &str) {
         let Some(path) = self.paths.get(id).cloned() else {
             return;
@@ -263,12 +265,24 @@ impl LayerTree {
             list.remove(index);
         }
         self.reindex();
+        if self
+            .get(&self.active)
+            .is_none_or(|node| node.kind != LayerNodeType::Layer)
+            && let Some(first) = self.leaves().first().map(|node| node.id.clone())
+        {
+            self.active = first;
+        }
     }
 
-    /// Puts a node back where `detach` took it from (undo): a copy of it
-    /// with its children, flags and style, at `index` in `parent` (or last
-    /// there); a group that is gone puts it at the top (the web's `attach`).
+    /// Puts a node where `detach` took it from (undo), or where the
+    /// document's `add_layer` puts a new one: a copy of it with its
+    /// children, flags and style, at `index` in `parent` (or last there); a
+    /// group that is gone puts it at the top (the web's `attach`). A node
+    /// whose id the tree already has is not put in twice.
     pub(crate) fn attach(&mut self, node: &LayerNode, parent: Option<&str>, index: usize) {
+        if self.paths.contains_key(&node.id) {
+            return;
+        }
         let group = parent
             .and_then(|id| self.paths.get(id).cloned())
             .unwrap_or_default();
@@ -290,29 +304,19 @@ impl LayerTree {
         }
     }
 
-    /// Adds a node last in `parent` when that is a group, last in the group
-    /// of `parent` when that is a layer, last at the top of the tree otherwise
-    /// (an unknown `parent` too). The group it goes into is opened (web
-    /// `LayerStore.add`). Returns the new node's id.
-    pub(crate) fn add(&mut self, new: NewLayer, parent: Option<&str>) -> String {
-        let container = parent
-            .and_then(|id| Some((self.get(id)?.kind, self.paths.get(id)?.clone())))
-            .and_then(|(kind, path)| match kind {
-                LayerNodeType::Group => Some(path),
-                // A layer's group; none at the top of the tree.
-                LayerNodeType::Layer => {
-                    Some(path[..path.len() - 1].to_vec()).filter(|p| !p.is_empty())
-                }
-            });
+    /// A node as the document's `add_layer` makes it, not yet in the tree:
+    /// open, with no children, its id the given one (the counter kept ahead
+    /// of a `layer-N`) or the next `layer-N` (the web's `LayerStore.make`).
+    pub(crate) fn make(&mut self, new: NewLayer) -> LayerNode {
         let id = match new.id {
-            Some(id) if !self.paths.contains_key(&id) => {
+            Some(id) => {
                 self.counter = self.counter.max(counted(&id).unwrap_or(0));
                 id
             }
-            _ => self.next_id(),
+            None => self.next_id(),
         };
-        let node = LayerNode {
-            id: id.clone(),
+        LayerNode {
+            id,
             name: new.name,
             kind: new.kind,
             visible: new.visible,
@@ -320,19 +324,28 @@ impl LayerTree {
             expanded: true,
             style: new.style,
             children: Vec::new(),
-        };
-        match container
-            .as_deref()
-            .and_then(|path| node_mut(&mut self.roots, path))
-        {
-            Some(group) => {
-                group.children.push(node);
-                group.expanded = true;
-            }
-            None => self.roots.push(node),
         }
-        self.reindex();
-        id
+    }
+
+    /// The group a node added beside or into `parent` goes into: `parent`
+    /// when it is a group, the group of `parent` when it is a layer, none
+    /// (the top of the tree) for a top layer or an unknown id (the web's
+    /// `containerFor`).
+    pub(crate) fn container_for(&self, parent: Option<&str>) -> Option<String> {
+        let node = self.get(parent?)?;
+        match node.kind {
+            LayerNodeType::Group => Some(node.id.clone()),
+            LayerNodeType::Layer => self.parent(&node.id).map(|group| group.id.clone()),
+        }
+    }
+
+    /// How many nodes a group has (the top of the tree for none): where a
+    /// node added last goes.
+    pub(crate) fn len_of(&self, container: Option<&str>) -> usize {
+        match container.and_then(|id| self.get(id)) {
+            Some(group) => group.children.len(),
+            None => self.roots.len(),
+        }
     }
 
     /// The next `layer-N` no node has.

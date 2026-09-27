@@ -1,8 +1,8 @@
 //! Puts what a reader produced into the drawing (the web's `io/apply.ts`).
 //! The targets are checked first, so nothing changes when one is missing or
-//! locked; then the new layers are made (not undoable, as on the web and as
-//! the processing runner's new target layers) and every object goes in as
-//! ONE undo step named after the file (CLAUDE.md §4.8, §7).
+//! locked; then the new layers are made and every object goes in, all as ONE
+//! undo step named after the file (CLAUDE.md §4.8, §7): undo takes the
+//! objects and the layers made for them (docs/adr/0076).
 //!
 //! The web also checks each object again here, as it checks a `.kcad` file's,
 //! because they reach it from the formats worker as plain data. The desktop
@@ -154,55 +154,60 @@ pub fn apply_import(
         .collect();
 
     let mut created = Vec::new();
-    if !new_ids.is_empty() {
-        let parent = match &plan.group {
-            Some(group) => {
-                let key = fold_turkish(group);
-                let found = doc
-                    .layers()
-                    .nodes()
+    let slots = doc.transact(&plan.label, |doc| {
+        if !new_ids.is_empty() {
+            let parent = match &plan.group {
+                Some(group) => {
+                    let key = fold_turkish(group);
+                    let found = doc
+                        .layers()
+                        .nodes()
+                        .iter()
+                        .find(|n| n.kind == LayerNodeType::Group && fold_turkish(&n.name) == key)
+                        .map(|n| n.id.clone());
+                    match found {
+                        Some(id) => Some(id),
+                        None => {
+                            let new = NewLayer {
+                                id: Some(fresh_id(group, &mut taken)),
+                                ..NewLayer::group(group.clone())
+                            };
+                            Some(doc.add_layer(new, None, false).map_err(|r| r.to_string())?)
+                        }
+                    }
+                }
+                None => None,
+            };
+            for (source, t) in &plan.layers {
+                let LayerTarget::New {
+                    name,
+                    style,
+                    visible,
+                    locked,
+                } = t
+                else {
+                    continue;
+                };
+                let id = new_ids
                     .iter()
-                    .find(|n| n.kind == LayerNodeType::Group && fold_turkish(&n.name) == key)
-                    .map(|n| n.id.clone());
-                Some(found.unwrap_or_else(|| {
-                    let new = NewLayer {
-                        id: Some(fresh_id(group, &mut taken)),
-                        ..NewLayer::group(group.clone())
-                    };
-                    doc.add_layer(new, None)
-                }))
+                    .find(|(s, _)| s == source)
+                    .map(|(_, id)| id.clone());
+                let new = NewLayer {
+                    id,
+                    name: name.clone(),
+                    kind: LayerNodeType::Layer,
+                    visible: *visible,
+                    locked: *locked,
+                    style: (**style).clone(),
+                };
+                doc.add_layer(new, parent.as_deref(), false)
+                    .map_err(|r| r.to_string())?;
+                created.push(name.clone());
             }
-            None => None,
-        };
-        for (source, t) in &plan.layers {
-            let LayerTarget::New {
-                name,
-                style,
-                visible,
-                locked,
-            } = t
-            else {
-                continue;
-            };
-            let id = new_ids
-                .iter()
-                .find(|(s, _)| s == source)
-                .map(|(_, id)| id.clone());
-            let new = NewLayer {
-                id,
-                name: name.clone(),
-                kind: LayerNodeType::Layer,
-                visible: *visible,
-                locked: *locked,
-                style: (**style).clone(),
-            };
-            doc.add_layer(new, parent.as_deref());
-            created.push(name.clone());
         }
-    }
-    let slots = doc
-        .add_many(chosen, &plan.label)
-        .map_err(|e| format!("{e}. Hiçbir nesne eklenmedi."))?;
+        doc.add_many(chosen, &plan.label)
+            .map_err(|e| format!("{e}. Hiçbir nesne eklenmedi."))
+    })?;
     Ok(Applied { slots, created })
 }
 
@@ -317,6 +322,7 @@ mod tests {
         assert_eq!(doc.len(), 1000);
     }
 
+    /// The layers go into the named group, in the import's one step (docs/adr/0076).
     #[test]
     fn new_layers_go_into_the_named_group_and_unchosen_layers_stay_out() {
         let mut doc = doc();
@@ -384,6 +390,18 @@ mod tests {
         assert_eq!(
             doc.layers().get("import-yol").map(|l| l.style.line_type),
             Some(LineType::Continuous)
+        );
+        // One step: undo takes the objects and the layers made for them, redo brings both back.
+        assert_eq!(doc.undo().as_deref(), Some("DXF: plan.dxf"));
+        assert_eq!(doc.len(), 0);
+        assert!(doc.layers().get("import-plan-dxf").is_none());
+        assert_eq!(doc.redo().as_deref(), Some("DXF: plan.dxf"));
+        assert_eq!(doc.len(), 2);
+        assert_eq!(
+            doc.layers()
+                .get("import-plan-dxf")
+                .map(|g| g.children.len()),
+            Some(2)
         );
 
         // A second import finds the group and its layers again.

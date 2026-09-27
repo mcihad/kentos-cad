@@ -104,6 +104,8 @@ pub enum Event {
 impl App {
     /// The right button went down on the drawing; with Shift, the snap menu opens.
     pub(crate) fn right_pressed(&mut self, at: Point) {
+        // The drawing takes the keyboard from the layer tree (web: its blur).
+        self.layers_keyboard = false;
         self.drawing_menu = self.modifiers.shift().then_some(Open {
             kind: Kind::Snap,
             at,

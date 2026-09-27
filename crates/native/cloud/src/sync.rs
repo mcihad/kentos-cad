@@ -708,4 +708,4 @@ mod tests;
 pub(crate) use base::objects_by_id;
 pub use base::{BaseMeta, BaseObject, BaseSnapshot, BaseStep};
 pub use draft::{DRAFT_VERSION, Draft, DraftChange, DraftMeta, Restored};
-pub use remote::{Incoming, Remote, Taken};
+pub use remote::{Incoming, KeptLayer, Remote, Taken};

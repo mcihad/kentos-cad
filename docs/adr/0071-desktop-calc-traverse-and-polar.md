@@ -121,7 +121,7 @@
 
 ## Web'den ayrılanlar
 
-- **Tablo klavyesi:** ↑ ile satır yukarı çıkılmıyor; ↓ Enter'in işini yapmıyor. Iced'in yazı kutusu okları tabloya bırakmıyor. Web'de ikisi de var, açık iş olarak kaldı.
+- **Tablo klavyesi:** ↑ ile satır yukarı çıkılmıyor; ↓ Enter'in işini yapmıyor. Iced'in yazı kutusu okları tabloya bırakmıyor. Web'de ikisi de var, açık iş olarak kaldı. (27 Eylül, düzeltme: yazı kutusu okları bırakıyordu; onları açık pencerenin tuş yönlendirmesi yutuyordu. İkisi [ADR 0075](0075-desktop-layer-search-and-keys.md)'te geldi.)
 - **Okunamayan sayı:** masaüstünde tablo her çizildiğinde işaretlenir. Web'de işaret yazarken konuyordu, yapıştırma ya da satır ekleyince siliniyordu. Web ajanı bunu 12. görevle düzeltti (`1fd4120`); iki taraf aynı olacak.
 - **İpucu yazı tipi:** sayı hücresi boşken ipucu arayüzün yazı tipiyle yazılır, değer yazılınca eş aralıklı rakamlara geçer. Web sayıları arayüz yazı tipinin eş genişlikli rakamlarıyla yazar; masaüstünün yazı tipinde bu seçenek yok.
 

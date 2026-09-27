@@ -1591,6 +1591,59 @@ fn a_drawing_changed_while_it_went_up_stays_as_it_is() {
     );
 }
 
+/// An editor of a database project (objects, not the tree; the web's
+/// b19ed6f): Yeni katman and Yeni grup are off with the reason; run anyway,
+/// and the row's Yanına yeni katman, Yeniden adlandır and Sil, say it and
+/// change nothing; the eye stays the user's own. A file project may.
+#[test]
+fn an_editor_may_not_change_the_layer_tree_of_a_database_project() {
+    use crate::layering::{Event as LayerEvent, TREE_LOCKED};
+    let mut app = signed_in();
+    let mut project = info(ProjectStorage::Database, true, ProjectState::Active);
+    project.access.permissions = vec![ProjectPermission::Read, ProjectPermission::FeatureWrite];
+    open(&mut app, project);
+    assert!(!app.available("layer.new") && !app.available("layer.newGroup"));
+    assert_eq!(app.why_disabled("layer.new"), Some(TREE_LOCKED));
+    let nodes = |app: &App| {
+        let doc = app.document.as_ref().expect("open");
+        (
+            doc.model.layers().leaves().len(),
+            doc.model.layers().nodes().len(),
+        )
+    };
+    let before = nodes(&app);
+    let _ = app.run("layer.new");
+    assert_eq!(last_said(&app), TREE_LOCKED);
+    let _ = app.run("layer.newGroup");
+    assert_eq!(last_said(&app), TREE_LOCKED);
+    for event in [
+        LayerEvent::AddBeside("cizim".into()),
+        LayerEvent::Rename("cizim".into()),
+        LayerEvent::Remove("cizim".into()),
+    ] {
+        let _ = app.update(Message::Layer(event));
+        assert_eq!(last_said(&app), TREE_LOCKED);
+    }
+    assert_eq!(nodes(&app), before);
+    assert!(app.renaming.is_none() && app.dialog.is_none());
+    let visible = |app: &App| {
+        let doc = app.document.as_ref().expect("open");
+        doc.model.layers().get("cizim").is_some_and(|l| l.visible)
+    };
+    let was = visible(&app);
+    let _ = app.update(Message::LayerVisible("cizim".into()));
+    assert_ne!(visible(&app), was, "the eye still works");
+
+    let mut app = signed_in();
+    let mut project = info(ProjectStorage::File, true, ProjectState::Active);
+    project.access.permissions = vec![ProjectPermission::Read, ProjectPermission::FeatureWrite];
+    open(&mut app, project);
+    assert!(
+        app.available("layer.new"),
+        "a file project saves its tree with the file"
+    );
+}
+
 #[test]
 fn the_status_bar_offers_sign_in_or_says_who_and_where() {
     let (mut app, _) = App::boot(None);
@@ -2235,6 +2288,49 @@ fn action_screens() {
                     .expect("writes the picture");
                 println!("{}", file.display());
             }
+        }
+    }
+}
+
+/// Pictures for the owner: an editor's database project, the pointer
+/// resting on Katmanlar's Yeni katman (off, its tip says why; docs/adr/0078);
+/// `.run/shots/bulut-agac-kilitli-*`.
+/// `cargo test -p kentos-desktop cloud::tests::tree_locked_screens -- --ignored --nocapture`
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn tree_locked_screens() {
+    use iced::{Point, Size};
+    use kentos_ui::snapshot::{Input, Snapshot};
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
+        for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
+            let mut app = signed_in();
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+            app.apply_settings();
+            let mut project = info(ProjectStorage::Database, true, ProjectState::Active);
+            project.access.permissions =
+                vec![ProjectPermission::Read, ProjectPermission::FeatureWrite];
+            open(&mut app, project);
+            let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+            let mut update = |app: &mut App, message| {
+                let _ = app.update(message);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            // Katmanlar's header: Yeni katman left of Yeni grup.
+            let at = Point::new(width - 91.0, 160.0);
+            snapshot.input(&mut app, App::view, &mut update, Input::Move(at));
+            std::thread::sleep(std::time::Duration::from_millis(500));
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("bulut-agac-kilitli-{width}x{height}{suffix}.png"));
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
+            println!("{}", file.display());
         }
     }
 }

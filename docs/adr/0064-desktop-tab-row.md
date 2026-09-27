@@ -50,3 +50,13 @@ Masaüstünde ad "• kaydedilmedi" yazısıyla gösteriliyordu. Koordinat siste
   - kaydedilmemiş noktası;
   - koordinat sistemi (dar pencerede yalnız simgesi);
   - açık Yardım menüsü.
+
+## Sonra
+
+- 27 Eylül: KentOS CAD hakkında web'inki gibidir (web `653b550`). Satırları şunlardır:
+  - Sürüm: Rust çalışma alanının sürümü;
+  - Çizim motoru;
+  - Koordinat sistemi: projeninki, EPSG koduyla;
+  - Sunucu: son sunucu denetiminin yanıtı. Hizmet, sürüm ve commit'in ilk sekiz harfi yazar; uyumsuzsa “…, uyumsuz”, sürerken “soruluyor…”, yoksa “bağlı değil”.
+- Altta masaüstüne taşınan komutların sayısı durur.
+- `view_commands::tests`, `gorunum-hakkinda-*` görüntüleri.

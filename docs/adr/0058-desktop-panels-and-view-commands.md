@@ -64,7 +64,7 @@
 
 ### Komut arama (Alt+Q)
 
-- Masaüstünün şeridinde henüz arama kutusu yok. Alt+Q web'in klasik arayüzündeki gibi komut satırına odaklanır ve bütün komutların listesini açar; yazdıkça süzülür.
+- Masaüstünün şeridinde henüz arama kutusu yok. Alt+Q web'in klasik arayüzündeki gibi komut satırına odaklanır ve bütün komutların listesini açar; yazdıkça süzülür. (27 Eylül: sekme satırında “Komut ara” kutusu geldi; Alt+Q ona odaklanır, [ADR 0077](0077-desktop-command-search.md).)
 - Liste ilk kez bütün komutlarla açılınca iki kusur göründü ve düzeltildi (KentOS UI `command_line`):
   - Adı olmayan komut kimliğiyle listelenir (`analysis.volume`). 100 px'lik ad sütunu bu adları başlığın üstüne taşırıyordu. Sütun artık listedeki en uzun ada göre genişler. En çok 20 harftir, eş aralıklı yüzde harf başına 0,6 em; daha uzun ad kırpılır. Başlık da kendi sütununda kırpılır. Liste 460 px'ten 500 px'e genişledi.
   - Masaüstünde çalışmayan komutlar listede şeritteki gibi soluktur (`Command::dimmed`). Açıklama satırı önce nedenini söyler: "Web'de var; masaüstüne henüz taşınmadı." ya da web'in bekleyen notu.

@@ -213,7 +213,8 @@
       "default": true,
       "scope": "session",
       "hosts": [
-        "web"
+        "web",
+        "desktop"
       ],
       "version": 1,
       "group": "drafting",

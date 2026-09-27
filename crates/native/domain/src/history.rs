@@ -10,9 +10,10 @@
 //!   cancel reverts them;
 //! - the undo history keeps the last 200 steps; a new step clears redo.
 //!
-//! Only undoable data are ops: objects, layer styles and a layer's removal
-//! (with the objects on it). Layer visibility, lock, names and fold are
-//! changed at once and never recorded (web).
+//! Only undoable data are ops: objects, layer styles, a layer's addition and
+//! removal (with the objects on it), and the active layer an addition set.
+//! Layer visibility, lock, names and fold, and a layer made active by hand,
+//! are changed at once and never recorded (web).
 
 use std::collections::{HashSet, VecDeque};
 
@@ -42,9 +43,17 @@ pub(crate) enum Op {
         after: Box<LayerStyle>,
     },
     /// A layer or a group taken out of the tree with everything under it
-    /// (`Document::remove_layer`), and its inverse, which puts it back.
+    /// (`Document::remove_layer`), and its inverse, which puts it back; a
+    /// new one (`Document::add_layer`) is a `LayerAdd`.
     LayerRemove(Box<LayerPlace>),
     LayerAdd(Box<LayerPlace>),
+    /// The active layer an addition set (`add_layer` activating): applied
+    /// only while the active layer is still `before`, so undo and redo leave
+    /// a layer made active by hand in between as it is (the web's `layerActive`).
+    LayerActive {
+        before: String,
+        after: String,
+    },
 }
 
 /// A tree node as a step keeps it (children, flags, style), and where it
@@ -83,6 +92,10 @@ impl Op {
             },
             Op::LayerRemove(place) => Op::LayerAdd(place.clone()),
             Op::LayerAdd(place) => Op::LayerRemove(place.clone()),
+            Op::LayerActive { before, after } => Op::LayerActive {
+                before: after.clone(),
+                after: before.clone(),
+            },
         }
     }
 }
@@ -318,11 +331,55 @@ impl Document {
             step.ops.iter().any(|op| match op {
                 Op::Add(s) | Op::Remove(s) => hit(s),
                 Op::Update { before, .. } => hit(before),
-                Op::LayerStyle { .. } | Op::LayerRemove(_) | Op::LayerAdd(_) => false,
+                Op::LayerStyle { .. }
+                | Op::LayerRemove(_)
+                | Op::LayerAdd(_)
+                | Op::LayerActive { .. } => false,
             })
         };
         self.history.undo.retain(|step| !touches(step));
         self.history.redo.retain(|step| !touches(step));
+    }
+
+    /// Drops the undo and redo steps that add or remove a node holding one
+    /// of these layers, as the step recorded it or as it is in the tree now
+    /// (a layer put into an added group since): another editor put objects
+    /// there, and undoing the step would take the layer from under them
+    /// (the web's `applyExternal`).
+    pub(crate) fn forget_layer_history(&mut self, layers: &HashSet<String>) {
+        if layers.is_empty() {
+            return;
+        }
+        let tree = &self.layers;
+        let holds = |step: &Step| {
+            step.ops.iter().any(|op| match op {
+                Op::LayerRemove(place) | Op::LayerAdd(place) => {
+                    let mut ids = Vec::new();
+                    node_ids(&place.node, &mut ids);
+                    if let Some(now) = tree.get(&place.node.id) {
+                        node_ids(now, &mut ids);
+                    }
+                    ids.iter().any(|id| layers.contains(id))
+                }
+                _ => false,
+            })
+        };
+        let undo: VecDeque<Step> = self
+            .history
+            .undo
+            .iter()
+            .filter(|step| !holds(step))
+            .cloned()
+            .collect();
+        let redo: Vec<Step> = self
+            .history
+            .redo
+            .iter()
+            .filter(|step| !holds(step))
+            .cloned()
+            .collect();
+        self.history.undo = undo;
+        self.history.redo = redo;
     }
 
     /// Drops the undo and redo steps that change the layer tree: another
@@ -351,8 +408,13 @@ impl Document {
                 self.layers.replace_style(layer, after);
                 return;
             }
+            // A node still holding objects stays: taking it away would leave
+            // them on no layer (its step's own objects go before it; another
+            // editor's objects drop the step, `forget_layer_history`).
             Op::LayerRemove(place) => {
-                self.layers.detach(&place.node.id);
+                if !self.holds_objects(&place.node.id) {
+                    self.layers.detach(&place.node.id);
+                }
                 return;
             }
             Op::LayerAdd(place) => {
@@ -360,8 +422,22 @@ impl Document {
                     .attach(&place.node, place.parent.as_deref(), place.index);
                 return;
             }
+            Op::LayerActive { before, after } => {
+                if self.layers.active() == before {
+                    self.layers.set_active(after);
+                }
+                return;
+            }
         };
         let objects = self.store.len();
         self.history.journal.touch(touched, objects);
+    }
+}
+
+/// The ids of a node and of every node under it.
+fn node_ids(node: &LayerNode, out: &mut Vec<String>) {
+    out.push(node.id.clone());
+    for child in &node.children {
+        node_ids(child, out);
     }
 }

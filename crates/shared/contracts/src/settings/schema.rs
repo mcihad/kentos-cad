@@ -158,7 +158,7 @@ fn settings() -> Vec<SettingDescriptor> {
             ),
         boolean("drafting.grid", true)
             .scope(SettingScope::Session)
-            .hosts(&[Web])
+            .hosts(&[Web, Desktop])
             .text("Izgara", "Çizim alanında ızgarayı gösterir (F7)."),
         boolean("drafting.tracking", true)
             .scope(SettingScope::Session)

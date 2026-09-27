@@ -526,3 +526,30 @@ fn selected_tab<'a, Message: 'a>(label: Fragment<'a>) -> Element<'a, Message> {
     .height(tab_height() + 1.0)
     .into()
 }
+
+/// Şeritte yeri gösterilen öğe (ör. komut aramasının "Şeritte göster"i):
+/// üstünde kısa süre duran vurgu çerçevesi (web'in `[data-flash]`'i, 2 px
+/// vurgu rengi). Çerçeve öğenin yerini değiştirmez.
+pub(crate) fn flashed<'a, Message: 'a>(
+    content: Element<'a, Message>,
+    on: bool,
+) -> Element<'a, Message> {
+    if !on {
+        return content;
+    }
+    iced::widget::stack![
+        content,
+        container(space::horizontal())
+            .width(iced::Fill)
+            .height(iced::Fill)
+            .style(|theme: &iced::Theme| container::Style {
+                border: iced::Border {
+                    color: crate::theme::Tokens::of(theme).accent,
+                    width: 2.0,
+                    radius: crate::style::button::RADIUS.into(),
+                },
+                ..container::Style::default()
+            }),
+    ]
+    .into()
+}

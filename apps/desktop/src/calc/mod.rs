@@ -109,6 +109,8 @@ pub enum Event {
     Paste(usize, usize, String),
     Pasted(usize, usize, Option<String>),
     Submit(usize, usize),
+    /// ↑ (true) or ↓ in the focused field, found by `arrow`.
+    Arrow(bool, iced::widget::Id),
     AddRow,
     RemoveRow(usize),
     /// Aplikasyon: the selected points into the table.
@@ -151,6 +153,13 @@ impl Calc {
 
 fn event(e: Event) -> Message {
     Message::Calc(e)
+}
+
+/// ↑ (`up`) or ↓ with a Hesap window open: the focused field is found,
+/// then its table moves the keyboard (`grid::arrow`).
+pub(crate) fn arrow(up: bool) -> Task<Message> {
+    use iced::advanced::widget::{operate, operation::focusable::find_focused};
+    operate(find_focused()).map(move |from| event(Event::Arrow(up, from)))
 }
 
 /// An angle already in the project's unit, with its mark (the web's `angleText`).
@@ -315,6 +324,10 @@ impl App {
             },
             Event::Submit(row, col) => match self.calc.table(window) {
                 Some(table) => grid::submit(table, window, row, col),
+                None => Task::none(),
+            },
+            Event::Arrow(up, from) => match self.calc.table(window) {
+                Some(table) => grid::arrow(table, window, &from, up),
                 None => Task::none(),
             },
             Event::AddRow => match self.calc.table(window) {

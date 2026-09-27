@@ -625,9 +625,13 @@ impl App {
     /// The status bar's cloud cells: the open project with its workspace,
     /// where its save stands and the connection's dot, then the account with
     /// Çıkış. One line each, bounded, so they fit beside the drawing's cells.
-    pub(crate) fn cloud_cells(&self) -> Vec<Element<'_, Message>> {
+    /// The status bar's cloud cells; in a narrow window (`words` false) the
+    /// dots and icons only, their words in the tips (the web's step).
+    pub(crate) fn cloud_cells(&self, words: bool) -> Vec<Element<'_, Message>> {
         // The interface's text size, as every cell of the bar (the web's `--fs-xs`).
-        let line = |s: String| label::muted(s).wrapping(Wrapping::None);
+        let line = move |s: String| {
+            label::muted(if words { s } else { String::new() }).wrapping(Wrapping::None)
+        };
         let mut cells: Vec<Element<'_, Message>> = Vec::new();
         if let Some((doc, source)) = self
             .document
@@ -638,9 +642,10 @@ impl App {
                 .revision
                 .as_ref()
                 .map_or(String::new(), |r| format!(" Revizyon {}.", r.number));
+            let place = Readout::new(line(format!("{} › {}", source.workspace, doc.name())));
+            let place = if words { place.width(170.0) } else { place };
             cells.push(
-                Readout::new(line(format!("{} › {}", source.workspace, doc.name())))
-                    .width(170.0)
+                place
                     .icon(Icon::Globe)
                     .tip(Tip::new("Bulut projesi").body(format!(
                         "{} › {}. Saklama: {}. Rolünüz: {}.{revision}",
@@ -675,7 +680,7 @@ impl App {
                     .live
                     .as_ref()
                     .is_some_and(|l| l.sync.state() == SaveState::Offline);
-            if !says {
+            if !says && words {
                 cells.push(
                     Readout::new(line(dot.to_owned()))
                         .tip(Tip::new("Bağlantı").body(about))
@@ -684,6 +689,15 @@ impl App {
             }
         }
         match &self.cloud.me {
+            Some(me) if !words => cells.push(
+                Readout::new(label::muted("Çıkış"))
+                    .on_press(Message::Run("cloud.signOut"))
+                    .tip(format!(
+                        "{} olarak giriş yapıldı. Bulut oturumunu kapatır.",
+                        me.user.display_name
+                    ))
+                    .into(),
+            ),
             Some(me) => {
                 cells.push(
                     Readout::new(line(me.user.display_name.clone()))
@@ -710,6 +724,35 @@ impl App {
             ),
         }
         cells
+    }
+
+    /// About how wide the cloud cells are (status bar steps, view.rs):
+    /// their texts at the type size `size`, with icons and padding.
+    pub(crate) fn cloud_cells_width(&self, words: bool, size: f32) -> f32 {
+        let text = |s: &str| s.chars().count() as f32 * size * 0.52;
+        let cell = |s: &str| text(s) + 16.0 + 9.0;
+        let mut width = 0.0;
+        if self
+            .document
+            .as_ref()
+            .is_some_and(|d| d.cloud_source().is_some())
+        {
+            if words {
+                let (state, ..) = self.save_cell();
+                width += typography_scaled(170.0) + 19.0 + 25.0 + cell(&state) + 12.0;
+                let (dot, ..) = self.link_cell();
+                width += cell(dot);
+            } else {
+                width += 2.0 * 44.0;
+            }
+        }
+        width += match &self.cloud.me {
+            Some(me) if words => cell(&me.user.display_name) + cell("Çıkış"),
+            Some(_) => cell("Çıkış"),
+            None if words => cell("Buluta giriş") + 19.0,
+            None => 44.0,
+        };
+        width
     }
 
     /// The connection's dot: çevrimiçi, çevrimdışı or eşitleniyor. Without a
@@ -878,4 +921,9 @@ pub(super) fn describe(
         .map(|l| format!(" · {l}"))
         .unwrap_or_default();
     format!("{} · {layer}{label}", words::kind(entity.kind()))
+}
+
+/// A width in the interface's scale (the cells' fixed widths are given unscaled).
+fn typography_scaled(width: f32) -> f32 {
+    kentos_ui::theme::typography::scaled(width)
 }

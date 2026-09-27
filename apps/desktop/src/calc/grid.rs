@@ -67,6 +67,41 @@ pub fn submit(table: &mut dyn Table, window: Window, row: usize, col: usize) -> 
     iced::widget::operation::focus(cell_id(window, row + 1, col))
 }
 
+/// ↑ or ↓ in the cell `from` (the web's `key`): ↓ is Enter (the next row
+/// with this column open, or a new row); ↑ goes to the nearest row above
+/// with this column open. A fixed cell takes no keyboard, so it is passed
+/// over (the web focuses its read-only field). Nothing when `from` is none of
+/// the table's cells.
+pub fn arrow(
+    table: &mut dyn Table,
+    window: Window,
+    from: &iced::widget::Id,
+    up: bool,
+) -> Task<Message> {
+    let Some((row, col)) = cell_of(table, window, from) else {
+        return Task::none();
+    };
+    if !up {
+        return submit(table, window, row, col);
+    }
+    match above(table, row, col) {
+        Some(r) => iced::widget::operation::focus(cell_id(window, r, col)),
+        None => Task::none(),
+    }
+}
+
+/// The table's cell whose field is `id`.
+fn cell_of(table: &dyn Table, window: Window, id: &iced::widget::Id) -> Option<(usize, usize)> {
+    (0..table.rows())
+        .flat_map(|r| (0..table.columns()).map(move |c| (r, c)))
+        .find(|&(r, c)| cell_id(window, r, c) == *id)
+}
+
+/// The nearest row above `row` whose column `col` is typed in.
+fn above(table: &dyn Table, row: usize, col: usize) -> Option<usize> {
+    (0..row).rev().find(|&r| !table.readonly(r, col))
+}
+
 /// “Satır ekle”: a row after the last one that may take one (the web's
 /// `add`), and the keyboard to its first open cell.
 pub fn add(table: &mut dyn Table, window: Window) -> Task<Message> {
@@ -313,6 +348,26 @@ mod tests {
         fn remove(&mut self, row: usize) {
             self.0.remove(row);
         }
+    }
+
+    /// ↑ ↓ find the focused cell by its field; ↑ passes over a fixed cell.
+    #[test]
+    fn the_arrows_find_the_cell_and_the_row_above() {
+        let sheet = Sheet(vec![Default::default(); 3]);
+        let id = cell_id(Window::Polar, 2, 1);
+        assert_eq!(cell_of(&sheet, Window::Polar, &id), Some((2, 1)));
+        assert_eq!(
+            cell_of(&sheet, Window::Traverse, &id),
+            None,
+            "another window's"
+        );
+        assert_eq!(above(&sheet, 2, 1), Some(1));
+        assert_eq!(
+            above(&sheet, 1, 0),
+            None,
+            "the first row's first cell is fixed"
+        );
+        assert_eq!(above(&sheet, 1, 1), Some(0));
     }
 
     #[test]

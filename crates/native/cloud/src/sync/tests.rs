@@ -329,7 +329,8 @@ fn a_removed_layer_goes_after_its_objects() {
     let on_cizim_now = o.document.by_layer("cizim").count();
     let new = o
         .document
-        .add_layer(kentos_domain::NewLayer::layer("Yeni"), None);
+        .add_layer(kentos_domain::NewLayer::layer("Yeni"), None, false)
+        .unwrap();
     let mut e = point(486700.0);
     e.base_mut().layer_id = new.clone();
     o.document.add(e).unwrap();
@@ -1094,4 +1095,153 @@ fn what_the_command_on_its_way_carries_is_in_the_drawing_at_once() {
     );
     assert_eq!(x_of(&again.document, id), Some(486600.0));
     assert_eq!(sync.pending(), 2);
+}
+
+/// The sample's tree without a node (another editor's removal).
+fn without(nodes: &[LayerNode], id: &str) -> Vec<LayerNode> {
+    nodes
+        .iter()
+        .filter(|n| n.id != id)
+        .map(|n| LayerNode {
+            children: without(&n.children, id),
+            ..n.clone()
+        })
+        .collect()
+}
+
+/// A layer another editor removed while this device had an object on it
+/// not sent yet (the web's 88ca558): the layer stays, in its group, and the
+/// notice counts the object; the next command sends the tree with it over
+/// the server's metadata version, and the object with it.
+#[test]
+fn a_removed_layer_stays_while_it_holds_unsent_objects() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    let mut e = point(486700.0);
+    e.base_mut().layer_id = "bina".into();
+    o.document.add(e).unwrap();
+    let mut info = o.info.clone();
+    info.layers = without(&info.layers, "bina");
+    info.meta_version = "6".into();
+    let incoming = sync.incoming(&page(vec![event(10, None, &[], true)]));
+    let taken = sync
+        .take_remote(
+            &mut o.document,
+            incoming,
+            Remote {
+                records: vec![],
+                info: Some(info),
+            },
+        )
+        .unwrap();
+    assert_eq!(
+        taken.kept,
+        [KeptLayer {
+            id: "bina".into(),
+            name: "Bina".into(),
+            unsent: 1,
+        }]
+    );
+    assert_eq!(
+        taken.kept[0].text(),
+        "“Bina” katmanını başka biri sildi; üzerinde gönderilmemiş 1 nesneniz olduğu için katman bu çizimde kaldı ve yeniden kaydedilecek."
+    );
+    assert_eq!(
+        o.document.layers().parent("bina").map(|g| g.id.as_str()),
+        Some("layer-g"),
+        "back in its group"
+    );
+    let env = sync.next(&o.document).unwrap();
+    let c = input(&env);
+    let layers = c.project.and_then(|p| p.layers).expect("the tree goes");
+    assert!(remote::is_layer(&layers, "bina"));
+    assert_eq!(
+        env.expected_versions.get(PROJECT_KEY).map(String::as_str),
+        Some("6")
+    );
+    assert!(
+        c.features
+            .iter()
+            .any(|f| matches!(f, FeatureChange::Create { .. }))
+    );
+}
+
+/// A removed layer whose objects are all on the server goes, as the other
+/// editor wants, with the objects the same events delete; nothing is said.
+#[test]
+fn a_removed_layer_with_everything_sent_goes() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    let on_bina: Vec<(Uuid, FeatureOp)> = o
+        .document
+        .by_layer("bina")
+        .map(|e| {
+            (
+                o.document.uid(Slot(e.base().id)).unwrap(),
+                FeatureOp::Delete,
+            )
+        })
+        .collect();
+    assert!(!on_bina.is_empty());
+    let mut info = o.info.clone();
+    info.layers = without(&info.layers, "bina");
+    info.meta_version = "6".into();
+    let incoming = sync.incoming(&page(vec![event(10, None, &on_bina, true)]));
+    let taken = sync
+        .take_remote(
+            &mut o.document,
+            incoming,
+            Remote {
+                records: vec![],
+                info: Some(info),
+            },
+        )
+        .unwrap();
+    assert!(taken.kept.is_empty());
+    assert!(o.document.layers().get("bina").is_none());
+    assert_eq!(o.document.by_layer("bina").count(), 0);
+    assert_eq!(sync.next(&o.document), None);
+}
+
+/// Through a conflict of the metadata, “take the server's”: the name goes
+/// back to the server's, the layer holding an unsent object stays, and the
+/// next command sends it back.
+#[test]
+fn taking_the_servers_metadata_keeps_a_layer_with_unsent_objects() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    o.document.rename_layer("parsel", "Parseller");
+    let mut e = point(486700.0);
+    e.base_mut().layer_id = "bina".into();
+    o.document.add(e).unwrap();
+    sync.observe(&o.document);
+    let mut info = o.info.clone();
+    info.layers = without(&info.layers, "bina");
+    info.meta_version = "7".into();
+    let incoming = sync.incoming(&page(vec![event(10, None, &[], true)]));
+    let taken = sync
+        .take_remote(
+            &mut o.document,
+            incoming,
+            Remote {
+                records: vec![],
+                info: Some(info.clone()),
+            },
+        )
+        .unwrap();
+    assert_eq!(taken.conflicts, 1);
+    let kept = sync.take_theirs(&mut o.document, Some(&info)).unwrap();
+    assert_eq!(kept.len(), 1);
+    assert_eq!(o.document.layers().get("parsel").unwrap().name, "Parsel");
+    assert!(o.document.layers().get("bina").is_some());
+    let env = sync.next(&o.document).unwrap();
+    let layers = input(&env)
+        .project
+        .and_then(|p| p.layers)
+        .expect("the tree goes");
+    assert!(remote::is_layer(&layers, "bina"));
+    assert_eq!(
+        env.expected_versions.get(PROJECT_KEY).map(String::as_str),
+        Some("7")
+    );
 }

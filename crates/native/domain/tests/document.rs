@@ -357,27 +357,43 @@ fn new_layers_count_on_from_the_file_and_never_repeat_an_id() {
         "activeLayer":"layer-3","entities":[],"styles":{"items":[],"categories":[]}}"#;
     let mut doc = Document::from_snapshot(DocumentSnapshotV1::from_json(text).expect("reads"))
         .expect("opens");
-    assert_eq!(doc.add_layer(NewLayer::layer("Bir"), None), "layer-13");
-    assert_eq!(doc.add_layer(NewLayer::group("İki"), None), "layer-14");
+    let add = |doc: &mut Document, new: NewLayer| doc.add_layer(new, None, false);
+    assert_eq!(
+        add(&mut doc, NewLayer::layer("Bir")).as_deref(),
+        Ok("layer-13")
+    );
+    assert_eq!(
+        add(&mut doc, NewLayer::group("İki")).as_deref(),
+        Ok("layer-14")
+    );
     // A given id is kept, and a larger layer-N moves the counter on.
     let forty = NewLayer {
         id: Some("layer-40".into()),
         ..NewLayer::layer("Kırk")
     };
-    assert_eq!(doc.add_layer(forty, None), "layer-40");
-    assert_eq!(doc.add_layer(NewLayer::layer("Sonraki"), None), "layer-41");
-    // An id a node has already gets a new one; the old node keeps it.
+    assert_eq!(add(&mut doc, forty).as_deref(), Ok("layer-40"));
+    assert_eq!(
+        add(&mut doc, NewLayer::layer("Sonraki")).as_deref(),
+        Ok("layer-41")
+    );
+    // An id a node has already is refused; the old node keeps it (fixtures'
+    // layer-add.json has the refusal's words).
     let same = NewLayer {
         id: Some("layer-12".into()),
         ..NewLayer::layer("Aynı")
     };
-    assert_eq!(doc.add_layer(same, None), "layer-42");
+    assert!(add(&mut doc, same).is_err());
     assert_eq!(
         doc.layers().get("layer-12").map(|n| n.name.as_str()),
         Some("On iki")
     );
+    assert_eq!(
+        add(&mut doc, NewLayer::layer("Son")).as_deref(),
+        Ok("layer-42")
+    );
     assert!(doc.is_dirty());
-    assert!(!doc.can_undo());
+    // Each addition is a step of its own (docs/adr/0076).
+    assert_eq!(doc.undo().as_deref(), Some("Katman ekle"));
 }
 
 /// A group is made empty and open; a new layer is not made active by itself
@@ -385,7 +401,9 @@ fn new_layers_count_on_from_the_file_and_never_repeat_an_id() {
 #[test]
 fn a_new_group_is_empty_and_the_active_layer_stays() {
     let mut doc = empty();
-    let group = doc.add_layer(NewLayer::group("Yeni grup"), Some("a"));
+    let group = doc
+        .add_layer(NewLayer::group("Yeni grup"), Some("a"), false)
+        .expect("a new id");
     let node = doc.layers().get(&group).expect("added").clone();
     assert!(node.children.is_empty() && node.expanded);
     assert_eq!(
