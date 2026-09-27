@@ -52,59 +52,62 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Anlamsız | Toplam |
 |---|---|---|---|---|---|
-| Komutlar | 139 | 0 | 28 | 0 | 167 |
+| Komutlar | 139 | 0 | 26 | 2 | 167 |
 | Araçlar | 56 | 0 | 2 | 0 | 58 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 1 |
 | Çalışma modları | 3 | 0 | 2 | 0 | 5 |
-| Ayarlar | 27 | 0 | 38 | 0 | 65 |
-| Tarayıcı depoları | 1 | 0 | 9 | 0 | 10 |
-| `.kcad` alanları (v1 okunur, v2 yazılır) | 0 | 0 | 192 | 0 | 192 |
-| Pencereler ve paneller | 1 | 0 | 61 | 0 | 62 |
+| Ayarlar | 38 | 12 | 14 | 1 | 65 |
+| Tarayıcı depoları | 6 | 1 | 2 | 1 | 10 |
+| `.kcad` alanları (v1 okunur, v2 yazılır) | 192 | 0 | 0 | 0 | 192 |
+| Pencereler ve paneller | 42 | 3 | 17 | 0 | 62 |
 
-### Masaüstünde anlamsız (0)
+- `.kcad` alanları (v1 okunur, v2 yazılır), bütünüyle: implemented — Masaüstü .kcad'i web'le aynı Rust kodeğiyle (crates/shared/kcad) okur ve yazar: v2 yazılır, v1 okunur; belge (kentos-domain) göçü web'in örnek dosyasıyla aynı çıkarır (crates/native/domain/tests/snapshot_v2.rs, ADR 0025).
 
-Yok.
+### Masaüstünde anlamsız (4)
+
+- Komutlar: `view.renderer.webgl2` WebGL2 — Masaüstü çizimi wgpu ile yapar; arka ucu (Vulkan, Metal, DirectX 12, OpenGL) wgpu seçer (ADR 0019). WebGL2 ile WebGPU tarayıcının seçenekleridir.
+- Komutlar: `view.renderer.webgpu` WebGPU — Masaüstü çizimi wgpu ile yapar; arka ucu (Vulkan, Metal, DirectX 12, OpenGL) wgpu seçer (ADR 0019). WebGL2 ile WebGPU tarayıcının seçenekleridir.
+- Ayarlar: `device.rendererPreference`  — WebGL2 ya da WebGPU seçimi tarayıcınındır; masaüstünün arka ucunu wgpu seçer (ADR 0019).
+- Tarayıcı depoları: `kentos.prefs.v1`  — Web'in tipli ayarlardan önceki deposudur; masaüstünün böyle eski bir deposu olmadı, ayarları baştan ayarlar.json'dadır.
 
 ### Web'de olup masaüstünde olmayanlar
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (28 / 167)
+#### Komutlar (26 / 167)
 
-- `analysis.slope` Eğim analizi…
-- `analysis.volume` Hacim hesabı…
+- `analysis.slope` Eğim analizi… (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
+- `analysis.volume` Hacim hesabı… (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `cloud.share` Bulut projesini paylaş…
-- `crs.query` Koordinat sorgula
-- `crs.transform` Datum dönüşümü (ED50 ↔ TUREF)…
-- `file.export.pdf` PDF pafta…
-- `file.import.ncz` Netcad NCZ…
-- `file.print` Yazdır ve pafta çıktısı…
-- `map.contours` Eşyükselti üret…
-- `map.parcelReport` Parsel alan çizelgesi
-- `map.profile` Boy kesit al…
-- `map.sheet` Pafta bölümlemesi…
+- `crs.query` Koordinat sorgula (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
+- `crs.transform` Datum dönüşümü (ED50 ↔ TUREF)… (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
+- `file.export.pdf` PDF pafta… (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
+- `file.import.ncz` Netcad NCZ… (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
+- `file.print` Yazdır ve pafta çıktısı… (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
+- `map.contours` Eşyükselti üret… (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
+- `map.parcelReport` Parsel alan çizelgesi (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
+- `map.profile` Boy kesit al… (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
+- `map.sheet` Pafta bölümlemesi… (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `processing.newModel` Yeni model…
 - `style.assign` Seçili nesnelere sembol ver…
 - `style.clearSymbol` Nesne sembolünü kaldır
 - `style.legend` Lejant…
 - `style.manager` Stil yöneticisi…
 - `style.svgEditor` SVG çizim düzenleyicisi…
-- `tool.stakeout` Aplikasyon
-- `tool.subdivide` İfraz
+- `tool.stakeout` Aplikasyon (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
+- `tool.subdivide` İfraz (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `view.keyTips` Şerit harf ipuçları
-- `view.renderer.webgl2` WebGL2
-- `view.renderer.webgpu` WebGPU
 - `view.ribbon` Şerit arayüzü
 - `view.toolbox` Araç kutusu
 - `view.toolboxDock` Araç kutusunu kenara sabitle
-- `workspace.disaster` Afet Analizi
-- `workspace.plan3d` 3D Plan
+- `workspace.disaster` Afet Analizi (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
+- `workspace.plan3d` 3D Plan (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 
 #### Araçlar (2 / 58)
 
-- `stakeout` Aplikasyon — Aplikasyon aracı hazır değil. Hesap menüsündeki `calc.stakeout` penceresi ayrıdır ve çalışır.
-- `subdivide` İfraz — İfraz hesabı henüz yok. Alan ve hisse kuralları bağımsız referans ve kurum kabulü ister (CLAUDE.md §7, §23; TODOS.md GIS-06, GIS-13).
+- `stakeout` Aplikasyon (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)) — Aplikasyon aracı hazır değil. Hesap menüsündeki `calc.stakeout` penceresi ayrıdır ve çalışır.
+- `subdivide` İfraz (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)) — İfraz hesabı henüz yok. Alan ve hisse kuralları bağımsız referans ve kurum kabulü ister (CLAUDE.md §7, §23; TODOS.md GIS-06, GIS-13).
 
 #### İşlem araçları (0 / 4)
 
@@ -116,310 +119,60 @@ Yok.
 
 #### Çalışma modları (2 / 5)
 
-- `disaster` Afet ve risk analizi
-- `plan3d` İmar planından 3D kent tasarımı
+- `disaster` Afet ve risk analizi (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
+- `plan3d` İmar planından 3D kent tasarımı (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 
-#### Ayarlar (38 / 65)
+#### Ayarlar (26 / 65)
 
-- `device.rendererPreference`
-- `layout.bottomExpanded`
-- `layout.bottomHeight`
-- `layout.bottomTab`
-- `layout.dockTab`
-- `layout.dockWidth`
-- `layout.layersFraction`
-- `layout.processingFolded`
-- `layout.processingTab`
-- `layout.ribbonCollapsed`
+- `layout.bottomExpanded`  (kısmi) (masaüstünde: apps/desktop/src/bottom.rs) — Alt panel F2 ile açılıp kapanır; yeniden açılışta hatırlanmaz.
+- `layout.bottomHeight`  (kısmi) (masaüstünde: apps/desktop/src/bottom.rs) — Boyu sürükleyerek değişir; yeniden açılışta hatırlanmaz.
+- `layout.bottomTab`  (kısmi) (masaüstünde: apps/desktop/src/bottom.rs) — Sekmeler (komut geçmişi, koordinat listesi, uyarılar) var; seçili sekme yeniden açılışta hatırlanmaz.
+- `layout.dockTab`  (kısmi) (masaüstünde: apps/desktop/src/app.rs (Docks: Katmanlar ve İşlemler sekmeleri)) — Seçili sekme yeniden açılışta hatırlanmaz.
+- `layout.dockWidth`  (kısmi) (masaüstünde: apps/desktop/src/app.rs (Docks)) — Genişlik sürükleyerek değişir; yeniden açılışta hatırlanmaz.
+- `layout.layersFraction`  (kısmi) (masaüstünde: apps/desktop/src/app.rs (Docks: Katmanlar ile Özellikler bölmesi)) — Bölme sürükleyerek değişir; yeniden açılışta hatırlanmaz.
+- `layout.processingFolded`  (kısmi) (masaüstünde: apps/desktop/src/processing/panel.rs) — Kategoriler katlanır; yeniden açılışta hatırlanmaz.
+- `layout.processingTab`  (kısmi) (masaüstünde: apps/desktop/src/processing/panel.rs) — Araçlar ve Geçmiş sekmeleri var; seçili sekme yeniden açılışta hatırlanmaz.
+- `layout.ribbonCollapsed`  (kısmi) (masaüstünde: apps/desktop/src/view.rs (view.ribbonCollapse)) — Şerit daraltılır; yeniden açılışta hatırlanmaz.
 - `layout.ribbonQuickAccess`
 - `layout.ribbonSplits`
-- `layout.ribbonTab`
+- `layout.ribbonTab`  (kısmi) (masaüstünde: apps/desktop/src/view.rs) — Seçili sekme yeniden açılışta hatırlanmaz.
 - `layout.ribbonToolbox`
-- `layout.rightVisible`
-- `layout.theme`
+- `layout.rightVisible`  (kısmi) (masaüstünde: apps/desktop/src/view_commands.rs (F4)) — Paneller F4 ile gizlenir; yeniden açılışta hatırlanmaz.
 - `layout.toolboxColumns`
 - `layout.toolboxDocked`
 - `layout.toolboxFolded`
 - `layout.toolboxVisible`
 - `layout.toolboxX`
 - `layout.toolboxY`
-- `project.angleUnit`
-- `project.areaDecimals`
-- `project.areaUnit`
-- `project.drawingFont`
-- `project.lengthDecimals`
-- `project.plotScale`
-- `project.srid`
-- `project.workspace`
 - `session.color`
 - `session.lineType`
 - `session.lineWeight`
-- `user.accent`
 - `user.crosshair`
 - `user.shell`
-- `user.uiFont`
-- `user.uiScale`
+- `user.uiFont`  (kısmi) (masaüstünde: ayarlar.json appearance.typeface (Görünüm sekmesi, ADR 0051)) — Masaüstünde KentOS UI'ın üç yazı tipi var (IBM Plex Sans, Inter, Plus Jakarta Sans); web yedi seçenek sunar.
 
-#### Tarayıcı depoları (9 / 10)
+#### Tarayıcı depoları (3 / 10)
 
-- `kentos.cloud/drafts`
-- `kentos.files/recent`
 - `kentos.invitation`
-- `kentos.prefs.v1`  — Eski tercih deposu. Tipli ayarlara (`kentos.settings.v1`) bir kez taşınır; uygulama ona bir daha yazmaz, yedek olarak olduğu gibi durur (ADR 0023).
-- `kentos.processing.v1`
-- `kentos.settings.v1`
-- `kentos.settings.v1.backup`  — Okunamayan ya da geçersiz değer içeren ayar kaydının tam metni; kurtarma üstüne yazmadan önce buraya kopyalar (ADR 0023).
 - `kentos.styles.v1`
-- `kentos.ui.v1`
+- `kentos.ui.v1`  (kısmi) (masaüstünde: ayarlar.json appearance.theme) — Tema kalıcıdır; panellerin ve şeridin yerleşimi yeniden açılışta hatırlanmaz.
 
-#### `.kcad` alanları (v1 okunur, v2 yazılır) (192 / 192)
+#### `.kcad` alanları (v1 okunur, v2 yazılır) (0 / 192)
 
-- `AngleUnit`
-- `ArcEntity.a0`
-- `ArcEntity.a1`
-- `ArcEntity.attrs`
-- `ArcEntity.c`
-- `ArcEntity.color`
-- `ArcEntity.id`
-- `ArcEntity.label`
-- `ArcEntity.layerId`
-- `ArcEntity.r`
-- `ArcEntity.symbol`
-- `AreaUnit`
-- `Bounds.maxX`
-- `Bounds.maxY`
-- `Bounds.minX`
-- `Bounds.minY`
-- `CircleEntity.attrs`
-- `CircleEntity.c`
-- `CircleEntity.color`
-- `CircleEntity.id`
-- `CircleEntity.label`
-- `CircleEntity.layerId`
-- `CircleEntity.r`
-- `CircleEntity.symbol`
-- `ConstructionEntity.attrs`
-- `ConstructionEntity.color`
-- `ConstructionEntity.dir`
-- `ConstructionEntity.id`
-- `ConstructionEntity.label`
-- `ConstructionEntity.layerId`
-- `ConstructionEntity.p`
-- `ConstructionEntity.symbol`
-- `DimensionEntity.a`
-- `DimensionEntity.angle`
-- `DimensionEntity.attrs`
-- `DimensionEntity.b`
-- `DimensionEntity.c`
-- `DimensionEntity.color`
-- `DimensionEntity.height`
-- `DimensionEntity.id`
-- `DimensionEntity.label`
-- `DimensionEntity.layerId`
-- `DimensionEntity.offset`
-- `DimensionEntity.style`
-- `DimensionEntity.symbol`
-- `DimensionEntity.text`
-- `DimensionStyle`
-- `DocumentSnapshotV1.activeLayer`
-- `DocumentSnapshotV1.entities`
-- `DocumentSnapshotV1.format`
-- `DocumentSnapshotV1.homeView`
-- `DocumentSnapshotV1.layers`
-- `DocumentSnapshotV1.name`
-- `DocumentSnapshotV1.origin`
-- `DocumentSnapshotV1.settings`
-- `DocumentSnapshotV1.styles`
-- `DocumentSnapshotV1.version`
-- `DocumentSnapshotV2.activeLayer`
-- `DocumentSnapshotV2.entities`
-- `DocumentSnapshotV2.format`
-- `DocumentSnapshotV2.homeView`
-- `DocumentSnapshotV2.layers`
-- `DocumentSnapshotV2.migratedFrom`
-- `DocumentSnapshotV2.name`
-- `DocumentSnapshotV2.origin`
-- `DocumentSnapshotV2.projectId`
-- `DocumentSnapshotV2.settings`
-- `DocumentSnapshotV2.styles`
-- `DocumentSnapshotV2.uids`
-- `DocumentSnapshotV2.version`
-- `DrawingFont`
-- `EllipseEntity.attrs`
-- `EllipseEntity.c`
-- `EllipseEntity.color`
-- `EllipseEntity.id`
-- `EllipseEntity.label`
-- `EllipseEntity.layerId`
-- `EllipseEntity.major`
-- `EllipseEntity.ratio`
-- `EllipseEntity.symbol`
-- `EllipseEntity.t0`
-- `EllipseEntity.t1`
-- `Entity`
-- `EntityId`
-- `HatchEntity.attrs`
-- `HatchEntity.color`
-- `HatchEntity.holes`
-- `HatchEntity.id`
-- `HatchEntity.label`
-- `HatchEntity.layerId`
-- `HatchEntity.pattern`
-- `HatchEntity.ring`
-- `HatchEntity.symbol`
-- `HatchPattern.angle`
-- `HatchPattern.spacing`
-- `HatchPattern.type`
-- `HatchPatternType`
-- `LabelInk`
-- `LabelPlacement`
-- `LabelStyle.grow`
-- `LabelStyle.ink`
-- `LabelStyle.maxScale`
-- `LabelStyle.maxSize`
-- `LabelStyle.minFeaturePx`
-- `LabelStyle.minScale`
-- `LabelStyle.placement`
-- `LabelStyle.size`
-- `LabelStyle.template`
-- `LabelStyle.weight`
-- `LayerNode.children`
-- `LayerNode.expanded`
-- `LayerNode.id`
-- `LayerNode.locked`
-- `LayerNode.name`
-- `LayerNode.style`
-- `LayerNode.type`
-- `LayerNode.visible`
-- `LayerNodeType`
-- `LayerStyle.color`
-- `LayerStyle.fill`
-- `LayerStyle.label`
-- `LayerStyle.lineType`
-- `LayerStyle.lineWeight`
-- `LayerStyle.pickInterior`
-- `LayerStyle.point`
-- `LayerStyle.renderer`
-- `LineEntity.a`
-- `LineEntity.attrs`
-- `LineEntity.b`
-- `LineEntity.color`
-- `LineEntity.id`
-- `LineEntity.label`
-- `LineEntity.layerId`
-- `LineEntity.symbol`
-- `LineType`
-- `MigrationSource.format`
-- `MigrationSource.sourceSha256`
-- `MigrationSource.version`
-- `PathEntity.attrs`
-- `PathEntity.bulges`
-- `PathEntity.color`
-- `PathEntity.holes`
-- `PathEntity.id`
-- `PathEntity.label`
-- `PathEntity.layerId`
-- `PathEntity.pts`
-- `PathEntity.symbol`
-- `PointEntity.attrs`
-- `PointEntity.color`
-- `PointEntity.id`
-- `PointEntity.label`
-- `PointEntity.layerId`
-- `PointEntity.p`
-- `PointEntity.symbol`
-- `PointEntity.z`
-- `PointStyle.size`
-- `PointStyle.symbol`
-- `PointSymbol`
-- `ProjectId`
-- `ProjectSettings.angleUnit`
-- `ProjectSettings.areaDecimals`
-- `ProjectSettings.areaUnit`
-- `ProjectSettings.drawingFont`
-- `ProjectSettings.lengthDecimals`
-- `ProjectSettings.plotScale`
-- `ProjectSettings.srid`
-- `ProjectSettings.workspace`
-- `ProjectStyles.categories`
-- `ProjectStyles.items`
-- `RingGeometry.bulges`
-- `RingGeometry.pts`
-- `SplineEntity.attrs`
-- `SplineEntity.closed`
-- `SplineEntity.color`
-- `SplineEntity.id`
-- `SplineEntity.label`
-- `SplineEntity.layerId`
-- `SplineEntity.pts`
-- `SplineEntity.symbol`
-- `TextEntity.attrs`
-- `TextEntity.color`
-- `TextEntity.height`
-- `TextEntity.id`
-- `TextEntity.label`
-- `TextEntity.layerId`
-- `TextEntity.p`
-- `TextEntity.rotation`
-- `TextEntity.symbol`
-- `TextEntity.text`
-- `Vec2.x`
-- `Vec2.y`
-- `Workspace`
+Yok.
 
-#### Pencereler ve paneller (61 / 62)
+#### Pencereler ve paneller (20 / 62)
 
-- `apps/web/src/ui/appmenu/AppMenu.ts#openAppMenu` openAppMenu
-- `apps/web/src/ui/bottom/BottomPanel.ts#BottomPanel` BottomPanel
-- `apps/web/src/ui/bottom/CommandLine.ts#CommandLine` CommandLine
-- `apps/web/src/ui/calc/IntersectionDialog.ts#openIntersection` openIntersection
-- `apps/web/src/ui/calc/PolarDialog.ts#openPolar` openPolar
-- `apps/web/src/ui/calc/StakeoutDialog.ts#openStakeout` openStakeout
-- `apps/web/src/ui/calc/TraverseDialog.ts#openTraverse` openTraverse
-- `apps/web/src/ui/cloud/AccessLostNotice.ts#openAccessLostNotice` openAccessLostNotice
-- `apps/web/src/ui/cloud/CatalogDialog.ts#openCatalog` openCatalog
-- `apps/web/src/ui/cloud/ConflictDialog.ts#openConflictDialog` openConflictDialog
-- `apps/web/src/ui/cloud/HistoryForms.ts#openCheckpointDialog` openCheckpointDialog
-- `apps/web/src/ui/cloud/HistoryForms.ts#openRestoreDialog` openRestoreDialog
+- `apps/web/src/ui/bottom/BottomPanel.ts#BottomPanel` BottomPanel (kısmi) (masaüstünde: apps/desktop/src/bottom.rs (ADR 0058)) — Komut geçmişinin satırlarında saat yazmaz.
 - `apps/web/src/ui/cloud/InvitationDialog.ts#openInvitationDialog` openInvitationDialog
-- `apps/web/src/ui/cloud/LoginDialog.ts#openLoginDialog` openLoginDialog
-- `apps/web/src/ui/cloud/ProjectActions.ts#openDeleteDialog` openDeleteDialog
-- `apps/web/src/ui/cloud/ProjectActions.ts#openRenameDialog` openRenameDialog
 - `apps/web/src/ui/cloud/ProjectForms.ts#openConvertDialog` openConvertDialog
 - `apps/web/src/ui/cloud/ProjectForms.ts#openDuplicateDialog` openDuplicateDialog
 - `apps/web/src/ui/cloud/ProjectForms.ts#openMetadataDialog` openMetadataDialog
-- `apps/web/src/ui/cloud/ProjectsDialog.ts#openProjectsDialog` openProjectsDialog
 - `apps/web/src/ui/cloud/ShareDialog.ts#openShareDialog` openShareDialog
-- `apps/web/src/ui/cloud/UploadDialog.ts#openUploadDialog` openUploadDialog
-- `apps/web/src/ui/dialogs.ts#openAboutDialog` openAboutDialog
-- `apps/web/src/ui/dialogs.ts#openShortcutsDialog` openShortcutsDialog
-- `apps/web/src/ui/dock/RightDock.ts#RightDock` RightDock
-- `apps/web/src/ui/io/CoordExportDialog.ts#openCoordExport` openCoordExport
-- `apps/web/src/ui/io/CoordImportDialog.ts#openCoordImport` openCoordImport
-- `apps/web/src/ui/io/DxfExportDialog.ts#openDxfExport` openDxfExport
-- `apps/web/src/ui/io/DxfImportDialog.ts#openDxfImport` openDxfImport
-- `apps/web/src/ui/io/GeoJsonExportDialog.ts#openGeoJsonExport` openGeoJsonExport
-- `apps/web/src/ui/io/GisImportDialog.ts#openGeoJsonImport` openGeoJsonImport
-- `apps/web/src/ui/io/GisImportDialog.ts#openShapefileImport` openShapefileImport
-- `apps/web/src/ui/layers/LayersPanel.ts#LayersPanel` LayersPanel
 - `apps/web/src/ui/menu/MenuBar.ts#MenuBar` MenuBar
-- `apps/web/src/ui/processing/ProcessingPanel.ts#ProcessingPanel` ProcessingPanel
-- `apps/web/src/ui/processing/ToolDialog.ts#openModelDialog` openModelDialog
-- `apps/web/src/ui/processing/ToolDialog.ts#openToolDialog` openToolDialog
 - `apps/web/src/ui/processing/model/ModelDesigner.ts#openModelDesigner` openModelDesigner
-- `apps/web/src/ui/properties/PropertiesPanel.ts#PropertiesPanel` PropertiesPanel — Öznitelikler v1'de metindir; tipli öznitelik şeması henüz yok (CLAUDE.md §24.1, TODOS.md DOM-09..11).
-- `apps/web/src/ui/ribbon/Ribbon.ts#Ribbon` Ribbon
-- `apps/web/src/ui/settings/AppSettingsDialog.ts#openAppSettings` openAppSettings
-- `apps/web/src/ui/settings/NewProjectDialog.ts#openNewProjectDialog` openNewProjectDialog
-- `apps/web/src/ui/settings/ProjectSettingsDialog.ts#openProjectSettings` openProjectSettings
-- `apps/web/src/ui/shell/AppShell.ts#AppShell` AppShell
-- `apps/web/src/ui/shell/CommandBar.ts#CommandBar` CommandBar
-- `apps/web/src/ui/shell/CursorInput.ts#CursorInput` CursorInput
-- `apps/web/src/ui/shell/HoverCard.ts#HoverCard` HoverCard
-- `apps/web/src/ui/shell/InlineTextEditor.ts#InlineTextEditor` InlineTextEditor
-- `apps/web/src/ui/start/StartScreen.ts#openStartScreen` openStartScreen
-- `apps/web/src/ui/statusbar/StatusBar.ts#StatusBar` StatusBar
-- `apps/web/src/ui/style/LayerStyleDialog.ts#openLayerStyle` openLayerStyle
+- `apps/web/src/ui/ribbon/Ribbon.ts#Ribbon` Ribbon (kısmi) (masaüstünde: apps/desktop/src/view.rs, catalog.rs (ADR 0017, 0051)) — Giriş'in Katmanlar ve Özellikler panelleri ile Seçim sekmesinin paneli yok (etkin katman, yeni nesnelerin rengi, çizgi tipi ve kalınlığı, çizim ölçeği, seçimin özeti); yöntem düğmesi son seçimi göstermez; hızlı erişime ekleme ve harf ipuçları yok.
+- `apps/web/src/ui/statusbar/StatusBar.ts#StatusBar` StatusBar (kısmi) (masaüstünde: apps/desktop/src/view.rs, cloud/view.rs (ADR 0058, 0080)) — Web'in sunucu hücresi ve onun hesap menüsü yok; masaüstünde hesabın adı ve Çıkış ayrı hücrelerdir (ADR 0041). Çizim motoru hücresi masaüstünde anlamsızdır (wgpu).
 - `apps/web/src/ui/style/LegendDialog.ts#openLegend` openLegend
 - `apps/web/src/ui/style/StyleManager.ts#openStyleManager` openStyleManager
 - `apps/web/src/ui/style/SymbolDesigner.ts#openSymbolDesigner` openSymbolDesigner
