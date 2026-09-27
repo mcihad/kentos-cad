@@ -15,25 +15,34 @@ use crate::editor::check::check;
 use crate::parser::BinOp;
 
 /// A node's width.
-pub const NODE_W: f64 = 176.0;
+pub const NODE_W: f64 = 152.0;
 /// The title's row.
-pub const HEAD: f64 = 30.0;
+pub const HEAD: f64 = 26.0;
 /// An input's row.
-pub const ROW: f64 = 24.0;
+pub const ROW: f64 = 22.0;
 /// The value's row at the bottom.
-pub const VALUE: f64 = 26.0;
+pub const VALUE: f64 = 22.0;
 /// Between two columns.
-pub const GAP: f64 = 72.0;
+pub const GAP: f64 = 48.0;
 /// A column: a node and the gap after it.
 pub const COLUMN: f64 = NODE_W + GAP;
 /// Between two subtrees stacked in a column.
-const STACK: f64 = 18.0;
+const STACK: f64 = 14.0;
 /// Under the lowest node, where a tree without a place goes.
-const APART: f64 = 48.0;
+const APART: f64 = 40.0;
 
 /// A node's height with `ports` inputs.
 fn height(ports: usize) -> f64 {
     HEAD + ROW * ports as f64 + VALUE
+}
+
+/// A node's height: a constant is its title alone (its value is the
+/// title), anything else has its inputs and a row for its value.
+fn node_height(t: &T) -> f64 {
+    match t {
+        T::Num(_) | T::Text(_) | T::Bool(_) | T::Null | T::Hole => HEAD + 4.0,
+        _ => height(shape(t).ports.len()),
+    }
 }
 
 /// The inputs a node shows: each connected one, and the empty ones it may
@@ -214,7 +223,7 @@ fn whole(t: &T) -> bool {
 /// The height of a subtree's block: its node, or its connected inputs'
 /// blocks stacked, whichever is taller.
 fn block(t: &T) -> f64 {
-    let own = height(shape(t).ports.len());
+    let own = node_height(t);
     let kids: Vec<f64> = t
         .inputs()
         .into_iter()
@@ -231,7 +240,7 @@ fn block(t: &T) -> f64 {
 /// Places a subtree with its root's left edge at `x` and its block's top at `top`.
 fn place(t: &T, path: &mut Vec<usize>, x: f64, top: f64, out: &mut Vec<(Vec<usize>, f64, f64)>) {
     let b = block(t);
-    let own = height(shape(t).ports.len());
+    let own = node_height(t);
     let kids: Vec<(usize, &T)> = t
         .inputs()
         .into_iter()
@@ -252,7 +261,7 @@ fn place(t: &T, path: &mut Vec<usize>, x: f64, top: f64, out: &mut Vec<(Vec<usiz
 
 /// Where the root of a subtree placed with its block's top at 0 stands.
 fn root_offset(t: &T) -> f64 {
-    (block(t) - height(shape(t).ports.len())) / 2.0
+    (block(t) - node_height(t)) / 2.0
 }
 
 pub(crate) fn lay_out(read: &[Option<T>], trees: &[Tree], schema: &Schema) -> Flow {
@@ -436,7 +445,7 @@ fn node(
         title,
         key,
         ty: types::of(t, schema),
-        h: height(ports.len()),
+        h: node_height(t),
         ports,
         grows: shape.grows,
         negated: negation(t),

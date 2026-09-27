@@ -95,6 +95,14 @@ export class CodeEditor {
     this.input.focus();
   }
 
+  /** Replaces the whole text (the flow wrote it): checked and painted, the cursor at its end. */
+  setValue(text: string): void {
+    if (text === this.input.value) return;
+    this.input.value = text;
+    this.input.setSelectionRange(text.length, text.length);
+    this.changed();
+  }
+
   /**
    * Replaces `start..end` with `text` as typing would (the browser's undo
    * keeps it) and puts the cursor at `caret` in it.

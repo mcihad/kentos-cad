@@ -22,6 +22,12 @@ pub enum Edit {
         key: String,
         at: (f64, f64),
     },
+    /// An expression put down as it is written (a field's value from the
+    /// help, `'Arsa'`), not connected, its top-left at `at`.
+    AddText {
+        text: String,
+        at: (f64, f64),
+    },
     /// Node `from`'s value into input `port` of node `to` (`r`, the result).
     Connect {
         from: String,
@@ -330,6 +336,11 @@ fn apply(s: &mut State, change: &Edit) -> Result<Option<String>, String> {
     match change {
         Edit::Add { key, at } => {
             let t = new_node(key)?;
+            s.trees.push((Some(t), Some(*at)));
+            Ok(Some((s.trees.len() - 1).to_string()))
+        }
+        Edit::AddText { text, at } => {
+            let t = read(text).map_err(|e| format!("Eklenemedi: {}", e.text()))?;
             s.trees.push((Some(t), Some(*at)));
             Ok(Some((s.trees.len() - 1).to_string()))
         }

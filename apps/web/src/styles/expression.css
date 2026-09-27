@@ -560,3 +560,578 @@
   font-size: var(--fs-xs);
 }
 
+
+/* ── The flow: Metin | Akış (docs/adr/0101) ───────────────────────────
+ * The same text as nodes on a dotted working surface (the model
+ * designer's canvas): values go from a node's output (right) into another
+ * node's input (left), the result stands on the right. A node's accent is
+ * its kind's syntax colour; an edge and a pin take the type of the value. */
+.exprb__modes {
+  display: flex;
+  gap: 2px;
+  margin: -2px 0 2px;
+  border-bottom: 1px solid var(--c-line);
+}
+.exprb__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: calc(30px * var(--ui-scale));
+  margin-bottom: -1px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+}
+.exprb__tab:hover {
+  color: var(--c-text);
+}
+.exprb__tab[aria-selected='true'] {
+  border-bottom-color: var(--c-accent);
+  color: var(--c-text);
+  font-weight: 600;
+}
+.exprb__op:disabled {
+  opacity: 0.4;
+}
+/* Akış takes more of the window: a flow is wider than a line of text. */
+.dialog--exprb.dialog--exprb-flow {
+  width: min(calc(1400px * var(--ui-scale)), 100%);
+  height: min(calc(880px * var(--ui-scale)), 100%);
+}
+.dialog--exprb-flow .exprb {
+  grid-template-columns: minmax(0, 1fr) calc(224px * var(--ui-scale)) calc(276px * var(--ui-scale));
+}
+.exprb__side {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--c-panel-head);
+}
+.exprb__side > .xhelp {
+  flex: 1;
+}
+
+.xflow {
+  --xgrid: 20px;
+  position: relative;
+  flex: 1;
+  min-height: calc(160px * var(--ui-scale));
+  overflow: hidden;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+  background-color: var(--c-field);
+  background-image: radial-gradient(circle, var(--c-line) 1px, transparent 1.3px);
+  background-size: var(--xgrid) var(--xgrid);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.xflow:focus {
+  outline: none;
+}
+.xflow:focus-visible {
+  border-color: var(--c-accent-line);
+}
+.xflow[data-panning] {
+  cursor: grabbing;
+}
+.xflow__world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+}
+.xflow__edges {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  overflow: visible;
+  pointer-events: none;
+}
+.xflow__edge {
+  fill: none;
+  stroke: var(--c-syn-operator);
+  stroke-width: 1.8;
+  opacity: 0.85;
+}
+.xflow__edge[data-type='number'] {
+  stroke: var(--c-syn-literal);
+}
+.xflow__edge[data-type='text'] {
+  stroke: var(--c-syn-text);
+}
+.xflow__edge[data-type='bool'] {
+  stroke: var(--c-syn-keyword);
+}
+.xflow__edge--on {
+  stroke-width: 2.6;
+  opacity: 1;
+}
+.xflow__edge--wire {
+  stroke: var(--c-accent);
+  stroke-dasharray: 6 4;
+  opacity: 1;
+}
+.xflow__tools {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: flex;
+  gap: 1px;
+  padding: 2px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  background: var(--c-panel);
+}
+.xflow__note {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  background: var(--c-panel);
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+  pointer-events: none;
+}
+.xflow__note .icon {
+  flex: none;
+  color: var(--c-info);
+}
+.xflow__note--error {
+  border-color: var(--c-danger);
+  color: var(--c-text);
+}
+.xflow__note--error .icon {
+  color: var(--c-danger);
+}
+
+/* A node: its sizes are the core's (world pixels); the view scales them. */
+.xfn {
+  --xfn-accent: var(--c-syn-operator);
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px solid var(--c-line-strong);
+  border-top: 3px solid var(--xfn-accent);
+  border-radius: 7px;
+  background: var(--c-panel);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  color: var(--c-text);
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+  cursor: default;
+}
+.xfn--result {
+  --xfn-accent: var(--c-accent);
+  background: var(--c-panel-head);
+}
+.xfn--field {
+  --xfn-accent: var(--c-syn-field);
+}
+.xfn--variable {
+  --xfn-accent: var(--c-syn-variable);
+}
+.xfn--number,
+.xfn--constant {
+  --xfn-accent: var(--c-syn-literal);
+}
+.xfn--text {
+  --xfn-accent: var(--c-syn-text);
+}
+.xfn--function {
+  --xfn-accent: var(--c-syn-function);
+}
+.xfn--keyword {
+  --xfn-accent: var(--c-syn-keyword);
+}
+/* Not connected to the result: apart, dashed, and moved by its title. */
+.xfn--apart {
+  border-style: dashed;
+  border-top-style: solid;
+  opacity: 0.92;
+}
+.xfn--apart .xfn__head {
+  cursor: move;
+}
+.xfn:hover {
+  border-color: var(--c-text-3);
+  border-top-color: var(--xfn-accent);
+}
+.xfn[data-status='warning'] {
+  border-color: var(--c-warn);
+  border-top-color: var(--xfn-accent);
+}
+.xfn[data-status='error'] {
+  border-color: var(--c-danger);
+  border-top-color: var(--xfn-accent);
+}
+.xfn[aria-selected='true'] {
+  border-color: var(--c-accent);
+  border-top-color: var(--xfn-accent);
+  box-shadow:
+    0 0 0 1px var(--c-accent),
+    0 2px 8px rgba(0, 0, 0, 0.25);
+}
+.xfn[data-moving] {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+}
+.xfn__head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-sizing: border-box;
+  padding: 0 6px 0 10px;
+  border-bottom: 1px solid var(--c-line);
+}
+.xfn__title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--xfn-accent);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.xfn--result .xfn__title {
+  color: var(--c-text);
+  font-family: var(--font-ui);
+}
+.xfn__status {
+  display: inline-flex;
+  flex: none;
+}
+.xfn__status--error {
+  color: var(--c-danger);
+}
+.xfn__status--warning {
+  color: var(--c-warn);
+}
+.xfn__btn {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: var(--r-xs);
+  background: none;
+  color: var(--c-text-3);
+}
+.xfn__btn:hover {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+.xfn__port {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 6px 0 12px;
+}
+.xfn__port[data-drop] {
+  background: var(--c-accent-soft);
+}
+.xfn__pin,
+.xfn__out {
+  position: absolute;
+  box-sizing: border-box;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--c-syn-operator);
+  border-radius: 50%;
+  background: var(--c-field);
+  cursor: crosshair;
+}
+.xfn__pin {
+  top: 50%;
+  left: -6px;
+  transform: translateY(-50%);
+}
+.xfn__out {
+  right: -6px;
+  transform: translateY(-50%);
+  background: var(--c-syn-operator);
+}
+.xfn__port[data-type='number'] .xfn__pin,
+.xfn__out[data-type='number'] {
+  border-color: var(--c-syn-literal);
+}
+.xfn__port[data-type='text'] .xfn__pin,
+.xfn__out[data-type='text'] {
+  border-color: var(--c-syn-text);
+}
+.xfn__port[data-type='bool'] .xfn__pin,
+.xfn__out[data-type='bool'] {
+  border-color: var(--c-syn-keyword);
+}
+.xfn__out[data-type='number'] {
+  background: var(--c-syn-literal);
+}
+.xfn__out[data-type='text'] {
+  background: var(--c-syn-text);
+}
+.xfn__out[data-type='bool'] {
+  background: var(--c-syn-keyword);
+}
+.xfn__port[data-on] .xfn__pin {
+  background: currentColor;
+}
+.xfn__port[data-on] {
+  color: var(--c-syn-operator);
+}
+.xfn__port[data-on][data-type='number'] {
+  color: var(--c-syn-literal);
+}
+.xfn__port[data-on][data-type='text'] {
+  color: var(--c-syn-text);
+}
+.xfn__port[data-on][data-type='bool'] {
+  color: var(--c-syn-keyword);
+}
+.xfn__port[data-optional]:not([data-on]) .xfn__pin {
+  border-style: dashed;
+}
+.xfn__pin:hover,
+.xfn__out:hover {
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 3px var(--c-accent-soft);
+}
+.xfn__pname {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--c-text-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.xfn__opt {
+  color: var(--c-text-3);
+}
+.xfn__ptype {
+  flex: none;
+  padding: 0 5px;
+  border-radius: 8px;
+  background: var(--c-line-soft);
+  color: var(--c-text-3);
+  font-size: 10px;
+  line-height: 15px;
+}
+.xfn__ptype[data-type='number'] {
+  color: var(--c-syn-literal);
+}
+.xfn__ptype[data-type='text'] {
+  color: var(--c-syn-text);
+}
+.xfn__ptype[data-type='bool'] {
+  color: var(--c-syn-keyword);
+}
+.xfn__note {
+  display: inline-flex;
+  flex: none;
+  color: var(--c-warn);
+}
+.xfn__value {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  box-sizing: border-box;
+  padding: 0 10px;
+  overflow: hidden;
+  border-top: 1px solid var(--c-line-soft);
+  color: var(--c-text-3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 21px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.xfn--result .xfn__value {
+  color: var(--c-text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* The selected node's inspector, over the help. */
+.xfi {
+  flex: none;
+  max-height: 55%;
+  overflow-y: auto;
+  padding: 12px 16px 12px;
+  border-bottom: 1px solid var(--c-line);
+  font-size: var(--fs-sm);
+}
+.xfi__kind {
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+.xfi__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0 8px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.xfi__type,
+.xfi__ptype {
+  flex: none;
+  padding: 0 6px;
+  border-radius: 8px;
+  background: var(--c-line-soft);
+  color: var(--c-text-3);
+  font-family: var(--font-ui);
+  font-size: var(--fs-2xs);
+  font-weight: 400;
+  line-height: 1.6;
+}
+.xfi__type[data-type='number'],
+.xfi__ptype[data-type='number'] {
+  color: var(--c-syn-literal);
+}
+.xfi__type[data-type='text'],
+.xfi__ptype[data-type='text'] {
+  color: var(--c-syn-text);
+}
+.xfi__type[data-type='bool'],
+.xfi__ptype[data-type='bool'] {
+  color: var(--c-syn-keyword);
+}
+.xfi__row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+}
+.xfi__label {
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+}
+.xfi__input {
+  width: 100%;
+  font-family: var(--font-mono);
+}
+.xfi__input[aria-invalid='true'] {
+  border-color: var(--c-danger);
+}
+.xfi__msg {
+  color: var(--c-danger);
+  font-size: var(--fs-xs);
+}
+.xfi__msg:empty {
+  display: none;
+}
+.xfi__seg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+.xfi__opt {
+  min-width: calc(30px * var(--ui-scale));
+  height: calc(26px * var(--ui-scale));
+  padding: 0 8px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+  background: var(--c-field);
+  color: var(--c-text);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+}
+.xfi__opt:hover {
+  background: var(--c-hover);
+}
+.xfi__opt[aria-pressed='true'] {
+  border-color: var(--c-accent-line);
+  background: var(--c-accent-soft);
+}
+.xfi__check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-sm);
+}
+.xfi__problems p {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 8px 0 0;
+  font-size: var(--fs-xs);
+}
+.xfi__problems .icon {
+  flex: none;
+  margin-top: 1px;
+}
+.xfi__error {
+  color: var(--c-danger);
+}
+.xfi__warn .icon {
+  color: var(--c-warn);
+}
+.xfi__ports {
+  display: grid;
+  gap: 4px;
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-xs);
+}
+.xfi__port {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.xfi__pname {
+  font-family: var(--font-mono);
+  color: var(--c-text);
+}
+.xfi__pstate {
+  color: var(--c-text-3);
+}
+.xfi__port[data-required] .xfi__pstate {
+  color: var(--c-danger);
+}
+.xfi__premove {
+  margin-left: auto;
+}
+.xfi__pnote {
+  flex-basis: 100%;
+  color: var(--c-text-3);
+}
+.xfi__hint {
+  margin: 8px 0 0;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+.xfi__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+.xfi__remove {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}

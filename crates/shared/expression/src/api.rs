@@ -416,7 +416,8 @@ impl From<FlowNode> for NodeJson {
     }
 }
 
-/// A flow as the page draws it; `head`, `row`, `value`: the rows of a node.
+/// A flow as the page draws it; `head`, `row`, `value`: the rows of a node;
+/// `column`: a node and the gap after it.
 struct FlowJson {
     nodes: Vec<NodeJson>,
     texts: Vec<String>,
@@ -425,8 +426,9 @@ struct FlowJson {
     head: f64,
     row: f64,
     value: f64,
+    column: f64,
 }
-json_struct!(out FlowJson { nodes, texts, error, bounds, head, row, value });
+json_struct!(out FlowJson { nodes, texts, error, bounds, head, row, value, column });
 
 impl From<Flow> for FlowJson {
     fn from(f: Flow) -> FlowJson {
@@ -439,6 +441,7 @@ impl From<Flow> for FlowJson {
             head: flow::HEAD,
             row: flow::ROW,
             value: flow::VALUE,
+            column: flow::COLUMN,
         }
     }
 }
@@ -447,6 +450,10 @@ impl From<Flow> for FlowJson {
 enum EditJson {
     Add {
         key: String,
+        at: [f64; 2],
+    },
+    AddText {
+        text: String,
         at: [f64; 2],
     },
     Connect {
@@ -514,6 +521,7 @@ enum EditJson {
 }
 kentos_geometry_core::json_tagged!(EditJson, "op",
     Add => "add" { key, at },
+    AddText => "addText" { text, at },
     Connect => "connect" { from, to, port },
     Disconnect => "disconnect" { to, port },
     Remove => "remove" { node },
@@ -536,6 +544,7 @@ impl From<EditJson> for Edit {
     fn from(e: EditJson) -> Edit {
         match e {
             EditJson::Add { key, at: [x, y] } => Edit::Add { key, at: (x, y) },
+            EditJson::AddText { text, at: [x, y] } => Edit::AddText { text, at: (x, y) },
             EditJson::Connect { from, to, port } => Edit::Connect { from, to, port },
             EditJson::Disconnect { to, port } => Edit::Disconnect { to, port },
             EditJson::Remove { node } => Edit::Remove { node },

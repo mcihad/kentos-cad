@@ -71,10 +71,13 @@ export interface Flow {
   readonly head: number;
   readonly row: number;
   readonly value: number;
+  /** A column: a node and the gap after it. */
+  readonly column: number;
 }
 
 export type FlowEdit =
   | { readonly op: 'add'; readonly key: string; readonly at: readonly [number, number] }
+  | { readonly op: 'addText'; readonly text: string; readonly at: readonly [number, number] }
   | { readonly op: 'connect'; readonly from: string; readonly to: string; readonly port: number }
   | { readonly op: 'disconnect'; readonly to: string; readonly port: number }
   | { readonly op: 'remove'; readonly node: string }
