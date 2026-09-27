@@ -1,0 +1,1225 @@
+{
+ "format": "kentos.cells",
+ "version": 1,
+ "saveTexts": [
+  {
+   "state": "saved",
+   "sample": 3,
+   "text": "Buluta kaydedildi"
+  },
+  {
+   "state": "pending",
+   "sample": 3,
+   "text": "Kaydedilecek: 3"
+  },
+  {
+   "state": "saving",
+   "sample": 3,
+   "text": "Kaydediliyor…"
+  },
+  {
+   "state": "offline_pending",
+   "sample": 3,
+   "text": "Çevrimdışı: 3 bekliyor"
+  },
+  {
+   "state": "conflict",
+   "sample": 3,
+   "text": "Çakışma: 3"
+  },
+  {
+   "state": "error",
+   "sample": 3,
+   "text": "Kayıt hatası"
+  },
+  {
+   "state": "readonly",
+   "sample": 3,
+   "text": "Salt okunur"
+  },
+  {
+   "state": "deleted",
+   "sample": 3,
+   "text": "Proje silindi"
+  },
+  {
+   "state": "revoked",
+   "sample": 3,
+   "text": "Erişim kaldırıldı"
+  },
+  {
+   "state": "archived",
+   "sample": 3,
+   "text": "Proje arşivde"
+  }
+ ],
+ "linkTexts": {
+  "none": "",
+  "connecting": "bağlanıyor",
+  "online": "canlı",
+  "reconnecting": "yeniden bağlanıyor",
+  "offline": "çevrimdışı",
+  "auth_required": "oturum gerekli"
+ },
+ "views": [
+  {
+   "input": {
+    "kind": "none"
+   },
+   "view": {
+    "hidden": true,
+    "text": "",
+    "state": null
+   },
+   "action": null
+  },
+  {
+   "input": {
+    "kind": "database",
+    "state": "saved",
+    "pending": 3,
+    "conflicts": 2
+   },
+   "view": {
+    "hidden": false,
+    "text": "Buluta kaydedildi",
+    "state": "saved"
+   },
+   "action": "file.save"
+  },
+  {
+   "input": {
+    "kind": "database",
+    "state": "pending",
+    "pending": 3,
+    "conflicts": 2
+   },
+   "view": {
+    "hidden": false,
+    "text": "Kaydedilecek: 3",
+    "state": "pending"
+   },
+   "action": "file.save"
+  },
+  {
+   "input": {
+    "kind": "database",
+    "state": "saving",
+    "pending": 3,
+    "conflicts": 2
+   },
+   "view": {
+    "hidden": false,
+    "text": "Kaydediliyor…",
+    "state": "saving"
+   },
+   "action": "file.save"
+  },
+  {
+   "input": {
+    "kind": "database",
+    "state": "offline_pending",
+    "pending": 3,
+    "conflicts": 2
+   },
+   "view": {
+    "hidden": false,
+    "text": "Çevrimdışı: 3 bekliyor",
+    "state": "offline_pending"
+   },
+   "action": "file.save"
+  },
+  {
+   "input": {
+    "kind": "database",
+    "state": "conflict",
+    "pending": 3,
+    "conflicts": 2
+   },
+   "view": {
+    "hidden": false,
+    "text": "Çakışma: 2",
+    "state": "conflict"
+   },
+   "action": "cloud.conflicts"
+  },
+  {
+   "input": {
+    "kind": "database",
+    "state": "error",
+    "pending": 3,
+    "conflicts": 2
+   },
+   "view": {
+    "hidden": false,
+    "text": "Kayıt hatası",
+    "state": "error"
+   },
+   "action": "file.save"
+  },
+  {
+   "input": {
+    "kind": "database",
+    "state": "readonly",
+    "pending": 3,
+    "conflicts": 2
+   },
+   "view": {
+    "hidden": false,
+    "text": "Salt okunur",
+    "state": "readonly"
+   },
+   "action": null
+  },
+  {
+   "input": {
+    "kind": "database",
+    "state": "deleted",
+    "pending": 3,
+    "conflicts": 2
+   },
+   "view": {
+    "hidden": false,
+    "text": "Proje silindi",
+    "state": "deleted"
+   },
+   "action": "file.save"
+  },
+  {
+   "input": {
+    "kind": "database",
+    "state": "revoked",
+    "pending": 3,
+    "conflicts": 2
+   },
+   "view": {
+    "hidden": false,
+    "text": "Erişim kaldırıldı",
+    "state": "revoked"
+   },
+   "action": "file.save"
+  },
+  {
+   "input": {
+    "kind": "database",
+    "state": "archived",
+    "pending": 3,
+    "conflicts": 2
+   },
+   "view": {
+    "hidden": false,
+    "text": "Proje arşivde",
+    "state": "archived"
+   },
+   "action": "file.save"
+  },
+  {
+   "input": {
+    "kind": "file",
+    "state": "saved",
+    "base": "12",
+    "progress": 0.426,
+    "conflictActual": "13",
+    "newerRevision": "14"
+   },
+   "view": {
+    "hidden": false,
+    "text": "Buluta kaydedildi · r12",
+    "state": "saved"
+   },
+   "action": "file.save"
+  },
+  {
+   "input": {
+    "kind": "file",
+    "state": "pending",
+    "base": "12",
+    "progress": 0.426,
+    "conflictActual": "13",
+    "newerRevision": "14"
+   },
+   "view": {
+    "hidden": false,
+    "text": "Kaydedilmedi · r12 üstüne",
+    "state": "pending"
+   },
+   "action": "file.save"
+  },
+  {
+   "input": {
+    "kind": "file",
+    "state": "encoding",
+    "base": "12",
+    "progress": 0.426,
+    "conflictActual": "13",
+    "newerRevision": "14"
+   },
+   "view": {
+    "hidden": false,
+    "text": "Dosya hazırlanıyor…",
+    "state": "encoding"
+   },
+   "action": null
+  },
+  {
+   "input": {
+    "kind": "file",
+    "state": "uploading",
+    "base": "12",
+    "progress": 0.426,
+    "conflictActual": "13",
+    "newerRevision": "14"
+   },
+   "view": {
+    "hidden": false,
+    "text": "Yükleniyor %43",
+    "state": "uploading"
+   },
+   "action": null
+  },
+  {
+   "input": {
+    "kind": "file",
+    "state": "verifying",
+    "base": "12",
+    "progress": 0.426,
+    "conflictActual": "13",
+    "newerRevision": "14"
+   },
+   "view": {
+    "hidden": false,
+    "text": "Sunucu doğruluyor…",
+    "state": "verifying"
+   },
+   "action": null
+  },
+  {
+   "input": {
+    "kind": "file",
+    "state": "conflict",
+    "base": "12",
+    "progress": 0.426,
+    "conflictActual": "13",
+    "newerRevision": "14"
+   },
+   "view": {
+    "hidden": false,
+    "text": "Çakışma: r13 kaydedilmiş",
+    "state": "conflict"
+   },
+   "action": "cloud.conflicts"
+  },
+  {
+   "input": {
+    "kind": "file",
+    "state": "outdated",
+    "base": "12",
+    "progress": 0.426,
+    "conflictActual": "13",
+    "newerRevision": "14"
+   },
+   "view": {
+    "hidden": false,
+    "text": "Yeni revizyon: r14",
+    "state": "outdated"
+   },
+   "action": "cloud.openNewest"
+  },
+  {
+   "input": {
+    "kind": "file",
+    "state": "error",
+    "base": "12",
+    "progress": 0.426,
+    "conflictActual": "13",
+    "newerRevision": "14"
+   },
+   "view": {
+    "hidden": false,
+    "text": "Kayıt hatası",
+    "state": "error"
+   },
+   "action": "file.save"
+  },
+  {
+   "input": {
+    "kind": "file",
+    "state": "readonly",
+    "base": "12",
+    "progress": 0.426,
+    "conflictActual": "13",
+    "newerRevision": "14"
+   },
+   "view": {
+    "hidden": false,
+    "text": "Salt okunur",
+    "state": "readonly"
+   },
+   "action": null
+  },
+  {
+   "input": {
+    "kind": "file",
+    "state": "deleted",
+    "base": "12",
+    "progress": 0.426,
+    "conflictActual": "13",
+    "newerRevision": "14"
+   },
+   "view": {
+    "hidden": false,
+    "text": "Proje silindi",
+    "state": "deleted"
+   },
+   "action": "file.save"
+  },
+  {
+   "input": {
+    "kind": "file",
+    "state": "revoked",
+    "base": "12",
+    "progress": 0.426,
+    "conflictActual": "13",
+    "newerRevision": "14"
+   },
+   "view": {
+    "hidden": false,
+    "text": "Erişim kaldırıldı",
+    "state": "revoked"
+   },
+   "action": "file.save"
+  },
+  {
+   "input": {
+    "kind": "file",
+    "state": "archived",
+    "base": "12",
+    "progress": 0.426,
+    "conflictActual": "13",
+    "newerRevision": "14"
+   },
+   "view": {
+    "hidden": false,
+    "text": "Proje arşivde",
+    "state": "archived"
+   },
+   "action": "file.save"
+  },
+  {
+   "input": {
+    "kind": "file",
+    "state": "saved",
+    "base": "0",
+    "progress": 0.426,
+    "conflictActual": "13",
+    "newerRevision": "14"
+   },
+   "view": {
+    "hidden": false,
+    "text": "Henüz revizyon yok",
+    "state": "saved"
+   },
+   "action": "file.save"
+  },
+  {
+   "input": {
+    "kind": "file",
+    "state": "pending",
+    "base": "0",
+    "progress": 0.426,
+    "conflictActual": "13",
+    "newerRevision": "14"
+   },
+   "view": {
+    "hidden": false,
+    "text": "Kaydedilmedi",
+    "state": "pending"
+   },
+   "action": "file.save"
+  },
+  {
+   "input": {
+    "kind": "file",
+    "state": "uploading",
+    "base": "12",
+    "progress": 0.005,
+    "conflictActual": "13",
+    "newerRevision": "14"
+   },
+   "view": {
+    "hidden": false,
+    "text": "Yükleniyor %1",
+    "state": "uploading"
+   },
+   "action": null
+  },
+  {
+   "input": {
+    "kind": "file",
+    "state": "uploading",
+    "base": "12",
+    "progress": 0.995,
+    "conflictActual": "13",
+    "newerRevision": "14"
+   },
+   "view": {
+    "hidden": false,
+    "text": "Yükleniyor %100",
+    "state": "uploading"
+   },
+   "action": null
+  },
+  {
+   "input": {
+    "kind": "file",
+    "state": "conflict",
+    "base": "12",
+    "progress": 0.426,
+    "conflictActual": null,
+    "newerRevision": "14"
+   },
+   "view": {
+    "hidden": false,
+    "text": "Çakışma: r? kaydedilmiş",
+    "state": "conflict"
+   },
+   "action": "cloud.conflicts"
+  },
+  {
+   "input": {
+    "kind": "file",
+    "state": "outdated",
+    "base": "12",
+    "progress": 0.426,
+    "conflictActual": "13",
+    "newerRevision": null
+   },
+   "view": {
+    "hidden": false,
+    "text": "Yeni revizyon: r?",
+    "state": "outdated"
+   },
+   "action": "cloud.openNewest"
+  }
+ ],
+ "ago": [
+  {
+   "at": null,
+   "now": 1790000000000,
+   "text": "henüz yok"
+  },
+  {
+   "at": 1790000000000,
+   "now": 1790000000000,
+   "text": "0 sn önce"
+  },
+  {
+   "at": 1789999940600,
+   "now": 1790000000000,
+   "text": "59 sn önce"
+  },
+  {
+   "at": 1789999940400,
+   "now": 1790000000000,
+   "text": "1 dk önce"
+  },
+  {
+   "at": 1789999911000,
+   "now": 1790000000000,
+   "text": "1 dk önce"
+  },
+  {
+   "at": 1789999910000,
+   "now": 1790000000000,
+   "text": "2 dk önce"
+  },
+  {
+   "at": 1789999850000,
+   "now": 1790000000000,
+   "text": "3 dk önce"
+  },
+  {
+   "at": 1789996400000,
+   "now": 1790000000000,
+   "text": "60 dk önce"
+  },
+  {
+   "at": 1790000005000,
+   "now": 1790000000000,
+   "text": "-5 sn önce"
+  }
+ ],
+ "databaseTips": [
+  {
+   "input": {
+    "state": "saved",
+    "where": "Büro › Ada 101",
+    "lastSaved": 1789999988000,
+    "now": 1790000000000,
+    "link": "online",
+    "error": "",
+    "durableDrafts": true
+   },
+   "expect": {
+    "title": "Bulut kaydı",
+    "description": "Büro › Ada 101. Değişiklikler kendiliğinden kaydedilir; Ctrl+S hemen gönderir. Son kayıt: 12 sn önce. Canlı bağlantı: canlı."
+   }
+  },
+  {
+   "input": {
+    "state": "pending",
+    "where": "Büro › Ada 101",
+    "lastSaved": null,
+    "now": 1790000000000,
+    "link": "reconnecting",
+    "error": "",
+    "durableDrafts": false
+   },
+   "expect": {
+    "title": "Bulut kaydı",
+    "description": "Büro › Ada 101. Değişiklikler kendiliğinden kaydedilir; Ctrl+S hemen gönderir. Son kayıt: henüz yok. Canlı bağlantı: yeniden bağlanıyor. Bu tarayıcı taslakları saklayamıyor: kaydedilmeden kapanırsa değişiklikler kaybolur."
+   }
+  },
+  {
+   "input": {
+    "state": "error",
+    "where": "Büro › Ada 101",
+    "lastSaved": 1789999400000,
+    "now": 1790000000000,
+    "link": "offline",
+    "error": "Sunucu isteği reddetti: sürüm eski.",
+    "durableDrafts": true
+   },
+   "expect": {
+    "title": "Bulut kaydı",
+    "description": "Büro › Ada 101. Değişiklikler kendiliğinden kaydedilir; Ctrl+S hemen gönderir. Son kayıt: 10 dk önce. Canlı bağlantı: çevrimdışı. Sunucu isteği reddetti: sürüm eski."
+   }
+  },
+  {
+   "input": {
+    "state": "deleted",
+    "where": "Büro › Ada 101",
+    "lastSaved": null,
+    "now": 1790000000000,
+    "link": "online",
+    "error": "",
+    "durableDrafts": true
+   },
+   "expect": {
+    "title": "Bulut kaydı",
+    "description": "Büro › Ada 101 sunucuda silindi. Değişiklikler buluta gönderilmiyor; bu cihazda saklanıyor. Tıklayın ya da Ctrl+S: çizimi yerel bir dosyaya kaydedin."
+   }
+  },
+  {
+   "input": {
+    "state": "revoked",
+    "where": "Büro › Ada 101",
+    "lastSaved": null,
+    "now": 1790000000000,
+    "link": "online",
+    "error": "",
+    "durableDrafts": true
+   },
+   "expect": {
+    "title": "Bulut kaydı",
+    "description": "Büro › Ada 101 projesine erişiminiz kaldırıldı. Değişiklikler buluta gönderilmiyor; bu cihazda saklanıyor. Tıklayın ya da Ctrl+S: çizimi yerel bir dosyaya kaydedin. Erişim için proje sahibine başvurun."
+   }
+  },
+  {
+   "input": {
+    "state": "archived",
+    "where": "Büro › Ada 101",
+    "lastSaved": null,
+    "now": 1790000000000,
+    "link": "online",
+    "error": "",
+    "durableDrafts": true
+   },
+   "expect": {
+    "title": "Bulut kaydı",
+    "description": "Büro › Ada 101 arşivlenmiş: salt okunurdur, değişiklikler buluta gönderilmiyor. Tıklayın ya da Ctrl+S: çizimi yerel bir dosyaya kaydedin. Proje sahibi ya da yöneticisi arşivden çıkarınca projeyi yeniden açın."
+   }
+  }
+ ],
+ "fileTips": [
+  {
+   "input": {
+    "where": "Büro › Ada 101",
+    "base": "0",
+    "lastSaved": null,
+    "now": 1790000000000,
+    "newer": null,
+    "error": "",
+    "link": "none",
+    "dirty": false
+   },
+   "expect": {
+    "title": "Bulut kaydı: dosya projesi",
+    "description": "Büro › Ada 101, dosya olarak saklanıyor (KCAD revizyonları). Projenin henüz revizyonu yok. Kendiliğinden kaydedilmez: Kaydet (Ctrl+S) yeni bir revizyon yazar; arada başkası kaydettiyse üzerine yazılmaz."
+   }
+  },
+  {
+   "input": {
+    "where": "Büro › Ada 101",
+    "base": "12",
+    "lastSaved": {
+     "revision": "12",
+     "at": 1789999970000
+    },
+    "now": 1790000000000,
+    "newer": null,
+    "error": "",
+    "link": "online",
+    "dirty": true
+   },
+   "expect": {
+    "title": "Bulut kaydı: dosya projesi",
+    "description": "Büro › Ada 101, dosya olarak saklanıyor (KCAD revizyonları). Çizimin dayandığı revizyon: 12. Kendiliğinden kaydedilmez: Kaydet (Ctrl+S) yeni bir revizyon yazar; arada başkası kaydettiyse üzerine yazılmaz. Bu pencerenin son kaydı: revizyon 12, 30 sn önce. Canlı bağlantı: canlı. Kaydedilmemiş değişiklikler bu cihazda kurtarma kopyası olarak da saklanıyor."
+   }
+  },
+  {
+   "input": {
+    "where": "Büro › Ada 101",
+    "base": "12",
+    "lastSaved": null,
+    "now": 1790000000000,
+    "newer": {
+     "revision": "14",
+     "by": "Mehmet Demir"
+    },
+    "error": "Yükleme kesildi.",
+    "link": "offline",
+    "dirty": false
+   },
+   "expect": {
+    "title": "Bulut kaydı: dosya projesi",
+    "description": "Büro › Ada 101, dosya olarak saklanıyor (KCAD revizyonları). Çizimin dayandığı revizyon: 12. Kendiliğinden kaydedilmez: Kaydet (Ctrl+S) yeni bir revizyon yazar; arada başkası kaydettiyse üzerine yazılmaz. Sunucuda daha yeni revizyon var: 14 (Mehmet Demir); açmak için tıklayın. Yükleme kesildi. Canlı bağlantı: çevrimdışı."
+   }
+  },
+  {
+   "input": {
+    "where": "Büro › Ada 101",
+    "base": "12",
+    "lastSaved": null,
+    "now": 1790000000000,
+    "newer": {
+     "revision": "14",
+     "by": ""
+    },
+    "error": "",
+    "link": "none",
+    "dirty": false
+   },
+   "expect": {
+    "title": "Bulut kaydı: dosya projesi",
+    "description": "Büro › Ada 101, dosya olarak saklanıyor (KCAD revizyonları). Çizimin dayandığı revizyon: 12. Kendiliğinden kaydedilmez: Kaydet (Ctrl+S) yeni bir revizyon yazar; arada başkası kaydettiyse üzerine yazılmaz. Sunucuda daha yeni revizyon var: 14; açmak için tıklayın."
+   }
+  }
+ ],
+ "serverTexts": {
+  "checking": "Sunucu…",
+  "online": "Sunucu: bağlı",
+  "offline": "Sunucu: yok",
+  "incompatible": "Sunucu: uyumsuz"
+ },
+ "serverTips": [
+  {
+   "input": {
+    "state": "online",
+    "health": {
+     "status": "ok",
+     "service": "kentosd",
+     "version": "0.9.0",
+     "commit": "4d67c97af7fe8fa6",
+     "contracts": 7
+    },
+    "detail": "",
+    "dev": false
+   },
+   "expect": {
+    "title": "KentOS sunucusu",
+    "description": "kentosd 0.9.0 (4d67c97a), sözleşme sürümü 7. Hesap, bulut projeleri ve bağlantı denetimi için tıklayın."
+   }
+  },
+  {
+   "input": {
+    "state": "online",
+    "health": {
+     "status": "ok",
+     "service": "kentosd",
+     "version": "0.9.0",
+     "contracts": 7
+    },
+    "detail": "",
+    "dev": false
+   },
+   "expect": {
+    "title": "KentOS sunucusu",
+    "description": "kentosd 0.9.0, sözleşme sürümü 7. Hesap, bulut projeleri ve bağlantı denetimi için tıklayın."
+   }
+  },
+  {
+   "input": {
+    "state": "incompatible",
+    "health": {
+     "status": "ok",
+     "service": "kentosd",
+     "version": "0.9.0",
+     "commit": "4d67c97af7fe8fa6",
+     "contracts": 7
+    },
+    "detail": "Sunucu sözleşme sürümü 7, uygulama 8 bekliyor. Uygulamayı ya da sunucuyu güncelleyin.",
+    "dev": false
+   },
+   "expect": {
+    "title": "KentOS sunucusu",
+    "description": "kentosd 0.9.0 (4d67c97a). Sunucu sözleşme sürümü 7, uygulama 8 bekliyor. Uygulamayı ya da sunucuyu güncelleyin. Hesap, bulut projeleri ve bağlantı denetimi için tıklayın."
+   }
+  },
+  {
+   "input": {
+    "state": "incompatible",
+    "health": {
+     "status": "ok",
+     "service": "kentosd",
+     "version": "0.9.0",
+     "contracts": 7
+    },
+    "detail": "Sunucu sözleşme sürümü 7, uygulama 8 bekliyor. Uygulamayı ya da sunucuyu güncelleyin.",
+    "dev": true
+   },
+   "expect": {
+    "title": "KentOS sunucusu",
+    "description": "kentosd 0.9.0. Sunucu sözleşme sürümü 7, uygulama 8 bekliyor. Uygulamayı ya da sunucuyu güncelleyin. Hesap, bulut projeleri ve bağlantı denetimi için tıklayın."
+   }
+  },
+  {
+   "input": {
+    "state": "checking",
+    "health": null,
+    "detail": "",
+    "dev": false
+   },
+   "expect": {
+    "title": "KentOS sunucusu",
+    "description": "Sunucuya soruluyor… Hesap, bulut projeleri ve bağlantı denetimi için tıklayın."
+   }
+  },
+  {
+   "input": {
+    "state": "offline",
+    "health": null,
+    "detail": "Sunucuya ulaşılamadı.",
+    "dev": true
+   },
+   "expect": {
+    "title": "KentOS sunucusu",
+    "description": "Sunucuya ulaşılamadı. Çizim sunucusuz çalışır; kayıt yerel .kcad dosyasına yapılır. Geliştirmede sunucuyu “pnpm api” ile başlatın. Hesap, bulut projeleri ve bağlantı denetimi için tıklayın."
+   }
+  },
+  {
+   "input": {
+    "state": "offline",
+    "health": null,
+    "detail": "Sunucuya ulaşılamadı.",
+    "dev": false
+   },
+   "expect": {
+    "title": "KentOS sunucusu",
+    "description": "Sunucuya ulaşılamadı. Çizim sunucusuz çalışır; kayıt yerel .kcad dosyasına yapılır. Hesap, bulut projeleri ve bağlantı denetimi için tıklayın."
+   }
+  }
+ ],
+ "projectActions": [
+  {
+   "command": "cloud.history",
+   "permission": "project.history"
+  },
+  {
+   "command": "cloud.share",
+   "permission": "project.share"
+  },
+  {
+   "command": "cloud.rename",
+   "permission": "project.edit"
+  },
+  {
+   "command": "cloud.delete",
+   "permission": "project.delete"
+  }
+ ],
+ "accountRows": [
+  {
+   "title": "signed out",
+   "input": {
+    "user": null,
+    "project": null,
+    "disabled": [
+     "cloud.history",
+     "cloud.share",
+     "cloud.rename",
+     "cloud.delete"
+    ],
+    "denied": []
+   },
+   "rows": [
+    {
+     "kind": "header",
+     "label": "Oturum açılmadı"
+    },
+    {
+     "command": "cloud.signIn"
+    },
+    {
+     "kind": "separator"
+    },
+    {
+     "command": "cloud.open"
+    },
+    {
+     "command": "cloud.upload"
+    },
+    {
+     "command": "cloud.uploadFile"
+    },
+    {
+     "command": "cloud.history"
+    },
+    {
+     "command": "cloud.share"
+    },
+    {
+     "command": "cloud.rename"
+    },
+    {
+     "command": "cloud.delete"
+    },
+    {
+     "kind": "separator"
+    },
+    {
+     "command": "server.check"
+    }
+   ]
+  },
+  {
+   "title": "signed in, no project open",
+   "input": {
+    "user": "Ayşe Yılmaz",
+    "project": null,
+    "disabled": [
+     "cloud.history",
+     "cloud.share",
+     "cloud.rename",
+     "cloud.delete"
+    ],
+    "denied": [
+     "project.history",
+     "project.share"
+    ]
+   },
+   "rows": [
+    {
+     "kind": "header",
+     "label": "Ayşe Yılmaz"
+    },
+    {
+     "command": "cloud.signOut"
+    },
+    {
+     "kind": "separator"
+    },
+    {
+     "command": "cloud.open"
+    },
+    {
+     "command": "cloud.upload"
+    },
+    {
+     "command": "cloud.uploadFile"
+    },
+    {
+     "command": "cloud.history"
+    },
+    {
+     "command": "cloud.share"
+    },
+    {
+     "command": "cloud.rename"
+    },
+    {
+     "command": "cloud.delete"
+    },
+    {
+     "kind": "separator"
+    },
+    {
+     "command": "server.check"
+    }
+   ]
+  },
+  {
+   "title": "a project open, every right",
+   "input": {
+    "user": "Ayşe Yılmaz",
+    "project": {
+     "tenantName": "Büro"
+    },
+    "disabled": [],
+    "denied": []
+   },
+   "rows": [
+    {
+     "kind": "header",
+     "label": "Ayşe Yılmaz · Büro"
+    },
+    {
+     "command": "cloud.signOut"
+    },
+    {
+     "kind": "separator"
+    },
+    {
+     "command": "cloud.open"
+    },
+    {
+     "command": "cloud.upload"
+    },
+    {
+     "command": "cloud.uploadFile"
+    },
+    {
+     "command": "cloud.history"
+    },
+    {
+     "command": "cloud.share"
+    },
+    {
+     "command": "cloud.rename"
+    },
+    {
+     "command": "cloud.delete"
+    },
+    {
+     "kind": "separator"
+    },
+    {
+     "command": "server.check"
+    }
+   ]
+  },
+  {
+   "title": "a viewer: no share, rename or delete",
+   "input": {
+    "user": "Mehmet Demir",
+    "project": {
+     "tenantName": "Büro"
+    },
+    "disabled": [
+     "cloud.share",
+     "cloud.rename",
+     "cloud.delete"
+    ],
+    "denied": [
+     "project.share",
+     "project.edit",
+     "project.delete"
+    ]
+   },
+   "rows": [
+    {
+     "kind": "header",
+     "label": "Mehmet Demir · Büro"
+    },
+    {
+     "command": "cloud.signOut"
+    },
+    {
+     "kind": "separator"
+    },
+    {
+     "command": "cloud.open"
+    },
+    {
+     "command": "cloud.upload"
+    },
+    {
+     "command": "cloud.uploadFile"
+    },
+    {
+     "command": "cloud.history"
+    },
+    {
+     "command": "cloud.share",
+     "detail": "Bu projede yetkiniz yok (project.share); proje sahibine ya da yöneticisine başvurun."
+    },
+    {
+     "command": "cloud.rename",
+     "detail": "Bu projede yetkiniz yok (project.edit); proje sahibine ya da yöneticisine başvurun."
+    },
+    {
+     "command": "cloud.delete",
+     "detail": "Bu projede yetkiniz yok (project.delete); proje sahibine ya da yöneticisine başvurun."
+    },
+    {
+     "kind": "separator"
+    },
+    {
+     "command": "server.check"
+    }
+   ]
+  },
+  {
+   "title": "off for another reason: no detail",
+   "input": {
+    "user": "Ayşe Yılmaz",
+    "project": {
+     "tenantName": "Büro"
+    },
+    "disabled": [
+     "cloud.rename"
+    ],
+    "denied": []
+   },
+   "rows": [
+    {
+     "kind": "header",
+     "label": "Ayşe Yılmaz · Büro"
+    },
+    {
+     "command": "cloud.signOut"
+    },
+    {
+     "kind": "separator"
+    },
+    {
+     "command": "cloud.open"
+    },
+    {
+     "command": "cloud.upload"
+    },
+    {
+     "command": "cloud.uploadFile"
+    },
+    {
+     "command": "cloud.history"
+    },
+    {
+     "command": "cloud.share"
+    },
+    {
+     "command": "cloud.rename"
+    },
+    {
+     "command": "cloud.delete"
+    },
+    {
+     "kind": "separator"
+    },
+    {
+     "command": "server.check"
+    }
+   ]
+  },
+  {
+   "title": "a right lacking but the command on: no detail",
+   "input": {
+    "user": "Ayşe Yılmaz",
+    "project": {
+     "tenantName": "Büro"
+    },
+    "disabled": [],
+    "denied": [
+     "project.delete"
+    ]
+   },
+   "rows": [
+    {
+     "kind": "header",
+     "label": "Ayşe Yılmaz · Büro"
+    },
+    {
+     "command": "cloud.signOut"
+    },
+    {
+     "kind": "separator"
+    },
+    {
+     "command": "cloud.open"
+    },
+    {
+     "command": "cloud.upload"
+    },
+    {
+     "command": "cloud.uploadFile"
+    },
+    {
+     "command": "cloud.history"
+    },
+    {
+     "command": "cloud.share"
+    },
+    {
+     "command": "cloud.rename"
+    },
+    {
+     "command": "cloud.delete"
+    },
+    {
+     "kind": "separator"
+    },
+    {
+     "command": "server.check"
+    }
+   ]
+  },
+  {
+   "title": "an empty name, signed in",
+   "input": {
+    "user": "",
+    "project": null,
+    "disabled": [],
+    "denied": []
+   },
+   "rows": [
+    {
+     "kind": "header",
+     "label": ""
+    },
+    {
+     "command": "cloud.signOut"
+    },
+    {
+     "kind": "separator"
+    },
+    {
+     "command": "cloud.open"
+    },
+    {
+     "command": "cloud.upload"
+    },
+    {
+     "command": "cloud.uploadFile"
+    },
+    {
+     "command": "cloud.history"
+    },
+    {
+     "command": "cloud.share"
+    },
+    {
+     "command": "cloud.rename"
+    },
+    {
+     "command": "cloud.delete"
+    },
+    {
+     "kind": "separator"
+    },
+    {
+     "command": "server.check"
+    }
+   ]
+  }
+ ]
+}

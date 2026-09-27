@@ -25,7 +25,7 @@ export async function resolveFileConflict(ctx: AppContext): Promise<boolean> {
   const who = newer?.by ? ` (${newer.by})` : '';
   const answer = await confirmDialog<Answer>({
     title: 'Dosya başka biri tarafından kaydedildi',
-    message: `“${p.name}” siz çalışırken başka biri tarafından kaydedildi: sunucuda revizyon ${c.actual}${who} var, sizin çiziminiz revizyon ${c.expected}'e dayanıyor. Hiçbir şey yazılmadı; iki dosya birleştirilmez.`,
+    message: `“${p.name}” siz çalışırken başka biri tarafından kaydedildi: sunucuda revizyon ${c.actual}${who} var; çiziminizin dayandığı revizyon ${c.expected}. Hiçbir şey yazılmadı; iki dosya birleştirilmez.`,
     details: [
       `Ayrı kopya olarak kaydet: çiziminiz yeni bir bulut dosya projesi olur ve açık proje o olur; “${p.name}” olduğu gibi kalır.`,
       'Yerel dosyaya kaydet: çiziminiz bu bilgisayara .kcad olarak kaydedilir ve çizim buluttaki projeden ayrılır.',

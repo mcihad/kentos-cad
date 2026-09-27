@@ -4,6 +4,7 @@ Bulut projeleri penceresinin (katalog, [ADR 0028](../../docs/adr/0028-project-ca
 
 - **Web**: `apps/web/src/app/cloud/catalogPlan.test.ts` (Vitest), `app/cloud/catalog.ts` ve `app/cloud/catalogPlan.ts`'e karşı. Pencere (`ui/cloud/CatalogDialog.ts`, `catalogRows.ts`, `catalogDetails.ts`, `ProjectActions.ts`) bu kararları yalnız çizer.
 - **Masaüstü**: katalog penceresi (`apps/desktop/src/cloud/`) aynı dosyayı okur.
+- **Durum çubuğunun bulut hücreleri**: web'de `apps/web/src/ui/statusbar/cellsPlan.test.ts`, `ui/statusbar/cellsPlan.ts`'e karşı; hücreler (`cloudCells.ts`, `StatusBar.ts`) yalnız çizer. Cevaplar koddan ayrı, `scripts/fixtures/cells_cases.py` ile bulunur ve yazılır (`--check` karşılaştırır).
 - **Proje formları**: web'de `apps/web/src/app/cloud/formsPlan.test.ts`, `app/cloud/formsPlan.ts` (ve etiketler için `catalog.ts`'in `parseTags`'i) karşısında; formlar (`ui/cloud/ProjectForms.ts`, `ProjectActions.ts`'in Yeniden adlandır'ı) yalnız çizer. Cevaplar koddan ayrı, `scripts/fixtures/forms_cases.py` ile bulunur ve yazılır (`--check` karşılaştırır).
 - **Paylaş**: web'de `apps/web/src/app/cloud/sharePlan.test.ts`, `app/cloud/sharing.ts`, `invitations.ts` ve `sharePlan.ts`'e karşı; pencere (`ui/cloud/ShareDialog.ts`, `shareFind.ts`, `shareInvites.ts`) yalnız çizer. Dosyanın cevapları koddan ayrı, `scripts/fixtures/share_cases.py` ile bulunur ve yazılır (`--check` hiçbir şey yazmadan karşılaştırır); masaüstünün Paylaş penceresi aynı dosyayı okur.
 
@@ -11,6 +12,7 @@ Bulut projeleri penceresinin (katalog, [ADR 0028](../../docs/adr/0028-project-ca
 |---|---|
 | `v1/catalog.json` | Katalogun sözleri ve kuralları |
 | `v1/share.json` | Paylaş penceresinin sözleri ve kuralları |
+| `v1/cells.json` | Durum çubuğunun bulut hücreleri: kayıt hücresi, sunucu hücresi ve hesap menüsü |
 | `v1/forms.json` | Proje formlarının (Proje bilgileri, Yeniden adlandır, Kopyasını oluştur, öbür saklama biçimine çevirme) sözleri ve kuralları |
 
 ## Biçim (`kentos.catalog`, sürüm 1)
@@ -54,6 +56,21 @@ Bulut projeleri penceresinin (katalog, [ADR 0028](../../docs/adr/0028-project-ca
 | `envelopes` | Pencerenin gönderdiği ürün komutları (`project.share`, `project.access.revoke`, `project.invite`, `project.invitation.revoke`); `requestId` ve `idempotencyKey` her istekte yenidir, burada yazılmaz |
 | `failures` | Başarısız isteğin sözü: bağlantı yok, oturum bitti, proje yok, sunucu geçici olarak yanıt vermiyor, öbür durumlarda sunucunun kendi iletisi |
 | `lines` | Günlüğe ve durum satırına yazılanlar |
+
+## Biçim (`kentos.cells`, sürüm 1)
+
+| Alan | Anlamı |
+|---|---|
+| `format`, `version` | `"kentos.cells"`, `1` |
+| `saveTexts` | Veritabanı projesinin kayıt durumu sözü (`state`; bekleyen ya da çakışan sayı `sample` ile) |
+| `linkTexts` | Canlı bağlantının sözü (`none` boş) |
+| `views` | Kayıt hücresi: girdi (`none`; `database`: durum, bekleyen, çakışma sayısı; `file`: durum, dayandığı revizyon `base` ('0' ilkinden önce), yükleme `progress` 0…1, çakışmadaki revizyon, sunucudaki yeni revizyon) → `view` (`hidden`, söz, lambanın durumu) ve tıklamanın komutu (`action`: çakışmada `cloud.conflicts`; dosyada yeni revizyon `cloud.openNewest`; salt okunur ya da kayıt yoldayken hiçbiri; yoksa `file.save`, silinmiş ya da erişimi kaldırılmış projede de: yerel dosyaya kaydeder). Yükleme yüzdesi JavaScript'in yuvarlamasıyladır (yarım yukarı) |
+| `ago` | “ne zaman önce”: hiç yoksa “henüz yok”; 60 saniyeden az saniye, yoksa dakika (ikisi de yarım yukarı yuvarlanır); ileri bir saat eksi saniye yazar |
+| `databaseTips` | Veritabanı projesinin hücre ipucu: nerede (“kurum › proje”), nasıl kaydedildiği ve son kayıt, canlı bağlantı, hata, bu tarayıcının taslak saklayıp saklayamadığı; silinmiş, erişimi kaldırılmış ve arşivlenmiş projede ayrı sözler |
+| `fileTips` | Dosya projesinin hücre ipucu: dayandığı revizyon (sayı ekten ayrı yazılır), Kaydet'in ne yaptığı, pencerenin son kaydı, sunucudaki yeni revizyon (kaydedenle), hata, bağlantı, kaydedilmemiş değişiklik |
+| `serverTexts`, `serverTips` | Sunucu hücresinin sözü ve ipucu. Girdi: durum, sunucunun son iyi yanıtı (sözleşmenin `Health`'i: `status` “ok”, hizmet, sürüm, bilinirse `commit`, sözleşme sürümü), neden ve geliştirme yapısı mı. Bağlıyken hizmet, sürüm, commit'in ilk 8 hanesi ve sözleşme sürümü; uyumsuzken hizmet, sürüm ve commit, ardından iki sözleşme sürümünü de söyleyen neden; sorulurken; yokken nedeni, çizimin sunucusuz çalıştığı ve (geliştirme yapısında) sunucunun nasıl başlatılacağı |
+| `projectActions` | Açık projenin menüdeki işleri ve her birinin istediği yetki |
+| `accountRows` | Hesap menüsü: başlık (hesabın adı · açık projenin çalışma alanı, ya da “Oturum açılmadı”), giriş/çıkış, bulut komutları, açık projenin işleri, sunucu denetimi. Açık projede kapalı olan ve hesabın yetkisi olmayan iş hangi yetkinin eksik olduğunu söyler; başka bir nedenle kapalı ya da yetkisi eksik ama açık olan söylemez |
 
 ## Biçim (`kentos.forms`, sürüm 1)
 

@@ -3,7 +3,8 @@
 // kentos are not touched). Seeds projects of every kind, then at each size signs in as ayse and pictures each
 // scene in the dark and the light theme: the catalog's lists, details, tabs, selects and empty search; the history
 // tab and its forms; the share dialog with the find box, invitations and removing access; the project forms and
-// questions; renaming the open project; a file project's conflict; the access-lost notice; an invitation's page.
+// questions; renaming the open project; a file project's conflict; the access-lost notice; the status bar's cloud
+// cells and the server cell's account menu; an invitation's page.
 // Pictures go to scripts/e2e/out/shots/cloud/<scene>-<theme>-<width>.png.
 //
 //   cargo build -q -p kentos-api --bin kentosd --example e2e_database
@@ -266,6 +267,16 @@ function helpers(b, w) {
     },
     /** A button of the topmost window. */
     pressTop: (sel, text) => ui.press(sel, text, true),
+    /** The pointer rests on an element until its tooltip shows. */
+    async hover(sel) {
+      const p = await centre(sel);
+      if (!p) throw new Error(`yok: ${sel}`);
+      await b.move(2, 2);
+      await sleep(100);
+      await b.move(...p);
+      await b.waitFor(`!!document.querySelector('.tooltip[data-open]')`, 4000).catch(() => {});
+      await sleep(250);
+    },
     async type(text) {
       await b.type(text);
       await sleep(150);
@@ -562,6 +573,52 @@ const SCENES = [
       await mehmet.run(P.his, 'project.share', { userId: ayseMe.user.id, role: 'viewer' });
       await ayse.run(P.his, 'project.favorite', { favorite: true }).catch(() => {});
     }
+  },
+  // ── The status bar's cloud cells and the server cell's account menu (ui/statusbar/cellsPlan.ts) ──
+  async (ui) => {
+    // A database project shared with her as a viewer: read-only; the actions she lacks say which right.
+    await ui.openCatalog();
+    await ui.list('Benimle paylaşılanlar');
+    await ui.pick(P.his.name);
+    await ui.press('.dialog__foot .btn--primary', 'Aç');
+    await ui.waitFor(`window.kentos.cloud.project.value?.projectId === ${JSON.stringify(P.his.projectId)} && window.kentos.cloud.link.value === 'online' && !document.querySelector('.dialog')`, 30000);
+    await ui.hover('.status__save');
+    await ui.snap('status-save-database');
+    await ui.hover('.status__server');
+    await ui.snap('status-server-tip');
+    await ui.press('.status__server');
+    await ui.waitFor(`!!document.querySelector('.menu')`);
+    await sleep(300);
+    await ui.snap('status-account-menu');
+    await ui.escape();
+    // The cell's other states, set on the open project's save for the picture, then put back.
+    const was = await ui.eval(`(() => { const s = window.kentos.cloud.sync.value; return { state: s.state.value, pending: s.pending.value }; })()`);
+    for (const [state, pending, id] of [['offline_pending', 3, 'status-save-offline'], ['saving', 0, 'status-save-saving']]) {
+      await ui.eval(`(() => { const s = window.kentos.cloud.sync.value; s.pending.set(${pending}); s.state.set(${JSON.stringify(state)}); })()`);
+      await ui.hover('.status__save');
+      await ui.snap(id);
+    }
+    await ui.eval(`(() => { const s = window.kentos.cloud.sync.value; s.pending.set(${was.pending}); s.state.set(${JSON.stringify(was.state)}); })()`);
+    await ui.b.move(2, 2);
+    // A file project: its revision, an upload on its way, and a newer revision offered.
+    await ui.eval(`import('/src/ui/cloud/CatalogDialog.ts').then((m) => m.openCatalog(window.kentos, ${ids(P.sheet)}))`);
+    await ui.waitFor(`document.querySelector('.catalog-row[aria-selected="true"]')?.textContent.startsWith(${JSON.stringify(P.sheet.name)})`);
+    await ui.press('.dialog__foot .btn--primary', 'Aç');
+    await ui.waitFor(`window.kentos.cloud.file.value && !document.querySelector('.dialog')`, 30000);
+    await ui.closeAll();
+    await ui.hover('.status__save');
+    await ui.snap('status-save-file');
+    const file = `window.kentos.cloud.file.value`;
+    const before = await ui.eval(`({ state: ${file}.state.value, progress: ${file}.progress.value })`);
+    await ui.eval(`(() => { const f = ${file}; f.progress.set(0.42); f.state.set('uploading'); })()`);
+    await ui.b.move(2, 2);
+    await sleep(200);
+    await ui.snap('status-save-file-uploading');
+    await ui.eval(`(() => { const f = ${file}; f.newer.set({ revision: String(Number(f.base.value) + 1), by: 'Mehmet Demir' }); f.state.set('outdated'); })()`);
+    await ui.hover('.status__save');
+    await ui.snap('status-save-file-outdated');
+    await ui.eval(`(() => { const f = ${file}; f.newer.set(null); f.progress.set(${before.progress}); f.state.set(${JSON.stringify(before.state)}); })()`);
+    await ui.b.move(2, 2);
   },
 ];
 
