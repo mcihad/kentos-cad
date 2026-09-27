@@ -58,6 +58,12 @@ describe('classify', () => {
       [5, 100],
     ]);
     expect(equalInterval([3, 3], 5)).toEqual([{ min: 3, max: 3 }]);
+    // A big layer's values: no spread into a call (that overflows the stack at about 150 000).
+    const many = Array.from({ length: 400_000 }, (_, i) => (i * 7919) % 400_000);
+    expect(equalInterval(many, 2)).toEqual([
+      { min: 0, max: 199_999.5 },
+      { min: 199_999.5, max: 399_999 },
+    ]);
     expect(equalCount([], 3)).toEqual([]);
     // The numbers the values' text reads as: text that reads as a number counts, 12 significant digits.
     const nums = [poly({ N: '12.5' }), poly({ N: 'abc' }), poly({}), poly({ N: '7' })];

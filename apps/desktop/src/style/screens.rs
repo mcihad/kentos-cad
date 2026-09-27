@@ -119,6 +119,149 @@ fn settings_screens() {
     }
 }
 
+/// Katman stili's states on the demo drawing (docs/adr/0091), each applied so
+/// the drawing behind shows it: Basit on Ada sınırı, Kategorili on Parsel
+/// sınırı by Nitelik, Aralıklı on Yapı by the storeys, Kurallar on Parsel
+/// sınırı, Tek sembol on Kot noktaları, and the question on closing with
+/// changes not applied; dark and light at both sizes, and light with a larger
+/// text at the small one.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn layer_style_screens() {
+    use crate::style::layer_style::{Event, Field, Kind, RuleEdit};
+    use kentos_native_style::classify::Method;
+    let Some(doc) = demo() else {
+        eprintln!("the web's demo drawing is not written: see the module's comment");
+        return;
+    };
+    let out = root().join(".run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let states: [(&str, &str, Vec<Event>); 6] = [
+        ("basit", "ada", vec![]),
+        (
+            "kategorili",
+            "parsel",
+            vec![
+                Event::Kind(Kind::Categorized),
+                Event::Expr(Field::Categories, "Nitelik".into()),
+                Event::Classify,
+                Event::Other(true),
+                Event::Apply,
+            ],
+        ),
+        (
+            "aralikli",
+            "yapi",
+            vec![
+                Event::Kind(Kind::Graduated),
+                Event::Expr(Field::Classes, "[Kat adedi]".into()),
+                Event::Method(Method::Interval),
+                Event::Count("4".into()),
+                Event::Ramp("maviler"),
+                Event::Graduate,
+                Event::Apply,
+            ],
+        ),
+        (
+            "kurallar",
+            "parsel",
+            vec![
+                Event::Kind(Kind::Rules),
+                Event::Rule(vec![0], RuleEdit::Label("Arsalar".into())),
+                Event::Expr(Field::Rule(vec![0]), "Nitelik = 'Arsa'".into()),
+                Event::Rule(vec![0], RuleEdit::AddChild),
+                Event::Rule(vec![0, 0], RuleEdit::Label("Büyük arsalar".into())),
+                Event::Expr(Field::Rule(vec![0, 0]), "$alan > 400".into()),
+                Event::Rule(vec![0, 0], RuleEdit::MaxScale("5.000".into())),
+                Event::AddElse,
+                Event::AddRule,
+                Event::Rule(vec![2], RuleEdit::Label("Hatalı koşul".into())),
+                Event::Expr(Field::Rule(vec![2]), "$alan >".into()),
+                Event::Apply,
+            ],
+        ),
+        ("tek", "kot", vec![Event::Kind(Kind::Single), Event::Apply]),
+        // Closing with categories not applied: the window asks first.
+        (
+            "soru",
+            "parsel",
+            vec![
+                Event::Kind(Kind::Categorized),
+                Event::Expr(Field::Categories, "Nitelik".into()),
+                Event::Classify,
+                Event::Close,
+            ],
+        ),
+    ];
+    let sizes: [(f32, f32, &str, &str, i64); 5] = [
+        (1440.0, 900.0, "dark", "", 13),
+        (1100.0, 650.0, "dark", "", 13),
+        (1440.0, 900.0, "light", "-acik", 13),
+        (1100.0, 650.0, "light", "-acik", 13),
+        (1100.0, 650.0, "light", "-acik-buyuk", 16),
+    ];
+    for (name, layer, events) in &states {
+        for (width, height, mode, suffix, text) in sizes {
+            let (mut app, _) = App::boot(None);
+            let _ = app.update(Message::Opened(Some(Ok(Box::new(doc.clone())))));
+            let _ = app.settings.choose(&[
+                ("appearance.theme", serde_json::Value::from(mode)),
+                ("appearance.textSize", serde_json::Value::from(text)),
+            ]);
+            app.apply_settings();
+            let _ = app.update(Message::LayerStyle(Event::Open(Some((*layer).to_owned()))));
+            for e in events {
+                let _ = app.update(Message::LayerStyle(e.clone()));
+            }
+            let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+            let mut update = |app: &mut App, message| {
+                let _ = app.update(message);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            for _ in 0..60 {
+                let _ = snapshot.render(app.view(), &app.theme());
+                if !app.viewport.status().images_pending {
+                    break;
+                }
+            }
+            let file = out.join(format!("lstil-{name}-{width}x{height}{suffix}.png"));
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
+            println!("{}", file.display());
+            // The style on the drawing: the window closed, the layer in view.
+            if matches!(*name, "basit" | "soru") || width < 1400.0 {
+                continue;
+            }
+            let _ = app.update(Message::LayerStyle(Event::Done));
+            let Some(b) = extent(&app, layer) else {
+                continue;
+            };
+            let camera = &mut app.viewport.camera;
+            let (bw, bh) = ((b.max_x - b.min_x).max(1.0), (b.max_y - b.min_y).max(1.0));
+            camera.scale = (camera.width / (bw * 1.15)).min(camera.height / (bh * 1.15));
+            camera.center_on(kentos_render_wgpu::Vec2::new(
+                (b.min_x + b.max_x) / 2.0,
+                (b.min_y + b.max_y) / 2.0,
+            ));
+            snapshot.settle(&mut app, App::view, &mut update);
+            for _ in 0..60 {
+                let _ = snapshot.render(app.view(), &app.theme());
+                if !app.viewport.status().images_pending {
+                    break;
+                }
+            }
+            let file = out.join(format!("lstil-{name}-cizim-{width}x{height}{suffix}.png"));
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
+            println!("{}", file.display());
+        }
+    }
+}
+
 #[test]
 #[ignore = "pictures for the owner, run by hand"]
 fn screens() {

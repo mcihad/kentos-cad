@@ -77,7 +77,7 @@ const LABELS: { min: number; max: number; digits?: number }[] = [
   { min: 2.5, max: 7.25, digits: 0 },
   { min: 0.123456, max: 0.5, digits: 4 },
 ];
-const TYPED = ['7', '0', '-3', '25', 'abc', '2.5', '', '20', '1'];
+const TYPED = ['7', '0', '-3', '25', 'abc', '2.5', '', '20', '1', ' ', '-0.4', 'Infinity', '1e3'];
 
 it.runIf(!!process.env.GOLDEN_WRITE)('records the layer style window’s classes', () => {
   const doc = layerDocument('Kadastro', { color: 'fg', lineType: 'continuous', lineWeight: 0.25 }, DRAWING);

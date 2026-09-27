@@ -2736,7 +2736,7 @@
   },
   {
    "typed": "0",
-   "count": 5
+   "count": 1
   },
   {
    "typed": "-3",
@@ -2765,6 +2765,22 @@
   {
    "typed": "1",
    "count": 1
+  },
+  {
+   "typed": " ",
+   "count": 5
+  },
+  {
+   "typed": "-0.4",
+   "count": 1
+  },
+  {
+   "typed": "Infinity",
+   "count": 20
+  },
+  {
+   "typed": "1e3",
+   "count": 20
   }
  ]
 }

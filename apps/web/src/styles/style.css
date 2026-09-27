@@ -588,9 +588,47 @@
 }
 .lsty__exprrow {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 .lsty__expr {
+  flex: 1;
+  min-width: 0;
   width: 100%;
+}
+/* The expression field's Alanlar, Değişkenler and İşlevler menus, and a rule's ƒ. */
+.lsty__menu {
+  flex: none;
+  gap: 3px;
+  white-space: nowrap;
+}
+/* Basit: the layer's current look, one picture per geometry class. */
+.lsty__look {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--fs-xs);
+}
+/* A category's value with the mark of an earlier category of the same value. */
+.lsty__value {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.lsty__value .field {
+  flex: 1;
+  min-width: 0;
+}
+.lsty__shadow {
+  flex: none;
+  display: inline-flex;
+  color: var(--c-warn);
+}
+.rule__off {
+  margin: 2px 0 0 8px;
 }
 .lsty__n {
   width: 56px;
@@ -662,7 +700,8 @@
   border-color: var(--c-danger);
 }
 .slot__name {
-  max-width: 64px;
+  /* “Basit görünüş” in full, a little past the picture. */
+  max-width: 72px;
   overflow: hidden;
   font-size: var(--fs-2xs);
   white-space: nowrap;

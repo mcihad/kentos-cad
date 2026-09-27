@@ -10,7 +10,7 @@
 //      browser holds the entry points to the contract's layouts;
 //   The styled drawing's module (styled.layout.json, the web's WebGPU
 //   styled pipelines) goes through 1 and 2 as well: compiled, and every
-//   pipeline built with its three bind groups (frame, style, atlas).
+//   pipeline built with its two bind groups (the frame with the atlas, then the style; version 2).
 //   3. a frame is drawn at Turkish TM coordinates (E 487 000, N 4 420 000)
 //      from buffers written at the JSON's offsets, with float64 split into
 //      float32 high/low parts in JavaScript, and read back: the background,

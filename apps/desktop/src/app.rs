@@ -113,6 +113,8 @@ pub enum Dialog {
     Calc,
     /// A processing tool's or model's window (processing/).
     Processing,
+    /// Katman stili (style/layer_style/); the window is `App::styles.layer_style`.
+    LayerStyle,
     /// Katmanlar → Sil on a layer or group with objects (layering.rs); the
     /// node is `App::removing_layer`.
     RemoveLayer,
@@ -197,6 +199,8 @@ pub enum Message {
     Calc(crate::calc::Event),
     /// A processing tool's window (processing/).
     Processing(crate::processing::Event),
+    /// Katman stili (style/layer_style/).
+    LayerStyle(crate::style::layer_style::Event),
     /// Esc in the empty command line: the running command ends.
     CommandCancelled,
     /// The command line's text box took or let go of the keyboard.
@@ -707,6 +711,7 @@ impl App {
             }
             Message::Calc(event) => return self.calc_event(event),
             Message::Processing(event) => return self.processing_event(event),
+            Message::LayerStyle(event) => return self.layer_style_event(event),
             // The layer tree's changes go through the document, as on the web: visibility
             // and lock are edits (unsaved) but not undo steps.
             Message::LayerVisible(id) => {
@@ -1016,6 +1021,7 @@ impl App {
             "draft.grid" => self.toggle_session("drafting.grid", "Izgara"),
             // The styled drawing's view choices (style/, docs/adr/0090).
             "view.lineWeights" => self.toggle_session("graphics.lineWeights", "Çizgi kalınlığı"),
+            "style.layerStyle" => self.open_layer_style(None),
             "view.symbols.plot" | "view.symbols.screen" => self.choose_symbol_size(id),
             // Selecting (docs/adr/0029): the pointer selects while no command runs.
             "tool.select" => self.leave_tool(),
@@ -1119,6 +1125,12 @@ impl App {
             "server.check" => !self.server_checking,
             id if id.starts_with("cloud.") => self.cloud_available(id),
             "layer.new" | "layer.newGroup" => self.tree_locked().is_none(),
+            // Katman stili opens for the active layer: not for a group.
+            "style.layerStyle" => doc.is_some_and(|d| {
+                d.layers()
+                    .get(d.layers().active())
+                    .is_some_and(|n| n.kind == kentos_contracts::LayerNodeType::Layer)
+            }),
             _ => true,
         }
     }

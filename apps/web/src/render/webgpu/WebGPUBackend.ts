@@ -139,7 +139,7 @@ export class WebGPUBackend implements RenderBackend {
     this.pipelineLayout = device.createPipelineLayout({ bindGroupLayouts: [frameLayout, this.styleLayout] });
     this.frameBuffer = device.createBuffer({ size: FRAME_BYTES, usage: BUFFER.UNIFORM | BUFFER.COPY_DST });
     this.frameBind = device.createBindGroup({ layout: frameLayout, entries: [{ binding: 0, resource: { buffer: this.frameBuffer } }] });
-    this.styled = new WebGPUStyledRenderer(device, this.format, frameLayout);
+    this.styled = new WebGPUStyledRenderer(device, this.format, this.frameBuffer);
     this.copyModule = device.createShaderModule({ code: COPY_WGSL });
     // An explicit layout: one bind group of the kept base serves the copy pipeline of every count.
     this.copyLayout = device.createBindGroupLayout({ entries: [{ binding: 0, visibility: STAGE.FRAGMENT, texture: { sampleType: 'float' } }] });
@@ -345,7 +345,8 @@ export class WebGPUBackend implements RenderBackend {
             pass.draw(f.count);
           }
         }
-        this.styled.draw(pass, l.styled, this.samples);
+        // The styled pipelines bind their own group 0 (the frame with the atlas); the plain ones need theirs back.
+        if (this.styled.draw(pass, l.styled, this.samples)) pass.setBindGroup(0, this.frameBind);
       }
       pass.setPipeline(pipes.line);
       for (const l of layers)

@@ -43,14 +43,39 @@ export function summaryMarkdown(inv) {
     '',
     s.commandsWithoutPlace.map((id) => `\`${id}\``).join(', ') || 'Yok.',
     '',
-    '## Masaüstü',
-    '',
-    `Masaüstü kabuğu (apps/desktop) ${s.commandsOnDesktop} / ${s.commands.total} komutu çalıştırıyor; öbürleri şeritte soluk durur ve “masaüstüne henüz taşınmadı” der (docs/adr/0017). Liste: apps/desktop/ported.json.`,
-    '',
+    ...desktopMarkdown(inv, name),
     '## Test başvurusu',
     '',
     `${s.commandsWithoutTests} / ${s.commands.total} komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.`,
     '',
   );
   return lines.join('\n');
+}
+
+/** The desktop column: per section what the desktop has, then, by section, what the web has and it does not. */
+function desktopMarkdown(inv, name) {
+  const d = inv.summary.desktop;
+  const where = (i) => (i.desktopWhere ? ` (masaüstünde: ${i.desktopWhere})` : '');
+  const note = (i) => (i.desktopNote ? ` — ${i.desktopNote}` : i.note ? ` — ${i.note}` : '');
+  const out = [
+    '## Masaüstü',
+    '',
+    'Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/desktop/equivalents.json`\'ın bütün bir bölüm için dediği; masaüstü kabuğunun çalıştırdığı komutlar (`apps/desktop/ported.json`) ve onlarla araçları (`tool.<kimlik>`), işlem araçları ve modelleri (`processing.run.…`, `processing.model.…`), çalışma modları (`workspace.<kimlik>`); şeması masaüstünü de barındıran tipli ayarlar; tablonun öğe öğe dediği (masaüstündeki yeri ya da orada neden anlamsız olduğu); en son `annotations.json`. Bilinmeyen `none`dır. Masaüstünde komutu olmayanlar şeritte soluk durur ve “masaüstüne henüz taşınmadı” der (docs/adr/0017).',
+    '',
+    '| Bölüm | Masaüstünde | Kısmi | Yok | Anlamsız | Toplam |',
+    '|---|---|---|---|---|---|',
+    ...Object.entries(SECTIONS).map(([k, label]) => `| ${label} | ${d[k].implemented} | ${d[k].partial} | ${d[k].none + d[k].pending} | ${d[k]['n/a']} | ${d[k].total} |`),
+    '',
+  ];
+  const whole = Object.entries(inv.summary.desktopSections ?? {});
+  if (whole.length) out.push(...whole.map(([k, e]) => `- ${SECTIONS[k] ?? k}, bütünüyle: ${e.desktop}${e.where ? `, ${e.where}` : ''}${e.reason ? ` — ${e.reason}` : ''}`), '');
+  const na = Object.keys(SECTIONS).flatMap((k) => inv[k].filter((i) => i.platforms.desktop === 'n/a').map((i) => `- ${SECTIONS[k]}: \`${i.id}\` ${name(i)}${note(i)}`.trimEnd()));
+  out.push(`### Masaüstünde anlamsız (${na.length})`, '', ...(na.length ? na : ['Yok.']), '');
+  out.push('### Web\'de olup masaüstünde olmayanlar', '', 'Kısmi olanlar notlarıyla; bölüm bölüm.', '');
+  for (const [k, label] of Object.entries(SECTIONS)) {
+    const left = inv[k].filter((i) => ['none', 'pending', 'partial'].includes(i.platforms.desktop));
+    out.push(`#### ${label} (${left.length} / ${inv[k].length})`, '');
+    out.push(...(left.length ? left.map((i) => `- \`${i.id}\` ${name(i)}${i.platforms.desktop === 'partial' ? ' (kısmi)' : ''}${where(i)}${note(i)}`.trimEnd()) : ['Yok.']), '');
+  }
+  return out;
 }

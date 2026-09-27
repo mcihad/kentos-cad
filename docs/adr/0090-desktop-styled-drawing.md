@@ -67,10 +67,10 @@
   - toplulukların sayıları tek köşe arabelleğinde;
   - her topluluğun 144 baytlık stil bloğu tek bir uniform arabellekte, dinamik ofsetle;
   - bağlama grubu katman başına bir tane.
-- **Bağlama grupları:** Iced'in aygıtı en çok iki bağlama grubu alır (`max_bind_groups: 2`, iced_wgpu). Sözleşme üç grup kullanır.
-  - Masaüstü atlası 2. gruptan 0. gruba, çerçevenin yanına alır (bağlama 1 ve 2). Değişen yalnız bu iki sayıdır (`styled::shader::ATLAS_REMAP`), gölgelendiricinin kendisi ortaktır.
-  - `tests/styled_contract.rs` ortak modülü ve masaüstününkini naga ile doğrular: bağlamalar, yapıların yerleşimi, giriş noktaları, köşe düzenleri ve karıştırmalar sözleşmenindir.
-  - Web ajanına öneri: sözleşmenin 2. sürümünde atlas çerçevenin grubuna geçsin, bu çeviri kalksın.
+- **Bağlama grupları:** Iced'in aygıtı en çok iki bağlama grubu alır (`max_bind_groups: 2`, iced_wgpu).
+  - Sözleşmenin 2. sürümünde (web ajanının ef1cf63'ü) atlas 0. grupta, çerçevenin yanındadır (bağlama 1 ve 2); stil 1. gruptadır. Masaüstü ortak kaynağı olduğu gibi kurar.
+  - İlk sürümde sözleşme üç grup kullanıyordu; masaüstü atlasın iki bağlama sayısını yüklerken değiştiriyordu (`ATLAS_REMAP`). Web ajanı sözleşmeyi 2. sürüme taşıyınca bu çeviri kalktı.
+  - `tests/styled_contract.rs` ortak modülü naga ile doğrular: sürüm, bağlamalar (iki grup), yapıların yerleşimi, giriş noktaları, köşe düzenleri ve karıştırmalar sözleşmenindir.
 - **Atlas:** 2048² tek sayfa.
   - Görüntü gösterildiği boyda çizilir, ikinin kuvveti adımlarla (8–512 px); raf yerleşimi, yerine duran boy, sayfa dolunca baştan (`render/atlas.ts`'in kuralları).
   - Görüntüler işlemcide tiny-skia ile çizilir: SVG ve raster işaretler, yazılar, desen döşemeleri, şekiller (`canvasShapes.ts`'in karşılığı).

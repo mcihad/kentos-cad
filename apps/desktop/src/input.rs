@@ -100,6 +100,10 @@ impl App {
                         self.calc_picked(p);
                     }
                 }
+                // Sahneden seç's objects: the processing window opens again (processing/).
+                ViewChange::PickedObjects(keep) => {
+                    let _ = self.processing_picked_objects(keep);
+                }
                 change => self.viewport.change(change),
             }
         }
@@ -358,6 +362,14 @@ impl App {
                         && !self.cloud.catalog.as_ref().is_some_and(|c| c.busy()) =>
                 {
                     return self.cloud_event(crate::cloud::Event::CatalogOpen);
+                }
+                // ← → change Katman stili's kind when no field has the keyboard (style/layer_style/).
+                Some(key @ (Named::ArrowLeft | Named::ArrowRight))
+                    if self.dialog == Some(crate::app::Dialog::LayerStyle) =>
+                {
+                    return self.layer_style_event(crate::style::layer_style::Event::Step(
+                        key == Named::ArrowRight,
+                    ));
                 }
                 // ↑ ↓ in a Hesap window's table go to the row above or below (calc/grid.rs).
                 Some(key @ (Named::ArrowUp | Named::ArrowDown))

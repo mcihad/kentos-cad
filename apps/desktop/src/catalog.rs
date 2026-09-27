@@ -98,6 +98,8 @@ pub const PORTED: &[&str] = &[
     // revizyonu aç (cloud/actions.rs, docs/adr/0073).
     "cloud.uploadFile",
     "cloud.openNewest",
+    // Proje geçmişi…: the catalog's Geçmiş tab on the open project (docs/adr/0087).
+    "cloud.history",
     "cloud.rename",
     "cloud.delete",
     // New layers and groups (layering.rs): edits that are not undone, as on the web.
@@ -217,6 +219,8 @@ pub const PORTED: &[&str] = &[
     "view.lineWeights",
     "view.symbols.plot",
     "view.symbols.screen",
+    // Katman stili: the active layer's renderer (docs/adr/0091).
+    "style.layerStyle",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

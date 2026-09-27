@@ -15,9 +15,14 @@
 //!   the core reads, the objects' values for its expressions ([`table`]).
 //! - [`batches`]: the core's batches with their colours from the theme, their
 //!   atlas images and how far they reach: what the renderer draws.
+//! - [`preview`]: a symbol on a sample object, built as a styled layer for its picture.
+//! - [`renderer`]: a layer's renderer as the layer style window edits it,
+//!   [`classify`]: the classes the window makes of the objects' values, and
+//!   [`tally`]: what each category, class and rule takes, as the core draws it.
 //!
 //! Both platforms are held to `fixtures/style/v1/batches.json` (a layer's
-//! way to the GPU) and `cases.json` (the core's answers).
+//! way to the GPU), `classify.json` (the window's classes) and `cases.json`
+//! (the core's answers).
 #![forbid(unsafe_code)]
 #![cfg_attr(
     not(test),
@@ -25,12 +30,16 @@
 )]
 
 pub mod batches;
+pub mod classify;
 pub mod color;
 pub mod library;
+pub mod preview;
 pub mod program;
+pub mod renderer;
 pub mod simple;
 pub mod system;
 pub mod table;
+pub mod tally;
 
 pub use batches::{
     AtlasImage, Cap, FillPaintBatch, MarkerLook, StyledBatch, StyledLayer, TileMark, Unit,

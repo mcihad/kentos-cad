@@ -100,6 +100,7 @@ pub mod paste;
 pub mod path;
 pub mod perpendicular;
 pub mod pick;
+pub mod pick_objects;
 pub mod point;
 pub mod point_calc;
 mod points;

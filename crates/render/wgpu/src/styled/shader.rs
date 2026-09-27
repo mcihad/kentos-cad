@@ -30,22 +30,10 @@ pub const SOURCES: [(&str, &str); 5] = [
 /// The binding, vertex and uniform layout contract of the module.
 pub const LAYOUT_JSON: &str = include_str!("../../../../../shaders/wgsl/styled.layout.json");
 
-/// The contract's atlas bindings (group 2) and where the desktop binds them:
-/// beside the frame in group 0. Iced's device takes two bind groups at most
-/// (`max_bind_groups: 2`, iced_wgpu's compositor), the contract uses three;
-/// the shader code is the shared one, only these two numbers move (docs/adr/0090).
-pub const ATLAS_REMAP: [(&str, &str); 2] = [
-    (
-        "@group(2) @binding(0) var atlasTex",
-        "@group(0) @binding(1) var atlasTex",
-    ),
-    (
-        "@group(2) @binding(1) var atlasSmp",
-        "@group(0) @binding(2) var atlasSmp",
-    ),
-];
-
 /// The module's source as the contract has it: its files joined, each after a comment naming it.
+/// The desktop builds it as it is: since the contract's version 2 the atlas
+/// binds in group 0 beside the frame, and Iced's device takes two bind groups
+/// (`max_bind_groups: 2`, iced_wgpu's compositor; docs/adr/0090).
 pub fn shared_source() -> String {
     let mut out = String::with_capacity(SOURCES.iter().map(|(p, s)| p.len() + s.len() + 16).sum());
     for (path, text) in SOURCES {
@@ -58,11 +46,9 @@ pub fn shared_source() -> String {
     out
 }
 
-/// The module the desktop builds: the shared source with the atlas bound in group 0 ([`ATLAS_REMAP`]).
+/// The module the desktop builds: the shared source.
 pub fn source() -> String {
-    ATLAS_REMAP
-        .iter()
-        .fold(shared_source(), |text, (from, to)| text.replace(from, to))
+    shared_source()
 }
 
 #[cfg(test)]
@@ -70,12 +56,16 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_atlas_moves_to_the_frame_s_group_once() {
+    fn the_atlas_binds_beside_the_frame_in_two_groups() {
         let shared = shared_source();
-        for (from, _) in ATLAS_REMAP {
-            assert_eq!(shared.matches(from).count(), 1, "{from}");
-        }
-        let desktop = source();
-        assert!(!desktop.contains("@group(2)"));
+        assert_eq!(
+            shared.matches("@group(0) @binding(1) var atlasTex").count(),
+            1
+        );
+        assert_eq!(
+            shared.matches("@group(0) @binding(2) var atlasSmp").count(),
+            1
+        );
+        assert!(!shared.contains("@group(2)"));
     }
 }

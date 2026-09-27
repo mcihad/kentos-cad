@@ -59,6 +59,7 @@
     "cloud.conflicts",
     "cloud.uploadFile",
     "cloud.openNewest",
+    "cloud.history",
     "cloud.rename",
     "cloud.delete",
     "layer.new",
@@ -136,7 +137,8 @@
     "draft.tracking",
     "view.lineWeights",
     "view.symbols.plot",
-    "view.symbols.screen"
+    "view.symbols.screen",
+    "style.layerStyle"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

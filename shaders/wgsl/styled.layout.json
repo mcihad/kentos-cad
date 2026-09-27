@@ -1,8 +1,8 @@
 {
   "format": "kentos.wgsl-layout",
-  "version": 1,
+  "version": 2,
   "module": "styled",
-  "description": "KentOS styled drawing (docs/STYLE.md §6): the style engine's batches (render/types.ts StyledBatch) as strokes, fills with a per-pixel paint and markers. The web's WebGPU backend joins these sources in this order (apps/web/src/render/webgpu/styledShaders.ts) and scripts/wgsl/browser-check.mjs compiles them in a browser's WebGPU and builds these pipelines; the native renderer is to be checked against the same file. The WebGL2 twin is apps/web/src/render/webgl2/styledShaders.ts. Any change to a struct, attribute, binding or packing raises the version.",
+  "description": "KentOS styled drawing (docs/STYLE.md §6): the style engine's batches (render/types.ts StyledBatch) as strokes, fills with a per-pixel paint and markers. The web's WebGPU backend joins these sources in this order (apps/web/src/render/webgpu/styledShaders.ts) and scripts/wgsl/browser-check.mjs compiles them in a browser's WebGPU and builds these pipelines; the native renderer is to be checked against the same file. The WebGL2 twin is apps/web/src/render/webgl2/styledShaders.ts. Any change to a struct, attribute, binding or packing raises the version. Version 2 binds the atlas in group 0 beside the frame: a native wgpu device may offer only two bind groups (Iced’s does).",
   "sources": [
     "styled/common.wgsl",
     "styled/shapes.wgsl",
@@ -14,20 +14,15 @@
     {
       "group": 0,
       "bindings": [
-        { "binding": 0, "name": "frame", "type": "uniform", "struct": "Frame", "visibility": ["vertex", "fragment"] }
+        { "binding": 0, "name": "frame", "type": "uniform", "struct": "Frame", "visibility": ["vertex", "fragment"] },
+        { "binding": 1, "name": "atlasTex", "type": "texture", "sampleType": "float", "visibility": ["fragment"] },
+        { "binding": 2, "name": "atlasSmp", "type": "sampler", "samplerType": "filtering", "visibility": ["fragment"] }
       ]
     },
     {
       "group": 1,
       "bindings": [
         { "binding": 0, "name": "st", "type": "uniform", "struct": "SStyle", "visibility": ["vertex", "fragment"] }
-      ]
-    },
-    {
-      "group": 2,
-      "bindings": [
-        { "binding": 0, "name": "atlasTex", "type": "texture", "sampleType": "float", "visibility": ["fragment"] },
-        { "binding": 1, "name": "atlasSmp", "type": "sampler", "samplerType": "filtering", "visibility": ["fragment"] }
       ]
     }
   ],

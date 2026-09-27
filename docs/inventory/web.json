@@ -74,7 +74,87 @@
     },
     "commandsWithoutPlace": [],
     "commandsWithoutTests": 52,
-    "commandsOnDesktop": 137
+    "commandsOnDesktop": 139,
+    "desktop": {
+      "commands": {
+        "total": 167,
+        "implemented": 139,
+        "partial": 0,
+        "pending": 15,
+        "none": 11,
+        "n/a": 2
+      },
+      "tools": {
+        "total": 58,
+        "implemented": 56,
+        "partial": 0,
+        "pending": 2,
+        "none": 0,
+        "n/a": 0
+      },
+      "processing": {
+        "total": 4,
+        "implemented": 4,
+        "partial": 0,
+        "pending": 0,
+        "none": 0,
+        "n/a": 0
+      },
+      "models": {
+        "total": 1,
+        "implemented": 1,
+        "partial": 0,
+        "pending": 0,
+        "none": 0,
+        "n/a": 0
+      },
+      "workspaces": {
+        "total": 5,
+        "implemented": 3,
+        "partial": 0,
+        "pending": 2,
+        "none": 0,
+        "n/a": 0
+      },
+      "settings": {
+        "total": 65,
+        "implemented": 38,
+        "partial": 12,
+        "pending": 0,
+        "none": 14,
+        "n/a": 1
+      },
+      "storage": {
+        "total": 10,
+        "implemented": 6,
+        "partial": 1,
+        "pending": 0,
+        "none": 2,
+        "n/a": 1
+      },
+      "fileFields": {
+        "total": 192,
+        "implemented": 192,
+        "partial": 0,
+        "pending": 0,
+        "none": 0,
+        "n/a": 0
+      },
+      "screens": {
+        "total": 62,
+        "implemented": 42,
+        "partial": 3,
+        "pending": 0,
+        "none": 17,
+        "n/a": 0
+      }
+    },
+    "desktopSections": {
+      "fileFields": {
+        "desktop": "implemented",
+        "reason": "Masaüstü .kcad'i web'le aynı Rust kodeğiyle (crates/shared/kcad) okur ve yazar: v2 yazılır, v1 okunur; belge (kentos-domain) göçü web'in örnek dosyasıyla aynı çıkarır (crates/native/domain/tests/snapshot_v2.rs, ADR 0025)."
+      }
+    }
   },
   "commands": [
     {
@@ -100,9 +180,10 @@
       "status": "pending",
       "platforms": {
         "web": "pending",
-        "desktop": "none"
+        "desktop": "pending"
       },
-      "tests": []
+      "tests": [],
+      "desktopWhere": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)"
     },
     {
       "id": "analysis.volume",
@@ -127,9 +208,10 @@
       "status": "pending",
       "platforms": {
         "web": "pending",
-        "desktop": "none"
+        "desktop": "pending"
       },
-      "tests": []
+      "tests": [],
+      "desktopWhere": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)"
     },
     {
       "id": "calc.forward",
@@ -393,7 +475,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -732,9 +814,10 @@
       "status": "pending",
       "platforms": {
         "web": "pending",
-        "desktop": "none"
+        "desktop": "pending"
       },
-      "tests": []
+      "tests": [],
+      "desktopWhere": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)"
     },
     {
       "id": "crs.set",
@@ -794,9 +877,10 @@
       "status": "pending",
       "platforms": {
         "web": "pending",
-        "desktop": "none"
+        "desktop": "pending"
       },
-      "tests": []
+      "tests": [],
+      "desktopWhere": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)"
     },
     {
       "id": "draft.grid",
@@ -1372,9 +1456,10 @@
       "status": "pending",
       "platforms": {
         "web": "pending",
-        "desktop": "none"
+        "desktop": "pending"
       },
-      "tests": []
+      "tests": [],
+      "desktopWhere": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)"
     },
     {
       "id": "file.import.dxf",
@@ -1505,9 +1590,10 @@
       "status": "pending",
       "platforms": {
         "web": "pending",
-        "desktop": "none"
+        "desktop": "pending"
       },
-      "tests": []
+      "tests": [],
+      "desktopWhere": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)"
     },
     {
       "id": "file.import.shp",
@@ -1654,9 +1740,10 @@
       "status": "pending",
       "platforms": {
         "web": "pending",
-        "desktop": "none"
+        "desktop": "pending"
       },
-      "tests": []
+      "tests": [],
+      "desktopWhere": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)"
     },
     {
       "id": "file.save",
@@ -1973,9 +2060,10 @@
       "status": "pending",
       "platforms": {
         "web": "pending",
-        "desktop": "none"
+        "desktop": "pending"
       },
-      "tests": []
+      "tests": [],
+      "desktopWhere": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)"
     },
     {
       "id": "map.edgeLengths",
@@ -2032,11 +2120,12 @@
       "status": "pending",
       "platforms": {
         "web": "pending",
-        "desktop": "none"
+        "desktop": "pending"
       },
       "tests": [
         "apps/web/src/app/menus.test.ts"
-      ]
+      ],
+      "desktopWhere": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)"
     },
     {
       "id": "map.profile",
@@ -2059,9 +2148,10 @@
       "status": "pending",
       "platforms": {
         "web": "pending",
-        "desktop": "none"
+        "desktop": "pending"
       },
-      "tests": []
+      "tests": [],
+      "desktopWhere": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)"
     },
     {
       "id": "map.sheet",
@@ -2084,9 +2174,10 @@
       "status": "pending",
       "platforms": {
         "web": "pending",
-        "desktop": "none"
+        "desktop": "pending"
       },
-      "tests": []
+      "tests": [],
+      "desktopWhere": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)"
     },
     {
       "id": "processing.history",
@@ -2463,7 +2554,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/scripts/e2e/layout.mjs",
@@ -4417,9 +4508,10 @@
       "status": "pending",
       "platforms": {
         "web": "pending",
-        "desktop": "none"
+        "desktop": "pending"
       },
-      "tests": []
+      "tests": [],
+      "desktopWhere": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)"
     },
     {
       "id": "tool.stretch",
@@ -4486,11 +4578,12 @@
       "status": "pending",
       "platforms": {
         "web": "pending",
-        "desktop": "none"
+        "desktop": "pending"
       },
       "tests": [
         "apps/web/src/app/menus.test.ts"
-      ]
+      ],
+      "desktopWhere": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)"
     },
     {
       "id": "tool.text",
@@ -5001,11 +5094,12 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "n/a"
       },
       "tests": [
         "apps/web/scripts/e2e/smoke.mjs"
-      ]
+      ],
+      "desktopNote": "Masaüstü çizimi wgpu ile yapar; arka ucu (Vulkan, Metal, DirectX 12, OpenGL) wgpu seçer (ADR 0019). WebGL2 ile WebGPU tarayıcının seçenekleridir."
     },
     {
       "id": "view.renderer.webgpu",
@@ -5032,9 +5126,10 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "n/a"
       },
-      "tests": []
+      "tests": [],
+      "desktopNote": "Masaüstü çizimi wgpu ile yapar; arka ucu (Vulkan, Metal, DirectX 12, OpenGL) wgpu seçer (ADR 0019). WebGL2 ile WebGPU tarayıcının seçenekleridir."
     },
     {
       "id": "view.ribbon",
@@ -5503,9 +5598,10 @@
       "status": "pending",
       "platforms": {
         "web": "pending",
-        "desktop": "none"
+        "desktop": "pending"
       },
-      "tests": []
+      "tests": [],
+      "desktopWhere": "apps/desktop/src/modes.rs (menüde “Yakında”)"
     },
     {
       "id": "workspace.gis",
@@ -5588,9 +5684,10 @@
       "status": "pending",
       "platforms": {
         "web": "pending",
-        "desktop": "none"
+        "desktop": "pending"
       },
-      "tests": []
+      "tests": [],
+      "desktopWhere": "apps/desktop/src/modes.rs (menüde “Yakında”)"
     }
   ],
   "tools": [
@@ -5614,7 +5711,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/stretch-align.json"
@@ -5645,7 +5742,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/arc-variants.json"
@@ -5671,7 +5768,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
@@ -5699,7 +5796,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -5723,7 +5820,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/areas.json"
@@ -5750,7 +5847,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/areas.json"
@@ -5778,7 +5875,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
@@ -5807,7 +5904,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
@@ -5836,7 +5933,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/scripts/e2e/smoke.mjs",
@@ -5865,7 +5962,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
@@ -5893,7 +5990,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/path-edit-tools.json"
@@ -5921,7 +6018,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/corner-tools.json"
@@ -5954,7 +6051,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/scripts/e2e/smoke.mjs",
@@ -5982,7 +6079,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/move-copy.json"
@@ -6011,7 +6108,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
@@ -6041,7 +6138,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/spot-divide.json"
@@ -6067,7 +6164,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/ribbon.test.ts",
@@ -6095,7 +6192,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/ellipse-spline.json"
@@ -6122,7 +6219,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/select-delete.json"
@@ -6149,7 +6246,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/object-tools.json"
@@ -6176,7 +6273,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/edge-tools.json"
@@ -6204,7 +6301,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
@@ -6231,7 +6328,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
@@ -6259,7 +6356,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/object-tools.json"
@@ -6286,7 +6383,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/path-edit-tools.json"
@@ -6313,7 +6410,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
@@ -6345,7 +6442,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
@@ -6373,7 +6470,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/mirror.json"
@@ -6400,7 +6497,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/scripts/e2e/smoke.mjs",
@@ -6428,7 +6525,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/edge-tools.json"
@@ -6452,7 +6549,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/navigation.json"
@@ -6481,7 +6578,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/parallel-line.json"
@@ -6506,7 +6603,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/menus.test.ts",
@@ -6536,7 +6633,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/perpendiculars.json"
@@ -6562,7 +6659,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/perpendiculars.json"
@@ -6589,7 +6686,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/object-tracking.json",
@@ -6617,7 +6714,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
@@ -6650,7 +6747,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
@@ -6678,7 +6775,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/construction-lines.json"
@@ -6706,7 +6803,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/ribbon.test.ts",
@@ -6736,7 +6833,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/ribbon.test.ts",
@@ -6765,7 +6862,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/ribbon.test.ts",
@@ -6790,7 +6887,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/donut-cloud.json"
@@ -6817,7 +6914,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/rotate-scale.json"
@@ -6844,7 +6941,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/rotate-scale.json"
@@ -6868,14 +6965,13 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/menus.test.ts",
         "apps/web/src/app/workspaces.test.ts",
         "apps/web/scripts/e2e/interaction.mjs",
         "apps/web/scripts/e2e/layout.mjs",
-        "apps/web/scripts/e2e/shots.mjs",
         "fixtures/interaction/v1/select-delete.json"
       ]
     },
@@ -6900,7 +6996,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/ellipse-spline.json"
@@ -6925,7 +7021,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/spot-divide.json"
@@ -6950,9 +7046,10 @@
       "status": "pending",
       "platforms": {
         "web": "pending",
-        "desktop": "none"
+        "desktop": "pending"
       },
       "tests": [],
+      "desktopWhere": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)",
       "note": "Aplikasyon aracı hazır değil. Hesap menüsündeki `calc.stakeout` penceresi ayrıdır ve çalışır."
     },
     {
@@ -6976,7 +7073,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/stretch-align.json"
@@ -7000,11 +7097,12 @@
       "status": "pending",
       "platforms": {
         "web": "pending",
-        "desktop": "none"
+        "desktop": "pending"
       },
       "tests": [
         "apps/web/src/app/menus.test.ts"
       ],
+      "desktopWhere": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)",
       "note": "İfraz hesabı henüz yok. Alan ve hisse kuralları bağımsız referans ve kurum kabulü ister (CLAUDE.md §7, §23; TODOS.md GIS-06, GIS-13)."
     },
     {
@@ -7027,7 +7125,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -7052,7 +7150,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -7075,7 +7173,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/areas.json"
@@ -7102,7 +7200,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/edge-tools.json"
@@ -7128,7 +7226,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/path-edit-tools.json"
@@ -7156,7 +7254,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
@@ -7182,7 +7280,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "fixtures/interaction/v1/navigation.json"
@@ -7275,13 +7373,12 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/processing/processing.test.ts",
         "apps/web/src/processing/runs.test.ts",
-        "apps/web/scripts/fixtures/record-processing-dialog.test.ts",
-        "apps/web/scripts/e2e/shots.mjs"
+        "apps/web/scripts/fixtures/record-processing-dialog.test.ts"
       ]
     },
     {
@@ -7349,13 +7446,12 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/processing/processing.test.ts",
         "apps/web/src/processing/runs.test.ts",
         "apps/web/scripts/fixtures/record-processing-dialog.test.ts",
-        "apps/web/scripts/e2e/shots.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
     },
@@ -7475,13 +7571,12 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/processing/processing.test.ts",
         "apps/web/src/processing/runs.test.ts",
-        "apps/web/scripts/fixtures/record-processing-dialog.test.ts",
-        "apps/web/scripts/e2e/shots.mjs"
+        "apps/web/scripts/fixtures/record-processing-dialog.test.ts"
       ]
     },
     {
@@ -7531,12 +7626,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/processing/runs.test.ts",
         "apps/web/scripts/fixtures/record-processing-dialog.test.ts",
-        "apps/web/scripts/e2e/shots.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
     }
@@ -7566,11 +7660,10 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/scripts/fixtures/record-processing-dialog.test.ts",
-        "apps/web/scripts/e2e/shots.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
     }
@@ -7604,7 +7697,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -7621,8 +7714,9 @@
       "status": "pending",
       "platforms": {
         "web": "pending",
-        "desktop": "none"
-      }
+        "desktop": "pending"
+      },
+      "desktopWhere": "apps/desktop/src/modes.rs (menüde “Yakında”)"
     },
     {
       "id": "gis",
@@ -7654,7 +7748,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -7671,7 +7765,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -7688,8 +7782,9 @@
       "status": "pending",
       "platforms": {
         "web": "pending",
-        "desktop": "none"
-      }
+        "desktop": "pending"
+      },
+      "desktopWhere": "apps/desktop/src/modes.rs (menüde “Yakında”)"
     }
   ],
   "settings": [
@@ -7732,8 +7827,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "n/a"
+      },
+      "desktopNote": "WebGL2 ya da WebGPU seçimi tarayıcınındır; masaüstünün arka ucunu wgpu seçer (ADR 0019)."
     },
     {
       "id": "layout.bottomExpanded",
@@ -7745,8 +7841,10 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "partial"
+      },
+      "desktopWhere": "apps/desktop/src/bottom.rs",
+      "desktopNote": "Alt panel F2 ile açılıp kapanır; yeniden açılışta hatırlanmaz."
     },
     {
       "id": "layout.bottomHeight",
@@ -7758,8 +7856,10 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "partial"
+      },
+      "desktopWhere": "apps/desktop/src/bottom.rs",
+      "desktopNote": "Boyu sürükleyerek değişir; yeniden açılışta hatırlanmaz."
     },
     {
       "id": "layout.bottomTab",
@@ -7771,8 +7871,10 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "partial"
+      },
+      "desktopWhere": "apps/desktop/src/bottom.rs",
+      "desktopNote": "Sekmeler (komut geçmişi, koordinat listesi, uyarılar) var; seçili sekme yeniden açılışta hatırlanmaz."
     },
     {
       "id": "layout.dockTab",
@@ -7784,8 +7886,10 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "partial"
+      },
+      "desktopWhere": "apps/desktop/src/app.rs (Docks: Katmanlar ve İşlemler sekmeleri)",
+      "desktopNote": "Seçili sekme yeniden açılışta hatırlanmaz."
     },
     {
       "id": "layout.dockWidth",
@@ -7797,8 +7901,10 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "partial"
+      },
+      "desktopWhere": "apps/desktop/src/app.rs (Docks)",
+      "desktopNote": "Genişlik sürükleyerek değişir; yeniden açılışta hatırlanmaz."
     },
     {
       "id": "layout.layersFraction",
@@ -7810,8 +7916,10 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "partial"
+      },
+      "desktopWhere": "apps/desktop/src/app.rs (Docks: Katmanlar ile Özellikler bölmesi)",
+      "desktopNote": "Bölme sürükleyerek değişir; yeniden açılışta hatırlanmaz."
     },
     {
       "id": "layout.processingFolded",
@@ -7823,8 +7931,10 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "partial"
+      },
+      "desktopWhere": "apps/desktop/src/processing/panel.rs",
+      "desktopNote": "Kategoriler katlanır; yeniden açılışta hatırlanmaz."
     },
     {
       "id": "layout.processingTab",
@@ -7836,8 +7946,10 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "partial"
+      },
+      "desktopWhere": "apps/desktop/src/processing/panel.rs",
+      "desktopNote": "Araçlar ve Geçmiş sekmeleri var; seçili sekme yeniden açılışta hatırlanmaz."
     },
     {
       "id": "layout.ribbonCollapsed",
@@ -7849,8 +7961,10 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "partial"
+      },
+      "desktopWhere": "apps/desktop/src/view.rs (view.ribbonCollapse)",
+      "desktopNote": "Şerit daraltılır; yeniden açılışta hatırlanmaz."
     },
     {
       "id": "layout.ribbonQuickAccess",
@@ -7888,8 +8002,10 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "partial"
+      },
+      "desktopWhere": "apps/desktop/src/view.rs",
+      "desktopNote": "Seçili sekme yeniden açılışta hatırlanmaz."
     },
     {
       "id": "layout.ribbonToolbox",
@@ -7914,8 +8030,10 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "partial"
+      },
+      "desktopWhere": "apps/desktop/src/view_commands.rs (F4)",
+      "desktopNote": "Paneller F4 ile gizlenir; yeniden açılışta hatırlanmaz."
     },
     {
       "id": "layout.theme",
@@ -7927,8 +8045,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "ayarlar.json appearance.theme (Görünüm sekmesi, ADR 0051)"
     },
     {
       "id": "layout.toolboxColumns",
@@ -8018,8 +8137,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "Proje ayarları (apps/desktop/src/project/settings.rs), .kcad'de"
     },
     {
       "id": "project.areaDecimals",
@@ -8031,8 +8151,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "Proje ayarları (apps/desktop/src/project/settings.rs), .kcad'de"
     },
     {
       "id": "project.areaUnit",
@@ -8044,8 +8165,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "Proje ayarları (apps/desktop/src/project/settings.rs), .kcad'de"
     },
     {
       "id": "project.drawingFont",
@@ -8057,8 +8179,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "Proje ayarları (apps/desktop/src/project/settings.rs), .kcad'de"
     },
     {
       "id": "project.lengthDecimals",
@@ -8070,8 +8193,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "Proje ayarları (apps/desktop/src/project/settings.rs), .kcad'de"
     },
     {
       "id": "project.plotScale",
@@ -8083,8 +8207,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "Proje ayarları (apps/desktop/src/project/settings.rs), .kcad'de"
     },
     {
       "id": "project.srid",
@@ -8096,8 +8221,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "Proje ayarları ve Koordinat sistemi… (apps/desktop/src/project/settings.rs, crs.rs), .kcad'de"
     },
     {
       "id": "project.workspace",
@@ -8109,8 +8235,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "Proje ayarları ve durum çubuğundaki mod (apps/desktop/src/modes.rs), .kcad'de"
     },
     {
       "id": "session.color",
@@ -8232,8 +8359,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "ayarlar.json appearance.accentColor (Görünüm sekmesi, ADR 0051)"
     },
     {
       "id": "user.commandBar",
@@ -8554,8 +8682,10 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "partial"
+      },
+      "desktopWhere": "ayarlar.json appearance.typeface (Görünüm sekmesi, ADR 0051)",
+      "desktopNote": "Masaüstünde KentOS UI'ın üç yazı tipi var (IBM Plex Sans, Inter, Plus Jakarta Sans); web yedi seçenek sunar."
     },
     {
       "id": "user.uiScale",
@@ -8568,8 +8698,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "ayarlar.json appearance.textSize (Görünüm sekmesi, ADR 0051)"
     }
   ],
   "storage": [
@@ -8580,8 +8711,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "$XDG_DATA_HOME/kentos-cad/bulut-taslak (ADR 0040, 0043)"
     },
     {
       "id": "kentos.files/recent",
@@ -8590,8 +8722,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "$XDG_STATE_HOME/kentos-cad/son-dosyalar.json (ADR 0050)"
     },
     {
       "id": "kentos.invitation",
@@ -8610,8 +8743,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "n/a"
       },
+      "desktopNote": "Web'in tipli ayarlardan önceki deposudur; masaüstünün böyle eski bir deposu olmadı, ayarları baştan ayarlar.json'dadır.",
       "note": "Eski tercih deposu. Tipli ayarlara (`kentos.settings.v1`) bir kez taşınır; uygulama ona bir daha yazmaz, yedek olarak olduğu gibi durur (ADR 0023)."
     },
     {
@@ -8621,8 +8755,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "$XDG_STATE_HOME/kentos-cad/islemler.json (ADR 0084)"
     },
     {
       "id": "kentos.recovery/copies",
@@ -8642,8 +8777,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "~/.config/kentos-cad/ayarlar.json (ADR 0023)"
     },
     {
       "id": "kentos.settings.v1.backup",
@@ -8652,8 +8788,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
+      "desktopWhere": "~/.config/kentos-cad/ayarlar-yedek-<zaman>.json (apps/desktop/src/settings.rs)",
       "note": "Okunamayan ya da geçersiz değer içeren ayar kaydının tam metni; kurtarma üstüne yazmadan önce buraya kopyalar (ADR 0023)."
     },
     {
@@ -8673,8 +8810,10 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "partial"
+      },
+      "desktopWhere": "ayarlar.json appearance.theme",
+      "desktopNote": "Tema kalıcıdır; panellerin ve şeridin yerleşimi yeniden açılışta hatırlanmaz."
     }
   ],
   "fileFields": [
@@ -8689,7 +8828,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -8702,7 +8841,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -8715,7 +8854,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -8728,7 +8867,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -8741,7 +8880,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -8754,7 +8893,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -8767,7 +8906,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -8780,7 +8919,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -8793,7 +8932,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -8806,7 +8945,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -8819,7 +8958,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -8834,7 +8973,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -8847,7 +8986,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -8860,7 +8999,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -8873,7 +9012,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -8886,7 +9025,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -8899,7 +9038,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -8912,7 +9051,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -8925,7 +9064,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -8938,7 +9077,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -8951,7 +9090,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -8964,7 +9103,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -8977,7 +9116,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -8990,7 +9129,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9003,7 +9142,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9016,7 +9155,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9029,7 +9168,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9042,7 +9181,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9055,7 +9194,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9068,7 +9207,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9081,7 +9220,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9094,7 +9233,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9107,7 +9246,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9120,7 +9259,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9133,7 +9272,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9146,7 +9285,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9159,7 +9298,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9172,7 +9311,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9185,7 +9324,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9198,7 +9337,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9211,7 +9350,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9224,7 +9363,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9237,7 +9376,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9250,7 +9389,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9263,7 +9402,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9276,7 +9415,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9293,7 +9432,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9306,7 +9445,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9319,7 +9458,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9332,7 +9471,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9345,7 +9484,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9358,7 +9497,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9371,7 +9510,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9384,7 +9523,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9397,7 +9536,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9410,7 +9549,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9423,7 +9562,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9436,7 +9575,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9449,7 +9588,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9462,7 +9601,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9475,7 +9614,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9488,7 +9627,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9501,7 +9640,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9514,7 +9653,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9527,7 +9666,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9540,7 +9679,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9553,7 +9692,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9566,7 +9705,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9579,7 +9718,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9592,7 +9731,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9611,7 +9750,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9624,7 +9763,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9637,7 +9776,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9650,7 +9789,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9663,7 +9802,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9676,7 +9815,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9689,7 +9828,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9702,7 +9841,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9715,7 +9854,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9728,7 +9867,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9741,7 +9880,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9754,7 +9893,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9818,7 +9957,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9829,7 +9968,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9842,7 +9981,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9855,7 +9994,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9868,7 +10007,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9881,7 +10020,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9894,7 +10033,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9907,7 +10046,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9920,7 +10059,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9933,7 +10072,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9946,7 +10085,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9959,7 +10098,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9972,7 +10111,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -9985,7 +10124,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10000,7 +10139,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10015,7 +10154,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10031,7 +10170,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10044,7 +10183,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10057,7 +10196,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10070,7 +10209,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10083,7 +10222,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10096,7 +10235,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10109,7 +10248,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10122,7 +10261,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10135,7 +10274,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10148,7 +10287,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10161,7 +10300,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10174,7 +10313,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10187,7 +10326,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10200,7 +10339,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10213,7 +10352,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10226,7 +10365,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10239,7 +10378,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10252,7 +10391,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10265,7 +10404,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10279,7 +10418,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10292,7 +10431,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10305,7 +10444,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10318,7 +10457,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10331,7 +10470,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10344,7 +10483,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10357,7 +10496,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10370,7 +10509,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10383,7 +10522,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10396,7 +10535,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10409,7 +10548,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10422,7 +10561,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10435,7 +10574,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10448,7 +10587,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10461,7 +10600,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10474,7 +10613,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10487,7 +10626,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10503,7 +10642,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10516,7 +10655,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10529,7 +10668,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10542,7 +10681,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10555,7 +10694,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10568,7 +10707,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10581,7 +10720,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10594,7 +10733,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10607,7 +10746,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10620,7 +10759,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10633,7 +10772,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10646,7 +10785,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10659,7 +10798,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10672,7 +10811,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10685,7 +10824,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10698,7 +10837,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10711,7 +10850,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10724,7 +10863,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10737,7 +10876,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10750,7 +10889,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10763,7 +10902,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10776,7 +10915,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10789,7 +10928,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10804,7 +10943,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10815,7 +10954,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10828,7 +10967,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10841,7 +10980,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10854,7 +10993,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10867,7 +11006,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10880,7 +11019,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10893,7 +11032,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10906,7 +11045,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10919,7 +11058,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10932,7 +11071,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10945,7 +11084,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10958,7 +11097,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10971,7 +11110,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10984,7 +11123,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -10997,7 +11136,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -11010,7 +11149,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -11023,7 +11162,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -11036,7 +11175,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -11049,7 +11188,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -11062,7 +11201,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -11075,7 +11214,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -11088,7 +11227,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -11101,7 +11240,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -11114,7 +11253,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -11127,7 +11266,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -11140,7 +11279,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -11153,7 +11292,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -11166,7 +11305,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -11179,7 +11318,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -11192,7 +11331,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -11205,7 +11344,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -11218,7 +11357,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -11231,7 +11370,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -11248,7 +11387,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     }
   ],
@@ -11261,8 +11400,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/app_menu/ (ADR 0050)"
     },
     {
       "id": "apps/web/src/ui/bottom/BottomPanel.ts#BottomPanel",
@@ -11272,8 +11412,10 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "partial"
+      },
+      "desktopWhere": "apps/desktop/src/bottom.rs (ADR 0058)",
+      "desktopNote": "Komut geçmişinin satırlarında saat yazmaz."
     },
     {
       "id": "apps/web/src/ui/bottom/CommandLine.ts#CommandLine",
@@ -11283,8 +11425,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/view.rs, input.rs (KentOS UI CommandLine)"
     },
     {
       "id": "apps/web/src/ui/calc/IntersectionDialog.ts#openIntersection",
@@ -11294,8 +11437,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/calc/intersection.rs (ADR 0071)"
     },
     {
       "id": "apps/web/src/ui/calc/PolarDialog.ts#openPolar",
@@ -11305,8 +11449,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/calc/polar.rs (ADR 0071)"
     },
     {
       "id": "apps/web/src/ui/calc/StakeoutDialog.ts#openStakeout",
@@ -11316,8 +11461,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/calc/stakeout.rs (ADR 0071)"
     },
     {
       "id": "apps/web/src/ui/calc/TraverseDialog.ts#openTraverse",
@@ -11327,8 +11473,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/calc/traverse.rs (ADR 0070)"
     },
     {
       "id": "apps/web/src/ui/cloud/AccessLostNotice.ts#openAccessLostNotice",
@@ -11338,8 +11485,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/cloud/follow.rs"
     },
     {
       "id": "apps/web/src/ui/cloud/CatalogDialog.ts#openCatalog",
@@ -11349,8 +11497,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/cloud/catalog*.rs (ADR 0086)"
     },
     {
       "id": "apps/web/src/ui/cloud/ConflictDialog.ts#openConflictDialog",
@@ -11360,8 +11509,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/cloud/view.rs, follow.rs"
     },
     {
       "id": "apps/web/src/ui/cloud/HistoryForms.ts#openCheckpointDialog",
@@ -11371,8 +11521,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/cloud/catalog_history_view.rs (ADR 0087)"
     },
     {
       "id": "apps/web/src/ui/cloud/HistoryForms.ts#openRestoreDialog",
@@ -11382,8 +11533,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/cloud/catalog_history_view.rs (ADR 0087)"
     },
     {
       "id": "apps/web/src/ui/cloud/InvitationDialog.ts#openInvitationDialog",
@@ -11404,8 +11556,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/cloud/account.rs, view.rs (ADR 0041)"
     },
     {
       "id": "apps/web/src/ui/cloud/ProjectActions.ts#openDeleteDialog",
@@ -11415,8 +11568,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/cloud/actions.rs (ADR 0073)"
     },
     {
       "id": "apps/web/src/ui/cloud/ProjectActions.ts#openRenameDialog",
@@ -11426,8 +11580,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/cloud/actions.rs (ADR 0073)"
     },
     {
       "id": "apps/web/src/ui/cloud/ProjectForms.ts#openConvertDialog",
@@ -11470,8 +11625,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/cloud/mod.rs (cloud.open, cloud.upload, cloud.uploadFile)"
     },
     {
       "id": "apps/web/src/ui/cloud/ShareDialog.ts#openShareDialog",
@@ -11492,8 +11648,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/cloud/upload.rs (ADR 0041, 0073)"
     },
     {
       "id": "apps/web/src/ui/dialogs.ts#openAboutDialog",
@@ -11503,8 +11660,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/view.rs (Dialog::About)"
     },
     {
       "id": "apps/web/src/ui/dialogs.ts#openShortcutsDialog",
@@ -11514,8 +11672,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/view.rs (Dialog::Shortcuts)"
     },
     {
       "id": "apps/web/src/ui/dock/RightDock.ts#RightDock",
@@ -11525,8 +11684,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/view.rs, app.rs (KentOS UI DockSpace)"
     },
     {
       "id": "apps/web/src/ui/io/CoordExportDialog.ts#openCoordExport",
@@ -11536,8 +11696,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/exchange/coord_export.rs (ADR 0048)"
     },
     {
       "id": "apps/web/src/ui/io/CoordImportDialog.ts#openCoordImport",
@@ -11547,8 +11708,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/exchange/coord_import.rs (ADR 0048)"
     },
     {
       "id": "apps/web/src/ui/io/DxfExportDialog.ts#openDxfExport",
@@ -11558,8 +11720,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/exchange/dxf_export.rs (ADR 0048)"
     },
     {
       "id": "apps/web/src/ui/io/DxfImportDialog.ts#openDxfImport",
@@ -11569,8 +11732,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/exchange/dxf_import.rs (ADR 0048)"
     },
     {
       "id": "apps/web/src/ui/io/GeoJsonExportDialog.ts#openGeoJsonExport",
@@ -11580,8 +11744,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/exchange/geojson_export.rs (ADR 0053)"
     },
     {
       "id": "apps/web/src/ui/io/GisImportDialog.ts#openGeoJsonImport",
@@ -11591,8 +11756,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/exchange/gis_import.rs (ADR 0053)"
     },
     {
       "id": "apps/web/src/ui/io/GisImportDialog.ts#openShapefileImport",
@@ -11602,8 +11768,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/exchange/gis_import.rs (ADR 0053)"
     },
     {
       "id": "apps/web/src/ui/io/OpeningDialog.ts#openOpeningDialog",
@@ -11625,8 +11792,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/layer_tree.rs (ADR 0072, 0075)"
     },
     {
       "id": "apps/web/src/ui/menu/MenuBar.ts#MenuBar",
@@ -11647,8 +11815,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/processing/panel.rs (ADR 0084)"
     },
     {
       "id": "apps/web/src/ui/processing/ToolDialog.ts#openModelDialog",
@@ -11658,8 +11827,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/processing/window.rs (ADR 0084)"
     },
     {
       "id": "apps/web/src/ui/processing/ToolDialog.ts#openToolDialog",
@@ -11669,8 +11839,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/processing/window.rs (ADR 0084, 0088)"
     },
     {
       "id": "apps/web/src/ui/processing/model/ModelDesigner.ts#openModelDesigner",
@@ -11691,8 +11862,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
+      "desktopWhere": "apps/desktop/src/properties/ (ADR 0063, 0066)",
       "note": "Öznitelikler v1'de metindir; tipli öznitelik şeması henüz yok (CLAUDE.md §24.1, TODOS.md DOM-09..11)."
     },
     {
@@ -11703,8 +11875,10 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "partial"
+      },
+      "desktopWhere": "apps/desktop/src/view.rs, catalog.rs (ADR 0017, 0051)",
+      "desktopNote": "Giriş'in Katmanlar ve Özellikler panelleri ile Seçim sekmesinin paneli yok (etkin katman, yeni nesnelerin rengi, çizgi tipi ve kalınlığı, çizim ölçeği, seçimin özeti); yöntem düğmesi son seçimi göstermez; hızlı erişime ekleme ve harf ipuçları yok."
     },
     {
       "id": "apps/web/src/ui/settings/AppSettingsDialog.ts#openAppSettings",
@@ -11714,8 +11888,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/settings_view.rs (ADR 0023)"
     },
     {
       "id": "apps/web/src/ui/settings/NewProjectDialog.ts#openNewProjectDialog",
@@ -11725,8 +11900,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/project/new.rs (ADR 0049)"
     },
     {
       "id": "apps/web/src/ui/settings/ProjectSettingsDialog.ts#openProjectSettings",
@@ -11736,8 +11912,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/project/settings.rs (ADR 0049)"
     },
     {
       "id": "apps/web/src/ui/shell/AppShell.ts#AppShell",
@@ -11747,8 +11924,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/view.rs (ADR 0017)"
     },
     {
       "id": "apps/web/src/ui/shell/CommandBar.ts#CommandBar",
@@ -11758,8 +11936,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/command_bar.rs"
     },
     {
       "id": "apps/web/src/ui/shell/CursorInput.ts#CursorInput",
@@ -11769,8 +11948,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/preview.rs, input.rs (değer alanı)"
     },
     {
       "id": "apps/web/src/ui/shell/HoverCard.ts#HoverCard",
@@ -11780,8 +11960,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/hover_card.rs (ADR 0068, 0082)"
     },
     {
       "id": "apps/web/src/ui/shell/InlineTextEditor.ts#InlineTextEditor",
@@ -11791,8 +11972,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/text_field.rs (ADR 0060)"
     },
     {
       "id": "apps/web/src/ui/start/StartScreen.ts#openStartScreen",
@@ -11802,8 +11984,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/start.rs (ADR 0050)"
     },
     {
       "id": "apps/web/src/ui/statusbar/StatusBar.ts#StatusBar",
@@ -11813,8 +11996,10 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "partial"
+      },
+      "desktopWhere": "apps/desktop/src/view.rs, cloud/view.rs (ADR 0058, 0080)",
+      "desktopNote": "Web'in sunucu hücresi ve onun hesap menüsü yok; masaüstünde hesabın adı ve Çıkış ayrı hücrelerdir (ADR 0041). Çizim motoru hücresi masaüstünde anlamsızdır (wgpu)."
     },
     {
       "id": "apps/web/src/ui/style/LayerStyleDialog.ts#openLayerStyle",
@@ -11824,8 +12009,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/style/layer_style/ (ADR 0091)"
     },
     {
       "id": "apps/web/src/ui/style/LegendDialog.ts#openLegend",
