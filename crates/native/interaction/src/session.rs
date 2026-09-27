@@ -8,7 +8,7 @@
 //! | Önizleme (preview) | pointer moves change only [`Session::preview`], never the drawing |
 //! | Onay (confirm) | [`Session::confirm`]: the tool commits one undo step and stays for the next object |
 //! | İptal (cancel) | [`Session::exit`]: the draft is dropped, nothing reaches the drawing or its history |
-//! | Askıda (suspended) | not yet: the point calculator is not on the desktop (UX-07) |
+//! | Askıda (suspended) | [`Session::nest`]: the point calculator runs over a command waiting for a point (or a grip being moved); its point goes to the command as if clicked, Esc brings the command back as it was (docs/adr/0083) |
 //!
 //! “Repeat the last command” and what a key means are the host's: it asks
 //! [`Session::last`] and routes keys by ADR 0018's order. So is the object
@@ -30,6 +30,7 @@ use crate::erase::{self, Erase};
 use crate::format::Format;
 use crate::lengthen::{self, Lengthen};
 use crate::line::{self, Line};
+use crate::log::Level;
 use crate::mirror::{self, Mirror};
 use crate::move_copy::{self, Move};
 use crate::navigate::{self, Pan, ZoomWindow};
@@ -118,14 +119,28 @@ pub const TOOLS: &[&str] = &[
     boundary::ID,
 ];
 
+/// What a tool running over another one suspended (docs/adr/0083).
+enum Suspended {
+    /// A command waiting for a point.
+    Tool(Box<dyn Tool>),
+    /// No command: the select tool with a grip being moved.
+    Grip,
+}
+
 /// The running tool, if any, the last one started, and the select tool that
 /// has the pointer while none runs.
 #[derive(Default)]
 pub struct Session {
     tool: Option<Box<dyn Tool>>,
+    /// The command suspended under the running tool (the point calculator's).
+    parent: Option<Suspended>,
     last: Option<&'static str>,
     select: Select,
 }
+
+/// What the web says when the command takes no point at its step.
+pub const NO_POINT_NOW: &str =
+    "Çalışan araç şu adımda nokta beklemiyor; hesaplanan nokta kullanılmadı.";
 
 impl Session {
     pub fn new() -> Self {
@@ -213,7 +228,76 @@ impl Session {
     /// web's `ToolManager.run`). The host calls [`Session::activate`] right after.
     pub fn run(&mut self, tool: Box<dyn Tool>) {
         self.tool = Some(tool);
+        self.parent = None;
         self.select.reset();
+    }
+
+    /// Runs `child` over the running command without ending it (the point
+    /// calculator; the web's `ToolManager.nest`, ADR 0018 “Askıda”). The
+    /// command keeps its state. When the child finishes, its point goes to
+    /// the command as if clicked; Esc brings the command back as it was.
+    /// With no command, it runs over a grip being moved. `label` is what the
+    /// command line says (“Nokta hesabı: Kenar kesişimi”).
+    pub fn nest(&mut self, child: Box<dyn Tool>, label: String, cx: &mut Context<'_>) {
+        if self.parent.is_some() {
+            return;
+        }
+        let parent = match self.tool.take() {
+            Some(tool) => Suspended::Tool(tool),
+            None if self.select.grip_active() => Suspended::Grip,
+            None => return,
+        };
+        self.parent = Some(parent);
+        cx.say(Level::Command, label);
+        self.tool = Some(child);
+        if self
+            .tool
+            .as_mut()
+            .is_some_and(|t| t.activate(cx) == Flow::Exit)
+        {
+            self.unnest(None, cx);
+        }
+    }
+
+    /// Whether a tool runs over a suspended command.
+    pub fn nested(&self) -> bool {
+        self.parent.is_some()
+    }
+
+    /// Whether the point calculator may run now (the web's `canCalcPoint`):
+    /// a command that takes points and snaps, or a grip being moved; not
+    /// over another calculator.
+    pub fn can_calc_point(&self) -> bool {
+        if self.parent.is_some() {
+            return false;
+        }
+        match &self.tool {
+            Some(tool) => tool.accepts_points() && tool.snaps(),
+            None => self.select.grip_active(),
+        }
+    }
+
+    /// Ends the tool run over the suspended command, which goes on; `point`
+    /// reaches it as if clicked (the web's `unnest`).
+    fn unnest(&mut self, point: Option<Vec2>, cx: &mut Context<'_>) {
+        let Some(parent) = self.parent.take() else {
+            self.tool = None;
+            return;
+        };
+        self.tool = match parent {
+            Suspended::Tool(tool) => Some(tool),
+            Suspended::Grip => None,
+        };
+        let Some(p) = point else {
+            return;
+        };
+        let taken = match &mut self.tool {
+            Some(tool) => tool.accept_point(p, cx),
+            None => self.select.accept_point(p, cx),
+        };
+        if !taken {
+            cx.say(Level::Warn, NO_POINT_NOW);
+        }
     }
 
     /// Right after a start: the select tool lets go of the hovered object,
@@ -228,9 +312,11 @@ impl Session {
         }
     }
 
-    /// Leaves the running tool; its draft is dropped (ADR 0018, “İptal”).
+    /// Leaves the running tool; its draft is dropped (ADR 0018, “İptal”),
+    /// and so is a command suspended under it.
     pub fn exit(&mut self) {
         self.tool = None;
+        self.parent = None;
     }
 
     /// Esc: the running tool steps back when it can (the web's `cancel`: an
@@ -241,19 +327,30 @@ impl Session {
             return self.select.cancel();
         }
         let stays = self.tool.as_mut().is_some_and(|t| t.cancel(cx));
-        if !stays {
-            self.tool = None;
+        if stays {
+            return true;
         }
-        stays
+        // Over a suspended command: it comes back as it was.
+        if self.parent.is_some() {
+            self.unnest(None, cx);
+            return true;
+        }
+        self.tool = None;
+        false
     }
 
     pub fn is_running(&self) -> bool {
         self.tool.is_some()
     }
 
-    /// The running tool's id; `select` when none runs, as the traces read it.
+    /// The running command's id; `select` when none runs, as the traces
+    /// read it. Under the point calculator it is the suspended command's.
     pub fn tool_id(&self) -> &'static str {
-        self.tool.as_ref().map_or("select", |t| t.id())
+        match &self.parent {
+            Some(Suspended::Tool(tool)) => tool.id(),
+            Some(Suspended::Grip) => "select",
+            None => self.tool.as_ref().map_or("select", |t| t.id()),
+        }
     }
 
     /// The running tool's name (`Kapalı alan`).
@@ -343,7 +440,7 @@ impl Session {
             Some(tool) => tool.pointer_down(p, cx),
             None => self.select.pointer_down(p, cx),
         }
-        self.settle();
+        self.settle(cx);
     }
 
     /// The left button came up (on the drawing, or wherever a press on it ended).
@@ -352,7 +449,7 @@ impl Session {
             Some(tool) => tool.pointer_up(p, cx),
             None => self.select.pointer_up(p, cx),
         }
-        self.settle();
+        self.settle(cx);
     }
 
     /// The selection box being drawn: the select tool's while no command
@@ -371,7 +468,7 @@ impl Session {
         if let Some(tool) = self.tool.as_mut() {
             tool.text_typed(text, cx);
         }
-        self.settle();
+        self.settle(cx);
     }
 
     pub fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
@@ -380,15 +477,22 @@ impl Session {
             // A typed point places a grip being moved.
             None => self.select.input(text, cx),
         };
-        self.settle();
+        self.settle(cx);
         taken
     }
 
     /// A tool that finished with that call leaves: the web's modify tools
-    /// call `ctx.tools.exit()` once their transform is written.
-    fn settle(&mut self) {
-        if self.tool.as_ref().is_some_and(|t| t.finished()) {
-            self.tool = None;
+    /// call `ctx.tools.exit()` once their transform is written. One run over
+    /// a suspended command hands it its point, and the command may finish
+    /// with that point in turn.
+    fn settle(&mut self, cx: &mut Context<'_>) {
+        while self.tool.as_ref().is_some_and(|t| t.finished()) {
+            if self.parent.is_some() {
+                let point = self.tool.as_ref().and_then(|t| t.computed());
+                self.unnest(point, cx);
+            } else {
+                self.tool = None;
+            }
         }
     }
 
@@ -398,7 +502,13 @@ impl Session {
         match &mut self.tool {
             Some(tool) => {
                 if tool.confirm(cx) == Flow::Exit {
-                    self.tool = None;
+                    if self.parent.is_some() {
+                        let point = self.tool.as_ref().and_then(|t| t.computed());
+                        self.unnest(point, cx);
+                        self.settle(cx);
+                    } else {
+                        self.tool = None;
+                    }
                 }
             }
             None => {

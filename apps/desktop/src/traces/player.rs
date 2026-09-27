@@ -14,6 +14,8 @@ use iced::{Point, Rectangle, Task, event, mouse, window};
 use kentos_contracts::{DocumentSnapshotV1, Entity};
 use kentos_render_wgpu::Vec2;
 
+use kentos_ui::widget::command_line::Entry;
+
 use crate::app::{App, Message, Picker};
 use crate::document::Document;
 use crate::keys;
@@ -122,6 +124,10 @@ impl Seen {
 pub struct Observation {
     pub tool: String,
     pub points: usize,
+    /// The prompt's whole text.
+    pub prompt: String,
+    /// What the step wrote to the command line, in order, at every level.
+    pub messages: Vec<String>,
     pub options: Vec<String>,
     pub dynamic_input: Option<String>,
     pub command_line: String,
@@ -170,9 +176,9 @@ impl<'a> Player<'a> {
         file: PathBuf,
     ) -> Result<Self, String> {
         let d = &trace.draft;
-        if d.grid || d.tracking {
+        if d.tracking {
             return Err(format!(
-                "{}: ızgara ve nesne izleme masaüstünde henüz yok; iz oynatılamaz",
+                "{}: nesne izleme masaüstünde henüz yok; iz oynatılamaz",
                 trace.id
             ));
         }
@@ -198,6 +204,7 @@ impl<'a> Player<'a> {
         // later (F3, F8) starts from these, and the other drafting values
         // (snap kinds, apertures, polar step) are the settings' defaults.
         let refused = player.app.settings.choose(&[
+            ("drafting.grid", d.grid.into()),
             ("drafting.ortho", d.ortho.into()),
             ("drafting.polar", d.polar.into()),
             ("drafting.snap", d.snap.into()),
@@ -229,12 +236,24 @@ impl<'a> Player<'a> {
                 break;
             }
             let label = format!("adım {} {}", i + 1, describe(step));
+            let said = self.app.history.len();
             if let Err(error) = self.act(step) {
                 problems.push(format!("{label}: {error}"));
                 break;
             }
             if let Some(expect) = &step.expect {
-                let bad = compare(expect, &self.observe(), self.trace);
+                let mut seen = self.observe();
+                seen.messages = self.app.history[said.min(self.app.history.len())..]
+                    .iter()
+                    .map(|entry| match entry {
+                        Entry::Input(t)
+                        | Entry::Value(t)
+                        | Entry::Output(t)
+                        | Entry::Warning(t)
+                        | Entry::Error(t) => t.clone(),
+                    })
+                    .collect();
+                let bad = compare(expect, &seen, self.trace);
                 if !bad.is_empty() {
                     problems.push(format!("{label}: {}", bad.join("; ")));
                 }
@@ -520,6 +539,8 @@ impl<'a> Player<'a> {
         Observation {
             tool: app.session.tool_id().to_owned(),
             points: app.session.point_count(),
+            prompt: app.session.prompt().text(),
+            messages: Vec::new(),
             options: app
                 .session
                 .prompt()

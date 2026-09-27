@@ -89,6 +89,11 @@ pub struct Step {
 pub struct Expect {
     pub(super) tool: Option<String>,
     pub(super) points: Option<usize>,
+    /// The prompt's whole text, exactly (docs/adr/0083).
+    pub(super) prompt: Option<String>,
+    /// Texts the step must have written, each whole and in this order, among
+    /// all its messages at any level; others may come between.
+    pub(super) logged: Option<Vec<String>>,
     pub(super) options: Option<Vec<String>>,
     /// `null` (closed) and absent (not compared) differ.
     #[serde(default, deserialize_with = "present")]

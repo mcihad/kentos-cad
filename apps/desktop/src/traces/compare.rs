@@ -25,6 +25,24 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
             want.to_string(),
         );
     }
+    if let Some(want) = &expect.prompt {
+        check(
+            "prompt",
+            &got.prompt == want,
+            format!("{:?}", got.prompt),
+            format!("{want:?}"),
+        );
+    }
+    if let Some(want) = &expect.logged {
+        // Each whole and in this order among the step's messages; others may come between.
+        let mut said = got.messages.iter();
+        check(
+            "logged",
+            want.iter().all(|w| said.any(|m| m == w)),
+            format!("{:?}", got.messages),
+            format!("{want:?}"),
+        );
+    }
     if let Some(want) = &expect.options {
         check(
             "options",

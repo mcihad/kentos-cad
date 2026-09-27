@@ -62,7 +62,7 @@ pub fn layer<'a>(
         if let Some(tag) = tag {
             let at = screen(tag.at);
             layers.push(
-                pin(measurement(tag.lines, tag_tone))
+                pin(measurement(tag.lines, tag_tone, snap))
                     .x(at.x.round() + 16.0)
                     .y(at.y.round() + 16.0)
                     .width(Fill)
@@ -91,10 +91,12 @@ pub fn layer<'a>(
 /// The measurement beside the cursor: length and bearing, or the arc's
 /// radius and length, and the area once there are three corners; in the
 /// danger colour where it names what goes (a vertex to remove).
-fn measurement<'a>(lines: Vec<String>, tone: Tone) -> Element<'a, Message> {
+fn measurement<'a>(lines: Vec<String>, tone: Tone, snap: Color) -> Element<'a, Message> {
+    // The point calculator's readings are in the drawing's snap colour (the web's `pal.snap`).
     let color = move |t: &Tokens| match tone {
         Tone::Danger => t.danger,
-        _ => t.accent,
+        Tone::Snap => snap,
+        Tone::Accent => t.accent,
     };
     let lines = column(lines.into_iter().map(|line| {
         text(line)

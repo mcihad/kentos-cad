@@ -91,6 +91,15 @@ impl Paste {
 }
 
 impl Tool for Paste {
+    /// A computed point is where the objects go (the web's `acceptPoint`).
+    fn accepts_points(&self) -> bool {
+        true
+    }
+
+    fn accept_point(&mut self, p: Vec2, cx: &mut Context<'_>) -> bool {
+        self.place(p, cx);
+        true
+    }
     fn id(&self) -> &'static str {
         ID
     }

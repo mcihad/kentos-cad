@@ -32,6 +32,7 @@ mod modes;
 mod opening;
 #[cfg(test)]
 mod perf;
+mod point_calc;
 mod preview;
 mod project;
 mod properties;

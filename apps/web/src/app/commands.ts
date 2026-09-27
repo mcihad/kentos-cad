@@ -239,8 +239,9 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       category: E,
       icon: 'undo',
       run: () => {
-        // While a command runs, its own newest step goes first (docs/adr/0018).
-        if (tools.activeId.value !== 'select' && tools.active.undoStep?.()) return;
+        // While a command runs, its own newest step goes first (docs/adr/0018); so does the point calculator's,
+        // over a waiting grip too.
+        if ((tools.activeId.value !== 'select' || tools.nested) && tools.active.undoStep?.()) return;
         const label = doc.undo();
         if (label) log.info(`Geri alındı: ${label}`);
         selection.retain((id) => !!doc.get(id));

@@ -576,4 +576,21 @@ pub trait Tool {
     fn select_box(&self) -> Option<SelectBox> {
         None
     }
+    /// Whether the tool takes points computed elsewhere: the point
+    /// calculator runs over it (the web's `acceptPoint` is there,
+    /// docs/adr/0083).
+    fn accepts_points(&self) -> bool {
+        false
+    }
+    /// A computed point, as if clicked at this step: the same as a typed
+    /// point, no ortho or polar applied (the web's `acceptPoint`). False
+    /// when this step takes no point.
+    fn accept_point(&mut self, _p: Vec2, _cx: &mut Context<'_>) -> bool {
+        false
+    }
+    /// A tool run over a suspended command (the point calculator): the
+    /// point it hands to that command once it has finished.
+    fn computed(&self) -> Option<Vec2> {
+        None
+    }
 }

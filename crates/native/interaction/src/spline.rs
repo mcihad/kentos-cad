@@ -94,6 +94,15 @@ impl Spline {
 }
 
 impl Tool for Spline {
+    /// A point computed by the point calculator, as if clicked (the web's `acceptPoint`).
+    fn accepts_points(&self) -> bool {
+        true
+    }
+
+    fn accept_point(&mut self, p: Vec2, cx: &mut Context<'_>) -> bool {
+        self.accept(p, cx);
+        true
+    }
     fn id(&self) -> &'static str {
         ID
     }

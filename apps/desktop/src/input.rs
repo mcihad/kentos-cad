@@ -465,6 +465,12 @@ impl App {
         if self.session.is_running() || self.session.grip_active() {
             self.echo_value(text);
             if self.with_tool(|s, cx| s.input(text, cx)) != Some(true) {
+                // Nokta hesapla by its alias while a point is expected (docs/adr/0083).
+                if let Some(def) = kentos_interaction::point_calc::CalcDef::by_alias(text)
+                    && self.session.can_calc_point()
+                {
+                    return self.start_point_calc(def.kind);
+                }
                 self.warn(format!(
                     "“{text}” anlaşılamadı. Koordinatı Y,X ya da @dY,dX biçiminde yazın."
                 ));

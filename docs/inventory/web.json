@@ -3566,7 +3566,8 @@
         "apps/web/scripts/e2e/visual.mjs",
         "fixtures/interaction/v1/arc-variants.json",
         "fixtures/interaction/v1/line-chain.json",
-        "fixtures/interaction/v1/navigation.json"
+        "fixtures/interaction/v1/navigation.json",
+        "fixtures/interaction/v1/point-calc.json"
       ]
     },
     {
@@ -6319,7 +6320,8 @@
         "apps/web/scripts/e2e/visual.mjs",
         "fixtures/interaction/v1/arc-variants.json",
         "fixtures/interaction/v1/line-chain.json",
-        "fixtures/interaction/v1/navigation.json"
+        "fixtures/interaction/v1/navigation.json",
+        "fixtures/interaction/v1/point-calc.json"
       ]
     },
     {

@@ -209,6 +209,21 @@ impl<S: Stages> Modify<S> {
 }
 
 impl<S: Stages> Tool for Modify<S> {
+    /// A computed point in the stages, not while picking (the web's
+    /// `SelectionFirstTool.acceptPoint`).
+    fn accepts_points(&self) -> bool {
+        true
+    }
+
+    fn accept_point(&mut self, p: Vec2, cx: &mut Context<'_>) -> bool {
+        if self.picking {
+            return false;
+        }
+        let flow = self.stages.point(p, cx);
+        self.after(flow, cx);
+        true
+    }
+
     fn id(&self) -> &'static str {
         self.stages.id()
     }

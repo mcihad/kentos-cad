@@ -46,6 +46,15 @@ impl PickPoint {
 }
 
 impl Tool for PickPoint {
+    /// A computed point is the one picked (the web's `acceptPoint`).
+    fn accepts_points(&self) -> bool {
+        true
+    }
+
+    fn accept_point(&mut self, p: Vec2, cx: &mut Context<'_>) -> bool {
+        self.finish(Some(p), cx);
+        true
+    }
     fn id(&self) -> &'static str {
         ID
     }

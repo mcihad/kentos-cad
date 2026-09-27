@@ -69,6 +69,7 @@ const REFS: Record<CalcKind, string[]> = {
   polar: ['durulan nokta (S)', 'bakılan nokta (R)'],
   mid: ['birinci nokta', 'ikinci nokta'],
 };
+const capitalize = (s: string): string => s.charAt(0).toLocaleUpperCase('tr-TR') + s.slice(1);
 const LETTERS: Record<CalcKind, string[]> = { side: ['A', 'B'], distances: ['A', 'B'], lines: ['A', 'B', 'C', 'D'], along: ['A', 'B'], polar: ['S', 'R'], mid: ['1', '2'] };
 
 /** Whether the running command can take a calculated point now. */
@@ -126,6 +127,24 @@ class PointCalcTool implements Tool {
     return this.pts.at(-1) ?? null;
   }
 
+  /** References picked so far. */
+  get pointCount(): number {
+    return this.pts.length;
+  }
+
+  /**
+   * Ctrl+Z while the calculator runs: newest first, the choice between two
+   * solutions (back to typing the values), else the last reference picked.
+   * True even with nothing to take back: the drawing is never undone under
+   * the suspended command; Esc leaves the calculator.
+   */
+  undoStep(): boolean {
+    if (this.candidates.length) this.candidates = [];
+    else this.pts.pop();
+    this.refresh();
+    return true;
+  }
+
   pointerMove(p: ToolPointer): void {
     this.hover = p.world;
     this.ctx.view.requestOverlay();
@@ -161,9 +180,39 @@ class PointCalcTool implements Tool {
     }
   }
 
+  /**
+   * Whatever is typed while the calculator runs is its own: what it cannot
+   * take is refused in its own words, saying what the step waits for, and
+   * the step stays. References are shown on the drawing, never typed.
+   */
   input(text: string): boolean {
     const t = text.trim();
-    if (this.pts.length < REFS[this.kind].length) return false;
+    if (this.pts.length < REFS[this.kind].length || !this.take(t)) this.ctx.log.warn(`“${t}” anlaşılamadı. ${this.expected()}`);
+    return true;
+  }
+
+  /** What the step waits for, as a refusal says it. */
+  private expected(): string {
+    const refs = REFS[this.kind];
+    if (this.pts.length < refs.length) return `${capitalize(refs[this.pts.length])} çizimde gösterin.`;
+    if (this.candidates.length) return 'İki çözümden istediğinize tıklayın ya da Enter’la sağdakini alın.';
+    switch (this.kind) {
+      case 'side':
+        return 'Dik ayak ve dik boyu yazın: absis,ordinat (ör. 12.5,3).';
+      case 'distances':
+        return 'A ve B noktalarına uzaklıkları yazın: d1,d2 (ör. 10,8).';
+      case 'along':
+        return 'A’dan uzaklığı yazın ya da a/b oranı (ör. 1/3).';
+      default: {
+        // Açı ve mesafe (İki nokta ortası and Doğru kesişimi take no value: they finish on their last reference).
+        const deg = this.ctx.doc.settings.angleUnit.value === 'deg';
+        return `Açı (${deg ? 'derece' : 'grad'}, saat yönünde) ve mesafeyi yazın: açı,mesafe (ör. ${deg ? '90' : '100'},25).`;
+      }
+    }
+  }
+
+  /** Takes a value typed once every reference is shown; false when the kind cannot read it. */
+  private take(t: string): boolean {
     const pair = t.match(/^(-?\d+(?:\.\d+)?)\s*[,; ]\s*(-?\d+(?:\.\d+)?)$/);
     const [a, b] = this.pts;
     switch (this.kind) {
