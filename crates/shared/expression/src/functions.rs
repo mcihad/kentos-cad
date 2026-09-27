@@ -3,7 +3,7 @@
 //! names, arities and help are `library`'s table. Text a function makes is
 //! written at the end of the caller's buffer.
 
-use kentos_geometry_core::jsmath::{js_max, js_max_all, js_min, js_min_all, js_round, js_sign};
+use kentos_geometry_core::jsmath::{PI, js_max, js_max_all, js_min, js_min_all, js_round, js_sign};
 
 use crate::js::number;
 use crate::js::text::{self, MAX_STRING_UNITS, utf16_len};
@@ -45,6 +45,9 @@ pub fn number_function(f: Func, xs: &[f64]) -> Option<V<'static>> {
         Func::Abs => finite(first.abs()),
         Func::Min => finite(js_min_all(xs.iter().copied())),
         Func::Max => finite(js_max_all(xs.iter().copied())),
+        Func::Sqrt => finite(first.sqrt()),
+        Func::Ceil => finite(first.ceil()),
+        Func::Floor => finite(first.floor()),
         _ => return None,
     })
 }
@@ -106,6 +109,77 @@ pub fn call<'a>(f: Func, args: &[V<'a>], out: &mut String, s: &mut Scratch) -> R
         Func::Abs => numeric_of(args, |n| n.next().unwrap_or(f64::NAN).abs()),
         Func::Min => numeric_of(args, |n| js_min_all(n)),
         Func::Max => numeric_of(args, |n| js_max_all(n)),
+        Func::Sqrt => numeric_of(args, |n| n.next().unwrap_or(f64::NAN).sqrt()),
+        Func::Ceil => numeric_of(args, |n| n.next().unwrap_or(f64::NAN).ceil()),
+        Func::Floor => numeric_of(args, |n| n.next().unwrap_or(f64::NAN).floor()),
+        Func::Pi => V::Num(PI),
+        Func::Left | Func::Right => {
+            // The first or the last n characters (UTF-16 units, as `parça` counts).
+            let Some(n) = num(1) else {
+                return R::V(V::Null);
+            };
+            if first == V::Null {
+                return R::V(V::Null);
+            }
+            let t = as_text(first, &mut s.a);
+            let total = utf16_len(t);
+            let count = if n > 0.0 { units(n.trunc(), total) } else { 0 };
+            if f == Func::Left {
+                text::push_slice(out, t, 0, Some(count));
+            } else {
+                text::push_slice(out, t, total - count, None);
+            }
+            return R::Made;
+        }
+        Func::Find => {
+            // Where the text is found, from 1 (UTF-16 units); 0 when it is not.
+            if first == V::Null || arg(1) == V::Null {
+                return R::V(V::Null);
+            }
+            let Scratch { a, b, .. } = s;
+            let (t, needle) = (as_text(first, a), as_text(arg(1), b));
+            V::Num(
+                t.find(needle)
+                    .map_or(0.0, |at| (utf16_len(&t[..at]) + 1) as f64),
+            )
+        }
+        Func::Concat => {
+            // Each value's text in turn; an empty value adds nothing.
+            let mark = out.len();
+            for &a in args {
+                push_text(out, a);
+            }
+            if out.len() - mark > MAX_STRING_UNITS && utf16_len(&out[mark..]) > MAX_STRING_UNITS {
+                return R::Thrown;
+            }
+            return R::Made;
+        }
+        Func::PadEnd => {
+            // As `doldur`, the fill after the text (a space when none is given).
+            let Some(len) = num(1) else {
+                return R::V(V::Null);
+            };
+            if first == V::Null {
+                return R::V(V::Null);
+            }
+            let fill = match args.get(2) {
+                None => u16::from(b' '),
+                Some(&c) => text::first_unit(as_text(c, &mut s.b)).unwrap_or(u16::from(b' ')),
+            };
+            let target = js_max(0.0, js_round(len));
+            let mark = out.len();
+            push_text(out, first);
+            let n = utf16_len(&out[mark..]);
+            if target <= n as f64 {
+                return R::Made;
+            }
+            if target > MAX_STRING_UNITS as f64 {
+                return R::Thrown;
+            }
+            let c = char::from_u32(u32::from(fill)).unwrap_or('\u{fffd}');
+            out.extend(std::iter::repeat_n(c, target as usize - n));
+            return R::Made;
+        }
         Func::Upper | Func::Lower | Func::Trim | Func::Length | Func::Replace
             if first == V::Null =>
         {

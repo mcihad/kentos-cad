@@ -27,9 +27,33 @@ pub struct Old {
     pub needs: Needs,
 }
 
+/// The message of a source the old language did not have (docs/adr/0100 §4):
+/// CASE, IN, BETWEEN, LIKE, IS NULL, `^`. The differential test leaves it out.
+pub const OUTSIDE: &str = "outside the old language";
+
+/// Whether the tree is all the old language's.
+fn old(n: &Node) -> bool {
+    match n {
+        Node::Case(..) | Node::In(..) | Node::Between(..) | Node::Like(..) | Node::IsNull(..) => {
+            false
+        }
+        Node::Bin(BinOp::Pow, ..) => false,
+        Node::Bin(_, a, b) => old(a) && old(b),
+        Node::Not(a) | Node::Neg(a) => old(a),
+        Node::Call(_, args) => args.iter().all(old),
+        Node::Lit(_) | Node::Field(_) | Node::Var(_) => true,
+    }
+}
+
 pub fn compile(source: &str) -> Result<Old, CompileError> {
     let mut parser = Parser::new(tokenize(source)?);
     let root = parser.parse()?;
+    if !old(&root) {
+        return Err(CompileError {
+            message: OUTSIDE.into(),
+            at: 0,
+        });
+    }
     let mut needs = Needs::default();
     uses(&root, &mut needs);
     Ok(Old {
@@ -54,6 +78,10 @@ fn uses(n: &Node, needs: &mut Needs) {
             _ => {}
         },
         Node::Call(_, args) => args.iter().for_each(|a| uses(a, needs)),
+        // CASE, IN, BETWEEN, LIKE and IS NULL came after it (docs/adr/0100 §4).
+        Node::Case(..) | Node::In(..) | Node::Between(..) | Node::Like(..) | Node::IsNull(..) => {
+            panic!("the old language had no {n:?}")
+        }
         Node::Not(a) | Node::Neg(a) => uses(a, needs),
         Node::Bin(_, a, b) => {
             uses(a, needs);
@@ -596,6 +624,8 @@ pub fn call<'a>(f: Func, args: &mut [Value<'a>]) -> Result<Value<'a>, Thrown> {
             .find(|a| !is_empty(a))
             .map(mem::take)
             .unwrap_or_default(),
+        // Functions after it (docs/adr/0100 §4).
+        f => panic!("the old language had no {f:?}"),
     })
 }
 
@@ -678,6 +708,7 @@ fn binary<'a>(op: BinOp, a: Value<'a>, b: Value<'a>) -> Result<Value<'a>, Thrown
                 _ => joined(into_text(a), into_text(b))?,
             }
         }
+        BinOp::Pow => panic!("the old language had no ^"),
         BinOp::Sub | BinOp::Mul | BinOp::Div | BinOp::Rem => {
             let (Some(na), Some(nb)) = (to_number(&a), to_number(&b)) else {
                 return Ok(Value::Null);
@@ -725,6 +756,9 @@ fn eval<'a>(n: &'a Node, s: &'a dyn Scope) -> Result<Value<'a>, Thrown> {
             let a = eval(a, s)?;
             let b = eval(b, s)?;
             binary(*op, a, b)?
+        }
+        Node::Case(..) | Node::In(..) | Node::Between(..) | Node::Like(..) | Node::IsNull(..) => {
+            panic!("the old language had no {n:?}")
         }
     })
 }

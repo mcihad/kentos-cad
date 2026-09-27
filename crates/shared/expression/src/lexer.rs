@@ -39,8 +39,8 @@ impl Token {
     }
 }
 
-pub(crate) const OPS: [&str; 17] = [
-    "<=", ">=", "!=", "<>", "==", "||", "=", "<", ">", "+", "-", "*", "/", "%", "(", ")", ",",
+pub(crate) const OPS: [&str; 18] = [
+    "<=", ">=", "!=", "<>", "==", "||", "=", "<", ">", "+", "-", "*", "/", "%", "(", ")", ",", "^",
 ];
 
 fn err(message: impl Into<String>, at: usize) -> CompileError {

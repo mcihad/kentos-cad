@@ -169,6 +169,7 @@ fn numbers(op: BinOp, x: f64, y: f64) -> Option<Value<'static>> {
         BinOp::Ge => Value::Bool(x - y >= 0.0),
         BinOp::And => Value::Bool(x != 0.0 && y != 0.0),
         BinOp::Or => Value::Bool(x != 0.0 || y != 0.0),
+        BinOp::Pow => Value::Num(kentos_geometry_core::jsmath::pow(x, y)),
         BinOp::Join => return None,
     })
 }
@@ -259,6 +260,41 @@ pub fn walk<'a>(
                 .map(|a| walk(a, s, sc))
                 .collect::<Result<Vec<_>, _>>()?;
             apply(*f, &mut values, sc)?
+        }
+        // `durum`: the conditions in order, only the chosen value read (docs/adr/0100 §4).
+        Node::Case(whens, otherwise) => {
+            for (c, v) in whens {
+                if scalar::truthy(walk(c, s, sc)?.view()) {
+                    return walk(v, s, sc);
+                }
+            }
+            match otherwise {
+                Some(e) => walk(e, s, sc)?,
+                None => Value::Null,
+            }
+        }
+        // `içinde`: every item is read, as a function's arguments are.
+        Node::In(x, items, negated) => {
+            let x = walk(x, s, sc)?;
+            let mut found = false;
+            for item in items {
+                let v = walk(item, s, sc)?;
+                found = found || scalar::equals(x.view(), v.view(), buffers(sc));
+            }
+            Value::Bool(found != *negated)
+        }
+        Node::Between(x, low, high, negated) => {
+            let (x, low, high) = (walk(x, s, sc)?, walk(low, s, sc)?, walk(high, s, sc)?);
+            let inside = scalar::between(x.view(), low.view(), high.view(), buffers(sc));
+            Value::Bool(inside != *negated)
+        }
+        Node::Like(x, pattern, fold, negated) => {
+            let (x, pattern) = (walk(x, s, sc)?, walk(pattern, s, sc)?);
+            let fits = scalar::like(x.view(), pattern.view(), *fold, buffers(sc));
+            Value::Bool(fits != *negated)
+        }
+        Node::IsNull(x, negated) => {
+            Value::Bool(scalar::is_empty(walk(x, s, sc)?.view()) != *negated)
         }
     })
 }

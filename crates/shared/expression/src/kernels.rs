@@ -4,7 +4,7 @@
 //! take the objects that were not. A fast pass settles only objects where
 //! the rules would give the same.
 
-use kentos_geometry_core::jsmath::js_max;
+use kentos_geometry_core::jsmath::{js_max, pow};
 
 use crate::exec::{BOOL, Col, NULL, NUM, Out, TEXT, THROWN};
 use crate::functions;
@@ -139,6 +139,7 @@ pub(crate) fn binary(
         (BinOp::Le, _) => numbers2(a, b, out, |x, y| (BOOL, bit(x - y <= 0.0))),
         (BinOp::Gt, _) => numbers2(a, b, out, |x, y| (BOOL, bit(x - y > 0.0))),
         (BinOp::Ge, _) => numbers2(a, b, out, |x, y| (BOOL, bit(x - y >= 0.0))),
+        (BinOp::Pow, _) => numbers2(a, b, out, |x, y| (NUM, pow(x, y))),
         (BinOp::And, _) => truths2(a, b, out, |p, q| p && q),
         (BinOp::Or, _) => truths2(a, b, out, |p, q| p || q),
         (BinOp::Join, _) => true,
@@ -200,6 +201,7 @@ fn numbers_of_text(op: BinOp, x: V, y: V, out: &mut Out, i: usize) -> bool {
         BinOp::Le => (BOOL, bit(p - q <= 0.0)),
         BinOp::Gt => (BOOL, bit(p - q > 0.0)),
         BinOp::Ge => (BOOL, bit(p - q >= 0.0)),
+        BinOp::Pow => (NUM, pow(p, q)),
         _ => return false,
     };
     out.k[i] = k;
@@ -256,7 +258,15 @@ pub(crate) fn call(f: Func, cols: &[Col], out: &mut Out, scratch: &mut Scratch) 
     let mut many = Vec::new();
     let numeric = matches!(
         f,
-        Func::Round | Func::Number | Func::Int | Func::Abs | Func::Min | Func::Max
+        Func::Round
+            | Func::Number
+            | Func::Int
+            | Func::Abs
+            | Func::Min
+            | Func::Max
+            | Func::Sqrt
+            | Func::Ceil
+            | Func::Floor
     );
     for i in 0..out.k.len() {
         if numeric && let Some(v) = number_function(f, cols, i) {
@@ -289,6 +299,90 @@ pub(crate) fn call(f: Func, cols: &[Col], out: &mut Out, scratch: &mut Scratch) 
         let values = &*values;
         out.rule(i, |made| functions::call(f, values, made, scratch));
     }
+}
+
+/// A truth for each object by the rules, or THROWN where an operand threw.
+fn truths(out: &mut Out, f: impl Fn(usize) -> Option<bool>) {
+    for i in 0..out.k.len() {
+        match f(i) {
+            Some(b) => {
+                out.k[i] = BOOL;
+                out.x[i] = bit(b);
+            }
+            None => out.k[i] = THROWN,
+        }
+    }
+}
+
+/// `durum` (docs/adr/0100 §4): per object, the value of the first condition
+/// that holds; a branch not reached may have thrown.
+pub(crate) fn case(cols: &[Col], otherwise: bool, out: &mut Out) {
+    let mut views: Vec<Option<V>> = Vec::with_capacity(cols.len());
+    for i in 0..out.k.len() {
+        views.clear();
+        views.extend(cols.iter().map(|c| c.view(i)));
+        let r = scalar::case(&views, otherwise);
+        out.rule(i, |_| r);
+    }
+}
+
+/// `içinde`: the value (the first column) equal to one of the list's.
+pub(crate) fn within(cols: &[Col], negated: bool, out: &mut Out, scratch: &mut Scratch) {
+    let mut items: Vec<V> = Vec::with_capacity(cols.len());
+    for i in 0..out.k.len() {
+        items.clear();
+        let mut thrown = false;
+        for c in cols {
+            match c.view(i) {
+                Some(v) => items.push(v),
+                None => thrown = true,
+            }
+        }
+        if thrown {
+            out.k[i] = THROWN;
+            continue;
+        }
+        let found = scalar::within(items[0], &items[1..], scratch);
+        out.k[i] = BOOL;
+        out.x[i] = bit(found != negated);
+    }
+}
+
+pub(crate) fn between(
+    [x, low, high]: [Col; 3],
+    negated: bool,
+    out: &mut Out,
+    scratch: &mut Scratch,
+) {
+    for i in 0..out.k.len() {
+        let (Some(v), Some(a), Some(b)) = (x.view(i), low.view(i), high.view(i)) else {
+            out.k[i] = THROWN;
+            continue;
+        };
+        out.k[i] = BOOL;
+        out.x[i] = bit(scalar::between(v, a, b, scratch) != negated);
+    }
+}
+
+pub(crate) fn like(
+    [x, pattern]: [Col; 2],
+    fold: bool,
+    negated: bool,
+    out: &mut Out,
+    scratch: &mut Scratch,
+) {
+    for i in 0..out.k.len() {
+        let (Some(v), Some(p)) = (x.view(i), pattern.view(i)) else {
+            out.k[i] = THROWN;
+            continue;
+        };
+        out.k[i] = BOOL;
+        out.x[i] = bit(scalar::like(v, p, fold, scratch) != negated);
+    }
+}
+
+pub(crate) fn is_null(x: Col, negated: bool, out: &mut Out) {
+    truths(out, |i| x.view(i).map(|v| scalar::is_empty(v) != negated));
 }
 
 /// `yuvarla(x, d)` with a constant number of digits: the power of ten once,

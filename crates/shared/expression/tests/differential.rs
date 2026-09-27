@@ -4,6 +4,10 @@
 //! its position, the fields read, each value's kind, its number to the bit,
 //! its text and the text's UTF-16 length; one object at a time
 //! (`Expr::evaluate`) as well as a table at a time (`rows::evaluate_rows`).
+//! The language since docs/adr/0100 §4 (durum, içinde, arasında, gibi,
+//! benzer, boş as a test, `^`, the new functions) the reference never had:
+//! there the column engine is held to one object at a time, its own tree
+//! walker, and `fixtures/expression/v2/language.json` holds the values.
 //! The generator is the web's (`apps/web/src/model/expression/cases.ts`),
 //! with text outside the Basic Multilingual Plane (emoji) and Greek sigmas
 //! added, and numbers that are not finite among the geometry values.
@@ -13,7 +17,7 @@
 mod reference;
 
 use kentos_expression::rows::{
-    As, Column, Layout, MEASURE_STRIDE, RowsInput, Table, evaluate_rows,
+    As, Column, Layout, MEASURE_STRIDE, RowsInput, Table, evaluate_rows, put,
 };
 use kentos_expression::{Value, compile};
 
@@ -279,7 +283,115 @@ fn quoted(g: &mut Gen, s: &str) -> String {
     format!("{q}{doubled}{q}")
 }
 
-fn atom(g: &mut Gen, depth: u32) -> String {
+/// Patterns for `gibi` and `benzer`: wildcards, escapes, Turkish letters, emoji.
+const PATTERNS: [&str; 16] = [
+    "'A%'", "'%a%'", "'_r%'", "'%'", "''", "'\\%'", "'%\\_%'", "'Ç%'", "'ç_n%'", "'%sa'", "'__'",
+    "'a😀%'", "'_'", "'İ%'", "'%ı%'", "'1%'",
+];
+/// The functions since docs/adr/0100 §4, with their arities.
+const FRESH_FUNCTIONS: [(&str, i64, i64); 17] = [
+    ("kök", 1, 1),
+    ("sqrt", 1, 1),
+    ("tavan", 1, 1),
+    ("ceil", 1, 1),
+    ("taban", 1, 1),
+    ("floor", 1, 1),
+    ("pi", 0, 0),
+    ("sol", 2, 2),
+    ("left", 2, 2),
+    ("sağ", 2, 2),
+    ("right", 2, 2),
+    ("bul", 2, 2),
+    ("strpos", 2, 2),
+    ("birleştir", 1, 5),
+    ("concat", 1, 3),
+    ("sağdoldur", 2, 3),
+    ("rpad", 2, 3),
+];
+
+/// `değil ` before içinde, arasında, gibi and benzer, now and then.
+fn not(g: &mut Gen) -> &'static str {
+    if g.chance(0.3) {
+        g.pick(&["değil ", "not ", "NOT "])
+    } else {
+        ""
+    }
+}
+
+/// A piece of the language since docs/adr/0100 §4, around random operands.
+fn fresh(g: &mut Gen, depth: u32) -> String {
+    let d = depth + 1;
+    match g.int(0, 9) {
+        0 => {
+            let mut s = g.pick(&["durum", "DURUM", "case"]).to_string();
+            for _ in 0..g.int(1, 3) {
+                let when = *g.pick(&["eğer", "when", "EĞER"]);
+                let condition = expr(g, d, true);
+                let then = *g.pick(&["ise", "then", "İSE"]);
+                let value = expr(g, d, true);
+                s += &format!(" {when} {condition} {then} {value}");
+            }
+            if g.chance(0.6) {
+                let otherwise = *g.pick(&["yoksa", "else"]);
+                s += &format!(" {otherwise} {}", expr(g, d, true));
+            }
+            format!("{s} {}", g.pick(&["son", "end", "SON"]))
+        }
+        1 => {
+            let a = atom(g, d, true);
+            let not = not(g);
+            let word = *g.pick(&["içinde", "in", "İÇİNDE"]);
+            let items: Vec<String> = (0..g.int(1, 4)).map(|_| expr(g, d, true)).collect();
+            format!("{a} {not}{word} ({})", items.join(", "))
+        }
+        2 => {
+            let a = atom(g, d, true);
+            let not = not(g);
+            let word = *g.pick(&["arasında", "between"]);
+            let low = atom(g, d, true);
+            let and = *g.pick(&["ve", "and"]);
+            format!("{a} {not}{word} {low} {and} {}", atom(g, d, true))
+        }
+        3 => {
+            let a = atom(g, d, true);
+            let not = not(g);
+            let word = *g.pick(&["gibi", "like", "benzer", "ilike", "ILIKE"]);
+            let pattern = if g.chance(0.7) {
+                g.pick(&PATTERNS).to_string()
+            } else {
+                atom(g, d, true)
+            };
+            format!("{a} {not}{word} {pattern}")
+        }
+        4 => {
+            let a = atom(g, d, true);
+            let test = *g.pick(&["boş", "boş değil", "IS NULL", "is not null", "BOŞ DEĞİL"]);
+            format!("{a} {test}")
+        }
+        5 | 6 => {
+            let sign = *g.pick(&["", "-"]);
+            let base = atom(g, d, true);
+            format!("{sign}{base} ^ {}", atom(g, d, true))
+        }
+        _ => {
+            let &(name, lo, hi) = g.pick(&FRESH_FUNCTIONS);
+            let n = if g.chance(0.1) {
+                *g.pick(&[lo - 1, hi + 1])
+            } else {
+                g.int(lo, hi)
+            };
+            let args: Vec<String> = (0..n.max(0)).map(|_| expr(g, d, true)).collect();
+            format!("{name}({})", args.join(", "))
+        }
+    }
+}
+
+/// An operand; with `new`, now and then a piece of the language since
+/// docs/adr/0100 §4 (near the top only, so the sources stay small).
+fn atom(g: &mut Gen, depth: u32, new: bool) -> String {
+    if new && depth < 6 && g.chance(0.3) {
+        return fresh(g, depth);
+    }
     match g.int(0, 10) {
         0 | 1 => g.pick(&NUMBERS).to_string(),
         2 => {
@@ -302,14 +414,14 @@ fn atom(g: &mut Gen, depth: u32) -> String {
             } else {
                 g.int(lo, hi)
             };
-            let args: Vec<String> = (0..n.max(0)).map(|_| expr(g, depth + 1)).collect();
+            let args: Vec<String> = (0..n.max(0)).map(|_| expr(g, depth + 1, new)).collect();
             let sep = *g.pick(&[", ", ","]);
             format!("{name}({})", args.join(sep))
         }
-        9 => format!("({})", expr(g, depth + 1)),
+        9 => format!("({})", expr(g, depth + 1, new)),
         _ if g.chance(0.15) => {
             // Text past V8's longest string throws, and empties the whole expression.
-            let inner = atom(g, depth + 1);
+            let inner = atom(g, depth + 1, new);
             let wrap = *g.pick(&[
                 "boş(boş({}))",
                 "eğer(doğru, 1, {})",
@@ -322,12 +434,12 @@ fn atom(g: &mut Gen, depth: u32) -> String {
         _ => format!(
             "{}{}",
             g.pick(&["-", "+", "değil ", "not ", "NOT ", "- "]),
-            atom(g, depth + 1)
+            atom(g, depth + 1, new)
         ),
     }
 }
 
-fn expr(g: &mut Gen, depth: u32) -> String {
+fn expr(g: &mut Gen, depth: u32, new: bool) -> String {
     if g.chance(0.15) {
         // Numbers against numbers, where the engine takes its fast path: equal values too.
         let a = *g.pick(&NUMERIC_ATOMS);
@@ -371,16 +483,22 @@ fn expr(g: &mut Gen, depth: u32) -> String {
         return f.replace("{}", &arg);
     }
     if depth > 3 || g.chance(0.45) {
-        return atom(g, depth);
+        return atom(g, depth, new);
     }
-    let a = expr(g, depth + 1);
+    let a = expr(g, depth + 1, new);
     let op = *g.pick(&BINARY);
-    format!("{a}{op}{}", expr(g, depth + 1))
+    format!("{a}{op}{}", expr(g, depth + 1, new))
 }
 
-/// A source: an expression, now and then cut short or with a stray character in it.
-fn source(g: &mut Gen) -> String {
-    let mut s: Vec<char> = expr(g, 0).chars().collect();
+/// A source: an expression, now and then cut short or with a stray character
+/// in it; with `new`, in the language since docs/adr/0100 §4 too.
+fn source(g: &mut Gen, new: bool) -> String {
+    let e = if new && g.chance(0.5) {
+        fresh(g, 0)
+    } else {
+        expr(g, 0, new)
+    };
+    let mut s: Vec<char> = e.chars().collect();
     if g.chance(0.12) {
         let k = g.int(0, s.len() as i64) as usize;
         s.truncate(k);
@@ -544,9 +662,11 @@ fn the_column_engine_gives_the_tree_evaluators_answers() {
     let mut g = Gen(seed);
     let (mut errors, mut values) = (0, 0);
     for case in 0..cases {
-        let src = source(&mut g);
+        let src = source(&mut g, false);
         let what = format!("durum {case} {src:?}");
         let (new, old) = match (compile(&src), reference::compile(&src)) {
+            // A stray quote can bare a random word: `x in (…)` is the new language's (docs/adr/0100 §4).
+            (Ok(_), Err(b)) if b.message == reference::OUTSIDE => continue,
             (Err(a), Err(b)) => {
                 assert_eq!((a.message, a.at), (b.message, b.at), "{what}");
                 errors += 1;
@@ -595,5 +715,65 @@ fn the_column_engine_gives_the_tree_evaluators_answers() {
     assert!(
         values > cases && errors > cases / 20,
         "{values} değer, {errors} hata"
+    );
+}
+
+#[test]
+fn the_new_words_give_the_same_values_by_column_and_by_object() {
+    let cases: usize = std::env::var("EXPRESSION_DIFF_CASES")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(20_000);
+    let seed: u64 = std::env::var("EXPRESSION_DIFF_SEED")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(0x2545_f491_4f6c_dd1d);
+    let mut g = Gen(seed);
+    let (mut errors, mut values, mut fresh) = (0, 0, 0);
+    let mut tmp = String::new();
+    for case in 0..cases {
+        let src = source(&mut g, true);
+        let what = format!("durum {case} {src:?}");
+        let Ok(e) = compile(&src) else {
+            errors += 1;
+            continue;
+        };
+        if reference::compile(&src).is_err_and(|b| b.message == reference::OUTSIDE) {
+            fresh += 1;
+        }
+        let n = g.int(1, 6) as usize;
+        let objects: Vec<Object> = (0..n).map(|i| object(&mut g, i + 1)).collect();
+        let (texts, lens, numbers, measures) = table(&e.fields, e.needs, &objects);
+        let scale = if g.chance(0.3) { 500.0 } else { f64::NAN };
+        let input = || RowsInput {
+            n,
+            texts: &texts,
+            text_lens: &lens,
+            numbers: &numbers,
+            measures: &measures,
+            scale,
+        };
+        let rows = Table::new(input(), Layout::new(e.fields.len(), e.needs))
+            .unwrap_or_else(|m| panic!("{what}: {m}"));
+        // One object at a time, each value as every mode asks.
+        let mut each: Vec<Column> = MODES.iter().map(|_| Column::default()).collect();
+        for i in 0..n {
+            let row = rows.row(i, None);
+            let v = e.evaluate(&row);
+            for (column, want) in each.iter_mut().zip(MODES) {
+                put(column, Some(v.view()), want, &mut tmp);
+            }
+        }
+        for (b, want) in each.iter().zip(MODES) {
+            let a = evaluate_rows(&e, &input(), want).unwrap_or_else(|m| panic!("{what}: {m}"));
+            if let Some(d) = differs(&a, b) {
+                panic!("{what} [{want:?}]: {d}");
+            }
+        }
+        values += n;
+    }
+    assert!(
+        values > cases && errors > cases / 20 && fresh > cases / 5,
+        "{values} değer, {errors} hata, {fresh} yeni"
     );
 }

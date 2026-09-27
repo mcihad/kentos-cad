@@ -189,19 +189,25 @@ eğer(boş(Parsel), 'numarasız', Ada || '/' || Parsel)
 
 - **Alanlar:** düz ad (`Parsel`) ya da boşluk ve işaret içerenler için köşeli parantez (`[Tapu alanı (m²)]`). Olmayan alan boş (`null`) verir; pencere ifadenin okuduğu ama nesnelerde olmayan alanları önizlemede söyler.
 - **Değerler:** sayı (ondalık ayırıcı nokta), metin (`'…'` ya da `"…"`, içte çift tırnak bir tırnaktır), `doğru`/`true`, `yanlış`/`false`, `boş`/`null`.
-- **İşleçler:** `ve`/`and`, `veya`/`or`, `değil`/`not`; `= != <> < <= > >=`; `+ - * / %`; `||` metin birleştirir. `+` iki taraf da sayıysa toplar, değilse birleştirir.
+- **İşleçler:** `ve`/`and`, `veya`/`or`, `değil`/`not`; `= != <> < <= > >=`; `+ - * / %`; `^` üs alır (işaretten önce, sağdan sola: `-2 ^ 2` = −4, `2 ^ 3 ^ 2` = 512); `||` metin birleştirir. `+` iki taraf da sayıysa toplar, değilse birleştirir.
+- **Koşul sözleri** (ADR 0100 §4; QGIS'teki karşılığı takma addır):
+  - `durum eğer koşul ise değer … [yoksa değer] son` (`CASE WHEN … THEN … ELSE … END`): ilk doğru koşulun değeri; seçilmeyen dallar hesaplanmaz.
+  - `x [değil] içinde ('Arsa', 'Tarla')` (`IN`), `x [değil] arasında 3 ve 5` (`BETWEEN`).
+  - `x [değil] gibi 'P___12'` (`LIKE`: `%` herhangi bir metin, `_` tek karakter, `\` ardındakini olduğu gibi alır), `x benzer 'çın%'` (`ILIKE`: büyük/küçük ve Türkçe harf farkı gözetilmez).
+  - `x boş`, `x boş değil` (`IS NULL`, `IS NOT NULL`).
+  - Bu sözler yalnız durabilecekleri yerde sözdür: Durum, Son, Gibi adlı alanlar alandır. Dil iki değerlidir: boş bir değerle `arasında`, `gibi`, `içinde` yanlış, `değil`'li biçimleri doğrudur.
 - **Tür kuralları:** öznitelikler metindir; aritmetik ve karşılaştırma metindeki sayıyı okur ("472.27" → 472.27). Boş bir değerle aritmetik boş verir, karşılaştırma yanlış verir; `= boş` yalnızca boş için doğrudur. Sıfıra bölme boştur. Metin karşılaştırması Türkçe sıralamayla ve büyük/küçük harfe duyarlıdır; `içerir`, `başlar`, `biter` harf farkı gözetmez.
 - **Değişkenler:** `$alan`, `$uzunluk` (`$çevre`), `$köşe`, `$tür`, `$katman`, `$etiket`, `$y` (sağa), `$x` (yukarı), `$sıra` (bu çalıştırmadaki sıra, 1'den), `$id`; yalnızca sembol çizilirken `$ölçek` (çizim ölçeğinin paydası; işlem araçlarında boştur).
   - Geometriden doğrudan okunanlar (ADR 0100 §3): `$merkez_y` ve `$merkez_x` (ağırlık merkezi: kapalı alanda, taramada, dairede ve tam elipste alanın merkezi, delikler düşülür; öbür nesnelerde yer noktası); `$min_y`, `$max_y`, `$min_x`, `$max_x` (sınır kutusu; Y sağa, X yukarı); `$genişlik`, `$yükseklik`.
   - Web'de bu yeniler ifade geometri deposunda değerlendirildiğinde dolar (`ExprObjects.geometry`); ölçü kaydıyla giden yolda boştur.
 - **Tipli alanlar:** çağıran bir şema verirse (`compile_with`), şemadaki kullanıcı alanları türleriyle okunur: sayı alanı sayıdır (metinden okunmaz), doğru/yanlış alanı doğru/yanlıştır, tarih ISO metnidir (YYYY-AA-GG; metin olarak karşılaştırılır). Şemada olmayan ad bugünkü gibi metin özniteliğidir.
-- **İşlevler** (Türkçe adı ve QGIS'teki İngilizce adıyla): `yuvarla/round`, `metin/to_string` (sabit ondalık), `sayı/to_real`, `tamsayı/int`, `mutlak/abs`, `min`, `max`, `büyük/upper`, `küçük/lower`, `kırp/trim`, `uzunluk/length`, `parça/substr`, `doldur/lpad`, `değiştir/replace`, `içerir/contains`, `başlar/starts_with`, `biter/ends_with`, `eğer/if`, `boş/is_empty`, `varsayılan/coalesce`.
+- **İşlevler** (Türkçe adı ve QGIS'teki İngilizce adıyla): `yuvarla/round`, `metin/to_string` (sabit ondalık), `sayı/to_real`, `tamsayı/int`, `mutlak/abs`, `min`, `max`, `büyük/upper`, `küçük/lower`, `kırp/trim`, `uzunluk/length`, `parça/substr`, `doldur/lpad`, `değiştir/replace`, `içerir/contains`, `başlar/starts_with`, `biter/ends_with`, `eğer/if`, `boş/is_empty`, `varsayılan/coalesce`; `kök/sqrt`, `tavan/ceil`, `taban/floor`, `pi`, `sol/left`, `sağ/right`, `bul/strpos` (1'den; yoksa 0), `birleştir/concat` (boş değer bir şey eklemez), `sağdoldur/rpad`.
 - **Adlar Türkçe harf farkı gözetmez:** `YUVARLA` = `yuvarla`, `$cevre` = `$çevre`, `DEGIL` = `değil`.
 - Yazılan değer metne `toText` ile çevrilir: tam sayılar ondalıksız, ondalıklar kayan nokta gürültüsü atılarak (0.1 + 0.2 → "0.3"), doğru/yanlış olarak.
 
 Pencerede ifade alanı tek satırdır (komut satırı gibi eşaralıklı yazıyla). Altında girdi nesnelerinin alanları düğme olarak (tıklayınca imlecin yerine eklenir), "Değişkenler" ve "İşlevler" menüleri (her biri ne yaptığını söyler) ve canlı bir satır bulunur: koşulda "16 / 340 nesne koşulu sağlıyor.", değerde "İlk nesnede (10): “472.26”."
 
-Yeni işlev eklemek için `crates/shared/expression/src/library.rs`'teki `FUNCTIONS` tablosuna ad, İngilizce (QGIS) karşılık, değer sayısı, kullanım ve açıklama, `call`'a hesabını ekleyin; `src/tests.rs`'e ve gerekirse `fixtures/expression/`'a durum yazın. Menüler (`exprCatalog`) ve belge bu tablodan beslenir.
+Yeni işlev eklemek için `crates/shared/expression/src/library.rs`'teki `FUNCTIONS` tablosuna ad, İngilizce (QGIS) karşılık, değer sayısı, grup, argümanlar, örnekler ve açıklama, `functions.rs`'teki `call`'a hesabını ekleyin (sütun motoru `kernels.rs`'te aynı kuralı çağırır); `src/tests.rs`'e ve `fixtures/expression/v2/language.json`'un bağımsız başvurusuna (`scripts/fixtures/expression_language.py`) durum yazın. Menüler, İfade oluşturucunun ağacı ve yardımı bu tablodan beslenir.
 
 ## 6. Çalışma yerleri (client, worker, server, postgis)
 

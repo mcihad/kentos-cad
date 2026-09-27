@@ -108,15 +108,33 @@
     - şekil okumalarını sayar.
   - Web'de `expression.test.ts` gerçek bir depoda denetler: ölçü kaydı yoluyla aynı değerler, yeni değişkenler.
 
-### 4. Dil ekleri (plan, sıradaki dilim)
+### 4. Dil ekleri (uygulandı, dilim 5)
 
-- **Eklenenler:**
-  - `CASE WHEN … THEN … ELSE … END`;
-  - `[NOT] IN`, `[NOT] BETWEEN`, `[NOT] LIKE` / `ILIKE`;
-  - `IS [NOT] NULL` (`boş`);
-  - birkaç sayı ve metin işlevi.
-- **Adlar:** Türkçe adlar önce gelir, QGIS adları takma addır.
-- **Durumlar:** `fixtures/expression/v2`'de, sayıların bağımsız bir Python başvurusuyla.
+- **Eklenenler** (Türkçe söz önce, QGIS'inki takma ad):
+  - `durum eğer koşul ise değer … [yoksa değer] son` (`CASE WHEN … THEN … ELSE … END`): ilk doğru koşulun değeri, hiçbiri değilse `yoksa`'nınki, o da yoksa boş. Seçilmeyen dallar hesaplanmaz: orada JavaScript'in en uzun metnini aşan bir değer ifadeyi boşaltmaz.
+  - `x [değil] içinde (a, b, …)` (`[NOT] IN`): `=` gibi karşılaştırır; öğelerin hepsi okunur, işlevin argümanları gibi.
+  - `x [değil] arasında a ve b` (`[NOT] BETWEEN`): `<`'nün sırasıyla a ≤ x ≤ b; boş bir değerle yanlış.
+  - `x [değil] gibi 'kalıp'`, `x [değil] benzer 'kalıp'` (`LIKE`, `ILIKE`): `%` herhangi bir metin, `_` tek karakter, `\` ardındakini olduğu gibi alır. `benzer` büyük/küçük harf ve Türkçe harf farkını `içerir` gibi gözetmez, ama baştaki ve sondaki boşlukları korur.
+  - `x boş`, `x boş değil` (`IS [NOT] NULL`): alanı olmayan ya da boş metin.
+  - `a ^ b`: üs; işaretten önce hesaplanır (`-2 ^ 2` = −4), sağdan sola gruplanır.
+  - İşlevler: `kök/sqrt`, `tavan/ceil`, `taban/floor`, `pi`, `sol/left`, `sağ/right`, `bul/strpos` (1'den, UTF-16 birimi; yoksa 0), `birleştir/concat`, `sağdoldur/rpad`.
+- **Dil ikili kalır:** SQL'in üç değerli mantığı yoktur. `boş değil içinde (1)` doğrudur, çünkü `değil (boş içinde (1))`'dir.
+- **Sözcükler yalnız durabilecekleri yerde sözcüktür:** Durum, Son, Gibi adlı alanlar alandır. Daha önce derlenmeyen bir ifade aynı hatayı verir. `Not` ise (`değil`) eskisi gibi anahtar sözcüktür, alan köşeli parantezle yazılır.
+- **Motorlar:** ayrıştırıcı düğümleri (`Node::Case`, `In`, `Between`, `Like`, `IsNull`, `BinOp::Pow`) iki yolda:
+  - sütun motorunda komutlardır; sabitler katlanır, `durum` yalnız seçilen dalın değerini alır;
+  - tek nesne yolu (`walk`) aynı kuralları (`scalar`) kullanır.
+- **İfade oluşturucu:**
+  - sözcükleyici tek geçişte, ayrıştırıcı gibi bir değerin bitip bitmediğini izleyerek, sözcüklerin hangi işlecin parçası olduğunu işaretler (`Piece::phrase`); renkler, uyarılar ve imleçteki yardım (`ise` → `durum`, `IS` → `boş`) bundandır.
+  - Ağaçta yeni işleçler İşleçler'de, `durum` QGIS'teki gibi Koşullar'dadır.
+  - Ağaçtan ve tamamlamadan kalıbıyla yazılır, imleç ilk değerin yerinde: `içinde (|)`, `arasında | ve `, `gibi '|'`, `durum eğer | ise  yoksa  son`.
+  - İşleç çubuğunda `^` vardır.
+- **Doğruluk:**
+  - `kök` IEEE'nin karekökü, doğru yuvarlanmıştır.
+  - `^`, geometri çekirdeğindeki gibi libm'in `pow`'udur (fdlibm'in yöntemi): her platformda aynı bitler, tam sayı üslerde tam; öbür üslerde “neredeyse yuvarlanmış”, doğru yuvarlanmış değerin en çok bir son basamak birimi yanında. Bağımsız başvuru bunu buldu: `16 ^ (1/3)` motorda 2.519842099789746, doğrusu 2.5198420997897464 (Node 24'te V8 de bunu verir).
+- **Denetimler:**
+  - `fixtures/expression/v2/language.json`: 106 kaynak, 6 nesne. Değerleri motordan bağımsız `scripts/fixtures/expression_language.py` hesaplar: ayrıştırıcı ve kurallar yeniden yazılmıştır; kuvvet kesirli sayılarla ya da 60 basamakla, karekök 60 basamakla, metin konumları UTF-16 birimiyle. Rust'ta `tests/language.rs` (tek nesne ve sütun), web'de `language.test.ts` bitine kadar karşılaştırır. Tam olmayan üslü kuvvetin karar verdiği iki durum `"ulp": 1` taşır.
+  - `tests/differential.rs`'e ikinci bir karşılaştırma eklendi: yeni dilde rastgele kaynaklar (varsayılan 20 000; 300 000 ile üç tohum denendi), sütun motoru ile tek nesne yolu her sonuç biçiminde. Eski başvuru yeni sözdizimini “eski dilde yok” diye reddeder, eski karşılaştırma o kaynakları atlar.
+  - `fixtures/expression/v1` değişmeden geçer; `builder.json` 199 duruma çıktı: yeni sözcüklerin renkleri, hataları, tamamlaması, yardımı, kalıplar.
 
 ### 5. İfade oluşturucu: düzenleyici hizmetleri ve pencere (uygulandı, dilim 4)
 
@@ -141,7 +159,7 @@
 - **Denetimler:**
   - web: `apps/web/scripts/e2e/builder.mjs` (klavye ve fare, 18 denetim) ve düzen geçişinde üç görünüm;
   - masaüstü: `expression::tests` (9) ve resimler (`expression::tests::screens`).
-- **En son:** metinle gidip gelen küçük bir akış görünümü (isteğe bağlı).
+- **Akış görünümü:** metinle gidip gelen düğüm görünümü artık isteğe bağlı değil; sahibin önceliği, ayrı bir kararla (ADR 0101).
 
 ## Ölçüm
 
