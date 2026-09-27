@@ -339,6 +339,14 @@ impl App {
                 {
                     return self.processing_event(crate::processing::Event::Run);
                 }
+                // ← → change Katman stili's kind when no field has the keyboard (style/layer_style/).
+                Some(key @ (Named::ArrowLeft | Named::ArrowRight))
+                    if self.dialog == Some(crate::app::Dialog::LayerStyle) =>
+                {
+                    return self.layer_style_event(crate::style::layer_style::Event::Step(
+                        key == Named::ArrowRight,
+                    ));
+                }
                 // ↑ ↓ in a Hesap window's table go to the row above or below (calc/grid.rs).
                 Some(key @ (Named::ArrowUp | Named::ArrowDown))
                     if self.dialog == Some(crate::app::Dialog::Calc) =>

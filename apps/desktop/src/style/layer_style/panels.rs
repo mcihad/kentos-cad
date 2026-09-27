@@ -6,12 +6,12 @@
 //! row will draw.
 
 use iced::widget::tooltip::Position;
-use iced::widget::{Column, Row, button, column, container, rich_text, row, space, span};
+use iced::widget::{Column, Row, button, column, container, rich_text, row, space, span, stack};
 use iced::{Center, Element, Fill, Length};
 use kentos_native_style::classify::{Method, RAMPS, ramp_colors, texts};
 use kentos_native_style::renderer::SymbolSet;
 use kentos_native_style::simple::symbols_of_layer_style;
-use kentos_native_style::tally::{category_tally, shadowed};
+use kentos_native_style::tally::{category_tally, class_tally, shadowed};
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::label;
 use kentos_ui::style;
@@ -86,7 +86,8 @@ impl App {
             Kind::Unknown => unknown_panel(window),
         };
         let title = format!("Katman stili: {}", node.map_or("", |n| n.name.as_str()));
-        overlay::modal(
+        let name = node.map_or(String::new(), |n| n.name.clone());
+        let base = overlay::modal(
             Dialog::new(title)
                 .push(top)
                 .scroll_fill(container(panel).padding([0, 4]).width(Fill))
@@ -95,7 +96,12 @@ impl App {
                 .width(WIDTH)
                 .max_height(HEIGHT),
             ev(Event::Close),
-        )
+        );
+        if window.asking {
+            stack![base, overlay::modal(question(&name), ev(Event::Stay))].into()
+        } else {
+            base
+        }
     }
 
     /// The drawing's theme colours as symbols read them (`fg`, `ink`, `paper`).
@@ -176,6 +182,52 @@ fn footer<'a>(window: &LayerStyleWindow) -> Element<'a, Message> {
     .spacing(8)
     .align_y(Center)
     .into()
+}
+
+/// Closing with changes not applied (the web's `askUnsaved` with `apply`,
+/// DESIGN.md §7.9.1): “Uygulamadan kapat” aside on the left, Vazgeç, and
+/// “Uygula ve kapat” first in weight.
+fn question<'a>(name: &str) -> Element<'a, Message> {
+    let symbol = container(icon(Icon::Warning).size(18.0).tone(Tone::Warning))
+        .center_x(36)
+        .center_y(36)
+        .style(|t: &iced::Theme| container::Style {
+            background: Some(iced::Background::Color(
+                Tokens::of(t).warning.scale_alpha(0.14),
+            )),
+            border: iced::border::rounded(18.0),
+            ..container::Style::default()
+        });
+    let text = column![
+        label::title("Uygulanmamış değişiklikler"),
+        label::body(format!(
+            "“{name}” katman stilinde uygulanmamış değişiklikler var. Pencere kapanırsa bu değişiklikler kaybolur."
+        )),
+    ]
+    .spacing(6)
+    .width(Fill);
+    let answer = |text: &'static str, e: Event| {
+        button(label::body(text))
+            .padding([5, 14])
+            .style(style::button::secondary)
+            .on_press(ev(e))
+    };
+    let actions = row![
+        answer("Uygulamadan kapat", Event::Discard),
+        space::horizontal(),
+        answer("Vazgeç", Event::Stay),
+        button(label::body("Uygula ve kapat").style(style::text::on_accent))
+            .padding([5, 14])
+            .style(style::button::primary)
+            .on_press(ev(Event::Done)),
+    ]
+    .spacing(6)
+    .align_y(Center);
+    container(column![row![symbol, text].spacing(14), actions].spacing(18))
+        .width(typography::scaled(480.0))
+        .padding(18)
+        .style(style::container::popover)
+        .into()
 }
 
 /// A note with a bold lead (the web's `note('info', …)`).
@@ -303,7 +355,7 @@ fn categorized_panel<'a>(
     let c = &window.categorized;
     let values = window.values(src);
     let error = values.error_text();
-    let (counts, rest) = category_tally(&values.values, &c.categories);
+    let (counts, rest) = category_tally(&values.values, &window.drawn(src), &c.categories);
     let has_expr = !kentos_processing::text::js_trim(&c.expr).is_empty();
     let classify = small_button(
         None,
@@ -458,10 +510,12 @@ fn graduated_panel<'a>(
 ) -> Element<'a, Message> {
     let g = &window.graduated;
     let numbers = window.numbers(src);
+    let any = numbers.values.iter().any(Option::is_some);
     let has_expr = !kentos_processing::text::js_trim(&g.expr).is_empty();
     let error = numbers
         .error_text()
-        .or_else(|| (has_expr && numbers.values.is_empty()).then(|| texts::NO_NUMBERS.to_owned()));
+        .or_else(|| (has_expr && !any).then(|| texts::NO_NUMBERS.to_owned()));
+    let (counts, rest) = class_tally(&numbers.values, &window.drawn(src), &g.classes);
     let mut out = Column::new().spacing(10).push(
         row![
             label::caption("Değer").style(style::text::muted),
@@ -505,11 +559,7 @@ fn graduated_panel<'a>(
             label::caption("Renkler").style(style::text::muted),
             container(ramp).width(Length::Fixed(typography::scaled(180.0))),
             ramp_strip(current.stops),
-            small_button(
-                None,
-                "Sınıfla",
-                (!numbers.values.is_empty()).then(|| ev(Event::Graduate))
-            ),
+            small_button(None, "Sınıfla", any.then(|| ev(Event::Graduate))),
         ]
         .spacing(8)
         .align_y(Center),
@@ -529,16 +579,16 @@ fn graduated_panel<'a>(
         .align_y(Center),
     );
     table = table.push(row_line());
-    let last = g.classes.len().saturating_sub(1);
     for (i, c) in g.classes.iter().enumerate() {
         let typed = |min: bool, v: f64| {
             window
                 .typed
                 .get(&bound_key(i, min))
                 .cloned()
-                .unwrap_or_else(|| kentos_processing::text::js_number(v))
+                // The bound as the labels round it; the class keeps it whole until one is typed.
+                .unwrap_or_else(|| kentos_native_style::classify::rounded(v, 2))
         };
-        let n = kentos_native_style::classify::count_in(&numbers.values, c.min, c.max, i == last);
+        let n = counts.get(i).copied().unwrap_or(0);
         table = table.push(
             row![
                 container(slots(env, SetAt::Class(i), &c.symbols, &c.label)).width(slot_w),
@@ -554,6 +604,22 @@ fn graduated_panel<'a>(
                 count(n.to_string(), COUNT),
                 container(tool("trash", "Sınıfı sil", Some(ev(Event::RemoveClass(i)))))
                     .width(fixed(DELETE)),
+            ]
+            .spacing(8)
+            .align_y(Center),
+        );
+    }
+    // What no class takes (no number, or outside every class): not drawn.
+    if !g.classes.is_empty() && rest > 0 {
+        table = table.push(row_line()).push(
+            row![
+                space().width(slot_w),
+                container(
+                    label::body("Sınıfların dışında kalanlar: çizilmez").style(style::text::muted)
+                )
+                .width(Fill),
+                count(rest.to_string(), COUNT),
+                space().width(fixed(DELETE)),
             ]
             .spacing(8)
             .align_y(Center),

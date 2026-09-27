@@ -181,20 +181,27 @@ pub fn numbers_of(list: &[&Entity], expr: &str, scope: &ExprScope) -> Evaluated<
     }
 }
 
-/// How many objects a condition takes (a rule's count); an empty condition takes them all.
-pub fn condition_count(
+/// The number each object's value reads as (None: none), in the objects' order:
+/// what a graduated renderer draws each object by.
+pub fn numbers_per_object(
     list: &[&Entity],
-    filter: Option<&str>,
+    expr: &str,
     scope: &ExprScope,
-) -> Result<usize, (String, usize)> {
-    let Some(filter) = filter.filter(|f| !f.trim().is_empty()) else {
-        return Ok(list.len());
-    };
-    let c = compile(filter).map_err(|e| (e.message, e.at))?;
-    Ok(evaluate(&c, list, scope, As::Bool)
-        .iter()
-        .filter(|v| **v == Value::Bool(true))
-        .count())
+) -> Evaluated<Option<f64>> {
+    match compile(expr) {
+        Err(e) => Evaluated::failed(e.message, e.at),
+        Ok(c) => Evaluated {
+            values: evaluate(&c, list, scope, As::TextNumber)
+                .into_iter()
+                .map(|v| match v {
+                    Value::Num(x) if x.is_finite() => Some(x),
+                    _ => None,
+                })
+                .collect(),
+            error: None,
+            at: 0,
+        },
+    }
 }
 
 // ── Values and numeric classes ─────────────────────────────────────────
@@ -593,9 +600,13 @@ pub fn js_number(text: &str) -> f64 {
 
 /// Label for a numeric class: “12.5 – 30”, each bound to `digits` decimals (`classLabel`).
 pub fn class_label(c: NumericClass, digits: u32) -> String {
+    format!("{} – {}", rounded(c.min, digits), rounded(c.max, digits))
+}
+
+/// A number to `digits` decimals as a label writes it (`Math.round`, then its shortest text).
+pub fn rounded(v: f64, digits: u32) -> String {
     let p = 10f64.powi(digits as i32);
-    let round = |v: f64| number::to_string(js_round(v * p) / p);
-    format!("{} – {}", round(c.min), round(c.max))
+    number::to_string(js_round(v * p) / p)
 }
 
 // ── What the layer style window makes of them ─────────────────────────

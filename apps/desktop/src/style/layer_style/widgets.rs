@@ -76,12 +76,12 @@ fn slot<'a>(
         .center_y(PICTURE.1)
         .into(),
     };
-    // The name in the web's small size, cut to the picture's width.
+    // The name in the web's small size, a little past the picture at most (the web's 72 px).
     let size = typography::caption() - 1.0;
     let face = container(
         column![
             picture,
-            label::caption(fit(&name, size, typography::scaled(PICTURE.0 + 2.0)))
+            label::caption(fit(&name, size, typography::scaled(PICTURE.0 + 8.0)))
                 .size(size)
                 .style(style::text::muted)
         ]

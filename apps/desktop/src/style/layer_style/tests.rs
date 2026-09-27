@@ -195,9 +195,10 @@ fn rules_are_edited_as_a_tree_and_count_what_they_draw() {
         doc,
         store: app.spatial.store(),
     });
-    // The drawing's point, everything for the new rule, what no sibling took.
+    // The drawing's point, everything drawn for the new rule (not the text and the
+    // dimension: the style engine does not draw them), what no sibling took.
     assert_eq!(counts.get(&vec![0]), Some(&RuleCount::Count(1)));
-    let all = doc.count("cizim");
+    let all = doc.count("cizim") - 2;
     assert_eq!(counts.get(&vec![1]), Some(&RuleCount::Count(all)));
     assert_eq!(counts.get(&vec![1, 0]), Some(&RuleCount::Count(all)));
     assert_eq!(counts.get(&vec![2]), Some(&RuleCount::Count(0)));
@@ -285,4 +286,57 @@ fn the_command_opens_the_active_layer_s_window() {
         .active()
         .to_owned();
     assert_eq!(window(&app).layer, active);
+}
+
+#[test]
+fn closing_with_changes_not_applied_asks_first() {
+    let mut app = app_with_drawing();
+    ls(&mut app, Event::Open(Some("parsel".into())));
+    // Nothing changed: Esc closes at once.
+    app.close_dialog();
+    assert!(app.styles.layer_style.is_none());
+    assert_eq!(app.dialog, None);
+
+    ls(&mut app, Event::Open(Some("parsel".into())));
+    ls(&mut app, Event::Kind(Kind::Single));
+    ls(&mut app, Event::Close);
+    assert!(window(&app).asking, "Vazgeç asks");
+    assert_eq!(app.dialog, Some(Dialog::LayerStyle));
+    // Asked, the kinds stay, and Esc answers “stay”.
+    ls(&mut app, Event::Step(true));
+    assert_eq!(window(&app).kind, Kind::Single);
+    app.close_dialog();
+    assert!(!window(&app).asking);
+    assert_eq!(app.dialog, Some(Dialog::LayerStyle));
+    // Uygulamadan kapat drops the draft.
+    ls(&mut app, Event::Close);
+    ls(&mut app, Event::Discard);
+    assert!(app.styles.layer_style.is_none());
+    assert_eq!(app.dialog, None);
+    assert_eq!(renderer_of(&app, "parsel"), None);
+
+    // Uygula ve kapat writes it.
+    ls(&mut app, Event::Open(Some("parsel".into())));
+    ls(&mut app, Event::Kind(Kind::Single));
+    ls(&mut app, Event::Close);
+    ls(&mut app, Event::Done);
+    assert!(app.styles.layer_style.is_none());
+    assert_eq!(
+        renderer_of(&app, "parsel").map(|r| r["type"].clone()),
+        Some(json!("single"))
+    );
+}
+
+#[test]
+fn arrows_step_through_the_kinds() {
+    let mut app = app_with_drawing();
+    ls(&mut app, Event::Open(Some("parsel".into())));
+    ls(&mut app, Event::Step(true));
+    assert_eq!(window(&app).kind, Kind::Single);
+    for _ in 0..6 {
+        ls(&mut app, Event::Step(true));
+    }
+    assert_eq!(window(&app).kind, Kind::Rules, "stops at the last");
+    ls(&mut app, Event::Step(false));
+    assert_eq!(window(&app).kind, Kind::Graduated);
 }

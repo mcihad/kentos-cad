@@ -28,14 +28,14 @@ use iced::Task;
 use kentos_contracts::Entity;
 use kentos_native_style::classify::{
     self, CLASS_COUNT_DEFAULT, DEFAULT_RAMP, Evaluated, ExprScope, Method, OTHER_COLOR, Present,
-    categories_of, class_count, classes_present, graduated_of, js_number, new_category, numbers_of,
-    plain_symbols, texts, unique_values, values_of,
+    categories_of, class_count, classes_present, graduated_of, js_number, new_category,
+    numbers_per_object, plain_symbols, texts, unique_values, values_of,
 };
 use kentos_native_style::renderer::{
     Categorized, GeometryClass, Graduated, Renderer, Rule, Rules, Single, SymbolSet,
 };
 use kentos_native_style::simple::symbols_of_layer_style;
-use kentos_native_style::tally::{RuleCount, rule_counts};
+use kentos_native_style::tally::{RuleCount, drawable, rule_counts};
 use serde_json::Value;
 
 use crate::app::{App, Dialog, Message};
@@ -111,10 +111,17 @@ pub enum Event {
     /// Opens the window for a layer (Katmanlar's menu), or the active one.
     Open(Option<String>),
     Kind(Kind),
+    /// → or ← with no field holding the keyboard: the next or the previous kind (the web's segmented control).
+    Step(bool),
+    /// Vazgeç, Esc or the backdrop: closes, or asks first when changes were not applied.
     Close,
     Apply,
-    /// Tamam: applied, then closed.
+    /// Tamam, or the question's “Uygula ve kapat”: applied, then closed.
     Done,
+    /// The question's “Uygulamadan kapat”: closed, the changes dropped.
+    Discard,
+    /// The question's Vazgeç: the window stays as it was.
+    Stay,
     /// An expression field's text as typed.
     Expr(Field, String),
     /// Text put at the end of an expression field (a field, a variable, a function).
@@ -154,8 +161,9 @@ pub type Counts = Rc<HashMap<Vec<usize>, RuleCount>>;
 struct Cache {
     generation: Option<u64>,
     values: HashMap<String, Rc<Evaluated<Option<String>>>>,
-    numbers: HashMap<String, Rc<Evaluated<f64>>>,
+    numbers: HashMap<String, Rc<Evaluated<Option<f64>>>>,
     rules: Option<(String, Counts)>,
+    drawn: Option<Rc<Vec<bool>>>,
 }
 
 /// What the window reads of the drawing.
@@ -231,6 +239,8 @@ pub struct LayerStyleWindow {
     applied: Option<Value>,
     /// The last thing the window said, and whether it warns.
     said: Option<(String, bool)>,
+    /// Closing asked about the changes not applied (the web's `askUnsaved`).
+    pub asking: bool,
     /// Fields whose typed text is kept apart from the value it gives (expressions, numbers).
     pub(super) typed: HashMap<String, String>,
     cache: RefCell<Cache>,
@@ -291,6 +301,7 @@ impl LayerStyleWindow {
             ramp: DEFAULT_RAMP,
             applied: current,
             said: None,
+            asking: false,
             typed: HashMap::new(),
             cache: RefCell::new(Cache::default()),
         };
@@ -336,6 +347,11 @@ impl LayerStyleWindow {
                 .to_value(),
             ),
         }
+    }
+
+    /// Whether the window holds changes Uygula has not written.
+    pub fn unapplied(&self) -> bool {
+        self.renderer() != self.applied
     }
 
     /// What the footer says: that edits wait for Uygula, else the last word.
@@ -414,8 +430,8 @@ impl LayerStyleWindow {
         made
     }
 
-    /// The graduated expression's numbers.
-    pub fn numbers(&self, src: &Source<'_>) -> Rc<Evaluated<f64>> {
+    /// The graduated expression's number per object (None: none).
+    pub fn numbers(&self, src: &Source<'_>) -> Rc<Evaluated<Option<f64>>> {
         self.fresh(src.doc);
         let expr = kentos_processing::text::js_trim(&self.graduated.expr).to_owned();
         if let Some(hit) = self.cache.borrow().numbers.get(&expr) {
@@ -429,9 +445,20 @@ impl LayerStyleWindow {
                 at: 0,
             }
         } else {
-            src.scope(|scope| numbers_of(&list, &expr, scope))
+            src.scope(|scope| numbers_per_object(&list, &expr, scope))
         });
         self.cache.borrow_mut().numbers.insert(expr, made.clone());
+        made
+    }
+
+    /// Whether the style engine draws each of the layer's objects (not texts and dimensions).
+    pub fn drawn(&self, src: &Source<'_>) -> Rc<Vec<bool>> {
+        self.fresh(src.doc);
+        if let Some(hit) = &self.cache.borrow().drawn {
+            return hit.clone();
+        }
+        let made = Rc::new(drawable(&self.entities(src.doc)));
+        self.cache.borrow_mut().drawn = Some(made.clone());
         made
     }
 
@@ -470,6 +497,16 @@ impl LayerStyleWindow {
     pub fn edit(&mut self, e: Event, src: &Source<'_>) {
         match e {
             Event::Kind(k) => self.kind = k,
+            Event::Step(next) => {
+                if let Some(i) = KINDS.iter().position(|k| *k == self.kind) {
+                    let j = if next {
+                        (i + 1).min(KINDS.len() - 1)
+                    } else {
+                        i.saturating_sub(1)
+                    };
+                    self.kind = KINDS[j];
+                }
+            }
             Event::Expr(field, text) => self.set_expr(&field, text),
             Event::Insert(field, text) => {
                 let before = self.expr_text(&field);
@@ -529,12 +566,13 @@ impl LayerStyleWindow {
             Event::Count(text) => self.count = text,
             Event::Ramp(r) => self.ramp = r,
             Event::Graduate => {
-                let numbers = self.numbers(src);
-                if numbers.values.is_empty() {
+                let numbers: Vec<f64> =
+                    self.numbers(src).values.iter().flatten().copied().collect();
+                if numbers.is_empty() {
                     return;
                 }
                 let classes = graduated_of(
-                    &numbers.values,
+                    &numbers,
                     self.method,
                     class_count(&self.count),
                     self.ramp,
@@ -543,7 +581,7 @@ impl LayerStyleWindow {
                 let n = classes.len();
                 self.graduated.classes = classes;
                 self.typed.clear();
-                self.say(texts::classified(n, numbers.values.len()), false);
+                self.say(texts::classified(n, numbers.len()), false);
             }
             Event::ClassMin(i, text) => self.class_bound(i, text, true),
             Event::ClassMax(i, text) => self.class_bound(i, text, false),
@@ -571,7 +609,12 @@ impl LayerStyleWindow {
                     set.set(class, symbol);
                 }
             }
-            Event::Open(_) | Event::Close | Event::Apply | Event::Done => {}
+            Event::Open(_)
+            | Event::Close
+            | Event::Apply
+            | Event::Done
+            | Event::Discard
+            | Event::Stay => {}
         }
     }
 
@@ -791,6 +834,24 @@ impl App {
         }
     }
 
+    /// Whether the window may close now (Esc, Vazgeç, the backdrop): with
+    /// changes not applied it asks first; asked, Esc answers “stay”.
+    pub(crate) fn layer_style_may_close(&mut self) -> bool {
+        let Some(window) = &mut self.styles.layer_style else {
+            return true;
+        };
+        if window.asking {
+            window.asking = false;
+            return false;
+        }
+        if window.unapplied() {
+            window.asking = true;
+            return false;
+        }
+        self.styles.layer_style = None;
+        true
+    }
+
     pub(crate) fn layer_style_event(&mut self, event: Event) -> Task<Message> {
         if let Event::Open(id) = event {
             self.open_layer_style(id);
@@ -800,14 +861,19 @@ impl App {
             return Task::none();
         };
         match event {
-            Event::Close => {
+            Event::Close => self.close_dialog(),
+            Event::Discard => {
                 self.styles.layer_style = None;
                 self.dialog = None;
             }
+            Event::Stay => window.asking = false,
+            // The kinds do not change under the question.
+            Event::Step(_) if window.asking => {}
             Event::Apply => {
                 window.apply(&mut doc.model);
             }
             Event::Done => {
+                window.asking = false;
                 if window.apply(&mut doc.model) {
                     self.styles.layer_style = None;
                     self.dialog = None;

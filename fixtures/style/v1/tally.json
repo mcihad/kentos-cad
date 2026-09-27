@@ -1,0 +1,117 @@
+{
+ "format": "kentos.style-tally",
+ "version": 1,
+ "note": "Katman stili penceresinin Nesne sütunu: her kategorinin, sınıfın ve kuralın çizimde alacağı nesne, stil çekirdeğinin çizdiği gibi (crates/shared/style-core/src/style/resolve.rs). Yalnız stil motorunun çizdiği nesneler sayılır: yazı ve ölçü sayılmaz. Bir nesne değerinin ilk kategorisine gider (aynı değerin sonraki kategorisi hiçbir şey almaz, gölgededir); değeri olmayan nesnenin değeri boş metindir; kapalı kategori nesnelerini yine sayar. Sayı veren nesne onu alan ilk sınıfa gider (alt sınır dahil, üst hariç; son sınıf üstü de alır); sayısı olmayan ya da hiçbir sınıfın almadığı nesne kalandır. Kural, üst kuralının aldıkları arasından koşulu sağlayanları alır (koşulsuz: hepsini); değilse kuralı üstünün aldıklarından açık ve koşulu okunan hiçbir kardeşin almadıklarını alır; kapalı kural sayısını yine söyler, kardeşlerini değilseden alıkoymaz; okunamayan koşul yerini söyleyen hatayla döner. Alan adının ifadede yazılışı: tek parça ve ayrılmış sözcük değilse olduğu gibi, değilse köşeli ayraç içinde (\"…\" metindir). Elle yazıldı ve iki platformun kendi kodunu denetler: masaüstü crates/native/style/tests/tally.rs, web apps/web/src/ui/style/tally.test.ts.",
+ "layerName": "Kadastro",
+ "entities": [
+  { "kind": "point", "id": 1, "layerId": "k", "attrs": { "Kat": "1", "Nitelik": "Tarla" }, "p": { "x": 487000, "y": 4420000 } },
+  { "kind": "point", "id": 2, "layerId": "k", "attrs": { "Kat": "2", "Nitelik": "Arsa" }, "p": { "x": 487010, "y": 4420000 } },
+  { "kind": "point", "id": 3, "layerId": "k", "attrs": { "Kat": "3", "Nitelik": "Tarla" }, "p": { "x": 487020, "y": 4420000 } },
+  { "kind": "point", "id": 4, "layerId": "k", "attrs": { "Kat": "4", "Nitelik": "Arsa" }, "p": { "x": 487030, "y": 4420000 } },
+  { "kind": "point", "id": 5, "layerId": "k", "attrs": { "Kat": "5", "Nitelik": "Tarla" }, "p": { "x": 487040, "y": 4420000 } },
+  { "kind": "point", "id": 6, "layerId": "k", "attrs": { "Kat": "6", "Nitelik": "Arsa" }, "p": { "x": 487050, "y": 4420000 } },
+  { "kind": "point", "id": 7, "layerId": "k", "attrs": { "Kat": "x" }, "p": { "x": 487060, "y": 4420000 } },
+  { "kind": "text", "id": 8, "layerId": "k", "attrs": { "Kat": "9", "Nitelik": "Arsa" }, "p": { "x": 487070, "y": 4420000 }, "text": "Yazı", "height": 2, "rotation": 0 },
+  { "kind": "polyline", "id": 9, "layerId": "k", "attrs": { "Kat": "12", "Nitelik": "" }, "pts": [ { "x": 487000, "y": 4420010 }, { "x": 487010, "y": 4420010 } ] }
+ ],
+ "categories": [
+  {
+   "id": "first-of-its-value",
+   "expr": "Nitelik",
+   "categories": [
+    { "value": "Arsa", "label": "Arsa", "symbols": {} },
+    { "value": "Tarla", "label": "Tarla", "symbols": {}, "enabled": false },
+    { "value": "Arsa", "label": "Arsa (yine)", "symbols": {} },
+    { "value": "", "label": "Boş", "symbols": {} },
+    { "value": "Bağ", "label": "Bağ", "symbols": {} }
+   ],
+   "expect": { "counts": [3, 3, 0, 2, 0], "rest": 0, "shadowed": [false, false, true, false, false] }
+  },
+  {
+   "id": "the-rest",
+   "expr": "Nitelik",
+   "categories": [ { "value": "Arsa", "label": "Arsa", "symbols": {} } ],
+   "expect": { "counts": [3], "rest": 5, "shadowed": [false] }
+  },
+  {
+   "id": "none-yet",
+   "expr": "Nitelik",
+   "categories": [],
+   "expect": { "counts": [], "rest": 8, "shadowed": [] }
+  }
+ ],
+ "classes": [
+  {
+   "id": "first-that-takes",
+   "expr": "Kat",
+   "classes": [
+    { "min": 1, "max": 3, "label": "1 – 3", "symbols": {} },
+    { "min": 2, "max": 5, "label": "2 – 5", "symbols": {} },
+    { "min": 5, "max": 6, "label": "5 – 6", "symbols": {} }
+   ],
+   "expect": { "counts": [2, 2, 2], "rest": 2 }
+  },
+  {
+   "id": "the-last-takes-its-max",
+   "expr": "Kat",
+   "classes": [ { "min": 0, "max": 6, "label": "0 – 6", "symbols": {} } ],
+   "expect": { "counts": [6], "rest": 2 }
+  },
+  {
+   "id": "another-does-not",
+   "expr": "Kat",
+   "classes": [
+    { "min": 0, "max": 6, "label": "0 – 6", "symbols": {} },
+    { "min": 100, "max": 200, "label": "100 – 200", "symbols": {} }
+   ],
+   "expect": { "counts": [5, 0], "rest": 3 }
+  }
+ ],
+ "rules": [
+  {
+   "id": "a-tree",
+   "rules": [
+    { "id": "a", "label": "Arsa", "filter": "Nitelik = 'Arsa'", "children": [
+     { "id": "a1", "label": "Yüksek", "filter": "Kat > 3" },
+     { "id": "a2", "label": "Diğer", "isElse": true }
+    ] },
+    { "id": "b", "label": "Kapalı", "filter": "Kat = 1", "enabled": false },
+    { "id": "c", "label": "Diğerleri", "isElse": true },
+    { "id": "d", "label": "Bozuk", "filter": "Kat >" }
+   ],
+   "expect": [
+    { "path": [0], "count": 3 },
+    { "path": [0, 0], "count": 2 },
+    { "path": [0, 1], "count": 1 },
+    { "path": [1], "count": 1 },
+    { "path": [2], "count": 5 },
+    { "path": [3], "error": "6. karakterde: İfade yarım kalmış: sonunda bir değer eksik." }
+   ]
+  },
+  {
+   "id": "a-switched-off-parent",
+   "rules": [
+    { "id": "p", "label": "Tarlalar", "filter": "Nitelik = 'Tarla'", "enabled": false, "children": [
+     { "id": "p1", "label": "Yüksek", "filter": "Kat > 2" }
+    ] },
+    { "id": "q", "label": "Diğerleri", "isElse": true }
+   ],
+   "expect": [
+    { "path": [0], "count": 3 },
+    { "path": [0, 0], "count": 2 },
+    { "path": [1], "count": 8 }
+   ]
+  }
+ ],
+ "fieldTokens": [
+  { "name": "Nitelik", "token": "Nitelik" },
+  { "name": "_kod", "token": "_kod" },
+  { "name": "Kat2", "token": "Kat2" },
+  { "name": "Tapu alanı", "token": "[Tapu alanı]" },
+  { "name": "Yüzölçümü (m²)", "token": "[Yüzölçümü (m²)]" },
+  { "name": "2kat", "token": "[2kat]" },
+  { "name": "değil", "token": "[değil]" },
+  { "name": "ve", "token": "[ve]" },
+  { "name": "Boş", "token": "[Boş]" }
+ ]
+}

@@ -122,8 +122,9 @@ fn settings_screens() {
 /// Katman stili's states on the demo drawing (docs/adr/0091), each applied so
 /// the drawing behind shows it: Basit on Ada sınırı, Kategorili on Parsel
 /// sınırı by Nitelik, Aralıklı on Yapı by the storeys, Kurallar on Parsel
-/// sınırı, Tek sembol on Kot noktaları; dark and light at both sizes, and
-/// light with a larger text at the small one.
+/// sınırı, Tek sembol on Kot noktaları, and the question on closing with
+/// changes not applied; dark and light at both sizes, and light with a larger
+/// text at the small one.
 #[test]
 #[ignore = "pictures for the owner, run by hand"]
 fn layer_style_screens() {
@@ -135,7 +136,7 @@ fn layer_style_screens() {
     };
     let out = root().join(".run/shots");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    let states: [(&str, &str, Vec<Event>); 5] = [
+    let states: [(&str, &str, Vec<Event>); 6] = [
         ("basit", "ada", vec![]),
         (
             "kategorili",
@@ -180,6 +181,17 @@ fn layer_style_screens() {
             ],
         ),
         ("tek", "kot", vec![Event::Kind(Kind::Single), Event::Apply]),
+        // Closing with categories not applied: the window asks first.
+        (
+            "soru",
+            "parsel",
+            vec![
+                Event::Kind(Kind::Categorized),
+                Event::Expr(Field::Categories, "Nitelik".into()),
+                Event::Classify,
+                Event::Close,
+            ],
+        ),
     ];
     let sizes: [(f32, f32, &str, &str, i64); 5] = [
         (1440.0, 900.0, "dark", "", 13),
@@ -219,7 +231,7 @@ fn layer_style_screens() {
                 .expect("writes the picture");
             println!("{}", file.display());
             // The style on the drawing: the window closed, the layer in view.
-            if *name == "basit" || width < 1400.0 {
+            if matches!(*name, "basit" | "soru") || width < 1400.0 {
                 continue;
             }
             let _ = app.update(Message::LayerStyle(Event::Done));

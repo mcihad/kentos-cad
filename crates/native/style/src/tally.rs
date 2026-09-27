@@ -1,11 +1,11 @@
 //! What the layer style window counts as the user edits: which objects each
 //! category, class or rule takes, as the style core draws them
 //! (`kentos_style_core::style::resolve`), so the Nesne column says what the
-//! map will show. The web's window counts values one by one
-//! (`categoryCounts`, `countIn`, a rule's own condition over the whole
-//! layer); the desktop follows the drawing: an object goes to the first
-//! category of its value, a child rule counts among its parent's objects,
-//! a “değilse” rule what no sibling took.
+//! map will show. Only objects the style engine draws count (texts and
+//! dimensions are drawn elsewhere). An object goes to the first category of
+//! its value and to the first class that takes its number; a child rule
+//! counts among its parent's objects, a “değilse” rule what no sibling took.
+//! Both platforms are held to `fixtures/style/v1/tally.json`.
 
 use std::collections::HashMap;
 
@@ -13,19 +13,29 @@ use kentos_contracts::Entity;
 use kentos_style_core::expr::rows::As;
 use kentos_style_core::expr::{Value, compile};
 
-use crate::classify::{ExprScope, evaluate};
-use crate::renderer::{Category, Rule};
+use crate::classify::{ExprScope, evaluate, geometry_class};
+use crate::renderer::{Category, GraduatedClass, Rule};
 
-/// How many objects each category takes, and how many none does
-/// (“Diğer değerler”). An object without a value has the value "", as the core reads it.
-pub fn category_tally(values: &[Option<String>], categories: &[Category]) -> (Vec<usize>, usize) {
+/// Whether the style engine draws each object (texts and dimensions it does not).
+pub fn drawable(list: &[&Entity]) -> Vec<bool> {
+    list.iter().map(|e| geometry_class(e).is_some()).collect()
+}
+
+/// How many drawn objects each category takes, and how many none does
+/// (“Diğer değerler”). An object without a value has the value "", as the
+/// core reads it; a switched-off category keeps its objects.
+pub fn category_tally(
+    values: &[Option<String>],
+    drawn: &[bool],
+    categories: &[Category],
+) -> (Vec<usize>, usize) {
     let mut first: HashMap<&str, usize> = HashMap::new();
     for (i, k) in categories.iter().enumerate() {
         first.entry(k.value.as_str()).or_insert(i);
     }
     let mut counts = vec![0; categories.len()];
     let mut rest = 0;
-    for v in values {
+    for (v, _) in values.iter().zip(drawn).filter(|(_, d)| **d) {
         match first.get(v.as_deref().unwrap_or("")) {
             Some(&i) => counts[i] += 1,
             None => rest += 1,
@@ -41,6 +51,32 @@ pub fn shadowed(categories: &[Category], i: usize) -> bool {
         .is_some_and(|k| categories[..i].iter().any(|o| o.value == k.value))
 }
 
+/// How many drawn objects each class takes (the first that takes the
+/// number: its lower bound included, its upper bound too for the last), and
+/// how many none does (no number, or outside every class): those are not drawn.
+pub fn class_tally(
+    numbers: &[Option<f64>],
+    drawn: &[bool],
+    classes: &[GraduatedClass],
+) -> (Vec<usize>, usize) {
+    let mut counts = vec![0; classes.len()];
+    let mut rest = 0;
+    let last = classes.len().wrapping_sub(1);
+    for (n, _) in numbers.iter().zip(drawn).filter(|(_, d)| **d) {
+        let taken = n.and_then(|n| {
+            classes
+                .iter()
+                .enumerate()
+                .position(|(i, k)| n >= k.min && (n < k.max || (i == last && n <= k.max)))
+        });
+        match taken {
+            Some(i) => counts[i] += 1,
+            None => rest += 1,
+        }
+    }
+    (counts, rest)
+}
+
 /// What a rule takes, or why its condition cannot be read.
 #[derive(Clone, Debug, PartialEq)]
 pub enum RuleCount {
@@ -52,10 +88,12 @@ pub enum RuleCount {
 /// Which objects a condition takes, or why it cannot be read.
 type Mask = Result<Vec<bool>, String>;
 
-/// Each rule's count by its path in the tree (indices from the top). A rule
-/// takes its parent's objects that meet its condition (an empty one: all);
-/// a “değilse” rule takes its parent's objects no enabled sibling took.
-/// Scale ranges and the rule's own switch do not change what it counts.
+/// Each rule's count by its path in the tree (indices from the top), of the
+/// drawn objects. A rule takes its parent's objects that meet its condition
+/// (none: all); a “değilse” rule takes its parent's objects that no enabled
+/// sibling with a readable condition took. A rule that is off still says
+/// what it would take, and does not keep its siblings' objects from “değilse”.
+/// Scale ranges do not change what a rule counts.
 pub fn rule_counts(
     rules: &[Rule],
     list: &[&Entity],
@@ -63,7 +101,7 @@ pub fn rule_counts(
 ) -> HashMap<Vec<usize>, RuleCount> {
     let mut masks: HashMap<String, Mask> = HashMap::new();
     let mut mask_of = |filter: Option<&str>| -> Mask {
-        let Some(f) = filter.map(str::trim).filter(|f| !f.is_empty()) else {
+        let Some(f) = filter else {
             return Ok(vec![true; list.len()]);
         };
         masks
@@ -78,8 +116,8 @@ pub fn rule_counts(
             .clone()
     };
     let mut out = HashMap::new();
-    let everything = vec![true; list.len()];
-    walk(rules, &everything, &mut Vec::new(), &mut mask_of, &mut out);
+    let drawn = drawable(list);
+    walk(rules, &drawn, &mut Vec::new(), &mut mask_of, &mut out);
     out
 }
 
@@ -135,90 +173,5 @@ pub fn field_token(name: &str) -> String {
         name.to_owned()
     } else {
         format!("[{name}]")
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use serde_json::json;
-
-    fn entities() -> Vec<Entity> {
-        (1..=6)
-            .map(|i| {
-                serde_json::from_value(json!({
-                    "kind": "point", "id": i, "layerId": "k", "p": { "x": i, "y": 0 },
-                    "attrs": { "Kat": i.to_string(), "Nitelik": if i % 2 == 0 { "Arsa" } else { "Tarla" } },
-                }))
-                .unwrap()
-            })
-            .collect()
-    }
-
-    fn rule(v: serde_json::Value) -> Rule {
-        serde_json::from_value(v).unwrap()
-    }
-
-    #[test]
-    fn rules_count_what_they_draw() {
-        let list = entities();
-        let list: Vec<&Entity> = list.iter().collect();
-        let name = |_: &str| "Kadastro".to_owned();
-        let measures = |_: &[&Entity]| Vec::new();
-        let scope = ExprScope {
-            layer_name: &name,
-            measures: &measures,
-        };
-        let rules = vec![
-            rule(
-                json!({ "id": "a", "label": "Arsa", "filter": "Nitelik = 'Arsa'", "children": [
-                { "id": "a1", "label": "Yüksek", "filter": "Kat > 3" },
-                { "id": "a2", "label": "Diğer", "isElse": true },
-            ] }),
-            ),
-            rule(json!({ "id": "b", "label": "Kapalı", "filter": "Kat = 1", "enabled": false })),
-            rule(json!({ "id": "c", "label": "Diğerleri", "isElse": true })),
-            rule(json!({ "id": "d", "label": "Bozuk", "filter": "Kat >" })),
-        ];
-        let counts = rule_counts(&rules, &list, &scope);
-        let n = |p: &[usize]| counts.get(p).cloned();
-        assert_eq!(n(&[0]), Some(RuleCount::Count(3)));
-        // Among Arsa's 2, 4 and 6: 4 and 6 are above 3, 2 is left for “Diğer”.
-        assert_eq!(n(&[0, 0]), Some(RuleCount::Count(2)));
-        assert_eq!(n(&[0, 1]), Some(RuleCount::Count(1)));
-        // Off, it still says what it would take; it does not keep the others from “Diğerleri”.
-        assert_eq!(n(&[1]), Some(RuleCount::Count(1)));
-        assert_eq!(n(&[2]), Some(RuleCount::Count(3)));
-        assert!(
-            matches!(n(&[3]), Some(RuleCount::Error(e)) if e.contains("karakterde") || !e.is_empty())
-        );
-    }
-
-    #[test]
-    fn a_value_goes_to_its_first_category() {
-        let cat = |v: &str| Category {
-            value: v.into(),
-            label: v.into(),
-            symbols: Default::default(),
-            enabled: None,
-            extra: Default::default(),
-        };
-        let cats = vec![cat("Arsa"), cat("Tarla"), cat("Arsa"), cat("")];
-        let values = vec![
-            Some("Arsa".to_owned()),
-            Some("Arsa".to_owned()),
-            None,
-            Some("Bağ".to_owned()),
-        ];
-        assert_eq!(category_tally(&values, &cats), (vec![2, 0, 0, 1], 1));
-        assert!(shadowed(&cats, 2) && !shadowed(&cats, 0));
-    }
-
-    #[test]
-    fn fields_are_written_bare_or_in_brackets() {
-        assert_eq!(field_token("Nitelik"), "Nitelik");
-        assert_eq!(field_token("Tapu alanı"), "[Tapu alanı]");
-        assert_eq!(field_token("değil"), "[değil]");
-        assert_eq!(field_token("2kat"), "[2kat]");
     }
 }
