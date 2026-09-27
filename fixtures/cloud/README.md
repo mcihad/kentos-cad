@@ -6,6 +6,7 @@ Bulut projeleri penceresinin (katalog, [ADR 0028](../../docs/adr/0028-project-ca
 - **Masaüstü**: katalog penceresi (`apps/desktop/src/cloud/`) aynı dosyayı okur.
 - **Durum çubuğunun bulut hücreleri**: web'de `apps/web/src/ui/statusbar/cellsPlan.test.ts`, `ui/statusbar/cellsPlan.ts`'e karşı; hücreler (`cloudCells.ts`, `StatusBar.ts`) yalnız çizer. Cevaplar koddan ayrı, `scripts/fixtures/cells_cases.py` ile bulunur ve yazılır (`--check` karşılaştırır).
 - **Proje formları**: web'de `apps/web/src/app/cloud/formsPlan.test.ts`, `app/cloud/formsPlan.ts` (ve etiketler için `catalog.ts`'in `parseTags`'i) karşısında; formlar (`ui/cloud/ProjectForms.ts`, `ProjectActions.ts`'in Yeniden adlandır'ı) yalnız çizer. Cevaplar koddan ayrı, `scripts/fixtures/forms_cases.py` ile bulunur ve yazılır (`--check` karşılaştırır).
+- **Dosya projesinin revizyonları** ([docs/specs/file-revisions.md](../../docs/specs/file-revisions.md)): web'de `apps/web/src/app/cloud/fileRevisionsPlan.test.ts`, `app/cloud/fileRevisionsPlan.ts`'e ve kayıt hücresi için `ui/statusbar/cellsPlan.ts`'e karşı; `app/cloud/fileProject.ts` durumunu planın `step`'iyle tutar, `ui/cloud/FileConflict.ts` planın sorularını sorar. Cevaplar koddan ayrı, `scripts/fixtures/file_revisions_cases.py` ile bulunur ve yazılır (`--check` karşılaştırır).
 - **Paylaş**: web'de `apps/web/src/app/cloud/sharePlan.test.ts`, `app/cloud/sharing.ts`, `invitations.ts` ve `sharePlan.ts`'e karşı; pencere (`ui/cloud/ShareDialog.ts`, `shareFind.ts`, `shareInvites.ts`) yalnız çizer. Dosyanın cevapları koddan ayrı, `scripts/fixtures/share_cases.py` ile bulunur ve yazılır (`--check` hiçbir şey yazmadan karşılaştırır); masaüstünün Paylaş penceresi aynı dosyayı okur.
 
 | Dosya | İçerik |
@@ -14,6 +15,7 @@ Bulut projeleri penceresinin (katalog, [ADR 0028](../../docs/adr/0028-project-ca
 | `v1/share.json` | Paylaş penceresinin sözleri ve kuralları |
 | `v1/cells.json` | Durum çubuğunun bulut hücreleri: kayıt hücresi, sunucu hücresi ve hesap menüsü |
 | `v1/forms.json` | Proje formlarının (Proje bilgileri, Yeniden adlandır, Kopyasını oluştur, öbür saklama biçimine çevirme) sözleri ve kuralları |
+| `v1/file-revisions.json` | Açık dosya projesinin revizyonları: yeni revizyonun öğrenilmesi, hücrenin durumu, Kaydet'in ilk adımı, yeniden eşitleme, sorular ve cevapları, sözler |
 
 ## Biçim (`kentos.catalog`, sürüm 1)
 
@@ -71,6 +73,32 @@ Bulut projeleri penceresinin (katalog, [ADR 0028](../../docs/adr/0028-project-ca
 | `serverTexts`, `serverTips` | Sunucu hücresinin sözü ve ipucu. Girdi: durum, sunucunun son iyi yanıtı (sözleşmenin `Health`'i: `status` “ok”, hizmet, sürüm, bilinirse `commit`, sözleşme sürümü), neden ve geliştirme yapısı mı. Bağlıyken hizmet, sürüm, commit'in ilk 8 hanesi ve sözleşme sürümü; uyumsuzken hizmet, sürüm ve commit, ardından iki sözleşme sürümünü de söyleyen neden; sorulurken; yokken nedeni, çizimin sunucusuz çalıştığı ve (geliştirme yapısında) sunucunun nasıl başlatılacağı |
 | `projectActions` | Açık projenin menüdeki işleri ve her birinin istediği yetki |
 | `accountRows` | Hesap menüsü: başlık (hesabın adı · açık projenin çalışma alanı, ya da “Oturum açılmadı”), giriş/çıkış, bulut komutları, açık projenin işleri, sunucu denetimi. Açık projede kapalı olan ve hesabın yetkisi olmayan iş hangi yetkinin eksik olduğunu söyler; başka bir nedenle kapalı ya da yetkisi eksik ama açık olan söylemez |
+
+Kayıt hücresinin iki yeni hâli bu dosyada değil, `file-revisions.json`'dadır: kaydedilmemiş iş üstünde yeni revizyonun sözü (girdide `dirty`) ve ipucunda kim ile ne zaman (`newer.at`). Buradaki durumlarda `dirty` ve `at` yoktur; onlarsız sözler değişmedi.
+
+## Biçim (`kentos.fileRevisions`, sürüm 1)
+
+Durumlar, bir açık dosya projesinin bildiklerinden (`RevisionState`) yola çıkar: `base` (çizimin dayandığı revizyon, yoksa `"0"`), `newer` (sunucudaki yeni revizyon: `revision`, `by` kaydeden ya da boş, `at` RFC 3339 zamanı ya da `null`), `conflict` (`expected`, `actual`), `dirty`, `stage` (`idle`, `encoding`, `uploading`, `verifying`), `failed`, `writable`, `ended` (`deleted`, `revoked`, `archived` ya da `null`). Anlamları [docs/specs/file-revisions.md](../../docs/specs/file-revisions.md) §1'dedir.
+
+| Alan | Anlamı |
+|---|---|
+| `format`, `version`, `timeZone` | `"kentos.fileRevisions"`, `1`; zamanlar cihazın yerel saatiyle yazılır, durumlar bu bölgeyle (`Europe/Istanbul`) denetlenir |
+| `resyncRetryMs` | Yanıtsız kalan yeniden eşitlemenin yeniden abone olmadan önce beklediği süre (30 000 ms) |
+| `texts` | Tek satırlık sözler, `{ sample: [değerler], text }`: Kaydet sürerken (`busy`), projesi silinmiş ya da erişimi kalkmışken (`unreadableDeleted`, `unreadableRevoked`), yeniden eşitlemeye yanıt gelmeyince (`resyncFailed`), çizim yerel dosyaya kaydedilip projeden ayrılınca (`detached`), son revizyon açılamayınca (`openFailed`: ad ve neden) |
+| `marks` | Geçmiş sekmesinin işaretleri: en yeni revizyon, açık çizimin dayandığı revizyon |
+| `who` | Kim ve ne zaman: “ (Mehmet Demir, 27.09.2026 14:32)”; yalnız bilinen yazılır, ikisi de yoksa boş |
+| `cellStates` | Bilinenlerden hücrenin durumu (`cellState`): bitiş, Kaydet'in aşaması, çakışma, yeni revizyon (kaydedilmemiş işte ve salt okunurda da), salt okunur, başarısızlık, kaydedilmemiş, kaydedildi |
+| `steps` | Tek girdi (`from`, `input`) → sonraki bilinenler ve `say` (yeni revizyon bir kez söylenecek mi). Girdiler: `dirty`, `newest` (sunucunun en yenisi ya da `null`), `stage`, `committed` (`revision`, `dirty`), `refused` (`actual`), `failed`, `unchanged`, `access` (`writable`), `ended` (`why`) |
+| `saveSteps` | Kaydet'in ilk adımı (`saveStep`): `ended`, `readonly`, `conflict` (soru yeniden), `unchanged`, `behind` (yeni revizyon biliniyor: hiçbir şey yüklenmez, durum reddedilmiş gibi olur, soru gelir), `save` |
+| `events` | Olay dizisi (`seq`, `kind`, `requestId`) ve bu pencerenin kendi istek kimlikleri (`own`) → son imleç, bitiş (`deleted`; `archived` ve bu pencere yaptıysa `quiet`), erişimin yeniden sorulması, en yeni revizyonun sorulması (dizi başına bir kez) |
+| `newest` | Revizyon listesi (`GET …/files`, sözleşmenin `FileRevisions`'ı) → en yeni revizyon, kim ve ne zaman; revizyon yoksa `null` |
+| `resync` | Yeniden eşitlemede projenin cevabı (`project` ve durumu ile `eventCursor`, `deleted`, `notFound`, `forbidden` ve iletisi, `unreachable`, `failed`) → `follow` (yeni imleç; ardından erişim ve en yeni revizyon sorulur), `end` (neden ve sunucunun sözü), `retry` |
+| `offers` | Sorulan (`name`, `state`, `busy`: Kaydet sürüyor, `via`: `newest` ya da `conflict`) → `ask` ve sorunun tamamı (kimliği, başlık, soru, maddeler, cevaplar sırasıyla: `value`, `label`, `kind`, `aside`, `does`: `copy` / `local` / `latest` / `nothing`, `work`: kaydedilmemiş işe ne olduğu `saved` / `dropped` / `kept` / `none`; `cancel`), `say` (`tone`, `line`) ya da `none` |
+| `lines` | Yeni revizyonun günlük satırı: temiz çizimde, kaydedilmemiş işte, kim ya da zaman bilinmezken, çizimin revizyonu yokken |
+| `tips` | Kayıt hücresinin ipucu (`ui/statusbar/cellsPlan.ts` `fileTip`), yeni revizyonun kimi ve zamanıyla, kaydedilmemiş iş varken ve yokken |
+| `cells` | Hücrenin sözü, durumu ve tıklaması, bilinenlerden (yükleme ilerlemesi 0) |
+| `historyMarks` | Geçmiş'te bir revizyon satırının işaretleri (`revision`, `current`, `openBase`: proje burada açık değilse `null`) |
+| `traces` | Bütün sıralar: başlangıç, adımlar, son bilinenler. Bir adım üç türlüdür. Girdi adımında girdi, `say` ve hücre (`state`, `text`, `action`) vardır. Kaydet adımında (`save`) ilk adım ve hücre vardır; `behind` durumu `refused` ile, `unchanged` ise `unchanged` ile değiştirir, `save`'de aşamalar sonraki girdilerdir. Tıklama adımında (`offer`, `busy`) gelen vardır: `ask` ve sorunun kimliği ile cevapları, ya da `say` ve satırı |
 
 ## Biçim (`kentos.forms`, sürüm 1)
 

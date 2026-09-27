@@ -2,6 +2,7 @@ import type { FileCommitted } from '../../contracts/generated/FileCommitted';
 import type { ProjectInfo } from '../../contracts/generated/ProjectInfo';
 import { replaceDrawing } from '../fileIO';
 import type { NewerRevision } from './fileProject';
+import { newerLine } from './fileRevisionsPlan';
 import { readProject } from './incoming';
 import type { CloudSession, Progress, UploadCatalog } from './session';
 import { commitEnvelope, sizeText, verifyDownload } from './transfer';
@@ -20,14 +21,9 @@ export type { FileStage } from './uploading';
  * revision read whole, and the project is attached at that revision.
  */
 
-/** Someone else saved a newer revision of the open file project: said, never loaded by itself. */
-export function newerText(name: string, newer: NewerRevision, base: string): string {
-  return `“${name}” başka bir yerde kaydedildi: revizyon ${newer.revision}${newer.by ? ` (${newer.by})` : ''}. Açık çizimin dayandığı revizyon: ${base}; yeni revizyonu açmak için durum çubuğundaki kayıt durumuna tıklayın. Kendiliğinden yeniden yüklenmez.`;
-}
-
-/** The notice of a newer revision for the project `info` (the log; the status bar offers to open it). */
+/** The notice of a newer revision for the project `info` (the log, fileRevisionsPlan.ts `newerLine`; the status bar offers it). */
 function noticeNewer(s: CloudSession, info: ProjectInfo) {
-  return (newer: NewerRevision) => s.ctx.log.warn(newerText(info.name, newer, s.file.value?.base.value ?? '?'));
+  return (newer: NewerRevision) => s.ctx.log.warn(newerLine(info.name, newer, s.file.value?.base.value ?? '?', s.ctx.doc.dirty.value));
 }
 
 /**

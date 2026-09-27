@@ -74,8 +74,25 @@ describe.skipIf(!formatsBuilt)('file projects in the cloud session (docs/adr/003
     // Time for a reload that must not come.
     await new Promise((r) => setTimeout(r, 150));
     const file = session.file.value!;
-    expect([file.newer.value, file.base.value, file.state.value, doc.size, doc.revision]).toEqual([{ revision: '2', by: 'Mehmet Demir' }, '1', 'outdated', before.size, before.revision]);
-    expect(messages.filter((m) => m.includes('başka bir yerde kaydedildi'))).toEqual([expect.stringMatching(/revizyon 2 \(Mehmet Demir\)\. Açık çizimin dayandığı revizyon: 1; .*Kendiliğinden yeniden yüklenmez\.$/)]);
+    expect([file.newer.value, file.base.value, file.state.value, doc.size, doc.revision]).toEqual([{ revision: '2', by: 'Mehmet Demir', at: '2026-09-26T11:00:00Z' }, '1', 'outdated', before.size, before.revision]);
+    expect(messages.filter((m) => m.includes('başka bir yerde kaydedildi'))).toEqual([expect.stringMatching(/revizyon 2 \(Mehmet Demir, \d\d\.\d\d\.\d{4} \d\d:\d\d\)\. Açık çizimin dayandığı revizyon: 1; yeni revizyonu açmak için .*Kendiliğinden yeniden yüklenmez\.$/)]);
+  });
+
+  it('a resync on the open file project asks the server and follows again; the drawing is not opened again (docs/specs/file-revisions.md)', async () => {
+    const { session, server, doc, sockets, messages } = setup();
+    expect(await session.uploadFile('t', 'Ada', undefined, {})).toBe(true);
+    doc.add(point(486557));
+    const before = { size: doc.size, revision: doc.revision };
+    // Missed while the channel could not replay: someone else's revision.
+    await server.files.commitAs(await bytesOf(emptyDoc()), 'Mehmet Demir');
+    const socket = sockets.made.at(-1)!;
+    socket.o.onResync();
+    for (let i = 0; i < 50 && socket.reconnects === 0; i++) await new Promise((r) => setTimeout(r, 5));
+    const file = session.file.value!;
+    expect([socket.reconnects, file.cursor, file.base.value, file.newer.value?.revision, file.state.value]).toEqual([1, String(server.history.length), '1', '2', 'outdated']);
+    expect([doc.size, doc.revision, doc.dirty.value]).toEqual([before.size, before.revision, true]);
+    expect(messages.some((m) => m.includes('yeniden açılıyor'))).toBe(false);
+    expect(messages.filter((m) => m.includes('başka bir yerde kaydedildi'))).toEqual([expect.stringMatching(/revizyon 2 .*kaydedilmemiş değişiklikleriniz Kaydet ile bu revizyonun üzerine yazılamaz\./)]);
   });
 
   it('a download that changed on the way never becomes the drawing', async () => {

@@ -1,5 +1,6 @@
 import type { AppContext } from '../../app/context';
 import { when } from '../../app/cloud/catalog';
+import { revisionMarks } from '../../app/cloud/fileRevisionsPlan';
 import { KIND_LABEL, pointText, whyNotCreate, whyNotDelete, whyNotDownload, whyNotTake, type HistoryData } from '../../app/cloud/history';
 import { sizeText } from '../../app/cloud/transfer';
 import type { Checkpoint } from '../../contracts/generated/Checkpoint';
@@ -16,8 +17,11 @@ import { icon } from '../icons';
  * downloaded and restored as a new project; a checkpoint is removed by its
  * maker or someone who manages the project, and a new one is named here.
  * An action the account may not take stays visible, disabled, and says
- * why. Nothing here asks the server: the catalog does, and redraws (also
- * when a `project.checkpoint` or `project.file` event arrives).
+ * why. The newest revision is marked, and so is the one the open drawing is
+ * based on when the project is open here (docs/specs/file-revisions.md).
+ * Nothing here asks the server: the catalog does, and redraws (also when a
+ * `project.checkpoint` or `project.file` event arrives, and when the open
+ * drawing's revision changes).
  */
 
 /** The history while it is on its way, or why it is not there. */
@@ -42,7 +46,7 @@ export function rowButton(label: string, iconName: string, run: () => void, why:
 
 const objectsText = (n?: string) => (n ? ` · ${Number(n).toLocaleString('tr-TR')} nesne` : '');
 
-function revisionRow(p: ProjectSummary, r: FileRevision, newest: boolean, actions: HistoryActions): HTMLElement {
+function revisionRow(p: ProjectSummary, r: FileRevision, marks: readonly string[], actions: HistoryActions): HTMLElement {
   const perms = p.access.permissions;
   return h(
     'div',
@@ -50,7 +54,7 @@ function revisionRow(p: ProjectSummary, r: FileRevision, newest: boolean, action
     h(
       'div',
       { class: 'catalog-history__main' },
-      h('span', { class: 'catalog-history__title' }, `Revizyon ${r.revision}`, newest ? h('span', { class: 'catalog-chip catalog-chip--open' }, 'En yeni') : null),
+      h('span', { class: 'catalog-history__title' }, `Revizyon ${r.revision}`, ...marks.map((m) => h('span', { class: 'catalog-chip catalog-chip--open' }, m))),
       h('span', { class: 'catalog-history__meta' }, `${r.createdByName || 'görünmüyor'} · ${when(r.createdAt)}`),
       h('span', { class: 'catalog-history__meta num' }, `${sizeText(r.size)}${objectsText(r.objects)}`),
     ),
@@ -84,6 +88,13 @@ function checkpointRow(ctx: AppContext, p: ProjectSummary, c: Checkpoint, action
       rowButton('Sil…', 'trash', () => actions.deleteCheckpoint(c), whyNotDelete(c, ctx.cloud.me.value?.user.id, perms, p.state === 'archived'), true),
     ),
   );
+}
+
+/** The revision the open drawing is based on, when `p` is the file project open here. */
+export function drawingBaseOf(ctx: AppContext, p: ProjectSummary): string | null {
+  const open = ctx.cloud.project.value;
+  const file = ctx.cloud.file.value;
+  return file && open && open.projectId === p.id && open.tenantId === p.tenantId ? file.base.value : null;
 }
 
 /** The history tab's content for `p`. */
@@ -124,7 +135,7 @@ export function renderHistory(ctx: AppContext, p: ProjectSummary, state: History
     out.push(
       h('h4', { class: 'catalog-history__head' }, 'Revizyonlar', h('span', { class: 'catalog-history__count' }, String(list.length))),
       list.length
-        ? h('div', { class: 'catalog-history__list', role: 'list', 'aria-label': 'Revizyonlar' }, list.map((r) => revisionRow(p, r, r.revision === state.revisions!.current, actions)))
+        ? h('div', { class: 'catalog-history__list', role: 'list', 'aria-label': 'Revizyonlar' }, list.map((r) => revisionRow(p, r, revisionMarks(r.revision, state.revisions!.current, drawingBaseOf(ctx, p)), actions)))
         : h('p', { class: 'catalog-details__muted' }, 'Henüz kaydedilmiş revizyon yok: ilk Kaydet 1. revizyonu yazar.'),
     );
   } else

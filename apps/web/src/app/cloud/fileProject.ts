@@ -6,9 +6,25 @@ import type { CadDocument } from '../../model/document';
 import { encodeDrawing, type DrawingCodec } from '../drawingFile';
 import { ApiFailure, type CloudApi } from './api';
 import type { AccessOutcome } from './sync';
-import { PROJECT_ACCESS, PROJECT_ARCHIVED, PROJECT_DELETED } from './syncCore';
+import {
+  cellState,
+  newestOf,
+  opened,
+  readEvents,
+  resyncStep,
+  saveStep,
+  step,
+  type FileSaveState,
+  type NewerRevision,
+  type ProjectAnswer,
+  type RevisionConflict,
+  type RevisionInput,
+  type RevisionState,
+} from './fileRevisionsPlan';
 import { commitEnvelope, fileConflict, sha256Hex, uploadBytes, uploadGone } from './transfer';
 import { again } from './upload';
+
+export type { FileSaveState, NewerRevision } from './fileRevisionsPlan';
 
 /**
  * Saving an open file project (docs/adr/0031, 0038; TODOS.md SYNC-02,
@@ -31,40 +47,23 @@ import { again } from './upload';
  *   drawing stays as it is; the user chooses (a separate copy, a local file,
  *   or the newest revision). Two files are never merged byte by byte.
  * - Someone else saved while the project is open (a `project.file` event):
- *   it is said, and the newest revision is offered; nothing is reloaded by
- *   itself (`newer`).
+ *   the server is asked which revision, by whom and when; it is said, and
+ *   the newest revision is offered; nothing is reloaded by itself
+ *   (`newer`). A Kaydet over it uploads nothing: it would be refused, so
+ *   the user chooses at once.
+ * - The events missed cannot be replayed (a resync): the project and its
+ *   newest revision are asked; the drawing is never replaced (`resync`).
  * - The project deleted, archived or out of reach, or the role lowered:
  *   nothing more is saved there; the drawing stays on screen, and the local
  *   recovery copy keeps its unsaved work (app/recovery.ts).
+ *
+ * What the state is and what each of these does to it is
+ * fileRevisionsPlan.ts's (`step`, `cellState`, `saveStep`); this class does
+ * the asking, the uploading and the committing.
  */
-
-/**
- * `saved`: the drawing on screen is revision `base`. `pending`: it has
- * changes no revision holds. `outdated`: someone saved a newer revision.
- */
-export type FileSaveState =
-  | 'saved'
-  | 'pending'
-  | 'encoding'
-  | 'uploading'
-  | 'verifying'
-  | 'conflict'
-  | 'outdated'
-  | 'error'
-  | 'readonly'
-  | 'deleted'
-  | 'revoked'
-  | 'archived';
 
 /** What one Kaydet did. */
 export type SaveOutcome = 'saved' | 'unchanged' | 'conflict' | 'failed' | 'readonly' | 'ended';
-
-/** A newer revision on the server than the drawing is based on. */
-export interface NewerRevision {
-  revision: string;
-  /** Who saved it, when the server says. */
-  by: string;
-}
 
 export interface FileProjectOptions {
   doc: CadDocument;
@@ -79,7 +78,7 @@ export interface FileProjectOptions {
   /** The KCAD v2 codec (the formats worker; tests run it in process). */
   codec: () => Promise<DrawingCodec>;
   warn: (text: string) => void;
-  /** Someone else saved a newer revision while the project is open. */
+  /** Someone else saved a newer revision while the project is open (said once per revision). */
   onNewer?: (newer: NewerRevision) => void;
   onDeleted?: () => void;
   onRevoked?: (reason: string) => void;
@@ -102,6 +101,7 @@ interface Inflight {
 const IDLE_MS = 100;
 
 export class FileProjectSave {
+  /** The save cell's state (fileRevisionsPlan.ts `cellState`). */
   readonly state = new Signal<FileSaveState>('saved');
   /** How far the upload is (0–1), while `uploading`. */
   readonly progress = new Signal(0);
@@ -113,16 +113,16 @@ export class FileProjectSave {
   /** A newer revision than `base` that someone else saved, while the drawing is open. */
   readonly newer = new Signal<NewerRevision | null>(null);
   /** The revisions a refused save met: the drawing's base and the server's newest. */
-  readonly conflict = new Signal<{ expected: string; actual: string } | null>(null);
+  readonly conflict = new Signal<RevisionConflict | null>(null);
   /** Unsaved changes (0 or 1): what an access change says is not saved. */
   readonly pending = new Signal(0);
   private readonly o: FileProjectOptions;
+  /** What the project knows; the signals above are published from it. */
+  private s: RevisionState;
   private saving: Promise<SaveOutcome> | null = null;
   private inflight: Inflight | null = null;
   /** Request ids of this window's commits: their events are its own. */
   private readonly own = new Set<string>();
-  private ended: 'deleted' | 'revoked' | 'archived' | null = null;
-  private writable: boolean;
   private disposed = false;
   private readonly unsubscribe: (() => void)[] = [];
   /** The newest event cursor heard. */
@@ -130,19 +130,38 @@ export class FileProjectSave {
 
   constructor(o: FileProjectOptions) {
     this.o = o;
+    this.s = opened(o.base, { dirty: o.doc.dirty.value, writable: o.canWrite });
     this.base = new Signal(o.base);
     this.cursor = o.cursor;
-    this.writable = o.canWrite;
-    if (!this.writable) this.state.set('readonly');
+    this.publish();
     this.unsubscribe.push(
       o.doc.dirty.subscribe((dirty) => {
+        // Edited after a save, or clean again after undoing to the saved state; `pending` after, so what it wakes reads the new state.
+        this.apply({ kind: 'dirty', dirty });
         this.pending.set(dirty ? 1 : 0);
-        // Edited after a save, or clean again after undoing to the saved state.
-        if (this.state.value === 'saved' && dirty) this.state.set('pending');
-        else if (this.state.value === 'pending' && !dirty) this.state.set('saved');
       }, true),
     );
-    if (o.doc.dirty.value && this.state.value === 'saved') this.state.set('pending');
+  }
+
+  /** What the project knows now (fileRevisionsPlan.ts): what the questions read. */
+  get revisions(): RevisionState {
+    return this.s;
+  }
+
+  /** One change of what the project knows, published to the signals; true when a newer revision is to be said. */
+  private apply(i: RevisionInput): boolean {
+    const { state, say } = step(this.s, i);
+    this.s = state;
+    this.publish();
+    return say;
+  }
+
+  private publish(): void {
+    const s = this.s;
+    this.base.set(s.base);
+    this.newer.set(s.newer);
+    this.conflict.set(s.conflict);
+    this.state.set(cellState(s));
   }
 
   /** Stops for good (the project is left): an answer still on its way changes nothing any more. */
@@ -158,7 +177,7 @@ export class FileProjectSave {
 
   /** Why nothing is saved there any more, if so. */
   get endedBy(): 'deleted' | 'revoked' | 'archived' | null {
-    return this.ended;
+    return this.s.ended;
   }
 
   /** Saves the drawing as a new revision; one save at a time (a second Kaydet gets the first one's outcome). */
@@ -173,13 +192,9 @@ export class FileProjectSave {
   private async run(): Promise<SaveOutcome> {
     const { o } = this;
     if (this.disposed) return 'failed';
-    if (this.ended) return 'ended';
-    if (!this.writable) {
-      this.state.set('readonly');
-      return 'readonly';
-    }
-    // The user chooses first (a copy, a local file or the newest revision): a save now would meet the same.
-    if (this.conflict.value) return 'conflict';
+    // Where nothing is saved, and while a conflict stands (the user chooses first: a save now would meet the same).
+    const first = saveStep(this.s);
+    if (first === 'ended' || first === 'readonly' || first === 'conflict') return first;
     await this.whenIdle();
     if (this.disposed) return 'failed';
     try {
@@ -188,22 +203,35 @@ export class FileProjectSave {
         const r = await this.commit(this.inflight);
         if (r !== 'saved' || !o.doc.dirty.value) return r;
       }
-      if (!o.doc.dirty.value && this.base.value !== '0') {
-        this.state.set(this.newer.value ? 'outdated' : 'saved');
-        return 'unchanged';
+      switch (saveStep(this.s)) {
+        case 'ended':
+          return 'ended';
+        case 'readonly':
+          return 'readonly';
+        case 'conflict':
+          return 'conflict';
+        case 'unchanged':
+          this.apply({ kind: 'unchanged' });
+          return 'unchanged';
+        case 'behind':
+          // A newer revision is known: the server would refuse this one, so nothing is uploaded; the user chooses.
+          this.apply({ kind: 'refused', actual: this.s.newer!.revision });
+          return 'conflict';
+        case 'save':
+          break;
       }
       this.error.set('');
-      this.state.set('encoding');
+      this.apply({ kind: 'stage', stage: 'encoding' });
       const encoded = await encodeDrawing(o.doc, o.codec);
       if (this.disposed) return 'failed';
       if (encoded.dropped) o.warn(`KCAD v2'nin tanımadığı alanlar dosyaya yazılmadı: ${encoded.dropped}.`);
       const sha256 = await sha256Hex(encoded.bytes);
       this.progress.set(0);
-      this.state.set('uploading');
+      this.apply({ kind: 'stage', stage: 'uploading' });
       const target = { tenantId: o.tenantId, projectId: o.projectId };
       const upload = await uploadBytes(o.api, target, encoded.bytes, sha256, {
         progress: (done, total) => this.progress.set(total ? Math.min(1, done / total) : 0),
-        verifying: () => !this.disposed && this.state.set('verifying'),
+        verifying: () => void (!this.disposed && this.apply({ kind: 'stage', stage: 'verifying' })),
         waits: o.waits,
         part: o.part?.(),
       });
@@ -217,7 +245,7 @@ export class FileProjectSave {
 
   /** Commits the uploaded revision on the drawing's base. */
   private async commit(f: Inflight): Promise<SaveOutcome> {
-    this.state.set('verifying');
+    this.apply({ kind: 'stage', stage: 'verifying' });
     this.own.add(f.envelope.requestId);
     let done: FileCommitted;
     try {
@@ -226,9 +254,9 @@ export class FileProjectSave {
       const c = fileConflict(e);
       if (c) {
         this.inflight = null;
-        this.conflict.set(c);
-        this.newer.set({ revision: c.actual, by: '' });
-        this.state.set('conflict');
+        this.apply({ kind: 'refused', actual: c.actual });
+        // The refusal names only the number: who saved it and when are asked (the question may already be up).
+        void this.askNewest();
         return 'conflict';
       }
       // Refused for good: it is not sent again. Unanswered: it is, with its key, at the next Kaydet.
@@ -237,13 +265,11 @@ export class FileProjectSave {
     }
     if (this.disposed) return 'failed';
     this.inflight = null;
-    this.base.set(done.revision);
-    if (this.newer.value && Number(this.newer.value.revision) <= Number(done.revision)) this.newer.set(null);
     this.lastSaved.set({ revision: done.revision, at: Date.now(), sha256: done.sha256, size: done.size });
     // Only the revision written is saved: an edit made meanwhile stays unsaved (CLAUDE.md §4.8).
     this.o.doc.markSaved(f.revision);
     this.error.set('');
-    this.state.set(this.o.doc.dirty.value ? 'pending' : this.newer.value ? 'outdated' : 'saved');
+    this.apply({ kind: 'committed', revision: done.revision, dirty: this.o.doc.dirty.value });
     return 'saved';
   }
 
@@ -269,7 +295,7 @@ export class FileProjectSave {
       ? `Dosya kaydedilemedi: sunucuya ulaşılamadı (${why}). Çizim olduğu gibi duruyor; bağlantı dönünce yeniden Kaydet'e basın.`
       : `Dosya kaydedilemedi: ${why} Çizim olduğu gibi duruyor.`;
     this.error.set(text);
-    this.state.set('error');
+    this.apply({ kind: 'failed' });
     this.o.warn(text);
     return 'failed';
   }
@@ -282,56 +308,78 @@ export class FileProjectSave {
     });
   }
 
-  /**
-   * The conflict is settled (a copy was saved elsewhere, a local file was
-   * written, or the newest revision replaced the drawing): the next Kaydet
-   * goes on from `base`.
-   */
-  settle(base = this.base.value): void {
-    this.conflict.set(null);
-    this.base.set(base);
-    if (this.newer.value && Number(this.newer.value.revision) <= Number(base)) this.newer.set(null);
-    if (!this.ended && this.writable) this.state.set(this.o.doc.dirty.value ? 'pending' : this.newer.value ? 'outdated' : 'saved');
-  }
-
   // ── Events ─────────────────────────────────────────────────────────────
 
   /** Events of the project (from the socket, in order): another's revision, a deletion, an archive, an access change. */
   receive(events: readonly EventRecord[]): void {
-    if (this.disposed || this.ended) return;
-    for (const e of events) {
-      this.cursor = e.seq;
-      const mine = !!e.requestId && this.own.has(e.requestId);
-      if (e.kind === PROJECT_DELETED) return this.markDeleted();
-      if (e.kind === PROJECT_ARCHIVED) return this.markArchived(mine);
-      if (e.kind === PROJECT_ACCESS) this.o.onAccessChanged?.();
-      if (e.kind === 'project.file' && !mine) void this.heardNewer();
-    }
+    if (this.disposed || this.s.ended) return;
+    const read = readEvents(events, (id) => this.own.has(id));
+    if (read.cursor !== null) this.cursor = read.cursor;
+    if (read.end?.why === 'deleted') return this.markDeleted();
+    if (read.end?.why === 'archived') return this.markArchived(read.end.quiet);
+    if (read.access) this.o.onAccessChanged?.();
+    if (read.newest) void this.askNewest();
   }
 
-  /** Someone else committed a revision: which one and who, from the server; said, never loaded by itself. */
-  private async heardNewer(): Promise<void> {
+  /** Asks the server which revision is its newest, who saved it and when: said once when newer, never loaded by itself. */
+  private async askNewest(): Promise<void> {
     let revs;
     try {
       revs = await this.o.api.fileRevisions(this.o.tenantId, this.o.projectId);
     } catch {
       return;
     }
-    if (this.disposed || this.ended || !revs.current || Number(revs.current) <= Number(this.base.value)) return;
-    const newest = revs.revisions.find((r) => r.revision === revs.current);
-    const newer = { revision: revs.current, by: newest?.createdByName ?? '' };
-    if (this.newer.value?.revision === newer.revision) return;
-    this.newer.set(newer);
-    if (this.state.value === 'saved') this.state.set('outdated');
-    this.o.onNewer?.(newer);
+    if (this.disposed) return;
+    if (this.apply({ kind: 'newest', newest: newestOf(revs) }) && this.s.newer) this.o.onNewer?.(this.s.newer);
+  }
+
+  /**
+   * The server keeps no events from this window's cursor any more (or the
+   * cursor is beyond its newest): the project is asked what became of it,
+   * then its newest revision; events are followed from its cursor now. The
+   * drawing is never replaced. Answers what to do next: `follow` (subscribe
+   * again), `retry` (later: no answer came), or `ended`.
+   */
+  async resync(): Promise<'follow' | 'retry' | 'ended'> {
+    if (this.disposed || this.s.ended) return 'ended';
+    const next = resyncStep(await this.askProject());
+    if (this.disposed || this.s.ended) return 'ended';
+    switch (next.kind) {
+      case 'end':
+        if (next.why === 'deleted') this.markDeleted();
+        else if (next.why === 'archived') this.markArchived();
+        else this.markRevoked(next.reason);
+        return 'ended';
+      case 'retry':
+        return 'retry';
+      case 'follow':
+        this.cursor = next.cursor;
+        // The events missed may have changed the access, or brought a revision: asked as those events would.
+        this.o.onAccessChanged?.();
+        await this.askNewest();
+        return this.disposed || this.s.ended ? 'ended' : 'follow';
+    }
+  }
+
+  /** The project as the server has it now, for a resync; passing failures are tried again first. */
+  private async askProject(): Promise<ProjectAnswer> {
+    try {
+      const info = await again(() => this.o.api.project(this.o.tenantId, this.o.projectId), this.o.waits);
+      return { kind: 'project', state: info.state, eventCursor: info.eventCursor };
+    } catch (e) {
+      if (!(e instanceof ApiFailure)) return { kind: 'failed', message: e instanceof Error ? e.message : String(e) };
+      if (e.deleted) return { kind: 'deleted' };
+      if (e.notFound) return { kind: 'notFound' };
+      if (e.code === 'forbidden') return { kind: 'forbidden', message: e.message };
+      return e.transient ? { kind: 'unreachable' } : { kind: 'failed', message: e.message };
+    }
   }
 
   // ── Deletion and access ────────────────────────────────────────────────
 
   private end(why: 'deleted' | 'revoked' | 'archived'): boolean {
-    if (this.ended || this.disposed) return false;
-    this.ended = why;
-    this.state.set(why);
+    if (this.s.ended || this.disposed) return false;
+    this.apply({ kind: 'ended', why });
     return true;
   }
 
@@ -355,13 +403,8 @@ export class FileProjectSave {
 
   /** What this account may do changed while the project is open: without the right to write, Kaydet is refused. */
   setAccess(canWrite: boolean): AccessOutcome {
-    if (this.ended || this.disposed || canWrite === this.writable) return 'same';
-    this.writable = canWrite;
-    if (!canWrite) {
-      this.state.set('readonly');
-      return 'held';
-    }
-    this.state.set(this.conflict.value ? 'conflict' : this.o.doc.dirty.value ? 'pending' : 'saved');
-    return 'resumed';
+    if (this.s.ended || this.disposed || canWrite === this.s.writable) return 'same';
+    this.apply({ kind: 'access', writable: canWrite });
+    return canWrite ? 'resumed' : 'held';
   }
 }

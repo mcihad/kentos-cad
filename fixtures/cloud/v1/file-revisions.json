@@ -1,0 +1,3917 @@
+{
+ "format": "kentos.fileRevisions",
+ "version": 1,
+ "timeZone": "Europe/Istanbul",
+ "resyncRetryMs": 30000,
+ "texts": {
+  "busy": {
+   "sample": [
+    "Kadastro paftası 2026"
+   ],
+   "text": "“Kadastro paftası 2026” kaydediliyor; son revizyonu açmak için kaydın bitmesini bekleyin."
+  },
+  "unreadableDeleted": {
+   "sample": [
+    "Kadastro paftası 2026"
+   ],
+   "text": "“Kadastro paftası 2026” bulut projesi silindi; son revizyonu açılamaz. Çizimi saklamak için yerel bir dosyaya kaydedin."
+  },
+  "unreadableRevoked": {
+   "sample": [
+    "Kadastro paftası 2026"
+   ],
+   "text": "“Kadastro paftası 2026” projesine erişiminiz kaldırıldı; son revizyonu açılamaz. Çizimi saklamak için yerel bir dosyaya kaydedin."
+  },
+  "resyncFailed": {
+   "sample": [
+    "Kadastro paftası 2026"
+   ],
+   "text": "“Kadastro paftası 2026” projesinin kaçırılan olayları alınamadı ve sunucu yanıt vermedi; başkasının kaydettiği bir revizyon şimdilik bilinmiyor. Yarım dakika sonra yeniden sorulur; çizim olduğu gibi duruyor."
+  },
+  "detached": {
+   "sample": [
+    "Kadastro paftası 2026"
+   ],
+   "text": "Çizim yerel dosyaya kaydedildi ve “Kadastro paftası 2026” bulut projesinden ayrıldı; proje olduğu gibi duruyor."
+  },
+  "openFailed": {
+   "sample": [
+    "Kadastro paftası 2026",
+    "Sunucuya ulaşılamadı."
+   ],
+   "text": "“Kadastro paftası 2026” son revizyonu açılamadı: Sunucuya ulaşılamadı."
+  }
+ },
+ "marks": {
+  "newest": "En yeni",
+  "base": "Açık çizim"
+ },
+ "who": [
+  {
+   "newer": {
+    "revision": "5",
+    "by": "Mehmet Demir",
+    "at": "2026-09-27T11:32:00Z"
+   },
+   "text": " (Mehmet Demir, 27.09.2026 14:32)"
+  },
+  {
+   "newer": {
+    "revision": "5",
+    "by": "Mehmet Demir",
+    "at": null
+   },
+   "text": " (Mehmet Demir)"
+  },
+  {
+   "newer": {
+    "revision": "5",
+    "by": "",
+    "at": "2026-09-27T11:32:00Z"
+   },
+   "text": " (27.09.2026 14:32)"
+  },
+  {
+   "newer": {
+    "revision": "5",
+    "by": "",
+    "at": null
+   },
+   "text": ""
+  }
+ ],
+ "cellStates": [
+  {
+   "title": "opened at a revision, clean",
+   "state": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "expect": "saved"
+  },
+  {
+   "title": "without a revision yet",
+   "state": {
+    "base": "0",
+    "newer": null,
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "expect": "saved"
+  },
+  {
+   "title": "unsaved changes",
+   "state": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": true,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "expect": "pending"
+  },
+  {
+   "title": "a newer revision, clean",
+   "state": {
+    "base": "4",
+    "newer": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "expect": "outdated"
+  },
+  {
+   "title": "a newer revision over unsaved work",
+   "state": {
+    "base": "4",
+    "newer": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": null,
+    "dirty": true,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "expect": "outdated"
+  },
+  {
+   "title": "a newer revision while read-only: offered all the same",
+   "state": {
+    "base": "4",
+    "newer": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": false,
+    "ended": null
+   },
+   "expect": "outdated"
+  },
+  {
+   "title": "read-only",
+   "state": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": true,
+    "stage": "idle",
+    "failed": false,
+    "writable": false,
+    "ended": null
+   },
+   "expect": "readonly"
+  },
+  {
+   "title": "a conflict outranks the newer revision",
+   "state": {
+    "base": "4",
+    "newer": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": {
+     "expected": "4",
+     "actual": "5"
+    },
+    "dirty": true,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "expect": "conflict"
+  },
+  {
+   "title": "a Kaydet on its way outranks a conflict-to-be",
+   "state": {
+    "base": "4",
+    "newer": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": null,
+    "dirty": true,
+    "stage": "uploading",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "expect": "uploading"
+  },
+  {
+   "title": "the last Kaydet failed",
+   "state": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": true,
+    "stage": "idle",
+    "failed": true,
+    "writable": true,
+    "ended": null
+   },
+   "expect": "error"
+  },
+  {
+   "title": "a newer revision outranks the last failure",
+   "state": {
+    "base": "4",
+    "newer": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": null,
+    "dirty": true,
+    "stage": "idle",
+    "failed": true,
+    "writable": true,
+    "ended": null
+   },
+   "expect": "outdated"
+  },
+  {
+   "title": "ended outranks everything",
+   "state": {
+    "base": "4",
+    "newer": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": {
+     "expected": "4",
+     "actual": "5"
+    },
+    "dirty": true,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": "revoked"
+   },
+   "expect": "revoked"
+  },
+  {
+   "title": "archived",
+   "state": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": false,
+    "ended": "archived"
+   },
+   "expect": "archived"
+  }
+ ],
+ "steps": [
+  {
+   "title": "an edit",
+   "from": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "input": {
+    "kind": "dirty",
+    "dirty": true
+   },
+   "expect": {
+    "state": {
+     "base": "4",
+     "newer": null,
+     "conflict": null,
+     "dirty": true,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "say": false
+   }
+  },
+  {
+   "title": "the same dirty again: nothing",
+   "from": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": true,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "input": {
+    "kind": "dirty",
+    "dirty": true
+   },
+   "expect": {
+    "state": {
+     "base": "4",
+     "newer": null,
+     "conflict": null,
+     "dirty": true,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "say": false
+   }
+  },
+  {
+   "title": "a newer revision heard: said",
+   "from": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "input": {
+    "kind": "newest",
+    "newest": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    }
+   },
+   "expect": {
+    "state": {
+     "base": "4",
+     "newer": {
+      "revision": "5",
+      "by": "Mehmet Demir",
+      "at": "2026-09-27T11:32:00Z"
+     },
+     "conflict": null,
+     "dirty": false,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "say": true
+   }
+  },
+  {
+   "title": "the drawing's own revision: nothing",
+   "from": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "input": {
+    "kind": "newest",
+    "newest": {
+     "revision": "4",
+     "by": "Ayşe Yılmaz",
+     "at": "2026-09-27T08:05:00Z"
+    }
+   },
+   "expect": {
+    "state": {
+     "base": "4",
+     "newer": null,
+     "conflict": null,
+     "dirty": false,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "say": false
+   }
+  },
+  {
+   "title": "an older one: nothing",
+   "from": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "input": {
+    "kind": "newest",
+    "newest": {
+     "revision": "3",
+     "by": "Ayşe Yılmaz",
+     "at": "2026-09-27T08:05:00Z"
+    }
+   },
+   "expect": {
+    "state": {
+     "base": "4",
+     "newer": null,
+     "conflict": null,
+     "dirty": false,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "say": false
+   }
+  },
+  {
+   "title": "none yet: nothing",
+   "from": {
+    "base": "0",
+    "newer": null,
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "input": {
+    "kind": "newest",
+    "newest": null
+   },
+   "expect": {
+    "state": {
+     "base": "0",
+     "newer": null,
+     "conflict": null,
+     "dirty": false,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "say": false
+   }
+  },
+  {
+   "title": "the first revision of a project opened without one: said",
+   "from": {
+    "base": "0",
+    "newer": null,
+    "conflict": null,
+    "dirty": true,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "input": {
+    "kind": "newest",
+    "newest": {
+     "revision": "1",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    }
+   },
+   "expect": {
+    "state": {
+     "base": "0",
+     "newer": {
+      "revision": "1",
+      "by": "Mehmet Demir",
+      "at": "2026-09-27T11:32:00Z"
+     },
+     "conflict": null,
+     "dirty": true,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "say": true
+   }
+  },
+  {
+   "title": "the same newer revision again: said once",
+   "from": {
+    "base": "4",
+    "newer": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "input": {
+    "kind": "newest",
+    "newest": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    }
+   },
+   "expect": {
+    "state": {
+     "base": "4",
+     "newer": {
+      "revision": "5",
+      "by": "Mehmet Demir",
+      "at": "2026-09-27T11:32:00Z"
+     },
+     "conflict": null,
+     "dirty": false,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "say": false
+   }
+  },
+  {
+   "title": "a late, older answer never lowers it",
+   "from": {
+    "base": "4",
+    "newer": {
+     "revision": "6",
+     "by": "Zeynep Kaya",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "input": {
+    "kind": "newest",
+    "newest": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    }
+   },
+   "expect": {
+    "state": {
+     "base": "4",
+     "newer": {
+      "revision": "6",
+      "by": "Zeynep Kaya",
+      "at": "2026-09-27T11:32:00Z"
+     },
+     "conflict": null,
+     "dirty": false,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "say": false
+   }
+  },
+  {
+   "title": "a later revision: said again",
+   "from": {
+    "base": "4",
+    "newer": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "input": {
+    "kind": "newest",
+    "newest": {
+     "revision": "6",
+     "by": "Zeynep Kaya",
+     "at": "2026-09-27T11:32:00Z"
+    }
+   },
+   "expect": {
+    "state": {
+     "base": "4",
+     "newer": {
+      "revision": "6",
+      "by": "Zeynep Kaya",
+      "at": "2026-09-27T11:32:00Z"
+     },
+     "conflict": null,
+     "dirty": false,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "say": true
+   }
+  },
+  {
+   "title": "who and when filled in after a refusal named only the number: not said again",
+   "from": {
+    "base": "4",
+    "newer": {
+     "revision": "5",
+     "by": "",
+     "at": null
+    },
+    "conflict": {
+     "expected": "4",
+     "actual": "5"
+    },
+    "dirty": true,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "input": {
+    "kind": "newest",
+    "newest": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    }
+   },
+   "expect": {
+    "state": {
+     "base": "4",
+     "newer": {
+      "revision": "5",
+      "by": "Mehmet Demir",
+      "at": "2026-09-27T11:32:00Z"
+     },
+     "conflict": {
+      "expected": "4",
+      "actual": "5"
+     },
+     "dirty": true,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "say": false
+   }
+  },
+  {
+   "title": "a later revision over a standing conflict: the conflict is with it",
+   "from": {
+    "base": "4",
+    "newer": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": {
+     "expected": "4",
+     "actual": "5"
+    },
+    "dirty": true,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "input": {
+    "kind": "newest",
+    "newest": {
+     "revision": "6",
+     "by": "Zeynep Kaya",
+     "at": "2026-09-27T11:32:00Z"
+    }
+   },
+   "expect": {
+    "state": {
+     "base": "4",
+     "newer": {
+      "revision": "6",
+      "by": "Zeynep Kaya",
+      "at": "2026-09-27T11:32:00Z"
+     },
+     "conflict": {
+      "expected": "4",
+      "actual": "6"
+     },
+     "dirty": true,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "say": true
+   }
+  },
+  {
+   "title": "Kaydet begins: the last failure is forgotten",
+   "from": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": true,
+    "stage": "idle",
+    "failed": true,
+    "writable": true,
+    "ended": null
+   },
+   "input": {
+    "kind": "stage",
+    "stage": "encoding"
+   },
+   "expect": {
+    "state": {
+     "base": "4",
+     "newer": null,
+     "conflict": null,
+     "dirty": true,
+     "stage": "encoding",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "say": false
+   }
+  },
+  {
+   "title": "uploading",
+   "from": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": true,
+    "stage": "encoding",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "input": {
+    "kind": "stage",
+    "stage": "uploading"
+   },
+   "expect": {
+    "state": {
+     "base": "4",
+     "newer": null,
+     "conflict": null,
+     "dirty": true,
+     "stage": "uploading",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "say": false
+   }
+  },
+  {
+   "title": "committed, clean",
+   "from": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": true,
+    "stage": "verifying",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "input": {
+    "kind": "committed",
+    "revision": "5",
+    "dirty": false
+   },
+   "expect": {
+    "state": {
+     "base": "5",
+     "newer": null,
+     "conflict": null,
+     "dirty": false,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "say": false
+   }
+  },
+  {
+   "title": "committed with edits made meanwhile",
+   "from": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": true,
+    "stage": "verifying",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "input": {
+    "kind": "committed",
+    "revision": "5",
+    "dirty": true
+   },
+   "expect": {
+    "state": {
+     "base": "5",
+     "newer": null,
+     "conflict": null,
+     "dirty": true,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "say": false
+   }
+  },
+  {
+   "title": "committed under a later revision someone else saved meanwhile",
+   "from": {
+    "base": "4",
+    "newer": {
+     "revision": "6",
+     "by": "Zeynep Kaya",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": null,
+    "dirty": true,
+    "stage": "verifying",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "input": {
+    "kind": "committed",
+    "revision": "5",
+    "dirty": false
+   },
+   "expect": {
+    "state": {
+     "base": "5",
+     "newer": {
+      "revision": "6",
+      "by": "Zeynep Kaya",
+      "at": "2026-09-27T11:32:00Z"
+     },
+     "conflict": null,
+     "dirty": false,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "say": false
+   }
+  },
+  {
+   "title": "refused: the server names the number only",
+   "from": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": true,
+    "stage": "verifying",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "input": {
+    "kind": "refused",
+    "actual": "5"
+   },
+   "expect": {
+    "state": {
+     "base": "4",
+     "newer": {
+      "revision": "5",
+      "by": "",
+      "at": null
+     },
+     "conflict": {
+      "expected": "4",
+      "actual": "5"
+     },
+     "dirty": true,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "say": false
+   }
+  },
+  {
+   "title": "refused: who and when known stay",
+   "from": {
+    "base": "4",
+    "newer": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": null,
+    "dirty": true,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "input": {
+    "kind": "refused",
+    "actual": "5"
+   },
+   "expect": {
+    "state": {
+     "base": "4",
+     "newer": {
+      "revision": "5",
+      "by": "Mehmet Demir",
+      "at": "2026-09-27T11:32:00Z"
+     },
+     "conflict": {
+      "expected": "4",
+      "actual": "5"
+     },
+     "dirty": true,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "say": false
+   }
+  },
+  {
+   "title": "refused below a later revision known: the conflict is with the later one",
+   "from": {
+    "base": "4",
+    "newer": {
+     "revision": "6",
+     "by": "Zeynep Kaya",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": null,
+    "dirty": true,
+    "stage": "verifying",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "input": {
+    "kind": "refused",
+    "actual": "5"
+   },
+   "expect": {
+    "state": {
+     "base": "4",
+     "newer": {
+      "revision": "6",
+      "by": "Zeynep Kaya",
+      "at": "2026-09-27T11:32:00Z"
+     },
+     "conflict": {
+      "expected": "4",
+      "actual": "6"
+     },
+     "dirty": true,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "say": false
+   }
+  },
+  {
+   "title": "failed",
+   "from": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": true,
+    "stage": "uploading",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "input": {
+    "kind": "failed"
+   },
+   "expect": {
+    "state": {
+     "base": "4",
+     "newer": null,
+     "conflict": null,
+     "dirty": true,
+     "stage": "idle",
+     "failed": true,
+     "writable": true,
+     "ended": null
+    },
+    "say": false
+   }
+  },
+  {
+   "title": "unchanged: the failure is forgotten",
+   "from": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": true,
+    "writable": true,
+    "ended": null
+   },
+   "input": {
+    "kind": "unchanged"
+   },
+   "expect": {
+    "state": {
+     "base": "4",
+     "newer": null,
+     "conflict": null,
+     "dirty": false,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "say": false
+   }
+  },
+  {
+   "title": "unchanged without a failure: nothing",
+   "from": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "input": {
+    "kind": "unchanged"
+   },
+   "expect": {
+    "state": {
+     "base": "4",
+     "newer": null,
+     "conflict": null,
+     "dirty": false,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "say": false
+   }
+  },
+  {
+   "title": "the right to write taken",
+   "from": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": true,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "input": {
+    "kind": "access",
+    "writable": false
+   },
+   "expect": {
+    "state": {
+     "base": "4",
+     "newer": null,
+     "conflict": null,
+     "dirty": true,
+     "stage": "idle",
+     "failed": false,
+     "writable": false,
+     "ended": null
+    },
+    "say": false
+   }
+  },
+  {
+   "title": "the right to write back",
+   "from": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": true,
+    "stage": "idle",
+    "failed": false,
+    "writable": false,
+    "ended": null
+   },
+   "input": {
+    "kind": "access",
+    "writable": true
+   },
+   "expect": {
+    "state": {
+     "base": "4",
+     "newer": null,
+     "conflict": null,
+     "dirty": true,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "say": false
+   }
+  },
+  {
+   "title": "deleted",
+   "from": {
+    "base": "4",
+    "newer": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": null,
+    "dirty": true,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "input": {
+    "kind": "ended",
+    "why": "deleted"
+   },
+   "expect": {
+    "state": {
+     "base": "4",
+     "newer": {
+      "revision": "5",
+      "by": "Mehmet Demir",
+      "at": "2026-09-27T11:32:00Z"
+     },
+     "conflict": null,
+     "dirty": true,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": "deleted"
+    },
+    "say": false
+   }
+  },
+  {
+   "title": "after the end a revision changes nothing",
+   "from": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": "deleted"
+   },
+   "input": {
+    "kind": "newest",
+    "newest": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    }
+   },
+   "expect": {
+    "state": {
+     "base": "4",
+     "newer": null,
+     "conflict": null,
+     "dirty": false,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": "deleted"
+    },
+    "say": false
+   }
+  },
+  {
+   "title": "after the end a second end changes nothing",
+   "from": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": "archived"
+   },
+   "input": {
+    "kind": "ended",
+    "why": "deleted"
+   },
+   "expect": {
+    "state": {
+     "base": "4",
+     "newer": null,
+     "conflict": null,
+     "dirty": false,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": "archived"
+    },
+    "say": false
+   }
+  },
+  {
+   "title": "after the end the drawing's changes still count",
+   "from": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": "deleted"
+   },
+   "input": {
+    "kind": "dirty",
+    "dirty": true
+   },
+   "expect": {
+    "state": {
+     "base": "4",
+     "newer": null,
+     "conflict": null,
+     "dirty": true,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": "deleted"
+    },
+    "say": false
+   }
+  }
+ ],
+ "saveSteps": [
+  {
+   "title": "nothing is saved after the end",
+   "state": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": true,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": "deleted"
+   },
+   "expect": "ended"
+  },
+  {
+   "title": "read-only",
+   "state": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": true,
+    "stage": "idle",
+    "failed": false,
+    "writable": false,
+    "ended": null
+   },
+   "expect": "readonly"
+  },
+  {
+   "title": "a standing conflict: asked again",
+   "state": {
+    "base": "4",
+    "newer": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": {
+     "expected": "4",
+     "actual": "5"
+    },
+    "dirty": true,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "expect": "conflict"
+  },
+  {
+   "title": "clean at a revision: unchanged",
+   "state": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "expect": "unchanged"
+  },
+  {
+   "title": "clean and a newer revision: unchanged (nothing to write)",
+   "state": {
+    "base": "4",
+    "newer": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "expect": "unchanged"
+  },
+  {
+   "title": "unsaved and a newer revision: behind, nothing uploaded",
+   "state": {
+    "base": "4",
+    "newer": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": null,
+    "dirty": true,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "expect": "behind"
+  },
+  {
+   "title": "unsaved: saved",
+   "state": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": true,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "expect": "save"
+  },
+  {
+   "title": "without a revision yet, clean: its first is written",
+   "state": {
+    "base": "0",
+    "newer": null,
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "expect": "save"
+  },
+  {
+   "title": "without a revision yet, someone saved the first: behind",
+   "state": {
+    "base": "0",
+    "newer": {
+     "revision": "1",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "expect": "behind"
+  }
+ ],
+ "events": [
+  {
+   "title": "nothing",
+   "own": [
+    "web-kaydet-1",
+    "web-arsiv-1"
+   ],
+   "events": [],
+   "expect": {
+    "cursor": null,
+    "end": null,
+    "access": false,
+    "newest": false
+   }
+  },
+  {
+   "title": "someone else's revision",
+   "own": [
+    "web-kaydet-1",
+    "web-arsiv-1"
+   ],
+   "events": [
+    {
+     "seq": "41",
+     "kind": "project.file",
+     "requestId": "baskasi-1"
+    }
+   ],
+   "expect": {
+    "cursor": "41",
+    "end": null,
+    "access": false,
+    "newest": true
+   }
+  },
+  {
+   "title": "this window's own revision",
+   "own": [
+    "web-kaydet-1",
+    "web-arsiv-1"
+   ],
+   "events": [
+    {
+     "seq": "41",
+     "kind": "project.file",
+     "requestId": "web-kaydet-1"
+    }
+   ],
+   "expect": {
+    "cursor": "41",
+    "end": null,
+    "access": false,
+    "newest": false
+   }
+  },
+  {
+   "title": "a revision without a request id is someone else's",
+   "own": [
+    "web-kaydet-1",
+    "web-arsiv-1"
+   ],
+   "events": [
+    {
+     "seq": "41",
+     "kind": "project.file"
+    }
+   ],
+   "expect": {
+    "cursor": "41",
+    "end": null,
+    "access": false,
+    "newest": true
+   }
+  },
+  {
+   "title": "two revisions: the newest is asked once",
+   "own": [
+    "web-kaydet-1",
+    "web-arsiv-1"
+   ],
+   "events": [
+    {
+     "seq": "41",
+     "kind": "project.file",
+     "requestId": "baskasi-1"
+    },
+    {
+     "seq": "42",
+     "kind": "project.file",
+     "requestId": "baskasi-2"
+    }
+   ],
+   "expect": {
+    "cursor": "42",
+    "end": null,
+    "access": false,
+    "newest": true
+   }
+  },
+  {
+   "title": "a grant changed, then a revision",
+   "own": [
+    "web-kaydet-1",
+    "web-arsiv-1"
+   ],
+   "events": [
+    {
+     "seq": "41",
+     "kind": "project.access",
+     "requestId": "yonetici"
+    },
+    {
+     "seq": "42",
+     "kind": "project.file",
+     "requestId": "baskasi-1"
+    }
+   ],
+   "expect": {
+    "cursor": "42",
+    "end": null,
+    "access": true,
+    "newest": true
+   }
+  },
+  {
+   "title": "others' events of no concern here",
+   "own": [
+    "web-kaydet-1",
+    "web-arsiv-1"
+   ],
+   "events": [
+    {
+     "seq": "41",
+     "kind": "project.metadata",
+     "requestId": "baskasi-1"
+    },
+    {
+     "seq": "42",
+     "kind": "project.checkpoint",
+     "requestId": "baskasi-2"
+    }
+   ],
+   "expect": {
+    "cursor": "42",
+    "end": null,
+    "access": false,
+    "newest": false
+   }
+  },
+  {
+   "title": "deleted: nothing after it counts",
+   "own": [
+    "web-kaydet-1",
+    "web-arsiv-1"
+   ],
+   "events": [
+    {
+     "seq": "41",
+     "kind": "project.file",
+     "requestId": "baskasi-1"
+    },
+    {
+     "seq": "42",
+     "kind": "project.deleted",
+     "requestId": "baskasi-2"
+    },
+    {
+     "seq": "43",
+     "kind": "project.access",
+     "requestId": "yonetici"
+    }
+   ],
+   "expect": {
+    "cursor": "42",
+    "end": {
+     "why": "deleted",
+     "quiet": false
+    },
+    "access": false,
+    "newest": false
+   }
+  },
+  {
+   "title": "archived by someone else",
+   "own": [
+    "web-kaydet-1",
+    "web-arsiv-1"
+   ],
+   "events": [
+    {
+     "seq": "41",
+     "kind": "project.archived",
+     "requestId": "baskasi-1"
+    }
+   ],
+   "expect": {
+    "cursor": "41",
+    "end": {
+     "why": "archived",
+     "quiet": false
+    },
+    "access": false,
+    "newest": false
+   }
+  },
+  {
+   "title": "archived by this window: quiet",
+   "own": [
+    "web-kaydet-1",
+    "web-arsiv-1"
+   ],
+   "events": [
+    {
+     "seq": "41",
+     "kind": "project.archived",
+     "requestId": "web-arsiv-1"
+    }
+   ],
+   "expect": {
+    "cursor": "41",
+    "end": {
+     "why": "archived",
+     "quiet": true
+    },
+    "access": false,
+    "newest": false
+   }
+  }
+ ],
+ "newest": [
+  {
+   "title": "none yet",
+   "revisions": {
+    "revisions": []
+   },
+   "expect": null
+  },
+  {
+   "title": "the newest, with who and when",
+   "revisions": {
+    "current": "5",
+    "revisions": [
+     {
+      "revision": "5",
+      "size": 2048,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "createdBy": "u2",
+      "createdByName": "Mehmet Demir",
+      "createdAt": "2026-09-27T11:32:00Z"
+     },
+     {
+      "revision": "4",
+      "size": 2048,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "createdBy": "u2",
+      "createdByName": "Ayşe Yılmaz",
+      "createdAt": "2026-09-27T08:05:00Z"
+     }
+    ]
+   },
+   "expect": {
+    "revision": "5",
+    "by": "Mehmet Demir",
+    "at": "2026-09-27T11:32:00Z"
+   }
+  },
+  {
+   "title": "the newest not in the list: its number only",
+   "revisions": {
+    "current": "7",
+    "revisions": [
+     {
+      "revision": "5",
+      "size": 2048,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "createdBy": "u2",
+      "createdByName": "Mehmet Demir",
+      "createdAt": "2026-09-27T11:32:00Z"
+     }
+    ]
+   },
+   "expect": {
+    "revision": "7",
+    "by": "",
+    "at": null
+   }
+  },
+  {
+   "title": "a name that does not show",
+   "revisions": {
+    "current": "5",
+    "revisions": [
+     {
+      "revision": "5",
+      "size": 2048,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "createdBy": "u2",
+      "createdByName": "",
+      "createdAt": "2026-09-27T11:32:00Z"
+     }
+    ]
+   },
+   "expect": {
+    "revision": "5",
+    "by": "",
+    "at": "2026-09-27T11:32:00Z"
+   }
+  }
+ ],
+ "resync": [
+  {
+   "title": "the project as it was: followed from its cursor now",
+   "answer": {
+    "kind": "project",
+    "state": "active",
+    "eventCursor": "118"
+   },
+   "expect": {
+    "kind": "follow",
+    "cursor": "118"
+   }
+  },
+  {
+   "title": "archived meanwhile",
+   "answer": {
+    "kind": "project",
+    "state": "archived",
+    "eventCursor": "118"
+   },
+   "expect": {
+    "kind": "end",
+    "why": "archived",
+    "reason": ""
+   }
+  },
+  {
+   "title": "in the trash (a manager sees it)",
+   "answer": {
+    "kind": "project",
+    "state": "trashed",
+    "eventCursor": "118"
+   },
+   "expect": {
+    "kind": "end",
+    "why": "deleted",
+    "reason": ""
+   }
+  },
+  {
+   "title": "deleted (410)",
+   "answer": {
+    "kind": "deleted"
+   },
+   "expect": {
+    "kind": "end",
+    "why": "deleted",
+    "reason": ""
+   }
+  },
+  {
+   "title": "gone for this account (404)",
+   "answer": {
+    "kind": "notFound"
+   },
+   "expect": {
+    "kind": "end",
+    "why": "revoked",
+    "reason": ""
+   }
+  },
+  {
+   "title": "its organisation may not be used now (403)",
+   "answer": {
+    "kind": "forbidden",
+    "message": "Kurum üyeliğiniz etkin değil."
+   },
+   "expect": {
+    "kind": "end",
+    "why": "revoked",
+    "reason": "Kurum üyeliğiniz etkin değil."
+   }
+  },
+  {
+   "title": "no answer",
+   "answer": {
+    "kind": "unreachable"
+   },
+   "expect": {
+    "kind": "retry"
+   }
+  },
+  {
+   "title": "refused otherwise",
+   "answer": {
+    "kind": "failed",
+    "message": "Sunucu hatası."
+   },
+   "expect": {
+    "kind": "retry"
+   }
+  }
+ ],
+ "offers": [
+  {
+   "title": "a newer revision, clean: the plain question",
+   "input": {
+    "name": "Kadastro paftası 2026",
+    "state": {
+     "base": "4",
+     "newer": {
+      "revision": "5",
+      "by": "Mehmet Demir",
+      "at": "2026-09-27T11:32:00Z"
+     },
+     "conflict": null,
+     "dirty": false,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "busy": false,
+    "via": "newest"
+   },
+   "expect": {
+    "kind": "ask",
+    "question": {
+     "id": "newest",
+     "title": "Son revizyonu aç",
+     "message": "“Kadastro paftası 2026” başka bir yerde kaydedildi: revizyon 5 (Mehmet Demir, 27.09.2026 14:32). Açık çizim revizyon 4; kaydedilmemiş değişikliği yok.",
+     "details": [],
+     "answers": [
+      {
+       "value": "later",
+       "label": "Sonra",
+       "does": "nothing",
+       "work": "none"
+      },
+      {
+       "value": "open",
+       "label": "Son revizyonu aç",
+       "kind": "primary",
+       "does": "latest",
+       "work": "none"
+      }
+     ],
+     "cancel": "later"
+    }
+   }
+  },
+  {
+   "title": "Son revizyonu aç with no newer revision known, clean",
+   "input": {
+    "name": "Kadastro paftası 2026",
+    "state": {
+     "base": "4",
+     "newer": null,
+     "conflict": null,
+     "dirty": false,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "busy": false,
+    "via": "newest"
+   },
+   "expect": {
+    "kind": "ask",
+    "question": {
+     "id": "newest",
+     "title": "Son revizyonu aç",
+     "message": "“Kadastro paftası 2026” projesinin sunucudaki en yeni revizyonu açılsın mı? Açık çizim revizyon 4; kaydedilmemiş değişikliği yok.",
+     "details": [],
+     "answers": [
+      {
+       "value": "later",
+       "label": "Sonra",
+       "does": "nothing",
+       "work": "none"
+      },
+      {
+       "value": "open",
+       "label": "Son revizyonu aç",
+       "kind": "primary",
+       "does": "latest",
+       "work": "none"
+      }
+     ],
+     "cancel": "later"
+    }
+   }
+  },
+  {
+   "title": "without a revision yet, clean",
+   "input": {
+    "name": "Kadastro paftası 2026",
+    "state": {
+     "base": "0",
+     "newer": null,
+     "conflict": null,
+     "dirty": false,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "busy": false,
+    "via": "newest"
+   },
+   "expect": {
+    "kind": "ask",
+    "question": {
+     "id": "newest",
+     "title": "Son revizyonu aç",
+     "message": "“Kadastro paftası 2026” projesinin sunucudaki en yeni revizyonu açılsın mı? Açık çizimin henüz revizyonu yok; kaydedilmemiş değişikliği yok.",
+     "details": [],
+     "answers": [
+      {
+       "value": "later",
+       "label": "Sonra",
+       "does": "nothing",
+       "work": "none"
+      },
+      {
+       "value": "open",
+       "label": "Son revizyonu aç",
+       "kind": "primary",
+       "does": "latest",
+       "work": "none"
+      }
+     ],
+     "cancel": "later"
+    }
+   }
+  },
+  {
+   "title": "unsaved work, no newer revision known: the unsaved question",
+   "input": {
+    "name": "Kadastro paftası 2026",
+    "state": {
+     "base": "4",
+     "newer": null,
+     "conflict": null,
+     "dirty": true,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "busy": false,
+    "via": "newest"
+   },
+   "expect": {
+    "kind": "ask",
+    "question": {
+     "id": "unsaved",
+     "title": "Kaydedilmemiş değişiklikler",
+     "message": "“Kadastro paftası 2026” içinde kaydedilmemiş değişiklikler var. Sunucudaki en yeni revizyon açılırsa bu değişiklikler atılır (açık çizim revizyon 4). Saklamak için önce Kaydet ile kaydedin.",
+     "details": [],
+     "answers": [
+      {
+       "value": "discard",
+       "label": "Kaydetmeden aç",
+       "aside": true,
+       "does": "latest",
+       "work": "dropped"
+      },
+      {
+       "value": "stay",
+       "label": "Vazgeç",
+       "does": "nothing",
+       "work": "kept"
+      }
+     ],
+     "cancel": "stay"
+    }
+   }
+  },
+  {
+   "title": "unsaved work without a revision yet",
+   "input": {
+    "name": "Kadastro paftası 2026",
+    "state": {
+     "base": "0",
+     "newer": null,
+     "conflict": null,
+     "dirty": true,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "busy": false,
+    "via": "newest"
+   },
+   "expect": {
+    "kind": "ask",
+    "question": {
+     "id": "unsaved",
+     "title": "Kaydedilmemiş değişiklikler",
+     "message": "“Kadastro paftası 2026” içinde kaydedilmemiş değişiklikler var. Sunucudaki en yeni revizyon açılırsa bu değişiklikler atılır (açık çizimin henüz revizyonu yok). Saklamak için önce Kaydet ile kaydedin.",
+     "details": [],
+     "answers": [
+      {
+       "value": "discard",
+       "label": "Kaydetmeden aç",
+       "aside": true,
+       "does": "latest",
+       "work": "dropped"
+      },
+      {
+       "value": "stay",
+       "label": "Vazgeç",
+       "does": "nothing",
+       "work": "kept"
+      }
+     ],
+     "cancel": "stay"
+    }
+   }
+  },
+  {
+   "title": "a newer revision over unsaved work: the conflict's question",
+   "input": {
+    "name": "Kadastro paftası 2026",
+    "state": {
+     "base": "4",
+     "newer": {
+      "revision": "5",
+      "by": "Mehmet Demir",
+      "at": "2026-09-27T11:32:00Z"
+     },
+     "conflict": null,
+     "dirty": true,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "busy": false,
+    "via": "newest"
+   },
+   "expect": {
+    "kind": "ask",
+    "question": {
+     "id": "conflict",
+     "title": "Dosya başka biri tarafından kaydedildi",
+     "message": "“Kadastro paftası 2026” siz çalışırken başka biri tarafından kaydedildi: sunucuda revizyon 5 (Mehmet Demir, 27.09.2026 14:32) var; çiziminizin dayandığı revizyon 4. Hiçbir şey yazılmadı; iki dosya birleştirilmez.",
+     "details": [
+      "Ayrı kopya olarak kaydet: çiziminiz yeni bir bulut dosya projesi olur ve açık proje o olur; “Kadastro paftası 2026” olduğu gibi kalır.",
+      "Yerel dosyaya kaydet: çiziminiz bu bilgisayara .kcad olarak kaydedilir ve çizim buluttaki projeden ayrılır.",
+      "Son revizyonu aç: revizyon 5 açılır; bu çizimdeki kaydedilmemiş değişiklikler atılır."
+     ],
+     "answers": [
+      {
+       "value": "latest",
+       "label": "Son revizyonu aç",
+       "kind": "danger",
+       "aside": true,
+       "does": "latest",
+       "work": "dropped"
+      },
+      {
+       "value": "stay",
+       "label": "Vazgeç",
+       "does": "nothing",
+       "work": "kept"
+      },
+      {
+       "value": "local",
+       "label": "Yerel dosyaya kaydet",
+       "does": "local",
+       "work": "saved"
+      },
+      {
+       "value": "copy",
+       "label": "Ayrı kopya olarak kaydet",
+       "kind": "primary",
+       "does": "copy",
+       "work": "saved"
+      }
+     ],
+     "cancel": "stay"
+    }
+   }
+  },
+  {
+   "title": "a standing conflict: the conflict's question",
+   "input": {
+    "name": "Kadastro paftası 2026",
+    "state": {
+     "base": "4",
+     "newer": {
+      "revision": "5",
+      "by": "Mehmet Demir",
+      "at": "2026-09-27T11:32:00Z"
+     },
+     "conflict": {
+      "expected": "4",
+      "actual": "5"
+     },
+     "dirty": true,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "busy": false,
+    "via": "newest"
+   },
+   "expect": {
+    "kind": "ask",
+    "question": {
+     "id": "conflict",
+     "title": "Dosya başka biri tarafından kaydedildi",
+     "message": "“Kadastro paftası 2026” siz çalışırken başka biri tarafından kaydedildi: sunucuda revizyon 5 (Mehmet Demir, 27.09.2026 14:32) var; çiziminizin dayandığı revizyon 4. Hiçbir şey yazılmadı; iki dosya birleştirilmez.",
+     "details": [
+      "Ayrı kopya olarak kaydet: çiziminiz yeni bir bulut dosya projesi olur ve açık proje o olur; “Kadastro paftası 2026” olduğu gibi kalır.",
+      "Yerel dosyaya kaydet: çiziminiz bu bilgisayara .kcad olarak kaydedilir ve çizim buluttaki projeden ayrılır.",
+      "Son revizyonu aç: revizyon 5 açılır; bu çizimdeki kaydedilmemiş değişiklikler atılır."
+     ],
+     "answers": [
+      {
+       "value": "latest",
+       "label": "Son revizyonu aç",
+       "kind": "danger",
+       "aside": true,
+       "does": "latest",
+       "work": "dropped"
+      },
+      {
+       "value": "stay",
+       "label": "Vazgeç",
+       "does": "nothing",
+       "work": "kept"
+      },
+      {
+       "value": "local",
+       "label": "Yerel dosyaya kaydet",
+       "does": "local",
+       "work": "saved"
+      },
+      {
+       "value": "copy",
+       "label": "Ayrı kopya olarak kaydet",
+       "kind": "primary",
+       "does": "copy",
+       "work": "saved"
+      }
+     ],
+     "cancel": "stay"
+    }
+   }
+  },
+  {
+   "title": "a Kaydet on its way: a line, no question",
+   "input": {
+    "name": "Kadastro paftası 2026",
+    "state": {
+     "base": "4",
+     "newer": {
+      "revision": "5",
+      "by": "Mehmet Demir",
+      "at": "2026-09-27T11:32:00Z"
+     },
+     "conflict": null,
+     "dirty": true,
+     "stage": "uploading",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "busy": true,
+    "via": "newest"
+   },
+   "expect": {
+    "kind": "say",
+    "tone": "info",
+    "line": "“Kadastro paftası 2026” kaydediliyor; son revizyonu açmak için kaydın bitmesini bekleyin."
+   }
+  },
+  {
+   "title": "deleted: a line",
+   "input": {
+    "name": "Kadastro paftası 2026",
+    "state": {
+     "base": "4",
+     "newer": null,
+     "conflict": null,
+     "dirty": true,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": "deleted"
+    },
+    "busy": false,
+    "via": "newest"
+   },
+   "expect": {
+    "kind": "say",
+    "tone": "warn",
+    "line": "“Kadastro paftası 2026” bulut projesi silindi; son revizyonu açılamaz. Çizimi saklamak için yerel bir dosyaya kaydedin."
+   }
+  },
+  {
+   "title": "access taken: a line",
+   "input": {
+    "name": "Kadastro paftası 2026",
+    "state": {
+     "base": "4",
+     "newer": null,
+     "conflict": null,
+     "dirty": false,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": "revoked"
+    },
+    "busy": false,
+    "via": "newest"
+   },
+   "expect": {
+    "kind": "say",
+    "tone": "warn",
+    "line": "“Kadastro paftası 2026” projesine erişiminiz kaldırıldı; son revizyonu açılamaz. Çizimi saklamak için yerel bir dosyaya kaydedin."
+   }
+  },
+  {
+   "title": "archived: the newest can still be read",
+   "input": {
+    "name": "Kadastro paftası 2026",
+    "state": {
+     "base": "4",
+     "newer": null,
+     "conflict": null,
+     "dirty": false,
+     "stage": "idle",
+     "failed": false,
+     "writable": false,
+     "ended": "archived"
+    },
+    "busy": false,
+    "via": "newest"
+   },
+   "expect": {
+    "kind": "ask",
+    "question": {
+     "id": "newest",
+     "title": "Son revizyonu aç",
+     "message": "“Kadastro paftası 2026” projesinin sunucudaki en yeni revizyonu açılsın mı? Açık çizim revizyon 4; kaydedilmemiş değişikliği yok.",
+     "details": [],
+     "answers": [
+      {
+       "value": "later",
+       "label": "Sonra",
+       "does": "nothing",
+       "work": "none"
+      },
+      {
+       "value": "open",
+       "label": "Son revizyonu aç",
+       "kind": "primary",
+       "does": "latest",
+       "work": "none"
+      }
+     ],
+     "cancel": "later"
+    }
+   }
+  },
+  {
+   "title": "a refused Kaydet: the conflict's question, who not known yet",
+   "input": {
+    "name": "Kadastro paftası 2026",
+    "state": {
+     "base": "4",
+     "newer": {
+      "revision": "5",
+      "by": "",
+      "at": null
+     },
+     "conflict": {
+      "expected": "4",
+      "actual": "5"
+     },
+     "dirty": true,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "busy": false,
+    "via": "conflict"
+   },
+   "expect": {
+    "kind": "ask",
+    "question": {
+     "id": "conflict",
+     "title": "Dosya başka biri tarafından kaydedildi",
+     "message": "“Kadastro paftası 2026” siz çalışırken başka biri tarafından kaydedildi: sunucuda revizyon 5 var; çiziminizin dayandığı revizyon 4. Hiçbir şey yazılmadı; iki dosya birleştirilmez.",
+     "details": [
+      "Ayrı kopya olarak kaydet: çiziminiz yeni bir bulut dosya projesi olur ve açık proje o olur; “Kadastro paftası 2026” olduğu gibi kalır.",
+      "Yerel dosyaya kaydet: çiziminiz bu bilgisayara .kcad olarak kaydedilir ve çizim buluttaki projeden ayrılır.",
+      "Son revizyonu aç: revizyon 5 açılır; bu çizimdeki kaydedilmemiş değişiklikler atılır."
+     ],
+     "answers": [
+      {
+       "value": "latest",
+       "label": "Son revizyonu aç",
+       "kind": "danger",
+       "aside": true,
+       "does": "latest",
+       "work": "dropped"
+      },
+      {
+       "value": "stay",
+       "label": "Vazgeç",
+       "does": "nothing",
+       "work": "kept"
+      },
+      {
+       "value": "local",
+       "label": "Yerel dosyaya kaydet",
+       "does": "local",
+       "work": "saved"
+      },
+      {
+       "value": "copy",
+       "label": "Ayrı kopya olarak kaydet",
+       "kind": "primary",
+       "does": "copy",
+       "work": "saved"
+      }
+     ],
+     "cancel": "stay"
+    }
+   }
+  },
+  {
+   "title": "a refused Kaydet, who known",
+   "input": {
+    "name": "Kadastro paftası 2026",
+    "state": {
+     "base": "4",
+     "newer": {
+      "revision": "5",
+      "by": "Mehmet Demir",
+      "at": "2026-09-27T11:32:00Z"
+     },
+     "conflict": {
+      "expected": "4",
+      "actual": "5"
+     },
+     "dirty": true,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "busy": false,
+    "via": "conflict"
+   },
+   "expect": {
+    "kind": "ask",
+    "question": {
+     "id": "conflict",
+     "title": "Dosya başka biri tarafından kaydedildi",
+     "message": "“Kadastro paftası 2026” siz çalışırken başka biri tarafından kaydedildi: sunucuda revizyon 5 (Mehmet Demir, 27.09.2026 14:32) var; çiziminizin dayandığı revizyon 4. Hiçbir şey yazılmadı; iki dosya birleştirilmez.",
+     "details": [
+      "Ayrı kopya olarak kaydet: çiziminiz yeni bir bulut dosya projesi olur ve açık proje o olur; “Kadastro paftası 2026” olduğu gibi kalır.",
+      "Yerel dosyaya kaydet: çiziminiz bu bilgisayara .kcad olarak kaydedilir ve çizim buluttaki projeden ayrılır.",
+      "Son revizyonu aç: revizyon 5 açılır; bu çizimdeki kaydedilmemiş değişiklikler atılır."
+     ],
+     "answers": [
+      {
+       "value": "latest",
+       "label": "Son revizyonu aç",
+       "kind": "danger",
+       "aside": true,
+       "does": "latest",
+       "work": "dropped"
+      },
+      {
+       "value": "stay",
+       "label": "Vazgeç",
+       "does": "nothing",
+       "work": "kept"
+      },
+      {
+       "value": "local",
+       "label": "Yerel dosyaya kaydet",
+       "does": "local",
+       "work": "saved"
+      },
+      {
+       "value": "copy",
+       "label": "Ayrı kopya olarak kaydet",
+       "kind": "primary",
+       "does": "copy",
+       "work": "saved"
+      }
+     ],
+     "cancel": "stay"
+    }
+   }
+  },
+  {
+   "title": "a conflict over a clean drawing (its changes undone): nothing to drop",
+   "input": {
+    "name": "Kadastro paftası 2026",
+    "state": {
+     "base": "4",
+     "newer": {
+      "revision": "5",
+      "by": "Mehmet Demir",
+      "at": "2026-09-27T11:32:00Z"
+     },
+     "conflict": {
+      "expected": "4",
+      "actual": "5"
+     },
+     "dirty": false,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "busy": false,
+    "via": "conflict"
+   },
+   "expect": {
+    "kind": "ask",
+    "question": {
+     "id": "conflict",
+     "title": "Dosya başka biri tarafından kaydedildi",
+     "message": "“Kadastro paftası 2026” siz çalışırken başka biri tarafından kaydedildi: sunucuda revizyon 5 (Mehmet Demir, 27.09.2026 14:32) var; çiziminizin dayandığı revizyon 4. Hiçbir şey yazılmadı; iki dosya birleştirilmez.",
+     "details": [
+      "Ayrı kopya olarak kaydet: çiziminiz yeni bir bulut dosya projesi olur ve açık proje o olur; “Kadastro paftası 2026” olduğu gibi kalır.",
+      "Yerel dosyaya kaydet: çiziminiz bu bilgisayara .kcad olarak kaydedilir ve çizim buluttaki projeden ayrılır.",
+      "Son revizyonu aç: revizyon 5 açılır."
+     ],
+     "answers": [
+      {
+       "value": "latest",
+       "label": "Son revizyonu aç",
+       "kind": "danger",
+       "aside": true,
+       "does": "latest",
+       "work": "none"
+      },
+      {
+       "value": "stay",
+       "label": "Vazgeç",
+       "does": "nothing",
+       "work": "none"
+      },
+      {
+       "value": "local",
+       "label": "Yerel dosyaya kaydet",
+       "does": "local",
+       "work": "none"
+      },
+      {
+       "value": "copy",
+       "label": "Ayrı kopya olarak kaydet",
+       "kind": "primary",
+       "does": "copy",
+       "work": "none"
+      }
+     ],
+     "cancel": "stay"
+    }
+   }
+  },
+  {
+   "title": "a first revision saved elsewhere before this drawing's",
+   "input": {
+    "name": "Kadastro paftası 2026",
+    "state": {
+     "base": "0",
+     "newer": {
+      "revision": "1",
+      "by": "Mehmet Demir",
+      "at": "2026-09-27T11:32:00Z"
+     },
+     "conflict": {
+      "expected": "0",
+      "actual": "1"
+     },
+     "dirty": true,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "busy": false,
+    "via": "conflict"
+   },
+   "expect": {
+    "kind": "ask",
+    "question": {
+     "id": "conflict",
+     "title": "Dosya başka biri tarafından kaydedildi",
+     "message": "“Kadastro paftası 2026” siz çalışırken başka biri tarafından kaydedildi: sunucuda revizyon 1 (Mehmet Demir, 27.09.2026 14:32) var; çiziminiz henüz kaydedilmiş bir revizyona dayanmıyor. Hiçbir şey yazılmadı; iki dosya birleştirilmez.",
+     "details": [
+      "Ayrı kopya olarak kaydet: çiziminiz yeni bir bulut dosya projesi olur ve açık proje o olur; “Kadastro paftası 2026” olduğu gibi kalır.",
+      "Yerel dosyaya kaydet: çiziminiz bu bilgisayara .kcad olarak kaydedilir ve çizim buluttaki projeden ayrılır.",
+      "Son revizyonu aç: revizyon 1 açılır; bu çizimdeki kaydedilmemiş değişiklikler atılır."
+     ],
+     "answers": [
+      {
+       "value": "latest",
+       "label": "Son revizyonu aç",
+       "kind": "danger",
+       "aside": true,
+       "does": "latest",
+       "work": "dropped"
+      },
+      {
+       "value": "stay",
+       "label": "Vazgeç",
+       "does": "nothing",
+       "work": "kept"
+      },
+      {
+       "value": "local",
+       "label": "Yerel dosyaya kaydet",
+       "does": "local",
+       "work": "saved"
+      },
+      {
+       "value": "copy",
+       "label": "Ayrı kopya olarak kaydet",
+       "kind": "primary",
+       "does": "copy",
+       "work": "saved"
+      }
+     ],
+     "cancel": "stay"
+    }
+   }
+  },
+  {
+   "title": "Kayıt çakışmalarını çöz with nothing to solve",
+   "input": {
+    "name": "Kadastro paftası 2026",
+    "state": {
+     "base": "4",
+     "newer": null,
+     "conflict": null,
+     "dirty": false,
+     "stage": "idle",
+     "failed": false,
+     "writable": true,
+     "ended": null
+    },
+    "busy": false,
+    "via": "conflict"
+   },
+   "expect": {
+    "kind": "none"
+   }
+  }
+ ],
+ "lines": [
+  {
+   "title": "clean",
+   "name": "Kadastro paftası 2026",
+   "newer": {
+    "revision": "5",
+    "by": "Mehmet Demir",
+    "at": "2026-09-27T11:32:00Z"
+   },
+   "base": "4",
+   "dirty": false,
+   "text": "“Kadastro paftası 2026” başka bir yerde kaydedildi: revizyon 5 (Mehmet Demir, 27.09.2026 14:32). Açık çizimin dayandığı revizyon: 4; yeni revizyonu açmak için durum çubuğundaki kayıt durumuna tıklayın. Kendiliğinden yeniden yüklenmez."
+  },
+  {
+   "title": "over unsaved work",
+   "name": "Kadastro paftası 2026",
+   "newer": {
+    "revision": "5",
+    "by": "Mehmet Demir",
+    "at": "2026-09-27T11:32:00Z"
+   },
+   "base": "4",
+   "dirty": true,
+   "text": "“Kadastro paftası 2026” başka bir yerde kaydedildi: revizyon 5 (Mehmet Demir, 27.09.2026 14:32). Açık çizimin dayandığı revizyon: 4; kaydedilmemiş değişiklikleriniz Kaydet ile bu revizyonun üzerine yazılamaz. Ayrı kopya, yerel dosya ya da son revizyon için durum çubuğundaki kayıt durumuna tıklayın. Kendiliğinden yeniden yüklenmez."
+  },
+  {
+   "title": "who not known",
+   "name": "Kadastro paftası 2026",
+   "newer": {
+    "revision": "5",
+    "by": "",
+    "at": null
+   },
+   "base": "4",
+   "dirty": false,
+   "text": "“Kadastro paftası 2026” başka bir yerde kaydedildi: revizyon 5. Açık çizimin dayandığı revizyon: 4; yeni revizyonu açmak için durum çubuğundaki kayıt durumuna tıklayın. Kendiliğinden yeniden yüklenmez."
+  },
+  {
+   "title": "when not known",
+   "name": "Kadastro paftası 2026",
+   "newer": {
+    "revision": "5",
+    "by": "Mehmet Demir",
+    "at": null
+   },
+   "base": "4",
+   "dirty": true,
+   "text": "“Kadastro paftası 2026” başka bir yerde kaydedildi: revizyon 5 (Mehmet Demir). Açık çizimin dayandığı revizyon: 4; kaydedilmemiş değişiklikleriniz Kaydet ile bu revizyonun üzerine yazılamaz. Ayrı kopya, yerel dosya ya da son revizyon için durum çubuğundaki kayıt durumuna tıklayın. Kendiliğinden yeniden yüklenmez."
+  },
+  {
+   "title": "when only",
+   "name": "Kadastro paftası 2026",
+   "newer": {
+    "revision": "5",
+    "by": "",
+    "at": "2026-09-27T11:32:00Z"
+   },
+   "base": "4",
+   "dirty": false,
+   "text": "“Kadastro paftası 2026” başka bir yerde kaydedildi: revizyon 5 (27.09.2026 14:32). Açık çizimin dayandığı revizyon: 4; yeni revizyonu açmak için durum çubuğundaki kayıt durumuna tıklayın. Kendiliğinden yeniden yüklenmez."
+  },
+  {
+   "title": "without a revision yet",
+   "name": "Kadastro paftası 2026",
+   "newer": {
+    "revision": "1",
+    "by": "Mehmet Demir",
+    "at": "2026-09-27T11:32:00Z"
+   },
+   "base": "0",
+   "dirty": true,
+   "text": "“Kadastro paftası 2026” başka bir yerde kaydedildi: revizyon 1 (Mehmet Demir, 27.09.2026 14:32). Açık çizimin henüz revizyonu yok; kaydedilmemiş değişiklikleriniz Kaydet ile bu revizyonun üzerine yazılamaz. Ayrı kopya, yerel dosya ya da son revizyon için durum çubuğundaki kayıt durumuna tıklayın. Kendiliğinden yeniden yüklenmez."
+  }
+ ],
+ "tips": [
+  {
+   "input": {
+    "where": "Büro › Kadastro paftası 2026",
+    "base": "4",
+    "lastSaved": {
+     "revision": "4",
+     "at": 1789999880000
+    },
+    "now": 1790000000000,
+    "newer": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "error": "",
+    "link": "online",
+    "dirty": false
+   },
+   "expect": {
+    "title": "Bulut kaydı: dosya projesi",
+    "description": "Büro › Kadastro paftası 2026, dosya olarak saklanıyor (KCAD revizyonları). Çizimin dayandığı revizyon: 4. Kendiliğinden kaydedilmez: Kaydet (Ctrl+S) yeni bir revizyon yazar; arada başkası kaydettiyse üzerine yazılmaz. Bu pencerenin son kaydı: revizyon 4, 2 dk önce. Sunucuda daha yeni revizyon var: 5 (Mehmet Demir, 27.09.2026 14:32); açmak için tıklayın. Canlı bağlantı: canlı."
+   }
+  },
+  {
+   "input": {
+    "where": "Büro › Kadastro paftası 2026",
+    "base": "4",
+    "lastSaved": null,
+    "now": 1790000000000,
+    "newer": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "error": "",
+    "link": "online",
+    "dirty": true
+   },
+   "expect": {
+    "title": "Bulut kaydı: dosya projesi",
+    "description": "Büro › Kadastro paftası 2026, dosya olarak saklanıyor (KCAD revizyonları). Çizimin dayandığı revizyon: 4. Kendiliğinden kaydedilmez: Kaydet (Ctrl+S) yeni bir revizyon yazar; arada başkası kaydettiyse üzerine yazılmaz. Sunucuda daha yeni revizyon var: 5 (Mehmet Demir, 27.09.2026 14:32); kaydedilmemiş değişiklikleriniz Kaydet ile onun üzerine yazılamaz. Seçenekler için tıklayın. Canlı bağlantı: canlı. Kaydedilmemiş değişiklikler bu cihazda kurtarma kopyası olarak da saklanıyor."
+   }
+  },
+  {
+   "input": {
+    "where": "Büro › Kadastro paftası 2026",
+    "base": "4",
+    "lastSaved": null,
+    "now": 1790000000000,
+    "newer": {
+     "revision": "5",
+     "by": "",
+     "at": null
+    },
+    "error": "",
+    "link": "offline",
+    "dirty": true
+   },
+   "expect": {
+    "title": "Bulut kaydı: dosya projesi",
+    "description": "Büro › Kadastro paftası 2026, dosya olarak saklanıyor (KCAD revizyonları). Çizimin dayandığı revizyon: 4. Kendiliğinden kaydedilmez: Kaydet (Ctrl+S) yeni bir revizyon yazar; arada başkası kaydettiyse üzerine yazılmaz. Sunucuda daha yeni revizyon var: 5; kaydedilmemiş değişiklikleriniz Kaydet ile onun üzerine yazılamaz. Seçenekler için tıklayın. Canlı bağlantı: çevrimdışı. Kaydedilmemiş değişiklikler bu cihazda kurtarma kopyası olarak da saklanıyor."
+   }
+  },
+  {
+   "input": {
+    "where": "Büro › Kadastro paftası 2026",
+    "base": "4",
+    "lastSaved": null,
+    "now": 1790000000000,
+    "newer": null,
+    "error": "",
+    "link": "offline",
+    "dirty": true
+   },
+   "expect": {
+    "title": "Bulut kaydı: dosya projesi",
+    "description": "Büro › Kadastro paftası 2026, dosya olarak saklanıyor (KCAD revizyonları). Çizimin dayandığı revizyon: 4. Kendiliğinden kaydedilmez: Kaydet (Ctrl+S) yeni bir revizyon yazar; arada başkası kaydettiyse üzerine yazılmaz. Canlı bağlantı: çevrimdışı. Kaydedilmemiş değişiklikler bu cihazda kurtarma kopyası olarak da saklanıyor."
+   }
+  }
+ ],
+ "cells": [
+  {
+   "title": "a newer revision, clean",
+   "state": {
+    "base": "4",
+    "newer": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "expect": {
+    "state": "outdated",
+    "text": "Yeni revizyon: r5",
+    "action": "cloud.openNewest"
+   }
+  },
+  {
+   "title": "a newer revision over unsaved work",
+   "state": {
+    "base": "4",
+    "newer": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": null,
+    "dirty": true,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "expect": {
+    "state": "outdated",
+    "text": "Yeni revizyon: r5 · kaydedilmedi",
+    "action": "cloud.openNewest"
+   }
+  },
+  {
+   "title": "a newer revision, read-only",
+   "state": {
+    "base": "4",
+    "newer": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": null,
+    "dirty": true,
+    "stage": "idle",
+    "failed": false,
+    "writable": false,
+    "ended": null
+   },
+   "expect": {
+    "state": "outdated",
+    "text": "Yeni revizyon: r5 · kaydedilmedi",
+    "action": "cloud.openNewest"
+   }
+  },
+  {
+   "title": "the conflict",
+   "state": {
+    "base": "4",
+    "newer": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": {
+     "expected": "4",
+     "actual": "5"
+    },
+    "dirty": true,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "expect": {
+    "state": "conflict",
+    "text": "Çakışma: r5 kaydedilmiş",
+    "action": "cloud.conflicts"
+   }
+  }
+ ],
+ "historyMarks": [
+  {
+   "title": "the newest, and the open drawing's",
+   "revision": "5",
+   "current": "5",
+   "openBase": "5",
+   "expect": [
+    "En yeni",
+    "Açık çizim"
+   ]
+  },
+  {
+   "title": "the newest, the drawing is older",
+   "revision": "5",
+   "current": "5",
+   "openBase": "4",
+   "expect": [
+    "En yeni"
+   ]
+  },
+  {
+   "title": "the open drawing's, a newer one exists",
+   "revision": "4",
+   "current": "5",
+   "openBase": "4",
+   "expect": [
+    "Açık çizim"
+   ]
+  },
+  {
+   "title": "neither",
+   "revision": "3",
+   "current": "5",
+   "openBase": "4",
+   "expect": []
+  },
+  {
+   "title": "the project is not open here",
+   "revision": "5",
+   "current": "5",
+   "openBase": null,
+   "expect": [
+    "En yeni"
+   ]
+  }
+ ],
+ "traces": [
+  {
+   "title": "someone else saves while the drawing is clean",
+   "start": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "steps": [
+    {
+     "input": {
+      "kind": "newest",
+      "newest": {
+       "revision": "5",
+       "by": "Mehmet Demir",
+       "at": "2026-09-27T11:32:00Z"
+      }
+     },
+     "say": true,
+     "cell": {
+      "state": "outdated",
+      "text": "Yeni revizyon: r5",
+      "action": "cloud.openNewest"
+     }
+    },
+    {
+     "offer": "newest",
+     "busy": false,
+     "expect": {
+      "kind": "ask",
+      "id": "newest",
+      "answers": [
+       "later",
+       "open"
+      ]
+     }
+    },
+    {
+     "input": {
+      "kind": "newest",
+      "newest": {
+       "revision": "5",
+       "by": "Mehmet Demir",
+       "at": "2026-09-27T11:32:00Z"
+      }
+     },
+     "say": false,
+     "cell": {
+      "state": "outdated",
+      "text": "Yeni revizyon: r5",
+      "action": "cloud.openNewest"
+     }
+    }
+   ],
+   "end": {
+    "base": "4",
+    "newer": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   }
+  },
+  {
+   "title": "unsaved work, then someone else saves; Kaydet uploads nothing",
+   "start": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "steps": [
+    {
+     "input": {
+      "kind": "dirty",
+      "dirty": true
+     },
+     "say": false,
+     "cell": {
+      "state": "pending",
+      "text": "Kaydedilmedi · r4 üstüne",
+      "action": "file.save"
+     }
+    },
+    {
+     "input": {
+      "kind": "newest",
+      "newest": {
+       "revision": "5",
+       "by": "Mehmet Demir",
+       "at": "2026-09-27T11:32:00Z"
+      }
+     },
+     "say": true,
+     "cell": {
+      "state": "outdated",
+      "text": "Yeni revizyon: r5 · kaydedilmedi",
+      "action": "cloud.openNewest"
+     }
+    },
+    {
+     "offer": "newest",
+     "busy": false,
+     "expect": {
+      "kind": "ask",
+      "id": "conflict",
+      "answers": [
+       "latest",
+       "stay",
+       "local",
+       "copy"
+      ]
+     }
+    },
+    {
+     "save": "behind",
+     "cell": {
+      "state": "conflict",
+      "text": "Çakışma: r5 kaydedilmiş",
+      "action": "cloud.conflicts"
+     }
+    },
+    {
+     "offer": "conflict",
+     "busy": false,
+     "expect": {
+      "kind": "ask",
+      "id": "conflict",
+      "answers": [
+       "latest",
+       "stay",
+       "local",
+       "copy"
+      ]
+     }
+    },
+    {
+     "save": "conflict",
+     "cell": {
+      "state": "conflict",
+      "text": "Çakışma: r5 kaydedilmiş",
+      "action": "cloud.conflicts"
+     }
+    }
+   ],
+   "end": {
+    "base": "4",
+    "newer": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": {
+     "expected": "4",
+     "actual": "5"
+    },
+    "dirty": true,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   }
+  },
+  {
+   "title": "Kaydet refused before the event came: who and when follow",
+   "start": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "steps": [
+    {
+     "input": {
+      "kind": "dirty",
+      "dirty": true
+     },
+     "say": false,
+     "cell": {
+      "state": "pending",
+      "text": "Kaydedilmedi · r4 üstüne",
+      "action": "file.save"
+     }
+    },
+    {
+     "save": "save",
+     "cell": {
+      "state": "pending",
+      "text": "Kaydedilmedi · r4 üstüne",
+      "action": "file.save"
+     }
+    },
+    {
+     "input": {
+      "kind": "stage",
+      "stage": "encoding"
+     },
+     "say": false,
+     "cell": {
+      "state": "encoding",
+      "text": "Dosya hazırlanıyor…",
+      "action": null
+     }
+    },
+    {
+     "input": {
+      "kind": "stage",
+      "stage": "uploading"
+     },
+     "say": false,
+     "cell": {
+      "state": "uploading",
+      "text": "Yükleniyor %0",
+      "action": null
+     }
+    },
+    {
+     "input": {
+      "kind": "stage",
+      "stage": "verifying"
+     },
+     "say": false,
+     "cell": {
+      "state": "verifying",
+      "text": "Sunucu doğruluyor…",
+      "action": null
+     }
+    },
+    {
+     "input": {
+      "kind": "refused",
+      "actual": "5"
+     },
+     "say": false,
+     "cell": {
+      "state": "conflict",
+      "text": "Çakışma: r5 kaydedilmiş",
+      "action": "cloud.conflicts"
+     }
+    },
+    {
+     "offer": "conflict",
+     "busy": false,
+     "expect": {
+      "kind": "ask",
+      "id": "conflict",
+      "answers": [
+       "latest",
+       "stay",
+       "local",
+       "copy"
+      ]
+     }
+    },
+    {
+     "input": {
+      "kind": "newest",
+      "newest": {
+       "revision": "5",
+       "by": "Mehmet Demir",
+       "at": "2026-09-27T11:32:00Z"
+      }
+     },
+     "say": false,
+     "cell": {
+      "state": "conflict",
+      "text": "Çakışma: r5 kaydedilmiş",
+      "action": "cloud.conflicts"
+     }
+    },
+    {
+     "offer": "conflict",
+     "busy": false,
+     "expect": {
+      "kind": "ask",
+      "id": "conflict",
+      "answers": [
+       "latest",
+       "stay",
+       "local",
+       "copy"
+      ]
+     }
+    }
+   ],
+   "end": {
+    "base": "4",
+    "newer": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": {
+     "expected": "4",
+     "actual": "5"
+    },
+    "dirty": true,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   }
+  },
+  {
+   "title": "a newer revision heard while a Kaydet goes, then the refusal",
+   "start": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "steps": [
+    {
+     "input": {
+      "kind": "dirty",
+      "dirty": true
+     },
+     "say": false,
+     "cell": {
+      "state": "pending",
+      "text": "Kaydedilmedi · r4 üstüne",
+      "action": "file.save"
+     }
+    },
+    {
+     "save": "save",
+     "cell": {
+      "state": "pending",
+      "text": "Kaydedilmedi · r4 üstüne",
+      "action": "file.save"
+     }
+    },
+    {
+     "input": {
+      "kind": "stage",
+      "stage": "encoding"
+     },
+     "say": false,
+     "cell": {
+      "state": "encoding",
+      "text": "Dosya hazırlanıyor…",
+      "action": null
+     }
+    },
+    {
+     "input": {
+      "kind": "stage",
+      "stage": "uploading"
+     },
+     "say": false,
+     "cell": {
+      "state": "uploading",
+      "text": "Yükleniyor %0",
+      "action": null
+     }
+    },
+    {
+     "input": {
+      "kind": "newest",
+      "newest": {
+       "revision": "5",
+       "by": "Mehmet Demir",
+       "at": "2026-09-27T11:32:00Z"
+      }
+     },
+     "say": true,
+     "cell": {
+      "state": "uploading",
+      "text": "Yükleniyor %0",
+      "action": null
+     }
+    },
+    {
+     "offer": "newest",
+     "busy": true,
+     "expect": {
+      "kind": "say",
+      "line": "“Kadastro paftası 2026” kaydediliyor; son revizyonu açmak için kaydın bitmesini bekleyin."
+     }
+    },
+    {
+     "input": {
+      "kind": "stage",
+      "stage": "verifying"
+     },
+     "say": false,
+     "cell": {
+      "state": "verifying",
+      "text": "Sunucu doğruluyor…",
+      "action": null
+     }
+    },
+    {
+     "input": {
+      "kind": "refused",
+      "actual": "5"
+     },
+     "say": false,
+     "cell": {
+      "state": "conflict",
+      "text": "Çakışma: r5 kaydedilmiş",
+      "action": "cloud.conflicts"
+     }
+    }
+   ],
+   "end": {
+    "base": "4",
+    "newer": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": {
+     "expected": "4",
+     "actual": "5"
+    },
+    "dirty": true,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   }
+  },
+  {
+   "title": "a Kaydet committed with edits made while it went",
+   "start": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "steps": [
+    {
+     "input": {
+      "kind": "dirty",
+      "dirty": true
+     },
+     "say": false,
+     "cell": {
+      "state": "pending",
+      "text": "Kaydedilmedi · r4 üstüne",
+      "action": "file.save"
+     }
+    },
+    {
+     "save": "save",
+     "cell": {
+      "state": "pending",
+      "text": "Kaydedilmedi · r4 üstüne",
+      "action": "file.save"
+     }
+    },
+    {
+     "input": {
+      "kind": "stage",
+      "stage": "encoding"
+     },
+     "say": false,
+     "cell": {
+      "state": "encoding",
+      "text": "Dosya hazırlanıyor…",
+      "action": null
+     }
+    },
+    {
+     "input": {
+      "kind": "stage",
+      "stage": "uploading"
+     },
+     "say": false,
+     "cell": {
+      "state": "uploading",
+      "text": "Yükleniyor %0",
+      "action": null
+     }
+    },
+    {
+     "input": {
+      "kind": "stage",
+      "stage": "verifying"
+     },
+     "say": false,
+     "cell": {
+      "state": "verifying",
+      "text": "Sunucu doğruluyor…",
+      "action": null
+     }
+    },
+    {
+     "input": {
+      "kind": "committed",
+      "revision": "5",
+      "dirty": true
+     },
+     "say": false,
+     "cell": {
+      "state": "pending",
+      "text": "Kaydedilmedi · r5 üstüne",
+      "action": "file.save"
+     }
+    },
+    {
+     "offer": "newest",
+     "busy": false,
+     "expect": {
+      "kind": "ask",
+      "id": "unsaved",
+      "answers": [
+       "discard",
+       "stay"
+      ]
+     }
+    }
+   ],
+   "end": {
+    "base": "5",
+    "newer": null,
+    "conflict": null,
+    "dirty": true,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   }
+  },
+  {
+   "title": "a failed Kaydet, then a newer revision",
+   "start": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "steps": [
+    {
+     "input": {
+      "kind": "dirty",
+      "dirty": true
+     },
+     "say": false,
+     "cell": {
+      "state": "pending",
+      "text": "Kaydedilmedi · r4 üstüne",
+      "action": "file.save"
+     }
+    },
+    {
+     "save": "save",
+     "cell": {
+      "state": "pending",
+      "text": "Kaydedilmedi · r4 üstüne",
+      "action": "file.save"
+     }
+    },
+    {
+     "input": {
+      "kind": "stage",
+      "stage": "encoding"
+     },
+     "say": false,
+     "cell": {
+      "state": "encoding",
+      "text": "Dosya hazırlanıyor…",
+      "action": null
+     }
+    },
+    {
+     "input": {
+      "kind": "failed"
+     },
+     "say": false,
+     "cell": {
+      "state": "error",
+      "text": "Kayıt hatası",
+      "action": "file.save"
+     }
+    },
+    {
+     "input": {
+      "kind": "newest",
+      "newest": {
+       "revision": "5",
+       "by": "Mehmet Demir",
+       "at": "2026-09-27T11:32:00Z"
+      }
+     },
+     "say": true,
+     "cell": {
+      "state": "outdated",
+      "text": "Yeni revizyon: r5 · kaydedilmedi",
+      "action": "cloud.openNewest"
+     }
+    },
+    {
+     "save": "behind",
+     "cell": {
+      "state": "conflict",
+      "text": "Çakışma: r5 kaydedilmiş",
+      "action": "cloud.conflicts"
+     }
+    }
+   ],
+   "end": {
+    "base": "4",
+    "newer": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": {
+     "expected": "4",
+     "actual": "5"
+    },
+    "dirty": true,
+    "stage": "idle",
+    "failed": true,
+    "writable": true,
+    "ended": null
+   }
+  },
+  {
+   "title": "a failed Kaydet undone: Kaydet finds nothing to write",
+   "start": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "steps": [
+    {
+     "input": {
+      "kind": "dirty",
+      "dirty": true
+     },
+     "say": false,
+     "cell": {
+      "state": "pending",
+      "text": "Kaydedilmedi · r4 üstüne",
+      "action": "file.save"
+     }
+    },
+    {
+     "save": "save",
+     "cell": {
+      "state": "pending",
+      "text": "Kaydedilmedi · r4 üstüne",
+      "action": "file.save"
+     }
+    },
+    {
+     "input": {
+      "kind": "stage",
+      "stage": "encoding"
+     },
+     "say": false,
+     "cell": {
+      "state": "encoding",
+      "text": "Dosya hazırlanıyor…",
+      "action": null
+     }
+    },
+    {
+     "input": {
+      "kind": "failed"
+     },
+     "say": false,
+     "cell": {
+      "state": "error",
+      "text": "Kayıt hatası",
+      "action": "file.save"
+     }
+    },
+    {
+     "input": {
+      "kind": "dirty",
+      "dirty": false
+     },
+     "say": false,
+     "cell": {
+      "state": "error",
+      "text": "Kayıt hatası",
+      "action": "file.save"
+     }
+    },
+    {
+     "save": "unchanged",
+     "cell": {
+      "state": "saved",
+      "text": "Buluta kaydedildi · r4",
+      "action": "file.save"
+     }
+    }
+   ],
+   "end": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   }
+  },
+  {
+   "title": "read-only: a newer revision is still offered",
+   "start": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": false,
+    "ended": null
+   },
+   "steps": [
+    {
+     "input": {
+      "kind": "newest",
+      "newest": {
+       "revision": "5",
+       "by": "Mehmet Demir",
+       "at": "2026-09-27T11:32:00Z"
+      }
+     },
+     "say": true,
+     "cell": {
+      "state": "outdated",
+      "text": "Yeni revizyon: r5",
+      "action": "cloud.openNewest"
+     }
+    },
+    {
+     "offer": "newest",
+     "busy": false,
+     "expect": {
+      "kind": "ask",
+      "id": "newest",
+      "answers": [
+       "later",
+       "open"
+      ]
+     }
+    },
+    {
+     "input": {
+      "kind": "dirty",
+      "dirty": true
+     },
+     "say": false,
+     "cell": {
+      "state": "outdated",
+      "text": "Yeni revizyon: r5 · kaydedilmedi",
+      "action": "cloud.openNewest"
+     }
+    },
+    {
+     "save": "readonly",
+     "cell": {
+      "state": "outdated",
+      "text": "Yeni revizyon: r5 · kaydedilmedi",
+      "action": "cloud.openNewest"
+     }
+    },
+    {
+     "offer": "newest",
+     "busy": false,
+     "expect": {
+      "kind": "ask",
+      "id": "conflict",
+      "answers": [
+       "latest",
+       "stay",
+       "local",
+       "copy"
+      ]
+     }
+    }
+   ],
+   "end": {
+    "base": "4",
+    "newer": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": null,
+    "dirty": true,
+    "stage": "idle",
+    "failed": false,
+    "writable": false,
+    "ended": null
+   }
+  },
+  {
+   "title": "a late answer never lowers the newer revision",
+   "start": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "steps": [
+    {
+     "input": {
+      "kind": "newest",
+      "newest": {
+       "revision": "6",
+       "by": "Zeynep Kaya",
+       "at": "2026-09-27T11:32:00Z"
+      }
+     },
+     "say": true,
+     "cell": {
+      "state": "outdated",
+      "text": "Yeni revizyon: r6",
+      "action": "cloud.openNewest"
+     }
+    },
+    {
+     "input": {
+      "kind": "newest",
+      "newest": {
+       "revision": "5",
+       "by": "Mehmet Demir",
+       "at": "2026-09-27T11:32:00Z"
+      }
+     },
+     "say": false,
+     "cell": {
+      "state": "outdated",
+      "text": "Yeni revizyon: r6",
+      "action": "cloud.openNewest"
+     }
+    }
+   ],
+   "end": {
+    "base": "4",
+    "newer": {
+     "revision": "6",
+     "by": "Zeynep Kaya",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   }
+  },
+  {
+   "title": "a resync finds a revision; later the project is deleted",
+   "start": {
+    "base": "4",
+    "newer": null,
+    "conflict": null,
+    "dirty": false,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": null
+   },
+   "steps": [
+    {
+     "input": {
+      "kind": "dirty",
+      "dirty": true
+     },
+     "say": false,
+     "cell": {
+      "state": "pending",
+      "text": "Kaydedilmedi · r4 üstüne",
+      "action": "file.save"
+     }
+    },
+    {
+     "input": {
+      "kind": "newest",
+      "newest": {
+       "revision": "5",
+       "by": "Mehmet Demir",
+       "at": "2026-09-27T11:32:00Z"
+      }
+     },
+     "say": true,
+     "cell": {
+      "state": "outdated",
+      "text": "Yeni revizyon: r5 · kaydedilmedi",
+      "action": "cloud.openNewest"
+     }
+    },
+    {
+     "input": {
+      "kind": "ended",
+      "why": "deleted"
+     },
+     "say": false,
+     "cell": {
+      "state": "deleted",
+      "text": "Proje silindi",
+      "action": "file.save"
+     }
+    },
+    {
+     "save": "ended",
+     "cell": {
+      "state": "deleted",
+      "text": "Proje silindi",
+      "action": "file.save"
+     }
+    },
+    {
+     "offer": "newest",
+     "busy": false,
+     "expect": {
+      "kind": "say",
+      "line": "“Kadastro paftası 2026” bulut projesi silindi; son revizyonu açılamaz. Çizimi saklamak için yerel bir dosyaya kaydedin."
+     }
+    },
+    {
+     "input": {
+      "kind": "newest",
+      "newest": {
+       "revision": "6",
+       "by": "Zeynep Kaya",
+       "at": "2026-09-27T11:32:00Z"
+      }
+     },
+     "say": false,
+     "cell": {
+      "state": "deleted",
+      "text": "Proje silindi",
+      "action": "file.save"
+     }
+    }
+   ],
+   "end": {
+    "base": "4",
+    "newer": {
+     "revision": "5",
+     "by": "Mehmet Demir",
+     "at": "2026-09-27T11:32:00Z"
+    },
+    "conflict": null,
+    "dirty": true,
+    "stage": "idle",
+    "failed": false,
+    "writable": true,
+    "ended": "deleted"
+   }
+  }
+ ]
+}

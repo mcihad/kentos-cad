@@ -58,6 +58,14 @@
   - **Vazgeç**: hiçbir şey olmaz; durum çakışma olarak kalır.
 - Proje açıkken başkası revizyon kaydederse (`project.file` olayı, istek kimliği bu pencerenin değil) bu söylenir ve durum çubuğu “Yeni revizyon: rN” der. Tıklanınca en yeni revizyon önerilir; kaydedilmemiş değişiklik varsa aynı çakışma sorusu gelir. Çizim kendiliğinden yeniden yüklenmez.
 - Proje silinir, arşivlenir ya da erişim kalkarsa Kaydet reddedilir; çizim ekranda kalır, Kaydet yerel dosya önerir. Rol düşerse Kaydet “salt okunur” olur, dönünce yeniden yazar.
+- **28 Eylül:** davranış masaüstüne taşınmak üzere [docs/specs/file-revisions.md](../specs/file-revisions.md)'de yazıldı. Kurallar saf bir plandadır (`app/cloud/fileRevisionsPlan.ts`, `fixtures/cloud/v1/file-revisions.json`). Yazılırken şunlar düzeltildi:
+  - Kanal kaçırılan olayları veremediğinde (yeniden eşitleme) dosya projesi artık sunucudan yeniden açılmıyor. Proje ve en yeni revizyonu soruluyor; çizim değişmiyor. Önceden yeniden açılış çizimi değiştiriyordu; bu, yukarıdaki kurala aykırıydı.
+  - Kaydedilmemiş iş varken gelen yeni revizyonu hücre de söylüyor: “Yeni revizyon: r5 · kaydedilmedi”.
+  - Yeni revizyon biliniyorken Kaydet hiçbir şey yüklemeden soruyu getiriyor.
+  - Yeni revizyonun kaydedeni ve zamanı ipucunda, günlükte ve soruda yazılıyor.
+  - Salt okunur hesap da yeni revizyonu görüp açabiliyor.
+  - Geç gelen eski bir cevap bilinen yeni revizyonu düşürmüyor.
+  - Geçmiş sekmesi açık çizimin revizyonunu işaretliyor.
 
 ### Kurtarma kopyası
 

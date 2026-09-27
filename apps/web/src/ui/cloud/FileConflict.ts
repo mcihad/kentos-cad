@@ -1,45 +1,45 @@
+import { offer, REVISION_TEXTS, type Offer, type RevisionAnswer } from '../../app/cloud/fileRevisionsPlan';
 import type { AppContext } from '../../app/context';
-import { askUnsaved, confirmDialog } from '../widgets/confirm';
+import { confirmDialog } from '../widgets/confirm';
 import { openUploadDialog } from './UploadDialog';
 
 /**
  * A file project's Kaydet that met a newer revision, and the newer
- * revision someone else saved while the project is open (docs/adr/0038;
- * TODOS.md SYNC-06). Two files are never merged byte by byte: the user
- * chooses where the drawing goes — a separate copy (a new file project, or
- * a local file) — or opens the newest revision and drops the drawing's
- * changes. Nothing is reloaded by itself.
+ * revision someone else saved while the project is open (docs/adr/0038,
+ * docs/specs/file-revisions.md; TODOS.md SYNC-06). Two files are never
+ * merged byte by byte: the user chooses where the drawing goes — a separate
+ * copy (a new file project, or a local file) — or opens the newest revision
+ * and drops the drawing's changes. Nothing is reloaded by itself. Which
+ * question comes, its words and what each answer does are
+ * app/cloud/fileRevisionsPlan.ts's; this file asks and does it.
  */
 
-type Answer = 'copy' | 'local' | 'latest' | 'stay';
+/** Asks what the plan offers and does the answer. True when the drawing ended up saved or replaced by the newest revision. */
+async function run(ctx: AppContext, o: Offer): Promise<boolean> {
+  if (o.kind === 'none') return false;
+  if (o.kind === 'say') {
+    ctx.log[o.tone](o.line);
+    return false;
+  }
+  const q = o.question;
+  const value = await confirmDialog({
+    title: q.title,
+    message: q.message,
+    details: q.details,
+    answers: q.answers.map(({ value, label, kind, aside }) => ({ value, label, kind, aside })),
+    cancel: q.cancel,
+  });
+  const answer = q.answers.find((a) => a.value === value);
+  return answer ? act(ctx, answer) : false;
+}
 
-/** The question after a refused Kaydet (or before opening a newer revision over unsaved work). True when the drawing ended up saved. */
-export async function resolveFileConflict(ctx: AppContext): Promise<boolean> {
+/** What an answer does (fileRevisionsPlan.ts `AnswerDoes`, `AnswerWork`). */
+async function act(ctx: AppContext, a: RevisionAnswer): Promise<boolean> {
   const cloud = ctx.cloud;
   const file = cloud.file.value;
   const p = cloud.project.value;
   if (!file || !p) return false;
-  const newer = file.newer.value;
-  const c = file.conflict.value ?? (newer ? { expected: file.base.value, actual: newer.revision } : null);
-  if (!c) return false;
-  const who = newer?.by ? ` (${newer.by})` : '';
-  const answer = await confirmDialog<Answer>({
-    title: 'Dosya başka biri tarafından kaydedildi',
-    message: `“${p.name}” siz çalışırken başka biri tarafından kaydedildi: sunucuda revizyon ${c.actual}${who} var; çiziminizin dayandığı revizyon ${c.expected}. Hiçbir şey yazılmadı; iki dosya birleştirilmez.`,
-    details: [
-      `Ayrı kopya olarak kaydet: çiziminiz yeni bir bulut dosya projesi olur ve açık proje o olur; “${p.name}” olduğu gibi kalır.`,
-      'Yerel dosyaya kaydet: çiziminiz bu bilgisayara .kcad olarak kaydedilir ve çizim buluttaki projeden ayrılır.',
-      `Son revizyonu aç: revizyon ${c.actual} açılır; bu çizimdeki kaydedilmemiş değişiklikler atılır.`,
-    ],
-    answers: [
-      { value: 'latest', label: 'Son revizyonu aç', kind: 'danger', aside: true },
-      { value: 'stay', label: 'Vazgeç' },
-      { value: 'local', label: 'Yerel dosyaya kaydet' },
-      { value: 'copy', label: 'Ayrı kopya olarak kaydet', kind: 'primary' },
-    ],
-    cancel: 'stay',
-  });
-  switch (answer) {
+  switch (a.does) {
     case 'copy':
       // The upload window, on file storage, named as a copy: it says how far it is and what went wrong.
       openUploadDialog(ctx, { storage: 'file', name: `${p.name} (kopya)`, tenantId: p.tenantId });
@@ -48,63 +48,41 @@ export async function resolveFileConflict(ctx: AppContext): Promise<boolean> {
       const saved = await ctx.files.saveAs();
       if (saved && cloud.file.value === file) {
         cloud.detach();
-        ctx.log.info(`Çizim yerel dosyaya kaydedildi ve “${p.name}” bulut projesinden ayrıldı; proje olduğu gibi duruyor.`);
+        ctx.log.info(REVISION_TEXTS.detached(p.name));
       }
       return saved;
     }
     case 'latest':
-      return openLatest(ctx);
+      // Dropped on purpose: their recovery copy goes too (app/recovery.ts).
+      if (a.work === 'dropped' && ctx.doc.dirty.value) ctx.recovery.discard();
+      try {
+        return await cloud.open(p.tenantId, p.projectId);
+      } catch (e) {
+        ctx.log.error(REVISION_TEXTS.openFailed(p.name, e instanceof Error ? e.message : String(e)));
+        return false;
+      }
     default:
       return false;
   }
 }
 
-/** Opens the newest revision of the open file project; the drawing's unsaved changes are dropped on purpose. */
-async function openLatest(ctx: AppContext): Promise<boolean> {
+/** The question after a refused Kaydet, or Kayıt çakışmalarını çöz… on a file project. True when the drawing ended up saved. */
+export async function resolveFileConflict(ctx: AppContext): Promise<boolean> {
+  const file = ctx.cloud.file.value;
   const p = ctx.cloud.project.value;
-  if (!p) return false;
-  // Dropped on purpose: their recovery copy goes too (app/recovery.ts).
-  if (ctx.doc.dirty.value) ctx.recovery.discard();
-  try {
-    return await ctx.cloud.open(p.tenantId, p.projectId);
-  } catch (e) {
-    ctx.log.error(`“${p.name}” son revizyonu açılamadı: ${e instanceof Error ? e.message : String(e)}`);
-    return false;
-  }
+  if (!file || !p) return false;
+  return run(ctx, offer({ name: p.name, s: file.revisions, busy: file.busy, via: 'conflict' }));
 }
 
 /**
- * Someone else saved a newer revision while the project is open: offered.
- * Over unsaved work it is the conflict's question (the work needs a place
- * first); over unsaved work with no newer revision known, the unsaved
- * question (the newest may be the revision the drawing started from, and
- * opening it drops the work); over a clean drawing, a plain question.
+ * The newest revision offered: the save cell's click on a newer revision,
+ * or Son revizyonu aç…. Over unsaved work it is the conflict's question
+ * (the work needs a place first); over unsaved work with no newer revision
+ * known, the unsaved question; over a clean drawing, a plain question.
  */
 export async function offerNewest(ctx: AppContext): Promise<boolean> {
   const file = ctx.cloud.file.value;
   const p = ctx.cloud.project.value;
   if (!file || !p) return false;
-  if (file.conflict.value || (ctx.doc.dirty.value && file.newer.value)) return resolveFileConflict(ctx);
-  if (ctx.doc.dirty.value) {
-    const answer = await askUnsaved({
-      name: p.name,
-      after: `Sunucudaki en yeni revizyon açılırsa bu değişiklikler atılır (açık çizim revizyon ${file.base.value}). Saklamak için önce Kaydet ile kaydedin.`,
-      verb: 'aç',
-      canSave: false,
-    });
-    return answer === 'discard' ? openLatest(ctx) : false;
-  }
-  const newer = file.newer.value;
-  const answer = await confirmDialog<'open' | 'later'>({
-    title: 'Son revizyonu aç',
-    message: newer
-      ? `“${p.name}” başka bir yerde kaydedildi: revizyon ${newer.revision}${newer.by ? ` (${newer.by})` : ''}. Açık çizim revizyon ${file.base.value}; kaydedilmemiş değişikliği yok.`
-      : `“${p.name}” projesinin sunucudaki en yeni revizyonu açılsın mı? Açık çizim revizyon ${file.base.value}; kaydedilmemiş değişikliği yok.`,
-    answers: [
-      { value: 'later', label: 'Sonra' },
-      { value: 'open', label: 'Son revizyonu aç', kind: 'primary' },
-    ],
-    cancel: 'later',
-  });
-  return answer === 'open' ? openLatest(ctx) : false;
+  return run(ctx, offer({ name: p.name, s: file.revisions, busy: file.busy, via: 'newest' }));
 }

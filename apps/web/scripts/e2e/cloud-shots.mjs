@@ -3,8 +3,9 @@
 // kentos are not touched). Seeds projects of every kind, then at each size signs in as ayse and pictures each
 // scene in the dark and the light theme: the catalog's lists, details, tabs, selects and empty search; the history
 // tab and its forms; the share dialog with the find box, invitations and removing access; the project forms and
-// questions; renaming the open project; a file project's conflict; the access-lost notice; the status bar's cloud
-// cells and the server cell's account menu; an invitation's page.
+// questions; renaming the open project; a file project's conflict; a file project's revisions (someone else's
+// revision heard, over unsaved work, the questions, the conflict, the history's marks, the log line, offline); the
+// access-lost notice; the status bar's cloud cells and the server cell's account menu; an invitation's page.
 // Pictures go to scripts/e2e/out/shots/cloud/<scene>-<theme>-<width>.png.
 //
 //   cargo build -q -p kentos-api --bin kentosd --example e2e_database
@@ -377,7 +378,8 @@ const SCENES = [
     await ui.windowUp();
     await ui.snap('history-checkpoint-delete-question');
     await ui.pressTop('.btn--danger');
-    await ui.waitFor(`document.querySelectorAll('.dialog').length === 1 && !document.querySelector('.catalog-history__list')?.textContent.includes('Teslim öncesi')`);
+    // The list asked again after the removal: its rows, not its loading line.
+    await ui.waitFor(`document.querySelectorAll('.dialog').length === 1 && ${historyReady} && !!document.querySelector('.catalog-history__list') && !document.querySelector('.catalog-history__list').textContent.includes('Teslim öncesi')`);
     // Yeni proje olarak geri yükle… on a checkpoint.
     await ui.press('.catalog-history__list .btn', 'Yeni proje olarak geri yükle');
     await ui.windowUp();
@@ -555,6 +557,85 @@ const SCENES = [
     await ui.snap('notice-file-conflict');
     await ui.pressTop('.btn', 'Vazgeç');
     await ui.closeAll();
+  },
+  // ── A file project's revisions (docs/specs/file-revisions.md): its own project for each size, removed after ──
+  async (ui) => {
+    if (only && !only.some((id) => id.startsWith('revision-'))) return;
+    const p = await project(ayse, ORG, { name: 'Ada 1248 pafta', projectType: 'cad', tags: ['pafta'], description: 'Revizyon resimleri için.', storage: 'file' });
+    await commitFile(ayse, p, snap1, '0');
+    await commitFile(ayse, p, snap2, '1');
+    await commitFile(ayse, p, snap1, '2');
+    await ayse.run(p, 'project.share', { userId: mehmetMe.user.id, role: 'editor' });
+    const file = 'window.kentos.cloud.file.value';
+    const cell = async (id) => {
+      await ui.hover('.status__save');
+      await ui.snap(id);
+      await ui.b.move(2, 2);
+    };
+    try {
+      await ui.eval(`import('/src/ui/cloud/CatalogDialog.ts').then((m) => m.openCatalog(window.kentos, ${ids(p)}))`);
+      await ui.waitFor(`document.querySelector('.catalog-row[aria-selected="true"]')?.textContent.startsWith(${JSON.stringify(p.name)})`);
+      await ui.press('.dialog__foot .btn--primary', 'Aç');
+      await ui.waitFor(`${file}?.base.value === '3' && window.kentos.cloud.link.value === 'online' && !document.querySelector('.dialog')`, 30000);
+      await ui.closeAll();
+      await cell('revision-current');
+      // Mehmet saves revision 4 elsewhere: heard, said with who and when, offered; nothing is loaded.
+      await commitFile(mehmet, p, snap2, '3');
+      await ui.waitFor(`${file}.newer.value?.revision === '4' && !!${file}.newer.value.at`, 15000);
+      await cell('revision-newer');
+      await ui.eval(`(() => { const u = window.kentos.ui; u.bottomHeight.set(Math.min(260, Math.round(innerHeight * 0.34))); u.bottomTab.set('history'); u.bottomExpanded.set(true); })()`);
+      await sleep(300);
+      await ui.snap('revision-log');
+      await ui.eval(`window.kentos.ui.bottomExpanded.set(false)`);
+      await ui.press('.status__save');
+      await ui.windowUp(1);
+      await ui.snap('revision-newer-question');
+      await ui.pressTop('.btn', 'Sonra');
+      // An edit here: the cell says both; a click brings the conflict's question.
+      await ui.eval(`window.kentos.doc.add({ kind: 'point', layerId: 'nokta', label: 'P.105', p: { x: ${O.x + 50}, y: ${O.y + 12} }, attrs: { Nokta: 'P.105' } })`);
+      await ui.waitFor(`document.querySelector('.status__save')?.textContent === 'Yeni revizyon: r4 · kaydedilmedi'`);
+      await cell('revision-newer-dirty');
+      await ui.press('.status__save');
+      await ui.windowUp(1);
+      await ui.snap('revision-newer-dirty-question');
+      await ui.pressTop('.btn', 'Vazgeç');
+      // Kaydet: nothing is uploaded, the question at once; Vazgeç leaves the conflict standing.
+      await ui.run('file.save');
+      await ui.waitFor(`[...document.querySelectorAll('.dialog')].some((d) => d.textContent.includes('başka biri tarafından kaydedildi'))`, 15000);
+      await sleep(200);
+      await ui.pressTop('.btn', 'Vazgeç');
+      await ui.waitFor(`${file}.state.value === 'conflict'`);
+      await cell('revision-conflict');
+      // The history: the newest revision and the one the open drawing is based on.
+      await ui.run('cloud.history');
+      await ui.waitFor(`${historyReady} && !!document.querySelector('.catalog-history__row[data-revision="3"] .catalog-chip')`, 15000);
+      // The list and the pane settle first (a late redraw scrolls the pane back to its top).
+      await sleep(1200);
+      await ui.eval(`document.querySelector('.catalog-history__row[data-revision="3"]').scrollIntoView({ block: 'end' })`);
+      await sleep(300);
+      await ui.snap('revision-history');
+      await ui.closeAll();
+      // The newest opened over the edit (dropped on purpose), then another edit: no newer revision is known now.
+      await ui.run('cloud.conflicts');
+      await ui.windowUp(1);
+      await ui.pressTop('.btn--danger', 'Son revizyonu aç');
+      await ui.waitFor(`${file}?.base.value === '4' && !window.kentos.doc.dirty.value && !document.querySelector('.dialog')`, 30000);
+      await ui.eval(`window.kentos.doc.add({ kind: 'point', layerId: 'nokta', label: 'P.106', p: { x: ${O.x + 55}, y: ${O.y + 12} }, attrs: { Nokta: 'P.106' } })`);
+      await ui.run('cloud.openNewest');
+      await ui.windowUp(1);
+      await ui.snap('revision-unsaved-question');
+      await ui.pressTop('.btn', 'Vazgeç');
+      // Offline, set for the picture: the cell's words stay; the server cell and the tip say it.
+      await ui.eval(`(() => { window.kentos.cloud.link.set('offline'); window.kentos.server.state.set('offline'); })()`);
+      await cell('revision-offline');
+      await ui.eval(`(() => { window.kentos.cloud.link.set('online'); window.kentos.server.state.set('online'); })()`);
+    } finally {
+      await ui.closeAll();
+      // Left, and removed for good, so the next size and the catalog's pictures do not see it.
+      await ui.eval(`(() => { if (window.kentos.cloud.project.value?.projectId === ${JSON.stringify(p.projectId)}) { window.kentos.cloud.detach(); window.kentos.commands.execute('edit.undo'); } })()`);
+      await ayse.run(p, 'project.trash').catch(() => {});
+      await ayse.run(p, 'project.purge', { confirmName: p.name }).catch(() => {});
+    }
   },
   // ── Access taken away while the project is open ──
   async (ui) => {
