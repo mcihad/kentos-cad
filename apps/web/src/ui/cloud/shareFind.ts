@@ -1,5 +1,6 @@
 import { emailProblem } from '../../app/cloud/invitations';
-import { ROLE_LABEL, failureText } from '../../app/cloud/sharing';
+import { SHARE_TEXTS, candidateNote, nobodyFound, searchesFor } from '../../app/cloud/sharePlan';
+import { failureText } from '../../app/cloud/sharing';
 import type { ProjectAccessList } from '../../contracts/generated/ProjectAccessList';
 import type { ShareCandidate } from '../../contracts/generated/ShareCandidate';
 import type { AppContext } from '../../app/context';
@@ -13,6 +14,7 @@ import type { ProjectTarget } from './ProjectActions';
  * The list is used with the arrows and Enter, or the mouse; Esc closes it
  * before it closes the dialog. Where nobody is found and a whole e-mail was
  * typed, the list offers to invite that address instead (docs/adr/0042).
+ * Its words and rules are sharePlan.ts's.
  */
 
 export interface PersonFinderOptions {
@@ -52,8 +54,8 @@ export function createPersonFinder(ctx: AppContext, target: ProjectTarget, o: Pe
   const find = h('input', {
     class: 'field',
     type: 'text',
-    placeholder: 'Ad ya da e-posta yazın',
-    'aria-label': 'Paylaşılacak kişi',
+    placeholder: SHARE_TEXTS.find.placeholder,
+    'aria-label': SHARE_TEXTS.find.label,
     role: 'combobox',
     'aria-autocomplete': 'list',
     'aria-expanded': 'false',
@@ -62,7 +64,7 @@ export function createPersonFinder(ctx: AppContext, target: ProjectTarget, o: Pe
     spellcheck: 'false',
     disabled: true,
   });
-  const suggest = h('ul', { class: 'share-suggest', id: suggestId, role: 'listbox', 'aria-label': 'Bulunan kişiler', hidden: true });
+  const suggest = h('ul', { class: 'share-suggest', id: suggestId, role: 'listbox', 'aria-label': SHARE_TEXTS.find.list, hidden: true });
 
   const hide = () => {
     suggest.hidden = true;
@@ -87,13 +89,10 @@ export function createPersonFinder(ctx: AppContext, target: ProjectTarget, o: Pe
   };
   /** Nobody found: what the workspace allows, and, for a whole e-mail, an invitation instead. */
   const nobody = (query: string): HTMLElement[] => {
-    const personal = o.list()?.tenantKind === 'personal';
-    const none = personal
-      ? `“${query}” ile eşleşen kimse yok. Kurumlarınızın dışından biriyle “Davetler”den e-postayla paylaşabilirsiniz.`
-      : `“${query}” ile eşleşen etkin bir kurum üyesi yok. Kurum dışından biri “Davetler”den e-postayla davet edilir ve misafir olur.`;
-    const out = [h('li', { class: 'share-suggest__none' }, none)];
-    if (!emailProblem(query)) {
-      const li = h('li', { class: 'share-suggest__item share-suggest__invite', role: 'option', id: `${suggestId}-0`, 'aria-selected': 'true' }, h('span', { class: 'share-suggest__name' }, `“${query.trim()}” adresine e-postayla davet gönder…`));
+    const none = nobodyFound(query, o.list()?.tenantKind === 'personal');
+    const out = [h('li', { class: 'share-suggest__none' }, none.text)];
+    if (none.invite) {
+      const li = h('li', { class: 'share-suggest__item share-suggest__invite', role: 'option', id: `${suggestId}-0`, 'aria-selected': 'true' }, h('span', { class: 'share-suggest__name' }, none.invite));
       li.addEventListener('pointerdown', (e) => e.preventDefault());
       li.addEventListener('click', () => {
         hide();
@@ -111,13 +110,13 @@ export function createPersonFinder(ctx: AppContext, target: ProjectTarget, o: Pe
       suggest,
       candidates.length
         ? candidates.map((c, i) => {
-            const has = current.get(c.userId);
+            const has = candidateNote(current.get(c.userId)?.role);
             const li = h(
               'li',
               { class: 'share-suggest__item', role: 'option', id: `${suggestId}-${i}`, 'aria-selected': String(i === active) },
               h('span', { class: 'share-suggest__name' }, c.displayName),
               c.email ? h('span', { class: 'share-suggest__mail' }, c.email) : null,
-              has?.role ? h('span', { class: 'share-suggest__has' }, `şu an ${ROLE_LABEL[has.role]}`) : null,
+              has ? h('span', { class: 'share-suggest__has' }, has) : null,
             );
             // The field keeps the focus: typing goes on while the mouse picks.
             li.addEventListener('pointerdown', (e) => e.preventDefault());
@@ -140,7 +139,7 @@ export function createPersonFinder(ctx: AppContext, target: ProjectTarget, o: Pe
       chosen = null;
       o.picked(null);
     }
-    if (chosen || query.replace(/\s+/g, '').length < 2) return hide();
+    if (chosen || !searchesFor(query)) return hide();
     timer = setTimeout(() => {
       const abort = (searching = new AbortController());
       ctx.cloud.api.candidates(target.tenantId, target.projectId, query, abort.signal).then(
@@ -150,7 +149,7 @@ export function createPersonFinder(ctx: AppContext, target: ProjectTarget, o: Pe
         (e: unknown) => {
           if (abort.signal.aborted || !o.open()) return;
           hide();
-          o.say(failureText(e, 'Kişi aranamadı'), 'error');
+          o.say(failureText(e, SHARE_TEXTS.find.failed), 'error');
         },
       );
     }, SEARCH_MS) as unknown as number;
