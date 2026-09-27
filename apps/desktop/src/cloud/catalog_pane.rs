@@ -125,10 +125,9 @@ impl App {
             );
         }
         if plan.tabs.is_some() && c.tab == Tab::History {
-            body = body.push(
-                muted("Geçmiş (revizyonlar ve kontrol noktaları) masaüstüne henüz taşınmadı; web uygulamasında açılabilir.")
-                    .width(Fill),
-            );
+            for part in self.history_tab(p) {
+                body = body.push(part);
+            }
         } else {
             body = body.push(if p.description.is_empty() {
                 muted("Açıklama yok.").width(Fill)
@@ -256,7 +255,7 @@ impl App {
             "Nesne" => waiting(d).unwrap_or_else(|| match d {
                 Details::Database(x) => plain(format!(
                     "{} nesne, {} katman",
-                    group(&x.feature_count),
+                    words::grouped(&x.feature_count),
                     x.layer_count
                 )),
                 Details::File {
@@ -264,7 +263,7 @@ impl App {
                     objects,
                     ..
                 } => plain(match objects {
-                    Some(n) => format!("{} nesne (revizyon {r})", group(n)),
+                    Some(n) => format!("{} nesne (revizyon {r})", words::grouped(n)),
                     None => format!("Nesne sayısı bilinmiyor (revizyon {r})"),
                 }),
                 _ => muted("Henüz kaydedilmiş revizyon yok").into(),
@@ -378,33 +377,5 @@ impl App {
         .spacing(10)
         .padding([14, 16])
         .into()
-    }
-}
-
-/// A decimal count with tr-TR's thousands (1284 → “1.284”); other text as it is.
-fn group(count: &str) -> String {
-    if count.is_empty() || !count.bytes().all(|b| b.is_ascii_digit()) {
-        return count.to_owned();
-    }
-    let mut out = String::new();
-    for (i, d) in count.chars().enumerate() {
-        if i > 0 && (count.len() - i).is_multiple_of(3) {
-            out.push('.');
-        }
-        out.push(d);
-    }
-    out
-}
-
-#[cfg(test)]
-mod tests {
-    use super::group;
-
-    #[test]
-    fn counts_are_grouped_as_the_web_groups_them() {
-        assert_eq!(group("1284"), "1.284");
-        assert_eq!(group("12"), "12");
-        assert_eq!(group("1234567"), "1.234.567");
-        assert_eq!(group("12a"), "12a");
     }
 }

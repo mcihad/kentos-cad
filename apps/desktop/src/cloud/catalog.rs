@@ -23,6 +23,7 @@ use kentos_contracts::{
 
 use crate::app::{App, Dialog, Message, Then};
 use crate::cloud::catalog_actions::{Act, Acting};
+use crate::cloud::catalog_history::History;
 use crate::cloud::{Event, plan, uuid, words};
 
 /// Projects asked for at once (the web's page).
@@ -148,6 +149,11 @@ pub struct Catalog {
     pub asking: Option<(Act, ProjectSummary)>,
     /// The action on its way.
     pub(super) acting: Option<Acting>,
+    /// The Geçmiş tab (catalog_history.rs).
+    pub history: History,
+    /// A project made here to select once the list shows it, and whether to
+    /// open it then (the web's `wanted` and `openAfter`).
+    pub(super) wanted: Option<(String, bool)>,
 }
 
 impl Catalog {
@@ -177,9 +183,9 @@ impl Catalog {
         self.device.iter().find(|k| k.info.id == id)
     }
 
-    /// Whether an action or a question holds the window.
+    /// Whether an action, a question or a form holds the window.
     pub fn busy(&self) -> bool {
-        self.acting.is_some() || self.asking.is_some()
+        self.acting.is_some() || self.asking.is_some() || self.history.busy()
     }
 
     /// The selection moved (or the list changed under it): its counts are
@@ -203,9 +209,6 @@ impl Catalog {
                     self.details_at = Some(Instant::now() + DETAILS_DELAY);
                 }
             }
-        }
-        if changed {
-            self.tab = Tab::Info;
         }
     }
 
@@ -289,6 +292,8 @@ impl App {
             status: None,
             asking: None,
             acting: None,
+            history: History::default(),
+            wanted: None,
         });
         self.dialog = Some(Dialog::Catalog);
         self.catalog_load(false)
@@ -444,7 +449,8 @@ impl App {
                 c.list = list;
                 c.select(None);
                 c.status = None;
-                return self.catalog_load(false);
+                let load = self.catalog_load(false);
+                return Task::batch([load, self.history_follow()]);
             }
             Event::CatalogSearch(text) => {
                 c.search = text;
@@ -462,7 +468,10 @@ impl App {
                 c.org = Some(org);
                 return self.catalog_load(false);
             }
-            Event::CatalogPick(id) => c.select(Some(id)),
+            Event::CatalogPick(id) => {
+                c.select(Some(id));
+                return self.history_follow();
+            }
             // ↑ ↓ Home End in the list (the web's list keys).
             Event::CatalogStep(step) => {
                 let ids: Vec<String> = match c.list {
@@ -484,8 +493,12 @@ impl App {
                     (Step::Up, Some(i)) => i.saturating_sub(1),
                 };
                 c.select(Some(ids[next].clone()));
+                return self.history_follow();
             }
-            Event::CatalogTab(tab) => c.tab = tab,
+            Event::CatalogTab(tab) => {
+                c.tab = tab;
+                return self.history_follow();
+            }
             Event::CatalogHover(id) => c.hovered = id,
             Event::CatalogMore => {
                 if c.next.is_some() && c.loading.is_none() {
@@ -588,10 +601,35 @@ impl App {
                     return self.catalog_load(false);
                 }
                 page(c, more, result);
-                return self.came_online();
+                let made = self.catalog_listed();
+                return Task::batch([made, self.history_follow(), self.came_online()]);
             }
             _ => {}
         }
+        Task::none()
+    }
+}
+
+impl App {
+    /// After a page: a project made here (a restored point) is opened as
+    /// soon as the list shows it; a later list opens nothing by itself (the
+    /// web's `paintList`).
+    fn catalog_listed(&mut self) -> Task<Message> {
+        let Some(c) = self.cloud.catalog.as_mut() else {
+            return Task::none();
+        };
+        let Some((id, open)) = c.wanted.take() else {
+            return Task::none();
+        };
+        if !open {
+            return Task::none();
+        }
+        if c.picked.as_deref() == Some(id.as_str()) {
+            return self.catalog_event(Event::CatalogOpen);
+        }
+        c.status = Some(Said::info(
+            "Yeni proje oluşturuldu ama bu listede görünmüyor; “Projelerim”de arayıp açın.",
+        ));
         Task::none()
     }
 }
@@ -665,10 +703,13 @@ fn page(c: &mut Catalog, more: bool, result: Result<ProjectPage, ApiFailure>) {
             c.total = page.total;
             c.next = page.next;
             c.retention = page.trash_retention_days;
+            let listed = |id: &String| c.projects.iter().any(|p| &p.id == id);
             let keep = c
-                .picked
-                .clone()
-                .filter(|id| c.projects.iter().any(|p| &p.id == id));
+                .wanted
+                .as_ref()
+                .map(|(id, _)| id.clone())
+                .filter(listed)
+                .or_else(|| c.picked.clone().filter(listed));
             c.select(keep);
         }
         Err(failure) => {

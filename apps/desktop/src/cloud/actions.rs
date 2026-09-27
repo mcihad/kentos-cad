@@ -86,6 +86,13 @@ pub enum Settle {
         crate::cloud::catalog_actions::Act,
         Box<kentos_contracts::ProjectSummary>,
     ),
+    /// A checkpoint of the open project, named once its edits went (catalog_history.rs).
+    Checkpoint(
+        Box<(
+            kentos_contracts::ProjectSummary,
+            kentos_contracts::CheckpointCreate,
+        )>,
+    ),
 }
 
 /// A failed request as a sentence: the server's words, or what to do when it
@@ -354,6 +361,10 @@ impl App {
             }
             Some(Settle::Trash) => self.send_trash(),
             Some(Settle::Catalog(act, p)) => self.catalog_send(act, *p),
+            Some(Settle::Checkpoint(what)) => {
+                let (p, input) = *what;
+                self.checkpoint_send(&p, input)
+            }
             None => Task::none(),
         }
     }

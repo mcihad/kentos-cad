@@ -18,17 +18,17 @@ use crate::cloud::catalog_actions::{Act, Acted};
 use crate::cloud::tests::{PROJECT, cloud, database, last_said, page, said, signed_in, summary};
 use crate::cloud::{Event, plan};
 
-const SECOND: &str = "0199aaaa-0000-7000-8000-00000000000b";
+pub(super) const SECOND: &str = "0199aaaa-0000-7000-8000-00000000000b";
 
 /// A project the account owns with every right.
-fn owned(id: &str, name: &str) -> ProjectSummary {
+pub(super) fn owned(id: &str, name: &str) -> ProjectSummary {
     let mut p = summary(id, name, ProjectStorage::Database);
     p.access.permissions = ProjectPermission::ALL.to_vec();
     p
 }
 
 /// The catalog on `view`, its first page answered with `projects`.
-fn listed(app: &mut App, view: CatalogView, projects: Vec<ProjectSummary>) {
+pub(super) fn listed(app: &mut App, view: CatalogView, projects: Vec<ProjectSummary>) {
     if app.cloud.catalog.is_none() {
         let _ = app.run("cloud.open");
     }
@@ -52,12 +52,12 @@ fn listed(app: &mut App, view: CatalogView, projects: Vec<ProjectSummary>) {
     );
 }
 
-fn catalog(app: &App) -> &crate::cloud::Catalog {
+pub(super) fn catalog(app: &App) -> &crate::cloud::Catalog {
     app.cloud.catalog.as_ref().expect("the window")
 }
 
 /// The action on its way: its id.
-fn acting(app: &App) -> u64 {
+pub(super) fn acting(app: &App) -> u64 {
     catalog(app)
         .acting
         .as_ref()
@@ -191,13 +191,13 @@ fn the_details_are_asked_once_the_selection_rests() {
         },
     );
     assert!(matches!(catalog(&app).details, Details::Database(_)));
-    // The same project picked again keeps them; the tab goes back to Bilgiler on another.
+    // The same project picked again keeps them; the tab stays as it was on another (the web's).
     cloud(&mut app, Event::CatalogTab(Tab::History));
     cloud(&mut app, Event::CatalogPick(PROJECT.into()));
     assert!(matches!(catalog(&app).details, Details::Database(_)));
     assert_eq!(catalog(&app).tab, Tab::History);
     cloud(&mut app, Event::CatalogPick(SECOND.into()));
-    assert_eq!(catalog(&app).tab, Tab::Info);
+    assert_eq!(catalog(&app).tab, Tab::History);
 }
 
 #[test]
@@ -578,7 +578,63 @@ fn screens() {
     let mut shared = project(10, "Mehmet'in aplikasyon işi", ProjectType::Cad, false);
     shared.owner_name = "Mehmet Kaya".into();
     shared.access.role = ProjectRole::Editor;
-    let scenes = ["projelerim", "cop", "soru-cop", "paylasilan", "bos-arama"];
+    let scenes = [
+        "projelerim",
+        "cop",
+        "soru-cop",
+        "paylasilan",
+        "bos-arama",
+        "gecmis-veritabani",
+        "gecmis-dosya",
+        "gecmis-form",
+        "gecmis-geri-yukle",
+        "gecmis-sil",
+    ];
+    // The history of the web's pictures (cloud-shots.mjs).
+    let checkpoint =
+        |id: &str, name: &str, note: &str, kind, revision: &str| kentos_contracts::Checkpoint {
+            id: id.into(),
+            name: name.into(),
+            note: (!note.is_empty()).then(|| note.into()),
+            kind,
+            revision: revision.into(),
+            size: "1638".into(),
+            sha256: "a".repeat(64),
+            objects: Some("6".into()),
+            created_by: "0199aaaa-0000-7000-8000-00000000a1a1".into(),
+            created_by_name: "Ayşe Yılmaz".into(),
+            created_at: "2026-09-27T09:54:00Z".into(),
+        };
+    let snapshots = vec![
+        checkpoint(
+            "0199aaaa-0000-7000-8000-0000000000c1",
+            "Belediyeye teslim",
+            "İmar müdürlüğüne gönderilen sürüm.",
+            kentos_contracts::CheckpointKind::Snapshot,
+            "1",
+        ),
+        checkpoint(
+            "0199aaaa-0000-7000-8000-0000000000c2",
+            "Teslim öncesi",
+            "Son düzeltmelerden önce.",
+            kentos_contracts::CheckpointKind::Snapshot,
+            "1",
+        ),
+    ];
+    let revisions: Vec<kentos_contracts::FileRevision> = (1..=5)
+        .rev()
+        .map(|n| kentos_contracts::FileRevision {
+            revision: n.to_string(),
+            size: 1600 + 50 * n,
+            sha256: "b".repeat(64),
+            created_by: "u2".into(),
+            created_by_name: "Mehmet Demir".into(),
+            created_at: "2026-09-27T09:56:00Z".into(),
+            objects: Some((n + 2).to_string()),
+        })
+        .collect();
+    let mut kadastro = project(11, "Kadastro paftası 2026", ProjectType::Cad, false);
+    kadastro.storage = ProjectStorage::File;
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
             for scene in scenes {
@@ -604,6 +660,73 @@ fn screens() {
                     "bos-arama" => {
                         listed(&mut app, CatalogView::Mine, Vec::new());
                         app.cloud.catalog.as_mut().expect("open").search = "zzz".into();
+                    }
+                    "gecmis-dosya" => {
+                        // The web's file project: “Kadastro paftası 2026”, first in the list.
+                        let mut list: Vec<ProjectSummary> = mine
+                            .iter()
+                            .filter(|p| p.name != kadastro.name)
+                            .cloned()
+                            .collect();
+                        list.insert(0, kadastro.clone());
+                        listed(&mut app, CatalogView::Mine, list);
+                        cloud(&mut app, Event::CatalogPick(kadastro.id.clone()));
+                        cloud(&mut app, Event::CatalogTab(Tab::History));
+                        if let Some(id) = catalog(&app).history.request() {
+                            let mut named = snapshots[0].clone();
+                            named.kind = kentos_contracts::CheckpointKind::Revision;
+                            named.revision = "3".into();
+                            cloud(
+                                &mut app,
+                                Event::HistoryLoaded {
+                                    id,
+                                    result: Ok(crate::cloud::history::HistoryData {
+                                        storage: ProjectStorage::File,
+                                        revisions: Some(kentos_contracts::FileRevisions {
+                                            current: Some("5".into()),
+                                            revisions: revisions.clone(),
+                                        }),
+                                        checkpoints: Some(vec![named]),
+                                    }),
+                                },
+                            );
+                        }
+                    }
+                    "gecmis-veritabani" | "gecmis-form" | "gecmis-geri-yukle" | "gecmis-sil" => {
+                        listed(&mut app, CatalogView::Mine, mine.clone());
+                        cloud(&mut app, Event::CatalogPick(ada.id.clone()));
+                        cloud(&mut app, Event::CatalogTab(Tab::History));
+                        if let Some(id) = catalog(&app).history.request() {
+                            cloud(
+                                &mut app,
+                                Event::HistoryLoaded {
+                                    id,
+                                    result: Ok(crate::cloud::history::HistoryData {
+                                        storage: ProjectStorage::Database,
+                                        revisions: None,
+                                        checkpoints: Some(snapshots.clone()),
+                                    }),
+                                },
+                            );
+                        }
+                        match scene {
+                            "gecmis-form" => {
+                                cloud(&mut app, Event::HistoryCreate);
+                                cloud(&mut app, Event::HistoryName("Teslim öncesi".into()));
+                            }
+                            "gecmis-geri-yukle" => cloud(
+                                &mut app,
+                                Event::HistoryRestore(
+                                    crate::cloud::catalog_history::Point::Checkpoint(
+                                        snapshots[0].clone(),
+                                    ),
+                                ),
+                            ),
+                            "gecmis-sil" => {
+                                cloud(&mut app, Event::HistoryRemove(snapshots[1].clone()));
+                            }
+                            _ => {}
+                        }
                     }
                     _ => {
                         listed(&mut app, CatalogView::Mine, mine.clone());
