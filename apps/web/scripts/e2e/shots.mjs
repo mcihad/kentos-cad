@@ -17,7 +17,9 @@
 // empty history); layout (panels, sizes and toolbox as kept, sizes kept larger than the window shown within it, the
 // ribbon's kept tab, quick access and split choices, folded); modeldesigner (Model tasarımcısı: a new model, the
 // built-in model's copy, an input, a step and a source list, a wire dragged and its menu, a step with problems, a chain,
-// a number input, the tools searched and one carried, the unsaved question).
+// a number input, the tools searched and one carried, the unsaved question); ribbon (the key tips on the tabs, on
+// Giriş and narrowed, the quick access bar's menu, right clicks on a command, an added one, a fixed one and a tab, a
+// tool's methods and a family under their split buttons, the folded ribbon open).
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { createServer } from 'vite';
@@ -913,6 +915,61 @@ SCENES.modeldesigner = [
     },
   },
 ].map((s) => ({ close: (ui) => closeModelDesigner(ui), ...s }));
+
+// The ribbon (ui/ribbon/ribbonPlan.ts, keytips.ts; docs/specs/ribbon.md): its key tips on the tabs and the quick
+// access bar, then on Giriş's controls, then narrowed by a typed letter; the bar's menu; a right click on a command
+// off the bar, on one added to it, on a fixed one and on a tab; a tool's methods and a family under their split
+// buttons; the folded ribbon open over the drawing. Each scene starts from a bar with two added commands and puts
+// the classic shell and the layout back after.
+const RIBBON_BAR = { ribbonQuickAccess: ['view.zoomExtents', 'tool.line'], ribbonTab: 'home', ribbonCollapsed: false };
+async function ribbonOn(ui, fields = {}) {
+  await ui.eval(layoutSet({ ...RIBBON_BAR, ...fields }));
+  await shellTo(ui, 'ribbon');
+}
+async function ribbonOff(ui) {
+  await ui.escapeAll(3);
+  await shellTo(ui, 'classic');
+  await ui.eval(LAYOUT_BACK);
+  await ui.sleep(200);
+}
+/** The key tips shown (F6), then the letters typed one by one. */
+async function keyTips(ui, letters = '') {
+  await ui.eval(`window.kentos.commands.execute('view.keyTips')`);
+  await ui.waitFor(`!!document.querySelector('.keytips__tip')`);
+  for (const ch of letters) {
+    await ui.key(ch);
+    await ui.sleep(250);
+  }
+  await ui.sleep(400);
+}
+/** A right click on an element of the ribbon, and the menu it opens. */
+async function rightClick(ui, sel) {
+  await ui.contextClick(...(await ui.eval(centreOf(sel))));
+  await ui.waitFor(`!!document.querySelector('.menu')`);
+  await ui.sleep(300);
+}
+SCENES.ribbon = [
+  { id: 'keytips-tabs', open: async (ui) => (await ribbonOn(ui), await keyTips(ui)) },
+  { id: 'keytips-controls', open: async (ui) => (await ribbonOn(ui), await keyTips(ui, 'gi')) },
+  { id: 'keytips-typed', open: async (ui) => (await ribbonOn(ui), await keyTips(ui, 'gik')) },
+  { id: 'bar-menu', open: async (ui) => (await ribbonOn(ui), await ui.clickSel('.ribbon__qat-more'), await ui.waitFor(`!!document.querySelector('.menu')`), await ui.sleep(300)) },
+  { id: 'menu-add', open: async (ui) => (await ribbonOn(ui), await rightClick(ui, '.ribbon__strip [data-command="tool.polyline"]')) },
+  { id: 'menu-remove', open: async (ui) => (await ribbonOn(ui), await rightClick(ui, '.ribbon__qat [data-command="tool.line"]')) },
+  { id: 'menu-fixed', open: async (ui) => (await ribbonOn(ui), await rightClick(ui, '.ribbon__qat [data-command="file.save"]')) },
+  { id: 'menu-elsewhere', open: async (ui) => (await ribbonOn(ui), await rightClick(ui, '.ribbon__tab[data-tab="draw"]')) },
+  {
+    id: 'split-methods',
+    open: async (ui) => (await ribbonOn(ui), await ui.clickSel('.ribbon__strip [data-split="circle"] .rsplit__arrow'), await ui.waitFor(`!!document.querySelector('.menu')`), await ui.sleep(300)),
+  },
+  {
+    id: 'split-family',
+    open: async (ui) => (await ribbonOn(ui, { ribbonTab: 'draw' }), await ui.clickSel('.ribbon__strip [data-split="rectangle"] .rsplit__arrow'), await ui.waitFor(`!!document.querySelector('.menu')`), await ui.sleep(300)),
+  },
+  {
+    id: 'folded-open',
+    open: async (ui) => (await ribbonOn(ui, { ribbonCollapsed: true }), await ui.clickSel('.ribbon__tab[data-tab="home"]'), await ui.sleep(500)),
+  },
+].map((s) => ({ close: (ui) => ribbonOff(ui), ...s }));
 
 SCENES.svgedit = [
   { id: 'new', open: (ui) => openSvg(ui) },

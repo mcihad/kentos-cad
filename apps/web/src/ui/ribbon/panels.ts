@@ -7,6 +7,7 @@ import { icon } from '../icons';
 import { colorField, layerField, lineTypeField, scaleField, weightField } from '../toolbar/fields';
 import { tooltip } from '../widgets/tooltip';
 import { commandControl, menuControl, overflowMenu, splitControl, type Control, type ControlHost } from './controls';
+import { RIBBON_TEXTS } from './ribbonPlan';
 
 /**
  * How much of a panel shows. The ribbon lowers levels, rightmost panels
@@ -88,7 +89,7 @@ export class PanelView {
     const more = overflow
       ? h(
           'button',
-          { class: 'rpanel__more', type: 'button', 'aria-haspopup': 'menu', 'aria-expanded': 'false', 'aria-label': `${model.label}: diğer araçlar`, dataset: { commands: overflow.join(' ') } },
+          { class: 'rpanel__more', type: 'button', 'aria-haspopup': 'menu', 'aria-expanded': 'false', 'aria-label': RIBBON_TEXTS.panelMore(model.label), dataset: { commands: overflow.join(' ') } },
           h('span', { class: 'rpanel__label' }, model.label),
           icon('chevronDown', 10),
         )
@@ -111,7 +112,7 @@ export class PanelView {
           overflowMenu(ctx, overflow, more, host, () => more.setAttribute('aria-expanded', 'false')).focusFirst();
         }),
       );
-      d.add(tooltip(more, () => ({ title: `${model.label}: diğer araçlar`, description: overflow.map((id) => ctx.commands.get(id)?.title ?? id).join(' · ') })));
+      d.add(tooltip(more, () => ({ title: RIBBON_TEXTS.panelMore(model.label), description: overflow.map((id) => ctx.commands.get(id)?.title ?? id).join(' · ') })));
     }
     this.el = h(
       'div',

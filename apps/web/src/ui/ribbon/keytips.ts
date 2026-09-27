@@ -85,6 +85,46 @@ export function assignKeyTips(labels: readonly string[], reserved: ReadonlySet<s
   return out;
 }
 
+/**
+ * The first level's tips: a digit for each of the first nine quick access
+ * buttons that can be used now, then a letter or two for each visible tab,
+ * never a digit.
+ */
+export function firstLevelTips(quickAccess: number, tabLabels: readonly string[]): { quickAccess: string[]; tabs: string[] } {
+  const digits = Array.from({ length: Math.min(9, quickAccess) }, (_, i) => String(i + 1));
+  return { quickAccess: digits, tabs: assignKeyTips(tabLabels, new Set(digits)) };
+}
+
+/** What a key does while the tips show. */
+export type KeyTipStep =
+  /** A tip typed in full: its control runs (a tab opens and its controls get tips). */
+  | { kind: 'run'; tip: string }
+  /** The start of one or more tips: the others dim; `typed` is what is typed so far. */
+  | { kind: 'typed'; typed: string }
+  /** Esc at the open tab's controls: back to the tabs. */
+  | { kind: 'back' }
+  /** The tips go away: Esc at the tabs, or a key that is not one letter or digit, or one held with Ctrl or ⌘. */
+  | { kind: 'hide' }
+  /** Nothing happens: Alt or Shift alone, or a letter no tip starts with. */
+  | { kind: 'ignore' };
+
+/**
+ * A key pressed while the tips show, at a level, with `typed` letters so
+ * far. Esc takes back what was typed, then goes back a level, then away;
+ * Backspace takes back one letter. A letter (Turkish letters folded) runs
+ * the tip it completes or narrows to the tips it starts.
+ */
+export function keyTipStep(level: 'tabs' | 'controls', typed: string, tips: readonly string[], key: string, held: { ctrl?: boolean; meta?: boolean } = {}): KeyTipStep {
+  if (key === 'Alt' || key === 'Shift') return { kind: 'ignore' };
+  if (key === 'Escape') return typed ? { kind: 'typed', typed: '' } : level === 'controls' ? { kind: 'back' } : { kind: 'hide' };
+  if (key === 'Backspace' && typed) return { kind: 'typed', typed: typed.slice(0, -1) };
+  const ch = lettersOf(key);
+  if (ch.length !== 1 || held.ctrl || held.meta) return { kind: 'hide' };
+  const next = typed + ch;
+  if (tips.includes(next)) return { kind: 'run', tip: next };
+  return tips.some((t) => t.startsWith(next)) ? { kind: 'typed', typed: next } : { kind: 'ignore' };
+}
+
 /** Label of a control: its aria-label, else its text. */
 function labelOf(el: HTMLElement): string {
   return el.getAttribute('aria-label') ?? el.textContent ?? '';
@@ -135,19 +175,19 @@ export class KeyTips {
     if (!this.layer || !this.level) return;
     this.typed = '';
     const items: { label: string; el: HTMLElement; run: () => void }[] = [];
-    let reserved = new Set<string>();
     const fixed: { tip: string; el: HTMLElement; run: () => void }[] = [];
+    let tips: string[];
     if (this.level.kind === 'tabs') {
-      this.host.quickAccess().forEach((el, i) => i < 9 && fixed.push({ tip: String(i + 1), el, run: () => this.press(el) }));
-      reserved = new Set(fixed.map((f) => f.tip));
-      for (const t of this.host.tabs()) items.push({ label: t.label, el: t.el, run: () => this.openTab(t.id) });
+      const bar = this.host.quickAccess();
+      const tabs = this.host.tabs();
+      const first = firstLevelTips(bar.length, tabs.map((t) => t.label));
+      first.quickAccess.forEach((tip, i) => fixed.push({ tip, el: bar[i], run: () => this.press(bar[i]) }));
+      for (const t of tabs) items.push({ label: t.label, el: t.el, run: () => this.openTab(t.id) });
+      tips = first.tabs;
     } else {
       for (const el of this.host.controls()) items.push({ label: labelOf(el), el, run: () => this.press(el) });
+      tips = assignKeyTips(items.map((i) => i.label));
     }
-    const tips = assignKeyTips(
-      items.map((i) => i.label),
-      reserved,
-    );
     this.tips = [...fixed, ...items.map((it, i) => ({ tip: tips[i], el: it.el, run: it.run }))]
       .filter((t) => t.tip)
       .map((t) => ({ ...t, badge: this.badge(t.tip, t.el) }));
@@ -195,35 +235,30 @@ export class KeyTips {
 
   private key(e: KeyboardEvent): void {
     if (!this.level) return;
+    const step = keyTipStep(
+      this.level.kind,
+      this.typed,
+      this.tips.map((t) => t.tip),
+      e.key,
+      { ctrl: e.ctrlKey, meta: e.metaKey },
+    );
+    // Alt and Shift pass (Shift+letter types the same letter); every other key is the tips'.
     if (e.key === 'Alt' || e.key === 'Shift') return;
     e.preventDefault();
     e.stopPropagation();
-    if (e.key === 'Escape') {
-      if (this.typed) {
-        this.typed = '';
-        this.mark();
-      } else if (this.level.kind === 'controls') {
+    switch (step.kind) {
+      case 'run':
+        return this.tips.find((t) => t.tip === step.tip)?.run();
+      case 'typed':
+        this.typed = step.typed;
+        return this.mark();
+      case 'back':
         this.level = { kind: 'tabs' };
-        this.render();
-      } else this.hide();
-      return;
-    }
-    if (e.key === 'Backspace' && this.typed) {
-      this.typed = this.typed.slice(0, -1);
-      this.mark();
-      return;
-    }
-    const ch = lettersOf(e.key);
-    if (ch.length !== 1 || e.ctrlKey || e.metaKey) {
-      this.hide();
-      return;
-    }
-    const typed = this.typed + ch;
-    const exact = this.tips.find((t) => t.tip === typed);
-    if (exact) return exact.run();
-    if (this.tips.some((t) => t.tip.startsWith(typed))) {
-      this.typed = typed;
-      this.mark();
+        return this.render();
+      case 'hide':
+        return this.hide();
+      case 'ignore':
+        return;
     }
   }
 

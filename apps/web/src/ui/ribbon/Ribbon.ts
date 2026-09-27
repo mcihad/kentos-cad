@@ -1,7 +1,7 @@
 import '../../styles/ribbon.css';
 import type { AppContext } from '../../app/context';
 import { commandItem, menuById, resolveMenu } from '../../app/menus';
-import { panelCommands, QUICK_ACCESS, quickAccessOf, ribbonTabs, startTab, type RibbonTab } from '../../app/ribbon';
+import { panelCommands, quickAccessOf, ribbonTabs, startTab, type RibbonTab } from '../../app/ribbon';
 import { filterOf } from '../../app/workspaces';
 import { fullscreenButton } from '../shell/fullscreenButton';
 import { DisposableStore, listen } from '../../core/disposable';
@@ -14,10 +14,8 @@ import { tooltip } from '../widgets/tooltip';
 import { commandControl, type ControlHost } from './controls';
 import { KeyTips } from './keytips';
 import { LEVELS, PanelView, type Level, type PanelHost } from './panels';
+import { commandMenu, quickAccessMenu, RIBBON_TEXTS, ribbonMenu, withQuickAccess, type RibbonRow } from './ribbonPlan';
 import { RibbonSearch } from './search';
-
-/** Commands offered for the quick access bar besides what the user adds from the ribbon. */
-const QUICK_ACCESS_OFFERS = ['file.new', 'file.open', 'file.saveAs', 'edit.paste', 'view.zoomExtents', 'tool.zoomWindow', 'tool.pan', 'tools.options', 'view.theme.toggle'];
 
 /** One tab's panels, built the first time the tab opens and kept until the ribbon closes. */
 class TabView {
@@ -90,7 +88,7 @@ export class Ribbon extends Component {
       showTab: (id) => this.select(id, { focus: false }),
     };
 
-    this.qat = h('div', { class: 'ribbon__qat', role: 'toolbar', 'aria-label': 'Hızlı erişim' });
+    this.qat = h('div', { class: 'ribbon__qat', role: 'toolbar', 'aria-label': RIBBON_TEXTS.quickAccess });
     this.tabList = h('div', { class: 'ribbon__tabs', role: 'tablist', 'aria-label': 'Şerit sekmeleri' });
     this.search = new RibbonSearch(ctx, this.d, {
       where: (id) => this.where(id),
@@ -101,7 +99,7 @@ export class Ribbon extends Component {
     const dirty = h('span', { class: 'menubar__dirty', title: 'Kaydedilmemiş değişiklikler var' });
     const crs = h('button', { class: 'ribbon__crs', type: 'button' }, icon('crs', 14), h('span', { class: 'ribbon__crs-name' }));
     const help = h('button', { class: 'ribbon__icon', type: 'button', 'aria-label': 'Yardım', 'aria-haspopup': 'menu' }, icon('help', 16));
-    const fold = h('button', { class: 'ribbon__icon', type: 'button', 'aria-label': 'Şeridi daralt' }, icon('chevronUp', 16));
+    const fold = h('button', { class: 'ribbon__icon', type: 'button', 'aria-label': RIBBON_TEXTS.fold }, icon('chevronUp', 16));
     this.bar = h(
       'div',
       { class: 'ribbon__bar' },
@@ -145,14 +143,14 @@ export class Ribbon extends Component {
     );
     this.d.add(tooltip(help, () => ({ title: 'Yardım', description: 'Klavye kısayolları ve KentOS CAD hakkında.' })));
     this.d.add(listen(fold, 'click', () => ctx.commands.execute('view.ribbonCollapse')));
-    this.d.add(tooltip(fold, () => ({ title: ui.ribbonCollapsed.value ? 'Şeridi sabitle' : 'Şeridi daralt', shortcut: 'Ctrl+F1', description: 'Daraltılmış şerit bir sekmeye tıklayınca çizimin üstünde açılır.' })));
+    this.d.add(tooltip(fold, () => ({ title: ui.ribbonCollapsed.value ? RIBBON_TEXTS.pin : RIBBON_TEXTS.fold, shortcut: 'Ctrl+F1', description: RIBBON_TEXTS.foldTip })));
 
     // Folded to the tab row, or open.
     this.d.add(
       ui.ribbonCollapsed.subscribe((c) => {
         this.el.toggleAttribute('data-collapsed', c);
         fold.replaceChildren(icon(c ? 'chevronDown' : 'chevronUp', 16));
-        fold.setAttribute('aria-label', c ? 'Şeridi sabitle' : 'Şeridi daralt');
+        fold.setAttribute('aria-label', c ? RIBBON_TEXTS.pin : RIBBON_TEXTS.fold);
         this.closePeek();
         this.scheduleFit();
       }, true),
@@ -189,6 +187,15 @@ export class Ribbon extends Component {
       controls: () => [...this.focusables(), ...(this.pop ? [...this.pop.el.querySelectorAll<HTMLElement>('button:not(:disabled)')] : [])],
     });
     this.d.add(() => this.keyTips.hide());
+    // A right click the controls did not take (a tab, a menu button, a panel's title, empty space) offers the fold,
+    // never the browser's own menu; a text field keeps its menu.
+    this.d.add(
+      listen<MouseEvent>(this.el, 'contextmenu', (e) => {
+        if (e.defaultPrevented || (e.target as Element).closest('input, textarea, [contenteditable]')) return;
+        e.preventDefault();
+        PopupMenu.open(this.rows(ribbonMenu()), { x: e.clientX, y: e.clientY });
+      }),
+    );
     this.bindKeys();
     this.bindAltTap();
     this.bindPeek();
@@ -526,60 +533,44 @@ export class Ribbon extends Component {
     const { ctx } = this;
     const host: ControlHost = this.host;
     const buttons = this.quickAccess().map((id) => commandControl(ctx, id, this.qatD, host, 'rbtn--qat rbtn--small rbtn--icon').el);
-    const more = h('button', { class: 'ribbon__qat-more', type: 'button', 'aria-label': 'Hızlı erişimi özelleştir', 'aria-haspopup': 'menu' }, icon('chevronDown', 12));
+    const more = h('button', { class: 'ribbon__qat-more', type: 'button', 'aria-label': RIBBON_TEXTS.customize, 'aria-haspopup': 'menu' }, icon('chevronDown', 12));
     this.qatD.add(
       listen<PointerEvent>(more, 'pointerdown', (e) => {
         if (e.button !== 0) return;
         e.preventDefault();
         more.setAttribute('aria-expanded', 'true');
-        PopupMenu.open(this.qatMenu(), more.getBoundingClientRect(), { owner: more, minWidth: 250, onClose: () => more.setAttribute('aria-expanded', 'false') });
+        PopupMenu.open(this.rows(quickAccessMenu(this.quickAccess(), (id) => !!this.ctx.commands.get(id))), more.getBoundingClientRect(), {
+          owner: more,
+          minWidth: 250,
+          onClose: () => more.setAttribute('aria-expanded', 'false'),
+        });
       }),
     );
-    this.qatD.add(tooltip(more, () => ({ title: 'Hızlı erişimi özelleştir', description: 'Şeritteki bir düğmeye sağ tıklayarak da ekleyebilirsiniz.' })));
+    this.qatD.add(tooltip(more, () => ({ title: RIBBON_TEXTS.customize, description: RIBBON_TEXTS.customizeTip })));
     this.qat.replaceChildren(...buttons, more);
     this.scheduleFit();
   }
 
-  private qatMenu(): MenuItem[] {
-    const { ctx } = this;
-    const current = this.quickAccess();
-    const item = (id: string): MenuItem => {
-      const cmd = ctx.commands.get(id);
-      const fixed = QUICK_ACCESS.includes(id);
-      const on = current.includes(id);
+  /** The plan's rows (ribbonPlan.ts) as menu items: a command's own row, or a quick access row that adds or takes off. */
+  private rows(rows: readonly RibbonRow[]): MenuItem[] {
+    return rows.map((r): MenuItem => {
+      if (r.kind === 'header' || r.kind === 'separator') return r;
+      if (r.kind === 'command') return commandItem(this.ctx, r.command);
+      const set = r.set;
       return {
-        label: cmd?.title ?? id,
-        checked: on,
-        disabled: fixed,
-        hint: fixed ? 'sabit' : undefined,
-        run: () => this.setQuickAccess(id, !on),
+        label: r.label ?? this.ctx.commands.get(r.command)?.title ?? r.command,
+        icon: r.icon,
+        checked: r.checked,
+        disabled: r.disabled,
+        hint: r.hint,
+        run: set === undefined ? undefined : () => this.ctx.ui.ribbonQuickAccess.set(withQuickAccess(this.ctx.ui.ribbonQuickAccess.value, r.command, set)),
       };
-    };
-    const offers = [...new Set([...current, ...QUICK_ACCESS_OFFERS])].filter((id) => ctx.commands.get(id));
-    return [{ kind: 'header', label: 'Hızlı erişim' }, ...offers.map(item), { kind: 'separator' }, commandItem(ctx, 'view.ribbonCollapse')];
+    });
   }
 
-  private setQuickAccess(id: string, on: boolean): void {
-    const list = this.ctx.ui.ribbonQuickAccess.value.filter((x) => x !== id);
-    this.ctx.ui.ribbonQuickAccess.set(on ? [...list, id] : list);
-  }
-
-  /** Right button on a ribbon command: add it to (or remove it from) the quick access bar. */
+  /** Right button on a ribbon command: add it to (or take it off) the quick access bar (ribbonPlan.ts `commandMenu`). */
   private commandMenu(id: string, at: { x: number; y: number }): void {
-    const fixed = QUICK_ACCESS.includes(id);
-    const on = this.quickAccess().includes(id);
-    PopupMenu.open(
-      [
-        fixed
-          ? { label: 'Hızlı erişimde (sabit)', icon: 'pin', disabled: true }
-          : on
-            ? { label: 'Hızlı erişimden kaldır', icon: 'close', run: () => this.setQuickAccess(id, false) }
-            : { label: 'Hızlı erişime ekle', icon: 'pin', run: () => this.setQuickAccess(id, true) },
-        { kind: 'separator' },
-        commandItem(this.ctx, 'view.ribbonCollapse'),
-      ],
-      at,
-    );
+    PopupMenu.open(this.rows(commandMenu(id, this.quickAccess())), at);
   }
 
   // ── Search: showing where a command lives ─────────────────────────────

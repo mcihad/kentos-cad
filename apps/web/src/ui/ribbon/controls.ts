@@ -1,6 +1,7 @@
 import type { AppContext } from '../../app/context';
 import { commandItem, resolveMenu, type SubmenuSpec } from '../../app/menus';
 import { splitChoiceKey, splitCurrent, type SplitEntry } from '../../app/ribbon';
+import { RIBBON_TEXTS, splitFace, splitMenu } from './ribbonPlan';
 import { listen, type DisposableStore } from '../../core/disposable';
 import { watchAll } from '../../core/signal';
 import { h } from '../dom';
@@ -101,7 +102,7 @@ export function commandControl(ctx: AppContext, id: string, d: DisposableStore, 
 /** Runs a split entry: the tool, then its method's option as if typed. */
 export function runEntry(ctx: AppContext, e: SplitEntry): boolean {
   if (!ctx.commands.execute(e.command)) return false;
-  if (e.option && !ctx.tools.active.input?.(e.option)) ctx.log.warn(`“${e.title}: ${e.label}” şu an başlatılamadı.`);
+  if (e.option && !ctx.tools.active.input?.(e.option)) ctx.log.warn(RIBBON_TEXTS.cannotStart(e.title, e.label));
   if (e.command.startsWith('tool.')) ctx.view.focus();
   return true;
 }
@@ -124,12 +125,12 @@ export function splitControl(ctx: AppContext, key: string, entries: readonly Spl
     const e = current();
     const cmd = ctx.commands.get(e.command);
     const icon20 = icon(cmd?.icon ?? 'more', 20);
-    const label = ribbonLabel(e.title);
-    main.replaceChildren(icon20, h('span', { class: 'rbtn__label rsplit__label' }, label));
-    arrow.replaceChildren(h('span', { class: 'rbtn__label rsplit__label' }, label), h('span', { class: 'rbtn__caret' }, icon('chevronDown', 12)));
+    const face = splitFace(e);
+    main.replaceChildren(icon20, h('span', { class: 'rbtn__label rsplit__label' }, face.label));
+    arrow.replaceChildren(h('span', { class: 'rbtn__label rsplit__label' }, face.label), h('span', { class: 'rbtn__caret' }, icon('chevronDown', 12)));
     main.dataset.command = e.command;
-    main.setAttribute('aria-label', e.option || e.label !== e.title ? `${e.title}: ${e.label}` : e.title);
-    arrow.setAttribute('aria-label', `${e.title}: diğer seçenekler`);
+    main.setAttribute('aria-label', face.aria);
+    arrow.setAttribute('aria-label', RIBBON_TEXTS.others(e.title));
     if (cmd?.pending) main.dataset.pending = '';
     else delete main.dataset.pending;
   };
@@ -143,12 +144,14 @@ export function splitControl(ctx: AppContext, key: string, entries: readonly Spl
   d.add(ctx.tools.activeId.subscribe(sync));
   d.add(listen<PointerEvent>(main, 'pointerdown', (e) => e.button === 0 && e.preventDefault()));
   d.add(listen(main, 'click', () => runEntry(ctx, current()) && host.afterRun()));
-  d.add(
-    listen<MouseEvent>(main, 'contextmenu', (e) => {
-      e.preventDefault();
-      host.commandMenu(current().command, { x: e.clientX, y: e.clientY });
-    }),
-  );
+  // The top and the arrow both stand for the choice on top: a right click offers it for the quick access bar.
+  for (const part of [main, arrow])
+    d.add(
+      listen<MouseEvent>(part, 'contextmenu', (e) => {
+        e.preventDefault();
+        host.commandMenu(current().command, { x: e.clientX, y: e.clientY });
+      }),
+    );
   d.add(
     tooltip(
       main,
@@ -156,26 +159,26 @@ export function splitControl(ctx: AppContext, key: string, entries: readonly Spl
         const e = current();
         const tip = commandTip(ctx, e.command);
         // A method names itself after the tool (Daire: 3 nokta).
-        return e.label !== e.title ? { ...tip, title: `${e.title}: ${e.label}`, description: e.description ?? tip.description, steps: e.option ? undefined : tip.steps } : tip;
+        return e.label !== e.title ? { ...tip, title: RIBBON_TEXTS.method(e.title, e.label), description: e.description ?? tip.description, steps: e.option ? undefined : tip.steps } : tip;
       },
       'bottom',
     ),
   );
   const open = (keyboard: boolean) => {
     arrow.setAttribute('aria-expanded', 'true');
-    // A tool's methods are listed under its name; a family lists its tools.
-    const methods = entries.every((e) => e.command === entries[0].command);
-    const items: MenuItem[] = entries.map((e) => ({
+    // A tool's methods are listed under its name; a family lists its tools (ribbonPlan.ts `splitMenu`).
+    const menu = splitMenu(entries);
+    const items: MenuItem[] = entries.map((e, i) => ({
       ...commandItem(ctx, e.command),
-      label: e.label,
-      hint: e.description,
+      label: menu.rows[i].label,
+      hint: menu.rows[i].hint,
       run: () => {
         splits.set({ ...splits.value, [key]: splitChoiceKey(e) });
         render();
         if (runEntry(ctx, e)) host.afterRun();
       },
     }));
-    const m = PopupMenu.open(methods ? [{ kind: 'header', label: entries[0].title }, ...items] : items, el.getBoundingClientRect(), {
+    const m = PopupMenu.open(menu.header ? [{ kind: 'header', label: menu.header }, ...items] : items, el.getBoundingClientRect(), {
       minWidth: 300,
       owner: el,
       onClose: () => arrow.setAttribute('aria-expanded', 'false'),
@@ -198,7 +201,7 @@ export function splitControl(ctx: AppContext, key: string, entries: readonly Spl
       }
     }),
   );
-  d.add(tooltip(arrow, () => ({ title: `${current().title}: diğer seçenekler`, description: entries.map((e) => e.label).join(' · ') }), 'bottom'));
+  d.add(tooltip(arrow, () => ({ title: RIBBON_TEXTS.others(current().title), description: entries.map((e) => e.label).join(' · ') }), 'bottom'));
   return { el, sync };
 }
 
