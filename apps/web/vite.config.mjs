@@ -139,6 +139,10 @@ export default defineConfig({
   // Agents' git worktrees live under .claude/worktrees: neither watched nor tested from here.
   server: { watch: { ignored: ['**/.claude/**'] } },
   test: {
+    // Transformed modules are kept on disk (node_modules/.vitest-cache, keyed by each file's content) and reused
+    // between runs. Without it Vitest's forks pool left a copy of every module in a new /tmp folder on each run,
+    // and /tmp here is a RAM disk.
+    fsModuleCache: true,
     setupFiles: ['src/wasm/testSetup.ts', 'src/style/svg/testSetup.ts'],
     exclude: ['**/node_modules/**', '**/dist/**', '**/.claude/**'],
     // Vitest empties stylesheets; these two are read as text by app/appearance.test.ts.
