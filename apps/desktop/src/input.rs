@@ -102,7 +102,9 @@ impl App {
                 }
                 // Sahneden seç's objects: the processing window opens again (processing/).
                 ViewChange::PickedObjects(keep) => {
-                    let _ = self.processing_picked_objects(keep);
+                    if !self.processing_picked_objects(keep) {
+                        let _ = self.builder_picked(keep);
+                    }
                 }
                 change => self.viewport.change(change),
             }
@@ -234,6 +236,13 @@ impl App {
         }
         let doc = self.document.as_ref();
         self.viewport.update(event.clone(), doc);
+        // No crosshair while the middle button pans (the web's `panFrom`): a
+        // pan reports itself, and the first plain move after it ends it.
+        match event {
+            viewport::Event::Panned { .. } => self.panning = true,
+            viewport::Event::Moved(_) | viewport::Event::Left => self.panning = false,
+            _ => {}
+        }
         match event {
             viewport::Event::Moved(at) => {
                 let world = self.viewport.world(at);
@@ -327,6 +336,10 @@ impl App {
 
     /// A key no text box captured, by ADR 0018's order (see the module).
     pub(crate) fn key(&mut self, press: KeyPress) -> Task<Message> {
+        // 0. İfade oluşturucu takes the keys its editor leaves (expression/).
+        if let Some(task) = self.builder_key(&press) {
+            return task;
+        }
         // 1. The application menu takes every key while it is open (app_menu.rs).
         if self.app_menu.is_some() {
             return self.app_menu_key(&press);

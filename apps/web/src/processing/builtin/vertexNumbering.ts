@@ -47,6 +47,8 @@ export const vertexNumbering = defineTool({
         { value: 'point', label: 'Seçilen noktaya en yakın', hint: 'Haritada gösterdiğiniz noktaya en yakın köşe' },
       ],
       default: 'northwest',
+      // Sahneden seç beside the choice: the start vertex picked on the drawing in one step (docs/adr/0088).
+      picks: { option: 'point', point: 'startPoint' },
     },
     { name: 'startPoint', label: 'Başlangıç noktası', type: 'point', description: 'Her alanda bu noktaya en yakın köşeden başlanır.', visibleWhen: (v: Shown) => v.start === 'point' },
     { name: 'prefix', label: 'Önek', type: 'string', default: 'P', allowEmpty: true, maxLength: 12, description: 'Numaranın başındaki yazı.' },

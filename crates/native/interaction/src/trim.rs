@@ -29,7 +29,7 @@ use crate::edge::{self, Hover, Outline};
 use crate::format::Format;
 use crate::log::Level;
 use crate::prompt::{Prompt, upper_tr};
-use crate::tool::{Context, Flow, Pointer, Preview, Tone, Tool};
+use crate::tool::{Context, Cursor, Flow, Pointer, Preview, Tone, Tool};
 use crate::{Vec2, js_trim};
 
 /// The trim tool's id: its command is `tool.trim`.
@@ -223,6 +223,11 @@ impl Boundary {
 }
 
 impl Tool for Boundary {
+    /// An object is picked (the web's `cursor = 'pick'`).
+    fn cursor(&self) -> Cursor {
+        Cursor::Pick
+    }
+
     fn id(&self) -> &'static str {
         match self.act {
             Act::Trim => TRIM_ID,

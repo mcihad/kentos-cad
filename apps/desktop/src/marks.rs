@@ -13,6 +13,10 @@
 //!   a path's mid grips as small hollow diamonds while their segment is 28 px
 //!   long; the grip being moved larger, in the drawing's ink.
 //!
+//! - the crosshair at the pointer (`drawCrosshair`): arms of the chosen
+//!   length (`appearance.crosshair`), shorter with a pick box while an
+//!   object is wanted; none for Kaydır or while the middle button pans.
+//!
 //! They change with every pointer move and hold one glyph or one box, so
 //! they are not scene parts; the selection's own highlight is (viewport.rs).
 
@@ -69,7 +73,49 @@ pub struct Marks {
     pub hot: Option<(Slot, usize)>,
     /// Nesne izleme's points and the alignment the cursor is locked to (tracking.rs).
     pub tracking: Option<TrackingMarks>,
+    /// The crosshair at the pointer, when the pointer is over the drawing.
+    pub crosshair: Option<Crosshair>,
     pub colors: MarkColors,
+}
+
+/// How long the crosshair's arms are (`appearance.crosshair`, the web's `CROSSHAIR_ARM`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum CrosshairSize {
+    Small,
+    #[default]
+    Medium,
+    /// Across the whole drawing.
+    Full,
+}
+
+impl CrosshairSize {
+    /// The setting's word: `small`, `medium`, `full`; anything else the default.
+    pub fn parse(word: &str) -> Self {
+        match word {
+            "small" => Self::Small,
+            "full" => Self::Full,
+            _ => Self::Medium,
+        }
+    }
+
+    /// An arm's length in pixels: 16, 40, or through the drawing; 55 % of it,
+    /// rounded, while an object is picked, unless across the drawing (the web's).
+    pub fn arm(self, pick: bool) -> f32 {
+        let arm = match self {
+            Self::Small => 16.0,
+            Self::Medium => 40.0,
+            Self::Full => return 1e5,
+        };
+        if pick { (arm * 0.55_f32).round() } else { arm }
+    }
+}
+
+/// The crosshair's look: its arms, and whether an object is picked (a
+/// shorter cross with a pick box, the web's `pick` cursor).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Crosshair {
+    pub size: CrosshairSize,
+    pub pick: bool,
 }
 
 /// What object tracking shows (the web's `drawObjectTracking`).
@@ -87,6 +133,7 @@ impl Marks {
             && self.select.is_none()
             && self.grips.is_empty()
             && self.tracking.is_none()
+            && self.crosshair.is_none()
     }
 }
 
@@ -99,7 +146,7 @@ impl<Message> canvas::Program<Message> for Marks {
         renderer: &Renderer,
         theme: &Theme,
         bounds: Rectangle,
-        _cursor: mouse::Cursor,
+        cursor: mouse::Cursor,
     ) -> Vec<canvas::Geometry> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let accent = Tokens::of(theme).accent;
@@ -115,6 +162,10 @@ impl<Message> canvas::Program<Message> for Marks {
             // On the pixel's middle, as the web strokes it.
             let at = Point::new(x.round() as f32 + 0.5, y.round() as f32 + 0.5);
             snap_marker(&mut frame, hit.kind, at, &self.colors);
+        }
+        // Last, over the rest, as the web draws it.
+        if let (Some(c), Some(at)) = (self.crosshair, cursor.position_in(bounds)) {
+            crosshair(&mut frame, c, at, bounds.size(), &self.colors);
         }
         vec![frame.into_geometry()]
     }
@@ -181,6 +232,37 @@ fn grips(
             edge(1.5, accent),
         );
     }
+}
+
+/// The web's `drawCrosshair`: the drawing's ink at 85 %, 1 px on the
+/// pixel's middle; a pick box 10 px across while an object is picked.
+fn crosshair(frame: &mut canvas::Frame, c: Crosshair, at: Point, area: Size, colors: &MarkColors) {
+    let (x, y) = (at.x.round() + 0.5, at.y.round() + 0.5);
+    // Across the drawing at most: a full arm reaches every edge.
+    let arm = c.size.arm(c.pick).min(area.width + area.height);
+    let gap = if c.pick { 5.0 } else { 0.0 };
+    let cross = Path::new(|b| {
+        b.move_to(Point::new(x - arm, y));
+        b.line_to(Point::new(x - gap, y));
+        b.move_to(Point::new(x + gap, y));
+        b.line_to(Point::new(x + arm, y));
+        b.move_to(Point::new(x, y - arm));
+        b.line_to(Point::new(x, y - gap));
+        b.move_to(Point::new(x, y + gap));
+        b.line_to(Point::new(x, y + arm));
+        if c.pick {
+            b.rectangle(
+                Point::new(x - gap, y - gap),
+                Size::new(gap * 2.0, gap * 2.0),
+            );
+        }
+    });
+    frame.stroke(
+        &cross,
+        Stroke::default()
+            .with_color(colors.fg.scale_alpha(0.85))
+            .with_width(1.0),
+    );
 }
 
 /// The web's `drawSelectionBox`.
@@ -372,3 +454,150 @@ fn snap_marker(frame: &mut canvas::Frame, kind: SnapKind, at: Point, colors: &Ma
         ..label
     });
 }
+
+impl crate::app::App {
+    /// The crosshair the marks draw at the pointer (the web's
+    /// `drawCrosshair`): the running tool's kind, the chosen arms; none for
+    /// Kaydır or while the middle button pans.
+    pub(crate) fn crosshair_mark(&self) -> Option<Crosshair> {
+        use kentos_interaction::Cursor;
+        match self.session.cursor() {
+            _ if self.panning => None,
+            Cursor::Grab => None,
+            cursor => Some(Crosshair {
+                size: self.crosshair,
+                pick: cursor == Cursor::Pick,
+            }),
+        }
+    }
+}
+
+#[cfg(test)]
+mod crosshair_tests {
+    use super::*;
+    use crate::app::Message;
+    use crate::files_testing::app_with_drawing;
+
+    #[test]
+    fn the_arms_are_the_webs_and_shorter_for_a_pick() {
+        use CrosshairSize::*;
+        assert_eq!((Small.arm(false), Small.arm(true)), (16.0, 9.0));
+        assert_eq!((Medium.arm(false), Medium.arm(true)), (40.0, 22.0));
+        assert_eq!((Full.arm(false), Full.arm(true)), (1e5, 1e5));
+        assert_eq!(CrosshairSize::parse("full"), Full);
+        assert_eq!(CrosshairSize::parse("?"), Medium);
+    }
+
+    #[test]
+    fn the_crosshair_follows_the_tool_the_setting_and_the_pan() {
+        let mut app = app_with_drawing();
+        let pick = |size| Some(Crosshair { size, pick: true });
+        // No command: the select tool picks objects.
+        assert_eq!(app.crosshair_mark(), pick(CrosshairSize::Medium));
+        // A drawing tool wants a point: the full cross.
+        let _ = app.update(Message::Run("tool.line"));
+        assert_eq!(
+            app.crosshair_mark(),
+            Some(Crosshair {
+                size: CrosshairSize::Medium,
+                pick: false
+            })
+        );
+        // Sil picks, Kaydır shows its hand instead.
+        let _ = app.update(Message::Run("tool.erase"));
+        assert_eq!(app.crosshair_mark(), pick(CrosshairSize::Medium));
+        let _ = app.update(Message::Run("tool.pan"));
+        assert_eq!(app.crosshair_mark(), None);
+        let _ = app.update(Message::Run("tool.cancel"));
+        // The setting's arms, kept through the settings window's Kaydet.
+        let _ = app
+            .settings
+            .choose(&[("appearance.crosshair", serde_json::json!("full"))]);
+        app.apply_settings();
+        assert_eq!(app.crosshair_mark(), pick(CrosshairSize::Full));
+        // None while the middle button pans; back with the next plain move.
+        let _ = app.update(Message::Viewport(crate::viewport::Event::Panned {
+            by: iced::Vector::new(4.0, 0.0),
+            at: iced::Point::new(100.0, 100.0),
+        }));
+        assert_eq!(app.crosshair_mark(), None);
+        let _ = app.update(Message::Viewport(crate::viewport::Event::Moved(
+            iced::Point::new(110.0, 100.0),
+        )));
+        assert_eq!(app.crosshair_mark(), pick(CrosshairSize::Full));
+    }
+
+    /// Pictures for the owner: the pick crosshair, the drawing tool's cross,
+    /// the full crosshair, with grid north and the scale bar
+    /// (`.run/shots/imlec-*`):
+    ///
+    /// ```text
+    /// cargo test -p kentos-desktop marks::crosshair_tests::screens -- --ignored --nocapture
+    /// ```
+    #[test]
+    #[ignore = "pictures for the owner, run by hand"]
+    fn screens() {
+        use iced::{Point, Size, mouse};
+        use kentos_ui::snapshot::Snapshot;
+
+        let _typography = crate::appearance::tests::TYPOGRAPHY.lock();
+        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+        std::fs::create_dir_all(&out).expect("a folder for the pictures");
+        let shot = |app: &mut crate::app::App, name: &str, size: Size, at: Point| {
+            let mut snapshot = Snapshot::new(size).expect("a renderer");
+            let mut update = |app: &mut crate::app::App, message| {
+                let _ = app.update(message);
+            };
+            snapshot.settle(app, crate::app::App::view, &mut update);
+            snapshot.step(
+                app,
+                crate::app::App::view,
+                &mut update,
+                &[iced::Event::Mouse(mouse::Event::CursorMoved {
+                    position: at,
+                })],
+            );
+            snapshot.settle(app, crate::app::App::view, &mut update);
+            let file = out.join(format!("{name}.png"));
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
+            println!("{}", file.display());
+        };
+        for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
+            let mut app = app_with_drawing();
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+            app.apply_settings();
+            let wide = Size::new(1440.0, 900.0);
+            let narrow = Size::new(1100.0, 650.0);
+            shot(
+                &mut app,
+                &format!("imlec-secim-1440{suffix}"),
+                wide,
+                Point::new(520.0, 470.0),
+            );
+            let _ = app.update(Message::Run("tool.line"));
+            shot(
+                &mut app,
+                &format!("imlec-cizgi-1100{suffix}"),
+                narrow,
+                Point::new(380.0, 360.0),
+            );
+            let _ = app.update(Message::Run("tool.cancel"));
+            let _ = app
+                .settings
+                .choose(&[("appearance.crosshair", serde_json::json!("full"))]);
+            app.apply_settings();
+            shot(
+                &mut app,
+                &format!("imlec-tam-1440{suffix}"),
+                wide,
+                Point::new(520.0, 470.0),
+            );
+        }
+    }
+}
+

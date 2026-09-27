@@ -118,10 +118,10 @@
       },
       "settings": {
         "total": 65,
-        "implemented": 41,
+        "implemented": 42,
         "partial": 12,
         "pending": 0,
-        "none": 11,
+        "none": 10,
         "n/a": 1
       },
       "storage": {
@@ -142,10 +142,10 @@
       },
       "screens": {
         "total": 63,
-        "implemented": 43,
+        "implemented": 44,
         "partial": 4,
         "pending": 0,
-        "none": 16,
+        "none": 15,
         "n/a": 0
       }
     },
@@ -8395,7 +8395,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -11704,8 +11704,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/expression/ (ADR 0100 §5; İşlemler'in ifade alanındaki ε)"
     },
     {
       "id": "apps/web/src/ui/io/CoordExportDialog.ts#openCoordExport",
@@ -16948,6 +16949,7 @@
     "toolbox": "<rect x=\"3\" y=\"3\" width=\"6\" height=\"6\" rx=\"1\"/><rect x=\"11\" y=\"3\" width=\"6\" height=\"6\" rx=\"1\"/><rect x=\"3\" y=\"11\" width=\"6\" height=\"6\" rx=\"1\"/><rect x=\"11\" y=\"11\" width=\"6\" height=\"6\" rx=\"1\"/>",
     "terminal": "<rect x=\"2.5\" y=\"4\" width=\"15\" height=\"12\" rx=\"1\"/><path d=\"m6 8 2.5 2L6 12M10.5 12.5h3.5\"/>",
     "snap": "<rect x=\"6.5\" y=\"6.5\" width=\"7\" height=\"7\"/><path d=\"M10 2v4.5M10 13.5V18M2 10h4.5M13.5 10H18\"/>",
+    "target": "<circle cx=\"10\" cy=\"10\" r=\"5.9\"/><path d=\"M10 1.9v3.4M10 14.7v3.4M1.9 10h3.4M14.7 10h3.4\"/><circle cx=\"10\" cy=\"10\" r=\"1.3\" fill=\"currentColor\" stroke=\"none\"/>",
     "grid": "<path d=\"M3 7h14M3 13h14M7 3v14M13 3v14\"/>",
     "lineWeight": "<path d=\"M3 5h14\"/><path d=\"M3 10h14\" stroke-width=\"2.4\"/><path d=\"M3 15.5h14\" stroke-width=\"3.6\"/>",
     "ortho": "<path d=\"M4 3.5v12.5h12.5\"/><path d=\"M4 12h4v4\"/>",

@@ -208,6 +208,8 @@ pub enum Message {
     Processing(crate::processing::Event),
     /// Katman stili (style/layer_style/).
     LayerStyle(crate::style::layer_style::Event),
+    /// İfade oluşturucu over an expression field's window (expression/).
+    Builder(crate::expression::Event),
     /// Stil yöneticisi (style/manager/).
     StyleManager(Box<crate::style::manager::Event>),
     /// Lejant (style/legend/).
@@ -378,6 +380,10 @@ pub struct App {
     pub command_bar: bool,
     /// The rollover card shows (`drafting.hoverInfo`, hover_card.rs).
     pub hover_info: bool,
+    /// The crosshair's arms (`appearance.crosshair`, marks.rs).
+    pub crosshair: crate::marks::CrosshairSize,
+    /// The middle button pans the drawing: no crosshair meanwhile (input.rs).
+    pub panning: bool,
     /// The object whose rollover card shows (hover_card.rs).
     pub hover_card: Option<kentos_domain::Slot>,
     /// The hover the card's wait was started for (`Selection::hover_version`).
@@ -393,6 +399,8 @@ pub struct App {
     pub(crate) dwell_on_time: bool,
     /// İşlemler: the processing tools and models, their window and history (processing/).
     pub processing: crate::processing::Processing,
+    /// İfade oluşturucu, while it is open over the window that asked for it (expression/).
+    pub(crate) builder: Option<crate::expression::Builder>,
     /// The layer or group Katmanlar → Sil asks about (`Dialog::RemoveLayer`).
     pub removing_layer: Option<String>,
     /// The typed settings (docs/adr/0023): kept in `ayarlar.json` when opened by `main`.
@@ -517,6 +525,8 @@ impl App {
             cursor_input: true,
             command_bar: false,
             hover_info: true,
+            crosshair: crate::marks::CrosshairSize::default(),
+            panning: false,
             hover_card: None,
             hover_seen: 0,
             calc: crate::calc::Calc::default(),
@@ -525,6 +535,7 @@ impl App {
             tracking_waited: 0,
             dwell_on_time: true,
             processing: crate::processing::Processing::default(),
+            builder: None,
             removing_layer: None,
             settings,
             settings_draft: None,
@@ -738,6 +749,7 @@ impl App {
             }
             Message::Calc(event) => return self.calc_event(event),
             Message::Processing(event) => return self.processing_event(event),
+            Message::Builder(event) => return self.builder_event(event),
             Message::LayerStyle(event) => return self.layer_style_event(event),
             Message::StyleManager(event) => return self.style_manager_event(*event),
             Message::Legend(event) => return self.legend_event(event),
@@ -874,6 +886,7 @@ impl App {
         self.cursor_input = s.bool("drafting.cursorInput");
         self.command_bar = s.bool("drafting.commandBar");
         self.hover_info = s.bool("drafting.hoverInfo");
+        self.crosshair = crate::marks::CrosshairSize::parse(&s.text("appearance.crosshair"));
         self.viewport.grid_shown = s.bool("drafting.grid");
         self.apply_appearance();
     }

@@ -352,7 +352,7 @@ fn settings() -> Vec<SettingDescriptor> {
                 ("full", "Tam ekran"),
             ],
         )
-        .hosts(&[Web])
+        .hosts(&[Web, Desktop])
         .text("Artı imleç", "Çizim alanındaki imlecin kol uzunluğu."),
         boolean("appearance.startScreen", true)
             .hosts(&[Web, Desktop])

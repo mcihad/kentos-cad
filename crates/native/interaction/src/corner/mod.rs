@@ -36,7 +36,7 @@ use crate::log::Level;
 use crate::points::plain_number;
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{
-    Context, Flow, Marker, MarkerShape, Memory, Pointer, Preview, Stroke, Tag, Tone, Tool,
+    Context, Cursor, Flow, Marker, MarkerShape, Memory, Pointer, Preview, Stroke, Tag, Tone, Tool,
 };
 use crate::{Vec2, js_trim};
 use plan::Op;
@@ -358,6 +358,11 @@ impl CornerTool {
 }
 
 impl Tool for CornerTool {
+    /// An object is picked (the web's `cursor = 'pick'`).
+    fn cursor(&self) -> Cursor {
+        Cursor::Pick
+    }
+
     fn id(&self) -> &'static str {
         match self.kind {
             Kind::Fillet => FILLET_ID,

@@ -173,17 +173,30 @@ class ModelDesigner implements InspectorHost {
     this.render();
   }
 
-  /** Closes the designer while the user shows a point, then opens it again on the same draft. */
-  pickPoint(stepId: string, param: string): void {
+  /**
+   * Closes the designer while the user shows a point, then opens it again
+   * on the same draft; `also` is a choice set with it (Sahneden seç beside
+   * a choice, docs/adr/0088).
+   */
+  pickPoint(stepId: string, param: string, also?: { param: string; value: string }): void {
     const state: DesignerState = { draft: this.model, saved: this.savedJson, baseline: this.baseline, builtinCopy: this.builtinCopy, selected: { kind: 'step', id: stepId } };
     const def = this.lookup(this.model.steps.find((s) => s.id === stepId)?.tool ?? '')?.parameters.find((p) => p.name === param);
     this.dialog.close();
     const reopen = (p: Vec2 | null) =>
       queueMicrotask(() => {
-        if (p) setSource(state.draft, stepId, param, { kind: 'value', value: p });
+        if (p) {
+          setSource(state.draft, stepId, param, { kind: 'value', value: p });
+          if (also) setSource(state.draft, stepId, also.param, { kind: 'value', value: also.value });
+        }
         new ModelDesigner(this.ctx, state);
       });
     this.ctx.tools.run(new PickPointTool(this.ctx, def?.label ?? 'Nokta', reopen), `Model tasarımcısı: ${def?.label ?? 'nokta'}`);
+  }
+
+  pickChoice(stepId: string, param: string): void {
+    const def = this.lookup(this.model.steps.find((s) => s.id === stepId)?.tool ?? '')?.parameters.find((p) => p.name === param);
+    const picks = def?.type === 'enum' ? def.picks : undefined;
+    if (picks) this.pickPoint(stepId, picks.point, { param, value: picks.option });
   }
 
   deleteModel(): void {

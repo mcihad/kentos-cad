@@ -104,11 +104,17 @@ pub struct TextField {
 }
 
 /// The pointer's look over the drawing while a tool runs (the web's `Tool.cursor`):
-/// the drawing's crosshair (the web's `pick` and `cross`), or an open hand for Kaydır.
+/// the drawing's crosshair for a point, a shorter one with a pick box for
+/// an object, or an open hand for Kaydır. The host draws the crosshair
+/// (the web's `drawCrosshair`).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum Cursor {
+    /// A point is wanted (the web's `cross`).
     #[default]
     Cross,
+    /// An object is wanted: the select tool, Sil, Tarama, the edge tools and
+    /// Sahneden seç (the web's `pick`).
+    Pick,
     Grab,
 }
 

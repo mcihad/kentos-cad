@@ -31,7 +31,7 @@ use crate::points::{self, wire_all};
 use crate::prompt::{Prompt, upper_tr};
 use crate::faces;
 use crate::spatial::measures;
-use crate::tool::{self, Context, Flow, Memory, Pointer, Preview, Tool};
+use crate::tool::{self, Context, Cursor, Flow, Memory, Pointer, Preview, Tool};
 
 /// The tool's id: its command is `tool.hatch`.
 pub const ID: &str = "hatch";
@@ -274,6 +274,11 @@ impl Hatch {
 }
 
 impl Tool for Hatch {
+    /// An object is picked (the web's `cursor = 'pick'`).
+    fn cursor(&self) -> Cursor {
+        Cursor::Pick
+    }
+
     fn id(&self) -> &'static str {
         ID
     }

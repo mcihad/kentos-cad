@@ -18,6 +18,7 @@ mod document;
 mod drawing_fonts;
 mod drawing_menus;
 mod exchange;
+mod expression;
 #[cfg(test)]
 mod files_testing;
 mod hover_card;
@@ -27,6 +28,7 @@ mod keys;
 mod labels;
 mod layer_tree;
 mod layering;
+mod map_marks;
 mod marks;
 mod modes;
 mod opening;
