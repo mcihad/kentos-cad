@@ -431,16 +431,26 @@ fn push_number(out: &mut String, d: &[u8], n: i64) {
 
 /// `String(x)`: JavaScript's Number::toString.
 pub fn to_string(x: f64) -> String {
+    let mut out = String::with_capacity(24);
+    push_string(&mut out, x);
+    out
+}
+
+/// `String(x)` written at the end of `out` (the expression engine's columns:
+/// no text of its own per value).
+pub fn push_string(out: &mut String, x: f64) {
     if x.is_nan() {
-        return "NaN".into();
+        out.push_str("NaN");
+        return;
     }
     if x == 0.0 {
-        return "0".into();
+        out.push('0');
+        return;
     }
     if x.is_infinite() {
-        return if x > 0.0 { "Infinity" } else { "-Infinity" }.into();
+        out.push_str(if x > 0.0 { "Infinity" } else { "-Infinity" });
+        return;
     }
-    let mut out = String::with_capacity(24);
     let x = if x < 0.0 {
         out.push('-');
         -x
@@ -455,8 +465,7 @@ pub fn to_string(x: f64) -> String {
     } else {
         shortest(x)
     };
-    push_number(&mut out, d.get(), i64::from(e) + 1);
-    out
+    push_number(out, d.get(), i64::from(e) + 1);
 }
 
 /// `x.toPrecision(p)` for 1 ≤ p ≤ 100.
@@ -503,12 +512,19 @@ pub fn to_precision(x: f64, p: u32) -> String {
 /// trailing zeros dropped. Zero, and numbers whose rounding could leave the
 /// normal doubles (2e-308, or 2e+308 which reads as ∞), read the text back.
 pub fn to_string_precision(x: f64, p: u32) -> String {
+    let mut out = String::with_capacity(24);
+    push_string_precision(&mut out, x, p);
+    out
+}
+
+/// `to_string_precision` written at the end of `out`.
+pub fn push_string_precision(out: &mut String, x: f64, p: u32) {
     let p = p.clamp(1, 15);
     if !(1e-307..1e308).contains(&x.abs()) {
         let y: f64 = to_precision(x, p).parse().unwrap_or(f64::NAN);
-        return to_string(y);
+        push_string(out, y);
+        return;
     }
-    let mut out = String::with_capacity(24);
     let x = if x < 0.0 {
         out.push('-');
         -x
@@ -516,17 +532,23 @@ pub fn to_string_precision(x: f64, p: u32) -> String {
         x
     };
     let (d, e) = precision_digits(x, p as usize);
-    push_number(&mut out, d.trimmed().get(), i64::from(e) + 1);
-    out
+    push_number(out, d.trimmed().get(), i64::from(e) + 1);
 }
 
 /// `x.toFixed(f)` for 0 ≤ f ≤ 100.
 pub fn to_fixed(x: f64, f: u32) -> String {
+    let mut out = String::with_capacity(f.min(100) as usize + 24);
+    push_fixed(&mut out, x, f);
+    out
+}
+
+/// `x.toFixed(f)` written at the end of `out`.
+pub fn push_fixed(out: &mut String, x: f64, f: u32) {
     if !x.is_finite() || x.abs() >= 1e21 {
-        return to_string(x);
+        push_string(out, x);
+        return;
     }
     let f = f.min(100) as usize;
-    let mut out = String::with_capacity(f + 24);
     // −0 prints without a sign; a negative value rounded to zero keeps it ("-0.00").
     let x = if x < 0.0 {
         out.push('-');
@@ -548,14 +570,13 @@ pub fn to_fixed(x: f64, f: u32) -> String {
     if whole == 0 {
         out.push('0');
     } else {
-        push_digits(&mut out, &d[..whole]);
+        push_digits(out, &d[..whole]);
     }
     if f != 0 {
         out.push('.');
-        push_zeros(&mut out, f.saturating_sub(d.len()));
-        push_digits(&mut out, &d[whole..]);
+        push_zeros(out, f.saturating_sub(d.len()));
+        push_digits(out, &d[whole..]);
     }
-    out
 }
 
 #[cfg(test)]

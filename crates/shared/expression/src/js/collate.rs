@@ -31,13 +31,16 @@ fn weights(c: char) -> Option<(u32, u16, u16)> {
 }
 
 /// `a.localeCompare(b, 'tr')`: letters over the whole text first, then accents, then case.
+/// Each level walks the texts again rather than collecting their weights, so
+/// comparing allocates nothing (an expression compares text per object).
 pub fn compare_tr(a: &str, b: &str) -> Ordering {
     if a == b {
         return Ordering::Equal;
     }
-    let ka: Vec<(u32, u16, u16)> = a.chars().filter_map(weights).collect();
-    let kb: Vec<(u32, u16, u16)> = b.chars().filter_map(weights).collect();
-    let level = |f: fn(&(u32, u16, u16)) -> u32| ka.iter().map(f).cmp(kb.iter().map(f));
+    let level = |f: fn((u32, u16, u16)) -> u32| {
+        let ka = a.chars().filter_map(weights).map(f);
+        ka.cmp(b.chars().filter_map(weights).map(f))
+    };
     level(|w| w.0)
         .then_with(|| level(|w| u32::from(w.1)))
         .then_with(|| level(|w| u32::from(w.2)))
@@ -65,5 +68,40 @@ mod tests {
         assert_eq!(order("éa", "eb"), Less);
         // A character the table leaves out orders after every letter.
         assert_eq!(order("ß", "z"), Greater);
+    }
+
+    /// The order as it was computed before (docs/adr/0100): both texts' weights collected, then compared.
+    fn compare_collected(a: &str, b: &str) -> Ordering {
+        if a == b {
+            return Equal;
+        }
+        let ka: Vec<(u32, u16, u16)> = a.chars().filter_map(weights).collect();
+        let kb: Vec<(u32, u16, u16)> = b.chars().filter_map(weights).collect();
+        let level = |f: fn(&(u32, u16, u16)) -> u32| ka.iter().map(f).cmp(kb.iter().map(f));
+        level(|w| w.0)
+            .then_with(|| level(|w| u32::from(w.1)))
+            .then_with(|| level(|w| u32::from(w.2)))
+    }
+
+    #[test]
+    fn walking_the_levels_gives_the_collected_order() {
+        let alphabet: Vec<char> = "aAbBcCçÇıIiİéeE ß\u{200b}😀19!zZ\u{301}".chars().collect();
+        let mut seed = 0x2545_f491_4f6c_dd1d_u64;
+        let mut next = move || {
+            seed ^= seed << 13;
+            seed ^= seed >> 7;
+            seed ^= seed << 17;
+            seed
+        };
+        let word = |next: &mut dyn FnMut() -> u64| -> String {
+            let n = next() % 6;
+            (0..n)
+                .map(|_| alphabet[(next() % alphabet.len() as u64) as usize])
+                .collect()
+        };
+        for _ in 0..50_000 {
+            let (a, b) = (word(&mut next), word(&mut next));
+            assert_eq!(compare_tr(&a, &b), compare_collected(&a, &b), "{a:?} {b:?}");
+        }
     }
 }
