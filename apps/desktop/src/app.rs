@@ -316,6 +316,8 @@ pub struct App {
     /// The geometry store kept in step with the open drawing: what a click
     /// picks, a box selects and a point snaps to (docs/adr/0029).
     pub spatial: Spatial,
+    /// The style library and the styled drawing's pictures (style/, docs/adr/0090).
+    pub styles: crate::style::Styles,
     /// What the drawing tools remember between runs for as long as the app
     /// lives: the last circle radius, the rectangle's rotation and corners, the
     /// regular polygon's sides (the web's static tool fields, docs/adr/0032).
@@ -456,6 +458,7 @@ impl App {
             viewport: Viewport::new(),
             session: Session::new(),
             spatial: Spatial::new(),
+            styles: crate::style::Styles::new(),
             memory: Memory::default(),
             selection: Selection::new(),
             clipboard: Clipboard::new(),
@@ -600,6 +603,7 @@ impl App {
         }
         self.followed = Some(now);
         self.spatial.sync(&doc.model);
+        self.styles.follow_project(Some(doc.model.styles()));
         let model = &doc.model;
         self.selection.retain(|slot| model.get(slot).is_some());
     }
@@ -892,6 +896,7 @@ impl App {
         self.selected_layer = None;
         self.viewport.opened(&doc);
         self.spatial.reload(&doc.model);
+        self.styles.follow_project(Some(doc.model.styles()));
         self.selection = Selection::new();
         self.followed = Some((doc.session, doc.model.generation()));
         self.document = Some(doc);
@@ -968,6 +973,9 @@ impl App {
             "draft.polar" => self.toggle_session("drafting.polar", "Kutupsal izleme"),
             "draft.snap" => self.toggle_session("drafting.snap", "Kenetleme"),
             "draft.grid" => self.toggle_session("drafting.grid", "Izgara"),
+            // The styled drawing's view choices (style/, docs/adr/0090).
+            "view.lineWeights" => self.toggle_session("graphics.lineWeights", "Çizgi kalınlığı"),
+            "view.symbols.plot" | "view.symbols.screen" => self.choose_symbol_size(id),
             // Selecting (docs/adr/0029): the pointer selects while no command runs.
             "tool.select" => self.leave_tool(),
             "edit.deselect" => self.selection.clear(),
@@ -1041,6 +1049,9 @@ impl App {
             "draft.polar" => self.draft.polar.is_some(),
             "draft.snap" => self.draft.snap,
             "draft.grid" => self.settings.bool("drafting.grid"),
+            "view.lineWeights" => self.settings.bool("graphics.lineWeights"),
+            "view.symbols.plot" => self.settings.text("graphics.symbolSize") != "screen",
+            "view.symbols.screen" => self.settings.text("graphics.symbolSize") == "screen",
             "view.theme.dark" => self.mode == Mode::Dark,
             "view.theme.light" => self.mode == Mode::Light,
             "view.bottomPanel" => self.command_expanded,

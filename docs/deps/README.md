@@ -1,6 +1,6 @@
 # Bağımlılık kaydı
 
-Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.md `BASE-06`'nın karşılığıdır. Bugünkü 32 Rust bağımlılığı aşağıdadır (26 Eylül; `miniz_oxide` eklendi). Lisans taramasını ve SBOM'u CI'a bağlamak ayrı iştir (`OPS-13`).
+Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.md `BASE-06`'nın karşılığıdır. Bugünkü 34 Rust bağımlılığı aşağıdadır (26 Eylül'de `miniz_oxide`; 27 Eylül'de `tiny-skia` ve `roxmltree` eklendi). Lisans taramasını ve SBOM'u CI'a bağlamak ayrı iştir (`OPS-13`).
 
 ## Kurallar
 
@@ -26,7 +26,9 @@ Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.
 | iced_runtime | 0.14.0 (isteğe bağlı: `snapshot`) | MIT | native | ui; desktop (iz oynatıcısı uygulamanın görevlerini çalıştırır) | ADR 0016, 0021; paket zaten Iced ve KentOS UI üzerinden ikilideydi, kilide yeni paket girmedi |
 | glam | 0.30.10 (isteğe bağlı: `spatial`) | MIT OR Apache-2.0 | native | ui | ADR 0016 |
 | bytemuck | 1.25.2, `derive` (isteğe bağlı: `spatial`) | Zlib OR Apache-2.0 OR MIT | native | ui, render-wgpu | ADR 0016, 0019 |
-| png | 0.18.1 (isteğe bağlı: `snapshot`) | MIT OR Apache-2.0 | native | ui | ADR 0016 |
+| png | 0.18.1 (isteğe bağlı: `snapshot`) | MIT OR Apache-2.0 | native | ui; desktop (stil kitaplığının PNG görüntüleri) | ADR 0016, 0090 |
+| tiny-skia | 0.11.4, varsayılan özellikler kapalı, `std`, `simd` | BSD-3-Clause | native (masaüstü) | render-wgpu (stilli çizimin atlası: SVG ve raster işaretler, yazılar, desen döşemeleri) | ADR 0090 (sahibin onayı, 27 Eylül); iced_tiny_skia üzerinden aynı özelliklerle ikilideydi, kilide yeni paket girmedi |
+| roxmltree | 0.20.0 (varsayılan özellikler) | MIT OR Apache-2.0 | native (masaüstü) | desktop (kitaplığın SVG çizimleri; web'de tarayıcı okur) | ADR 0090 (sahibin onayı, 27 Eylül); fontdb (fontconfig-parser) üzerinden aynı özelliklerle kilitliydi, kilide yeni paket girmedi |
 | rfd | 0.17.2 (varsayılan: `xdg-portal`, `wayland`) | MIT | native (masaüstü) | desktop | ADR 0017 (sahibin onayı, 25 Eylül). Getirdiği tek yeni paket `pollster` (Apache-2.0 OR MIT) |
 | wgpu | 27.0.1 (Iced'in kilitlediği sürüm, varsayılan özellikler) | MIT OR Apache-2.0 | native (masaüstü) | render-wgpu | ADR 0019; kilide yeni paket girmedi |
 | naga | 27.0.3, `wgsl-in` (yalnız test) | MIT OR Apache-2.0 | native (test) | render-wgpu | ADR 0019 |

@@ -124,7 +124,10 @@
     "tool.areaSplit",
     "tool.toArea",
     "tool.toPolyline",
-    "tool.boundary"
+    "tool.boundary",
+    "view.lineWeights",
+    "view.symbols.plot",
+    "view.symbols.screen"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

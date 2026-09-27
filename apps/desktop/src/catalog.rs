@@ -199,6 +199,11 @@ pub const PORTED: &[&str] = &[
     "tool.toArea",
     "tool.toPolyline",
     "tool.boundary",
+    // The styled drawing's view choices (docs/adr/0090): layer line weights on or off
+    // (Kalınlık), symbols at the plot scale or at a fixed size on the screen.
+    "view.lineWeights",
+    "view.symbols.plot",
+    "view.symbols.screen",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

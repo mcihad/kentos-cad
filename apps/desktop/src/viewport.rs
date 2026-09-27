@@ -41,6 +41,7 @@ use kentos_contracts::{DrawingFont, Entity, LayerNode};
 use kentos_interaction::{Cursor, Selection, ViewChange};
 use kentos_render_wgpu::camera::FIT_PADDING;
 use kentos_render_wgpu::scene::{self, lod};
+use kentos_render_wgpu::styled::StyledScene;
 use kentos_render_wgpu::{
     Bounds, Camera, Drawing, FrameInput, FrameStats, Palette, RenderError, RenderSettings,
     Renderer, Rgba8, SampleFailure, ScenePart, Vec2, ViewId,
@@ -131,6 +132,9 @@ pub enum Event {
     RightHeld(Point),
     /// The right button went down and up here within [`RIGHT_HOLD`].
     RightClick(Point),
+    /// The wheel stopped: symbols of a fixed screen size are built again at
+    /// the view's scale (docs/adr/0090).
+    Settled,
 }
 
 /// What the last frame drew, or why it could not.
@@ -142,6 +146,21 @@ pub struct Status {
     pub supported: Vec<u32>,
     /// A count the area could not draw with; it draws with the last that worked (AA-02).
     pub failure: Option<SampleFailure>,
+    /// The styled atlas left images for another frame (docs/adr/0090): the area asks for one.
+    pub images_pending: bool,
+}
+
+/// What the drawing area draws the styled layers with (docs/adr/0090): the
+/// geometry store they are built next to, the style library and its
+/// pictures, and the view's symbol settings.
+#[derive(Clone, Copy)]
+pub struct Styling<'a> {
+    pub spatial: &'a kentos_interaction::Spatial,
+    pub styles: &'a crate::style::Styles,
+    /// Semboller → Ekranda sabit (`graphics.symbolSize`).
+    pub screen_symbols: bool,
+    /// Kalınlık (`graphics.lineWeights`): off draws every line one pixel wide.
+    pub line_weights: bool,
 }
 
 /// How the area draws: the settings' effective `graphics.msaa` and `graphics.hiDpi` (docs/adr/0023).
@@ -182,7 +201,14 @@ pub struct Viewport {
     pub grid_shown: bool,
     grid: RefCell<Option<Grid>>,
     status: Arc<Mutex<Status>>,
+    /// The drawing's layers through the style engine, as last built (docs/adr/0090).
+    styled: RefCell<crate::style::scene::StyledCache>,
+    /// The wheel's last zoom: screen-sized symbols wait for it to settle.
+    zoomed_at: Option<Instant>,
 }
+
+/// How long after the wheel's last turn screen-sized symbols are built again (the web's).
+const SYMBOLS_SETTLE: Duration = Duration::from_millis(150);
 
 /// The grid lines on the GPU and what they were built for: the world box
 /// they span (three views wide around the view then), their spacing, the
@@ -216,6 +242,8 @@ struct Cached {
     generation: u64,
     changes: u64,
     canvas: Canvas,
+    /// Built as the plain scene (no style library given): the drawing's own parts.
+    plain: bool,
     origin: Vec2,
     fixed: Arc<ScenePart>,
     curves: Arc<ScenePart>,
@@ -270,6 +298,8 @@ impl Viewport {
             grid_shown: true,
             grid: RefCell::new(None),
             status: Arc::new(Mutex::new(Status::default())),
+            styled: RefCell::new(crate::style::scene::StyledCache::default()),
+            zoomed_at: None,
         }
     }
 
@@ -348,6 +378,7 @@ impl Viewport {
                 self.camera
                     .zoom_at(factor, f64::from(at.x), f64::from(at.y));
                 self.cursor = Some(self.world(at));
+                self.zoomed_at = Some(Instant::now());
             }
             Event::Extents => {
                 if let Some(extents) = doc.and_then(scene::extents) {
@@ -364,6 +395,7 @@ impl Viewport {
             }
             // It may come from off the area; the last move placed the pointer.
             Event::Released(_) => {}
+            Event::Settled => self.zoomed_at = None,
         }
     }
 
@@ -398,6 +430,7 @@ impl Viewport {
     /// and the pointer looking as the running tool asks (docs/adr/0056).
     /// A change of either value reaches the next frame: new targets on the
     /// same device, nothing reopened (TODOS.md AA-02).
+    #[allow(clippy::too_many_arguments)]
     pub fn view<'a>(
         &'a self,
         doc: &Document,
@@ -406,6 +439,7 @@ impl Viewport {
         selection: &Selection,
         accent: Rgba8,
         cursor: Cursor,
+        styling: Option<Styling<'_>>,
     ) -> Element<'a, Message> {
         let canvas = canvas.into();
         let palette = palette(canvas);
@@ -414,8 +448,11 @@ impl Viewport {
             hi_dpi: graphics.hi_dpi,
             ..RenderSettings::new(palette.background)
         };
+        // Every shown layer through the style engine, as on the web (docs/adr/0090);
+        // without the library, the plain scene of before.
+        let styled = styling.map(|s| self.styled_scene(doc, &palette, s));
         let (origin, fixed, curves, construction, clip) =
-            self.scene(doc, canvas, &palette, &settings);
+            self.scene_with(doc, canvas, &palette, &settings, styled.is_none());
         let (selected, hovered) = self.highlights(doc, selection, accent, &fixed, &curves, &clip);
         // The grid under everything (Izgara, F7).
         let grid = if self.grid_shown {
@@ -431,6 +468,11 @@ impl Viewport {
             settings,
             status: self.status.clone(),
             cursor,
+            styled: styled.unwrap_or_default(),
+            images: styling.map(|s| s.styles.images.clone()),
+            settle_at: styling
+                .filter(|s| s.screen_symbols)
+                .and_then(|_| self.settling()),
         })
         .width(Fill)
         .height(Fill)
@@ -450,13 +492,88 @@ impl Viewport {
         }
     }
 
-    /// The scene of `doc`, from the cache when nothing it depends on changed.
+    /// The drawing's styled layers (docs/adr/0090), from the cache where nothing they depend on changed.
+    fn styled_scene(&self, doc: &Document, palette: &Palette, s: Styling<'_>) -> StyledScene {
+        let hex = |c: Rgba8| format!("#{:02X}{:02X}{:02X}", c.0[0], c.0[1], c.0[2]);
+        let look = crate::style::scene::Look {
+            palette: kentos_native_style::StylePalette {
+                fg: hex(palette.fg),
+                fg_dim: hex(palette.fg_dim),
+                ink: hex(palette.ink),
+                paper: hex(palette.background),
+            },
+            symbol_scale: self.symbol_scale(doc, s.screen_symbols),
+            screen: s.screen_symbols,
+            hairlines: !s.line_weights,
+            origin: scene::scene_origin(doc),
+        };
+        self.styled.borrow_mut().scene(
+            self.generation,
+            &doc.model,
+            s.spatial.store(),
+            &s.styles.library,
+            &look,
+            &self.camera.visible_bounds(),
+            // Over the grid, under the highlights.
+            1,
+        )
+    }
+
+    /// The scale paper-mm symbols are built at: the project's plot scale, or
+    /// with symbols of a fixed size on the screen the view's own in quarter
+    /// octaves. While the wheel turns the layers keep the scale they were
+    /// built at; they are built again when it stops (the web's 150 ms).
+    fn symbol_scale(&self, doc: &Document, screen: bool) -> f64 {
+        let now = kentos_native_style::symbol_scale_of(
+            screen,
+            doc.model.settings().plot_scale,
+            self.camera.scale,
+        );
+        if !screen || self.settling().is_none() {
+            return now;
+        }
+        match self.styled.try_borrow().ok().and_then(|c| c.built_scale()) {
+            Some((built, true)) => built,
+            _ => now,
+        }
+    }
+
+    /// When the wheel's zoom settles and screen-sized symbols are built again, while it has not.
+    fn settling(&self) -> Option<Instant> {
+        self.zoomed_at
+            .map(|t| t + SYMBOLS_SETTLE)
+            .filter(|t| *t > Instant::now())
+    }
+
+    /// What the last styled build cost and how many layers it built (docs/adr/0090).
+    #[cfg(test)]
+    pub fn styled_build(&self) -> Option<(Duration, usize)> {
+        self.styled.try_borrow().ok().and_then(|c| c.last_build)
+    }
+
+    /// The plain scene of `doc`, from the cache when nothing it depends on changed.
+    #[cfg(test)]
     fn scene(
         &self,
         doc: &Document,
         canvas: impl Into<Canvas>,
         palette: &Palette,
         settings: &RenderSettings,
+    ) -> (Vec2, Arc<ScenePart>, Arc<ScenePart>, Arc<ScenePart>, Bounds) {
+        self.scene_with(doc, canvas, palette, settings, true)
+    }
+
+    /// The scene of `doc`, from the cache when nothing it depends on changed.
+    /// With `plain` off the drawing's layers are styled (docs/adr/0090): the
+    /// parts then only carry the origin and the curves' tolerance the
+    /// highlights are built with.
+    fn scene_with(
+        &self,
+        doc: &Document,
+        canvas: impl Into<Canvas>,
+        palette: &Palette,
+        settings: &RenderSettings,
+        plain: bool,
     ) -> (Vec2, Arc<ScenePart>, Arc<ScenePart>, Arc<ScenePart>, Bounds) {
         let canvas = canvas.into();
         let view = self.camera.visible_bounds();
@@ -466,47 +583,79 @@ impl Viewport {
         let changes = changes(doc);
         let mut cache = self.scene.borrow_mut();
         let current = cache.as_ref().is_some_and(|c| {
-            c.generation == self.generation && c.changes == changes && c.canvas == canvas
+            c.generation == self.generation
+                && c.changes == changes
+                && c.canvas == canvas
+                && c.plain == plain
         });
+        let empty = |origin: Vec2, tolerance: f64| {
+            Arc::new(ScenePart {
+                origin,
+                tolerance,
+                ..ScenePart::default()
+            })
+        };
         if !current {
             let origin = scene::scene_origin(doc);
             let clip = construction_clip(&view);
-            *cache = Some(Cached {
-                generation: self.generation,
-                changes,
-                canvas,
-                origin,
-                fixed: Arc::new(scene::build_fixed(doc, palette, origin)),
-                curves: Arc::new(scene::build_curves(
-                    doc,
-                    palette,
+            *cache = Some(if plain {
+                Cached {
+                    generation: self.generation,
+                    changes,
+                    canvas,
+                    plain,
                     origin,
-                    lod::tolerance(band),
-                    budget,
-                )),
-                band,
-                construction: Arc::new(scene::build_construction(doc, palette, origin, &clip)),
-                clip,
+                    fixed: Arc::new(scene::build_fixed(doc, palette, origin)),
+                    curves: Arc::new(scene::build_curves(
+                        doc,
+                        palette,
+                        origin,
+                        lod::tolerance(band),
+                        budget,
+                    )),
+                    band,
+                    construction: Arc::new(scene::build_construction(doc, palette, origin, &clip)),
+                    clip,
+                }
+            } else {
+                Cached {
+                    generation: self.generation,
+                    changes,
+                    canvas,
+                    plain,
+                    origin,
+                    fixed: empty(origin, 0.0),
+                    curves: empty(origin, lod::tolerance(band)),
+                    band,
+                    construction: empty(origin, 0.0),
+                    clip,
+                }
             });
         } else if let Some(cached) = cache.as_mut() {
             if lod::stale(cached.band, needed) {
-                cached.curves = Arc::new(scene::build_curves(
-                    doc,
-                    palette,
-                    cached.origin,
-                    lod::tolerance(band),
-                    budget,
-                ));
+                cached.curves = if plain {
+                    Arc::new(scene::build_curves(
+                        doc,
+                        palette,
+                        cached.origin,
+                        lod::tolerance(band),
+                        budget,
+                    ))
+                } else {
+                    empty(cached.origin, lod::tolerance(band))
+                };
                 cached.band = band;
             }
             if clip_stale(&view, &cached.clip) {
                 cached.clip = construction_clip(&view);
-                cached.construction = Arc::new(scene::build_construction(
-                    doc,
-                    palette,
-                    cached.origin,
-                    &cached.clip,
-                ));
+                if plain {
+                    cached.construction = Arc::new(scene::build_construction(
+                        doc,
+                        palette,
+                        cached.origin,
+                        &cached.clip,
+                    ));
+                }
             }
         }
         match cache.as_ref() {
@@ -666,6 +815,11 @@ struct Program {
     status: Arc<Mutex<Status>>,
     /// The pointer's look the running tool asks for over the area.
     cursor: Cursor,
+    /// The drawing's styled layers and where their images come from (docs/adr/0090).
+    styled: StyledScene,
+    images: Option<Arc<crate::style::images::Images>>,
+    /// When the wheel's zoom settles and screen-sized symbols are to be built again.
+    settle_at: Option<Instant>,
 }
 
 /// What the widget remembers between events.
@@ -705,6 +859,26 @@ impl shader::Program<Message> for Program {
                 Hold::Wait(until) => shader::Action::request_redraw_at(until),
             });
         }
+        // Screen-sized symbols wait for the wheel to stop, then are built again (docs/adr/0090).
+        if let iced::Event::Window(iced::window::Event::RedrawRequested(now)) = event
+            && let Some(at) = self.settle_at
+        {
+            return Some(if *now >= at {
+                shader::Action::publish(Message::Viewport(Event::Settled))
+            } else {
+                shader::Action::request_redraw_at(at)
+            });
+        }
+        // The styled atlas left images for another frame (docs/adr/0090).
+        if let iced::Event::Window(iced::window::Event::RedrawRequested(_)) = event
+            && self
+                .status
+                .lock()
+                .unwrap_or_else(PoisonError::into_inner)
+                .images_pending
+        {
+            return Some(shader::Action::request_redraw());
+        }
         let (event, capture) = gesture(state, event, bounds, cursor, Instant::now())?;
         let action = match event {
             Some(event) => shader::Action::publish(Message::Viewport(event)),
@@ -725,6 +899,8 @@ impl shader::Program<Message> for Program {
             camera: self.camera,
             settings: self.settings,
             status: self.status.clone(),
+            styled: self.styled.clone(),
+            images: self.images.clone(),
         }
     }
 
@@ -887,6 +1063,8 @@ pub struct Frame {
     camera: Camera,
     settings: RenderSettings,
     status: Arc<Mutex<Status>>,
+    styled: StyledScene,
+    images: Option<Arc<crate::style::images::Images>>,
 }
 
 impl fmt::Debug for Frame {
@@ -928,6 +1106,19 @@ impl shader::Primitive for Frame {
                         settings: &self.settings,
                     },
                 );
+                // The styled layers after the plain parts of the same frame (docs/adr/0090).
+                let images_pending = match &self.images {
+                    Some(images) => {
+                        renderer.prepare_styled(device, queue, self.id, &self.styled, &**images)
+                    }
+                    None => renderer.prepare_styled(
+                        device,
+                        queue,
+                        self.id,
+                        &self.styled,
+                        &kentos_render_wgpu::styled::NoImages,
+                    ),
+                };
                 Status {
                     stats: renderer.stats(self.id).unwrap_or_default(),
                     error: prepared
@@ -936,6 +1127,7 @@ impl shader::Primitive for Frame {
                         .map(|e| e.to_string()),
                     supported: renderer.sample_counts().to_vec(),
                     failure: renderer.sample_failure(self.id).cloned(),
+                    images_pending,
                 }
             }
             Err(error) => Status {

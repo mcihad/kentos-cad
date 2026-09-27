@@ -1,0 +1,21 @@
+[package]
+name = "kentos-native-style"
+description = "The desktop's style engine page: the style library (system, user, project), a layer's program for the style core, and the core's batches with their colours and atlas images (docs/STYLE.md §6)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Pure Rust, native only (scripts/arch/deps.mjs, group `style`): no Iced, no
+# GPU, no runtime. The web keeps its own TypeScript page (apps/web/src/render/
+# styledLayer.ts, styledBatches.ts, apps/web/src/style/library.ts); both are
+# held to fixtures/style/v1. The drawing comes from the shared style core; the
+# desktop's wgpu renderer draws what this crate hands it.
+[dependencies]
+kentos-contracts = { path = "../../shared/contracts", default-features = false }
+kentos-geometry-core = { path = "../../shared/geometry-core" }
+kentos-style-core = { path = "../../shared/style-core" }
+kentos-native-application = { path = "../application" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+libm = { workspace = true }

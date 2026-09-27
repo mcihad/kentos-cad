@@ -426,13 +426,14 @@ fn settings() -> Vec<SettingDescriptor> {
             "plot",
             &[("plot", "Çizim ölçeğinde"), ("screen", "Ekranda sabit")],
         )
-        .hosts(&[Web])
+        // The desktop draws styled layers too (docs/adr/0090).
+        .hosts(&[Web, Desktop])
         .text(
             "Semboller",
             "Çizim ölçeğinde: basılı paftadaki boyları, harita ile büyür ve küçülür. Ekranda sabit: her yakınlıkta aynı boy.",
         ),
         boolean("graphics.lineWeights", true)
-            .hosts(&[Web])
+            .hosts(&[Web, Desktop])
             .text(
                 "Çizgi kalınlığı",
                 "Katman çizgileri kalınlıklarıyla çizilir. Kapalıyken hepsi ince çizilir.",

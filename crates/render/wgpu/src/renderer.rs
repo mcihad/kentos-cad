@@ -47,6 +47,7 @@ use crate::scene::{LayerRanges, ScenePart};
 use crate::settings::RenderSettings;
 use crate::shader;
 use crate::stats::FrameStats;
+use crate::styled::{ImageSource, StyledFrame, StyledGpu, StyledScene, ViewStyled};
 use crate::targets::{self, Compose, Targets, pop_error_now, supported_samples};
 
 /// A drawing area's key: its uniform and cached buffers are its own.
@@ -115,6 +116,8 @@ pub struct Renderer {
     compose: Compose,
     views: HashMap<ViewId, View>,
     chunk_bytes: u64,
+    /// The styled layers' pipelines and atlas, made with the first styled frame (docs/adr/0090).
+    styled: Option<StyledGpu>,
 }
 
 impl fmt::Debug for Renderer {
@@ -172,6 +175,7 @@ impl Renderer {
             compose,
             views: HashMap::new(),
             chunk_bytes: device.limits().max_buffer_size.min(MAX_CHUNK_BYTES),
+            styled: None,
         })
     }
 
@@ -322,14 +326,25 @@ impl Renderer {
         }
         state.own = state.targets.is_some();
 
+        let (drawn_size, drawn_scale) = if state.own {
+            (size_px, scale_factor)
+        } else {
+            (frame.size_px, frame.scale_factor)
+        };
+        state.drawn = Drawn {
+            size_px: drawn_size,
+            scale_factor: drawn_scale,
+            center: [
+                frame.camera.center.x - frame.origin.x,
+                frame.camera.center.y - frame.origin.y,
+            ],
+            scale: frame.camera.scale,
+            screen_scale: frame.camera.screen_scale(),
+        };
         let uniform = frame.camera.frame_uniform(
             frame.origin,
-            if state.own { size_px } else { frame.size_px },
-            if state.own {
-                scale_factor
-            } else {
-                frame.scale_factor
-            },
+            drawn_size,
+            drawn_scale,
             settings,
             self.srgb_target,
         );
@@ -342,6 +357,53 @@ impl Renderer {
             state.error.clone_from(&failure);
         }
         failure.map_or(Ok(()), Err)
+    }
+
+    /// After [`Renderer::prepare`] of the same frame: the view's styled layers
+    /// (docs/adr/0090). Uploads the layers it has not drawn (by id), drops the
+    /// ones it no longer draws, decides what shows and places its images in
+    /// the atlas, drawn from `images`. They are drawn over the first
+    /// `scene.under` parts and under the rest. Returns whether an image waits
+    /// for another frame (the host then asks for one).
+    pub fn prepare_styled(
+        &mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        view: ViewId,
+        scene: &StyledScene,
+        images: &dyn ImageSource,
+    ) -> bool {
+        let format = self.format;
+        let gpu = self
+            .styled
+            .get_or_insert_with(|| StyledGpu::new(device, format));
+        let Some(state) = self.views.get_mut(&view) else {
+            return false;
+        };
+        let samples = state.targets.as_ref().map_or(1, |t| t.samples);
+        let styled = state
+            .styled
+            .get_or_insert_with(|| ViewStyled::new(device, gpu));
+        let d = state.drawn;
+        let pending = gpu.prepare(
+            device,
+            queue,
+            styled,
+            scene,
+            &StyledFrame {
+                center: d.center,
+                scale: d.scale,
+                dpr: d.scale_factor,
+                size_px: d.size_px,
+                scale_denominator: d.screen_scale,
+            },
+            samples,
+            images,
+        );
+        let (drawn, bytes) = styled.counts();
+        state.stats.draw_calls += drawn;
+        state.stats.resident_bytes += bytes;
+        pending
     }
 
     /// Whether `view` draws into its own targets this frame: the host then
@@ -357,7 +419,7 @@ impl Renderer {
         let (Some(state), Some(pipes)) = (self.views.get(&view), self.pipelines.get(&1)) else {
             return;
         };
-        state.draw(pass, pipes);
+        state.draw(pass, pipes, self.styled.as_ref().map(|g| (g, 1)));
     }
 
     /// Draws `view` into its own targets and composes the picture into
@@ -389,7 +451,11 @@ impl Renderer {
                 timestamp_writes: None,
                 occlusion_query_set: None,
             });
-            state.draw(&mut pass, pipes);
+            state.draw(
+                &mut pass,
+                pipes,
+                self.styled.as_ref().map(|g| (g, targets.samples)),
+            );
         }
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("kentos.cad2d.compose"),
@@ -542,6 +608,23 @@ struct View {
     /// The area in the host's frame, device pixels: x, y, width, height.
     viewport: [f32; 4],
     clear: [f32; 4],
+    /// What the last prepared frame is drawn at (the styled layers' frame).
+    drawn: Drawn,
+    /// The view's styled layers (docs/adr/0090), once it has had any.
+    styled: Option<ViewStyled>,
+}
+
+/// The target and camera a frame is drawn at.
+#[derive(Clone, Copy, Debug, Default)]
+struct Drawn {
+    size_px: [f32; 2],
+    scale_factor: f64,
+    /// Camera centre relative to the origin, metres.
+    center: [f64; 2],
+    /// Logical pixels per metre.
+    scale: f64,
+    /// The screen scale 1:N at 96 dpi.
+    screen_scale: f64,
 }
 
 impl View {
@@ -574,14 +657,41 @@ impl View {
             failed: None,
             viewport: [0.0, 0.0, 1.0, 1.0],
             clear: [0.0, 0.0, 0.0, 1.0],
+            drawn: Drawn::default(),
+            styled: None,
         }
     }
 
-    /// The background, then every layer's fills, strokes and marks, with the given pipelines.
-    fn draw(&self, pass: &mut wgpu::RenderPass<'_>, pipes: &Pipelines) {
+    /// The background, then every layer's fills, strokes and marks, with the
+    /// given pipelines. Styled layers, when the view has them, draw over the
+    /// first parts (the grid) and under the rest (the highlights).
+    fn draw(
+        &self,
+        pass: &mut wgpu::RenderPass<'_>,
+        pipes: &Pipelines,
+        styled: Option<(&StyledGpu, u32)>,
+    ) {
         pass.set_bind_group(0, &self.bind_group, &[]);
         pass.set_pipeline(&pipes.background);
         pass.draw(0..layout::BACKGROUND.vertex_count.unwrap_or(3), 0..1);
+        let all = 0..self.parts.len();
+        match (styled, &self.styled) {
+            (Some((gpu, samples)), Some(view)) if !view.layers.is_empty() => {
+                let under = view.under.min(self.parts.len());
+                self.draw_parts(pass, pipes, 0..under);
+                gpu.draw(pass, view, samples);
+                pass.set_bind_group(0, &self.bind_group, &[]);
+                self.draw_parts(pass, pipes, under..all.end);
+            }
+            _ => self.draw_parts(pass, pipes, all),
+        }
+    }
+
+    /// The fills, strokes and marks of the parts in `parts`, kind by kind.
+    fn draw_parts(&self, pass: &mut wgpu::RenderPass<'_>, pipes: &Pipelines, parts: Range<usize>) {
+        if parts.is_empty() {
+            return;
+        }
         let passes: [(&wgpu::RenderPipeline, Kind); 3] = [
             (&pipes.fill, Kind::Fills),
             (&pipes.line, Kind::Segments),
@@ -589,7 +699,7 @@ impl View {
         ];
         for (pipeline, kind) in passes {
             pass.set_pipeline(pipeline);
-            self.each(kind, |chunks, range| {
+            self.each_in(parts.clone(), kind, |chunks, range| {
                 chunks.draw(pass, range, kind.vertices_per_instance());
             });
         }
@@ -597,10 +707,21 @@ impl View {
 
     /// Visits what a frame draws of one kind, in draw order: layer by layer,
     /// bottom first, each part's share of the layer in slot order.
-    fn each(&self, kind: Kind, mut visit: impl FnMut(&Chunks, &Range<u32>)) {
-        let layers = self.parts.iter().map(|p| p.layers.len()).max().unwrap_or(0);
+    fn each(&self, kind: Kind, visit: impl FnMut(&Chunks, &Range<u32>)) {
+        self.each_in(0..self.parts.len(), kind, visit);
+    }
+
+    /// [`View::each`] over some of the parts.
+    fn each_in(
+        &self,
+        parts: Range<usize>,
+        kind: Kind,
+        mut visit: impl FnMut(&Chunks, &Range<u32>),
+    ) {
+        let parts = self.parts.get(parts).unwrap_or(&[]);
+        let layers = parts.iter().map(|p| p.layers.len()).max().unwrap_or(0);
         for layer in 0..layers {
-            for part in &self.parts {
+            for part in parts {
                 if let Some(ranges) = part.layers.get(layer) {
                     let (chunks, range) = kind.select(part, ranges);
                     visit(chunks, range);
