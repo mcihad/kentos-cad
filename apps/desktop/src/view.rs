@@ -606,6 +606,18 @@ impl App {
                     },
                 )
             })
+            // Nokta hesabı while the command waits for a point and the strip is off (the web's stripParts).
+            .map(|prompt| {
+                if !self.command_bar && self.session.can_calc_point() {
+                    prompt.menu(
+                        crate::point_calc::CHIP,
+                        Some(crate::icons::from_web(Some("calc"))),
+                        crate::point_calc::calc_menu(),
+                    )
+                } else {
+                    prompt
+                }
+            })
             // The one-shot snap waits for the next click; its × drops it (the web's stripParts).
             .map(|prompt| match self.snap_once() {
                 Some(kind) => prompt

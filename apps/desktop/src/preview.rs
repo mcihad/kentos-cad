@@ -13,11 +13,12 @@
 
 use iced::widget::canvas::{self, LineDash, Path, Stroke};
 use iced::widget::{Space, canvas as canvas_widget, column, container, pin, row, stack, text};
-use iced::{Color, Element, Fill, Point, Rectangle, Renderer, Theme, border, mouse};
+use iced::{Color, Element, Fill, Point, Rectangle, Renderer, Theme, Vector, border, mouse};
 
 use kentos_interaction::{MarkerShape, Preview, Tone, Vec2};
 use kentos_render_wgpu::Camera;
 use kentos_ui::theme::{Tokens, typography};
+use kentos_ui::widget::beside;
 
 use crate::app::Message;
 use crate::marks::Marks;
@@ -61,7 +62,7 @@ pub fn layer<'a>(
         if let Some(tag) = tag {
             let at = screen(tag.at);
             layers.push(
-                pin(measurement(tag.lines, tag_tone))
+                pin(measurement(tag.lines, tag_tone, snap))
                     .x(at.x.round() + 16.0)
                     .y(at.y.round() + 16.0)
                     .width(Fill)
@@ -71,15 +72,15 @@ pub fn layer<'a>(
         }
     }
     if let Some((value, at)) = field {
+        // Above right of the cursor, clear of the tag below right of it;
+        // left of it near the drawing's right edge, lower near its top, never
+        // outside it (the web's `besidePointer`, DESIGN.md §7.4.2).
         let at = screen(at);
-        layers.push(
-            pin(value_field(value))
-                .x(at.x.round() + 18.0)
-                .y(at.y.round() - 58.0)
-                .width(Fill)
-                .height(Fill)
-                .into(),
-        );
+        layers.push(beside(
+            value_field(value),
+            Point::new(at.x.round(), at.y.round()),
+            Vector::new(18.0, -58.0),
+        ));
     }
     if layers.is_empty() {
         return Space::new().width(Fill).height(Fill).into();
@@ -90,10 +91,12 @@ pub fn layer<'a>(
 /// The measurement beside the cursor: length and bearing, or the arc's
 /// radius and length, and the area once there are three corners; in the
 /// danger colour where it names what goes (a vertex to remove).
-fn measurement<'a>(lines: Vec<String>, tone: Tone) -> Element<'a, Message> {
+fn measurement<'a>(lines: Vec<String>, tone: Tone, snap: Color) -> Element<'a, Message> {
+    // The point calculator's readings are in the drawing's snap colour (the web's `pal.snap`).
     let color = move |t: &Tokens| match tone {
         Tone::Danger => t.danger,
-        _ => t.accent,
+        Tone::Snap => snap,
+        Tone::Accent => t.accent,
     };
     let lines = column(lines.into_iter().map(|line| {
         text(line)

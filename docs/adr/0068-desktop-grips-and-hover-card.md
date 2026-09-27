@@ -112,3 +112,7 @@
 - Görüntüler (`hover_card::screens`, `.run/shots/tutamac-*`, `uzerine-gelme-*`), koyu ve açık, 1440×900 ve 1100×650:
   - seçili parselin tutamaçları, taşınan köşe, kesikli önizleme ve uzaklık;
   - parselin üzerindeki kart.
+
+## Sonra
+
+- 27 Eylül: kartın yeri ve genişliği web'in `5c1cf5a`'sındaki kurala geçti. Kart kenarda imlecin öbür yanına geçer, uzun adı kaydırır, satırları `auto 1fr`'dır ([ADR 0082](0082-cards-and-tips-at-the-edges.md)).

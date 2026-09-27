@@ -279,6 +279,13 @@ pub fn scaled(px: f32) -> f32 {
     current().scaled(px)
 }
 
+/// Varsayılan yazı boyutunda verilmiş bir ölçünün o anki boyuttaki
+/// karşılığı: web'in `px × var(--ui-scale)`'i (ör. bilgi kartının en çok
+/// 280 piksellik genişliği, DESIGN.md §7.4.2); tam piksele yuvarlanır.
+pub fn from_default(px: f32) -> f32 {
+    (px * current().size / Typography::DEFAULT.size).round()
+}
+
 /// [`scaled`]'ın tersi: o anki yazı boyutundaki bir ölçünün 12 piksellik
 /// gövde metnindeki karşılığı (ör. kullanıcının sürükleyerek verdiği panel
 /// genişliğini yazı boyutundan bağımsız saklamak için).

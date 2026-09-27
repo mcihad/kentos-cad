@@ -15,8 +15,8 @@
 //! Over a grip of a selected path, the idle menu starts with the grip's
 //! actions (kentos_interaction::grip_menu, docs/adr/0074): Köşe N with
 //! Köşeyi sil, or Kenar N with Ortasına köşe ekle and Düz kenar yap or Yaya
-//! dönüştür. The web's Nokta hesapla submenu waits for the point
-//! calculator (TODOS.md UX-07).
+//! dönüştür. While a command waits for a point, the command menu offers
+//! Nokta hesapla (docs/adr/0083).
 
 use iced::Point;
 use kentos_interaction::SnapKind;
@@ -275,8 +275,13 @@ impl App {
                 .item(label, Message::PromptOption(option.key))
                 .shortcut(option.key);
         }
+        let mut menu = menu.separator();
+        if self.session.can_calc_point() {
+            menu = menu
+                .submenu("Nokta hesapla", crate::point_calc::calc_menu())
+                .icon(crate::icons::from_web(Some("calc")));
+        }
         let menu = menu
-            .separator()
             .submenu("Tek seferlik kenet", self.snap_menu(Menu::new()))
             .icon(crate::icons::from_web(Some("snap")));
         ["draft.snap", "draft.ortho", "draft.polar", "draft.tracking", "-", "view.zoomExtents"]

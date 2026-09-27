@@ -210,6 +210,19 @@ impl Stretch {
 }
 
 impl Tool for Stretch {
+    /// A computed point for the base or the target (the web's `acceptPoint`).
+    fn accepts_points(&self) -> bool {
+        true
+    }
+
+    fn accept_point(&mut self, p: Vec2, cx: &mut Context<'_>) -> bool {
+        if !self.placing() {
+            return false;
+        }
+        self.point(p, cx);
+        self.refresh(cx);
+        true
+    }
     fn id(&self) -> &'static str {
         ID
     }

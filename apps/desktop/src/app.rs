@@ -190,6 +190,8 @@ pub enum Message {
     CommandFocus(bool),
     /// An option button of the running command's prompt (its key: `G`, `Enter`).
     PromptOption(&'static str),
+    /// Nokta hesapla: a construction over the running command (docs/adr/0083).
+    PointCalc(kentos_interaction::point_calc::CalcKind),
     /// A key press no text box captured (keys.rs); routed by ADR 0018.
     Key(KeyPress),
     /// Shift, Ctrl, Alt or the logo key changed (Shift turns ortho over for a click).
@@ -648,6 +650,7 @@ impl App {
                 }
             }
             Message::PromptOption(key) => return self.prompt_option(key),
+            Message::PointCalc(kind) => return self.start_point_calc(kind),
             Message::Key(press) => return self.key(press),
             Message::Modifiers(modifiers) => self.modifiers = modifiers,
             Message::Dock(event) => self.docks.update(event),

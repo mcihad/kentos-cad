@@ -144,7 +144,7 @@ fn settings() -> Vec<SettingDescriptor> {
                 "Komut çalışırken çizim alanının üstünde de aracın adı, beklediği adım ve seçenekleri (kenar sayısı, yöntem, kopya…) düğme olarak gösterilir. Kapalıyken (varsayılan) bunların hepsi, nokta hesabı ve tek seferlik kenet alttaki komut satırındadır.",
             ),
         boolean("drafting.hoverInfo", true)
-            .hosts(&[Web])
+            .hosts(&[Web, Desktop])
             .text(
                 "Nesne bilgi kartı",
                 "Seçim aracında bir nesnenin üzerinde durunca türü, katmanı, uzunluğu ya da alanı gösterilir.",

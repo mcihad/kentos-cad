@@ -280,6 +280,18 @@ fn right_angle(foot: Vec2, along: Vec2, up: Vec2) -> Marker {
 }
 
 impl Tool for Perpendicular {
+    /// A computed point once there is a reference (the web's `acceptPoint`).
+    fn accepts_points(&self) -> bool {
+        true
+    }
+
+    fn accept_point(&mut self, p: Vec2, cx: &mut Context<'_>) -> bool {
+        if self.reference.is_none() {
+            return false;
+        }
+        self.point(p, cx);
+        true
+    }
     fn id(&self) -> &'static str {
         if self.out { OUT_ID } else { IN_ID }
     }

@@ -256,7 +256,15 @@ pub struct Prompt<'a, Message> {
     command: Option<Fragment<'a>>,
     text: Fragment<'a>,
     options: Vec<Keyword<'a, Message>>,
+    /// Chips that open a menu above them (Nokta hesabı): never chosen by typing.
+    menus: Vec<MenuChip<'a, Message>>,
     placeholder: Option<Fragment<'a>>,
+}
+
+struct MenuChip<'a, Message> {
+    label: Fragment<'a>,
+    icon: Option<Icon>,
+    menu: crate::widget::Menu<Message>,
 }
 
 struct Keyword<'a, Message> {
@@ -273,8 +281,25 @@ impl<'a, Message> Prompt<'a, Message> {
             command: None,
             text: text.into_fragment(),
             options: Vec::new(),
+            menus: Vec::new(),
             placeholder: None,
         }
+    }
+
+    /// A chip after the options that opens `menu` above it when clicked (the
+    /// web's Nokta hesabı chip); typing never chooses it.
+    pub fn menu(
+        mut self,
+        label: impl IntoFragment<'a>,
+        icon: Option<Icon>,
+        menu: crate::widget::Menu<Message>,
+    ) -> Self {
+        self.menus.push(MenuChip {
+            label: label.into_fragment(),
+            icon,
+            menu,
+        });
+        self
     }
 
     /// Etkin komutun adı; vurgu renginde bir etiketle gösterilir.
@@ -857,6 +882,25 @@ fn input_row<'a, Message: Clone + 'a>(
                     .padding([1, 7])
                     .style(style::button::keyword),
             );
+        }
+
+        for chip in prompt.menus {
+            let mut face = Row::new().spacing(5).align_y(Center);
+            if let Some(glyph) = chip.icon {
+                face = face.push(icon(glyph).size(14.0));
+            }
+            face = face.push(label::body(chip.label));
+            // Framed like the options; the menu button draws its hover and press over it.
+            let face = container(face).padding([1, 7]).style(|theme: &Theme| {
+                let t = Tokens::of(theme);
+                container::Style {
+                    text_color: Some(t.text),
+                    border: border::rounded(3.0).width(1.0).color(t.border),
+                    ..container::Style::default()
+                }
+            });
+            let menu = chip.menu;
+            ask = ask.push(crate::widget::MenuButton::new(face, move || menu.clone()));
         }
 
         content = content.push(ask);
@@ -1952,8 +1996,8 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Console<'a, M
         &'b mut self,
         tree: &'b mut Tree,
         layout: Layout<'b>,
-        _renderer: &Renderer,
-        _viewport: &Rectangle,
+        renderer: &Renderer,
+        viewport: &Rectangle,
         translation: Vector,
     ) -> Option<overlay::Element<'b, Message, Theme, Renderer>> {
         let Tree {
@@ -1963,7 +2007,15 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Console<'a, M
 
         if !self.is_open(state) {
             self.panel = None;
-            return None;
+            // The input row's own: a prompt chip's menu (Nokta hesabı).
+            let row = layout.children().nth(1)?;
+            return self.input.as_widget_mut().overlay(
+                &mut children[1],
+                row,
+                renderer,
+                viewport,
+                translation,
+            );
         }
 
         let row = layout.children().nth(1)?.bounds() + translation;

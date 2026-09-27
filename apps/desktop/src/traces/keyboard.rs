@@ -127,6 +127,7 @@ pub(super) fn stroke_for(ch: &str, layout: Layout) -> Result<Stroke, String> {
         }),
         (Layout::Us, '@') => Some(shifted("2", Code::Digit2)),
         (Layout::Us, '<') => Some(plain("<", Code::IntlBackslash)),
+        (Layout::Us, '/') => Some(plain("/", Code::Slash)),
         // Turkish Q: + is Shift+4, − sits right of *, @ is AltGr+Q (Ctrl+Alt on Windows).
         (Layout::TurkishQ, '.') => Some(plain(".", Code::Slash)),
         (Layout::TurkishQ, ',') => Some(plain(",", Code::Backslash)),
@@ -138,6 +139,8 @@ pub(super) fn stroke_for(ch: &str, layout: Layout) -> Result<Stroke, String> {
             ..plain("q", Code::KeyQ)
         }),
         (Layout::TurkishQ, '<') => Some(plain("<", Code::IntlBackslash)),
+        // Turkish Q: / is Shift+7.
+        (Layout::TurkishQ, '/') => Some(shifted("7", Code::Digit7)),
         _ => None,
     };
     if let Some(stroke) = symbol {

@@ -89,6 +89,14 @@ const ICON_SLOT: f32 = 16.0;
 /// Menünün en dar ve en geniş hâli.
 const MIN_WIDTH: f32 = 184.0;
 const MAX_WIDTH: f32 = 360.0;
+/// A row with a detail line (the web's `menu__label--2`): its text column,
+/// the icon's column, and the padding above and below.
+const DETAIL_WIDTH: f32 = 300.0;
+const DETAIL_ICON: f32 = 22.0;
+const DETAIL_ICON_SLOT: f32 = 26.0;
+const DETAIL_PAD: (f32, f32) = (6.0, 7.0);
+/// The detail's line height, relative to its size (the web's 1.35).
+const DETAIL_LEADING: f32 = 1.35;
 /// Alt menünün ana menünün üstüne binen kısmı.
 const SUBMENU_OVERLAP: f32 = 2.0;
 /// Menü imlecin bu kadar sağında ve altında açılır.
@@ -98,6 +106,55 @@ const BUTTON_GAP: f32 = 3.0;
 
 fn item_height() -> f32 {
     typography::scaled(ITEM_HEIGHT)
+}
+
+/// How many lines `text` takes at `size` in `width`, its words wrapped as the
+/// renderer wraps them (from the estimated widths of the words).
+fn wrapped_lines(text: &str, size: f32, width: f32) -> usize {
+    let space = typography::text_width(" ", size);
+    let mut lines = 1;
+    let mut used = 0.0;
+    for word in text.split_whitespace() {
+        let w = typography::text_width(word, size);
+        if used > 0.0 && used + space + w > width {
+            lines += 1;
+            used = w;
+        } else if used > 0.0 {
+            used += space + w;
+        } else {
+            used = w;
+        }
+        // A word longer than the line breaks within itself.
+        while used > width {
+            lines += 1;
+            used -= width;
+        }
+    }
+    lines
+}
+
+/// A row with a detail line: its label, then the detail's lines.
+fn detail_height(detail: &str) -> f32 {
+    let caption = typography::caption();
+    let lines = wrapped_lines(detail, caption, typography::scaled(DETAIL_WIDTH));
+    let (top, bottom) = DETAIL_PAD;
+    (top + typography::body() * 1.3 + 2.0 + lines as f32 * caption * DETAIL_LEADING + bottom).ceil()
+}
+
+/// The row under `position` in a panel as laid out: a container around a
+/// column of rows, one per item.
+fn row_at(panel: Layout<'_>, position: Point) -> Option<usize> {
+    let column = panel.children().next()?;
+    column
+        .children()
+        .position(|row| row.bounds().contains(position))
+}
+
+/// The top of row `index` in a panel's node, from the panel's top.
+fn row_top(panel: &layout::Node, index: usize) -> Option<f32> {
+    let column = panel.children().first()?;
+    let row = column.children().get(index)?;
+    Some(column.bounds().y + row.bounds().y)
 }
 
 fn header_height() -> f32 {
@@ -126,6 +183,8 @@ enum Item<Message> {
 struct Command<Message> {
     icon: Option<Icon>,
     label: String,
+    /// A second line under the label, smaller and muted: what the command does.
+    detail: Option<String>,
     shortcut: Option<String>,
     on_press: Option<Message>,
     checked: Option<bool>,
@@ -139,6 +198,10 @@ struct Command<Message> {
 impl<Message> Item<Message> {
     fn height(&self) -> f32 {
         match self {
+            Item::Command(Command {
+                detail: Some(detail),
+                ..
+            }) => detail_height(detail),
             Item::Command(_) | Item::Submenu { .. } => item_height(),
             Item::Separator => SEPARATOR_HEIGHT,
             Item::Header(_) => header_height(),
@@ -165,6 +228,7 @@ impl<Message> Menu<Message> {
         self.items.push(Item::Command(Command {
             icon: None,
             label: label.into(),
+            detail: None,
             shortcut: None,
             on_press: on_press.into(),
             checked: None,
@@ -185,6 +249,7 @@ impl<Message> Menu<Message> {
         self.items.push(Item::Command(Command {
             icon: None,
             label: label.into(),
+            detail: None,
             shortcut: None,
             on_press: on_press.into(),
             checked: Some(checked),
@@ -206,6 +271,7 @@ impl<Message> Menu<Message> {
         self.items.push(Item::Command(Command {
             icon: None,
             label: label.into(),
+            detail: None,
             shortcut: None,
             on_press: on_press.into(),
             checked: Some(chosen),
@@ -268,6 +334,17 @@ impl<Message> Menu<Message> {
         self
     }
 
+    /// Son eklenen komutun altında ikinci satır: ne yaptığı, küçük ve soluk
+    /// yazıyla, sabit bir sütunda kayarak (web'in `detail`'i). Böyle satırı
+    /// olan menü daha geniştir.
+    pub fn detail(mut self, detail: impl Into<String>) -> Self {
+        if let Some(Item::Command(command)) = self.items.last_mut() {
+            command.detail = Some(detail.into());
+        }
+
+        self
+    }
+
     /// Son eklenen komutun kısayolu; yalnızca gösterilir.
     pub fn shortcut(mut self, shortcut: impl Into<String>) -> Self {
         if let Some(Item::Command(command)) = self.items.last_mut() {
@@ -321,7 +398,9 @@ impl<Message> Menu<Message> {
         PADDING + self.items.iter().take(index).map(Item::height).sum::<f32>()
     }
 
-    /// Kutunun üstünden `y` uzaklıktaki komut.
+    /// Kutunun üstünden `y` uzaklıktaki komut, sabit yükseklikli satırlarla
+    /// hesaplanan (açık menü yerini çizilen satırlardan okur, `row_at`).
+    #[cfg(test)]
     fn item_at(&self, y: f32) -> Option<usize> {
         let mut top = PADDING;
 
@@ -372,11 +451,36 @@ impl<Message> Menu<Message> {
             .find(|&index| self.items[index].is_selectable())
     }
 
+    /// Bir komutunda ikinci satır var mı.
+    fn has_details(&self) -> bool {
+        self.items
+            .iter()
+            .any(|item| matches!(item, Item::Command(command) if command.detail.is_some()))
+    }
+
     /// Kutunun genişliği: en uzun satıra göre, sınırlar içinde. Metnin
     /// genişliği yazı ailesinin ortalama harf genişliğinden tahmin edilir.
     fn width(&self) -> f32 {
         let body = typography::body();
         let caption = typography::caption();
+        if self.has_details() {
+            // The detail column, fixed so its lines are known before drawing.
+            let shortcut = self
+                .items
+                .iter()
+                .filter_map(|item| match item {
+                    Item::Command(command) => command.shortcut.as_deref(),
+                    _ => None,
+                })
+                .map(|shortcut| typography::mono_width(shortcut, caption) + 8.0)
+                .fold(0.0, f32::max);
+            return DETAIL_ICON_SLOT
+                + 8.0
+                + typography::scaled(DETAIL_WIDTH)
+                + shortcut
+                + 16.0
+                + PADDING * 2.0;
+        }
 
         let widest = self
             .items
@@ -904,14 +1008,15 @@ impl<'b, Message: Clone> Overlay<'_, 'b, Message> {
         let main = layouts.next()?.bounds();
         let sub = layouts.next().map(|layout| layout.bounds());
 
-        if let (Some(bounds), Some(menu)) = (sub, self.open_submenu())
+        if let (Some(bounds), Some(_)) = (sub, self.open_submenu())
             && bounds.contains(position)
         {
-            return menu.item_at(position.y - bounds.y).map(Target::Sub);
+            let sub = layout.children().nth(1)?;
+            return row_at(sub, position).map(Target::Sub);
         }
 
         main.contains(position)
-            .then(|| self.menu.item_at(position.y - main.y))
+            .then(|| row_at(layout.children().next()?, position))
             .flatten()
             .map(Target::Main)
     }
@@ -1038,6 +1143,7 @@ impl<Message: Clone> overlay::Overlay<Message, Theme, Renderer> for Overlay<'_, 
             y.clamp(0.0, (bounds.height - size.height).max(0.0)),
         );
 
+        let main_node = main.clone();
         let mut children = vec![main.move_to(origin)];
 
         if let (Some(sub), Some(index)) = (self.sub.as_mut(), self.state.submenu) {
@@ -1052,7 +1158,10 @@ impl<Message: Clone> overlay::Overlay<Message, Theme, Renderer> for Overlay<'_, 
             } else {
                 (origin.x - sub_size.width + SUBMENU_OVERLAP).max(0.0)
             };
-            let y = (origin.y + self.menu.offset(index) - PADDING)
+            // The row's own top in the panel as laid out (rows with a detail
+            // line are as tall as their text).
+            let top = row_top(&main_node, index).unwrap_or_else(|| self.menu.offset(index));
+            let y = (origin.y + top - PADDING)
                 .min(bounds.height - sub_size.height)
                 .max(0.0);
 
@@ -1248,6 +1357,10 @@ fn item_row<'a, Message: 'a>(
     highlighted: bool,
     swatches: bool,
 ) -> Element<'a, Message> {
+    let detail = match item {
+        Item::Command(command) => command.detail.clone(),
+        _ => None,
+    };
     let (mark, text, shortcut, submenu, enabled, danger, sample) = match item {
         Item::Command(command) => (
             // A check shows its ✓ when on, a radio its dot, else its own icon
@@ -1288,6 +1401,10 @@ fn item_row<'a, Message: 'a>(
                 .into();
         }
     };
+
+    if let Some(detail) = detail {
+        return detail_row(mark, text, detail, shortcut, highlighted, enabled, danger);
+    }
 
     let slot: Element<'a, Message> = match mark {
         Mark::Icon(glyph) => icon(glyph).size(14.0).into(),
@@ -1337,6 +1454,66 @@ fn item_row<'a, Message: 'a>(
         .height(item_height())
         .width(Fill)
         .align_y(Center)
+        .style(style::container::menu_item(highlighted, enabled, danger))
+        .into()
+}
+
+/// A command with a detail line (the web's `menu__label--2`): a larger icon,
+/// the label over the detail in a fixed column, the shortcut at the right.
+fn detail_row<'a, Message: 'a>(
+    mark: Mark,
+    text: String,
+    detail: String,
+    shortcut: Option<String>,
+    highlighted: bool,
+    enabled: bool,
+    danger: bool,
+) -> Element<'a, Message> {
+    let slot: Element<'a, Message> = match mark {
+        Mark::Icon(glyph) => icon(glyph).size(DETAIL_ICON).into(),
+        _ => space::horizontal().width(DETAIL_ICON).into(),
+    };
+    let quiet = move |theme: &Theme| {
+        let t = Tokens::of(theme);
+        iced::widget::text::Style {
+            color: Some(if highlighted && enabled {
+                t.on_accent.scale_alpha(0.75)
+            } else {
+                t.muted
+            }),
+        }
+    };
+    let words = Column::new()
+        .push(label::body(text))
+        .push(
+            label::caption(detail)
+                .line_height(DETAIL_LEADING)
+                .wrapping(iced::widget::text::Wrapping::Word)
+                .style(quiet)
+                .width(typography::scaled(DETAIL_WIDTH)),
+        )
+        .spacing(2);
+    let mut content = row![
+        container(slot)
+            .width(DETAIL_ICON_SLOT)
+            .padding(iced::Padding::default().top(1.0)),
+        words,
+    ]
+    .spacing(8)
+    .align_y(iced::alignment::Vertical::Top);
+    if let Some(shortcut) = shortcut {
+        content = content.push(space::horizontal().width(Fill));
+        content = content.push(label::mono_caption(shortcut).style(quiet));
+    }
+    let (top, bottom) = DETAIL_PAD;
+    container(content)
+        .padding(iced::Padding {
+            top,
+            right: 8.0,
+            bottom,
+            left: 8.0,
+        })
+        .width(Fill)
         .style(style::container::menu_item(highlighted, enabled, danger))
         .into()
 }

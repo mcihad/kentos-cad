@@ -23,7 +23,7 @@ use crate::app::{App, Message};
 use crate::settings::schema;
 
 /// The settings the window shows, in its order.
-pub const KEYS: [&str; 28] = [
+pub const KEYS: [&str; 29] = [
     "drafting.ortho",
     "drafting.polar",
     "drafting.polarIncrement",
@@ -31,6 +31,7 @@ pub const KEYS: [&str; 28] = [
     "drafting.pickAperture",
     "drafting.cursorInput",
     "drafting.commandBar",
+    "drafting.hoverInfo",
     "drafting.snap",
     "snap.endpoint",
     "snap.midpoint",
@@ -400,6 +401,11 @@ impl App {
                 switch("drafting.commandBar", None),
             )
             .help(help("drafting.commandBar"))
+            .field(
+                title("drafting.hoverInfo"),
+                switch("drafting.hoverInfo", None),
+            )
+            .help(help("drafting.hoverInfo"))
             .section("Kenetleme")
             .field(
                 title("drafting.snap"),

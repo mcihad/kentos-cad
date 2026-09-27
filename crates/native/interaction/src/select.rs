@@ -267,6 +267,16 @@ impl Select {
         true
     }
 
+    /// A point computed by the point calculator: the grip goes there (the
+    /// web's `SelectTool.acceptPoint`). False when no grip moves.
+    pub fn accept_point(&mut self, p: Vec2, cx: &mut Context<'_>) -> bool {
+        if self.grip.is_none() {
+            return false;
+        }
+        self.commit(p, cx);
+        true
+    }
+
     /// Enter, Space or a quick right click: the grip goes where the pointer
     /// is. False when no grip moves (the last command repeats then).
     pub fn confirm(&mut self, cx: &mut Context<'_>) -> bool {

@@ -100,6 +100,7 @@ pub mod path;
 pub mod perpendicular;
 pub mod pick;
 pub mod point;
+pub mod point_calc;
 mod points;
 pub mod polar;
 mod prompt;

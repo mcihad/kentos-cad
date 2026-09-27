@@ -102,6 +102,34 @@ impl App {
                 .align_y(Center),
             |step, note| step.push(label::caption(note.clone())),
         );
+        let mut options: Vec<Element<'_, Message>> = options.collect();
+        // Nokta hesabı, whenever the command waits for a point (the web's `cmdbar__calc`).
+        if self.session.can_calc_point() {
+            let face = row![
+                icon(crate::icons::from_web(Some("calc"))).size(14.0),
+                label::caption(crate::point_calc::CHIP),
+            ]
+            .spacing(5)
+            .align_y(Center);
+            let face = container(face)
+                .padding(Padding {
+                    top: 2.0,
+                    right: 9.0,
+                    bottom: 2.0,
+                    left: 9.0,
+                })
+                .style(|theme: &iced::Theme| {
+                    let t = Tokens::of(theme);
+                    container::Style {
+                        text_color: Some(t.text),
+                        border: iced::border::rounded(3.0).width(1.0).color(t.border),
+                        ..container::Style::default()
+                    }
+                });
+            options.push(
+                kentos_ui::widget::MenuButton::new(face, crate::point_calc::calc_menu).into(),
+            );
+        }
         let main = Row::new()
             .push(name)
             .push(step)
