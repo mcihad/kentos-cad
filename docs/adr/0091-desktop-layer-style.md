@@ -86,14 +86,18 @@
 - **Yuva adı:** “Basit görünüş” resmin biraz dışına taşarak tam yazılır (en çok 72 px).
 - **Masaüstünde alanlar** her tuşta etkilidir. Sayılar ve hata yazarken güncellenir; web'de Enter ya da odak çıkınca. Değerler ifadeye göre önbellekte olduğundan yazmak yavaşlamaz.
 
-### Çekirdeğe öneri, web ajanıyla anlaşıldı
+### Çekirdekte kapalı kategori (web ajanıyla anlaşıldı)
 
-- Kapalı kategorinin nesnesi bugün “Diğer değerler”e düşüyor: `find(|c| c.enabled && c.value == v)`.
-- QGIS'te kapalı kategori çizilmez. Anlaşılan kural:
+- Kapalı kategorinin nesnesi “Diğer değerler”e düşüyordu: `find(|c| c.enabled && c.value == v)`. Pencerenin sayısı ise onu kategoriye veriyordu.
+- QGIS'te kapalı kategori çizilmez. Yeni kural (`style-core` `resolve.rs`):
   - değerin ilk kategorisi alınır;
   - kategori kapalıysa nesne çizilmez;
   - `other` yalnız hiçbir kategorinin tutmadığı değere gider.
-- Ayrı bir adımda yapılacak: `cases.json` ve `batches.json`'a birer durum eklenir; `legend.json`'da kapalı kategorinin yeri gözden geçirilir.
+- Sabitleyenler:
+  - çekirdeğin birim sınaması (`style/tests.rs`);
+  - `batches.json`'ın yeni durumu `categorized-off`: Arsa kapalı, parseli çizilmez, diğer değerlere de düşmez. Web ve masaüstü geçer.
+- `cases.json`'un rastgele katmanlarında kapalı kategoriye düşen nesne yoktu: yanıtları değişmedi, yeniden kaydedilmedi.
+- Lejant kapalı kategoriyi zaten yazmıyordu (`legendOf`); `legend.json` değişmedi.
 
 ## Sonuçlar
 
