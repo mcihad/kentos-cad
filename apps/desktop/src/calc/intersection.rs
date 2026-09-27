@@ -10,7 +10,9 @@ use std::fmt;
 
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{Canvas, column, container, row};
-use iced::{Element, Fill, Length, Pixels, Point, Rectangle, Renderer, Size, Theme, mouse};
+use iced::{
+    Border, Element, Fill, Length, Pixels, Point, Rectangle, Renderer, Shrink, Size, Theme, mouse,
+};
 use kentos_domain::Document as Model;
 use kentos_interaction::survey::Unit;
 use kentos_interaction::survey::intersection::{forward_intersection, resection};
@@ -22,8 +24,7 @@ use kentos_ui::widget::segmented::Segmented;
 
 use super::read::{Known, read_number, resolve_point};
 use super::{
-    Event, Field, event, footer_button, known_field, layer_select, number_field, result_table,
-    summary,
+    Event, Field, event, footer, known_field, number_field, result_table, summary, text_field,
 };
 use crate::app::Message;
 use crate::exchange::words::{self, Kind as Line};
@@ -157,16 +158,6 @@ impl Form {
         Computed { errors, result }
     }
 
-    /// The layer new points go to: the one chosen, else `poligon`, else the active one.
-    pub fn layer_or_default(&self, model: &Model) -> String {
-        let layers = model.layers();
-        match &self.layer {
-            Some(id) if layers.get(id).is_some() => id.clone(),
-            _ if layers.get("poligon").is_some() => "poligon".to_owned(),
-            _ => layers.active().to_owned(),
-        }
-    }
-
     /// The report's lines (the web's `copyReport`): none without a result.
     pub fn report(&self, model: &Model, format: &Format) -> Option<Vec<Vec<String>>> {
         let found = self.compute(model).result?;
@@ -187,10 +178,15 @@ impl Form {
     pub fn view<'a>(&'a self, model: &Model, format: &Format) -> Element<'a, Message> {
         let computed = self.compute(model);
         let forward = self.kind == Kind::Forward;
-        let unit = format.angle_unit_label();
+        let unit = if format.angle_unit_label() == "°" {
+            "°"
+        } else {
+            "g"
+        };
         let kind = Segmented::new([Kind::Forward, Kind::Resection], self.kind, |k| {
             event(Event::Kind(k))
-        });
+        })
+        .hints([Kind::Forward.hint(), Kind::Resection.hint()]);
         let mut knowns = column![
             known_field(model, format, "A noktası", Field::A, &self.a, None),
             known_field(model, format, "B noktası", Field::B, &self.b, None),
@@ -219,33 +215,40 @@ impl Form {
         };
         knowns = knowns.push(
             row![
-                angle_field(alpha, &self.alpha, |t| event(Event::Alpha(t))),
-                angle_field(beta, &self.beta, |t| event(Event::Beta(t))),
-                number_field("Yeni noktanın adı", &self.name, "P", |t| event(
+                number_field(alpha, &self.alpha, "", |t| event(Event::Alpha(t))),
+                number_field(beta, &self.beta, "", |t| event(Event::Beta(t))),
+                text_field("Yeni noktanın adı", &self.name, "P", |t| event(
                     Event::Name(t)
                 )),
             ]
-            .spacing(12),
+            .spacing(18)
+            .wrap()
+            .vertical_spacing(12),
         );
-        let sketch = column![
-            Canvas::new(Sketch { kind: self.kind })
-                .width(Length::Fixed(SKETCH_W))
-                .height(Length::Fixed(SKETCH_H)),
-            label::caption(if forward {
-                "Açılar saat yönünde ölçülür; P, A'dan B'ye bakınca sağdadır."
-            } else {
-                "Bilinen noktalar P'den bakınca soldan sağa A, B, C sırasındadır; açılar saat yönündedir."
-            })
-            .width(Length::Fixed(SKETCH_W)),
+        // The web's sketch box: beside the fields and as tall as they are.
+        let sketch = container(
+            column![
+                Canvas::new(Sketch { kind: self.kind })
+                    .width(Fill)
+                    .height(Length::Fixed(typography::scaled(SKETCH_H))),
+                label::caption(if forward {
+                    "Açılar saat yönünde ölçülür; P, A'dan B'ye bakınca sağdadır."
+                } else {
+                    "Bilinen noktalar P'den bakınca soldan sağa A, B, C sırasındadır; açılar saat yönündedir."
+                })
+                .width(Fill),
+            ]
+            .spacing(6),
+        )
+        .padding(10)
+        .width(Length::Fixed(typography::scaled(230.0)))
+        .height(Fill)
+        .style(sketch_box);
+        let mut body = column![
+            words::field("Kestirme türü", kind, None),
+            row![knowns.width(Fill), sketch].spacing(18).height(Shrink),
         ]
-        .spacing(6);
-        let mut dialog = Dialog::new("Kestirme")
-            .push(words::field(
-                "Kestirme türü",
-                kind,
-                Some(self.kind.hint().to_owned()),
-            ))
-            .push(row![knowns.width(Fill), container(sketch).padding([4, 0])].spacing(20));
+        .spacing(12);
         let lines = match &computed.result {
             None => computed
                 .errors
@@ -265,10 +268,10 @@ impl Form {
             }
         };
         if let Some(summary) = summary(lines) {
-            dialog = dialog.push(summary);
+            body = body.push(summary);
         }
         if let Some(found) = &computed.result {
-            dialog = dialog.push(result_table(
+            body = body.push(result_table(
                 &["Nokta", "Y (sağa)", "X (yukarı)"],
                 vec![vec![
                     found.name.clone(),
@@ -279,56 +282,36 @@ impl Form {
             ));
         }
         let done = computed.result.is_some();
-        dialog
-            .action(footer_button(
-                "Raporu kopyala",
-                done.then(|| event(Event::CopyReport)),
-                false,
-            ))
-            .action(
-                row![
-                    label::body("Katman"),
-                    layer_select(model, &self.layer_or_default(model))
-                ]
-                .spacing(8)
-                .align_y(iced::Center),
-            )
-            .action(footer_button(
-                "Çizime ekle",
-                done.then(|| event(Event::AddPoints)),
-                true,
-            ))
-            .action(footer_button("Kapat", Some(event(Event::Close)), false))
-            .width(820.0)
-            .into()
+        footer(
+            Dialog::new("Kestirme").scroll(body),
+            model,
+            self.layer.as_deref(),
+            done,
+            done,
+        )
+        .width(820.0)
+        .into()
     }
 }
 
-/// An angle field: its label and the value typed.
-fn angle_field<'a>(
-    title: String,
-    value: &'a str,
-    on_input: impl Fn(String) -> Message + 'a,
-) -> Element<'a, Message> {
-    column![
-        label::caption(title),
-        iced::widget::text_input("", value)
-            .on_input(on_input)
-            .padding([5, 8])
-            .width(Fill)
-            .font(typography::mono())
-            .size(typography::body())
-            .style(kentos_ui::style::field::input),
-    ]
-    .spacing(4)
-    .width(Fill)
-    .into()
+/// The sketch's box (the web's `calc-sketch-box`): the heading's ground
+/// and a faint edge.
+fn sketch_box(theme: &Theme) -> container::Style {
+    let t = Tokens::of(theme);
+    container::Style {
+        background: Some(t.header.into()),
+        border: Border {
+            color: t.border,
+            width: 1.0,
+            radius: 2.0.into(),
+        },
+        ..container::Style::default()
+    }
 }
 
-/// The sketch's size: the web's 200 × 118 drawing at 1.2.
-const SKETCH_W: f32 = 240.0;
-const SKETCH_H: f32 = 141.6;
-const SCALE: f32 = 1.2;
+/// The web's drawing (an SVG of 200 × 118), drawn to its box's width
+/// (230 less the padding).
+const SKETCH_H: f32 = 210.0 * 118.0 / 200.0;
 
 /// The web's sketch (an SVG there): which point is where and which angle is
 /// which, not to scale.
@@ -350,7 +333,10 @@ impl<Message> canvas::Program<Message> for Sketch {
         let t = Tokens::of(theme);
         let (ink, accent) = (t.text, t.accent);
         let mut frame = canvas::Frame::new(renderer, bounds.size());
-        let at = |x: f32, y: f32| Point::new(x * SCALE, y * SCALE);
+        // The SVG's units to the box: as wide as it fits, centred.
+        let scale = (bounds.width / 200.0).min(bounds.height / 118.0);
+        let left = (bounds.width - 200.0 * scale) / 2.0;
+        let at = |x: f32, y: f32| Point::new(left + x * scale, y * scale);
         let line = |frame: &mut canvas::Frame, a: (f32, f32), b: (f32, f32)| {
             frame.stroke(
                 &Path::line(at(a.0, a.1), at(b.0, b.1)),
@@ -373,7 +359,7 @@ impl<Message> canvas::Program<Message> for Sketch {
                 let path = Path::new(|b| {
                     b.arc(canvas::path::Arc {
                         center: at(c.0, c.1),
-                        radius: r * SCALE,
+                        radius: r * scale,
                         start_angle: iced::Radians(start),
                         end_angle: iced::Radians(end),
                     });
@@ -381,14 +367,14 @@ impl<Message> canvas::Program<Message> for Sketch {
                 frame.stroke(&path, Stroke::default().with_color(accent).with_width(1.6));
             };
         let mark = |frame: &mut canvas::Frame, x: f32, y: f32| {
-            frame.fill_rectangle(at(x, y), Size::new(6.0 * SCALE, 6.0 * SCALE), ink);
+            frame.fill_rectangle(at(x, y), Size::new(6.0 * scale, 6.0 * scale), ink);
         };
         let word = |frame: &mut canvas::Frame, s: &str, x: f32, y: f32, color| {
             frame.fill_text(Text {
                 content: s.to_owned(),
                 position: at(x, y - 11.0),
                 color,
-                size: Pixels(13.0 * SCALE),
+                size: Pixels(13.0 * scale),
                 font: typography::ui(),
                 ..Text::default()
             });
@@ -413,7 +399,7 @@ impl<Message> canvas::Program<Message> for Sketch {
                 word(&mut frame, "P", 112.0, 112.0, ink);
                 word(&mut frame, "α", 58.0, 44.0, accent);
                 word(&mut frame, "β", 132.0, 46.0, accent);
-                circle(&mut frame, at(104.0, 96.0), ink);
+                circle(&mut frame, at(104.0, 96.0), 4.0 * scale, ink);
             }
             Kind::Resection => {
                 line(&mut frame, (100.0, 100.0), (30.0, 22.0));
@@ -442,7 +428,7 @@ impl<Message> canvas::Program<Message> for Sketch {
                 word(&mut frame, "P", 108.0, 114.0, ink);
                 word(&mut frame, "α", 80.0, 76.0, accent);
                 word(&mut frame, "β", 112.0, 74.0, accent);
-                circle(&mut frame, at(100.0, 100.0), ink);
+                circle(&mut frame, at(100.0, 100.0), 4.0 * scale, ink);
             }
         }
         vec![frame.into_geometry()]
@@ -450,9 +436,9 @@ impl<Message> canvas::Program<Message> for Sketch {
 }
 
 /// The new point: a small ring.
-fn circle(frame: &mut canvas::Frame, at: Point, ink: iced::Color) {
+fn circle(frame: &mut canvas::Frame, at: Point, radius: f32, ink: iced::Color) {
     frame.stroke(
-        &Path::circle(at, 4.0 * SCALE),
+        &Path::circle(at, radius),
         Stroke::default().with_color(ink).with_width(1.4),
     );
 }

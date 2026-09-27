@@ -1,11 +1,13 @@
 //! What the Hesap windows read from their fields, without the window (the
-//! web's `ui/calc/read.ts`, docs/adr/0070): known points, numbers, and
-//! Aplikasyon's checks before and around the core's computation. The
-//! windows show the errors; the tests read them here.
+//! web's `ui/calc/read.ts`, docs/adr/0070, 0071): known points, numbers,
+//! and Kutupsal alım's and Aplikasyon's checks before and around the core's
+//! computation. The windows show the errors; the tests read them here.
 
 use kentos_contracts::Entity;
 use kentos_domain::Document as Model;
-use kentos_interaction::survey::polar::{Stake, StakeoutInput, stakeout};
+use kentos_interaction::survey::polar::{
+    PolarInput, PolarPoint, Shot, Stake, StakeoutInput, polar_survey, stakeout,
+};
 use kentos_interaction::{Vec2, js_trim, upper_tr};
 
 /// A known point as typed: a point object's name, or “Y,X” (the web's `Known`).
@@ -169,6 +171,141 @@ pub fn unit_name(unit: kentos_contracts::AngleUnit) -> &'static str {
     }
 }
 
+/// Kutupsal alım's fields read and computed (the web's `readPolar`).
+#[derive(Clone, Debug, PartialEq)]
+pub struct PolarRead {
+    pub errors: Vec<String>,
+    pub points: Option<Vec<PolarPoint>>,
+    /// The filled rows' names: the name typed, else the row's number.
+    pub names: Vec<String>,
+}
+
+/// The core numbers the shots it is given (“2. noktanın …”) and the table
+/// leaves its empty rows out of them: the message is given back with the
+/// row the user sees (the web's `atTableRow`; `row_of`: shot → table row).
+pub fn at_table_row(message: &str, row_of: impl Fn(usize) -> Option<usize>) -> String {
+    let digits = message.bytes().take_while(u8::is_ascii_digit).count();
+    let shot = message[..digits].parse::<usize>().ok();
+    match (
+        message[digits..].strip_prefix(". noktanın "),
+        shot.and_then(row_of),
+    ) {
+        (Some(after), Some(row)) => format!("{row}. noktanın {after}"),
+        _ => message.to_owned(),
+    }
+}
+
+/// Kutupsal alım's fields read and computed: the points and their names,
+/// or why not (the errors in order).
+pub fn read_polar(
+    form: &super::polar::Form,
+    resolve: impl Fn(&str) -> Known,
+    unit: &str,
+) -> PolarRead {
+    use super::polar::{DISTANCE, NAME, READING, TARGET, ZENITH};
+    let mut errors = Vec::new();
+    let mut known = |text: &str, label: &str| match resolve(text) {
+        Known::Empty => {
+            errors.push(format!("{label} verilmedi."));
+            None
+        }
+        Known::Error(e) => {
+            errors.push(format!("{label}: {e}"));
+            None
+        }
+        Known::Point { p, .. } => Some(p),
+    };
+    let station = known(&form.station, "Durulan nokta");
+    let back = known(&form.back, "Bakılan nokta");
+    let back_reading = read_number(&form.back_reading).unwrap_or(0.0);
+    let station_z = read_number(&form.station_z);
+    let instrument_height = read_number(&form.instrument_height);
+    if back_reading.is_nan() {
+        errors.push("Bakılan noktanın okuması bir sayı değil.".to_owned());
+    }
+    if station_z.is_some_and(f64::is_nan) {
+        errors.push("İstasyon kotu bir sayı değil.".to_owned());
+    }
+    if instrument_height.is_some_and(f64::is_nan) {
+        errors.push("Alet yüksekliği bir sayı değil.".to_owned());
+    }
+    // The rows with anything typed, with their place in the table.
+    let rows: Vec<(usize, &[String; 5])> = form
+        .rows
+        .iter()
+        .enumerate()
+        .filter(|(_, r)| r.iter().any(|v| !js_trim(v).is_empty()))
+        .collect();
+    if rows.is_empty() {
+        errors.push("Tabloya en az bir nokta yazın.".to_owned());
+    }
+    let mut shots = Vec::new();
+    for &(i, r) in &rows {
+        let n = i + 1;
+        let reading = read_number(&r[READING]);
+        let distance = read_number(&r[DISTANCE]);
+        let zenith = read_number(&r[ZENITH]);
+        let target_height = read_number(&r[TARGET]);
+        match reading {
+            None => errors.push(format!("{n}. satırda yatay açı okuması yok.")),
+            Some(v) if v.is_nan() => {
+                errors.push(format!("{n}. satırda yatay açı okuması bir sayı değil."))
+            }
+            Some(_) => {}
+        }
+        match distance {
+            None => errors.push(format!("{n}. satırda uzunluk yok.")),
+            Some(v) if v.is_nan() => errors.push(format!("{n}. satırda uzunluk bir sayı değil.")),
+            Some(_) => {}
+        }
+        if zenith.is_some_and(f64::is_nan) || target_height.is_some_and(f64::is_nan) {
+            errors.push(format!("{n}. satırda bir değer sayı değil."));
+        }
+        shots.push(Shot {
+            reading: reading.unwrap_or(f64::NAN),
+            distance: distance.unwrap_or(f64::NAN),
+            zenith,
+            target_height,
+        });
+    }
+    let names: Vec<String> = rows
+        .iter()
+        .map(|&(i, r)| match js_trim(&r[NAME]) {
+            "" => format!("{}", i + 1),
+            name => name.to_owned(),
+        })
+        .collect();
+    let (Some(station), Some(back), true) = (station, back, errors.is_empty()) else {
+        return PolarRead {
+            errors,
+            points: None,
+            names,
+        };
+    };
+    let points = match polar_survey(&PolarInput {
+        unit: unit.to_owned(),
+        station,
+        back,
+        back_reading,
+        station_z,
+        instrument_height,
+        shots,
+    }) {
+        Ok(points) => Some(points),
+        Err(e) => {
+            errors.push(at_table_row(&e, |shot| {
+                rows.get(shot.checked_sub(1)?).map(|&(i, _)| i + 1)
+            }));
+            None
+        }
+    };
+    PolarRead {
+        errors,
+        points,
+        names,
+    }
+}
+
 /// Aplikasyon's fields read and computed (the web's `readStakeout`).
 #[derive(Clone, Debug, PartialEq)]
 pub struct StakeoutRead {
@@ -252,6 +389,105 @@ pub fn read_stakeout(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A known point with no drawing behind it: coordinates only.
+    fn resolve(text: &str) -> Known {
+        let t = js_trim(text);
+        match coords(t) {
+            _ if t.is_empty() => Known::Empty,
+            Some(p) => Known::Point {
+                p,
+                name: String::new(),
+            },
+            None => Known::Error(format!(
+                "“{t}” adlı nokta çizimde yok. Adını denetleyin ya da Y,X yazın."
+            )),
+        }
+    }
+
+    /// Kutupsal alım from (0, 0) oriented on (0, 100), the back reading 0.
+    fn polar(rows: &[&[(usize, &str)]]) -> super::super::polar::Form {
+        let mut form = super::super::polar::Form {
+            station: "0,0".to_owned(),
+            back: "0,100".to_owned(),
+            rows: Vec::new(),
+            ..Default::default()
+        };
+        for cells in rows {
+            let mut row: [String; 5] = Default::default();
+            for &(col, value) in *cells {
+                row[col] = value.to_owned();
+            }
+            form.rows.push(row);
+        }
+        form
+    }
+
+    /// The web's read.test.ts: the core counts the filled rows, the message
+    /// names the table's.
+    #[test]
+    fn a_polar_core_message_names_the_table_row() {
+        use super::super::polar::{DISTANCE, NAME, READING, ZENITH};
+        let form = polar(&[
+            &[(NAME, "1"), (READING, "0"), (DISTANCE, "10")],
+            &[],
+            &[(NAME, "3"), (READING, "100"), (DISTANCE, "0")],
+        ]);
+        let read = read_polar(&form, resolve, "grad");
+        assert_eq!(read.points, None);
+        assert_eq!(read.errors, ["3. noktanın uzunluğu sıfırdan büyük olmalı."]);
+        let form = polar(&[&[], &[], &[(READING, "0"), (DISTANCE, "10"), (ZENITH, "0")]]);
+        assert_eq!(
+            read_polar(&form, resolve, "grad").errors,
+            [
+                "3. noktanın başucu açısı yatay uzunluk bırakmıyor (0 ile yarım tur arasında olmalı)."
+            ]
+        );
+        assert_eq!(
+            at_table_row("Başka bir ileti.", |_| Some(9)),
+            "Başka bir ileti."
+        );
+    }
+
+    #[test]
+    fn polar_heights_that_are_not_numbers_are_refused() {
+        use super::super::polar::{DISTANCE, READING};
+        let mut form = polar(&[&[(READING, "0"), (DISTANCE, "10")]]);
+        form.station_z = "12a".to_owned();
+        form.instrument_height = "x".to_owned();
+        let read = read_polar(&form, resolve, "grad");
+        assert_eq!(read.points, None);
+        assert_eq!(
+            read.errors,
+            [
+                "İstasyon kotu bir sayı değil.",
+                "Alet yüksekliği bir sayı değil."
+            ]
+        );
+    }
+
+    /// A slope distance at a quarter turn is horizontal; the height comes
+    /// from the station's, the instrument's and the target's (100 + 1.5 − 1.5).
+    #[test]
+    fn polar_numbers_are_taken_as_the_web_takes_them() {
+        use super::super::polar::{DISTANCE, NAME, READING, TARGET, ZENITH};
+        let mut form = polar(&[&[
+            (NAME, "A"),
+            (READING, "100"),
+            (DISTANCE, "10"),
+            (ZENITH, "100"),
+            (TARGET, "1.5"),
+        ]]);
+        form.station_z = "100".to_owned();
+        form.instrument_height = "1,5".to_owned();
+        let read = read_polar(&form, resolve, "grad");
+        assert!(read.errors.is_empty(), "{:?}", read.errors);
+        assert_eq!(read.names, ["A"]);
+        let points = read.points.expect("a point");
+        assert_eq!(points.len(), 1);
+        assert!((points[0].p.x - 10.0).abs() < 1e-9 && points[0].p.y.abs() < 1e-9);
+        assert!(points[0].z.is_some_and(|z| (z - 100.0).abs() < 1e-9));
+    }
 
     #[test]
     fn coordinates_are_read_east_first_as_the_web_reads_them() {

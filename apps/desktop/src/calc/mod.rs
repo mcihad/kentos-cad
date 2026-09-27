@@ -1,12 +1,15 @@
-//! Hesap: the surveying windows (the web's `ui/calc/`, docs/adr/0070),
-//! Önden and Geriden kestirme ([`intersection`]) and Aplikasyon
-//! ([`stakeout`]). What they share, as the web's `common.ts`:
+//! Hesap: the surveying windows (the web's `ui/calc/`, docs/adr/0070,
+//! 0071): Poligon hesabı ([`traverse`]), Kutupsal alım ([`polar`]), Önden
+//! and Geriden kestirme ([`intersection`]) and Aplikasyon ([`stakeout`]).
+//! What they share, as the web's `common.ts`:
 //!
 //! - a known point: a point object's name in the drawing or “Y,X”, or shown
 //!   on the drawing (Çizimden: the window closes, the pick tool runs, the
 //!   window opens again as it was, the point's name when it snapped to a
 //!   named point, else its coordinates);
 //! - numbers read as the web reads them ([`read`]);
+//! - the measurements table ([`grid`]): Enter goes down, rows are added and
+//!   removed, lines pasted from a spreadsheet fill down and right;
 //! - a summary of at most six problems, then the results;
 //! - the report copied as tab-separated lines, for a spreadsheet;
 //! - new points added as one undo step named after the window, with their
@@ -15,34 +18,49 @@
 //! What is typed stays while the app runs, whatever drawing is open, as on
 //! the web; nothing of it is saved.
 
+pub mod grid;
 pub mod intersection;
+mod parts;
+pub mod polar;
 pub mod read;
 pub mod stakeout;
+pub mod traverse;
 
 use std::collections::BTreeMap;
 
-use iced::widget::{Column, button, column, container, row, text_input};
-use iced::{Center, Element, Fill, Length, Task};
+use iced::widget::column;
+use iced::{Element, Task};
 use kentos_contracts::{Entity, EntityBase, PointEntity, Vec2 as Wire};
 use kentos_domain::Slot;
 use kentos_interaction::pick::PickPoint;
 use kentos_interaction::{Format, Level, Vec2, fixed};
-use kentos_ui::icon::{Icon, icon};
-use kentos_ui::label;
-use kentos_ui::style;
-use kentos_ui::widget::select::{Choice, Select};
 
 use crate::app::{App, Dialog as Asking, Message};
-use crate::exchange::words::{self, Kind as Line};
 
-pub use read::Known;
+use grid::Table;
+pub(crate) use parts::{
+    footer, footer_button, known_field, knowns, leaves, number_field, result_table, summary,
+    text_field,
+};
 
 /// The commands the windows answer.
-pub const COMMANDS: &[&str] = &["calc.forward", "calc.resection", "calc.stakeout"];
+pub const COMMANDS: &[&str] = &[
+    "calc.traverse",
+    "calc.polar",
+    "calc.forward",
+    "calc.resection",
+    "calc.stakeout",
+];
+
+/// The windows' greatest height: the web's body of at most 760 px with the
+/// heading and the buttons; in a lower window the body scrolls.
+pub(crate) const MAX_HEIGHT: f32 = 880.0;
 
 /// A Hesap window.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Window {
+    Traverse,
+    Polar,
     Intersection,
     Stakeout,
 }
@@ -50,11 +68,18 @@ pub enum Window {
 /// A known point field of the window it is in.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Field {
+    /// Kestirme's known points.
     A,
     B,
     C,
+    /// Kutupsal alım's and Aplikasyon's station.
     Station,
+    /// The point looked at: from the station, or from a traverse's start.
     Back,
+    /// Poligon hesabı's start, end and the point looked at from the end.
+    Start,
+    End,
+    Fore,
 }
 
 /// What the windows ask for.
@@ -70,17 +95,25 @@ pub enum Event {
     Alpha(String),
     Beta(String),
     Name(String),
+    /// Poligon hesabı's kind, and whether the angle at the end was measured.
+    TraverseKind(traverse::Kind),
+    EndOriented(bool),
+    /// Kutupsal alım's reading to the back point and heights.
+    BackReading(String),
+    StationZ(String),
+    InstrumentHeight(String),
     /// Where new points go: a layer's index in the leaves.
     Layer(usize),
     AddPoints,
     CopyReport,
-    /// Aplikasyon's table: a cell typed, pasted, Enter in it; rows added and removed.
-    Cell(usize, String),
-    Paste(usize, String),
-    Pasted(usize, Option<String>),
-    Submit(usize),
+    /// A table's cell (row, column) typed, pasted, Enter in it; rows added and removed.
+    Cell(usize, usize, String),
+    Paste(usize, usize, String),
+    Pasted(usize, usize, Option<String>),
+    Submit(usize, usize),
     AddRow,
     RemoveRow(usize),
+    /// Aplikasyon: the selected points into the table.
     FromSelection,
 }
 
@@ -88,10 +121,34 @@ pub enum Event {
 #[derive(Debug, Default)]
 pub struct Calc {
     pub open: Option<Window>,
+    pub traverse: traverse::Form,
+    pub polar: polar::Form,
     pub intersection: intersection::Form,
     pub stakeout: stakeout::Form,
     /// The field Çizimden picks for, while its window is closed.
     picking: Option<(Window, Field)>,
+}
+
+impl Calc {
+    /// A window's measurements table; Kestirme has none.
+    fn table(&mut self, window: Window) -> Option<&mut dyn Table> {
+        match window {
+            Window::Traverse => Some(&mut self.traverse),
+            Window::Polar => Some(&mut self.polar),
+            Window::Stakeout => Some(&mut self.stakeout),
+            Window::Intersection => None,
+        }
+    }
+
+    /// Where a window's new points go; Aplikasyon writes nothing.
+    fn layer(&mut self, window: Window) -> Option<&mut Option<String>> {
+        match window {
+            Window::Traverse => Some(&mut self.traverse.layer),
+            Window::Polar => Some(&mut self.polar.layer),
+            Window::Intersection => Some(&mut self.intersection.layer),
+            Window::Stakeout => None,
+        }
+    }
 }
 
 fn event(e: Event) -> Message {
@@ -111,26 +168,52 @@ pub fn angle_text(format: &Format, v: f64) -> String {
 impl App {
     /// `calc.*`: the window opens as it was left.
     pub(crate) fn calc_command(&mut self, id: &'static str) -> Task<Message> {
+        if self.document.is_none() {
+            self.warn("Hesap için önce bir çizim açın.");
+            return Task::none();
+        }
         match id {
-            "calc.forward" => {
-                self.calc_open(Window::Intersection, Some(intersection::Kind::Forward))
+            "calc.traverse" => self.calc_show(Window::Traverse),
+            "calc.polar" => self.calc_show(Window::Polar),
+            "calc.forward" | "calc.resection" => {
+                self.calc.intersection.kind = if id == "calc.forward" {
+                    intersection::Kind::Forward
+                } else {
+                    intersection::Kind::Resection
+                };
+                self.calc_show(Window::Intersection);
             }
-            "calc.resection" => {
-                self.calc_open(Window::Intersection, Some(intersection::Kind::Resection))
-            }
-            "calc.stakeout" => self.calc_open(Window::Stakeout, None),
+            "calc.stakeout" => self.calc_show(Window::Stakeout),
             _ => {}
         }
         Task::none()
     }
 
-    fn calc_open(&mut self, window: Window, kind: Option<intersection::Kind>) {
-        if self.document.is_none() {
-            self.warn("Hesap için önce bir çizim açın.");
+    /// The window shown, as the web builds it on opening: the layer chosen
+    /// stays while the drawing has it, else the window's own (`poligon`
+    /// where there is one; the active layer); a traverse's station rows
+    /// take the known points' names.
+    fn calc_show(&mut self, window: Window) {
+        let Some(doc) = &self.document else {
             return;
+        };
+        let layers = doc.model.layers();
+        let preferred = match window {
+            Window::Polar => None,
+            _ => Some("poligon"),
+        };
+        if let Some(layer) = self.calc.layer(window)
+            && layer.as_deref().is_none_or(|id| layers.get(id).is_none())
+        {
+            *layer = Some(
+                preferred
+                    .filter(|id| layers.get(id).is_some())
+                    .unwrap_or(layers.active())
+                    .to_owned(),
+            );
         }
-        if let Some(kind) = kind {
-            self.calc.intersection.kind = kind;
+        if window == Window::Traverse {
+            self.calc.traverse.sync(&doc.model);
         }
         self.calc.open = Some(window);
         self.dialog = Some(Asking::Calc);
@@ -140,10 +223,11 @@ impl App {
         let Some(window) = self.calc.open else {
             return Task::none();
         };
-        match e {
+        let task = match e {
             Event::Close => {
                 self.calc.open = None;
                 self.dialog = None;
+                Task::none()
             }
             Event::Pick(field) => {
                 let title = self.calc_title(window);
@@ -155,60 +239,136 @@ impl App {
                 self.session.run(Box::new(PickPoint::new(title, label)));
                 self.with_tool(|s, cx| s.activate(cx));
                 self.say(Level::Command, format!("{title}: {label}"));
+                Task::none()
             }
-            Event::Known(field, text) => *self.calc_known_text(window, field) = text,
-            Event::CopyReport => return self.calc_copy_report(window),
-            Event::AddPoints => self.calc_add_points(window),
+            Event::Known(field, text) => {
+                *self.calc_known_text(window, field) = text;
+                Task::none()
+            }
+            Event::CopyReport => self.calc_copy_report(window),
+            Event::AddPoints => {
+                self.calc_add_points(window);
+                Task::none()
+            }
             Event::Layer(i) => {
-                if let Some(doc) = &self.document {
-                    let leaves = leaves(&doc.model);
-                    if let Some((id, _, locked)) = leaves.get(i)
-                        && !locked
-                    {
-                        self.calc.intersection.layer = Some(id.clone());
-                    }
+                if let Some(doc) = &self.document
+                    && let Some((id, _, false)) = leaves(&doc.model).get(i)
+                    && let Some(layer) = self.calc.layer(window)
+                {
+                    *layer = Some(id.clone());
                 }
+                Task::none()
             }
-            Event::Kind(kind) => self.calc.intersection.kind = kind,
-            Event::Alpha(t) => self.calc.intersection.alpha = t,
-            Event::Beta(t) => self.calc.intersection.beta = t,
-            Event::Name(t) => self.calc.intersection.name = t,
-            Event::Cell(row, text) => self.calc.stakeout.set(row, text),
-            Event::Paste(row, contents) => {
+            Event::Kind(kind) => {
+                self.calc.intersection.kind = kind;
+                Task::none()
+            }
+            Event::Alpha(t) => {
+                self.calc.intersection.alpha = t;
+                Task::none()
+            }
+            Event::Beta(t) => {
+                self.calc.intersection.beta = t;
+                Task::none()
+            }
+            Event::Name(t) => {
+                self.calc.intersection.name = t;
+                Task::none()
+            }
+            Event::TraverseKind(kind) => {
+                self.calc.traverse.kind = kind;
+                Task::none()
+            }
+            Event::EndOriented(on) => {
+                self.calc.traverse.end_oriented = on;
+                Task::none()
+            }
+            Event::BackReading(t) => {
+                self.calc.polar.back_reading = t;
+                Task::none()
+            }
+            Event::StationZ(t) => {
+                self.calc.polar.station_z = t;
+                Task::none()
+            }
+            Event::InstrumentHeight(t) => {
+                self.calc.polar.instrument_height = t;
+                Task::none()
+            }
+            Event::Cell(row, col, text) => {
+                if let Some(table) = self.calc.table(window) {
+                    table.set(row, col, text);
+                }
+                Task::none()
+            }
+            Event::Paste(row, col, contents) => {
                 // The field's own paste stands until the clipboard says it held a table.
-                self.calc.stakeout.set(row, contents);
-                return iced::clipboard::read().map(move |t| event(Event::Pasted(row, t)));
-            }
-            Event::Pasted(row, raw) => {
-                if let Some(raw) = raw {
-                    self.calc.stakeout.paste(row, &raw);
+                if let Some(table) = self.calc.table(window) {
+                    table.set(row, col, contents);
                 }
+                iced::clipboard::read().map(move |t| event(Event::Pasted(row, col, t)))
             }
-            Event::Submit(row) => return self.calc.stakeout.submit(row),
-            Event::AddRow => {
-                let row = self.calc.stakeout.add_row();
-                return iced::widget::operation::focus(stakeout::cell_id(row));
+            Event::Pasted(row, col, raw) => match (raw, self.calc.table(window)) {
+                (Some(raw), Some(table)) => match grid::paste(table, row, col, &raw) {
+                    Some(at) => iced::widget::operation::focus(grid::cell_id(window, at, col)),
+                    None => Task::none(),
+                },
+                _ => Task::none(),
+            },
+            Event::Submit(row, col) => match self.calc.table(window) {
+                Some(table) => grid::submit(table, window, row, col),
+                None => Task::none(),
+            },
+            Event::AddRow => match self.calc.table(window) {
+                Some(table) => grid::add(table, window),
+                None => Task::none(),
+            },
+            Event::RemoveRow(row) => {
+                if let Some(table) = self.calc.table(window)
+                    && table.can_remove(row)
+                {
+                    table.remove(row);
+                }
+                Task::none()
             }
-            Event::RemoveRow(row) => self.calc.stakeout.remove_row(row),
-            Event::FromSelection => self.calc_from_selection(),
+            Event::FromSelection => {
+                self.calc_from_selection();
+                Task::none()
+            }
+        };
+        // The station rows are named after the known points, as the web's
+        // table is on every change.
+        if window == Window::Traverse
+            && let Some(doc) = &self.document
+        {
+            self.calc.traverse.sync(&doc.model);
         }
-        Task::none()
+        task
     }
 
     fn calc_title(&self, window: Window) -> &'static str {
         match window {
+            Window::Traverse => traverse::TITLE,
+            Window::Polar => polar::TITLE,
             Window::Intersection => self.calc.intersection.kind.title(),
             Window::Stakeout => stakeout::TITLE,
         }
     }
 
     fn calc_known_text(&mut self, window: Window, field: Field) -> &mut String {
+        let calc = &mut self.calc;
         match (window, field) {
-            (Window::Intersection, Field::B) => &mut self.calc.intersection.b,
-            (Window::Intersection, Field::C) => &mut self.calc.intersection.c,
-            (Window::Intersection, _) => &mut self.calc.intersection.a,
-            (Window::Stakeout, Field::Back) => &mut self.calc.stakeout.back,
-            (Window::Stakeout, _) => &mut self.calc.stakeout.station,
+            (Window::Traverse, Field::Back) => &mut calc.traverse.back,
+            (Window::Traverse, Field::End) => &mut calc.traverse.end,
+            (Window::Traverse, Field::Fore) => &mut calc.traverse.fore,
+            (Window::Traverse, _) => &mut calc.traverse.start,
+            (Window::Polar, Field::Back) => &mut calc.polar.back,
+            (Window::Polar, _) => &mut calc.polar.station,
+            (Window::Intersection, Field::B) => &mut calc.intersection.b,
+            (Window::Intersection, Field::C) => &mut calc.intersection.c,
+            (Window::Intersection, _) => &mut calc.intersection.a,
+            (Window::Stakeout, Field::Back) => &mut calc.stakeout.back,
+            (Window::Stakeout, _) => &mut calc.stakeout.station,
         }
     }
 
@@ -222,8 +382,7 @@ impl App {
             let text = read::name_at(&doc.model, p).unwrap_or_else(|| format!("{},{}", p.x, p.y));
             *self.calc_known_text(window, field) = text;
         }
-        self.calc.open = Some(window);
-        self.dialog = Some(Asking::Calc);
+        self.calc_show(window);
     }
 
     /// The report, tab-separated lines, to the system clipboard (the web's `copyReport`).
@@ -233,9 +392,12 @@ impl App {
         };
         let format = Format::of(doc.settings());
         let title = self.calc_title(window);
+        let model = &doc.model;
         let lines = match window {
-            Window::Intersection => self.calc.intersection.report(&doc.model, &format),
-            Window::Stakeout => self.calc.stakeout.report(&doc.model, &format),
+            Window::Traverse => self.calc.traverse.report(model, &format),
+            Window::Polar => self.calc.polar.report(model, &format),
+            Window::Intersection => self.calc.intersection.report(model, &format),
+            Window::Stakeout => self.calc.stakeout.report(model, &format),
         };
         let Some(lines) = lines else {
             return Task::none();
@@ -255,35 +417,55 @@ impl App {
         iced::clipboard::write(text)
     }
 
+    /// Çizime ekle: the window's new points in one step, named after it; the
+    /// window closes (the web's `addToDrawing`).
     fn calc_add_points(&mut self, window: Window) {
-        let Window::Intersection = window else {
-            return;
-        };
         let Some(doc) = &self.document else {
             return;
         };
-        let form = &self.calc.intersection;
-        let Some(result) = form.compute(&doc.model).result else {
+        let model = &doc.model;
+        let calc = &self.calc;
+        let (points, kind, layer) = match window {
+            Window::Traverse => (
+                calc.traverse.points(model),
+                "Poligon noktası",
+                &calc.traverse.layer,
+            ),
+            Window::Polar => (calc.polar.points(model), "Alım noktası", &calc.polar.layer),
+            Window::Intersection => {
+                let Some(found) = calc.intersection.compute(model).result else {
+                    return;
+                };
+                let point = NewPoint {
+                    name: found.name,
+                    p: found.p,
+                    z: None,
+                };
+                (vec![point], "Kestirme noktası", &calc.intersection.layer)
+            }
+            Window::Stakeout => return,
+        };
+        let (Some(layer), false) = (layer.clone(), points.is_empty()) else {
             return;
         };
-        let layer = form.layer_or_default(&doc.model);
-        let title = form.kind.title();
-        let point = NewPoint {
-            name: result.name.clone(),
-            p: result.p,
-            z: None,
-        };
-        if self.add_points(&layer, &[point], "Kestirme noktası", title) {
-            self.say(
-                Level::Success,
-                format!(
-                    "{title}: {} noktası çizime eklendi (Ctrl+Z geri alır).",
-                    result.name
-                ),
-            );
-            self.calc.open = None;
-            self.dialog = None;
+        let step = self.calc_title(window);
+        if !self.add_points(&layer, &points, kind, step) {
+            return;
         }
+        let n = points.len();
+        let said = match window {
+            Window::Traverse => {
+                format!("{step}: {n} poligon noktası çizime eklendi (Ctrl+Z geri alır).")
+            }
+            Window::Polar => format!("{step}: {n} nokta çizime eklendi (Ctrl+Z geri alır)."),
+            _ => format!(
+                "{step}: {} noktası çizime eklendi (Ctrl+Z geri alır).",
+                points[0].name
+            ),
+        };
+        self.say(Level::Success, said);
+        self.calc.open = None;
+        self.dialog = None;
     }
 
     /// Aplikasyon's “Seçili noktaları ekle”: the selected points, by name
@@ -392,9 +574,12 @@ impl App {
             return column![].into();
         };
         let format = Format::of(doc.settings());
+        let model = &doc.model;
         let dialog = match window {
-            Window::Intersection => self.calc.intersection.view(&doc.model, &format),
-            Window::Stakeout => self.calc.stakeout.view(&doc.model, &format),
+            Window::Traverse => self.calc.traverse.view(model, &format),
+            Window::Polar => self.calc.polar.view(model, &format),
+            Window::Intersection => self.calc.intersection.view(model, &format),
+            Window::Stakeout => self.calc.stakeout.view(model, &format),
         };
         kentos_ui::widget::overlay::modal(dialog, event(Event::Close))
     }
@@ -411,371 +596,17 @@ pub struct NewPoint {
 /// The label of a known field, as the prompt of Çizimden names it.
 fn field_label(window: Window, field: Field) -> &'static str {
     match (window, field) {
-        (Window::Stakeout, Field::Back) => "Bakılan nokta",
-        (Window::Stakeout, _) => "Durulan nokta (istasyon)",
+        (Window::Traverse, Field::Back) => "Başlangıçta bakılan nokta",
+        (Window::Traverse, Field::End) => "Bitiş noktası (B)",
+        (Window::Traverse, Field::Fore) => "Bitişte bakılan nokta",
+        (Window::Traverse, _) => "Başlangıç noktası (A)",
+        (Window::Polar | Window::Stakeout, Field::Back) => "Bakılan nokta",
+        (Window::Polar | Window::Stakeout, _) => "Durulan nokta (istasyon)",
         (Window::Intersection, Field::B) => "B noktası",
         (Window::Intersection, Field::C) => "C noktası",
         (Window::Intersection, _) => "A noktası",
     }
 }
 
-/// The layers points may go to, in tree order, as the layer select lists
-/// them: id, name, locked.
-pub(crate) fn leaves(model: &kentos_domain::Document) -> Vec<(String, String, bool)> {
-    let layers = model.layers();
-    layers
-        .leaves()
-        .into_iter()
-        .map(|node| {
-            (
-                node.id.clone(),
-                node.name.clone(),
-                layers.is_locked(&node.id),
-            )
-        })
-        .collect()
-}
-
-/// A known point field (the web's `knownField`): the text, Çizimden, and
-/// under them what it resolves to: the point, the error, or the hint.
-pub(crate) fn known_field<'a>(
-    model: &kentos_domain::Document,
-    format: &Format,
-    title: &'a str,
-    field: Field,
-    text: &'a str,
-    hint: Option<&'a str>,
-) -> Element<'a, Message> {
-    let input = text_input("Nokta adı ya da Y,X", text)
-        .on_input(move |t| event(Event::Known(field, t)))
-        .padding([5, 8])
-        .width(Fill)
-        .font(kentos_ui::theme::typography::ui())
-        .size(kentos_ui::theme::typography::body())
-        .style(style::field::input);
-    let pick = button(
-        row![icon(Icon::Magnet).size(14.0), label::body("Çizimden")]
-            .spacing(6)
-            .align_y(Center),
-    )
-    .on_press(event(Event::Pick(field)))
-    .padding([5, 10])
-    .style(style::button::secondary);
-    let resolved = match read::resolve_point(model, text) {
-        Known::Empty => label::caption(hint.unwrap_or("Henüz verilmedi")),
-        Known::Error(e) => label::caption(e).style(style::text::danger),
-        Known::Point { p, .. } => label::caption(format.point(p)),
-    };
-    words::field(
-        title,
-        column![row![input, pick].spacing(8).align_y(Center), resolved].spacing(4),
-        None,
-    )
-}
-
-/// A text field with its label (the web's `textField`).
-pub(crate) fn number_field<'a>(
-    title: &'a str,
-    value: &'a str,
-    placeholder: &'a str,
-    on_input: impl Fn(String) -> Message + 'a,
-) -> Element<'a, Message> {
-    words::field(
-        title,
-        text_input(placeholder, value)
-            .on_input(on_input)
-            .padding([5, 8])
-            .width(Fill)
-            .font(kentos_ui::theme::typography::ui())
-            .size(kentos_ui::theme::typography::body())
-            .style(style::field::input),
-        None,
-    )
-}
-
-/// The summary box: at most six problems, or what was computed.
-pub(crate) fn summary<'a>(lines: Vec<(Line, String)>) -> Option<Element<'a, Message>> {
-    (!lines.is_empty()).then(|| {
-        words::summary(
-            lines
-                .into_iter()
-                .map(|(kind, t)| words::text_line(kind, t))
-                .collect(),
-        )
-    })
-}
-
-/// A results table: a header and rows of text, numbers right-aligned.
-pub(crate) fn result_table<'a>(
-    head: &[&'a str],
-    rows: Vec<Vec<String>>,
-    numeric: &[bool],
-) -> Element<'a, Message> {
-    let cell = |t: String, n: bool, strong: bool| -> Element<'a, Message> {
-        let text = if n { label::mono(t) } else { label::body(t) };
-        let text = if strong {
-            text.font(kentos_ui::theme::typography::ui_strong())
-        } else {
-            text
-        };
-        let c = container(text).width(Fill).padding([4, 8]);
-        if n {
-            c.align_x(iced::Right).into()
-        } else {
-            c.into()
-        }
-    };
-    let head_row = row(head
-        .iter()
-        .zip(numeric)
-        .map(|(h, &n)| cell((*h).to_owned(), n, true)));
-    let mut table = Column::new().push(
-        container(head_row)
-            .width(Fill)
-            .style(style::container::header),
-    );
-    for r in rows {
-        table = table.push(row(r
-            .into_iter()
-            .zip(numeric)
-            .map(|(t, &n)| cell(t, n, false))));
-    }
-    container(table)
-        .width(Fill)
-        .style(style::container::bordered)
-        .into()
-}
-
-/// The layer select of the footer (the web's `layerChoice`): locked layers marked.
-pub(crate) fn layer_select<'a>(
-    model: &kentos_domain::Document,
-    chosen: &str,
-) -> Element<'a, Message> {
-    let leaves = leaves(model);
-    let selected = leaves.iter().position(|(id, _, _)| id == chosen);
-    let choices: Vec<Choice> = leaves
-        .iter()
-        .map(|(_, name, locked)| {
-            Choice::new(if *locked {
-                format!("{name} (kilitli)")
-            } else {
-                name.clone()
-            })
-        })
-        .collect();
-    container(Select::new(choices, selected, |i| event(Event::Layer(i))).searchable(false))
-        .width(Length::Fixed(200.0))
-        .into()
-}
-
-/// The footer's buttons as the web lays them out.
-pub(crate) fn footer_button<'a>(
-    caption: &'a str,
-    on: Option<Message>,
-    primary: bool,
-) -> Element<'a, Message> {
-    if primary {
-        words::primary(caption, on)
-    } else {
-        words::secondary(caption, on)
-    }
-}
-
 #[cfg(test)]
-mod tests {
-    use kentos_contracts::Entity;
-
-    use super::*;
-    use crate::files_testing::{app_with_drawing, last_said};
-
-    fn calc(app: &mut App, e: Event) {
-        let _ = app.update(Message::Calc(e));
-    }
-
-    /// Önden kestirme from A (0, 0) and B (100, 0), 50 g at each: P lies
-    /// right of A → B, at (50, −50). Worked out by hand.
-    #[test]
-    fn forward_intersection_adds_its_point_in_one_step() {
-        let mut app = app_with_drawing();
-        let _ = app.run("calc.forward");
-        assert_eq!(app.dialog, Some(Asking::Calc));
-        calc(&mut app, Event::Known(Field::A, "0,0".into()));
-        calc(&mut app, Event::Known(Field::B, "100;0".into()));
-        calc(&mut app, Event::Alpha("50".into()));
-        calc(&mut app, Event::Beta("50,0".into()));
-        let doc = app.document.as_ref().expect("open");
-        let found = app
-            .calc
-            .intersection
-            .compute(&doc.model)
-            .result
-            .expect("a point");
-        assert!(
-            (found.p.x - 50.0).abs() < 1e-9 && (found.p.y + 50.0).abs() < 1e-9,
-            "{:?}",
-            found.p
-        );
-        assert_eq!(found.name, "P");
-        let count = doc.model.entities().count();
-        calc(&mut app, Event::AddPoints);
-        assert_eq!(app.dialog, None, "the window closes");
-        let doc = app.document.as_mut().expect("open");
-        assert_eq!(doc.model.entities().count(), count + 1);
-        let Some(Entity::Point(p)) = app.selection.ids().first().and_then(|&s| doc.model.get(s))
-        else {
-            panic!("the new point, selected");
-        };
-        assert_eq!(p.base.label.as_deref(), Some("P"));
-        assert_eq!(
-            p.base.attrs.get("Tür").map(String::as_str),
-            Some("Kestirme noktası")
-        );
-        assert_eq!(
-            last_said(&app),
-            "Önden kestirme: P noktası çizime eklendi (Ctrl+Z geri alır)."
-        );
-        let doc = app.document.as_mut().expect("open");
-        assert_eq!(doc.model.undo().as_deref(), Some("Önden kestirme"));
-    }
-
-    #[test]
-    fn missing_fields_are_said_in_the_webs_order() {
-        let mut app = app_with_drawing();
-        let _ = app.run("calc.resection");
-        calc(&mut app, Event::Known(Field::B, "Q9".into()));
-        calc(&mut app, Event::Alpha("x".into()));
-        let doc = app.document.as_ref().expect("open");
-        let computed = app.calc.intersection.compute(&doc.model);
-        assert_eq!(
-            computed.errors,
-            [
-                "A noktası verilmedi.",
-                "B noktası: “Q9” adlı nokta çizimde yok. Adını denetleyin ya da Y,X yazın.",
-                "C noktası verilmedi.",
-                "α açısını yazın.",
-                "β açısını yazın.",
-            ]
-        );
-    }
-
-    /// Çizimden: the window closes, the pick tool asks, a typed point comes
-    /// back into the field and the window opens again as it was.
-    #[test]
-    fn a_point_shown_on_the_drawing_comes_back_to_its_field() {
-        let mut app = app_with_drawing();
-        let _ = app.run("calc.stakeout");
-        calc(&mut app, Event::Known(Field::Back, "12,34".into()));
-        calc(&mut app, Event::Pick(Field::Station));
-        assert_eq!(app.dialog, None);
-        assert_eq!(
-            app.session.prompt().text(),
-            "Aplikasyon: Durulan nokta (istasyon): haritada bir nokta gösterin ya da Y,X yazın [Vazgeç (Esc)]"
-        );
-        let _ = app.submit_line("486513.341,4420189.522");
-        assert!(!app.session.is_running());
-        assert_eq!(app.dialog, Some(Asking::Calc));
-        // The demo drawing's point P1 lies exactly there: its name is taken.
-        assert_eq!(app.calc.stakeout.station, "P1");
-        assert_eq!(app.calc.stakeout.back, "12,34", "the rest as it was");
-        // Esc: nothing picked, the window opens again.
-        calc(&mut app, Event::Pick(Field::Back));
-        app.cancel();
-        assert_eq!(app.dialog, Some(Asking::Calc));
-        assert_eq!(app.calc.stakeout.back, "12,34");
-    }
-
-    /// From (0, 0) oriented on (0, 100): the point (100, 0) is 100 g east,
-    /// 100 m away, 100 g clockwise from the back point.
-    #[test]
-    fn stakeout_values_and_a_target_at_the_station() {
-        let mut app = app_with_drawing();
-        let _ = app.run("calc.stakeout");
-        calc(&mut app, Event::Known(Field::Station, "0,0".into()));
-        calc(&mut app, Event::Known(Field::Back, "0,100".into()));
-        calc(&mut app, Event::Cell(0, "100,0".into()));
-        let doc = app.document.as_ref().expect("open");
-        let read = app.calc.stakeout.compute(&doc.model);
-        let stakes = read.stakes.expect("values");
-        assert!((stakes[0].bearing - 100.0).abs() < 1e-9);
-        assert!((stakes[0].distance - 100.0).abs() < 1e-9);
-        assert!(stakes[0].angle.is_some_and(|a| (a - 100.0).abs() < 1e-9));
-        assert_eq!(read.names, ["100,0"]);
-        calc(&mut app, Event::Cell(1, "0,0".into()));
-        let doc = app.document.as_ref().expect("open");
-        assert_eq!(
-            app.calc.stakeout.compute(&doc.model).errors,
-            ["2. satırdaki nokta durulan noktayla aynı yerde; semt tanımsız."]
-        );
-    }
-}
-
-/// The two windows filled in, for the owner. Not run by default:
-/// `cargo test -p kentos-desktop calc::screens -- --ignored --nocapture`.
-#[cfg(test)]
-#[test]
-#[ignore = "pictures for the owner, run by hand"]
-fn screens() {
-    use iced::Size;
-    use kentos_ui::snapshot::Snapshot;
-
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
-    std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
-        for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
-            for name in ["hesap-onden", "hesap-geriden", "hesap-aplikasyon"] {
-                let mut app = crate::files_testing::app_with_drawing();
-                let _ = app
-                    .settings
-                    .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
-                app.apply_settings();
-                let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
-                let mut update = |app: &mut App, message| {
-                    let _ = app.update(message);
-                };
-                snapshot.settle(&mut app, App::view, &mut update);
-                let calc = |app: &mut App, e: Event| {
-                    let _ = app.update(Message::Calc(e));
-                };
-                match name {
-                    "hesap-onden" => {
-                        let _ = app.run("calc.forward");
-                        calc(&mut app, Event::Known(Field::A, "P1".into()));
-                        calc(
-                            &mut app,
-                            Event::Known(Field::B, "486535.757,4420188.723".into()),
-                        );
-                        calc(&mut app, Event::Alpha("62,5".into()));
-                        calc(&mut app, Event::Beta("58.25".into()));
-                        calc(&mut app, Event::Name("Y1".into()));
-                    }
-                    "hesap-geriden" => {
-                        let _ = app.run("calc.resection");
-                        calc(&mut app, Event::Known(Field::A, "P1".into()));
-                        calc(
-                            &mut app,
-                            Event::Known(Field::B, "486535.757,4420188.723".into()),
-                        );
-                        calc(&mut app, Event::Alpha("42".into()));
-                    }
-                    _ => {
-                        let _ = app.run("calc.stakeout");
-                        calc(&mut app, Event::Known(Field::Station, "P1".into()));
-                        calc(
-                            &mut app,
-                            Event::Known(Field::Back, "486535.757,4420188.723".into()),
-                        );
-                        calc(&mut app, Event::Cell(0, "486538.221,4420218.986".into()));
-                        calc(&mut app, Event::Cell(1, "486514.344 4420220.532".into()));
-                    }
-                }
-                snapshot.settle(&mut app, App::view, &mut update);
-                let file = out.join(format!("{name}-{width}x{height}{suffix}.png"));
-                snapshot
-                    .render(app.view(), &app.theme())
-                    .save(&file)
-                    .expect("writes the picture");
-                println!("{}", file.display());
-            }
-        }
-    }
-}
+mod tests;

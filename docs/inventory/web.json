@@ -74,7 +74,7 @@
     },
     "commandsWithoutPlace": [],
     "commandsWithoutTests": 55,
-    "commandsOnDesktop": 118
+    "commandsOnDesktop": 120
   },
   "commands": [
     {
@@ -192,7 +192,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
@@ -297,7 +297,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",

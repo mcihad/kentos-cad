@@ -7,7 +7,7 @@
 - **Web ajanının tarifi (27 Eylül, 13. görev):**
   - kaynak: `ui/calc/common.ts`, `read.ts`, `IntersectionDialog.ts`, `StakeoutDialog.ts` ve çekirdeğin `survey` modülü;
   - 15. görevde web'de üç düzeltme yapıldı (`af28188`); Aplikasyon'un durulan noktadaki hedef reddi bu dilime alındı.
-- Poligon hesabı ve Kutupsal alım ikinci dilimdir.
+- Poligon hesabı ve Kutupsal alım ikinci dilimdir ([ADR 0071](0071-desktop-calc-traverse-and-polar.md)). O dilim Aplikasyon'un tablosunu ortak ölçü tablosuna taşıdı; dört pencereyi de web'in yerleşimine getirdi.
 
 ## Bağlam
 
