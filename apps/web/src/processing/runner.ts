@@ -1,6 +1,7 @@
 import { Signal } from '../core/signal';
 import { foldTurkish } from '../core/text';
 import type { Entity, NewEntity } from '../model/entities';
+import { entityObjects, type BuilderObjects } from '../model/expression/builderObjects';
 import { compileExpression, previewExpression } from '../model/expression/expression';
 import { resolveFeatures, summarizeFeatures, type FeatureHost, type InputSummary } from './features';
 import { withObjects } from './geometry';
@@ -150,6 +151,21 @@ export class ProcessingRunner {
     const set = resolveFeatures(values[input.name] as FeaturesValue, input, this.host);
     const layers = this.host.doc.layers;
     return previewExpression(r.expr, set.entities, def.returns, (id) => layers.get(id)?.name ?? id, (list) => this.measures(list));
+  }
+
+  /**
+   * The objects an expression parameter runs on, for the expression
+   * builder's preview and a field's values (docs/adr/0100 §5); undefined
+   * while its input resolves to nothing.
+   */
+  builderObjects(tool: ProcessingTool, values: Record<string, unknown>, name: string): BuilderObjects | undefined {
+    const def = tool.parameters.find((p) => p.name === name);
+    if (def?.type !== 'expression') return undefined;
+    const input = tool.parameters.find((p) => p.name === (def.of ?? ''));
+    if (input?.type !== 'features' || !values[input.name]) return undefined;
+    const set = resolveFeatures(values[input.name] as FeaturesValue, input, this.host);
+    const layers = this.host.doc.layers;
+    return entityObjects(set.entities, (id) => layers.get(id)?.name ?? id, { measures: (list) => this.measures(list) });
   }
 
   /** The expressions' geometry values of these objects: from the drawing's store the host keeps, else from a store of their own. */
