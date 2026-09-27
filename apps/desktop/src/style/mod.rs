@@ -2,16 +2,18 @@
 //! style library the drawing and the style windows read, the drawing's
 //! styled layers for the drawing area (`scene.rs`), the pictures the GPU
 //! atlas draws its images from (`images.rs`, `svg.rs`), symbol pictures for
-//! the windows (`thumbs.rs`) and the Katman stili window (`layer_style/`,
-//! docs/adr/0091).
+//! the windows (`thumbs.rs`), the Katman stili window (`layer_style/`,
+//! docs/adr/0091) and Stil yöneticisi (`manager/`, docs/adr/0092).
 //!
 //! The library holds the system symbols that ship with KentOS, the user's
-//! own and the open project's (`ProjectStyles` in the drawing, so everyone
-//! who opens the project sees them). The web keeps the same three sources
-//! (`style/library.ts`).
+//! own (Kitaplığım, kept in a .kstil file of the user's data folder,
+//! `user_library.rs`) and the open project's (`ProjectStyles` in the
+//! drawing, so everyone who opens the project sees them). The web keeps the
+//! same three sources (`style/library.ts`).
 
 pub mod images;
 pub mod layer_style;
+pub mod manager;
 #[cfg(test)]
 mod perf;
 pub mod scene;
@@ -19,7 +21,9 @@ pub mod scene;
 mod screens;
 pub mod svg;
 pub mod thumbs;
+pub mod user_library;
 
+use std::path::Path;
 use std::sync::Arc;
 
 use kentos_contracts::ProjectStyles;
@@ -34,6 +38,10 @@ pub struct Styles {
     pub thumbs: thumbs::Thumbs,
     /// The open Katman stili window.
     pub layer_style: Option<layer_style::LayerStyleWindow>,
+    /// The open Stil yöneticisi window.
+    pub manager: Option<manager::Manager>,
+    /// Where Kitaplığım is kept (nowhere until the program names its folder, and in tests).
+    user_file: user_library::UserLibrary,
     /// The project styles last loaded, so an unchanged drawing is not read again.
     project: Option<ProjectStyles>,
 }
@@ -60,7 +68,46 @@ impl Styles {
             images: Arc::new(images::Images::new()),
             thumbs: thumbs::Thumbs::default(),
             layer_style: None,
+            manager: None,
+            user_file: user_library::UserLibrary::default(),
             project: None,
+        }
+    }
+
+    /// Kitaplığım from its file in `folder`; what to say when the file could not be read.
+    pub fn open_user_library(&mut self, folder: &Path) -> Option<String> {
+        let (file, opened) = user_library::UserLibrary::open(folder);
+        self.user_file = file;
+        self.library
+            .load(Source::User, &opened.items, &opened.categories);
+        opened.problem
+    }
+
+    /// After an edit of `source` in the library: Kitaplığım is written to its
+    /// file, the project's part into the drawing (an edit, not an undo step:
+    /// the library keeps no undo, as on the web). What to say when it could
+    /// not be kept.
+    pub fn changed(
+        &mut self,
+        source: Source,
+        doc: Option<&mut kentos_domain::Document>,
+    ) -> Option<String> {
+        match source {
+            Source::System => None,
+            Source::User => self.user_file.save(&self.library).err().map(|e| {
+                format!("Kitaplığım kaydedilemedi ({e}); değişiklik yalnız bu oturumda duruyor. Klasörün yazılabilir olduğunu denetleyin.")
+            }),
+            Source::Project => {
+                let Some(doc) = doc else {
+                    return Some("Açık çizim yok: projenin kitaplığı kaydedilemedi.".into());
+                };
+                let (items, categories) = self.library.dump(Source::Project);
+                let styles = ProjectStyles { items, categories };
+                doc.set_styles(styles.clone());
+                // The drawing now holds what the library holds: not read back.
+                self.project = Some(styles);
+                None
+            }
         }
     }
 

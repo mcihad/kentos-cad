@@ -413,3 +413,25 @@ fn a_new_group_is_empty_and_the_active_layer_stays() {
     assert_eq!(doc.layers().active(), "a");
     assert_eq!(doc.layers().unique_name("Yeni grup"), "Yeni grup 2");
 }
+
+#[test]
+fn the_project_styles_change_as_an_edit_without_an_undo_step() {
+    let mut doc = empty();
+    let generation = doc.generation();
+    let styles = kentos_domain::contracts::ProjectStyles {
+        items: vec![serde_json::json!({
+            "kind": "symbol", "id": "p-1", "name": "Proje sembolü", "path": ["Proje"],
+            "symbol": { "type": "fill", "layers": [] },
+        })],
+        categories: Vec::new(),
+    };
+    doc.set_styles(styles.clone());
+    assert_eq!(doc.styles(), &styles);
+    assert!(doc.is_dirty());
+    assert!(doc.generation() > generation);
+    assert!(!doc.can_undo(), "the library keeps no undo");
+    // The same styles again are no edit.
+    let generation = doc.generation();
+    doc.set_styles(styles);
+    assert_eq!(doc.generation(), generation);
+}

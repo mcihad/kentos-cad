@@ -262,6 +262,242 @@ fn layer_style_screens() {
     }
 }
 
+/// What a picture of Stil yöneticisi shows: its events, then a text to click
+/// (a menu's button) or to right-click (a tree node's menu).
+struct ManagerState {
+    name: &'static str,
+    setup: fn(&mut App),
+    click: Option<(&'static str, bool, bool)>,
+}
+
+/// Stil yöneticisi in the states of the web's pictures
+/// (`apps/web/scripts/e2e/shots.mjs stylemanager`): `.run/shots/smgr-*.png`.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn manager_screens() {
+    use crate::style::manager::{Event, KindFilter, Pick, PickTarget};
+    use kentos_native_style::library::Source;
+    use kentos_ui::snapshot::Input;
+    fn sm(app: &mut App, e: Event) {
+        let _ = app.update(Message::StyleManager(Box::new(e)));
+    }
+    fn open(app: &mut App) {
+        let _ = app.update(Message::Run("style.manager"));
+    }
+    fn with_copy(app: &mut App) {
+        open(app);
+        sm(app, Event::Copy("temel.cizgi.cift".into(), Source::User));
+    }
+    let states = [
+        ManagerState {
+            name: "acik",
+            setup: open,
+            click: None,
+        },
+        ManagerState {
+            name: "sistem-secili",
+            setup: |app| {
+                open(app);
+                sm(app, Event::Press("temel.cizgi.cift".into()));
+            },
+            click: None,
+        },
+        ManagerState {
+            name: "kitapligim-secili",
+            setup: with_copy,
+            click: None,
+        },
+        ManagerState {
+            name: "arama",
+            setup: |app| {
+                open(app);
+                sm(app, Event::Search("konut".into()));
+            },
+            click: None,
+        },
+        ManagerState {
+            name: "tur-isaret",
+            setup: |app| {
+                open(app);
+                sm(app, Event::Kind(KindFilter::Marker));
+            },
+            click: None,
+        },
+        ManagerState {
+            name: "tur-cizim",
+            setup: |app| {
+                open(app);
+                sm(app, Event::Kind(KindFilter::Asset));
+            },
+            click: None,
+        },
+        ManagerState {
+            name: "mpyy",
+            setup: |app| {
+                open(app);
+                sm(app, Event::Go(Source::System, vec!["MPYY".into()], true));
+                sm(
+                    app,
+                    Event::Go(
+                        Source::System,
+                        vec!["MPYY".into(), "Uygulama imar planı".into()],
+                        true,
+                    ),
+                );
+            },
+            click: None,
+        },
+        ManagerState {
+            name: "sil-sorusu",
+            setup: |app| {
+                with_copy(app);
+                let id = app
+                    .styles
+                    .manager
+                    .as_ref()
+                    .and_then(|m| m.selected.clone())
+                    .unwrap_or_default();
+                sm(app, Event::Delete(id));
+            },
+            click: None,
+        },
+        ManagerState {
+            name: "sec-isaret",
+            setup: |app| {
+                let _ = app.open_style_manager(
+                    Some(Pick {
+                        kind: Some(KindFilter::Marker),
+                        title: "Nokta sembolü seçin".into(),
+                        current: None,
+                        target: PickTarget::Selection,
+                    }),
+                    None,
+                );
+                sm(app, Event::Press("temel.isaret.arti".into()));
+            },
+            click: None,
+        },
+        ManagerState {
+            name: "ice-aktar",
+            setup: |app| {
+                with_copy(app);
+                let text = kentos_native_style::file::export_styles(
+                    &app.styles.library,
+                    &["temel.cizgi.cift", "temel.alan.dolu"],
+                )
+                .to_string();
+                app.offer_import("paylasilan.kstil", &text, false);
+            },
+            click: None,
+        },
+        ManagerState {
+            name: "menu-yeni",
+            setup: open,
+            click: Some(("Yeni sembol", false, true)),
+        },
+        ManagerState {
+            name: "menu-ice",
+            setup: open,
+            click: Some(("İçe aktar", false, true)),
+        },
+        ManagerState {
+            name: "menu-disa",
+            setup: open,
+            click: Some(("Dışa aktar", false, true)),
+        },
+        // A system symbol's Kopyala, as the web's picture: its details are short, the button in view.
+        ManagerState {
+            name: "menu-kopyala",
+            setup: |app| {
+                open(app);
+                sm(app, Event::Press("temel.cizgi.cift".into()));
+            },
+            click: Some(("Kopyala", false, true)),
+        },
+        ManagerState {
+            name: "menu-kategori",
+            setup: with_copy,
+            click: Some(("Kitaplığım", true, false)),
+        },
+    ];
+    let Some(doc) = demo() else {
+        eprintln!("the web's demo drawing is not written: see the module's comment");
+        return;
+    };
+    let out = root().join(".run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let only = std::env::var("KENTOS_SHOTS_ONLY").ok();
+    let sizes: [(f32, f32, &str, &str, i64); 5] = [
+        (1440.0, 900.0, "dark", "", 13),
+        (1100.0, 650.0, "dark", "", 13),
+        (1440.0, 900.0, "light", "-acik", 13),
+        (1100.0, 650.0, "light", "-acik", 13),
+        (1100.0, 650.0, "light", "-acik-buyuk", 16),
+    ];
+    for state in &states {
+        if only
+            .as_deref()
+            .is_some_and(|o| !o.split(',').any(|n| n == state.name))
+        {
+            continue;
+        }
+        for (width, height, mode, suffix, text) in sizes {
+            let (mut app, _) = App::boot(None);
+            let _ = app.update(Message::Opened(Some(Ok(Box::new(doc.clone())))));
+            let _ = app.settings.choose(&[
+                ("appearance.theme", serde_json::Value::from(mode)),
+                ("appearance.textSize", serde_json::Value::from(text)),
+            ]);
+            app.apply_settings();
+            (state.setup)(&mut app);
+            let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+            let mut update = |app: &mut App, message| {
+                let _ = app.update(message);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            if let Some((label, right, last)) = state.click {
+                // The window's text (the last one found, over the ribbon's), or
+                // the tree's (the first one, before the details' badge).
+                let find = |snapshot: &mut Snapshot, app: &App| {
+                    let found: Vec<_> = crate::point_calc::texts(snapshot, app)
+                        .into_iter()
+                        .filter(|(t, _)| t == label)
+                        .map(|(_, at)| at)
+                        .collect();
+                    let at = if last { found.last() } else { found.first() };
+                    at.copied()
+                        .unwrap_or_else(|| panic!("“{label}” is not shown"))
+                };
+                let at = find(&mut snapshot, &app);
+                // Below the details' view on a short window: no picture of a closed menu.
+                if at.center().y > height - 100.0 {
+                    println!(
+                        "{}: “{label}” is below the view at {width}x{height}",
+                        state.name
+                    );
+                    continue;
+                }
+                let input = if right {
+                    Input::RightClick(at.center())
+                } else {
+                    Input::Click(at.center())
+                };
+                snapshot.input(&mut app, App::view, &mut update, input);
+            }
+            // The pictures' images reach the atlas over a few frames.
+            for _ in 0..8 {
+                let _ = snapshot.render(app.view(), &app.theme());
+            }
+            let file = out.join(format!("smgr-{}-{width}x{height}{suffix}.png", state.name));
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
+            println!("{}", file.display());
+        }
+    }
+}
+
 #[test]
 #[ignore = "pictures for the owner, run by hand"]
 fn screens() {

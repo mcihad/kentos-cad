@@ -22,6 +22,8 @@ export interface DetailsHost {
   readonly ctx: AppContext;
   readonly pick?: { onPick(id: string): void };
   select(id: string): void;
+  /** Shows an item where it lives (a copy just made) and chooses it. */
+  reveal(id: string): void;
   say(text: string, kind?: 'ok' | 'warn'): void;
   design(what: { id?: string }): void;
   edit(id: string): void;
@@ -158,7 +160,8 @@ function actions(host: DetailsHost, item: Sourced, editable: boolean): HTMLEleme
     const copyTo = (to: 'user' | 'project') => {
       const c = lib.copy(item.id, to);
       host.say(`“${item.name}” ${to === 'user' ? 'Kitaplığım' : 'Proje'} kitaplığına kopyalandı.`);
-      host.select(c.id);
+      // The list goes to the copy, so its card is in view (it stayed where it was).
+      host.reveal(c.id);
     };
     PopupMenu.open(
       [
@@ -170,24 +173,24 @@ function actions(host: DetailsHost, item: Sourced, editable: boolean): HTMLEleme
   });
   list.push(copyBtn);
   list.push(btn('Dışa aktar', 'export', () => host.say(`${downloadStyles(ctx, [item.id], item.name)} öğe dışa aktarıldı.`)));
-  if (editable) {
-    // Asked in a window (DESIGN.md §7.9.1): the library keeps no undo.
-    const del = btn('Sil', 'trash', () => {
-      const users = item.kind === 'asset' ? lib.usersOf(item.id).length : 0;
-      void askRemove({
-        title: 'Kitaplıktan sil',
-        message: `“${item.name}” ${item.source === 'project' ? 'projenin kitaplığından' : 'Kitaplığım’dan'} silinsin mi? Bu geri alınamaz.`,
-        details: users ? [`${users} sembol bu çizimi kullanıyor; silinirse onlarda boş kalır.`] : undefined,
-        action: 'Sil',
-      }).then((yes) => {
-        if (!yes || !lib.get(item.id)) return;
-        lib.remove(item.id);
-        host.say(`“${item.name}” silindi.`);
-      });
-    }, { danger: true });
-    list.push(del);
-  }
+  if (editable) list.push(btn('Sil', 'trash', () => askDelete(host, item), { danger: true }));
   return h('div', { class: 'smgr__actions' }, list);
+}
+
+/** Sil (and Delete on a card): asked in a window (DESIGN.md §7.9.1), as the library keeps no undo. */
+export function askDelete(host: DetailsHost, item: Sourced): void {
+  const lib = host.ctx.styles.library;
+  const users = item.kind === 'asset' ? lib.usersOf(item.id).length : 0;
+  void askRemove({
+    title: 'Kitaplıktan sil',
+    message: `“${item.name}” ${item.source === 'project' ? 'projenin kitaplığından' : 'Kitaplığım’dan'} silinsin mi? Bu geri alınamaz.`,
+    details: users ? [`${users} sembol bu çizimi kullanıyor; silinirse onlarda boş kalır.`] : undefined,
+    action: 'Sil',
+  }).then((yes) => {
+    if (!yes || !lib.get(item.id)) return;
+    lib.remove(item.id);
+    host.say(`“${item.name}” silindi.`);
+  });
 }
 
 /** Gives the selected objects this symbol (one undo step, `cad.entities.set`); locked layers are skipped and counted. */
@@ -238,7 +241,8 @@ export function renderImport(host: DetailsHost, name: string, file: StyleFile, i
               value: mode,
               onChange: (v) => ((mode = v), render()),
             }),
-            mode === 'replace' ? h('p', { class: 'smgr__muted' }, 'Sistem öğelerinin üzerine yazılmaz; onlar kopya olarak alınır.') : null,
+            // As importStyles does (fixtures/style/v1/kstil.json): the note said they came as copies.
+            mode === 'replace' ? h('p', { class: 'smgr__muted' }, 'Yalnız hedef kitaplıktakilerin üzerine yazılır; sistemdekiler ve öbür kitaplıktakiler atlanır.') : null,
           ]
         : null,
       h(

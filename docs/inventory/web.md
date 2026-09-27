@@ -52,15 +52,15 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 139 | 0 | 11 | 15 | 2 | 167 |
+| Komutlar | 142 | 0 | 8 | 15 | 2 | 167 |
 | Araçlar | 56 | 0 | 0 | 2 | 0 | 58 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
 | Çalışma modları | 3 | 0 | 0 | 2 | 0 | 5 |
 | Ayarlar | 41 | 12 | 11 | 0 | 1 | 65 |
-| Tarayıcı depoları | 6 | 1 | 2 | 0 | 1 | 10 |
+| Tarayıcı depoları | 7 | 1 | 1 | 0 | 1 | 10 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 192 | 0 | 0 | 0 | 0 | 192 |
-| Pencereler ve paneller | 42 | 3 | 18 | 0 | 0 | 63 |
+| Pencereler ve paneller | 42 | 4 | 17 | 0 | 0 | 63 |
 
 Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
 
@@ -77,14 +77,11 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (11 / 167; ayrıca 15 iki platformda da bekliyor)
+#### Komutlar (8 / 167; ayrıca 15 iki platformda da bekliyor)
 
 - `cloud.share` Bulut projesini paylaş…
 - `processing.newModel` Yeni model…
-- `style.assign` Seçili nesnelere sembol ver…
-- `style.clearSymbol` Nesne sembolünü kaldır
 - `style.legend` Lejant…
-- `style.manager` Stil yöneticisi…
 - `style.svgEditor` SVG çizim düzenleyicisi…
 - `view.keyTips` Şerit harf ipuçları
 - `view.ribbon` Şerit arayüzü
@@ -150,10 +147,9 @@ Yok.
 - `user.shell`
 - `user.uiFont`  (kısmi) (masaüstünde: ayarlar.json appearance.typeface (Görünüm sekmesi, ADR 0051)) — Masaüstünde KentOS UI'ın üç yazı tipi var (IBM Plex Sans, Inter, Plus Jakarta Sans); web yedi seçenek sunar.
 
-#### Tarayıcı depoları (3 / 10)
+#### Tarayıcı depoları (2 / 10)
 
 - `kentos.invitation`
-- `kentos.styles.v1`
 - `kentos.ui.v1`  (kısmi) (masaüstünde: ayarlar.json appearance.theme) — Tema kalıcıdır; panellerin ve şeridin yerleşimi yeniden açılışta hatırlanmaz.
 
 #### `.kcad` alanları (v1 okunur, v2 yazılır) (0 / 192)
@@ -174,7 +170,7 @@ Yok.
 - `apps/web/src/ui/ribbon/Ribbon.ts#Ribbon` Ribbon (kısmi) (masaüstünde: apps/desktop/src/view.rs, catalog.rs, ribbon_panels.rs (ADR 0017, 0051, 0089)) — Yöntem düğmesi son seçimi göstermez; hızlı erişime ekleme, şeridin sağ tık menüsü ve harf ipuçları yok.
 - `apps/web/src/ui/statusbar/StatusBar.ts#StatusBar` StatusBar (kısmi) (masaüstünde: apps/desktop/src/view.rs, cloud/view.rs (ADR 0058, 0080)) — Web'in sunucu hücresi ve onun hesap menüsü yok; masaüstünde hesabın adı ve Çıkış ayrı hücrelerdir (ADR 0041). Çizim motoru hücresi masaüstünde anlamsızdır (wgpu).
 - `apps/web/src/ui/style/LegendDialog.ts#openLegend` openLegend
-- `apps/web/src/ui/style/StyleManager.ts#openStyleManager` openStyleManager
+- `apps/web/src/ui/style/StyleManager.ts#openStyleManager` openStyleManager (kısmi) (masaüstünde: apps/desktop/src/style/manager/ (ADR 0092)) — Düzenle ve Yeni sembol sembol tasarımcısını, SVG çizimi SVG düzenleyicisini açar; ikisi masaüstüne henüz taşınmadı, düğmeleri soluk ve nedenini söyler.
 - `apps/web/src/ui/style/SymbolDesigner.ts#openSymbolDesigner` openSymbolDesigner
 - `apps/web/src/ui/svgedit/SvgEditor.ts#openSvgEditor` openSvgEditor
 - `apps/web/src/ui/svgedit/svgDocProps.ts#openDocProps` openDocProps

@@ -15,7 +15,9 @@ use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::sync::Arc;
 
-use kentos_contracts::{Entity, EntityBase, LayerNodeType, LayerStyle, ProjectSettings};
+use kentos_contracts::{
+    Entity, EntityBase, LayerNodeType, LayerStyle, ProjectSettings, ProjectStyles,
+};
 
 use crate::document::Document;
 use crate::history::{LayerPlace, Op};
@@ -392,6 +394,16 @@ impl Document {
     pub fn set_settings(&mut self, settings: ProjectSettings) {
         if self.settings != settings {
             self.settings = settings;
+            self.mark_edited();
+        }
+    }
+
+    /// Replaces the project's style library, its symbols, drawings and
+    /// categories (web `doc.styles.set`, the style manager's Proje): an edit
+    /// when it differs, never an undo step (the library keeps no undo).
+    pub fn set_styles(&mut self, styles: ProjectStyles) {
+        if self.styles != styles {
+            self.styles = styles;
             self.mark_edited();
         }
     }
