@@ -9,7 +9,7 @@ use std::fmt;
 use std::path::PathBuf;
 
 use iced::widget::{button, container, row, space, text, text_input};
-use iced::{Center, Element, Fill, Task};
+use iced::{Center, Element, Task};
 use serde_json::Value;
 
 use kentos_contracts::{ResolvedSetting, SettingErrorCode, SettingHost, SettingScope, same_value};
@@ -17,10 +17,11 @@ use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::widget::number::Unit;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Banner, Dialog, Form, NumberInput, Segmented, Switch, overlay};
+use kentos_ui::widget::{Banner, Segmented};
 
 use crate::app::{App, Message};
 use crate::settings::schema;
+use crate::settings_sections::Section;
 
 /// The settings the window shows, in its order.
 pub const KEYS: [&str; 32] = [
@@ -59,7 +60,7 @@ pub const KEYS: [&str; 32] = [
 ];
 
 /// The snap kinds, in the web's order (docs/adr/0029).
-const SNAP_KINDS: [&str; 8] = [
+pub(crate) const SNAP_KINDS: [&str; 8] = [
     "snap.endpoint",
     "snap.midpoint",
     "snap.center",
@@ -70,7 +71,7 @@ const SNAP_KINDS: [&str; 8] = [
     "snap.nearest",
 ];
 
-const PX: &[Unit] = &[Unit::new("px", 1.0)];
+pub(crate) const PX: &[Unit] = &[Unit::new("px", 1.0)];
 
 /// The window's draft: the values asked for, and a pending import or reset.
 #[derive(Debug, Clone, PartialEq)]
@@ -83,10 +84,12 @@ pub struct SettingsDraft {
     pub reset: bool,
     /// What the last file action said.
     pub note: Option<(bool, String)>,
+    /// The section shown (settings_sections.rs).
+    pub section: Section,
 }
 
 impl SettingsDraft {
-    fn changed(&self) -> bool {
+    pub(crate) fn changed(&self) -> bool {
         self.values != self.initial || self.import.is_some() || self.reset
     }
 }
@@ -102,11 +105,41 @@ pub enum Edit {
     Import,
     Imported(Option<Result<(String, String), String>>),
     Reset,
+    /// Another section; its own values back to their defaults (the web's
+    /// “Bu bölümü varsayılana döndür”).
+    Section(Section),
+    ResetSection,
+    /// Proje ayarları over this window, which comes back when it closes.
+    OpenProject,
 }
 
 impl App {
+    /// A window that waited under the one that just closed comes back, as
+    /// it was (the web's stacked dialogs); one whose state is gone does not.
+    pub(crate) fn dialog_back(&mut self) {
+        if self.dialog.is_some() {
+            return;
+        }
+        let Some(under) = self.dialog_under.take() else {
+            return;
+        };
+        let alive = match under {
+            crate::app::Dialog::Settings => self.settings_draft.is_some(),
+            crate::app::Dialog::Project => self.project.is_some(),
+            _ => false,
+        };
+        if alive {
+            self.dialog = Some(under);
+        }
+    }
+
     /// Opens the window on the values asked for now.
     pub(crate) fn open_settings(&mut self) {
+        self.open_settings_at(Section::default());
+    }
+
+    /// Opens the window on a section (Proje ayarları's “Uygulama ayarlarını aç”: Yeni projeler).
+    pub(crate) fn open_settings_at(&mut self, section: Section) {
         let values: BTreeMap<&'static str, Value> = KEYS
             .iter()
             .map(|&k| (k, self.settings.requested(k)))
@@ -117,6 +150,7 @@ impl App {
             import: None,
             reset: false,
             note: None,
+            section,
         });
         self.dialog = Some(crate::app::Dialog::Settings);
     }
@@ -203,6 +237,22 @@ impl App {
                 );
             }
             Edit::Imported(Some(Ok((name, body)))) => return self.take_import(name, body),
+            Edit::Section(section) => draft.section = section,
+            Edit::ResetSection => {
+                for key in draft.section.keys() {
+                    if let Some(d) = schema().get(key) {
+                        draft.values.insert(key, d.default.clone());
+                    }
+                }
+            }
+            Edit::OpenProject => {
+                // This window waits under Proje ayarları, its draft as it is (`dialog_back`).
+                let task = self.project_command("file.settings");
+                if self.dialog == Some(crate::app::Dialog::Project) {
+                    self.dialog_under = Some(crate::app::Dialog::Settings);
+                }
+                return task;
+            }
             Edit::Save => return self.save_settings(),
         }
         Task::none()
@@ -365,253 +415,8 @@ impl App {
         Task::none()
     }
 
-    /// The window.
-    pub(crate) fn settings_dialog(&self) -> Element<'_, Message> {
-        let Some(draft) = &self.settings_draft else {
-            return text("").into();
-        };
-        let value = |key: &str| draft.values.get(key).cloned().unwrap_or(Value::Null);
-        let help = |key: &str| schema().get(key).map_or("", |d| d.description.as_str());
-        let title = |key: &str| schema().get(key).map_or("", |d| d.title.as_str());
-        // A switch the organisation's policy fixes shows the value in use and cannot be turned.
-        let switch = |key: &'static str, caption: Option<&'static str>| {
-            let control = match self.settings.resolved(key).filter(|r| r.locked) {
-                Some(r) => Switch::disabled(r.effective.as_bool().unwrap_or(false))
-                    .label("Kurum politikası sabitliyor"),
-                None => Switch::new(value(key).as_bool().unwrap_or(false), move |v| {
-                    Message::Settings(Edit::Value(key, Value::Bool(v)))
-                }),
-            };
-            match caption {
-                Some(caption) if self.settings.resolved(key).is_some_and(|r| !r.locked) => {
-                    control.label(caption)
-                }
-                _ => control,
-            }
-        };
-
-        // Two columns: the drafting aids and the theme; the graphics and the settings file.
-        let drafting = Form::new()
-            .label_width(150.0)
-            .section("Çizim yardımcıları")
-            .field(
-                title("drafting.ortho"),
-                switch("drafting.ortho", Some("Bu oturum")),
-            )
-            .help(help("drafting.ortho"))
-            .field(
-                title("drafting.polar"),
-                switch("drafting.polar", Some("Bu oturum")),
-            )
-            .help(help("drafting.polar"))
-            .field(
-                title("drafting.polarIncrement"),
-                choices("drafting.polarIncrement", &value("drafting.polarIncrement")),
-            )
-            .help(help("drafting.polarIncrement"))
-            .field(
-                title("drafting.snapAperture"),
-                NumberInput::new(
-                    value("drafting.snapAperture").as_f64().unwrap_or(11.0),
-                    |v| {
-                        Message::Settings(Edit::Value(
-                            "drafting.snapAperture",
-                            Value::from(v.round() as i64),
-                        ))
-                    },
-                )
-                .units(PX)
-                .range(range("drafting.snapAperture"))
-                .step(1.0)
-                .decimals(0)
-                .width(120),
-            )
-            .help(help("drafting.snapAperture"))
-            .field(
-                title("drafting.pickAperture"),
-                NumberInput::new(
-                    value("drafting.pickAperture").as_f64().unwrap_or(5.0),
-                    |v| {
-                        Message::Settings(Edit::Value(
-                            "drafting.pickAperture",
-                            Value::from(v.round() as i64),
-                        ))
-                    },
-                )
-                .units(PX)
-                .range(range("drafting.pickAperture"))
-                .step(1.0)
-                .decimals(0)
-                .width(120),
-            )
-            .help(help("drafting.pickAperture"))
-            .field(
-                title("drafting.cursorInput"),
-                switch("drafting.cursorInput", None),
-            )
-            .help(help("drafting.cursorInput"))
-            .field(
-                title("drafting.commandBar"),
-                switch("drafting.commandBar", None),
-            )
-            .help(help("drafting.commandBar"))
-            .field(
-                title("drafting.hoverInfo"),
-                switch("drafting.hoverInfo", None),
-            )
-            .help(help("drafting.hoverInfo"))
-            .section("Kenetleme")
-            .field(
-                title("drafting.snap"),
-                switch("drafting.snap", Some("Bu oturum")),
-            )
-            .help(help("drafting.snap"));
-        let drafting = SNAP_KINDS
-            .iter()
-            .fold(drafting, |form, &key| {
-                form.field(title(key), switch(key, None)).help(help(key))
-            })
-            .section("Görünüm")
-            .field(
-                title("appearance.theme"),
-                listed("appearance.theme", &value("appearance.theme")),
-            )
-            .help(help("appearance.theme"))
-            .field(
-                title("appearance.accentColor"),
-                accent_choice(
-                    value("appearance.accentColor").as_str().unwrap_or("mavi"),
-                    self.mode,
-                ),
-            )
-            .help(help("appearance.accentColor"))
-            .field(
-                title("appearance.drawingBackground"),
-                choices(
-                    "appearance.drawingBackground",
-                    &value("appearance.drawingBackground"),
-                ),
-            )
-            .help(help("appearance.drawingBackground"))
-            .field(
-                title("appearance.crosshair"),
-                choices("appearance.crosshair", &value("appearance.crosshair")),
-            )
-            .help(help("appearance.crosshair"))
-            .field(
-                title("appearance.typeface"),
-                listed("appearance.typeface", &value("appearance.typeface")),
-            )
-            .help(help("appearance.typeface"))
-            .field(
-                title("appearance.monoTypeface"),
-                choices("appearance.monoTypeface", &value("appearance.monoTypeface")),
-            )
-            .help(help("appearance.monoTypeface"))
-            .field(
-                title("appearance.textSize"),
-                NumberInput::new(value("appearance.textSize").as_f64().unwrap_or(13.0), |v| {
-                    Message::Settings(Edit::Value(
-                        "appearance.textSize",
-                        Value::from(v.round() as i64),
-                    ))
-                })
-                .units(PX)
-                .range(range("appearance.textSize"))
-                .step(1.0)
-                .decimals(0)
-                .width(120),
-            )
-            .help(help("appearance.textSize"))
-            .field(
-                title("appearance.startScreen"),
-                switch("appearance.startScreen", None),
-            )
-            .help(help("appearance.startScreen"))
-            .section("Yeni projeler")
-            .field(
-                title("newProjects.srid"),
-                crs_choice(value("newProjects.srid").as_u64().unwrap_or(5256) as u32),
-            )
-            .help(help("newProjects.srid"))
-            .field(
-                title("newProjects.workspace"),
-                choices("newProjects.workspace", &value("newProjects.workspace")),
-            )
-            .help(help("newProjects.workspace"))
-            .field(
-                title("newProjects.drawingFont"),
-                listed("newProjects.drawingFont", &value("newProjects.drawingFont")),
-            )
-            .help(help("newProjects.drawingFont"));
-        let mut graphics = Form::new()
-            .label_width(150.0)
-            .section("Grafik (bu cihaz)")
-            .field("Hazır ayar", presets(draft))
-            .help("Hızlı, Dengeli ve Kaliteli yalnız aşağıdaki iki değeri doldurur; her biri ayrıca değiştirilebilir. Çizimin kaydını ve hassasiyetini değiştirmez.")
-            .field(title("graphics.msaa"), choices("graphics.msaa", &value("graphics.msaa")))
-            .help(help("graphics.msaa"))
-            .row(self.effective_note("graphics.msaa", &value("graphics.msaa")))
-            .field(title("graphics.hiDpi"), switch("graphics.hiDpi", None))
-            .help(help("graphics.hiDpi"))
-            // The styled drawing (docs/adr/0090), as the web's Çizim motoru → Semboller ve çizgiler.
-            .section("Semboller ve çizgiler")
-            .field(
-                title("graphics.symbolSize"),
-                choices("graphics.symbolSize", &value("graphics.symbolSize")),
-            )
-            .help(help("graphics.symbolSize"))
-            .field(title("graphics.lineWeights"), switch("graphics.lineWeights", None))
-            .help(help("graphics.lineWeights"))
-            .section("Ayar dosyası")
-            .row(
-                row![
-                    action("Dışa aktar…", Edit::Export),
-                    action("İçe aktar…", Edit::Import),
-                    action("Varsayılanlara döndür", Edit::Reset),
-                ]
-                .spacing(6),
-            );
-        if let Some((warn, note)) = &draft.note {
-            graphics = graphics.row(if *warn {
-                Banner::warning(note.as_str())
-            } else {
-                Banner::info(note.as_str())
-            });
-        }
-        let graphics = graphics.row(label::caption(self.where_kept()));
-        let body = row![
-            container(drafting).width(Fill),
-            container(graphics).width(Fill)
-        ]
-        .spacing(28);
-
-        let save = button(label::body("Kaydet"))
-            .on_press_maybe(draft.changed().then_some(Message::Settings(Edit::Save)))
-            .padding([5, 16])
-            .style(style::button::primary);
-        let cancel = button(label::body("Vazgeç"))
-            .on_press(Message::DialogClosed)
-            .padding([5, 16])
-            .style(style::button::secondary);
-        overlay::modal(
-            Dialog::new("Uygulama ayarları")
-                .hint("Ctrl+,")
-                .push(label::muted(
-                    "Çizim yardımcıları, kenet türleri ve görünüm sizin tercihinizdir; grafik ayarları bu cihaza özgüdür; Orto, Kutupsal izleme ve Kenetleme bu oturum içindir.",
-                ))
-                // The body scrolls; Kaydet and Vazgeç stay in view whatever the window's height.
-                .scroll_fill(body)
-                .action(cancel)
-                .action(save)
-                .width(1080.0)
-                .max_height(860.0),
-            Message::DialogClosed,
-        )
-    }
-
     /// The value in use against the one asked for, with the device's reason when they differ (SET-03).
-    fn effective_note(&self, key: &str, draft: &Value) -> Element<'_, Message> {
+    pub(crate) fn effective_note(&self, key: &str, draft: &Value) -> Element<'_, Message> {
         let Some(r) = self.settings.preview(key, draft) else {
             return text("").into();
         };
@@ -637,7 +442,7 @@ impl App {
     }
 
     /// Where the settings are kept, and what opening them did.
-    fn where_kept(&self) -> String {
+    pub(crate) fn where_kept(&self) -> String {
         let mut out = match self.settings.path() {
             Some(path) => format!("Ayarlar {} dosyasında saklanır.", path.display()),
             None => "Ayarlar bu oturum için bellekte; dosyaya yazılmaz.".to_owned(),
@@ -688,12 +493,12 @@ pub fn samples_label(n: u32) -> String {
         .map_or_else(|| format!("{n}×"), |c| c.label.clone())
 }
 
-fn range(key: &str) -> std::ops::RangeInclusive<f64> {
+pub(crate) fn range(key: &str) -> std::ops::RangeInclusive<f64> {
     let d = schema().get(key);
     d.and_then(|d| d.min).unwrap_or(0.0)..=d.and_then(|d| d.max).unwrap_or(100.0)
 }
 
-fn action(label_text: &'static str, edit: Edit) -> Element<'static, Message> {
+pub(crate) fn action(label_text: &'static str, edit: Edit) -> Element<'static, Message> {
     button(label::body(label_text))
         .on_press(Message::Settings(edit))
         .padding([4, 12])
@@ -730,7 +535,7 @@ impl fmt::Display for Pick {
 
 /// A setting's choices as a segmented control, the draft's value selected.
 /// A setting with many choices as a list (the drawing typefaces).
-fn listed(key: &'static str, current: &Value) -> Element<'static, Message> {
+pub(crate) fn listed(key: &'static str, current: &Value) -> Element<'static, Message> {
     let choices: Vec<kentos_contracts::SettingChoice> = schema()
         .get(key)
         .map(|d| d.choices.clone())
@@ -750,7 +555,10 @@ fn listed(key: &'static str, current: &Value) -> Element<'static, Message> {
 
 /// The accent colour: the eight presets as swatches, and a colour of one's
 /// own as `#RRGGBB` (taken when it reads; kept as typed until then).
-fn accent_choice(current: &str, mode: kentos_ui::theme::Mode) -> Element<'static, Message> {
+pub(crate) fn accent_choice(
+    current: &str,
+    mode: kentos_ui::theme::Mode,
+) -> Element<'static, Message> {
     use kentos_ui::theme::Accent;
     let chosen = Accent::parse(current);
     let chips = Accent::PRESETS
@@ -805,7 +613,7 @@ fn accent_choice(current: &str, mode: kentos_ui::theme::Mode) -> Element<'static
 }
 
 /// The coordinate system new projects are offered with: the registry's list.
-fn crs_choice(srid: u32) -> Element<'static, Message> {
+pub(crate) fn crs_choice(srid: u32) -> Element<'static, Message> {
     let systems = crate::crs::systems();
     let labels = systems.iter().map(|s| {
         Choice::new(format!("{} (EPSG:{})", s.name, s.srid))
@@ -821,7 +629,7 @@ fn crs_choice(srid: u32) -> Element<'static, Message> {
     .into()
 }
 
-fn choices(key: &'static str, current: &Value) -> Element<'static, Message> {
+pub(crate) fn choices(key: &'static str, current: &Value) -> Element<'static, Message> {
     let count = schema().get(key).map_or(0, |d| d.choices.len());
     let picks = (0..count).map(move |index| Pick { key, index });
     let selected = picks
@@ -851,7 +659,7 @@ impl fmt::Display for PresetPick {
 }
 
 /// The graphics presets; none selected (and “Özel” beside them) when the values match none.
-fn presets(draft: &SettingsDraft) -> Element<'static, Message> {
+pub(crate) fn presets(draft: &SettingsDraft) -> Element<'static, Message> {
     let picks: Vec<PresetPick> = schema()
         .presets
         .iter()
@@ -925,6 +733,129 @@ mod tests {
         let _ = app.update(Message::DialogClosed);
         assert_eq!(app.draft.snap_aperture, 18.0);
         assert_eq!(app.settings.requested("drafting.snapAperture"), 18);
+    }
+
+    /// Uygulama ayarları's sections for the owner, dark and light, at both
+    /// sizes; `.run/shots/uygulama-ayarlari-*`.
+    /// `cargo test -p kentos-desktop settings_view::tests::settings_screens -- --ignored --nocapture`
+    #[test]
+    #[ignore = "pictures for the owner, run by hand"]
+    fn settings_screens() {
+        use crate::settings_sections::Section;
+        use iced::Size;
+        use kentos_ui::snapshot::Snapshot;
+
+        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+        std::fs::create_dir_all(&out).expect("a folder for the pictures");
+        let names = [
+            (Section::Appearance, "gorunum"),
+            (Section::Snap, "kenetleme"),
+            (Section::NewProjects, "yeni-projeler"),
+            (Section::Engine, "cizim-motoru"),
+            (Section::File, "ayar-dosyasi"),
+        ];
+        for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
+            for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
+                for (section, name) in names {
+                    let mut app = crate::files_testing::app_with_drawing();
+                    let _ = app
+                        .settings
+                        .choose(&[("appearance.theme", Value::from(mode))]);
+                    app.apply_settings();
+                    let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+                    let mut update = |app: &mut App, message| {
+                        let _ = app.update(message);
+                    };
+                    snapshot.settle(&mut app, App::view, &mut update);
+                    let _ = app.run("tools.options");
+                    edit(&mut app, Edit::Section(section));
+                    snapshot.settle(&mut app, App::view, &mut update);
+                    let file = out.join(format!(
+                        "uygulama-ayarlari-{name}-{width}x{height}{suffix}.png"
+                    ));
+                    snapshot
+                        .render(app.view(), &app.theme())
+                        .save(&file)
+                        .expect("writes the picture");
+                    println!("{}", file.display());
+                }
+            }
+        }
+    }
+
+    /// The web's sections: one's own values go back to their defaults, the
+    /// others' stay (parity-audit A2, A5).
+    #[test]
+    fn a_section_resets_only_its_own_values() {
+        use crate::settings_sections::Section;
+        let (mut app, _) = App::boot(None);
+        let _ = app.run("tools.options");
+        let draft = app.settings_draft.as_ref().expect("open");
+        assert_eq!(draft.section, Section::Appearance, "the web's first");
+        edit(&mut app, Edit::Value("snap.endpoint", Value::Bool(false)));
+        edit(
+            &mut app,
+            Edit::Value("appearance.textSize", Value::from(16)),
+        );
+        edit(&mut app, Edit::Section(Section::Snap));
+        edit(&mut app, Edit::ResetSection);
+        let draft = app.settings_draft.as_ref().expect("open");
+        assert_eq!(draft.values.get("snap.endpoint"), Some(&Value::Bool(true)));
+        assert_eq!(
+            draft.values.get("appearance.textSize"),
+            Some(&Value::from(16)),
+            "another section's value stays"
+        );
+        // Every value the window shows is in exactly one section.
+        let mut all: Vec<&str> = Section::ALL
+            .iter()
+            .flat_map(|s| s.keys())
+            .copied()
+            .collect();
+        all.sort_unstable();
+        let mut keys = KEYS.to_vec();
+        keys.sort_unstable();
+        assert_eq!(all, keys);
+    }
+
+    /// Proje ayarları and Uygulama ayarları open over each other, the one
+    /// under comes back as it was (the web's stacked dialogs; A3, P2).
+    #[test]
+    fn the_settings_windows_open_over_each_other_and_come_back() {
+        use crate::app::Dialog;
+        use crate::project::Event as ProjectEvent;
+        use crate::settings_sections::Section;
+        let mut app = crate::files_testing::app_with_drawing();
+        let _ = app.run("tools.options");
+        edit(
+            &mut app,
+            Edit::Value("drafting.snapAperture", Value::from(19)),
+        );
+        edit(&mut app, Edit::Section(Section::NewProjects));
+        edit(&mut app, Edit::OpenProject);
+        assert_eq!(app.dialog, Some(Dialog::Project));
+        let _ = app.update(Message::Project(Box::new(ProjectEvent::Close)));
+        assert_eq!(app.dialog, Some(Dialog::Settings), "back as it was");
+        let draft = app.settings_draft.as_ref().expect("the draft kept");
+        assert_eq!(
+            draft.values.get("drafting.snapAperture"),
+            Some(&Value::from(19))
+        );
+        let _ = app.update(Message::DialogClosed);
+        assert_eq!(app.dialog, None);
+
+        // The other way: Uygulama ayarları on Yeni projeler over Proje ayarları.
+        let _ = app.run("file.settings");
+        let _ = app.update(Message::Project(Box::new(ProjectEvent::Settings(
+            crate::project::settings::Event::OpenApp,
+        ))));
+        assert_eq!(app.dialog, Some(Dialog::Settings));
+        assert_eq!(
+            app.settings_draft.as_ref().map(|d| d.section),
+            Some(Section::NewProjects)
+        );
+        let _ = app.update(Message::DialogClosed);
+        assert_eq!(app.dialog, Some(Dialog::Project), "Proje ayarları again");
     }
 
     /// New projects' defaults: saving says the open project stays as it is

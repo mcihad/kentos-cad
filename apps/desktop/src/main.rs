@@ -66,6 +66,7 @@ mod saving;
 mod screens;
 mod selecting;
 mod settings;
+mod settings_sections;
 mod settings_view;
 mod snapshot;
 mod start;

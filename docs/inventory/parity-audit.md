@@ -21,6 +21,7 @@ Denetim yalnız okur; masaüstünün kodu değişmedi. Masaüstünün resimleri 
 - 28 Eylül: 3. madde (N1), web'in `newProjectNote.ts` kuralıyla (`apps/desktop/src/project/new.rs`).
 - 28 Eylül: 4. maddenin yanlış sözü (A1): web'in Ayar dosyası görünüş tercihlerinin masaüstüne taşınmadığını söyler; masaüstü, dosyadaki web'e özgü değerleri sessizce atlamaz, adlarıyla söyler. Anahtarların birleşmesi TODOS.md UX-13'ün Görünüş maddesindedir.
 - 28 Eylül: 9. (A4), 12. (Ç1), 13. (K1, K2), 14. (İ2), 15. (İ1, İ3, İ4) maddeler; S1, Nokta hesabı çipinin ve Koordinat listesi al'daki virgülün ipuçları. Araç kutusunun kategori, model ve araç satırları da web'inki gibi ipucu taşır; İşlemler geçmişi çalıştırmanın saatini yazar.
+- 28 Eylül: 6., 7. ve 10. maddeler (A2, A3, A5, P1, P2): Uygulama ayarları web'in beş bölümüyle (Görünüm, Kenetleme, Yeni projeler, Çizim motoru, Ayar dosyası), kapsam kutusu, bölüm başlığı ve açıklamasıyla; iki ayar penceresinde “Bu bölümü varsayılana döndür”; “Proje ayarlarını aç” ve “Uygulama ayarlarını aç” (pencere öbürünün üstünde açılır, kapanınca alttaki olduğu gibi döner). Tema kartları ve yazı tipi örnekleri görünüş anahtarlarının birleşmesine kaldı.
 - 28 Eylül: 5. ve 11. maddeler (Y1–Y4): Buluta yükle proje türünü, açıklamayı ve etiketleri sorar; saklama biçimi “(sonradan değişmez)” ve web'in açıklamalarıyla; dosya saklamada düğme “Buluta dosya olarak kaydet”; saklamaya göre not; aşamalar ve yüzdeli, boyutlu ilerleme (`kentos-cloud` `upload_new_watched`).
 
 ## Yöntem

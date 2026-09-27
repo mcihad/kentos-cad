@@ -8,7 +8,7 @@
 
 mod content;
 mod new;
-mod settings;
+pub(crate) mod settings;
 
 use std::fmt;
 

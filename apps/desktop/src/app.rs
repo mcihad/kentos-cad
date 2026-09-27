@@ -389,6 +389,10 @@ pub struct App {
     /// as the docks' layout); `None`: the command line's own.
     pub bottom_log: Option<f32>,
     pub dialog: Option<Dialog>,
+    /// A window waiting under the one on top, back when that one closes:
+    /// Uygulama ayarları under Proje ayarları, or the other way (the web's
+    /// stacked dialogs; settings_sections.rs, project/settings.rs).
+    pub dialog_under: Option<Dialog>,
     /// The drawing area's camera and scene cache.
     pub viewport: Viewport,
     /// The running tool and the last one started (kentos-interaction, docs/adr/0021).
@@ -573,6 +577,7 @@ impl App {
             bottom_tab: crate::bottom::BottomTab::default(),
             bottom_log: None,
             dialog: None,
+            dialog_under: None,
             viewport: Viewport::new(),
             session: Session::new(),
             spatial: Spatial::new(),
@@ -737,6 +742,7 @@ impl App {
         }
         // The key tips follow what the ribbon shows now (ribbon_keys.rs).
         self.refresh_key_tips();
+        self.dialog_back();
         let task = Task::batch([
             task,
             self.text_field_tasks(),

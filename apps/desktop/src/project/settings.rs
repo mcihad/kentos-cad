@@ -42,6 +42,16 @@ impl Section {
         }
     }
 
+    /// Its icon in the list, as the web's.
+    fn icon(self) -> kentos_ui::icon::Icon {
+        use kentos_ui::icon::Icon;
+        match self {
+            Section::General => Icon::Properties,
+            Section::Crs => Icon::Globe,
+            Section::Units => Icon::Ruler,
+        }
+    }
+
     fn lead(self) -> &'static str {
         match self {
             Section::General => {
@@ -117,6 +127,11 @@ pub enum Event {
     AreaDecimals(u32),
     AreaUnit(AreaUnit),
     AngleUnit(AngleUnit),
+    /// The shown section's own values back to their defaults (the web's
+    /// “Bu bölümü varsayılana döndür”).
+    ResetSection,
+    /// Uygulama ayarları over this window, which comes back when it closes.
+    OpenApp,
     Save,
 }
 
@@ -141,6 +156,12 @@ impl App {
     pub(super) fn project_settings_event(&mut self, e: Event) {
         if let Event::Save = e {
             self.save_project_settings();
+            return;
+        }
+        if let Event::OpenApp = e {
+            // This window waits under Uygulama ayarları, as it is (app.rs `dialog_back`).
+            self.open_settings_at(crate::settings_sections::Section::NewProjects);
+            self.dialog_under = Some(crate::app::Dialog::Project);
             return;
         }
         let Some(Window::Settings(s)) = &mut self.project else {
@@ -168,7 +189,8 @@ impl App {
             Event::AreaDecimals(n) => d.area_decimals = n.min(4),
             Event::AreaUnit(u) => d.area_unit = u,
             Event::AngleUnit(u) => d.angle_unit = u,
-            Event::Save => {}
+            Event::ResetSection => reset_section(s.section, d),
+            Event::OpenApp | Event::Save => {}
         }
     }
 
@@ -211,11 +233,18 @@ impl App {
             .iter()
             .fold(Column::new().spacing(2).width(190), |nav, section| {
                 nav.push(
-                    button(label::body(section.label()))
-                        .on_press(event(Event::Section(*section)))
-                        .padding([6, 10])
-                        .width(Fill)
-                        .style(style::button::navigation(*section == s.section)),
+                    button(
+                        row![
+                            kentos_ui::icon::icon(section.icon()).size(16.0),
+                            label::body(section.label())
+                        ]
+                        .spacing(8)
+                        .align_y(iced::Center),
+                    )
+                    .on_press(event(Event::Section(*section)))
+                    .padding([6, 10])
+                    .width(Fill)
+                    .style(style::button::navigation(*section == s.section)),
                 )
             });
         let page: Element<'a, Message> = match s.section {
@@ -240,9 +269,25 @@ impl App {
             label::caption(doc.name().to_owned()),
         ]
         .spacing(6);
+        // A section without values of its own (Koordinat sistemi) has nothing to reset.
+        let own = s.section != Section::Crs;
+        let reset = button(label::body("Bu bölümü varsayılana döndür"))
+            .on_press_maybe(own.then_some(event(Event::ResetSection)))
+            .padding([5, 16])
+            .style(style::button::ghost);
+        let reset: Element<'a, Message> = if own {
+            reset.into()
+        } else {
+            kentos_ui::widget::tip(
+                reset,
+                kentos_ui::widget::Tip::new("Bu bölümde varsayılana dönecek ayar yok."),
+                iced::widget::tooltip::Position::Top,
+            )
+        };
         overlay::blocking(
             Dialog::new("Proje ayarları")
                 .push(column![row![nav, content].spacing(16), scope].spacing(12))
+                .aside(reset)
                 .action(words::secondary(
                     "Vazgeç",
                     Some(message(ProjectEvent::Close)),
@@ -318,6 +363,7 @@ impl App {
     }
 
     fn crs_section<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
+        let open_app = words::secondary("Uygulama ayarlarını aç", Some(event(Event::OpenApp)));
         let default_srid = self.settings.number("newProjects.srid") as u32;
         let default = crs::system(default_srid).map(|c| {
             format!(
@@ -337,11 +383,17 @@ impl App {
             ),
             group(
                 "Yeni projeler",
-                setting(
-                    "Yeni projelerin varsayılanı",
-                    None,
-                    label::caption(default.unwrap_or_default()),
-                ),
+                row![
+                    column![
+                        label::body("Yeni projelerin varsayılanı"),
+                        label::caption(default.unwrap_or_default()),
+                    ]
+                    .spacing(2)
+                    .width(Fill),
+                    open_app,
+                ]
+                .spacing(16)
+                .align_y(iced::Center),
             ),
         ]
         .spacing(16)
@@ -448,4 +500,43 @@ fn units<'a>(s: &'a State) -> Element<'a, Message> {
             "Ondalık ayırıcı her zaman noktadır; komut satırına aynı biçimde yazılabilir (Y,X virgülle ayrılır).",
         ))
         .into()
+}
+/// A section's own values back to the defaults the web's plan names
+/// (`PROJECT_SETTINGS_DEFAULTS`, the settings schema's `project.*`); the
+/// name and the coordinate system stay.
+fn reset_section(section: Section, d: &mut ProjectSettings) {
+    fn default(key: &str) -> Option<serde_json::Value> {
+        crate::settings::schema()
+            .get(key)
+            .map(|def| def.default.clone())
+    }
+    fn read<T: serde::de::DeserializeOwned>(key: &str) -> Option<T> {
+        default(key).and_then(|v| serde_json::from_value(v).ok())
+    }
+    match section {
+        Section::General => {
+            d.plot_scale = default("project.plotScale")
+                .and_then(|v| v.as_f64())
+                .unwrap_or(1000.0);
+            d.workspace = read("project.workspace");
+            d.drawing_font = read("project.drawingFont");
+        }
+        Section::Units => {
+            d.length_decimals = default("project.lengthDecimals")
+                .and_then(|v| v.as_u64())
+                .and_then(|n| u32::try_from(n).ok())
+                .unwrap_or(3);
+            d.area_decimals = default("project.areaDecimals")
+                .and_then(|v| v.as_u64())
+                .and_then(|n| u32::try_from(n).ok())
+                .unwrap_or(2);
+            if let Some(unit) = read("project.areaUnit") {
+                d.area_unit = unit;
+            }
+            if let Some(unit) = read("project.angleUnit") {
+                d.angle_unit = unit;
+            }
+        }
+        Section::Crs => {}
+    }
 }
