@@ -23,7 +23,13 @@ type Op =
    * flags, style), `parent` and `index` its place (null parent: the top).
    */
   | ({ type: 'layerRemove' } & LayerPlace)
-  | ({ type: 'layerAdd' } & LayerPlace);
+  | ({ type: 'layerAdd' } & LayerPlace)
+  /**
+   * The active layer an edit set (`addLayer` with `activate`): applied only
+   * while the active layer is still `before`, so undo and redo leave a layer
+   * made active by hand in between as it is.
+   */
+  | { type: 'layerActive'; before: string; after: string };
 
 /** A layer tree node as a history step keeps it, and its place: the parent group (null: the top) and the index there. */
 interface LayerPlace {
@@ -34,6 +40,17 @@ interface LayerPlace {
 
 /** Whether an op changes the layer tree rather than an object. */
 const isLayerTreeOp = (o: Op): o is Extract<Op, { type: 'layerRemove' | 'layerAdd' }> => o.type === 'layerRemove' || o.type === 'layerAdd';
+
+/** Whether an op is about layers (their tree, style or the active one) rather than an object. */
+const isLayerOp = (o: Op): o is Extract<Op, { type: 'layerStyle' | 'layerRemove' | 'layerAdd' | 'layerActive' }> =>
+  o.type === 'layerStyle' || o.type === 'layerActive' || isLayerTreeOp(o);
+
+/** The ids of a node and of every node under it. */
+function nodeIds(node: LayerNode, out: string[] = []): string[] {
+  out.push(node.id);
+  for (const c of node.children) nodeIds(c, out);
+  return out;
+}
 
 /** An edit the document refuses, with the reason for people; nothing was changed. */
 export class Refusal extends Error {}
@@ -394,6 +411,44 @@ export class CadDocument {
   }
 
   /**
+   * Adds a layer, or a group, as one undo step “Katman ekle” / “Grup ekle”
+   * (into the open transaction or group, if one is, under its name): where
+   * `LayerStore.add` puts it (into a group given as `parentId`, else that
+   * layer's group, else the top; an unknown parent: the top; at the end),
+   * the group it goes into opened as `add` opens it (view state: undo leaves
+   * it open). With `activate` the new layer becomes the active one in the
+   * same step. Undo takes it away again: the active layer it set goes back to
+   * the one before; one made active by hand that goes with it gives way to
+   * the first layer of the tree. Refused with a `Refusal`, nothing changed,
+   * when an id of it is already in the tree. Returns the node in the tree.
+   */
+  addLayer(init: LayerInit, parentId: string | null = null, opts: { activate?: boolean } = {}): LayerNode {
+    const layers = this.layers;
+    const taken = init.id !== undefined && layers.get(init.id) ? init.id : undefined;
+    if (taken !== undefined) throw new Refusal(`“${taken}” kimlikli katman zaten var; katman eklenmedi.`);
+    const node = layers.make(init);
+    const again = nodeIds(node).find((id) => layers.get(id));
+    if (again !== undefined) throw new Refusal(`“${again}” kimlikli katman zaten var; katman eklenmedi.`);
+    const parent = layers.containerFor(parentId);
+    const container = parent === null ? null : layers.get(parent);
+    const index = container ? container.children.length : layers.tree.length;
+    const label = node.type === 'group' ? 'Grup ekle' : 'Katman ekle';
+    const before = layers.active.value;
+    if (container) container.expanded = true;
+    this.transact(label, () => {
+      this.record({ type: 'layerAdd', node: structuredClone(node), parent, index }, label);
+      if (opts.activate && node.type === 'layer' && before !== node.id) this.record({ type: 'layerActive', before, after: node.id }, label);
+    });
+    return layers.get(node.id)!;
+  }
+
+  /** The ids of the node now in the tree under this id and of every node under it; none when it is not in the tree. */
+  private subtree(id: string): string[] {
+    const node = this.layers.get(id);
+    return node ? nodeIds(node) : [];
+  }
+
+  /**
    * Deletes a layer, or a group with everything under it, and the objects on
    * them, as one undo step “Katman sil” (into the open transaction or group,
    * if one is). Undo puts the node back in its place with its children,
@@ -609,12 +664,22 @@ export class CadDocument {
     const slots = new Set<number>();
     const uids = new Set<string>();
     for (const o of ops) {
-      if (o.type === 'layerStyle' || isLayerTreeOp(o)) continue;
+      if (isLayerOp(o)) continue;
       const e = o.type === 'update' ? o.after : o.entity;
       slots.add(e.id);
       uids.add(e.uid);
     }
     this.forgetHistoryOf(slots, uids);
+    // Another editor's object on a layer a step added (or took away): undoing that step would take the
+    // layer from under it, so the step goes.
+    const onLayers = new Set((changes.put ?? []).map((e) => e.layerId));
+    if (onLayers.size) {
+      // The node as the step recorded it, and as it is now (a layer put into an added group since).
+      const holds = (tx: Transaction) => tx.ops.some((o) => isLayerTreeOp(o) && [...nodeIds(o.node), ...this.subtree(o.node.id)].some((id) => onLayers.has(id)));
+      this.undoStack = this.undoStack.filter((tx) => !holds(tx));
+      this.redoStack = this.redoStack.filter((tx) => !holds(tx));
+      this.syncHistory();
+    }
     // Another editor's tree: a removed layer's recorded place may no longer fit it, so those steps go.
     if (changes.meta?.layers) {
       const touchesTree = (tx: Transaction) => tx.ops.some(isLayerTreeOp);
@@ -632,7 +697,7 @@ export class CadDocument {
   forgetHistoryOf(ids: ReadonlySet<number>, uids: ReadonlySet<string> = new Set()): void {
     if (!ids.size && !uids.size) return;
     const hit = (e: DrawingEntity) => ids.has(e.id) || uids.has(e.uid);
-    const touches = (tx: Transaction) => tx.ops.some((o) => (o.type === 'update' ? hit(o.before) : o.type === 'layerStyle' || isLayerTreeOp(o) ? false : hit(o.entity)));
+    const touches = (tx: Transaction) => tx.ops.some((o) => (o.type === 'update' ? hit(o.before) : isLayerOp(o) ? false : hit(o.entity)));
     this.undoStack = this.undoStack.filter((tx) => !touches(tx));
     this.redoStack = this.redoStack.filter((tx) => !touches(tx));
     this.syncHistory();
@@ -701,12 +766,18 @@ export class CadDocument {
     const uids: string[] = [];
     let layerStyles = false;
     for (const op of ops) {
-      if (op.type === 'layerStyle' || isLayerTreeOp(op)) {
+      if (isLayerOp(op)) {
         this.applyingLayers = true;
         try {
           if (op.type === 'layerStyle') this.layers.replaceStyle(op.layerId, op.after);
-          else if (op.type === 'layerRemove') this.layers.detach(op.node.id);
-          else this.layers.attach(op.node, op.parent, op.index);
+          else if (op.type === 'layerActive') {
+            if (this.layers.active.value === op.before) this.layers.setActive(op.after);
+          }
+          // A node still holding objects stays: taking it away would leave them on no layer. (Its step's
+          // own objects go before it; another editor's put on it drops the step, see applyExternal.)
+          else if (op.type === 'layerRemove') {
+            if (!this.subtree(op.node.id).some((id) => this.layerIndex.get(id)?.size)) this.layers.detach(op.node.id);
+          } else this.layers.attach(op.node, op.parent, op.index);
         } finally {
           this.applyingLayers = false;
         }
@@ -812,6 +883,7 @@ function updateOp(before: DrawingEntity | undefined, patch: Partial<Entity>): Ex
 
 function invert(op: Op): Op {
   if (op.type === 'layerStyle') return { ...op, before: op.after, after: op.before };
+  if (op.type === 'layerActive') return { ...op, before: op.after, after: op.before };
   if (op.type === 'layerRemove') return { ...op, type: 'layerAdd' };
   if (op.type === 'layerAdd') return { ...op, type: 'layerRemove' };
   if (op.type === 'add') return { type: 'remove', entity: op.entity };

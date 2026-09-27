@@ -1,9 +1,10 @@
 //! New layers and groups (the web's `layer.new` and `layer.newGroup`,
 //! apps/web/src/app/commands.ts, and the two buttons of its Katmanlar panel).
 //! A new layer goes last into the active layer's group and becomes the
-//! active layer; a new group goes last at the top of the tree. Each is an
-//! edit that is not undone: the web's layer creation is not an undo step
-//! either (kentos-domain `add_layer`, fixtures/document-ops/v1/layers.json).
+//! active layer; a new group goes last at the top of the tree. Each is one
+//! undo step, “Katman ekle” or “Grup ekle”: undo takes it away and makes the
+//! layer before active again (kentos-domain `add_layer`,
+//! fixtures/document-ops/v1/layer-add.json, docs/adr/0076).
 //!
 //! The tree follows the drawing's selection (the owner's request, 26
 //! September): the rows of the selected objects' layers show selected, their
@@ -196,11 +197,16 @@ impl App {
                 }
             }
             Event::RenameCancel => self.renaming = None,
-            // The web makes the new layer active; it says nothing.
+            // As Yeni katman: one step, the new layer made active (the web's since bdaed77).
             Event::AddBeside(id) => {
                 let name = model.layers().unique_name("Yeni katman");
-                let new = model.add_layer(NewLayer::layer(name), Some(&id));
-                model.set_active_layer(&new);
+                match model.add_layer(NewLayer::layer(name.clone()), Some(&id), true) {
+                    Ok(_) => self.say(
+                        Level::Success,
+                        format!("“{name}” katmanı eklendi ve etkin yapıldı."),
+                    ),
+                    Err(refusal) => self.warn(refusal.to_string()),
+                }
             }
             Event::Rename(_) | Event::Remove(_) => {}
         }
@@ -430,14 +436,16 @@ impl App {
         };
         let name = doc.model.layers().unique_name("Yeni katman");
         let active = doc.model.layers().active().to_owned();
-        let id = doc
+        match doc
             .model
-            .add_layer(NewLayer::layer(name.clone()), Some(&active));
-        doc.model.set_active_layer(&id);
-        self.say(
-            Level::Success,
-            format!("“{name}” katmanı eklendi ve etkin yapıldı."),
-        );
+            .add_layer(NewLayer::layer(name.clone()), Some(&active), true)
+        {
+            Ok(_) => self.say(
+                Level::Success,
+                format!("“{name}” katmanı eklendi ve etkin yapıldı."),
+            ),
+            Err(refusal) => self.warn(refusal.to_string()),
+        }
     }
 
     /// `layer.newGroup`: “Yeni grup” at the top of the tree.
@@ -447,8 +455,13 @@ impl App {
             return;
         };
         let name = doc.model.layers().unique_name("Yeni grup");
-        doc.model.add_layer(NewLayer::group(name.clone()), None);
-        self.say(Level::Success, format!("“{name}” grubu eklendi."));
+        match doc
+            .model
+            .add_layer(NewLayer::group(name.clone()), None, false)
+        {
+            Ok(_) => self.say(Level::Success, format!("“{name}” grubu eklendi.")),
+            Err(refusal) => self.warn(refusal.to_string()),
+        }
     }
 
     /// The Katmanlar panel's header: the layer count and the two buttons.
@@ -526,7 +539,7 @@ mod tests {
         let node = model.layers().get(&id).expect("added");
         assert_eq!(node.name, "Yeni katman");
         assert_eq!(model.layers().parent(&id).map(|g| g.id.clone()), group);
-        assert!(model.is_dirty() && !model.can_undo());
+        assert!(model.is_dirty() && model.can_undo());
         assert_ne!(model.revision(), revision);
         assert_eq!(
             last_said(&app),
@@ -540,6 +553,17 @@ mod tests {
             model.layers().get(second).map(|n| n.name.as_str()),
             Some("Yeni katman 2")
         );
+        // Each is one step, “Katman ekle”: undo takes it away and makes the
+        // layer before active again (docs/adr/0076).
+        let model = &mut app.document.as_mut().expect("open").model;
+        assert_eq!(model.undo().as_deref(), Some("Katman ekle"));
+        assert_eq!(model.layers().active(), id);
+        assert_eq!(model.undo().as_deref(), Some("Katman ekle"));
+        assert_eq!(model.layers().active(), active);
+        assert!(model.layers().get(&id).is_none());
+        let _ = app.update(Message::Run("layer.newGroup"));
+        let model = &mut app.document.as_mut().expect("open").model;
+        assert_eq!(model.undo().as_deref(), Some("Grup ekle"));
     }
 
     /// Katmanlar → Sil (task 12, fixtures/document-ops/v1/layer-remove.json
@@ -582,7 +606,9 @@ mod tests {
         assert!(model.layers().get("cizim").is_none());
         assert_eq!(model.undo().as_deref(), Some("Katman sil"));
         assert_eq!(model.count("cizim"), objects);
-        let empty = model.add_layer(kentos_domain::NewLayer::layer("Boş"), None);
+        let empty = model
+            .add_layer(kentos_domain::NewLayer::layer("Boş"), None, false)
+            .expect("a new layer");
         let _ = app.update(Message::Layer(Event::Remove(empty.clone())));
         assert_eq!(app.dialog, None, "nothing to ask");
         assert_eq!(last_said(&app), "“Boş” katmanı silindi.");

@@ -323,7 +323,8 @@ fn a_paste_goes_through_the_commands_in_one_step() {
     // A group's id is no layer: the object goes to the active one.
     let group = b
         .doc
-        .add_layer(kentos_domain::NewLayer::group("Grup"), None);
+        .add_layer(kentos_domain::NewLayer::group("Grup"), None, false)
+        .expect("a new group");
     let mut item = board.items()[0].clone();
     item.base_mut().layer_id = group;
     let mut grouped = Clipboard::new();

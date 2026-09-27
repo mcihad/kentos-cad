@@ -6,8 +6,9 @@
 //! drawing does not become unsaved and its revision stays. The undo and redo
 //! steps that touch the objects they change are dropped, as the web drops
 //! them (`forgetHistoryOf`), so an undo never puts back a state someone else
-//! replaced. Readers that follow the document (`changes_since`) see them like
-//! any change.
+//! replaced; so are the steps that add or remove a layer the change puts
+//! objects on. Readers that follow the document (`changes_since`) see them
+//! like any change.
 //!
 //! Objects are named by their persistent ids: one already in the drawing
 //! keeps its slot, a new one gets the next slot. A change that names an id
@@ -85,6 +86,12 @@ impl Document {
         }
         let mut ops = Vec::with_capacity(change.put.len() + change.remove.len());
         let mut slots = HashSet::new();
+        // The layers the change puts objects on (the web's `onLayers`).
+        let on_layers: HashSet<String> = change
+            .put
+            .iter()
+            .map(|(_, entity)| entity.base().layer_id.clone())
+            .collect();
         for (uid, mut entity) in change.put {
             let slot = match self.store.slot_of(uid) {
                 Some(slot) => slot,
@@ -142,6 +149,9 @@ impl Document {
             }
         }
         self.forget_history_of(&slots, &named);
+        // Another editor's object on a layer a step added (or took away):
+        // undoing that step would take the layer from under it, so the step goes.
+        self.forget_layer_history(&on_layers);
         if changed {
             // Not an edit (the revision stays), but what the drawing shows changed.
             self.generation += 1;

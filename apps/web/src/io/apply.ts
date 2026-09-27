@@ -8,9 +8,9 @@ import { readEntityList } from '../model/snapshot';
 /**
  * Puts what a reader produced into the drawing. The objects are checked
  * like a `.kcad` file's first, so nothing changes if one is unusable; then
- * the new layers are made (layer creation is not undoable, as with the
- * processing runner's new target layers) and every object goes in as ONE
- * undo step with one change event (CLAUDE.md §4.8, §7).
+ * the new layers are made and every object goes in, all as ONE undo step
+ * with one change event (CLAUDE.md §4.8, §7): undo takes the objects and
+ * the layers made for them.
  */
 
 /** Where the objects of one source layer go. */
@@ -78,18 +78,20 @@ export function applyImport(doc: CadDocument, entities: readonly ContractEntity[
   if (!checked.ok) return { ok: false, error: `Dosyadan okunan nesneler çizime uymuyor (${checked.error}). Hiçbir şey eklenmedi; dosyayla birlikte bildirin.` };
 
   const created: string[] = [];
-  if (newIds.size) {
-    let parent: string | null = null;
-    if (plan.group) {
-      const group = doc.layers.tree.find((n) => n.type === 'group' && foldTurkish(n.name) === foldTurkish(plan.group!));
-      parent = group?.id ?? doc.layers.add({ id: freshId(plan.group, taken), name: plan.group, type: 'group', children: [] }, null).id;
+  const added = doc.transact(plan.label, () => {
+    if (newIds.size) {
+      let parent: string | null = null;
+      if (plan.group) {
+        const group = doc.layers.tree.find((n) => n.type === 'group' && foldTurkish(n.name) === foldTurkish(plan.group!));
+        parent = group?.id ?? doc.addLayer({ id: freshId(plan.group, taken), name: plan.group, type: 'group', children: [] }, null).id;
+      }
+      for (const [source, t] of plan.layers) {
+        if (t.kind !== 'new') continue;
+        doc.addLayer({ id: newIds.get(source), name: t.name, style: t.style, visible: t.visible, locked: t.locked }, parent);
+        created.push(t.name);
+      }
     }
-    for (const [source, t] of plan.layers) {
-      if (t.kind !== 'new') continue;
-      doc.layers.add({ id: newIds.get(source), name: t.name, style: t.style, visible: t.visible, locked: t.locked }, parent);
-      created.push(t.name);
-    }
-  }
-  const added = doc.transact(plan.label, () => doc.addMany(checked.entities as unknown as NewEntity[], plan.label));
+    return doc.addMany(checked.entities as unknown as NewEntity[], plan.label);
+  });
   return { ok: true, ids: added.map((e) => e.id), created };
 }

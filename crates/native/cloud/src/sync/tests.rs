@@ -329,7 +329,8 @@ fn a_removed_layer_goes_after_its_objects() {
     let on_cizim_now = o.document.by_layer("cizim").count();
     let new = o
         .document
-        .add_layer(kentos_domain::NewLayer::layer("Yeni"), None);
+        .add_layer(kentos_domain::NewLayer::layer("Yeni"), None, false)
+        .unwrap();
     let mut e = point(486700.0);
     e.base_mut().layer_id = new.clone();
     o.document.add(e).unwrap();

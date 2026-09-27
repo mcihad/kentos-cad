@@ -30,6 +30,8 @@ pub mod labels {
     pub const CHANGE: &str = "Değiştir";
     pub const LAYER_STYLE: &str = "Katman stili";
     pub const LAYER_REMOVE: &str = "Katman sil";
+    pub const LAYER_ADD: &str = "Katman ekle";
+    pub const GROUP_ADD: &str = "Grup ekle";
 }
 
 /// Every slot (`u32`) has been given out in this document; nothing was added.
@@ -306,14 +308,73 @@ impl Document {
         }
     }
 
-    /// Adds a layer or group (web `layers.add`; where it goes: [`LayerTree`]'s
-    /// `add`). An edit that is not undone: the web's layer creation is not an
-    /// undo step either (an import's new layers stay when its objects are
-    /// undone). Returns the new node's id.
-    pub fn add_layer(&mut self, new: NewLayer, parent: Option<&str>) -> String {
-        let id = self.layers.add(new, parent);
-        self.mark_edited();
-        id
+    /// Adds a layer or a group as one undo step, “Katman ekle” or “Grup
+    /// ekle” (into the open transaction or group, if one is, under its name;
+    /// the web's `CadDocument.addLayer`). It goes last into `parent` when
+    /// that is a group, last into the group of `parent` when that is a
+    /// layer, last at the top otherwise (an unknown `parent` too); the group
+    /// it enters opens, and undo leaves it open (a view state). With
+    /// `activate` a new layer becomes the active one in the same step: undo
+    /// makes the one before active again, unless another was made active by
+    /// hand meanwhile; an active layer that goes with an undone node gives
+    /// way to the first layer of the tree. Refused, with nothing changed,
+    /// when the tree already has the id. Returns the new node's id.
+    pub fn add_layer(
+        &mut self,
+        new: NewLayer,
+        parent: Option<&str>,
+        activate: bool,
+    ) -> Result<String, Refusal> {
+        if let Some(id) = new.id.as_deref().filter(|id| self.layers.get(id).is_some()) {
+            return Err(Refusal(format!(
+                "“{id}” kimlikli katman zaten var; katman eklenmedi."
+            )));
+        }
+        let node = self.layers.make(new);
+        let id = node.id.clone();
+        let container = self.layers.container_for(parent);
+        let index = self.layers.len_of(container.as_deref());
+        let label = match node.kind {
+            LayerNodeType::Group => labels::GROUP_ADD,
+            LayerNodeType::Layer => labels::LAYER_ADD,
+        };
+        let before = self.layers.active().to_owned();
+        let active = (activate && node.kind == LayerNodeType::Layer && before != id).then(|| {
+            Op::LayerActive {
+                before,
+                after: id.clone(),
+            }
+        });
+        if let Some(group) = &container {
+            self.layers.set_expanded(group, true);
+        }
+        let place = LayerPlace {
+            node,
+            parent: container,
+            index,
+        };
+        let _ = self.transact(label, |doc| {
+            doc.record(vec![Op::LayerAdd(Box::new(place))], label);
+            if let Some(op) = active {
+                doc.record(vec![op], label);
+            }
+            Ok::<(), Refusal>(())
+        });
+        Ok(id)
+    }
+
+    /// Whether any object is on a layer of this node or under it now.
+    pub(crate) fn holds_objects(&self, id: &str) -> bool {
+        let kept: HashSet<&str> = self
+            .layers
+            .leaves_of(id)
+            .into_iter()
+            .map(|layer| layer.id.as_str())
+            .collect();
+        !kept.is_empty()
+            && self
+                .entities()
+                .any(|e| kept.contains(e.base().layer_id.as_str()))
     }
 
     /// Names the drawing (web `doc.name.set`): an edit when the name

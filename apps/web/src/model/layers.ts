@@ -99,6 +99,17 @@ export class LayerStore {
   }
 
   private build(n: LayerInit, parent: LayerNode | null): LayerNode {
+    const node = this.make(n);
+    this.register(node, parent);
+    return node;
+  }
+
+  /**
+   * A node as `add` makes it, not yet in the tree: its defaults, and an id
+   * from the counter when none is given (with its children, made the same
+   * way). The document's undoable `addLayer` records it.
+   */
+  make(n: LayerInit): LayerNode {
     // Ids read from a file ("layer-12") keep the counter ahead of them, so new layers never collide.
     const m = n.id ? /^layer-(\d+)$/.exec(n.id) : null;
     if (m) uid = Math.max(uid, Number(m[1]));
@@ -112,10 +123,17 @@ export class LayerStore {
       style: { ...defaultStyle, ...n.style },
       children: [],
     };
+    node.children = (n.children ?? []).map((c) => this.make(c));
+    return node;
+  }
+
+  /** Puts `node` and everything under it into the index, under `parent`; the leaves' ids go to `leaves`. */
+  private register(node: LayerNode, parent: LayerNode | null, leaves: string[] = []): string[] {
     this.index.set(node.id, node);
     this.parents.set(node.id, parent);
-    node.children = (n.children ?? []).map((c) => this.build(c, node));
-    return node;
+    if (node.type === 'layer') leaves.push(node.id);
+    for (const c of node.children) this.register(c, node, leaves);
+    return leaves;
   }
 
   get tree(): readonly LayerNode[] {
@@ -258,14 +276,23 @@ export class LayerStore {
   }
 
   add(init: LayerInit, parentId?: string | null): LayerNode {
-    const parent = parentId ? this.get(parentId) : null;
-    const container = parent && parent.type === 'group' ? parent : parent ? this.parentOf(parent.id) : null;
+    const container = this.get(this.containerFor(parentId) ?? '') ?? null;
     const node = this.build(init, container);
     (container ? container.children : this.roots).push(node);
     if (container) container.expanded = true;
     this.events.emit('structure', undefined);
     this.version.update((v) => v + 1);
     return node;
+  }
+
+  /**
+   * The group a node added beside or into `parentId` goes into: that group,
+   * the layer's group, or null for the top (a top layer or an unknown id).
+   */
+  containerFor(parentId?: string | null): string | null {
+    const parent = parentId ? this.get(parentId) : null;
+    const container = parent && parent.type === 'group' ? parent : parent ? this.parentOf(parent.id) : null;
+    return container?.id ?? null;
   }
 
   /** Where a node sits: its parent group (null at the top) and its place among the parent's nodes. Null for an unknown id. */
@@ -278,8 +305,10 @@ export class LayerStore {
 
   /**
    * Takes a node out of the tree with everything under it (the document's
-   * undoable layer removal, `CadDocument.removeLayer`; nothing else calls
-   * it). An unknown id changes nothing.
+   * undoable layer ops, `CadDocument.removeLayer` and the undo of
+   * `addLayer`; nothing else calls it). When the active layer goes with it,
+   * the first layer of the tree becomes active, as `reset` does. An unknown
+   * id changes nothing.
    */
   detach(id: string): void {
     const node = this.get(id);
@@ -295,27 +324,24 @@ export class LayerStore {
       n.children.forEach(forget);
     };
     forget(node);
+    if (this.get(this.active.value)?.type !== 'layer') this.active.set(this.leaves()[0]?.id ?? this.active.value);
     this.events.emit('structure', undefined);
     this.events.emit('state', { ids: leaves });
     this.version.update((v) => v + 1);
   }
 
   /**
-   * Puts a node back where `detach` took it from (undo): a copy of `node`, so
-   * the one a history step keeps stays as it was, with its children, flags and
-   * style. A parent that is gone puts it at the top.
+   * Puts a node where `detach` took it from (undo), or where the document's
+   * `addLayer` puts a new one: a copy of `node`, so the one a history step
+   * keeps stays as it was, with its children, flags and style. A parent that
+   * is gone puts it at the top. A node whose id the tree already has is not
+   * put in twice (nothing changes).
    */
   attach(node: LayerNode, parent: string | null, index: number): void {
+    if (this.get(node.id)) return;
     const container = parent ? (this.get(parent) ?? null) : null;
     const copy = structuredClone(node);
-    const leaves: string[] = [];
-    const enter = (n: LayerNode, p: LayerNode | null): void => {
-      this.index.set(n.id, n);
-      this.parents.set(n.id, p);
-      if (n.type === 'layer') leaves.push(n.id);
-      n.children.forEach((c) => enter(c, n));
-    };
-    enter(copy, container);
+    const leaves = this.register(copy, container);
     const list = container ? container.children : this.roots;
     list.splice(Math.min(index, list.length), 0, copy);
     this.events.emit('structure', undefined);

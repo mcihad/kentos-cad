@@ -263,3 +263,55 @@ fn every_edit_moves_the_generation_with_the_revision() {
     doc.set_active_layer("a");
     assert_eq!(doc.generation(), g + 3);
 }
+
+/// An object another editor puts on `layer`, under a new persistent id.
+fn theirs(layer: &str) -> External {
+    External {
+        put: vec![(Uuid::new_v4(), point(layer, 9.0))],
+        ..External::default()
+    }
+}
+
+fn tops(doc: &Document) -> Vec<&str> {
+    doc.layers().nodes().iter().map(|n| n.id.as_str()).collect()
+}
+
+/// Another editor's object on a layer this drawing added drops the step
+/// that added it: undo cannot take the layer from under it. A layer put
+/// since into a group added here drops the group's step too; a step the
+/// object does not concern stays (the web's layerAdd.test.ts, docs/adr/0076).
+#[test]
+fn another_editors_object_on_an_added_layer_drops_its_step() {
+    use kentos_domain::NewLayer;
+    let with_id = |id: &str, new: NewLayer| NewLayer {
+        id: Some(id.into()),
+        ..new
+    };
+
+    let mut doc = empty();
+    doc.add_layer(with_id("yeni", NewLayer::layer("Yeni")), None, false)
+        .unwrap();
+    assert!(doc.can_undo());
+    doc.apply_external(theirs("yeni")).unwrap();
+    assert!(!doc.can_undo());
+    assert!(doc.layers().get("yeni").is_some());
+
+    let mut doc = empty();
+    doc.add_layer(with_id("grup", NewLayer::group("Grup")), None, false)
+        .unwrap();
+    doc.add_layer(with_id("ic", NewLayer::layer("İç")), Some("grup"), false)
+        .unwrap();
+    doc.apply_external(theirs("ic")).unwrap();
+    assert!(!doc.can_undo());
+    assert_eq!(tops(&doc), ["g", "c", "grup"]);
+
+    let mut doc = empty();
+    doc.add_layer(with_id("bir", NewLayer::layer("Bir")), None, false)
+        .unwrap();
+    doc.add_layer(with_id("iki", NewLayer::layer("İki")), None, false)
+        .unwrap();
+    doc.apply_external(theirs("iki")).unwrap();
+    assert_eq!(doc.undo().as_deref(), Some("Katman ekle"));
+    assert_eq!(tops(&doc), ["g", "c", "iki"]);
+    assert!(!doc.can_undo());
+}

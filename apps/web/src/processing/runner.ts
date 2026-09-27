@@ -300,17 +300,17 @@ export class ProcessingRunner {
     const { doc } = this.host;
     const ch = result.changes;
     if (!ch) return [];
-    // Layers the run writes to but that do not exist yet.
-    for (const e of ch.add ?? []) {
-      const pending = newLayers.get(e.layerId);
-      if (!pending || doc.layers.get(e.layerId)) continue;
-      doc.layers.add({ id: e.layerId, name: pending.name, style: pending.def.newLayerStyle }, null);
-    }
     const locked = (layerId: string) => doc.layers.isLocked(layerId);
     let skipped = 0;
     const added: number[] = [];
     // Removals, then updates, then additions, each as one change (the panels and the store hear it once).
     doc.transact(tool.label, () => {
+      // Layers the run writes to but that do not exist yet: in the tool's step, so undo takes them too.
+      for (const e of ch.add ?? []) {
+        const pending = newLayers.get(e.layerId);
+        if (!pending || doc.layers.get(e.layerId)) continue;
+        doc.addLayer({ id: e.layerId, name: pending.name, style: pending.def.newLayerStyle }, null);
+      }
       const gone: number[] = [];
       for (const id of ch.remove ?? []) {
         const e = doc.get(id);

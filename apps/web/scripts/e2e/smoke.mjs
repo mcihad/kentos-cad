@@ -928,6 +928,21 @@ try {
     JSON.stringify(virtualTree),
   );
 
+  // Yeni katman is one undo step “Katman ekle”: undo takes the layer away and gives the active layer back.
+  {
+    const layerState = () => b.eval(`({ active: window.kentos.doc.layers.active.value, count: window.kentos.doc.layers.leaves().length, said: window.kentos.log.entries.value.at(-1)?.text ?? '' })`);
+    const before = await layerState();
+    await b.eval(`window.kentos.commands.execute('layer.new')`);
+    const made = await layerState();
+    const step = await b.eval('window.kentos.doc.undo()');
+    const after = await layerState();
+    check(
+      'Yeni katman is one step “Katman ekle”: undo takes the layer away and makes the one before active again',
+      made.count === before.count + 1 && made.active !== before.active && /katmanı eklendi ve etkin yapıldı\.$/.test(made.said) && step === 'Katman ekle' && after.count === before.count && after.active === before.active,
+      JSON.stringify({ before, made, step, after }),
+    );
+  }
+
   // Katmanlar → Sil: a layer with objects asks first and goes with them in one step “Katman sil”, which undo
   // brings back; Delete on an empty layer's row removes it at once; the active layer is refused in its words.
   {
@@ -1880,10 +1895,17 @@ try {
     await b.waitFor(`!document.querySelector('.dialog--io')`, 10000).catch(() => {});
     const got = await b.eval(`[...window.kentos.doc.all()].filter((e) => e.kind === 'point' && (e.label === '1001' || e.label === '1002')).map((e) => [e.label, e.p.x, e.p.y, e.z, window.kentos.doc.layers.get(e.layerId)?.name, e.attrs.Ad])`);
     check('coordinate import adds the points exactly, on a new layer named after the file', JSON.stringify(got) === JSON.stringify([['1001', 487061.123, 4420101.456, 105.2, 'deneme', '1001'], ['1002', 487071.5, 4420111.25, 106.75, 'deneme', '1002']]), JSON.stringify(got));
+    // The layer made for the points is in the step too: undo takes it, redo brings it back.
+    const layerNamed = (name) => b.eval(`window.kentos.doc.layers.leaves().some((l) => l.name === ${JSON.stringify(name)})`);
     await b.eval(`window.kentos.commands.execute('edit.undo')`);
     const undone = await b.eval('window.kentos.doc.size');
+    const layerUndone = await layerNamed('deneme');
     await b.eval(`window.kentos.commands.execute('edit.redo')`);
-    check('coordinate import is one undo step', undone === n0 && (await b.eval('window.kentos.doc.size')) === n0 + 2, `${n0} → ${undone}`);
+    check(
+      'coordinate import is one undo step, the layer made for it included',
+      undone === n0 && !layerUndone && (await layerNamed('deneme')) && (await b.eval('window.kentos.doc.size')) === n0 + 2,
+      `${n0} → ${undone}, katman ${layerUndone ? 'kaldı' : 'gitti'}`,
+    );
     await b.eval(`(() => { const k = window.kentos; k.selection.set([...k.doc.all()].filter((e) => e.kind === 'point' && (e.label === '1001' || e.label === '1002')).map((e) => e.id)); k.commands.execute('file.export.ncn'); })()`);
     await b.waitFor(`document.querySelector('.dialog--io .io-summary')`, 10000).catch(() => {});
     await ioPress('.dialog--io .dialog__foot .btn--primary', 'Dışa aktar');
@@ -1939,10 +1961,17 @@ try {
       return !!circle && hit?.id === circle.id;
     })()`);
     check('DXF import: an imported object can be picked at once', picked === true, String(picked));
+    // Its group and new layers are in the step too.
+    const groupThere = () => b.eval(`window.kentos.doc.layers.tree.some((n) => n.type === 'group' && n.name === 'kapi.dxf')`);
     await b.eval(`window.kentos.commands.execute('edit.undo')`);
     const undone = await b.eval('window.kentos.doc.size');
+    const groupUndone = await groupThere();
     await b.eval(`window.kentos.commands.execute('edit.redo')`);
-    check('DXF import is one undo step', undone === n0 && (await b.eval('window.kentos.doc.size')) === n0 + 8, `${n0} → ${undone}`);
+    check(
+      'DXF import is one undo step, its group and new layers included',
+      undone === n0 && !groupUndone && (await groupThere()) && (await b.eval('window.kentos.doc.size')) === n0 + 8,
+      `${n0} → ${undone}, grup ${groupUndone ? 'kaldı' : 'gitti'}`,
+    );
     await b.eval(`(() => { const k = window.kentos; k.files.picker = window.__io.original; k.selection.clear(); })()`);
   }
 

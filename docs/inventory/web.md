@@ -52,4 +52,4 @@ Masaüstü kabuğu (apps/desktop) 124 / 167 komutu çalıştırıyor; öbürleri
 
 ## Test başvurusu
 
-54 / 167 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+53 / 167 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

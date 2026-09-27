@@ -69,12 +69,13 @@ fn a_dxf_goes_in_as_one_undo_step_with_its_layers_in_a_group_named_after_the_fil
     assert!(!group.children.is_empty());
     assert!(last_said(&app).contains("nesne"), "{}", last_said(&app));
 
-    // One undo step takes every object back; the layers stay (as on the web).
+    // One undo step takes every object back, and the layers made for them
+    // (as on the web since bdaed77; docs/adr/0076).
     let _ = app.update(Message::Run("edit.undo"));
     let model = &app.document.as_ref().expect("open").model;
     assert_eq!(model.len(), before);
     assert!(
-        model
+        !model
             .layers()
             .nodes()
             .iter()

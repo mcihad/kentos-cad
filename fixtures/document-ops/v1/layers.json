@@ -2,7 +2,7 @@
   "format": "kentos.document-ops",
   "version": 1,
   "title": "Katmanlar: görünürlük, kilit, klasör, ad ve stil",
-  "note": "Katman beklentisinde visible, locked, expanded, name ve style düğümün kendi değeridir; isVisible ve isLocked üst grupları da hesaba katan yanıttır (LayerStore.isVisible, isLocked). Görünürlük, kilit ve ad proje verisidir: belgeyi kirletir, ama geri alma geçmişine girmez. Yalnız katman stili (setLayerStyle) geri alınabilir.",
+  "note": "Katman beklentisinde visible, locked, expanded, name ve style düğümün kendi değeridir; isVisible ve isLocked üst grupları da hesaba katan yanıttır (LayerStore.isVisible, isLocked). Görünürlük, kilit ve ad proje verisidir: belgeyi kirletir, ama geri alma geçmişine girmez. Katman stili (setLayerStyle), katman ekleme (addLayer, layer-add.json) ve silme (removeLayer, layer-remove.json) geri alınabilir.",
   "setup": {
     "format": "kentos.document",
     "version": 1,
@@ -445,7 +445,7 @@
       ]
     },
     {
-      "name": "Katman ekleme: grubun içine, katmanın grubuna, en üste; girdiği grup açılır; düzenlemedir ama geri alınmaz",
+      "name": "Katman ekleme: grubun içine, katmanın grubuna, en üste; girdiği grup açılır; her ekleme bir geri alma adımıdır (ayrıntısı layer-add.json)",
       "note": "Kimliksiz katman layer-N alır; sayaç platformun kendisidir (web modül genelinde sayar), bu yüzden senaryolar kimliği verir.",
       "steps": [
         {"op": "setExpanded", "id": "g", "expanded": false, "expect": {"dirty": false, "layers": {"g": {"expanded": false}}}},
@@ -458,7 +458,7 @@
             "tree": {"": ["g", "c"], "g": ["a", "b", "d"]},
             "dirty": true,
             "revision": "changed",
-            "canUndo": false,
+            "canUndo": true,
             "activeLayer": "a",
             "layers": {
               "g": {"expanded": true},
@@ -498,7 +498,7 @@
           "note": "Bilinmeyen üst: en üste.",
           "expect": {"tree": {"": ["g", "c", "f", "h", "j"]}}
         },
-        {"op": "undo", "returns": null, "expect": {"tree": {"": ["g", "c", "f", "h", "j"]}, "dirty": true}}
+        {"op": "undo", "returns": "Katman ekle", "note": "Son ekleme (Sınır) geri alınır.", "expect": {"tree": {"": ["g", "c", "f", "h"]}, "dirty": true}}
       ]
     },
     {

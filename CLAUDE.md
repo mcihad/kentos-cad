@@ -272,7 +272,9 @@ Masaüstünde araç kamerayı kendisi değiştirmez; `Context.view_changes`'a `V
 
 `CadDocument.add/update/remove`, toplu karşılıkları ve `transact` tek mutation
 yoludur. Transaction hata verirse rollback; nested işlem savepoint; çoklu edit
-tek mantıksal undo adımıdır. Async grup işlemlerinde mevcut group/cancel yolunu kullanın.
+tek mantıksal undo adımıdır. Katman ve grup eklemek ve silmek de geri alınabilir adımdır; içe
+aktarmanın açtığı katmanlar onun adımındadır (ADR 0072, 0076). Async grup işlemlerinde mevcut
+group/cancel yolunu kullanın.
 `markSaved(revision)` yalnız gerçekten kaydedilen güncel sürümü temizler.
 Kaydetme sürerken yapılan yeni değişikliği dirty=false yapmayın.
 `.kcad` KCAD v2'dir (`DocumentSnapshotV2`, ADR 0025): web biçim işçisinde, masaüstü yerel
