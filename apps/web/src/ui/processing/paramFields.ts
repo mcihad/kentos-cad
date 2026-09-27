@@ -301,6 +301,7 @@ function expressionField(def: Extract<ParamDef, { type: 'expression' }>, value: 
     fields: () => attributeFields(def.of ? (env.describe(def.of)?.fields ?? []) : []),
     objects: () => env.builderObjects(def.name),
     context: def.label,
+    fail: (message) => env.ctx.log.error(message),
   });
   refresh();
   return h('div', { class: 'pfield__stack' }, h('div', { class: 'pfield__exprrow' }, input, open), tools, preview);

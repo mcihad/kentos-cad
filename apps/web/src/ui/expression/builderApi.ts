@@ -23,8 +23,9 @@ export interface ExpressionBuilderOptions {
   readonly onOk: (value: string) => void;
 }
 
-export function openExpressionBuilder(opts: ExpressionBuilderOptions): void {
-  void import('./ExpressionBuilder').then((m) => m.openBuilder(opts));
+/** Opens the builder; the promise fails when its code cannot be loaded (the caller says so). */
+export function openExpressionBuilder(opts: ExpressionBuilderOptions): Promise<void> {
+  return import('./ExpressionBuilder').then((m) => m.showBuilder(opts));
 }
 
 /**
@@ -37,11 +38,15 @@ export function builderButton(opts: {
   readonly fields: () => readonly ExprField[];
   readonly objects?: () => BuilderObjects | undefined;
   readonly context?: string;
+  /** Says that the builder could not be loaded (the app's log). */
+  readonly fail: (message: string) => void;
 }): HTMLButtonElement {
   const b = h('button', { class: 'ibtn exprb-open', type: 'button', title: 'İfade oluşturucu…', 'aria-label': 'İfade oluşturucu' }, icon('expression', 16));
   b.addEventListener('mousedown', (e) => e.preventDefault());
   b.addEventListener('click', () =>
-    openExpressionBuilder({ value: opts.get(), context: opts.context, fields: opts.fields(), objects: opts.objects?.(), onOk: opts.set }),
+    openExpressionBuilder({ value: opts.get(), context: opts.context, fields: opts.fields(), objects: opts.objects?.(), onOk: opts.set }).catch((e: Error) =>
+      opts.fail(`İfade oluşturucu yüklenemedi: ${e.message}. Bağlantıyı denetleyip yeniden deneyin.`),
+    ),
   );
   return b;
 }

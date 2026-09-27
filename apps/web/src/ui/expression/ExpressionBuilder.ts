@@ -19,7 +19,7 @@ import { HelpPane } from './HelpPane';
  * leaves the field as it was. The desktop's builder is the same (the
  * language services are one core).
  */
-export function openBuilder(opts: ExpressionBuilderOptions): void {
+export function showBuilder(opts: ExpressionBuilderOptions): void {
   new ExpressionBuilder(opts);
 }
 
