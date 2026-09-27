@@ -23,7 +23,7 @@ use crate::app::{App, Message};
 use crate::settings::schema;
 
 /// The settings the window shows, in its order.
-pub const KEYS: [&str; 29] = [
+pub const KEYS: [&str; 31] = [
     "drafting.ortho",
     "drafting.polar",
     "drafting.polarIncrement",
@@ -43,6 +43,8 @@ pub const KEYS: [&str; 29] = [
     "snap.nearest",
     "graphics.msaa",
     "graphics.hiDpi",
+    "graphics.symbolSize",
+    "graphics.lineWeights",
     "appearance.theme",
     "appearance.accentColor",
     "appearance.drawingBackground",
@@ -495,6 +497,15 @@ impl App {
             .row(self.effective_note("graphics.msaa", &value("graphics.msaa")))
             .field(title("graphics.hiDpi"), switch("graphics.hiDpi", None))
             .help(help("graphics.hiDpi"))
+            // The styled drawing (docs/adr/0090), as the web's Çizim motoru → Semboller ve çizgiler.
+            .section("Semboller ve çizgiler")
+            .field(
+                title("graphics.symbolSize"),
+                choices("graphics.symbolSize", &value("graphics.symbolSize")),
+            )
+            .help(help("graphics.symbolSize"))
+            .field(title("graphics.lineWeights"), switch("graphics.lineWeights", None))
+            .help(help("graphics.lineWeights"))
             .section("Ayar dosyası")
             .row(
                 row![

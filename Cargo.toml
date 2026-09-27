@@ -30,6 +30,8 @@ members = [
     "crates/native/processing",
     # The desktop's cloud client (docs/adr/0040): the web's protocol through a native adapter.
     "crates/native/cloud",
+    # The desktop's style engine page (docs/adr/0090): the style library and a layer's way to the GPU.
+    "crates/native/style",
     # Server-only libraries: PostgreSQL/PostGIS and the use cases.
     "crates/server/postgres",
     "crates/server/application",
@@ -60,6 +62,7 @@ default-members = [
     "crates/native/interaction",
     "crates/native/processing",
     "crates/native/cloud",
+    "crates/native/style",
     "crates/server/postgres",
     "crates/server/application",
     "apps/api",
@@ -129,6 +132,13 @@ rfd = { version = "=0.17.2" }
 # directly so the renderer shares Iced's device (TODOS.md REN-01, REN-02). Same version
 # and features as through Iced: nothing new in the lockfile.
 wgpu = { version = "=27.0.1" }
+# The styled drawing's atlas on the desktop (docs/adr/0090; the owner's approval, 2026-09-27):
+# SVG pictograms, text markers and pattern tiles rasterized on the CPU. The version and
+# features Iced's software renderer already builds (iced_tiny_skia): nothing new in the lockfile.
+tiny-skia = { version = "=0.11.4", default-features = false, features = ["std", "simd"] }
+# SVG text read into the SVG core's element tree on the desktop (docs/adr/0090; the owner's
+# approval, 2026-09-27); the web lets the browser parse it. Locked already through fontdb.
+roxmltree = { version = "=0.20.0" }
 # Tests only: the naga wgpu uses validates the shared WGSL (shaders/wgsl, REN-05).
 naga = { version = "=27.0.3", features = ["wgsl-in"] }
 # Tests only: waits on wgpu's futures in the renderer's GPU test (locked through rfd).

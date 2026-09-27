@@ -2468,12 +2468,17 @@ dependencies = [
  "kentos-contracts",
  "kentos-domain",
  "kentos-formats",
+ "kentos-geometry-core",
  "kentos-interaction",
  "kentos-kcad",
+ "kentos-native-style",
  "kentos-processing",
  "kentos-render-wgpu",
+ "kentos-svg-core",
  "kentos-ui",
+ "png",
  "rfd",
+ "roxmltree",
  "serde",
  "serde_json",
 ]
@@ -2569,6 +2574,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "kentos-native-style"
+version = "0.1.0"
+dependencies = [
+ "kentos-contracts",
+ "kentos-geometry-core",
+ "kentos-native-application",
+ "kentos-style-core",
+ "libm",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "kentos-postgres"
 version = "0.1.0"
 dependencies = [
@@ -2596,10 +2614,12 @@ dependencies = [
  "bytemuck",
  "kentos-contracts",
  "kentos-geometry-core",
+ "kentos-native-style",
  "naga",
  "pollster",
  "serde",
  "serde_json",
+ "tiny-skia",
  "wgpu",
 ]
 

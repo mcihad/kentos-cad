@@ -401,6 +401,7 @@ impl App {
                     &self.selection,
                     accent,
                     self.session.cursor(),
+                    Some(self.styles.styling(&self.spatial, &self.settings)),
                 );
                 // The running command's strip on top (command_bar.rs); the right
                 // button's menus over it all (drawing_menus.rs).

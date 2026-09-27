@@ -49,6 +49,10 @@ const GROUPS = [
   // The native processing tools (İşlemler, docs/PROCESSING.md): declared tools and models over
   // the document, run by the desktop; the web keeps its TypeScript tools. Listed before `native`.
   { name: 'processing', path: 'crates/native/processing/', targets: [HOST], uses: ['shared', 'domain', 'application'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  // The desktop's style engine page (docs/adr/0090): the style library, a layer's program for the
+  // style core and the core's batches with their colours and images. Pure like the tool session:
+  // no Iced, window system or GPU (the renderer draws what it gives). Listed before `native`.
+  { name: 'style', path: 'crates/native/style/', targets: [HOST], uses: ['shared', 'domain', 'application'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   { name: 'native', path: 'crates/native/', targets: [HOST], uses: ['shared', 'domain', 'native'], forbid: ['sqlx*', 'axum*', ...BROWSER, ...DESKTOP, 'pyo3*'] },
   { name: 'server', path: 'crates/server/', targets: [HOST], uses: ['shared', 'domain', 'native', 'server'], forbid: [...BROWSER, ...DESKTOP] },
   { name: 'api', path: 'apps/api/', targets: [HOST], uses: ['shared', 'domain', 'native', 'server'], forbid: [...BROWSER, ...DESKTOP] },
@@ -56,10 +60,11 @@ const GROUPS = [
   { name: 'ui', path: 'crates/ui/', targets: [HOST], uses: [], forbid: [...RUNTIMES, ...BROWSER, 'pyo3*'] },
   // The native renderer (docs/adr/0019): wgpu on the host's device, fed by the shared core.
   // No Iced or window system (the desktop app plugs it into Iced), no runtime, no browser.
-  { name: 'render', path: 'crates/render/', targets: [HOST], uses: ['shared'], forbid: [...RUNTIMES, ...BROWSER, 'iced*', 'winit', 'pyo3*'] },
+  // It draws the style crate's batches (docs/adr/0090).
+  { name: 'render', path: 'crates/render/', targets: [HOST], uses: ['shared', 'domain', 'application', 'style'], forbid: [...RUNTIMES, ...BROWSER, 'iced*', 'winit', 'pyo3*'] },
   // Desktop programs: Iced's executor may be tokio; no server framework, no browser bindings.
-  { name: 'desktop', path: 'apps/desktop/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'processing', 'native', 'ui', 'render'], forbid: ['axum*', ...BROWSER] },
-  { name: 'desktop', path: 'apps/ui-showcase/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'native', 'ui', 'render'], forbid: ['axum*', ...BROWSER] },
+  { name: 'desktop', path: 'apps/desktop/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'processing', 'native', 'ui', 'render', 'style'], forbid: ['axum*', ...BROWSER] },
+  { name: 'desktop', path: 'apps/ui-showcase/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'native', 'ui', 'render', 'style'], forbid: ['axum*', ...BROWSER] },
 ];
 
 const meta = JSON.parse(cargo(['metadata', '--format-version', '1', '--locked', '--no-deps']));

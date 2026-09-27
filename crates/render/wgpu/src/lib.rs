@@ -43,6 +43,7 @@ pub mod scene;
 pub mod settings;
 pub mod shader;
 pub mod stats;
+pub mod styled;
 pub mod targets;
 
 pub use camera::Camera;

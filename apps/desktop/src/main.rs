@@ -50,6 +50,7 @@ mod settings;
 mod settings_view;
 mod snapshot;
 mod start;
+mod style;
 mod text_field;
 mod traces;
 mod tracking;

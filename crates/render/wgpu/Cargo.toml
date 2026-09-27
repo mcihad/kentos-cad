@@ -12,8 +12,12 @@ publish.workspace = true
 [dependencies]
 kentos-contracts = { path = "../../shared/contracts", default-features = false }
 kentos-geometry-core = { path = "../../shared/geometry-core" }
+# The styled layers it draws: the style engine's batches with their colours and images (docs/adr/0090).
+kentos-native-style = { path = "../../native/style" }
 wgpu = { workspace = true }
 bytemuck = { workspace = true, features = ["derive"] }
+# The styled atlas's pictures, drawn on the CPU (docs/adr/0090).
+tiny-skia = { workspace = true }
 
 [dev-dependencies]
 naga = { workspace = true }

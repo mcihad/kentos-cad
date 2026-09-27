@@ -133,7 +133,10 @@
     "map.edgeLengths",
     "processing.toolbox",
     "processing.history",
-    "draft.tracking"
+    "draft.tracking",
+    "view.lineWeights",
+    "view.symbols.plot",
+    "view.symbols.screen"
   ],
   "format": "kentos.desktop-ported",
   "version": 1
