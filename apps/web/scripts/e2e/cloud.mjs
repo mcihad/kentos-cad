@@ -341,6 +341,39 @@ try {
   const reopened = await b.eval(`(() => { const k = window.kentos; return { size: k.doc.size, line: k.doc.byUid(${JSON.stringify(lineId)}) }; })()`);
   check('after a reload the cloud project opens with the line, under the same id', reopened.size === size + 1 && reopened.line?.b.x === X + 100, `${reopened.size} nesne`);
 
+  // A layer with objects removed in one step (docs/adr/0072): its objects' deletes and the tree without it reach
+  // the real server, which takes them (the fallback for a dropped layer, its guard); undo brings both back.
+  {
+    const pbase = `/v1/tenants/${project.tenantId}/projects/${project.projectId}`;
+    const saved = () => b.waitFor(`window.kentos.cloud.sync.value.state.value === 'saved' && !window.kentos.doc.dirty.value`, 15000);
+    const onServer = async (uids) => {
+      const info = await mehmet.call('GET', pbase);
+      const ids = (nodes) => nodes.flatMap((n) => [n.id, ...ids(n.children ?? [])]);
+      const features = await mehmet.call('GET', `${pbase}/features?ids=${uids.join(',')}`);
+      return { layer: ids(info.body.layers ?? []).includes('e2e-sil'), objects: features.body.features?.length ?? -1 };
+    };
+    const uids = await b.eval(`(() => {
+      const d = window.kentos.doc;
+      d.addLayer({ id: 'e2e-sil', name: 'E2E sil' }, null);
+      return d.addMany([0, 1].map((i) => ({ kind: 'point', layerId: 'e2e-sil', p: { x: ${X} + i, y: ${N} + 30 }, attrs: {} }))).map((e) => e.uid);
+    })()`);
+    await saved();
+    const made = await onServer(uids);
+    await b.eval(`window.kentos.doc.removeLayer('e2e-sil')`);
+    await saved();
+    const removed = await onServer(uids);
+    const step = await b.eval('window.kentos.doc.undo()');
+    await saved();
+    const back = await onServer(uids);
+    await b.eval(`window.kentos.doc.removeLayer('e2e-sil')`);
+    await saved();
+    check(
+      'a layer removed with its objects reaches the server in one step, and undo brings both back',
+      made.layer && made.objects === 2 && !removed.layer && removed.objects === 0 && step === 'Katman sil' && back.layer && back.objects === 2,
+      JSON.stringify({ made, removed, step, back }),
+    );
+  }
+
   // Mehmet moves the line's end: the change arrives live, with no unsaved mark.
   const moved = { ...line.entity, b: { x: X + 120, y: N } };
   const r1 = await mehmet.commit(project.tenantId, project.projectId, [{ op: 'update', id: lineId, entity: moved }], { [lineId]: line.version });
