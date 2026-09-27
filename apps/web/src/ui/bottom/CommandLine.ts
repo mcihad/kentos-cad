@@ -10,6 +10,7 @@ import { Component } from '../Component';
 import { h, replaceChildren } from '../dom';
 import { icon } from '../icons';
 import { optionButtons, optionForKey, parsePrompt, runPromptOption } from '../promptOptions';
+import { echo } from './logPlan';
 import { calcMenuItems } from '../shell/calcMenu';
 import { SNAP_LABEL } from '../../viewport/picking';
 import { PopupMenu } from '../widgets/PopupMenu';
@@ -208,7 +209,7 @@ export class CommandLine extends Component {
     const tool = tools.active;
     // A running command takes the text, and so does selection while a grip waits for its new place.
     if (takesTypedInput(tools.activeId.value, tool) && tool.input) {
-      log.command(`› ${text}`);
+      log.command(echo(text));
       this.remember(text);
       this.input.value = '';
       if (tool.input(text)) return;

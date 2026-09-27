@@ -86,6 +86,8 @@ pub struct Live {
     /// The server's tree for that, come while an edit was open: used once it ends.
     pub(super) giving: Option<kentos_contracts::ProjectInfo>,
     pub told: Told,
+    /// When the server last answered a save (milliseconds since 1970; the save cell's tip).
+    pub last_saved: Option<i64>,
 }
 
 impl Live {
@@ -124,6 +126,7 @@ impl Live {
             give_back: false,
             giving: None,
             told: Told::default(),
+            last_saved: None,
         }
     }
 
@@ -414,6 +417,7 @@ impl App {
         match result {
             Ok(answer) => {
                 live.sync.answered(&doc.model, &answer);
+                live.last_saved = Some(crate::cloud::now_ms());
                 live.sent = None;
                 live.retry_at = None;
                 // The next batch, or edits made while it was on its way, go at once.

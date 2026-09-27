@@ -3,6 +3,7 @@ import type { DrawingFont, Workspace } from '../model/projectSettings';
 import { Signal } from '../core/signal';
 import { settingDefault } from '../core/settings/schema';
 import type { LineType } from '../model/layers';
+import { LAYOUT_DEFAULTS, LAYOUT_KEY, readLayout, type UiLayoutData } from './layoutPlan';
 import type { SettingsStore } from './settings/store';
 
 const sessionDefault = (key: string) => settingDefault(key) as boolean;
@@ -34,13 +35,17 @@ export interface LogEntry {
   text: string;
 }
 
+/** The log keeps this many lines; the oldest go first (fixtures/shell/v1/log.json). */
+export const LOG_LIMIT = 500;
+
 export class MessageLog {
   readonly entries = new Signal<readonly LogEntry[]>([]);
+  /** Ids only grow, across Geçmişi temizle too (the Uyarılar badge counts from them, ui/bottom/warnings.ts). */
   private seq = 0;
 
   push(level: LogLevel, text: string): void {
     const next = [...this.entries.value, { id: ++this.seq, time: new Date(), level, text }];
-    this.entries.set(next.length > 500 ? next.slice(-500) : next);
+    this.entries.set(next.length > LOG_LIMIT ? next.slice(-LOG_LIMIT) : next);
   }
 
   command = (t: string) => this.push('command', t);
@@ -54,83 +59,43 @@ export class MessageLog {
   }
 }
 
-export type Theme = 'dark' | 'light';
-export type BottomTab = 'history' | 'coords' | 'messages';
-export type DockTab = 'layers' | 'processing';
-export type ProcessingTab = 'tools' | 'history';
-
-export interface UiLayoutData {
-  theme: Theme;
-  rightVisible: boolean;
-  dockWidth: number;
-  /** Share of the right dock height given to the layer tree. */
-  layersFraction: number;
-  bottomExpanded: boolean;
-  bottomHeight: number;
-  bottomTab: BottomTab;
-  toolboxVisible: boolean;
-  toolboxDocked: boolean;
-  toolboxX: number;
-  toolboxY: number;
-  toolboxColumns: 2 | 3;
-  /** Toolbox groups folded by the user (ToolGroup ids). */
-  toolboxFolded: string[];
-  /** Right dock content: layer tree and attributes, or the processing toolbox. */
-  dockTab: DockTab;
-  processingTab: ProcessingTab;
-  /** Processing categories folded in the toolbox. */
-  processingFolded: string[];
-  /** Ribbon (Şerit): the open tab, folded to its tab row, and commands added to its quick access bar. */
-  ribbonTab: string;
-  ribbonCollapsed: boolean;
-  ribbonQuickAccess: string[];
-  /** The entry last chosen on each split button (Daire ▾: 3 nokta), by button key. */
-  ribbonSplits: Record<string, string>;
-  /** The floating toolbox next to the ribbon (off by default: the ribbon holds every tool). */
-  ribbonToolbox: boolean;
-}
-
-const DEFAULTS: UiLayoutData = {
-  theme: 'dark',
-  rightVisible: true,
-  dockWidth: 312,
-  layersFraction: 0.5,
-  bottomExpanded: false,
-  bottomHeight: 190,
-  bottomTab: 'history',
-  toolboxVisible: true,
-  toolboxDocked: false,
-  toolboxX: 12,
-  toolboxY: 12,
-  toolboxColumns: 3,
-  toolboxFolded: [],
-  dockTab: 'layers',
-  processingTab: 'tools',
-  processingFolded: [],
-  ribbonTab: 'home',
-  ribbonCollapsed: false,
-  ribbonQuickAccess: [],
-  ribbonSplits: {},
-  ribbonToolbox: false,
-};
+export type { BottomTab, DockTab, ProcessingTab, Theme, UiLayoutData } from './layoutPlan';
 
 export type Signals<T> = { readonly [K in keyof T]: Signal<T[K]> };
 
-/**
- * One signal per field, persisted to localStorage under `key`. Storage may be
- * unavailable (private mode) or hold stale fields; unknown keys are dropped
- * and missing ones fall back to defaults.
- */
-export function persistedSignals<T extends object>(key: string, defaults: T): Signals<T> {
-  let saved: Partial<T> = {};
+/** A store is written this long after its last change (ms): one write for a drag, not one per step. */
+export const SAVE_DELAY_MS = 250;
+
+/** What was stored under `key`, or null (nothing, or storage refused: private mode). */
+function stored(key: string): string | null {
   try {
-    saved = JSON.parse(localStorage.getItem(key) ?? '{}');
+    return localStorage.getItem(key);
   } catch {
-    /* ignore */
+    return null;
   }
-  const state = Object.fromEntries(
-    Object.entries(defaults).map(([k, v]) => [k, new Signal(k in saved ? (saved as Record<string, unknown>)[k] : v)]),
-  ) as unknown as Signals<T>;
+}
+
+/**
+ * One signal per field, persisted to localStorage under `key`, every field
+ * written SAVE_DELAY_MS after the last change. Storage may be unavailable
+ * (private mode) or hold stale fields. `read` turns what was stored into the
+ * values; by default a field stored is taken as it is and a missing one is
+ * its default. Fields the defaults do not name are dropped: the next write
+ * leaves them out.
+ */
+export function persistedSignals<T extends object>(key: string, defaults: T, read?: (text: string | null) => T): Signals<T> {
+  let values: T;
+  if (read) values = read(stored(key));
+  else {
+    let saved: Partial<T> = {};
+    try {
+      saved = JSON.parse(stored(key) ?? '{}');
+    } catch {
+      /* ignore */
+    }
+    values = Object.fromEntries(Object.entries(defaults).map(([k, v]) => [k, k in saved ? (saved as Record<string, unknown>)[k] : v])) as T;
+  }
+  const state = Object.fromEntries(Object.entries(values).map(([k, v]) => [k, new Signal(v)])) as unknown as Signals<T>;
   let timer = 0;
   const save = () => {
     clearTimeout(timer);
@@ -141,26 +106,15 @@ export function persistedSignals<T extends object>(key: string, defaults: T): Si
       } catch {
         /* ignore */
       }
-    }, 250);
+    }, SAVE_DELAY_MS);
   };
   for (const s of Object.values(state)) (s as Signal<unknown>).subscribe(save);
   return state;
 }
 
-/** Workspace layout (panel sizes, toolbox position, theme). */
+/** Workspace layout (panels, sizes, toolbox, dock and ribbon states, theme): app/layoutPlan.ts reads it. */
 export function createUiState(): Signals<UiLayoutData> {
-  let legacyToolbox = false;
-  try {
-    const raw = localStorage.getItem('kentos.ui.v1');
-    legacyToolbox = !!raw && !('toolboxFolded' in JSON.parse(raw));
-  } catch {
-    /* ignore */
-  }
-  const state = persistedSignals<UiLayoutData>('kentos.ui.v1', DEFAULTS);
-  // Layouts saved before the titled toolbox groups used one or two columns;
-  // the grouped toolbox is laid out for three.
-  if (legacyToolbox) state.toolboxColumns.set(3);
-  return state;
+  return persistedSignals<UiLayoutData>(LAYOUT_KEY, LAYOUT_DEFAULTS, readLayout);
 }
 export type UiState = Signals<UiLayoutData>;
 

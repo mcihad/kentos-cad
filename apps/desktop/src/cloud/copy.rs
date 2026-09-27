@@ -19,7 +19,7 @@ use std::time::{Duration, Instant};
 
 use iced::Task;
 use iced::task::Handle;
-use kentos_cloud::{ApiFailure, Cloud as Client, Replica, ReplicaError, SaveState};
+use kentos_cloud::{ApiFailure, Cloud as Client, Replica, ReplicaError};
 use kentos_contracts::{Me, ProjectStorage};
 use kentos_domain::Uuid;
 use serde_json::Value;
@@ -198,7 +198,8 @@ impl App {
         }
         self.cloud.link = Link::Online;
         self.output("Sunucuya yeniden ulaşıldı; bu cihazda bekleyen değişiklikler gönderiliyor.");
-        self.resume()
+        let server = self.server_answers_again();
+        Task::batch([self.resume(), server])
     }
 
     /// The server can be reached with a session: what waited goes, following starts again.
@@ -255,18 +256,6 @@ impl App {
             }
             _ => self.came_online(),
         }
-    }
-
-    /// Whether the open cloud project's work is on its way (the dot says eşitleniyor).
-    pub(crate) fn syncing(&self) -> bool {
-        self.cloud.live.as_ref().is_some_and(|l| {
-            l.sending() || matches!(l.sync.state(), SaveState::Pending | SaveState::Saving)
-        }) || self.saving.is_some()
-            || self
-                .cloud
-                .held
-                .as_ref()
-                .is_some_and(|h| h.sending.is_some())
     }
 
     /// A file project's save that waits in the copy goes now (the connection returned).

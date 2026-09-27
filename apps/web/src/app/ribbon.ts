@@ -144,6 +144,20 @@ export const RIBBON_TABS: readonly RibbonTabSpec[] = [
 /** Always on the quick access bar; the user may add more (and remove what they added). */
 export const QUICK_ACCESS: readonly string[] = ['file.save', 'edit.undo', 'edit.redo'];
 
+/**
+ * The quick access bar from the layout's kept list (`ribbonQuickAccess`,
+ * app/layoutPlan.ts): the fixed commands, then the ones the user added that
+ * this app has, once each, in the order added.
+ */
+export function quickAccessOf(kept: readonly string[], exists: (id: string) => boolean): string[] {
+  return [...QUICK_ACCESS, ...new Set(kept.filter((id) => exists(id) && !QUICK_ACCESS.includes(id)))];
+}
+
+/** The ribbon's tab at start: the kept one (`ribbonTab`) while the work mode shows it and it is not contextual; else Giriş. */
+export function startTab(kept: string, tabs: readonly { readonly id: string; readonly contextual?: string }[]): string {
+  return tabs.some((t) => t.id === kept && !t.contextual) ? kept : 'home';
+}
+
 /** One choice of a split button: a tool, or a tool started with one of its methods. */
 export interface SplitEntry {
   readonly command: string;
@@ -154,6 +168,14 @@ export interface SplitEntry {
   /** The list's text: the method, or the tool's name. */
   readonly label: string;
   readonly description?: string;
+}
+
+/** A split choice as the layout keeps it (`ribbonSplits`, by the button's key): its command and its method's option. */
+export const splitChoiceKey = (e: Pick<SplitEntry, 'command' | 'option'>): string => `${e.command}|${e.option ?? ''}`;
+
+/** A split button's entry on top: the one last chosen, or its first when none was or the kept one is gone. */
+export function splitCurrent<E extends Pick<SplitEntry, 'command' | 'option'>>(entries: readonly E[], kept: string | undefined): E {
+  return entries.find((e) => splitChoiceKey(e) === kept) ?? entries[0];
 }
 
 export type RibbonItem =

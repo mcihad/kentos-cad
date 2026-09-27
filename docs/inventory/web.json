@@ -2389,6 +2389,7 @@
       },
       "tests": [
         "apps/web/scripts/e2e/builder.mjs",
+        "apps/web/scripts/e2e/flow.mjs",
         "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
@@ -7634,6 +7635,7 @@
         "apps/web/src/processing/runs.test.ts",
         "apps/web/scripts/fixtures/record-processing-dialog.test.ts",
         "apps/web/scripts/e2e/builder.mjs",
+        "apps/web/scripts/e2e/flow.mjs",
         "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
@@ -8814,7 +8816,7 @@
     {
       "id": "kentos.ui.v1",
       "kind": "localStorage",
-      "source": "apps/web/src/app/state.ts",
+      "source": "apps/web/src/app/layoutPlan.ts",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -11712,7 +11714,7 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "desktopWhere": "apps/desktop/src/expression/ (ADR 0100 §5; İşlemler'in ifade alanındaki ε)"
+      "desktopWhere": "apps/desktop/src/expression/ (ADR 0100 §5; Metin | Akış, ADR 0101; İşlemler'in ifade alanındaki ε)"
     },
     {
       "id": "apps/web/src/ui/io/CoordExportDialog.ts#openCoordExport",
@@ -12024,8 +12026,8 @@
         "web": "implemented",
         "desktop": "partial"
       },
-      "desktopWhere": "apps/desktop/src/view.rs, cloud/view.rs (ADR 0058, 0080)",
-      "desktopNote": "Web'in sunucu hücresi ve onun hesap menüsü yok; masaüstünde hesabın adı ve Çıkış ayrı hücrelerdir (ADR 0041). Çizim motoru hücresi masaüstünde anlamsızdır (wgpu)."
+      "desktopWhere": "apps/desktop/src/view.rs, cloud/cells.rs (ADR 0058, 0080, 0113)",
+      "desktopNote": "Web'in son iletiyi birkaç saniye gösteren hücresi yok; iletiler alt paneldedir. Dosya projesinde başkasının yeni revizyonu henüz izlenmediği için “Yeni revizyon” durumu gösterilmez. Çizim motoru hücresi masaüstünde anlamsızdır (wgpu)."
     },
     {
       "id": "apps/web/src/ui/style/LayerStyleDialog.ts#openLayerStyle",

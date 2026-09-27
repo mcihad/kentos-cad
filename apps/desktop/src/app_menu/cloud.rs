@@ -88,14 +88,25 @@ impl App {
             .as_ref()
             .and_then(|d| d.cloud_source().map(|s| (d, s)))
         {
-            let (state, tone, _) = self.save_cell();
-            let (link, _, _) = self.link_cell();
+            // The web's card: the workspace, the save cell's words and the live link's.
+            let state = self
+                .save_cell()
+                .map_or_else(String::new, |c| format!(" · {}", c.view.text));
+            let link = crate::cloud::cells_plan::link_text(self.link_state());
+            let link = if link.is_empty() {
+                String::new()
+            } else {
+                format!(" · {link}")
+            };
+            let lamp = self
+                .save_cell()
+                .map(|c| crate::cloud::cells::lamp(c.shade, c.lamp));
             pane = pane.push(card(
                 row![
-                    text("●").style(move |theme: &iced::Theme| tone.style(theme)),
+                    lamp.unwrap_or_else(|| text("").into()),
                     column![
                         label::strong(doc.name().to_owned()),
-                        label::caption(format!("{} · {state} · {link}", source.workspace)),
+                        label::caption(format!("{}{state}{link}", source.workspace)),
                     ]
                     .spacing(1),
                 ]

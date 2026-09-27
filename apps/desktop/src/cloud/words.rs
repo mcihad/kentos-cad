@@ -5,7 +5,6 @@
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use kentos_cloud::SaveState;
 use kentos_contracts::{
     CatalogSort, CatalogView, ConflictReason, ProjectRole, ProjectStorage, TenantKind,
 };
@@ -119,22 +118,6 @@ pub fn view(view: CatalogView) -> ViewText {
             empty: "Çöp kutusu boş. Geri yükleyebileceğiniz (sahibi ya da kurum yöneticisi olduğunuz) silinmiş projeler burada durur.",
             note: "",
         },
-    }
-}
-
-/// Where a database project's autosave stands, in the status bar (`n`: what waits).
-pub fn save_state(state: SaveState, waiting: usize) -> String {
-    match state {
-        SaveState::Saved => "Kaydedildi".to_owned(),
-        SaveState::Pending => format!("Kaydedilmedi ({waiting})"),
-        SaveState::Saving => "Kaydediliyor".to_owned(),
-        SaveState::Offline => "Bağlantı yok — yeniden denenecek".to_owned(),
-        SaveState::Conflict => "Çakışma".to_owned(),
-        SaveState::Error => "Kayıt hatası".to_owned(),
-        SaveState::ReadOnly => "Salt okunur".to_owned(),
-        SaveState::Archived => "Arşivlendi".to_owned(),
-        SaveState::Deleted => "Çöp kutusunda".to_owned(),
-        SaveState::Revoked => "Erişim kaldırıldı".to_owned(),
     }
 }
 

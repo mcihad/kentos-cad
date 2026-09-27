@@ -12,7 +12,10 @@
 // form, the add menus, a child marker, ƒ on, the preview geometry, the unsaved question, inline and library symbols);
 // svgedit (SVG düzenleyicisi: a new and a library drawing, shapes, the tabs, the menus, a polyline in progress, text,
 // node editing, measuring, the XML source, document properties, export, the unsaved question);
-// shell (the classic shell: the bars, and the toolbox docked, in two columns, folded, widened, its tip, a snapping drag).
+// shell (the classic shell: the bars, and the toolbox docked, in two columns, folded, widened, its tip, a snapping drag);
+// log (the bottom panel's lines with their times and levels, Uyarılar with its badge, a warning in the status bar, the
+// empty history); layout (panels, sizes and toolbox as kept, sizes kept larger than the window shown within it, the
+// ribbon's kept tab, quick access and split choices, folded).
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { createServer } from 'vite';
@@ -633,6 +636,138 @@ SCENES.shell = [
     close: async (ui) => (await ui.releaseAt(2, 2), await ui.eval(TOOLBOX_RESET)),
   },
 ].map((s) => ({ close: async (ui) => (await ui.escapeAll(1), await ui.eval(TOOLBOX_RESET)), ...s }));
+
+// The log (ui/bottom/logPlan.ts, fixtures/shell/v1/log.json): a short session's lines in Komut geçmişi with their
+// times and levels (a tool's name, what was typed, the points it took, a value not understood, a mistyped command, a
+// file written) and the Uyarılar badge; the warnings alone in Uyarılar; a warning in the status bar with the panel
+// closed; the empty history. Every scene puts the log, the panel and the drawing back as they were.
+/** The command line emptied (a mistyped command stays in it, selected). */
+const CMDLINE_EMPTY = `(() => { const i = document.querySelector('.cmdline__input'); i.value = ''; i.dispatchEvent(new Event('input', { bubbles: true })); })()`;
+const LOG_KEEP = `(() => { const k = window.kentos; window.__shotLog = k.log.entries.value; window.__shotHeight = k.ui.bottomHeight.value; })()`;
+const LOG_RESTORE = `(() => {
+  const k = window.kentos;
+  k.tools.activate('select');
+  while (k.doc.canUndo.value) k.doc.undo();
+  k.log.entries.set(window.__shotLog ?? []);
+  k.ui.bottomHeight.set(window.__shotHeight ?? 190);
+  k.ui.bottomTab.set('history');
+  k.ui.bottomExpanded.set(false);
+  ${CMDLINE_EMPTY};
+})()`;
+/** The panel open on a tab, tall enough for the whole session. */
+const LOG_OPEN = (tab) => `(() => { const u = window.kentos.ui; u.bottomHeight.set(Math.min(300, Math.round(innerHeight * 0.4))); u.bottomTab.set('${tab}'); u.bottomExpanded.set(true); })()`;
+/** A line typed into the command line and entered. */
+async function typeLine(ui, text) {
+  await ui.clickSel('.cmdline__input');
+  await ui.eval(CMDLINE_EMPTY);
+  await ui.type(text);
+  await ui.key('Enter');
+  await ui.sleep(300);
+}
+/** The log kept aside and emptied, then a short session written into it, a second or more between some lines. */
+async function logSession(ui) {
+  await ui.eval(LOG_KEEP);
+  await ui.eval(`window.kentos.log.clear()`);
+  await ui.eval(`window.kentos.commands.execute('tool.line')`);
+  await ui.sleep(300);
+  await typeLine(ui, '412100,4512100');
+  await ui.sleep(1000);
+  await typeLine(ui, '@40,0');
+  await typeLine(ui, '@0,30');
+  await typeLine(ui, '@40<');
+  await ui.key('Escape');
+  await ui.sleep(1000);
+  await typeLine(ui, 'PARSLE');
+  await ui.eval(`window.kentos.log.success('“ada-101.ncn” yazıldı: 12 nokta.')`);
+  await ui.eval(`window.kentos.view.focus()`);
+}
+SCENES.log = [
+  {
+    id: 'history',
+    open: async (ui) => {
+      await logSession(ui);
+      await ui.eval(LOG_OPEN('history'));
+      await ui.sleep(400);
+    },
+  },
+  {
+    id: 'warnings',
+    open: async (ui) => {
+      await logSession(ui);
+      await ui.eval(LOG_OPEN('messages'));
+      await ui.sleep(400);
+    },
+  },
+  {
+    id: 'status-warning',
+    open: async (ui) => {
+      await ui.eval(LOG_KEEP);
+      await ui.eval(`window.kentos.ui.bottomExpanded.set(false)`);
+      await ui.eval(`window.kentos.commands.execute('tool.line')`);
+      await ui.sleep(300);
+      await typeLine(ui, '@40<');
+      await ui.sleep(300);
+    },
+  },
+  {
+    id: 'history-empty',
+    open: async (ui) => {
+      await ui.eval(LOG_KEEP);
+      await ui.eval(`window.kentos.log.clear()`);
+      await ui.eval(LOG_OPEN('history'));
+      // The status bar's message of an earlier line fades by itself (5 s, 9 s for a warning).
+      await ui.waitFor(`!document.querySelector('.status__flash[data-show]')`, 12000);
+      await ui.sleep(400);
+    },
+  },
+].map((s) => ({ close: async (ui) => (await ui.escapeAll(1), await ui.eval(LOG_RESTORE), await ui.sleep(200)), ...s }));
+
+// The kept layout (app/layoutPlan.ts, fixtures/shell/v1/layout.json): panels, sizes and the toolbox as kept; a dock and
+// a bottom panel kept larger than this window allows, shown within it; the ribbon with its kept tab, quick access
+// commands and split choices, and folded. Each scene sets the live layout and puts it back after.
+const LAYOUT_KEEP = `window.__shotLayout = Object.fromEntries(Object.entries(window.kentos.ui).map(([k, s]) => [k, s.value]))`;
+const LAYOUT_BACK = `(() => { const ui = window.kentos.ui; for (const [k, v] of Object.entries(window.__shotLayout ?? {})) ui[k].set(v); })()`;
+/** Layout fields set on the live layout (the kept ones first saved aside). */
+const layoutSet = (fields) => `(() => { ${LAYOUT_KEEP}; const ui = window.kentos.ui; for (const [k, v] of Object.entries(${JSON.stringify(fields)})) ui[k].set(v); })()`;
+/** The shell as Uygulama ayarları sets it; the ribbon loads on first use. */
+async function shellTo(ui, kind) {
+  await ui.eval(`window.kentos.prefs.shell.set(${JSON.stringify(kind)})`);
+  await ui.waitFor(kind === 'ribbon' ? `!!document.querySelector('.ribbon__strip .rpanel')` : `!!document.querySelector('.menubar')`, 10000);
+  await ui.sleep(500);
+}
+const RIBBON_KEPT = { ribbonTab: 'draw', ribbonQuickAccess: ['view.zoomExtents', 'tool.line'], ribbonSplits: { circle: 'tool.circle|3N', rectangle: 'tool.regularPolygon|' } };
+SCENES.layout = [
+  {
+    id: 'kept',
+    open: async (ui) => {
+      await ui.eval(layoutSet({ dockWidth: 400, layersFraction: 0.35, bottomExpanded: true, bottomTab: 'coords', toolboxDocked: true, toolboxColumns: 2, toolboxFolded: ['annotate'] }));
+      await ui.sleep(500);
+    },
+  },
+  {
+    id: 'window-limits',
+    open: async (ui) => {
+      await ui.eval(layoutSet({ dockWidth: 560, bottomExpanded: true, bottomHeight: 600 }));
+      await ui.sleep(500);
+    },
+  },
+  {
+    id: 'ribbon-kept',
+    open: async (ui) => {
+      await ui.eval(layoutSet(RIBBON_KEPT));
+      await shellTo(ui, 'ribbon');
+    },
+    close: async (ui) => (await shellTo(ui, 'classic'), await ui.eval(LAYOUT_BACK)),
+  },
+  {
+    id: 'ribbon-collapsed',
+    open: async (ui) => {
+      await ui.eval(layoutSet({ ...RIBBON_KEPT, ribbonCollapsed: true }));
+      await shellTo(ui, 'ribbon');
+    },
+    close: async (ui) => (await shellTo(ui, 'classic'), await ui.eval(LAYOUT_BACK)),
+  },
+].map((s) => ({ close: async (ui) => (await ui.escapeAll(1), await ui.eval(LAYOUT_BACK), await ui.sleep(300)), ...s }));
 
 SCENES.svgedit = [
   { id: 'new', open: (ui) => openSvg(ui) },

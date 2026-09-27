@@ -455,6 +455,8 @@ pub struct App {
     /// The side panels' layout while F4 hides them, put back as it was.
     pub(crate) hidden_docks: Option<Docks<Panel>>,
     /// A server check is on its way (`server.check` waits for it).
+    /// The check at start: its answer goes to the server cell, not to the log.
+    pub(crate) server_quiet: bool,
     pub server_checking: bool,
     /// The last server check's answer: its health, or why there was none
     /// (KentOS CAD hakkında names the server by it).
@@ -570,6 +572,7 @@ impl App {
             fullscreen: false,
             hidden_docks: None,
             server_checking: false,
+            server_quiet: false,
             server_health: None,
         };
         if !app.recovery.offers.is_empty() {

@@ -316,6 +316,8 @@ pub struct Saving {
     pub revision: u64,
     pub stage: String,
     pub fraction: f32,
+    /// The stage it is at (a cloud save's cell says it: preparing, uploading, the server checking).
+    pub step: Option<Stage>,
     started: Instant,
     stop: Arc<AtomicBool>,
     /// A cloud save's request, once its bytes are ready: stopping drops it.
@@ -373,6 +375,7 @@ impl App {
             revision,
             stage: "Çizim hazırlanıyor".to_owned(),
             fraction: 0.0,
+            step: None,
             started: Instant::now(),
             stop: stop.clone(),
             upload: None,
@@ -415,6 +418,7 @@ impl App {
             Event::Progress { id, stage } => {
                 if let Some(s) = self.saving.as_mut().filter(|s| s.id == id) {
                     (s.stage, s.fraction) = stage.describe();
+                    s.step = Some(stage);
                 }
             }
             Event::Stop => {

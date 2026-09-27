@@ -74,6 +74,23 @@ impl App {
         window::latest().and_then(move |id| window::set_mode(id, mode))
     }
 
+    /// Asks the server once at start, as the web does when it is idle after
+    /// start: the server cell says the answer, the log says nothing.
+    pub(crate) fn check_server_quietly(&mut self) -> Task<Message> {
+        self.server_quiet = true;
+        self.check_server()
+    }
+
+    /// The server answered a cloud request (a sign-in, the connection's
+    /// return): the server cell asks it again quietly unless it already says
+    /// it is there (the web asks again when the network returns).
+    pub(crate) fn server_answers_again(&mut self) -> Task<Message> {
+        if self.server_checking || matches!(self.server_health, Some(Ok(_))) {
+            return Task::none();
+        }
+        self.check_server_quietly()
+    }
+
     /// `server.check`: asks the KentOS server now (the web's `ServerStatus.check`).
     fn check_server(&mut self) -> Task<Message> {
         let server = self
@@ -83,19 +100,25 @@ impl App {
             .map_or_else(|| self.settings.text("cloud.server"), |c| c.server().to_owned());
         match Cloud::new(&server) {
             Ok(client) => {
+                // The last answer stays while the new one is on its way (the cell keeps saying it).
                 self.server_checking = true;
-                self.server_health = None;
-                self.output(format!("Sunucuya soruluyor: {server}…"));
+                if !self.server_quiet {
+                    self.output(format!("Sunucuya soruluyor: {server}…"));
+                }
                 // Asked when the task runs, not when it is made.
                 Task::perform(async move { client.health().await }, |answer| {
                     Message::ServerChecked(answer.map_err(|e| e.to_string()))
                 })
             }
             Err(e) => {
-                self.say(
-                    Level::Info,
-                    format!("Sunucu yok. {e} Çizim sunucusuz çalışmaya devam ediyor."),
-                );
+                let quiet = std::mem::take(&mut self.server_quiet);
+                self.server_health = Some(Err(e.to_string()));
+                if !quiet {
+                    self.say(
+                        Level::Info,
+                        format!("Sunucu yok. {e} Çizim sunucusuz çalışmaya devam ediyor."),
+                    );
+                }
                 Task::none()
             }
         }
@@ -105,6 +128,10 @@ impl App {
     pub(crate) fn server_checked(&mut self, answer: Result<Health, String>) {
         self.server_checking = false;
         self.server_health = Some(answer.clone());
+        // The check at start says its answer in the server cell only.
+        if std::mem::take(&mut self.server_quiet) {
+            return;
+        }
         match answer {
             Ok(h) if h.status != "ok" => self.say(
                 Level::Info,

@@ -22,6 +22,7 @@ use kentos_cloud::{ApiFailure, Opened, Revision, Source as Kept, conflicting_rev
 use kentos_contracts::{FileCommitted, ProjectStorage};
 
 use crate::app::{App, Dialog, Message, Then};
+use crate::cloud::cells_plan::FileState;
 use crate::cloud::{Event, Once};
 use crate::saving::{self, Stage, Target};
 
@@ -104,11 +105,12 @@ impl App {
         let Some(client) = client else {
             return self.keep_on_device(id, bytes, based_on);
         };
-        (s.stage, s.fraction) = Stage::Uploading {
+        let first = Stage::Uploading {
             done: 0,
             total: bytes.len() as u64,
-        }
-        .describe();
+        };
+        (s.stage, s.fraction) = first.describe();
+        s.step = Some(first);
         // Kept for this device's copy, should the server not answer.
         if keeps {
             s.bytes = Some(bytes.clone());
@@ -242,6 +244,12 @@ impl App {
         match result {
             Ok(committed) => {
                 let number = committed.revision.parse::<u64>().unwrap_or(0);
+                // This window's last save, for the save cell's tip.
+                self.cloud.file_saved = Some((
+                    s.session,
+                    committed.revision.clone(),
+                    crate::cloud::now_ms(),
+                ));
                 let mut later = "";
                 if same && let Some(doc) = self.document.as_mut() {
                     doc.model.mark_saved(s.revision);
@@ -256,6 +264,7 @@ impl App {
                     }
                 }
                 self.cloud.file_conflict = None;
+                self.cloud.file_failed = None;
                 self.say(
                     kentos_interaction::Level::Success,
                     format!("“{name}” buluta kaydedildi: revizyon {number}.{later}"),
@@ -281,6 +290,15 @@ impl App {
                         self.dialog = Some(Dialog::FileConflict);
                     }
                 } else {
+                    // The save cell says it until the next Kaydet (the web's `error`, `deleted`, `revoked`).
+                    let state = if failure.deleted() {
+                        FileState::Deleted
+                    } else if failure.code == "forbidden" {
+                        FileState::Revoked
+                    } else {
+                        FileState::Error
+                    };
+                    self.cloud.file_failed = Some((s.session, state, failure.message.clone()));
                     self.say(
                         kentos_interaction::Level::Error,
                         format!(

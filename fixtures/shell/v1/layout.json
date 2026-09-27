@@ -1,0 +1,1117 @@
+{
+ "format": "kentos.layout",
+ "version": 1,
+ "key": "kentos.ui.v1",
+ "saveMs": 250,
+ "defaults": {
+  "theme": "dark",
+  "rightVisible": true,
+  "dockWidth": 312,
+  "layersFraction": 0.5,
+  "bottomExpanded": false,
+  "bottomHeight": 190,
+  "bottomTab": "history",
+  "toolboxVisible": true,
+  "toolboxDocked": false,
+  "toolboxX": 12,
+  "toolboxY": 12,
+  "toolboxColumns": 3,
+  "toolboxFolded": [],
+  "dockTab": "layers",
+  "processingTab": "tools",
+  "processingFolded": [],
+  "ribbonTab": "home",
+  "ribbonCollapsed": false,
+  "ribbonQuickAccess": [],
+  "ribbonSplits": {},
+  "ribbonToolbox": false
+ },
+ "fields": {
+  "theme": {
+   "kind": "enum",
+   "values": [
+    "dark",
+    "light"
+   ]
+  },
+  "rightVisible": {
+   "kind": "boolean"
+  },
+  "dockWidth": {
+   "kind": "number",
+   "min": 240,
+   "max": 560
+  },
+  "layersFraction": {
+   "kind": "number",
+   "min": 0.15,
+   "max": 0.85
+  },
+  "bottomExpanded": {
+   "kind": "boolean"
+  },
+  "bottomHeight": {
+   "kind": "number",
+   "min": 96
+  },
+  "bottomTab": {
+   "kind": "enum",
+   "values": [
+    "history",
+    "coords",
+    "messages"
+   ]
+  },
+  "toolboxVisible": {
+   "kind": "boolean"
+  },
+  "toolboxDocked": {
+   "kind": "boolean"
+  },
+  "toolboxX": {
+   "kind": "number"
+  },
+  "toolboxY": {
+   "kind": "number"
+  },
+  "toolboxColumns": {
+   "kind": "columns"
+  },
+  "toolboxFolded": {
+   "kind": "texts"
+  },
+  "dockTab": {
+   "kind": "enum",
+   "values": [
+    "layers",
+    "processing"
+   ]
+  },
+  "processingTab": {
+   "kind": "enum",
+   "values": [
+    "tools",
+    "history"
+   ]
+  },
+  "processingFolded": {
+   "kind": "texts"
+  },
+  "ribbonTab": {
+   "kind": "text"
+  },
+  "ribbonCollapsed": {
+   "kind": "boolean"
+  },
+  "ribbonQuickAccess": {
+   "kind": "texts"
+  },
+  "ribbonSplits": {
+   "kind": "textMap"
+  },
+  "ribbonToolbox": {
+   "kind": "boolean"
+  }
+ },
+ "limits": {
+  "dockWidth": {
+   "min": 240,
+   "max": 560,
+   "maxShare": 0.5,
+   "reset": 312
+  },
+  "layersFraction": {
+   "min": 0.15,
+   "max": 0.85,
+   "reset": 0.5
+  },
+  "bottomHeight": {
+   "min": 96,
+   "maxShare": 0.6,
+   "reset": 190
+  }
+ },
+ "reads": [
+  {
+   "title": "nothing stored",
+   "stored": null,
+   "layout": {
+    "theme": "dark",
+    "rightVisible": true,
+    "dockWidth": 312,
+    "layersFraction": 0.5,
+    "bottomExpanded": false,
+    "bottomHeight": 190,
+    "bottomTab": "history",
+    "toolboxVisible": true,
+    "toolboxDocked": false,
+    "toolboxX": 12,
+    "toolboxY": 12,
+    "toolboxColumns": 3,
+    "toolboxFolded": [],
+    "dockTab": "layers",
+    "processingTab": "tools",
+    "processingFolded": [],
+    "ribbonTab": "home",
+    "ribbonCollapsed": false,
+    "ribbonQuickAccess": [],
+    "ribbonSplits": {},
+    "ribbonToolbox": false
+   }
+  },
+  {
+   "title": "not JSON",
+   "stored": "{\"theme\":\"light\",",
+   "layout": {
+    "theme": "dark",
+    "rightVisible": true,
+    "dockWidth": 312,
+    "layersFraction": 0.5,
+    "bottomExpanded": false,
+    "bottomHeight": 190,
+    "bottomTab": "history",
+    "toolboxVisible": true,
+    "toolboxDocked": false,
+    "toolboxX": 12,
+    "toolboxY": 12,
+    "toolboxColumns": 3,
+    "toolboxFolded": [],
+    "dockTab": "layers",
+    "processingTab": "tools",
+    "processingFolded": [],
+    "ribbonTab": "home",
+    "ribbonCollapsed": false,
+    "ribbonQuickAccess": [],
+    "ribbonSplits": {},
+    "ribbonToolbox": false
+   }
+  },
+  {
+   "title": "a JSON list, not an object",
+   "stored": "[\"light\"]",
+   "layout": {
+    "theme": "dark",
+    "rightVisible": true,
+    "dockWidth": 312,
+    "layersFraction": 0.5,
+    "bottomExpanded": false,
+    "bottomHeight": 190,
+    "bottomTab": "history",
+    "toolboxVisible": true,
+    "toolboxDocked": false,
+    "toolboxX": 12,
+    "toolboxY": 12,
+    "toolboxColumns": 3,
+    "toolboxFolded": [],
+    "dockTab": "layers",
+    "processingTab": "tools",
+    "processingFolded": [],
+    "ribbonTab": "home",
+    "ribbonCollapsed": false,
+    "ribbonQuickAccess": [],
+    "ribbonSplits": {},
+    "ribbonToolbox": false
+   }
+  },
+  {
+   "title": "a JSON number",
+   "stored": "42",
+   "layout": {
+    "theme": "dark",
+    "rightVisible": true,
+    "dockWidth": 312,
+    "layersFraction": 0.5,
+    "bottomExpanded": false,
+    "bottomHeight": 190,
+    "bottomTab": "history",
+    "toolboxVisible": true,
+    "toolboxDocked": false,
+    "toolboxX": 12,
+    "toolboxY": 12,
+    "toolboxColumns": 3,
+    "toolboxFolded": [],
+    "dockTab": "layers",
+    "processingTab": "tools",
+    "processingFolded": [],
+    "ribbonTab": "home",
+    "ribbonCollapsed": false,
+    "ribbonQuickAccess": [],
+    "ribbonSplits": {},
+    "ribbonToolbox": false
+   }
+  },
+  {
+   "title": "JSON null",
+   "stored": "null",
+   "layout": {
+    "theme": "dark",
+    "rightVisible": true,
+    "dockWidth": 312,
+    "layersFraction": 0.5,
+    "bottomExpanded": false,
+    "bottomHeight": 190,
+    "bottomTab": "history",
+    "toolboxVisible": true,
+    "toolboxDocked": false,
+    "toolboxX": 12,
+    "toolboxY": 12,
+    "toolboxColumns": 3,
+    "toolboxFolded": [],
+    "dockTab": "layers",
+    "processingTab": "tools",
+    "processingFolded": [],
+    "ribbonTab": "home",
+    "ribbonCollapsed": false,
+    "ribbonQuickAccess": [],
+    "ribbonSplits": {},
+    "ribbonToolbox": false
+   }
+  },
+  {
+   "title": "an empty object: a store from before the titled toolbox groups",
+   "stored": "{}",
+   "layout": {
+    "theme": "dark",
+    "rightVisible": true,
+    "dockWidth": 312,
+    "layersFraction": 0.5,
+    "bottomExpanded": false,
+    "bottomHeight": 190,
+    "bottomTab": "history",
+    "toolboxVisible": true,
+    "toolboxDocked": false,
+    "toolboxX": 12,
+    "toolboxY": 12,
+    "toolboxColumns": 3,
+    "toolboxFolded": [],
+    "dockTab": "layers",
+    "processingTab": "tools",
+    "processingFolded": [],
+    "ribbonTab": "home",
+    "ribbonCollapsed": false,
+    "ribbonQuickAccess": [],
+    "ribbonSplits": {},
+    "ribbonToolbox": false
+   }
+  },
+  {
+   "title": "every field kept, none a default",
+   "stored": "{\"theme\":\"light\",\"rightVisible\":false,\"dockWidth\":400,\"layersFraction\":0.35,\"bottomExpanded\":true,\"bottomHeight\":260,\"bottomTab\":\"messages\",\"toolboxVisible\":false,\"toolboxDocked\":true,\"toolboxX\":240,\"toolboxY\":80,\"toolboxColumns\":2,\"toolboxFolded\":[\"draw\",\"annotate\"],\"dockTab\":\"processing\",\"processingTab\":\"history\",\"processingFolded\":[\"points\"],\"ribbonTab\":\"draw\",\"ribbonCollapsed\":true,\"ribbonQuickAccess\":[\"view.zoomExtents\",\"tool.line\"],\"ribbonSplits\":{\"circle\":\"tool.circle|3N\",\"rectangle\":\"tool.regularPolygon|\"},\"ribbonToolbox\":true}",
+   "layout": {
+    "theme": "light",
+    "rightVisible": false,
+    "dockWidth": 400,
+    "layersFraction": 0.35,
+    "bottomExpanded": true,
+    "bottomHeight": 260,
+    "bottomTab": "messages",
+    "toolboxVisible": false,
+    "toolboxDocked": true,
+    "toolboxX": 240,
+    "toolboxY": 80,
+    "toolboxColumns": 2,
+    "toolboxFolded": [
+     "draw",
+     "annotate"
+    ],
+    "dockTab": "processing",
+    "processingTab": "history",
+    "processingFolded": [
+     "points"
+    ],
+    "ribbonTab": "draw",
+    "ribbonCollapsed": true,
+    "ribbonQuickAccess": [
+     "view.zoomExtents",
+     "tool.line"
+    ],
+    "ribbonSplits": {
+     "circle": "tool.circle|3N",
+     "rectangle": "tool.regularPolygon|"
+    },
+    "ribbonToolbox": true
+   }
+  },
+  {
+   "title": "values of the wrong type are not taken",
+   "stored": "{\"theme\":\"blue\",\"rightVisible\":\"yes\",\"dockWidth\":\"300\",\"bottomTab\":\"log\",\"ribbonTab\":5,\"toolboxFolded\":\"draw\",\"ribbonSplits\":[\"circle\"],\"ribbonQuickAccess\":{\"0\":\"tool.line\"},\"toolboxColumns\":\"2\",\"layersFraction\":null,\"bottomExpanded\":1}",
+   "layout": {
+    "theme": "dark",
+    "rightVisible": true,
+    "dockWidth": 312,
+    "layersFraction": 0.5,
+    "bottomExpanded": false,
+    "bottomHeight": 190,
+    "bottomTab": "history",
+    "toolboxVisible": true,
+    "toolboxDocked": false,
+    "toolboxX": 12,
+    "toolboxY": 12,
+    "toolboxColumns": 3,
+    "toolboxFolded": [],
+    "dockTab": "layers",
+    "processingTab": "tools",
+    "processingFolded": [],
+    "ribbonTab": "home",
+    "ribbonCollapsed": false,
+    "ribbonQuickAccess": [],
+    "ribbonSplits": {},
+    "ribbonToolbox": false
+   }
+  },
+  {
+   "title": "sizes out of their limits are brought within them; the toolbox place and a tall panel wait for the window",
+   "stored": "{\"dockWidth\":100,\"layersFraction\":0.95,\"bottomHeight\":20,\"toolboxX\":-40,\"toolboxY\":5000,\"toolboxFolded\":[]}",
+   "layout": {
+    "theme": "dark",
+    "rightVisible": true,
+    "dockWidth": 240,
+    "layersFraction": 0.85,
+    "bottomExpanded": false,
+    "bottomHeight": 96,
+    "bottomTab": "history",
+    "toolboxVisible": true,
+    "toolboxDocked": false,
+    "toolboxX": -40,
+    "toolboxY": 5000,
+    "toolboxColumns": 3,
+    "toolboxFolded": [],
+    "dockTab": "layers",
+    "processingTab": "tools",
+    "processingFolded": [],
+    "ribbonTab": "home",
+    "ribbonCollapsed": false,
+    "ribbonQuickAccess": [],
+    "ribbonSplits": {},
+    "ribbonToolbox": false
+   }
+  },
+  {
+   "title": "a size too large, a share too small, a very tall panel",
+   "stored": "{\"dockWidth\":900,\"layersFraction\":0.05,\"bottomHeight\":5000,\"toolboxFolded\":[]}",
+   "layout": {
+    "theme": "dark",
+    "rightVisible": true,
+    "dockWidth": 560,
+    "layersFraction": 0.15,
+    "bottomExpanded": false,
+    "bottomHeight": 5000,
+    "bottomTab": "history",
+    "toolboxVisible": true,
+    "toolboxDocked": false,
+    "toolboxX": 12,
+    "toolboxY": 12,
+    "toolboxColumns": 3,
+    "toolboxFolded": [],
+    "dockTab": "layers",
+    "processingTab": "tools",
+    "processingFolded": [],
+    "ribbonTab": "home",
+    "ribbonCollapsed": false,
+    "ribbonQuickAccess": [],
+    "ribbonSplits": {},
+    "ribbonToolbox": false
+   }
+  },
+  {
+   "title": "a number too large for a double is not finite",
+   "stored": "{\"dockWidth\":1e999,\"bottomHeight\":-1e999,\"toolboxFolded\":[]}",
+   "layout": {
+    "theme": "dark",
+    "rightVisible": true,
+    "dockWidth": 312,
+    "layersFraction": 0.5,
+    "bottomExpanded": false,
+    "bottomHeight": 190,
+    "bottomTab": "history",
+    "toolboxVisible": true,
+    "toolboxDocked": false,
+    "toolboxX": 12,
+    "toolboxY": 12,
+    "toolboxColumns": 3,
+    "toolboxFolded": [],
+    "dockTab": "layers",
+    "processingTab": "tools",
+    "processingFolded": [],
+    "ribbonTab": "home",
+    "ribbonCollapsed": false,
+    "ribbonQuickAccess": [],
+    "ribbonSplits": {},
+    "ribbonToolbox": false
+   }
+  },
+  {
+   "title": "lists keep their texts, maps their text values",
+   "stored": "{\"toolboxFolded\":[\"draw\",3,null,\"edit\",true],\"processingFolded\":[{\"id\":\"x\"},\"points\"],\"ribbonQuickAccess\":[\"tool.line\",[\"tool.arc\"]],\"ribbonSplits\":{\"circle\":\"tool.circle|2N\",\"rectangle\":5,\"arc\":null}}",
+   "layout": {
+    "theme": "dark",
+    "rightVisible": true,
+    "dockWidth": 312,
+    "layersFraction": 0.5,
+    "bottomExpanded": false,
+    "bottomHeight": 190,
+    "bottomTab": "history",
+    "toolboxVisible": true,
+    "toolboxDocked": false,
+    "toolboxX": 12,
+    "toolboxY": 12,
+    "toolboxColumns": 3,
+    "toolboxFolded": [
+     "draw",
+     "edit"
+    ],
+    "dockTab": "layers",
+    "processingTab": "tools",
+    "processingFolded": [
+     "points"
+    ],
+    "ribbonTab": "home",
+    "ribbonCollapsed": false,
+    "ribbonQuickAccess": [
+     "tool.line"
+    ],
+    "ribbonSplits": {
+     "circle": "tool.circle|2N"
+    },
+    "ribbonToolbox": false
+   }
+  },
+  {
+   "title": "three columns stay three, any other number is two",
+   "stored": "{\"toolboxColumns\":4,\"toolboxFolded\":[]}",
+   "layout": {
+    "theme": "dark",
+    "rightVisible": true,
+    "dockWidth": 312,
+    "layersFraction": 0.5,
+    "bottomExpanded": false,
+    "bottomHeight": 190,
+    "bottomTab": "history",
+    "toolboxVisible": true,
+    "toolboxDocked": false,
+    "toolboxX": 12,
+    "toolboxY": 12,
+    "toolboxColumns": 2,
+    "toolboxFolded": [],
+    "dockTab": "layers",
+    "processingTab": "tools",
+    "processingFolded": [],
+    "ribbonTab": "home",
+    "ribbonCollapsed": false,
+    "ribbonQuickAccess": [],
+    "ribbonSplits": {},
+    "ribbonToolbox": false
+   }
+  },
+  {
+   "title": "a column count that is not whole is two",
+   "stored": "{\"toolboxColumns\":2.5,\"toolboxFolded\":[]}",
+   "layout": {
+    "theme": "dark",
+    "rightVisible": true,
+    "dockWidth": 312,
+    "layersFraction": 0.5,
+    "bottomExpanded": false,
+    "bottomHeight": 190,
+    "bottomTab": "history",
+    "toolboxVisible": true,
+    "toolboxDocked": false,
+    "toolboxX": 12,
+    "toolboxY": 12,
+    "toolboxColumns": 2,
+    "toolboxFolded": [],
+    "dockTab": "layers",
+    "processingTab": "tools",
+    "processingFolded": [],
+    "ribbonTab": "home",
+    "ribbonCollapsed": false,
+    "ribbonQuickAccess": [],
+    "ribbonSplits": {},
+    "ribbonToolbox": false
+   }
+  },
+  {
+   "title": "before the titled toolbox groups: two columns become three",
+   "stored": "{\"toolboxColumns\":2,\"theme\":\"light\"}",
+   "layout": {
+    "theme": "light",
+    "rightVisible": true,
+    "dockWidth": 312,
+    "layersFraction": 0.5,
+    "bottomExpanded": false,
+    "bottomHeight": 190,
+    "bottomTab": "history",
+    "toolboxVisible": true,
+    "toolboxDocked": false,
+    "toolboxX": 12,
+    "toolboxY": 12,
+    "toolboxColumns": 3,
+    "toolboxFolded": [],
+    "dockTab": "layers",
+    "processingTab": "tools",
+    "processingFolded": [],
+    "ribbonTab": "home",
+    "ribbonCollapsed": false,
+    "ribbonQuickAccess": [],
+    "ribbonSplits": {},
+    "ribbonToolbox": false
+   }
+  },
+  {
+   "title": "with the titled groups, two columns stay two",
+   "stored": "{\"toolboxColumns\":2,\"toolboxFolded\":[]}",
+   "layout": {
+    "theme": "dark",
+    "rightVisible": true,
+    "dockWidth": 312,
+    "layersFraction": 0.5,
+    "bottomExpanded": false,
+    "bottomHeight": 190,
+    "bottomTab": "history",
+    "toolboxVisible": true,
+    "toolboxDocked": false,
+    "toolboxX": 12,
+    "toolboxY": 12,
+    "toolboxColumns": 2,
+    "toolboxFolded": [],
+    "dockTab": "layers",
+    "processingTab": "tools",
+    "processingFolded": [],
+    "ribbonTab": "home",
+    "ribbonCollapsed": false,
+    "ribbonQuickAccess": [],
+    "ribbonSplits": {},
+    "ribbonToolbox": false
+   }
+  },
+  {
+   "title": "fields the layout does not know are dropped",
+   "stored": "{\"theme\":\"light\",\"toolboxFolded\":[],\"oldPanel\":true,\"ribbonTabs\":[\"home\"]}",
+   "layout": {
+    "theme": "light",
+    "rightVisible": true,
+    "dockWidth": 312,
+    "layersFraction": 0.5,
+    "bottomExpanded": false,
+    "bottomHeight": 190,
+    "bottomTab": "history",
+    "toolboxVisible": true,
+    "toolboxDocked": false,
+    "toolboxX": 12,
+    "toolboxY": 12,
+    "toolboxColumns": 3,
+    "toolboxFolded": [],
+    "dockTab": "layers",
+    "processingTab": "tools",
+    "processingFolded": [],
+    "ribbonTab": "home",
+    "ribbonCollapsed": false,
+    "ribbonQuickAccess": [],
+    "ribbonSplits": {},
+    "ribbonToolbox": false
+   }
+  },
+  {
+   "title": "a fraction and sizes that are not whole are kept as they are",
+   "stored": "{\"layersFraction\":0.333,\"dockWidth\":313.5,\"bottomHeight\":200.25,\"toolboxFolded\":[]}",
+   "layout": {
+    "theme": "dark",
+    "rightVisible": true,
+    "dockWidth": 313.5,
+    "layersFraction": 0.333,
+    "bottomExpanded": false,
+    "bottomHeight": 200.25,
+    "bottomTab": "history",
+    "toolboxVisible": true,
+    "toolboxDocked": false,
+    "toolboxX": 12,
+    "toolboxY": 12,
+    "toolboxColumns": 3,
+    "toolboxFolded": [],
+    "dockTab": "layers",
+    "processingTab": "tools",
+    "processingFolded": [],
+    "ribbonTab": "home",
+    "ribbonCollapsed": false,
+    "ribbonQuickAccess": [],
+    "ribbonSplits": {},
+    "ribbonToolbox": false
+   }
+  }
+ ],
+ "dockWidths": [
+  {
+   "kept": 312,
+   "window": 1440,
+   "shown": 312
+  },
+  {
+   "kept": 560,
+   "window": 1440,
+   "shown": 560
+  },
+  {
+   "kept": 560,
+   "window": 1100,
+   "shown": 550
+  },
+  {
+   "kept": 560,
+   "window": 1101,
+   "shown": 551
+  },
+  {
+   "kept": 200,
+   "window": 1440,
+   "shown": 240
+  },
+  {
+   "kept": 313.5,
+   "window": 1440,
+   "shown": 314
+  },
+  {
+   "kept": 400,
+   "window": 400,
+   "shown": 200
+  },
+  {
+   "kept": 1000,
+   "window": 2560,
+   "shown": 560
+  }
+ ],
+ "bottomHeights": [
+  {
+   "kept": 190,
+   "window": 900,
+   "shown": 190
+  },
+  {
+   "kept": 600,
+   "window": 900,
+   "shown": 540
+  },
+  {
+   "kept": 600,
+   "window": 650,
+   "shown": 390
+  },
+  {
+   "kept": 50,
+   "window": 900,
+   "shown": 96
+  },
+  {
+   "kept": 400,
+   "window": 651,
+   "shown": 391
+  },
+  {
+   "kept": 190,
+   "window": 150,
+   "shown": 90
+  },
+  {
+   "kept": 5000,
+   "window": 1440,
+   "shown": 864
+  }
+ ],
+ "layersDrags": [
+  {
+   "start": 0.5,
+   "dy": 100,
+   "height": 600,
+   "fraction": 0.6666666666666666
+  },
+  {
+   "start": 0.5,
+   "dy": -400,
+   "height": 600,
+   "fraction": 0.15
+  },
+  {
+   "start": 0.8,
+   "dy": 50,
+   "height": 400,
+   "fraction": 0.85
+  },
+  {
+   "start": 0.3,
+   "dy": 0,
+   "height": 500,
+   "fraction": 0.3
+  },
+  {
+   "start": 0.15,
+   "dy": -10,
+   "height": 300,
+   "fraction": 0.15
+  }
+ ],
+ "ribbon": {
+  "quickAccessFixed": [
+   "file.save",
+   "edit.undo",
+   "edit.redo"
+  ],
+  "quickAccess": [
+   {
+    "kept": [],
+    "exists": [
+     "tool.line"
+    ],
+    "bar": [
+     "file.save",
+     "edit.undo",
+     "edit.redo"
+    ]
+   },
+   {
+    "kept": [
+     "view.zoomExtents",
+     "tool.line"
+    ],
+    "exists": [
+     "view.zoomExtents",
+     "tool.line"
+    ],
+    "bar": [
+     "file.save",
+     "edit.undo",
+     "edit.redo",
+     "view.zoomExtents",
+     "tool.line"
+    ]
+   },
+   {
+    "kept": [
+     "edit.undo",
+     "tool.line",
+     "tool.line",
+     "gone.command",
+     "view.grid"
+    ],
+    "exists": [
+     "tool.line",
+     "view.grid",
+     "edit.undo"
+    ],
+    "bar": [
+     "file.save",
+     "edit.undo",
+     "edit.redo",
+     "tool.line",
+     "view.grid"
+    ]
+   }
+  ],
+  "splits": [
+   {
+    "entries": [
+     {
+      "command": "tool.circle"
+     },
+     {
+      "command": "tool.circle",
+      "option": "2N"
+     },
+     {
+      "command": "tool.circle",
+      "option": "3N"
+     },
+     {
+      "command": "tool.circle",
+      "option": "TTY"
+     },
+     {
+      "command": "tool.circle",
+      "option": "TTT"
+     }
+    ],
+    "kept": "tool.circle|3N",
+    "current": 2
+   },
+   {
+    "entries": [
+     {
+      "command": "tool.circle"
+     },
+     {
+      "command": "tool.circle",
+      "option": "2N"
+     },
+     {
+      "command": "tool.circle",
+      "option": "3N"
+     },
+     {
+      "command": "tool.circle",
+      "option": "TTY"
+     },
+     {
+      "command": "tool.circle",
+      "option": "TTT"
+     }
+    ],
+    "kept": null,
+    "current": 0
+   },
+   {
+    "entries": [
+     {
+      "command": "tool.circle"
+     },
+     {
+      "command": "tool.circle",
+      "option": "2N"
+     },
+     {
+      "command": "tool.circle",
+      "option": "3N"
+     },
+     {
+      "command": "tool.circle",
+      "option": "TTY"
+     },
+     {
+      "command": "tool.circle",
+      "option": "TTT"
+     }
+    ],
+    "kept": "tool.circle|",
+    "current": 0
+   },
+   {
+    "entries": [
+     {
+      "command": "tool.circle"
+     },
+     {
+      "command": "tool.circle",
+      "option": "2N"
+     },
+     {
+      "command": "tool.circle",
+      "option": "3N"
+     },
+     {
+      "command": "tool.circle",
+      "option": "TTY"
+     },
+     {
+      "command": "tool.circle",
+      "option": "TTT"
+     }
+    ],
+    "kept": "tool.circle|KTT",
+    "current": 0
+   },
+   {
+    "entries": [
+     {
+      "command": "tool.circle"
+     },
+     {
+      "command": "tool.circle",
+      "option": "2N"
+     },
+     {
+      "command": "tool.circle",
+      "option": "3N"
+     },
+     {
+      "command": "tool.circle",
+      "option": "TTY"
+     },
+     {
+      "command": "tool.circle",
+      "option": "TTT"
+     }
+    ],
+    "kept": "tool.arc|3N",
+    "current": 0
+   },
+   {
+    "entries": [
+     {
+      "command": "tool.rectangle"
+     },
+     {
+      "command": "tool.rectangle3"
+     },
+     {
+      "command": "tool.regularPolygon"
+     }
+    ],
+    "kept": "tool.regularPolygon|",
+    "current": 2
+   },
+   {
+    "entries": [
+     {
+      "command": "tool.rectangle"
+     },
+     {
+      "command": "tool.rectangle3"
+     },
+     {
+      "command": "tool.regularPolygon"
+     }
+    ],
+    "kept": "tool.regularPolygon",
+    "current": 0
+   }
+  ],
+  "startTabs": [
+   {
+    "kept": "draw",
+    "tabs": [
+     {
+      "id": "file"
+     },
+     {
+      "id": "home"
+     },
+     {
+      "id": "draw"
+     },
+     {
+      "id": "modify"
+     },
+     {
+      "id": "view"
+     },
+     {
+      "id": "selection",
+      "contextual": "selection"
+     }
+    ],
+    "tab": "draw"
+   },
+   {
+    "kept": "view",
+    "tabs": [
+     {
+      "id": "file"
+     },
+     {
+      "id": "home"
+     },
+     {
+      "id": "draw"
+     },
+     {
+      "id": "modify"
+     },
+     {
+      "id": "view"
+     },
+     {
+      "id": "selection",
+      "contextual": "selection"
+     }
+    ],
+    "tab": "view"
+   },
+   {
+    "kept": "selection",
+    "tabs": [
+     {
+      "id": "file"
+     },
+     {
+      "id": "home"
+     },
+     {
+      "id": "draw"
+     },
+     {
+      "id": "modify"
+     },
+     {
+      "id": "view"
+     },
+     {
+      "id": "selection",
+      "contextual": "selection"
+     }
+    ],
+    "tab": "home"
+   },
+   {
+    "kept": "gone",
+    "tabs": [
+     {
+      "id": "file"
+     },
+     {
+      "id": "home"
+     },
+     {
+      "id": "draw"
+     },
+     {
+      "id": "modify"
+     },
+     {
+      "id": "view"
+     },
+     {
+      "id": "selection",
+      "contextual": "selection"
+     }
+    ],
+    "tab": "home"
+   },
+   {
+    "kept": "modify",
+    "tabs": [
+     {
+      "id": "file"
+     },
+     {
+      "id": "home"
+     },
+     {
+      "id": "draw"
+     },
+     {
+      "id": "view"
+     },
+     {
+      "id": "selection",
+      "contextual": "selection"
+     }
+    ],
+    "tab": "home"
+   },
+   {
+    "kept": "",
+    "tabs": [
+     {
+      "id": "file"
+     },
+     {
+      "id": "home"
+     },
+     {
+      "id": "draw"
+     },
+     {
+      "id": "modify"
+     },
+     {
+      "id": "view"
+     },
+     {
+      "id": "selection",
+      "contextual": "selection"
+     }
+    ],
+    "tab": "home"
+   }
+  ]
+ }
+}

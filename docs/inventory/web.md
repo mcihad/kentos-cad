@@ -160,7 +160,7 @@ Yok.
 - `apps/web/src/ui/menu/MenuBar.ts#MenuBar` MenuBar
 - `apps/web/src/ui/processing/model/ModelDesigner.ts#openModelDesigner` openModelDesigner
 - `apps/web/src/ui/ribbon/Ribbon.ts#Ribbon` Ribbon (kısmi) (masaüstünde: apps/desktop/src/view.rs, catalog.rs, ribbon_panels.rs (ADR 0017, 0051, 0089)) — Yöntem düğmesi son seçimi göstermez; hızlı erişime ekleme, şeridin sağ tık menüsü ve harf ipuçları yok.
-- `apps/web/src/ui/statusbar/StatusBar.ts#StatusBar` StatusBar (kısmi) (masaüstünde: apps/desktop/src/view.rs, cloud/view.rs (ADR 0058, 0080)) — Web'in sunucu hücresi ve onun hesap menüsü yok; masaüstünde hesabın adı ve Çıkış ayrı hücrelerdir (ADR 0041). Çizim motoru hücresi masaüstünde anlamsızdır (wgpu).
+- `apps/web/src/ui/statusbar/StatusBar.ts#StatusBar` StatusBar (kısmi) (masaüstünde: apps/desktop/src/view.rs, cloud/cells.rs (ADR 0058, 0080, 0113)) — Web'in son iletiyi birkaç saniye gösteren hücresi yok; iletiler alt paneldedir. Dosya projesinde başkasının yeni revizyonu henüz izlenmediği için “Yeni revizyon” durumu gösterilmez. Çizim motoru hücresi masaüstünde anlamsızdır (wgpu).
 - `apps/web/src/ui/style/StyleManager.ts#openStyleManager` openStyleManager (kısmi) (masaüstünde: apps/desktop/src/style/manager/ (ADR 0092)) — SVG çizimi SVG düzenleyicisini açar; masaüstüne henüz taşınmadı, düğmesi soluk ve nedenini söyler. Düzenle ve Yeni sembol Sembol tasarımcısını açar (ADR 0094).
 - `apps/web/src/ui/svgedit/SvgEditor.ts#openSvgEditor` openSvgEditor
 - `apps/web/src/ui/svgedit/svgDocProps.ts#openDocProps` openDocProps

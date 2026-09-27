@@ -149,7 +149,7 @@ fn the_tree_inserts_on_a_double_press_a_function_around_the_selection() {
     event(&mut app, Event::Edit(Action::Move(Motion::DocumentEnd)));
     event(
         &mut app,
-        Event::Operator(" > ", kentos_expression::editor::Kind::Operator),
+        Event::Operator(">", " > ", kentos_expression::editor::Kind::Operator),
     );
     assert_eq!(source(&app), "mutlak($alan) > ");
 }
@@ -322,6 +322,162 @@ fn screens() {
                 let file = out.join(format!(
                     "ifade-olusturucu-{name}-{width}x{height}{suffix}.png"
                 ));
+                snapshot
+                    .render(app.view(), &app.theme())
+                    .save(&file)
+                    .expect("writes the picture");
+                println!("{}", file.display());
+            }
+        }
+    }
+}
+
+/// Akış (docs/adr/0101): the same text as nodes; a value written in the
+/// inspector, a connection taken off and put back, a node removed and
+/// brought back, a palette entry carried onto an empty input; each change
+/// is the text's at once, and Tamam writes it back.
+#[test]
+fn akis_changes_the_text_and_tamam_writes_it_back() {
+    use super::ViewMode;
+    use super::flow::FlowEvent as F;
+    let mut app = opened();
+    written(&mut app, "yuvarla($alan, 2)");
+    event(&mut app, Event::Mode(ViewMode::Flow));
+    let ids = |app: &App| -> Vec<String> {
+        app.builder
+            .as_ref()
+            .and_then(|b| b.flow.flow.as_ref())
+            .map(|f| f.nodes.iter().map(|n| n.id.clone()).collect())
+            .unwrap_or_default()
+    };
+    assert_eq!(ids(&app), ["r", "0", "0.0", "0.1"]);
+    let flow = |app: &mut App, e: F| event(app, Event::Flow(e));
+
+    // A value written in the inspector.
+    flow(&mut app, F::Select(Some("0.1".into())));
+    assert_eq!(
+        app.builder.as_ref().map(|b| b.flow.draft.clone()),
+        Some("2".into())
+    );
+    flow(&mut app, F::Draft("3".into()));
+    flow(&mut app, F::Commit);
+    assert_eq!(source(&app), "yuvarla($alan, 3)");
+    flow(&mut app, F::Draft("x".into()));
+    flow(&mut app, F::Commit);
+    assert!(
+        app.builder
+            .as_ref()
+            .is_some_and(|b| b.flow.draft_error.is_some()),
+        "not a number"
+    );
+
+    // A connection taken off stands apart; put back, the text is as it was.
+    flow(
+        &mut app,
+        F::Disconnect {
+            to: "0".into(),
+            port: 1,
+        },
+    );
+    assert_eq!(source(&app), "yuvarla($alan)");
+    assert!(ids(&app).contains(&"1".to_owned()));
+    flow(
+        &mut app,
+        F::Connect {
+            from: "1".into(),
+            to: "0".into(),
+            port: 1,
+        },
+    );
+    assert_eq!(source(&app), "yuvarla($alan, 3)");
+
+    // Removed, the node's input is empty (the text's error); Ctrl+Z brings it back.
+    flow(&mut app, F::Remove("0.0".into()));
+    assert_eq!(source(&app), "yuvarla(?, 3)");
+    assert!(
+        app.builder
+            .as_ref()
+            .is_some_and(|b| b.check.error.is_some())
+    );
+    flow(&mut app, F::Undo);
+    assert_eq!(source(&app), "yuvarla($alan, 3)");
+    flow(&mut app, F::Redo);
+    flow(&mut app, F::Undo);
+
+    // A palette entry carried out of the tree onto the empty input.
+    flow(
+        &mut app,
+        F::Disconnect {
+            to: "0".into(),
+            port: 0,
+        },
+    );
+    let place = app
+        .builder
+        .as_ref()
+        .and_then(|b| b.palette().iter().position(|k| k == "field:Nitelik"))
+        .expect("Nitelik is in the palette");
+    event(&mut app, Event::Carry(place));
+    assert_eq!(
+        app.builder.as_ref().and_then(|b| b.flow.carrying.clone()),
+        Some("field:Nitelik".into())
+    );
+    flow(
+        &mut app,
+        F::Drop {
+            at: (-400.0, 0.0),
+            to: Some(("0".into(), 0)),
+        },
+    );
+    assert_eq!(source(&app), "yuvarla(Nitelik, 3)");
+
+    // Metin shows the same text; Tamam writes it back.
+    event(&mut app, Event::Mode(ViewMode::Text));
+    event(&mut app, Event::Ok);
+    assert_eq!(condition(&app), "yuvarla(Nitelik, 3)");
+}
+
+/// Pictures for the owner: Akış over İfadeyle seç, a whole expression and a
+/// node selected with its inspector; both themes at 1440×900 and 1100×650
+/// (`.run/shots/ifade-akisi-*`).
+/// `cargo test -p kentos-desktop expression::tests::flow_screens -- --ignored --nocapture`
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn flow_screens() {
+    use super::ViewMode;
+    use super::flow::FlowEvent as F;
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
+        for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
+            for name in ["akis", "dugum"] {
+                let mut app = opened();
+                let _ = app
+                    .settings
+                    .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+                app.apply_settings();
+                let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+                let mut update = |app: &mut App, message| {
+                    let _ = app.update(message);
+                };
+                snapshot.settle(&mut app, App::view, &mut update);
+                match name {
+                    "akis" => written(
+                        &mut app,
+                        "durum eğer Nitelik = 'Arsa' ve $alan > 500 ise yuvarla($alan / 1000, 2) yoksa 0 son",
+                    ),
+                    _ => written(&mut app, "yuvarla(Nitelik || ' ' || ?, 2)"),
+                }
+                event(&mut app, Event::Mode(ViewMode::Flow));
+                snapshot.settle(&mut app, App::view, &mut update);
+                if name == "dugum" {
+                    event(&mut app, Event::Flow(F::Select(Some("0".into()))));
+                }
+                snapshot.settle(&mut app, App::view, &mut update);
+                let file = out.join(format!("ifade-akisi-{name}-{width}x{height}{suffix}.png"));
                 snapshot
                     .render(app.view(), &app.theme())
                     .save(&file)
