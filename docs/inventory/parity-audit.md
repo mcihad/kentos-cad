@@ -18,6 +18,7 @@ Denetim yalnız okur; masaüstünün kodu değişmedi. Masaüstünün resimleri 
 **Sonradan kapananlar** (güncel liste TODOS.md UX-13'tedir):
 
 - 28 Eylül: 1., 2. madde ve B1–B4 ([ADR 0119](../adr/0119-desktop-file-revisions.md)); reddedilen yüklemeden sonra istek anahtarı.
+- 28 Eylül: 3. madde (N1), web'in `newProjectNote.ts` kuralıyla (`apps/desktop/src/project/new.rs`).
 
 ## Yöntem
 

@@ -22,6 +22,47 @@ use crate::crs::{self, PickFor};
 use crate::document::Document;
 use crate::exchange::words;
 
+/// Yeni proje's note about the drawing on screen: a warning, or information.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct Note {
+    pub warn: bool,
+    pub text: String,
+}
+
+/// What Yeni proje says of the drawing on screen before anything is done
+/// (the web's newProjectNote.ts; docs/inventory/parity-audit.md N1): a cloud
+/// project that saves by itself is closed and what waits is sent; unsaved
+/// changes of a database project that does not save (read-only, archived,
+/// gone) are not sent, and what to do is asked at Oluştur; a local
+/// drawing's or a file project's unsaved changes (Kaydet saves them) get the
+/// unsaved question at Oluştur. Nothing is said over a clean drawing.
+/// `cloud`: the open project's name, whether it saves by itself now, and
+/// whether it keeps objects in the database.
+pub(crate) fn note(name: &str, cloud: Option<(&str, bool, bool)>, dirty: bool) -> Option<Note> {
+    if let Some((project, true, _)) = cloud {
+        return Some(Note {
+            warn: false,
+            text: format!(
+                "“{project}” bulut projesi kapanır. Bekleyen değişiklikleri buluta gönderilir; gönderilemeyenler bu cihazda kalır ve proje yeniden açılınca geri gelir."
+            ),
+        });
+    }
+    if !dirty {
+        return None;
+    }
+    Some(Note {
+        warn: true,
+        text: match cloud {
+            Some((project, _, true)) => format!(
+                "“{project}” projesindeki değişiklikleriniz buluta kaydedilmiyor; Oluştur’a basınca ne yapılacağı sorulur."
+            ),
+            _ => format!(
+                "“{name}” içinde kaydedilmemiş değişiklikler var; Oluştur’a basınca önce sorulur."
+            ),
+        },
+    })
+}
+
 pub struct State {
     name: String,
     srid: u32,
@@ -216,6 +257,31 @@ impl App {
         }
     }
 
+    /// What Yeni proje says of the drawing on screen: a database project
+    /// that saves by itself sends what waits; one that does not (a viewer's,
+    /// an archived or ended one) says its edits are not sent.
+    fn new_project_note(&self) -> Option<Note> {
+        let doc = self.document.as_ref()?;
+        let live = self
+            .cloud
+            .live
+            .as_ref()
+            .filter(|l| l.session == doc.session && doc.is_database());
+        let cloud = doc.cloud_source().map(|s| {
+            let autosaves = live.is_some_and(|l| {
+                let state = l.sync.state();
+                !state.ended() && state != kentos_cloud::SaveState::ReadOnly
+            });
+            (s.info.name.as_str(), autosaves, doc.is_database())
+        });
+        // A database project's unsaved work is what it has not sent.
+        let dirty = match live {
+            Some(l) => !l.sync.all_sent(),
+            None => doc.dirty(),
+        };
+        note(doc.name(), cloud, dirty)
+    }
+
     pub(super) fn new_project_view<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
         let name = text_input("Proje adı", &s.name)
             .on_input(|t| event(Event::Name(t)))
@@ -259,18 +325,12 @@ impl App {
             .push(Banner::info(format!(
                 "Boş bir çizim açılır. Katmanlar: {layers}. Birimler varsayılanla başlar (uzunluk 3, alan 2 ondalık, m², grad); Dosya → Proje ayarları’ndan değiştirilir."
             )));
-        if let Some(doc) = &self.document {
-            if doc.cloud_source().is_some() && doc.is_database() {
-                body = body.push(Banner::info(format!(
-                    "“{}” bulut projesi kapanır. Bekleyen değişiklikleri buluta gönderilir; gönderilemeyenler bu cihazda kalır ve proje yeniden açılınca geri gelir.",
-                    doc.name()
-                )));
-            } else if doc.dirty() {
-                body = body.push(Banner::warning(format!(
-                    "“{}” içinde kaydedilmemiş değişiklikler var; Oluştur’a basınca önce sorulur.",
-                    doc.name()
-                )));
-            }
+        if let Some(note) = self.new_project_note() {
+            body = body.push(if note.warn {
+                Banner::warning(note.text)
+            } else {
+                Banner::info(note.text)
+            });
         }
         if let Some(status) = &s.status {
             body = body.push(words::text_line(words::Kind::Error, status.clone()));

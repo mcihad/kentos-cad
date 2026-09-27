@@ -234,6 +234,50 @@ mod tests {
         let _ = app.update(Message::Project(Box::new(event)));
     }
 
+    /// Yeni proje's note about the drawing on screen: the web's cases
+    /// (newProjectNote.test.ts; docs/inventory/parity-audit.md N1).
+    #[test]
+    fn yeni_proje_says_what_becomes_of_the_drawing_on_screen() {
+        use super::new::{Note, note};
+        let cloud = |database: bool, autosaves: bool| Some(("Ada 101", autosaves, database));
+        // A database project that saves by itself is closed, what waits sent.
+        assert_eq!(
+            note("Ada 101", cloud(true, true), true),
+            Some(Note {
+                warn: false,
+                text: "“Ada 101” bulut projesi kapanır. Bekleyen değişiklikleri buluta gönderilir; gönderilemeyenler bu cihazda kalır ve proje yeniden açılınca geri gelir.".into(),
+            })
+        );
+        // One that does not save: its edits are not sent, what to do is asked.
+        assert_eq!(
+            note("Ada 101", cloud(true, false), true),
+            Some(Note {
+                warn: true,
+                text: "“Ada 101” projesindeki değişiklikleriniz buluta kaydedilmiyor; Oluştur’a basınca ne yapılacağı sorulur.".into(),
+            })
+        );
+        // A file project's edits are saved by Kaydet: the unsaved question, as a local drawing's.
+        let local = note("Ada 101", None, true);
+        assert_eq!(note("Ada 101", cloud(false, false), true), local);
+        assert_eq!(
+            local,
+            Some(Note {
+                warn: true,
+                text: "“Ada 101” içinde kaydedilmemiş değişiklikler var; Oluştur’a basınca önce sorulur."
+                    .into(),
+            })
+        );
+        // Nothing over a clean drawing that does not save by itself.
+        assert_eq!(
+            [
+                note("Ada 101", None, false),
+                note("Ada 101", cloud(false, false), false),
+                note("Ada 101", cloud(true, false), false),
+            ],
+            [None, None, None]
+        );
+    }
+
     #[test]
     fn a_new_project_replaces_a_clean_drawing_with_the_standard_layers() {
         let mut app = app_with_drawing();

@@ -277,7 +277,7 @@ Temel kabul senaryosu: kullanıcı polygon aracını seçer, çizim alanında no
   - **Bulut:** 28 Eylül'de bitti: dosya projesinde başkasının yeni revizyonu (durum çubuğunun “Yeni revizyon”u), Kaydet'in yüklemeden sorması, dört cevaplı çakışma sorusu, Geçmiş'in “Açık çizim” işareti ([ADR 0119](docs/adr/0119-desktop-file-revisions.md)).
   - **Eşitlik denetimi** (28 Eylül, [docs/inventory/parity-audit.md](docs/inventory/parity-audit.md)): ortak planı ya da fixture'ı olan ekranlarda web'den ayrılan davranış yok. Farklar, önem sırasıyla:
     - ~~dosya projesinde başkasının revizyonu, Kaydet'in yüklemeden sorması, dört cevaplı çakışma sorusu (“Yerel dosyaya kaydet” dahil), Geçmiş'in “Açık çizim” işareti (B1–B4)~~: 28 Eylül'de bitti (ADR 0119);
-    - Yeni proje notu, kaydedilmeyen veritabanı projesi üstünde “gönderilir” diyor (N1; yanlış sonuç);
+    - ~~Yeni proje notu, kaydedilmeyen veritabanı projesi üstünde “gönderilir” diyor (N1)~~: 28 Eylül'de düzeldi, web'in kuralıyla (`project/new.rs` `note`);
     - görünüş tercihleri (tema, vurgu, yazı tipi, yazı boyu) iki platformda başka anahtarlarda, ayar dosyası öbür platforma taşımıyor (A1, A6; yanlış sonuç);
     - ~~reddedilen yüklemeden sonra aynı istek anahtarı~~: 28 Eylül'de düzeldi; kalıcı retten sonra yeni anahtar, yanıt gelmeyince aynısı (ADR 0119);
     - Buluta yükle'de proje türü, açıklama ve etiketler (Y1); sözler ve yüzdeli ilerleme (Y2–Y4);
