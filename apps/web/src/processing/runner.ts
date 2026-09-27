@@ -66,6 +66,14 @@ export interface RunProgress {
 
 const HISTORY_LIMIT = 100;
 
+/** Where a scope looked, as the refusal of an input whose objects are all on locked layers says it. */
+const LOCKED_WHERE: Record<Exclude<FeaturesValue['scope'], 'ids'>, string> = {
+  selection: 'seçili nesnelerin',
+  visible: 'görünen alandaki nesnelerin',
+  all: 'görünen katmanlardaki nesnelerin',
+  layer: 'bu katmandaki nesnelerin',
+};
+
 function emptyInputMessage(label: string, v: FeaturesValue): string {
   switch (v.scope) {
     case 'selection':
@@ -201,17 +209,29 @@ export class ProcessingRunner {
     // Resolve what depends on the host: features to ids, layers to a target (new layers are made only on apply).
     const jobValues: Record<string, unknown> = { ...values };
     const newLayers = new Map<string, { name: string; def: LayerParam }>();
+    /** What resolving the inputs left out, said once the run starts. */
+    const notes: string[] = [];
     let size = 0;
     for (const p of tool.parameters) {
       const v = values[p.name];
       if (!isVisible(p, values) || v === null || v === undefined) continue;
       if (p.type === 'features') {
-        const set = resolveFeatures(v as FeaturesValue, p, this.host);
+        const fv = v as FeaturesValue;
+        const set = resolveFeatures(fv, p, this.host);
+        let entities = set.entities;
+        // A tool that changes its input does not get objects it may not change (layers locked).
+        const locked = p.writes ? entities.filter((e) => this.host.doc.layers.isLocked(e.layerId)).length : 0;
+        if (locked) {
+          entities = entities.filter((e) => !this.host.doc.layers.isLocked(e.layerId));
+          if (!entities.length && !p.optional && fv.scope !== 'ids')
+            return { status: 'invalid', issues: [{ param: p.name, message: `“${p.label}”: ${LOCKED_WHERE[fv.scope]} hepsi kilitli katmanda. Kilidi Katmanlar panelinden açın.` }] };
+          notes.push(`“${p.label}”: ${locked} nesne kilitli katmanda olduğu için işleme alınmadı.`);
+        }
         // Running on nothing is a mistake worth stopping (usually: nothing selected);
         // an empty output passed along a model is not.
-        if (!set.entities.length && !p.optional && (v as FeaturesValue).scope !== 'ids') return { status: 'invalid', issues: [{ param: p.name, message: emptyInputMessage(p.label, v as FeaturesValue) }] };
-        size += set.entities.length;
-        jobValues[p.name] = { ids: set.entities.map((e) => e.id), description: set.description } satisfies FeatureRef;
+        if (!entities.length && !p.optional && fv.scope !== 'ids') return { status: 'invalid', issues: [{ param: p.name, message: emptyInputMessage(p.label, fv) }] };
+        size += entities.length;
+        jobValues[p.name] = { ids: entities.map((e) => e.id), description: set.description } satisfies FeatureRef;
       }
       if (p.type === 'layer') {
         const t = this.resolveLayer(v as LayerValue);
@@ -255,6 +275,7 @@ export class ProcessingRunner {
         );
       },
     };
+    for (const n of notes) log?.('warn', n);
     this.running.set({ toolId: tool.id, fraction: 0, label: '' });
     try {
       const result = await executor.execute(tool, job, this.host.doc, feedback);

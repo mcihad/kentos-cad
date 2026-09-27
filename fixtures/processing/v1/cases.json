@@ -181,6 +181,22 @@
       }
     },
     {
+      "id": "calculate-locked",
+      "title": "Öznitelik hesapla, kilitli katmandaki parsel de seçiliyken: o parsel işleme alınmaz ve söylenir; özet ve çıktılar yalnız yazılanı sayar",
+      "document": "parcels.kcad",
+      "selection": [1, 4],
+      "run": {"tool": "attributes.calculate"},
+      "values": {},
+      "expect": {
+        "status": "ok",
+        "summary": "1 nesnede “Hesap alanı” yazıldı.",
+        "log": [{"level": "warn", "text": "“Nesneler”: 1 nesne kilitli katmanda olduğu için işleme alınmadı."}],
+        "undo": "Öznitelik hesapla",
+        "updated": [{"id": 1, "attrs": {"Ada": "101", "Parsel": "1", "Nitelik": "Arsa", "Hesap alanı": "600.00"}, "label": "1"}],
+        "outputs": {"count": 1, "changed": [1]}
+      }
+    },
+    {
       "id": "select-new",
       "title": "İfadeyle seç, varsayılanlarla: görünen katmanlardaki bütün nesnelerde $alan > 500, yeni seçim; çizim değişmez",
       "document": "parcels.kcad",
@@ -593,6 +609,30 @@
       "run": {"tool": "points.numberVertices"},
       "values": {"prefix": "PARSEL"},
       "expect": {"status": "invalid", "issues": [{"message": "Toplam uzunluk önekten uzun olmalı; yoksa doldurma yapılamaz."}]}
+    },
+    {
+      "id": "refuse-all-locked-selection",
+      "title": "Değiştiren araç, seçili nesnelerin hepsi kilitli katmandayken",
+      "document": "parcels.kcad",
+      "selection": [4],
+      "run": {"tool": "attributes.calculate"},
+      "values": {},
+      "expect": {
+        "status": "invalid",
+        "issues": [{"param": "input", "message": "“Nesneler”: seçili nesnelerin hepsi kilitli katmanda. Kilidi Katmanlar panelinden açın."}]
+      }
+    },
+    {
+      "id": "refuse-all-locked-layer",
+      "title": "Değiştiren araç, kilitli katmanın nesneleriyle",
+      "document": "parcels.kcad",
+      "selection": [],
+      "run": {"tool": "attributes.calculate"},
+      "values": {"input": {"scope": "layer", "layerId": "kilitli"}},
+      "expect": {
+        "status": "invalid",
+        "issues": [{"param": "input", "message": "“Nesneler”: bu katmandaki nesnelerin hepsi kilitli katmanda. Kilidi Katmanlar panelinden açın."}]
+      }
     },
     {
       "id": "refuse-missing-layer",

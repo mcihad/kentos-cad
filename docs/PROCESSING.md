@@ -113,7 +113,7 @@ export const vertexNumbering = defineTool({
 
 | Tür | Pencerede değer (`ParamValues`) | `run`'da değer (`ResolvedValues`) | Seçenekler |
 |---|---|---|---|
-| `features` | `{ scope: 'selection' \| 'visible' \| 'all' }`, `{ scope: 'layer', layerId }`, `{ scope: 'ids', ids }` | `FeatureSet { entities, description }` | `kinds` (uygun nesne türleri), `scopes` (sunulan kapsamlar) |
+| `features` | `{ scope: 'selection' \| 'visible' \| 'all' }`, `{ scope: 'layer', layerId }`, `{ scope: 'ids', ids }` | `FeatureSet { entities, description }` | `kinds` (uygun nesne türleri), `scopes` (sunulan kapsamlar), `writes` (araç bu nesneleri değiştirir) |
 | `number` | `number` | aynı | `min`, `max`, `integer`, `unit` |
 | `string` | `string` | aynı | `placeholder`, `maxLength`, `allowEmpty` |
 | `boolean` | `boolean` | aynı | — |
@@ -132,6 +132,7 @@ sağlanınca gösterilir ve denetlenir), `default` (sabit ya da
 - **Nesne türü süzgeci:** `features` değeri isteğe bağlı `kinds` taşır. Kapsamda aracın alabildiği iki ya da daha çok tür varsa pencere her tür için sayılı bir düğme gösterir ("Kapalı alan 118"); kullanıcı bu çalıştırmada yalnızca bazı türleri alabilir (örneğin yalnızca kapalı alanların kenarlarını yazmak). Hiç tür kalmazsa araç çalışmaz.
 - **Kapsamlar:** "Seçili" seçimdeki nesneler; "Görünen" kutusu ekrandaki görünür alanla kesişen, görünür katmanlardaki nesneler (yardımcı çizgiler hariç; kutu testini görünümün geometri deposu yapar); "Tümü" görünür katmanlardaki bütün nesneler; "Katman" bir katman ya da grubun altındaki bütün katmanlar (gizli olsa bile); "ids" modellerde önceki adımın çıktısıdır ve pencerede sunulmaz. `kinds` dışındaki nesneler sessizce elenir; pencere ne kadar nesne okunacağını canlı gösterir.
 - **Boş girdi:** zorunlu bir `features` parametresi hiç nesneye çözülmezse çalıştırıcı aracı çalıştırmaz ve alanın altına yönlendiren bir mesaj yazar ("Önce nesneleri seçin ya da kapsamı değiştirin"). Model içinde (`ids`) boş çıktı hata değildir.
+- **Değiştirilen girdi (`writes`):** araç girdisinin nesnelerini değiştiriyorsa (Öznitelik hesapla) kilitli katmandaki nesneler girdiye alınmaz ve çalıştırma başında söylenir: "“Nesneler”: 1 nesne kilitli katmanda olduğu için işleme alınmadı." Özet, çıktılar ve modelin sonraki adımı yalnız yazılanı sayar. Nesnelerin hepsi kilitliyse araç çalışmaz: "“Nesneler”: seçili nesnelerin hepsi kilitli katmanda. Kilidi Katmanlar panelinden açın." (kapsamın sözüyle: görünen alandaki, görünen katmanlardaki, bu katmandaki). Uygulamadaki kilitli katman atlaması güvenlik ağı olarak kalır.
 - **Hedef katman:** `{ newName }` aynı adlı bir katman varsa onu kullanır (araç ikinci kez çalışınca aynı "Köşe noktaları" katmanına yazar); yoksa katman yalnızca araç gerçekten ona yazarsa oluşturulur. Kilitli katman seçilemez; kilitli katmana düşen değişiklikler atlanır ve sayısı bildirilir.
 
 ### 4.3 Çalışma bağlamı ve değişiklik kümesi

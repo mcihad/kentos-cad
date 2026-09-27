@@ -82,6 +82,12 @@ export interface FeaturesParam<N extends string = string> extends ParamBase<N> {
   /** Scopes offered in the dialog (default: all but "ids"). */
   readonly scopes?: readonly Exclude<FeatureScope, 'ids'>[];
   readonly default?: Default<FeaturesValue>;
+  /**
+   * The tool changes these objects (Öznitelik hesapla): objects on locked
+   * layers are left out when the input is resolved, and said, so the
+   * summary, the outputs and a model's next step count only what is written.
+   */
+  readonly writes?: boolean;
 }
 
 export interface NumberParam<N extends string = string> extends ParamBase<N> {
