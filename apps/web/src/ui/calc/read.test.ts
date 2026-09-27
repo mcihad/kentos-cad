@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { Entity } from '../../model/entities';
 import { readPolar, readStakeout, resolvePointIn, type PolarForm, type Row } from './read';
 
 /**
@@ -6,13 +7,13 @@ import { readPolar, readStakeout, resolvePointIn, type PolarForm, type Row } fro
  * (the real one, through WASM): the messages name what the user sees.
  */
 
-const resolve = (text: string) => resolvePointIn({ all: () => [] }, text);
+const resolve = (text: string) => resolvePointIn({ all: () => ([] as Entity[]).values() }, text);
 
 const polar = (rows: Row[], extra: Partial<PolarForm> = {}): PolarForm => ({ station: '0,0', back: '0,100', backReading: '0', stationZ: '', instrumentHeight: '', rows, ...extra });
 
 describe('Kutupsal alım', () => {
   it('a core message names the table row, not the shot counted among the filled rows', () => {
-    const rows = [{ name: '1', reading: '0', distance: '10' }, {}, { name: '3', reading: '100', distance: '0' }];
+    const rows: Row[] = [{ name: '1', reading: '0', distance: '10' }, {}, { name: '3', reading: '100', distance: '0' }];
     const read = readPolar(polar(rows), resolve, 'grad');
     expect(read.points).toBeNull();
     expect(read.errors).toEqual(['3. noktanın uzunluğu sıfırdan büyük olmalı.']);
