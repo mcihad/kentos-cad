@@ -95,6 +95,8 @@ const ITEMS = [
   { id: 'legend', open: (ui) => ui.run('style.legend') },
   { id: 'svg-editor', open: (ui) => ui.run('style.svgEditor') },
   { id: 'processing-tool', open: (ui) => ui.run('map.edgeLengths') },
+  // İfadeyle seç: the expression field with the builder's ε beside it.
+  { id: 'processing-expression', open: (ui) => ui.run('processing.run.selection.byExpression'), ready: '.exprb-open' },
   // The expression builder (DESIGN.md §7.16) over İfadeyle seç: a call being written (its signature and help),
   // the completion list as a name is typed, and an error with a field's values listed.
   { id: 'expression-builder', open: (ui) => ui.builder("Nitelik = 'Arsa' ve yuvarla($alan, "), ready: '.dialog--exprb .xed__sigcode' },

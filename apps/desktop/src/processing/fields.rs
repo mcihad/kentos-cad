@@ -562,6 +562,18 @@ fn expression<'a>(
         .on_input(move |t| ev(Event::Text(name.clone(), t)))
         .font(typography::mono())
         .width(Fill);
+    // İfade oluşturucu on this field's text (expression/, DESIGN.md §7.16).
+    let open = tip(
+        button(icon(crate::icons::from_web(Some("expression"))).size(16.0))
+            .padding([4, 6])
+            .style(style::button::secondary)
+            .on_press(Message::Builder(crate::expression::Event::OpenProcessing(
+                def.name.clone(),
+            ))),
+        Tip::new("İfade oluşturucu…"),
+        iced::widget::tooltip::Position::Top,
+    );
+    let line = row![line, open].spacing(6).align_y(Center);
     let fields: Vec<(String, usize)> = of
         .and_then(|of| env.window.inputs.get(of))
         .map(|s| s.fields.clone())

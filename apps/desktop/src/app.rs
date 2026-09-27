@@ -206,6 +206,8 @@ pub enum Message {
     Processing(crate::processing::Event),
     /// Katman stili (style/layer_style/).
     LayerStyle(crate::style::layer_style::Event),
+    /// İfade oluşturucu over an expression field's window (expression/).
+    Builder(crate::expression::Event),
     /// Stil yöneticisi (style/manager/).
     StyleManager(Box<crate::style::manager::Event>),
     /// Esc in the empty command line: the running command ends.
@@ -389,6 +391,8 @@ pub struct App {
     pub(crate) dwell_on_time: bool,
     /// İşlemler: the processing tools and models, their window and history (processing/).
     pub processing: crate::processing::Processing,
+    /// İfade oluşturucu, while it is open over the window that asked for it (expression/).
+    pub(crate) builder: Option<crate::expression::Builder>,
     /// The layer or group Katmanlar → Sil asks about (`Dialog::RemoveLayer`).
     pub removing_layer: Option<String>,
     /// The typed settings (docs/adr/0023): kept in `ayarlar.json` when opened by `main`.
@@ -521,6 +525,7 @@ impl App {
             tracking_waited: 0,
             dwell_on_time: true,
             processing: crate::processing::Processing::default(),
+            builder: None,
             removing_layer: None,
             settings,
             settings_draft: None,
@@ -734,6 +739,7 @@ impl App {
             }
             Message::Calc(event) => return self.calc_event(event),
             Message::Processing(event) => return self.processing_event(event),
+            Message::Builder(event) => return self.builder_event(event),
             Message::LayerStyle(event) => return self.layer_style_event(event),
             Message::StyleManager(event) => return self.style_manager_event(*event),
             // The layer tree's changes go through the document, as on the web: visibility

@@ -108,7 +108,7 @@
     - şekil okumalarını sayar.
   - Web'de `expression.test.ts` gerçek bir depoda denetler: ölçü kaydı yoluyla aynı değerler, yeni değişkenler.
 
-### 4. Dil ekleri (plan, dilim 4)
+### 4. Dil ekleri (plan, sıradaki dilim)
 
 - **Eklenenler:**
   - `CASE WHEN … THEN … ELSE … END`;
@@ -118,17 +118,30 @@
 - **Adlar:** Türkçe adlar önce gelir, QGIS adları takma addır.
 - **Durumlar:** `fixtures/expression/v2`'de, sayıların bağımsız bir Python başvurusuyla.
 
-### 5. Düzenleyici hizmetleri ve arayüz (plan, dilim 5–8)
+### 5. İfade oluşturucu: düzenleyici hizmetleri ve pencere (uygulandı, dilim 4)
 
-- **Motorun tablolarından:**
-  - sözcük türleri ve konumları (renklendirme);
-  - bağlama göre tamamlama: alanlar tür ve kaynaklarıyla, değerler, tek satırlık yardımıyla işlevler, sözcükler;
-  - imza yardımı, konumlu tanılar, biçimleme.
-- **Arayüz:**
-  - web'de `apps/web/src/ui/expression/`;
-  - masaüstünde KentOS UI'da genel bir kod alanı ve `apps/desktop/src/expression/`.
-  - Web ajanı, stil ajanı ve ana oturum kendi pencerelerine yerleştirir.
-- **En son:** metinle gidip gelen küçük bir akış görünümü.
+- **Öncelik:** sahip, dil eklerinden (§4) önce QGIS'in ifade penceresinin karşılığını istedi (27 Eylül). Tarih grubu, dile tarih işlevleri gelince eklenir. İşlev düzenleyicisi sekmesi yoktur.
+- **Tek çekirdek, `kentos_expression::editor`:** iki platformun penceresi yalnız çizer; anlam buradadır.
+  - `tokens`: her sözcüğün türü (sayı, metin, alan, değişken, işlev, anahtar sözcük, sabit, işleç, parantez, virgül, bilinmeyen). Sözcükleyici dilin taramasını paylaşır ama kapanmamış tırnakta ya da köşeli parantezde, yalnız `$`'da ve anlamsız karakterde durmaz (`lex.rs`).
+  - `check`: dilin hatası, altı çizilecek aralığıyla (“8. karakterde: …”); nesnelerde olmayan her alan için uyarı, büyük/küçük harf ya da bir iki harf kaymışsa kastedilen alanla.
+  - `complete`: imleçte durabilecek adlar: alanlar (yalın ya da köşeli parantezle), `$` değerleri, parantezleriyle işlevler (imleç arasında), dilin sözcükleri. Türkçe harf ve büyük/küçük harf gözetilmez; İngilizce adlar bulunur ve hangisiyle bulunduğu söylenir. Sıra: tam eşleşme, başı, öbür adın başı, `_` ya da boşluk sonrası, içinde (en az üç harf). Kendiliğinden yalnız ad yazılırken açılır, Ctrl+Boşluk'la her yerde.
+  - `signature` (imleçteki çağrı ve yazılan argüman), `bracket` (imleçteki parantez ve eşi), `catalog` (ağacın grupları: Alanlar ve değerler, Değişkenler, Dönüşümler, Geometri, İşleçler, Koşullar, Matematik, Metin), `help` ve `help_at`, `values` ve `literal` (alanın değerleri Türkçe sırada, dilin yazdığı gibi), `place` (seçili metni işlev sarar, işleç tek boşlukla durur), `preview`.
+  - Konumlar 0'dan UTF-16 birimidir; `units` masaüstünün satır ve bayt konumuna çevirir.
+- **Belgeli kitaplık:** her işlev, değişken ve işleç grubu, argümanları (isteğe bağlı olanlar işaretli), örnekleri ve öbür adlarıyla. Değer bildiren her örnek, yardımın sözünü ettiği parselde değerlendirilir (`editor::catalog` testleri).
+- **Sabitleme:** `fixtures/expression/v2/builder.json` (155 durum) Rust'ta (`tests/builder.rs`) ve WASM'da (`apps/web/src/model/expression/builder.test.ts`) aynı yanıtları verir. Web işlemleri `kentos_expression::api`'dedir; WASM çağrı tablosunda stil çekirdeğinden sonra gelir. `KENTOS_WRITE_BUILDER=1` yanıtları yeniden yazar; farkı okuyun.
+- **Web** (`apps/web/src/ui/expression/`, ilk kullanımda yüklenir):
+  - düzenleyici, sözdizimi renklerinde boyanmış kopyasının üstünde saydam bir metin alanıdır;
+  - geri almayı tarayıcı tutar; önizlemenin nesneleri çağırandan gelir (`builderObjects.ts`).
+- **Masaüstü** (`apps/desktop/src/expression/`):
+  - Iced'in metin düzenleyicisi çekirdeğin sözcük türleriyle boyanır; hata ve uyarı dalgaları ile parantez kutuları üstündeki kanvastadır;
+  - satır kırılmaz: düzenleyici metni kadar büyüktür, çevresindeki kaydırıcı imleci izler (QGIS'teki gibi yatay kayar);
+  - öneri listesi kelimenin altındadır;
+  - önizlemenin nesnesi çizimden de seçilir (Sahneden seç, ADR 0088; `PickObjects::one`).
+- **Açılış:** İşlemler penceresinin (ve web'de model incelemesinin) ifade alanının yanındaki ε düğmesi. Stil pencereleri stil ajanının yerleştirmesini bekler. Görünüş DESIGN.md §7.16'dadır.
+- **Denetimler:**
+  - web: `apps/web/scripts/e2e/builder.mjs` (klavye ve fare, 18 denetim) ve düzen geçişinde üç görünüm;
+  - masaüstü: `expression::tests` (9) ve resimler (`expression::tests::screens`).
+- **En son:** metinle gidip gelen küçük bir akış görünümü (isteğe bağlı).
 
 ## Ölçüm
 

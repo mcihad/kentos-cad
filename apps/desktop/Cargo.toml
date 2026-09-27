@@ -37,6 +37,8 @@ kentos-formats = { path = "../../crates/shared/formats" }
 # images with zune-jpeg (the owner's approval, 2026-09-27; docs/adr/0092).
 kentos-native-style = { path = "../../crates/native/style" }
 kentos-geometry-core = { path = "../../crates/shared/geometry-core" }
+# The expression language's editor services (İfade oluşturucu, docs/adr/0100 §5).
+kentos-expression = { path = "../../crates/shared/expression" }
 kentos-svg-core = { path = "../../crates/shared/svg-core" }
 roxmltree = { workspace = true }
 png = { workspace = true }
