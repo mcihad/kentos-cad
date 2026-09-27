@@ -444,17 +444,16 @@ impl Path {
 
     /// Writes the area through the product command `cad.polygon.create`
     /// (docs/adr/0022), as one undo step. What the web's tool knows
-    /// implicitly is explicit in its input (CMD-07): the active layer; the
-    /// desktop has no current colour, so the layer's colour applies. False,
-    /// with the command's message, when it refused (a locked layer); a hidden
-    /// layer is written with its warning.
+    /// implicitly is explicit in its input (CMD-07): the active layer and
+    /// the current colour. False, with the command's message, when it
+    /// refused (a locked layer); a hidden layer is written with its warning.
     fn create_polygon(&self, pts: &[Vec2], bulges: Option<Vec<f64>>, cx: &mut Context<'_>) -> bool {
         let input = PolygonCreate {
             layer_id: cx.doc.layers().active().to_owned(),
             pts: pts.iter().copied().map(wire).collect(),
             bulges,
             holes: None,
-            color: None,
+            color: cx.draft.color.map(str::to_owned),
             attrs: None,
             expected_revision: None,
         };
@@ -465,13 +464,13 @@ impl Path {
     /// Writes the polyline through the product command `cad.polyline.create`
     /// (docs/adr/0027), as one undo step, with one bulge per drawn segment;
     /// the command stores the document's per-point form. As for the area:
-    /// the active layer, no current colour; false when refused.
+    /// the active layer and the current colour; false when refused.
     fn create_polyline(&self, pts: &[Vec2], cx: &mut Context<'_>) -> bool {
         let input = PolylineCreate {
             layer_id: cx.doc.layers().active().to_owned(),
             pts: pts.iter().copied().map(wire).collect(),
             bulges: has_bulges(Some(&self.bulges)).then(|| self.bulges.clone()),
-            color: None,
+            color: cx.draft.color.map(str::to_owned),
             attrs: None,
             expected_revision: None,
         };
@@ -480,8 +479,9 @@ impl Path {
     }
 
     /// Writes the parcel through the product command `cad.entities.create`
-    /// on the parcel layer, whatever the active one (docs/adr/0067): the next
-    /// number on that layer as its label and its Parsel, Nitelik “Arsa”, the
+    /// on the parcel layer, whatever the active one (docs/adr/0067), in the
+    /// current colour: the next number on that layer as its label and its
+    /// Parsel, Nitelik “Arsa”, the
     /// other attributes left for Öznitelikler. The deed area is left empty:
     /// it is the title deed's, not the drawing's (CLAUDE.md §7, §23); the
     /// message gives the geometric area. The parcel is selected, so
@@ -517,7 +517,7 @@ impl Path {
                     bulges,
                     holes: None,
                 },
-                color: None,
+                color: cx.draft.color.map(str::to_owned),
                 attrs: Some(BTreeMap::from(attrs.map(|(k, v)| (k.to_owned(), v.to_owned())))),
                 label: Some(number.clone()),
             }],

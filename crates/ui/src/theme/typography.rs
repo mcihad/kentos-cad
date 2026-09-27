@@ -309,6 +309,20 @@ pub fn text_width(text: &str, size: f32) -> f32 {
     current().text_width(text, size, false)
 }
 
+/// Metin `room` genişliğine (piksel) sığmazsa sonunu “…” ile kısaltır (web'in
+/// `text-overflow: ellipsis`'i); sığan metin olduğu gibi döner. Genişlik
+/// [`text_width`]'in geniş tutan tahminiyledir: kısaltılan metin sığar.
+pub fn elide(text: &str, size: f32, room: f32) -> std::borrow::Cow<'_, str> {
+    if text_width(text, size) <= room {
+        return std::borrow::Cow::Borrowed(text);
+    }
+    let one = text_width("a", size).max(f32::EPSILON);
+    // Room for the characters and the ellipsis itself.
+    let keep = ((room / one).floor() as usize).saturating_sub(1);
+    let kept: String = text.chars().take(keep).collect();
+    std::borrow::Cow::Owned(format!("{}…", kept.trim_end()))
+}
+
 /// Yarı kalın arayüz metninin yaklaşık genişliği.
 pub fn strong_width(text: &str, size: f32) -> f32 {
     current().text_width(text, size, true)
@@ -394,6 +408,18 @@ mod tests {
             .size,
             18.0
         );
+    }
+
+    #[test]
+    fn a_long_text_is_cut_with_an_ellipsis_to_fit() {
+        // Reads the setting, as the ribbon's fields do; changes nothing.
+        let size = 12.0;
+        assert_eq!(elide("Taslak", size, 1000.0), "Taslak");
+        let room = text_width("Katmana", size);
+        let cut = elide("Katmana göre", size, room);
+        assert!(cut.ends_with('…') && cut.starts_with("Katman"), "{cut}");
+        assert!(text_width(&cut, size) <= room, "{cut}");
+        assert_eq!(elide("Katmana göre", size, 0.0), "…");
     }
 
     #[test]

@@ -57,7 +57,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 | İşlem araçları | 4 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 1 |
 | Çalışma modları | 3 | 0 | 2 | 0 | 5 |
-| Ayarlar | 38 | 12 | 14 | 1 | 65 |
+| Ayarlar | 41 | 12 | 11 | 1 | 65 |
 | Tarayıcı depoları | 6 | 1 | 2 | 1 | 10 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 192 | 0 | 0 | 0 | 192 |
 | Pencereler ve paneller | 42 | 3 | 17 | 0 | 62 |
@@ -122,7 +122,7 @@ Yok.
 - `disaster` Afet ve risk analizi (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 - `plan3d` İmar planından 3D kent tasarımı (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 
-#### Ayarlar (26 / 65)
+#### Ayarlar (23 / 65)
 
 - `layout.bottomExpanded`  (kısmi) (masaüstünde: apps/desktop/src/bottom.rs) — Alt panel F2 ile açılıp kapanır; yeniden açılışta hatırlanmaz.
 - `layout.bottomHeight`  (kısmi) (masaüstünde: apps/desktop/src/bottom.rs) — Boyu sürükleyerek değişir; yeniden açılışta hatırlanmaz.
@@ -144,9 +144,6 @@ Yok.
 - `layout.toolboxVisible`
 - `layout.toolboxX`
 - `layout.toolboxY`
-- `session.color`
-- `session.lineType`
-- `session.lineWeight`
 - `user.crosshair`
 - `user.shell`
 - `user.uiFont`  (kısmi) (masaüstünde: ayarlar.json appearance.typeface (Görünüm sekmesi, ADR 0051)) — Masaüstünde KentOS UI'ın üç yazı tipi var (IBM Plex Sans, Inter, Plus Jakarta Sans); web yedi seçenek sunar.
@@ -171,7 +168,7 @@ Yok.
 - `apps/web/src/ui/cloud/ShareDialog.ts#openShareDialog` openShareDialog
 - `apps/web/src/ui/menu/MenuBar.ts#MenuBar` MenuBar
 - `apps/web/src/ui/processing/model/ModelDesigner.ts#openModelDesigner` openModelDesigner
-- `apps/web/src/ui/ribbon/Ribbon.ts#Ribbon` Ribbon (kısmi) (masaüstünde: apps/desktop/src/view.rs, catalog.rs (ADR 0017, 0051)) — Giriş'in Katmanlar ve Özellikler panelleri ile Seçim sekmesinin paneli yok (etkin katman, yeni nesnelerin rengi, çizgi tipi ve kalınlığı, çizim ölçeği, seçimin özeti); yöntem düğmesi son seçimi göstermez; hızlı erişime ekleme ve harf ipuçları yok.
+- `apps/web/src/ui/ribbon/Ribbon.ts#Ribbon` Ribbon (kısmi) (masaüstünde: apps/desktop/src/view.rs, catalog.rs, ribbon_panels.rs (ADR 0017, 0051, 0089)) — Yöntem düğmesi son seçimi göstermez; hızlı erişime ekleme, şeridin sağ tık menüsü ve harf ipuçları yok.
 - `apps/web/src/ui/statusbar/StatusBar.ts#StatusBar` StatusBar (kısmi) (masaüstünde: apps/desktop/src/view.rs, cloud/view.rs (ADR 0058, 0080)) — Web'in sunucu hücresi ve onun hesap menüsü yok; masaüstünde hesabın adı ve Çıkış ayrı hücrelerdir (ADR 0041). Çizim motoru hücresi masaüstünde anlamsızdır (wgpu).
 - `apps/web/src/ui/style/LegendDialog.ts#openLegend` openLegend
 - `apps/web/src/ui/style/StyleManager.ts#openStyleManager` openStyleManager

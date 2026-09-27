@@ -35,8 +35,38 @@ impl App {
         catalog().tabs_in(self.work_mode())
     }
 
-    /// The tab shown: the chosen one while the mode keeps it, else Giriş.
+    /// The contextual tabs of the drawing's mode (the web's Seçim, shown
+    /// while something is selected).
+    pub(crate) fn contextual_tabs(&self) -> impl Iterator<Item = &'static Tab> {
+        catalog().contextual_in(self.work_mode())
+    }
+
+    /// The tab shown: the contextual Seçim while it is open and something is
+    /// selected, else the chosen tab ([`App::regular_tab`]).
     pub(crate) fn shown_tab(&self) -> &'static str {
+        if self.ribbon_context
+            && !self.selection.is_empty()
+            && let Some(tab) = self.contextual_tabs().next()
+        {
+            return tab.id;
+        }
+        self.regular_tab()
+    }
+
+    /// A click on a tab (the web's `select`): the contextual tab opens over
+    /// the chosen one, which stays for when the selection is gone; another
+    /// becomes the chosen one.
+    pub(crate) fn choose_tab(&mut self, id: &'static str) {
+        if self.contextual_tabs().any(|t| t.id == id) {
+            self.ribbon_context = !self.selection.is_empty();
+        } else {
+            self.tab = id;
+            self.ribbon_context = false;
+        }
+    }
+
+    /// The chosen tab: the chosen one while the mode keeps it, else Giriş.
+    pub(crate) fn regular_tab(&self) -> &'static str {
         let mut tabs = self.ribbon_tabs();
         let first = catalog()
             .tabs_in(self.work_mode())
@@ -70,7 +100,7 @@ impl App {
         settings.workspace = Some(mode.id);
         doc.model.set_settings(settings);
         // The tab stays open while the mode keeps it (DESIGN.md §7.3.2).
-        self.tab = self.shown_tab();
+        self.tab = self.regular_tab();
         self.output(format!(
             "Çalışma modu: {}. Gizlenen komutlar komut satırından ve kısayoluyla yine çalışır.",
             mode.label
