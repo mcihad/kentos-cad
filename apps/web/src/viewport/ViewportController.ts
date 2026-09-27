@@ -908,7 +908,8 @@ export class ViewportController {
   private syncLayers(): void {
     const { doc } = this.ctx;
     const backend = this.backend!;
-    const ids = this.allDirty ? doc.layers.leaves().map((l) => l.id) : [...this.dirtyLayers];
+    // A layer gone from the tree (Katmanlar → Sil) is among the dirty ones even when all are: its buffers go too.
+    const ids = this.allDirty ? [...new Set([...doc.layers.leaves().map((l) => l.id), ...this.dirtyLayers])] : [...this.dirtyLayers];
     this.allDirty = false;
     this.dirtyLayers.clear();
     const plotScale = this.symbolScale();
@@ -928,6 +929,7 @@ export class ViewportController {
       const node = doc.layers.get(id);
       if (!node || node.type !== 'layer') {
         backend.remove(id);
+        this.constructionLayers.delete(id);
         continue;
       }
       const list = doc.byLayer(id);

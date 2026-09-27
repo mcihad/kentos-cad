@@ -726,6 +726,7 @@ impl App {
                     Message::DialogClosed,
                 )
             }
+            Asking::RemoveLayer => self.remove_layer_question(),
             Asking::Settings => self.settings_dialog(),
             Asking::Recovery => self.recovery_dialog(),
             Asking::SignIn => self.sign_in_view(),

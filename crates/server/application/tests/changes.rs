@@ -619,3 +619,202 @@ async fn concurrent_writers_serialize_per_project() {
     assert_eq!(info.data_revision, "3");
     db.close().await;
 }
+
+/// The tree without the node `id` (and what is under it).
+fn without(nodes: &[kentos_contracts::LayerNode], id: &str) -> Vec<kentos_contracts::LayerNode> {
+    nodes
+        .iter()
+        .filter(|n| n.id != id)
+        .map(|n| kentos_contracts::LayerNode {
+            children: without(&n.children, id),
+            ..n.clone()
+        })
+        .collect()
+}
+
+/// The layer ids of the project's tree as the server holds it.
+async fn layer_ids(db: &TestDb, project: Uuid) -> Vec<String> {
+    fn walk(nodes: &[kentos_contracts::LayerNode], out: &mut Vec<String>) {
+        for n in nodes {
+            out.push(n.id.clone());
+            walk(&n.children, out);
+        }
+    }
+    let value: serde_json::Value =
+        sqlx::query_scalar("select layers from kentos.project where id = $1")
+            .bind(project)
+            .fetch_one(&db.owner)
+            .await
+            .unwrap();
+    let tree: Vec<kentos_contracts::LayerNode> = serde_json::from_value(value).unwrap();
+    let mut out = Vec::new();
+    walk(&tree, &mut out);
+    out
+}
+
+/// Katmanlar → Sil in a database project (the web's and the desktop's): the
+/// layer's objects deleted and the tree without it, in one command. The
+/// objects' layer is judged as it was, since the new tree no longer has it.
+/// A layer that still holds an object once the command's objects are written
+/// (someone else's, not sent) is kept: a @project conflict, and nothing of
+/// the command is written. An object moved off it in the same command lets
+/// it go.
+#[tokio::test]
+async fn a_layer_goes_with_its_objects_or_not_at_all() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    admin::create_tenant(&db.owner, "buro", "Büro", 5)
+        .await
+        .unwrap();
+    let ayse = member(&db, "buro", "ayse", TenantRole::ProjectManager).await;
+    let bora = member(&db, "buro", "bora", TenantRole::Editor).await;
+    let project = new_project(&db, &ayse).await;
+    share_with(&db, &ayse, project, &[&bora], GrantRole::Editor).await;
+    let (ayse_p, bora_p) = (
+        open(&db, &ayse, project).await,
+        open(&db, &bora, project).await,
+    );
+    let s = sample();
+    let tree = unlocked(&s.layers);
+    let (p1, p2) = (Uuid::new_v4().to_string(), Uuid::new_v4().to_string());
+
+    // Two objects on “Bina” (in the Kadastro group), then the layer with them.
+    let made = changes::commit(
+        &db.app,
+        &ayse_p,
+        envelope(
+            &ayse,
+            project,
+            changes_of(vec![
+                FeatureChange::Create {
+                    id: p1.clone(),
+                    entity: a_point("bina", 486512.0),
+                },
+                FeatureChange::Create {
+                    id: p2.clone(),
+                    entity: a_point("bina", 486513.0),
+                },
+            ]),
+            &[],
+        ),
+    )
+    .await
+    .unwrap();
+    let removal = ProjectChanges {
+        features: vec![
+            FeatureChange::Delete { id: p1.clone() },
+            FeatureChange::Delete { id: p2.clone() },
+        ],
+        project: Some(ProjectPatch {
+            layers: Some(without(&tree, "bina")),
+            ..ProjectPatch::default()
+        }),
+    };
+    let removed = changes::commit(
+        &db.app,
+        &ayse_p,
+        envelope(
+            &ayse,
+            project,
+            removal,
+            &[
+                (p1.as_str(), made.versions[&p1].as_str()),
+                (p2.as_str(), made.versions[&p2].as_str()),
+                ("@project", made.meta_version.as_str()),
+            ],
+        ),
+    )
+    .await
+    .unwrap();
+    assert_eq!(removed.deleted.len(), 2);
+    assert!(!layer_ids(&db, project).await.contains(&"bina".to_owned()));
+
+    // Bora puts an object on “Çizim”; Ayşe, not knowing it, removes the layer alone.
+    let q = Uuid::new_v4().to_string();
+    let put = changes::commit(
+        &db.app,
+        &bora_p,
+        envelope(
+            &bora,
+            project,
+            changes_of(vec![FeatureChange::Create {
+                id: q.clone(),
+                entity: a_point("cizim", 486514.0),
+            }]),
+            &[],
+        ),
+    )
+    .await
+    .unwrap();
+    let after_bina = without(&tree, "bina");
+    let tree_only = ProjectChanges {
+        features: vec![],
+        project: Some(ProjectPatch {
+            layers: Some(without(&after_bina, "cizim")),
+            ..ProjectPatch::default()
+        }),
+    };
+    match changes::commit(
+        &db.app,
+        &ayse_p,
+        envelope(
+            &ayse,
+            project,
+            tree_only,
+            &[("@project", removed.meta_version.as_str())],
+        ),
+    )
+    .await
+    {
+        Err(AppError::Conflict {
+            conflicts, message, ..
+        }) => {
+            assert!(
+                message.contains("“Çizim” katmanında hâlâ nesne var"),
+                "{message}"
+            );
+            assert_eq!(conflicts.len(), 1);
+            assert_eq!(
+                (conflicts[0].id.as_str(), conflicts[0].reason),
+                ("@project", ConflictReason::Project)
+            );
+        }
+        other => panic!("expected a @project conflict, got {other:?}"),
+    }
+    // Nothing was written: the layer and Bora's object stay.
+    assert!(layer_ids(&db, project).await.contains(&"cizim".to_owned()));
+    let kept = projects::features_by_id(&db.app, &ayse_p, &[Uuid::parse_str(&q).unwrap()])
+        .await
+        .unwrap();
+    assert_eq!(kept.len(), 1);
+
+    // Moving the object off the layer in the same command lets the layer go.
+    let moved = ProjectChanges {
+        features: vec![FeatureChange::Update {
+            id: q.clone(),
+            entity: a_point("parsel", 486514.0),
+        }],
+        project: Some(ProjectPatch {
+            layers: Some(without(&after_bina, "cizim")),
+            ..ProjectPatch::default()
+        }),
+    };
+    changes::commit(
+        &db.app,
+        &ayse_p,
+        envelope(
+            &ayse,
+            project,
+            moved,
+            &[
+                (q.as_str(), put.versions[&q].as_str()),
+                ("@project", removed.meta_version.as_str()),
+            ],
+        ),
+    )
+    .await
+    .unwrap();
+    assert!(!layer_ids(&db, project).await.contains(&"cizim".to_owned()));
+    db.close().await;
+}

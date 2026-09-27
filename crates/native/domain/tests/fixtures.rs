@@ -342,6 +342,11 @@ fn apply(doc: &mut Document, state: &mut State, step: &Value, at: &str) -> Outco
             );
             Value::Null
         }
+        // A refusal is caught as a fixture's own `throw` is (`catch`).
+        "removeLayer" => match doc.remove_layer(id()?) {
+            Ok(gone) => json!(gone),
+            Err(refusal) => return Err(Stop::Thrown(refusal.0)),
+        },
         "addLayer" => {
             let layer = &step["layer"];
             // The web lays the given style fields over its default one.

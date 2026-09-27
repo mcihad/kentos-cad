@@ -6,6 +6,64 @@ import { disposeAll, layers, pt, reopen, setup, storedDraft, wire, xOf } from '.
 afterEach(disposeAll);
 
 describe('cloud autosave', () => {
+  it('sends a removed layer as its objects’ deletes and the tree in one command; undo sends them back', async () => {
+    const { doc, server, sync } = setup();
+    doc.add(pt(1, 'parsel'));
+    doc.add(pt(2, 'parsel'));
+    const kept = doc.add(pt(3));
+    await sync.flush();
+    const commits = server.commits;
+    expect(doc.removeLayer('parsel')).toBe(2);
+    expect(await sync.flush()).toBe(true);
+    expect(server.commits).toBe(commits + 1);
+    expect([...server.store.keys()]).toEqual([kept.uid]);
+    expect(server.meta.layers.map((n) => n.id)).toEqual(['cizim']);
+    // Undo: the layer and its objects go back in one command, the tree with them.
+    doc.undo();
+    expect(await sync.flush()).toBe(true);
+    expect(server.commits).toBe(commits + 2);
+    expect(server.store.size).toBe(3);
+    expect(server.meta.layers.map((n) => n.id)).toEqual(['cizim', 'parsel']);
+    expect(sync.state.value).toBe('saved');
+  });
+
+  it('a removed layer’s objects go before the other changes; the tree with the last of them, a new layer’s objects with it or after', async () => {
+    const { doc, server, sync } = setup();
+    doc.addMany(Array.from({ length: 2001 }, (_, i) => pt(i, 'parsel')));
+    const moved = doc.add(pt(-2, 'parsel'));
+    await sync.flush();
+    const commits = server.commits;
+    // Changed before the removal, so first in line: objects on a layer the server does not have yet, and one
+    // moved off the removed layer. More changes than one command carries.
+    doc.layers.add({ id: 'yeni', name: 'Yeni' }, null);
+    doc.addMany(Array.from({ length: 1999 }, (_, i) => pt(-10 - i, 'yeni')));
+    doc.update(moved.id, { layerId: 'cizim' });
+    doc.removeLayer('parsel');
+    expect(await sync.flush()).toBe(true);
+    // 2000 deletes and the move, then the last delete with the tree and the new layer's objects, then the rest.
+    expect(server.commits).toBe(commits + 3);
+    expect(sync.conflicts.value).toEqual([]);
+    expect(server.meta.layers.map((n) => n.id)).toEqual(['cizim', 'yeni']);
+    expect(server.store.size).toBe(2000);
+    expect((server.store.get(moved.uid)?.entity as { layerId: string }).layerId).toBe('cizim');
+  });
+
+  it('sends a tree without a removed layer with the last batch of its objects, as the server wants', async () => {
+    const { doc, server, sync } = setup();
+    // More objects than one command carries (BATCH): the deletes take two commands.
+    doc.addMany(Array.from({ length: 2001 }, (_, i) => pt(i, 'parsel')));
+    doc.add(pt(-1));
+    await sync.flush();
+    const commits = server.commits;
+    doc.removeLayer('parsel');
+    expect(await sync.flush()).toBe(true);
+    // Sent with the first batch the tree would have been refused: 1 object still on the layer.
+    expect(server.commits).toBe(commits + 2);
+    expect(server.store.size).toBe(1);
+    expect(server.meta.layers.map((n) => n.id)).toEqual(['cizim']);
+    expect(sync.conflicts.value).toEqual([]);
+  });
+
   it('sends an edit once and says saved only after the answer', async () => {
     const { doc, server, sync } = setup();
     const e = doc.add(pt(486512));

@@ -102,8 +102,11 @@ pub enum Dialog {
     Project,
     /// Başlangıç (start.rs).
     Start,
-    /// A Hesap window (calc/): Kestirme, Aplikasyon.
+    /// A Hesap window (calc/).
     Calc,
+    /// Katmanlar → Sil on a layer or group with objects (layering.rs); the
+    /// node is `App::removing_layer`.
+    RemoveLayer,
 }
 
 /// Where the app goes once the drawing on screen is left (cloud/leaving.rs).
@@ -315,6 +318,8 @@ pub struct App {
     pub hover_seen: u64,
     /// The Hesap windows' fields, kept while the app runs (calc/).
     pub calc: crate::calc::Calc,
+    /// The layer or group Katmanlar → Sil asks about (`Dialog::RemoveLayer`).
+    pub removing_layer: Option<String>,
     /// The typed settings (docs/adr/0023): kept in `ayarlar.json` when opened by `main`.
     pub settings: Settings,
     /// The settings window's draft while it is open.
@@ -428,6 +433,7 @@ impl App {
             hover_card: None,
             hover_seen: 0,
             calc: crate::calc::Calc::default(),
+            removing_layer: None,
             settings,
             settings_draft: None,
             reported_failure: None,
@@ -695,14 +701,20 @@ impl App {
                     return self.leave(Then::Close(window));
                 }
             }
-            Message::DialogConfirmed => {
-                if let Some(Dialog::Unsaved(then)) = self.dialog.take() {
+            Message::DialogConfirmed => match self.dialog.take() {
+                Some(Dialog::Unsaved(then)) => {
                     // The unsaved changes are dropped on purpose: their recovery copy goes too.
                     self.recovery.discard();
                     self.cloud.leave_failure = None;
                     return self.proceed(then);
                 }
-            }
+                Some(Dialog::RemoveLayer) => {
+                    if let Some(id) = self.removing_layer.take() {
+                        self.remove_layer(&id);
+                    }
+                }
+                _ => {}
+            },
             Message::DialogClosed => self.close_dialog(),
             Message::Cloud(event) => return self.cloud_event(*event),
             Message::Exchange(event) => return self.exchange_event(*event),

@@ -23,6 +23,8 @@ export interface TreeAdapter<T> {
   /** Space. */
   onToggle?(node: T): void;
   onRename?(node: T): void;
+  /** Delete (the owner removes the node); without it the key is left to others. */
+  onDelete?(node: T): void;
   onContextMenu?(node: T, e: MouseEvent): void;
   /** Keep a node while filtering (ancestors of matches are kept automatically). */
   matches?(node: T, query: string): boolean;
@@ -399,6 +401,12 @@ export class TreeView<T> {
       case 'F2':
         handled();
         if (cur) a.onRename?.(cur);
+        return;
+      case 'Delete':
+        // Only a tree that deletes takes the key: elsewhere it deletes the drawing's selection.
+        if (!a.onDelete || !cur) return;
+        handled();
+        a.onDelete(cur);
         return;
     }
   }
