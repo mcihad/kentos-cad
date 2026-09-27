@@ -63,16 +63,20 @@ impl Tool for PickPoint {
         self.title
     }
 
-    /// “Poligon hesabı: Başlangıç noktası (A): haritada bir nokta gösterin ya da Y,X yazın [Vazgeç (Esc)]”.
+    /// “Poligon hesabı: Başlangıç noktası (A): haritada bir nokta gösterin ya
+    /// da Y,X yazın [Vazgeç (Esc)]”; without a title (a processing tool's
+    /// point, the web's `PickPointTool`) the field's name leads.
     fn prompt(&self) -> Prompt {
-        Prompt::new(
-            self.title,
-            format!(
-                "{}: haritada bir nokta gösterin ya da Y,X yazın",
-                self.field
-            ),
-        )
-        .option("Vazgeç", "Esc")
+        let step = format!(
+            "{}: haritada bir nokta gösterin ya da Y,X yazın",
+            self.field
+        );
+        let prompt = if self.title.is_empty() {
+            Prompt::untitled(step)
+        } else {
+            Prompt::new(self.title, step)
+        };
+        prompt.option("Vazgeç", "Esc")
     }
 
     fn point_count(&self) -> usize {

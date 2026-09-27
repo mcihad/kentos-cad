@@ -44,7 +44,10 @@ impl As {
         }
     }
 
-    fn convert(self, v: Value<'_>) -> Value<'_> {
+    /// One value as the caller asked for it: the rule `evaluate_rows` applies
+    /// to every object, and the desktop's processing tools to theirs
+    /// (`kentos-processing`, which evaluates objects one by one).
+    pub fn convert(self, v: Value<'_>) -> Value<'_> {
         match (self, v) {
             (As::Value, v) | (_, v @ Value::Null) => v,
             (As::Number, v) => to_number(&v).map_or(Value::Null, Value::Num),

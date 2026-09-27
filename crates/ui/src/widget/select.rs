@@ -61,6 +61,7 @@ pub struct Choice {
     detail: Option<String>,
     color: Option<Color>,
     icon: Option<Icon>,
+    disabled: bool,
 }
 
 impl Choice {
@@ -70,6 +71,7 @@ impl Choice {
             detail: None,
             color: None,
             icon: None,
+            disabled: false,
         }
     }
 
@@ -87,6 +89,12 @@ impl Choice {
 
     pub fn icon(mut self, icon: Icon) -> Self {
         self.icon = Some(icon);
+        self
+    }
+
+    /// Listede sönük görünür, seçilemez (ör. kilitli katman; nedeni ayrıntıda yazılır).
+    pub fn disabled(mut self) -> Self {
+        self.disabled = true;
         self
     }
 
@@ -353,14 +361,19 @@ fn panel<'a>(
             line = line.push(icon(glyph).size(14.0));
         }
 
-        line = line.push(label::body(choice.label.clone()).width(Fill));
+        let name = label::body(choice.label.clone()).width(Fill);
+        line = line.push(if choice.disabled {
+            name.style(style::text::disabled)
+        } else {
+            name
+        });
 
         if let Some(detail) = &choice.detail {
             line = line.push(label::mono_caption(detail.clone()));
         }
 
         button(line)
-            .on_press(Event::Pick(index))
+            .on_press_maybe((!choice.disabled).then_some(Event::Pick(index)))
             .width(Fill)
             .height(typography::scaled(ROW_HEIGHT))
             .padding([0, 6])

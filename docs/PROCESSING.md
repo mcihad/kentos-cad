@@ -299,3 +299,7 @@ türünün işaretidir (bkz. §10).
 | `attributes.calculate` | Öznitelik hesapla | Seçilen alana (var olan ya da yeni) her nesne için bir ifadenin değerini yazar; varsayılan `metin($alan, <proje alan hassasiyeti>)`. İsteğe bağlı koşulla yalnızca bazı nesnelere yazar; sonuç boşsa alana dokunmaz ya da boşaltır. Etiket alanın eski değerini gösteriyorsa yeni değeri gösterir. Tek geri alma adımı. |
 | `selection.byExpression` | İfadeyle seç | Koşulu sağlayan nesneleri seçer: yeni seçim, seçime ekle, seçimden çıkar ya da seçim içinde ara. Belgeyi değiştirmez. |
 | `annotation.edgeLengths` | Kenar uzunluklarını yaz | Alan, çoklu çizgi ve çizgilerin her kenarına uzunluğunu, kenar ortasına ve okunur açıyla, dışa ya da içe yazar. Yay kenarında yay boyu yazılır. Ortak kenarlar bir kez yazılır; ondalık basamak varsayılanı proje ayarından gelir; önek, sonek ve en kısa kenar süzgeci gelişmiş ayarlardadır. |
+
+## 12. Masaüstü
+
+Masaüstü aynı araçları kendi çekirdeğiyle çalıştırır ([ADR 0084](adr/0084-desktop-processing.md)): `crates/native/processing` (`kentos-processing`) bu belgenin sözleşmesinin yerli karşılığıdır (parametreler, kapsamlar, çalıştırıcı, modeller, yerleşik araçlar); `fixtures/processing/v1`'in bütün durumlarını geçer. Pencere, komutlar ve takma adlar `apps/desktop/src/processing/`'dedir; her aracın son değerleri `$XDG_STATE_HOME/kentos-cad/islemler.json`'dadır. Yeni bir yerleşik araç iki platformda birlikte ve ortak durumlarıyla eklenir.

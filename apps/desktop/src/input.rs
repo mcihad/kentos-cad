@@ -94,7 +94,11 @@ impl App {
                 // Yazı's field opens over the drawing (text_field.rs).
                 ViewChange::Text(field) => self.open_text_field(field),
                 // Çizimden: the point goes to the window that asked, which opens again (calc/).
-                ViewChange::Picked(p) => self.calc_picked(p),
+                ViewChange::Picked(p) => {
+                    if !self.processing_picked(p) {
+                        self.calc_picked(p);
+                    }
+                }
                 change => self.viewport.change(change),
             }
         }
@@ -316,6 +320,13 @@ impl App {
             match press.named() {
                 // What the window held goes with it (a password, a request).
                 Some(Named::Escape) => self.close_dialog(),
+                // Ctrl+Enter runs a processing tool from anywhere in its window (the web's).
+                Some(Named::Enter)
+                    if press.modifiers.control()
+                        && self.dialog == Some(crate::app::Dialog::Processing) =>
+                {
+                    return self.processing_event(crate::processing::Event::Run);
+                }
                 // ↑ ↓ in a Hesap window's table go to the row above or below (calc/grid.rs).
                 Some(key @ (Named::ArrowUp | Named::ArrowDown))
                     if self.dialog == Some(crate::app::Dialog::Calc) =>

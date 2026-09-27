@@ -21,6 +21,9 @@ kentos-domain = { path = "../../crates/native/domain" }
 kentos-render-wgpu = { path = "../../crates/render/wgpu" }
 # The tool session: tools, prompts and typed input over the document (docs/adr/0021).
 kentos-interaction = { path = "../../crates/native/interaction" }
+# İşlemler (docs/PROCESSING.md): the processing tools and models over the document, held to
+# the web's by fixtures/processing/v1 (docs/adr/0084).
+kentos-processing = { path = "../../crates/native/processing" }
 # The cloud client (docs/adr/0040): signing in, the catalog, opening, saving and following
 # cloud projects, device drafts; its own runtime, awaited on Iced's executor (docs/adr/0041).
 kentos-cloud = { path = "../../crates/native/cloud" }

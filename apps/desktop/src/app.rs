@@ -104,6 +104,8 @@ pub enum Dialog {
     Start,
     /// A Hesap window (calc/).
     Calc,
+    /// A processing tool's or model's window (processing/).
+    Processing,
     /// Katmanlar → Sil on a layer or group with objects (layering.rs); the
     /// node is `App::removing_layer`.
     RemoveLayer,
@@ -184,6 +186,8 @@ pub enum Message {
     HoverCard(u64),
     /// The Hesap windows (calc/).
     Calc(crate::calc::Event),
+    /// A processing tool's window (processing/).
+    Processing(crate::processing::Event),
     /// Esc in the empty command line: the running command ends.
     CommandCancelled,
     /// The command line's text box took or let go of the keyboard.
@@ -346,6 +350,8 @@ pub struct App {
     pub hover_seen: u64,
     /// The Hesap windows' fields, kept while the app runs (calc/).
     pub calc: crate::calc::Calc,
+    /// İşlemler: the processing tools and models, their window and history (processing/).
+    pub processing: crate::processing::Processing,
     /// The layer or group Katmanlar → Sil asks about (`Dialog::RemoveLayer`).
     pub removing_layer: Option<String>,
     /// The typed settings (docs/adr/0023): kept in `ayarlar.json` when opened by `main`.
@@ -469,6 +475,7 @@ impl App {
             hover_card: None,
             hover_seen: 0,
             calc: crate::calc::Calc::default(),
+            processing: crate::processing::Processing::default(),
             removing_layer: None,
             settings,
             settings_draft: None,
@@ -667,6 +674,7 @@ impl App {
             Message::Properties(event) => self.properties_event(event),
             Message::HoverCard(version) => self.hover_card_due(version),
             Message::Calc(event) => return self.calc_event(event),
+            Message::Processing(event) => return self.processing_event(event),
             // The layer tree's changes go through the document, as on the web: visibility
             // and lock are edits (unsaved) but not undo steps.
             Message::LayerVisible(id) => {
@@ -937,6 +945,9 @@ impl App {
         }
         if crate::calc::COMMANDS.contains(&id) {
             return self.calc_command(id);
+        }
+        if crate::processing::answers(id) {
+            return self.processing_command(id);
         }
         if crate::clipboard::COMMANDS.contains(&id) {
             return self.clipboard_command(id);

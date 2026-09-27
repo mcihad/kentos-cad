@@ -34,6 +34,7 @@ mod opening;
 mod perf;
 mod point_calc;
 mod preview;
+mod processing;
 mod project;
 mod properties;
 mod recent;
@@ -96,6 +97,8 @@ fn main() -> iced::Result {
             // The recent files, kept beside the program's other history.
             if let Some(folder) = recent::RecentFiles::default_folder() {
                 app.recent = recent::RecentFiles::open(&folder);
+                // Each processing tool's last values (islemler.json), beside them.
+                app.processing.memory = processing::memory::Memory::open(&folder);
             }
             // Without a drawing named, the start screen (when the preference wants it).
             if path.is_none() {

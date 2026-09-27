@@ -124,7 +124,13 @@
     "tool.areaSplit",
     "tool.toArea",
     "tool.toPolyline",
-    "tool.boundary"
+    "tool.boundary",
+    "processing.run.points.numberVertices",
+    "processing.run.annotation.edgeLengths",
+    "processing.run.attributes.calculate",
+    "processing.run.selection.byExpression",
+    "processing.model.builtin.parcelSheet",
+    "map.edgeLengths"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

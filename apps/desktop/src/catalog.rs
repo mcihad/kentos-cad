@@ -199,6 +199,14 @@ pub const PORTED: &[&str] = &[
     "tool.toArea",
     "tool.toPolyline",
     "tool.boundary",
+    // İşlemler (docs/adr/0084): each tool's and model's window, and Harita's
+    // Kenar ölçülerini yaz, which opens Kenar uzunluklarını yaz.
+    "processing.run.points.numberVertices",
+    "processing.run.annotation.edgeLengths",
+    "processing.run.attributes.calculate",
+    "processing.run.selection.byExpression",
+    "processing.model.builtin.parcelSheet",
+    "map.edgeLengths",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

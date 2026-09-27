@@ -74,7 +74,7 @@
     },
     "commandsWithoutPlace": [],
     "commandsWithoutTests": 52,
-    "commandsOnDesktop": 125
+    "commandsOnDesktop": 131
   },
   "commands": [
     {
@@ -2003,7 +2003,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/menus.test.ts",
@@ -2138,7 +2138,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/scripts/e2e/smoke.mjs"
@@ -2206,7 +2206,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -2235,7 +2235,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -2265,7 +2265,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -2294,7 +2294,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/scripts/e2e/smoke.mjs"
