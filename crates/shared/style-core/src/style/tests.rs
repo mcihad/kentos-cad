@@ -439,6 +439,16 @@ fn categorized_graduated_and_single_renderers() {
         draw(&cat, &[("Tur", "dere")]),
         [("#0000FF".into(), None, None)]
     );
+    // A switched-off category draws its objects with nothing, not with the
+    // others; a later category of the same value does not take them either.
+    let off = program(&format!(
+        r#"{{"type":"categorized","expr":"Tur","categories":[{{"value":"yol","label":"Yol","symbols":{{"line":{RED}}},"enabled":false}},{{"value":"yol","label":"Yol 2","symbols":{{"line":{RED}}}}}],"other":{{"line":{BLUE}}}}}"#
+    ));
+    assert_eq!(draw(&off, &[("Tur", "yol")]), []);
+    assert_eq!(
+        draw(&off, &[("Tur", "dere")]),
+        [("#0000FF".into(), None, None)]
+    );
     // 10 is in the last class: its max is included.
     let grad = program(&format!(
         r#"{{"type":"graduated","expr":"$uzunluk * 10","classes":[{{"min":0,"max":5,"label":"kısa","symbols":{{"line":{RED}}}}},{{"min":5,"max":10,"label":"uzun","symbols":{{"line":{BLUE}}}}}]}}"#

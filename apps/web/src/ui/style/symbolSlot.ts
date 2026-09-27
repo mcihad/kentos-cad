@@ -9,7 +9,8 @@ import { drawNow } from './thumbs';
 /**
  * A symbol in a layer style: a small picture that opens a menu to pick a
  * library symbol, edit the symbol here (it then lives in the style), keep
- * it in the user's library, or go back to the layer's plain look.
+ * it in the user's library, or go back to the layer's plain look. A class
+ * without a symbol shows the plain look it falls back to, when given.
  */
 
 const CLASS_LABEL: Record<GeometryClass, string> = { fill: 'Alan', line: 'Çizgi', marker: 'Nokta' };
@@ -20,14 +21,15 @@ export function symbolOfRef(ctx: AppContext, ref: SymbolRef | undefined): Symbol
   return 'ref' in ref ? ctx.styles.library.symbol(ref.ref) : ref;
 }
 
-export function symbolSlot(ctx: AppContext, ref: SymbolRef | undefined, cls: GeometryClass, onChange: (ref: SymbolRef | undefined) => void, title: string): HTMLElement {
+export function symbolSlot(ctx: AppContext, ref: SymbolRef | undefined, cls: GeometryClass, onChange: (ref: SymbolRef | undefined) => void, title: string, fallback?: SymbolRef): HTMLElement {
   const lib = ctx.styles.library;
   const sym = symbolOfRef(ctx, ref);
+  const shown = ref ? sym : symbolOfRef(ctx, fallback);
   const canvas = h('canvas', { class: 'slot__pic', width: '64', height: '36', style: 'width:64px;height:36px' });
   const name = ref && 'ref' in ref ? (lib.get(ref.ref)?.name ?? 'Kitaplıkta yok') : ref ? 'Bu stilde' : 'Basit görünüş';
   const btn = h('button', { class: `slot${ref && 'ref' in ref && !sym ? ' slot--missing' : ''}`, type: 'button', title: `${CLASS_LABEL[cls]}: ${name}` }, canvas, h('span', { class: 'slot__name' }, name));
   queueMicrotask(() => {
-    if (sym) drawNow(ctx, canvas, sym);
+    if (shown) drawNow(ctx, canvas, shown);
     else {
       const g = canvas.getContext('2d');
       g?.clearRect(0, 0, canvas.width, canvas.height);
@@ -74,12 +76,12 @@ export function symbolSlot(ctx: AppContext, ref: SymbolRef | undefined, cls: Geo
   return btn;
 }
 
-/** Slots for each geometry class a set covers (or the layer has). */
-export function symbolSetSlots(ctx: AppContext, set: SymbolSet, classes: readonly GeometryClass[], onChange: (set: SymbolSet) => void, title: string): HTMLElement {
+/** Slots for each geometry class a set covers (or the layer has); `simple`: the look a class without a symbol falls back to. */
+export function symbolSetSlots(ctx: AppContext, set: SymbolSet, classes: readonly GeometryClass[], onChange: (set: SymbolSet) => void, title: string, simple?: SymbolSet): HTMLElement {
   return h(
     'div',
     { class: 'slots' },
-    classes.map((c) => symbolSlot(ctx, set[c], c, (ref) => onChange({ ...set, [c]: ref }), `${title} (${CLASS_LABEL[c].toLocaleLowerCase('tr')})`)),
+    classes.map((c) => symbolSlot(ctx, set[c], c, (ref) => onChange({ ...set, [c]: ref }), `${title} (${CLASS_LABEL[c].toLocaleLowerCase('tr')})`, simple?.[c])),
   );
 }
 

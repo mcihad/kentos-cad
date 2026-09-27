@@ -82,6 +82,20 @@ const CATEGORIZED: LayerStyle = {
   },
 };
 
+/** Arsa switched off: its parcel draws nothing, and does not fall to the others either (as in QGIS). */
+const CATEGORIZED_OFF: LayerStyle = {
+  ...SIMPLE,
+  renderer: {
+    type: 'categorized',
+    expr: 'Nitelik',
+    categories: [
+      { value: 'Arsa', label: 'Arsa', symbols: { fill: { ref: 'alan-tarama' } }, enabled: false },
+      { value: 'Yol', label: 'Yol', symbols: { line: { ref: 'cizgi-oklu' } } },
+    ],
+    other: { marker: { ref: 'nokta-harf' }, line: { type: 'line', layers: [{ id: 'o', type: 'simpleLine', color: 'fgDim', width: 0.18 }] } },
+  },
+};
+
 const RULES: LayerStyle = {
   ...SIMPLE,
   renderer: {
@@ -112,6 +126,7 @@ const INPUTS: Input[] = [
   { id: 'own-symbols-screen', title: 'Kendi sembolü olan nesneler, ekranda sabit, 12 px/m', style: SIMPLE, entities: OWN, plotScale: 1000, view: { symbolSize: 'screen', pxPerM: 12, lineWeights: true } },
   { id: 'categorized', title: 'Kategorili işleyici: Arsa taralı, Yol oklu, diğerleri harf ve ince çizgi', style: CATEGORIZED, entities: DRAWING, plotScale: 500, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true } },
   { id: 'rules-scale', title: 'Kurallı işleyici: ölçek aralıklı iki kural ve değilse kuralı', style: RULES, entities: DRAWING, plotScale: 1000, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: false } },
+  { id: 'categorized-off', title: 'Kategorili işleyici, Arsa kapalı: Arsa çizilmez, diğer değerlere de düşmez', style: CATEGORIZED_OFF, entities: DRAWING, plotScale: 500, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true } },
 ];
 
 it.runIf(!!process.env.GOLDEN_WRITE)('records the styled layers’ way to the GPU', () => {

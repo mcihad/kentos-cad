@@ -6361,6 +6361,766 @@
      }
     ]
    }
+  },
+  {
+   "id": "categorized-off",
+   "title": "Kategorili işleyici, Arsa kapalı: Arsa çizilmez, diğer değerlere de düşmez",
+   "style": {
+    "color": "fg",
+    "lineType": "dashdot",
+    "lineWeight": 0.5,
+    "fill": "#E5484D33",
+    "point": {
+     "symbol": "cross",
+     "size": 9
+    },
+    "renderer": {
+     "type": "categorized",
+     "expr": "Nitelik",
+     "categories": [
+      {
+       "value": "Arsa",
+       "label": "Arsa",
+       "symbols": {
+        "fill": {
+         "ref": "alan-tarama"
+        }
+       },
+       "enabled": false
+      },
+      {
+       "value": "Yol",
+       "label": "Yol",
+       "symbols": {
+        "line": {
+         "ref": "cizgi-oklu"
+        }
+       }
+      }
+     ],
+     "other": {
+      "marker": {
+       "ref": "nokta-harf"
+      },
+      "line": {
+       "type": "line",
+       "layers": [
+        {
+         "id": "o",
+         "type": "simpleLine",
+         "color": "fgDim",
+         "width": 0.18
+        }
+       ]
+      }
+     }
+    }
+   },
+   "entities": [
+    {
+     "kind": "polygon",
+     "layerId": "k",
+     "attrs": {
+      "Nitelik": "Arsa"
+     },
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420015
+      },
+      {
+       "x": 487000,
+       "y": 4420015
+      }
+     ],
+     "id": 1,
+     "uid": "01a0e299-89eb-7138-a7ff-1d3753d7439a"
+    },
+    {
+     "kind": "polyline",
+     "layerId": "k",
+     "attrs": {
+      "Nitelik": "Yol"
+     },
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420020
+      },
+      {
+       "x": 487030,
+       "y": 4420020
+      },
+      {
+       "x": 487030,
+       "y": 4420035
+      }
+     ],
+     "id": 2,
+     "uid": "01a0e299-89eb-7139-8685-ee9b6a357531"
+    },
+    {
+     "kind": "point",
+     "layerId": "k",
+     "attrs": {
+      "Nitelik": "Ağaç"
+     },
+     "p": {
+      "x": 487040,
+      "y": 4420010
+     },
+     "id": 3,
+     "uid": "01a0e299-89eb-713a-8201-4711d083788a"
+    },
+    {
+     "kind": "text",
+     "layerId": "k",
+     "attrs": {},
+     "p": {
+      "x": 487005,
+      "y": 4420005
+     },
+     "text": "Etiket",
+     "height": 2,
+     "rotation": 0,
+     "id": 4,
+     "uid": "01a0e299-89eb-713b-9dc4-165e6aabb2ad"
+    },
+    {
+     "kind": "hatch",
+     "layerId": "k",
+     "attrs": {},
+     "ring": [
+      {
+       "x": 487025,
+       "y": 4420000
+      },
+      {
+       "x": 487035,
+       "y": 4420000
+      },
+      {
+       "x": 487035,
+       "y": 4420008
+      },
+      {
+       "x": 487025,
+       "y": 4420008
+      }
+     ],
+     "pattern": {
+      "type": "lines",
+      "angle": 30,
+      "spacing": 1.5
+     },
+     "id": 5,
+     "uid": "01a0e299-89eb-713c-88d4-9b562a74d28e"
+    },
+    {
+     "kind": "dimension",
+     "layerId": "k",
+     "attrs": {},
+     "a": {
+      "x": 487000,
+      "y": 4419995
+     },
+     "b": {
+      "x": 487020,
+      "y": 4419995
+     },
+     "offset": 2,
+     "height": 1.5,
+     "id": 6,
+     "uid": "01a0e299-89eb-713d-86a6-cc796b42fa48"
+    }
+   ],
+   "plotScale": 500,
+   "view": {
+    "symbolSize": "plot",
+    "pxPerM": 4,
+    "lineWeights": true
+   },
+   "expect": {
+    "symbolScale": 500,
+    "decisions": [
+     {
+      "id": 1,
+      "mode": "renderer",
+      "a": 0,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 2,
+      "mode": "renderer",
+      "a": 0,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 3,
+      "mode": "renderer",
+      "a": 0,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 4,
+      "mode": "skip",
+      "a": 0,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 5,
+      "mode": "set",
+      "a": 1,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 6,
+      "mode": "dimension",
+      "a": 0,
+      "simple": 0,
+      "color": 0
+     }
+    ],
+    "program": {
+     "symbols": {
+      "alan-tarama": {
+       "type": "fill",
+       "layers": [
+        {
+         "id": "f",
+         "type": "simpleFill",
+         "color": "#4E79A780"
+        },
+        {
+         "id": "h",
+         "type": "hatchFill",
+         "angle": 45,
+         "spacing": 2,
+         "width": 0.25,
+         "color": "fg"
+        },
+        {
+         "id": "o",
+         "type": "simpleLine",
+         "color": "fg",
+         "width": 0.35
+        }
+       ]
+      },
+      "cizgi-oklu": {
+       "type": "line",
+       "layers": [
+        {
+         "id": "l",
+         "type": "simpleLine",
+         "color": "#E15759",
+         "width": 0.5,
+         "dash": [
+          3,
+          1.5
+         ]
+        },
+        {
+         "id": "m",
+         "type": "markerLine",
+         "placement": "interval",
+         "interval": 10,
+         "rotate": true,
+         "marker": {
+          "type": "marker",
+          "layers": [
+           {
+            "id": "s",
+            "type": "shape",
+            "shape": "arrowhead",
+            "size": 2,
+            "fill": "#E15759"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      "nokta-harf": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "t",
+         "type": "text",
+         "text": "T",
+         "size": 3,
+         "font": "sans",
+         "weight": 700,
+         "color": "fg",
+         "halo": {
+          "color": "paper",
+          "width": 0.5
+         }
+        }
+       ]
+      }
+     },
+     "renderer": {
+      "type": "categorized",
+      "expr": "Nitelik",
+      "categories": [
+       {
+        "value": "Arsa",
+        "label": "Arsa",
+        "symbols": {
+         "fill": {
+          "ref": "alan-tarama"
+         }
+        },
+        "enabled": false
+       },
+       {
+        "value": "Yol",
+        "label": "Yol",
+        "symbols": {
+         "line": {
+          "ref": "cizgi-oklu"
+         }
+        }
+       }
+      ],
+      "other": {
+       "marker": {
+        "ref": "nokta-harf"
+       },
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "o",
+          "type": "simpleLine",
+          "color": "fgDim",
+          "width": 0.18
+         }
+        ]
+       }
+      }
+     },
+     "sets": [
+      {
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "l",
+          "type": "simpleLine",
+          "color": "fg",
+          "width": 0.5,
+          "dash": [
+           5,
+           1.2,
+           0.6,
+           1.2
+          ],
+          "unit": "mm",
+          "cap": "butt",
+          "join": "miter"
+         }
+        ]
+       },
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#E5484D33"
+         },
+         {
+          "id": "o",
+          "type": "simpleLine",
+          "color": "fg",
+          "width": 0.5,
+          "dash": [
+           5,
+           1.2,
+           0.6,
+           1.2
+          ],
+          "unit": "mm",
+          "cap": "butt",
+          "join": "miter"
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "p",
+          "type": "shape",
+          "shape": "cross",
+          "size": 9,
+          "unit": "px",
+          "stroke": "fg",
+          "strokeWidth": 1.3,
+          "fill": null
+         }
+        ]
+       }
+      },
+      {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "h1",
+          "type": "hatchFill",
+          "angle": 30,
+          "spacing": 1.5,
+          "width": 0,
+          "color": "fg",
+          "unit": "m"
+         }
+        ]
+       }
+      }
+     ],
+     "refs": [],
+     "colors": [
+      "fg"
+     ],
+     "assets": {}
+    },
+    "objects": [
+     4,
+     0,
+     0,
+     0,
+     4,
+     0,
+     0,
+     0,
+     4,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     2,
+     1,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0
+    ],
+    "table": {
+     "texts": "ArsaYolAğaç",
+     "lens": [
+      4,
+      3,
+      4,
+      -1,
+      -1,
+      -1
+     ],
+     "numbers": []
+    },
+    "batches": [
+     {
+      "kind": "fill",
+      "positions": [
+       25,
+       8,
+       25,
+       0,
+       35,
+       0,
+       35,
+       0,
+       35,
+       8,
+       25,
+       8
+      ],
+      "paint": {
+       "kind": "hatch",
+       "color": [
+        0.8941176470588236,
+        0.9176470588235294,
+        0.9411764705882353,
+        1
+       ],
+       "angle": 0.5235987755982988,
+       "spacing": 1.5,
+       "width": 0,
+       "offset": 0,
+       "dash": null,
+       "dashOffset": 0,
+       "unit": "world"
+      },
+      "bounds": [
+       25,
+       0,
+       35,
+       8
+      ],
+      "reach": 0,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "stroke",
+      "segments": [
+       0,
+       20,
+       30,
+       20,
+       0,
+       1,
+       30,
+       20,
+       30,
+       35,
+       30,
+       2
+      ],
+      "color": [
+       0.8823529411764706,
+       0.3411764705882353,
+       0.34901960784313724,
+       1
+      ],
+      "width": 0.25,
+      "unit": "world",
+      "dash": [
+       1.5,
+       0.75
+      ],
+      "dashOffset": 0,
+      "cap": "butt",
+      "blur": 0,
+      "bounds": [
+       0,
+       20,
+       30,
+       35
+      ],
+      "reach": 1.125,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "marker",
+      "instances": [
+       0,
+       20,
+       0,
+       1,
+       1,
+       5,
+       20,
+       0,
+       1,
+       1,
+       10,
+       20,
+       0,
+       1,
+       1,
+       15,
+       20,
+       0,
+       1,
+       1,
+       20,
+       20,
+       0,
+       1,
+       1,
+       25,
+       20,
+       0,
+       1,
+       1,
+       30,
+       20,
+       1.5707964,
+       1,
+       1,
+       30,
+       25,
+       1.5707964,
+       1,
+       1,
+       30,
+       30,
+       1.5707964,
+       1,
+       1,
+       30,
+       35,
+       1.5707964,
+       1,
+       1
+      ],
+      "unit": "world",
+      "look": {
+       "kind": "shape",
+       "shape": "arrowhead",
+       "fill": [
+        0.8823529411764706,
+        0.3411764705882353,
+        0.34901960784313724,
+        1
+       ],
+       "stroke": null,
+       "strokeWidth": 0,
+       "params": [
+        0,
+        12,
+        3.141592653589793,
+        0.2
+       ]
+      },
+      "offset": [
+       0,
+       0
+      ],
+      "anchor": [
+       0,
+       0
+      ],
+      "opacity": 1,
+      "extent": [
+       1,
+       1
+      ],
+      "bounds": [
+       0,
+       20,
+       30,
+       35
+      ],
+      "reach": 3.5,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "stroke",
+      "segments": [
+       0,
+       -4.25,
+       0,
+       -2.25,
+       0,
+       3,
+       20,
+       -4.25,
+       20,
+       -2.25,
+       0,
+       3,
+       0,
+       -3,
+       20,
+       -3,
+       0,
+       3,
+       -0.31819806,
+       -3.318198,
+       0.31819806,
+       -2.681802,
+       0,
+       3,
+       19.681803,
+       -3.318198,
+       20.318197,
+       -2.681802,
+       0,
+       3
+      ],
+      "color": [
+       0.8941176470588236,
+       0.9176470588235294,
+       0.9411764705882353,
+       1
+      ],
+      "width": 0,
+      "unit": "px",
+      "dash": null,
+      "dashOffset": 0,
+      "cap": "butt",
+      "blur": 0,
+      "bounds": [
+       -0.31819805153645575,
+       -4.25,
+       20.318198051536456,
+       -2.25
+      ],
+      "reach": 1,
+      "reachUnit": "px"
+     },
+     {
+      "kind": "marker",
+      "instances": [
+       40,
+       10,
+       0,
+       0,
+       1.875
+      ],
+      "unit": "world",
+      "look": {
+       "kind": "image",
+       "image": {
+        "key": "t|T|sans|700|false|#E4EAF0|#151B22/0.167",
+        "kind": "text",
+        "text": "T",
+        "font": "Arial, \"Liberation Sans\", Arimo, Helvetica, sans-serif",
+        "weight": 700,
+        "italic": false,
+        "color": "#E4EAF0",
+        "halo": {
+         "color": "#151B22",
+         "width": 0.16666666666666666
+        }
+       },
+       "fit": "height"
+      },
+      "offset": [
+       0,
+       0
+      ],
+      "anchor": [
+       0,
+       0
+      ],
+      "opacity": 1,
+      "extent": [
+       0,
+       1.875
+      ],
+      "bounds": [
+       40,
+       10,
+       40,
+       10
+      ],
+      "reach": 4.8125,
+      "reachUnit": "world"
+     }
+    ]
+   }
   }
  ]
 }

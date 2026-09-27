@@ -1,10 +1,10 @@
 //! The styled drawing's shared WGSL and its layout contract
-//! (`shaders/wgsl/styled.layout.json`, docs/STYLE.md §6, docs/adr/0090):
-//! naga, the compiler wgpu runs, parses and validates the shared module and
-//! the desktop's (the atlas moved into group 0: Iced's device takes two bind
-//! groups); the uniforms, entry points, pipelines and vertex layouts the
-//! desktop builds are the contract's. The browser side is
-//! `scripts/wgsl/browser-check.mjs`.
+//! (`shaders/wgsl/styled.layout.json`, version 2, docs/STYLE.md §6,
+//! docs/adr/0090): naga, the compiler wgpu runs, parses and validates the
+//! shared module, which the desktop builds as it is (two bind groups: the
+//! frame with the atlas, then the style; Iced's device takes two); the
+//! uniforms, entry points, pipelines and vertex layouts the desktop builds are
+//! the contract's. The browser side is `scripts/wgsl/browser-check.mjs`.
 
 use std::collections::BTreeMap;
 use std::mem::size_of;
@@ -19,6 +19,7 @@ use serde::Deserialize;
 #[serde(rename_all = "camelCase")]
 struct Contract {
     format: String,
+    version: u32,
     module: String,
     sources: Vec<String>,
     bind_groups: Vec<BindGroup>,
@@ -108,29 +109,27 @@ fn validate(source: &str) -> naga::Module {
 }
 
 #[test]
-fn the_shared_and_the_desktop_module_validate() {
+fn the_shared_module_validates_and_the_desktop_builds_it_as_it_is() {
     let c = contract();
     assert_eq!(
-        (c.format.as_str(), c.module.as_str()),
-        ("kentos.wgsl-layout", "styled")
+        (c.format.as_str(), c.version, c.module.as_str()),
+        ("kentos.wgsl-layout", 2, "styled")
     );
-    let shared = validate(&shader::shared_source());
-    let desktop = validate(&shader::source());
-    for module in [&shared, &desktop] {
-        for p in &c.pipelines {
-            for (name, stage) in [
-                (&p.vertex, naga::ShaderStage::Vertex),
-                (&p.fragment, naga::ShaderStage::Fragment),
-            ] {
-                assert!(
-                    module
-                        .entry_points
-                        .iter()
-                        .any(|e| &e.name == name && e.stage == stage),
-                    "{}: {name} ({stage:?})",
-                    p.name
-                );
-            }
+    assert_eq!(shader::source(), shader::shared_source());
+    let module = validate(&shader::shared_source());
+    for p in &c.pipelines {
+        for (name, stage) in [
+            (&p.vertex, naga::ShaderStage::Vertex),
+            (&p.fragment, naga::ShaderStage::Fragment),
+        ] {
+            assert!(
+                module
+                    .entry_points
+                    .iter()
+                    .any(|e| &e.name == name && e.stage == stage),
+                "{}: {name} ({stage:?})",
+                p.name
+            );
         }
     }
 }
@@ -160,7 +159,6 @@ fn binding(module: &naga::Module, name: &str) -> Option<naga::ResourceBinding> {
 fn the_bindings_are_the_contract_s_with_the_atlas_beside_the_frame() {
     let c = contract();
     let shared = validate(&shader::shared_source());
-    let desktop = validate(&shader::source());
     for group in &c.bind_groups {
         for b in &group.bindings {
             assert_eq!(
@@ -169,27 +167,20 @@ fn the_bindings_are_the_contract_s_with_the_atlas_beside_the_frame() {
                     group: group.group,
                     binding: b.binding
                 }),
-                "shared: {}",
-                b.name
-            );
-            // The desktop: the frame's group takes the atlas (texture 1, sampler 2).
-            let moved = match (group.group, b.binding) {
-                (2, k) => (0, k + 1),
-                other => other,
-            };
-            assert_eq!(
-                binding(&desktop, &b.name),
-                Some(naga::ResourceBinding {
-                    group: moved.0,
-                    binding: moved.1
-                }),
-                "desktop: {}",
+                "{}",
                 b.name
             );
         }
     }
+    // The frame, the atlas texture and its sampler in group 0; the style in group 1:
+    // two groups, all Iced's device takes.
+    let at = |name: &str| binding(&shared, name).map(|b| (b.group, b.binding));
+    assert_eq!(at("frame"), Some((0, 0)));
+    assert_eq!(at("atlasTex"), Some((0, 1)));
+    assert_eq!(at("atlasSmp"), Some((0, 2)));
+    assert_eq!(at("st"), Some((1, 0)));
     assert!(
-        desktop
+        shared
             .global_variables
             .iter()
             .all(|(_, g)| g.binding.as_ref().is_none_or(|b| b.group < 2))

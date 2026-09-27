@@ -1,7 +1,9 @@
 //! The style engine on the desktop (docs/STYLE.md, docs/adr/0090): the
 //! style library the drawing and the style windows read, the drawing's
-//! styled layers for the drawing area (`scene.rs`), and the pictures the
-//! GPU atlas draws its images from (`images.rs`, `svg.rs`).
+//! styled layers for the drawing area (`scene.rs`), the pictures the GPU
+//! atlas draws its images from (`images.rs`, `svg.rs`), symbol pictures for
+//! the windows (`thumbs.rs`) and the Katman stili window (`layer_style/`,
+//! docs/adr/0091).
 //!
 //! The library holds the system symbols that ship with KentOS, the user's
 //! own and the open project's (`ProjectStyles` in the drawing, so everyone
@@ -9,12 +11,14 @@
 //! (`style/library.ts`).
 
 pub mod images;
+pub mod layer_style;
 #[cfg(test)]
 mod perf;
 pub mod scene;
 #[cfg(test)]
 mod screens;
 pub mod svg;
+pub mod thumbs;
 
 use std::sync::Arc;
 
@@ -26,6 +30,10 @@ pub struct Styles {
     pub library: StyleLibrary,
     /// The atlas's pictures, shared with the drawing area's frames.
     pub images: Arc<images::Images>,
+    /// The symbol pictures of the style windows.
+    pub thumbs: thumbs::Thumbs,
+    /// The open Katman stili window.
+    pub layer_style: Option<layer_style::LayerStyleWindow>,
     /// The project styles last loaded, so an unchanged drawing is not read again.
     project: Option<ProjectStyles>,
 }
@@ -50,6 +58,8 @@ impl Styles {
         Styles {
             library: kentos_native_style::system::library(),
             images: Arc::new(images::Images::new()),
+            thumbs: thumbs::Thumbs::default(),
+            layer_style: None,
             project: None,
         }
     }

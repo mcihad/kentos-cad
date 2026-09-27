@@ -732,6 +732,10 @@ impl App {
             Some(Dialog::Exchange) => self.exchange = None,
             Some(Dialog::Project) => self.project = None,
             Some(Dialog::Processing) => self.processing.dialog = None,
+            // With changes not applied, Katman stili asks first (style/layer_style/).
+            Some(Dialog::LayerStyle) if !self.layer_style_may_close() => {
+                self.dialog = Some(Dialog::LayerStyle);
+            }
             _ => {}
         }
     }

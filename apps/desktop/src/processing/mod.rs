@@ -52,8 +52,8 @@ pub struct Processing {
     pub memory: memory::Memory,
     /// The open window.
     pub dialog: Option<ToolDialog>,
-    /// The window put away while a point is shown on the drawing, and the parameter it is for.
-    picking: Option<(ToolDialog, String)>,
+    /// The window put away while its field is picked on the drawing (Sahneden seç).
+    picking: Option<Picking>,
     /// The dock's İşlemler tab.
     pub panel: panel::PanelState,
 }
@@ -69,6 +69,22 @@ impl Default for Processing {
             panel: panel::PanelState::default(),
         }
     }
+}
+
+/// A field picked on the drawing while its window steps aside (docs/adr/0088).
+enum Picking {
+    /// A point parameter's point; `then`: the choice and option it also chooses.
+    Point {
+        window: ToolDialog,
+        name: String,
+        then: Option<(String, String)>,
+    },
+    /// A features parameter's objects; the selection before, back on Esc.
+    Objects {
+        window: ToolDialog,
+        name: String,
+        before: Vec<Slot>,
+    },
 }
 
 /// What the window asks for.
@@ -96,8 +112,13 @@ pub enum Event {
     Kind(String, String),
     /// Text put at the end of an expression (a field, a variable, a function).
     Insert(String, String),
-    /// Haritadan göster for a point parameter.
+    /// Sahneden seç for a point parameter.
     Pick(String),
+    /// Sahneden seç beside a choice one of whose options is a picked point
+    /// (the numbering's start vertex).
+    PickChoice(String),
+    /// Sahneden seç for a features parameter's objects.
+    PickObjects(String),
     /// Sonuçları seç, or Seçime yakınlaştır after a selecting tool.
     Results,
     /// Geri al after a run.
@@ -255,7 +276,24 @@ impl App {
                 }
             }
             Event::Pick(name) => {
-                self.processing_pick(name);
+                self.processing_pick(name, None);
+                return Task::none();
+            }
+            Event::PickChoice(name) => {
+                let picks = self.processing.dialog.as_ref().and_then(|w| {
+                    w.tool
+                        .parameters
+                        .iter()
+                        .find(|p| p.name == name)
+                        .and_then(|p| p.picks.clone())
+                });
+                if let Some((option, point)) = picks {
+                    self.processing_pick(point, Some((name, option)));
+                }
+                return Task::none();
+            }
+            Event::PickObjects(name) => {
+                self.processing_pick_objects(name);
                 return Task::none();
             }
             Event::Panel(e) => {
@@ -376,9 +414,10 @@ impl App {
         }
     }
 
-    /// Haritadan göster: the window steps aside while a point is shown on
-    /// the drawing, then opens again with it (the web's `pickPoint`).
-    fn processing_pick(&mut self, name: String) {
+    /// Sahneden seç: the window steps aside while a point is picked on the
+    /// drawing (snaps apply), then opens again with it (the web's
+    /// `pickPoint`); `then` chooses a choice's option with it.
+    fn processing_pick(&mut self, name: String, then: Option<(String, String)>) {
         let Some(window) = self.processing.dialog.take() else {
             return;
         };
@@ -389,7 +428,7 @@ impl App {
             .find(|p| p.name == name)
             .map_or_else(|| name.clone(), |p| p.label.clone());
         self.say(Level::Command, format!("{}: {label}", window.tool.label));
-        self.processing.picking = Some((window, name));
+        self.processing.picking = Some(Picking::Point { window, name, then });
         self.dialog = None;
         self.field = None;
         self.snap = None;
@@ -397,10 +436,55 @@ impl App {
         self.with_tool(|s, cx| s.activate(cx));
     }
 
+    /// Sahneden seç for input objects: the window steps aside, the objects
+    /// are picked on the drawing (the field's kinds only), and Enter brings
+    /// the window back with them as its selection; Esc as it was.
+    fn processing_pick_objects(&mut self, name: String) {
+        let Some(window) = self.processing.dialog.take() else {
+            return;
+        };
+        let Some(def) = window.tool.parameters.iter().find(|p| p.name == name) else {
+            self.processing.dialog = Some(window);
+            return;
+        };
+        // The kinds the field takes, narrowed to the kinds chosen with its chips.
+        let taken: Option<Vec<String>> = match &def.kind {
+            kentos_processing::ParamKind::Features { kinds, .. } => kinds.clone(),
+            _ => None,
+        };
+        let chosen = kentos_processing::values::FeaturesValue::read(
+            window.values.get(&name).unwrap_or(&Value::Null),
+        )
+        .and_then(|v| v.kinds);
+        let kinds = chosen.or(taken);
+        let label = def.label.clone();
+        self.say(Level::Command, format!("{}: {label}", window.tool.label));
+        let before: Vec<Slot> = self.selection.ids().to_vec();
+        // A fresh pick: what was selected comes back on Esc.
+        self.selection.clear();
+        self.processing.picking = Some(Picking::Objects {
+            window,
+            name,
+            before,
+        });
+        self.dialog = None;
+        self.field = None;
+        self.snap = None;
+        self.session.run(Box::new(
+            kentos_interaction::pick_objects::PickObjects::new(label, kinds),
+        ));
+        self.with_tool(|s, cx| s.activate(cx));
+    }
+
     /// The point shown, or none (Esc): the window opens again as it was.
     /// Returns false when no processing window was waiting for it.
     pub(crate) fn processing_picked(&mut self, p: Option<Vec2>) -> bool {
-        let Some((mut window, name)) = self.processing.picking.take() else {
+        let Some(Picking::Point {
+            mut window,
+            name,
+            then,
+        }) = self.processing.picking.take()
+        else {
             return false;
         };
         if let Some(p) = p {
@@ -408,6 +492,49 @@ impl App {
                 .values
                 .insert(name.clone(), json!({ "x": p.x, "y": p.y }));
             window.touch(&name);
+            // The choice whose option the pick gives (the numbering's start vertex).
+            if let Some((choice, option)) = then {
+                window.values.insert(choice.clone(), json!(option));
+                window.touch(&choice);
+            }
+        }
+        self.processing.dialog = Some(window);
+        self.dialog = Some(Dialog::Processing);
+        self.refresh_processing();
+        true
+    }
+
+    /// The objects picked (kept) or not (Esc): the window opens again, its
+    /// field on the selection that holds them. Returns false when no
+    /// processing window was waiting for them.
+    pub(crate) fn processing_picked_objects(&mut self, keep: bool) -> bool {
+        let Some(Picking::Objects {
+            mut window,
+            name,
+            before,
+        }) = self.processing.picking.take()
+        else {
+            return false;
+        };
+        if keep && !self.selection.is_empty() {
+            // Its kinds stay as they were chosen; the scope is the selection.
+            let mut value = json!({ "scope": "selection" });
+            if let Some(kinds) = window
+                .values
+                .get(&name)
+                .and_then(|v| v.get("kinds"))
+                .cloned()
+            {
+                value["kinds"] = kinds;
+            }
+            window.values.insert(name.clone(), value);
+            window.touch(&name);
+            self.say(
+                Level::Info,
+                format!("{} nesne seçildi.", self.selection.len()),
+            );
+        } else {
+            self.selection.set(before);
         }
         self.processing.dialog = Some(window);
         self.dialog = Some(Dialog::Processing);

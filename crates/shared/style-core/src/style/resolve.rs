@@ -87,8 +87,11 @@ pub fn resolve_renderer<'a>(renderer: &'a Renderer, t: &dyn Values) -> Vec<Resol
             other,
         } => {
             let v = expr.and_then(|e| t.text(e)).unwrap_or_default();
-            match categories.iter().find(|c| c.enabled && c.value == v) {
-                Some(c) => one(&c.symbols),
+            // The first category of the value takes the object; switched off, it
+            // draws nothing (as in QGIS). The others take only values no category holds.
+            match categories.iter().find(|c| c.value == v) {
+                Some(c) if c.enabled => one(&c.symbols),
+                Some(_) => Vec::new(),
                 None => other.as_ref().map_or_else(Vec::new, one),
             }
         }

@@ -74,14 +74,14 @@
     },
     "commandsWithoutPlace": [],
     "commandsWithoutTests": 52,
-    "commandsOnDesktop": 137,
+    "commandsOnDesktop": 138,
     "desktop": {
       "commands": {
         "total": 167,
-        "implemented": 137,
+        "implemented": 138,
         "partial": 0,
         "pending": 0,
-        "none": 30,
+        "none": 29,
         "n/a": 0
       },
       "tools": {
@@ -2538,7 +2538,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/scripts/e2e/layout.mjs",

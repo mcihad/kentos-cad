@@ -389,15 +389,15 @@ impl App {
                 .submenu("Renk", self.layer_colors(node))
                 .submenu("Çizgi tipi", types)
                 .submenu("Kalınlık", weights)
-                // The style dialog is not on the desktop yet: shown, dimmed.
                 .item(
                     if style.renderer.is_some() {
                         "Katman stili… (özel)"
                     } else {
                         "Katman stili…"
                     },
-                    None,
+                    Message::LayerStyle(crate::style::layer_style::Event::Open(Some(id.clone()))),
                 )
+                .icon(crate::icons::from_web(Some("layerStyle")))
                 .separator();
         }
         menu.item("Yeniden adlandır", event(Event::Rename(id.clone())))

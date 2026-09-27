@@ -134,6 +134,82 @@ fn a_start_point_is_shown_on_the_drawing_and_the_window_comes_back_with_it() {
     );
 }
 
+fn key(app: &mut App, named: iced::keyboard::key::Named) {
+    use iced::keyboard::key::{NativeCode, Physical};
+    let _ = app.update(Message::Key(crate::keys::KeyPress {
+        key: iced::keyboard::Key::Named(named),
+        physical: Physical::Unidentified(NativeCode::Unidentified),
+        modifiers: iced::keyboard::Modifiers::default(),
+        text: None,
+        repeat: false,
+    }));
+}
+
+#[test]
+fn the_start_vertex_is_picked_on_the_drawing_from_beside_its_choice() {
+    let mut app = app_with_parcels();
+    app.selection.set([Slot(1)]);
+    let _ = app.update(Message::Run("processing.run.points.numberVertices"));
+    // Sahneden seç beside Başlangıç köşesi: the point, and the choice it gives.
+    event(&mut app, Event::PickChoice("start".into()));
+    assert_eq!(app.dialog, None, "the window steps aside");
+    assert_eq!(
+        app.session.prompt().text(),
+        "Başlangıç noktası: haritada bir nokta gösterin ya da Y,X yazın [Vazgeç (Esc)]"
+    );
+    let _ = app.submit_line("487010,4420010");
+    let window = app.processing.dialog.as_ref().expect("back");
+    assert_eq!(window.values.get("start"), Some(&json!("point")));
+    assert_eq!(
+        window.values.get("startPoint"),
+        Some(&json!({ "x": 487010.0, "y": 4420010.0 }))
+    );
+    // Esc: nothing changes.
+    event(&mut app, Event::Value("start".into(), json!("north")));
+    event(&mut app, Event::PickChoice("start".into()));
+    key(&mut app, iced::keyboard::key::Named::Escape);
+    let window = app.processing.dialog.as_ref().expect("back");
+    assert_eq!(window.values.get("start"), Some(&json!("north")));
+}
+
+#[test]
+fn input_objects_are_picked_on_the_drawing_of_the_fields_kinds() {
+    use crate::selecting::tests::{click, objects};
+    use iced::keyboard::key::Named;
+
+    let mut app = objects();
+    app.selection.set([Slot(1)]);
+    let _ = app.update(Message::Run("processing.run.points.numberVertices"));
+    event(&mut app, Event::PickObjects("input".into()));
+    assert_eq!(app.dialog, None, "the window steps aside");
+    assert!(app.selection.is_empty(), "a fresh pick");
+    assert_eq!(
+        app.session.prompt().text(),
+        "Alanlar: nesneleri tıklayın ya da pencereyle seçin (0 seçili) [Bitti (Enter) / Vazgeç (Esc)]"
+    );
+    // A point is not an area: taken neither by a click nor by a box.
+    click(&mut app, 20.0, -8.0);
+    assert!(app.selection.is_empty());
+    // The parcel inside.
+    click(&mut app, -18.0, 9.0);
+    assert_eq!(app.selection.ids(), &[Slot(4)]);
+    assert!(app.session.prompt().text().contains("(1 seçili)"));
+    key(&mut app, Named::Enter);
+    let window = app.processing.dialog.as_ref().expect("back");
+    assert_eq!(
+        window.values.get("input"),
+        Some(&json!({ "scope": "selection" }))
+    );
+    assert_eq!(app.selection.ids(), &[Slot(4)]);
+    // Esc: the selection as it was.
+    event(&mut app, Event::PickObjects("input".into()));
+    click(&mut app, -18.0, 9.0);
+    click(&mut app, -18.0, 9.0);
+    key(&mut app, Named::Escape);
+    assert!(app.processing.dialog.is_some());
+    assert_eq!(app.selection.ids(), &[Slot(4)], "back as it was");
+}
+
 #[test]
 fn an_alias_on_the_command_line_opens_the_tool_and_last_values_come_back() {
     let mut app = app_with_parcels();

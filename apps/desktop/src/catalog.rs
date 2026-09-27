@@ -217,6 +217,8 @@ pub const PORTED: &[&str] = &[
     "view.lineWeights",
     "view.symbols.plot",
     "view.symbols.screen",
+    // Katman stili: the active layer's renderer (docs/adr/0091).
+    "style.layerStyle",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the
