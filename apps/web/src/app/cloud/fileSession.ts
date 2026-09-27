@@ -2,11 +2,12 @@ import type { FileCommitted } from '../../contracts/generated/FileCommitted';
 import type { ProjectInfo } from '../../contracts/generated/ProjectInfo';
 import { replaceDrawing } from '../fileIO';
 import type { NewerRevision } from './fileProject';
+import { newerLine } from './fileRevisionsPlan';
 import { readProject } from './incoming';
 import type { CloudSession, Progress, UploadCatalog } from './session';
 import { commitEnvelope, sizeText, verifyDownload } from './transfer';
 import { again } from './upload';
-import { UploadFailed, createInput, sendDrawing, type FileStage } from './uploading';
+import { createInput, failedUpload, sendDrawing, type FileStage } from './uploading';
 
 export type { FileStage } from './uploading';
 
@@ -20,14 +21,9 @@ export type { FileStage } from './uploading';
  * revision read whole, and the project is attached at that revision.
  */
 
-/** Someone else saved a newer revision of the open file project: said, never loaded by itself. */
-export function newerText(name: string, newer: NewerRevision, base: string): string {
-  return `“${name}” başka bir yerde kaydedildi: revizyon ${newer.revision}${newer.by ? ` (${newer.by})` : ''}. Açık çizimin dayandığı revizyon: ${base}; yeni revizyonu açmak için durum çubuğundaki kayıt durumuna tıklayın. Kendiliğinden yeniden yüklenmez.`;
-}
-
-/** The notice of a newer revision for the project `info` (the log; the status bar offers to open it). */
+/** The notice of a newer revision for the project `info` (the log, fileRevisionsPlan.ts `newerLine`; the status bar offers it). */
 function noticeNewer(s: CloudSession, info: ProjectInfo) {
-  return (newer: NewerRevision) => s.ctx.log.warn(newerText(info.name, newer, s.file.value?.base.value ?? '?'));
+  return (newer: NewerRevision) => s.ctx.log.warn(newerLine(info.name, newer, s.file.value?.base.value ?? '?', s.ctx.doc.dirty.value));
 }
 
 /**
@@ -84,23 +80,44 @@ export async function openFileProject(s: CloudSession, info: ProjectInfo, progre
  * Makes the drawing on screen a new file project in `tenantId` named
  * `name`: the project is created (`storage: file`), the drawing's `.kcad`
  * uploaded and committed as revision 1 on "0", and the project attached.
- * A failure after the project was created is `UploadFailed` (it stays
- * empty; the drawing stays local, under its own name).
+ * `key`: the upload's idempotency key; the same upload tried again passes
+ * the same one, and finds the project it made (and its revision 1, when an
+ * earlier try wrote it and its answer was lost). A failure after the
+ * project was created is `UploadFailed`: refused for good the empty project
+ * goes to the trash, with no answer it is kept (uploading.ts
+ * `failedUpload`); the drawing stays local, under its own name.
  */
-export async function uploadAsFileProject(s: CloudSession, tenantId: string, name: string, progress: Progress, catalog: UploadCatalog, stage?: (s: FileStage) => void): Promise<boolean> {
+export async function uploadAsFileProject(
+  s: CloudSession,
+  tenantId: string,
+  name: string,
+  progress: Progress,
+  catalog: UploadCatalog,
+  stage?: (s: FileStage) => void,
+  key: string = crypto.randomUUID(),
+): Promise<boolean> {
   const { ctx, api } = s;
   const doc = ctx.doc;
   // The drawing becomes the new project: the previous cloud project is left first (its changes sent).
   await s.sync.value?.flush().catch(() => false);
   s.detach();
   stage?.('creating');
-  const key = crypto.randomUUID();
   const info = await again(() => api.createProject(tenantId, createInput(doc, name, catalog, 'file'), key));
   const target = { tenantId, projectId: info.id };
   // The revision holds the project's name; the drawing takes it back if the upload fails.
   const before = doc.name.value;
   if (before !== name) doc.applyExternal({ meta: { name } });
   try {
+    // An earlier try of this upload wrote revision 1, its answer lost: the drawing (unchanged behind the window) is it.
+    const revs = await again(() => api.fileRevisions(tenantId, info.id));
+    const written = revs.current ? revs.revisions.find((r) => r.revision === revs.current) : undefined;
+    if (revs.current) {
+      const file = s.attachFile({ ...info, name }, revs.current, info.eventCursor, noticeNewer(s, { ...info, name }));
+      if (written) file.lastSaved.set({ revision: written.revision, at: Date.now(), sha256: written.sha256, size: written.size });
+      doc.markSaved(doc.revision);
+      ctx.log.success(`“${name}” buluta dosya olarak kaydedildi: revizyon ${revs.current}${written ? `, ${sizeText(written.size)}` : ''}. Bundan sonra Kaydet (Ctrl+S) yeni bir revizyon yazar; kendiliğinden kaydedilmez.`);
+      return true;
+    }
     const sent = await sendDrawing(api, doc, () => ctx.files.kcad(), target, { stage, progress, warn: (t) => ctx.log.warn(t), part: s.uploadPart });
     const envelope = commitEnvelope(target, sent.upload.id, '0');
     const done = await again(() => api.lifecycle<FileCommitted>(envelope));
@@ -112,7 +129,7 @@ export async function uploadAsFileProject(s: CloudSession, tenantId: string, nam
     return true;
   } catch (e) {
     if (before !== name && doc.name.value === name && !doc.busy) doc.applyExternal({ meta: { name: before } });
-    throw new UploadFailed(info, e);
+    throw await failedUpload(api, info, e);
   }
 }
 

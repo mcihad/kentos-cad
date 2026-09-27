@@ -4,8 +4,9 @@ import { CadDocument } from '../../model/document';
 import { LayerStore } from '../../model/layers';
 import { snapshotSampleDocument } from '../../model/snapshotSample';
 import { RecoveryCopies, type RecoveryCopy, type RecoveryStore } from '../recovery';
+import { ApiFailure } from './api';
 import { bytesOf, cloudSetup } from './cloudTesting';
-import { UploadFailed } from './uploading';
+import { UploadFailed, failedUpload } from './uploading';
 
 /**
  * File projects and the import in the cloud session (docs/adr/0031, 0036,
@@ -74,8 +75,25 @@ describe.skipIf(!formatsBuilt)('file projects in the cloud session (docs/adr/003
     // Time for a reload that must not come.
     await new Promise((r) => setTimeout(r, 150));
     const file = session.file.value!;
-    expect([file.newer.value, file.base.value, file.state.value, doc.size, doc.revision]).toEqual([{ revision: '2', by: 'Mehmet Demir' }, '1', 'outdated', before.size, before.revision]);
-    expect(messages.filter((m) => m.includes('başka bir yerde kaydedildi'))).toEqual([expect.stringMatching(/revizyon 2 \(Mehmet Demir\)\. Açık çizimin dayandığı revizyon: 1; .*Kendiliğinden yeniden yüklenmez\.$/)]);
+    expect([file.newer.value, file.base.value, file.state.value, doc.size, doc.revision]).toEqual([{ revision: '2', by: 'Mehmet Demir', at: '2026-09-26T11:00:00Z' }, '1', 'outdated', before.size, before.revision]);
+    expect(messages.filter((m) => m.includes('başka bir yerde kaydedildi'))).toEqual([expect.stringMatching(/revizyon 2 \(Mehmet Demir, \d\d\.\d\d\.\d{4} \d\d:\d\d\)\. Açık çizimin dayandığı revizyon: 1; yeni revizyonu açmak için .*Kendiliğinden yeniden yüklenmez\.$/)]);
+  });
+
+  it('a resync on the open file project asks the server and follows again; the drawing is not opened again (docs/specs/file-revisions.md)', async () => {
+    const { session, server, doc, sockets, messages } = setup();
+    expect(await session.uploadFile('t', 'Ada', undefined, {})).toBe(true);
+    doc.add(point(486557));
+    const before = { size: doc.size, revision: doc.revision };
+    // Missed while the channel could not replay: someone else's revision.
+    await server.files.commitAs(await bytesOf(emptyDoc()), 'Mehmet Demir');
+    const socket = sockets.made.at(-1)!;
+    socket.o.onResync();
+    for (let i = 0; i < 50 && socket.reconnects === 0; i++) await new Promise((r) => setTimeout(r, 5));
+    const file = session.file.value!;
+    expect([socket.reconnects, file.cursor, file.base.value, file.newer.value?.revision, file.state.value]).toEqual([1, String(server.history.length), '1', '2', 'outdated']);
+    expect([doc.size, doc.revision, doc.dirty.value]).toEqual([before.size, before.revision, true]);
+    expect(messages.some((m) => m.includes('yeniden açılıyor'))).toBe(false);
+    expect(messages.filter((m) => m.includes('başka bir yerde kaydedildi'))).toEqual([expect.stringMatching(/revizyon 2 .*kaydedilmemiş değişiklikleriniz Kaydet ile bu revizyonun üzerine yazılamaz\./)]);
   });
 
   it('a download that changed on the way never becomes the drawing', async () => {
@@ -127,15 +145,55 @@ describe.skipIf(!formatsBuilt)('a new database project filled by one import (doc
     expect(server.store.size).toBe(doc.size);
   });
 
-  it('an import refused by one object leaves the new project empty and the drawing local, and says which object', async () => {
+  it('an import refused by one object leaves no project behind (the empty one goes to the trash); the drawing stays local, and the object is named', async () => {
     const { session, server, doc } = setup();
     doc.add(point(486501));
     server.files.refuseImportAt = 13;
     const e = await session.upload('t', 'Ada 101', undefined, {}).catch((x: unknown) => x);
     expect(e).toBeInstanceOf(UploadFailed);
     const failed = e as UploadFailed;
-    expect([failed.refused, failed.project.id, failed.message]).toEqual([{ index: 13, path: 'entities[13]' }, 'p', 'Dosyanın 14. nesnesi içe aktarılamadı: koordinat ±1 000 000 000 sınırının dışında.']);
-    expect([server.store.size, session.project.value, doc.dirty.value, doc.name.value]).toEqual([0, null, true, 'Örnek pafta.kcad']);
+    expect([failed.refused, failed.project.id, failed.message, failed.left]).toEqual([{ index: 13, path: 'entities[13]' }, 'p', 'Dosyanın 14. nesnesi içe aktarılamadı: koordinat ±1 000 000 000 sınırının dışında.', 'trashed']);
+    expect([server.store.size, server.deleted, server.lifecycleLog.at(-1)?.commandName]).toEqual([0, true, 'project.trash']);
+    expect([session.project.value, doc.dirty.value, doc.name.value]).toEqual([null, true, 'Örnek pafta.kcad']);
+  });
+
+  it('a file project’s revision refused for good leaves no project behind either; the drawing keeps its own name', async () => {
+    const { session, server, doc } = setup();
+    doc.add(point(486501));
+    const real = server.lifecycle;
+    server.lifecycle = (async (envelope: Parameters<typeof real>[0]) => {
+      if (envelope.commandName === 'project.file.commit') throw new ApiFailure(422, { error: 'invalid', message: 'Dosya KCAD v2 olarak okunamadı.' }, 'Geçersiz istek.');
+      return real(envelope);
+    }) as typeof real;
+    const e = (await session.uploadFile('t', 'Ada 101 (dosya)', undefined, {}).catch((x: unknown) => x)) as UploadFailed;
+    expect([e instanceof UploadFailed, e.left, server.deleted, server.files.revisions.length]).toEqual([true, 'trashed', true, 0]);
+    expect([session.project.value, doc.dirty.value, doc.name.value]).toEqual([null, true, 'Örnek pafta.kcad']);
+  });
+
+  it('no answer from the server: the new project is kept for the same upload tried again; a trash that does not go through keeps it too', async () => {
+    const { server } = setup();
+    const info = await server.project();
+    const lost = await failedUpload(server, info, new ApiFailure(0, { error: 'network' }, 'Sunucuya ulaşılamadı.'));
+    expect([lost.left, server.deleted, server.lifecycleLog.length]).toEqual(['kept', false, 0]);
+    server.offline = true;
+    const unreachable = await failedUpload(server, info, new ApiFailure(422, { error: 'invalid', message: 'Geçersiz.' }, 'Geçersiz istek.'), [1, 1]);
+    expect([unreachable.left, server.deleted]).toEqual(['kept', false]);
+  });
+
+  it('the same upload tried again (its key) finds its project and what an earlier try put in it: nothing is sent twice', async () => {
+    const database = setup();
+    expect(await database.session.upload('t', 'Ada 101', undefined, {}, undefined, 'ayni-yukleme')).toBe(true);
+    // The first try's answer is taken as lost: the window tries again with the same key.
+    database.session.detach();
+    expect(await database.session.upload('t', 'Ada 101', undefined, {}, undefined, 'ayni-yukleme')).toBe(true);
+    const imports = database.server.lifecycleLog.filter((e) => e.commandName === 'project.import').length;
+    expect([imports, database.session.project.value?.storage, database.doc.dirty.value]).toEqual([1, 'database', false]);
+
+    const file = setup();
+    expect(await file.session.uploadFile('t', 'Ada 101 (dosya)', undefined, {}, undefined, 'ayni-dosya')).toBe(true);
+    file.session.detach();
+    expect(await file.session.uploadFile('t', 'Ada 101 (dosya)', undefined, {}, undefined, 'ayni-dosya')).toBe(true);
+    expect([file.server.files.commits, file.session.file.value?.base.value, file.doc.dirty.value]).toEqual([1, '1', false]);
   });
 
   it('a drawing changed while it goes up: the project holds it as it went; the drawing stays local, unattached, and says so', async () => {

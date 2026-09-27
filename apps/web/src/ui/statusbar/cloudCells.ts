@@ -25,6 +25,7 @@ const fileSaveOf = (f: FileProjectSave): FileSave => ({
   progress: f.progress.value,
   conflictActual: f.conflict.value?.actual ?? null,
   newerRevision: f.newer.value?.revision ?? null,
+  dirty: f.revisions.dirty,
 });
 
 /** The open file project's Kaydet state in words (the app menu uses it too). */
@@ -71,7 +72,7 @@ export function saveCell(ctx: AppContext, d: DisposableStore): HTMLElement {
   d.add(
     ctx.cloud.file.subscribe((file) => {
       drop();
-      if (file) per = [file.state.subscribe(render), file.progress.subscribe(render), file.base.subscribe(render), file.newer.subscribe(render)];
+      if (file) per = [file.state.subscribe(render), file.progress.subscribe(render), file.base.subscribe(render), file.newer.subscribe(render), file.pending.subscribe(render)];
       render();
     }, true),
   );

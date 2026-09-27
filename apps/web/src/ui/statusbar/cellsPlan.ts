@@ -1,4 +1,5 @@
 import type { FileSaveState } from '../../app/cloud/fileProject';
+import { newerTip, type NewerRevision } from '../../app/cloud/fileRevisionsPlan';
 import type { LinkState } from '../../app/cloud/socket';
 import type { SaveState } from '../../app/cloud/syncCore';
 import type { ServerState } from '../../app/server';
@@ -35,6 +36,8 @@ export interface FileSave {
   conflictActual: string | null;
   /** A newer revision on the server the drawing is not based on. */
   newerRevision: string | null;
+  /** The drawing has unsaved changes (what a newer revision says over them; absent: none). */
+  dirty?: boolean;
 }
 
 export type SaveCellInput = { kind: 'none' } | DatabaseSave | FileSave;
@@ -62,7 +65,8 @@ export const FILE_SAVE_TEXT: Record<FileSaveState, (f: FileSave) => string> = {
   uploading: (f) => `Yükleniyor %${Math.round(f.progress * 100)}`,
   verifying: () => 'Sunucu doğruluyor…',
   conflict: (f) => `Çakışma: r${f.conflictActual ?? '?'} kaydedilmiş`,
-  outdated: (f) => `Yeni revizyon: r${f.newerRevision ?? '?'}`,
+  // Over unsaved work too: Kaydet cannot write over it (docs/specs/file-revisions.md).
+  outdated: (f) => `Yeni revizyon: r${f.newerRevision ?? '?'}${f.dirty ? ' · kaydedilmedi' : ''}`,
   error: () => 'Kayıt hatası',
   readonly: () => 'Salt okunur',
   deleted: () => 'Proje silindi',
@@ -141,7 +145,8 @@ export function fileTip(t: {
   base: string;
   lastSaved: { revision: string; at: number } | null;
   now: number;
-  newer: { revision: string; by: string } | null;
+  /** A newer revision on the server: who saved it and when, as far as known (`at` absent: not known). */
+  newer: (Omit<NewerRevision, 'at'> & { at?: string | null }) | null;
   error: string;
   link: LinkState | 'none';
   /** The drawing has unsaved changes (kept here as a recovery copy too). */
@@ -154,7 +159,7 @@ export function fileTip(t: {
     t.base === '0' ? 'Projenin henüz revizyonu yok.' : `Çizimin dayandığı revizyon: ${t.base}.`,
     'Kendiliğinden kaydedilmez: Kaydet (Ctrl+S) yeni bir revizyon yazar; arada başkası kaydettiyse üzerine yazılmaz.',
     t.lastSaved ? `Bu pencerenin son kaydı: revizyon ${t.lastSaved.revision}, ${ago(t.lastSaved.at, t.now)}.` : '',
-    t.newer ? `Sunucuda daha yeni revizyon var: ${t.newer.revision}${t.newer.by ? ` (${t.newer.by})` : ''}; açmak için tıklayın.` : '',
+    t.newer ? newerTip({ ...t.newer, at: t.newer.at ?? null }, t.dirty) : '',
     t.error,
     link ? `Canlı bağlantı: ${link}.` : '',
     t.dirty ? 'Kaydedilmemiş değişiklikler bu cihazda kurtarma kopyası olarak da saklanıyor.' : '',

@@ -3,7 +3,7 @@ import { changesHistory, loadHistory } from '../../app/cloud/history';
 import type { ProjectDuplicated } from '../../contracts/generated/ProjectDuplicated';
 import type { ProjectSummary } from '../../contracts/generated/ProjectSummary';
 import { askRemove } from '../widgets/confirm';
-import type { HistoryActions, HistoryState } from './catalogHistory';
+import { drawingBaseOf, type HistoryActions, type HistoryState } from './catalogHistory';
 import type { DownloadRequest } from './downloads';
 import { openCheckpointDialog, openRestoreDialog, type HistoryTarget } from './HistoryForms';
 import { reason } from './ProjectActions';
@@ -39,6 +39,8 @@ export class HistoryPanel {
   private gen = 0;
   private timer = 0;
   private unwatch: (() => void) | null = null;
+  /** The open drawing's revision, followed while its project's history shows (its row is marked). */
+  private unbase: (() => void) | null = null;
 
   constructor(ctx: AppContext, o: HistoryPanelOptions) {
     this.ctx = ctx;
@@ -82,6 +84,9 @@ export class HistoryPanel {
       this.unwatch?.();
       this.unwatch = p && p.state !== 'trashed' ? this.ctx.cloud.watchProject(p.tenantId, p.id, (events) => changesHistory(events) && this.later()) : null;
     }
+    this.unbase?.();
+    const file = this.ctx.cloud.file.value;
+    this.unbase = p && file && drawingBaseOf(this.ctx, p) !== null ? file.base.subscribe(() => this.o.paint()) : null;
     this.ask();
   }
 
@@ -91,6 +96,8 @@ export class HistoryPanel {
     clearTimeout(this.timer);
     this.unwatch?.();
     this.unwatch = null;
+    this.unbase?.();
+    this.unbase = null;
     this.project = null;
     this.state = 'none';
   }

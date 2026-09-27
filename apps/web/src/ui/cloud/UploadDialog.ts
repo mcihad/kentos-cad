@@ -8,7 +8,6 @@ import type { MembershipView } from '../../contracts/generated/MembershipView';
 import type { ProjectStorage } from '../../contracts/generated/ProjectStorage';
 import { ENTITY_KIND_LABEL, type DrawingEntity } from '../../model/entities';
 import { h } from '../dom';
-import { confirmDialog } from '../widgets/confirm';
 import { Dialog } from '../widgets/Dialog';
 import { catalogFields } from './ProjectForms';
 
@@ -25,9 +24,10 @@ import { catalogFields } from './ProjectForms';
  *
  * The window says each stage (the project created, the drawing written,
  * the upload with how far, the server checking it, the import). If the
- * drawing does not get in, the new project stays empty and the drawing
- * local: the user deletes the empty project or keeps it, and a refused
- * object is named and selected.
+ * drawing does not get in, it stays local and the window says why, as the
+ * desktop's does: refused for good, the empty project is moved to the trash
+ * and a refused object is named and selected; with no answer the project
+ * is kept, and trying again (the same upload's idempotency key) fills it.
  */
 
 /** What the window starts with (a conflict's “Ayrı kopya olarak kaydet” asks for a file project named as a copy). */
@@ -110,6 +110,10 @@ export function openUploadDialog(ctx: AppContext, preset: UploadPreset = {}): vo
   };
   const canCreate = () => creates(tenant);
   let running = false;
+  // The upload's idempotency key, kept while the same upload is tried again: a project kept after no answer is
+  // found and filled, never a second one made. What is asked for changes, or the project went to the trash: a new key.
+  let key = crypto.randomUUID();
+  let asked = '';
   const refresh = () => {
     primary.textContent = storage === 'file' ? 'Buluta dosya olarak kaydet' : 'Buluta yükle';
     hint.textContent =
@@ -135,41 +139,27 @@ export function openUploadDialog(ctx: AppContext, preset: UploadPreset = {}): vo
     refresh();
   };
 
-  /** The drawing did not get into the new project: it stays empty; the user deletes it or keeps it, and a refused object is shown. */
-  const failed = async (e: UploadFailed) => {
+  /**
+   * The drawing did not get into the new project: the window stays open and
+   * says why (and the log keeps it). Refused for good, the empty project is
+   * in the trash, and a refused object is selected to be fixed; with no
+   * answer the project waits on the server for the same upload to be tried
+   * again.
+   */
+  const failed = (e: UploadFailed) => {
     const p = e.project;
     const refused = e.refused ? refusedObjectText(ctx, e.refused.index) : null;
-    const why = e.failure instanceof ApiFailure ? e.failure.message : e.message;
-    say(`“${p.name}” oluşturuldu ama çizim yüklenemedi: ${why}`, 'error');
-    const answer = await confirmDialog<'delete' | 'keep'>({
-      title: 'Çizim buluta aktarılamadı',
-      message: refused
-        ? `Sunucu çizimin ${refused} nesnesini almadı: ${why} Hiçbir nesne yazılmadı.`
-        : `“${p.name}” projesi oluşturuldu, ama çizim içine yüklenemedi: ${why}`,
-      details: [
-        `“${p.name}” sunucuda boş duruyor; çiziminiz bu cihazda olduğu gibi, kaydedilmemiş değişiklikleriyle.`,
-        'Boş projeyi sil: proje kalıcı olarak silinir.',
-        refused
-          ? 'Çizimi yerelde tut: proje boş kalır; reddedilen nesne seçilir, düzeltip yeniden yükleyebilirsiniz.'
-          : 'Çizimi yerelde tut: proje boş kalır; bağlantı ya da neden düzelince yeniden yükleyebilirsiniz.',
-      ],
-      answers: [
-        { value: 'delete', label: 'Boş projeyi sil', kind: 'danger', aside: true },
-        { value: 'keep', label: 'Çizimi yerelde tut', kind: 'primary' },
-      ],
-      cancel: 'keep',
-    });
-    if (answer === 'delete') {
-      const ref = { tenantId: p.tenantId, projectId: p.id, name: p.name };
-      try {
-        await cloud.lifecycle.trash(ref);
-        await cloud.lifecycle.purge(ref);
-        ctx.log.info(`Boş “${p.name}” projesi silindi; çizim bu cihazda duruyor.`);
-      } catch (x) {
-        ctx.log.warn(`Boş “${p.name}” projesi silinemedi (${x instanceof Error ? x.message : String(x)}); Bulut projeleri’nden silebilirsiniz.`);
-      }
-    } else ctx.log.info(`“${p.name}” bulut projesi boş kaldı; çizim bu cihazda duruyor.`);
-    dialog.close();
+    const why = (e.failure instanceof ApiFailure ? e.failure.message : e.message).replace(/\.?$/, '.');
+    const text =
+      e.left === 'trashed'
+        ? refused
+          ? `Sunucu çizimin ${refused} nesnesini almadı: ${why} Hiçbir nesne yazılmadı; “${p.name}” projesi çöp kutusuna taşındı. Reddedilen nesne çizimde seçildi; düzeltip yeniden yükleyebilirsiniz.`
+          : `Çizim buluta aktarılamadı: ${why} “${p.name}” projesi çöp kutusuna taşındı; çiziminiz bu cihazda olduğu gibi duruyor.`
+        : `“${p.name}” oluşturuldu ama çizim yüklenemedi: ${why} Proje sunucuda boş duruyor; yeniden denerseniz aynı proje kullanılır.`;
+    say(text, 'error');
+    ctx.log.warn(text);
+    // In the trash, the project is not found again: the next try makes a new one.
+    if (e.left === 'trashed') asked = '';
     // The refused object, selected and shown, to be fixed.
     if (e.refused) {
       const entity = ([...ctx.doc.all()] as DrawingEntity[])[e.refused.index];
@@ -184,6 +174,11 @@ export function openUploadDialog(ctx: AppContext, preset: UploadPreset = {}): vo
     if (primary.disabled) return;
     lock(true);
     const name = nameField.value.trim();
+    const now = JSON.stringify([tenant.tenantId, name, storage, fields.read()]);
+    if (now !== asked) {
+      asked = now;
+      key = crypto.randomUUID();
+    }
     const onProgress = (done: number, total: number) => {
       progress.hidden = false;
       bar.style.width = `${total ? Math.round((done / total) * 100) : 100}%`;
@@ -192,13 +187,13 @@ export function openUploadDialog(ctx: AppContext, preset: UploadPreset = {}): vo
     try {
       // False: the project was made and holds the drawing as it went up, but the drawing changed on its way and
       // stays local (the log says so). The window closes either way: another press would make a second project.
-      if (storage === 'file') await cloud.uploadFile(tenant.tenantId, name, onProgress, fields.read(), stageSay);
-      else await cloud.upload(tenant.tenantId, name, onProgress, fields.read(), stageSay);
+      if (storage === 'file') await cloud.uploadFile(tenant.tenantId, name, onProgress, fields.read(), stageSay, key);
+      else await cloud.upload(tenant.tenantId, name, onProgress, fields.read(), stageSay, key);
       dialog.close();
     } catch (e) {
       lock(false);
       progress.hidden = true;
-      if (e instanceof UploadFailed) return void failed(e);
+      if (e instanceof UploadFailed) return failed(e);
       say(e instanceof ApiFailure || e instanceof Error ? e.message : 'Yükleme tamamlanamadı.', 'error');
     }
   };

@@ -19,6 +19,7 @@ import { ApiFailure, HttpCloudApi, type CloudApi } from './api';
 import { catalogEnvelope } from './catalog';
 import { browserDraftStore, draftKey, type DraftStore } from './drafts';
 import { FileProjectSave, type NewerRevision } from './fileProject';
+import { REVISION_TEXTS, RESYNC_RETRY_MS } from './fileRevisionsPlan';
 import { openFileProject, saveFileProject, uploadAsFileProject, type FileStage } from './fileSession';
 import { uploadAsDatabaseProject } from './importing';
 import { readProject } from './incoming';
@@ -464,9 +465,19 @@ export class CloudSession {
   /**
    * The live channel, the access watch and the name of an open project,
    * for either kind: `receive` takes its events, `target` its access
-   * changes; the history panel hears the events after them.
+   * changes; the history panel hears the events after them. `resync`: what
+   * the project does when the server cannot replay the events it missed
+   * (default: opened again from the server).
    */
-  private connect(info: ProjectInfo, project: CloudProject, receive: (events: EventRecord[]) => void, target: AccessTarget, cursor: () => string, explicit: boolean): AccessWatch {
+  private connect(
+    info: ProjectInfo,
+    project: CloudProject,
+    receive: (events: EventRecord[]) => void,
+    target: AccessTarget,
+    cursor: () => string,
+    explicit: boolean,
+    resync?: () => void,
+  ): AccessWatch {
     const watch = new AccessWatch({
       api: this.api,
       sync: target,
@@ -486,6 +497,7 @@ export class CloudSession {
         this.events.emit('events', { tenantId: info.tenantId, projectId: info.id, events });
       },
       onResync: () => {
+        if (resync) return resync();
         this.ctx.log.warn('Canlı bağlantı kaçırılan değişiklikleri veremiyor; proje sunucudan yeniden açılıyor.');
         this.open(info.tenantId, info.id).catch((e: unknown) => {
           // Deleted meanwhile (its event was among the ones no longer kept): the same as hearing it.
@@ -541,7 +553,24 @@ export class CloudSession {
       onAccessChanged: () => void watch?.check(),
       part: () => this.uploadPart,
     });
-    watch = this.connect(info, project, (events) => file.receive(events), file, () => file.cursor, true);
+    // The events it missed are asked of the server, never by opening it again: the drawing is not replaced (docs/adr/0038).
+    let retry = 0;
+    let unanswered = false;
+    const resync = () => {
+      clearTimeout(retry);
+      void file.resync().then((next) => {
+        if (this.file.value !== file) return;
+        if (next === 'follow') {
+          unanswered = false;
+          this.socket?.reconnect();
+        } else if (next === 'retry') {
+          if (!unanswered) this.ctx.log.warn(REVISION_TEXTS.resyncFailed(info.name));
+          unanswered = true;
+          retry = setTimeout(() => this.file.value === file && this.socket?.reconnect(), RESYNC_RETRY_MS) as unknown as number;
+        }
+      });
+    };
+    watch = this.connect(info, project, (events) => file.receive(events), file, () => file.cursor, true, resync);
     this.file.set(file);
     this.project.set(project);
     if (info.state === 'archived') file.markArchived(true);
@@ -650,10 +679,12 @@ export class CloudSession {
    * its catalog metadata (docs/adr/0028): the project is created, the
    * drawing's `.kcad` uploaded and imported in one transaction (importing.ts,
    * docs/adr/0036). A refused import leaves the new project empty and the
-   * drawing local (`UploadFailed`). `stage` hears where it is.
+   * drawing local (`UploadFailed`). `stage` hears where it is; `key`, the
+   * upload's idempotency key, is passed again when the same upload is tried
+   * again (it finds the project it made).
    */
-  upload(tenantId: string, name: string, progress: Progress = () => {}, catalog: UploadCatalog = {}, stage?: (s: FileStage) => void): Promise<boolean> {
-    return uploadAsDatabaseProject(this, tenantId, name, progress, catalog, stage);
+  upload(tenantId: string, name: string, progress: Progress = () => {}, catalog: UploadCatalog = {}, stage?: (s: FileStage) => void, key?: string): Promise<boolean> {
+    return uploadAsDatabaseProject(this, tenantId, name, progress, catalog, stage, key);
   }
 
   /**
@@ -661,8 +692,8 @@ export class CloudSession {
    * dosya olarak kaydet”, docs/adr/0031): created with `storage: file`, the
    * drawing's `.kcad` uploaded and committed as revision 1.
    */
-  uploadFile(tenantId: string, name: string, progress: Progress = () => {}, catalog: UploadCatalog = {}, stage?: (s: FileStage) => void): Promise<boolean> {
-    return uploadAsFileProject(this, tenantId, name, progress, catalog, stage);
+  uploadFile(tenantId: string, name: string, progress: Progress = () => {}, catalog: UploadCatalog = {}, stage?: (s: FileStage) => void, key?: string): Promise<boolean> {
+    return uploadAsFileProject(this, tenantId, name, progress, catalog, stage, key);
   }
 
 }

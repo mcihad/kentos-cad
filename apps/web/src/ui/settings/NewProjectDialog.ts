@@ -10,6 +10,7 @@ import { Dialog } from '../widgets/Dialog';
 import { crsPicker } from './crsPicker';
 import { workspacePicker } from './workspacePicker';
 import { effectiveWorkspace } from '../../app/workspaces';
+import { newProjectNote } from './newProjectNote';
 import { group } from './SettingsShell';
 
 /**
@@ -79,16 +80,13 @@ export function openNewProjectDialog(ctx: AppContext): void {
   const groups = standardLayers(draft.plotScale)
     .map((n) => n.name)
     .join(', ');
-  // What happens to the drawing on screen, said before anything is done.
-  const current = cloud
-    ? ctx.cloud.autosaves()
-      ? note('info', `“${cloud.name}” bulut projesi kapanır. Bekleyen değişiklikleri buluta gönderilir; gönderilemeyenler bu cihazda kalır ve proje yeniden açılınca geri gelir.`)
-      : ctx.doc.dirty.value
-        ? note('warn', `“${cloud.name}” projesindeki değişiklikleriniz buluta kaydedilmiyor (salt okunur); Oluştur’a basınca ne yapılacağı sorulur.`)
-        : null
-    : ctx.doc.dirty.value
-      ? note('warn', `“${ctx.doc.name.value}” içinde kaydedilmemiş değişiklikler var; Oluştur’a basınca önce sorulur.`)
-      : null;
+  // What happens to the drawing on screen, said before anything is done (newProjectNote.ts).
+  const said = newProjectNote({
+    name: ctx.doc.name.value,
+    cloud: cloud && { name: cloud.name, autosaves: ctx.cloud.autosaves(), database: cloud.storage === 'database' },
+    dirty: ctx.doc.dirty.value,
+  });
+  const current = said && note(said.tone, said.text);
 
   const dialog = new Dialog({
     title: 'Yeni proje',

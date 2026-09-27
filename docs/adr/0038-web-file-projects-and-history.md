@@ -21,7 +21,7 @@
 
 - Proje `storage: file` ile açılır (`project.create`). Çizimin KCAD v2 baytları yerel Kaydet'in yoluyla yazılır: tipli sütunlar, biçim işçisi, geri okuyarak doğrulama (ADR 0030; `app/drawingFile.ts` `encodeDrawing`).
 - Baytların SHA-256'sı tarayıcıda hesaplanır (`crypto.subtle`). Sonra yükleme açılır, baytlar tek `PUT` ile gönderilir, `project.file.commit` `@file = "0"` ile 1. revizyonu yazar.
-- Yükleme yarıda kalırsa proje boş kalır ve çizim yerel kalır; kullanıcıya boş projeyi silmek ya da bırakmak sorulur (aşağıdaki içe aktarım gibi).
+- Yükleme yarıda kalırsa proje boş kalır ve çizim yerel kalır; kullanıcıya boş projeyi silmek ya da bırakmak sorulur (aşağıdaki içe aktarım gibi). **28 Eylül:** soru kalktı; masaüstünün yolu gibidir (aşağıda, “Veritabanına yükleme”nin notu).
 
 ### Dosya projesini açma
 
@@ -58,6 +58,14 @@
   - **Vazgeç**: hiçbir şey olmaz; durum çakışma olarak kalır.
 - Proje açıkken başkası revizyon kaydederse (`project.file` olayı, istek kimliği bu pencerenin değil) bu söylenir ve durum çubuğu “Yeni revizyon: rN” der. Tıklanınca en yeni revizyon önerilir; kaydedilmemiş değişiklik varsa aynı çakışma sorusu gelir. Çizim kendiliğinden yeniden yüklenmez.
 - Proje silinir, arşivlenir ya da erişim kalkarsa Kaydet reddedilir; çizim ekranda kalır, Kaydet yerel dosya önerir. Rol düşerse Kaydet “salt okunur” olur, dönünce yeniden yazar.
+- **28 Eylül:** davranış masaüstüne taşınmak üzere [docs/specs/file-revisions.md](../specs/file-revisions.md)'de yazıldı. Kurallar saf bir plandadır (`app/cloud/fileRevisionsPlan.ts`, `fixtures/cloud/v1/file-revisions.json`). Yazılırken şunlar düzeltildi:
+  - Kanal kaçırılan olayları veremediğinde (yeniden eşitleme) dosya projesi artık sunucudan yeniden açılmıyor. Proje ve en yeni revizyonu soruluyor; çizim değişmiyor. Önceden yeniden açılış çizimi değiştiriyordu; bu, yukarıdaki kurala aykırıydı.
+  - Kaydedilmemiş iş varken gelen yeni revizyonu hücre de söylüyor: “Yeni revizyon: r5 · kaydedilmedi”.
+  - Yeni revizyon biliniyorken Kaydet hiçbir şey yüklemeden soruyu getiriyor.
+  - Yeni revizyonun kaydedeni ve zamanı ipucunda, günlükte ve soruda yazılıyor.
+  - Salt okunur hesap da yeni revizyonu görüp açabiliyor.
+  - Geç gelen eski bir cevap bilinen yeni revizyonu düşürmüyor.
+  - Geçmiş sekmesi açık çizimin revizyonunu işaretliyor.
 
 ### Kurtarma kopyası
 
@@ -74,6 +82,11 @@
 
 - “Buluta yükle” (veritabanı) artık şöyledir: proje açılır, çizimin `.kcad`'i yüklenir, `project.import` tek işlemde aktarır (ADR 0036). Her nesne kalıcı kimliğiyle ve 1. sürümüyle gelir. Otomatik kayıt bu sürümlerle başlar; olay imleci içe aktarımdan sonraki projeden okunur.
 - Sunucunun almadığı ilk nesne bütün dosyayı reddeder (`entities[i]`). Proje boş kalır, çizim yerel kalır. Soru “Boş projeyi sil” ya da “Çizimi yerelde tut” der. Reddedilen nesne sırası, türü, katmanı ve etiketiyle söylenir; çizimde seçilip gösterilir.
+- **28 Eylül:** web masaüstünün yoluna geçti (kentos-cloud `upload_new`; `app/cloud/uploading.ts` `failedUpload`; iki saklama biçiminde de):
+  - Çizim kesin olarak reddedilince boş proje çöp kutusuna taşınır; soru sorulmaz. Pencere açık kalır ve nedeni söyler; günlük de yazar. Reddedilen nesne yine adıyla söylenir, çizimde seçilip gösterilir.
+  - Sunucu yanıt vermezse proje sunucuda kalır. Pencere aynı yüklemeyi aynı idempotency anahtarıyla yeniden dener; sunucu aynı projeyi verir.
+  - Önceki denemenin yazdığı içerik (dosya projesinde 1. revizyon, veritabanı projesinde içe aktarım) bulunursa yeniden gönderilmez.
+  - Ad, çalışma alanı, saklama biçimi ya da katalog alanları değişince ve proje çöp kutusuna gidince anahtar yenilenir.
 - Eski parça parça yol yalnız içe aktarımı olmayan sunucu için kalır: yükleme yolu yok (çıplak 404/405), veritabanı projesine dosya almıyor ya da `project.import` bilinmiyor.
 - Yükleme sürerken çizim değiştiyse (pencere kipli olduğu için pratikte olmaz) proje içe aktarılmış hâliyle kalır. Çizim ona bağlanmaz; değişiklikleri yerinde durur.
 - Açık bir veritabanı projesine başkası içe aktarım yaparsa (`project.import` olayı) proje yeniden açılır.

@@ -49,7 +49,8 @@ def file_text(f):
         'uploading': f'Yükleniyor %{js_round(f["progress"] * 100)}',
         'verifying': 'Sunucu doğruluyor…',
         'conflict': f'Çakışma: r{f["conflictActual"] or "?"} kaydedilmiş',
-        'outdated': f'Yeni revizyon: r{f["newerRevision"] or "?"}',
+        # Over unsaved work too (file-revisions.json holds those cases; these have no `dirty`).
+        'outdated': f'Yeni revizyon: r{f["newerRevision"] or "?"}' + (' · kaydedilmedi' if f.get('dirty') else ''),
         'error': 'Kayıt hatası',
         'readonly': 'Salt okunur',
         'deleted': 'Proje silindi',
@@ -107,6 +108,13 @@ def db_tip(t):
     return {'title': title, 'description': ' '.join(x for x in lines if x)}
 
 
+def newer_tip(newer, dirty):
+    """Who saved it and when (file-revisions.json holds the cases with a time and over unsaved work; these have neither)."""
+    assert newer.get('at') is None and not dirty, 'a time or unsaved work: file-revisions.json holds those cases'
+    head = f'Sunucuda daha yeni revizyon var: {newer["revision"]}{f" ({newer["by"]})" if newer["by"] else ""}'
+    return f'{head}; açmak için tıklayın.'
+
+
 def file_tip(t):
     link = LINK[t['link']]
     last, newer = t['lastSaved'], t['newer']
@@ -115,7 +123,7 @@ def file_tip(t):
         'Projenin henüz revizyonu yok.' if t['base'] == '0' else f"Çizimin dayandığı revizyon: {t['base']}.",
         'Kendiliğinden kaydedilmez: Kaydet (Ctrl+S) yeni bir revizyon yazar; arada başkası kaydettiyse üzerine yazılmaz.',
         f'Bu pencerenin son kaydı: revizyon {last["revision"]}, {ago(last["at"], t["now"])}.' if last else '',
-        f'Sunucuda daha yeni revizyon var: {newer["revision"]}{f" ({newer["by"]})" if newer["by"] else ""}; açmak için tıklayın.' if newer else '',
+        newer_tip(newer, t['dirty']) if newer else '',
         t['error'],
         f'Canlı bağlantı: {link}.' if link else '',
         'Kaydedilmemiş değişiklikler bu cihazda kurtarma kopyası olarak da saklanıyor.' if t['dirty'] else '',

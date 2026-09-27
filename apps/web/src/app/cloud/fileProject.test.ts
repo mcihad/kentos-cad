@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { formatsBuilt, kcadInProcess } from '../../io/testFormats';
 import { snapshotSampleDocument } from '../../model/snapshotSample';
-import type { CloudApi } from './api';
+import { ApiFailure, type CloudApi } from './api';
 import { bytesOf, serverFor } from './cloudTesting';
 import { FileProjectSave, type FileSaveState, type NewerRevision } from './fileProject';
 
@@ -49,6 +49,8 @@ async function setup(opts: { base?: string; revisions?: number; canWrite?: boole
 }
 
 const point = (x: number) => ({ kind: 'point' as const, layerId: 'cizim', p: { x, y: 4420200 }, attrs: {} });
+/** Lets the answers already on their way arrive. */
+const tick = () => new Promise((r) => setTimeout(r, 0));
 
 describe.skipIf(!formatsBuilt)('Kaydet on a file project (docs/adr/0038)', () => {
   it('writes the next revision on its base, in stages, and calls it saved only once the server committed it', async () => {
@@ -152,13 +154,12 @@ describe.skipIf(!formatsBuilt)('Kaydet on a file project (docs/adr/0038)', () =>
     expect(await file.save()).toBe('conflict');
     expect(server.files.revisions).toHaveLength(2);
     expect([file.state.value, file.conflict.value, doc.dirty.value, doc.size]).toEqual(['conflict', { expected: '1', actual: '2' }, true, before]);
-    // Until the user chooses, Kaydet does not try again over it.
+    // The refusal names only the number: who saved it and when are asked after it.
+    await tick();
+    expect(file.newer.value).toEqual({ revision: '2', by: 'Mehmet Demir', at: '2026-09-26T11:00:00Z' });
+    // Until the user chooses (a copy, a local file, the newest revision: each leaves this session), Kaydet does not try again over it.
     expect(await file.save()).toBe('conflict');
     expect(server.files.commits).toBe(0);
-    // Chosen (a copy elsewhere, a local file, or the newest revision opened): Kaydet goes on from the new base.
-    file.settle('2');
-    expect(await file.save()).toBe('saved');
-    expect(file.base.value).toBe('3');
   });
 
   it('someone else’s revision while the project is open is said and offered, never loaded by itself', async () => {
@@ -166,11 +167,91 @@ describe.skipIf(!formatsBuilt)('Kaydet on a file project (docs/adr/0038)', () =>
     const before = doc.size;
     const e = await server.files.commitAs(await bytesOf(snapshotSampleDocument()), 'Mehmet Demir');
     file.receive([e]);
-    await new Promise((r) => setTimeout(r, 0));
-    expect(file.newer.value).toEqual({ revision: '2', by: 'Mehmet Demir' });
+    await tick();
+    const newer = { revision: '2', by: 'Mehmet Demir', at: '2026-09-26T11:00:00Z' };
+    expect(file.newer.value).toEqual(newer);
     expect(file.state.value).toBe('outdated');
-    expect(told.newer).toEqual([{ revision: '2', by: 'Mehmet Demir' }]);
+    expect(told.newer).toEqual([newer]);
     expect(doc.size).toBe(before);
+    // Heard again (the same revision, another event of it): said once.
+    file.receive([e]);
+    await tick();
+    expect(told.newer).toHaveLength(1);
+  });
+
+  it('a newer revision over unsaved work: the state says it; Kaydet uploads nothing and goes to the choice (docs/specs/file-revisions.md)', async () => {
+    const { doc, server, file, states } = await setup();
+    doc.add(point(486501));
+    file.receive([await server.files.commitAs(await bytesOf(snapshotSampleDocument()))]);
+    await tick();
+    expect([file.state.value, file.revisions.dirty, file.newer.value?.revision]).toEqual(['outdated', true, '2']);
+    expect(await file.save()).toBe('conflict');
+    // The server would refuse it: nothing was encoded, uploaded or committed.
+    expect([server.files.sends, server.files.commits, states.includes('encoding')]).toEqual([0, 0, false]);
+    expect([file.state.value, file.conflict.value, file.newer.value?.by, doc.dirty.value]).toEqual(['conflict', { expected: '1', actual: '2' }, 'Mehmet Demir', true]);
+  });
+
+  it('a late answer never lowers the newer revision known', async () => {
+    const gate: { open: (() => void) | null } = { open: null };
+    const { server, file } = await setup({
+      api: (a) =>
+        Object.assign(Object.create(a) as CloudApi, {
+          fileRevisions: async (...args: Parameters<CloudApi['fileRevisions']>) => {
+            const answer = await a.fileRevisions(...args);
+            // The first question's answer (revision 2) comes back last.
+            if (!gate.open) await new Promise<void>((r) => (gate.open = r));
+            return answer;
+          },
+        }),
+    });
+    file.receive([await server.files.commitAs(await bytesOf(snapshotSampleDocument()))]);
+    await tick();
+    file.receive([await server.files.commitAs(await bytesOf(snapshotSampleDocument()), 'Zeynep Kaya', 'ucuncu')]);
+    await tick();
+    expect(file.newer.value?.revision).toBe('3');
+    gate.open?.();
+    await tick();
+    expect(file.newer.value).toEqual({ revision: '3', by: 'Zeynep Kaya', at: '2026-09-26T11:00:00Z' });
+  });
+
+  it('a resync asks the project and its newest revision, follows from its cursor now, and never replaces the drawing', async () => {
+    const { doc, server, file, told } = await setup();
+    doc.add(point(486501));
+    const before = { size: doc.size, revision: doc.revision };
+    // Missed while away: someone else's revision.
+    await server.files.commitAs(await bytesOf(snapshotSampleDocument()));
+    expect(await file.resync()).toBe('follow');
+    expect([file.cursor, file.newer.value?.revision, told.newer.length, told.asked, file.state.value]).toEqual([String(server.history.length), '2', 1, 1, 'outdated']);
+    expect([doc.size, doc.revision, doc.dirty.value, file.base.value]).toEqual([before.size, before.revision, true, '1']);
+  });
+
+  it('a resync tries a passing failure again before it waits for later', async () => {
+    let failures = 2;
+    const { server, file } = await setup({
+      api: (a) =>
+        Object.assign(Object.create(a) as CloudApi, {
+          project: async (...args: Parameters<CloudApi['project']>) => {
+            if (failures-- > 0) throw new ApiFailure(503, { error: 'unavailable', message: 'Sunucu kısa süreliğine yanıt veremiyor.' }, 'Sunucu kısa süreliğine yanıt veremiyor.');
+            return a.project(...args);
+          },
+        }),
+    });
+    expect([await file.resync(), file.cursor]).toEqual(['follow', String(server.history.length)]);
+  });
+
+  it('a resync that finds the project deleted, archived or out of reach ends it; no answer is tried again later', async () => {
+    const deleted = await setup();
+    deleted.server.deleteAs('biri');
+    expect([await deleted.file.resync(), deleted.file.state.value, deleted.told.deleted]).toEqual(['ended', 'deleted', 1]);
+    const archived = await setup();
+    archived.server.archiveAs('biri');
+    expect([await archived.file.resync(), archived.file.state.value, archived.told.archived]).toEqual(['ended', 'archived', 1]);
+    const revoked = await setup();
+    revoked.server.grant(null);
+    expect([await revoked.file.resync(), revoked.file.state.value]).toEqual(['ended', 'revoked']);
+    const away = await setup();
+    away.server.offline = true;
+    expect([await away.file.resync(), away.file.state.value, away.file.cursor]).toEqual(['retry', 'saved', String(away.server.history.length)]);
   });
 
   it('the event of this window’s own commit is not someone else’s', async () => {
@@ -178,7 +259,7 @@ describe.skipIf(!formatsBuilt)('Kaydet on a file project (docs/adr/0038)', () =>
     doc.add(point(486501));
     expect(await file.save()).toBe('saved');
     file.receive([server.history.at(-1)!]);
-    await new Promise((r) => setTimeout(r, 0));
+    await tick();
     expect([file.newer.value, told.newer.length, file.state.value]).toEqual([null, 0, 'saved']);
   });
 

@@ -1028,16 +1028,33 @@ try {
   await b.waitFor(`window.kentos.cloud.file.value.newer.value?.revision === '4'`, 8000);
   const outdated = await b.eval(`({ cell: document.querySelector('.status__save')?.textContent, base: window.kentos.cloud.file.value.base.value })`);
   check('another client’s revision is said and offered, not loaded', r4.status === 200 && r4.put === 200 && outdated.base === '3' && /Yeni revizyon: r4/.test(outdated.cell), JSON.stringify(outdated));
-  // An edit saved over it: refused (SYNC-06); the question offers a copy, a local file or the newest revision.
+  // Who saved it and when, in the log (docs/specs/file-revisions.md §3.4).
+  const heard4 = await b.eval(`({ newer: window.kentos.cloud.file.value.newer.value, line: window.kentos.log.entries.value.map((e) => e.text).filter((t) => t.includes('başka bir yerde kaydedildi')).at(-1) ?? '' })`);
+  const mehmetName = mehmetMe.body.user.displayName;
+  check(
+    'the newer revision says who saved it and when, in the log',
+    heard4.newer?.by === mehmetName && !!heard4.newer?.at && new RegExp(`revizyon 4 \\(${mehmetName}, \\d\\d\\.\\d\\d\\.\\d{4} \\d\\d:\\d\\d\\)\\. Açık çizimin dayandığı revizyon: 3; yeni revizyonu açmak için`).test(heard4.line),
+    JSON.stringify(heard4),
+  );
+  // An edit over it: the cell says both (§3.2); Kaydet uploads nothing and asks at once, the server would refuse it (§4).
   await addPoint(486602);
+  await b.waitFor(`document.querySelector('.status__save')?.textContent === 'Yeni revizyon: r4 · kaydedilmedi'`, 5000).catch(() => {});
+  const dirtyCell = await b.eval(`document.querySelector('.status__save')?.textContent`);
+  check('an edit under a newer revision: the cell says both', dirtyCell === 'Yeni revizyon: r4 · kaydedilmedi', dirtyCell);
+  const statesBefore = (await b.eval('window.__fileStates')).length;
   await b.key('s', { ctrl: true });
   await b.waitFor(`!!document.querySelector('.dialog[aria-label="Dosya başka biri tarafından kaydedildi"]')`, 15000);
   const asked4 = await b.eval(`(() => { const d = document.querySelector('.dialog[aria-label="Dosya başka biri tarafından kaydedildi"]'); return { answers: [...d.querySelectorAll('.dialog__foot .btn')].map((x) => x.textContent), text: d.textContent }; })()`);
   const kept4 = await ayse.call('GET', `${fbase}/files`);
+  const since4 = (await b.eval('window.__fileStates')).slice(statesBefore);
   check(
-    'a Kaydet over another’s revision is refused and asks; nothing is written',
-    kept4.body.current === '4' && asked4.answers.join('|') === 'Son revizyonu aç|Vazgeç|Yerel dosyaya kaydet|Ayrı kopya olarak kaydet' && /revizyon 4/.test(asked4.text),
-    asked4.answers.join(' | '),
+    'a Kaydet over another’s revision uploads nothing and asks; nothing is written',
+    kept4.body.current === '4' &&
+      asked4.answers.join('|') === 'Son revizyonu aç|Vazgeç|Yerel dosyaya kaydet|Ayrı kopya olarak kaydet' &&
+      asked4.text.includes(`revizyon 4 (${mehmetName},`) &&
+      !since4.includes('encoding') &&
+      !since4.includes('uploading'),
+    `${asked4.answers.join(' | ')}; ${since4.join(' → ')}`,
   );
   await themed('cloud-file-conflict');
   // The newest revision's download is cut halfway (docs/adr/0045): it goes on with Range from the bytes that arrived.
@@ -1104,6 +1121,29 @@ try {
     JSON.stringify({ askedNewest, keptEdit }),
   );
 
+  // The events missed cannot be replayed (a cursor beyond the server's newest): the file project is asked, never
+  // opened again; it follows on from the server's cursor (docs/specs/file-revisions.md §2.4).
+  const copyPath = `/v1/tenants/${fileCopy.tenantId}/projects/${fileCopy.id}`;
+  const beforeResync = await b.eval(`({ size: window.kentos.doc.size, revision: window.kentos.doc.revision, base: window.kentos.cloud.file.value.base.value })`);
+  await b.eval(`(() => {
+    window.__heard = [];
+    window.kentos.cloud.events.on('events', (e) => window.__heard.push(...e.events.map((x) => x.kind)));
+    window.kentos.cloud.file.value.cursor = '999999999';
+    window.kentos.cloud.socket.reconnect();
+  })()`);
+  await b.waitFor(`window.kentos.cloud.file.value.cursor !== '999999999' && window.kentos.cloud.link.value === 'online'`, 20000).catch(() => {});
+  await sleep(500);
+  await ayse.call('POST', `${copyPath}/commands`, { commandName: 'project.share', version: 1, tenantId: fileCopy.tenantId, projectId: fileCopy.id, requestId: `e2e-${crypto.randomUUID()}`, idempotencyKey: crypto.randomUUID(), expectedVersions: {}, input: { userId: mehmetMe.body.user.id, role: 'viewer' } });
+  await b.waitFor(`window.__heard.includes('project.access')`, 10000).catch(() => {});
+  const afterResync = await b.eval(`({ size: window.kentos.doc.size, revision: window.kentos.doc.revision, base: window.kentos.cloud.file.value.base.value, cursor: window.kentos.cloud.file.value.cursor, heard: window.__heard, reopened: window.kentos.log.entries.value.some((e) => e.text.includes('yeniden açılıyor')) })`);
+  const copyNow = await ayse.call('GET', copyPath);
+  check(
+    'a resync on a file project asks the server and follows on from its cursor; the drawing is not opened again',
+    afterResync.size === beforeResync.size && afterResync.revision === beforeResync.revision && afterResync.base === beforeResync.base && !afterResync.reopened &&
+      afterResync.cursor !== '999999999' && Number(afterResync.cursor) <= Number(copyNow.body.eventCursor) && afterResync.heard.includes('project.access'),
+    JSON.stringify({ beforeResync, afterResync, eventCursor: copyNow.body.eventCursor }),
+  );
+
   // ── History and checkpoints (docs/adr/0034, 0038) ──
   // Downloads are written to a stand-in for the save dialog; `window.__disk.bytes` is the file.
   const resetDisk = () =>
@@ -1135,8 +1175,12 @@ try {
   const copyTitle = `${fileName} (kopya)`;
   const copyBase = `/v1/tenants/${fileCopy.tenantId}/projects/${fileCopy.id}`;
   await historyOf(copyTitle);
-  const copyHistory = await b.eval(`({ revisions: [...document.querySelectorAll('.catalog-history__row[data-revision]')].map((r) => r.dataset.revision), empty: document.querySelector('.catalog-details').textContent.includes('Henüz kontrol noktası yok') })`);
-  check('the open file project’s history: its one revision, no checkpoint yet', copyHistory.revisions.join() === '1' && copyHistory.empty, JSON.stringify(copyHistory));
+  const copyHistory = await b.eval(`({ revisions: [...document.querySelectorAll('.catalog-history__row[data-revision]')].map((r) => r.dataset.revision), marks: [...document.querySelectorAll('.catalog-history__row[data-revision="1"] .catalog-chip')].map((c) => c.textContent), empty: document.querySelector('.catalog-details').textContent.includes('Henüz kontrol noktası yok') })`);
+  check(
+    'the open file project’s history: its one revision, the newest and the open drawing’s, no checkpoint yet',
+    copyHistory.revisions.join() === '1' && copyHistory.marks.join('|') === 'En yeni|Açık çizim' && copyHistory.empty,
+    JSON.stringify(copyHistory),
+  );
   await press('.catalog-history__tools .btn', 'Kontrol noktası oluştur');
   await b.waitFor(`!!document.querySelector(${JSON.stringify(cpDialog)})`, 3000);
   const cpName = `Teslim ${stamp3}`;

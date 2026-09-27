@@ -36,17 +36,17 @@ export async function bytesOf(doc: CadDocument): Promise<Uint8Array> {
   return (await encodeDrawing(doc, kcadInProcess)).bytes;
 }
 
-/** A live channel the test drives: `push` delivers events as the socket would. */
+/** A live channel the test drives: `push` delivers events as the socket would; `reconnects` counts subscribing again. */
 export function fakeSockets() {
-  const made: { o: Omit<SocketOptions, 'url'>; started: boolean }[] = [];
+  const made: { o: Omit<SocketOptions, 'url'>; started: boolean; reconnects: number }[] = [];
   const factory: SocketFactory = (o) => {
-    const socket = { o, started: false };
+    const socket = { o, started: false, reconnects: 0 };
     made.push(socket);
     return {
       state: new Signal<'connecting' | 'online' | 'reconnecting' | 'offline' | 'auth_required'>('online'),
       start: () => void (socket.started = true),
       stop: () => void (socket.started = false),
-      reconnect: () => {},
+      reconnect: () => void socket.reconnects++,
     };
   };
   return { factory, made, push: (events: Parameters<SocketOptions['onEvents']>[0]) => made.at(-1)?.o.onEvents(events) };
