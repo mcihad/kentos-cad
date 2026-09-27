@@ -116,7 +116,7 @@ Listelerin tanımı `words.rs`'tedir:
 - **Arşivlenen** açık proje salt okunur olur. Bir kez “arşivlendi: salt okunur” denir; olay gelince başkasının arşivi için olan uyarı ve pencere çıkmaz (`archived_by_me`).
 - **Arşivden çıkarılan** açık proje yeniden açılır; katalog ekranda kalır (`reopen_keeps_catalog`).
 
-**Henüz masaüstünde olmayanlar:** Paylaş, Bilgileri düzenle, Kopyasını oluştur, Dönüştür ve Geçmiş sekmesinin içeriği.
+**Henüz masaüstünde olmayanlar:** Paylaş, Bilgileri düzenle, Kopyasını oluştur ve Dönüştür. Geçmiş sekmesi [ADR 0087](0087-desktop-cloud-history.md)'de geldi.
 
 - Düğmeleri görünür ve kapalıdır; ipucu “Masaüstüne henüz taşınmadı” der.
 - Hakkı olmayana önce hangi hakkın gerektiği söylenir.

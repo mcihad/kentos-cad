@@ -163,6 +163,22 @@ pub fn ago_ms(ms: u64) -> String {
     }
 }
 
+/// A decimal count as tr-TR writes it (`toLocaleString`): 1284 → “1.284”;
+/// anything else as it is.
+pub fn grouped(count: &str) -> String {
+    if count.is_empty() || !count.bytes().all(|b| b.is_ascii_digit()) {
+        return count.to_owned();
+    }
+    let mut out = String::new();
+    for (i, d) in count.chars().enumerate() {
+        if i > 0 && (count.len() - i).is_multiple_of(3) {
+            out.push('.');
+        }
+        out.push(d);
+    }
+    out
+}
+
 /// A size as the web writes it (`sizeText`, tr-TR): “512 bayt”, “1,5 KB”, “12,3 MB”.
 pub fn size_text(bytes: usize) -> String {
     // tr-TR: “.” groups thousands, “,” is the decimal mark; one decimal at most, half away from zero.
@@ -343,6 +359,14 @@ mod tests {
         assert_eq!(say("2026-09-24T12:00:00Z"), "2 gün önce");
         assert_eq!(say("2026-08-01T08:00:00Z"), "01.08.2026");
         assert_eq!(say("bozuk"), "");
+    }
+
+    #[test]
+    fn counts_are_grouped_as_the_web_groups_them() {
+        assert_eq!(grouped("1284"), "1.284");
+        assert_eq!(grouped("12"), "12");
+        assert_eq!(grouped("1234567"), "1.234.567");
+        assert_eq!(grouped("12a"), "12a");
     }
 
     #[test]

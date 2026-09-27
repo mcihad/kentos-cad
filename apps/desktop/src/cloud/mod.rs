@@ -21,6 +21,8 @@
 //! | `catalog_view.rs` | the catalog window: its lists, the chosen list's rows, the questions |
 //! | `catalog_pane.rs` | the catalog's selected project: facts, tabs, actions |
 //! | `catalog_actions.rs` | the selected project's actions: favourite, archive, trash, restore, purge, download |
+//! | `catalog_history.rs` | the Geçmiş tab: revisions and checkpoints, followed; its forms and removal |
+//! | `catalog_history_view.rs` | the Geçmiş tab's rows, its forms and its question |
 //! | `opening.rs` | a project opened into the drawing, its progress |
 //! | `leaving.rs` | leaving a project: its draft first, or the question |
 //! | `copy.rs` | the project's local copy, work without a connection |
@@ -30,6 +32,7 @@
 //! | `upload.rs` | “Buluta yükle” |
 //! | `view.rs` | the windows and the status bar cells |
 //! | `plan.rs` | what the catalog shows and offers: rows, the selected project, questions, lines |
+//! | `history.rs` | the history's rules: who may name, remove, download and restore |
 //! | `local_time.rs` | the device's local time for the lists' dates |
 //! | `words.rs` | the interface's words: roles, lists, states, times |
 
@@ -37,11 +40,14 @@ mod account;
 mod actions;
 pub mod catalog;
 mod catalog_actions;
+mod catalog_history;
+mod catalog_history_view;
 mod catalog_pane;
 mod catalog_view;
 pub mod copy;
 mod file;
 mod follow;
+pub mod history;
 mod leaving;
 mod live;
 pub mod local_time;
@@ -51,6 +57,8 @@ mod upload;
 mod view;
 pub mod words;
 
+#[cfg(test)]
+mod catalog_history_tests;
 #[cfg(test)]
 mod catalog_tests;
 #[cfg(test)]
@@ -175,6 +183,34 @@ pub enum Event {
         id: u64,
         done: u64,
         total: u64,
+    },
+    // ── The Geçmiş tab (catalog_history.rs) ─────────────────────────────
+    HistoryLoaded {
+        id: u64,
+        result: Result<history::HistoryData, ApiFailure>,
+    },
+    /// The project's events followed while the tab shows it.
+    HistoryEvents {
+        id: u64,
+        result: Result<kentos_contracts::EventPage, ApiFailure>,
+    },
+    HistoryRetry,
+    HistoryDownloadRevision(kentos_contracts::FileRevision),
+    HistoryDownloadCheckpoint(kentos_contracts::Checkpoint),
+    HistoryCreate,
+    HistoryRestore(catalog_history::Point),
+    HistoryRemove(kentos_contracts::Checkpoint),
+    HistoryRemoveAnswer(bool),
+    /// The forms' fields: a name, a note, the revision named, the new project's workspace.
+    HistoryName(String),
+    HistoryNote(iced::widget::text_editor::Action),
+    HistoryRevision(usize),
+    HistoryPlace(usize),
+    HistorySubmit,
+    HistoryFormClose,
+    HistoryActed {
+        id: u64,
+        result: Result<catalog_history::HistoryActed, ApiFailure>,
     },
     // ── Opening ─────────────────────────────────────────────────────────
     OpenProgress {
@@ -354,10 +390,9 @@ impl CloudState {
         self.live.is_some()
             || self.held.is_some()
             || (self.link == copy::Link::Offline && self.me.is_some())
-            || self
-                .catalog
-                .as_ref()
-                .is_some_and(|c| c.search_at.is_some() || c.details_at.is_some())
+            || self.catalog.as_ref().is_some_and(|c| {
+                c.search_at.is_some() || c.details_at.is_some() || c.history.waits()
+            })
     }
 
     /// The connection, when signed in.
@@ -448,6 +483,22 @@ impl App {
                 self.catalog_download_progress(id, done, total);
                 Task::none()
             }
+            Event::HistoryDownloadRevision(r) => self.history_download_revision(r),
+            Event::HistoryDownloadCheckpoint(c) => self.history_download_checkpoint(c),
+            Event::HistoryLoaded { .. }
+            | Event::HistoryEvents { .. }
+            | Event::HistoryRetry
+            | Event::HistoryCreate
+            | Event::HistoryRestore(_)
+            | Event::HistoryRemove(_)
+            | Event::HistoryRemoveAnswer(_)
+            | Event::HistoryName(_)
+            | Event::HistoryNote(_)
+            | Event::HistoryRevision(_)
+            | Event::HistoryPlace(_)
+            | Event::HistorySubmit
+            | Event::HistoryFormClose
+            | Event::HistoryActed { .. } => self.history_event(event),
             Event::OpenProgress { .. }
             | Event::Opened { .. }
             | Event::OpenCancel
@@ -593,7 +644,14 @@ impl App {
             Task::none()
         };
         let details = self.catalog_details_tick(now);
-        Task::batch([search, details, self.live_tick(now), self.probe_tick(now)])
+        let history = self.history_tick(now);
+        Task::batch([
+            search,
+            details,
+            history,
+            self.live_tick(now),
+            self.probe_tick(now),
+        ])
     }
 
     /// After every message: the open database project takes in the drawing's
@@ -635,12 +693,22 @@ impl App {
             Some(Dialog::Catalog) => {
                 // A question over the window goes first (its Vazgeç); an open
                 // under way is stopped by its own Vazgeç, the window stays until then.
-                let asking = self
-                    .cloud
-                    .catalog
-                    .as_mut()
-                    .and_then(|c| c.asking.take())
-                    .is_some();
+                let asking = self.cloud.catalog.as_mut().is_some_and(|c| {
+                    let h = &mut c.history;
+                    if h.removing.take().is_some() {
+                        return true;
+                    }
+                    // A form closes unless its request is on its way.
+                    if let Some(f) = &h.form {
+                        if !matches!(f, catalog_history::Form::Checkpoint(f) if f.busy)
+                            && !matches!(f, catalog_history::Form::Restore(f) if f.busy)
+                        {
+                            h.form = None;
+                        }
+                        return true;
+                    }
+                    c.asking.take().is_some()
+                });
                 if asking || self.cloud.opening.is_some() {
                     self.dialog = Some(Dialog::Catalog);
                     return;

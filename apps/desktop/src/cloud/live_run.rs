@@ -388,6 +388,7 @@ fn cloud_live() {
     );
     share(&r, &mehmet);
     let (tenant, project) = ids(&r.app);
+    let db_project = project.clone();
     let uid = the_point(&r.app);
 
     // 3. The catalog lists it; opened again from there.
@@ -638,5 +639,172 @@ fn cloud_live() {
         "{:?}",
         said(&r.app).last()
     );
+    catalog_live(&mut r, &dir, &project, &db_project, stamp);
     println!("{}", said(&r.app).join("\n"));
+}
+
+/// The last line said.
+fn last(app: &App) -> String {
+    said(app).pop().unwrap_or_default()
+}
+
+/// Bulut projeleri on the real server (docs/adr/0086, 0087): the trash and
+/// Geri yükle, a project's details, the favourite, a `.kcad` download, the
+/// history with a checkpoint named and restored as a new project that
+/// opens; then what this run made goes: to the trash and removed for good.
+fn catalog_live(r: &mut Runner, dir: &Path, file_project: &str, db_project: &str, stamp: &str) {
+    use crate::cloud::catalog::{Details, List, Tab};
+    use crate::cloud::catalog_actions::Act;
+    use crate::cloud::catalog_history::{HistoryState, Point};
+    use kentos_contracts::CatalogView;
+
+    let listed = |id: String| {
+        move |a: &App| {
+            a.cloud
+                .catalog
+                .as_ref()
+                .is_some_and(|c| !c.loading() && c.projects.iter().any(|p| p.id == id))
+        }
+    };
+    // 16. The trash lists the file project; its main button restores it.
+    r.send(Message::Run("cloud.open"));
+    r.cloud(Event::CatalogView(List::View(CatalogView::Trash)));
+    r.until(
+        "çöp kutusu",
+        Duration::from_secs(15),
+        listed(file_project.to_owned()),
+    );
+    r.cloud(Event::CatalogPick(file_project.to_owned()));
+    r.shot("23-katalog-cop-kutusu");
+    r.cloud(Event::CatalogOpen);
+    r.until("geri yükleme", Duration::from_secs(15), |a| {
+        last(a).ends_with("çöp kutusundan geri yüklendi.")
+    });
+
+    // 17. Projelerim: the database project's objects, layers and extent, once the selection rests.
+    r.cloud(Event::CatalogView(List::View(CatalogView::Mine)));
+    r.until(
+        "projelerim",
+        Duration::from_secs(15),
+        listed(db_project.to_owned()),
+    );
+    r.cloud(Event::CatalogPick(db_project.to_owned()));
+    r.until("bilgiler", Duration::from_secs(15), |a| {
+        a.cloud
+            .catalog
+            .as_ref()
+            .is_some_and(|c| matches!(&c.details, Details::Database(d) if d.feature_count == "13"))
+    });
+    r.shot("24-katalog-bilgiler");
+
+    // 18. The favourite, on and off.
+    r.cloud(Event::CatalogAct(Act::Favorite));
+    r.until("favori", Duration::from_secs(15), |a| {
+        last(a).ends_with("favorilere eklendi.")
+            || a.cloud.catalog.as_ref().is_some_and(|c| {
+                c.status
+                    .as_ref()
+                    .is_some_and(|s| s.text.ends_with("favorilere eklendi."))
+            })
+    });
+    r.cloud(Event::CatalogAct(Act::Favorite));
+    r.until("favori değil", Duration::from_secs(15), |a| {
+        a.cloud.catalog.as_ref().is_some_and(|c| {
+            c.status
+                .as_ref()
+                .is_some_and(|s| s.text.ends_with("favorilerden çıkarıldı."))
+        })
+    });
+
+    // 19. .kcad olarak indir: the database project's snapshot, a KCAD v2 file.
+    let down = dir.join("indirilen.kcad");
+    r.app.picker = crate::app::Picker::File(down.clone());
+    r.cloud(Event::CatalogAct(Act::Download));
+    r.until("indirme", Duration::from_secs(30), |a| {
+        last(a).contains(" indirildi: ")
+    });
+    let bytes = std::fs::read(&down).expect("the file was written");
+    assert_eq!(kentos_kcad::sniff(&bytes), kentos_kcad::Sniff::Kcad);
+    r.app.picker = crate::app::Picker::Dialog;
+
+    // 20. Geçmiş: a checkpoint named, the list asked again with it.
+    r.cloud(Event::CatalogTab(Tab::History));
+    r.until("geçmiş", Duration::from_secs(15), |a| {
+        a.cloud
+            .catalog
+            .as_ref()
+            .is_some_and(|c| matches!(c.history.state, HistoryState::Loaded(_)))
+    });
+    let name = format!("Canlı nokta {stamp}");
+    r.cloud(Event::HistoryCreate);
+    r.cloud(Event::HistoryName(name.clone()));
+    r.shot("25-kontrol-noktasi-formu");
+    r.cloud(Event::HistorySubmit);
+    r.until("kontrol noktası", Duration::from_secs(30), |a| {
+        last(a).starts_with(&format!("“{name}” kontrol noktası oluşturuldu"))
+    });
+    let with_it = |a: &App| {
+        a.cloud
+            .catalog
+            .as_ref()
+            .and_then(|c| match &c.history.state {
+                HistoryState::Loaded(d) => d
+                    .checkpoints
+                    .as_ref()
+                    .and_then(|l| l.iter().find(|x| x.name == name).cloned()),
+                _ => None,
+            })
+    };
+    r.until("geçmiş yenilendi", Duration::from_secs(15), |a| {
+        with_it(a).is_some()
+    });
+    r.shot("26-gecmis");
+
+    // 21. Restored as a new project: shown in Projelerim and opened.
+    let cp = with_it(&r.app).expect("the checkpoint");
+    r.cloud(Event::HistoryRestore(Point::Checkpoint(cp)));
+    r.shot("27-geri-yukle-formu");
+    r.cloud(Event::HistorySubmit);
+    r.until("geri yüklenen proje", Duration::from_secs(60), |a| {
+        a.cloud.opening.is_none()
+            && a.document
+                .as_ref()
+                .is_some_and(|d| d.name().contains(&name) && d.cloud_source().is_some())
+    });
+    r.shot("28-geri-yuklenen-proje");
+    let (_, restored) = ids(&r.app);
+
+    // 22. What this run made goes: the restored project and the file project, to the trash and for good.
+    for project in [restored.as_str(), file_project] {
+        r.send(Message::Run("cloud.open"));
+        r.cloud(Event::CatalogView(List::View(CatalogView::Mine)));
+        r.until(
+            "projelerim",
+            Duration::from_secs(15),
+            listed(project.to_owned()),
+        );
+        r.cloud(Event::CatalogPick(project.to_owned()));
+        r.cloud(Event::CatalogAct(Act::Trash));
+        r.cloud(Event::CatalogAnswer(true));
+        r.until("çöpe taşıma", Duration::from_secs(30), |a| {
+            a.cloud.catalog.as_ref().is_some_and(|c| {
+                c.status
+                    .as_ref()
+                    .is_some_and(|s| s.text.ends_with("çöp kutusuna taşındı."))
+            })
+        });
+        r.cloud(Event::CatalogView(List::View(CatalogView::Trash)));
+        r.until(
+            "çöp kutusu",
+            Duration::from_secs(15),
+            listed(project.to_owned()),
+        );
+        r.cloud(Event::CatalogPick(project.to_owned()));
+        r.cloud(Event::CatalogAct(Act::Purge));
+        r.cloud(Event::CatalogAnswer(true));
+        r.until("kalıcı silme", Duration::from_secs(30), |a| {
+            last(a).contains("kalıcı olarak silindi")
+        });
+        r.cloud(Event::Close);
+    }
 }

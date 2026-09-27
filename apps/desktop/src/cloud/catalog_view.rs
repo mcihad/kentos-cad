@@ -145,8 +145,12 @@ impl App {
                 .center(Fill)
                 .into()
         }));
-        match self.catalog_question_view() {
-            Some(question) => stack![window, question].into(),
+        // A question or a form over the window (the web's stacked dialogs).
+        match self
+            .catalog_question_view()
+            .or_else(|| self.history_overlay())
+        {
+            Some(over) => stack![window, over].into(),
             None => window,
         }
     }
