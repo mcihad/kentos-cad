@@ -11,7 +11,7 @@ import { MEASURE_STRIDE, type ExprValue } from './expressionLib';
  *   'P' || doldur($sıra, 5)
  *   yuvarla([Tapu alanı] - $alan, 2)
  *
- * The language is the Rust style core's (crates/shared/style-core/src/expr,
+ * The language is the Rust expression crate's (crates/shared/expression,
  * docs/adr/0008 “İfade dili”): the server evaluates the same expressions
  * the same way. This module builds the table of what an expression reads
  * of each object and reads the answer back; an expression is evaluated for
@@ -108,7 +108,7 @@ function measuresOf(list: readonly Entity[]): Float64Array {
     const length = entityLength(e);
     const area = entityArea(e);
     const at = entityAnchor(e);
-    // Flags: 1 length, 2 area, 4 anchor (crates/shared/style-core/src/expr/rows.rs).
+    // Flags: 1 length, 2 area, 4 anchor (crates/shared/expression/src/rows.rs).
     out[k] = (length !== null ? 1 : 0) | (area !== null ? 2 : 0) | (at ? 4 : 0);
     out[k + 1] = length ?? 0;
     out[k + 2] = area ?? 0;
@@ -129,7 +129,7 @@ export interface ExprTable {
 }
 
 /**
- * The table of what expressions read (crates/shared/style-core/src/expr/rows.rs
+ * The table of what expressions read (crates/shared/expression/src/rows.rs
  * has the layout): text slots per object (the fields in order, then the label,
  * the layer name and the kind label, each only when read; a missing value is
  * length −1), number slots (the id, then the vertex count), one object after

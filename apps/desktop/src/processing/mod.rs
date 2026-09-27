@@ -17,6 +17,7 @@
 pub mod dialog;
 mod fields;
 pub mod memory;
+pub mod panel;
 #[cfg(test)]
 mod tests;
 mod window;
@@ -38,7 +39,10 @@ pub use dialog::{RunStatus, ToolDialog};
 pub fn answers(id: &str) -> bool {
     id.starts_with("processing.run.")
         || id.starts_with("processing.model.")
-        || id == "map.edgeLengths"
+        || matches!(
+            id,
+            "map.edgeLengths" | "processing.toolbox" | "processing.history"
+        )
 }
 
 /// İşlemler's state while the app runs.
@@ -50,6 +54,8 @@ pub struct Processing {
     pub dialog: Option<ToolDialog>,
     /// The window put away while a point is shown on the drawing, and the parameter it is for.
     picking: Option<(ToolDialog, String)>,
+    /// The dock's İşlemler tab.
+    pub panel: panel::PanelState,
 }
 
 impl Default for Processing {
@@ -60,6 +66,7 @@ impl Default for Processing {
             memory: memory::Memory::temporary(),
             dialog: None,
             picking: None,
+            panel: panel::PanelState::default(),
         }
     }
 }
@@ -95,6 +102,8 @@ pub enum Event {
     Results,
     /// Geri al after a run.
     Undo,
+    /// The dock's İşlemler tab.
+    Panel(panel::Event),
 }
 
 /// The app as the window reads it: the live descriptions and previews.
@@ -166,6 +175,19 @@ impl App {
             self.warn("İşlem araçları için önce bir çizim açın.");
             return Task::none();
         }
+        // The toolbox and the history are the dock's İşlemler tab (panel.rs).
+        if let Some(tab) = match id {
+            "processing.toolbox" => Some(panel::Tab::Tools),
+            "processing.history" => Some(panel::Tab::History),
+            _ => None,
+        } {
+            self.processing.panel.tab = tab;
+            self.docks.show(
+                crate::app::Panel::Processing,
+                kentos_ui::widget::docking::Side::Right,
+            );
+            return Task::none();
+        }
         let tool = if id == "map.edgeLengths" {
             "annotation.edgeLengths".to_owned()
         } else if let Some(tool) = id.strip_prefix("processing.run.") {
@@ -234,6 +256,10 @@ impl App {
             }
             Event::Pick(name) => {
                 self.processing_pick(name);
+                return Task::none();
+            }
+            Event::Panel(e) => {
+                self.processing_panel_event(e);
                 return Task::none();
             }
             Event::Target(choice) => {

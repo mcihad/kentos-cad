@@ -1,10 +1,10 @@
 //! The frozen answers of the expression language (fixtures/expression/v1/cases.json,
 //! recorded by apps/web/scripts/fixtures/record-expression.test.ts after the core
 //! agreed with the TypeScript it replaced), natively: each case's objects become
-//! the table the browser sends (`expr::rows`), evaluated in every result mode.
+//! the table the browser sends (`rows`), evaluated in every result mode.
 
-use kentos_style_core::expr::rows::{As, BOOL, EMPTY, NUMBER, RowsInput, TEXT, evaluate_rows};
-use kentos_style_core::expr::{self, Expr};
+use kentos_expression::rows::{As, BOOL, EMPTY, NUMBER, RowsInput, TEXT, evaluate_rows};
+use kentos_expression::{self as expr, Expr};
 use serde_json::Value as Json;
 
 fn fixture() -> Json {
@@ -26,7 +26,7 @@ fn num(v: &Json) -> f64 {
     }
 }
 
-/// The table for `e` (the layout `expr::rows` documents), from the fixture's objects.
+/// The table for `e` (the layout `rows` documents), from the fixture's objects.
 fn table(e: &Expr, objects: &[Json]) -> (String, Vec<i32>, Vec<f64>, Vec<f64>) {
     let mut texts = String::new();
     let mut lens = Vec::new();

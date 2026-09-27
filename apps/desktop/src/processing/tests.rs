@@ -209,3 +209,109 @@ fn screens() {
         }
     }
 }
+
+#[test]
+fn the_toolbox_is_a_tab_beside_the_layers_with_search_and_this_session_s_runs() {
+    use super::panel::{Event as PanelEvent, Tab};
+    use crate::app::Panel;
+
+    let mut app = app_with_parcels();
+    let slot = app.docks.slot(Panel::Processing).expect("docked");
+    assert_eq!(
+        app.docks.slot(Panel::Layers),
+        Some(slot),
+        "the tab is beside Katmanlar"
+    );
+    let _ = app.update(Message::Run("processing.toolbox"));
+    assert!(app.docks.is_shown(Panel::Processing));
+    assert_eq!(app.processing.panel.tab, Tab::Tools);
+    assert_eq!(app.processing_meta(), "4 araç");
+    // Turkish letters folded: “kose” finds Köşe noktalarını numarala only.
+    event(&mut app, Event::Panel(PanelEvent::Search("kose".into())));
+    let hits: Vec<String> = app
+        .processing
+        .registry
+        .search(&app.processing.panel.search)
+        .iter()
+        .map(|t| t.id.clone())
+        .collect();
+    assert_eq!(hits, ["points.numberVertices"]);
+    // A run goes to Geçmiş; Yeniden aç brings its values back, n nesneyi seç what it made.
+    app.selection.set([Slot(3)]);
+    let _ = app.update(Message::Run("processing.run.points.numberVertices"));
+    event(&mut app, Event::Value("prefix".into(), json!("K")));
+    event(&mut app, Event::Run);
+    event(&mut app, Event::Close);
+    let _ = app.update(Message::Run("processing.history"));
+    assert_eq!(app.processing.panel.tab, Tab::History);
+    assert_eq!(app.processing_meta(), "1 kayıt");
+    let seq = app.processing.runner.history()[0].seq;
+    app.selection.clear();
+    event(&mut app, Event::Panel(PanelEvent::SelectRun(seq)));
+    assert_eq!(app.selection.len(), 4, "the four new corner points");
+    event(&mut app, Event::Panel(PanelEvent::Reopen(seq)));
+    let window = app.processing.dialog.as_ref().expect("open again");
+    assert_eq!(window.values.get("prefix"), Some(&json!("K")));
+}
+
+/// The dock's İşlemler tab for the owner: the tools, a search and the
+/// history with three runs. Not run by default:
+/// `cargo test -p kentos-desktop processing::tests::panel_screens -- --ignored --nocapture`.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn panel_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    use super::panel::Event as PanelEvent;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
+        for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
+            for name in ["araclar", "arama", "gecmis"] {
+                let mut app = app_with_parcels();
+                let _ = app
+                    .settings
+                    .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+                app.apply_settings();
+                let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+                let mut update = |app: &mut App, message| {
+                    let _ = app.update(message);
+                };
+                snapshot.settle(&mut app, App::view, &mut update);
+                if name == "gecmis" {
+                    for (ids, command) in [
+                        (
+                            vec![Slot(1), Slot(2)],
+                            "processing.run.points.numberVertices",
+                        ),
+                        (vec![Slot(6)], "processing.run.annotation.edgeLengths"),
+                        (
+                            vec![Slot(1), Slot(2)],
+                            "processing.model.builtin.parcelSheet",
+                        ),
+                    ] {
+                        app.selection.set(ids);
+                        let _ = app.update(Message::Run(command));
+                        event(&mut app, Event::Run);
+                        event(&mut app, Event::Close);
+                    }
+                    let _ = app.update(Message::Run("processing.history"));
+                } else {
+                    let _ = app.update(Message::Run("processing.toolbox"));
+                }
+                if name == "arama" {
+                    event(&mut app, Event::Panel(PanelEvent::Search("kose".into())));
+                }
+                snapshot.settle(&mut app, App::view, &mut update);
+                let file = out.join(format!("islemler-{name}-{width}x{height}{suffix}.png"));
+                snapshot
+                    .render(app.view(), &app.theme())
+                    .save(&file)
+                    .expect("writes the picture");
+                println!("{}", file.display());
+            }
+        }
+    }
+}

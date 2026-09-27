@@ -1,5 +1,5 @@
 // Writes the Turkish text order of the expression language
-// (crates/shared/style-core/src/js/collation_tr.rs) from ICU's Turkish
+// (crates/shared/expression/src/js/collation_tr.rs) from ICU's Turkish
 // collation, as Node ships it. Runs only on purpose:
 //   GOLDEN_WRITE=1 pnpm -C apps/web exec vitest run scripts/fixtures/record-collation.test.ts
 // The TypeScript compared text with localeCompare(…, 'tr'), so the order
@@ -12,7 +12,7 @@
 import { writeFileSync } from 'node:fs';
 import { expect, it } from 'vitest';
 
-const OUT = new URL('../../../../crates/shared/style-core/src/js/collation_tr.rs', import.meta.url);
+const OUT = new URL('../../../../crates/shared/expression/src/js/collation_tr.rs', import.meta.url);
 
 /** Blocks the table covers: controls that occur in text, ASCII, Latin, Greek, Cyrillic, general punctuation, currency. */
 const BLOCKS: readonly [number, number][] = [

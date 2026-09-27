@@ -11,9 +11,28 @@ node apps/web/scripts/perf/modules.mjs --label y4 # pnpm build'den sonra: ağır
 pnpm perf:kcad --label after                     # KCAD v2 kaydet/aç: Vite + başsız Chrome (GPU), 1–200 000 parsel × 3 koşu
 KENTOS_PERF_LABEL=after KENTOS_PERF_OUT=docs/perf \
   cargo test --release -p kentos-desktop perf::kcad -- --ignored --nocapture --test-threads=1   # aynısı masaüstünde
+EXPRESSION_PERF_OUT=$PWD/docs/perf EXPRESSION_PERF_LABEL=yeni \
+  cargo test --release -p kentos-expression --test perf -- --ignored --nocapture   # ifade motoru native, 10⁵ ve 10⁶ nesne
+EXPRESSION_BENCH=1 EXPRESSION_N=100000,1000000 EXPRESSION_PERF_OUT=docs/perf EXPRESSION_PERF_LABEL=yeni \
+  pnpm -C apps/web exec vitest run scripts/perf/expression.test.ts --disable-console-intercept   # aynısı web'in WASM yolunda
 ```
 
 Ölçüm sırasında makinede başka ağır süreç (Vite, e2e, cargo) çalışmaz.
+
+## İfade motoru: bugünkü motorun tabanı (2026-09-27, `23cc8f7`)
+
+- **Kaynak:** [expression-native-eski-2026-09-27.md](expression-native-eski-2026-09-27.md), [expression-web-eski-2026-09-27.md](expression-web-eski-2026-09-27.md). Karar [ADR 0100](../adr/0100-expression-engine.md)'dedir; bu, ağaç değerlendiricisinin taşımadan sonraki ölçümüdür, sütunla değerlendiren motor aynı betiklerle ölçülecek.
+- **Ortam:** i5-11300H, 15 GB, Ubuntu 26.04.1; native `--release`, web Node 24 ve `--profile wasm`. Native 20, web 10 koşu; p50.
+- **Veri:** Parsel 1…n, Nitelik (her üçüncüsü Tarla), 0…1000 m² alan. Native süre yalnız değerlendirmedir; web süresi tabloyu kurmayı ve değerleri okumayı da kapsar.
+
+| 10⁶ nesne, p50 | Native | Web (WASM yolu) |
+|---|---|---|
+| `Nitelik = 'Arsa' ve $alan > 500` | 76,8 ms | 169,5 ms |
+| `'P' \|\| doldur($sıra, 5)` | 114,6 ms | 179,7 ms |
+| `metin($alan, 2) \|\| ' m²'` | 109,1 ms | 196,2 ms |
+| `yuvarla($alan, 2)` | 55,4 ms | 71,5 ms |
+| `$alan / 10000 > 0.05 ve $uzunluk < 400` | 73,0 ms | 116,7 ms |
+| `Parsel * 2 + 1` | 57,7 ms | 176,8 ms |
 
 ## KCAD v2 kaydet ve aç: tipli işçi sınırı, aşamalı açılış (2026-09-26, `82dcbb9` → `35caac8`)
 

@@ -49,7 +49,7 @@ pub fn call_op(id: u32, args: &str) -> Result<String, JsError> {
 }
 
 /// One expression's values for a table of objects
-/// (`kentos_style_core::expr::rows` has the table's layout).
+/// (`kentos_expression::rows` has the table's layout).
 #[wasm_bindgen]
 pub struct ExprColumn {
     kinds: Vec<u8>,
@@ -101,7 +101,7 @@ pub fn expr_evaluate(
     scale: f64,
     want: u8,
 ) -> Result<ExprColumn, JsError> {
-    use kentos_style_core::expr::{compile, rows};
+    use kentos_expression::{compile, rows};
     let e = compile(source).map_err(|e| JsError::new(&e.text()))?;
     let c = rows::evaluate_rows(
         &e,
