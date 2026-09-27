@@ -7,7 +7,8 @@ import { DisposableStore, listen } from '../../core/disposable';
 import { watchAll } from '../../core/signal';
 import { h, replaceChildren, type Child } from '../dom';
 import { icon } from '../icons';
-import { LINK_TEXT, SAVE_TEXT, fileSaveText } from '../statusbar/cloudCells';
+import { LINK_TEXT, SAVE_TEXT } from '../statusbar/cellsPlan';
+import { fileSaveText } from '../statusbar/cloudCells';
 import { brandMark } from '../shell/brandButton';
 import { recentFileRow } from '../start/recentList';
 

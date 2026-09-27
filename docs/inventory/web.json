@@ -407,7 +407,7 @@
       "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
-        "apps/web/src/ui/statusbar/cloudCells.ts"
+        "apps/web/src/ui/statusbar/cellsPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -441,7 +441,7 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
-        "apps/web/src/ui/statusbar/cloudCells.ts"
+        "apps/web/src/ui/statusbar/cellsPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -470,7 +470,7 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
-        "apps/web/src/ui/statusbar/cloudCells.ts"
+        "apps/web/src/ui/statusbar/cellsPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -504,7 +504,7 @@
         "apps/web/src/ui/appmenu/AppMenu.ts",
         "apps/web/src/ui/cloud/ProjectsDialog.ts",
         "apps/web/src/ui/start/StartScreen.ts",
-        "apps/web/src/ui/statusbar/cloudCells.ts"
+        "apps/web/src/ui/statusbar/cellsPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -531,7 +531,7 @@
       "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
-        "apps/web/src/ui/statusbar/cloudCells.ts"
+        "apps/web/src/ui/statusbar/cellsPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -566,7 +566,7 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
-        "apps/web/src/ui/statusbar/cloudCells.ts"
+        "apps/web/src/ui/statusbar/cellsPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -599,7 +599,7 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
-        "apps/web/src/ui/statusbar/cloudCells.ts"
+        "apps/web/src/ui/statusbar/cellsPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -629,7 +629,7 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
-        "apps/web/src/ui/statusbar/cloudCells.ts"
+        "apps/web/src/ui/statusbar/cellsPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -659,7 +659,7 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
-        "apps/web/src/ui/statusbar/cloudCells.ts"
+        "apps/web/src/ui/statusbar/cellsPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -694,7 +694,7 @@
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
         "apps/web/src/ui/cloud/ProjectsDialog.ts",
-        "apps/web/src/ui/statusbar/cloudCells.ts"
+        "apps/web/src/ui/statusbar/cellsPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -725,7 +725,7 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/cloud/ProjectsDialog.ts",
-        "apps/web/src/ui/statusbar/cloudCells.ts"
+        "apps/web/src/ui/statusbar/cellsPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -1774,7 +1774,7 @@
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
         "apps/web/src/ui/shell/shellPlan.ts",
-        "apps/web/src/ui/statusbar/cloudCells.ts"
+        "apps/web/src/ui/statusbar/cellsPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -2448,7 +2448,7 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
-        "apps/web/src/ui/statusbar/cloudCells.ts"
+        "apps/web/src/ui/statusbar/cellsPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
