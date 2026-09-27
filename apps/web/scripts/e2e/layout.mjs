@@ -74,6 +74,16 @@ const ITEMS = [
   { id: 'model-designer', open: (ui) => ui.run('processing.newModel') },
   { id: 'cloud-login', open: (ui) => ui.run('cloud.signIn') },
   { id: 'question-layer-remove', open: async (ui) => (await ui.rightClick('.panel--layers .tree__row[data-id="parsel"] .tree__name'), await ui.clickText('.menu__item', 'Sil')), ready: '.dialog--confirm' },
+  // Son revizyonu aç over unsaved work (ui/cloud/FileConflict.ts offerNewest) needs a file project: the same question
+  // with its texts, from the widget.
+  {
+    id: 'question-newest-unsaved',
+    open: (ui) =>
+      ui.eval(
+        `import('/src/ui/widgets/confirm.ts').then((m) => void m.askUnsaved({ name: 'Ada 1244–1249 aplikasyon (kopya)', after: 'Sunucudaki en yeni revizyon açılırsa bu değişiklikler atılır (açık çizim revizyon 12). Saklamak için önce Kaydet ile kaydedin.', verb: 'aç', canSave: false }))`,
+      ),
+    ready: '.dialog--confirm',
+  },
   // Last: it leaves the drawing unsaved.
   { id: 'question-unsaved', open: async (ui) => (await ui.eval(`window.kentos.doc.name.set('Soru')`), await ui.run('file.new'), await ui.clickText('.dialog__foot .btn--primary', 'Oluştur')), ready: '.dialog--confirm' },
 ];

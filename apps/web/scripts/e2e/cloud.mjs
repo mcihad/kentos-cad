@@ -1051,6 +1051,25 @@ try {
   const fileCopy = await b.eval(`({ id: window.kentos.cloud.project.value.projectId, tenantId: window.kentos.cloud.project.value.tenantId, size: window.kentos.doc.size, dirty: window.kentos.doc.dirty.value })`);
   const original = await ayse.call('GET', `${fbase}/files`);
   check('“Ayrı kopya olarak kaydet” makes the drawing, its edit included, a new file project; the original keeps its revisions', r5.status === 200 && fileCopy.size === r4size + 1 && !fileCopy.dirty && original.body.current === '5', `${fileCopy.size} nesne`);
+  // Son revizyonu aç over an unsaved edit with no newer revision known: the unsaved question (before, nothing
+  // happened); Vazgeç keeps the edit, Kaydetmeden aç opens the newest revision without it.
+  await addPoint(486604);
+  const unsavedSel = '.dialog[aria-label="Kaydedilmemiş değişiklikler"]';
+  await b.eval(`window.kentos.commands.execute('cloud.openNewest')`);
+  await b.waitFor(`!!document.querySelector('${unsavedSel}')`, 10000);
+  const askedNewest = await b.eval(`(() => { const d = document.querySelector('${unsavedSel}'); return { answers: [...d.querySelectorAll('.dialog__foot .btn')].map((x) => x.textContent), text: d.querySelector('.dialog__body')?.textContent ?? d.textContent }; })()`);
+  await press(`${unsavedSel} .dialog__foot .btn`, 'Vazgeç');
+  const keptEdit = await b.eval(`({ dirty: window.kentos.doc.dirty.value, size: window.kentos.doc.size })`);
+  await b.eval(`window.kentos.commands.execute('cloud.openNewest')`);
+  await b.waitFor(`!!document.querySelector('${unsavedSel}')`, 10000);
+  await press(`${unsavedSel} .dialog__foot .btn`, 'Kaydetmeden aç');
+  await b.waitFor(`!window.kentos.doc.dirty.value && window.kentos.doc.size === ${fileCopy.size}`, 30000);
+  check(
+    '“Son revizyonu aç” over an unsaved edit asks first; Vazgeç keeps it, Kaydetmeden aç opens the newest revision without it',
+    askedNewest.answers.join('|') === 'Kaydetmeden aç|Vazgeç' && askedNewest.text.includes('kaydedilmemiş değişiklikler var') && askedNewest.text.includes('revizyon 1') &&
+      keptEdit.dirty && keptEdit.size === fileCopy.size + 1 && (await b.eval('window.kentos.cloud.file.value?.base.value')) === '1',
+    JSON.stringify({ askedNewest, keptEdit }),
+  );
 
   // ── History and checkpoints (docs/adr/0034, 0038) ──
   // Downloads are written to a stand-in for the save dialog; `window.__disk.bytes` is the file.
