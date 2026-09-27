@@ -8,6 +8,18 @@ import { colorSwatch } from '../layers/swatch';
 const DELAY_MS = 500;
 
 /**
+ * The registered (tapu) area as the card shows it: the attribute as written,
+ * not parsed, rounded or converted (it is the deed's value, CLAUDE.md §7,
+ * §23.1), with “m²” after a plain decimal number (a point or a comma); null
+ * when there is none.
+ */
+export function deedAreaText(attrs: Readonly<Record<string, string>>): string | null {
+  const text = (attrs['Tapu alanı (m²)'] ?? '').trim();
+  if (!text) return null;
+  return /^\d+([.,]\d+)?$/.test(text) ? `${text} m²` : text;
+}
+
+/**
  * Rollover card: resting the mouse on an object (select tool) shows what
  * it is — kind, layer, length or area, parcel data — without selecting it.
  */
@@ -73,10 +85,10 @@ export class HoverCard extends Component {
     if (a.Mahalle) rows.push(['Mahalle', a.Mahalle]);
     if (a.Nitelik) rows.push(['Nitelik', a.Nitelik]);
     // Registered (tapu) area next to the computed one: the difference is what a surveyor checks.
-    const deed = parseFloat(a['Tapu alanı (m²)'] ?? '');
-    if (Number.isFinite(deed)) rows.push(['Tapu alanı', format.area(deed)]);
+    const deed = deedAreaText(a);
+    if (deed !== null) rows.push(['Tapu alanı', deed]);
     const area = entityArea(e);
-    if (area !== null) rows.push([Number.isFinite(deed) ? 'Hesaplanan alan' : 'Alan', format.area(area)]);
+    if (area !== null) rows.push([deed !== null ? 'Hesaplanan alan' : 'Alan', format.area(area)]);
     if (e.kind === 'polygon' && e.holes?.length) rows.push(['Ada (delik)', String(e.holes.length)]);
     const length = entityLength(e);
     if (length !== null) rows.push([e.kind === 'polygon' || e.kind === 'circle' ? 'Çevre' : 'Uzunluk', format.length(length)]);
