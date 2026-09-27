@@ -40,14 +40,39 @@ Komut kayıtlarının yanında menü ve şerit yerleri de hesaplanır: menü yol
   - `partial` yalnız `annotations.json`'dan gelir ve nedenini `note` alanında taşır.
 - **`platforms`:** `{ web, desktop }`.
   - `web` `status`'la aynıdır.
-  - `desktop`: masaüstü kabuğunun çalıştırdığı komutlar (`apps/desktop/ported.json`, masaüstü testi onu `catalog::PORTED` ile eşit tutar) `implemented`'dır, öbürleri `none`. Ayarlarda tipli ayarın `hosts`'unda masaüstü varsa `implemented`'dır (`settingsSchema.json`). Bir özellik masaüstünde anlamsızsa notla `n/a` yazılır.
-- **`tests`:** kimliğin geçtiği test dosyaları, e2e betikleri ve etkileşim izleri (`fixtures/interaction`, [ADR 0018](../adr/0018-tool-session-and-input.md)).
+  - `desktop`: `implemented` | `partial` | `pending` | `none` | `n/a`; aşağıdaki kaynaklardan, her biri öncekinin üstüne, bu sırayla gelir. Hiçbiri bir şey demezse `none`'dır.
+    1. `apps/desktop/equivalents.json`'ın `sections`'ı: bütün bir bölüm için tek söz (ör. `.kcad` alanlarının hepsi, ortak kodek).
+    2. `apps/desktop/ported.json`: masaüstü kabuğunun çalıştırdığı komutlar (masaüstü testi onu `catalog::PORTED` ile eşit tutar) `implemented`'dır; onlarla araçlar (`tool.<id>`), işlem araçları ve modeller (`processing.run.<id>`, `processing.model.<id>`) ve çalışma modları (`workspace.<id>`).
+    3. Ayarlarda tipli ayarın `hosts`'unda masaüstü varsa `implemented` (`settingsSchema.json`).
+    4. `apps/desktop/equivalents.json`'ın öğe öğe dedikleri; öğeye `desktopWhere` (masaüstündeki yeri) ve `desktopNote` (neden; `n/a`'da zorunlu) da gelir.
+    5. `annotations.json`'daki `desktop`.
+- **`tests`:** kimliğin geçtiği test dosyaları, e2e betikleri ve etkileşim izleri (`fixtures/interaction`, [ADR 0018](../adr/0018-tool-session-and-input.md)). Yalnız resim çeken betikler (`…shots.mjs`) sayılmaz.
   - Komutta kimlik tırnak içinde aranır. Araçta `tool.<id>` ya da `activate('<id>')`, işlem araçlarında kimlik ya da komut kimliği aranır.
   - Kimliğin geçmesi davranışın sınandığını göstermez. Boş liste de sınanmadığı anlamına gelmez: test komutu başka bir yoldan çalıştırıyor olabilir.
 - **`uiSources`** (komutlar): kimliğin tırnak içinde geçtiği `src/ui` dosyaları. Panel düğmeleri, durum çubuğu, uygulama menüsü ve pencereler böyle bulunur.
 - **`shortcutsInInput`** (komutlar): `shortcuts`'tan, bir metin alanı klavyedeyken de çalışanlar (tuş eşleminde `allowInInput`, `app/keybindings.ts`: Ctrl+S, F tuşları …). Yalnız böyle bir akoru olan komutlarda bulunur. Masaüstü metin alanlarında hangi akorun geçeceğini buradan okur (`apps/desktop/src/catalog.rs`); elle kopyalanmış liste yoktur.
 - **`productCommand`** (araçlar): aracın onayında çalışan ürün komutu, katalogdaki kimliğiyle (ADR 0013, 0022). Araç kataloğundan (`tools/catalog.ts`) gelir; yalnız bir ürün komutundan yazan araçlarda bulunur. Arayüz komutu ile ürün komutu arasındaki eşleme budur (`AI-01`).
 - **`note`, `acceptance`:** `annotations.json`'dan. `acceptance`, TODOS.md'deki kabul izidir. Otomatik testin yerine geçmez.
+
+## Masaüstünün tablosu (`apps/desktop/equivalents.json`)
+
+Masaüstünün elle tuttuğu dosyadır (`kentos.desktop-equivalents`, sürüm 1); `ported.json`'ın yanında durur. Yoksa boş sayılır.
+
+```json
+{
+  "format": "kentos.desktop-equivalents",
+  "version": 1,
+  "commands": { "view.renderer.webgl2": { "desktop": "n/a", "reason": "Masaüstü yalnız wgpu ile çizer (ADR 0019)." } },
+  "screens": { "apps/web/src/ui/processing/ToolDialog.ts#openToolDialog": { "desktop": "implemented", "where": "apps/desktop/src/processing/window.rs" } },
+  "storage": { "kentos.processing.v1": { "desktop": "implemented", "where": "$XDG_STATE_HOME/kentos-cad/islemler.json" } },
+  "sections": { "fileFields": { "desktop": "implemented", "reason": "Masaüstü KCAD v2'yi ortak kodekle okur ve yazar." } }
+}
+```
+
+- Anahtarlar envanterin bölümleri (`commands`, `tools`, `processing`, `models`, `workspaces`, `settings`, `storage`, `fileFields`, `screens`) ve `sections`'dır; öğe anahtarları `web.json`'daki `id`'lerdir.
+- Bir öğe: `desktop` (yukarıdaki sözler), `where` (masaüstündeki yeri: modül, dosya, ayar anahtarı), `reason` (Türkçe neden; `n/a`'da zorunlu, `partial`'da beklenir). Başka alan yazılmaz.
+- Envanterde olmayan bir bölüm ya da kimlik, bilinmeyen bir söz ya da alan, nedeni yazılmamış `n/a` betiği durdurur: tablo fark edilmeden eskimez.
+- `summary.desktop` her bölümde masaüstünde olan, kısmi, olmayan ve anlamsız öğeleri sayar; `summary.desktopSections` tablonun bütün bölümler için dediğidir. `web.md` bunları bölüm bölüm yazar ve web'de olup masaüstünde olmayanları sıralar.
 
 ## Notlar
 
@@ -58,4 +83,4 @@ Komut kayıtlarının yanında menü ve şerit yerleri de hesaplanır: menü yol
 ## Sınırlar
 
 - Tarama kalıpları kodun bugünkü alışkanlıklarıdır. Başka biçimde yazılmış bir pencere ya da depo kaçırılır, yanlış okunmaz.
-- Envanter web uygulamasınındır. Sunucu uçları (`apps/api`) ve Rust hesap çağrıları ayrı envanterdir. Masaüstü, Python ve AI sütunları kendi fazlarında eklenir (`AI-01`).
+- Envanter web uygulamasınındır. Sunucu uçları (`apps/api`) ve Rust hesap çağrıları ayrı envanterdir. Python ve AI sütunları kendi fazlarında eklenir (`AI-01`).
