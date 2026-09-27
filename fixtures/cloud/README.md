@@ -67,7 +67,7 @@ Bulut projeleri penceresinin (katalog, [ADR 0028](../../docs/adr/0028-project-ca
 | `metadata` | Proje bilgileri: gösterilen katalog sürümü (`shown`) ve formun şimdiki değerleri (`now`) → gönderilen yama (yalnız değişenler: ad kırpılarak, tür, açıklama, etiketler sırasıyla) ve Kaydet açık mı (ad boş değil ve bir şey değişti) |
 | `rename` | Yeniden adlandır açık mı: kırpılmış ad boş değil ve şimdiki addan başka |
 | `duplicate` | Kopyasını oluştur açık mı: bir çalışma alanı var ve ad boş değil |
-| `places` | Sunulan çalışma alanları: etkin, koltuklu ve `project.create` yetkili üyelikler, kaynağın alanı başta, gerisi hesabın sırasıyla; ad kurumda kurumun adı, kişisel alanda “Kişisel”. Liste ikiden azken kapalıdır |
+| `places` | Sunulan çalışma alanları: etkin, koltuklu ve `project.create` yetkili üyelikler, kaynağın alanı başta, gerisi hesabın sırasıyla; ad kurumda kurumun adı, kişisel alanda “Kişisel”. Liste ikiden azken kapalıdır. Üyelikler sözleşmenin `MembershipView`'ıdır (rol `TenantRole`); rol okunmaz, bu yüzden üyeliklerde farklıdır |
 | `convert` | Öbür saklama biçimine çevirme: proje (`name`, `storage`) ve açık çizimin kaydedilmemiş değişikliği (`openDirty`: bu proje burada açık ve değişmiş) → hedef, başlık, giriş, sonuçlar (veritabanına aktarırken sunucu sınırı ve varsa kaydedilmemiş değişiklik notu), ad alanının örneği, sürerken söz |
 | `counts` | Sunucunun ondalık metin olarak gönderdiği sayılar, Türkçe binlik ayırıcıyla (1.234.567; JavaScript sayısına çevrilmeden); sayı olmayan metin olduğu gibi |
 | `convertedLines` | Çevirmenin günlük satırı |

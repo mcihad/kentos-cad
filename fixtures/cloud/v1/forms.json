@@ -318,7 +318,7 @@
     "tenantSlug": "t-kisisel",
     "tenantName": "Ayşe Yılmaz",
     "tenantKind": "personal",
-    "role": "member",
+    "role": "owner",
     "seat": true,
     "active": true,
     "capabilities": [
@@ -330,7 +330,7 @@
     "tenantSlug": "t-buro",
     "tenantName": "Büro",
     "tenantKind": "organization",
-    "role": "member",
+    "role": "editor",
     "seat": true,
     "active": true,
     "capabilities": [
@@ -342,7 +342,7 @@
     "tenantSlug": "t-belediye",
     "tenantName": "Belediye",
     "tenantKind": "organization",
-    "role": "member",
+    "role": "viewer",
     "seat": true,
     "active": true,
     "capabilities": []
@@ -352,7 +352,7 @@
     "tenantSlug": "t-eski",
     "tenantName": "Eski Kurum",
     "tenantKind": "organization",
-    "role": "member",
+    "role": "admin",
     "seat": true,
     "active": false,
     "capabilities": [
@@ -364,7 +364,7 @@
     "tenantSlug": "t-koltuksuz",
     "tenantName": "Koltuksuz Kurum",
     "tenantKind": "organization",
-    "role": "member",
+    "role": "editor",
     "seat": false,
     "active": true,
     "capabilities": [
@@ -376,7 +376,7 @@
     "tenantSlug": "t-ortak",
     "tenantName": "Ortak Çalışma",
     "tenantKind": "organization",
-    "role": "member",
+    "role": "project_manager",
     "seat": true,
     "active": true,
     "capabilities": [

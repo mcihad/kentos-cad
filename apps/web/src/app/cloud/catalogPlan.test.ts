@@ -3,6 +3,7 @@ import type { CatalogSort } from '../../contracts/generated/CatalogSort';
 import type { CatalogView } from '../../contracts/generated/CatalogView';
 import type { ProjectPermission } from '../../contracts/generated/ProjectPermission';
 import type { ProjectSummary } from '../../contracts/generated/ProjectSummary';
+import { fieldsOf, membersOf } from '../../contracts/testContract';
 import { SORT_LABEL, STATE_LABEL, TYPE_HINT, TYPE_LABEL, VIEWS } from './catalog';
 import {
   ARCHIVED_TEXT,
@@ -120,32 +121,3 @@ describe('catalog words and rules (fixtures/cloud/v1/catalog.json)', () => {
     }
   });
 });
-
-// The contract as ts-rs writes it from the Rust types (crates/shared/contracts): read as text, so the values
-// allowed here are the Rust ones, not a copy.
-const CONTRACT = import.meta.glob<string>('../../contracts/generated/{AccessSource,AreaUnit,ProjectAccessView,ProjectPermission,ProjectRole,ProjectState,ProjectStorage,ProjectSummary,ProjectType,TenantKind}.ts', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-});
-const contractText = (type: string): string => {
-  const text = CONTRACT[`../../contracts/generated/${type}.ts`];
-  if (text === undefined) throw new Error(`contracts/generated/${type}.ts okunamadı`);
-  // Doc comments carry words, not fields.
-  return text.replace(/\/\*\*[\s\S]*?\*\//g, '');
-};
-/** A string union's members: `export type X = "a" | "b";`. */
-function membersOf(type: string): string[] {
-  const body = /export type \w+ = ([^;]+);/.exec(contractText(type))?.[1] ?? '';
-  const out = [...body.matchAll(/"([^"]*)"/g)].map((m) => m[1]);
-  if (!out.length) throw new Error(`${type} bir metin birleşimi değil`);
-  return out;
-}
-/** An object type's fields, name → optional: `export type X = { a: …, b?: … };`. */
-function fieldsOf(type: string): Map<string, boolean> {
-  const text = contractText(type);
-  const body = text.slice(text.indexOf('= {') + 3, text.lastIndexOf('}'));
-  const out = new Map([...body.matchAll(/(?:^|[,{\s])(\w+)(\?)?\s*:/g)].map((m) => [m[1], m[2] === '?']));
-  if (!out.size) throw new Error(`${type} bir nesne türü değil`);
-  return out;
-}

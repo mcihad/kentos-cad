@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { MembershipView } from '../../contracts/generated/MembershipView';
 import type { ProjectStorage } from '../../contracts/generated/ProjectStorage';
 import type { ProjectType } from '../../contracts/generated/ProjectType';
+import { fieldProblems, memberProblem } from '../../contracts/testContract';
 import { ApiFailure } from './api';
 import { parseTags } from './catalog';
 import {
@@ -111,6 +112,20 @@ describe('project forms (fixtures/cloud/v1/forms.json)', () => {
 
   it('offers the workspaces the account may open projects in, the source’s first', () => {
     for (const c of F.places.cases) expect(creatablePlaces(F.places.memberships, c.first), c.first).toEqual(c.places);
+  });
+
+  // The desktop reads the file's memberships, project types and storage modes into the contract's own types,
+  // strictly: a value the contract does not have ("role": "member") must fail here too, not only there.
+  it('holds the file’s contract values to the generated contract', () => {
+    for (const m of F.places.memberships) {
+      expect(fieldProblems(m, 'MembershipView'), m.tenantId).toEqual([]);
+      expect(memberProblem(m.role, 'TenantRole'), `${m.tenantId}: role`).toBeNull();
+      expect(memberProblem(m.tenantKind, 'TenantKind'), `${m.tenantId}: tenantKind`).toBeNull();
+    }
+    for (const [where, t] of [['shown', F.metadata.shown.projectType], ...F.metadata.cases.map((c) => [c.title, c.now.projectType])])
+      expect(memberProblem(t, 'ProjectType'), `metadata: ${where}`).toBeNull();
+    for (const [where, s] of [...F.convert.map((c) => [c.title, c.project.storage]), ...F.convertedLines.map((c) => [c.name, c.to])])
+      expect(memberProblem(s, 'ProjectStorage'), `storage: ${where}`).toBeNull();
   });
 
   it('says what a conversion to the other storage mode does', () => {

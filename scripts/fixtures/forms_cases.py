@@ -160,17 +160,20 @@ RENAMES = [('Ada 102', 'Ada 101'), ('Ada 101', 'Ada 101'), ('  Ada 101  ', 'Ada 
 DUPLICATES = [(2, 'Ada 101 (kopya)'), (0, 'Ada 101 (kopya)'), (1, '  '), (1, 'x')]
 
 
-def membership(tid, name, kind='organization', active=True, seat=True, caps=('project.create',)):
-    return {'tenantId': tid, 'tenantSlug': tid, 'tenantName': name, 'tenantKind': kind, 'role': 'member', 'seat': seat, 'active': active, 'capabilities': list(caps)}
+# The contract's MembershipView (crates/shared/contracts: TenantRole is viewer, editor, project_manager, admin or
+# owner). Where a project may be made is its capabilities', its seat's and its being active: the role only says
+# who the member is, so the roles vary to show they are not read.
+def membership(tid, name, role, kind='organization', active=True, seat=True, caps=('project.create',)):
+    return {'tenantId': tid, 'tenantSlug': tid, 'tenantName': name, 'tenantKind': kind, 'role': role, 'seat': seat, 'active': active, 'capabilities': list(caps)}
 
 
 MEMBERSHIPS = [
-    membership('t-kisisel', 'Ayşe Yılmaz', kind='personal'),
-    membership('t-buro', 'Büro'),
-    membership('t-belediye', 'Belediye', caps=()),
-    membership('t-eski', 'Eski Kurum', active=False),
-    membership('t-koltuksuz', 'Koltuksuz Kurum', seat=False),
-    membership('t-ortak', 'Ortak Çalışma'),
+    membership('t-kisisel', 'Ayşe Yılmaz', 'owner', kind='personal'),
+    membership('t-buro', 'Büro', 'editor'),
+    membership('t-belediye', 'Belediye', 'viewer', caps=()),
+    membership('t-eski', 'Eski Kurum', 'admin', active=False),
+    membership('t-koltuksuz', 'Koltuksuz Kurum', 'editor', seat=False),
+    membership('t-ortak', 'Ortak Çalışma', 'project_manager'),
 ]
 CONVERTS = [
     ('a file project, not open here', {'name': 'Ada 101', 'storage': 'file'}, False),
