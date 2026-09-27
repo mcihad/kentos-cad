@@ -181,7 +181,9 @@ impl App {
                     Some(Next::Upload(storage)) => self.leave(Then::Upload(storage)),
                     None => Task::none(),
                 };
-                Task::batch([online, next])
+                // The server answered: its cell asks it again, quietly, unless it says so already.
+                let server = self.server_answers_again();
+                Task::batch([online, next, server])
             }
         }
     }

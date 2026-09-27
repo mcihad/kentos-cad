@@ -85,6 +85,11 @@ pub(crate) fn said(app: &App) -> Vec<String> {
         .collect()
 }
 
+/// The status bar's save cell's words (cells.rs).
+pub(crate) fn cell_text(app: &App) -> String {
+    app.save_cell().map(|c| c.view.text).unwrap_or_default()
+}
+
 pub(crate) fn last_said(app: &App) -> String {
     said(app).pop().unwrap_or_default()
 }
@@ -101,7 +106,7 @@ fn permissions(write: bool) -> Vec<ProjectPermission> {
     p
 }
 
-fn info(storage: ProjectStorage, write: bool, state: ProjectState) -> ProjectInfo {
+pub(crate) fn info(storage: ProjectStorage, write: bool, state: ProjectState) -> ProjectInfo {
     let s = DocumentSnapshotV1::from_json(SAMPLE).expect("reads");
     ProjectInfo {
         id: PROJECT.into(),
@@ -181,7 +186,7 @@ fn opened(info: ProjectInfo) -> Opened {
 /// Opens `info`'s project as the catalog would, the server's answer handed
 /// over; the copy is written (when there is a place for copies) and the
 /// drawing replaced, off the UI thread as in the app.
-fn open(app: &mut App, info: ProjectInfo) {
+pub(crate) fn open(app: &mut App, info: ProjectInfo) {
     app.cloud.open_hint = Some((info.name.clone(), info.storage));
     let _ = app.start_cloud_open(uuid(TENANT), uuid(PROJECT));
     let id = app.cloud.opening.as_ref().expect("opening").id;
@@ -205,7 +210,7 @@ pub(crate) fn database(app: &mut App) {
 }
 
 /// The first object (a point on “Çizim”), moved east by `dx`: an edit of this user.
-fn edit(app: &mut App, dx: f64) -> Uuid {
+pub(crate) fn edit(app: &mut App, dx: f64) -> Uuid {
     let doc = app.document.as_mut().expect("open");
     let slot = Slot(doc.model.entities().next().expect("an object").base().id);
     let mut e = doc.model.get(slot).expect("there").clone();
@@ -615,7 +620,7 @@ fn a_database_project_opens_as_the_drawing_and_says_where_it_is() {
     assert_eq!(app.dialog, None, "the catalog closed");
     assert!(app.cloud.catalog.is_none());
     assert_eq!(state(&app), SaveState::Saved);
-    assert_eq!(app.save_cell().0, "Kaydedildi");
+    assert_eq!(cell_text(&app), "Buluta kaydedildi");
 }
 
 #[test]
@@ -665,7 +670,7 @@ fn an_archived_project_opens_read_only_with_the_web_s_notice() {
         info(ProjectStorage::Database, true, ProjectState::Archived),
     );
     assert_eq!(state(&app), SaveState::Archived);
-    assert_eq!(app.save_cell().0, "Arşivlendi");
+    assert_eq!(cell_text(&app), "Proje arşivde");
     assert!(said(&app).iter().any(|t| t
         == "“Ada 101” arşivlenmiş bir proje: salt okunur açıldı; değişiklikler buluta kaydedilmez. Düzenlemek için arşivden çıkarılmalı ya da kopyası oluşturulmalı."));
 }
@@ -722,7 +727,7 @@ fn an_edit_goes_a_second_after_the_last_and_at_most_five_after_the_first() {
     edit(&mut app, 1.0);
     app.cloud_after(t0);
     assert_eq!(state(&app), SaveState::Pending);
-    assert_eq!(app.save_cell().0, "Kaydedilmedi (1)");
+    assert_eq!(cell_text(&app), "Kaydedilecek: 1");
     assert!(app.document.as_ref().expect("open").dirty());
     let _ = app.cloud_tick(t0 + Duration::from_millis(900));
     assert!(
@@ -739,7 +744,7 @@ fn an_edit_goes_a_second_after_the_last_and_at_most_five_after_the_first() {
     assert!(app.cloud.live.as_ref().is_some_and(|l| l.sent.is_none()));
     let _ = app.cloud_tick(t0 + Duration::from_millis(5000));
     assert_eq!(state(&app), SaveState::Saving);
-    assert_eq!(app.save_cell().0, "Kaydediliyor");
+    assert_eq!(cell_text(&app), "Kaydediliyor…");
     let key = app
         .cloud
         .live
@@ -770,7 +775,7 @@ fn an_edit_goes_a_second_after_the_last_and_at_most_five_after_the_first() {
         !app.document.as_ref().expect("open").dirty(),
         "saved when the server has it"
     );
-    assert_eq!(app.save_cell().0, "Kaydedildi");
+    assert_eq!(cell_text(&app), "Buluta kaydedildi");
 }
 
 #[test]
@@ -796,7 +801,7 @@ fn a_passing_failure_waits_and_the_same_command_goes_again() {
         )),
     );
     assert_eq!(state(&app), SaveState::Offline);
-    assert_eq!(app.save_cell().0, "Bağlantı yok — yeniden denenecek");
+    assert_eq!(cell_text(&app), "Çevrimdışı: 1 bekliyor");
     let _ = app.cloud_tick(Instant::now());
     assert!(
         !app.cloud.live.as_ref().expect("live").sending(),
@@ -843,9 +848,14 @@ fn a_refusal_for_good_shows_the_server_s_message() {
         )),
     );
     assert_eq!(state(&app), SaveState::Error);
-    assert_eq!(
-        app.save_cell().0,
-        "Kaydedilmedi: “Çizim” katmanı kilitli; nesneleri değiştirilemez."
+    // The web's words in the cell, the server's reason in its tip.
+    assert_eq!(cell_text(&app), "Kayıt hatası");
+    assert!(
+        app.save_cell()
+            .expect("a cloud project")
+            .tip
+            .description
+            .contains("Kaydedilmedi: “Çizim” katmanı kilitli; nesneleri değiştirilemez.")
     );
     assert_eq!(
         last_said(&app),
@@ -855,20 +865,6 @@ fn a_refusal_for_good_shows_the_server_s_message() {
 
 #[test]
 fn the_status_words_are_the_brief_s() {
-    let cases = [
-        (SaveState::Saved, "Kaydedildi"),
-        (SaveState::Pending, "Kaydedilmedi (3)"),
-        (SaveState::Saving, "Kaydediliyor"),
-        (SaveState::Offline, "Bağlantı yok — yeniden denenecek"),
-        (SaveState::Conflict, "Çakışma"),
-        (SaveState::ReadOnly, "Salt okunur"),
-        (SaveState::Archived, "Arşivlendi"),
-        (SaveState::Deleted, "Çöp kutusunda"),
-        (SaveState::Revoked, "Erişim kaldırıldı"),
-    ];
-    for (state, text) in cases {
-        assert_eq!(words::save_state(state, 3), text);
-    }
     let reasons = [
         (ConflictReason::Changed, "Başkası değiştirdi"),
         (ConflictReason::Deleted, "Başkası sildi"),
@@ -912,7 +908,7 @@ fn a_conflict_stops_sending_and_the_window_offers_both_choices() {
     let _ = app.run("file.save");
     conflict_on(&mut app, uid);
     assert_eq!(state(&app), SaveState::Conflict);
-    assert_eq!(app.save_cell().0, "Çakışma");
+    assert_eq!(cell_text(&app), "Çakışma: 1");
     assert!(app.cloud_available("cloud.conflicts"));
     assert!(
         last_said(&app).starts_with("Kayıt çakışması: 1 nesneyi başka biri daha önce kaydetti.")
@@ -1083,7 +1079,10 @@ fn others_changes_are_waited_for_and_asked_for_again_at_once() {
     assert!(live.polling.is_none());
     assert!(live.poll_at > Instant::now() + Duration::from_millis(500));
     assert_eq!(app.cloud.link, crate::cloud::copy::Link::Offline);
-    assert_eq!(app.link_cell().0, "Çevrimdışı");
+    assert_eq!(
+        app.link_state(),
+        crate::cloud::cells_plan::LinkState::Offline
+    );
 }
 
 /// A point of the sample on the hidden “Çizim” layer at `x`, as another editor made it.
@@ -1328,7 +1327,7 @@ fn a_deletion_seen_while_following_ends_sending() {
         }),
     );
     assert_eq!(state(&app), SaveState::Deleted);
-    assert_eq!(app.save_cell().0, "Çöp kutusunda");
+    assert_eq!(cell_text(&app), "Proje silindi");
     assert!(last_said(&app).starts_with("“Ada 101” bulut projesi silindi."));
     // The web's notice: what happened, what stays, a local copy offered.
     assert_eq!(app.dialog, Some(Dialog::Ended));
@@ -1507,7 +1506,7 @@ fn a_viewer_is_told_once_and_leaving_asks() {
 
 // ── A file project ──────────────────────────────────────────────────────
 
-fn file_project(app: &mut App) {
+pub(crate) fn file_project(app: &mut App) {
     open(app, info(ProjectStorage::File, true, ProjectState::Active));
 }
 
@@ -1526,10 +1525,10 @@ fn a_file_project_saves_its_next_revision() {
     let mut app = signed_in();
     file_project(&mut app);
     assert!(app.cloud.live.is_none(), "no autosave for a file project");
-    assert_eq!(app.save_cell().0, "Buluta kaydedildi · r3");
+    assert_eq!(cell_text(&app), "Buluta kaydedildi · r3");
     edit(&mut app, 1.0);
     let _ = app.update(Message::Modifiers(iced::keyboard::Modifiers::default()));
-    assert_eq!(app.save_cell().0, "Kaydedilmedi · r3 üstüne");
+    assert_eq!(cell_text(&app), "Kaydedilmedi · r3 üstüne");
     let id = save_file(&mut app);
     let s = app.saving.as_ref().expect("saving");
     assert!(s.stage.starts_with("Yükleniyor %"), "{}", s.stage);
@@ -1561,7 +1560,7 @@ fn a_file_project_saves_its_next_revision() {
         Some(4)
     );
     assert_eq!(last_said(&app), "“Ada 101” buluta kaydedildi: revizyon 4.");
-    assert_eq!(app.save_cell().0, "Buluta kaydedildi · r4");
+    assert_eq!(cell_text(&app), "Buluta kaydedildi · r4");
 }
 
 #[test]
@@ -1588,7 +1587,7 @@ fn a_file_conflict_offers_the_newest_revision_or_a_separate_project() {
     assert_eq!(app.dialog, Some(Dialog::FileConflict));
     let c = app.cloud.file_conflict.clone().expect("a conflict");
     assert_eq!((c.server, c.based_on), (5, 3));
-    assert_eq!(app.save_cell().0, "Çakışma: r5 kaydedilmiş");
+    assert_eq!(cell_text(&app), "Çakışma: r5 kaydedilmiş");
     assert!(
         app.document.as_ref().expect("open").dirty(),
         "nothing was written"
@@ -1946,13 +1945,11 @@ fn a_project_opens_from_this_device_s_copy_without_a_connection_and_its_work_wai
             .iter()
             .any(|t| t.contains("Çevrimdışı — değişiklikler bu cihazda saklanıyor"))
     );
+    // Signed out, the work waits in the draft: said as the web says work waiting offline.
+    assert_eq!(cell_text(&app), "Çevrimdışı: 1 bekliyor");
     assert_eq!(
-        app.save_cell().0,
-        "Çevrimdışı — değişiklikler bu cihazda saklanıyor"
-    );
-    assert_eq!(
-        app.link_cell().0,
-        "Çevrimdışı — değişiklikler bu cihazda saklanıyor"
+        app.link_state(),
+        crate::cloud::cells_plan::LinkState::AuthRequired
     );
     // Nothing goes without a session; the work waits in the draft.
     let _ = app.cloud_tick(Instant::now() + Duration::from_secs(10));
@@ -1993,7 +1990,7 @@ fn a_file_project_saved_without_a_connection_waits_in_the_copy_and_goes_later() 
         !app.document.as_ref().expect("open").dirty(),
         "saved on this device"
     );
-    assert_eq!(app.save_cell().0, "Kaydedildi (bu cihazda) · gönderilecek");
+    assert_eq!(cell_text(&app), "Kaydedildi (bu cihazda) · gönderilecek");
     assert!(app.cloud.held.as_ref().is_some_and(|h| h.kept_save));
 
     // Signed in again: it goes, based on the revision it was made on.
@@ -2017,7 +2014,7 @@ fn a_file_project_saved_without_a_connection_waits_in_the_copy_and_goes_later() 
         },
     );
     assert!(app.cloud.held.as_ref().is_some_and(|h| !h.kept_save));
-    assert_eq!(app.save_cell().0, "Buluta kaydedildi · r4");
+    assert_eq!(cell_text(&app), "Buluta kaydedildi · r4");
     let _ = std::fs::remove_dir_all(dir);
 }
 
@@ -2056,7 +2053,7 @@ fn a_kept_save_that_meets_a_newer_revision_keeps_both_until_the_choice() {
         app.cloud.held.as_ref().is_some_and(|h| h.kept_save),
         "never dropped without the choice"
     );
-    assert_eq!(app.save_cell().0, "Çakışma: r6 kaydedilmiş");
+    assert_eq!(cell_text(&app), "Çakışma: r6 kaydedilmiş");
     let _ = std::fs::remove_dir_all(dir);
 }
 
@@ -2121,15 +2118,22 @@ fn removing_a_copy_asks_about_its_unsent_work_first() {
 }
 
 #[test]
-fn the_dot_says_online_offline_or_syncing() {
+fn the_link_says_live_offline_or_signed_out() {
+    use crate::cloud::cells_plan::LinkState;
     let mut app = signed_in();
     database(&mut app);
-    assert_eq!(app.link_cell().0, "Çevrimiçi");
+    assert_eq!(app.link_state(), LinkState::Online);
     edit(&mut app, 1.0);
     app.cloud_after(Instant::now());
-    assert_eq!(app.link_cell().0, "Eşitleniyor");
+    assert_eq!(
+        cell_text(&app),
+        "Kaydedilecek: 1",
+        "what waits, in the save cell"
+    );
     app.cloud.link = crate::cloud::copy::Link::Offline;
-    assert_eq!(app.link_cell().0, "Çevrimdışı");
+    assert_eq!(app.link_state(), LinkState::Offline);
+    app.cloud.me = None;
+    assert_eq!(app.link_state(), LinkState::AuthRequired);
 }
 
 /// The connection's return with nothing waiting sends nothing, and the next

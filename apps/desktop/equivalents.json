@@ -195,11 +195,7 @@
     "apps/web/src/ui/shell/HoverCard.ts#HoverCard": { "desktop": "implemented", "where": "apps/desktop/src/hover_card.rs (ADR 0068, 0082)" },
     "apps/web/src/ui/shell/InlineTextEditor.ts#InlineTextEditor": { "desktop": "implemented", "where": "apps/desktop/src/text_field.rs (ADR 0060)" },
     "apps/web/src/ui/start/StartScreen.ts#openStartScreen": { "desktop": "implemented", "where": "apps/desktop/src/start.rs (ADR 0050)" },
-    "apps/web/src/ui/statusbar/StatusBar.ts#StatusBar": {
-      "desktop": "partial",
-      "where": "apps/desktop/src/view.rs, cloud/view.rs (ADR 0058, 0080)",
-      "reason": "Web'in sunucu hücresi ve onun hesap menüsü yok; masaüstünde hesabın adı ve Çıkış ayrı hücrelerdir (ADR 0041). Çizim motoru hücresi masaüstünde anlamsızdır (wgpu)."
-    },
+    "apps/web/src/ui/statusbar/StatusBar.ts#StatusBar": { "desktop": "partial", "where": "apps/desktop/src/view.rs, cloud/cells.rs (ADR 0058, 0080, 0113)", "reason": "Web'in son iletiyi birkaç saniye gösteren hücresi yok; iletiler alt paneldedir. Dosya projesinde başkasının yeni revizyonu henüz izlenmediği için “Yeni revizyon” durumu gösterilmez. Çizim motoru hücresi masaüstünde anlamsızdır (wgpu)." },
     "apps/web/src/ui/style/LayerStyleDialog.ts#openLayerStyle": { "desktop": "implemented", "where": "apps/desktop/src/style/layer_style/ (ADR 0091)" },
     "apps/web/src/ui/style/LegendDialog.ts#openLegend": { "desktop": "implemented", "where": "apps/desktop/src/style/legend/ (ADR 0093)" },
     "apps/web/src/ui/style/StyleManager.ts#openStyleManager": {

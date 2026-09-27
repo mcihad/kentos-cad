@@ -33,7 +33,9 @@
 //! | `follow.rs` | others' changes followed, access, conflicts resolved |
 //! | `file.rs` | a file project's save and its conflict |
 //! | `upload.rs` | “Buluta yükle” |
-//! | `view.rs` | the windows and the status bar cells |
+//! | `view.rs` | the windows |
+//! | `cells.rs` | the status bar's save and server cells, the account menu |
+//! | `cells_plan.rs` | what those cells say and do (fixtures/cloud/v1/cells.json) |
 //! | `plan.rs` | what the catalog shows and offers: rows, the selected project, questions, lines |
 //! | `history.rs` | the history's rules: who may name, remove, download and restore |
 //! | `share.rs` | “Projeyi paylaş”: the people, their roles, the invitations |
@@ -52,6 +54,12 @@ mod catalog_history;
 mod catalog_history_view;
 mod catalog_pane;
 mod catalog_view;
+pub mod cells;
+pub mod cells_plan;
+#[cfg(test)]
+mod cells_plan_tests;
+#[cfg(test)]
+mod cells_tests;
 pub mod copy;
 mod file;
 mod follow;
@@ -392,6 +400,11 @@ pub struct CloudState {
     pub archived_by_me: bool,
     /// Projeyi paylaş, over the catalog or alone (share.rs).
     pub share: Option<share::Share>,
+    /// The open file project's last save here: its drawing, revision and when (cells.rs).
+    pub file_saved: Option<(u64, String, i64)>,
+    /// Why the open file project's last save failed: its drawing, what the
+    /// cell says (an error, the project gone, the access taken) and the reason.
+    pub file_failed: Option<(u64, cells_plan::FileState, String)>,
     next: u64,
 }
 
@@ -473,6 +486,13 @@ pub fn access_of(info: &ProjectInfo) -> (bool, bool) {
 /// A project id from the server's text.
 pub fn uuid(text: &str) -> Option<Uuid> {
     Uuid::parse_str(text).ok()
+}
+
+/// Now, in milliseconds since 1970 (the cells' “… önce”).
+pub fn now_ms() -> i64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| i64::try_from(d.as_millis()).unwrap_or(i64::MAX))
 }
 
 impl App {

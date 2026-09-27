@@ -115,7 +115,9 @@ fn main() -> iced::Result {
             if path.is_none() {
                 app.start_at_launch();
             }
-            (app, task)
+            // The server cell's first answer (the web asks once it is idle after start).
+            let server = app.check_server_quietly();
+            (app, iced::Task::batch([task, server]))
         },
         app::App::update,
         app::App::view,
