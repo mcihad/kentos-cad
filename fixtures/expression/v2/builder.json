@@ -458,6 +458,263 @@
     },
     {
       "args": [
+        "durum eğer Kat > 3 ise 'yüksek' yoksa 'alçak' son"
+      ],
+      "op": "exprTokens",
+      "result": [
+        {
+          "class": "keyword",
+          "end": 5,
+          "start": 0
+        },
+        {
+          "class": "keyword",
+          "end": 10,
+          "start": 6
+        },
+        {
+          "class": "field",
+          "end": 14,
+          "start": 11
+        },
+        {
+          "class": "operator",
+          "end": 16,
+          "start": 15
+        },
+        {
+          "class": "number",
+          "end": 18,
+          "start": 17
+        },
+        {
+          "class": "keyword",
+          "end": 22,
+          "start": 19
+        },
+        {
+          "class": "text",
+          "end": 31,
+          "start": 23
+        },
+        {
+          "class": "keyword",
+          "end": 37,
+          "start": 32
+        },
+        {
+          "class": "text",
+          "end": 45,
+          "start": 38
+        },
+        {
+          "class": "keyword",
+          "end": 49,
+          "start": 46
+        }
+      ]
+    },
+    {
+      "args": [
+        "Nitelik değil içinde ('Arsa', 'Tarla') ve Kat arasında 3 ve 5"
+      ],
+      "op": "exprTokens",
+      "result": [
+        {
+          "class": "field",
+          "end": 7,
+          "start": 0
+        },
+        {
+          "class": "keyword",
+          "end": 13,
+          "start": 8
+        },
+        {
+          "class": "keyword",
+          "end": 20,
+          "start": 14
+        },
+        {
+          "class": "paren",
+          "end": 22,
+          "start": 21
+        },
+        {
+          "class": "text",
+          "end": 28,
+          "start": 22
+        },
+        {
+          "class": "comma",
+          "end": 29,
+          "start": 28
+        },
+        {
+          "class": "text",
+          "end": 37,
+          "start": 30
+        },
+        {
+          "class": "paren",
+          "end": 38,
+          "start": 37
+        },
+        {
+          "class": "keyword",
+          "end": 41,
+          "start": 39
+        },
+        {
+          "class": "field",
+          "end": 45,
+          "start": 42
+        },
+        {
+          "class": "keyword",
+          "end": 54,
+          "start": 46
+        },
+        {
+          "class": "number",
+          "end": 56,
+          "start": 55
+        },
+        {
+          "class": "keyword",
+          "end": 59,
+          "start": 57
+        },
+        {
+          "class": "number",
+          "end": 61,
+          "start": 60
+        }
+      ]
+    },
+    {
+      "args": [
+        "Ada gibi '12%' veya Ada IS NOT NULL veya Ada boş değil"
+      ],
+      "op": "exprTokens",
+      "result": [
+        {
+          "class": "field",
+          "end": 3,
+          "start": 0
+        },
+        {
+          "class": "keyword",
+          "end": 8,
+          "start": 4
+        },
+        {
+          "class": "text",
+          "end": 14,
+          "start": 9
+        },
+        {
+          "class": "keyword",
+          "end": 19,
+          "start": 15
+        },
+        {
+          "class": "field",
+          "end": 23,
+          "start": 20
+        },
+        {
+          "class": "keyword",
+          "end": 26,
+          "start": 24
+        },
+        {
+          "class": "keyword",
+          "end": 30,
+          "start": 27
+        },
+        {
+          "class": "keyword",
+          "end": 35,
+          "start": 31
+        },
+        {
+          "class": "keyword",
+          "end": 40,
+          "start": 36
+        },
+        {
+          "class": "field",
+          "end": 44,
+          "start": 41
+        },
+        {
+          "class": "keyword",
+          "end": 48,
+          "start": 45
+        },
+        {
+          "class": "keyword",
+          "end": 54,
+          "start": 49
+        }
+      ]
+    },
+    {
+      "args": [
+        "Durum || Son || Gibi || 2 ^ 3"
+      ],
+      "op": "exprTokens",
+      "result": [
+        {
+          "class": "field",
+          "end": 5,
+          "start": 0
+        },
+        {
+          "class": "operator",
+          "end": 8,
+          "start": 6
+        },
+        {
+          "class": "field",
+          "end": 12,
+          "start": 9
+        },
+        {
+          "class": "operator",
+          "end": 15,
+          "start": 13
+        },
+        {
+          "class": "field",
+          "end": 20,
+          "start": 16
+        },
+        {
+          "class": "operator",
+          "end": 23,
+          "start": 21
+        },
+        {
+          "class": "number",
+          "end": 25,
+          "start": 24
+        },
+        {
+          "class": "operator",
+          "end": 27,
+          "start": 26
+        },
+        {
+          "class": "number",
+          "end": 29,
+          "start": 28
+        }
+      ]
+    },
+    {
+      "args": [
         "Nitelik = 'Arsa' ve [Tapu alanı] > 500",
         "@fields"
       ],
@@ -688,6 +945,129 @@
           "text": "“ve” burada kullanılamaz; önünde bir değer olmalı."
         },
         "warnings": []
+      }
+    },
+    {
+      "args": [
+        "durum eğer Kat > 3 ise 'yüksek' yoksa 'alçak' son",
+        "@fields"
+      ],
+      "op": "exprCheck",
+      "result": {
+        "warnings": []
+      }
+    },
+    {
+      "args": [
+        "Kat arasında 3",
+        "@fields"
+      ],
+      "op": "exprCheck",
+      "result": {
+        "error": {
+          "end": 14,
+          "message": "“arasında” iki değer bekler, aralarında “ve” ile: Kat arasında 3 ve 5.",
+          "start": 14,
+          "text": "15. karakterde: “arasında” iki değer bekler, aralarında “ve” ile: Kat arasında 3 ve 5."
+        },
+        "warnings": []
+      }
+    },
+    {
+      "args": [
+        "Nitelik içinde 'Arsa'",
+        "@fields"
+      ],
+      "op": "exprCheck",
+      "result": {
+        "error": {
+          "end": 21,
+          "message": "“içinde” parantez içinde bir liste bekler: Nitelik içinde ('Arsa', 'Tarla').",
+          "start": 15,
+          "text": "16. karakterde: “içinde” parantez içinde bir liste bekler: Nitelik içinde ('Arsa', 'Tarla')."
+        },
+        "warnings": []
+      }
+    },
+    {
+      "args": [
+        "Nitelik içinde ()",
+        "@fields"
+      ],
+      "op": "exprCheck",
+      "result": {
+        "error": {
+          "end": 16,
+          "message": "“içinde” parantez içinde bir liste bekler: Nitelik içinde ('Arsa', 'Tarla').",
+          "start": 15,
+          "text": "16. karakterde: “içinde” parantez içinde bir liste bekler: Nitelik içinde ('Arsa', 'Tarla')."
+        },
+        "warnings": []
+      }
+    },
+    {
+      "args": [
+        "durum eğer Kat > 3 'x' son",
+        "@fields"
+      ],
+      "op": "exprCheck",
+      "result": {
+        "error": {
+          "end": 22,
+          "message": "“ise” bekleniyordu: durumda her koşulun ardından “ise” ve değeri gelir (durum eğer $alan > 500 ise 'büyük' yoksa 'küçük' son).",
+          "start": 19,
+          "text": "20. karakterde: “ise” bekleniyordu: durumda her koşulun ardından “ise” ve değeri gelir (durum eğer $alan > 500 ise 'büyük' yoksa 'küçük' son)."
+        },
+        "warnings": []
+      }
+    },
+    {
+      "args": [
+        "durum eğer Kat > 3 ise 'x'",
+        "@fields"
+      ],
+      "op": "exprCheck",
+      "result": {
+        "error": {
+          "end": 26,
+          "message": "“durum” kapanmamış: “son” bekleniyordu (ya da bir “eğer … ise …”, “yoksa …”).",
+          "start": 26,
+          "text": "27. karakterde: “durum” kapanmamış: “son” bekleniyordu (ya da bir “eğer … ise …”, “yoksa …”)."
+        },
+        "warnings": []
+      }
+    },
+    {
+      "args": [
+        "Ada IS 3",
+        "@fields"
+      ],
+      "op": "exprCheck",
+      "result": {
+        "error": {
+          "end": 8,
+          "message": "“IS” yalnız NULL ya da NOT NULL ile kullanılır: Ad IS NULL (Türkçesi: Ad boş).",
+          "start": 7,
+          "text": "8. karakterde: “IS” yalnız NULL ya da NOT NULL ile kullanılır: Ad IS NULL (Türkçesi: Ad boş)."
+        },
+        "warnings": []
+      }
+    },
+    {
+      "args": [
+        "Durum = 1 ve Ada benzer 'a%'",
+        "@fields"
+      ],
+      "op": "exprCheck",
+      "result": {
+        "warnings": [
+          {
+            "end": 5,
+            "message": "Bu nesnelerde “Durum” alanı yok, boş okunur.",
+            "start": 0,
+            "text": "Bu nesnelerde “Durum” alanı yok, boş okunur."
+          }
+        ]
       }
     },
     {
@@ -1039,12 +1419,28 @@
             "label": "Tapu alanı"
           },
           {
+            "caret": 6,
+            "detail": "taban(sayı)",
+            "insert": "taban()",
+            "key": "func:taban",
+            "kind": "function",
+            "label": "taban"
+          },
+          {
             "caret": 8,
             "detail": "tamsayı(sayı)",
             "insert": "tamsayı()",
             "key": "func:tamsayı",
             "kind": "function",
             "label": "tamsayı"
+          },
+          {
+            "caret": 6,
+            "detail": "tavan(sayı)",
+            "insert": "tavan()",
+            "key": "func:tavan",
+            "kind": "function",
+            "label": "tavan"
           }
         ],
         "start": 4
@@ -1263,6 +1659,14 @@
             "label": "başlar"
           },
           {
+            "caret": 10,
+            "detail": "birleştir(a, b, …)",
+            "insert": "birleştir()",
+            "key": "func:birleştir",
+            "kind": "function",
+            "label": "birleştir"
+          },
+          {
             "caret": 6,
             "detail": "biter(metin, aranan)",
             "insert": "biter()",
@@ -1277,6 +1681,14 @@
             "key": "func:boş",
             "kind": "function",
             "label": "boş"
+          },
+          {
+            "caret": 4,
+            "detail": "bul(metin, aranan)",
+            "insert": "bul()",
+            "key": "func:bul",
+            "kind": "function",
+            "label": "bul"
           },
           {
             "caret": 6,
@@ -1327,6 +1739,14 @@
             "label": "kırp"
           },
           {
+            "caret": 4,
+            "detail": "kök(sayı)",
+            "insert": "kök()",
+            "key": "func:kök",
+            "kind": "function",
+            "label": "kök"
+          },
+          {
             "caret": 6,
             "detail": "küçük(metin)",
             "insert": "küçük()",
@@ -1375,6 +1795,30 @@
             "label": "parça"
           },
           {
+            "caret": 3,
+            "detail": "pi()",
+            "insert": "pi()",
+            "key": "func:pi",
+            "kind": "function",
+            "label": "pi"
+          },
+          {
+            "caret": 4,
+            "detail": "sağ(metin, uzunluk)",
+            "insert": "sağ()",
+            "key": "func:sağ",
+            "kind": "function",
+            "label": "sağ"
+          },
+          {
+            "caret": 10,
+            "detail": "sağdoldur(değer, uzunluk, karakter)",
+            "insert": "sağdoldur()",
+            "key": "func:sağdoldur",
+            "kind": "function",
+            "label": "sağdoldur"
+          },
+          {
             "caret": 5,
             "detail": "sayı(metin)",
             "insert": "sayı()",
@@ -1383,12 +1827,36 @@
             "label": "sayı"
           },
           {
+            "caret": 4,
+            "detail": "sol(metin, uzunluk)",
+            "insert": "sol()",
+            "key": "func:sol",
+            "kind": "function",
+            "label": "sol"
+          },
+          {
+            "caret": 6,
+            "detail": "taban(sayı)",
+            "insert": "taban()",
+            "key": "func:taban",
+            "kind": "function",
+            "label": "taban"
+          },
+          {
             "caret": 8,
             "detail": "tamsayı(sayı)",
             "insert": "tamsayı()",
             "key": "func:tamsayı",
             "kind": "function",
             "label": "tamsayı"
+          },
+          {
+            "caret": 6,
+            "detail": "tavan(sayı)",
+            "insert": "tavan()",
+            "key": "func:tavan",
+            "kind": "function",
+            "label": "tavan"
           },
           {
             "caret": 8,
@@ -1567,6 +2035,22 @@
             "label": "$yükseklik"
           },
           {
+            "caret": 9,
+            "detail": "b ≤ a ≤ c mi (< gibi karşılaştırır",
+            "insert": "arasında  ve ",
+            "key": "op:arasında",
+            "kind": "keyword",
+            "label": "arasında"
+          },
+          {
+            "caret": 8,
+            "detail": "gibi, ama büyük/küçük harf ve Türkçe harf farkı gözetilmez",
+            "insert": "benzer ''",
+            "key": "op:benzer",
+            "kind": "keyword",
+            "label": "benzer"
+          },
+          {
             "caret": 3,
             "detail": "Boş değer",
             "insert": "boş",
@@ -1589,6 +2073,30 @@
             "key": "op:doğru",
             "kind": "keyword",
             "label": "doğru"
+          },
+          {
+            "caret": 11,
+            "detail": "İlk doğru koşulun değeri",
+            "insert": "durum eğer  ise  yoksa  son",
+            "key": "op:durum",
+            "kind": "keyword",
+            "label": "durum"
+          },
+          {
+            "caret": 6,
+            "detail": "Metin kalıba uyuyor mu",
+            "insert": "gibi ''",
+            "key": "op:gibi",
+            "kind": "keyword",
+            "label": "gibi"
+          },
+          {
+            "caret": 8,
+            "detail": "Listedeki değerlerden birine eşit mi (= gibi karşılaştırır)",
+            "insert": "içinde ()",
+            "key": "op:içinde",
+            "kind": "keyword",
+            "label": "içinde"
           },
           {
             "caret": 2,
@@ -1726,6 +2234,14 @@
             "label": "başlar"
           },
           {
+            "caret": 10,
+            "detail": "birleştir(a, b, …)",
+            "insert": "birleştir()",
+            "key": "func:birleştir",
+            "kind": "function",
+            "label": "birleştir"
+          },
+          {
             "caret": 6,
             "detail": "biter(metin, aranan)",
             "insert": "biter()",
@@ -1740,6 +2256,14 @@
             "key": "func:boş",
             "kind": "function",
             "label": "boş"
+          },
+          {
+            "caret": 4,
+            "detail": "bul(metin, aranan)",
+            "insert": "bul()",
+            "key": "func:bul",
+            "kind": "function",
+            "label": "bul"
           },
           {
             "caret": 6,
@@ -1790,6 +2314,14 @@
             "label": "kırp"
           },
           {
+            "caret": 4,
+            "detail": "kök(sayı)",
+            "insert": "kök()",
+            "key": "func:kök",
+            "kind": "function",
+            "label": "kök"
+          },
+          {
             "caret": 6,
             "detail": "küçük(metin)",
             "insert": "küçük()",
@@ -1838,6 +2370,30 @@
             "label": "parça"
           },
           {
+            "caret": 3,
+            "detail": "pi()",
+            "insert": "pi()",
+            "key": "func:pi",
+            "kind": "function",
+            "label": "pi"
+          },
+          {
+            "caret": 4,
+            "detail": "sağ(metin, uzunluk)",
+            "insert": "sağ()",
+            "key": "func:sağ",
+            "kind": "function",
+            "label": "sağ"
+          },
+          {
+            "caret": 10,
+            "detail": "sağdoldur(değer, uzunluk, karakter)",
+            "insert": "sağdoldur()",
+            "key": "func:sağdoldur",
+            "kind": "function",
+            "label": "sağdoldur"
+          },
+          {
             "caret": 5,
             "detail": "sayı(metin)",
             "insert": "sayı()",
@@ -1846,12 +2402,36 @@
             "label": "sayı"
           },
           {
+            "caret": 4,
+            "detail": "sol(metin, uzunluk)",
+            "insert": "sol()",
+            "key": "func:sol",
+            "kind": "function",
+            "label": "sol"
+          },
+          {
+            "caret": 6,
+            "detail": "taban(sayı)",
+            "insert": "taban()",
+            "key": "func:taban",
+            "kind": "function",
+            "label": "taban"
+          },
+          {
             "caret": 8,
             "detail": "tamsayı(sayı)",
             "insert": "tamsayı()",
             "key": "func:tamsayı",
             "kind": "function",
             "label": "tamsayı"
+          },
+          {
+            "caret": 6,
+            "detail": "tavan(sayı)",
+            "insert": "tavan()",
+            "key": "func:tavan",
+            "kind": "function",
+            "label": "tavan"
           },
           {
             "caret": 8,
@@ -2030,6 +2610,22 @@
             "label": "$yükseklik"
           },
           {
+            "caret": 9,
+            "detail": "b ≤ a ≤ c mi (< gibi karşılaştırır",
+            "insert": "arasında  ve ",
+            "key": "op:arasında",
+            "kind": "keyword",
+            "label": "arasında"
+          },
+          {
+            "caret": 8,
+            "detail": "gibi, ama büyük/küçük harf ve Türkçe harf farkı gözetilmez",
+            "insert": "benzer ''",
+            "key": "op:benzer",
+            "kind": "keyword",
+            "label": "benzer"
+          },
+          {
             "caret": 3,
             "detail": "Boş değer",
             "insert": "boş",
@@ -2054,6 +2650,30 @@
             "label": "doğru"
           },
           {
+            "caret": 11,
+            "detail": "İlk doğru koşulun değeri",
+            "insert": "durum eğer  ise  yoksa  son",
+            "key": "op:durum",
+            "kind": "keyword",
+            "label": "durum"
+          },
+          {
+            "caret": 6,
+            "detail": "Metin kalıba uyuyor mu",
+            "insert": "gibi ''",
+            "key": "op:gibi",
+            "kind": "keyword",
+            "label": "gibi"
+          },
+          {
+            "caret": 8,
+            "detail": "Listedeki değerlerden birine eşit mi (= gibi karşılaştırır)",
+            "insert": "içinde ()",
+            "key": "op:içinde",
+            "kind": "keyword",
+            "label": "içinde"
+          },
+          {
             "caret": 2,
             "detail": "İki koşul da doğru mu",
             "insert": "ve",
@@ -2076,6 +2696,118 @@
             "key": "op:yanlış",
             "kind": "keyword",
             "label": "yanlış"
+          }
+        ],
+        "start": 0
+      }
+    },
+    {
+      "args": [
+        "Kat ara",
+        7,
+        "@fields",
+        false
+      ],
+      "note": "Sözcük, yerine kalıbıyla yazılır",
+      "op": "exprComplete",
+      "result": {
+        "end": 7,
+        "items": [
+          {
+            "caret": 9,
+            "detail": "b ≤ a ≤ c mi (< gibi karşılaştırır",
+            "insert": "arasında  ve ",
+            "key": "op:arasında",
+            "kind": "keyword",
+            "label": "arasında"
+          }
+        ],
+        "start": 4
+      }
+    },
+    {
+      "args": [
+        "Ada li",
+        6,
+        "@fields",
+        false
+      ],
+      "note": "İngilizce ad: like, gibi",
+      "op": "exprComplete",
+      "result": {
+        "end": 6,
+        "items": [
+          {
+            "alias": "like",
+            "caret": 6,
+            "detail": "Metin kalıba uyuyor mu",
+            "insert": "gibi ''",
+            "key": "op:gibi",
+            "kind": "keyword",
+            "label": "gibi"
+          }
+        ],
+        "start": 4
+      }
+    },
+    {
+      "args": [
+        "dur",
+        3,
+        "@fields",
+        false
+      ],
+      "op": "exprComplete",
+      "result": {
+        "end": 3,
+        "items": [
+          {
+            "caret": 11,
+            "detail": "İlk doğru koşulun değeri",
+            "insert": "durum eğer  ise  yoksa  son",
+            "key": "op:durum",
+            "kind": "keyword",
+            "label": "durum"
+          },
+          {
+            "caret": 7,
+            "detail": "doldur(değer, uzunluk, karakter)",
+            "insert": "doldur()",
+            "key": "func:doldur",
+            "kind": "function",
+            "label": "doldur"
+          },
+          {
+            "caret": 10,
+            "detail": "sağdoldur(değer, uzunluk, karakter)",
+            "insert": "sağdoldur()",
+            "key": "func:sağdoldur",
+            "kind": "function",
+            "label": "sağdoldur"
+          }
+        ],
+        "start": 0
+      }
+    },
+    {
+      "args": [
+        "içi(1)",
+        3,
+        "@fields",
+        false
+      ],
+      "note": "Var olan “(” önünde yalnız sözcük",
+      "op": "exprComplete",
+      "result": {
+        "end": 3,
+        "items": [
+          {
+            "caret": 6,
+            "detail": "Listedeki değerlerden birine eşit mi (= gibi karşılaştırır)",
+            "insert": "içinde",
+            "key": "op:içinde",
+            "kind": "keyword",
+            "label": "içinde"
           }
         ],
         "start": 0
@@ -2310,6 +3042,68 @@
         "name": "eğer",
         "open": 4,
         "signature": "eğer(koşul, doğruysa, yanlışsa)"
+      }
+    },
+    {
+      "args": [
+        "sağdoldur('12', ",
+        16
+      ],
+      "op": "exprSignature",
+      "result": {
+        "active": 1,
+        "args": [
+          {
+            "description": "Doldurulacak değer",
+            "end": 15,
+            "name": "değer",
+            "optional": false,
+            "start": 10
+          },
+          {
+            "description": "Varılacak uzunluk",
+            "end": 24,
+            "name": "uzunluk",
+            "optional": false,
+            "start": 17
+          },
+          {
+            "description": "Doldurma karakteri; verilmezse boşluk",
+            "end": 34,
+            "name": "karakter",
+            "optional": true,
+            "start": 26
+          }
+        ],
+        "description": "Sağdan doldurur (karakter verilmezse boşluk)",
+        "key": "func:sağdoldur",
+        "name": "sağdoldur",
+        "open": 9,
+        "signature": "sağdoldur(değer, uzunluk, karakter)"
+      }
+    },
+    {
+      "args": [
+        "birleştir('a', 'b', ",
+        20
+      ],
+      "op": "exprSignature",
+      "result": {
+        "active": 0,
+        "args": [
+          {
+            "description": "Art arda yazılacak değerler",
+            "end": 17,
+            "name": "a, b, …",
+            "optional": false,
+            "start": 10
+          }
+        ],
+        "description": "Değerleri metin olarak art arda yazar; boş değer bir şey eklemez",
+        "key": "func:birleştir",
+        "name": "birleştir",
+        "open": 9,
+        "signature": "birleştir(a, b, …)"
       }
     },
     {
@@ -3110,6 +3904,326 @@
     },
     {
       "args": [
+        "func:kök",
+        "@fields"
+      ],
+      "op": "exprHelp",
+      "result": {
+        "aliases": [
+          "sqrt"
+        ],
+        "args": [
+          {
+            "description": "Karekökü alınacak sayı",
+            "name": "sayı",
+            "optional": false
+          }
+        ],
+        "description": "Karekök; eksi sayıda boş",
+        "examples": [
+          {
+            "expression": "kök(16)",
+            "result": "4"
+          },
+          {
+            "expression": "kök($alan)",
+            "result": "kare bir parselin kenarı"
+          }
+        ],
+        "group": "Matematik",
+        "key": "func:kök",
+        "kind": "function",
+        "signature": "kök(sayı)",
+        "title": "kök"
+      }
+    },
+    {
+      "args": [
+        "func:tavan",
+        "@fields"
+      ],
+      "op": "exprHelp",
+      "result": {
+        "aliases": [
+          "ceil"
+        ],
+        "args": [
+          {
+            "description": "Yuvarlanacak sayı",
+            "name": "sayı",
+            "optional": false
+          }
+        ],
+        "description": "Yukarı yuvarlar: sayıdan küçük olmayan en küçük tam sayı",
+        "examples": [
+          {
+            "expression": "tavan(2.1)",
+            "result": "3"
+          },
+          {
+            "expression": "tavan(-2.1)",
+            "result": "-2"
+          }
+        ],
+        "group": "Matematik",
+        "key": "func:tavan",
+        "kind": "function",
+        "signature": "tavan(sayı)",
+        "title": "tavan"
+      }
+    },
+    {
+      "args": [
+        "func:taban",
+        "@fields"
+      ],
+      "op": "exprHelp",
+      "result": {
+        "aliases": [
+          "floor"
+        ],
+        "args": [
+          {
+            "description": "Yuvarlanacak sayı",
+            "name": "sayı",
+            "optional": false
+          }
+        ],
+        "description": "Aşağı yuvarlar: sayıdan büyük olmayan en büyük tam sayı",
+        "examples": [
+          {
+            "expression": "taban(2.9)",
+            "result": "2"
+          },
+          {
+            "expression": "taban(-2.1)",
+            "result": "-3"
+          }
+        ],
+        "group": "Matematik",
+        "key": "func:taban",
+        "kind": "function",
+        "signature": "taban(sayı)",
+        "title": "taban"
+      }
+    },
+    {
+      "args": [
+        "func:pi",
+        "@fields"
+      ],
+      "op": "exprHelp",
+      "result": {
+        "aliases": [],
+        "args": [],
+        "description": "π sayısı",
+        "examples": [
+          {
+            "expression": "pi()",
+            "result": "3.14159265359"
+          },
+          {
+            "expression": "pi() * 10 ^ 2",
+            "result": "yarıçapı 10 olan dairenin alanı"
+          }
+        ],
+        "group": "Matematik",
+        "key": "func:pi",
+        "kind": "function",
+        "signature": "pi()",
+        "title": "pi"
+      }
+    },
+    {
+      "args": [
+        "func:sol",
+        "@fields"
+      ],
+      "op": "exprHelp",
+      "result": {
+        "aliases": [
+          "left"
+        ],
+        "args": [
+          {
+            "description": "Parçası alınacak metin",
+            "name": "metin",
+            "optional": false
+          },
+          {
+            "description": "Kaç karakter",
+            "name": "uzunluk",
+            "optional": false
+          }
+        ],
+        "description": "Metnin başından verilen sayıda karakter",
+        "examples": [
+          {
+            "expression": "sol('1245/12', 4)",
+            "result": "'1245'"
+          }
+        ],
+        "group": "Metin",
+        "key": "func:sol",
+        "kind": "function",
+        "signature": "sol(metin, uzunluk)",
+        "title": "sol"
+      }
+    },
+    {
+      "args": [
+        "func:sağ",
+        "@fields"
+      ],
+      "op": "exprHelp",
+      "result": {
+        "aliases": [
+          "right"
+        ],
+        "args": [
+          {
+            "description": "Parçası alınacak metin",
+            "name": "metin",
+            "optional": false
+          },
+          {
+            "description": "Kaç karakter",
+            "name": "uzunluk",
+            "optional": false
+          }
+        ],
+        "description": "Metnin sonundan verilen sayıda karakter",
+        "examples": [
+          {
+            "expression": "sağ('P00012', 2)",
+            "result": "'12'"
+          }
+        ],
+        "group": "Metin",
+        "key": "func:sağ",
+        "kind": "function",
+        "signature": "sağ(metin, uzunluk)",
+        "title": "sağ"
+      }
+    },
+    {
+      "args": [
+        "func:bul",
+        "@fields"
+      ],
+      "op": "exprHelp",
+      "result": {
+        "aliases": [
+          "strpos"
+        ],
+        "args": [
+          {
+            "description": "İçinde aranacak metin",
+            "name": "metin",
+            "optional": false
+          },
+          {
+            "description": "Aranan parça",
+            "name": "aranan",
+            "optional": false
+          }
+        ],
+        "description": "Aranan parçanın metindeki yeri (ilk karakter 1), yoksa 0; büyük/küçük harf ayrıdır",
+        "examples": [
+          {
+            "expression": "bul('1245/12', '/')",
+            "result": "5"
+          },
+          {
+            "expression": "bul('Arsa', 'x')",
+            "result": "0"
+          }
+        ],
+        "group": "Metin",
+        "key": "func:bul",
+        "kind": "function",
+        "signature": "bul(metin, aranan)",
+        "title": "bul"
+      }
+    },
+    {
+      "args": [
+        "func:birleştir",
+        "@fields"
+      ],
+      "op": "exprHelp",
+      "result": {
+        "aliases": [
+          "concat"
+        ],
+        "args": [
+          {
+            "description": "Art arda yazılacak değerler",
+            "name": "a, b, …",
+            "optional": false
+          }
+        ],
+        "description": "Değerleri metin olarak art arda yazar; boş değer bir şey eklemez",
+        "examples": [
+          {
+            "expression": "birleştir('Ada ', 1245, ' Parsel ', 12)",
+            "result": "'Ada 1245 Parsel 12'"
+          },
+          {
+            "expression": "birleştir('a', boş, 'b')",
+            "result": "'ab'"
+          }
+        ],
+        "group": "Metin",
+        "key": "func:birleştir",
+        "kind": "function",
+        "signature": "birleştir(a, b, …)",
+        "title": "birleştir"
+      }
+    },
+    {
+      "args": [
+        "func:sağdoldur",
+        "@fields"
+      ],
+      "op": "exprHelp",
+      "result": {
+        "aliases": [
+          "rpad"
+        ],
+        "args": [
+          {
+            "description": "Doldurulacak değer",
+            "name": "değer",
+            "optional": false
+          },
+          {
+            "description": "Varılacak uzunluk",
+            "name": "uzunluk",
+            "optional": false
+          },
+          {
+            "description": "Doldurma karakteri; verilmezse boşluk",
+            "name": "karakter",
+            "optional": true
+          }
+        ],
+        "description": "Sağdan doldurur (karakter verilmezse boşluk)",
+        "examples": [
+          {
+            "expression": "sağdoldur('12', 5, '_')",
+            "result": "'12___'"
+          }
+        ],
+        "group": "Metin",
+        "key": "func:sağdoldur",
+        "kind": "function",
+        "signature": "sağdoldur(değer, uzunluk, karakter)",
+        "title": "sağdoldur"
+      }
+    },
+    {
+      "args": [
         "var:alan",
         "@fields"
       ],
@@ -3840,6 +4954,33 @@
     },
     {
       "args": [
+        "op:^",
+        "@fields"
+      ],
+      "op": "exprHelp",
+      "result": {
+        "aliases": [],
+        "args": [],
+        "description": "Üs alır: a'nın b'inci kuvveti; işaretten önce hesaplanır (-2 ^ 2 = -4), sağdan sola (2 ^ 3 ^ 2 = 2 ^ 9)",
+        "examples": [
+          {
+            "expression": "2 ^ 10",
+            "result": "1024"
+          },
+          {
+            "expression": "-2 ^ 2",
+            "result": "-4"
+          }
+        ],
+        "group": "İşleçler",
+        "key": "op:^",
+        "kind": "operator",
+        "signature": "a ^ b",
+        "title": "^"
+      }
+    },
+    {
+      "args": [
         "op:||",
         "@fields"
       ],
@@ -3938,6 +5079,143 @@
     },
     {
       "args": [
+        "op:içinde",
+        "@fields"
+      ],
+      "op": "exprHelp",
+      "result": {
+        "aliases": [
+          "in"
+        ],
+        "args": [],
+        "description": "Listedeki değerlerden birine eşit mi (= gibi karşılaştırır); a değil içinde (…): hiçbirine eşit değil mi",
+        "examples": [
+          {
+            "expression": "Nitelik içinde ('Arsa', 'Tarla')",
+            "result": "arsa ve tarlalar için doğru"
+          },
+          {
+            "expression": "3 içinde (1, 2, 3)",
+            "result": "doğru"
+          }
+        ],
+        "group": "İşleçler",
+        "key": "op:içinde",
+        "kind": "keyword",
+        "signature": "a içinde (b, c, …)",
+        "title": "içinde"
+      }
+    },
+    {
+      "args": [
+        "op:arasında",
+        "@fields"
+      ],
+      "op": "exprHelp",
+      "result": {
+        "aliases": [
+          "between"
+        ],
+        "args": [],
+        "description": "b ≤ a ≤ c mi (< gibi karşılaştırır; boş bir değerle yanlış); a değil arasında b ve c: dışında mı",
+        "examples": [
+          {
+            "expression": "Kat arasında 3 ve 5",
+            "result": "3, 4 ve 5 katlılar için doğru"
+          },
+          {
+            "expression": "5 arasında 1 ve 10",
+            "result": "doğru"
+          }
+        ],
+        "group": "İşleçler",
+        "key": "op:arasında",
+        "kind": "keyword",
+        "signature": "a arasında b ve c",
+        "title": "arasında"
+      }
+    },
+    {
+      "args": [
+        "op:gibi",
+        "@fields"
+      ],
+      "op": "exprHelp",
+      "result": {
+        "aliases": [
+          "like"
+        ],
+        "args": [],
+        "description": "Metin kalıba uyuyor mu: % herhangi bir metin, _ tek karakter, \\ ardından gelen karakteri olduğu gibi alır; büyük/küçük harf ayrı",
+        "examples": [
+          {
+            "expression": "Ada gibi '12%'",
+            "result": "12 ile başlayan adalar için doğru"
+          },
+          {
+            "expression": "'P00012' gibi 'P___12'",
+            "result": "doğru"
+          }
+        ],
+        "group": "İşleçler",
+        "key": "op:gibi",
+        "kind": "keyword",
+        "signature": "a gibi 'kalıp'",
+        "title": "gibi"
+      }
+    },
+    {
+      "args": [
+        "op:benzer",
+        "@fields"
+      ],
+      "op": "exprHelp",
+      "result": {
+        "aliases": [
+          "ilike"
+        ],
+        "args": [],
+        "description": "gibi, ama büyük/küçük harf ve Türkçe harf farkı gözetilmez",
+        "examples": [
+          {
+            "expression": "'Çınar' benzer 'cin%'",
+            "result": "doğru"
+          }
+        ],
+        "group": "İşleçler",
+        "key": "op:benzer",
+        "kind": "keyword",
+        "signature": "a benzer 'kalıp'",
+        "title": "benzer"
+      }
+    },
+    {
+      "args": [
+        "op:durum",
+        "@fields"
+      ],
+      "op": "exprHelp",
+      "result": {
+        "aliases": [
+          "case"
+        ],
+        "args": [],
+        "description": "İlk doğru koşulun değeri; hiçbiri doğru değilse yoksa'nın değeri, yoksa yazılmamışsa boş. Seçilmeyen dallar hesaplanmaz",
+        "examples": [
+          {
+            "expression": "durum eğer 600 > 1000 ise 'büyük' eğer 600 > 500 ise 'orta' yoksa 'küçük' son",
+            "result": "'orta'"
+          }
+        ],
+        "group": "Koşullar",
+        "key": "op:durum",
+        "kind": "keyword",
+        "signature": "durum eğer koşul ise değer … yoksa değer son",
+        "title": "durum"
+      }
+    },
+    {
+      "args": [
         "op:doğru",
         "@fields"
       ],
@@ -3994,13 +5272,18 @@
       "op": "exprHelp",
       "result": {
         "aliases": [
-          "null"
+          "null",
+          "is null"
         ],
         "args": [],
-        "description": "Boş değer: alanı olmayan ya da boş metin; yalnız boşa eşittir",
+        "description": "Boş değer: alanı olmayan ya da boş metin; yalnız boşa eşittir. Bir değerden sonra: değer boş mu (a boş)",
         "examples": [
           {
             "expression": "Ada = boş",
+            "result": "adası olmayanlar için doğru"
+          },
+          {
+            "expression": "Ada boş",
             "result": "adası olmayanlar için doğru"
           }
         ],
@@ -4009,6 +5292,31 @@
         "kind": "keyword",
         "signature": "boş",
         "title": "boş"
+      }
+    },
+    {
+      "args": [
+        "op:boş değil",
+        "@fields"
+      ],
+      "op": "exprHelp",
+      "result": {
+        "aliases": [
+          "is not null"
+        ],
+        "args": [],
+        "description": "Değer boş değil mi: alanı olan ve boş metin olmayan",
+        "examples": [
+          {
+            "expression": "Ada boş değil",
+            "result": "adası olanlar için doğru"
+          }
+        ],
+        "group": "İşleçler",
+        "key": "op:boş değil",
+        "kind": "keyword",
+        "signature": "a boş değil",
+        "title": "boş değil"
       }
     },
     {
@@ -4513,6 +5821,146 @@
     },
     {
       "args": [
+        "durum eğer Kat > 3 ise 1 son",
+        20,
+        "@fields"
+      ],
+      "op": "exprHelpAt",
+      "result": {
+        "aliases": [
+          "case"
+        ],
+        "args": [],
+        "description": "İlk doğru koşulun değeri; hiçbiri doğru değilse yoksa'nın değeri, yoksa yazılmamışsa boş. Seçilmeyen dallar hesaplanmaz",
+        "examples": [
+          {
+            "expression": "durum eğer 600 > 1000 ise 'büyük' eğer 600 > 500 ise 'orta' yoksa 'küçük' son",
+            "result": "'orta'"
+          }
+        ],
+        "group": "Koşullar",
+        "key": "op:durum",
+        "kind": "keyword",
+        "signature": "durum eğer koşul ise değer … yoksa değer son",
+        "title": "durum"
+      }
+    },
+    {
+      "args": [
+        "Ada IS NOT NULL",
+        5,
+        "@fields"
+      ],
+      "op": "exprHelpAt",
+      "result": {
+        "aliases": [
+          "is not null"
+        ],
+        "args": [],
+        "description": "Değer boş değil mi: alanı olan ve boş metin olmayan",
+        "examples": [
+          {
+            "expression": "Ada boş değil",
+            "result": "adası olanlar için doğru"
+          }
+        ],
+        "group": "İşleçler",
+        "key": "op:boş değil",
+        "kind": "keyword",
+        "signature": "a boş değil",
+        "title": "boş değil"
+      }
+    },
+    {
+      "args": [
+        "Ada gibi 'a%'",
+        6,
+        "@fields"
+      ],
+      "op": "exprHelpAt",
+      "result": {
+        "aliases": [
+          "like"
+        ],
+        "args": [],
+        "description": "Metin kalıba uyuyor mu: % herhangi bir metin, _ tek karakter, \\ ardından gelen karakteri olduğu gibi alır; büyük/küçük harf ayrı",
+        "examples": [
+          {
+            "expression": "Ada gibi '12%'",
+            "result": "12 ile başlayan adalar için doğru"
+          },
+          {
+            "expression": "'P00012' gibi 'P___12'",
+            "result": "doğru"
+          }
+        ],
+        "group": "İşleçler",
+        "key": "op:gibi",
+        "kind": "keyword",
+        "signature": "a gibi 'kalıp'",
+        "title": "gibi"
+      }
+    },
+    {
+      "args": [
+        "Durum = 1",
+        2,
+        "@fields"
+      ],
+      "op": "exprHelpAt",
+      "result": {
+        "aliases": [],
+        "args": [],
+        "description": "Bu nesnelerde “Durum” alanı yok; değeri boş okunur.",
+        "examples": [
+          {
+            "expression": "boş(Durum)",
+            "result": "değeri olmayanlar için doğru"
+          },
+          {
+            "expression": "büyük(Durum)",
+            "result": "değeri büyük harflerle"
+          }
+        ],
+        "group": "Alanlar ve değerler",
+        "key": "field:Durum",
+        "kind": "field",
+        "signature": "Durum",
+        "source": "attribute",
+        "title": "Durum",
+        "type": "text"
+      }
+    },
+    {
+      "args": [
+        "2 ^ 3",
+        3,
+        "@fields"
+      ],
+      "op": "exprHelpAt",
+      "result": {
+        "aliases": [],
+        "args": [],
+        "description": "Üs alır: a'nın b'inci kuvveti; işaretten önce hesaplanır (-2 ^ 2 = -4), sağdan sola (2 ^ 3 ^ 2 = 2 ^ 9)",
+        "examples": [
+          {
+            "expression": "2 ^ 10",
+            "result": "1024"
+          },
+          {
+            "expression": "-2 ^ 2",
+            "result": "-4"
+          }
+        ],
+        "group": "İşleçler",
+        "key": "op:^",
+        "kind": "operator",
+        "signature": "a ^ b",
+        "title": "^"
+      }
+    },
+    {
+      "args": [
         "@fields",
         ""
       ],
@@ -4866,6 +6314,14 @@
               "label": "%"
             },
             {
+              "caret": 3,
+              "detail": "Üs alır",
+              "insert": " ^ ",
+              "key": "op:^",
+              "kind": "operator",
+              "label": "^"
+            },
+            {
               "caret": 4,
               "detail": "Metinleri birleştirir",
               "insert": " || ",
@@ -4898,6 +6354,38 @@
               "label": "değil"
             },
             {
+              "caret": 9,
+              "detail": "Listedeki değerlerden birine eşit mi (= gibi karşılaştırır)",
+              "insert": " içinde ()",
+              "key": "op:içinde",
+              "kind": "keyword",
+              "label": "içinde"
+            },
+            {
+              "caret": 10,
+              "detail": "b ≤ a ≤ c mi (< gibi karşılaştırır",
+              "insert": " arasında  ve ",
+              "key": "op:arasında",
+              "kind": "keyword",
+              "label": "arasında"
+            },
+            {
+              "caret": 7,
+              "detail": "Metin kalıba uyuyor mu",
+              "insert": " gibi ''",
+              "key": "op:gibi",
+              "kind": "keyword",
+              "label": "gibi"
+            },
+            {
+              "caret": 9,
+              "detail": "gibi, ama büyük/küçük harf ve Türkçe harf farkı gözetilmez",
+              "insert": " benzer ''",
+              "key": "op:benzer",
+              "kind": "keyword",
+              "label": "benzer"
+            },
+            {
               "caret": 7,
               "detail": "Doğru değeri",
               "insert": " doğru ",
@@ -4920,6 +6408,14 @@
               "key": "op:boş",
               "kind": "keyword",
               "label": "boş"
+            },
+            {
+              "caret": 11,
+              "detail": "Değer boş değil mi",
+              "insert": " boş değil ",
+              "key": "op:boş değil",
+              "kind": "keyword",
+              "label": "boş değil"
             }
           ],
           "title": "İşleçler"
@@ -4934,6 +6430,14 @@
               "key": "func:boş",
               "kind": "function",
               "label": "boş"
+            },
+            {
+              "caret": 12,
+              "detail": "İlk doğru koşulun değeri",
+              "insert": " durum eğer  ise  yoksa  son",
+              "key": "op:durum",
+              "kind": "keyword",
+              "label": "durum"
             },
             {
               "caret": 5,
@@ -4959,6 +6463,14 @@
           "items": [
             {
               "caret": 4,
+              "detail": "kök(sayı)",
+              "insert": "kök()",
+              "key": "func:kök",
+              "kind": "function",
+              "label": "kök"
+            },
+            {
+              "caret": 4,
               "detail": "max(a, b, …)",
               "insert": "max()",
               "key": "func:max",
@@ -4980,6 +6492,30 @@
               "key": "func:mutlak",
               "kind": "function",
               "label": "mutlak"
+            },
+            {
+              "caret": 3,
+              "detail": "pi()",
+              "insert": "pi()",
+              "key": "func:pi",
+              "kind": "function",
+              "label": "pi"
+            },
+            {
+              "caret": 6,
+              "detail": "taban(sayı)",
+              "insert": "taban()",
+              "key": "func:taban",
+              "kind": "function",
+              "label": "taban"
+            },
+            {
+              "caret": 6,
+              "detail": "tavan(sayı)",
+              "insert": "tavan()",
+              "key": "func:tavan",
+              "kind": "function",
+              "label": "tavan"
             },
             {
               "caret": 8,
@@ -5004,12 +6540,28 @@
               "label": "başlar"
             },
             {
+              "caret": 10,
+              "detail": "birleştir(a, b, …)",
+              "insert": "birleştir()",
+              "key": "func:birleştir",
+              "kind": "function",
+              "label": "birleştir"
+            },
+            {
               "caret": 6,
               "detail": "biter(metin, aranan)",
               "insert": "biter()",
               "key": "func:biter",
               "kind": "function",
               "label": "biter"
+            },
+            {
+              "caret": 4,
+              "detail": "bul(metin, aranan)",
+              "insert": "bul()",
+              "key": "func:bul",
+              "kind": "function",
+              "label": "bul"
             },
             {
               "caret": 6,
@@ -5066,6 +6618,30 @@
               "key": "func:parça",
               "kind": "function",
               "label": "parça"
+            },
+            {
+              "caret": 4,
+              "detail": "sağ(metin, uzunluk)",
+              "insert": "sağ()",
+              "key": "func:sağ",
+              "kind": "function",
+              "label": "sağ"
+            },
+            {
+              "caret": 10,
+              "detail": "sağdoldur(değer, uzunluk, karakter)",
+              "insert": "sağdoldur()",
+              "key": "func:sağdoldur",
+              "kind": "function",
+              "label": "sağdoldur"
+            },
+            {
+              "caret": 4,
+              "detail": "sol(metin, uzunluk)",
+              "insert": "sol()",
+              "key": "func:sol",
+              "kind": "function",
+              "label": "sol"
             },
             {
               "caret": 8,
@@ -5433,6 +7009,14 @@
               "label": "%"
             },
             {
+              "caret": 3,
+              "detail": "Üs alır",
+              "insert": " ^ ",
+              "key": "op:^",
+              "kind": "operator",
+              "label": "^"
+            },
+            {
               "caret": 4,
               "detail": "Metinleri birleştirir",
               "insert": " || ",
@@ -5465,6 +7049,38 @@
               "label": "değil"
             },
             {
+              "caret": 9,
+              "detail": "Listedeki değerlerden birine eşit mi (= gibi karşılaştırır)",
+              "insert": " içinde ()",
+              "key": "op:içinde",
+              "kind": "keyword",
+              "label": "içinde"
+            },
+            {
+              "caret": 10,
+              "detail": "b ≤ a ≤ c mi (< gibi karşılaştırır",
+              "insert": " arasında  ve ",
+              "key": "op:arasında",
+              "kind": "keyword",
+              "label": "arasında"
+            },
+            {
+              "caret": 7,
+              "detail": "Metin kalıba uyuyor mu",
+              "insert": " gibi ''",
+              "key": "op:gibi",
+              "kind": "keyword",
+              "label": "gibi"
+            },
+            {
+              "caret": 9,
+              "detail": "gibi, ama büyük/küçük harf ve Türkçe harf farkı gözetilmez",
+              "insert": " benzer ''",
+              "key": "op:benzer",
+              "kind": "keyword",
+              "label": "benzer"
+            },
+            {
               "caret": 7,
               "detail": "Doğru değeri",
               "insert": " doğru ",
@@ -5487,6 +7103,14 @@
               "key": "op:boş",
               "kind": "keyword",
               "label": "boş"
+            },
+            {
+              "caret": 11,
+              "detail": "Değer boş değil mi",
+              "insert": " boş değil ",
+              "key": "op:boş değil",
+              "kind": "keyword",
+              "label": "boş değil"
             }
           ],
           "title": "İşleçler"
@@ -5501,6 +7125,14 @@
               "key": "func:boş",
               "kind": "function",
               "label": "boş"
+            },
+            {
+              "caret": 12,
+              "detail": "İlk doğru koşulun değeri",
+              "insert": " durum eğer  ise  yoksa  son",
+              "key": "op:durum",
+              "kind": "keyword",
+              "label": "durum"
             },
             {
               "caret": 5,
@@ -5526,6 +7158,14 @@
           "items": [
             {
               "caret": 4,
+              "detail": "kök(sayı)",
+              "insert": "kök()",
+              "key": "func:kök",
+              "kind": "function",
+              "label": "kök"
+            },
+            {
+              "caret": 4,
               "detail": "max(a, b, …)",
               "insert": "max()",
               "key": "func:max",
@@ -5547,6 +7187,30 @@
               "key": "func:mutlak",
               "kind": "function",
               "label": "mutlak"
+            },
+            {
+              "caret": 3,
+              "detail": "pi()",
+              "insert": "pi()",
+              "key": "func:pi",
+              "kind": "function",
+              "label": "pi"
+            },
+            {
+              "caret": 6,
+              "detail": "taban(sayı)",
+              "insert": "taban()",
+              "key": "func:taban",
+              "kind": "function",
+              "label": "taban"
+            },
+            {
+              "caret": 6,
+              "detail": "tavan(sayı)",
+              "insert": "tavan()",
+              "key": "func:tavan",
+              "kind": "function",
+              "label": "tavan"
             },
             {
               "caret": 8,
@@ -5571,12 +7235,28 @@
               "label": "başlar"
             },
             {
+              "caret": 10,
+              "detail": "birleştir(a, b, …)",
+              "insert": "birleştir()",
+              "key": "func:birleştir",
+              "kind": "function",
+              "label": "birleştir"
+            },
+            {
               "caret": 6,
               "detail": "biter(metin, aranan)",
               "insert": "biter()",
               "key": "func:biter",
               "kind": "function",
               "label": "biter"
+            },
+            {
+              "caret": 4,
+              "detail": "bul(metin, aranan)",
+              "insert": "bul()",
+              "key": "func:bul",
+              "kind": "function",
+              "label": "bul"
             },
             {
               "caret": 6,
@@ -5635,6 +7315,30 @@
               "label": "parça"
             },
             {
+              "caret": 4,
+              "detail": "sağ(metin, uzunluk)",
+              "insert": "sağ()",
+              "key": "func:sağ",
+              "kind": "function",
+              "label": "sağ"
+            },
+            {
+              "caret": 10,
+              "detail": "sağdoldur(değer, uzunluk, karakter)",
+              "insert": "sağdoldur()",
+              "key": "func:sağdoldur",
+              "kind": "function",
+              "label": "sağdoldur"
+            },
+            {
+              "caret": 4,
+              "detail": "sol(metin, uzunluk)",
+              "insert": "sol()",
+              "key": "func:sol",
+              "kind": "function",
+              "label": "sol"
+            },
+            {
               "caret": 8,
               "detail": "uzunluk(metin)",
               "insert": "uzunluk()",
@@ -5654,6 +7358,60 @@
       ],
       "op": "exprBuilderCatalog",
       "result": []
+    },
+    {
+      "args": [
+        "@fields",
+        "like"
+      ],
+      "op": "exprBuilderCatalog",
+      "result": [
+        {
+          "group": "operators",
+          "items": [
+            {
+              "caret": 7,
+              "detail": "Metin kalıba uyuyor mu",
+              "insert": " gibi ''",
+              "key": "op:gibi",
+              "kind": "keyword",
+              "label": "gibi"
+            },
+            {
+              "caret": 9,
+              "detail": "gibi, ama büyük/küçük harf ve Türkçe harf farkı gözetilmez",
+              "insert": " benzer ''",
+              "key": "op:benzer",
+              "kind": "keyword",
+              "label": "benzer"
+            }
+          ],
+          "title": "İşleçler"
+        }
+      ]
+    },
+    {
+      "args": [
+        "@fields",
+        "case"
+      ],
+      "op": "exprBuilderCatalog",
+      "result": [
+        {
+          "group": "conditionals",
+          "items": [
+            {
+              "caret": 12,
+              "detail": "İlk doğru koşulun değeri",
+              "insert": " durum eğer  ise  yoksa  son",
+              "key": "op:durum",
+              "kind": "keyword",
+              "label": "durum"
+            }
+          ],
+          "title": "Koşullar"
+        }
+      ]
     },
     {
       "args": [
@@ -5777,6 +7535,52 @@
       "result": {
         "caret": 10,
         "text": "𝒜 + $alan"
+      }
+    },
+    {
+      "args": [
+        "Nitelik",
+        7,
+        7,
+        "keyword",
+        " içinde ()",
+        9
+      ],
+      "note": "Kalıp: imleç parantezin içinde",
+      "op": "exprPlace",
+      "result": {
+        "caret": 16,
+        "text": "Nitelik içinde ()"
+      }
+    },
+    {
+      "args": [
+        "",
+        0,
+        0,
+        "keyword",
+        " durum eğer  ise  yoksa  son",
+        12
+      ],
+      "op": "exprPlace",
+      "result": {
+        "caret": 11,
+        "text": "durum eğer  ise  yoksa  son"
+      }
+    },
+    {
+      "args": [
+        "Kat ",
+        4,
+        4,
+        "keyword",
+        " arasında  ve ",
+        10
+      ],
+      "op": "exprPlace",
+      "result": {
+        "caret": 13,
+        "text": "Kat arasında  ve "
       }
     },
     {

@@ -33,6 +33,7 @@ const OPERATORS: readonly { label: string; key?: string; insert: string; kind: E
   { label: '-', key: 'op:-', insert: ' - ', kind: 'operator' },
   { label: '*', key: 'op:*', insert: ' * ', kind: 'operator' },
   { label: '/', key: 'op:/', insert: ' / ', kind: 'operator' },
+  { label: '^', key: 'op:^', insert: ' ^ ', kind: 'operator' },
   { label: '||', key: 'op:||', insert: ' || ', kind: 'operator' },
   { label: '(', insert: '(', kind: 'operator' },
   { label: ')', insert: ')', kind: 'operator' },

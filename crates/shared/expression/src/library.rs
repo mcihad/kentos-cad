@@ -71,6 +71,12 @@ pub struct OpDef {
     pub signature: &'static str,
     pub description: &'static str,
     pub examples: &'static [(&'static str, &'static str)],
+    /// Where the builder's tree lists it: among the operators, `durum`
+    /// among the conditions (as QGIS lists CASE).
+    pub group: Group,
+    /// What the builder writes for it when that is more than the symbol:
+    /// the text before the cursor and after it (`içinde (`, `)`).
+    pub template: Option<(&'static str, &'static str)>,
 }
 
 pub static OPERATORS: &[OpDef] = &[
@@ -83,6 +89,8 @@ pub static OPERATORS: &[OpDef] = &[
             ("Nitelik = 'Arsa'", "Arsa olanlar için doğru"),
             ("Ada = boş", "adası olmayanlar için doğru"),
         ],
+        group: Group::Operators,
+        template: None,
     },
     OpDef {
         symbol: "!=",
@@ -90,6 +98,8 @@ pub static OPERATORS: &[OpDef] = &[
         signature: "a != b",
         description: "Eşit değil mi",
         examples: &[("Nitelik != 'Yol'", "yol olmayanlar için doğru")],
+        group: Group::Operators,
+        template: None,
     },
     OpDef {
         symbol: "<",
@@ -97,6 +107,8 @@ pub static OPERATORS: &[OpDef] = &[
         signature: "a < b",
         description: "Küçük mü: sayılar sayı olarak, metin Türkçe sıraya göre; boş bir değerle yanlış",
         examples: &[("$alan < 500", "500 m²'den küçükler için doğru")],
+        group: Group::Operators,
+        template: None,
     },
     OpDef {
         symbol: "<=",
@@ -104,6 +116,8 @@ pub static OPERATORS: &[OpDef] = &[
         signature: "a <= b",
         description: "Küçük ya da eşit mi",
         examples: &[("Kat <= 3", "3 ve daha az katlılar için doğru")],
+        group: Group::Operators,
+        template: None,
     },
     OpDef {
         symbol: ">",
@@ -111,6 +125,8 @@ pub static OPERATORS: &[OpDef] = &[
         signature: "a > b",
         description: "Büyük mü: sayılar sayı olarak, metin Türkçe sıraya göre; boş bir değerle yanlış",
         examples: &[("$alan > 500", "500 m²'den büyükler için doğru")],
+        group: Group::Operators,
+        template: None,
     },
     OpDef {
         symbol: ">=",
@@ -118,6 +134,8 @@ pub static OPERATORS: &[OpDef] = &[
         signature: "a >= b",
         description: "Büyük ya da eşit mi",
         examples: &[("Kat >= 4", "4 ve daha çok katlılar için doğru")],
+        group: Group::Operators,
+        template: None,
     },
     OpDef {
         symbol: "+",
@@ -125,6 +143,8 @@ pub static OPERATORS: &[OpDef] = &[
         signature: "a + b",
         description: "Toplar; iki taraf da sayı değilse metinleri birleştirir; alanı olmayan bir tarafla boş",
         examples: &[("Parsel + 1", "13 (Parsel 12 ise)")],
+        group: Group::Operators,
+        template: None,
     },
     OpDef {
         symbol: "-",
@@ -132,6 +152,8 @@ pub static OPERATORS: &[OpDef] = &[
         signature: "a - b",
         description: "Çıkarır; sayı olmayan bir tarafla boş",
         examples: &[("[Tapu alanı] - $alan", "tapu ile ölçü farkı")],
+        group: Group::Operators,
+        template: None,
     },
     OpDef {
         symbol: "*",
@@ -139,6 +161,8 @@ pub static OPERATORS: &[OpDef] = &[
         signature: "a * b",
         description: "Çarpar",
         examples: &[("$alan * 2", "1200")],
+        group: Group::Operators,
+        template: None,
     },
     OpDef {
         symbol: "/",
@@ -146,6 +170,8 @@ pub static OPERATORS: &[OpDef] = &[
         signature: "a / b",
         description: "Böler; sıfıra bölme boş",
         examples: &[("$alan / 10000", "hektar")],
+        group: Group::Operators,
+        template: None,
     },
     OpDef {
         symbol: "%",
@@ -153,6 +179,17 @@ pub static OPERATORS: &[OpDef] = &[
         signature: "a % b",
         description: "Bölümden kalan",
         examples: &[("$sıra % 2 = 0", "çift sıradakiler için doğru")],
+        group: Group::Operators,
+        template: None,
+    },
+    OpDef {
+        symbol: "^",
+        aliases: &[],
+        signature: "a ^ b",
+        description: "Üs alır: a'nın b'inci kuvveti; işaretten önce hesaplanır (-2 ^ 2 = -4), sağdan sola (2 ^ 3 ^ 2 = 2 ^ 9)",
+        examples: &[("2 ^ 10", "1024"), ("-2 ^ 2", "-4")],
+        group: Group::Operators,
+        template: None,
     },
     OpDef {
         symbol: "||",
@@ -160,6 +197,8 @@ pub static OPERATORS: &[OpDef] = &[
         signature: "a || b",
         description: "Metinleri birleştirir",
         examples: &[("Ada || '/' || Parsel", "'1245/12'")],
+        group: Group::Operators,
+        template: None,
     },
     OpDef {
         symbol: "ve",
@@ -170,6 +209,8 @@ pub static OPERATORS: &[OpDef] = &[
             "Nitelik = 'Arsa' ve $alan > 500",
             "500 m²'den büyük arsalar için doğru",
         )],
+        group: Group::Operators,
+        template: None,
     },
     OpDef {
         symbol: "veya",
@@ -180,6 +221,8 @@ pub static OPERATORS: &[OpDef] = &[
             "Nitelik = 'Arsa' veya Nitelik = 'Tarla'",
             "arsa ve tarlalar için doğru",
         )],
+        group: Group::Operators,
+        template: None,
     },
     OpDef {
         symbol: "değil",
@@ -187,6 +230,68 @@ pub static OPERATORS: &[OpDef] = &[
         signature: "değil a",
         description: "Koşulun tersi",
         examples: &[("değil boş(Ada)", "adası olanlar için doğru")],
+        group: Group::Operators,
+        template: None,
+    },
+    OpDef {
+        symbol: "içinde",
+        aliases: &["in"],
+        signature: "a içinde (b, c, …)",
+        description: "Listedeki değerlerden birine eşit mi (= gibi karşılaştırır); a değil içinde (…): hiçbirine eşit değil mi",
+        examples: &[
+            (
+                "Nitelik içinde ('Arsa', 'Tarla')",
+                "arsa ve tarlalar için doğru",
+            ),
+            ("3 içinde (1, 2, 3)", "doğru"),
+        ],
+        group: Group::Operators,
+        template: Some(("içinde (", ")")),
+    },
+    OpDef {
+        symbol: "arasında",
+        aliases: &["between"],
+        signature: "a arasında b ve c",
+        description: "b ≤ a ≤ c mi (< gibi karşılaştırır; boş bir değerle yanlış); a değil arasında b ve c: dışında mı",
+        examples: &[
+            ("Kat arasında 3 ve 5", "3, 4 ve 5 katlılar için doğru"),
+            ("5 arasında 1 ve 10", "doğru"),
+        ],
+        group: Group::Operators,
+        template: Some(("arasında ", " ve ")),
+    },
+    OpDef {
+        symbol: "gibi",
+        aliases: &["like"],
+        signature: "a gibi 'kalıp'",
+        description: "Metin kalıba uyuyor mu: % herhangi bir metin, _ tek karakter, \\ ardından gelen karakteri olduğu gibi alır; büyük/küçük harf ayrı",
+        examples: &[
+            ("Ada gibi '12%'", "12 ile başlayan adalar için doğru"),
+            ("'P00012' gibi 'P___12'", "doğru"),
+        ],
+        group: Group::Operators,
+        template: Some(("gibi '", "'")),
+    },
+    OpDef {
+        symbol: "benzer",
+        aliases: &["ilike"],
+        signature: "a benzer 'kalıp'",
+        description: "gibi, ama büyük/küçük harf ve Türkçe harf farkı gözetilmez",
+        examples: &[("'Çınar' benzer 'cin%'", "doğru")],
+        group: Group::Operators,
+        template: Some(("benzer '", "'")),
+    },
+    OpDef {
+        symbol: "durum",
+        aliases: &["case"],
+        signature: "durum eğer koşul ise değer … yoksa değer son",
+        description: "İlk doğru koşulun değeri; hiçbiri doğru değilse yoksa'nın değeri, yoksa yazılmamışsa boş. Seçilmeyen dallar hesaplanmaz",
+        examples: &[(
+            "durum eğer 600 > 1000 ise 'büyük' eğer 600 > 500 ise 'orta' yoksa 'küçük' son",
+            "'orta'",
+        )],
+        group: Group::Conditionals,
+        template: Some(("durum eğer ", " ise  yoksa  son")),
     },
     OpDef {
         symbol: "doğru",
@@ -194,6 +299,8 @@ pub static OPERATORS: &[OpDef] = &[
         signature: "doğru",
         description: "Doğru değeri",
         examples: &[("eğer(doğru, 1, 2)", "1")],
+        group: Group::Operators,
+        template: None,
     },
     OpDef {
         symbol: "yanlış",
@@ -201,13 +308,29 @@ pub static OPERATORS: &[OpDef] = &[
         signature: "yanlış",
         description: "Yanlış değeri",
         examples: &[("değil yanlış", "doğru")],
+        group: Group::Operators,
+        template: None,
     },
     OpDef {
         symbol: "boş",
-        aliases: &["null"],
+        aliases: &["null", "is null"],
         signature: "boş",
-        description: "Boş değer: alanı olmayan ya da boş metin; yalnız boşa eşittir",
-        examples: &[("Ada = boş", "adası olmayanlar için doğru")],
+        description: "Boş değer: alanı olmayan ya da boş metin; yalnız boşa eşittir. Bir değerden sonra: değer boş mu (a boş)",
+        examples: &[
+            ("Ada = boş", "adası olmayanlar için doğru"),
+            ("Ada boş", "adası olmayanlar için doğru"),
+        ],
+        group: Group::Operators,
+        template: None,
+    },
+    OpDef {
+        symbol: "boş değil",
+        aliases: &["is not null"],
+        signature: "a boş değil",
+        description: "Değer boş değil mi: alanı olan ve boş metin olmayan",
+        examples: &[("Ada boş değil", "adası olanlar için doğru")],
+        group: Group::Operators,
+        template: None,
     },
 ];
 
@@ -437,6 +560,16 @@ pub enum Func {
     If,
     Empty,
     Coalesce,
+    // Since docs/adr/0100 §4.
+    Sqrt,
+    Ceil,
+    Floor,
+    Pi,
+    Left,
+    Right,
+    Find,
+    Concat,
+    PadEnd,
 }
 
 pub struct FuncDef {
@@ -731,6 +864,127 @@ pub static FUNCTIONS: &[FuncDef] = &[
         group: Group::Conditionals,
         args: &[("a, b, …", "Sırayla denenecek değerler")],
         examples: &[("varsayılan(Ada, '?')", "Ada boşsa '?'")],
+    },
+    FuncDef {
+        func: Func::Sqrt,
+        name: "kök",
+        aliases: &["sqrt", "kok"],
+        arity: (1, Some(1)),
+        signature: "kök(sayı)",
+        description: "Karekök; eksi sayıda boş",
+        group: Group::Math,
+        args: &[("sayı", "Karekökü alınacak sayı")],
+        examples: &[("kök(16)", "4"), ("kök($alan)", "kare bir parselin kenarı")],
+    },
+    FuncDef {
+        func: Func::Ceil,
+        name: "tavan",
+        aliases: &["ceil"],
+        arity: (1, Some(1)),
+        signature: "tavan(sayı)",
+        description: "Yukarı yuvarlar: sayıdan küçük olmayan en küçük tam sayı",
+        group: Group::Math,
+        args: &[("sayı", "Yuvarlanacak sayı")],
+        examples: &[("tavan(2.1)", "3"), ("tavan(-2.1)", "-2")],
+    },
+    FuncDef {
+        func: Func::Floor,
+        name: "taban",
+        aliases: &["floor"],
+        arity: (1, Some(1)),
+        signature: "taban(sayı)",
+        description: "Aşağı yuvarlar: sayıdan büyük olmayan en büyük tam sayı",
+        group: Group::Math,
+        args: &[("sayı", "Yuvarlanacak sayı")],
+        examples: &[("taban(2.9)", "2"), ("taban(-2.1)", "-3")],
+    },
+    FuncDef {
+        func: Func::Pi,
+        name: "pi",
+        aliases: &[],
+        arity: (0, Some(0)),
+        signature: "pi()",
+        description: "π sayısı",
+        group: Group::Math,
+        args: &[],
+        examples: &[
+            ("pi()", "3.14159265359"),
+            ("pi() * 10 ^ 2", "yarıçapı 10 olan dairenin alanı"),
+        ],
+    },
+    FuncDef {
+        func: Func::Left,
+        name: "sol",
+        aliases: &["left"],
+        arity: (2, Some(2)),
+        signature: "sol(metin, uzunluk)",
+        description: "Metnin başından verilen sayıda karakter",
+        group: Group::Text,
+        args: &[
+            ("metin", "Parçası alınacak metin"),
+            ("uzunluk", "Kaç karakter"),
+        ],
+        examples: &[("sol('1245/12', 4)", "'1245'")],
+    },
+    FuncDef {
+        func: Func::Right,
+        name: "sağ",
+        aliases: &["right", "sag"],
+        arity: (2, Some(2)),
+        signature: "sağ(metin, uzunluk)",
+        description: "Metnin sonundan verilen sayıda karakter",
+        group: Group::Text,
+        args: &[
+            ("metin", "Parçası alınacak metin"),
+            ("uzunluk", "Kaç karakter"),
+        ],
+        examples: &[("sağ('P00012', 2)", "'12'")],
+    },
+    FuncDef {
+        func: Func::Find,
+        name: "bul",
+        aliases: &["strpos"],
+        arity: (2, Some(2)),
+        signature: "bul(metin, aranan)",
+        description: "Aranan parçanın metindeki yeri (ilk karakter 1), yoksa 0; büyük/küçük harf ayrıdır",
+        group: Group::Text,
+        args: &[
+            ("metin", "İçinde aranacak metin"),
+            ("aranan", "Aranan parça"),
+        ],
+        examples: &[("bul('1245/12', '/')", "5"), ("bul('Arsa', 'x')", "0")],
+    },
+    FuncDef {
+        func: Func::Concat,
+        name: "birleştir",
+        aliases: &["concat", "birlestir"],
+        arity: (1, None),
+        signature: "birleştir(a, b, …)",
+        description: "Değerleri metin olarak art arda yazar; boş değer bir şey eklemez",
+        group: Group::Text,
+        args: &[("a, b, …", "Art arda yazılacak değerler")],
+        examples: &[
+            (
+                "birleştir('Ada ', 1245, ' Parsel ', 12)",
+                "'Ada 1245 Parsel 12'",
+            ),
+            ("birleştir('a', boş, 'b')", "'ab'"),
+        ],
+    },
+    FuncDef {
+        func: Func::PadEnd,
+        name: "sağdoldur",
+        aliases: &["rpad", "sagdoldur"],
+        arity: (2, Some(3)),
+        signature: "sağdoldur(değer, uzunluk, karakter)",
+        description: "Sağdan doldurur (karakter verilmezse boşluk)",
+        group: Group::Text,
+        args: &[
+            ("değer", "Doldurulacak değer"),
+            ("uzunluk", "Varılacak uzunluk"),
+            ("karakter", "Doldurma karakteri; verilmezse boşluk"),
+        ],
+        examples: &[("sağdoldur('12', 5, '_')", "'12___'")],
     },
 ];
 

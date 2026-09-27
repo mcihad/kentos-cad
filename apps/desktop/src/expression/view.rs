@@ -29,7 +29,7 @@ const TREE: f32 = 220.0;
 const HELP: f32 = 270.0;
 
 /// The operator buttons over the editor: label, what goes in, how it stands.
-const OPERATORS: [(&str, &str, Kind); 14] = [
+const OPERATORS: [(&str, &str, Kind); 15] = [
     ("=", " = ", Kind::Operator),
     ("!=", " != ", Kind::Operator),
     ("<", " < ", Kind::Operator),
@@ -38,6 +38,7 @@ const OPERATORS: [(&str, &str, Kind); 14] = [
     ("-", " - ", Kind::Operator),
     ("*", " * ", Kind::Operator),
     ("/", " / ", Kind::Operator),
+    ("^", " ^ ", Kind::Operator),
     ("||", " || ", Kind::Operator),
     ("(", "(", Kind::Operator),
     (")", ")", Kind::Operator),

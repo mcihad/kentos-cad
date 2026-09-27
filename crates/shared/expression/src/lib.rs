@@ -13,8 +13,11 @@
 //! Fields: bare names (Parsel) or in brackets ([Tapu alanı]). Text: '…' or
 //! "…" (a doubled quote inside is one quote). Variables start with $ (see
 //! `library.rs`). Keywords: ve/and, veya/or, değil/not, doğru/true,
-//! yanlış/false, boş/null. Operators: = != <> < <= > >= + - * / % and ||
-//! (joins text). A faithful port of the TypeScript it replaced
+//! yanlış/false, boş/null. Operators: = != <> < <= > >= + - * / % ^ and ||
+//! (joins text). Since docs/adr/0100 §4: `durum eğer … ise … yoksa … son`
+//! (CASE), `içinde` (IN), `arasında … ve` (BETWEEN), `gibi` and `benzer`
+//! (LIKE, ILIKE), `boş` / `boş değil` after a value (IS [NOT] NULL), each
+//! with `değil` before it where SQL puts NOT. A faithful port of the TypeScript it replaced
 //! (`apps/web/src/model/expression/`, docs/adr/0008 “İfade dili”): the same
 //! values, the same text, the same errors at the same positions.
 //!
@@ -202,10 +205,28 @@ fn uses(n: &Node, needs: &mut Needs) {
             }
         },
         Node::Call(_, args) => args.iter().for_each(|a| uses(a, needs)),
-        Node::Not(a) | Node::Neg(a) => uses(a, needs),
-        Node::Bin(_, a, b) => {
+        Node::Not(a) | Node::Neg(a) | Node::IsNull(a, _) => uses(a, needs),
+        Node::Bin(_, a, b) | Node::Like(a, b, ..) => {
             uses(a, needs);
             uses(b, needs);
+        }
+        Node::Between(a, b, c, _) => {
+            uses(a, needs);
+            uses(b, needs);
+            uses(c, needs);
+        }
+        Node::In(a, items, _) => {
+            uses(a, needs);
+            items.iter().for_each(|i| uses(i, needs));
+        }
+        Node::Case(whens, otherwise) => {
+            for (c, v) in whens {
+                uses(c, needs);
+                uses(v, needs);
+            }
+            if let Some(e) = otherwise {
+                uses(e, needs);
+            }
         }
         Node::Lit(_) | Node::Field(_) => {}
     }

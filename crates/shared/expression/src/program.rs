@@ -86,15 +86,26 @@ pub enum Ins {
     /// A binary operator on its left and right operands.
     Bin(BinOp, [Operand; 2]),
     Call(Func, Box<[Operand]>),
+    /// `durum`: conditions and values alternating, the else last when set.
+    Case(Box<[Operand]>, bool),
+    /// `içinde`: the value, then the list; negated when set.
+    In(Box<[Operand]>, bool),
+    /// `arasında`: the value, the low and the high; negated.
+    Between([Operand; 3], bool),
+    /// `gibi`, `benzer` (fold): the value and the pattern; fold, negated.
+    Like([Operand; 2], bool, bool),
+    /// `boş`, `boş değil`: negated.
+    IsNull(Operand, bool),
 }
 
 impl Ins {
     pub fn operands(&self) -> &[Operand] {
         match self {
             Ins::Load(_) => &[],
-            Ins::Not(a) | Ins::Neg(a) => std::slice::from_ref(a),
-            Ins::Bin(_, ab) => ab,
-            Ins::Call(_, args) => args,
+            Ins::Not(a) | Ins::Neg(a) | Ins::IsNull(a, _) => std::slice::from_ref(a),
+            Ins::Bin(_, ab) | Ins::Like(ab, ..) => ab,
+            Ins::Between(abc, _) => abc,
+            Ins::Call(_, args) | Ins::Case(args, _) | Ins::In(args, _) => args,
         }
     }
 
@@ -212,9 +223,12 @@ impl Program {
         for ins in &mut self.code {
             match ins {
                 Ins::Load(_) => {}
-                Ins::Not(a) | Ins::Neg(a) => renumber(a),
-                Ins::Bin(_, ab) => ab.iter_mut().for_each(renumber),
-                Ins::Call(_, args) => args.iter_mut().for_each(renumber),
+                Ins::Not(a) | Ins::Neg(a) | Ins::IsNull(a, _) => renumber(a),
+                Ins::Bin(_, ab) | Ins::Like(ab, ..) => ab.iter_mut().for_each(renumber),
+                Ins::Between(abc, _) => abc.iter_mut().for_each(renumber),
+                Ins::Call(_, args) | Ins::Case(args, _) | Ins::In(args, _) => {
+                    args.iter_mut().for_each(renumber)
+                }
             }
         }
         self.result.iter_mut().for_each(renumber);
@@ -262,11 +276,46 @@ impl Builder {
                 let args: Box<[Operand]> = args.iter().map(|a| self.node(a)).collect();
                 self.op(Ins::Call(*f, args))
             }
+            Node::Case(whens, otherwise) => {
+                let mut parts = Vec::with_capacity(2 * whens.len() + 1);
+                for (c, v) in whens {
+                    parts.push(self.node(c));
+                    parts.push(self.node(v));
+                }
+                if let Some(e) = otherwise {
+                    parts.push(self.node(e));
+                }
+                let ins = Ins::Case(parts.into(), otherwise.is_some());
+                // Only what is reached counts: a branch that threw does not empty the whole.
+                if ins.constant() {
+                    let c = self.fold(&ins);
+                    return self.constant(c);
+                }
+                self.emit(ins)
+            }
+            Node::In(x, items, negated) => {
+                let mut list = vec![self.node(x)];
+                list.extend(items.iter().map(|i| self.node(i)));
+                self.op(Ins::In(list.into(), *negated))
+            }
+            Node::Between(x, low, high, negated) => {
+                let (x, low, high) = (self.node(x), self.node(low), self.node(high));
+                self.op(Ins::Between([x, low, high], *negated))
+            }
+            Node::Like(x, pattern, fold, negated) => {
+                let (x, pattern) = (self.node(x), self.node(pattern));
+                self.op(Ins::Like([x, pattern], *fold, *negated))
+            }
+            Node::IsNull(x, negated) => {
+                let x = self.node(x);
+                self.op(Ins::IsNull(x, *negated))
+            }
         }
     }
 
     /// An operation: folded when its operands are constants, empty (thrown)
-    /// when one of them threw, else an instruction.
+    /// when one of them threw, else an instruction (`durum`, which reads only
+    /// what it reaches, is `node`'s).
     fn op(&mut self, ins: Ins) -> Operand {
         let thrown = |o: &Operand| matches!(o, Operand::Const(c) if self.consts[*c as usize] == Const::Thrown);
         if ins.operands().iter().any(thrown) {
@@ -294,12 +343,30 @@ impl Builder {
     /// An operation on constants, computed now.
     fn fold(&mut self, ins: &Ins) -> Const {
         let consts = &self.consts;
-        let get = |o: &Operand| match o {
-            Operand::Const(c) => consts[*c as usize].view().unwrap_or(V::Null),
-            Operand::Reg(_) => V::Null,
+        // None: a constant that threw.
+        let view = |o: &Operand| match o {
+            Operand::Const(c) => consts[*c as usize].view(),
+            Operand::Reg(_) => Some(V::Null),
         };
+        let get = |o: &Operand| view(o).unwrap_or(V::Null);
+        let truth = |b: bool| R::V(V::Bool(b));
         let mut out = String::new();
         let r = match ins {
+            Ins::Case(parts, otherwise) => {
+                let views: Vec<Option<V>> = parts.iter().map(view).collect();
+                scalar::case(&views, *otherwise)
+            }
+            Ins::In(list, negated) => {
+                let items: Vec<V> = list[1..].iter().map(get).collect();
+                truth(scalar::within(get(&list[0]), &items, &mut self.scratch) != *negated)
+            }
+            Ins::Between([x, low, high], negated) => {
+                truth(scalar::between(get(x), get(low), get(high), &mut self.scratch) != *negated)
+            }
+            Ins::Like([x, pattern], fold, negated) => {
+                truth(scalar::like(get(x), get(pattern), *fold, &mut self.scratch) != *negated)
+            }
+            Ins::IsNull(x, negated) => truth(scalar::is_empty(get(x)) != *negated),
             Ins::Load(_) => R::V(V::Null),
             Ins::Not(a) => R::V(scalar::not(get(a))),
             Ins::Neg(a) => R::V(scalar::neg(get(a))),

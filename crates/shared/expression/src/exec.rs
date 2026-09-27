@@ -8,7 +8,10 @@
 //!
 //! The instructions themselves are `kernels`.
 
-use crate::kernels::{binary, bit, call, constant, neg, not, round_to, text_constant};
+use crate::kernels::{
+    between, binary, bit, call, case, constant, is_null, like, neg, not, round_to, text_constant,
+    within,
+};
 use crate::library::Func;
 use crate::program::{Const, Ins, Load, Program};
 use crate::scalar::{R, Scratch, V};
@@ -340,8 +343,8 @@ pub fn run<'a>(
             {
                 round_to(col(args[0]), *d, &mut out, scratch);
             }
-            Ins::Call(f, args) => {
-                // Most calls take a few arguments: their columns stay on the stack.
+            Ins::Call(_, args) | Ins::Case(args, _) | Ins::In(args, _) => {
+                // Most take a few operands: their columns stay on the stack.
                 const FEW: usize = 8;
                 let mut few = [Col::NONE; FEW];
                 let many: Vec<Col>;
@@ -354,8 +357,25 @@ pub fn run<'a>(
                     many = args.iter().map(|&o| col(o)).collect();
                     &many
                 };
-                call(*f, cols, &mut out, scratch);
+                match ins {
+                    Ins::Case(_, otherwise) => case(cols, *otherwise, &mut out),
+                    Ins::In(_, negated) => within(cols, *negated, &mut out, scratch),
+                    Ins::Call(f, _) => call(*f, cols, &mut out, scratch),
+                    _ => {}
+                }
             }
+            Ins::Between([x, low, high], negated) => {
+                between(
+                    [col(*x), col(*low), col(*high)],
+                    *negated,
+                    &mut out,
+                    scratch,
+                );
+            }
+            Ins::Like([x, pattern], fold, negated) => {
+                like([col(*x), col(*pattern)], *fold, *negated, &mut out, scratch);
+            }
+            Ins::IsNull(x, negated) => is_null(col(*x), *negated, &mut out),
         }
     }
 }

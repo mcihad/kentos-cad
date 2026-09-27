@@ -3,7 +3,7 @@
 //! a character it has no use for), so the editor colours and completes text
 //! while it is being written; and each token's class for the colours.
 
-use crate::js::text::{is_space, trim};
+use crate::js::text::{fold_turkish, is_space, trim};
 use crate::lexer::{OPS, code_point, number_end, starts_number, word};
 use crate::library::{find_function, find_variable};
 use crate::parser::{Keyword, keyword_of};
@@ -39,6 +39,12 @@ pub(crate) struct Piece {
     pub lex: Lex,
     pub start: usize,
     pub end: usize,
+    /// The operator (a symbol of `OPERATORS`) this word is part of, where
+    /// the grammar reads it so (docs/adr/0100 §4): `durum` for the words of
+    /// `durum … son`, `içinde` for `içinde` and a `değil` before it, `boş`
+    /// or `boş değil` for `x boş`, `x IS NOT NULL` … Elsewhere the same
+    /// words are fields: a field may be called Durum, Son or Gibi.
+    pub phrase: Option<&'static str>,
 }
 
 fn starts_with(u: &[u16], i: usize, op: &str) -> bool {
@@ -122,9 +128,121 @@ pub(crate) fn lex(u: &[u16]) -> Vec<Piece> {
             i += code_point(u, i).map_or(1, |(_, n)| n);
             Lex::Bad
         };
-        out.push(Piece { lex, start, end: i });
+        out.push(Piece {
+            lex,
+            start,
+            end: i,
+            phrase: None,
+        });
     }
+    mark(&mut out);
     out
+}
+
+/// The words that stand after a value, folded, and their operators.
+const AFTER_VALUE: [(&str, &str); 8] = [
+    ("ICINDE", "içinde"),
+    ("IN", "içinde"),
+    ("ARASINDA", "arasında"),
+    ("BETWEEN", "arasında"),
+    ("GIBI", "gibi"),
+    ("LIKE", "gibi"),
+    ("BENZER", "benzer"),
+    ("ILIKE", "benzer"),
+];
+
+/// A word's folded form, if the piece is a word.
+fn folded(p: &Piece) -> Option<String> {
+    match &p.lex {
+        Lex::Word { name } => Some(fold_turkish(name)),
+        _ => None,
+    }
+}
+
+/// The operator of a word that stands after a value.
+fn after_value(w: Option<&str>) -> Option<&'static str> {
+    let w = w?;
+    AFTER_VALUE.iter().find(|(f, _)| *f == w).map(|(_, s)| *s)
+}
+
+/// Sets `Piece::phrase` in one pass that follows, as the parser does,
+/// whether a value has just ended (where an operator stands) and the
+/// `durum`s not yet closed; linear, so a long text colours at once.
+fn mark(pieces: &mut [Piece]) {
+    let mut value = false;
+    let mut cases = 0usize;
+    let mut i = 0;
+    while i < pieces.len() {
+        let Some(w) = folded(&pieces[i]) else {
+            value = matches!(
+                pieces[i].lex,
+                Lex::Num | Lex::Str { .. } | Lex::Field { .. } | Lex::Var { .. } | Lex::Op(")")
+            );
+            i += 1;
+            continue;
+        };
+        let word_at = |k: usize| pieces.get(k).and_then(folded);
+        let keyword_at = |k: usize| word_at(k).as_deref().and_then(keyword_of);
+        let keyword = keyword_of(&w);
+        // How many pieces from `i` the operator takes, and which it is.
+        let mut phrase: Option<(usize, &'static str)> = None;
+        if value {
+            if let Some(symbol) = after_value(Some(&w)) {
+                phrase = Some((1, symbol));
+                value = false;
+            } else if keyword == Some(Keyword::Not)
+                && let Some(symbol) = after_value(word_at(i + 1).as_deref())
+            {
+                phrase = Some((2, symbol));
+                value = false;
+            } else if keyword == Some(Keyword::Null) || w == "IS" {
+                // `x boş [değil]`; `x IS [NOT] NULL`.
+                let negated = keyword_at(i + 1) == Some(Keyword::Not);
+                let mut n = 1 + usize::from(negated);
+                value = true;
+                if w == "IS" {
+                    if keyword_at(i + n) == Some(Keyword::Null) {
+                        n += 1;
+                    } else {
+                        value = false;
+                    }
+                }
+                phrase = Some((n, if negated { "boş değil" } else { "boş" }));
+            } else if cases > 0
+                && matches!(
+                    w.as_str(),
+                    "ISE" | "THEN" | "EGER" | "WHEN" | "YOKSA" | "ELSE"
+                )
+            {
+                phrase = Some((1, "durum"));
+                value = false;
+            } else if cases > 0 && matches!(w.as_str(), "SON" | "END") {
+                phrase = Some((1, "durum"));
+                cases -= 1;
+            } else {
+                value = !called(pieces, i)
+                    && !matches!(keyword, Some(Keyword::And | Keyword::Or | Keyword::Not));
+            }
+        } else if matches!(w.as_str(), "DURUM" | "CASE")
+            && matches!(word_at(i + 1).as_deref(), Some("EGER" | "WHEN"))
+        {
+            phrase = Some((2, "durum"));
+            cases += 1;
+        } else {
+            value = match keyword {
+                Some(Keyword::And | Keyword::Or | Keyword::Not) => false,
+                Some(Keyword::True | Keyword::False | Keyword::Null) => true,
+                None => !called(pieces, i),
+            };
+        }
+        let n = phrase.map_or(1, |(n, symbol)| {
+            for p in &mut pieces[i..i + n] {
+                p.phrase = Some(symbol);
+            }
+            n
+        });
+        i += n;
+    }
 }
 
 /// A token's class, for the editor's colours.
@@ -193,6 +311,9 @@ pub(crate) fn class_of(pieces: &[Piece], i: usize) -> Class {
             None => Class::Unknown,
         },
         Lex::Word { name } => {
+            if pieces[i].phrase.is_some() {
+                return Class::Keyword;
+            }
             if called(pieces, i) {
                 return match find_function(name) {
                     Some(_) => Class::Function,
@@ -267,5 +388,43 @@ mod tests {
         );
         // UTF-16 positions: 𝒜 is two units.
         assert_eq!(classes("'𝒜' || x"), "text:0-4 operator:5-7 field:8-9");
+    }
+
+    #[test]
+    fn the_new_words_are_keywords_only_where_the_grammar_reads_them() {
+        let keywords = |src: &str| -> Vec<String> {
+            let u: Vec<u16> = src.encode_utf16().collect();
+            let pieces = lex(&u);
+            (0..pieces.len())
+                .filter(|&i| class_of(&pieces, i) == Class::Keyword)
+                .map(|i| String::from_utf16_lossy(&u[pieces[i].start..pieces[i].end]))
+                .collect()
+        };
+        assert_eq!(
+            keywords("durum eğer Kat > 3 ise 'yüksek' yoksa 'alçak' son"),
+            ["durum", "eğer", "ise", "yoksa", "son"]
+        );
+        assert_eq!(
+            keywords("Nitelik değil içinde ('Arsa') ve Kat arasında 3 ve 5"),
+            ["değil", "içinde", "ve", "arasında", "ve"]
+        );
+        assert_eq!(
+            keywords("Ada gibi '12%' veya Ada IS NOT NULL veya Ada boş"),
+            ["gibi", "veya", "IS", "NOT", "NULL", "veya", "boş"]
+        );
+        // Nested, and a field called Gibi before gibi.
+        assert_eq!(
+            keywords("durum eğer Gibi gibi 'a%' ise durum eğer x ise 1 son son"),
+            [
+                "durum", "eğer", "gibi", "ise", "durum", "eğer", "ise", "son", "son"
+            ]
+        );
+        // Fields called so, and eğer the function, stay what they are.
+        assert!(keywords("Durum = 'Son' || Gibi || eğer(Son, 1, 2)").is_empty());
+        assert_eq!(
+            classes("eğer(1, 2, 3)").split(' ').next(),
+            Some("function:0-4")
+        );
+        assert_eq!(classes("2 ^ 3"), "number:0-1 operator:2-3 number:4-5");
     }
 }

@@ -134,7 +134,8 @@ pub fn complete(src: &str, cursor: usize, schema: &Schema, explicit: bool) -> Op
             let names: Vec<&str> = std::iter::once(o.symbol)
                 .chain(o.aliases.iter().copied())
                 .collect();
-            add(&names, operator_item(o, false));
+            // Before a `(` already there, only the word (as a function's name).
+            add(&names, operator_item(o, false, !before_call));
         }
     }
     if found.is_empty() {
@@ -405,7 +406,10 @@ mod tests {
 
     #[test]
     fn a_word_finds_fields_functions_variables_and_words() {
-        assert_eq!(labels("ta", 2, false), ["Tapu alanı", "tamsayı"]);
+        assert_eq!(
+            labels("ta", 2, false),
+            ["Tapu alanı", "taban", "tamsayı", "tavan"]
+        );
         let c = complete("yuv", 3, &schema(), false).expect("yuvarla");
         assert_eq!((c.start, c.end), (0, 3));
         assert_eq!(c.items[0].insert, "yuvarla()");
