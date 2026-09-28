@@ -125,9 +125,13 @@ impl App {
         self.field = None;
         if self.session.start(id) {
             // The web logs the tool as a command, by its name (`ToolManager.activate`).
-            let name = catalog()
-                .get(&format!("tool.{id}"))
-                .map_or(id, |command| command.title);
+            let command = catalog().get(&format!("tool.{id}")).or_else(|| {
+                // Koordinat oku is a menu command, not `tool.<id>`.
+                (id == kentos_interaction::coordinate::ID)
+                    .then(|| catalog().get("crs.query"))
+                    .flatten()
+            });
+            let name = command.map_or(id, |command| command.title);
             self.say(Level::Command, name);
             // It may act at once: the erase tool deletes a selection and leaves.
             self.with_tool(|s, cx| s.activate(cx));

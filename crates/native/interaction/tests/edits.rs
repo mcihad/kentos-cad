@@ -55,19 +55,22 @@ fn offset_copies_at_the_distance_or_through_a_point() {
     b.start("offset");
     assert_eq!(
         b.session.prompt().text(),
-        "Ötele: ötelenecek nesneye tıklayın [mesafe 1.000 m; mesafe için sayı yazın; Noktadan geç (N): kapalı]"
+        "Ötele: ötelenecek nesneye tıklayın [Noktadan geç (N) / İki yana (I) / Kaynağı sil (S)]"
     );
-    assert_eq!(b.options(), ["N"]);
+    assert_eq!(b.options(), ["N", "I", "S"]);
     // A typed number is the distance.
     assert!(b.type_text("2"));
     assert_eq!(b.memory.offset_distance, 2.0);
     // Hovering names the object by its edge; a click picks it.
     b.move_to(-20.0, 10.0);
     assert_eq!(b.selection.hover(), Some(Slot(2)));
+    // The distance a copy would go is by the cursor while an object is hovered.
+    let hovered = b.session.preview(&Default::default()).expect("a preview");
+    assert_eq!(hovered.tag.expect("a tag").lines, ["Mesafe 2.000 m"]);
     b.click(-20.0, 10.0);
     assert_eq!(
         b.session.prompt().text(),
-        "Ötele: kopyanın gideceği tarafa tıklayın [Noktadan geç (N): kapalı]"
+        "Ötele: kopyanın gideceği tarafa tıklayın [Noktadan geç (N) / İki yana (I) / Kaynağı sil (S)]"
     );
     b.move_to(-23.0, 10.0);
     let preview = b.session.preview(&Default::default()).expect("a preview");
@@ -83,12 +86,12 @@ fn offset_copies_at_the_distance_or_through_a_point() {
         b.session
             .prompt()
             .text()
-            .ends_with("[Noktadan geç (N): açık]")
+            .ends_with("[Noktadan geç (N): açık / İki yana (I) / Kaynağı sil (S)]")
     );
     b.click(-20.0, 10.0);
     assert_eq!(
         b.session.prompt().text(),
-        "Ötele: kopyanın geçeceği noktaya tıklayın [Noktadan geç (N): açık]"
+        "Ötele: kopyanın geçeceği noktaya tıklayın [Noktadan geç (N): açık / İki yana (I) / Kaynağı sil (S)]"
     );
     b.click(-17.0, 9.0);
     assert!(near(&line(&b, 15), &[[-17.0, 6.0], [-17.0, 18.0]]));

@@ -49,6 +49,15 @@
 //! - Öznitelikler's writes ([`properties`], docs/adr/0066): the layer, colour,
 //!   symbol, attributes and label through `cad.entities.set`, a geometry
 //!   value through `cad.entities.edit`;
+//! - the drawing and editing tools of docs/adr/0140: the reshaping, splitting,
+//!   cleaning and property-copying tools of phase 1 ([`reshape`], [`split`],
+//!   [`cleanup`], [`match_properties`]); phase 2's slice ([`sector`]), points
+//!   between two points ([`between`]), the point found from distances,
+//!   bearings or lines ([`meeting`]), the angle measured ([`angle`]), the
+//!   coordinate read ([`coordinate`]) and the chained and stacked dimensions
+//!   ([`dimension_chain`]); phase 3's fence for trim and extend
+//!   ([`trim`], `fence`), the two sides and deleted source of offset
+//!   ([`offset`]) and the array along a path ([`array_path`]);
 //! - the geometry store kept in step with the document ([`Spatial`]): what
 //!   a click picks, a box selects and a point snaps to;
 //! - [`Format`]: numbers as the web shows them in messages and the tag.
@@ -64,9 +73,12 @@
 )]
 
 pub mod align;
+pub mod angle;
 pub mod arc;
 pub mod area;
 pub mod array;
+pub mod array_path;
+pub mod between;
 pub mod boundary;
 pub mod breaking;
 pub mod calc;
@@ -74,14 +86,17 @@ pub mod circle;
 pub mod cleanup;
 pub mod clipboard;
 pub mod construction;
+pub mod coordinate;
 pub mod corner;
 pub mod dimension;
+pub mod dimension_chain;
 pub mod divide;
 pub mod donut;
 mod edge;
 pub mod ellipse;
 pub mod erase;
 mod faces;
+mod fence;
 mod format;
 pub mod grip_menu;
 pub mod hatch;
@@ -89,6 +104,7 @@ pub mod lengthen;
 pub mod line;
 mod log;
 pub mod match_properties;
+pub mod meeting;
 pub mod mirror;
 pub mod modify;
 pub mod move_copy;
@@ -116,6 +132,7 @@ pub mod revcloud;
 pub mod rotate;
 pub mod rotated;
 pub mod scale;
+pub mod sector;
 pub mod select;
 mod selection;
 mod session;

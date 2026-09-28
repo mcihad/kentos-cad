@@ -563,7 +563,10 @@ impl App {
 
     /// Whether this command is the running tool (`tool.line` while Çizgi runs).
     fn running(&self, id: &str) -> bool {
-        self.session.is_running() && id.strip_prefix("tool.") == Some(self.session.tool_id())
+        let tool = self.session.tool_id();
+        self.session.is_running()
+            && (id.strip_prefix("tool.") == Some(tool)
+                || (id == "crs.query" && tool == kentos_interaction::coordinate::ID))
     }
 
     /// Commands' on or off states for a menu, in its order.

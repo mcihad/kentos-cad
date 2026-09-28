@@ -213,6 +213,17 @@ pub const PORTED: &[&str] = &[
     "tool.simplify",
     "tool.cleanup",
     "tool.matchProperties",
+    // Phase 2 and 3 of docs/adr/0140: the slice, points between two points, the point found from
+    // distances, bearings or lines, the angle, the chained and stacked dimensions, the coordinate
+    // read (Harita › Koordinatlar) and the array along a path.
+    "tool.sector",
+    "tool.pointsBetween",
+    "tool.intersectPoint",
+    "tool.measureAngle",
+    "tool.dimContinue",
+    "tool.dimBaseline",
+    "crs.query",
+    "tool.arrayPath",
     // İşlemler (docs/adr/0084): each tool's and model's window, and Harita's
     // Kenar ölçülerini yaz, which opens Kenar uzunluklarını yaz.
     "processing.run.points.numberVertices",

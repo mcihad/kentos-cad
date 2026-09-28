@@ -23,6 +23,7 @@ use crate::Vec2;
 use crate::align::{self, Align};
 use crate::arc::{self, Arc};
 use crate::array::{self, Array};
+use crate::array_path;
 use crate::breaking::{self, Break};
 use crate::circle::{self, Circle};
 use crate::corner::{self, CornerTool};
@@ -54,8 +55,9 @@ use crate::tool::{Context, Cursor, Draft, Flow, Pointer, Preview, Tool, View};
 use crate::trim::{self, Boundary};
 use crate::vertex::{self, Vertex};
 use crate::{
-    area, boundary, cleanup, construction, dimension, divide, donut, ellipse, hatch,
-    match_properties, parallel, revcloud, spline, split, text,
+    angle, area, between, boundary, cleanup, construction, coordinate, dimension, dimension_chain,
+    divide, donut, ellipse, hatch, match_properties, meeting, parallel, revcloud, sector, spline,
+    split, text,
 };
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
@@ -126,6 +128,16 @@ pub const TOOLS: &[&str] = &[
     split::ID,
     cleanup::ID,
     match_properties::ID,
+    // Drawing tools of docs/adr/0140, phase 2.
+    sector::ID,
+    between::ID,
+    meeting::ID,
+    angle::ID,
+    coordinate::ID,
+    dimension_chain::CONTINUE_ID,
+    dimension_chain::BASELINE_ID,
+    // Phase 3: the array along a path (Çit, İki yana and Kaynağı sil are options of existing tools).
+    array_path::ID,
 ];
 
 /// What a tool running over another one suspended (docs/adr/0083).
@@ -228,6 +240,18 @@ impl Session {
             split::ID => Box::new(crate::split::Split::new()),
             cleanup::ID => Box::new(crate::cleanup::Cleanup::new()),
             match_properties::ID => Box::new(crate::match_properties::MatchProperties::new()),
+            sector::ID => Box::new(crate::sector::Sector::new()),
+            between::ID => Box::new(crate::between::PointsBetween::new()),
+            meeting::ID => Box::new(crate::meeting::IntersectPoint::new()),
+            angle::ID => Box::new(crate::angle::MeasureAngle::new()),
+            coordinate::ID => Box::new(crate::coordinate::CrsQuery::new()),
+            dimension_chain::CONTINUE_ID => {
+                Box::new(crate::dimension_chain::DimensionChain::continued())
+            }
+            dimension_chain::BASELINE_ID => {
+                Box::new(crate::dimension_chain::DimensionChain::baseline())
+            }
+            array_path::ID => Box::new(crate::array_path::ArrayPath::tool()),
             _ => return false,
         };
         // Kaydır is not repeated: Enter while panning repeats the command

@@ -1,5 +1,5 @@
 //! The drawings and the steps of the pictures `tools_screens` takes of the
-//! tools of docs/adr/0140 phase 1: each scene opens a small drawing that
+//! tools of docs/adr/0140 (phases 1 to 3): each scene opens a small drawing that
 //! shows its tool well, drives the real app the way a person would (the
 //! tool from the ribbon's command, a selection, a typed value, the pointer)
 //! and stops where the picture is to be taken: mid-use with the preview, or
@@ -54,6 +54,18 @@ impl Objects {
             layer,
             json!({ "kind": "arc", "c": xy(c), "r": r, "a0": a0, "a1": a1 }),
         )
+    }
+
+    fn point(&mut self, layer: &str, at: [f64; 2], z: Option<f64>) -> u32 {
+        let mut fields = json!({ "kind": "point", "p": xy(at) });
+        if let Some(z) = z {
+            fields["z"] = json!(z);
+        }
+        self.push(layer, fields)
+    }
+
+    fn circle(&mut self, layer: &str, c: [f64; 2], r: f64) -> u32 {
+        self.push(layer, json!({ "kind": "circle", "c": xy(c), "r": r }))
     }
 
     /// A field every object may have besides its kind's: its own colour, line weight.
@@ -128,6 +140,11 @@ fn method(app: &mut App, id: &'static str, option: &'static str) {
 
 fn typed(app: &mut App, text: &str) {
     let _ = app.submit_line(text);
+}
+
+/// The message log emptied, so that what the next step says is all it shows.
+fn forget(app: &mut App) {
+    let _ = app.update(Message::HistoryCleared);
 }
 
 fn select_all(app: &mut App) {
@@ -319,9 +336,143 @@ fn styles() -> Objects {
     o
 }
 
+/// A road, a parcel and open ground: room for pie slices.
+fn slice_ground() -> Objects {
+    let mut o = Objects::new();
+    o.path(
+        "yol",
+        &[[0.0, 4.0], [22.0, 2.0], [44.0, 8.0], [64.0, 6.0]],
+        false,
+    );
+    o.path(
+        "parsel",
+        &[[4.0, 18.0], [28.0, 18.0], [28.0, 38.0], [4.0, 38.0]],
+        true,
+    );
+    o
+}
+
+/// A long road with a parcel and a line to place points between.
+fn between_ground() -> Objects {
+    let mut o = Objects::new();
+    o.line("yol", [4.0, 8.0], [54.0, 26.0]);
+    o.path(
+        "parsel",
+        &[[4.0, 14.0], [22.0, 14.0], [22.0, 30.0], [4.0, 30.0]],
+        true,
+    );
+    o.line("cizim", [30.0, 4.0], [58.0, 4.0]);
+    o
+}
+
+/// Two known points and the ground around them, for distances, bearings and lines.
+fn meeting_ground() -> Objects {
+    let mut o = Objects::new();
+    o.point("parsel", [8.0, 14.0], None);
+    o.point("parsel", [44.0, 14.0], None);
+    o.line("yol", [0.0, -2.0], [52.0, -2.0]);
+    o.path(
+        "cizim",
+        &[[0.0, 34.0], [20.0, 36.0], [40.0, 34.0], [52.0, 30.0]],
+        false,
+    );
+    o.line("cizim", [6.0, 10.0], [20.0, 16.0]);
+    o.line("cizim", [10.0, 34.0], [20.0, 26.0]);
+    o
+}
+
+/// A parcel with four corners: an angle to measure at each.
+fn corners_ground() -> Objects {
+    let mut o = Objects::new();
+    o.path(
+        "parsel",
+        &[[6.0, 6.0], [46.0, 6.0], [38.0, 30.0], [14.0, 26.0]],
+        true,
+    );
+    o.line("yol", [0.0, 0.0], [54.0, 0.0]);
+    o
+}
+
+/// Survey points along a wall, one of them with its elevation.
+fn points_ground() -> Objects {
+    let mut o = Objects::new();
+    for (x, z) in [
+        (2.0, None),
+        (12.0, Some(24.6)),
+        (25.0, None),
+        (37.0, None),
+        (54.0, Some(21.3)),
+    ] {
+        o.point("parsel", [x, 8.0], z);
+    }
+    o.line("cizim", [2.0, 8.0], [54.0, 8.0]);
+    o.path("yol", &[[0.0, -6.0], [30.0, -4.0], [58.0, -6.0]], false);
+    // The far side of the block: room above for the dimensions.
+    o.path("parsel", &[[0.0, 44.0], [30.0, 46.0], [58.0, 44.0]], false);
+    o
+}
+
+/// Four roads across two streets that reach beyond them.
+fn fence_roads() -> Objects {
+    let mut o = Objects::new();
+    for x in [8.0, 22.0, 36.0, 50.0] {
+        o.line("cizim", [x, 0.0], [x, 32.0]);
+    }
+    for y in [8.0, 24.0] {
+        o.line("yol", [0.0, y], [58.0, y]);
+    }
+    o
+}
+
+/// A wall and lines that stop short of it, each a different length.
+fn short_lines() -> Objects {
+    let mut o = Objects::new();
+    o.line("yol", [54.0, 0.0], [54.0, 36.0]);
+    for (i, reach) in [30.0, 42.0, 36.0, 26.0, 40.0, 46.0].into_iter().enumerate() {
+        let y = 3.0 + i as f64 * 6.0;
+        o.line("cizim", [4.0, y], [reach + 4.0, y]);
+    }
+    o
+}
+
+/// A road with a corner and a parcel, to be offset to both sides.
+fn kerbs() -> Objects {
+    let mut o = Objects::new();
+    o.path(
+        "yol",
+        &[[2.0, 14.0], [24.0, 14.0], [36.0, 26.0], [58.0, 26.0]],
+        false,
+    );
+    o.path(
+        "parsel",
+        &[[6.0, 30.0], [20.0, 30.0], [20.0, 40.0], [6.0, 40.0]],
+        true,
+    );
+    o.circle("cizim", [44.0, 10.0], 5.0);
+    o
+}
+
+/// An arched road and a car outline at its start, to be laid along it.
+fn arch() -> Objects {
+    let mut o = Objects::new();
+    o.arc("yol", [30.0, -20.0], 45.0, 1.1, 2.05);
+    let (sx, sy) = (30.0 + 45.0 * 1.1f64.cos(), -20.0 + 45.0 * 1.1f64.sin());
+    let car = [
+        [-2.0, -1.0],
+        [1.0, -1.0],
+        [2.6, 0.0],
+        [1.0, 1.0],
+        [-2.0, 1.0],
+    ];
+    let pts: Vec<[f64; 2]> = car.iter().map(|p| [sx + p[0], sy + p[1]]).collect();
+    o.path("parsel", &pts, true);
+    o.line("cizim", [0.0, 0.0], [60.0, 0.0]);
+    o
+}
+
 // ── The scenes ──────────────────────────────────────────────────────────────
 
-pub(crate) fn scenes() -> Vec<Scene> {
+fn first_phase() -> Vec<Scene> {
     vec![
         ("yuvarla-onizleme", |app| {
             open(app, corners());
@@ -439,6 +590,306 @@ pub(crate) fn scenes() -> Vec<Scene> {
             click(app, [15.0, 12.0]);
             click(app, [50.0, 11.0]);
             hover(app, [30.0, 14.0]);
+        }),
+    ]
+}
+
+/// Every scene: phase 1's tools, then phase 2's, then phase 3's.
+pub(crate) fn scenes() -> Vec<Scene> {
+    let mut all = first_phase();
+    all.extend(second_phase());
+    all.extend(third_phase());
+    all
+}
+
+/// The car outline of [`arch`] selected: it starts where the road ends, so a click there would
+/// take the road.
+fn choose_car(app: &mut App) {
+    app.selection.set([kentos_domain::Slot(2)]);
+}
+
+/// Daire dilimi, Ara nokta, Kesişim noktası, Açı ölç, Koordinat oku, Zincir ve Baz ölçü.
+fn second_phase() -> Vec<Scene> {
+    vec![
+        ("dilim-onizleme", |app| {
+            open(app, slice_ground());
+            run(app, "tool.sector");
+            click(app, [44.0, 22.0]);
+            click(app, [58.0, 22.0]);
+            hover(app, [37.0, 34.1]);
+        }),
+        ("dilim-yazilan-onizleme", |app| {
+            open(app, slice_ground());
+            run(app, "tool.sector");
+            click(app, [40.0, 22.0]);
+            typed(app, "16");
+            typed(app, "20");
+            hover(app, [30.0, 38.0]);
+        }),
+        ("dilim-sonuc", |app| {
+            open(app, slice_ground());
+            run(app, "tool.sector");
+            click(app, [44.0, 22.0]);
+            click(app, [58.0, 22.0]);
+            forget(app);
+            click(app, [37.0, 34.1]);
+            hover(app, [16.0, 10.0]);
+        }),
+        ("aranokta-esit-onizleme", |app| {
+            open(app, between_ground());
+            run(app, "tool.pointsBetween");
+            click(app, [4.0, 8.0]);
+            click(app, [54.0, 26.0]);
+            hover(app, [30.0, 34.0]);
+        }),
+        ("aranokta-esit-sonuc", |app| {
+            open(app, between_ground());
+            run(app, "tool.pointsBetween");
+            click(app, [4.0, 8.0]);
+            click(app, [54.0, 26.0]);
+            forget(app);
+            typed(app, "6");
+            hover(app, [30.0, 34.0]);
+        }),
+        ("aranokta-uzaklik-onizleme", |app| {
+            open(app, between_ground());
+            method(app, "tool.pointsBetween", "U");
+            click(app, [4.0, 8.0]);
+            click(app, [54.0, 26.0]);
+            typed(app, "8, 20, 33");
+            // Taken back, the kept distances are what the next pair shows.
+            run(app, "edit.undo");
+            click(app, [4.0, 8.0]);
+            click(app, [54.0, 26.0]);
+            hover(app, [30.0, 34.0]);
+        }),
+        ("aranokta-oran-sonuc", |app| {
+            open(app, between_ground());
+            method(app, "tool.pointsBetween", "O");
+            click(app, [4.0, 8.0]);
+            click(app, [54.0, 26.0]);
+            forget(app);
+            typed(app, "0.15, 0.4, 0.75, 0.9");
+            hover(app, [30.0, 34.0]);
+        }),
+        ("kesisim-uzaklik-secim", |app| {
+            open(app, meeting_ground());
+            run(app, "tool.intersectPoint");
+            click(app, [8.0, 14.0]);
+            typed(app, "22");
+            click(app, [44.0, 14.0]);
+            typed(app, "24");
+            hover(app, [26.0, 25.0]);
+        }),
+        ("kesisim-uzaklik-sonuc", |app| {
+            open(app, meeting_ground());
+            run(app, "tool.intersectPoint");
+            click(app, [8.0, 14.0]);
+            typed(app, "22");
+            click(app, [44.0, 14.0]);
+            typed(app, "24");
+            forget(app);
+            click(app, [24.7, 28.3]);
+            hover(app, [40.0, 30.0]);
+        }),
+        ("kesisim-dogrultu-onizleme", |app| {
+            open(app, meeting_ground());
+            method(app, "tool.intersectPoint", "D");
+            click(app, [8.0, 14.0]);
+            typed(app, "60");
+            click(app, [44.0, 14.0]);
+            hover(app, [33.0, 21.0]);
+        }),
+        ("kesisim-dogrultu-sonuc", |app| {
+            open(app, meeting_ground());
+            method(app, "tool.intersectPoint", "D");
+            click(app, [8.0, 14.0]);
+            typed(app, "60");
+            click(app, [44.0, 14.0]);
+            forget(app);
+            typed(app, "340");
+            hover(app, [40.0, 30.0]);
+        }),
+        ("kesisim-dogru-onizleme", |app| {
+            open(app, meeting_ground());
+            method(app, "tool.intersectPoint", "L");
+            click(app, [6.0, 10.0]);
+            click(app, [20.0, 16.0]);
+            click(app, [10.0, 34.0]);
+            hover(app, [20.0, 26.0]);
+        }),
+        ("kesisim-dogru-sonuc", |app| {
+            open(app, meeting_ground());
+            method(app, "tool.intersectPoint", "L");
+            click(app, [6.0, 10.0]);
+            click(app, [20.0, 16.0]);
+            click(app, [10.0, 34.0]);
+            forget(app);
+            click(app, [20.0, 26.0]);
+            hover(app, [40.0, 30.0]);
+        }),
+        ("aci-onizleme", |app| {
+            open(app, corners_ground());
+            run(app, "tool.measureAngle");
+            click(app, [46.0, 6.0]);
+            click(app, [6.0, 6.0]);
+            hover(app, [40.0, 26.0]);
+        }),
+        ("aci-sonuc", |app| {
+            open(app, corners_ground());
+            run(app, "tool.measureAngle");
+            click(app, [46.0, 6.0]);
+            click(app, [6.0, 6.0]);
+            forget(app);
+            click(app, [38.0, 30.0]);
+            hover(app, [26.0, 16.0]);
+        }),
+        ("koordinat-oku", |app| {
+            open(app, points_ground());
+            run(app, "crs.query");
+            click(app, [12.0, 8.0]);
+            click(app, [30.0, 20.0]);
+            click(app, [54.0, 8.0]);
+            hover(app, [40.0, 26.0]);
+        }),
+        ("zincir-onizleme", |app| {
+            open(app, points_ground());
+            first_dimension(app);
+            run(app, "tool.dimContinue");
+            hover(app, [25.0, 12.0]);
+        }),
+        ("zincir-sonuc", |app| {
+            open(app, points_ground());
+            first_dimension(app);
+            run(app, "tool.dimContinue");
+            click(app, [25.0, 8.0]);
+            click(app, [37.0, 8.0]);
+            forget(app);
+            click(app, [54.0, 8.0]);
+            hover(app, [30.0, 24.0]);
+        }),
+        ("baz-onizleme", |app| {
+            open(app, points_ground());
+            first_dimension(app);
+            run(app, "tool.dimBaseline");
+            click(app, [25.0, 8.0]);
+            hover(app, [37.0, 12.0]);
+        }),
+        ("baz-sonuc", |app| {
+            open(app, points_ground());
+            first_dimension(app);
+            run(app, "tool.dimBaseline");
+            click(app, [25.0, 8.0]);
+            click(app, [37.0, 8.0]);
+            forget(app);
+            click(app, [54.0, 8.0]);
+            hover(app, [30.0, 40.0]);
+        }),
+    ]
+}
+
+/// The first dimension of a run, drawn with Ölçülendirme: (2, 8) to (12, 8), its line 6 m above.
+fn first_dimension(app: &mut App) {
+    run(app, "tool.dimension");
+    click(app, [2.0, 8.0]);
+    click(app, [12.0, 8.0]);
+    click(app, [7.0, 14.0]);
+    run(app, "tool.cancel");
+}
+
+/// Buda and Uzat's fence, Ötele's two sides and deleted source, Yol boyunca dizi.
+fn third_phase() -> Vec<Scene> {
+    vec![
+        ("cit-buda-onizleme", |app| {
+            open(app, fence_roads());
+            method(app, "tool.trim", "C");
+            click(app, [0.0, 16.0]);
+            click(app, [30.0, 16.0]);
+            hover(app, [56.0, 16.0]);
+        }),
+        ("cit-buda-sonuc", |app| {
+            open(app, fence_roads());
+            method(app, "tool.trim", "C");
+            click(app, [0.0, 16.0]);
+            click(app, [56.0, 16.0]);
+            forget(app);
+            run(app, "tool.confirm");
+            hover(app, [28.0, 28.0]);
+        }),
+        ("cit-uzat-onizleme", |app| {
+            open(app, short_lines());
+            method(app, "tool.extend", "C");
+            click(app, [28.0, -2.0]);
+            hover(app, [28.0, 38.0]);
+        }),
+        ("cit-uzat-sonuc", |app| {
+            open(app, short_lines());
+            method(app, "tool.extend", "C");
+            click(app, [28.0, -2.0]);
+            click(app, [28.0, 38.0]);
+            forget(app);
+            run(app, "tool.confirm");
+            hover(app, [40.0, 30.0]);
+        }),
+        ("otele-istem", |app| {
+            open(app, kerbs());
+            run(app, "tool.offset");
+        }),
+        ("otele-iki-yana-onizleme", |app| {
+            open(app, kerbs());
+            run(app, "tool.offset");
+            typed(app, "I");
+            typed(app, "3");
+            click(app, [13.0, 14.0]);
+            hover(app, [13.0, 19.0]);
+        }),
+        ("otele-iki-yana-sonuc", |app| {
+            open(app, kerbs());
+            run(app, "tool.offset");
+            typed(app, "I");
+            typed(app, "3");
+            click(app, [13.0, 14.0]);
+            forget(app);
+            click(app, [13.0, 19.0]);
+            hover(app, [40.0, 40.0]);
+        }),
+        ("otele-kaynak-sil-sonuc", |app| {
+            open(app, kerbs());
+            run(app, "tool.offset");
+            typed(app, "I");
+            typed(app, "S");
+            typed(app, "3");
+            click(app, [13.0, 14.0]);
+            forget(app);
+            click(app, [13.0, 19.0]);
+            hover(app, [40.0, 40.0]);
+        }),
+        ("dizi-yol-onizleme", |app| {
+            open(app, arch());
+            choose_car(app);
+            run(app, "tool.arrayPath");
+            click(app, [28.7, 25.0]);
+            typed(app, "7");
+            hover(app, [30.0, 8.0]);
+        }),
+        ("dizi-yol-aralik-onizleme", |app| {
+            open(app, arch());
+            choose_car(app);
+            run(app, "tool.arrayPath");
+            click(app, [28.7, 25.0]);
+            typed(app, "A");
+            typed(app, "9");
+            hover(app, [30.0, 8.0]);
+        }),
+        ("dizi-yol-sonuc", |app| {
+            open(app, arch());
+            choose_car(app);
+            run(app, "tool.arrayPath");
+            click(app, [28.7, 25.0]);
+            typed(app, "7");
+            forget(app);
+            run(app, "tool.confirm");
+            hover(app, [30.0, 8.0]);
         }),
     ]
 }

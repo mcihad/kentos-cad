@@ -312,6 +312,66 @@ pub struct Memory {
     /// Parçala's part count (Eşit parçalara) and piece length, metres (Uzunluktan).
     pub split_parts: u32,
     pub split_length: f64,
+    /// Ara nokta's part count, and the distances (metres) and ratios last typed.
+    pub between_parts: u32,
+    pub between_distances: Values,
+    pub between_ratios: Values,
+    /// Kesişim noktası's last distance, metres, offered by Enter (docs/adr/0140).
+    pub meeting_distance: f64,
+    /// The newest aligned or linear dimension written, by its persistent id:
+    /// where Zincir ölçü and Baz ölçü start when none is clicked.
+    pub last_dimension: Option<kentos_domain::Uuid>,
+    /// Ötele's “İki yana” (both sides) and “Kaynağı sil” (delete the source).
+    pub offset_both: bool,
+    pub offset_erase: bool,
+    /// Yol boyunca dizi's count, spacing (metres), whether the spacing rules
+    /// (the count then fills the path) and whether the copies turn along it.
+    pub path_count: u32,
+    pub path_spacing: f64,
+    pub path_by_spacing: bool,
+    pub path_align: bool,
+}
+
+/// A short list of numbers typed as one answer (Ara nokta's distances and
+/// ratios), kept in [`Memory`], which is `Copy`: at most [`Values::MAX`].
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Values {
+    len: u8,
+    v: [f64; Values::MAX],
+}
+
+impl Values {
+    pub const MAX: usize = 32;
+
+    /// The list, or `None` when it is longer than [`Values::MAX`].
+    pub fn from_slice(list: &[f64]) -> Option<Self> {
+        if list.len() > Self::MAX {
+            return None;
+        }
+        let mut v = [0.0; Self::MAX];
+        v[..list.len()].copy_from_slice(list);
+        Some(Self {
+            len: list.len() as u8,
+            v,
+        })
+    }
+
+    pub fn as_slice(&self) -> &[f64] {
+        &self.v[..usize::from(self.len)]
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+}
+
+impl Default for Values {
+    fn default() -> Self {
+        Self {
+            len: 0,
+            v: [0.0; Self::MAX],
+        }
+    }
 }
 
 impl Default for Memory {
@@ -366,6 +426,17 @@ impl Default for Memory {
             simplify_tolerance: 0.01,
             split_parts: 4,
             split_length: 10.0,
+            between_parts: 4,
+            between_distances: Values::default(),
+            between_ratios: Values::default(),
+            meeting_distance: 10.0,
+            last_dimension: None,
+            offset_both: false,
+            offset_erase: false,
+            path_count: 5,
+            path_spacing: 10.0,
+            path_by_spacing: false,
+            path_align: true,
         }
     }
 }

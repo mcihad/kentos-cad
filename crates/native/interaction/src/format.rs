@@ -114,6 +114,22 @@ impl Format {
         self.bearing((rad * 200.0) / std::f64::consts::PI)
     }
 
+    /// An angle typed in the project's angle unit (a direction, a bearing), in radians.
+    pub fn angle_from_typed(&self, typed: f64) -> f64 {
+        match self.angle_unit {
+            AngleUnit::Deg => (typed * std::f64::consts::PI) / 180.0,
+            AngleUnit::Grad => (typed * std::f64::consts::PI) / 200.0,
+        }
+    }
+
+    /// The project's angle unit as a prompt says it: `derece` or `grad`.
+    pub fn angle_unit_name(&self) -> &'static str {
+        match self.angle_unit {
+            AngleUnit::Deg => "derece",
+            AngleUnit::Grad => "grad",
+        }
+    }
+
     /// The same without its unit (the web's `angle(rad, false)`).
     pub fn angle_bare(&self, rad: f64) -> String {
         self.bearing_bare((rad * 200.0) / std::f64::consts::PI)

@@ -1266,6 +1266,8 @@ impl App {
             "view.theme.toggle" => self.choose_theme(self.mode.toggled()),
             id if id.starts_with("workspace.") => self.choose_mode(id),
             "tools.options" => self.open_settings(),
+            // Koordinat oku: a tool that reads the clicked point into the log (docs/adr/0140).
+            "crs.query" => return self.start_tool(kentos_interaction::coordinate::ID),
             "draft.ortho" => self.toggle_session("drafting.ortho", "Orto"),
             "draft.polar" => self.toggle_session("drafting.polar", "Kutupsal izleme"),
             "draft.tracking" => self.toggle_session("drafting.tracking", "Nesne izleme"),

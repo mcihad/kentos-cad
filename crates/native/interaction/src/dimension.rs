@@ -310,7 +310,14 @@ impl Dimension {
             angle: g.angle,
             c: g.c.map(wire),
         };
-        if points::write_objects(vec![geometry], None, cx).is_some() {
+        if let Some(out) = points::write_objects(vec![geometry], None, cx) {
+            // Zincir ölçü and Baz ölçü start from the newest straight one (docs/adr/0140).
+            if matches!(mode, Mode::Aligned | Mode::Linear) {
+                cx.memory.last_dimension = out
+                    .created
+                    .first()
+                    .and_then(|uid| kentos_domain::Uuid::parse_str(uid).ok());
+            }
             let value = cx.format().dimension(layout.prefix, layout.unit, layout.value);
             cx.say(Level::Success, format!("{}: {value}", mode.added()));
         }

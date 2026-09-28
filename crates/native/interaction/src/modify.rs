@@ -122,6 +122,17 @@ pub trait Stages {
     fn pointer(&mut self, _p: &Pointer, _down: bool, _cx: &mut Context<'_>) -> Option<Flow> {
         None
     }
+    /// Esc in the stages: the stage steps back (Yol boyunca dizi lets go of
+    /// its path) and answers true; false when it has nothing to give back
+    /// and the tool leaves.
+    fn back(&mut self, _cx: &mut Context<'_>) -> bool {
+        false
+    }
+    /// Lines and marks drawn with the ghosts, not in place of them (Yol
+    /// boyunca dizi: the path and where the copies start).
+    fn overlay(&self) -> Preview {
+        Preview::default()
+    }
 }
 
 /// A press on the drawing while picking: where it began and where the pointer is.
@@ -394,6 +405,15 @@ impl<S: Stages> Tool for Modify<S> {
         false
     }
 
+    /// Esc: a stage that can step back does; picking and the rest leave.
+    fn cancel(&mut self, cx: &mut Context<'_>) -> bool {
+        if self.picking || self.done || !self.stages.back(cx) {
+            return false;
+        }
+        self.refresh(cx);
+        true
+    }
+
     fn finished(&self) -> bool {
         self.done
     }
@@ -417,6 +437,8 @@ impl<S: Stages> Tool for Modify<S> {
             };
         }
         let mut strokes = self.ghosts.clone();
+        let overlay = self.stages.overlay();
+        strokes.extend(overlay.strokes);
         if let (Some(a), Some(hover)) = (self.stages.anchor(), self.hover) {
             strokes.push(Stroke::solid(vec![a, hover], false));
         }
@@ -427,6 +449,7 @@ impl<S: Stages> Tool for Modify<S> {
         Preview {
             strokes,
             marks: self.marks.clone(),
+            markers: overlay.markers,
             tag,
             tracking: self.hover.and(self.tracking),
             ..Preview::default()
