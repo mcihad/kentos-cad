@@ -19,6 +19,12 @@ EXPRESSION_BENCH=1 EXPRESSION_N=100000,1000000 EXPRESSION_PERF_OUT=docs/perf EXP
 
 Ölçüm sırasında makinede başka ağır süreç (Vite, e2e, cargo) çalışmaz.
 
+## Masaüstünde büyük seçim (2026-09-28, `5b2c6a7` → ADR 0123)
+
+- **Kaynak:** önce [frame-desktop-parts-2026-09-28.md](frame-desktop-parts-2026-09-28.md), sonra [frame-desktop-select-2026-09-28.md](frame-desktop-select-2026-09-28.md). Karar [ADR 0123](../adr/0123-desktop-large-selection.md)'tedir.
+- Hepsini seç, arayüz iş parçacığı p50: 50 000 parselde 137,7 → 92,4 ms; 100 000 parselde 241,9 → 171,1 ms. Büyük seçimin vurgusu çekirdeklerde kurulur; katmanın görünürlüğü ve kilidi katman başına bir kez aranır.
+- Yeni durum: çizimi açma (ilk kare), 100 000 parselde 105 ms (depo 63, stilli katmanlar 41).
+
 ## Masaüstünde büyük stilli katmanın parçaları (2026-09-28, `6cbc2ef` → ADR 0121)
 
 - **Kaynak:** önce [frame-desktop-after-2026-09-28.md](frame-desktop-after-2026-09-28.md), sonra [frame-desktop-parts-2026-09-28.md](frame-desktop-parts-2026-09-28.md). Karar [ADR 0121](../adr/0121-desktop-layer-parts.md)'dedir.

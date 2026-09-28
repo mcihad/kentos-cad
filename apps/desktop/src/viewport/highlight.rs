@@ -14,6 +14,7 @@
 
 use std::sync::Arc;
 
+use kentos_contracts::Entity;
 use kentos_domain::Slot;
 use kentos_interaction::Selection;
 use kentos_render_wgpu::scene::{self, Highlight};
@@ -53,6 +54,8 @@ const SELECTION_FILL: f64 = 0.13;
 const HOVER_ALPHA: f64 = 0.85;
 /// Point marks of a highlight, logical pixels (the web's `pointStyle: { size: 15, shape: 'ring' }`).
 const HIGHLIGHT_MARK: f32 = 15.0;
+/// A selection this large is highlighted on several cores (docs/adr/0123).
+const PARALLEL_FROM: usize = 2048;
 
 impl Viewport {
     /// The selection's part and the hovered object's, from the cache when
@@ -92,15 +95,35 @@ impl Viewport {
         let selected = match &cache.selected {
             Some((known, part)) if *known == key => part.clone(),
             _ => {
-                let part = build(
-                    &mut selection.ids().iter().copied(),
-                    Highlight {
-                        color: accent,
-                        fill: Some(accent.with_alpha(SELECTION_FILL)),
-                        mark_size: HIGHLIGHT_MARK,
-                        mark_shape: ring,
-                    },
-                );
+                let style = Highlight {
+                    color: accent,
+                    fill: Some(accent.with_alpha(SELECTION_FILL)),
+                    mark_size: HIGHLIGHT_MARK,
+                    mark_shape: ring,
+                };
+                // A large selection (select all, a window over a map) is built on
+                // the machine's cores; the part is the one built in turn.
+                let part = if selection.len() >= PARALLEL_FROM {
+                    let objects: Vec<&Entity> = selection
+                        .ids()
+                        .iter()
+                        .filter_map(|slot| doc.model.get(*slot))
+                        .collect();
+                    let threads = std::thread::available_parallelism()
+                        .map_or(1, |n| n.get())
+                        .clamp(1, 8);
+                    Arc::new(scene::build_highlight_parallel(
+                        &objects,
+                        &style,
+                        fixed.origin,
+                        curves.tolerance,
+                        key.below,
+                        clip,
+                        threads,
+                    ))
+                } else {
+                    build(&mut selection.ids().iter().copied(), style)
+                };
                 cache.selected = Some((key, part.clone()));
                 part
             }

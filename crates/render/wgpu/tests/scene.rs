@@ -547,3 +547,36 @@ fn the_grid_spaces_its_lines_as_the_webs() {
     assert_eq!((segments(0), segments(1)), (6, 3));
     assert!(part.segments[..6].iter().all(|s| s.color == colors[0].0));
 }
+
+/// A large selection's highlight (docs/adr/0123) built on several cores is
+/// the part one core builds: every kind of the sample, many times over, in
+/// runs of any length, joined in their order.
+#[test]
+fn a_highlight_built_side_by_side_is_the_one_built_in_turn() {
+    use kentos_render_wgpu::scene::{Highlight, build_highlight, build_highlight_parallel};
+
+    let doc = sample();
+    let objects: Vec<&Entity> = std::iter::repeat_n(&doc.entities, 300).flatten().collect();
+    let style = Highlight {
+        color: Rgba8::rgb(0x3b, 0x82, 0xf6),
+        fill: Some(Rgba8([0x3b, 0x82, 0xf6, 0x21])),
+        mark_size: 15.0,
+        mark_shape: 1,
+    };
+    let origin = origin(&doc);
+    let clip = kentos_render_wgpu::Bounds {
+        min_x: origin.x - 5_000.0,
+        min_y: origin.y - 5_000.0,
+        max_x: origin.x + 5_000.0,
+        max_y: origin.y + 5_000.0,
+    };
+    let whole = build_highlight(objects.iter().copied(), &style, origin, 0.05, 3, &clip);
+    assert!(!whole.segments.is_empty() && !whole.fills.is_empty() && !whole.markers.is_empty());
+    for threads in [1, 2, 3, 7, 8, objects.len() + 5] {
+        let side = build_highlight_parallel(&objects, &style, origin, 0.05, 3, &clip, threads);
+        assert_eq!(side.layers, whole.layers, "{threads} runs: the layers");
+        assert_eq!(side.segments, whole.segments, "{threads} runs: the strokes");
+        assert_eq!(side.fills, whole.fills, "{threads} runs: the fills");
+        assert_eq!(side.markers, whole.markers, "{threads} runs: the marks");
+    }
+}

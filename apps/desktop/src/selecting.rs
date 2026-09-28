@@ -17,11 +17,11 @@ impl App {
         let Some(doc) = &self.document else {
             return;
         };
-        let layers = doc.model.layers();
+        let mut shown = Shown::default();
         let ids: Vec<Slot> = doc
             .model
             .entities()
-            .filter(|e| layers.is_visible(&e.base().layer_id))
+            .filter(|e| shown.of(&doc.model, &e.base().layer_id))
             .map(|e| Slot(e.base().id))
             .collect();
         let n = ids.len();
@@ -34,12 +34,12 @@ impl App {
         let Some(doc) = &self.document else {
             return;
         };
-        let layers = doc.model.layers();
+        let mut shown = Shown::default();
         let selection = &self.selection;
         let ids: Vec<Slot> = doc
             .model
             .entities()
-            .filter(|e| layers.is_visible(&e.base().layer_id))
+            .filter(|e| shown.of(&doc.model, &e.base().layer_id))
             .map(|e| Slot(e.base().id))
             .filter(|slot| !selection.contains(*slot))
             .collect();
@@ -69,6 +69,22 @@ impl App {
                 padding: SELECTION_PADDING,
             });
         }
+    }
+}
+
+/// Whether a layer and the groups above it are shown, looked up once per
+/// layer: a large drawing has many objects on few layers (docs/adr/0123).
+#[derive(Default)]
+struct Shown(std::collections::HashMap<String, bool>);
+
+impl Shown {
+    fn of(&mut self, doc: &kentos_domain::Document, layer: &str) -> bool {
+        if let Some(&shown) = self.0.get(layer) {
+            return shown;
+        }
+        let shown = doc.layers().is_visible(layer);
+        self.0.insert(layer.to_owned(), shown);
+        shown
     }
 }
 

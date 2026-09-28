@@ -413,74 +413,145 @@ pub fn build_highlight<'a>(
     below: usize,
     clip: &Bounds,
 ) -> ScenePart {
-    let tol = if tolerance.is_finite() && tolerance > 0.0 {
-        tolerance
-    } else {
-        1.0
-    };
+    let tol = highlight_tolerance(tolerance);
     let mut b = Builder::new(origin);
     for _ in 0..below {
         let start = b.start();
         b.finish(start);
     }
     let start = b.start();
-    let color = style.color;
     for entity in objects {
-        match entity {
-            Entity::Point(p) => b.marker(v(&p.p), color, style.mark_size, style.mark_shape),
-            Entity::Line(l) => b.segment(v(&l.a), v(&l.b), color),
-            Entity::Polyline(p) => {
-                b.path(
-                    &bulge_path(&points(&p.pts), p.bulges.as_deref(), false, tol),
-                    false,
-                    color,
-                );
-            }
-            Entity::Polygon(p) => {
-                let mut rings = vec![bulge_path(&points(&p.pts), p.bulges.as_deref(), true, tol)];
-                rings.extend(
-                    p.holes
-                        .iter()
-                        .flatten()
-                        .map(|h| bulge_path(&points(&h.pts), h.bulges.as_deref(), true, tol)),
-                );
-                b.polygon(&rings, color, style.fill);
-            }
-            Entity::Hatch(h) => {
-                let mut rings = vec![points(&h.ring)];
-                rings.extend(h.holes.iter().flatten().map(|r| points(r)));
-                b.polygon(&rings, color, style.fill);
-            }
-            Entity::Circle(c) if valid_radius(c.r) => {
-                b.path(&circle_ring(v(&c.c), c.r, tol), true, color);
-            }
-            Entity::Arc(a) if valid_radius(a.r) => {
-                b.path(
-                    &arc_points(v(&a.c), a.r, a.a0, sweep(a.a0, a.a1), tol),
-                    false,
-                    color,
-                );
-            }
-            Entity::Ellipse(e) => {
-                let (pts, closed) = ellipse_points(v(&e.c), v(&e.major), e.ratio, e.t0, e.t1, tol);
-                b.path(&pts, closed, color);
-            }
-            Entity::Spline(s) => {
-                b.path(
-                    &catmull_rom(&points(&s.pts), s.closed, tol),
-                    s.closed,
-                    color,
-                );
-            }
-            Entity::Dimension(_) => {
-                dimension_lines(&mut b, entity, color);
-            }
-            Entity::Xline(_) | Entity::Ray(_) => construction_line(&mut b, entity, clip, color),
-            _ => {}
-        }
+        highlight_one(&mut b, entity, style, tol, clip);
     }
     b.finish(start);
     b.into_part(tol, BTreeMap::new())
+}
+
+/// [`build_highlight`] for many objects (a large selection): built in runs
+/// on up to `threads` cores side by side, then joined in their order, so
+/// the part is the one [`build_highlight`] makes of the same list.
+pub fn build_highlight_parallel(
+    objects: &[&Entity],
+    style: &Highlight,
+    origin: Vec2,
+    tolerance: f64,
+    below: usize,
+    clip: &Bounds,
+    threads: usize,
+) -> ScenePart {
+    let threads = threads.clamp(1, objects.len().max(1));
+    if threads == 1 {
+        return build_highlight(
+            objects.iter().copied(),
+            style,
+            origin,
+            tolerance,
+            below,
+            clip,
+        );
+    }
+    let tol = highlight_tolerance(tolerance);
+    let run = objects.len().div_ceil(threads);
+    let runs: Vec<Builder> = std::thread::scope(|s| {
+        let handles: Vec<_> = objects
+            .chunks(run)
+            .map(|list| {
+                s.spawn(move || {
+                    let mut b = Builder::new(origin);
+                    for entity in list {
+                        highlight_one(&mut b, entity, style, tol, clip);
+                    }
+                    b
+                })
+            })
+            .collect();
+        handles
+            .into_iter()
+            .map(|h| {
+                h.join()
+                    .unwrap_or_else(|panic| std::panic::resume_unwind(panic))
+            })
+            .collect()
+    });
+    let mut b = Builder::new(origin);
+    for _ in 0..below {
+        let start = b.start();
+        b.finish(start);
+    }
+    let start = b.start();
+    for part in runs {
+        b.fills.extend(part.fills);
+        b.segments.extend(part.segments);
+        b.markers.extend(part.markers);
+    }
+    b.finish(start);
+    b.into_part(tol, BTreeMap::new())
+}
+
+/// The chord tolerance a highlight's curves take: the curves part's, else a metre.
+fn highlight_tolerance(tolerance: f64) -> f64 {
+    if tolerance.is_finite() && tolerance > 0.0 {
+        tolerance
+    } else {
+        1.0
+    }
+}
+
+/// One object's highlight in `b`.
+fn highlight_one(b: &mut Builder, entity: &Entity, style: &Highlight, tol: f64, clip: &Bounds) {
+    let color = style.color;
+    match entity {
+        Entity::Point(p) => b.marker(v(&p.p), color, style.mark_size, style.mark_shape),
+        Entity::Line(l) => b.segment(v(&l.a), v(&l.b), color),
+        Entity::Polyline(p) => {
+            b.path(
+                &bulge_path(&points(&p.pts), p.bulges.as_deref(), false, tol),
+                false,
+                color,
+            );
+        }
+        Entity::Polygon(p) => {
+            let mut rings = vec![bulge_path(&points(&p.pts), p.bulges.as_deref(), true, tol)];
+            rings.extend(
+                p.holes
+                    .iter()
+                    .flatten()
+                    .map(|h| bulge_path(&points(&h.pts), h.bulges.as_deref(), true, tol)),
+            );
+            b.polygon(&rings, color, style.fill);
+        }
+        Entity::Hatch(h) => {
+            let mut rings = vec![points(&h.ring)];
+            rings.extend(h.holes.iter().flatten().map(|r| points(r)));
+            b.polygon(&rings, color, style.fill);
+        }
+        Entity::Circle(c) if valid_radius(c.r) => {
+            b.path(&circle_ring(v(&c.c), c.r, tol), true, color);
+        }
+        Entity::Arc(a) if valid_radius(a.r) => {
+            b.path(
+                &arc_points(v(&a.c), a.r, a.a0, sweep(a.a0, a.a1), tol),
+                false,
+                color,
+            );
+        }
+        Entity::Ellipse(e) => {
+            let (pts, closed) = ellipse_points(v(&e.c), v(&e.major), e.ratio, e.t0, e.t1, tol);
+            b.path(&pts, closed, color);
+        }
+        Entity::Spline(s) => {
+            b.path(
+                &catmull_rom(&points(&s.pts), s.closed, tol),
+                s.closed,
+                color,
+            );
+        }
+        Entity::Dimension(_) => {
+            dimension_lines(b, entity, color);
+        }
+        Entity::Xline(_) | Entity::Ray(_) => construction_line(b, entity, clip, color),
+        _ => {}
+    }
 }
 
 /// The box around every object, as zoom to extents takes it on the web: the

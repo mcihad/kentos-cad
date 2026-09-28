@@ -681,7 +681,12 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
     let color = same(&|b| b.color.as_deref());
     let symbol = same(&|b| b.symbol.as_deref());
     let layers = doc.model.layers();
-    let any_locked = objects.iter().any(|e| layers.is_locked(&e.base().layer_id));
+    // Each layer looked up once: a large selection has many objects on few layers.
+    let mut seen = std::collections::HashSet::new();
+    let any_locked = objects.iter().any(|e| {
+        let layer = e.base().layer_id.as_str();
+        seen.insert(layer) && layers.is_locked(layer)
+    });
     let edit = |editor: Editor| (!any_locked).then_some(editor);
 
     let mut sections = vec![Section {

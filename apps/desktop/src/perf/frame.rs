@@ -255,22 +255,28 @@ fn path(area: Rectangle, count: usize) -> Vec<Point> {
 }
 
 /// The app with `n` parcels open, fitted in the window.
-fn app_with(n: usize) -> (App, Harness) {
+/// The frame that puts the drawing on screen is measured: the app takes
+/// the read drawing (the store, the styled layers' first build in the view,
+/// the first upload and picture), the file's reading and decoding aside.
+fn app_with(n: usize) -> (App, Harness, Parts) {
     let (mut app, _) = App::boot(None);
     let doc = Document::from_v2(drawing(n), None).expect("the drawing opens");
-    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     let mut harness = Harness::new();
     harness.settle(&mut app);
-    (app, harness)
+    let first = harness.frame_with(&mut app, &[], move |app| {
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    });
+    harness.settle(&mut app);
+    (app, harness, first)
 }
 
 /// Every scenario on a drawing of `n` parcels: its name and its frames.
 fn scenarios(n: usize) -> (String, Vec<(&'static str, Vec<Parts>)>) {
-    let (mut app, mut h) = app_with(n);
+    let (mut app, mut h, first) = app_with(n);
     let renderer = h.renderer.name();
     let area = app.viewport.bounds;
     let center = area.center();
-    let mut out = Vec::new();
+    let mut out = vec![("Çizimi açma (ilk kare)", vec![first])];
     // Warm the caches the first frames fill (the scene, text), unmeasured.
     for p in path(area, 10) {
         h.frame(&mut app, &[moved(p)]);
