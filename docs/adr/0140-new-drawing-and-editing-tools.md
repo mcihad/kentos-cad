@@ -153,7 +153,34 @@ Her araç var olan aracın kalıbını izler:
 
 Komutun kuralı değişmez: geometri girdidedir, komut aracın önizlediğini yazar.
 
-Katalog yeniden üretilir; iki platformun işleyicisi, TypeScript türleri ve Python SDK'sı katalogla birlikte güncellenir. Ortak durumlar (`fixtures/commands/v1/cad.entities.edit.json`) bu türlerin adım adlarıyla genişletilir.
+Katalog yeniden üretilir; iki platformun işleyicisi, TypeScript türleri ve Python SDK'sı katalogla birlikte güncellenir. Ortak durumlar (`fixtures/commands/v1/cad.entities.edit.json`) bu türlerin adım adlarıyla genişletilir (45 → 48).
+
+`cad.entities.array`'e `path` yerleşimi eklenir (adım adı "Yol boyunca dizi"):
+
+- **Yol:** kalıcı kimliğiyle verilir; komut onu çizimden okur, değiştirmez.
+- **Yerler:** `count` kadar (2–10 000); `spacing` verilirse yolun başından o aralıkla, verilmezse baştan sona (kapalı yolda çevresine) eşit dağılır.
+- **Kopyalar:** k'ıncı kopya, yolun o yerdeki noktası eksi başı kadar taşınır; `align` ile önce yolun başı çevresinde, oradaki doğrultusu eksi baştaki doğrultusu kadar döner.
+- **Retler:** yolun kimliği (`invalid_uid`), yolun çizimde olmaması (`entity_not_found`) ve yeni `invalid_path` (çizgi, yay, daire ya da çoklu çizgi değil, ya da uzunluğu yok). `invalid_spacing` iki durumda: aralık sıfırdan büyük değilse ve yerler yolun sonunu geçerse.
+- **Doğrulama:** beş ortak durum (25 → 30). Kopyalar Python'da tanımdan hesaplanır ve iki platformda bit bit tutar; dairenin çeyrek dönüşleri de.
+
+### Çekirdek işlevleri
+
+Hepsi `kentos-geometry-core`'da, birim testleriyle. Web'de WASM üzerinden adıyla (`op('…')`), masaüstünde doğrudan çağrılır.
+
+| Faz | İşlev | Ne verir |
+|---|---|---|
+| 1 | `allCorners(e, {radius} \| {d1, d2})` | Nesnenin bütün köşeleri yuvarlanmış ya da kesilmiş hâli; yapılan ve atlanan köşe sayısı. Kısa bir kenarı paylaşan iki köşe birlikte atlanır, sonuç başlangıç köşesine bağlı değildir. |
+| 1 | `reverseEntity(e)` | Yönü çevrilmiş nesne. |
+| 1 | `simplifyEntity(e, tol)` | Sadeleşmiş nesne; atılan köşe sayısı ve en büyük sapma. |
+| 1 | `splitAtCrossings`, `splitEqual`, `splitByLength` | Parçalar; parçalar nesnenin verisini taşır. |
+| 1 | `cleanupFindings(list)` | Yinelenen ve boş nesnelerin kimlikleri; tekrarlanan köşeleri atılmış nesneler. |
+| 2 | `sector(c, r, a0, a1)` | Daire diliminin halkası. |
+| 2 | `pointsBetween(a, b, {parts} \| {distances} \| {ratios})` | İki nokta arasındaki noktalar. |
+| 2 | `distanceDistance`, `bearingBearing` | Kesişim noktaları; semtlerin kesişimi iki noktanın da önünde olmalı. |
+| 2 | `angleAt(tepe, p1, p2)` | Açı ve dış açısı. |
+| 2 | `continueDimension`, `baselineDimension` | Taban ölçünün doğrultusunda sonraki doğrusal ölçü. |
+| 3 | `fenceCrossings(e, çit)` | Çitin nesneyi kestiği noktalar, çitin sırasıyla. |
+| 3 | `pathArrayTransforms(yol, adet, aralık, align)` | Yol dizisinin dönüşümleri; `array_transforms`'un `affines` türüyle kopyalanır. |
 
 ### İş bölümü ve sıra
 
