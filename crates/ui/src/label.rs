@@ -28,9 +28,10 @@ pub fn muted<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
     body(content).style(style::text::muted)
 }
 
-/// Açıklama, grup adı ve meta bilgisi (gövdeden 1 piksel küçük, ikincil renk).
+/// Açıklama, not ve meta bilgisi (gövdeden 1 piksel küçük, üçüncül renk: web'in
+/// küçük yazıları gibi `--c-text-3`).
 pub fn caption<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
-    text(content).size(ty::caption()).style(style::text::muted)
+    text(content).size(ty::caption()).style(style::text::faint)
 }
 
 /// Vurgulu gövde metni.

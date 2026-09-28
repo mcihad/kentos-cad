@@ -29,10 +29,14 @@ Aynı temayı seçen kullanıcı iki platformda iki ayrı arayüz görüyordu. A
   | `border` | `--c-line` | `#2d3641` | `#d3d9df` |
   | `border_strong()` | `--c-line-strong` | `#3d4856` | `#b5bfc9` |
   | `text`, `muted` | `--c-text`, `--c-text-2` | `#d6dde5`, `#9ba7b5` | `#1b232c`, `#4d5966` |
+  | `faint` (yeni) | `--c-text-3` | `#6d7988` | `#7a8591` |
   | `popover` | `--c-popover` | `#27303b` | `#fbfcfd` |
   | `success`, `warning`, `danger`, `info` | `--c-ok`, `--c-warn`, `--c-danger`, `--c-info` | web'inkiler | web'inkiler |
 
 - Seçimin yumuşak vurgusu (`selection()`) web'in `--c-accent-soft`'udur: koyuda vurgunun %18'i, açıkta %12'si.
+- **Üçüncül yazı** (`faint`, `style::text::faint`): web küçük yazılarını üçüncül tonda yazar: alanların yardımı, grup notları, menü kısayolları, sayılar. Masaüstünde bunların karşılığı `label::caption`'dır; artık bu tondadır. İpucu balonunun gövdesi web'deki gibi ikincil tonda kalır. Gece temasında `#5b636e`, yüksek karşıtlıkta ikincil yazıyla aynıdır (7:1).
+- Ağaçlarda grup adları web'deki gibi ikincil tondadır (etkin satır hariç).
+- Ağaç satırının göz ve kilit düğmeleri web'in `.ibtn--row`'udur (`style::button::row_toggle`): dinlenirken üçüncül tonda ve soluk; öne çıkan durumda (gizli, kilitli, seçilemez) ikincil tonda; üzerine gelince yazının renginde. Gizli ve kilitli katmanlar ilk bakışta seçilir.
 - İkincil düğme web'in `.btn`'idir: alan zemininde, belirgin kenarlı. Üzerine gelince zemin açılır, kenar yazının sönük tonuna döner.
 - Gece ve yüksek karşıtlık temaları masaüstünündür. Web onları ADR 0126'nın sonraki diliminde bu değerlerle alacaktır.
 - **Tek kaynak:** palet `tokens.css`'te yazılıdır. Masaüstünün bir testi (`appearance_tokens_tests`) iki temanın belirteçlerini dosyadan okuyup karşılaştırır. Bir yanda değişen renk öbür yanda değişmezse test düşer. Bu, UI-08'in ilk adımıdır: belirteçler henüz tek dosyadan üretilmiyor, ama ayrılamazlar.
@@ -41,12 +45,11 @@ Aynı temayı seçen kullanıcı iki platformda iki ayrı arayüz görüyordu. A
 
 - Aynı tema iki platformda aynı renklerdedir: mavi-grafit kabuk, bir ton daha derin çizim alanı, aynı kenar ve yazı tonları.
 - Masaüstünün bütün ekranları değişir.
-- Kalan farklar:
-  - Web'in üçüncül yazısı (`--c-text-3`) masaüstünde yoktur; notlar ikincil yazıyla yazılır.
-  - Web'in şeridi araç çubuğu tonundadır (`--c-toolbar`), masaüstününki panel tonunda.
+- Yazı düzeyleri web'inki gibidir: birincil, ikincil, üçüncül.
+- Kalan fark: web'in şeridi araç çubuğu tonundadır (`--c-toolbar`), masaüstününki panel tonunda.
 
 ## Doğrulama
 
-- `cargo test -p kentos-desktop appearance_tokens`: iki temanın belirteçleri `tokens.css` ile en çok 1/255 farkla aynıdır.
+- `cargo test -p kentos-desktop appearance_tokens`: iki temanın belirteçleri (üçüncül yazı dahil) `tokens.css` ile en çok 1/255 farkla aynıdır.
 - `cargo test -p kentos-ui`, `-p kentos-desktop`, `-p kentos-ui-showcase`.
 - Önce ve sonra resimleri, GPU çizicisiyle (`kentos-cad snapshot`) ve ekran testleriyle (`ui_screens`, `settings_look_tests::screens`), web'inkilerle yan yana.

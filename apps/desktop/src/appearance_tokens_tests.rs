@@ -101,6 +101,7 @@ fn the_dark_and_light_themes_are_the_webs() {
         );
         same(&format!("{theme} text"), t.text, web("--c-text"));
         same(&format!("{theme} muted"), t.muted, web("--c-text-2"));
+        same(&format!("{theme} faint"), t.faint, web("--c-text-3"));
         same(&format!("{theme} popover"), t.popover, web("--c-popover"));
         same(&format!("{theme} success"), t.success, web("--c-ok"));
         same(&format!("{theme} warning"), t.warning, web("--c-warn"));

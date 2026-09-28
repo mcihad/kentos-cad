@@ -78,7 +78,12 @@ impl Tip {
             .max_width(typography::from_default(MAX_WIDTH) - 20.0);
 
         if let Some(body) = self.body {
-            content = content.push(label::caption(body).wrapping(Wrapping::WordOrGlyph));
+            // The body in the secondary tone, as the web's tip (--c-tooltip-text-2).
+            content = content.push(
+                label::caption(body)
+                    .style(style::text::muted)
+                    .wrapping(Wrapping::WordOrGlyph),
+            );
         }
 
         if let Some(detail) = self.detail {

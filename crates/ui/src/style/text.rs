@@ -19,6 +19,14 @@ pub fn muted(theme: &Theme) -> Style {
     }
 }
 
+/// Üçüncül metin: küçük notlar, alanların yardımı, sayılar (web'in
+/// `--c-text-3`'ü).
+pub fn faint(theme: &Theme) -> Style {
+    Style {
+        color: Some(Tokens::of(theme).faint),
+    }
+}
+
 /// Vurgu renginde metin (ör. açık olan çizim).
 pub fn accent(theme: &Theme) -> Style {
     Style {

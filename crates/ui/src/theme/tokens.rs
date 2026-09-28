@@ -36,6 +36,9 @@ pub struct Tokens {
     pub text: Color,
     /// İkincil metin: açıklamalar, başlık meta bilgisi, pasif sekmeler.
     pub muted: Color,
+    /// Üçüncül metin: küçük notlar, alanların yardımı, sayılar, kısayollar
+    /// (web'in `--c-text-3`'ü).
+    pub faint: Color,
 
     /// Etkin araç, seçim ve odak rengi.
     pub accent: Color,
@@ -72,6 +75,7 @@ impl Tokens {
 
         text: hex(0xd6dde5),
         muted: hex(0x9ba7b5),
+        faint: hex(0x6d7988),
 
         accent: hex(0x4c7fe0),
         accent_hover: hex(0x6c96e6),
@@ -100,6 +104,7 @@ impl Tokens {
 
         text: hex(0x1b232c),
         muted: hex(0x4d5966),
+        faint: hex(0x7a8591),
 
         accent: hex(0x1f4a96),
         accent_hover: hex(0x1a3e7e),
@@ -129,6 +134,7 @@ impl Tokens {
 
         text: hex(0xb9c1ca),
         muted: hex(0x77808c),
+        faint: hex(0x5b636e),
 
         accent: hex(0x4589cb),
         accent_hover: hex(0x60a0d8),
@@ -159,6 +165,7 @@ impl Tokens {
 
         text: hex(0xffffff),
         muted: hex(0xd6d6d6),
+        faint: hex(0xd6d6d6),
 
         accent: hex(0x6cb4ff),
         accent_hover: hex(0x8fc6ff),

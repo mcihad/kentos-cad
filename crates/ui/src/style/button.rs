@@ -200,6 +200,26 @@ pub fn secondary(theme: &Theme, status: Status) -> Style {
     )
 }
 
+/// Ağaç satırının göz, kilit gibi düğmeleri (web'in `.ibtn--row`'u):
+/// dinlenirken üçüncül tonda ve soluk, öne çıkan durumda (gizli, kilitli)
+/// ikincil tonda; üzerine gelince yazının renginde.
+pub fn row_toggle(pressed: bool) -> impl Fn(&Theme, Status) -> Style {
+    move |theme, status| {
+        let t = Tokens::of(theme);
+
+        Style {
+            background: None,
+            text_color: match status {
+                Status::Hovered | Status::Pressed => t.text,
+                Status::Disabled => t.disabled(),
+                Status::Active if pressed => t.muted,
+                Status::Active => t.faint.scale_alpha(0.55),
+            },
+            ..Style::default()
+        }
+    }
+}
+
 /// Tablo satırındaki küçük ikon düğmeleri: zemin yok, üzerine gelince
 /// vurgu rengi.
 pub fn subtle(theme: &Theme, status: Status) -> Style {

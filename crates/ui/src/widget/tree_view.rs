@@ -116,6 +116,9 @@ impl From<bool> for Check {
 /// seçilebilirlik.
 pub struct Toggle<Message> {
     on: bool,
+    /// The state that stands out (hidden, locked, not selectable): its icon
+    /// is drawn stronger than the resting ones (the web's `aria-pressed`).
+    pressed: bool,
     glyphs: (Icon, Icon),
     tips: (&'static str, &'static str),
     message: Message,
@@ -131,6 +134,7 @@ impl<Message> Toggle<Message> {
     ) -> Self {
         Self {
             on,
+            pressed: !on,
             glyphs,
             tips,
             message,
@@ -152,12 +156,15 @@ impl<Message> Toggle<Message> {
 
     /// Kilit: kilitli öğeler düzenlenmez.
     pub fn locked(locked: bool, message: Message) -> Self {
-        Self::new(
-            locked,
-            (Icon::Lock, Icon::Unlock),
-            ("Kilitli: açmak için tıklayın", "Kilitlemek için tıklayın"),
-            message,
-        )
+        Self {
+            pressed: locked,
+            ..Self::new(
+                locked,
+                (Icon::Lock, Icon::Unlock),
+                ("Kilitli: açmak için tıklayın", "Kilitlemek için tıklayın"),
+                message,
+            )
+        }
     }
 
     /// Seçilebilirlik: seçilemeyen öğelere tıklanınca seçilmez.
@@ -504,7 +511,7 @@ fn node_row<'a, Message: Clone + 'a>(
         muted,
         menu,
         id: _,
-        folder: _,
+        folder,
         editor,
         toggles,
         heading,
@@ -540,7 +547,9 @@ fn node_row<'a, Message: Clone + 'a>(
                 (typography::body(), typography::ui())
             };
             let name = Elided::new(name).size(size).font(font).width(Fill);
-            let name = if muted || heading {
+            // A group's name in the secondary tone, as the web's layer tree;
+            // the active row keeps the text's own.
+            let name = if muted || heading || (folder && !active) {
                 name.style(style::text::muted)
             } else {
                 name
@@ -597,14 +606,10 @@ fn row_toggle<'a, Message: Clone + 'a>(toggle: Toggle<Message>) -> Element<'a, M
     };
 
     tip(
-        button(icon(glyph).size(13.0).tone(if toggle.on {
-            Tone::Inherit
-        } else {
-            Tone::Muted
-        }))
-        .on_press(toggle.message)
-        .padding([2, 3])
-        .style(style::button::subtle),
+        button(icon(glyph).size(13.0))
+            .on_press(toggle.message)
+            .padding([2, 3])
+            .style(style::button::row_toggle(toggle.pressed)),
         Tip::new(description),
         tooltip::Position::Left,
     )
