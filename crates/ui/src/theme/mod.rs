@@ -127,9 +127,12 @@ mod tests {
 
     #[test]
     fn tokens_follow_the_theme_accent() {
-        let blue = Tokens::of(&theme(Mode::Dark, Accent::Blue));
-        assert_eq!(blue.accent, Tokens::DARK.accent);
-        assert_eq!(blue.on_accent, iced::Color::WHITE);
+        // Temanın vurgusu hazır rengin o temadaki tonudur.
+        for mode in [Mode::Dark, Mode::Light] {
+            let blue = Tokens::of(&theme(mode, Accent::Blue));
+            assert_eq!(blue.accent, Accent::Blue.color(mode));
+            assert_eq!(blue.on_accent, iced::Color::WHITE);
+        }
 
         // Açık vurguda yazı koyu olur; aydınlık temada koyu ton seçilir.
         let amber = Tokens::of(&theme(Mode::Dark, Accent::Amber));

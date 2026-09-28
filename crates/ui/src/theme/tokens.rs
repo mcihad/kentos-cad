@@ -56,57 +56,60 @@ pub struct Tokens {
 }
 
 impl Tokens {
+    /// Koyu grafit: web'in mavi-grafit kabuğu (DESIGN.md §3.1, web'in
+    /// `tokens.css`'i; `apps/desktop` bir testle aynı tutar).
     pub const DARK: Self = Self {
         mode: Mode::Dark,
         is_dark: true,
 
-        window: hex(0x1d1f23),
-        surface: hex(0x282b30),
-        surface_alt: hex(0x2f3338),
-        surface_hover: hex(0x3a3f46),
-        header: hex(0x33373d),
-        field: hex(0x18191c),
-        border: hex(0x40454d),
+        window: hex(0x181e26),
+        surface: hex(0x212932),
+        surface_alt: hex(0x252e38),
+        surface_hover: hex(0x2d353d),
+        header: hex(0x252e38),
+        field: hex(0x171c23),
+        border: hex(0x2d3641),
 
-        text: hex(0xd8dce1),
-        muted: hex(0x8d959f),
+        text: hex(0xd6dde5),
+        muted: hex(0x9ba7b5),
 
-        accent: hex(0x4c9be8),
-        accent_hover: hex(0x6fb1f0),
+        accent: hex(0x4c7fe0),
+        accent_hover: hex(0x6c96e6),
         on_accent: hex(0xffffff),
 
-        popover: hex(0x2a2d32),
+        popover: hex(0x27303b),
 
-        success: hex(0x5cbf62),
-        warning: hex(0xf2c53d),
-        danger: hex(0xe5584f),
+        success: hex(0x6fd08c),
+        warning: hex(0xe9a23b),
+        danger: hex(0xef6b61),
         info: hex(0x6db3f2),
     };
 
+    /// Açık pafta: serin, kâğıt paftayı andıran griler (DESIGN.md §3.2).
     pub const LIGHT: Self = Self {
         mode: Mode::Light,
         is_dark: false,
 
-        window: hex(0xdcdfe3),
-        surface: hex(0xeceef0),
-        surface_alt: hex(0xf7f8f9),
-        surface_hover: hex(0xd5dae0),
-        header: hex(0xe1e4e8),
+        window: hex(0xe3e7eb),
+        surface: hex(0xf4f6f8),
+        surface_alt: hex(0xeaeef1),
+        surface_hover: hex(0xe7e9ec),
+        header: hex(0xeaeef1),
         field: hex(0xffffff),
-        border: hex(0xbcc2c9),
+        border: hex(0xd3d9df),
 
-        text: hex(0x1e2226),
-        muted: hex(0x5c636c),
+        text: hex(0x1b232c),
+        muted: hex(0x4d5966),
 
-        accent: hex(0x1b6fd0),
-        accent_hover: hex(0x155cae),
+        accent: hex(0x1f4a96),
+        accent_hover: hex(0x1a3e7e),
         on_accent: hex(0xffffff),
 
-        popover: hex(0xf7f8f9),
+        popover: hex(0xfbfcfd),
 
-        success: hex(0x2f9437),
-        warning: hex(0xb58500),
-        danger: hex(0xcc3a31),
+        success: hex(0x1f9d4c),
+        warning: hex(0xb76e00),
+        danger: hex(0xc8372d),
         info: hex(0x1f6fc4),
     };
 
@@ -213,12 +216,14 @@ impl Tokens {
         }
     }
 
-    /// Seçili satır, etkin araç ve açık alt menü zemini.
+    /// Seçili satır, etkin araç ve açık alt menü zemini (web'in
+    /// `--c-accent-soft`'u).
     pub fn selection(&self) -> Color {
         self.accent.scale_alpha(match self.mode {
             Mode::HighContrast => 0.4,
-            Mode::Light => 0.14,
-            Mode::Dark | Mode::Night => 0.22,
+            Mode::Light => 0.12,
+            Mode::Dark => 0.18,
+            Mode::Night => 0.22,
         })
     }
 
@@ -239,13 +244,18 @@ impl Tokens {
     }
 
     /// Belirgin kenar: menülerin ve açılır panellerin çerçevesi, üzerine
-    /// gelinen alanın kenarı (web'in `--c-line-strong`'u).
+    /// gelinen alanın kenarı (web'in `--c-line-strong`'u; web'de olmayan
+    /// temalarda kenardan yazıya doğru).
     pub fn border_strong(&self) -> Color {
-        mix(
-            self.border,
-            self.text,
-            if self.is_dark { 0.14 } else { 0.16 },
-        )
+        match self.mode {
+            Mode::Dark => hex(0x3d4856),
+            Mode::Light => hex(0xb5bfc9),
+            Mode::Night | Mode::HighContrast => mix(
+                self.border,
+                self.text,
+                if self.is_dark { 0.14 } else { 0.16 },
+            ),
+        }
     }
 
     /// Odaklanan alanın ve "değişecek" durumun kenarı: vurgu, biraz

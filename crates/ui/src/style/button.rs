@@ -178,21 +178,22 @@ fn lighten(color: Color, amount: f32) -> Color {
     }
 }
 
-/// İkincil eylem: kenarlı, yüzey renginde düğme.
+/// İkincil eylem (web'in `.btn`'i): alan zemininde, belirgin kenarlı düğme;
+/// üzerine gelince zemin açılır, kenar sönük yazının tonuna döner.
 pub fn secondary(theme: &Theme, status: Status) -> Style {
     let t = Tokens::of(theme);
 
-    let (background, text) = match status {
-        Status::Active => (t.surface_alt, t.text),
-        Status::Hovered | Status::Pressed => (t.surface_hover, t.text),
-        Status::Disabled => (t.surface_alt, t.disabled()),
+    let (background, text, edge) = match status {
+        Status::Active => (t.field, t.text, t.border_strong()),
+        Status::Hovered | Status::Pressed => (t.surface_hover, t.text, t.muted.scale_alpha(0.6)),
+        Status::Disabled => (t.field, t.disabled(), t.border),
     };
 
     style(
         background,
         text,
         Border {
-            color: t.border,
+            color: edge,
             width: 1.0,
             radius: radius().into(),
         },

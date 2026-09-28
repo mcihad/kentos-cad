@@ -37,6 +37,10 @@ Renkler **rol** adıyla kullanılır, değerle kullanılmaz. TypeScript içinde 
 rengi yazılmaz; çizim alanı renkleri `readCanvasPalette()` ile CSS
 jetonlarından okunur.
 
+Masaüstü (KentOS UI `Tokens`) koyu ve açık temada aynı değerleri kullanır; masaüstünün
+bir testi onları `tokens.css`'ten okuyup karşılaştırır ([ADR 0129](docs/adr/0129-desktop-palette-is-the-webs.md)).
+Gece ve yüksek karşıtlık temaları masaüstünündür; web onları sonra alacak (ADR 0126).
+
 ### 3.1 Koyu tema: "Grafit" (varsayılan)
 
 Mavi-grafit bir kabuk çizim alanını çevreler. Alan kabuktan bir ton daha

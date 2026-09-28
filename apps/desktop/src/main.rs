@@ -7,6 +7,8 @@
 mod app;
 mod app_menu;
 mod appearance;
+#[cfg(test)]
+mod appearance_tokens_tests;
 mod bottom;
 mod calc;
 mod catalog;
