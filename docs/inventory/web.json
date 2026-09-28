@@ -49,8 +49,8 @@
       "pending": 2
     },
     "settings": {
-      "total": 66,
-      "implemented": 66,
+      "total": 68,
+      "implemented": 68,
       "partial": 0,
       "pending": 0
     },
@@ -117,8 +117,8 @@
         "n/a": 0
       },
       "settings": {
-        "total": 66,
-        "implemented": 57,
+        "total": 68,
+        "implemented": 59,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -8394,6 +8394,21 @@
       }
     },
     {
+      "id": "user.corners",
+      "key": "corners",
+      "setting": "appearance.corners",
+      "scope": "user",
+      "persistence": "localStorage kentos.settings.v1",
+      "type": "string",
+      "default": "soft",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "ayarlar.json appearance.corners: iki platformun ortak anahtarı; KentOS UI theme::shape (Uygulama ayarları → Görünüm → Biçim, ADR 0127)"
+    },
+    {
       "id": "user.crosshair",
       "key": "crosshair",
       "setting": "appearance.crosshair",
@@ -8518,6 +8533,21 @@
         "web": "implemented",
         "desktop": "implemented"
       }
+    },
+    {
+      "id": "user.shadows",
+      "key": "shadows",
+      "setting": "appearance.shadows",
+      "scope": "user",
+      "persistence": "localStorage kentos.settings.v1",
+      "type": "string",
+      "default": "soft",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "ayarlar.json appearance.shadows: iki platformun ortak anahtarı; KentOS UI theme::shape (Uygulama ayarları → Görünüm → Biçim, ADR 0127)"
     },
     {
       "id": "user.shell",

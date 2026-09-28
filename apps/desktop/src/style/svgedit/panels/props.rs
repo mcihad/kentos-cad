@@ -48,7 +48,7 @@ pub fn swatch<'a>(value: Color, on: impl Fn(String) -> Message + 'a) -> Element<
             border: iced::Border {
                 color: Tokens::of(t).border,
                 width: 1.0,
-                radius: 3.0.into(),
+                radius: kentos_ui::theme::shape::radius(3.0).into(),
             },
             ..container::Style::default()
         });
@@ -149,7 +149,7 @@ pub fn tool_box<'a>(title_text: &str, rows: Vec<Element<'a, Message>>) -> Elemen
                 border: iced::Border {
                     color: tk.accent.scale_alpha(0.45),
                     width: 1.0,
-                    radius: 4.0.into(),
+                    radius: kentos_ui::theme::shape::radius(4.0).into(),
                 },
                 ..container::Style::default()
             }

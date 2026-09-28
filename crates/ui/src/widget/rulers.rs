@@ -926,7 +926,7 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Rulers<'a, Message> {
                         border: Border {
                             color: t.border,
                             width: 1.0,
-                            radius: 3.0.into(),
+                            radius: crate::theme::shape::radius(3.0).into(),
                         },
                         shadow: Shadow {
                             color: t.shadow(),

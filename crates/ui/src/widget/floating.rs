@@ -61,7 +61,7 @@ use iced::{
 use crate::icon::{Icon, Tone, icon};
 use crate::label;
 use crate::style;
-use crate::style::button::RADIUS;
+use crate::style::button::radius;
 use crate::theme::{Tokens, typography};
 
 /// Kenarların yakalandığı uzaklık (piksel).
@@ -1427,7 +1427,7 @@ where
                         renderer.fill_quad(
                             Quad {
                                 bounds: square,
-                                border: border::rounded(3.0),
+                                border: border::rounded(crate::theme::shape::radius(3.0)),
                                 ..Quad::default()
                             },
                             Background::Color(t.layer(if pressed { 0.12 } else { 0.07 })),
@@ -1966,7 +1966,7 @@ fn draw_frame<K, Message>(
             border: Border {
                 color: t.border,
                 width: 1.0,
-                radius: RADIUS.into(),
+                radius: radius().into(),
             },
             shadow,
             ..Quad::default()
@@ -1988,7 +1988,7 @@ fn draw_frame<K, Message>(
                 width: bounds.width - 2.0,
                 height: bar_height.max(0.0),
             },
-            border: border::rounded(border::top(RADIUS - 1.0)),
+            border: border::rounded(border::top(radius() - 1.0)),
             ..Quad::default()
         },
         Background::Color(t.header),
@@ -2014,7 +2014,7 @@ fn draw_frame<K, Message>(
                     height: 2.0,
                     ..bounds
                 },
-                border: border::rounded(border::top(RADIUS)),
+                border: border::rounded(border::top(radius())),
                 ..Quad::default()
             },
             Background::Color(t.accent),

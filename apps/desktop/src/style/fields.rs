@@ -230,7 +230,7 @@ pub fn fx<'a, M: Clone + 'a>(on: bool, press: M) -> Element<'a, M> {
                             tokens.border
                         },
                         width: 1.0,
-                        radius: 3.0.into(),
+                        radius: kentos_ui::theme::shape::radius(3.0).into(),
                     },
                     ..button::Style::default()
                 }
@@ -300,7 +300,7 @@ pub fn color<'a, M: Clone + 'a>(
                 border: Border {
                     color: Tokens::of(t).muted,
                     width: 1.0,
-                    radius: 3.0.into(),
+                    radius: kentos_ui::theme::shape::radius(3.0).into(),
                 },
                 ..container::Style::default()
             })
@@ -316,7 +316,7 @@ pub fn color<'a, M: Clone + 'a>(
             border: Border {
                 color: Tokens::of(t).muted,
                 width: 1.0,
-                radius: 3.0.into(),
+                radius: kentos_ui::theme::shape::radius(3.0).into(),
             },
             ..container::Style::default()
         })

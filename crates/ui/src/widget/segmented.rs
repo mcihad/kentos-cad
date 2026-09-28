@@ -106,8 +106,8 @@ impl<'a, Message: Clone + 'a> From<Segmented<'a, Message>> for Element<'a, Messa
                 }
             });
 
-        container(iced::widget::Row::with_children(segments).spacing(1))
-            .padding(1)
+        container(iced::widget::Row::with_children(segments).spacing(2))
+            .padding(2)
             .width(typography::length(segmented.width))
             .style(style::container::segmented)
             .into()

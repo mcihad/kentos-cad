@@ -2,19 +2,21 @@
 
 use iced::widget::pick_list::{Status as PickListStatus, Style as PickListStyle};
 use iced::widget::{overlay, rule, scrollable, text_editor, text_input};
-use iced::{Background, Border, Color, Shadow, Theme, Vector};
+use iced::{Background, Border, Color, Theme};
 
 use crate::theme::Tokens;
+use crate::theme::shape::{self, Level};
 
-use super::button::RADIUS;
+use super::button::radius;
 
-/// Kenarlı metin girişi; odaklanınca kenar vurgu rengini alır.
+/// Kenarlı metin girişi: üzerine gelince kenar belirginleşir, odakta
+/// vurgu çizgisini alır (web'in `.field`'ı).
 pub fn input(theme: &Theme, status: text_input::Status) -> text_input::Style {
     let t = Tokens::of(theme);
 
     let edge = match status {
-        text_input::Status::Focused { .. } => t.accent,
-        text_input::Status::Hovered => t.muted,
+        text_input::Status::Focused { .. } => t.accent_line(),
+        text_input::Status::Hovered => t.border_strong(),
         text_input::Status::Active | text_input::Status::Disabled => t.border,
     };
 
@@ -23,7 +25,7 @@ pub fn input(theme: &Theme, status: text_input::Status) -> text_input::Style {
         border: Border {
             color: edge,
             width: 1.0,
-            radius: RADIUS.into(),
+            radius: radius().into(),
         },
         icon: t.muted,
         placeholder: t.muted.scale_alpha(0.75),
@@ -69,7 +71,7 @@ pub fn cell(invalid: bool) -> impl Fn(&Theme, text_input::Status) -> text_input:
 
         let edge = match status {
             _ if invalid => t.danger,
-            text_input::Status::Focused { .. } => t.accent,
+            text_input::Status::Focused { .. } => t.accent_line(),
             _ => Color::TRANSPARENT,
         };
 
@@ -78,20 +80,21 @@ pub fn cell(invalid: bool) -> impl Fn(&Theme, text_input::Status) -> text_input:
             border: Border {
                 color: edge,
                 width: 1.0,
-                radius: RADIUS.into(),
+                radius: radius().into(),
             },
             ..input(theme, status)
         }
     }
 }
 
-/// Çok satırlı metin alanı; odaklanınca kenar vurgu rengini alır.
+/// Çok satırlı metin alanı: üzerine gelince kenar belirginleşir, odakta
+/// vurgu çizgisini alır.
 pub fn text_area(theme: &Theme, status: text_editor::Status) -> text_editor::Style {
     let t = Tokens::of(theme);
 
     let edge = match status {
-        text_editor::Status::Focused { .. } => t.accent,
-        text_editor::Status::Hovered => t.muted,
+        text_editor::Status::Focused { .. } => t.accent_line(),
+        text_editor::Status::Hovered => t.border_strong(),
         text_editor::Status::Active | text_editor::Status::Disabled => t.border,
     };
 
@@ -100,7 +103,7 @@ pub fn text_area(theme: &Theme, status: text_editor::Status) -> text_editor::Sty
         border: Border {
             color: edge,
             width: 1.0,
-            radius: RADIUS.into(),
+            radius: radius().into(),
         },
         placeholder: t.muted.scale_alpha(0.75),
         value: t.text,
@@ -117,11 +120,12 @@ pub fn cell_pick_list(theme: &Theme, status: PickListStatus) -> PickListStyle {
         background: Background::Color(Color::TRANSPARENT),
         border: Border {
             color: match status {
-                PickListStatus::Hovered | PickListStatus::Opened { .. } => t.accent,
+                PickListStatus::Opened { .. } => t.accent_line(),
+                PickListStatus::Hovered => t.border_strong(),
                 PickListStatus::Active => Color::TRANSPARENT,
             },
             width: 1.0,
-            radius: RADIUS.into(),
+            radius: radius().into(),
         },
         ..pick_list(theme, status)
     }
@@ -138,34 +142,32 @@ pub fn pick_list(theme: &Theme, status: PickListStatus) -> PickListStyle {
         background: Background::Color(t.field),
         border: Border {
             color: match status {
-                PickListStatus::Hovered | PickListStatus::Opened { .. } => t.accent,
+                PickListStatus::Opened { .. } => t.accent_line(),
+                PickListStatus::Hovered => t.border_strong(),
                 PickListStatus::Active => t.border,
             },
             width: 1.0,
-            radius: RADIUS.into(),
+            radius: radius().into(),
         },
     }
 }
 
-/// Açılır listenin seçenek menüsü.
+/// Açılır listenin seçenek menüsü: menülerin görünüşü, seçili satır
+/// yumuşak vurgu zemininde (DESIGN.md §3.3).
 pub fn menu(theme: &Theme) -> overlay::menu::Style {
     let t = Tokens::of(theme);
 
     overlay::menu::Style {
         background: Background::Color(t.popover),
         border: Border {
-            color: t.border,
+            color: t.border_strong(),
             width: 1.0,
-            radius: RADIUS.into(),
+            radius: shape::md().into(),
         },
         text_color: t.text,
-        selected_text_color: t.on_accent,
-        selected_background: Background::Color(t.accent),
-        shadow: Shadow {
-            color: t.shadow(),
-            offset: Vector::new(0.0, 3.0),
-            blur_radius: 10.0,
-        },
+        selected_text_color: t.text,
+        selected_background: Background::Color(t.selection()),
+        shadow: shape::shadow(Level::Pop, &t),
     }
 }
 

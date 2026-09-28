@@ -981,7 +981,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Tabs<'a, Mess
                     renderer.fill_quad(
                         Quad {
                             bounds: close_area(bounds),
-                            border: border::rounded(3.0),
+                            border: border::rounded(crate::theme::shape::radius(3.0)),
                             ..Quad::default()
                         },
                         Background::Color(t.layer(0.12)),
@@ -1003,7 +1003,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Tabs<'a, Mess
                 renderer.fill_quad(
                     Quad {
                         bounds: square(close_area(bounds).center(), 7.0),
-                        border: border::rounded(3.5),
+                        border: border::rounded(crate::theme::shape::radius(3.5)),
                         ..Quad::default()
                     },
                     Background::Color(if active { t.text } else { t.muted }),
@@ -1020,7 +1020,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Tabs<'a, Mess
                 renderer.fill_quad(
                     Quad {
                         bounds: square(plus.bounds().center(), bounds.height - 8.0),
-                        border: border::rounded(4.0),
+                        border: border::rounded(crate::theme::shape::radius(4.0)),
                         ..Quad::default()
                     },
                     Background::Color(t.layer(0.08)),

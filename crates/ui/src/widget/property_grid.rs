@@ -29,6 +29,7 @@ use crate::icon::{Icon, Tone, icon};
 use crate::label;
 use crate::style;
 use crate::theme::{Tokens, typography};
+use crate::widget::elided::Elided;
 use crate::widget::{Menu, MenuButton};
 
 const KEY_WIDTH: f32 = 112.0;
@@ -237,17 +238,16 @@ pub fn value<'a, Message: 'a>(
     numeric: bool,
     unit: Option<String>,
 ) -> Element<'a, Message> {
-    let text = if numeric {
-        label::mono(text)
-    } else {
-        label::body(text)
-    };
-    let mut content = row![
-        container(text.wrapping(iced::widget::text::Wrapping::None))
-            .padding([0, 6])
-            .clip(true)
-    ]
-    .align_y(Center);
+    // One line: a long value ends in “…” (the web's cell), never cut mid-letter.
+    let text = Elided::new(text.into_fragment())
+        .size(typography::body())
+        .font(if numeric {
+            typography::mono()
+        } else {
+            typography::ui()
+        })
+        .width(Fill);
+    let mut content = row![container(text).padding([0, 6]).width(Fill)].align_y(Center);
     if let Some(unit) = unit {
         content = content.push(label::caption(unit).style(style::text::muted));
     }
@@ -267,9 +267,10 @@ pub fn choice<'a, Message: Clone + 'a>(
     }
     face = face
         .push(
-            container(label::body(text).wrapping(iced::widget::text::Wrapping::None))
-                .width(Fill)
-                .clip(true),
+            Elided::new(text.into_fragment())
+                .size(typography::body())
+                .font(typography::ui())
+                .width(Fill),
         )
         .push(icon(Icon::ChevronDown).size(12.0).tone(Tone::Muted));
     MenuButton::new(

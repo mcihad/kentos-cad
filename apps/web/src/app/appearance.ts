@@ -98,6 +98,18 @@ export async function applyDrawingFont(id: DrawingFont): Promise<void> {
 
 export const accentById = (id: AccentId): AccentSpec => ACCENTS.find((a) => a.id === id) ?? ACCENTS[0];
 
+/** The corners (`appearance.corners`): every radius together (styles/tokens.css). */
+export type CornersId = 'sharp' | 'soft' | 'round';
+/** The shadows of what floats (`appearance.shadows`). */
+export type ShadowsId = 'off' | 'soft' | 'strong';
+
+/** Sets the corners and the shadows (docs/adr/0127); the soft ones are tokens.css itself. */
+export function applyShape(corners: CornersId, shadows: ShadowsId): void {
+  const root = document.documentElement;
+  root.dataset.corners = corners;
+  root.dataset.shadows = shadows;
+}
+
 /** The interface's text size in pixels at which --ui-scale is 1 (`appearance.textSize`). */
 export const BASE_TEXT_SIZE = 13;
 

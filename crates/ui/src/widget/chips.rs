@@ -36,7 +36,7 @@ use iced::{
 use crate::attribute::text as search;
 use crate::icon::{Icon, icon};
 use crate::style;
-use crate::style::button::RADIUS;
+use crate::style::button::radius;
 use crate::theme::{Tokens, typography};
 use crate::widget::dropdown::propagate;
 
@@ -210,7 +210,7 @@ fn chip_style(theme: &Theme) -> container::Style {
         border: Border {
             color: t.border,
             width: 1.0,
-            radius: 3.0.into(),
+            radius: crate::theme::shape::radius(3.0).into(),
         },
         text_color: Some(t.text),
         ..container::Style::default()
@@ -533,7 +533,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ChipInput<'a,
                         t.border
                     },
                     width: 1.0,
-                    radius: RADIUS.into(),
+                    radius: radius().into(),
                 },
                 ..Quad::default()
             },

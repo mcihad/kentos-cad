@@ -70,6 +70,12 @@ impl App {
         let password = field("Parola", &s.password, Some(Event::SignInPassword))
             .secure(true)
             .on_submit_maybe(submit.clone());
+        // A halo round the field that has the keyboard (docs/adr/0127).
+        let (server, login, password) = (
+            kentos_ui::widget::focus_ring(server),
+            kentos_ui::widget::focus_ring(login),
+            kentos_ui::widget::focus_ring(password),
+        );
         let mut form = Form::new()
             .label_width(90.0)
             .field("Sunucu", server)
@@ -196,6 +202,7 @@ impl App {
             .size(typography::body())
             .padding([5, 8])
             .style(style::field::input);
+        let name = kentos_ui::widget::focus_ring(name);
         // The storage mode, for good (docs/adr/0031): each option says what it means.
         let storage = [ProjectStorage::Database, ProjectStorage::File]
             .into_iter()
@@ -222,6 +229,7 @@ impl App {
             .size(typography::body())
             .padding([5, 8])
             .style(style::field::input);
+        let tags = kentos_ui::widget::focus_ring(tags);
         let count = doc.entity_count();
         let hint = match u.storage {
             ProjectStorage::File => format!(

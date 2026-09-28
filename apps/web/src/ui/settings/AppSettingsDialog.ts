@@ -35,7 +35,7 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
       icon: 'appearance',
       title: 'Görünüm',
       lead: 'Tema, vurgu rengi, yazı tipi, arayüz düzeni, yazı boyutu, artı imleç ve fare yardımcıları.',
-      keys: ['theme', 'accent', 'uiFont', 'shell', 'textSize', 'crosshair', 'cursorInput', 'commandBar', 'hoverInfo', 'startScreen'],
+      keys: ['theme', 'accent', 'uiFont', 'shell', 'textSize', 'corners', 'shadows', 'crosshair', 'cursorInput', 'commandBar', 'hoverInfo', 'startScreen'],
       render: (api) => appearance(api),
     },
     {
@@ -209,6 +209,37 @@ function appearance(api: DraftApi<AppDraft>) {
         shellCard('ribbon', 'Şerit', 'Sekmeli şerit; dar pencerede kendini sığdırır'),
       ),
       note('info', 'İkisi aynı araç ve komutları sunar; yeni bir araç ikisinde de kendiliğinden yer alır. Görünüm → Şerit arayüzü komutuyla da geçilir.'),
+    ),
+    group(
+      'Biçim',
+      settingRow(
+        'Köşeler',
+        'Düğmelerin, alanların, menülerin ve pencerelerin köşeleri: klasik CAD gibi keskin, yumuşak ya da yuvarlak.',
+        segmented({
+          label: 'Köşeler',
+          value: d.corners,
+          options: [
+            { value: 'sharp', label: 'Keskin' },
+            { value: 'soft', label: 'Yumuşak' },
+            { value: 'round', label: 'Yuvarlak' },
+          ],
+          onChange: (v) => api.set('corners', v),
+        }),
+      ),
+      settingRow(
+        'Gölgeler',
+        'Menülerin, açılır listelerin, ipuçlarının ve pencerelerin gölgesi; yerleşik paneller her zaman düzdür.',
+        segmented({
+          label: 'Gölgeler',
+          value: d.shadows,
+          options: [
+            { value: 'off', label: 'Kapalı' },
+            { value: 'soft', label: 'Hafif' },
+            { value: 'strong', label: 'Belirgin' },
+          ],
+          onChange: (v) => api.set('shadows', v),
+        }),
+      ),
     ),
     group(
       'Yazı ve imleç',

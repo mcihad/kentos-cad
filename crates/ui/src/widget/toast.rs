@@ -54,7 +54,7 @@ use iced::{
 use crate::icon::{Icon, icon};
 use crate::label;
 use crate::style;
-use crate::style::button::RADIUS;
+use crate::style::button::radius;
 use crate::theme::{Tokens, typography};
 use crate::widget::Severity;
 
@@ -1098,7 +1098,7 @@ fn frame(renderer: &mut Renderer, t: &Tokens, bounds: Rectangle, shadow: bool) {
             border: Border {
                 color: t.border,
                 width: 1.0,
-                radius: RADIUS.into(),
+                radius: radius().into(),
             },
             shadow: if shadow {
                 Shadow {
@@ -1120,7 +1120,7 @@ fn highlight(renderer: &mut Renderer, t: &Tokens, bounds: Rectangle, pressed: bo
     renderer.fill_quad(
         Quad {
             bounds,
-            border: border::rounded(3.0),
+            border: border::rounded(crate::theme::shape::radius(3.0)),
             ..Quad::default()
         },
         Background::Color(t.layer(if pressed { 0.12 } else { 0.07 })),

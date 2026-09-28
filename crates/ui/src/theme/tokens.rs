@@ -238,6 +238,25 @@ impl Tokens {
         self.warning
     }
 
+    /// Belirgin kenar: menülerin ve açılır panellerin çerçevesi, üzerine
+    /// gelinen alanın kenarı (web'in `--c-line-strong`'u).
+    pub fn border_strong(&self) -> Color {
+        mix(
+            self.border,
+            self.text,
+            if self.is_dark { 0.14 } else { 0.16 },
+        )
+    }
+
+    /// Odaklanan alanın ve "değişecek" durumun kenarı: vurgu, biraz
+    /// saydam (web'in `--c-accent-line`'ı); yüksek karşıtlıkta tam.
+    pub fn accent_line(&self) -> Color {
+        self.accent.scale_alpha(match self.mode {
+            Mode::HighContrast => 1.0,
+            _ => 0.8,
+        })
+    }
+
     /// Devre dışı öğelerin metni ve ikonları.
     pub fn disabled(&self) -> Color {
         self.muted.scale_alpha(0.55)

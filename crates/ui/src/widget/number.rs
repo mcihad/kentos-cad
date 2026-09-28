@@ -48,7 +48,7 @@ use iced::{
 
 use crate::attribute::number;
 use crate::style;
-use crate::style::button::RADIUS;
+use crate::style::button::radius;
 use crate::theme::{Mode, Tokens, typography};
 use crate::widget::dropdown::propagate;
 
@@ -873,7 +873,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for NumberInput<'
                 border: Border {
                     color: edge,
                     width: 1.0,
-                    radius: RADIUS.into(),
+                    radius: radius().into(),
                 },
                 ..Quad::default()
             },
@@ -898,7 +898,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for NumberInput<'
                 Quad {
                     bounds: handle,
                     border: Border {
-                        radius: (RADIUS - 1.0).into(),
+                        radius: (radius() - 1.0).into(),
                         ..Border::default()
                     },
                     ..Quad::default()
@@ -969,7 +969,8 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for NumberInput<'
 
 impl<'a, Message: Clone + 'a> From<NumberInput<'a, Message>> for Element<'a, Message> {
     fn from(input: NumberInput<'a, Message>) -> Self {
-        Element::new(input)
+        // A halo round the box while its field has the keyboard.
+        crate::widget::focus_ring(Element::new(input)).into()
     }
 }
 

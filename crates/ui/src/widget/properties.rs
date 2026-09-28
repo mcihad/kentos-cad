@@ -211,7 +211,7 @@ impl<'a, Message: Clone + 'a> From<PropertiesDialog<'a, Message>> for Element<'a
                     .center_y(8)
                     .style(|theme: &Theme| container::Style {
                         background: Some(Background::Color(Tokens::of(theme).accent)),
-                        border: iced::border::rounded(4.0),
+                        border: iced::border::rounded(crate::theme::shape::radius(4.0)),
                         ..container::Style::default()
                     }),
                 label::muted("Kaydedilmemiş değişiklikler var"),

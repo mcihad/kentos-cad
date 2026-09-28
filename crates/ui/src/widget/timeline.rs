@@ -1021,7 +1021,7 @@ impl<'a, Message> Widget<Message, Theme, Renderer> for Track<'a, Message> {
                     border: Border {
                         color: t.border,
                         width: 1.0,
-                        radius: 3.0.into(),
+                        radius: crate::theme::shape::radius(3.0).into(),
                     },
                     ..Quad::default()
                 },
@@ -1073,7 +1073,7 @@ impl<'a, Message> Widget<Message, Theme, Renderer> for Track<'a, Message> {
                                 Size::new(3.0, rows.range.height - 2.0),
                             ),
                             border: Border {
-                                radius: 1.5.into(),
+                                radius: crate::theme::shape::radius(1.5).into(),
                                 ..Border::default()
                             },
                             ..Quad::default()
@@ -1254,7 +1254,7 @@ impl<'a, Message> Widget<Message, Theme, Renderer> for Track<'a, Message> {
                             border: Border {
                                 color: t.border,
                                 width: 1.0,
-                                radius: 3.0.into(),
+                                radius: crate::theme::shape::radius(3.0).into(),
                             },
                             ..Quad::default()
                         },

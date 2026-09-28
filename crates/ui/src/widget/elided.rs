@@ -20,7 +20,7 @@ use std::borrow::Cow;
 use iced::advanced::layout::{self, Layout};
 use iced::advanced::renderer;
 use iced::advanced::text::{self as text_core, Paragraph as _, Renderer as _};
-use iced::advanced::widget::{Tree, Widget, tree};
+use iced::advanced::widget::{self, Tree, Widget, tree};
 use iced::alignment::Vertical;
 use iced::widget::text::{self, LineHeight, Wrapping};
 use iced::{Element, Font, Length, Pixels, Point, Rectangle, Renderer, Size, Theme, mouse};
@@ -168,6 +168,18 @@ impl<Message> Widget<Message, Theme, Renderer> for Elided<'_> {
             Length::Shrink,
             Size::new(bounds.width, height),
         ))
+    }
+
+    /// The whole text, not the shortened one: what it says, for finding it
+    /// (tests, a screen reader).
+    fn operate(
+        &mut self,
+        _tree: &mut Tree,
+        layout: Layout<'_>,
+        _renderer: &Renderer,
+        operation: &mut dyn widget::Operation,
+    ) {
+        operation.text(None, layout.bounds(), &self.content);
     }
 
     fn draw(

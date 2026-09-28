@@ -79,6 +79,7 @@ use crate::icon::{Icon, icon};
 use crate::label;
 use crate::style;
 use crate::theme::{Tokens, typography};
+use crate::widget::elided::Elided;
 
 // Metni taşıyan ölçüler 12 piksellik gövde metninde tasarlandı ve yazı
 // boyutuyla büyür.
@@ -499,7 +500,7 @@ impl<Message> Menu<Message> {
                     Item::Command(command) => command.shortcut.as_deref(),
                     _ => None,
                 })
-                .map(|shortcut| typography::mono_width(shortcut, caption) + 8.0)
+                .map(|shortcut| typography::text_width(shortcut, caption) + 8.0)
                 .fold(0.0, f32::max);
             return DETAIL_ICON_SLOT
                 + 8.0
@@ -516,7 +517,7 @@ impl<Message> Menu<Message> {
                 Item::Command(command) => {
                     typography::text_width(&command.label, body)
                         + command.shortcut.as_deref().map_or(0.0, |shortcut| {
-                            typography::mono_width(shortcut, caption) + 24.0
+                            typography::text_width(shortcut, caption) + 24.0
                         })
                         + command
                             .hint
@@ -904,7 +905,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ContextMenu<'
                     renderer,
                     renderer::Quad {
                         bounds: layout.bounds(),
-                        border: border::rounded(3.0),
+                        border: border::rounded(crate::theme::shape::radius(3.0)),
                         ..renderer::Quad::default()
                     },
                     Background::Color(t.layer(alpha)),
@@ -1331,6 +1332,17 @@ impl<Message: Clone> overlay::Overlay<Message, Theme, Renderer> for Overlay<'_, 
             let window = visible.bounds();
             let content = main.bounds();
             let clipped = content.height > window.height + 0.5;
+            // The box's shadow, under the layer that clips the box to the window.
+            let t = Tokens::of(theme);
+            renderer.fill_quad(
+                renderer::Quad {
+                    bounds: window,
+                    border: border::rounded(crate::theme::shape::md()),
+                    shadow: crate::theme::shape::shadow(crate::theme::shape::Level::Pop, &t),
+                    ..renderer::Quad::default()
+                },
+                Background::Color(t.popover),
+            );
             renderer.with_layer(window, |renderer| {
                 self.main.as_widget().draw(
                     self.main_tree,
@@ -1343,7 +1355,6 @@ impl<Message: Clone> overlay::Overlay<Message, Theme, Renderer> for Overlay<'_, 
                 );
             });
             if clipped {
-                let t = Tokens::of(theme);
                 // The box closed where the panel is cut, and where the window is on it.
                 renderer.fill_quad(
                     renderer::Quad {
@@ -1351,7 +1362,7 @@ impl<Message: Clone> overlay::Overlay<Message, Theme, Renderer> for Overlay<'_, 
                         border: iced::Border {
                             color: t.border,
                             width: 1.0,
-                            radius: style::button::RADIUS.into(),
+                            radius: style::button::radius().into(),
                         },
                         ..renderer::Quad::default()
                     },
@@ -1599,19 +1610,30 @@ fn item_row<'a, Message: 'a>(
             false,
             None,
         ),
+        // Inset from the menu's sides (the web's `.menu__sep`: 4 px, 6 px).
         Item::Separator => {
             return container(rule::horizontal(1).style(style::field::hairline))
-                .padding([0.0, PADDING])
+                .padding([0.0, 6.0])
                 .height(SEPARATOR_HEIGHT)
                 .align_y(Center)
                 .into();
         }
+        // Over the labels, quiet and strong (the web's `.menu__header`).
         Item::Header(title) => {
-            return container(label::caption(title.clone()))
-                .padding([0, 8])
-                .height(header_height())
-                .align_y(Center)
-                .into();
+            return container(
+                label::caption(title.clone())
+                    .font(typography::ui_strong())
+                    .style(style::text::muted),
+            )
+            .padding(iced::Padding {
+                top: 3.0,
+                right: 8.0,
+                bottom: 0.0,
+                left: 8.0 + ICON_SLOT + 8.0,
+            })
+            .height(header_height())
+            .align_y(Center)
+            .into();
         }
     };
 
@@ -1634,34 +1656,23 @@ fn item_row<'a, Message: 'a>(
             None => space::horizontal().width(11).into(),
         });
     }
-    content = content.push(label::body(text).width(Fill));
+    // One line: a long label ends in “…” within the menu's widest (a row
+    // keeps its height whatever it says).
+    content = content.push(
+        Elided::new(text)
+            .size(typography::body())
+            .font(typography::ui())
+            .width(Fill),
+    );
 
+    // Quiet beside the label, in the interface's letters (the web's
+    // `.menu__hint`, `.menu__kbd`): on the soft highlight they stay readable.
     if let Some(hint) = hint {
-        content = content.push(label::caption(hint).style(move |theme: &Theme| {
-            let t = Tokens::of(theme);
-
-            iced::widget::text::Style {
-                color: Some(if highlighted && enabled {
-                    t.on_accent.scale_alpha(0.75)
-                } else {
-                    t.muted
-                }),
-            }
-        }));
+        content = content.push(label::caption(hint).style(style::text::muted));
     }
 
     if let Some(shortcut) = shortcut {
-        content = content.push(label::mono_caption(shortcut).style(move |theme: &Theme| {
-            let t = Tokens::of(theme);
-
-            iced::widget::text::Style {
-                color: Some(if highlighted && enabled {
-                    t.on_accent.scale_alpha(0.75)
-                } else {
-                    t.muted
-                }),
-            }
-        }));
+        content = content.push(label::caption(shortcut).style(style::text::muted));
     }
 
     if submenu {
@@ -1684,7 +1695,7 @@ fn dot<'a, Message: 'a>() -> Element<'a, Message> {
         .height(6)
         .style(move |theme: &Theme| container::Style {
             background: Some(Tokens::of(theme).accent.into()),
-            border: iced::border::rounded(3),
+            border: iced::border::rounded(crate::theme::shape::radius(3.0)),
             ..container::Style::default()
         })
         .into()
@@ -1711,18 +1722,14 @@ fn detail_row<'a, Message: 'a>(
             .into(),
         Mark::None => space::horizontal().width(DETAIL_ICON).into(),
     };
-    let quiet = move |theme: &Theme| {
-        let t = Tokens::of(theme);
-        iced::widget::text::Style {
-            color: Some(if highlighted && enabled {
-                t.on_accent.scale_alpha(0.75)
-            } else {
-                t.muted
-            }),
-        }
-    };
+    let quiet = style::text::muted;
     let words = Column::new()
-        .push(label::body(text))
+        .push(
+            Elided::new(text)
+                .size(typography::body())
+                .font(typography::ui())
+                .width(typography::scaled(DETAIL_WIDTH)),
+        )
         .push(
             label::caption(detail)
                 .line_height(DETAIL_LEADING)
@@ -1741,7 +1748,7 @@ fn detail_row<'a, Message: 'a>(
     .align_y(iced::alignment::Vertical::Top);
     if let Some(shortcut) = shortcut {
         content = content.push(space::horizontal().width(Fill));
-        content = content.push(label::mono_caption(shortcut).style(quiet));
+        content = content.push(label::caption(shortcut).style(quiet));
     }
     let (top, bottom) = DETAIL_PAD;
     container(content)

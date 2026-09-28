@@ -54,6 +54,7 @@ pub(crate) fn known_field<'a>(
         .font(typography::ui())
         .size(typography::body())
         .style(style::field::input);
+    let input = kentos_ui::widget::focus_ring(input);
     let pick = tip(
         button(
             row![icon(Icon::Magnet).size(14.0), label::body("Çizimden")]
@@ -136,6 +137,7 @@ fn labelled<'a>(
         })
         .size(typography::body())
         .style(style::field::input);
+    let input = kentos_ui::widget::focus_ring(input);
     column![label::caption(title), input].spacing(4).into()
 }
 

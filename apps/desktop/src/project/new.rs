@@ -290,6 +290,7 @@ impl App {
             .size(typography::body())
             .width(260)
             .style(style::field::input);
+        let name = kentos_ui::widget::focus_ring(name);
         let default_srid = self.settings.number("newProjects.srid") as u32;
         let layers = content::standard_layers(s.plot_scale)
             .iter()

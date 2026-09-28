@@ -756,8 +756,8 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
                 .into()
         });
 
-        container(Row::with_children(segments).spacing(1))
-            .padding(1)
+        container(Row::with_children(segments).spacing(2))
+            .padding(2)
             .style(style::container::segmented)
             .into()
     }

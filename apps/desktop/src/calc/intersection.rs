@@ -303,7 +303,7 @@ fn sketch_box(theme: &Theme) -> container::Style {
         border: Border {
             color: t.border,
             width: 1.0,
-            radius: 2.0.into(),
+            radius: kentos_ui::theme::shape::radius(2.0).into(),
         },
         ..container::Style::default()
     }

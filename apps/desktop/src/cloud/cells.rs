@@ -365,7 +365,7 @@ pub(crate) fn lamp<'a>(shade: Shade, lamp: Lamp) -> Element<'a, Message> {
                 border: Border {
                     color: if lamp == Lamp::Good { t.success } else { tint },
                     width: 1.4,
-                    radius: 3.5.into(),
+                    radius: kentos_ui::theme::shape::radius(3.5).into(),
                 },
                 ..container::Style::default()
             }

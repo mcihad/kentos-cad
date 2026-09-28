@@ -1,11 +1,12 @@
 //! Kap (container) stilleri: yüzeyler, açılır paneller ve küçük süsler.
 
 use iced::widget::container::Style;
-use iced::{Background, Border, Color, Shadow, Theme, Vector, border};
+use iced::{Background, Border, Color, Theme, border};
 
 use crate::theme::Tokens;
+use crate::theme::shape::{self, Level};
 
-use super::button::RADIUS;
+use super::button::radius;
 
 fn fill(color: Color) -> Style {
     Style {
@@ -40,7 +41,7 @@ pub fn tile(theme: &Theme) -> Style {
     Style {
         background: Some(Background::Color(Tokens::of(theme).header)),
         border: Border {
-            radius: RADIUS.into(),
+            radius: radius().into(),
             ..Border::default()
         },
         ..Style::default()
@@ -61,7 +62,7 @@ pub fn field_box(theme: &Theme) -> Style {
         border: Border {
             color: t.border,
             width: 1.0,
-            radius: RADIUS.into(),
+            radius: radius().into(),
         },
         ..Style::default()
     }
@@ -73,7 +74,7 @@ pub fn grid_lines(theme: &Theme) -> Style {
     fill(Tokens::of(theme).border)
 }
 
-/// Kenarlı yüzey: gruplanmış içerik ve örnek alanları.
+/// Kenarlı yüzey: gruplanmış içerik ve örnek alanları (kart kademesi).
 pub fn bordered(theme: &Theme) -> Style {
     let t = Tokens::of(theme);
 
@@ -82,13 +83,14 @@ pub fn bordered(theme: &Theme) -> Style {
         border: Border {
             color: t.border,
             width: 1.0,
-            radius: RADIUS.into(),
+            radius: shape::md().into(),
         },
         ..Style::default()
     }
 }
 
-/// Açılır menüler, ipuçları ve iletişim kutuları: kenar ve gölge.
+/// Açılır menüler, açılır paneller ve ipuçları: kenar, menü kademesinin
+/// köşesi ve gölgesi (web'in `.menu`'sü: `--r-md`, `--shadow-pop`).
 pub fn popover(theme: &Theme) -> Style {
     let t = Tokens::of(theme);
 
@@ -96,28 +98,43 @@ pub fn popover(theme: &Theme) -> Style {
         text_color: Some(t.text),
         background: Some(Background::Color(t.popover)),
         border: Border {
-            color: t.border,
+            color: t.border_strong(),
             width: 1.0,
-            radius: RADIUS.into(),
+            radius: shape::md().into(),
         },
-        shadow: Shadow {
-            color: t.shadow(),
-            offset: Vector::new(0.0, 3.0),
-            blur_radius: 10.0,
-        },
+        shadow: shape::shadow(Level::Pop, &t),
         ..Style::default()
     }
 }
 
-/// Bağlam menüsü satırı: vurgulanınca vurgu zemini ve açık metin;
+/// İletişim kutuları ve pencereler: panel zemini, belirgin kenar, pencere
+/// kademesinin köşesi ve gölgesi (web'in `.dialog`'u).
+pub fn dialog(theme: &Theme) -> Style {
+    let t = Tokens::of(theme);
+
+    Style {
+        text_color: Some(t.text),
+        background: Some(Background::Color(t.surface)),
+        border: Border {
+            color: t.border_strong(),
+            width: 1.0,
+            radius: shape::lg().into(),
+        },
+        shadow: shape::shadow(Level::Window, &t),
+        ..Style::default()
+    }
+}
+
+/// Bağlam menüsü satırı: vurgulanınca yumuşak vurgu zemini, yazı kendi
+/// renginde (DESIGN.md §3.3; web'in `.menu__item[data-active]`'i);
 /// tehlikeli komut kırmızıyla, devre dışı komut sönük yazılır.
 pub fn menu_item(highlighted: bool, enabled: bool, danger: bool) -> impl Fn(&Theme) -> Style {
     move |theme| {
         let t = Tokens::of(theme);
 
         let (background, text) = match (highlighted && enabled, enabled, danger) {
-            (true, _, true) => (Some(t.danger), t.on_accent),
-            (true, _, false) => (Some(t.accent), t.on_accent),
+            (true, _, true) => (Some(t.danger.scale_alpha(0.16)), t.danger),
+            (true, _, false) => (Some(t.selection()), t.text),
             (false, false, _) => (None, t.disabled()),
             (false, true, true) => (None, t.danger),
             (false, true, false) => (None, t.text),
@@ -126,7 +143,7 @@ pub fn menu_item(highlighted: bool, enabled: bool, danger: bool) -> impl Fn(&The
         Style {
             text_color: Some(text),
             background: background.map(Background::Color),
-            border: border::rounded(RADIUS),
+            border: border::rounded(radius()),
             ..Style::default()
         }
     }
@@ -140,7 +157,7 @@ pub fn token(theme: &Theme) -> Style {
     Style {
         text_color: Some(t.accent_hover),
         background: Some(Background::Color(t.selection())),
-        border: border::rounded(3.0),
+        border: border::rounded(shape::xs()),
         ..Style::default()
     }
 }
@@ -154,7 +171,7 @@ pub fn keycap(theme: &Theme) -> Style {
         border: Border {
             color: t.border,
             width: 1.0,
-            radius: 3.0.into(),
+            radius: shape::xs().into(),
         },
         ..Style::default()
     }
@@ -168,7 +185,7 @@ pub fn suggestion(highlighted: bool) -> impl Fn(&Theme) -> Style {
         Style {
             text_color: Some(t.text),
             background: highlighted.then(|| Background::Color(t.selection())),
-            border: border::rounded(RADIUS),
+            border: border::rounded(radius()),
             ..Style::default()
         }
     }
@@ -183,23 +200,24 @@ pub fn floating(theme: &Theme) -> Style {
         border: Border {
             color: t.border,
             width: 1.0,
-            radius: RADIUS.into(),
+            radius: shape::md().into(),
         },
+        shadow: shape::shadow(Level::Float, &t),
         ..Style::default()
     }
 }
 
-/// Parçalı seçim çerçevesi: parçalar arasındaki 1 piksellik boşluklar kenar
-/// renginde görünür.
+/// Parçalı seçimin çukur izi (web'in `.seg`'i): alan zemini, ince kenar;
+/// parçalar içinde 2 piksel arayla durur.
 pub fn segmented(theme: &Theme) -> Style {
     let t = Tokens::of(theme);
 
     Style {
-        background: Some(Background::Color(t.border)),
+        background: Some(Background::Color(t.field)),
         border: Border {
             color: t.border,
             width: 1.0,
-            radius: RADIUS.into(),
+            radius: shape::md().into(),
         },
         ..Style::default()
     }
@@ -215,7 +233,7 @@ pub fn badge(theme: &Theme) -> Style {
         border: Border {
             color: t.border,
             width: 1.0,
-            radius: RADIUS.into(),
+            radius: shape::xs().into(),
         },
         ..Style::default()
     }
@@ -230,7 +248,7 @@ pub fn count(theme: &Theme) -> Style {
         text_color: Some(t.accent_hover),
         background: Some(Background::Color(t.accent.scale_alpha(0.18))),
         border: Border {
-            radius: 8.0.into(),
+            radius: crate::theme::shape::radius(8.0).into(),
             ..Border::default()
         },
         ..Style::default()
@@ -254,7 +272,7 @@ pub fn warning_count(theme: &Theme) -> Style {
         text_color: Some(ink),
         background: Some(Background::Color(t.warning)),
         border: Border {
-            radius: 8.0.into(),
+            radius: crate::theme::shape::radius(8.0).into(),
             ..Border::default()
         },
         ..Style::default()
@@ -278,7 +296,7 @@ pub fn swatch(color: Color) -> impl Fn(&Theme) -> Style {
         border: Border {
             color: Color::from_rgba(0.0, 0.0, 0.0, 0.35),
             width: 1.0,
-            radius: 1.0.into(),
+            radius: shape::radius(1.0).into(),
         },
         ..Style::default()
     }
@@ -295,7 +313,7 @@ pub fn outline(color: Color, width: f32) -> impl Fn(&Theme) -> Style {
         border: Border {
             color,
             width,
-            radius: border::radius(1.0),
+            radius: border::radius(shape::radius(1.0)),
         },
         ..Style::default()
     }

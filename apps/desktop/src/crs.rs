@@ -495,6 +495,7 @@ pub fn picker<'a, Message: Clone + 'a>(
         .padding([5, 8])
         .size(typography::body())
         .style(style::field::input);
+    let search_box = kentos_ui::widget::focus_ring(search_box);
     let mut browser = Column::new().spacing(6).push(
         row![icon(Icon::Search).size(14.0).tone(Tone::Muted), search_box]
             .spacing(6)

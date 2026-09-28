@@ -21,7 +21,7 @@ use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::theme::typography;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Menu, MenuButton, Segmented, Switch, Tip, tip};
+use kentos_ui::widget::{Menu, MenuButton, Segmented, Switch, Tip, focus_ring, tip};
 use serde_json::{Value, json};
 
 use super::Event;
@@ -271,7 +271,7 @@ fn number<'a>(def: &'a ParamDef, unit: &'a str, env: &Env<'a, '_>) -> Element<'a
         .font(typography::mono())
         .align_x(Alignment::End)
         .width(Length::Fixed(typography::scaled(120.0)));
-    let mut line = row![field].spacing(8).align_y(Center);
+    let mut line = row![focus_ring(field)].spacing(8).align_y(Center);
     if !unit.is_empty() {
         line = line.push(label::caption(unit).style(style::text::muted));
     }
@@ -292,12 +292,14 @@ fn text<'a>(
         .on_input(move |t| ev(Event::Text(name.clone(), t)));
     // A one or two letter field is short and centred (the web's `pfield__text--short`).
     if max_length.is_some_and(|m| m <= 2) {
-        field
-            .align_x(Alignment::Center)
-            .width(Length::Fixed(typography::scaled(64.0)))
-            .into()
+        focus_ring(
+            field
+                .align_x(Alignment::Center)
+                .width(Length::Fixed(typography::scaled(64.0))),
+        )
+        .into()
     } else {
-        field.width(Fill).into()
+        focus_ring(field.width(Fill)).into()
     }
 }
 
@@ -420,7 +422,10 @@ fn layer<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, Message> {
     let field = input("Yeni katmanın adı", &new_name, false, ev)
         .on_input(move |t| ev(Event::LayerName(name.clone(), t)))
         .width(Fill);
-    column![list, field].spacing(8).width(Fill).into()
+    column![list, focus_ring(field)]
+        .spacing(8)
+        .width(Fill)
+        .into()
 }
 
 fn point_field<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, Message> {
@@ -519,9 +524,11 @@ fn field<'a>(
     let combo: Element<'a, Message> = if allow_new {
         let name = def.name.clone();
         row![
-            input("Alan adı", &value, invalid, ev)
-                .on_input(move |t| ev(Event::Text(name.clone(), t)))
-                .width(Fill),
+            focus_ring(
+                input("Alan adı", &value, invalid, ev)
+                    .on_input(move |t| ev(Event::Text(name.clone(), t)))
+                    .width(Fill)
+            ),
             open
         ]
         .spacing(2)
@@ -589,7 +596,7 @@ fn expression<'a>(
         .font(typography::mono())
         .width(Fill);
     // İfade oluşturucu on this field's text (expression/, DESIGN.md §7.16).
-    let mut line = row![line].spacing(6).align_y(Center);
+    let mut line = row![focus_ring(line)].spacing(6).align_y(Center);
     if env.builder {
         line = line.push(tip(
             button(icon(crate::icons::from_web(Some("expression"))).size(16.0))

@@ -97,6 +97,8 @@
     "user.accent": { "desktop": "implemented", "where": "ayarlar.json appearance.accent: iki platformun ortak anahtarı, on hazır renk ya da #rrggbb (Görünüm sekmesi, ADR 0051, 0126)" },
     "user.textSize": { "desktop": "implemented", "where": "ayarlar.json appearance.textSize: iki platformun ortak anahtarı, piksel (Görünüm sekmesi, ADR 0051, 0126)" },
     "user.theme": { "desktop": "implemented", "where": "ayarlar.json appearance.theme: iki platformun ortak anahtarı, dört tema (Görünüm sekmesi, ADR 0051, 0126)" },
+    "user.corners": { "desktop": "implemented", "where": "ayarlar.json appearance.corners: iki platformun ortak anahtarı; KentOS UI theme::shape (Uygulama ayarları → Görünüm → Biçim, ADR 0127)" },
+    "user.shadows": { "desktop": "implemented", "where": "ayarlar.json appearance.shadows: iki platformun ortak anahtarı; KentOS UI theme::shape (Uygulama ayarları → Görünüm → Biçim, ADR 0127)" },
     "user.uiFont": { "desktop": "implemented", "where": "ayarlar.json appearance.uiFont: iki platformun ortak anahtarı, web'in yedi yüzü aynı kimliklerle (Görünüm sekmesi, ADR 0051, 0126; crates/ui/assets/fonts)" },
     "project.angleUnit": { "desktop": "implemented", "where": "Proje ayarları (apps/desktop/src/project/settings.rs), .kcad'de" },
     "project.areaDecimals": { "desktop": "implemented", "where": "Proje ayarları (apps/desktop/src/project/settings.rs), .kcad'de" },

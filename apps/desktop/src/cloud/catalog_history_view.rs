@@ -57,7 +57,7 @@ fn frame<'a>(body: impl Into<Element<'a, Message>>) -> Element<'a, Message> {
                 border: Border {
                     color: t.border,
                     width: 1.0,
-                    radius: 6.0.into(),
+                    radius: kentos_ui::theme::shape::radius(6.0).into(),
                 },
                 ..container::Style::default()
             }
@@ -328,6 +328,7 @@ impl App {
                     .size(typography::body())
                     .padding([5, 8])
                     .style(style::field::input);
+                let name = kentos_ui::widget::focus_ring(name);
                 let note = text_editor(&f.note)
                     .placeholder("İsteğe bağlı: neden, kime, hangi aşama")
                     .on_action(|a| cloud(Event::HistoryNote(a)))
@@ -413,6 +414,7 @@ impl App {
                     .size(typography::body())
                     .padding([5, 8])
                     .style(style::field::input);
+                let name = kentos_ui::widget::focus_ring(name);
                 let place: Element<'_, Message> = if f.places.len() < 2 {
                     container(
                         label::body(

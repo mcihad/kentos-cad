@@ -255,7 +255,7 @@ pub fn shape_list<'a>(ed: &'a SvgEditor) -> Element<'a, Message> {
                 container::Style {
                     background: chosen.then(|| iced::Background::Color(tk.selection())),
                     border: iced::Border {
-                        radius: 3.0.into(),
+                        radius: kentos_ui::theme::shape::radius(3.0).into(),
                         ..iced::Border::default()
                     },
                     ..container::Style::default()

@@ -781,6 +781,7 @@ impl App {
                 .padding([5, 8])
                 .size(kentos_ui::theme::typography::body())
                 .style(style::field::input);
+            let name = kentos_ui::widget::focus_ring(name);
             parts = parts.push(
                 container(words::field(
                     "Yeni katmanın adı",

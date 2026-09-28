@@ -574,7 +574,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Bar<'a, Messa
                         border: Border {
                             color: t.border.scale_alpha(alpha),
                             width: 1.0,
-                            radius: 6.0.into(),
+                            radius: crate::theme::shape::radius(6.0).into(),
                         },
                         shadow: Shadow {
                             color: t.shadow().scale_alpha(alpha),
@@ -629,7 +629,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Bar<'a, Messa
                             Quad {
                                 bounds,
                                 border: Border {
-                                    radius: 4.0.into(),
+                                    radius: crate::theme::shape::radius(4.0).into(),
                                     ..Border::default()
                                 },
                                 ..Quad::default()

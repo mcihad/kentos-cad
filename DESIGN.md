@@ -209,9 +209,11 @@ Bütün boyutlar `--ui-scale` ile çarpılır. **Uygulama ayarları → Görün�
 
 Dok içine yerleşik paneller köşesizdir (0).
 
+**Uygulama ayarları → Görünüm → Biçim → Köşeler** (`appearance.corners`; iki platformda aynı ayar, [ADR 0127](docs/adr/0127-interface-finish.md)) kademeleri birlikte değiştirir: Keskin (dörtte bir, en çok 2 px; klasik CAD programları gibi), Yumuşak (varsayılan, tablodaki değerler), Yuvarlak (1,6 katı). Haplar ve daireler değişmez. Masaüstü aynı kademeleri KentOS UI'ın `theme::shape`'iyle uygular.
+
 ### 5.4 Gölge
 
-Yalnızca **yüzen** öğeler gölge alır: araç kutusu (`--shadow-float`); menü, ipucu ve pencere (`--shadow-pop`). Paneller ve kartlar gölgesizdir; ayrım kenarlıkla yapılır.
+Yalnızca **yüzen** öğeler gölge alır: araç kutusu (`--shadow-float`); menü, ipucu ve pencere (`--shadow-pop`). Paneller ve kartlar gölgesizdir; ayrım kenarlıkla yapılır. **Görünüm → Biçim → Gölgeler** (`appearance.shadows`): Kapalı, Hafif (varsayılan), Belirgin; yerleşik paneller her seçenekte düzdür.
 
 Tek istisna şeridin gölgesidir (§7.3.1): şeridin altında yalnız çizim alanına düşen hafif bir gölge (`--shadow-bar`) şeridi çizimin üstünde duran bir yüzey gibi ayırır. Yandaki paneller şeritle aynı düzlemdedir, gölge almaz. Koyu temada gölge daha yoğundur, çünkü koyu zeminde az görünür.
 

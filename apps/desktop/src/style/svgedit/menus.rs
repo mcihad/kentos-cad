@@ -67,7 +67,7 @@ fn menu_button<'a>(
         border: iced::Border {
             color: Tokens::of(t).border,
             width: 1.0,
-            radius: 4.0.into(),
+            radius: kentos_ui::theme::shape::radius(4.0).into(),
         },
         ..container::Style::default()
     });

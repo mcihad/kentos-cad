@@ -142,7 +142,7 @@ impl App {
                             .style(|theme: &Theme| container::Style {
                                 background: Some(Background::Color(Tokens::of(theme).selection())),
                                 border: Border {
-                                    radius: 2.0.into(),
+                                    radius: kentos_ui::theme::shape::radius(2.0).into(),
                                     ..Border::default()
                                 },
                                 ..container::Style::default()

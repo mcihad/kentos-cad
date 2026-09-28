@@ -921,7 +921,9 @@ fn input_row<'a, Message: Clone + 'a>(
                 let t = Tokens::of(theme);
                 container::Style {
                     text_color: Some(t.text),
-                    border: border::rounded(3.0).width(1.0).color(t.border),
+                    border: border::rounded(crate::theme::shape::radius(3.0))
+                        .width(1.0)
+                        .color(t.border),
                     ..container::Style::default()
                 }
             });

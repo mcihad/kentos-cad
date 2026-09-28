@@ -305,6 +305,7 @@ impl App {
             .size(typography::body())
             .width(260)
             .style(style::field::input);
+        let name = kentos_ui::widget::focus_ring(name);
         let font = Select::new(
             FONTS.iter().map(|(_, name)| Choice::new(*name)),
             FONTS.iter().position(|(f, _)| {

@@ -67,7 +67,7 @@ use iced::{
 use crate::icon::{Icon, icon};
 use crate::label;
 use crate::style;
-use crate::style::button::RADIUS;
+use crate::style::button::radius;
 use crate::theme::{Tokens, typography};
 use crate::widget::context_menu::{Menu, MenuButton};
 use crate::widget::tabs::{self, Look};
@@ -2933,7 +2933,7 @@ where
                         border: Border {
                             color: t.border,
                             width: 1.0,
-                            radius: RADIUS.into(),
+                            radius: radius().into(),
                         },
                         shadow: Shadow {
                             color: t.shadow(),
@@ -2985,7 +2985,7 @@ where
                             border: Border {
                                 color: t.accent,
                                 width: 1.0,
-                                radius: 2.0.into(),
+                                radius: crate::theme::shape::radius(2.0).into(),
                             },
                             ..Quad::default()
                         },
@@ -3406,7 +3406,7 @@ where
                     renderer.fill_quad(
                         Quad {
                             bounds: tabs::close_area(rect),
-                            border: border::rounded(3.0),
+                            border: border::rounded(crate::theme::shape::radius(3.0)),
                             ..Quad::default()
                         },
                         Background::Color(t.layer(0.12)),
@@ -3434,7 +3434,7 @@ where
                 renderer.fill_quad(
                     Quad {
                         bounds: (square + origin).shrink(4.0),
-                        border: border::rounded(3.0),
+                        border: border::rounded(crate::theme::shape::radius(3.0)),
                         ..Quad::default()
                     },
                     Background::Color(t.layer(0.08)),
@@ -3527,7 +3527,7 @@ where
                 border: Border {
                     color: t.accent,
                     width: 1.0,
-                    radius: RADIUS.into(),
+                    radius: radius().into(),
                 },
                 shadow: Shadow {
                     color: t.shadow(),

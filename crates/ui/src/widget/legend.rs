@@ -121,7 +121,7 @@ fn symbol<'a, Message: 'a>(symbol: Symbol, muted: bool) -> Element<'a, Message> 
             Border {
                 color: stroke.scale_alpha(alpha),
                 width: 1.5,
-                radius: 2.0.into(),
+                radius: crate::theme::shape::radius(2.0).into(),
             },
         )
         .into(),
@@ -130,7 +130,7 @@ fn symbol<'a, Message: 'a>(symbol: Symbol, muted: bool) -> Element<'a, Message> 
             (side * 0.6).round(),
             color.scale_alpha(alpha),
             Border {
-                radius: 2.0.into(),
+                radius: crate::theme::shape::radius(2.0).into(),
                 ..Border::default()
             },
         )
@@ -407,7 +407,7 @@ pub fn frame<'a, Message: 'a>(legend: impl Into<Element<'a, Message>>) -> Elemen
                 border: Border {
                     color: t.border,
                     width: 1.0,
-                    radius: 4.0.into(),
+                    radius: crate::theme::shape::radius(4.0).into(),
                 },
                 ..container::Style::default()
             }

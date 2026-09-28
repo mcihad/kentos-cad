@@ -74,6 +74,8 @@ mod start;
 mod style;
 mod text_field;
 mod traces;
+#[cfg(test)]
+mod ui_screens;
 mod tracking;
 mod view;
 mod view_commands;

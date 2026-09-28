@@ -58,7 +58,7 @@ use iced::advanced::widget::{Operation, Tree, Widget, tree};
 use iced::advanced::{Clipboard, Shell};
 use iced::alignment::Horizontal;
 use iced::keyboard::{self, key};
-use iced::widget::text::{Fragment, IntoFragment, Wrapping};
+use iced::widget::text::{Fragment, IntoFragment};
 use iced::widget::{
     Column as Rows, Row, button, container, rule, scrollable, space, text_input, tooltip,
 };
@@ -72,6 +72,7 @@ use crate::label;
 use crate::style;
 use crate::theme::{Tokens, typography};
 use crate::widget::context_menu::{ContextMenu, Menu};
+use crate::widget::elided::Elided;
 use crate::widget::table::{self, MenuBuilder};
 use crate::widget::virtual_list::VirtualList;
 use crate::widget::{Tip, tip};
@@ -530,20 +531,21 @@ fn node_row<'a, Message: Clone + 'a>(
     tree = match editor {
         Some(editor) => tree.push(container(editor).width(Fill)),
         None => {
-            let name = if heading {
-                label::caption(name).font(typography::ui_strong())
+            // One line: a long name ends in “…” before the row's toggles.
+            let (size, font) = if heading {
+                (typography::caption(), typography::ui_strong())
             } else if active {
-                label::strong(name)
+                (typography::body(), typography::ui_strong())
             } else {
-                label::body(name)
-            }
-            .wrapping(Wrapping::None);
+                (typography::body(), typography::ui())
+            };
+            let name = Elided::new(name).size(size).font(font).width(Fill);
             let name = if muted || heading {
                 name.style(style::text::muted)
             } else {
                 name
             };
-            let name: Element<'a, Message> = container(name).width(Fill).clip(true).into();
+            let name: Element<'a, Message> = container(name).width(Fill).into();
 
             tree.push(match name_tip {
                 Some(tip) => crate::widget::tip(name, tip, iced::widget::tooltip::Position::Bottom),
@@ -1197,7 +1199,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Reorder<'a, M
                     border: Border {
                         color: t.accent,
                         width: 1.0,
-                        radius: 2.0.into(),
+                        radius: crate::theme::shape::radius(2.0).into(),
                     },
                     ..Quad::default()
                 },
@@ -1233,7 +1235,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Reorder<'a, M
                         border: Border {
                             color: t.accent,
                             width: 2.0,
-                            radius: 3.0.into(),
+                            radius: crate::theme::shape::radius(3.0).into(),
                         },
                         ..Quad::default()
                     },

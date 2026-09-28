@@ -115,7 +115,7 @@ impl App {
                 border: Border {
                     color: Tokens::of(t).border,
                     width: 1.0,
-                    radius: 4.0.into(),
+                    radius: kentos_ui::theme::shape::radius(4.0).into(),
                 },
                 ..container::Style::default()
             });
@@ -192,7 +192,7 @@ impl App {
                 border: Border {
                     color: k.border,
                     width: 1.0,
-                    radius: 4.0.into(),
+                    radius: kentos_ui::theme::shape::radius(4.0).into(),
                 },
                 ..container::Style::default()
             }

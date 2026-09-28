@@ -554,6 +554,66 @@
       "apply": "live"
     },
     {
+      "key": "appearance.corners",
+      "type": "enum",
+      "default": "soft",
+      "choices": [
+        {
+          "value": "sharp",
+          "label": "Keskin"
+        },
+        {
+          "value": "soft",
+          "label": "Yumuşak"
+        },
+        {
+          "value": "round",
+          "label": "Yuvarlak"
+        }
+      ],
+      "scope": "user",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "appearance",
+      "title": "Köşeler",
+      "description": "Düğmelerin, alanların, menülerin ve pencerelerin köşeleri: klasik CAD gibi keskin, yumuşak ya da yuvarlak.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "appearance.shadows",
+      "type": "enum",
+      "default": "soft",
+      "choices": [
+        {
+          "value": "off",
+          "label": "Kapalı"
+        },
+        {
+          "value": "soft",
+          "label": "Hafif"
+        },
+        {
+          "value": "strong",
+          "label": "Belirgin"
+        }
+      ],
+      "scope": "user",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "appearance",
+      "title": "Gölgeler",
+      "description": "Menülerin, açılır listelerin, ipuçlarının ve pencerelerin gölgesi; yerleşik paneller her zaman düzdür.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
       "key": "appearance.drawingBackground",
       "type": "enum",
       "default": "theme",

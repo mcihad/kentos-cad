@@ -57,7 +57,7 @@ pub fn anchor_picker<'a>(
                         border: Border {
                             color: if lit { tk.accent } else { tk.border },
                             width: 1.0,
-                            radius: 2.0.into(),
+                            radius: kentos_ui::theme::shape::radius(2.0).into(),
                         },
                         ..container::Style::default()
                     }

@@ -1,4 +1,4 @@
-import type { AccentId, ThemeId, UiFontId } from './appearance';
+import type { AccentId, CornersId, ShadowsId, ThemeId, UiFontId } from './appearance';
 import type { DrawingFont, Workspace } from '../model/projectSettings';
 import { Signal } from '../core/signal';
 import { settingDefault } from '../core/settings/schema';
@@ -155,6 +155,10 @@ export interface PreferencesData {
   theme: ThemeId;
   /** The interface's text size in pixels; every size of the chrome scales with it. */
   textSize: number;
+  /** Every radius together (docs/adr/0127). */
+  corners: CornersId;
+  /** The shadow of what floats: menus, pop-ups, dialogs. */
+  shadows: ShadowsId;
   /** Accent colour of the interface and the drawing's selection (app/appearance.ts). */
   accent: AccentId;
   /** Interface typeface, bundled with the app (app/appearance.ts). */
@@ -214,6 +218,8 @@ export const PREF_KEYS = {
   crosshair: 'appearance.crosshair',
   theme: 'appearance.theme',
   textSize: 'appearance.textSize',
+  corners: 'appearance.corners',
+  shadows: 'appearance.shadows',
   accent: 'appearance.accent',
   uiFont: 'appearance.uiFont',
   rendererPreference: 'graphics.backend',

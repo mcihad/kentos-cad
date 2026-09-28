@@ -452,6 +452,7 @@ impl App {
             .on_submit(cloud(Event::RenameSubmit))
             .padding([5, 8])
             .style(style::field::input);
+        let field = kentos_ui::widget::focus_ring(field);
         let mut form = Form::new()
             .label_width(80.0)
             .field(forms::rename::NAME, field)

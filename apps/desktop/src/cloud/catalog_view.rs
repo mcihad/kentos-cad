@@ -306,7 +306,7 @@ impl App {
                             t.text
                         },
                         border: Border {
-                            radius: 6.0.into(),
+                            radius: kentos_ui::theme::shape::radius(6.0).into(),
                             ..Border::default()
                         },
                         ..button::Style::default()

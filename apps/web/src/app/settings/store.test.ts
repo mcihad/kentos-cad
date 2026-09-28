@@ -83,6 +83,8 @@ const MIGRATED: PreferencesData = {
   // The older five sizes are pixels now (docs/adr/0126); the theme was never here.
   theme: 'dark',
   textSize: 14,
+  corners: 'soft',
+  shadows: 'soft',
   accent: 'teal',
   uiFont: 'inter',
   rendererPreference: 'webgpu',

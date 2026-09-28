@@ -122,7 +122,9 @@ fn kbd<'a>(key: String) -> Element<'a, Message> {
             let t = Tokens::of(theme);
             container::Style {
                 background: Some(t.surface_alt.into()),
-                border: iced::border::rounded(3.0).width(1.0).color(t.border),
+                border: iced::border::rounded(kentos_ui::theme::shape::radius(3.0))
+                    .width(1.0)
+                    .color(t.border),
                 text_color: Some(t.text),
                 ..container::Style::default()
             }
@@ -220,6 +222,7 @@ impl App {
             .size(typography::body())
             .padding([5, 8])
             .style(style::field::input);
+        let search = kentos_ui::widget::focus_ring(search);
         overlay::modal(
             Dialog::new("Fare ve klavye kısayolları")
                 .hint("F1")

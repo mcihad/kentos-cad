@@ -647,7 +647,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Radial<'a, Me
                                 Size::new(8.0, 8.0),
                             ),
                             border: Border {
-                                radius: 4.0.into(),
+                                radius: crate::theme::shape::radius(4.0).into(),
                                 ..Border::default()
                             },
                             ..Quad::default()

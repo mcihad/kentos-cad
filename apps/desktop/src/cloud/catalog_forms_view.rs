@@ -38,6 +38,7 @@ fn metadata_window(f: &MetadataForm) -> Dialog<'_, Message> {
         .size(typography::body())
         .padding([5, 8])
         .style(style::field::input);
+    let name = kentos_ui::widget::focus_ring(name);
     let kind = Select::new(
         PROJECT_TYPES.map(|t| Choice::new(type_label(t))),
         PROJECT_TYPES.iter().position(|t| *t == f.project_type),
@@ -57,6 +58,7 @@ fn metadata_window(f: &MetadataForm) -> Dialog<'_, Message> {
         .size(typography::body())
         .padding([5, 8])
         .style(style::field::input);
+    let tags = kentos_ui::widget::focus_ring(tags);
     let mut body = column![
         labelled(metadata::NAME, name),
         labelled(fields::TYPE, kind),
@@ -109,6 +111,7 @@ fn made_window(f: &MadeForm) -> Dialog<'_, Message> {
         .size(typography::body())
         .padding([5, 8])
         .style(style::field::input);
+    let name = kentos_ui::widget::focus_ring(name);
     let mut body = column![
         label::body(lead).width(Fill),
         bullets(consequences),

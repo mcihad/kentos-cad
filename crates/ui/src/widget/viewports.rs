@@ -219,7 +219,7 @@ fn chip(theme: &Theme) -> container::Style {
         border: Border {
             color: t.border.scale_alpha(0.6),
             width: 1.0,
-            radius: 3.0.into(),
+            radius: crate::theme::shape::radius(3.0).into(),
         },
         text_color: Some(t.text),
         ..container::Style::default()

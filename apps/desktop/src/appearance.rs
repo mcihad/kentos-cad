@@ -9,6 +9,7 @@
 use iced::widget::{button, column, container, row, space, text, tooltip};
 use iced::{Border, Center, Color, Element, Fill, Font, Task, Theme};
 use kentos_ui::icon::Icon;
+use kentos_ui::theme::shape::{self, Corners, Shadows, Shape};
 use kentos_ui::theme::typography::{self, Family, Mono, Typography};
 use kentos_ui::theme::{Accent, Mode, Tokens};
 use kentos_ui::widget::ribbon::{self, Button as Tool, Group};
@@ -237,6 +238,15 @@ impl App {
         if typography != self.typography {
             self.typography = typography;
             typography::set(typography);
+        }
+        // So are the corners and the shadows (docs/adr/0127).
+        let shape = Shape {
+            corners: Corners::parse(&word("appearance.corners")).unwrap_or_default(),
+            shadows: Shadows::parse(&word("appearance.shadows")).unwrap_or_default(),
+        };
+        if shape != self.shape {
+            self.shape = shape;
+            shape::set(shape);
         }
     }
 
@@ -524,7 +534,7 @@ fn theme_tile(mode: Mode, accent: Accent, selected: bool) -> Element<'static, Me
             border: Border {
                 color: tokens.border,
                 width: 1.0,
-                radius: 2.0.into(),
+                radius: kentos_ui::theme::shape::radius(2.0).into(),
             },
             ..container::Style::default()
         });
@@ -592,7 +602,7 @@ fn backdrop_tile(backdrop: Backdrop, selected: bool) -> Element<'static, Message
             border: Border {
                 color: Tokens::of(theme).border,
                 width: 1.0,
-                radius: 2.0.into(),
+                radius: kentos_ui::theme::shape::radius(2.0).into(),
             },
             ..container::Style::default()
         });

@@ -255,7 +255,7 @@ fn option(theme: &Theme, status: Status) -> Style {
         },
         text_color: t.text,
         border: Border {
-            radius: 3.0.into(),
+            radius: crate::theme::shape::radius(3.0).into(),
             ..Border::default()
         },
         shadow: iced::Shadow::default(),

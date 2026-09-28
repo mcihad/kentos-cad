@@ -1270,7 +1270,7 @@ fn document_title(name: &str, dirty: bool) -> Element<'static, Message> {
         .height(6)
         .style(|theme: &iced::Theme| container::Style {
             background: Some(kentos_ui::theme::Tokens::of(theme).accent.into()),
-            border: iced::border::rounded(3),
+            border: iced::border::rounded(kentos_ui::theme::shape::radius(3.0)),
             ..container::Style::default()
         });
     row![

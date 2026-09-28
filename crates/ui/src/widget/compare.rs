@@ -564,7 +564,7 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Compare<'a, Message> 
                         Quad {
                             bounds: tag,
                             border: Border {
-                                radius: 3.0.into(),
+                                radius: crate::theme::shape::radius(3.0).into(),
                                 ..Border::default()
                             },
                             ..Quad::default()

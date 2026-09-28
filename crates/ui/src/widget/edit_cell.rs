@@ -35,7 +35,7 @@ use iced::{
 };
 
 use crate::style;
-use crate::style::button::RADIUS;
+use crate::style::button::radius;
 use crate::theme::{Tokens, typography};
 use crate::widget::dropdown::propagate;
 
@@ -328,7 +328,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for EditCell<'a, 
                     border: Border {
                         color: edge,
                         width: 1.0,
-                        radius: RADIUS.into(),
+                        radius: radius().into(),
                     },
                     ..Quad::default()
                 },

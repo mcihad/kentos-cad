@@ -249,7 +249,7 @@ impl<Message> overlay::Overlay<Message, Theme, Renderer> for Badge {
                 border: Border {
                     color: t.border.scale_alpha(alpha),
                     width: 1.0,
-                    radius: 3.0.into(),
+                    radius: crate::theme::shape::radius(3.0).into(),
                 },
                 shadow: Shadow {
                     color: t.shadow().scale_alpha(alpha),

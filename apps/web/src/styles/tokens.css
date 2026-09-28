@@ -182,3 +182,34 @@
   --backdrop: rgba(24, 32, 42, 0.32);
   color-scheme: light;
 }
+
+/*
+ * Köşeler and Gölgeler (Uygulama ayarları → Görünüm → Biçim; docs/adr/0127),
+ * the same settings as the desktop's: every radius together (sharp as the
+ * classic CAD programs, round), and the shadow of what floats (menus,
+ * pop-ups, dialogs); docked panels stay flat whatever is chosen.
+ */
+:root[data-corners='sharp'] {
+  --r-xs: 0.5px;
+  --r-sm: 1px;
+  --r-md: 1.5px;
+  --r-lg: 2px;
+}
+:root[data-corners='round'] {
+  --r-xs: 3.2px;
+  --r-sm: 6.4px;
+  --r-md: 9.6px;
+  --r-lg: 16px;
+}
+:root[data-shadows='off'] {
+  --shadow-float: none;
+  --shadow-pop: none;
+}
+:root:not([data-theme='light'])[data-shadows='strong'] {
+  --shadow-float: 0 16px 40px rgba(3, 6, 10, 0.62), 0 3px 8px rgba(3, 6, 10, 0.45);
+  --shadow-pop: 0 18px 46px rgba(3, 6, 10, 0.68), 0 3px 10px rgba(3, 6, 10, 0.5);
+}
+:root[data-theme='light'][data-shadows='strong'] {
+  --shadow-float: 0 14px 34px rgba(20, 30, 42, 0.24), 0 2px 6px rgba(20, 30, 42, 0.18);
+  --shadow-pop: 0 16px 40px rgba(20, 30, 42, 0.26), 0 2px 6px rgba(20, 30, 42, 0.2);
+}

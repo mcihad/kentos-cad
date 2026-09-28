@@ -211,7 +211,8 @@ impl<'a, Message: Clone + 'a> From<SearchBox<'a, Message>> for Element<'a, Messa
                 .style(style::container::keycap)
                 .into()
         });
-        Element::new(Search {
+        // A halo round the box while its field has the keyboard.
+        crate::widget::focus_ring(Element::new(Search {
             glass: glass.into(),
             input: input.into(),
             hint,
@@ -228,7 +229,8 @@ impl<'a, Message: Clone + 'a> From<SearchBox<'a, Message>> for Element<'a, Messa
             height: b.height,
             room: b.room,
             list: None,
-        })
+        }))
+        .into()
     }
 }
 
@@ -628,7 +630,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Search<'a, Me
                 renderer,
                 renderer::Quad {
                     bounds,
-                    border: border::rounded(style::button::RADIUS)
+                    border: border::rounded(style::button::radius())
                         .color(edge)
                         .width(1.0),
                     ..renderer::Quad::default()
@@ -640,7 +642,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Search<'a, Me
                 renderer,
                 renderer::Quad {
                     bounds,
-                    border: border::rounded(style::button::RADIUS),
+                    border: border::rounded(style::button::radius()),
                     ..renderer::Quad::default()
                 },
                 Background::Color(t.surface_hover),
@@ -827,7 +829,7 @@ fn result_row<'a, Message: 'a>(found: &Found<'a>, active: bool) -> Element<'a, M
                         t.surface_hover.into()
                     }
                 }),
-                border: border::rounded(style::button::RADIUS),
+                border: border::rounded(style::button::radius()),
                 ..container::Style::default()
             }
         })

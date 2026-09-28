@@ -102,6 +102,8 @@ impl Section {
                 "appearance.uiFont",
                 "appearance.monoFont",
                 "appearance.textSize",
+                "appearance.corners",
+                "appearance.shadows",
                 "appearance.crosshair",
                 "appearance.drawingBackground",
                 "drafting.cursorInput",
@@ -342,6 +344,17 @@ impl App {
                 f.pixels("appearance.textSize", 13.0),
             )
             .help(Fields::help("appearance.textSize"))
+            .section("Biçim")
+            .field(
+                Fields::title("appearance.corners"),
+                choices("appearance.corners", &f.value("appearance.corners")),
+            )
+            .help(Fields::help("appearance.corners"))
+            .field(
+                Fields::title("appearance.shadows"),
+                choices("appearance.shadows", &f.value("appearance.shadows")),
+            )
+            .help(Fields::help("appearance.shadows"))
             .section("İmleç ve fare yardımcıları")
             .field(
                 Fields::title("appearance.crosshair"),

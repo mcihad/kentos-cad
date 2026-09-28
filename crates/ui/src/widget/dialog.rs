@@ -151,7 +151,7 @@ impl<'a, Message: 'a> From<Dialog<'a, Message>> for Element<'a, Message> {
         let boxed = container(content)
             .width(typography::scaled(dialog.width))
             .padding(18)
-            .style(style::container::popover);
+            .style(style::container::dialog);
 
         match dialog.max_height {
             Some(height) => boxed.max_height(typography::scaled(height)).into(),
@@ -291,7 +291,7 @@ impl<'a, Message: Clone + 'a> From<Confirm<'a, Message>> for Element<'a, Message
         container(column![row![symbol, text].spacing(14), actions].spacing(18))
             .width(typography::scaled(420.0))
             .padding(18)
-            .style(style::container::popover)
+            .style(style::container::dialog)
             .into()
     }
 }

@@ -289,6 +289,32 @@ fn settings() -> Vec<SettingDescriptor> {
                 "Yazı boyutu",
                 "Menüler, paneller ve komut satırı; arayüz onunla büyür. Çizim etiketleri etkilenmez.",
             ),
+        // The shape of the chrome (docs/adr/0127): every radius together, and
+        // the shadow of what floats; docked panels stay flat.
+        choice(
+            "appearance.corners",
+            "soft",
+            &[
+                ("sharp", "Keskin"),
+                ("soft", "Yumuşak"),
+                ("round", "Yuvarlak"),
+            ],
+        )
+        .hosts(&[Web, Desktop])
+        .text(
+            "Köşeler",
+            "Düğmelerin, alanların, menülerin ve pencerelerin köşeleri: klasik CAD gibi keskin, yumuşak ya da yuvarlak.",
+        ),
+        choice(
+            "appearance.shadows",
+            "soft",
+            &[("off", "Kapalı"), ("soft", "Hafif"), ("strong", "Belirgin")],
+        )
+        .hosts(&[Web, Desktop])
+        .text(
+            "Gölgeler",
+            "Menülerin, açılır listelerin, ipuçlarının ve pencerelerin gölgesi; yerleşik paneller her zaman düzdür.",
+        ),
         choice(
             "appearance.drawingBackground",
             "theme",

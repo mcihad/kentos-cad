@@ -507,7 +507,7 @@ fn solid(color: Color) -> impl Fn(&Theme, button::Status) -> button::Style {
                     t.border
                 },
                 width: 1.0,
-                radius: 2.0.into(),
+                radius: crate::theme::shape::radius(2.0).into(),
             },
             ..button::Style::default()
         }
@@ -1154,7 +1154,7 @@ pub fn preview<'a, Message: 'a>(ramp: &Ramp, width: f32, height: f32) -> Element
             border: Border {
                 color: Tokens::of(theme).border,
                 width: 1.0,
-                radius: 2.0.into(),
+                radius: crate::theme::shape::radius(2.0).into(),
             },
             ..container::Style::default()
         })
@@ -1475,7 +1475,7 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Bar<'a, Message> {
                 border: Border {
                     color: t.border,
                     width: 1.0,
-                    radius: 3.0.into(),
+                    radius: crate::theme::shape::radius(3.0).into(),
                 },
                 ..Quad::default()
             },
@@ -1512,7 +1512,7 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Bar<'a, Message> {
                     border: Border {
                         color: if selected { t.accent } else { t.muted }.scale_alpha(alpha),
                         width: if selected { 2.0 } else { 1.0 },
-                        radius: 2.0.into(),
+                        radius: crate::theme::shape::radius(2.0).into(),
                     },
                     ..Quad::default()
                 },

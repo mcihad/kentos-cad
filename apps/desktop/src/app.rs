@@ -510,6 +510,8 @@ pub struct App {
     pub backdrop: crate::appearance::Backdrop,
     /// The interface's typefaces and text size as last applied (appearance.rs).
     pub typography: kentos_ui::theme::typography::Typography,
+    /// The interface's corners and shadows as last applied (appearance.rs, docs/adr/0127).
+    pub shape: kentos_ui::theme::shape::Shape,
     /// The window fills the screen (`view.fullscreen`, view_commands.rs).
     pub fullscreen: bool,
     /// The side panels' layout while F4 hides them, put back as it was.
@@ -645,6 +647,7 @@ impl App {
             opening_recent: None,
             backdrop: crate::appearance::Backdrop::default(),
             typography: kentos_ui::theme::typography::current(),
+            shape: kentos_ui::theme::shape::current(),
             fullscreen: false,
             hidden_docks: None,
             server_checking: false,

@@ -122,7 +122,9 @@ impl App {
                     let t = Tokens::of(theme);
                     container::Style {
                         text_color: Some(t.text),
-                        border: iced::border::rounded(3.0).width(1.0).color(t.border),
+                        border: iced::border::rounded(kentos_ui::theme::shape::radius(3.0))
+                            .width(1.0)
+                            .color(t.border),
                         ..container::Style::default()
                     }
                 });

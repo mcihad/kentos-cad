@@ -40,6 +40,7 @@ use crate::label;
 use crate::style;
 use crate::theme::typography;
 use crate::widget::dropdown::{Dropdown, Reaction};
+use crate::widget::elided::Elided;
 use crate::widget::swatch;
 
 // Ölçüler 12 piksellik gövde metninde tasarlandı ve yazı boyutuyla büyür.
@@ -250,6 +251,8 @@ impl<'a, Message: Clone + 'a> From<Select<'a, Message>> for Element<'a, Message>
             searchable.unwrap_or(choices.iter().filter(|c| !c.header).count() >= SEARCH_FROM);
         let search_id = widget::Id::unique();
 
+        // One line whatever the text: a long one ends in “…” (the web's
+        // `.dropdown__text`), so every box has the same height.
         let current = selected.and_then(|index| choices.get(index));
         let shown: Element<'a, Message> = match current {
             Some(choice) => {
@@ -260,9 +263,21 @@ impl<'a, Message: Clone + 'a> From<Select<'a, Message>> for Element<'a, Message>
                 }
 
                 let text = choice.shown.clone().unwrap_or_else(|| choice.label.clone());
-                shown.push(label::body(text).width(Fill)).into()
+                shown
+                    .push(
+                        Elided::new(text)
+                            .size(typography::body())
+                            .font(typography::ui())
+                            .width(Fill),
+                    )
+                    .into()
             }
-            None => label::muted(placeholder).width(Fill).into(),
+            None => Elided::new(placeholder)
+                .size(typography::body())
+                .font(typography::ui())
+                .style(style::text::muted)
+                .width(Fill)
+                .into(),
         };
 
         let anchor_style: fn(&iced::Theme) -> container::Style = if borderless {
@@ -401,7 +416,11 @@ fn panel<'a>(
             line = line.push(icon(glyph).size(14.0));
         }
 
-        let name = label::body(choice.label.clone()).width(Fill);
+        // One line: a long name ends in “…”, the row keeps its height.
+        let name = Elided::new(choice.label.clone())
+            .size(typography::body())
+            .font(typography::ui())
+            .width(Fill);
         line = line.push(if choice.disabled {
             name.style(style::text::disabled)
         } else {
@@ -418,7 +437,7 @@ fn panel<'a>(
             .width(Fill)
             .height(typography::scaled(ROW_HEIGHT))
             .padding([0, 6])
-            .style(style::button::list_item(is_selected))
+            .style(style::button::menu_row)
             .into()
     }))
     .spacing(1);
@@ -474,7 +493,7 @@ fn command<'a>(glyph: Icon, text: String, event: Event) -> Element<'a, Event> {
     .width(Fill)
     .height(typography::scaled(ROW_HEIGHT))
     .padding([0, 6])
-    .style(style::button::list_item(false))
+    .style(style::button::menu_row)
     .into()
 }
 

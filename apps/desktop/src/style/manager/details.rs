@@ -82,7 +82,7 @@ pub fn source_badge<'a>(source: Source, long: bool) -> Element<'a, Message> {
             container::Style {
                 background: Some(iced::Background::Color(tone.scale_alpha(0.14))),
                 text_color: Some(tone),
-                border: iced::border::rounded(8.0),
+                border: iced::border::rounded(kentos_ui::theme::shape::radius(8.0)),
                 ..container::Style::default()
             }
         })

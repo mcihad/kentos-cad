@@ -702,7 +702,7 @@ pub(crate) fn flashed<'a, Message: 'a>(
                 border: iced::Border {
                     color: crate::theme::Tokens::of(theme).accent,
                     width: 2.0,
-                    radius: crate::style::button::RADIUS.into(),
+                    radius: crate::style::button::radius().into(),
                 },
                 ..container::Style::default()
             }),

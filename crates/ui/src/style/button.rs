@@ -5,8 +5,11 @@ use iced::{Background, Border, Color, Theme, border};
 
 use crate::theme::Tokens;
 
-/// Bütün düğmelerin köşe yarıçapı.
-pub const RADIUS: f32 = 2.0;
+/// Düğmelerin, giriş alanlarının ve menü satırlarının köşe yarıçapı:
+/// biçimin `sm` kademesi (Görünüm → Köşeler, [`crate::theme::shape`]).
+pub fn radius() -> f32 {
+    crate::theme::shape::sm()
+}
 
 fn is_hovered(status: Status) -> bool {
     matches!(status, Status::Hovered | Status::Pressed)
@@ -41,7 +44,7 @@ pub fn flat(theme: &Theme, status: Status) -> Style {
         Border {
             color: edge,
             width: 1.0,
-            radius: RADIUS.into(),
+            radius: radius().into(),
         },
     )
 }
@@ -83,7 +86,7 @@ pub fn ribbon(state: Ribbon) -> impl Fn(&Theme, Status) -> Style {
             (Ribbon::Idle, _) => (Color::TRANSPARENT, t.muted),
         };
 
-        style(background, icon, border::rounded(RADIUS))
+        style(background, icon, border::rounded(radius()))
     }
 }
 
@@ -109,7 +112,7 @@ pub fn primary(theme: &Theme, status: Status) -> Style {
         Status::Disabled => (t.accent.scale_alpha(0.3), t.on_accent.scale_alpha(0.5)),
     };
 
-    style(background, text, border::rounded(RADIUS))
+    style(background, text, border::rounded(radius()))
 }
 
 /// Yıkıcı birincil eylem (ör. "Tümünü sil"): kırmızı zemin.
@@ -122,7 +125,7 @@ pub fn danger(theme: &Theme, status: Status) -> Style {
         Status::Disabled => (t.danger.scale_alpha(0.3), t.on_accent.scale_alpha(0.5)),
     };
 
-    style(background, text, border::rounded(RADIUS))
+    style(background, text, border::rounded(radius()))
 }
 
 /// Bir şeyi bırakan ya da silen, birincil olmayan eylem (web'in
@@ -143,7 +146,7 @@ pub fn danger_outline(theme: &Theme, status: Status) -> Style {
         Border {
             color: edge,
             width: 1.0,
-            radius: RADIUS.into(),
+            radius: radius().into(),
         },
     )
 }
@@ -161,7 +164,7 @@ pub fn navigation(selected: bool) -> impl Fn(&Theme, Status) -> Style {
             (false, _) => Color::TRANSPARENT,
         };
 
-        style(background, t.text, border::rounded(RADIUS))
+        style(background, t.text, border::rounded(radius()))
     }
 }
 
@@ -191,7 +194,7 @@ pub fn secondary(theme: &Theme, status: Status) -> Style {
         Border {
             color: t.border,
             width: 1.0,
-            radius: RADIUS.into(),
+            radius: radius().into(),
         },
     )
 }
@@ -238,7 +241,7 @@ pub fn tool(active: bool) -> impl Fn(&Theme, Status) -> Style {
             Border {
                 color: t.accent,
                 width: 1.0,
-                radius: RADIUS.into(),
+                radius: radius().into(),
             },
         )
     }
@@ -349,7 +352,7 @@ pub fn calendar(selected: bool, today: bool, tone: CellTone) -> impl Fn(&Theme, 
                     Color::TRANSPARENT
                 },
                 width: if today && !selected { 1.0 } else { 0.0 },
-                radius: 3.0.into(),
+                radius: crate::theme::shape::radius(3.0).into(),
             },
         )
     }
@@ -375,25 +378,44 @@ pub fn check(filled: bool) -> impl Fn(&Theme, Status) -> Style {
             Border {
                 color: edge,
                 width: 1.0,
-                radius: RADIUS.into(),
+                radius: radius().into(),
             },
         )
     }
 }
 
-/// Parçalı seçim düğmesi (ör. seçim yöntemi); seçili parça vurgu zeminiyle.
+/// Parçalı seçimin parçası (web'in `.seg__opt`'u): seçili parça çukur
+/// izin içinde kabarık durur (başlık zemini, belirgin kenar, hafif gölge);
+/// öbürleri sönük yazılır, üzerine gelince hafif bir katman alır.
 pub fn segment(selected: bool) -> impl Fn(&Theme, Status) -> Style {
     move |theme, status| {
         let t = Tokens::of(theme);
 
-        let (background, text) = match (selected, status) {
-            (true, _) => (t.accent, t.on_accent),
-            (false, Status::Disabled) => (t.surface_alt, t.disabled()),
-            (false, status) if is_hovered(status) => (t.surface_hover, t.text),
-            (false, _) => (t.surface_alt, t.text),
+        if selected {
+            return Style {
+                background: Some(Background::Color(t.header)),
+                text_color: t.text,
+                border: Border {
+                    color: t.border_strong(),
+                    width: 1.0,
+                    radius: radius().into(),
+                },
+                shadow: iced::Shadow {
+                    color: Color::from_rgba(0.0, 0.0, 0.0, if t.is_dark { 0.28 } else { 0.1 }),
+                    offset: iced::Vector::new(0.0, 1.0),
+                    blur_radius: 2.0,
+                },
+                snap: true,
+            };
+        }
+
+        let (background, text) = match status {
+            Status::Disabled => (Color::TRANSPARENT, t.disabled()),
+            status if is_hovered(status) => (t.layer(0.06), t.text),
+            _ => (Color::TRANSPARENT, t.muted),
         };
 
-        style(background, text, Border::default())
+        style(background, text, border::rounded(radius()))
     }
 }
 
@@ -426,7 +448,11 @@ pub fn ghost(theme: &Theme, status: Status) -> Style {
         Status::Disabled => (Color::TRANSPARENT, t.disabled()),
     };
 
-    style(background, text, border::rounded(3.0))
+    style(
+        background,
+        text,
+        border::rounded(crate::theme::shape::radius(3.0)),
+    )
 }
 
 /// Durum çubuğu anahtarı: açıkken ikonu vurgu renginde, metni tam renkte;
@@ -444,7 +470,7 @@ pub fn status_toggle(active: bool) -> impl Fn(&Theme, Status) -> Style {
         style(
             background,
             if active { t.text } else { t.muted },
-            border::rounded(3.0),
+            border::rounded(crate::theme::shape::radius(3.0)),
         )
     }
 }
@@ -466,7 +492,7 @@ pub fn keyword(theme: &Theme, status: Status) -> Style {
         Border {
             color: edge,
             width: 1.0,
-            radius: 3.0.into(),
+            radius: crate::theme::shape::radius(3.0).into(),
         },
     )
 }
@@ -490,7 +516,7 @@ pub fn swatch(selected: bool) -> impl Fn(&Theme, Status) -> Style {
             border: Border {
                 color: edge,
                 width,
-                radius: 3.0.into(),
+                radius: crate::theme::shape::radius(3.0).into(),
             },
             ..Style::default()
         }
@@ -512,7 +538,7 @@ pub fn toggle(active: bool) -> impl Fn(&Theme, Status) -> Style {
         style(
             background,
             if active { t.accent_hover } else { t.muted },
-            border::rounded(RADIUS),
+            border::rounded(radius()),
         )
     }
 }
@@ -529,13 +555,14 @@ pub fn brand(open: bool) -> impl Fn(&Theme, Status) -> Style {
                 t.accent
             },
             t.on_accent,
-            border::rounded(border::top(RADIUS)),
+            border::rounded(border::top(radius())),
         )
     }
 }
 
-/// Liste ve menü satırları; `highlighted` satır (ör. alt menüsü açık
-/// komut) vurgu zemini ve kenarıyla gösterilir.
+/// Liste satırı: seçili ya da klavyeyle gelinen satır yumuşak vurgu
+/// zemininde, üzerine gelinen hafif bir katmanla (web'in `--c-hover`'ı);
+/// kenar yok.
 pub fn list_item(highlighted: bool) -> impl Fn(&Theme, Status) -> Style {
     move |theme, status| {
         let t = Tokens::of(theme);
@@ -543,23 +570,26 @@ pub fn list_item(highlighted: bool) -> impl Fn(&Theme, Status) -> Style {
         let background = if highlighted {
             t.selection()
         } else if is_hovered(status) {
-            t.surface_hover
+            t.layer(0.06)
         } else {
             Color::TRANSPARENT
         };
 
-        style(
-            background,
-            t.text,
-            Border {
-                color: if highlighted {
-                    t.accent
-                } else {
-                    Color::TRANSPARENT
-                },
-                width: if highlighted { 1.0 } else { 0.0 },
-                radius: RADIUS.into(),
-            },
-        )
+        style(background, t.text, border::rounded(radius()))
     }
+}
+
+/// Açılır listenin ya da menünün satırı: üzerine gelinen satır yumuşak
+/// vurgu zemininde (web'in `.menu__item[data-active]`'i); geçerli değer
+/// yanındaki işaretle belli olur, zeminle değil.
+pub fn menu_row(theme: &Theme, status: Status) -> Style {
+    let t = Tokens::of(theme);
+
+    let background = if is_hovered(status) {
+        t.selection()
+    } else {
+        Color::TRANSPARENT
+    };
+
+    style(background, t.text, border::rounded(radius()))
 }

@@ -150,7 +150,9 @@ fn value_field<'a>(value: &'a str) -> Element<'a, Message> {
         container::Style {
             background: Some(t.field.into()),
             text_color: Some(t.text),
-            border: border::rounded(3).width(1).color(t.accent),
+            border: border::rounded(kentos_ui::theme::shape::radius(3.0))
+                .width(1)
+                .color(t.accent),
             ..container::Style::default()
         }
     });
@@ -165,7 +167,9 @@ fn value_field<'a>(value: &'a str) -> Element<'a, Message> {
             let t = Tokens::of(theme);
             container::Style {
                 background: Some(t.popover.into()),
-                border: border::rounded(4).width(1).color(t.accent.scale_alpha(0.6)),
+                border: border::rounded(kentos_ui::theme::shape::radius(4.0))
+                    .width(1)
+                    .color(t.accent.scale_alpha(0.6)),
                 shadow: iced::Shadow {
                     color: Color::BLACK.scale_alpha(0.3),
                     offset: iced::Vector::new(0.0, 2.0),

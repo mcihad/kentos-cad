@@ -9,6 +9,7 @@
 
 pub mod accent;
 pub mod motion;
+pub mod shape;
 pub mod tokens;
 pub mod typography;
 

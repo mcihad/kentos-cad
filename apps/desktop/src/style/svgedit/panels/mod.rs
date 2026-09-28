@@ -100,8 +100,8 @@ pub fn seg<'a>(
             None => part.into(),
         }
     });
-    container(Row::with_children(parts).spacing(1))
-        .padding(1)
+    container(Row::with_children(parts).spacing(2))
+        .padding(2)
         .width(Fill)
         .style(ui_style::container::segmented)
         .into()

@@ -278,7 +278,7 @@ fn frame(theme: &Theme) -> container::Style {
         border: Border {
             color: t.border,
             width: 1.0,
-            radius: 4.0.into(),
+            radius: kentos_ui::theme::shape::radius(4.0).into(),
         },
         ..container::Style::default()
     }
@@ -511,7 +511,7 @@ fn card_style(theme: &Theme, status: button::Status, chosen: bool) -> button::St
         border: Border {
             color,
             width,
-            radius: 6.0.into(),
+            radius: kentos_ui::theme::shape::radius(6.0).into(),
         },
         ..button::Style::default()
     }

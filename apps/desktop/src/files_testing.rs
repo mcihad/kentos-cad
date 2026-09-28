@@ -106,13 +106,23 @@ pub fn find_text(
     app: &App,
     caption: &str,
 ) -> Option<iced::Rectangle> {
+    find_texts(snapshot, app, caption).into_iter().next()
+}
+
+/// Where a text is drawn: every widget showing exactly `caption`, in the
+/// order the view lists them (a shortened one reports its whole text).
+pub fn find_texts(
+    snapshot: &mut kentos_ui::snapshot::Snapshot,
+    app: &App,
+    caption: &str,
+) -> Vec<iced::Rectangle> {
     use std::sync::{Arc, Mutex};
 
     use iced::advanced::widget::{Id, Operation};
 
     struct Find {
         caption: String,
-        found: Arc<Mutex<Option<iced::Rectangle>>>,
+        found: Arc<Mutex<Vec<iced::Rectangle>>>,
     }
     impl Operation for Find {
         fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn Operation)) {
@@ -121,13 +131,12 @@ pub fn find_text(
         fn text(&mut self, _id: Option<&Id>, bounds: iced::Rectangle, text: &str) {
             if text == self.caption
                 && let Ok(mut found) = self.found.lock()
-                && found.is_none()
             {
-                *found = Some(bounds);
+                found.push(bounds);
             }
         }
     }
-    let found = Arc::new(Mutex::new(None));
+    let found = Arc::new(Mutex::new(Vec::new()));
     snapshot.operate(
         app.view(),
         Box::new(Find {
@@ -135,5 +144,5 @@ pub fn find_text(
             found: found.clone(),
         }),
     );
-    found.lock().ok().and_then(|f| *f)
+    found.lock().map(|f| f.clone()).unwrap_or_default()
 }

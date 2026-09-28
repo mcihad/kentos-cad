@@ -219,7 +219,7 @@ fn row_style(theme: &Theme, status: button::Status, chosen: bool) -> button::Sty
         border: Border {
             color: edge,
             width: 1.0,
-            radius: 4.0.into(),
+            radius: kentos_ui::theme::shape::radius(4.0).into(),
         },
         ..button::Style::default()
     }

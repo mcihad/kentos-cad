@@ -24,7 +24,7 @@ import { registerDefaultKeybindings } from './keybindings';
 import { createProcessing, registerProcessingCommands } from './processing';
 import { createStyles, registerStyleCommands } from './styles';
 import { Formatter } from './format';
-import { applyAccent, applyDrawingFont, applyTextSize, applyUiFont } from './appearance';
+import { applyAccent, applyDrawingFont, applyShape, applyTextSize, applyUiFont } from './appearance';
 import { createPreferences, createUiState, DraftingSettings, MessageLog } from './state';
 import { openBrowserSettings, reportSettingsOpen } from './settings/browser';
 import { onCoreFault } from '../wasm/core';
@@ -69,6 +69,7 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
   applyAccent(prefs.accent.value);
   const fontReady = applyUiFont(prefs.uiFont.value);
   applyTextSize(prefs.textSize.value);
+  applyShape(prefs.corners.value, prefs.shadows.value);
 
   const selection = new Selection();
   // Services that need the context are attached right after it exists.
@@ -95,6 +96,9 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
   // the settings window, a command, an imported file, a reset.
   prefs.theme.subscribe(() => showTheme(ctx));
   prefs.textSize.subscribe((px) => applyTextSize(px));
+  const shape = () => applyShape(prefs.corners.value, prefs.shadows.value);
+  prefs.corners.subscribe(shape);
+  prefs.shadows.subscribe(shape);
   ctx.files = new DocumentFiles(ctx);
   ctx.cloud = new CloudSession(ctx);
   // Unsaved work is kept on this device as it changes, apart from any file (docs/adr/0030).
