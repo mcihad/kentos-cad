@@ -128,15 +128,11 @@ pub struct Tabs<'a, Message> {
     on_close: Option<Box<dyn Fn(usize) -> Message + 'a>>,
     on_reorder: Option<Box<dyn Fn(usize, usize) -> Message + 'a>>,
     on_new: Option<Message>,
-    content: Option<Paint<'a>>,
     /// Yeni sekme ikonu.
     plus: Element<'a, Message>,
     /// Sığmayan sekmelerin listesi.
     list: Element<'a, Message>,
 }
-
-/// Temadan okunan renk.
-type Paint<'a> = Box<dyn Fn(&Theme) -> Color + 'a>;
 
 struct Entry<'a, Message> {
     closable: bool,
@@ -253,7 +249,6 @@ impl<'a, Message: Clone + 'a> Tabs<'a, Message> {
             on_close: None,
             on_reorder: None,
             on_new: None,
-            content: None,
             plus: icon(Icon::Plus).size(12.0).into(),
             list: list.into(),
         }
@@ -283,13 +278,6 @@ impl<'a, Message: Clone + 'a> Tabs<'a, Message> {
     /// geçer.
     pub fn bottom(mut self) -> Self {
         self.bottom = true;
-        self
-    }
-
-    /// Etkin sekmenin zemini: sekmenin bağlandığı içeriğin rengi
-    /// (varsayılan yüzey rengi).
-    pub fn content(mut self, color: impl Fn(&Theme) -> Color + 'a) -> Self {
-        self.content = Some(Box::new(color));
         self
     }
 }
@@ -903,17 +891,11 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Tabs<'a, Mess
         let state = tree.state.downcast_ref::<State>();
         let t = Tokens::of(theme);
         let bounds = layout.bounds();
-        let content = self
-            .content
-            .as_ref()
-            .map_or(t.surface, |color| color(theme));
-
         strip(renderer, &t, bounds, self.bottom);
 
         let mut children = layout.children();
         let plus = children.next();
         let list = children.next();
-        let mut previous = None;
 
         for (index, ((entry, tree), tab)) in self
             .tabs
@@ -938,12 +920,9 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Tabs<'a, Mess
                     active,
                     hovered,
                     bottom: self.bottom,
-                    separator: previous == Some(false) && !active,
-                    content,
                     accent: true,
                 },
             );
-            previous = Some(active);
 
             let mut parts = tab.children();
             let (Some(label), Some(glyph)) = (parts.next(), parts.next()) else {
@@ -1127,11 +1106,8 @@ pub(crate) struct Look {
     pub hovered: bool,
     /// Şerit içeriğin altında.
     pub bottom: bool,
-    /// Solundaki sekme de etkin değil: aralarına ince ayraç çizilir.
-    pub separator: bool,
-    /// Etkin sekmenin bağlandığı içeriğin rengi.
-    pub content: Color,
-    /// Etkin sekmenin kenarında vurgu çizgisi (ör. odaktaki yığın).
+    /// Etkin sekmenin çizgisi tam vurgu renginde (ör. odaktaki yığın);
+    /// değilse daha soluk.
     pub accent: bool,
 }
 
@@ -1152,59 +1128,38 @@ pub(crate) fn strip(renderer: &mut Renderer, t: &Tokens, bounds: Rectangle, bott
     );
 }
 
-/// Sekmenin zemini; başlığın altındaki (solan ucun karıştığı) rengi
-/// döndürür.
+/// Sekmenin zemini ve çizgisi (web'in sekmeleri, DESIGN.md §7.5; şeridin
+/// sekmeleri gibi): kutu yoktur. Etkin sekmenin içeriğe bakan kenarında 2
+/// piksellik vurgu çizgisi durur, üzerine gelinen sekme hafif bir katman
+/// alır. Başlığın altındaki (solan ucun karıştığı) rengi döndürür.
 pub(crate) fn tab(renderer: &mut Renderer, t: &Tokens, bounds: Rectangle, look: Look) -> Color {
-    if look.active {
-        // Etkin sekme şeridin kenar çizgisini örter, içeriğe bağlanır.
-        fill(renderer, bounds, look.content);
+    let mut under = t.window;
 
-        for x in [bounds.x, bounds.x + bounds.width - 1.0] {
-            fill(
-                renderer,
-                Rectangle::new(Point::new(x, bounds.y), Size::new(1.0, bounds.height)),
-                t.border,
-            );
-        }
-
-        if look.accent {
-            let y = if look.bottom {
-                bounds.y + bounds.height - 2.0
-            } else {
-                bounds.y
-            };
-
-            fill(
-                renderer,
-                Rectangle::new(Point::new(bounds.x, y), Size::new(bounds.width, 2.0)),
-                t.accent,
-            );
-        }
-
-        return look.content;
+    if look.hovered && !look.active {
+        let layer = t.layer(0.05);
+        fill(renderer, bounds, layer);
+        under = mix(t.window, Color { a: 1.0, ..layer }, layer.a);
     }
 
-    if look.separator {
-        let inset = (bounds.height * 0.28).round();
+    if look.active {
+        let y = if look.bottom {
+            bounds.y
+        } else {
+            bounds.y + bounds.height - 2.0
+        };
 
         fill(
             renderer,
-            Rectangle::new(
-                Point::new(bounds.x, bounds.y + inset),
-                Size::new(1.0, bounds.height - inset * 2.0),
-            ),
-            t.border,
+            Rectangle::new(Point::new(bounds.x, y), Size::new(bounds.width, 2.0)),
+            if look.accent {
+                t.accent
+            } else {
+                t.accent.scale_alpha(0.55)
+            },
         );
     }
 
-    if look.hovered {
-        let layer = t.layer(0.05);
-        fill(renderer, bounds, layer);
-
-        return mix(t.window, Color { a: 1.0, ..layer }, layer.a);
-    }
-
-    t.window
+    under
 }
 
 /// Kısılan başlığın sonu: zemine doğru solan şerit. Sekmenin kenar ve vurgu

@@ -16,7 +16,7 @@ use iced::widget::{column, container, responsive, row, space, stack, themer};
 use iced::{Border, Element, Fill, Point, Shadow, Size, Theme, Vector};
 
 use kentos_ui::label;
-use kentos_ui::spatial::model_space::{Backdrop, Style};
+use kentos_ui::spatial::model_space::Backdrop;
 use kentos_ui::spatial::{ModelSpace, Tool};
 use kentos_ui::theme::{self, Mode, Tokens, typography};
 use kentos_ui::widget::rulers::{self, Transform};
@@ -34,13 +34,9 @@ const DESK: f32 = 28.0;
 const MARGIN: f32 = 0.03;
 
 impl Showcase {
-    /// Model ve düzen sekmeleri, harita alanının altında. Etkin sekme
-    /// üstündeki alana bağlanır: model alanında harita zemininin, düzende
-    /// masanın rengini alır.
+    /// Model ve düzen sekmeleri, harita alanının altında; etkin sekme
+    /// üstündeki alana bakan vurgu çizgisini taşır.
     pub(super) fn sheet_tabs(&self) -> Element<'_, Message> {
-        let backdrop = self.backdrop;
-        let model = self.sheets.current() == 0;
-
         let tabs = std::iter::once(Tab::new("Model").closable(false)).chain(
             self.sheets
                 .iter()
@@ -52,13 +48,6 @@ impl Showcase {
             .on_reorder(Message::SheetMoved)
             .on_new(Message::SheetAdded)
             .bottom()
-            .content(move |theme| {
-                if model {
-                    Style::with(backdrop, theme).background
-                } else {
-                    Tokens::of(theme).surface
-                }
-            })
             .into()
     }
 

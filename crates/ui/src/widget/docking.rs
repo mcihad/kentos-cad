@@ -3317,11 +3317,6 @@ where
         hit: Option<Hit>,
     ) {
         let header = frame.header + origin;
-        let content = if entry.is_floating() {
-            t.popover
-        } else {
-            t.surface
-        };
         let hovered = if state.gesture.is_none() { hit } else { None };
 
         tabs::strip(renderer, t, header, false);
@@ -3331,7 +3326,6 @@ where
         let menu = parts.next();
         let body = parts.next();
         let chevron = parts.next();
-        let mut previous = None;
 
         for (tab, ((head, head_tree), head_layout)) in entry
             .tabs
@@ -3354,12 +3348,9 @@ where
                     active,
                     hovered: tab_hovered,
                     bottom: false,
-                    separator: previous == Some(false) && !active,
-                    content,
                     accent: active && state.focus == Some(head.key),
                 },
             );
-            previous = Some(active);
 
             let mut head_parts = head_layout.children();
             let (Some(label), Some(glyph)) = (head_parts.next(), head_parts.next()) else {

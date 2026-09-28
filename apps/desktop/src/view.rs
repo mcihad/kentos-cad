@@ -43,12 +43,44 @@ use crate::ribbon_bar::rows_menu;
 use crate::ribbon_plan;
 use crate::viewport::mark_colors;
 
+/// The ribbon's shadow on what lies under it (the web's `--shadow-bar`,
+/// DESIGN.md §5.4): a faint shade along the drawing's top edge; the docked
+/// panels beside it stay flat. None with Görünüm → Gölgeler → Kapalı.
+fn ribbon_shade<'a>() -> Element<'a, Message> {
+    use kentos_ui::theme::shape::{self, Shadows};
+
+    let strength = match shape::current().shadows {
+        Shadows::Off => return iced::widget::space::horizontal().into(),
+        Shadows::Soft => 1.0,
+        Shadows::Strong => 1.5,
+    };
+    container(iced::widget::space::horizontal())
+        .width(Fill)
+        .height(12)
+        .style(move |theme: &iced::Theme| {
+            let alpha = strength * if Tokens::of(theme).is_dark { 0.5 } else { 0.07 };
+            let shade = |a: f32| Color::from_rgba(0.04, 0.06, 0.09, a);
+            container::Style {
+                background: Some(iced::Background::Gradient(iced::Gradient::Linear(
+                    // From the top edge down.
+                    iced::gradient::Linear::new(iced::Radians(std::f32::consts::PI))
+                        .add_stop(0.0, shade(alpha))
+                        .add_stop(0.35, shade(alpha * 0.4))
+                        .add_stop(1.0, shade(0.0)),
+                ))),
+                ..container::Style::default()
+            }
+        })
+        .into()
+}
+
 impl App {
     pub fn view(&self) -> Element<'_, Message> {
         // The side panels run the body's whole height; the bottom panel and the
         // command line sit under the drawing only (DESIGN.md §5.1, the web's shell).
         let docked = DockSpace::new(
-            column![self.drawing_area(), self.bottom()],
+            // The ribbon's shade falls on the drawing only, not on the docks.
+            stack![column![self.drawing_area(), self.bottom()], ribbon_shade()],
             &self.docks,
             Message::Dock,
             move |panel| {

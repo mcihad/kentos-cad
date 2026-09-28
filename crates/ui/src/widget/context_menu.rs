@@ -1357,38 +1357,42 @@ impl<Message: Clone> overlay::Overlay<Message, Theme, Renderer> for Overlay<'_, 
                 );
             });
             if clipped {
-                // The box closed where the panel is cut, and where the window is on it.
-                renderer.fill_quad(
-                    renderer::Quad {
-                        bounds: window,
-                        border: iced::Border {
-                            color: t.border,
-                            width: 1.0,
-                            radius: style::button::radius().into(),
+                // Over the panel's own layer: drawn in the one under it, the
+                // panel's ground would hide the edge and the scroll thumb.
+                renderer.with_layer(window, |renderer| {
+                    // The box closed where the panel is cut, and where the window is on it.
+                    renderer.fill_quad(
+                        renderer::Quad {
+                            bounds: window,
+                            border: iced::Border {
+                                color: t.border_strong(),
+                                width: 1.0,
+                                radius: crate::theme::shape::md().into(),
+                            },
+                            ..renderer::Quad::default()
                         },
-                        ..renderer::Quad::default()
-                    },
-                    Background::Color(Color::TRANSPARENT),
-                );
-                let track = window.height - 2.0 * SCROLLBAR_INSET;
-                let thumb = (track * window.height / content.height)
-                    .max(24.0)
-                    .min(track);
-                let travel = (content.height - window.height).max(1.0);
-                let offset = (window.y - content.y) / travel;
-                renderer.fill_quad(
-                    renderer::Quad {
-                        bounds: Rectangle {
-                            x: window.x + window.width - SCROLLBAR - SCROLLBAR_INSET,
-                            y: window.y + SCROLLBAR_INSET + (track - thumb) * offset,
-                            width: SCROLLBAR,
-                            height: thumb,
+                        Background::Color(Color::TRANSPARENT),
+                    );
+                    let track = window.height - 2.0 * SCROLLBAR_INSET;
+                    let thumb = (track * window.height / content.height)
+                        .max(24.0)
+                        .min(track);
+                    let travel = (content.height - window.height).max(1.0);
+                    let offset = (window.y - content.y) / travel;
+                    renderer.fill_quad(
+                        renderer::Quad {
+                            bounds: Rectangle {
+                                x: window.x + window.width - SCROLLBAR - SCROLLBAR_INSET,
+                                y: window.y + SCROLLBAR_INSET + (track - thumb) * offset,
+                                width: SCROLLBAR,
+                                height: thumb,
+                            },
+                            border: border::rounded(SCROLLBAR / 2.0),
+                            ..renderer::Quad::default()
                         },
-                        border: border::rounded(SCROLLBAR / 2.0),
-                        ..renderer::Quad::default()
-                    },
-                    Background::Color(t.muted.scale_alpha(0.55)),
-                );
+                        Background::Color(t.muted.scale_alpha(0.55)),
+                    );
+                });
             }
         }
 
