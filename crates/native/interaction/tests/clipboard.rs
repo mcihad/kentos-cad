@@ -342,6 +342,7 @@ fn a_paste_goes_through_the_commands_in_one_step() {
             attrs: Default::default(),
             label: None,
             symbol: None,
+            line_weight: None,
         },
         p: kentos_contracts::Vec2 { x: E, y: N },
         text: "   ".to_owned(),

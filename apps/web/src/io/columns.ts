@@ -50,6 +50,8 @@ const HATCH_PATTERNS = ['solid', 'lines', 'cross'] as const;
 const COLOR = 1;
 const LABEL = 2;
 const SYMBOL = 4;
+/** The object's own line weight: its first float (docs/adr/0139). */
+const WEIGHT = 8;
 const OPT = [1 << 8, 1 << 9, 1 << 10, 1 << 11] as const;
 const HOLE_BULGES = 1;
 
@@ -57,7 +59,7 @@ const HOLE_BULGES = 1;
  * The fields each kind may have, besides the ones every object has: what the
  * contract holds. Anything else an object carries is reported, not written.
  */
-const COMMON = ['kind', 'id', 'uid', 'layerId', 'color', 'attrs', 'label', 'symbol'];
+const COMMON = ['kind', 'id', 'uid', 'layerId', 'color', 'attrs', 'label', 'symbol', 'lineWeight'];
 const FIELDS: Record<string, ReadonlySet<string>> = Object.fromEntries(
   Object.entries({
     point: ['p', 'z'],
@@ -257,6 +259,7 @@ class Packer {
     this.int(0);
     this.int(keys.length);
     let flags = 0;
+    if (e.lineWeight !== undefined) (flags |= WEIGHT), this.float(e.lineWeight, 'lineWeight');
     if (e.color !== undefined) (flags |= COLOR), this.text(e.color, 'color');
     if (e.label !== undefined) (flags |= LABEL), this.text(e.label, 'label');
     if (e.symbol !== undefined) (flags |= SYMBOL), this.text(e.symbol, 'symbol');
@@ -497,6 +500,7 @@ export class ColumnsReader {
     const flags = this.readInt();
     const n = this.readInt();
     const e: Record<string, unknown> = { kind, id: i + 1, uid: this.uid(i), layerId };
+    if (flags & WEIGHT) e.lineWeight = this.num();
     if (flags & COLOR) e.color = this.readText();
     if (flags & LABEL) e.label = this.readText();
     if (flags & SYMBOL) e.symbol = this.readText();

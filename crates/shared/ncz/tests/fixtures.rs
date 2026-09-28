@@ -78,6 +78,16 @@ fn every_record_type_on_its_layer_with_the_files_system() {
     assert_eq!(attr(sheet, "Pafta"), Some("H40-D-07-B-1-C"));
     let skipped: Vec<&str> = r.report.skipped.iter().map(|s| s.what.as_str()).collect();
     assert_eq!(skipped, ["NCZ türü 8", "NCZ türü 14"]);
+    // One record gives a pen, 2 tenths of a millimetre: the line in the container, and only it
+    // takes its own weight; the others are drawn in their layer's (docs/adr/0139).
+    let weighed: Vec<(usize, f64)> = r
+        .entities
+        .iter()
+        .enumerate()
+        .filter_map(|(i, e)| e.base().line_weight.map(|w| (i, w)))
+        .collect();
+    assert_eq!(weighed, [(16, 0.2)]);
+    assert!(matches!(r.entities[16], Entity::Line(_)));
     // What each layer holds, without walking its objects (docs/adr/0138).
     let parsel = &r.layers[0];
     assert_eq!(parsel.kinds.iter().map(|(k, n)| (k.as_str(), *n)).collect::<Vec<_>>(), [("line", 2), ("point", 3)]);

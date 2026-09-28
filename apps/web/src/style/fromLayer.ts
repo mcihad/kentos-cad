@@ -24,11 +24,11 @@ export function lineSymbolOf(color: string, lineType: LineType, weight: number):
 }
 
 /**
- * Symbols for a layer's simple style; `color` is the object's own colour when it has one. `hairlines`: line
- * weights hidden (Kalınlık off), every line one pixel.
+ * Symbols for a layer's simple style; `color` is the object's own colour when it has one, `weight` its own
+ * line weight (mm; docs/adr/0139). `hairlines`: line weights hidden (Kalınlık off), every line one pixel.
  */
-export function symbolsOfLayerStyle(style: LayerStyle, color = style.color, hairlines = false): SymbolSet {
-  const line = lineSymbolOf(color, style.lineType, hairlines ? 0 : style.lineWeight);
+export function symbolsOfLayerStyle(style: LayerStyle, color = style.color, hairlines = false, weight = style.lineWeight): SymbolSet {
+  const line = lineSymbolOf(color, style.lineType, hairlines ? 0 : weight);
   const fill: FillSymbol = {
     type: 'fill',
     layers: [...(style.fill ? [{ id: 'f', type: 'simpleFill' as const, color: style.fill }] : []), { ...line.layers[0], id: 'o' }],

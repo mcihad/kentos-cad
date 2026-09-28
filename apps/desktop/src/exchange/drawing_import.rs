@@ -340,7 +340,7 @@ impl App {
                                 .declared_crs
                                 .as_ref()
                                 .map(|d| Statement::of(Some(d), false));
-                            s.crs.declare(project, statement, r.bounds.clone());
+                            s.crs.declare(project, statement, r.bounds);
                         }
                         s.result = Some(r);
                     }

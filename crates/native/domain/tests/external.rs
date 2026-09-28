@@ -33,6 +33,7 @@ fn point(layer: &str, x: f64) -> Entity {
             attrs: Default::default(),
             label: None,
             symbol: None,
+            line_weight: None,
         },
         p: Vec2 { x, y: 0.0 },
         z: None,

@@ -16,4 +16,11 @@ attrs: { [key in string]: string }, label?: string,
 /**
  * Library symbol overriding the layer's style.
  */
-symbol?: string, };
+symbol?: string, 
+/**
+ * Its own line weight, paper millimetres as the layer's
+ * (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+ * ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+ * object (docs/adr/0139).
+ */
+lineWeight?: number, };

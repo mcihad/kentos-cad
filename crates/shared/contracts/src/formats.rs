@@ -26,7 +26,9 @@ use crate::layer::LineType;
 ///    of their own, loaded when such a file is imported, reporting their progress, their objects
 ///    crossing as typed columns; a layer's objects by kind and their box (`ImportLayer.kinds`,
 ///    `ImportLayer.bounds`) and where the view shows an import (`ImportResult.view`).
-pub const FORMATS_VERSION: u32 = 8;
+/// 9: an object's own line weight (`EntityBase.line_weight`, docs/adr/0139): DXF's group 370 and
+///    an NCZ's pen read into it, written back as 370.
+pub const FORMATS_VERSION: u32 = 9;
 
 // ── Every import ────────────────────────────────────────────────────────
 

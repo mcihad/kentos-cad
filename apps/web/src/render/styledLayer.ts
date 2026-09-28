@@ -128,8 +128,11 @@ export function buildStyledLayer(id: string, entities: readonly Entity[], style:
       colorIndex.set(color, (c = colors.length));
       colors.push(color);
     }
-    let s = simple.get(color);
-    if (s === undefined) simple.set(color, (s = setOf(symbolsOfLayerStyle(style, color, opts.hairlines))));
+    // The object's own weight, else its layer's (docs/adr/0139): the simple look by colour and weight.
+    const weight = e.lineWeight ?? style.lineWeight;
+    const key = `${color}\u0000${weight}`;
+    let s = simple.get(key);
+    if (s === undefined) simple.set(key, (s = setOf(symbolsOfLayerStyle(style, color, opts.hairlines, weight))));
     let mode = RENDERER;
     let a = 0;
     if (e.kind === 'text') mode = SKIP;

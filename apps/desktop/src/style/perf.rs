@@ -64,6 +64,7 @@ fn drawing(n: usize) -> Document {
             attrs: BTreeMap::new(),
             label: None,
             symbol: None,
+            line_weight: None,
         }
     };
     for i in 0..n {

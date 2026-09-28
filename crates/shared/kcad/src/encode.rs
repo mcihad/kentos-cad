@@ -19,6 +19,7 @@ use kentos_contracts::{
 };
 use serde_json::Value;
 
+use crate::SCHEMA_WITH_LINE_WEIGHTS;
 use crate::cbor::{MAX_DEPTH, MAX_ITEMS, MAX_STRING, Seg, Writer, key_order, render};
 use crate::error::{Code, KcadError};
 use crate::watch::{Step, Watch, report};
@@ -171,11 +172,17 @@ impl<'d> Encoder<'d> {
                 ),
             ));
         }
+        // Schema 3 only when an object has its own line weight: every other drawing stays schema 2, byte for byte.
+        let schema = if doc.entities.iter().any(|e| e.base().line_weight.is_some()) {
+            SCHEMA_WITH_LINE_WEIGHTS
+        } else {
+            DOCUMENT_VERSION_2
+        };
         self.open(3, true)?;
         self.key("format");
         self.w.text(DOCUMENT_FORMAT);
         self.key("version");
-        self.w.uint(u64::from(DOCUMENT_VERSION_2));
+        self.w.uint(u64::from(schema));
         self.key("document");
         self.at(Seg::Name("document"), |e| e.body(doc))?;
         self.close();

@@ -44,6 +44,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
                 attrs,
                 label: Some(format!("{}/{}", 100 + i / 50, i % 50 + 1)),
                 symbol: None,
+                line_weight: None,
             },
             pts,
             bulges: None,

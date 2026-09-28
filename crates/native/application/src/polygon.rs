@@ -197,6 +197,7 @@ fn polygon(input: PolygonCreate, id: u32) -> Entity {
             attrs: input.attrs.unwrap_or_default(),
             label: None,
             symbol: None,
+            line_weight: None,
         },
         pts: input.pts,
         bulges: input.bulges,

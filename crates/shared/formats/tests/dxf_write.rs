@@ -36,6 +36,7 @@ fn base(layer: &str) -> EntityBase {
         attrs: BTreeMap::new(),
         label: None,
         symbol: None,
+        line_weight: None,
     }
 }
 
@@ -980,4 +981,32 @@ fn nothing_to_write_is_still_a_file_autocad_opens() {
         text.contains("  2\r\n0\r\n 70\r\n0\r\n 62\r\n7\r\n"),
         "layer 0"
     );
+}
+
+#[test]
+fn an_objects_line_weight_goes_out_as_370_and_comes_back_exactly() {
+    // docs/adr/0139: the nearest of AutoCAD's weights in 370; one it rounds goes in KentOS's
+    // data and comes back exactly, while the file's 370 still is the weight it rounds to.
+    let line = |w: Option<f64>, dy: f64| {
+        Entity::Line(LineEntity {
+            base: with("parsel", |b| b.line_weight = w),
+            a: tm(dy, 0.0),
+            b: tm(dy, 10.0),
+        })
+    };
+    let objects = vec![line(Some(0.35), 0.0), line(Some(0.33), 1.0), line(Some(0.0), 2.0), line(None, 3.0)];
+    let (text, report) = write(&input(objects.clone()));
+    let p = pairs(&text);
+    let written: Vec<Option<&str>> = entities_of(&p, "LINE").iter().map(|e| group(e, 370)).collect();
+    assert_eq!(written, [Some("35"), Some("35"), Some("0"), None]);
+    assert!(report.notes.iter().any(|n| n.what == "Nesne kalınlığı"), "{:?}", report.notes);
+    let back = read(&text);
+    let weights: Vec<Option<f64>> = back.entities.iter().map(|e| e.base().line_weight).collect();
+    assert_eq!(weights, [Some(0.35), Some(0.33), Some(0.0), None]);
+    // Another program sets the second one to 0.50 mm: its 370 wins over KentOS's stale 0.33.
+    let at = text.match_indices("  0\r\nLINE\r\n").nth(1).expect("the second LINE").0;
+    let (head, rest) = text.split_at(at);
+    let edited = format!("{head}{}", rest.replacen("370\r\n35\r\n", "370\r\n50\r\n", 1));
+    let weights: Vec<Option<f64>> = read(&edited).entities.iter().map(|e| e.base().line_weight).collect();
+    assert_eq!(weights[1], Some(0.5));
 }

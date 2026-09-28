@@ -213,6 +213,18 @@ impl Writer<'_> {
                 self.out.int(420, rgb);
             }
         }
+        // Its own line weight as the nearest one DXF has; the exact one goes in KentOS's data.
+        if let Some(w) = base.line_weight {
+            let (dxf, rounded) = super::layers::line_weight(w);
+            if rounded {
+                self.report.note(
+                    "Nesne kalınlığı",
+                    "DXF'in kalınlıklarından en yakınına yuvarlandı; KentOS kendi değerini geri okur",
+                    0,
+                );
+            }
+            self.out.int(370, dxf);
+        }
         h
     }
 
@@ -227,6 +239,9 @@ impl Writer<'_> {
                 .as_ref()
                 .filter(|c| aci::from_app(c).0.read_back() != **c)
                 .cloned(),
+            line_weight: base
+                .line_weight
+                .filter(|w| super::layers::line_weight(*w).1),
             ..Meta::default()
         }
     }

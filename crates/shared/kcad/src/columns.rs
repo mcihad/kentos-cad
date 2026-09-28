@@ -18,7 +18,8 @@
 //! - `ints` (u32): first the number of layer ids in the layer table, then per
 //!   object its layer (table index), flags, attribute count and the kind's
 //!   own counts;
-//! - `floats` (f64, bit for bit: −0 stays −0): per object the kind's numbers;
+//! - `floats` (f64, bit for bit: −0 stays −0): per object its own line
+//!   weight when it has one, then the kind's numbers;
 //! - `text` (UTF-16 code units, as JavaScript holds its strings) and
 //!   `text_lengths` (code units of each text): first the layer table (layer
 //!   ids in the order objects first use them), then per object its colour,
@@ -27,7 +28,7 @@
 //!
 //! | Kind | ints | floats | texts |
 //! |---|---|---|---|
-//! | every object | layer, flags, attributes | | colour?, label?, symbol?, key and value per attribute |
+//! | every object | layer, flags, attributes | line weight? | colour?, label?, symbol?, key and value per attribute |
 //! | point | | p, z? | |
 //! | line | | a, b | |
 //! | polyline, polygon | n; m if bulges; h if holes, then per hole: hole flags, k, j if bulges | pts (2n), bulges (m), per hole: pts (2k), bulges (j) | |
@@ -40,7 +41,8 @@
 //! | dimension | style if any | a, b, offset, height, angle if any, c if any | text if any |
 //! | hatch | n, pattern type; h if holes, then k per hole | ring (2n), pattern angle, spacing, per hole: pts (2k) | |
 //!
-//! A point is two floats, x then y. Flags: 1 colour, 2 label, 4 symbol; a
+//! A point is two floats, x then y. Flags: 1 colour, 2 label, 4 symbol, 8
+//! line weight (docs/adr/0139); a
 //! kind's optional fields from bit 8 up, in the order the table names them
 //! (point: z; polyline and polygon: bulges, holes; dimension: text, style,
 //! angle, c; hatch: holes). A hole's flags: 1 bulges. Dimension styles and
@@ -76,6 +78,7 @@ pub const KINDS: [&str; 13] = [
 const COLOR: u32 = 1;
 const LABEL: u32 = 2;
 const SYMBOL: u32 = 4;
+const WEIGHT: u32 = 8;
 /// A kind's optional fields, in the order the module's table names them.
 const OPT: [u32; 4] = [1 << 8, 1 << 9, 1 << 10, 1 << 11];
 const HOLE_BULGES: u32 = 1;
@@ -204,10 +207,15 @@ impl Packer {
             attrs,
             label,
             symbol,
+            line_weight,
         } = entity.base();
         let flags_at = self.out.ints.len() + 1;
         self.out.ints.extend([layer, 0, count(attrs.len())]);
         let mut flags = 0;
+        if let Some(w) = line_weight {
+            flags |= WEIGHT;
+            self.float(*w);
+        }
         for (bit, value) in [(COLOR, color), (LABEL, label), (SYMBOL, symbol)] {
             if let Some(v) = value {
                 flags |= bit;
@@ -566,6 +574,7 @@ fn object(c: &mut Cursor<'_>, table: &[String], i: usize, k: u8) -> Result<Entit
     if attr_count > c.cols.text_lengths.len() {
         return Err(broken("öznitelik sayısı metinlerden fazla"));
     }
+    let line_weight = (flags & WEIGHT != 0).then(|| c.float()).transpose()?;
     let color = (flags & COLOR != 0)
         .then(|| c.text(|| place("color")))
         .transpose()?;
@@ -588,8 +597,9 @@ fn object(c: &mut Cursor<'_>, table: &[String], i: usize, k: u8) -> Result<Entit
         attrs,
         label,
         symbol,
+        line_weight,
     };
-    let known = COLOR | LABEL | SYMBOL | allowed(k);
+    let known = COLOR | LABEL | SYMBOL | WEIGHT | allowed(k);
     if flags & !known != 0 {
         return Err(broken(&format!(
             "{}. nesnenin bayrakları {flags:#x}",
@@ -884,6 +894,7 @@ mod tests {
             attrs: BTreeMap::new(),
             label: None,
             symbol: None,
+            line_weight: None,
         }
     }
 

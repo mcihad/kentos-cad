@@ -60,6 +60,7 @@ pub fn drawing(extra: usize) -> Document {
                 attrs: [("Ad".to_owned(), format!("N{i}"))].into(),
                 label: None,
                 symbol: None,
+                line_weight: None,
             },
             p: Vec2 {
                 x: 486_500.0 + i as f64,

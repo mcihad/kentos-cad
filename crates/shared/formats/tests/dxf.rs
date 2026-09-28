@@ -703,3 +703,82 @@ fn a_large_file_reads_in_one_pass() {
     assert_eq!(limited.entities.len(), 1000);
     assert!(skipped(&limited, "Nesne sınırı").is_some());
 }
+
+#[test]
+fn an_object_takes_its_own_line_weight_and_a_block_member_its_inserts() {
+    // docs/adr/0139: 370 in hundredths of a mm; −1 BYLAYER and −3 the drawing's default are the
+    // layer's; −2 BYBLOCK is the insert's, and an insert that says BYLAYER hands on its layer's.
+    let tables = groups(&[
+        (0, "TABLE"),
+        (2, "LAYER"),
+        (0, "LAYER"),
+        (2, "KALIN"),
+        (70, "0"),
+        (62, "7"),
+        (370, "70"),
+        (0, "ENDTAB"),
+    ]);
+    let blocks = groups(&[
+        (0, "BLOCK"),
+        (2, "KAPI"),
+        (8, "0"),
+        (10, "0"),
+        (20, "0"),
+        (0, "LINE"),
+        (8, "0"),
+        (370, "-2"),
+        (10, "0"),
+        (20, "0"),
+        (11, "1"),
+        (21, "0"),
+        (0, "LINE"),
+        (8, "0"),
+        (370, "18"),
+        (10, "0"),
+        (20, "1"),
+        (11, "1"),
+        (21, "1"),
+        (0, "ENDBLK"),
+    ]);
+    let line = |weight: Option<&str>| {
+        let mut g = vec![(0, "LINE".to_string()), (8, "0".to_string())];
+        if let Some(w) = weight {
+            g.push((370, w.to_string()));
+        }
+        g.extend(groups(&[(10, "0"), (20, "0"), (11, "5"), (21, "5")]));
+        g
+    };
+    let insert = |layer: &str, weight: &str| {
+        groups(&[(0, "INSERT"), (2, "KAPI"), (8, layer), (370, weight), (10, "10"), (20, "10")])
+    };
+    let mut entities = Vec::new();
+    for w in [Some("35"), Some("0"), Some("-1"), Some("-3"), None, Some("x"), Some("211")] {
+        entities.extend(line(w));
+    }
+    entities.extend(insert("0", "50"));
+    entities.extend(insert("KALIN", "-1"));
+    let r = dxf::read(
+        &dxf_of(&[("TABLES", tables), ("BLOCKS", blocks), ("ENTITIES", entities)]),
+        &DxfReadOptions::default(),
+    )
+    .expect("read");
+    let weights: Vec<Option<f64>> = r.entities.iter().map(|e| e.base().line_weight).collect();
+    assert_eq!(
+        weights,
+        [
+            Some(0.35),
+            Some(0.0),
+            None,
+            None,
+            None,
+            None,
+            Some(2.11),
+            // The first insert (50): its BYBLOCK member takes 0.50, its own-weight member keeps 0.18.
+            Some(0.5),
+            Some(0.18),
+            // The second says BYLAYER on KALIN (0.70): its BYBLOCK member takes the layer's.
+            Some(0.7),
+            Some(0.18),
+        ]
+    );
+}

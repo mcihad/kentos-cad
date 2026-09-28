@@ -111,6 +111,7 @@ pub fn legend_of(layers: &[LegendLayer<'_>], src: &impl LegendSources) -> Vec<Le
                 let simple = SymbolSet::from_value(&symbols_of_layer_style(
                     layer.style,
                     &layer.style.color,
+                    layer.style.line_weight,
                     false,
                 ));
                 entries.extend(set_entries(Some(&simple), layer.name));

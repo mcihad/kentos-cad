@@ -144,6 +144,7 @@ fn entities(input: &EntitiesCreate) -> Vec<Entity> {
                     attrs: object.attrs.clone().unwrap_or_default(),
                     label: object.label.clone(),
                     symbol: None,
+                    line_weight: None,
                 },
             )
         })

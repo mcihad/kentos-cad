@@ -24,6 +24,7 @@ fn base(layer: &str) -> EntityBase {
         attrs: Default::default(),
         label: None,
         symbol: None,
+        line_weight: None,
     }
 }
 

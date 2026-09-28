@@ -221,6 +221,7 @@ fn base(layer: &str, label: Option<String>, attrs: &BTreeMap<String, String>) ->
         attrs: attrs.clone(),
         label,
         symbol: None,
+        line_weight: None,
     }
 }
 

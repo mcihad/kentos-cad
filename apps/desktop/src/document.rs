@@ -352,6 +352,7 @@ mod tests {
                 attrs: [("Ad".to_owned(), "P2-web".to_owned())].into(),
                 label: None,
                 symbol: None,
+                line_weight: None,
             },
             p: Vec2 {
                 x: 486_520.125,

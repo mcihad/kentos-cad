@@ -41,7 +41,19 @@ pub struct EntityBase {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub symbol: Option<String>,
+    /// Its own line weight, paper millimetres as the layer's
+    /// (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+    /// ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+    /// object (docs/adr/0139).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
+    pub line_weight: Option<f64>,
 }
+
+/// The heaviest line weight an object may have, mm: DXF's heaviest is 2.11,
+/// a Netcad pen reaches 100 (docs/adr/0139).
+pub const MAX_LINE_WEIGHT: f64 = 100.0;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]

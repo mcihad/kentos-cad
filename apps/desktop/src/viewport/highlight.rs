@@ -234,6 +234,7 @@ mod tests {
             attrs: Default::default(),
             label: None,
             symbol: None,
+            line_weight: None,
         };
         for side in [32usize, 100, 316] {
             let sample = sample();

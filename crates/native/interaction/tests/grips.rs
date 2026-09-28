@@ -147,6 +147,7 @@ fn a_grip_that_would_break_the_shape_is_left_where_it_was() {
                 attrs: BTreeMap::new(),
                 label: None,
                 symbol: None,
+                line_weight: None,
             },
             c: Wire { x: E, y: N + 20.0 },
             r: 4.0,

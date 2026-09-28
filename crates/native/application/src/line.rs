@@ -95,6 +95,7 @@ fn line(input: LineCreate, id: u32) -> Entity {
             attrs: input.attrs.unwrap_or_default(),
             label: None,
             symbol: None,
+            line_weight: None,
         },
         a: input.a,
         b: input.b,

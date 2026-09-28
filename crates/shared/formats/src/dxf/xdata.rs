@@ -12,6 +12,7 @@
 //! 1002 {  1000 attr     <string> <string>        1002 }   one GIS attribute: key, value
 //! 1002 {  1000 symbol   <string>                 1002 }   the library symbol drawn for it
 //! 1002 {  1000 color    <string>                 1002 }   the colour as the app names it ("fg", "#7fb2e5")
+//! 1002 {  1000 weight   1040 <mm>                1002 }   the object's own line weight, exactly (370 holds the nearest DXF one)
 //! 1002 {  1000 hole     1005 <handle>            1002 }   a ring of the polygon with that handle
 //! 1002 {  1000 curve    1070 <0|1>               1002 }   a SPLINE through its fit points is KentOS's curve (1: closed)
 //! 1002 {  1000 arc      1040 <a0> 1040 <a1>      1002 }   the arc's angles in radians, exactly
@@ -50,6 +51,8 @@ pub struct Meta {
     pub attrs: BTreeMap<String, String>,
     pub symbol: Option<String>,
     pub color: Option<String>,
+    /// The object's own line weight in mm when its 370 rounds it (docs/adr/0139).
+    pub line_weight: Option<f64>,
     /// Handle of the polygon this closed polyline is a hole of.
     pub hole_of: Option<u64>,
     /// The SPLINE is KentOS's curve through its fit points; true: closed.
@@ -160,6 +163,9 @@ pub fn groups(meta: &Meta) -> Vec<(i32, String)> {
     }
     if let Some(c) = &meta.color {
         item("color", &mut out, |o| string(c, o));
+    }
+    if let Some(w) = meta.line_weight {
+        item("weight", &mut out, |o| o.push((1040, dxf_real(w))));
     }
     if let Some(h) = meta.hole_of {
         item("hole", &mut out, |o| o.push((1005, format!("{h:X}"))));
@@ -362,6 +368,7 @@ pub fn read(groups: &[(i32, String)]) -> Option<Meta> {
             }
             "symbol" => m.symbol = text(a).or(m.symbol),
             "color" => m.color = text(a).or(m.color),
+            "weight" => m.line_weight = real(a).or(m.line_weight),
             "hole" => {
                 if let Some(Value::Handle(h)) = a {
                     m.hole_of = Some(*h);
@@ -431,6 +438,7 @@ mod tests {
             attrs,
             symbol: Some("mpyy.konut".into()),
             color: Some("fg-dim".into()),
+            line_weight: Some(0.1 + 0.23),
             hole_of: Some(0x2F),
             curve: Some(true),
             arc: Some((0.1 + 0.2, -1.0 / 3.0)),

@@ -85,6 +85,7 @@ fn point(input: PointCreate, id: u32) -> Entity {
             attrs: input.attrs.unwrap_or_default(),
             label: input.label,
             symbol: None,
+            line_weight: None,
         },
         p: input.p,
         z: input.z,

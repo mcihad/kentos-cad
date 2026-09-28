@@ -350,5 +350,5 @@ fn a_layer_built_in_parts_draws_as_the_layer_built_whole() {
             checked += 1;
         }
     }
-    assert_eq!(checked, 27, "nine cases, three part sizes");
+    assert_eq!(checked, 33, "eleven cases, three part sizes");
 }

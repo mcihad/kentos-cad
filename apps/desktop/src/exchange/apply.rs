@@ -372,7 +372,12 @@ fn finite(e: &Entity) -> bool {
     let p = |v: &Vec2| v.x.is_finite() && v.y.is_finite();
     let ps = |v: &[Vec2]| v.iter().all(p);
     let fs = |v: &[f64]| v.iter().all(|x| x.is_finite());
-    match e {
+    // Its own line weight, when it has one, is a weight a drawing can hold (docs/adr/0139).
+    let weight = e
+        .base()
+        .line_weight
+        .is_none_or(|w| (0.0..=kentos_contracts::MAX_LINE_WEIGHT).contains(&w));
+    weight && match e {
         Entity::Point(e) => p(&e.p) && e.z.is_none_or(f64::is_finite),
         Entity::Line(e) => p(&e.a) && p(&e.b),
         Entity::Polyline(e) | Entity::Polygon(e) => {
@@ -444,6 +449,7 @@ mod tests {
             attrs: BTreeMap::new(),
             label: None,
             symbol: None,
+            line_weight: None,
         }
     }
 

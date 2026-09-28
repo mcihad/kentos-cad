@@ -69,6 +69,17 @@ const OWN: NewEntity[] = [
   { kind: 'point', layerId: 'k', attrs: {}, color: '#F28E2B', p: P(50, 25) },
 ];
 
+/**
+ * Objects with their own line weights (docs/adr/0139): the thinnest, DXF's heaviest, one with its own colour too,
+ * and one without (the layer's). Each is drawn in its layer's simple look at its own weight.
+ */
+const WEIGHTS: NewEntity[] = [
+  { kind: 'polyline', layerId: 'k', attrs: {}, lineWeight: 0, pts: [P(0, 0), P(20, 0)] },
+  { kind: 'polyline', layerId: 'k', attrs: {}, lineWeight: 2.11, pts: [P(0, 5), P(20, 5)] },
+  { kind: 'polygon', layerId: 'k', attrs: {}, lineWeight: 0.25, color: '#F28E2B', pts: [P(0, 10), P(10, 10), P(10, 20)] },
+  { kind: 'polyline', layerId: 'k', attrs: {}, pts: [P(0, 25), P(20, 25)] },
+];
+
 const CATEGORIZED: LayerStyle = {
   ...SIMPLE,
   renderer: {
@@ -127,6 +138,8 @@ const INPUTS: Input[] = [
   { id: 'categorized', title: 'Kategorili işleyici: Arsa taralı, Yol oklu, diğerleri harf ve ince çizgi', style: CATEGORIZED, entities: DRAWING, plotScale: 500, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true } },
   { id: 'rules-scale', title: 'Kurallı işleyici: ölçek aralıklı iki kural ve değilse kuralı', style: RULES, entities: DRAWING, plotScale: 1000, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: false } },
   { id: 'categorized-off', title: 'Kategorili işleyici, Arsa kapalı: Arsa çizilmez, diğer değerlere de düşmez', style: CATEGORIZED_OFF, entities: DRAWING, plotScale: 500, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true } },
+  { id: 'own-weights', title: 'Kendi kalınlığı olan nesneler: en ince, DXF’in en kalını, kendi rengiyle biri ve kalınlığı olmayan (katmanınki)', style: SIMPLE, entities: WEIGHTS, plotScale: 1000, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true } },
+  { id: 'own-weights-hairlines', title: 'Kendi kalınlığı olan nesneler, kalınlıklar kapalı: hepsi bir piksel', style: SIMPLE, entities: WEIGHTS, plotScale: 1000, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: false } },
 ];
 
 it.runIf(!!process.env.GOLDEN_WRITE)('records the styled layers’ way to the GPU', () => {

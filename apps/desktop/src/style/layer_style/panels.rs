@@ -43,7 +43,12 @@ impl App {
         let node = model.layers().get(&window.layer);
         let simple = node
             .map(|n| {
-                SymbolSet::from_value(&symbols_of_layer_style(&n.style, &n.style.color, false))
+                SymbolSet::from_value(&symbols_of_layer_style(
+                    &n.style,
+                    &n.style.color,
+                    n.style.line_weight,
+                    false,
+                ))
             })
             .unwrap_or_default();
         let palette = self.style_palette();

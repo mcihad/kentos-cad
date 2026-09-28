@@ -55,6 +55,7 @@ fn parcel(i: usize, shift: f64) -> Entity {
             ]),
             label: Some(format!("{}/{}", 100 + i / 50, i % 50 + 1)),
             symbol: None,
+            line_weight: None,
         },
         pts,
         bulges: None,

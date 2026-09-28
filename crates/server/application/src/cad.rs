@@ -26,7 +26,16 @@ pub const PROJECTION_TOLERANCE: f64 = 0.001;
 /// Coordinates and sizes beyond this are refused as garbage (TM coordinates reach 4.5·10⁶ m).
 const MAX_ABS: f64 = 1e9;
 const MAX_POINTS: usize = 1_000_000;
-const BASE_KEYS: [&str; 7] = ["kind", "id", "layerId", "color", "attrs", "label", "symbol"];
+const BASE_KEYS: [&str; 8] = [
+    "kind",
+    "id",
+    "layerId",
+    "color",
+    "attrs",
+    "label",
+    "symbol",
+    "lineWeight",
+];
 
 /// A feature row's content (without ids, versions and audit columns).
 #[derive(Clone, Debug, PartialEq)]
@@ -40,6 +49,8 @@ pub struct Stored {
     pub label: Option<String>,
     pub color: Option<String>,
     pub symbol: Option<String>,
+    /// Its own line weight, mm (docs/adr/0139); none: its layer's.
+    pub line_weight: Option<f64>,
 }
 
 fn p(v: kentos_contracts::Vec2) -> P {
@@ -117,6 +128,14 @@ fn validate(e: &Entity) -> Result<(), String> {
     };
     if base.layer_id.is_empty() || base.layer_id.len() > 200 {
         return Err("katman kimliği boş ya da çok uzun".into());
+    }
+    if let Some(w) = base.line_weight
+        && !(0.0..=kentos_contracts::MAX_LINE_WEIGHT).contains(&w)
+    {
+        return Err(format!(
+            "çizgi kalınlığı {w} mm; 0 ile {} arasında olmalı",
+            kentos_contracts::MAX_LINE_WEIGHT
+        ));
     }
     if base.attrs.len() > 500
         || base
@@ -270,6 +289,7 @@ pub fn to_stored(entity: &Entity, srid: u32) -> Result<Stored, String> {
         text(&map, "color"),
         text(&map, "symbol"),
     );
+    let line_weight = map.get("lineWeight").and_then(Value::as_f64);
     let properties = map
         .get("attrs")
         .cloned()
@@ -293,6 +313,7 @@ pub fn to_stored(entity: &Entity, srid: u32) -> Result<Stored, String> {
         label,
         color,
         symbol,
+        line_weight,
     })
 }
 
@@ -357,6 +378,9 @@ pub fn from_stored(s: &Stored) -> Result<Entity, String> {
             map.insert(k.into(), v.clone().into());
         }
     }
+    if let Some(w) = s.line_weight {
+        map.insert("lineWeight".into(), w.into());
+    }
     serde_json::from_value(Value::Object(map)).map_err(|e| format!("nesne okunamadı: {e}"))
 }
 
@@ -382,6 +406,34 @@ mod tests {
         assert_eq!(l.b.y.to_bits(), 0.0f64.to_bits());
         assert_eq!(l.base.id, 0);
         assert_eq!(l.base.attrs["Ad"], "x");
+    }
+
+    #[test]
+    fn an_objects_own_line_weight_is_a_column_of_its_own() {
+        // docs/adr/0139: a line keeps its geometry as source and has no definition to hold it.
+        let line = entity(
+            serde_json::json!({ "kind": "line", "id": 1, "layerId": "p", "attrs": {}, "lineWeight": 0.35,
+            "a": { "x": 0, "y": 0 }, "b": { "x": 10, "y": 0 } }),
+        );
+        let s = to_stored(&line, 5256).unwrap();
+        assert_eq!((s.source_kind, s.line_weight), ("geom", Some(0.35)));
+        assert_eq!(from_stored(&s).unwrap().base().line_weight, Some(0.35));
+        // A circle's definition does not hold it twice.
+        let circle = entity(
+            serde_json::json!({ "kind": "circle", "id": 1, "layerId": "p", "attrs": {}, "lineWeight": 0.0,
+            "c": { "x": 0, "y": 0 }, "r": 2 }),
+        );
+        let s = to_stored(&circle, 5256).unwrap();
+        assert_eq!(s.line_weight, Some(0.0));
+        assert!(s.cad_definition.as_ref().unwrap().get("lineWeight").is_none());
+        assert_eq!(from_stored(&s).unwrap().base().line_weight, Some(0.0));
+        // Without one, none; past 100 mm, refused.
+        let plain = entity(serde_json::json!({ "kind": "point", "id": 1, "layerId": "p", "attrs": {}, "p": { "x": 0, "y": 0 } }));
+        assert_eq!(to_stored(&plain, 5256).unwrap().line_weight, None);
+        let heavy = entity(
+            serde_json::json!({ "kind": "point", "id": 1, "layerId": "p", "attrs": {}, "lineWeight": 101.0, "p": { "x": 0, "y": 0 } }),
+        );
+        assert!(to_stored(&heavy, 5256).unwrap_err().contains("çizgi kalınlığı"));
     }
 
     #[test]

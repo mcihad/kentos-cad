@@ -61,8 +61,8 @@
       "pending": 0
     },
     "fileFields": {
-      "total": 192,
-      "implemented": 192,
+      "total": 203,
+      "implemented": 203,
       "partial": 0,
       "pending": 0
     },
@@ -133,8 +133,8 @@
         "n/a": 2
       },
       "fileFields": {
-        "total": 192,
-        "implemented": 192,
+        "total": 203,
+        "implemented": 203,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -9003,6 +9003,19 @@
       }
     },
     {
+      "id": "ArcEntity.lineWeight",
+      "contract": "ArcEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "lineWeight",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "ArcEntity.r",
       "contract": "ArcEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -9174,6 +9187,19 @@
       }
     },
     {
+      "id": "CircleEntity.lineWeight",
+      "contract": "CircleEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "lineWeight",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "CircleEntity.r",
       "contract": "CircleEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -9271,6 +9297,19 @@
       "field": "layerId",
       "type": "string",
       "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "ConstructionEntity.lineWeight",
+      "contract": "ConstructionEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "lineWeight",
+      "type": "number",
+      "optional": true,
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -9427,6 +9466,19 @@
       "field": "layerId",
       "type": "string",
       "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionEntity.lineWeight",
+      "contract": "DimensionEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "lineWeight",
+      "type": "number",
+      "optional": true,
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -9899,6 +9951,19 @@
       }
     },
     {
+      "id": "EllipseEntity.lineWeight",
+      "contract": "EllipseEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "lineWeight",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "EllipseEntity.major",
       "contract": "EllipseEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -10110,6 +10175,19 @@
       "field": "layerId",
       "type": "string",
       "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "HatchEntity.lineWeight",
+      "contract": "HatchEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "lineWeight",
+      "type": "number",
+      "optional": true,
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -10684,6 +10762,19 @@
       }
     },
     {
+      "id": "LineEntity.lineWeight",
+      "contract": "LineEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "lineWeight",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "LineEntity.symbol",
       "contract": "LineEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -10843,6 +10934,19 @@
       }
     },
     {
+      "id": "PathEntity.lineWeight",
+      "contract": "PathEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "lineWeight",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "PathEntity.pts",
       "contract": "PathEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -10927,6 +11031,19 @@
       "field": "layerId",
       "type": "string",
       "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "PointEntity.lineWeight",
+      "contract": "PointEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "lineWeight",
+      "type": "number",
+      "optional": true,
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -11259,6 +11376,19 @@
       }
     },
     {
+      "id": "SplineEntity.lineWeight",
+      "contract": "SplineEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "lineWeight",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "SplineEntity.pts",
       "contract": "SplineEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -11356,6 +11486,19 @@
       "field": "layerId",
       "type": "string",
       "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "TextEntity.lineWeight",
+      "contract": "TextEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "lineWeight",
+      "type": "number",
+      "optional": true,
       "status": "implemented",
       "platforms": {
         "web": "implemented",

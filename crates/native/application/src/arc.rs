@@ -100,6 +100,7 @@ fn arc(input: ArcCreate, id: u32) -> Entity {
             attrs: input.attrs.unwrap_or_default(),
             label: None,
             symbol: None,
+            line_weight: None,
         },
         c: input.c,
         r: input.r,

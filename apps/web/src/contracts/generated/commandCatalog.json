@@ -74,6 +74,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "r": {
                 "format": "double",
                 "type": "number"
@@ -139,6 +149,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "r": {
                 "format": "double",
                 "type": "number"
@@ -193,6 +213,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -273,6 +303,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "offset": {
                 "format": "double",
@@ -369,6 +409,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "major": {
                 "$ref": "#/$defs/Vec2"
@@ -684,6 +734,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pattern": {
                 "$ref": "#/$defs/HatchPattern"
               },
@@ -979,6 +1039,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -1055,6 +1125,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -1107,6 +1187,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -1345,6 +1435,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -1403,6 +1503,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -8552,6 +8662,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "r": {
                 "format": "double",
                 "type": "number"
@@ -8609,6 +8729,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "r": {
                 "format": "double",
                 "type": "number"
@@ -8663,6 +8793,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -8743,6 +8883,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "offset": {
                 "format": "double",
@@ -8826,6 +8976,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "major": {
                 "$ref": "#/$defs/Vec2"
@@ -9079,6 +9239,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pattern": {
                 "$ref": "#/$defs/HatchPattern"
               },
@@ -9173,6 +9343,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -9240,6 +9420,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -9292,6 +9482,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -9378,6 +9578,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -9436,6 +9646,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -9755,6 +9975,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "r": {
                 "format": "double",
                 "type": "number"
@@ -9812,6 +10042,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "r": {
                 "format": "double",
                 "type": "number"
@@ -9866,6 +10106,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -9946,6 +10196,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "offset": {
                 "format": "double",
@@ -10029,6 +10289,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "major": {
                 "$ref": "#/$defs/Vec2"
@@ -10282,6 +10552,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pattern": {
                 "$ref": "#/$defs/HatchPattern"
               },
@@ -10376,6 +10656,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -10443,6 +10733,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -10495,6 +10795,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -10581,6 +10891,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -10639,6 +10959,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -10919,6 +11249,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "r": {
                 "format": "double",
                 "type": "number"
@@ -10976,6 +11316,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "r": {
                 "format": "double",
                 "type": "number"
@@ -11030,6 +11380,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -11110,6 +11470,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "offset": {
                 "format": "double",
@@ -11193,6 +11563,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "major": {
                 "$ref": "#/$defs/Vec2"
@@ -11446,6 +11826,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pattern": {
                 "$ref": "#/$defs/HatchPattern"
               },
@@ -11540,6 +11930,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -11607,6 +12007,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -11659,6 +12069,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -11745,6 +12165,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -11803,6 +12233,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -12235,6 +12675,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "r": {
                 "format": "double",
                 "type": "number"
@@ -12292,6 +12742,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "r": {
                 "format": "double",
                 "type": "number"
@@ -12346,6 +12806,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -12426,6 +12896,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "offset": {
                 "format": "double",
@@ -12509,6 +12989,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "major": {
                 "$ref": "#/$defs/Vec2"
@@ -12762,6 +13252,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pattern": {
                 "$ref": "#/$defs/HatchPattern"
               },
@@ -12856,6 +13356,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -12923,6 +13433,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -12975,6 +13495,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -13061,6 +13591,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -13119,6 +13659,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -13384,6 +13934,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "r": {
                 "format": "double",
                 "type": "number"
@@ -13441,6 +14001,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "r": {
                 "format": "double",
                 "type": "number"
@@ -13495,6 +14065,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -13575,6 +14155,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "offset": {
                 "format": "double",
@@ -13658,6 +14248,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "major": {
                 "$ref": "#/$defs/Vec2"
@@ -13911,6 +14511,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pattern": {
                 "$ref": "#/$defs/HatchPattern"
               },
@@ -14005,6 +14615,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -14072,6 +14692,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -14124,6 +14754,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -14210,6 +14850,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -14268,6 +14918,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -14543,6 +15203,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "r": {
                 "format": "double",
                 "type": "number"
@@ -14600,6 +15270,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "r": {
                 "format": "double",
                 "type": "number"
@@ -14654,6 +15334,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -14734,6 +15424,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "offset": {
                 "format": "double",
@@ -14817,6 +15517,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "major": {
                 "$ref": "#/$defs/Vec2"
@@ -15070,6 +15780,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pattern": {
                 "$ref": "#/$defs/HatchPattern"
               },
@@ -15164,6 +15884,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -15231,6 +15961,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -15283,6 +16023,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -15369,6 +16119,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -15427,6 +16187,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -15833,6 +16603,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "r": {
                 "format": "double",
                 "type": "number"
@@ -15890,6 +16670,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "r": {
                 "format": "double",
                 "type": "number"
@@ -15944,6 +16734,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -16024,6 +16824,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "offset": {
                 "format": "double",
@@ -16107,6 +16917,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "major": {
                 "$ref": "#/$defs/Vec2"
@@ -16360,6 +17180,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pattern": {
                 "$ref": "#/$defs/HatchPattern"
               },
@@ -16454,6 +17284,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -16521,6 +17361,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -16573,6 +17423,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -16659,6 +17519,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -16717,6 +17587,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -17724,6 +18604,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "r": {
                 "format": "double",
                 "type": "number"
@@ -17781,6 +18671,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "r": {
                 "format": "double",
                 "type": "number"
@@ -17835,6 +18735,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -17915,6 +18825,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "offset": {
                 "format": "double",
@@ -17998,6 +18918,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "major": {
                 "$ref": "#/$defs/Vec2"
@@ -18251,6 +19181,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pattern": {
                 "$ref": "#/$defs/HatchPattern"
               },
@@ -18345,6 +19285,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -18412,6 +19362,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -18464,6 +19424,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -18550,6 +19520,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -18608,6 +19588,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -18993,6 +19983,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "r": {
                 "format": "double",
                 "type": "number"
@@ -19050,6 +20050,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "r": {
                 "format": "double",
                 "type": "number"
@@ -19104,6 +20114,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -19184,6 +20204,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "offset": {
                 "format": "double",
@@ -19267,6 +20297,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "major": {
                 "$ref": "#/$defs/Vec2"
@@ -19520,6 +20560,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pattern": {
                 "$ref": "#/$defs/HatchPattern"
               },
@@ -19614,6 +20664,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -19681,6 +20741,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -19733,6 +20803,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -19819,6 +20899,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -19877,6 +20967,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -20732,6 +21832,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "r": {
                 "format": "double",
                 "type": "number"
@@ -20789,6 +21899,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "r": {
                 "format": "double",
                 "type": "number"
@@ -20843,6 +21963,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -20923,6 +22053,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "offset": {
                 "format": "double",
@@ -21006,6 +22146,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "major": {
                 "$ref": "#/$defs/Vec2"
@@ -21259,6 +22409,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pattern": {
                 "$ref": "#/$defs/HatchPattern"
               },
@@ -21353,6 +22513,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -21420,6 +22590,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -21472,6 +22652,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -21558,6 +22748,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -21616,6 +22816,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -22018,6 +23228,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "r": {
                 "format": "double",
                 "type": "number"
@@ -22075,6 +23295,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "r": {
                 "format": "double",
                 "type": "number"
@@ -22129,6 +23359,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -22209,6 +23449,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "offset": {
                 "format": "double",
@@ -22292,6 +23542,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "major": {
                 "$ref": "#/$defs/Vec2"
@@ -22545,6 +23805,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pattern": {
                 "$ref": "#/$defs/HatchPattern"
               },
@@ -22639,6 +23909,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -22706,6 +23986,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -22758,6 +24048,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"
@@ -22844,6 +24144,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -22902,6 +24212,16 @@
               },
               "layerId": {
                 "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "p": {
                 "$ref": "#/$defs/Vec2"

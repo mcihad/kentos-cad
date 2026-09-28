@@ -367,6 +367,7 @@ mod tests {
                 attrs,
                 label: label.map(str::to_owned),
                 symbol: None,
+                line_weight: None,
             },
             p: Vec2 { x: 1.5, y: 2.5 },
             z,

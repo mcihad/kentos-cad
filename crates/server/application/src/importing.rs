@@ -112,13 +112,14 @@ pub(crate) async fn insert_objects(
     let labels: Vec<Option<&str>> = rows.iter().map(|(_, s)| s.label.as_deref()).collect();
     let colors: Vec<Option<&str>> = rows.iter().map(|(_, s)| s.color.as_deref()).collect();
     let symbols: Vec<Option<&str>> = rows.iter().map(|(_, s)| s.symbol.as_deref()).collect();
+    let weights: Vec<Option<f64>> = rows.iter().map(|(_, s)| s.line_weight).collect();
     sqlx::query(
         "insert into kentos.feature (tenant_id, project_id, id, layer_id, kind, source_kind, srid, geom, cad_definition, properties,
-                                     label, color, symbol, projection_version, created_by, updated_by, version)
+                                     label, color, symbol, line_weight, projection_version, created_by, updated_by, version)
          select $1, $2, f.id, f.layer_id, f.kind, f.source_kind, $3, public.st_geomfromewkb(f.geom), f.cad_definition, f.properties,
-                f.label, f.color, f.symbol, $4, $5, $5, 1
-           from unnest($6::uuid[], $7::text[], $8::text[], $9::text[], $10::bytea[], $11::jsonb[], $12::jsonb[], $13::text[], $14::text[], $15::text[])
-             as f(id, layer_id, kind, source_kind, geom, cad_definition, properties, label, color, symbol)",
+                f.label, f.color, f.symbol, f.line_weight, $4, $5, $5, 1
+           from unnest($6::uuid[], $7::text[], $8::text[], $9::text[], $10::bytea[], $11::jsonb[], $12::jsonb[], $13::text[], $14::text[], $15::text[], $16::float8[])
+             as f(id, layer_id, kind, source_kind, geom, cad_definition, properties, label, color, symbol, line_weight)",
     )
     .bind(tenant)
     .bind(project)
@@ -135,6 +136,7 @@ pub(crate) async fn insert_objects(
     .bind(&labels)
     .bind(&colors)
     .bind(&symbols)
+    .bind(&weights)
     .execute(&mut **tx)
     .await?;
     Ok(())

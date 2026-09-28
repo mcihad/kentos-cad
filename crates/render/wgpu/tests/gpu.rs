@@ -245,6 +245,7 @@ fn one_line(x: f64) -> DocumentSnapshotV1 {
             attrs: Default::default(),
             label: None,
             symbol: None,
+            line_weight: None,
         },
         a: kentos_contracts::Vec2 { x, y: N - 50.0 },
         b: kentos_contracts::Vec2 { x, y: N + 50.0 },

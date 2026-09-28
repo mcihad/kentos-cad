@@ -188,14 +188,21 @@ impl format::Sink for Emitter {
             self.truncated += 1;
             return true;
         }
+        let first = self.out.len();
         match self.place(e, layer) {
             Ok(()) => {
-                // The pen: 0 is the thinnest line, a negative width the layer's.
+                // The pen, tenths of a millimetre: the object's own weight, as the C++ reader
+                // gives it (docs/adr/0139). Zero, a negative width (Netcad's own DXF export
+                // writes those as the thinnest line) or one past 100 mm is the layer's.
                 if e.line_width.is_finite() && e.line_width > 0.0 && e.line_width <= 1000.0 {
                     let mm = e.line_width / 10.0;
                     self.widths += 1;
                     self.widest = self.widest.max(mm);
                     self.thinnest = if self.widths == 1 { mm } else { self.thinnest.min(mm) };
+                    // Every object the record made: a smart object's symbol is drawn in its pen.
+                    for made in &mut self.out[first..] {
+                        made.base_mut().line_weight = Some(mm);
+                    }
                 }
             }
             Err(why) => self.report.skip(kind_words(e.kind), why, 0),
@@ -272,6 +279,7 @@ impl Emitter {
             attrs: BTreeMap::new(),
             label: None,
             symbol: None,
+            line_weight: None,
         }
     }
 
@@ -664,7 +672,7 @@ impl Emitter {
             self.report.note_n(
                 "Çizgi kalınlığı",
                 &format!(
-                    "nesnelerin kendi kalınlığı var ({:.2}–{:.2} mm); KentOS nesne başına kalınlığı henüz taşımıyor, katmanın kalınlığıyla çizilir",
+                    "nesnenin kendi kalınlığıyla alındı ({:.2}–{:.2} mm); kalınlığı olmayanlar katmanınkiyle çizilir",
                     self.thinnest, self.widest
                 ),
                 0,

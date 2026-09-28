@@ -225,6 +225,7 @@ fn base(rng: &mut Rng, layer: &str) -> EntityBase {
         attrs,
         label: rng.chance(30).then(|| rng.text()),
         symbol: rng.chance(10).then(|| rng.text()),
+        line_weight: None,
     }
 }
 

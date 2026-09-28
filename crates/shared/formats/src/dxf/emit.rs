@@ -10,13 +10,13 @@ use std::collections::{BTreeMap, HashMap};
 
 use kentos_contracts::{
     ArcEntity, Bounds, CircleEntity, ConstructionEntity, EllipseEntity, Entity, EntityBase,
-    HatchEntity, HatchPattern, HatchPatternType, LineEntity, PathEntity, PointEntity, RingGeometry,
-    SplineEntity, TextEntity, Vec2,
+    HatchEntity, HatchPattern, HatchPatternType, LineEntity, MAX_LINE_WEIGHT, PathEntity,
+    PointEntity, RingGeometry, SplineEntity, TextEntity, Vec2,
 };
 
 use super::aci;
 use super::dimension;
-use super::entity::{Color, Kind, P3, Parsed, Vertex};
+use super::entity::{Color, Kind, P3, Parsed, Vertex, Weight};
 use super::hatch::{Edge, Hatch, Path};
 use super::strings::{mtext_lines, text_codes};
 use super::xdata::{Meta, caret_decode};
@@ -53,6 +53,8 @@ pub struct Library {
     pub blocks: HashMap<String, Block>,
     /// Upper-case layer name → the layer's colour for BYBLOCK children of inserts on it.
     pub layer_colors: HashMap<String, String>,
+    /// Upper-case layer name → the layer's line weight (mm), for BYBLOCK children of inserts on it.
+    pub layer_weights: HashMap<String, f64>,
     /// Upper-case layer name → the name as the LAYER table spells it (DXF layer names ignore case).
     pub layer_names: HashMap<String, String>,
     /// Upper-case text style name → fixed height (0: none).
@@ -68,6 +70,8 @@ pub struct Ctx {
     pub z_offset: f64,
     pub layer: Option<String>,
     pub byblock: String,
+    /// The insert's line weight, for its BYBLOCK children (none: their layer's).
+    pub byblock_weight: Option<f64>,
     /// Upper-case names of the blocks being inserted (cycle guard).
     pub chain: Vec<String>,
     /// Inside a dimension's block: its definition points are not drawing content.
@@ -82,6 +86,7 @@ impl Ctx {
             z_offset: 0.0,
             layer: None,
             byblock: "ink".to_string(),
+            byblock_weight: None,
             chain: Vec::new(),
             in_dimension: false,
         }
@@ -150,7 +155,7 @@ impl Out {
     }
 }
 
-fn base(layer: &str, color: Option<String>) -> EntityBase {
+fn base(layer: &str, color: Option<String>, line_weight: Option<f64>) -> EntityBase {
     EntityBase {
         id: 0,
         layer_id: layer.to_string(),
@@ -158,6 +163,7 @@ fn base(layer: &str, color: Option<String>) -> EntityBase {
         attrs: BTreeMap::new(),
         label: None,
         symbol: None,
+        line_weight,
     }
 }
 
@@ -210,6 +216,13 @@ fn apply_meta(meta: &Meta, e: &mut Entity) {
         && aci::from_app(app).0.read_back() == *read
     {
         b.color = Some(app.clone());
+    }
+    // The exact weight, while the entity's 370 still is the DXF weight it rounds to (an edit elsewhere wins).
+    if let (Some(app), Some(read)) = (meta.line_weight, b.line_weight)
+        && (0.0..=MAX_LINE_WEIGHT).contains(&app)
+        && crate::dxf::writer::rounded_weight(app) == read
+    {
+        b.line_weight = Some(app);
     }
 }
 
@@ -305,6 +318,26 @@ impl<'l> Emitter<'l> {
         }
     }
 
+    /// Its own line weight (docs/adr/0139): none for BYLAYER and the drawing's
+    /// default, the insert's for BYBLOCK, else the group's millimetres.
+    fn weight_of(e: &Parsed, ctx: &Ctx) -> Option<f64> {
+        match e.common.weight {
+            Weight::ByLayer | Weight::Default => None,
+            Weight::ByBlock => ctx.byblock_weight,
+            Weight::Mm(w) => Some(w),
+        }
+    }
+
+    /// What an insert hands its BYBLOCK children: its own weight, or its layer's.
+    fn insert_weight(&self, e: &Parsed, ctx: &Ctx, layer: &str) -> Option<f64> {
+        match e.common.weight {
+            Weight::ByLayer => self.lib.layer_weights.get(&layer.to_uppercase()).copied(),
+            Weight::ByBlock => ctx.byblock_weight,
+            Weight::Default => None,
+            Weight::Mm(w) => Some(w),
+        }
+    }
+
     /// The colour override: none for BYLAYER, the insert's colour for BYBLOCK.
     fn color_of(&self, e: &Parsed, ctx: &Ctx) -> Option<String> {
         match e.common.color {
@@ -396,7 +429,8 @@ impl<'l> Emitter<'l> {
         }
         let layer = self.layer_of(e, ctx);
         let color = self.color_of(e, ctx);
-        let b = || base(&layer, color.clone());
+        let weight = Self::weight_of(e, ctx);
+        let b = || base(&layer, color.clone(), weight);
         let ext = e.common.extrusion;
         match &e.kind {
             Kind::Line { a, b: bb } => {
@@ -1300,6 +1334,7 @@ impl<'l> Emitter<'l> {
             Color::Aci(n) => aci::color(n),
             Color::True(rgb) => aci::true_color(rgb),
         };
+        let byblock_weight = self.insert_weight(e, ctx, layer);
         let nz = super::extrusion_z(e.common.extrusion);
         let mut chain = ctx.chain.clone();
         chain.push(key);
@@ -1331,6 +1366,7 @@ impl<'l> Emitter<'l> {
                 z_offset: ctx.z_offset + ctx.z_scale * nz * (p[2] - sz * block.base[2]),
                 layer: Some(layer.to_string()),
                 byblock: byblock.clone(),
+                byblock_weight,
                 chain: chain.clone(),
                 in_dimension: ctx.in_dimension,
             };
@@ -1376,6 +1412,7 @@ impl<'l> Emitter<'l> {
             tf: o.then(&ctx.tf),
             layer: Some(layer.to_string()),
             byblock,
+            byblock_weight: self.insert_weight(e, ctx, layer),
             chain,
             in_dimension: true,
             ..ctx.clone()

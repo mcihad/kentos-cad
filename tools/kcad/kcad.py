@@ -52,6 +52,9 @@ MAX_STRING = 1 << 24
 
 DOCUMENT_FORMAT = "kentos.document"
 DOCUMENT_VERSION = 2
+# Schema 3: schema 2 and an object's own line weight (`lineWeight`, mm; docs/adr/0139).
+SCHEMA_WITH_LINE_WEIGHTS = 3
+MAX_LINE_WEIGHT = 100.0
 
 
 class KcadError(Exception):
@@ -281,6 +284,8 @@ class _Schema:
         self.path = []
         self.uids = []
         self.seen = set()
+        # Whether objects may have their own line weight (schema 3).
+        self.weights = False
 
     def where(self):
         return "/".join(self.path) or "(kök)"
@@ -422,8 +427,10 @@ class _Schema:
         if v.get("format") != DOCUMENT_FORMAT:
             self.fail("schema_format", f"KentOS çizimi değil (format ≠ {DOCUMENT_FORMAT})")
         version = v.get("version")
-        if type(version) is not int or version != DOCUMENT_VERSION:
-            self.fail("schema_version", f"belge şeması sürümü {version!r} okunamıyor (desteklenen: {DOCUMENT_VERSION})")
+        if type(version) is not int or version not in (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS):
+            self.fail("schema_version", f"belge şeması sürümü {version!r} okunamıyor (desteklenen: {DOCUMENT_VERSION}, {SCHEMA_WITH_LINE_WEIGHTS})")
+        # In schema 2 an object's line weight is an unknown field.
+        self.weights = version == SCHEMA_WITH_LINE_WEIGHTS
         checked = self.fields({"format": (self.text, True), "version": (self.uint(32), True), "document": (self.document, True)})(v)
         return checked["document"]
 
@@ -561,7 +568,14 @@ class _Schema:
             "label": (self.text, False),
             "symbol": (self.text, False),
             "layerId": (self.text, True),
+            **({"lineWeight": (self.line_weight, False)} if self.weights else {}),
         }
+
+    def line_weight(self, v):
+        w = self.float(v)
+        if not 0.0 <= w <= MAX_LINE_WEIGHT:
+            self.fail("bad_value", f"çizgi kalınlığı {w} mm; 0 ile {MAX_LINE_WEIGHT:g} arasında olmalı")
+        return w
 
     def ring(self, v):
         return self.fields({"pts": (self.array(self.point), True), "bulges": (self.array(self.float), False)})(v)

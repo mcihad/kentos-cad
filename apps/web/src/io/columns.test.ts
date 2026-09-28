@@ -31,10 +31,10 @@ const P = (x: number, y: number) => ({ x, y });
 function everyKind(): PageEntity[] {
   return [
     { ...base(), kind: 'point', p: P(-0, 1.5), z: 12.25, label: 'P1', color: '#FF0000', symbol: 'nirengi' },
-    { ...base('yol'), kind: 'line', a: P(1, 2), b: P(3, 4) },
+    { ...base('yol'), kind: 'line', a: P(1, 2), b: P(3, 4), lineWeight: 0.35 },
     { ...base(), kind: 'polyline', pts: [P(0, 0), P(1, 1), P(2, 0)], bulges: [0.5, -0] },
     { ...base(), kind: 'polygon', pts: [P(0, 0), P(10, 0), P(10, 10)], bulges: [0, 0, 0.25], holes: [{ pts: [P(1, 1), P(2, 1), P(2, 2)] }, { pts: [P(3, 3), P(4, 3), P(4, 4)], bulges: [0.1] }] },
-    { ...base(), kind: 'circle', c: P(5, 5), r: 2 },
+    { ...base(), kind: 'circle', c: P(5, 5), r: 2, lineWeight: 0 },
     { ...base(), kind: 'arc', c: P(5, 5), r: 2, a0: 0, a1: Math.PI },
     { ...base(), kind: 'ellipse', c: P(1, 1), major: P(3, 0), ratio: 0.5, t0: 0, t1: 2 * Math.PI },
     { ...base(), kind: 'spline', pts: [P(0, 0), P(1, 2), P(3, 1)], closed: true },

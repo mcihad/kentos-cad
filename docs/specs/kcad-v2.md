@@ -194,10 +194,12 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`; değilse `schema_version` |
+| `version` | tam sayı | `2` ya da `3`; değilse `schema_version` |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
+
+**Şema 3**, şema 2'nin kendisi ve nesnenin kendi çizgi kalınlığıdır (`lineWeight`, §6.6; ADR 0139). Yazıcı `3`'ü **yalnız bir nesnenin kendi kalınlığı varken** yazar; başka her çizim şema 2'dir ve eskisiyle bayt bayt aynıdır, bu yüzden şema 2 okuyucusu onu açmaya devam eder. Şema 2 yükünde `lineWeight` bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/line-weight-in-schema-2.kcad`). Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) iki şemada da aynıdır; şema dosyanın neyi taşıdığını söyler.
 
 ### 6.2 Belge
 
@@ -308,6 +310,7 @@ Yanlış CBOR türü (float yerine tam sayı, nokta yerine harita) `wrong_type`'
 | `label` | metin | | nesnenin etiketi |
 | `symbol` | metin | | katman stilinin yerine kitaplık sembolü |
 | `layerId` | metin | evet | nesnenin katmanı |
+| `lineWeight` | float | | yalnız şema 3: nesnenin kendi çizgi kalınlığı, kağıtta mm, `0` en ince çizgi; `0`…`100` dışı `bad_value`; yoksa katmana göre |
 
 **Türlere göre alanlar** (ortak alanlarla birlikte aynı haritada, sıralı):
 
@@ -507,6 +510,7 @@ Anahtar sırasına dikkat: `name` (4) < `layers` (6) < `origin` < `styles` < `en
 - **Ana sürüm** yalnız kap düzeni uyumsuz değişince artar (başlık alanlarının yeri, bütünlük yöntemi).
 - **Küçük sürüm** yeni bir kodek, bayrak, uzantı ya da isteğe bağlı başlık alanı getirir. Yazıcı `minReaderMinor`'ı yalnız o yeni şeyi gerçekten kullandığında yükseltir.
 - **Belge şeması sürümü** şema uyumsuz değişince artar (alan anlamı, zorunluluk). Yeni bir nesne türü ya da alan da şema sürümünü ya da bir zorunlu uzantıyı gerektirir: 2.0 okuyucusu bilmediği alanı ve türü reddeder.
+  - Yazıcı şema sürümünü, `minReaderMinor` gibi, dosyada **gerçekten kullandığı** en yeni alana göre yazar: nesne kalınlığı olmayan çizim şema 2'dir (§6.1).
 - **Profil** değişirse (etiket kullanımı gibi) yeni bir `encoding` kimliği alır.
 - Her değişiklik bu belgeyi, `fixtures/kcad/v2`'yi, Rust kodlayıcısını ve `tools/kcad/kcad.py`'yi birlikte günceller; eski örnek dosyalar okunmaya devam eder.
 

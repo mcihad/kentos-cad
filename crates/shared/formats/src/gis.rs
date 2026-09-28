@@ -111,6 +111,7 @@ impl Collect {
             attrs: attrs.clone(),
             label: label.map(str::to_string),
             symbol: None,
+            line_weight: None,
         };
         self.entities.push(match shape {
             Shape::Point { p, z } => Entity::Point(PointEntity { base, p, z }),

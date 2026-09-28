@@ -17,6 +17,12 @@
 mod entities;
 mod input;
 mod layers;
+
+/// The line weight (mm) a DXF holds for `mm` once written: the nearest of
+/// AutoCAD's weights, read back as a reader reads group 370 (docs/adr/0139).
+pub fn rounded_weight(mm: f64) -> f64 {
+    layers::line_weight(mm).0 as f64 / 100.0
+}
 mod template;
 
 pub(crate) use input::Objects;

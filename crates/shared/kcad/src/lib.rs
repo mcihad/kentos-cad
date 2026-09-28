@@ -56,6 +56,12 @@ pub use kentos_contracts as contracts;
 pub use watch::{Quiet, Step, Watch};
 
 /// The file extension (with the dot).
+/// Document schema 3 (docs/specs/kcad-v2.md §6.1): schema 2 and an object's
+/// own line weight, `lineWeight` (docs/adr/0139). A writer writes it only
+/// when an object has one: a drawing without one stays schema 2, byte for
+/// byte, and a reader of schema 2 still opens it.
+pub const SCHEMA_WITH_LINE_WEIGHTS: u32 = 3;
+
 pub const EXTENSION: &str = ".kcad";
 /// The media type: no registered KCAD type exists, so none is claimed (TODOS.md FILE-13).
 pub const MIME: &str = "application/octet-stream";

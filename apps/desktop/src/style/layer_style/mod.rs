@@ -269,6 +269,7 @@ impl LayerStyleWindow {
         let simple = SymbolSet::from_value(&symbols_of_layer_style(
             &node.style,
             &node.style.color,
+            node.style.line_weight,
             false,
         ))
         .only(&classes);

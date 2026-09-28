@@ -370,9 +370,10 @@ pub(crate) type FeatureRow = (
     Option<String>,
     Option<String>,
     Option<String>,
+    Option<f64>,
 );
 
-pub(crate) const FEATURE_COLUMNS: &str = "id, version, layer_id, kind, source_kind, public.st_asewkb(geom), cad_definition, properties, label, color, symbol";
+pub(crate) const FEATURE_COLUMNS: &str = "id, version, layer_id, kind, source_kind, public.st_asewkb(geom), cad_definition, properties, label, color, symbol, line_weight";
 
 pub(crate) fn record(
     (
@@ -387,6 +388,7 @@ pub(crate) fn record(
         label,
         color,
         symbol,
+        line_weight,
     ): FeatureRow,
 ) -> AppResult<FeatureRecord> {
     let source_kind = if source_kind == "geom" { "geom" } else { "cad" };
@@ -400,6 +402,7 @@ pub(crate) fn record(
         label,
         color,
         symbol,
+        line_weight,
     };
     let entity = from_stored(&stored)
         .map_err(|e| AppError::invalid(format!("Nesne {id} okunamadı: {e}")))?;

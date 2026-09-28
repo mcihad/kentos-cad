@@ -870,6 +870,7 @@ fn perf() {
                 attrs: Default::default(),
                 label: Some(format!("N{i}")),
                 symbol: None,
+                line_weight: None,
             },
             p: kentos_contracts::Vec2 {
                 x: 486_400.0 + (i % side) as f64,

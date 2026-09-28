@@ -38,7 +38,16 @@ interface EntityBase {
   label?: string;
   /** Library symbol drawn for this object, overriding its layer's style (docs/STYLE.md). */
   symbol?: string;
+  /**
+   * Its own line weight, paper millimetres as the layer's `lineWeight`, 0 the
+   * thinnest line; undefined means "katmana göre" (docs/adr/0139). What a
+   * DXF's group 370 and a Netcad pen give an object.
+   */
+  lineWeight?: number;
 }
+
+/** The heaviest line weight an object may have, mm (`MAX_LINE_WEIGHT` in the contracts). */
+export const MAX_LINE_WEIGHT = 100;
 
 export interface PointEntity extends EntityBase {
   kind: 'point';

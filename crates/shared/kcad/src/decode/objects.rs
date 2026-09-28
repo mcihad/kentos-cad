@@ -1,14 +1,15 @@
-//! The objects of document schema 2 read from a payload (docs/specs/kcad-v2.md
-//! §6.6): each a one-key map, its kind and then its fields, read into the
-//! contract's `Entity` with the persistent id the file gives it; the ids are
-//! unique in a file.
+//! The objects of document schemas 2 and 3 read from a payload
+//! (docs/specs/kcad-v2.md §6.6): each a one-key map, its kind and then its
+//! fields, read into the contract's `Entity` with the persistent id the file
+//! gives it; the ids are unique in a file. Schema 3 adds an object's own line
+//! weight (`lineWeight`, docs/adr/0139); in schema 2 it is an unknown field.
 
 use std::collections::{BTreeMap, HashSet};
 
 use kentos_contracts::{
     ArcEntity, CircleEntity, ConstructionEntity, DimensionEntity, DimensionStyle, EllipseEntity,
     Entity, EntityBase, EntityId, HatchEntity, HatchPattern, HatchPatternType, LineEntity,
-    PathEntity, PointEntity, RingGeometry, SplineEntity, TextEntity, Vec2,
+    MAX_LINE_WEIGHT, PathEntity, PointEntity, RingGeometry, SplineEntity, TextEntity, Vec2,
 };
 
 use super::{PREALLOCATE, floats, id16, list, map, named, point, points, required, text, unknown};
@@ -49,12 +50,15 @@ const KINDS: &[(&str, Kind)] = &[
     ("hatch", Kind::Hatch),
 ];
 
-/// Whether a kind's map may hold `key` (the fields every kind has, then its own).
-fn allowed(kind: Kind, key: &str) -> bool {
+/// Whether a kind's map may hold `key` (the fields every kind has, then its
+/// own); `weights`: the payload is schema 3, where an object may have its own
+/// line weight.
+fn allowed(kind: Kind, key: &str, weights: bool) -> bool {
     matches!(
         key,
         "uid" | "attrs" | "color" | "label" | "symbol" | "layerId"
-    ) || match kind {
+    ) || (weights && key == "lineWeight")
+        || match kind {
         Kind::Point => matches!(key, "p" | "z"),
         Kind::Line => matches!(key, "a" | "b"),
         Kind::Polyline => matches!(key, "pts" | "bulges"),
@@ -82,6 +86,7 @@ struct Fields {
     label: Option<String>,
     symbol: Option<String>,
     layer_id: Option<String>,
+    line_weight: Option<f64>,
     p: Option<Vec2>,
     a: Option<Vec2>,
     b: Option<Vec2>,
@@ -117,6 +122,7 @@ pub(super) fn objects(
     r: &mut Reader<'_>,
     name: Option<&str>,
     layers: usize,
+    weights: bool,
 ) -> Result<(Vec<Entity>, Vec<EntityId>), KcadError> {
     let n = r.array()?;
     r.report(Step::Project {
@@ -133,7 +139,7 @@ pub(super) fn objects(
             r.report(Step::Reading { done: i, total: n })?;
         }
         r.push(Seg::Index(i));
-        let (entity, uid) = object(r, i)?;
+        let (entity, uid) = object(r, i, weights)?;
         if !seen.insert(uid) {
             r.push(Seg::Name("uid"));
             let e = r.fail(
@@ -157,7 +163,7 @@ pub(super) fn objects(
 // work of each object must be a function called once per object, not inlined into the
 // one loop that runs once for the whole drawing (docs/adr/0030).
 #[inline(never)]
-fn object(r: &mut Reader<'_>, index: usize) -> Result<(Entity, EntityId), KcadError> {
+fn object(r: &mut Reader<'_>, index: usize, weights: bool) -> Result<(Entity, EntityId), KcadError> {
     let (n, at) = r.map()?;
     if n != 1 {
         return Err(r.fail_at(
@@ -179,7 +185,7 @@ fn object(r: &mut Reader<'_>, index: usize) -> Result<(Entity, EntityId), KcadEr
     };
     let mut f = Fields::default();
     map(r, |r, key| {
-        if !allowed(kind, key) {
+        if !allowed(kind, key, weights) {
             return Err(unknown(r));
         }
         match key {
@@ -196,6 +202,16 @@ fn object(r: &mut Reader<'_>, index: usize) -> Result<(Entity, EntityId), KcadEr
             "label" => f.label = Some(text(r)?),
             "symbol" => f.symbol = Some(text(r)?),
             "layerId" => f.layer_id = Some(text(r)?),
+            "lineWeight" => {
+                let w = r.float()?;
+                if !(0.0..=MAX_LINE_WEIGHT).contains(&w) {
+                    return Err(r.fail(
+                        Code::BadValue,
+                        &format!("çizgi kalınlığı {w} mm; 0 ile {MAX_LINE_WEIGHT} arasında olmalı"),
+                    ));
+                }
+                f.line_weight = Some(w);
+            }
             "p" => f.p = Some(point(r)?),
             "a" => f.a = Some(point(r)?),
             "b" => f.b = Some(point(r)?),
@@ -259,6 +275,7 @@ fn build(
         attrs: required(r, f.attrs.take(), "attrs")?,
         label: f.label.take(),
         symbol: f.symbol.take(),
+        line_weight: f.line_weight.take(),
     };
     Ok(match kind {
         Kind::Point => Entity::Point(PointEntity {

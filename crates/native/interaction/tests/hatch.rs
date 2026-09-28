@@ -235,6 +235,7 @@ fn too_dense_a_pattern_is_refused() {
             attrs: BTreeMap::new(),
             label: None,
             symbol: None,
+            line_weight: None,
         },
         pts: vec![
             far(-50_000.0, -50_000.0),

@@ -295,6 +295,8 @@ def entity(e, uid, index):
         "attrs": (lambda a: cmap({k: text(v) for k, v in a.items()}), True),
         "label": (text, False),
         "symbol": (text, False),
+        # Schema 3 (docs/adr/0139): an object's own line weight, mm.
+        "lineWeight": (f64, False),
         **KINDS[kind],
     }
     body = fields({k: v for k, v in e.items() if k not in ("kind", "id")}, table, f"nesne {index} ({kind})")
@@ -325,7 +327,9 @@ def document(d):
         },
         "belge",
     )
-    return root(cmap(body))
+    # Schema 3 only when an object has its own line weight: every other drawing stays schema 2.
+    schema = 3 if any("lineWeight" in e for e in d["entities"]) else 2
+    return root(cmap(body), version=uint(schema))
 
 
 def root(document_bytes, version=b"\x02"):
@@ -498,7 +502,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-3.kcad"] = container(root(cmap(parts), version=b"\x03"))
+    files["schema-version-4.kcad"] = container(root(cmap(parts), version=b"\x04"))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -508,6 +512,11 @@ def broken(minimal_content, minimal_file):
     files["nil-uid.kcad"] = container(with_parts({**parts, "entities": array([cmap({"point": cmap({**body, "uid": blob(bytes(16))})})])}))
     same = cmap({"point": cmap({**body, "uid": blob(uid_bytes(m["uids"][0]))})})
     files["duplicate-uid.kcad"] = container(with_parts({**parts, "entities": array([same, same])}))
+    # An object's own line weight is schema 3's: in schema 2 it is an unknown field; beyond 0…100 mm a bad value.
+    weighed = cmap({"point": cmap({**body, "uid": blob(uid_bytes(m["uids"][0])), "lineWeight": f64(0.35)})})
+    files["line-weight-in-schema-2.kcad"] = container(with_parts({**parts, "entities": array([weighed])}))
+    heavy = cmap({"point": cmap({**body, "uid": blob(uid_bytes(m["uids"][0])), "lineWeight": f64(100.5)})})
+    files["line-weight-too-heavy.kcad"] = container(root(cmap({**parts, "entities": array([heavy])}), version=b"\x03"))
     files["unknown-kind.kcad"] = container(with_parts({**parts, "entities": array([cmap({"block": cmap({**body, "uid": blob(uid_bytes(m["uids"][0]))})})])}))
     files["two-kinds.kcad"] = container(with_parts({**parts, "entities": array([cmap({"line": cmap({}), "point": cmap({**body, "uid": blob(uid_bytes(m["uids"][0]))})})])}))
     files["point-three-numbers.kcad"] = container(with_parts({**parts, "origin": array([f64(1.0), f64(2.0), f64(3.0)])}))
@@ -558,6 +567,7 @@ def build():
     out["minimal.kcad"] = container(document(minimal))
     out["drawing.kcad"] = container(document(drawing))
     out["migrated.kcad"] = container(document(moved))
+    out["line-weights.kcad"] = container(document(load("line-weights.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

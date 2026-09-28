@@ -150,8 +150,8 @@ struct Interned {
     color_index: HashMap<String, i32>,
     refs: Vec<String>,
     ref_index: HashMap<String, i32>,
-    /// The simple look's set by colour.
-    simple: HashMap<String, i32>,
+    /// The simple look's set by colour and line weight (its bits).
+    simple: HashMap<(String, u64), i32>,
 }
 
 impl Interned {
@@ -195,11 +195,14 @@ pub fn layer_call(style: &LayerStyle, entities: &[&Entity], opts: &BuildOptions)
         let base = e.base();
         let color = base.color.as_deref().unwrap_or(&style.color);
         let c = it.color(color);
-        let s = match it.simple.get(color) {
+        // The object's own weight, else its layer's (docs/adr/0139).
+        let weight = base.line_weight.unwrap_or(style.line_weight);
+        let key = (color.to_owned(), weight.to_bits());
+        let s = match it.simple.get(&key) {
             Some(&s) => s,
             None => {
-                let s = it.set(symbols_of_layer_style(style, color, opts.hairlines));
-                it.simple.insert(color.to_owned(), s);
+                let s = it.set(symbols_of_layer_style(style, color, weight, opts.hairlines));
+                it.simple.insert(key, s);
                 s
             }
         };

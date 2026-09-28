@@ -42,6 +42,7 @@ fn point(x: f64) -> Entity {
             attrs: Default::default(),
             label: None,
             symbol: None,
+            line_weight: None,
         },
         p: Vec2 { x, y: 4_420_190.0 },
         z: None,

@@ -56,6 +56,7 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
         attrs: BTreeMap::from([("Nitelik".to_owned(), "Arsa".to_owned())]),
         label: None,
         symbol: None,
+        line_weight: None,
     };
     for i in 0..n {
         let (x, y) = (

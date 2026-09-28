@@ -76,6 +76,7 @@ fn base(layer: &str) -> EntityBase {
         attrs: BTreeMap::new(),
         label: None,
         symbol: None,
+        line_weight: None,
     }
 }
 

@@ -6,7 +6,7 @@ import type { V1Identities } from '../contracts/generated/V1Identities';
 import { isUuid } from '../core/uuid';
 import { crsBySrid } from '../geo/crs';
 import type { CadDocument, DocumentContent } from './document';
-import type { Entity } from './entities';
+import { MAX_LINE_WEIGHT, type Entity } from './entities';
 import type { LayerInit } from './layers';
 import { DRAWING_FONT_IDS, WORKSPACE_IDS } from './projectSettings';
 
@@ -379,6 +379,10 @@ function entity(v: unknown, where: string, layers: ReadonlySet<string>, ids: Set
   if (!layers.has(layerId)) fail(at(w, 'katman'), `“${layerId}” katmanı dosyada yok`);
   const attrs = isObj(v.attrs) ? v.attrs : fail(at(w, 'öznitelikler'), 'nesne olmalı');
   for (const k in attrs) if (typeof attrs[k] !== 'string') str(attrs[k], at(w, `öznitelik “${k}”`));
+  if (v.lineWeight !== undefined) {
+    const weight = numAt(v.lineWeight, w, 'kalınlık');
+    if (weight < 0 || weight > MAX_LINE_WEIGHT) fail(at(w, 'kalınlık'), `0 ile ${MAX_LINE_WEIGHT} mm arasında olmalı`);
+  }
   // Geometry by kind: every coordinate a finite float64, lists long enough to draw.
   switch (kind) {
     case 'point':

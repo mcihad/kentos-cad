@@ -1,11 +1,14 @@
-//! The objects written in document schema 2 (docs/specs/kcad-v2.md §6.6):
+//! The objects written in document schema 2, or 3 when one has its own line
+//! weight (docs/specs/kcad-v2.md §6.6, docs/adr/0139):
 //! each a one-key map, its kind and then its fields, whose keys are sorted per
 //! object (they depend on the kind); every object with its persistent id,
 //! unique and not nil.
 
 use std::collections::{BTreeMap, HashSet};
 
-use kentos_contracts::{DocumentSnapshotV2, Entity, EntityId, HatchPattern, RingGeometry, Vec2};
+use kentos_contracts::{
+    DocumentSnapshotV2, Entity, EntityId, HatchPattern, MAX_LINE_WEIGHT, RingGeometry, Vec2,
+};
 
 use super::Encoder;
 use super::names::{dimension_style, hatch_pattern};
@@ -80,6 +83,17 @@ impl<'d> Encoder<'d> {
         }
         if let Some(s) = &base.symbol {
             f.push(("symbol", Val::Text(s)));
+        }
+        if let Some(w) = base.line_weight {
+            if !(0.0..=MAX_LINE_WEIGHT).contains(&w) {
+                self.path.push(Seg::Name(kind));
+                self.path.push(Seg::Name("lineWeight"));
+                return Err(self.fail(
+                    Code::BadValue,
+                    &format!("çizgi kalınlığı {w} mm; 0 ile {MAX_LINE_WEIGHT} arasında olmalı"),
+                ));
+            }
+            f.push(("lineWeight", Val::Float(w)));
         }
         match entity {
             Entity::Point(e) => {

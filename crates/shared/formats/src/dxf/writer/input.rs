@@ -97,6 +97,7 @@ impl Fields {
             attrs: need(self.attrs, "attrs")?,
             label: self.label,
             symbol: self.symbol,
+            line_weight: None,
         };
         let rings = |holes: Option<Vec<Hole>>| -> Result<Option<Vec<RingGeometry>>, E> {
             holes

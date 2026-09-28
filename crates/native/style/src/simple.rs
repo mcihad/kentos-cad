@@ -48,10 +48,16 @@ pub fn line_symbol_of(color: &str, line_type: LineType, weight: f64) -> Value {
 }
 
 /// The symbols of a layer's simple look (`symbolsOfLayerStyle`); `color` is
-/// the object's own colour when it has one. `hairlines`: line weights hidden
-/// (Kalınlık off), every line one pixel.
-pub fn symbols_of_layer_style(style: &LayerStyle, color: &str, hairlines: bool) -> Value {
-    let weight = if hairlines { 0.0 } else { style.line_weight };
+/// the object's own colour when it has one, `weight` its own line weight
+/// (mm; docs/adr/0139). `hairlines`: line weights hidden (Kalınlık off),
+/// every line one pixel.
+pub fn symbols_of_layer_style(
+    style: &LayerStyle,
+    color: &str,
+    weight: f64,
+    hairlines: bool,
+) -> Value {
+    let weight = if hairlines { 0.0 } else { weight };
     let line = line_symbol_of(color, style.line_type, weight);
     let mut fill_layers = Vec::with_capacity(2);
     if let Some(fill) = &style.fill {

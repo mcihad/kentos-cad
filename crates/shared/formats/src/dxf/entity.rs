@@ -22,10 +22,23 @@ pub enum Color {
     True(i64),
 }
 
+/// Line weight as DXF gives it (group 370): hundredths of a millimetre, or
+/// −1 BYLAYER, −2 BYBLOCK, −3 the drawing's default (LWDEFAULT).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Weight {
+    ByLayer,
+    ByBlock,
+    /// The drawing's default weight: drawn as its layer's, as the C++ reader does.
+    Default,
+    /// Millimetres.
+    Mm(f64),
+}
+
 #[derive(Clone, Debug)]
 pub struct Common {
     pub layer: String,
     pub color: Color,
+    pub weight: Weight,
     pub extrusion: P3,
     pub paper: bool,
     pub invisible: bool,
@@ -285,6 +298,13 @@ fn common(list: &[Pair<'_>], dec: Decoder) -> Result<Common, Unreadable> {
         },
         _ => Color::ByLayer,
     };
+    // A weight that does not read as a whole number, or a negative other than the three, is the layer's.
+    let weight = match list.iter().find(|p| p.code == 370).and_then(|p| parse_int(p.text())) {
+        Some(-2) => Weight::ByBlock,
+        Some(-3) => Weight::Default,
+        Some(n) if (0..=10_000).contains(&n) => Weight::Mm(n as f64 / 100.0),
+        _ => Weight::ByLayer,
+    };
     let layer = g.string(8);
     Ok(Common {
         layer: if layer.trim().is_empty() {
@@ -293,6 +313,7 @@ fn common(list: &[Pair<'_>], dec: Decoder) -> Result<Common, Unreadable> {
             layer
         },
         color,
+        weight,
         extrusion: [
             g.num_or(210, 0.0)?,
             g.num_or(220, 0.0)?,

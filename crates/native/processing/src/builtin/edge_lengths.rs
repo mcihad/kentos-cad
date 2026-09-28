@@ -160,6 +160,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, _feedback: &mut dyn Feedback) -> 
                     ]),
                     label: None,
                     symbol: None,
+                    line_weight: None,
                 },
                 p: l.p,
                 text: format!(

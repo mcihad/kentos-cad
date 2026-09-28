@@ -213,6 +213,9 @@ impl<'a> Reader<'a> {
                     };
                     let key = def.name.to_uppercase();
                     self.lib.layer_colors.insert(key.clone(), def.color.clone());
+                    if let Some(w) = def.line_weight {
+                        self.lib.layer_weights.insert(key.clone(), w);
+                    }
                     self.lib.layer_names.insert(key, def.name.clone());
                     self.layers.push(def);
                 }

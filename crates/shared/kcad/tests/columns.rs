@@ -54,6 +54,7 @@ fn points(n: usize) -> DocumentSnapshotV2 {
                     attrs: Default::default(),
                     label: None,
                     symbol: None,
+                    line_weight: None,
                 },
                 p: Vec2 {
                     x: 500_000.0 + i as f64,
