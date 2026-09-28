@@ -49,10 +49,26 @@ pub enum Family {
     Inter,
     /// Geometrik, açık ve yumuşak hatlı.
     PlusJakartaSans,
+    /// Dar; dar ekranda çok yazı sığar.
+    SourceSans3,
+    /// Geniş dil desteği.
+    NotoSans,
+    /// Tanıdık ve dengeli.
+    Roboto,
+    /// İşletim sisteminin yazı tipi (gömülü değil).
+    System,
 }
 
 impl Family {
-    pub const ALL: [Family; 3] = [Family::IbmPlexSans, Family::Inter, Family::PlusJakartaSans];
+    pub const ALL: [Family; 7] = [
+        Family::IbmPlexSans,
+        Family::Inter,
+        Family::PlusJakartaSans,
+        Family::SourceSans3,
+        Family::NotoSans,
+        Family::Roboto,
+        Family::System,
+    ];
 
     /// Yazı tipinin adı; gösterilen ad da budur.
     pub const fn name(self) -> &'static str {
@@ -60,16 +76,26 @@ impl Family {
             Family::IbmPlexSans => "IBM Plex Sans",
             Family::Inter => "Inter",
             Family::PlusJakartaSans => "Plus Jakarta Sans",
+            Family::SourceSans3 => "Source Sans 3",
+            Family::NotoSans => "Noto Sans",
+            Family::Roboto => "Roboto",
+            Family::System => "Sistem yazı tipi",
         }
     }
 
-    /// Harflerin ortalama genişliği (em), Türkçe arayüz metninde ölçülmüş:
-    /// normal ve yarı kalın.
+    /// Harflerin ortalama genişliği (em), Türkçe arayüz metninde ölçülmüş
+    /// (`scripts/fonts/ui_fonts.py --advance`): normal ve yarı kalın. Sistemin
+    /// yazı tipi bilinmediği için geniş bir sans (DejaVu Sans) gibi sayılır:
+    /// yazı kesilmez, şerit biraz erken küçülür.
     const fn advance(self) -> (f32, f32) {
         match self {
             Family::IbmPlexSans => (0.456, 0.474),
             Family::Inter => (0.483, 0.493),
             Family::PlusJakartaSans => (0.472, 0.482),
+            Family::SourceSans3 => (0.425, 0.438),
+            Family::NotoSans => (0.480, 0.499),
+            Family::Roboto => (0.454, 0.460),
+            Family::System => (0.52, 0.54),
         }
     }
 }
@@ -122,7 +148,11 @@ impl Typography {
     }
 
     pub fn ui(&self) -> Font {
-        Font::with_name(self.family.name())
+        match self.family {
+            // The system's own sans serif, as fontconfig gives it.
+            Family::System => Font::DEFAULT,
+            family => Font::with_name(family.name()),
+        }
     }
 
     pub fn ui_strong(&self) -> Font {
@@ -339,13 +369,19 @@ fn chars(text: &str) -> f32 {
 
 /// Gömülü yazı tipleri: her ailenin normal ve yarı kalın kesimi.
 #[cfg(feature = "fonts")]
-pub const FONTS: [&[u8]; 10] = [
+pub const FONTS: [&[u8]; 16] = [
     include_bytes!("../../assets/fonts/IBMPlexSans-Regular.ttf"),
     include_bytes!("../../assets/fonts/IBMPlexSans-SemiBold.ttf"),
     include_bytes!("../../assets/fonts/Inter-Regular.ttf"),
     include_bytes!("../../assets/fonts/Inter-SemiBold.ttf"),
     include_bytes!("../../assets/fonts/PlusJakartaSans-Regular.ttf"),
     include_bytes!("../../assets/fonts/PlusJakartaSans-SemiBold.ttf"),
+    include_bytes!("../../assets/fonts/SourceSans3-Regular.ttf"),
+    include_bytes!("../../assets/fonts/SourceSans3-SemiBold.ttf"),
+    include_bytes!("../../assets/fonts/NotoSans-Regular.ttf"),
+    include_bytes!("../../assets/fonts/NotoSans-SemiBold.ttf"),
+    include_bytes!("../../assets/fonts/Roboto-Regular.ttf"),
+    include_bytes!("../../assets/fonts/Roboto-SemiBold.ttf"),
     include_bytes!("../../assets/fonts/IBMPlexMono-Regular.ttf"),
     include_bytes!("../../assets/fonts/IBMPlexMono-SemiBold.ttf"),
     include_bytes!("../../assets/fonts/JetBrainsMono-Regular.ttf"),
@@ -446,6 +482,9 @@ mod tests {
             Family::IbmPlexSans.name(),
             Family::Inter.name(),
             Family::PlusJakartaSans.name(),
+            Family::SourceSans3.name(),
+            Family::NotoSans.name(),
+            Family::Roboto.name(),
             Mono::IbmPlexMono.name(),
             Mono::JetBrainsMono.name(),
         ];

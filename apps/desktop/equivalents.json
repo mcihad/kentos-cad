@@ -96,11 +96,7 @@
     "session.lineWeight": { "desktop": "implemented", "where": "Şerit › Giriş › Özellikler: Kalınlık (ribbon_panels.rs, ADR 0089)" },
     "user.accent": { "desktop": "implemented", "where": "ayarlar.json appearance.accentColor (Görünüm sekmesi, ADR 0051)" },
     "user.uiScale": { "desktop": "implemented", "where": "ayarlar.json appearance.textSize (Görünüm sekmesi, ADR 0051)" },
-    "user.uiFont": {
-      "desktop": "partial",
-      "where": "ayarlar.json appearance.typeface (Görünüm sekmesi, ADR 0051)",
-      "reason": "Masaüstünde KentOS UI'ın üç yazı tipi var (IBM Plex Sans, Inter, Plus Jakarta Sans); web yedi seçenek sunar."
-    },
+    "user.uiFont": { "desktop": "implemented", "where": "ayarlar.json appearance.typeface: web'in yedi yüzü, aynı kimliklerle (Görünüm sekmesi, ADR 0051; crates/ui/assets/fonts)" },
     "project.angleUnit": { "desktop": "implemented", "where": "Proje ayarları (apps/desktop/src/project/settings.rs), .kcad'de" },
     "project.areaDecimals": { "desktop": "implemented", "where": "Proje ayarları (apps/desktop/src/project/settings.rs), .kcad'de" },
     "project.areaUnit": { "desktop": "implemented", "where": "Proje ayarları (apps/desktop/src/project/settings.rs), .kcad'de" },

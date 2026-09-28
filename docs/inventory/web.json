@@ -118,8 +118,8 @@
       },
       "settings": {
         "total": 65,
-        "implemented": 55,
-        "partial": 1,
+        "implemented": 56,
+        "partial": 0,
         "pending": 0,
         "none": 0,
         "n/a": 9
@@ -8699,10 +8699,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "partial"
+        "desktop": "implemented"
       },
-      "desktopWhere": "ayarlar.json appearance.typeface (Görünüm sekmesi, ADR 0051)",
-      "desktopNote": "Masaüstünde KentOS UI'ın üç yazı tipi var (IBM Plex Sans, Inter, Plus Jakarta Sans); web yedi seçenek sunar."
+      "desktopWhere": "ayarlar.json appearance.typeface: web'in yedi yüzü, aynı kimliklerle (Görünüm sekmesi, ADR 0051; crates/ui/assets/fonts)"
     },
     {
       "id": "user.uiScale",

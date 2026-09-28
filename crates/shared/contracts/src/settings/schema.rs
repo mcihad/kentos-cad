@@ -244,6 +244,10 @@ fn settings() -> Vec<SettingDescriptor> {
                 ("plex", "IBM Plex Sans"),
                 ("inter", "Inter"),
                 ("jakarta", "Plus Jakarta Sans"),
+                ("source", "Source Sans 3"),
+                ("noto", "Noto Sans"),
+                ("roboto", "Roboto"),
+                ("system", "Sistem yazı tipi"),
             ],
         )
         .hosts(&[Desktop])

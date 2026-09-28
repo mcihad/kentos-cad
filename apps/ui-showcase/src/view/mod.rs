@@ -596,5 +596,9 @@ pub(crate) fn family_note(family: Family) -> &'static str {
         }
         Family::Inter => "Ekran için çizilmiş; x yüksekliği büyük, küçük boyutta en okunaklısı.",
         Family::PlusJakartaSans => "Geometrik, açık ve yumuşak hatlı; ferah bir görünüm.",
+        Family::SourceSans3 => "Dar; dar ekranda çok yazı sığar.",
+        Family::NotoSans => "Geniş dil desteği.",
+        Family::Roboto => "Tanıdık ve dengeli.",
+        Family::System => "İşletim sisteminin yazı tipi; uygulamayla gelmez.",
     }
 }

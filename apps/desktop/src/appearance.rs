@@ -81,6 +81,11 @@ fn family_key(family: Family) -> &'static str {
         Family::IbmPlexSans => "plex",
         Family::Inter => "inter",
         Family::PlusJakartaSans => "jakarta",
+        // The web's ids (`appearance.uiFont`, UI_FONTS).
+        Family::SourceSans3 => "source",
+        Family::NotoSans => "noto",
+        Family::Roboto => "roboto",
+        Family::System => "system",
     }
 }
 
@@ -122,6 +127,11 @@ fn family_note(family: Family) -> &'static str {
         }
         Family::Inter => "Ekran için çizilmiş; x yüksekliği büyük, küçük boyutta en okunaklısı.",
         Family::PlusJakartaSans => "Geometrik, açık ve yumuşak hatlı; ferah bir görünüm.",
+        // The web's notes (UI_FONTS).
+        Family::SourceSans3 => "Dar; dar ekranda çok yazı sığar.",
+        Family::NotoSans => "Geniş dil desteği.",
+        Family::Roboto => "Tanıdık ve dengeli.",
+        Family::System => "İşletim sisteminin yazı tipi; uygulamayla gelmez.",
     }
 }
 

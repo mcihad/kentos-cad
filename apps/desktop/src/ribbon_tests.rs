@@ -98,6 +98,50 @@ fn the_view_tab_carries_the_interface_groups_and_drops_the_webs_engine() {
     );
 }
 
+/// The interface in the web's other typefaces for the owner (TODOS.md
+/// UX-13): the Giriş tab in each at both sizes, the Görünüm tab's tiles
+/// and a light window once; `.run/shots/yazi-tipi-*`.
+/// `cargo test -p kentos-desktop ribbon_tests::typeface_screens -- --ignored --nocapture`
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn typeface_screens() {
+    use kentos_ui::snapshot::Snapshot;
+
+    let _typography = crate::appearance::tests::TYPOGRAPHY.lock();
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let mut cases = Vec::new();
+    for face in ["source", "noto", "roboto", "system"] {
+        for size in [(1440.0, 900.0), (1100.0, 650.0)] {
+            cases.push((face, "home", size, "dark"));
+        }
+    }
+    cases.push(("source", "view", (1440.0, 900.0), "dark"));
+    cases.push(("noto", "home", (1100.0, 650.0), "light"));
+    for (face, tab, (width, height), mode) in cases {
+        let mut app = app_with_drawing();
+        let _ = app.settings.choose(&[
+            ("appearance.typeface", serde_json::json!(face)),
+            ("appearance.theme", serde_json::json!(mode)),
+        ]);
+        app.apply_settings();
+        app.tab = tab;
+        let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let suffix = if mode == "light" { "-acik" } else { "" };
+        let file = out.join(format!("yazi-tipi-{face}-{tab}-{width}{suffix}.png"));
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
+        println!("{}", file.display());
+    }
+    typography::set(Typography::DEFAULT);
+}
+
 /// Pictures of the ribbon for the owner, in `.run/shots`:
 ///
 /// ```text

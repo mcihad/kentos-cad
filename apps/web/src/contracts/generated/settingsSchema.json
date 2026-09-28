@@ -433,6 +433,22 @@
         {
           "value": "jakarta",
           "label": "Plus Jakarta Sans"
+        },
+        {
+          "value": "source",
+          "label": "Source Sans 3"
+        },
+        {
+          "value": "noto",
+          "label": "Noto Sans"
+        },
+        {
+          "value": "roboto",
+          "label": "Roboto"
+        },
+        {
+          "value": "system",
+          "label": "Sistem yazı tipi"
         }
       ],
       "scope": "user",
