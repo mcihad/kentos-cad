@@ -17,11 +17,17 @@
 //! `KENTOS_PERF_SIZES` (parcels, comma separated) changes the drawings;
 //! `KENTOS_SNAPSHOT_BACKEND=tiny-skia` the renderer; `KENTOS_PERF_OUT`
 //! writes `frame-desktop-<label>-<date>.{json,md}` there instead of printing.
+//!
+//! The last scenarios, up to 10 000 parcels, run Parsel ölçü yazıları on
+//! every parcel: here, then on another thread (docs/adr/0125), where the UI
+//! thread only starts it and applies its answer; how long the thread took
+//! is printed.
 
 use std::time::Instant;
 
 use iced::advanced::clipboard;
 use iced::advanced::renderer::{self, Headless};
+use iced::futures::StreamExt as _;
 use iced::keyboard::{self, key};
 use iced::{Event, Pixels, Point, Rectangle, Renderer, Size, mouse, window};
 use iced_runtime::user_interface::{self, UserInterface};
@@ -492,7 +498,74 @@ fn scenarios(n: usize) -> (String, Vec<(&'static str, Vec<Parts>)>) {
         vec![h.frame(&mut app, &key(key::Named::Escape))],
     ));
     assert!(app.selection.is_empty(), "Esc let the selection go");
+    // Up to 10 000 parcels: the model writes 40 objects a parcel (400 000
+    // here), run twice with a copy between; at 50 000 that is 2 million
+    // objects and more memory than the measuring machine (15 GB) has.
+    if (1..=10_000).contains(&n) {
+        processing(&mut app, &mut h, &mut out);
+    }
     (renderer, out)
+}
+
+/// Parsel ölçü yazıları on every parcel: here, where the UI thread does it
+/// all, then on another thread, where it starts the run and later applies
+/// the answer (docs/adr/0125).
+fn processing(app: &mut App, h: &mut Harness, out: &mut Vec<(&'static str, Vec<Parts>)>) {
+    use crate::processing::Event;
+    let revision = |app: &App| app.document.as_ref().map(|d| d.model.revision());
+    let _ = app.run("edit.selectAll");
+    let _ = app.update(Message::Run("processing.model.builtin.parcelSheet"));
+    let _ = app.update(Message::Processing(Event::Target("client".into())));
+    h.settle(app);
+    let before = revision(app);
+    out.push((
+        "Parsel ölçü yazıları, bu bilgisayarda",
+        vec![h.frame_with(app, &[], |app| {
+            let _ = app.update(Message::Processing(Event::Run));
+        })],
+    ));
+    assert_ne!(revision(app), before, "the model ran here");
+    let _ = app.run("edit.undo");
+    let _ = app.update(Message::Processing(Event::Target("worker".into())));
+    h.settle(app);
+    let before = revision(app);
+    let mut task = None;
+    let started = Instant::now();
+    out.push((
+        "Parsel ölçü yazıları, arka planda: Çalıştır",
+        vec![h.frame_with(app, &[], |app| {
+            task = Some(app.update(Message::Processing(Event::Run)));
+        })],
+    ));
+    // What the thread says, heard once it is done.
+    let mut said = Vec::new();
+    if let Some(mut stream) = task.and_then(iced_runtime::task::into_stream) {
+        while let Some(action) = iced::futures::executor::block_on(stream.next()) {
+            if let iced_runtime::Action::Output(message) = action {
+                said.push(message);
+            }
+        }
+    }
+    println!(
+        "arka plandaki iş: {:.0} ms",
+        started.elapsed().as_secs_f64() * 1000.0
+    );
+    let at = said
+        .iter()
+        .position(crate::processing::is_answer)
+        .expect("the thread's answer");
+    let answer = said.remove(at);
+    for message in said {
+        let _ = app.update(message);
+    }
+    assert_eq!(revision(app), before, "nothing changes before the answer");
+    out.push((
+        "Parsel ölçü yazıları, arka planda: sonucun uygulanması",
+        vec![h.frame_with(app, &[], |app| {
+            let _ = app.update(answer);
+        })],
+    ));
+    assert_ne!(revision(app), before, "the answer was applied");
 }
 
 fn percentile(xs: &[f64], p: f64) -> f64 {

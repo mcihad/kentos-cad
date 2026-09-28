@@ -11,9 +11,9 @@
 //!   the right. It stays open after a run, to adjust and run again.
 //! - A run writes through the document's transaction, one undo step named
 //!   after the tool (a model after itself); history is kept for the session.
-//! - A tool whose inputs are 2 000 objects or more runs on another thread
-//!   ([`background`], the web's worker; Nerede çalışır chooses): the window
-//!   shows how far it is, Durdur stops it, the drawing stays in use.
+//! - A tool or a model whose inputs are 2 000 objects or more runs on
+//!   another thread ([`background`], the web's worker; Nerede çalışır
+//!   chooses): the window shows how far it is, Durdur stops it.
 //! - Each tool's last values outlive the program in `islemler.json`
 //!   ([`memory`]).
 
@@ -33,21 +33,35 @@ pub(crate) fn panel_message(event: panel::Event) -> crate::app::Message {
 mod tests;
 mod window;
 
-use std::sync::Arc;
-
 use iced::Task;
 use kentos_domain::Slot;
 use kentos_interaction::pick::PickPoint;
 use kentos_interaction::{Level, Selection, Vec2};
-use kentos_processing::model_runner::{MODEL_PREFIX, run_model};
+use kentos_processing::model_runner::{MODEL_PREFIX, end_model, replay_model, run_model};
 use kentos_processing::{
-    Bounds, Defaults, Host, LogLine, Outcome, Prepared, Registry, RunResult, Runner, Scene, Store,
-    Target, Values,
+    Bounds, Defaults, Host, LogLine, Outcome, Prepared, Registry, Runner, Scene, Store, Target,
+    Values,
 };
 use serde_json::{Value, json};
 
 use crate::app::{App, Dialog, Message};
 pub use dialog::{RunStatus, ToolDialog};
+
+/// Said when a model's drawing changed while it ran on another thread.
+const CHANGED_MEANWHILE: &str =
+    "Çizim model çalışırken değişti; model çizimin şimdiki hâlinde yeniden çalıştırıldı.";
+
+/// Whether a message is a background run's last word (perf::frame waits for it).
+#[cfg(test)]
+pub(crate) fn is_answer(message: &Message) -> bool {
+    matches!(
+        message,
+        Message::Processing(Event::Background(
+            _,
+            background::Reply::Done | background::Reply::Failed(_)
+        ))
+    )
+}
 
 /// Whether İşlemler answers a command: a tool, a model, or Harita's Kenar ölçülerini yaz.
 pub fn answers(id: &str) -> bool {
@@ -389,11 +403,18 @@ impl App {
         };
         let values = window.values.clone();
         let tool = window.tool.clone();
-        let available = window.targets().available;
+        let targets = window.targets(&self.processing.registry);
         let choice = plan::effective_choice(
             plan::Choice::read(self.processing.memory.target(&tool.id)),
-            &available,
+            &targets.available,
         );
+        // Otomatik's answer for the whole: a tool's is taken again from its
+        // job below, its locked objects left out (the web's).
+        let background = |auto: Option<Target>| match choice {
+            Some(plan::Choice::At(Target::Worker)) => true,
+            Some(plan::Choice::Auto) => auto == Some(Target::Worker),
+            _ => false,
+        };
         self.processing.memory.remember(&tool.id, &values);
         let session = doc.session;
         let mut stage = Stage {
@@ -405,43 +426,62 @@ impl App {
         let mut log: Vec<LogLine> = Vec::new();
         let registry = &self.processing.registry;
         let runner = &mut self.processing.runner;
-        // A model runs its steps here, one after another.
-        if let Some(model) = tool
+        let (running, task) = if let Some(model) = tool
             .id
             .strip_prefix(MODEL_PREFIX)
             .and_then(|id| registry.model(id))
         {
-            let lookup = |id: &str| registry.tool(id);
-            let outcome = run_model(model, &values, runner, &mut stage, &lookup, &mut log);
-            self.processing_ran(&tool.label, None, log, outcome);
-            return Task::none();
-        }
-        let mut job = match runner.prepare(&stage, &tool, &values, false, &mut log) {
-            Prepared::Ready(job) => job,
-            Prepared::Done(outcome) => {
+            // A model: its steps one after another, here or whole on another thread.
+            if !background(targets.auto) {
+                let lookup = |id: &str| registry.tool(id);
+                let outcome = run_model(model, &values, runner, &mut stage, &lookup, &mut log);
                 self.processing_ran(&tool.label, None, log, outcome);
                 return Task::none();
             }
-        };
-        let background = match choice {
-            Some(plan::Choice::At(Target::Worker)) => true,
-            Some(plan::Choice::Auto) => {
-                plan::auto_target(&available, job.size()) == Some(Target::Worker)
+            let run = background::ModelRun {
+                model: model.clone(),
+                inputs: values,
+                tools: model
+                    .steps
+                    .iter()
+                    .filter_map(|s| registry.tool(&s.tool).map(|t| (s.tool.clone(), t)))
+                    .collect(),
+                generation: stage.doc.generation(),
+            };
+            self.processing.runs += 1;
+            background::start_model(
+                self.processing.runs,
+                run,
+                stage.doc.reading_copy(),
+                stage.selection.ids().to_vec(),
+                stage.view,
+                session,
+                |id, reply| Message::Processing(Event::Background(id, reply)),
+            )
+        } else {
+            let mut job = match runner.prepare(&stage, &tool, &values, false, &mut log) {
+                Prepared::Ready(job) => job,
+                Prepared::Done(outcome) => {
+                    self.processing_ran(&tool.label, None, log, outcome);
+                    return Task::none();
+                }
+            };
+            if !background(plan::auto_target(&targets.available, job.size())) {
+                let outcome = runner.complete(&mut stage, job, &mut log);
+                self.processing_ran(&tool.label, None, log, outcome);
+                return Task::none();
             }
-            _ => false,
+            job.target = Target::Worker;
+            self.processing.runs += 1;
+            background::start_tool(
+                self.processing.runs,
+                job,
+                stage.doc.reading_copy(),
+                session,
+                |id, reply| Message::Processing(Event::Background(id, reply)),
+            )
         };
-        if !background {
-            let outcome = runner.complete(&mut stage, job, &mut log);
-            self.processing_ran(&tool.label, None, log, outcome);
-            return Task::none();
-        }
-        job.target = Target::Worker;
-        let copy = stage.doc.reading_copy();
-        self.processing.runs += 1;
-        let id = self.processing.runs;
-        let (running, task) = background::start(id, job, copy, session, |id, reply| {
-            Message::Processing(Event::Background(id, reply))
-        });
+        let id = running.id;
         self.processing.running.push(running);
         // What resolving the inputs left out, said as the run starts (the web's).
         for line in log {
@@ -520,10 +560,10 @@ impl App {
                 }
             }
             background::Reply::Line(line) => self.say_line(line),
-            background::Reply::Done(result) => {
+            background::Reply::Done => {
                 let running = self.processing.running.remove(at);
-                let result = Arc::try_unwrap(result).unwrap_or_else(|shared| (*shared).clone());
-                self.processing_finish(running, Ok(result));
+                let answer = running.answer().ok_or_else(|| "sonuç alınamadı".to_owned());
+                self.processing_finish(running, answer);
             }
             background::Reply::Failed(why) => {
                 let running = self.processing.running.remove(at);
@@ -533,28 +573,75 @@ impl App {
     }
 
     /// A background run's answer, applied on the drawing it was computed
-    /// for in one undo step; nothing changes when that drawing is gone.
+    /// for in one undo step; nothing changes when that drawing is gone. A
+    /// model's steps apply as they went on the copy while the drawing is
+    /// unchanged; changed meanwhile (another editor's work), the model runs
+    /// again here, on the drawing as it is.
     fn processing_finish(
         &mut self,
         running: background::Running,
-        answer: Result<RunResult, String>,
+        answer: Result<background::Answer, String>,
     ) {
-        let label = running.job.tool.label.clone();
-        let id = running.id;
+        use background::{Answer, Work};
+        let label = running.work.label();
+        let background::Running {
+            id, work, session, ..
+        } = running;
         let mut log = Vec::new();
         let runner = &mut self.processing.runner;
-        let outcome = match (answer, &mut self.document) {
-            (Err(why), _) => runner.failed(running.job, &why),
-            (Ok(result), Some(doc)) if doc.session == running.session => {
-                let mut stage = Stage {
-                    doc: &mut doc.model,
-                    selection: &mut self.selection,
-                    store: self.spatial.store(),
-                    view: Some(self.viewport.camera.visible_bounds()),
-                };
-                runner.finish(&mut stage, running.job, result, false, &mut log)
+        let view = Some(self.viewport.camera.visible_bounds());
+        let mut stage = self
+            .document
+            .as_mut()
+            .filter(|d| d.session == session)
+            .map(|doc| Stage {
+                doc: &mut doc.model,
+                selection: &mut self.selection,
+                store: self.spatial.store(),
+                view,
+            });
+        let outcome = match (work, answer, &mut stage) {
+            (Work::Tool(job), Ok(Answer::Tool(result)), Some(stage)) => {
+                runner.finish(stage, job, result, false, &mut log)
             }
-            (Ok(_), _) => runner.stop(running.job),
+            (Work::Tool(job), Ok(_), None) => runner.stop(job),
+            (Work::Tool(job), Ok(Answer::Model { .. }), Some(_)) => {
+                runner.failed(job, "beklenmeyen bir sonuç geldi")
+            }
+            (Work::Tool(job), Err(why), _) => runner.failed(job, &why),
+            (Work::Model(run), Ok(Answer::Model { steps, log: said }), Some(stage)) => {
+                let lookup = |id: &str| run.tool(id);
+                if stage.doc.generation() == run.generation {
+                    log = said;
+                    // The replay repeats the copy's messages.
+                    let mut again = Vec::new();
+                    replay_model(
+                        &run.model,
+                        &run.inputs,
+                        runner,
+                        stage,
+                        &lookup,
+                        steps,
+                        &mut again,
+                    )
+                } else {
+                    log.push(LogLine {
+                        level: kentos_processing::Level::Info,
+                        text: CHANGED_MEANWHILE.to_owned(),
+                    });
+                    run_model(&run.model, &run.inputs, runner, stage, &lookup, &mut log)
+                }
+            }
+            (Work::Model(run), Ok(_), _) => {
+                end_model(&run.model, &run.inputs, runner, &|id| run.tool(id), None)
+            }
+            (Work::Model(run), Err(why), _) => end_model(
+                &run.model,
+                &run.inputs,
+                runner,
+                &|id| run.tool(id),
+                Some(&why),
+            ),
         };
         self.processing_ran(&label, Some(id), log, outcome);
     }
@@ -571,8 +658,14 @@ impl App {
         };
         let running = self.processing.running.remove(at);
         running.stop();
-        let label = running.job.tool.label.clone();
-        let outcome = self.processing.runner.stop(running.job);
+        let label = running.work.label();
+        let runner = &mut self.processing.runner;
+        let outcome = match running.work {
+            background::Work::Tool(job) => runner.stop(job),
+            background::Work::Model(run) => {
+                end_model(&run.model, &run.inputs, runner, &|id| run.tool(id), None)
+            }
+        };
         self.processing_ran(&label, Some(id), Vec::new(), outcome);
     }
 

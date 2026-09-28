@@ -221,8 +221,10 @@ pub fn target_short(t: Target) -> &'static str {
 }
 
 /// Under Otomatik: when it sends a job to the background (the web's rule).
-pub const AUTO_HINT: &str =
-    "2.000 ya da daha çok nesneli işler arka planda çalışır; program donmaz.";
+/// The web adds that the page does not freeze; here the result is still
+/// written on the UI thread (docs/adr/0125), so the line says only where
+/// the work is done.
+pub const AUTO_HINT: &str = "2.000 ya da daha çok nesneli işler arka planda hesaplanır.";
 
 /// What the window knows of the places (the web's `TargetsInput`).
 pub struct Targets {

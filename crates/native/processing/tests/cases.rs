@@ -10,7 +10,7 @@ use std::path::PathBuf;
 use kentos_contracts::{DocumentSnapshotV1, Entity};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::geometry::Bounds;
-use kentos_processing::model_runner::{model_as_tool, run_model};
+use kentos_processing::model_runner::{model_as_tool, record_model, replay_model, run_model};
 use kentos_processing::parameters::default_values;
 use kentos_processing::{
     Defaults, Feedback, Host, Level, LogLine, Outcome, Prepared, Registry, Runner, Scene, Tool,
@@ -188,9 +188,10 @@ impl Feedback for Apart<'_> {
     }
 }
 
-/// Plays a case. `on_copy`: a tool is prepared on the host, computed on a
-/// copy of its drawing (as the desktop computes on another thread) and
-/// finished on the host.
+/// Plays a case. `on_copy`: as the desktop runs apart from the drawing on
+/// another thread, a tool is prepared on the host, computed on the
+/// drawing's reading copy and finished on the host; a model runs on the
+/// copy, recorded, and is replayed on the host.
 fn play(c: &Value, registry: &Registry, on_copy: bool) -> Seen {
     let doc = load(c["document"].as_str().expect("a document"));
     let view = c.get("view").and_then(Value::as_array).map(|v| {
@@ -219,7 +220,7 @@ fn play(c: &Value, registry: &Registry, on_copy: bool) -> Seen {
         if on_copy {
             match runner.prepare(&host, &tool, &values, false, &mut log) {
                 Prepared::Ready(job) => {
-                    let copy = host.doc.clone();
+                    let copy = host.doc.reading_copy();
                     let result = Runner::compute(&job, &copy, &mut Apart { log: &mut log });
                     runner.finish(&mut host, job, result, false, &mut log)
                 }
@@ -235,7 +236,36 @@ fn play(c: &Value, registry: &Registry, on_copy: bool) -> Seen {
             .unwrap_or_else(|| panic!("model yok: {id}"));
         let as_tool = model_as_tool(model, &lookup);
         let values = with_values(&as_tool, &host.doc, c.get("values"));
-        run_model(model, &values, &mut runner, &mut host, &lookup, &mut log)
+        if on_copy {
+            let mut copy = TestHost {
+                doc: host.doc.reading_copy(),
+                selection: host.selection.clone(),
+                view: host.view,
+            };
+            let mut unheard = Vec::new();
+            let steps = record_model(
+                model,
+                &values,
+                &mut copy,
+                &lookup,
+                &mut Apart { log: &mut unheard },
+                &mut log,
+            );
+            assert!(unheard.is_empty(), "the steps' messages are the log's");
+            // The copy's messages are the run's; the replay's repeat them.
+            let mut replayed = Vec::new();
+            replay_model(
+                model,
+                &values,
+                &mut runner,
+                &mut host,
+                &lookup,
+                steps,
+                &mut replayed,
+            )
+        } else {
+            run_model(model, &values, &mut runner, &mut host, &lookup, &mut log)
+        }
     };
     Seen {
         outcome,
@@ -515,28 +545,35 @@ fn the_defaults_the_tools_take_from_the_drawing() {
     }
 }
 
-/// The desktop computes a large job on another thread, on a copy of the
-/// drawing, and applies the result on the drawing it shows: every tool case
-/// ends the same that way.
+/// The desktop computes a large job on another thread, on the drawing's
+/// reading copy, and applies the result on the drawing it shows; a model
+/// runs whole on the copy and is replayed on the drawing: every case ends
+/// the same that way.
 #[test]
 fn every_case_does_the_same_computed_on_a_copy_of_the_drawing() {
     fn sent<T: Send>() {}
     sent::<kentos_processing::Job>();
     sent::<Document>();
     sent::<kentos_processing::RunResult>();
+    sent::<kentos_processing::Model>();
+    sent::<kentos_processing::model_runner::RecordedStep>();
     let file = cases();
     let tol = file["tolerance"].as_f64().expect("a tolerance");
     let registry = Registry::builtin();
     let mut problems = Vec::new();
-    let mut tools = 0;
+    let (mut tools, mut models) = (0, 0);
     for c in file["cases"].as_array().expect("cases") {
-        if c["run"].get("tool").is_none() {
-            continue;
+        if c["run"].get("tool").is_some() {
+            tools += 1;
+        } else {
+            models += 1;
         }
-        tools += 1;
         problems.extend(check(c, play(c, &registry, true), tol));
     }
-    assert!(tools > 10, "{tools} tool cases");
+    assert!(
+        tools > 10 && models > 0,
+        "{tools} tool cases, {models} model cases"
+    );
     assert!(problems.is_empty(), "\n{}", problems.join("\n"));
 }
 

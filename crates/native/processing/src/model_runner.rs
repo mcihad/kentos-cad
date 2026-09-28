@@ -4,6 +4,12 @@
 //! reaches the next step as the ids of the objects it made or chose). The
 //! whole model is one undo step; if a step fails or is stopped, what the
 //! earlier steps did is taken back.
+//!
+//! The desktop can run a model apart from the drawing (docs/adr/0125): on
+//! another thread, over the drawing's reading copy, each step prepared,
+//! computed and applied there ([`record_model`]); then the recorded steps
+//! are applied on the drawing as they were on the copy, in one undo step
+//! ([`replay_model`]).
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -14,8 +20,8 @@ use serde_json::{Value, json};
 use crate::features::Host;
 use crate::model::{Model, ModelStep, ValueSource, check_model, order_steps, step_name};
 use crate::parameters::default_values;
-use crate::runner::{LogLine, Outcome, RunRecord, Runner, Status};
-use crate::types::{Defaults, OutputKind, RunResult, Target, Tool, Values};
+use crate::runner::{Job, LogLine, Outcome, Prepared, RunRecord, Runner, Status};
+use crate::types::{Defaults, Feedback, OutputKind, RunResult, Target, Tool, Values};
 
 /// The prefix of model ids in history and commands ("model:builtin.parcelSheet").
 pub const MODEL_PREFIX: &str = "model:";
@@ -106,6 +112,11 @@ fn step_outputs(tool: &Tool, result: &RunResult, added: &[Slot]) -> Values {
     out
 }
 
+/// How a model's step runs ([`run_model_with`]): given the runner, the
+/// host, the step's tool and values, and where its messages go.
+pub type StepRun<'a> =
+    dyn FnMut(&mut Runner, &mut dyn Host, &Tool, &Values, &mut Vec<LogLine>) -> Outcome + 'a;
+
 /// Runs `model` with its inputs on the host's drawing, as one undo step.
 pub fn run_model(
     model: &Model,
@@ -114,6 +125,203 @@ pub fn run_model(
     host: &mut dyn Host,
     lookup: &dyn Fn(&str) -> Option<Tool>,
     log: &mut Vec<LogLine>,
+) -> Outcome {
+    run_model_with(
+        model,
+        inputs,
+        runner,
+        host,
+        lookup,
+        log,
+        &mut |runner, host, tool, values, log| runner.run(host, tool, values, true, log),
+    )
+}
+
+/// A model's step as it went on the copy ([`record_model`]): the job and
+/// what it computed, or how it ended before computing.
+#[derive(Clone)]
+pub enum RecordedStep {
+    Computed {
+        job: Box<Job>,
+        result: Box<RunResult>,
+        canceled: bool,
+    },
+    Ended(Box<Outcome>),
+}
+
+/// Runs `model` on `host` (the drawing's reading copy, on any thread) as
+/// [`run_model`] does, each step prepared, computed and applied there, and
+/// records the steps for [`replay_model`]. `feedback` hears the steps'
+/// progress as the whole model's share, and stops them; the steps' messages
+/// go to `log` in the order a run here gives them.
+pub fn record_model(
+    model: &Model,
+    inputs: &Values,
+    host: &mut dyn Host,
+    lookup: &dyn Fn(&str) -> Option<Tool>,
+    feedback: &mut dyn Feedback,
+    log: &mut Vec<LogLine>,
+) -> Vec<RecordedStep> {
+    let count = order_steps(model).map_or(0, |o| o.len()).max(1);
+    let mut steps = Vec::new();
+    let mut runner = Runner::new();
+    run_model_with(
+        model,
+        inputs,
+        &mut runner,
+        host,
+        lookup,
+        log,
+        &mut |runner, host, tool, values, log| {
+            let job = match runner.prepare(&*host, tool, values, true, log) {
+                Prepared::Ready(job) => job,
+                Prepared::Done(outcome) => {
+                    steps.push(RecordedStep::Ended(Box::new(outcome.clone())));
+                    return outcome;
+                }
+            };
+            let done = steps.len();
+            let mut share = Share {
+                inner: &mut *feedback,
+                log: &mut *log,
+                done,
+                count,
+            };
+            let result = if share.canceled() {
+                RunResult::default()
+            } else {
+                Runner::compute(&job, host.doc(), &mut share)
+            };
+            let canceled = share.canceled();
+            share.progress(1.0, "");
+            steps.push(RecordedStep::Computed {
+                job: Box::new(job.clone()),
+                result: Box::new(result.clone()),
+                canceled,
+            });
+            runner.finish(host, job, result, canceled, log)
+        },
+    );
+    steps
+}
+
+/// Applies recorded steps on the host's drawing as they went on the copy,
+/// in one undo step, and records the model in `runner`'s history: on the
+/// drawing the copy was made of, unchanged since, it ends as the recorded
+/// run did. Messages of the replay go to `log`.
+pub fn replay_model(
+    model: &Model,
+    inputs: &Values,
+    runner: &mut Runner,
+    host: &mut dyn Host,
+    lookup: &dyn Fn(&str) -> Option<Tool>,
+    steps: Vec<RecordedStep>,
+    log: &mut Vec<LogLine>,
+) -> Outcome {
+    let mut steps = steps.into_iter();
+    run_model_with(
+        model,
+        inputs,
+        runner,
+        host,
+        lookup,
+        log,
+        &mut |runner, host, _tool, _values, log| match steps.next() {
+            Some(RecordedStep::Computed {
+                job,
+                result,
+                canceled,
+            }) => runner.finish(host, *job, *result, canceled, log),
+            Some(RecordedStep::Ended(outcome)) => *outcome,
+            // More steps than were recorded: the drawing is not the copy's.
+            None => Outcome::Invalid { issues: Vec::new() },
+        },
+    )
+}
+
+/// Ends a model that ran apart without touching the drawing: stopped
+/// (Durdur, its drawing gone) or broken off (`why`); recorded in
+/// `runner`'s history in the model's words.
+pub fn end_model(
+    model: &Model,
+    inputs: &Values,
+    runner: &mut Runner,
+    lookup: &dyn Fn(&str) -> Option<Tool>,
+    why: Option<&str>,
+) -> Outcome {
+    let (status, message) = match why {
+        None => (
+            Status::Canceled,
+            "Model durduruldu; çizim değişmedi.".to_owned(),
+        ),
+        Some(why) => (
+            Status::Error,
+            format!("“{}” çalışırken hata: {why}", model.label),
+        ),
+    };
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_or(0, |d| d.as_millis() as u64);
+    let record = runner.add_record(RunRecord {
+        seq: 0,
+        tool_id: model_as_tool(model, lookup).id,
+        label: model.label.clone(),
+        values: inputs.clone(),
+        started: now,
+        ms: 0,
+        status,
+        summary: message.clone(),
+        added: Vec::new(),
+        touched: Vec::new(),
+        target: None,
+    });
+    Outcome::Stopped {
+        status,
+        message,
+        record,
+    }
+}
+
+/// A step's feedback as a share of the whole model (step `done` of
+/// `count`); its messages join the model's log.
+struct Share<'a> {
+    inner: &'a mut dyn Feedback,
+    log: &'a mut Vec<LogLine>,
+    done: usize,
+    count: usize,
+}
+
+impl Feedback for Share<'_> {
+    fn progress(&mut self, fraction: f64, label: &str) {
+        let share = (self.done as f64 + fraction.clamp(0.0, 1.0)) / self.count as f64;
+        self.inner.progress(share, label);
+    }
+
+    fn info(&mut self, message: String) {
+        self.log.push(LogLine {
+            level: crate::runner::Level::Info,
+            text: message,
+        });
+    }
+
+    fn warn(&mut self, message: String) {
+        self.log.push(LogLine::warn(message));
+    }
+
+    fn canceled(&self) -> bool {
+        self.inner.canceled()
+    }
+}
+
+/// [`run_model`] with each step run by `run_step`.
+pub fn run_model_with(
+    model: &Model,
+    inputs: &Values,
+    runner: &mut Runner,
+    host: &mut dyn Host,
+    lookup: &dyn Fn(&str) -> Option<Tool>,
+    log: &mut Vec<LogLine>,
+    run_step: &mut StepRun,
 ) -> Outcome {
     let as_tool = model_as_tool(model, lookup);
     let input_issues = runner.validate(&as_tool, inputs, host.doc());
@@ -214,7 +422,7 @@ pub fn run_model(
                 source_value(src, inputs, &outputs, model, lookup),
             );
         }
-        match runner.run(host, &tool, &values, true, log) {
+        match run_step(runner, host, &tool, &values, log) {
             Outcome::Ok {
                 result,
                 added: step_added,

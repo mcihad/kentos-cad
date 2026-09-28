@@ -10,7 +10,8 @@ use kentos_domain::Slot;
 use kentos_processing::model_runner::MODEL_PREFIX;
 use kentos_processing::parameters::{default_values, restore_values};
 use kentos_processing::{
-    Defaults, InputSummary, Issue, Outcome, ParamKind, Runner, Scene, Target, Tool, Values,
+    Defaults, InputSummary, Issue, Outcome, ParamKind, Registry, Runner, Scene, Target, Tool,
+    Values,
 };
 use serde_json::{Value, json};
 
@@ -323,37 +324,43 @@ impl ToolDialog {
             .find(|i| i.param.as_deref() == Some(name))
     }
 
-    /// Nerede çalışır for this window (plan.rs): the places the tool names,
-    /// those this program has (a model runs its steps here), and where
-    /// Otomatik sends the inputs now.
-    pub(super) fn targets(&self) -> Targets {
-        let model = self.tool.id.starts_with(MODEL_PREFIX);
-        let available: Vec<Target> = if model {
-            vec![Target::Client]
-        } else {
-            self.tool
-                .targets
-                .iter()
-                .copied()
-                .filter(|t| matches!(t, Target::Client | Target::Worker))
-                .collect()
-        };
-        let declared = if model {
-            available.clone()
-        } else {
-            self.tool.targets.clone()
+    /// Nerede çalışır for this window (plan.rs): the places the tool names
+    /// (a model: every place one of its steps can go here, the web's), those
+    /// this program has, and where Otomatik sends the inputs now.
+    pub(super) fn targets(&self, registry: &Registry) -> Targets {
+        let here = |t: &Target| matches!(t, Target::Client | Target::Worker);
+        let model = self
+            .tool
+            .id
+            .strip_prefix(MODEL_PREFIX)
+            .and_then(|id| registry.model(id));
+        let (declared, available) = match model {
+            Some(model) => {
+                let mut places: Vec<Target> = Vec::new();
+                for step in &model.steps {
+                    for t in registry
+                        .tool(&step.tool)
+                        .map(|t| t.targets)
+                        .unwrap_or_default()
+                    {
+                        if here(&t) && !places.contains(&t) {
+                            places.push(t);
+                        }
+                    }
+                }
+                (places.clone(), places)
+            }
+            None => (
+                self.tool.targets.clone(),
+                self.tool.targets.iter().copied().filter(here).collect(),
+            ),
         };
         let size = self.inputs.values().map(|s| s.count).sum();
-        let auto = if model {
-            None
-        } else {
-            auto_target(&available, size)
-        };
         Targets {
+            auto: auto_target(&available, size),
             declared,
             available,
-            auto,
-            model,
+            model: model.is_some(),
         }
     }
 

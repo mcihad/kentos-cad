@@ -190,7 +190,8 @@ fn otomatik_sends_two_thousand_objects_to_the_background_with_the_same_answer() 
         Event::Text("condition".into(), "$x >= 486500".into()),
     );
     let window = app.processing.dialog.as_ref().expect("open");
-    let (options, hint, choice) = targets_view(&window.targets(), Choice::Auto);
+    let (options, hint, choice) =
+        targets_view(&window.targets(&app.processing.registry), Choice::Auto);
     assert_eq!(options[0].note.as_deref(), Some("şimdi: arka planda"));
     assert_eq!((hint, choice), (Some(AUTO_HINT), Some(Choice::Auto)));
     // Here first, for the answer.
@@ -214,6 +215,108 @@ fn otomatik_sends_two_thousand_objects_to_the_background_with_the_same_answer() 
         app.processing.runner.history()[0].target,
         Some(Target::Worker)
     );
+}
+
+/// Parsel ölçü yazıları on two parcels: `worker`, whole on another thread
+/// (driven to its end); else here. `meanwhile` changes the drawing after
+/// Çalıştır, before the answer.
+fn parcel_sheet(worker: bool, meanwhile: impl FnOnce(&mut App)) -> App {
+    let mut app = app_with_parcels();
+    app.selection.set([Slot(1), Slot(2), Slot(7)]);
+    let _ = app.update(Message::Run("processing.model.builtin.parcelSheet"));
+    let place = if worker { "worker" } else { "client" };
+    event(&mut app, Event::Target(place.into()));
+    let task = app.update(Message::Processing(Event::Run));
+    if worker {
+        assert!(
+            matches!(status(&app), RunStatus::Running { .. }),
+            "{:?}",
+            status(&app)
+        );
+        meanwhile(&mut app);
+        drive(&mut app, task);
+    }
+    app
+}
+
+/// The drawing's objects and layers, to compare two runs.
+fn drawn(app: &App) -> (Vec<kentos_contracts::Entity>, Vec<(String, String)>) {
+    let doc = &app.document.as_ref().expect("open").model;
+    let layers = doc
+        .layers()
+        .leaves()
+        .into_iter()
+        .map(|l| (l.id.clone(), l.name.clone()))
+        .collect();
+    (doc.entities().cloned().collect(), layers)
+}
+
+/// A model runs whole on another thread, over the drawing's copy, and its
+/// steps are applied on the drawing as they went there: it ends as a run
+/// here does, in one undo step.
+#[test]
+fn a_model_in_the_background_ends_as_it_does_here_in_one_undo_step() {
+    let before = drawn(&app_with_parcels());
+    let here = parcel_sheet(false, |_| {});
+    assert!(
+        matches!(status(&here), RunStatus::Ok { undo: true, .. }),
+        "{:?}",
+        status(&here)
+    );
+    let mut apart = parcel_sheet(true, |_| {});
+    assert_eq!(status(&apart), status(&here));
+    assert_eq!(drawn(&apart), drawn(&here));
+    assert_eq!(last_said(&apart), last_said(&here));
+    assert!(apart.processing.running.is_empty());
+    event(&mut apart, Event::Undo);
+    assert_eq!(
+        drawn(&apart),
+        before,
+        "one undo step takes the whole model back"
+    );
+}
+
+/// Durdur ends a model at once, in the model's words; its late answer is dropped.
+#[test]
+fn durdur_ends_a_model_at_once() {
+    let before = drawn(&app_with_parcels());
+    let app = parcel_sheet(true, |app| event(app, Event::Stop));
+    let stopped = "Model durduruldu; çizim değişmedi.";
+    assert_eq!(status(&app), RunStatus::Error(stopped.into()));
+    assert_eq!(last_said(&app), stopped);
+    assert_eq!(drawn(&app), before);
+    let record = &app.processing.runner.history()[0];
+    assert_eq!(
+        (record.tool_id.as_str(), record.status),
+        ("model:builtin.parcelSheet", Status::Canceled)
+    );
+}
+
+/// The drawing changed while the model ran on its copy (another editor's
+/// work): the copy's steps would not fit it, so the model runs again here,
+/// on the drawing as it is, and says so.
+#[test]
+fn a_model_whose_drawing_changed_meanwhile_runs_again_on_it() {
+    let change = |app: &mut App| {
+        let doc = &mut app.document.as_mut().expect("open").model;
+        doc.remove(&[Slot(7)]);
+    };
+    let apart = parcel_sheet(true, change);
+    let mut here = app_with_parcels();
+    change(&mut here);
+    here.selection.set([Slot(1), Slot(2)]);
+    let _ = here.update(Message::Run("processing.model.builtin.parcelSheet"));
+    event(&mut here, Event::Target("client".into()));
+    event(&mut here, Event::Run);
+    assert!(
+        apart
+            .log
+            .lines()
+            .any(|l| l.text == super::CHANGED_MEANWHILE),
+        "it says why it ran again"
+    );
+    assert_eq!(status(&apart), status(&here));
+    assert_eq!(drawn(&apart), drawn(&here));
 }
 
 #[test]

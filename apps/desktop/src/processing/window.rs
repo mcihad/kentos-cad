@@ -346,7 +346,7 @@ fn side<'a>(window: &'a ToolDialog, processing: &'a Processing) -> Element<'a, M
     // for these inputs now, then each place the tool names; places this
     // program does not have are coming.
     let (options, hint, current) = plan::targets_view(
-        &window.targets(),
+        &window.targets(registry),
         Choice::read(processing.memory.target(&tool.id)),
     );
     let mut targets =

@@ -49,14 +49,15 @@ Masaüstü bunların hiçbirini yapmıyordu. "Nerede çalışır"da yalnız "Bu 
   - bu programda olmayanlar (sunucu, PostGIS) "yakında"dır.
 
   Seçim araç başına `islemler.json`'da saklanır, web'deki gibi. Seçenek satırlarının notu satırın sonunda durur, kural Otomatik'in altındadır. Bunun için KentOS UI `RadioGroup`'a `notes_at_end`, `hint` ve `disabled_with` eklendi.
-- **Sözcükler:** masaüstü web'in sayfasından değil kendinden söz eder: "Bu bilgisayarda", "Arka planda", "Arka planda çalışıyor; Durdur ile durdurabilirsiniz.", "…; program donmaz." Testler web'in sözcüklerini bunlarla değiştirerek aynı dosyayı oynar.
+- **Sözcükler:** masaüstü web'in sayfasından değil kendinden söz eder: "Bu bilgisayarda", "Arka planda", "Arka planda çalışıyor; Durdur ile durdurabilirsiniz.", "2.000 ya da daha çok nesneli işler arka planda hesaplanır." (web "…; sayfa donmaz" der; masaüstünde sonucun yazılması arayüz iş parçacığında kaldığı için bu söz alınmadı) Testler web'in sözcüklerini bunlarla değiştirerek aynı dosyayı oynar.
 
 ## Sonuçlar
 
 - 2 000 ve daha çok nesneli bir aracın hesabı artık arayüzü dondurmaz. Pencere ilerlemeyi gösterir, Durdur hemen yanıt verir.
 - Arayüz iş parçacığında kalanlar:
   - hazırlık (girdilerin çözülmesi) ve okuma kopyası (100 000 nesnede birkaç ms);
-  - sonucun tek adımda uygulanması.
+  - sonucun tek adımda uygulanması: yeni nesneler çizime, geometri deposuna ve sahneye yazılır.
+- **Ölçüm, sonradan** ([ADR 0125](0125-desktop-models-background.md)): çok nesne yazan işte donmanın büyük payı bu uygulamadır, hesap değil. 10 000 parselde 400 000 nesne yazan Parsel ölçü yazıları burada 1,65 sn, arka planda sonucun uygulanması 1,37 sn sürdü. Yazmayı hızlandırmak ayrı bir performans işidir (TODOS.md PERF-08).
 - **Modeller** (Parsel ölçü yazıları) adımlarını hâlâ burada, art arda çalıştırır. "Nerede çalışır"da yalnız "Bu bilgisayarda" vardır. Adımlar arka plana gidince model birden çok güncelleme boyunca açık bir geri alma grubu tutar. Bu arada kullanıcının yaptığı düzenleme modelin adımına katılmamalıdır. Bu ayrı bir dilimdir (TODOS.md PERF-08).
 - İş sürerken yapılan düzenlemeler sonuçla çakışabilir. Web'deki gibi: silinen nesnenin değişikliği ve kilitlenen katmana yazılanlar atlanır ve sayılır.
 
