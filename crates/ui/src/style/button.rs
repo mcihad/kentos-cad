@@ -239,10 +239,11 @@ pub fn subtle(theme: &Theme, status: Status) -> Style {
 /// Seçili olmayan şerit sekmesi.
 pub fn tab(theme: &Theme, status: Status) -> Style {
     let t = Tokens::of(theme);
+    let hovered = is_hovered(status);
 
     Style {
-        background: None,
-        text_color: if is_hovered(status) { t.text } else { t.muted },
+        background: hovered.then(|| t.layer(0.055).into()),
+        text_color: if hovered { t.text } else { t.muted },
         ..Style::default()
     }
 }
@@ -564,19 +565,21 @@ pub fn toggle(active: bool) -> impl Fn(&Theme, Status) -> Style {
     }
 }
 
-/// Uygulama menüsünü açan marka düğmesi; menü açıkken koyulaşır.
+/// Uygulama menüsünü açan marka düğmesi (web'in `.brand`'ı): zemini yok;
+/// üzerine gelince ya da menü açıkken hafif bir katman. Yazısı kendi rengini
+/// taşır; ok üçüncül tondadır.
 pub fn brand(open: bool) -> impl Fn(&Theme, Status) -> Style {
     move |theme, status| {
         let t = Tokens::of(theme);
 
         style(
             if open || is_hovered(status) {
-                t.accent_hover
+                t.layer(0.055)
             } else {
-                t.accent
+                Color::TRANSPARENT
             },
-            t.on_accent,
-            border::rounded(border::top(radius())),
+            t.faint,
+            border::rounded(crate::theme::shape::md()),
         )
     }
 }

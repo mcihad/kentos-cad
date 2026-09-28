@@ -4,18 +4,18 @@ use std::rc::Rc;
 
 use iced::advanced::widget;
 use iced::widget::text::{Fragment, IntoFragment, Wrapping};
-use iced::widget::{button, column, container, row, space, text, tooltip};
-use iced::{Center, Element, Fill, Padding, Right, Top};
+use iced::widget::{button, column, container, row, text, tooltip};
+use iced::{Center, Element, Fill, Padding};
 
 use super::{ICON, LARGE_ICON, LARGE_WEIGHT, content_height, row_height, tab_height};
 use crate::icon::{Icon, Tone, icon};
 use crate::label;
 use crate::style;
 use crate::style::button::Ribbon as State;
-use crate::theme::{Tokens, typography};
+use crate::theme::{Mode, brand, typography};
 use crate::widget::context_menu::{ContextMenu, Menu, MenuButton};
 use crate::widget::key_tip::{KeyTip, Place, key_tip};
-use crate::widget::{Tip, tip};
+use crate::widget::{Tip, brand_mark, tip};
 
 /// Şerit düğmesinin tasarlandığı boyut.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -541,10 +541,14 @@ impl<'a, Message: Clone + 'a> From<Button<'a, Message>> for Element<'a, Message>
     }
 }
 
-/// Sekme şeridinin başındaki uygulama düğmesi (Office'teki "Dosya"
-/// sekmesi gibi): marka işareti, uygulama adı ve açılır menü oku.
+/// Sekme şeridinin başındaki marka düğmesi (web'in `.brand`'ı, DESIGN.md
+/// §2): logo, marka yazısı ve açılır menü oku; zemini yoktur, üzerine
+/// gelince ya da menü açıkken hafifçe belirir. Yazı markanın laciverti
+/// tonundadır, seçilen vurguyu izlemez.
 pub struct AppButton<'a, Message> {
     title: Fragment<'a>,
+    tail: Option<Fragment<'a>>,
+    tip: Option<Tip>,
     open: bool,
     on_press: Option<Message>,
 }
@@ -553,12 +557,26 @@ impl<'a, Message: Clone + 'a> AppButton<'a, Message> {
     pub fn new(title: impl IntoFragment<'a>) -> Self {
         Self {
             title: title.into_fragment(),
+            tail: None,
+            tip: None,
             open: false,
             on_press: None,
         }
     }
 
-    /// Menü açıkken düğme koyulaşır.
+    /// Yazının ince ikinci kısmı: web'deki "Kent" ve "OS".
+    pub fn tail(mut self, tail: impl IntoFragment<'a>) -> Self {
+        self.tail = Some(tail.into_fragment());
+        self
+    }
+
+    /// Menü kapalıyken gösterilen ipucu.
+    pub fn tip(mut self, tip: Tip) -> Self {
+        self.tip = Some(tip);
+        self
+    }
+
+    /// Menü açıkken düğmenin zemini belirir.
     pub fn open(mut self, open: bool) -> Self {
         self.open = open;
         self
@@ -572,43 +590,46 @@ impl<'a, Message: Clone + 'a> AppButton<'a, Message> {
 
 impl<'a, Message: Clone + 'a> From<AppButton<'a, Message>> for Element<'a, Message> {
     fn from(app_button: AppButton<'a, Message>) -> Self {
-        button(
-            row![
-                logo_mark(),
-                label::heading(app_button.title),
-                icon(Icon::ChevronDown).size(10.0),
-            ]
-            .spacing(8)
-            .height(Fill)
-            .align_y(Center),
+        let brand_text = |alpha: f32| {
+            move |theme: &iced::Theme| text::Style {
+                color: Some(brand(Mode::of(theme)).text.scale_alpha(alpha)),
+            }
+        };
+        let mut word = row![label::heading(app_button.title).style(brand_text(1.0))];
+        if let Some(tail) = app_button.tail {
+            word = word.push(
+                label::text(tail)
+                    .size(typography::heading())
+                    .style(brand_text(0.85)),
+            );
+        }
+        let face: Element<'a, Message> = button(
+            row![brand_mark(20.0), word, icon(Icon::ChevronDown).size(12.0)]
+                .spacing(7)
+                .height(Fill)
+                .align_y(Center),
         )
         .on_press_maybe(app_button.on_press)
-        .height(tab_height())
-        .padding([0, 12])
+        .height(typography::scaled(26.0))
+        .padding(Padding {
+            top: 0.0,
+            right: 6.0,
+            bottom: 0.0,
+            left: 3.0,
+        })
         .style(style::button::brand(app_button.open))
-        .into()
+        .into();
+        let face = match app_button.tip {
+            Some(hint) if !app_button.open => tip(face, hint, tooltip::Position::Bottom),
+            _ => face,
+        };
+        container(face)
+            .height(tab_height())
+            .padding(Padding {
+                left: 6.0,
+                ..Padding::ZERO
+            })
+            .align_y(Center)
+            .into()
     }
-}
-
-/// KentOS marka işareti: köşesinde dolu kare olan çerçeve. Vurgu
-/// zemininde durur (şeridin marka düğmesi, uygulama menüsünün başlığı).
-pub fn logo_mark<'a, Message: 'a>() -> Element<'a, Message> {
-    let on_accent = |theme: &iced::Theme| Tokens::of(theme).on_accent;
-
-    container(
-        container(space::horizontal())
-            .width(4)
-            .height(4)
-            .style(move |theme| iced::widget::container::Style {
-                background: Some(on_accent(theme).into()),
-                ..Default::default()
-            }),
-    )
-    .width(13)
-    .height(13)
-    .align_x(Right)
-    .align_y(Top)
-    .padding(2)
-    .style(move |theme| style::container::outline(on_accent(theme), 1.5)(theme))
-    .into()
 }

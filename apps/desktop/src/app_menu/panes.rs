@@ -83,9 +83,7 @@ impl App {
                 format!("{}{}", d.name(), if d.dirty() { " •" } else { "" })
             });
         row![
-            container(kentos_ui::widget::ribbon::logo_mark())
-                .center(28)
-                .style(style::container::accent),
+            kentos_ui::widget::brand_mark(28.0),
             column![
                 row![
                     text("KentOS").font(kentos_ui::theme::typography::ui_strong()),

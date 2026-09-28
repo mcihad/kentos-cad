@@ -107,5 +107,14 @@ fn the_dark_and_light_themes_are_the_webs() {
         same(&format!("{theme} warning"), t.warning, web("--c-warn"));
         same(&format!("{theme} danger"), t.danger, web("--c-danger"));
         same(&format!("{theme} info"), t.info, web("--c-info"));
+        let b = kentos_ui::theme::brand(mode);
+        same(&format!("{theme} brand"), b.tile, web("--c-brand"));
+        same(&format!("{theme} brand-hi"), b.hi, web("--c-brand-hi"));
+        same(&format!("{theme} brand-ink"), b.ink, web("--c-brand-ink"));
+        same(
+            &format!("{theme} brand-text"),
+            b.text,
+            web("--c-brand-text"),
+        );
     }
 }

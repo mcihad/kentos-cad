@@ -31,7 +31,7 @@
 mod control;
 mod layout;
 
-pub use control::{AppButton, Button, logo_mark};
+pub use control::{AppButton, Button};
 pub use layout::{Choice, Field, Gallery, Group, Level, Preview, Row, Stack, Tile};
 
 use iced::widget::text::{Fragment, IntoFragment};
@@ -390,17 +390,17 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
         for (i, tab) in tabs.into_iter().enumerate() {
             let tab_tip = tab_tips.get(i).cloned().flatten();
             let contextual = tab.count.is_some();
-            let face = tab_face(tab.label, tab.selected, tab.count);
-            // Daraltılmış şeritte seçili sekme panele akmaz; kalın yazıyla
-            // ayrılır.
-            let tab_button = if tab.selected && !collapsed {
+            // Daraltılmış şeritte hiçbir sekme açık görünmez (web'in `data-collapsed`'i).
+            let open = tab.selected && !collapsed;
+            let face = tab_face(tab.label, open, tab.count);
+            let tab_button = if open {
                 selected_tab(face)
             } else {
                 underlined(
                     button(container(face).height(Fill).align_y(iced::Center))
                         .on_press(tab.on_press)
                         .height(tab_height())
-                        .padding([0, 14])
+                        .padding([0, 11])
                         .style(style::button::tab),
                     Length::Shrink,
                 )
@@ -409,7 +409,7 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
             let tab_button = key_tip(tab_button, tab_tip, Place::Under);
             // A contextual tab stands a little apart, a thin accent line over it (web).
             strip = strip.push(if contextual {
-                let line = !tab.selected || collapsed;
+                // The contextual tab's line stays over it, open or not (web).
                 underlined(
                     row![
                         space::horizontal().width(4),
@@ -417,7 +417,7 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
                             tab_button,
                             container(space::horizontal())
                                 .width(Fill)
-                                .height(if line { TAB_ACCENT } else { 0.0 })
+                                .height(TAB_ACCENT)
                                 .style(style::container::accent),
                         ]
                     ],
@@ -613,8 +613,6 @@ fn underlined<'a, Message: 'a>(
         .into()
 }
 
-/// Seçili sekme: üstte vurgu çizgisi, yanlarda kenar çizgisi; altta çizgi
-/// yoktur ve gövdesi panelle aynı renktedir.
 /// Sekmenin yazısı: seçiliyse kalın; bağlamsal sekmede vurgu renginde ve
 /// yanında sayı rozeti.
 fn tab_face<'a, Message: 'a>(
@@ -655,32 +653,24 @@ fn tab_face<'a, Message: 'a>(
     .into()
 }
 
+/// Açık sekme (web'in `.ribbon__tab[aria-selected]`'ı): yazı ana renkte ve
+/// yarı kalın, altında 2 piksellik vurgu çizgisi; sekme satırının alt
+/// çizgisi altından sürer.
 fn selected_tab<'a, Message: 'a>(face: Element<'a, Message>) -> Element<'a, Message> {
-    row![
-        vertical_divider(),
+    underlined(
         column![
+            container(face)
+                .height(tab_height() - TAB_ACCENT)
+                .padding([0, 11])
+                .align_y(iced::Center),
             container(space::horizontal())
                 .width(Fill)
                 .height(TAB_ACCENT)
                 .style(style::container::accent),
-            // Alt boşluk vurgu çizgisini dengeler; yazı diğer sekmelerle aynı
-            // taban çizgisinde kalır.
-            container(face)
-                .height(Fill)
-                .padding(Padding {
-                    top: 0.0,
-                    right: 14.0,
-                    bottom: TAB_ACCENT + 1.0,
-                    left: 14.0,
-                })
-                .align_y(iced::Center)
-                .style(style::container::surface),
         ]
         .width(Length::Shrink),
-        vertical_divider(),
-    ]
-    .height(tab_height() + 1.0)
-    .into()
+        Length::Shrink,
+    )
 }
 
 /// Şeritte yeri gösterilen öğe (ör. komut aramasının "Şeritte göster"i):

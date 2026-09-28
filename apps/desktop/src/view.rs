@@ -111,7 +111,11 @@ impl App {
         let catalog = catalog();
         let mut ribbon = Ribbon::new()
             .application(
-                AppButton::new("KentOS CAD")
+                AppButton::new("Kent")
+                    .tail("OS")
+                    .tip(kentos_ui::widget::Tip::new("KentOS").body(
+                        "Uygulama menüsü: yeni, aç, kaydet, içe ve dışa aktar, bulut ve ayarlar.",
+                    ))
                     .open(self.app_menu.is_some())
                     .on_press(Message::AppMenu(crate::app_menu::Event::Toggle)),
             )

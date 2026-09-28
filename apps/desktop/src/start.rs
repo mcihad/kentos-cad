@@ -207,9 +207,7 @@ impl App {
             );
         }
         let brand = row![
-            container(kentos_ui::widget::ribbon::logo_mark())
-                .center(44)
-                .style(style::container::accent),
+            kentos_ui::widget::brand_mark(44.0),
             column![
                 row![
                     text("KentOS ")

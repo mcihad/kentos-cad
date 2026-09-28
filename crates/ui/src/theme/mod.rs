@@ -8,6 +8,7 @@
 //! izler.
 
 pub mod accent;
+pub mod brand;
 pub mod motion;
 pub mod shape;
 pub mod tokens;
@@ -18,6 +19,7 @@ use std::sync::{Mutex, PoisonError};
 use iced::Theme;
 
 pub use accent::Accent;
+pub use brand::{Brand, brand};
 pub use tokens::Tokens;
 
 /// Tema.
