@@ -333,6 +333,10 @@ impl Input for EntitiesArray {
                 "fill" => Some(fill),
                 _ => coordinate(center, "center", rest),
             },
+            ArrayLayout::Path { spacing, .. } => match rest {
+                "spacing" => spacing.as_mut(),
+                _ => None,
+            },
         }
     }
 }

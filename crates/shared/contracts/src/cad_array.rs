@@ -19,7 +19,7 @@ use ts_rs::TS;
 use crate::cad::{REVISION_TEXT, UID_TEXT};
 use crate::entity::{Entity, Vec2};
 
-/// Copies objects into a rectangular or a polar array.
+/// Copies objects into a rectangular or a polar array, or along a path.
 pub const CAD_ENTITIES_ARRAY: &str = "cad.entities.array";
 pub const CAD_ENTITIES_ARRAY_VERSION: u32 = 1;
 
@@ -57,6 +57,25 @@ pub enum ArrayLayout {
         fill: f64,
         rotate: bool,
     },
+    /// Yol boyunca dizi (docs/adr/0140): `count` places, 2 to 10 000, along
+    /// the object `path` names by its persistent id (a line, an arc, a
+    /// circle or a polyline), the originals at the first, the path's start.
+    /// The places are `spacing` metres apart along the path from its start,
+    /// or without a spacing spread evenly from its start to its end (round a
+    /// closed path, its end being its start). The copy at a place moves by
+    /// the path's point there less its start; with `align` it first turns
+    /// about the start by the path's direction there less its direction at
+    /// the start. The path is read, never changed.
+    Path {
+        #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+        path: String,
+        #[cfg_attr(feature = "schema", schemars(range(min = 2, max = 10000)))]
+        count: u32,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        spacing: Option<f64>,
+        align: bool,
+    },
 }
 
 /// Input of `cad.entities.array` v1: copies of objects named by their
@@ -68,7 +87,8 @@ pub enum ArrayLayout {
 /// Each copy takes every field of its original (layer, colour, attributes,
 /// label, symbol) and a new persistent id; the originals stay. The copies
 /// are written place after place, each place the objects in the input's
-/// order. The undo step is the tool's name: “Dizi” or “Kutupsal dizi”.
+/// order. The undo step is the tool's name: “Dizi”, “Kutupsal dizi” or
+/// “Yol boyunca dizi”.
 ///
 /// Objects on a locked layer (by itself or a group above it) are not
 /// copied: with others they are named in the output's `locked` with a
@@ -78,14 +98,19 @@ pub enum ArrayLayout {
 /// repeated id counts once.
 ///
 /// Refusals (`CommandError.code`), checked in this order: `no_entities`,
-/// `invalid_uid` (each id in order), `not_finite` (the layout's numbers, in
-/// their order), `invalid_count` (rows and columns, or the count, out of
-/// their range), `invalid_spacing` (a grid direction with more than one
-/// place and no spacing), `invalid_fill` (a polar fill of zero or past a
-/// full turn), `invalid_revision`, `revision_conflict` (status `conflict`),
-/// `entity_not_found` (each id in order), `layer_locked`, then `not_finite`
-/// again (path `layout`) when a copy would lie past the largest float64; on
-/// the desktop also `slots_exhausted`.
+/// `invalid_uid` (each id in order, then a path array's path at
+/// `layout.path`), `not_finite` (the layout's numbers, in their order),
+/// `invalid_count` (rows and columns, or the count, out of their range),
+/// `invalid_spacing` (a grid direction with more than one place and no
+/// spacing; a path array's spacing not above zero), `invalid_fill` (a polar
+/// fill of zero or past a full turn), `invalid_revision`,
+/// `revision_conflict` (status `conflict`), `entity_not_found` (each id in
+/// order, then the path at `layout.path`), `invalid_path` (a path that is
+/// not a line, an arc, a circle or a polyline, or has no length),
+/// `invalid_spacing` again (a path array's places past the end of an open
+/// path, or round to the start of a closed one), `layer_locked`, then
+/// `not_finite` again (path `layout`) when a copy would lie past the
+/// largest float64; on the desktop also `slots_exhausted`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

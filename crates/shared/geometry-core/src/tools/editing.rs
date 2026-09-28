@@ -7,7 +7,7 @@
 
 use crate::api::Op;
 use crate::entity::{Entity, Shape, entity_bounds_in};
-use crate::geom::affine::{Affine, align, rotation, translation};
+use crate::geom::affine::{Affine, align, compose, rotation, translation};
 use crate::geom::arc::{ArcGeom, norm_angle};
 use crate::geom::bulge::bulge_at;
 use crate::geom::dimension::sector_arms;
@@ -15,6 +15,7 @@ use crate::geom::intersect::line_line;
 use crate::geometry::{dist, empty_bounds, is_empty_bounds};
 use crate::jsmath::{PI, acos, atan2, cos, js_max, js_min, js_round, or, pow, sin, tan};
 use crate::op;
+use crate::ops::path::{path_of, point_at_s, tangent_at_s};
 use crate::text::Font;
 use crate::tools::point_input::midpoint;
 use crate::vec2::Vec2;
@@ -160,8 +161,86 @@ pub fn array_transforms(
                 reference,
             ))
         }
+        // Maps made elsewhere (a path array, docs/adr/0140): six numbers each, as Affine holds them.
+        ("affines", p) if !p.is_empty() && p.len() % 6 == 0 => Some(
+            p.chunks_exact(6)
+                .map(|m| [m[0], m[1], m[2], m[3], m[4], m[5]])
+                .collect(),
+        ),
         _ => None,
     }
+}
+
+/// Most places a path array fills, the originals' among them (docs/adr/0140).
+pub const PATH_PLACES_MAX: f64 = 10_000.0;
+
+/// Yol boyunca dizi (docs/adr/0140): the copies' maps along `path`, a line,
+/// an arc, a circle or a polyline. `count` places, the originals at the
+/// first, the path's start; the places are `spacing` metres apart along the
+/// path from its start, or without a spacing spread evenly from its start
+/// to its end (round a closed path, its end being its start). The k-th copy
+/// moves by the path's point at its place less its start; with `align` it
+/// first turns about the start by the path's direction there less the
+/// direction at the start. None for another kind of path, one of no length,
+/// a count out of 2 to [`PATH_PLACES_MAX`] (whole), a spacing not above
+/// zero, or places past the end of an open path or round to the start of a
+/// closed one. Whether the numbers are finite is the command's to check.
+pub fn path_array_transforms(
+    path: &Shape,
+    count: f64,
+    spacing: Option<f64>,
+    align: bool,
+) -> Option<Vec<Affine>> {
+    let follows = matches!(
+        path,
+        Shape::Line { .. } | Shape::Polyline { .. } | Shape::Arc { .. } | Shape::Circle { .. }
+    );
+    let whole = count.fract() == 0.0 && (2.0..=PATH_PLACES_MAX).contains(&count);
+    if !follows || !whole {
+        return None;
+    }
+    let p = path_of(path)?;
+    let l = p.length;
+    if !(l > 1e-9) {
+        return None;
+    }
+    let place = |k: f64| match spacing {
+        Some(s) => k * s,
+        None if p.closed => (l * k) / count,
+        None => (l * k) / (count - 1.0),
+    };
+    if let Some(s) = spacing {
+        let last = place(count - 1.0);
+        let eps = 1e-9 * js_max(1.0, l);
+        let fits = if p.closed {
+            last < l - eps
+        } else {
+            last <= l + eps
+        };
+        if !(s > 0.0) || !fits {
+            return None;
+        }
+    }
+    let start = point_at_s(&p, 0.0);
+    let direction = |s: f64| {
+        let t = tangent_at_s(&p, s);
+        atan2(t.y, t.x)
+    };
+    let d0 = direction(0.0);
+    let mut out = Vec::new();
+    let mut k = 1.0;
+    while k < count {
+        let s = place(k);
+        let at = point_at_s(&p, s);
+        let moved = translation(at.x - start.x, at.y - start.y);
+        out.push(if align {
+            compose(&moved, &rotation(direction(s) - d0, start))
+        } else {
+            moved
+        });
+        k += 1.0;
+    }
+    Some(out)
 }
 
 /// ALIGN: the first source point onto the first destination; with a second
@@ -570,6 +649,12 @@ pub(crate) static OPS: &[Op] = &[
             array_transforms(&kind, &params, &shapes, font)
         }
     ),
+    op!(
+        "pathArrayTransforms",
+        |path: Entity, count: f64, spacing: Option<f64>, align: bool| {
+            path_array_transforms(&path.shape, count, spacing, align)
+        }
+    ),
     op!("vertexCorner", |prev: Vec2,
                          at: Vec2,
                          next: Vec2,
@@ -620,6 +705,57 @@ pub(crate) static OPS: &[Op] = &[
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::geom::affine::apply;
+
+    #[test]
+    fn a_path_array_follows_a_bend_and_turns_with_it() {
+        let path = Shape::Polyline {
+            pts: vec![
+                Vec2::new(0.0, 0.0),
+                Vec2::new(10.0, 0.0),
+                Vec2::new(10.0, 10.0),
+            ],
+            bulges: None,
+            holes: None,
+        };
+        // Five places over 20 m: 0, 5, 10 (the bend: the next edge's direction), 15, 20.
+        let maps = path_array_transforms(&path, 5.0, None, true).expect("maps");
+        assert_eq!(maps.len(), 4);
+        let tip = Vec2::new(1.0, 0.0);
+        assert_eq!(apply(&maps[0], tip), Vec2::new(6.0, 0.0));
+        let turned = apply(&maps[2], tip);
+        assert!(
+            (turned.x - 10.0).abs() < 1e-12 && (turned.y - 6.0).abs() < 1e-12,
+            "{turned:?}"
+        );
+        // Without turning, only moved.
+        let moved = path_array_transforms(&path, 5.0, None, false).expect("maps");
+        assert_eq!(apply(&moved[2], tip), Vec2::new(11.0, 5.0));
+        // Spacing: 3 places 8 m apart fit on 20 m, 4 do not.
+        assert!(path_array_transforms(&path, 3.0, Some(8.0), false).is_some());
+        assert!(path_array_transforms(&path, 4.0, Some(8.0), false).is_none());
+        assert!(path_array_transforms(&path, 1.0, None, false).is_none());
+        assert!(path_array_transforms(&path, 3.0, Some(0.0), false).is_none());
+        let point = Shape::Point {
+            p: Vec2::new(0.0, 0.0),
+            z: None,
+        };
+        assert!(path_array_transforms(&point, 3.0, None, false).is_none());
+    }
+
+    #[test]
+    fn round_a_circle_the_places_share_it_out() {
+        let circle = Shape::Circle {
+            c: Vec2::new(0.0, 0.0),
+            r: 1.0,
+        };
+        let maps = path_array_transforms(&circle, 4.0, None, false).expect("maps");
+        assert_eq!(maps.len(), 3);
+        // The start is east; a quarter round is north.
+        let start = Vec2::new(1.0, 0.0);
+        let q = apply(&maps[0], start);
+        assert!(q.x.abs() < 1e-12 && (q.y - 1.0).abs() < 1e-12, "{q:?}");
+    }
 
     #[test]
     fn non_rotating_polar_copies_move_the_same_in_a_tm_zone() {

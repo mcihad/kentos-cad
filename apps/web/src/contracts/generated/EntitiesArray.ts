@@ -11,7 +11,8 @@ import type { ArrayLayout } from "./ArrayLayout";
  * Each copy takes every field of its original (layer, colour, attributes,
  * label, symbol) and a new persistent id; the originals stay. The copies
  * are written place after place, each place the objects in the input's
- * order. The undo step is the tool's name: “Dizi” or “Kutupsal dizi”.
+ * order. The undo step is the tool's name: “Dizi”, “Kutupsal dizi” or
+ * “Yol boyunca dizi”.
  *
  * Objects on a locked layer (by itself or a group above it) are not
  * copied: with others they are named in the output's `locked` with a
@@ -21,14 +22,19 @@ import type { ArrayLayout } from "./ArrayLayout";
  * repeated id counts once.
  *
  * Refusals (`CommandError.code`), checked in this order: `no_entities`,
- * `invalid_uid` (each id in order), `not_finite` (the layout's numbers, in
- * their order), `invalid_count` (rows and columns, or the count, out of
- * their range), `invalid_spacing` (a grid direction with more than one
- * place and no spacing), `invalid_fill` (a polar fill of zero or past a
- * full turn), `invalid_revision`, `revision_conflict` (status `conflict`),
- * `entity_not_found` (each id in order), `layer_locked`, then `not_finite`
- * again (path `layout`) when a copy would lie past the largest float64; on
- * the desktop also `slots_exhausted`.
+ * `invalid_uid` (each id in order, then a path array's path at
+ * `layout.path`), `not_finite` (the layout's numbers, in their order),
+ * `invalid_count` (rows and columns, or the count, out of their range),
+ * `invalid_spacing` (a grid direction with more than one place and no
+ * spacing; a path array's spacing not above zero), `invalid_fill` (a polar
+ * fill of zero or past a full turn), `invalid_revision`,
+ * `revision_conflict` (status `conflict`), `entity_not_found` (each id in
+ * order, then the path at `layout.path`), `invalid_path` (a path that is
+ * not a line, an arc, a circle or a polyline, or has no length),
+ * `invalid_spacing` again (a path array's places past the end of an open
+ * path, or round to the start of a closed one), `layer_locked`, then
+ * `not_finite` again (path `layout`) when a copy would lie past the
+ * largest float64; on the desktop also `slots_exhausted`.
  */
 export type EntitiesArray = { 
 /**

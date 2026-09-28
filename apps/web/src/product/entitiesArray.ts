@@ -6,7 +6,10 @@ import type { EntitiesArrayPlan } from '../contracts/generated/EntitiesArrayPlan
 import type { Entity as PlannedEntity } from '../contracts/generated/Entity';
 import type { CadDocument } from '../model/document';
 import type { Entity, NewEntity } from '../model/entities';
-import { arrayCopies, geometryIsFinite } from '../model/ops/transform';
+import { pathOf } from '../model/ops/path';
+import { arrayCopies, geometryIsFinite, pathArrayTransforms } from '../model/ops/transform';
+import { isUuid } from '../core/uuid';
+import type { Affine } from '../model/geom/affine';
 import { checkRevision, checkUids, error, failed, findObjects, notFinite, notFiniteValue, validated, type Stop } from './checks';
 import type { ProductCommand } from './command';
 
@@ -51,7 +54,7 @@ interface Checked {
 const lockedMessage = (n: number) => `${n} nesne kilitli katmanda olduğu için atlandı. Kopyalamak için katmanın kilidini Katmanlar panelinden açın.`;
 
 /** The undo step's name: the tool's (docs/adr/0047). */
-export const arrayLabel = (layout: ArrayLayout): string => (layout.kind === 'grid' ? 'Dizi' : 'Kutupsal dizi');
+export const arrayLabel = (layout: ArrayLayout): string => (layout.kind === 'grid' ? 'Dizi' : layout.kind === 'polar' ? 'Kutupsal dizi' : 'Yol boyunca dizi');
 
 const refuse = (code: string, message: string, path: string): Stop => failed(error(code, message, path));
 
@@ -70,6 +73,24 @@ function checkLayout(l: ArrayLayout): Stop | null {
       return refuse('invalid_spacing', 'Sütunlar arasındaki aralık (dY) sıfır; kopyalar üst üste düşer. Sıfırdan farklı bir aralık verin.', 'layout.dx');
     if (l.rows > 1 && Math.abs(l.dy) < NONE)
       return refuse('invalid_spacing', 'Satırlar arasındaki aralık (dX) sıfır; kopyalar üst üste düşer. Sıfırdan farklı bir aralık verin.', 'layout.dy');
+    return null;
+  }
+  if (l.kind === 'path') {
+    if (!isUuid(l.path))
+      return refuse(
+        'invalid_uid',
+        `“${l.path}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.`,
+        'layout.path',
+      );
+    const spacing = l.spacing ?? null;
+    if (spacing !== null) {
+      const bad = notFiniteValue(spacing, 'Aralık', 'Aralığı sonlu bir sayıyla verin.', 'layout.spacing');
+      if (bad) return bad;
+    }
+    if (!Number.isInteger(l.count) || l.count < 2 || l.count > 10_000)
+      return refuse('invalid_count', 'Adet 2 ile 10 000 arasında bir tam sayı olmalı. Başka bir adet verin.', 'layout.count');
+    if (spacing !== null && spacing < NONE)
+      return refuse('invalid_spacing', 'Aralık sıfırdan büyük olmalı. Bir aralık verin ya da kopyaları yola eşit dağıtmak için aralığı boş bırakın.', 'layout.spacing');
     return null;
   }
   const stop = notFinite(l.center, 'Merkezin', 'layout.center') ?? notFiniteValue(l.fill, 'Doldurma açısı', 'Açıyı sonlu bir sayıyla verin.', 'layout.fill');
@@ -97,12 +118,39 @@ function check(doc: CadDocument, input: EntitiesArray): Stop | Checked {
       sources.push(f.uid);
     }
   }
+  const maps = pathMaps(doc, input.layout);
+  if (maps && 'status' in maps) return maps;
   if (!originals.length) return failed(error('layer_locked', lockedMessage(locked.length), 'uids'));
-  const copies = arrayCopies(originals, input.layout, doc.settings.drawingFont.value);
+  const copies = arrayCopies(originals, input.layout, doc.settings.drawingFont.value, maps ?? undefined);
   if (copies.some((c, i) => geometryIsFinite(originals[i % originals.length]) && !geometryIsFinite(c)))
     return failed(error('not_finite', 'Dönüşüm sonucunda sonlu olmayan bir değer çıktı (sayı taşması). Daha küçük bir değer verin.', 'layout'));
   const warnings: CommandWarning[] = locked.length ? [{ code: 'layer_locked', message: lockedMessage(locked.length), path: 'uids' }] : [];
   return { sources, copies, locked, warnings };
+}
+
+/**
+ * A path array's maps from its path in the document: `entity_not_found`, `invalid_path` and `invalid_spacing`
+ * (places past its end) as the contract orders them; null for the other layouts.
+ */
+function pathMaps(doc: CadDocument, layout: ArrayLayout): Stop | Affine[] | null {
+  if (layout.kind !== 'path') return null;
+  const path = doc.byUid(layout.path);
+  if (!path)
+    return failed(
+      error('entity_not_found', `“${layout.path}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.`, 'layout.path'),
+    );
+  const follows = path.kind === 'line' || path.kind === 'arc' || path.kind === 'circle' || path.kind === 'polyline';
+  const length = follows ? (pathOf(path)?.length ?? 0) : 0;
+  if (!(length > NONE))
+    return refuse('invalid_path', 'Yol bir çizgi, yay, daire ya da çoklu çizgi olmalı ve bir uzunluğu olmalı. Başka bir nesneyi yol olarak seçin.', 'layout.path');
+  const maps = pathArrayTransforms(path, layout.count, layout.spacing ?? null, layout.align);
+  if (!maps)
+    return refuse(
+      'invalid_spacing',
+      'Bu aralıkla bu kadar kopya yola sığmıyor: yerler yolun sonunu (kapalı yolda başını) geçiyor. Daha küçük bir aralık ya da adet verin.',
+      'layout.spacing',
+    );
+  return maps;
 }
 
 const isStop = (c: Stop | Checked): c is Stop => 'status' in c;

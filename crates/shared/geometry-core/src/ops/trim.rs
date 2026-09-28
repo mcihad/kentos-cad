@@ -235,7 +235,35 @@ fn circle_hits(c: Vec2, r: f64, b: &Edge) -> Vec<Vec2> {
     }
 }
 
+/// Buda and Uzat, Çit yöntemi (docs/adr/0140): where the fence (a drawn
+/// open path) crosses `target`, in the fence's order: each crossing is
+/// where the tool picks the object, as a click there would, so the part
+/// the fence crosses is trimmed and the end it passes nearest is extended.
+/// Crossings closer than 1e-9 m to one before are one.
+pub fn fence_crossings(target: &Entity, fence: &[Vec2]) -> Vec<Vec2> {
+    let edges = crate::ops::edges::entity_edges(&target.shape);
+    let mut out: Vec<Vec2> = Vec::new();
+    for w in fence.windows(2) {
+        let seg = Edge::Seg { a: w[0], b: w[1] };
+        let mut here: Vec<(f64, Vec2)> = edges
+            .iter()
+            .flat_map(|e| crate::geom::intersect::intersect_edges(&seg, e))
+            .map(|h| (h.t, h.p))
+            .collect();
+        here.sort_by(|a, b| a.0.total_cmp(&b.0));
+        for (_, p) in here {
+            if !out.iter().any(|q| js_hypot(q.x - p.x, q.y - p.y) <= 1e-9) {
+                out.push(p);
+            }
+        }
+    }
+    out
+}
+
 pub(crate) static OPS: &[Op] = &[
+    op!("fenceCrossings", |target: Entity, fence: Vec<Vec2>| {
+        fence_crossings(&target, &fence)
+    }),
     op!("trimEntity", |target: Entity,
                        pick: Vec2,
                        boundaries: Vec<Edge>| {
@@ -250,3 +278,33 @@ pub(crate) static OPS: &[Op] = &[
         )
     ),
 ];
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_fence_picks_each_object_where_it_crosses_it_in_its_order() {
+        let square = Entity::new(Shape::Polygon {
+            pts: vec![
+                Vec2::new(0.0, 0.0),
+                Vec2::new(10.0, 0.0),
+                Vec2::new(10.0, 10.0),
+                Vec2::new(0.0, 10.0),
+            ],
+            bulges: None,
+            holes: None,
+        });
+        // A fence across the square from west to east, then on north of it.
+        let fence = [
+            Vec2::new(-5.0, 5.0),
+            Vec2::new(15.0, 5.0),
+            Vec2::new(15.0, 20.0),
+        ];
+        assert_eq!(
+            fence_crossings(&square, &fence),
+            vec![Vec2::new(0.0, 5.0), Vec2::new(10.0, 5.0)]
+        );
+        assert!(fence_crossings(&square, &[Vec2::new(20.0, 0.0), Vec2::new(30.0, 0.0)]).is_empty());
+    }
+}

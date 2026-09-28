@@ -471,6 +471,7 @@ class ArrayLayout(_Union):
 
     - :class:`GridArrayLayout` (``kind: grid``)
     - :class:`PolarArrayLayout` (``kind: polar``)
+    - :class:`PathArrayLayout` (``kind: path``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -1466,7 +1467,8 @@ class EntitiesArray(_Model):
     Each copy takes every field of its original (layer, colour, attributes,
     label, symbol) and a new persistent id; the originals stay. The copies
     are written place after place, each place the objects in the input's
-    order. The undo step is the tool's name: “Dizi” or “Kutupsal dizi”.
+    order. The undo step is the tool's name: “Dizi”, “Kutupsal dizi” or
+    “Yol boyunca dizi”.
 
     Objects on a locked layer (by itself or a group above it) are not
     copied: with others they are named in the output's `locked` with a
@@ -1476,14 +1478,19 @@ class EntitiesArray(_Model):
     repeated id counts once.
 
     Refusals (`CommandError.code`), checked in this order: `no_entities`,
-    `invalid_uid` (each id in order), `not_finite` (the layout's numbers, in
-    their order), `invalid_count` (rows and columns, or the count, out of
-    their range), `invalid_spacing` (a grid direction with more than one
-    place and no spacing), `invalid_fill` (a polar fill of zero or past a
-    full turn), `invalid_revision`, `revision_conflict` (status `conflict`),
-    `entity_not_found` (each id in order), `layer_locked`, then `not_finite`
-    again (path `layout`) when a copy would lie past the largest float64; on
-    the desktop also `slots_exhausted`.
+    `invalid_uid` (each id in order, then a path array's path at
+    `layout.path`), `not_finite` (the layout's numbers, in their order),
+    `invalid_count` (rows and columns, or the count, out of their range),
+    `invalid_spacing` (a grid direction with more than one place and no
+    spacing; a path array's spacing not above zero), `invalid_fill` (a polar
+    fill of zero or past a full turn), `invalid_revision`,
+    `revision_conflict` (status `conflict`), `entity_not_found` (each id in
+    order, then the path at `layout.path`), `invalid_path` (a path that is
+    not a line, an arc, a circle or a polyline, or has no length),
+    `invalid_spacing` again (a path array's places past the end of an open
+    path, or round to the start of a closed one), `layer_locked`, then
+    `not_finite` again (path `layout`) when a copy would lie past the
+    largest float64; on the desktop also `slots_exhausted`.
     Attributes:
         uids: The objects' persistent ids (lowercase UUID text with hyphens), at least one.
         layout: Where the copies go.
@@ -4402,6 +4409,43 @@ class PolarArrayLayout(ArrayLayout):
 
 
 @dataclass(kw_only=True, slots=True)
+class PathArrayLayout(ArrayLayout):
+    """Yol boyunca dizi (docs/adr/0140): `count` places, 2 to 10 000, along
+    the object `path` names by its persistent id (a line, an arc, a
+    circle or a polyline), the originals at the first, the path's start.
+    The places are `spacing` metres apart along the path from its start,
+    or without a spacing spread evenly from its start to its end (round a
+    closed path, its end being its start). The copy at a place moves by
+    the path's point there less its start; with `align` it first turns
+    about the start by the path's direction there less its direction at
+    the start. The path is read, never changed.
+    """
+    TAG_VALUE: ClassVar[str] = "path"
+    path: str
+    count: int
+    align: bool
+    spacing: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "path"}
+        out["path"] = self.path
+        out["count"] = self.count
+        out["align"] = self.align
+        if self.spacing is not UNSET:
+            out["spacing"] = None if self.spacing is None else float(self.spacing)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PathArrayLayout:
+        return cls(
+            path=data["path"],
+            count=data["count"],
+            align=data["align"],
+            spacing=UNSET if "spacing" not in data else None if data["spacing"] is None else float(data["spacing"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PolylineEntity(PathEntity, Entity):
     """Entity ``polyline``: a :class:`PathEntity`."""
     TAG_VALUE: ClassVar[str] = "polyline"
@@ -5052,7 +5096,7 @@ class AlignTransform(Transform):
         )
 
 
-_ARRAY_LAYOUT: dict[str, type[ArrayLayout]] = {"grid": GridArrayLayout, "polar": PolarArrayLayout}
+_ARRAY_LAYOUT: dict[str, type[ArrayLayout]] = {"grid": GridArrayLayout, "polar": PolarArrayLayout, "path": PathArrayLayout}
 
 
 _ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity}
@@ -5170,6 +5214,7 @@ __all__ = [
     "MirrorTransform",
     "MoveTransform",
     "NewObject",
+    "PathArrayLayout",
     "PathEntity",
     "PointCreate",
     "PointCreated",

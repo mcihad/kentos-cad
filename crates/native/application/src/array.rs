@@ -28,9 +28,10 @@ use kentos_contracts::{
     ArrayLayout, CommandError, CommandResult, CommandWarning, EntitiesArray, EntitiesArrayPlan,
     EntitiesArrayed, Entity,
 };
-use kentos_domain::Document;
+use kentos_domain::{Document, Uuid};
+use kentos_geometry_core::ops::path::path_of;
 use kentos_geometry_core::ops::transform::transform_shape;
-use kentos_geometry_core::tools::editing::array_transforms;
+use kentos_geometry_core::tools::editing::{array_transforms, path_array_transforms};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop};
@@ -116,12 +117,16 @@ pub fn label(layout: &ArrayLayout) -> &'static str {
     match layout {
         ArrayLayout::Grid { .. } => "Dizi",
         ArrayLayout::Polar { .. } => "Kutupsal dizi",
+        ArrayLayout::Path { .. } => "Yol boyunca dizi",
     }
 }
 
-/// The layout as the core's `array_transforms` takes it: its kind and numbers.
+/// The layout as the core's `array_transforms` takes it: its kind and
+/// numbers. A path array's maps come from its path (`path_array_transforms`),
+/// which the document holds: none here.
 pub fn array_numbers(layout: &ArrayLayout) -> (&'static str, Vec<f64>) {
     match *layout {
+        ArrayLayout::Path { .. } => ("affines", Vec::new()),
         ArrayLayout::Grid { rows, cols, dx, dy } => {
             ("grid", vec![f64::from(rows), f64::from(cols), dx, dy])
         }
@@ -224,8 +229,94 @@ fn check_layout(layout: &ArrayLayout) -> Result<(), Stop> {
                 ));
             }
         }
+        ArrayLayout::Path {
+            ref path,
+            count,
+            spacing,
+            ..
+        } => {
+            if !checks::is_uid_text(path) {
+                return Err(refuse(
+                    codes::INVALID_UID,
+                    &format!(
+                        "“{path}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın."
+                    ),
+                    "layout.path",
+                ));
+            }
+            if let Some(s) = spacing {
+                checks::finite(
+                    s,
+                    "Aralık",
+                    "Aralığı sonlu bir sayıyla verin.",
+                    "layout.spacing",
+                )?;
+            }
+            if !(2..=10_000).contains(&count) {
+                return Err(refuse(
+                    codes::INVALID_COUNT,
+                    "Adet 2 ile 10 000 arasında bir tam sayı olmalı. Başka bir adet verin.",
+                    "layout.count",
+                ));
+            }
+            if spacing.is_some_and(|s| s < NONE) {
+                return Err(refuse(
+                    codes::INVALID_SPACING,
+                    "Aralık sıfırdan büyük olmalı. Bir aralık verin ya da kopyaları yola eşit dağıtmak için aralığı boş bırakın.",
+                    "layout.spacing",
+                ));
+            }
+        }
     }
     Ok(())
+}
+
+/// A path array's maps from its path in the document: `entity_not_found`,
+/// `invalid_path` and `invalid_spacing` (places past its end) as the
+/// contract orders them; None for the other layouts.
+fn path_maps(doc: &Document, layout: &ArrayLayout) -> Result<Option<Vec<[f64; 6]>>, Stop> {
+    let ArrayLayout::Path {
+        ref path,
+        count,
+        spacing,
+        align,
+    } = *layout
+    else {
+        return Ok(None);
+    };
+    let Some(entity) = Uuid::parse_str(path)
+        .ok()
+        .and_then(|u| doc.slot_of(u))
+        .and_then(|slot| doc.get(slot))
+    else {
+        return Err(refuse(
+            codes::ENTITY_NOT_FOUND,
+            &format!(
+                "“{path}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin."
+            ),
+            "layout.path",
+        ));
+    };
+    let shape = shape(entity);
+    let follows = matches!(
+        entity,
+        Entity::Line(_) | Entity::Arc(_) | Entity::Circle(_) | Entity::Polyline(_)
+    );
+    if !follows || !path_of(&shape).is_some_and(|p| p.length > NONE) {
+        return Err(refuse(
+            codes::INVALID_PATH,
+            "Yol bir çizgi, yay, daire ya da çoklu çizgi olmalı ve bir uzunluğu olmalı. Başka bir nesneyi yol olarak seçin.",
+            "layout.path",
+        ));
+    }
+    match path_array_transforms(&shape, f64::from(count), spacing, align) {
+        Some(maps) => Ok(Some(maps)),
+        None => Err(refuse(
+            codes::INVALID_SPACING,
+            "Bu aralıkla bu kadar kopya yola sığmıyor: yerler yolun sonunu (kapalı yolda başını) geçiyor. Daha küçük bir aralık ya da adet verin.",
+            "layout.spacing",
+        )),
+    }
 }
 
 /// The checks in the contract's order.
@@ -244,6 +335,7 @@ fn check(doc: &Document, input: &EntitiesArray) -> Result<Checked, Stop> {
             originals.push((entity, shape(entity)));
         }
     }
+    let path = path_maps(doc, &input.layout)?;
     if sources.is_empty() {
         return Err(refuse(
             codes::LAYER_LOCKED,
@@ -252,7 +344,10 @@ fn check(doc: &Document, input: &EntitiesArray) -> Result<Checked, Stop> {
         ));
     }
     let shapes: Vec<_> = originals.iter().map(|(_, s)| s.clone()).collect();
-    let (kind, numbers) = array_numbers(&input.layout);
+    let (kind, mut numbers) = array_numbers(&input.layout);
+    if let Some(maps) = path {
+        numbers = maps.concat();
+    }
     let font = drawing_font(doc.settings().drawing_font);
     let Some(affines) = array_transforms(kind, &numbers, &shapes, font) else {
         return Err(refuse(codes::NOT_FINITE, "Dizi kurulamadı.", "layout"));

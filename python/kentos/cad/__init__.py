@@ -157,6 +157,7 @@ __all__ = [
     "NotSignedIn",
     "Outcome",
     "Page",
+    "PathArrayLayout",
     "PathEntity",
     "PointCreate",
     "PointCreated",

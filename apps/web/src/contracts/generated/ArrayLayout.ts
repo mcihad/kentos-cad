@@ -6,4 +6,4 @@ import type { Vec2 } from "./Vec2";
  * where they are. Coordinates are x east (Y), y north (X), in the
  * project's units (m), float64.
  */
-export type ArrayLayout = { "kind": "grid", rows: number, cols: number, dx: number, dy: number, } | { "kind": "polar", center: Vec2, count: number, fill: number, rotate: boolean, };
+export type ArrayLayout = { "kind": "grid", rows: number, cols: number, dx: number, dy: number, } | { "kind": "polar", center: Vec2, count: number, fill: number, rotate: boolean, } | { "kind": "path", path: string, count: number, spacing?: number, align: boolean, };

@@ -30,7 +30,7 @@ import math
 import sys
 
 sys.dont_write_bytecode = True  # no __pycache__ in the tree
-from affine_reference import assert_no_negative_zero, moved, rotation, translation  # noqa: E402  (the maps, beside this file)
+from affine_reference import assert_no_negative_zero, compose, moved, rotation, translation  # noqa: E402  (the maps, beside this file)
 
 style = {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}
 
@@ -104,6 +104,67 @@ def polar(c, count, fill, rotate, middle=None):
             dx, dy = middle[0] - c[0], middle[1] - c[1]
             cs, sn = math.cos(a), math.sin(a)
             out.append(translation(cs * dx - sn * dy - dx, sn * dx + cs * dy - dy))
+    return out
+
+
+def path_places(e, count, spacing):
+    """The path's edges (a line's one segment, a circle's one counter-clockwise turn from east), their lengths,
+    and the places along it: `spacing` apart from the start, or spread from the start to the end (round a
+    closed path)."""
+    if e["kind"] == "line":
+        a, b = (e["a"]["x"], e["a"]["y"]), (e["b"]["x"], e["b"]["y"])
+        edges = [("seg", a, b, math.hypot(b[0] - a[0], b[1] - a[1]))]
+        closed = False
+    elif e["kind"] == "circle":
+        c, r = (e["c"]["x"], e["c"]["y"]), e["r"]
+        edges = [("arc", c, r, 2.0 * math.pi * r)]
+        closed = True
+    else:
+        raise ValueError(e["kind"])
+    length = sum(ed[3] for ed in edges)
+    if spacing is not None:
+        places = [k * spacing for k in range(count)]
+    elif closed:
+        places = [(length * k) / count for k in range(count)]
+    else:
+        places = [(length * k) / (count - 1.0) for k in range(count)]
+    return edges, length, closed, places
+
+
+def point_on(edges, length, closed, s):
+    """The path's point and direction of travel (radians from east) at arc length s: the edge whose start is
+    at or before s, the fraction along it, as the path's definition takes them."""
+    q = (((s % length) + length) % length) if closed else max(0.0, min(length, s))
+    cum = 0.0
+    starts = []
+    for ed in edges:
+        starts.append(cum)
+        cum += ed[3]
+    i = max(j for j in range(len(edges)) if q >= starts[j] - 1e-12)
+    ed = edges[i]
+    t = min(1.0, (q - starts[i]) / (ed[3] or 1.0))
+    if ed[0] == "seg":
+        _, a, b, l = ed
+        p = (a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t)
+        d = (b[0] - a[0]) / (l or 1.0), (b[1] - a[1]) / (l or 1.0)
+    else:
+        _, c, r, _ = ed
+        ang = 0.0 + 2.0 * math.pi * t
+        p = (c[0] + math.cos(ang) * r, c[1] + math.sin(ang) * r)
+        d = (-(p[1] - c[1]) / r, (p[0] - c[0]) / r)
+    return p, math.atan2(d[1], d[0])
+
+
+def along(path_id, count, spacing=None, align=False):
+    """Yol boyunca dizi: the k-th copy moved by the path's point at its place less its start; with `align`
+    first turned about the start by the path's direction there less its direction at the start."""
+    edges, length, closed, places = path_places(BY_ID[path_id], count, spacing)
+    start, d0 = point_on(edges, length, closed, 0.0)
+    out = []
+    for s in places[1:]:
+        at, d = point_on(edges, length, closed, s)
+        move = translation(at[0] - start[0], at[1] - start[1])
+        out.append(compose(move, rotation(d - d0, start)) if align else move)
     return out
 
 
@@ -204,6 +265,19 @@ def conflict():
 
 def locked_warning(n):
     return {"code": "layer_locked", "message": LOCKED(n), "path": "uids"}
+
+
+PATH_COUNT = "Adet 2 ile 10 000 arasında bir tam sayı olmalı. Başka bir adet verin."
+PATH_SPACING = "Aralık sıfırdan büyük olmalı. Bir aralık verin ya da kopyaları yola eşit dağıtmak için aralığı boş bırakın."
+PATH_NOT_A_PATH = "Yol bir çizgi, yay, daire ya da çoklu çizgi olmalı ve bir uzunluğu olmalı. Başka bir nesneyi yol olarak seçin."
+PATH_TOO_SHORT = "Bu aralıkla bu kadar kopya yola sığmıyor: yerler yolun sonunu (kapalı yolda başını) geçiyor. Daha küçük bir aralık ya da adet verin."
+
+
+def Y(path, count, spacing=None, align=False):
+    out = {"kind": "path", "path": path, "count": count, "align": align}
+    if spacing is not None:
+        out["spacing"] = spacing
+    return out
 
 
 def G(rows, cols, dx, dy):
@@ -318,6 +392,59 @@ cases.append({
     "steps": [
         {"op": "execute", "input": {"uids": [U(12), U(13)], "layout": R(*O, 3, 90, False)}, "result": done(made, locked=[U(12)], warnings=[locked_warning(1)]),
          "expect": written(made, {"entities": {**{str(s): e for s, e in made}, "12": ORIG(12)}})},
+    ],
+})
+
+# ── Path arrays (ADR 0140) ───────────────────────────────────────────────
+
+made = copies([13], along(10, 3))
+cases.append({
+    "name": "Yol boyunca dizi: çizginin başından sonuna eşit 3 yer; kopyalar yolun başından oraya taşınır; yol değişmez; adım Yol boyunca dizi",
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(13)], "layout": Y(U(10), 3)}, "result": done(made),
+         "expect": written(made, {"entities": {**{str(slot): e for slot, e in made}, "10": ORIG(10)}})},
+        {"op": "undo", "returns": "Yol boyunca dizi", "note": "Yol boyunca dizi aracının adımı.", "expect": {"ids": IDS, "canUndo": False, "canRedo": True}},
+    ],
+})
+
+made = copies([4, 13], along(10, 4, 3.0))
+cases.append({
+    "name": "aralıkla: yolun başından 3 m arayla 4 yer; her yerde nesneler girdinin sırasıyla",
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(4), U(13)], "layout": Y(U(10), 4, 3.0)}, "result": done(made), "expect": written(made)},
+    ],
+})
+
+made = copies([10], along(13, 4, None, True))
+cases.append({
+    "name": "kapalı yolun (dairenin) çevresine eşit 4 yer, başı doğudan saat yönünün tersine; align ile kopyalar yolun doğrultusuyla döner",
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(10)], "layout": Y(U(13), 4, None, True)}, "result": done(made), "expect": written(made)},
+    ],
+})
+
+made = copies([4], along(15, 2))
+cases.append({
+    "name": "kilitli katmandaki yol da okunur: yol değişmez, yalnız nesneler kopyalanır",
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(4)], "layout": Y(U(15), 2)}, "result": done(made), "expect": written(made)},
+    ],
+})
+
+cases.append({
+    "name": "yol dizisinin retleri, sözleşmenin sırasıyla: yolun kimliği, aralığın sonluluğu, adet, aralık, yolun çizimde olması, yolun türü, yerlerin yola sığması; kilitli nesne yolun denetiminden sonra",
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(13)], "layout": Y("12", 3)}, "result": failed("invalid_uid", BADUID("12"), "layout.path"), "expect": untouched},
+        {"op": "execute", "input": {"uids": [U(13)], "layout": Y(U(10), 3, 1.0)}, "nonFinite": {"layout.spacing": "NaN"},
+         "result": failed("not_finite", NFV("Aralık", SPACING_FIX), "layout.spacing"), "expect": untouched},
+        {"op": "execute", "input": {"uids": [U(13)], "layout": Y(U(10), 1)}, "result": failed("invalid_count", PATH_COUNT, "layout.count"), "expect": untouched},
+        {"op": "execute", "input": {"uids": [U(13)], "layout": Y(U(10), 10001)}, "result": failed("invalid_count", PATH_COUNT, "layout.count"), "expect": untouched},
+        {"op": "execute", "input": {"uids": [U(13)], "layout": Y(U(10), 3, 0)}, "result": failed("invalid_spacing", PATH_SPACING, "layout.spacing"), "expect": untouched},
+        {"op": "execute", "input": {"uids": [U(13)], "layout": Y(MISSING, 3)}, "result": failed("entity_not_found", NOTFOUND(MISSING), "layout.path"), "expect": untouched},
+        {"op": "execute", "input": {"uids": [U(13)], "layout": Y(U(9), 3)}, "result": failed("invalid_path", PATH_NOT_A_PATH, "layout.path"), "expect": untouched},
+        {"op": "execute", "input": {"uids": [U(13)], "layout": Y(U(10), 4, 5.0)}, "result": failed("invalid_spacing", PATH_TOO_SHORT, "layout.spacing"), "expect": untouched},
+        {"op": "execute", "input": {"uids": [U(12)], "layout": Y(U(9), 3)}, "result": failed("invalid_path", PATH_NOT_A_PATH, "layout.path"), "expect": untouched},
+        {"op": "execute", "input": {"uids": [U(12)], "layout": Y(U(10), 3)}, "result": failed("layer_locked", LOCKED(1), "uids"), "expect": untouched},
     ],
 })
 
@@ -527,7 +654,7 @@ def write(command, title, note, cases):
 write(
     "cad.entities.array",
     "Nesneleri diziye kopyala: doğrulama, plan, yazma, geri alma",
-    "ADR 0047. Denetim sırası: en az bir nesne; her kimliğin yazımı; yerleşimin sayılarının sonlu olması (sırasıyla), satır ve sütunun ya da adedin aralığı, birden çok yeri olan yönün aralığı ya da doldurma açısı; beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması; hepsinin kilitli katmanda olmaması; kopyaların sonlu kalması. Kopya aslının bütün alanlarını ve yeni bir kalıcı kimlik alır; kopyalar yer yer, her yerde girdinin sırasıyla yazılır. Kilitli katmandaki nesnenin kopyası yapılmaz. Adım aracın adıdır: Dizi, Kutupsal dizi. Kurulumdaki en büyük kimlik 20; kopyalar 21'den başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+    "ADR 0047, 0140. Denetim sırası: en az bir nesne; her kimliğin yazımı, sonra yol dizisinde yolun kimliğinin yazımı; yerleşimin sayılarının sonlu olması (sırasıyla), satır ve sütunun ya da adedin aralığı, birden çok yeri olan yönün aralığı, yol dizisinin aralığının sıfırdan büyük olması ya da doldurma açısı; beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması, sonra yolun; yolun çizgi, yay, daire ya da çoklu çizgi olması ve bir uzunluğu olması; yerlerin yola sığması; hepsinin kilitli katmanda olmaması; kopyaların sonlu kalması. Yol dizisinin k'ıncı kopyası, yolun o yerdeki noktası eksi başı kadar taşınır; align ile önce yolun başı çevresinde, oradaki doğrultusu eksi baştaki doğrultusu kadar döner. Yol okunur, değişmez. Kopya aslının bütün alanlarını ve yeni bir kalıcı kimlik alır; kopyalar yer yer, her yerde girdinin sırasıyla yazılır. Kilitli katmandaki nesnenin kopyası yapılmaz. Adım aracın adıdır: Dizi, Kutupsal dizi, Yol boyunca dizi. Kurulumdaki en büyük kimlik 20; kopyalar 21'den başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
     cases,
 )
 print(f"{len(cases)} cases" + (" match" if "--check" in sys.argv[1:] else " written"))

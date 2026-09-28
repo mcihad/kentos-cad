@@ -19836,7 +19836,7 @@
       "id": "cad.entities.array",
       "version": 1,
       "title": "Nesneleri diziye kopyala",
-      "summary": "Kalıcı kimlikleriyle verilen nesnelerin kopyalarını satır ve sütunlara ya da bir merkezin çevresine dizer; bütün kopyalar tek geri alma adımındadır. Dizi: satır × sütun yer (2 ile 10 000 arası), sütunlar dx, satırlar dy aralıkla; birden çok yeri olan yönün aralığı sıfır olamaz. Kutupsal dizi: merkezin çevresinde adet kadar öğe (2 ile 1000 arası, asıllar dahil), fill derecelik açıya; 360 tam turu eşit böler, eksi saat yönündedir. rotate ile kopyalar merkez etrafında döner, yoksa yönünü koruyup kopyalanan nesnelerin kutusunun ortasıyla yer değiştirir. Dizi ve Kutupsal dizi araçları seçimi kimlik listesi olarak verip bu komutla yazar; adım aracın adını taşır. Yerleşim geometri çekirdeğindedir: her nesne türü aynı kuralla kopyalanır. Kopya aslının bütün alanlarını ve yeni bir kalıcı kimlik alır. Kilitli katmandaki nesnenin kopyası yapılmaz: öbürleri uyarıyla yazılır, hepsi kilitliyse hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
+      "summary": "Kalıcı kimlikleriyle verilen nesnelerin kopyalarını satır ve sütunlara ya da bir merkezin çevresine dizer; bütün kopyalar tek geri alma adımındadır. Dizi: satır × sütun yer (2 ile 10 000 arası), sütunlar dx, satırlar dy aralıkla; birden çok yeri olan yönün aralığı sıfır olamaz. Kutupsal dizi: merkezin çevresinde adet kadar öğe (2 ile 1000 arası, asıllar dahil), fill derecelik açıya; 360 tam turu eşit böler, eksi saat yönündedir. rotate ile kopyalar merkez etrafında döner, yoksa yönünü koruyup kopyalanan nesnelerin kutusunun ortasıyla yer değiştirir. Yol boyunca dizi: kalıcı kimliğiyle verilen yol (çizgi, yay, daire ya da çoklu çizgi) boyunca adet kadar yer (2 ile 10 000 arası, asıllar yolun başında); spacing verilirse yerler yolun başından o aralıkla, verilmezse yolun başından sonuna (kapalı yolda çevresine) eşit dağılır; align ile kopyalar yolun doğrultusuyla döner. Yol okunur, değişmez. Dizi, Kutupsal dizi ve Yol boyunca dizi araçları seçimi kimlik listesi olarak verip bu komutla yazar; adım aracın adını taşır. Yerleşim geometri çekirdeğindedir: her nesne türü aynı kuralla kopyalanır. Kopya aslının bütün alanlarını ve yeni bir kalıcı kimlik alır. Kilitli katmandaki nesnenin kopyası yapılmaz: öbürleri uyarıyla yazılır, hepsi kilitliyse hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -19924,6 +19924,42 @@
                   "rotate"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "Yol boyunca dizi (docs/adr/0140): `count` places, 2 to 10 000, along\nthe object `path` names by its persistent id (a line, an arc, a\ncircle or a polyline), the originals at the first, the path's start.\nThe places are `spacing` metres apart along the path from its start,\nor without a spacing spread evenly from its start to its end (round a\nclosed path, its end being its start). The copy at a place moves by\nthe path's point there less its start; with `align` it first turns\nabout the start by the path's direction there less its direction at\nthe start. The path is read, never changed.",
+                "properties": {
+                  "align": {
+                    "type": "boolean"
+                  },
+                  "count": {
+                    "format": "uint32",
+                    "maximum": 10000,
+                    "minimum": 2,
+                    "type": "integer"
+                  },
+                  "kind": {
+                    "const": "path",
+                    "type": "string"
+                  },
+                  "path": {
+                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "type": "string"
+                  },
+                  "spacing": {
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind",
+                  "path",
+                  "count",
+                  "align"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -19947,7 +19983,7 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.entities.array` v1: copies of objects named by their\npersistent ids (docs/adr/0014) laid out by `layout`, as one undo step.\nThe array tools make the selection explicit here (TODOS.md CMD-07): they\ngive the selected objects' ids; the command reads no selection, layer or\nview.\n\nEach copy takes every field of its original (layer, colour, attributes,\nlabel, symbol) and a new persistent id; the originals stay. The copies\nare written place after place, each place the objects in the input's\norder. The undo step is the tool's name: “Dizi” or “Kutupsal dizi”.\n\nObjects on a locked layer (by itself or a group above it) are not\ncopied: with others they are named in the output's `locked` with a\n`layer_locked` warning; when every one is locked nothing is written and\nthe answer is `layer_locked`. A polar array's copies that do not turn are\nplaced by the middle of the box of the objects that are copied. A\nrepeated id counts once.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`,\n`invalid_uid` (each id in order), `not_finite` (the layout's numbers, in\ntheir order), `invalid_count` (rows and columns, or the count, out of\ntheir range), `invalid_spacing` (a grid direction with more than one\nplace and no spacing), `invalid_fill` (a polar fill of zero or past a\nfull turn), `invalid_revision`, `revision_conflict` (status `conflict`),\n`entity_not_found` (each id in order), `layer_locked`, then `not_finite`\nagain (path `layout`) when a copy would lie past the largest float64; on\nthe desktop also `slots_exhausted`.",
+        "description": "Input of `cad.entities.array` v1: copies of objects named by their\npersistent ids (docs/adr/0014) laid out by `layout`, as one undo step.\nThe array tools make the selection explicit here (TODOS.md CMD-07): they\ngive the selected objects' ids; the command reads no selection, layer or\nview.\n\nEach copy takes every field of its original (layer, colour, attributes,\nlabel, symbol) and a new persistent id; the originals stay. The copies\nare written place after place, each place the objects in the input's\norder. The undo step is the tool's name: “Dizi”, “Kutupsal dizi” or\n“Yol boyunca dizi”.\n\nObjects on a locked layer (by itself or a group above it) are not\ncopied: with others they are named in the output's `locked` with a\n`layer_locked` warning; when every one is locked nothing is written and\nthe answer is `layer_locked`. A polar array's copies that do not turn are\nplaced by the middle of the box of the objects that are copied. A\nrepeated id counts once.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`,\n`invalid_uid` (each id in order, then a path array's path at\n`layout.path`), `not_finite` (the layout's numbers, in their order),\n`invalid_count` (rows and columns, or the count, out of their range),\n`invalid_spacing` (a grid direction with more than one place and no\nspacing; a path array's spacing not above zero), `invalid_fill` (a polar\nfill of zero or past a full turn), `invalid_revision`,\n`revision_conflict` (status `conflict`), `entity_not_found` (each id in\norder, then the path at `layout.path`), `invalid_path` (a path that is\nnot a line, an arc, a circle or a polyline, or has no length),\n`invalid_spacing` again (a path array's places past the end of an open\npath, or round to the start of a closed one), `layer_locked`, then\n`not_finite` again (path `layout`) when a copy would lie past the\nlargest float64; on the desktop also `slots_exhausted`.",
         "properties": {
           "expectedRevision": {
             "description": "The document revision the input was prepared against, as decimal text\n(from a plan, or the document). When given and the document is no\nlonger at it, nothing is written and the answer is `conflict`.",

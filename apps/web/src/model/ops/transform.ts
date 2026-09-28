@@ -2,7 +2,7 @@ import type { ArrayLayout } from '../../contracts/generated/ArrayLayout';
 import type { Transform } from '../../contracts/generated/Transform';
 import type { Entity, EntityKind, NewEntity } from '../entities';
 import type { Affine } from '../geom/affine';
-import { arrayObjects as coreArrayObjects, transformObjects as coreTransformObjects } from '../../wasm/core';
+import { arrayObjects as coreArrayObjects, op, transformObjects as coreTransformObjects } from '../../wasm/core';
 import { packEntities, unpackEntities, type Geometry, type Packed } from '../../wasm/pack';
 import { entityOp } from './entityOp';
 
@@ -142,11 +142,22 @@ export function transformObjects<E extends Entity>(list: readonly E[], t: Transf
   );
 }
 
-/** An array of `cad.entities.array` as the core's `array_transforms` takes it: its kind and numbers. */
+/**
+ * An array of `cad.entities.array` as the core's `array_transforms` takes it: its kind and numbers. A path
+ * array's maps come from its path in the document (`pathArrayTransforms`): none here.
+ */
 export function arrayNumbers(layout: ArrayLayout): [string, number[]] {
   if (layout.kind === 'grid') return ['grid', [layout.rows, layout.cols, layout.dx, layout.dy]];
+  if (layout.kind === 'path') return ['affines', []];
   return ['polar', [layout.center.x, layout.center.y, layout.count, layout.fill, layout.rotate ? 1 : 0]];
 }
+
+/**
+ * Yol boyunca dizi (docs/adr/0140): the copies' maps along `path` (a line, an arc, a circle or a polyline),
+ * `count` places from its start, `spacing` metres apart or spread over it, turned with it when `align`.
+ * Null for another kind of path, one of no length, or places past its end (computed by the geometry core).
+ */
+export const pathArrayTransforms = op<(path: Entity, count: number, spacing: number | null, align: boolean) => Affine[] | null>('pathArrayTransforms');
 
 /**
  * Copies of `list` laid out by an array of the product command
@@ -157,10 +168,12 @@ export function arrayNumbers(layout: ArrayLayout): [string, number[]] {
  * after place, each place in the list's order, each with its original's
  * other fields.
  */
-export function arrayCopies<E extends Entity>(list: readonly E[], layout: ArrayLayout, font: string): E[] {
+export function arrayCopies<E extends Entity>(list: readonly E[], layout: ArrayLayout, font: string, maps?: readonly Affine[]): E[] {
   if (!list.length) return [];
   const packed = packEntities(list);
-  const [kind, params] = arrayNumbers(layout);
+  const [kind, numbers] = arrayNumbers(layout);
+  // A path array's maps, made from its path, go to the core as six numbers each.
+  const params = maps ? maps.flat() : numbers;
   const copies = coreArrayObjects(packed.nums, packed.strings, kind, Float64Array.from(params), font);
   // As many runs of the list as the core laid places out (rows × cols − 1, or count − 1).
   return transformedFrom(
