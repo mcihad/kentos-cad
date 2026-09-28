@@ -72,9 +72,9 @@ describe('menus from the catalog', () => {
 
   it('shows a tool added to the catalog in the menu of its group, with nothing else to edit', () => {
     const added: ToolDescriptor = { ...TOOL_CATALOG.find((t) => t.id === 'arc')!, id: 'clothoid', label: 'Klotoid', section: 'curve' };
-    const loose: ToolDescriptor = { ...TOOL_CATALOG.find((t) => t.id === 'trim')!, id: 'cleanup', label: 'Temizle', section: undefined };
+    const loose: ToolDescriptor = { ...TOOL_CATALOG.find((t) => t.id === 'trim')!, id: 'tidy', label: 'Toparla', section: undefined };
     const tools = [...TOOL_CATALOG, added, loose];
     expect(menuBlocks(menuById('draw')!.items, tools).find((b) => b.label === 'Eğri')!.items).toContain('tool.clothoid');
-    expect(menuBlocks(menuById('modify')!.items, tools).find((b) => b.label === 'Düzenle')!.items).toEqual(['tool.cleanup']);
+    expect(menuBlocks(menuById('modify')!.items, tools).find((b) => b.label === 'Düzenle')!.items).toEqual(['tool.tidy']);
   });
 });

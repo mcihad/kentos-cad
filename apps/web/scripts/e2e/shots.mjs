@@ -19,7 +19,8 @@
 // built-in model's copy, an input, a step and a source list, a wire dragged and its menu, a step with problems, a chain,
 // a number input, the tools searched and one carried, the unsaved question); ribbon (the key tips on the tabs, on
 // Giriş and narrowed, the quick access bar's menu, right clicks on a command, an added one, a fixed one and a tab, a
-// tool's methods and a family under their split buttons, the folded ribbon open).
+// tool's methods and a family under their split buttons, the folded ribbon open); tools (docs/adr/0140: the tabs of
+// the new drawing and editing tools, their split buttons, each tool at work).
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { createServer } from 'vite';
@@ -968,6 +969,20 @@ SCENES.ribbon = [
   {
     id: 'folded-open',
     open: async (ui) => (await ribbonOn(ui, { ribbonCollapsed: true }), await ui.clickSel('.ribbon__tab[data-tab="home"]'), await ui.sleep(500)),
+  },
+].map((s) => ({ close: (ui) => ribbonOff(ui), ...s }));
+
+// The drawing and editing tools of docs/adr/0140: the ribbon tabs that hold them and their split buttons; each
+// tool at work is added here as it is built. Same layout helpers as the ribbon group.
+SCENES.tools = [
+  ...[
+    ['ribbon-draw', 'draw'],
+    ['ribbon-modify', 'modify'],
+    ['ribbon-map', 'map'],
+  ].map(([id, tab]) => ({ id, open: async (ui) => (await ribbonOn(ui, { ribbonTab: tab }), await ui.sleep(400)) })),
+  {
+    id: 'split-corner',
+    open: async (ui) => (await ribbonOn(ui, { ribbonTab: 'modify' }), await ui.clickSel('.ribbon__strip [data-split="corner"] .rsplit__arrow'), await ui.waitFor(`!!document.querySelector('.menu')`), await ui.sleep(300)),
   },
 ].map((s) => ({ close: (ui) => ribbonOff(ui), ...s }));
 

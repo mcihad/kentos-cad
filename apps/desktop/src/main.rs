@@ -82,6 +82,8 @@ mod text_field;
 mod traces;
 #[cfg(test)]
 mod ui_screens;
+#[cfg(test)]
+mod tools_screens;
 mod tracking;
 mod view;
 mod view_commands;

@@ -19,16 +19,16 @@
   },
   "summary": {
     "commands": {
-      "total": 167,
+      "total": 181,
       "implemented": 153,
       "partial": 0,
-      "pending": 14
+      "pending": 28
     },
     "tools": {
-      "total": 58,
+      "total": 72,
       "implemented": 56,
       "partial": 0,
-      "pending": 2
+      "pending": 16
     },
     "processing": {
       "total": 4,
@@ -73,23 +73,23 @@
       "pending": 0
     },
     "commandsWithoutPlace": [],
-    "commandsWithoutTests": 52,
+    "commandsWithoutTests": 65,
     "commandsOnDesktop": 148,
     "desktop": {
       "commands": {
-        "total": 167,
+        "total": 181,
         "implemented": 148,
         "partial": 0,
         "pending": 14,
-        "none": 0,
+        "none": 14,
         "n/a": 5
       },
       "tools": {
-        "total": 58,
+        "total": 72,
         "implemented": 56,
         "partial": 0,
         "pending": 2,
-        "none": 0,
+        "none": 14,
         "n/a": 0
       },
       "processing": {
@@ -2952,6 +2952,38 @@
       ]
     },
     {
+      "id": "tool.arrayPath",
+      "title": "Yol boyunca dizi",
+      "category": "Dönüştür",
+      "icon": "arrayPath",
+      "description": "Seçili nesneleri bir çizgi, yay ya da çoklu çizgi boyunca eşit aralıkla çoğaltır; istenirse yolun doğrultusuna döndürür.",
+      "aliases": [
+        "ARRAYPATH",
+        "YOLDIZI"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Değiştir › Dizi"
+      ],
+      "ribbon": [
+        "Değiştir › Dizi",
+        "Seçim › Dizi"
+      ],
+      "quickAccess": false,
+      "toolbox": true,
+      "hiddenIn": [
+        "gis"
+      ],
+      "uiSources": [],
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
       "id": "tool.arrayPolar",
       "title": "Kutupsal dizi",
       "category": "Dönüştür",
@@ -3122,6 +3154,39 @@
       ]
     },
     {
+      "id": "tool.chamferAll",
+      "title": "Tüm köşelere pah",
+      "category": "Düzenle",
+      "icon": "chamferAll",
+      "description": "Seçili çoklu çizgi ve alanların bütün köşelerini aynı mesafeyle keser; sığmayan köşe atlanır ve söylenir.",
+      "aliases": [
+        "TUMKOSELEREPAH",
+        "PAHHEPSI",
+        "CHAMFERALL"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Değiştir › Köşe"
+      ],
+      "ribbon": [
+        "Giriş › Değiştir",
+        "Değiştir › Köşe"
+      ],
+      "quickAccess": false,
+      "toolbox": true,
+      "hiddenIn": [
+        "gis"
+      ],
+      "uiSources": [],
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
       "id": "tool.circle",
       "title": "Daire",
       "category": "Çizim",
@@ -3156,6 +3221,37 @@
         "apps/web/scripts/e2e/smoke.mjs",
         "fixtures/interaction/v1/circle-methods.json"
       ]
+    },
+    {
+      "id": "tool.cleanup",
+      "title": "Çizimi temizle",
+      "category": "Düzenle",
+      "icon": "cleanup",
+      "description": "Üst üste binen yinelenen nesneleri, sıfır uzunluklu nesneleri ve art arda tekrarlanan köşeleri bulur; önce gösterir, onayla tek adımda temizler.",
+      "aliases": [
+        "TEMIZLE",
+        "CLEANUP",
+        "OVERKILL"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Değiştir › Nesne"
+      ],
+      "ribbon": [
+        "Değiştir › Nesne",
+        "Seçim › Nesne"
+      ],
+      "quickAccess": false,
+      "toolbox": true,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": []
     },
     {
       "id": "tool.confirm",
@@ -3224,6 +3320,68 @@
       "tests": [
         "fixtures/interaction/v1/move-copy.json"
       ]
+    },
+    {
+      "id": "tool.dimBaseline",
+      "title": "Baz ölçü",
+      "category": "Açıklama",
+      "icon": "dimBaseline",
+      "description": "Son ölçünün ilk noktasından ölçülen ölçüleri üst üste dizer.",
+      "aliases": [
+        "DIMBASELINE",
+        "DBA",
+        "BAZOLCU"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Çizim › Açıklama"
+      ],
+      "ribbon": [
+        "Giriş › Açıklama",
+        "Çizim › Açıklama"
+      ],
+      "quickAccess": false,
+      "toolbox": true,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "tool.dimContinue",
+      "title": "Zincir ölçü",
+      "category": "Açıklama",
+      "icon": "dimContinue",
+      "description": "Son ölçünün ucundan başlayarak aynı çizgi üzerinde art arda ölçüler ekler.",
+      "aliases": [
+        "DIMCONTINUE",
+        "DCO",
+        "ZINCIROLCU"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Çizim › Açıklama"
+      ],
+      "ribbon": [
+        "Giriş › Açıklama",
+        "Çizim › Açıklama"
+      ],
+      "quickAccess": false,
+      "toolbox": true,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": []
     },
     {
       "id": "tool.dimension",
@@ -3521,6 +3679,39 @@
       ]
     },
     {
+      "id": "tool.filletAll",
+      "title": "Tüm köşeleri yuvarla",
+      "category": "Düzenle",
+      "icon": "filletAll",
+      "description": "Seçili çoklu çizgi ve alanların bütün köşelerini aynı yarıçapla yuvarlar; sığmayan köşe atlanır ve söylenir.",
+      "aliases": [
+        "TUMKOSELERIYUVARLA",
+        "YUVARLAHEPSI",
+        "FILLETALL"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Değiştir › Köşe"
+      ],
+      "ribbon": [
+        "Giriş › Değiştir",
+        "Değiştir › Köşe"
+      ],
+      "quickAccess": false,
+      "toolbox": true,
+      "hiddenIn": [
+        "gis"
+      ],
+      "uiSources": [],
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
       "id": "tool.hatch",
       "title": "Tarama",
       "category": "Açıklama",
@@ -3557,6 +3748,35 @@
         "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/hatches.json"
       ]
+    },
+    {
+      "id": "tool.intersectPoint",
+      "title": "Kesişim noktası",
+      "category": "Çizim",
+      "icon": "intersectPoint",
+      "description": "İki bilinen noktadan ölçülen uzaklıkların, doğrultuların ya da iki doğrunun kesişimine nokta koyar.",
+      "aliases": [
+        "KESISIMNOKTA",
+        "KESISIM"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Çizim › Nokta"
+      ],
+      "ribbon": [
+        "Çizim › Nokta"
+      ],
+      "quickAccess": false,
+      "toolbox": true,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": []
     },
     {
       "id": "tool.join",
@@ -3671,6 +3891,38 @@
       ]
     },
     {
+      "id": "tool.matchProperties",
+      "title": "Özellik kopyala",
+      "category": "Düzenle",
+      "icon": "matchProperties",
+      "description": "Bir nesnenin katmanını, rengini, çizgi kalınlığını ve sembolünü tıklanan öbür nesnelere verir.",
+      "aliases": [
+        "MA",
+        "MATCHPROP",
+        "OZELLIKKOPYALA",
+        "STILKOPYALA"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Değiştir › Nesne"
+      ],
+      "ribbon": [
+        "Değiştir › Nesne",
+        "Seçim › Nesne"
+      ],
+      "quickAccess": false,
+      "toolbox": true,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
       "id": "tool.measure",
       "title": "Mesafe ölç",
       "category": "Harita",
@@ -3704,6 +3956,39 @@
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/measure-parcel.json"
+      ]
+    },
+    {
+      "id": "tool.measureAngle",
+      "title": "Açı ölç",
+      "category": "Harita",
+      "icon": "measureAngle",
+      "description": "Bir tepe noktası ve iki koldan açıyı ölçer; projenin açı biriminde ve dış açısıyla yazar.",
+      "aliases": [
+        "ACIOLC",
+        "ANGLE",
+        "ACI"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Harita › Ölçme",
+        "Analiz › Ölçme"
+      ],
+      "ribbon": [
+        "Harita › Ölçme"
+      ],
+      "quickAccess": false,
+      "toolbox": true,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": [
+        "apps/web/src/app/workspaces.test.ts"
       ]
     },
     {
@@ -4034,6 +4319,35 @@
       ]
     },
     {
+      "id": "tool.pointsBetween",
+      "title": "Ara nokta",
+      "category": "Çizim",
+      "icon": "pointsBetween",
+      "description": "İki nokta arasındaki doğru üzerine nokta koyar: eşit aralıkla, ilk noktadan uzaklıkla ya da oranla.",
+      "aliases": [
+        "ARANOKTA",
+        "ARA"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Çizim › Nokta"
+      ],
+      "ribbon": [
+        "Çizim › Nokta"
+      ],
+      "quickAccess": false,
+      "toolbox": true,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
       "id": "tool.polygon",
       "title": "Kapalı alan",
       "category": "Çizim",
@@ -4317,6 +4631,37 @@
       ]
     },
     {
+      "id": "tool.reverse",
+      "title": "Yönü çevir",
+      "category": "Düzenle",
+      "icon": "reverse",
+      "description": "Çizgi, yay, çoklu çizgi, eğri ve alanın çizim yönünü tersine çevirir; biçimi ve yeri değişmez.",
+      "aliases": [
+        "REVERSE",
+        "YONCEVIR",
+        "TERSCEVIR"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Değiştir › Nesne"
+      ],
+      "ribbon": [
+        "Değiştir › Nesne",
+        "Seçim › Nesne"
+      ],
+      "quickAccess": false,
+      "toolbox": true,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
       "id": "tool.rotate",
       "title": "Döndür",
       "category": "Dönüştür",
@@ -4389,6 +4734,36 @@
       ]
     },
     {
+      "id": "tool.sector",
+      "title": "Daire dilimi",
+      "category": "Çizim",
+      "icon": "sector",
+      "description": "Merkezden ve iki kenardan kapalı daire dilimi (pasta dilimi) çizer; yay saat yönünün tersine süpürülür.",
+      "aliases": [
+        "DILIM",
+        "SECTOR",
+        "DAIREDILIMI"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Çizim › Eğri"
+      ],
+      "ribbon": [
+        "Çizim › Eğri"
+      ],
+      "quickAccess": false,
+      "toolbox": true,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
       "id": "tool.select",
       "title": "Seç",
       "category": "Seçim",
@@ -4418,6 +4793,36 @@
         "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/select-delete.json"
       ]
+    },
+    {
+      "id": "tool.simplify",
+      "title": "Sadeleştir",
+      "category": "Düzenle",
+      "icon": "simplify",
+      "description": "Çoklu çizgi ve alandan, verilen uzaklıktan daha az sapan köşeleri atar; atılan köşe sayısı ve en büyük sapma söylenir.",
+      "aliases": [
+        "SADELESTIR",
+        "SIMPLIFY"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Değiştir › Nesne"
+      ],
+      "ribbon": [
+        "Değiştir › Nesne",
+        "Seçim › Nesne"
+      ],
+      "quickAccess": false,
+      "toolbox": true,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": []
     },
     {
       "id": "tool.spline",
@@ -4454,6 +4859,35 @@
       "tests": [
         "fixtures/interaction/v1/ellipse-spline.json"
       ]
+    },
+    {
+      "id": "tool.split",
+      "title": "Parçala",
+      "category": "Düzenle",
+      "icon": "split",
+      "description": "Çizgileri birbirini kestikleri yerlerden, eşit parçalara ya da verilen uzunluklarda ayrı nesnelere ayırır; yaylar yay kalır.",
+      "aliases": [
+        "PARCALA",
+        "SPLIT"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Değiştir › Kenar"
+      ],
+      "ribbon": [
+        "Değiştir › Kenar"
+      ],
+      "quickAccess": false,
+      "toolbox": true,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": []
     },
     {
       "id": "tool.spot",
@@ -5927,6 +6361,29 @@
       ]
     },
     {
+      "id": "arrayPath",
+      "label": "Yol boyunca dizi",
+      "icon": "arrayPath",
+      "group": "transform",
+      "section": "array",
+      "aliases": [
+        "ARRAYPATH",
+        "YOLDIZI"
+      ],
+      "primary": false,
+      "family": "array",
+      "rare": false,
+      "methods": [],
+      "steps": 0,
+      "description": "Seçili nesneleri bir çizgi, yay ya da çoklu çizgi boyunca eşit aralıkla çoğaltır; istenirse yolun doğrultusuna döndürür.",
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
       "id": "arrayPolar",
       "label": "Kutupsal dizi",
       "icon": "arrayPolar",
@@ -6040,6 +6497,30 @@
       ]
     },
     {
+      "id": "chamferAll",
+      "label": "Tüm köşelere pah",
+      "icon": "chamferAll",
+      "group": "modify",
+      "section": "corner",
+      "aliases": [
+        "TUMKOSELEREPAH",
+        "PAHHEPSI",
+        "CHAMFERALL"
+      ],
+      "primary": false,
+      "family": "corner",
+      "rare": false,
+      "methods": [],
+      "steps": 0,
+      "description": "Seçili çoklu çizgi ve alanların bütün köşelerini aynı mesafeyle keser; sığmayan köşe atlanır ve söylenir.",
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
       "id": "circle",
       "label": "Daire",
       "icon": "circle",
@@ -6074,6 +6555,29 @@
       ]
     },
     {
+      "id": "cleanup",
+      "label": "Çizimi temizle",
+      "icon": "cleanup",
+      "group": "modify",
+      "section": "object",
+      "aliases": [
+        "TEMIZLE",
+        "CLEANUP",
+        "OVERKILL"
+      ],
+      "primary": false,
+      "rare": true,
+      "methods": [],
+      "steps": 0,
+      "description": "Üst üste binen yinelenen nesneleri, sıfır uzunluklu nesneleri ve art arda tekrarlanan köşeleri bulur; önce gösterir, onayla tek adımda temizler.",
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
       "id": "copy",
       "label": "Kopyala",
       "icon": "copy",
@@ -6101,6 +6605,52 @@
       ]
     },
     {
+      "id": "dimBaseline",
+      "label": "Baz ölçü",
+      "icon": "dimBaseline",
+      "group": "annotate",
+      "aliases": [
+        "DIMBASELINE",
+        "DBA",
+        "BAZOLCU"
+      ],
+      "primary": false,
+      "family": "dimension",
+      "rare": false,
+      "methods": [],
+      "steps": 0,
+      "description": "Son ölçünün ilk noktasından ölçülen ölçüleri üst üste dizer.",
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "dimContinue",
+      "label": "Zincir ölçü",
+      "icon": "dimContinue",
+      "group": "annotate",
+      "aliases": [
+        "DIMCONTINUE",
+        "DCO",
+        "ZINCIROLCU"
+      ],
+      "primary": false,
+      "family": "dimension",
+      "rare": false,
+      "methods": [],
+      "steps": 0,
+      "description": "Son ölçünün ucundan başlayarak aynı çizgi üzerinde art arda ölçüler ekler.",
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
       "id": "dimension",
       "label": "Ölçülendirme",
       "icon": "dimension",
@@ -6115,6 +6665,7 @@
         "DIMDIA"
       ],
       "primary": true,
+      "family": "dimension",
       "rare": false,
       "methods": [],
       "steps": 3,
@@ -6324,6 +6875,30 @@
       ]
     },
     {
+      "id": "filletAll",
+      "label": "Tüm köşeleri yuvarla",
+      "icon": "filletAll",
+      "group": "modify",
+      "section": "corner",
+      "aliases": [
+        "TUMKOSELERIYUVARLA",
+        "YUVARLAHEPSI",
+        "FILLETALL"
+      ],
+      "primary": false,
+      "family": "corner",
+      "rare": false,
+      "methods": [],
+      "steps": 0,
+      "description": "Seçili çoklu çizgi ve alanların bütün köşelerini aynı yarıçapla yuvarlar; sığmayan köşe atlanır ve söylenir.",
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
       "id": "hatch",
       "label": "Tarama",
       "icon": "hatch",
@@ -6349,6 +6924,32 @@
         "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/hatches.json"
       ]
+    },
+    {
+      "id": "intersectPoint",
+      "label": "Kesişim noktası",
+      "icon": "intersectPoint",
+      "group": "draw",
+      "section": "point",
+      "aliases": [
+        "KESISIMNOKTA",
+        "KESISIM"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [
+        "İki uzaklık",
+        "İki doğrultu",
+        "İki doğru"
+      ],
+      "steps": 0,
+      "description": "İki bilinen noktadan ölçülen uzaklıkların, doğrultuların ya da iki doğrunun kesişimine nokta koyar.",
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": []
     },
     {
       "id": "join",
@@ -6438,6 +7039,30 @@
       ]
     },
     {
+      "id": "matchProperties",
+      "label": "Özellik kopyala",
+      "icon": "matchProperties",
+      "group": "modify",
+      "section": "object",
+      "aliases": [
+        "MA",
+        "MATCHPROP",
+        "OZELLIKKOPYALA",
+        "STILKOPYALA"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 0,
+      "description": "Bir nesnenin katmanını, rengini, çizgi kalınlığını ve sembolünü tıklanan öbür nesnelere verir.",
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
       "id": "measure",
       "label": "Mesafe ölç",
       "icon": "measure",
@@ -6462,6 +7087,31 @@
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/measure-parcel.json"
+      ]
+    },
+    {
+      "id": "measureAngle",
+      "label": "Açı ölç",
+      "icon": "measureAngle",
+      "group": "map",
+      "section": "measure",
+      "aliases": [
+        "ACIOLC",
+        "ANGLE",
+        "ACI"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 0,
+      "description": "Bir tepe noktası ve iki koldan açıyı ölçer; projenin açı biriminde ve dış açısıyla yazar.",
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": [
+        "apps/web/src/app/workspaces.test.ts"
       ]
     },
     {
@@ -6710,6 +7360,32 @@
       ]
     },
     {
+      "id": "pointsBetween",
+      "label": "Ara nokta",
+      "icon": "pointsBetween",
+      "group": "draw",
+      "section": "point",
+      "aliases": [
+        "ARANOKTA",
+        "ARA"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [
+        "Eşit aralık",
+        "Uzaklıkla",
+        "Oranla"
+      ],
+      "steps": 0,
+      "description": "İki nokta arasındaki doğru üzerine nokta koyar: eşit aralıkla, ilk noktadan uzaklıkla ya da oranla.",
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
       "id": "polygon",
       "label": "Kapalı alan",
       "icon": "polygon",
@@ -6910,6 +7586,29 @@
       ]
     },
     {
+      "id": "reverse",
+      "label": "Yönü çevir",
+      "icon": "reverse",
+      "group": "modify",
+      "section": "object",
+      "aliases": [
+        "REVERSE",
+        "YONCEVIR",
+        "TERSCEVIR"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 0,
+      "description": "Çizgi, yay, çoklu çizgi, eğri ve alanın çizim yönünü tersine çevirir; biçimi ve yeri değişmez.",
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
       "id": "rotate",
       "label": "Döndür",
       "icon": "rotate",
@@ -6964,6 +7663,29 @@
       ]
     },
     {
+      "id": "sector",
+      "label": "Daire dilimi",
+      "icon": "sector",
+      "group": "draw",
+      "section": "curve",
+      "aliases": [
+        "DILIM",
+        "SECTOR",
+        "DAIREDILIMI"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 0,
+      "description": "Merkezden ve iki kenardan kapalı daire dilimi (pasta dilimi) çizer; yay saat yönünün tersine süpürülür.",
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
       "id": "select",
       "label": "Seç",
       "icon": "select",
@@ -6992,6 +7714,28 @@
       ]
     },
     {
+      "id": "simplify",
+      "label": "Sadeleştir",
+      "icon": "simplify",
+      "group": "modify",
+      "section": "object",
+      "aliases": [
+        "SADELESTIR",
+        "SIMPLIFY"
+      ],
+      "primary": false,
+      "rare": true,
+      "methods": [],
+      "steps": 0,
+      "description": "Çoklu çizgi ve alandan, verilen uzaklıktan daha az sapan köşeleri atar; atılan köşe sayısı ve en büyük sapma söylenir.",
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
       "id": "spline",
       "label": "Eğri",
       "icon": "spline",
@@ -7017,6 +7761,32 @@
       "tests": [
         "fixtures/interaction/v1/ellipse-spline.json"
       ]
+    },
+    {
+      "id": "split",
+      "label": "Parçala",
+      "icon": "split",
+      "group": "modify",
+      "section": "edge",
+      "aliases": [
+        "PARCALA",
+        "SPLIT"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [
+        "Kesişimlerden",
+        "Eşit parçalara",
+        "Uzunluktan"
+      ],
+      "steps": 0,
+      "description": "Çizgileri birbirini kestikleri yerlerden, eşit parçalara ya da verilen uzunluklarda ayrı nesnelere ayırır; yaylar yay kalır.",
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": []
     },
     {
       "id": "spot",
@@ -12621,7 +13391,8 @@
               "tool.arc",
               "tool.ellipse",
               "tool.spline",
-              "tool.donut"
+              "tool.donut",
+              "tool.sector"
             ]
           },
           {
@@ -12645,7 +13416,9 @@
             "label": "Nokta",
             "items": [
               "tool.point",
-              "tool.divide"
+              "tool.divide",
+              "tool.pointsBetween",
+              "tool.intersectPoint"
             ]
           },
           {
@@ -12653,6 +13426,8 @@
             "items": [
               "tool.text",
               "tool.dimension",
+              "tool.dimContinue",
+              "tool.dimBaseline",
               "tool.revcloud",
               "tool.hatch"
             ]
@@ -12679,7 +13454,8 @@
             "label": "Dizi",
             "items": [
               "tool.array",
-              "tool.arrayPolar"
+              "tool.arrayPolar",
+              "tool.arrayPath"
             ]
           },
           {
@@ -12689,7 +13465,8 @@
               "tool.trim",
               "tool.extend",
               "tool.lengthen",
-              "tool.break"
+              "tool.break",
+              "tool.split"
             ]
           },
           {
@@ -12697,6 +13474,8 @@
             "items": [
               "tool.fillet",
               "tool.chamfer",
+              "tool.filletAll",
+              "tool.chamferAll",
               "tool.vertex"
             ]
           },
@@ -12705,7 +13484,11 @@
             "items": [
               "tool.join",
               "tool.explode",
-              "tool.erase"
+              "tool.erase",
+              "tool.reverse",
+              "tool.simplify",
+              "tool.cleanup",
+              "tool.matchProperties"
             ]
           },
           {
@@ -12763,7 +13546,8 @@
             "label": "Ölçme",
             "items": [
               "tool.measure",
-              "tool.area"
+              "tool.area",
+              "tool.measureAngle"
             ]
           },
           {
@@ -12829,7 +13613,8 @@
             "label": "Ölçme",
             "items": [
               "tool.measure",
-              "tool.area"
+              "tool.area",
+              "tool.measureAngle"
             ]
           },
           {
@@ -13299,6 +14084,16 @@
                     "command": "tool.chamfer",
                     "title": "Pah",
                     "label": "Pah"
+                  },
+                  {
+                    "command": "tool.filletAll",
+                    "title": "Tüm köşeleri yuvarla",
+                    "label": "Tüm köşeleri yuvarla"
+                  },
+                  {
+                    "command": "tool.chamferAll",
+                    "title": "Tüm köşelere pah",
+                    "label": "Tüm köşelere pah"
                   }
                 ],
                 "key": "corner",
@@ -13321,7 +14116,24 @@
                 "size": "large"
               },
               {
-                "command": "tool.dimension",
+                "split": [
+                  {
+                    "command": "tool.dimension",
+                    "title": "Ölçülendirme",
+                    "label": "Ölçülendirme"
+                  },
+                  {
+                    "command": "tool.dimContinue",
+                    "title": "Zincir ölçü",
+                    "label": "Zincir ölçü"
+                  },
+                  {
+                    "command": "tool.dimBaseline",
+                    "title": "Baz ölçü",
+                    "label": "Baz ölçü"
+                  }
+                ],
+                "key": "dimension",
                 "size": "large"
               },
               {
@@ -13471,6 +14283,10 @@
               {
                 "command": "tool.spline",
                 "size": "small"
+              },
+              {
+                "command": "tool.sector",
+                "size": "small"
               }
             ],
             "overflow": [
@@ -13553,11 +14369,61 @@
             "items": [
               {
                 "command": "tool.point",
-                "size": "large"
+                "size": "small"
               },
               {
                 "command": "tool.divide",
-                "size": "large"
+                "size": "small"
+              },
+              {
+                "split": [
+                  {
+                    "command": "tool.pointsBetween",
+                    "title": "Ara nokta",
+                    "label": "Eşit aralık"
+                  },
+                  {
+                    "command": "tool.pointsBetween",
+                    "option": "U",
+                    "title": "Ara nokta",
+                    "label": "Uzaklıkla",
+                    "description": "İlk noktadan verilen uzaklıklarda"
+                  },
+                  {
+                    "command": "tool.pointsBetween",
+                    "option": "O",
+                    "title": "Ara nokta",
+                    "label": "Oranla",
+                    "description": "İki nokta arasının oranında (0 ile 1 arası)"
+                  }
+                ],
+                "key": "pointsBetween",
+                "size": "small"
+              },
+              {
+                "split": [
+                  {
+                    "command": "tool.intersectPoint",
+                    "title": "Kesişim noktası",
+                    "label": "İki uzaklık"
+                  },
+                  {
+                    "command": "tool.intersectPoint",
+                    "option": "D",
+                    "title": "Kesişim noktası",
+                    "label": "İki doğrultu",
+                    "description": "İki bilinen noktadan okunan doğrultuların kesişimi"
+                  },
+                  {
+                    "command": "tool.intersectPoint",
+                    "option": "L",
+                    "title": "Kesişim noktası",
+                    "label": "İki doğru",
+                    "description": "İki noktayla verilen iki doğrunun kesişimi"
+                  }
+                ],
+                "key": "intersectPoint",
+                "size": "small"
               }
             ],
             "overflow": [],
@@ -13572,7 +14438,24 @@
                 "size": "large"
               },
               {
-                "command": "tool.dimension",
+                "split": [
+                  {
+                    "command": "tool.dimension",
+                    "title": "Ölçülendirme",
+                    "label": "Ölçülendirme"
+                  },
+                  {
+                    "command": "tool.dimContinue",
+                    "title": "Zincir ölçü",
+                    "label": "Zincir ölçü"
+                  },
+                  {
+                    "command": "tool.dimBaseline",
+                    "title": "Baz ölçü",
+                    "label": "Baz ölçü"
+                  }
+                ],
+                "key": "dimension",
                 "size": "large"
               },
               {
@@ -13642,6 +14525,11 @@
                     "command": "tool.arrayPolar",
                     "title": "Kutupsal dizi",
                     "label": "Kutupsal dizi"
+                  },
+                  {
+                    "command": "tool.arrayPath",
+                    "title": "Yol boyunca dizi",
+                    "label": "Yol boyunca dizi"
                   }
                 ],
                 "key": "array",
@@ -13670,6 +14558,31 @@
               {
                 "command": "tool.break",
                 "size": "small"
+              },
+              {
+                "split": [
+                  {
+                    "command": "tool.split",
+                    "title": "Parçala",
+                    "label": "Kesişimlerden"
+                  },
+                  {
+                    "command": "tool.split",
+                    "option": "E",
+                    "title": "Parçala",
+                    "label": "Eşit parçalara",
+                    "description": "Nesneyi verilen sayıda eşit uzunlukta parçaya ayırır"
+                  },
+                  {
+                    "command": "tool.split",
+                    "option": "U",
+                    "title": "Parçala",
+                    "label": "Uzunluktan",
+                    "description": "Başından verilen uzunlukta parçalara ayırır"
+                  }
+                ],
+                "key": "split",
+                "size": "small"
               }
             ],
             "overflow": [
@@ -13692,6 +14605,16 @@
                     "command": "tool.chamfer",
                     "title": "Pah",
                     "label": "Pah"
+                  },
+                  {
+                    "command": "tool.filletAll",
+                    "title": "Tüm köşeleri yuvarla",
+                    "label": "Tüm köşeleri yuvarla"
+                  },
+                  {
+                    "command": "tool.chamferAll",
+                    "title": "Tüm köşelere pah",
+                    "label": "Tüm köşelere pah"
                   }
                 ],
                 "key": "corner",
@@ -13718,9 +14641,20 @@
               {
                 "command": "tool.erase",
                 "size": "small"
+              },
+              {
+                "command": "tool.reverse",
+                "size": "small"
+              },
+              {
+                "command": "tool.matchProperties",
+                "size": "small"
               }
             ],
-            "overflow": [],
+            "overflow": [
+              "tool.simplify",
+              "tool.cleanup"
+            ],
             "keep": false
           },
           {
@@ -13825,11 +14759,15 @@
             "items": [
               {
                 "command": "tool.measure",
-                "size": "large"
+                "size": "small"
               },
               {
                 "command": "tool.area",
-                "size": "large"
+                "size": "small"
+              },
+              {
+                "command": "tool.measureAngle",
+                "size": "small"
               }
             ],
             "overflow": [],
@@ -14376,6 +15314,11 @@
                     "command": "tool.arrayPolar",
                     "title": "Kutupsal dizi",
                     "label": "Kutupsal dizi"
+                  },
+                  {
+                    "command": "tool.arrayPath",
+                    "title": "Yol boyunca dizi",
+                    "label": "Yol boyunca dizi"
                   }
                 ],
                 "key": "array",
@@ -14400,9 +15343,20 @@
               {
                 "command": "tool.erase",
                 "size": "small"
+              },
+              {
+                "command": "tool.reverse",
+                "size": "small"
+              },
+              {
+                "command": "tool.matchProperties",
+                "size": "small"
               }
             ],
-            "overflow": [],
+            "overflow": [
+              "tool.simplify",
+              "tool.cleanup"
+            ],
             "keep": false
           },
           {
@@ -14859,6 +15813,16 @@
                       "command": "tool.chamfer",
                       "title": "Pah",
                       "label": "Pah"
+                    },
+                    {
+                      "command": "tool.filletAll",
+                      "title": "Tüm köşeleri yuvarla",
+                      "label": "Tüm köşeleri yuvarla"
+                    },
+                    {
+                      "command": "tool.chamferAll",
+                      "title": "Tüm köşelere pah",
+                      "label": "Tüm köşelere pah"
                     }
                   ],
                   "key": "corner",
@@ -14881,7 +15845,24 @@
                   "size": "large"
                 },
                 {
-                  "command": "tool.dimension",
+                  "split": [
+                    {
+                      "command": "tool.dimension",
+                      "title": "Ölçülendirme",
+                      "label": "Ölçülendirme"
+                    },
+                    {
+                      "command": "tool.dimContinue",
+                      "title": "Zincir ölçü",
+                      "label": "Zincir ölçü"
+                    },
+                    {
+                      "command": "tool.dimBaseline",
+                      "title": "Baz ölçü",
+                      "label": "Baz ölçü"
+                    }
+                  ],
+                  "key": "dimension",
                   "size": "large"
                 },
                 {
@@ -15031,6 +16012,10 @@
                 {
                   "command": "tool.spline",
                   "size": "small"
+                },
+                {
+                  "command": "tool.sector",
+                  "size": "small"
                 }
               ],
               "overflow": [
@@ -15113,11 +16098,61 @@
               "items": [
                 {
                   "command": "tool.point",
-                  "size": "large"
+                  "size": "small"
                 },
                 {
                   "command": "tool.divide",
-                  "size": "large"
+                  "size": "small"
+                },
+                {
+                  "split": [
+                    {
+                      "command": "tool.pointsBetween",
+                      "title": "Ara nokta",
+                      "label": "Eşit aralık"
+                    },
+                    {
+                      "command": "tool.pointsBetween",
+                      "option": "U",
+                      "title": "Ara nokta",
+                      "label": "Uzaklıkla",
+                      "description": "İlk noktadan verilen uzaklıklarda"
+                    },
+                    {
+                      "command": "tool.pointsBetween",
+                      "option": "O",
+                      "title": "Ara nokta",
+                      "label": "Oranla",
+                      "description": "İki nokta arasının oranında (0 ile 1 arası)"
+                    }
+                  ],
+                  "key": "pointsBetween",
+                  "size": "small"
+                },
+                {
+                  "split": [
+                    {
+                      "command": "tool.intersectPoint",
+                      "title": "Kesişim noktası",
+                      "label": "İki uzaklık"
+                    },
+                    {
+                      "command": "tool.intersectPoint",
+                      "option": "D",
+                      "title": "Kesişim noktası",
+                      "label": "İki doğrultu",
+                      "description": "İki bilinen noktadan okunan doğrultuların kesişimi"
+                    },
+                    {
+                      "command": "tool.intersectPoint",
+                      "option": "L",
+                      "title": "Kesişim noktası",
+                      "label": "İki doğru",
+                      "description": "İki noktayla verilen iki doğrunun kesişimi"
+                    }
+                  ],
+                  "key": "intersectPoint",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -15132,7 +16167,24 @@
                   "size": "large"
                 },
                 {
-                  "command": "tool.dimension",
+                  "split": [
+                    {
+                      "command": "tool.dimension",
+                      "title": "Ölçülendirme",
+                      "label": "Ölçülendirme"
+                    },
+                    {
+                      "command": "tool.dimContinue",
+                      "title": "Zincir ölçü",
+                      "label": "Zincir ölçü"
+                    },
+                    {
+                      "command": "tool.dimBaseline",
+                      "title": "Baz ölçü",
+                      "label": "Baz ölçü"
+                    }
+                  ],
+                  "key": "dimension",
                   "size": "large"
                 },
                 {
@@ -15202,6 +16254,11 @@
                       "command": "tool.arrayPolar",
                       "title": "Kutupsal dizi",
                       "label": "Kutupsal dizi"
+                    },
+                    {
+                      "command": "tool.arrayPath",
+                      "title": "Yol boyunca dizi",
+                      "label": "Yol boyunca dizi"
                     }
                   ],
                   "key": "array",
@@ -15230,6 +16287,31 @@
                 {
                   "command": "tool.break",
                   "size": "small"
+                },
+                {
+                  "split": [
+                    {
+                      "command": "tool.split",
+                      "title": "Parçala",
+                      "label": "Kesişimlerden"
+                    },
+                    {
+                      "command": "tool.split",
+                      "option": "E",
+                      "title": "Parçala",
+                      "label": "Eşit parçalara",
+                      "description": "Nesneyi verilen sayıda eşit uzunlukta parçaya ayırır"
+                    },
+                    {
+                      "command": "tool.split",
+                      "option": "U",
+                      "title": "Parçala",
+                      "label": "Uzunluktan",
+                      "description": "Başından verilen uzunlukta parçalara ayırır"
+                    }
+                  ],
+                  "key": "split",
+                  "size": "small"
                 }
               ],
               "overflow": [
@@ -15252,6 +16334,16 @@
                       "command": "tool.chamfer",
                       "title": "Pah",
                       "label": "Pah"
+                    },
+                    {
+                      "command": "tool.filletAll",
+                      "title": "Tüm köşeleri yuvarla",
+                      "label": "Tüm köşeleri yuvarla"
+                    },
+                    {
+                      "command": "tool.chamferAll",
+                      "title": "Tüm köşelere pah",
+                      "label": "Tüm köşelere pah"
                     }
                   ],
                   "key": "corner",
@@ -15278,9 +16370,20 @@
                 {
                   "command": "tool.erase",
                   "size": "small"
+                },
+                {
+                  "command": "tool.reverse",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.matchProperties",
+                  "size": "small"
                 }
               ],
-              "overflow": [],
+              "overflow": [
+                "tool.simplify",
+                "tool.cleanup"
+              ],
               "keep": false
             },
             {
@@ -15381,11 +16484,15 @@
               "items": [
                 {
                   "command": "tool.measure",
-                  "size": "large"
+                  "size": "small"
                 },
                 {
                   "command": "tool.area",
-                  "size": "large"
+                  "size": "small"
+                },
+                {
+                  "command": "tool.measureAngle",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -15734,6 +16841,11 @@
                       "command": "tool.arrayPolar",
                       "title": "Kutupsal dizi",
                       "label": "Kutupsal dizi"
+                    },
+                    {
+                      "command": "tool.arrayPath",
+                      "title": "Yol boyunca dizi",
+                      "label": "Yol boyunca dizi"
                     }
                   ],
                   "key": "array",
@@ -15758,9 +16870,20 @@
                 {
                   "command": "tool.erase",
                   "size": "small"
+                },
+                {
+                  "command": "tool.reverse",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.matchProperties",
+                  "size": "small"
                 }
               ],
-              "overflow": [],
+              "overflow": [
+                "tool.simplify",
+                "tool.cleanup"
+              ],
               "keep": false
             },
             {
@@ -16363,6 +17486,10 @@
                   ],
                   "key": "arc",
                   "size": "large"
+                },
+                {
+                  "command": "tool.sector",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -16374,11 +17501,61 @@
               "items": [
                 {
                   "command": "tool.point",
-                  "size": "large"
+                  "size": "small"
                 },
                 {
                   "command": "tool.divide",
-                  "size": "large"
+                  "size": "small"
+                },
+                {
+                  "split": [
+                    {
+                      "command": "tool.pointsBetween",
+                      "title": "Ara nokta",
+                      "label": "Eşit aralık"
+                    },
+                    {
+                      "command": "tool.pointsBetween",
+                      "option": "U",
+                      "title": "Ara nokta",
+                      "label": "Uzaklıkla",
+                      "description": "İlk noktadan verilen uzaklıklarda"
+                    },
+                    {
+                      "command": "tool.pointsBetween",
+                      "option": "O",
+                      "title": "Ara nokta",
+                      "label": "Oranla",
+                      "description": "İki nokta arasının oranında (0 ile 1 arası)"
+                    }
+                  ],
+                  "key": "pointsBetween",
+                  "size": "small"
+                },
+                {
+                  "split": [
+                    {
+                      "command": "tool.intersectPoint",
+                      "title": "Kesişim noktası",
+                      "label": "İki uzaklık"
+                    },
+                    {
+                      "command": "tool.intersectPoint",
+                      "option": "D",
+                      "title": "Kesişim noktası",
+                      "label": "İki doğrultu",
+                      "description": "İki bilinen noktadan okunan doğrultuların kesişimi"
+                    },
+                    {
+                      "command": "tool.intersectPoint",
+                      "option": "L",
+                      "title": "Kesişim noktası",
+                      "label": "İki doğru",
+                      "description": "İki noktayla verilen iki doğrunun kesişimi"
+                    }
+                  ],
+                  "key": "intersectPoint",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -16391,6 +17568,22 @@
                 {
                   "command": "tool.text",
                   "size": "large"
+                },
+                {
+                  "split": [
+                    {
+                      "command": "tool.dimContinue",
+                      "title": "Zincir ölçü",
+                      "label": "Zincir ölçü"
+                    },
+                    {
+                      "command": "tool.dimBaseline",
+                      "title": "Baz ölçü",
+                      "label": "Baz ölçü"
+                    }
+                  ],
+                  "key": "dimension",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -16453,6 +17646,31 @@
                 {
                   "command": "tool.break",
                   "size": "small"
+                },
+                {
+                  "split": [
+                    {
+                      "command": "tool.split",
+                      "title": "Parçala",
+                      "label": "Kesişimlerden"
+                    },
+                    {
+                      "command": "tool.split",
+                      "option": "E",
+                      "title": "Parçala",
+                      "label": "Eşit parçalara",
+                      "description": "Nesneyi verilen sayıda eşit uzunlukta parçaya ayırır"
+                    },
+                    {
+                      "command": "tool.split",
+                      "option": "U",
+                      "title": "Parçala",
+                      "label": "Uzunluktan",
+                      "description": "Başından verilen uzunlukta parçalara ayırır"
+                    }
+                  ],
+                  "key": "split",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -16473,9 +17691,20 @@
                 {
                   "command": "tool.erase",
                   "size": "small"
+                },
+                {
+                  "command": "tool.reverse",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.matchProperties",
+                  "size": "small"
                 }
               ],
-              "overflow": [],
+              "overflow": [
+                "tool.simplify",
+                "tool.cleanup"
+              ],
               "keep": false
             },
             {
@@ -16580,11 +17809,15 @@
               "items": [
                 {
                   "command": "tool.measure",
-                  "size": "large"
+                  "size": "small"
                 },
                 {
                   "command": "tool.area",
-                  "size": "large"
+                  "size": "small"
+                },
+                {
+                  "command": "tool.measureAngle",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -17127,9 +18360,20 @@
                 {
                   "command": "tool.erase",
                   "size": "small"
+                },
+                {
+                  "command": "tool.reverse",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.matchProperties",
+                  "size": "small"
                 }
               ],
-              "overflow": [],
+              "overflow": [
+                "tool.simplify",
+                "tool.cleanup"
+              ],
               "keep": false
             },
             {
@@ -17258,6 +18502,20 @@
     "explode": "<path d=\"M3.5 7.5v-4h4M16.5 7.5v-4h-4M3.5 12.5v4h4M16.5 12.5v4h-4\"/><path d=\"M10 8V6.5M10 13.5V12M8 10H6.5M13.5 10H12\"/>",
     "stretch": "<path d=\"M3.5 5.5h6l6 4.5-6 4.5h-6z\"/><rect x=\"8.5\" y=\"2.5\" width=\"9\" height=\"15\" stroke-dasharray=\"1.8 1.6\"/><rect x=\"14\" y=\"8.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "vertex": "<path d=\"m3 15 5-9 9 5\"/><rect x=\"1.5\" y=\"13.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"6.5\" y=\"4.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15.5\" y=\"9.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M12.5 12.5v5M10 15h5\"/>",
+    "filletAll": "<rect x=\"3.5\" y=\"4.5\" width=\"13\" height=\"11\" rx=\"3.6\"/><path d=\"M8 10h4M10 8v4\" stroke-width=\"1.1\"/>",
+    "chamferAll": "<path d=\"M7 4.5h6l3.5 3.5v4L13 15.5H7L3.5 12V8z\"/><path d=\"M8 10h4M10 8v4\" stroke-width=\"1.1\"/>",
+    "reverse": "<path d=\"M3.5 7h12\"/><path d=\"m13 4.5 2.5 2.5-2.5 2.5\"/><path d=\"M16.5 13h-12\"/><path d=\"m7 10.5-2.5 2.5L7 15.5\"/>",
+    "simplify": "<path d=\"m3 12 2.2-2.6 1.6 1.4 2.4-3.3 1.6 1.2 2.2-3 1.6 1.1L17 5.5\" stroke-dasharray=\"1.5 1.3\"/><path d=\"M3 16 17 8.5\"/><rect x=\"1.5\" y=\"14.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15.5\" y=\"7\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "split": "<path d=\"M3 14.5 7.3 12.2M9.2 11.2l1.6-.8M12.7 9.4 17 7.1\"/><path d=\"m7.4 9.4 1.9 4M10.6 7.6l1.9 4\" stroke-width=\"1.1\"/><rect x=\"1.5\" y=\"13\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15.5\" y=\"5.6\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "cleanup": "<path d=\"M14.5 2.8 10.4 9\"/><path d=\"M6.4 9.4h7.2l1.2 7.1H5.2z\"/><path d=\"M8.1 12.2v4.3M10 12.2v4.3M11.9 12.2v4.3\"/>",
+    "matchProperties": "<path d=\"m11.4 3.2 5.4 5.4-5.1 5.1-5.4-5.4z\"/><path d=\"M6.3 8.3 3.2 16.8l8.5-3.1\"/><path d=\"M4.6 12.9 7 15.4\"/>",
+    "sector": "<path d=\"M5 15.5V4.5a11 11 0 0 1 11 11z\" fill=\"currentColor\" fill-opacity=\".14\"/><rect x=\"3.5\" y=\"14\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"3.5\" y=\"3\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"14.5\" y=\"14\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "pointsBetween": "<path d=\"M3 14 17 6\"/><circle cx=\"7.7\" cy=\"11.3\" r=\"1.25\"/><circle cx=\"10\" cy=\"10\" r=\"1.25\"/><circle cx=\"12.3\" cy=\"8.7\" r=\"1.25\"/><rect x=\"1.5\" y=\"12.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15.5\" y=\"4.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "intersectPoint": "<circle cx=\"7.5\" cy=\"11\" r=\"4.6\"/><circle cx=\"12.5\" cy=\"11\" r=\"4.6\"/><circle cx=\"10\" cy=\"7.15\" r=\"1.4\" fill=\"currentColor\"/><rect x=\"6\" y=\"9.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"11\" y=\"9.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "measureAngle": "<path d=\"M3.5 16h13M3.5 16 13 5\"/><path d=\"M9.5 16a6 6 0 0 0-2.1-4.55\"/><path d=\"M11.4 13.2h2.4\" stroke-width=\"1.1\"/><rect x=\"2\" y=\"14.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "dimContinue": "<path d=\"M3 5.5v10M10 5.5v10M17 5.5v10M3 12.5h14\"/><path d=\"m5.1 11.3-2.1 1.2 2.1 1.2M7.9 11.3l2.1 1.2-2.1 1.2M12.1 11.3l-2.1 1.2 2.1 1.2M14.9 11.3l2.1 1.2-2.1 1.2\"/>",
+    "dimBaseline": "<path d=\"M3.5 4v12.5M10 10v6.5M16.5 5.5v11M3.5 13h6.5M3.5 8h13\"/><path d=\"m5.5 12-2 1 2 1M8 12l2 1-2 1M5.5 7l-2 1 2 1M14.5 7l2 1-2 1\"/>",
+    "arrayPath": "<path d=\"M3 16c2.7-6.4 7.4-10.3 14-11\" stroke-dasharray=\"2 1.6\"/><rect x=\"2\" y=\"12.5\" width=\"3.2\" height=\"3.2\"/><rect x=\"7\" y=\"7.6\" width=\"3.2\" height=\"3.2\"/><rect x=\"13\" y=\"4\" width=\"3.2\" height=\"3.2\"/>",
     "divide": "<path d=\"M3 13.5 17 6.5\"/><circle cx=\"7.7\" cy=\"11.2\" r=\"1.3\"/><circle cx=\"12.3\" cy=\"8.8\" r=\"1.3\"/><rect x=\"1.5\" y=\"12\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15.5\" y=\"5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "array": "<rect x=\"3.5\" y=\"3.5\" width=\"5\" height=\"5\"/><rect x=\"11.5\" y=\"3.5\" width=\"5\" height=\"5\"/><rect x=\"3.5\" y=\"11.5\" width=\"5\" height=\"5\"/><rect x=\"11.5\" y=\"11.5\" width=\"5\" height=\"5\"/>",
     "erase": "<path d=\"M8.5 16.5h8\"/><path d=\"m11.4 3.9 4.7 4.7a1 1 0 0 1 0 1.4L9.7 16.5H6.4l-2.7-2.7a1 1 0 0 1 0-1.4l6.3-8.5a1 1 0 0 1 1.4 0z\"/><path d=\"m7.3 8.2 4.5 4.5\"/>",

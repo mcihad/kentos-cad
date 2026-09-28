@@ -747,6 +747,7 @@ Bu bölümde bir aracın listelenmesi sıfırdan yazılması gerektiği anlamın
 - [ ] `CAD-08` Çizgi kalınlığı, pattern, çizim fontu, fiziksel mm/ölçek, kâğıt renkleri, çıktı DPI ve PDF/SVG/DXF görünüş eşdeğerliğini test et; ekran kalite ayarı baskı verisini değiştirmesin.
 - [ ] `CAD-09` Proje şablonları, standart katman/stil, komut makroları, kullanıcı workspace'i, özel toolbar/kısayol ve kurumsal dağıtım profilini settings/command üzerinden sun.
 - [ ] `CAD-10` Katman kilidi/seçilebilirlik, filtre, toplu property edit, match properties, clipboard ve belge arası kopyada ID/style/CRS çakışmalarını yönet.
+- [ ] `CAD-11` PiriCAD'in araç adlarından gerekli olanları KentOS'un mekaniğiyle ekle ([ADR 0140](docs/adr/0140-new-drawing-and-editing-tools.md)). Faz 1: tüm köşeleri yuvarla, tüm köşelere pah, Parçala, Yönü çevir, Sadeleştir, Çizimi temizle, Özellik kopyala. Faz 2: daire dilimi, ara nokta, kesişim noktası, açı ölç, koordinat oku, zincir ve baz ölçü. Faz 3: Buda ve Uzat'a çit, Ötele'ye iki yana ve kaynağı sil, yol boyunca dizi. Açık: lider, koordinat ve yay uzunluğu ölçüleri (yeni nesne türü). — 29 Eylül: on altı araç katalogda, şeritte ve masaüstünün şeridinde bekliyor olarak yerinde.
 
 ### 16.2 GIS, haritacılık ve kadastro
 

@@ -51,14 +51,14 @@ describe('ribbon', () => {
   it('shows a tool added to the catalog in its menu and ribbon tab, with nothing else to edit', () => {
     const plain = { primary: undefined, methods: undefined, family: undefined, rare: undefined };
     const added: ToolDescriptor = { ...TOOL_CATALOG.find((t) => t.id === 'arc')!, ...plain, id: 'clothoid', label: 'Klotoid', section: 'curve' };
-    const loose: ToolDescriptor = { ...TOOL_CATALOG.find((t) => t.id === 'trim')!, ...plain, id: 'cleanup', label: 'Temizle', section: undefined };
+    const loose: ToolDescriptor = { ...TOOL_CATALOG.find((t) => t.id === 'trim')!, ...plain, id: 'tidy', label: 'Toparla', section: undefined };
     const tools = [...TOOL_CATALOG, added, loose];
-    expect(allMenus(tools)).toEqual(expect.arrayContaining(['tool.clothoid', 'tool.cleanup']));
+    expect(allMenus(tools)).toEqual(expect.arrayContaining(['tool.clothoid', 'tool.tidy']));
     const withNew = ribbonTabs(inputs(tools));
     const draw = withNew.find((t) => t.id === 'draw')!;
     expect(draw.panels.find((p) => p.label === 'Eğri')!.items).toContainEqual({ kind: 'command', id: 'tool.clothoid', size: 'small' });
     const modify = withNew.find((t) => t.id === 'modify')!;
-    expect(modify.panels.find((p) => p.label === 'Düzenle')!.items).toContainEqual({ kind: 'command', id: 'tool.cleanup', size: 'large' });
+    expect(modify.panels.find((p) => p.label === 'Düzenle')!.items).toContainEqual({ kind: 'command', id: 'tool.tidy', size: 'large' });
   });
 
   it('builds the processing tab from the registry and the model library', () => {
@@ -91,9 +91,10 @@ describe('ribbon', () => {
     expect(pano.items.slice(1).every((i) => i.kind === 'command' && i.size === 'small')).toBe(true);
     expect(home.panels.find((p) => p.label === 'Seçim')!.items.every((i) => i.kind === 'command' && i.size === 'small')).toBe(true);
     const ölçme = tabs.find((t) => t.id === 'map')!.panels.find((p) => p.label === 'Ölçme')!;
-    expect(ölçme.items.every((i) => i.kind === 'command' && i.size === 'large')).toBe(true);
+    // Three tools and none of them main: small, three to a column.
+    expect(sized(ölçme.items)).toEqual(['tool.measure:small', 'tool.area:small', 'tool.measureAngle:small']);
     const curve = tabs.find((t) => t.id === 'draw')!.panels.find((p) => p.label === 'Eğri')!;
-    expect(sized(curve.items)).toEqual(['tool.circle▾:large', 'tool.arc▾:large', 'tool.ellipse:small', 'tool.spline:small']);
+    expect(sized(curve.items)).toEqual(['tool.circle▾:large', 'tool.arc▾:large', 'tool.ellipse:small', 'tool.spline:small', 'tool.sector:small']);
     expect(curve.overflow).toEqual(['tool.donut']);
   });
 

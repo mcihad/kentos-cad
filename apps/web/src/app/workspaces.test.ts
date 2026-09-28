@@ -77,7 +77,7 @@ describe('work modes', () => {
     expect(tabs.some((t) => t.id === 'processing')).toBe(false);
     const map = tabs.find((t) => t.id === 'map')!;
     expect(map.label).toBe('Ölçme');
-    expect(map.panels.flatMap(panelCommands)).toEqual(['calc.traverse', 'calc.polar', 'calc.stakeout', 'calc.forward', 'calc.resection', 'tool.measure', 'tool.area']);
+    expect(map.panels.flatMap(panelCommands)).toEqual(['calc.traverse', 'calc.polar', 'calc.stakeout', 'calc.forward', 'calc.resection', 'tool.measure', 'tool.area', 'tool.measureAngle']);
     expect(cad.command('tool.parcel')).toBe(false);
     expect(cad.command('tool.hatch')).toBe(true);
   });
