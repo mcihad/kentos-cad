@@ -147,6 +147,11 @@ pub fn label(operation: EditOperation) -> &'static str {
         EditOperation::Grip => "Tutamaçla düzenle",
         EditOperation::StraightEdge => "Düz kenar yap",
         EditOperation::ArcEdge => "Yaya dönüştür",
+        // The drawing and editing tools of docs/adr/0140.
+        EditOperation::Split => "Parçala",
+        EditOperation::Reverse => "Yönü çevir",
+        EditOperation::Simplify => "Sadeleştir",
+        EditOperation::Cleanup => "Çizimi temizle",
     }
 }
 

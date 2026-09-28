@@ -85,6 +85,17 @@ pub enum EditOperation {
     /// Yaya dönüştür: a straight edge of a polyline or an area made an arc,
     /// from the grip menu of the edge's middle.
     ArcEdge,
+    /// Parçala (docs/adr/0140): objects cut into separate pieces where they
+    /// cross, into equal parts or by length; the first piece keeps the
+    /// object's place and id, every piece its data.
+    Split,
+    /// Yönü çevir: an object drawn the other way round, its outline the same.
+    Reverse,
+    /// Sadeleştir: a path's vertices within a tolerance of its outline dropped.
+    Simplify,
+    /// Çizimi temizle: objects repeated on their layer and empty ones
+    /// deleted, vertices repeated in a row dropped.
+    Cleanup,
 }
 
 /// A drawing object's geometry alone: its kind and the fields that place and

@@ -59,6 +59,10 @@ export const EDIT_LABEL: Record<EditOperation, string> = {
   grip: 'Tutamaçla düzenle',
   straightEdge: 'Düz kenar yap',
   arcEdge: 'Yaya dönüştür',
+  split: 'Parçala',
+  reverse: 'Yönü çevir',
+  simplify: 'Sadeleştir',
+  cleanup: 'Çizimi temizle',
 };
 
 /** The contract's geometry fields by kind (`EntityGeometry`): what the command writes of a geometry. */

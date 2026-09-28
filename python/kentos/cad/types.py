@@ -171,6 +171,10 @@ class EditOperation(_StrEnum):
     - ``grip``: Tutamaçla düzenle: a selected object's grip moved (a vertex, an end,
     - ``straightEdge``: Düz kenar yap: an arc edge of a polyline or an area made straight
     - ``arcEdge``: Yaya dönüştür: a straight edge of a polyline or an area made an arc,
+    - ``split``: Parçala (docs/adr/0140): objects cut into separate pieces where they
+    - ``reverse``: Yönü çevir: an object drawn the other way round, its outline the same.
+    - ``simplify``: Sadeleştir: a path's vertices within a tolerance of its outline dropped.
+    - ``cleanup``: Çizimi temizle: objects repeated on their layer and empty ones
     """
     OFFSET = "offset"
     TRIM = "trim"
@@ -194,9 +198,13 @@ class EditOperation(_StrEnum):
     GRIP = "grip"
     STRAIGHT_EDGE = "straightEdge"
     ARC_EDGE = "arcEdge"
+    SPLIT = "split"
+    REVERSE = "reverse"
+    SIMPLIFY = "simplify"
+    CLEANUP = "cleanup"
 
 
-EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge"]
+EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup"]
 """The names of :class:`EditOperation`, for a plain string."""
 
 

@@ -33,6 +33,8 @@ pub(super) static TABLES: &[&[Op]] = &[
     crate::ops::lengthen::OPS,
     crate::ops::offset::OPS,
     crate::ops::fillet::OPS,
+    crate::ops::reshape::OPS,
+    crate::ops::split::OPS,
     crate::ops::join::OPS,
     crate::ops::vertex::OPS,
     crate::ops::explode::OPS,

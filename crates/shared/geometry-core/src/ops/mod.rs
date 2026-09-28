@@ -12,6 +12,8 @@ pub mod join;
 pub mod lengthen;
 pub mod offset;
 pub mod path;
+pub mod reshape;
+pub mod split;
 pub mod stretch;
 pub mod transform;
 pub mod trim;

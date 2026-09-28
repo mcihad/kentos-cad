@@ -382,15 +382,17 @@ class _EntitiesEdit(LocalCommand[EntitiesEdit, EntitiesEdited, EntitiesEditPlan]
     komutla yazar. Seçili nesnenin tutamacı sürüklenince grip işlemiyle (adımı Tutamaçla
     düzenle), tutamacın menüsü Ortasına köşe ekle ve Köşeyi sil için vertexAdd ve
     vertexRemove, Düz kenar yap ve Yaya dönüştür için straightEdge ve arcEdge
-    işlemleriyle yazar. update nesnenin geometrisini değiştirir, öbür alanları kalır;
-    replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır,
-    öznitelikleri ve etiketi keepData ile kalır; add bir nesneden yeni nesne yapar,
-    katmanını ve rengini alır; remove nesneyi siler. Bir nesne tek bir değişiklikle
-    değişir. Yazının metni boş olamaz; kapalı alanın halkası en az 3 köşelidir,
-    kenarlarından biri yaysa 2. Kilitli katmandaki nesne değişmez, ondan nesne yapılmaz:
-    böyle bir nesne verilirse hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim
-    o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin
-    istemez; bulut projesine değişiklik project.changes ile gider.
+    işlemleriyle yazar. Parçala, Yönü çevir, Sadeleştir ve Çizimi temizle split,
+    reverse, simplify ve cleanup işlemleriyle, Tüm köşeleri yuvarla ve Tüm köşelere pah
+    fillet ve chamfer işlemleriyle yazar. update nesnenin geometrisini değiştirir, öbür
+    alanları kalır; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı
+    ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır; add bir nesneden yeni
+    nesne yapar, katmanını ve rengini alır; remove nesneyi siler. Bir nesne tek bir
+    değişiklikle değişir. Yazının metni boş olamaz; kapalı alanın halkası en az 3
+    köşelidir, kenarlarından biri yaysa 2. Kilitli katmandaki nesne değişmez, ondan
+    nesne yapılmaz: böyle bir nesne verilirse hiçbir şey yazılmaz. expectedRevision
+    verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.
     """
     __slots__ = ()
     id = "cad.entities.edit"
@@ -420,16 +422,18 @@ class _EntitiesEdit(LocalCommand[EntitiesEdit, EntitiesEdited, EntitiesEditPlan]
         çıkar, böl, Alana çevir, Çizgiye çevir) kendi adlarıyla bu komutla yazar. Seçili
         nesnenin tutamacı sürüklenince grip işlemiyle (adımı Tutamaçla düzenle), tutamacın
         menüsü Ortasına köşe ekle ve Köşeyi sil için vertexAdd ve vertexRemove, Düz kenar
-        yap ve Yaya dönüştür için straightEdge ve arcEdge işlemleriyle yazar. update
-        nesnenin geometrisini değiştirir, öbür alanları kalır; replace nesneyi yerinde ve
-        kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi
-        keepData ile kalır; add bir nesneden yeni nesne yapar, katmanını ve rengini alır;
-        remove nesneyi siler. Bir nesne tek bir değişiklikle değişir. Yazının metni boş
-        olamaz; kapalı alanın halkası en az 3 köşelidir, kenarlarından biri yaysa 2. Kilitli
-        katmandaki nesne değişmez, ondan nesne yapılmaz: böyle bir nesne verilirse hiçbir
-        şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
-        yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik
-        project.changes ile gider.
+        yap ve Yaya dönüştür için straightEdge ve arcEdge işlemleriyle yazar. Parçala, Yönü
+        çevir, Sadeleştir ve Çizimi temizle split, reverse, simplify ve cleanup
+        işlemleriyle, Tüm köşeleri yuvarla ve Tüm köşelere pah fillet ve chamfer
+        işlemleriyle yazar. update nesnenin geometrisini değiştirir, öbür alanları kalır;
+        replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır,
+        öznitelikleri ve etiketi keepData ile kalır; add bir nesneden yeni nesne yapar,
+        katmanını ve rengini alır; remove nesneyi siler. Bir nesne tek bir değişiklikle
+        değişir. Yazının metni boş olamaz; kapalı alanın halkası en az 3 köşelidir,
+        kenarlarından biri yaysa 2. Kilitli katmandaki nesne değişmez, ondan nesne yapılmaz:
+        böyle bir nesne verilirse hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim
+        o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin
+        istemez; bulut projesine değişiklik project.changes ile gider.
 
         Args:
             doc: The drawing it works on.

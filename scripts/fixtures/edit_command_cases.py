@@ -794,10 +794,52 @@ def write(command, title, note, cases):
         f.write(text)
 
 
+# The drawing and editing tools of ADR 0140: Parçala cuts an object into pieces (the first keeps its place and
+# its id, every piece keeps its data), Yönü çevir and Sadeleştir give an object another geometry, Çizimi temizle
+# deletes repeats and empty objects and cleans repeated vertices; each is one step with its own name.
+PIECE_A = line(487000, 4420000, 487010, 4420000)
+PIECE_B = line(487010, 4420000, 487020, 4420000)
+REVERSED = {"kind": "polyline", "pts": [P(487010, 4420020), P(487010, 4420010), P(487000, 4420010)]}
+THINNED = {"kind": "polyline", "pts": [P(487000, 4420010), P(487010, 4420020)]}
+cases.append({
+    "name": "Parçala: ilk parça yerinde ve kimliğiyle, öbürü yeni; ikisi de verisini keepData ile taşır; tek adım",
+    "steps": [
+        {"op": "captureUid", "id": 1, "as": "cizgi"},
+        {"op": "execute", "input": {"operation": "split", "changes": [{"kind": "replace", "uid": uid(1), "geometry": PIECE_A, "keepData": True},
+                                                                      {"kind": "add", "from": uid(1), "geometry": PIECE_B, "keepData": True}]},
+         "result": done(changed=[uid(1)], created=[uid(9)]),
+         "expect": {"ids": ids_after(added=[9]), "entities": {"1": inherited(1, PIECE_A, True, 1), "9": inherited(1, PIECE_B, True, 9)}, "uids": {"1": "cizgi"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Parçala", "expect": {"ids": IDS, "entities": {"1": E(1)}, "uids": {"1": "cizgi"}, "canUndo": False}},
+    ],
+})
+
+cases.append({
+    "name": "Yönü çevir ve Sadeleştir: nesnenin yeni geometrisi, öbür alanları kalır; her biri tek adım, adı işlemin",
+    "steps": [
+        {"op": "execute", "input": {"operation": "reverse", "changes": [{"kind": "update", "uid": uid(2), "geometry": REVERSED}]}, "result": done(changed=[uid(2)]),
+         "expect": {"entities": {"2": updated(2, REVERSED)}, "revision": "changed"}},
+        {"op": "execute", "input": {"operation": "simplify", "changes": [{"kind": "update", "uid": uid(2), "geometry": THINNED}]}, "result": done(changed=[uid(2)]),
+         "expect": {"entities": {"2": updated(2, THINNED)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Sadeleştir", "expect": {"entities": {"2": updated(2, REVERSED)}}},
+        {"op": "undo", "returns": "Yönü çevir", "expect": {"entities": {"2": E(2)}, "canUndo": False}},
+    ],
+})
+
+cases.append({
+    "name": "Çizimi temizle: yinelenen ve boş nesneler silinir, tekrarlanan köşeleri atılan nesne yerinde değişir; tek adım",
+    "steps": [
+        {"op": "captureUid", "id": 7, "as": "gizli"},
+        {"op": "execute", "input": {"operation": "cleanup", "changes": [{"kind": "remove", "uid": uid(7)}, {"kind": "update", "uid": uid(2), "geometry": THINNED}]},
+         "result": done(changed=[uid(2)], removed=["$uid:gizli"]),
+         "expect": {"ids": ids_after(removed=[7]), "entities": {"2": updated(2, THINNED)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Çizimi temizle", "expect": {"ids": IDS, "entities": {"2": E(2), "7": E(7)}, "canUndo": False}},
+    ],
+})
+
 write(
     "cad.entities.edit",
     "Nesneleri düzenle: doğrulama, plan, yazma, geri alma",
-    "ADR 0047. Denetim sırası: en az bir değişiklik; her değişikliğin kimliğinin yazımı (add'de from); her geometrinin nokta sayısı, yazının boş olmayan metni, sonlu sayıları ve yarıçapı; beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması; bir nesnenin tek değişiklikle değişmesi; hiçbir nesnenin kilitli katmanda olmaması (düzenleme bütün yazılır ya da hiç). update yalnız geometriyi değiştirir; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır, simgesi gelmez; add bir nesneden yeni nesne yapar, onun katmanını ve rengini alır. Adım işlemin adıdır: Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle, Köşe sil, Esnet; Öznitelikler'in (properties) adımı Değiştir; alan araçlarınınki Alan birleştir, Alan kesiştir, Alan çıkar, Alan böl, Alana çevir, Çizgiye çevir. Kapalı alanın halkası (dış halka ya da delik) en az 3 köşelidir; iki kenarından biri yaysa (yay değeri 0 değil; verilmeyen 0 sayılır) 2 köşeli olabilir. Taramanın halkası en az 3 köşelidir. Kurulumdaki en büyük kimlik 8; yeni nesneler 9'dan başlar; properties durumlarının kendi kurulumu vardır. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+    "ADR 0047. Denetim sırası: en az bir değişiklik; her değişikliğin kimliğinin yazımı (add'de from); her geometrinin nokta sayısı, yazının boş olmayan metni, sonlu sayıları ve yarıçapı; beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması; bir nesnenin tek değişiklikle değişmesi; hiçbir nesnenin kilitli katmanda olmaması (düzenleme bütün yazılır ya da hiç). update yalnız geometriyi değiştirir; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır, simgesi gelmez; add bir nesneden yeni nesne yapar, onun katmanını ve rengini alır. Adım işlemin adıdır: Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle, Köşe sil, Esnet; Öznitelikler'in (properties) adımı Değiştir; alan araçlarınınki Alan birleştir, Alan kesiştir, Alan çıkar, Alan böl, Alana çevir, Çizgiye çevir; ADR 0140'ın araçlarınınki Parçala, Yönü çevir, Sadeleştir, Çizimi temizle (Tüm köşeleri yuvarla ve Tüm köşelere pah Köşe yuvarla ve Pah'tır). Kapalı alanın halkası (dış halka ya da delik) en az 3 köşelidir; iki kenarından biri yaysa (yay değeri 0 değil; verilmeyen 0 sayılır) 2 köşeli olabilir. Taramanın halkası en az 3 köşelidir. Kurulumdaki en büyük kimlik 8; yeni nesneler 9'dan başlar; properties durumlarının kendi kurulumu vardır. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
     cases,
 )
 print(f"{len(cases)} cases" + (" match" if "--check" in sys.argv[1:] else " written"))
