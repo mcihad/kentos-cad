@@ -118,6 +118,11 @@ impl Memory {
         self.write();
     }
 
+    /// Where a tool is asked to run: the stored choice, else Otomatik (the web's `targetChoice`).
+    pub fn target(&self, tool: &str) -> &str {
+        self.targets.get(tool).map_or("auto", String::as_str)
+    }
+
     /// Keeps where a tool is asked to run.
     pub fn set_target(&mut self, tool: &str, choice: &str) {
         if self.targets.get(tool).map(String::as_str) != Some(choice) {

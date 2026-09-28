@@ -11,14 +11,19 @@
 //!   the right. It stays open after a run, to adjust and run again.
 //! - A run writes through the document's transaction, one undo step named
 //!   after the tool (a model after itself); history is kept for the session.
+//! - A tool whose inputs are 2 000 objects or more runs on another thread
+//!   ([`background`], the web's worker; Nerede çalışır chooses): the window
+//!   shows how far it is, Durdur stops it, the drawing stays in use.
 //! - Each tool's last values outlive the program in `islemler.json`
 //!   ([`memory`]).
 
+mod background;
 pub(crate) mod designer;
 pub mod dialog;
 mod fields;
 pub mod memory;
 pub mod panel;
+mod plan;
 
 /// The İşlemler panel's event as the app's message (the ribbon's model buttons send it too).
 pub(crate) fn panel_message(event: panel::Event) -> crate::app::Message {
@@ -28,13 +33,16 @@ pub(crate) fn panel_message(event: panel::Event) -> crate::app::Message {
 mod tests;
 mod window;
 
+use std::sync::Arc;
+
 use iced::Task;
 use kentos_domain::Slot;
 use kentos_interaction::pick::PickPoint;
 use kentos_interaction::{Level, Selection, Vec2};
 use kentos_processing::model_runner::{MODEL_PREFIX, run_model};
 use kentos_processing::{
-    Bounds, Defaults, Host, LogLine, Outcome, Registry, Runner, Scene, Store, Values,
+    Bounds, Defaults, Host, LogLine, Outcome, Prepared, Registry, RunResult, Runner, Scene, Store,
+    Target, Values,
 };
 use serde_json::{Value, json};
 
@@ -64,6 +72,10 @@ pub struct Processing {
     pub(crate) designer: Option<Box<designer::Designer>>,
     /// The dock's İşlemler tab.
     pub panel: panel::PanelState,
+    /// Runs going on other threads (background.rs).
+    pub(crate) running: Vec<background::Running>,
+    /// The last background run's id.
+    runs: u64,
 }
 
 impl Default for Processing {
@@ -76,6 +88,8 @@ impl Default for Processing {
             picking: None,
             designer: None,
             panel: panel::PanelState::default(),
+            running: Vec::new(),
+            runs: 0,
         }
     }
 }
@@ -110,6 +124,10 @@ pub enum Event {
     /// Varsayılanlar: every field back to its default.
     Reset,
     Run,
+    /// Durdur: the window's background run stops.
+    Stop,
+    /// What background run `id` says.
+    Background(u64, background::Reply),
     /// A parameter's value chosen: a choice, a switch, a scope, a layer, kinds.
     Value(String, Value),
     /// A number field's text as typed.
@@ -120,7 +138,7 @@ pub enum Event {
     LayerName(String, String),
     /// A features parameter's scope chosen: the parameter and the scope's id.
     Scope(String, String),
-    /// Nerede çalışır chosen (the desktop runs every tool here: kept for the web's parity).
+    /// Nerede çalışır chosen: "auto" or a place's id, kept per tool.
     Target(String),
     /// Gelişmiş ayarlar opened or closed.
     Advanced,
@@ -285,8 +303,13 @@ impl App {
                 self.dialog = None;
                 return Task::none();
             }
-            Event::Run => {
-                self.run_processing();
+            Event::Run => return self.run_processing(),
+            Event::Stop => {
+                self.processing_stop();
+                return Task::none();
+            }
+            Event::Background(id, reply) => {
+                self.processing_background(id, reply);
                 return Task::none();
             }
             Event::Results => {
@@ -350,18 +373,29 @@ impl App {
     }
 
     /// Çalıştır (the web's `ToolDialog.run`): every problem shows, or the
-    /// tool runs; the window stays open with what it did.
-    fn run_processing(&mut self) {
+    /// tool runs; the window stays open with what it did. Where it runs is
+    /// Nerede çalışır's: Otomatik sends inputs of 2 000 objects or more to
+    /// another thread, the window showing how far it is (background.rs).
+    fn run_processing(&mut self) -> Task<Message> {
         let Some(window) = &mut self.processing.dialog else {
-            return;
+            return Task::none();
         };
+        if window.running() {
+            return Task::none();
+        }
         let (Some(doc), true) = (&mut self.document, window.attempt()) else {
             self.refresh_processing();
-            return;
+            return Task::none();
         };
         let values = window.values.clone();
         let tool = window.tool.clone();
+        let available = window.targets().available;
+        let choice = plan::effective_choice(
+            plan::Choice::read(self.processing.memory.target(&tool.id)),
+            &available,
+        );
         self.processing.memory.remember(&tool.id, &values);
+        let session = doc.session;
         let mut stage = Stage {
             doc: &mut doc.model,
             selection: &mut self.selection,
@@ -370,47 +404,176 @@ impl App {
         };
         let mut log: Vec<LogLine> = Vec::new();
         let registry = &self.processing.registry;
-        let outcome = match tool
+        let runner = &mut self.processing.runner;
+        // A model runs its steps here, one after another.
+        if let Some(model) = tool
             .id
             .strip_prefix(MODEL_PREFIX)
             .and_then(|id| registry.model(id))
         {
-            Some(model) => {
-                let lookup = |id: &str| registry.tool(id);
-                run_model(
-                    model,
-                    &values,
-                    &mut self.processing.runner,
-                    &mut stage,
-                    &lookup,
-                    &mut log,
-                )
+            let lookup = |id: &str| registry.tool(id);
+            let outcome = run_model(model, &values, runner, &mut stage, &lookup, &mut log);
+            self.processing_ran(&tool.label, None, log, outcome);
+            return Task::none();
+        }
+        let mut job = match runner.prepare(&stage, &tool, &values, false, &mut log) {
+            Prepared::Ready(job) => job,
+            Prepared::Done(outcome) => {
+                self.processing_ran(&tool.label, None, log, outcome);
+                return Task::none();
             }
-            None => self
-                .processing
-                .runner
-                .run(&mut stage, &tool, &values, false, &mut log),
         };
-        for line in log {
-            match line.level {
-                kentos_processing::Level::Info => self.say(Level::Info, line.text),
-                kentos_processing::Level::Warn => self.warn(line.text),
+        let background = match choice {
+            Some(plan::Choice::At(Target::Worker)) => true,
+            Some(plan::Choice::Auto) => {
+                plan::auto_target(&available, job.size()) == Some(Target::Worker)
             }
+            _ => false,
+        };
+        if !background {
+            let outcome = runner.complete(&mut stage, job, &mut log);
+            self.processing_ran(&tool.label, None, log, outcome);
+            return Task::none();
+        }
+        job.target = Target::Worker;
+        let copy = stage.doc.reading_copy();
+        self.processing.runs += 1;
+        let id = self.processing.runs;
+        let (running, task) = background::start(id, job, copy, session, |id, reply| {
+            Message::Processing(Event::Background(id, reply))
+        });
+        self.processing.running.push(running);
+        // What resolving the inputs left out, said as the run starts (the web's).
+        for line in log {
+            self.say_line(line);
+        }
+        if let Some(window) = &mut self.processing.dialog {
+            window.started(id);
+        }
+        task
+    }
+
+    /// A message of a tool's, in the command history.
+    fn say_line(&mut self, line: LogLine) {
+        match line.level {
+            kentos_processing::Level::Info => self.say(Level::Info, line.text),
+            kentos_processing::Level::Warn => self.warn(line.text),
+        }
+    }
+
+    /// A run ended: its messages and how it went go to the command
+    /// history, and its window shows it (`waiting`: the window waiting for
+    /// that background run, open or put aside; none: the open one).
+    fn processing_ran(
+        &mut self,
+        label: &str,
+        waiting: Option<u64>,
+        log: Vec<LogLine>,
+        outcome: Outcome,
+    ) {
+        for line in log {
+            self.say_line(line);
         }
         match &outcome {
             Outcome::Ok { record, .. } => {
-                self.say(
-                    Level::Success,
-                    format!("{}: {}", tool.label, record.summary),
-                );
+                self.say(Level::Success, format!("{label}: {}", record.summary));
             }
             Outcome::Stopped { message, .. } => self.warn(message.clone()),
             Outcome::Invalid { .. } => {}
         }
-        if let Some(window) = &mut self.processing.dialog {
+        let window = match waiting {
+            Some(id) => self.window_waiting(id),
+            None => self.processing.dialog.as_mut(),
+        };
+        if let Some(window) = window {
             window.ran(outcome);
         }
         self.refresh_processing();
+    }
+
+    /// The window waiting for background run `id`: open, or put aside
+    /// while one of its fields is picked on the drawing.
+    fn window_waiting(&mut self, id: u64) -> Option<&mut ToolDialog> {
+        let p = &mut self.processing;
+        if p.dialog.as_ref().is_some_and(|w| w.waiting == Some(id)) {
+            return p.dialog.as_mut();
+        }
+        match &mut p.picking {
+            Some(Picking::Point { window, .. } | Picking::Objects { window, .. })
+                if window.waiting == Some(id) =>
+            {
+                Some(window)
+            }
+            _ => None,
+        }
+    }
+
+    /// What a background run says; a stopped run's words are not heard.
+    fn processing_background(&mut self, id: u64, reply: background::Reply) {
+        let Some(at) = self.processing.running.iter().position(|r| r.id == id) else {
+            return;
+        };
+        match reply {
+            background::Reply::Progress(share, step) => {
+                if let Some(window) = self.window_waiting(id) {
+                    window.progressed(share, step);
+                }
+            }
+            background::Reply::Line(line) => self.say_line(line),
+            background::Reply::Done(result) => {
+                let running = self.processing.running.remove(at);
+                let result = Arc::try_unwrap(result).unwrap_or_else(|shared| (*shared).clone());
+                self.processing_finish(running, Ok(result));
+            }
+            background::Reply::Failed(why) => {
+                let running = self.processing.running.remove(at);
+                self.processing_finish(running, Err(why));
+            }
+        }
+    }
+
+    /// A background run's answer, applied on the drawing it was computed
+    /// for in one undo step; nothing changes when that drawing is gone.
+    fn processing_finish(
+        &mut self,
+        running: background::Running,
+        answer: Result<RunResult, String>,
+    ) {
+        let label = running.job.tool.label.clone();
+        let id = running.id;
+        let mut log = Vec::new();
+        let runner = &mut self.processing.runner;
+        let outcome = match (answer, &mut self.document) {
+            (Err(why), _) => runner.failed(running.job, &why),
+            (Ok(result), Some(doc)) if doc.session == running.session => {
+                let mut stage = Stage {
+                    doc: &mut doc.model,
+                    selection: &mut self.selection,
+                    store: self.spatial.store(),
+                    view: Some(self.viewport.camera.visible_bounds()),
+                };
+                runner.finish(&mut stage, running.job, result, false, &mut log)
+            }
+            (Ok(_), _) => runner.stop(running.job),
+        };
+        self.processing_ran(&label, Some(id), log, outcome);
+    }
+
+    /// Durdur (the web's): the window's background run ends now and the
+    /// drawing stays as it is; the thread is asked to stop, and what it
+    /// still says is not heard.
+    fn processing_stop(&mut self) {
+        let Some(id) = self.processing.dialog.as_ref().and_then(|w| w.waiting) else {
+            return;
+        };
+        let Some(at) = self.processing.running.iter().position(|r| r.id == id) else {
+            return;
+        };
+        let running = self.processing.running.remove(at);
+        running.stop();
+        let label = running.job.tool.label.clone();
+        let outcome = self.processing.runner.stop(running.job);
+        self.processing_ran(&label, Some(id), Vec::new(), outcome);
     }
 
     /// Sonuçları seç: what the run made or changed becomes the selection,

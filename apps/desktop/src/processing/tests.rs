@@ -8,10 +8,13 @@ use kentos_contracts::DocumentSnapshotV1;
 use kentos_domain::Slot;
 use serde_json::json;
 
+use kentos_processing::{Status, Target};
+
+use super::plan::{AUTO_HINT, Choice, LineKind, RUNNING_BACKGROUND, footer_of, targets_view};
 use super::{Event, RunStatus};
 use crate::app::{App, Dialog, Message};
 use crate::document::Document;
-use crate::files_testing::last_said;
+use crate::files_testing::{drive, last_said};
 
 const PARCELS: &str = include_str!("../../../../fixtures/processing/v1/parcels.kcad");
 
@@ -73,6 +76,146 @@ fn a_run_writes_one_undo_step_named_after_the_tool_and_the_window_stays() {
     assert_eq!(status(&app), RunStatus::Idle);
 }
 
+/// Nerede çalışır: Arka planda. The run goes to another thread and the
+/// window waits; driven to its end, it does what it does here, in one
+/// undo step, recorded as run in the background.
+#[test]
+fn a_run_in_the_background_does_what_it_does_here_in_one_undo_step() {
+    let mut app = app_with_parcels();
+    app.selection.set([Slot(1), Slot(2), Slot(7)]);
+    let _ = app.update(Message::Run("processing.run.annotation.edgeLengths"));
+    event(&mut app, Event::Target("worker".into()));
+    assert_eq!(
+        app.processing.memory.target("annotation.edgeLengths"),
+        "worker"
+    );
+    let before = app.document.as_ref().map_or(0, |d| d.model.len());
+    let task = app.update(Message::Processing(Event::Run));
+    assert!(
+        matches!(
+            status(&app),
+            RunStatus::Running {
+                background: true,
+                ..
+            }
+        ),
+        "{:?}",
+        status(&app)
+    );
+    let window = app.processing.dialog.as_ref().expect("open");
+    let buttons = footer_of(&window.status);
+    assert_eq!((buttons.run, buttons.close), ("Çalışıyor…", "Durdur"));
+    assert!(buttons.run_disabled && buttons.reset_disabled);
+    assert_eq!(window.line().text, RUNNING_BACKGROUND);
+    assert_eq!(
+        app.document.as_ref().map_or(0, |d| d.model.len()),
+        before,
+        "nothing changes before the answer"
+    );
+    // Çalıştır again waits for it.
+    event(&mut app, Event::Run);
+    assert_eq!(app.processing.running.len(), 1);
+    drive(&mut app, task);
+    let summary = "3 nesneye 8 kenar uzunluğu yazıldı; 1 ortak kenar bir kez yazıldı.";
+    assert_eq!(
+        status(&app),
+        RunStatus::Ok {
+            text: summary.into(),
+            pick: (11..=18).map(Slot).collect(),
+            selected: false,
+            undo: true,
+        }
+    );
+    assert_eq!(
+        last_said(&app),
+        format!("Kenar uzunluklarını yaz: {summary}")
+    );
+    assert_eq!(
+        app.processing.runner.history()[0].target,
+        Some(Target::Worker)
+    );
+    assert!(app.processing.running.is_empty());
+    let doc = &app.document.as_ref().expect("open").model;
+    assert_eq!(doc.len(), before + 8);
+    assert!(doc.layers().get("islem-kenar-olculeri").is_some());
+    event(&mut app, Event::Undo);
+    let doc = &app.document.as_ref().expect("open").model;
+    assert_eq!(doc.len(), before);
+    assert!(doc.layers().get("islem-kenar-olculeri").is_none());
+}
+
+/// Durdur ends a background run at once, as the web's ends its worker's
+/// job: the drawing stays as it is, and the thread's late answer is not heard.
+#[test]
+fn durdur_ends_a_background_run_at_once_and_its_late_answer_is_dropped() {
+    let mut app = app_with_parcels();
+    app.selection.set([Slot(1), Slot(2), Slot(7)]);
+    let _ = app.update(Message::Run("processing.run.annotation.edgeLengths"));
+    event(&mut app, Event::Target("worker".into()));
+    let before = app.document.as_ref().map_or(0, |d| d.model.len());
+    let task = app.update(Message::Processing(Event::Run));
+    event(&mut app, Event::Stop);
+    let stopped = "İşlem iptal edildi; çizim değişmedi.";
+    assert_eq!(status(&app), RunStatus::Error(stopped.into()));
+    assert_eq!(last_said(&app), stopped);
+    assert_eq!(app.dialog, Some(Dialog::Processing), "the window stays");
+    drive(&mut app, task);
+    assert_eq!(status(&app), RunStatus::Error(stopped.into()));
+    assert_eq!(app.document.as_ref().map_or(0, |d| d.model.len()), before);
+    let record = &app.processing.runner.history()[0];
+    assert_eq!(
+        (record.status, record.target),
+        (Status::Canceled, Some(Target::Worker))
+    );
+}
+
+/// Otomatik (the web's rule): inputs of 2 000 objects or more run in the
+/// background, and the answer is the one a run here gives.
+#[test]
+fn otomatik_sends_two_thousand_objects_to_the_background_with_the_same_answer() {
+    let (mut app, _) = App::boot(None);
+    let drawing = crate::files_testing::drawing(2100);
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(drawing)))));
+    let _ = app.update(Message::Run("processing.run.selection.byExpression"));
+    // The points are on Çizim, a hidden layer: the layer's objects, not the shown ones.
+    event(
+        &mut app,
+        Event::Value(
+            "input".into(),
+            json!({ "scope": "layer", "layerId": "cizim" }),
+        ),
+    );
+    event(
+        &mut app,
+        Event::Text("condition".into(), "$x >= 486500".into()),
+    );
+    let window = app.processing.dialog.as_ref().expect("open");
+    let (options, hint, choice) = targets_view(&window.targets(), Choice::Auto);
+    assert_eq!(options[0].note.as_deref(), Some("şimdi: arka planda"));
+    assert_eq!((hint, choice), (Some(AUTO_HINT), Some(Choice::Auto)));
+    // Here first, for the answer.
+    event(&mut app, Event::Target("client".into()));
+    event(&mut app, Event::Run);
+    let here = status(&app);
+    assert!(
+        matches!(&here, RunStatus::Ok { selected: true, .. }),
+        "{here:?}"
+    );
+    let chosen = app.selection.ids().to_vec();
+    assert!(chosen.len() >= 2100, "{}", chosen.len());
+    app.selection.clear();
+    event(&mut app, Event::Target("auto".into()));
+    let task = app.update(Message::Processing(Event::Run));
+    assert!(matches!(status(&app), RunStatus::Running { .. }));
+    drive(&mut app, task);
+    assert_eq!(status(&app), here);
+    assert_eq!(app.selection.ids(), chosen.as_slice());
+    assert_eq!(
+        app.processing.runner.history()[0].target,
+        Some(Target::Worker)
+    );
+}
+
 #[test]
 fn with_nothing_selected_the_problem_shows_under_the_field() {
     let mut app = app_with_parcels();
@@ -90,9 +233,10 @@ fn with_nothing_selected_the_problem_shows_under_the_field() {
             "“Alanlar”: seçili nesneler arasında uygun nesne yok. Önce nesneleri seçin ya da kapsamı değiştirin."
         )
     );
+    let line = window.line();
     assert_eq!(
-        window.warning().as_deref(),
-        Some("Çalıştırmadan önce 1 alanı düzeltin.")
+        (line.kind, line.text.as_str()),
+        (LineKind::Warn, "Çalıştırmadan önce 1 alanı düzeltin.")
     );
     // A change clears the run's problem; a number out of range shows while typing.
     event(&mut app, Event::Number("length".into(), "31".into()));
@@ -240,7 +384,7 @@ fn screens() {
 
     let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    let views: [(&str, &'static str); 10] = [
+    let views: [(&str, &'static str); 12] = [
         ("kenar", "processing.run.annotation.edgeLengths"),
         ("numara", "processing.run.points.numberVertices"),
         ("oznitelik", "processing.run.attributes.calculate"),
@@ -253,6 +397,9 @@ fn screens() {
         ("ifade-degiskenler", "processing.run.selection.byExpression"),
         // The output layer's list: the new layer, then the existing ones by their place.
         ("katman-listesi", "processing.run.annotation.edgeLengths"),
+        // Running on another thread (Nerede çalışır: Arka planda), and stopped with Durdur.
+        ("arka-plan", "processing.run.annotation.edgeLengths"),
+        ("durduruldu", "processing.run.annotation.edgeLengths"),
     ];
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
@@ -277,6 +424,16 @@ fn screens() {
                         event(&mut app, Event::Advanced);
                     }
                     "sonuc" | "gecersiz" => event(&mut app, Event::Run),
+                    "arka-plan" | "durduruldu" => {
+                        event(&mut app, Event::Target("worker".into()));
+                        event(&mut app, Event::Run);
+                        let id = app.processing.runs;
+                        let step = super::background::Reply::Progress(0.42, String::new());
+                        event(&mut app, Event::Background(id, step));
+                        if name == "durduruldu" {
+                            event(&mut app, Event::Stop);
+                        }
+                    }
                     _ => {}
                 }
                 snapshot.settle(&mut app, App::view, &mut update);

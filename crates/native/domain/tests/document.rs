@@ -474,3 +474,38 @@ fn a_layers_objects_are_read_by_their_places_which_edits_and_undo_keep() {
     assert_eq!(doc.place(a2), Some(places[2]));
     assert_eq!(ids(&doc, 0..u64::MAX), all);
 }
+
+#[test]
+fn a_reading_copy_holds_the_drawing_as_it_is_without_its_undo() {
+    let mut doc = empty();
+    let a = doc.add(point("a", 1.0)).expect("slot");
+    let b = doc.add(point("b", 2.0)).expect("slot");
+    let copy = doc.reading_copy();
+    let objects = |d: &Document| -> Vec<(u32, Option<kentos_domain::Uuid>, String)> {
+        d.entities()
+            .map(|e| {
+                let slot = Slot(e.base().id);
+                (slot.0, d.uid(slot), e.base().layer_id.clone())
+            })
+            .collect()
+    };
+    assert_eq!(
+        objects(&copy),
+        objects(&doc),
+        "the same objects, ids and order"
+    );
+    assert_eq!(copy.place(b), doc.place(b));
+    assert_eq!(copy.layers().active(), doc.layers().active());
+    assert_eq!(copy.settings(), doc.settings());
+    assert_eq!(
+        (copy.revision(), copy.generation()),
+        (doc.revision(), doc.generation())
+    );
+    assert!(doc.can_undo());
+    assert!(!copy.can_undo(), "no undo history comes along");
+    // The drawing goes on; the copy stays as it was.
+    assert!(doc.update(a, moved(&doc, a, 7.0)));
+    doc.remove(&[b]);
+    assert!(matches!(copy.get(a), Some(Entity::Point(p)) if p.p.x == 1.0));
+    assert!(copy.get(b).is_some());
+}

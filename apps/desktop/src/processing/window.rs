@@ -10,16 +10,18 @@ use iced::{Alignment, Center, Element, Fill, Length};
 use kentos_interaction::Format;
 use kentos_processing::model_runner::MODEL_PREFIX;
 use kentos_processing::parameters::is_visible;
-use kentos_processing::{ParamDef, ParamKind, Target};
+use kentos_processing::{ParamDef, ParamKind};
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::theme::typography;
+use kentos_ui::widget::progress::{self, Tint};
 use kentos_ui::widget::radio::RadioGroup;
 use kentos_ui::widget::{Dialog, horizontal_divider, overlay};
 
-use super::dialog::{RunStatus, ToolDialog};
+use super::dialog::ToolDialog;
 use super::fields::{Env, control};
+use super::plan::{self, Action, Choice, LineIcon, LineKind};
 use super::{Event, Processing};
 use crate::app::{App, Message};
 
@@ -32,16 +34,8 @@ const WIDTH: f32 = 940.0;
 const HEIGHT: f32 = 660.0;
 /// The right-hand panel and a field's control column.
 const SIDE: f32 = 300.0;
-
-/// Where a tool runs, as the window names it (the desktop's words for the web's targets).
-fn target_label(t: Target) -> &'static str {
-    match t {
-        Target::Client => "Bu bilgisayarda",
-        Target::Worker => "Arka planda",
-        Target::Server => "KentOS sunucusunda",
-        Target::Postgis => "PostGIS veritabanında",
-    }
-}
+/// The running run's bar (the web's `.ptool__progress`).
+const PROGRESS: f32 = 140.0;
 
 impl App {
     /// The open processing window, over the drawing.
@@ -348,22 +342,27 @@ fn side<'a>(window: &'a ToolDialog, processing: &'a Processing) -> Element<'a, M
                 .style(style::container::bordered),
         );
     }
-    // The desktop runs every tool here; the places the tool declares but
-    // this program does not have are listed as coming (the web's rule).
-    let mut targets = RadioGroup::new(Some(Target::Client), |t: Target| {
-        ev(Event::Target(t.id().to_owned()))
-    });
-    let declared: Vec<Target> = if model.is_some() {
-        vec![Target::Client]
-    } else {
-        tool.targets.clone()
-    };
-    for t in declared {
-        targets = if t == Target::Client {
-            targets.option(t, target_label(t), "bu çalıştırmada")
+    // Nerede çalışır (the web's plan, plan.rs): Otomatik and what it picks
+    // for these inputs now, then each place the tool names; places this
+    // program does not have are coming.
+    let (options, hint, current) = plan::targets_view(
+        &window.targets(),
+        Choice::read(processing.memory.target(&tool.id)),
+    );
+    let mut targets =
+        RadioGroup::new(current, |c: Choice| ev(Event::Target(c.id().to_owned()))).notes_at_end();
+    for (i, o) in options.into_iter().enumerate() {
+        let note = o.note.unwrap_or_default();
+        targets = if o.disabled {
+            targets.disabled_with(o.value, o.label, note)
         } else {
-            targets.disabled(t, format!("{} (yakında)", target_label(t)))
+            targets.option(o.value, o.label, note)
         };
+        if i == 0
+            && let Some(hint) = hint
+        {
+            targets = targets.hint(hint);
+        }
     }
     out = out.push(column![side_title("Nerede çalışır"), targets].spacing(8));
     if !tool.aliases.is_empty() {
@@ -387,12 +386,15 @@ fn side_title<'a>(text: &'a str) -> Element<'a, Message> {
         .into()
 }
 
-/// Varsayılanlar, what the last run did (or what to fix), Kapat and Çalıştır.
+/// Varsayılanlar, the status line (how the run goes or ended, or what to
+/// fix), Kapat or Durdur, and Çalıştır: the web's plan (plan.rs).
 fn footer<'a>(window: &'a ToolDialog) -> Element<'a, Message> {
+    let buttons = plan::footer_of(&window.status);
+    let line = window.line();
     let reset = button(label::body("Varsayılanlar"))
         .padding([5, 10])
         .style(style::button::ghost)
-        .on_press(ev(Event::Reset));
+        .on_press_maybe((!buttons.reset_disabled).then(|| ev(Event::Reset)));
     let small = |text: &'a str, e: Event| {
         button(label::body(text))
             .padding([4, 8])
@@ -400,57 +402,46 @@ fn footer<'a>(window: &'a ToolDialog) -> Element<'a, Message> {
             .on_press(ev(e))
     };
     let mut status = Row::new().spacing(8).align_y(Center).width(Fill);
-    match (&window.status, window.warning()) {
-        (
-            RunStatus::Ok {
-                text,
-                pick,
-                selected,
-                undo,
-            },
-            _,
-        ) => {
-            status = status
-                .push(icon(Icon::Success).size(16.0).tone(Tone::Success))
-                .push(label::body(text.clone()).width(Fill));
-            if *selected || !pick.is_empty() {
-                status = status.push(small(
-                    if *selected {
-                        "Seçime yakınlaştır"
-                    } else {
-                        "Sonuçları seç"
-                    },
-                    Event::Results,
-                ));
-            }
-            if *undo {
-                status = status.push(small("Geri al", Event::Undo));
-            }
-        }
-        (_, Some(warning)) => {
-            status = status
-                .push(icon(Icon::Warning).size(16.0).tone(Tone::Warning))
-                .push(label::body(warning).width(Fill));
-        }
-        (RunStatus::Error(text), None) => {
-            status = status
-                .push(icon(Icon::Error).size(16.0).tone(Tone::Danger))
-                .push(label::body(text.clone()).width(Fill));
-        }
-        _ => {}
+    if line.kind == LineKind::Running {
+        let share = line.progress.map(|p| f32::from(p) / 100.0);
+        status = status.push(
+            progress::bar(share)
+                .width(Length::Fixed(typography::scaled(PROGRESS)))
+                .tint(Tint::Muted),
+        );
+    } else if let Some(mark) = line.icon {
+        status = status.push(match mark {
+            LineIcon::Success => icon(Icon::Success).size(16.0).tone(Tone::Success),
+            LineIcon::Warning => icon(Icon::Warning).size(16.0).tone(Tone::Warning),
+            LineIcon::Error => icon(Icon::Error).size(16.0).tone(Tone::Danger),
+        });
     }
-    let close = button(label::body("Kapat"))
+    if !line.text.is_empty() {
+        status = status.push(label::body(line.text).width(Fill));
+    }
+    for action in line.actions {
+        status = status.push(match action {
+            Action::Zoom => small("Seçime yakınlaştır", Event::Results),
+            Action::Select => small("Sonuçları seç", Event::Results),
+            Action::Undo => small("Geri al", Event::Undo),
+        });
+    }
+    let close = button(label::body(buttons.close))
         .padding([5, 14])
         .style(style::button::secondary)
-        .on_press(ev(Event::Close));
+        .on_press(ev(if window.running() {
+            Event::Stop
+        } else {
+            Event::Close
+        }));
     let run = button(
-        row![icon(Icon::Play).size(14.0), label::body("Çalıştır")]
+        row![icon(Icon::Play).size(14.0), label::body(buttons.run)]
             .spacing(6)
             .align_y(Center),
     )
     .padding([5, 14])
     .style(style::button::primary)
-    .on_press(ev(Event::Run));
+    .on_press_maybe((!buttons.run_disabled).then(|| ev(Event::Run)));
     row![reset, status, close, run]
         .spacing(10)
         .align_y(Center)

@@ -7,18 +7,27 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use kentos_domain::Slot;
+use kentos_processing::model_runner::MODEL_PREFIX;
 use kentos_processing::parameters::{default_values, restore_values};
 use kentos_processing::{
-    Defaults, InputSummary, Issue, Outcome, ParamKind, Runner, Scene, Tool, Values,
+    Defaults, InputSummary, Issue, Outcome, ParamKind, Runner, Scene, Target, Tool, Values,
 };
 use serde_json::{Value, json};
 
 use super::Event;
+use super::plan::{StatusLine, Targets, auto_target, status_line};
 
 /// How the last run ended, for the footer.
 #[derive(Clone, Debug, PartialEq)]
 pub enum RunStatus {
     Idle,
+    /// It runs: the share done and the tool's step label (empty: none);
+    /// `background`: on another thread, the window waiting (plan.rs).
+    Running {
+        fraction: f64,
+        label: String,
+        background: bool,
+    },
     /// It ran. `pick`: what Sonuçları seç selects; `selected`: the run chose
     /// the selection itself; `undo`: it changed the drawing.
     Ok {
@@ -45,6 +54,8 @@ pub struct ToolDialog {
     attempted: bool,
     pub(super) advanced_open: bool,
     pub status: RunStatus,
+    /// The background run this window shows (background.rs), while it runs.
+    pub(super) waiting: Option<u64>,
     /// Problems of the values (the runner's validation).
     pub(super) issues: Vec<Issue>,
     /// Problems a run found before starting (nothing selected), until the next edit.
@@ -77,6 +88,7 @@ impl ToolDialog {
             attempted: false,
             advanced_open,
             status: RunStatus::Idle,
+            waiting: None,
             issues: Vec::new(),
             run_issues: Vec::new(),
             inputs: BTreeMap::new(),
@@ -86,6 +98,10 @@ impl ToolDialog {
 
     /// Varsayılanlar: every field back to its default.
     pub fn reset(&mut self, defaults: &Defaults) {
+        // It waits while a run is going (the web's footer disables it).
+        if self.running() {
+            return;
+        }
         self.values = default_values(&self.tool, defaults);
         self.numbers.clear();
         self.touched.clear();
@@ -115,8 +131,35 @@ impl ToolDialog {
     pub fn touch(&mut self, name: &str) {
         self.touched.insert(name.to_owned());
         self.run_issues.clear();
-        if !matches!(self.status, RunStatus::Idle) {
+        // A finished run's line clears; a running one stays (the web's).
+        if !matches!(self.status, RunStatus::Idle | RunStatus::Running { .. }) {
             self.status = RunStatus::Idle;
+        }
+    }
+
+    /// Whether a run is going.
+    pub fn running(&self) -> bool {
+        matches!(self.status, RunStatus::Running { .. })
+    }
+
+    /// A run started on another thread: the window shows run `id` until it ends.
+    pub fn started(&mut self, id: u64) {
+        self.waiting = Some(id);
+        self.status = RunStatus::Running {
+            fraction: 0.0,
+            label: String::new(),
+            background: true,
+        };
+    }
+
+    /// How far the running run is, and the step it says.
+    pub fn progressed(&mut self, share: f64, step: String) {
+        if let RunStatus::Running {
+            fraction, label, ..
+        } = &mut self.status
+        {
+            *fraction = share;
+            *label = step;
         }
     }
 
@@ -238,6 +281,7 @@ impl ToolDialog {
 
     /// How the run ended.
     pub fn ran(&mut self, outcome: Outcome) {
+        self.waiting = None;
         match outcome {
             Outcome::Ok {
                 result,
@@ -279,23 +323,50 @@ impl ToolDialog {
             .find(|i| i.param.as_deref() == Some(name))
     }
 
-    /// The footer's warning: the tool's own rule, or how many fields to fix.
-    pub(super) fn warning(&self) -> Option<String> {
-        if !self.attempted {
-            return None;
+    /// Nerede çalışır for this window (plan.rs): the places the tool names,
+    /// those this program has (a model runs its steps here), and where
+    /// Otomatik sends the inputs now.
+    pub(super) fn targets(&self) -> Targets {
+        let model = self.tool.id.starts_with(MODEL_PREFIX);
+        let available: Vec<Target> = if model {
+            vec![Target::Client]
+        } else {
+            self.tool
+                .targets
+                .iter()
+                .copied()
+                .filter(|t| matches!(t, Target::Client | Target::Worker))
+                .collect()
+        };
+        let declared = if model {
+            available.clone()
+        } else {
+            self.tool.targets.clone()
+        };
+        let size = self.inputs.values().map(|s| s.count).sum();
+        let auto = if model {
+            None
+        } else {
+            auto_target(&available, size)
+        };
+        Targets {
+            declared,
+            available,
+            auto,
+            model,
         }
-        let all = || self.run_issues.iter().chain(&self.issues);
-        if let Some(own) = all().find(|i| i.param.is_none()) {
-            return Some(own.message.clone());
-        }
-        let fields = all().filter(|i| i.param.is_some()).count();
-        if fields > 0 {
-            return Some(format!("Çalıştırmadan önce {fields} alanı düzeltin."));
-        }
-        match &self.status {
-            RunStatus::Invalid(text) => Some(text.clone()),
-            _ => None,
-        }
+    }
+
+    /// The line beside the buttons (the web's plan, plan.rs): how the run
+    /// goes or ended, or what to fix; the run's refusal comes first.
+    pub(super) fn line(&self) -> StatusLine {
+        let issues: Vec<Issue> = self
+            .run_issues
+            .iter()
+            .chain(&self.issues)
+            .cloned()
+            .collect();
+        status_line(&self.status, self.attempted, &issues)
     }
 
     /// The tool's preview line, or why there is none (the web's `renderPreview`).

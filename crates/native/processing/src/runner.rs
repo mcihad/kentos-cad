@@ -16,8 +16,8 @@ use crate::geometry::RunGeometry;
 use crate::parameters::{Issue, is_visible, validate_values};
 use crate::text::{fold_turkish, js_trim};
 use crate::types::{
-    Defaults, FeatureSet, Feedback, NewLayerStyle, ParamKind, Resolved, RunContext, RunResult,
-    Target, TargetLayer, Tool, Values,
+    Defaults, FeatureSet, Feedback, NewLayerStyle, ParamKind, Resolved, RunContext, RunFn,
+    RunResult, Target, TargetLayer, Tool, Values,
 };
 use crate::values::{FeaturesValue, LayerValue, Scope};
 
@@ -93,6 +93,44 @@ pub enum Outcome {
         message: String,
         record: RunRecord,
     },
+}
+
+/// Input size (objects) from which a job goes to the background (the web's `WORKER_THRESHOLD`).
+pub const WORKER_THRESHOLD: usize = 2000;
+
+/// A run resolved against the host and ready to compute (the web's
+/// `RunJob`): the tool, its values, each features input as the ids it
+/// resolved to, the layers it writes to and the selection, all owned, so
+/// the computation can go to another thread ([`Runner::compute`]).
+#[derive(Clone)]
+pub struct Job {
+    pub tool: Tool,
+    /// Where it runs: here (as prepared), or in the background; the history records it.
+    pub target: Target,
+    values: Values,
+    silent: bool,
+    started: (u64, Instant),
+    inputs: BTreeMap<String, (Vec<Slot>, String)>,
+    layers: BTreeMap<String, TargetLayer>,
+    new_layers: BTreeMap<String, (String, NewLayerStyle)>,
+    selection: Vec<Slot>,
+    run: RunFn,
+}
+
+impl Job {
+    /// Objects the features inputs resolved to: the web's input size, from
+    /// which [`WORKER_THRESHOLD`] sends a job to the background.
+    pub fn size(&self) -> usize {
+        self.inputs.values().map(|(ids, _)| ids.len()).sum()
+    }
+}
+
+/// What preparing a run gave.
+pub enum Prepared {
+    /// Ready to compute.
+    Ready(Job),
+    /// It cannot start: invalid values, nothing to run on, nowhere to run here.
+    Done(Outcome),
 }
 
 /// Where a scope looked, as the refusal of an input whose objects are all on locked layers says it.
@@ -353,7 +391,9 @@ impl Runner {
     }
 
     /// Runs `tool` with `values` on the host's drawing. `silent`: no history
-    /// record (a model records itself once, not each step). Messages go to `log`.
+    /// record (a model records itself once, not each step). Messages go to
+    /// `log`. The three steps at once: [`Runner::prepare`], [`Runner::compute`]
+    /// on the host's drawing, [`Runner::finish`].
     pub fn run(
         &mut self,
         host: &mut dyn Host,
@@ -362,9 +402,41 @@ impl Runner {
         silent: bool,
         log: &mut Vec<LogLine>,
     ) -> Outcome {
+        match self.prepare(host, tool, values, silent, log) {
+            Prepared::Ready(job) => self.complete(host, job, log),
+            Prepared::Done(outcome) => outcome,
+        }
+    }
+
+    /// Computes a prepared job on the host's drawing and finishes it, here
+    /// and now: [`Runner::compute`], then [`Runner::finish`].
+    pub fn complete(&mut self, host: &mut dyn Host, job: Job, log: &mut Vec<LogLine>) -> Outcome {
+        let (result, canceled) = {
+            let mut feedback = Collect {
+                log: &mut *log,
+                canceled: self.canceled,
+            };
+            let result = Self::compute(&job, host.doc(), &mut feedback);
+            (result, feedback.canceled || self.canceled)
+        };
+        self.finish(host, job, result, canceled, log)
+    }
+
+    /// Validates the values and resolves what depends on the host (the
+    /// objects of each features input, the layers written to, the
+    /// selection) into a job; or how the run ended when it cannot start.
+    /// Notes on what resolving left out go to `log`.
+    pub fn prepare(
+        &mut self,
+        host: &dyn Scene,
+        tool: &Tool,
+        values: &Values,
+        silent: bool,
+        log: &mut Vec<LogLine>,
+    ) -> Prepared {
         let issues = self.validate(tool, values, host.doc());
         if !issues.is_empty() {
-            return Outcome::Invalid { issues };
+            return Prepared::Done(Outcome::Invalid { issues });
         }
         let started = (now_ms(), Instant::now());
         // Resolve what depends on the host: objects to ids, layers to a
@@ -400,7 +472,7 @@ impl Runner {
                         if locked > 0 {
                             entities.retain(|e| !is_locked(e));
                             if entities.is_empty() && !p.optional && !is_ids {
-                                return Outcome::Invalid {
+                                return Prepared::Done(Outcome::Invalid {
                                     issues: vec![Issue {
                                         param: Some(p.name.clone()),
                                         message: format!(
@@ -409,7 +481,7 @@ impl Runner {
                                             locked_where(&fv.scope)
                                         ),
                                     }],
-                                };
+                                });
                             }
                             notes.push(format!(
                                 "“{}”: {locked} nesne kilitli katmanda olduğu için işleme alınmadı.",
@@ -419,12 +491,12 @@ impl Runner {
                         // Running on nothing is a mistake worth stopping (usually:
                         // nothing selected); an empty output passed along a model is not.
                         if entities.is_empty() && !p.optional && !is_ids {
-                            return Outcome::Invalid {
+                            return Prepared::Done(Outcome::Invalid {
                                 issues: vec![Issue {
                                     param: Some(p.name.clone()),
                                     message: empty_input_message(&p.label, &fv.scope),
                                 }],
-                            };
+                            });
                         }
                         inputs.insert(
                             p.name.clone(),
@@ -467,97 +539,153 @@ impl Runner {
                 Vec::new(),
                 None,
             );
-            return Outcome::Stopped {
+            return Prepared::Done(Outcome::Stopped {
                 status: Status::Error,
                 message,
                 record,
-            };
+            });
         };
-        let target = Some(Target::Client);
         self.canceled = false;
         for note in notes {
             log.push(LogLine::warn(note));
         }
-        let (result, canceled) = {
-            let doc = host.doc();
-            let units = Defaults::of(doc);
-            let selection = host.selected();
-            let mut resolved = Resolved::new(values.clone());
-            let mut objects: Vec<&Entity> = Vec::new();
-            let mut seen = HashSet::new();
-            for p in &tool.parameters {
-                match &p.kind {
-                    ParamKind::Features { .. } => {
-                        if let Some((ids, description)) = inputs.get(&p.name) {
-                            let entities: Vec<&Entity> =
-                                ids.iter().filter_map(|id| doc.get(*id)).collect();
-                            objects.extend(entities.iter().filter(|e| seen.insert(e.base().id)));
-                            resolved.features.insert(
-                                p.name.clone(),
-                                FeatureSet {
-                                    entities,
-                                    description: description.clone(),
-                                },
-                            );
-                        }
+        Prepared::Ready(Job {
+            tool: tool.clone(),
+            target: Target::Client,
+            values: values.clone(),
+            silent,
+            started,
+            inputs,
+            layers,
+            new_layers,
+            selection: host.selected(),
+            run,
+        })
+    }
+
+    /// The tool's work (the web's executors run this part): what it would
+    /// change, computed on `doc`, the drawing the job was prepared on or a
+    /// copy of it, on any thread. It reads and never writes; the runner
+    /// applies the result on the host ([`Runner::finish`]).
+    pub fn compute(job: &Job, doc: &Document, feedback: &mut dyn Feedback) -> RunResult {
+        let units = Defaults::of(doc);
+        let mut resolved = Resolved::new(job.values.clone());
+        let mut objects: Vec<&Entity> = Vec::new();
+        let mut seen = HashSet::new();
+        for p in &job.tool.parameters {
+            match &p.kind {
+                ParamKind::Features { .. } => {
+                    if let Some((ids, description)) = job.inputs.get(&p.name) {
+                        let entities: Vec<&Entity> =
+                            ids.iter().filter_map(|id| doc.get(*id)).collect();
+                        objects.extend(entities.iter().filter(|e| seen.insert(e.base().id)));
+                        resolved.features.insert(
+                            p.name.clone(),
+                            FeatureSet {
+                                entities,
+                                description: description.clone(),
+                            },
+                        );
                     }
-                    ParamKind::Expression { .. } => {
-                        let src =
-                            js_trim(values.get(&p.name).and_then(Value::as_str).unwrap_or(""));
-                        if let Ok(expr) = kentos_style_core::expr::compile(src)
-                            && !src.is_empty()
-                        {
-                            resolved.exprs.insert(p.name.clone(), expr);
-                        }
-                    }
-                    ParamKind::Field { .. } => {
-                        if let Some(s) = values.get(&p.name).and_then(Value::as_str) {
-                            resolved.values.insert(p.name.clone(), json!(js_trim(s)));
-                        }
-                    }
-                    _ => {}
                 }
+                ParamKind::Expression { .. } => {
+                    let src = js_trim(
+                        job.values
+                            .get(&p.name)
+                            .and_then(Value::as_str)
+                            .unwrap_or(""),
+                    );
+                    if let Ok(expr) = kentos_style_core::expr::compile(src)
+                        && !src.is_empty()
+                    {
+                        resolved.exprs.insert(p.name.clone(), expr);
+                    }
+                }
+                ParamKind::Field { .. } => {
+                    if let Some(s) = job.values.get(&p.name).and_then(Value::as_str) {
+                        resolved.values.insert(p.name.clone(), json!(js_trim(s)));
+                    }
+                }
+                _ => {}
             }
-            resolved.layers = layers;
-            let geometry = RunGeometry::of(objects);
-            let ctx = RunContext {
-                doc,
-                units: &units,
-                selection: &selection,
-                geometry: &geometry,
-                layer_names: doc
-                    .layers()
-                    .leaves()
-                    .into_iter()
-                    .map(|l| (l.id.clone(), l.name.clone()))
-                    .collect(),
-            };
-            let mut feedback = Collect {
-                log: &mut *log,
-                canceled: self.canceled,
-            };
-            let result = run(&resolved, &ctx, &mut feedback);
-            (result, feedback.canceled || self.canceled)
-        };
-        if canceled {
-            let message = "İşlem iptal edildi; çizim değişmedi.".to_owned();
-            let record = self.record(
-                silent,
-                tool,
-                values,
-                started,
-                Status::Canceled,
-                message.clone(),
-                Vec::new(),
-                Vec::new(),
-                target,
-            );
-            return Outcome::Stopped {
-                status: Status::Canceled,
-                message,
-                record,
-            };
         }
+        resolved.layers = job.layers.clone();
+        let geometry = RunGeometry::of(objects);
+        let ctx = RunContext {
+            doc,
+            units: &units,
+            selection: &job.selection,
+            geometry: &geometry,
+            layer_names: doc
+                .layers()
+                .leaves()
+                .into_iter()
+                .map(|l| (l.id.clone(), l.name.clone()))
+                .collect(),
+        };
+        (job.run)(&resolved, &ctx, feedback)
+    }
+
+    /// Ends a job that was stopped (Durdur), or whose drawing is gone:
+    /// nothing changes; the run is recorded as canceled.
+    pub fn stop(&mut self, job: Job) -> Outcome {
+        let message = "İşlem iptal edildi; çizim değişmedi.".to_owned();
+        self.end(job, Status::Canceled, message)
+    }
+
+    /// Ends a job whose computation broke off (`why`): nothing changes, the
+    /// run is recorded as an error in the web's words.
+    pub fn failed(&mut self, job: Job, why: &str) -> Outcome {
+        let message = format!("“{}” çalışırken hata: {why}", job.tool.label);
+        self.end(job, Status::Error, message)
+    }
+
+    /// A job ended without changing anything.
+    fn end(&mut self, job: Job, status: Status, message: String) -> Outcome {
+        let record = self.record(
+            job.silent,
+            &job.tool,
+            &job.values,
+            job.started,
+            status,
+            message.clone(),
+            Vec::new(),
+            Vec::new(),
+            Some(job.target),
+        );
+        Outcome::Stopped {
+            status,
+            message,
+            record,
+        }
+    }
+
+    /// Ends a job with what [`Runner::compute`] gave: a stopped run changes
+    /// nothing; otherwise the change set is applied to the host's drawing in
+    /// one undo step (objects gone or on locked layers are left out and
+    /// counted, as on the web), the selection set, the run recorded.
+    pub fn finish(
+        &mut self,
+        host: &mut dyn Host,
+        job: Job,
+        result: RunResult,
+        canceled: bool,
+        log: &mut Vec<LogLine>,
+    ) -> Outcome {
+        if canceled {
+            return self.stop(job);
+        }
+        let Job {
+            tool,
+            target,
+            values,
+            silent,
+            started,
+            new_layers,
+            ..
+        } = job;
+        let (tool, values) = (&tool, &values);
+        let target = Some(target);
         let added = match apply(host.doc_mut(), tool, &result, &new_layers, log) {
             Ok(added) => added,
             Err(why) => {

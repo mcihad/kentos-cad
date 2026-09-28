@@ -142,6 +142,29 @@ impl Document {
         self.store.count(layer)
     }
 
+    /// What the drawing holds now, without its undo history, for reading
+    /// elsewhere (the desktop computes a large processing job on another
+    /// thread). The objects are shared, not copied; the copy's revision and
+    /// generation are the drawing's.
+    pub fn reading_copy(&self) -> Document {
+        Document {
+            name: self.name.clone(),
+            settings: self.settings.clone(),
+            origin: self.origin,
+            home_view: self.home_view,
+            styles: self.styles.clone(),
+            project_id: self.project_id,
+            migrated_from: self.migrated_from.clone(),
+            layers: self.layers.clone(),
+            store: self.store.clone(),
+            next_slot: self.next_slot,
+            history: History::default(),
+            edits: self.edits,
+            generation: self.generation,
+            dirty: self.dirty,
+        }
+    }
+
     // ── Saving ───────────────────────────────────────────────────────────
 
     /// The revision of what a file would hold: it changes with every edit,

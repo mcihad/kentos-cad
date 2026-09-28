@@ -13,7 +13,8 @@ use kentos_geometry_core::geometry::Bounds;
 use kentos_processing::model_runner::{model_as_tool, run_model};
 use kentos_processing::parameters::default_values;
 use kentos_processing::{
-    Defaults, Host, Level, LogLine, Outcome, Registry, Runner, Scene, Tool, Values,
+    Defaults, Feedback, Host, Level, LogLine, Outcome, Prepared, Registry, Runner, Scene, Tool,
+    Values,
 };
 use serde_json::{Map, Value, json};
 
@@ -163,7 +164,34 @@ fn with_values(tool: &Tool, doc: &Document, over: Option<&Value>) -> Values {
     values
 }
 
-fn play(c: &Value, registry: &Registry) -> Seen {
+/// A tool's messages when it is computed apart from its host (the desktop's background runs).
+struct Apart<'a> {
+    log: &'a mut Vec<LogLine>,
+}
+
+impl Feedback for Apart<'_> {
+    fn progress(&mut self, _fraction: f64, _label: &str) {}
+
+    fn info(&mut self, message: String) {
+        self.log.push(LogLine {
+            level: Level::Info,
+            text: message,
+        });
+    }
+
+    fn warn(&mut self, message: String) {
+        self.log.push(LogLine::warn(message));
+    }
+
+    fn canceled(&self) -> bool {
+        false
+    }
+}
+
+/// Plays a case. `on_copy`: a tool is prepared on the host, computed on a
+/// copy of its drawing (as the desktop computes on another thread) and
+/// finished on the host.
+fn play(c: &Value, registry: &Registry, on_copy: bool) -> Seen {
     let doc = load(c["document"].as_str().expect("a document"));
     let view = c.get("view").and_then(Value::as_array).map(|v| {
         let n = |i: usize| v[i].as_f64().expect("a number");
@@ -188,7 +216,18 @@ fn play(c: &Value, registry: &Registry) -> Seen {
             .tool(id)
             .unwrap_or_else(|| panic!("araç yok: {id}"));
         let values = with_values(&tool, &host.doc, c.get("values"));
-        runner.run(&mut host, &tool, &values, false, &mut log)
+        if on_copy {
+            match runner.prepare(&host, &tool, &values, false, &mut log) {
+                Prepared::Ready(job) => {
+                    let copy = host.doc.clone();
+                    let result = Runner::compute(&job, &copy, &mut Apart { log: &mut log });
+                    runner.finish(&mut host, job, result, false, &mut log)
+                }
+                Prepared::Done(outcome) => outcome,
+            }
+        } else {
+            runner.run(&mut host, &tool, &values, false, &mut log)
+        }
     } else {
         let id = c["run"]["model"].as_str().expect("a tool or a model");
         let model = registry
@@ -476,6 +515,31 @@ fn the_defaults_the_tools_take_from_the_drawing() {
     }
 }
 
+/// The desktop computes a large job on another thread, on a copy of the
+/// drawing, and applies the result on the drawing it shows: every tool case
+/// ends the same that way.
+#[test]
+fn every_case_does_the_same_computed_on_a_copy_of_the_drawing() {
+    fn sent<T: Send>() {}
+    sent::<kentos_processing::Job>();
+    sent::<Document>();
+    sent::<kentos_processing::RunResult>();
+    let file = cases();
+    let tol = file["tolerance"].as_f64().expect("a tolerance");
+    let registry = Registry::builtin();
+    let mut problems = Vec::new();
+    let mut tools = 0;
+    for c in file["cases"].as_array().expect("cases") {
+        if c["run"].get("tool").is_none() {
+            continue;
+        }
+        tools += 1;
+        problems.extend(check(c, play(c, &registry, true), tol));
+    }
+    assert!(tools > 10, "{tools} tool cases");
+    assert!(problems.is_empty(), "\n{}", problems.join("\n"));
+}
+
 #[test]
 fn every_case_does_what_it_says() {
     let file = cases();
@@ -484,7 +548,7 @@ fn every_case_does_what_it_says() {
     let mut problems = Vec::new();
     let mut report = Vec::new();
     for c in file["cases"].as_array().expect("cases") {
-        let found = check(c, play(c, &registry), tol);
+        let found = check(c, play(c, &registry, false), tol);
         report.push(format!(
             "{} {}: {}",
             if found.is_empty() { "✓" } else { "✗" },

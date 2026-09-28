@@ -50,7 +50,9 @@ pub use kentos_geometry_core::store::Store;
 pub use model::{Model, ModelInput, ModelStep, ValueSource};
 pub use parameters::Issue;
 pub use registry::Registry;
-pub use runner::{Level, LogLine, Outcome, RunRecord, Runner, Status};
+pub use runner::{
+    Job, Level, LogLine, Outcome, Prepared, RunRecord, Runner, Status, WORKER_THRESHOLD,
+};
 pub use types::{
     ChangeSet, DefaultValue, Defaults, EnumOption, FeatureSet, Feedback, OutputDef, OutputKind,
     ParamDef, ParamKind, Patch, Resolved, Returns, RunContext, RunResult, ScopeKind, ShownWhen,
