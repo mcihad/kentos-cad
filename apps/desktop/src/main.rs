@@ -68,6 +68,7 @@ mod selecting;
 mod settings;
 mod settings_sections;
 mod settings_view;
+mod shortcuts;
 mod snapshot;
 mod start;
 mod style;

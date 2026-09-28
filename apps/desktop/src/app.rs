@@ -193,6 +193,8 @@ pub enum Message {
     },
     /// A command put on the quick access bar (true) or taken off (docs/adr/0117).
     QuickAccess(String, bool),
+    /// What Fare ve klavye kısayolları searches for (shortcuts.rs).
+    ShortcutsSearch(String),
     /// A pointer event taken so nothing under it reacts (a right click on
     /// Komut ara keeps the ribbon's menu away).
     Swallowed,
@@ -393,6 +395,8 @@ pub struct App {
     /// Uygulama ayarları under Proje ayarları, or the other way (the web's
     /// stacked dialogs; settings_sections.rs, project/settings.rs).
     pub dialog_under: Option<Dialog>,
+    /// What Fare ve klavye kısayolları searches for (shortcuts.rs).
+    pub shortcuts_query: String,
     /// The drawing area's camera and scene cache.
     pub viewport: Viewport,
     /// The running tool and the last one started (kentos-interaction, docs/adr/0021).
@@ -578,6 +582,7 @@ impl App {
             bottom_log: None,
             dialog: None,
             dialog_under: None,
+            shortcuts_query: String::new(),
             viewport: Viewport::new(),
             session: Session::new(),
             spatial: Spatial::new(),
@@ -812,6 +817,7 @@ impl App {
                 label,
             } => return self.split_chosen(key, id, option, label),
             Message::QuickAccess(id, on) => self.quick_access_changed(&id, on),
+            Message::ShortcutsSearch(text) => self.shortcuts_query = text,
             Message::Swallowed => {}
             Message::KeyTipsAway => {
                 self.key_tips = None;
@@ -1262,7 +1268,7 @@ impl App {
             "view.zoomSelection" => self.zoom_selection(),
             "commandline.focus" => return operation::focus(COMMAND_INPUT),
             "help.about" => self.dialog = Some(Dialog::About),
-            "help.shortcuts" => self.dialog = Some(Dialog::Shortcuts),
+            "help.shortcuts" => return self.open_shortcuts(),
             // An edit, not an undo step (web: LayerStore.showAll).
             "layer.showAll" => match &mut self.document {
                 Some(doc) => doc.model.show_all_layers(),

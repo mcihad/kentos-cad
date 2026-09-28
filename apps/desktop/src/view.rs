@@ -12,7 +12,7 @@
 //! disabled button) and its tooltip says why; typed or keyed, it says so in
 //! the command line.
 
-use iced::widget::{button, column, container, row, scrollable, stack, text};
+use iced::widget::{button, column, container, row, stack, text};
 use iced::{Color, Element, Fill};
 
 use kentos_contracts::{LayerNode, LayerNodeType};
@@ -29,8 +29,7 @@ use kentos_ui::widget::status_bar::{Readout, StatusBar};
 use kentos_ui::widget::table::Column as TreeColumn;
 use kentos_ui::widget::tree_view::{self, Node, Toggle, TreeView};
 use kentos_ui::widget::{
-    CommandLine, Confirm, Dialog, DockSpace, EmptyState, Menu, Pane, ShortcutList, Tip, overlay,
-    swatch,
+    CommandLine, Confirm, Dialog, DockSpace, EmptyState, Menu, Pane, Tip, overlay, swatch,
 };
 
 use crate::app::{App, COMMAND_INPUT, Dialog as Asking, Message, Panel};
@@ -993,26 +992,8 @@ impl App {
                     Message::DialogClosed,
                 )
             }
-            Asking::Shortcuts => {
-                let list = catalog()
-                    .commands()
-                    .iter()
-                    .filter(|c| !c.shortcuts.is_empty())
-                    .fold(ShortcutList::new(), |list, c| {
-                        let place = if c.standing == Standing::Ported { "" } else { " (web)" };
-                        list.item(c.shortcuts.join(", "), format!("{}{place}", c.title))
-                    });
-                overlay::modal(
-                    Dialog::new("Klavye kısayolları")
-                        .hint("F1")
-                        .push(label::muted("Masaüstünde taşınan komutların kısayolları, bütün komutların Ctrl, Alt ve F tuşlu kısayolları çalışır; “(web)” olanlar henüz yalnız web'de."))
-                        // The list spans the window's width: long command names are not cut.
-                        .push(scrollable(list).width(Fill).height(420))
-                        .action(close())
-                        .width(560.0),
-                    Message::DialogClosed,
-                )
-            }
+            // The web's “Fare ve klavye kısayolları” (shortcuts.rs).
+            Asking::Shortcuts => self.shortcuts_view(),
             Asking::Unsaved(then) => {
                 // What would be lost, with the count (cloud/leaving.rs).
                 let q = self.unsaved_question(then);
