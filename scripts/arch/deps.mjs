@@ -56,6 +56,10 @@ const GROUPS = [
   // A drawing's project model (the coordinate system registry, a new project's content): pure
   // like the document, which it builds on. Listed before `native`.
   { name: 'project', path: 'crates/native/project/', targets: [HOST], uses: ['shared', 'domain'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  // The headless command host (docs/adr/0130): a drawing without a window, its product commands
+  // by name, the catalog, queries and files; what the Python SDK and the MCP server stand on.
+  // Pure like the commands it runs. Listed before `native`.
+  { name: 'headless', path: 'crates/native/headless/', targets: [HOST], uses: ['shared', 'domain', 'application', 'project'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   { name: 'native', path: 'crates/native/', targets: [HOST], uses: ['shared', 'domain', 'native'], forbid: ['sqlx*', 'axum*', ...BROWSER, ...DESKTOP, 'pyo3*'] },
   { name: 'server', path: 'crates/server/', targets: [HOST], uses: ['shared', 'domain', 'native', 'server'], forbid: [...BROWSER, ...DESKTOP] },
   { name: 'api', path: 'apps/api/', targets: [HOST], uses: ['shared', 'domain', 'native', 'server'], forbid: [...BROWSER, ...DESKTOP] },

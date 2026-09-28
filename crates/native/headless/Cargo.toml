@@ -1,0 +1,22 @@
+[package]
+name = "kentos-headless"
+description = "The headless command host: a drawing without a window, its product commands by name with JSON in and out, the catalog, queries, measures and .kcad files; what the Python SDK (kentos.cad) and the MCP server stand on"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Pure Rust, native only (scripts/arch/deps.mjs, group `headless`): no UI, GPU, database,
+# async runtime or network. It runs the desktop's own command handlers
+# (kentos-native-application) over the native document, so a script, an agent and the
+# window write the same way (TODOS.md §14–15, docs/adr/0130).
+[dependencies]
+# The catalog with its JSON Schemas (the `schema` feature): discovery for Python and AI.
+kentos-contracts = { path = "../../shared/contracts", default-features = false, features = ["schema"] }
+kentos-domain = { path = "../domain" }
+kentos-native-application = { path = "../application" }
+kentos-project = { path = "../project" }
+kentos-kcad = { path = "../../shared/kcad" }
+kentos-geometry-core = { path = "../../shared/geometry-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }

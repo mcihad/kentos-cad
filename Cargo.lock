@@ -2547,6 +2547,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "kentos-headless"
+version = "0.1.0"
+dependencies = [
+ "kentos-contracts",
+ "kentos-domain",
+ "kentos-geometry-core",
+ "kentos-kcad",
+ "kentos-native-application",
+ "kentos-project",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "kentos-interaction"
 version = "0.1.0"
 dependencies = [
