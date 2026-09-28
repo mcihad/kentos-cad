@@ -10,7 +10,8 @@
 //!   cookie with `x-kentos-client: desktop`. Any custom header stops a
 //!   cross-site form, so the rule is the same; the name only says who asked.
 //! - Python SDK (`kentos.cad.Connection`, docs/adr/0131): the desktop's way,
-//!   with `x-kentos-client: python`.
+//!   with `x-kentos-client: python`; the MCP server (`kentos-mcp`,
+//!   docs/adr/0134) with `x-kentos-client: mcp`.
 //! - API clients: `Authorization: Bearer <OpenID access token>`.
 
 use axum::Json;
@@ -27,8 +28,8 @@ use super::error::{Body, Failure, request_id};
 
 pub const SESSION_COOKIE: &str = "kentos_session";
 pub const CLIENT_HEADER: &str = "x-kentos-client";
-/// The programs that send [`CLIENT_HEADER`]: the web app, the desktop app and the Python SDK.
-pub const CLIENTS: [&str; 3] = ["web", "desktop", "python"];
+/// The programs that send [`CLIENT_HEADER`]: the web app, the desktop app, the Python SDK and the MCP server.
+pub const CLIENTS: [&str; 4] = ["web", "desktop", "python", "mcp"];
 
 pub fn cookie(headers: &HeaderMap, name: &str) -> Option<String> {
     headers
@@ -313,7 +314,7 @@ mod client_tests {
         let mut h = HeaderMap::new();
         assert!(check_client_header(&Method::POST, &h).is_err());
         assert!(check_client_header(&Method::GET, &h).is_ok());
-        for c in ["web", "desktop", "python"] {
+        for c in ["web", "desktop", "python", "mcp"] {
             h.insert(CLIENT_HEADER, HeaderValue::from_static(c));
             assert!(check_client_header(&Method::POST, &h).is_ok(), "{c}");
         }

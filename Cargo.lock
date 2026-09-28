@@ -2585,6 +2585,7 @@ dependencies = [
 name = "kentos-mcp"
 version = "0.1.0"
 dependencies = [
+ "kentos-cloud",
  "kentos-contracts",
  "kentos-domain",
  "kentos-headless",

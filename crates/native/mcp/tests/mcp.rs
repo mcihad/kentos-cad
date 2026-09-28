@@ -74,9 +74,29 @@ fn a_modern_client_discovers_lists_and_draws_a_measured_polygon_it_saves_and_rea
     ] {
         assert!(names.contains(&name), "{name}");
     }
+    for name in [
+        "project.list",
+        "project.open",
+        "project.share",
+        "project.create",
+        "project.rename",
+    ] {
+        assert!(names.contains(&name), "{name}");
+    }
+    let share = tools
+        .iter()
+        .find(|t| t["name"] == "project.share")
+        .expect("the command");
+    assert_eq!(share["inputSchema"]["required"][0], "tenant");
+    assert_eq!(share["inputSchema"]["required"][1], "project");
+    assert_eq!(share["annotations"]["openWorldHint"], true);
+    let create = tools
+        .iter()
+        .find(|t| t["name"] == "project.create")
+        .expect("the command");
     assert!(
-        !names.iter().any(|n| n.starts_with("project.")),
-        "the server's commands are not here"
+        create["inputSchema"]["properties"].get("project").is_none(),
+        "a new project has none yet"
     );
     let polygon = tools
         .iter()
@@ -406,4 +426,28 @@ fn the_process_speaks_json_lines_on_stdio() {
     assert_eq!(broken["error"]["code"], -32600);
     child.kill().expect("stopped");
     let _ = child.wait();
+}
+
+#[test]
+fn the_servers_tools_need_the_account_the_environment_names() {
+    if std::env::var_os("KENTOS_URL").is_some() {
+        return; // A developer's own server is named: this test is about none.
+    }
+    let mut server = Server::new();
+    let listed = call(&mut server, "project.list", json!({}));
+    assert_eq!(listed["isError"], true);
+    assert_eq!(
+        listed["structuredContent"]["error"]["code"],
+        "not_configured"
+    );
+    let shared = call(
+        &mut server,
+        "project.share",
+        json!({ "tenant": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f", "project": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+                "userId": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f", "role": "viewer" }),
+    );
+    assert_eq!(
+        shared["structuredContent"]["error"]["code"],
+        "not_configured"
+    );
 }

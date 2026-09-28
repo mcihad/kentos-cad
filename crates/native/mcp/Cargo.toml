@@ -6,9 +6,9 @@ edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
-# Pure Rust over stdin and stdout (scripts/arch/deps.mjs, group `mcp`): no async runtime,
-# network, UI or database. JSON-RPC and MCP are written here from the specification
-# (docs/adr/0133); no MCP library.
+# Rust over stdin and stdout (scripts/arch/deps.mjs, group `mcp`): no UI or database. The
+# drawing tools are pure; the server's go through the desktop's cloud client (its own runtime,
+# docs/adr/0134). JSON-RPC and MCP are written here from the specification (docs/adr/0133).
 [[bin]]
 name = "kentos-mcp"
 path = "src/main.rs"
@@ -17,4 +17,6 @@ path = "src/main.rs"
 kentos-contracts = { path = "../../shared/contracts", default-features = false, features = ["schema"] }
 kentos-domain = { path = "../domain" }
 kentos-headless = { path = "../headless" }
+# The server's commands (docs/adr/0134): the desktop's cloud client, on its own runtime.
+kentos-cloud = { path = "../cloud" }
 serde_json = { workspace = true }

@@ -11,12 +11,15 @@
 //! - A command's refusal is a tool result with `isError`, its code and the
 //!   field it is about, so the model can correct itself; an unknown tool or
 //!   a malformed request is a JSON-RPC error.
+//! - The server's commands (`project.*`) go to the KentOS server with the
+//!   account the environment names (`cloud`, docs/adr/0134).
 #![forbid(unsafe_code)]
 #![cfg_attr(
     not(test),
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+mod cloud;
 mod server;
 mod tools;
 

@@ -50,6 +50,8 @@ impl Fault {
 /// The drawings open in this process, by handle; the handshake a legacy client made.
 pub struct Server {
     pub(crate) drawings: BTreeMap<String, Session>,
+    /// The KentOS server's account, from the environment (cloud.rs).
+    pub(crate) account: crate::cloud::Account,
     legacy: Option<String>,
     pub(crate) catalog: Value,
     tools: Vec<Value>,
@@ -67,6 +69,7 @@ impl Server {
         let tools = tools::list(&catalog);
         Self {
             drawings: BTreeMap::new(),
+            account: crate::cloud::Account::default(),
             legacy: None,
             catalog,
             tools,

@@ -65,6 +65,8 @@ struct Inner {
     base: String,
     http: reqwest::Client,
     session: RwLock<Option<Token>>,
+    /// The program the requests say they come from (the server's `x-kentos-client`).
+    client: &'static str,
 }
 
 impl fmt::Debug for Inner {
@@ -203,7 +205,7 @@ impl Inner {
             .request(method, url)
             .timeout(timeout)
             .header(header::ACCEPT, "application/json")
-            .header(CLIENT_HEADER, CLIENT);
+            .header(CLIENT_HEADER, self.client);
         match self.token() {
             Some(Token(t)) => b.header(header::COOKIE, format!("{SESSION_COOKIE}={t}")),
             None => b,
@@ -384,6 +386,12 @@ impl Cloud {
     /// A connection to the server at `server` (`https://kentos.kurum.gov.tr`,
     /// `http://127.0.0.1:8787`), not signed in. Nothing is sent yet.
     pub fn new(server: &str) -> Result<Self, ApiFailure> {
+        Self::for_program(server, CLIENT)
+    }
+
+    /// The same for another program than the desktop, named in every request
+    /// (`mcp`: the MCP server, docs/adr/0134; the server knows its programs).
+    pub fn for_program(server: &str, client: &'static str) -> Result<Self, ApiFailure> {
         let base = server_address(server)?;
         let http = reqwest::Client::builder()
             .connect_timeout(Duration::from_secs(10))
@@ -397,6 +405,7 @@ impl Cloud {
                 base,
                 http,
                 session: RwLock::new(None),
+                client,
             }),
         })
     }
@@ -467,7 +476,7 @@ impl Cloud {
                 .post(url)
                 .timeout(TIMEOUT)
                 .header(header::ACCEPT, "application/json")
-                .header(CLIENT_HEADER, CLIENT);
+                .header(CLIENT_HEADER, inner.client);
             let res = Inner::json_body(b, &body)?
                 .send()
                 .await
@@ -503,7 +512,7 @@ impl Cloud {
                 .http
                 .post(inner.url("/v1/auth/logout")?)
                 .timeout(TIMEOUT)
-                .header(CLIENT_HEADER, CLIENT)
+                .header(CLIENT_HEADER, inner.client)
                 .header(header::COOKIE, format!("{SESSION_COOKIE}={t}"));
             let res = b
                 .send()
@@ -676,6 +685,21 @@ impl Cloud {
             let project = Uuid::parse_str(&envelope.project_id)
                 .map_err(|_| ApiFailure::local("Komutun proje kimliği geçersiz."))?;
             let url = inner.project_url(tenant, project, "/commands")?;
+            let b = Inner::json_body(inner.request(Method::POST, url, TIMEOUT), &envelope)?;
+            inner.json(b, TIMEOUT).await
+        })
+    }
+
+    /// A product command with no project yet (`project.create`, the envelope's
+    /// project empty) in the envelope's organisation (`POST /v1/tenants/{tenant}/commands`).
+    pub fn tenant_command<O: DeserializeOwned + Send + 'static>(
+        &self,
+        envelope: CommandEnvelope,
+    ) -> impl Future<Output = Result<O, ApiFailure>> + Send + 'static {
+        self.call(move |inner| async move {
+            let tenant = Uuid::parse_str(&envelope.tenant_id)
+                .map_err(|_| ApiFailure::local("Komutun kurum kimliği geçersiz."))?;
+            let url = inner.url(&format!("/v1/tenants/{tenant}/commands"))?;
             let b = Inner::json_body(inner.request(Method::POST, url, TIMEOUT), &envelope)?;
             inner.json(b, TIMEOUT).await
         })

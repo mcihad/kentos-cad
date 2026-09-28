@@ -10,6 +10,7 @@ use kentos_domain::Uuid;
 use kentos_headless::{HeadlessError, NewDrawing, Op, Session};
 use serde_json::{Value, json};
 
+use crate::cloud;
 use crate::server::{Fault, Server};
 
 /// The most drawings open at once: another is refused until one is closed.
@@ -36,6 +37,16 @@ fn annotations(read_only: bool, destructive: bool) -> Value {
         "openWorldHint": false,
     })
 }
+
+/// A tool that reaches the KentOS server.
+fn remote(read_only: bool, destructive: bool) -> Value {
+    let mut notes = annotations(read_only, destructive);
+    notes["openWorldHint"] = json!(true);
+    notes
+}
+
+const TENANT: &str = "Projenin kurumu ya da kişisel alanı (UUID; project.list'in tenantId'si).";
+const PROJECT: &str = "Projenin kimliği (UUID; project.list'in id'si).";
 
 fn tool(name: &str, title: &str, description: &str, input: Value, notes: Value) -> Value {
     json!({ "name": name, "title": title, "description": description, "inputSchema": input, "annotations": notes })
@@ -167,15 +178,115 @@ pub fn list(catalog: &Value) -> Vec<Value> {
             annotations(false, false),
         ),
     ];
-    for c in catalog["commands"].as_array().into_iter().flatten() {
-        let local = c["hosts"]
+    let commands: Vec<&Value> = catalog["commands"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .collect();
+    let local = |c: &Value| {
+        c["hosts"]
             .as_array()
-            .is_some_and(|h| h.iter().any(|x| x == "desktop"));
-        if local {
-            tools.push(command_tool(c));
-        }
+            .is_some_and(|h| h.iter().any(|x| x == "desktop"))
+    };
+    for c in commands.iter().filter(|c| local(c)) {
+        tools.push(command_tool(c));
+    }
+    tools.push(tool(
+        "project.list",
+        "Bulut projeleri",
+        "Hesabın proje kataloğundan bir sayfa: kimlik, kurum (tenantId), ad, rol, durum … \
+         view: mine, organization (tenant ile), shared, recent, favorites, archived, trash. \
+         Sunucuya ortamdaki hesapla bağlanır.",
+        object(
+            json!({
+                "view": { "type": "string", "enum": ["mine", "organization", "shared", "recent", "favorites", "archived", "trash"], "default": "mine" },
+                "q": { "type": "string", "description": "Adda, açıklamada ya da etiketlerde geçen sözcükler." },
+                "tenant": { "type": "string", "description": TENANT },
+                "limit": { "type": "integer", "minimum": 1, "maximum": 200 },
+                "after": { "type": "string", "description": "Önceki sayfanın next'i." }
+            }),
+            &[],
+        ),
+        remote(true, false),
+    ));
+    tools.push(tool(
+        "project.open",
+        "Bulut projesini aç",
+        "Bir veritabanı projesinin bu anki görüntüsünü (.kcad) indirir ve yerel bir çizim olarak açar; \
+         tutamacını verir. Yerel kopyadır: değişiklikleri buluta gitmez, buluta project.changes yazar.",
+        object(
+            json!({
+                "tenant": { "type": "string", "description": TENANT },
+                "project": { "type": "string", "description": PROJECT }
+            }),
+            &["tenant", "project"],
+        ),
+        remote(true, false),
+    ));
+    for c in commands.iter().filter(|c| !local(c)) {
+        tools.push(server_tool(c));
     }
     tools
+}
+
+/// A server command as a tool: its input schema with the project it acts on,
+/// the versions it rests on and its idempotency key.
+fn server_tool(c: &Value) -> Value {
+    let id = c["id"].as_str().unwrap_or_default();
+    let project_scope = c["requires"]
+        .as_array()
+        .is_some_and(|r| r.iter().any(|x| x == "cloudProject"));
+    let mut schema = c["input"].clone();
+    if let Some(fields) = schema.as_object_mut() {
+        fields.remove("title");
+    }
+    if !schema["properties"].is_object() {
+        schema["properties"] = json!({});
+    }
+    schema["properties"]["tenant"] = json!({ "type": "string", "description": TENANT });
+    let mut own = vec![json!("tenant")];
+    if project_scope {
+        schema["properties"]["project"] = json!({ "type": "string", "description": PROJECT });
+        own.push(json!("project"));
+    }
+    schema["properties"]["expectedVersions"] = json!({
+        "type": "object",
+        "additionalProperties": { "type": "string" },
+        "description": "Değişikliğin dayandığı sürümler: @project (katalog), @file (dosya revizyonu), nesne kimlikleri."
+    });
+    schema["properties"]["idempotencyKey"] = json!({
+        "type": "string",
+        "description": "Aynı anahtarla yeniden gönderilen istek aynı sonucu alır, ikinci kez yazılmaz."
+    });
+    match schema["required"].as_array_mut() {
+        Some(required) => {
+            for (i, name) in own.into_iter().enumerate() {
+                required.insert(i, name);
+            }
+        }
+        None => schema["required"] = json!(own),
+    }
+    let destructive = matches!(
+        id,
+        "project.purge"
+            | "project.trash"
+            | "project.access.revoke"
+            | "project.invitation.revoke"
+            | "project.checkpoint.delete"
+            | "project.changes"
+    );
+    let description = format!(
+        "{}\n\nKentOS sunucusunda, ortamdaki hesabın yetkisiyle çalışır; yetkiyi sunucu denetler. \
+         Sonuç komutun çıktısıdır; sunucunun reddi status, code, message ve path ile gelir.",
+        c["summary"].as_str().unwrap_or_default()
+    );
+    json!({
+        "name": id,
+        "title": c["title"],
+        "description": description,
+        "inputSchema": schema,
+        "annotations": remote(false, destructive),
+    })
 }
 
 /// A catalog command as a tool: its input schema with `drawing` and `op`.
@@ -431,6 +542,58 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
                 serde_json::to_value(&m).unwrap_or(Value::Null),
                 false,
             ))
+        }
+        "project.list" => server
+            .account
+            .projects(args)
+            .map(|page| answer(page, false))
+            .map_err(|f| cloud::refusal(&f)),
+        "project.open" => {
+            let (tenant, project) = (
+                text(args, "tenant").ok_or_else(|| refused("invalid_input", "tenant gerekli."))?,
+                text(args, "project")
+                    .ok_or_else(|| refused("invalid_input", "project gerekli."))?,
+            );
+            let (bytes, revision) = server
+                .account
+                .snapshot(tenant, project)
+                .map_err(|f| cloud::refusal(&f))?;
+            let session = Session::from_bytes(&bytes).map_err(host)?;
+            let mut opened = opened(server, session)?;
+            opened["structuredContent"]["projectRevision"] = json!(revision);
+            opened["content"][0]["text"] =
+                json!(serde_json::to_string(&opened["structuredContent"]).unwrap_or_default());
+            Ok(opened)
+        }
+        remote if remote.starts_with("project.") => {
+            let Some(c) = server.catalog["commands"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .find(|c| c["id"] == remote)
+            else {
+                return Err(refused(
+                    "unknown_command",
+                    format!("{remote} katalogda yok."),
+                ));
+            };
+            let version = c["version"]
+                .as_u64()
+                .and_then(|v| u32::try_from(v).ok())
+                .unwrap_or(1);
+            let scope = if c["requires"]
+                .as_array()
+                .is_some_and(|r| r.iter().any(|x| x == "cloudProject"))
+            {
+                "project"
+            } else {
+                "tenant"
+            };
+            server
+                .account
+                .command(remote, version, scope, args)
+                .map(|output| answer(output, false))
+                .map_err(|f| cloud::refusal(&f))
         }
         "drawing.undo" | "drawing.redo" => {
             let (s, _) = session(server, args)?;
