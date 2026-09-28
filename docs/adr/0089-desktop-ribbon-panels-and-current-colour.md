@@ -77,7 +77,7 @@ Renk `kentos_interaction::Draft::color`'dadır; ayar değişince korunur, çünk
 
 “Katmana göre” renk yazmaz. Hesap pencerelerinin noktaları renk almaz (web'in `addPoints`'i gibi).
 
-Çizgi tipi ve kalınlık oturumda tutulur: web'de de hiçbir araç onları okumaz.
+Çizgi tipi oturumda tutulur: web'de de hiçbir araç onu okumaz. Kalınlık da oturumdadır; [ADR 0139](0139-object-line-weight.md)'dan beri çizgiyle çizilen her yeni nesneye yazılır (nokta, yazı, ölçü ve tarama almaz).
 
 ### KentOS UI eklemeleri
 

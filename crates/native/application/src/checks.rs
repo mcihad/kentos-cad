@@ -6,7 +6,9 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::{CommandError, CommandResult, CommandWarning, Entity, LayerNodeType};
+use kentos_contracts::{
+    CommandError, CommandResult, CommandWarning, Entity, LayerNodeType, MAX_LINE_WEIGHT,
+};
 use kentos_domain::{Document, Slot, Uuid};
 
 use crate::codes;
@@ -32,6 +34,21 @@ pub(crate) fn error(code: &str, message: String, path: Option<String>) -> Comman
         message,
         path,
         revision: None,
+    }
+}
+
+/// The line weight an input gives, when it gives one: a number from 0 to
+/// 100 mm (`invalid_line_weight`, docs/adr/0139); NaN and ±∞ are not. `path`
+/// names it. The message names no value: Rust and JavaScript write some
+/// numbers differently (∞, 1e21), and both sides answer in the same words.
+pub(crate) fn line_weight(weight: Option<f64>, path: &str) -> Result<(), Stop> {
+    match weight {
+        Some(w) if !(0.0..=MAX_LINE_WEIGHT).contains(&w) => Err(Stop::Failed(error(
+            codes::INVALID_LINE_WEIGHT,
+            "Çizgi kalınlığı 0 ile 100 mm arasında bir sayı olmalı (0 en ince çizgidir). Bir kalınlık ya da “Katmana göre” seçin.".into(),
+            Some(path.to_owned()),
+        ))),
+        _ => Ok(()),
     }
 }
 

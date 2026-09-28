@@ -110,11 +110,11 @@ fn line_type_weight_and_scale_are_the_webs_fields() {
     ))));
     let _ = app.update(Message::RibbonPanel(Event::Weight(Some(0.35))));
     assert_eq!(
-        (app.new_line_type, app.new_line_weight),
+        (app.new_line_type, app.draft.line_weight),
         (Some(LineType::Dashed), Some(0.35))
     );
     assert_eq!(line_type_text(app.new_line_type), "Kesikli");
-    assert_eq!(weight_value_text(app.new_line_weight), "0.35 mm");
+    assert_eq!(weight_value_text(app.draft.line_weight), "0.35 mm");
     assert_eq!(weight_value_text(None), "Katmana göre");
     assert_eq!(color_text(Some("#4F8EF7")), "Mavi");
     // Ölçek is the project's: an edit of the drawing, no undo step (the web's).

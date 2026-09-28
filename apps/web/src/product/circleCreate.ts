@@ -4,7 +4,7 @@ import type { CirclePlan } from '../contracts/generated/CirclePlan';
 import type { CommandWarning } from '../contracts/generated/CommandWarning';
 import type { CadDocument } from '../model/document';
 import type { NewEntity } from '../model/entities';
-import { checkLayer, checkRadius, checkRevision, copy, notFinite, notFiniteValue, validated, type Stop } from './checks';
+import { checkLineWeight, checkLayer, checkRadius, checkRevision, copy, notFinite, notFiniteValue, validated, type Stop } from './checks';
 import type { ProductCommand } from './command';
 
 /**
@@ -17,7 +17,8 @@ import type { ProductCommand } from './command';
  * geometry core and gives the result here.
  *
  * The checks, in order (the first that fails answers): the centre finite (x
- * before y), then the radius finite, then above zero; the expected
+ * before y), then the radius finite, then above zero; the line weight from
+ * 0 to 100 mm when given (docs/adr/0139); the expected
  * revision; the layer (checks.ts, for the reasons polygonCreate.ts gives).
  */
 
@@ -27,6 +28,7 @@ function check(doc: CadDocument, input: CircleCreate): Stop | CommandWarning[] {
     notFinite(input.c, 'Merkezin', 'c') ??
     notFiniteValue(input.r, 'Yarıçap', 'Yarıçapı sonlu bir sayıyla verin.', 'r') ??
     checkRadius(input.r) ??
+    checkLineWeight(input.lineWeight, 'lineWeight') ??
     checkRevision(doc, input.expectedRevision) ??
     checkLayer(doc, input.layerId)
   );
@@ -40,6 +42,7 @@ function circleOf(input: CircleCreate): NewEntity & { kind: 'circle' } {
     r: input.r,
     layerId: input.layerId,
     ...(input.color != null && { color: input.color }),
+    ...(input.lineWeight != null && { lineWeight: input.lineWeight }),
     attrs: { ...input.attrs },
   };
 }

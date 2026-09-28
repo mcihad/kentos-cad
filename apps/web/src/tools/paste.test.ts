@@ -38,14 +38,14 @@ function harness() {
 const at = (x: number, y: number) => ({ x, y });
 
 describe('Yapıştır', () => {
-  it('pastes onto each object’s own layer, else the active one; keeps colour, attributes, label and symbol; one step, slots in the clipboard’s order', () => {
+  it('pastes onto each object’s own layer, else the active one; keeps colour, line weight, attributes, label and symbol; one step, slots in the clipboard’s order', () => {
     const { ctx, doc, said } = harness();
     const items: NewEntity[] = [
       { kind: 'point', layerId: 'yol', p: at(0, 0), attrs: { Ad: 'P1' }, label: 'P1', symbol: 'nirengi' },
       { kind: 'line', layerId: 'kilitli', a: at(0, 0), b: at(1, 0), attrs: {} },
-      { kind: 'circle', layerId: 'baska-cizimin', c: at(0, 0), r: 2, attrs: {} },
+      { kind: 'circle', layerId: 'baska-cizimin', c: at(0, 0), r: 2, lineWeight: 0, attrs: {} },
       { kind: 'text', layerId: 'grup', p: at(0, 0), text: 'Ada 101', height: 2, rotation: 0, attrs: {} },
-      { kind: 'line', layerId: 'yol', a: at(0, 1), b: at(1, 1), color: '#E5484D', attrs: {} },
+      { kind: 'line', layerId: 'yol', a: at(0, 1), b: at(1, 1), color: '#E5484D', lineWeight: 0.7, attrs: {} },
     ];
     const ids = pasteEntities(ctx, items, 10, 0);
     // Slot 1 is the drawing's own point: the pasted ones follow in the clipboard's order.
@@ -53,7 +53,10 @@ describe('Yapıştır', () => {
     // A locked layer, one this drawing lacks and a group send their objects to the active layer.
     expect(ids.map((id) => doc.get(id)?.layerId)).toEqual(['yol', 'cizim', 'cizim', 'cizim', 'yol']);
     expect(doc.get(2)).toMatchObject({ kind: 'point', p: at(10, 0), attrs: { Ad: 'P1' }, label: 'P1', symbol: 'nirengi' });
-    expect(doc.get(6)).toMatchObject({ kind: 'line', a: at(10, 1), b: at(11, 1), color: '#E5484D' });
+    // Its own line weight too (docs/adr/0139), 0 the thinnest line; none stays none.
+    expect(doc.get(6)).toMatchObject({ kind: 'line', a: at(10, 1), b: at(11, 1), color: '#E5484D', lineWeight: 0.7 });
+    expect(doc.get(4)).toMatchObject({ kind: 'circle', lineWeight: 0 });
+    expect('lineWeight' in doc.get(3)!).toBe(false);
     expect(said().at(-1)).toBe('5 nesne yapıştırıldı.');
     expect(doc.undo()).toBe('Yapıştır');
     expect(doc.size).toBe(1);

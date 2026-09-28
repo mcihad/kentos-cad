@@ -40,6 +40,7 @@ fn triangle() -> PolygonCreate {
         bulges: None,
         holes: None,
         color: None,
+        line_weight: None,
         attrs: None,
         expected_revision: None,
     }

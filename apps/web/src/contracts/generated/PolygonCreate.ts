@@ -10,7 +10,7 @@ import type { Vec2 } from "./Vec2";
  *
  * Refusals (`CommandError.code`), checked in this order: `too_few_corners`,
  * `not_finite`, `bulge_count` (the outer ring, then each hole),
- * `invalid_revision`, `revision_conflict` (status `conflict`),
+ * `invalid_line_weight` (not from 0 to 100 mm), `invalid_revision`, `revision_conflict` (status `conflict`),
  * `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also
  * `slots_exhausted`. Warning: `layer_hidden` (it is written all the same).
  * Geometric validity (self-intersection, zero area, a hole outside the
@@ -40,6 +40,12 @@ holes?: Array<RingGeometry>,
  * Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).
  */
 color?: string, 
+/**
+ * Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
+ * thinnest, at most 100; docs/adr/0139): what the tools give a new
+ * object from the current weight. Absent: the layer's (katmana göre).
+ */
+lineWeight?: number, 
 /**
  * GIS attributes, text in v1. Absent: none.
  */

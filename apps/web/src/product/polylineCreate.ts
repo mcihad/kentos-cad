@@ -4,7 +4,7 @@ import type { PolylineCreated } from '../contracts/generated/PolylineCreated';
 import type { PolylinePlan } from '../contracts/generated/PolylinePlan';
 import type { CadDocument } from '../model/document';
 import type { NewEntity } from '../model/entities';
-import { checkLayer, checkRevision, copy, error, failed, notFinite, validated, type Stop } from './checks';
+import { checkLineWeight, checkLayer, checkRevision, copy, error, failed, notFinite, validated, type Stop } from './checks';
 import type { ProductCommand } from './command';
 
 /**
@@ -15,7 +15,8 @@ import type { ProductCommand } from './command';
  *
  * The checks, in order (the first that fails answers): at least 2 points,
  * finite coordinates (x before y), one bulge per edge when bulges are given
- * (one fewer than the points), finite bulges; the expected revision; the
+ * (one fewer than the points), finite bulges; the line weight from 0 to 100
+ * mm when given (docs/adr/0139); the expected revision; the
  * layer (checks.ts, for the reasons polygonCreate.ts gives).
  *
  * Bulges are given one per edge; the document keeps one per point, as DXF's
@@ -49,7 +50,7 @@ function check(doc: CadDocument, input: PolylineCreate): Stop | CommandWarning[]
       if (!Number.isFinite(bulges[i]))
         return failed(error('not_finite', `${i + 1}. kenarın yay değeri sonlu bir sayı değil (NaN ya da sonsuz). Düz kenar için 0, yay için tan(açı/4) verin.`, `bulges[${i}]`));
   }
-  return checkRevision(doc, input.expectedRevision) ?? checkLayer(doc, input.layerId);
+  return checkLineWeight(input.lineWeight, 'lineWeight') ?? checkRevision(doc, input.expectedRevision) ?? checkLayer(doc, input.layerId);
 }
 
 /** The polyline `input` describes, as the document stores it (bulges one per point): its own copies. */
@@ -60,6 +61,7 @@ function polylineOf(input: PolylineCreate): NewEntity & { kind: 'polyline' } {
     ...(input.bulges != null && { bulges: [...input.bulges, 0] }),
     layerId: input.layerId,
     ...(input.color != null && { color: input.color }),
+    ...(input.lineWeight != null && { lineWeight: input.lineWeight }),
     attrs: { ...input.attrs },
   };
 }

@@ -256,10 +256,19 @@ export const entityArea = op<(e: Entity) => number | null>('entityArea');
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
 
 /** Pure geometry of an entity (what modify operations produce). */
-export type EntityGeometry = DistributiveOmit<Entity, 'id' | 'uid' | 'layerId' | 'attrs' | 'color' | 'label'>;
+export type EntityGeometry = DistributiveOmit<Entity, 'id' | 'uid' | 'layerId' | 'attrs' | 'color' | 'label' | 'symbol' | 'lineWeight'>;
 
-/** Geometry-only view of an entity (drops ids, layer, colour, attributes, label). */
+/**
+ * Whether an object is drawn with lines, so its own line weight shows and a
+ * new one takes the current weight: not a point, a text, a dimension or a
+ * hatch (docs/adr/0139; the desktop's `Entity::draws_lines`).
+ */
+export function drawsLines(e: { kind: Entity['kind'] }): boolean {
+  return e.kind !== 'point' && e.kind !== 'text' && e.kind !== 'dimension' && e.kind !== 'hatch';
+}
+
+/** Geometry-only view of an entity (drops ids, layer, colour, attributes, label, symbol and line weight). */
 export function entityGeometry(e: Entity): EntityGeometry {
-  const { id: _i, uid: _u, layerId: _l, attrs: _a, color: _c, label: _t, ...g } = e;
+  const { id: _i, uid: _u, layerId: _l, attrs: _a, color: _c, label: _t, symbol: _s, lineWeight: _w, ...g } = e;
   return g as EntityGeometry;
 }

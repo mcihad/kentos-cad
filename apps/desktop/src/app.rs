@@ -437,10 +437,10 @@ pub struct App {
     /// (the typed settings' `drafting.*`, applied by `apply_settings`), and
     /// the colour new objects take (the ribbon's Renk, ribbon_panels.rs).
     pub draft: Draft,
-    /// The line type and weight new objects take, `None` by layer (the
-    /// ribbon's Tip and Kalınlık): the session's, which no tool reads yet (web).
+    /// The line type new objects take, `None` by layer (the ribbon's Tip):
+    /// the session's, which no tool reads yet (web). The weight is the
+    /// draft's (`Draft::line_weight`), which the tools give new objects.
     pub new_line_type: Option<kentos_contracts::LineType>,
-    pub new_line_weight: Option<f64>,
     /// Typed values open beside the cursor (`drafting.cursorInput`).
     pub cursor_input: bool,
     /// The strip over the drawing while a command runs (`drafting.commandBar`, command_bar.rs).
@@ -615,7 +615,6 @@ impl App {
             field: None,
             draft: Draft::default(),
             new_line_type: None,
-            new_line_weight: None,
             cursor_input: true,
             command_bar: false,
             hover_info: true,
@@ -1088,8 +1087,9 @@ impl App {
             snap_kinds: snap_kinds(|key| s.bool(key)),
             pick_aperture: s.number("drafting.pickAperture"),
             tracking: s.bool("drafting.tracking"),
-            // The session's, not a setting: kept through a settings change.
+            // The session's, not settings: kept through a settings change.
             color: self.draft.color,
+            line_weight: self.draft.line_weight,
         };
         self.cursor_input = s.bool("drafting.cursorInput");
         self.command_bar = s.bool("drafting.commandBar");

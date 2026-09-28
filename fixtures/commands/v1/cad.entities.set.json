@@ -89,10 +89,11 @@
       ]
     },
     {
-      "name": "kalınlık 0 ile 100 mm arasında olmalı: invalid_line_weight (yolu lineWeight); hiçbir şey yazılmaz",
+      "name": "kalınlık 0 ile 100 mm arasında bir sayı olmalı; NaN da değildir: invalid_line_weight (yolu lineWeight); hiçbir şey yazılmaz",
       "steps": [
-        {"op": "execute", "input": {"uids": ["$uidOf:1"], "lineWeight": 100.5, "operation": "lineWeight"}, "result": {"status": "failed", "error": {"code": "invalid_line_weight", "message": "Çizgi kalınlığı 100.5 mm olamaz: 0 ile 100 mm arasında olmalı (0 en ince çizgidir). Bir kalınlık ya da “Katmana göre” seçin.", "path": "lineWeight"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
-        {"op": "execute", "input": {"uids": ["$uidOf:1"], "lineWeight": -0.25, "operation": "lineWeight"}, "result": {"status": "failed", "error": {"code": "invalid_line_weight", "message": "Çizgi kalınlığı -0.25 mm olamaz: 0 ile 100 mm arasında olmalı (0 en ince çizgidir). Bir kalınlık ya da “Katmana göre” seçin.", "path": "lineWeight"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "lineWeight": 100.5, "operation": "lineWeight"}, "result": {"status": "failed", "error": {"code": "invalid_line_weight", "message": "Çizgi kalınlığı 0 ile 100 mm arasında bir sayı olmalı (0 en ince çizgidir). Bir kalınlık ya da “Katmana göre” seçin.", "path": "lineWeight"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "lineWeight": -0.25, "operation": "lineWeight"}, "result": {"status": "failed", "error": {"code": "invalid_line_weight", "message": "Çizgi kalınlığı 0 ile 100 mm arasında bir sayı olmalı (0 en ince çizgidir). Bir kalınlık ya da “Katmana göre” seçin.", "path": "lineWeight"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "lineWeight": 0.35, "operation": "lineWeight"}, "nonFinite": {"lineWeight": "NaN"}, "result": {"status": "failed", "error": {"code": "invalid_line_weight", "message": "Çizgi kalınlığı 0 ile 100 mm arasında bir sayı olmalı (0 en ince çizgidir). Bir kalınlık ya da “Katmana göre” seçin.", "path": "lineWeight"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
       ]
     },
     {

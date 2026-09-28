@@ -105,7 +105,10 @@ pub struct EntitiesSetProperties {
     /// unchanged.
     #[serde(default, with = "nullable", skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
-    #[cfg_attr(feature = "schema", schemars(with = "Option<f64>", range(min = 0.0, max = 100.0)))]
+    #[cfg_attr(
+        feature = "schema",
+        schemars(with = "Option<f64>", range(min = 0.0, max = 100.0))
+    )]
     pub line_weight: Option<Option<f64>>,
     /// Their own symbol, a library item's id (`EntityBase.symbol`), drawn
     /// instead of their layer's style; null: the layer's style. The id is
@@ -182,7 +185,10 @@ mod nullable {
         serializer: S,
     ) -> Result<S::Ok, S::Error> {
         // An absent field is skipped (`skip_serializing_if`) before it gets here.
-        value.as_ref().and_then(Option::as_ref).serialize(serializer)
+        value
+            .as_ref()
+            .and_then(Option::as_ref)
+            .serialize(serializer)
     }
 
     pub fn deserialize<'de, D: Deserializer<'de>, T: Deserialize<'de>>(

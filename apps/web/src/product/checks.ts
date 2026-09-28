@@ -4,7 +4,7 @@ import type { CommandWarning } from '../contracts/generated/CommandWarning';
 import type { Vec2 } from '../contracts/generated/Vec2';
 import { isUuid } from '../core/uuid';
 import type { CadDocument } from '../model/document';
-import type { Entity } from '../model/entities';
+import { MAX_LINE_WEIGHT, type Entity } from '../model/entities';
 
 /**
  * What every create command checks after its own input (docs/adr/0022,
@@ -44,6 +44,17 @@ export function notFiniteValue(value: number, what: string, fix: string, path: s
 }
 
 /** A circle's or an arc's radius: above zero (`invalid_radius`), once it is finite. */
+/**
+ * The line weight an input gives, when it gives one: a number from 0 to 100 mm
+ * (`invalid_line_weight`, docs/adr/0139); NaN and ±∞ are not. The message names
+ * no value: JavaScript and Rust write some numbers differently (∞, 1e21), and
+ * both sides answer in the same words.
+ */
+export function checkLineWeight(weight: number | null | undefined, path: string): Stop | null {
+  if (weight == null || (weight >= 0 && weight <= MAX_LINE_WEIGHT)) return null;
+  return failed(error('invalid_line_weight', 'Çizgi kalınlığı 0 ile 100 mm arasında bir sayı olmalı (0 en ince çizgidir). Bir kalınlık ya da “Katmana göre” seçin.', path));
+}
+
 export function checkRadius(r: number): Stop | null {
   return r > 0 ? null : failed(error('invalid_radius', 'Yarıçap sıfırdan büyük olmalı. Pozitif bir yarıçap verin.', 'r'));
 }

@@ -8,6 +8,7 @@
 //!
 //! The checks, in order (the first that fails answers):
 //! 1. the centre finite (x before y), then the radius finite, then above zero;
+//!    then the line weight from 0 to 100 mm when given;
 //! 2. the expected revision, 3. the layer: every create command's
 //!    (`checks.rs`), for the reasons `polygon.rs` gives.
 
@@ -69,6 +70,7 @@ fn check(doc: &Document, input: &CircleCreate) -> Result<Vec<CommandWarning>, St
     checks::point(input.c, "Merkezin", "c")?;
     checks::finite(input.r, "Yarıçap", "Yarıçapı sonlu bir sayıyla verin.", "r")?;
     checks::radius(input.r)?;
+    checks::line_weight(input.line_weight, "lineWeight")?;
     checks::revision(doc, input.expected_revision.as_deref())?;
     checks::layer(doc, &input.layer_id)
 }
@@ -84,7 +86,7 @@ fn circle(input: CircleCreate, id: u32) -> Entity {
             attrs: input.attrs.unwrap_or_default(),
             label: None,
             symbol: None,
-            line_weight: None,
+            line_weight: input.line_weight,
         },
         c: input.c,
         r: input.r,

@@ -4,7 +4,7 @@ import type { ArcPlan } from '../contracts/generated/ArcPlan';
 import type { CommandWarning } from '../contracts/generated/CommandWarning';
 import type { CadDocument } from '../model/document';
 import type { NewEntity } from '../model/entities';
-import { checkLayer, checkRadius, checkRevision, copy, notFinite, notFiniteValue, validated, type Stop } from './checks';
+import { checkLineWeight, checkLayer, checkRadius, checkRevision, copy, notFinite, notFiniteValue, validated, type Stop } from './checks';
 import type { ProductCommand } from './command';
 
 /**
@@ -19,6 +19,7 @@ import type { ProductCommand } from './command';
  *
  * The checks, in order (the first that fails answers): the centre finite (x
  * before y), the radius, `a0` and `a1` finite, the radius above zero; the
+ * line weight from 0 to 100 mm when given (docs/adr/0139); the
  * expected revision; the layer (checks.ts, for the reasons polygonCreate.ts
  * gives). The angles are stored as given: equal angles are a full turn, as
  * the document reads them, and no angle is refused for its size.
@@ -32,6 +33,7 @@ function check(doc: CadDocument, input: ArcCreate): Stop | CommandWarning[] {
     notFiniteValue(input.a0, 'Başlangıç açısı', 'Açıyı sonlu bir sayıyla verin.', 'a0') ??
     notFiniteValue(input.a1, 'Bitiş açısı', 'Açıyı sonlu bir sayıyla verin.', 'a1') ??
     checkRadius(input.r) ??
+    checkLineWeight(input.lineWeight, 'lineWeight') ??
     checkRevision(doc, input.expectedRevision) ??
     checkLayer(doc, input.layerId)
   );
@@ -47,6 +49,7 @@ function arcOf(input: ArcCreate): NewEntity & { kind: 'arc' } {
     a1: input.a1,
     layerId: input.layerId,
     ...(input.color != null && { color: input.color }),
+    ...(input.lineWeight != null && { lineWeight: input.lineWeight }),
     attrs: { ...input.attrs },
   };
 }

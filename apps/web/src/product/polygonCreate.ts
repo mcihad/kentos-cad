@@ -5,7 +5,7 @@ import type { PolygonPlan } from '../contracts/generated/PolygonPlan';
 import type { Vec2 } from '../contracts/generated/Vec2';
 import type { CadDocument } from '../model/document';
 import type { NewEntity } from '../model/entities';
-import { checkLayer, checkRevision, copy, error, failed, notFinite, validated, type Stop } from './checks';
+import { checkLineWeight, checkLayer, checkRevision, copy, error, failed, notFinite, validated, type Stop } from './checks';
 import type { ProductCommand } from './command';
 
 /**
@@ -17,7 +17,8 @@ import type { ProductCommand } from './command';
  *
  * The checks, in order (the first that fails answers): the outer ring, then
  * each hole (at least 3 corners, finite coordinates, one bulge per edge
- * when bulges are given, finite bulges); the expected revision (decimal
+ * when bulges are given, finite bulges); the line weight from 0 to 100 mm
+ * when given (docs/adr/0139); the expected revision (decimal
  * text, then the document's own: `conflict` when not); the layer (known, a
  * layer not a group, not locked by itself or a group above). A hidden layer
  * is written with a warning. An input broken by itself is refused before
@@ -86,7 +87,7 @@ function check(doc: CadDocument, input: PolygonCreate): Stop | CommandWarning[] 
     const broken = checkRing(h, hole.pts, hole.bulges);
     if (broken) return broken;
   }
-  return checkRevision(doc, input.expectedRevision) ?? checkLayer(doc, input.layerId);
+  return checkLineWeight(input.lineWeight, 'lineWeight') ?? checkRevision(doc, input.expectedRevision) ?? checkLayer(doc, input.layerId);
 }
 
 /** The polygon `input` describes, as the document stores it: its own copies, never the caller's arrays. */
@@ -98,6 +99,7 @@ function polygonOf(input: PolygonCreate): NewEntity & { kind: 'polygon' } {
     ...(input.holes != null && { holes: input.holes.map((h) => ({ pts: h.pts.map(copy), ...(h.bulges != null && { bulges: [...h.bulges] }) })) }),
     layerId: input.layerId,
     ...(input.color != null && { color: input.color }),
+    ...(input.lineWeight != null && { lineWeight: input.lineWeight }),
     attrs: { ...input.attrs },
   };
 }

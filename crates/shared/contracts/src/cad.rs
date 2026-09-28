@@ -25,7 +25,7 @@ pub const CAD_POLYGON_CREATE_VERSION: u32 = 1;
 ///
 /// Refusals (`CommandError.code`), checked in this order: `too_few_corners`,
 /// `not_finite`, `bulge_count` (the outer ring, then each hole),
-/// `invalid_revision`, `revision_conflict` (status `conflict`),
+/// `invalid_line_weight` (not from 0 to 100 mm), `invalid_revision`, `revision_conflict` (status `conflict`),
 /// `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also
 /// `slots_exhausted`. Warning: `layer_hidden` (it is written all the same).
 /// Geometric validity (self-intersection, zero area, a hole outside the
@@ -55,6 +55,13 @@ pub struct PolygonCreate {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
+    /// Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
+    /// thinnest, at most 100; docs/adr/0139): what the tools give a new
+    /// object from the current weight. Absent: the layer's (katmana göre).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
+    pub line_weight: Option<f64>,
     /// GIS attributes, text in v1. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -119,7 +126,7 @@ pub const CAD_LINE_CREATE_VERSION: u32 = 1;
 /// `color` from the current colour; the command reads neither.
 ///
 /// Refusals (`CommandError.code`), checked in this order: `not_finite` (`a`,
-/// then `b`, x before y), `invalid_revision`, `revision_conflict` (status
+/// then `b`, x before y), `invalid_line_weight` (not from 0 to 100 mm), `invalid_revision`, `revision_conflict` (status
 /// `conflict`), `layer_not_found`, `not_a_layer`, `layer_locked`; on the
 /// desktop also `slots_exhausted`. Warning: `layer_hidden` (it is written
 /// all the same). A line whose ends coincide is not refused: geometric
@@ -140,6 +147,13 @@ pub struct LineCreate {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
+    /// Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
+    /// thinnest, at most 100; docs/adr/0139): what the tools give a new
+    /// object from the current weight. Absent: the layer's (katmana göre).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
+    pub line_weight: Option<f64>,
     /// GIS attributes, text in v1. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -197,7 +211,7 @@ pub const CAD_POLYLINE_CREATE_VERSION: u32 = 1;
 ///
 /// Refusals (`CommandError.code`), checked in this order: `too_few_points`,
 /// `not_finite` (points, x before y), `bulge_count`, `not_finite` (bulges),
-/// `invalid_revision`, `revision_conflict` (status `conflict`),
+/// `invalid_line_weight` (not from 0 to 100 mm), `invalid_revision`, `revision_conflict` (status `conflict`),
 /// `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also
 /// `slots_exhausted`. Warning: `layer_hidden` (it is written all the same).
 /// Geometric validity (a path crossing itself, zero-length edges) is not
@@ -225,6 +239,13 @@ pub struct PolylineCreate {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
+    /// Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
+    /// thinnest, at most 100; docs/adr/0139): what the tools give a new
+    /// object from the current weight. Absent: the layer's (katmana göre).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
+    pub line_weight: Option<f64>,
     /// GIS attributes, text in v1. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

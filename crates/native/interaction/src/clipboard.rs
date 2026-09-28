@@ -229,6 +229,7 @@ pub fn paste(items: &[Entity], dx: f64, dy: f64, cx: &mut Context<'_>) -> Vec<Sl
                 .map(|(e, geometry)| NewObject {
                     geometry: geometry.clone(),
                     color: e.base().color.clone(),
+                    line_weight: e.base().line_weight,
                     attrs: Some(e.base().attrs.clone()),
                     label: e.base().label.clone(),
                 })

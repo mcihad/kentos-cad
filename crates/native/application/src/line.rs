@@ -7,7 +7,8 @@
 //! is its own object and its own undo step, as the tool always wrote them.
 //!
 //! The checks, in order (the first that fails answers):
-//! 1. both ends finite: `a` then `b`, x before y;
+//! 1. both ends finite: `a` then `b`, x before y; then the line weight, when
+//!    given, from 0 to 100 mm (`checks::line_weight`, docs/adr/0139);
 //! 2. the expected revision, 3. the layer: every create command's
 //!    (`checks.rs`), for the reasons `polygon.rs` gives.
 //!
@@ -80,6 +81,7 @@ fn check(doc: &Document, input: &LineCreate) -> Result<Vec<CommandWarning>, Stop
             }
         }
     }
+    checks::line_weight(input.line_weight, "lineWeight")?;
     checks::revision(doc, input.expected_revision.as_deref())?;
     checks::layer(doc, &input.layer_id)
 }
@@ -95,7 +97,7 @@ fn line(input: LineCreate, id: u32) -> Entity {
             attrs: input.attrs.unwrap_or_default(),
             label: None,
             symbol: None,
-            line_weight: None,
+            line_weight: input.line_weight,
         },
         a: input.a,
         b: input.b,

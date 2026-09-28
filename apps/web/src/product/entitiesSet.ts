@@ -5,8 +5,8 @@ import type { EntitiesSetPropertiesPlan } from '../contracts/generated/EntitiesS
 import type { Entity as PlannedEntity } from '../contracts/generated/Entity';
 import type { PropertiesOperation } from '../contracts/generated/PropertiesOperation';
 import type { CadDocument } from '../model/document';
-import { MAX_LINE_WEIGHT, type Entity } from '../model/entities';
-import { checkRevision, checkUids, error, failed, findObjects, isBlank, validated, type Stop } from './checks';
+import type { Entity } from '../model/entities';
+import { checkLineWeight, checkRevision, checkUids, error, failed, findObjects, isBlank, validated, type Stop } from './checks';
 import type { ProductCommand } from './command';
 
 /**
@@ -89,15 +89,8 @@ function check(doc: CadDocument, input: EntitiesSetProperties): Stop | Checked {
     return failed({ code: 'nothing_to_set', message: 'Değişecek özellik verilmedi. Katman, renk, kalınlık, sembol, öznitelik ya da etiket verin.' });
   if (attrs.some(isBlank))
     return failed(error('invalid_attribute', 'Öznitelik adı boş olamaz; yalnız boşluktan oluşan ad da boştur. Özniteliğe bir ad verin.', 'attrs'));
-  const weight = input.lineWeight;
-  if (weight != null && !(weight >= 0 && weight <= MAX_LINE_WEIGHT))
-    return failed(
-      error(
-        'invalid_line_weight',
-        `Çizgi kalınlığı ${weight} mm olamaz: 0 ile 100 mm arasında olmalı (0 en ince çizgidir). Bir kalınlık ya da “Katmana göre” seçin.`,
-        'lineWeight',
-      ),
-    );
+  const weight = checkLineWeight(input.lineWeight, 'lineWeight');
+  if (weight) return weight;
   const revision = checkRevision(doc, input.expectedRevision);
   if (revision) return revision;
   const found = findObjects(doc, input.uids);

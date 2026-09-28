@@ -197,6 +197,21 @@ pub enum EntityGeometry {
     },
 }
 
+impl EntityGeometry {
+    /// Whether an object of this geometry is drawn with lines, so it takes
+    /// the current line weight: not a point, a text, a dimension or a hatch
+    /// (docs/adr/0139; `Entity::draws_lines`).
+    pub fn draws_lines(&self) -> bool {
+        !matches!(
+            self,
+            EntityGeometry::Point { .. }
+                | EntityGeometry::Text { .. }
+                | EntityGeometry::Dimension { .. }
+                | EntityGeometry::Hatch { .. }
+        )
+    }
+}
+
 /// One change of an edit. The objects are named by their persistent ids
 /// (docs/adr/0014).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

@@ -454,6 +454,7 @@ impl Path {
             bulges,
             holes: None,
             color: cx.draft.color.map(str::to_owned),
+            line_weight: cx.draft.line_weight,
             attrs: None,
             expected_revision: None,
         };
@@ -471,6 +472,7 @@ impl Path {
             pts: pts.iter().copied().map(wire).collect(),
             bulges: has_bulges(Some(&self.bulges)).then(|| self.bulges.clone()),
             color: cx.draft.color.map(str::to_owned),
+            line_weight: cx.draft.line_weight,
             attrs: None,
             expected_revision: None,
         };
@@ -518,6 +520,7 @@ impl Path {
                     holes: None,
                 },
                 color: cx.draft.color.map(str::to_owned),
+                line_weight: cx.draft.line_weight,
                 attrs: Some(BTreeMap::from(attrs.map(|(k, v)| (k.to_owned(), v.to_owned())))),
                 label: Some(number.clone()),
             }],

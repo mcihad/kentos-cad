@@ -33,7 +33,7 @@ function harness() {
     log,
     selection: new Selection(),
     format: new Formatter({ lengthDecimals: new Signal(3), areaDecimals: new Signal(2), areaUnit: new Signal('m2' as const), angleUnit: new Signal('grad' as const) }),
-    settings: { color: new Signal<string | null>(null) },
+    settings: { color: new Signal<string | null>(null), lineWeight: new Signal<number | null>(null) },
     prefs: { snapAperture: new Signal(8) },
     view: { requestOverlay: () => {}, trackAlong: () => null, camera: { worldToScreen: (p: unknown) => p } },
     tools: { exit: () => {} },

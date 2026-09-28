@@ -118,12 +118,20 @@ function reshaped(e: Entity, g: EntityGeometry): NewEntity {
 }
 
 /**
- * What a replacement or a new piece takes from its object: the layer and the
- * colour, the attributes and the label with `keepData`; not the symbol (the
- * tools' `inherit`).
+ * What a replacement or a new piece takes from its object: the layer, the
+ * colour and its own line weight (a trimmed 0.70 mm line stays 0.70 mm,
+ * docs/adr/0139), the attributes and the label with `keepData`; not the
+ * symbol (the tools' `inherit`).
  */
 function inherited(e: Entity, g: EntityGeometry, keepData: boolean): NewEntity {
-  return { ...geometryOf(g), layerId: e.layerId, color: e.color, attrs: keepData ? { ...e.attrs } : {}, label: keepData ? e.label : undefined } as unknown as NewEntity;
+  return {
+    ...geometryOf(g),
+    layerId: e.layerId,
+    color: e.color,
+    lineWeight: e.lineWeight,
+    attrs: keepData ? { ...e.attrs } : {},
+    label: keepData ? e.label : undefined,
+  } as unknown as NewEntity;
 }
 
 /**

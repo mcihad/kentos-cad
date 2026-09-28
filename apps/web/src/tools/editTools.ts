@@ -401,6 +401,7 @@ export function pasteEntities(ctx: AppContext, items: readonly NewEntity[], dx: 
   const objectOf = (e: NewEntity): NewObject => ({
     geometry: geometryOf(e as unknown as EditGeometry) as unknown as EditGeometry,
     ...(e.color !== undefined && { color: e.color }),
+    ...(e.lineWeight !== undefined && { lineWeight: e.lineWeight }),
     attrs: { ...e.attrs },
     ...(e.label !== undefined && { label: e.label }),
   });

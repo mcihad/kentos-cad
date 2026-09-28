@@ -36,6 +36,7 @@ fn points(n: usize) -> EntitiesCreate {
                     z: None,
                 },
                 color: None,
+                line_weight: None,
                 attrs: None,
                 label: None,
             })
@@ -113,6 +114,7 @@ fn the_geometry_is_written_as_given() {
                     dir,
                 },
                 color: None,
+                line_weight: None,
                 attrs: None,
                 label: None,
             }],

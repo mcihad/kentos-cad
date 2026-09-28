@@ -51,6 +51,7 @@ class _CircleCreate(LocalCommand[CircleCreate, CircleCreated, CirclePlan]):
         attrs: Mapping[str, str] | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        line_weight: float | None | Unset = UNSET,
     ) -> CircleCreated:
         """Daire oluştur: Açık çizimde verilen katmana merkezi ve yarıçapıyla bir daire ekler;
         tek geri alma adımıdır. Daire aracı yöntemlerinin (merkez ve yarıçap ya da çap, iki
@@ -71,6 +72,9 @@ class _CircleCreate(LocalCommand[CircleCreate, CircleCreated, CirclePlan]):
             expected_revision: The document revision the input was prepared against, as decimal text
                 (from a plan, or the document). When given and the document is no
                 longer at it, nothing is written and the answer is `conflict`.
+            line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
+                thinnest, at most 100; docs/adr/0139): what the tools give a new
+                object from the current weight. Absent: the layer's (katmana göre).
 
         Returns:
             CircleCreated
@@ -86,6 +90,7 @@ class _CircleCreate(LocalCommand[CircleCreate, CircleCreated, CirclePlan]):
             attrs=_opt(attrs, lambda x: dict(x)),
             color=color,
             expected_revision=expected_revision,
+            line_weight=line_weight,
         ))
 
     def plan(
@@ -99,6 +104,7 @@ class _CircleCreate(LocalCommand[CircleCreate, CircleCreated, CirclePlan]):
         attrs: Mapping[str, str] | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        line_weight: float | None | Unset = UNSET,
     ) -> CirclePlan:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -110,6 +116,7 @@ class _CircleCreate(LocalCommand[CircleCreate, CircleCreated, CirclePlan]):
             attrs=_opt(attrs, lambda x: dict(x)),
             color=color,
             expected_revision=expected_revision,
+            line_weight=line_weight,
         ))
 
     def validate(
@@ -123,6 +130,7 @@ class _CircleCreate(LocalCommand[CircleCreate, CircleCreated, CirclePlan]):
         attrs: Mapping[str, str] | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        line_weight: float | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -134,6 +142,7 @@ class _CircleCreate(LocalCommand[CircleCreate, CircleCreated, CirclePlan]):
             attrs=_opt(attrs, lambda x: dict(x)),
             color=color,
             expected_revision=expected_revision,
+            line_weight=line_weight,
         ))
 
 

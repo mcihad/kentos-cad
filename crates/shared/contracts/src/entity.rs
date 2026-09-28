@@ -298,7 +298,17 @@ pub enum Entity {
 }
 
 impl Entity {
-    /// The fields every object has (id, layer, colour, attributes, label, symbol).
+    /// Whether the object is drawn with lines, so its own line weight shows
+    /// and a new one takes the current weight: not a point, a text, a
+    /// dimension or a hatch (docs/adr/0139; the web's `drawsLines`).
+    pub fn draws_lines(&self) -> bool {
+        !matches!(
+            self,
+            Entity::Point(_) | Entity::Text(_) | Entity::Dimension(_) | Entity::Hatch(_)
+        )
+    }
+
+    /// The fields every object has (id, layer, colour, line weight, attributes, label, symbol).
     pub fn base(&self) -> &EntityBase {
         match self {
             Entity::Point(e) => &e.base,

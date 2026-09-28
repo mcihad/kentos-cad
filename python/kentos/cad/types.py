@@ -647,7 +647,7 @@ class ArcCreate(_Model):
 
     Refusals (`CommandError.code`), checked in this order: `not_finite` (`c`,
     x before y, then `r`, `a0`, `a1`), `invalid_radius` (not above zero),
-    `invalid_revision`, `revision_conflict` (status `conflict`),
+    `invalid_line_weight` (not from 0 to 100 mm), `invalid_revision`, `revision_conflict` (status `conflict`),
     `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also
     `slots_exhausted`. Warning: `layer_hidden` (it is written all the same).
     The angles are stored as given: equal angles are a full turn, as the
@@ -664,6 +664,9 @@ class ArcCreate(_Model):
         expected_revision: The document revision the input was prepared against, as decimal text
             (from a plan, or the document). When given and the document is no
             longer at it, nothing is written and the answer is `conflict`.
+        line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
+            thinnest, at most 100; docs/adr/0139): what the tools give a new
+            object from the current weight. Absent: the layer's (katmana göre).
     """
     layer_id: str
     c: Vec2
@@ -673,6 +676,7 @@ class ArcCreate(_Model):
     attrs: dict[str, str] | None | Unset = UNSET
     color: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -687,6 +691,8 @@ class ArcCreate(_Model):
             out["color"] = self.color
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         return out
 
     @classmethod
@@ -700,6 +706,7 @@ class ArcCreate(_Model):
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
             color=data.get("color", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
         )
 
 
@@ -1025,7 +1032,7 @@ class CircleCreate(_Model):
 
     Refusals (`CommandError.code`), checked in this order: `not_finite` (`c`,
     x before y, then `r`), `invalid_radius` (not above zero),
-    `invalid_revision`, `revision_conflict` (status `conflict`),
+    `invalid_line_weight` (not from 0 to 100 mm), `invalid_revision`, `revision_conflict` (status `conflict`),
     `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also
     `slots_exhausted`. Warning: `layer_hidden` (it is written all the same).
     Attributes:
@@ -1037,6 +1044,9 @@ class CircleCreate(_Model):
         expected_revision: The document revision the input was prepared against, as decimal text
             (from a plan, or the document). When given and the document is no
             longer at it, nothing is written and the answer is `conflict`.
+        line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
+            thinnest, at most 100; docs/adr/0139): what the tools give a new
+            object from the current weight. Absent: the layer's (katmana göre).
     """
     layer_id: str
     c: Vec2
@@ -1044,6 +1054,7 @@ class CircleCreate(_Model):
     attrs: dict[str, str] | None | Unset = UNSET
     color: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -1056,6 +1067,8 @@ class CircleCreate(_Model):
             out["color"] = self.color
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         return out
 
     @classmethod
@@ -1067,6 +1080,7 @@ class CircleCreate(_Model):
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
             color=data.get("color", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
         )
 
 
@@ -1570,7 +1584,8 @@ class EntitiesCreate(_Model):
     `too_few_corners` (a closed area's or a hatch's ring or hole, by
     `cad.entities.edit`'s rule: a closed area's may have 2 corners when an
     edge is an arc), `empty_text` (a text whose text is empty or only white space),
-    `not_finite`, `invalid_radius`; then `invalid_revision`,
+    `not_finite`, `invalid_radius`, `invalid_line_weight` (the object's weight
+    not from 0 to 100 mm); then `invalid_revision`,
     `revision_conflict` (status `conflict`), `layer_not_found`,
     `not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`.
     Warning: `layer_hidden` (they are written all the same).
@@ -2534,7 +2549,7 @@ class LineCreate(_Model):
     `color` from the current colour; the command reads neither.
 
     Refusals (`CommandError.code`), checked in this order: `not_finite` (`a`,
-    then `b`, x before y), `invalid_revision`, `revision_conflict` (status
+    then `b`, x before y), `invalid_line_weight` (not from 0 to 100 mm), `invalid_revision`, `revision_conflict` (status
     `conflict`), `layer_not_found`, `not_a_layer`, `layer_locked`; on the
     desktop also `slots_exhausted`. Warning: `layer_hidden` (it is written
     all the same). A line whose ends coincide is not refused: geometric
@@ -2548,6 +2563,9 @@ class LineCreate(_Model):
         expected_revision: The document revision the input was prepared against, as decimal text
             (from a plan, or the document). When given and the document is no
             longer at it, nothing is written and the answer is `conflict`.
+        line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
+            thinnest, at most 100; docs/adr/0139): what the tools give a new
+            object from the current weight. Absent: the layer's (katmana göre).
     """
     layer_id: str
     a: Vec2
@@ -2555,6 +2573,7 @@ class LineCreate(_Model):
     attrs: dict[str, str] | None | Unset = UNSET
     color: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -2567,6 +2586,8 @@ class LineCreate(_Model):
             out["color"] = self.color
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         return out
 
     @classmethod
@@ -2578,6 +2599,7 @@ class LineCreate(_Model):
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
             color=data.get("color", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
         )
 
 
@@ -2703,11 +2725,15 @@ class NewObject(_Model):
         attrs: GIS attributes, text in v1. Absent: none.
         color: Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).
         label: The text shown beside it (`EntityBase.label`). Absent: none.
+        line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
+            thinnest, at most 100; docs/adr/0139): what the tools give a new
+            object from the current weight. Absent: the layer's (katmana göre).
     """
     geometry: EntityGeometry
     attrs: dict[str, str] | None | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -2718,6 +2744,8 @@ class NewObject(_Model):
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         return out
 
     @classmethod
@@ -2727,6 +2755,7 @@ class NewObject(_Model):
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
         )
 
 
@@ -2997,7 +3026,7 @@ class PolygonCreate(_Model):
 
     Refusals (`CommandError.code`), checked in this order: `too_few_corners`,
     `not_finite`, `bulge_count` (the outer ring, then each hole),
-    `invalid_revision`, `revision_conflict` (status `conflict`),
+    `invalid_line_weight` (not from 0 to 100 mm), `invalid_revision`, `revision_conflict` (status `conflict`),
     `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also
     `slots_exhausted`. Warning: `layer_hidden` (it is written all the same).
     Geometric validity (self-intersection, zero area, a hole outside the
@@ -3015,6 +3044,9 @@ class PolygonCreate(_Model):
             (from a plan, or the document). When given and the document is no
             longer at it, nothing is written and the answer is `conflict`.
         holes: Holes: closed rings of at least 3 corners, each with one bulge per edge when it has bulges.
+        line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
+            thinnest, at most 100; docs/adr/0139): what the tools give a new
+            object from the current weight. Absent: the layer's (katmana göre).
     """
     layer_id: str
     pts: list[Vec2]
@@ -3023,6 +3055,7 @@ class PolygonCreate(_Model):
     color: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     holes: list[RingGeometry] | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -3038,6 +3071,8 @@ class PolygonCreate(_Model):
             out["expectedRevision"] = self.expected_revision
         if self.holes is not UNSET:
             out["holes"] = None if self.holes is None else [e0.to_json() for e0 in self.holes]
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         return out
 
     @classmethod
@@ -3050,6 +3085,7 @@ class PolygonCreate(_Model):
             color=data.get("color", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             holes=UNSET if "holes" not in data else None if data["holes"] is None else [RingGeometry.from_json(e0) for e0 in data["holes"]],
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
         )
 
 
@@ -3117,7 +3153,7 @@ class PolylineCreate(_Model):
 
     Refusals (`CommandError.code`), checked in this order: `too_few_points`,
     `not_finite` (points, x before y), `bulge_count`, `not_finite` (bulges),
-    `invalid_revision`, `revision_conflict` (status `conflict`),
+    `invalid_line_weight` (not from 0 to 100 mm), `invalid_revision`, `revision_conflict` (status `conflict`),
     `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also
     `slots_exhausted`. Warning: `layer_hidden` (it is written all the same).
     Geometric validity (a path crossing itself, zero-length edges) is not
@@ -3136,6 +3172,9 @@ class PolylineCreate(_Model):
         expected_revision: The document revision the input was prepared against, as decimal text
             (from a plan, or the document). When given and the document is no
             longer at it, nothing is written and the answer is `conflict`.
+        line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
+            thinnest, at most 100; docs/adr/0139): what the tools give a new
+            object from the current weight. Absent: the layer's (katmana göre).
     """
     layer_id: str
     pts: list[Vec2]
@@ -3143,6 +3182,7 @@ class PolylineCreate(_Model):
     bulges: list[float] | None | Unset = UNSET
     color: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -3156,6 +3196,8 @@ class PolylineCreate(_Model):
             out["color"] = self.color
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         return out
 
     @classmethod
@@ -3167,6 +3209,7 @@ class PolylineCreate(_Model):
             bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
             color=data.get("color", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
         )
 
 

@@ -9,7 +9,7 @@ import type { Vec2 } from "./Vec2";
  *
  * Refusals (`CommandError.code`), checked in this order: `too_few_points`,
  * `not_finite` (points, x before y), `bulge_count`, `not_finite` (bulges),
- * `invalid_revision`, `revision_conflict` (status `conflict`),
+ * `invalid_line_weight` (not from 0 to 100 mm), `invalid_revision`, `revision_conflict` (status `conflict`),
  * `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also
  * `slots_exhausted`. Warning: `layer_hidden` (it is written all the same).
  * Geometric validity (a path crossing itself, zero-length edges) is not
@@ -37,6 +37,12 @@ bulges?: Array<number>,
  * Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).
  */
 color?: string, 
+/**
+ * Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
+ * thinnest, at most 100; docs/adr/0139): what the tools give a new
+ * object from the current weight. Absent: the layer's (katmana göre).
+ */
+lineWeight?: number, 
 /**
  * GIS attributes, text in v1. Absent: none.
  */

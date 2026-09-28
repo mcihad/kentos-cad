@@ -85,6 +85,26 @@ Web ve masaüstü, katmanın düz görünüşünü nesnenin rengine ve kalınlı
 
 Geometrisi kaynak olan nesnenin (nokta, çizgi, düz çoklu çizgi, alan) tanımı yoktur. Bu yüzden kalınlık, renk ve etiket gibi kendi sütunundadır. Aynı şekilde yazılır, okunur ve kopyalanır.
 
+### 7. Yeni nesneler
+
+Web'in araç çubuğundaki ve masaüstünün şeridindeki (Giriş › Özellikler) “Kalınlık” artık yeni nesnelere yazılır, renk gibi (ADR 0089):
+
+- Değer oturumdadır: web'de `ctx.settings.lineWeight`, masaüstünde `Draft::line_weight`.
+- Çizgiyle çizilen her araç onu komutun girdisine açıkça yazar (CMD-07): çizgi, çoklu çizgi, kapalı alan, parsel, daire, yay, dikdörtgen ve `cad.entities.create` ile yazan araçlar (elips, eğri, halka, paralel…).
+- Nokta, yazı, ölçü ve tarama çizgiyle çizilmez, kalınlık almaz (`draws_lines`, web'de `writeObjects`).
+- “Katmana göre” kalınlık yazmaz. `0` en ince çizgidir, “yok” değildir.
+
+Altı oluşturma komutu (`cad.line.create`, `cad.polyline.create`, `cad.polygon.create`, `cad.circle.create`, `cad.arc.create`, `cad.entities.create`) `lineWeight` alır:
+
+- Girdinin geometrisinden sonra, sürümden ve katmandan önce denetlenir; `cad.entities.create`'te her nesne kendi sırasında (`objects[i].lineWeight`).
+- `0`…`100` dışı, NaN ya da sonsuz kalınlık `invalid_line_weight`'tir.
+- İletide değer yazmaz: Rust ile JavaScript bazı sayıları (∞, 1e21) farklı yazar; iki taraf aynı sözlerle cevap verir. `cad.entities.set`'in iletisi de böyle oldu.
+
+Nesneden yapılan nesneler kendi kalınlığını korur:
+
+- `cad.entities.edit`'in `replace` ve `add` parçaları (Buda, Kır, Patlat, Ötele, alan işlemleri) katmanı ve rengi gibi kalınlığı da alır: budanan 0,70 mm'lik çizgi 0,70 mm kalır. İlk sürümde katmanınkine düşüyordu.
+- Yapıştırılan nesne de alır. Masaüstü öyle yapıyordu; web'de eksikti.
+
 ## Sonuçlar
 
 **Testler:**
@@ -104,7 +124,12 @@ Geometrisi kaynak olan nesnenin (nokta, çizgi, düz çoklu çizgi, alan) tanım
 - `0`…`100` dışı `invalid_line_weight` ile reddedilir.
 - İki taraf `fixtures/commands/v1/cad.entities.set.json`'daki yeni durumları geçer.
 
-**Açık kalan (sıradaki iş):** araç çubuğu ve şeridin “Kalınlık”ının yeni nesnelere verilmesi.
+**Yeni nesneler, parçalar ve yapıştırma:**
+
+- Altı oluşturma komutunun ortak durumları (`fixtures/commands/v1/cad.*.create.json`): kendi kalınlığıyla yazılır, `0` yazılır, aralık dışı ve NaN reddedilir, denetimlerin sırası.
+- `cad.entities.edit.json`: Buda'nın, Patlat'ın ve Ötele'nin parçaları kalınlığı alır.
+- Araç çubuğu ve şerit: `apps/web/src/tools/lineWeight.test.ts` ve `crates/native/interaction/tests/line_weight.rs` aynı araçları sürer.
+- Yapıştırma: `paste.test.ts` ve `crates/native/interaction/tests/clipboard.rs`.
 
 **Taşınmayanlar:**
 

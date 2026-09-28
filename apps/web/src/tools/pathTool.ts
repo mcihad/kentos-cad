@@ -299,8 +299,12 @@ export class PathTool extends PointInputTool {
    */
   private createPolyline(pts: Vec2[], length: () => number): void {
     const color = this.ctx.settings.color.value;
+    const lineWeight = this.ctx.settings.lineWeight.value;
     const segments = hasBulges(this.bulges) ? { bulges: [...this.bulges] } : {};
-    const result = polylineCreate.execute({ doc: this.ctx.doc }, { layerId: this.ctx.doc.layers.active.value, pts, ...segments, ...(color !== null && { color }) });
+    const result = polylineCreate.execute(
+      { doc: this.ctx.doc },
+      { layerId: this.ctx.doc.layers.active.value, pts, ...segments, ...(color !== null && { color }), ...(lineWeight !== null && { lineWeight }) },
+    );
     if (result.status !== 'completed') {
       if ('error' in result) this.ctx.log.warn(result.error.message);
       return;
@@ -320,7 +324,11 @@ export class PathTool extends PointInputTool {
    */
   private createPolygon(pts: Vec2[], bulges: number[] | undefined, area: () => number): void {
     const color = this.ctx.settings.color.value;
-    const result = polygonCreate.execute({ doc: this.ctx.doc }, { layerId: this.ctx.doc.layers.active.value, pts, ...(bulges && { bulges }), ...(color !== null && { color }) });
+    const lineWeight = this.ctx.settings.lineWeight.value;
+    const result = polygonCreate.execute(
+      { doc: this.ctx.doc },
+      { layerId: this.ctx.doc.layers.active.value, pts, ...(bulges && { bulges }), ...(color !== null && { color }), ...(lineWeight !== null && { lineWeight }) },
+    );
     if (result.status !== 'completed') {
       if ('error' in result) this.ctx.log.warn(result.error.message);
       return;
@@ -343,9 +351,11 @@ export class PathTool extends PointInputTool {
     const next = parcels.reduce((m, e) => Math.max(m, parseInt(e.attrs.Parsel ?? '0', 10) || 0), 0) + 1;
     const area = Math.abs(bulgeRingArea(geom.pts, geom.bulges));
     const color = this.ctx.settings.color.value;
+    const lineWeight = this.ctx.settings.lineWeight.value;
     const parcel = {
       geometry: geom as unknown as NewGeometry,
       ...(color !== null && { color }),
+      ...(lineWeight !== null && { lineWeight }),
       attrs: { Ada: '', Parsel: String(next), Mahalle: '', Nitelik: 'Arsa', 'Tapu alanı (m²)': '', Pafta: '' },
       label: String(next),
     };

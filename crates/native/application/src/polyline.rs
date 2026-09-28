@@ -6,7 +6,7 @@
 //! The checks, in order (the first that fails answers):
 //! 1. at least 2 points, every coordinate finite (x before y), one bulge per
 //!    edge when bulges are given (one fewer than the points), every bulge
-//!    finite;
+//!    finite; then the line weight from 0 to 100 mm when given;
 //! 2. the expected revision, 3. the layer: every create command's
 //!    (`checks.rs`), for the reasons `polygon.rs` gives.
 //!
@@ -122,6 +122,7 @@ fn check(doc: &Document, input: &PolylineCreate) -> Result<Vec<CommandWarning>, 
             }
         }
     }
+    checks::line_weight(input.line_weight, "lineWeight")?;
     checks::revision(doc, input.expected_revision.as_deref())?;
     checks::layer(doc, &input.layer_id)
 }
@@ -137,7 +138,7 @@ fn polyline(input: PolylineCreate, id: u32) -> Entity {
             attrs: input.attrs.unwrap_or_default(),
             label: None,
             symbol: None,
-            line_weight: None,
+            line_weight: input.line_weight,
         },
         pts: input.pts,
         bulges: input.bulges.map(|mut bulges| {

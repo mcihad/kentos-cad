@@ -7,6 +7,7 @@
 //! The checks, in order (the first that fails answers):
 //! 1. the outer ring, then each hole: at least 3 corners, every coordinate
 //!    finite, one bulge per edge when bulges are given, every bulge finite;
+//!    then the line weight from 0 to 100 mm when given (docs/adr/0139);
 //! 2. the expected revision: decimal text, then the document's own
 //!    (`conflict` when not);
 //! 3. the layer: known, a layer and not a group, not locked (by itself or a
@@ -88,6 +89,7 @@ fn check(doc: &Document, input: &PolygonCreate) -> Result<Vec<CommandWarning>, S
     for (h, hole) in input.holes.iter().flatten().enumerate() {
         check_ring(Ring::Hole(h), &hole.pts, hole.bulges.as_deref())?;
     }
+    checks::line_weight(input.line_weight, "lineWeight")?;
     checks::revision(doc, input.expected_revision.as_deref())?;
     checks::layer(doc, &input.layer_id)
 }
@@ -197,7 +199,7 @@ fn polygon(input: PolygonCreate, id: u32) -> Entity {
             attrs: input.attrs.unwrap_or_default(),
             label: None,
             symbol: None,
-            line_weight: None,
+            line_weight: input.line_weight,
         },
         pts: input.pts,
         bulges: input.bulges,

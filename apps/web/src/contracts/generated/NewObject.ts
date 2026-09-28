@@ -15,6 +15,12 @@ geometry: EntityGeometry,
  */
 color?: string, 
 /**
+ * Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
+ * thinnest, at most 100; docs/adr/0139): what the tools give a new
+ * object from the current weight. Absent: the layer's (katmana göre).
+ */
+lineWeight?: number, 
+/**
  * GIS attributes, text in v1. Absent: none.
  */
 attrs?: { [key in string]: string }, 

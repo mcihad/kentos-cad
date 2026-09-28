@@ -100,7 +100,8 @@ impl App {
         match event {
             Event::Color(color) => self.draft.color = color,
             Event::LineType(line_type) => self.new_line_type = line_type,
-            Event::Weight(weight) => self.new_line_weight = weight,
+            // New objects drawn with lines take it (docs/adr/0139).
+            Event::Weight(weight) => self.draft.line_weight = weight,
             Event::Scale(scale) => {
                 if let Some(doc) = &mut self.document {
                     let mut settings = doc.settings().clone();
@@ -244,7 +245,7 @@ impl App {
             .iter()
             .map(|(_, value)| self.drawing_color(value))
             .collect();
-        let (line_type, weight) = (self.new_line_type, self.new_line_weight);
+        let (line_type, weight) = (self.new_line_type, self.draft.line_weight);
         let scale = doc.settings().plot_scale;
         let s = typography::scaled;
         let fields_width = move |level: Level| match level {

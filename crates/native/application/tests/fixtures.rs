@@ -165,8 +165,12 @@ trait Input {
 }
 
 impl Input for PolygonCreate {
-    /// `pts[1].y`, `bulges[3]`, `holes[0].pts[2].x`, `holes[1].bulges[0]`.
+    /// `pts[1].y`, `bulges[3]`, `holes[0].pts[2].x`, `holes[1].bulges[0]`,
+    /// `lineWeight` (which the step's input must give).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
+        if path == "lineWeight" {
+            return self.line_weight.as_mut();
+        }
         let (pts, bulges, rest) = match path.strip_prefix("holes[") {
             Some(rest) => {
                 let (h, rest) = rest.split_once("].")?;
@@ -184,8 +188,11 @@ impl Input for PolygonCreate {
 }
 
 impl Input for LineCreate {
-    /// `a.x`, `b.y`.
+    /// `a.x`, `b.y`, `lineWeight` (which the step's input must give).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
+        if path == "lineWeight" {
+            return self.line_weight.as_mut();
+        }
         let (end, axis) = path.split_once('.')?;
         let p = match end {
             "a" => &mut self.a,
@@ -201,9 +208,11 @@ impl Input for LineCreate {
 }
 
 impl Input for PolylineCreate {
-    /// `pts[1].y`, `bulges[0]`.
+    /// `pts[1].y`, `bulges[0]`, `lineWeight` (which the step's input must give).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        if path.starts_with("pts[") {
+        if path == "lineWeight" {
+            self.line_weight.as_mut()
+        } else if path.starts_with("pts[") {
             point_number(&mut self.pts, path)
         } else {
             bulge_number(&mut self.bulges, path)
@@ -219,9 +228,12 @@ impl Input for EntitiesDelete {
 }
 
 impl Input for EntitiesSetProperties {
-    /// No number: the input is ids and texts.
-    fn number(&mut self, _path: &str) -> Option<&mut f64> {
-        None
+    /// `lineWeight` (which the step's input must give); the rest is ids and texts.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "lineWeight" => self.line_weight.as_mut()?.as_mut(),
+            _ => None,
+        }
     }
 }
 
@@ -249,20 +261,22 @@ impl Input for PointCreate {
 }
 
 impl Input for CircleCreate {
-    /// `c.x`, `c.y`, `r`.
+    /// `c.x`, `c.y`, `r`, `lineWeight` (which the step's input must give).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match path {
             "r" => Some(&mut self.r),
+            "lineWeight" => self.line_weight.as_mut(),
             _ => coordinate(&mut self.c, "c", path),
         }
     }
 }
 
 impl Input for ArcCreate {
-    /// `c.x`, `c.y`, `r`, `a0`, `a1`.
+    /// `c.x`, `c.y`, `r`, `a0`, `a1`, `lineWeight` (which the step's input must give).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match path {
             "r" => Some(&mut self.r),
+            "lineWeight" => self.line_weight.as_mut(),
             "a0" => Some(&mut self.a0),
             "a1" => Some(&mut self.a1),
             _ => coordinate(&mut self.c, "c", path),
@@ -339,11 +353,15 @@ impl Input for EntitiesEdit {
 }
 
 impl Input for EntitiesCreate {
-    /// `objects[0].geometry.major.x`, `objects[1].geometry.pts[2].y`, `objects[0].geometry.ratio` …
+    /// `objects[0].geometry.major.x`, `objects[1].geometry.pts[2].y`, `objects[0].geometry.ratio`,
+    /// `objects[1].lineWeight` (which the step's input must give) …
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        let (i, rest) = path.strip_prefix("objects[")?.split_once("].geometry.")?;
+        let (i, rest) = path.strip_prefix("objects[")?.split_once("].")?;
         let object = self.objects.get_mut(i.parse::<usize>().ok()?)?;
-        geometry_number(&mut object.geometry, rest)
+        match rest {
+            "lineWeight" => object.line_weight.as_mut(),
+            _ => geometry_number(&mut object.geometry, rest.strip_prefix("geometry.")?),
+        }
     }
 }
 

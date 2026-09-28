@@ -299,15 +299,6 @@ fn weight_editor(ids: &[Slot], current: Option<Option<f64>>) -> Editor {
     }
 }
 
-/// Whether an object is drawn with lines, so its line weight shows: not a
-/// point, text, dimension or hatch (the web's `drawsLines`).
-fn draws_lines(e: &Entity) -> bool {
-    !matches!(
-        e,
-        Entity::Point(_) | Entity::Text(_) | Entity::Dimension(_) | Entity::Hatch(_)
-    )
-}
-
 /// A symbol as the panel names it: “Çeşitli”, “Katman stiline göre”, or its
 /// name among the project's styles; one of the system library, which the
 /// desktop does not hold yet, by its id (docs/adr/0063).
@@ -452,9 +443,11 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
         .editor(edit(layer_editor(doc, &ids, Some(&base.layer_id)))),
         Row::text("Renk", color_text(color)).editor(edit(color_editor(&ids, color))),
     ];
-    if draws_lines(e) {
+    if e.draws_lines() {
         let weight = Some(base.line_weight);
-        general.push(Row::text("Kalınlık", weight_text(weight)).editor(edit(weight_editor(&ids, weight))));
+        general.push(
+            Row::text("Kalınlık", weight_text(weight)).editor(edit(weight_editor(&ids, weight))),
+        );
     }
     if takes_symbol(e) {
         general.push(
@@ -747,7 +740,7 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
     let edit = |editor: Editor| (!any_locked).then_some(editor);
 
     // The weight of the objects drawn with lines; the others have none to show.
-    let lined: Vec<&&Entity> = objects.iter().filter(|e| draws_lines(e)).collect();
+    let lined: Vec<&&Entity> = objects.iter().filter(|e| e.draws_lines()).collect();
     let weight = lined
         .iter()
         .all(|e| e.base().line_weight == lined[0].base().line_weight)
@@ -758,9 +751,14 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
     ];
     if !lined.is_empty() {
         let lined_ids: Vec<Slot> = lined.iter().map(|e| Slot(e.base().id)).collect();
-        rows.push(Row::text("Kalınlık", weight_text(weight)).editor(edit(weight_editor(&lined_ids, weight))));
+        rows.push(
+            Row::text("Kalınlık", weight_text(weight))
+                .editor(edit(weight_editor(&lined_ids, weight))),
+        );
     }
-    rows.push(Row::text("Sembol", symbol_text(doc, symbol)).editor(edit(symbol_editor(doc, symbol))));
+    rows.push(
+        Row::text("Sembol", symbol_text(doc, symbol)).editor(edit(symbol_editor(doc, symbol))),
+    );
     let mut sections = vec![Section {
         id: "general",
         title: "Ortak özellikler",

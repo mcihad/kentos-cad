@@ -304,8 +304,9 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
     Ok(checked)
 }
 
-/// What a replacement or a new piece takes from its object: the layer and
-/// the colour, the attributes and the label with `keep_data`; not the
+/// What a replacement or a new piece takes from its object: the layer, the
+/// colour and its own line weight (a trimmed 0.70 mm line stays 0.70 mm,
+/// docs/adr/0139), the attributes and the label with `keep_data`; not the
 /// symbol (the web's `EdgePickTool.inherit`). `id` is its slot (0 for a new one).
 fn inherited(base: &EntityBase, id: u32, keep_data: bool) -> EntityBase {
     EntityBase {
@@ -319,7 +320,7 @@ fn inherited(base: &EntityBase, id: u32, keep_data: bool) -> EntityBase {
         },
         label: if keep_data { base.label.clone() } else { None },
         symbol: None,
-        line_weight: None,
+        line_weight: base.line_weight,
     }
 }
 

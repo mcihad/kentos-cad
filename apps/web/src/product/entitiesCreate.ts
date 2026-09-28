@@ -7,7 +7,7 @@ import type { Entity as PlannedEntity } from '../contracts/generated/Entity';
 import type { NewObject } from '../contracts/generated/NewObject';
 import type { CadDocument } from '../model/document';
 import type { NewEntity } from '../model/entities';
-import { checkLayer, checkRevision, error, failed, validated, type Stop } from './checks';
+import { checkLineWeight, checkLayer, checkRevision, error, failed, validated, type Stop } from './checks';
 import type { ProductCommand } from './command';
 import { checkGeometry, geometryOf } from './entitiesEdit';
 
@@ -24,7 +24,8 @@ import { checkGeometry, geometryOf } from './entitiesEdit';
  *
  * The checks, in order (the first that fails answers): at least one object;
  * every geometry, in order, by `cad.entities.edit`'s rules (enough points
- * for its kind, every number finite, a positive radius); the expected
+ * for its kind, every number finite, a positive radius) and its line weight
+ * from 0 to 100 mm when given (docs/adr/0139); the expected
  * revision, then the layer (checks.ts, for the reasons polygonCreate.ts gives).
  */
 
@@ -46,7 +47,7 @@ export const CREATE_LABEL: Record<CreateOperation, string> = {
 function check(doc: CadDocument, input: EntitiesCreate): Stop | CommandWarning[] {
   if (!input.objects.length) return failed(error('no_objects', 'Eklenecek nesne verilmedi. En az bir nesne verin.', 'objects'));
   for (const [i, o] of input.objects.entries()) {
-    const stop = checkGeometry(o.geometry, i, 'objects', 'nesnenin');
+    const stop = checkGeometry(o.geometry, i, 'objects', 'nesnenin') ?? checkLineWeight(o.lineWeight, `objects[${i}].lineWeight`);
     if (stop) return stop;
   }
   return checkRevision(doc, input.expectedRevision) ?? checkLayer(doc, input.layerId);
@@ -58,6 +59,7 @@ function entityOf(o: NewObject, layerId: string): NewEntity {
     ...geometryOf(o.geometry),
     layerId,
     ...(o.color != null && { color: o.color }),
+    ...(o.lineWeight != null && { lineWeight: o.lineWeight }),
     attrs: { ...o.attrs },
     ...(o.label != null && { label: o.label }),
   } as unknown as NewEntity;

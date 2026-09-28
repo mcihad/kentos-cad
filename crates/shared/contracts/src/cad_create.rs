@@ -73,6 +73,13 @@ pub struct NewObject {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
+    /// Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
+    /// thinnest, at most 100; docs/adr/0139): what the tools give a new
+    /// object from the current weight. Absent: the layer's (katmana göre).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
+    pub line_weight: Option<f64>,
     /// GIS attributes, text in v1. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -96,7 +103,8 @@ pub struct NewObject {
 /// `too_few_corners` (a closed area's or a hatch's ring or hole, by
 /// `cad.entities.edit`'s rule: a closed area's may have 2 corners when an
 /// edge is an arc), `empty_text` (a text whose text is empty or only white space),
-/// `not_finite`, `invalid_radius`; then `invalid_revision`,
+/// `not_finite`, `invalid_radius`, `invalid_line_weight` (the object's weight
+/// not from 0 to 100 mm); then `invalid_revision`,
 /// `revision_conflict` (status `conflict`), `layer_not_found`,
 /// `not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`.
 /// Warning: `layer_hidden` (they are written all the same).

@@ -33,7 +33,7 @@ function harness() {
     log,
     selection: new Selection(),
     format: new Formatter({ lengthDecimals: new Signal(3), areaDecimals: new Signal(2), areaUnit: new Signal('m2' as const), angleUnit: new Signal('grad' as const) }),
-    settings: { color: new Signal<string | null>(null) },
+    settings: { color: new Signal<string | null>(null), lineWeight: new Signal<number | null>(null) },
     view: { requestOverlay: () => {} },
     tools: { exit: () => {} },
   } as unknown as AppContext;

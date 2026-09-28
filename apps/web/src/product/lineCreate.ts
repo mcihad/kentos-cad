@@ -4,7 +4,7 @@ import type { LineCreated } from '../contracts/generated/LineCreated';
 import type { LinePlan } from '../contracts/generated/LinePlan';
 import type { CadDocument } from '../model/document';
 import type { NewEntity } from '../model/entities';
-import { checkLayer, checkRevision, copy, notFinite, validated, type Stop } from './checks';
+import { checkLineWeight, checkLayer, checkRevision, copy, notFinite, validated, type Stop } from './checks';
 import type { ProductCommand } from './command';
 
 /**
@@ -18,7 +18,8 @@ import type { ProductCommand } from './command';
  * them.
  *
  * The checks, in order (the first that fails answers): both ends finite
- * (`a` then `b`, x before y); the expected revision; the layer (checks.ts,
+ * (`a` then `b`, x before y); the line weight, when given, from 0 to 100 mm
+ * (docs/adr/0139); the expected revision; the layer (checks.ts,
  * for the reasons polygonCreate.ts gives). A line whose ends coincide is
  * written: geometric validity is not checked, as for the closed area; the
  * tool never gives one.
@@ -29,6 +30,7 @@ function check(doc: CadDocument, input: LineCreate): Stop | CommandWarning[] {
   return (
     notFinite(input.a, 'Başlangıç noktasının', 'a') ??
     notFinite(input.b, 'Bitiş noktasının', 'b') ??
+    checkLineWeight(input.lineWeight, 'lineWeight') ??
     checkRevision(doc, input.expectedRevision) ??
     checkLayer(doc, input.layerId)
   );
@@ -42,6 +44,7 @@ function lineOf(input: LineCreate): NewEntity & { kind: 'line' } {
     b: copy(input.b),
     layerId: input.layerId,
     ...(input.color != null && { color: input.color }),
+    ...(input.lineWeight != null && { lineWeight: input.lineWeight }),
     attrs: { ...input.attrs },
   };
 }

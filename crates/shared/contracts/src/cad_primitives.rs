@@ -119,7 +119,7 @@ pub const CAD_CIRCLE_CREATE_VERSION: u32 = 1;
 ///
 /// Refusals (`CommandError.code`), checked in this order: `not_finite` (`c`,
 /// x before y, then `r`), `invalid_radius` (not above zero),
-/// `invalid_revision`, `revision_conflict` (status `conflict`),
+/// `invalid_line_weight` (not from 0 to 100 mm), `invalid_revision`, `revision_conflict` (status `conflict`),
 /// `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also
 /// `slots_exhausted`. Warning: `layer_hidden` (it is written all the same).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -138,6 +138,13 @@ pub struct CircleCreate {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
+    /// Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
+    /// thinnest, at most 100; docs/adr/0139): what the tools give a new
+    /// object from the current weight. Absent: the layer's (katmana göre).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
+    pub line_weight: Option<f64>,
     /// GIS attributes, text in v1. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -199,7 +206,7 @@ pub const CAD_ARC_CREATE_VERSION: u32 = 1;
 ///
 /// Refusals (`CommandError.code`), checked in this order: `not_finite` (`c`,
 /// x before y, then `r`, `a0`, `a1`), `invalid_radius` (not above zero),
-/// `invalid_revision`, `revision_conflict` (status `conflict`),
+/// `invalid_line_weight` (not from 0 to 100 mm), `invalid_revision`, `revision_conflict` (status `conflict`),
 /// `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also
 /// `slots_exhausted`. Warning: `layer_hidden` (it is written all the same).
 /// The angles are stored as given: equal angles are a full turn, as the
@@ -225,6 +232,13 @@ pub struct ArcCreate {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
+    /// Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
+    /// thinnest, at most 100; docs/adr/0139): what the tools give a new
+    /// object from the current weight. Absent: the layer's (katmana göre).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
+    pub line_weight: Option<f64>,
     /// GIS attributes, text in v1. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

@@ -54,6 +54,7 @@ pub fn add_points(
                     z: pt.z,
                 },
                 color: None,
+                line_weight: None,
                 attrs: Some(attrs),
                 label: Some(pt.name.clone()),
             }

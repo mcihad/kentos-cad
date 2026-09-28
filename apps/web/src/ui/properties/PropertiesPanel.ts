@@ -1,7 +1,7 @@
 import type { AppContext } from '../../app/context';
 import { watchAll } from '../../core/signal';
 import { DIMENSION_STYLE_LABEL, layoutDimension } from '../../model/geom/dimension';
-import { ENTITY_KIND_LABEL, HATCH_PATTERN_LABEL, entityArea, entityLength, type Entity, type HatchPatternType } from '../../model/entities';
+import { ENTITY_KIND_LABEL, HATCH_PATTERN_LABEL, drawsLines, entityArea, entityLength, type Entity, type HatchPatternType } from '../../model/entities';
 import { angleDeg, bearingGrad, dist } from '../../model/geometry';
 import { sweep } from '../../model/geom/arc';
 import { isFullEllipse, majorLength } from '../../model/geom/ellipse';
@@ -458,9 +458,4 @@ export class PropertiesPanel extends Panel {
     if (totals.length) sections.push({ id: 'totals', title: 'Toplamlar', rows: totals });
     return sections;
   }
-}
-
-/** Whether an object is drawn with lines, so its line weight shows (docs/adr/0139): not a point, text, dimension or hatch. */
-function drawsLines(e: Entity): boolean {
-  return e.kind !== 'point' && e.kind !== 'text' && e.kind !== 'dimension' && e.kind !== 'hatch';
 }

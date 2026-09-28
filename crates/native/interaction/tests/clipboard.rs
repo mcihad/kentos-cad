@@ -280,6 +280,22 @@ fn paste_in_place_puts_copies_where_the_objects_were() {
 }
 
 #[test]
+fn a_pasted_object_keeps_its_own_line_weight() {
+    // As its colour (docs/adr/0139): 0 is the thinnest line, not “none”.
+    let mut b = bench(&[2]);
+    let board = copy(&mut b);
+    for weight in [Some(0.7), Some(0.0), None] {
+        let mut item = board.items()[0].clone();
+        item.base_mut().line_weight = weight;
+        let mut own = Clipboard::new();
+        own.set(vec![item], None);
+        let slots = b.run(|_, cx| clipboard::paste_in_place(&own, cx));
+        let pasted = b.doc.get(slots[0]).expect("pasted");
+        assert_eq!(pasted.base().line_weight, weight);
+    }
+}
+
+#[test]
 fn the_paste_tool_is_not_repeated() {
     let mut b = bench(&[1]);
     b.start("line");

@@ -12,7 +12,7 @@
 //! 1. at least one object;
 //! 2. every geometry, in order, by `cad.entities.edit`'s rules: enough
 //!    points for its kind, every number finite, a circle's or an arc's
-//!    radius above zero;
+//!    radius above zero; and its line weight from 0 to 100 mm when given;
 //! 3. the expected revision, then the layer (every create command's, `checks.rs`).
 
 use kentos_contracts::{
@@ -123,6 +123,7 @@ fn check(doc: &Document, input: &EntitiesCreate) -> Result<Vec<CommandWarning>, 
     }
     for (i, object) in input.objects.iter().enumerate() {
         check_geometry(&object.geometry, "objects", i, "nesnenin")?;
+        checks::line_weight(object.line_weight, &format!("objects[{i}].lineWeight"))?;
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
     checks::layer(doc, &input.layer_id)
@@ -144,7 +145,7 @@ fn entities(input: &EntitiesCreate) -> Vec<Entity> {
                     attrs: object.attrs.clone().unwrap_or_default(),
                     label: object.label.clone(),
                     symbol: None,
-                    line_weight: None,
+                    line_weight: object.line_weight,
                 },
             )
         })

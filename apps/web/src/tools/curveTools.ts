@@ -178,8 +178,8 @@ export class ArcTool extends PointInputTool {
       this.ctx.log.warn('Bu değerlerle yay oluşmuyor (noktalar aynı doğruda ya da yarıçap kiriş için küçük).');
       return;
     }
-    // Written by the product command `cad.arc.create` (docs/adr/0032): the arc as stored, the active layer and colour explicit.
-    const written = this.written(arcCreate.execute({ doc: this.ctx.doc }, { layerId: this.ctx.doc.layers.active.value, c: g.c, r: g.r, a0: g.a0, a1: g.a1, ...this.colour() }));
+    // Written by the product command `cad.arc.create` (docs/adr/0032): the arc as stored, the active layer, colour and line weight explicit.
+    const written = this.written(arcCreate.execute({ doc: this.ctx.doc }, { layerId: this.ctx.doc.layers.active.value, c: g.c, r: g.r, a0: g.a0, a1: g.a1, ...this.colour(), ...this.weight() }));
     if (written) this.ctx.log.success(`Yay eklendi: r = ${this.ctx.format.length(g.r)}, açı ${deg(normAngle(g.a1 - g.a0) || 2 * Math.PI).toFixed(4)}°`);
     this.pts = [];
     this.mode = 'three';
@@ -363,9 +363,9 @@ export class CircleTool extends PointInputTool {
     this.refreshPrompt();
   }
 
-  /** Written by the product command `cad.circle.create` (docs/adr/0032): the active layer and colour explicit. */
+  /** Written by the product command `cad.circle.create` (docs/adr/0032): the active layer, colour and line weight explicit. */
   private commit(c: Vec2, r: number): void {
-    if (r > 1e-9 && this.written(circleCreate.execute({ doc: this.ctx.doc }, { layerId: this.ctx.doc.layers.active.value, c, r, ...this.colour() }))) {
+    if (r > 1e-9 && this.written(circleCreate.execute({ doc: this.ctx.doc }, { layerId: this.ctx.doc.layers.active.value, c, r, ...this.colour(), ...this.weight() }))) {
       CircleTool.lastRadius = r;
       this.ctx.log.success(`Daire eklendi: r = ${this.ctx.format.length(r)}`);
     }

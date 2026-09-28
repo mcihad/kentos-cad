@@ -140,12 +140,16 @@ pub struct Draft {
     /// …), explicit in the product command's input (CMD-07); `None`: the
     /// layer's (“Katmana göre”).
     pub color: Option<&'static str>,
+    /// The line weight new objects drawn with lines take, mm (the ribbon's
+    /// Kalınlık, the web's `ctx.settings.lineWeight`; docs/adr/0139); `None`:
+    /// the layer's (“Katmana göre”).
+    pub line_weight: Option<f64>,
 }
 
 impl Default for Draft {
     /// The web's defaults: ortho and polar off, an 11 px snap aperture,
     /// snapping on with its default kinds (all but nearest), a 5 px pick
-    /// aperture, the layer's colour (app/state.ts, the settings schema).
+    /// aperture, the layer's colour and weight (app/state.ts, the settings schema).
     fn default() -> Self {
         Self {
             ortho: false,
@@ -156,6 +160,7 @@ impl Default for Draft {
             pick_aperture: 5.0,
             tracking: true,
             color: None,
+            line_weight: None,
         }
     }
 }

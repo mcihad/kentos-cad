@@ -206,17 +206,17 @@ export abstract class PointInputTool implements Tool {
   /**
    * A closed shape the tool built (a rectangle, a regular polygon) through
    * the product command `cad.polygon.create` (docs/adr/0032): the active
-   * layer and the current colour explicit. Whether it was written.
+   * layer, the current colour and line weight explicit. Whether it was written.
    */
   protected writeRing(pts: Vec2[], bulges?: number[]): boolean {
-    const input = { layerId: this.ctx.doc.layers.active.value, pts, ...(bulges && { bulges }), ...this.colour() };
+    const input = { layerId: this.ctx.doc.layers.active.value, pts, ...(bulges && { bulges }), ...this.colour(), ...this.weight() };
     return this.written(polygonCreate.execute({ doc: this.ctx.doc }, input)) !== null;
   }
 
   /**
    * Objects the tool built (an ellipse, a spline, a construction line …)
    * through the product command `cad.entities.create` (docs/adr/0057): the
-   * active layer and the current colour explicit; one undo step, “Ekle” or
+   * active layer, the current colour and line weight explicit; one undo step, “Ekle” or
    * the tool's `operation`, noted for Ctrl+Z. The output, or null when
    * refused (the refusal said).
    */
@@ -230,6 +230,12 @@ export abstract class PointInputTool implements Tool {
   protected colour(): { color?: string } {
     const color = this.ctx.settings.color.value;
     return color !== null ? { color } : {};
+  }
+
+  /** The current line weight (the toolbar's Kalınlık, docs/adr/0139), explicit in a command's input; absent: the layer's. */
+  protected weight(): { lineWeight?: number } {
+    const lineWeight = this.ctx.settings.lineWeight.value;
+    return lineWeight !== null ? { lineWeight } : {};
   }
 
   draw(g: CanvasRenderingContext2D, view: ViewTransform): void {
@@ -281,7 +287,7 @@ export class LineTool extends PointInputTool {
    * texts, word for word). The new line's slot, or null when refused.
    */
   private createLine(a: Vec2, b: Vec2): number | null {
-    return this.written(lineCreate.execute({ doc: this.ctx.doc }, { layerId: this.ctx.doc.layers.active.value, a, b, ...this.colour() }))?.id ?? null;
+    return this.written(lineCreate.execute({ doc: this.ctx.doc }, { layerId: this.ctx.doc.layers.active.value, a, b, ...this.colour(), ...this.weight() }))?.id ?? null;
   }
 
   protected override option(key: string): boolean {

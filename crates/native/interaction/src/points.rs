@@ -96,6 +96,7 @@ pub(crate) fn write_ring(
         bulges,
         holes: None,
         color: cx.draft.color.map(str::to_owned),
+        line_weight: cx.draft.line_weight,
         attrs: None,
         expected_revision: None,
     };
@@ -125,6 +126,11 @@ pub(crate) fn write_objects(
         objects: geometries
             .into_iter()
             .map(|geometry| kentos_contracts::NewObject {
+                // The current weight goes to what is drawn with lines (docs/adr/0139).
+                line_weight: geometry
+                    .draws_lines()
+                    .then_some(cx.draft.line_weight)
+                    .flatten(),
                 geometry,
                 color: cx.draft.color.map(str::to_owned),
                 attrs: None,

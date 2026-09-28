@@ -24,7 +24,7 @@
 
 use kentos_contracts::{
     CommandResult, CommandWarning, EntitiesPropertiesSet, EntitiesSetProperties,
-    EntitiesSetPropertiesPlan, Entity, LayerNodeType, MAX_LINE_WEIGHT, PropertiesOperation,
+    EntitiesSetPropertiesPlan, Entity, LayerNodeType, PropertiesOperation,
 };
 use kentos_domain::{Document, Slot};
 
@@ -184,15 +184,7 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
             Some("attrs".into()),
         )));
     }
-    if let Some(Some(w)) = input.line_weight
-        && !(0.0..=MAX_LINE_WEIGHT).contains(&w)
-    {
-        return Err(Stop::Failed(error(
-            codes::INVALID_LINE_WEIGHT,
-            format!("Çizgi kalınlığı {w} mm olamaz: 0 ile 100 mm arasında olmalı (0 en ince çizgidir). Bir kalınlık ya da “Katmana göre” seçin."),
-            Some("lineWeight".into()),
-        )));
-    }
+    checks::line_weight(input.line_weight.flatten(), "lineWeight")?;
     checks::revision(doc, input.expected_revision.as_deref())?;
     let found = checks::named(doc, &input.uids)?;
     let layers = doc.layers();

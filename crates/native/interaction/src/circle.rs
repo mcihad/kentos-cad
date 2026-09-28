@@ -249,6 +249,7 @@ impl Circle {
             c: wire(c),
             r,
             color: cx.draft.color.map(str::to_owned),
+            line_weight: cx.draft.line_weight,
             attrs: None,
             expected_revision: None,
         };
