@@ -219,11 +219,15 @@ impl App {
                 self.item_controls(tab.id, item, &mut out);
             }
             // The user's models in the model library's panel (view.rs `user_model_buttons`).
-            if panel
-                .items
-                .iter()
-                .any(|item| matches!(item, Item::Command { id: "processing.newModel", .. }))
-            {
+            if panel.items.iter().any(|item| {
+                matches!(
+                    item,
+                    Item::Command {
+                        id: "processing.newModel",
+                        ..
+                    }
+                )
+            }) {
                 for m in self.user_models() {
                     out.push((
                         TipKey::Model(m.id.clone()),

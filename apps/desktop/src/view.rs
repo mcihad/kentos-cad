@@ -340,11 +340,15 @@ impl App {
         }
         // The model library's panel lists the user's models after the built-in
         // ones (the web's `@models`): each opens its window, as its command does.
-        if panel
-            .items
-            .iter()
-            .any(|item| matches!(item, Item::Command { id: "processing.newModel", .. }))
-        {
+        if panel.items.iter().any(|item| {
+            matches!(
+                item,
+                Item::Command {
+                    id: "processing.newModel",
+                    ..
+                }
+            )
+        }) {
             for button in self.user_model_buttons() {
                 group = group.tool(button);
                 any = true;
@@ -676,7 +680,9 @@ impl App {
         let active = doc.model.layers().active() == node.id;
         let mut row = Node::new(node.name.as_str())
             // Its place in the tree (the web's name title).
-            .tip(kentos_ui::widget::Tip::new(doc.model.layers().path(&node.id)))
+            .tip(kentos_ui::widget::Tip::new(
+                doc.model.layers().path(&node.id),
+            ))
             .cells([label::caption(doc.count_below(node).to_string()).into()])
             .on_press(Message::LayerSelected(node.id.clone()))
             .selected(self.layer_row_selected(&node.id))
