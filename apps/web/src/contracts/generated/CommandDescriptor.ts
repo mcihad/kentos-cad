@@ -49,4 +49,10 @@ input: unknown,
 /**
  * JSON Schema of the result.
  */
-output: unknown, examples: Array<CommandExample>, };
+output: unknown, 
+/**
+ * JSON Schema of what `plan` answers: the change it would make, with
+ * nothing written (TODOS.md CMD-04). Absent for a command only the
+ * server runs: the server executes, it does not plan.
+ */
+plan?: unknown, examples: Array<CommandExample>, };

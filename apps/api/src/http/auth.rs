@@ -9,6 +9,8 @@
 //!   account; the program holds the token in memory and sends it as the
 //!   cookie with `x-kentos-client: desktop`. Any custom header stops a
 //!   cross-site form, so the rule is the same; the name only says who asked.
+//! - Python SDK (`kentos.cad.Connection`, docs/adr/0131): the desktop's way,
+//!   with `x-kentos-client: python`.
 //! - API clients: `Authorization: Bearer <OpenID access token>`.
 
 use axum::Json;
@@ -25,8 +27,8 @@ use super::error::{Body, Failure, request_id};
 
 pub const SESSION_COOKIE: &str = "kentos_session";
 pub const CLIENT_HEADER: &str = "x-kentos-client";
-/// The programs that send [`CLIENT_HEADER`]: the web app and the desktop app.
-pub const CLIENTS: [&str; 2] = ["web", "desktop"];
+/// The programs that send [`CLIENT_HEADER`]: the web app, the desktop app and the Python SDK.
+pub const CLIENTS: [&str; 3] = ["web", "desktop", "python"];
 
 pub fn cookie(headers: &HeaderMap, name: &str) -> Option<String> {
     headers
@@ -298,5 +300,24 @@ pub async fn oidc_callback(
             tracing::info!(error = %e, "OpenID girişi tamamlanamadı");
             back_with_error(&state, e.code())
         }
+    }
+}
+
+#[cfg(test)]
+mod client_tests {
+    use super::*;
+    use axum::http::Method;
+
+    #[test]
+    fn a_change_names_one_of_the_programs_and_a_read_need_not() {
+        let mut h = HeaderMap::new();
+        assert!(check_client_header(&Method::POST, &h).is_err());
+        assert!(check_client_header(&Method::GET, &h).is_ok());
+        for c in ["web", "desktop", "python"] {
+            h.insert(CLIENT_HEADER, HeaderValue::from_static(c));
+            assert!(check_client_header(&Method::POST, &h).is_ok(), "{c}");
+        }
+        h.insert(CLIENT_HEADER, HeaderValue::from_static("curl"));
+        assert!(check_client_header(&Method::DELETE, &h).is_err());
     }
 }

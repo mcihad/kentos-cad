@@ -65,6 +65,12 @@ pub struct CommandDescriptor {
     /// JSON Schema of the result.
     #[cfg_attr(feature = "ts", ts(type = "unknown"))]
     pub output: serde_json::Value,
+    /// JSON Schema of what `plan` answers: the change it would make, with
+    /// nothing written (TODOS.md CMD-04). Absent for a command only the
+    /// server runs: the server executes, it does not plan.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional, type = "unknown"))]
+    pub plan: Option<serde_json::Value>,
     pub examples: Vec<CommandExample>,
 }
 
@@ -194,6 +200,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Interactive,
             input: schema::<ProjectChanges>(),
             output: schema::<CommitResult>(),
+            plan: None,
             examples: vec![CommandExample {
                 title: "Yeni bir nokta ekle".into(),
                 input: json!({
@@ -229,6 +236,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Interactive,
             input: schema::<ProjectShare>(),
             output: schema::<ProjectAccessChange>(),
+            plan: None,
             examples: vec![CommandExample {
                 title: "Bir meslektaşı düzenleyici yap".into(),
                 input: json!({ "userId": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f", "role": "editor" }),
@@ -252,6 +260,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Interactive,
             input: schema::<ProjectAccessRevoke>(),
             output: schema::<ProjectAccessChange>(),
+            plan: None,
             examples: vec![CommandExample {
                 title: "Paylaşımı kaldır".into(),
                 input: json!({ "userId": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f" }),
@@ -279,6 +288,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Interactive,
             input: schema::<crate::ProjectCreate>(),
             output: schema::<crate::ProjectInfo>(),
+            plan: None,
             examples: vec![CommandExample {
                 title: "Boş bir ifraz projesi aç".into(),
                 input: json!({
@@ -312,6 +322,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Interactive,
             input: schema::<crate::ProjectRename>(),
             output: schema::<crate::ProjectCatalogChange>(),
+            plan: None,
             examples: vec![CommandExample {
                 title: "Projeye yeni bir ad ver".into(),
                 input: json!({ "name": "Ada 101 (revize)" }),
@@ -336,6 +347,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Interactive,
             input: schema::<crate::ProjectMetadataUpdate>(),
             output: schema::<crate::ProjectCatalogChange>(),
+            plan: None,
             examples: vec![CommandExample {
                 title: "Türü ve etiketleri değiştir, açıklama ekle".into(),
                 input: json!({
@@ -364,6 +376,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Interactive,
             input: schema::<crate::ProjectDuplicate>(),
             output: schema::<crate::ProjectDuplicated>(),
+            plan: None,
             examples: vec![CommandExample {
                 title: "Kişisel alana bir kopya".into(),
                 input: json!({ "name": "Ada 101 (deneme)", "tenantId": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f" }),
@@ -387,6 +400,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Interactive,
             input: schema::<crate::EmptyInput>(),
             output: schema::<crate::ProjectCatalogChange>(),
+            plan: None,
             examples: vec![CommandExample {
                 title: "Biten projeyi arşivle".into(),
                 input: json!({}),
@@ -410,6 +424,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Interactive,
             input: schema::<crate::EmptyInput>(),
             output: schema::<crate::ProjectCatalogChange>(),
+            plan: None,
             examples: vec![CommandExample {
                 title: "Arşivden çıkar".into(),
                 input: json!({}),
@@ -434,6 +449,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Interactive,
             input: schema::<crate::EmptyInput>(),
             output: schema::<crate::ProjectCatalogChange>(),
+            plan: None,
             examples: vec![CommandExample {
                 title: "Çöp kutusuna taşı".into(),
                 input: json!({}),
@@ -457,6 +473,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Interactive,
             input: schema::<crate::EmptyInput>(),
             output: schema::<crate::ProjectCatalogChange>(),
+            plan: None,
             examples: vec![CommandExample {
                 title: "Geri yükle".into(),
                 input: json!({}),
@@ -481,6 +498,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Interactive,
             input: schema::<crate::ProjectPurge>(),
             output: schema::<crate::ProjectPurged>(),
+            plan: None,
             examples: vec![CommandExample {
                 title: "Adını yazarak kalıcı olarak sil".into(),
                 input: json!({ "confirmName": "Ada 101 (eski)" }),
@@ -503,6 +521,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Instant,
             input: schema::<crate::ProjectFavorite>(),
             output: schema::<crate::ProjectCatalogChange>(),
+            plan: None,
             examples: vec![CommandExample {
                 title: "Favorilere ekle".into(),
                 input: json!({ "favorite": true }),
@@ -528,6 +547,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Interactive,
             input: schema::<crate::FileCommit>(),
             output: schema::<crate::FileCommitted>(),
+            plan: None,
             examples: vec![CommandExample {
                 title: "İlk revizyonu kaydet".into(),
                 input: json!({ "uploadId": "0199a1b2-3c4d-7e5f-8a9b-0c1d2e3f4a5b" }),
@@ -554,6 +574,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Interactive,
             input: schema::<crate::ProjectConvert>(),
             output: schema::<crate::ProjectDuplicated>(),
+            plan: None,
             examples: vec![CommandExample {
                 title: "Dosya projesini PostGIS'e aktar".into(),
                 input: json!({ "to": "database" }),
@@ -582,6 +603,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Interactive,
             input: schema::<crate::ProjectImport>(),
             output: schema::<crate::ProjectImported>(),
+            plan: None,
             examples: vec![CommandExample {
                 title: "Yerel çizimi yeni projeye aktar".into(),
                 input: json!({ "uploadId": "0199a1b2-3c4d-7e5f-8a9b-0c1d2e3f4a5b" }),
@@ -607,6 +629,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Interactive,
             input: schema::<crate::ProjectInvite>(),
             output: schema::<crate::InvitationChange>(),
+            plan: None,
             examples: vec![CommandExample {
                 title: "Belediyedeki mühendisi görüntüleyici olarak davet et".into(),
                 input: json!({ "email": "muhendis@belediye.gov.tr", "role": "viewer" }),
@@ -630,6 +653,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Interactive,
             input: schema::<crate::InvitationRevoke>(),
             output: schema::<crate::InvitationChange>(),
+            plan: None,
             examples: vec![CommandExample {
                 title: "Bekleyen daveti geri al".into(),
                 input: json!({ "invitationId": "0199a1b2-3c4d-7e5f-8a9b-0c1d2e3f4a5b" }),
@@ -655,6 +679,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Interactive,
             input: schema::<crate::CheckpointCreate>(),
             output: schema::<crate::CheckpointChange>(),
+            plan: None,
             examples: vec![CommandExample {
                 title: "Teslim öncesi".into(),
                 input: json!({ "name": "Belediyeye teslim", "note": "Ada 101 ifraz dosyası" }),
@@ -678,6 +703,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Interactive,
             input: schema::<crate::CheckpointDelete>(),
             output: schema::<crate::CheckpointChange>(),
+            plan: None,
             examples: vec![CommandExample {
                 title: "Kontrol noktasını kaldır".into(),
                 input: json!({ "checkpointId": "0199a1b2-3c4d-7e5f-8a9b-0c1d2e3f4a5b" }),
@@ -706,6 +732,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Interactive,
             input: schema::<crate::CheckpointRestore>(),
             output: schema::<crate::ProjectDuplicated>(),
+            plan: None,
             examples: vec![CommandExample {
                 title: "Teslim hâlinden yeni proje".into(),
                 input: json!({ "checkpointId": "0199a1b2-3c4d-7e5f-8a9b-0c1d2e3f4a5b", "name": "Ada 101 (teslim)" }),
@@ -733,6 +760,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Instant,
             input: schema::<PolygonCreate>(),
             output: schema::<PolygonCreated>(),
+            plan: Some(schema::<crate::PolygonPlan>()),
             examples: vec![
                 CommandExample {
                     title: "Dikdörtgen bir alan".into(),
@@ -800,6 +828,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Instant,
             input: schema::<LineCreate>(),
             output: schema::<LineCreated>(),
+            plan: Some(schema::<crate::LinePlan>()),
             examples: vec![
                 CommandExample {
                     title: "Bir çizgi".into(),
@@ -847,6 +876,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Instant,
             input: schema::<PolylineCreate>(),
             output: schema::<PolylineCreated>(),
+            plan: Some(schema::<crate::PolylinePlan>()),
             examples: vec![
                 CommandExample {
                     title: "Üç noktalı çoklu çizgi".into(),
@@ -903,6 +933,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Instant,
             input: schema::<EntitiesDelete>(),
             output: schema::<EntitiesDeleted>(),
+            plan: Some(schema::<crate::EntitiesDeletePlan>()),
             examples: vec![
                 CommandExample {
                     title: "İki nesneyi sil".into(),
@@ -953,6 +984,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Instant,
             input: schema::<PointCreate>(),
             output: schema::<PointCreated>(),
+            plan: Some(schema::<crate::PointPlan>()),
             examples: vec![
                 CommandExample {
                     title: "Bir nokta".into(),
@@ -1000,6 +1032,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Instant,
             input: schema::<CircleCreate>(),
             output: schema::<CircleCreated>(),
+            plan: Some(schema::<crate::CirclePlan>()),
             examples: vec![
                 CommandExample {
                     title: "Yarıçapı 12,5 m olan bir daire".into(),
@@ -1048,6 +1081,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Instant,
             input: schema::<ArcCreate>(),
             output: schema::<ArcCreated>(),
+            plan: Some(schema::<crate::ArcPlan>()),
             examples: vec![
                 CommandExample {
                     title: "Doğudan kuzeye çeyrek yay".into(),
@@ -1103,6 +1137,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Instant,
             input: schema::<EntitiesTransform>(),
             output: schema::<EntitiesTransformed>(),
+            plan: Some(schema::<crate::EntitiesTransformPlan>()),
             examples: vec![
                 CommandExample {
                     title: "İki nesneyi 12,5 m doğuya, 7,25 m güneye taşıma".into(),
@@ -1184,6 +1219,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Instant,
             input: schema::<EntitiesEdit>(),
             output: schema::<EntitiesEdited>(),
+            plan: Some(schema::<crate::EntitiesEditPlan>()),
             examples: vec![
                 CommandExample {
                     title: "Budama: çizginin kalan iki parçası; ilki çizginin kendisidir".into(),
@@ -1260,6 +1296,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Instant,
             input: schema::<EntitiesArray>(),
             output: schema::<EntitiesArrayed>(),
+            plan: Some(schema::<crate::EntitiesArrayPlan>()),
             examples: vec![
                 CommandExample {
                     title: "Bir parseli 2 satır × 3 sütun diziye kopyalama: sütunlar 25 m, satırlar 40 m arayla".into(),
@@ -1320,6 +1357,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Instant,
             input: schema::<crate::EntitiesCreate>(),
             output: schema::<crate::EntitiesCreated>(),
+            plan: Some(schema::<crate::EntitiesCreatePlan>()),
             examples: vec![
                 CommandExample {
                     title: "Bir elips: merkezi, büyük yarı ekseni (merkezden bir uca) ve küçük eksenin büyüğe oranı".into(),
@@ -1394,6 +1432,7 @@ pub fn catalog() -> CommandCatalog {
             cost: CommandCost::Instant,
             input: schema::<crate::EntitiesSetProperties>(),
             output: schema::<crate::EntitiesPropertiesSet>(),
+            plan: Some(schema::<crate::EntitiesSetPropertiesPlan>()),
             examples: vec![
                 CommandExample {
                     title: "Katman değiştir: iki nesne Yol katmanına".into(),
@@ -1477,6 +1516,17 @@ mod tests {
             assert!(
                 d.input.get("$schema").is_some() && d.output.get("$schema").is_some(),
                 "{}: schemas",
+                d.id
+            );
+            // A command an app runs plans too; one only the server runs does not.
+            let local = d
+                .hosts
+                .iter()
+                .any(|h| matches!(h, CommandHost::Web | CommandHost::Desktop));
+            assert_eq!(
+                d.plan.as_ref().is_some_and(|p| p.get("$schema").is_some()),
+                local,
+                "{}: a plan schema exactly when an app runs it",
                 d.id
             );
             // Permissions are the fixed names of docs/adr/0015.
