@@ -25,12 +25,13 @@ pub use dimension::layout as dimension_layout;
 pub(crate) use writer::Objects;
 pub use writer::{WriteInput, input_from_json, write};
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use kentos_contracts::{DxfReadOptions, ImportLayer, ImportResult, LineType};
 
 use crate::num::{parse_int, parse_real};
 use crate::text::Encoding;
+use crate::watch::{Quiet, STOPPED, Watch};
 use emit::{Block, Ctx, Emitter, Library, Out};
 use entity::P3;
 use lexer::{Lexer, Pair};
@@ -344,8 +345,23 @@ fn encoding(bytes: &[u8], version: &str, codepage: &str, out: &mut Out) -> Encod
     }
 }
 
+/// Objects read between two looks at the watch.
+const WATCH_EVERY: u32 = 2048;
+
 /// Reads an ASCII DXF file.
 pub fn read(bytes: &[u8], opts: &DxfReadOptions) -> Result<ImportResult, String> {
+    read_watched(bytes, opts, &mut Quiet)
+}
+
+/// Reads an ASCII DXF file, telling `watch` how far it is (thousandths of
+/// the file's bytes) and stopping when it says so (`Err(STOPPED)`).
+pub fn read_watched(
+    bytes: &[u8],
+    opts: &DxfReadOptions,
+    watch: &mut dyn Watch,
+) -> Result<ImportResult, String> {
+    let total = bytes.len().max(1) as u64;
+    let mut ask = |pos: usize| watch.step((pos as u64).min(total) * 950 / total, 1000);
     if bytes.starts_with(b"AutoCAD Binary DXF") {
         return Err("Bu dosya ikili (binary) DXF. KentOS ASCII DXF okur: dosyayı AutoCAD'de DXF olarak, “ASCII” seçeneğiyle kaydedip yeniden deneyin.".into());
     }
@@ -400,6 +416,9 @@ pub fn read(bytes: &[u8], opts: &DxfReadOptions) -> Result<ImportResult, String>
             continue;
         }
         saw_section = true;
+        if !ask(rd.lex.position()) {
+            return Err(STOPPED.into());
+        }
         let Some(name) = rd.lex.next()? else { break };
         match name.text().to_uppercase().as_str() {
             "HEADER" => {
@@ -427,12 +446,17 @@ pub fn read(bytes: &[u8], opts: &DxfReadOptions) -> Result<ImportResult, String>
     }
     if pending_entities {
         let model = Ctx::model();
+        let mut seen = 0u32;
         while let Some(p) = rd.lex.next()? {
             if p.code != 0 {
                 continue;
             }
             if p.is(0, "ENDSEC") {
                 break;
+            }
+            seen += 1;
+            if seen.is_multiple_of(WATCH_EVERY) && !ask(rd.lex.position()) {
+                return Err(STOPPED.into());
             }
             let kind = p.text().to_uppercase();
             match rd.entity(&kind, p.line)? {
@@ -457,6 +481,8 @@ pub fn read(bytes: &[u8], opts: &DxfReadOptions) -> Result<ImportResult, String>
                 line_type: l.line_type,
                 line_weight: l.line_weight,
                 count,
+                kinds: BTreeMap::new(),
+                bounds: None,
             });
         }
     }
@@ -475,6 +501,8 @@ pub fn read(bytes: &[u8], opts: &DxfReadOptions) -> Result<ImportResult, String>
             line_type: LineType::Continuous,
             line_weight: None,
             count,
+            kinds: BTreeMap::new(),
+            bounds: None,
         });
     }
     if out.truncated > 0 {
@@ -491,6 +519,9 @@ pub fn read(bytes: &[u8], opts: &DxfReadOptions) -> Result<ImportResult, String>
             0,
         );
     }
+    if !ask(bytes.len()) {
+        return Err(STOPPED.into());
+    }
     out.report.fact("Sürüm", version_name(&rd.version));
     out.report.fact("Karakter kodlaması", rd.dec.enc.label());
     if let Some(u) = rd.units {
@@ -499,11 +530,14 @@ pub fn read(bytes: &[u8], opts: &DxfReadOptions) -> Result<ImportResult, String>
             out.report.note("Birim", &format!("dosya birimini {} olarak bildiriyor; koordinatlar ölçeklenmeden alındı (metre sayıldı)", units_name(u)), 0);
         }
     }
-    Ok(ImportResult {
+    let mut result = ImportResult {
         entities: out.entities,
         layers,
         report: out.report.import(),
         bounds: out.bounds,
         declared_crs: None,
-    })
+        view: None,
+    };
+    crate::import::summarise(&mut result);
+    Ok(result)
 }

@@ -4,7 +4,7 @@ import type { FileKind, PickedFile } from './fileIO';
 
 /**
  * File exchange commands: coordinate lists (Netcad NCN, TXT, CSV), DXF and
- * GeoJSON in and out, Shapefile in (docs/adr/0046). The dialogs, the formats worker and its Rust module load on first
+ * GeoJSON in and out, Shapefile and Netcad NCZ in (docs/adr/0046, 0138). The dialogs, the formats worker and its Rust modules load on first
  * use (CLAUDE.md §20): nothing of them is in the start-up bundle. Reading
  * and writing run in the worker (§6.2 rule 6); the source coordinate system
  * is always asked, never guessed, and nothing is reprojected (§5).
@@ -12,6 +12,7 @@ import type { FileKind, PickedFile } from './fileIO';
 
 export const COORD_FILES: FileKind = { description: 'Koordinat listesi (NCN, TXT, CSV)', accept: { 'text/plain': ['.ncn', '.txt', '.csv', '.xyz', '.dat', '.asc'] } };
 export const DXF_FILES: FileKind = { description: 'AutoCAD DXF (DWG değil)', accept: { 'application/dxf': ['.dxf'] } };
+export const NCZ_FILES: FileKind = { description: 'Netcad çizimi (NCZ)', accept: { 'application/x-netcad-ncz': ['.ncz'] } };
 export const GEOJSON_FILES: FileKind = { description: 'GeoJSON', accept: { 'application/geo+json': ['.geojson', '.json'] } };
 /** A Shapefile layer's files, chosen together (a .zip is not read: docs/adr/0046). */
 export const SHAPEFILE_FILES: FileKind = { description: 'Shapefile katmanı (.shp, .shx, .dbf, .prj, .cpg)', accept: { 'application/x-shapefile': ['.shp', '.shx', '.dbf', '.prj', '.cpg'] } };
@@ -52,7 +53,17 @@ export function registerFileExchangeCommands(ctx: AppContext): void {
       description:
         "AutoCAD DXF (ASCII) çizimini içe aktarır: katmanlar, bloklar (patlatılarak), yaylı çoklu çizgiler, taramalar ve yazılar; alınamayanlar nedeniyle listelenir. DWG açılamaz: kapalı (tescilli) bir biçimdir; AutoCAD ya da Netcad'de DXF olarak kaydedip onu açın.",
       aliases: ['DXF', 'DXFAL', 'DXFIN'],
-      run: () => importWith(ctx, DXF_FILES, 'DXF', () => import('../ui/io/DxfImportDialog'), (m, file) => m.openDxfImport(ctx, file, DXF_FILES)),
+      run: () => importWith(ctx, DXF_FILES, 'DXF', () => import('../ui/io/DrawingImportDialog'), (m, file) => m.openDxfImport(ctx, file, DXF_FILES)),
+    },
+    {
+      id: 'file.import.ncz',
+      title: 'Netcad NCZ…',
+      category: 'Dosya',
+      icon: 'import',
+      description:
+        'Netcad NCZ çizimini içe aktarır: katmanlar, noktalar, çizgiler, yaylı çoklu çizgiler, yazılar ve imar planının akıllı nesneleri (yerleşim, yapılaşma, yol, plan notu, fonksiyon adı) Netcad sembolleriyle, en üstte çizilerek. Dosyanın bildirdiği koordinat sistemi gösterilir; projeninkinden başkaysa alınmaz, koordinatlar dönüştürülmez.',
+      aliases: ['NCZ', 'NCZAL', 'NETCAD'],
+      run: () => importWith(ctx, NCZ_FILES, 'NCZ', () => import('../ui/io/DrawingImportDialog'), (m, file) => m.openNczImport(ctx, file, NCZ_FILES)),
     },
     {
       id: 'file.import.geojson',

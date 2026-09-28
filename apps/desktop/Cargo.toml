@@ -34,6 +34,9 @@ kentos-cloud = { path = "../../crates/native/cloud" }
 # File exchange (exchange/): the shared readers and writers of coordinate lists and DXF,
 # the ones the web runs in its formats worker (CLAUDE.md §9.7, docs/adr/0009).
 kentos-formats = { path = "../../crates/shared/formats" }
+# Netcad NCZ in (docs/adr/0138): a port of GPL-2.0-or-later code, not distributed before the
+# author's permission (crates/shared/ncz/README.md).
+kentos-ncz = { path = "../../crates/shared/ncz" }
 # The style engine (style/, docs/adr/0090): the library, each layer's program and
 # batches; the store they are built next to; SVG drawings read for the atlas with
 # the SVG core's readers, parsed by roxmltree (the owner's approval, 2026-09-27;

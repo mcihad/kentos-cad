@@ -204,4 +204,10 @@ impl Document {
         self.generation += 1;
         self.dirty = true;
     }
+
+    /// What the drawing holds changed, though no edit is recorded yet (a step
+    /// an open group gathered, or a group taken back): what shows it follows.
+    pub(crate) fn mark_changed(&mut self) {
+        self.generation += 1;
+    }
 }

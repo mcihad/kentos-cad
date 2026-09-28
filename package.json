@@ -25,6 +25,8 @@
     "arch:deps": "node scripts/arch/deps.mjs",
     "rust:wasm": "cargo build -p kentos-geometry-wasm --target wasm32-unknown-unknown --profile wasm && wasm-bindgen --target web --out-dir apps/web/src/wasm/pkg target/wasm32-unknown-unknown/wasm/kentos_geometry_wasm.wasm",
     "rust:wasm:formats": "cargo build -p kentos-formats-wasm --target wasm32-unknown-unknown --profile wasm && wasm-bindgen --target web --out-dir apps/web/src/io/pkg target/wasm32-unknown-unknown/wasm/kentos_formats_wasm.wasm",
+    "rust:wasm:dxf": "cargo build -p kentos-dxf-wasm --target wasm32-unknown-unknown --profile wasm && wasm-bindgen --target web --out-dir apps/web/src/io/dxf/pkg target/wasm32-unknown-unknown/wasm/kentos_dxf_wasm.wasm",
+    "rust:wasm:ncz": "cargo build -p kentos-ncz-wasm --target wasm32-unknown-unknown --profile wasm && wasm-bindgen --target web --out-dir apps/web/src/io/ncz/pkg target/wasm32-unknown-unknown/wasm/kentos_ncz_wasm.wasm",
     "rust:wasm:svg": "cargo build -p kentos-svg-wasm --target wasm32-unknown-unknown --profile wasm && wasm-bindgen --target web --out-dir apps/web/src/style/svg/pkg target/wasm32-unknown-unknown/wasm/kentos_svg_wasm.wasm",
     "test:rust": "pnpm rust:test && pnpm wasm && pnpm -C apps/web exec vitest run src/wasm src/io",
     "py:test": "sh scripts/python/test.sh",

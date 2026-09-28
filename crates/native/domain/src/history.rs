@@ -218,10 +218,15 @@ impl Document {
     }
 
     /// Closes a group and reverts what it did. Nothing is recorded; undo, redo,
-    /// the dirty flag and the revision stay as they were before the group.
+    /// the dirty flag and the revision stay as they were before the group
+    /// (the generation moves: what the drawing shows changed back).
     pub fn cancel_group(&mut self, group: Group) {
         if let Some(open) = self.take_group(group) {
+            let changed = !open.step.ops.is_empty();
             self.revert(&open.step.ops);
+            if changed {
+                self.mark_changed();
+            }
         }
     }
 
@@ -239,8 +244,9 @@ impl Document {
     }
 
     /// How many changes the open group has gathered; none without one. Inside
-    /// a group nothing is an edit before it ends (the revision and the
-    /// generation stay), so this says whether ending it will record a step.
+    /// a group nothing is an edit before it ends (the revision and the dirty
+    /// flag stay; only the generation follows what is shown), so this says
+    /// whether ending it will record a step.
     pub fn group_changes(&self) -> usize {
         self.history
             .group
@@ -312,6 +318,11 @@ impl Document {
     fn commit(&mut self, step: Step) {
         if let Some(open) = &mut self.history.group {
             open.step.ops.extend(step.ops);
+            // The drawing changed all the same, and what shows it follows each
+            // step (a large import fills in as it goes, as the web's listeners
+            // hear a group's changes as they come); the edit is recorded, and
+            // the revision moves, when the group ends.
+            self.mark_changed();
             return;
         }
         self.history.undo.push_back(step);

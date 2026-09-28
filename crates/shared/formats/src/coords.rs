@@ -683,12 +683,17 @@ pub fn read(bytes: &[u8], opts: &CoordReadOptions) -> CoordRead {
         duplicate_names,
         hints,
         bounds,
-        result: opts.entities.then(|| ImportResult {
-            entities,
-            layers: Vec::new(),
-            report: report.import(),
-            bounds,
-            declared_crs: None,
+        result: opts.entities.then(|| {
+            let mut result = ImportResult {
+                entities,
+                layers: Vec::new(),
+                report: report.import(),
+                bounds,
+                declared_crs: None,
+                view: None,
+            };
+            crate::import::summarise(&mut result);
+            result
         }),
     }
 }

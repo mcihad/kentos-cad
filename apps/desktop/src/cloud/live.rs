@@ -176,6 +176,10 @@ impl App {
         let (Some(live), Some(doc)) = (self.cloud.live.as_mut(), self.document.as_mut()) else {
             return;
         };
+        // An open group (a large import going in) is looked at once it ends or is taken back.
+        if doc.model.is_busy() {
+            return;
+        }
         let seen = (doc.model.generation(), doc.model.revision());
         if seen == live.seen {
             return;

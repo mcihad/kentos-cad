@@ -61,6 +61,11 @@ impl<'a> Lexer<'a> {
     }
 
     /// The next group, or None at the end of the file.
+    /// How far into the bytes the lexer is (a long read's progress).
+    pub fn position(&self) -> usize {
+        self.pos
+    }
+
     pub fn next(&mut self) -> Result<Option<Pair<'a>>, String> {
         if let Some(p) = self.peeked.take() {
             return Ok(Some(p));

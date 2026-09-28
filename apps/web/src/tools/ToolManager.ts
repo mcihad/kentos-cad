@@ -14,6 +14,12 @@ export class ToolManager {
   /** Tools suspended under a transparent one (point calculator), innermost last. */
   private parents: Tool[] = [];
   private readonly ctx: AppContext;
+  /**
+   * While set, no tool starts (a large import writing into the drawing lets
+   * only the view move, app/hold.ts): the one running stays, and the hold
+   * says why.
+   */
+  hold: (() => void) | null = null;
 
   constructor(ctx: AppContext) {
     this.ctx = ctx;
@@ -49,6 +55,7 @@ export class ToolManager {
   activate(id: string): void {
     const d = this.registry.get(id);
     if (!d) return;
+    if (this.hold) return this.hold();
     this.dropNested();
     this.current?.deactivate?.();
     this.promptSub?.();
@@ -68,6 +75,7 @@ export class ToolManager {
    * contents). It is not remembered for "repeat last".
    */
   run(tool: Tool, label: string): void {
+    if (this.hold) return this.hold();
     this.dropNested();
     this.current?.deactivate?.();
     this.promptSub?.();
@@ -86,6 +94,7 @@ export class ToolManager {
    */
   nest(child: Tool, label: string): void {
     if (!this.current) return;
+    if (this.hold) return this.hold();
     this.parents.push(this.current);
     this.promptSub?.();
     this.current = child;

@@ -9,10 +9,11 @@
 //! gets the reader's typed objects; the one check left, that every number is
 //! finite, runs where the file is read, off the UI thread ([`unusable`]).
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
+use std::time::{Duration, Instant};
 
-use kentos_contracts::{Entity, LayerNode, LayerNodeType, LayerStyle};
-use kentos_domain::{Document, NewLayer, Slot};
+use kentos_contracts::{Entity, LayerNode, LayerNodeType, LayerStyle, Vec2};
+use kentos_domain::{Document, Group, NewLayer, Slot};
 
 /// Where the objects of one source layer go.
 #[derive(Clone, Debug, PartialEq)]
@@ -104,18 +105,29 @@ fn node_ids(nodes: &[LayerNode], out: &mut HashSet<String>) {
     }
 }
 
-pub fn apply_import(
-    doc: &mut Document,
-    entities: Vec<Entity>,
-    plan: &ImportPlan,
-) -> Result<Applied, String> {
+/// The targets checked and the new layers named: what an import needs before
+/// it changes anything.
+struct Prepared {
+    taken: HashSet<String>,
+    /// Source layer → the id its new layer gets.
+    new_ids: Vec<(String, String)>,
+    /// Source layer → the layer its objects go to.
+    targets: HashMap<String, String>,
+}
+
+/// Checks the plan's targets (an existing layer that is missing or locked
+/// refuses the import) and names the layers to make; nothing changes.
+fn prepare(doc: &Document, plan: &ImportPlan) -> Result<Prepared, String> {
     let mut taken = HashSet::new();
     node_ids(doc.layers().nodes(), &mut taken);
     let mut new_ids: Vec<(String, String)> = Vec::new();
+    let mut targets = HashMap::new();
     for (source, target) in &plan.layers {
         match target {
             LayerTarget::New { name, .. } => {
-                new_ids.push((source.clone(), fresh_id(name, &mut taken)));
+                let id = fresh_id(name, &mut taken);
+                targets.insert(source.clone(), id.clone());
+                new_ids.push((source.clone(), id));
             }
             LayerTarget::Existing(id) => match doc.layers().get(id) {
                 Some(node) if node.kind == LayerNodeType::Layer => {
@@ -125,6 +137,7 @@ pub fn apply_import(
                             node.name
                         ));
                     }
+                    targets.insert(source.clone(), id.clone());
                 }
                 _ => {
                     return Err(format!(
@@ -134,94 +147,264 @@ pub fn apply_import(
             },
         }
     }
-    let target = |source: &str| -> Option<&str> {
-        let (_, t) = plan.layers.iter().find(|(s, _)| s == source)?;
-        match t {
-            LayerTarget::Existing(id) => Some(id.as_str()),
-            LayerTarget::New { .. } => new_ids
-                .iter()
-                .find(|(s, _)| s == source)
-                .map(|(_, id)| id.as_str()),
-        }
-    };
-    let chosen: Vec<Entity> = entities
-        .into_iter()
-        .filter_map(|mut e| {
-            let layer = target(&e.base().layer_id)?.to_owned();
-            e.base_mut().layer_id = layer;
-            Some(e)
-        })
-        .collect();
+    Ok(Prepared {
+        taken,
+        new_ids,
+        targets,
+    })
+}
 
+/// The group named in the plan (found or made) and the new layers in it:
+/// inside the import's transaction or group, so undo takes them too.
+fn make_layers(
+    doc: &mut Document,
+    plan: &ImportPlan,
+    prepared: &mut Prepared,
+) -> Result<Vec<String>, String> {
     let mut created = Vec::new();
-    let slots = doc.transact(&plan.label, |doc| {
-        if !new_ids.is_empty() {
-            let parent = match &plan.group {
-                Some(group) => {
-                    let key = fold_turkish(group);
-                    let found = doc
-                        .layers()
-                        .nodes()
-                        .iter()
-                        .find(|n| n.kind == LayerNodeType::Group && fold_turkish(&n.name) == key)
-                        .map(|n| n.id.clone());
-                    match found {
-                        Some(id) => Some(id),
-                        None => {
-                            let new = NewLayer {
-                                id: Some(fresh_id(group, &mut taken)),
-                                ..NewLayer::group(group.clone())
-                            };
-                            Some(doc.add_layer(new, None, false).map_err(|r| r.to_string())?)
-                        }
-                    }
+    if prepared.new_ids.is_empty() {
+        return Ok(created);
+    }
+    let parent = match &plan.group {
+        Some(group) => {
+            let key = fold_turkish(group);
+            let found = doc
+                .layers()
+                .nodes()
+                .iter()
+                .find(|n| n.kind == LayerNodeType::Group && fold_turkish(&n.name) == key)
+                .map(|n| n.id.clone());
+            match found {
+                Some(id) => Some(id),
+                None => {
+                    let new = NewLayer {
+                        id: Some(fresh_id(group, &mut prepared.taken)),
+                        ..NewLayer::group(group.clone())
+                    };
+                    Some(doc.add_layer(new, None, false).map_err(|r| r.to_string())?)
                 }
-                None => None,
-            };
-            for (source, t) in &plan.layers {
-                let LayerTarget::New {
-                    name,
-                    style,
-                    visible,
-                    locked,
-                } = t
-                else {
-                    continue;
-                };
-                let id = new_ids
-                    .iter()
-                    .find(|(s, _)| s == source)
-                    .map(|(_, id)| id.clone());
-                let new = NewLayer {
-                    id,
-                    name: name.clone(),
-                    kind: LayerNodeType::Layer,
-                    visible: *visible,
-                    locked: *locked,
-                    style: (**style).clone(),
-                };
-                doc.add_layer(new, parent.as_deref(), false)
-                    .map_err(|r| r.to_string())?;
-                created.push(name.clone());
             }
         }
+        None => None,
+    };
+    for (source, t) in &plan.layers {
+        let LayerTarget::New {
+            name,
+            style,
+            visible,
+            locked,
+        } = t
+        else {
+            continue;
+        };
+        let id = prepared
+            .new_ids
+            .iter()
+            .find(|(s, _)| s == source)
+            .map(|(_, id)| id.clone());
+        let new = NewLayer {
+            id,
+            name: name.clone(),
+            kind: LayerNodeType::Layer,
+            visible: *visible,
+            locked: *locked,
+            style: (**style).clone(),
+        };
+        doc.add_layer(new, parent.as_deref(), false)
+            .map_err(|r| r.to_string())?;
+        created.push(name.clone());
+    }
+    Ok(created)
+}
+
+/// `e` onto its target layer, or none when its layer is left out.
+fn retarget(mut e: Entity, targets: &HashMap<String, String>) -> Option<Entity> {
+    let layer = targets.get(&e.base().layer_id)?.clone();
+    e.base_mut().layer_id = layer;
+    Some(e)
+}
+
+pub fn apply_import(
+    doc: &mut Document,
+    entities: Vec<Entity>,
+    plan: &ImportPlan,
+) -> Result<Applied, String> {
+    let mut prepared = prepare(doc, plan)?;
+    let chosen: Vec<Entity> = entities
+        .into_iter()
+        .filter_map(|e| retarget(e, &prepared.targets))
+        .collect();
+    let mut created = Vec::new();
+    let slots = doc.transact(&plan.label, |doc| {
+        created = make_layers(doc, plan, &mut prepared)?;
         doc.add_many(chosen, &plan.label)
             .map_err(|e| format!("{e}. Hiçbir nesne eklenmedi."))
     })?;
     Ok(Applied { slots, created })
 }
 
+/// Objects written between two looks at the clock.
+const BATCH: usize = 2048;
+
+/// A large import going into the drawing a slice of time at a time, so the
+/// window keeps drawing (and the objects appear as they go in), yet as ONE
+/// undo step: its layers and every object are made inside a group, which
+/// [`Progressive::stop`] reverts whole.
+#[derive(Debug)]
+pub struct Progressive {
+    group: Option<Group>,
+    targets: HashMap<String, String>,
+    entities: std::vec::IntoIter<Entity>,
+    label: String,
+    total: usize,
+    seen: usize,
+    pub slots: Vec<Slot>,
+    pub created: Vec<String>,
+}
+
+impl Progressive {
+    /// Checks the targets, opens the group and makes the new layers in it;
+    /// nothing is left behind when a target refuses. The objects come with [`feed`](Self::feed).
+    pub fn start(doc: &mut Document, plan: &ImportPlan) -> Result<Self, String> {
+        let mut prepared = prepare(doc, plan)?;
+        let group = doc.begin_group(&plan.label);
+        let made = doc.transact(&plan.label, |doc| make_layers(doc, plan, &mut prepared));
+        let created = match made {
+            Ok(c) => c,
+            Err(e) => {
+                doc.cancel_group(group);
+                return Err(e);
+            }
+        };
+        Ok(Self {
+            group: Some(group),
+            targets: prepared.targets,
+            total: 0,
+            entities: Vec::new().into_iter(),
+            label: plan.label.clone(),
+            seen: 0,
+            slots: Vec::new(),
+            created,
+        })
+    }
+
+    /// The objects to write, the reader's (their `layerId` the source layer's name).
+    pub fn feed(&mut self, entities: Vec<Entity>) {
+        self.total = entities.len();
+        self.seen = 0;
+        self.slots.reserve(entities.len());
+        self.entities = entities.into_iter();
+    }
+
+    /// How far it is, 0..1.
+    pub fn share(&self) -> f32 {
+        if self.total == 0 {
+            1.0
+        } else {
+            self.seen as f32 / self.total as f32
+        }
+    }
+
+    /// Objects looked at so far, and in all.
+    pub fn counts(&self) -> (usize, usize) {
+        (self.seen, self.total)
+    }
+
+    /// Writes objects for about `budget`; true once every object is in and
+    /// the undo step is closed. A refusal reverts everything the import did.
+    pub fn step(&mut self, doc: &mut Document, budget: Duration) -> Result<bool, String> {
+        let until = Instant::now() + budget;
+        loop {
+            let mut batch = Vec::with_capacity(BATCH);
+            for e in self.entities.by_ref().take(BATCH) {
+                self.seen += 1;
+                if let Some(e) = retarget(e, &self.targets) {
+                    batch.push(e);
+                }
+            }
+            let last = self.seen >= self.total;
+            if !batch.is_empty() {
+                match doc.add_many(batch, &self.label) {
+                    Ok(slots) => self.slots.extend(slots),
+                    Err(e) => {
+                        self.cancel(doc);
+                        return Err(format!("{e}. Hiçbir nesne eklenmedi."));
+                    }
+                }
+            }
+            if last {
+                if let Some(group) = self.group.take() {
+                    doc.end_group(group);
+                }
+                return Ok(true);
+            }
+            if Instant::now() >= until {
+                return Ok(false);
+            }
+        }
+    }
+
+    fn cancel(&mut self, doc: &mut Document) {
+        if let Some(group) = self.group.take() {
+            doc.cancel_group(group);
+        }
+    }
+
+    /// Stops the import: everything it made is reverted, and nothing is recorded.
+    pub fn stop(mut self, doc: &mut Document) {
+        self.cancel(doc);
+    }
+}
+
 /// The first object with a number that is not finite (NaN or infinite),
 /// which the drawing could neither show nor save: `(its place from 1, its
-/// kind)`. A number of an object survives a JSON round trip unchanged only
-/// when it is finite (JSON has no NaN; `serde_json` writes it as null).
+/// kind)`. Every float of every object is looked at once, in place (a JSON
+/// round trip of each object, which this used to be, took seconds for a
+/// large file).
 pub fn unusable(entities: &[Entity]) -> Option<(usize, &'static str)> {
-    entities.iter().enumerate().find_map(|(i, e)| {
-        let back = serde_json::to_value(e)
-            .ok()
-            .and_then(|v| serde_json::from_value::<Entity>(v).ok());
-        (back.as_ref() != Some(e)).then_some((i + 1, e.kind()))
-    })
+    entities
+        .iter()
+        .position(|e| !finite(e))
+        .map(|i| (i + 1, entities[i].kind()))
+}
+
+fn finite(e: &Entity) -> bool {
+    let p = |v: &Vec2| v.x.is_finite() && v.y.is_finite();
+    let ps = |v: &[Vec2]| v.iter().all(p);
+    let fs = |v: &[f64]| v.iter().all(|x| x.is_finite());
+    match e {
+        Entity::Point(e) => p(&e.p) && e.z.is_none_or(f64::is_finite),
+        Entity::Line(e) => p(&e.a) && p(&e.b),
+        Entity::Polyline(e) | Entity::Polygon(e) => {
+            ps(&e.pts)
+                && e.bulges.as_deref().is_none_or(fs)
+                && e.holes.as_deref().is_none_or(|holes| {
+                    holes
+                        .iter()
+                        .all(|h| ps(&h.pts) && h.bulges.as_deref().is_none_or(fs))
+                })
+        }
+        Entity::Circle(e) => p(&e.c) && e.r.is_finite(),
+        Entity::Arc(e) => p(&e.c) && fs(&[e.r, e.a0, e.a1]),
+        Entity::Ellipse(e) => p(&e.c) && p(&e.major) && fs(&[e.ratio, e.t0, e.t1]),
+        Entity::Spline(e) => ps(&e.pts),
+        Entity::Xline(e) | Entity::Ray(e) => p(&e.p) && p(&e.dir),
+        Entity::Text(e) => p(&e.p) && e.height.is_finite() && e.rotation.is_finite(),
+        Entity::Dimension(e) => {
+            p(&e.a)
+                && p(&e.b)
+                && e.offset.is_finite()
+                && e.height.is_finite()
+                && e.angle.is_none_or(f64::is_finite)
+                && e.c.as_ref().is_none_or(p)
+        }
+        Entity::Hatch(e) => {
+            ps(&e.ring)
+                && e.holes.as_deref().is_none_or(|h| h.iter().all(|r| ps(r)))
+                && e.pattern.angle.is_finite()
+                && e.pattern.spacing.is_finite()
+        }
+    }
 }
 
 /// What the import window says when [`unusable`] finds one (the web's words).

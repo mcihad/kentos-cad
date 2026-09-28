@@ -2474,6 +2474,7 @@ dependencies = [
  "kentos-interaction",
  "kentos-kcad",
  "kentos-native-style",
+ "kentos-ncz",
  "kentos-processing",
  "kentos-project",
  "kentos-render-wgpu",
@@ -2494,6 +2495,18 @@ dependencies = [
  "kentos-contracts",
  "serde_json",
  "uuid",
+]
+
+[[package]]
+name = "kentos-dxf-wasm"
+version = "0.1.0"
+dependencies = [
+ "kentos-contracts",
+ "kentos-formats",
+ "kentos-kcad",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -2613,6 +2626,29 @@ dependencies = [
  "libm",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "kentos-ncz"
+version = "0.1.0"
+dependencies = [
+ "kentos-contracts",
+ "kentos-formats",
+ "kentos-geometry-core",
+ "libm",
+ "serde_json",
+]
+
+[[package]]
+name = "kentos-ncz-wasm"
+version = "0.1.0"
+dependencies = [
+ "kentos-contracts",
+ "kentos-formats",
+ "kentos-kcad",
+ "kentos-ncz",
+ "serde_json",
+ "wasm-bindgen",
 ]
 
 [[package]]

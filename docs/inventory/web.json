@@ -20,9 +20,9 @@
   "summary": {
     "commands": {
       "total": 167,
-      "implemented": 152,
+      "implemented": 153,
       "partial": 0,
-      "pending": 15
+      "pending": 14
     },
     "tools": {
       "total": 58,
@@ -67,20 +67,20 @@
       "pending": 0
     },
     "screens": {
-      "total": 63,
-      "implemented": 63,
+      "total": 65,
+      "implemented": 65,
       "partial": 0,
       "pending": 0
     },
     "commandsWithoutPlace": [],
     "commandsWithoutTests": 52,
-    "commandsOnDesktop": 147,
+    "commandsOnDesktop": 148,
     "desktop": {
       "commands": {
         "total": 167,
-        "implemented": 147,
+        "implemented": 148,
         "partial": 0,
-        "pending": 15,
+        "pending": 14,
         "none": 0,
         "n/a": 5
       },
@@ -141,8 +141,8 @@
         "n/a": 0
       },
       "screens": {
-        "total": 63,
-        "implemented": 57,
+        "total": 65,
+        "implemented": 59,
         "partial": 2,
         "pending": 0,
         "none": 0,
@@ -1572,7 +1572,13 @@
       "id": "file.import.ncz",
       "title": "Netcad NCZ…",
       "category": "Dosya",
-      "aliases": [],
+      "icon": "import",
+      "description": "Netcad NCZ çizimini içe aktarır: katmanlar, noktalar, çizgiler, yaylı çoklu çizgiler, yazılar ve imar planının akıllı nesneleri (yerleşim, yapılaşma, yol, plan notu, fonksiyon adı) Netcad sembolleriyle, en üstte çizilerek. Dosyanın bildirdiği koordinat sistemi gösterilir; projeninkinden başkaysa alınmaz, koordinatlar dönüştürülmez.",
+      "aliases": [
+        "NCZ",
+        "NCZAL",
+        "NETCAD"
+      ],
       "kind": "action",
       "shortcuts": [],
       "menus": [
@@ -1587,13 +1593,12 @@
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts"
       ],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "pending"
+        "web": "implemented",
+        "desktop": "implemented"
       },
-      "tests": [],
-      "desktopWhere": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)"
+      "tests": []
     },
     {
       "id": "file.import.shp",
@@ -11792,6 +11797,42 @@
       "desktopWhere": "apps/desktop/src/exchange/coord_import.rs (ADR 0048)"
     },
     {
+      "id": "apps/web/src/ui/io/DrawingImportDialog.ts#openDrawingImport",
+      "name": "openDrawingImport",
+      "role": "window",
+      "source": "apps/web/src/ui/io/DrawingImportDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/exchange/drawing_import.rs (ADR 0048, 0138)"
+    },
+    {
+      "id": "apps/web/src/ui/io/DrawingImportDialog.ts#openDxfImport",
+      "name": "openDxfImport",
+      "role": "window",
+      "source": "apps/web/src/ui/io/DrawingImportDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/exchange/drawing_import.rs (ADR 0048, 0138)"
+    },
+    {
+      "id": "apps/web/src/ui/io/DrawingImportDialog.ts#openNczImport",
+      "name": "openNczImport",
+      "role": "window",
+      "source": "apps/web/src/ui/io/DrawingImportDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/exchange/drawing_import.rs (ADR 0138)"
+    },
+    {
       "id": "apps/web/src/ui/io/DxfExportDialog.ts#openDxfExport",
       "name": "openDxfExport",
       "role": "window",
@@ -11802,18 +11843,6 @@
         "desktop": "implemented"
       },
       "desktopWhere": "apps/desktop/src/exchange/dxf_export.rs (ADR 0048)"
-    },
-    {
-      "id": "apps/web/src/ui/io/DxfImportDialog.ts#openDxfImport",
-      "name": "openDxfImport",
-      "role": "window",
-      "source": "apps/web/src/ui/io/DxfImportDialog.ts",
-      "status": "implemented",
-      "platforms": {
-        "web": "implemented",
-        "desktop": "implemented"
-      },
-      "desktopWhere": "apps/desktop/src/exchange/dxf_import.rs (ADR 0048)"
     },
     {
       "id": "apps/web/src/ui/io/GeoJsonExportDialog.ts#openGeoJsonExport",

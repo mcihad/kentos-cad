@@ -5,18 +5,20 @@ import type { DxfReadOptions } from '../contracts/generated/DxfReadOptions';
 import type { DxfWriteInput } from '../contracts/generated/DxfWriteInput';
 import type { GeoJsonReadOptions } from '../contracts/generated/GeoJsonReadOptions';
 import type { GeoJsonWriteInput } from '../contracts/generated/GeoJsonWriteInput';
+import type { NczReadOptions } from '../contracts/generated/NczReadOptions';
 import type { ShapefileReadOptions } from '../contracts/generated/ShapefileReadOptions';
 import type { ImportResult } from '../contracts/generated/ImportResult';
 import type { ExportReport } from '../contracts/generated/ExportReport';
 import type { V1Identities } from '../contracts/generated/V1Identities';
-import type { PackedDrawing } from './columns';
+import type { DrawingColumns, PackedDrawing } from './columns';
 import { KcadError, transferables, type KcadProgress } from './kcad';
 import type { FormatsReply, FormatsRequest, ShapefileBuffers } from './protocol';
 
 /**
- * The page's side of the formats worker. The worker, and the Rust formats
- * module in it, start with the first request (an import, an export, a
- * drawing opened; never at start-up, CLAUDE.md §20) and stop after a quiet
+ * The page's side of the formats worker. The worker, and the Rust module a
+ * request needs in it (formats, DXF or NCZ), start with the first request
+ * that needs them (an import, an export, a drawing opened; never at
+ * start-up, CLAUDE.md §20) and stop after a quiet
  * half minute, so the memory a large file took is given back; after a large
  * drawing was read or written they stop at once (the module's memory never
  * shrinks while it lives, docs/adr/0030). A trap in the module or a worker
@@ -37,6 +39,17 @@ export interface WorkerLike {
 export interface WrittenFile {
   bytes: Uint8Array;
   report: ExportReport;
+}
+
+/**
+ * A drawing a reader imported (DXF, Netcad NCZ; docs/adr/0138): the result
+ * without its objects (`entities` empty; its layers count theirs by kind and
+ * give their box) and the objects as typed columns (io/columns.ts), read into
+ * the drawing a chunk at a time (io/drawingImport.ts).
+ */
+export interface ImportedDrawing {
+  result: ImportResult;
+  columns: DrawingColumns;
 }
 
 type Ok = Extract<FormatsReply, { ok: true }>;
@@ -69,14 +82,26 @@ export class FormatsClient {
   }
 
   /**
-   * Reads a DXF file. A large file is not copied: when `bytes` spans its
-   * whole buffer, the buffer is handed over to the worker and `bytes` is
-   * left empty (the caller no longer needs it); a view into a larger buffer
-   * sends a copy of its own bytes.
+   * Reads a DXF file (the DXF module, loaded the first time one is read). A
+   * large file is not copied: when `bytes` spans its whole buffer, the buffer
+   * is handed over to the worker and `bytes` is left empty (the caller no
+   * longer needs it); a view into a larger buffer sends a copy of its own
+   * bytes. `progress` hears how far the read is (`reading`, thousandths).
    */
-  async readDxf(bytes: Uint8Array, options: DxfReadOptions): Promise<ImportResult> {
+  async readDxf(bytes: Uint8Array, options: DxfReadOptions, progress?: (p: KcadProgress) => void): Promise<ImportedDrawing> {
+    if (bytes.byteLength > LARGE) this.large = true;
     const buffer = handOver(bytes);
-    return json<ImportResult>(await this.request({ op: 'readDxf', bytes: buffer, options }, [buffer]));
+    return imported(await this.request({ op: 'readDxf', bytes: buffer, options }, [buffer], progress));
+  }
+
+  /**
+   * Reads a Netcad NCZ drawing (docs/adr/0138; the NCZ module, loaded the
+   * first time one is read), handing `bytes` over as `readDxf` does.
+   */
+  async readNcz(bytes: Uint8Array, options: NczReadOptions, progress?: (p: KcadProgress) => void): Promise<ImportedDrawing> {
+    if (bytes.byteLength > LARGE) this.large = true;
+    const buffer = handOver(bytes);
+    return imported(await this.request({ op: 'readNcz', bytes: buffer, options }, [buffer], progress));
   }
 
   /**
@@ -110,7 +135,7 @@ export class FormatsClient {
     return written(await this.request({ op: 'writeCoords', input }, []));
   }
 
-  /** Writes a DXF (AutoCAD 2007) of the objects and their layers; the input goes as a structured copy. */
+  /** Writes a DXF (AutoCAD 2007) of the objects and their layers (the DXF module); the input goes as a structured copy. */
   async writeDxf(input: DxfWriteInput): Promise<WrittenFile> {
     return written(await this.request({ op: 'writeDxf', input }, []));
   }
@@ -233,6 +258,11 @@ function handOver(bytes: Uint8Array): ArrayBuffer {
 function json<T>(r: Ok): T {
   if (!('json' in r)) throw new Error('Dosya biçimi modülü beklenmeyen bir yanıt verdi.');
   return JSON.parse(decoder.decode(r.json)) as T;
+}
+
+function imported(r: Ok): ImportedDrawing {
+  if (!('imported' in r)) throw new Error('Dosya biçimi modülü beklenmeyen bir yanıt verdi.');
+  return { result: JSON.parse(r.imported.head) as ImportResult, columns: r.imported.columns };
 }
 
 function written(r: Ok): WrittenFile {

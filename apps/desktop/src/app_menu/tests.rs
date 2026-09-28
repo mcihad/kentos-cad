@@ -152,7 +152,9 @@ fn the_keyboard_walks_the_rows_and_enter_runs_one() {
         Some(Focus::Pane(1)),
         "the coordinate list"
     );
-    // NCZ does not run here yet: the keyboard passes it.
+    // NCZ runs here too (docs/adr/0138): the keyboard stops on it.
+    key(&mut app, Named::ArrowDown);
+    assert_eq!(state(&app).focus, Some(Focus::Pane(2)), "NCZ");
     key(&mut app, Named::ArrowDown);
     assert_eq!(state(&app).focus, Some(Focus::Pane(3)), "Shapefile");
     key(&mut app, Named::ArrowDown);

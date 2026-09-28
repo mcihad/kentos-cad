@@ -492,6 +492,8 @@ pub struct App {
     pub picker: Picker,
     /// The open under way, if any (opening.rs).
     pub opening: Option<opening::Opening>,
+    /// A large import going into the drawing a frame at a time (exchange/drawing_import.rs).
+    pub importing: Option<crate::exchange::drawing_import::Importing>,
     /// The save under way, if any (saving.rs).
     pub saving: Option<saving::Saving>,
     /// Where tests make the disk fail during a save (none in the app).
@@ -641,6 +643,7 @@ impl App {
             last_level: None,
             picker: Picker::Dialog,
             opening: None,
+            importing: None,
             saving: None,
             save_faults: saving::Faults::NONE,
             recovery,
@@ -746,6 +749,16 @@ impl App {
             // The kept layout, written after its last change; the window's size.
             self.layout_subscription(),
             window::resize_events().map(|(_, size)| Message::WindowResized(size)),
+            // A large import writes a slice of its objects each frame (exchange/drawing_import.rs).
+            if self.importing.is_some() {
+                window::frames().map(|_| {
+                    Message::Exchange(Box::new(crate::exchange::Event::DrawingImport(
+                        crate::exchange::drawing_import::Event::Frame,
+                    )))
+                })
+            } else {
+                Subscription::none()
+            },
             // While the key tips show (or Alt is down alone): a click or the
             // window losing the focus sends them away (ribbon_keys.rs).
             if self.key_tips.is_some() || self.alt_armed {
@@ -813,6 +826,10 @@ impl App {
         }
         // While Python code runs the drawing takes no other edit (python/).
         if let Some(task) = self.while_scripting(&message) {
+            return task;
+        }
+        // Nor while a large import goes in, a frame at a time (exchange/drawing_import.rs).
+        if let Some(task) = self.while_importing(&message) {
             return task;
         }
         // A command from the ribbon or a menu keeps the text field's text first (the web's blur),

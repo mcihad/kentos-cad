@@ -163,18 +163,23 @@ impl Collect {
                     line_type: LineType::Continuous,
                     line_weight: None,
                     count: 0,
+                    kinds: BTreeMap::new(),
+                    bounds: None,
                 });
                 layers.len() - 1
             });
             layers[i].count += 1;
         }
-        ImportResult {
+        let mut result = ImportResult {
             entities: self.entities,
             layers,
             report: self.report.import(),
             bounds: self.bounds,
             declared_crs: declared,
-        }
+            view: None,
+        };
+        crate::import::summarise(&mut result);
+        result
     }
 }
 

@@ -217,3 +217,80 @@
 .io-status[data-kind='error'] {
   color: var(--c-danger);
 }
+
+/* A large import writing into the drawing (ui/io/importing.ts, docs/adr/0138): a panel in the
+   drawing's bottom right corner (placed by the script), counting the objects; Durdur. */
+.importing {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  width: min(380px, 100% - 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-lg);
+  background: var(--c-popover);
+  box-shadow: var(--shadow-pop);
+}
+.importing__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.importing__title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--c-text);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.importing__bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--c-line);
+  overflow: hidden;
+}
+.importing__bar > span {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--c-accent);
+}
+.importing__detail {
+  margin: 0;
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The read's progress in the import window, while the worker reads the file. */
+.io-reading {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+}
+.io-reading__bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--c-line);
+  overflow: hidden;
+}
+.io-reading__bar > span {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--c-accent);
+  transition: width var(--dur);
+}
+.io-reading__text {
+  margin: 0;
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+}

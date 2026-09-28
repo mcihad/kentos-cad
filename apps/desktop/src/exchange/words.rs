@@ -150,7 +150,7 @@ pub fn kind_counts(counts: &[(&str, u32)]) -> String {
     sorted.sort_by_key(|&(_, n)| std::cmp::Reverse(n));
     sorted
         .iter()
-        .map(|(kind, n)| format!("{n} {}", kind_name(kind)))
+        .map(|(kind, n)| format!("{} {}", crate::crs::grouped(f64::from(*n)), kind_name(kind)))
         .collect::<Vec<_>>()
         .join(", ")
 }

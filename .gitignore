@@ -29,9 +29,11 @@ apps/web/scripts/showcase/out/
 
 # Rust
 /target
-# WASM build output (pnpm rust:wasm, pnpm rust:wasm:formats, pnpm rust:wasm:svg)
+# WASM build output (pnpm rust:wasm, rust:wasm:formats, rust:wasm:dxf, rust:wasm:ncz, rust:wasm:svg)
 apps/web/src/wasm/pkg/
 apps/web/src/io/pkg/
+apps/web/src/io/dxf/pkg/
+apps/web/src/io/ncz/pkg/
 apps/web/src/style/svg/pkg/
 
 # Local server credentials (kentosd db-setup writes them; never committed)

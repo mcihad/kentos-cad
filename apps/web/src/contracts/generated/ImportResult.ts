@@ -17,4 +17,10 @@ bounds?: Bounds,
 /**
  * The coordinate system the file declares (GeoJSON, Shapefile; docs/adr/0046).
  */
-declaredCrs?: DeclaredCrs, };
+declaredCrs?: DeclaredCrs, 
+/**
+ * Where the view shows the objects once they are in: their extent without
+ * the far strays a file can hold (a slip drawn at 0, 0 beside a city,
+ * `kentos_formats::import::view_bounds`; docs/adr/0138).
+ */
+view?: Bounds, };

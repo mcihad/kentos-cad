@@ -146,7 +146,8 @@
     "style.assign",
     "style.clearSymbol",
     "style.legend",
-    "style.svgEditor"
+    "style.svgEditor",
+    "file.import.ncz"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

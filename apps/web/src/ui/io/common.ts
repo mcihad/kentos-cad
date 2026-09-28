@@ -62,11 +62,11 @@ export function summaryLine(kind: 'ok' | 'warn' | 'info' | 'error', ...content: 
 export const reportText = (i: ReportItem): string =>
   `${i.what}: ${i.count}, ${i.reason}${i.lines.length ? ` (satır ${i.lines.join(', ')}${i.count > i.lines.length ? ' …' : ''})` : ''}.`;
 
-/** Object counts by kind, largest first, without plurals (Turkish counts take none: "12 çizgi, 3 yay"). */
+/** Object counts by kind, largest first, without plurals (Turkish counts take none: "12 çizgi, 3 yay"; "187.202 çizgi"). */
 export function kindCounts(counts: ReadonlyMap<string, number>): string {
   return [...counts]
     .sort((a, b) => b[1] - a[1])
-    .map(([k, n]) => `${n} ${(ENTITY_KIND_LABEL[k as EntityKind] ?? k).toLocaleLowerCase('tr-TR')}`)
+    .map(([k, n]) => `${n.toLocaleString('tr-TR')} ${(ENTITY_KIND_LABEL[k as EntityKind] ?? k).toLocaleLowerCase('tr-TR')}`)
     .join(', ');
 }
 
@@ -89,20 +89,20 @@ const byDatum = (): Map<Datum, CrsDef[]> => {
   return groups;
 };
 
-/** What a file says of its coordinate system (GeoJSON, Shapefile; docs/adr/0046). */
+/** What a file says of its coordinate system (GeoJSON, Shapefile, docs/adr/0046; Netcad NCZ, docs/adr/0138). */
 export interface CrsStatement {
   /** The EPSG code the statement names, when it could be read. */
   srid: number | null;
   /** The statement as the file writes it ("urn:ogc:def:crs:EPSG::5256", "TUREF_TM36"); empty when the file says nothing. */
   text: string;
-  /** RFC 7946 (no `crs` member), a GeoJSON `crs` member, a .prj; `none`: the file says nothing. */
-  source: 'rfc7946' | 'geoJsonCrs' | 'prj' | 'none';
+  /** RFC 7946 (no `crs` member), a GeoJSON `crs` member, a .prj, an NCZ's projection blocks; `none`: the file says nothing. */
+  source: 'rfc7946' | 'geoJsonCrs' | 'prj' | 'ncz' | 'none';
 }
 
 /**
  * "Bu koordinatlar hangi sistemde?" A file that says nothing of its system
  * (DXF, a coordinate list, a Shapefile without .prj) starts at the project's
- * system; one that says (GeoJSON, a .prj; `declare`) starts at what it says,
+ * system; one that says (GeoJSON, a .prj, an NCZ; `declare`) starts at what it says,
  * or at no choice when that could not be read: a statement is never guessed
  * into a system. Another system than the project's blocks the import:
  * coordinate transformations do not exist yet and coordinates are never
@@ -192,6 +192,10 @@ export class CrsQuestion {
         return st.srid !== null ? `Dosyanın crs üyesi: “${st.text}”${code}.` : `Dosyanın crs üyesi okunamadı (${st.text}); koordinatların sistemini siz seçin.`;
       case 'prj':
         return st.srid !== null ? `Dosyanın .prj'si: “${st.text}”${code}.` : `Dosyanın .prj'si tanınmadı (“${st.text}”); koordinatların sistemini siz seçin.`;
+      case 'ncz':
+        return st.srid !== null
+          ? `Dosyanın bildirdiği sistem: “${st.text}”${code}.`
+          : `Dosyanın bildirdiği sistem bir EPSG koduna karşılık gelmiyor (“${st.text}”); koordinatların sistemini siz seçin.`;
       case 'none':
         return "Dosya koordinat sistemini belirtmiyor (.prj yok): projenin sistemi seçili; koordinatların bu sistemde olduğundan emin olun.";
     }

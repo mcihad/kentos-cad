@@ -3,4 +3,4 @@
 /**
  * Where a file's statement of its coordinate system comes from.
  */
-export type CrsSource = "rfc7946" | "geoJsonCrs" | "prj";
+export type CrsSource = "rfc7946" | "geoJsonCrs" | "prj" | "ncz";

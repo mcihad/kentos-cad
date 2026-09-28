@@ -42,6 +42,12 @@ export class CommandRegistry {
   readonly events = new Emitter<CommandEvents>();
   private commands = new Map<string, Command>();
   private aliases = new Map<string, string>();
+  /**
+   * While set, asked before every command runs: false refuses it, and the
+   * hold says why (a large import writing into the drawing lets only the
+   * view move, app/hold.ts).
+   */
+  hold: ((cmd: Command) => boolean) | null = null;
 
   register(cmd: Command): Disposable {
     if (this.commands.has(cmd.id)) console.warn(`Command "${cmd.id}" re-registered`);
@@ -78,6 +84,7 @@ export class CommandRegistry {
       this.events.emit('missing', { id });
       return false;
     }
+    if (this.hold && !this.hold(cmd)) return false;
     if (cmd.isEnabled && !cmd.isEnabled()) return false;
     cmd.run(args);
     this.events.emit('executed', { command: cmd, args });

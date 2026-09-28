@@ -260,6 +260,25 @@ fn an_open_group_counts_its_changes() {
     assert_eq!(doc.len(), 0);
 }
 
+/// What shows the drawing follows a group as it goes (a large import fills
+/// in frame by frame), and its taking back; the edit waits for its end.
+#[test]
+fn an_open_groups_steps_move_the_generation_but_not_the_revision() {
+    let mut doc = empty();
+    let (generation, revision) = (doc.generation(), doc.revision());
+    let group = doc.begin_group("İçe aktar");
+    doc.add(point("a", 1.0)).expect("slot");
+    assert!(doc.generation() > generation, "the drawing shows the new object");
+    assert_eq!(doc.revision(), revision, "no edit yet");
+    assert!(!doc.is_dirty());
+    let shown = doc.generation();
+    doc.cancel_group(group);
+    assert!(doc.generation() > shown, "and shows it gone");
+    assert_eq!(doc.revision(), revision);
+    assert!(!doc.is_dirty());
+    assert_eq!(doc.len(), 0);
+}
+
 #[test]
 fn a_group_begun_inside_another_ends_nothing() {
     let mut doc = empty();

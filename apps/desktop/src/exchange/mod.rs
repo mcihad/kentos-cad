@@ -1,6 +1,7 @@
 //! File exchange (the web's `app/fileExchange.ts` and `ui/io/`): coordinate
-//! lists (Netcad NCN, TXT, CSV) and DXF, in and out; GeoJSON in and out and
-//! Shapefile in, from its files or a zip archive; through the shared
+//! lists (Netcad NCN, TXT, CSV) and DXF, in and out; Netcad NCZ in
+//! (docs/adr/0138); GeoJSON in and out and Shapefile in, from its files or a
+//! zip archive; through the shared
 //! readers and writers (`crates/shared/formats`, the ones the web runs in its
 //! formats worker; CLAUDE.md §9.7, docs/adr/0009). Files are read and
 //! written off the UI thread. The source coordinate system is always asked,
@@ -14,8 +15,8 @@
 pub mod apply;
 mod coord_export;
 mod coord_import;
+pub(crate) mod drawing_import;
 mod dxf_export;
-mod dxf_import;
 mod geojson_export;
 mod gis_import;
 #[cfg(test)]
@@ -49,6 +50,8 @@ pub struct Picked {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Kind {
     Dxf,
+    /// A Netcad NCZ drawing (docs/adr/0138).
+    Ncz,
     Coords,
     GeoJson,
     /// A Shapefile layer's files chosen together, or its zip archive.
@@ -58,7 +61,8 @@ pub enum Kind {
 /// The open exchange window.
 #[derive(Debug)]
 pub enum Window {
-    DxfImport(dxf_import::State),
+    /// DXF or NCZ in (drawing_import.rs).
+    DrawingImport(drawing_import::State),
     CoordImport(coord_import::State),
     DxfExport(dxf_export::State),
     CoordExport(coord_export::State),
@@ -74,7 +78,7 @@ pub enum Event {
     Picked(Kind, Option<Result<Picked, String>>),
     /// Files picked together (a Shapefile's parts, or its archive).
     PickedMany(Kind, Option<Result<Vec<Picked>, String>>),
-    DxfImport(dxf_import::Event),
+    DrawingImport(drawing_import::Event),
     CoordImport(coord_import::Event),
     DxfExport(dxf_export::Event),
     CoordExport(coord_export::Event),
@@ -87,8 +91,9 @@ pub enum Event {
 }
 
 /// The web command ids this module runs.
-pub const COMMANDS: [&str; 8] = [
+pub const COMMANDS: [&str; 9] = [
     "file.import.dxf",
+    "file.import.ncz",
     "file.import.ncn",
     "crs.points",
     "file.export.dxf",
@@ -121,6 +126,7 @@ impl App {
         }
         match id {
             "file.import.dxf" => self.pick(Kind::Dxf),
+            "file.import.ncz" => self.pick(Kind::Ncz),
             "file.import.ncn" | "crs.points" => self.pick(Kind::Coords),
             "file.import.geojson" => self.pick(Kind::GeoJson),
             "file.import.shp" => self.pick(Kind::Shapefile),
@@ -164,6 +170,7 @@ impl App {
         }
         let (title, filter, extensions): (&str, &str, &[&str]) = match kind {
             Kind::Dxf => ("DXF içe aktar", "AutoCAD DXF (DWG değil)", &["dxf"]),
+            Kind::Ncz => ("NCZ içe aktar", "Netcad çizimi (NCZ)", &["ncz"]),
             Kind::Coords => (
                 "Koordinat listesi içe aktar",
                 "Koordinat listesi (NCN, TXT, CSV)",
@@ -224,7 +231,12 @@ impl App {
                 self.error(e);
                 Task::none()
             }
-            Event::Picked(Kind::Dxf, Some(Ok(file))) => self.dxf_import_picked(file),
+            Event::Picked(Kind::Dxf, Some(Ok(file))) => {
+                self.drawing_import_picked(drawing_import::Source::Dxf, file)
+            }
+            Event::Picked(Kind::Ncz, Some(Ok(file))) => {
+                self.drawing_import_picked(drawing_import::Source::Ncz, file)
+            }
             Event::Picked(Kind::Coords, Some(Ok(file))) => self.coord_import_picked(file),
             Event::Picked(Kind::GeoJson, Some(Ok(file))) => {
                 self.gis_import_picked(Ok(gis_import::Source::GeoJson(file)))
@@ -244,7 +256,7 @@ impl App {
                 1 => self.exchange_event(Event::Picked(kind, files.pop().map(Ok))),
                 _ => Task::none(),
             },
-            Event::DxfImport(e) => self.dxf_import_event(e),
+            Event::DrawingImport(e) => self.drawing_import_event(e),
             Event::CoordImport(e) => self.coord_import_event(e),
             Event::DxfExport(e) => self.dxf_export_event(e),
             Event::CoordExport(e) => self.coord_export_event(e),
@@ -258,8 +270,11 @@ impl App {
         }
     }
 
-    /// Closes the window; a read still running is dropped when it answers.
+    /// Closes the window; a read still running is asked to stop, and dropped when it answers.
     pub(crate) fn close_exchange(&mut self) {
+        if let Some(Window::DrawingImport(s)) = &self.exchange {
+            s.stop_reading();
+        }
         self.exchange = None;
         if self.dialog == Some(Dialog::Exchange) {
             self.dialog = None;
@@ -268,7 +283,7 @@ impl App {
 
     pub(crate) fn exchange_view(&self) -> Element<'_, Message> {
         match &self.exchange {
-            Some(Window::DxfImport(s)) => self.dxf_import_view(s),
+            Some(Window::DrawingImport(s)) => self.drawing_import_view(s),
             Some(Window::CoordImport(s)) => self.coord_import_view(s),
             Some(Window::DxfExport(s)) => self.dxf_export_view(s),
             Some(Window::CoordExport(s)) => self.coord_export_view(s),
@@ -278,16 +293,31 @@ impl App {
         }
     }
 
-    /// Shows what an import added: its extent, never smaller than a few
+    /// Shows what an import added: its extent without far strays
+    /// (`kentos_formats::import::view_bounds`), never smaller than a few
     /// metres, so one point alone is shown in context (web `zoomToImported`).
     pub(crate) fn zoom_to(&mut self, slots: &[Slot]) {
+        let Some(doc) = &self.document else { return };
+        let boxes: Vec<kentos_contracts::Bounds> = slots
+            .iter()
+            .filter_map(|s| doc.model.get(*s))
+            .filter_map(|e| scene::extents_of(doc, std::iter::once(e)))
+            .map(|b| kentos_contracts::Bounds {
+                min_x: b.min_x,
+                min_y: b.min_y,
+                max_x: b.max_x,
+                max_y: b.max_y,
+            })
+            .collect();
+        if let Some(b) = kentos_formats::import::view_bounds(&boxes) {
+            self.zoom_to_bounds(&b);
+        }
+    }
+
+    /// Shows `b`, never smaller than a few metres across.
+    pub(crate) fn zoom_to_bounds(&mut self, b: &kentos_contracts::Bounds) {
         /// At least this much around what was imported.
         const MIN_SPAN: f64 = 20.0;
-        let Some(doc) = &self.document else { return };
-        let objects = slots.iter().filter_map(|s| doc.model.get(*s));
-        let Some(b) = scene::extents_of(doc, objects) else {
-            return;
-        };
         let grow = |lo: f64, hi: f64| {
             let pad = ((MIN_SPAN - (hi - lo)) / 2.0).max(0.0);
             (lo - pad, hi + pad)

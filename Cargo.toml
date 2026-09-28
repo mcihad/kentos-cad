@@ -8,6 +8,9 @@ members = [
     "crates/shared/geometry-core",
     "crates/shared/contracts",
     "crates/shared/formats",
+    # Netcad NCZ drawings (docs/adr/0138): a port of the NCZ Reader plugin, GPL-2.0-or-later
+    # (crates/shared/ncz/README.md: not distributed before the author's permission).
+    "crates/shared/ncz",
     # The project file, .kcad v2 (docs/specs/kcad-v2.md, docs/adr/0025).
     "crates/shared/kcad",
     # The expression language (docs/adr/0100): processing tools, styles and filters.
@@ -17,6 +20,9 @@ members = [
     # Browser bindings (wasm-bindgen) of the shared libraries.
     "crates/wasm/geometry-wasm",
     "crates/wasm/formats-wasm",
+    # DXF and Netcad NCZ in modules of their own, loaded only when such a file is imported.
+    "crates/wasm/dxf-wasm",
+    "crates/wasm/ncz-wasm",
     "crates/wasm/svg-wasm",
     # Native libraries (desktop, later the server; never the browser): the drawing
     # document, the counterpart of the web's TypeScript one (docs/adr/0020), the
@@ -59,12 +65,15 @@ default-members = [
     "crates/shared/geometry-core",
     "crates/shared/contracts",
     "crates/shared/formats",
+    "crates/shared/ncz",
     "crates/shared/kcad",
     "crates/shared/expression",
     "crates/shared/style-core",
     "crates/shared/svg-core",
     "crates/wasm/geometry-wasm",
     "crates/wasm/formats-wasm",
+    "crates/wasm/dxf-wasm",
+    "crates/wasm/ncz-wasm",
     "crates/wasm/svg-wasm",
     "crates/native/domain",
     "crates/native/application",

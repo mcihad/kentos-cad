@@ -4,7 +4,7 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 167 | 152 | 0 | 15 |
+| Komutlar | 167 | 153 | 0 | 14 |
 | Araçlar | 58 | 56 | 0 | 2 |
 | İşlem araçları | 4 | 4 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
@@ -12,20 +12,19 @@
 | Ayarlar | 68 | 68 | 0 | 0 |
 | Tarayıcı depoları | 10 | 10 | 0 | 0 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 192 | 192 | 0 | 0 |
-| Pencereler ve paneller | 63 | 63 | 0 | 0 |
+| Pencereler ve paneller | 65 | 65 | 0 | 0 |
 
 ## Kısmi (0)
 
 Yok.
 
-## Bekleyen (19)
+## Bekleyen (18)
 
 - Komutlar: `analysis.slope` Eğim analizi…
 - Komutlar: `analysis.volume` Hacim hesabı…
 - Komutlar: `crs.query` Koordinat sorgula
 - Komutlar: `crs.transform` Datum dönüşümü (ED50 ↔ TUREF)…
 - Komutlar: `file.export.pdf` PDF pafta…
-- Komutlar: `file.import.ncz` Netcad NCZ…
 - Komutlar: `file.print` Yazdır ve pafta çıktısı…
 - Komutlar: `map.contours` Eşyükselti üret…
 - Komutlar: `map.parcelReport` Parsel alan çizelgesi
@@ -52,7 +51,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 147 | 0 | 0 | 15 | 5 | 167 |
+| Komutlar | 148 | 0 | 0 | 14 | 5 | 167 |
 | Araçlar | 56 | 0 | 0 | 2 | 0 | 58 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
@@ -60,7 +59,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 | Ayarlar | 59 | 0 | 0 | 0 | 9 | 68 |
 | Tarayıcı depoları | 8 | 0 | 0 | 0 | 2 | 10 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 192 | 0 | 0 | 0 | 0 | 192 |
-| Pencereler ve paneller | 57 | 2 | 0 | 0 | 4 | 63 |
+| Pencereler ve paneller | 59 | 2 | 0 | 0 | 4 | 65 |
 
 Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
 
@@ -93,14 +92,13 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (0 / 167; ayrıca 15 iki platformda da bekliyor)
+#### Komutlar (0 / 167; ayrıca 14 iki platformda da bekliyor)
 
 - `analysis.slope` Eğim analizi… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `analysis.volume` Hacim hesabı… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `crs.query` Koordinat sorgula (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `crs.transform` Datum dönüşümü (ED50 ↔ TUREF)… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `file.export.pdf` PDF pafta… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
-- `file.import.ncz` Netcad NCZ… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `file.print` Yazdır ve pafta çıktısı… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `map.contours` Eşyükselti üret… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `map.parcelReport` Parsel alan çizelgesi (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
@@ -141,7 +139,7 @@ Yok.
 
 Yok.
 
-#### Pencereler ve paneller (2 / 63)
+#### Pencereler ve paneller (2 / 65)
 
 - `apps/web/src/ui/svgedit/svgExport.ts#openExportDialog` openExportDialog (kısmi) (masaüstünde: apps/desktop/src/style/svgedit/files/export.rs (ADR 0095)) — PNG panoya kopyalanamaz: masaüstünün panosu yalnız metin tutar (SVG kopyalanır). PNG dosyaya yazılır.
 - `apps/web/src/ui/svgedit/svgImport.ts#openImportDialog` openImportDialog (kısmi) (masaüstünde: apps/desktop/src/style/svgedit/files/import.rs, read.rs (ADR 0095)) — Katı XML olarak okunamayan ve onarılamayan dosya ayrıştırıcının nedeniyle (satır, sütun) reddedilir; web'in son çaresi tarayıcının hoşgörülü HTML ayrıştırıcısıdır.

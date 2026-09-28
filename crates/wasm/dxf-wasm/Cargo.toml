@@ -1,0 +1,18 @@
+[package]
+name = "kentos-dxf-wasm"
+description = "AutoCAD DXF for the browser: the formats worker loads this module only when a DXF is imported or exported"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+kentos-contracts = { path = "../../shared/contracts", default-features = false }
+kentos-formats = { path = "../../shared/formats" }
+kentos-kcad = { path = "../../shared/kcad" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+wasm-bindgen = { workspace = true }

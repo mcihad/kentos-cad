@@ -11,16 +11,24 @@ Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.
 - Saf hesap crate'leri (`crates/shared/*`) DOM, Iced, SQLx, ağ ya da host runtime'a bağlanamaz (CLAUDE.md §14, ADR 0010).
 - **Aday** tablosundaki bir satır kurulmuş ya da onaylanmış bağımlılık değildir. Karar ilgili fazın ADR'sinde verilir.
 
+## Türetilmiş kod ve dağıtım koşulu
+
+| Crate | Kaynak | Lisans | Koşul |
+|---|---|---|---|
+| `kentos-ncz` (`crates/shared/ncz`), `kentos-ncz-wasm` (`crates/wasm/ncz-wasm`) | Erdinç Örsan ÜNAL, QGIS eklentisi NCZ Reader 1.4.3 (`ncz_pure.py`), <https://github.com/erdincunal/Jeomatik-NCZ-Reader> | GPL-2.0-or-later (kaynağınki) | Yazarın izni (MIT, Apache-2.0 ya da yazılı izin) gelene dek NCZ okuyucusunu içeren hiçbir derleme dağıtılmaz; sahibin kararı, 28 Eylül. TODOS.md `NCZ-01`, ADR 0138 §2 |
+
+Dış bağımlılık değildir: kod bu depodadır ve kilide dış paket getirmez. Masaüstü ikilisi bu crate'i içerdiğinden koşul masaüstünün dağıtımını da bağlar; web'de koşul yalnız NCZ modülünü (`apps/web/src/io/ncz/pkg`) bağlar, çünkü o ayrı yüklenir.
+
 ## Rust: çalışma alanı (`Cargo.toml` → `[workspace.dependencies]`)
 
 | Crate | Sürüm ve özellikler | Lisans | Hedef | Kullanan | Karar |
 |---|---|---|---|---|---|
-| serde | 1.0.229, `derive` | MIT OR Apache-2.0 | native, wasm32 | contracts, formats, formats-wasm, application, api, kcad; processing (bir modelin adımlarındaki değerler yazıldığı sırayla okunur; kilide yeni paket girmedi, ADR 0116) | ADR 0001 |
-| serde_json | 1.0.151, `float_roundtrip` | MIT OR Apache-2.0 | native, wasm32 | contracts, formats, formats-wasm, application, api; processing (işlem araçlarının değerleri, ADR 0084); test (domain, native-application dahil), kcad | ADR 0001, 0008 |
-| libm | 0.2.16 | MIT | native, wasm32 | geometry-core, formats | ADR 0008 |
+| serde | 1.0.229, `derive` | MIT OR Apache-2.0 | native, wasm32 | contracts, formats, formats-wasm, dxf-wasm, application, api, kcad; processing (bir modelin adımlarındaki değerler yazıldığı sırayla okunur; kilide yeni paket girmedi, ADR 0116) | ADR 0001 |
+| serde_json | 1.0.151, `float_roundtrip` | MIT OR Apache-2.0 | native, wasm32 | contracts, formats, formats-wasm, dxf-wasm, ncz-wasm, application, api; ncz (yalnız test); processing (işlem araçlarının değerleri, ADR 0084); test (domain, native-application dahil), kcad | ADR 0001, 0008 |
+| libm | 0.2.16 | MIT | native, wasm32 | geometry-core, formats, ncz | ADR 0008 |
 | rust_decimal | 1.43.0, yalnız `std` | MIT | native, wasm32 | geometry-core | ADR 0001, 0004 |
 | ts-rs | 12.0.1, `serde-json-impl` | MIT | native (yalnız TS üretimi, `ts` özelliği) | contracts | ADR 0001, 0002 |
-| wasm-bindgen | 0.2.128 | MIT OR Apache-2.0 | wasm32 | geometry-wasm, formats-wasm, svg-wasm | ADR 0001 (`wasm-bindgen-cli` aynı sürüm) |
+| wasm-bindgen | 0.2.128 | MIT OR Apache-2.0 | wasm32 | geometry-wasm, formats-wasm, dxf-wasm, ncz-wasm, svg-wasm | ADR 0001 (`wasm-bindgen-cli` aynı sürüm); ADR 0138 |
 | schemars | 1.2.2, `derive`, `std` | MIT | native, wasm32 (derlenebilir; tarayıcı paketlerine girmez) | contracts (`schema` özelliği); katalog testlerinde application ve native-application (`schema` özelliği, yalnız geliştirme) | ADR 0013 (sahibin onayı, 25 Eylül). Getirdikleri: `schemars_derive` (MIT), `dyn-clone`, `ref-cast`, `ref-cast-impl`, `serde_derive_internals` (MIT OR Apache-2.0) |
 | iced | 0.14.0 (varsayılan özellikler; `canvas`, `advanced`, vitrinde `debug`, `tokio`) | MIT | native (masaüstü) | ui, ui-showcase, desktop (`canvas`: araç önizlemesi, ADR 0021) | ADR 0016 (`kentos-rc`'nin test edilmiş sürümü) |
 | iced_runtime | 0.14.0 (isteğe bağlı: `snapshot`) | MIT | native | ui; desktop (iz oynatıcısı uygulamanın görevlerini çalıştırır) | ADR 0016, 0021; paket zaten Iced ve KentOS UI üzerinden ikilideydi, kilide yeni paket girmedi |
@@ -52,7 +60,7 @@ Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.
 | pyo3 | 0.29.2, varsayılan özellikler kapalı, `macros`, `abi3-py310` | MIT OR Apache-2.0 | native (CPython eklentisi) | python (`kentos._native`, Python SDK'sının yerel modülü; `default-members` dışında) | ADR 0131 (sahibin onayı, 28 Eylül). Kararlı ABI: CPython 3.10 ve sonrası için platform başına tek tekerlek. Eskimiş `extension-module` özelliği kullanılmaz; maturin `PYO3_BUILD_EXTENSION_MODULE`'ü kendisi koyar. Kilide girenler: `pyo3`, `pyo3-ffi`, `pyo3-build-config`, `pyo3-macros`, `pyo3-macros-backend` (MIT OR Apache-2.0) ve `target-lexicon` 0.13.5 (Apache-2.0 WITH LLVM-exception) |
 | miniz_oxide | 0.9.1, varsayılan özellikler kapalı, `with-alloc` (yalnız inflate kullanılır) | MIT OR Zlib OR Apache-2.0 | native, wasm32 (saf Rust) | formats (zip'li Shapefile, `zip.rs`) | ADR 0046 soru 4 (sahibin onayı, 26 Eylül), ADR 0053; `flate2` üzerinden zaten kilitliydi (`adler2` ile), kilide yeni paket girmedi. Biçim WASM modülü zip okumaz: +183 bayt |
 
-**Geçişli bağımlılıklar** (`Cargo.lock`): 648 paket, 26'sı çalışma alanının kendi crate'leri (28 Eylül; PyO3'ün beş paketi ve `target-lexicon` girdi).
+**Geçişli bağımlılıklar** (`Cargo.lock`): 652 paket, 30'u çalışma alanının kendi crate'leri (28 Eylül; PyO3'ün beş paketi ve `target-lexicon` girdi; sonra `kentos-ncz`, `kentos-dxf-wasm` ve `kentos-ncz-wasm` eklendi, dış paket girmedi).
 
 - Masaüstü arayüzü (Iced, wgpu, winit, cosmic-text, tiny-skia …) 291 paket getirdi (ADR 0016). Hepsi taranmıştır.
 - Yalnız masaüstü derlemesine girerler; web ve sunucu derlemesi (`default-members`) onları derlemez.

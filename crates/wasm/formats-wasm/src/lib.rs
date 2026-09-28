@@ -1,16 +1,17 @@
 //! The file formats in the browser. The formats Web Worker
 //! (`apps/web/src/io/formatsWorker.ts`) loads this module the first time the user
-//! imports or exports a file, or opens or saves a drawing (the `.kcad` v2
-//! codec, `kentos-kcad`; a v1 drawing's persistent ids); it never loads at
-//! start-up (CLAUDE.md §20).
+//! imports or exports a coordinate list, a GeoJSON or a Shapefile, or opens or
+//! saves a drawing (the `.kcad` v2 codec, `kentos-kcad`; a v1 drawing's
+//! persistent ids); it never loads at start-up (CLAUDE.md §20). DXF and Netcad
+//! NCZ have modules of their own (`kentos-dxf-wasm`, `kentos-ncz-wasm`), loaded
+//! only when such a file is imported or exported.
 //! Files cross as bytes; options and results as JSON (the contracts in
 //! `kentos_contracts::formats`), whose float64 values serde_json writes as
 //! the shortest round-trip decimal, so coordinates arrive bit for bit. A
 //! drawing to save or one read crosses as typed columns (docs/adr/0030).
 
 use kentos_contracts::{
-    CoordReadOptions, CoordWriteInput, DxfReadOptions, FORMATS_VERSION, GeoJsonReadOptions,
-    ShapefileReadOptions,
+    CoordReadOptions, CoordWriteInput, FORMATS_VERSION, GeoJsonReadOptions, ShapefileReadOptions,
 };
 use wasm_bindgen::prelude::*;
 
@@ -57,16 +58,6 @@ pub fn read_coords(bytes: &[u8], options: &str) -> Result<Vec<u8>, JsError> {
     let opts: CoordReadOptions =
         serde_json::from_str(options).map_err(|e| bad_input("Okuma seçenekleri", &e))?;
     to_json(&kentos_formats::coords::read(bytes, &opts))
-}
-
-/// Reads an ASCII DXF file: `options` is `DxfReadOptions`, the result `ImportResult` (JSON bytes).
-/// A file that is not a DXF (a DWG, a binary DXF, broken groups) throws the reason.
-#[wasm_bindgen(js_name = readDxf)]
-pub fn read_dxf(bytes: &[u8], options: &str) -> Result<Vec<u8>, JsError> {
-    let opts: DxfReadOptions =
-        serde_json::from_str(options).map_err(|e| bad_input("Okuma seçenekleri", &e))?;
-    let result = kentos_formats::dxf::read(bytes, &opts).map_err(|e| JsError::new(&e))?;
-    to_json(&result)
 }
 
 /// Writes a coordinate list from `CoordWriteInput` (JSON).
@@ -278,20 +269,6 @@ pub fn decode_kcad(bytes: Vec<u8>, progress: &KcadProgress) -> Kcad {
         },
         Err(e) => Kcad::refused(&e),
     }
-}
-
-/// Writes an AutoCAD 2007 DXF from `DxfWriteInput` (JSON). The objects are
-/// read by the formats crate's own visitor (`dxf::WriteInput`), not the
-/// contract's derived code, which would weigh ~100 KB in this module.
-#[wasm_bindgen(js_name = writeDxf)]
-pub fn write_dxf(input: &str) -> Result<Written, JsError> {
-    let input: kentos_formats::dxf::WriteInput =
-        serde_json::from_str(input).map_err(|e| bad_input("Yazılacak nesneler", &e))?;
-    let (bytes, report) = kentos_formats::dxf::write(&input.0);
-    Ok(Written {
-        bytes,
-        report: String::from_utf8(to_json(&report)?).unwrap_or_default(),
-    })
 }
 
 // ── GIS files: GeoJSON and Shapefile (docs/adr/0046) ────────────────────

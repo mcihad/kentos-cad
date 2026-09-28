@@ -1,7 +1,8 @@
 //! “Bu koordinatlar hangi sistemde?” (the web's `CrsQuestion`,
 //! apps/web/src/ui/io/common.ts). A file that says nothing of its system
 //! (DXF, a coordinate list, a Shapefile without .prj) starts at the
-//! project's system; one that says (GeoJSON, a .prj; [`CrsQuestion::declare`])
+//! project's system; one that says (GeoJSON, a .prj, a Netcad NCZ's MPROJ;
+//! [`CrsQuestion::declare`])
 //! starts at what it says, or at no choice when that could not be read: a
 //! statement is never guessed into a system. Another system than the
 //! project's blocks the import: datum and zone transformations do not exist
@@ -35,6 +36,8 @@ pub enum Said {
     GeoJsonCrs,
     /// A Shapefile's .prj.
     Prj,
+    /// A Netcad NCZ's MPROJ and TILED_XML blocks (docs/adr/0138).
+    Ncz,
     /// The file says nothing (a Shapefile without .prj).
     Nothing,
 }
@@ -71,6 +74,7 @@ impl Statement {
                 CrsSource::Rfc7946 => Said::Rfc7946,
                 CrsSource::GeoJsonCrs => Said::GeoJsonCrs,
                 CrsSource::Prj => Said::Prj,
+                CrsSource::Ncz => Said::Ncz,
             },
         }
     }
@@ -143,6 +147,11 @@ impl CrsQuestion {
             (Said::Prj, Some(_)) => format!("Dosyanın .prj'si: “{}”{code}.", st.text),
             (Said::Prj, None) => format!(
                 "Dosyanın .prj'si tanınmadı (“{}”); koordinatların sistemini siz seçin.",
+                st.text
+            ),
+            (Said::Ncz, Some(_)) => format!("Dosyanın bildirdiği sistem: “{}”{code}.", st.text),
+            (Said::Ncz, None) => format!(
+                "Dosyanın bildirdiği sistem bir EPSG koduna karşılık gelmiyor (“{}”); koordinatların sistemini siz seçin.",
                 st.text
             ),
             (Said::Nothing, _) => "Dosya koordinat sistemini belirtmiyor (.prj yok): projenin sistemi seçili; koordinatların bu sistemde olduğundan emin olun.".to_owned(),

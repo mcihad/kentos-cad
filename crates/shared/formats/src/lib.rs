@@ -26,6 +26,7 @@ pub mod dxf;
 pub mod geojson;
 pub mod geom;
 pub mod gis;
+pub mod import;
 pub mod json;
 pub mod math;
 pub mod num;
@@ -33,6 +34,7 @@ pub mod nurbs;
 pub mod report;
 pub mod shp;
 pub mod text;
+pub mod watch;
 pub mod zip;
 
 pub use kentos_contracts as contracts;

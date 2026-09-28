@@ -1,0 +1,20 @@
+[package]
+name = "kentos-ncz-wasm"
+description = "Netcad NCZ for the browser: the formats worker loads this module only when an NCZ is imported"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+# It links kentos-ncz, a port of GPL-2.0-or-later code (crates/shared/ncz/README.md).
+license = "GPL-2.0-or-later"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+kentos-contracts = { path = "../../shared/contracts", default-features = false }
+kentos-formats = { path = "../../shared/formats" }
+kentos-kcad = { path = "../../shared/kcad" }
+kentos-ncz = { path = "../../shared/ncz" }
+serde_json = { workspace = true }
+wasm-bindgen = { workspace = true }

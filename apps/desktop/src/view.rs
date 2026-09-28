@@ -129,6 +129,8 @@ impl App {
         layers.extend(self.builder_view());
         // A save's panel and an open's window (saving.rs, opening.rs), over everything else.
         layers.extend(self.saving_view());
+        // A large import's panel: the objects as they go in, and Durdur (exchange/drawing_import.rs).
+        layers.extend(self.importing_view());
         layers.extend(self.opening_view());
         layers.extend(self.cloud_opening_view());
         if layers.len() == 1 {

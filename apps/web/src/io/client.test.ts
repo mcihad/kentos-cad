@@ -69,10 +69,28 @@ describe('FormatsClient', () => {
     expect(bytes).toEqual(new Uint8Array([49, 32, 50]));
     // Answers in any order; one for an unknown id is ignored.
     w.reply({ id: 999, ok: true, json: encode('?') });
-    w.reply({ id: w.id(1), ok: true, json: encode({ entities: [], layers: [] }) });
+    const columns = { kinds: new Uint8Array(0), uids: new Uint8Array(0), ints: new Uint32Array(1), floats: new Float64Array(0), text: new Uint16Array(0), textLengths: new Uint32Array(0) };
+    w.reply({ id: w.id(1), ok: true, imported: { head: JSON.stringify({ entities: [], layers: [] }), columns } });
     w.reply({ id: w.id(0), ok: true, json: encode({ points: 2 }) });
     await expect(first).resolves.toEqual({ points: 2 });
-    await expect(second).resolves.toEqual({ entities: [], layers: [] });
+    // An imported drawing: its head parsed, its objects the columns the worker sent.
+    const d = await second;
+    expect(d.result).toEqual({ entities: [], layers: [] });
+    expect(d.columns).toBe(columns);
+  });
+
+  it("hears a drawing's read as it goes, and hands a Netcad drawing over like a DXF", async () => {
+    const { client, workers } = setup();
+    const heard: unknown[] = [];
+    const bytes = new Uint8Array([1, 2, 3]);
+    const read = client.readNcz(bytes, { maxEntities: 0, drawingFont: 'barlow' }, (p) => heard.push(p));
+    const w = workers[0];
+    expect(w.sent[0].message).toMatchObject({ op: 'readNcz', options: { maxEntities: 0, drawingFont: 'barlow' } });
+    expect(w.sent[0].transfer[0]).toBe(bytes.buffer);
+    w.reply({ id: w.id(), progress: { stage: 'reading', done: 400, total: 1000 } });
+    w.reply({ id: w.id(), ok: false, fatal: false, message: 'NCZ dosyası değil.' });
+    await expect(read).rejects.toThrow('NCZ dosyası değil.');
+    expect(heard).toEqual([{ stage: 'reading', done: 400, total: 1000 }]);
   });
 
   it('hands a DXF file over without a copy, and copies a view into a larger buffer', () => {

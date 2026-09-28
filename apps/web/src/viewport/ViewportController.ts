@@ -150,6 +150,11 @@ export class ViewportController {
     this.palette = readCanvasPalette();
   }
 
+  /** The element the drawing is drawn in (null before `mount`). */
+  get element(): HTMLElement | null {
+    return this.host ?? null;
+  }
+
   async mount(host: HTMLElement): Promise<void> {
     this.host = host;
     this.overlay = document.createElement('canvas');

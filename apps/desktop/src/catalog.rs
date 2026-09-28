@@ -233,6 +233,8 @@ pub const PORTED: &[&str] = &[
     "style.legend",
     // SVG çizim düzenleyicisi, its import, export, document properties and tracing (docs/adr/0095).
     "style.svgEditor",
+    // Netcad NCZ in, through the same window as DXF (exchange/drawing_import.rs, docs/adr/0138).
+    "file.import.ncz",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

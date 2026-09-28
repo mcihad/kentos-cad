@@ -4,8 +4,9 @@ import type { DxfReadOptions } from '../contracts/generated/DxfReadOptions';
 import type { DxfWriteInput } from '../contracts/generated/DxfWriteInput';
 import type { GeoJsonReadOptions } from '../contracts/generated/GeoJsonReadOptions';
 import type { GeoJsonWriteInput } from '../contracts/generated/GeoJsonWriteInput';
+import type { NczReadOptions } from '../contracts/generated/NczReadOptions';
 import type { ShapefileReadOptions } from '../contracts/generated/ShapefileReadOptions';
-import type { PackedDrawing } from './columns';
+import type { DrawingColumns, PackedDrawing } from './columns';
 import type { KcadProgress } from './kcad';
 
 /**
@@ -15,14 +16,20 @@ import type { KcadProgress } from './kcad';
  * transferred, and the page parses them (CLAUDE.md §6.2 rule 6). A drawing
  * to save or one read crosses as typed columns (io/columns.ts, docs/adr/0030)
  * whose buffers are transferred: the side that sends them no longer has
- * them. A long KCAD read or write sends progress messages before its reply.
+ * them, and so does an imported drawing (DXF, Netcad NCZ; docs/adr/0138),
+ * each read by a module of its own that the worker loads the first time such
+ * a file is imported. A long KCAD read or write, and a drawing's import,
+ * send progress messages before their reply.
  */
 
 export type FormatsRequest =
   | { id: number; op: 'readCoords'; bytes: ArrayBuffer; options: CoordReadOptions }
   | { id: number; op: 'writeCoords'; input: CoordWriteInput }
+  /** A DXF drawing to import (the DXF module, crates/wasm/dxf-wasm). */
   | { id: number; op: 'readDxf'; bytes: ArrayBuffer; options: DxfReadOptions }
   | { id: number; op: 'writeDxf'; input: DxfWriteInput }
+  /** A Netcad NCZ drawing to import (the NCZ module, crates/wasm/ncz-wasm; docs/adr/0138). */
+  | { id: number; op: 'readNcz'; bytes: ArrayBuffer; options: NczReadOptions }
   /** GeoJSON and Shapefile (docs/adr/0046); a Shapefile layer's files go together, the .shp required. */
   | { id: number; op: 'readGeoJson'; bytes: ArrayBuffer; options: GeoJsonReadOptions }
   | { id: number; op: 'writeGeoJson'; input: GeoJsonWriteInput }
@@ -52,7 +59,9 @@ export type FormatsReply =
   | { id: number; ok: true; kcad: ArrayBuffer }
   /** A `.kcad` v2 file's drawing, packed. */
   | { id: number; ok: true; drawing: PackedDrawing }
-  /** How far a KCAD read or write is; the reply follows. */
+  /** An imported drawing: the `ImportResult` without its objects as JSON (`head`), the objects as columns. */
+  | { id: number; ok: true; imported: { head: string; columns: DrawingColumns } }
+  /** How far a KCAD read or write, or a drawing's import (`reading`), is; the reply follows. */
   | { id: number; progress: KcadProgress }
   /** `fatal`: the module trapped or did not load; the page starts a fresh worker. `code`: a KCAD error's (spec §9). */
   | { id: number; ok: false; message: string; fatal: boolean; code?: string };

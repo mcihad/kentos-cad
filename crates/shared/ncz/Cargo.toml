@@ -1,0 +1,23 @@
+[package]
+name = "kentos-ncz"
+description = "Netcad NCZ drawings read into the app's objects: the NCZ Reader plugin's parser ported to Rust, with Netcad 8's smart objects drawn as the symbols they are"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+# A port of Erdinç Örsan ÜNAL's NCZ Reader (GPL-2.0-or-later); see README.md: nothing
+# with this crate in it is distributed before the author's permission (docs/adr/0138).
+license = "GPL-2.0-or-later"
+
+# Pure like the formats crate it reports through: builds for the host (the desktop links
+# it) and wasm32 (the web's NCZ module, crates/wasm/ncz-wasm, loaded only when an NCZ is
+# imported); no file system, no network (CLAUDE.md §14). libm for every transcendental
+# function, so a file reads to the same bits natively and in the browser (§23.4).
+[dependencies]
+kentos-contracts = { path = "../contracts", default-features = false }
+kentos-formats = { path = "../formats" }
+kentos-geometry-core = { path = "../geometry-core" }
+libm = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

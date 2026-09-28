@@ -207,12 +207,12 @@ export function attachV1Identities(content: DocumentContent, ids: V1Identities):
  * exactly like a file's: every field, finite coordinates, lists long enough
  * to draw, a layer among `layers`, unique positive ids. The objects are
  * returned as given; `where` names them in the message ("Nesne 12 (arc) ›
- * yarıçap: …").
+ * yarıçap: …"), counting from `before` + 1 (a list checked in chunks).
  */
-export function readEntityList(list: readonly unknown[], layers: ReadonlySet<string>, where = 'Nesne'): { ok: true; entities: Entity[] } | { ok: false; error: string } {
+export function readEntityList(list: readonly unknown[], layers: ReadonlySet<string>, where = 'Nesne', before = 0): { ok: true; entities: Entity[] } | { ok: false; error: string } {
   const ids = new Set<number>();
   try {
-    return { ok: true, entities: list.map((e, i) => entity(e, `${where} ${i + 1}`, layers, ids)) };
+    return { ok: true, entities: list.map((e, i) => entity(e, `${where} ${before + i + 1}`, layers, ids)) };
   } catch (e) {
     return { ok: false, error: (e as Error).message };
   }

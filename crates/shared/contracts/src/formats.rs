@@ -22,7 +22,11 @@ use crate::layer::LineType;
 /// 6: the drawing crosses as typed columns (`kentos_kcad::columns`) with progress, not as JSON (docs/adr/0030).
 /// 7: GeoJSON read and write, Shapefile read (`readGeoJson`, `writeGeoJson`, `readShapefile`);
 ///    an import says the coordinate system its file declares (`declaredCrs`, docs/adr/0046).
-pub const FORMATS_VERSION: u32 = 7;
+/// 8: Netcad NCZ (`NczReadOptions`, `CrsSource::Ncz`, docs/adr/0138); DXF and NCZ read in modules
+///    of their own, loaded when such a file is imported, reporting their progress, their objects
+///    crossing as typed columns; a layer's objects by kind and their box (`ImportLayer.kinds`,
+///    `ImportLayer.bounds`) and where the view shows an import (`ImportResult.view`).
+pub const FORMATS_VERSION: u32 = 8;
 
 // ── Every import ────────────────────────────────────────────────────────
 
@@ -45,6 +49,15 @@ pub struct ImportLayer {
     pub line_weight: Option<f64>,
     /// Objects read onto this layer.
     pub count: u32,
+    /// Those objects by kind (`point`, `line`, …): what a choice of layers
+    /// brings, counted without walking the objects (docs/adr/0138).
+    #[serde(default)]
+    pub kinds: BTreeMap<String, u32>,
+    /// The box those objects' defining points span (a text's is its
+    /// insertion point): where a choice of layers is, without walking them.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub bounds: Option<Bounds>,
 }
 
 /// One line of an import or export report: what, how many, and what happened to it.
@@ -99,6 +112,9 @@ pub enum CrsSource {
     GeoJsonCrs,
     /// A Shapefile's `.prj` (WKT).
     Prj,
+    /// A Netcad NCZ drawing's MPROJ block (datum, projection, zone) and the
+    /// SRS its TILED_XML block names (docs/adr/0138).
+    Ncz,
 }
 
 /// The coordinate system a file declares: what the file says, never a
@@ -138,6 +154,12 @@ pub struct ImportResult {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub declared_crs: Option<DeclaredCrs>,
+    /// Where the view shows the objects once they are in: their extent without
+    /// the far strays a file can hold (a slip drawn at 0, 0 beside a city,
+    /// `kentos_formats::import::view_bounds`; docs/adr/0138).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub view: Option<Bounds>,
 }
 
 // ── Coordinate lists (Netcad NCN, TXT, CSV) ─────────────────────────────
@@ -390,6 +412,23 @@ pub struct ExportReport {
     pub counts: BTreeMap<String, u32>,
     pub notes: Vec<ReportItem>,
     pub skipped: Vec<ReportItem>,
+}
+
+// ── Netcad NCZ (docs/adr/0138) ──────────────────────────────────────────
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct NczReadOptions {
+    /// Stop after this many objects (0: one million); the rest is counted and reported.
+    pub max_entities: u32,
+    /// The drawing's typeface (`ProjectSettings.drawingFont`; empty: the
+    /// default). A smart object's centred text is placed by its width in the
+    /// face the drawing shows it in: the app's texts sit on their lower left.
+    #[serde(default)]
+    pub drawing_font: String,
 }
 
 // ── GeoJSON (RFC 7946) and Shapefile (docs/adr/0046) ───────────────────

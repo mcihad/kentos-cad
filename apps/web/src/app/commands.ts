@@ -227,7 +227,6 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       isEnabled: () => !ctx.files.busy.value,
       watch: [ctx.files.busy],
     },
-    pending(ctx, 'file.import.ncz', 'Netcad NCZ…', F),
     pending(ctx, 'file.export.pdf', 'PDF pafta…', F),
     { ...pending(ctx, 'file.print', 'Yazdır ve pafta çıktısı…', F, 'print'), short: 'Yazdır' },
     { id: 'file.settings', title: 'Proje ayarları…', category: F, icon: 'folder', aliases: ['PROJE'], run: () => hooks.openProjectSettings() },

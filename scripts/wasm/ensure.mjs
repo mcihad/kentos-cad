@@ -1,7 +1,9 @@
 // Builds the Rust WASM packages whose sources changed since their last build
 // (docs/adr/0008): the geometry core (apps/web/src/wasm/pkg), which the app needs to
 // start, the file formats (apps/web/src/io/pkg), which the formats worker loads
-// only when a file is imported or exported, and the SVG editor's geometry
+// only when a file is imported or exported or a drawing opened or saved, DXF and
+// Netcad NCZ (apps/web/src/io/dxf/pkg, io/ncz/pkg), loaded only for such a file,
+// and the SVG editor's geometry
 // (apps/web/src/style/svg/pkg), loaded with the editor (CLAUDE.md §20). `pnpm dev`,
 // `test`, `build`, `e2e` and the perf scripts run this first. Each package
 // has its own digest (the crates it is built from and the toolchain pins)
@@ -19,6 +21,10 @@ const PACKAGES = [
   { label: 'Geometri çekirdeği', script: 'rust:wasm', out: 'apps/web/src/wasm/pkg', lib: 'kentos_geometry_wasm', sources: ['crates/shared/geometry-core', 'crates/shared/expression', 'crates/shared/style-core', 'crates/wasm/geometry-wasm', ...PINS] },
   // The formats use the core's own sampling of bulged rings (docs/adr/0009): a core edit rebuilds both.
   { label: 'Dosya biçimleri', script: 'rust:wasm:formats', out: 'apps/web/src/io/pkg', lib: 'kentos_formats_wasm', sources: ['crates/shared/formats', 'crates/shared/kcad', 'crates/wasm/formats-wasm', 'crates/shared/contracts', 'crates/shared/geometry-core', ...PINS] },
+  // DXF and Netcad NCZ, each in a module of its own that the formats worker loads only when such a
+  // file is imported or exported (the objects cross as the drawing's typed columns, crates/shared/kcad).
+  { label: 'DXF', script: 'rust:wasm:dxf', out: 'apps/web/src/io/dxf/pkg', lib: 'kentos_dxf_wasm', sources: ['crates/shared/formats', 'crates/shared/kcad', 'crates/wasm/dxf-wasm', 'crates/shared/contracts', 'crates/shared/geometry-core', ...PINS] },
+  { label: 'Netcad NCZ', script: 'rust:wasm:ncz', out: 'apps/web/src/io/ncz/pkg', lib: 'kentos_ncz_wasm', sources: ['crates/shared/ncz', 'crates/shared/formats', 'crates/shared/kcad', 'crates/wasm/ncz-wasm', 'crates/shared/contracts', 'crates/shared/geometry-core', ...PINS] },
   // The SVG editor's geometry (loaded with the editor) runs on the core's overlay and writes numbers as the style core does.
   { label: 'SVG düzenleyicisi', script: 'rust:wasm:svg', out: 'apps/web/src/style/svg/pkg', lib: 'kentos_svg_wasm', sources: ['crates/shared/svg-core', 'crates/wasm/svg-wasm', 'crates/shared/geometry-core', 'crates/shared/expression', 'crates/shared/style-core', ...PINS] },
 ];
