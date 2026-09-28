@@ -228,3 +228,127 @@ fn builds_the_web_s_batches() {
         problems.join("\n")
     );
 }
+
+/// A large layer drawn in parts (the desktop's parts of a layer, docs/adr/0121):
+/// every case built whole and built in parts of one, two and three objects
+/// one after another. In the parts' merged order the batches meet in the
+/// whole layer's order, and a batch's parts carry its objects' numbers in
+/// the whole batch's order: the GPU draws the same things in the same order.
+#[test]
+fn a_layer_built_in_parts_draws_as_the_layer_built_whole() {
+    use kentos_native_style::batches::{StyledLayer, merged_order};
+
+    let f = fixture();
+    let p = &f["palette"];
+    let palette = StylePalette {
+        fg: p["fg"].as_str().unwrap().into(),
+        fg_dim: p["fgDim"].as_str().unwrap().into(),
+        ink: p["ink"].as_str().unwrap().into(),
+        paper: p["paper"].as_str().unwrap().into(),
+    };
+    let mut library = StyleLibrary::default();
+    let mut items: Vec<Value> = f["assets"].as_array().unwrap().clone();
+    for (id, symbol) in f["library"].as_object().unwrap() {
+        items.push(json!({ "kind": "symbol", "id": id, "name": id, "path": [], "symbol": symbol }));
+    }
+    library.load(Source::Project, &items, &[]);
+    let origin = Vec2::new(
+        f["origin"]["x"].as_f64().unwrap(),
+        f["origin"]["y"].as_f64().unwrap(),
+    );
+    let layer_id = f["layer"]["id"].as_str().unwrap();
+    let layer_name = f["layer"]["name"].as_str().unwrap().to_owned();
+    let mut checked = 0;
+    for c in f["cases"].as_array().unwrap() {
+        let id = c["id"].as_str().unwrap();
+        let style: LayerStyle = serde_json::from_value(c["style"].clone()).expect("style");
+        let entities: Vec<Entity> = c["entities"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|e| {
+                let mut e = e.clone();
+                e["layerId"] = json!(layer_id);
+                serde_json::from_value(e).expect("entity")
+            })
+            .collect();
+        let mut store = Store::new();
+        store.put_many(entities.iter().map(|e| {
+            let b = e.base();
+            (
+                f64::from(b.id),
+                b.layer_id.as_str(),
+                b.label.as_deref().is_some_and(|l| !l.is_empty()),
+                shape(e),
+            )
+        }));
+        let view = &c["view"];
+        let screen = view["symbolSize"] == "screen";
+        let scale = symbol_scale_of(
+            screen,
+            c["plotScale"].as_f64().unwrap(),
+            view["pxPerM"].as_f64().unwrap(),
+        );
+        let name = layer_name.clone();
+        let names = move |_: &str| name.clone();
+        let opts = BuildOptions {
+            origin,
+            plot_scale: scale,
+            screen,
+            hairlines: view["lineWeights"] == false,
+            clip: None,
+            library: &library,
+            layer_name: &names,
+        };
+        let build = |list: &[&Entity]| -> StyledLayer {
+            let (call, batches) = build_layer(&store, &style, list, &opts).expect("build");
+            assert!(!call.reads_index, "{id}: no case reads $sıra");
+            decode(
+                batches,
+                &DecodeOptions {
+                    palette: &palette,
+                    plot_scale: scale,
+                    library: &library,
+                },
+            )
+            .expect("decode")
+        };
+        let list: Vec<&Entity> = entities.iter().collect();
+        let whole = build(&list);
+        // What the whole layer draws: each batch's key and its numbers, in order.
+        let want: Vec<(u64, &[f32])> = whole
+            .batches
+            .iter()
+            .map(|b| (b.key, &whole.data[b.range.clone()]))
+            .collect();
+        for size in 1..=3 {
+            let parts: Vec<StyledLayer> = list.chunks(size).map(build).collect();
+            let refs: Vec<&StyledLayer> = parts.iter().collect();
+            let mut got: Vec<(u64, Vec<f32>)> = Vec::new();
+            for (p, b) in merged_order(&refs) {
+                let batch = &parts[p].batches[b];
+                let data = &parts[p].data[batch.range.clone()];
+                match got.last_mut() {
+                    Some((key, numbers)) if *key == batch.key => numbers.extend_from_slice(data),
+                    _ => got.push((batch.key, data.to_vec())),
+                }
+            }
+            assert_eq!(
+                got.len(),
+                want.len(),
+                "{id}, parts of {size}: the whole layer's batches"
+            );
+            for (i, ((gk, gd), (wk, wd))) in got.iter().zip(&want).enumerate() {
+                assert_eq!(gk, wk, "{id}, parts of {size}: batch {i} in its place");
+                let same = gd.len() == wd.len()
+                    && gd
+                        .iter()
+                        .zip(wd.iter())
+                        .all(|(a, b)| a.to_bits() == b.to_bits());
+                assert!(same, "{id}, parts of {size}: batch {i}'s numbers");
+            }
+            checked += 1;
+        }
+    }
+    assert_eq!(checked, 27, "nine cases, three part sizes");
+}

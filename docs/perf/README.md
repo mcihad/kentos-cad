@@ -19,6 +19,21 @@ EXPRESSION_BENCH=1 EXPRESSION_N=100000,1000000 EXPRESSION_PERF_OUT=docs/perf EXP
 
 Ölçüm sırasında makinede başka ağır süreç (Vite, e2e, cargo) çalışmaz.
 
+## Masaüstünde büyük stilli katmanın parçaları (2026-09-28, `6cbc2ef` → ADR 0121)
+
+- **Kaynak:** önce [frame-desktop-after-2026-09-28.md](frame-desktop-after-2026-09-28.md), sonra [frame-desktop-parts-2026-09-28.md](frame-desktop-parts-2026-09-28.md). Karar [ADR 0121](../adr/0121-desktop-layer-parts.md)'dedir.
+- **Ortam:** aşağıdaki ölçümle aynı.
+
+| p50 | 50 000 parsel | 100 000 parsel |
+|---|---|---|
+| Bir nesneyi silme, arayüz iş parçacığı | 74,5 → 15,3 ms | 120,6 → 7,6 ms |
+| Geri al ve yinele, arayüz iş parçacığı | 59,9 → 13,4 ms | 114,5 → 12,8 ms |
+| 1:1000'de kaydırma, GPU (geri okumayla) | 18,7 → 11,4 ms | 29,3 → 13,5 ms |
+
+- 8192 ve daha çok nesneli katman, belgedeki yerlerine göre 4096'lık parçalarda kurulur. Düzenleme yalnız kendi parçasını yeniden kurar ve yükler.
+- Görünmeyen parça çizilmez.
+- Partiler bütün katmanın sırasıyla çizilir: GPU aynı sayıları aynı sırayla alır.
+
 ## Masaüstünün karesi büyük çizimde (2026-09-28, `1b72b1e` → ADR 0120)
 
 - **Kaynak:** [frame-desktop-before-2026-09-28.md](frame-desktop-before-2026-09-28.md), [frame-desktop-after-2026-09-28.md](frame-desktop-after-2026-09-28.md) (ham veri `.json`). Karar [ADR 0120](../adr/0120-desktop-frame-cost.md)'dedir.

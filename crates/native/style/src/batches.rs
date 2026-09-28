@@ -7,6 +7,7 @@
 //! draws what this gives it; `fixtures/style/v1/batches.json` holds both
 //! platforms to the same batches.
 
+use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::Range;
 
 use kentos_style_core::js::number;
@@ -303,6 +304,13 @@ pub enum BatchKind {
 pub struct StyledBatch {
     pub range: Range<usize>,
     pub kind: BatchKind,
+    /// The symbol level it draws at, lowest first (the core's order).
+    pub level: f64,
+    /// What gathers objects into it in the core (`BatchSink::entry`): its
+    /// kind, its style without what varies per object (a mark's size, height
+    /// and turn) and its scale range. Two builds of parts of one layer give
+    /// a batch the same key when the layer built whole draws them as one.
+    pub key: u64,
     /// Origin-relative box of the geometry: min x, min y, max x, max y.
     pub bounds: [f64; 4],
     /// How far drawing reaches past the geometry, in `reach_unit`.
@@ -940,6 +948,7 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
         let style = d.get("style").unwrap_or(&Value::Null);
         let min_scale = d.get("minScale").and_then(Value::as_f64);
         let max_scale = d.get("maxScale").and_then(Value::as_f64);
+        let (level, key) = order_of(d, style);
         let batch = match s(d, "kind") {
             "stroke" => {
                 let unit = Unit::read(style.get("unit"));
@@ -954,6 +963,8 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
                         cap: Cap::read(style.get("cap")),
                         blur: n(style, "blur"),
                     },
+                    level,
+                    key,
                     bounds,
                     reach: dw + 1.0,
                     reach_unit: unit,
@@ -966,6 +977,8 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
                 kind: BatchKind::Fill {
                     paint: looks.paint(style),
                 },
+                level,
+                key,
                 bounds,
                 reach: 0.0,
                 reach_unit: Unit::World,
@@ -1002,6 +1015,8 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
                         opacity: n(common, "opacity"),
                         extent: [dw, dh],
                     },
+                    level,
+                    key,
                     bounds,
                     reach: w.max(dh).max(dw) * 1.5 + offset[0].hypot(offset[1]) + 2.0,
                     reach_unit: unit,
@@ -1016,6 +1031,78 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
         data: out.data,
         batches,
     })
+}
+
+/// A batch's level and key (`StyledBatch::level`, `key`) from the core's
+/// description: a stroke's and a fill's style is its key as it is; a mark's
+/// key leaves out its size and height and turns it to 0 (`MarkerStyle::key`),
+/// as the description carries the first mark's.
+fn order_of(d: &Value, style: &Value) -> (f64, u64) {
+    let kind = s(d, "kind");
+    let (level, keyed) = match kind {
+        "stroke" | "fill" => (n(style, "level"), style.clone()),
+        _ => {
+            let mut keyed = style.clone();
+            if let Some(o) = keyed.as_object_mut() {
+                o.remove("size");
+                o.remove("height");
+                if let Some(common) = o.get_mut("common").and_then(Value::as_object_mut) {
+                    common.insert("rotation".into(), json!(0.0));
+                }
+            }
+            (
+                n(style.get("common").unwrap_or(&Value::Null), "level"),
+                keyed,
+            )
+        }
+    };
+    let mut hasher = DefaultHasher::new();
+    kind.hash(&mut hasher);
+    keyed.to_string().hash(&mut hasher);
+    d.get("minScale").map(Value::to_string).hash(&mut hasher);
+    d.get("maxScale").map(Value::to_string).hash(&mut hasher);
+    (level, hasher.finish())
+}
+
+/// Where a batch's kind draws within its level: fills, then lines, then marks (the core's `Kind`).
+fn kind_rank(kind: &BatchKind) -> u8 {
+    match kind {
+        BatchKind::Fill { .. } => 0,
+        BatchKind::Stroke { .. } => 1,
+        BatchKind::Marker { .. } => 2,
+    }
+}
+
+/// The draw order of one layer built in parts that follow one another in
+/// document order (the desktop's parts of a large layer): `(part, batch)`
+/// pairs in the order the layer built whole draws. The core orders a layer's
+/// batches by level, then fills, lines and marks, then the order it first
+/// met them; a part's batches are in that order among themselves. So a
+/// batch's place in the whole layer is its level, its kind and where its key
+/// is first met (the first part that has it, and its place there), and the
+/// parts of one batch draw one after another, as its objects do.
+pub fn merged_order(parts: &[&StyledLayer]) -> Vec<(usize, usize)> {
+    let mut first: std::collections::HashMap<u64, (usize, usize)> =
+        std::collections::HashMap::new();
+    for (p, layer) in parts.iter().enumerate() {
+        for (b, batch) in layer.batches.iter().enumerate() {
+            first.entry(batch.key).or_insert((p, b));
+        }
+    }
+    let mut all: Vec<(usize, usize)> = parts
+        .iter()
+        .enumerate()
+        .flat_map(|(p, layer)| (0..layer.batches.len()).map(move |b| (p, b)))
+        .collect();
+    all.sort_by(|&(pa, ba), &(pb, bb)| {
+        let (a, b) = (&parts[pa].batches[ba], &parts[pb].batches[bb]);
+        a.level
+            .total_cmp(&b.level)
+            .then(kind_rank(&a.kind).cmp(&kind_rank(&b.kind)))
+            .then(first[&a.key].cmp(&first[&b.key]))
+            .then(pa.cmp(&pb))
+    });
+    all
 }
 
 // ── Checks a frame makes (`render/types.ts`) ────────────────────────────

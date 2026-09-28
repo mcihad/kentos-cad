@@ -10,8 +10,14 @@
 //! symbol scale, the library, or, for a layer with construction lines, the
 //! box they are clipped to. A pan or a zoom within the symbol scale's step
 //! rebuilds nothing; the GPU keeps the batches (crates/render/wgpu styled).
+//!
+//! A large layer is built in parts (docs/adr/0121): its objects by run of
+//! places in the document, which an edit keeps. A change builds its parts
+//! again and leaves the others; the GPU skips the parts out of view; the
+//! scene draws the parts' batches in the order of the layer built whole
+//! (`batches::merged_order`), so the same numbers draw in the same order.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
@@ -20,7 +26,7 @@ use kentos_contracts::{Entity, LayerNode, LayerNodeType, LayerStyle};
 use kentos_domain::{ChangeMark, Changes, Slot};
 use kentos_geometry_core::store::Store;
 use kentos_native_style::StylePalette;
-use kentos_native_style::batches::{DecodeOptions, decode};
+use kentos_native_style::batches::{DecodeOptions, StyledLayer, decode, merged_order};
 use kentos_native_style::library::StyleLibrary;
 use kentos_native_style::program::{BuildOptions, build_layer};
 use kentos_render_wgpu::styled::{StyledLayerPart, StyledScene};
@@ -41,14 +47,37 @@ pub struct Look {
     pub origin: Vec2,
 }
 
-struct Layer {
-    style: LayerStyle,
-    name: String,
+/// Places per part of a large layer: a part holds the layer's objects whose
+/// places in the document fall in one run of `PART_PLACES` (docs/adr/0121).
+pub(crate) const PART_PLACES: u64 = 4096;
+/// A layer is built in parts from this many objects, and whole again below half of it.
+pub(crate) const PARTS_FROM: usize = 8192;
+
+/// A part of a layer as built.
+struct Part {
     part: Arc<StyledLayerPart>,
     /// It has infinite lines or rays: built again when their clip box moves.
     construction: bool,
+}
+
+struct Layer {
+    style: LayerStyle,
+    name: String,
+    /// Its parts by run of places (`place / PART_PLACES`), in document
+    /// order; a layer built whole has one, at 0.
+    parts: BTreeMap<u64, Part>,
+    /// Built in parts: large, and nothing of it reads `$sıra`.
+    split: bool,
+    /// An expression of it reads `$sıra`: it is built whole, as one run.
+    reads_index: bool,
     /// Its objects changed while it was hidden.
     stale: bool,
+}
+
+/// What of a shown layer is built again: all of it, or some of its parts.
+#[derive(Default)]
+struct Dirty {
+    parts: HashSet<u64>,
 }
 
 /// The styled layers as last built, and what they were built from.
@@ -63,10 +92,10 @@ pub struct StyledCache {
     library: u64,
     clip: Option<Bounds>,
     layers: HashMap<String, Layer>,
-    /// Each object's layer when last built, for objects since removed.
-    slot_layer: HashMap<Slot, String>,
+    /// Each object's layer and part when last built, for objects since removed or moved.
+    slot_part: HashMap<Slot, (String, u64)>,
     scene: StyledScene,
-    /// What the last rebuild cost, and how many layers it built.
+    /// What the last rebuild cost, and how many layer parts it built.
     pub last_build: Option<(Duration, usize)>,
 }
 
@@ -156,7 +185,7 @@ impl StyledCache {
         let mut all = false;
         if self.drawing != Some(drawing) {
             self.layers.clear();
-            self.slot_layer.clear();
+            self.slot_part.clear();
             self.mark = None;
             self.drawing = Some(drawing);
             all = true;
@@ -164,16 +193,21 @@ impl StyledCache {
         if self.look.as_ref() != Some(look) || self.library != library.version() {
             all = true;
         }
-        let mut dirty: HashSet<String> = HashSet::new();
+        // The parts the changes touched: where each changed object is now, and where it was.
+        let mut dirty: HashMap<String, Dirty> = HashMap::new();
         match self.mark.map(|m| doc.changes_since(m)) {
             None | Some(Changes::All) => all = true,
             Some(Changes::Slots(slots)) => {
                 for slot in slots {
-                    if let Some(e) = doc.get(*slot) {
-                        dirty.insert(e.base().layer_id.clone());
+                    if let (Some(e), Some(place)) = (doc.get(*slot), doc.place(*slot)) {
+                        dirty
+                            .entry(e.base().layer_id.clone())
+                            .or_default()
+                            .parts
+                            .insert(place / PART_PLACES);
                     }
-                    if let Some(was) = self.slot_layer.get(slot) {
-                        dirty.insert(was.clone());
+                    if let Some((layer, part)) = self.slot_part.get(slot) {
+                        dirty.entry(layer.clone()).or_default().parts.insert(*part);
                     }
                 }
             }
@@ -183,17 +217,17 @@ impl StyledCache {
             _ => {
                 let c = construction_clip(view);
                 self.clip = Some(c);
-                dirty.extend(
-                    self.layers
-                        .iter()
-                        .filter(|(_, l)| l.construction)
-                        .map(|(id, _)| id.clone()),
-                );
+                for (id, layer) in &self.layers {
+                    for (key, part) in &layer.parts {
+                        if part.construction {
+                            dirty.entry(id.clone()).or_default().parts.insert(*key);
+                        }
+                    }
+                }
                 c
             }
         };
         if all {
-            dirty.extend(self.layers.keys().cloned());
             for l in self.layers.values_mut() {
                 l.stale = true;
             }
@@ -203,36 +237,76 @@ impl StyledCache {
         names(doc.layers().nodes(), &mut layer_names);
         let shown_ids: HashSet<&str> = shown.iter().map(|n| n.id.as_str()).collect();
         // Changed layers that are hidden wait until they show.
-        for id in &dirty {
+        for id in dirty.keys() {
             if !shown_ids.contains(id.as_str())
                 && let Some(l) = self.layers.get_mut(id)
             {
                 l.stale = true;
             }
         }
-        let mut changed_order = self.scene.layers.len() != shown.len();
-        // The layers to build, with their objects.
-        let mut todo: Vec<(&LayerNode, Vec<&Entity>)> = Vec::new();
+        // What to build: a layer whole (all of its parts, or its one run), or
+        // the parts of it that changed. `reset`: the layer's parts are replaced.
+        struct Plan<'d> {
+            node: &'d LayerNode,
+            reset: bool,
+            split: bool,
+            parts: Vec<(u64, Vec<&'d Entity>)>,
+        }
+        let mut plans: Vec<Plan> = Vec::new();
         for node in &shown {
             let cached = self.layers.get(&node.id);
-            let rebuild = all
-                || dirty.contains(&node.id)
-                || cached.is_none_or(|l| l.stale || l.style != node.style || l.name != node.name);
-            if !rebuild {
+            let count = doc.count(&node.id);
+            let reads_index = cached.is_some_and(|l| l.reads_index && l.style == node.style);
+            let split = !reads_index
+                && match cached {
+                    Some(l) if l.split => count >= PARTS_FROM / 2,
+                    _ => count >= PARTS_FROM,
+                };
+            let reset = all
+                || cached.is_none_or(|l| {
+                    l.stale || l.style != node.style || l.name != node.name || l.split != split
+                });
+            let changed = dirty.get(&node.id);
+            if !reset && changed.is_none() {
                 continue;
             }
-            changed_order = true;
-            let entities: Vec<&Entity> = doc.by_layer(&node.id).collect();
-            for e in &entities {
-                self.slot_layer.insert(Slot(e.base().id), node.id.clone());
-            }
-            todo.push((node, entities));
+            let parts = if !split {
+                vec![(0, doc.by_layer(&node.id).collect())]
+            } else if reset {
+                // Every part: the layer's objects by run of places.
+                let mut parts: Vec<(u64, Vec<&Entity>)> = Vec::new();
+                for (place, e) in doc.by_layer_placed(&node.id, 0..u64::MAX) {
+                    let key = place / PART_PLACES;
+                    match parts.last_mut() {
+                        Some((k, list)) if *k == key => list.push(e),
+                        _ => parts.push((key, vec![e])),
+                    }
+                }
+                parts
+            } else {
+                let mut keys: Vec<u64> =
+                    changed.map_or_else(Vec::new, |d| d.parts.iter().copied().collect());
+                keys.sort_unstable();
+                keys.into_iter()
+                    .map(|key| {
+                        let places = key * PART_PLACES..(key + 1) * PART_PLACES;
+                        (
+                            key,
+                            doc.by_layer_placed(&node.id, places)
+                                .map(|(_, e)| e)
+                                .collect(),
+                        )
+                    })
+                    .collect()
+            };
+            plans.push(Plan {
+                node,
+                reset,
+                split,
+                parts,
+            });
         }
-        let built = todo.len();
-        // Layers are independent: built side by side on the machine's cores (the store,
-        // the library and the look are only read), the biggest first.
-        todo.sort_by_key(|(_, e)| std::cmp::Reverse(e.len()));
-        let build = |node: &LayerNode, entities: &[&Entity]| {
+        let build = |node: &LayerNode, entities: &[&Entity]| -> (StyledLayer, bool) {
             let opts = BuildOptions {
                 origin: look.origin,
                 plot_scale: look.symbol_scale,
@@ -248,7 +322,7 @@ impl StyledCache {
                 },
             };
             build_layer(store, &node.style, entities, &opts)
-                .and_then(|(_, batches)| {
+                .and_then(|(call, batches)| {
                     decode(
                         batches,
                         &DecodeOptions {
@@ -257,80 +331,175 @@ impl StyledCache {
                             library,
                         },
                     )
+                    .map(|layer| (layer, call.reads_index))
                 })
                 .unwrap_or_default()
         };
+        // Every part to build, the biggest first: built side by side on the
+        // machine's cores (the store, the library and the look are only read).
+        let mut jobs: Vec<(usize, usize)> = plans
+            .iter()
+            .enumerate()
+            .flat_map(|(p, plan)| (0..plan.parts.len()).map(move |k| (p, k)))
+            .collect();
+        jobs.sort_by_key(|&(p, k)| std::cmp::Reverse(plans[p].parts[k].1.len()));
+        let run = |&(p, k): &(usize, usize)| build(plans[p].node, &plans[p].parts[k].1);
         let threads = std::thread::available_parallelism()
             .map_or(1, |n| n.get())
             .clamp(1, 8)
-            .min(todo.len());
-        let layers: Vec<kentos_native_style::StyledLayer> = if threads <= 1 {
-            todo.iter().map(|(n, e)| build(n, e)).collect()
+            .min(jobs.len());
+        let mut built: HashMap<(usize, usize), (StyledLayer, bool)> = HashMap::new();
+        if threads <= 1 {
+            built.extend(jobs.iter().map(|j| (*j, run(j))));
         } else {
-            // Each thread takes every `threads`-th layer, so the big ones spread out.
-            let mut out: Vec<Option<kentos_native_style::StyledLayer>> = vec![None; todo.len()];
+            // Each thread takes every `threads`-th job, so the big ones spread out.
             std::thread::scope(|s| {
                 let handles: Vec<_> = (0..threads)
                     .map(|t| {
-                        let todo = &todo;
-                        let build = &build;
+                        let jobs = &jobs;
+                        let run = &run;
                         s.spawn(move || {
-                            (t..todo.len())
+                            (t..jobs.len())
                                 .step_by(threads)
-                                .map(|i| (i, build(todo[i].0, &todo[i].1)))
+                                .map(|i| (jobs[i], run(&jobs[i])))
                                 .collect::<Vec<_>>()
                         })
                     })
                     .collect();
                 for h in handles {
-                    for (i, layer) in h.join().unwrap_or_default() {
-                        out[i] = Some(layer);
-                    }
+                    built.extend(h.join().unwrap_or_default());
                 }
             });
-            out.into_iter().map(Option::unwrap_or_default).collect()
-        };
-        for ((node, entities), layer) in todo.iter().zip(layers) {
-            self.layers.insert(
-                node.id.clone(),
-                Layer {
-                    style: node.style.clone(),
-                    name: node.name.clone(),
-                    part: Arc::new(StyledLayerPart {
-                        id: NEXT_LAYER.fetch_add(1, Ordering::Relaxed),
-                        layer,
-                    }),
-                    construction: entities.iter().any(|e| construction(e)),
+        }
+        let count = jobs.len();
+        for (p, plan) in plans.iter().enumerate() {
+            let id = &plan.node.id;
+            let mut results: Vec<(u64, &[&Entity], StyledLayer, bool)> = plan
+                .parts
+                .iter()
+                .enumerate()
+                .map(|(k, (key, entities))| {
+                    let (layer, reads) = built.remove(&(p, k)).unwrap_or_default();
+                    (*key, entities.as_slice(), layer, reads)
+                })
+                .collect();
+            let mut split = plan.split;
+            let mut reset = plan.reset;
+            // A part reads `$sıra`: the layer is one run, built whole again.
+            if split && results.iter().any(|r| r.3) {
+                let entities: Vec<&Entity> = doc.by_layer(id).collect();
+                let (layer, _) = build(plan.node, &entities);
+                split = false;
+                reset = true;
+                results = Vec::new();
+                for e in &entities {
+                    self.slot_part.insert(Slot(e.base().id), (id.clone(), 0));
+                }
+                let entry = self.layers.entry(id.clone()).or_insert_with(|| Layer {
+                    style: plan.node.style.clone(),
+                    name: plan.node.name.clone(),
+                    parts: BTreeMap::new(),
+                    split: false,
+                    reads_index: true,
                     stale: false,
-                },
-            );
+                });
+                entry.parts.clear();
+                entry.parts.insert(0, new_part(layer, &entities));
+                entry.reads_index = true;
+            }
+            let reads_index = results.iter().any(|r| r.3);
+            let entry = self.layers.entry(id.clone()).or_insert_with(|| Layer {
+                style: plan.node.style.clone(),
+                name: plan.node.name.clone(),
+                parts: BTreeMap::new(),
+                split,
+                reads_index,
+                stale: false,
+            });
+            if reset {
+                entry.style = plan.node.style.clone();
+                entry.name = plan.node.name.clone();
+                entry.split = split;
+                entry.stale = false;
+                if !results.is_empty() {
+                    entry.parts.clear();
+                    entry.reads_index = reads_index;
+                }
+            }
+            for (key, entities, layer, _) in results {
+                for e in entities {
+                    self.slot_part.insert(Slot(e.base().id), (id.clone(), key));
+                }
+                // A part left with no objects goes; a layer built whole keeps its one.
+                if entities.is_empty() && split {
+                    entry.parts.remove(&key);
+                } else {
+                    entry.parts.insert(key, new_part(layer, entities));
+                }
+            }
         }
         // Layers gone from the tree go with their buffers.
         let known: HashSet<&str> = layer_names.keys().map(String::as_str).collect();
         self.layers.retain(|id, _| known.contains(id.as_str()));
-        if changed_order
-            || self.scene.under != under
-            || !self.scene.layers.iter().zip(&shown).all(|(p, n)| {
-                self.layers
-                    .get(&n.id)
-                    .is_some_and(|l| Arc::ptr_eq(&l.part, p))
-            })
-        {
+        // The scene: the shown layers' parts, bottom first, and when a layer
+        // comes in parts, the order of the layer built whole.
+        let mut parts: Vec<Arc<StyledLayerPart>> = Vec::new();
+        let mut order: Vec<(u32, u32)> = Vec::new();
+        let mut split_any = false;
+        for node in &shown {
+            let Some(layer) = self.layers.get(&node.id) else {
+                continue;
+            };
+            let base = parts.len();
+            let list: Vec<&Arc<StyledLayerPart>> = layer.parts.values().map(|p| &p.part).collect();
+            if list.len() > 1 {
+                split_any = true;
+                let layers: Vec<&StyledLayer> = list.iter().map(|p| &p.layer).collect();
+                order.extend(
+                    merged_order(&layers)
+                        .into_iter()
+                        .map(|(p, b)| ((base + p) as u32, b as u32)),
+                );
+            } else {
+                for part in &list {
+                    order.extend((0..part.layer.batches.len()).map(|b| (base as u32, b as u32)));
+                }
+            }
+            parts.extend(list.into_iter().cloned());
+        }
+        let same = self.scene.under == under
+            && self.scene.layers.len() == parts.len()
+            && self
+                .scene
+                .layers
+                .iter()
+                .zip(&parts)
+                .all(|(a, b)| Arc::ptr_eq(a, b));
+        if !same {
             self.scene = StyledScene {
-                layers: shown
-                    .iter()
-                    .filter_map(|n| self.layers.get(&n.id).map(|l| l.part.clone()))
-                    .collect(),
+                layers: parts,
                 under,
+                order: split_any.then(|| Arc::new(order)),
             };
         }
         self.mark = Some(doc.change_mark());
         self.generation = Some(generation);
         self.look = Some(look.clone());
         self.library = library.version();
-        if built > 0 {
-            self.last_build = Some((started.elapsed(), built));
+        if count > 0 {
+            self.last_build = Some((started.elapsed(), count));
         }
         self.scene.clone()
+    }
+}
+
+/// A built part of a layer, under a new id (the GPU uploads what it has not seen).
+fn new_part(layer: StyledLayer, entities: &[&Entity]) -> Part {
+    Part {
+        part: Arc::new(StyledLayerPart {
+            id: NEXT_LAYER.fetch_add(1, Ordering::Relaxed),
+            layer,
+        }),
+        construction: entities.iter().any(|e| construction(e)),
     }
 }

@@ -66,6 +66,9 @@ pub struct LayerCall {
     pub program: String,
     pub objects: Vec<i32>,
     pub table: ExprTable,
+    /// An expression reads an object's place in the run (`$sıra`): the
+    /// layer's objects must be built as one run to draw as they do.
+    pub reads_index: bool,
 }
 
 /// The library symbols a renderer's sets refer to (`rendererRefs`).
@@ -254,6 +257,7 @@ pub fn layer_call(style: &LayerStyle, entities: &[&Entity], opts: &BuildOptions)
         program,
         objects,
         table: ExprTable::default(),
+        reads_index: false,
     }
 }
 
@@ -266,6 +270,7 @@ pub fn build_layer(
 ) -> Result<(LayerCall, Batches), String> {
     let mut call = layer_call(style, entities, opts);
     let program = Program::read(&call.program)?;
+    call.reads_index = program.needs.index;
     call.table = expr_table(&program.fields, program.needs, entities, opts.layer_name);
     let ids: Vec<f64> = entities.iter().map(|e| f64::from(e.base().id)).collect();
     let objects = LayerObjects {

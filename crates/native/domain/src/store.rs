@@ -8,6 +8,7 @@
 //! order and the order a saved file lists the objects in.
 
 use std::collections::{BTreeMap, HashMap};
+use std::ops::Range;
 use std::sync::Arc;
 
 use kentos_contracts::Entity;
@@ -77,6 +78,24 @@ impl Store {
             .into_iter()
             .flat_map(|list| list.values())
             .filter_map(|slot| self.get(*slot))
+    }
+
+    /// The objects of one layer whose places fall in `places`, in document order, with their places.
+    pub fn on_layer_placed(
+        &self,
+        layer: &str,
+        places: Range<u64>,
+    ) -> impl Iterator<Item = (u64, &Stored)> {
+        self.layers
+            .get(layer)
+            .into_iter()
+            .flat_map(move |list| list.range(places.clone()))
+            .filter_map(|(seq, slot)| self.get(*slot).map(|stored| (*seq, stored)))
+    }
+
+    /// An object's place in the document.
+    pub fn place(&self, slot: Slot) -> Option<u64> {
+        self.items.get(&slot).map(|item| item.seq)
     }
 
     pub fn count(&self, layer: &str) -> usize {

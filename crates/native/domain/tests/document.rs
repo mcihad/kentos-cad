@@ -435,3 +435,42 @@ fn the_project_styles_change_as_an_edit_without_an_undo_step() {
     doc.set_styles(styles);
     assert_eq!(doc.generation(), generation);
 }
+
+#[test]
+fn a_layers_objects_are_read_by_their_places_which_edits_and_undo_keep() {
+    let mut doc = empty();
+    let a1 = doc.add(point("a", 1.0)).expect("slot");
+    let b1 = doc.add(point("b", 2.0)).expect("slot");
+    let a2 = doc.add(point("a", 3.0)).expect("slot");
+    let a3 = doc.add(point("a", 4.0)).expect("slot");
+    let places: Vec<u64> = [a1, b1, a2, a3]
+        .iter()
+        .map(|s| doc.place(*s).expect("placed"))
+        .collect();
+    assert!(places.windows(2).all(|w| w[0] < w[1]), "{places:?}");
+    let ids = |doc: &Document, range: std::ops::Range<u64>| -> Vec<(u64, u32)> {
+        doc.by_layer_placed("a", range)
+            .map(|(place, e)| (place, e.base().id))
+            .collect()
+    };
+    let all = ids(&doc, 0..u64::MAX);
+    assert_eq!(
+        all,
+        vec![(places[0], a1.0), (places[2], a2.0), (places[3], a3.0)],
+        "the layer's own objects, in document order"
+    );
+    assert_eq!(
+        ids(&doc, places[1]..places[3]),
+        vec![(places[2], a2.0)],
+        "only the places asked for"
+    );
+    // A change keeps the place; a removed object put back takes it again.
+    assert!(doc.update(a2, moved(&doc, a2, 9.0)));
+    assert_eq!(doc.place(a2), Some(places[2]));
+    doc.remove(&[a2]);
+    assert_eq!(doc.place(a2), None);
+    assert_eq!(ids(&doc, 0..u64::MAX).len(), 2);
+    assert!(doc.undo().is_some());
+    assert_eq!(doc.place(a2), Some(places[2]));
+    assert_eq!(ids(&doc, 0..u64::MAX), all);
+}

@@ -9,6 +9,8 @@
 //! in `edit.rs`, transactions and the undo history in `history.rs`, reading
 //! and writing snapshots in `snapshot.rs`.
 
+use std::ops::Range;
+
 use kentos_contracts::{Bounds, Entity, MigrationSource, ProjectSettings, ProjectStyles, Vec2};
 
 use crate::history::History;
@@ -113,6 +115,26 @@ impl Document {
     /// The objects of a layer in document order.
     pub fn by_layer(&self, layer: &str) -> impl Iterator<Item = &Entity> {
         self.store.on_layer(layer).map(|stored| &*stored.entity)
+    }
+
+    /// The objects of a layer whose places in the document fall in
+    /// `places`, in document order, with their places. A place is kept by an
+    /// object that changes and taken again when it is put back (undo), so a
+    /// range of places is a stable part of a layer (the desktop draws a large
+    /// layer in such parts).
+    pub fn by_layer_placed(
+        &self,
+        layer: &str,
+        places: Range<u64>,
+    ) -> impl Iterator<Item = (u64, &Entity)> {
+        self.store
+            .on_layer_placed(layer, places)
+            .map(|(place, stored)| (place, &*stored.entity))
+    }
+
+    /// An object's place in the document: larger is later.
+    pub fn place(&self, slot: Slot) -> Option<u64> {
+        self.store.place(slot)
     }
 
     /// How many objects a layer has.

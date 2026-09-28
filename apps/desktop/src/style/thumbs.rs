@@ -299,6 +299,7 @@ impl shader::Primitive for Frame {
         let scene = StyledScene {
             layers: vec![self.built.part.clone()],
             under: 0,
+            order: None,
         };
         let pending = renderer.prepare_styled(device, queue, self.id, &scene, &*self.images);
         self.built.pending.store(pending, Ordering::Relaxed);

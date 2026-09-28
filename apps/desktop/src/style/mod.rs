@@ -24,6 +24,8 @@ pub mod manager;
 mod perf;
 pub mod scene;
 #[cfg(test)]
+mod scene_tests;
+#[cfg(test)]
 mod screens;
 pub mod svg;
 pub mod svgedit;

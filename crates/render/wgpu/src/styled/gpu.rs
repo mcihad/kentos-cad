@@ -35,6 +35,11 @@ pub struct StyledLayerPart {
 pub struct StyledScene {
     pub layers: Vec<Arc<StyledLayerPart>>,
     pub under: usize,
+    /// The draw order as `(layer, batch)` pairs, when a large layer comes in
+    /// parts whose batches interleave (the desktop's parts, drawn in the
+    /// order of the layer built whole: `batches::merged_order`); none draws
+    /// every layer's batches in turn.
+    pub order: Option<Arc<Vec<(u32, u32)>>>,
 }
 
 /// What a frame of styled layers needs.
@@ -486,6 +491,7 @@ impl StyledGpu {
             view.layers.push(layer);
         }
         view.under = scene.under;
+        view.order = scene.order.clone();
         let px_per_m = frame.scale * frame.dpr;
         let uniform = StyledFrameUniform {
             offset: [frame.center[0] as f32, frame.center[1] as f32],
@@ -583,24 +589,40 @@ impl StyledGpu {
         }
         pass.set_bind_group(0, &view.frame_bind, &[]);
         let mut current: Option<Pipe> = None;
-        for layer in &view.layers {
+        let mut batch = |layer: &GpuLayer, b: &GpuBatch| {
             let Some(vertex) = &layer.vertex else {
-                continue;
+                return;
             };
-            for b in &layer.batches {
-                if !b.visible || b.count == 0 {
-                    continue;
+            if !b.visible || b.count == 0 {
+                return;
+            }
+            if current != Some(b.pipe) {
+                pass.set_pipeline(pipes.get(b.pipe));
+                current = Some(b.pipe);
+            }
+            pass.set_bind_group(1, &layer.bind, &[b.offset]);
+            pass.set_vertex_buffer(0, vertex.slice(b.bytes.clone()));
+            if b.instanced {
+                pass.draw(0..6, 0..b.count);
+            } else {
+                pass.draw(0..b.count, 0..1);
+            }
+        };
+        match &view.order {
+            Some(order) => {
+                for &(l, b) in order.iter() {
+                    if let Some(layer) = view.layers.get(l as usize)
+                        && let Some(b) = layer.batches.get(b as usize)
+                    {
+                        batch(layer, b);
+                    }
                 }
-                if current != Some(b.pipe) {
-                    pass.set_pipeline(pipes.get(b.pipe));
-                    current = Some(b.pipe);
-                }
-                pass.set_bind_group(1, &layer.bind, &[b.offset]);
-                pass.set_vertex_buffer(0, vertex.slice(b.bytes.clone()));
-                if b.instanced {
-                    pass.draw(0..6, 0..b.count);
-                } else {
-                    pass.draw(0..b.count, 0..1);
+            }
+            None => {
+                for layer in &view.layers {
+                    for b in &layer.batches {
+                        batch(layer, b);
+                    }
                 }
             }
         }
@@ -650,6 +672,8 @@ pub struct ViewStyled {
     pub(crate) layers: Vec<GpuLayer>,
     /// How many of the view's plain parts draw beneath the styled layers.
     pub under: usize,
+    /// The scene's draw order, when it has one (`StyledScene::order`).
+    order: Option<Arc<Vec<(u32, u32)>>>,
 }
 
 impl ViewStyled {
@@ -684,6 +708,7 @@ impl ViewStyled {
             uniform: StyledFrameUniform::default(),
             layers: Vec::new(),
             under: 0,
+            order: None,
         }
     }
 
@@ -692,6 +717,7 @@ impl ViewStyled {
     /// same pixels (a kept picture, renderer.rs).
     pub(crate) fn key(&self, hasher: &mut impl Hasher) {
         self.under.hash(hasher);
+        self.order.as_deref().hash(hasher);
         bytemuck::bytes_of(&self.uniform).hash(hasher);
         for layer in &self.layers {
             layer.id.hash(hasher);
