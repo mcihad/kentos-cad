@@ -204,6 +204,15 @@ pub const PORTED: &[&str] = &[
     "tool.toArea",
     "tool.toPolyline",
     "tool.boundary",
+    // Drawing and editing tools, phase 1 (docs/adr/0140): every corner at once, Parçala
+    // with its three methods, direction, thinning, cleaning and property copying.
+    "tool.filletAll",
+    "tool.chamferAll",
+    "tool.split",
+    "tool.reverse",
+    "tool.simplify",
+    "tool.cleanup",
+    "tool.matchProperties",
     // İşlemler (docs/adr/0084): each tool's and model's window, and Harita's
     // Kenar ölçülerini yaz, which opens Kenar uzunluklarını yaz.
     "processing.run.points.numberVertices",

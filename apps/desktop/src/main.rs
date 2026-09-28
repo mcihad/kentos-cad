@@ -83,6 +83,8 @@ mod traces;
 #[cfg(test)]
 mod ui_screens;
 #[cfg(test)]
+mod tools_scenes;
+#[cfg(test)]
 mod tools_screens;
 mod tracking;
 mod view;

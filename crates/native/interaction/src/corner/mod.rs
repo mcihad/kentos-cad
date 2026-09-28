@@ -60,6 +60,31 @@ enum Stage {
     Size,
 }
 
+/// A typed chamfer size: `d` or `d1,d2`, plain decimals (the web's
+/// `/^(\d+(?:\.\d+)?)(?:\s*[,;]\s*(\d+(?:\.\d+)?))?$/`). Tüm köşelere pah reads its
+/// distances the same way.
+pub(crate) fn parse_cut(text: &str) -> Option<(f64, f64)> {
+    let t = js_trim(text);
+    let decimal = |s: &str| {
+        let (whole, frac) = match s.split_once('.') {
+            Some((w, f)) => (w, Some(f)),
+            None => (s, None),
+        };
+        let digits = |d: &str| !d.is_empty() && d.bytes().all(|b| b.is_ascii_digit());
+        (digits(whole) && frac.is_none_or(digits))
+            .then(|| s.parse::<f64>().ok())
+            .flatten()
+    };
+    match t.find([',', ';']) {
+        Some(at) => {
+            let d1 = decimal(t[..at].trim_end_matches([' ', '\t']))?;
+            let d2 = decimal(t[at + 1..].trim_start_matches([' ', '\t']))?;
+            Some((d1, d2))
+        }
+        None => decimal(t).map(|d| (d, d)),
+    }
+}
+
 /// The fillet or the chamfer tool.
 #[derive(Clone, Debug)]
 pub struct CornerTool {
@@ -161,27 +186,7 @@ impl CornerTool {
     fn op_for_text(&self, text: &str) -> Option<Op> {
         match self.kind {
             Kind::Fillet => plain_number(text).filter(|n| *n >= 0.0).map(Op::Radius),
-            Kind::Chamfer => {
-                let t = js_trim(text);
-                let decimal = |s: &str| {
-                    let (whole, frac) = match s.split_once('.') {
-                        Some((w, f)) => (w, Some(f)),
-                        None => (s, None),
-                    };
-                    let digits = |d: &str| !d.is_empty() && d.bytes().all(|b| b.is_ascii_digit());
-                    (digits(whole) && frac.is_none_or(digits))
-                        .then(|| s.parse::<f64>().ok())
-                        .flatten()
-                };
-                match t.find([',', ';']) {
-                    Some(at) => {
-                        let d1 = decimal(t[..at].trim_end_matches([' ', '\t']))?;
-                        let d2 = decimal(t[at + 1..].trim_start_matches([' ', '\t']))?;
-                        Some(Op::Cut(d1, d2))
-                    }
-                    None => decimal(t).map(|d| Op::Cut(d, d)),
-                }
-            }
+            Kind::Chamfer => parse_cut(text).map(|(d1, d2)| Op::Cut(d1, d2)),
         }
     }
 

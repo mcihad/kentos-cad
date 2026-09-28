@@ -305,6 +305,13 @@ pub struct Memory {
     pub dimension_mode: DimensionMode,
     pub dimension_lock: Option<f64>,
     pub dimension_by_vertex: bool,
+    /// Sadeleştir's tolerance, metres (docs/adr/0140). Tüm köşeleri yuvarla and
+    /// Tüm köşelere pah keep their values in `fillet_radius` and `chamfer`,
+    /// as the one-corner tools do.
+    pub simplify_tolerance: f64,
+    /// Parçala's part count (Eşit parçalara) and piece length, metres (Uzunluktan).
+    pub split_parts: u32,
+    pub split_length: f64,
 }
 
 impl Default for Memory {
@@ -356,6 +363,9 @@ impl Default for Memory {
             dimension_mode: DimensionMode::Aligned,
             dimension_lock: None,
             dimension_by_vertex: false,
+            simplify_tolerance: 0.01,
+            split_parts: 4,
+            split_length: 10.0,
         }
     }
 }

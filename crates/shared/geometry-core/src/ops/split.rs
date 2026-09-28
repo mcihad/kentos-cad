@@ -7,13 +7,15 @@
 //! Nothing is snapped and no tolerance is widened (CLAUDE.md §23.3): a
 //! repeat is the same geometry to 1e-9 m.
 
+use std::collections::HashMap;
+
 use crate::api::Op;
 use crate::api::json::{Json, ToJson, field};
 use crate::entity::{Entity, Shape};
 use crate::geom::arrangement::Ring;
 use crate::geom::bulge::{BulgePath, clean_bulge_path};
 use crate::geom::intersect::Edge;
-use crate::jsmath::{js_hypot, js_max};
+use crate::jsmath::{js_hypot, js_max, js_min};
 use crate::op;
 use crate::ops::edges::entity_edges;
 use crate::ops::path::{Division, Path, cuts_on, division_params, path_of, sub_path};
@@ -252,6 +254,24 @@ fn same_shape(a: &Shape, b: &Shape) -> bool {
     }
 }
 
+/// Where an object starts, east: what two repeats have alike to 1e-9 m (a
+/// line drawn the other way round too: its western end). None when it is
+/// not a finite number.
+fn anchor(s: &Shape) -> Option<f64> {
+    let x = match s {
+        Shape::Line { a, b } => js_min(a.x, b.x),
+        Shape::Point { p, .. } | Shape::Text { p, .. } => p.x,
+        Shape::Polyline { pts, .. } | Shape::Polygon { pts, .. } | Shape::Spline { pts, .. } => {
+            pts.first()?.x
+        }
+        Shape::Circle { c, .. } | Shape::Arc { c, .. } | Shape::Ellipse { c, .. } => c.x,
+        Shape::Xline { p, .. } | Shape::Ray { p, .. } => p.x,
+        Shape::Dimension { a, .. } => a.x,
+        Shape::Hatch { ring, .. } => ring.first()?.x,
+    };
+    x.is_finite().then_some(x)
+}
+
 fn field_of<'a>(e: &'a Entity, name: &str) -> Option<&'a Json> {
     e.rest.iter().find(|(k, _)| k == name).map(|(_, v)| v)
 }
@@ -287,7 +307,11 @@ pub fn cleanup_findings(list: &[Entity]) -> Findings {
     let mut empty = Vec::new();
     let mut cleaned = Vec::new();
     let mut vertices = 0;
-    let mut kept: Vec<usize> = Vec::new();
+    // The kept objects by where they start, in buckets 1 µm wide: a repeat
+    // starts within 1e-9 m of its first, so it is in the same bucket or a
+    // neighbour, and a drawing of any size is searched in one pass. (Finer
+    // buckets would not do: a TM coordinate times 1e9 passes 2^52 and rounds.)
+    let mut kept: HashMap<i64, Vec<usize>> = HashMap::new();
     for (i, e) in list.iter().enumerate() {
         let id = field_of(e, "id").cloned().unwrap_or(Json::Null);
         if is_empty(&e.shape) {
@@ -295,13 +319,24 @@ pub fn cleanup_findings(list: &[Entity]) -> Findings {
             continue;
         }
         let layer = field_of(e, "layerId");
-        if kept.iter().any(|&k| {
+        let bucket = anchor(&e.shape).map(|x| (x * 1e6).floor() as i64);
+        let near = bucket.map_or_else(Vec::new, |b| {
+            (b - 1..=b + 1)
+                .filter_map(|k| kept.get(&k))
+                .flatten()
+                .copied()
+                .collect()
+        });
+        if near.iter().any(|&k| {
             field_of(&list[k], "layerId") == layer && same_shape(&list[k].shape, &e.shape)
         }) {
             repeats.push(id);
             continue;
         }
-        kept.push(i);
+        // An object with no finite start repeats nothing (NaN equals nothing).
+        if let Some(b) = bucket {
+            kept.entry(b).or_default().push(i);
+        }
         let shape = match &e.shape {
             Shape::Polyline { pts, bulges, holes } => {
                 without_repeats(pts, bulges.as_deref(), false).map(|c| Shape::Polyline {
@@ -605,6 +640,46 @@ mod tests {
         };
         assert_eq!(pts.len(), 3);
         assert_eq!(field_of(&f.cleaned[0], "id"), Some(&Json::Num(7.0)));
+    }
+
+    #[test]
+    fn a_large_drawing_is_searched_in_one_pass_and_repeats_straddling_a_bucket_are_found() {
+        // Two lines 1e-10 apart across a bucket's edge are the same line, at a TM easting too.
+        let x = 487_000.000_001;
+        let a = with_id(
+            1.0,
+            "a",
+            Shape::Line {
+                a: v(x - 5e-11, 0.0),
+                b: v(3.0, 0.0),
+            },
+        );
+        let b = with_id(
+            2.0,
+            "a",
+            Shape::Line {
+                a: v(x + 5e-11, 0.0),
+                b: v(3.0, 0.0),
+            },
+        );
+        assert_eq!(cleanup_findings(&[a, b]).repeats, vec![Json::Num(2.0)]);
+        let many: Vec<Entity> = (0..50_000)
+            .map(|i| {
+                let x = f64::from(i) * 2.0;
+                with_id(
+                    f64::from(i),
+                    "a",
+                    Shape::Line {
+                        a: v(x, 0.0),
+                        b: v(x + 1.0, 1.0),
+                    },
+                )
+            })
+            .collect();
+        let t = std::time::Instant::now();
+        let f = cleanup_findings(&many);
+        assert!(f.repeats.is_empty());
+        assert!(t.elapsed().as_secs_f64() < 2.0, "{:?}", t.elapsed());
     }
 
     #[test]

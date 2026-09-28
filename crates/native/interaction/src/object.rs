@@ -93,7 +93,7 @@ impl ObjectAction {
     }
 
     /// The selected objects not on a locked layer, saying how many were left out (the web's `begin`).
-    fn targets(cx: &mut Context<'_>) -> Vec<Slot> {
+    pub(crate) fn targets(cx: &mut Context<'_>) -> Vec<Slot> {
         let all: Vec<Slot> = cx
             .selection
             .ids()

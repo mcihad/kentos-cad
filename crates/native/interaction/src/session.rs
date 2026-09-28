@@ -44,6 +44,7 @@ use crate::prompt::Prompt;
 use crate::rectangle::{self, Rectangle};
 use crate::regular::{self, RegularPolygon};
 use crate::rotate::{self, Rotate};
+use crate::reshape::{self, Reshape};
 use crate::rotated::{self, RotatedRectangle};
 use crate::scale::{self, Scale};
 use crate::select::{Select, SelectBox};
@@ -53,8 +54,8 @@ use crate::tool::{Context, Cursor, Draft, Flow, Pointer, Preview, Tool, View};
 use crate::trim::{self, Boundary};
 use crate::vertex::{self, Vertex};
 use crate::{
-    area, boundary, construction, dimension, divide, donut, ellipse, hatch, parallel, revcloud,
-    spline, text,
+    area, boundary, cleanup, construction, dimension, divide, donut, ellipse, hatch,
+    match_properties, parallel, revcloud, spline, split, text,
 };
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
@@ -117,6 +118,14 @@ pub const TOOLS: &[&str] = &[
     area::TO_AREA_ID,
     area::TO_POLYLINE_ID,
     boundary::ID,
+    // Drawing and editing tools of docs/adr/0140, phase 1.
+    reshape::FILLET_ALL_ID,
+    reshape::CHAMFER_ALL_ID,
+    reshape::REVERSE_ID,
+    reshape::SIMPLIFY_ID,
+    split::ID,
+    cleanup::ID,
+    match_properties::ID,
 ];
 
 /// What a tool running over another one suspended (docs/adr/0083).
@@ -212,6 +221,13 @@ impl Session {
             area::TO_AREA_ID => Box::new(crate::area::AreaAction::to_area()),
             area::TO_POLYLINE_ID => Box::new(crate::area::AreaAction::to_polyline()),
             boundary::ID => Box::new(crate::boundary::Boundary::new()),
+            reshape::FILLET_ALL_ID => Box::new(Reshape::fillet_all()),
+            reshape::CHAMFER_ALL_ID => Box::new(Reshape::chamfer_all()),
+            reshape::REVERSE_ID => Box::new(Reshape::reverse()),
+            reshape::SIMPLIFY_ID => Box::new(Reshape::simplify()),
+            split::ID => Box::new(crate::split::Split::new()),
+            cleanup::ID => Box::new(crate::cleanup::Cleanup::new()),
+            match_properties::ID => Box::new(crate::match_properties::MatchProperties::new()),
             _ => return false,
         };
         // Kaydır is not repeated: Enter while panning repeats the command

@@ -201,3 +201,59 @@ impl Bench {
 pub fn rel(p: kentos_contracts::Vec2) -> [f64; 2] {
     [p.x - E, p.y - N]
 }
+
+/// Objects added to a test drawing (docs/adr/0140): the fields every object has, on `layer`.
+pub fn base(layer: &str) -> kentos_contracts::EntityBase {
+    kentos_contracts::EntityBase {
+        id: 0,
+        layer_id: layer.to_owned(),
+        color: None,
+        attrs: Default::default(),
+        label: None,
+        symbol: None,
+        line_weight: None,
+    }
+}
+
+fn wire(p: [f64; 2]) -> kentos_contracts::Vec2 {
+    kentos_contracts::Vec2 {
+        x: E + p[0],
+        y: N + p[1],
+    }
+}
+
+impl Bench {
+    /// A line from `a` to `b` (east and north differences from (E, N)) on `layer`.
+    pub fn add_line(&mut self, layer: &str, a: [f64; 2], b: [f64; 2]) -> kentos_domain::Slot {
+        let line = Entity::Line(kentos_contracts::LineEntity {
+            base: base(layer),
+            a: wire(a),
+            b: wire(b),
+        });
+        self.doc.add(line).expect("a slot")
+    }
+
+    /// An open polyline (`closed` false) or a closed area through `pts` on `layer`.
+    pub fn add_path(&mut self, layer: &str, pts: &[[f64; 2]], closed: bool) -> kentos_domain::Slot {
+        let path = kentos_contracts::PathEntity {
+            base: base(layer),
+            pts: pts.iter().map(|p| wire(*p)).collect(),
+            bulges: None,
+            holes: None,
+        };
+        let entity = if closed {
+            Entity::Polygon(path)
+        } else {
+            Entity::Polyline(path)
+        };
+        self.doc.add(entity).expect("a slot")
+    }
+
+    /// The vertices of a path or an area, east and north differences from (E, N).
+    pub fn path_pts(&self, slot: kentos_domain::Slot) -> Vec<[f64; 2]> {
+        let Some(Entity::Polyline(p) | Entity::Polygon(p)) = self.doc.get(slot) else {
+            panic!("a path at {slot:?}: {:?}", self.doc.get(slot));
+        };
+        p.pts.iter().map(|q| rel(*q)).collect()
+    }
+}

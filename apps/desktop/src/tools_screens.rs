@@ -32,7 +32,9 @@ fn ribbon_scenes() -> Vec<Scene> {
 /// Every scene of the new tools: the ribbon's, then each tool's (the tool
 /// modules add theirs here as they are built).
 fn scenes() -> Vec<Scene> {
-    ribbon_scenes()
+    let mut all = ribbon_scenes();
+    all.extend(crate::tools_scenes::scenes());
+    all
 }
 
 fn wanted(name: &str) -> bool {
@@ -56,6 +58,9 @@ fn screens() {
                     .settings
                     .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
                 app.apply_settings();
+                // The command history open, so the picture shows what the tool said; the
+                // area settles at its size before the drawing opens and is fitted to it.
+                app.command_expanded = !name.starts_with("serit");
                 let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
                 let mut update = |app: &mut App, message: Message| {
                     let _ = app.update(message);
