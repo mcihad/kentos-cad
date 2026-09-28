@@ -1285,6 +1285,7 @@ impl App {
             // The bottom panel (bottom.rs): F2, and the coordinate list.
             "view.bottomPanel" => self.toggle_bottom(),
             "view.coords" => self.show_bottom(crate::bottom::BottomTab::Coords),
+            crate::catalog::PYTHON_CONSOLE => self.toggle_python(),
             "view.zoomIn" => self.zoom_in(),
             "view.zoomOut" => self.zoom_out(),
             "view.zoomExtents" => self
@@ -1356,6 +1357,9 @@ impl App {
             "view.theme.dark" => self.mode == Mode::Dark,
             "view.theme.light" => self.mode == Mode::Light,
             "view.bottomPanel" => self.command_expanded,
+            crate::catalog::PYTHON_CONSOLE => {
+                self.command_expanded && self.bottom_tab == crate::bottom::BottomTab::Python
+            }
             "view.rightPanel" => self.right_panel_shown(),
             "view.fullscreen" => self.fullscreen,
             id if id.starts_with("workspace.") => {

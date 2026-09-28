@@ -225,6 +225,16 @@ impl App {
         }
     }
 
+    /// Python konsolu (the desktop's own command): the panel on its Python
+    /// tab, or closed when it shows that tab already.
+    pub(crate) fn toggle_python(&mut self) {
+        if self.command_expanded && self.bottom_tab == BottomTab::Python {
+            self.command_expanded = false;
+        } else {
+            self.show_bottom(BottomTab::Python);
+        }
+    }
+
     fn listing(&self) -> Listing {
         let Some(doc) = &self.document else {
             return Listing::Empty;
@@ -431,6 +441,44 @@ mod tests {
         run(&mut app, "view.bottomPanel");
         run(&mut app, "view.bottomPanel");
         assert_eq!(app.bottom_tab, BottomTab::Coords);
+    }
+
+    /// Araçlar › Komut's Python konsolu opens the panel on the Python tab,
+    /// from any other tab, and closes it from there.
+    #[test]
+    fn python_konsolu_is_in_the_ribbon_and_opens_the_python_tab() {
+        use crate::catalog::{Item, PYTHON_CONSOLE, catalog};
+        let komut = catalog()
+            .tabs()
+            .find(|tab| tab.id == "tools")
+            .and_then(|tab| tab.panels.iter().find(|p| p.label == "Komut"))
+            .expect("Araçlar › Komut");
+        assert!(
+            komut
+                .items
+                .iter()
+                .any(|i| matches!(i, Item::Command { id, large: true } if *id == PYTHON_CONSOLE))
+        );
+        for mode in [kentos_contracts::Workspace::Cad, kentos_contracts::Workspace::Gis] {
+            assert!(
+                catalog()
+                    .tabs_in(mode)
+                    .flat_map(|t| t.panels.iter())
+                    .flat_map(|p| p.items.iter())
+                    .any(|i| matches!(i, Item::Command { id, .. } if *id == PYTHON_CONSOLE)),
+                "{mode:?}"
+            );
+        }
+
+        let mut app = app_with_drawing();
+        run(&mut app, "view.coords");
+        run(&mut app, PYTHON_CONSOLE);
+        assert!(app.command_expanded);
+        assert_eq!(app.bottom_tab, BottomTab::Python);
+        assert_eq!(app.checked(PYTHON_CONSOLE), Some(true));
+        run(&mut app, PYTHON_CONSOLE);
+        assert!(!app.command_expanded);
+        assert_eq!(app.checked(PYTHON_CONSOLE), Some(false));
     }
 
     #[test]

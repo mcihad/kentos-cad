@@ -528,20 +528,32 @@ fn screens() {
                 "imza",
                 "betik",
                 "ajan",
+                "serit",
             ] {
+                if std::env::var("KENTOS_SHOTS_ONLY")
+                    .is_ok_and(|only| !only.split(',').any(|o| o == name))
+                {
+                    continue;
+                }
                 let mut app = app_with_drawing();
                 let _ = app
                     .settings
                     .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
                 app.apply_settings();
-                let _ = app.update(Message::BottomTab(crate::bottom::BottomTab::Python));
+                if name == "serit" {
+                    // Opened from Araçlar › Komut › Python konsolu.
+                    app.tab = "tools";
+                    let _ = app.update(Message::Run(crate::catalog::PYTHON_CONSOLE));
+                } else {
+                    let _ = app.update(Message::BottomTab(crate::bottom::BottomTab::Python));
+                }
                 let _ = app.update(Message::BottomResized(if height > 800.0 {
                     330.0
                 } else {
                     250.0
                 }));
                 let mut heard = None;
-                if name != "bos" {
+                if !matches!(name, "bos" | "serit") {
                     run_real(&mut app, "len(doc), doc.settings.srid", &mut heard);
                     run_real(
                         &mut app,

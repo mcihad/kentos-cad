@@ -68,7 +68,7 @@ Sahibin kararı (28 Eylül): **ayrı süreç**. Gömülü yolun bedeli ağırdı
 - İlk ret komut geçmişine bir kez yazılır.
 - Görünümü kaydırmak ve yakınlaştırmak serbesttir.
 
-**Arayüz.** Alt panelde "Python" sekmesi vardır. Web'de henüz konsol yok (PY-18); bu sekme masaüstüne özgüdür.
+**Arayüz.** Alt panelde "Python" sekmesi vardır. Web'de henüz konsol yok (PY-18); bu sekme masaüstüne özgüdür. Şeritte Araçlar › Komut'ta "Python konsolu" (`python.console`, komut satırında PYTHON, KONSOL) paneli bu sekmede açar, sekme açıkken kapatır. Web komutu olmadığı için `PORTED`'da değil, masaüstünün kendi komutudur (`catalog::desktop_commands`).
 
 - **Çıktı:** en çok 4 000 satır tutulur ve kendiliğinden sona kaydırılır.
   - Çalıştırılan kod `>>>` ve `...` ile soluk,

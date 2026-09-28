@@ -253,6 +253,50 @@ const DESKTOP_DESCRIPTIONS: &[(&str, &str)] = &[
     ),
 ];
 
+/// The desktop's own command: the web has no Python console (python/,
+/// docs/adr/0132). Kept out of [`PORTED`], which names web commands only.
+pub const PYTHON_CONSOLE: &str = "python.console";
+
+/// The desktop's own commands, beside the web's.
+fn desktop_commands() -> Vec<Command> {
+    let description = "Alt paneli Python sekmesinde açar: çizimde kentos.cad ile kod ve betik çalıştırılır, ajan bağlantısı açılır; açıksa kapatır.";
+    vec![Command {
+        id: PYTHON_CONSOLE,
+        title: "Python konsolu",
+        short: "Python",
+        description,
+        line_note: description,
+        aliases: &["PYTHON", "KONSOL"],
+        shortcuts: &[],
+        shortcuts_in_input: &[],
+        icon: icons::from_web(Some("terminal")),
+        standing: Standing::Ported,
+        pending_note: None,
+        category: "Araçlar",
+    }]
+}
+
+/// Puts the desktop's own commands in the ribbon: Python konsolu after
+/// Komut satırına git, in Araçlar › Komut.
+fn place_desktop_commands(tabs: &mut [Tab]) {
+    let komut = tabs
+        .iter_mut()
+        .filter(|tab| tab.id == "tools")
+        .flat_map(|tab| tab.panels.iter_mut())
+        .filter(|panel| {
+            panel
+                .items
+                .iter()
+                .any(|item| matches!(item, Item::Command { id: "commandline.focus", .. }))
+        });
+    for panel in komut {
+        panel.items.push(Item::Command {
+            id: PYTHON_CONSOLE,
+            large: true,
+        });
+    }
+}
+
 /// Where a command stands, from the desktop's point of view.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Standing {
@@ -558,6 +602,7 @@ impl Catalog {
                     category: leak(c.category.unwrap_or_default()),
                 }
             })
+            .chain(desktop_commands())
             .collect();
         let by_id = commands
             .iter()
@@ -565,14 +610,17 @@ impl Catalog {
             .map(|(i, c)| (c.id, i))
             .collect();
 
-        let tabs = raw.layout.ribbon.into_iter().map(tab).collect();
+        let mut tabs: Vec<Tab> = raw.layout.ribbon.into_iter().map(tab).collect();
+        place_desktop_commands(&mut tabs);
         let mode_tabs = raw
             .layout
             .ribbon_by_mode
             .into_iter()
             .filter_map(|(mode, tabs)| {
                 let mode = serde_json::from_value(serde_json::Value::String(mode)).ok()?;
-                Some((mode, tabs.into_iter().map(tab).collect()))
+                let mut tabs: Vec<Tab> = tabs.into_iter().map(tab).collect();
+                place_desktop_commands(&mut tabs);
+                Some((mode, tabs))
             })
             .collect();
         fn tab(tab: RawTab) -> Tab {
