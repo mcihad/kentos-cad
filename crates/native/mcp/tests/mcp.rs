@@ -451,3 +451,130 @@ fn the_servers_tools_need_the_account_the_environment_names() {
         "not_configured"
     );
 }
+
+/// A stand-in for the desktop's agents' link: a Unix socket answering on a
+/// headless drawing as the desktop answers on its open one.
+#[cfg(unix)]
+fn stand_in_desktop(path: &std::path::Path) -> std::thread::JoinHandle<()> {
+    use kentos_headless::{NewDrawing, Op, Session};
+    use std::os::unix::net::UnixListener;
+    let listener = UnixListener::bind(path).expect("the socket");
+    std::thread::spawn(move || {
+        let mut session = Session::new(&NewDrawing {
+            name: "Masaüstü".into(),
+            srid: 5256,
+            plot_scale: 1000.0,
+            workspace: kentos_contracts::Workspace::Cad,
+            drawing_font: kentos_contracts::DrawingFont::Barlow,
+        })
+        .expect("a drawing");
+        let (stream, _) = listener.accept().expect("a connection");
+        let mut writer = stream.try_clone().expect("its writer");
+        for line in BufReader::new(stream).lines() {
+            let Ok(line) = line else { break };
+            let request: Value = serde_json::from_str(&line).expect("JSON");
+            let params = &request["params"];
+            let result = match request["method"].as_str().unwrap_or_default() {
+                "hello" => Ok(json!({ "name": "Masaüstü", "objects": session.document().len() })),
+                "summary" => Ok(session.summary()),
+                "layers" => Ok(serde_json::to_value(session.layers()).expect("layers")),
+                "measure" => session
+                    .measure(params["uid"].as_str().unwrap_or_default())
+                    .map(|m| serde_json::to_value(m).expect("a measure")),
+                "run" => session.run(
+                    params["command"].as_str().unwrap_or_default(),
+                    None,
+                    Op::parse(params["op"].as_str().unwrap_or("execute")).expect("op"),
+                    params["input"].clone(),
+                ),
+                other => panic!("{other}"),
+            };
+            let answer = match result {
+                Ok(r) => json!({ "id": request["id"], "ok": true, "result": r }),
+                Err(e) => {
+                    json!({ "id": request["id"], "ok": false, "code": e.code, "message": e.message })
+                }
+            };
+            writeln!(writer, "{answer}").expect("answered");
+        }
+    })
+}
+
+#[cfg(unix)]
+#[test]
+fn a_desktop_handle_sends_the_tools_to_the_drawing_on_the_screen() {
+    let dir = std::env::temp_dir().join(format!("kentos-mcp-masaustu-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let path = dir.join("m.sock");
+    let desktop = stand_in_desktop(&path);
+    let mut server = Server::new();
+
+    let attached = call(&mut server, "desktop.attach", json!({ "path": path }));
+    assert_eq!(attached["isError"], false, "{attached}");
+    assert_eq!(attached["structuredContent"]["desktop"]["name"], "Masaüstü");
+    let handle = attached["structuredContent"]["drawing"]
+        .as_str()
+        .expect("a handle")
+        .to_owned();
+    assert!(handle.starts_with("desktop-"));
+
+    let summary = call(&mut server, "drawing.summary", json!({ "drawing": handle }));
+    let layer = summary["structuredContent"]["activeLayer"]
+        .as_str()
+        .expect("a layer")
+        .to_owned();
+    let written = call(
+        &mut server,
+        "cad.polygon.create",
+        json!({ "drawing": handle, "layerId": layer, "pts": square() }),
+    );
+    assert_eq!(
+        written["structuredContent"]["status"], "completed",
+        "{written}"
+    );
+    let uid = written["structuredContent"]["output"]["uid"]
+        .as_str()
+        .expect("its id")
+        .to_owned();
+    let measured = call(
+        &mut server,
+        "drawing.measure",
+        json!({ "drawing": handle, "uid": uid }),
+    );
+    assert_eq!(measured["structuredContent"]["area"], 250.0);
+    let refused = call(
+        &mut server,
+        "cad.polygon.create",
+        json!({ "drawing": handle, "layerId": "yok", "pts": square() }),
+    );
+    assert_eq!(refused["isError"], true, "the desktop's command refused");
+    assert_eq!(
+        refused["structuredContent"]["error"]["code"],
+        "layer_not_found"
+    );
+
+    let saved = call(&mut server, "drawing.save", json!({ "drawing": handle }));
+    assert_eq!(
+        saved["structuredContent"]["error"]["code"], "desktop_user",
+        "the user saves"
+    );
+    let listed = call(&mut server, "drawing.list", json!({}));
+    assert_eq!(listed["structuredContent"]["drawings"][0]["desktop"], true);
+    let closed = call(&mut server, "drawing.close", json!({ "drawing": handle }));
+    assert_eq!(closed["structuredContent"]["detached"], true);
+    let gone = call(&mut server, "drawing.summary", json!({ "drawing": handle }));
+    assert_eq!(
+        gone["structuredContent"]["error"]["code"],
+        "unknown_drawing"
+    );
+    desktop.join().expect("the stand-in ended");
+
+    let none = call(
+        &mut server,
+        "desktop.attach",
+        json!({ "path": dir.join("yok.sock") }),
+    );
+    assert_eq!(none["structuredContent"]["error"]["code"], "no_desktop");
+    let _ = std::fs::remove_dir_all(dir);
+}

@@ -13,6 +13,8 @@
 //!   a malformed request is a JSON-RPC error.
 //! - The server's commands (`project.*`) go to the KentOS server with the
 //!   account the environment names (`cloud`, docs/adr/0134).
+//! - `desktop.attach` gives a handle on the drawing open in the KentOS
+//!   desktop, through the link the user opens there (`desktop`, docs/adr/0137).
 #![forbid(unsafe_code)]
 #![cfg_attr(
     not(test),
@@ -20,6 +22,7 @@
 )]
 
 mod cloud;
+mod desktop;
 mod server;
 mod tools;
 

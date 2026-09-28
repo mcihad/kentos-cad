@@ -15,9 +15,11 @@
 //! - while code runs the drawing takes no other edit (as while a drawing
 //!   opens, opening.rs): commands, clicks, the panels' edits wait for it.
 
+mod agents;
 mod assist;
 mod code;
 mod host;
+pub(crate) mod link;
 pub(crate) mod script;
 mod view;
 
@@ -117,6 +119,10 @@ pub struct Console {
     /// The last questions asked of the process: older answers are dropped.
     asked_completion: u64,
     asked_signature: u64,
+    /// The agents' link, while the user keeps it open (link.rs, agents.rs).
+    pub link: Option<link::Link>,
+    /// The programs connected through it, by connection.
+    agents: std::collections::BTreeMap<u64, link::Answerer>,
 }
 
 impl Default for Console {
@@ -138,6 +144,8 @@ impl Default for Console {
             signature: None,
             asked_completion: 0,
             asked_signature: 0,
+            link: None,
+            agents: std::collections::BTreeMap::new(),
         }
     }
 }
@@ -205,6 +213,10 @@ pub enum Event {
     Mode(Mode),
     /// The Betik side (script.rs).
     Script(script::Event),
+    /// The agents' link opened or closed (link.rs).
+    Link,
+    /// A program on the link (agents.rs).
+    Agent(link::Heard),
     /// A message of the process of this generation.
     Host(u64, Said),
 }
@@ -235,6 +247,11 @@ impl App {
                 Task::none()
             }
             Event::Script(event) => self.script_event(event),
+            Event::Link => self.agents_toggle(),
+            Event::Agent(heard) => {
+                self.agents_heard(heard);
+                view::follow()
+            }
             Event::Step(step) => {
                 if let Some(list) = &mut self.python.completion {
                     list.step(step);

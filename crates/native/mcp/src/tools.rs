@@ -11,6 +11,7 @@ use kentos_headless::{HeadlessError, NewDrawing, Op, Session};
 use serde_json::{Value, json};
 
 use crate::cloud;
+use crate::desktop::{self, Desktop};
 use crate::server::{Fault, Server};
 
 /// The most drawings open at once: another is refused until one is closed.
@@ -80,6 +81,19 @@ pub fn list(catalog: &Value) -> Vec<Value> {
                     "drawingFont": { "type": "string", "description": "Çizimin yazı tipi (barlow, arimo …)." }
                 }),
                 &["srid"],
+            ),
+            annotations(false, false),
+        ),
+        tool(
+            "desktop.attach",
+            "Masaüstündeki çizime bağlan",
+            "KentOS masaüstünde açık çizime bağlanır; tutamacını verir. drawing.* ve cad.* araçları bu \
+             tutamaçla ekrandaki çizimi okur ve komutlarla yazar; her yazma masaüstünde bir geri alma \
+             adımıdır, kullanıcı hemen görür. Kullanıcı önce Python sekmesinden “Ajanlara aç” demelidir. \
+             Kaydetmek ve geri almak kullanıcınındır.",
+            object(
+                json!({ "path": { "type": "string", "description": "Bağlantının yolu; yoksa masaüstünün varsayılanı." } }),
+                &[],
             ),
             annotations(false, false),
         ),
@@ -394,8 +408,93 @@ fn opened(server: &mut Server, session: Session) -> Result<Value, Value> {
     ))
 }
 
+/// A handle on the desktop's drawing: its tools go there.
+fn on_desktop(server: &mut Server, handle: &str, name: &str, args: &Value) -> Result<Value, Value> {
+    let (method, params) = match name {
+        "drawing.summary" => ("summary", json!({})),
+        "drawing.layers" => ("layers", json!({})),
+        "drawing.entities" => (
+            "entities",
+            json!({
+                "layer": args.get("layer"),
+                "kinds": args.get("kinds"),
+                "bbox": args.get("bbox"),
+                "after": args.get("after"),
+                "limit": args.get("limit").and_then(Value::as_u64).unwrap_or(PAGE).clamp(1, PAGE_MAX),
+            }),
+        ),
+        "drawing.entity" => ("entity", json!({ "uid": args.get("uid") })),
+        "drawing.measure" => ("measure", json!({ "uid": args.get("uid") })),
+        "drawing.close" => {
+            server.desktops.remove(handle);
+            return Ok(answer(json!({ "closed": handle, "detached": true }), false));
+        }
+        "drawing.save" | "drawing.undo" | "drawing.redo" => {
+            return Err(refused(
+                "desktop_user",
+                "Masaüstündeki çizimi kullanıcı kaydeder ve geri alır: ondan isteyin.",
+            ));
+        }
+        command if command.starts_with("cad.") => {
+            let mut input = args.clone();
+            if let Some(fields) = input.as_object_mut() {
+                fields.remove("drawing");
+                fields.remove("op");
+            }
+            (
+                "run",
+                json!({ "command": command, "op": text(args, "op").unwrap_or("execute"), "input": input }),
+            )
+        }
+        other => {
+            return Err(refused(
+                "not_on_desktop",
+                format!("{other} masaüstündeki çizimle kullanılmaz."),
+            ));
+        }
+    };
+    let Some(link) = server.desktops.get_mut(handle) else {
+        return Err(refused(
+            "unknown_drawing",
+            "Masaüstü tutamacı artık açık değil.",
+        ));
+    };
+    match link.ask(method, params) {
+        Ok(value) if method == "layers" => Ok(answer(json!({ "layers": value }), false)),
+        Ok(value) => {
+            let failed = method == "run" && value["status"] != "completed";
+            Ok(answer(value, failed))
+        }
+        Err((code, message)) => {
+            if code == "desktop_gone" {
+                server.desktops.remove(handle);
+            }
+            Err(refused(&code, message))
+        }
+    }
+}
+
 fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
+    if let Some(handle) = text(args, "drawing").filter(|h| server.desktops.contains_key(*h)) {
+        let handle = handle.to_owned();
+        return on_desktop(server, &handle, name, args);
+    }
     match name {
+        "desktop.attach" => {
+            let path =
+                text(args, "path").map_or_else(desktop::default_path, std::path::PathBuf::from);
+            let mut link =
+                Desktop::connect(path).map_err(|(code, message)| refused(&code, message))?;
+            let hello = link
+                .ask("hello", json!({}))
+                .map_err(|(code, message)| refused(&code, message))?;
+            let handle = format!("desktop-{}", Uuid::new_v4());
+            server.desktops.insert(handle.clone(), link);
+            Ok(answer(
+                json!({ "drawing": handle, "desktop": hello }),
+                false,
+            ))
+        }
         "drawing.open" => {
             let path =
                 text(args, "path").ok_or_else(|| refused("invalid_input", "path gerekli."))?;
@@ -442,21 +541,22 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
             opened(server, session)
         }
         "drawing.list" => {
-            let open: Vec<Value> = server
-                .drawings
+            let mut open: Vec<Value> = server
+                .desktops
                 .iter()
-                .map(|(handle, s)| {
-                    let summary = s.summary();
-                    json!({
-                        "drawing": handle,
-                        "name": summary["name"],
-                        "path": summary.get("path"),
-                        "objects": summary["objects"],
-                        "revision": summary["revision"],
-                        "dirty": summary["dirty"],
-                    })
-                })
+                .map(|(handle, d)| json!({ "drawing": handle, "desktop": true, "link": d.path.display().to_string() }))
                 .collect();
+            open.extend(server.drawings.iter().map(|(handle, s)| {
+                let summary = s.summary();
+                json!({
+                    "drawing": handle,
+                    "name": summary["name"],
+                    "path": summary.get("path"),
+                    "objects": summary["objects"],
+                    "revision": summary["revision"],
+                    "dirty": summary["dirty"],
+                })
+            }));
             Ok(answer(json!({ "drawings": open }), false))
         }
         "drawing.close" => {

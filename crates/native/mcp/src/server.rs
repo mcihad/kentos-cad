@@ -52,6 +52,8 @@ pub struct Server {
     pub(crate) drawings: BTreeMap<String, Session>,
     /// The KentOS server's account, from the environment (cloud.rs).
     pub(crate) account: crate::cloud::Account,
+    /// The desktops attached, by handle (desktop.rs).
+    pub(crate) desktops: BTreeMap<String, crate::desktop::Desktop>,
     legacy: Option<String>,
     pub(crate) catalog: Value,
     tools: Vec<Value>,
@@ -70,6 +72,7 @@ impl Server {
         Self {
             drawings: BTreeMap::new(),
             account: crate::cloud::Account::default(),
+            desktops: BTreeMap::new(),
             legacy: None,
             catalog,
             tools,

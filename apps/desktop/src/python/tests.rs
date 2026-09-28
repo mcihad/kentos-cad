@@ -527,6 +527,7 @@ fn screens() {
                 "tamamlama",
                 "imza",
                 "betik",
+                "ajan",
             ] {
                 let mut app = app_with_drawing();
                 let _ = app
@@ -572,6 +573,41 @@ fn screens() {
                         |app| app.python.running.is_none() && app.python.lines.len() > 2,
                     );
                 }
+                #[cfg(unix)]
+                let _link_dir = if name == "ajan" {
+                    let dir = crate::files_testing::scratch("ajan-resim");
+                    let path = dir.join("masaustu.sock");
+                    let (open, _task) = super::link::Link::open(&path, |heard| {
+                        Message::Python(Event::Agent(heard))
+                    })
+                    .expect("the link");
+                    app.python.lines.clear();
+                    app.python.push(
+                        Kind::Note,
+                        "Ajan bağlantısı açık: /run/user/1000/kentos-cad/masaustu.sock. Bu kullanıcının programları (MCP'de desktop.attach) açık çizimi okuyup komutlarla yazabilir; her yazma bir geri alma adımıdır.",
+                    );
+                    app.python.link = Some(open);
+                    let (answerer, _answers) = super::link::Answerer::testing();
+                    let _ = app.update(Message::Python(Event::Agent(
+                        super::link::Heard::Connected(1, answerer),
+                    )));
+                    let layer = app
+                        .document
+                        .as_ref()
+                        .map(|d| d.model.layers().active().to_owned())
+                        .expect("a layer");
+                    let input: Value = serde_json::from_str(&format!(
+                        r#"{{"layerId": "{layer}", "pts": {SQUARE}}}"#
+                    ))
+                    .expect("input");
+                    let _ = app.update(Message::Python(Event::Agent(super::link::Heard::Request(
+                        1,
+                        json!({ "id": 1, "method": "run", "params": { "command": "cad.polygon.create", "op": "execute", "input": input } }),
+                    ))));
+                    Some(dir)
+                } else {
+                    None
+                };
                 if name == "tamamlama" {
                     typed(&mut app, "cad.poly");
                     ask_real(&mut app, Event::Complete, &mut heard, |app| {
@@ -752,4 +788,245 @@ fn real_python_runs_the_script_and_shows_where_it_failed() {
         "the failed line"
     );
     let _ = app.update(Message::Python(Event::Stop));
+}
+
+/// An agent's request answered on the open drawing (agents.rs), the
+/// answers read from a stand-in connection.
+fn ask_agent(
+    app: &mut App,
+    answers: &std::sync::mpsc::Receiver<String>,
+    method: &str,
+    params: Value,
+) -> Value {
+    let _ = app.update(Message::Python(Event::Agent(super::link::Heard::Request(
+        7,
+        json!({ "id": 1, "method": method, "params": params }),
+    ))));
+    serde_json::from_str(&answers.try_recv().expect("an answer")).expect("JSON")
+}
+
+#[cfg(unix)]
+#[test]
+fn an_agent_reads_and_writes_the_open_drawing_each_write_its_own_step() {
+    let mut app = app_with_drawing();
+    let dir = crate::files_testing::scratch("ajan");
+    let (open, _task) = super::link::Link::open(&dir.join("m.sock"), |heard| {
+        Message::Python(Event::Agent(heard))
+    })
+    .expect("the link");
+    app.python.link = Some(open);
+    let (answerer, answers) = super::link::Answerer::testing();
+    let _ = app.update(Message::Python(Event::Agent(
+        super::link::Heard::Connected(7, answerer),
+    )));
+    let before = objects(&app);
+
+    let hello = ask_agent(&mut app, &answers, "hello", json!({}));
+    assert_eq!(hello["ok"], true);
+    assert_eq!(hello["result"]["objects"], before);
+    let layer = app
+        .document
+        .as_ref()
+        .map(|d| d.model.layers().active().to_owned())
+        .expect("a layer");
+    let input: Value =
+        serde_json::from_str(&format!(r#"{{"layerId": "{layer}", "pts": {SQUARE}}}"#))
+            .expect("input");
+    let written = ask_agent(
+        &mut app,
+        &answers,
+        "run",
+        json!({ "command": "cad.polygon.create", "op": "execute", "input": input }),
+    );
+    assert_eq!(written["result"]["status"], "completed");
+    assert_eq!(objects(&app), before + 1);
+    assert!(
+        app.log
+            .lines()
+            .any(|l| l.text == "Ajan: cad.polygon.create"),
+        "the command history says an agent wrote"
+    );
+    let model = &mut app.document.as_mut().expect("open").model;
+    assert!(model.undo().is_some(), "its own undo step");
+    assert_eq!(model.len(), before);
+
+    // While console code runs, agents wait.
+    running(&mut app);
+    let busy = ask_agent(&mut app, &answers, "summary", json!({}));
+    assert_eq!(
+        (busy["ok"].clone(), busy["code"].clone()),
+        (json!(false), json!("busy"))
+    );
+    app.python.running = None;
+    let unknown = ask_agent(&mut app, &answers, "undo", json!({}));
+    assert_eq!(unknown["code"], "unknown_method", "undo is the user's");
+
+    // Closed: every request is refused.
+    let _ = app.update(Message::Python(Event::Link));
+    assert!(app.python.link.is_none());
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[cfg(unix)]
+#[test]
+fn the_link_is_this_users_alone_and_goes_with_its_socket() {
+    use std::io::{BufRead, BufReader, Write};
+    use std::os::unix::fs::PermissionsExt;
+    let dir = crate::files_testing::scratch("ajan-soket");
+    let path = dir.join("m.sock");
+    let mut app = app_with_drawing();
+    let (open, task) = super::link::Link::open(&path, |heard| Message::Python(Event::Agent(heard)))
+        .expect("the link");
+    app.python.link = Some(open);
+    let mode = std::fs::metadata(&path)
+        .expect("the socket")
+        .permissions()
+        .mode()
+        & 0o777;
+    assert_eq!(mode, 0o600);
+    assert!(
+        super::link::Link::open(&path, |heard| Message::Python(Event::Agent(heard))).is_err(),
+        "a second window does not take a link that is in use"
+    );
+
+    let mut client = std::os::unix::net::UnixStream::connect(&path).expect("connects");
+    writeln!(client, r#"{{"id": 5, "method": "hello", "params": {{}}}}"#).expect("asked");
+    let mut stream = iced_runtime::task::into_stream(task).expect("the link's messages");
+    let mut reader = BufReader::new(client.try_clone().expect("its reader"));
+    // Until the request is answered (the second window's probe came and went first).
+    loop {
+        use iced::futures::StreamExt as _;
+        match iced::futures::executor::block_on(stream.next()) {
+            Some(iced_runtime::Action::Output(message)) => {
+                let request = matches!(
+                    message,
+                    Message::Python(Event::Agent(super::link::Heard::Request(..)))
+                );
+                let _ = app.update(message);
+                if request {
+                    break;
+                }
+            }
+            Some(_) => {}
+            None => panic!("the link ended"),
+        }
+    }
+    let mut line = String::new();
+    reader.read_line(&mut line).expect("an answer");
+    let answer: Value = serde_json::from_str(&line).expect("JSON");
+    assert_eq!(
+        (answer["id"].clone(), answer["ok"].clone()),
+        (json!(5), json!(true))
+    );
+    let _ = app.update(Message::Python(Event::Link));
+    assert!(!path.exists(), "the socket goes with the link");
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+/// A real agent: `kentos-mcp` (built beside this test) attaches to the
+/// desktop through its link and draws on the open drawing over MCP, while
+/// the app answers. `cargo build -p kentos-mcp` first.
+#[cfg(unix)]
+#[test]
+#[ignore = "needs the kentos-mcp program (cargo build -p kentos-mcp)"]
+fn a_real_agent_draws_on_the_open_drawing_through_mcp() {
+    use iced::futures::StreamExt as _;
+    use std::io::{BufRead, BufReader, Write};
+    use std::process::{Command, Stdio};
+    let mcp = std::env::current_exe()
+        .expect("this test")
+        .ancestors()
+        .skip(1)
+        .take(3)
+        .map(|d| d.join("kentos-mcp"))
+        .find(|p| p.exists())
+        .expect("target/<profile>/kentos-mcp: cargo build -p kentos-mcp");
+    let dir = crate::files_testing::scratch("ajan-mcp");
+    let path = dir.join("m.sock");
+    let mut app = app_with_drawing();
+    let (open, task) = super::link::Link::open(&path, |heard| Message::Python(Event::Agent(heard)))
+        .expect("the link");
+    app.python.link = Some(open);
+    let before = objects(&app);
+    let layer = app
+        .document
+        .as_ref()
+        .map(|d| d.model.layers().active().to_owned())
+        .expect("a layer");
+    let agent = std::thread::spawn(move || {
+        let mut child = Command::new(mcp)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .expect("kentos-mcp");
+        let mut stdin = child.stdin.take().expect("its input");
+        let mut lines = BufReader::new(child.stdout.take().expect("its output")).lines();
+        let meta = json!({
+            "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+            "io.modelcontextprotocol/clientCapabilities": {}
+        });
+        let mut call = |id: u64, name: &str, arguments: Value| -> Value {
+            let request = json!({ "jsonrpc": "2.0", "id": id, "method": "tools/call",
+                "params": { "_meta": meta, "name": name, "arguments": arguments } });
+            writeln!(stdin, "{request}").expect("asked");
+            stdin.flush().expect("sent");
+            let answer: Value =
+                serde_json::from_str(&lines.next().expect("a line").expect("read")).expect("JSON");
+            answer["result"]["structuredContent"].clone()
+        };
+        let attached = call(1, "desktop.attach", json!({ "path": path }));
+        let handle = attached["drawing"].as_str().expect("a handle").to_owned();
+        let pts: Value = serde_json::from_str(SQUARE).expect("points");
+        let written = call(
+            2,
+            "cad.polygon.create",
+            json!({ "drawing": handle, "layerId": layer, "pts": pts }),
+        );
+        let uid = written["output"]["uid"]
+            .as_str()
+            .expect("its id")
+            .to_owned();
+        let measured = call(
+            3,
+            "drawing.measure",
+            json!({ "drawing": handle, "uid": uid }),
+        );
+        let _ = child.kill();
+        let _ = child.wait();
+        (attached, written, measured)
+    });
+    // The app answers until the agent's connection ends.
+    let mut stream = iced_runtime::task::into_stream(task).expect("the link's messages");
+    loop {
+        match iced::futures::executor::block_on(stream.next()) {
+            Some(iced_runtime::Action::Output(message)) => {
+                let closed = matches!(
+                    message,
+                    Message::Python(Event::Agent(super::link::Heard::Closed(_)))
+                );
+                let _ = app.update(message);
+                if closed {
+                    break;
+                }
+            }
+            Some(_) => {}
+            None => break,
+        }
+    }
+    let (attached, written, measured) = agent.join().expect("the agent");
+    assert_eq!(attached["desktop"]["objects"], before);
+    assert_eq!(written["status"], "completed", "{written}");
+    assert_eq!(measured["area"], 250.0);
+    assert_eq!(
+        objects(&app),
+        before + 1,
+        "the drawing on the screen changed"
+    );
+    assert!(
+        app.log
+            .lines()
+            .any(|l| l.text == "Ajan: cad.polygon.create")
+    );
+    let _ = app.update(Message::Python(Event::Link));
+    let _ = std::fs::remove_dir_all(dir);
 }

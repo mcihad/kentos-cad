@@ -232,6 +232,27 @@ fn small(glyph: Icon, about: Tip, message: Option<Message>) -> Element<'static, 
     )
 }
 
+/// The agents' link: open (lit, with its socket and connections in its tip) or closed.
+fn link_toggle(c: &super::Console) -> Element<'_, Message> {
+    let about = match &c.link {
+        Some(open) => Tip::new("Ajan bağlantısını kapat").detail(format!(
+            "{} · {} ajan bağlı",
+            open.path.display(),
+            c.agents.len()
+        )),
+        None => Tip::new("Ajanlara aç")
+            .detail("MCP'deki bir ajan açık çizimi okuyup komutlarla yazabilir"),
+    };
+    tip(
+        button(icon(Icon::Link).size(15.0))
+            .on_press(ev(Event::Link))
+            .padding([5, 6])
+            .style(style::button::toggle(c.link.is_some())),
+        about,
+        iced::widget::tooltip::Position::Top,
+    )
+}
+
 /// Konsol | Betik, at the start of each side's bar.
 fn mode_switch(mode: super::Mode) -> Element<'static, Message> {
     let side = |label: &'static str, this: super::Mode| {
@@ -377,6 +398,7 @@ impl App {
                 Tip::new("Çıktıyı temizle"),
                 (!c.lines.is_empty()).then_some(ev(Event::Clear)),
             ),
+            link_toggle(c),
         ]
         .spacing(4)
         .align_y(iced::Center);
