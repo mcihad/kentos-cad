@@ -93,6 +93,7 @@ impl Document {
                 entity: Arc::new(entity),
             }));
         }
+        self.store.reserve(ops.len());
         self.record(ops, label);
         Ok(slots)
     }

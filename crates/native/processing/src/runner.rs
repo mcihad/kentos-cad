@@ -16,8 +16,8 @@ use crate::geometry::RunGeometry;
 use crate::parameters::{Issue, is_visible, validate_values};
 use crate::text::{fold_turkish, js_trim};
 use crate::types::{
-    Defaults, FeatureSet, Feedback, NewLayerStyle, ParamKind, Resolved, RunContext, RunFn,
-    RunResult, Target, TargetLayer, Tool, Values,
+    ChangeSet, Defaults, FeatureSet, Feedback, NewLayerStyle, ParamKind, Resolved, RunContext,
+    RunFn, RunResult, Target, TargetLayer, Tool, Values,
 };
 use crate::values::{FeaturesValue, LayerValue, Scope};
 
@@ -668,7 +668,7 @@ impl Runner {
         &mut self,
         host: &mut dyn Host,
         job: Job,
-        result: RunResult,
+        mut result: RunResult,
         canceled: bool,
         log: &mut Vec<LogLine>,
     ) -> Outcome {
@@ -686,7 +686,12 @@ impl Runner {
         } = job;
         let (tool, values) = (&tool, &values);
         let target = Some(target);
-        let added = match apply(host.doc_mut(), tool, &result, &new_layers, log) {
+        // The change set is spent here: its new objects move into the
+        // drawing, not copied (a run may add hundreds of thousands).
+        let changes = result.changes.take().unwrap_or_default();
+        let updated: Vec<Slot> = changes.update.iter().map(|u| u.id).collect();
+        let removed = !changes.remove.is_empty();
+        let added = match apply(host.doc_mut(), tool, changes, &new_layers, log) {
             Ok(added) => added,
             Err(why) => {
                 let message = format!("“{}” çalışırken hata: {why}", tool.label);
@@ -718,14 +723,12 @@ impl Runner {
         if let Some(ids) = &selected {
             host.select(ids);
         }
-        let changes = result.changes.clone().unwrap_or_default();
         let touched: Vec<Slot> = {
             let doc = host.doc();
             distinct(
-                changes
-                    .update
+                updated
                     .iter()
-                    .map(|u| u.id)
+                    .copied()
                     .chain(selected.iter().flatten().copied()),
             )
             .into_iter()
@@ -736,7 +739,7 @@ impl Runner {
             Some(ids) => format!("{} nesne seçildi.", ids.len()),
             None => format!("{} nesne eklendi.", added.len()),
         });
-        let edited = !added.is_empty() || !changes.update.is_empty() || !changes.remove.is_empty();
+        let edited = !added.is_empty() || !updated.is_empty() || removed;
         let record = self.record(
             silent,
             tool,
@@ -763,13 +766,10 @@ impl Runner {
 fn apply(
     doc: &mut Document,
     tool: &Tool,
-    result: &RunResult,
+    ch: ChangeSet,
     new_layers: &BTreeMap<String, (String, NewLayerStyle)>,
     log: &mut Vec<LogLine>,
 ) -> Result<Vec<Slot>, String> {
-    let Some(ch) = &result.changes else {
-        return Ok(Vec::new());
-    };
     let mut skipped = 0usize;
     // Removals, then updates, then additions, each as one change.
     let added = doc.transact(&tool.label, |doc| {
@@ -819,14 +819,14 @@ fn apply(
             patches.push((u.id, next));
         }
         doc.update_many(patches, &tool.label);
-        let mut fresh = Vec::new();
-        for n in &ch.add {
+        let mut fresh = Vec::with_capacity(ch.add.len());
+        for n in ch.add {
             let layer = &n.base().layer_id;
             if doc.layers().get(layer).is_none() || locked(doc, layer) {
                 skipped += 1;
                 continue;
             }
-            fresh.push(n.clone());
+            fresh.push(n);
         }
         doc.add_many(fresh, &tool.label).map_err(|e| e.to_string())
     })?;

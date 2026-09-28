@@ -27,6 +27,20 @@ use crate::store::Stored;
 /// Undo steps kept; an older step is dropped when a new one comes (web; TODOS.md TX-06).
 pub const UNDO_LIMIT: usize = 200;
 
+/// Steps holding at least this many operations are let go on another thread.
+const FREE_APART: usize = 20_000;
+
+/// Drops `value`, holding `ops` operations: a large one on another thread, so
+/// an edit after undoing a run of hundreds of thousands of objects does not
+/// wait for them to be freed (TODOS.md PERF-08).
+fn free_apart<T: Send + 'static>(value: T, ops: usize) {
+    if ops >= FREE_APART {
+        std::thread::spawn(move || drop(value));
+    } else {
+        drop(value);
+    }
+}
+
 #[derive(Clone, Debug)]
 pub(crate) enum Op {
     Add(Stored),
@@ -291,10 +305,15 @@ impl Document {
             return;
         }
         self.history.undo.push_back(step);
-        if self.history.undo.len() > UNDO_LIMIT {
-            self.history.undo.pop_front();
+        if self.history.undo.len() > UNDO_LIMIT
+            && let Some(oldest) = self.history.undo.pop_front()
+        {
+            let ops = oldest.ops.len();
+            free_apart(oldest, ops);
         }
-        self.history.redo.clear();
+        let redo = std::mem::take(&mut self.history.redo);
+        let ops = redo.iter().map(|s| s.ops.len()).sum();
+        free_apart(redo, ops);
         self.mark_edited();
     }
 

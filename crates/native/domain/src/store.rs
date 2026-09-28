@@ -102,6 +102,26 @@ impl Store {
         self.layers.get(layer).map_or(0, BTreeMap::len)
     }
 
+    /// Room for `n` more objects: a large addition grows the tables once.
+    pub fn reserve(&mut self, n: usize) {
+        self.items.reserve(n);
+        self.uids.reserve(n);
+    }
+
+    /// An object into its layer's list; the layer's id is copied only for
+    /// a layer not listed yet (a run adds hundreds of thousands at once).
+    fn list(&mut self, layer: &str, seq: u64, slot: Slot) {
+        match self.layers.get_mut(layer) {
+            Some(list) => {
+                list.insert(seq, slot);
+            }
+            None => {
+                self.layers
+                    .insert(layer.to_owned(), BTreeMap::from([(seq, slot)]));
+            }
+        }
+    }
+
     /// Sets an object. A known slot keeps its place in the document (and in
     /// its new layer's list when the layer changed); a new one goes last.
     pub fn put(&mut self, stored: Stored) {
@@ -112,10 +132,7 @@ impl Store {
                 self.next_seq - 1
             });
             self.order.insert(seq, slot);
-            self.layers
-                .entry(stored.layer().to_owned())
-                .or_default()
-                .insert(seq, slot);
+            self.list(stored.layer(), seq, slot);
             self.uids.insert(stored.uid, slot);
             self.items.insert(slot, Item { seq, stored });
             return;
@@ -124,10 +141,16 @@ impl Store {
             if let Some(list) = self.layers.get_mut(item.stored.layer()) {
                 list.remove(&item.seq);
             }
-            self.layers
-                .entry(stored.layer().to_owned())
-                .or_default()
-                .insert(item.seq, slot);
+            let seq = item.seq;
+            self.list(stored.layer(), seq, slot);
+            if let Some(item) = self.items.get_mut(&slot) {
+                if item.stored.uid != stored.uid {
+                    self.uids.remove(&item.stored.uid);
+                    self.uids.insert(stored.uid, slot);
+                }
+                item.stored = stored;
+            }
+            return;
         }
         if item.stored.uid != stored.uid {
             self.uids.remove(&item.stored.uid);

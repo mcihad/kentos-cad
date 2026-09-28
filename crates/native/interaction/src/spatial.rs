@@ -23,8 +23,6 @@
 //! the web's: points and edges before interiors, the smallest area, window
 //! and crossing boxes, the snap kinds' weights.
 
-use std::collections::HashSet;
-
 use kentos_contracts::{Entity, LabelPlacement, LabelStyle, LayerNode};
 use kentos_domain::{ChangeMark, Changes, Document, LayerTree, Slot};
 use kentos_geometry_core::entity::{Shape, entity_area, entity_length, entity_vertices};
@@ -96,13 +94,14 @@ impl Spatial {
         match doc.changes_since(self.mark) {
             Changes::All => return self.reload(doc),
             Changes::Slots(slots) => {
-                let mut seen = HashSet::with_capacity(slots.len());
+                // Each slot once, in slot order: new objects go in in the
+                // order they were made (slots are given in turn).
+                let mut slots = slots.to_vec();
+                slots.sort_unstable();
+                slots.dedup();
                 let mut gone = Vec::new();
-                let mut changed = Vec::new();
-                for &slot in slots {
-                    if !seen.insert(slot) {
-                        continue;
-                    }
+                let mut changed = Vec::with_capacity(slots.len());
+                for slot in slots {
                     match doc.get(slot) {
                         Some(entity) => changed.push(entity),
                         None => gone.push(f64::from(slot.0)),

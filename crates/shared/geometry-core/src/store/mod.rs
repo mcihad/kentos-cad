@@ -89,6 +89,9 @@ pub struct Store {
     next_order: u64,
     live: usize,
     layer_ids: HashMap<String, u32>,
+    /// The layer the last object put was on: objects come in runs of one
+    /// layer, and ids only ever join `layer_ids`, so it stays right.
+    last_layer: Option<(String, u32)>,
     flags: Vec<LayerFlags>,
     /// Label rules by kind for layers without a label style (see `labels`).
     label_defaults: [Option<labels::LabelRule>; 5],
@@ -166,6 +169,8 @@ impl Store {
         &mut self,
         items: impl IntoIterator<Item = (f64, &'a str, bool, Shape)>,
     ) -> usize {
+        let items = items.into_iter();
+        self.reserve(items.size_hint().0);
         let mut n = 0;
         for (id, layer, label, shape) in items {
             self.put(id, layer, label, shape);
@@ -411,13 +416,32 @@ impl Store {
     }
 
     fn layer_index(&mut self, id: &str) -> u32 {
-        if let Some(&l) = self.layer_ids.get(id) {
-            return l;
+        if let Some((last, l)) = &self.last_layer
+            && last == id
+        {
+            return *l;
         }
-        let l = self.flags.len() as u32;
-        self.layer_ids.insert(id.to_string(), l);
-        self.flags.push(UNLISTED);
+        let l = match self.layer_ids.get(id) {
+            Some(&l) => l,
+            None => {
+                let l = self.flags.len() as u32;
+                self.layer_ids.insert(id.to_string(), l);
+                self.flags.push(UNLISTED);
+                l
+            }
+        };
+        self.last_layer = Some((id.to_string(), l));
         l
+    }
+
+    /// Room for `n` more objects: a large addition grows the tables once.
+    fn reserve(&mut self, n: usize) {
+        self.slots.reserve(n);
+        self.in_tree.reserve(n);
+        self.in_loose.reserve(n);
+        self.loose.reserve(n);
+        self.ordered.reserve(n);
+        self.by_id.reserve(n);
     }
 
     /// Marks a slot as outside the tree until the next build.

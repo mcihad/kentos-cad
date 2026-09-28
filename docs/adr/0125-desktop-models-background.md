@@ -64,3 +64,25 @@ Aynı makine (Iris Xe, 15 GB), `perf::frame`'in yeni durumları, 10 000 parsel, 
   - arka plandaki Parsel ölçü yazıları buradakiyle aynı nesneleri, katmanları, durumu ve iletiyi verir; tek geri alma adımı hepsini geri alır;
   - Durdur modeli hemen bitirir; kayıt iptaldir;
   - arada değişen çizimde model yeniden çalışır ve bunu söyler; sonuç değişen çizimde burada çalışanınkidir.
+
+## Ek (28 Eylül): büyük sonucun yazılması
+
+Sonucun uygulanması, zamanlayıcılarla parçalarına ayrıldı (10 000 parsel, 400 000 nesne). Giderilenler:
+
+- **İki tam kopya.** `Runner::finish`, güncellenen nesnelerin kimliklerini okumak için bütün değişiklik kümesini kopyalıyordu (adım başına 85–90 ms). `apply` de her yeni nesneyi bir kez daha kopyalıyordu. Değişiklik kümesi artık tüketilir: yeni nesneler kopyalanmadan çizime taşınır. Oynatma 779 → 423 ms.
+- **Belge deposu.** Her yeni nesne için katmanın kimliğinden yeni bir `String` ayrılıyordu. Artık yalnız listelenmemiş katmanda ayrılır. Toplu eklemede tablolar önce büyütülür.
+- **Yineleme geçmişi.** Geri alınmış büyük bir işten sonra yeni düzenleme, yineleme geçmişindeki nesneleri arayüz iş parçacığında serbest bırakıyordu (400 000 nesnede 82 ms). 20 000 ve daha çok işlem tutan adımlar artık ayrı bir iş parçacığında serbest bırakılır; sınırı aşan en eski geri alma adımı da öyle (`free_apart`).
+- **Geometri deposu** (web'le ortak): toplu eklemede tablolar önce büyütülür. Art arda aynı katmanın numarası önbellekten gelir. Eşitleme kimlikleri `HashSet` yerine sıralayıp tekilleştirir; yeni kimlikler sırayla verildiği için belge sırası aynıdır.
+
+Aynı makine, iki koşunun ortalaması, arayüz iş parçacığı (MİB), milisaniye:
+
+| Durum | Önce | Sonra |
+|---|---|---|
+| Arka planda: sonucun uygulanması | 1 259 | 860 (−%32) |
+| Oynatma (yazma) | 779 | 335 |
+| Burada çalıştırma | 1 600 | 1 260 |
+| Arka plandaki iş parçacığı | 1 423 | 1 055 |
+
+Denenip bırakılan: geometri deposunun kayıtlarını çekirdeklere bölmek. Kayıt başına iş küçük olduğundan kazandırmadı (sıralı 30, paralel 35–41 ms). Ayrı iş parçacığında serbest bırakmanın ayırıcıda yarattığı çekişme de ölçüldü: eşitleme 20–25 ms yavaşlıyor, ama toplamda yaklaşık 40 ms kazanç kalıyor (iki koşu: yerinde 901 ve 900, ayrı iş parçacığında 864 ve 854 ms).
+
+Kalan pay: iki adımın belgeye yazılması (adım başına yaklaşık 150 ms; kimlik, karma tabloları, sıra ve katman ağaçları), geometri deposunun eşitlenmesi (yaklaşık 180 ms: kimlikler 25, kayıtlar 30, ekleme ve ağacın yeniden kuruluşu 120), sahnenin kurulması (görünüm, yaklaşık 210 ms) ve çizim (yaklaşık 100 ms).
