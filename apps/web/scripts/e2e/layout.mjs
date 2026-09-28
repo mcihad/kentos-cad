@@ -21,8 +21,8 @@ const opt = (name) => (args.includes(`--${name}`) ? args[args.indexOf(`--${name}
 const only = opt('only');
 const sizes = (opt('sizes') ?? ['1100x650', '1440x900']).map((s) => s.split('x').map(Number));
 const themes = opt('themes') ?? ['dark', 'light'];
-/** The type scale (Uygulama ayarları → Görünüm → Yazı boyutu), as the settings window applies it. */
-const SCALES = { small: 0.93, standard: 1, large: 1.08, xlarge: 1.16, xxlarge: 1.25 };
+/** The text size (Uygulama ayarları → Görünüm → Yazı boyutu) in pixels, by the names of its five steps (docs/adr/0126). */
+const SIZES = { small: 12, standard: 13, large: 14, xlarge: 15, xxlarge: 16 };
 const scale = opt('scale')?.[0] ?? 'standard';
 const DIR = join(OUT, 'layout');
 mkdirSync(DIR, { recursive: true });
@@ -240,7 +240,7 @@ for (const [w, hgt] of sizes) {
       await sleep(1200);
       await b.waitFor(ready, 20000);
       await b.eval(`window.kentos.commands.execute('view.theme.${theme}')`);
-      if (scale !== 'standard') await b.eval(`(() => { document.documentElement.style.setProperty('--ui-scale', '${SCALES[scale]}'); window.kentos.prefs.uiScale.set('${scale}'); })()`);
+      if (scale !== 'standard') await b.eval(`window.kentos.prefs.textSize.set(${SIZES[scale]})`);
       await b.eval('document.fonts.ready');
       await sleep(300);
       for (const item of ITEMS) {

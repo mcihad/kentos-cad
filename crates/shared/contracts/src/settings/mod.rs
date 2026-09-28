@@ -144,6 +144,11 @@ pub struct SettingDescriptor {
     /// has them; a number has them when only some steps make sense.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub choices: Vec<SettingChoice>,
+    /// A text that may also be a colour, `#rrggbb`, besides its choices
+    /// (the accent, docs/adr/0126); kept in lower case.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub color: bool,
     /// Unit of a number: `px`, `deg`, `sample`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

@@ -235,13 +235,14 @@ mod tests {
     fn broken_lines_keep_the_defaults() {
         let settings = Settings::parse(
             "# yorum\ntema = mor\nyazi-ailesi = comic-sans\nyazi-boyutu = 99\nbilinmeyen = 1\n\
-             bozuk satır\nyuva = bozuk\nvurgu = lacivert\nharita-zemini = mavi",
+             bozuk satır\nyuva = bozuk\nvurgu = eflatun\nharita-zemini = mavi",
         );
 
         assert_eq!(settings.mode, Mode::Dark);
-        assert_eq!(settings.accent, Accent::Blue);
+        assert_eq!(settings.accent, Accent::Navy);
         assert_eq!(settings.backdrop, Backdrop::Theme);
-        assert_eq!(settings.typography.family, Family::IbmPlexSans);
+        // The default typeface, the product's (docs/adr/0126).
+        assert_eq!(settings.typography.family, Family::PlusJakartaSans);
         assert_eq!(settings.typography.size, 18.0);
         assert_eq!(settings.docks, DockPanel::layout());
     }

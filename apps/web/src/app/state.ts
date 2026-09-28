@@ -1,4 +1,4 @@
-import type { AccentId, UiFontId } from './appearance';
+import type { AccentId, ThemeId, UiFontId } from './appearance';
 import type { DrawingFont, Workspace } from '../model/projectSettings';
 import { Signal } from '../core/signal';
 import { settingDefault } from '../core/settings/schema';
@@ -126,7 +126,6 @@ export type UiState = Signals<UiLayoutData>;
 // Anything a colleague opening the same project must also see belongs in
 // model/projectSettings.ts instead.
 
-export type UiScale = 'small' | 'standard' | 'large' | 'xlarge' | 'xxlarge';
 /** Workbench chrome: menu bar, toolbar and floating toolbox, or the tabbed ribbon (Şerit). */
 export type ShellKind = 'classic' | 'ribbon';
 export type CrosshairSize = 'small' | 'medium' | 'full';
@@ -152,7 +151,10 @@ export interface PreferencesData {
   /** Polar tracking step in degrees (F10 toggles tracking). */
   polarIncrement: number;
   crosshair: CrosshairSize;
-  uiScale: UiScale;
+  /** The interface's colours (app/appearance.ts); the layout kept it before (docs/adr/0126). */
+  theme: ThemeId;
+  /** The interface's text size in pixels; every size of the chrome scales with it. */
+  textSize: number;
   /** Accent colour of the interface and the drawing's selection (app/appearance.ts). */
   accent: AccentId;
   /** Interface typeface, bundled with the app (app/appearance.ts). */
@@ -210,7 +212,8 @@ export const PREF_KEYS = {
   snapTangent: 'snap.tangent',
   polarIncrement: 'drafting.polarIncrement',
   crosshair: 'appearance.crosshair',
-  uiScale: 'appearance.uiScale',
+  theme: 'appearance.theme',
+  textSize: 'appearance.textSize',
   accent: 'appearance.accent',
   uiFont: 'appearance.uiFont',
   rendererPreference: 'graphics.backend',

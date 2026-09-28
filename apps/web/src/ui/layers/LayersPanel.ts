@@ -119,7 +119,7 @@ export class LayersPanel extends Panel {
     this.d.add(layers.events.on('structure', () => this.scheduleRebuild()));
     this.d.add(layers.events.on('expanded', () => this.scheduleRebuild()));
     this.d.add(layers.events.on('state', () => this.writeStates()));
-    this.d.add(watchAll([layers.active, ctx.ui.theme], () => this.writeStates()));
+    this.d.add(watchAll([layers.active, ctx.prefs.theme], () => this.writeStates()));
     this.d.add(ctx.doc.events.on('changed', () => this.writeCounts()));
     this.d.add(ctx.selection.ids.subscribe(() => this.followSelection()));
     this.rebuild();

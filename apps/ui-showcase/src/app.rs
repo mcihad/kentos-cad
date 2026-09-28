@@ -3389,8 +3389,8 @@ mod tests {
         assert_eq!(app.pending, Some(Pending::Accent));
 
         // Hazır renk adıyla ya da baş harfleriyle seçilir.
-        submit(&mut app, "tur");
-        assert_eq!(app.accent, Accent::Turquoise);
+        submit(&mut app, "pet");
+        assert_eq!(app.accent, Accent::Teal);
         assert_eq!(app.pending, None);
 
         // #RRGGBB de yazılabilir; yanlış yazım hata verir, komut sürer.

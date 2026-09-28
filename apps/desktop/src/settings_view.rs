@@ -47,11 +47,11 @@ pub const KEYS: [&str; 32] = [
     "graphics.symbolSize",
     "graphics.lineWeights",
     "appearance.theme",
-    "appearance.accentColor",
+    "appearance.accent",
     "appearance.drawingBackground",
     "appearance.crosshair",
-    "appearance.typeface",
-    "appearance.monoTypeface",
+    "appearance.uiFont",
+    "appearance.monoFont",
     "appearance.textSize",
     "appearance.startScreen",
     "newProjects.srid",
@@ -268,8 +268,9 @@ impl App {
                 draft.note = Some((true, format!("“{name}” alınamadı. {}", code.message())));
             }
             Ok((file, diagnostics)) => {
-                // The web's own values (its appearance) have nothing to go to here:
-                // said by name, never dropped in silence (docs/inventory/parity-audit.md A1).
+                // The web's own values (its classic interface, its drawing engine) have
+                // nothing to go to here: said by name, never dropped in silence
+                // (docs/inventory/parity-audit.md A1). The look is shared (docs/adr/0126).
                 let web_only: Vec<String> = file
                     .user
                     .keys()
@@ -307,7 +308,7 @@ impl App {
                     String::new()
                 } else {
                     format!(
-                        " Web uygulamasına özgü {} değerin masaüstünde karşılığı yok, alınmadı: {}. Görünüş tercihleri masaüstünde ayrı tutulur.",
+                        " Web uygulamasına özgü {} değerin masaüstünde karşılığı yok, alınmadı: {}.",
                         web_only.len(),
                         web_only.join(", ")
                     )
@@ -351,15 +352,19 @@ impl App {
             .filter(|(key, value)| !same_value(&self.settings.requested(key), value))
             .map(|(key, value)| (*key, value.clone()))
             .collect();
-        // A colour of one's own is taken only when it reads; the one in use stays otherwise.
+        // A colour of one's own is taken only when it reads (as its id or
+        // #rrggbb, the shared keys, docs/adr/0126); the one in use stays otherwise.
         let before = changes.len();
-        changes.retain(|(key, value)| {
-            *key != "appearance.accentColor"
-                || value
-                    .as_str()
-                    .and_then(kentos_ui::theme::Accent::parse)
-                    .is_some()
-        });
+        changes = changes
+            .into_iter()
+            .filter_map(|(key, value)| {
+                if key != "appearance.accent" {
+                    return Some((key, value));
+                }
+                let accent = value.as_str().and_then(kentos_ui::theme::Accent::parse)?;
+                Some((key, Value::from(accent.key())))
+            })
+            .collect();
         if changes.len() != before {
             self.warn("Vurgu rengi okunamadı; #RRGGBB biçiminde yazın (ör. #2f80ed). Önceki renk duruyor.");
         }
@@ -578,7 +583,7 @@ pub(crate) fn accent_choice(
                     },
                 ))
                 .on_press(Message::Settings(Edit::Value(
-                    "appearance.accentColor",
+                    "appearance.accent",
                     Value::from(accent.key()),
                 )))
                 .padding(2)
@@ -597,7 +602,7 @@ pub(crate) fn accent_choice(
             ""
         },
     )
-    .on_input(|text| Message::Settings(Edit::Value("appearance.accentColor", Value::from(text))))
+    .on_input(|text| Message::Settings(Edit::Value("appearance.accent", Value::from(text))))
     .width(96)
     .padding([3, 6]);
     let note = match chosen {
@@ -885,14 +890,15 @@ mod tests {
         assert_eq!(said.last(), Some(&"Uygulama ayarları kaydedildi."));
     }
 
-    /// A web settings file: its values the desktop has are taken; its own
-    /// (the web's appearance) are said by name, not dropped in silence
+    /// A web settings file: its values the desktop has are taken, the look
+    /// too (docs/adr/0126; an older one's five text sizes as pixels); its own
+    /// (the classic interface) are said by name, not dropped in silence
     /// (docs/inventory/parity-audit.md A1).
     #[test]
     fn a_web_settings_file_says_what_has_no_place_here() {
         let (mut app, _) = App::boot(None);
         let _ = app.run("tools.options");
-        let body = r#"{"format":"kentos.settings","version":1,"user":{"drafting.snapAperture":16,"appearance.accent":"teal","appearance.uiFont":"inter"}}"#;
+        let body = r#"{"format":"kentos.settings","version":1,"user":{"drafting.snapAperture":16,"appearance.accent":"teal","appearance.uiFont":"inter","appearance.uiScale":"large","appearance.shell":"ribbon"}}"#;
         edit(
             &mut app,
             Edit::Imported(Some(Ok((
@@ -905,11 +911,18 @@ mod tests {
             draft.values.get("drafting.snapAperture"),
             Some(&Value::from(16))
         );
+        for (key, value) in [
+            ("appearance.accent", Value::from("teal")),
+            ("appearance.uiFont", Value::from("inter")),
+            ("appearance.textSize", Value::from(14)),
+        ] {
+            assert_eq!(draft.values.get(key), Some(&value), "{key}");
+        }
         let (warn, note) = draft.note.expect("said");
         assert!(!warn, "nothing invalid");
         assert_eq!(
             note,
-            "“kentos-ayarlar.json” okundu. Değerleri pencerede; Kaydet ile uygulanır. Web uygulamasına özgü 2 değerin masaüstünde karşılığı yok, alınmadı: Vurgu rengi, Yazı tipi. Görünüş tercihleri masaüstünde ayrı tutulur."
+            "“kentos-ayarlar.json” okundu. Değerleri pencerede; Kaydet ile uygulanır. Web uygulamasına özgü 1 değerin masaüstünde karşılığı yok, alınmadı: Arayüz düzeni."
         );
     }
 

@@ -55,7 +55,13 @@ impl SettingDescriptor {
             }
         };
         if !self.choices.is_empty() && !self.choices.iter().any(|c| same_value(&c.value, &value)) {
-            return Err(Code::NotAllowed);
+            // A colour where one may be given instead (the accent).
+            return value
+                .as_str()
+                .filter(|_| self.color)
+                .and_then(color_of)
+                .map(Value::String)
+                .ok_or(Code::NotAllowed);
         }
         Ok(value)
     }
@@ -350,10 +356,11 @@ impl SettingsFile {
     /// Reads a stored or exported settings document (TODOS.md SET-04). A
     /// leading byte order mark is skipped. The format and version are checked
     /// first; another format or version is refused, not guessed. Within the
-    /// layers, a value that is invalid, sensitive or in a layer that cannot
-    /// hold it is dropped and reported; the others are kept. An unknown key
-    /// (from a newer version) is kept as it is and reported, so saving here
-    /// does not lose it.
+    /// layers, an older key is read under today's ([`RENAMED`]); a value
+    /// that is invalid, sensitive or in a layer that cannot hold it is
+    /// dropped and reported; the others are kept. An unknown key (from a
+    /// newer version) is kept as it is and reported, so saving here does
+    /// not lose it.
     pub fn from_json(
         text: &str,
         schema: &SettingsSchema,
@@ -425,12 +432,104 @@ fn whole_number(v: &Value) -> Option<f64> {
     v.as_f64().filter(|n| n.fract() == 0.0)
 }
 
+/// Keys earlier versions kept settings under, and today's (docs/adr/0126):
+/// the desktop's accent, typefaces and the web's five text sizes. Every
+/// settings document, stored or imported, is read through them.
+pub const RENAMED: &[(&str, &str)] = &[
+    ("appearance.accentColor", "appearance.accent"),
+    ("appearance.typeface", "appearance.uiFont"),
+    ("appearance.monoTypeface", "appearance.monoFont"),
+    ("appearance.uiScale", "appearance.textSize"),
+];
+
+/// An older key's value under today's key: `None` when `key` is not an
+/// older key; an error when its value has no reading today.
+///
+/// - the desktop's accent names (`mavi`, `turkuaz` …, as it wrote them)
+///   become the shared ids; near twins join the web's (turkuaz → teal,
+///   kehribar → amber); `#RRGGBB` is kept in lower case;
+/// - the typefaces keep their ids;
+/// - the web's text sizes become pixels: 12, 13, 14, 15 and 16.
+pub fn renamed_setting(
+    key: &str,
+    value: &Value,
+) -> Option<Result<(&'static str, Value), SettingErrorCode>> {
+    let (_, to) = RENAMED.iter().find(|(from, _)| *from == key)?;
+    let Some(word) = value.as_str() else {
+        return Some(Err(Code::WrongType));
+    };
+    let read = match key {
+        "appearance.accentColor" => older_accent(word).map(Value::String),
+        "appearance.uiScale" => match word {
+            "small" => Some(json!(12)),
+            "standard" => Some(json!(13)),
+            "large" => Some(json!(14)),
+            "xlarge" => Some(json!(15)),
+            "xxlarge" => Some(json!(16)),
+            _ => None,
+        },
+        _ => Some(Value::String(word.to_owned())),
+    };
+    Some(read.map(|v| (*to, v)).ok_or(Code::NotAllowed))
+}
+
+/// A colour, `#rrggbb` in either case, as settings keep it: lower case.
+pub fn color_of(text: &str) -> Option<String> {
+    let digits = text.strip_prefix('#')?;
+    (digits.len() == 6 && digits.chars().all(|c| c.is_ascii_hexdigit()))
+        .then(|| format!("#{}", digits.to_ascii_lowercase()))
+}
+
+/// The desktop's accent as it stored it, in today's ids.
+fn older_accent(word: &str) -> Option<String> {
+    let preset = match word {
+        "mavi" => "blue",
+        "turkuaz" => "teal",
+        "yesil" => "green",
+        "kehribar" => "amber",
+        "turuncu" => "orange",
+        "pembe" => "pink",
+        "mor" => "violet",
+        "gri" => "gray",
+        _ => return color_of(word),
+    };
+    Some(preset.to_owned())
+}
+
+/// A layer's older keys under today's: a value already under today's key
+/// wins; an older value with no reading today is dropped and reported
+/// under its older key.
+fn renamed_layer(
+    mut values: Map<String, Value>,
+    scope: SettingScope,
+    diagnostics: &mut Vec<SettingDiagnostic>,
+) -> Map<String, Value> {
+    for (from, _) in RENAMED {
+        let Some(value) = values.remove(*from) else {
+            continue;
+        };
+        match renamed_setting(from, &value) {
+            Some(Ok((to, value))) => {
+                values.entry(to).or_insert(value);
+            }
+            Some(Err(code)) => diagnostics.push(SettingDiagnostic {
+                layer: scope,
+                key: (*from).to_owned(),
+                code,
+            }),
+            None => {}
+        }
+    }
+    values
+}
+
 fn read_layer(
     schema: &SettingsSchema,
     scope: SettingScope,
     values: Map<String, Value>,
     diagnostics: &mut Vec<SettingDiagnostic>,
 ) -> SettingsLayer {
+    let values = renamed_layer(values, scope, diagnostics);
     let mut kept = SettingsLayer::new();
     for (key, value) in values {
         let checked = match schema.get(&key) {

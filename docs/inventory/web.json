@@ -49,8 +49,8 @@
       "pending": 2
     },
     "settings": {
-      "total": 65,
-      "implemented": 65,
+      "total": 66,
+      "implemented": 66,
       "partial": 0,
       "pending": 0
     },
@@ -117,8 +117,8 @@
         "n/a": 0
       },
       "settings": {
-        "total": 65,
-        "implemented": 56,
+        "total": 66,
+        "implemented": 57,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -8377,7 +8377,7 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "desktopWhere": "ayarlar.json appearance.accentColor (Görünüm sekmesi, ADR 0051)"
+      "desktopWhere": "ayarlar.json appearance.accent: iki platformun ortak anahtarı, on hazır renk ya da #rrggbb (Görünüm sekmesi, ADR 0051, 0126)"
     },
     {
       "id": "user.commandBar",
@@ -8689,6 +8689,36 @@
       }
     },
     {
+      "id": "user.textSize",
+      "key": "textSize",
+      "setting": "appearance.textSize",
+      "scope": "user",
+      "persistence": "localStorage kentos.settings.v1",
+      "type": "number",
+      "default": 13,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "ayarlar.json appearance.textSize: iki platformun ortak anahtarı, piksel (Görünüm sekmesi, ADR 0051, 0126)"
+    },
+    {
+      "id": "user.theme",
+      "key": "theme",
+      "setting": "appearance.theme",
+      "scope": "user",
+      "persistence": "localStorage kentos.settings.v1",
+      "type": "string",
+      "default": "dark",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "ayarlar.json appearance.theme: iki platformun ortak anahtarı, dört tema (Görünüm sekmesi, ADR 0051, 0126)"
+    },
+    {
       "id": "user.uiFont",
       "key": "uiFont",
       "setting": "appearance.uiFont",
@@ -8701,22 +8731,7 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "desktopWhere": "ayarlar.json appearance.typeface: web'in yedi yüzü, aynı kimliklerle (Görünüm sekmesi, ADR 0051; crates/ui/assets/fonts)"
-    },
-    {
-      "id": "user.uiScale",
-      "key": "uiScale",
-      "setting": "appearance.uiScale",
-      "scope": "user",
-      "persistence": "localStorage kentos.settings.v1",
-      "type": "string",
-      "default": "standard",
-      "status": "implemented",
-      "platforms": {
-        "web": "implemented",
-        "desktop": "implemented"
-      },
-      "desktopWhere": "ayarlar.json appearance.textSize (Görünüm sekmesi, ADR 0051)"
+      "desktopWhere": "ayarlar.json appearance.uiFont: iki platformun ortak anahtarı, web'in yedi yüzü aynı kimliklerle (Görünüm sekmesi, ADR 0051, 0126; crates/ui/assets/fonts)"
     }
   ],
   "storage": [

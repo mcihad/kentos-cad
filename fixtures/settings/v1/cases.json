@@ -1,9 +1,18 @@
 {
   "format": "kentos.settings-cases",
   "version": 1,
-  "note": "Tipli ayarların ortak durumları (TODOS.md SET-01..05; docs/adr/0023). Web apps/web/src/core/settings (settings.test.ts), masaüstü ve ileride sunucu crates/shared/contracts/src/settings (tests/settings.rs) bu dosyayı okur; iki taraf aynı hata kodunu vermelidir. values: bir değerin doğrulanması (anahtar yoksa unknown_key). writes: bir katmana yazma (anahtar, sonra katman, sonra değer). resolve: katmanlar, kurum politikası ve aygıt kısıtlarıyla istenen ve etkin değer; expect yalnız adı geçen ayarları, diagnostics bütün tanıları sırasız karşılaştırır. files: saklanan ayar belgesi; text ham metin, document JSON nesnesi olarak yazılır. presets: hazır ayarın tanınması ve doldurduğu değerler. Kod değişikliği iki uygulamada ve burada birlikte yapılır.",
+  "note": "Tipli ayarların ortak durumları (TODOS.md SET-01..05; docs/adr/0023). Web apps/web/src/core/settings (settings.test.ts), masaüstü ve ileride sunucu crates/shared/contracts/src/settings (tests/settings.rs) bu dosyayı okur; iki taraf aynı hata kodunu vermelidir. values: bir değerin doğrulanması (anahtar yoksa unknown_key). writes: bir katmana yazma (anahtar, sonra katman, sonra değer). resolve: katmanlar, kurum politikası ve aygıt kısıtlarıyla istenen ve etkin değer; expect yalnız adı geçen ayarları, diagnostics bütün tanıları sırasız karşılaştırır. files: saklanan ayar belgesi; text ham metin, document JSON nesnesi olarak yazılır; eski anahtarlar bugünkülerine okunur (ADR 0126). presets: hazır ayarın tanınması ve doldurduğu değerler. Kod değişikliği iki uygulamada ve burada birlikte yapılır.",
   "values": [
     { "name": "anahtar açık", "key": "drafting.ortho", "value": true, "expect": { "value": true } },
+    { "name": "vurgu: hazır renk", "key": "appearance.accent", "value": "navy", "expect": { "value": "navy" } },
+    { "name": "vurgu: özel renk", "key": "appearance.accent", "value": "#12ab34", "expect": { "value": "#12ab34" } },
+    { "name": "vurgu: özel renk küçük harfe iner", "key": "appearance.accent", "value": "#12AB34", "expect": { "value": "#12ab34" } },
+    { "name": "vurgu: hazır renklerden değil", "key": "appearance.accent", "value": "purple", "expect": { "error": "not_allowed" } },
+    { "name": "vurgu: yarım renk", "key": "appearance.accent", "value": "#12ab3", "expect": { "error": "not_allowed" } },
+    { "name": "vurgu: çok uzun", "key": "appearance.accent", "value": "#12ab34#12ab34#12", "expect": { "error": "out_of_range" } },
+    { "name": "yazı boyu piksel", "key": "appearance.textSize", "value": 16, "expect": { "value": 16 } },
+    { "name": "yazı boyu: aralık dışı", "key": "appearance.textSize", "value": 19, "expect": { "error": "out_of_range" } },
+    { "name": "eski anahtar bilinmez (dosya okunurken çevrilir)", "key": "appearance.uiScale", "value": "large", "expect": { "error": "unknown_key" } },
     { "name": "anahtar: sayı değil", "key": "drafting.ortho", "value": 1, "expect": { "error": "wrong_type" } },
     { "name": "anahtar: metin değil", "key": "drafting.ortho", "value": "true", "expect": { "error": "wrong_type" } },
     { "name": "anahtar: null değil", "key": "drafting.cursorInput", "value": null, "expect": { "error": "wrong_type" } },
@@ -327,6 +336,35 @@
       "name": "bozuk göç kaydı değerleri götürmez",
       "document": { "format": "kentos.settings", "version": 1, "user": { "drafting.cursorInput": false }, "migrations": "dün" },
       "expect": { "user": { "drafting.cursorInput": false }, "device": {}, "migrations": 0, "diagnostics": [] }
+    },
+    {
+      "name": "eski görünüş anahtarları bugünkülerine okunur (ADR 0126)",
+      "document": { "format": "kentos.settings", "version": 1, "user": { "appearance.accentColor": "turkuaz", "appearance.typeface": "inter", "appearance.monoTypeface": "jetbrains", "appearance.uiScale": "large", "appearance.theme": "night" } },
+      "expect": { "user": { "appearance.accent": "teal", "appearance.uiFont": "inter", "appearance.monoFont": "jetbrains", "appearance.textSize": 14, "appearance.theme": "night" }, "device": {}, "migrations": 0, "diagnostics": [] }
+    },
+    {
+      "name": "masaüstünün vurgu adları ve özel renk; web'in yazı boyları piksel olur",
+      "document": { "format": "kentos.settings", "version": 1, "user": { "appearance.accentColor": "#FF8800", "appearance.uiScale": "xxlarge" }, "device": { "appearance.accentColor": "kehribar", "appearance.uiScale": "small" } },
+      "expect": { "user": { "appearance.accent": "#ff8800", "appearance.textSize": 16 }, "device": { "appearance.accent": "amber", "appearance.textSize": 12 }, "migrations": 0, "diagnostics": [] }
+    },
+    {
+      "name": "bugünkü anahtardaki değer eskisini geçer",
+      "document": { "format": "kentos.settings", "version": 1, "user": { "appearance.accent": "bordeaux", "appearance.accentColor": "mor", "appearance.textSize": 17, "appearance.uiScale": "small" } },
+      "expect": { "user": { "appearance.accent": "bordeaux", "appearance.textSize": 17 }, "device": {}, "migrations": 0, "diagnostics": [] }
+    },
+    {
+      "name": "okunamayan eski değer eski adıyla söylenir; çevrilen değer bugünkü adıyla denetlenir",
+      "document": { "format": "kentos.settings", "version": 1, "user": { "appearance.accentColor": "bozuk", "appearance.uiScale": 3, "appearance.typeface": "comic", "appearance.monoTypeface": "plexMono" } },
+      "expect": {
+        "user": { "appearance.monoFont": "plexMono" },
+        "device": {},
+        "migrations": 0,
+        "diagnostics": [
+          { "layer": "user", "key": "appearance.accentColor", "code": "not_allowed" },
+          { "layer": "user", "key": "appearance.uiScale", "code": "wrong_type" },
+          { "layer": "user", "key": "appearance.uiFont", "code": "not_allowed" }
+        ]
+      }
     }
   ],
   "presets": {

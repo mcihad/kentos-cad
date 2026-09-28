@@ -212,8 +212,9 @@ fn settings() -> Vec<SettingDescriptor> {
             "Kenar üzerindeki en yakın nokta; başka kenet yoksa devreye girer.",
         ),
         // ── Appearance ──────────────────────────────────────────────────
-        // The desktop keeps its theme here. The web's theme stays in its layout store
-        // (`kentos.ui.v1`) until its appearance settings move (docs/adr/0023).
+        // The same keys on both platforms (docs/adr/0126): the settings file
+        // carries the look from one to the other. Older keys are read into
+        // these ([`super::renamed_setting`]).
         choice(
             "appearance.theme",
             "dark",
@@ -224,54 +225,69 @@ fn settings() -> Vec<SettingDescriptor> {
                 ("highContrast", "Yüksek karşıtlık"),
             ],
         )
-        .hosts(&[Desktop])
+        .hosts(&[Web, Desktop])
         .text(
             "Tema",
             "Arayüzün renkleri: koyu grafit, açık pafta, karanlık odada parlamayan gece ya da siyah zeminli yüksek karşıtlık.",
         ),
-        // The desktop's own look (KentOS UI's themes, accents and typefaces, docs/adr/0051);
-        // the web keeps its appearance settings below.
-        text("appearance.accentColor", "mavi", 16)
-            .hosts(&[Desktop])
+        // A preset or #rrggbb: the web's four and the desktop's eight, near
+        // twins joined (turkuaz → teal, kehribar → amber), in hue order.
+        text("appearance.accent", "navy", 16)
+            .steps(&[
+                (json!("navy"), "Lacivert"),
+                (json!("blue"), "Mavi"),
+                (json!("teal"), "Petrol yeşili"),
+                (json!("green"), "Yeşil"),
+                (json!("amber"), "Amber"),
+                (json!("orange"), "Turuncu"),
+                (json!("bordeaux"), "Bordo"),
+                (json!("pink"), "Pembe"),
+                (json!("violet"), "Mor"),
+                (json!("gray"), "Gri"),
+            ])
+            .color()
+            .version(2)
+            .hosts(&[Web, Desktop])
             .text(
                 "Vurgu rengi",
-                "Çalışan araç, seçim, odak ve seçili öğelerin rengi: mavi, turkuaz, yeşil, kehribar, turuncu, pembe, mor, gri ya da #RRGGBB. Renk temanın zemininde okunur kalacak kadar ayarlanır.",
+                "Çalışan araç, seçim, odak ve seçili öğeler bu renkle gösterilir; çizimdeki seçim rengi de ona uyar. Hazır renklerden biri ya da #RRGGBB; renk temanın zemininde okunur kalacak kadar ayarlanır.",
             ),
         choice(
-            "appearance.typeface",
-            "plex",
+            "appearance.uiFont",
+            "jakarta",
             &[
-                ("plex", "IBM Plex Sans"),
-                ("inter", "Inter"),
                 ("jakarta", "Plus Jakarta Sans"),
+                ("inter", "Inter"),
+                ("plex", "IBM Plex Sans"),
                 ("source", "Source Sans 3"),
                 ("noto", "Noto Sans"),
                 ("roboto", "Roboto"),
                 ("system", "Sistem yazı tipi"),
             ],
         )
-        .hosts(&[Desktop])
+        .hosts(&[Web, Desktop])
         .text(
             "Yazı tipi",
-            "Menüler, şerit, paneller ve pencerelerin yazısı; çizimdeki yazı nesneleri etkilenmez.",
+            "Menüler, paneller, pencereler ve çizim alanındaki işaret yazıları; çizimdeki yazı nesneleri etkilenmez.",
         ),
         choice(
-            "appearance.monoTypeface",
+            "appearance.monoFont",
             "plexMono",
             &[("plexMono", "IBM Plex Mono"), ("jetbrains", "JetBrains Mono")],
         )
-        .hosts(&[Desktop])
+        .hosts(&[Web, Desktop])
         .text(
             "Eş aralıklı yazı",
-            "Koordinatların, ölçülerin ve komut satırının yazısı.",
+            "Komut satırının, koordinatların ve ifade alanlarının yazısı.",
         ),
         integer("appearance.textSize", 13)
             .range(11.0, 18.0)
             .unit("px")
-            .hosts(&[Desktop])
+            .version(2)
+            .hosts(&[Web, Desktop])
             .text(
                 "Yazı boyutu",
-                "Arayüz metninin boyutu; şerit, paneller ve komut satırı onunla büyür. Çizim etiketleri etkilenmez.",
+                "Menüler, paneller ve komut satırı; arayüz onunla büyür. Çizim etiketleri etkilenmez.",
             ),
         choice(
             "appearance.drawingBackground",
@@ -289,39 +305,6 @@ fn settings() -> Vec<SettingDescriptor> {
             "Çizim alanının zemini, arayüzün temasından bağımsız: temaya uyar, arduvaz, siyah (klasik AutoCAD) ya da kâğıt.",
         ),
         choice(
-            "appearance.accent",
-            "navy",
-            &[
-                ("navy", "Lacivert"),
-                ("amber", "Amber"),
-                ("teal", "Petrol yeşili"),
-                ("bordeaux", "Bordo"),
-            ],
-        )
-        .hosts(&[Web])
-        .text(
-            "Vurgu rengi",
-            "Çalışan araç, seçim, odak ve seçili öğeler bu renkle gösterilir; çizimdeki seçim rengi de ona uyar.",
-        ),
-        choice(
-            "appearance.uiFont",
-            "jakarta",
-            &[
-                ("jakarta", "Plus Jakarta Sans"),
-                ("inter", "Inter"),
-                ("plex", "IBM Plex Sans"),
-                ("source", "Source Sans 3"),
-                ("noto", "Noto Sans"),
-                ("roboto", "Roboto"),
-                ("system", "Sistem yazı tipi"),
-            ],
-        )
-        .hosts(&[Web])
-        .text(
-            "Yazı tipi",
-            "Menüler, paneller, pencereler ve çizim alanındaki işaret yazıları; çizimdeki yazı nesneleri etkilenmez.",
-        ),
-        choice(
             "appearance.shell",
             "classic",
             &[("classic", "Klasik"), ("ribbon", "Şerit")],
@@ -330,22 +313,6 @@ fn settings() -> Vec<SettingDescriptor> {
         .text(
             "Arayüz düzeni",
             "Menüler, araç çubuğu ve kayan araç kutusu ya da sekmeli şerit; ikisi aynı araç ve komutları sunar.",
-        ),
-        choice(
-            "appearance.uiScale",
-            "standard",
-            &[
-                ("small", "Küçük"),
-                ("standard", "Standart"),
-                ("large", "Büyük"),
-                ("xlarge", "Çok büyük"),
-                ("xxlarge", "En büyük"),
-            ],
-        )
-        .hosts(&[Web])
-        .text(
-            "Yazı boyutu",
-            "Menüler, paneller ve komut satırı. Çizim etiketleri etkilenmez.",
         ),
         choice(
             "appearance.crosshair",
@@ -605,6 +572,7 @@ fn build(key: &str, kind: SettingType, default: Value) -> Build {
         min: None,
         max: None,
         choices: Vec::new(),
+        color: false,
         unit: None,
         scope: SettingScope::User,
         hosts: Vec::new(),
@@ -670,6 +638,18 @@ impl Build {
                 label: (*label).into(),
             })
             .collect();
+        self
+    }
+
+    /// A text that may also be `#rrggbb` besides its choices.
+    fn color(mut self) -> Self {
+        self.0.color = true;
+        self
+    }
+
+    /// A change of meaning or domain: a new version (docs/adr/0023).
+    fn version(mut self, version: u32) -> Self {
+        self.0.version = version;
         self
     }
 

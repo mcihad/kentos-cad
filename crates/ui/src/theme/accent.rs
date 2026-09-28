@@ -1,8 +1,11 @@
 //! Vurgu rengi: etkin araç, seçim, odak, birincil düğmeler ve öndeki
 //! pencerenin çizgisi.
 //!
-//! Sekiz hazır renk vardır; her birinin koyu ve aydınlık tema için ayrı
-//! tonu seçilmiştir. Kullanıcı kendi rengini `#RRGGBB` olarak da verebilir:
+//! On hazır renk vardır: web'in dördü (lacivert, amber, petrol yeşili,
+//! bordo; tonları web'in `accents.css`'inden) ve KentOS UI'nin öbürleri;
+//! ikisinin ortak ayarı `appearance.accent`tır (docs/adr/0126). Her birinin
+//! koyu ve aydınlık tema için ayrı tonu seçilmiştir. Kullanıcı kendi rengini
+//! `#RRGGBB` olarak da verebilir:
 //! renk, temanın zemininde okunur kalacak kadar açılır ya da koyulaştırılır.
 //! Vurgu zeminindeki yazı, rengin açıklığına göre beyaz ya da koyu olur
 //! ([`Tokens::with_accent`](super::Tokens::with_accent)).
@@ -28,13 +31,17 @@ const NIGHT_DIM: f32 = 0.12;
 /// Vurgu rengi.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum Accent {
-    /// Mavi: KentOS'un varsayılanı.
+    /// Lacivert: KentOS'un varsayılanı (DESIGN.md §3.5).
     #[default]
+    Navy,
     Blue,
-    Turquoise,
+    /// Petrol yeşili.
+    Teal,
     Green,
     Amber,
     Orange,
+    /// Bordo.
+    Bordeaux,
     Pink,
     Violet,
     /// Renksiz, sakin bir vurgu.
@@ -44,13 +51,15 @@ pub enum Accent {
 }
 
 impl Accent {
-    /// Hazır renkler, seçim listelerindeki sırasıyla.
-    pub const PRESETS: [Accent; 8] = [
+    /// Hazır renkler, seçim listelerindeki sırasıyla (renk çemberinde).
+    pub const PRESETS: [Accent; 10] = [
+        Accent::Navy,
         Accent::Blue,
-        Accent::Turquoise,
+        Accent::Teal,
         Accent::Green,
         Accent::Amber,
         Accent::Orange,
+        Accent::Bordeaux,
         Accent::Pink,
         Accent::Violet,
         Accent::Gray,
@@ -59,11 +68,13 @@ impl Accent {
     /// Arayüzde gösterilen adı; kullanıcının renginde `#rrggbb`.
     pub fn name(self) -> String {
         let name = match self {
+            Accent::Navy => "Lacivert",
             Accent::Blue => "Mavi",
-            Accent::Turquoise => "Turkuaz",
+            Accent::Teal => "Petrol yeşili",
             Accent::Green => "Yeşil",
-            Accent::Amber => "Kehribar",
+            Accent::Amber => "Amber",
             Accent::Orange => "Turuncu",
+            Accent::Bordeaux => "Bordo",
             Accent::Pink => "Pembe",
             Accent::Violet => "Mor",
             Accent::Gray => "Gri",
@@ -73,25 +84,44 @@ impl Accent {
         name.to_owned()
     }
 
-    /// Ayar dosyasındaki adı: "mavi", "#ff8800".
+    /// Ayar dosyasındaki adı (`appearance.accent`, iki platformda aynı):
+    /// "navy", "#ff8800".
     pub fn key(self) -> String {
-        match self {
-            Accent::Custom(_) => self.name(),
-            preset => ascii(&preset.name()),
-        }
+        let id = match self {
+            Accent::Navy => "navy",
+            Accent::Blue => "blue",
+            Accent::Teal => "teal",
+            Accent::Green => "green",
+            Accent::Amber => "amber",
+            Accent::Orange => "orange",
+            Accent::Bordeaux => "bordeaux",
+            Accent::Pink => "pink",
+            Accent::Violet => "violet",
+            Accent::Gray => "gray",
+            Accent::Custom(_) => return self.name(),
+        };
+
+        id.to_owned()
     }
 
-    /// Hazır rengin adı ya da `#RRGGBB` (başındaki # isteğe bağlı);
-    /// büyük/küçük harf ve Türkçe karakter ayırmaz.
+    /// Hazır rengin ayar adı ya da Türkçe adı ya da `#RRGGBB` (başındaki #
+    /// isteğe bağlı); büyük/küçük harf ve Türkçe karakter ayırmaz. Eski
+    /// adlar da okunur: turkuaz petrol yeşili, kehribar amberdir.
     pub fn parse(text: &str) -> Option<Self> {
         let text = text.trim();
         let key = ascii(text);
 
         if let Some(preset) = Self::PRESETS
             .into_iter()
-            .find(|preset| ascii(&preset.name()) == key)
+            .find(|preset| preset.key() == key || ascii(&preset.name()) == key)
         {
             return Some(preset);
+        }
+
+        match key.as_str() {
+            "turkuaz" => return Some(Accent::Teal),
+            "kehribar" => return Some(Accent::Amber),
+            _ => {}
         }
 
         let digits = text.strip_prefix('#').unwrap_or(text);
@@ -124,13 +154,17 @@ impl Accent {
     }
 
     /// Hazır rengin temadaki tonu ya da kullanıcının rengi, düzeltilmeden.
+    /// Web'in dört rengi web'in tonlarıdır (`accents.css`): koyu temada
+    /// dolgusu, aydınlıkta yazı olarak okunan tonu.
     fn tone(self, mode: Mode) -> Color {
         let (dark, light) = match self {
+            Accent::Navy => (0x4c7fe0, 0x1f4a96),
             Accent::Blue => (0x4c9be8, 0x1b6fd0),
-            Accent::Turquoise => (0x2db5ac, 0x08766f),
+            Accent::Teal => (0x2aa99d, 0x0c6660),
             Accent::Green => (0x3cb483, 0x137a4b),
-            Accent::Amber => (0xe2a93b, 0x8c5c00),
+            Accent::Amber => (0xf2b632, 0x8f5f00),
             Accent::Orange => (0xee8446, 0xb04a0b),
+            Accent::Bordeaux => (0xc24a63, 0x8a1f37),
             Accent::Pink => (0xe3689b, 0xbc2c6b),
             Accent::Violet => (0x9d86f0, 0x6547cf),
             Accent::Gray => (0xaeb6c0, 0x4f5863),
@@ -201,13 +235,19 @@ mod tests {
 
     #[test]
     fn names_and_hex_codes_are_parsed() {
+        assert_eq!(Accent::parse("navy"), Some(Accent::Navy));
+        assert_eq!(Accent::parse("Lacivert"), Some(Accent::Navy));
         assert_eq!(Accent::parse("mavi"), Some(Accent::Blue));
         assert_eq!(Accent::parse("  YEŞİL "), Some(Accent::Green));
+        assert_eq!(Accent::parse("petrol yeşili"), Some(Accent::Teal));
+        assert_eq!(Accent::parse("bordeaux"), Some(Accent::Bordeaux));
+        // Older names.
         assert_eq!(Accent::parse("kehribar"), Some(Accent::Amber));
+        assert_eq!(Accent::parse("turkuaz"), Some(Accent::Teal));
         assert_eq!(Accent::parse("#FF8800"), Some(Accent::Custom(0xff8800)));
         assert_eq!(Accent::parse("ff8800"), Some(Accent::Custom(0xff8800)));
         assert_eq!(Accent::parse("#ff880"), None);
-        assert_eq!(Accent::parse("lacivert"), None);
+        assert_eq!(Accent::parse("purple"), None);
 
         for accent in Accent::PRESETS
             .into_iter()

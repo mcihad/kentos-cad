@@ -80,7 +80,9 @@ const MIGRATED: PreferencesData = {
   snapTangent: true,
   polarIncrement: 30,
   crosshair: 'full',
-  uiScale: 'large',
+  // The older five sizes are pixels now (docs/adr/0126); the theme was never here.
+  theme: 'dark',
+  textSize: 14,
   accent: 'teal',
   uiFont: 'inter',
   rendererPreference: 'webgpu',
@@ -133,7 +135,7 @@ describe('the one migration of kentos.prefs.v1', () => {
   });
 
   it('leaves behind only what the rules refuse, names it, and keeps it in the old entry', () => {
-    const old = JSON.stringify({ snapAperture: 40, polarIncrement: 22.5, accent: 'purple', renderQuality: 'ultra', cursorInput: 'yes', olderSetting: 1, uiScale: 'large' });
+    const old = JSON.stringify({ snapAperture: 40, polarIncrement: 22.5, accent: 'purple', renderQuality: 'ultra', cursorInput: 'yes', olderSetting: 1, uiScale: 'large', uiFont: 'comic' });
     const storage = new MemoryStorage({ [LEGACY_PREFS]: old });
     const store = SettingsStore.open(storage, () => AT);
     expect(store.report.migrated?.moved).toBe(1);
@@ -144,8 +146,9 @@ describe('the one migration of kentos.prefs.v1', () => {
       ['renderQuality', 'not_allowed'],
       ['cursorInput', 'wrong_type'],
       ['olderSetting', 'unknown_key'],
+      ['uiFont', 'not_allowed'],
     ]);
-    expect(store.requested('appearance.uiScale')).toBe('large');
+    expect(store.requested('appearance.textSize')).toBe(14);
     expect(store.requested('drafting.snapAperture')).toBe(11);
     expect(storage.getItem(LEGACY_PREFS)).toBe(old);
   });
@@ -234,17 +237,17 @@ describe('writing, reset, export and import', () => {
   it('reset forgets the stored values; export and import carry them across', () => {
     const storage = new MemoryStorage();
     const store = SettingsStore.open(storage, () => AT);
-    store.choose({ 'drafting.snapAperture': 17, 'graphics.msaa': 8, 'appearance.uiScale': 'xlarge' });
+    store.choose({ 'drafting.snapAperture': 17, 'graphics.msaa': 8, 'appearance.textSize': 15 });
     const text = store.exportText();
     store.reset();
     expect([store.requested('drafting.snapAperture'), store.requested('graphics.msaa')]).toEqual([11, 4]);
     const other = SettingsStore.open(new MemoryStorage(), () => AT);
     expect(other.importText(text)).toEqual({ ok: true, diagnostics: [] });
-    expect([other.requested('drafting.snapAperture'), other.requested('graphics.msaa'), other.requested('appearance.uiScale')]).toEqual([17, 8, 'xlarge']);
+    expect([other.requested('drafting.snapAperture'), other.requested('graphics.msaa'), other.requested('appearance.textSize')]).toEqual([17, 8, 15]);
     // A file that is not a settings document changes nothing.
     expect(other.importText('{"format":"kentos.document","version":1}')).toEqual({ ok: false, code: 'not_settings' });
     expect(other.requested('drafting.snapAperture')).toBe(17);
-    store.reset(['appearance.uiScale']);
+    store.reset(['appearance.textSize']);
     expect(JSON.parse(store.exportText()).user).toEqual({});
   });
 
@@ -310,7 +313,8 @@ describe('preferences over the settings service', () => {
     }
     // The choices the schema offers are the app's own lists.
     const choices = (key: string) => settingDescriptor(key)!.choices!.map((c) => c.value);
-    expect(choices('appearance.accent')).toEqual(ACCENTS.map((a) => a.id));
+    // The web draws four of the shared accents; the six others and a colour of one's own come next (docs/adr/0126).
+    expect(ACCENTS.map((a) => a.id).every((id) => choices('appearance.accent').includes(id))).toBe(true);
     expect(choices('appearance.uiFont')).toEqual(UI_FONTS.map((f) => f.id));
     expect(choices('newProjects.drawingFont')).toEqual(DRAWING_FONTS.map((f) => f.id));
     expect(choices('project.drawingFont')).toEqual(DRAWING_FONTS.map((f) => f.id));

@@ -1,14 +1,24 @@
 /**
  * Look of the interface that each user picks for themselves (Uygulama
- * ayarları → Görünüm): the accent colour and the typeface. Both are CSS
- * only: an accent is a set of token values (styles/accents.css, amber is
- * tokens.css itself), a typeface one of the families bundled with the app
- * (styles/fonts.css, assets/fonts; never fetched from a CDN).
+ * ayarları → Görünüm): the theme, the accent colour, the typeface and the
+ * text size. All are CSS only: a theme and an accent are sets of token
+ * values (styles/tokens.css, styles/accents.css; amber is tokens.css
+ * itself), a typeface one of the families bundled with the app
+ * (styles/fonts.css, assets/fonts; never fetched from a CDN). The desktop
+ * keeps the same settings under the same keys (docs/adr/0126).
  */
 
 import type { DrawingFont } from '../model/projectSettings';
 
-export type AccentId = 'navy' | 'amber' | 'teal' | 'bordeaux';
+/** The themes (`appearance.theme`); night and high contrast are dark ones. */
+export type ThemeId = 'dark' | 'light' | 'night' | 'highContrast';
+
+/**
+ * An accent (`appearance.accent`): a preset's id or `#rrggbb`. The web
+ * draws the presets it has tokens for and the others as its default until
+ * it has them (docs/adr/0126).
+ */
+export type AccentId = string;
 
 export interface AccentSpec {
   readonly id: AccentId;
@@ -87,6 +97,23 @@ export async function applyDrawingFont(id: DrawingFont): Promise<void> {
 }
 
 export const accentById = (id: AccentId): AccentSpec => ACCENTS.find((a) => a.id === id) ?? ACCENTS[0];
+
+/** The interface's text size in pixels at which --ui-scale is 1 (`appearance.textSize`). */
+export const BASE_TEXT_SIZE = 13;
+
+/** The web's five sizes as they were, in pixels (Uygulama ayarları → Görünüm → Yazı boyutu). */
+export const TEXT_SIZES: readonly { readonly px: number; readonly label: string }[] = [
+  { px: 12, label: 'Küçük' },
+  { px: 13, label: 'Standart' },
+  { px: 14, label: 'Büyük' },
+  { px: 15, label: 'Çok büyük' },
+  { px: 16, label: 'En büyük' },
+];
+
+/** Every size token derives from --ui-scale: the text size over the base. */
+export function applyTextSize(px: number): void {
+  document.documentElement.style.setProperty('--ui-scale', String(px / BASE_TEXT_SIZE));
+}
 export const uiFontById = (id: UiFontId): UiFontSpec => UI_FONTS.find((f) => f.id === id) ?? UI_FONTS[0];
 
 /** Sets the accent tokens (the drawing's colours are read again by the caller: view.refreshPalette). */

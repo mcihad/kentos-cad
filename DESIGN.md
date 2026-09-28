@@ -108,7 +108,7 @@ Serin, kâğıt paftayı andıran griler. Krem ya da sıcak kâğıt tonu kullan
 
 ### 3.5 Vurgu rengi seçenekleri
 
-**Uygulama ayarları → Görünüm → Vurgu rengi** (`prefs.accent`, `app/appearance.ts`): **Lacivert** (varsayılan), Amber (§3.1–3.2'deki değerler), Petrol yeşili, Bordo. Her seçenek aynı jetonları yeniden tanımlar (`styles/accents.css`: `--c-accent`, `--c-accent-ink`, `--c-accent-text`, `--c-accent-soft`, `--c-accent-line`, `--c-tooltip-accent`, `--canvas-accent`) ve temaya göre ayarlanır: koyu temada okunabilsin diye açık bir ton (lacivertte `#4c7fe0` dolgu, `#8fb3f5` metin), açık temada koyu ton (lacivertte `#1f4a96`). Lacivert, petrol ve bordoda dolgu üstündeki mürekkep beyazdır. Çizimdeki seçim rengi (`--canvas-accent`) vurguyu izler. Uyarı turuncusu (`--c-warn`), kenet yeşili ve hata kırmızısı hiçbir seçenekte değişmez. Seçimde her renk, yarısı koyu temanın yarısı açık temanın tonu olan yuvarlak bir örnekle gösterilir.
+**Uygulama ayarları → Görünüm → Vurgu rengi** (`appearance.accent`; iki platformda aynı ayar, [ADR 0126](docs/adr/0126-shared-appearance-settings.md)): renk çemberinin sırasıyla **Lacivert** (varsayılan), Mavi, Petrol yeşili, Yeşil, Amber (§3.1–3.2'deki değerler), Turuncu, Bordo, Pembe, Mor, Gri ya da kullanıcının kendi rengi (`#RRGGBB`; temanın zemininde okunur kalacak kadar açılır ya da koyulaşır). Web'de lacivert, amber, petrol ve bordonun jetonları elle ayarlanmıştır; bu dört seçenek aynı jetonları yeniden tanımlar (`styles/accents.css`: `--c-accent`, `--c-accent-ink`, `--c-accent-text`, `--c-accent-soft`, `--c-accent-line`, `--c-tooltip-accent`, `--canvas-accent`) ve temaya göre ayarlanır: koyu temada okunabilsin diye açık bir ton (lacivertte `#4c7fe0` dolgu, `#8fb3f5` metin), açık temada koyu ton (lacivertte `#1f4a96`). Lacivert, petrol ve bordoda dolgu üstündeki mürekkep beyazdır. Çizimdeki seçim rengi (`--canvas-accent`) vurguyu izler. Uyarı turuncusu (`--c-warn`), kenet yeşili ve hata kırmızısı hiçbir seçenekte değişmez. Seçimde her renk, yarısı koyu temanın yarısı açık temanın tonu olan yuvarlak bir örnekle gösterilir.
 
 ### 3.6 Çizim kalitesi
 
@@ -126,9 +126,9 @@ Serin, kâğıt paftayı andıran griler. Krem ya da sıcak kâğıt tonu kullan
 
 | Aile | Kullanım |
 |---|---|
-| **Plus Jakarta Sans** (varsayılan; değişken ağırlık) | Bütün arayüz metni. **Uygulama ayarları → Görünüm → Yazı tipi** (`prefs.uiFont`) ile Inter, IBM Plex Sans, Source Sans 3, Noto Sans, Roboto ya da sistemin yazı tipi seçilir. |
+| **Plus Jakarta Sans** (varsayılan, iki platformda; değişken ağırlık) | Bütün arayüz metni. **Uygulama ayarları → Görünüm → Yazı tipi** (`appearance.uiFont`, ADR 0126) ile Inter, IBM Plex Sans, Source Sans 3, Noto Sans, Roboto ya da sistemin yazı tipi seçilir. |
 | **Barlow** (varsayılan çizim yazı tipi) | Çizimin kendi yazıları: yazı nesneleri, ölçü değerleri, etiketler (üst katman). **Proje ayarları → Genel → Çizim yazı tipi** (`doc.settings.drawingFont`, projeyle kaydedilir; yeni projelerin varsayılanı Uygulama ayarları → Yeni projeler) ile klasik teknik çizim yazıları seçilir: Arimo (Arial ölçülerinde), Overpass (DIN/ISO), Quicksand (ince, yuvarlak uçlu; plotter yazısına benzer), Architects Daughter (mimari el yazısı), Courier Prime (daktilo), IBM Plex Mono. Veridir; arayüz yazı tipi seçimini izlemez. |
-| **IBM Plex Mono** (400, 500) | **Yalnızca** komut satırı girdisi, komut geçmişi, takma ad gösterimi (`PL`, `PARSEL`) ve işlem pencerelerindeki ifade alanı (komut gibi yazılır). Veri etiketlerinde mono kullanılmaz. |
+| **IBM Plex Mono** (400, 500; `appearance.monoFont` ile JetBrains Mono) | **Yalnızca** komut satırı girdisi, komut geçmişi, takma ad gösterimi (`PL`, `PARSEL`) ve işlem pencerelerindeki ifade alanı (komut gibi yazılır). Veri etiketlerinde mono kullanılmaz. |
 
 **Yazı tipleri uygulamayla gelir, CDN'den ya da internetten yüklenmez** (`apps/web/src/assets/fonts/<ad>/`, her birinin yanında SIL OFL 1.1 lisansı; `styles/fonts.css`). Yalnız Latin ve Latin Extended alt kümeleri vardır (ğ, ş, İ ikincisindedir); tarayıcı yalnız kullanılan yazı tipini indirir. Seçim kartında her yazı tipi kendisiyle yazılır (“Ağ Şı İ 123”). Arayüz yazı tipi çizim alanındaki işaretlere (kenet adı, ölçek çubuğu, kuzey oku) de uygulanır; çizimdeki yazı nesneleri, ölçü değerleri ve etiketler veridir, yazı tipi değişmez. Masaüstü aynı yüzleri web'in dosyalarından üretilmiş TrueType olarak taşır (`apps/desktop/assets/fonts/drawing`, [ADR 0055](docs/adr/0055-desktop-drawing-text.md)).
 
@@ -136,7 +136,7 @@ Rakamlar her yerde **tabular** (`.num` sınıfı ya da `font-variant-numeric: ta
 
 ### 4.1 Ölçek
 
-Bütün boyutlar `--ui-scale` ile çarpılır. **Uygulama ayarları → Görünüm → Yazı boyutu** değerleri: Küçük 0,93, Standart 1, Büyük 1,08, Çok büyük 1,16, En büyük 1,25. En büyükte de şerit 1100 px'te her sekmeye sığar.
+Bütün boyutlar `--ui-scale` ile çarpılır. **Uygulama ayarları → Görünüm → Yazı boyutu** piksel olarak saklanır (`appearance.textSize`, 11–18, varsayılan 13; iki platformda aynı ayar, ADR 0126); web'de `--ui-scale` = boyut / 13. Hazır adımlar: Küçük 12, Standart 13, Büyük 14, Çok büyük 15, En büyük 16. En büyükte de şerit 1100 px'te her sekmeye sığar.
 
 | Jeton | Standart | Kullanım |
 |---|---|---|
@@ -289,7 +289,7 @@ Menü çubuğu, araç çubuğu ve araç kutusunun sekmeli karşılığıdır; Uy
 - **Klavye:** sekmelerde ←/→, Home/End; ↓ panellere iner; panellerde oklar düğmeler arasında gezer, Esc sekmeye döner. Düğmeye fareyle tıklamak odağı almaz: Enter son komutu yinelemeye devam eder.
 - Hareket yoktur: açılma, daralma ve panel küçülmesi anlıktır (§12).
 - Şeritle birlikte araç kutusu kapalıdır (Görünüm → Araç kutusu ya da F9 ile açılır ve ayrı hatırlanır).
-- **Masaüstü** (KentOS UI, ADR 0051): aynı sığdırma kuralı ve seviyeler; genişlikler yazı ölçümünden hesaplanır. Katlanmış panel tıklayınca araçlarını menüde açar (aileler alt menü, seyrek araçlar “Diğer araçlar”). Düğmeler web'in ölçülerindedir ve web'in ikonlarını taşır (envanterden, [ADR 0054](docs/adr/0054-desktop-draws-the-web-icons.md)): satır 24 px, büyük ikon 28 px ve sabit 1,55 px çizgi; ikon dinlenirken ikincil, üzerine gelince ana renk; çalışan araç dolu vurgu, açık anahtar yumuşak vurgu. Görünüm sekmesinde web panellerinden sonra arayüzün kendi grupları durur: Tema (Koyu, Aydınlık, Gece, Yüksek karşıtlık; sekiz vurgu ve özel renk), Çizim zemini (temaya uy, arduvaz, siyah, kâğıt), Yazı tipi (IBM Plex Sans, Inter, Plus Jakarta Sans), Eş aralıklı (IBM Plex Mono, JetBrains Mono) ve Yazı boyutu (11–18 px). Web'in Tema ve Çizim motoru menüleri masaüstünde yoktur.
+- **Masaüstü** (KentOS UI, ADR 0051): aynı sığdırma kuralı ve seviyeler; genişlikler yazı ölçümünden hesaplanır. Katlanmış panel tıklayınca araçlarını menüde açar (aileler alt menü, seyrek araçlar “Diğer araçlar”). Düğmeler web'in ölçülerindedir ve web'in ikonlarını taşır (envanterden, [ADR 0054](docs/adr/0054-desktop-draws-the-web-icons.md)): satır 24 px, büyük ikon 28 px ve sabit 1,55 px çizgi; ikon dinlenirken ikincil, üzerine gelince ana renk; çalışan araç dolu vurgu, açık anahtar yumuşak vurgu. Görünüm sekmesinde web panellerinden sonra arayüzün kendi grupları durur: Tema (Koyu, Aydınlık, Gece, Yüksek karşıtlık; on vurgu ve özel renk), Çizim zemini (temaya uy, arduvaz, siyah, kâğıt), Yazı tipi (IBM Plex Sans, Inter, Plus Jakarta Sans), Eş aralıklı (IBM Plex Mono, JetBrains Mono) ve Yazı boyutu (11–18 px). Web'in Tema ve Çizim motoru menüleri masaüstünde yoktur.
 
 ### 7.3.2 Çalışma modları
 

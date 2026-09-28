@@ -9,7 +9,7 @@
  */
 import type { SettingDiagnostic } from '../../contracts/generated/SettingDiagnostic';
 import type { SettingsMigration } from '../../contracts/generated/SettingsMigration';
-import { checkWrite, type SettingsLayer } from '../../core/settings/rules';
+import { checkWrite, renamedSetting, type SettingsLayer } from '../../core/settings/rules';
 import { SETTINGS_SCHEMA, settingDescriptor } from '../../core/settings/schema';
 
 export const LEGACY_PREFS = 'kentos.prefs.v1';
@@ -75,7 +75,14 @@ export function migrateLegacyPrefs(text: string, at: Date): Migrated {
   } catch {
     old = null;
   }
-  const put = (field: string, key: string, value: unknown) => {
+  const put = (field: string, older: string, given: unknown) => {
+    // A setting renamed since (the web's five text sizes are pixels now, docs/adr/0126) is read under today's key.
+    const renamed = renamedSetting(older, given);
+    if (renamed && !renamed.ok) {
+      dropped.push({ layer: 'user', key: field, code: renamed.code });
+      return;
+    }
+    const [key, value] = renamed ? [renamed.key, renamed.value] : [older, given];
     const d = settingDescriptor(key)!;
     const layer = d.scope === 'device' ? 'device' : 'user';
     const checked = checkWrite(SETTINGS_SCHEMA, layer, key, value);

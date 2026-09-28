@@ -27,6 +27,11 @@ max?: number,
  */
 choices?: Array<SettingChoice>, 
 /**
+ * A text that may also be a colour, `#rrggbb`, besides its choices
+ * (the accent, docs/adr/0126); kept in lower case.
+ */
+color?: boolean, 
+/**
  * Unit of a number: `px`, `deg`, `sample`.
  */
 unit?: string, scope: SettingScope, hosts: Array<SettingHost>, 

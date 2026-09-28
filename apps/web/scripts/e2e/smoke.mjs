@@ -302,14 +302,14 @@ try {
           fit: document.querySelector('.toolbar').dataset.fit,
         };
       })()`);
-    const scaleTo = (name, value) => b.eval(`(() => { document.documentElement.style.setProperty('--ui-scale', '${value}'); window.kentos.prefs.uiScale.set('${name}'); })()`);
+    const scaleTo = (px) => b.eval(`window.kentos.prefs.textSize.set(${px})`);
     await b.send('Emulation.setDeviceMetricsOverride', { width: 1100, height: 650, deviceScaleFactor: 1, mobile: false });
     await sleep(300);
     const standard = await bars();
-    await scaleTo('xxlarge', 1.25);
+    await scaleTo(16);
     await sleep(300);
     const largest = await bars();
-    await scaleTo('standard', 1);
+    await scaleTo(13);
     await b.send('Emulation.setDeviceMetricsOverride', { width: 1600, height: 900, deviceScaleFactor: 1, mobile: false });
     await sleep(300);
     const wide = await bars();
@@ -1572,7 +1572,7 @@ try {
     await b.key('z', { ctrl: true });
     check('SVG editor takes the array back in one undo step', (await svgShapes()).length === 2);
     // The editor in both themes and at the "Büyük" size, a path's nodes on show; the preview ink follows the theme.
-    const theme0 = await b.eval('window.kentos.ui.theme.value');
+    const theme0 = await b.eval('window.kentos.prefs.theme.value');
     await b.click(...(await docPt(12, 30)));
     await b.key('a');
     const rectFill = () => b.eval(`document.querySelector('.svge__svg > g:first-child rect[data-id]')?.getAttribute('fill') ?? ''`);
@@ -2231,7 +2231,7 @@ try {
         k.selection.clear();
       })()`);
     const gisThemed = async (name) => {
-      const theme0 = await b.eval('window.kentos.ui.theme.value');
+      const theme0 = await b.eval('window.kentos.prefs.theme.value');
       for (const t of ['dark', 'light']) {
         await b.eval(`window.kentos.commands.execute('view.theme.${t}')`);
         await sleep(200);

@@ -98,9 +98,9 @@ impl Section {
         match self {
             Self::Appearance => &[
                 "appearance.theme",
-                "appearance.accentColor",
-                "appearance.typeface",
-                "appearance.monoTypeface",
+                "appearance.accent",
+                "appearance.uiFont",
+                "appearance.monoFont",
                 "appearance.textSize",
                 "appearance.crosshair",
                 "appearance.drawingBackground",
@@ -311,13 +311,13 @@ impl App {
             )
             .help(Fields::help("appearance.theme"))
             .field(
-                Fields::title("appearance.accentColor"),
+                Fields::title("appearance.accent"),
                 accent_choice(
-                    f.value("appearance.accentColor").as_str().unwrap_or("mavi"),
+                    f.value("appearance.accent").as_str().unwrap_or("navy"),
                     self.mode,
                 ),
             )
-            .help(Fields::help("appearance.accentColor"))
+            .help(Fields::help("appearance.accent"))
             .field(
                 Fields::title("appearance.drawingBackground"),
                 choices(
@@ -328,18 +328,15 @@ impl App {
             .help(Fields::help("appearance.drawingBackground"))
             .section("Yazı")
             .field(
-                Fields::title("appearance.typeface"),
-                listed("appearance.typeface", &f.value("appearance.typeface")),
+                Fields::title("appearance.uiFont"),
+                listed("appearance.uiFont", &f.value("appearance.uiFont")),
             )
-            .help(Fields::help("appearance.typeface"))
+            .help(Fields::help("appearance.uiFont"))
             .field(
-                Fields::title("appearance.monoTypeface"),
-                choices(
-                    "appearance.monoTypeface",
-                    &f.value("appearance.monoTypeface"),
-                ),
+                Fields::title("appearance.monoFont"),
+                choices("appearance.monoFont", &f.value("appearance.monoFont")),
             )
-            .help(Fields::help("appearance.monoTypeface"))
+            .help(Fields::help("appearance.monoFont"))
             .field(
                 Fields::title("appearance.textSize"),
                 f.pixels("appearance.textSize", 13.0),
@@ -433,7 +430,7 @@ impl App {
             .label_width(170.0)
             .section("Dışa ve içe aktarma")
             .field("Dışa aktar", action("Dışa aktar…", Edit::Export))
-            .help("Kaydedilmiş uygulama ayarlarını bir kentos.settings dosyasına yazar. Web uygulaması da aynı dosyayı okur; görünüş tercihleri iki uygulamada ayrı tutulur.")
+            .help("Kaydedilmiş uygulama ayarlarını bir kentos.settings dosyasına yazar. Web uygulaması da aynı dosyayı okur; tema, vurgu rengi, yazı tipi ve yazı boyutu da onunla taşınır.")
             .field("İçe aktar", action("İçe aktar…", Edit::Import))
             .help("Bir ayar dosyasının değerleri bu pencereye gelir; Kaydet ile uygulanır. Geçersiz değerler alınmaz ve adıyla söylenir.");
         if let Some((warn, note)) = &draft.note {

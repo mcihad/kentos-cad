@@ -181,7 +181,7 @@ class SvgEditor implements CanvasHost, PropsHost, FileHost, ActionsHost, MenuHos
       onClose: () => themeSub(),
       stack: true,
     });
-    const themeSub = ctx.ui.theme.subscribe(() => this.refresh());
+    const themeSub = ctx.prefs.theme.subscribe(() => this.refresh());
     if (skipped.length) this.status(`Açılırken: ${skipped.join(', ')}.`, 'warn');
     else if (original && !this.editable) this.status('Sistem çizimi: kaydedince Kitaplığım\'a kopyası yazılır.');
     this.refresh();

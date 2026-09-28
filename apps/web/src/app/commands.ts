@@ -8,7 +8,7 @@ import { pasteEntities, PasteTool } from '../tools/editTools';
 import { Signal } from '../core/signal';
 import { TOOL_GROUP_LABEL } from '../tools/Tool';
 import type { AppContext } from './context';
-import type { Theme, UiScale } from './state';
+import type { ThemeId } from './appearance';
 import { WORKSPACES, type WorkspaceSpec } from './workspaces';
 
 /** Features that exist in the menu but are not built yet say so plainly. */
@@ -103,18 +103,18 @@ function renderer(ctx: AppContext, kind: BackendKind, title: string, description
   };
 }
 
-export function applyTheme(ctx: AppContext, theme: Theme): void {
-  document.documentElement.dataset.theme = theme;
-  // Palette first: theme subscribers (layer swatches) read it.
-  ctx.view.refreshPalette();
-  ctx.ui.theme.set(theme);
+/** Chooses the theme: kept as the setting `appearance.theme` (docs/adr/0126); createApp shows it as it changes. */
+export function applyTheme(ctx: AppContext, theme: ThemeId): void {
+  ctx.prefs.theme.set(theme);
 }
 
-/** Type scale multiplier; every font/size token is derived from --ui-scale. */
-export const UI_SCALE: Record<UiScale, number> = { small: 0.93, standard: 1, large: 1.08, xlarge: 1.16, xxlarge: 1.25 };
-
-export function applyUiScale(scale: UiScale): void {
-  document.documentElement.style.setProperty('--ui-scale', String(UI_SCALE[scale] ?? 1));
+/**
+ * Shows the theme in use: the tokens (tokens.css) and the drawing's
+ * palette, which theme subscribers (layer swatches) read after it.
+ */
+export function showTheme(ctx: AppContext): void {
+  document.documentElement.dataset.theme = ctx.prefs.theme.value;
+  ctx.view.refreshPalette();
 }
 
 export interface CommandHooks {
@@ -382,8 +382,8 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       category: V,
       icon: 'moon',
       run: () => applyTheme(ctx, 'dark'),
-      isChecked: () => ui.theme.value === 'dark',
-      watch: [ui.theme],
+      isChecked: () => ctx.prefs.theme.value === 'dark',
+      watch: [ctx.prefs.theme],
     },
     {
       id: 'view.theme.light',
@@ -391,8 +391,8 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       category: V,
       icon: 'sun',
       run: () => applyTheme(ctx, 'light'),
-      isChecked: () => ui.theme.value === 'light',
-      watch: [ui.theme],
+      isChecked: () => ctx.prefs.theme.value === 'light',
+      watch: [ctx.prefs.theme],
     },
     ...WORKSPACES.map((w) => workspace(ctx, w)),
     renderer(ctx, 'webgl2', 'WebGL2', 'Tüm güncel tarayıcılarda çalışır. Varsayılan çizim motoru.'),
@@ -424,7 +424,8 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       description: 'Katman çizgileri kalınlıklarıyla çizilir. Kapalıyken hepsi ince çizilir (AutoCAD LWT); hassas çalışmada kalın sınırlar noktaları örtmez. Kitaplık sembolleri kendi kalınlığını korur.',
       aliases: ['KALINLIK', 'LWT', 'LWDISPLAY'],
     }),
-    { id: 'view.theme.toggle', title: 'Temayı değiştir', category: V, run: () => applyTheme(ctx, ui.theme.value === 'dark' ? 'light' : 'dark') },
+    // Between the light theme and the dark ones (night and high contrast are dark).
+    { id: 'view.theme.toggle', title: 'Temayı değiştir', category: V, run: () => applyTheme(ctx, ctx.prefs.theme.value === 'light' ? 'dark' : 'light') },
     {
       id: 'view.ribbon',
       title: 'Şerit arayüzü',

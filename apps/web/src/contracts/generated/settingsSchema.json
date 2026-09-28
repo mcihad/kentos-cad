@@ -392,6 +392,7 @@
       ],
       "scope": "user",
       "hosts": [
+        "web",
         "desktop"
       ],
       "version": 1,
@@ -402,172 +403,62 @@
       "apply": "live"
     },
     {
-      "key": "appearance.accentColor",
-      "type": "text",
-      "default": "mavi",
-      "max": 16.0,
-      "scope": "user",
-      "hosts": [
-        "desktop"
-      ],
-      "version": 1,
-      "group": "appearance",
-      "title": "Vurgu rengi",
-      "description": "Çalışan araç, seçim, odak ve seçili öğelerin rengi: mavi, turkuaz, yeşil, kehribar, turuncu, pembe, mor, gri ya da #RRGGBB. Renk temanın zemininde okunur kalacak kadar ayarlanır.",
-      "sensitive": false,
-      "apply": "live"
-    },
-    {
-      "key": "appearance.typeface",
-      "type": "enum",
-      "default": "plex",
-      "choices": [
-        {
-          "value": "plex",
-          "label": "IBM Plex Sans"
-        },
-        {
-          "value": "inter",
-          "label": "Inter"
-        },
-        {
-          "value": "jakarta",
-          "label": "Plus Jakarta Sans"
-        },
-        {
-          "value": "source",
-          "label": "Source Sans 3"
-        },
-        {
-          "value": "noto",
-          "label": "Noto Sans"
-        },
-        {
-          "value": "roboto",
-          "label": "Roboto"
-        },
-        {
-          "value": "system",
-          "label": "Sistem yazı tipi"
-        }
-      ],
-      "scope": "user",
-      "hosts": [
-        "desktop"
-      ],
-      "version": 1,
-      "group": "appearance",
-      "title": "Yazı tipi",
-      "description": "Menüler, şerit, paneller ve pencerelerin yazısı; çizimdeki yazı nesneleri etkilenmez.",
-      "sensitive": false,
-      "apply": "live"
-    },
-    {
-      "key": "appearance.monoTypeface",
-      "type": "enum",
-      "default": "plexMono",
-      "choices": [
-        {
-          "value": "plexMono",
-          "label": "IBM Plex Mono"
-        },
-        {
-          "value": "jetbrains",
-          "label": "JetBrains Mono"
-        }
-      ],
-      "scope": "user",
-      "hosts": [
-        "desktop"
-      ],
-      "version": 1,
-      "group": "appearance",
-      "title": "Eş aralıklı yazı",
-      "description": "Koordinatların, ölçülerin ve komut satırının yazısı.",
-      "sensitive": false,
-      "apply": "live"
-    },
-    {
-      "key": "appearance.textSize",
-      "type": "integer",
-      "default": 13,
-      "min": 11.0,
-      "max": 18.0,
-      "unit": "px",
-      "scope": "user",
-      "hosts": [
-        "desktop"
-      ],
-      "version": 1,
-      "group": "appearance",
-      "title": "Yazı boyutu",
-      "description": "Arayüz metninin boyutu; şerit, paneller ve komut satırı onunla büyür. Çizim etiketleri etkilenmez.",
-      "sensitive": false,
-      "apply": "live"
-    },
-    {
-      "key": "appearance.drawingBackground",
-      "type": "enum",
-      "default": "theme",
-      "choices": [
-        {
-          "value": "theme",
-          "label": "Temaya uy"
-        },
-        {
-          "value": "slate",
-          "label": "Arduvaz"
-        },
-        {
-          "value": "black",
-          "label": "Siyah"
-        },
-        {
-          "value": "paper",
-          "label": "Kâğıt"
-        }
-      ],
-      "scope": "user",
-      "hosts": [
-        "desktop"
-      ],
-      "version": 1,
-      "group": "appearance",
-      "title": "Çizim zemini",
-      "description": "Çizim alanının zemini, arayüzün temasından bağımsız: temaya uyar, arduvaz, siyah (klasik AutoCAD) ya da kâğıt.",
-      "sensitive": false,
-      "apply": "live"
-    },
-    {
       "key": "appearance.accent",
-      "type": "enum",
+      "type": "text",
       "default": "navy",
+      "max": 16.0,
       "choices": [
         {
           "value": "navy",
           "label": "Lacivert"
         },
         {
-          "value": "amber",
-          "label": "Amber"
+          "value": "blue",
+          "label": "Mavi"
         },
         {
           "value": "teal",
           "label": "Petrol yeşili"
         },
         {
+          "value": "green",
+          "label": "Yeşil"
+        },
+        {
+          "value": "amber",
+          "label": "Amber"
+        },
+        {
+          "value": "orange",
+          "label": "Turuncu"
+        },
+        {
           "value": "bordeaux",
           "label": "Bordo"
+        },
+        {
+          "value": "pink",
+          "label": "Pembe"
+        },
+        {
+          "value": "violet",
+          "label": "Mor"
+        },
+        {
+          "value": "gray",
+          "label": "Gri"
         }
       ],
+      "color": true,
       "scope": "user",
       "hosts": [
-        "web"
+        "web",
+        "desktop"
       ],
-      "version": 1,
+      "version": 2,
       "group": "appearance",
       "title": "Vurgu rengi",
-      "description": "Çalışan araç, seçim, odak ve seçili öğeler bu renkle gösterilir; çizimdeki seçim rengi de ona uyar.",
+      "description": "Çalışan araç, seçim, odak ve seçili öğeler bu renkle gösterilir; çizimdeki seçim rengi de ona uyar. Hazır renklerden biri ya da #RRGGBB; renk temanın zemininde okunur kalacak kadar ayarlanır.",
       "sensitive": false,
       "apply": "live"
     },
@@ -607,12 +498,91 @@
       ],
       "scope": "user",
       "hosts": [
-        "web"
+        "web",
+        "desktop"
       ],
       "version": 1,
       "group": "appearance",
       "title": "Yazı tipi",
       "description": "Menüler, paneller, pencereler ve çizim alanındaki işaret yazıları; çizimdeki yazı nesneleri etkilenmez.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "appearance.monoFont",
+      "type": "enum",
+      "default": "plexMono",
+      "choices": [
+        {
+          "value": "plexMono",
+          "label": "IBM Plex Mono"
+        },
+        {
+          "value": "jetbrains",
+          "label": "JetBrains Mono"
+        }
+      ],
+      "scope": "user",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "appearance",
+      "title": "Eş aralıklı yazı",
+      "description": "Komut satırının, koordinatların ve ifade alanlarının yazısı.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "appearance.textSize",
+      "type": "integer",
+      "default": 13,
+      "min": 11.0,
+      "max": 18.0,
+      "unit": "px",
+      "scope": "user",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 2,
+      "group": "appearance",
+      "title": "Yazı boyutu",
+      "description": "Menüler, paneller ve komut satırı; arayüz onunla büyür. Çizim etiketleri etkilenmez.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "appearance.drawingBackground",
+      "type": "enum",
+      "default": "theme",
+      "choices": [
+        {
+          "value": "theme",
+          "label": "Temaya uy"
+        },
+        {
+          "value": "slate",
+          "label": "Arduvaz"
+        },
+        {
+          "value": "black",
+          "label": "Siyah"
+        },
+        {
+          "value": "paper",
+          "label": "Kâğıt"
+        }
+      ],
+      "scope": "user",
+      "hosts": [
+        "desktop"
+      ],
+      "version": 1,
+      "group": "appearance",
+      "title": "Çizim zemini",
+      "description": "Çizim alanının zemini, arayüzün temasından bağımsız: temaya uyar, arduvaz, siyah (klasik AutoCAD) ya da kâğıt.",
       "sensitive": false,
       "apply": "live"
     },
@@ -638,43 +608,6 @@
       "group": "appearance",
       "title": "Arayüz düzeni",
       "description": "Menüler, araç çubuğu ve kayan araç kutusu ya da sekmeli şerit; ikisi aynı araç ve komutları sunar.",
-      "sensitive": false,
-      "apply": "live"
-    },
-    {
-      "key": "appearance.uiScale",
-      "type": "enum",
-      "default": "standard",
-      "choices": [
-        {
-          "value": "small",
-          "label": "Küçük"
-        },
-        {
-          "value": "standard",
-          "label": "Standart"
-        },
-        {
-          "value": "large",
-          "label": "Büyük"
-        },
-        {
-          "value": "xlarge",
-          "label": "Çok büyük"
-        },
-        {
-          "value": "xxlarge",
-          "label": "En büyük"
-        }
-      ],
-      "scope": "user",
-      "hosts": [
-        "web"
-      ],
-      "version": 1,
-      "group": "appearance",
-      "title": "Yazı boyutu",
-      "description": "Menüler, paneller ve komut satırı. Çizim etiketleri etkilenmez.",
       "sensitive": false,
       "apply": "live"
     },

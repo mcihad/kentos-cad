@@ -1,9 +1,10 @@
 //! Görünüm (the showcase's interface groups, on the desktop): the theme
 //! with the accent colour, the drawing's background, the interface and the
 //! monospaced typefaces and the text size (docs/adr/0051). Each choice is a
-//! preference kept in the settings file (`appearance.*`) and applies at
-//! once; the ribbon's Görünüm tab shows them after the web's panels, and
-//! they fold into one button each when the window is narrow.
+//! preference kept in the settings file (`appearance.*`, the web's keys too:
+//! docs/adr/0126) and applies at once; the ribbon's Görünüm tab shows them
+//! after the web's panels, and they fold into one button each when the
+//! window is narrow.
 
 use iced::widget::{button, column, container, row, space, text, tooltip};
 use iced::{Border, Center, Color, Element, Fill, Font, Task, Theme};
@@ -75,13 +76,12 @@ impl Backdrop {
     }
 }
 
-/// The setting's values of the typefaces.
+/// The setting's values of the typefaces (`appearance.uiFont`, the web's UI_FONTS ids).
 fn family_key(family: Family) -> &'static str {
     match family {
         Family::IbmPlexSans => "plex",
         Family::Inter => "inter",
         Family::PlusJakartaSans => "jakarta",
-        // The web's ids (`appearance.uiFont`, UI_FONTS).
         Family::SourceSans3 => "source",
         Family::NotoSans => "noto",
         Family::Roboto => "roboto",
@@ -167,7 +167,7 @@ impl App {
                 format!("Tema: {}.", mode.label()),
             ),
             Event::Accent(accent) => (
-                "appearance.accentColor",
+                "appearance.accent",
                 Value::from(accent.key()),
                 format!("Vurgu rengi: {}.", accent.name()),
             ),
@@ -177,12 +177,12 @@ impl App {
                 format!("Çizim zemini: {}.", backdrop.name()),
             ),
             Event::Family(family) => (
-                "appearance.typeface",
+                "appearance.uiFont",
                 Value::from(family_key(family)),
                 format!("Yazı tipi: {}.", family.name()),
             ),
             Event::Mono(mono) => (
-                "appearance.monoTypeface",
+                "appearance.monoFont",
                 Value::from(mono_key(mono)),
                 format!("Eş aralıklı yazı: {}.", mono.name()),
             ),
@@ -220,15 +220,15 @@ impl App {
             "highContrast" => Mode::HighContrast,
             _ => Mode::Dark,
         };
-        self.accent = Accent::parse(&word("appearance.accentColor")).unwrap_or_default();
+        self.accent = Accent::parse(&word("appearance.accent")).unwrap_or_default();
         self.backdrop = Backdrop::parse(&word("appearance.drawingBackground"));
         let family = Family::ALL
             .into_iter()
-            .find(|f| family_key(*f) == word("appearance.typeface"))
+            .find(|f| family_key(*f) == word("appearance.uiFont"))
             .unwrap_or_default();
         let mono = Mono::ALL
             .into_iter()
-            .find(|m| mono_key(*m) == word("appearance.monoTypeface"))
+            .find(|m| mono_key(*m) == word("appearance.monoFont"))
             .unwrap_or_default();
         let size = s.number("appearance.textSize") as f32;
         let typography = Typography { family, mono, size }.clamped();
@@ -297,8 +297,8 @@ impl App {
             row![
                 themes,
                 column![
-                    chips(&Accent::PRESETS[..4]),
-                    chips(&Accent::PRESETS[4..]),
+                    chips(&Accent::PRESETS[..5]),
+                    chips(&Accent::PRESETS[5..]),
                     Element::from(custom),
                 ]
                 .spacing(1),
@@ -680,10 +680,11 @@ pub(crate) mod tests {
         assert_eq!(setting(&app, "appearance.drawingBackground"), "black");
         look(&mut app, Event::Accent(Accent::Violet));
         assert_eq!(app.accent, Accent::Violet);
-        assert_eq!(setting(&app, "appearance.accentColor"), "mor");
+        // The web's keys and ids (docs/adr/0126).
+        assert_eq!(setting(&app, "appearance.accent"), "violet");
         look(&mut app, Event::Family(Family::Inter));
         assert_eq!(app.typography.family, Family::Inter);
-        assert_eq!(setting(&app, "appearance.typeface"), "inter");
+        assert_eq!(setting(&app, "appearance.uiFont"), "inter");
         look(&mut app, Event::Size(Step::Larger));
         assert_eq!(app.typography.size, 14.0);
         assert_eq!(setting(&app, "appearance.textSize"), 14);
@@ -694,7 +695,7 @@ pub(crate) mod tests {
         }
         assert_eq!(app.typography.size, 11.0, "no smaller than 11");
         look(&mut app, Event::Size(Step::Default));
-        look(&mut app, Event::Family(Family::IbmPlexSans));
+        look(&mut app, Event::Family(Family::PlusJakartaSans));
         assert_eq!(typography::current(), Typography::DEFAULT);
     }
 
@@ -710,17 +711,45 @@ pub(crate) mod tests {
     }
 
     #[test]
-    fn a_custom_accent_is_read_and_a_broken_one_falls_back() {
+    fn a_custom_accent_is_read_and_a_broken_one_is_refused() {
         let mut app = app_with_drawing();
         let _ = app
             .settings
-            .choose(&[("appearance.accentColor", Value::from("#ff8800"))]);
+            .choose(&[("appearance.accent", Value::from("#FF8800"))]);
         app.apply_settings();
         assert_eq!(app.accent, Accent::Custom(0xff8800));
-        let _ = app
+        assert_eq!(
+            setting(&app, "appearance.accent"),
+            "#ff8800",
+            "kept in lower case"
+        );
+        let refused = app
             .settings
-            .choose(&[("appearance.accentColor", Value::from("bozuk"))]);
+            .choose(&[("appearance.accent", Value::from("bozuk"))]);
+        assert!(!refused.is_empty(), "the shared rules refuse it");
         app.apply_settings();
-        assert_eq!(app.accent, Accent::default());
+        assert_eq!(app.accent, Accent::Custom(0xff8800), "the chosen one stays");
+    }
+
+    /// An older settings file of this program (and one of the web's) is read
+    /// under today's keys: the look comes back as it was (docs/adr/0126).
+    #[test]
+    fn an_older_settings_file_keeps_its_look() {
+        use kentos_contracts::{SettingsFile, settings_schema};
+        let text = r##"{"format":"kentos.settings","version":1,"user":{"appearance.accentColor":"turkuaz","appearance.typeface":"inter","appearance.monoTypeface":"jetbrains","appearance.textSize":15,"appearance.theme":"night"}}"##;
+        let (file, diagnostics) = SettingsFile::from_json(text, &settings_schema()).expect("reads");
+        assert!(diagnostics.is_empty(), "{diagnostics:?}");
+        assert_eq!(
+            file.user.get("appearance.accent"),
+            Some(&Value::from("teal"))
+        );
+        assert_eq!(
+            file.user.get("appearance.uiFont"),
+            Some(&Value::from("inter"))
+        );
+        assert_eq!(
+            file.user.get("appearance.monoFont"),
+            Some(&Value::from("jetbrains"))
+        );
     }
 }

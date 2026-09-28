@@ -71,7 +71,7 @@ export function layerField(ctx: AppContext, d: DisposableStore, opts: FieldOptio
     const n = layers.get(layers.active.value);
     if (n) dd.set(h('span', { class: 'swatch', style: `--swatch:${layerSwatch(n, ctx.view.palette)}` }), h('span', { class: 'dropdown__text' }, n.name));
   };
-  d.add(watchAll([layers.active, layers.version, ctx.ui.theme], sync));
+  d.add(watchAll([layers.active, layers.version, ctx.prefs.theme], sync));
   sync();
   return dd.el;
 }
@@ -137,7 +137,7 @@ export function colorField(ctx: AppContext, d: DisposableStore, opts: FieldOptio
     const c = currentColor(ctx);
     dd.set(c.swatch ? h('span', { class: 'swatch', style: `--swatch:${c.swatch}` }) : null, h('span', { class: 'dropdown__text' }, c.text));
   };
-  d.add(watchAll([ctx.settings.color, ctx.ui.theme], sync));
+  d.add(watchAll([ctx.settings.color, ctx.prefs.theme], sync));
   sync();
   return dd.el;
 }
@@ -187,7 +187,7 @@ export function propertiesField(ctx: AppContext, d: DisposableStore, opts: Field
     const c = currentColor(ctx);
     dd.set(c.swatch ? h('span', { class: 'swatch', style: `--swatch:${c.swatch}` }) : null, h('span', { class: 'dropdown__text' }, 'Özellikler'));
   };
-  d.add(watchAll([ctx.settings.color, ctx.ui.theme], sync));
+  d.add(watchAll([ctx.settings.color, ctx.prefs.theme], sync));
   sync();
   return dd.el;
 }

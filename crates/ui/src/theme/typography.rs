@@ -39,15 +39,16 @@ use std::sync::atomic::{AtomicU8, AtomicU32, Ordering};
 use iced::font::Weight;
 use iced::{Font, Length};
 
-/// Arayüz metninin yazı ailesi.
+/// Arayüz metninin yazı ailesi. Varsayılanı web'inki gibi Plus Jakarta
+/// Sans'tır (DESIGN.md, docs/adr/0126).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum Family {
     /// Mühendislik çizgili, dar ve sakin bir grotesk.
-    #[default]
     IbmPlexSans,
     /// Ekran için çizilmiş; x yüksekliği büyük, küçük boyutta en okunaklısı.
     Inter,
     /// Geometrik, açık ve yumuşak hatlı.
+    #[default]
     PlusJakartaSans,
     /// Dar; dar ekranda çok yazı sığar.
     SourceSans3,
@@ -60,10 +61,11 @@ pub enum Family {
 }
 
 impl Family {
+    /// Seçim listelerindeki sırasıyla (web'in `UI_FONTS`'u).
     pub const ALL: [Family; 7] = [
-        Family::IbmPlexSans,
-        Family::Inter,
         Family::PlusJakartaSans,
+        Family::Inter,
+        Family::IbmPlexSans,
         Family::SourceSans3,
         Family::NotoSans,
         Family::Roboto,
@@ -131,7 +133,7 @@ pub struct Typography {
 
 impl Typography {
     pub const DEFAULT: Self = Self {
-        family: Family::IbmPlexSans,
+        family: Family::PlusJakartaSans,
         mono: Mono::IbmPlexMono,
         size: 13.0,
     };

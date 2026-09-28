@@ -10,7 +10,7 @@ import type { ProjectSettingsSection } from '../ui/settings/ProjectSettingsDialo
 import { AppShell } from '../ui/shell/AppShell';
 import { ViewportController } from '../viewport/ViewportController';
 import { Clipboard } from './clipboard';
-import { registerCoreCommands } from './commands';
+import { registerCoreCommands, showTheme } from './commands';
 import type { AppContext } from './context';
 import { registerCloudCommands } from './cloud/commands';
 import { CloudSession } from './cloud/session';
@@ -24,8 +24,7 @@ import { registerDefaultKeybindings } from './keybindings';
 import { createProcessing, registerProcessingCommands } from './processing';
 import { createStyles, registerStyleCommands } from './styles';
 import { Formatter } from './format';
-import { applyUiScale } from './commands';
-import { applyAccent, applyDrawingFont, applyUiFont } from './appearance';
+import { applyAccent, applyDrawingFont, applyTextSize, applyUiFont } from './appearance';
 import { createPreferences, createUiState, DraftingSettings, MessageLog } from './state';
 import { openBrowserSettings, reportSettingsOpen } from './settings/browser';
 import { onCoreFault } from '../wasm/core';
@@ -59,15 +58,17 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
   const ui = createUiState();
   // The typed settings (docs/adr/0023): opened (and migrated once) before anything reads a preference.
   const settingsStore = openBrowserSettings();
+  // The theme lived in the layout until it became a setting (docs/adr/0126): taken over once.
+  if (settingsStore.resolved('appearance.theme').source === 'default' && ui.theme.value !== 'dark') settingsStore.choose({ 'appearance.theme': ui.theme.value });
   const prefs = createPreferences(settingsStore);
   // The system symbol library and the demo drawing are chunks of their own, fetched beside the geometry core (main.ts).
   const { system, sampleProject } = await start;
   const doc = sampleProject(prefs.defaultSrid.value);
   // Theme, accent, typeface and type scale before any service reads CSS tokens (canvas palette).
-  document.documentElement.dataset.theme = ui.theme.value;
+  document.documentElement.dataset.theme = prefs.theme.value;
   applyAccent(prefs.accent.value);
   const fontReady = applyUiFont(prefs.uiFont.value);
-  applyUiScale(prefs.uiScale.value);
+  applyTextSize(prefs.textSize.value);
 
   const selection = new Selection();
   // Services that need the context are attached right after it exists.
@@ -90,6 +91,10 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
   } as AppContext & { tools: ToolManager; view: ViewportController; files: DocumentFiles; cloud: CloudSession; recovery: RecoveryCopies };
   ctx.tools = new ToolManager(ctx);
   ctx.view = new ViewportController(ctx);
+  // The theme and the text size follow their settings however they change:
+  // the settings window, a command, an imported file, a reset.
+  prefs.theme.subscribe(() => showTheme(ctx));
+  prefs.textSize.subscribe((px) => applyTextSize(px));
   ctx.files = new DocumentFiles(ctx);
   ctx.cloud = new CloudSession(ctx);
   // Unsaved work is kept on this device as it changes, apart from any file (docs/adr/0030).

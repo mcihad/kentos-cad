@@ -1,8 +1,7 @@
-import { applyTheme, applyUiScale } from '../../app/commands';
-import { applyAccent, applyUiFont } from '../../app/appearance';
+import { applyAccent, applyUiFont, TEXT_SIZES, type ThemeId } from '../../app/appearance';
 import { accentPicker, drawingFontPicker, fontPicker } from './appearancePickers';
 import type { AppContext } from '../../app/context';
-import { PREF_KEYS, PREFERENCE_DEFAULTS, type PreferencesData, type ShellKind, type Theme } from '../../app/state';
+import { PREF_KEYS, PREFERENCE_DEFAULTS, type PreferencesData, type ShellKind } from '../../app/state';
 import { crsBySrid } from '../../geo/crs';
 import { settingDescriptor } from '../../core/settings/schema';
 import { h } from '../dom';
@@ -15,9 +14,7 @@ import { engine } from './engineSection';
 import { settingsFile, type FileDraft, type FileState } from './settingsFileSection';
 
 /** Application settings: this user, this browser, every project. */
-export interface AppDraft extends PreferencesData, FileDraft {
-  theme: Theme;
-}
+export type AppDraft = PreferencesData & FileDraft;
 
 export type AppSettingsSection = 'appearance' | 'snap' | 'newProjects' | 'engine' | 'file';
 
@@ -29,7 +26,7 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
   const store = ctx.settingsStore;
   // The draft edits what was asked for (a device limit keeps only the value in use lower; SET-03).
   const requested = Object.fromEntries(FIELDS.map((f) => [f, store.requested(PREF_KEYS[f])])) as unknown as PreferencesData;
-  const initial: AppDraft = { ...requested, theme: ctx.ui.theme.value, importText: null, importName: null, resetAll: false };
+  const initial: AppDraft = { ...requested, importText: null, importName: null, resetAll: false };
 
   const sections: SectionDef<AppDraft>[] = [
     {
@@ -38,7 +35,7 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
       icon: 'appearance',
       title: 'Görünüm',
       lead: 'Tema, vurgu rengi, yazı tipi, arayüz düzeni, yazı boyutu, artı imleç ve fare yardımcıları.',
-      keys: ['theme', 'accent', 'uiFont', 'shell', 'uiScale', 'crosshair', 'cursorInput', 'commandBar', 'hoverInfo', 'startScreen'],
+      keys: ['theme', 'accent', 'uiFont', 'shell', 'textSize', 'crosshair', 'cursorInput', 'commandBar', 'hoverInfo', 'startScreen'],
       render: (api) => appearance(api),
     },
     {
@@ -107,7 +104,7 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
     scope: { icon: 'settings', title: 'Bu tarayıcıda saklanır', detail: 'Tüm projeler için geçerlidir' },
     sections,
     initial,
-    defaults: { ...PREFERENCE_DEFAULTS, theme: 'dark', importText: null, importName: null, resetAll: false },
+    defaults: { ...PREFERENCE_DEFAULTS, importText: null, importName: null, resetAll: false },
     section,
     onSave: (draft, init) => {
       // An imported file replaces the stored values first; “Varsayılanlara döndür” forgets them.
@@ -117,11 +114,11 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
       const changed = Object.fromEntries(FIELDS.filter((f) => draft[f] !== base[f]).map((f) => [PREF_KEYS[f], draft[f]]));
       const refused = Object.keys(store.choose(changed));
       if (refused.length) ctx.log.warn(`Kaydedilemeyen ayar: ${refused.join(', ')}. Değerleri denetleyip yeniden deneyin.`);
-      if (draft.uiScale !== init.uiScale) applyUiScale(draft.uiScale);
-      if (draft.accent !== init.accent) applyAccent(draft.accent);
-      if (draft.theme !== init.theme) applyTheme(ctx, draft.theme);
-      // The drawing's selection colour follows the accent.
-      else if (draft.accent !== init.accent) ctx.view.refreshPalette();
+      // The theme and the text size follow their settings (createApp); the drawing's selection colour follows the accent.
+      if (draft.accent !== init.accent) {
+        applyAccent(draft.accent);
+        ctx.view.refreshPalette();
+      }
       if (draft.uiFont !== init.uiFont) void applyUiFont(draft.uiFont).then(() => ctx.view.refreshFonts());
       if (draft.defaultSrid !== init.defaultSrid) {
         const c = crsBySrid(draft.defaultSrid)!;
@@ -137,7 +134,7 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
 
 function appearance(api: DraftApi<AppDraft>) {
   const d = api.draft;
-  const themeCard = (theme: Theme, label: string) => {
+  const themeCard = (theme: ThemeId, label: string) => {
     const b = h(
       'button',
       { class: 'theme-card', type: 'button', role: 'radio', 'aria-checked': String(d.theme === theme), 'data-preview': theme },
@@ -220,15 +217,9 @@ function appearance(api: DraftApi<AppDraft>) {
         'Menüler, paneller ve komut satırı. Çizim etiketleri etkilenmez.',
         segmented({
           label: 'Yazı boyutu',
-          value: d.uiScale,
-          options: [
-            { value: 'small', label: 'Küçük' },
-            { value: 'standard', label: 'Standart' },
-            { value: 'large', label: 'Büyük' },
-            { value: 'xlarge', label: 'Çok büyük' },
-            { value: 'xxlarge', label: 'En büyük' },
-          ],
-          onChange: (v) => api.set('uiScale', v),
+          value: String(d.textSize),
+          options: TEXT_SIZES.map((s) => ({ value: String(s.px), label: s.label, hint: `${s.px} piksel` })),
+          onChange: (v) => api.set('textSize', Number(v)),
         }),
       ),
       settingRow(

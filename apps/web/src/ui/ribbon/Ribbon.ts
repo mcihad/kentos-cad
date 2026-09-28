@@ -168,7 +168,7 @@ export class Ribbon extends Component {
     const ro = new ResizeObserver(() => this.scheduleFit());
     ro.observe(this.el);
     this.d.add(() => ro.disconnect());
-    this.d.add(ctx.prefs.uiScale.subscribe(() => requestAnimationFrame(() => this.remeasure())));
+    this.d.add(ctx.prefs.textSize.subscribe(() => requestAnimationFrame(() => this.remeasure())));
     const fonts = document.fonts;
     if (fonts) {
       const loaded = () => this.remeasure();

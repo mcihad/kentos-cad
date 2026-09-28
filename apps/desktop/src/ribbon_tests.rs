@@ -121,7 +121,7 @@ fn typeface_screens() {
     for (face, tab, (width, height), mode) in cases {
         let mut app = app_with_drawing();
         let _ = app.settings.choose(&[
-            ("appearance.typeface", serde_json::json!(face)),
+            ("appearance.uiFont", serde_json::json!(face)),
             ("appearance.theme", serde_json::json!(mode)),
         ]);
         app.apply_settings();
@@ -200,8 +200,8 @@ fn screens() {
     let mut app = app_with_drawing();
     let _ = app.settings.choose(&[
         ("appearance.textSize", serde_json::json!(15)),
-        ("appearance.accentColor", serde_json::json!("turuncu")),
-        ("appearance.typeface", serde_json::json!("jakarta")),
+        ("appearance.accent", serde_json::json!("orange")),
+        ("appearance.uiFont", serde_json::json!("jakarta")),
     ]);
     app.apply_settings();
     app.tab = "home";

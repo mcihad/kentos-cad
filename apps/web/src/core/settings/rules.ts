@@ -55,8 +55,17 @@ export function validateSetting(d: SettingDescriptor, value: unknown): Checked {
     // −0 is kept as 0, as the Rust side writes it.
     v = value === 0 ? 0 : value;
   }
-  if (d.choices?.length && !d.choices.some((c) => sameValue(c.value, v))) return fail('not_allowed');
+  if (d.choices?.length && !d.choices.some((c) => sameValue(c.value, v))) {
+    // A colour where one may be given instead (the accent).
+    const color = d.color && typeof v === 'string' ? colorOf(v) : undefined;
+    return color === undefined ? fail('not_allowed') : { ok: true, value: color };
+  }
   return { ok: true, value: v };
+}
+
+/** A colour, `#rrggbb` in either case, as settings keep it: lower case (`color_of`). */
+export function colorOf(text: string): string | undefined {
+  return /^#[0-9a-fA-F]{6}$/.test(text) ? text.toLowerCase() : undefined;
 }
 
 const RANK: Partial<Record<SettingScope, number>> = { user: 1, device: 2, session: 3 };
@@ -249,9 +258,10 @@ const CODES: readonly string[] = [
 /**
  * Reads a stored or exported settings document (TODOS.md SET-04), as
  * `SettingsFile::from_json` does: a leading BOM is skipped; another format or
- * version is refused; within the layers an invalid, sensitive or misplaced
- * value is dropped and reported, the others are kept, and an unknown key is
- * kept untouched and reported.
+ * version is refused; within the layers an older key is read under today's
+ * (RENAMED), an invalid, sensitive or misplaced value is dropped and
+ * reported, the others are kept, and an unknown key is kept untouched and
+ * reported.
  */
 export function readSettingsFile(text: string, schema: SettingsSchema): FileRead {
   const body = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
@@ -279,8 +289,69 @@ export function readSettingsFile(text: string, schema: SettingsSchema): FileRead
   return { ok: true, file, diagnostics };
 }
 
-function readLayer(schema: SettingsSchema, layer: 'user' | 'device', values: Record<string, unknown>, diagnostics: SettingDiagnostic[]): SettingsLayer {
+/**
+ * Keys earlier versions kept settings under, and today's (docs/adr/0126):
+ * the desktop's accent and typefaces, the web's five text sizes. Every
+ * settings document, stored or imported, is read through them.
+ */
+export const RENAMED: readonly (readonly [string, string])[] = [
+  ['appearance.accentColor', 'appearance.accent'],
+  ['appearance.typeface', 'appearance.uiFont'],
+  ['appearance.monoTypeface', 'appearance.monoFont'],
+  ['appearance.uiScale', 'appearance.textSize'],
+];
+
+/** The web's five text sizes before they were pixels. */
+const OLDER_TEXT_SIZES: Readonly<Record<string, number>> = { small: 12, standard: 13, large: 14, xlarge: 15, xxlarge: 16 };
+
+/** The desktop's accent names as it stored them, in today's ids (near twins join the web's). */
+const OLDER_ACCENTS: Readonly<Record<string, string>> = {
+  mavi: 'blue',
+  turkuaz: 'teal',
+  yesil: 'green',
+  kehribar: 'amber',
+  turuncu: 'orange',
+  pembe: 'pink',
+  mor: 'violet',
+  gri: 'gray',
+};
+
+export type Renamed = { readonly ok: true; readonly key: string; readonly value: SettingValue } | { readonly ok: false; readonly code: SettingErrorCode };
+
+/**
+ * An older key's value under today's key, as `renamed_setting` gives it:
+ * undefined when `key` is not an older key; an error when its value has no
+ * reading today.
+ */
+export function renamedSetting(key: string, value: unknown): Renamed | undefined {
+  const to = RENAMED.find(([from]) => from === key)?.[1];
+  if (to === undefined) return undefined;
+  if (typeof value !== 'string') return { ok: false, code: 'wrong_type' };
+  let read: SettingValue | undefined;
+  if (key === 'appearance.accentColor') read = Object.hasOwn(OLDER_ACCENTS, value) ? OLDER_ACCENTS[value] : colorOf(value);
+  else if (key === 'appearance.uiScale') read = Object.hasOwn(OLDER_TEXT_SIZES, value) ? OLDER_TEXT_SIZES[value] : undefined;
+  else read = value;
+  return read === undefined ? { ok: false, code: 'not_allowed' } : { ok: true, key: to, value: read };
+}
+
+/** A layer's older keys under today's: a value already under today's key wins; one with no reading is reported under its older key. */
+function renamedLayer(layer: 'user' | 'device', values: Record<string, unknown>, diagnostics: SettingDiagnostic[]): Record<string, unknown> {
+  const out: Record<string, unknown> = { ...values };
+  for (const [from] of RENAMED) {
+    if (!Object.hasOwn(out, from)) continue;
+    const value = out[from];
+    delete out[from];
+    const renamed = renamedSetting(from, value);
+    if (!renamed) continue;
+    if (!renamed.ok) diagnostics.push({ layer, key: from, code: renamed.code });
+    else if (!Object.hasOwn(out, renamed.key)) out[renamed.key] = renamed.value;
+  }
+  return out;
+}
+
+function readLayer(schema: SettingsSchema, layer: 'user' | 'device', raw: Record<string, unknown>, diagnostics: SettingDiagnostic[]): SettingsLayer {
   const kept: SettingsLayer = {};
+  const values = renamedLayer(layer, raw, diagnostics);
   for (const [key, value] of Object.entries(values)) {
     const d = settingDescriptor(key, schema);
     if (!d) {

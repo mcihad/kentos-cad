@@ -554,8 +554,8 @@ impl Showcase {
 
         Group::new("Tema").push(themes).push(
             Stack::new()
-                .push(chips(&Accent::PRESETS[..4]))
-                .push(chips(&Accent::PRESETS[4..]))
+                .push(chips(&Accent::PRESETS[..5]))
+                .push(chips(&Accent::PRESETS[5..]))
                 .push(custom),
         )
     }
