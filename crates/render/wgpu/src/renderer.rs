@@ -26,6 +26,18 @@
 //! out of memory), the view draws on with the last count that worked and the
 //! failure is kept for the host to report (AA-02).
 //!
+//! The kept picture: the host redraws its whole window for any event (a
+//! pointer move, a button's hover), and a large drawing costs the GPU far
+//! more than the interface. A view asked to keep its picture
+//! (`FrameInput::keep_picture`, the desktop's drawing area) draws into its
+//! own targets and remembers what the resolved picture shows: the parts'
+//! ids, the frame uniform, the ground and the styled layers' batches and
+//! images. A frame with the same key composes the kept picture and draws
+//! nothing else of the scene. What changes with the pointer (the hovered
+//! object, `FrameInput::overlays`) is left out of it and drawn over it in
+//! every frame, straight into the host's frame at its resolution, as the
+//! web draws its hover apart from the drawing's layers.
+//!
 //! The scene cache: a view keeps the GPU buffers of the scene parts it drew
 //! last, by part id. A frame with the same parts uploads only its 64-byte
 //! uniform; a new part is uploaded once, in chunks the device accepts, and
@@ -35,6 +47,7 @@
 
 use std::collections::HashMap;
 use std::fmt;
+use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::Range;
 
 use bytemuck::Pod;
@@ -93,6 +106,15 @@ pub struct FrameInput<'a> {
     /// Device pixels per logical pixel.
     pub scale_factor: f64,
     pub settings: &'a RenderSettings,
+    /// Keep the picture between frames (the desktop's drawing area): the
+    /// view draws into its own targets even single-sampled at full
+    /// resolution, and a frame whose picture would be the last one's
+    /// composes the kept picture without drawing the scene again.
+    pub keep_picture: bool,
+    /// With `keep_picture`: how many of the last parts change often (the
+    /// hovered object). They are left out of the kept picture and drawn over
+    /// it in every frame, straight into the host's frame at its resolution.
+    pub overlays: usize,
 }
 
 /// The pipelines of one sample count.
@@ -249,7 +271,7 @@ impl Renderer {
             _ => asked,
         };
         let scaled = !settings.hi_dpi && frame.scale_factor > 1.0;
-        let own = samples > 1 || scaled;
+        let own = samples > 1 || scaled || frame.keep_picture;
         let (size_px, scale_factor) = if scaled {
             (
                 [
@@ -349,10 +371,42 @@ impl Renderer {
             self.srgb_target,
         );
         queue.write_buffer(&state.uniform, 0, bytemuck::bytes_of(&uniform));
+        // What the picture shows and how: the parts under the overlays, the
+        // frame and the ground. The styled layers add theirs (prepare_styled).
+        state.keep = frame.keep_picture && state.own;
+        state.overlays = if state.keep {
+            frame.overlays.min(state.parts.len())
+        } else {
+            0
+        };
+        let mut key = DefaultHasher::new();
+        for part in &state.parts[..state.parts.len() - state.overlays] {
+            part.id.hash(&mut key);
+        }
+        bytemuck::bytes_of(&uniform).hash(&mut key);
+        state.clear.map(f32::to_bits).hash(&mut key);
+        state.want = key.finish();
+        state.want_styled = None;
+        if state.overlays > 0 {
+            // The overlays go straight into the host's frame: its size and scale.
+            let overlay = frame.camera.frame_uniform(
+                frame.origin,
+                frame.size_px,
+                frame.scale_factor,
+                settings,
+                self.srgb_target,
+            );
+            let (buffer, _) = state
+                .overlay
+                .get_or_insert_with(|| frame_binding(device, frame_layout, "kentos.cad2d.overlay"));
+            queue.write_buffer(buffer, 0, bytemuck::bytes_of(&overlay));
+            uploaded += std::mem::size_of::<FrameUniform>() as u64;
+        }
         state.stats = state.count();
         state.stats.uploaded_bytes = uploaded;
         state.stats.samples = state.targets.as_ref().map_or(1, |t| t.samples);
         state.stats.target_bytes = state.targets.as_ref().map_or(0, |t| t.bytes);
+        state.stats.picture_kept = state.picture_kept();
         if failure.is_some() {
             state.error.clone_from(&failure);
         }
@@ -401,8 +455,12 @@ impl Renderer {
             images,
         );
         let (drawn, bytes) = styled.counts();
+        let mut key = DefaultHasher::new();
+        styled.key(&mut key);
+        state.want_styled = Some(key.finish());
         state.stats.draw_calls += drawn;
         state.stats.resident_bytes += bytes;
+        state.stats.picture_kept = state.picture_kept();
         pending
     }
 
@@ -419,7 +477,12 @@ impl Renderer {
         let (Some(state), Some(pipes)) = (self.views.get(&view), self.pipelines.get(&1)) else {
             return;
         };
-        state.draw(pass, pipes, self.styled.as_ref().map(|g| (g, 1)));
+        state.draw(
+            pass,
+            pipes,
+            self.styled.as_ref().map(|g| (g, 1)),
+            state.parts.len(),
+        );
     }
 
     /// Draws `view` into its own targets and composes the picture into
@@ -443,7 +506,9 @@ impl Renderer {
             return;
         };
         let [r, g, b, a] = state.clear.map(f64::from);
-        {
+        // A kept picture that is still the one this frame shows is composed as it is.
+        let key = state.picture_key();
+        if !(state.keep && targets.holds(key)) {
             let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("kentos.cad2d.picture"),
                 color_attachments: &[Some(targets.attachment(wgpu::Color { r, g, b, a }))],
@@ -455,7 +520,11 @@ impl Renderer {
                 &mut pass,
                 pipes,
                 self.styled.as_ref().map(|g| (g, targets.samples)),
+                state.parts.len() - state.overlays,
             );
+            if state.keep {
+                targets.keep(key);
+            }
         }
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("kentos.cad2d.compose"),
@@ -476,6 +545,14 @@ impl Renderer {
         pass.set_viewport(x, y, w, h, 0.0, 1.0);
         pass.set_scissor_rect(clip[0], clip[1], clip[2].max(1), clip[3].max(1));
         self.compose.draw(&mut pass, targets);
+        // The overlays over the picture, at the host's resolution.
+        if let (Some((_, bind)), Some(host)) = (&state.overlay, self.pipelines.get(&1))
+            && state.overlays > 0
+        {
+            pass.set_bind_group(0, bind, &[]);
+            let all = state.parts.len();
+            state.draw_parts(&mut pass, host, all - state.overlays..all);
+        }
     }
 
     /// End of a frame: views left undrawn long enough are released with their buffers and targets.
@@ -612,6 +689,16 @@ struct View {
     drawn: Drawn,
     /// The view's styled layers (docs/adr/0090), once it has had any.
     styled: Option<ViewStyled>,
+    /// This frame keeps its picture (`FrameInput::keep_picture`, with targets).
+    keep: bool,
+    /// The picture's key from the plain parts and the frame (`prepare`) and
+    /// from the styled layers (`prepare_styled`): the same key, the same pixels.
+    want: u64,
+    want_styled: Option<u64>,
+    /// The last parts, drawn over the kept picture in every frame.
+    overlays: usize,
+    /// The host frame's uniform the overlays are drawn with, once needed.
+    overlay: Option<(wgpu::Buffer, wgpu::BindGroup)>,
 }
 
 /// The target and camera a frame is drawn at.
@@ -627,22 +714,32 @@ struct Drawn {
     screen_scale: f64,
 }
 
+/// A frame uniform's buffer and its bind group.
+fn frame_binding(
+    device: &wgpu::Device,
+    layout: &wgpu::BindGroupLayout,
+    label: &'static str,
+) -> (wgpu::Buffer, wgpu::BindGroup) {
+    let uniform = device.create_buffer(&wgpu::BufferDescriptor {
+        label: Some(label),
+        size: std::mem::size_of::<FrameUniform>() as u64,
+        usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+        mapped_at_creation: false,
+    });
+    let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+        label: Some(label),
+        layout,
+        entries: &[wgpu::BindGroupEntry {
+            binding: 0,
+            resource: uniform.as_entire_binding(),
+        }],
+    });
+    (uniform, bind_group)
+}
+
 impl View {
     fn new(device: &wgpu::Device, layout: &wgpu::BindGroupLayout) -> Self {
-        let uniform = device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("kentos.cad2d.frame"),
-            size: std::mem::size_of::<FrameUniform>() as u64,
-            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-            mapped_at_creation: false,
-        });
-        let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: Some("kentos.cad2d.frame"),
-            layout,
-            entries: &[wgpu::BindGroupEntry {
-                binding: 0,
-                resource: uniform.as_entire_binding(),
-            }],
-        });
+        let (uniform, bind_group) = frame_binding(device, layout, "kentos.cad2d.frame");
         Self {
             uniform,
             bind_group,
@@ -659,22 +756,46 @@ impl View {
             clear: [0.0, 0.0, 0.0, 1.0],
             drawn: Drawn::default(),
             styled: None,
+            keep: false,
+            want: 0,
+            want_styled: None,
+            overlays: 0,
+            overlay: None,
         }
     }
 
-    /// The background, then every layer's fills, strokes and marks, with the
-    /// given pipelines. Styled layers, when the view has them, draw over the
-    /// first parts (the grid) and under the rest (the highlights).
+    /// The key of the picture this frame shows.
+    fn picture_key(&self) -> u64 {
+        let mut key = DefaultHasher::new();
+        self.want.hash(&mut key);
+        self.want_styled.hash(&mut key);
+        key.finish()
+    }
+
+    /// Whether this frame composes the picture kept from an earlier one.
+    fn picture_kept(&self) -> bool {
+        self.keep
+            && self
+                .targets
+                .as_ref()
+                .is_some_and(|t| t.holds(self.picture_key()))
+    }
+
+    /// The background, then every layer's fills, strokes and marks of the
+    /// parts before `end`, with the given pipelines. Styled layers, when the
+    /// view has them, draw over the first parts (the grid) and under the rest
+    /// (the highlights).
     fn draw(
         &self,
         pass: &mut wgpu::RenderPass<'_>,
         pipes: &Pipelines,
         styled: Option<(&StyledGpu, u32)>,
+        end: usize,
     ) {
         pass.set_bind_group(0, &self.bind_group, &[]);
         pass.set_pipeline(&pipes.background);
         pass.draw(0..layout::BACKGROUND.vertex_count.unwrap_or(3), 0..1);
-        let all = 0..self.parts.len();
+        let all = 0..end.min(self.parts.len());
         match (styled, &self.styled) {
             (Some((gpu, samples)), Some(view)) if !view.layers.is_empty() => {
                 let under = view.under.min(self.parts.len());

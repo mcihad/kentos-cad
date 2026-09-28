@@ -375,6 +375,10 @@ pub struct App {
     pub(crate) text_field_release: bool,
     /// Öznitelikler's closed sections, by id, while the app runs (the web's `collapsed`).
     pub(crate) props_closed: std::collections::HashSet<&'static str>,
+    /// Öznitelikler for a selection of several objects, as last worked out (properties/).
+    pub(crate) properties_cache: crate::properties::PanelCache,
+    /// The labels the view shows, as last asked of the geometry store (labels.rs).
+    pub(crate) label_spots: crate::labels::Spots,
     /// The last left press's object with no command running, and when (a double click edits a text).
     pub(crate) last_click: Option<(kentos_domain::Slot, Instant)>,
     /// The log (message_log.rs): every line said, 500 at most, with its time
@@ -567,6 +571,8 @@ impl App {
             text_field_select: false,
             text_field_release: false,
             props_closed: std::collections::HashSet::new(),
+            properties_cache: Default::default(),
+            label_spots: Default::default(),
             last_click: None,
             log: {
                 let mut log = crate::log_plan::Log::default();

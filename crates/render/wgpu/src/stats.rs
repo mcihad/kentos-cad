@@ -24,4 +24,8 @@ pub struct FrameStats {
     /// Bytes of the view's own targets (multisampled colour and picture); 0
     /// when it draws straight into the host's pass.
     pub target_bytes: u64,
+    /// The frame composed the picture kept from an earlier one: nothing it
+    /// shows changed, so the scene was not drawn again, only the overlays
+    /// over it (`FrameInput::keep_picture`). The counts above are the picture's.
+    pub picture_kept: bool,
 }

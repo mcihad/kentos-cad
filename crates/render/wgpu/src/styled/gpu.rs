@@ -9,6 +9,7 @@
 //! blocks; then it only issues draw calls, switching pipelines when they change.
 
 use std::collections::HashMap;
+use std::hash::{Hash, Hasher};
 use std::ops::Range;
 use std::sync::Arc;
 
@@ -497,6 +498,7 @@ impl StyledGpu {
             viewport: frame.size_px,
         };
         queue.write_buffer(&view.frame, 0, bytemuck::bytes_of(&uniform));
+        view.uniform = uniform;
         let hw = f64::from(frame.size_px[0]) / 2.0 / px_per_m;
         let hh = f64::from(frame.size_px[1]) / 2.0 / px_per_m;
         let box_ = [
@@ -643,6 +645,8 @@ pub struct GpuLayer {
 pub struct ViewStyled {
     frame: wgpu::Buffer,
     frame_bind: wgpu::BindGroup,
+    /// What `frame` holds.
+    uniform: StyledFrameUniform,
     pub(crate) layers: Vec<GpuLayer>,
     /// How many of the view's plain parts draw beneath the styled layers.
     pub under: usize,
@@ -677,8 +681,27 @@ impl ViewStyled {
         ViewStyled {
             frame,
             frame_bind,
+            uniform: StyledFrameUniform::default(),
             layers: Vec::new(),
             under: 0,
+        }
+    }
+
+    /// What the last prepared frame of these layers draws: the layers, the
+    /// batches shown and their images' places, the frame. The same key, the
+    /// same pixels (a kept picture, renderer.rs).
+    pub(crate) fn key(&self, hasher: &mut impl Hasher) {
+        self.under.hash(hasher);
+        bytemuck::bytes_of(&self.uniform).hash(hasher);
+        for layer in &self.layers {
+            layer.id.hash(hasher);
+            for b in &layer.batches {
+                b.visible.hash(hasher);
+                if let Some((generation, uv)) = b.placed {
+                    generation.hash(hasher);
+                    uv.map(f32::to_bits).hash(hasher);
+                }
+            }
         }
     }
 

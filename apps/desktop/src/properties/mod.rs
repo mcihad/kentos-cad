@@ -29,6 +29,7 @@ mod tests;
 
 use iced::widget::{Column, column, container, row, space};
 use iced::{Center, Color, Element, Fill, Theme};
+use std::cell::RefCell;
 use std::collections::BTreeMap;
 
 use kentos_contracts::{Entity, EntitiesSetProperties, HatchPatternType, PropertiesOperation};
@@ -128,9 +129,41 @@ pub(crate) fn js_parse_float(text: &str) -> f64 {
     text[..end].parse().unwrap_or(f64::NAN)
 }
 
+/// The panel last worked out for several selected objects, and what it was
+/// worked out from: the drawing, its changes and the selection. A large
+/// selection's kinds, shared values and totals are gathered once, not in
+/// every frame the pointer moves (docs/perf, the desktop's frame).
+#[derive(Default)]
+pub(crate) struct PanelCache(RefCell<Option<(PanelKey, Panel)>>);
+
+/// The open drawing (its session), its changes and the selection's version.
+type PanelKey = (u64, u64, u64);
+
 impl App {
     /// The panel's content for the selection now.
     pub(crate) fn properties_panel(&self, doc: &Document) -> Panel {
+        // One object or none: little to gather, and the drawing's summary
+        // shows what is not a change of it (its file, the active layer).
+        if self.selection.len() < 2 {
+            return self.work_out_panel(doc);
+        }
+        let key = (
+            doc.session,
+            doc.model.generation(),
+            self.selection.version(),
+        );
+        let mut cache = self.properties_cache.0.borrow_mut();
+        if let Some((known, panel)) = cache.as_ref()
+            && *known == key
+        {
+            return panel.clone();
+        }
+        let panel = self.work_out_panel(doc);
+        *cache = Some((key, panel.clone()));
+        panel
+    }
+
+    fn work_out_panel(&self, doc: &Document) -> Panel {
         let selected: Vec<Slot> = self.selection.ids().to_vec();
         rows::panel(doc, &selected, |ids| {
             // Summed by the geometry store, as the web sums them: a selection can be large.

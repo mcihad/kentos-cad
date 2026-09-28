@@ -36,6 +36,8 @@ use serde_json::{Value, json};
 
 use crate::document::{self, Document};
 
+mod frame;
+
 /// The drawing of measure.rs: `n` parcels of 20 vertices on one layer.
 fn drawing(n: usize) -> DocumentSnapshotV2 {
     let mut entities = Vec::with_capacity(n);
@@ -245,6 +247,48 @@ fn run_child(op: &str, n: usize, file: &Path) -> Value {
     serde_json::from_str(line).expect("JSON")
 }
 
+/// The machine, the build and the tree a measurement ran on (TODOS.md
+/// PERF-01): `machine`, `commit`, `dirtyTree`, `date`, and `machineText`
+/// for a report's first line.
+fn environment(root: &Path) -> Value {
+    let text = |cmd: &str, args: &[&str]| {
+        Command::new(cmd)
+            .args(args)
+            .current_dir(root)
+            .output()
+            .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_owned())
+            .unwrap_or_default()
+    };
+    let cpu = std::fs::read_to_string("/proc/cpuinfo")
+        .unwrap_or_default()
+        .lines()
+        .find_map(|l| l.strip_prefix("model name"))
+        .map(|l| l.trim_start_matches([' ', '\t', ':']).to_owned())
+        .unwrap_or_default();
+    let threads = std::thread::available_parallelism().map_or(0, |n| n.get());
+    let memory_gb = std::fs::read_to_string("/proc/meminfo")
+        .unwrap_or_default()
+        .lines()
+        .find_map(|l| l.strip_prefix("MemTotal:"))
+        .and_then(|v| v.trim().trim_end_matches("kB").trim().parse::<f64>().ok())
+        .map_or(0.0, |kb| (kb / 1024.0 / 1024.0).round());
+    let os = std::fs::read_to_string("/etc/os-release")
+        .unwrap_or_default()
+        .lines()
+        .find_map(|l| l.strip_prefix("PRETTY_NAME="))
+        .map(|l| l.trim_matches('"').to_owned())
+        .unwrap_or_default();
+    let rustc = text("rustc", &["--version"]);
+    let kernel = text("uname", &["-r"]);
+    json!({
+        "machine": { "cpu": cpu, "threads": threads, "memoryGb": memory_gb, "os": os, "kernel": kernel, "rustc": rustc },
+        "machineText": format!("{cpu}, {threads} iş parçacığı, {memory_gb} GB; {os} ({kernel}); {rustc}"),
+        "commit": text("git", &["rev-parse", "--short", "HEAD"]),
+        "dirtyTree": !text("git", &["status", "--porcelain", "--untracked-files=no"]).is_empty(),
+        "date": text("date", &["+%F"]),
+    })
+}
+
 fn median(mut xs: Vec<f64>) -> f64 {
     xs.sort_by(f64::total_cmp);
     match xs.len() {
@@ -296,44 +340,16 @@ fn kcad() {
             "runs": all.iter().map(|(s, o)| json!({ "save": s, "open": o })).collect::<Vec<_>>(),
         }));
     }
-    let text = |cmd: &str, args: &[&str]| {
-        Command::new(cmd)
-            .args(args)
-            .current_dir(&root)
-            .output()
-            .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_owned())
-            .unwrap_or_default()
-    };
-    let cpu = std::fs::read_to_string("/proc/cpuinfo")
-        .unwrap_or_default()
-        .lines()
-        .find_map(|l| l.strip_prefix("model name"))
-        .map(|l| l.trim_start_matches([' ', '\t', ':']).to_owned())
-        .unwrap_or_default();
-    let threads = std::thread::available_parallelism().map_or(0, |n| n.get());
-    let memory_gb = std::fs::read_to_string("/proc/meminfo")
-        .unwrap_or_default()
-        .lines()
-        .find_map(|l| l.strip_prefix("MemTotal:"))
-        .and_then(|v| v.trim().trim_end_matches("kB").trim().parse::<f64>().ok())
-        .map_or(0.0, |kb| (kb / 1024.0 / 1024.0).round());
-    let os = std::fs::read_to_string("/etc/os-release")
-        .unwrap_or_default()
-        .lines()
-        .find_map(|l| l.strip_prefix("PRETTY_NAME="))
-        .map(|l| l.trim_matches('"').to_owned())
-        .unwrap_or_default();
-    let commit = text("git", &["rev-parse", "--short", "HEAD"]);
-    let dirty = !text("git", &["status", "--porcelain", "--untracked-files=no"]).is_empty();
-    let rustc = text("rustc", &["--version"]);
-    let kernel = text("uname", &["-r"]);
-    let date = text("date", &["+%F"]);
+    let env = environment(&root);
+    let text = |key: &str| env[key].as_str().unwrap_or_default().to_owned();
+    let (machine, commit, date) = (text("machineText"), text("commit"), text("date"));
+    let dirty = env["dirtyTree"].as_bool().unwrap_or(false);
     let report = json!({
         "label": label,
         "date": date,
         "commit": commit,
         "dirtyTree": dirty,
-        "machine": { "cpu": cpu, "threads": threads, "memoryGb": memory_gb, "os": os, "kernel": kernel, "rustc": rustc },
+        "machine": env["machine"],
         "setup": { "runs": runs, "sizes": sizes, "profile": "release (lto thin)", "files": ".run/perf" },
         "summary": rows,
     });
@@ -352,7 +368,7 @@ fn kcad() {
         ),
         String::new(),
         format!(
-            "{cpu}, {threads} iş parçacığı, {memory_gb} GB; {os} ({kernel}); {rustc}, `--release` (lto thin). {runs} koşu, her hücre ortanca. Test `apps/desktop/src/perf.rs`: her işlem kendi sürecinde çalışır, bellek o sürecin en yüksek yerleşik belleğinin (VmHWM) işlemden önceki düzeyin üstündeki payıdır. Dosyalar `.run/perf`'e yazılır (yerel disk, `fsync` dahil)."
+            "{machine}, `--release` (lto thin). {runs} koşu, her hücre ortanca. Test `apps/desktop/src/perf.rs`: her işlem kendi sürecinde çalışır, bellek o sürecin en yüksek yerleşik belleğinin (VmHWM) işlemden önceki düzeyin üstündeki payıdır. Dosyalar `.run/perf`'e yazılır (yerel disk, `fsync` dahil)."
         ),
         String::new(),
         "Çizim: parsel başına 20 köşeli bir alan, üç öznitelik ve etiket, tek katman (`crates/shared/kcad/tests/measure.rs` ile aynı). “Arayüzde” kaydın arayüz iş parçacığındaki payıdır (önce `to_snapshot_v2`, ADR 0030'dan beri nesneleri paylaşan kopya `Document::clone`); “yazma” kaydın kendi iş parçacığındaki payıdır: anlık görüntü (ADR 0030'dan beri), doğrulamalı kodlama, geçici dosya, `fsync`, geri okuma ve yer değiştirme (`document::write`). “Açma” dosyanın okunması, çözülmesi ve belgenin kurulmasıdır (`Document::read`); “sahne” ilk karenin arayüz iş parçacığında kurulan sahnesidir (çizgiler ve eğriler, bütün çizim görünürken).".to_owned(),

@@ -13,9 +13,10 @@
 //! The picture is kept while the view, the drawing and the colours stay;
 //! upright text goes through Iced's glyph cache, turned text as outlines.
 
-use std::cell::Cell;
+use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::hash::{DefaultHasher, Hash, Hasher};
+use std::rc::Rc;
 use std::sync::Mutex;
 
 use iced::advanced::graphics::text::Paragraph;
@@ -37,30 +38,41 @@ use crate::drawing_fonts;
 use crate::exchange::dimension_text;
 use crate::viewport::Canvas;
 
-/// The labels' layer over the drawing area.
+/// The labels a view shows, as last asked of the store, and what they were
+/// asked for: the drawing (`drawing`, its changes), the view and the text
+/// edited in place. The store walks every object in view to answer (all of
+/// them in an overview), so a frame whose view and drawing stay (a pointer
+/// move, a button's hover) takes them from here.
+#[derive(Default)]
+pub struct Spots(RefCell<Option<(u64, Rc<Vec<LabelSpot>>)>>);
+
+impl Spots {
+    fn get(&self, key: u64, ask: impl FnOnce() -> Vec<LabelSpot>) -> Rc<Vec<LabelSpot>> {
+        let mut kept = self.0.borrow_mut();
+        match kept.as_ref() {
+            Some((known, spots)) if *known == key => spots.clone(),
+            _ => {
+                let spots = Rc::new(ask());
+                *kept = Some((key, spots.clone()));
+                spots
+            }
+        }
+    }
+}
+
+/// The labels' layer over the drawing area; `drawing` tells one open drawing from another.
+#[allow(clippy::too_many_arguments)]
 pub fn layer<'a>(
     doc: &'a Document,
+    drawing: u64,
     spatial: &Spatial,
+    kept: &Spots,
     camera: &Camera,
     canvas: Canvas,
     palette: &Palette,
     format: &Format,
     hidden: Option<Slot>,
 ) -> Element<'a, Message> {
-    let view = camera.visible_bounds();
-    let mut spots = spatial.labels(
-        Vec2::new(view.min_x, view.min_y),
-        Vec2::new(view.max_x, view.max_y),
-        camera.scale,
-    );
-    // A text or a dimension's value being edited in place (the web's `setEditing`).
-    if let Some(hidden) = hidden {
-        spots.retain(|spot| match spot {
-            LabelSpot::Text { slot, .. } | LabelSpot::Dimension { slot, .. } => *slot != hidden,
-            _ => true,
-        });
-    }
-    let font = doc.settings().drawing_font.unwrap_or(DrawingFont::Barlow);
     let mut key = DefaultHasher::new();
     (
         camera.center.x.to_bits(),
@@ -68,12 +80,30 @@ pub fn layer<'a>(
         camera.scale.to_bits(),
         camera.width.to_bits(),
         camera.height.to_bits(),
-        doc.revision(),
-        canvas as u8,
-        font as u8,
+        drawing,
+        // Every change, other editors' too (a revision counts only this user's).
+        doc.generation(),
         hidden.map(|s| s.0),
     )
         .hash(&mut key);
+    let spots = kept.get(key.finish(), || {
+        let view = camera.visible_bounds();
+        let mut spots = spatial.labels(
+            Vec2::new(view.min_x, view.min_y),
+            Vec2::new(view.max_x, view.max_y),
+            camera.scale,
+        );
+        // A text or a dimension's value being edited in place (the web's `setEditing`).
+        if let Some(hidden) = hidden {
+            spots.retain(|spot| match spot {
+                LabelSpot::Text { slot, .. } | LabelSpot::Dimension { slot, .. } => *slot != hidden,
+                _ => true,
+            });
+        }
+        spots
+    });
+    let font = doc.settings().drawing_font.unwrap_or(DrawingFont::Barlow);
+    (canvas as u8, font as u8).hash(&mut key);
     // The number formats decide a dimension's text.
     format!("{format:?}").hash(&mut key);
     canvas::Canvas::new(Labels {
@@ -124,7 +154,7 @@ pub fn colors(canvas: Canvas, palette: &Palette) -> Colors {
 
 struct Labels<'a> {
     doc: &'a Document,
-    spots: Vec<LabelSpot>,
+    spots: Rc<Vec<LabelSpot>>,
     camera: Camera,
     colors: Colors,
     font: DrawingFont,
@@ -210,7 +240,7 @@ impl Labels<'_> {
         let size = frame.size();
         let mut room = Room::new(size.width, size.height);
         let layers = self.doc.layers();
-        for spot in &self.spots {
+        for spot in self.spots.iter() {
             let slot = match spot {
                 LabelSpot::Dimension { slot, .. }
                 | LabelSpot::Text { slot, .. }
@@ -790,11 +820,11 @@ fn perf() {
     let doc = &app.document.as_ref().expect("open").model;
     let labels = Labels {
         doc,
-        spots: app.spatial.labels(
+        spots: Rc::new(app.spatial.labels(
             Vec2::new(v.min_x, v.min_y),
             Vec2::new(v.max_x, v.max_y),
             4.0,
-        ),
+        )),
         camera,
         colors: colors(Canvas::Slate, &crate::viewport::palette(Canvas::Slate)),
         font: DrawingFont::Barlow,

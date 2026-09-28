@@ -27,6 +27,9 @@ struct Gpu {
     device: wgpu::Device,
     queue: wgpu::Queue,
     renderer: Renderer,
+    /// What the frames ask of the view: keep the picture, and how many last parts are overlays.
+    keep: bool,
+    overlays: usize,
 }
 
 impl Gpu {
@@ -65,6 +68,8 @@ impl Gpu {
             device,
             queue,
             renderer,
+            keep: false,
+            overlays: 0,
         }
     }
 
@@ -121,6 +126,8 @@ impl Gpu {
                     origin_px: [0.0, 0.0],
                     scale_factor: scale,
                     settings,
+                    keep_picture: self.keep,
+                    overlays: self.overlays,
                 },
             )
             .expect("the parts upload");
@@ -271,6 +278,64 @@ fn on_a_real_gpu() {
     multisampling_changes_live_and_smooths_fill_edges(&mut gpu);
     a_count_the_device_refuses_falls_back_to_the_last_working_one(&mut gpu);
     hi_dpi_off_draws_a_quarter_of_the_pixels_and_fills_the_area(&mut gpu);
+    a_kept_picture_is_composed_again_with_the_hover_over_it(&mut gpu);
+}
+
+/// The kept picture (the desktop's drawing area): the same frame again
+/// composes the picture without drawing the scene; the hovered object, an
+/// overlay, is drawn over it in every frame and changes without the scene
+/// being drawn; a pan draws the scene again. The pixels are those of the
+/// frame drawn whole, single-sampled and with 4× multisampling.
+fn a_kept_picture_is_composed_again_with_the_hover_over_it(gpu: &mut Gpu) {
+    let (width, height) = (64, 64);
+    let doc = one_line(E);
+    let origin = scene::scene_origin(&doc);
+    let fixed = scene::build_fixed(&doc, &palette(), origin);
+    let hover_a = scene::build_fixed(&one_line(E + 6.0), &palette(), origin);
+    let hover_b = scene::build_fixed(&one_line(E - 6.0), &palette(), origin);
+    let mut camera = Camera {
+        center: Vec2::new(E, N),
+        scale: 2.0,
+        width: f64::from(width),
+        height: f64::from(height),
+    };
+    for samples in [1, 4] {
+        let mut settings = RenderSettings::new(Rgba8::rgb(0, 0, 0));
+        settings.samples = samples;
+        // The frames drawn whole, as a view that keeps nothing draws them.
+        gpu.keep = false;
+        gpu.overlays = 0;
+        let whole_a = gpu.draw(&[&fixed, &hover_a], &camera, &settings, width, height);
+        let whole_b = gpu.draw(&[&fixed, &hover_b], &camera, &settings, width, height);
+        assert_ne!(whole_a, whole_b, "the hover shows");
+        gpu.keep = true;
+        gpu.overlays = 1;
+        let kept = |gpu: &Gpu| gpu.renderer.stats(1).expect("stats").picture_kept;
+        let first = gpu.draw(&[&fixed, &hover_a], &camera, &settings, width, height);
+        assert!(!kept(gpu), "{samples}×: the first frame draws the scene");
+        assert_eq!(first, whole_a, "{samples}×: the same pixels as drawn whole");
+        let again = gpu.draw(&[&fixed, &hover_a], &camera, &settings, width, height);
+        assert!(kept(gpu), "{samples}×: the same frame keeps the picture");
+        assert_eq!(again, whole_a, "{samples}×: kept, the same pixels");
+        let hovered = gpu.draw(&[&fixed, &hover_b], &camera, &settings, width, height);
+        assert!(kept(gpu), "{samples}×: another hover keeps the picture");
+        assert_eq!(
+            hovered, whole_b,
+            "{samples}×: the new hover over the kept picture"
+        );
+        camera.center.x += 1.0;
+        let panned = gpu.draw(&[&fixed, &hover_b], &camera, &settings, width, height);
+        assert!(!kept(gpu), "{samples}×: a pan draws the scene again");
+        gpu.keep = false;
+        gpu.overlays = 0;
+        let whole = gpu.draw(&[&fixed, &hover_b], &camera, &settings, width, height);
+        assert_eq!(
+            panned, whole,
+            "{samples}×: panned, the same pixels as drawn whole"
+        );
+        camera.center.x -= 1.0;
+    }
+    eprintln!("kept picture on the GPU: composed again, the hover drawn over it, 1× and 4×");
 }
 
 /// One grey square turned by 30° on black: its edges cross pixels at every

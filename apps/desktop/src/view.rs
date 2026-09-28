@@ -567,7 +567,9 @@ impl App {
                 // The text being edited in place is hidden meanwhile (text_field.rs).
                 let labels = crate::labels::layer(
                     &doc.model,
+                    doc.session,
                     &self.spatial,
+                    &self.label_spots,
                     &self.viewport.camera,
                     self.canvas(),
                     &crate::viewport::palette(self.canvas()),

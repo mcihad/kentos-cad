@@ -1,0 +1,673 @@
+{
+  "environment": {
+    "commit": "1b72b1e",
+    "date": "2026-09-28",
+    "dirtyTree": true,
+    "machine": {
+      "cpu": "11th Gen Intel(R) Core(TM) i5-11300H @ 3.10GHz",
+      "kernel": "7.0.0-34-generic",
+      "memoryGb": 15.0,
+      "os": "Ubuntu 26.04.1 LTS",
+      "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)",
+      "threads": 8
+    },
+    "machineText": "11th Gen Intel(R) Core(TM) i5-11300H @ 3.10GHz, 8 iş parçacığı, 15 GB; Ubuntu 26.04.1 LTS (7.0.0-34-generic); rustc 1.96.0 (ac68faa20 2026-05-25)"
+  },
+  "label": "before",
+  "rows": [
+    {
+      "parcels": 0,
+      "scenario": "Boş kare (yeniden çizim)",
+      "summary": {
+        "appP50": 0.00007900000000000001,
+        "cpuMax": 0.849493,
+        "cpuP50": 0.6809259999999999,
+        "cpuP95": 0.7984559999999999,
+        "drawP50": 0.15226699999999999,
+        "eventP50": 0.0,
+        "frames": 30,
+        "gpuP50": 13.775391999999998,
+        "layoutP50": 0.288294,
+        "viewP50": 0.231784
+      }
+    },
+    {
+      "parcels": 0,
+      "scenario": "İmleç çizimin üstünde (seçim aracı)",
+      "summary": {
+        "appP50": 0.014950999999999999,
+        "cpuMax": 0.709299,
+        "cpuP50": 0.534331,
+        "cpuP95": 0.616467,
+        "drawP50": 0.12825199999999998,
+        "eventP50": 0.043963,
+        "frames": 120,
+        "gpuP50": 13.043634,
+        "layoutP50": 0.2263925,
+        "viewP50": 0.11865300000000001
+      }
+    },
+    {
+      "parcels": 0,
+      "scenario": "Tekerlekle yakınlaştırma",
+      "summary": {
+        "appP50": 0.013236,
+        "cpuMax": 1.1389369999999999,
+        "cpuP50": 0.570749,
+        "cpuP95": 0.899973,
+        "drawP50": 0.1489025,
+        "eventP50": 0.0468025,
+        "frames": 32,
+        "gpuP50": 13.394739,
+        "layoutP50": 0.226595,
+        "viewP50": 0.1318185
+      }
+    },
+    {
+      "parcels": 0,
+      "scenario": "Orta tuşla kaydırma",
+      "summary": {
+        "appP50": 0.012795500000000001,
+        "cpuMax": 0.806932,
+        "cpuP50": 0.48499899999999996,
+        "cpuP95": 0.6369290000000001,
+        "drawP50": 0.13485999999999998,
+        "eventP50": 0.0406585,
+        "frames": 40,
+        "gpuP50": 12.489416,
+        "layoutP50": 0.177563,
+        "viewP50": 0.1137805
+      }
+    },
+    {
+      "parcels": 0,
+      "scenario": "Çoklu çizgi çizerken imleç (kenet açık)",
+      "summary": {
+        "appP50": 0.016759500000000004,
+        "cpuMax": 0.7278910000000001,
+        "cpuP50": 0.6050639999999999,
+        "cpuP95": 0.6562800000000001,
+        "drawP50": 0.141981,
+        "eventP50": 0.048756,
+        "frames": 120,
+        "gpuP50": 13.560522,
+        "layoutP50": 0.26489150000000006,
+        "viewP50": 0.12676549999999998
+      }
+    },
+    {
+      "parcels": 0,
+      "scenario": "Bir nesneyi silme",
+      "summary": {
+        "appP50": 0.01729,
+        "cpuMax": 0.623303,
+        "cpuP50": 0.623303,
+        "cpuP95": 0.623303,
+        "drawP50": 0.146429,
+        "eventP50": 0.0,
+        "frames": 1,
+        "gpuP50": 12.339369,
+        "layoutP50": 0.272017,
+        "viewP50": 0.187567
+      }
+    },
+    {
+      "parcels": 0,
+      "scenario": "Geri al ve yinele (bir nesne)",
+      "summary": {
+        "appP50": 0.0049735,
+        "cpuMax": 0.531807,
+        "cpuP50": 0.5220100000000001,
+        "cpuP95": 0.531807,
+        "drawP50": 0.108901,
+        "eventP50": 0.0,
+        "frames": 10,
+        "gpuP50": 12.52234,
+        "layoutP50": 0.212563,
+        "viewP50": 0.188185
+      }
+    },
+    {
+      "parcels": 0,
+      "scenario": "Hepsini seç (Ctrl+A)",
+      "summary": {
+        "appP50": 0.003418,
+        "cpuMax": 0.671607,
+        "cpuP50": 0.671607,
+        "cpuP95": 0.671607,
+        "drawP50": 0.14715999999999999,
+        "eventP50": 0.0,
+        "frames": 1,
+        "gpuP50": 12.592915999999999,
+        "layoutP50": 0.313062,
+        "viewP50": 0.207967
+      }
+    },
+    {
+      "parcels": 0,
+      "scenario": "İmleç çizimin üstünde (hepsi seçili)",
+      "summary": {
+        "appP50": 0.0152855,
+        "cpuMax": 0.61446,
+        "cpuP50": 0.541726,
+        "cpuP95": 0.595136,
+        "drawP50": 0.129386,
+        "eventP50": 0.044283,
+        "frames": 60,
+        "gpuP50": 13.008544,
+        "layoutP50": 0.228765,
+        "viewP50": 0.119863
+      }
+    },
+    {
+      "parcels": 0,
+      "scenario": "Seçimi bırakma (Esc)",
+      "summary": {
+        "appP50": 0.017399,
+        "cpuMax": 0.47841600000000006,
+        "cpuP50": 0.47841600000000006,
+        "cpuP95": 0.47841600000000006,
+        "drawP50": 0.11320200000000001,
+        "eventP50": 0.045242,
+        "frames": 1,
+        "gpuP50": 13.163396,
+        "layoutP50": 0.179451,
+        "viewP50": 0.12312200000000001
+      }
+    },
+    {
+      "parcels": 10000,
+      "scenario": "Boş kare (yeniden çizim)",
+      "summary": {
+        "appP50": 0.000054,
+        "cpuMax": 1.6633079999999998,
+        "cpuP50": 0.889385,
+        "cpuP95": 1.5829460000000002,
+        "drawP50": 0.1404415,
+        "eventP50": 0.0,
+        "frames": 30,
+        "gpuP50": 22.605984999999997,
+        "layoutP50": 0.223869,
+        "viewP50": 0.564573
+      }
+    },
+    {
+      "parcels": 10000,
+      "scenario": "İmleç çizimin üstünde (seçim aracı)",
+      "summary": {
+        "appP50": 0.023641500000000003,
+        "cpuMax": 1.8050370000000002,
+        "cpuP50": 1.448347,
+        "cpuP95": 1.63614,
+        "drawP50": 0.2350505,
+        "eventP50": 0.0809205,
+        "frames": 120,
+        "gpuP50": 28.328121000000003,
+        "layoutP50": 0.467787,
+        "viewP50": 0.6261375
+      }
+    },
+    {
+      "parcels": 10000,
+      "scenario": "Tekerlekle yakınlaştırma",
+      "summary": {
+        "appP50": 0.013152500000000001,
+        "cpuMax": 2.420706,
+        "cpuP50": 0.968997,
+        "cpuP95": 2.120834,
+        "drawP50": 0.173551,
+        "eventP50": 0.0540165,
+        "frames": 32,
+        "gpuP50": 16.775686,
+        "layoutP50": 0.2658485,
+        "viewP50": 0.3944865
+      }
+    },
+    {
+      "parcels": 10000,
+      "scenario": "Orta tuşla kaydırma",
+      "summary": {
+        "appP50": 0.0201215,
+        "cpuMax": 1.6610549999999997,
+        "cpuP50": 1.5385660000000003,
+        "cpuP95": 1.625844,
+        "drawP50": 0.2603795,
+        "eventP50": 0.0802195,
+        "frames": 40,
+        "gpuP50": 27.212309,
+        "layoutP50": 0.40725449999999996,
+        "viewP50": 0.759131
+      }
+    },
+    {
+      "parcels": 10000,
+      "scenario": "Çoklu çizgi çizerken imleç (kenet açık)",
+      "summary": {
+        "appP50": 0.026557499999999998,
+        "cpuMax": 1.946563,
+        "cpuP50": 1.5253510000000001,
+        "cpuP95": 1.847355,
+        "drawP50": 0.249095,
+        "eventP50": 0.084593,
+        "frames": 120,
+        "gpuP50": 28.756444,
+        "layoutP50": 0.5151604999999999,
+        "viewP50": 0.6432975
+      }
+    },
+    {
+      "parcels": 10000,
+      "scenario": "Bir nesneyi silme",
+      "summary": {
+        "appP50": 0.038893000000000004,
+        "cpuMax": 15.813023999999999,
+        "cpuP50": 15.813023999999999,
+        "cpuP95": 15.813023999999999,
+        "drawP50": 0.212619,
+        "eventP50": 0.0,
+        "frames": 1,
+        "gpuP50": 33.679001,
+        "layoutP50": 0.46326,
+        "viewP50": 15.098251999999999
+      }
+    },
+    {
+      "parcels": 10000,
+      "scenario": "Geri al ve yinele (bir nesne)",
+      "summary": {
+        "appP50": 0.016451,
+        "cpuMax": 13.470139999999999,
+        "cpuP50": 11.339559999999999,
+        "cpuP95": 13.470139999999999,
+        "drawP50": 0.1592065,
+        "eventP50": 0.0,
+        "frames": 10,
+        "gpuP50": 24.100906,
+        "layoutP50": 0.275184,
+        "viewP50": 10.8489765
+      }
+    },
+    {
+      "parcels": 10000,
+      "scenario": "Hepsini seç (Ctrl+A)",
+      "summary": {
+        "appP50": 2.93015,
+        "cpuMax": 31.337002000000002,
+        "cpuP50": 31.337002000000002,
+        "cpuP95": 31.337002000000002,
+        "drawP50": 0.18332900000000002,
+        "eventP50": 0.0,
+        "frames": 1,
+        "gpuP50": 43.125177,
+        "layoutP50": 0.44270699999999996,
+        "viewP50": 27.780816
+      }
+    },
+    {
+      "parcels": 10000,
+      "scenario": "İmleç çizimin üstünde (hepsi seçili)",
+      "summary": {
+        "appP50": 0.020773,
+        "cpuMax": 6.4384879999999995,
+        "cpuP50": 5.830528,
+        "cpuP95": 6.230303000000001,
+        "drawP50": 0.12168799999999999,
+        "eventP50": 0.063136,
+        "frames": 60,
+        "gpuP50": 35.698648,
+        "layoutP50": 0.26552950000000003,
+        "viewP50": 5.3331815
+      }
+    },
+    {
+      "parcels": 10000,
+      "scenario": "Seçimi bırakma (Esc)",
+      "summary": {
+        "appP50": 0.024100999999999997,
+        "cpuMax": 3.048552,
+        "cpuP50": 3.048552,
+        "cpuP95": 3.048552,
+        "drawP50": 1.631282,
+        "eventP50": 0.080219,
+        "frames": 1,
+        "gpuP50": 24.265238,
+        "layoutP50": 0.694852,
+        "viewP50": 0.6180979999999999
+      }
+    },
+    {
+      "parcels": 50000,
+      "scenario": "Boş kare (yeniden çizim)",
+      "summary": {
+        "appP50": 0.0001425,
+        "cpuMax": 3.617254,
+        "cpuP50": 3.3948389999999997,
+        "cpuP95": 3.473306,
+        "drawP50": 0.24726350000000002,
+        "eventP50": 0.0,
+        "frames": 30,
+        "gpuP50": 83.356673,
+        "layoutP50": 0.470582,
+        "viewP50": 2.6594235
+      }
+    },
+    {
+      "parcels": 50000,
+      "scenario": "İmleç çizimin üstünde (seçim aracı)",
+      "summary": {
+        "appP50": 0.167983,
+        "cpuMax": 4.000833,
+        "cpuP50": 3.4629949999999994,
+        "cpuP95": 3.575405999999999,
+        "drawP50": 0.2448325,
+        "eventP50": 0.0818245,
+        "frames": 120,
+        "gpuP50": 83.27931,
+        "layoutP50": 0.518225,
+        "viewP50": 2.4488980000000002
+      }
+    },
+    {
+      "parcels": 50000,
+      "scenario": "Tekerlekle yakınlaştırma",
+      "summary": {
+        "appP50": 0.020415,
+        "cpuMax": 4.796674,
+        "cpuP50": 2.6307780000000003,
+        "cpuP95": 4.493679,
+        "drawP50": 0.28028600000000004,
+        "eventP50": 0.08541199999999999,
+        "frames": 32,
+        "gpuP50": 42.163846,
+        "layoutP50": 0.48926500000000006,
+        "viewP50": 1.7353155
+      }
+    },
+    {
+      "parcels": 50000,
+      "scenario": "Orta tuşla kaydırma",
+      "summary": {
+        "appP50": 0.020969500000000002,
+        "cpuMax": 4.5814259999999996,
+        "cpuP50": 3.895928,
+        "cpuP95": 4.2892600000000005,
+        "drawP50": 0.270346,
+        "eventP50": 0.0807735,
+        "frames": 40,
+        "gpuP50": 79.70224099999999,
+        "layoutP50": 0.449844,
+        "viewP50": 3.044619
+      }
+    },
+    {
+      "parcels": 50000,
+      "scenario": "Çoklu çizgi çizerken imleç (kenet açık)",
+      "summary": {
+        "appP50": 0.3122105,
+        "cpuMax": 4.432469,
+        "cpuP50": 3.6618280000000003,
+        "cpuP95": 3.9071840000000004,
+        "drawP50": 0.2655475,
+        "eventP50": 0.08496700000000001,
+        "frames": 120,
+        "gpuP50": 83.520382,
+        "layoutP50": 0.5564775,
+        "viewP50": 2.451573
+      }
+    },
+    {
+      "parcels": 50000,
+      "scenario": "Bir nesneyi silme",
+      "summary": {
+        "appP50": 0.061813,
+        "cpuMax": 67.71914899999999,
+        "cpuP50": 67.71914899999999,
+        "cpuP95": 67.71914899999999,
+        "drawP50": 0.240349,
+        "eventP50": 0.0,
+        "frames": 1,
+        "gpuP50": 100.44483699999999,
+        "layoutP50": 0.543427,
+        "viewP50": 66.87356
+      }
+    },
+    {
+      "parcels": 50000,
+      "scenario": "Geri al ve yinele (bir nesne)",
+      "summary": {
+        "appP50": 0.016949,
+        "cpuMax": 62.79871900000001,
+        "cpuP50": 58.96056600000001,
+        "cpuP95": 62.79871900000001,
+        "drawP50": 0.144312,
+        "eventP50": 0.0,
+        "frames": 10,
+        "gpuP50": 98.782043,
+        "layoutP50": 0.2391905,
+        "viewP50": 58.3747595
+      }
+    },
+    {
+      "parcels": 50000,
+      "scenario": "Hepsini seç (Ctrl+A)",
+      "summary": {
+        "appP50": 17.529222,
+        "cpuMax": 140.187056,
+        "cpuP50": 140.187056,
+        "cpuP95": 140.187056,
+        "drawP50": 0.197481,
+        "eventP50": 0.0,
+        "frames": 1,
+        "gpuP50": 245.76249,
+        "layoutP50": 0.415582,
+        "viewP50": 122.044771
+      }
+    },
+    {
+      "parcels": 50000,
+      "scenario": "İmleç çizimin üstünde (hepsi seçili)",
+      "summary": {
+        "appP50": 0.0865235,
+        "cpuMax": 36.558709,
+        "cpuP50": 30.035694000000003,
+        "cpuP95": 30.968863000000002,
+        "drawP50": 0.1023945,
+        "eventP50": 0.0318545,
+        "frames": 60,
+        "gpuP50": 137.88921100000002,
+        "layoutP50": 0.237313,
+        "viewP50": 29.5751145
+      }
+    },
+    {
+      "parcels": 50000,
+      "scenario": "Seçimi bırakma (Esc)",
+      "summary": {
+        "appP50": 0.017598,
+        "cpuMax": 8.487521,
+        "cpuP50": 8.487521,
+        "cpuP95": 8.487521,
+        "drawP50": 6.5037259999999995,
+        "eventP50": 0.035561,
+        "frames": 1,
+        "gpuP50": 79.779725,
+        "layoutP50": 0.444078,
+        "viewP50": 1.486558
+      }
+    },
+    {
+      "parcels": 100000,
+      "scenario": "Boş kare (yeniden çizim)",
+      "summary": {
+        "appP50": 0.0001445,
+        "cpuMax": 6.112364,
+        "cpuP50": 5.772880999999999,
+        "cpuP95": 5.9805079999999995,
+        "drawP50": 0.2477445,
+        "eventP50": 0.0,
+        "frames": 30,
+        "gpuP50": 175.56883100000002,
+        "layoutP50": 0.477854,
+        "viewP50": 5.0211749999999995
+      }
+    },
+    {
+      "parcels": 100000,
+      "scenario": "İmleç çizimin üstünde (seçim aracı)",
+      "summary": {
+        "appP50": 0.026258,
+        "cpuMax": 6.829073999999999,
+        "cpuP50": 5.636186,
+        "cpuP95": 5.994998,
+        "drawP50": 0.238218,
+        "eventP50": 0.080762,
+        "frames": 120,
+        "gpuP50": 173.778457,
+        "layoutP50": 0.48964900000000006,
+        "viewP50": 4.7520855
+      }
+    },
+    {
+      "parcels": 100000,
+      "scenario": "Tekerlekle yakınlaştırma",
+      "summary": {
+        "appP50": 0.020189,
+        "cpuMax": 7.303921,
+        "cpuP50": 5.011238999999999,
+        "cpuP95": 6.803428,
+        "drawP50": 0.2769345,
+        "eventP50": 0.084202,
+        "frames": 32,
+        "gpuP50": 102.83684699999999,
+        "layoutP50": 0.49653800000000003,
+        "viewP50": 4.017194
+      }
+    },
+    {
+      "parcels": 100000,
+      "scenario": "Orta tuşla kaydırma",
+      "summary": {
+        "appP50": 0.0196065,
+        "cpuMax": 6.993526,
+        "cpuP50": 6.161080999999999,
+        "cpuP95": 6.891578999999999,
+        "drawP50": 0.2483055,
+        "eventP50": 0.07655200000000001,
+        "frames": 40,
+        "gpuP50": 169.51883800000002,
+        "layoutP50": 0.4076965,
+        "viewP50": 5.229183
+      }
+    },
+    {
+      "parcels": 100000,
+      "scenario": "Çoklu çizgi çizerken imleç (kenet açık)",
+      "summary": {
+        "appP50": 0.0276875,
+        "cpuMax": 8.11422,
+        "cpuP50": 5.7517059999999995,
+        "cpuP95": 6.417841999999999,
+        "drawP50": 0.2536005,
+        "eventP50": 0.082487,
+        "frames": 120,
+        "gpuP50": 173.866539,
+        "layoutP50": 0.5319265,
+        "viewP50": 4.652089
+      }
+    },
+    {
+      "parcels": 100000,
+      "scenario": "Bir nesneyi silme",
+      "summary": {
+        "appP50": 0.036029,
+        "cpuMax": 111.10944299999998,
+        "cpuP50": 111.10944299999998,
+        "cpuP95": 111.10944299999998,
+        "drawP50": 0.233482,
+        "eventP50": 0.0,
+        "frames": 1,
+        "gpuP50": 195.531545,
+        "layoutP50": 0.508533,
+        "viewP50": 110.33139899999999
+      }
+    },
+    {
+      "parcels": 100000,
+      "scenario": "Geri al ve yinele (bir nesne)",
+      "summary": {
+        "appP50": 0.016642499999999998,
+        "cpuMax": 115.306084,
+        "cpuP50": 113.614536,
+        "cpuP95": 115.306084,
+        "drawP50": 0.15791100000000002,
+        "eventP50": 0.0,
+        "frames": 10,
+        "gpuP50": 196.91598599999998,
+        "layoutP50": 0.24006450000000001,
+        "viewP50": 112.9326925
+      }
+    },
+    {
+      "parcels": 100000,
+      "scenario": "Hepsini seç (Ctrl+A)",
+      "summary": {
+        "appP50": 26.86228,
+        "cpuMax": 275.841372,
+        "cpuP50": 275.841372,
+        "cpuP95": 275.841372,
+        "drawP50": 0.16964,
+        "eventP50": 0.0,
+        "frames": 1,
+        "gpuP50": 450.611387,
+        "layoutP50": 0.39794999999999997,
+        "viewP50": 248.411502
+      }
+    },
+    {
+      "parcels": 100000,
+      "scenario": "İmleç çizimin üstünde (hepsi seçili)",
+      "summary": {
+        "appP50": 0.052703999999999994,
+        "cpuMax": 77.376431,
+        "cpuP50": 63.178565,
+        "cpuP95": 72.18781999999999,
+        "drawP50": 0.1021285,
+        "eventP50": 0.031722,
+        "frames": 60,
+        "gpuP50": 320.798771,
+        "layoutP50": 0.23774,
+        "viewP50": 62.677582
+      }
+    },
+    {
+      "parcels": 100000,
+      "scenario": "Seçimi bırakma (Esc)",
+      "summary": {
+        "appP50": 0.018873,
+        "cpuMax": 14.370488,
+        "cpuP50": 14.370488,
+        "cpuP95": 14.370488,
+        "drawP50": 11.208846,
+        "eventP50": 0.037325,
+        "frames": 1,
+        "gpuP50": 177.770557,
+        "layoutP50": 0.37453,
+        "viewP50": 2.7309140000000003
+      }
+    }
+  ],
+  "setup": {
+    "profile": "release (lto thin)",
+    "renderer": "wgpu",
+    "sizes": [
+      0,
+      10000,
+      50000,
+      100000
+    ],
+    "window": [
+      1440.0,
+      900.0
+    ]
+  }
+}

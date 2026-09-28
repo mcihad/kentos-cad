@@ -9,6 +9,11 @@
 //!   the host's frame, inside the drawing area's viewport and scissor: a
 //!   GPU-to-GPU draw, nothing read back to the CPU (REN-02 holds).
 //!
+//! - **A kept picture:** a view that keeps its picture between frames (the
+//!   desktop's drawing area) draws the scene again only when what it shows
+//!   changed; otherwise the resolved texture it holds is composed as it is
+//!   (renderer.rs).
+//!
 //! The textures are made for a size and a sample count and made again when
 //! either changes. A replaced texture is dropped: wgpu keeps it alive until
 //! the submissions that use it have finished, so nothing in flight loses
@@ -20,6 +25,7 @@
 
 use std::future::Future;
 use std::pin::pin;
+use std::sync::{Mutex, PoisonError};
 use std::task::{Context, Poll, Waker};
 
 /// Counts beyond 1 a view may ask for; the device says which it takes.
@@ -227,6 +233,9 @@ pub struct Targets {
     bind_group: wgpu::BindGroup,
     /// Bytes of the textures, for the frame's statistics and the settings window.
     pub bytes: u64,
+    /// The key of the picture the resolved texture holds, once drawn
+    /// (renderer.rs, a kept picture); new targets hold none.
+    kept: Mutex<Option<u64>>,
 }
 
 impl Targets {
@@ -288,7 +297,18 @@ impl Targets {
             resolve,
             bind_group,
             bytes: pixels * texel * (u64::from(samples.max(1)) + u64::from(samples > 1)),
+            kept: Mutex::new(None),
         }
+    }
+
+    /// Whether the resolved texture holds the picture of `key`.
+    pub fn holds(&self, key: u64) -> bool {
+        *self.kept.lock().unwrap_or_else(PoisonError::into_inner) == Some(key)
+    }
+
+    /// The resolved texture now holds the picture of `key` (drawn this frame).
+    pub fn keep(&self, key: u64) {
+        *self.kept.lock().unwrap_or_else(PoisonError::into_inner) = Some(key);
     }
 
     /// The colour attachment the view's own pass draws into: the multisampled

@@ -1106,6 +1106,11 @@ impl shader::Primitive for Frame {
                         origin_px: [bounds.x * scale, bounds.y * scale],
                         scale_factor: f64::from(scale),
                         settings: &self.settings,
+                        // Iced draws the window again for any event; the drawing is
+                        // drawn again only when it changed. The hovered object (the
+                        // last part) goes over it (kentos-render-wgpu, renderer.rs).
+                        keep_picture: true,
+                        overlays: 1,
                     },
                 );
                 // The styled layers after the plain parts of the same frame (docs/adr/0090).

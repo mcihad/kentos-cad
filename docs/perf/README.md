@@ -19,6 +19,23 @@ EXPRESSION_BENCH=1 EXPRESSION_N=100000,1000000 EXPRESSION_PERF_OUT=docs/perf EXP
 
 Ölçüm sırasında makinede başka ağır süreç (Vite, e2e, cargo) çalışmaz.
 
+## Masaüstünün karesi büyük çizimde (2026-09-28, `1b72b1e` → ADR 0120)
+
+- **Kaynak:** [frame-desktop-before-2026-09-28.md](frame-desktop-before-2026-09-28.md), [frame-desktop-after-2026-09-28.md](frame-desktop-after-2026-09-28.md) (ham veri `.json`). Karar [ADR 0120](../adr/0120-desktop-frame-cost.md)'dedir.
+- **Ortam:** i5-11300H, Iris Xe, 15 GB, Ubuntu 26.04.1; `--release`; pencere 1440×900, 4× örnekleme (varsayılan). Arayüz pencere açmadan Iced'in çalışma zamanının sırasıyla sürülür (`apps/desktop/src/perf/frame.rs`); GPU sütunu resmin geri okunmasını da içerir (boş çizimde ≈13 ms, pencerede yoktur).
+- **Çizim:** parsel başına 20 köşeli alan, etiketli, tek katman; bütünü pencerede.
+
+| 100 000 parsel, p50 | Arayüz iş parçacığı, önce → sonra | GPU, önce → sonra |
+|---|---|---|
+| İmleç çizimin üstünde | 5,64 → 0,52 ms | 173,8 → 12,4 ms |
+| İmleç, hepsi seçili | 63,18 → 1,14 ms | 320,8 → 12,1 ms |
+| Orta tuşla kaydırma | 6,16 → 5,87 ms | 169,5 → 172,5 ms |
+| Bir nesneyi silme | 111,1 → 120,6 ms | 195,5 → 193,1 ms |
+
+- Iced her olayda bütün pencereyi çizer. Önceden çizim alanı her karede bütün sahneyi yeniden çiziyordu; şimdi resmini tutar, üzerine gelme vurgusu üstüne çizilir. İmleç karesi çizimin boyutundan bağımsız oldu.
+- Yazıların sorgusu ve çok nesneli Öznitelikler de artık her karede yeniden bulunmuyor.
+- Kalanlar: kaydırmada GPU (stilli katmanın parçaları bütün katmanı kapsar), tek nesnenin düzenlenmesinde bütün stilli katmanın yeniden kurulması ve hepsini seçmek (TODOS.md PERF-08).
+
 ## İfade motoru: tipli alanlar ve şekillerden geometri (2026-09-27, `cdbb36f`)
 
 - **Kaynak:** [expression-native-tipli-2026-09-27.md](expression-native-tipli-2026-09-27.md), [expression-web-tipli-2026-09-27.md](expression-web-tipli-2026-09-27.md). Karar [ADR 0100](../adr/0100-expression-engine.md) §3'tedir.

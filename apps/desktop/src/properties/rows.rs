@@ -29,6 +29,7 @@ const PATTERNS: [(HatchPatternType, &str); 3] = [
 ];
 
 /// The panel's content.
+#[derive(Clone)]
 pub(crate) struct Panel {
     pub summary: Summary,
     /// The header's meta: `#12`, `3 nesne`.
@@ -37,6 +38,7 @@ pub(crate) struct Panel {
 }
 
 /// Over the grid: the object's kind and label and its layer, or the selection's size and kinds.
+#[derive(Clone)]
 pub(crate) enum Summary {
     /// Nothing selected: “Seçili nesne yok” and how to select.
     Empty,
@@ -53,6 +55,7 @@ pub(crate) enum Summary {
 }
 
 /// A section of the grid; its id keeps it closed while the app runs.
+#[derive(Clone)]
 pub(crate) struct Section {
     pub id: &'static str,
     pub title: &'static str,
@@ -60,6 +63,7 @@ pub(crate) struct Section {
 }
 
 /// A row: its name, its value as shown, and how it is edited, if it is.
+#[derive(Clone)]
 pub(crate) struct Row {
     pub label: Cow<'static, str>,
     pub value: String,
@@ -70,6 +74,7 @@ pub(crate) struct Row {
 }
 
 /// How a row is edited.
+#[derive(Clone)]
 pub(crate) enum Editor {
     /// A text cell: the committed text goes to the field.
     Text(Field),
