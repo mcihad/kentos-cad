@@ -69,6 +69,15 @@ fn moved(position: Point) -> Event {
     Event::Mouse(mouse::Event::CursorMoved { position })
 }
 
+/// A left click at a place: the pointer there, the button pressed and let go.
+fn click(position: Point) -> [Event; 3] {
+    [
+        moved(position),
+        Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)),
+        Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)),
+    ]
+}
+
 impl Harness {
     fn new() -> Self {
         typography::load();
@@ -446,6 +455,38 @@ fn scenarios(n: usize) -> (String, Vec<(&'static str, Vec<Parts>)>) {
             .map(|p| h.frame(&mut app, &[moved(p)]))
             .collect(),
     ));
+    // Everything moved with Taşı: the base point, the pointer on the way, the second point, undone.
+    h.frame_with(&mut app, &[], |app| {
+        let _ = app.run("tool.move");
+    });
+    let from = Point::new(area.x + area.width * 0.4, area.y + area.height * 0.5);
+    h.frame(&mut app, &click(from));
+    out.push((
+        "Taşırken imleç (hepsi seçili)",
+        (1..=30)
+            .map(|i| {
+                let to = Point::new(from.x + 2.0 * i as f32, from.y + 1.5 * i as f32);
+                h.frame(&mut app, &[moved(to)])
+            })
+            .collect(),
+    ));
+    let to = Point::new(from.x + 62.0, from.y + 46.5);
+    let before = app.document.as_ref().map(|d| d.model.revision());
+    out.push((
+        "Hepsini taşıma (ikinci nokta)",
+        vec![h.frame(&mut app, &click(to))],
+    ));
+    assert!(
+        n == 0 || app.document.as_ref().map(|d| d.model.revision()) != before,
+        "the move was applied"
+    );
+    out.push((
+        "Taşımayı geri alma",
+        vec![h.frame_with(&mut app, &[], |app| {
+            let _ = app.run("edit.undo");
+        })],
+    ));
+    let _ = app.run("tool.select");
     out.push((
         "Seçimi bırakma (Esc)",
         vec![h.frame(&mut app, &key(key::Named::Escape))],
