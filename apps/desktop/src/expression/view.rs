@@ -204,13 +204,11 @@ fn signature(b: &Builder) -> Element<'_, Message> {
     };
     row![
         face,
-        container(
-            label::caption(note)
-                .style(style::text::muted)
-                .wrapping(iced::widget::text::Wrapping::None)
-        )
-        .width(Fill)
-        .clip(true),
+        // One line: a long description ends in “…” (the web's ellipsis).
+        kentos_ui::widget::Elided::new(note)
+            .size(typography::caption())
+            .style(style::text::muted)
+            .width(Fill),
     ]
     .spacing(10)
     .align_y(Center)
