@@ -24,6 +24,8 @@ kentos-interaction = { path = "../../crates/native/interaction" }
 # İşlemler (docs/PROCESSING.md): the processing tools and models over the document, held to
 # the web's by fixtures/processing/v1 (docs/adr/0084).
 kentos-processing = { path = "../../crates/native/processing" }
+# The coordinate system registry and a new project's content, shared with the headless host.
+kentos-project = { path = "../../crates/native/project" }
 # The cloud client (docs/adr/0040): signing in, the catalog, opening, saving and following
 # cloud projects, device drafts; its own runtime, awaited on Iced's executor (docs/adr/0041).
 kentos-cloud = { path = "../../crates/native/cloud" }

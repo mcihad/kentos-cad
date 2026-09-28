@@ -28,6 +28,9 @@ members = [
     # The desktop's processing tools (İşlemler, docs/PROCESSING.md): the web's tools and
     # models over the native document, held to fixtures/processing/v1.
     "crates/native/processing",
+    # A drawing's project model (the coordinate system registry, a new project's content),
+    # and the headless command host over the product commands (Python, AI; TODOS.md §14–15).
+    "crates/native/project",
     # The desktop's cloud client (docs/adr/0040): the web's protocol through a native adapter.
     "crates/native/cloud",
     # The desktop's style engine page (docs/adr/0090): the style library and a layer's way to the GPU.
@@ -61,6 +64,7 @@ default-members = [
     "crates/native/application",
     "crates/native/interaction",
     "crates/native/processing",
+    "crates/native/project",
     "crates/native/cloud",
     "crates/native/style",
     "crates/server/postgres",

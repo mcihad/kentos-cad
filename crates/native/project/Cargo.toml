@@ -1,0 +1,17 @@
+[package]
+name = "kentos-project"
+description = "A native drawing's project model: the coordinate system registry and what a new project starts as, shared by the desktop and the headless command host"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Pure Rust, native only (scripts/arch/deps.mjs, group `project`): no UI, GPU, database,
+# async runtime or network. The web keeps its own TypeScript (geo/crs.ts,
+# model/newProject.ts); both read the same registry (fixtures/crs/v1/registry.json) and
+# are held together by fixtures/project/v1/new-project.json.
+[dependencies]
+kentos-contracts = { path = "../../shared/contracts", default-features = false }
+kentos-domain = { path = "../domain" }
+serde = { workspace = true }
+serde_json = { workspace = true }

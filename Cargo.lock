@@ -2474,6 +2474,7 @@ dependencies = [
  "kentos-kcad",
  "kentos-native-style",
  "kentos-processing",
+ "kentos-project",
  "kentos-render-wgpu",
  "kentos-svg-core",
  "kentos-ui",
@@ -2606,6 +2607,16 @@ dependencies = [
  "kentos-geometry-core",
  "kentos-native-application",
  "kentos-style-core",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "kentos-project"
+version = "0.1.0"
+dependencies = [
+ "kentos-contracts",
+ "kentos-domain",
  "serde",
  "serde_json",
 ]
