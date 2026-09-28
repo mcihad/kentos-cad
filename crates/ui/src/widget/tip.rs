@@ -410,7 +410,13 @@ impl<Message> overlay::Overlay<Message, Theme, Renderer> for Bubble<'_, '_, Mess
             &layout::Limits::new(Size::ZERO, bounds).shrink(Padding::new(EDGE)),
         );
         let size = node.size();
-        node.move_to(place(self.anchor, size, bounds, self.position))
+        // The overlay spans the window: iced clips an overlay to its layout,
+        // and a layout of the tip alone would cut its shadow down to the
+        // corners left outside its rounded box (dark corners, docs/adr/0127).
+        layout::Node::with_children(
+            bounds,
+            vec![node.move_to(place(self.anchor, size, bounds, self.position))],
+        )
     }
 
     fn draw(
@@ -421,12 +427,15 @@ impl<Message> overlay::Overlay<Message, Theme, Renderer> for Bubble<'_, '_, Mess
         layout: Layout<'_>,
         cursor: mouse::Cursor,
     ) {
+        let Some(bubble) = layout.children().next() else {
+            return;
+        };
         self.tip.as_widget().draw(
             self.tree,
             renderer,
             theme,
             style,
-            layout,
+            bubble,
             cursor,
             &Rectangle::with_size(Size::INFINITE),
         );

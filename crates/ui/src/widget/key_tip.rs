@@ -223,12 +223,17 @@ impl Badge {
 }
 
 impl<Message> overlay::Overlay<Message, Theme, Renderer> for Badge {
-    fn layout(&mut self, _renderer: &Renderer, _bounds: Size) -> layout::Node {
+    fn layout(&mut self, _renderer: &Renderer, bounds: Size) -> layout::Node {
         let (size, _) = self.size();
-        layout::Node::new(size).move_to(Point::new(
-            (self.at.x - size.width / 2.0).round(),
-            self.at.y.round(),
-        ))
+        // Over the whole window: iced clips an overlay to its layout, and the
+        // badge's own would leave its shadow only in its corners (docs/adr/0127).
+        layout::Node::with_children(
+            bounds,
+            vec![layout::Node::new(size).move_to(Point::new(
+                (self.at.x - size.width / 2.0).round(),
+                self.at.y.round(),
+            ))],
+        )
     }
 
     fn draw(
@@ -239,9 +244,12 @@ impl<Message> overlay::Overlay<Message, Theme, Renderer> for Badge {
         layout: Layout<'_>,
         _cursor: mouse::Cursor,
     ) {
+        let Some(badge) = layout.children().next() else {
+            return;
+        };
         let t = Tokens::of(theme);
         let (_, size) = self.size();
-        let bounds = layout.bounds();
+        let bounds = badge.bounds();
         let alpha = if self.tip.dim { 0.25 } else { 1.0 };
         renderer.fill_quad(
             Quad {

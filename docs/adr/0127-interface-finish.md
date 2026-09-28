@@ -56,7 +56,8 @@ Masaüstü (KentOS UI) ile web yan yana konunca farklar şunlardı:
   - kısayollar ve ipuçları arayüz yazısıyla ve sönük; ayırıcılar kenardan içeride;
   - başlıklar yarı kalın, sönük ve etiket sütununa hizalı.
 
-  Menü kutusunu pencereye kırpan katmandan önce kutunun gölgesi ayrıca çizilir; gölge artık kesilmez.
+  Menü kutusunu pencereye kırpan katmandan önce kutunun gölgesi ayrıca çizilir; gölge artık kesilmez. Katmanın içindeki kutu gölgesiz çizilir (`style::container::popover_flat`). İçte ikinci bir gölge kutunun sınırında kesilir, yalnız yuvarlak köşelerin dışında kalır ve köşelerde koyu kareler bırakır (sahibin bildirimi, 28 Eylül: "Radius olunca köşelerde siyahlık kalıyor").
+- **Açılır katmanlar:** iced bir açılır katmanı (overlay) yerleşiminin sınırına kırpar. Kutusu kadar yerleşimi olan katmanda gölge aynı biçimde köşelere iner. Bu yüzden ipucu (`tip`) ve harf ipucu rozeti (`key_tip`) de açılır liste ve komut satırı gibi pencere boyunca yerleşir; kutu onun içinde durur.
 - **Liste satırları** (`list_item`): seçili ya da klavyeyle gelinen satır yumuşak vurgudur, kenarsız; üzerine gelinen hafif bir katman alır. Açılır kutunun listesi `menu_row` kullanır: üzerine gelince yumuşak vurgu; geçerli değer işaretiyle belli olur.
 - **Bölümlü seçici:** çukur iz (alan zemini, ince kenar, `md` köşe, 2 piksel boşluk). Seçili dilim başlık zemininde, belirgin kenarlı ve hafif gölgeli; öbürleri sönük yazılır.
 - **Alanlar:** üzerine gelince kenar belirginleşir (`border_strong`). Odakta vurgu çizgisini alır (`Tokens::accent_line`, web'in `--c-accent-line`'ı).
@@ -87,6 +88,7 @@ Masaüstü (KentOS UI) ile web yan yana konunca farklar şunlardı:
 - `cargo test -p kentos-contracts --test settings`: iki yeni ayar şemada (seçenekler, varsayılanlar, iki platform).
 - `cargo test -p kentos-desktop`, `-p kentos-ui-showcase`: bütün masaüstü ve vitrin testleri.
 - `pnpm -C apps/web exec vitest run src/core/settings src/app/settings`: web'in tercihleri iki yeni ayarla.
+- Köşeler GPU çizicisiyle (`kentos-cad snapshot … --ayar appearance.corners=round --tikla 310,106` ve `--tikla 995,57`): Daire menüsünün ve katman listesinin köşe pikselleri çevreleriyle aynıdır; düzeltmeden önce dışarıdakinden koyuydu (ör. (13,16,20) ile (16,20,26)).
 - `cargo test -p kentos-desktop ui_screens -- --ignored --nocapture`: `.run/shots/arayuz-*`:
   - sağ tık menüsü üç köşe ve gölge seçeneğinde;
   - şeritte ve ağaçta uzun katman adı, açık listesiyle;

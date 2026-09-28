@@ -107,6 +107,17 @@ pub fn popover(theme: &Theme) -> Style {
     }
 }
 
+/// Gölgesini kendisi çizmeyen açılır kutu: kutuyu kırpan bir katmanda çizilen
+/// (ör. pencereye sığmayınca kayan bağlam menüsü) ve gölgesi o katmanın
+/// dışında ayrıca çizilen kutular için. Kırpılan katmanda gölge yalnız yuvarlak
+/// köşelerin dışında kalır ve köşeleri karartırdı.
+pub fn popover_flat(theme: &Theme) -> Style {
+    Style {
+        shadow: iced::Shadow::default(),
+        ..popover(theme)
+    }
+}
+
 /// İletişim kutuları ve pencereler: panel zemini, belirgin kenar, pencere
 /// kademesinin köşesi ve gölgesi (web'in `.dialog`'u).
 pub fn dialog(theme: &Theme) -> Style {

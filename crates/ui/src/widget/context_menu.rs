@@ -977,11 +977,13 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ContextMenu<'
                     _ => None,
                 };
 
-                let main = panel(&menu, main_highlight);
+                // The main box is drawn in a layer that clips it to the window,
+                // its shadow outside that layer (`draw`); the submenu draws its own.
+                let main = panel(&menu, main_highlight, style::container::popover_flat);
                 let sub = state
                     .submenu
                     .and_then(|index| menu.submenu_of(index))
-                    .map(|submenu| panel(submenu, sub_highlight));
+                    .map(|submenu| panel(submenu, sub_highlight, style::container::popover));
 
                 let open = self.open.insert(Open { menu, main, sub });
 
@@ -1557,6 +1559,7 @@ enum Mark {
 fn panel<'a, Message: 'a>(
     menu: &Menu<Message>,
     highlighted: Option<usize>,
+    boxed: fn(&Theme) -> container::Style,
 ) -> Element<'a, Message> {
     let swatches = menu.has_swatches();
     let rows = menu
@@ -1568,7 +1571,7 @@ fn panel<'a, Message: 'a>(
     container(Column::with_children(rows))
         .padding(PADDING)
         .width(menu.width())
-        .style(style::container::popover)
+        .style(boxed)
         .into()
 }
 
