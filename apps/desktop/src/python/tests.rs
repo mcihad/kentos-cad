@@ -273,6 +273,71 @@ fn enter_runs_whole_code_and_waits_for_the_rest_of_a_block() {
     assert!(!whole("   "));
 }
 
+/// The code box with `code` and the cursor at its end.
+fn typed(app: &mut App, code: &str) {
+    use iced::widget::text_editor::{Action, Motion};
+    app.python.input = iced::widget::text_editor::Content::with_text(code);
+    app.python.input.perform(Action::Move(Motion::DocumentEnd));
+}
+
+#[test]
+fn an_answered_list_is_shown_narrowed_and_taken_and_a_late_answer_is_dropped() {
+    let mut app = app_with_drawing();
+    typed(&mut app, "x = cad.poly");
+    app.python.asked_completion = 2;
+    let items = json!([
+        {"text": "polygon", "kind": "module", "detail": ""},
+        {"text": "polyline", "kind": "module", "detail": ""},
+        {"text": "point", "kind": "module", "detail": ""}
+    ]);
+    said(
+        &mut app,
+        json!({"type": "completions", "id": 1, "start": 8, "items": items}),
+    );
+    assert!(
+        app.python.completion.is_none(),
+        "an older question's answer"
+    );
+    said(
+        &mut app,
+        json!({"type": "completions", "id": 2, "start": 8, "items": items}),
+    );
+    let shown = |app: &App| {
+        app.python
+            .completion
+            .as_ref()
+            .map(|l| l.entries().map(|c| c.text.clone()).collect::<Vec<_>>())
+    };
+    assert_eq!(
+        shown(&app),
+        Some(vec!["polygon".to_owned(), "polyline".to_owned()]),
+        "narrowed to what is typed"
+    );
+    let _ = app.update(Message::Python(Event::Step(1)));
+    let _ = app.update(Message::Python(Event::Accept(None)));
+    assert_eq!(app.python.input.text().trim_end(), "x = cad.polyline");
+    assert!(app.python.completion.is_none());
+    // Tab where nothing is to complete: four spaces.
+    typed(&mut app, "");
+    let _ = app.update(Message::Python(Event::Indent));
+    assert_eq!(app.python.input.text().trim_end_matches('\n'), "    ");
+}
+
+#[test]
+fn a_signature_answer_is_shown_and_running_code_hides_it() {
+    let mut app = app_with_drawing();
+    app.python.asked_signature = 3;
+    said(
+        &mut app,
+        json!({"type": "signature", "id": 3, "label": "measure(uid: str) -> Measure", "doc": "Ölç.", "argument": "uid: str"}),
+    );
+    let s = app.python.signature.clone().expect("the signature");
+    assert_eq!(s.label, "measure(uid: str) -> Measure");
+    assert_eq!(s.argument.as_deref(), Some("uid: str"));
+    said(&mut app, json!({"type": "signature", "id": 3}));
+    assert!(app.python.signature.is_none(), "outside a call");
+}
+
 #[test]
 fn up_and_down_go_through_the_runs() {
     let mut app = app_with_drawing();
@@ -367,6 +432,60 @@ fn run_real(app: &mut App, code: &str, heard: &mut Option<Heard>) {
     }
 }
 
+/// Sends `event` to the real console and drives its messages until `done` holds.
+fn ask_real(app: &mut App, event: Event, heard: &mut Option<Heard>, done: impl Fn(&App) -> bool) {
+    use iced::futures::StreamExt as _;
+    let task = app.update(Message::Python(event));
+    if heard.is_none() {
+        *heard = iced_runtime::task::into_stream(task);
+    }
+    let Some(stream) = heard.as_mut() else {
+        return;
+    };
+    while !done(app) {
+        match iced::futures::executor::block_on(stream.next()) {
+            Some(iced_runtime::Action::Output(message)) => {
+                let _ = app.update(message);
+            }
+            Some(_) => {}
+            None => break,
+        }
+    }
+}
+
+/// The real console completes a name and shows the signature of the call
+/// being written. Needs the checkout's Python (`pnpm py:test`).
+#[test]
+#[ignore = "needs a Python with the kentos package (pnpm py:test)"]
+fn real_python_completes_and_shows_signatures() {
+    let mut app = app_with_drawing();
+    let mut heard = None;
+    typed(&mut app, "cad.polygon.cr");
+    ask_real(&mut app, Event::Complete, &mut heard, |app| {
+        app.python.completion.is_some()
+    });
+    let _ = app.update(Message::Python(Event::Accept(None)));
+    assert_eq!(app.python.input.text().trim_end(), "cad.polygon.create");
+    typed(&mut app, "cad.polygon.create(doc, layer_id=");
+    ask_real(
+        &mut app,
+        Event::Edit(iced::widget::text_editor::Action::Move(
+            iced::widget::text_editor::Motion::DocumentEnd,
+        )),
+        &mut heard,
+        |app| app.python.signature.is_some(),
+    );
+    let s = app.python.signature.clone().expect("the signature");
+    assert!(
+        s.label
+            .starts_with("create(doc: Document, /, *, layer_id: str"),
+        "{}",
+        s.label
+    );
+    assert_eq!(s.argument.as_deref(), Some("layer_id: str"));
+    let _ = app.update(Message::Python(Event::Stop));
+}
+
 /// Pictures of the Python tab for the owner, with real runs (needs the
 /// checkout's Python, `pnpm py:test`): dark and light, at 1440×900 and
 /// 1100×650; `.run/shots/python-konsol-*`:
@@ -384,7 +503,7 @@ fn screens() {
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
-            for name in ["bos", "calismalar", "calisiyor"] {
+            for name in ["bos", "calismalar", "calisiyor", "tamamlama", "imza"] {
                 let mut app = app_with_drawing();
                 let _ = app
                     .settings
@@ -415,6 +534,23 @@ fn screens() {
                 }
                 if name == "calisiyor" {
                     running(&mut app);
+                }
+                if name == "tamamlama" {
+                    typed(&mut app, "cad.poly");
+                    ask_real(&mut app, Event::Complete, &mut heard, |app| {
+                        app.python.completion.is_some()
+                    });
+                }
+                if name == "imza" {
+                    typed(&mut app, "cad.polygon.create(doc, layer_id=");
+                    ask_real(
+                        &mut app,
+                        Event::Edit(iced::widget::text_editor::Action::Move(
+                            iced::widget::text_editor::Motion::DocumentEnd,
+                        )),
+                        &mut heard,
+                        |app| app.python.signature.is_some(),
+                    );
                 }
                 let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
                 let mut update = |app: &mut App, message| {

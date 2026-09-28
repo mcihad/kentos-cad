@@ -10,6 +10,8 @@ as it comes.
 Desktop → host::
 
     {"type": "exec", "id": 1, "code": "…"}
+    {"type": "complete", "id": 2, "code": "…", "cursor": 14}
+    {"type": "signature", "id": 3, "code": "…", "cursor": 20}
     {"type": "reply", "id": 7, "ok": true, "result": …}
     {"type": "reply", "id": 7, "ok": false, "code": "…", "message": "…"}
 
@@ -20,6 +22,11 @@ Host → desktop::
     {"type": "call", "id": 7, "method": "run", "params": {…}}
     {"type": "done", "id": 1, "ok": true}
     {"type": "done", "id": 1, "ok": false, "error": "Traceback …", "exception": "ValueError"}
+    {"type": "completions", "id": 2, "start": 10, "items": [{"text": …, "kind": …, "detail": …}]}
+    {"type": "signature", "id": 3, "label": "create(doc, /, *, layer_id: str, …)", "doc": "…", "argument": "…"}
+
+Completion and signatures are asked only between runs (``_assist``), from
+the console's names, without running anything written.
 
 A run of code sees ``cad`` (``kentos.cad``) and ``doc``: the drawing open in
 the desktop (``kentos.cad.current()``), whose requests the desktop answers on
@@ -43,7 +50,7 @@ from typing import IO, Any
 
 import kentos
 
-from . import _native
+from . import _assist, _native
 from . import cad
 from .cad import document as _document
 from .cad.errors import KentosError
@@ -264,7 +271,19 @@ def main() -> int:
         message = channel.receive()
         if message is None:
             return 0
-        if message.get("type") != "exec":
+        kind = message.get("type")
+        if kind in ("complete", "signature"):
+            code, cursor = str(message.get("code", "")), int(message.get("cursor", 0))
+            try:
+                if kind == "complete":
+                    answer = {"type": "completions", **_assist.complete(console.names, code, cursor)}
+                else:
+                    answer = {"type": "signature", **(_assist.signature(console.names, code, cursor) or {})}
+            except Exception:  # noqa: BLE001 - help that fails is no help, never an error
+                answer = {"type": "completions" if kind == "complete" else "signature"}
+            channel.send({**answer, "id": message.get("id")})
+            continue
+        if kind != "exec":
             continue
         run = message.get("id")
         name = str(message.get("name") or f"<konsol {run}>")

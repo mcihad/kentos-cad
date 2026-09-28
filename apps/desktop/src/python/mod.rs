@@ -15,6 +15,7 @@
 //! - while code runs the drawing takes no other edit (as while a drawing
 //!   opens, opening.rs): commands, clicks, the panels' edits wait for it.
 
+mod assist;
 mod host;
 mod view;
 
@@ -94,6 +95,13 @@ pub struct Console {
     pub running: Option<Run>,
     runs: u64,
     python: PathBuf,
+    /// The names that can end the word at the cursor, while the list is open (assist.rs).
+    pub completion: Option<assist::List>,
+    /// The call the cursor is in.
+    pub signature: Option<assist::Signature>,
+    /// The last questions asked of the process: older answers are dropped.
+    asked_completion: u64,
+    asked_signature: u64,
 }
 
 impl Default for Console {
@@ -109,6 +117,10 @@ impl Default for Console {
             running: None,
             runs: 0,
             python: PathBuf::new(),
+            completion: None,
+            signature: None,
+            asked_completion: 0,
+            asked_signature: 0,
         }
     }
 }
@@ -163,6 +175,15 @@ pub enum Event {
     Picked(Option<PathBuf>),
     /// ↑ (-1) and ↓ (+1) through the runs.
     History(i32),
+    /// Ctrl+Space, or Tab after a name or a dot: the names that can end it.
+    Complete,
+    /// ↑ (-1) and ↓ (+1) in the open list.
+    Step(i32),
+    /// An entry of the list taken: the one shown active, or the one clicked.
+    Accept(Option<usize>),
+    CloseList,
+    /// Tab where nothing is to complete: four spaces.
+    Indent,
     /// A message of the process of this generation.
     Host(u64, Said),
 }
@@ -178,7 +199,35 @@ impl App {
     pub(crate) fn python_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Edit(action) => {
+                let moved = !matches!(action, text_editor::Action::Scroll { .. });
                 self.python.input.perform(action);
+                if moved {
+                    self.python_refilter();
+                    return self.python_ask_signature();
+                }
+                Task::none()
+            }
+            Event::Complete => self.python_ask_completion(),
+            Event::Step(step) => {
+                if let Some(list) = &mut self.python.completion {
+                    list.step(step);
+                }
+                Task::none()
+            }
+            Event::Accept(which) => {
+                self.python_accept(which);
+                self.python_ask_signature()
+            }
+            Event::CloseList => {
+                self.python.completion = None;
+                Task::none()
+            }
+            Event::Indent => {
+                self.python
+                    .input
+                    .perform(text_editor::Action::Edit(text_editor::Edit::Paste(
+                        std::sync::Arc::new("    ".to_owned()),
+                    )));
                 Task::none()
             }
             Event::Run => {
@@ -240,6 +289,8 @@ impl App {
         if code.trim().is_empty() || self.python.running.is_some() {
             return Task::none();
         }
+        self.python.completion = None;
+        self.python.signature = None;
         let title = match &file {
             Some(name) => {
                 self.python
@@ -331,6 +382,19 @@ impl App {
                 Some("done") => {
                     self.python_done(&m);
                     view::follow()
+                }
+                Some("completions") => {
+                    if m.get("id").and_then(Value::as_u64) == Some(self.python.asked_completion) {
+                        self.python.completion = assist::List::of(&m);
+                        self.python_refilter();
+                    }
+                    Task::none()
+                }
+                Some("signature") => {
+                    if m.get("id").and_then(Value::as_u64) == Some(self.python.asked_signature) {
+                        self.python.signature = assist::Signature::of(&m);
+                    }
+                    Task::none()
                 }
                 _ => Task::none(),
             },
@@ -517,6 +581,76 @@ impl App {
                 ),
             );
         }
+    }
+
+    /// Asks the process what can end the word at the cursor (it starts the
+    /// process when there is none yet); not while code runs.
+    fn python_ask_completion(&mut self) -> Task<Message> {
+        if self.python.running.is_some() {
+            return Task::none();
+        }
+        let mut started = Task::none();
+        if self.python.host.is_none() {
+            match self.python_start() {
+                Ok(task) => started = task,
+                Err(e) => {
+                    self.python.push(Kind::Error, e);
+                    return view::follow();
+                }
+            }
+        }
+        let (code, cursor) = assist::caret(&self.python.input);
+        self.python.asked_completion += 1;
+        let ask = json!({"type": "complete", "id": self.python.asked_completion, "code": code, "cursor": cursor});
+        if let Some(h) = &self.python.host {
+            h.send(&ask);
+        }
+        started
+    }
+
+    /// Asks for the call the cursor is in, when it is in one and the process runs idle.
+    fn python_ask_signature(&mut self) -> Task<Message> {
+        let (code, cursor) = assist::caret(&self.python.input);
+        let before: String = code.chars().take(cursor).collect();
+        if !before.contains('(') || self.python.running.is_some() {
+            self.python.signature = None;
+            return Task::none();
+        }
+        let Some(h) = &self.python.host else {
+            return Task::none();
+        };
+        self.python.asked_signature += 1;
+        h.send(&json!({"type": "signature", "id": self.python.asked_signature, "code": code, "cursor": cursor}));
+        Task::none()
+    }
+
+    /// The open list follows what is typed; it closes when the word ends.
+    fn python_refilter(&mut self) {
+        let Some(list) = &mut self.python.completion else {
+            return;
+        };
+        let (code, cursor) = assist::caret(&self.python.input);
+        if !list.follow(&code, cursor) {
+            self.python.completion = None;
+        }
+    }
+
+    /// Puts the entry in place of the word it ends.
+    fn python_accept(&mut self, which: Option<usize>) {
+        let Some(list) = self.python.completion.take() else {
+            return;
+        };
+        let Some(choice) = list.chosen(which) else {
+            return;
+        };
+        let (code, cursor) = assist::caret(&self.python.input);
+        assist::replace(
+            &mut self.python.input,
+            &code,
+            list.start,
+            cursor,
+            &choice.text,
+        );
     }
 
     fn python_history(&mut self, step: i32) {

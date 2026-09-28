@@ -203,3 +203,84 @@ class Outside(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Assist(unittest.TestCase):
+    """Completion and signatures from the console's names (kentos._assist)."""
+
+    def setUp(self) -> None:
+        from kentos import _assist
+        from kentos.host import Console
+
+        self.assist = _assist
+        self.names = Console.__new__(Console)
+        self.names.names = {"cad": cad, "doc": cad.Document.new("Yardım", srid=5256), "adet": 3}
+
+    def complete(self, code: str) -> tuple[int, list[str]]:
+        answer = self.assist.complete(self.names.names, code, len(code))
+        return answer["start"], [i["text"] for i in answer["items"]]
+
+    def test_names_and_attributes_complete_without_running_anything(self) -> None:
+        start, items = self.complete("cad.poly")
+        self.assertEqual(start, 4)
+        self.assertEqual(items[:2], ["polygon", "polyline"])
+        _, items = self.complete("cad.polygon.create.")
+        self.assertIn("plan", items)
+        self.assertIn("validate", items)
+        self.assertNotIn("_input", items, "private names only when asked for")
+        _, items = self.complete("ad")
+        self.assertIn("adet", items)
+        _, items = self.complete("doc.settings.")
+        self.assertIn("srid", items, "a property is followed through its return type")
+        _, items = self.complete("yok.x")
+        self.assertEqual(items, [])
+
+    def test_items_say_what_they_are(self) -> None:
+        answer = self.assist.complete(self.names.names, "cad.polygon.cr", 14)
+        create = next(i for i in answer["items"] if i["text"] == "create")
+        self.assertEqual(create["kind"], "function", "a command's wrapper is called")
+        self.assertIn("layer_id: str", create["detail"])
+        answer = self.assist.complete(self.names.names, "doc.mea", 7)
+        measure = next(i for i in answer["items"] if i["text"] == "measure")
+        self.assertEqual(measure["kind"], "function")
+        self.assertIn("uid", measure["detail"])
+
+    def test_the_signature_of_the_call_the_cursor_is_in(self) -> None:
+        code = "cad.polygon.create(doc, layer_id='a', pts"
+        sig = self.assist.signature(self.names.names, code, len(code))
+        assert sig is not None
+        self.assertTrue(sig["label"].startswith("create(doc: Document, /, *, layer_id: str"))
+        self.assertNotIn("'", sig["label"])
+        self.assertIn("Kapalı alan oluştur", sig["doc"])
+        self.assertNotIn("``", sig["doc"], "help without its markup")
+        _, items = self.complete("cad.poly")
+        polygon = self.assist.complete(self.names.names, "cad.poly", 8)["items"][0]
+        self.assertEqual(polygon["detail"], "kentos.cad.polygon: cad.polygon.create.")
+        code = "cad.polygon.create(doc, layer_id="
+        sig = self.assist.signature(self.names.names, code, len(code))
+        assert sig is not None
+        self.assertEqual(sig["argument"], "layer_id: str")
+        code = "doc.measure("
+        sig = self.assist.signature(self.names.names, code, len(code))
+        assert sig is not None and sig["label"].startswith("measure(uid: str)")
+        self.assertIsNone(self.assist.signature(self.names.names, "print(1) ", 9))
+        self.assertIsNone(self.assist.signature(self.names.names, "s = '('", 7))
+
+
+class HostAssist(unittest.TestCase):
+    def test_the_console_answers_between_runs(self) -> None:
+        desktop = Desktop()
+        try:
+            desktop.run("kapali = 1")
+            desktop.send({"type": "complete", "id": 5, "code": "kap", "cursor": 3})
+            answer = desktop.receive()
+            self.assertEqual((answer["type"], answer["id"], answer["start"]), ("completions", 5, 0))
+            self.assertIn("kapali", [i["text"] for i in answer["items"]])
+            desktop.send({"type": "signature", "id": 6, "code": "doc.entity(", "cursor": 11})
+            answer = desktop.receive()
+            self.assertEqual((answer["type"], answer["id"]), ("signature", 6))
+            self.assertTrue(answer["label"].startswith("entity(uid: str)"))
+            desktop.send({"type": "signature", "id": 7, "code": "x", "cursor": 1})
+            self.assertEqual(desktop.receive(), {"type": "signature", "id": 7})
+        finally:
+            desktop.close()
