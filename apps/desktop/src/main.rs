@@ -128,6 +128,8 @@ fn main() -> iced::Result {
             // The recent files, kept beside the program's other history.
             if let Some(folder) = recent::RecentFiles::default_folder() {
                 app.recent = recent::RecentFiles::open(&folder);
+                // The Python tab's unsaved script, kept beside them (docs/adr/0136).
+                app.python.script = python::script::Script::load(&folder);
                 // Each processing tool's last values (islemler.json), beside them.
                 app.processing.memory = processing::memory::Memory::open(&folder);
                 // The user's models (the designer's Kaydet) beside the built-in ones.

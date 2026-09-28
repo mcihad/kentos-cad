@@ -486,6 +486,23 @@ fn real_python_completes_and_shows_signatures() {
     let _ = app.update(Message::Python(Event::Stop));
 }
 
+/// The script the pictures show: parcels listed with their areas, a new
+/// layer's worth of points at their centres.
+const SCRIPT: &str = r#""""Parsellerin alanları ve ağırlık merkezlerine nokta."""
+from kentos.cad import Vec2
+
+toplam = 0.0
+for r in doc.entities(kinds="polygon"):
+    m = doc.measure(r.uid)
+    toplam += m.area or 0
+    b = m.bounds
+    orta = Vec2((b.min_x + b.max_x) / 2, (b.min_y + b.max_y) / 2)
+    cad.point.create(doc, layer_id=r.entity.layer_id, p=orta)
+    print(f"{r.entity.label or r.uid[:8]}: {m.area:.2f} m²")
+
+print(f"Toplam: {toplam:.2f} m²")  # 1 dönüm = 1000 m²
+"#;
+
 /// Pictures of the Python tab for the owner, with real runs (needs the
 /// checkout's Python, `pnpm py:test`): dark and light, at 1440×900 and
 /// 1100×650; `.run/shots/python-konsol-*`:
@@ -503,7 +520,14 @@ fn screens() {
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
-            for name in ["bos", "calismalar", "calisiyor", "tamamlama", "imza"] {
+            for name in [
+                "bos",
+                "calismalar",
+                "calisiyor",
+                "tamamlama",
+                "imza",
+                "betik",
+            ] {
                 let mut app = app_with_drawing();
                 let _ = app
                     .settings
@@ -534,6 +558,19 @@ fn screens() {
                 }
                 if name == "calisiyor" {
                     running(&mut app);
+                }
+                if name == "betik" {
+                    app.python.script.content =
+                        iced::widget::text_editor::Content::with_text(SCRIPT);
+                    app.python.script.dirty = true;
+                    app.python.lines.clear();
+                    let _ = app.update(Message::Python(Event::Mode(super::Mode::Script)));
+                    ask_real(
+                        &mut app,
+                        Event::Script(super::script::Event::RunAll),
+                        &mut heard,
+                        |app| app.python.running.is_none() && app.python.lines.len() > 2,
+                    );
                 }
                 if name == "tamamlama" {
                     typed(&mut app, "cad.poly");
@@ -601,6 +638,118 @@ fn round_trips() {
         "1 000 cad.point.create: {:.0} ms, {:.0} µs each",
         took.as_secs_f64() * 1000.0,
         took.as_secs_f64() * 1000.0
+    );
+    let _ = app.update(Message::Python(Event::Stop));
+}
+
+fn script_text(app: &App) -> String {
+    app.python.script.content.text()
+}
+
+fn script_event(app: &mut App, event: super::script::Event) {
+    let _ = app.update(Message::Python(Event::Script(event)));
+}
+
+#[test]
+fn the_script_is_kept_as_a_draft_and_comes_back() {
+    use iced::widget::text_editor::{Action, Edit};
+    let dir = crate::files_testing::scratch("python-betik");
+    let mut app = app_with_drawing();
+    app.python.script = super::script::Script::load(&dir);
+    let _ = app.update(Message::Python(Event::Mode(super::Mode::Script)));
+    script_event(
+        &mut app,
+        super::script::Event::Edit(Action::Edit(Edit::Paste(std::sync::Arc::new(
+            "print('taslak')".into(),
+        )))),
+    );
+    assert!(app.python.script.dirty);
+    let again = super::script::Script::load(&dir);
+    assert_eq!(again.content.text().trim_end(), "print('taslak')");
+    assert!(again.dirty, "unsaved, as it was left");
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn yeni_over_unsaved_work_asks_first() {
+    use iced::widget::text_editor::{Action, Edit};
+    let mut app = app_with_drawing();
+    script_event(
+        &mut app,
+        super::script::Event::Edit(Action::Edit(Edit::Paste(std::sync::Arc::new(
+            "a = 1".into(),
+        )))),
+    );
+    script_event(&mut app, super::script::Event::New);
+    assert_eq!(app.python.script.asking, Some(super::script::Pending::New));
+    assert_eq!(script_text(&app).trim_end(), "a = 1", "nothing lost yet");
+    script_event(&mut app, super::script::Event::Cancel);
+    assert!(app.python.script.asking.is_none());
+    assert_eq!(script_text(&app).trim_end(), "a = 1");
+    script_event(&mut app, super::script::Event::New);
+    script_event(&mut app, super::script::Event::DropAndGo);
+    assert_eq!(script_text(&app).trim_end(), "", "a new script");
+    assert!(!app.python.script.dirty);
+}
+
+#[test]
+fn saving_writes_the_file_and_a_new_line_keeps_its_indentation() {
+    use iced::widget::text_editor::{Action, Edit, Motion};
+    let dir = crate::files_testing::scratch("python-kaydet");
+    let path = dir.join("parseller.py");
+    let mut app = app_with_drawing();
+    script_event(
+        &mut app,
+        super::script::Event::Edit(Action::Edit(Edit::Paste(std::sync::Arc::new(
+            "for p in x:".into(),
+        )))),
+    );
+    script_event(
+        &mut app,
+        super::script::Event::Edit(Action::Move(Motion::DocumentEnd)),
+    );
+    script_event(&mut app, super::script::Event::Newline);
+    assert_eq!(script_text(&app), "for p in x:\n    ");
+    script_event(&mut app, super::script::Event::SavedAs(Some(path.clone())));
+    assert_eq!(
+        std::fs::read_to_string(&path).expect("written"),
+        "for p in x:\n    "
+    );
+    assert!(!app.python.script.dirty);
+    assert_eq!(app.python.script.run_name(), path.display().to_string());
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+/// A script run whole in the real console: its output beside it, and on an
+/// error the cursor on the line it stopped at. Needs `pnpm py:test`'s Python.
+#[test]
+#[ignore = "needs a Python with the kentos package (pnpm py:test)"]
+fn real_python_runs_the_script_and_shows_where_it_failed() {
+    use iced::widget::text_editor::Content;
+    let mut app = app_with_drawing();
+    app.python.script.content =
+        Content::with_text("n = len(doc)\nprint(n)\nraise ValueError('dur')\n");
+    let mut heard = None;
+    ask_real(
+        &mut app,
+        Event::Script(super::script::Event::RunAll),
+        &mut heard,
+        |app| {
+            app.python.running.is_none() && app.python.lines.iter().any(|l| l.kind == Kind::Error)
+        },
+    );
+    let out: Vec<&str> = app
+        .python
+        .lines
+        .iter()
+        .filter(|l| l.kind == Kind::Out)
+        .map(|l| l.text.as_str())
+        .collect();
+    assert_eq!(out, ["13"]);
+    assert_eq!(
+        app.python.script.content.cursor().position.line,
+        2,
+        "the failed line"
     );
     let _ = app.update(Message::Python(Event::Stop));
 }

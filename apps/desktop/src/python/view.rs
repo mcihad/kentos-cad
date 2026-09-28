@@ -232,11 +232,37 @@ fn small(glyph: Icon, about: Tip, message: Option<Message>) -> Element<'static, 
     )
 }
 
+/// Konsol | Betik, at the start of each side's bar.
+fn mode_switch(mode: super::Mode) -> Element<'static, Message> {
+    let side = |label: &'static str, this: super::Mode| {
+        button(text(label).size(typography::body()))
+            .on_press(ev(Event::Mode(this)))
+            .padding([3, 10])
+            .style(style::button::segment(mode == this))
+    };
+    row![
+        side("Konsol", super::Mode::Console),
+        side("Betik", super::Mode::Script)
+    ]
+    .spacing(0)
+    .into()
+}
+
 impl App {
-    /// The bottom panel's Python tab.
+    /// The bottom panel's Python tab: the console, or the script beside its output.
     pub(crate) fn python_tab(&self) -> Element<'_, Message> {
+        match self.python.mode {
+            super::Mode::Console => self.python_console(),
+            super::Mode::Script => {
+                self.python_script_view(mode_switch(super::Mode::Script), self.python_output())
+            }
+        }
+    }
+
+    /// What the code printed (both sides show it).
+    fn python_output(&self) -> Element<'_, Message> {
         let c = &self.python;
-        let output: Element<'_, Message> = if c.lines.is_empty() {
+        if c.lines.is_empty() {
             let intro = match &c.ready {
                 Some(ready) => format!("{ready}. "),
                 None => String::new(),
@@ -265,7 +291,13 @@ impl App {
             .width(Fill)
             .height(Fill)
             .into()
-        };
+        }
+    }
+
+    /// The Konsol side: the output, the code box and its buttons.
+    fn python_console(&self) -> Element<'_, Message> {
+        let c = &self.python;
+        let output = self.python_output();
         let code = c.input.text();
         let (all, cursor) = super::assist::caret(&c.input);
         let word = all
@@ -348,10 +380,14 @@ impl App {
         ]
         .spacing(4)
         .align_y(iced::Center);
-        let input = row![container(editor).width(Fill), buttons]
-            .spacing(8)
-            .padding([6, 12])
-            .align_y(iced::Center);
+        let input = row![
+            mode_switch(super::Mode::Console),
+            container(editor).width(Fill),
+            buttons
+        ]
+        .spacing(8)
+        .padding([6, 12])
+        .align_y(iced::Center);
         // The list and the signature over the output's lower edge, just above the code.
         let mut over = Column::new().spacing(4).padding([4, 12]);
         if let Some(list) = &c.completion {

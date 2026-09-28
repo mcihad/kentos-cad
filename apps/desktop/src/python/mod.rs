@@ -16,7 +16,9 @@
 //!   opens, opening.rs): commands, clicks, the panels' edits wait for it.
 
 mod assist;
+mod code;
 mod host;
+pub(crate) mod script;
 mod view;
 
 #[cfg(test)]
@@ -80,8 +82,21 @@ pub struct Run {
     title: String,
 }
 
+/// The Python tab's two sides.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum Mode {
+    /// Code typed and run line by line.
+    #[default]
+    Console,
+    /// A script written, kept in a file, run whole or in part (script.rs).
+    Script,
+}
+
 /// The console's state.
 pub struct Console {
+    pub mode: Mode,
+    /// The Betik side's script (script.rs).
+    pub script: script::Script,
     pub lines: Vec<Line>,
     pub input: text_editor::Content,
     history: Vec<String>,
@@ -107,6 +122,8 @@ pub struct Console {
 impl Default for Console {
     fn default() -> Self {
         Self {
+            mode: Mode::Console,
+            script: script::Script::default(),
             lines: Vec::new(),
             input: text_editor::Content::new(),
             history: Vec::new(),
@@ -184,6 +201,10 @@ pub enum Event {
     CloseList,
     /// Tab where nothing is to complete: four spaces.
     Indent,
+    /// Konsol or Betik.
+    Mode(Mode),
+    /// The Betik side (script.rs).
+    Script(script::Event),
     /// A message of the process of this generation.
     Host(u64, Said),
 }
@@ -208,6 +229,12 @@ impl App {
                 Task::none()
             }
             Event::Complete => self.python_ask_completion(),
+            Event::Mode(mode) => {
+                self.python.mode = mode;
+                self.python.completion = None;
+                Task::none()
+            }
+            Event::Script(event) => self.script_event(event),
             Event::Step(step) => {
                 if let Some(list) = &mut self.python.completion {
                     list.step(step);
@@ -488,6 +515,12 @@ impl App {
         if !ok {
             let error = m.get("error").and_then(Value::as_str).unwrap_or_default();
             self.python.push_text(Kind::Error, error);
+            // The script run whole: the cursor goes to the line it stopped on.
+            if run.title == self.python.script.run_name()
+                && let Some(line) = script::failed_line(error, &run.title)
+            {
+                self.python.script.show_line(line);
+            }
         }
         let poisoned = run.poisoned;
         let title = run.title.clone();
