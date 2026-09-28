@@ -1,13 +1,14 @@
 //! What every import says besides its objects (docs/adr/0138): each layer's
 //! objects by kind and the box they span, so a window counts and places what
 //! a choice of layers brings without walking hundreds of thousands of
-//! objects, and where the view shows the objects once they are in. The
-//! desktop and the web read these from the result, so the two place an
-//! import alike (the web's `viewOf` is [`view_of`] on four numbers).
+//! objects, and where the view shows the objects once they are in, with a
+//! note on the far strays it leaves out. The desktop and the web read these
+//! from the result, so the two place an import alike (the web's `viewOf` is
+//! [`view_of`] on four numbers).
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
-use kentos_contracts::{Bounds, Entity, ImportResult, Vec2};
+use kentos_contracts::{Bounds, Entity, ImportResult, ReportItem, Vec2};
 
 use crate::math::hypot;
 
@@ -80,18 +81,21 @@ fn union<'a>(it: impl Iterator<Item = &'a Bounds>) -> Option<Bounds> {
     })
 }
 
-/// Where the view shows what was imported: the extent of `boxes` without
-/// the far strays a file can hold. A real plan held two copies of a small
-/// outline drawn at (0, 0), a slip in its source: fitted to everything, the
-/// city was a dot in a 4 400 km view. The bulk is the box of the centres'
-/// 2nd to 98th percentiles; a box whose centre lies beyond it grown by
-/// twenty times its size (and at least 100 km) is a stray, when strays are
-/// under one in a hundred (else the file is spread out, not slipped).
-pub fn view_bounds(boxes: &[Bounds]) -> Option<Bounds> {
+fn centre(b: &Bounds) -> (f64, f64) {
+    ((b.min_x + b.max_x) / 2.0, (b.min_y + b.max_y) / 2.0)
+}
+
+/// The boxes that lie far from the rest of a file, by index. A real plan
+/// held two copies of a small outline drawn at (0, 0), a slip in its
+/// source: fitted to everything, the city was a dot in a 4 400 km view. The
+/// bulk is the box of the centres' 2nd to 98th percentiles; a box whose
+/// centre lies beyond it grown by twenty times its size (and at least
+/// 100 km) is a stray. None among fewer than 100 boxes, and none when one in
+/// a hundred or more is out there: the file is spread out, not slipped.
+fn strays(boxes: &[Bounds]) -> Vec<usize> {
     if boxes.len() < 100 {
-        return union(boxes.iter());
+        return Vec::new();
     }
-    let centre = |b: &Bounds| ((b.min_x + b.max_x) / 2.0, (b.min_y + b.max_y) / 2.0);
     let pick = |mut v: Vec<f64>, q: f64| {
         let at = (q * (v.len() - 1) as f64) as usize;
         v.select_nth_unstable_by(at, f64::total_cmp);
@@ -102,15 +106,38 @@ pub fn view_bounds(boxes: &[Bounds]) -> Option<Bounds> {
     let (x0, x1) = (pick(xs.clone(), 0.02), pick(xs, 0.98));
     let (y0, y1) = (pick(ys.clone(), 0.02), pick(ys, 0.98));
     let grow = (20.0 * (x1 - x0).max(y1 - y0)).max(100_000.0);
-    let near = |b: &&Bounds| {
-        let (x, y) = centre(b);
-        x >= x0 - grow && x <= x1 + grow && y >= y0 - grow && y <= y1 + grow
-    };
-    let kept = boxes.iter().filter(near).count();
-    if (boxes.len() - kept) * 100 > boxes.len() {
-        return union(boxes.iter());
+    let far: Vec<usize> = boxes
+        .iter()
+        .enumerate()
+        .filter(|(_, b)| {
+            let (x, y) = centre(b);
+            !(x >= x0 - grow && x <= x1 + grow && y >= y0 - grow && y <= y1 + grow)
+        })
+        .map(|(i, _)| i)
+        .collect();
+    if far.len() * 100 > boxes.len() {
+        return Vec::new();
     }
-    union(boxes.iter().filter(near))
+    far
+}
+
+/// The boxes' extent without those `far` names.
+fn union_but(boxes: &[Bounds], far: &[usize]) -> Option<Bounds> {
+    let mut far = far.iter().copied().peekable();
+    union(boxes.iter().enumerate().filter_map(|(i, b)| {
+        if far.peek() == Some(&i) {
+            far.next();
+            None
+        } else {
+            Some(b)
+        }
+    }))
+}
+
+/// Where the view shows what was imported: the extent of `boxes` without
+/// the far strays a file can hold (`strays`).
+pub fn view_bounds(boxes: &[Bounds]) -> Option<Bounds> {
+    union_but(boxes, &strays(boxes))
 }
 
 /// Where the view shows the chosen layers (their boxes, `ImportLayer.bounds`):
@@ -144,14 +171,19 @@ pub fn summarise(result: &mut ImportResult) {
     }
     let mut per: HashMap<&str, Layer> = HashMap::new();
     let mut boxes = Vec::with_capacity(result.entities.len());
+    let mut on = Vec::with_capacity(result.entities.len());
     for e in &result.entities {
-        let layer = per.entry(e.base().layer_id.as_str()).or_default();
+        let name = e.base().layer_id.as_str();
+        let layer = per.entry(name).or_default();
         *layer.kinds.entry(e.kind()).or_default() += 1;
         if let Some(b) = defining_bounds(e) {
             layer.bounds = union([layer.bounds.as_ref(), Some(&b)].into_iter().flatten());
             boxes.push(b);
+            on.push(name);
         }
     }
+    let far = strays(&boxes);
+    let note = stray_note(&boxes, &on, &far);
     let mut per: HashMap<String, Layer> = per.into_iter().map(|(l, v)| (l.to_owned(), v)).collect();
     for layer in &mut result.layers {
         if let Some(l) = per.remove(&layer.name) {
@@ -159,7 +191,35 @@ pub fn summarise(result: &mut ImportResult) {
             layer.bounds = l.bounds;
         }
     }
-    result.view = view_bounds(&boxes);
+    result.view = union_but(&boxes, &far);
+    result.report.notes.extend(note);
+}
+
+/// The strays, said: how many, on which layers, and where the first is
+/// (Y to the right, X up, as a Turkish plan writes them).
+fn stray_note(boxes: &[Bounds], on: &[&str], far: &[usize]) -> Option<ReportItem> {
+    let first = boxes.get(*far.first()?)?;
+    let mut per: BTreeMap<&str, u32> = BTreeMap::new();
+    for &i in far {
+        *per.entry(on[i]).or_default() += 1;
+    }
+    let mut layers: Vec<String> = per.iter().take(3).map(|(n, k)| format!("{n} {k}")).collect();
+    if per.len() > 3 {
+        layers.push("…".into());
+    }
+    let (x, y) = centre(first);
+    Some(ReportItem {
+        what: "Uzaktaki nesne".into(),
+        count: u32::try_from(far.len()).unwrap_or(u32::MAX),
+        // `+ 0.0` writes a negative zero as 0.
+        reason: format!(
+            "çizimin geri kalanından çok uzakta ({}; ilki Y {:.0}, X {:.0} yakınında); görünüm onları dışarıda bırakır, kaynakta yanlış yere düşmüşlerse silin",
+            layers.join(", "),
+            x + 0.0,
+            y + 0.0
+        ),
+        lines: Vec::new(),
+    })
 }
 
 #[cfg(test)]
@@ -188,6 +248,23 @@ mod tests {
             boxes.push(at(f64::from(i), 0.0));
         }
         assert_eq!(view_bounds(&boxes).expect("a view").min_x, 0.0);
+    }
+
+    #[test]
+    fn a_stray_is_said_with_its_layer_and_where_it_is() {
+        let mut boxes: Vec<Bounds> = (0..500)
+            .map(|i| at(585_000.0 + f64::from(i), 4_400_000.0))
+            .collect();
+        let mut on = vec!["PARSEL"; 500];
+        boxes.push(at(-0.5, -0.5));
+        on.push("TRAFO");
+        let far = strays(&boxes);
+        assert_eq!(far, [500]);
+        let note = stray_note(&boxes, &on, &far).expect("a note");
+        assert_eq!((note.what.as_str(), note.count), ("Uzaktaki nesne", 1));
+        assert!(note.reason.starts_with("çizimin geri kalanından çok uzakta (TRAFO 1; ilki Y 0, X 0 yakınında)"), "{}", note.reason);
+        assert!(!note.reason.ends_with('.'), "the report line puts the full stop");
+        assert!(stray_note(&boxes[..500], &on[..500], &strays(&boxes[..500])).is_none());
     }
 
     #[test]

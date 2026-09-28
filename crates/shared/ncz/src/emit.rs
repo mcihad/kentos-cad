@@ -173,8 +173,6 @@ struct Emitter {
     undrawn: BTreeMap<SmartClass, u32>,
     unsized_objects: u32,
     centred_texts: u32,
-    /// Where each record read begins, and its layer: what `strays` looks at.
-    places: Vec<(f64, f64, usize)>,
     bounds: Option<Bounds>,
 }
 
@@ -192,9 +190,6 @@ impl format::Sink for Emitter {
         }
         match self.place(e, layer) {
             Ok(()) => {
-                if let Some(c) = e.coords.first() {
-                    self.places.push((c.x, c.y, layer));
-                }
                 // The pen: 0 is the thinnest line, a negative width the layer's.
                 if e.line_width.is_finite() && e.line_width > 0.0 && e.line_width <= 1000.0 {
                     let mm = e.line_width / 10.0;
@@ -234,7 +229,6 @@ impl Emitter {
             undrawn: BTreeMap::new(),
             unsized_objects: 0,
             centred_texts: 0,
-            places: Vec::new(),
             bounds: None,
         }
     }
@@ -600,52 +594,6 @@ impl Emitter {
         Ok(())
     }
 
-    /// Objects hundreds of kilometres from the rest of the drawing, said. A
-    /// real UİP holds two copies of a transformer outline drawn at (0, 0), a
-    /// slip in the source that Netcad shows too: the drawing's data, read as
-    /// such, but zooming to what was imported then fits a 4 400 km box and
-    /// the city is a dot in its corner. The bulk is where 96 % of the objects
-    /// are; a stray is outside that box grown by twenty times its size and at
-    /// least 100 km on every side (never the long tail of a real town).
-    fn strays(&mut self) {
-        if self.places.len() < 100 {
-            return;
-        }
-        let percentile = |east: bool, q: f64| {
-            let mut v: Vec<f64> = self.places.iter().map(|p| if east { p.0 } else { p.1 }).collect();
-            let at = (q * (v.len() - 1) as f64) as usize;
-            v.select_nth_unstable_by(at, f64::total_cmp);
-            v[at]
-        };
-        let (x0, x1, y0, y1) = (percentile(true, 0.02), percentile(true, 0.98), percentile(false, 0.02), percentile(false, 0.98));
-        let grow = (20.0_f64 * (x1 - x0).max(y1 - y0)).max(100_000.0);
-        let far: Vec<&(f64, f64, usize)> = self
-            .places
-            .iter()
-            .filter(|(x, y, _)| !(*x >= x0 - grow && *x <= x1 + grow && *y >= y0 - grow && *y <= y1 + grow))
-            .collect();
-        if far.is_empty() || far.len() * 100 > self.places.len() {
-            return;
-        }
-        let mut per: BTreeMap<&str, u32> = BTreeMap::new();
-        for p in &far {
-            *per.entry(self.layers[p.2].name.as_str()).or_default() += 1;
-        }
-        let mut layers: Vec<String> = per.iter().take(3).map(|(n, k)| format!("{n} {k}")).collect();
-        if per.len() > 3 {
-            layers.push("…".into());
-        }
-        let first = far[0];
-        // `+ 0.0` writes a negative zero as 0.
-        let reason = format!(
-            "çizimin geri kalanından çok uzakta ({}; ilki Y {:.0}, X {:.0} yakınında); görünüm onları dışarıda bırakır. Kaynakta yanlış yere düşmüşlerse silin.",
-            layers.join(", "),
-            first.0 + 0.0,
-            first.1 + 0.0
-        );
-        self.report.note_n("Uzaktaki nesne", &reason, 0, far.len() as u32);
-    }
-
     /// The report's lines for what the reference counts or lets fall.
     fn tally(&mut self, header: &Header, tables: &[attributes::Table]) {
         for (t, &n) in header.dropped.iter().enumerate() {
@@ -760,7 +708,6 @@ impl Emitter {
                 self.truncated,
             );
         }
-        self.strays();
     }
 
     /// The layers the objects landed on, in the order they are made in the
