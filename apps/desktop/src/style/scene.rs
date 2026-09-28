@@ -18,6 +18,7 @@
 //! (`batches::merged_order`), so the same numbers draw in the same order.
 
 use std::collections::{BTreeMap, HashMap, HashSet};
+use std::hash::BuildHasherDefault;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
@@ -92,8 +93,9 @@ pub struct StyledCache {
     library: u64,
     clip: Option<Bounds>,
     layers: HashMap<String, Layer>,
-    /// Each object's layer and part when last built, for objects since removed or moved.
-    slot_part: HashMap<Slot, (String, u64)>,
+    /// Each object's layer and part when last built, for objects since
+    /// removed or moved; the layer's id shared, not copied per object.
+    slot_part: HashMap<Slot, (Arc<str>, u64), BuildHasherDefault<SlotHasher>>,
     scene: StyledScene,
     /// What the last rebuild cost, and how many layer parts it built.
     pub last_build: Option<(Duration, usize)>,
@@ -198,16 +200,21 @@ impl StyledCache {
         match self.mark.map(|m| doc.changes_since(m)) {
             None | Some(Changes::All) => all = true,
             Some(Changes::Slots(slots)) => {
+                // Each slot once: a run changes hundreds of thousands at once.
+                let mut slots = slots.to_vec();
+                slots.sort_unstable();
+                slots.dedup();
                 for slot in slots {
-                    if let (Some(e), Some(place)) = (doc.get(*slot), doc.place(*slot)) {
-                        dirty
-                            .entry(e.base().layer_id.clone())
-                            .or_default()
-                            .parts
-                            .insert(place / PART_PLACES);
+                    // A layer not built yet is built whole: its objects' parts
+                    // need no finding.
+                    if let Some(e) = doc.get(slot)
+                        && self.layers.contains_key(e.base().layer_id.as_str())
+                        && let Some(place) = doc.place(slot)
+                    {
+                        dirty_part(&mut dirty, &e.base().layer_id, place / PART_PLACES);
                     }
-                    if let Some((layer, part)) = self.slot_part.get(slot) {
-                        dirty.entry(layer.clone()).or_default().parts.insert(*part);
+                    if let Some((layer, part)) = self.slot_part.get(&slot) {
+                        dirty_part(&mut dirty, layer, *part);
                     }
                 }
             }
@@ -392,8 +399,11 @@ impl StyledCache {
                 split = false;
                 reset = true;
                 results = Vec::new();
+                let shared: Arc<str> = Arc::from(id.as_str());
+                self.slot_part.reserve(entities.len());
                 for e in &entities {
-                    self.slot_part.insert(Slot(e.base().id), (id.clone(), 0));
+                    self.slot_part
+                        .insert(Slot(e.base().id), (Arc::clone(&shared), 0));
                 }
                 let entry = self.layers.entry(id.clone()).or_insert_with(|| Layer {
                     style: plan.node.style.clone(),
@@ -426,9 +436,13 @@ impl StyledCache {
                     entry.reads_index = reads_index;
                 }
             }
+            let shared: Arc<str> = Arc::from(id.as_str());
+            self.slot_part
+                .reserve(results.iter().map(|r| r.1.len()).sum());
             for (key, entities, layer, _) in results {
                 for e in entities {
-                    self.slot_part.insert(Slot(e.base().id), (id.clone(), key));
+                    self.slot_part
+                        .insert(Slot(e.base().id), (Arc::clone(&shared), key));
                 }
                 // A part left with no objects goes; a layer built whole keeps its one.
                 if entities.is_empty() && split {
@@ -490,6 +504,52 @@ impl StyledCache {
             self.last_build = Some((started.elapsed(), count));
         }
         self.scene.clone()
+    }
+}
+
+/// A part of `layer` to build again; the layer's id is copied only when it
+/// is not listed yet.
+fn dirty_part(dirty: &mut HashMap<String, Dirty>, layer: &str, part: u64) {
+    match dirty.get_mut(layer) {
+        Some(d) => {
+            d.parts.insert(part);
+        }
+        None => {
+            dirty
+                .entry(layer.to_owned())
+                .or_default()
+                .parts
+                .insert(part);
+        }
+    }
+}
+
+/// A quick hash for slots, small numbers given in turn (Fx's multiply: the
+/// low bits, the table's buckets, are a permutation of the slot's).
+#[derive(Default)]
+pub(crate) struct SlotHasher(u64);
+
+impl std::hash::Hasher for SlotHasher {
+    fn finish(&self) -> u64 {
+        self.0
+    }
+
+    fn write(&mut self, bytes: &[u8]) {
+        for &b in bytes {
+            self.write_u8(b);
+        }
+    }
+
+    fn write_u8(&mut self, n: u8) {
+        self.write_u64(u64::from(n));
+    }
+
+    fn write_u32(&mut self, n: u32) {
+        self.write_u64(u64::from(n));
+    }
+
+    fn write_u64(&mut self, n: u64) {
+        self.0 = (self.0.rotate_left(5) ^ n).wrapping_mul(0x51_7c_c1_b7_27_22_0a_95);
     }
 }
 

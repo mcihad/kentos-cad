@@ -85,4 +85,6 @@ Aynı makine, iki koşunun ortalaması, arayüz iş parçacığı (MİB), milisa
 
 Denenip bırakılan: geometri deposunun kayıtlarını çekirdeklere bölmek. Kayıt başına iş küçük olduğundan kazandırmadı (sıralı 30, paralel 35–41 ms). Ayrı iş parçacığında serbest bırakmanın ayırıcıda yarattığı çekişme de ölçüldü: eşitleme 20–25 ms yavaşlıyor, ama toplamda yaklaşık 40 ms kazanç kalıyor (iki koşu: yerinde 901 ve 900, ayrı iş parçacığında 864 ve 854 ms).
 
+**Stilli sahne.** Görünümün yaklaşık 210 ms'sinin 185'i stilli sahneydi: gerçek kurulum yalnız 20 ms (103 parça, çekirdeklerde); gerisi kayıt tutma. Değişen kimlikler tekilleştirilir. Henüz kurulmamış (yeni) katmanların nesneleri için parça aranmaz, o katman zaten baştan kurulur. Parça kaydı katmanın kimliğini nesne başına kopyalamaz (`Arc<str>`), tamsayı karmasıyla ve önceden büyütülmüş tabloyla tutulur (`SlotHasher`). Kayıt 40 → 25 ms; sahne 185 → 150–165 ms. Kirli parçaların bulunması 77–91 ms'de kaldı: yük, büyük tablolarda 410 000 aramanın önbellek ıskaları.
+
 Kalan pay: iki adımın belgeye yazılması (adım başına yaklaşık 150 ms; kimlik, karma tabloları, sıra ve katman ağaçları), geometri deposunun eşitlenmesi (yaklaşık 180 ms: kimlikler 25, kayıtlar 30, ekleme ve ağacın yeniden kuruluşu 120), sahnenin kurulması (görünüm, yaklaşık 210 ms) ve çizim (yaklaşık 100 ms).
