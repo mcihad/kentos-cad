@@ -60,6 +60,9 @@ const GROUPS = [
   // by name, the catalog, queries and files; what the Python SDK and the MCP server stand on.
   // Pure like the commands it runs. Listed before `native`.
   { name: 'headless', path: 'crates/native/headless/', targets: [HOST], uses: ['shared', 'domain', 'application', 'project'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  // The Python SDK's extension module (docs/adr/0131): the headless host under CPython. The one
+  // native crate that uses pyo3. Listed before `native`.
+  { name: 'python', path: 'crates/native/python/', targets: [HOST], uses: ['shared', 'domain', 'application', 'project', 'headless'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'gdal*', 'proj', 'proj-sys'] },
   { name: 'native', path: 'crates/native/', targets: [HOST], uses: ['shared', 'domain', 'native'], forbid: ['sqlx*', 'axum*', ...BROWSER, ...DESKTOP, 'pyo3*'] },
   { name: 'server', path: 'crates/server/', targets: [HOST], uses: ['shared', 'domain', 'native', 'server'], forbid: [...BROWSER, ...DESKTOP] },
   { name: 'api', path: 'apps/api/', targets: [HOST], uses: ['shared', 'domain', 'native', 'server'], forbid: [...BROWSER, ...DESKTOP] },

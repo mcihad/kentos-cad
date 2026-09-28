@@ -32,6 +32,9 @@ members = [
     # and the headless command host over the product commands (Python, AI; TODOS.md §14–15).
     "crates/native/project",
     "crates/native/headless",
+    # The Python SDK's extension module kentos._native (docs/adr/0131): built by maturin, tested
+    # from Python; not a default member, as it links a Python.
+    "crates/native/python",
     # The desktop's cloud client (docs/adr/0040): the web's protocol through a native adapter.
     "crates/native/cloud",
     # The desktop's style engine page (docs/adr/0090): the style library and a layer's way to the GPU.
@@ -142,6 +145,11 @@ wgpu = { version = "=27.0.1" }
 # SVG pictograms, text markers and pattern tiles rasterized on the CPU. The version and
 # features Iced's software renderer already builds (iced_tiny_skia): nothing new in the lockfile.
 tiny-skia = { version = "=0.11.4", default-features = false, features = ["std", "simd"] }
+# The Python SDK's extension module kentos._native (docs/adr/0131; the owner's approval,
+# 2026-09-28): CPython 3.10 and later through the stable ABI, one wheel per platform. maturin
+# (1.9.4 and later) builds it and sets PYO3_BUILD_EXTENSION_MODULE, so the deprecated
+# `extension-module` feature is not used; a plain cargo build links the system's libpython.
+pyo3 = { version = "=0.29.2", default-features = false, features = ["macros", "abi3-py310"] }
 # SVG text read into the SVG core's element tree on the desktop (docs/adr/0090; the owner's
 # approval, 2026-09-27); the web lets the browser parse it. Locked already through fontdb.
 roxmltree = { version = "=0.20.0" }

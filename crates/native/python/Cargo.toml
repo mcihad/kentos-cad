@@ -1,0 +1,22 @@
+[package]
+name = "kentos-python"
+description = "The CPython extension kentos._native: the headless command host (kentos-headless) under the Python SDK kentos.cad"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Built by maturin from python/pyproject.toml into the package `kentos` (docs/adr/0131). Not in
+# default-members: it links a Python, which web and server work does not need; its tests run
+# from Python (scripts/python/test.sh). scripts/arch/deps.mjs, group `python`: the only native
+# crate that may use pyo3.
+[lib]
+name = "kentos_python"
+crate-type = ["cdylib"]
+
+[dependencies]
+kentos-contracts = { path = "../../shared/contracts", default-features = false }
+kentos-headless = { path = "../headless" }
+pyo3 = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

@@ -42,3 +42,7 @@ apps/web/src/style/svg/pkg/
 
 # Background services started by make (PIDs and logs; scripts/dev/svc.sh)
 .run/
+
+# The Python SDK (docs/adr/0131): its native module as maturin builds it, and caches
+python/kentos/_native*.so
+__pycache__/

@@ -1,0 +1,23 @@
+# The Python SDK of KentOS CAD (docs/adr/0131): the package `kentos`, its native module
+# kentos._native built from crates/native/python by maturin, its typed layer kentos.cad
+# generated from the command catalog (scripts/python/sdk.py).
+[build-system]
+requires = ["maturin>=1.9.4,<2"]
+build-backend = "maturin"
+
+[project]
+name = "kentos"
+description = "KentOS CAD'in Python kitaplığı: çizim, ürün komutları ve proje bulutu (kentos.cad)"
+requires-python = ">=3.10"
+dynamic = ["version"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Rust",
+    "Operating System :: POSIX :: Linux",
+    "Typing :: Typed",
+]
+
+[tool.maturin]
+manifest-path = "../crates/native/python/Cargo.toml"
+module-name = "kentos._native"
+python-source = "."

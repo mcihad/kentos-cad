@@ -1,6 +1,6 @@
 # Bağımlılık kaydı
 
-Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.md `BASE-06`'nın karşılığıdır. Bugünkü 35 Rust bağımlılığı aşağıdadır (26 Eylül'de `miniz_oxide`; 27 Eylül'de `tiny-skia`, `roxmltree` ve `zune-jpeg` eklendi). Lisans taramasını ve SBOM'u CI'a bağlamak ayrı iştir (`OPS-13`).
+Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.md `BASE-06`'nın karşılığıdır. Bugünkü 36 Rust bağımlılığı aşağıdadır (26 Eylül'de `miniz_oxide`; 27 Eylül'de `tiny-skia`, `roxmltree` ve `zune-jpeg`; 28 Eylül'de `pyo3` eklendi). Lisans taramasını ve SBOM'u CI'a bağlamak ayrı iştir (`OPS-13`).
 
 ## Kurallar
 
@@ -49,9 +49,10 @@ Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.
 | time | 0.3.55 | MIT OR Apache-2.0 | native | application, api | ADR 0007 |
 | tracing | 0.1.44 | MIT | native | api | ADR 0007 |
 | tracing-subscriber | 0.3.23 | MIT | native | api | ADR 0007 |
+| pyo3 | 0.29.2, varsayılan özellikler kapalı, `macros`, `abi3-py310` | MIT OR Apache-2.0 | native (CPython eklentisi) | python (`kentos._native`, Python SDK'sının yerel modülü; `default-members` dışında) | ADR 0131 (sahibin onayı, 28 Eylül). Kararlı ABI: CPython 3.10 ve sonrası için platform başına tek tekerlek. Eskimiş `extension-module` özelliği kullanılmaz; maturin `PYO3_BUILD_EXTENSION_MODULE`'ü kendisi koyar. Kilide girenler: `pyo3`, `pyo3-ffi`, `pyo3-build-config`, `pyo3-macros`, `pyo3-macros-backend` (MIT OR Apache-2.0) ve `target-lexicon` 0.13.5 (Apache-2.0 WITH LLVM-exception) |
 | miniz_oxide | 0.9.1, varsayılan özellikler kapalı, `with-alloc` (yalnız inflate kullanılır) | MIT OR Zlib OR Apache-2.0 | native, wasm32 (saf Rust) | formats (zip'li Shapefile, `zip.rs`) | ADR 0046 soru 4 (sahibin onayı, 26 Eylül), ADR 0053; `flate2` üzerinden zaten kilitliydi (`adler2` ile), kilide yeni paket girmedi. Biçim WASM modülü zip okumaz: +183 bayt |
 
-**Geçişli bağımlılıklar** (`Cargo.lock`): 639 paket, 23'ü çalışma alanının kendi crate'leri (27 Eylül; `zune-jpeg` ve `zune-core` girdi).
+**Geçişli bağımlılıklar** (`Cargo.lock`): 648 paket, 26'sı çalışma alanının kendi crate'leri (28 Eylül; PyO3'ün beş paketi ve `target-lexicon` girdi).
 
 - Masaüstü arayüzü (Iced, wgpu, winit, cosmic-text, tiny-skia …) 291 paket getirdi (ADR 0016). Hepsi taranmıştır.
 - Yalnız masaüstü derlemesine girerler; web ve sunucu derlemesi (`default-members`) onları derlemez.
@@ -80,7 +81,9 @@ Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.
 | Rust | 1.96.0, `wasm32-unknown-unknown` hedefiyle | `rust-toolchain.toml` |
 | wasm-bindgen-cli | 0.2.128 | crate sürümüyle aynı olmak zorunda (CLAUDE.md §2) |
 | Node, pnpm | 24.16.0, 11.24.0 (referans makinede, 25 Eylül; depoda kilitli değil) | `docs/baseline/` |
-| Python 3 | yalnız standart kitaplık (`decimal`, `fractions`, `math`, `json`, `random`, `re`) | `scripts/fixtures/*.py` bağımsız referans üreticileri |
+| Python 3 | yalnız standart kitaplık (`decimal`, `fractions`, `math`, `json`, `random`, `re`) | `scripts/fixtures/*.py` bağımsız referans üreticileri; `scripts/python/sdk.py` (Python SDK'sının üreticisi) |
+| CPython | 3.10 ve sonrası (kararlı ABI); SDK'nın çalışma zamanı yalnız standart kitaplık | `python/` paketi `kentos` (ADR 0131) |
+| maturin | 1.15.0 (`>=1.9.4,<2`; MIT OR Apache-2.0), `.run/py` ortamında | `python/pyproject.toml`'un derleme arka ucu; `scripts/python/test.sh` kurar (ADR 0131, sahibin onayı, 28 Eylül) |
 | PostgreSQL + PostGIS | `postgis/postgis:18-3.6` (yerel geliştirme kabı) | ADR 0006 |
 
 ## Aday: kurulmadı, ilgili fazda karar verilecek
@@ -91,5 +94,5 @@ Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.
 | sqlx TLS özelliği (`rustls`) | Üretim veritabanı bağlantısı | `OPS-03` |
 | S3 uyumlu nesne deposu istemcisi | Bulut dosya revizyonları | `SYNC-02`, `SYNC-03` |
 | PROJ, GDAL bağlayıcıları | Dönüşüm ve biçimler (native/sunucu) | `NUM-05`, `NUM-06`, `FMT-04` |
-| PyO3 + gömülü CPython; Pyodide | Python | `PY-01`, `PY-02`, `PY-18` |
+| Masaüstüne gömülü CPython (konsol, betik paneli); Pyodide | Python | `PY-01`, `PY-02`, `PY-18` (PyO3'ün kendisi ADR 0131 ile kurulu) |
 | MCP uygulaması | AI yüzeyi | `AI-03`, `AI-04` |
