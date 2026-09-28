@@ -972,6 +972,198 @@ SCENES.ribbon = [
   },
 ].map((s) => ({ close: (ui) => ribbonOff(ui), ...s }));
 
+// The new tools at work (docs/adr/0140): each one is started from the ribbon's command, its value typed in the command
+// line as a user does, and a picture taken with the preview showing and another after Enter. Objects the scene needs
+// are added on bare ground next to the demo drawing (sized by the view's width) and taken back after; the demo
+// drawing's own parcels serve where a parcel will do.
+const UNDO_ALL = `(() => { const k = window.kentos; k.tools.activate('select'); while (k.doc.canUndo.value) k.doc.undo(); k.selection.clear(); k.view.zoomExtents(); })()`;
+/** The page point of a world point. */
+const PAGE_AT = (x, y) => `(() => { const k = window.kentos; const r = k.view.clientRect(); const s = k.view.camera.worldToScreen({ x: ${x}, y: ${y} }); return [Math.round(s.x + r.left), Math.round(s.y + r.top)]; })()`;
+/** `body` run with the view's middle `c` and a sixth of its width `w`; `add` puts an object on the active layer. */
+const SCRATCH = (body) => `(() => {
+  const k = window.kentos;
+  const b = k.view.camera.visibleBounds();
+  const c = { x: (b.minX + b.maxX) / 2, y: (b.minY + b.maxY) / 2 };
+  const w = (b.maxX - b.minX) / 6;
+  const add = (e) => k.doc.add({ layerId: k.doc.layers.active.value, attrs: {}, ...e });
+  ${body}
+})()`;
+/** The view over bare ground next to the drawing (about 120 m wide), for the scenes that draw their own objects. */
+const CLEAR_VIEW = `(() => {
+  const k = window.kentos;
+  const e = k.view.extent();
+  const r = k.view.clientRect();
+  const w = 120;
+  const h = (w * r.height) / r.width;
+  k.selection.clear();
+  k.view.camera.fit({ minX: e.maxX + 400, minY: e.minY, maxX: e.maxX + 400 + w, maxY: e.minY + h }, 0);
+  k.view.requestRender();
+})()`;
+const runTool = (id) => `window.kentos.commands.execute('tool.${id}')`;
+/** The mouse over the drawing at a world point, as a user reaches for the next click. */
+async function hoverAt(ui, x, y) {
+  await ui.move(...(await ui.eval(PAGE_AT(x, y))));
+  await ui.sleep(350);
+}
+/** Six neighbouring parcels of the demo drawing (its “Parsel sınırı” layer) selected and filled in the view. */
+const SIX_PARCELS = `(() => {
+  const k = window.kentos;
+  const all = [...k.doc.all()].filter((e) => e.kind === 'polygon' && k.doc.layers.get(e.layerId)?.name === 'Parsel sınırı');
+  const mid = (e) => ({ x: e.pts.reduce((a, p) => a + p.x, 0) / e.pts.length, y: e.pts.reduce((a, p) => a + p.y, 0) / e.pts.length });
+  const o = mid(all[0]);
+  all.sort((a, b) => Math.hypot(mid(a).x - o.x, mid(a).y - o.y) - Math.hypot(mid(b).x - o.x, mid(b).y - o.y));
+  k.selection.set(all.slice(0, 6).map((e) => e.id));
+})()`;
+async function parcelsInView(ui) {
+  await ui.eval(SIX_PARCELS);
+  await ui.eval(`window.kentos.view.zoomToSelection()`);
+  await ui.sleep(500);
+}
+async function startTool(ui, id) {
+  await ui.eval(runTool(id));
+  await ui.sleep(300);
+}
+/** A line typed into the command line (the value a tool asks for). */
+async function typeValue(ui, text) {
+  await typeLine(ui, text);
+  await ui.sleep(300);
+}
+/** Enter in the emptied command line: what a user presses to confirm. */
+async function pressEnter(ui) {
+  await ui.clickSel('.cmdline__input');
+  await ui.eval(CMDLINE_EMPTY);
+  await ui.key('Enter');
+  await ui.sleep(500);
+}
+/** The middle of the view, in world coordinates, for the mouse. */
+const VIEW_MID = `(() => { const k = window.kentos; const b = k.view.camera.visibleBounds(); return [(b.minX + b.maxX) / 2, (b.minY + b.maxY) / 2]; })()`;
+async function hoverMid(ui) {
+  await hoverAt(ui, ...(await ui.eval(VIEW_MID)));
+}
+
+function toolScenes() {
+  const ribbon = (ui) => ribbonOn(ui, { ribbonTab: 'modify' });
+  const lastOf = (kind) => `[...window.kentos.doc.all()].filter((e) => e.kind === '${kind}').slice(-1).map((e) => e.id)`;
+  /** A wiggly open polyline of many vertices along a gentle curve, for Sadeleştir and Yönü çevir. */
+  const WIGGLE = SCRATCH(`
+    const pts = [];
+    for (let i = 0; i <= 48; i++) {
+      const t = i / 48;
+      pts.push({ x: c.x - 2.2 * w + 4.4 * w * t, y: c.y + 0.7 * w * Math.sin(t * Math.PI * 1.5) + 0.02 * w * Math.sin(i * 7.3) });
+    }
+    const e = add({ kind: 'polyline', pts, color: '#E5484D' });
+    k.selection.set([e.id]);`);
+  const WIGGLE_TOL = SCRATCH(`return (0.05 * w).toFixed(2);`);
+  /** Three lines crossing each other, selected. */
+  const CROSSING = SCRATCH(`
+    const a = add({ kind: 'line', a: { x: c.x - 2 * w, y: c.y }, b: { x: c.x + 2 * w, y: c.y } });
+    const d = add({ kind: 'line', a: { x: c.x - 1.4 * w, y: c.y - 1.2 * w }, b: { x: c.x + 1.6 * w, y: c.y + 1.3 * w } });
+    const v = add({ kind: 'line', a: { x: c.x + 0.5 * w, y: c.y - 1.4 * w }, b: { x: c.x + 0.5 * w, y: c.y + 1.4 * w } });
+    k.selection.set([a.id, d.id, v.id]);`);
+  /** A long line, alone; the point on it a click picks it at. */
+  const ONE_LINE = SCRATCH(`add({ kind: 'line', a: { x: c.x - 2.2 * w, y: c.y }, b: { x: c.x + 2.2 * w, y: c.y + 0.5 * w } });`);
+  const ON_LINE = SCRATCH(`return [c.x, c.y + 0.25 * w];`);
+  /** A bent polyline; the point near its last end, and a piece length that leaves a short last piece. */
+  const BENT = SCRATCH(`add({ kind: 'polyline', pts: [{ x: c.x - 2.2 * w, y: c.y - 0.6 * w }, { x: c.x + 0.6 * w, y: c.y - 0.6 * w }, { x: c.x + 2 * w, y: c.y + 0.9 * w }] });`);
+  const NEAR_BENT_END = SCRATCH(`return [c.x + 2 * w - 0.06 * w, c.y + 0.9 * w - 0.06 * w * 1.5 / 1.4];`);
+  const BENT_LENGTH = SCRATCH(`return (((0.6 + 2.2) * w + Math.hypot(1.4 * w, 1.5 * w)) / 5.5).toFixed(2);`);
+  /** Drawn twice, empty, and with repeated vertices: what Çizimi temizle finds. */
+  const MESSY = SCRATCH(`
+    add({ kind: 'line', a: { x: c.x - 2 * w, y: c.y - w }, b: { x: c.x, y: c.y - w } });
+    add({ kind: 'line', a: { x: c.x - 2 * w, y: c.y - w }, b: { x: c.x, y: c.y - w } });
+    add({ kind: 'polygon', pts: [{ x: c.x + w, y: c.y - w }, { x: c.x + 2 * w, y: c.y - w }, { x: c.x + 2 * w, y: c.y - w }, { x: c.x + 2 * w, y: c.y }, { x: c.x + w, y: c.y }, { x: c.x + w, y: c.y }] });
+    add({ kind: 'line', a: { x: c.x - w, y: c.y + w }, b: { x: c.x - w, y: c.y + w } });
+    add({ kind: 'line', a: { x: c.x, y: c.y + 0.3 * w }, b: { x: c.x + 0.8 * w, y: c.y + 0.3 * w } });
+    add({ kind: 'line', a: { x: c.x, y: c.y + 0.3 * w }, b: { x: c.x + 0.8 * w, y: c.y + 0.3 * w } });
+    k.selection.set([...k.doc.all()].slice(-6).map((e) => e.id));`);
+  /** A source with its own colour and weight, and plain objects to give them to; the points a click picks them at. */
+  const MATCH = SCRATCH(`
+    const sq = (x0, y0, x1, y1, o) => add({ kind: 'polygon', pts: [{ x: x0, y: y0 }, { x: x1, y: y0 }, { x: x1, y: y1 }, { x: x0, y: y1 }], ...o });
+    sq(c.x - 2 * w, c.y + 0.2 * w, c.x - 0.8 * w, c.y + 1.2 * w, { color: '#E5484D', lineWeight: 0.7 });
+    sq(c.x - 0.4 * w, c.y + 0.2 * w, c.x + 0.8 * w, c.y + 1.2 * w, { color: '#3B82F6', lineWeight: 0.13 });
+    add({ kind: 'circle', c: { x: c.x + 1.6 * w, y: c.y + 0.7 * w }, r: 0.5 * w, color: '#3B82F6', lineWeight: 0.13 });
+    k.selection.clear();`);
+  const MATCH_SOURCE = SCRATCH(`return [c.x - 1.4 * w, c.y + 0.2 * w];`);
+  const MATCH_TARGET = SCRATCH(`return [c.x + 0.2 * w, c.y + 0.2 * w];`);
+  const MATCH_TARGET_2 = SCRATCH(`return [c.x + 2.1 * w, c.y + 0.7 * w];`);
+  const BELOW = SCRATCH(`return [c.x, c.y - 1.5 * w];`);
+  const bare = async (ui, scratch) => {
+    await ribbon(ui);
+    await ui.eval(CLEAR_VIEW);
+    await ui.sleep(300);
+    await ui.eval(scratch);
+  };
+  const clickWorld = async (ui, expr) => ui.clickAt(...(await ui.eval(PAGE_AT(...(await ui.eval(expr))))));
+  const splitOn = async (ui, scratch, option, point, value) => {
+    await bare(ui, scratch);
+    await startTool(ui, 'split');
+    await ui.eval(`window.kentos.tools.active.input('${option}')`);
+    await clickWorld(ui, point);
+    await ui.sleep(300);
+    await typeValue(ui, typeof value === 'function' ? await value() : value);
+  };
+  const matchStart = async (ui) => {
+    await bare(ui, MATCH);
+    await startTool(ui, 'matchProperties');
+    await clickWorld(ui, MATCH_SOURCE);
+    await ui.sleep(300);
+  };
+  return [
+    // Tüm köşeleri yuvarla and Tüm köşelere pah: two parcels, the value typed.
+    { id: 'filletall-preview', open: async (ui) => (await ribbon(ui), await parcelsInView(ui), await startTool(ui, 'filletAll'), await typeValue(ui, '4'), await hoverMid(ui)) },
+    { id: 'filletall-result', open: async (ui) => (await ribbon(ui), await parcelsInView(ui), await startTool(ui, 'filletAll'), await typeValue(ui, '4'), await pressEnter(ui), await ui.move(2, 2)) },
+    { id: 'chamferall-preview', open: async (ui) => (await ribbon(ui), await parcelsInView(ui), await startTool(ui, 'chamferAll'), await typeValue(ui, '4,6'), await hoverMid(ui)) },
+    { id: 'chamferall-result', open: async (ui) => (await ribbon(ui), await parcelsInView(ui), await startTool(ui, 'chamferAll'), await typeValue(ui, '4,6'), await pressEnter(ui), await ui.move(2, 2)) },
+    // Parçala: from the crossings, in equal parts, by length from an end.
+    { id: 'split-crossings-preview', open: async (ui) => (await bare(ui, CROSSING), await startTool(ui, 'split'), await hoverMid(ui)) },
+    { id: 'split-crossings-result', open: async (ui) => (await bare(ui, CROSSING), await startTool(ui, 'split'), await pressEnter(ui), await ui.move(2, 2)) },
+    { id: 'split-equal-preview', open: async (ui) => (await splitOn(ui, ONE_LINE, 'E', ON_LINE, '5'), await hoverMid(ui)) },
+    { id: 'split-equal-result', open: async (ui) => (await splitOn(ui, ONE_LINE, 'E', ON_LINE, '5'), await pressEnter(ui), await ui.move(2, 2)) },
+    { id: 'split-length-preview', open: async (ui) => (await splitOn(ui, BENT, 'U', NEAR_BENT_END, () => ui.eval(BENT_LENGTH)), await hoverMid(ui)) },
+    { id: 'split-length-result', open: async (ui) => (await splitOn(ui, BENT, 'U', NEAR_BENT_END, () => ui.eval(BENT_LENGTH)), await pressEnter(ui), await ui.move(2, 2)) },
+    // Yönü çevir: the arrows show the direction the object will have; picked and confirmed, or selected first.
+    {
+      id: 'reverse-preview',
+      open: async (ui) => {
+        await bare(ui, WIGGLE);
+        await ui.eval(`window.kentos.selection.clear()`);
+        await startTool(ui, 'reverse');
+        await ui.eval(`window.kentos.selection.set(${lastOf('polyline')})`);
+        await hoverMid(ui);
+      },
+    },
+    {
+      id: 'reverse-result',
+      open: async (ui) => {
+        await bare(ui, WIGGLE);
+        // Selected first: the tool turns it at once and says so; the direction itself shows only in the arrows of the picture before.
+        await startTool(ui, 'reverse');
+        await ui.sleep(400);
+        await ui.move(2, 2);
+      },
+    },
+    // Sadeleştir: the tolerance typed; the vertices that go are struck.
+    { id: 'simplify-preview', open: async (ui) => (await bare(ui, WIGGLE), await startTool(ui, 'simplify'), await typeValue(ui, await ui.eval(WIGGLE_TOL)), await hoverMid(ui)) },
+    { id: 'simplify-result', open: async (ui) => (await bare(ui, WIGGLE), await startTool(ui, 'simplify'), await typeValue(ui, await ui.eval(WIGGLE_TOL)), await pressEnter(ui), await ui.move(2, 2)) },
+    // Çizimi temizle: the finding first, then the cleaned drawing.
+    { id: 'cleanup-preview', open: async (ui) => (await bare(ui, MESSY), await startTool(ui, 'cleanup'), await hoverMid(ui)) },
+    { id: 'cleanup-result', open: async (ui) => (await bare(ui, MESSY), await startTool(ui, 'cleanup'), await pressEnter(ui), await ui.move(2, 2)) },
+    // Özellik kopyala: the source clicked and a target under the mouse; then two targets taken one after the other.
+    { id: 'match-preview', open: async (ui) => (await matchStart(ui), await hoverAt(ui, ...(await ui.eval(MATCH_TARGET)))) },
+    {
+      id: 'match-result',
+      open: async (ui) => {
+        await matchStart(ui);
+        for (const t of [MATCH_TARGET, MATCH_TARGET_2]) {
+          await clickWorld(ui, t);
+          await ui.sleep(300);
+        }
+        await hoverAt(ui, ...(await ui.eval(BELOW)));
+      },
+    },
+  ];
+}
+
 // The drawing and editing tools of docs/adr/0140: the ribbon tabs that hold them and their split buttons; each
 // tool at work is added here as it is built. Same layout helpers as the ribbon group.
 SCENES.tools = [
@@ -984,7 +1176,8 @@ SCENES.tools = [
     id: 'split-corner',
     open: async (ui) => (await ribbonOn(ui, { ribbonTab: 'modify' }), await ui.clickSel('.ribbon__strip [data-split="corner"] .rsplit__arrow'), await ui.waitFor(`!!document.querySelector('.menu')`), await ui.sleep(300)),
   },
-].map((s) => ({ close: (ui) => ribbonOff(ui), ...s }));
+  ...toolScenes(),
+].map((s) => ({ close: async (ui) => (await ui.eval(UNDO_ALL), await ribbonOff(ui)), ...s }));
 
 SCENES.svgedit = [
   { id: 'new', open: (ui) => openSvg(ui) },

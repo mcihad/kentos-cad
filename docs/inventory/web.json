@@ -20,15 +20,15 @@
   "summary": {
     "commands": {
       "total": 181,
-      "implemented": 153,
+      "implemented": 160,
       "partial": 0,
-      "pending": 28
+      "pending": 21
     },
     "tools": {
       "total": 72,
-      "implemented": 56,
+      "implemented": 63,
       "partial": 0,
-      "pending": 16
+      "pending": 9
     },
     "processing": {
       "total": 4,
@@ -74,22 +74,22 @@
     },
     "commandsWithoutPlace": [],
     "commandsWithoutTests": 65,
-    "commandsOnDesktop": 148,
+    "commandsOnDesktop": 155,
     "desktop": {
       "commands": {
         "total": 181,
-        "implemented": 148,
+        "implemented": 155,
         "partial": 0,
         "pending": 14,
-        "none": 14,
+        "none": 7,
         "n/a": 5
       },
       "tools": {
         "total": 72,
-        "implemented": 56,
+        "implemented": 63,
         "partial": 0,
         "pending": 2,
-        "none": 14,
+        "none": 7,
         "n/a": 0
       },
       "processing": {
@@ -3179,10 +3179,10 @@
         "gis"
       ],
       "uiSources": [],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -3246,10 +3246,10 @@
       "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -3704,10 +3704,10 @@
         "gis"
       ],
       "uiSources": [],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -3915,10 +3915,10 @@
       "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -4654,10 +4654,10 @@
       "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -4817,10 +4817,10 @@
       "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -4882,10 +4882,10 @@
       "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -6511,12 +6511,13 @@
       "family": "corner",
       "rare": false,
       "methods": [],
-      "steps": 0,
+      "steps": 3,
       "description": "Seçili çoklu çizgi ve alanların bütün köşelerini aynı mesafeyle keser; sığmayan köşe atlanır ve söylenir.",
-      "status": "pending",
+      "productCommand": "cad.entities.edit",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -6568,12 +6569,13 @@
       "primary": false,
       "rare": true,
       "methods": [],
-      "steps": 0,
+      "steps": 3,
       "description": "Üst üste binen yinelenen nesneleri, sıfır uzunluklu nesneleri ve art arda tekrarlanan köşeleri bulur; önce gösterir, onayla tek adımda temizler.",
-      "status": "pending",
+      "productCommand": "cad.entities.edit",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -6889,12 +6891,13 @@
       "family": "corner",
       "rare": false,
       "methods": [],
-      "steps": 0,
+      "steps": 3,
       "description": "Seçili çoklu çizgi ve alanların bütün köşelerini aynı yarıçapla yuvarlar; sığmayan köşe atlanır ve söylenir.",
-      "status": "pending",
+      "productCommand": "cad.entities.edit",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -7053,12 +7056,13 @@
       "primary": false,
       "rare": false,
       "methods": [],
-      "steps": 0,
+      "steps": 3,
       "description": "Bir nesnenin katmanını, rengini, çizgi kalınlığını ve sembolünü tıklanan öbür nesnelere verir.",
-      "status": "pending",
+      "productCommand": "cad.entities.set",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -7599,12 +7603,13 @@
       "primary": false,
       "rare": false,
       "methods": [],
-      "steps": 0,
+      "steps": 2,
       "description": "Çizgi, yay, çoklu çizgi, eğri ve alanın çizim yönünü tersine çevirir; biçimi ve yeri değişmez.",
-      "status": "pending",
+      "productCommand": "cad.entities.edit",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -7726,12 +7731,13 @@
       "primary": false,
       "rare": true,
       "methods": [],
-      "steps": 0,
+      "steps": 3,
       "description": "Çoklu çizgi ve alandan, verilen uzaklıktan daha az sapan köşeleri atar; atılan köşe sayısı ve en büyük sapma söylenir.",
-      "status": "pending",
+      "productCommand": "cad.entities.edit",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -7779,12 +7785,13 @@
         "Eşit parçalara",
         "Uzunluktan"
       ],
-      "steps": 0,
+      "steps": 3,
       "description": "Çizgileri birbirini kestikleri yerlerden, eşit parçalara ya da verilen uzunluklarda ayrı nesnelere ayırır; yaylar yay kalır.",
-      "status": "pending",
+      "productCommand": "cad.entities.edit",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": []
     },

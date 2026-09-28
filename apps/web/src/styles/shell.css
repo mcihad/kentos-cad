@@ -2,6 +2,9 @@
 /* Desktop workstation layout; below this width the page scrolls instead. */
 .shell {
   display: grid;
+  /* One column that keeps to the window: without it the column grows to the widest minimum any part asks for
+     (a long command prompt in the command line), and the ribbon, the dock and the status bar run past the edge. */
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr) var(--status-h);
   height: 100dvh;
   min-width: 1100px;
