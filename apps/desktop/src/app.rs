@@ -280,6 +280,8 @@ pub enum Message {
     RibbonSearchRun(usize),
     RibbonSearchReveal(usize),
     RibbonFlashEnd(&'static str),
+    /// A model's outline ends (ribbon_search.rs).
+    RibbonModelFlashEnd(String),
     LayerVisible(String),
     LayerLocked(String),
     LayerExpanded(String),
@@ -354,6 +356,8 @@ pub struct App {
     /// for a moment (ribbon_search.rs).
     pub(crate) ribbon_search: String,
     pub(crate) ribbon_flash: Option<&'static str>,
+    /// One of the user's models shown by Komut ara (its id).
+    pub(crate) ribbon_flash_model: Option<String>,
     /// The layer tree has the keyboard: a row was pressed and nothing else
     /// took the keyboard since (layer_tree.rs).
     pub(crate) layers_keyboard: bool,
@@ -553,6 +557,7 @@ impl App {
             layer_query: String::new(),
             ribbon_search: String::new(),
             ribbon_flash: None,
+            ribbon_flash_model: None,
             layers_keyboard: false,
             layer_reveal: None,
             drawing_menu: None,
@@ -875,6 +880,7 @@ impl App {
             Message::RibbonSearchRun(index) => return self.search_run(index),
             Message::RibbonSearchReveal(index) => return self.search_reveal(index),
             Message::RibbonFlashEnd(id) => self.search_flash_end(id),
+            Message::RibbonModelFlashEnd(id) => self.search_model_flash_end(&id),
             Message::Layer(event) => return self.layer_event(event),
             Message::DrawingMenu(event) => self.drawing_menu_event(event),
             Message::TextField(event) => self.text_field_event(event),
@@ -1391,6 +1397,20 @@ impl App {
         let found = catalog().commands().iter().find(|c| {
             c.aliases.iter().any(|a| fold(a) == folded) || fold(c.title) == folded || c.id == text
         });
+        // A model of the user's, by its name (“Parsel ölçüleri”, “Parsel ölçüleri…”).
+        let model = found.is_none().then(|| {
+            self.user_models()
+                .find(|m| {
+                    fold(&m.label) == folded
+                        || fold(&format!("{}…", m.label)) == folded
+                        || text == format!("processing.model.{}", m.id)
+                })
+                .map(|m| m.id.clone())
+        });
+        if let Some(Some(id)) = model {
+            self.remember(text);
+            return self.processing_command(&format!("processing.model.{id}"));
+        }
         match found {
             Some(command) => {
                 // As on the web (`CommandLine.run`): the line's ↑ brings it back; the

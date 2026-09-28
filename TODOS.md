@@ -284,7 +284,7 @@ Temel kabul senaryosu: kullanıcı polygon aracını seçer, çizim alanında no
     - ~~ayar pencerelerinde bölüm bölüm varsayılana döndürme (A2, P1), birbirine yol veren düğmeler (A3, P2), Uygulama ayarları'nın bölümlü düzeni (A5)~~: 28 Eylül'de bitti (`settings_sections.rs`; iki pencere birbirinin üstünde açılır, alttaki olduğu gibi geri gelir). Web'in tema kartları ve yazı tipi örnekleri, görünüş anahtarlarının birleşmesiyle (aşağıdaki Görünüş) birlikte;
     - ~~Fare ve klavye kısayolları penceresi: arama, fare tablosu, kategoriler, takma adlar, Türkçe klavye notu (H1, H2)~~: 28 Eylül'de bitti (`shortcuts.rs`);
     - ~~küçük sözler ve ipuçları: veritabanı çakışması (Ç1), Katmanlar'da adın yolu ve menüdeki tuşlar (K1, K2), İşlemler (İ1–İ4), Başlangıç'ta ×'in ipucu (S1), Nokta hesabı çipinin ipucu, Koordinat listesi al'da virgülün ipucu~~ ve kaydedince varsayılanların notu (A4): 28 Eylül'de bitti.
-  - **İşlemler:** kullanıcının modelleri şeritte ve komut satırında (araç kutusunda var, ADR 0116).
+  - **İşlemler:** 28 Eylül'de bitti: kullanıcının modelleri web'deki gibi komut sayılır: İşlemler sekmesinin Modeller panelinde düğme, komut satırında adıyla, Komut ara'da yeriyle (araç kutusunda zaten vardı, ADR 0116).
   - **Görünüş:** arayüz yazı tiplerinden Source Sans 3, Noto Sans, Roboto ve “Sistem yazı tipi” (`user.uiFont`; masaüstünde üç yüz var). Bununla birlikte iki platformun görünüş anahtarları birleşmeli: web `appearance.accent`, `uiFont`, `uiScale` (beş adım) ve temayı yerleşimde tutar; masaüstü `appearance.theme`, `accentColor`, `typeface`, `monoTypeface`, `textSize` (piksel). Ayar dosyası o zaman görünüşü de taşır (parity-audit A1, A6).
   - İki platformda da bekleyenler (`pending`) ve yalnız web'e ait klasik arayüz bu listeye girmez.
 

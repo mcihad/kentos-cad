@@ -19,6 +19,11 @@ pub mod dialog;
 mod fields;
 pub mod memory;
 pub mod panel;
+
+/// The İşlemler panel's event as the app's message (the ribbon's model buttons send it too).
+pub(crate) fn panel_message(event: panel::Event) -> crate::app::Message {
+    crate::app::Message::Processing(Event::Panel(event))
+}
 #[cfg(test)]
 mod tests;
 mod window;

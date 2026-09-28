@@ -338,6 +338,18 @@ impl App {
                 any = true;
             }
         }
+        // The model library's panel lists the user's models after the built-in
+        // ones (the web's `@models`): each opens its window, as its command does.
+        if panel
+            .items
+            .iter()
+            .any(|item| matches!(item, Item::Command { id: "processing.newModel", .. }))
+        {
+            for button in self.user_model_buttons() {
+                group = group.tool(button);
+                any = true;
+            }
+        }
         if !panel.overflow.is_empty() {
             let ids = panel.overflow.clone();
             let checked = self.checks(&ids);
@@ -349,6 +361,38 @@ impl App {
             group = group.launcher(message, launcher.title);
         }
         any.then_some(group)
+    }
+
+    /// The user's models as the ribbon's buttons (the web registers each as
+    /// `processing.model.<id>`, “<label>…”).
+    pub(crate) fn user_model_buttons(&self) -> Vec<Button<'static, Message>> {
+        use crate::ribbon_keys::TipKey;
+        self.user_models()
+            .map(|m| {
+                let title = format!("{}…", m.label);
+                let mut about = Tip::new(title.clone());
+                if !m.description.is_empty() {
+                    about = about.body(m.description.clone());
+                }
+                // As large as the built-in model beside it; the ribbon shrinks them in a narrow window.
+                Button::large(crate::icons::from_web(Some("processing")), title)
+                    .on_press(crate::processing::panel_message(
+                        crate::processing::panel::Event::RunModel(m.id.clone()),
+                    ))
+                    .tip(about)
+                    .flash(self.ribbon_flash_model.as_deref() == Some(m.id.as_str()))
+                    .key_tips(self.key_tip(&TipKey::Model(m.id.clone())), None)
+            })
+            .collect()
+    }
+
+    /// The models the user made (not the built-in ones), in the library's order.
+    pub(crate) fn user_models(&self) -> impl Iterator<Item = &kentos_processing::Model> {
+        let registry = &self.processing.registry;
+        registry
+            .models()
+            .iter()
+            .filter(|m| !registry.is_builtin_model(&m.id))
     }
 
     pub(crate) fn ribbon_button(&self, item: &Item) -> Option<Button<'static, Message>> {
@@ -688,8 +732,11 @@ impl App {
         });
         // Every command; none is suggested while one runs: what is typed is
         // the running command's (line_commands).
+        // The catalog's commands, then the user's models (borrowed from the library).
+        let mut commands: Vec<LineCommand<'_>> = all_line_commands().collect::<Vec<_>>();
+        commands.extend(self.model_line_commands());
         let line = line
-            .commands(all_line_commands())
+            .commands(commands)
             .suggest_commands(!self.session.is_running() && !self.session.grip_active());
         let open = self.command_expanded;
         line.prompt(self.line_prompt())
@@ -1127,6 +1174,20 @@ impl App {
             return Vec::new();
         }
         all_line_commands().collect()
+    }
+}
+
+impl App {
+    /// The user's models as the command line lists them: by name, as the web's
+    /// registered model commands.
+    fn model_line_commands(&self) -> impl Iterator<Item = LineCommand<'_>> {
+        self.user_models()
+            .filter(|_| !self.session.is_running())
+            .map(|m| {
+                LineCommand::new(m.label.as_str(), m.label.as_str())
+                    .description(m.description.as_str())
+                    .icon(crate::icons::from_web(Some("processing")))
+            })
     }
 }
 

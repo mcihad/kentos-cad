@@ -42,6 +42,8 @@ pub(crate) enum TipKey {
     More(&'static str),
     Launcher(&'static str),
     Folded(&'static str),
+    /// One of the user's models in the Modeller panel (by its id).
+    Model(String),
 }
 
 /// What typing a key tip in full does.
@@ -215,6 +217,22 @@ impl App {
             }
             for item in &panel.items {
                 self.item_controls(tab.id, item, &mut out);
+            }
+            // The user's models in the model library's panel (view.rs `user_model_buttons`).
+            if panel
+                .items
+                .iter()
+                .any(|item| matches!(item, Item::Command { id: "processing.newModel", .. }))
+            {
+                for m in self.user_models() {
+                    out.push((
+                        TipKey::Model(m.id.clone()),
+                        format!("{}…", m.label),
+                        TipAction::Run(crate::processing::panel_message(
+                            crate::processing::panel::Event::RunModel(m.id.clone()),
+                        )),
+                    ));
+                }
             }
             if !panel.overflow.is_empty() {
                 out.push((
