@@ -66,6 +66,9 @@ mod saving;
 mod screens;
 mod selecting;
 mod settings;
+mod settings_look;
+#[cfg(test)]
+mod settings_look_tests;
 mod settings_sections;
 mod settings_view;
 mod shortcuts;

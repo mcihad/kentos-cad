@@ -77,7 +77,7 @@ Aynı kural web'in eski `kentos.prefs.v1` göçünde de uygulanır (`legacy.ts`)
 - `Family` ve `Typography::DEFAULT` artık Plus Jakarta Sans'tır. Hiç seçmemiş kullanıcının masaüstündeki yazısı değişir (sahibin kararı).
 - Ayar penceresi özel rengi ortak adına çevirerek saklar.
 - Web'in ayar dosyasını alırken artık yalnız klasik arayüz ve çizim motoru gibi gerçekten web'e özgü değerleri adlarıyla söyler.
-- **Sonraki dilim:** Uygulama ayarları → Görünüm'e web'in tema kartları, vurgu örnekleri, yazı tipi örnekleri ve boyut adımları.
+- **Sonraki dilim:** Uygulama ayarları → Görünüm'e web'in tema kartları, vurgu örnekleri, yazı tipi örnekleri ve boyut adımları (28 Eylül'de geldi, ADR 0128).
 
 ## Sonuçlar
 

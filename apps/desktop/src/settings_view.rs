@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 use std::fmt;
 use std::path::PathBuf;
 
-use iced::widget::{button, container, row, space, text, text_input};
+use iced::widget::{button, row, text};
 use iced::{Center, Element, Task};
 use serde_json::Value;
 
@@ -558,65 +558,6 @@ pub(crate) fn listed(key: &'static str, current: &Value) -> Element<'static, Mes
     })
     .searchable(false)
     .into()
-}
-
-/// The accent colour: the eight presets as swatches, and a colour of one's
-/// own as `#RRGGBB` (taken when it reads; kept as typed until then).
-pub(crate) fn accent_choice(
-    current: &str,
-    mode: kentos_ui::theme::Mode,
-) -> Element<'static, Message> {
-    use kentos_ui::theme::Accent;
-    let chosen = Accent::parse(current);
-    let chips = Accent::PRESETS
-        .into_iter()
-        .fold(row![].spacing(2), |row, accent| {
-            let color = accent.color(mode);
-            row.push(
-                button(container(space::horizontal()).width(14).height(14).style(
-                    move |_: &iced::Theme| container::Style {
-                        background: Some(color.into()),
-                        border: iced::Border {
-                            color: iced::Color::BLACK.scale_alpha(0.3),
-                            width: 1.0,
-                            radius: 7.0.into(),
-                        },
-                        ..container::Style::default()
-                    },
-                ))
-                .on_press(Message::Settings(Edit::Value(
-                    "appearance.accent",
-                    Value::from(accent.key()),
-                )))
-                .padding(2)
-                .style(move |theme, status| {
-                    let mut style = style::button::swatch(chosen == Some(accent))(theme, status);
-                    style.border.radius = 10.0.into();
-                    style
-                }),
-            )
-        });
-    let custom = text_input(
-        "#RRGGBB",
-        if current.starts_with('#') {
-            current
-        } else {
-            ""
-        },
-    )
-    .on_input(|text| Message::Settings(Edit::Value("appearance.accent", Value::from(text))))
-    .width(96)
-    .padding([3, 6]);
-    let note = match chosen {
-        None if !current.is_empty() => {
-            label::caption("Okunamadı: #RRGGBB biçiminde yazın.").style(style::text::danger)
-        }
-        _ => label::caption(""),
-    };
-    row![chips, custom, note]
-        .spacing(8)
-        .align_y(iced::Center)
-        .into()
 }
 
 /// The coordinate system new projects are offered with: the registry's list.

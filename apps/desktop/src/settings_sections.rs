@@ -8,16 +8,16 @@
 use iced::widget::{Column, button, column, container, row, scrollable, space, text};
 use iced::{Center, Element, Fill};
 use kentos_ui::icon::{Icon, icon};
-use kentos_ui::theme::typography;
+use kentos_ui::theme::{Accent, typography};
 use kentos_ui::widget::{Banner, Dialog, Form, NumberInput, Switch, Tip, overlay, tip};
 use kentos_ui::{label, style};
 use serde_json::Value;
 
 use crate::app::{App, Message};
 use crate::settings::schema;
+use crate::settings_look as look;
 use crate::settings_view::{
-    Edit, PX, SNAP_KINDS, SettingsDraft, accent_choice, action, choices, crs_choice, listed,
-    presets, range,
+    Edit, PX, SNAP_KINDS, SettingsDraft, action, choices, crs_choice, listed, presets, range,
 };
 
 /// A section of the window.
@@ -303,47 +303,60 @@ impl App {
     }
 
     fn appearance_section<'a>(&self, f: &Fields<'a>) -> Element<'a, Message> {
-        // Groups whose names are not their settings' own (no “Tema / Tema”).
-        let form = Form::new()
-            .label_width(170.0)
-            .section("Renkler")
-            .field(
-                Fields::title("appearance.theme"),
-                listed("appearance.theme", &f.value("appearance.theme")),
-            )
-            .help(Fields::help("appearance.theme"))
-            .field(
-                Fields::title("appearance.accent"),
-                accent_choice(
-                    f.value("appearance.accent").as_str().unwrap_or("navy"),
-                    self.mode,
+        // The web's order and pickers (AppSettingsDialog.ts appearance()):
+        // theme cards, accent swatches and typeface cards, each with the
+        // desktop's own settings of its kind under it.
+        let accent = f.value("appearance.accent");
+        let accent = accent.as_str().unwrap_or("navy");
+        let form = || Form::new().label_width(170.0);
+        let theme = look::group(
+            Fields::title("appearance.theme"),
+            None,
+            column![
+                look::theme_cards(
+                    &f.value("appearance.theme"),
+                    Accent::parse(accent).unwrap_or_default(),
                 ),
-            )
-            .help(Fields::help("appearance.accent"))
-            .field(
-                Fields::title("appearance.drawingBackground"),
-                choices(
-                    "appearance.drawingBackground",
-                    &f.value("appearance.drawingBackground"),
-                ),
-            )
-            .help(Fields::help("appearance.drawingBackground"))
-            .section("Yazı")
-            .field(
-                Fields::title("appearance.uiFont"),
-                listed("appearance.uiFont", &f.value("appearance.uiFont")),
-            )
-            .help(Fields::help("appearance.uiFont"))
-            .field(
-                Fields::title("appearance.monoFont"),
-                choices("appearance.monoFont", &f.value("appearance.monoFont")),
-            )
-            .help(Fields::help("appearance.monoFont"))
-            .field(
-                Fields::title("appearance.textSize"),
-                f.pixels("appearance.textSize", 13.0),
-            )
-            .help(Fields::help("appearance.textSize"))
+                form()
+                    .field(
+                        Fields::title("appearance.drawingBackground"),
+                        choices(
+                            "appearance.drawingBackground",
+                            &f.value("appearance.drawingBackground"),
+                        ),
+                    )
+                    .help(Fields::help("appearance.drawingBackground")),
+            ]
+            .spacing(14),
+        );
+        let accent = look::group(
+            Fields::title("appearance.accent"),
+            Some(Fields::help("appearance.accent")),
+            look::accent_swatches(accent),
+        );
+        let typeface = look::group(
+            Fields::title("appearance.uiFont"),
+            Some(Fields::help("appearance.uiFont")),
+            column![
+                look::typeface_cards(&f.value("appearance.uiFont")),
+                form()
+                    .field(
+                        Fields::title("appearance.monoFont"),
+                        choices("appearance.monoFont", &f.value("appearance.monoFont")),
+                    )
+                    .help(Fields::help("appearance.monoFont"))
+                    .field(
+                        Fields::title("appearance.textSize"),
+                        look::text_sizes(
+                            &f.value("appearance.textSize"),
+                            f.pixels("appearance.textSize", 13.0),
+                        ),
+                    )
+                    .help(Fields::help("appearance.textSize")),
+            ]
+            .spacing(14),
+        );
+        let rest = form()
             .section("Biçim")
             .field(
                 Fields::title("appearance.corners"),
@@ -361,15 +374,15 @@ impl App {
                 choices("appearance.crosshair", &f.value("appearance.crosshair")),
             )
             .help(Fields::help("appearance.crosshair"));
-        let form = [
+        let rest = [
             "drafting.cursorInput",
             "drafting.commandBar",
             "drafting.hoverInfo",
         ]
         .into_iter()
-        .fold(form, |form, key| f.switch_field(form, key, None));
-        let form = f.switch_field(form.section("Açılış"), "appearance.startScreen", None);
-        form.into()
+        .fold(rest, |form, key| f.switch_field(form, key, None));
+        let rest = f.switch_field(rest.section("Açılış"), "appearance.startScreen", None);
+        column![theme, accent, typeface, rest].spacing(18).into()
     }
 
     fn new_projects_section<'a>(&self, f: &Fields<'a>) -> Element<'a, Message> {

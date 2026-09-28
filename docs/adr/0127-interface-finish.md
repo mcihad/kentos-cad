@@ -80,7 +80,7 @@ Masaüstü (KentOS UI) ile web yan yana konunca farklar şunlardı:
 - Bütün ekranlar değişti: köşeler 2 pikselden kademelere geçti.
 - Kalan farklar ayrı işlerdir:
   - masaüstünün tema renkleri web'in paletinden ayrıdır (ör. koyu temanın zemini nötr grafit, web'inki mavi-grafit);
-  - Uygulama ayarları → Görünüm'de web'in tema kartları, vurgu ve yazı tipi örnekleri yoktur (TODOS.md UX-13).
+  - Uygulama ayarları → Görünüm'de web'in tema kartları, vurgu ve yazı tipi örnekleri yoktur (TODOS.md UX-13); ADR 0128 getirdi.
 
 ## Doğrulama
 
