@@ -2470,6 +2470,7 @@ dependencies = [
  "kentos-expression",
  "kentos-formats",
  "kentos-geometry-core",
+ "kentos-headless",
  "kentos-interaction",
  "kentos-kcad",
  "kentos-native-style",

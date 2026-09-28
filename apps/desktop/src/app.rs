@@ -257,6 +257,8 @@ pub enum Message {
     Designer(Box<crate::style::designer::Event>),
     /// SVG çizim düzenleyicisi (style/svgedit/).
     SvgEdit(Box<crate::style::svgedit::Event>),
+    /// The Python console (python/, docs/adr/0132).
+    Python(crate::python::Event),
     /// Esc in the empty command line: the running command ends.
     CommandCancelled,
     /// The command line's text box took or let go of the keyboard.
@@ -395,6 +397,8 @@ pub struct App {
     pub command_expanded: bool,
     /// The bottom panel's tab (bottom.rs).
     pub bottom_tab: crate::bottom::BottomTab,
+    /// The Python console, the bottom panel's Python tab (python/, docs/adr/0132).
+    pub(crate) python: crate::python::Console,
     /// The open history's height when the panel's edge was dragged (in memory,
     /// as the docks' layout); `None`: the command line's own.
     pub bottom_log: Option<f32>,
@@ -592,6 +596,7 @@ impl App {
             command_input: String::new(),
             command_expanded: false,
             bottom_tab: crate::bottom::BottomTab::default(),
+            python: crate::python::Console::default(),
             bottom_log: None,
             dialog: None,
             dialog_under: None,
@@ -806,6 +811,10 @@ impl App {
         if let Some(task) = self.while_opening(&message) {
             return task;
         }
+        // While Python code runs the drawing takes no other edit (python/).
+        if let Some(task) = self.while_scripting(&message) {
+            return task;
+        }
         // A command from the ribbon or a menu keeps the text field's text first (the web's blur),
         // and takes the keyboard from the layer tree (the web's button takes the focus).
         if matches!(
@@ -907,6 +916,7 @@ impl App {
             Message::Legend(event) => return self.legend_event(event),
             Message::Designer(event) => return self.designer_event(*event),
             Message::SvgEdit(event) => return self.svgedit_event(*event),
+            Message::Python(event) => return self.python_event(event),
             // The layer tree's changes go through the document, as on the web: visibility
             // and lock are edits (unsaved) but not undo steps.
             Message::LayerVisible(id) => {

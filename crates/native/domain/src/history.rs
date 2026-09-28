@@ -238,6 +238,16 @@ impl Document {
         None
     }
 
+    /// How many changes the open group has gathered; none without one. Inside
+    /// a group nothing is an edit before it ends (the revision and the
+    /// generation stay), so this says whether ending it will record a step.
+    pub fn group_changes(&self) -> usize {
+        self.history
+            .group
+            .as_ref()
+            .map_or(0, |open| open.step.ops.len())
+    }
+
     /// Whether a transaction or a group is open.
     pub fn is_busy(&self) -> bool {
         self.history.pending.is_some() || self.history.group.is_some()

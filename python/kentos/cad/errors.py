@@ -108,9 +108,12 @@ class FileError(HostError):
 
 
 class NotRunHere(HostError):
-    """A command this host does not run: the server's (``server_command``;
-    call it through :class:`kentos.cad.Connection`), an unknown one
-    (``unknown_command``), or another version (``unknown_version``)."""
+    """Not done here: the server's command (``server_command``; call it
+    through :class:`kentos.cad.Connection`), an unknown one
+    (``unknown_command``), another version (``unknown_version``); in the
+    desktop's console what the desktop does itself (``not_in_console``: undo,
+    save), no drawing open (``no_document``); outside it, the desktop's
+    drawing (``no_desktop``)."""
 
 
 class Busy(HostError):
@@ -130,6 +133,9 @@ _HOST: dict[str, type[HostError]] = {
     "legacy_file": FileError,
     "no_path": FileError,
     "server_command": NotRunHere,
+    "not_in_console": NotRunHere,
+    "no_desktop": NotRunHere,
+    "no_document": NotRunHere,
     "unknown_command": NotRunHere,
     "unknown_version": NotRunHere,
     "busy": Busy,
@@ -249,6 +255,15 @@ class CommandWarning(UserWarning):
         self.code = code
         self.message = message
 
+
+# Named where they are used: `kentos.cad.CommandFailed` in a traceback.
+for _error in (
+    KentosError, CommandError, CommandFailed, NeedsInput, RevisionConflict, CommandCancelled,
+    HostError, InvalidInput, UnknownObject, FileError, NotRunHere, Busy, UnknownSystem,
+    DecodeError, ServerError, NotSignedIn, Forbidden, NotFound, ServerConflict, Gone,
+    Unreachable, CommandWarning,
+):
+    _error.__module__ = "kentos.cad"
 
 __all__ = [
     "Busy",

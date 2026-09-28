@@ -54,6 +54,7 @@ mod preview;
 mod processing;
 mod project;
 mod properties;
+mod python;
 mod recent;
 mod recovery;
 mod ribbon_bar;

@@ -21,7 +21,7 @@ from typing import Any, TypeVar
 
 from .. import _native
 from ._runtime import _enum_out, _Model, decode, dumps
-from .errors import UnknownObject, host_error
+from .errors import NotRunHere, UnknownObject, host_error
 from .types import (
     Bounds,
     DrawingFont,
@@ -35,6 +35,76 @@ from .types import (
 )
 
 T = TypeVar("T")
+
+
+class SessionBase:
+    """What a Document works over besides a native session: the drawing
+    open in the desktop, asked through its console (``kentos.host``).
+    Internal; a Document is opened with ``new``, ``open``, ``from_bytes`` or
+    :func:`current`. The methods are the native session's, JSON text in and out."""
+
+    __slots__ = ()
+
+    def run(self, command: str, op: str, input: str, version: int | None = None) -> str:
+        raise NotImplementedError
+
+    def save(self, path: str | None = None) -> str:
+        raise NotImplementedError
+
+    def to_bytes(self) -> bytes:
+        raise NotImplementedError
+
+    def summary(self) -> str:
+        raise NotImplementedError
+
+    def layers(self) -> str:
+        raise NotImplementedError
+
+    def entities(
+        self,
+        layer: str | None = None,
+        kinds: list[str] | None = None,
+        bbox: tuple[float, float, float, float] | None = None,
+        after: str | None = None,
+        limit: int | None = None,
+    ) -> str:
+        raise NotImplementedError
+
+    def entity(self, uid: str) -> str:
+        raise NotImplementedError
+
+    def measure(self, uid: str) -> str:
+        raise NotImplementedError
+
+    def undo(self) -> str | None:
+        raise NotImplementedError
+
+    def redo(self) -> str | None:
+        raise NotImplementedError
+
+    def begin_group(self, label: str) -> None:
+        raise NotImplementedError
+
+    def end_group(self) -> bool:
+        raise NotImplementedError
+
+    def cancel_group(self) -> bool:
+        raise NotImplementedError
+
+
+_CURRENT: Document | None = None
+
+
+def current() -> Document:
+    """The drawing open in the KentOS desktop, when this runs in its Python
+    console (there ``doc`` is it too). Every run in the console is one undo
+    step; the desktop takes it back when the run raises or is stopped."""
+    if _CURRENT is None:
+        raise NotRunHere(
+            "no_desktop",
+            "Bu betik masaüstünün Python konsolunda çalışmıyor: bir çizimi Document.new ya da Document.open ile açın.",
+        )
+    return _CURRENT
 
 
 def _host(call: Callable[..., T], *args: Any) -> T:
@@ -127,7 +197,7 @@ class Document:
     __slots__ = ("__weakref__", "_session")
 
     def __init__(self, session: Any) -> None:
-        if not isinstance(session, _native.Session):
+        if not isinstance(session, (_native.Session, SessionBase)):
             raise TypeError("Bir çizim Document.new, Document.open ya da Document.from_bytes ile açılır.")
         self._session = session
 
@@ -328,17 +398,21 @@ class Document:
 
     def undo(self) -> str | None:
         """Undoes the last step; its name, or None when there is none."""
-        return self._session.undo()
+        step: str | None = _host(self._session.undo)
+        return step
 
     def redo(self) -> str | None:
         """Redoes the last undone step; its name, or None."""
-        return self._session.redo()
+        step: str | None = _host(self._session.redo)
+        return step
 
     @contextmanager
     def group(self, label: str) -> Iterator[Document]:
         """Every command inside is one undo step named ``label``; an
         exception takes all of it back and goes on. No group inside a group,
-        no save while one is open.
+        no save while one is open. In the desktop's console a run is one step
+        already: a group names it, and a group that fails takes the whole run
+        back at its end, even when the script goes on.
 
         >>> with doc.group("Parselleri böl"):
         ...     cad.entities.edit(doc, operation="areaSplit", changes=[...])
@@ -347,9 +421,9 @@ class Document:
         try:
             yield self
         except BaseException:
-            self._session.cancel_group()
+            _host(self._session.cancel_group)
             raise
-        self._session.end_group()
+        _host(self._session.end_group)
 
     # ------------------------------------------------------------ any command
 
@@ -381,4 +455,4 @@ def _walk(nodes: Iterable[LayerNode]) -> Iterator[LayerNode]:
         yield from _walk(n.children)
 
 
-__all__ = ["BoundsLike", "Document", "DocumentInfo", "Measure", "Page", "Record", "Saved"]
+__all__ = ["BoundsLike", "Document", "DocumentInfo", "Measure", "Page", "Record", "Saved", "current"]

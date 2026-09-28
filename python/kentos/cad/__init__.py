@@ -254,6 +254,7 @@ __all__ = [
     "catalog",
     "circle",
     "command",
+    "current",
     "entities",
     "line",
     "point",

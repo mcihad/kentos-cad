@@ -73,7 +73,9 @@ const GROUPS = [
   // It draws the style crate's batches (docs/adr/0090).
   { name: 'render', path: 'crates/render/', targets: [HOST], uses: ['shared', 'domain', 'application', 'style'], forbid: [...RUNTIMES, ...BROWSER, 'iced*', 'winit', 'pyo3*'] },
   // Desktop programs: Iced's executor may be tokio; no server framework, no browser bindings.
-  { name: 'desktop', path: 'apps/desktop/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'processing', 'project', 'native', 'ui', 'render', 'style'], forbid: ['axum*', ...BROWSER] },
+  // The desktop's Python console (docs/adr/0132) answers its script's requests through the
+  // headless host's `rpc`; the Python itself runs in a process of its own, never in the app.
+  { name: 'desktop', path: 'apps/desktop/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'processing', 'project', 'headless', 'native', 'ui', 'render', 'style'], forbid: ['axum*', 'pyo3*', ...BROWSER] },
   { name: 'desktop', path: 'apps/ui-showcase/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'native', 'ui', 'render', 'style'], forbid: ['axum*', ...BROWSER] },
 ];
 

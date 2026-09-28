@@ -2,9 +2,8 @@
 
 use std::path::{Path, PathBuf};
 
-use kentos_contracts::{Bounds, DocumentSnapshotV1, LayerNode, ProjectSettings};
+use kentos_contracts::{Bounds, DocumentSnapshotV1, LayerNode};
 use kentos_domain::{Document, Group};
-use serde::Serialize;
 use serde_json::{Value, json};
 
 use crate::HeadlessError;
@@ -23,23 +22,6 @@ pub struct Session {
     /// Read from a v1 JSON file: saved only to a new path, never over it.
     legacy: bool,
     group: Option<Group>,
-}
-
-/// The drawing as a whole (without its objects).
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct Summary<'a> {
-    name: &'a str,
-    revision: String,
-    dirty: bool,
-    objects: usize,
-    settings: &'a ProjectSettings,
-    active_layer: &'a str,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    path: Option<String>,
-    legacy: bool,
-    can_undo: bool,
-    can_redo: bool,
 }
 
 impl Session {
@@ -141,21 +123,17 @@ impl Session {
         dispatch::run(&mut self.doc, command, version, op, input)
     }
 
-    /// The drawing's name, revision, dirty flag, settings and active layer.
+    /// The drawing's name, revision, dirty flag, settings and active layer
+    /// ([`crate::rpc::summary`]), with the file it came from.
     pub fn summary(&self) -> Value {
-        serde_json::to_value(Summary {
-            name: self.doc.name(),
-            revision: self.doc.revision().to_string(),
-            dirty: self.doc.is_dirty(),
-            objects: self.doc.len(),
-            settings: self.doc.settings(),
-            active_layer: self.doc.layers().active(),
-            path: self.path.as_ref().map(|p| p.display().to_string()),
-            legacy: self.legacy,
-            can_undo: self.doc.can_undo(),
-            can_redo: self.doc.can_redo(),
-        })
-        .unwrap_or(Value::Null)
+        let mut summary = crate::rpc::summary(&self.doc);
+        if let Some(fields) = summary.as_object_mut() {
+            if let Some(path) = &self.path {
+                fields.insert("path".into(), json!(path.display().to_string()));
+            }
+            fields.insert("legacy".into(), json!(self.legacy));
+        }
+        summary
     }
 
     /// The layer tree (groups and layers, their styles and flags).

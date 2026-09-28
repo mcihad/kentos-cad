@@ -244,6 +244,22 @@ fn undo_and_redo_wait_while_a_transaction_or_a_group_is_open() {
     assert_eq!(doc.len(), 1);
 }
 
+/// What an open group gathered is counted before it ends (the Python
+/// console says whether a failed run wrote anything, docs/adr/0132).
+#[test]
+fn an_open_group_counts_its_changes() {
+    let mut doc = empty();
+    assert_eq!(doc.group_changes(), 0);
+    let group = doc.begin_group("Python");
+    assert_eq!(doc.group_changes(), 0);
+    doc.add(point("a", 1.0)).expect("slot");
+    doc.add(point("a", 2.0)).expect("slot");
+    assert_eq!(doc.group_changes(), 2);
+    doc.cancel_group(group);
+    assert_eq!(doc.group_changes(), 0);
+    assert_eq!(doc.len(), 0);
+}
+
 #[test]
 fn a_group_begun_inside_another_ends_nothing() {
     let mut doc = empty();

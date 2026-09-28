@@ -250,3 +250,50 @@ fn pages_follow_the_drawing_and_a_cursor_reads_on() {
         .expect("a page");
     assert!(none.items.is_empty());
 }
+
+#[test]
+fn a_drawing_another_host_owns_answers_the_same_requests_by_name() {
+    use kentos_headless::rpc;
+    let snapshot = kentos_project::new_project::new_project(&NewDrawing {
+        name: "Konsol".into(),
+        srid: 5256,
+        plot_scale: 1000.0,
+        workspace: Workspace::Cad,
+        drawing_font: DrawingFont::Barlow,
+    })
+    .expect("a new project");
+    let mut doc = kentos_domain::Document::from_snapshot(snapshot).expect("a document");
+    let layer = doc.layers().active().to_owned();
+
+    let answer = rpc::call(
+        &mut doc,
+        "run",
+        &json!({"command": "cad.polygon.create", "op": "execute", "input": square(&layer)}),
+    )
+    .expect("runs");
+    let uid = created(&answer);
+    let summary = rpc::call(&mut doc, "summary", &json!({})).expect("a summary");
+    assert_eq!(summary["objects"], 1);
+    assert_eq!(summary["canUndo"], true);
+    let measure = rpc::call(&mut doc, "measure", &json!({"uid": uid})).expect("measures");
+    assert_eq!(measure["area"], 250.0);
+    let page = rpc::call(
+        &mut doc,
+        "entities",
+        &json!({"kinds": ["polygon"], "bbox": [423499, 4512299, 423501, 4512301], "limit": 5}),
+    )
+    .expect("a page");
+    assert_eq!(page["items"][0]["uid"], uid.as_str());
+    let one = rpc::call(&mut doc, "entity", &json!({"uid": uid})).expect("the object");
+    assert_eq!(one["entity"]["kind"], "polygon");
+    let layers = rpc::call(&mut doc, "layers", &json!(null)).expect("the tree");
+    assert!(layers.as_array().is_some_and(|n| !n.is_empty()));
+
+    let unknown = rpc::call(&mut doc, "undo", &json!({})).expect_err("the host's own");
+    assert_eq!(unknown.code, "unknown_method");
+    let shape =
+        rpc::call(&mut doc, "entities", &json!({"bbox": [1, 2]})).expect_err("four numbers");
+    assert_eq!(shape.code, "invalid_input");
+    let missing = rpc::call(&mut doc, "run", &json!({"op": "execute"})).expect_err("no command");
+    assert_eq!(missing.code, "invalid_input");
+}

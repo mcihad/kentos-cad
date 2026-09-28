@@ -12,6 +12,8 @@
 //!   ones the server runs are listed too, and refused here with the reason.
 //! - Queries ([`Session::layers`], [`Session::entities`], [`Session::entity`])
 //!   and measures ([`Session::measure`]) read without writing.
+//! - [`rpc::call`]: the same by name over a document another host owns (the
+//!   desktop's open drawing, asked by its Python console).
 //!
 //! JSON crosses the boundary on purpose: the Python SDK (`kentos.cad`) and
 //! the MCP server speak the catalog's own wire form, which the web and the
@@ -27,6 +29,7 @@ mod dispatch;
 mod error;
 mod files;
 mod query;
+pub mod rpc;
 mod session;
 
 pub use dispatch::{DESKTOP, Op};

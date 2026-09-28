@@ -9,7 +9,8 @@
 //!   edge's length and bearing, and the outline's area or length; rows are
 //!   built only as they scroll into view (a contour has thousands);
 //! - Uyarılar: the warnings and errors; the tab's badge counts the ones not
-//!   seen yet.
+//!   seen yet;
+//! - Python: the desktop's own console, not the web's (python/, docs/adr/0132).
 //!
 //! As on the web, the tab row ends with Geçmişi temizle and Paneli kapat,
 //! and the panel's top edge is dragged to size it (a double click puts the
@@ -39,10 +40,16 @@ pub enum BottomTab {
     History,
     Coords,
     Messages,
+    Python,
 }
 
 impl BottomTab {
-    const ALL: [BottomTab; 3] = [BottomTab::History, BottomTab::Coords, BottomTab::Messages];
+    const ALL: [BottomTab; 4] = [
+        BottomTab::History,
+        BottomTab::Coords,
+        BottomTab::Messages,
+        BottomTab::Python,
+    ];
 }
 
 /// The tab row's two buttons (Geçmişi temizle, Paneli kapat) and their margins.
@@ -108,6 +115,9 @@ impl App {
                     .icon(from_web(Some("warning")))
                     .closable(false)
                     .badge(self.log.unseen()),
+                Tab::new("Python")
+                    .icon(from_web(Some("terminal")))
+                    .closable(false),
             ],
             BottomTab::ALL
                 .iter()
@@ -129,6 +139,7 @@ impl App {
             BottomTab::History => self.log_list(LogListing::History),
             BottomTab::Coords => self.coordinate_list(),
             BottomTab::Messages => self.log_list(LogListing::Messages),
+            BottomTab::Python => self.python_tab(),
         };
         column![
             sash,

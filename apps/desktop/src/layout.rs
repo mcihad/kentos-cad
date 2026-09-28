@@ -185,6 +185,7 @@ fn tab_key(tab: BottomTab) -> &'static str {
         BottomTab::History => "history",
         BottomTab::Coords => "coords",
         BottomTab::Messages => "messages",
+        BottomTab::Python => "python",
     }
 }
 
@@ -209,6 +210,7 @@ impl App {
         self.bottom_tab = match keeper.text("bottomTab") {
             "coords" => BottomTab::Coords,
             "messages" => BottomTab::Messages,
+            "python" => BottomTab::Python,
             _ => BottomTab::History,
         };
         self.processing.panel.tab = if keeper.text("processingTab") == "history" {
