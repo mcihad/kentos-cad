@@ -459,7 +459,10 @@ mod tests {
                 .iter()
                 .any(|i| matches!(i, Item::Command { id, large: true } if *id == PYTHON_CONSOLE))
         );
-        for mode in [kentos_contracts::Workspace::Cad, kentos_contracts::Workspace::Gis] {
+        for mode in [
+            kentos_contracts::Workspace::Cad,
+            kentos_contracts::Workspace::Gis,
+        ] {
             assert!(
                 catalog()
                     .tabs_in(mode)

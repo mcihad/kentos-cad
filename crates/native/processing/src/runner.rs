@@ -774,8 +774,14 @@ fn apply(
     // Removals, then updates, then additions, each as one change.
     let added = doc.transact(&tool.label, |doc| {
         // Layers the run writes to but that do not exist yet: in the tool's step, so undo takes them too.
+        // Each run of one layer is asked once: a run adds hundreds of thousands of objects to a few layers.
+        let mut asked: Option<&str> = None;
         for e in &ch.add {
             let id = &e.base().layer_id;
+            if asked == Some(id.as_str()) {
+                continue;
+            }
+            asked = Some(id.as_str());
             let Some((name, style)) = new_layers.get(id) else {
                 continue;
             };
@@ -819,15 +825,24 @@ fn apply(
             patches.push((u.id, next));
         }
         doc.update_many(patches, &tool.label);
-        let mut fresh = Vec::with_capacity(ch.add.len());
-        for n in ch.add {
+        // Filtered in place: nothing moves unless something is left out (an object is large).
+        let mut fresh = ch.add;
+        let mut verdict: Option<(String, bool)> = None;
+        fresh.retain(|n| {
             let layer = &n.base().layer_id;
-            if doc.layers().get(layer).is_none() || locked(doc, layer) {
+            let takes = match &verdict {
+                Some((id, takes)) if id == layer => *takes,
+                _ => {
+                    let takes = doc.layers().get(layer).is_some() && !locked(doc, layer);
+                    verdict = Some((layer.clone(), takes));
+                    takes
+                }
+            };
+            if !takes {
                 skipped += 1;
-                continue;
             }
-            fresh.push(n);
-        }
+            takes
+        });
         doc.add_many(fresh, &tool.label).map_err(|e| e.to_string())
     })?;
     if skipped > 0 {

@@ -231,6 +231,36 @@ impl Harness {
     }
 }
 
+/// A pan with the middle button from `center`, 20 steps out and back: its frames.
+fn pan(app: &mut App, h: &mut Harness, center: Point) -> Vec<Parts> {
+    h.frame(
+        app,
+        &[
+            moved(center),
+            Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Middle)),
+        ],
+    );
+    let frames = (1..=40)
+        .map(|i| {
+            let step = if i <= 20 { i as f32 } else { (40 - i) as f32 };
+            h.frame(
+                app,
+                &[moved(Point::new(
+                    center.x + 9.0 * step,
+                    center.y + 5.0 * step,
+                ))],
+            )
+        })
+        .collect();
+    h.frame(
+        app,
+        &[Event::Mouse(mouse::Event::ButtonReleased(
+            mouse::Button::Middle,
+        ))],
+    );
+    frames
+}
+
 /// A key pressed and let go, as the window gives it.
 fn key(named: key::Named) -> Vec<Event> {
     let physical = key::Physical::Unidentified(key::NativeCode::Unidentified);
@@ -331,31 +361,7 @@ fn scenarios(n: usize) -> (String, Vec<(&'static str, Vec<Parts>)>) {
     std::thread::sleep(std::time::Duration::from_millis(200));
     h.frame(&mut app, &[]);
 
-    h.frame(
-        &mut app,
-        &[
-            moved(center),
-            Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Middle)),
-        ],
-    );
-    let frames = (1..=40)
-        .map(|i| {
-            let step = if i <= 20 { i as f32 } else { (40 - i) as f32 };
-            h.frame(
-                &mut app,
-                &[moved(Point::new(
-                    center.x + 9.0 * step,
-                    center.y + 5.0 * step,
-                ))],
-            )
-        })
-        .collect();
-    h.frame(
-        &mut app,
-        &[Event::Mouse(mouse::Event::ButtonReleased(
-            mouse::Button::Middle,
-        ))],
-    );
+    let frames = pan(&mut app, &mut h, center);
     out.push(("Orta tuşla kaydırma", frames));
 
     // The same pan at 1:1000 (96 dpi), where a parcel is about 120 px wide
@@ -363,31 +369,7 @@ fn scenarios(n: usize) -> (String, Vec<(&'static str, Vec<Parts>)>) {
     let fitted = app.viewport.camera;
     app.viewport.camera.scale = 1.0 / (1000.0 * 0.000_264_58);
     assert!((app.viewport.camera.screen_scale() - 1000.0).abs() < 1.0);
-    h.frame(
-        &mut app,
-        &[
-            moved(center),
-            Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Middle)),
-        ],
-    );
-    let frames = (1..=40)
-        .map(|i| {
-            let step = if i <= 20 { i as f32 } else { (40 - i) as f32 };
-            h.frame(
-                &mut app,
-                &[moved(Point::new(
-                    center.x + 9.0 * step,
-                    center.y + 5.0 * step,
-                ))],
-            )
-        })
-        .collect();
-    h.frame(
-        &mut app,
-        &[Event::Mouse(mouse::Event::ButtonReleased(
-            mouse::Button::Middle,
-        ))],
-    );
+    let frames = pan(&mut app, &mut h, center);
     out.push(("Orta tuşla kaydırma, 1:1000", frames));
     app.viewport.camera = fitted;
     h.frame(&mut app, &[moved(center)]);
@@ -566,6 +548,32 @@ fn processing(app: &mut App, h: &mut Harness, out: &mut Vec<(&'static str, Vec<P
         })],
     ));
     assert_ne!(revision(app), before, "the answer was applied");
+    // The drawing with the result, the run's window closed: the pointer
+    // moving over it, frame by frame.
+    app.processing.dialog = None;
+    app.dialog = None;
+    h.settle(app);
+    let area = app.viewport.bounds;
+    out.push((
+        "Parsel ölçü yazıları: sonuçlu çizimde imleç",
+        path(area, 20)
+            .into_iter()
+            .map(|p| h.frame(app, &[moved(p)]))
+            .collect(),
+    ));
+    out.push((
+        "Parsel ölçü yazıları: sonuçlu çizimde kaydırma",
+        pan(app, h, area.center()),
+    ));
+    // At 1:1000 the labels of the parcels in view show.
+    let fitted = app.viewport.camera;
+    app.viewport.camera.scale = 1.0 / (1000.0 * 0.000_264_58);
+    h.frame(app, &[moved(area.center())]);
+    out.push((
+        "Parsel ölçü yazıları: sonuçlu çizimde kaydırma, 1:1000",
+        pan(app, h, area.center()),
+    ));
+    app.viewport.camera = fitted;
 }
 
 fn percentile(xs: &[f64], p: f64) -> f64 {

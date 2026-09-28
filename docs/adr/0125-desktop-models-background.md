@@ -92,3 +92,34 @@ Denenip bırakılan: geometri deposunun kayıtlarını çekirdeklere bölmek. Ka
 Son hâl, iki koşu: sonucun uygulanması **784 ve 763 ms** (başta 1 259, −%39); burada çalıştırma 1 154 ve 1 150 ms (başta 1 600); arka plandaki iş 1 014 ve 1 001 ms (başta 1 423).
 
 Kalan pay: iki adımın belgeye yazılması (adım başına yaklaşık 150 ms; kimlik, karma tabloları, sıra ve katman ağaçları), geometri deposunun eşitlenmesi (yaklaşık 180 ms: kimlikler 25, kayıtlar 30, ekleme ve ağacın yeniden kuruluşu 120), sahnenin kurulması (görünüm, yaklaşık 210 ms) ve çizim (yaklaşık 100 ms).
+
+## Ek 2 (28 Eylül): sonuçlu çizimin yazıları ve yazmanın kalanı
+
+Ölçüm düzeneği artık sonuçtan sonrasını da ölçer. Uygulamadan sonra İşlem penceresi kapatılır; ardından çizimin üstünde imleç, genel görünümde kaydırma ve 1:1000'de kaydırma ölçülür. Genel görünümdeki kaydırma yeni bir sorun gösterdi: 400 000 nesneli çizimde her kaydırma karesi 116 ms sürüyordu, 1:1000'de de öyle. Pay çizimdeydi, yani yazıların boyanmasında (`labels.rs`).
+
+- **Genel görünüm.** Depo görünümdeki ≈200 000 köşe numarasının yerini verir; bunlardan ≈184'ü sığar. Her biri için nesne, katman, stil (kopyasıyla), metin ve genişlik bulunuyor, ret en sonda geliyordu. Etiketin kutusu her durumda kendi tutturma noktasını içerir. Bu yüzden o noktanın hücresi doluysa sonuç zaten "çizilmez"dir. Bu artık hiçbir şeye bakmadan önce denenir (`Room::taken_at`); çizilenler aynıdır. Boyama 94 → 5 ms.
+- **Döndürülmüş yazılar.** Kenar uzunlukları harflerin dış çizgisiyle çizilir: Iced düz yazıyı döndüremez. 1:1000'de görünen 1 300 yazının dış çizgilerini çıkarmak her karede 50 ms tutuyordu. Dış çizgiler yazının kendi çerçevesindedir; dönüş ve yer çerçevenin dönüşümüdür. Bu yüzden yazı, yazı tipi, boy ve tutturma kaymasıyla anahtarlanıp tutulur (en çok 8 192 yazı; aşınca hepsi bırakılır). Kaydırmada hepsi önbellekten gelir.
+- **Belgeye yazma.** Katmanın var olup olmadığı ve kilidi nesne başına değil, art arda aynı katman için bir kez sorulur. Eklenecekler yerinde süzülür (`retain`): hiçbir nesne atlanmadıkça 248 baytlık nesneler yeniden taşınmaz. Oynatma 300 → 236 ms.
+- **Geometri deposu** (web'le ortak): kimlik ve yer tabloları SipHash yerine splitmix64'le karılır (`IdHasher`). Tam sayının `f64`'ü düşük bitleri sıfır olduğundan yalnız çarpma yetmez. 65 536 kimliğin kovalara rastgele bir karma kadar yayıldığı sınanır.
+
+Aynı makine, 10 000 parsel, arayüz iş parçacığı (MİB), milisaniye; iki koşu. Rapor: [frame-desktop-yazilar-2026-09-28](../perf/frame-desktop-yazilar-2026-09-28.md).
+
+| Durum | Önce | Sonra |
+|---|---|---|
+| Arka planda: sonucun uygulanması | 784, 763 | 594, 593 |
+| Sonuçlu çizimde kaydırma (p50) | 116 | 32 |
+| Sonuçlu çizimde kaydırma, 1:1000 (p50) | 116 | 62–63 |
+| Sonuçlu çizimde imleç (p50) | 0,9 | 0,6–0,7 |
+
+Uygulama karesindeki çizim payı 94 → 6 ms oldu; kalanı oynatma 236, eşitleme ≈165 ve sahne ≈167 ms'dir.
+
+**Denenip bırakılanlar:**
+
+- Eşitlemede kayıtları ve kutuları çekirdeklere bölmek kazandırmadı: 160 → 149 ms. Pay, depoya sırayla eklemek (400 000 nesnede 82 ms) ve ağacın yeniden kurulmasıydı.
+- Ağacın 32 bitlik Hilbert anahtarlarını taban sıralamasıyla dizmek de kazandırmadı: 36 ms kaldı. Pay sıralamada değil, 800 000 büyük kaydın bellekten okunmasındadır.
+- Kimlikleri topluca üretmek adım başına ≈17 ms kazandırırdı (`now_v7` 200 000 kimlikte 17,5 ms). Ama `now_v7`'nin aynı milisaniyedeki sıra güvencesini zayıflatır; yapılmadı.
+
+**Kalan:**
+
+- **1:1000'de kaydırma (62 ms).** Döndürülmüş yazıların her karede yeniden üçgenlenmesidir: hale konturu 28, dolgu 31 ms. Iced'in çizim çerçevesi üçgenlenmiş şekli saklayıp kaydırmaya izin vermez. Yazıları kendi ağı olarak tutan ayrı bir bileşen gerekir.
+- **Genel görünümde kaydırma (24 ms görünüm).** Deponun görünümdeki 200 000 yeri her karede yeniden vermesidir.

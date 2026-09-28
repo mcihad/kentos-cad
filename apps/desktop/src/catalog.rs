@@ -284,10 +284,15 @@ fn place_desktop_commands(tabs: &mut [Tab]) {
         .filter(|tab| tab.id == "tools")
         .flat_map(|tab| tab.panels.iter_mut())
         .filter(|panel| {
-            panel
-                .items
-                .iter()
-                .any(|item| matches!(item, Item::Command { id: "commandline.focus", .. }))
+            panel.items.iter().any(|item| {
+                matches!(
+                    item,
+                    Item::Command {
+                        id: "commandline.focus",
+                        ..
+                    }
+                )
+            })
         });
     for panel in komut {
         panel.items.push(Item::Command {

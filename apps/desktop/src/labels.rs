@@ -249,6 +249,12 @@ impl Labels<'_> {
                 | LabelSpot::Beside { slot, .. }
                 | LabelSpot::Along { slot, .. } => *slot,
             };
+            // A label whose place is taken is not drawn: known before its
+            // object, style and text are looked at (an overview offers
+            // hundreds of thousands, a few hundred fit).
+            if self.anchor(spot).is_some_and(|at| room.taken_at(at)) {
+                continue;
+            }
             let Some(entity) = self.doc.get(slot) else {
                 continue;
             };
@@ -324,6 +330,27 @@ impl Labels<'_> {
         crate::map_marks::paint(frame, &self.camera, &self.colors);
     }
 
+    /// Where an object's label is anchored on screen, inside the box it
+    /// claims whatever its text and size; none for texts and dimensions.
+    fn anchor(&self, spot: &LabelSpot) -> Option<Point> {
+        match *spot {
+            LabelSpot::Center { at, .. } => Some(self.screen(at)),
+            LabelSpot::Corner { at, .. } => {
+                let tl = self.screen(at);
+                Some(Point::new(tl.x + 8.0, tl.y + 14.0))
+            }
+            LabelSpot::Beside { at, .. } => {
+                let p = self.screen(at);
+                Some(Point::new(p.x + 7.0, p.y - 7.0))
+            }
+            LabelSpot::Along { a, b, .. } => {
+                let (a, c) = (self.screen(a), self.screen(b));
+                Some(Point::new((a.x + c.x) / 2.0, (a.y + c.y) / 2.0))
+            }
+            LabelSpot::Dimension { .. } | LabelSpot::Text { .. } => None,
+        }
+    }
+
     /// An object's label where its style places it, unless one is already there.
     fn label(
         &self,
@@ -360,9 +387,11 @@ impl Labels<'_> {
             color,
         };
         let halo = self.colors.halo;
+        let Some(s) = self.anchor(spot) else {
+            return;
+        };
         match *spot {
-            LabelSpot::Center { at, .. } => {
-                let s = self.screen(at);
+            LabelSpot::Center { .. } => {
                 if room.claim(
                     s.x - width / 2.0,
                     s.y - size / 2.0,
@@ -372,16 +401,12 @@ impl Labels<'_> {
                     draw(frame, &piece(s, 0.0, Anchor::CenterMiddle), halo);
                 }
             }
-            LabelSpot::Corner { at, .. } => {
-                let tl = self.screen(at);
-                let s = Point::new(tl.x + 8.0, tl.y + 14.0);
+            LabelSpot::Corner { .. } => {
                 if room.claim(s.x, s.y - size / 2.0, s.x + width, s.y + size / 2.0) {
                     draw(frame, &piece(s, 0.0, Anchor::LeftMiddle), halo);
                 }
             }
-            LabelSpot::Beside { at, .. } => {
-                let p = self.screen(at);
-                let s = Point::new(p.x + 7.0, p.y - 7.0);
+            LabelSpot::Beside { .. } => {
                 if room.claim(s.x, s.y - size / 2.0, s.x + width, s.y + size / 2.0) {
                     draw(frame, &piece(s, 0.0, Anchor::LeftMiddle), halo);
                 }
@@ -393,7 +418,7 @@ impl Labels<'_> {
                 if !(-std::f32::consts::FRAC_PI_2..=std::f32::consts::FRAC_PI_2).contains(&angle) {
                     angle += std::f32::consts::PI;
                 }
-                let mid = Point::new((a.x + c.x) / 2.0, (a.y + c.y) / 2.0);
+                let mid = s;
                 let hx = (angle.cos().abs() * width + angle.sin().abs() * size) / 2.0;
                 let hy = (angle.sin().abs() * width + angle.cos().abs() * size) / 2.0;
                 if room.claim(mid.x - hx, mid.y - hy, mid.x + hx, mid.y + hy) {
@@ -526,21 +551,68 @@ fn draw(frame: &mut Frame, piece: &Piece<'_>, halo: Color) {
     frame.with_save(|frame| {
         frame.translate(Vector::new(piece.at.x, piece.at.y));
         frame.rotate(piece.angle);
-        let mut glyphs: Vec<Path> = Vec::new();
-        text(Point::new(dx, dy), piece.color).draw_with(|path, _| glyphs.push(path));
+        let glyphs = outlines(piece, dx, dy, || {
+            let mut glyphs: Vec<Path> = Vec::new();
+            text(Point::new(dx, dy), piece.color).draw_with(|path, _| glyphs.push(path));
+            glyphs
+        });
         let stroke = Stroke {
             width: HALO * 2.0,
             line_join: LineJoin::Round,
             ..Stroke::default()
         }
         .with_color(halo);
-        for glyph in &glyphs {
+        for glyph in glyphs.iter() {
             frame.stroke(glyph, stroke);
         }
-        for glyph in &glyphs {
+        for glyph in glyphs.iter() {
             frame.fill(glyph, piece.color);
         }
     });
+}
+
+/// Turned texts' glyph outlines kept at most (a view at 1:1000 over a
+/// parcel sheet turns about 1 300 edge lengths).
+const OUTLINES_KEPT: usize = 8_192;
+
+/// What a turned text's outlines depend on: the text, its typeface, its
+/// size and its offset from the anchor. The turn and the place are the
+/// frame's transform, so a pan finds every text of the last frame here.
+type OutlineKey = (String, Font, u32, u32, u32);
+
+thread_local! {
+    /// Shaping a text and taking its glyphs' outlines is most of a turned
+    /// text's cost; the drawing's canvas paints on this thread only.
+    static OUTLINES: RefCell<HashMap<OutlineKey, Rc<Vec<Path>>>> = RefCell::new(HashMap::new());
+}
+
+/// A turned text's glyph outlines in its own frame, from the kept ones or
+/// made by `make`; the kept ones are let go all at once when too many.
+fn outlines(
+    piece: &Piece<'_>,
+    dx: f32,
+    dy: f32,
+    make: impl FnOnce() -> Vec<Path>,
+) -> Rc<Vec<Path>> {
+    let key = (
+        piece.text.to_owned(),
+        piece.font,
+        piece.size.to_bits(),
+        dx.to_bits(),
+        dy.to_bits(),
+    );
+    OUTLINES.with(|kept| {
+        if let Some(glyphs) = kept.borrow().get(&key) {
+            return glyphs.clone();
+        }
+        let glyphs = Rc::new(make());
+        let mut kept = kept.borrow_mut();
+        if kept.len() >= OUTLINES_KEPT {
+            kept.clear();
+        }
+        kept.insert(key, glyphs.clone());
+        glyphs
+    })
 }
 
 /// Where labels already are on screen, in 8 px cells: a label that would
@@ -563,6 +635,16 @@ impl Room {
             rows,
             taken: vec![false; cols * rows],
         }
+    }
+
+    /// Whether the cell under a point on screen is taken: a label whose box
+    /// holds the point cannot claim it then (`claim` refuses it).
+    fn taken_at(&self, p: Point) -> bool {
+        if !(p.x >= 0.0 && p.y >= 0.0) {
+            return false;
+        }
+        let (c, r) = ((p.x / Self::CELL) as usize, (p.y / Self::CELL) as usize);
+        c < self.cols && r < self.rows && self.taken[r * self.cols + c]
     }
 
     /// Takes the box if nothing is there yet; false (and nothing taken) when a label is in the way.
@@ -611,6 +693,26 @@ fn slots(spots: &[LabelSpot]) -> Vec<kentos_domain::Slot> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A label whose box holds a taken cell's point cannot claim it: what
+    /// lets the paint pass over it before looking at its object.
+    #[test]
+    fn a_taken_anchor_means_the_claim_fails() {
+        let mut room = Room::new(200.0, 120.0);
+        assert!(room.claim(40.0, 30.0, 90.0, 45.0));
+        for (x, y) in [(40.0, 30.0), (60.0, 40.0), (95.0, 47.9)] {
+            assert!(room.taken_at(Point::new(x, y)), "{x}, {y}");
+            // Every box around the point, wide or narrow.
+            for (w, h) in [(0.0, 0.0), (30.0, 10.0), (4.0, 60.0)] {
+                assert!(!room.claim(x - w / 2.0, y - h / 2.0, x + w / 2.0, y + h / 2.0));
+            }
+        }
+        // Off the screen, or not a number: never taken (the claim decides then).
+        for (x, y) in [(-1.0, 40.0), (60.0, 500.0), (f32::NAN, 40.0)] {
+            assert!(!room.taken_at(Point::new(x, y)));
+        }
+        assert!(!room.taken_at(Point::new(150.0, 100.0)));
+    }
 
     #[test]
     fn a_label_in_the_way_is_left_out_and_off_screen_ones_always_fit() {

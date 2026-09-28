@@ -24,6 +24,7 @@ pub mod tools;
 pub use pack::{Packer, array_packed_objects, transform_packed_objects};
 
 use std::collections::{HashMap, HashSet};
+use std::hash::{BuildHasherDefault, Hasher};
 
 use crate::api::json::{FromJson, Json};
 use crate::entity::{Entity, Shape, entity_bounds_in};
@@ -78,6 +79,38 @@ impl Item {
     }
 }
 
+/// A quick hash for the store's ids and places (an id's `f64` bits, an
+/// order): every object put looks them up, hundreds of thousands at once,
+/// where the standard hash's protection against chosen keys only costs
+/// time. The splitmix64 finalizer mixes every bit into the low ones the
+/// table's buckets are: a whole number's `f64` has its low bits zero.
+#[derive(Default)]
+struct IdHasher(u64);
+
+impl Hasher for IdHasher {
+    fn finish(&self) -> u64 {
+        let mut x = self.0;
+        x ^= x >> 30;
+        x = x.wrapping_mul(0xbf58_476d_1ce4_e5b9);
+        x ^= x >> 27;
+        x = x.wrapping_mul(0x94d0_49bb_1331_11eb);
+        x ^ (x >> 31)
+    }
+
+    fn write(&mut self, bytes: &[u8]) {
+        for &b in bytes {
+            self.write_u64(u64::from(b));
+        }
+    }
+
+    fn write_u64(&mut self, n: u64) {
+        self.0 = self.0.rotate_left(5) ^ n;
+    }
+}
+
+type IdMap<V> = HashMap<u64, V, BuildHasherDefault<IdHasher>>;
+type IdSet = HashSet<u64, BuildHasherDefault<IdHasher>>;
+
 /// Rebuild the tree when this many objects changed since the last build (or a sixteenth of all, if more).
 const REBUILD_AFTER: usize = 256;
 
@@ -85,7 +118,7 @@ const REBUILD_AFTER: usize = 256;
 pub struct Store {
     slots: Vec<Option<Item>>,
     free: Vec<u32>,
-    by_id: HashMap<u64, u32>,
+    by_id: IdMap<u32>,
     next_order: u64,
     live: usize,
     layer_ids: HashMap<String, u32>,
@@ -107,10 +140,10 @@ pub struct Store {
     /// The places of removed ids. Ids are never given twice, so an id that
     /// comes back (undo, redo, a rolled-back edit) is the same object, and it
     /// takes its place again, as in the document (docs/adr/0020).
-    vacated: HashMap<u64, u64>,
+    vacated: IdMap<u64>,
     /// The orders in `vacated`: their `ordered` entries survive compaction,
     /// so a returning id finds its place without a sort.
-    vacated_orders: HashSet<u64>,
+    vacated_orders: IdSet,
     /// The drawing typeface text boxes are measured in (`ProjectSettings.drawingFont`).
     font: Font,
 }
@@ -579,6 +612,25 @@ pub(crate) fn padded(b: Bounds, extra: f64) -> Bounds {
 
 #[cfg(test)]
 mod tests {
+    use std::hash::{BuildHasher, BuildHasherDefault};
+
+    /// Whole-number ids (their `f64` bits end in zeros) and orders in turn
+    /// fall into many buckets, the hash's low bits: as a random hash would.
+    #[test]
+    fn ids_and_orders_spread_over_the_buckets() {
+        let hasher = BuildHasherDefault::<super::IdHasher>::default();
+        let mask = (1u64 << 16) - 1;
+        for keys in [
+            (0..65_536u64).map(|n| (n as f64).to_bits()).collect::<Vec<_>>(),
+            (0..65_536u64).collect(),
+        ] {
+            let buckets: std::collections::HashSet<u64> =
+                keys.iter().map(|k| hasher.hash_one(k) & mask).collect();
+            // A random hash fills about 63 % of them.
+            assert!(buckets.len() > 40_000, "{} buckets", buckets.len());
+        }
+    }
+
     use super::*;
 
     fn line(id: f64, layer: &str, x: f64) -> String {
