@@ -87,4 +87,8 @@ Denenip bırakılan: geometri deposunun kayıtlarını çekirdeklere bölmek. Ka
 
 **Stilli sahne.** Görünümün yaklaşık 210 ms'sinin 185'i stilli sahneydi: gerçek kurulum yalnız 20 ms (103 parça, çekirdeklerde); gerisi kayıt tutma. Değişen kimlikler tekilleştirilir. Henüz kurulmamış (yeni) katmanların nesneleri için parça aranmaz, o katman zaten baştan kurulur. Parça kaydı katmanın kimliğini nesne başına kopyalamaz (`Arc<str>`), tamsayı karmasıyla ve önceden büyütülmüş tabloyla tutulur (`SlotHasher`). Kayıt 40 → 25 ms; sahne 185 → 150–165 ms. Kirli parçaların bulunması 77–91 ms'de kaldı: yük, büyük tablolarda 410 000 aramanın önbellek ıskaları.
 
+**Kimlik karması.** Belge deposu nesneleri kimlikle (`Slot`, sırayla verilen küçük sayılar) SipHash tablosunda tutuyordu. Eşitleme, sahne, planlar ve yazma yüz binlerce kez arar. `Slot` anahtarlı tablolar artık Fx'in çarpmasıyla karılır (`kentos_domain::SlotMap`); tablolar hiç gezilmez, yalnız aranır, sırası çıktıyı etkilemez. Sırayla verilen 65 536 kimliğin 65 536 ayrı kovaya düştüğü sınanır. Sahnenin parça kaydı da aynı karmayı kullanır.
+
+Son hâl, iki koşu: sonucun uygulanması **784 ve 763 ms** (başta 1 259, −%39); burada çalıştırma 1 154 ve 1 150 ms (başta 1 600); arka plandaki iş 1 014 ve 1 001 ms (başta 1 423).
+
 Kalan pay: iki adımın belgeye yazılması (adım başına yaklaşık 150 ms; kimlik, karma tabloları, sıra ve katman ağaçları), geometri deposunun eşitlenmesi (yaklaşık 180 ms: kimlikler 25, kayıtlar 30, ekleme ve ağacın yeniden kuruluşu 120), sahnenin kurulması (görünüm, yaklaşık 210 ms) ve çizim (yaklaşık 100 ms).

@@ -18,13 +18,12 @@
 //! (`batches::merged_order`), so the same numbers draw in the same order.
 
 use std::collections::{BTreeMap, HashMap, HashSet};
-use std::hash::BuildHasherDefault;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
 
 use kentos_contracts::{Entity, LayerNode, LayerNodeType, LayerStyle};
-use kentos_domain::{ChangeMark, Changes, Slot};
+use kentos_domain::{ChangeMark, Changes, Slot, SlotMap};
 use kentos_geometry_core::store::Store;
 use kentos_native_style::StylePalette;
 use kentos_native_style::batches::{DecodeOptions, StyledLayer, decode, merged_order};
@@ -95,7 +94,7 @@ pub struct StyledCache {
     layers: HashMap<String, Layer>,
     /// Each object's layer and part when last built, for objects since
     /// removed or moved; the layer's id shared, not copied per object.
-    slot_part: HashMap<Slot, (Arc<str>, u64), BuildHasherDefault<SlotHasher>>,
+    slot_part: SlotMap<(Arc<str>, u64)>,
     scene: StyledScene,
     /// What the last rebuild cost, and how many layer parts it built.
     pub last_build: Option<(Duration, usize)>,
@@ -521,35 +520,6 @@ fn dirty_part(dirty: &mut HashMap<String, Dirty>, layer: &str, part: u64) {
                 .parts
                 .insert(part);
         }
-    }
-}
-
-/// A quick hash for slots, small numbers given in turn (Fx's multiply: the
-/// low bits, the table's buckets, are a permutation of the slot's).
-#[derive(Default)]
-pub(crate) struct SlotHasher(u64);
-
-impl std::hash::Hasher for SlotHasher {
-    fn finish(&self) -> u64 {
-        self.0
-    }
-
-    fn write(&mut self, bytes: &[u8]) {
-        for &b in bytes {
-            self.write_u8(b);
-        }
-    }
-
-    fn write_u8(&mut self, n: u8) {
-        self.write_u64(u64::from(n));
-    }
-
-    fn write_u32(&mut self, n: u32) {
-        self.write_u64(u64::from(n));
-    }
-
-    fn write_u64(&mut self, n: u64) {
-        self.0 = (self.0.rotate_left(5) ^ n).wrapping_mul(0x51_7c_c1_b7_27_22_0a_95);
     }
 }
 

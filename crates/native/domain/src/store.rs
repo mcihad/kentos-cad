@@ -13,6 +13,7 @@ use std::sync::Arc;
 
 use kentos_contracts::Entity;
 
+use crate::hash::SlotMap;
 use crate::identity::{Slot, Uuid};
 
 /// An object as the document keeps it: its persistent id and its data, whose
@@ -43,14 +44,14 @@ struct Item {
 
 #[derive(Clone, Debug, Default)]
 pub(crate) struct Store {
-    items: HashMap<Slot, Item>,
+    items: SlotMap<Item>,
     order: BTreeMap<u64, Slot>,
     layers: HashMap<String, BTreeMap<u64, Slot>>,
     uids: HashMap<Uuid, Slot>,
     next_seq: u64,
     /// The places of removed slots. Slots are never given twice, so a slot
     /// that comes back is the same object, and it takes its place again.
-    vacated: HashMap<Slot, u64>,
+    vacated: SlotMap<u64>,
 }
 
 impl Store {
