@@ -2582,6 +2582,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "kentos-mcp"
+version = "0.1.0"
+dependencies = [
+ "kentos-contracts",
+ "kentos-domain",
+ "kentos-headless",
+ "serde_json",
+]
+
+[[package]]
 name = "kentos-native-application"
 version = "0.1.0"
 dependencies = [

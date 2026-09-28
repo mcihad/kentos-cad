@@ -35,6 +35,8 @@ members = [
     # The Python SDK's extension module kentos._native (docs/adr/0131): built by maturin, tested
     # from Python; not a default member, as it links a Python.
     "crates/native/python",
+    # The MCP server over the headless host (docs/adr/0133): tools for AI agents over stdio.
+    "crates/native/mcp",
     # The desktop's cloud client (docs/adr/0040): the web's protocol through a native adapter.
     "crates/native/cloud",
     # The desktop's style engine page (docs/adr/0090): the style library and a layer's way to the GPU.
@@ -70,6 +72,7 @@ default-members = [
     "crates/native/processing",
     "crates/native/project",
     "crates/native/headless",
+    "crates/native/mcp",
     "crates/native/cloud",
     "crates/native/style",
     "crates/server/postgres",

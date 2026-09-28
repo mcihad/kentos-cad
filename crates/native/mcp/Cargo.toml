@@ -1,0 +1,20 @@
+[package]
+name = "kentos-mcp"
+description = "KentOS's MCP server: the command catalog's drawing commands, a drawing's queries and its .kcad files as tools for AI agents, over stdio, on the headless command host"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Pure Rust over stdin and stdout (scripts/arch/deps.mjs, group `mcp`): no async runtime,
+# network, UI or database. JSON-RPC and MCP are written here from the specification
+# (docs/adr/0133); no MCP library.
+[[bin]]
+name = "kentos-mcp"
+path = "src/main.rs"
+
+[dependencies]
+kentos-contracts = { path = "../../shared/contracts", default-features = false, features = ["schema"] }
+kentos-domain = { path = "../domain" }
+kentos-headless = { path = "../headless" }
+serde_json = { workspace = true }
