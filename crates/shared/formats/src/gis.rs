@@ -195,14 +195,19 @@ fn entity_base(e: &mut Entity) -> &mut EntityBase {
 }
 
 /// Twice the signed area of a ring (the shoelace sum Σ xᵢ·yᵢ₊₁ − xᵢ₊₁·yᵢ,
-/// without a repeated closing point): positive counter-clockwise.
+/// without a repeated closing point): positive counter-clockwise. Taken
+/// relative to the first point: on raw TM coordinates the products cancel
+/// away the area of a small ring (docs/adr/0122).
 pub fn shoelace(ring: &[Vec2]) -> f64 {
+    let Some(&o) = ring.first() else {
+        return 0.0;
+    };
     let n = ring.len();
     let mut s = 0.0;
     for i in 0..n {
         let a = ring[i];
         let b = ring[(i + 1) % n];
-        s += a.x * b.y - b.x * a.y;
+        s += (a.x - o.x) * (b.y - o.y) - (b.x - o.x) * (a.y - o.y);
     }
     s
 }

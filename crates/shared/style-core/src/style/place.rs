@@ -515,24 +515,26 @@ pub fn interior_point(rings: &[Vec<Vec2>]) -> Option<Vec2> {
 }
 
 /// An area's centre of mass by the shoelace sums, or its first point when
-/// it has no area (the centroid marker's "centroid" position).
+/// it has no area (the centroid marker's "centroid" position). The sums are
+/// taken relative to the first point: on raw TM coordinates their products
+/// cancel away metres (docs/adr/0122).
 pub fn centroid_of(ring: &[Vec2]) -> Option<Vec2> {
-    if ring.is_empty() {
-        return None;
-    }
+    let &o = ring.first()?;
     let (mut a, mut cx, mut cy) = (0.0, 0.0, 0.0);
     let mut j = ring.len() - 1;
     for i in 0..ring.len() {
-        let f = ring[j].x * ring[i].y - ring[i].x * ring[j].y;
+        let (xj, yj) = (ring[j].x - o.x, ring[j].y - o.y);
+        let (xi, yi) = (ring[i].x - o.x, ring[i].y - o.y);
+        let f = xj * yi - xi * yj;
         a += f;
-        cx += (ring[j].x + ring[i].x) * f;
-        cy += (ring[j].y + ring[i].y) * f;
+        cx += (xj + xi) * f;
+        cy += (yj + yi) * f;
         j = i;
     }
     Some(if a.abs() < 1e-12 {
-        ring[0]
+        o
     } else {
-        Vec2::new(cx / (3.0 * a), cy / (3.0 * a))
+        Vec2::new(o.x + cx / (3.0 * a), o.y + cy / (3.0 * a))
     })
 }
 

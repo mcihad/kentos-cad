@@ -63,7 +63,10 @@ it.runIf(!!process.env.GOLDEN_WRITE)('records the style compiler’s answers', (
     });
     const c = call as StyledCall | null;
     if (!c || c.data.length > MAX_NUMBERS || (!c.batches.length && !g.chance(0.1))) continue;
-    layers.push({ layer: { name: scene.name, style: scene.style }, library: Object.fromEntries(library), entities, origin: scene.origin, plotScale: scene.plotScale, clip: scene.clip ?? null, ...c });
+    // The answers do not read an object's persistent id (docs/adr/0014): each run
+    // makes new ones, so they are left out and a record changes only with its answers.
+    const recorded = entities.map(({ uid: _uid, ...entity }) => entity);
+    layers.push({ layer: { name: scene.name, style: scene.style }, library: Object.fromEntries(library), entities: recorded, origin: scene.origin, plotScale: scene.plotScale, clip: scene.clip ?? null, ...c });
   }
   const head = {
     format: 'kentos.style-cases',

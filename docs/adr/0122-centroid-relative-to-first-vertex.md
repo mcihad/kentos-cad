@@ -30,12 +30,19 @@ Alanın kendisi (`signed_area`) bu hatadan önceden kurtarılmıştı: koordinat
 - **Stil derleyicisinin yanıtları:** `fixtures/style/v1/cases.json` web'in kaydedicisiyle yeniden yazıldı (`record-style.test.ts`, WASM'daki düzeltilmiş çekirdek).
   - Fark okundu. Değişenler alan merkezindeki işaretlerin konumları ve kaydedicinin bir alan merkezinden kurduğu bir kırpma kutusudur.
   - Değişen 31 işaret kesin ağırlık merkezlerine 2,8·10⁻¹⁴ m içinde oturur; eskileri 0,985 m'ye kadar uzaktı. Yaylı kenarlı 20 durum ayrıca hesaplanmadı: onlarda halka çekirdekte yoğunlaştırılır, aynı işlevden geçer.
-  - Kaydedici, fixture kaydedildikten sonra gelen nesne kimliklerini (`uid`, ADR 0014) de yazıyor. Yanıtlar kimliğe bağlı değildir.
+
+- **Aynı hatanın öbür iki yeri:** tarama iki yerde daha mutlak koordinatla çarpım buldu. İkisi de artık ilk noktaya göredir.
+  - Stil çekirdeğinin `place::centroid_of`'u sembolün "merkez" konumlu işaretini yerleştirir.
+  - Biçimlerin `gis::shoelace`'i GeoJSON yazarken halkanın yönünü, Shapefile okurken dış halka ile deliği ayırır.
+
+  Yön ve alan hataları eşiğin çok altında kalıyordu. GIS fixture'ları ve bağımsız okuyucu (`gis_reference.py --check`) değişmedi. Stil yanıtlarında iki "merkez" durumu yuvarlama düzeyinde değişti. Öbür eşleşmeler yön vektörleriyle (farklarla) çalışır.
+- **Kaydedicinin kimlikleri:** kaydedici (`record-style.test.ts`) her koşuda yeni kalıcı kimlikler üretiyordu. Yanıtlar kimliğe bağlı olmadığı için katmanların nesneleri kimliksiz yazılır. Kayıt yalnız yanıtlar değişince değişir.
+- **Stil yanıtlarındaki fark:** düzeltmeden önceki dosyaya göre iki katmanın merkez işaretleri, bir katmanın kırpma kutusu ve 33 sembol durumu.
 
 ## Sonuçlar
 
 - Etiketler, işaretler ve `$x`/`$y` TM koordinatlarında da kesin yerindedir. İki platform aynı düzeltilmiş çekirdeği kullanır (web WASM'la).
-- Mutlak koordinatlarla çarpım kuran başka hesap kalmadığı ayrıca taranmalıdır. `signed_area`, ifade motorunun momentleri ve bu işlev artık ilk köşeye göredir.
+- Ortak ve yerli crate'lerde mutlak koordinatla çarpım kuran alan ve ağırlık merkezi hesabı kalmadı. `signed_area`, ifade motorunun momentleri, `centroid`, `centroid_of` ve `shoelace` ilk noktaya göredir.
 
 ## Doğrulama
 
