@@ -49,6 +49,7 @@ impl App {
                 uids: kentos_interaction::properties::uids_of(model, &slots),
                 layer_id: None,
                 color: None,
+                line_weight: None,
                 symbol: Some(id.map(str::to_owned)),
                 attrs: None,
                 label: None,

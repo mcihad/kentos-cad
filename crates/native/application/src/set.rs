@@ -1,10 +1,10 @@
-//! `cad.entities.set` v1 (docs/adr/0066): the layer, colour, symbol,
-//! attributes or label of objects named by their persistent ids, as one
+//! `cad.entities.set` v1 (docs/adr/0066): the layer, colour, line weight
+//! (docs/adr/0139), symbol, attributes or label of objects named by their persistent ids, as one
 //! undo step named after the operation. The desktop's handler over the
 //! native document; the web's is `apps/web/src/product/entitiesSet.ts`. Both
 //! pass the shared cases in `fixtures/commands/v1/cad.entities.set.json`.
 //!
-//! Öznitelikler's Katman, Renk and attribute rows write here. They put the
+//! Öznitelikler's Katman, Renk, Kalınlık and attribute rows write here. They put the
 //! objects and the value in the input (TODOS.md CMD-07): the command reads
 //! no selection and no library.
 //!
@@ -12,6 +12,7 @@
 //! 1. at least one id; every id lowercase UUID text with hyphens (in order);
 //! 2. something to set;
 //! 3. no attribute name empty or only white space (Unicode's `White_Space`);
+//!    the line weight given a number from 0 to 100 mm;
 //! 4. the expected revision (every command's, `checks.rs`);
 //! 5. every id names an object of the document (in order);
 //! 6. the layer given is one, not a group;
@@ -23,7 +24,7 @@
 
 use kentos_contracts::{
     CommandResult, CommandWarning, EntitiesPropertiesSet, EntitiesSetProperties,
-    EntitiesSetPropertiesPlan, Entity, LayerNodeType, PropertiesOperation,
+    EntitiesSetPropertiesPlan, Entity, LayerNodeType, MAX_LINE_WEIGHT, PropertiesOperation,
 };
 use kentos_domain::{Document, Slot};
 
@@ -102,6 +103,7 @@ pub fn label(input: &EntitiesSetProperties) -> &'static str {
     match input.operation {
         PropertiesOperation::Layer => "Katman değiştir",
         PropertiesOperation::Color => "Renk değiştir",
+        PropertiesOperation::LineWeight => "Kalınlık değiştir",
         PropertiesOperation::Symbol if input.symbol == Some(None) => "Sembolü kaldır",
         PropertiesOperation::Symbol => "Sembol ata",
         PropertiesOperation::Attributes => "Değiştir",
@@ -134,6 +136,9 @@ fn changed(e: &Entity, input: &EntitiesSetProperties) -> Option<Entity> {
     if let Some(color) = &input.color {
         base.color.clone_from(color);
     }
+    if let Some(weight) = input.line_weight {
+        base.line_weight = weight;
+    }
     if let Some(symbol) = &input.symbol {
         base.symbol.clone_from(symbol);
     }
@@ -159,13 +164,14 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
     let attrs = input.attrs.as_ref().filter(|a| !a.is_empty());
     if input.layer_id.is_none()
         && input.color.is_none()
+        && input.line_weight.is_none()
         && input.symbol.is_none()
         && attrs.is_none()
         && input.label.is_none()
     {
         return Err(Stop::Failed(error(
             codes::NOTHING_TO_SET,
-            "Değişecek özellik verilmedi. Katman, renk, sembol, öznitelik ya da etiket verin."
+            "Değişecek özellik verilmedi. Katman, renk, kalınlık, sembol, öznitelik ya da etiket verin."
                 .into(),
             None,
         )));
@@ -176,6 +182,15 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
             "Öznitelik adı boş olamaz; yalnız boşluktan oluşan ad da boştur. Özniteliğe bir ad verin."
                 .into(),
             Some("attrs".into()),
+        )));
+    }
+    if let Some(Some(w)) = input.line_weight
+        && !(0.0..=MAX_LINE_WEIGHT).contains(&w)
+    {
+        return Err(Stop::Failed(error(
+            codes::INVALID_LINE_WEIGHT,
+            format!("Çizgi kalınlığı {w} mm olamaz: 0 ile 100 mm arasında olmalı (0 en ince çizgidir). Bir kalınlık ya da “Katmana göre” seçin."),
+            Some("lineWeight".into()),
         )));
     }
     checks::revision(doc, input.expected_revision.as_deref())?;

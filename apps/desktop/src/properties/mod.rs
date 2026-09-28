@@ -55,6 +55,8 @@ pub enum Event {
     Layer(Vec<Slot>, String),
     /// Renk ▾: the objects' colour; none, the layer's.
     Color(Vec<Slot>, Option<String>),
+    /// Kalınlık ▾: the objects' own line weight in mm; none, the layer's (docs/adr/0139).
+    Weight(Vec<Slot>, Option<f64>),
     /// Desen ▾ of a hatch.
     Pattern(Slot, HatchPatternType),
 }
@@ -311,6 +313,11 @@ impl App {
                 input.color = Some(color);
                 properties::set_properties(model, input)
             }
+            Event::Weight(ids, weight) => {
+                let mut input = set_input(model, &ids, PropertiesOperation::LineWeight);
+                input.line_weight = Some(weight);
+                properties::set_properties(model, input)
+            }
             Event::Pattern(slot, kind) => match model.get(slot) {
                 Some(Entity::Hatch(h)) => {
                     let mut h = h.clone();
@@ -337,6 +344,7 @@ fn set_input(
         uids: properties::uids_of(model, slots),
         layer_id: None,
         color: None,
+        line_weight: None,
         symbol: None,
         attrs: None,
         label: None,

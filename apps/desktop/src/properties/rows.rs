@@ -19,7 +19,7 @@ use crate::document::{Document, crs_name};
 use crate::selecting::kind_title;
 
 /// The colours the panel offers (the web's `DRAW_COLORS`, fields.ts).
-use crate::ribbon_panels::DRAW_COLORS;
+use crate::ribbon_panels::{DRAW_COLORS, LINE_WEIGHTS, weight_text as weight_label};
 
 /// A hatch pattern's name (the web's `HATCH_PATTERN_LABEL`), in its order.
 const PATTERNS: [(HatchPatternType, &str); 3] = [
@@ -255,6 +255,59 @@ fn color_text(current: Option<Option<&str>>) -> String {
     }
 }
 
+/// A line weight as the panel names it: “Çeşitli” for a mixed selection, “Katmana göre”, or “0.35 mm”.
+fn weight_text(current: Option<Option<f64>>) -> String {
+    match current {
+        None => "Çeşitli".to_owned(),
+        Some(None) => "Katmana göre".to_owned(),
+        Some(Some(w)) => weight_label(w),
+    }
+}
+
+/// Kalınlık ▾: by layer, then the weights, an imported one not in the list
+/// among them (the web's `weightEditor`, docs/adr/0139).
+fn weight_editor(ids: &[Slot], current: Option<Option<f64>>) -> Editor {
+    let set = |w: Option<f64>| Message::Properties(Event::Weight(ids.to_vec(), w));
+    let mut weights = LINE_WEIGHTS.to_vec();
+    if let Some(Some(w)) = current
+        && !weights.contains(&w)
+    {
+        weights.push(w);
+        weights.sort_by(f64::total_cmp);
+    }
+    let mut items = vec![
+        Choice::Pick {
+            label: "Katmana göre".to_owned(),
+            swatch: None,
+            chosen: current == Some(None),
+            enabled: true,
+            message: set(None),
+        },
+        Choice::Separator,
+    ];
+    items.extend(weights.into_iter().map(|w| Choice::Pick {
+        label: weight_label(w),
+        swatch: None,
+        chosen: current == Some(Some(w)),
+        enabled: true,
+        message: set(Some(w)),
+    }));
+    Editor::Select {
+        text: weight_text(current),
+        swatch: None,
+        items,
+    }
+}
+
+/// Whether an object is drawn with lines, so its line weight shows: not a
+/// point, text, dimension or hatch (the web's `drawsLines`).
+fn draws_lines(e: &Entity) -> bool {
+    !matches!(
+        e,
+        Entity::Point(_) | Entity::Text(_) | Entity::Dimension(_) | Entity::Hatch(_)
+    )
+}
+
 /// A symbol as the panel names it: “Çeşitli”, “Katman stiline göre”, or its
 /// name among the project's styles; one of the system library, which the
 /// desktop does not hold yet, by its id (docs/adr/0063).
@@ -399,6 +452,10 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
         .editor(edit(layer_editor(doc, &ids, Some(&base.layer_id)))),
         Row::text("Renk", color_text(color)).editor(edit(color_editor(&ids, color))),
     ];
+    if draws_lines(e) {
+        let weight = Some(base.line_weight);
+        general.push(Row::text("Kalınlık", weight_text(weight)).editor(edit(weight_editor(&ids, weight))));
+    }
     if takes_symbol(e) {
         general.push(
             Row::text("Sembol", symbol_text(doc, symbol)).editor(edit(symbol_editor(doc, symbol))),
@@ -689,15 +746,25 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
     });
     let edit = |editor: Editor| (!any_locked).then_some(editor);
 
+    // The weight of the objects drawn with lines; the others have none to show.
+    let lined: Vec<&&Entity> = objects.iter().filter(|e| draws_lines(e)).collect();
+    let weight = lined
+        .iter()
+        .all(|e| e.base().line_weight == lined[0].base().line_weight)
+        .then(|| lined.first().and_then(|e| e.base().line_weight));
+    let mut rows = vec![
+        Row::text("Katman", "Kilitli katman içeriyor").editor(edit(layer_editor(doc, &ids, layer))),
+        Row::text("Renk", color_text(color)).editor(edit(color_editor(&ids, color))),
+    ];
+    if !lined.is_empty() {
+        let lined_ids: Vec<Slot> = lined.iter().map(|e| Slot(e.base().id)).collect();
+        rows.push(Row::text("Kalınlık", weight_text(weight)).editor(edit(weight_editor(&lined_ids, weight))));
+    }
+    rows.push(Row::text("Sembol", symbol_text(doc, symbol)).editor(edit(symbol_editor(doc, symbol))));
     let mut sections = vec![Section {
         id: "general",
         title: "Ortak özellikler",
-        rows: vec![
-            Row::text("Katman", "Kilitli katman içeriyor")
-                .editor(edit(layer_editor(doc, &ids, layer))),
-            Row::text("Renk", color_text(color)).editor(edit(color_editor(&ids, color))),
-            Row::text("Sembol", symbol_text(doc, symbol)).editor(edit(symbol_editor(doc, symbol))),
-        ],
+        rows,
     }];
     let f = Format::of(doc.settings());
     let mut totals = Vec::new();

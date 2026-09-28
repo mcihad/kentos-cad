@@ -5,24 +5,25 @@ import type { EntitiesSetPropertiesPlan } from '../contracts/generated/EntitiesS
 import type { Entity as PlannedEntity } from '../contracts/generated/Entity';
 import type { PropertiesOperation } from '../contracts/generated/PropertiesOperation';
 import type { CadDocument } from '../model/document';
-import type { Entity } from '../model/entities';
+import { MAX_LINE_WEIGHT, type Entity } from '../model/entities';
 import { checkRevision, checkUids, error, failed, findObjects, isBlank, validated, type Stop } from './checks';
 import type { ProductCommand } from './command';
 
 /**
- * `cad.entities.set` v1: the layer, colour, symbol, attributes or label of
- * objects named by their persistent ids, as one undo step named after the
+ * `cad.entities.set` v1: the layer, colour, line weight (docs/adr/0139),
+ * symbol, attributes or label of objects named by their persistent ids, as one undo step named after the
  * operation. The web's handler over `CadDocument`; the desktop's is in
  * `crates/native/application`. Both pass the shared cases in
  * fixtures/commands/v1/cad.entities.set.json.
  *
- * Öznitelikler's Katman, Renk and attribute rows, Sembol ver and Sembolü
+ * Öznitelikler's Katman, Renk, Kalınlık and attribute rows, Sembol ver and Sembolü
  * kaldır write here. They put the objects and the value in the input
  * (TODOS.md CMD-07): the command reads no selection and no library.
  *
  * The checks, in order (the first that fails answers): at least one id,
  * each lowercase UUID text with hyphens; something to set; no attribute
- * name empty or only white space; the expected revision (checks.ts); each
+ * name empty or only white space; the line weight a number from 0 to 100
+ * mm; the expected revision (checks.ts); each
  * id names an object; the layer given is one, not a group; no object on a
  * locked layer, then the layer given not locked. An object already as asked
  * is left alone; when none changes nothing is written.
@@ -32,6 +33,7 @@ import type { ProductCommand } from './command';
 const LABEL: Record<Exclude<PropertiesOperation, 'symbol'>, string> = {
   layer: 'Katman değiştir',
   color: 'Renk değiştir',
+  lineWeight: 'Kalınlık değiştir',
   attributes: 'Değiştir',
   label: 'Etiket değiştir',
 };
@@ -61,7 +63,7 @@ const attrOf = (e: Entity, key: string): string | null => (Object.hasOwn(e.attrs
 function patchOf(e: Entity, input: EntitiesSetProperties): Partial<Entity> | null {
   const patch: Record<string, unknown> = {};
   if (input.layerId != null && e.layerId !== input.layerId) patch.layerId = input.layerId;
-  for (const key of ['color', 'symbol', 'label'] as const) {
+  for (const key of ['color', 'lineWeight', 'symbol', 'label'] as const) {
     const want = input[key];
     if (want !== undefined && (e[key] ?? null) !== want) patch[key] = want ?? undefined;
   }
@@ -83,10 +85,19 @@ function check(doc: CadDocument, input: EntitiesSetProperties): Stop | Checked {
   const stop = checkUids(input.uids, 'Özellikleri değişecek nesne verilmedi.');
   if (stop) return stop;
   const attrs = Object.keys(input.attrs ?? {});
-  if (input.layerId == null && input.color === undefined && input.symbol === undefined && !attrs.length && input.label === undefined)
-    return failed({ code: 'nothing_to_set', message: 'Değişecek özellik verilmedi. Katman, renk, sembol, öznitelik ya da etiket verin.' });
+  if (input.layerId == null && input.color === undefined && input.lineWeight === undefined && input.symbol === undefined && !attrs.length && input.label === undefined)
+    return failed({ code: 'nothing_to_set', message: 'Değişecek özellik verilmedi. Katman, renk, kalınlık, sembol, öznitelik ya da etiket verin.' });
   if (attrs.some(isBlank))
     return failed(error('invalid_attribute', 'Öznitelik adı boş olamaz; yalnız boşluktan oluşan ad da boştur. Özniteliğe bir ad verin.', 'attrs'));
+  const weight = input.lineWeight;
+  if (weight != null && !(weight >= 0 && weight <= MAX_LINE_WEIGHT))
+    return failed(
+      error(
+        'invalid_line_weight',
+        `Çizgi kalınlığı ${weight} mm olamaz: 0 ile 100 mm arasında olmalı (0 en ince çizgidir). Bir kalınlık ya da “Katmana göre” seçin.`,
+        'lineWeight',
+      ),
+    );
   const revision = checkRevision(doc, input.expectedRevision);
   if (revision) return revision;
   const found = findObjects(doc, input.uids);

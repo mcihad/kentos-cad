@@ -6,8 +6,8 @@ use std::collections::BTreeMap;
 
 use iced::keyboard::Modifiers;
 use kentos_contracts::{
-    DimensionEntity, Entity, EntityBase, HatchEntity, HatchPattern, HatchPatternType, TextEntity,
-    Vec2 as Wire,
+    DimensionEntity, Entity, EntityBase, HatchEntity, HatchPattern, HatchPatternType, LineEntity,
+    TextEntity, Vec2 as Wire,
 };
 use kentos_domain::Slot;
 
@@ -178,6 +178,54 @@ fn layer_and_colour_are_one_step_each_and_a_hidden_layer_is_said() {
         Some("“Gizli katman” katmanı gizli; taşınan nesneler görünmeyecek.")
     );
     assert_eq!(app.selection.ids(), [Slot(5)]);
+}
+
+#[test]
+fn a_line_shows_its_own_weight_and_kalinlik_sets_it_or_gives_it_back_to_the_layer() {
+    // docs/adr/0139: an imported weight (1.20 mm) is shown, and listed among the ordinary ones.
+    let mut app = objects();
+    let mut own = base("nokta");
+    own.line_weight = Some(1.2);
+    let line = add(
+        &mut app,
+        Entity::Line(LineEntity {
+            base: own,
+            a: Wire { x: E, y: N },
+            b: Wire { x: E + 10.0, y: N },
+        }),
+    );
+    select(&mut app, &[line]);
+    assert_eq!(value(&app, "Genel", "Kalınlık"), "1.20 mm");
+    let genel = rows(&app).remove(0).1;
+    let Some(Editor::Select { items, .. }) = &genel
+        .iter()
+        .find(|r| r.label == "Kalınlık")
+        .expect("Kalınlık ▾")
+        .editor
+    else {
+        panic!("Kalınlık ▾");
+    };
+    let picks: Vec<(String, bool)> = items
+        .iter()
+        .filter_map(|c| match c {
+            Choice::Pick { label, chosen, .. } => Some((label.clone(), *chosen)),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(picks[0], ("Katmana göre".to_owned(), false));
+    assert!(picks.contains(&("1.20 mm".to_owned(), true)), "{picks:?}");
+    // Kalınlık ▾ → 0.35 mm, then Katmana göre: each its own step.
+    event(&mut app, Event::Weight(vec![Slot(line)], Some(0.35)));
+    assert_eq!(entity(&app, line).base().line_weight, Some(0.35));
+    assert_eq!(value(&app, "Genel", "Kalınlık"), "0.35 mm");
+    event(&mut app, Event::Weight(vec![Slot(line)], None));
+    assert_eq!(entity(&app, line).base().line_weight, None);
+    assert_eq!(value(&app, "Genel", "Kalınlık"), "Katmana göre");
+    assert_eq!(undo_label(&mut app).as_deref(), Some("Kalınlık değiştir"));
+    assert_eq!(entity(&app, line).base().line_weight, Some(0.35));
+    // A point is not drawn with a line: it shows no weight.
+    select(&mut app, &[5]);
+    assert!(rows(&app)[0].1.iter().all(|r| r.label != "Kalınlık"));
 }
 
 #[test]

@@ -108,10 +108,14 @@ try {
   await sleep(1500);
   await b.shot(`${tag}-4-bitti`);
 
-  // Close to the smart objects: the first settlement symbol, 60 m round it.
+  // Close to the smart objects (the first settlement symbol), else to a heavy line (its own weight, ADR 0139), 60 m round it.
   const near = await b.eval(`(() => {
     const k = window.kentos;
-    const e = k.doc.all().find((x) => x.attrs?.['Akıllı nesne'] === 'Yerleşim') ?? k.doc.all().find((x) => x.kind === 'text');
+    const all = [...k.doc.all()];
+    const e =
+      all.find((x) => x.attrs?.['Akıllı nesne'] === 'Yerleşim') ??
+      all.find((x) => (x.lineWeight ?? 0) >= 0.7 && x.kind !== 'text') ??
+      all.find((x) => x.kind === 'text');
     if (!e) return false;
     const b = k.doc.bounds([e.id]);
     const cx = (b.minX + b.maxX) / 2, cy = (b.minY + b.maxY) / 2;

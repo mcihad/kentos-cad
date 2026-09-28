@@ -404,18 +404,20 @@ class PropertiesOperation(_StrEnum):
 
     - ``layer``: Katman ▾: the objects move to another layer. “Katman değiştir”.
     - ``color``: Renk ▾: their own colour, or their layer's. “Renk değiştir”.
+    - ``lineWeight``: Kalınlık ▾: their own line weight, or their layer's (docs/adr/0139).
     - ``symbol``: Sembol ver and Sembolü kaldır: their own symbol, or their layer
     - ``attributes``: An attribute row of Öznitelikler, with the label that shows the
     - ``label``: The label alone. “Etiket değiştir”.
     """
     LAYER = "layer"
     COLOR = "color"
+    LINE_WEIGHT = "lineWeight"
     SYMBOL = "symbol"
     ATTRIBUTES = "attributes"
     LABEL = "label"
 
 
-PropertiesOperationName = Literal["layer", "color", "symbol", "attributes", "label"]
+PropertiesOperationName = Literal["layer", "color", "lineWeight", "symbol", "attributes", "label"]
 """The names of :class:`PropertiesOperation`, for a plain string."""
 
 
@@ -504,6 +506,7 @@ class Entity(_Union):
         id: int
         label: str | None | Unset
         layer_id: str
+        line_weight: float | None | Unset
         symbol: str | None | Unset
 
     @property
@@ -736,6 +739,10 @@ class ArcEntity(Entity):
     Attributes:
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
         color: Colour override; absent = the layer's colour ("katmana göre").
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139).
         symbol: Library symbol overriding the layer's style.
     """
     TAG_VALUE: ClassVar[str] = "arc"
@@ -748,6 +755,7 @@ class ArcEntity(Entity):
     a1: float
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -763,6 +771,8 @@ class ArcEntity(Entity):
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         return out
@@ -779,6 +789,7 @@ class ArcEntity(Entity):
             a1=float(data["a1"]),
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
         )
 
@@ -1098,6 +1109,10 @@ class CircleEntity(Entity):
     Attributes:
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
         color: Colour override; absent = the layer's colour ("katmana göre").
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139).
         symbol: Library symbol overriding the layer's style.
     """
     TAG_VALUE: ClassVar[str] = "circle"
@@ -1108,6 +1123,7 @@ class CircleEntity(Entity):
     r: float
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -1121,6 +1137,8 @@ class CircleEntity(Entity):
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         return out
@@ -1135,6 +1153,7 @@ class CircleEntity(Entity):
             r=float(data["r"]),
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
         )
 
@@ -1205,6 +1224,10 @@ class ConstructionEntity(_Model):
     Attributes:
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
         color: Colour override; absent = the layer's colour ("katmana göre").
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139).
         symbol: Library symbol overriding the layer's style.
     """
     id: int
@@ -1214,6 +1237,7 @@ class ConstructionEntity(_Model):
     dir: Vec2
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -1227,6 +1251,8 @@ class ConstructionEntity(_Model):
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         return out
@@ -1241,6 +1267,7 @@ class ConstructionEntity(_Model):
             dir=Vec2.from_json(data["dir"]),
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
         )
 
@@ -1256,6 +1283,10 @@ class DimensionEntity(Entity):
         angle: Linear: measured direction in degrees (0 = ΔY, 90 = ΔX).
         c: Angular: the vertex.
         color: Colour override; absent = the layer's colour ("katmana göre").
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139).
         symbol: Library symbol overriding the layer's style.
     """
     TAG_VALUE: ClassVar[str] = "dimension"
@@ -1270,6 +1301,7 @@ class DimensionEntity(Entity):
     c: Vec2 | None | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
     style: DimensionStyle | DimensionStyleName | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     text: str | None | Unset = UNSET
@@ -1291,6 +1323,8 @@ class DimensionEntity(Entity):
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.style is not UNSET:
             out["style"] = None if self.style is None else _enum_out(self.style)
         if self.symbol is not UNSET:
@@ -1313,6 +1347,7 @@ class DimensionEntity(Entity):
             c=UNSET if "c" not in data else None if data["c"] is None else Vec2.from_json(data["c"]),
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             style=UNSET if "style" not in data else None if data["style"] is None else _enum_in(DimensionStyle, data["style"]),
             symbol=data.get("symbol", UNSET),
             text=data.get("text", UNSET),
@@ -1325,6 +1360,10 @@ class EllipseEntity(Entity):
     Attributes:
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
         color: Colour override; absent = the layer's colour ("katmana göre").
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139).
         symbol: Library symbol overriding the layer's style.
     """
     TAG_VALUE: ClassVar[str] = "ellipse"
@@ -1338,6 +1377,7 @@ class EllipseEntity(Entity):
     t1: float
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -1354,6 +1394,8 @@ class EllipseEntity(Entity):
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         return out
@@ -1371,6 +1413,7 @@ class EllipseEntity(Entity):
             t1=float(data["t1"]),
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
         )
 
@@ -1896,9 +1939,9 @@ class EntitiesSetProperties(_Model):
     Öznitelikler fills `uids` from the selection and the property from the
     row; the command reads no selection, library or view.
 
-    A property absent from the input stays as it is. `color`, `symbol` and
-    `label` are removed with null: the object is drawn in its layer's colour
-    and style again, and shows no label. An attribute is set by its name, or
+    A property absent from the input stays as it is. `color`, `lineWeight`,
+    `symbol` and `label` are removed with null: the object is drawn in its
+    layer's colour, weight and style again, and shows no label. An attribute is set by its name, or
     removed with null; the attributes not named stay. What an object already
     has is not a change: an object as the input asks is left alone and is
     not in the output, and when no object changes nothing is written (no
@@ -1911,7 +1954,8 @@ class EntitiesSetProperties(_Model):
 
     Refusals (`CommandError.code`), checked in this order: `no_entities`,
     `invalid_uid` (each id in order), `nothing_to_set` (no property given),
-    `invalid_attribute` (an attribute name empty or only white space), then
+    `invalid_attribute` (an attribute name empty or only white space),
+    `invalid_line_weight` (a weight not a number from 0 to 100 mm), then
     `invalid_revision`, `revision_conflict` (status `conflict`),
     `entity_not_found` (each id in order), `layer_not_found` and
     `not_a_layer` (the `layerId` given), `layer_locked` (each object's layer
@@ -1933,6 +1977,9 @@ class EntitiesSetProperties(_Model):
             unchanged.
         layer_id: The layer they move to: a layer's id (`LayerNode.id`), not a group's.
             Absent: they stay on theirs.
+        line_weight: Their own line weight, paper mm (`EntityBase.line_weight`, 0 the
+            thinnest, at most 100); null: their layer's (katmana göre). Absent:
+            unchanged.
         symbol: Their own symbol, a library item's id (`EntityBase.symbol`), drawn
             instead of their layer's style; null: the layer's style. The id is
             not looked up: the libraries are the host's. Absent: unchanged.
@@ -1944,6 +1991,7 @@ class EntitiesSetProperties(_Model):
     expected_revision: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     layer_id: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -1960,6 +2008,8 @@ class EntitiesSetProperties(_Model):
             out["label"] = self.label
         if self.layer_id is not UNSET:
             out["layerId"] = self.layer_id
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         return out
@@ -1974,6 +2024,7 @@ class EntitiesSetProperties(_Model):
             expected_revision=data.get("expectedRevision", UNSET),
             label=data.get("label", UNSET),
             layer_id=data.get("layerId", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
         )
 
@@ -2206,6 +2257,10 @@ class HatchEntity(Entity):
     Attributes:
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
         color: Colour override; absent = the layer's colour ("katmana göre").
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139).
         symbol: Library symbol overriding the layer's style.
     """
     TAG_VALUE: ClassVar[str] = "hatch"
@@ -2217,6 +2272,7 @@ class HatchEntity(Entity):
     color: str | None | Unset = UNSET
     holes: list[list[Vec2]] | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -2232,6 +2288,8 @@ class HatchEntity(Entity):
             out["holes"] = None if self.holes is None else [[_vec2_out(e1) for e1 in e0] for e0 in self.holes]
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         return out
@@ -2247,6 +2305,7 @@ class HatchEntity(Entity):
             color=data.get("color", UNSET),
             holes=UNSET if "holes" not in data else None if data["holes"] is None else [[Vec2.from_json(e1) for e1 in e0] for e0 in data["holes"]],
             label=data.get("label", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
         )
 
@@ -2561,6 +2620,10 @@ class LineEntity(Entity):
     Attributes:
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
         color: Colour override; absent = the layer's colour ("katmana göre").
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139).
         symbol: Library symbol overriding the layer's style.
     """
     TAG_VALUE: ClassVar[str] = "line"
@@ -2571,6 +2634,7 @@ class LineEntity(Entity):
     b: Vec2
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -2584,6 +2648,8 @@ class LineEntity(Entity):
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         return out
@@ -2598,6 +2664,7 @@ class LineEntity(Entity):
             b=Vec2.from_json(data["b"]),
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
         )
 
@@ -2669,6 +2736,10 @@ class PathEntity(_Model):
     Attributes:
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
         color: Colour override; absent = the layer's colour ("katmana göre").
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139).
         symbol: Library symbol overriding the layer's style.
     """
     id: int
@@ -2679,6 +2750,7 @@ class PathEntity(_Model):
     color: str | None | Unset = UNSET
     holes: list[RingGeometry] | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -2695,6 +2767,8 @@ class PathEntity(_Model):
             out["holes"] = None if self.holes is None else [e0.to_json() for e0 in self.holes]
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         return out
@@ -2710,6 +2784,7 @@ class PathEntity(_Model):
             color=data.get("color", UNSET),
             holes=UNSET if "holes" not in data else None if data["holes"] is None else [RingGeometry.from_json(e0) for e0 in data["holes"]],
             label=data.get("label", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
         )
 
@@ -2815,6 +2890,10 @@ class PointEntity(Entity):
     Attributes:
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
         color: Colour override; absent = the layer's colour ("katmana göre").
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139).
         symbol: Library symbol overriding the layer's style.
     """
     TAG_VALUE: ClassVar[str] = "point"
@@ -2824,6 +2903,7 @@ class PointEntity(Entity):
     p: Vec2
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     z: float | None | Unset = UNSET
 
@@ -2837,6 +2917,8 @@ class PointEntity(Entity):
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         if self.z is not UNSET:
@@ -2852,6 +2934,7 @@ class PointEntity(Entity):
             p=Vec2.from_json(data["p"]),
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
             z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
         )
@@ -4064,6 +4147,10 @@ class SplineEntity(Entity):
     Attributes:
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
         color: Colour override; absent = the layer's colour ("katmana göre").
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139).
         symbol: Library symbol overriding the layer's style.
     """
     TAG_VALUE: ClassVar[str] = "spline"
@@ -4074,6 +4161,7 @@ class SplineEntity(Entity):
     closed: bool
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -4087,6 +4175,8 @@ class SplineEntity(Entity):
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         return out
@@ -4101,6 +4191,7 @@ class SplineEntity(Entity):
             closed=data["closed"],
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
         )
 
@@ -4116,6 +4207,10 @@ class TextEntity(Entity):
         height: Metres.
         rotation: Degrees, counter-clockwise from east.
         color: Colour override; absent = the layer's colour ("katmana göre").
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139).
         symbol: Library symbol overriding the layer's style.
     """
     TAG_VALUE: ClassVar[str] = "text"
@@ -4128,6 +4223,7 @@ class TextEntity(Entity):
     rotation: float
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -4143,6 +4239,8 @@ class TextEntity(Entity):
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         return out
@@ -4159,6 +4257,7 @@ class TextEntity(Entity):
             rotation=float(data["rotation"]),
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
         )
 

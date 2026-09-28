@@ -96,10 +96,15 @@ Geometrisi kaynak olan nesnenin (nokta, çizgi, düz çoklu çizgi, alan) tanım
 - Sunucunun sütunu (`crates/server/application/src/cad.rs`).
 - İki çizicinin ortak batch dosyası.
 
-**Açık kalanlar (sıradaki iş):**
+**Öznitelikler'de Kalınlık ▾ satırı (web ve masaüstü):**
 
-- Öznitelikler'de kalınlık satırı (web ve masaüstü, `cad.entities.set` ile);
-- araç çubuğu ve şeridin “Kalınlık”ının yeni nesnelere verilmesi.
+- Çizgiyle çizilen nesnelerde görünür; nokta, yazı, ölçü ve taramada görünmez.
+- Seçenekler “Katmana göre” ve kalınlıklardır. Listede olmayan bir alınmış kalınlık (1,20 mm gibi) de listede seçili görünür.
+- Değer `cad.entities.set` ile yazılır: işlem `lineWeight`, `null` katmana göre demektir, adım “Kalınlık değiştir”dir.
+- `0`…`100` dışı `invalid_line_weight` ile reddedilir.
+- İki taraf `fixtures/commands/v1/cad.entities.set.json`'daki yeni durumları geçer.
+
+**Açık kalan (sıradaki iş):** araç çubuğu ve şeridin “Kalınlık”ının yeni nesnelere verilmesi.
 
 **Taşınmayanlar:**
 

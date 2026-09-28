@@ -79,6 +79,23 @@
       ]
     },
     {
+      "name": "Kalınlık değiştir: nesnenin kendi kalınlığı verilir (ADR 0139); aynısı değişiklik değildir; null nesneyi katmanının kalınlığına döndürür; her yazma kendi adımıdır",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:2", "$uidOf:3"], "lineWeight": 0.35, "operation": "lineWeight"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:2", "$uidOf:3"], "ids": [2, 3], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"kind": "polygon", "id": 2, "layerId": "yapi", "attrs": {"Ada": "101", "Parsel": "7"}, "label": "7", "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}], "lineWeight": 0.35}, "3": {"kind": "point", "id": 3, "layerId": "yapi", "attrs": {}, "p": {"x": 487060, "y": 4420000}, "lineWeight": 0.35}}, "revision": "changed"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:2"], "lineWeight": 0.35, "operation": "lineWeight"}, "result": {"status": "completed", "output": {"changed": [], "ids": [], "revision": "$current"}, "warnings": []}, "expect": {"revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:3"], "lineWeight": null, "operation": "lineWeight"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:3"], "ids": [3], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"3": {"kind": "point", "id": 3, "layerId": "yapi", "attrs": {}, "p": {"x": 487060, "y": 4420000}}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Kalınlık değiştir", "note": "Öznitelikler'in Kalınlık ▾ satırının adımı.", "expect": {"entities": {"3": {"kind": "point", "id": 3, "layerId": "yapi", "attrs": {}, "p": {"x": 487060, "y": 4420000}, "lineWeight": 0.35}}}},
+        {"op": "undo", "returns": "Kalınlık değiştir", "expect": {"entities": {"2": {"kind": "polygon", "id": 2, "layerId": "yapi", "attrs": {"Ada": "101", "Parsel": "7"}, "label": "7", "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}]}, "3": {"kind": "point", "id": 3, "layerId": "yapi", "attrs": {}, "p": {"x": 487060, "y": 4420000}}}, "canUndo": false}}
+      ]
+    },
+    {
+      "name": "kalınlık 0 ile 100 mm arasında olmalı: invalid_line_weight (yolu lineWeight); hiçbir şey yazılmaz",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "lineWeight": 100.5, "operation": "lineWeight"}, "result": {"status": "failed", "error": {"code": "invalid_line_weight", "message": "Çizgi kalınlığı 100.5 mm olamaz: 0 ile 100 mm arasında olmalı (0 en ince çizgidir). Bir kalınlık ya da “Katmana göre” seçin.", "path": "lineWeight"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "lineWeight": -0.25, "operation": "lineWeight"}, "result": {"status": "failed", "error": {"code": "invalid_line_weight", "message": "Çizgi kalınlığı -0.25 mm olamaz: 0 ile 100 mm arasında olmalı (0 en ince çizgidir). Bir kalınlık ya da “Katmana göre” seçin.", "path": "lineWeight"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
       "name": "Sembol ata ve Sembolü kaldır: sembol verilir, null katman stiline döndürür; kimliği kitaplıkta aranmaz",
       "steps": [
         {"op": "execute", "input": {"uids": ["$uidOf:2", "$uidOf:3"], "symbol": "agac", "operation": "symbol"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:2", "$uidOf:3"], "ids": [2, 3], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"kind": "polygon", "id": 2, "layerId": "yapi", "attrs": {"Ada": "101", "Parsel": "7"}, "label": "7", "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}], "symbol": "agac"}, "3": {"kind": "point", "id": 3, "layerId": "yapi", "attrs": {}, "p": {"x": 487060, "y": 4420000}, "symbol": "agac"}}, "revision": "changed"}},
@@ -164,8 +181,8 @@
     {
       "name": "değişecek özellik verilmedi: nothing_to_set (yolu yok); boş öznitelik tablosu da bir şey vermez",
       "steps": [
-        {"op": "execute", "input": {"uids": ["$uidOf:1"], "operation": "color"}, "result": {"status": "failed", "error": {"code": "nothing_to_set", "message": "Değişecek özellik verilmedi. Katman, renk, sembol, öznitelik ya da etiket verin."}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
-        {"op": "execute", "input": {"uids": ["$uidOf:1"], "attrs": {}, "operation": "attributes"}, "result": {"status": "failed", "error": {"code": "nothing_to_set", "message": "Değişecek özellik verilmedi. Katman, renk, sembol, öznitelik ya da etiket verin."}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "operation": "color"}, "result": {"status": "failed", "error": {"code": "nothing_to_set", "message": "Değişecek özellik verilmedi. Katman, renk, kalınlık, sembol, öznitelik ya da etiket verin."}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "attrs": {}, "operation": "attributes"}, "result": {"status": "failed", "error": {"code": "nothing_to_set", "message": "Değişecek özellik verilmedi. Katman, renk, kalınlık, sembol, öznitelik ya da etiket verin."}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
       ]
     },
     {
@@ -180,7 +197,7 @@
       "name": "girdinin hatası çizimin durumundan önce gelir: öznitelik adı ve verilmeyen özellik, sürümden, nesneden ve katmandan önce denetlenir",
       "steps": [
         {"op": "execute", "input": {"uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"], "layerId": "yok", "attrs": {"": "x"}, "operation": "attributes", "expectedRevision": "999"}, "result": {"status": "failed", "error": {"code": "invalid_attribute", "message": "Öznitelik adı boş olamaz; yalnız boşluktan oluşan ad da boştur. Özniteliğe bir ad verin.", "path": "attrs"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
-        {"op": "execute", "input": {"uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"], "operation": "label", "expectedRevision": "999"}, "result": {"status": "failed", "error": {"code": "nothing_to_set", "message": "Değişecek özellik verilmedi. Katman, renk, sembol, öznitelik ya da etiket verin."}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+        {"op": "execute", "input": {"uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"], "operation": "label", "expectedRevision": "999"}, "result": {"status": "failed", "error": {"code": "nothing_to_set", "message": "Değişecek özellik verilmedi. Katman, renk, kalınlık, sembol, öznitelik ya da etiket verin."}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
       ]
     },
     {

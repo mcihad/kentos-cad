@@ -9,7 +9,7 @@ import { Panel } from '../dock/Panel';
 import { h, replaceChildren } from '../dom';
 import { geometryClassOf } from '../../style/geometry';
 import { colorSwatch, layerSwatch } from '../layers/swatch';
-import { DRAW_COLORS } from '../toolbar/fields';
+import { DRAW_COLORS, LINE_WEIGHTS, weightText } from '../toolbar/fields';
 import type { MenuItem } from '../widgets/PopupMenu';
 import { PropertyGrid, type PropRow, type PropSection } from '../widgets/PropertyGrid';
 import { setGeometry, setProperties, uidsOf } from './write';
@@ -131,6 +131,28 @@ export class PropertiesPanel extends Panel {
     return DRAW_COLORS.find((x) => x.value === current)?.name ?? current;
   }
 
+  /** A line weight as the panel names it: “Çeşitli” for a mixed selection, “Katmana göre”, or “0.35 mm”. */
+  private weightText(current: number | undefined | null): string {
+    if (current === null) return 'Çeşitli';
+    if (current === undefined) return 'Katmana göre';
+    return weightText(current);
+  }
+
+  /** Kalınlık ▾: by layer, then the weights (an imported one that is not in the list among them; docs/adr/0139). */
+  private weightEditor(ids: number[], current: number | undefined | null): PropRow['editor'] {
+    const set = (lineWeight: number | null) => setProperties(this.ctx, { uids: uidsOf(this.ctx, ids), lineWeight, operation: 'lineWeight' });
+    const weights = typeof current === 'number' && !LINE_WEIGHTS.includes(current) ? [...LINE_WEIGHTS, current].sort((a, b) => a - b) : LINE_WEIGHTS;
+    return {
+      type: 'select',
+      display: () => ({ text: this.weightText(current) }),
+      items: () => [
+        { label: 'Katmana göre', radio: true, checked: current === undefined, run: () => set(null) },
+        { kind: 'separator' },
+        ...weights.map((w): MenuItem => ({ label: weightText(w), radio: true, checked: current === w, run: () => set(w) })),
+      ],
+    };
+  }
+
   /** A symbol as the panel names it: “Çeşitli”, “Katman stiline göre”, or its name in the library. */
   private symbolText(current: string | undefined | null): string {
     if (current === null) return 'Çeşitli';
@@ -179,6 +201,7 @@ export class PropertiesPanel extends Panel {
         { label: 'Tür', value: ENTITY_KIND_LABEL[e.kind] },
         { label: 'Katman', value: '', editor: locked ? undefined : this.layerEditor([e.id], e.layerId) },
         { label: 'Renk', value: this.colorText(e.color), editor: locked ? undefined : this.colorEditor([e.id], e.color) },
+        ...(drawsLines(e) ? [{ label: 'Kalınlık', value: this.weightText(e.lineWeight), editor: locked ? undefined : this.weightEditor([e.id], e.lineWeight) }] : []),
         ...(geometryClassOf(e) ? [{ label: 'Sembol', value: this.symbolText(e.symbol), editor: locked ? undefined : this.symbolEditor(e.symbol) }] : []),
       ],
     };
@@ -415,10 +438,16 @@ export class PropertiesPanel extends Panel {
     // Summed by the geometry store: a selection can hold tens of thousands of objects.
     const { length, area } = this.ctx.view.measure(ids);
     const symbol = ents.every((e) => e.symbol === ents[0].symbol) ? ents[0].symbol : null;
+    // The weight of the objects drawn with lines; the others have none to show.
+    const lined = ents.filter(drawsLines);
+    const weight = lined.every((e) => e.lineWeight === lined[0]?.lineWeight) ? lined[0]?.lineWeight : null;
     // With a locked object in the selection nothing is editable: the values are still named.
     const rows: PropRow[] = [
       { label: 'Katman', value: 'Kilitli katman içeriyor', editor: anyLocked ? undefined : this.layerEditor(ids, layer) },
       { label: 'Renk', value: this.colorText(color), editor: anyLocked ? undefined : this.colorEditor(ids, color) },
+      ...(lined.length
+        ? [{ label: 'Kalınlık', value: this.weightText(weight), editor: anyLocked ? undefined : this.weightEditor(lined.map((e) => e.id), weight) }]
+        : []),
       { label: 'Sembol', value: this.symbolText(symbol), editor: anyLocked ? undefined : this.symbolEditor(symbol) },
     ];
     const totals: PropRow[] = [];
@@ -429,4 +458,9 @@ export class PropertiesPanel extends Panel {
     if (totals.length) sections.push({ id: 'totals', title: 'Toplamlar', rows: totals });
     return sections;
   }
+}
+
+/** Whether an object is drawn with lines, so its line weight shows (docs/adr/0139): not a point, text, dimension or hatch. */
+function drawsLines(e: Entity): boolean {
+  return e.kind !== 'point' && e.kind !== 'text' && e.kind !== 'dimension' && e.kind !== 'hatch';
 }

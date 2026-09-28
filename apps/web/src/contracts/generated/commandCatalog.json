@@ -23061,6 +23061,11 @@
                 "type": "string"
               },
               {
+                "const": "lineWeight",
+                "description": "Kalınlık ▾: their own line weight, or their layer's (docs/adr/0139).\n“Kalınlık değiştir”.",
+                "type": "string"
+              },
+              {
                 "const": "symbol",
                 "description": "Sembol ver and Sembolü kaldır: their own symbol, or their layer\nstyle's. “Sembol ata”; “Sembolü kaldır” when `symbol` is null.",
                 "type": "string"
@@ -23079,7 +23084,7 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.entities.set` v1: properties set for objects named by their\npersistent ids (docs/adr/0014), written as one undo step named after\n`operation`. Everything the command depends on is here (TODOS.md CMD-07):\nÖznitelikler fills `uids` from the selection and the property from the\nrow; the command reads no selection, library or view.\n\nA property absent from the input stays as it is. `color`, `symbol` and\n`label` are removed with null: the object is drawn in its layer's colour\nand style again, and shows no label. An attribute is set by its name, or\nremoved with null; the attributes not named stay. What an object already\nhas is not a change: an object as the input asks is left alone and is\nnot in the output, and when no object changes nothing is written (no\nundo step, the revision stays).\n\nAn object on a locked layer (by itself or a group above it) is not\nchanged, and no object moves to a locked layer: when one is named,\nnothing is written and the answer is `layer_locked`. Objects move to a\nhidden layer with the warning `layer_hidden`.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`,\n`invalid_uid` (each id in order), `nothing_to_set` (no property given),\n`invalid_attribute` (an attribute name empty or only white space), then\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`entity_not_found` (each id in order), `layer_not_found` and\n`not_a_layer` (the `layerId` given), `layer_locked` (each object's layer\nin the input's order, then the `layerId` given). Warning: `layer_hidden`\n(the `layerId` given is hidden and at least one object moves to it).\nWhite space is Unicode's `White_Space` (Rust's `char::is_whitespace`).",
+        "description": "Input of `cad.entities.set` v1: properties set for objects named by their\npersistent ids (docs/adr/0014), written as one undo step named after\n`operation`. Everything the command depends on is here (TODOS.md CMD-07):\nÖznitelikler fills `uids` from the selection and the property from the\nrow; the command reads no selection, library or view.\n\nA property absent from the input stays as it is. `color`, `lineWeight`,\n`symbol` and `label` are removed with null: the object is drawn in its\nlayer's colour, weight and style again, and shows no label. An attribute is set by its name, or\nremoved with null; the attributes not named stay. What an object already\nhas is not a change: an object as the input asks is left alone and is\nnot in the output, and when no object changes nothing is written (no\nundo step, the revision stays).\n\nAn object on a locked layer (by itself or a group above it) is not\nchanged, and no object moves to a locked layer: when one is named,\nnothing is written and the answer is `layer_locked`. Objects move to a\nhidden layer with the warning `layer_hidden`.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`,\n`invalid_uid` (each id in order), `nothing_to_set` (no property given),\n`invalid_attribute` (an attribute name empty or only white space),\n`invalid_line_weight` (a weight not a number from 0 to 100 mm), then\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`entity_not_found` (each id in order), `layer_not_found` and\n`not_a_layer` (the `layerId` given), `layer_locked` (each object's layer\nin the input's order, then the `layerId` given). Warning: `layer_hidden`\n(the `layerId` given is hidden and at least one object moves to it).\nWhite space is Unicode's `White_Space` (Rust's `char::is_whitespace`).",
         "properties": {
           "attrs": {
             "additionalProperties": {
@@ -23120,6 +23125,16 @@
             "description": "The layer they move to: a layer's id (`LayerNode.id`), not a group's.\nAbsent: they stay on theirs.",
             "type": [
               "string",
+              "null"
+            ]
+          },
+          "lineWeight": {
+            "description": "Their own line weight, paper mm (`EntityBase.line_weight`, 0 the\nthinnest, at most 100); null: their layer's (katmana göre). Absent:\nunchanged.",
+            "format": "double",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "type": [
+              "number",
               "null"
             ]
           },

@@ -267,6 +267,7 @@ pub fn paste(items: &[Entity], dx: f64, dy: f64, cx: &mut Context<'_>) -> Vec<Sl
                 uids,
                 layer_id: None,
                 color: None,
+                line_weight: None,
                 symbol: Some(Some(symbol)),
                 attrs: None,
                 label: None,

@@ -8,9 +8,9 @@ import type { PropertiesOperation } from "./PropertiesOperation";
  * Öznitelikler fills `uids` from the selection and the property from the
  * row; the command reads no selection, library or view.
  *
- * A property absent from the input stays as it is. `color`, `symbol` and
- * `label` are removed with null: the object is drawn in its layer's colour
- * and style again, and shows no label. An attribute is set by its name, or
+ * A property absent from the input stays as it is. `color`, `lineWeight`,
+ * `symbol` and `label` are removed with null: the object is drawn in its
+ * layer's colour, weight and style again, and shows no label. An attribute is set by its name, or
  * removed with null; the attributes not named stay. What an object already
  * has is not a change: an object as the input asks is left alone and is
  * not in the output, and when no object changes nothing is written (no
@@ -23,7 +23,8 @@ import type { PropertiesOperation } from "./PropertiesOperation";
  *
  * Refusals (`CommandError.code`), checked in this order: `no_entities`,
  * `invalid_uid` (each id in order), `nothing_to_set` (no property given),
- * `invalid_attribute` (an attribute name empty or only white space), then
+ * `invalid_attribute` (an attribute name empty or only white space),
+ * `invalid_line_weight` (a weight not a number from 0 to 100 mm), then
  * `invalid_revision`, `revision_conflict` (status `conflict`),
  * `entity_not_found` (each id in order), `layer_not_found` and
  * `not_a_layer` (the `layerId` given), `layer_locked` (each object's layer
@@ -47,6 +48,12 @@ layerId?: string,
  * layer's (katmana göre). Absent: unchanged.
  */
 color?: string | null, 
+/**
+ * Their own line weight, paper mm (`EntityBase.line_weight`, 0 the
+ * thinnest, at most 100); null: their layer's (katmana göre). Absent:
+ * unchanged.
+ */
+lineWeight?: number | null, 
 /**
  * Their own symbol, a library item's id (`EntityBase.symbol`), drawn
  * instead of their layer's style; null: the layer's style. The id is

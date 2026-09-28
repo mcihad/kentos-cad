@@ -534,6 +534,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
+        line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
     ) -> EntitiesPropertiesSet:
         """Nesnelerin özelliklerini değiştir: Kalıcı kimlikleriyle verilen nesnelerin
@@ -566,6 +567,9 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
                 unchanged.
             layer_id: The layer they move to: a layer's id (`LayerNode.id`), not a group's.
                 Absent: they stay on theirs.
+            line_weight: Their own line weight, paper mm (`EntityBase.line_weight`, 0 the
+                thinnest, at most 100); null: their layer's (katmana göre). Absent:
+                unchanged.
             symbol: Their own symbol, a library item's id (`EntityBase.symbol`), drawn
                 instead of their layer's style; null: the layer's style. The id is
                 not looked up: the libraries are the host's. Absent: unchanged.
@@ -585,6 +589,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
             expected_revision=expected_revision,
             label=label,
             layer_id=layer_id,
+            line_weight=line_weight,
             symbol=symbol,
         ))
 
@@ -600,6 +605,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
+        line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
     ) -> EntitiesSetPropertiesPlan:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -613,6 +619,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
             expected_revision=expected_revision,
             label=label,
             layer_id=layer_id,
+            line_weight=line_weight,
             symbol=symbol,
         ))
 
@@ -628,6 +635,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
+        line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -641,6 +649,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
             expected_revision=expected_revision,
             label=label,
             layer_id=layer_id,
+            line_weight=line_weight,
             symbol=symbol,
         ))
 
