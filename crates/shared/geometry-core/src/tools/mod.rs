@@ -6,6 +6,7 @@
 //! `apps/web/src/viewport` only pick, preview and record; camera and screen pixels
 //! stay there.
 
+pub mod construct;
 pub mod drawing;
 pub mod editing;
 pub mod object_tracking;
