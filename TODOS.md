@@ -209,7 +209,7 @@ Kabul: aynı basit düzenleme, ortak fixture ile native uygulamada, TS web uygul
 ### 3.3 Hassasiyet, CRS ve geometri
 
 - [ ] `NUM-01` Domain koordinatını `f64`, mülkiyet/hisse/nihai yuvarlama değerlerini mevcut decimal/rational sözleşmeleriyle koru. `NaN/Inf/-0` için hesaplama, dış protokol ve kalıcı dosya politikalarını ayrı yaz. Dosya politikası: NaN/±∞ yasak, −0 korunur (ADR 0025).
-- [ ] `NUM-02` Mevcut libm/robust predicate ve bağımsız referans testlerini koru; GPU hesaplarını kadastral nihai değerlerin otoritesi yapma. Kalan sağlam karar dilimleri (yay kesişimleri, ortak sınır kararları, incircle) `docs/DEVIR.md` §3 madde 3'te tarif edilmiştir.
+- [ ] `NUM-02` Mevcut libm/robust predicate ve bağımsız referans testlerini koru; GPU hesaplarını kadastral nihai değerlerin otoritesi yapma. Kalan sağlam karar dilimleri (yay kesişimleri, ortak sınır kararları, incircle) `docs/DEVIR.md` §3 madde 3'te tarif edilmiştir. — 28 Eylül: alanın ağırlık merkezi (`geometry::centroid`: etiket çapası, `$x`/`$y`, sembolün alan merkezine yerleşimi) mutlak TM koordinatlarıyla çarpım kurduğu için küçük parselde metrelerce sapıyordu; artık ilk köşeye göre, bağımsız kesin hesapla doğrulandı (ADR 0122). Mutlak koordinatla çarpım kuran başka hesap taranmalı.
 - [ ] `NUM-03` Eksen sırasını açıklaştır: iç model `x=east, y=north`, arayüzdeki geleneksel `Y,X`, EPSG eksen sırası ve LonLat birbirine adapter ile dönsün.
 - [ ] `NUM-04` Proje CRS, kaynak CRS, render CRS, yatay/düşey datum, coordinate epoch, Z/M ve birimi ayrı alanlarla modelle; `srid` tek başına bütün jeodezik bilgiyi taşımaz.
 - [ ] `NUM-05` Native/server PROJ/PostGIS dönüşüm yolu ile WASM'da desteklenen dönüşümleri aynı servis sözleşmesinde sun; tarayıcıya her native bağımlılığın derlenebileceğini varsayma.

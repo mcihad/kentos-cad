@@ -72,26 +72,35 @@ pub fn path_length(pts: &[Vec2], closed: bool) -> f64 {
     l
 }
 
+/// The area's centroid; the vertices' mean for a ring without area.
+/// Coordinates are taken relative to the first vertex, as in `signed_area`:
+/// with raw TM coordinates the products cancel away metres (a 25 × 18 m
+/// parcel's centroid strayed 5 m; docs/adr/0122).
 pub fn centroid(pts: &[Vec2]) -> Vec2 {
+    let Some(&o) = pts.first() else {
+        return Vec2::new(f64::NAN, f64::NAN);
+    };
     let a = signed_area(pts);
     if a.abs() < 1e-9 {
         let (mut sx, mut sy) = (0.0, 0.0);
         for p in pts {
-            sx += p.x;
-            sy += p.y;
+            sx += p.x - o.x;
+            sy += p.y - o.y;
         }
         let n = pts.len() as f64;
-        return Vec2::new(sx / n, sy / n);
+        return Vec2::new(o.x + sx / n, o.y + sy / n);
     }
     let (mut cx, mut cy) = (0.0, 0.0);
     let mut j = pts.len() - 1;
     for i in 0..pts.len() {
-        let f = pts[j].x * pts[i].y - pts[i].x * pts[j].y;
-        cx += (pts[j].x + pts[i].x) * f;
-        cy += (pts[j].y + pts[i].y) * f;
+        let (xj, yj) = (pts[j].x - o.x, pts[j].y - o.y);
+        let (xi, yi) = (pts[i].x - o.x, pts[i].y - o.y);
+        let f = xj * yi - xi * yj;
+        cx += (xj + xi) * f;
+        cy += (yj + yi) * f;
         j = i;
     }
-    Vec2::new(cx / (6.0 * a), cy / (6.0 * a))
+    Vec2::new(o.x + cx / (6.0 * a), o.y + cy / (6.0 * a))
 }
 
 /// Even-odd point in ring test. For each edge crossing the horizontal
@@ -190,6 +199,26 @@ mod tests {
     fn step(x: f64, up: bool) -> f64 {
         let bits = x.to_bits();
         f64::from_bits(if (x > 0.0) == up { bits + 1 } else { bits - 1 })
+    }
+
+    /// A 76 m² parcel at TM coordinates: its centroid is the exact one
+    /// (Python `fractions`) to 10 nm. Taken on the raw coordinates it was
+    /// 1.9 m off (docs/adr/0122).
+    #[test]
+    fn a_small_parcels_centroid_at_tm_coordinates_is_exact() {
+        let pts = [
+            (486_125.439_14, 4_420_808.742_16),
+            (486_123.215_69, 4_420_805.328_36),
+            (486_117.317_63, 4_420_805.780_16),
+            (486_113.390_28, 4_420_812.095_89),
+            (486_118.100_35, 4_420_815.166_15),
+            (486_119.876_27, 4_420_813.2),
+            (486_124.9, 4_420_812.6),
+        ]
+        .map(|(x, y)| Vec2::new(x, y));
+        let c = centroid(&pts);
+        assert!((c.x - 486_119.795_251_411_9).abs() < 1e-8, "{c:?}");
+        assert!((c.y - 4_420_809.901_225_769).abs() < 1e-8, "{c:?}");
     }
 
     /// Points within an ulp or two of a long parcel edge at TM coordinates:
