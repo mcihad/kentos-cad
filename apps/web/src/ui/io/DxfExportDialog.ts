@@ -5,6 +5,7 @@ import type { DxfWriteLayer } from '../../contracts/generated/DxfWriteLayer';
 import { formats } from '../../io/client';
 import type { Entity } from '../../model/entities';
 import { layoutDimension } from '../../model/geom/dimension';
+import { hasIslands } from '../../model/pathCounts';
 import { h, replaceChildren } from '../dom';
 import { colorSwatch } from '../layers/swatch';
 import { segmented } from '../widgets/controls';
@@ -149,7 +150,7 @@ class DxfExportDialog {
     for (const e of list) kinds.set(e.kind, (kinds.get(e.kind) ?? 0) + 1);
     const layers = [...chosen.keys()].map((id) => ctx.doc.layers.get(id)).filter((l) => !!l);
     const dimensions = kinds.get('dimension') ?? 0;
-    const islands = list.filter((e) => e.kind === 'polygon' && e.holes?.length).length;
+    const islands = list.filter(hasIslands).length;
     const data = list.some((e) => e.label || e.symbol || Object.keys(e.attrs).length);
     const themed = layers.some((l) => THEMED.has(l.style.color)) || list.some((e) => e.color && THEMED.has(e.color));
     const styled = layers.filter((l) => l.style.renderer || l.style.fill).length;

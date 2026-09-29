@@ -3,6 +3,7 @@ import type { FileKind } from '../../app/fileIO';
 import type { GeoJsonWriteInput } from '../../contracts/generated/GeoJsonWriteInput';
 import { formats } from '../../io/client';
 import type { Entity } from '../../model/entities';
+import { hasArcs } from '../../model/pathCounts';
 import { h, replaceChildren } from '../dom';
 import { colorSwatch } from '../layers/swatch';
 import { segmented } from '../widgets/controls';
@@ -30,8 +31,6 @@ const CURVES = new Set(['circle', 'arc', 'ellipse', 'spline']);
 const UNWRITTEN = new Set(['text', 'dimension', 'xline', 'ray']);
 
 const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
-
-const bulged = (e: Entity) => (e.kind === 'polyline' || e.kind === 'polygon') && ((e.bulges ?? []).some((b) => Math.abs(b) > 1e-12) || (e.holes ?? []).some((r) => (r.bulges ?? []).some((b) => Math.abs(b) > 1e-12)));
 
 class GeoJsonExportDialog {
   private readonly ctx: AppContext;
@@ -145,7 +144,7 @@ class GeoJsonExportDialog {
     const kinds = new Map<string, number>();
     for (const e of list) kinds.set(e.kind, (kinds.get(e.kind) ?? 0) + 1);
     const written = list.filter((e) => !UNWRITTEN.has(e.kind));
-    const curves = list.filter((e) => CURVES.has(e.kind) || bulged(e)).length;
+    const curves = list.filter((e) => CURVES.has(e.kind) || hasArcs(e)).length;
     const hatches = kinds.get('hatch') ?? 0;
     const areas = list.filter((e) => e.kind === 'polygon' || e.kind === 'hatch').length;
     const unwritten = list.length - written.length;
