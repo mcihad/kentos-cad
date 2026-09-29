@@ -368,6 +368,27 @@ pub fn unusable(entities: &[Entity]) -> Option<(usize, &'static str)> {
         .map(|i| (i + 1, entities[i].kind()))
 }
 
+/// A path's numbers are finite: its rings' points and bulges, a multi-part
+/// area's every part too (docs/adr/0143).
+fn path_finite(e: &kentos_contracts::PathEntity) -> bool {
+    let ring = |pts: &[Vec2], bulges: Option<&[f64]>| {
+        pts.iter().all(|v| v.x.is_finite() && v.y.is_finite())
+            && bulges.is_none_or(|b| b.iter().all(|x| x.is_finite()))
+    };
+    let holes = |holes: &Option<Vec<kentos_contracts::RingGeometry>>| {
+        holes
+            .iter()
+            .flatten()
+            .all(|h| ring(&h.pts, h.bulges.as_deref()))
+    };
+    ring(&e.pts, e.bulges.as_deref())
+        && holes(&e.holes)
+        && e.parts
+            .iter()
+            .flatten()
+            .all(|part| ring(&part.pts, part.bulges.as_deref()) && holes(&part.holes))
+}
+
 fn finite(e: &Entity) -> bool {
     let p = |v: &Vec2| v.x.is_finite() && v.y.is_finite();
     let ps = |v: &[Vec2]| v.iter().all(p);
@@ -377,39 +398,32 @@ fn finite(e: &Entity) -> bool {
         .base()
         .line_weight
         .is_none_or(|w| (0.0..=kentos_contracts::MAX_LINE_WEIGHT).contains(&w));
-    weight && match e {
-        Entity::Point(e) => p(&e.p) && e.z.is_none_or(f64::is_finite),
-        Entity::Line(e) => p(&e.a) && p(&e.b),
-        Entity::Polyline(e) | Entity::Polygon(e) => {
-            ps(&e.pts)
-                && e.bulges.as_deref().is_none_or(fs)
-                && e.holes.as_deref().is_none_or(|holes| {
-                    holes
-                        .iter()
-                        .all(|h| ps(&h.pts) && h.bulges.as_deref().is_none_or(fs))
-                })
+    weight
+        && match e {
+            Entity::Point(e) => p(&e.p) && e.z.is_none_or(f64::is_finite),
+            Entity::Line(e) => p(&e.a) && p(&e.b),
+            Entity::Polyline(e) | Entity::Polygon(e) => path_finite(e),
+            Entity::Circle(e) => p(&e.c) && e.r.is_finite(),
+            Entity::Arc(e) => p(&e.c) && fs(&[e.r, e.a0, e.a1]),
+            Entity::Ellipse(e) => p(&e.c) && p(&e.major) && fs(&[e.ratio, e.t0, e.t1]),
+            Entity::Spline(e) => ps(&e.pts),
+            Entity::Xline(e) | Entity::Ray(e) => p(&e.p) && p(&e.dir),
+            Entity::Text(e) => p(&e.p) && e.height.is_finite() && e.rotation.is_finite(),
+            Entity::Dimension(e) => {
+                p(&e.a)
+                    && p(&e.b)
+                    && e.offset.is_finite()
+                    && e.height.is_finite()
+                    && e.angle.is_none_or(f64::is_finite)
+                    && e.c.as_ref().is_none_or(p)
+            }
+            Entity::Hatch(e) => {
+                ps(&e.ring)
+                    && e.holes.as_deref().is_none_or(|h| h.iter().all(|r| ps(r)))
+                    && e.pattern.angle.is_finite()
+                    && e.pattern.spacing.is_finite()
+            }
         }
-        Entity::Circle(e) => p(&e.c) && e.r.is_finite(),
-        Entity::Arc(e) => p(&e.c) && fs(&[e.r, e.a0, e.a1]),
-        Entity::Ellipse(e) => p(&e.c) && p(&e.major) && fs(&[e.ratio, e.t0, e.t1]),
-        Entity::Spline(e) => ps(&e.pts),
-        Entity::Xline(e) | Entity::Ray(e) => p(&e.p) && p(&e.dir),
-        Entity::Text(e) => p(&e.p) && e.height.is_finite() && e.rotation.is_finite(),
-        Entity::Dimension(e) => {
-            p(&e.a)
-                && p(&e.b)
-                && e.offset.is_finite()
-                && e.height.is_finite()
-                && e.angle.is_none_or(f64::is_finite)
-                && e.c.as_ref().is_none_or(p)
-        }
-        Entity::Hatch(e) => {
-            ps(&e.ring)
-                && e.holes.as_deref().is_none_or(|h| h.iter().all(|r| ps(r)))
-                && e.pattern.angle.is_finite()
-                && e.pattern.spacing.is_finite()
-        }
-    }
 }
 
 /// What the import window says when [`unusable`] finds one (the web's words).
@@ -684,5 +698,19 @@ mod tests {
         };
         high.z = Some(f64::INFINITY);
         assert_eq!(unusable(&[Entity::Point(high)]), Some((1, "point")));
+        // A multi-part area's other part is checked too (docs/adr/0143).
+        let v = |x: f64, y: f64| Vec2 { x, y };
+        let area: Entity = serde_json::from_value(serde_json::json!({
+            "kind": "polygon", "id": 1, "layerId": "0", "attrs": {},
+            "pts": [{ "x": 0, "y": 0 }, { "x": 1, "y": 0 }, { "x": 1, "y": 1 }],
+            "parts": [{ "pts": [{ "x": 5, "y": 0 }, { "x": 6, "y": 0 }, { "x": 6, "y": 1 }] }]
+        }))
+        .expect("an area");
+        assert_eq!(unusable(std::slice::from_ref(&area)), None);
+        let Entity::Polygon(mut bad) = area else {
+            panic!("an area")
+        };
+        bad.parts.as_mut().expect("parts")[0].pts[1] = v(f64::INFINITY, 0.0);
+        assert_eq!(unusable(&[Entity::Polygon(bad)]), Some((1, "polygon")));
     }
 }
