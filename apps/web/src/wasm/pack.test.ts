@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Entity } from '../model/entities';
+import type { Entity, PolylineEntity } from '../model/entities';
 import { CoreStore } from './core';
 import { packEntities, unpackEntities } from './pack';
 import { Gen } from './calls/harness';
@@ -58,7 +58,7 @@ const square = (x: number, y: number, side: number) => [
 ];
 
 /** An area of three parts: arcs and a hole in the first, a hole in the second, arcs in the third (docs/adr/0143). */
-const threeParts = (id: number): Entity => ({
+const threeParts = (id: number): PolylineEntity => ({
   id,
   layerId: 'a',
   attrs: {},
@@ -75,7 +75,7 @@ const threeParts = (id: number): Entity => ({
 
 describe('a multi-part area packed (docs/adr/0143)', () => {
   it('gives the store the very area its JSON gives, every part with its arcs and holes', () => {
-    const list: Entity[] = [threeParts(1), { ...threeParts(2), parts: [{ pts: square(30, 30, 4) }], holes: undefined, bulges: undefined }];
+    const list = [threeParts(1), { ...threeParts(2), parts: [{ pts: square(30, 30, 4) }], holes: undefined, bulges: undefined }];
     const packed = new CoreStore();
     const p = packEntities(list);
     packed.putPacked(p.nums, p.strings);
@@ -112,7 +112,7 @@ describe('a multi-part area packed (docs/adr/0143)', () => {
     const back = unpackEntities(packEntities(list));
     expect(back.map((r) => r.id)).toEqual([1, 2]);
     for (const [i, r] of back.entries()) {
-      const { id: _i, layerId: _l, label: _t, attrs: _a, ...geometry } = list[i] as Entity & { label?: string };
+      const { id: _i, layerId: _l, label: _t, attrs: _a, ...geometry } = list[i];
       expect(r.geometry).toEqual(geometry);
       expect(r.labelled).toBe(true);
     }

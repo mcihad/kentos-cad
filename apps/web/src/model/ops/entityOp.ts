@@ -6,7 +6,9 @@ import { op } from '../../wasm/core';
  * the TypeScript it replaced set a cleared `bulges` or `holes` to
  * undefined. `CadDocument.update` merges its patch into the entity, so a
  * missing field would keep the old arcs or holes: every polyline, polygon
- * and hatch in the result gets the field back, undefined.
+ * and hatch in the result gets the field back, undefined. An area's parts
+ * (docs/adr/0143) are the same: an area the core gives back with one part
+ * has none, so the old ones must not stay.
  */
 export function entityOp<F extends (...args: never[]) => unknown>(name: string): F {
   const call = op<(...args: unknown[]) => unknown>(name);
@@ -29,6 +31,7 @@ function clear(v: unknown): void {
   const kind = o.kind;
   if ((kind === 'polyline' || kind === 'polygon') && !('bulges' in o)) o.bulges = undefined;
   if ((kind === 'polygon' || kind === 'hatch') && !('holes' in o)) o.holes = undefined;
+  if (kind === 'polygon' && !('parts' in o)) o.parts = undefined;
   for (const key in o) {
     const x = o[key];
     if (x && typeof x === 'object') clear(x);

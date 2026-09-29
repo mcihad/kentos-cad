@@ -14,6 +14,13 @@ import { entityOp } from './entityOp';
 /** The area an entity encloses, or null for open or non-area entities. Hatches are fills, not areas. */
 export const areaOfEntity = op<(e: EntityGeometry) => Area | null>('areaOfEntity');
 
+/**
+ * The areas an entity encloses: a multi-part area's parts one by one (docs/adr/0143), any other closed entity's one
+ * (what `areaOfEntity` gives), none for open or non-area entities. `areaOfEntity` gives nothing for a multi-part area:
+ * it has no one outline.
+ */
+export const areasOfEntity = op<(e: EntityGeometry) => Area[]>('areasOfEntity');
+
 /** Polygon geometry of an area (holes only when there are some). */
 export const polygonOfArea = entityOp<(a: Area) => EntityGeometry>('polygonOfArea');
 

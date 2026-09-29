@@ -29,7 +29,8 @@ export const SHAPE_FIELDS: Record<EntityKind, readonly string[]> = {
   point: ['p', 'z'],
   line: ['a', 'b'],
   polyline: ['pts', 'bulges', 'holes'],
-  polygon: ['pts', 'bulges', 'holes'],
+  // An area's parts past its first are its own (docs/adr/0143); the elevations (`zs`) are the object's, not the core's.
+  polygon: ['pts', 'bulges', 'holes', 'parts'],
   circle: ['c', 'r'],
   arc: ['c', 'r', 'a0', 'a1'],
   ellipse: ['c', 'major', 'ratio', 't0', 't1'],
@@ -58,8 +59,8 @@ export function geometryIsFinite(e: Entity): boolean {
  * other field of its own first, then the kind and its fields. The other
  * fields keep their values; the attributes, the one object among them,
  * are copied, so a copy shares nothing with its original (as after JSON).
- * A cleared `bulges` or `holes` is written as undefined, as `entityOp`
- * does, so `CadDocument.update` drops the old one.
+ * A cleared `bulges`, `holes` or `parts` is written as undefined, as
+ * `entityOp` does, so `CadDocument.update` drops the old one.
  */
 export function withGeometry<E extends Entity | NewEntity>(e: E, g: Geometry): E {
   const src = e as unknown as Record<string, unknown>;
@@ -73,14 +74,36 @@ export function withGeometry<E extends Entity | NewEntity>(e: E, g: Geometry): E
   for (const key in g) out[key] = g[key];
   if ((g.kind === 'polyline' || g.kind === 'polygon') && !('bulges' in g)) out.bulges = undefined;
   if ((g.kind === 'polygon' || g.kind === 'hatch') && !('holes' in g)) out.holes = undefined;
+  if (g.kind === 'polygon' && !('parts' in g)) out.parts = undefined;
   // A transform moves each vertex and keeps it: the elevations stay with their vertices, the
-  // holes' too; a vertex count that changed leaves them out (docs/adr/0142).
-  type Ring = { pts: unknown[]; zs?: (number | null)[] };
-  const before = src.holes as Ring[] | undefined;
-  if (g.kind === 'polygon' && Array.isArray(out.holes) && before?.some((h) => h.zs))
-    out.holes = (out.holes as Ring[]).map((h, i) => (before[i]?.zs && before[i].pts.length === h.pts.length ? { ...h, zs: before[i].zs } : h));
+  // holes' too, and each part's and its holes' (docs/adr/0143); a vertex count that changed
+  // leaves them out (docs/adr/0142).
+  if (g.kind === 'polygon') {
+    const holes = src.holes as Ring[] | undefined;
+    if (Array.isArray(out.holes) && holes?.some((h) => h.zs)) out.holes = withElevations(out.holes as Ring[], holes);
+    const was = src.parts as ElevatedPart[] | undefined;
+    if (Array.isArray(out.parts) && was) out.parts = (out.parts as ElevatedPart[]).map((part, k) => withPartElevations(part, was[k]));
+  }
   if (Array.isArray(out.zs) && (!Array.isArray(out.pts) || out.zs.length !== out.pts.length)) out.zs = undefined;
   return out as unknown as E;
+}
+
+/** A ring of an area (a hole) and a part of it, with the elevations their vertices may carry. */
+type Ring = { pts: unknown[]; zs?: (number | null)[] };
+type ElevatedPart = Ring & { holes?: Ring[] };
+
+/** `now`, the rings a transform gave back, with the elevations of `was` (the same ring before it) where the vertex count is the same. */
+function withElevations(now: Ring[], was: readonly Ring[]): Ring[] {
+  return now.map((ring, i) => (was[i]?.zs && was[i].pts.length === ring.pts.length ? { ...ring, zs: was[i].zs } : ring));
+}
+
+/** A part a transform gave back with the elevations of the part it was: its own and its holes'. */
+function withPartElevations(part: ElevatedPart, was: ElevatedPart | undefined): ElevatedPart {
+  if (!was) return part;
+  const out = { ...part };
+  if (was.zs && was.pts.length === part.pts.length) out.zs = was.zs;
+  if (Array.isArray(out.holes) && was.holes?.some((h) => h.zs)) out.holes = withElevations(out.holes, was.holes);
+  return out;
 }
 
 /**
