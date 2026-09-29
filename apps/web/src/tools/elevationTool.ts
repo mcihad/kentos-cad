@@ -102,7 +102,12 @@ export class ElevationTool extends SelectionFirstTool {
     const { doc, log, selection, format } = this.ctx;
     const all = this.targets();
     const takers = all.filter(takesElevation);
-    if (!takers.length) return void log.warn(NONE_TAKES);
+    if (!takers.length) {
+      // The selection changed under the tool (or Sıfırla took objects picked): back to picking, as a confirmed selection would go.
+      log.warn(NONE_TAKES);
+      this.picking = true;
+      return this.refresh();
+    }
     const open = takers.filter((e) => !doc.layers.isLocked(e.layerId));
     // Only locked objects: the command refuses them with its own message, and nothing is written.
     const chosen = !open.length ? takers : change.kind === 'raise' ? open.filter(hasVertexElevation) : open;

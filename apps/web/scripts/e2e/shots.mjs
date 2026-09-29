@@ -1593,6 +1593,8 @@ function queryScenes(bare, clickWorld) {
 // 3D length. Five objects on bare ground carry the scenes; their slots are kept in `window.__elev`.
 function adr0142Scenes(bare, clickWorld) {
   const none = FIT('return 0;');
+  /** The log emptied and the status bar's flash of the last message put out: nothing of an earlier scene shows. */
+  const QUIET = `(() => { window.kentos.log.clear(); document.querySelector('.status__flash')?.removeAttribute('data-show'); })()`;
   // A line with both ends, a polyline with a range and two vertices without an elevation (one at the end), an area
   // with a hole and every vertex elevated, a spot with its height and a circle (takes none).
   const OBJECTS = FIT(`
@@ -1613,7 +1615,7 @@ function adr0142Scenes(bare, clickWorld) {
   /** The tool started on the objects (some selected), the log open under the drawing. */
   const started = async (ui, names, options = []) => {
     await bare(ui, OBJECTS, { ribbonTab: 'modify', ...LOGGED });
-    await ui.eval(`window.kentos.log.clear()`);
+    await ui.eval(QUIET);
     await ui.eval(selectNames(...names));
     await startTool(ui, 'setElevation');
     for (const o of options) await ui.eval(`window.kentos.tools.active.input('${o}')`);
@@ -1629,7 +1631,7 @@ function adr0142Scenes(bare, clickWorld) {
   /** Öznitelikler over the dock (the layer tree at its least) with Genel folded, so Geometri shows whole at 1100×650. */
   const props = async (ui, names) => {
     await bare(ui, OBJECTS, { ribbonTab: 'modify', layersFraction: 0.15 });
-    await ui.eval(`window.kentos.log.clear()`);
+    await ui.eval(QUIET);
     await ui.eval(selectNames(...names));
     await ui.move(2, 2);
     await ui.sleep(400);
@@ -1641,7 +1643,7 @@ function adr0142Scenes(bare, clickWorld) {
   /** The objects on bare ground with some selected, the select tool active. */
   const selected = async (ui, names) => {
     await bare(ui, OBJECTS, { ribbonTab: 'modify' });
-    await ui.eval(`window.kentos.log.clear()`);
+    await ui.eval(QUIET);
     await ui.eval(selectNames(...names));
     await ui.sleep(300);
   };
@@ -1681,7 +1683,7 @@ function adr0142Scenes(bare, clickWorld) {
       id: 'coord-read-vertex',
       open: async (ui) => {
         await bare(ui, OBJECTS, { ribbonTab: 'modify', ...LOGGED });
-        await ui.eval(`window.kentos.log.clear()`);
+        await ui.eval(QUIET);
         await ui.eval(`window.kentos.commands.execute('crs.query')`);
         await ui.sleep(300);
         for (const [fx, fy] of [[-1.4, -0.3], [-2.3, 1.05], [-0.5, -0.75]]) {

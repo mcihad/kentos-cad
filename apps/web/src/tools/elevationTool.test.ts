@@ -348,6 +348,18 @@ describe('Kot ver: what is left out', () => {
     expect(h.doc.undo()).toBe('Ekle');
   });
 
+  it('Sıfırla over picked objects that take none says so and stays at the picking', () => {
+    const h = toolHarness();
+    const circle = h.add({ kind: 'circle', c: pt(50, 50), r: 5 });
+    const tool = h.use(new ElevationTool(h.ctx));
+    tool.activate();
+    select(h, circle);
+    tool.input('S');
+    expect(levels(h).at(-1)).toBe('warn: Seçimde kot alan nesne yok; çizgi, çoklu çizgi, alan ya da nokta seçin.');
+    expect(tool.prompt.value).toContain('kot verilecek nesneleri seçin');
+    expect(h.doc.undo()).toBe('Ekle');
+  });
+
   it('the same words when the selection is confirmed with nothing that takes one', () => {
     const h = toolHarness();
     const circle = h.add({ kind: 'circle', c: pt(50, 50), r: 5 });
