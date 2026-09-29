@@ -10,6 +10,7 @@ import { commandButton } from '../widgets/CommandButton';
 import { askRemove } from '../widgets/confirm';
 import { PopupMenu, type MenuItem } from '../widgets/PopupMenu';
 import { TreeView } from '../widgets/TreeView';
+import { objectsOfNode, zoomItem } from './layerZoom';
 import { colorSwatch, layerSwatch } from './swatch';
 import { treeLocked } from './treeRights';
 
@@ -298,11 +299,12 @@ export class LayersPanel extends Panel {
       {
         label: 'Nesnelerini seç',
         run: () => {
-          const ids = layers.leavesOf(n.id).flatMap((l) => this.ctx.doc.byLayer(l.id).map((e) => e.id));
+          const ids = objectsOfNode(this.ctx, n);
           this.ctx.selection.set(ids);
           this.ctx.log.info(`${n.name}: ${ids.length} nesne seçildi.`);
         },
       },
+      zoomItem(this.ctx, n),
       { kind: 'separator' },
     );
     if (isLayer) {

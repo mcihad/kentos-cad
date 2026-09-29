@@ -131,8 +131,9 @@ export function replaceDrawing(ctx: AppContext, content: DocumentContent): void 
   ctx.selection.clear();
   ctx.doc.replaceWith(content);
   const home = ctx.doc.homeView;
+  // The drawing's own view, not a navigation of the user's: the history stays empty (docs/adr/0141).
   if (home) ctx.view.camera.fit(home);
-  else ctx.view.zoomExtents();
+  else ctx.view.showAll();
 }
 
 const message = (e: unknown) => (e instanceof Error ? e.message : String(e));

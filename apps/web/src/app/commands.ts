@@ -10,6 +10,7 @@ import { Signal } from '../core/signal';
 import { TOOL_GROUP_LABEL } from '../tools/Tool';
 import type { AppContext } from './context';
 import type { ThemeId } from './appearance';
+import { checkExtent } from './extentCheck';
 import { WORKSPACES, type WorkspaceSpec } from './workspaces';
 
 /** Features that exist in the menu but are not built yet say so plainly. */
@@ -352,9 +353,37 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
 
     // Görünüm
     { id: 'view.zoomExtents', title: 'Tümünü göster', category: V, icon: 'zoomExtents', aliases: ['ZE', 'TUMU', 'LIMITBUL'], run: () => view.zoomExtents() },
-    { ...pending(ctx, 'view.previous', 'Önceki görünüm', V, 'viewPrevious'), aliases: ['ZP', 'ONCEKIGORUNUM', 'ONCEKIPENCERE'] },
-    { ...pending(ctx, 'view.next', 'Sonraki görünüm', V, 'viewNext'), aliases: ['ZN', 'SONRAKIGORUNUM', 'SONRAKIPENCERE'] },
-    { ...pending(ctx, 'view.extentCheck', 'Kapsam denetimi', V, 'extentCheck'), aliases: ['KAPSAM', 'KAPSAMDENETIM', 'EXTENTCHECK'] },
+    {
+      id: 'view.previous',
+      title: 'Önceki görünüm',
+      category: V,
+      icon: 'viewPrevious',
+      description: 'Görünümü bir önceki yakınlaştırma ve kaydırma durumuna döndürür (en çok 30 görünüm tutulur). Başka bir çizim açılınca geçmiş boşalır.',
+      aliases: ['ZP', 'ONCEKIGORUNUM', 'ONCEKIPENCERE'],
+      run: () => void view.viewBack(),
+      isEnabled: () => view.navigation.history.canBack.value,
+      watch: [view.navigation.history.canBack],
+    },
+    {
+      id: 'view.next',
+      title: 'Sonraki görünüm',
+      category: V,
+      icon: 'viewNext',
+      description: 'Önceki görünümle geri dönülen görünüme yeniden gider. Yeni bir yakınlaştırma ya da kaydırma sonraki görünümleri siler.',
+      aliases: ['ZN', 'SONRAKIGORUNUM', 'SONRAKIPENCERE'],
+      run: () => void view.viewForward(),
+      isEnabled: () => view.navigation.history.canForward.value,
+      watch: [view.navigation.history.canForward],
+    },
+    {
+      id: 'view.extentCheck',
+      title: 'Kapsam denetimi',
+      category: V,
+      icon: 'extentCheck',
+      description: 'Görünen nesnelerden çizimin geri kalanından çok uzakta olanları seçer (yanlış koordinat sistemiyle gelen ya da sıfıra düşen nesneler gibi) ve kaç tane olduklarını söyler. Nesneleri taşımaz, silmez.',
+      aliases: ['KAPSAM', 'KAPSAMDENETIM', 'EXTENTCHECK'],
+      run: () => checkExtent(ctx),
+    },
     { id: 'view.zoomIn', title: 'Yakınlaştır', category: V, icon: 'zoomIn', run: () => view.zoomBy(1.5) },
     { id: 'view.zoomOut', title: 'Uzaklaştır', category: V, icon: 'zoomOut', run: () => view.zoomBy(1 / 1.5) },
     {

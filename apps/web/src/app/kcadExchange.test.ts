@@ -72,7 +72,7 @@ function web() {
     log: { success: noop, warn: noop, error: (m: string) => { throw new Error(m); }, info: noop },
     tools: { activate: noop },
     selection: { clear: noop },
-    view: { camera: { fit: noop }, zoomExtents: noop },
+    view: { camera: { fit: noop }, showAll: noop, zoomExtents: noop },
     cloud: { project: { value: null }, sync: { value: null }, autosaves: () => false, leave: async () => 0, detach: noop },
   } as unknown as AppContext;
   const files = new DocumentFiles(ctx);

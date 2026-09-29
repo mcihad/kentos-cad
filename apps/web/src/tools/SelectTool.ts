@@ -216,6 +216,8 @@ export class PanTool implements Tool {
   readonly cursor = 'grab' as const;
   readonly snaps = false;
   private last: Vec2 | null = null;
+  /** Whether the drag has kept the view it leaves (Önceki görünüm, docs/adr/0141). */
+  private kept = false;
   private readonly ctx: AppContext;
 
   constructor(ctx: AppContext) {
@@ -223,11 +225,18 @@ export class PanTool implements Tool {
   }
 
   pointerDown(p: ToolPointer): void {
-    if (p.button === 0) this.last = p.screen;
+    if (p.button !== 0) return;
+    this.last = p.screen;
+    this.kept = false;
   }
 
   pointerMove(p: ToolPointer): void {
     if (!this.last) return;
+    // The start of a pan keeps the view it leaves: at the drag's first move, so a click that goes nowhere keeps nothing.
+    if (!this.kept) {
+      this.kept = true;
+      this.ctx.view.rememberView();
+    }
     this.ctx.view.camera.panBy(p.screen.x - this.last.x, p.screen.y - this.last.y);
     this.last = p.screen;
   }
@@ -271,7 +280,7 @@ export class ZoomWindowTool implements Tool {
   private finish(w: Vec2): void {
     const a = this.a!.world;
     if (Math.abs(w.x - a.x) > 1e-6 && Math.abs(w.y - a.y) > 1e-6)
-      this.ctx.view.camera.fit({ minX: Math.min(a.x, w.x), minY: Math.min(a.y, w.y), maxX: Math.max(a.x, w.x), maxY: Math.max(a.y, w.y) }, 0);
+      this.ctx.view.zoomToBox({ minX: Math.min(a.x, w.x), minY: Math.min(a.y, w.y), maxX: Math.max(a.x, w.x), maxY: Math.max(a.y, w.y) });
     this.ctx.tools.exit();
   }
 

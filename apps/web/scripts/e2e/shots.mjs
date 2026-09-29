@@ -1375,6 +1375,60 @@ function faz3Scenes(bare, clickWorld) {
   ];
 }
 
+// Faz 1 of docs/adr/0141: Görünüm › Yakınlaştır with the view history and Kapsam denetimi, and the layer tree's
+// Katmana yakınlaştır. Scenes are added below as the phases are built.
+function adr0141Scenes() {
+  /** The view history's two buttons both on: zoomed in twice, then one step back. */
+  const HISTORY = `(() => { const k = window.kentos; k.view.navigation.history.clear(); k.view.zoomBy(1.5); k.view.zoomBy(1.5); k.view.viewBack(); })()`;
+  /** A square of 60 m at the coordinate origin, where a drawing brought in with the wrong system lands. */
+  const STRAY = `(() => {
+    const k = window.kentos;
+    return k.doc.add({ kind: 'polygon', layerId: k.doc.layers.active.value, attrs: {}, color: '#E5484D', pts: [{ x: 0, y: 0 }, { x: 60, y: 0 }, { x: 60, y: 60 }, { x: 0, y: 60 }] }).id;
+  })()`;
+  /** The first layer row of the tree with objects on it (a layer, not a group). */
+  const LAYER_ROW = `(() => {
+    const rows = [...document.querySelectorAll('.panel--layers .tree__row:not([data-group])')];
+    const r = rows.find((e) => Number(e.querySelector('.tree__count')?.textContent.replace(/\D/g, '')) > 0);
+    r.scrollIntoView({ block: 'nearest' });
+    const b = r.getBoundingClientRect();
+    return [Math.round(b.left + b.width / 2), Math.round(b.top + b.height / 2)];
+  })()`;
+  const GROUP_ROW = `(() => {
+    const r = document.querySelector('.panel--layers .tree__row[data-group]');
+    const b = r.getBoundingClientRect();
+    return [Math.round(b.left + b.width / 2), Math.round(b.top + b.height / 2)];
+  })()`;
+  /** The demo sheet in view, as the drawing opens (the scenes end with Tümünü göster, which shows the symbol catalogue below it too). */
+  const HOME = `(() => { const k = window.kentos; k.view.camera.fit(k.doc.homeView); k.log.clear(); })()`;
+  const menuOn = async (ui, at) => {
+    await ui.contextClick(...(await ui.eval(at)));
+    await ui.waitFor(`!!document.querySelector('.menu')`);
+    await ui.sleep(300);
+  };
+  return [
+    { id: 'ribbon-view', open: async (ui) => (await ribbonOn(ui, { ribbonTab: 'view' }), await ui.eval(HOME), await ui.eval(HISTORY), await ui.sleep(400)) },
+    {
+      id: 'extentcheck-result',
+      open: async (ui) => {
+        await ribbonOn(ui, { ribbonTab: 'view', ...LOGGED });
+        const id = await ui.eval(STRAY);
+        await ui.eval(`window.kentos.log.clear()`);
+        await ui.eval(`window.kentos.commands.execute('view.extentCheck')`);
+        await ui.sleep(300);
+        // The selected stray alone in the view, as “Seçime yakınlaştır” would show it.
+        await ui.eval(`(() => { const k = window.kentos; if (!k.selection.has(${id})) throw new Error('seçilmedi'); k.view.zoomToSelection(); })()`);
+        await ui.sleep(500);
+      },
+    },
+    {
+      id: 'extentcheck-none',
+      open: async (ui) => (await ribbonOn(ui, { ribbonTab: 'view', ...LOGGED }), await ui.eval(HOME), await ui.eval(`window.kentos.log.clear()`), await ui.eval(`window.kentos.commands.execute('view.extentCheck')`), await ui.sleep(400)),
+    },
+    { id: 'layers-zoom-menu', open: async (ui) => (await ribbonOn(ui), await ui.eval(HOME), await menuOn(ui, LAYER_ROW)) },
+    { id: 'layers-zoom-group-menu', open: async (ui) => (await ribbonOn(ui), await ui.eval(HOME), await menuOn(ui, GROUP_ROW)) },
+  ];
+}
+
 // The drawing and editing tools of docs/adr/0140: the ribbon tabs that hold them and their split buttons; each
 // tool at work is added here as it is built. Same layout helpers as the ribbon group.
 SCENES.tools = [
@@ -1388,6 +1442,7 @@ SCENES.tools = [
     open: async (ui) => (await ribbonOn(ui, { ribbonTab: 'modify' }), await ui.clickSel('.ribbon__strip [data-split="corner"] .rsplit__arrow'), await ui.waitFor(`!!document.querySelector('.menu')`), await ui.sleep(300)),
   },
   ...toolScenes(),
+  ...adr0141Scenes(),
 ].map((s) => ({ close: async (ui) => (await ui.eval(UNDO_ALL), await ribbonOff(ui)), ...s }));
 
 SCENES.svgedit = [

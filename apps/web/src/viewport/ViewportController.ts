@@ -20,6 +20,7 @@ import type { ToolPointer } from '../tools/Tool';
 import { Camera } from './Camera';
 import { drawCrosshair, drawGrips, drawLabels, drawNorthArrow, drawObjectTracking, drawScaleBar, drawSnap, midGripVisible } from './overlay';
 import { alongTrack, trackAngles, trackPoint, type TrackHit } from './objectTracking';
+import { ViewNavigation } from './viewHistory';
 import { symbolScaleOf } from './symbolScale';
 import type { ExprColumnData } from '../wasm/core';
 import { PickIndex, type SnapHit, type SnapKind } from './picking';
@@ -81,6 +82,8 @@ interface ViewportEvents {
  */
 export class ViewportController {
   readonly camera = new Camera();
+  /** The camera with the views it has been at, for Önceki and Sonraki görünüm (docs/adr/0141); the session's, empty when another drawing opens. */
+  readonly navigation = new ViewNavigation(this.camera);
   readonly cursorWorld = new Signal<Vec2 | null>(null);
   /** One-shot object snap chosen from the right-button menu; cleared after the next pick. */
   readonly snapOverride = new Signal<SnapKind | null>(null);
@@ -143,6 +146,8 @@ export class ViewportController {
   private editingId: number | null = null;
   private snap: SnapHit | null = null;
   private panFrom: Vec2 | null = null;
+  /** Whether the pan being dragged has kept the view it left (Önceki görünüm). */
+  private panKept = false;
 
   constructor(ctx: AppContext) {
     this.ctx = ctx;
@@ -199,7 +204,7 @@ export class ViewportController {
     this.resize();
     const home = this.ctx.doc.homeView;
     if (home) this.camera.fit(home);
-    else this.zoomExtents();
+    else this.showAll();
     document.fonts?.ready.then(() => this.requestOverlay());
   }
 
@@ -460,14 +465,51 @@ export class ViewportController {
     return px / this.camera.scale;
   }
 
-  zoomExtents(): void {
+  /** Fits the view to every object without keeping the view it leaves: a drawing just put on screen has no history yet. */
+  showAll(): void {
     const b = this.picker.extent();
     if (b) this.camera.fit(b);
   }
 
+  /** Tümünü göster. */
+  zoomExtents(): void {
+    this.navigation.navigate(() => this.showAll());
+  }
+
   zoomToSelection(): void {
-    const b = this.picker.extent(this.ctx.selection.ids.value);
-    if (b) this.camera.fit(b, 96);
+    this.zoomToObjects(this.ctx.selection.ids.value);
+  }
+
+  /** Fits the view to these objects (Seçime, Katmana ve Gruba yakınlaştır); false when they have no box. */
+  zoomToObjects(ids: Iterable<number>): boolean {
+    const b = this.picker.extent(ids);
+    if (b) this.navigation.navigate(() => this.camera.fit(b, 96));
+    return !!b;
+  }
+
+  /** Fits the view to a box the user showed (Pencere yakınlaştır), `paddingPx` clear round it. */
+  zoomToBox(b: Bounds, paddingPx = 0): void {
+    this.navigation.navigate(() => this.camera.fit(b, paddingPx));
+  }
+
+  /** Keeps the view as it is, before a gesture that moves it (the Kaydır tool's drag). */
+  rememberView(): void {
+    this.navigation.remember();
+  }
+
+  /** Önceki görünüm. */
+  viewBack(): boolean {
+    return this.navigation.back();
+  }
+
+  /** Sonraki görünüm. */
+  viewForward(): boolean {
+    return this.navigation.forward();
+  }
+
+  /** The visible objects lying far from the rest of the drawing (Kapsam denetimi, docs/adr/0141). */
+  extentOutliers(): number[] {
+    return this.picker.extentOutliers();
   }
 
   /** The box around these objects (all of them without `ids`), from the geometry store; null when empty. */
@@ -476,7 +518,7 @@ export class ViewportController {
   }
 
   zoomBy(factor: number): void {
-    this.camera.zoomAt(factor, { x: this.camera.width / 2, y: this.camera.height / 2 });
+    this.navigation.navigate(() => this.camera.zoomAt(factor, { x: this.camera.width / 2, y: this.camera.height / 2 }));
   }
 
   focus(): void {
@@ -510,6 +552,8 @@ export class ViewportController {
     const stale = () => this.labelEpoch++;
     d.add(doc.events.on('touched', stale));
     d.add(doc.events.on('reset', stale));
+    // Another drawing: the views of the last one lead nowhere (docs/adr/0141).
+    d.add(doc.events.on('reset', () => this.navigation.history.clear()));
     d.add(doc.events.on('attrs', stale));
     d.add(doc.layers.events.on('state', stale));
     d.add(doc.layers.events.on('structure', stale));
@@ -741,6 +785,7 @@ export class ViewportController {
         if (e.button === 1) {
           e.preventDefault();
           this.panFrom = { x: e.clientX, y: e.clientY };
+          this.panKept = false;
           el.dataset.panning = '';
           return;
         }
@@ -756,6 +801,11 @@ export class ViewportController {
       listen<PointerEvent>(el, 'pointermove', (e) => {
         const t0 = import.meta.env.DEV ? performance.now() : 0;
         if (this.panFrom) {
+          // The start of a pan keeps the view it leaves: at its first move, so a middle click that goes nowhere keeps nothing.
+          if (!this.panKept) {
+            this.panKept = true;
+            this.navigation.remember();
+          }
           this.camera.panBy(e.clientX - this.panFrom.x, e.clientY - this.panFrom.y);
           this.panFrom = { x: e.clientX, y: e.clientY };
         }
@@ -805,6 +855,8 @@ export class ViewportController {
           e.preventDefault();
           const step = e.deltaMode === 1 ? e.deltaY * 0.05 : e.deltaY * 0.0015;
           const r = el.getBoundingClientRect();
+          // The first step after a pause keeps the view it leaves; a run of steps is one pass (docs/adr/0141).
+          this.navigation.wheel();
           this.camera.zoomAt(Math.exp(-step), { x: e.clientX - r.left, y: e.clientY - r.top });
         },
         { passive: false },

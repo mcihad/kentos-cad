@@ -83,7 +83,7 @@ export function setup(doc = new CadDocument({ name: 'Proje', layers: new LayerSt
     log: { success: say('ok'), warn: say('uyarı'), error: say('hata'), info: say('bilgi') },
     tools: { activate: () => {} },
     selection: { clear: () => {} },
-    view: { camera: { fit: (b: unknown) => fitted.push(b) }, zoomExtents: () => {} },
+    view: { camera: { fit: (b: unknown) => fitted.push(b) }, showAll: () => {}, zoomExtents: () => {} },
     cloud,
   } as unknown as AppContext;
   const files = new DocumentFiles(ctx);

@@ -80,4 +80,4 @@ export function holdDrawing(ctx: AppContext, opts: { why: string; keep: HTMLElem
 }
 
 /** Commands that only move the view: the ones a hold lets run. */
-const VIEW_COMMANDS: ReadonlySet<string> = new Set(['view.zoomExtents', 'view.zoomIn', 'view.zoomOut', 'view.fullscreen']);
+const VIEW_COMMANDS: ReadonlySet<string> = new Set(['view.zoomExtents', 'view.zoomIn', 'view.zoomOut', 'view.previous', 'view.next', 'view.fullscreen']);
