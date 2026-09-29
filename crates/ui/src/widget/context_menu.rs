@@ -97,6 +97,9 @@ const ICON_SLOT: f32 = 16.0;
 /// Menünün en dar ve en geniş hâli.
 const MIN_WIDTH: f32 = 184.0;
 const MAX_WIDTH: f32 = 360.0;
+/// The most a row's hint takes of the row; a longer one wraps, so that the
+/// label keeps its room (a method's description, Kot ver's “Artır”).
+const HINT_MAX: f32 = 224.0;
 /// A row with a detail line (the web's `menu__label--2`): its text column,
 /// the icon's column, and the padding above and below.
 const DETAIL_WIDTH: f32 = 300.0;
@@ -519,10 +522,10 @@ impl<Message> Menu<Message> {
                         + command.shortcut.as_deref().map_or(0.0, |shortcut| {
                             typography::text_width(shortcut, caption) + 24.0
                         })
-                        + command
-                            .hint
-                            .as_deref()
-                            .map_or(0.0, |hint| typography::text_width(hint, caption) + 24.0)
+                        + command.hint.as_deref().map_or(0.0, |hint| {
+                            typography::text_width(hint, caption).min(typography::scaled(HINT_MAX))
+                                + 24.0
+                        })
                 }
                 Item::Submenu { label, .. } => typography::text_width(label, body) + 24.0,
                 Item::Header(title) => typography::text_width(title, caption),
@@ -1675,7 +1678,10 @@ fn item_row<'a, Message: 'a>(
     // Quiet beside the label, in the interface's letters (the web's
     // `.menu__hint`, `.menu__kbd`): on the soft highlight they stay readable.
     if let Some(hint) = hint {
-        content = content.push(label::caption(hint).style(style::text::muted));
+        content = content.push(
+            container(label::caption(hint).style(style::text::muted))
+                .max_width(typography::scaled(HINT_MAX)),
+        );
     }
 
     if let Some(shortcut) = shortcut {
