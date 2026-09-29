@@ -20,3 +20,11 @@ export interface Elevated {
 
 /** Elevations for the vertices `pts` of an edit's result (`closed`: a ring), from `sources` and `same`. */
 export const carryElevations = op<(pts: Vec2[], closed: boolean, same: Elevated | null, sources: Elevated[], offset: boolean) => (number | null)[]>('carryElevations');
+
+/**
+ * A path's length in space (docs/adr/0142): each edge's plan length (an arc's along its curve) with the rise
+ * between its ends, √(plan² + rise²); null unless every vertex has an elevation. The plan length stays the
+ * measure of record (areas, perimeters, dimensions); this one is shown beside it. `bulges` are the path's,
+ * `closed` counts the closing edge (a ring).
+ */
+export const length3d = op<(pts: Vec2[], bulges: number[] | null, closed: boolean, zs: (number | null)[]) => number | null>('length3d');
