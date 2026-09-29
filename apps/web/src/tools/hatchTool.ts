@@ -5,7 +5,7 @@ import { entityArea, entityBounds, HATCH_PATTERN_LABEL, polygonRing, type Entity
 import type { Vec2 } from '../model/geometry';
 import { hatchSegments } from '../model/geom/hatch';
 import { insideArea, netArea, subtractAreas, type Area } from '../model/geom/region';
-import { areaOfEntity } from '../model/ops/areas';
+import { areasOfEntity } from '../model/ops/areas';
 import type { ViewTransform } from '../viewport/Camera';
 import { drawArea, strokePath, tint } from './preview';
 import { writeObjects } from './createCommand';
@@ -26,8 +26,9 @@ const paper = (ctx: AppContext, mm: number) => (mm / 1000) * ctx.doc.settings.pl
  * Tarama: click inside, the region is filled (not associative). Two ways
  * to find the region:
  *   kapalı nesne (default, Netcad): the smallest closed object around the
- *     click; closed objects inside it or across its edge (buildings in a
- *     parcel) become islands left unhatched;
+ *     click (of a multi-part area, the part the click is in, docs/adr/0143);
+ *     closed objects inside it or across its edge (buildings in a parcel)
+ *     become islands left unhatched;
  *   çizgiler (AutoCAD): the face closed by the visible line work, groups
  *     inside it as islands; the boundary set can be one layer.
  * Islands can be switched off (A).
@@ -43,8 +44,8 @@ export class HatchTool implements Tool {
   private readonly ctx: AppContext;
   private readonly faces: VisibleFaces;
   private pickingLayer = false;
-  /** Object mode: the enclosing object's region with islands cut out, kept while the cursor stays in it. */
-  private cache: { id: number; parts: Area[] } | null = null;
+  /** Object mode: the enclosing object's part with islands cut out, kept while the cursor stays in it (the object and its part). */
+  private cache: { id: number; part: number; parts: Area[] } | null = null;
   private sub: Disposable | null = null;
   private hover: Area | null = null;
 
@@ -94,19 +95,25 @@ export class HatchTool implements Tool {
     const S = HatchTool;
     if (S.byLines) return this.faces.at(p, S.islands);
     const r = this.ctx.view.enclosingRing(p);
-    const base = r && areaOfEntity(r.entity);
-    if (!r || !base) return null;
+    if (!r) return null;
+    // A multi-part area's part the point is in (docs/adr/0143); one area is itself.
+    const areas = areasOfEntity(r.entity);
+    const part = areas.length === 1 ? 0 : areas.findIndex((a) => insideArea(a, p));
+    if (part < 0) return null;
+    const base = areas[part];
     if (!S.islands) return base;
-    if (this.cache?.id !== r.entity.id) this.cache = { id: r.entity.id, parts: subtractAreas([base], this.islandsOf(r.entity, netArea(base))) };
+    if (this.cache?.id !== r.entity.id || this.cache.part !== part) this.cache = { id: r.entity.id, part, parts: subtractAreas([base], this.islandsOf(r.entity, netArea(base))) };
     return this.cache.parts.find((a) => insideArea(a, p)) ?? null;
   }
 
-  /** Closed objects inside or across the boundary object, smaller than it (a block around a parcel is not an island). */
+  /**
+   * Closed objects inside or across the boundary object, smaller than it (a block around a parcel is not an
+   * island); every part of a multi-part object is one (docs/adr/0143).
+   */
   private islandsOf(boundary: Entity, size: number): Area[] {
     return this.ctx.view.entitiesIn(entityBounds(boundary)).flatMap((e) => {
       if (e.id === boundary.id || e.kind === 'hatch') return [];
-      const a = areaOfEntity(e);
-      return a && netArea(a) < size * (1 - 1e-9) ? [a] : [];
+      return areasOfEntity(e).filter((a) => netArea(a) < size * (1 - 1e-9));
     });
   }
 
