@@ -6,9 +6,11 @@
 //! - The fence crosses an object when it meets an edge, a text's body, or
 //!   passes within the pick tolerance of a point (the store's `in_fence`). It
 //!   needs two points at least: with one, Enter says so and the tool waits.
-//! - What it crosses replaces the selection, or with Shift held joins it, and
-//!   the tool goes back to Seç: `Çit 3 nesneyi kesti; seçildi.` When it crosses
-//!   nothing the selection is left as it was: `Çit hiçbir nesneyi kesmedi.`
+//! - What it crosses replaces the selection, or joins it when Shift is held
+//!   (at the last pointer event, or as Enter is pressed: a right click with
+//!   Shift opens the snap menu instead), and the tool goes back to Seç: `Çit 3
+//!   nesneyi kesti; seçildi.` When it crosses nothing the selection is left as
+//!   it was, and the tool leaves all the same: `Çit hiçbir nesneyi kesmedi.`
 //! - Esc drops the fence drawn so far; with none it leaves.
 //!
 //! Only visible objects are selected; objects on a locked layer are, as in a
@@ -39,6 +41,8 @@ pub struct SelectFence {
     /// The next point as the pointer would give it (ortho and polar tracking applied).
     hover: Option<Vec2>,
     tracking: Option<Tracking>,
+    /// Shift was held at the last pointer event: ending the fence then adds to the selection.
+    shift: bool,
 }
 
 impl SelectFence {
@@ -75,7 +79,7 @@ impl SelectFence {
         if n == 0 {
             cx.say(Level::Warn, "Çit hiçbir nesneyi kesmedi.");
         } else {
-            cx.selection.take(hits, cx.shift);
+            cx.selection.take(hits, cx.shift || self.shift);
             cx.say(Level::Info, format!("Çit {n} nesneyi kesti; seçildi."));
         }
         Flow::Exit
@@ -120,12 +124,14 @@ impl Tool for SelectFence {
     }
 
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
+        self.shift = p.shift;
         let (point, tracking) = points::constrain(self.last(), p, cx);
         self.hover = Some(point);
         self.tracking = tracking;
     }
 
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
+        self.shift = p.shift;
         let (point, tracking) = points::constrain(self.last(), p, cx);
         self.tracking = tracking;
         self.add(point);

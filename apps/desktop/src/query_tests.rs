@@ -96,8 +96,8 @@ fn alan_hesapla_measures_inside_a_region_and_alan_olarak_ciz_is_one_named_undo()
     assert!(app.memory.area_inside);
     let mark = app.log.len();
     click(&mut app, [4.0, 16.0]);
-    // 24 × 20 m with a 6 × 6 m building inside: 480 − 36; 88 + 24 round.
-    assert_eq!(said(&app, mark), ["Alan 444.00 m²   Çevre 112.000 m"]);
+    // 24 × 20 m with a 6 × 6 m building inside: 480 − 36 net; the perimeter is the outer ring's, 88.
+    assert_eq!(said(&app, mark), ["Alan 444.00 m²   Çevre 88.000 m"]);
     assert!(prompt(&app).ends_with("[İçine tıkla (I): açık / Alan olarak çiz (A)]"));
     let before = app
         .document

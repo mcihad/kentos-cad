@@ -29,7 +29,8 @@
 //!   before the first point and while it is on; Yay and Uzunluk do not apply.
 //! - Alan hesapla's İçine tıkla (I) measures the region a click is inside, as
 //!   İçine tıklayarak alan finds it: the visible line work's face, closed
-//!   groups inside it as holes. After a measurement Alan olarak çiz (A) writes
+//!   groups inside it as holes (the area is net of them; the perimeter is the
+//!   outer ring's). After a measurement Alan olarak çiz (A) writes
 //!   the ring last measured (holes included) to the active layer through
 //!   `cad.polygon.create`, one undo step named “Alan olarak çiz”.
 //!
@@ -804,12 +805,10 @@ fn js_parse_int(text: &str) -> Option<u64> {
     Some(digits.parse().unwrap_or(u64::MAX))
 }
 
-/// The perimeter of a region: its outer ring and its holes', as an object's perimeter counts them.
+/// The perimeter of a region as İçine tıkla says it: its outer ring's; the
+/// islands are taken out of the area, not added to the perimeter (as the web says it).
 fn perimeter(region: &Region) -> f64 {
-    std::iter::once(&region.outer)
-        .chain(&region.holes)
-        .map(|ring| bulge_path_length(&ring.pts, ring.bulges.as_deref(), true))
-        .sum()
+    bulge_path_length(&region.outer.pts, region.outer.bulges.as_deref(), true)
 }
 
 /// A region as the web's `drawArea` draws an area: its outer ring and holes, lightly filled.
@@ -900,7 +899,10 @@ impl Path {
         let mut tag = None;
         if let Some((at, Some(region))) = &self.inside {
             areas.push(region_area(region, 0.16, None));
-            let mut lines = vec![format.area(net_area(region))];
+            let mut lines = vec![
+                format!("Alan {}", format.area(net_area(region))),
+                format!("Çevre {}", format.length(perimeter(region))),
+            ];
             if !region.holes.is_empty() {
                 lines.push(format!("{} ada", region.holes.len()));
             }

@@ -6,12 +6,16 @@
 //! - The circle holds the objects wholly inside it. Kesişen (K) also takes
 //!   those it touches: an edge inside it, or a closed object it lies within.
 //!   The switch is remembered from run to run ([`crate::tool::Memory`]).
-//! - What it finds replaces the selection, or with Shift held joins it, and
-//!   the tool goes back to Seç: `Dairenin içinde 4 nesne; seçildi.` /
-//!   `Daireye dokunan 5 nesne; seçildi.` When it finds nothing the selection
-//!   is left as it was: `Dairede nesne yok.`
-//! - Beside the cursor, the dashed circle's radius: `R 8.000 m`. Esc goes back
-//!   to the centre; from the centre it leaves.
+//! - What it finds replaces the selection, or joins it when Shift is held (at
+//!   the click that shows the radius, or, for a typed radius, at the last
+//!   click), and the tool goes back to Seç: `Dairenin içinde 4 nesne;
+//!   seçildi.` / `Daireye dokunan 5 nesne; seçildi.` When it finds nothing the
+//!   selection is left as it was, and the tool leaves all the same:
+//!   `Dairede nesne yok.`
+//! - The circle is dashed and lightly filled, in the window's colour for what
+//!   lies wholly inside and in the snap colour for Kesişen (as the selection
+//!   box is); beside the cursor, its radius: `R 8.000 m`. Esc goes back to the
+//!   centre; from the centre it leaves.
 //!
 //! The query is the store's `in_circle`: only visible objects count.
 
@@ -26,7 +30,7 @@ use crate::log::Level;
 use crate::points::{self, SAME};
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{
-    Context, Flow, Marker, MarkerShape, Memory, Pointer, Preview, Stroke, Tag, Tone, Tool,
+    Area, Context, Flow, Marker, MarkerShape, Memory, Pointer, Preview, Stroke, Tag, Tone, Tool,
 };
 
 /// The tool's id: its command is `tool.selectCircle`.
@@ -42,6 +46,8 @@ pub struct SelectCircle {
     centre: Option<Vec2>,
     /// The point under the pointer: the centre, or a point on the circle, as shown (and snapped).
     hover: Option<Vec2>,
+    /// Shift was held at the last click: a typed radius then adds to the selection.
+    shift: bool,
     /// What the session remembered, as of the last call (the prompt sees no context).
     memory: Memory,
     done: bool,
@@ -122,7 +128,7 @@ impl Tool for SelectCircle {
     }
 
     fn accept_point(&mut self, p: Vec2, cx: &mut Context<'_>) -> bool {
-        let shift = cx.shift;
+        let shift = cx.shift || self.shift;
         self.take(p, shift, cx);
         true
     }
@@ -140,6 +146,7 @@ impl Tool for SelectCircle {
 
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         self.see(cx);
+        self.shift = p.shift;
         self.take(p.world, p.shift, cx);
     }
 
@@ -150,7 +157,7 @@ impl Tool for SelectCircle {
             self.see(cx);
             return true;
         }
-        let shift = cx.shift;
+        let shift = cx.shift || self.shift;
         // A number is the radius; anything else a point.
         if let (Some(c), Some(radius)) = (self.centre, points::plain_number(text)) {
             self.finish(c, radius, shift, cx);
@@ -183,7 +190,7 @@ impl Tool for SelectCircle {
         self.done
     }
 
-    /// The dashed circle to the cursor, its radius beside it.
+    /// The dashed circle to the cursor, lightly filled, its radius beside it.
     fn preview(&self, format: &Format) -> Preview {
         let Some(c) = self.centre else {
             return Preview::default();
@@ -200,9 +207,23 @@ impl Tool for SelectCircle {
             return preview;
         };
         let r = dist(c, h);
+        // The window's colour for what lies wholly inside, the snap colour for Kesişen.
+        let tone = if self.memory.circle_crossing {
+            Tone::Snap
+        } else {
+            Tone::Accent
+        };
+        let outline = Outline::of(&Shape::Circle { c, r }, Some(DASH), 1.5, tone);
         preview
-            .strokes
-            .extend(Outline::of(&Shape::Circle { c, r }, Some(DASH), 1.5, Tone::Accent).strokes);
+            .areas
+            .extend(outline.strokes.first().map(|ring| Area {
+                rings: vec![ring.pts.clone()],
+                fill: 0.1,
+                width: 1.0,
+                dash: Some(DASH),
+                fill_tone: tone,
+            }));
+        preview.strokes.extend(outline.strokes);
         preview
             .strokes
             .push(Stroke::dashed(vec![c, h], false, [2.0, 3.0]));

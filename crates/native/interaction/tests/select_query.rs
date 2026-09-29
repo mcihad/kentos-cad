@@ -16,7 +16,7 @@
 mod common;
 
 use common::Bench;
-use kentos_interaction::{Format, Level};
+use kentos_interaction::{Format, Level, Tone};
 
 const AREAS: &str = include_str!("../../../../fixtures/interaction/v1/areas.kcad");
 
@@ -40,6 +40,10 @@ fn select(b: &mut Bench, slots: &[u32]) {
             .map(|s| kentos_domain::Slot(*s))
             .collect::<Vec<_>>(),
     );
+}
+
+fn rel_pt(de: f64, dn: f64) -> kentos_interaction::Vec2 {
+    kentos_interaction::Vec2::new(common::E + de, common::N + dn)
 }
 
 fn cancel(b: &mut Bench) -> bool {
@@ -102,6 +106,37 @@ fn shift_adds_what_the_fence_crosses_to_the_selection() {
     b.confirm();
     assert_eq!(b.selected(), [3, 1, 2]);
     assert_eq!(b.last_text(), Some("Çit 2 nesneyi kesti; seçildi."));
+}
+
+/// A right click with Shift opens the snap menu: the fence takes the Shift of the last pointer event.
+#[test]
+fn the_fence_adds_when_shift_was_held_at_the_last_click_or_is_at_enter() {
+    let mut b = bench("selectFence");
+    select(&mut b, &[3]);
+    b.click(-5.0, 8.0);
+    b.shift = true;
+    b.click(20.0, 8.0);
+    // Shift is let go before the fence ends: the last pointer event had it.
+    b.shift = false;
+    b.confirm();
+    assert_eq!(b.selected(), [3, 1, 2]);
+    // The pointer moved after Shift was let go: the fence replaces.
+    let mut b = bench("selectFence");
+    select(&mut b, &[3]);
+    b.click(-5.0, 8.0);
+    b.shift = true;
+    b.click(20.0, 8.0);
+    b.shift = false;
+    b.move_to(21.0, 8.0);
+    b.confirm();
+    assert_eq!(b.selected(), [1, 2]);
+    // Shift with Enter alone adds.
+    let mut b = bench("selectFence");
+    select(&mut b, &[3]);
+    clicks(&mut b, &[[-5.0, 8.0], [20.0, 8.0]]);
+    b.shift = true;
+    b.confirm();
+    assert_eq!(b.selected(), [3, 1, 2]);
 }
 
 #[test]
@@ -274,6 +309,14 @@ fn the_radius_is_shown_by_a_click_or_a_typed_point_and_shift_adds() {
     b.shift = true;
     b.click(13.0, 5.0);
     assert_eq!(b.selected(), [3, 1, 10]);
+    // A typed radius takes the Shift of the last click, the centre's.
+    let mut b = bench("selectCircle");
+    select(&mut b, &[3]);
+    b.shift = true;
+    b.click(5.0, 5.0);
+    b.shift = false;
+    assert!(b.type_text("8"));
+    assert_eq!(b.selected(), [3, 1, 10]);
 }
 
 #[test]
@@ -306,20 +349,35 @@ fn escape_goes_back_to_the_centre_and_then_leaves() {
 }
 
 #[test]
-fn the_circle_is_dashed_with_its_radius_beside_the_cursor() {
+fn the_circle_is_dashed_and_filled_with_its_radius_beside_the_cursor() {
     let mut b = bench("selectCircle");
     b.click(5.0, 5.0);
     b.move_to(13.0, 5.0);
     let p = preview(&b);
     assert_eq!(p.tag.expect("a tag").lines, ["R 8.000 m"]);
-    // The circle is a dashed ring of many points; the radius a short dashed line.
+    // The circle is a dashed ring of many points, lightly filled; the radius a short dashed line.
+    let ring = p
+        .strokes
+        .iter()
+        .find(|s| s.dash.is_some() && s.pts.len() > 16)
+        .expect("the circle");
+    assert_eq!(ring.tone, Tone::Accent, "the window's colour");
+    assert_eq!(p.areas.len(), 1);
+    assert_eq!(p.areas[0].rings[0], ring.pts);
+    assert!(p.strokes.iter().any(|s| s.pts.len() == 2));
+    assert!(preview(&bench("selectCircle")).strokes.is_empty());
+    // Kesişen: the snap colour, as the crossing box is.
+    let mut b = bench("selectCircle");
+    b.type_text("k");
+    b.click(5.0, 5.0);
+    b.move_to(13.0, 5.0);
+    let p = preview(&b);
+    assert_eq!(p.areas[0].fill_tone, Tone::Snap);
     assert!(
         p.strokes
             .iter()
-            .any(|s| s.dash.is_some() && s.pts.len() > 16)
+            .any(|s| s.pts.len() > 16 && s.tone == Tone::Snap)
     );
-    assert!(p.strokes.iter().any(|s| s.pts.len() == 2));
-    assert!(preview(&bench("selectCircle")).strokes.is_empty());
 }
 
 #[test]
@@ -446,37 +504,46 @@ fn shift_adds_the_area_to_the_selection() {
 }
 
 #[test]
-fn the_area_a_click_would_take_is_outlined_and_described_while_the_cursor_moves() {
+fn nothing_is_outlined_and_the_label_stays_at_the_last_click() {
     let mut b = bench("selectContaining");
+    // Nothing is outlined as the cursor moves, and there is no label before a click.
     b.move_to(2.0, 2.0);
-    assert_eq!(b.selection.hover().map(|s| s.0), Some(1));
-    assert_eq!(preview(&b).tag.expect("a tag").lines, ["1/1 · 100.00 m²"]);
-    // Nothing there: no outline, no label.
-    b.move_to(40.0, 40.0);
     assert_eq!(b.selection.hover(), None);
     assert!(preview(&b).tag.is_none());
-    // After a click the label describes what was selected while the cursor stays.
     b.click(8.0, 6.0);
-    b.move_to(8.0, 6.0);
-    assert_eq!(preview(&b).tag.expect("a tag").lines, ["1/2 · 100.00 m²"]);
-    assert_eq!(b.selection.hover(), None, "the selection itself is drawn");
+    let stays = |b: &Bench| {
+        let tag = preview(b).tag.expect("a tag");
+        (tag.at, tag.lines)
+    };
+    let label = (rel_pt(8.0, 6.0), vec!["1/2 · 100.00 m²".to_owned()]);
+    assert_eq!(stays(&b), label);
+    // The cursor goes elsewhere: the label does not follow it.
+    b.move_to(40.0, 40.0);
+    assert_eq!(stays(&b), label);
+    assert_eq!(b.selection.hover(), None);
+    // A click where nothing closed is changes nothing: the label and the cycle stay.
+    b.click(40.0, 40.0);
+    assert_eq!(b.last_level(), Some(Level::Warn));
+    assert_eq!(stays(&b), label);
+    b.click(8.3, 6.0);
+    assert_eq!(b.last_text(), Some("Alan seçildi (2/2, 100.00 m²)."));
+    assert_eq!(stays(&b).1, ["2/2 · 100.00 m²"]);
 }
 
 #[test]
-fn escape_and_enter_end_the_tool_and_take_the_outline_with_them() {
+fn escape_and_enter_end_the_tool() {
     // Esc.
     let mut b = bench("selectContaining");
-    b.move_to(2.0, 2.0);
-    assert!(b.selection.hover().is_some());
+    b.click(2.0, 2.0);
     assert!(!cancel(&mut b), "there is nothing to step back to");
     assert!(left(&b));
-    assert_eq!(b.selection.hover(), None);
+    assert_eq!(b.selected(), [1], "the selection stays");
     // Enter, or a quick right click, which is the same confirm.
     let mut b = bench("selectContaining");
-    b.move_to(2.0, 2.0);
+    b.click(2.0, 2.0);
     b.confirm();
     assert!(left(&b));
-    assert_eq!(b.selection.hover(), None);
+    assert_eq!(b.selected(), [1]);
     // Ctrl+Z is the drawing's.
     let mut b = bench("selectContaining");
     assert!(!b.undo_step());

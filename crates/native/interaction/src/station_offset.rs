@@ -8,8 +8,9 @@
 //!   right of A→B positive and the left negative.
 //!
 //! These are Nokta hesapla's yan nokta values, the shared core's `side_offsets`.
-//! Beside the cursor: `Ayak 12.400 m` and `Boy +3.100 m` (the sign always, a
-//! true minus for the left, none for zero); each click says
+//! Beside the cursor: `Ayak 12.400 m` and `Boy +3.100 m` (the sign of the
+//! boy always, `+` for the right, a true minus (U+2212) for the left, none
+//! for zero; a negative ayak is the formatter's ordinary “-”); each click says
 //! `Dik ayak 12.400 m, dik boy 3.100 m (sağda)` in the log. Nothing is written
 //! to the drawing.
 //!
@@ -17,7 +18,7 @@
 //! back: from the points to A (a new line), from B to A, from A it leaves.
 
 use kentos_geometry_core::geom::survey::{side_offsets, side_point};
-use kentos_geometry_core::geometry::dist;
+use kentos_geometry_core::geometry::{bearing_grad, dist};
 use kentos_geometry_core::tools::point_input::Tracking;
 use kentos_geometry_core::tools::point_text::{js_trim, point_from_text};
 
@@ -40,6 +41,8 @@ const REACH: f64 = 2.0;
 const ON_THE_LINE: f64 = 0.0005;
 /// The extension's and the perpendicular's dash and gap, logical pixels.
 const DASH: [f32; 2] = [4.0, 4.0];
+/// How many read points stay marked on the drawing: the latest ones.
+const MARKED: usize = 60;
 
 /// Dik ayak ölç.
 #[derive(Clone, Debug, Default)]
@@ -89,7 +92,7 @@ impl StationOffset {
                 if dist(a, p) <= SAME {
                     cx.say(
                         Level::Warn,
-                        "Hattın sonu başıyla aynı nokta olamaz; başka bir nokta gösterin.",
+                        "B noktası A ile çakışıyor; hattın sonu için başka bir nokta gösterin.",
                     );
                     return;
                 }
@@ -116,11 +119,14 @@ impl StationOffset {
         let f = cx.format();
         let text = format!(
             "Dik ayak {}, dik boy {} ({side})",
-            f.length(o.absis),
+            f.length(foot_of(o.absis)),
             f.length(o.ordinat.abs())
         );
         cx.say(Level::Info, text);
         self.read.push(p);
+        if self.read.len() > MARKED {
+            self.read.remove(0);
+        }
     }
 
     /// A new line: A is asked again.
@@ -143,6 +149,15 @@ impl StationOffset {
                 true
             }
         }
+    }
+}
+
+/// An ayak as shown: never “-0.000”.
+fn foot_of(absis: f64) -> f64 {
+    if absis.abs() < ON_THE_LINE {
+        0.0
+    } else {
+        absis
     }
 }
 
@@ -247,21 +262,33 @@ impl Tool for StationOffset {
             offset: [6.0, -6.0],
             tone: Tone::Snap,
         };
-        // B is still to give: the line as far as the cursor.
+        let ring = |at: Vec2, radius: f32, tone: Tone| Marker {
+            at,
+            shape: MarkerShape::Ring(radius),
+            tone,
+        };
+        preview.markers.push(ring(a, 4.0, Tone::Snap));
+        preview.labels.push(label(a, "A"));
+        // B is still to give: the line as far as the cursor, its length and semt.
         let Some(b) = self.b else {
             if let Some(h) = hover.filter(|h| dist(a, *h) > SAME) {
-                preview
-                    .strokes
-                    .push(Stroke::solid(vec![a, h], false).width(2.0).tone(Tone::Snap));
+                preview.strokes.push(Stroke::solid(vec![a, h], false));
+                preview.tag = Some(Tag {
+                    at: h,
+                    lines: vec![
+                        format.length(dist(a, h)),
+                        format!("Semt {}", format.bearing(bearing_grad(a, h))),
+                    ],
+                });
                 preview.tracking = self.tracking;
             }
-            preview.labels.push(label(a, "A"));
             return preview;
         };
         let l = dist(a, b);
         let (ux, uy) = ((b.x - a.x) / l, (b.y - a.y) / l);
+        let along = Vec2::new(ux, uy);
         let far = self.reach;
-        // The line as far as the eye reaches, dashed past its two ends.
+        // The line, and its extension across the view: the foot may lie beyond either end.
         preview.strokes.push(
             Stroke::dashed(
                 vec![
@@ -275,48 +302,48 @@ impl Tool for StationOffset {
         );
         preview
             .strokes
-            .push(Stroke::solid(vec![a, b], false).width(2.0).tone(Tone::Snap));
-        preview.labels.push(label(a, "A"));
+            .push(Stroke::solid(vec![a, b], false).width(1.5));
+        preview.markers.push(ring(b, 4.0, Tone::Snap));
         preview.labels.push(label(b, "B"));
-        preview.markers.extend(self.read.iter().map(|&at| Marker {
-            at,
-            shape: MarkerShape::Ring(3.5),
-            tone: Tone::Accent,
-        }));
-        let Some(p) = hover else {
-            return preview;
-        };
-        let Some(o) = side_offsets(a, b, p) else {
-            return preview;
-        };
-        // The foot, and the dashed perpendicular from it to the cursor.
-        if let Some(foot) = side_point(a, b, o.absis, 0.0) {
-            preview.markers.push(Marker {
-                at: foot,
-                shape: MarkerShape::Ring(4.0),
-                tone: Tone::Snap,
-            });
-            if o.ordinat.abs() >= ON_THE_LINE {
-                preview
-                    .strokes
-                    .push(Stroke::dashed(vec![foot, p], false, DASH).width(1.5));
+        // One point against the line: its foot, the dashed perpendicular to it and the
+        // square corner between them.
+        let reading = |p: Vec2, tone: Tone, preview: &mut Preview| {
+            let o = side_offsets(a, b, p)?;
+            let foot = side_point(a, b, o.absis, 0.0)?;
+            if o.ordinat.abs() >= ON_THE_LINE && dist(foot, p) > SAME {
+                preview.strokes.push(
+                    Stroke::dashed(vec![foot, p], false, DASH)
+                        .width(1.5)
+                        .tone(tone),
+                );
                 preview.markers.push(Marker {
                     at: foot,
                     shape: MarkerShape::RightAngle {
-                        along: Vec2::new(foot.x + ux, foot.y + uy),
+                        along: Vec2::new(foot.x + along.x, foot.y + along.y),
                         up: p,
                     },
-                    tone: Tone::Accent,
+                    tone,
                 });
             }
+            preview.markers.push(ring(foot, 3.0, tone));
+            Some(o)
+        };
+        for &p in &self.read {
+            reading(p, Tone::Snap, &mut preview);
+            preview.markers.push(ring(p, 4.0, Tone::Snap));
         }
-        preview.tag = Some(Tag {
-            at: p,
-            lines: vec![
-                format!("Ayak {}", format.length(o.absis)),
-                format!("Boy {}", signed(format, o.ordinat)),
-            ],
-        });
+        let Some(p) = hover else {
+            return preview;
+        };
+        if let Some(o) = reading(p, Tone::Accent, &mut preview) {
+            preview.tag = Some(Tag {
+                at: p,
+                lines: vec![
+                    format!("Ayak {}", format.length(foot_of(o.absis))),
+                    format!("Boy {}", signed(format, o.ordinat)),
+                ],
+            });
+        }
         preview
     }
 }

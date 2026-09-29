@@ -180,7 +180,10 @@ fn a_click_inside_a_region_measures_it_and_nothing_is_written() {
     b.move_to(-23.0, -10.0);
     let p = preview(&b);
     assert_eq!(p.areas.len(), 1, "the region under the cursor is filled");
-    assert_eq!(p.tag.expect("a tag").lines, ["100.00 m²"]);
+    assert_eq!(
+        p.tag.expect("a tag").lines,
+        ["Alan 100.00 m²", "Çevre 40.000 m"]
+    );
     let before = b.log.len();
     b.click(-23.0, -10.0);
     assert_eq!(said(&b, before), ["Alan 100.00 m²   Çevre 40.000 m"]);
@@ -203,13 +206,19 @@ fn a_click_inside_a_region_measures_it_and_nothing_is_written() {
 }
 
 #[test]
-fn islands_are_holes_and_count_in_the_perimeter() {
+fn islands_are_holes_of_the_area_and_the_perimeter_is_the_outer_ring() {
     let mut b = bench("area");
     b.type_text("i");
-    // Parcel 8 with its 4 × 4 m hole: 100 − 16 m², 40 + 16 m round.
+    // Parcel 8 with its 4 × 4 m hole: 100 − 16 m² net; the perimeter is the 40 m of its outer ring.
+    b.move_to(19.0, -10.0);
+    assert_eq!(
+        tag(&b),
+        ["Alan 84.00 m²", "Çevre 40.000 m", "1 ada"],
+        "the label says what the click would measure"
+    );
     let before = b.log.len();
     b.click(19.0, -10.0);
-    assert_eq!(said(&b, before), ["Alan 84.00 m²   Çevre 56.000 m"]);
+    assert_eq!(said(&b, before), ["Alan 84.00 m²   Çevre 40.000 m"]);
     // In the hole itself: its own region.
     let before = b.log.len();
     b.click(23.0, -10.0);
@@ -347,6 +356,18 @@ fn a_point_is_read_against_the_line_as_the_adr_works_it() {
         said(&b, before),
         ["Dik ayak -12.400 m, dik boy 3.100 m (solda)"]
     );
+    // Only the boy's minus is a true minus (U+2212); an ayak's is the formatter's.
+    b.move_to(-12.4, 3.1);
+    assert_eq!(tag(&b), ["Ayak -12.400 m", "Boy \u{2212}3.100 m"]);
+    // A hair behind A is no foot at all: never “-0.000”.
+    b.move_to(-0.0002, 3.0);
+    assert_eq!(tag(&b), ["Ayak 0.000 m", "Boy \u{2212}3.000 m"]);
+    let before = b.log.len();
+    b.click(-0.0002, 3.0);
+    assert_eq!(
+        said(&b, before),
+        ["Dik ayak 0.000 m, dik boy 3.000 m (solda)"]
+    );
     b.move_to(50.0, 0.0002);
     assert_eq!(tag(&b), ["Ayak 50.000 m", "Boy 0.000 m"]);
     let before = b.log.len();
@@ -395,6 +416,10 @@ fn the_preview_shows_the_line_its_extension_the_foot_and_the_perpendicular() {
         p.labels.iter().map(|l| l.text.as_str()).collect::<Vec<_>>(),
         ["A"]
     );
+    assert_eq!(
+        p.tag.as_ref().map(|t| t.lines.clone()),
+        Some(vec!["40.000 m".to_owned(), "Semt 100.0000 g".to_owned()])
+    );
     b.click(100.0, 0.0);
     b.move_to(30.0, 5.0);
     let p = preview(&b);
@@ -417,15 +442,28 @@ fn the_preview_shows_the_line_its_extension_the_foot_and_the_perpendicular() {
         p.labels.iter().map(|l| l.text.as_str()).collect::<Vec<_>>(),
         ["A", "B"]
     );
-    // A point already read stays ringed.
+    // A point already read stays marked: its foot, the perpendicular from it, the corner.
     b.click(30.0, 5.0);
     b.move_to(60.0, -4.0);
-    let rings = preview(&b)
+    let p = preview(&b);
+    let read = rel_pt(30.0, 5.0);
+    assert!(
+        p.markers
+            .iter()
+            .any(|m| m.at == read && matches!(m.shape, MarkerShape::Ring(_))),
+        "the point is ringed"
+    );
+    let dashed = p.strokes.iter().filter(|s| s.dash.is_some()).count();
+    assert_eq!(
+        dashed, 3,
+        "the extension, the read point's perpendicular and the cursor's"
+    );
+    let corners = p
         .markers
         .iter()
-        .filter(|m| matches!(m.shape, MarkerShape::Ring(r) if (r - 3.5).abs() < 1e-6))
+        .filter(|m| matches!(m.shape, MarkerShape::RightAngle { .. }))
         .count();
-    assert_eq!(rings, 1);
+    assert_eq!(corners, 2);
 }
 
 #[test]
@@ -484,6 +522,10 @@ fn a_second_point_on_the_first_is_no_line() {
     b.click(5.0, 5.0);
     assert_eq!(b.points(), 1, "B was not taken");
     assert_eq!(b.last_level(), Some(Level::Warn));
+    assert_eq!(
+        b.last_text(),
+        Some("B noktası A ile çakışıyor; hattın sonu için başka bir nokta gösterin.")
+    );
     // Ctrl+Z steps back as Esc does; at A the drawing's undo is the user's.
     assert!(b.undo_step());
     assert!(!b.undo_step());

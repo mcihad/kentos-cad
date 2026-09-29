@@ -7,10 +7,11 @@
 //!   smallest first, equal areas in the drawing's order.
 //! - A click within the pick tolerance of the previous click goes to the next
 //!   in that list and wraps after the last; a click anywhere else starts at the
-//!   smallest. It becomes the selection, or with Shift held joins it.
-//! - Beside the cursor: `2/3 · 1600.00 m²`, the place in the list and the
-//!   area: of the object selected while the cursor is where it was clicked,
-//!   else of the one a click here would select, whose outline is highlighted.
+//!   smallest. It becomes the selection, or with Shift held joins it. A click
+//!   where nothing closed is says so and changes nothing: the last click, its
+//!   place in the cycle and its label stay.
+//! - The label `2/3 · 1600.00 m²` (the place in the list, and the area) stays
+//!   at the last click's point. Nothing is outlined as the cursor moves.
 //! - The tool stays for more clicks; Esc, Enter or a right click ends it and
 //!   the pointer selects again.
 
@@ -22,7 +23,7 @@ use crate::Vec2;
 use crate::format::Format;
 use crate::log::Level;
 use crate::prompt::Prompt;
-use crate::tool::{Context, Cursor, Flow, Pointer, Preview, Tag, Tool};
+use crate::tool::{Context, Flow, Pointer, Preview, Tag, Tool};
 
 /// The tool's id: its command is `tool.selectContaining`.
 pub const ID: &str = "selectContaining";
@@ -31,9 +32,10 @@ pub const LABEL: &str = "İçeren alanı seç";
 /// İçeren alanı seç.
 #[derive(Clone, Debug, Default)]
 pub struct SelectContaining {
-    /// The last click: where it was and which of the objects around it it took (from 0).
+    /// The last click that found something: where it was and which of the
+    /// objects around it it took (from 0).
     last: Option<(Vec2, usize)>,
-    /// What stands beside the cursor.
+    /// The label at that click.
     tag: Option<Tag>,
 }
 
@@ -50,12 +52,9 @@ impl SelectContaining {
     /// A click at `at`: the smallest area around it, or the next larger when
     /// the place is the last click's. With `add` it joins the selection.
     fn click(&mut self, at: Vec2, add: bool, cx: &mut Context<'_>) {
-        cx.selection.set_hover(None);
         let list = cx.spatial.containing(at);
         if list.is_empty() {
             cx.say(Level::Warn, "Tıklanan noktayı içeren kapalı alan yok.");
-            self.last = None;
-            self.tag = None;
             return;
         }
         let n = list.len();
@@ -101,32 +100,7 @@ impl Tool for SelectContaining {
         false
     }
 
-    /// An object is wanted.
-    fn cursor(&self) -> Cursor {
-        Cursor::Pick
-    }
-
-    fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
-        let list = cx.spatial.containing(p.raw);
-        let f = cx.format();
-        let same_place = self
-            .last
-            .filter(|(at, _)| dist(*at, p.raw) <= cx.pick_tolerance());
-        // The selected object while the cursor stays where it was clicked; a
-        // click elsewhere would take the smallest: it is outlined and described.
-        let (shown, hover) = match same_place {
-            Some((_, i)) if i < list.len() => (Some((i, list[i].1)), None),
-            _ => (
-                list.first().map(|&(_, area)| (0, area)),
-                list.first().map(|&(slot, _)| slot),
-            ),
-        };
-        cx.selection.set_hover(hover);
-        self.tag = shown.map(|(i, area)| Tag {
-            at: p.raw,
-            lines: vec![Self::describe(i, list.len(), area, &f)],
-        });
-    }
+    fn pointer_move(&mut self, _p: &Pointer, _cx: &mut Context<'_>) {}
 
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         self.click(p.raw, p.shift, cx);
@@ -156,15 +130,8 @@ impl Tool for SelectContaining {
     }
 
     /// Enter or a quick right click ends.
-    fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
-        cx.selection.set_hover(None);
+    fn confirm(&mut self, _cx: &mut Context<'_>) -> Flow {
         Flow::Exit
-    }
-
-    /// Esc ends; nothing to step back to.
-    fn cancel(&mut self, cx: &mut Context<'_>) -> bool {
-        cx.selection.set_hover(None);
-        false
     }
 
     fn undo_step(&mut self, _cx: &mut Context<'_>) -> bool {
