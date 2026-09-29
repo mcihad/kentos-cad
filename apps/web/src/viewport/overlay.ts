@@ -393,8 +393,10 @@ export const GRIP_HIT_PX = 6;
 export function midGripVisible(set: GripSet, index: number, cam: Camera): boolean {
   const seg = set.segments[index];
   if (!(seg >= 0)) return true;
-  const a = cam.worldToScreen(set.points[seg]);
-  const b = cam.worldToScreen(set.points[(seg + 1) % set.vertices]);
+  // The segment counts within its own ring: the first part's is at the start of the grips (docs/adr/0143).
+  const ring = set.rings?.[index] ?? { from: 0, count: set.vertices };
+  const a = cam.worldToScreen(set.points[ring.from + seg]);
+  const b = cam.worldToScreen(set.points[ring.from + ((seg + 1) % ring.count)]);
   return Math.hypot(b.x - a.x, b.y - a.y) >= 28;
 }
 

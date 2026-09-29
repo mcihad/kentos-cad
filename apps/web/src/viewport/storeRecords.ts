@@ -35,7 +35,15 @@ export interface GripSet {
   id: number;
   points: Vec2[];
   segments: number[];
+  /** A path's vertex count; a multi-part area's, the first part's (docs/adr/0143). */
   vertices: number;
+  /**
+   * The vertex grips of the ring a mid grip belongs to, by grip index, for the mid grips of the parts of a
+   * multi-part area past its first: the store counts a mid grip's segment within its own part, so the segment's
+   * ends are those grips' `from + segment` and `from + (segment + 1) % count`. Absent when every mid grip is of the
+   * first ring, whose vertex grips are the first `vertices`.
+   */
+  rings?: ({ from: number; count: number } | undefined)[];
 }
 
 /** Grips as the store lists them: `id, count, vertices`, then `x, y, segment` per grip. */
@@ -49,7 +57,29 @@ export function readGrips(f: Float64Array): GripSet[] {
       set.points.push({ x: f[i], y: f[i + 1] });
       set.segments.push(f[i + 2]);
     }
+    partRings(set);
     out.push(set);
   }
   return out;
+}
+
+/**
+ * Finds the rings of a multi-part area's parts past its first (docs/adr/0143). A part lists its grips as an area
+ * does: its vertices, then a mid grip for each of them, whose segments run 0, 1, 2 …, then its holes' vertices; the
+ * first part's mid grips follow the first `vertices` grips. A run of mid grips anywhere else is another part's, and
+ * so many mid grips are so many vertices, just before the run. One pass over the grips, whatever their number.
+ */
+function partRings(set: GripSet): void {
+  const n = set.points.length;
+  for (let i = 0; i < n; i++) {
+    if (set.segments[i] !== 0) continue;
+    // The run of mid grips from here on: `k` of them, their segments 0 to k − 1.
+    let k = 1;
+    while (i + k < n && set.segments[i + k] === k) k++;
+    if (i !== set.vertices) {
+      set.rings ??= [];
+      for (let j = 0; j < k; j++) set.rings[i + j] = { from: i - k, count: k };
+    }
+    i += k - 1;
+  }
 }
