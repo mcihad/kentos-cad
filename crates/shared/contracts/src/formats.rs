@@ -28,7 +28,10 @@ use crate::layer::LineType;
 ///    `ImportLayer.bounds`) and where the view shows an import (`ImportResult.view`).
 /// 9: an object's own line weight (`EntityBase.line_weight`, docs/adr/0139): DXF's group 370 and
 ///    an NCZ's pen read into it, written back as 370.
-pub const FORMATS_VERSION: u32 = 9;
+/// 10: vertex elevations (docs/adr/0142): `.kcad` document schema 4 and the typed columns' layout
+///    (`kentos_kcad::columns`): a line's `za` and `zb`, a path's and a hole's `zs`, NaN in the
+///    columns for a vertex without an elevation.
+pub const FORMATS_VERSION: u32 = 10;
 
 // ── Every import ────────────────────────────────────────────────────────
 

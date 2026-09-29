@@ -1,5 +1,6 @@
-//! The objects written in document schema 2, or 3 when one has its own line
-//! weight (docs/specs/kcad-v2.md §6.6, docs/adr/0139):
+//! The objects written in document schema 2, 3 when one has its own line
+//! weight, or 4 when one has vertex elevations (docs/specs/kcad-v2.md §6.6,
+//! docs/adr/0139, docs/adr/0142):
 //! each a one-key map, its kind and then its fields, whose keys are sorted per
 //! object (they depend on the kind); every object with its persistent id,
 //! unique and not nil.
@@ -27,6 +28,8 @@ enum Val<'d> {
     Points(&'d [Vec2]),
     Floats(&'d [f64]),
     Attrs(&'d BTreeMap<String, String>),
+    /// Elevations and the number of vertices they belong to (one each, §6.6).
+    Elevations(&'d [Option<f64>], usize),
     Rings(&'d [RingGeometry]),
     Loops(&'d [Vec<Vec2>]),
     Pattern(&'d HatchPattern),
@@ -105,11 +108,20 @@ impl<'d> Encoder<'d> {
             Entity::Line(e) => {
                 f.push(("a", Val::Point(&e.a)));
                 f.push(("b", Val::Point(&e.b)));
+                if let Some(z) = e.za {
+                    f.push(("za", Val::Float(z)));
+                }
+                if let Some(z) = e.zb {
+                    f.push(("zb", Val::Float(z)));
+                }
             }
             Entity::Polyline(e) | Entity::Polygon(e) => {
                 f.push(("pts", Val::Points(&e.pts)));
                 if let Some(b) = &e.bulges {
                     f.push(("bulges", Val::Floats(b)));
+                }
+                if let Some(z) = &e.zs {
+                    f.push(("zs", Val::Elevations(z, e.pts.len())));
                 }
                 if let Some(h) = &e.holes {
                     if matches!(entity, Entity::Polyline(_)) {
@@ -196,6 +208,32 @@ impl<'d> Encoder<'d> {
         Ok(())
     }
 
+    /// A list of elevations, one per vertex (§6.6): a vertex without one is
+    /// written as `null`; the place is on the path.
+    fn elevations(&mut self, list: &'d [Option<f64>], vertices: usize) -> Result<(), KcadError> {
+        if list.len() != vertices {
+            return Err(self.fail(
+                Code::BadValue,
+                &format!(
+                    "{} kot var ama {vertices} köşe var; her köşenin bir kotu olmalı (kotsuz köşe için null)",
+                    list.len()
+                ),
+            ));
+        }
+        self.open(list.len(), false)?;
+        for (i, z) in list.iter().enumerate() {
+            self.at(Seg::Index(i), |e| match z {
+                Some(x) => e.float(*x),
+                None => {
+                    e.w.null();
+                    Ok(())
+                }
+            })?;
+        }
+        self.close();
+        Ok(())
+    }
+
     fn val(&mut self, v: Val<'d>) -> Result<(), KcadError> {
         match v {
             Val::Text(t) => self.text(t),
@@ -212,6 +250,7 @@ impl<'d> Encoder<'d> {
             Val::Point(p) => self.point(p),
             Val::Points(list) => self.points(list),
             Val::Floats(list) => self.floats(list),
+            Val::Elevations(list, vertices) => self.elevations(list, vertices),
             Val::Attrs(attrs) => {
                 let mut pairs: Vec<(&String, &String)> = attrs.iter().collect();
                 pairs.sort_by(|a, b| key_order(a.0, b.0));
@@ -227,7 +266,14 @@ impl<'d> Encoder<'d> {
                 self.open(rings.len(), false)?;
                 for (i, ring) in rings.iter().enumerate() {
                     self.at(Seg::Index(i), |e| {
-                        e.open(1 + usize::from(ring.bulges.is_some()), true)?;
+                        let optional =
+                            usize::from(ring.bulges.is_some()) + usize::from(ring.zs.is_some());
+                        e.open(1 + optional, true)?;
+                        // zs (2), pts (3), bulges (6).
+                        if let Some(zs) = &ring.zs {
+                            e.key("zs");
+                            e.at(Seg::Name("zs"), |e| e.elevations(zs, ring.pts.len()))?;
+                        }
                         e.key("pts");
                         e.at(Seg::Name("pts"), |e| e.points(&ring.pts))?;
                         if let Some(b) = &ring.bulges {

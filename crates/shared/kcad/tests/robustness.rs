@@ -8,7 +8,8 @@
 //! - every prefix of every valid fixture, and each fixture's payload cut and
 //!   mutated byte by byte inside a valid container;
 //! - random drawings (−0, subnormals, extremes, Unicode, deep layer trees,
-//!   opaque values) written, read back equal, written again to the same bytes;
+//!   opaque values, own line weights, vertex elevations) written, read back
+//!   equal, written again to the same bytes, each in the schema it needs;
 //! - what the writer refuses, with its code.
 
 use std::collections::BTreeMap;
@@ -17,9 +18,9 @@ use kentos_kcad::Code;
 use kentos_kcad::contracts::{
     AngleUnit, AreaUnit, Bounds, CircleEntity, DocumentSnapshotV2, DrawingFont, Entity, EntityBase,
     EntityId, HatchEntity, HatchPattern, HatchPatternType, LabelInk, LabelPlacement, LabelStyle,
-    LayerNode, LayerNodeType, LayerStyle, LineType, MigrationSource, PathEntity, PointEntity,
-    PointStyle, PointSymbol, ProjectId, ProjectSettings, ProjectStyles, RingGeometry, TextEntity,
-    Vec2, Workspace,
+    LayerNode, LayerNodeType, LayerStyle, LineEntity, LineType, MigrationSource, PathEntity,
+    PointEntity, PointStyle, PointSymbol, ProjectId, ProjectSettings, ProjectStyles, RingGeometry,
+    TextEntity, Vec2, Workspace,
 };
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -100,6 +101,18 @@ fn container(payload: &[u8]) -> Vec<u8> {
 
 fn payload_of(file: &[u8]) -> &[u8] {
     &file[36..file.len() - 32]
+}
+
+/// The document schema a file's payload says: the byte after the `version` key.
+fn schema_of(file: &[u8]) -> u8 {
+    let payload = payload_of(file);
+    let key = b"\x67version";
+    let at = payload
+        .windows(key.len())
+        .position(|w| w == key)
+        .expect("a version key")
+        + key.len();
+    payload[at]
 }
 
 #[test]
@@ -184,7 +197,14 @@ fn random_cbor_like_payloads_never_crash_the_reader() {
 
 #[test]
 fn every_prefix_and_every_mutation_of_the_fixtures_is_refused_or_read_without_crashing() {
-    for name in ["minimal.kcad", "drawing.kcad", "migrated.kcad"] {
+    // The newest schemas too: line weights (3) and vertex elevations (4) reach paths the others do not.
+    for name in [
+        "minimal.kcad",
+        "drawing.kcad",
+        "migrated.kcad",
+        "line-weights.kcad",
+        "elevations.kcad",
+    ] {
         let file = fixture(name);
         for end in 0..file.len() {
             assert!(
@@ -431,6 +451,66 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
     }
 }
 
+/// Own line weights and vertex elevations put on a random drawing from a
+/// stream of their own, so the drawings the other tests get do not change.
+/// `mode` 0 leaves it as it is (schema 2); 1 gives objects their own line
+/// weight (schema 3); 2 gives lines elevations at their ends and paths, their
+/// holes too, one per vertex with some vertices without (schema 4). Returns
+/// the schema the drawing needs.
+fn with_schema(doc: &mut DocumentSnapshotV2, mode: u64, rng: &mut Rng) -> u8 {
+    if mode == 0 {
+        return 2;
+    }
+    // A line to be sure of what the drawing has.
+    let layer = doc.active_layer.clone();
+    let b = base(rng, &layer);
+    doc.entities.push(Entity::Line(LineEntity {
+        base: b,
+        a: point(rng),
+        b: point(rng),
+        za: None,
+        zb: None,
+    }));
+    doc.uids.push(EntityId(rng.uid()));
+    for e in &mut doc.entities {
+        if rng.chance(40) {
+            e.base_mut().line_weight = Some(rng.below(1001) as f64 / 10.0);
+        }
+    }
+    let Some(Entity::Line(last)) = doc.entities.last_mut() else {
+        return 2;
+    };
+    if mode == 1 {
+        last.base.line_weight = Some(0.35);
+        return 3;
+    }
+    last.za = Some(rng.float());
+    for e in &mut doc.entities {
+        match e {
+            Entity::Line(l) => {
+                l.zb = rng.chance(60).then(|| rng.float());
+            }
+            Entity::Polyline(p) | Entity::Polygon(p) => {
+                if rng.chance(60) {
+                    p.zs = Some(p.pts.iter().map(|_| elevation(rng)).collect());
+                }
+                for h in p.holes.iter_mut().flatten() {
+                    if rng.chance(50) {
+                        h.zs = Some(h.pts.iter().map(|_| elevation(rng)).collect());
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    4
+}
+
+/// A vertex's elevation: none, or any finite float64 (−0, subnormals and the extremes too).
+fn elevation(rng: &mut Rng) -> Option<f64> {
+    rng.chance(75).then(|| rng.float())
+}
+
 /// The drawing with the slots a reader gives (1, 2, 3 … in file order).
 fn with_read_slots(mut doc: DocumentSnapshotV2) -> String {
     let text = serde_json::to_string(&doc.entities).expect("serializes");
@@ -446,9 +526,11 @@ fn with_read_slots(mut doc: DocumentSnapshotV2) -> String {
 fn random_drawings_round_trip_bit_for_bit_and_write_the_same_bytes_again() {
     let mut rng = Rng(20_260_926);
     for round in 0..600 {
-        let doc = drawing(&mut rng);
+        let mut doc = drawing(&mut rng);
+        let schema = with_schema(&mut doc, round % 3, &mut Rng(0x5eed_0000 + round));
         let bytes = kentos_kcad::encode_verified(&doc)
             .unwrap_or_else(|e| panic!("round {round}: {} {e}", e.code.as_str()));
+        assert_eq!(schema_of(&bytes), schema, "round {round}: the schema");
         let back = kentos_kcad::decode(&bytes).expect("reads back");
         assert_eq!(
             serde_json::to_string(&back).expect("serializes"),
@@ -554,8 +636,10 @@ fn random_drawings_cross_the_browsers_typed_boundary_unchanged() {
     // checked against the columns as they were sent; read back into columns again.
     let mut rng = Rng(20_260_927);
     for round in 0..600 {
-        let doc = drawing(&mut rng);
+        let mut doc = drawing(&mut rng);
+        let schema = with_schema(&mut doc, round % 3, &mut Rng(0x5eed_1000 + round));
         let want = kentos_kcad::encode(&doc).expect("writes");
+        assert_eq!(schema_of(&want), schema, "round {round}: the schema");
         let (head, cols) = kentos_kcad::split(doc).expect("splits");
         let (bytes, head_back) = kentos_kcad::encode_columns(&head, &cols, &mut kentos_kcad::Quiet)
             .unwrap_or_else(|e| panic!("round {round}: {} {e}", e.code.as_str()));

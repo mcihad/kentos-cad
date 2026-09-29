@@ -1,9 +1,9 @@
-//! Document schema 2 read from a payload (docs/specs/kcad-v2.md §6), straight
-//! into the contract (`DocumentSnapshotV2`): item by item, no intermediate
-//! tree, so memory follows the drawing, not what a file claims. Every map is
-//! checked for its keys (unknown ones are refused, required ones must be
-//! there) and every value for its type; the objects get the slots 1, 2, 3 …
-//! in file order. The objects themselves are read in `objects.rs`.
+//! Document schemas 2, 3 and 4 read from a payload (docs/specs/kcad-v2.md §6),
+//! straight into the contract (`DocumentSnapshotV2`): item by item, no
+//! intermediate tree, so memory follows the drawing, not what a file claims.
+//! Every map is checked for its keys (unknown ones are refused, required ones
+//! must be there) and every value for its type; the objects get the slots
+//! 1, 2, 3 … in file order. The objects themselves are read in `objects.rs`.
 
 mod objects;
 
@@ -14,11 +14,11 @@ use kentos_contracts::{
     ProjectSettings, ProjectStyles, Vec2, Workspace,
 };
 
-use crate::SCHEMA_WITH_LINE_WEIGHTS;
+use crate::SCHEMAS;
 use crate::cbor::{Any, Reader, Seg};
 use crate::error::{Code, KcadError};
 use crate::watch::Watch;
-use objects::objects;
+use objects::{Features, objects};
 
 /// The most items a list reserves before they are read.
 const PREALLOCATE: usize = 4096;
@@ -174,10 +174,12 @@ fn root(r: &mut Reader<'_>) -> Result<DocumentSnapshotV2, KcadError> {
         )
     };
     let version_error = |r: &Reader<'_>, v: &str| {
+        let known: Vec<String> = SCHEMAS.iter().map(u32::to_string).collect();
         r.fail(
             Code::SchemaVersion,
             &format!(
-                "belge şeması sürümü {v} bu uygulamada okunamıyor (desteklenen: {DOCUMENT_VERSION_2}, {SCHEMA_WITH_LINE_WEIGHTS}); KentOS'u güncelleyin"
+                "belge şeması sürümü {v} bu uygulamada okunamıyor (desteklenen: {}); KentOS'u güncelleyin",
+                known.join(", ")
             ),
         )
     };
@@ -193,9 +195,10 @@ fn root(r: &mut Reader<'_>) -> Result<DocumentSnapshotV2, KcadError> {
                 format_ok = true;
             }
             "version" => match r.any()? {
-                Any::Uint(v) if v == u64::from(DOCUMENT_VERSION_2) => schema = Some(DOCUMENT_VERSION_2),
-                Any::Uint(v) if v == u64::from(SCHEMA_WITH_LINE_WEIGHTS) => schema = Some(SCHEMA_WITH_LINE_WEIGHTS),
-                Any::Uint(v) => return Err(version_error(r, &v.to_string())),
+                Any::Uint(v) => match SCHEMAS.iter().find(|&&s| u64::from(s) == v) {
+                    Some(&known) => schema = Some(known),
+                    None => return Err(version_error(r, &v.to_string())),
+                },
                 _ => return Err(version_error(r, "(sayı değil)")),
             },
             "document" => {
@@ -220,7 +223,8 @@ fn root(r: &mut Reader<'_>) -> Result<DocumentSnapshotV2, KcadError> {
     required(r, document, "document")
 }
 
-/// The document; `schema` is its payload's (2, or 3 with objects' line weights).
+/// The document; `schema` is its payload's (2, 3 with objects' line weights,
+/// or 4 with vertex elevations too).
 fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError> {
     let mut name = None;
     let mut layers = None;
@@ -244,7 +248,7 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
                     r,
                     name.as_deref(),
                     layers.as_ref().map_or(0, Vec::len),
-                    schema >= SCHEMA_WITH_LINE_WEIGHTS,
+                    Features::of(schema),
                 )?)
             }
             "homeView" => home_view = Some(bounds(r)?),

@@ -19,7 +19,8 @@
 //!   object its layer (table index), flags, attribute count and the kind's
 //!   own counts;
 //! - `floats` (f64, bit for bit: −0 stays −0): per object its own line
-//!   weight when it has one, then the kind's numbers;
+//!   weight when it has one, then the kind's numbers; NaN only in an
+//!   elevation list, as a vertex without an elevation (below);
 //! - `text` (UTF-16 code units, as JavaScript holds its strings) and
 //!   `text_lengths` (code units of each text): first the layer table (layer
 //!   ids in the order objects first use them), then per object its colour,
@@ -30,8 +31,8 @@
 //! |---|---|---|---|
 //! | every object | layer, flags, attributes | line weight? | colour?, label?, symbol?, key and value per attribute |
 //! | point | | p, z? | |
-//! | line | | a, b | |
-//! | polyline, polygon | n; m if bulges; h if holes, then per hole: hole flags, k, j if bulges | pts (2n), bulges (m), per hole: pts (2k), bulges (j) | |
+//! | line | | a, b, za?, zb? | |
+//! | polyline, polygon | n; m if bulges; e if elevations; h if holes, then per hole: hole flags, k, j if bulges, d if elevations | pts (2n), bulges (m), zs (e), per hole: pts (2k), bulges (j), zs (d) | |
 //! | circle | | c, r | |
 //! | arc | | c, r, a0, a1 | |
 //! | ellipse | | c, major, ratio, t0, t1 | |
@@ -44,9 +45,21 @@
 //! A point is two floats, x then y. Flags: 1 colour, 2 label, 4 symbol, 8
 //! line weight (docs/adr/0139); a
 //! kind's optional fields from bit 8 up, in the order the table names them
-//! (point: z; polyline and polygon: bulges, holes; dimension: text, style,
-//! angle, c; hatch: holes). A hole's flags: 1 bulges. Dimension styles and
-//! hatch pattern types are numbered in the contract's order.
+//! (point: z; line: za, zb; polyline and polygon: bulges, holes, zs;
+//! dimension: text, style, angle, c; hatch: holes). A hole's flags: 1 bulges,
+//! 2 elevations. Dimension styles and hatch pattern types are numbered in the
+//! contract's order.
+//!
+//! Vertex elevations (docs/adr/0142): a line's ends are two optional floats.
+//! A path's or a hole's `zs` is a list, its length (`e`, `d`) and then one
+//! float per vertex; a vertex without an elevation is NaN, which an
+//! elevation never is (a file holds finite numbers only), so the two cannot
+//! meet: the reading maps NaN back to no elevation, and a NaN of any bit
+//! pattern is the same in a comparison. The length is the vertex count in a
+//! valid drawing; the columns carry it so that a list of another length
+//! reaches the encoder, which refuses it with its place, instead of shifting
+//! every number after it. A path's `zs` numbers follow its bulges and come
+//! before its holes', though its flag (bit 10) is the last of the three.
 
 use std::collections::{BTreeMap, HashMap};
 
@@ -82,6 +95,7 @@ const WEIGHT: u32 = 8;
 /// A kind's optional fields, in the order the module's table names them.
 const OPT: [u32; 4] = [1 << 8, 1 << 9, 1 << 10, 1 << 11];
 const HOLE_BULGES: u32 = 1;
+const HOLE_ELEVATIONS: u32 = 2;
 
 const DIMENSION_STYLES: [DimensionStyle; 5] = [
     DimensionStyle::Aligned,
@@ -187,6 +201,15 @@ impl Packer {
         self.out.floats.extend_from_slice(list);
     }
 
+    /// A list of elevations: its length, then the numbers; NaN stands for a
+    /// vertex without one.
+    fn elevations(&mut self, list: &[Option<f64>]) {
+        self.int(count(list.len()));
+        self.out
+            .floats
+            .extend(list.iter().map(|z| z.unwrap_or(f64::NAN)));
+    }
+
     fn text(&mut self, s: &str) {
         let start = self.out.text.len();
         self.out.text.extend(s.encode_utf16());
@@ -241,9 +264,21 @@ impl Packer {
                     self.float(*z);
                 }
             }
-            Entity::Line(LineEntity { base: _, a, b, .. }) => {
+            Entity::Line(LineEntity {
+                base: _,
+                a,
+                b,
+                za,
+                zb,
+            }) => {
                 self.point(a);
                 self.point(b);
+                for (bit, z) in [(OPT[0], za), (OPT[1], zb)] {
+                    if let Some(z) = z {
+                        flags |= bit;
+                        self.float(*z);
+                    }
+                }
             }
             Entity::Polyline(path) | Entity::Polygon(path) => {
                 let PathEntity {
@@ -251,21 +286,35 @@ impl Packer {
                     pts,
                     bulges,
                     holes,
-                    ..
+                    zs,
                 } = path;
                 self.points(pts);
                 if let Some(b) = bulges {
                     flags |= OPT[0];
                     self.numbers(b);
                 }
+                if let Some(z) = zs {
+                    flags |= OPT[2];
+                    self.elevations(z);
+                }
                 if let Some(holes) = holes {
                     flags |= OPT[1];
                     self.int(count(holes.len()));
-                    for RingGeometry { pts, bulges, .. } in holes {
-                        self.int(if bulges.is_some() { HOLE_BULGES } else { 0 });
+                    for RingGeometry { pts, bulges, zs } in holes {
+                        let mut hole = 0;
+                        if bulges.is_some() {
+                            hole |= HOLE_BULGES;
+                        }
+                        if zs.is_some() {
+                            hole |= HOLE_ELEVATIONS;
+                        }
+                        self.int(hole);
                         self.points(pts);
                         if let Some(b) = bulges {
                             self.numbers(b);
+                        }
+                        if let Some(z) = zs {
+                            self.elevations(z);
                         }
                     }
                 }
@@ -491,6 +540,22 @@ impl<'c> Cursor<'c> {
         Ok(out)
     }
 
+    /// A list of elevations (its length, then the numbers): NaN is a vertex without one.
+    fn elevations(&mut self) -> Result<Vec<Option<f64>>, KcadError> {
+        let n = self.usize()?;
+        let end = self
+            .float
+            .checked_add(n)
+            .filter(|&end| end <= self.cols.floats.len())
+            .ok_or_else(|| broken("kot listesi sayılardan uzun"))?;
+        let out = self.cols.floats[self.float..end]
+            .iter()
+            .map(|&z| (!z.is_nan()).then_some(z))
+            .collect();
+        self.float = end;
+        Ok(out)
+    }
+
     /// The next text; `where_` names it when it is not valid Unicode (a lone surrogate).
     fn text(&mut self, where_: impl FnOnce() -> String) -> Result<String, KcadError> {
         let units = *self
@@ -614,7 +679,8 @@ fn object(c: &mut Cursor<'_>, table: &[String], i: usize, k: u8) -> Result<Entit
 fn allowed(kind: u8) -> u32 {
     match kind {
         0 => OPT[0],
-        2 | 3 => OPT[0] | OPT[1],
+        1 => OPT[0] | OPT[1],
+        2 | 3 => OPT[0] | OPT[1] | OPT[2],
         11 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
         12 => OPT[0],
         _ => 0,
@@ -639,12 +705,13 @@ fn geometry(
             base,
             a: c.point()?,
             b: c.point()?,
-            za: None,
-            zb: None,
+            za: if has(0) { Some(c.float()?) } else { None },
+            zb: if has(1) { Some(c.float()?) } else { None },
         }),
         2 | 3 => {
             let pts = c.points()?;
             let bulges = if has(0) { Some(c.numbers()?) } else { None };
+            let zs = if has(2) { Some(c.elevations()?) } else { None };
             let holes = if has(1) {
                 let h = c.usize()?;
                 if h > c.cols.ints.len() {
@@ -653,7 +720,7 @@ fn geometry(
                 let mut rings = Vec::with_capacity(h);
                 for _ in 0..h {
                     let hole = c.int()?;
-                    if hole & !HOLE_BULGES != 0 {
+                    if hole & !(HOLE_BULGES | HOLE_ELEVATIONS) != 0 {
                         return Err(broken(&format!("deliğin bayrakları {hole:#x}")));
                     }
                     rings.push(RingGeometry {
@@ -663,7 +730,11 @@ fn geometry(
                         } else {
                             None
                         },
-                        zs: None,
+                        zs: if hole & HOLE_ELEVATIONS != 0 {
+                            Some(c.elevations()?)
+                        } else {
+                            None
+                        },
                     });
                 }
                 Some(rings)
@@ -675,7 +746,7 @@ fn geometry(
                 pts,
                 bulges,
                 holes,
-                zs: None,
+                zs,
             };
             if kind == 3 {
                 Entity::Polygon(path)
@@ -795,11 +866,17 @@ fn geometry(
 
 // ── Comparing ───────────────────────────────────────────────────────────
 
-/// Whether two slices of floats are the same bit for bit (−0 is not 0).
+/// Whether two slices of floats are the same bit for bit (−0 is not 0). Every
+/// NaN is the same as every other: the only NaN a set of columns may hold is
+/// an elevation list's vertex without one (see the module comment), and which
+/// bit pattern a page's engine gave it is no difference.
 /// Out of line: called once per object (see `Encoder::object`).
 #[inline(never)]
 fn same_bits(a: &[f64], b: &[f64]) -> bool {
-    a.len() == b.len() && a.iter().zip(b).all(|(x, y)| x.to_bits() == y.to_bits())
+    a.len() == b.len()
+        && a.iter()
+            .zip(b)
+            .all(|(x, y)| x.to_bits() == y.to_bits() || (x.is_nan() && y.is_nan()))
 }
 
 /// Where the objects `cols` hold differ from `entities` with `uids` (the
@@ -990,6 +1067,120 @@ mod tests {
         lone.text[0] = 0xd800;
         let e = unpack(&lone).map(|_| ()).unwrap_err();
         assert_eq!(e.code, Code::InvalidUtf8);
+    }
+
+    #[test]
+    fn elevations_are_laid_out_as_the_table_says() {
+        let line = Entity::Line(LineEntity {
+            base: base("0"),
+            a: Vec2 { x: 1.0, y: 2.0 },
+            b: Vec2 { x: 3.0, y: 4.0 },
+            za: None,
+            zb: Some(7.5),
+        });
+        let pts = vec![
+            Vec2 { x: 0.0, y: 0.0 },
+            Vec2 { x: 1.0, y: 1.0 },
+            Vec2 { x: 2.0, y: 0.0 },
+        ];
+        let polygon = Entity::Polygon(PathEntity {
+            base: base("0"),
+            pts: pts.clone(),
+            bulges: Some(vec![0.5]),
+            holes: Some(vec![
+                RingGeometry {
+                    pts: pts.clone(),
+                    bulges: None,
+                    zs: Some(vec![None, Some(3.0), Some(-0.0)]),
+                },
+                RingGeometry {
+                    pts,
+                    bulges: Some(vec![0.25]),
+                    zs: None,
+                },
+            ]),
+            zs: Some(vec![Some(10.0), None, Some(12.0)]),
+        });
+        let entities = vec![line, polygon];
+        let uids = vec![id(1), id(2)];
+        let cols = pack(entities.clone(), uids.clone());
+        // The layer table (1); the line: layer, flags (zb), attributes; the polygon: layer, flags
+        // (bulges, holes, elevations), attributes, n, m, e, h, then per hole its flags, k, j?, d?.
+        assert_eq!(
+            cols.ints,
+            [
+                1,
+                0,
+                OPT[1],
+                0,
+                0,
+                OPT[0] | OPT[1] | OPT[2],
+                0,
+                3,
+                1,
+                3,
+                2,
+                HOLE_ELEVATIONS,
+                3,
+                3,
+                HOLE_BULGES,
+                3,
+                1
+            ]
+        );
+        // A vertex without an elevation is NaN, and only there.
+        let nans: Vec<usize> = (0..cols.floats.len())
+            .filter(|&i| cols.floats[i].is_nan())
+            .collect();
+        assert_eq!(nans, [13, 21]);
+        assert_eq!(&cols.floats[..5], [1.0, 2.0, 3.0, 4.0, 7.5]);
+        assert_eq!(&cols.floats[11..13], [0.5, 10.0]);
+        assert_eq!(cols.floats[14], 12.0);
+        assert_eq!(cols.floats[22], 3.0);
+        assert_eq!(cols.floats[23].to_bits(), (-0.0f64).to_bits());
+
+        let (back, back_uids) = unpack(&cols).expect("unpacks");
+        assert_eq!(first_difference(&entities, &uids, &back, &back_uids), None);
+        assert_eq!(differs(&cols, &back, &back_uids), None);
+        let Entity::Polygon(p) = &back[1] else {
+            panic!("a polygon")
+        };
+        assert_eq!(p.zs, Some(vec![Some(10.0), None, Some(12.0)]));
+        let holes = p.holes.as_ref().expect("holes");
+        assert_eq!(holes[0].zs.as_ref().map(Vec::len), Some(3));
+        assert_eq!(holes[0].zs.as_ref().map(|z| z[0]), Some(None));
+        assert_eq!(holes[1].zs, None);
+        let Entity::Line(l) = &back[0] else {
+            panic!("a line")
+        };
+        assert_eq!((l.za, l.zb), (None, Some(7.5)));
+
+        // Every NaN is the same NaN: the page's engine may write another bit pattern for none.
+        let mut other = cols.clone();
+        other.floats[13] = f64::from_bits(0xfff8_0000_0000_0001);
+        assert_eq!(differs(&other, &back, &back_uids), None);
+        let (again, _) = unpack(&other).expect("unpacks");
+        assert_eq!(
+            first_difference(&back, &back_uids, &again, &back_uids),
+            None
+        );
+        // A number of an elevation is a difference all the same.
+        other.floats[14] = 12.5;
+        assert!(differs(&other, &back, &back_uids).is_some());
+
+        // Holes with flags no hole has, or lists running past the numbers, are refused.
+        let mut flags = cols.clone();
+        flags.ints[11] = 4;
+        assert_eq!(
+            unpack(&flags).map(|_| ()).unwrap_err().code,
+            Code::BadColumns
+        );
+        let mut long = cols;
+        long.ints[9] = 40;
+        assert_eq!(
+            unpack(&long).map(|_| ()).unwrap_err().code,
+            Code::BadColumns
+        );
     }
 
     #[test]

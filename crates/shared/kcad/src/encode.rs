@@ -1,5 +1,6 @@
-//! Document schema 2 written from the contract (docs/specs/kcad-v2.md §6) in
-//! KentOS CBOR profile 1. The writer keeps the rules the reader enforces, so it
+//! Document schemas 2, 3 and 4 written from the contract (docs/specs/kcad-v2.md
+//! §6) in KentOS CBOR profile 1: the oldest schema that holds what the drawing
+//! has (`schema_of`). The writer keeps the rules the reader enforces, so it
 //! never writes a file a reader refuses: finite floats, the length and depth
 //! limits, unique non-nil ids, no `null` renderer, no holes on a polyline;
 //! otherwise it stops with the place and the reason.
@@ -14,15 +15,15 @@ mod names;
 mod objects;
 
 use kentos_contracts::{
-    DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2, DocumentSnapshotV2, LabelStyle,
+    DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2, DocumentSnapshotV2, Entity, LabelStyle,
     LayerNode, LayerNodeType, LayerStyle, MigrationSource, ProjectSettings, Vec2,
 };
 use serde_json::Value;
 
-use crate::SCHEMA_WITH_LINE_WEIGHTS;
 use crate::cbor::{MAX_DEPTH, MAX_ITEMS, MAX_STRING, Seg, Writer, key_order, render};
 use crate::error::{Code, KcadError};
 use crate::watch::{Step, Watch, report};
+use crate::{SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_LINE_WEIGHTS};
 use names::{
     angle_unit, area_unit, drawing_font, label_ink, label_placement, line_type, point_symbol,
     workspace,
@@ -172,12 +173,7 @@ impl<'d> Encoder<'d> {
                 ),
             ));
         }
-        // Schema 3 only when an object has its own line weight: every other drawing stays schema 2, byte for byte.
-        let schema = if doc.entities.iter().any(|e| e.base().line_weight.is_some()) {
-            SCHEMA_WITH_LINE_WEIGHTS
-        } else {
-            DOCUMENT_VERSION_2
-        };
+        let schema = schema_of(&doc.entities);
         self.open(3, true)?;
         self.key("format");
         self.w.text(DOCUMENT_FORMAT);
@@ -488,6 +484,38 @@ impl<'d> Encoder<'d> {
     }
 }
 
+/// The oldest schema that holds the objects: 4 when one has a vertex
+/// elevation, 3 when one has its own line weight, else 2. A drawing without
+/// either stays as it always was, byte for byte.
+fn schema_of(entities: &[Entity]) -> u32 {
+    let mut schema = DOCUMENT_VERSION_2;
+    for e in entities {
+        if has_elevation(e) {
+            // The newest: nothing later in the drawing can change it.
+            return SCHEMA_WITH_ELEVATIONS;
+        }
+        if e.base().line_weight.is_some() {
+            schema = SCHEMA_WITH_LINE_WEIGHTS;
+        }
+    }
+    schema
+}
+
+/// Whether an object has a vertex elevation (a line's end, a path's or a
+/// hole's `zs`, even one whose every vertex is without): schema 4's fields.
+fn has_elevation(e: &Entity) -> bool {
+    match e {
+        Entity::Line(l) => l.za.is_some() || l.zb.is_some(),
+        Entity::Polyline(p) | Entity::Polygon(p) => {
+            p.zs.is_some()
+                || p.holes
+                    .as_ref()
+                    .is_some_and(|holes| holes.iter().any(|h| h.zs.is_some()))
+        }
+        _ => false,
+    }
+}
+
 /// 32 bytes from 64 lowercase hexadecimal digits.
 fn parse_hex32(text: &str) -> Option<[u8; 32]> {
     let raw = text.as_bytes();
@@ -513,7 +541,7 @@ mod tests {
     #[test]
     fn the_fixed_keys_are_in_encoded_order() {
         // The maps whose keys the writer writes by hand, in the order it writes them.
-        let maps: [&[&str]; 9] = [
+        let maps: [&[&str]; 10] = [
             &["format", "version", "document"],
             &[
                 "name",
@@ -565,6 +593,8 @@ mod tests {
             ],
             &["items", "categories"],
             &["type", "angle", "spacing"],
+            // A polygon's hole (docs/adr/0142).
+            &["zs", "pts", "bulges"],
         ];
         for keys in maps {
             assert!(

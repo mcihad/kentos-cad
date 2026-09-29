@@ -445,6 +445,16 @@ impl<'a> Reader<'a> {
         }
     }
 
+    /// A float64, or `null`: a vertex without an elevation (§6.6). Any other
+    /// item is of the wrong type; NaN and infinities are refused as everywhere.
+    pub fn float_or_null(&mut self) -> Result<Option<f64>, KcadError> {
+        match self.checked()? {
+            (_, Some(x)) => Ok(Some(x)),
+            (h, None) if h.major == SIMPLE && h.info == 22 => Ok(None),
+            (h, None) => Err(self.wrong(h, "float64 ya da null")),
+        }
+    }
+
     /// An integer from 0 to `max`; a negative one is out of range, not of another type (§6.3).
     pub fn uint(&mut self, max: u64) -> Result<u64, KcadError> {
         let (h, _) = self.checked()?;

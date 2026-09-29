@@ -124,7 +124,7 @@ describe.skipIf(!formatsBuilt)('KCAD v2 in the browser (formats WASM module)', (
         valid++;
       }
     }
-    expect(valid).toBe(7);
+    expect(valid).toBe(8);
   });
 
   it('packs every file as the Rust codec does: the page and the module lay the columns out the same', async () => {
@@ -138,26 +138,77 @@ describe.skipIf(!formatsBuilt)('KCAD v2 in the browser (formats WASM module)', (
 
   it('writes the reference files byte for byte from their drawings', async () => {
     const m = await formatsModule();
+    // Schema 2, 3 and 4 alike: a drawing without elevations keeps its bytes (and its schema), one with them is schema 4.
     for (const [content, file] of [
       ['minimal.json', 'minimal.kcad'],
       ['migrated.json', 'migrated.kcad'],
+      ['line-weights.json', 'line-weights.kcad'],
+      ['elevations.json', 'elevations.kcad'],
     ]) {
       expect(encodeWith(m, pack(drawing(content))), file).toEqual(read(file));
     }
   });
 
-  it('keeps −0, the extremes, every kind and every optional field through a write and a read', async () => {
+  it('writes vertex elevations from the page and reads them back: null stays null, −0 stays −0, in the schema they need', async () => {
     const m = await formatsModule();
-    // drawing.json's opaque parts hold whole numbers written as floats (2.0), which JavaScript cannot
-    // tell from integers: the browser writes them as integers, so the bytes differ from drawing.kcad
-    // there (ADR 0025) while every value reads back the same.
-    const all = drawing('drawing.json');
-    const back = unpackSnapshot(decodeWith(m, encodeWith(m, pack(all))));
+    const all = drawing('elevations.json');
+    const bytes = encodeWith(m, pack(all));
+    // The schema is the byte after the payload's `version` key (docs/specs/kcad-v2.md §6.1).
+    const schema = (b: Uint8Array) => {
+      const key = [0x67, ...new TextEncoder().encode('version')];
+      const at = b.findIndex((_, i) => key.every((k, j) => b[i + j] === k));
+      return b[at + key.length];
+    };
+    expect(schema(bytes)).toBe(4);
+    const back = unpackSnapshot(decodeWith(m, bytes));
     expect(difference(back, all)).toBeNull();
-    const text = back.entities.find((e) => e.kind === 'text');
-    expect(text?.kind === 'text' && Object.is(text.rotation, -0)).toBe(true);
-    const extreme = back.entities[13];
-    expect(extreme.kind === 'polyline' && extreme.pts[0].x === 5e-324 && extreme.pts[1].x === 1.7976931348623157e308).toBe(true);
+    const [, , , path, , polygon] = back.entities;
+    expect(path.kind === 'polyline' && path.zs?.[1] === null && Object.is(path.zs[3], -0)).toBe(true);
+    expect(polygon.kind === 'polygon' && polygon.holes?.[0].zs?.[0] === null && polygon.holes[1].zs === undefined).toBe(true);
+    // Without any elevation the same drawing is schema 3 (a line has its own weight) and then 2, as before this step.
+    const bare = structuredClone(all);
+    for (const e of bare.entities) {
+      if (e.kind === 'line') {
+        delete e.za;
+        delete e.zb;
+      }
+      if (e.kind === 'polyline' || e.kind === 'polygon') {
+        delete e.zs;
+        if (e.kind === 'polygon') for (const h of e.holes ?? []) delete h.zs;
+      }
+    }
+    expect(schema(encodeWith(m, pack(bare)))).toBe(3);
+    for (const e of bare.entities) delete e.lineWeight;
+    expect(schema(encodeWith(m, pack(bare)))).toBe(2);
+  });
+
+  it('refuses an elevation list of another length: the page before the module, and the module with its place', async () => {
+    const m = await formatsModule();
+    const d = drawing('elevations.json');
+    const path = d.entities.find((e) => e.kind === 'polyline' && e.zs);
+    if (path?.kind !== 'polyline' || !path.zs) throw new Error('a polyline with elevations');
+    path.zs.pop();
+    expect(() => pack(d)).toThrow(/^Çizim KCAD 2 olarak yazılamıyor: entities\/3\/zs: 3 kot var ama 4 köşe var/);
+
+    // Columns whose list was cut after packing (a stale page, a bug): they hold together, and the file's rule refuses them.
+    const one = drawing('minimal.json');
+    one.entities = [{ kind: 'polyline', id: 1, layerId: '0', attrs: {}, pts: [{ x: 0, y: 0 }, { x: 1, y: 1 }, { x: 2, y: 0 }], zs: [1, 2, 3] }];
+    one.uids = [one.uids[0]];
+    const packed = pack(one);
+    const c = packed.columns;
+    // The layer table (1), then the object: layer, flags (elevations), attributes, n, e.
+    expect([...c.ints]).toEqual([1, 0, 1 << 10, 0, 3, 3]);
+    const ints = c.ints.slice();
+    ints[5] = 2;
+    let error: unknown = null;
+    try {
+      encodeWith(m, { ...packed, columns: { ...c, ints, floats: c.floats.slice(0, c.floats.length - 1) } });
+    } catch (e) {
+      error = e;
+    }
+    expect(error).toBeInstanceOf(KcadError);
+    expect((error as KcadError).code).toBe('bad_value');
+    expect((error as KcadError).message).toMatch(/entities\/0\/polyline\/zs: 2 kot var ama 3 köşe var/);
   });
 
   it('refuses a drawing the file cannot hold, with the reason', async () => {

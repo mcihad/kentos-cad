@@ -44,6 +44,27 @@ function everyKind(): PageEntity[] {
     { ...base(), kind: 'dimension', a: P(0, 0), b: P(10, 0), offset: 2, height: 1.5, text: '10,00', style: 'linear', angle: 90, c: P(5, 5) },
     { ...base(), kind: 'dimension', a: P(0, 0), b: P(10, 0), offset: 2, height: 1.5 },
     { ...base(), kind: 'hatch', ring: [P(0, 0), P(5, 0), P(5, 5)], holes: [[P(1, 1), P(2, 1), P(2, 2)]], pattern: { type: 'cross', angle: 45, spacing: 1 } },
+    ...elevated(),
+  ] as PageEntity[];
+}
+
+/** Vertex elevations (docs/adr/0142): every place they may be, −0 and null (a vertex without one, not 0) among them. */
+function elevated(): PageEntity[] {
+  return [
+    { ...base(), kind: 'line', a: P(1, 2), b: P(3, 4), za: -0, zb: -25.125, lineWeight: 0.5 },
+    { ...base(), kind: 'line', a: P(1, 2), b: P(3, 4), zb: 1e-300 },
+    { ...base(), kind: 'polyline', pts: [P(0, 0), P(1, 1), P(2, 0)], zs: [101.5, null, -0] },
+    { ...base(), kind: 'polyline', pts: [P(0, 0), P(1, 1), P(2, 0)], zs: [null, null, null] },
+    {
+      ...base(),
+      kind: 'polygon',
+      pts: [P(0, 0), P(10, 0), P(10, 10), P(0, 10)],
+      bulges: [0, 0.25],
+      zs: [50, 50.5, null, 5e-324],
+      holes: [{ pts: [P(1, 1), P(2, 1), P(2, 2)], bulges: [0.1], zs: [null, 3, 1.7976931348623157e308] }, { pts: [P(3, 3), P(4, 3), P(4, 4)] }],
+    },
+    // Only a hole has them.
+    { ...base(), kind: 'polygon', pts: [P(0, 0), P(10, 0), P(10, 10)], holes: [{ pts: [P(1, 1), P(2, 1), P(2, 2)], zs: [1, 2, 3] }] },
   ] as PageEntity[];
 }
 
@@ -71,6 +92,49 @@ describe('the page packs a drawing into typed columns', () => {
     const r = new ColumnsReader(drawing.columns);
     expect(r.count).toBe(list.length);
     expect(KINDS[drawing.columns.kinds[1]]).toBe('line');
+  });
+
+  it('carries vertex elevations, a vertex without one as NaN and never as 0, −0 kept', () => {
+    const list = elevated();
+    const { drawing, dropped } = packDrawing(head, list);
+    expect(dropped).toEqual({});
+    const back = unpackSnapshot(drawing);
+    const want: DocumentSnapshotV2 = { ...head, entities: list.map(({ uid: _u, ...e }) => e as DocumentSnapshotV2['entities'][number]), uids: list.map((e) => e.uid!) };
+    // `difference` compares every number with Object.is: null is not 0, −0 is not 0.
+    expect(difference(back, want)).toBeNull();
+    const [line, half, path, none, holed, hole] = back.entities;
+    expect(line.kind === 'line' && Object.is(line.za, -0) && line.zb === -25.125 && line.lineWeight === 0.5).toBe(true);
+    expect(half.kind === 'line' && half.za === undefined && half.zb === 1e-300 && !('za' in half)).toBe(true);
+    expect(path.kind === 'polyline' && path.zs?.[0] === 101.5 && path.zs[1] === null && Object.is(path.zs[2], -0)).toBe(true);
+    expect(none.kind === 'polyline' && none.zs).toEqual([null, null, null]);
+    if (holed.kind !== 'polygon' || hole.kind !== 'polygon') throw new Error('polygons');
+    expect(holed.zs).toEqual([50, 50.5, null, 5e-324]);
+    expect(holed.holes?.[0].zs).toEqual([null, 3, 1.7976931348623157e308]);
+    expect(holed.holes?.[1].zs).toBeUndefined();
+    expect(hole.zs).toBeUndefined();
+    expect(hole.holes?.[0].zs).toEqual([1, 2, 3]);
+
+    // The columns: a list is its length and its numbers; NaN only where a vertex has none.
+    const c = drawing.columns;
+    // One of the path's list, the three of the all-null list, one each of the polygon's list and its hole's.
+    expect([...c.floats].filter(Number.isNaN)).toHaveLength(1 + 3 + 1 + 1);
+    const r = new ColumnsReader(c);
+    expect(r.count).toBe(list.length);
+  });
+
+  it('counts elevations where the contract has none instead of writing them', () => {
+    const list = everyKind();
+    (list[2] as unknown as Record<string, unknown>).za = 5; // a polyline has no ends
+    (list[13] as unknown as Record<string, unknown>).zs = [1, 2, 3]; // a hatch has no vertex elevations
+    (list[0] as unknown as Record<string, unknown>).zs = [1]; // nor a point
+    const { drawing, dropped } = packDrawing(head, list);
+    expect(dropped).toEqual({ 'polyline.za': 1, 'hatch.zs': 1, 'point.zs': 1 });
+    const back = unpackSnapshot(drawing);
+    expect('za' in back.entities[2] || 'zs' in back.entities[13] || 'zs' in back.entities[0]).toBe(false);
+    // A hole's own unknown field is still dropped, its elevations are not.
+    const holed = elevated()[4] as unknown as { holes: Record<string, unknown>[] };
+    holed.holes[0].note = 'bilinmeyen';
+    expect(packDrawing(head, [holed as unknown as PageEntity]).dropped).toEqual({ 'polygon.holes.note': 1 });
   });
 
   it('orders text as UTF-8 bytes do, beyond U+FFFF too', () => {
@@ -116,6 +180,36 @@ describe('the page packs a drawing into typed columns', () => {
     expect(packs((l) => ((l[0] as { kind: string }).kind = 'blok'))).toMatch(/^unknown_kind: /);
   });
 
+  it('stops at an elevation the file cannot hold, saying where', () => {
+    const packs = (change: (list: PageEntity[]) => void) => {
+      const list = everyKind();
+      change(list);
+      try {
+        packDrawing(head, list);
+      } catch (e) {
+        return `${(e as KcadError).code}: ${(e as Error).message}`;
+      }
+      return null;
+    };
+    const at = (kind: string) => everyKind().findIndex((e) => e.kind === kind && ('zs' in e || 'za' in e || 'zb' in e));
+    const line = at('line');
+    const path = at('polyline');
+    const polygon = at('polygon');
+    // One elevation per vertex, in the path and in its hole.
+    expect(packs((l) => (l[path] as unknown as { zs: unknown[] }).zs.pop())).toMatch(new RegExp(`^bad_value: .*entities/${path}/zs: 2 kot var ama 3 köşe var`));
+    expect(packs((l) => (l[polygon] as unknown as { zs: unknown[] }).zs.push(1))).toMatch(new RegExp(`^bad_value: .*entities/${polygon}/zs: 5 kot var ama 4 köşe var`));
+    expect(packs((l) => (l[polygon] as unknown as { holes: { zs: unknown[] }[] }).holes[0].zs.pop())).toMatch(new RegExp(`^bad_value: .*entities/${polygon}/holes/0/zs: 2 kot var ama 3 köşe var`));
+    // A finite number or null: not NaN, an infinity, text, or a missing entry.
+    expect(packs((l) => ((l[path] as unknown as { zs: unknown[] }).zs[1] = Number.NaN))).toMatch(new RegExp(`^non_finite: .*entities/${path}/zs/1: sayı NaN ya da sonsuz`));
+    expect(packs((l) => ((l[polygon] as unknown as { holes: { zs: unknown[] }[] }).holes[0].zs[2] = Infinity))).toMatch(new RegExp(`^non_finite: .*entities/${polygon}/holes/0/zs/2:`));
+    expect(packs((l) => ((l[path] as unknown as { zs: unknown[] }).zs[0] = '101,5'))).toMatch(new RegExp(`^wrong_type: .*entities/${path}/zs/0: kot sayı ya da null olmalı`));
+    expect(packs((l) => ((l[path] as unknown as { zs: unknown[] }).zs[0] = undefined))).toMatch(/^wrong_type: /);
+    expect(packs((l) => ((l[path] as unknown as { zs: unknown }).zs = 'kotlar'))).toMatch(new RegExp(`^wrong_type: .*entities/${path}/zs: kot listesi olmalı`));
+    // A line's end is a number, not null: an end without an elevation has none.
+    expect(packs((l) => ((l[line] as unknown as { za: unknown }).za = Number.NaN))).toMatch(new RegExp(`^non_finite: .*entities/${line}/za: sayı NaN`));
+    expect(packs((l) => ((l[line] as unknown as { zb: unknown }).zb = null))).toMatch(new RegExp(`^wrong_type: .*entities/${line}/zb: sayı olmalı`));
+  });
+
   it('gives its buffers to the worker once each', () => {
     const { drawing } = packDrawing(head, everyKind());
     const buffers = transferables(drawing.columns);
@@ -129,6 +223,9 @@ describe('the page packs a drawing into typed columns', () => {
     expect(() => unpackSnapshot(short)).toThrow(KcadError);
     const extra = { ...drawing, columns: { ...drawing.columns, ints: new Uint32Array([...drawing.columns.ints, 0]) } };
     expect(() => unpackSnapshot(extra)).toThrow(/fazladan/);
+    // An elevation list running past the numbers: the drawing's last object is one with elevations, so cut the last numbers.
+    const cut = { ...drawing, columns: { ...drawing.columns, floats: drawing.columns.floats.subarray(0, drawing.columns.floats.length - 2) } };
+    expect(() => unpackSnapshot(cut)).toThrow(/sayılardan uzun/);
   });
 
   it('packs a large drawing without a string or an object per vertex', () => {

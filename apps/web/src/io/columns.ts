@@ -52,8 +52,15 @@ const LABEL = 2;
 const SYMBOL = 4;
 /** The object's own line weight: its first float (docs/adr/0139). */
 const WEIGHT = 8;
+/**
+ * A kind's optional fields from bit 8 up, in the order the Rust module's table
+ * names them (point: z; line: za, zb; polyline and polygon: bulges, holes, zs;
+ * dimension: text, style, angle, c; hatch: holes).
+ */
 const OPT = [1 << 8, 1 << 9, 1 << 10, 1 << 11] as const;
+/** A hole's flags: its bulges, its elevations (docs/adr/0142). */
 const HOLE_BULGES = 1;
+const HOLE_ELEVATIONS = 2;
 
 /**
  * The fields each kind may have, besides the ones every object has: what the
@@ -63,9 +70,9 @@ const COMMON = ['kind', 'id', 'uid', 'layerId', 'color', 'attrs', 'label', 'symb
 const FIELDS: Record<string, ReadonlySet<string>> = Object.fromEntries(
   Object.entries({
     point: ['p', 'z'],
-    line: ['a', 'b'],
-    polyline: ['pts', 'bulges'],
-    polygon: ['pts', 'bulges', 'holes'],
+    line: ['a', 'b', 'za', 'zb'],
+    polyline: ['pts', 'bulges', 'zs'],
+    polygon: ['pts', 'bulges', 'holes', 'zs'],
     circle: ['c', 'r'],
     arc: ['c', 'r', 'a0', 'a1'],
     ellipse: ['c', 'major', 'ratio', 't0', 't1'],
@@ -212,6 +219,26 @@ class Packer {
     }
   }
 
+  /**
+   * A list of elevations, one per vertex (`vertices`, docs/adr/0142): its
+   * length, then the numbers, NaN for a vertex without one (`null`; a real
+   * elevation is always finite, so the two cannot meet). The file's rules are
+   * checked here, so the page says where: as many as the vertices, each a
+   * finite number or null.
+   */
+  elevations(list: unknown, field: string, vertices: number): void {
+    if (!Array.isArray(list)) throw unwritable('wrong_type', `${this.where}/${field}`, 'kot listesi olmalı');
+    if (list.length !== vertices) throw unwritable('bad_value', `${this.where}/${field}`, `${list.length} kot var ama ${vertices} köşe var; her köşenin bir kotu olmalı (kotsuz köşe için null)`);
+    this.int(list.length);
+    this.floats.room(list.length);
+    for (let i = 0; i < list.length; i++) {
+      const z: unknown = list[i];
+      if (z === null) this.floats.push(Number.NaN);
+      else if (typeof z === 'number' && Number.isFinite(z)) this.floats.push(z);
+      else throw unwritable(typeof z === 'number' ? 'non_finite' : 'wrong_type', `${this.where}/${field}/${i}`, typeof z === 'number' ? Packer.badFloat(z)! : 'kot sayı ya da null olmalı');
+    }
+  }
+
   text(s: unknown, field: string): void {
     if (typeof s !== 'string') throw unwritable('wrong_type', `${this.where}/${field}`, 'metin olmalı');
     const t = this.units;
@@ -282,11 +309,14 @@ class Packer {
       case 'line':
         this.point(e.a, 'a', kind);
         this.point(e.b, 'b', kind);
+        if (e.za !== undefined) (flags |= OPT[0]), this.float(e.za, 'za');
+        if (e.zb !== undefined) (flags |= OPT[1]), this.float(e.zb, 'zb');
         break;
       case 'polyline':
       case 'polygon': {
         this.points(e.pts, 'pts', kind);
         if (e.bulges !== undefined) (flags |= OPT[0]), this.numbers(e.bulges, 'bulges');
+        if (e.zs !== undefined) (flags |= OPT[2]), this.elevations(e.zs, 'zs', e.pts.length);
         // A polyline's holes are not the contract's: counted as dropped above, never written.
         const holes = e.kind === 'polygon' ? e.holes : undefined;
         if (holes !== undefined) {
@@ -294,10 +324,11 @@ class Packer {
           flags |= OPT[1];
           this.int(holes.length);
           holes.forEach((h, i) => {
-            for (const key in h) if (key !== 'pts' && key !== 'bulges') this.drop(`${kind}.holes.${key}`);
-            this.int(h.bulges !== undefined ? HOLE_BULGES : 0);
+            for (const key in h) if (key !== 'pts' && key !== 'bulges' && key !== 'zs') this.drop(`${kind}.holes.${key}`);
+            this.int((h.bulges !== undefined ? HOLE_BULGES : 0) | (h.zs !== undefined ? HOLE_ELEVATIONS : 0));
             this.points(h.pts, 'holes.pts', kind);
             if (h.bulges !== undefined) this.numbers(h.bulges, `holes/${i}/bulges`);
+            if (h.zs !== undefined) this.elevations(h.zs, `holes/${i}/zs`, h.pts.length);
           });
         }
         break;
@@ -469,6 +500,19 @@ export class ColumnsReader {
     return out;
   }
 
+  /** A list of elevations (its length, then the numbers): NaN is a vertex without one, null. */
+  private elevs(): (number | null)[] {
+    const n = this.readInt();
+    if (this.float + n > this.c.floats.length) throw broken('kot listesi sayılardan uzun');
+    const out = new Array<number | null>(n);
+    for (let i = 0; i < n; i++) {
+      const z = this.c.floats[this.float + i];
+      out[i] = Number.isNaN(z) ? null : z;
+    }
+    this.float += n;
+    return out;
+  }
+
   private readText(): string {
     if (this.texts >= this.c.textLengths.length) throw broken('metinler erken bitti');
     const n = this.c.textLengths[this.texts++];
@@ -519,11 +563,14 @@ export class ColumnsReader {
       case 'line':
         e.a = this.pt();
         e.b = this.pt();
+        if (has(0)) e.za = this.num();
+        if (has(1)) e.zb = this.num();
         break;
       case 'polyline':
       case 'polygon':
         e.pts = this.pts();
         if (has(0)) e.bulges = this.nums();
+        if (has(2)) e.zs = this.elevs();
         if (has(1)) {
           const h = this.readInt();
           const holes = [];
@@ -531,6 +578,7 @@ export class ColumnsReader {
             const hf = this.readInt();
             const ring: Record<string, unknown> = { pts: this.pts() };
             if (hf & HOLE_BULGES) ring.bulges = this.nums();
+            if (hf & HOLE_ELEVATIONS) ring.zs = this.elevs();
             holes.push(ring);
           }
           e.holes = holes;

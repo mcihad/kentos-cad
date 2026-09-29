@@ -9,9 +9,11 @@
 //!   binary64 floats only (NaN and infinities refused, −0 kept), text keys in
 //!   RFC 8949 §4.2.1 order without duplicates, no tags; depth, length and size
 //!   limits. Written here: no CBOR crate (owner's decision, 2026-09-26).
-//! - **Document schema 2** (`encode`, `decode`): the contract
+//! - **Document schemas 2, 3 and 4** (`encode`, `decode`): the contract
 //!   `DocumentSnapshotV2`, every object with its 16-byte persistent id
-//!   (docs/adr/0014); the open document's slots never enter the file.
+//!   (docs/adr/0014); the open document's slots never enter the file. Schema 3
+//!   adds an object's own line weight, schema 4 vertex elevations; a writer
+//!   writes the oldest schema that holds what the drawing has.
 //!
 //! One implementation for every platform (CLAUDE.md §14): the desktop app and
 //! the server call it natively, the browser through the formats WASM module
@@ -56,15 +58,29 @@ pub use kentos_contracts as contracts;
 pub use watch::{Quiet, Step, Watch};
 
 /// The file extension (with the dot).
+pub const EXTENSION: &str = ".kcad";
+/// The media type: no registered KCAD type exists, so none is claimed (TODOS.md FILE-13).
+pub const MIME: &str = "application/octet-stream";
+
 /// Document schema 3 (docs/specs/kcad-v2.md §6.1): schema 2 and an object's
 /// own line weight, `lineWeight` (docs/adr/0139). A writer writes it only
 /// when an object has one: a drawing without one stays schema 2, byte for
 /// byte, and a reader of schema 2 still opens it.
 pub const SCHEMA_WITH_LINE_WEIGHTS: u32 = 3;
 
-pub const EXTENSION: &str = ".kcad";
-/// The media type: no registered KCAD type exists, so none is claimed (TODOS.md FILE-13).
-pub const MIME: &str = "application/octet-stream";
+/// Document schema 4 (docs/specs/kcad-v2.md §6.1): schema 3 and vertex
+/// elevations, `za` and `zb` of a line, `zs` of a polyline, a polygon and a
+/// polygon's hole (docs/adr/0142). A writer writes it only when an object has
+/// one: a drawing without one stays schema 3 or 2, byte for byte, and a reader
+/// of those still opens it.
+pub const SCHEMA_WITH_ELEVATIONS: u32 = 4;
+
+/// The document schemas this codec reads, oldest first.
+pub const SCHEMAS: [u32; 3] = [
+    kentos_contracts::DOCUMENT_VERSION_2,
+    SCHEMA_WITH_LINE_WEIGHTS,
+    SCHEMA_WITH_ELEVATIONS,
+];
 
 /// The file a drawing is saved as.
 pub fn encode(doc: &DocumentSnapshotV2) -> Result<Vec<u8>, KcadError> {

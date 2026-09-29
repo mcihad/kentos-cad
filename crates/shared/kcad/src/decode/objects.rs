@@ -1,8 +1,9 @@
-//! The objects of document schemas 2 and 3 read from a payload
+//! The objects of document schemas 2, 3 and 4 read from a payload
 //! (docs/specs/kcad-v2.md §6.6): each a one-key map, its kind and then its
 //! fields, read into the contract's `Entity` with the persistent id the file
 //! gives it; the ids are unique in a file. Schema 3 adds an object's own line
-//! weight (`lineWeight`, docs/adr/0139); in schema 2 it is an unknown field.
+//! weight (`lineWeight`, docs/adr/0139), schema 4 the vertex elevations (`za`,
+//! `zb`, `zs`, docs/adr/0142); in an older schema they are unknown fields.
 
 use std::collections::{BTreeMap, HashSet};
 
@@ -16,6 +17,7 @@ use super::{PREALLOCATE, floats, id16, list, map, named, point, points, required
 use crate::cbor::{Reader, Seg};
 use crate::error::{Code, KcadError};
 use crate::watch::{EVERY, Step};
+use crate::{SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_LINE_WEIGHTS};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Kind {
@@ -50,31 +52,52 @@ const KINDS: &[(&str, Kind)] = &[
     ("hatch", Kind::Hatch),
 ];
 
+/// What a payload's schema lets an object hold beyond schema 2's fields.
+#[derive(Clone, Copy)]
+pub(super) struct Features {
+    /// Schema 3 and up: an object's own line weight (`lineWeight`).
+    weights: bool,
+    /// Schema 4: the vertex elevations (`za`, `zb`, `zs`).
+    elevations: bool,
+}
+
+impl Features {
+    pub(super) fn of(schema: u32) -> Self {
+        Self {
+            weights: schema >= SCHEMA_WITH_LINE_WEIGHTS,
+            elevations: schema >= SCHEMA_WITH_ELEVATIONS,
+        }
+    }
+}
+
 /// Whether a kind's map may hold `key` (the fields every kind has, then its
-/// own); `weights`: the payload is schema 3, where an object may have its own
-/// line weight.
-fn allowed(kind: Kind, key: &str, weights: bool) -> bool {
+/// own, then what the payload's schema adds).
+fn allowed(kind: Kind, key: &str, has: Features) -> bool {
     matches!(
         key,
         "uid" | "attrs" | "color" | "label" | "symbol" | "layerId"
-    ) || (weights && key == "lineWeight")
+    ) || (has.weights && key == "lineWeight")
         || match kind {
-        Kind::Point => matches!(key, "p" | "z"),
-        Kind::Line => matches!(key, "a" | "b"),
-        Kind::Polyline => matches!(key, "pts" | "bulges"),
-        Kind::Polygon => matches!(key, "pts" | "bulges" | "holes"),
-        Kind::Circle => matches!(key, "c" | "r"),
-        Kind::Arc => matches!(key, "c" | "r" | "a0" | "a1"),
-        Kind::Ellipse => matches!(key, "c" | "major" | "ratio" | "t0" | "t1"),
-        Kind::Spline => matches!(key, "pts" | "closed"),
-        Kind::Xline | Kind::Ray => matches!(key, "p" | "dir"),
-        Kind::Text => matches!(key, "p" | "text" | "height" | "rotation"),
-        Kind::Dimension => matches!(
-            key,
-            "a" | "b" | "c" | "text" | "angle" | "style" | "height" | "offset"
-        ),
-        Kind::Hatch => matches!(key, "ring" | "holes" | "pattern"),
-    }
+            Kind::Point => matches!(key, "p" | "z"),
+            Kind::Line => {
+                matches!(key, "a" | "b") || (has.elevations && matches!(key, "za" | "zb"))
+            }
+            Kind::Polyline => matches!(key, "pts" | "bulges") || (has.elevations && key == "zs"),
+            Kind::Polygon => {
+                matches!(key, "pts" | "bulges" | "holes") || (has.elevations && key == "zs")
+            }
+            Kind::Circle => matches!(key, "c" | "r"),
+            Kind::Arc => matches!(key, "c" | "r" | "a0" | "a1"),
+            Kind::Ellipse => matches!(key, "c" | "major" | "ratio" | "t0" | "t1"),
+            Kind::Spline => matches!(key, "pts" | "closed"),
+            Kind::Xline | Kind::Ray => matches!(key, "p" | "dir"),
+            Kind::Text => matches!(key, "p" | "text" | "height" | "rotation"),
+            Kind::Dimension => matches!(
+                key,
+                "a" | "b" | "c" | "text" | "angle" | "style" | "height" | "offset"
+            ),
+            Kind::Hatch => matches!(key, "ring" | "holes" | "pattern"),
+        }
 }
 
 /// Every field an object may have; each kind takes its own.
@@ -94,6 +117,8 @@ struct Fields {
     major: Option<Vec2>,
     dir: Option<Vec2>,
     z: Option<f64>,
+    za: Option<f64>,
+    zb: Option<f64>,
     r: Option<f64>,
     a0: Option<f64>,
     a1: Option<f64>,
@@ -107,6 +132,9 @@ struct Fields {
     pts: Option<Vec<Vec2>>,
     ring: Option<Vec<Vec2>>,
     bulges: Option<Vec<f64>>,
+    /// A path's elevations, and where in the payload they start (for a length error).
+    zs: Option<Vec<Option<f64>>>,
+    zs_at: usize,
     rings: Option<Vec<RingGeometry>>,
     loops: Option<Vec<Vec<Vec2>>>,
     closed: Option<bool>,
@@ -122,7 +150,7 @@ pub(super) fn objects(
     r: &mut Reader<'_>,
     name: Option<&str>,
     layers: usize,
-    weights: bool,
+    has: Features,
 ) -> Result<(Vec<Entity>, Vec<EntityId>), KcadError> {
     let n = r.array()?;
     r.report(Step::Project {
@@ -139,7 +167,7 @@ pub(super) fn objects(
             r.report(Step::Reading { done: i, total: n })?;
         }
         r.push(Seg::Index(i));
-        let (entity, uid) = object(r, i, weights)?;
+        let (entity, uid) = object(r, i, has)?;
         if !seen.insert(uid) {
             r.push(Seg::Name("uid"));
             let e = r.fail(
@@ -163,7 +191,11 @@ pub(super) fn objects(
 // work of each object must be a function called once per object, not inlined into the
 // one loop that runs once for the whole drawing (docs/adr/0030).
 #[inline(never)]
-fn object(r: &mut Reader<'_>, index: usize, weights: bool) -> Result<(Entity, EntityId), KcadError> {
+fn object(
+    r: &mut Reader<'_>,
+    index: usize,
+    has: Features,
+) -> Result<(Entity, EntityId), KcadError> {
     let (n, at) = r.map()?;
     if n != 1 {
         return Err(r.fail_at(
@@ -185,7 +217,7 @@ fn object(r: &mut Reader<'_>, index: usize, weights: bool) -> Result<(Entity, En
     };
     let mut f = Fields::default();
     map(r, |r, key| {
-        if !allowed(kind, key, weights) {
+        if !allowed(kind, key, has) {
             return Err(unknown(r));
         }
         match key {
@@ -219,6 +251,8 @@ fn object(r: &mut Reader<'_>, index: usize, weights: bool) -> Result<(Entity, En
             "major" => f.major = Some(point(r)?),
             "dir" => f.dir = Some(point(r)?),
             "z" => f.z = Some(r.float()?),
+            "za" => f.za = Some(r.float()?),
+            "zb" => f.zb = Some(r.float()?),
             "r" => f.r = Some(r.float()?),
             "a0" => f.a0 = Some(r.float()?),
             "a1" => f.a1 = Some(r.float()?),
@@ -232,7 +266,11 @@ fn object(r: &mut Reader<'_>, index: usize, weights: bool) -> Result<(Entity, En
             "pts" => f.pts = Some(points(r)?),
             "ring" => f.ring = Some(points(r)?),
             "bulges" => f.bulges = Some(floats(r)?),
-            "holes" if kind == Kind::Polygon => f.rings = Some(list(r, |r, _| ring(r))?),
+            "zs" => {
+                f.zs_at = r.position();
+                f.zs = Some(elevations(r)?);
+            }
+            "holes" if kind == Kind::Polygon => f.rings = Some(list(r, |r, _| ring(r, has))?),
             "holes" => f.loops = Some(list(r, |r, _| points(r))?),
             "closed" => f.closed = Some(r.bool()?),
             "text" => f.text = Some(text(r)?),
@@ -287,16 +325,18 @@ fn build(
             base,
             a: required(r, f.a, "a")?,
             b: required(r, f.b, "b")?,
-            za: None,
-            zb: None,
+            za: f.za,
+            zb: f.zb,
         }),
         Kind::Polyline | Kind::Polygon => {
+            let pts = required(r, f.pts.take(), "pts")?;
+            let zs = as_long_as(r, f.zs.take(), f.zs_at, pts.len())?;
             let path = PathEntity {
                 base,
-                pts: required(r, f.pts.take(), "pts")?,
+                pts,
                 bulges: f.bulges.take(),
                 holes: f.rings.take(),
-                zs: None,
+                zs,
             };
             if kind == Kind::Polygon {
                 Entity::Polygon(path)
@@ -368,21 +408,56 @@ fn build(
     })
 }
 
-fn ring(r: &mut Reader<'_>) -> Result<RingGeometry, KcadError> {
-    let (mut pts, mut bulges) = (None, None);
+/// A hole of a polygon; `has`: whether the payload's schema gives it elevations.
+fn ring(r: &mut Reader<'_>, has: Features) -> Result<RingGeometry, KcadError> {
+    let (mut pts, mut bulges, mut zs, mut zs_at) = (None, None, None, 0);
     map(r, |r, key| {
         match key {
             "pts" => pts = Some(points(r)?),
             "bulges" => bulges = Some(floats(r)?),
+            "zs" if has.elevations => {
+                zs_at = r.position();
+                zs = Some(elevations(r)?);
+            }
             _ => return Err(unknown(r)),
         }
         Ok(())
     })?;
-    Ok(RingGeometry {
-        pts: required(r, pts, "pts")?,
-        bulges,
-        zs: None,
-    })
+    let pts = required(r, pts, "pts")?;
+    let zs = as_long_as(r, zs, zs_at, pts.len())?;
+    Ok(RingGeometry { pts, bulges, zs })
+}
+
+/// A list of elevations: metres, `null` for a vertex without one (§6.6).
+fn elevations(r: &mut Reader<'_>) -> Result<Vec<Option<f64>>, KcadError> {
+    list(r, |r, _| r.float_or_null())
+}
+
+/// `zs` as it is when it has one elevation per vertex, else a bad value
+/// (§6.6). Keys are read in encoded order, `zs` before `pts`, so the count is
+/// checked once the whole map is read; `at` is where the `zs` list starts.
+fn as_long_as(
+    r: &mut Reader<'_>,
+    zs: Option<Vec<Option<f64>>>,
+    at: usize,
+    vertices: usize,
+) -> Result<Option<Vec<Option<f64>>>, KcadError> {
+    if let Some(list) = &zs
+        && list.len() != vertices
+    {
+        r.push(Seg::Name("zs"));
+        let e = r.fail_at(
+            Code::BadValue,
+            at,
+            &format!(
+                "{} kot var ama {vertices} köşe var; her köşenin bir kotu olmalı (kotsuz köşe için null)",
+                list.len()
+            ),
+        );
+        r.pop();
+        return Err(e);
+    }
+    Ok(zs)
 }
 
 fn pattern(r: &mut Reader<'_>) -> Result<HatchPattern, KcadError> {
