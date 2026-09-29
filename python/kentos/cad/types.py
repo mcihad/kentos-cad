@@ -184,6 +184,8 @@ class EditOperation(_StrEnum):
     - ``simplify``: Sadeleştir: a path's vertices within a tolerance of its outline dropped.
     - ``cleanup``: Çizimi temizle: objects repeated on their layer and empty ones
     - ``elevation``: Kot ver (docs/adr/0142): objects' vertices given elevations as the
+    - ``partsJoin``: Parçaları birleştir (docs/adr/0143): areas become one multi-part area
+    - ``partsSplit``: Parçalara ayır (docs/adr/0143): a multi-part area becomes an area a
     """
     OFFSET = "offset"
     TRIM = "trim"
@@ -212,9 +214,11 @@ class EditOperation(_StrEnum):
     SIMPLIFY = "simplify"
     CLEANUP = "cleanup"
     ELEVATION = "elevation"
+    PARTS_JOIN = "partsJoin"
+    PARTS_SPLIT = "partsSplit"
 
 
-EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation"]
+EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit"]
 """The names of :class:`EditOperation`, for a plain string."""
 
 
@@ -1876,8 +1880,9 @@ class EntitiesEdit(_Model):
         operation: The modify tool the edit comes from; it names the undo step: Ötele,
             Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt,
             Köşe ekle, Köşe sil, Esnet; Değiştir for Öznitelikler; Alan birleştir,
-            Alan kesiştir, Alan çıkar, Alan böl, Alana çevir, Çizgiye çevir;
-            Tutamaçla düzenle, Düz kenar yap, Yaya dönüştür for the grips.
+            Alan kesiştir, Alan çıkar, Alan böl, Alana çevir, Çizgiye çevir,
+            Parçaları birleştir, Parçalara ayır; Tutamaçla düzenle, Düz kenar
+            yap, Yaya dönüştür for the grips.
         changes: What changes, at least one.
         expected_revision: The document revision the input was prepared against, as decimal text
             (from a plan, or the document). When given and the document is no

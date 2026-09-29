@@ -44,8 +44,8 @@ use crate::polar::{self, Polar};
 use crate::prompt::Prompt;
 use crate::rectangle::{self, Rectangle};
 use crate::regular::{self, RegularPolygon};
-use crate::rotate::{self, Rotate};
 use crate::reshape::{self, Reshape};
+use crate::rotate::{self, Rotate};
 use crate::rotated::{self, RotatedRectangle};
 use crate::scale::{self, Scale};
 use crate::select::{Select, SelectBox};
@@ -120,6 +120,8 @@ pub const TOOLS: &[&str] = &[
     area::SPLIT_ID,
     area::TO_AREA_ID,
     area::TO_POLYLINE_ID,
+    area::PARTS_JOIN_ID,
+    area::PARTS_SPLIT_ID,
     boundary::ID,
     // Drawing and editing tools of docs/adr/0140, phase 1.
     reshape::FILLET_ALL_ID,
@@ -240,6 +242,8 @@ impl Session {
             area::SPLIT_ID => Box::new(crate::area::AreaSplit::tool()),
             area::TO_AREA_ID => Box::new(crate::area::AreaAction::to_area()),
             area::TO_POLYLINE_ID => Box::new(crate::area::AreaAction::to_polyline()),
+            area::PARTS_JOIN_ID => Box::new(crate::area::AreaAction::parts_join()),
+            area::PARTS_SPLIT_ID => Box::new(crate::area::AreaAction::parts_split()),
             boundary::ID => Box::new(crate::boundary::Boundary::new()),
             reshape::FILLET_ALL_ID => Box::new(Reshape::fillet_all()),
             reshape::CHAMFER_ALL_ID => Box::new(Reshape::chamfer_all()),

@@ -1093,10 +1093,56 @@ cases.append({
     ],
 })
 
+# Parçalara ayır and Parçaları birleştir (docs/adr/0143): the tools give the parts as they are, elevations with them; the
+# steps are named after the operations.
+P_OWN = {"kind": "polygon", "pts": P_FIRST, "zs": [1, 2, 3, 4]}
+P_OTHER = {"kind": "polygon", "pts": P_SECOND, "holes": [P_HOLE], "zs": [5, 6, 7, 8]}
+
+
+def p_new(geometry, slot):
+    """`add` from the multi-part area with keepData: its layer, attributes and geometry; a new slot."""
+    out = json.loads(json.dumps(geometry))
+    out["id"] = slot
+    out["layerId"] = PA()["layerId"]
+    out["attrs"] = PA()["attrs"]
+    return out
+
+
+cases.append({
+    "name": "Parçalara ayır: ilk parça alanın yerinde ve kimliğiyle kalır, öbürü öznitelikleriyle yeni alan olur; kotlar parçalarıyla; tek adım",
+    "setup": P_SETUP,
+    "steps": [
+        {"op": "captureUid", "id": 1, "as": "ada"},
+        {"op": "execute", "input": {"operation": "partsSplit", "changes": [
+            {"kind": "update", "uid": uid(1), "geometry": P_OWN},
+            {"kind": "add", "from": uid(1), "geometry": P_OTHER, "keepData": True}]},
+         "result": done(changed=[uid(1)], created=[uid(2)]),
+         "expect": {"ids": [1, 2], "entities": {"1": p_updated(P_OWN), "2": p_new(P_OTHER, 2)}, "uids": {"1": "ada", "2": "new"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Parçalara ayır", "expect": {"ids": P_IDS, "entities": {"1": PA()}, "uids": {"1": "ada"}, "canUndo": False}},
+    ],
+})
+
+J_FIRST = {k: v for k, v in PA().items() if k != "parts"}
+J_SECOND = {**J_FIRST, "id": 2, "pts": P_SECOND, "holes": [P_HOLE], "zs": [5, 6, 7, 8]}
+cases.append({
+    "name": "Parçaları birleştir: iki alan ilkinin yerinde tek, çok parçalı alan olur; öbürü silinir; tek adım",
+    "setup": {**SETUP, "entities": [J_FIRST, J_SECOND]},
+    "steps": [
+        {"op": "captureUid", "id": 1, "as": "ada"},
+        {"op": "captureUid", "id": 2, "as": "diger"},
+        {"op": "execute", "input": {"operation": "partsJoin", "changes": [
+            {"kind": "update", "uid": uid(1), "geometry": {**P_OWN, "parts": [{k: v for k, v in P_OTHER.items() if k != "kind"}]}},
+            {"kind": "remove", "uid": uid(2)}]},
+         "result": done(changed=[uid(1)], removed=["$uid:diger"]),
+         "expect": {"ids": P_IDS, "entities": {"1": PA()}, "uids": {"1": "ada"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Parçaları birleştir", "expect": {"ids": [1, 2], "entities": {"1": J_FIRST, "2": J_SECOND}, "uids": {"1": "ada", "2": "diger"}, "canUndo": False}},
+    ],
+})
+
 write(
     "cad.entities.edit",
     "Nesneleri düzenle: doğrulama, plan, yazma, geri alma",
-    "ADR 0047. Denetim sırası: en az bir değişiklik; her değişikliğin kimliğinin yazımı (add'de from); her geometrinin nokta sayısı, yazının boş olmayan metni, sonlu sayıları ve yarıçapı; beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması; bir nesnenin tek değişiklikle değişmesi; hiçbir nesnenin kilitli katmanda olmaması (düzenleme bütün yazılır ya da hiç). update yalnız geometriyi değiştirir; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır, simgesi gelmez; add bir nesneden yeni nesne yapar, onun katmanını ve rengini alır. Adım işlemin adıdır: Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle, Köşe sil, Esnet; Öznitelikler'in (properties) adımı Değiştir; alan araçlarınınki Alan birleştir, Alan kesiştir, Alan çıkar, Alan böl, Alana çevir, Çizgiye çevir; ADR 0140'ın araçlarınınki Parçala, Yönü çevir, Sadeleştir, Çizimi temizle (Tüm köşeleri yuvarla ve Tüm köşelere pah Köşe yuvarla ve Pah'tır). Kapalı alanın halkası (dış halka ya da delik) en az 3 köşelidir; iki kenarından biri yaysa (yay değeri 0 değil; verilmeyen 0 sayılır) 2 köşeli olabilir. Taramanın halkası en az 3 köşelidir. Kurulumdaki en büyük kimlik 8; yeni nesneler 9'dan başlar; properties durumlarının kendi kurulumu vardır. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+    "ADR 0047. Denetim sırası: en az bir değişiklik; her değişikliğin kimliğinin yazımı (add'de from); her geometrinin nokta sayısı, yazının boş olmayan metni, sonlu sayıları ve yarıçapı; beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması; bir nesnenin tek değişiklikle değişmesi; hiçbir nesnenin kilitli katmanda olmaması (düzenleme bütün yazılır ya da hiç). update yalnız geometriyi değiştirir; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır, simgesi gelmez; add bir nesneden yeni nesne yapar, onun katmanını ve rengini alır. Adım işlemin adıdır: Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle, Köşe sil, Esnet; Öznitelikler'in (properties) adımı Değiştir; alan araçlarınınki Alan birleştir, Alan kesiştir, Alan çıkar, Alan böl, Alana çevir, Çizgiye çevir, Parçaları birleştir, Parçalara ayır; ADR 0140'ın araçlarınınki Parçala, Yönü çevir, Sadeleştir, Çizimi temizle (Tüm köşeleri yuvarla ve Tüm köşelere pah Köşe yuvarla ve Pah'tır). Kapalı alanın halkası (dış halka ya da delik) en az 3 köşelidir; iki kenarından biri yaysa (yay değeri 0 değil; verilmeyen 0 sayılır) 2 köşeli olabilir. Taramanın halkası en az 3 köşelidir. Kurulumdaki en büyük kimlik 8; yeni nesneler 9'dan başlar; properties durumlarının kendi kurulumu vardır. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
     cases,
 )
 print(f"{len(cases)} cases" + (" match" if "--check" in sys.argv[1:] else " written"))

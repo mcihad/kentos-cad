@@ -82,10 +82,10 @@ fn intersect_adds_the_common_part_and_can_erase_the_sources() {
     b.start("areaIntersect");
     assert_eq!(
         b.session.prompt().text(),
-        "Alan kesiştir: nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın (0 seçili) [Kaynakları sil (S): hayır]"
+        "Alan kesiştir: nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın (0 seçili) [Kaynakları sil (S): hayır / Tek nesne (T): hayır]"
     );
     assert!(b.type_text("s"));
-    assert!(b.session.prompt().text().ends_with("(S): evet]"));
+    assert!(b.session.prompt().text().contains("(S): evet"));
     select(&mut b, &[1, 2]);
     b.confirm();
     assert!(b.doc.get(Slot(1)).is_none() && b.doc.get(Slot(2)).is_none());
@@ -103,7 +103,7 @@ fn subtract_takes_the_second_selection_from_the_first() {
     assert!(b.session.is_running());
     assert_eq!(
         b.session.prompt().text(),
-        "Alan çıkar: çıkarılacak alanları seçin, bitince sağ tıklayın (0 seçili) [Çıkarılanları sil (S): hayır]"
+        "Alan çıkar: çıkarılacak alanları seçin, bitince sağ tıklayın (0 seçili) [Çıkarılanları sil (S): hayır / Tek nesne (T): hayır]"
     );
     select(&mut b, &[2]);
     b.confirm();
@@ -284,4 +284,147 @@ fn a_click_inside_line_work_makes_an_area_on_the_active_layer() {
     assert!(b.session.prompt().text().ends_with("Sınır katmanı (K): Parseller]"));
     assert!(b.type_text("a"));
     assert!(b.session.prompt().text().contains("Adalar (A): yok sayılır"));
+}
+
+// ── Çok parçalı alan (docs/adr/0143) ────────────────────────────────────────
+
+/// The parts of the area at `slot`: each part's area, the first its own.
+fn parts(b: &Bench, slot: u32) -> Vec<f64> {
+    let Some(Entity::Polygon(p)) = b.doc.get(Slot(slot)) else {
+        panic!("an area at {slot}");
+    };
+    let one = |pts: &[kentos_contracts::Vec2],
+               holes: &Option<Vec<kentos_contracts::RingGeometry>>| {
+        let mut q = p.clone();
+        (q.pts, q.holes, q.zs, q.parts) = (pts.to_vec(), holes.clone(), None, None);
+        measures(&Entity::Polygon(q)).0.expect("an area")
+    };
+    std::iter::once(one(&p.pts, &p.holes))
+        .chain(
+            p.parts
+                .iter()
+                .flatten()
+                .map(|part| one(&part.pts, &part.holes)),
+        )
+        .collect()
+}
+
+#[test]
+fn union_with_one_object_makes_one_multi_part_area() {
+    // Parcels 1 and 8 do not touch: two areas, or one of two parts with Tek nesne.
+    let mut b = bench();
+    select(&mut b, &[1, 8]);
+    b.start("areaUnion");
+    assert_eq!(b.selected().len(), 2);
+    assert_eq!(
+        b.last_text(),
+        Some(
+            "2 alan birleştirildi: 2 ayrı alan (birbirine değmeyenler ayrı kalır), toplam 184.00 m²."
+        )
+    );
+    undo(&mut b);
+    select(&mut b, &[]);
+    b.start("areaUnion");
+    assert_eq!(
+        b.session.prompt().text(),
+        "Alan birleştir: nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın (0 seçili) [Tek nesne (T): hayır]"
+    );
+    assert!(b.type_text("t"));
+    assert!(b.memory.area_one_object);
+    select(&mut b, &[1, 8]);
+    b.confirm();
+    let made = b.selected();
+    assert_eq!(made.len(), 1);
+    // The largest part first: parcel 1's 100 m², then parcel 8's 100 − 16.
+    let sizes = parts(&b, made[0]);
+    assert!(near(sizes[0], 100.0) && near(sizes[1], 84.0), "{sizes:?}");
+    let e = b.doc.get(Slot(made[0])).expect("the union");
+    assert_eq!(e.base().label.as_deref(), Some("1"));
+    assert_eq!(
+        b.last_text(),
+        Some("2 alan birleştirildi: 2 parçalı tek alan, toplam 184.00 m².")
+    );
+    assert_eq!(undo(&mut b).as_deref(), Some("Alan birleştir"));
+}
+
+#[test]
+fn a_multi_part_area_is_taken_whole() {
+    // Parcels 1 and 8 as one area of two parts; parcel 2 overlaps only parcel 1.
+    let mut b = bench();
+    b.memory.area_one_object = true;
+    select(&mut b, &[1, 8]);
+    b.start("areaUnion");
+    let whole = b.selected()[0];
+    b.memory.area_one_object = false;
+    select(&mut b, &[whole, 2]);
+    b.start("areaIntersect");
+    let made = b.selected();
+    assert!(near(area(&b, made[0]), 24.0));
+    // Parcel 2 cut from the two-part area: it stays whole with Tek nesne.
+    undo(&mut b);
+    b.memory.area_one_object = true;
+    select(&mut b, &[whole]);
+    b.start("areaSubtract");
+    select(&mut b, &[2]);
+    b.confirm();
+    let made = b.selected();
+    assert_eq!(made.len(), 1);
+    let sizes = parts(&b, made[0]);
+    assert!(near(sizes[0], 84.0) && near(sizes[1], 76.0), "{sizes:?}");
+    assert_eq!(b.last_text(), Some("1 alandan çıkarıldı; kalan 160.00 m²."));
+}
+
+#[test]
+fn parts_join_in_the_first_ones_place_and_split_back() {
+    let mut b = bench();
+    let count = b.doc.entities().count();
+    select(&mut b, &[1, 8]);
+    b.start("partsJoin");
+    assert!(!b.session.is_running(), "it acts and leaves");
+    assert_eq!(b.selected(), vec![1]);
+    assert!(b.doc.get(Slot(8)).is_none());
+    assert_eq!(b.doc.entities().count(), count - 1);
+    let sizes = parts(&b, 1);
+    assert!(near(sizes[0], 100.0) && near(sizes[1], 84.0), "{sizes:?}");
+    assert_eq!(
+        b.last_text(),
+        Some("2 alan tek alanda birleşti: 2 parça, toplam 184.00 m².")
+    );
+    assert_eq!(undo(&mut b).as_deref(), Some("Parçaları birleştir"));
+    // Overlapping parcels merge into one part.
+    select(&mut b, &[1, 2]);
+    b.start("partsJoin");
+    assert_eq!(parts(&b, 1).len(), 1);
+    assert_eq!(
+        b.last_text(),
+        Some("2 alan tek alanda birleşti: örtüşenler birleşti, 1 parça, toplam 176.00 m².")
+    );
+    undo(&mut b);
+    // Joined, then split: the first part keeps slot 1, the other is new with its data.
+    select(&mut b, &[1, 8]);
+    b.start("partsJoin");
+    select(&mut b, &[1]);
+    b.start("partsSplit");
+    let made = b.selected();
+    assert_eq!((made.len(), made[0]), (2, 1));
+    assert!(near(area(&b, 1), 100.0) && near(area(&b, made[1]), 84.0));
+    let e = b.doc.get(Slot(made[1])).expect("the new area");
+    assert_eq!(e.base().label.as_deref(), Some("1"));
+    assert_eq!(b.last_text(), Some("1 alan parçalarına ayrıldı (2 alan)."));
+    assert_eq!(undo(&mut b).as_deref(), Some("Parçalara ayır"));
+    // An area of one part has nothing to split.
+    select(&mut b, &[2]);
+    b.start("partsSplit");
+    assert_eq!(
+        b.last_text(),
+        Some("Parçalarına ayrılacak çok parçalı bir alan seçin.")
+    );
+    select(&mut b, &[2]);
+    b.start("partsJoin");
+    assert_eq!(
+        b.last_text(),
+        Some(
+            "Parçaları birleştirmek için en az iki alan seçin (kapalı alan, daire, elips ya da kapalı eğri)."
+        )
+    );
 }

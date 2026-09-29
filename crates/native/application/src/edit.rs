@@ -157,6 +157,8 @@ pub fn label(operation: EditOperation) -> &'static str {
         EditOperation::Cleanup => "Çizimi temizle",
         // Kot ver (docs/adr/0142).
         EditOperation::Elevation => "Kot ver",
+        EditOperation::PartsJoin => "Parçaları birleştir",
+        EditOperation::PartsSplit => "Parçalara ayır",
     }
 }
 

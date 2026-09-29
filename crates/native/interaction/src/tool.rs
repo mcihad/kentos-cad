@@ -299,6 +299,9 @@ pub struct Memory {
     pub area_intersect_erase: bool,
     pub area_subtract_erase: bool,
     pub boundary_islands: bool,
+    /// Tek nesne of Alan birleştir, kesiştir and çıkar: the result one
+    /// multi-part area (`AreaTools.oneObject`, docs/adr/0143).
+    pub area_one_object: bool,
     /// Ölçülendirme's style, its linear direction lock in degrees (0 ΔY, 90 ΔX;
     /// none: from where the line is placed) and whether an angle is measured
     /// from its vertex (`DimensionTool.mode`, `.lock`, `.byVertex`).
@@ -427,6 +430,7 @@ impl Default for Memory {
             area_intersect_erase: false,
             area_subtract_erase: false,
             boundary_islands: true,
+            area_one_object: false,
             dimension_mode: DimensionMode::Aligned,
             dimension_lock: None,
             dimension_by_vertex: false,

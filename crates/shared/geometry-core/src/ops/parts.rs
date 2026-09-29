@@ -4,8 +4,10 @@
 
 use crate::api::Op;
 use crate::entity::{Entity, Shape, area_parts, join_parts};
+use crate::geom::arrangement::Area;
+use crate::geom::region::net_area;
 use crate::op;
-use crate::ops::areas::areas_of_entity;
+use crate::ops::areas::{areas_of_entity, polygon_of_area};
 use crate::ops::grips::grip_part;
 
 /// Where a grip is: its part (0: the area's own fields) and its index there.
@@ -39,6 +41,20 @@ pub fn joined_parts(entities: &[Entity]) -> Option<Entity> {
     Some(first.with(join_parts(&shapes)?))
 }
 
+/// Areas as one multi-part area, its parts from the largest to the
+/// smallest (a command's order, docs/adr/0143); one area is a plain area,
+/// none of none.
+pub fn one_area(areas: &[Area]) -> Option<Entity> {
+    let mut sized: Vec<(f64, &Area)> = areas.iter().map(|a| (net_area(a), a)).collect();
+    // Stable: equal sizes keep their order.
+    sized.sort_by(|a, b| b.0.total_cmp(&a.0));
+    let shapes: Vec<Shape> = sized
+        .into_iter()
+        .map(|(_, a)| polygon_of_area(a).shape)
+        .collect();
+    join_parts(&shapes).map(Entity::new)
+}
+
 pub(crate) static OPS: &[Op] = &[
     op!("gripPart", |e: Entity, index: usize| grip_part_of(
         &e.shape, index
@@ -46,6 +62,7 @@ pub(crate) static OPS: &[Op] = &[
     op!("splitParts", |e: Entity| split_parts(&e)),
     op!("joinParts", |entities: Vec<Entity>| joined_parts(&entities)),
     op!("areasOfEntity", |e: Entity| areas_of_entity(&e.shape)),
+    op!("oneArea", |areas: Vec<Area>| one_area(&areas)),
 ];
 
 #[cfg(test)]
@@ -266,5 +283,41 @@ mod tests {
         };
         assert_eq!(pts.len(), 5);
         assert!(corner_in_path(&e, 8, &CornerOp::Radius(1.0)).is_err());
+    }
+
+    #[test]
+    fn areas_become_one_largest_first_and_sets_intersect_as_wholes() {
+        use crate::geom::region::{intersect_area_sets, net_area};
+        let e = two();
+        // The 4 m square (16 m²) and the holed 10 m square (96 m²): the larger first.
+        let areas = areas_of_entity(&e);
+        let swapped = [areas[1].clone(), areas[0].clone()];
+        let one = one_area(&swapped).expect("one area");
+        assert_eq!(one.shape, e);
+        assert!(one_area(&[]).is_none());
+        assert!(!crate::entity::is_multi_part(
+            &one_area(&areas[..1]).expect("one").shape
+        ));
+        // A band across both parts meets each: the set is taken whole.
+        let band = crate::ops::areas::area_of_entity(&Shape::Polygon {
+            pts: vec![
+                Vec2::new(-1.0, 1.0),
+                Vec2::new(30.0, 1.0),
+                Vec2::new(30.0, 3.0),
+                Vec2::new(-1.0, 3.0),
+            ],
+            bulges: None,
+            holes: None,
+            parts: None,
+        })
+        .expect("a band");
+        let common = intersect_area_sets(&[areas.clone(), vec![band]]);
+        let mut sizes: Vec<f64> = common.iter().map(net_area).collect();
+        sizes.sort_by(f64::total_cmp);
+        assert_eq!(sizes.len(), 2);
+        assert!(
+            (sizes[0] - 8.0).abs() < 1e-9 && (sizes[1] - 20.0).abs() < 1e-9,
+            "{sizes:?}"
+        );
     }
 }

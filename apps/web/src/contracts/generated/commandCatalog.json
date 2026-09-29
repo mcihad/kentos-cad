@@ -18860,6 +18860,16 @@
                 "const": "elevation",
                 "description": "Kot ver (docs/adr/0142): objects' vertices given elevations as the\ngeometry's `zs` says: the same value, the old ones raised, or none.",
                 "type": "string"
+              },
+              {
+                "const": "partsJoin",
+                "description": "Parçaları birleştir (docs/adr/0143): areas become one multi-part area\nin the first one's place, overlapping ones merged into one part.",
+                "type": "string"
+              },
+              {
+                "const": "partsSplit",
+                "description": "Parçalara ayır (docs/adr/0143): a multi-part area becomes an area a\npart; the first part keeps its place, the others are new, with its data.",
+                "type": "string"
               }
             ]
           },
@@ -19529,7 +19539,7 @@
           },
           "operation": {
             "$ref": "#/$defs/EditOperation",
-            "description": "The modify tool the edit comes from; it names the undo step: Ötele,\nBuda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt,\nKöşe ekle, Köşe sil, Esnet; Değiştir for Öznitelikler; Alan birleştir,\nAlan kesiştir, Alan çıkar, Alan böl, Alana çevir, Çizgiye çevir;\nTutamaçla düzenle, Düz kenar yap, Yaya dönüştür for the grips."
+            "description": "The modify tool the edit comes from; it names the undo step: Ötele,\nBuda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt,\nKöşe ekle, Köşe sil, Esnet; Değiştir for Öznitelikler; Alan birleştir,\nAlan kesiştir, Alan çıkar, Alan böl, Alana çevir, Çizgiye çevir,\nParçaları birleştir, Parçalara ayır; Tutamaçla düzenle, Düz kenar\nyap, Yaya dönüştür for the grips."
           }
         },
         "required": [

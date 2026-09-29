@@ -449,8 +449,9 @@ class _EntitiesEdit(LocalCommand[EntitiesEdit, EntitiesEdited, EntitiesEditPlan]
             operation: The modify tool the edit comes from; it names the undo step: Ötele,
                 Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt,
                 Köşe ekle, Köşe sil, Esnet; Değiştir for Öznitelikler; Alan birleştir,
-                Alan kesiştir, Alan çıkar, Alan böl, Alana çevir, Çizgiye çevir;
-                Tutamaçla düzenle, Düz kenar yap, Yaya dönüştür for the grips.
+                Alan kesiştir, Alan çıkar, Alan böl, Alana çevir, Çizgiye çevir,
+                Parçaları birleştir, Parçalara ayır; Tutamaçla düzenle, Düz kenar
+                yap, Yaya dönüştür for the grips.
             changes: What changes, at least one.
             expected_revision: The document revision the input was prepared against, as decimal text
                 (from a plan, or the document). When given and the document is no

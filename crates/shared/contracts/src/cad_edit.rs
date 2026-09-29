@@ -99,6 +99,12 @@ pub enum EditOperation {
     /// Kot ver (docs/adr/0142): objects' vertices given elevations as the
     /// geometry's `zs` says: the same value, the old ones raised, or none.
     Elevation,
+    /// Parçaları birleştir (docs/adr/0143): areas become one multi-part area
+    /// in the first one's place, overlapping ones merged into one part.
+    PartsJoin,
+    /// Parçalara ayır (docs/adr/0143): a multi-part area becomes an area a
+    /// part; the first part keeps its place, the others are new, with its data.
+    PartsSplit,
 }
 
 /// A drawing object's geometry alone: its kind and the fields that place and
@@ -333,8 +339,9 @@ pub struct EntitiesEdit {
     /// The modify tool the edit comes from; it names the undo step: Ötele,
     /// Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt,
     /// Köşe ekle, Köşe sil, Esnet; Değiştir for Öznitelikler; Alan birleştir,
-    /// Alan kesiştir, Alan çıkar, Alan böl, Alana çevir, Çizgiye çevir;
-    /// Tutamaçla düzenle, Düz kenar yap, Yaya dönüştür for the grips.
+    /// Alan kesiştir, Alan çıkar, Alan böl, Alana çevir, Çizgiye çevir,
+    /// Parçaları birleştir, Parçalara ayır; Tutamaçla düzenle, Düz kenar
+    /// yap, Yaya dönüştür for the grips.
     pub operation: EditOperation,
     /// What changes, at least one.
     pub changes: Vec<EntityEdit>,

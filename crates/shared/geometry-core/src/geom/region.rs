@@ -94,6 +94,20 @@ pub fn intersect_areas(list: &[Area]) -> Vec<Area> {
     overlay(&sources, Rule::All)
 }
 
+/// What all the sets have in common, each set the areas of one object (a
+/// multi-part area's parts, docs/adr/0143): a set covers what any of its
+/// areas covers.
+pub fn intersect_area_sets(sets: &[Vec<Area>]) -> Vec<Area> {
+    match sets {
+        [] => Vec::new(),
+        [one] => union_areas(one),
+        _ => {
+            let sources: Vec<Source> = sets.iter().map(|set| area_source(set)).collect();
+            overlay(&sources, Rule::All)
+        }
+    }
+}
+
 /// `from` with everything covered by `cutters` removed.
 pub fn subtract_areas(from: &[Area], cutters: &[Area]) -> Vec<Area> {
     if cutters.is_empty() {
@@ -206,6 +220,9 @@ pub(crate) static OPS: &[Op] = &[
     op!("areaSource", |list: Vec<Area>| area_source(&list)),
     op!("unionAreas", |list: Vec<Area>| union_areas(&list)),
     op!("intersectAreas", |list: Vec<Area>| intersect_areas(&list)),
+    op!("intersectAreaSets", |sets: Vec<Vec<Area>>| {
+        intersect_area_sets(&sets)
+    }),
     op!("subtractAreas", |from: Vec<Area>, cutters: Vec<Area>| {
         subtract_areas(&from, &cutters)
     }),
