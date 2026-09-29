@@ -17,7 +17,7 @@ pnpm -C apps/web e2e:use usage-parcel                    # web: aynı adlar web-
 python3 scripts/usage/compare.py usage-parcel            # iki platform yan yana: karsilastir-…png
 ```
 
-Her boyut (1440×900, 1100×650) ve tema (koyu, açık) senaryoyu baştan oynatır; resimde komut geçmişi açıktır ve son satırı görünür. Beklentiler yol boyunca denetlenir ve söylenir.
+Her boyut (1440×900, 1100×650) ve tema (koyu, açık) senaryoyu baştan oynatır; yüksekliği 800 px ve üstü olan pencerenin resminde komut geçmişi açıktır ve son satırı görünür (küçük pencerede son ileti durum çubuğundadır). Beklentiler yol boyunca denetlenir ve söylenir.
 
 | Dosya | İçerik |
 |---|---|

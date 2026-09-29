@@ -116,9 +116,10 @@ fn play(
     let mut take = |app: &mut App, name: &str, line: bool| {
         count.set(count.get() + 1);
         let count = count.get();
-        // The command history open for the picture, so it shows what the tools said; closed
+        // The command history open for the picture, so it shows what the tools said, where the
+        // window has room for it (the status bar says the last message in a small one); closed
         // again while the steps play (its scrolling is no operation the trace player follows).
-        app.command_expanded = true;
+        app.command_expanded = size.height >= 800.0;
         snapshot.settle(app, App::view, &mut update);
         // At its newest line, as the app scrolls it when it shows (`message_log`).
         snapshot.operate(
