@@ -1163,6 +1163,7 @@ function toolScenes() {
     },
     ...faz2Scenes(bare, clickWorld),
     ...faz3Scenes(bare, clickWorld),
+    ...adr0141Scenes(bare, clickWorld),
   ];
 }
 
@@ -1375,9 +1376,10 @@ function faz3Scenes(bare, clickWorld) {
   ];
 }
 
-// Faz 1 of docs/adr/0141: Görünüm › Yakınlaştır with the view history and Kapsam denetimi, and the layer tree's
-// Katmana yakınlaştır. Scenes are added below as the phases are built.
-function adr0141Scenes() {
+// docs/adr/0141: Görünüm › Yakınlaştır with the view history and Kapsam denetimi, the layer tree's Katmana
+// yakınlaştır, the query tools (Mesafe ölç's fixed first point, Alan hesapla's İçine tıkla and Alan olarak çiz, Dik
+// ayak ölç) and the selection tools. Scenes are added below as the phases are built.
+function adr0141Scenes(bare, clickWorld) {
   /** The view history's two buttons both on: zoomed in twice, then one step back. */
   const HISTORY = `(() => { const k = window.kentos; k.view.navigation.history.clear(); k.view.zoomBy(1.5); k.view.zoomBy(1.5); k.view.viewBack(); })()`;
   /** A square of 60 m at the coordinate origin, where a drawing brought in with the wrong system lands. */
@@ -1426,6 +1428,69 @@ function adr0141Scenes() {
     },
     { id: 'layers-zoom-menu', open: async (ui) => (await ribbonOn(ui), await ui.eval(HOME), await menuOn(ui, LAYER_ROW)) },
     { id: 'layers-zoom-group-menu', open: async (ui) => (await ribbonOn(ui), await ui.eval(HOME), await menuOn(ui, GROUP_ROW)) },
+    ...queryScenes(bare, clickWorld),
+  ];
+}
+
+// Faz 2: the query tools, each on bare ground with the history open under the drawing.
+function queryScenes(bare, clickWorld) {
+  const none = SCRATCH('return 0;');
+  const inputOption = (ui, key) => ui.eval(`window.kentos.tools.active.input('${key}')`);
+  /** The tool's toggles (kept for the session) set to exactly these: `chip` is the prompt's text for it. */
+  const toggle = async (ui, key, chip, want) => {
+    const on = await ui.eval(`window.kentos.tools.active.prompt.value.includes('${chip}: açık')`);
+    if (on !== want) await inputOption(ui, key);
+  };
+  const started = async (ui, id, scratch = none) => {
+    await bare(ui, scratch, { ribbonTab: 'map', ...LOGGED });
+    await ui.eval(`window.kentos.log.clear()`);
+    await startTool(ui, id);
+  };
+  // Mesafe ölç with a fixed first point: the first, then three rays, the mouse on the way to a fourth.
+  const rays = async (ui) => {
+    await started(ui, 'measure');
+    await toggle(ui, 'S', 'Sabit ilk nokta (S)', true);
+    await clickAll(ui, clickWorld, [-1.6, -0.5], [0.4, -1.3], [1.8, -0.3], [0.9, 1.2]);
+  };
+  // Alan hesapla: a block of four lines with a square island in it, and a second, smaller region beside it.
+  const REGIONS = SCRATCH(`
+    const box = (x0, y0, x1, y1) => [[x0, y0, x1, y0], [x1, y0, x1, y1], [x1, y1, x0, y1], [x0, y1, x0, y0]].forEach(([ax, ay, bx, by]) => add({ kind: 'line', a: { x: c.x + ax * w, y: c.y + ay * w }, b: { x: c.x + bx * w, y: c.y + by * w } }));
+    box(-2.4, -1.2, 0.8, 1.3);
+    box(1.3, -0.6, 2.4, 0.6);
+    add({ kind: 'polygon', pts: [{ x: c.x - 1.4 * w, y: c.y - 0.3 * w }, { x: c.x - 0.4 * w, y: c.y - 0.3 * w }, { x: c.x - 0.4 * w, y: c.y + 0.5 * w }, { x: c.x - 1.4 * w, y: c.y + 0.5 * w }], color: '#3B82F6' });`);
+  const inside = async (ui, id = 'area') => {
+    await started(ui, id, REGIONS);
+    await toggle(ui, 'I', 'İçine tıkla (I)', true);
+  };
+  return [
+    { id: 'measure-fixed-preview', open: async (ui) => (await rays(ui), await hoverFrac(ui, -1.9, 1.0)) },
+    { id: 'measure-fixed-result', open: async (ui) => (await rays(ui), await pressEnter(ui), await ui.move(2, 2)) },
+    { id: 'measure-fixed-off', open: async (ui) => (await started(ui, 'measure'), await toggle(ui, 'S', 'Sabit ilk nokta (S)', false), await hoverFrac(ui, 0, 0)) },
+    { id: 'area-inside-preview', open: async (ui) => (await inside(ui), await hoverFrac(ui, -1.9, -0.9)) },
+    { id: 'area-inside-result', open: async (ui) => (await inside(ui), await clickWorld(ui, AT(-1.9, -0.9)), await hoverFrac(ui, 1.85, 0)) },
+    { id: 'area-inside-none', open: async (ui) => (await inside(ui), await clickWorld(ui, AT(0.9, -1.0)), await ui.move(2, 2)) },
+    {
+      id: 'area-draw-result',
+      open: async (ui) => {
+        await inside(ui);
+        await clickWorld(ui, AT(-1.9, -0.9));
+        await inputOption(ui, 'A');
+        await ui.sleep(300);
+        await hoverFrac(ui, 1.85, 0);
+      },
+    },
+    {
+      id: 'station-base',
+      open: async (ui) => (await started(ui, 'stationOffset'), await clickAll(ui, clickWorld, [-2.0, -0.6], [2.0, 0.5]), await hoverFrac(ui, 0.2, 0.4)),
+    },
+    {
+      id: 'station-point',
+      open: async (ui) => {
+        await started(ui, 'stationOffset');
+        await clickAll(ui, clickWorld, [-2.0, -0.6], [2.0, 0.5], [-0.9, 0.6]);
+        await hoverFrac(ui, 0.9, -0.9);
+      },
+    },
   ];
 }
 
@@ -1442,7 +1507,6 @@ SCENES.tools = [
     open: async (ui) => (await ribbonOn(ui, { ribbonTab: 'modify' }), await ui.clickSel('.ribbon__strip [data-split="corner"] .rsplit__arrow'), await ui.waitFor(`!!document.querySelector('.menu')`), await ui.sleep(300)),
   },
   ...toolScenes(),
-  ...adr0141Scenes(),
 ].map((s) => ({ close: async (ui) => (await ui.eval(UNDO_ALL), await ribbonOff(ui)), ...s }));
 
 SCENES.svgedit = [

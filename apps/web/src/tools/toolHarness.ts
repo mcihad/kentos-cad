@@ -53,7 +53,7 @@ export function toolHarness() {
       pickEdge: (_s: unknown, filter?: (e: Entity) => boolean) => (state.hit && (!filter || filter(state.hit)) ? state.hit : null),
       pickRect: () => state.inWindow,
       trackAlong: () => null,
-      camera: { visibleBounds: () => ({ minX: -50, minY: -50, maxX: 50, maxY: 50 }) },
+      camera: { visibleBounds: () => ({ minX: -50, minY: -50, maxX: 50, maxY: 50 }), worldToScreen: (p: { x: number; y: number }) => p },
       entitiesIn: () => [...doc.all()],
       trim: (target: Entity, at: { x: number; y: number }) => trimEntity(target, at, boundaries(target)),
       extend: (target: Entity, at: { x: number; y: number }) => extendEntity(target, at, boundaries(target)),
@@ -98,4 +98,30 @@ export function recorder() {
   ) as unknown as CanvasRenderingContext2D;
   const view = { worldToScreen: (p: { x: number; y: number }) => p } as never;
   return { g, view, calls };
+}
+
+/**
+ * A canvas context that records what a tool's preview draws: the paths stroked (the points the
+ * calls moved through, and whether the stroke was dashed), the texts drawn and the centres of
+ * the arcs (marks). `view` is the identity: the screen is the world.
+ */
+export function canvasLog() {
+  const paths: { points: [number, number][]; dashed: boolean }[] = [];
+  const texts: string[] = [];
+  const arcs: [number, number][] = [];
+  let points: [number, number][] = [];
+  let dashed = false;
+  const calls: Record<string, (...a: never[]) => unknown> = {
+    measureText: () => ({ width: 40 }),
+    beginPath: () => void (points = []),
+    moveTo: ((x: number, y: number) => void (points = [[x, y]])) as never,
+    lineTo: ((x: number, y: number) => void points.push([x, y])) as never,
+    setLineDash: ((d: number[]) => void (dashed = d.length > 0)) as never,
+    stroke: () => void (points.length > 1 && paths.push({ points: [...points], dashed })),
+    fillText: ((t: string) => void texts.push(t)) as never,
+    arc: ((x: number, y: number) => void arcs.push([x, y])) as never,
+  };
+  const g = new Proxy({}, { get: (_t, key: string) => (key === 'canvas' ? undefined : (calls[key] ?? (() => {}))), set: () => true }) as unknown as CanvasRenderingContext2D;
+  const view = { worldToScreen: (p: { x: number; y: number }) => p, scale: 1, width: 100, height: 100 } as never;
+  return { g, view, paths, texts, arcs };
 }

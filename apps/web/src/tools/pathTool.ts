@@ -43,7 +43,7 @@ export class PathTool extends PointInputTool {
   /** Set for parcel mode: target layer that also numbers new parcels. */
   private readonly parcelLayer?: string;
   /** One bulge per drawn segment (pts[i] → pts[i+1]). */
-  private bulges: number[] = [];
+  protected bulges: number[] = [];
   private arcMode = false;
   private spec: ArcSpec = { kind: 'tangent' };
   /** Point on the first arc of a path, which has no tangent to follow. */
@@ -260,7 +260,7 @@ export class PathTool extends PointInputTool {
   }
 
   /** Bulges for the finished shape; a polygon closes straight unless it was closed on its first vertex with an arc. */
-  private fullBulges(): number[] | undefined {
+  protected fullBulges(): number[] | undefined {
     const all = [...this.bulges, this.closing];
     return hasBulges(all) ? all : undefined;
   }
