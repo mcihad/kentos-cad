@@ -1,18 +1,19 @@
 //! Koordinat oku (`crs.query`, docs/adr/0140): each click reads the point
 //! under it, snapped as everywhere, and says it in the message log in the
 //! project's formats: `Y=487012.000, X=4420000.000`, with the elevation
-//! after them when the snapped object is a point that has one: `, Z=12.500`.
+//! after them when the snapped point is one that has one, a point object or
+//! a vertex of a line, a polyline or an area (docs/adr/0142): `, Z=12.500`.
 //! Beside the cursor the same numbers follow it. Nothing is written; Esc,
 //! Enter or a quick right click ends.
 
 use kentos_domain::Slot;
 
 use crate::Vec2;
+use crate::elevation;
 use crate::format::Format;
 use crate::log::Level;
 use crate::prompt::Prompt;
 use crate::tool::{Context, Flow, Marker, MarkerShape, Pointer, Preview, Tag, Tone, Tool};
-use kentos_contracts::Entity;
 use kentos_geometry_core::store::snap::SnapHit;
 
 /// The tool's id; its command is `crs.query` (a menu command, Harita › Koordinatlar).
@@ -34,16 +35,14 @@ impl CrsQuery {
         Self::default()
     }
 
-    /// The elevation of the point object a snap stands on.
+    /// The elevation of the point, or of the vertex of a line, a polyline or
+    /// an area, a snap stands on (docs/adr/0142).
     fn elevation(snap: Option<SnapHit>, cx: &Context<'_>) -> Option<f64> {
-        let id = snap?.id;
-        if !(0.0..=f64::from(u32::MAX)).contains(&id) {
+        let hit = snap?;
+        if !(0.0..=f64::from(u32::MAX)).contains(&hit.id) {
             return None;
         }
-        match cx.doc.get(Slot(id as u32))? {
-            Entity::Point(p) => p.z,
-            _ => None,
-        }
+        elevation::elevation_at(cx.doc.get(Slot(hit.id as u32))?, hit.point)
     }
 }
 
