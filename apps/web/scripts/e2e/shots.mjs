@@ -1659,6 +1659,21 @@ function adr0142Scenes(bare, clickWorld) {
     // it; then the grip clicked and carried, its tag with the distance and the elevation the vertex keeps.
     { id: 'grip-tag', open: async (ui) => (await selected(ui, ['path']), await hoverU(ui, -0.5, -0.75)) },
     { id: 'grip-tag-none', open: async (ui) => (await selected(ui, ['path']), await hoverU(ui, -1.4, -0.3)) },
+    // Koordinat oku on vertices: one without an elevation, then two that have one (the last one's tag has the Z).
+    {
+      id: 'coord-read-vertex',
+      open: async (ui) => {
+        await bare(ui, OBJECTS, { ribbonTab: 'modify', ...LOGGED });
+        await ui.eval(`window.kentos.log.clear()`);
+        await ui.eval(`window.kentos.commands.execute('crs.query')`);
+        await ui.sleep(300);
+        for (const [fx, fy] of [[-1.4, -0.3], [-2.3, 1.05], [-0.5, -0.75]]) {
+          await clickWorld(ui, AU(fx, fy));
+          await ui.sleep(300);
+        }
+        await ui.move(2, 2);
+      },
+    },
     {
       id: 'grip-tag-moving',
       open: async (ui) => {

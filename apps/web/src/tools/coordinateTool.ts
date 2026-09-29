@@ -1,6 +1,7 @@
 import type { AppContext } from '../app/context';
 import { Signal } from '../core/signal';
 import type { Vec2 } from '../model/geometry';
+import { elevationAt } from '../product/elevationValues';
 import type { ViewTransform } from '../viewport/Camera';
 import { ringMark } from './constructPreview';
 import { drawTag } from './preview';
@@ -10,8 +11,9 @@ import { pointFromText } from './tracking';
 /**
  * Koordinat oku (`crs.query`, docs/adr/0140): every click (snapped) writes its Y and X
  * to the log in the project's formats, and its Z when the snapped object is a point that
- * has one. Nothing is written to the drawing; Esc ends. A tool of its own, not in the
- * catalog (like paste): the command starts it.
+ * has one, or the snapped place is a vertex (a line's end) that has an elevation
+ * (docs/adr/0142). Nothing is written to the drawing; Esc ends. A tool of its own, not in
+ * the catalog (like paste): the command starts it.
  */
 export class CoordinateReadTool implements Tool {
   readonly id = 'coordinateRead';
@@ -53,11 +55,11 @@ export class CoordinateReadTool implements Tool {
     this.ctx.tools.exit();
   }
 
-  /** The reading: `Y=…, X=…` and the Z of the point snapped to. */
+  /** The reading: `Y=…, X=…` and the Z of the point or the vertex snapped to, when it has one. */
   private say(at: Vec2, snappedId?: number): void {
     const { doc, format, log } = this.ctx;
     const snapped = snappedId !== undefined ? doc.get(snappedId) : undefined;
-    const z = snapped?.kind === 'point' ? snapped.z : undefined;
+    const z = snapped?.kind === 'point' ? snapped.z : snapped ? (elevationAt(snapped, at) ?? undefined) : undefined;
     const text = `Y=${format.coord(at.x)}, X=${format.coord(at.y)}${z !== undefined ? `, Z=${format.length(z, false)}` : ''}`;
     log.info(text);
     this.read = { at, lines: [`Y ${format.coord(at.x)}`, `X ${format.coord(at.y)}`, ...(z !== undefined ? [`Z ${format.length(z, false)}`] : [])] };
