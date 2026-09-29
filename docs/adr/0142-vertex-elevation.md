@@ -57,7 +57,7 @@ Sahibin kararı (29 Eylül): `.kcad` şemasını değiştiren işler kendi özel
 - **GeoJSON:**
   - Okurken koordinatın üçüncü sayısı kottur.
   - Yazarken kotlu köşe üç sayıyla yazılır. Kotsuz köşe iki sayıyla yazılır; aynı dizide ikisi karışabilir, RFC 7946 buna izin verir.
-- **Netcad NCZ:** çizgi ve alan kayıtlarında köşe kotu varsa okunur. Okuyucunun hangi kayıtlarda Z bulduğu bu ADR'nin ilk işinde ölçülüp buraya yazılır.
+- **Netcad NCZ:** okuyucu her köşenin Z'sini zaten okur (`ncz::format::Coord.z`, kaydın +24'ündeki f32). Bugün içe aktarma onu yalnız noktada tutar; çizgi ve alanlara da geçer. Z'nin yerinde kalem kalınlığı duran kayıtlar (`coords[0].z`, okuyucunun notu) kot sayılmaz.
 - **Rapor:** her okuyucu kaç nesnenin kotlu geldiğini raporuna yazar.
 
 ### 4. Hesap ve düzenleme
