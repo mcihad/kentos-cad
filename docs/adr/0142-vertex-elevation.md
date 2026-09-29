@@ -36,8 +36,9 @@ Sahibin kararı (29 Eylül): `.kcad` şemasını değiştiren işler kendi özel
 - **Yazıcı ne zaman 4 yazar:** şema 4'ü yalnız bir nesnede köşe kotu varken yazar. Kotsuz çizim şema 2 ya da 3 olarak kalır, eskisiyle bayt bayt aynıdır.
 - **Okuyucu reddi:**
   - şema 2 ya da 3 yükünde bu alanlar bilinmeyen alandır (`unknown_field`);
-  - uzunluğu `pts`'ten farklı bir `zs` `bad_value`'dur;
-  - sonlu olmayan bir kot `bad_value`'dur.
+  - uzunluğu `pts`'ten farklı bir `zs` `bad_value`'dur, yeriyle (`…/holes/0/zs`);
+  - sonlu olmayan bir kot, CBOR profilinin her sayı için kuralıyla `non_finite`'tir;
+  - kotu olmayan çizgi ucunun anahtarı yazılmaz; `null` yalnız `zs`'in içinde geçerlidir (`za: null` `wrong_type`).
 - **Birlikte değişenler (ADR 0025'in kuralı):**
   - spesifikasyon §6.1, §6.6;
   - Rust kodeği ve tipli sütunlar (`io/columns.ts` ↔ `kcad/src/columns.rs`, `FORMATS_VERSION`);

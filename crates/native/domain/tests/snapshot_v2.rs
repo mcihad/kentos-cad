@@ -18,6 +18,10 @@ const MIGRATED: &str = concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/../../../fixtures/kcad/v2/migrated.json"
 );
+const ELEVATIONS: &str = concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../../fixtures/kcad/v2/elevations.json"
+);
 
 fn v1() -> Document {
     let text = std::fs::read_to_string(V1).expect("the v1 sample");
@@ -131,4 +135,15 @@ fn a_v2_snapshot_with_bad_ids_is_refused() {
         })
         .contains("“yok” katmanı dosyada yok")
     );
+}
+
+/// Vertex elevations (docs/adr/0142) come through the document as they are:
+/// the `.kcad` side's sample has lines with one or both ends, a polyline with
+/// vertices without one (null, not 0), holes with their own.
+#[test]
+fn vertex_elevations_come_through_the_document_as_they_are() {
+    let text = std::fs::read_to_string(ELEVATIONS).expect("the sample");
+    let snapshot: DocumentSnapshotV2 = serde_json::from_str(&text).expect("reads");
+    let doc = Document::from_snapshot_v2(snapshot.clone()).expect("opens");
+    assert_eq!(without_slots(&doc.to_snapshot_v2()), without_slots(&snapshot));
 }

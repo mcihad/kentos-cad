@@ -364,6 +364,19 @@ function layer(v: unknown, where: string): LayerInit {
  * `keepUid`: a v2 object's persistent id stays (its reader checks it); a v1
  * file has none, so one found there is not taken (ADR 0014).
  */
+/**
+ * A path's vertex elevations (docs/adr/0142): a list as long as its vertices, each a finite number or
+ * null (a vertex without one, not 0).
+ */
+function elevationsAt(v: unknown, n: number, w: string, what: string): void {
+  if (!Array.isArray(v)) fail(at(w, what), 'liste olmalı');
+  const list = v as unknown[];
+  if (list.length !== n) fail(at(w, what), `köşe sayısı kadar (${n}) olmalı; ${list.length} verildi`);
+  list.forEach((z, i) => {
+    if (z !== null) numAt(z, w, `${what} ${i + 1}`);
+  });
+}
+
 function entity(v: unknown, where: string, layers: ReadonlySet<string>, ids: Set<number>, keepUid = false): Entity {
   if (!isObj(v)) return fail(where, 'nesne olmalı');
   if (!keepUid && 'uid' in v) delete v.uid;
@@ -392,11 +405,14 @@ function entity(v: unknown, where: string, layers: ReadonlySet<string>, ids: Set
     case 'line':
       pointAt(v.a, w, 'a');
       pointAt(v.b, w, 'b');
+      if (v.za !== undefined) numAt(v.za, w, 'başlangıcın kotu');
+      if (v.zb !== undefined) numAt(v.zb, w, 'bitişin kotu');
       break;
     case 'polyline':
     case 'polygon': {
       const n = pointsAt(v.pts, w, 'köşeler', 2);
       if (v.bulges !== undefined && numbersAt(v.bulges, w, 'bulge') > n) fail(at(w, 'bulge'), 'köşe sayısından uzun olamaz');
+      if (v.zs !== undefined) elevationsAt(v.zs, n, w, 'kotlar');
       if (v.holes !== undefined) {
         if (kind !== 'polygon' || !Array.isArray(v.holes)) fail(at(w, 'adalar'), 'yalnızca kapalı alanda, liste olarak');
         (v.holes as unknown[]).forEach((h, i) => {
@@ -404,6 +420,7 @@ function entity(v: unknown, where: string, layers: ReadonlySet<string>, ids: Set
           const ring = h as Record<string, unknown>;
           const k = pointsAt(ring.pts, w, `ada ${i + 1}`, 3);
           if (ring.bulges !== undefined && numbersAt(ring.bulges, w, `ada ${i + 1} › bulge`) > k) fail(at(w, `ada ${i + 1} › bulge`), 'köşe sayısından uzun olamaz');
+          if (ring.zs !== undefined) elevationsAt(ring.zs, k, w, `ada ${i + 1} › kotlar`);
         });
       }
       break;
