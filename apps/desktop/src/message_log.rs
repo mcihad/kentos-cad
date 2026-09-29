@@ -28,7 +28,7 @@ use crate::log_plan::{self as plan, Line, Listing};
 pub(crate) const FADE: Duration = Duration::from_millis(160);
 
 /// The lists' scroll id: new lines take them to their end.
-const LIST: &str = "bottom-log";
+pub(crate) const LIST: &str = "bottom-log";
 
 /// The icons' size in the lists and in the status bar's message (the web's `ICON_SIZE`).
 const ICON_SIZE: f32 = 14.0;

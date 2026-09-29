@@ -705,6 +705,10 @@ impl Path {
             cx.say(Level::Warn, text);
             return;
         }
+        // A drawing without the parcel layer gets it, in the parcel's own undo step.
+        let Ok(opened) = crate::standard_layer::open_if_missing(PARCEL_LAYER, "parsel", cx) else {
+            return;
+        };
         let number = next_parcel(cx).to_string();
         let area = bulge_ring_area(pts, bulges.as_deref()).abs();
         let attrs = [
@@ -735,8 +739,14 @@ impl Path {
         };
         let result = create::execute(&mut ExecutionContext::new(cx.doc), input);
         let Some(out) = points::written(result, cx) else {
+            if let Some(opened) = opened {
+                opened.drop(cx);
+            }
             return;
         };
+        if let Some(opened) = opened {
+            opened.keep(cx);
+        }
         cx.selection.set(out.ids.iter().map(|&id| Slot(id)).collect::<Vec<_>>());
         let text = format!(
             "Parsel {number} oluşturuldu; geometrik alanı {}. Ada, mahalle ve tapu alanı bilgisini Öznitelikler panelinden girin.",

@@ -45,7 +45,9 @@ const GROUPS = [
   // a finished object goes through the product commands. Pure like the document: no Iced,
   // window system or GPU (the desktop feeds it input and draws its preview), no runtime, no
   // browser. Listed before `native`, whose path contains it.
-  { name: 'interaction', path: 'crates/native/interaction/', targets: [HOST], uses: ['shared', 'domain', 'application'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  // The tool session opens a standard layer a tool writes to (parsel, kot) as a new project has it
+  // (project's `standard_layer`, docs/adr/0067); project is a pure model over shared and domain.
+  { name: 'interaction', path: 'crates/native/interaction/', targets: [HOST], uses: ['shared', 'domain', 'application', 'project'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // The native processing tools (İşlemler, docs/PROCESSING.md): declared tools and models over
   // the document, run by the desktop; the web keeps its TypeScript tools. Listed before `native`.
   { name: 'processing', path: 'crates/native/processing/', targets: [HOST], uses: ['shared', 'domain', 'application'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },

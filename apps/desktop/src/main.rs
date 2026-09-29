@@ -98,6 +98,7 @@ mod tools_scenes;
 #[cfg(test)]
 mod tools_screens;
 mod tracking;
+mod usage;
 mod view;
 mod view_commands;
 mod viewport;
@@ -113,6 +114,15 @@ fn main() -> iced::Result {
     if args.peek().map(String::as_str) == Some("snapshot") {
         args.next();
         if let Err(error) = snapshot::run(args) {
+            eprintln!("{error}");
+            std::process::exit(1);
+        }
+        return Ok(());
+    }
+    // `kentos-cad kullan <iz>`: a usage scenario played and pictured step by step.
+    if args.peek().map(String::as_str) == Some("kullan") {
+        args.next();
+        if let Err(error) = usage::run(args) {
             eprintln!("{error}");
             std::process::exit(1);
         }

@@ -90,6 +90,22 @@ pub fn new_project(o: &NewProject) -> Result<DocumentSnapshotV1, String> {
     })
 }
 
+/// A layer of a new project's tree by its id (`parsel`), for a drawing that
+/// lacks it: a tool that writes to a standard layer opens it as a new
+/// project has it. None for an id the tree does not have, or a group.
+pub fn standard_layer(id: &str, plot_scale: f64) -> Option<LayerNode> {
+    fn find(nodes: Vec<LayerNode>, id: &str) -> Option<LayerNode> {
+        nodes.into_iter().find_map(|n| {
+            if n.id == id && n.kind == LayerNodeType::Layer {
+                Some(n)
+            } else {
+                find(n.children, id)
+            }
+        })
+    }
+    find(standard_layers(plot_scale), id)
+}
+
 /// The middle of the zone at Türkiye's centre latitude (the web's `workAreaCentre`).
 pub fn work_area_centre(crs: &System) -> Vec2 {
     if crs.kind == "geographic" {

@@ -9,6 +9,16 @@ Bir iz, kullanıcının çizim alanında yaptıklarını adım adım yazar: komu
 
 İz, iki uygulamanın kullanım davranışının ortak referansıdır.
 
+**Kullanım senaryoları.** `usage-` ile başlayan izler, uygulamayı gerçek bir iş akışıyla baştan sona kullanır ve `shot` adımlarında resim ister. Test olarak öbür izler gibi oynatılırlar. Resim olarak da şöyle oynatılırlar:
+
+```bash
+./target/debug/kentos-cad kullan usage-parcel            # masaüstü: .run/shots/kullanim/masaustu-<iz>-<nn>-<ad>-<GxY>[-acik].png
+pnpm -C apps/web e2e:use usage-parcel                    # web: aynı adlar web- ile
+python3 scripts/usage/compare.py usage-parcel            # iki platform yan yana: karsilastir-…png
+```
+
+Her boyut (1440×900, 1100×650) ve tema (koyu, açık) senaryoyu baştan oynatır; resimde komut geçmişi açıktır ve son satırı görünür. Beklentiler yol boyunca denetlenir ve söylenir.
+
 | Dosya | İçerik |
 |---|---|
 | `v1/polygon-accept.json` | §5 kabul izi: poligon başlat, tıkla, `12` yaz, Enter, sonraki nokta, kapat, geri al, yinele, kaydet ve aç |
@@ -48,6 +58,7 @@ Bir iz, kullanıcının çizim alanında yaptıklarını adım adım yazar: komu
 | `v1/grips.json` | Tutamaçlar ([ADR 0068](../../docs/adr/0068-desktop-grips-and-hover-card.md)): seçili çizginin ucunu sürükleyerek taşıma ve tek adımda geri alma; sürüklenmeden tıklanan tutamaç sıcak kalır, sonraki tık yerleştirir; Esc tutamacı bırakır (seçim kalır), Enter imlecin olduğu yere koyar; kapalı alanın kenar ortası yeni köşe olur; kilitli katmandaki nesnenin tutamacı alınmaz, basmak seçim kutusudur (`objects.kcad` üstünde) |
 | `v1/point-calc.json` | Nokta hesapla, çalışan Çizgi'nin içinde (`UX-07`): nokta beklenirken komut satırına yazılan takma ad (`YAN`, `KKES`, `DKES`, `HAT`, `AM`, `ORTA`) hesaplayıcıyı açar, Çizgi askıda kalır; referanslar kenetlenir (kilitli katmandaki çizgi de); hesaplanan nokta Çizgi'ye tıklanmış gibi gider ve iletisi projenin ondalıklarıyla yazılır; iki çözümden tıklanan, paralel doğruların uyarısı, `1/4` oranı, grad açı; okuyamadığı yazıyı hesaplayıcı her adımda kendi sözüyle reddeder (referans çizimde gösterilir; değer türünün biçimiyle, açı projenin biriminde; iki çözümden biri tıklanır), adım kalır; Esc askıdaki komuta hiçbir şey eklemeden döner; Ctrl+Z hesaplayıcının son referansını geri alır, çizimi geri almaz (`objects.kcad` üstünde) |
 | `v1/object-tracking.json` | Nesne izleme (`UX-07`), Nokta aracında: kenette durarak (`rest`) izleme noktası alma, noktanın yatay hizasına kilitlenme ve tıklananın hizaya oturması, hizadayken yazılan mesafe (noktadan hiza boyunca), iki noktanın hizalarının kesişimi, alınmış noktada yeniden durarak bırakma, Shift+F3 izlemeyi kapatır ama noktaları tutar, yeniden açınca kalan nokta hiza verir, en çok üç nokta (dördüncüsü en eskisini düşürür), araçtan çıkınca noktalar gider (`objects.kcad` üstünde) |
+| `v1/usage-parcel.json` | Kullanım senaryosu: boş çizimde koordinatları yazarak (`Y,X`, `@dY,dX`) parsel oluşturma (parsel katmanı yoksa yeni projedeki gibi açılır, parselle aynı adımda), güney kenarını ölçülendirme, içini tarama, seçip özniteliklerine ve kartına bakma, her işi kendi adımıyla geri alma; kot noktası (kot katmanı yoksa açılır) |
 | `v1/empty.kcad` | İzlerin başladığı boş çizim (`.kcad` v1) |
 | `v1/objects.kcad` | Seçim, kenet ve nokta hesabı izlerinin çizimi: çizgiler (1–3; 2 ile 3 (9,6; 8,8)'de kesişir), kapalı alan (4), nokta (5), kilitli katmanda çizgi (6), gizli katmanda çizgi (7) |
 | `v1/edits.kcad` | Değiştirme izlerinin çizimi (ADR 0047): (−20, 12)'de kesişen 1 ve 2, x = −4'te sınır 3, köşesi (0, 4)'te L biçimli çoklu çizgi 4, (14, 4)'te birleşen 5 ve 6, kırılacak 7, (8, −4)'te uç uca gelen 8 ve 9, kapalı alan 10, 10 m'lik 11, 12, 9'un ucundan devam eden, kilitli katmandaki 13 |
@@ -85,6 +96,7 @@ Adımlardaki koordinatlar, `view.center`'a göre doğu ve kuzey farklarıdır, m
 | `rightClick` | Sağ tuşa kısa basıp bırakma; menüyü açan basılı tutmadan kısa |
 | `focus` | Klavye odağı: `commandLine` (komut satırına tıklamak) |
 | `saveAndReopen` | Uygulamanın kendi kaydetme komutuyla yeni bir dosyaya yazar ve o dosyayı yeniden açar |
+| `shot` | Adı verilen resim (`"shot": "parsel"`): resim oynatıcıları (`kentos-cad kullan`, `e2e:use`) uygulamanın o anki hâlini çeker; test oynatıcıları adımı geçer |
 
 `shift: true`, `click` ya da `drag` adımında tuşa basılıyken Shift'in basılı olduğunu söyler (seçime ekleme ve çıkarma).
 

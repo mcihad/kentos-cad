@@ -16,3 +16,4 @@ kentos-contracts = { path = "../../shared/contracts", default-features = false }
 kentos-geometry-core = { path = "../../shared/geometry-core" }
 kentos-domain = { path = "../domain" }
 kentos-native-application = { path = "../application" }
+kentos-project = { path = "../project" }

@@ -119,6 +119,9 @@ pnpm e2e:visual          # görsel karşılaştırma
 pnpm e2e:layout          # her pencere, menü ve çubuk 1100×650 ve 1440×900'de, iki temada: taşma, kesik düğme ve yazı; resimler scripts/e2e/out/layout
 pnpm e2e:interaction     # etkileşim izleri: poligon kabul izi, tuş anlamları (fixtures/interaction, ADR 0018)
 cargo test -p kentos-desktop traces   # aynı izler masaüstünde, pencere açmadan (ADR 0021)
+./target/debug/kentos-cad kullan usage-parcel   # kullanım senaryosunu masaüstünde oynatıp adım adım resimle (.run/shots/kullanim; fixtures/interaction/README.md)
+pnpm -C apps/web e2e:use usage-parcel   # aynı senaryo web'de, aynı adlarla web-…png
+python3 scripts/usage/compare.py usage-parcel   # iki platformun resimleri yan yana
 apps/desktop/scripts/cloud-live.sh   # masaüstünün bulut arayüzü gerçek kentosd ile (geliştirme veritabanı; görüntüler .run/shots/bulut-*; ADR 0041)
 cargo test -p kentos-desktop cloud::file_follow_tests::revision_screens -- --ignored --nocapture   # dosya projesinin revizyon resimleri, .run/shots/bulut-revizyon-* (ADR 0119)
 cargo test -p kentos-processing   # işlem araçlarının ortak durumları masaüstünde (fixtures/processing/v1, ADR 0084)

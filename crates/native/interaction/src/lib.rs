@@ -155,6 +155,7 @@ mod session;
 pub mod set_elevation;
 pub mod spatial;
 pub mod spline;
+mod standard_layer;
 pub mod split;
 pub mod station_offset;
 pub mod stretch;

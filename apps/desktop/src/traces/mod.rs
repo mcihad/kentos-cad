@@ -141,6 +141,7 @@ mod tests {
             focus: None,
             save_and_reopen: None,
             shift: None,
+            shot: None,
             expect: None,
             note: None,
         });

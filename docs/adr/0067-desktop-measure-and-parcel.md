@@ -69,6 +69,22 @@ Web ajanı ikisini de bulup önerdi (8. görev, D). İki platformda değişti; i
   - 11 kimlikli parsel seçili;
   - Ctrl+Z tek adımda geri alır.
 
+### Ek (29 Eylül 2026): standart katmanı olmayan çizim
+
+Gerçek kullanımda (kullanım senaryosu `fixtures/interaction/v1/usage-parcel.json`) bir kusur çıktı. Parsel oluştur ve Kot noktası kendi standart katmanlarına yazar: `parsel` ve `kot`. Bu katmanı olmayan bir çizimde (içe alınmış DXF ya da NCZ, eski bir dosya) iki platform da parseli ya da noktayı yazmıyordu:
+
+- masaüstü, katman kimliğini soran bir iletiyle reddediyor ve yazılan köşeleri yitiriyordu;
+- web, hiçbir şey söylemeden işi bırakıyordu.
+
+Karar: katman yoksa, yeni projedeki tanımıyla açılır.
+
+- Kimliği, adı (“Parsel sınırı”, “Kot noktaları”) ve stili yeni projedekiyle aynıdır.
+- Katman, nesnenin geri alma adımında (“Ekle”) açılır. Nesne yazılamazsa katman da kalmaz.
+- Yazıldıktan sonra bilgi iletisi verilir: “Parsel sınırı” katmanı çizimde yoktu; parsel için açıldı.
+- Kilitli standart katmanın reddi değişmez.
+
+Masaüstünde `crates/native/interaction/src/standard_layer.rs` ile `kentos_project::new_project::standard_layer`; web'de aynı kural.
+
 ## Web'den ayrılanlar
 
 - Yok. Ölçülerin sonucu web'de olduğu gibi yalnız ileti satırında ve imlecin yanındadır. Pencere, kopyalama düğmesi ve ölçü nesnesi yoktur (web ajanının tarifi, C).

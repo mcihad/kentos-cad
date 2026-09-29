@@ -346,15 +346,22 @@ fn a_spot_elevation_goes_on_its_layer_with_its_elevation() {
         p.base.attrs.get("Z (m)").map(String::as_str),
         Some("12.346")
     );
-    // A drawing without the spot elevations' layer says so.
+    // A drawing without the spot elevations' layer gets it as a new project has it, in the
+    // point's own undo step (docs/adr/0067).
     let mut b = on(OBJECTS, "cizim", "spot");
     b.click(0.0, 0.0);
     assert!(b.type_text("1"));
     assert_eq!(
         b.last_text(),
-        Some("“kot” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.")
+        Some("“Kot noktaları” katmanı çizimde yoktu; kot noktası için açıldı.")
     );
-    assert_eq!(b.doc.len(), 7);
+    assert_eq!(b.doc.len(), 8);
+    assert_eq!(
+        b.doc.layers().get("kot").map(|n| n.name.as_str()),
+        Some("Kot noktaları")
+    );
+    assert_eq!(b.doc.undo().as_deref(), Some("Ekle"));
+    assert!(b.doc.layers().get("kot").is_none() && b.doc.len() == 7);
     // A locked spot layer: the tool's own words, another active layer would not help (docs/adr/0067).
     let mut b = on(TOOLS, "cizim", "spot");
     b.doc.toggle_layer_locked("kot");

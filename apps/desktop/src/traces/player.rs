@@ -160,6 +160,10 @@ pub struct TrackSeen {
     pub lines: Vec<([f64; 2], f64)>,
 }
 
+/// What takes a `shot` step's picture: the app, the picture's name, and
+/// whether the command line has the keyboard.
+pub type Shot<'s> = &'s mut dyn FnMut(&mut App, &str, bool);
+
 /// Plays a trace on an app.
 pub struct Player<'a> {
     pub app: &'a mut App,
@@ -238,10 +242,26 @@ impl<'a> Player<'a> {
     /// returns every expectation that did not hold, by step. A step that
     /// cannot be played ends the trace.
     pub fn play(&mut self, last: Option<usize>) -> Vec<String> {
+        self.play_with(last, None)
+    }
+
+    /// Plays the whole trace, calling `shot` at each `shot` step with the app,
+    /// the picture's name and whether the command line has the keyboard (so
+    /// the picture can show its suggestion list); the expectations' problems.
+    pub fn play_shots(&mut self, shot: Shot<'_>) -> Vec<String> {
+        self.play_with(None, Some(shot))
+    }
+
+    fn play_with(&mut self, last: Option<usize>, mut shot: Option<Shot<'_>>) -> Vec<String> {
         let mut problems = Vec::new();
         for (i, step) in self.trace.steps.iter().enumerate() {
             if last.is_some_and(|last| i >= last) {
                 break;
+            }
+            if let (Some(name), Some(take)) = (&step.shot, shot.as_mut()) {
+                let line = self.line_has_keyboard();
+                take(self.app, name, line);
+                continue;
             }
             let label = format!("adım {} {}", i + 1, describe(step));
             let said = self.app.log.last_id();
@@ -336,7 +356,7 @@ impl<'a> Player<'a> {
             self.press(&chord_stroke("Ctrl+S", self.variant.layout)?)?;
             return self.press(&chord_stroke("Ctrl+O", self.variant.layout)?);
         }
-        if step.expect.is_some() {
+        if step.expect.is_some() || step.shot.is_some() {
             return Ok(());
         }
         Err("adımda eylem yok".to_owned())
@@ -639,6 +659,8 @@ fn describe(step: &Step) -> String {
         format!("focus {target}")
     } else if step.save_and_reopen.is_some() {
         "saveAndReopen".to_owned()
+    } else if let Some(name) = &step.shot {
+        format!("shot {name}")
     } else {
         "beklenti".to_owned()
     }

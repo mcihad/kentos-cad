@@ -89,6 +89,16 @@ impl Point {
             cx.say(Level::Warn, text);
             return;
         }
+        // A drawing without the spot layer gets it, in the point's own undo step (docs/adr/0067).
+        let opened = if self.spot {
+            let Ok(opened) = crate::standard_layer::open_if_missing(SPOT_LAYER, "kot noktası", cx)
+            else {
+                return;
+            };
+            opened
+        } else {
+            None
+        };
         let input = PointCreate {
             layer_id: if self.spot {
                 SPOT_LAYER.to_owned()
@@ -108,8 +118,18 @@ impl Point {
             expected_revision: None,
         };
         let result = point::execute(&mut ExecutionContext::new(cx.doc), input);
-        if let Some(written) = points::written(result, cx) {
-            self.d.note(written.id, cx);
+        match points::written(result, cx) {
+            Some(written) => {
+                if let Some(opened) = opened {
+                    opened.keep(cx);
+                }
+                self.d.note(written.id, cx);
+            }
+            None => {
+                if let Some(opened) = opened {
+                    opened.drop(cx);
+                }
+            }
         }
     }
 }

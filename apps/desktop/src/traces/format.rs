@@ -81,6 +81,9 @@ pub struct Step {
     pub(super) save_and_reopen: Option<bool>,
     /// Shift held during the step's click or drag.
     pub(super) shift: Option<bool>,
+    /// A named picture of the app as it is now (usage scenarios, `kentos-cad
+    /// kullan`); a test run passes over it.
+    pub(super) shot: Option<String>,
     pub(super) expect: Option<Expect>,
     /// For the reader; not checked.
     #[allow(dead_code)]

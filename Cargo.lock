@@ -2582,6 +2582,7 @@ dependencies = [
  "kentos-domain",
  "kentos-geometry-core",
  "kentos-native-application",
+ "kentos-project",
 ]
 
 [[package]]
