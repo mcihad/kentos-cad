@@ -178,14 +178,14 @@ impl Summary {
     }
 
     /// How the row shows it, and the unit that follows it: `kot yok`;
-    /// `100.000` and `m`; `98.500 – 105.250` and `m`. With vertices missing it
+    /// `100.000` and `m`; `98.500–105.250` and `m` (an en dash without spaces, as ranges are set: four-digit elevations fit the cell at 1100 px). With vertices missing it
     /// is the range of those that have one; [`Summary::note`] says the rest.
     pub fn shown(&self, f: &Format) -> (String, Option<&'static str>) {
         let range = |lo: f64, hi: f64| {
             if lo == hi {
                 f.length_bare(lo)
             } else {
-                format!("{} – {}", f.length_bare(lo), f.length_bare(hi))
+                format!("{}–{}", f.length_bare(lo), f.length_bare(hi))
             }
         };
         match *self {
@@ -202,7 +202,7 @@ impl Summary {
         matches!(self, Summary::Partial(..)).then_some(SOME_WITHOUT)
     }
 
-    /// The same as one text, as a message says it: `98.500 – 105.250 m
+    /// The same as one text, as a message says it: `98.500–105.250 m
     /// (bazı köşeler kotsuz)`.
     pub fn text(&self, f: &Format) -> String {
         let (text, unit) = self.shown(f);
@@ -467,15 +467,15 @@ mod tests {
             Summary::Value(-4.25).shown(&f),
             ("-4.250".into(), Some("m"))
         );
-        assert_eq!(Summary::Range(98.5, 105.25).text(&f), "98.500 – 105.250 m");
+        assert_eq!(Summary::Range(98.5, 105.25).text(&f), "98.500–105.250 m");
         assert_eq!(
             Summary::Partial(98.5, 105.25).text(&f),
-            "98.500 – 105.250 m (bazı köşeler kotsuz)"
+            "98.500–105.250 m (bazı köşeler kotsuz)"
         );
         // The row shows the range with its unit and puts the note on a line under it.
         assert_eq!(
             Summary::Partial(98.5, 105.25).shown(&f),
-            ("98.500 – 105.250".into(), Some("m"))
+            ("98.500–105.250".into(), Some("m"))
         );
         assert_eq!(
             Summary::Partial(98.5, 105.25).note(),

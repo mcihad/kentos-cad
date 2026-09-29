@@ -101,7 +101,7 @@ Sahibin kararı (29 Eylül): `.kcad` şemasını değiştiren işler kendi özel
 
 - **Öznitelikler paneli:**
   - Çizgide "Kot (başlangıç)" ve "Kot (bitiş)" satırları.
-  - Çoklu çizgi ve alanda "Kot" satırı; köşeler aynıysa değeri, değilse "en düşük – en yüksek" aralığı gösterir, kotsuzsa "kot yok" der. Satır düzenlenince bütün köşelerin kotu o değer olur.
+  - Çoklu çizgi ve alanda "Kot" satırı; köşeler aynıysa değeri, değilse "en düşük–en yüksek" aralığını gösterir (uzun tire boşluksuz: dört basamaklı kotlar da hücreye sığar), kotsuzsa "kot yok" der. Satır düzenlenince bütün köşelerin kotu o değer olur.
 - **Tutamaç:** üzerine gelinen köşenin kotunu imleç yanında gösterir.
 - **Değiştir › Kot paneli, Kot ver aracı (`tool.setElevation`).** Seçili nesnelerin köşelerine yazar, üç biçimi vardır:
   - sabit: her köşeye aynı kot;

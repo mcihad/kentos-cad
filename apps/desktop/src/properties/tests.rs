@@ -652,9 +652,9 @@ fn a_polyline_shows_its_elevations_as_a_value_a_range_or_none() {
     let none = path_z(&mut app, None);
     for (slot, text, note) in [
         (same, "5.000 m", None),
-        (range, "98.500 – 105.250 m", None),
+        (range, "98.500–105.250 m", None),
         // The range of those that have one; the note is a line under it, the column too narrow for both.
-        (partial, "98.500 – 105.250 m", Some("(bazı köşeler kotsuz)")),
+        (partial, "98.500–105.250 m", Some("(bazı köşeler kotsuz)")),
         (none, "kot yok", None),
     ] {
         select(&mut app, &[slot]);
@@ -690,7 +690,7 @@ fn an_area_says_its_perimeter_in_space_holes_included() {
     // A rise of 3 m along the two long sides.
     let sloped = area_z(&mut app, some(&[10.0, 13.0, 13.0, 10.0]), some(&[10.0; 4]));
     select(&mut app, &[sloped]);
-    assert_eq!(value(&app, "Geometri", "Kot"), "10.000 – 13.000 m");
+    assert_eq!(value(&app, "Geometri", "Kot"), "10.000–13.000 m");
     // The ring: two sides of √(20² + 3²) and two flat ones of 10; the hole is flat, 12 m.
     let want = 2.0 * (400.0f64 + 9.0).sqrt() + 20.0 + 12.0;
     assert_eq!(value(&app, "Geometri", "3B çevre"), format!("{want:.3} m"));
