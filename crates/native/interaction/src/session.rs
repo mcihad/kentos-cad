@@ -50,6 +50,7 @@ use crate::rotated::{self, RotatedRectangle};
 use crate::scale::{self, Scale};
 use crate::select::{Select, SelectBox};
 use crate::spatial::Spatial;
+use crate::station_offset;
 use crate::stretch::{self, Stretch};
 use crate::tool::{Context, Cursor, Draft, Flow, Pointer, Preview, Tool, View};
 use crate::trim::{self, Boundary};
@@ -138,6 +139,8 @@ pub const TOOLS: &[&str] = &[
     dimension_chain::BASELINE_ID,
     // Phase 3: the array along a path (Çit, İki yana and Kaynağı sil are options of existing tools).
     array_path::ID,
+    // docs/adr/0141: Dik ayak ölç.
+    station_offset::ID,
 ];
 
 /// What a tool running over another one suspended (docs/adr/0083).
@@ -252,6 +255,7 @@ impl Session {
                 Box::new(crate::dimension_chain::DimensionChain::baseline())
             }
             array_path::ID => Box::new(crate::array_path::ArrayPath::tool()),
+            station_offset::ID => Box::new(station_offset::StationOffset::new()),
             _ => return false,
         };
         // Kaydır is not repeated: Enter while panning repeats the command

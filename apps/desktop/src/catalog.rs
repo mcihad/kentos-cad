@@ -259,6 +259,8 @@ pub const PORTED: &[&str] = &[
     "view.previous",
     "view.next",
     "view.extentCheck",
+    // Dik ayak ölç (docs/adr/0141): a point read against a line, to the log.
+    "tool.stationOffset",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

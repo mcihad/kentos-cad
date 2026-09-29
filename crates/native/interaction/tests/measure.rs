@@ -37,7 +37,10 @@ fn clicks(b: &mut Bench, pts: &[[f64; 2]]) {
 #[test]
 fn measure_says_the_total_length_and_writes_nothing() {
     let mut b = bench("measure");
-    assert_eq!(b.session.prompt().text(), "Mesafe ölç: ilk noktayı belirtin");
+    assert_eq!(
+        b.session.prompt().text(),
+        "Mesafe ölç: ilk noktayı belirtin [Sabit ilk nokta (S)]"
+    );
     clicks(&mut b, &[[-14.0, 4.0], [-14.0, 10.0]]);
     // The tag adds the whole path's length, the cursor's segment included.
     b.move_to(-8.0, 10.0);
@@ -61,7 +64,10 @@ fn measure_says_the_total_length_and_writes_nothing() {
 #[test]
 fn area_says_the_area_and_perimeter_and_closes_on_its_first_corner() {
     let mut b = bench("area");
-    assert_eq!(b.session.prompt().text(), "Alan hesapla: ilk noktayı belirtin");
+    assert_eq!(
+        b.session.prompt().text(),
+        "Alan hesapla: ilk noktayı belirtin [İçine tıkla (I)]"
+    );
     clicks(&mut b, &[[-14.0, 4.0], [-8.0, 4.0], [-8.0, 10.0], [-14.0, 10.0]]);
     b.move_to(-14.0, 4.0);
     assert_eq!(tag(&b).last().map(String::as_str), Some("Alan 36.00 m²"));

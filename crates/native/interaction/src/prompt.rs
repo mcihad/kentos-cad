@@ -108,6 +108,16 @@ impl Prompt {
         self
     }
 
+    /// A chip that turns something on or off, as Ötele's do: its name alone
+    /// while it is off, `İki yana (I): açık` while it is on.
+    pub fn toggle(self, label: &'static str, key: &'static str, on: bool) -> Self {
+        if on {
+            self.option_with(label, key, "açık")
+        } else {
+            self.option(label, key)
+        }
+    }
+
     /// A note in the bracket: `mesafe 1.000 m`, `Shift+tık: uzat`.
     pub fn note(mut self, text: impl Into<String>) -> Self {
         self.part(Part::Note(self.notes.len()));

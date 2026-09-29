@@ -165,7 +165,8 @@
     "file.import.ncz",
     "view.previous",
     "view.next",
-    "view.extentCheck"
+    "view.extentCheck",
+    "tool.stationOffset"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

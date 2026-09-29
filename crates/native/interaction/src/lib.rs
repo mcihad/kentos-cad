@@ -58,8 +58,10 @@
 //!   ([`dimension_chain`]); phase 3's fence for trim and extend
 //!   ([`trim`], `fence`), the two sides and deleted source of offset
 //!   ([`offset`]) and the array along a path ([`array_path`]);
-//! - the view history of docs/adr/0141 ([`view_history`]): the views left by
-//!   navigating, for Önceki and Sonraki görünüm;
+//! - docs/adr/0141: the view history ([`view_history`]), the views left by
+//!   navigating, for Önceki and Sonraki görünüm; Mesafe ölç's fixed first point
+//!   and Alan hesapla's İçine tıkla and Alan olarak çiz ([`path`]); Dik ayak
+//!   ölç ([`station_offset`]);
 //! - the geometry store kept in step with the document ([`Spatial`]): what
 //!   a click picks, a box selects and a point snaps to;
 //! - [`Format`]: numbers as the web shows them in messages and the tag.
@@ -141,6 +143,7 @@ mod session;
 pub mod spatial;
 pub mod spline;
 pub mod split;
+pub mod station_offset;
 pub mod stretch;
 pub mod text;
 mod tool;

@@ -1,5 +1,5 @@
 //! The drawings and the steps of the pictures `tools_screens` takes of the
-//! tools of docs/adr/0140 (phases 1 to 3): each scene opens a small drawing that
+//! tools of docs/adr/0140 (phases 1 to 3) and docs/adr/0141: each scene opens a small drawing that
 //! shows its tool well, drives the real app the way a person would (the
 //! tool from the ribbon's command, a selection, a typed value, the pointer)
 //! and stops where the picture is to be taken: mid-use with the preview, or
@@ -23,7 +23,7 @@ fn xy(p: [f64; 2]) -> Value {
 }
 
 /// One object of a scene: its kind's fields and its layer.
-struct Objects(Vec<Value>);
+pub(crate) struct Objects(Vec<Value>);
 
 impl Objects {
     fn new() -> Self {
@@ -91,7 +91,7 @@ fn layer(id: &str, name: &str, color: &str, weight: f64) -> Value {
 
 /// Opens a new drawing of `objects` on the layers Çizim, Yol and Parsel, as
 /// the app would open a file: the view fits it.
-fn open(app: &mut App, objects: Objects) {
+pub(crate) fn open(app: &mut App, objects: Objects) {
     let mut d: Value = serde_json::from_str(EMPTY).expect("the empty drawing reads");
     d["layers"] = json!([
         layer("cizim", "Çizim", "fg", 0.25),
@@ -106,7 +106,7 @@ fn open(app: &mut App, objects: Objects) {
 }
 
 /// Where a point (east and north from the drawing's origin) is on the drawing area.
-fn at(app: &App, p: [f64; 2]) -> Point {
+pub(crate) fn at(app: &App, p: [f64; 2]) -> Point {
     let [x, y] = app
         .viewport
         .camera
@@ -114,19 +114,19 @@ fn at(app: &App, p: [f64; 2]) -> Point {
     Point::new(x as f32, y as f32)
 }
 
-fn hover(app: &mut App, p: [f64; 2]) {
+pub(crate) fn hover(app: &mut App, p: [f64; 2]) {
     let point = at(app, p);
     let _ = app.update(Message::Viewport(Event::Moved(point)));
 }
 
-fn click(app: &mut App, p: [f64; 2]) {
+pub(crate) fn click(app: &mut App, p: [f64; 2]) {
     let point = at(app, p);
     let _ = app.update(Message::Viewport(Event::Moved(point)));
     let _ = app.update(Message::Viewport(Event::Pressed(point)));
     let _ = app.update(Message::Viewport(Event::Released(point)));
 }
 
-fn run(app: &mut App, id: &'static str) {
+pub(crate) fn run(app: &mut App, id: &'static str) {
     let _ = app.update(Message::Run(id));
 }
 
@@ -138,7 +138,7 @@ fn method(app: &mut App, id: &'static str, option: &'static str) {
     });
 }
 
-fn typed(app: &mut App, text: &str) {
+pub(crate) fn typed(app: &mut App, text: &str) {
     let _ = app.submit_line(text);
 }
 
@@ -594,11 +594,12 @@ fn first_phase() -> Vec<Scene> {
     ]
 }
 
-/// Every scene: phase 1's tools, then phase 2's, then phase 3's.
+/// Every scene: phase 1's tools, then phase 2's, then phase 3's, then docs/adr/0141's.
 pub(crate) fn scenes() -> Vec<Scene> {
     let mut all = first_phase();
     all.extend(second_phase());
     all.extend(third_phase());
+    all.extend(query_scenes());
     all
 }
 
@@ -890,6 +891,167 @@ fn third_phase() -> Vec<Scene> {
             forget(app);
             run(app, "tool.confirm");
             hover(app, [30.0, 8.0]);
+        }),
+    ]
+}
+
+// ── docs/adr/0141: the drawings ─────────────────────────────────────────────
+
+/// Nine parcels in a block, and two objects that fell far away from them.
+pub(crate) fn far_ground() -> Objects {
+    let mut o = Objects::new();
+    for i in 0..9 {
+        let (x, y) = ((i % 3) as f64 * 22.0, (i / 3) as f64 * 18.0);
+        o.path(
+            "parsel",
+            &[[x, y], [x + 20.0, y], [x + 20.0, y + 16.0], [x, y + 16.0]],
+            true,
+        );
+    }
+    // Brought in with a wrong coordinate system: half a kilometre from the block.
+    o.point("yol", [-520.0, -380.0], None);
+    o.path(
+        "yol",
+        &[
+            [520.0, 560.0],
+            [536.0, 560.0],
+            [536.0, 576.0],
+            [520.0, 576.0],
+        ],
+        true,
+    );
+    o
+}
+
+/// A parcel with a building drawn inside it, its neighbour, and a road: Mesafe ölç's corners.
+pub(crate) fn survey_ground() -> Objects {
+    let mut o = Objects::new();
+    o.path(
+        "parsel",
+        &[[6.0, 6.0], [46.0, 6.0], [38.0, 30.0], [14.0, 26.0]],
+        true,
+    );
+    o.line("yol", [0.0, 0.0], [54.0, 0.0]);
+    o.path(
+        "cizim",
+        &[[20.0, 12.0], [30.0, 12.0], [30.0, 18.0], [20.0, 18.0]],
+        true,
+    );
+    o
+}
+
+/// Two neighbouring parcels, the first with a building inside it (an island).
+pub(crate) fn islands_ground() -> Objects {
+    let mut o = Objects::new();
+    o.path(
+        "parsel",
+        &[[0.0, 0.0], [24.0, 0.0], [24.0, 20.0], [0.0, 20.0]],
+        true,
+    );
+    o.path(
+        "parsel",
+        &[[24.0, 0.0], [44.0, 0.0], [44.0, 20.0], [24.0, 20.0]],
+        true,
+    );
+    o.path(
+        "cizim",
+        &[[8.0, 6.0], [14.0, 6.0], [14.0, 12.0], [8.0, 12.0]],
+        true,
+    );
+    o
+}
+
+/// A road along a slope with a parcel at one side and a line at the other.
+pub(crate) fn station_ground() -> Objects {
+    let mut o = Objects::new();
+    o.line("yol", [4.0, 8.0], [54.0, 26.0]);
+    o.path(
+        "parsel",
+        &[[4.0, 14.0], [22.0, 14.0], [22.0, 30.0], [4.0, 30.0]],
+        true,
+    );
+    o.line("cizim", [30.0, 4.0], [58.0, 4.0]);
+    o.point("cizim", [40.0, 32.0], None);
+    o
+}
+
+// ── docs/adr/0141: the scenes ───────────────────────────────────────────────
+
+/// Kapsam denetimi, Mesafe ölç's fixed first point, İçine tıkla and Alan olarak çiz, Dik ayak ölç.
+fn query_scenes() -> Vec<Scene> {
+    vec![
+        ("kapsam-sonuc", |app| {
+            open(app, far_ground());
+            run(app, "view.extentCheck");
+            // Everything on screen, the strays selected among the parcels.
+            run(app, "view.zoomExtents");
+        }),
+        ("kapsam-temiz", |app| {
+            open(app, survey_ground());
+            run(app, "view.extentCheck");
+        }),
+        ("mesafe-sabit-onizleme", |app| {
+            open(app, survey_ground());
+            run(app, "tool.measure");
+            typed(app, "s");
+            forget(app);
+            click(app, [6.0, 6.0]);
+            click(app, [46.0, 6.0]);
+            click(app, [38.0, 30.0]);
+            click(app, [14.0, 26.0]);
+            hover(app, [52.0, 20.0]);
+        }),
+        ("mesafe-zincir-onizleme", |app| {
+            open(app, survey_ground());
+            run(app, "tool.measure");
+            click(app, [6.0, 6.0]);
+            click(app, [46.0, 6.0]);
+            hover(app, [38.0, 30.0]);
+        }),
+        ("alan-icine-tikla", |app| {
+            open(app, islands_ground());
+            run(app, "tool.area");
+            typed(app, "i");
+            hover(app, [4.0, 16.0]);
+        }),
+        ("alan-icine-tikla-sonuc", |app| {
+            open(app, islands_ground());
+            run(app, "tool.area");
+            typed(app, "i");
+            click(app, [4.0, 16.0]);
+            hover(app, [4.0, 16.0]);
+        }),
+        ("alan-olarak-ciz-sonuc", |app| {
+            open(app, islands_ground());
+            run(app, "tool.area");
+            typed(app, "i");
+            forget(app);
+            click(app, [4.0, 16.0]);
+            typed(app, "a");
+            hover(app, [34.0, 10.0]);
+        }),
+        ("dik-ayak-cizgi", |app| {
+            open(app, station_ground());
+            run(app, "tool.stationOffset");
+            click(app, [4.0, 8.0]);
+            hover(app, [40.0, 22.0]);
+        }),
+        ("dik-ayak-onizleme", |app| {
+            open(app, station_ground());
+            run(app, "tool.stationOffset");
+            click(app, [4.0, 8.0]);
+            click(app, [54.0, 26.0]);
+            hover(app, [46.0, 12.0]);
+        }),
+        ("dik-ayak-sonuc", |app| {
+            open(app, station_ground());
+            run(app, "tool.stationOffset");
+            click(app, [4.0, 8.0]);
+            click(app, [54.0, 26.0]);
+            forget(app);
+            click(app, [22.0, 14.0]);
+            click(app, [22.0, 30.0]);
+            hover(app, [46.0, 12.0]);
         }),
     ]
 }

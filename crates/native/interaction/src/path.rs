@@ -21,18 +21,35 @@
 //!   shapes write nothing and say the length, or the area and perimeter;
 //!   with fewer points it warns, writes nothing and starts over.
 //!
+//! Two options of the measuring shapes are docs/adr/0141's:
+//!
+//! - Mesafe ölç's Sabit ilk nokta (S) measures every new point from the first
+//!   (Netcad's cetvel, rays instead of a chain): the tag and the log say
+//!   the distance and semt of each ray, and no total is said. It is offered
+//!   before the first point and while it is on; Yay and Uzunluk do not apply.
+//! - Alan hesapla's İçine tıkla (I) measures the region a click is inside, as
+//!   İçine tıklayarak alan finds it: the visible line work's face, closed
+//!   groups inside it as holes. After a measurement Alan olarak çiz (A) writes
+//!   the ring last measured (holes included) to the active layer through
+//!   `cad.polygon.create`, one undo step named “Alan olarak çiz”.
+//!
 //! The web's messages are kept word for word. Every calculation is the
 //! shared core's (`kentos-geometry-core`); none is written here.
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{EntitiesCreate, EntityGeometry, NewObject, PolygonCreate, PolylineCreate};
+use kentos_contracts::{
+    EntitiesCreate, EntityGeometry, NewObject, PolygonCreate, PolylineCreate, RingGeometry,
+};
 use kentos_domain::Slot;
+use kentos_geometry_core::entity::polygon_ring;
 use kentos_geometry_core::geom::arc::DEFAULT_STEP;
+use kentos_geometry_core::geom::arrangement::{Area as Region, Ring};
 use kentos_geometry_core::geom::bulge::{
     bulge_arc, bulge_of_sweep, bulge_path_length, bulge_path_outline, bulge_ring_area,
     bulge_through, has_bulges, segment_tangent, tangent_bulge,
 };
+use kentos_geometry_core::geom::region::net_area;
 use kentos_geometry_core::geometry::{bearing_grad, dist};
 use kentos_geometry_core::jsmath::{PI, js_hypot};
 use kentos_geometry_core::tools::drawing::{
@@ -43,11 +60,15 @@ use kentos_geometry_core::tools::point_text::{js_trim, parse_number, point_from_
 use kentos_native_application::{ExecutionContext, create, polygon, polyline};
 
 use crate::Vec2;
+use crate::faces;
 use crate::format::Format;
 use crate::log::Level;
 use crate::points::{self, SAME, wire, wire_all};
 use crate::prompt::{Prompt, upper_tr};
-use crate::tool::{Context, Flow, Pointer, Preview, Tag, Tool};
+use crate::tool::{
+    Area, Context, Flow, Label, Marker, MarkerShape, Memory, Pointer, Preview, Stroke, Tag, Tone,
+    Tool,
+};
 
 /// The closed-area tool's id: its command is `tool.polygon`.
 pub const POLYGON_ID: &str = "polygon";
@@ -66,6 +87,8 @@ pub const PARCEL_ID: &str = "parcel";
 pub const PARCEL_LABEL: &str = "Parsel";
 /// The layer parcels go on and are numbered by (the web's `LAYERS.parcel`, the project template's).
 pub const PARCEL_LAYER: &str = "parsel";
+/// Alan olarak çiz's undo step (docs/adr/0141).
+pub const DRAW_AREA_LABEL: &str = "Alan olarak çiz";
 
 /// What the tool draws.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -161,6 +184,31 @@ pub struct Path {
     closing: f64,
     /// Where the button went down, while that click is being taken (closing on the first corner).
     pressed_at: Option<[f64; 2]>,
+    /// What the session remembered, as of the last call (the prompt sees no context).
+    memory: Memory,
+    /// İçine tıkla: where the pointer is and the region around it.
+    inside: Option<(Vec2, Option<Region>)>,
+    /// The faces of the visible line work, kept while the drawing and the view stand.
+    faces: FaceCache,
+    /// The area last measured, which Alan olarak çiz writes; kept until the next measurement starts.
+    measured: Option<Region>,
+}
+
+/// The faces İçine tıkla finds regions in ([`faces::Faces`], which is neither
+/// `Clone` nor `Debug`): a copy of the tool starts without them.
+#[derive(Default)]
+struct FaceCache(Option<faces::Faces>);
+
+impl Clone for FaceCache {
+    fn clone(&self) -> Self {
+        Self(None)
+    }
+}
+
+impl std::fmt::Debug for FaceCache {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("FaceCache")
+    }
 }
 
 impl Path {
@@ -177,6 +225,10 @@ impl Path {
             ask_length: false,
             closing: 0.0,
             pressed_at: None,
+            memory: Memory::default(),
+            inside: None,
+            faces: FaceCache::default(),
+            measured: None,
         }
     }
 
@@ -196,6 +248,30 @@ impl Path {
 
     fn last(&self) -> Option<Vec2> {
         self.pts.last().copied()
+    }
+
+    fn see(&mut self, cx: &Context<'_>) {
+        self.memory = *cx.memory;
+    }
+
+    /// Mesafe ölç with Sabit ilk nokta on: rays from the first point, not a chain.
+    fn fixed(&self) -> bool {
+        self.shape == Shape::MeasureLength && self.memory.measure_fixed
+    }
+
+    /// Alan hesapla with İçine tıkla on: a click measures the region it is inside.
+    fn inside_mode(&self) -> bool {
+        self.shape == Shape::MeasureArea && self.memory.area_inside
+    }
+
+    /// The point new ones are measured from, and ortho, polar tracking and
+    /// typed distances go from: the first with Sabit ilk nokta, else the last.
+    fn base(&self) -> Option<Vec2> {
+        if self.fixed() {
+            self.pts.first().copied()
+        } else {
+            self.last()
+        }
     }
 
     /// Travel direction at the last corner (the end tangent of the last segment).
@@ -246,8 +322,16 @@ impl Path {
     }
 
     fn on_point(&mut self, p: Vec2, cx: &mut Context<'_>) {
+        if self.inside_mode() {
+            return self.click_inside(p, cx);
+        }
+        if self.fixed() {
+            return self.on_ray(p, cx);
+        }
         let Some(last) = self.last() else {
             self.pts.push(p);
+            // A new measurement starts: what was measured before is no more Alan olarak çiz's.
+            self.measured = None;
             return;
         };
         // Options that take a point before the end point.
@@ -344,8 +428,123 @@ impl Path {
         self.finish(cx);
     }
 
+    /// A ray of Sabit ilk nokta: measured from the first point, said in the log.
+    fn on_ray(&mut self, p: Vec2, cx: &mut Context<'_>) {
+        let Some(first) = self.pts.first().copied() else {
+            self.pts.push(p);
+            return;
+        };
+        if dist(first, p) <= SAME {
+            return;
+        }
+        self.pts.push(p);
+        self.bulges.push(0.0);
+        let f = cx.format();
+        let text = format!(
+            "{}: {}, semt {}",
+            self.pts.len() - 1,
+            f.length(dist(first, p)),
+            f.bearing(bearing_grad(first, p))
+        );
+        cx.say(Level::Info, text);
+    }
+
+    /// İçine tıkla: the region around `p` is measured, as a ring drawn is.
+    fn click_inside(&mut self, p: Vec2, cx: &mut Context<'_>) {
+        let Some(region) = self.face(p, cx) else {
+            cx.say(
+                Level::Warn,
+                "Tıklanan noktayı çevreleyen kapalı bölge yok.",
+            );
+            return;
+        };
+        let f = cx.format();
+        let text = format!(
+            "Alan {}   Çevre {}",
+            f.area(net_area(&region)),
+            f.length(perimeter(&region))
+        );
+        cx.say(Level::Success, text);
+        self.measured = Some(region);
+    }
+
+    /// The face of the visible line work around `p`, closed groups inside it as holes.
+    fn face(&mut self, p: Vec2, cx: &Context<'_>) -> Option<Region> {
+        faces::face_at(&mut self.faces.0, p, true, None, cx)
+    }
+
+    /// The three switches of docs/adr/0141: Sabit ilk nokta (S) before the
+    /// first point or while it is on, İçine tıkla (I) likewise, Alan olarak çiz
+    /// (A) after a measurement. False when the key is none of them now.
+    fn switch(&mut self, key: &str, cx: &mut Context<'_>) -> bool {
+        match (self.shape, key) {
+            (Shape::MeasureLength, "S") if self.pts.is_empty() || self.fixed() => {
+                cx.memory.measure_fixed = !cx.memory.measure_fixed;
+                // A run of one kind is not carried over into the other.
+                self.reset();
+            }
+            (Shape::MeasureArea, "I" | "İ")
+                if !self.arc_mode && (self.pts.is_empty() || self.inside_mode()) =>
+            {
+                cx.memory.area_inside = !cx.memory.area_inside;
+                self.reset();
+                self.inside = None;
+            }
+            (Shape::MeasureArea, "A") if self.pts.is_empty() && self.measured.is_some() => {
+                self.draw_measured(cx);
+            }
+            _ => return false,
+        }
+        self.see(cx);
+        true
+    }
+
+    /// Alan olarak çiz: the area last measured, holes and all, written to the
+    /// active layer through `cad.polygon.create` as one undo step. A refusal
+    /// (a locked layer) is the command's own message, and nothing is written.
+    fn draw_measured(&mut self, cx: &mut Context<'_>) {
+        let Some(region) = self.measured.clone() else {
+            return;
+        };
+        let group = cx.doc.begin_group(DRAW_AREA_LABEL);
+        let input = PolygonCreate {
+            layer_id: cx.doc.layers().active().to_owned(),
+            pts: wire_all(&region.outer.pts),
+            bulges: region.outer.bulges.clone(),
+            holes: (!region.holes.is_empty()).then(|| {
+                region
+                    .holes
+                    .iter()
+                    .map(|hole| RingGeometry {
+                        pts: wire_all(&hole.pts),
+                        bulges: hole.bulges.clone(),
+                    })
+                    .collect()
+            }),
+            color: cx.draft.color.map(str::to_owned),
+            line_weight: cx.draft.line_weight,
+            attrs: None,
+            expected_revision: None,
+        };
+        let result = polygon::execute(&mut ExecutionContext::new(cx.doc), input);
+        if points::written(result, cx).is_none() {
+            cx.doc.cancel_group(group);
+            return;
+        }
+        cx.doc.end_group(group);
+        let text = format!(
+            "Alan olarak çizildi: {}.",
+            cx.format().area(net_area(&region))
+        );
+        cx.say(Level::Success, text);
+    }
+
     /// Option letters: Y, D, U, G and the arc options. False when the key is none of them now.
     fn option(&mut self, key: &str, cx: &mut Context<'_>) -> bool {
+        // Rays have no arcs and no direction to go on in: only Geri applies.
+        if self.fixed() && key != "G" {
+            return false;
+        }
         let arc = match key {
             "A" => Some(Spec::Angle { sweep: None }),
             "M" => Some(Spec::Centre { c: None }),
@@ -398,6 +597,8 @@ impl Path {
         let pts = self.pts.clone();
         let bulges = self.full_bulges();
         match self.shape {
+            // Rays have no total: what each said is all there is.
+            Shape::MeasureLength if self.fixed() => {}
             Shape::MeasureLength => {
                 let length = bulge_path_length(&pts, bulges.as_deref(), false);
                 let text = format!(
@@ -413,6 +614,10 @@ impl Path {
                 let f = cx.format();
                 let text = format!("Alan {}   Çevre {}", f.area(area), f.length(perimeter));
                 cx.say(Level::Success, text);
+                self.measured = Some(Region {
+                    outer: Ring { pts, bulges },
+                    holes: Vec::new(),
+                });
             }
             Shape::Parcel => self.create_parcel(&pts, bulges, cx),
             Shape::Closed => {
@@ -552,7 +757,7 @@ impl Path {
     /// The effective cursor for the next point: ortho (Shift turns it over)
     /// and polar tracking from the last point, by the shared core.
     fn constrain(&mut self, p: &Pointer, cx: &Context<'_>) -> Vec2 {
-        let (point, tracking) = points::constrain(self.last(), p, cx);
+        let (point, tracking) = points::constrain(self.base(), p, cx);
         self.tracking = tracking;
         point
     }
@@ -602,6 +807,116 @@ fn js_parse_int(text: &str) -> Option<u64> {
     Some(digits.parse().unwrap_or(u64::MAX))
 }
 
+/// The perimeter of a region: its outer ring and its holes', as an object's perimeter counts them.
+fn perimeter(region: &Region) -> f64 {
+    std::iter::once(&region.outer)
+        .chain(&region.holes)
+        .map(|ring| bulge_path_length(&ring.pts, ring.bulges.as_deref(), true))
+        .sum()
+}
+
+/// A region as the web's `drawArea` draws an area: its outer ring and holes, lightly filled.
+fn region_area(region: &Region, fill: f32, dash: Option<[f32; 2]>) -> Area {
+    Area {
+        rings: std::iter::once(&region.outer)
+            .chain(&region.holes)
+            .map(|ring| polygon_ring(&ring.pts, ring.bulges.as_deref()))
+            .collect(),
+        fill,
+        width: 2.0,
+        dash,
+        fill_tone: Tone::Accent,
+    }
+}
+
+impl Path {
+    /// Chips of the step that takes no point yet, and of İçine tıkla: Mesafe
+    /// ölç's Sabit ilk nokta; Alan hesapla's İçine tıkla, and Alan olarak çiz
+    /// once something was measured.
+    fn first_chips(&self, prompt: Prompt) -> Prompt {
+        match self.shape {
+            Shape::MeasureLength => {
+                prompt.toggle("Sabit ilk nokta", "S", self.memory.measure_fixed)
+            }
+            Shape::MeasureArea => {
+                let prompt = prompt.toggle("İçine tıkla", "I", self.memory.area_inside);
+                if self.measured.is_some() && self.pts.is_empty() {
+                    prompt.option(DRAW_AREA_LABEL, "A")
+                } else {
+                    prompt
+                }
+            }
+            _ => prompt,
+        }
+    }
+
+    /// Sabit ilk nokta: the rays from the first point, each numbered as the
+    /// log numbers it, and the cursor's own with its distance and semt.
+    fn fixed_preview(&self, format: &Format) -> Preview {
+        let Some(first) = self.pts.first().copied() else {
+            return Preview::default();
+        };
+        let mut preview = Preview::default();
+        preview.markers.push(Marker {
+            at: first,
+            shape: MarkerShape::Ring(5.0),
+            tone: Tone::Snap,
+        });
+        for (i, &end) in self.pts.iter().enumerate().skip(1) {
+            preview.strokes.push(Stroke::solid(vec![first, end], false));
+            preview.markers.push(Marker {
+                at: end,
+                shape: MarkerShape::Ring(3.0),
+                tone: Tone::Accent,
+            });
+            preview.labels.push(Label {
+                at: end,
+                text: i.to_string(),
+                offset: [6.0, -6.0],
+                tone: Tone::Snap,
+            });
+        }
+        if let Some(hover) = self.hover.filter(|h| dist(first, *h) > SAME) {
+            preview
+                .strokes
+                .push(Stroke::dashed(vec![first, hover], false, [6.0, 4.0]));
+            preview.tag = Some(Tag {
+                at: hover,
+                lines: vec![
+                    format.length(dist(first, hover)),
+                    format!("Semt {}", format.bearing(bearing_grad(first, hover))),
+                ],
+            });
+            preview.tracking = self.tracking;
+        }
+        preview
+    }
+
+    /// İçine tıkla: the region under the cursor filled with its area beside
+    /// it, and the last one measured (what Alan olarak çiz would write) dashed.
+    fn inside_preview(&self, format: &Format) -> Preview {
+        let hovered = self.inside.as_ref().and_then(|(_, region)| region.as_ref());
+        let mut areas = Vec::new();
+        if let Some(measured) = self.measured.as_ref().filter(|m| Some(*m) != hovered) {
+            areas.push(region_area(measured, 0.1, Some([5.0, 4.0])));
+        }
+        let mut tag = None;
+        if let Some((at, Some(region))) = &self.inside {
+            areas.push(region_area(region, 0.16, None));
+            let mut lines = vec![format.area(net_area(region))];
+            if !region.holes.is_empty() {
+                lines.push(format!("{} ada", region.holes.len()));
+            }
+            tag = Some(Tag { at: *at, lines });
+        }
+        Preview {
+            areas,
+            tag,
+            ..Preview::default()
+        }
+    }
+}
+
 impl Tool for Path {
     /// A point computed by the point calculator, as if clicked (the web's `acceptPoint`).
     fn accepts_points(&self) -> bool {
@@ -616,9 +931,20 @@ impl Tool for Path {
         self.shape.id()
     }
 
-    /// Perpendicular and tangent snaps are taken from the last point (the web's `snapFrom`).
+    /// Perpendicular and tangent snaps are taken from the last point (the web's `snapFrom`);
+    /// with Sabit ilk nokta, from the first.
     fn snap_from(&self) -> Option<Vec2> {
-        self.last()
+        self.base()
+    }
+
+    fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
+        self.see(cx);
+        Flow::Stay
+    }
+
+    /// İçine tıkla clicks inside a region, not on a point: nothing to snap to.
+    fn snaps(&self) -> bool {
+        !self.inside_mode()
     }
 
     fn label(&self) -> &'static str {
@@ -628,10 +954,24 @@ impl Tool for Path {
     fn prompt(&self) -> Prompt {
         let label = self.shape.label();
         let n = self.pts.len();
+        if self.inside_mode() {
+            return self.first_chips(Prompt::new(label, "alanı ölçülecek bölgenin içine tıklayın"));
+        }
         if n == 0 {
-            return Prompt::new(label, "ilk noktayı belirtin");
+            return self.first_chips(Prompt::new(label, "ilk noktayı belirtin"));
         }
         let done = n >= self.shape.min();
+        // Rays from the first point: no arcs, no direction to go on in.
+        if self.fixed() {
+            let prompt = Prompt::new(label, "sonraki noktayı belirtin")
+                .toggle("Sabit ilk nokta", "S", true)
+                .option("Geri", "G");
+            return if done {
+                prompt.option("Bitir", "Enter")
+            } else {
+                prompt
+            };
+        }
         // G takes the point back from here too, rather than start Kapalı alan (docs/adr/0069).
         if self.ask_length {
             return Prompt::new(label, "son doğrultuda devam edilecek uzunluğu yazın")
@@ -677,10 +1017,17 @@ impl Tool for Path {
     }
 
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
-        self.hover = Some(self.constrain(p, cx));
+        self.see(cx);
+        let point = self.constrain(p, cx);
+        self.hover = Some(point);
+        if self.inside_mode() {
+            let region = self.face(point, cx);
+            self.inside = Some((point, region));
+        }
     }
 
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
+        self.see(cx);
         self.pressed_at = Some(p.screen);
         let point = self.constrain(p, cx);
         self.accept(point, cx);
@@ -688,7 +1035,9 @@ impl Tool for Path {
     }
 
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
-        if self.option(&upper_tr(js_trim(text)), cx) {
+        self.see(cx);
+        let key = upper_tr(js_trim(text));
+        if self.switch(&key, cx) || self.option(&key, cx) {
             return true;
         }
         let number = parse_number(text);
@@ -728,7 +1077,7 @@ impl Tool for Path {
             }
         }
         // Object tracking has no line on the desktop yet: a bare number follows the cursor.
-        match point_from_text(text, self.last(), self.hover, |d| cx.track_along(d)) {
+        match point_from_text(text, self.base(), self.hover, |d| cx.track_along(d)) {
             Some(p) => {
                 self.accept(p, cx);
                 true
@@ -752,6 +1101,12 @@ impl Tool for Path {
     }
 
     fn preview(&self, format: &Format) -> Preview {
+        if self.inside_mode() {
+            return self.inside_preview(format);
+        }
+        if self.fixed() {
+            return self.fixed_preview(format);
+        }
         let mut pts = self.pts.clone();
         let mut bulges = self.bulges.clone();
         let end = self.hover.map(|h| self.end_for(h));
@@ -807,10 +1162,17 @@ impl Tool for Path {
             }
             _ => None,
         };
+        // The area last measured stays in view, dashed, until the next measurement starts.
+        let areas = self
+            .measured
+            .iter()
+            .map(|region| region_area(region, 0.1, Some([5.0, 4.0])))
+            .collect();
         Preview {
             path,
             ring,
             guides,
+            areas,
             tracking: tag.as_ref().and(self.tracking),
             tag,
             ..Preview::default()

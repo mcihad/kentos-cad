@@ -11,14 +11,96 @@
 
 use std::path::PathBuf;
 
-use iced::Size;
-use kentos_ui::snapshot::Snapshot;
+use iced::{Point, Size};
+use kentos_ui::snapshot::{Input, Snapshot};
 
 use crate::app::{App, Message};
-use crate::files_testing::app_with_drawing;
+use crate::files_testing::{app_with_drawing, find_text, find_texts};
 
 /// One picture: its name and what brings the app to it.
 pub(crate) type Scene = (&'static str, fn(&mut App));
+
+/// What a click on the window opens over a scene (a menu).
+type Pointing = fn(&mut Snapshot, &mut App);
+
+/// A picture that needs the pointer at the window itself: what brings the app
+/// to it, then what a click opens over it (a menu).
+type Pointed = (&'static str, fn(&mut App), Pointing);
+
+/// Any picture: its name, what brings the app to it, and the click over it, if any.
+type Shot = (&'static str, fn(&mut App), Option<Pointing>);
+
+/// Where a caption is drawn: its middle, or the point just right of it (a
+/// small split button's arrow). A caption that is also the ribbon's (the layer
+/// box says “Parsel”) is looked for in the docked panels first: the right of
+/// the window, under the ribbon.
+fn caption_at(snapshot: &mut Snapshot, app: &App, caption: &str, arrow: bool) -> Point {
+    let docked = find_texts(snapshot, app, caption)
+        .into_iter()
+        .find(|at| at.x > 900.0 && at.y > 150.0);
+    let at = docked
+        .or_else(|| find_text(snapshot, app, caption))
+        .unwrap_or_else(|| panic!("{caption} is on screen"));
+    if arrow {
+        Point::new(at.x + at.width + 10.0, at.center_y())
+    } else {
+        at.center()
+    }
+}
+
+/// A split button's list opened, as its key tip opens it (ribbon_keys.rs): by the
+/// button's own key, the tools' family or the tool with methods.
+fn open_split(snapshot: &mut Snapshot, app: &mut App, key: &str) {
+    use iced::futures::StreamExt as _;
+    let task: iced::Task<Message> =
+        kentos_ui::widget::context_menu::open_menu(crate::ribbon_keys::split_menu_id(key));
+    if let Some(mut stream) = iced_runtime::task::into_stream(task) {
+        while let Some(action) = iced::futures::executor::block_on(stream.next()) {
+            if let iced_runtime::Action::Widget(operation) = action {
+                snapshot.operate(app.view(), operation);
+            }
+        }
+    }
+}
+
+/// A click (or a right click) on a caption of the window.
+fn press_caption(snapshot: &mut Snapshot, app: &mut App, caption: &str, right: bool, arrow: bool) {
+    let at = caption_at(snapshot, app, caption, arrow);
+    let mut update = |app: &mut App, message: Message| {
+        let _ = app.update(message);
+    };
+    let input = if right {
+        Input::RightClick(at)
+    } else {
+        Input::Click(at)
+    };
+    snapshot.input(app, App::view, &mut update, input);
+}
+
+/// Pictures of menus the new commands are in (docs/adr/0141): the layer tree's, and Seç ▾.
+fn pointed_scenes() -> Vec<Pointed> {
+    vec![
+        (
+            "katman-menu-katman",
+            |_| {},
+            |s, app| {
+                press_caption(s, app, "Parsel", true, false);
+            },
+        ),
+        (
+            "katman-menu-grup",
+            |_| {},
+            |s, app| {
+                press_caption(s, app, "Kadastro", true, false);
+            },
+        ),
+        (
+            "secim-ailesi",
+            |app| app.tab = "home",
+            |s, app| open_split(s, app, "select"),
+        ),
+    ]
+}
 
 /// The ribbon tabs the new tools sit in.
 fn ribbon_scenes() -> Vec<Scene> {
@@ -26,6 +108,13 @@ fn ribbon_scenes() -> Vec<Scene> {
         ("serit-cizim", |app| app.tab = "draw"),
         ("serit-degistir", |app| app.tab = "modify"),
         ("serit-harita", |app| app.tab = "map"),
+        // docs/adr/0141: two zooms in and a step back, so that Önceki and Sonraki görünüm are both on.
+        ("serit-gorunum", |app| {
+            app.tab = "view";
+            for id in ["view.zoomIn", "view.zoomIn", "view.previous"] {
+                let _ = app.update(Message::Run(id));
+            }
+        }),
     ]
 }
 
@@ -49,7 +138,16 @@ fn screens() {
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
-            for (name, bring) in scenes() {
+            let all: Vec<Shot> = scenes()
+                .into_iter()
+                .map(|(name, bring)| (name, bring, None))
+                .chain(
+                    pointed_scenes()
+                        .into_iter()
+                        .map(|(name, bring, point)| (name, bring, Some(point))),
+                )
+                .collect();
+            for (name, bring, point) in all {
                 if !wanted(name) {
                     continue;
                 }
@@ -68,6 +166,10 @@ fn screens() {
                 snapshot.settle(&mut app, App::view, &mut update);
                 bring(&mut app);
                 snapshot.settle(&mut app, App::view, &mut update);
+                if let Some(point) = point {
+                    point(&mut snapshot, &mut app);
+                    snapshot.settle(&mut app, App::view, &mut update);
+                }
                 let file = out.join(format!("arac-{name}-{width}x{height}{suffix}.png"));
                 snapshot
                     .render(app.view(), &app.theme())

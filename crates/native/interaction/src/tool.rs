@@ -330,6 +330,11 @@ pub struct Memory {
     pub path_spacing: f64,
     pub path_by_spacing: bool,
     pub path_align: bool,
+    /// Mesafe ölç's “Sabit ilk nokta” (every point is measured from the first)
+    /// and Alan hesapla's “İçine tıkla” (a click inside a closed region
+    /// measures it; docs/adr/0141).
+    pub measure_fixed: bool,
+    pub area_inside: bool,
 }
 
 /// A short list of numbers typed as one answer (Ara nokta's distances and
@@ -437,6 +442,8 @@ impl Default for Memory {
             path_spacing: 10.0,
             path_by_spacing: false,
             path_align: true,
+            measure_fixed: false,
+            area_inside: false,
         }
     }
 }
