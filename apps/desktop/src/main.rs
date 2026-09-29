@@ -90,6 +90,8 @@ mod ui_screens;
 #[cfg(test)]
 mod netcad_names_tests;
 #[cfg(test)]
+mod parts_scenes;
+#[cfg(test)]
 mod query_tests;
 #[cfg(test)]
 mod tools_scenes;

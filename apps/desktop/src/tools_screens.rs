@@ -130,6 +130,7 @@ fn scenes() -> Vec<Scene> {
     let mut all = ribbon_scenes();
     all.extend(crate::tools_scenes::scenes());
     all.extend(crate::elevation_scenes::scenes());
+    all.extend(crate::parts_scenes::scenes());
     all
 }
 
