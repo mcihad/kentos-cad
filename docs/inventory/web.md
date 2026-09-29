@@ -50,7 +50,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 162 | 0 | 0 | 14 | 5 | 181 |
+| Komutlar | 163 | 0 | 0 | 13 | 5 | 181 |
 | Araçlar | 70 | 0 | 0 | 2 | 0 | 72 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
@@ -91,11 +91,10 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (0 / 181; ayrıca 14 iki platformda da bekliyor)
+#### Komutlar (0 / 181; ayrıca 13 iki platformda da bekliyor)
 
 - `analysis.slope` Eğim analizi… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `analysis.volume` Hacim hesabı… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
-- `crs.query` Koordinat oku (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `crs.transform` Datum dönüşümü (ED50 ↔ TUREF)… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `file.export.pdf` PDF pafta… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `file.print` Yazdır ve pafta çıktısı… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))

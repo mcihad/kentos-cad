@@ -74,13 +74,13 @@
     },
     "commandsWithoutPlace": [],
     "commandsWithoutTests": 65,
-    "commandsOnDesktop": 162,
+    "commandsOnDesktop": 163,
     "desktop": {
       "commands": {
         "total": 181,
-        "implemented": 162,
+        "implemented": 163,
         "partial": 0,
-        "pending": 14,
+        "pending": 13,
         "none": 0,
         "n/a": 5
       },
@@ -820,10 +820,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "pending"
+        "desktop": "implemented"
       },
-      "tests": [],
-      "desktopWhere": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)"
+      "tests": []
     },
     {
       "id": "crs.set",
