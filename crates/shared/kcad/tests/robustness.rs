@@ -355,6 +355,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
                     .chance(50)
                     .then(|| (0..rng.below(4)).map(|_| rng.float()).collect()),
                 holes: None,
+                zs: None,
             }),
             2 => Entity::Polygon(PathEntity {
                 base: b,
@@ -365,9 +366,11 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
                         .map(|_| RingGeometry {
                             pts: points(rng, 3),
                             bulges: rng.chance(50).then(|| vec![-0.0, rng.float()]),
+                            zs: None,
                         })
                         .collect()
                 }),
+                zs: None,
             }),
             3 => Entity::Circle(CircleEntity {
                 base: b,
@@ -503,6 +506,7 @@ fn the_writer_refuses_what_a_reader_would_refuse() {
                 pts: vec![Vec2 { x: 0.0, y: 0.0 }; 2],
                 bulges: None,
                 holes: Some(vec![]),
+                zs: None,
             })
         },
         Code::BadValue,

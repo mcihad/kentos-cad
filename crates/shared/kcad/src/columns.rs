@@ -241,7 +241,7 @@ impl Packer {
                     self.float(*z);
                 }
             }
-            Entity::Line(LineEntity { base: _, a, b }) => {
+            Entity::Line(LineEntity { base: _, a, b, .. }) => {
                 self.point(a);
                 self.point(b);
             }
@@ -251,6 +251,7 @@ impl Packer {
                     pts,
                     bulges,
                     holes,
+                    ..
                 } = path;
                 self.points(pts);
                 if let Some(b) = bulges {
@@ -260,7 +261,7 @@ impl Packer {
                 if let Some(holes) = holes {
                     flags |= OPT[1];
                     self.int(count(holes.len()));
-                    for RingGeometry { pts, bulges } in holes {
+                    for RingGeometry { pts, bulges, .. } in holes {
                         self.int(if bulges.is_some() { HOLE_BULGES } else { 0 });
                         self.points(pts);
                         if let Some(b) = bulges {
@@ -638,6 +639,8 @@ fn geometry(
             base,
             a: c.point()?,
             b: c.point()?,
+            za: None,
+            zb: None,
         }),
         2 | 3 => {
             let pts = c.points()?;
@@ -660,6 +663,7 @@ fn geometry(
                         } else {
                             None
                         },
+                        zs: None,
                     });
                 }
                 Some(rings)
@@ -671,6 +675,7 @@ fn geometry(
                 pts,
                 bulges,
                 holes,
+                zs: None,
             };
             if kind == 3 {
                 Entity::Polygon(path)
@@ -941,6 +946,8 @@ mod tests {
                 base: base("a"),
                 a: Vec2 { x: 1.0, y: 2.0 },
                 b: Vec2 { x: 3.0, y: 4.0 },
+                za: None,
+                zb: None,
             }),
             Entity::Hatch(HatchEntity {
                 base: base("b"),
@@ -992,6 +999,8 @@ mod tests {
                 base: base("a"),
                 a: Vec2 { x, y: 0.0 },
                 b: Vec2 { x: 1.0, y: 1.0 },
+                za: None,
+                zb: None,
             })
         };
         let cols = pack(vec![line(0.0)], vec![id(1)]);

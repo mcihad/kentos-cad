@@ -4,4 +4,9 @@ import type { Vec2 } from "./Vec2";
 /**
  * A closed ring in vertex + bulge form (a polygon hole).
  */
-export type RingGeometry = { pts: Array<Vec2>, bulges?: Array<number>, };
+export type RingGeometry = { pts: Array<Vec2>, bulges?: Array<number>, 
+/**
+ * Each vertex's elevation, m, as many as `pts`; `null` for a vertex
+ * without one (not 0); absent when no vertex has one (docs/adr/0142).
+ */
+zs?: Array<number | null>, };

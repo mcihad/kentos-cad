@@ -266,6 +266,7 @@ mod tests {
                         pts,
                         bulges: None,
                         holes: None,
+                        zs: None,
                     }));
                     id += 1;
                 }
@@ -277,6 +278,8 @@ mod tests {
                         x: e + side as f64 * 20.0,
                         y,
                     },
+                    za: None,
+                    zb: None,
                 }));
                 id += 1;
             }

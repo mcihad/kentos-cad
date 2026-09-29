@@ -101,5 +101,7 @@ fn line(input: LineCreate, id: u32) -> Entity {
         },
         a: input.a,
         b: input.b,
+        za: None,
+        zb: None,
     })
 }

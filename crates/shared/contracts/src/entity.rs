@@ -79,6 +79,14 @@ pub struct LineEntity {
     pub base: EntityBase,
     pub a: Vec2,
     pub b: Vec2,
+    /// The start's elevation, m; absent = none (docs/adr/0142).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub za: Option<f64>,
+    /// The end's elevation, m; absent = none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub zb: Option<f64>,
 }
 
 /// A closed ring in vertex + bulge form (a polygon hole).
@@ -91,6 +99,11 @@ pub struct RingGeometry {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub bulges: Option<Vec<f64>>,
+    /// Each vertex's elevation, m, as many as `pts`; `null` for a vertex
+    /// without one (not 0); absent when no vertex has one (docs/adr/0142).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub zs: Option<Vec<Option<f64>>>,
 }
 
 /// Polyline or polygon: vertices, DXF bulges (tan(θ/4), CCW positive) and, for polygons, holes.
@@ -109,6 +122,11 @@ pub struct PathEntity {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub holes: Option<Vec<RingGeometry>>,
+    /// Each vertex's elevation, m, as many as `pts`; `null` for a vertex
+    /// without one (not 0); absent when no vertex has one (docs/adr/0142).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub zs: Option<Vec<Option<f64>>>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

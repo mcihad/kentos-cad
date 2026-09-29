@@ -287,6 +287,8 @@ fn build(
             base,
             a: required(r, f.a, "a")?,
             b: required(r, f.b, "b")?,
+            za: None,
+            zb: None,
         }),
         Kind::Polyline | Kind::Polygon => {
             let path = PathEntity {
@@ -294,6 +296,7 @@ fn build(
                 pts: required(r, f.pts.take(), "pts")?,
                 bulges: f.bulges.take(),
                 holes: f.rings.take(),
+                zs: None,
             };
             if kind == Kind::Polygon {
                 Entity::Polygon(path)
@@ -378,6 +381,7 @@ fn ring(r: &mut Reader<'_>) -> Result<RingGeometry, KcadError> {
     Ok(RingGeometry {
         pts: required(r, pts, "pts")?,
         bulges,
+        zs: None,
     })
 }
 

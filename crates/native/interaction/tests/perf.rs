@@ -57,6 +57,7 @@ fn drawing(side: usize) -> Document {
                 pts,
                 bulges: None,
                 holes: None,
+                zs: None,
             }));
         }
         let mut b = base("cizim");
@@ -70,6 +71,8 @@ fn drawing(side: usize) -> Document {
                 x: E + side as f64 * 20.0,
                 y,
             },
+            za: None,
+            zb: None,
         }));
     }
     Document::from_snapshot(snapshot).expect("opens")
@@ -120,6 +123,8 @@ fn store_sync_and_queries_on_a_large_drawing() {
                     x: x + 10.0,
                     y: N - 5.0,
                 },
+                za: None,
+                zb: None,
             })
         };
         let (add, _) = each(200, |i| {

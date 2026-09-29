@@ -385,6 +385,7 @@ impl<'l> Emitter<'l> {
                 Entity::Polygon(h) => RingGeometry {
                     pts: h.pts.clone(),
                     bulges: h.bulges.clone(),
+                    zs: None,
                 },
                 _ => continue,
             };
@@ -439,6 +440,8 @@ impl<'l> Emitter<'l> {
                     base: b(),
                     a,
                     b: bb,
+                    za: None,
+                    zb: None,
                 }));
             }
             Kind::Point { p } => {
@@ -606,6 +609,7 @@ impl<'l> Emitter<'l> {
                     pts: ring,
                     bulges: None,
                     holes: None,
+                    zs: None,
                 }));
                 if *solid {
                     self.note(
@@ -701,6 +705,7 @@ impl<'l> Emitter<'l> {
                     pts,
                     bulges: None,
                     holes: None,
+                    zs: None,
                 }));
                 self.note(
                     "Kılavuz (LEADER)",
@@ -934,6 +939,7 @@ impl<'l> Emitter<'l> {
                 pts,
                 bulges,
                 holes: None,
+                zs: None,
             }));
         } else {
             self.push(Entity::Polyline(PathEntity {
@@ -941,6 +947,7 @@ impl<'l> Emitter<'l> {
                 pts,
                 bulges,
                 holes: None,
+                zs: None,
             }));
         }
     }

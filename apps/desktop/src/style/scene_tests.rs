@@ -75,6 +75,7 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
             pts,
             bulges: None,
             holes: None,
+            zs: None,
         }));
     }
     for i in 0..10 {
@@ -91,6 +92,7 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
             ],
             bulges: None,
             holes: None,
+            zs: None,
         }));
     }
     let snapshot = DocumentSnapshotV1 {

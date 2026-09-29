@@ -2670,6 +2670,8 @@ class LineEntity(Entity):
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
             object (docs/adr/0139).
         symbol: Library symbol overriding the layer's style.
+        za: The start's elevation, m; absent = none (docs/adr/0142).
+        zb: The end's elevation, m; absent = none.
     """
     TAG_VALUE: ClassVar[str] = "line"
     id: int
@@ -2681,6 +2683,8 @@ class LineEntity(Entity):
     label: str | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
+    za: float | None | Unset = UNSET
+    zb: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "line"}
@@ -2697,6 +2701,10 @@ class LineEntity(Entity):
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
+        if self.za is not UNSET:
+            out["za"] = None if self.za is None else float(self.za)
+        if self.zb is not UNSET:
+            out["zb"] = None if self.zb is None else float(self.zb)
         return out
 
     @classmethod
@@ -2711,6 +2719,8 @@ class LineEntity(Entity):
             label=data.get("label", UNSET),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
+            za=UNSET if "za" not in data else None if data["za"] is None else float(data["za"]),
+            zb=UNSET if "zb" not in data else None if data["zb"] is None else float(data["zb"]),
         )
 
 
@@ -2793,6 +2803,8 @@ class PathEntity(_Model):
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
             object (docs/adr/0139).
         symbol: Library symbol overriding the layer's style.
+        zs: Each vertex's elevation, m, as many as `pts`; `null` for a vertex
+            without one (not 0); absent when no vertex has one (docs/adr/0142).
     """
     id: int
     layer_id: str
@@ -2804,6 +2816,7 @@ class PathEntity(_Model):
     label: str | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
+    zs: list[float | None] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -2823,6 +2836,8 @@ class PathEntity(_Model):
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
+        if self.zs is not UNSET:
+            out["zs"] = None if self.zs is None else [None if e0 is None else float(e0) for e0 in self.zs]
         return out
 
     @classmethod
@@ -2838,6 +2853,7 @@ class PathEntity(_Model):
             label=data.get("label", UNSET),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
+            zs=UNSET if "zs" not in data else None if data["zs"] is None else [None if e0 is None else float(e0) for e0 in data["zs"]],
         )
 
 
@@ -4185,15 +4201,22 @@ class ProjectSummary(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class RingGeometry(_Model):
-    """A closed ring in vertex + bulge form (a polygon hole)."""
+    """A closed ring in vertex + bulge form (a polygon hole).
+    Attributes:
+        zs: Each vertex's elevation, m, as many as `pts`; `null` for a vertex
+            without one (not 0); absent when no vertex has one (docs/adr/0142).
+    """
     pts: list[Vec2]
     bulges: list[float] | None | Unset = UNSET
+    zs: list[float | None] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["pts"] = [_vec2_out(e0) for e0 in self.pts]
         if self.bulges is not UNSET:
             out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
+        if self.zs is not UNSET:
+            out["zs"] = None if self.zs is None else [None if e0 is None else float(e0) for e0 in self.zs]
         return out
 
     @classmethod
@@ -4201,6 +4224,7 @@ class RingGeometry(_Model):
         return cls(
             pts=[Vec2.from_json(e0) for e0 in data["pts"]],
             bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
+            zs=UNSET if "zs" not in data else None if data["zs"] is None else [None if e0 is None else float(e0) for e0 in data["zs"]],
         )
 
 

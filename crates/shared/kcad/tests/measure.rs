@@ -49,6 +49,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
             pts,
             bulges: None,
             holes: None,
+            zs: None,
         }));
         // A v7-shaped id: a fixed time, the version, the variant, then the object's number.
         let mut id = [

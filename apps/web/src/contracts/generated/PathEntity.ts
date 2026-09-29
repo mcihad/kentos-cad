@@ -5,7 +5,12 @@ import type { Vec2 } from "./Vec2";
 /**
  * Polyline or polygon: vertices, DXF bulges (tan(θ/4), CCW positive) and, for polygons, holes.
  */
-export type PathEntity = { pts: Array<Vec2>, bulges?: Array<number>, holes?: Array<RingGeometry>, id: number, layerId: string, 
+export type PathEntity = { pts: Array<Vec2>, bulges?: Array<number>, holes?: Array<RingGeometry>, 
+/**
+ * Each vertex's elevation, m, as many as `pts`; `null` for a vertex
+ * without one (not 0); absent when no vertex has one (docs/adr/0142).
+ */
+zs?: Array<number | null>, id: number, layerId: string, 
 /**
  * Colour override; absent = the layer's colour ("katmana göre").
  */

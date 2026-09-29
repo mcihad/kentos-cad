@@ -516,6 +516,7 @@ impl Path {
                     .map(|hole| RingGeometry {
                         pts: wire_all(&hole.pts),
                         bulges: hole.bulges.clone(),
+                        zs: None,
                     })
                     .collect()
             }),

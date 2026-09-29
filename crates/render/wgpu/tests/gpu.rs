@@ -249,6 +249,8 @@ fn one_line(x: f64) -> DocumentSnapshotV1 {
         },
         a: kentos_contracts::Vec2 { x, y: N - 50.0 },
         b: kentos_contracts::Vec2 { x, y: N + 50.0 },
+        za: None,
+        zb: None,
     })];
     doc
 }

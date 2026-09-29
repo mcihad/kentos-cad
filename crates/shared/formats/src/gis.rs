@@ -115,12 +115,19 @@ impl Collect {
         };
         self.entities.push(match shape {
             Shape::Point { p, z } => Entity::Point(PointEntity { base, p, z }),
-            Shape::Line(a, b) => Entity::Line(LineEntity { base, a, b }),
+            Shape::Line(a, b) => Entity::Line(LineEntity {
+                base,
+                a,
+                b,
+                za: None,
+                zb: None,
+            }),
             Shape::Polyline(pts) => Entity::Polyline(PathEntity {
                 base,
                 pts,
                 bulges: None,
                 holes: None,
+                zs: None,
             }),
             Shape::Polygon(pts, holes) => Entity::Polygon(PathEntity {
                 base,
@@ -129,9 +136,14 @@ impl Collect {
                 holes: (!holes.is_empty()).then(|| {
                     holes
                         .into_iter()
-                        .map(|pts| RingGeometry { pts, bulges: None })
+                        .map(|pts| RingGeometry {
+                            pts,
+                            bulges: None,
+                            zs: None,
+                        })
                         .collect()
                 }),
+                zs: None,
             }),
         });
     }

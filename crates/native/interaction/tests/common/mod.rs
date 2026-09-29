@@ -230,6 +230,8 @@ impl Bench {
             base: base(layer),
             a: wire(a),
             b: wire(b),
+            za: None,
+            zb: None,
         });
         self.doc.add(line).expect("a slot")
     }
@@ -241,6 +243,7 @@ impl Bench {
             pts: pts.iter().map(|p| wire(*p)).collect(),
             bulges: None,
             holes: None,
+            zs: None,
         };
         let entity = if closed {
             Entity::Polygon(path)

@@ -438,6 +438,8 @@ fn styled(b: &mut Bench, at: [f64; 2], to: [f64; 2]) -> Slot {
             x: E + to[0],
             y: N + to[1],
         },
+        za: None,
+        zb: None,
     });
     b.doc.add(line).expect("a slot")
 }

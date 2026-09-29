@@ -73,6 +73,13 @@ export function withGeometry<E extends Entity | NewEntity>(e: E, g: Geometry): E
   for (const key in g) out[key] = g[key];
   if ((g.kind === 'polyline' || g.kind === 'polygon') && !('bulges' in g)) out.bulges = undefined;
   if ((g.kind === 'polygon' || g.kind === 'hatch') && !('holes' in g)) out.holes = undefined;
+  // A transform moves each vertex and keeps it: the elevations stay with their vertices, the
+  // holes' too; a vertex count that changed leaves them out (docs/adr/0142).
+  type Ring = { pts: unknown[]; zs?: (number | null)[] };
+  const before = src.holes as Ring[] | undefined;
+  if (g.kind === 'polygon' && Array.isArray(out.holes) && before?.some((h) => h.zs))
+    out.holes = (out.holes as Ring[]).map((h, i) => (before[i]?.zs && before[i].pts.length === h.pts.length ? { ...h, zs: before[i].zs } : h));
+  if (Array.isArray(out.zs) && (!Array.isArray(out.pts) || out.zs.length !== out.pts.length)) out.zs = undefined;
   return out as unknown as E;
 }
 

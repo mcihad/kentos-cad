@@ -146,5 +146,6 @@ fn polyline(input: PolylineCreate, id: u32) -> Entity {
             bulges
         }),
         holes: None,
+        zs: None,
     })
 }

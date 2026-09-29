@@ -136,18 +136,22 @@ fn objects() -> Vec<Entity> {
             base: with("parsel", |b| b.color = Some("#FF0000".into())),
             a: tm(0.0, 0.0),
             b: tm(12.345678, -0.001),
+            za: None,
+            zb: None,
         }),
         Entity::Polyline(PathEntity {
             base: with("yol", |b| b.color = Some("fg".into())),
             pts: vec![tm(0.0, 0.0), tm(10.0, 0.0), tm(10.0, 10.0), tm(0.0, 0.0)],
             bulges: Some(vec![0.0, 0.4142135623730951, 0.0]),
             holes: None,
+            zs: None,
         }),
         Entity::Polyline(PathEntity {
             base: base("yol"),
             pts: vec![tm(0.0, 5.0), tm(3.0, 7.0)],
             bulges: None,
             holes: None,
+            zs: None,
         }),
         Entity::Polygon(PathEntity {
             base: with("parsel", |b| {
@@ -163,18 +167,22 @@ fn objects() -> Vec<Entity> {
                 RingGeometry {
                     pts: vec![tm(5.0, 5.0), tm(10.0, 5.0), tm(10.0, 10.0), tm(5.0, 10.0)],
                     bulges: None,
+                    zs: None,
                 },
                 RingGeometry {
                     pts: vec![tm(20.0, 20.0), tm(25.0, 20.0)],
                     bulges: Some(vec![1.0, 1.0]),
+                    zs: None,
                 },
             ]),
+            zs: None,
         }),
         Entity::Polygon(PathEntity {
             base: with("yapi", |b| b.color = Some("#7fb2e5".into())),
             pts: vec![tm(50.0, 0.0), tm(60.0, 0.0), tm(55.0, 8.0)],
             bulges: None,
             holes: None,
+            zs: None,
         }),
         Entity::Circle(CircleEntity {
             base: base("parsel"),
@@ -895,11 +903,15 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
             base: base("dup"),
             a: tm(0.0, 0.0),
             b: tm(1.0, 0.0),
+            za: None,
+            zb: None,
         }),
         Entity::Line(LineEntity {
             base: base("yok"),
             a: tm(0.0, 0.0),
             b: tm(0.0, 1.0),
+            za: None,
+            zb: None,
         }),
         Entity::Text(TextEntity {
             base: base("yazi"),
@@ -992,6 +1004,8 @@ fn an_objects_line_weight_goes_out_as_370_and_comes_back_exactly() {
             base: with("parsel", |b| b.line_weight = w),
             a: tm(dy, 0.0),
             b: tm(dy, 10.0),
+            za: None,
+            zb: None,
         })
     };
     let objects = vec![line(Some(0.35), 0.0), line(Some(0.33), 1.0), line(Some(0.0), 2.0), line(None, 3.0)];

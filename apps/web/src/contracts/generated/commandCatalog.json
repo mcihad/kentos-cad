@@ -1055,6 +1055,22 @@
                   "string",
                   "null"
                 ]
+              },
+              "za": {
+                "description": "The start's elevation, m; absent = none (docs/adr/0142).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "zb": {
+                "description": "The end's elevation, m; absent = none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -1145,6 +1161,20 @@
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               }
@@ -1394,6 +1424,20 @@
                   "$ref": "#/$defs/Vec2"
                 },
                 "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -8496,6 +8540,20 @@
                   "$ref": "#/$defs/Vec2"
                 },
                 "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -9369,6 +9427,22 @@
                   "string",
                   "null"
                 ]
+              },
+              "za": {
+                "description": "The start's elevation, m; absent = none (docs/adr/0142).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "zb": {
+                "description": "The end's elevation, m; absent = none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -9450,6 +9524,20 @@
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               }
@@ -9547,6 +9635,20 @@
                   "$ref": "#/$defs/Vec2"
                 },
                 "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -10692,6 +10794,22 @@
                   "string",
                   "null"
                 ]
+              },
+              "za": {
+                "description": "The start's elevation, m; absent = none (docs/adr/0142).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "zb": {
+                "description": "The end's elevation, m; absent = none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -10773,6 +10891,20 @@
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               }
@@ -10870,6 +11002,20 @@
                   "$ref": "#/$defs/Vec2"
                 },
                 "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -11976,6 +12122,22 @@
                   "string",
                   "null"
                 ]
+              },
+              "za": {
+                "description": "The start's elevation, m; absent = none (docs/adr/0142).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "zb": {
+                "description": "The end's elevation, m; absent = none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -12057,6 +12219,20 @@
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               }
@@ -12154,6 +12330,20 @@
                   "$ref": "#/$defs/Vec2"
                 },
                 "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -13402,6 +13592,22 @@
                   "string",
                   "null"
                 ]
+              },
+              "za": {
+                "description": "The start's elevation, m; absent = none (docs/adr/0142).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "zb": {
+                "description": "The end's elevation, m; absent = none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -13483,6 +13689,20 @@
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               }
@@ -13580,6 +13800,20 @@
                   "$ref": "#/$defs/Vec2"
                 },
                 "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -14671,6 +14905,22 @@
                   "string",
                   "null"
                 ]
+              },
+              "za": {
+                "description": "The start's elevation, m; absent = none (docs/adr/0142).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "zb": {
+                "description": "The end's elevation, m; absent = none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -14752,6 +15002,20 @@
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               }
@@ -14849,6 +15113,20 @@
                   "$ref": "#/$defs/Vec2"
                 },
                 "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -15950,6 +16228,22 @@
                   "string",
                   "null"
                 ]
+              },
+              "za": {
+                "description": "The start's elevation, m; absent = none (docs/adr/0142).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "zb": {
+                "description": "The end's elevation, m; absent = none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -16031,6 +16325,20 @@
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               }
@@ -16128,6 +16436,20 @@
                   "$ref": "#/$defs/Vec2"
                 },
                 "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -17350,6 +17672,22 @@
                   "string",
                   "null"
                 ]
+              },
+              "za": {
+                "description": "The start's elevation, m; absent = none (docs/adr/0142).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "zb": {
+                "description": "The end's elevation, m; absent = none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -17431,6 +17769,20 @@
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               }
@@ -17528,6 +17880,20 @@
                   "$ref": "#/$defs/Vec2"
                 },
                 "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -18534,6 +18900,20 @@
                   "$ref": "#/$defs/Vec2"
                 },
                 "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -19371,6 +19751,22 @@
                   "string",
                   "null"
                 ]
+              },
+              "za": {
+                "description": "The start's elevation, m; absent = none (docs/adr/0142).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "zb": {
+                "description": "The end's elevation, m; absent = none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -19452,6 +19848,20 @@
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               }
@@ -19549,6 +19959,20 @@
                   "$ref": "#/$defs/Vec2"
                 },
                 "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -20786,6 +21210,22 @@
                   "string",
                   "null"
                 ]
+              },
+              "za": {
+                "description": "The start's elevation, m; absent = none (docs/adr/0142).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "zb": {
+                "description": "The end's elevation, m; absent = none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -20867,6 +21307,20 @@
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               }
@@ -20964,6 +21418,20 @@
                   "$ref": "#/$defs/Vec2"
                 },
                 "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -21823,6 +22291,20 @@
                   "$ref": "#/$defs/Vec2"
                 },
                 "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -22665,6 +23147,22 @@
                   "string",
                   "null"
                 ]
+              },
+              "za": {
+                "description": "The start's elevation, m; absent = none (docs/adr/0142).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "zb": {
+                "description": "The end's elevation, m; absent = none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -22746,6 +23244,20 @@
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               }
@@ -22843,6 +23355,20 @@
                   "$ref": "#/$defs/Vec2"
                 },
                 "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -24076,6 +24602,22 @@
                   "string",
                   "null"
                 ]
+              },
+              "za": {
+                "description": "The start's elevation, m; absent = none (docs/adr/0142).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "zb": {
+                "description": "The end's elevation, m; absent = none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -24157,6 +24699,20 @@
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               }
@@ -24254,6 +24810,20 @@
                   "$ref": "#/$defs/Vec2"
                 },
                 "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               }
             },
             "required": [

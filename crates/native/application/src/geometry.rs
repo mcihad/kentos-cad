@@ -174,6 +174,7 @@ fn ring_back(r: Ring) -> RingGeometry {
     RingGeometry {
         pts: back(r.pts),
         bulges: r.bulges,
+        zs: None,
     }
 }
 
@@ -197,7 +198,26 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
         | (Entity::Polygon(e), Shape::Polygon { pts, bulges, holes }) => {
             e.pts = back(pts);
             e.bulges = bulges;
-            e.holes = holes.map(|hs| hs.into_iter().map(ring_back).collect());
+            // A transform moves each vertex and keeps it: the elevations stay
+            // with their vertices, the holes' too (docs/adr/0142).
+            let before = e.holes.take();
+            e.holes = holes.map(|hs| {
+                hs.into_iter()
+                    .enumerate()
+                    .map(|(i, h)| {
+                        let mut ring = ring_back(h);
+                        ring.zs = before
+                            .as_ref()
+                            .and_then(|b| b.get(i))
+                            .filter(|b| b.pts.len() == ring.pts.len())
+                            .and_then(|b| b.zs.clone());
+                        ring
+                    })
+                    .collect()
+            });
+            if e.zs.as_ref().is_some_and(|zs| zs.len() != e.pts.len()) {
+                e.zs = None;
+            }
         }
         (Entity::Circle(e), Shape::Circle { c, r }) => {
             e.c = p(c);
@@ -294,18 +314,26 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
 pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
     match geometry.clone() {
         EntityGeometry::Point { p, z } => Entity::Point(PointEntity { base, p, z }),
-        EntityGeometry::Line { a, b } => Entity::Line(LineEntity { base, a, b }),
+        EntityGeometry::Line { a, b } => Entity::Line(LineEntity {
+            base,
+            a,
+            b,
+            za: None,
+            zb: None,
+        }),
         EntityGeometry::Polyline { pts, bulges } => Entity::Polyline(PathEntity {
             base,
             pts,
             bulges,
             holes: None,
+            zs: None,
         }),
         EntityGeometry::Polygon { pts, bulges, holes } => Entity::Polygon(PathEntity {
             base,
             pts,
             bulges,
             holes,
+            zs: None,
         }),
         EntityGeometry::Circle { c, r } => Entity::Circle(CircleEntity { base, c, r }),
         EntityGeometry::Arc { c, r, a0, a1 } => Entity::Arc(ArcEntity { base, c, r, a0, a1 }),

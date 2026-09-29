@@ -469,6 +469,8 @@ mod tests {
             base: base(layer),
             a: Vec2 { x: 0.0, y: 0.0 },
             b: Vec2 { x: 1.0, y: 1.0 },
+            za: None,
+            zb: None,
         })
     }
 

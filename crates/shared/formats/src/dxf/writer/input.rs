@@ -132,6 +132,7 @@ impl Fields {
                     pts: need(pts, "pts")?,
                     bulges,
                     holes: rings(holes)?,
+                    zs: None,
                 })
             };
         let construction = |base: EntityBase,
@@ -154,6 +155,8 @@ impl Fields {
                 base,
                 a: need(self.a, "a")?,
                 b: need(self.b, "b")?,
+                za: None,
+                zb: None,
             }),
             "polyline" => Entity::Polyline(path(base, self.pts, self.bulges, self.holes)?),
             "polygon" => Entity::Polygon(path(base, self.pts, self.bulges, self.holes)?),

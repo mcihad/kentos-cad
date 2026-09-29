@@ -344,7 +344,7 @@ impl Emitter {
                 let (a, z) = (a.ok_or(BAD)?, z.ok_or(BAD)?);
                 self.grow(v(a));
                 self.grow(v(z));
-                self.push(layer, Entity::Line(LineEntity { base: b, a: v(a), b: v(z) }));
+                self.push(layer, Entity::Line(LineEntity { base: b, a: v(a), b: v(z), za: None, zb: None }));
             }
             Kind::Polyline => {
                 if !e.coords.iter().all(finite) {
@@ -358,7 +358,7 @@ impl Emitter {
                 for p in &pts {
                     self.grow(*p);
                 }
-                self.push(layer, Entity::Polyline(PathEntity { base: b, pts, bulges: None, holes: None }));
+                self.push(layer, Entity::Polyline(PathEntity { base: b, pts, bulges: None, holes: None, zs: None }));
             }
             Kind::Polygon | Kind::MapSheet | Kind::Triangle => {
                 let key = if e.kind == Kind::MapSheet { "Pafta" } else { "Etiket" };
@@ -428,7 +428,7 @@ impl Emitter {
         for p in &pts {
             self.grow(*p);
         }
-        self.push(layer, Entity::Polygon(PathEntity { base: b, pts, bulges: None, holes: None }));
+        self.push(layer, Entity::Polygon(PathEntity { base: b, pts, bulges: None, holes: None, zs: None }));
         Ok(())
     }
 
@@ -546,9 +546,9 @@ impl Emitter {
                     }
                     let base = next_base();
                     let entity = match (pts.as_slice(), closed) {
-                        ([a, z], false) => Entity::Line(LineEntity { base, a: *a, b: *z }),
-                        (_, true) => Entity::Polygon(PathEntity { base, pts, bulges: None, holes: None }),
-                        _ => Entity::Polyline(PathEntity { base, pts, bulges: None, holes: None }),
+                        ([a, z], false) => Entity::Line(LineEntity { base, a: *a, b: *z, za: None, zb: None }),
+                        (_, true) => Entity::Polygon(PathEntity { base, pts, bulges: None, holes: None, zs: None }),
+                        _ => Entity::Polyline(PathEntity { base, pts, bulges: None, holes: None, zs: None }),
                     };
                     self.push_smart(layer, entity);
                 }

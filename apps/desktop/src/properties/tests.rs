@@ -192,6 +192,8 @@ fn a_line_shows_its_own_weight_and_kalinlik_sets_it_or_gives_it_back_to_the_laye
             base: own,
             a: Wire { x: E, y: N },
             b: Wire { x: E + 10.0, y: N },
+            za: None,
+            zb: None,
         }),
     );
     select(&mut app, &[line]);

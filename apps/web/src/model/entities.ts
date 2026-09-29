@@ -58,6 +58,9 @@ export interface LineEntity extends EntityBase {
   kind: 'line';
   a: Vec2;
   b: Vec2;
+  /** The ends' elevations, m; undefined means none (docs/adr/0142). */
+  za?: number;
+  zb?: number;
 }
 export interface PolylineEntity extends EntityBase {
   kind: 'polyline' | 'polygon';
@@ -75,11 +78,18 @@ export interface PolylineEntity extends EntityBase {
    * something else. Area, edges, picking and fills all respect them.
    */
   holes?: RingGeometry[];
+  /**
+   * Each vertex's elevation, m, as many as `pts`; null for a vertex without
+   * one (not 0); undefined when no vertex has one (docs/adr/0142).
+   */
+  zs?: (number | null)[];
 }
 /** A closed ring of vertices with DXF bulges (outer boundary or hole). */
 export interface RingGeometry {
   pts: Vec2[];
   bulges?: number[];
+  /** Each vertex's elevation, as a polyline's `zs`. */
+  zs?: (number | null)[];
 }
 export interface CircleEntity extends EntityBase {
   kind: 'circle';
