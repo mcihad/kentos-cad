@@ -35,6 +35,7 @@ use kentos_native_application::{ExecutionContext, edit};
 
 use crate::Vec2;
 use crate::edge::Outline;
+use crate::elevation;
 use crate::format::Format;
 use crate::log::Level;
 use crate::points;
@@ -93,6 +94,9 @@ struct GripEdit {
     down: [f64; 2],
     /// Clicked without dragging: the next click places it.
     hot: bool,
+    /// The elevation of the vertex the grip stands on, when it has one: its
+    /// tag says it (docs/adr/0142). The vertex keeps it as it moves.
+    z: Option<f64>,
 }
 
 /// The select tool's state between pointer events.
@@ -107,6 +111,9 @@ pub struct Select {
     tracking: Option<Tracking>,
     /// The object as the grip would leave it, for the preview.
     moved: Option<Shape>,
+    /// The pointer rests on the grip of a vertex that has an elevation: where
+    /// the pointer is, and the elevation, for the tag beside it (docs/adr/0142).
+    hover_grip: Option<(Vec2, f64)>,
 }
 
 impl Select {
@@ -117,6 +124,7 @@ impl Select {
     /// The left button went down: a hot grip is placed, a grip is taken, or
     /// a click or a box starts here.
     pub fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
+        self.hover_grip = None;
         if self.grip.as_ref().is_some_and(|g| g.hot) {
             let at = self.grip_point.unwrap_or(p.world);
             return self.commit(at, cx);
@@ -129,6 +137,7 @@ impl Select {
                 origin,
                 down: p.screen,
                 hot: false,
+                z: grip_z(slot, index, cx),
             });
             self.grip_point = Some(origin);
             self.moved = None;
@@ -160,9 +169,14 @@ impl Select {
         }
         let Some(start) = self.start else {
             let hit = cx.spatial.pick(p.raw, cx.pick_tolerance());
-            cx.selection.set_hover(hit);
+            self.hover_grip = grip_tag_at(p, cx);
+            // On a tagged grip the pointer is on the vertex, not on the object: it is not
+            // hovered, and no rollover card opens over the tag (docs/adr/0142).
+            cx.selection
+                .set_hover(hit.filter(|_| self.hover_grip.is_none()));
             return;
         };
+        self.hover_grip = None;
         self.current = Some(At {
             screen: p.screen,
             world: p.raw,
@@ -353,18 +367,27 @@ impl Select {
     /// While a grip moves: the object as it would be, dashed; a dashed line
     /// from where the grip was; its distance beside the pointer (the web's `draw`).
     pub fn preview(&self, format: &Format) -> Option<Preview> {
-        let (g, at) = (self.grip.as_ref()?, self.grip_point?);
+        let (Some(g), Some(at)) = (self.grip.as_ref(), self.grip_point) else {
+            // Resting on the grip of a vertex that has an elevation: its tag (docs/adr/0142).
+            let (at, z) = self.hover_grip?;
+            return Some(Preview {
+                tag: Some(Tag {
+                    at,
+                    lines: vec![elevation_line(z, format)],
+                }),
+                ..Preview::default()
+            });
+        };
         let mut strokes = Vec::new();
         if let Some(moved) = &self.moved {
             strokes.extend(Outline::of(moved, Some([4.0, 3.0]), 1.5, Tone::Accent).strokes);
         }
         strokes.push(Stroke::dashed(vec![g.origin, at], false, [2.0, 3.0]));
+        let mut lines = vec![format.length(dist(g.origin, at))];
+        lines.extend(g.z.map(|z| elevation_line(z, format)));
         Some(Preview {
             strokes,
-            tag: Some(Tag {
-                at,
-                lines: vec![format.length(dist(g.origin, at))],
-            }),
+            tag: Some(Tag { at, lines }),
             tracking: self.tracking,
             ..Preview::default()
         })
@@ -404,4 +427,36 @@ pub(crate) fn grip_at(screen: [f64; 2], cx: &Context<'_>) -> Option<(Slot, usize
         }
     }
     found
+}
+
+/// Where the pointer rests on the grip of a vertex that has an elevation, and
+/// the elevation: the tag beside the pointer says it (docs/adr/0142). Grips
+/// are looked for only while a selected object has an elevation anywhere: a
+/// drawing without any pays nothing for the tag on every pointer move.
+fn grip_tag_at(p: &Pointer, cx: &Context<'_>) -> Option<(Vec2, f64)> {
+    let doc = &*cx.doc;
+    let ids = cx.selection.ids();
+    // A selection past the grips' limit has none to rest on, and is not looked through.
+    if ids.len() > GRIP_LIMIT
+        || !ids
+            .iter()
+            .any(|slot| doc.get(*slot).is_some_and(elevation::has_any))
+    {
+        return None;
+    }
+    let (slot, index, _) = grip_at(p.screen, cx)?;
+    Some((p.world, grip_z(slot, index, cx)?))
+}
+
+/// The elevation of the vertex the grip `index` of the object at `slot`
+/// stands on, when it has one (docs/adr/0142).
+fn grip_z(slot: Slot, index: usize, cx: &Context<'_>) -> Option<f64> {
+    cx.doc
+        .get(slot)
+        .and_then(|e| elevation::grip_elevation(e, index))
+}
+
+/// What the grip's tag says of a vertex's elevation: `Kot 104.000 m`.
+fn elevation_line(z: f64, format: &Format) -> String {
+    format!("Kot {}", format.length(z))
 }
