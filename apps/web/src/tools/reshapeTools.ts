@@ -172,7 +172,8 @@ export class FilletAllTool extends ValueReshapeTool<{ radius: number }> {
   protected readonly label = 'Tüm köşeleri yuvarla';
   protected readonly operation = 'fillet';
   protected readonly kindsText = 'çoklu çizgi ya da alan';
-  private static last: { radius: number } | null = null;
+  /** A rounding of a metre until another is typed (as on the desktop). */
+  private static last: { radius: number } | null = { radius: 1 };
 
   protected accepts(e: Entity): boolean {
     return cornerObject(e);
@@ -217,7 +218,8 @@ export class ChamferAllTool extends ValueReshapeTool<{ d1: number; d2: number }>
   protected readonly label = 'Tüm köşelere pah';
   protected readonly operation = 'chamfer';
   protected readonly kindsText = 'çoklu çizgi ya da alan';
-  private static last: { d1: number; d2: number } | null = null;
+  /** A cut of a metre on both edges until another is typed. */
+  private static last: { d1: number; d2: number } | null = { d1: 1, d2: 1 };
 
   protected accepts(e: Entity): boolean {
     return cornerObject(e);
@@ -267,7 +269,8 @@ export class SimplifyTool extends ValueReshapeTool<{ tolerance: number }> {
   protected readonly label = 'Sadeleştir';
   protected readonly operation = 'simplify';
   protected readonly kindsText = 'çoklu çizgi ya da alan';
-  private static last: { tolerance: number } | null = null;
+  /** A centimetre of tolerance until another is typed (the user always gives it; there is no hidden one, docs/adr/0140). */
+  private static last: { tolerance: number } | null = { tolerance: 0.01 };
 
   protected accepts(e: Entity): boolean {
     return cornerObject(e);

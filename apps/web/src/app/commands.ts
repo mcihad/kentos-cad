@@ -4,6 +4,7 @@ import { webgpuSupported } from '../render/webgpu/support';
 import type { Entity } from '../model/entities';
 import { entitiesDelete } from '../product/entitiesDelete';
 import { treeLocked } from '../ui/layers/treeRights';
+import { CoordinateReadTool } from '../tools/coordinateTool';
 import { pasteEntities, PasteTool } from '../tools/editTools';
 import { Signal } from '../core/signal';
 import { TOOL_GROUP_LABEL } from '../tools/Tool';
@@ -507,7 +508,16 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
     { ...pending(ctx, 'map.parcelReport', 'Parsel alan çizelgesi', M, 'parcelReport'), short: 'Alan çizelgesi' },
     { id: 'crs.set', title: 'Koordinat sistemi…', category: K, icon: 'crs', aliases: ['SRID', 'EPSG'], run: () => hooks.openProjectSettings('crs') },
     { ...pending(ctx, 'crs.transform', 'Datum dönüşümü (ED50 ↔ TUREF)…', K, 'crsTransform'), short: 'Datum dönüşümü' },
-    pending(ctx, 'crs.query', 'Koordinat sorgula', K, 'crsQuery'),
+    {
+      id: 'crs.query',
+      title: 'Koordinat oku',
+      short: 'Koordinat oku',
+      category: K,
+      icon: 'crsQuery',
+      description: 'Tıklanan (kenetli) noktanın Y ve X’ini, noktanın kotu varsa onu da iletiye yazar; her tıklama bir okumadır, Esc bitirir. Çizime bir şey yazılmaz.',
+      aliases: ['KOORDINATOKU', 'ID', 'NOKTAOKU'],
+      run: () => tools.run(new CoordinateReadTool(ctx), 'Koordinat oku'),
+    },
     pending(ctx, 'analysis.volume', 'Hacim hesabı…', A, 'volume'),
     pending(ctx, 'analysis.slope', 'Eğim analizi…', A, 'slope'),
 

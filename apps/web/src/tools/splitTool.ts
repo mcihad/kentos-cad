@@ -264,7 +264,7 @@ export class SplitTool extends SelectionFirstTool {
     const pieces = this.cuts.reduce((n, c) => n + c.pieces.length, 0);
     for (const c of this.cuts.slice(0, MAX_GHOSTS)) {
       if (this.picks) strokeGeometry(g, view, entityGeometry(c.entity), { color: pal.danger, dash: [5, 3], width: 1.5 });
-      strokePieces(g, view, c.pieces, [pal.accent, pal.snap], pal.labelHalo, c.entity.kind === 'circle');
+      strokePieces(g, view, c.pieces, [pal.snap, pal.fg], pal.labelHalo, c.entity.kind === 'circle');
     }
     if (!this.mouse || !pieces) return;
     const f = this.ctx.format;

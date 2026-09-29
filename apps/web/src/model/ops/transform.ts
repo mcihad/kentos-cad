@@ -61,7 +61,7 @@ export function geometryIsFinite(e: Entity): boolean {
  * A cleared `bulges` or `holes` is written as undefined, as `entityOp`
  * does, so `CadDocument.update` drops the old one.
  */
-function withGeometry<E extends Entity | NewEntity>(e: E, g: Geometry): E {
+export function withGeometry<E extends Entity | NewEntity>(e: E, g: Geometry): E {
   const src = e as unknown as Record<string, unknown>;
   const own = SHAPE_FIELDS[src.kind as EntityKind] ?? [];
   const out: Record<string, unknown> = {};

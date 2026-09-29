@@ -1,0 +1,73 @@
+import type { AppContext } from '../app/context';
+import { Signal } from '../core/signal';
+import type { Vec2 } from '../model/geometry';
+import type { ViewTransform } from '../viewport/Camera';
+import { ringMark } from './constructPreview';
+import { drawTag } from './preview';
+import type { Tool, ToolPointer } from './Tool';
+import { pointFromText } from './tracking';
+
+/**
+ * Koordinat oku (`crs.query`, docs/adr/0140): every click (snapped) writes its Y and X
+ * to the log in the project's formats, and its Z when the snapped object is a point that
+ * has one. Nothing is written to the drawing; Esc ends. A tool of its own, not in the
+ * catalog (like paste): the command starts it.
+ */
+export class CoordinateReadTool implements Tool {
+  readonly id = 'coordinateRead';
+  readonly prompt = new Signal('Koordinat oku: noktaya tıklayın ya da Y,X yazın; kenet çalışır [Bitir (Esc)]');
+  readonly cursor = 'cross' as const;
+  readonly snaps = true;
+  private readonly ctx: AppContext;
+  private hover: Vec2 | null = null;
+  /** The point read last and what was said of it, kept on screen until the next. */
+  private read: { at: Vec2; lines: string[] } | null = null;
+
+  constructor(ctx: AppContext) {
+    this.ctx = ctx;
+  }
+
+  pointerMove(p: ToolPointer): void {
+    this.hover = p.world;
+    this.ctx.view.requestOverlay();
+  }
+
+  pointerDown(p: ToolPointer): void {
+    if (p.button === 0) this.say(p.world, p.snap?.entityId);
+  }
+
+  acceptPoint(p: Vec2): boolean {
+    this.say(p);
+    return true;
+  }
+
+  input(text: string): boolean {
+    const p = pointFromText(this.ctx, text, this.read?.at ?? null, this.hover);
+    if (!p) return false;
+    this.say(p);
+    return true;
+  }
+
+  /** Right click or Enter ends, as in the other point tools. */
+  confirm(): void {
+    this.ctx.tools.exit();
+  }
+
+  /** The reading: `Y=…, X=…` and the Z of the point snapped to. */
+  private say(at: Vec2, snappedId?: number): void {
+    const { doc, format, log } = this.ctx;
+    const snapped = snappedId !== undefined ? doc.get(snappedId) : undefined;
+    const z = snapped?.kind === 'point' ? snapped.z : undefined;
+    const text = `Y=${format.coord(at.x)}, X=${format.coord(at.y)}${z !== undefined ? `, Z=${format.length(z, false)}` : ''}`;
+    log.info(text);
+    this.read = { at, lines: [`Y ${format.coord(at.x)}`, `X ${format.coord(at.y)}`, ...(z !== undefined ? [`Z ${format.length(z, false)}`] : [])] };
+    this.ctx.view.requestOverlay();
+  }
+
+  draw(g: CanvasRenderingContext2D, view: ViewTransform): void {
+    if (!this.read) return;
+    const pal = this.ctx.view.palette;
+    ringMark(g, view, this.read.at, pal.accent, 6);
+    drawTag(g, view.worldToScreen(this.read.at), this.read.lines, pal.accent, pal.labelHalo);
+  }
+}

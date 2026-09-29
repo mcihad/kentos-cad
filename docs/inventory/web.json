@@ -20,15 +20,15 @@
   "summary": {
     "commands": {
       "total": 181,
-      "implemented": 160,
+      "implemented": 168,
       "partial": 0,
-      "pending": 21
+      "pending": 13
     },
     "tools": {
       "total": 72,
-      "implemented": 63,
+      "implemented": 70,
       "partial": 0,
-      "pending": 9
+      "pending": 2
     },
     "processing": {
       "total": 4,
@@ -74,22 +74,22 @@
     },
     "commandsWithoutPlace": [],
     "commandsWithoutTests": 65,
-    "commandsOnDesktop": 155,
+    "commandsOnDesktop": 162,
     "desktop": {
       "commands": {
         "total": 181,
-        "implemented": 155,
+        "implemented": 162,
         "partial": 0,
         "pending": 14,
-        "none": 7,
+        "none": 0,
         "n/a": 5
       },
       "tools": {
         "total": 72,
-        "implemented": 63,
+        "implemented": 70,
         "partial": 0,
         "pending": 2,
-        "none": 7,
+        "none": 0,
         "n/a": 0
       },
       "processing": {
@@ -795,10 +795,16 @@
     },
     {
       "id": "crs.query",
-      "title": "Koordinat sorgula",
+      "title": "Koordinat oku",
+      "short": "Koordinat oku",
       "category": "Koordinat",
       "icon": "crsQuery",
-      "aliases": [],
+      "description": "Tıklanan (kenetli) noktanın Y ve X’ini, noktanın kotu varsa onu da iletiye yazar; her tıklama bir okumadır, Esc bitirir. Çizime bir şey yazılmaz.",
+      "aliases": [
+        "KOORDINATOKU",
+        "ID",
+        "NOKTAOKU"
+      ],
       "kind": "action",
       "shortcuts": [],
       "menus": [
@@ -811,9 +817,9 @@
       "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
+        "web": "implemented",
         "desktop": "pending"
       },
       "tests": [],
@@ -2976,10 +2982,10 @@
         "gis"
       ],
       "uiSources": [],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -3345,10 +3351,10 @@
       "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -3376,10 +3382,10 @@
       "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -3771,10 +3777,10 @@
       "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -3982,10 +3988,10 @@
       "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts"
@@ -4071,7 +4077,7 @@
       "title": "Ötele",
       "category": "Düzenle",
       "icon": "offset",
-      "description": "Çizgi, çoklu çizgi, alan, daire ya da yayın paralel kopyasını çıkarır.",
+      "description": "Çizgi, çoklu çizgi, alan, daire ya da yayın paralel kopyasını çıkarır; iki yana ya da kaynağı silerek.",
       "aliases": [
         "O",
         "OFFSET",
@@ -4340,10 +4346,10 @@
       "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -4756,10 +4762,10 @@
       "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -6374,12 +6380,13 @@
       "family": "array",
       "rare": false,
       "methods": [],
-      "steps": 0,
+      "steps": 3,
       "description": "Seçili nesneleri bir çizgi, yay ya da çoklu çizgi boyunca eşit aralıkla çoğaltır; istenirse yolun doğrultusuna döndürür.",
-      "status": "pending",
+      "productCommand": "cad.entities.array",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -6620,12 +6627,13 @@
       "family": "dimension",
       "rare": false,
       "methods": [],
-      "steps": 0,
+      "steps": 3,
       "description": "Son ölçünün ilk noktasından ölçülen ölçüleri üst üste dizer.",
-      "status": "pending",
+      "productCommand": "cad.entities.create",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -6643,12 +6651,13 @@
       "family": "dimension",
       "rare": false,
       "methods": [],
-      "steps": 0,
+      "steps": 3,
       "description": "Son ölçünün ucundan başlayarak aynı çizgi üzerinde art arda ölçüler ekler.",
-      "status": "pending",
+      "productCommand": "cad.entities.create",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -6834,8 +6843,11 @@
       ],
       "primary": false,
       "rare": false,
-      "methods": [],
-      "steps": 2,
+      "methods": [
+        "Tıklayarak",
+        "Çit"
+      ],
+      "steps": 3,
       "description": "Çizgi ya da yay ucunu ilk rastladığı kenara kadar uzatır.",
       "productCommand": "cad.entities.edit",
       "status": "implemented",
@@ -6945,12 +6957,13 @@
         "İki doğrultu",
         "İki doğru"
       ],
-      "steps": 0,
+      "steps": 3,
       "description": "İki bilinen noktadan ölçülen uzaklıkların, doğrultuların ya da iki doğrunun kesişimine nokta koyar.",
-      "status": "pending",
+      "productCommand": "cad.entities.create",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -7107,12 +7120,12 @@
       "primary": false,
       "rare": false,
       "methods": [],
-      "steps": 0,
+      "steps": 3,
       "description": "Bir tepe noktası ve iki koldan açıyı ölçer; projenin açı biriminde ve dış açısıyla yazar.",
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts"
@@ -7189,7 +7202,7 @@
       "rare": false,
       "methods": [],
       "steps": 3,
-      "description": "Çizgi, çoklu çizgi, alan, daire ya da yayın paralel kopyasını çıkarır.",
+      "description": "Çizgi, çoklu çizgi, alan, daire ya da yayın paralel kopyasını çıkarır; iki yana ya da kaynağı silerek.",
       "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
@@ -7380,12 +7393,13 @@
         "Uzaklıkla",
         "Oranla"
       ],
-      "steps": 0,
+      "steps": 3,
       "description": "İki nokta arasındaki doğru üzerine nokta koyar: eşit aralıkla, ilk noktadan uzaklıkla ya da oranla.",
-      "status": "pending",
+      "productCommand": "cad.entities.create",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -7681,12 +7695,13 @@
       "primary": false,
       "rare": false,
       "methods": [],
-      "steps": 0,
+      "steps": 3,
       "description": "Merkezden ve iki kenardan kapalı daire dilimi (pasta dilimi) çizer; yay saat yönünün tersine süpürülür.",
-      "status": "pending",
+      "productCommand": "cad.polygon.create",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -7986,8 +8001,11 @@
       ],
       "primary": true,
       "rare": false,
-      "methods": [],
-      "steps": 2,
+      "methods": [
+        "Tıklayarak",
+        "Çit"
+      ],
+      "steps": 3,
       "description": "Tıklanan parçayı, onu kesen en yakın iki kenar arasında siler.",
       "productCommand": "cad.entities.edit",
       "status": "implemented",
@@ -14073,11 +14091,39 @@
                 "size": "small"
               },
               {
-                "command": "tool.trim",
+                "split": [
+                  {
+                    "command": "tool.trim",
+                    "title": "Buda",
+                    "label": "Tıklayarak"
+                  },
+                  {
+                    "command": "tool.trim",
+                    "option": "C",
+                    "title": "Buda",
+                    "label": "Çit",
+                    "description": "Çizilen çitin kestiği her parçayı budar"
+                  }
+                ],
+                "key": "trim",
                 "size": "small"
               },
               {
-                "command": "tool.extend",
+                "split": [
+                  {
+                    "command": "tool.extend",
+                    "title": "Uzat",
+                    "label": "Tıklayarak"
+                  },
+                  {
+                    "command": "tool.extend",
+                    "option": "C",
+                    "title": "Uzat",
+                    "label": "Çit",
+                    "description": "Çizilen çitin kestiği her nesnenin ucunu uzatır"
+                  }
+                ],
+                "key": "extend",
                 "size": "small"
               },
               {
@@ -14419,14 +14465,14 @@
                     "option": "D",
                     "title": "Kesişim noktası",
                     "label": "İki doğrultu",
-                    "description": "İki bilinen noktadan okunan doğrultuların kesişimi"
+                    "description": "İki noktadan okunan doğrultular"
                   },
                   {
                     "command": "tool.intersectPoint",
                     "option": "L",
                     "title": "Kesişim noktası",
                     "label": "İki doğru",
-                    "description": "İki noktayla verilen iki doğrunun kesişimi"
+                    "description": "İki noktayla verilen iki doğru"
                   }
                 ],
                 "key": "intersectPoint",
@@ -14555,11 +14601,39 @@
                 "size": "large"
               },
               {
-                "command": "tool.trim",
+                "split": [
+                  {
+                    "command": "tool.trim",
+                    "title": "Buda",
+                    "label": "Tıklayarak"
+                  },
+                  {
+                    "command": "tool.trim",
+                    "option": "C",
+                    "title": "Buda",
+                    "label": "Çit",
+                    "description": "Çizilen çitin kestiği her parçayı budar"
+                  }
+                ],
+                "key": "trim",
                 "size": "large"
               },
               {
-                "command": "tool.extend",
+                "split": [
+                  {
+                    "command": "tool.extend",
+                    "title": "Uzat",
+                    "label": "Tıklayarak"
+                  },
+                  {
+                    "command": "tool.extend",
+                    "option": "C",
+                    "title": "Uzat",
+                    "label": "Çit",
+                    "description": "Çizilen çitin kestiği her nesnenin ucunu uzatır"
+                  }
+                ],
+                "key": "extend",
                 "size": "small"
               },
               {
@@ -15802,11 +15876,39 @@
                   "size": "small"
                 },
                 {
-                  "command": "tool.trim",
+                  "split": [
+                    {
+                      "command": "tool.trim",
+                      "title": "Buda",
+                      "label": "Tıklayarak"
+                    },
+                    {
+                      "command": "tool.trim",
+                      "option": "C",
+                      "title": "Buda",
+                      "label": "Çit",
+                      "description": "Çizilen çitin kestiği her parçayı budar"
+                    }
+                  ],
+                  "key": "trim",
                   "size": "small"
                 },
                 {
-                  "command": "tool.extend",
+                  "split": [
+                    {
+                      "command": "tool.extend",
+                      "title": "Uzat",
+                      "label": "Tıklayarak"
+                    },
+                    {
+                      "command": "tool.extend",
+                      "option": "C",
+                      "title": "Uzat",
+                      "label": "Çit",
+                      "description": "Çizilen çitin kestiği her nesnenin ucunu uzatır"
+                    }
+                  ],
+                  "key": "extend",
                   "size": "small"
                 },
                 {
@@ -16148,14 +16250,14 @@
                       "option": "D",
                       "title": "Kesişim noktası",
                       "label": "İki doğrultu",
-                      "description": "İki bilinen noktadan okunan doğrultuların kesişimi"
+                      "description": "İki noktadan okunan doğrultular"
                     },
                     {
                       "command": "tool.intersectPoint",
                       "option": "L",
                       "title": "Kesişim noktası",
                       "label": "İki doğru",
-                      "description": "İki noktayla verilen iki doğrunun kesişimi"
+                      "description": "İki noktayla verilen iki doğru"
                     }
                   ],
                   "key": "intersectPoint",
@@ -16284,11 +16386,39 @@
                   "size": "large"
                 },
                 {
-                  "command": "tool.trim",
+                  "split": [
+                    {
+                      "command": "tool.trim",
+                      "title": "Buda",
+                      "label": "Tıklayarak"
+                    },
+                    {
+                      "command": "tool.trim",
+                      "option": "C",
+                      "title": "Buda",
+                      "label": "Çit",
+                      "description": "Çizilen çitin kestiği her parçayı budar"
+                    }
+                  ],
+                  "key": "trim",
                   "size": "large"
                 },
                 {
-                  "command": "tool.extend",
+                  "split": [
+                    {
+                      "command": "tool.extend",
+                      "title": "Uzat",
+                      "label": "Tıklayarak"
+                    },
+                    {
+                      "command": "tool.extend",
+                      "option": "C",
+                      "title": "Uzat",
+                      "label": "Çit",
+                      "description": "Çizilen çitin kestiği her nesnenin ucunu uzatır"
+                    }
+                  ],
+                  "key": "extend",
                   "size": "small"
                 },
                 {
@@ -17307,11 +17437,39 @@
                   "size": "small"
                 },
                 {
-                  "command": "tool.trim",
+                  "split": [
+                    {
+                      "command": "tool.trim",
+                      "title": "Buda",
+                      "label": "Tıklayarak"
+                    },
+                    {
+                      "command": "tool.trim",
+                      "option": "C",
+                      "title": "Buda",
+                      "label": "Çit",
+                      "description": "Çizilen çitin kestiği her parçayı budar"
+                    }
+                  ],
+                  "key": "trim",
                   "size": "small"
                 },
                 {
-                  "command": "tool.extend",
+                  "split": [
+                    {
+                      "command": "tool.extend",
+                      "title": "Uzat",
+                      "label": "Tıklayarak"
+                    },
+                    {
+                      "command": "tool.extend",
+                      "option": "C",
+                      "title": "Uzat",
+                      "label": "Çit",
+                      "description": "Çizilen çitin kestiği her nesnenin ucunu uzatır"
+                    }
+                  ],
+                  "key": "extend",
                   "size": "small"
                 }
               ],
@@ -17551,14 +17709,14 @@
                       "option": "D",
                       "title": "Kesişim noktası",
                       "label": "İki doğrultu",
-                      "description": "İki bilinen noktadan okunan doğrultuların kesişimi"
+                      "description": "İki noktadan okunan doğrultular"
                     },
                     {
                       "command": "tool.intersectPoint",
                       "option": "L",
                       "title": "Kesişim noktası",
                       "label": "İki doğru",
-                      "description": "İki noktayla verilen iki doğrunun kesişimi"
+                      "description": "İki noktayla verilen iki doğru"
                     }
                   ],
                   "key": "intersectPoint",
@@ -17643,11 +17801,39 @@
                   "size": "large"
                 },
                 {
-                  "command": "tool.trim",
+                  "split": [
+                    {
+                      "command": "tool.trim",
+                      "title": "Buda",
+                      "label": "Tıklayarak"
+                    },
+                    {
+                      "command": "tool.trim",
+                      "option": "C",
+                      "title": "Buda",
+                      "label": "Çit",
+                      "description": "Çizilen çitin kestiği her parçayı budar"
+                    }
+                  ],
+                  "key": "trim",
                   "size": "large"
                 },
                 {
-                  "command": "tool.extend",
+                  "split": [
+                    {
+                      "command": "tool.extend",
+                      "title": "Uzat",
+                      "label": "Tıklayarak"
+                    },
+                    {
+                      "command": "tool.extend",
+                      "option": "C",
+                      "title": "Uzat",
+                      "label": "Çit",
+                      "description": "Çizilen çitin kestiği her nesnenin ucunu uzatır"
+                    }
+                  ],
+                  "key": "extend",
                   "size": "small"
                 },
                 {

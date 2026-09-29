@@ -1,6 +1,7 @@
 import type { Entity, EntityGeometry } from '../entities';
 import type { Vec2 } from '../geometry';
 import type { Edge } from '../geom/intersect';
+import { op } from '../../wasm/core';
 import { entityOp } from './entityOp';
 
 /**
@@ -20,3 +21,10 @@ export type ExtendResult = { geometry: EntityGeometry } | { error: string };
 
 /** Extends the end of `target` nearest to `pick` to the first boundary it meets. */
 export const extendEntity = entityOp<(target: Entity, pick: Vec2, boundaries: readonly Edge[]) => ExtendResult>('extendEntity');
+
+/**
+ * Buda and Uzat, Çit yöntemi (docs/adr/0140): where the fence (a drawn open path) crosses `target`, in
+ * the fence's order. Each crossing is where the tool picks the object, as a click there would: the
+ * part the fence crosses is trimmed, the end it passes nearest is extended.
+ */
+export const fenceCrossings = op<(target: Entity, fence: readonly Vec2[]) => Vec2[]>('fenceCrossings');

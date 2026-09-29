@@ -4,8 +4,8 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 181 | 160 | 0 | 21 |
-| Araçlar | 72 | 63 | 0 | 9 |
+| Komutlar | 181 | 168 | 0 | 13 |
+| Araçlar | 72 | 70 | 0 | 2 |
 | İşlem araçları | 4 | 4 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
 | Çalışma modları | 5 | 3 | 0 | 2 |
@@ -18,11 +18,10 @@
 
 Yok.
 
-## Bekleyen (32)
+## Bekleyen (17)
 
 - Komutlar: `analysis.slope` Eğim analizi…
 - Komutlar: `analysis.volume` Hacim hesabı…
-- Komutlar: `crs.query` Koordinat sorgula
 - Komutlar: `crs.transform` Datum dönüşümü (ED50 ↔ TUREF)…
 - Komutlar: `file.export.pdf` PDF pafta…
 - Komutlar: `file.print` Yazdır ve pafta çıktısı…
@@ -30,24 +29,10 @@ Yok.
 - Komutlar: `map.parcelReport` Parsel alan çizelgesi
 - Komutlar: `map.profile` Boy kesit al…
 - Komutlar: `map.sheet` Pafta bölümlemesi…
-- Komutlar: `tool.arrayPath` Yol boyunca dizi
-- Komutlar: `tool.dimBaseline` Baz ölçü
-- Komutlar: `tool.dimContinue` Zincir ölçü
-- Komutlar: `tool.intersectPoint` Kesişim noktası
-- Komutlar: `tool.measureAngle` Açı ölç
-- Komutlar: `tool.pointsBetween` Ara nokta
-- Komutlar: `tool.sector` Daire dilimi
 - Komutlar: `tool.stakeout` Aplikasyon
 - Komutlar: `tool.subdivide` İfraz
 - Komutlar: `workspace.disaster` Afet Analizi — Yakında
 - Komutlar: `workspace.plan3d` 3D Plan — Yakında
-- Araçlar: `arrayPath` Yol boyunca dizi
-- Araçlar: `dimBaseline` Baz ölçü
-- Araçlar: `dimContinue` Zincir ölçü
-- Araçlar: `intersectPoint` Kesişim noktası
-- Araçlar: `measureAngle` Açı ölç
-- Araçlar: `pointsBetween` Ara nokta
-- Araçlar: `sector` Daire dilimi
 - Araçlar: `stakeout` Aplikasyon — Aplikasyon aracı hazır değil. Hesap menüsündeki `calc.stakeout` penceresi ayrıdır ve çalışır.
 - Araçlar: `subdivide` İfraz — İfraz hesabı henüz yok. Alan ve hisse kuralları bağımsız referans ve kurum kabulü ister (CLAUDE.md §7, §23; TODOS.md GIS-06, GIS-13).
 - Çalışma modları: `disaster` Afet ve risk analizi
@@ -65,8 +50,8 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 155 | 0 | 7 | 14 | 5 | 181 |
-| Araçlar | 63 | 0 | 7 | 2 | 0 | 72 |
+| Komutlar | 162 | 0 | 0 | 14 | 5 | 181 |
+| Araçlar | 70 | 0 | 0 | 2 | 0 | 72 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
 | Çalışma modları | 3 | 0 | 0 | 2 | 0 | 5 |
@@ -106,18 +91,11 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (7 / 181; ayrıca 14 iki platformda da bekliyor)
+#### Komutlar (0 / 181; ayrıca 14 iki platformda da bekliyor)
 
-- `tool.arrayPath` Yol boyunca dizi
-- `tool.dimBaseline` Baz ölçü
-- `tool.dimContinue` Zincir ölçü
-- `tool.intersectPoint` Kesişim noktası
-- `tool.measureAngle` Açı ölç
-- `tool.pointsBetween` Ara nokta
-- `tool.sector` Daire dilimi
 - `analysis.slope` Eğim analizi… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `analysis.volume` Hacim hesabı… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
-- `crs.query` Koordinat sorgula (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
+- `crs.query` Koordinat oku (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `crs.transform` Datum dönüşümü (ED50 ↔ TUREF)… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `file.export.pdf` PDF pafta… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `file.print` Yazdır ve pafta çıktısı… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
@@ -130,15 +108,8 @@ Kısmi olanlar notlarıyla; bölüm bölüm.
 - `workspace.disaster` Afet Analizi (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 - `workspace.plan3d` 3D Plan (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 
-#### Araçlar (7 / 72; ayrıca 2 iki platformda da bekliyor)
+#### Araçlar (0 / 72; ayrıca 2 iki platformda da bekliyor)
 
-- `arrayPath` Yol boyunca dizi
-- `dimBaseline` Baz ölçü
-- `dimContinue` Zincir ölçü
-- `intersectPoint` Kesişim noktası
-- `measureAngle` Açı ölç
-- `pointsBetween` Ara nokta
-- `sector` Daire dilimi
 - `stakeout` Aplikasyon (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)) — Aplikasyon aracı hazır değil. Hesap menüsündeki `calc.stakeout` penceresi ayrıdır ve çalışır.
 - `subdivide` İfraz (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)) — İfraz hesabı henüz yok. Alan ve hisse kuralları bağımsız referans ve kurum kabulü ister (CLAUDE.md §7, §23; TODOS.md GIS-06, GIS-13).
 

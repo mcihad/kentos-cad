@@ -5,6 +5,8 @@ import { Signal } from '../core/signal';
 import { CadDocument } from '../model/document';
 import type { Entity, NewEntity } from '../model/entities';
 import { LayerStore } from '../model/layers';
+import { entityEdges } from '../model/ops/edges';
+import { extendEntity, trimEntity } from '../model/ops/trim';
 import { Selection } from '../model/selection';
 import type { ToolPointer } from './Tool';
 
@@ -33,7 +35,9 @@ export function toolHarness() {
   });
   const log = new MessageLog();
   const state = { hit: null as Entity | null, inWindow: [] as number[], exited: 0, tool: null as { cancel?(): boolean } | null };
-  const palette = { accent: '#0af', snap: '#fa0', danger: '#f33', labelHalo: '#000' };
+  const palette = { accent: '#0af', snap: '#fa0', danger: '#f33', fg: '#eee', labelHalo: '#000' };
+  /** The edges of every object but `except`: the boundaries the store hands trim and extend. */
+  const boundaries = (except: Entity) => [...doc.all()].filter((e) => e.id !== except.id).flatMap((e) => entityEdges(e));
   const ctx = {
     doc,
     log,
@@ -49,6 +53,12 @@ export function toolHarness() {
       pickEdge: (_s: unknown, filter?: (e: Entity) => boolean) => (state.hit && (!filter || filter(state.hit)) ? state.hit : null),
       pickRect: () => state.inWindow,
       trackAlong: () => null,
+      camera: { visibleBounds: () => ({ minX: -50, minY: -50, maxX: 50, maxY: 50 }) },
+      entitiesIn: () => [...doc.all()],
+      trim: (target: Entity, at: { x: number; y: number }) => trimEntity(target, at, boundaries(target)),
+      extend: (target: Entity, at: { x: number; y: number }) => extendEntity(target, at, boundaries(target)),
+      ghosts: () => new Float64Array(),
+      dimensionText: (l: { value: number }) => l.value.toFixed(3),
     },
     // The manager's `exit` (tools/ToolManager.ts): the running tool's `cancel` first, and it leaves when that says no.
     tools: { exit: () => void (state.tool?.cancel?.() || state.exited++) },

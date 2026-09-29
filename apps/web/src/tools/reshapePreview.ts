@@ -102,7 +102,8 @@ export function startOf(e: Entity): Vec2 | null {
 
 /**
  * The pieces of a split, drawn one after the other in two alternating
- * colours so each is told from its neighbour; a ring marks every cut. A
+ * colours so each is told from its neighbour (the callers pick two that differ
+ * from the selection's accent); a ring marks every cut. A
  * circle's first piece starts at a cut too (`round`).
  */
 export function strokePieces(g: CanvasRenderingContext2D, view: ViewTransform, pieces: readonly Entity[], colors: readonly [string, string], halo: string, round = false): void {

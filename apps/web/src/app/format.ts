@@ -76,6 +76,16 @@ export class Formatter {
     return this.prefs.angleUnit.value === 'deg' ? '°' : 'g';
   }
 
+  /** The angle unit in words, for prompts: “derece” or “grad”. */
+  get angleUnitName(): string {
+    return this.prefs.angleUnit.value === 'deg' ? 'derece' : 'grad';
+  }
+
+  /** An angle typed in the project's angle unit, in radians (the inverse of `angle`). */
+  angleFromTyped(value: number): number {
+    return this.prefs.angleUnit.value === 'deg' ? (value * Math.PI) / 180 : (value * Math.PI) / 200;
+  }
+
   point(p: { x: number; y: number }): string {
     return `Y ${this.coord(p.x)}  X ${this.coord(p.y)}`;
   }

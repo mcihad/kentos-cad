@@ -37,8 +37,13 @@ export function drawTag(g: CanvasRenderingContext2D, at: Vec2, lines: string[], 
   g.font = '500 11px Barlow, system-ui, sans-serif';
   const w = Math.max(...lines.map((l) => g.measureText(l).width)) + 12;
   const h = lines.length * 14 + 6;
-  const x = Math.round(at.x + 16);
-  const y = Math.round(at.y + 16);
+  // Beside the cursor, on its other side where the drawing's edge would cut the tag off.
+  const canvas = g.canvas as HTMLCanvasElement | undefined;
+  const room = { w: canvas?.clientWidth, h: canvas?.clientHeight };
+  let x = Math.round(at.x + 16);
+  let y = Math.round(at.y + 16);
+  if (room.w && x + w > room.w - 2) x = Math.max(2, Math.round(at.x - 16 - w));
+  if (room.h && y + h > room.h - 2) y = Math.max(2, Math.round(at.y - 16 - h));
   g.fillStyle = bg;
   g.globalAlpha = 0.92;
   g.fillRect(x, y, w, h);

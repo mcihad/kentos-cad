@@ -7,6 +7,7 @@ import { entityEdges } from '../model/ops/edges';
 import type { ViewTransform } from '../viewport/Camera';
 import { edgeArms, radialDimension, vertexArms } from './constructions';
 import { parseNumber } from './coordinateInput';
+import { rememberDimension } from './dimChainTools';
 import { PointInputTool } from './drawTools';
 import { drawTag, strokeGeometry, strokePath } from './preview';
 import type { ToolPointer } from './Tool';
@@ -301,8 +302,12 @@ export class DimensionTool extends PointInputTool {
     }
     const { style, ...rest } = g;
     // Written by `cad.entities.create` (step “Ekle”); a refusal (a locked layer) is said by it, nothing is added.
-    if (this.writeObjects([{ kind: 'dimension', ...rest, ...(style && style !== 'aligned' && { style }) }]))
+    const out = this.writeObjects([{ kind: 'dimension', ...rest, ...(style && style !== 'aligned' && { style }) }]);
+    if (out) {
+      // Zincir ölçü and Baz ölçü continue from the newest aligned or linear one (docs/adr/0140).
+      rememberDimension(this.ctx.doc.uidOf(out.ids[0]), style);
       this.ctx.log.success(`${ADDED[style ?? 'aligned']}: ${this.ctx.view.dimensionText(l)}`);
+    }
     this.reset();
   }
 

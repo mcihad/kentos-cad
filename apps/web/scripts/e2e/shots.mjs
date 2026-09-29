@@ -1087,8 +1087,8 @@ function toolScenes() {
   const MATCH_TARGET = SCRATCH(`return [c.x + 0.2 * w, c.y + 0.2 * w];`);
   const MATCH_TARGET_2 = SCRATCH(`return [c.x + 2.1 * w, c.y + 0.7 * w];`);
   const BELOW = SCRATCH(`return [c.x, c.y - 1.5 * w];`);
-  const bare = async (ui, scratch) => {
-    await ribbon(ui);
+  const bare = async (ui, scratch, fields = {}) => {
+    await ribbonOn(ui, { ribbonTab: 'modify', ...fields });
     await ui.eval(CLEAR_VIEW);
     await ui.sleep(300);
     await ui.eval(scratch);
@@ -1161,6 +1161,217 @@ function toolScenes() {
         await hoverAt(ui, ...(await ui.eval(BELOW)));
       },
     },
+    ...faz2Scenes(bare, clickWorld),
+    ...faz3Scenes(bare, clickWorld),
+  ];
+}
+
+/** A world point as fractions of the view's sixth-width unit around its middle (what `SCRATCH` sets up). */
+const AT = (fx, fy) => SCRATCH(`return [c.x + ${fx} * w, c.y + ${fy} * w];`);
+/** Clicks at each of the points, one after the other. */
+async function clickAll(ui, clickWorld, ...pts) {
+  for (const [fx, fy] of pts) {
+    await clickWorld(ui, AT(fx, fy));
+    await ui.sleep(250);
+  }
+}
+const hoverFrac = async (ui, fx, fy) => hoverAt(ui, ...(await ui.eval(AT(fx, fy))));
+/** The bottom panel's history open, tall enough for the lines a tool says (set with the ribbon's layout, put back by ribbonOff). */
+const LOGGED = { bottomExpanded: true, bottomTab: 'history', bottomHeight: 190 };
+
+// Faz 2 (docs/adr/0140): Daire dilimi, Ara nokta, Kesişim noktası, Açı ölç, Koordinat oku, Zincir ölçü, Baz ölçü.
+function faz2Scenes(bare, clickWorld) {
+  const none = SCRATCH('return 0;');
+  const inputOption = (ui, key) => ui.eval(`window.kentos.tools.active.input('${key}')`);
+  /** The tool started on bare ground, with its option typed; `logged`: the log open under the drawing. */
+  const on = async (ui, id, ...options) => {
+    await bare(ui, none);
+    await startTool(ui, id);
+    for (const o of options) await inputOption(ui, o);
+  };
+  const onLogged = async (ui, id) => {
+    await bare(ui, none, LOGGED);
+    await ui.eval(`window.kentos.log.clear()`);
+    await startTool(ui, id);
+  };
+  // Daire dilimi: a centre, the start point that sets the radius and the start angle, the end direction under the mouse.
+  const sector = async (ui) => {
+    await on(ui, 'sector');
+    await clickAll(ui, clickWorld, [-0.8, -1.1], [0.8, -1.1]);
+  };
+  // A line drawn from two clicks, the mouse at the second: Ara nokta at its kept 4 parts.
+  const between = async (ui, ...options) => {
+    await on(ui, 'pointsBetween', ...options);
+    await clickAll(ui, clickWorld, [-2.2, -0.6], [2.2, 0.8]);
+  };
+  const twoCircles = async (ui, logged = false) => {
+    await (logged ? onLogged : on)(ui, 'intersectPoint');
+    await clickWorld(ui, AT(-1.2, -0.3));
+    await typeValue(ui, '30');
+    await clickWorld(ui, AT(1.2, -0.3));
+    await typeValue(ui, '30');
+  };
+  const bearings = async (ui) => {
+    await on(ui, 'intersectPoint', 'D');
+    await clickWorld(ui, AT(-1.6, -1));
+    await typeValue(ui, '50');
+    await clickWorld(ui, AT(1.6, -1));
+  };
+  const threeLinePoints = async (ui) => {
+    await on(ui, 'intersectPoint', 'L');
+    await clickAll(ui, clickWorld, [-2, -1], [-0.5, -0.4], [0.5, -1.2]);
+  };
+  const angleStart = async (ui) => {
+    await on(ui, 'measureAngle');
+    await clickAll(ui, clickWorld, [-0.5, -0.8], [1.8, -0.8]);
+  };
+  /** An aligned dimension drawn with Ölçülendirme (the base the chain tools remember), then a chain tool started. */
+  const dimensionsFrom = async (ui, id) => {
+    await on(ui, 'dimension');
+    await clickAll(ui, clickWorld, [-2.4, -1.1], [-0.9, -1.1], [-1.6, -0.5]);
+    await startTool(ui, id);
+  };
+  return [
+    { id: 'sector-preview', open: async (ui) => (await sector(ui), await hoverFrac(ui, 0, 0.64)) },
+    { id: 'sector-result', open: async (ui) => (await sector(ui), await clickWorld(ui, AT(0, 0.64)), await ui.move(2, 2)) },
+    { id: 'between-preview', open: async (ui) => (await between(ui), await hoverFrac(ui, 2.5, 1.1)) },
+    { id: 'between-result', open: async (ui) => (await between(ui), await typeValue(ui, '5'), await hoverFrac(ui, 0, -1.4)) },
+    {
+      id: 'between-distances-result',
+      open: async (ui) => (await between(ui, 'U'), await typeValue(ui, '15, 45, 80'), await hoverFrac(ui, 0, -1.4)),
+    },
+    {
+      id: 'between-ratios-preview',
+      open: async (ui) => {
+        await between(ui, 'O');
+        await typeValue(ui, '0.1, 0.5, 0.9');
+        // The next two points, the kept ratios shown on them.
+        await clickAll(ui, clickWorld, [-2, -1.4], [2, -1.2]);
+        await hoverFrac(ui, 2.4, -0.9);
+      },
+    },
+    { id: 'meeting-distances-preview', open: async (ui) => (await twoCircles(ui), await hoverFrac(ui, 0.1, 0.8)) },
+    { id: 'meeting-distances-result', open: async (ui) => (await twoCircles(ui, true), await clickWorld(ui, AT(0.1, 0.8)), await ui.move(2, 2)) },
+    { id: 'meeting-bearings-preview', open: async (ui) => (await bearings(ui), await hoverFrac(ui, 0.89, -0.29)) },
+    { id: 'meeting-bearings-result', open: async (ui) => (await bearings(ui), await typeValue(ui, '350'), await ui.move(2, 2)) },
+    { id: 'meeting-lines-preview', open: async (ui) => (await threeLinePoints(ui), await hoverFrac(ui, 1.7, 0)) },
+    { id: 'meeting-lines-result', open: async (ui) => (await threeLinePoints(ui), await clickWorld(ui, AT(1.7, 0)), await ui.move(2, 2)) },
+    { id: 'angle-preview', open: async (ui) => (await angleStart(ui), await hoverFrac(ui, 0.8, 0.9)) },
+    {
+      id: 'angle-result',
+      open: async (ui) => {
+        await onLogged(ui, 'measureAngle');
+        await clickAll(ui, clickWorld, [-0.5, -0.8], [1.8, -0.8], [0.8, 0.7]);
+        await ui.move(2, 2);
+      },
+    },
+    {
+      id: 'coord-read',
+      open: async (ui) => {
+        await bare(ui, SCRATCH(`add({ kind: 'point', p: { x: c.x + 0.8 * w, y: c.y + 0.4 * w }, z: 118.5 }); add({ kind: 'line', a: { x: c.x - 2 * w, y: c.y - 0.6 * w }, b: { x: c.x + 2 * w, y: c.y - 0.2 * w } });`), LOGGED);
+        await ui.eval(`window.kentos.log.clear()`);
+        await ui.eval(`window.kentos.commands.execute('crs.query')`);
+        await ui.sleep(300);
+        await clickWorld(ui, AT(-0.6, 0.6));
+        await ui.sleep(300);
+        // The spot with its height, the mouse on it so the snap takes it.
+        await clickWorld(ui, AT(0.8, 0.4));
+        await ui.sleep(300);
+      },
+    },
+    { id: 'dimcontinue-preview', open: async (ui) => (await dimensionsFrom(ui, 'dimContinue'), await clickWorld(ui, AT(0.2, -1.3)), await hoverFrac(ui, 1.5, -1.0)) },
+    {
+      id: 'dimcontinue-result',
+      open: async (ui) => (await dimensionsFrom(ui, 'dimContinue'), await clickAll(ui, clickWorld, [0.2, -1.3], [1.5, -1.0], [2.6, -1.2]), await ui.move(2, 2)),
+    },
+    { id: 'dimbaseline-preview', open: async (ui) => (await dimensionsFrom(ui, 'dimBaseline'), await clickWorld(ui, AT(0.2, -1.3)), await hoverFrac(ui, 1.5, -1.0)) },
+    {
+      id: 'dimbaseline-result',
+      open: async (ui) => (await dimensionsFrom(ui, 'dimBaseline'), await clickAll(ui, clickWorld, [0.2, -1.3], [1.5, -1.0], [2.6, -1.2]), await ui.move(2, 2)),
+    },
+  ];
+}
+
+// Faz 3: the Çit method of Buda and Uzat, Ötele's İki yana and Kaynağı sil, Yol boyunca dizi.
+function faz3Scenes(bare, clickWorld) {
+  const inputOption = (ui, key) => ui.eval(`window.kentos.tools.active.input('${key}')`);
+  /** Two vertical boundaries and four lines across them (all the way, for Buda). */
+  const ACROSS = SCRATCH(`
+    for (const x of [-0.6, 0.6]) add({ kind: 'line', a: { x: c.x + x * w, y: c.y - 1.5 * w }, b: { x: c.x + x * w, y: c.y + 1.5 * w } });
+    for (const y of [-0.9, -0.3, 0.3, 0.9]) add({ kind: 'line', a: { x: c.x - 2.4 * w, y: c.y + y * w }, b: { x: c.x + 2.4 * w, y: c.y + y * w }, color: '#E5484D' });`);
+  /** A boundary at the east and four lines that stop short of it, at different lengths. */
+  const SHORT = SCRATCH(`
+    add({ kind: 'line', a: { x: c.x + 1.9 * w, y: c.y - 1.5 * w }, b: { x: c.x + 1.9 * w, y: c.y + 1.5 * w } });
+    [-0.9, -0.3, 0.3, 0.9].forEach((y, i) => add({ kind: 'line', a: { x: c.x - 2.4 * w, y: c.y + y * w }, b: { x: c.x + (0.9 + 0.25 * i) * w, y: c.y + y * w }, color: '#E5484D' }));`);
+  const fence = async (ui, id, scratch) => {
+    await bare(ui, scratch);
+    await startTool(ui, id);
+    await inputOption(ui, 'C');
+    await ui.sleep(250);
+  };
+  const fenceOn = async (ui, id, scratch, x) => {
+    await fence(ui, id, scratch);
+    await clickAll(ui, clickWorld, [x + 0.1, -1.35], [x - 0.15, -0.4], [x + 0.1, 0.55], [x, 1.35]);
+  };
+  const BENT_LINE = SCRATCH(`add({ kind: 'polyline', pts: [{ x: c.x - 2 * w, y: c.y - 0.9 * w }, { x: c.x, y: c.y - 0.9 * w }, { x: c.x + 0.8 * w, y: c.y + 0.6 * w }, { x: c.x + 2 * w, y: c.y + 0.6 * w }], color: '#E5484D' });`);
+  /** Ötele's options set to exactly these (they are kept for the session, so the last scene's are still on). */
+  const offsetOptions = async (ui, want) => {
+    for (const [key, label] of [['N', 'Noktadan geç'], ['I', 'İki yana'], ['S', 'Kaynağı sil']]) {
+      const on = await ui.eval(`window.kentos.tools.active.prompt.value.includes('${label} (${key}): açık')`);
+      if (on !== want.includes(key)) await inputOption(ui, key);
+    }
+  };
+  const offsetOn = async (ui, ...options) => {
+    await bare(ui, BENT_LINE);
+    await startTool(ui, 'offset');
+    await offsetOptions(ui, options);
+    await typeValue(ui, '6');
+    await clickWorld(ui, AT(-1, -0.9));
+    await ui.sleep(250);
+  };
+  /** A square to copy at the start of an arc it will follow. */
+  const PATH_ARRAY = SCRATCH(`
+    add({ kind: 'arc', c: { x: c.x, y: c.y - 2 * w }, r: 2.9 * w, a0: 0.55, a1: 2.6, color: '#3B82F6' });
+    const at = { x: c.x + 2.9 * w * Math.cos(0.55), y: c.y - 2 * w + 2.9 * w * Math.sin(0.55) };
+    const s = 0.18 * w;
+    const sq = add({ kind: 'polygon', pts: [{ x: at.x - s, y: at.y - s * 1.6 }, { x: at.x + s, y: at.y - s * 1.6 }, { x: at.x + s, y: at.y + s * 1.6 }, { x: at.x - s, y: at.y + s * 1.6 }], color: '#E5484D' });
+    k.selection.set([sq.id]);
+    return [c.x + 2.9 * Math.cos(1.6) * w, c.y - 2 * w + 2.9 * w * Math.sin(1.6)];`);
+  const pathArray = async (ui) => {
+    await bare(ui, PATH_ARRAY);
+    await startTool(ui, 'arrayPath');
+    // The top of the arc.
+    await clickWorld(ui, SCRATCH(`return [c.x + 2.9 * Math.cos(1.6) * w, c.y - 2 * w + 2.9 * w * Math.sin(1.6)];`));
+    await ui.sleep(250);
+    await typeValue(ui, '7');
+  };
+  return [
+    { id: 'trim-fence-preview', open: async (ui) => (await fenceOn(ui, 'trim', ACROSS, 0), await hoverFrac(ui, 0.05, 1.4)) },
+    { id: 'trim-fence-result', open: async (ui) => (await fenceOn(ui, 'trim', ACROSS, 0), await pressEnter(ui), await ui.move(2, 2)) },
+    { id: 'trim-fence-empty', open: async (ui) => (await fence(ui, 'trim', ACROSS), await hoverFrac(ui, 0, 0)) },
+    { id: 'extend-fence-preview', open: async (ui) => (await fenceOn(ui, 'extend', SHORT, 0.5), await hoverFrac(ui, 0.55, 1.4)) },
+    { id: 'extend-fence-result', open: async (ui) => (await fenceOn(ui, 'extend', SHORT, 0.5), await pressEnter(ui), await ui.move(2, 2)) },
+    { id: 'offset-both-preview', open: async (ui) => (await offsetOn(ui, 'I'), await hoverFrac(ui, -1, -0.4)) },
+    { id: 'offset-both-result', open: async (ui) => (await offsetOn(ui, 'I'), await clickWorld(ui, AT(-1, -0.4)), await ui.move(2, 2)) },
+    { id: 'offset-erase-preview', open: async (ui) => (await offsetOn(ui, 'S'), await hoverFrac(ui, -1, -0.4)) },
+    { id: 'offset-erase-result', open: async (ui) => (await offsetOn(ui, 'I', 'S'), await clickWorld(ui, AT(-1, -0.4)), await ui.move(2, 2)) },
+    { id: 'arraypath-preview', open: async (ui) => (await pathArray(ui), await hoverFrac(ui, 0, -0.2)) },
+    { id: 'arraypath-result', open: async (ui) => (await pathArray(ui), await pressEnter(ui), await ui.move(2, 2)) },
+    ...[
+      ['split-trim-methods', 'modify', 'trim'],
+      ['split-array', 'modify', 'array'],
+      ['split-dimension', 'draw', 'dimension'],
+      ['split-points-between', 'draw', 'pointsBetween'],
+      ['split-intersect-point', 'draw', 'intersectPoint'],
+    ].map(([id, tab, key]) => ({
+      id,
+      open: async (ui) => (
+        await ribbonOn(ui, { ribbonTab: tab }),
+        await ui.clickSel(`.ribbon__strip [data-split="${key}"] .rsplit__arrow`),
+        await ui.waitFor(`!!document.querySelector('.menu')`),
+        await ui.sleep(300)
+      ),
+    })),
   ];
 }
 
