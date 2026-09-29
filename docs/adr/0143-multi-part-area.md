@@ -55,6 +55,7 @@ Sahibin kararı (29 Eylül): `.kcad` şemasını değiştiren işler kendi özel
   - Yeni `partsJoin` (Parçaları birleştir): seçili alanlar tek, çok parçalı alan olur. Örtüşen alanlar birleşerek tek parça olur. Sonuç ilk seçilen alanın yuvasını, kimliğini, katmanını ve özniteliklerini alır.
   - Yeni `partsSplit` (Parçalara ayır): çok parçalı alan her parçası için bir alan olur. İlk parça alanın yuvasını ve kimliğini korur; öbürleri yeni alandır ve öznitelikleri taşır.
 - **Şerit:** Değiştir › Alan paneline Parçaları birleştir ve Parçalara ayır; birleştir, kesiştir ve çıkarda “Tek nesne (T)” çipi.
+- **Uygulama notu (29 Eylül):** `cad.entities.edit` yalnız değişiklikleri taşır; `oneObject` komutun alanı olmadı, üç aracın “Tek nesne (T)” seçeneğidir (masaüstünde `Memory.area_one_object`). Açıkken iki ya da daha çok parçalı sonuç tek `add` ile, büyükten küçüğe dizili tek alan olarak yazılır (çekirdeğin `one_area`'sı). Birleştir, kesiştir ve çıkar çok parçalı alanı bütün olarak alır (kesiştirmede `intersect_area_sets`). Parçaları birleştir, hiçbir parça öbürüyle örtüşmüyorsa her parçayı olduğu gibi, kotlarıyla dizer; örtüşme varsa parçaların birleşimini yazar. Parçalara ayır parçaları olduğu gibi (kotlarıyla) ayırır.
 - Kilitli katman, tek geri alma adımı ve ortak durumlar (`fixtures/commands/v1`, bağımsız Python denetimiyle) öbür alan işlemlerindeki gibidir.
 
 ### 5. Değişim biçimleri ve sunucu

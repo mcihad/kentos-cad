@@ -44,7 +44,7 @@ Sahibin kararı (29 Eylül): `.kcad` şemasını değiştiren işler kendi özel
   - Rust kodeği ve tipli sütunlar (`io/columns.ts` ↔ `kcad/src/columns.rs`, `FORMATS_VERSION`);
   - bağımsız Python okuyucusu (`tools/kcad/kcad.py`);
   - bağımsız yazıcıyla yeni örnek dosyalar (`fixtures/kcad/v2`: kotlu çizgi, kotlu ve kotsuz köşeli çoklu çizgi, kotlu delikli alan, şema 3'te `zs` reddi).
-- **Sunucu:** veritabanı projesi nesneyi `cad_definition` olarak saklar (§15). Kot orada da taşınır; PostGIS türevi 2B kalır, Z'li türev ayrı bir karardır.
+- **Sunucu:** veritabanı projesi nesneyi `cad_definition` olarak saklar (§15). Kot orada da taşınır; PostGIS türevi 2B kalır, Z'li türev ayrı bir karardır. (29 Eylül: yaysız çizgi, yol ve alanda kaynak 2B geometri kalıyor, kot düşüyordu; artık köşesinin kotu olan nesnenin kaynağı tanımıdır, ADR 0143'ün adım 3'ünde düzeltildi.)
 
 ### 3. Değişim biçimleri
 
