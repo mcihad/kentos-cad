@@ -12,6 +12,7 @@ import { colorSwatch, layerSwatch } from '../layers/swatch';
 import { DRAW_COLORS, LINE_WEIGHTS, weightText } from '../toolbar/fields';
 import type { MenuItem } from '../widgets/PopupMenu';
 import { PropertyGrid, type PropRow, type PropSection } from '../widgets/PropertyGrid';
+import { commonElevationRow, lineEndRow, pathElevationRow, spaceRow } from './elevationRows';
 import { setGeometry, setProperties, uidsOf } from './write';
 
 /**
@@ -237,16 +238,20 @@ export class PropertiesPanel extends Panel {
         geo.push(
           num('Başlangıç Y', e.a.x),
           num('Başlangıç X', e.a.y),
+          lineEndRow(this.ctx, e, 0, locked),
           num('Bitiş Y', e.b.x),
           num('Bitiş X', e.b.y),
+          lineEndRow(this.ctx, e, 1, locked),
           num('Uzunluk', dist(e.a, e.b), 'm'),
+          ...spaceRow(this.ctx, e),
           { label: 'Semt', value: f.bearing(bearingGrad(e.a, e.b), false), numeric: true, unit: f.angleUnitLabel },
         );
         break;
       case 'polyline':
       case 'polygon': {
         geo.push({ label: 'Köşe sayısı', value: String(e.pts.length), numeric: true });
-        geo.push(num(e.kind === 'polygon' ? 'Çevre' : 'Uzunluk', entityLength(e)!, 'm'));
+        geo.push(pathElevationRow(this.ctx, e, locked));
+        geo.push(num(e.kind === 'polygon' ? 'Çevre' : 'Uzunluk', entityLength(e)!, 'm'), ...spaceRow(this.ctx, e));
         if (e.kind === 'polygon') {
           // Net area: holes (adalar) are already taken out.
           if (e.holes?.length) geo.push({ label: 'Ada (delik)', value: String(e.holes.length), numeric: true });
@@ -449,6 +454,7 @@ export class PropertiesPanel extends Panel {
         ? [{ label: 'Kalınlık', value: this.weightText(weight), editor: anyLocked ? undefined : this.weightEditor(lined.map((e) => e.id), weight) }]
         : []),
       { label: 'Sembol', value: this.symbolText(symbol), editor: anyLocked ? undefined : this.symbolEditor(symbol) },
+      ...commonElevationRow(this.ctx, ents, anyLocked),
     ];
     const totals: PropRow[] = [];
     const f = this.ctx.format;

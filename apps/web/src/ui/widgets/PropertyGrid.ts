@@ -13,6 +13,8 @@ export interface PropRow {
   /** Numeric values use tabular figures and right alignment. */
   numeric?: boolean;
   unit?: string;
+  /** A remark under the value, smaller and muted (Kot: “(bazı köşeler kotsuz)”): what does not fit beside it. */
+  note?: string;
   editor?: PropEditor;
 }
 
@@ -55,6 +57,11 @@ export class PropertyGrid {
   }
 
   private cell(r: PropRow, key: string): HTMLElement {
+    const cell = this.field(r, key);
+    return r.note ? h('span', { class: 'props__with-note' }, cell, h('span', { class: 'props__note', title: r.note }, r.note)) : cell;
+  }
+
+  private field(r: PropRow, key: string): HTMLElement {
     const e = r.editor;
     if (!e) {
       return h('span', { class: `props__text${r.numeric ? ' num' : ''}`, title: r.value }, r.value, r.unit ? h('span', { class: 'props__unit' }, r.unit) : null);

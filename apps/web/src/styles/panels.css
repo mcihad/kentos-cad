@@ -372,6 +372,18 @@
   color: var(--c-text-3);
   font-size: var(--fs-xs);
 }
+/* A remark under the value (Kot's “bazı köşeler kotsuz”): a second line, muted, starting where the value's text does. */
+.props__with-note {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+}
+.props__note {
+  padding: 0 6px 2px;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
 
 /* ── Empty states ────────────────────────────────────────────────── */
 .empty {

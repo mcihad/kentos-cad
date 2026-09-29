@@ -5,6 +5,7 @@ import type { EntityEdit } from '../contracts/generated/EntityEdit';
 import type { EntityGeometry as EditGeometry } from '../contracts/generated/EntityGeometry';
 import type { Entity, EntityGeometry } from '../model/entities';
 import { entitiesEdit } from '../product/entitiesEdit';
+import { mapElevations } from '../product/elevationValues';
 
 /**
  * How the edge, corner and object tools write (docs/adr/0047): through the
@@ -35,4 +36,19 @@ export const editGeometry = (g: EntityGeometry): EditGeometry => g as unknown as
 /** The slots of the objects an edit made, in its order. */
 export function createdIds(ctx: AppContext, out: EntitiesEdited): number[] {
   return out.created.map((uid) => ctx.doc.byUid(uid)?.id).filter((id): id is number => id !== undefined);
+}
+
+/**
+ * Writes vertex elevations (docs/adr/0142): each object with its own geometry and the elevation `f` gives each vertex
+ * (its elevation and its place in `vertexElevations`' order), as one `cad.entities.edit` with the operation
+ * `elevation`, the undo step “Kot ver”. Kot ver and Öznitelikler's Kot rows write here. The command's answer, or
+ * null when nothing was written: it refused (its message is in the log) or no object takes elevations.
+ */
+export function writeElevations(ctx: AppContext, entities: readonly Entity[], f: (z: number | null, index: number) => number | null): EntitiesEdited | null {
+  const changes: EntityEdit[] = [];
+  for (const e of entities) {
+    const geometry = mapElevations(e, f);
+    if (geometry) changes.push({ kind: 'update', uid: uidOf(ctx, e), geometry });
+  }
+  return changes.length ? writeEdit(ctx, 'elevation', changes) : null;
 }

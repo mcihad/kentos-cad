@@ -1164,6 +1164,7 @@ function toolScenes() {
     ...faz2Scenes(bare, clickWorld),
     ...faz3Scenes(bare, clickWorld),
     ...adr0141Scenes(bare, clickWorld),
+    ...adr0142Scenes(bare, clickWorld),
   ];
 }
 
@@ -1584,6 +1585,69 @@ function queryScenes(bare, clickWorld) {
         await hoverU(ui, 0.9, -0.9);
       },
     },
+  ];
+}
+
+// docs/adr/0142: vertex elevations. Kot ver (its second step with the prompt and chips, and what it says after each way),
+// the Kot rows of Öznitelikler, the tag of a grip that has an elevation, Koordinat oku on a vertex and the hover card's
+// 3D length. Five objects on bare ground carry the scenes; their slots are kept in `window.__elev`.
+function adr0142Scenes(bare, clickWorld) {
+  // A line with both ends, a polyline with a range and two vertices without an elevation (one at the end), an area
+  // with a hole and every vertex elevated, a spot with its height and a circle (takes none).
+  const OBJECTS = FIT(`
+    const P = (fx, fy) => ({ x: c.x + fx * u, y: c.y + fy * u });
+    const line = add({ kind: 'line', a: P(-2.3, 1.05), b: P(-0.9, 1.3), za: 100.25, zb: 104.75, color: '#3B82F6' });
+    const path = add({ kind: 'polyline', pts: [P(-2.3, -0.9), P(-1.4, -0.3), P(-0.5, -0.75), P(0.4, -0.15), P(0.9, -0.5)], zs: [98.5, null, 105.25, 101, null], color: '#E5484D' });
+    const area = add({
+      kind: 'polygon',
+      pts: [P(0.4, 0.4), P(2.0, 0.4), P(2.0, 1.4), P(0.4, 1.4)],
+      zs: [96.4, 97.1, 98.9, 97.8],
+      holes: [{ pts: [P(0.9, 0.7), P(1.5, 0.7), P(1.5, 1.1), P(0.9, 1.1)], zs: [97.5, 97.5, 97.9, 97.9] }],
+      color: '#3B82F6',
+    });
+    const spot = add({ kind: 'point', p: P(1.7, -0.6), z: 118.5 });
+    const circle = add({ kind: 'circle', c: P(-1.6, 0.25), r: 0.3 * u, color: '#8B8B8B' });
+    window.__elev = { line: line.id, path: path.id, area: area.id, spot: spot.id, circle: circle.id };`);
+  const selectNames = (...names) => `(() => { const k = window.kentos; const o = window.__elev; k.selection.set([${names.map((n) => `o.${n}`).join(', ')}]); })()`;
+  /** The tool started on the objects (some selected), the log open under the drawing. */
+  const started = async (ui, names, options = []) => {
+    await bare(ui, OBJECTS, { ribbonTab: 'modify', ...LOGGED });
+    await ui.eval(`window.kentos.log.clear()`);
+    await ui.eval(selectNames(...names));
+    await startTool(ui, 'setElevation');
+    for (const o of options) await ui.eval(`window.kentos.tools.active.input('${o}')`);
+    await ui.sleep(200);
+  };
+  const SAMPLE = ['line', 'path', 'area', 'spot', 'circle'];
+  /** A section of Öznitelikler folded or opened, whichever it is not now. */
+  const section = async (ui, title, open) => {
+    const head = `[...document.querySelectorAll('.panel--props .props__section')].find((b) => b.textContent.includes(${JSON.stringify(title)}))`;
+    // No such section (nothing selected): nothing to fold or open.
+    if (await ui.eval(`(() => { const b = ${head}; return !!b && (b.getAttribute('aria-expanded') === 'true') !== ${open}; })()`)) await ui.clickText('.panel--props .props__section', title);
+  };
+  /** Öznitelikler over the dock (the layer tree at its least) with Genel folded, so Geometri shows whole at 1100×650. */
+  const props = async (ui, names) => {
+    await bare(ui, OBJECTS, { ribbonTab: 'modify', layersFraction: 0.15 });
+    await ui.eval(`window.kentos.log.clear()`);
+    await ui.eval(selectNames(...names));
+    await ui.move(2, 2);
+    await ui.sleep(400);
+    await section(ui, 'Genel', false);
+    await ui.move(2, 2);
+    await ui.sleep(300);
+  };
+  const propsClose = async (ui) => (await section(ui, 'Genel', true), await ui.eval(UNDO_ALL), await ribbonOff(ui));
+  return [
+    { id: 'elevation-step', open: async (ui) => (await started(ui, SAMPLE), await ui.move(2, 2)) },
+    { id: 'elevation-raise-step', open: async (ui) => (await started(ui, SAMPLE, ['A']), await ui.move(2, 2)) },
+    { id: 'elevation-picking', open: async (ui) => (await started(ui, []), await ui.move(2, 2)) },
+    { id: 'elevation-fixed-result', open: async (ui) => (await started(ui, SAMPLE), await typeValue(ui, '100'), await ui.move(2, 2)) },
+    { id: 'elevation-raise-result', open: async (ui) => (await started(ui, SAMPLE, ['A']), await typeValue(ui, '2.5'), await ui.move(2, 2)) },
+    { id: 'elevation-reset-result', open: async (ui) => (await started(ui, SAMPLE, ['S']), await ui.move(2, 2)) },
+    { id: 'props-line', open: async (ui) => props(ui, ['line']), close: propsClose },
+    { id: 'props-polyline', open: async (ui) => props(ui, ['path']), close: propsClose },
+    { id: 'props-polygon', open: async (ui) => props(ui, ['area']), close: propsClose },
+    { id: 'props-several', open: async (ui) => props(ui, ['line', 'path', 'area', 'circle']), close: propsClose },
   ];
 }
 

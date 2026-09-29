@@ -1,7 +1,6 @@
-import type { EntityEdit } from '../contracts/generated/EntityEdit';
-import { hasVertexElevation, mapElevations, takesElevation } from '../product/elevationValues';
+import { hasVertexElevation, takesElevation } from '../product/elevationValues';
 import { parseNumber } from './coordinateInput';
-import { uidOf, writeEdit } from './editCommand';
+import { writeElevations } from './editCommand';
 import { SelectionFirstTool } from './modifyTools';
 
 /**
@@ -109,8 +108,7 @@ export class ElevationTool extends SelectionFirstTool {
     const chosen = !open.length ? takers : change.kind === 'raise' ? open.filter(hasVertexElevation) : open;
     if (!chosen.length) return void log.warn('Seçili nesnelerin hiçbir köşesinde kot yok; fark eklenecek bir şey bulunamadı.');
     const f = change.kind === 'raise' ? (z: number | null) => (z === null ? null : z + change.by) : () => change.z;
-    const changes = chosen.map((e): EntityEdit => ({ kind: 'update', uid: uidOf(this.ctx, e), geometry: mapElevations(e, f)! }));
-    if (!writeEdit(this.ctx, 'elevation', changes)) return;
+    if (!writeElevations(this.ctx, chosen, f)) return;
     const n = chosen.length;
     log.info(change.kind === 'raise' ? `Kotlar ${signed(change.by, (m) => format.length(m))} değişti: ${n} nesne.` : change.z === null ? `Kot silindi: ${n} nesne.` : `Kot verildi: ${n} nesne.`);
     if (all.length > takers.length) log.warn(`${all.length - takers.length} nesne kot almaz (yalnız çizgi, çoklu çizgi, alan ve nokta).`);
