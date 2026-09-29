@@ -113,6 +113,15 @@ for (const [key, note] of Object.entries(annotations)) {
   if (note.note) target.note = note.note;
   if (note.acceptance) target.acceptance = note.acceptance;
 }
+// A typed name starts one command on both platforms: an alias two commands claim is a mistake
+// (the later registration wins silently). Folded as the command line folds it.
+const TURKISH = { Ç: 'C', Ğ: 'G', İ: 'I', Ö: 'O', Ş: 'S', Ü: 'U' };
+const foldName = (s) => s.toLocaleUpperCase('tr-TR').replace(/[ÇĞİÖŞÜ]/g, (c) => TURKISH[c]);
+const owners = new Map();
+for (const c of sections.commands) for (const a of new Set((c.aliases ?? []).map(foldName))) owners.set(a, [...(owners.get(a) ?? []), c.id]);
+for (const [alias, ids] of owners)
+  if (ids.length > 1) problems.push(`${alias}: takma ad ${ids.join(' ve ')} komutlarında; bir ad tek komutu başlatır, birinden çıkarın`);
+
 if (problems.length) {
   console.error(problems.join('\n'));
   process.exit(1);

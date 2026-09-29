@@ -20,15 +20,15 @@
   "summary": {
     "commands": {
       "total": 188,
-      "implemented": 168,
+      "implemented": 175,
       "partial": 0,
-      "pending": 20
+      "pending": 13
     },
     "tools": {
       "total": 76,
-      "implemented": 70,
+      "implemented": 74,
       "partial": 0,
-      "pending": 6
+      "pending": 2
     },
     "processing": {
       "total": 4,
@@ -73,23 +73,23 @@
       "pending": 0
     },
     "commandsWithoutPlace": [],
-    "commandsWithoutTests": 68,
-    "commandsOnDesktop": 163,
+    "commandsWithoutTests": 62,
+    "commandsOnDesktop": 170,
     "desktop": {
       "commands": {
         "total": 188,
-        "implemented": 163,
+        "implemented": 170,
         "partial": 0,
         "pending": 13,
-        "none": 7,
+        "none": 0,
         "n/a": 5
       },
       "tools": {
         "total": 76,
-        "implemented": 70,
+        "implemented": 74,
         "partial": 0,
         "pending": 2,
-        "none": 4,
+        "none": 0,
         "n/a": 0
       },
       "processing": {
@@ -823,7 +823,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/src/app/netcadNames.test.ts"
+      ]
     },
     {
       "id": "crs.set",
@@ -2749,11 +2751,10 @@
       "title": "Alan hesapla",
       "category": "Harita",
       "icon": "area",
-      "description": "Tıklanan köşelerden alan ve çevre hesaplar.",
+      "description": "Tıklanan köşelerden ya da içine tıklanan bölgeden alan ve çevre hesaplar; ölçülen alan istenirse alan olarak çizilir.",
       "aliases": [
         "AA",
         "AREA",
-        "ALANHESAP",
         "ALANSOR"
       ],
       "kind": "toggle",
@@ -2777,6 +2778,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/measure-parcel.json"
       ]
@@ -3268,6 +3270,7 @@
       "kind": "action",
       "shortcuts": [
         "Enter",
+        "Shift+Enter {\"shift\":true}",
         "Space"
       ],
       "menus": [],
@@ -3610,6 +3613,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/netcadNames.test.ts",
         "fixtures/interaction/v1/object-tools.json"
       ]
     },
@@ -3683,6 +3687,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/corner-tools.json"
       ]
@@ -3930,14 +3935,16 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/src/app/netcadNames.test.ts"
+      ]
     },
     {
       "id": "tool.measure",
       "title": "Mesafe ölç",
       "category": "Harita",
       "icon": "measure",
-      "description": "Noktalar arası kenar uzunluğu ve semt açısını ölçer.",
+      "description": "Noktalar arası kenar uzunluğu ve semt açısını ölçer; “Sabit ilk nokta” açıkken her noktayı ilk noktadan ölçer.",
       "aliases": [
         "DI",
         "DIST",
@@ -3965,6 +3972,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/measure-parcel.json"
       ]
@@ -4336,8 +4344,7 @@
       "icon": "pointsBetween",
       "description": "İki nokta arasındaki doğru üzerine nokta koyar: eşit aralıkla, ilk noktadan uzaklıkla ya da oranla.",
       "aliases": [
-        "ARANOKTA",
-        "ARA"
+        "ARANOKTA"
       ],
       "kind": "toggle",
       "shortcuts": [],
@@ -4431,6 +4438,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/polyline-arc.json"
       ]
@@ -4505,6 +4513,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/ribbon.test.ts",
         "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/rect-options.json"
@@ -4830,12 +4839,13 @@
       "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/ribbon.test.ts"
       ]
     },
@@ -4861,12 +4871,13 @@
       "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/ribbon.test.ts"
       ]
     },
@@ -4892,12 +4903,13 @@
       "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/ribbon.test.ts"
       ]
     },
@@ -4995,7 +5007,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/src/app/netcadNames.test.ts"
+      ]
     },
     {
       "id": "tool.spot",
@@ -5038,7 +5052,6 @@
       "icon": "stakeout",
       "description": "Seçili noktalar için istasyondan semt ve mesafe hesaplar.",
       "aliases": [
-        "APLIKASYON",
         "APL"
       ],
       "kind": "toggle",
@@ -5089,12 +5102,13 @@
       "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/workspaces.test.ts"
       ]
     },
@@ -5411,6 +5425,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/netcadNames.test.ts",
         "apps/web/scripts/e2e/smoke.mjs",
         "fixtures/interaction/v1/navigation.json"
       ]
@@ -5560,6 +5575,7 @@
       "title": "Kapsam denetimi",
       "category": "Görünüm",
       "icon": "extentCheck",
+      "description": "Görünen nesnelerden çizimin geri kalanından çok uzakta olanları seçer (yanlış koordinat sistemiyle gelen ya da sıfıra düşen nesneler gibi) ve kaç tane olduklarını söyler. Nesneleri taşımaz, silmez.",
       "aliases": [
         "KAPSAM",
         "KAPSAMDENETIM",
@@ -5577,12 +5593,14 @@
       "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/src/app/netcadNames.test.ts"
+      ]
     },
     {
       "id": "view.fullscreen",
@@ -5690,6 +5708,7 @@
       "title": "Sonraki görünüm",
       "category": "Görünüm",
       "icon": "viewNext",
+      "description": "Önceki görünümle geri dönülen görünüme yeniden gider. Yeni bir yakınlaştırma ya da kaydırma sonraki görünümleri siler.",
       "aliases": [
         "ZN",
         "SONRAKIGORUNUM",
@@ -5707,18 +5726,21 @@
       "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/src/app/netcadNames.test.ts"
+      ]
     },
     {
       "id": "view.previous",
       "title": "Önceki görünüm",
       "category": "Görünüm",
       "icon": "viewPrevious",
+      "description": "Görünümü bir önceki yakınlaştırma ve kaydırma durumuna döndürür (en çok 30 görünüm tutulur). Başka bir çizim açılınca geçmiş boşalır.",
       "aliases": [
         "ZP",
         "ONCEKIGORUNUM",
@@ -5736,12 +5758,14 @@
       "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/src/app/netcadNames.test.ts"
+      ]
     },
     {
       "id": "view.renderer.webgl2",
@@ -6129,6 +6153,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/netcadNames.test.ts",
         "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
@@ -6437,20 +6462,21 @@
       "aliases": [
         "AA",
         "AREA",
-        "ALANHESAP",
         "ALANSOR"
       ],
       "primary": false,
       "rare": false,
       "methods": [],
-      "steps": 2,
-      "description": "Tıklanan köşelerden alan ve çevre hesaplar.",
+      "steps": 4,
+      "description": "Tıklanan köşelerden ya da içine tıklanan bölgeden alan ve çevre hesaplar; ölçülen alan istenirse alan olarak çizilir.",
+      "productCommand": "cad.polygon.create",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/measure-parcel.json"
       ]
@@ -7052,6 +7078,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/netcadNames.test.ts",
         "fixtures/interaction/v1/object-tools.json"
       ]
     },
@@ -7111,6 +7138,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/corner-tools.json"
       ]
@@ -7305,7 +7333,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/src/app/netcadNames.test.ts"
+      ]
     },
     {
       "id": "measure",
@@ -7323,14 +7353,15 @@
       "primary": false,
       "rare": false,
       "methods": [],
-      "steps": 2,
-      "description": "Noktalar arası kenar uzunluğu ve semt açısını ölçer.",
+      "steps": 3,
+      "description": "Noktalar arası kenar uzunluğu ve semt açısını ölçer; “Sabit ilk nokta” açıkken her noktayı ilk noktadan ölçer.",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/measure-parcel.json"
       ]
@@ -7612,8 +7643,7 @@
       "group": "draw",
       "section": "point",
       "aliases": [
-        "ARANOKTA",
-        "ARA"
+        "ARANOKTA"
       ],
       "primary": false,
       "rare": false,
@@ -7690,6 +7720,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/polyline-arc.json"
       ]
@@ -7747,6 +7778,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/ribbon.test.ts",
         "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/rect-options.json"
@@ -7981,12 +8013,13 @@
       "methods": [],
       "steps": 3,
       "description": "Dairenin içinde kalan nesneleri seçer; “Kesişen” ile dokunanları da.",
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/ribbon.test.ts"
       ]
     },
@@ -8005,12 +8038,13 @@
       "methods": [],
       "steps": 3,
       "description": "Tıklanan noktayı içeren kapalı alanı seçer; aynı yere yeniden tıklamak bir büyüğüne geçer (parsel, ada, mahalle).",
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/ribbon.test.ts"
       ]
     },
@@ -8029,12 +8063,13 @@
       "methods": [],
       "steps": 2,
       "description": "Çizilen çitin kestiği nesneleri seçer.",
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/ribbon.test.ts"
       ]
     },
@@ -8114,7 +8149,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/src/app/netcadNames.test.ts"
+      ]
     },
     {
       "id": "spot",
@@ -8149,7 +8186,6 @@
       "section": "field",
       "shortcut": "Alt+A",
       "aliases": [
-        "APLIKASYON",
         "APL"
       ],
       "primary": false,
@@ -8182,12 +8218,13 @@
       "methods": [],
       "steps": 3,
       "description": "Noktaların bir hatta göre dik ayağını ve dik boyunu ölçer (sağa artı); çizime yazmaz, iletiye yazar.",
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/workspaces.test.ts"
       ]
     },
@@ -8426,6 +8463,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/netcadNames.test.ts",
         "apps/web/scripts/e2e/smoke.mjs",
         "fixtures/interaction/v1/navigation.json"
       ]

@@ -4,8 +4,8 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 188 | 168 | 0 | 20 |
-| Araçlar | 76 | 70 | 0 | 6 |
+| Komutlar | 188 | 175 | 0 | 13 |
+| Araçlar | 76 | 74 | 0 | 2 |
 | İşlem araçları | 4 | 4 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
 | Çalışma modları | 5 | 3 | 0 | 2 |
@@ -18,7 +18,7 @@
 
 Yok.
 
-## Bekleyen (28)
+## Bekleyen (17)
 
 - Komutlar: `analysis.slope` Eğim analizi…
 - Komutlar: `analysis.volume` Hacim hesabı…
@@ -29,22 +29,11 @@ Yok.
 - Komutlar: `map.parcelReport` Parsel alan çizelgesi
 - Komutlar: `map.profile` Boy kesit al…
 - Komutlar: `map.sheet` Pafta bölümlemesi…
-- Komutlar: `tool.selectCircle` Daireyle seç
-- Komutlar: `tool.selectContaining` İçeren alanı seç
-- Komutlar: `tool.selectFence` Çitle seç
 - Komutlar: `tool.stakeout` Aplikasyon
-- Komutlar: `tool.stationOffset` Dik ayak ölç
 - Komutlar: `tool.subdivide` İfraz
-- Komutlar: `view.extentCheck` Kapsam denetimi
-- Komutlar: `view.next` Sonraki görünüm
-- Komutlar: `view.previous` Önceki görünüm
 - Komutlar: `workspace.disaster` Afet Analizi — Yakında
 - Komutlar: `workspace.plan3d` 3D Plan — Yakında
-- Araçlar: `selectCircle` Daireyle seç
-- Araçlar: `selectContaining` İçeren alanı seç
-- Araçlar: `selectFence` Çitle seç
 - Araçlar: `stakeout` Aplikasyon — Aplikasyon aracı hazır değil. Hesap menüsündeki `calc.stakeout` penceresi ayrıdır ve çalışır.
-- Araçlar: `stationOffset` Dik ayak ölç
 - Araçlar: `subdivide` İfraz — İfraz hesabı henüz yok. Alan ve hisse kuralları bağımsız referans ve kurum kabulü ister (CLAUDE.md §7, §23; TODOS.md GIS-06, GIS-13).
 - Çalışma modları: `disaster` Afet ve risk analizi
 - Çalışma modları: `plan3d` İmar planından 3D kent tasarımı
@@ -61,8 +50,8 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 163 | 0 | 7 | 13 | 5 | 188 |
-| Araçlar | 70 | 0 | 4 | 2 | 0 | 76 |
+| Komutlar | 170 | 0 | 0 | 13 | 5 | 188 |
+| Araçlar | 74 | 0 | 0 | 2 | 0 | 76 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
 | Çalışma modları | 3 | 0 | 0 | 2 | 0 | 5 |
@@ -102,15 +91,8 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (7 / 188; ayrıca 13 iki platformda da bekliyor)
+#### Komutlar (0 / 188; ayrıca 13 iki platformda da bekliyor)
 
-- `tool.selectCircle` Daireyle seç
-- `tool.selectContaining` İçeren alanı seç
-- `tool.selectFence` Çitle seç
-- `tool.stationOffset` Dik ayak ölç
-- `view.extentCheck` Kapsam denetimi
-- `view.next` Sonraki görünüm
-- `view.previous` Önceki görünüm
 - `analysis.slope` Eğim analizi… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `analysis.volume` Hacim hesabı… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `crs.transform` Datum dönüşümü (ED50 ↔ TUREF)… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
@@ -125,12 +107,8 @@ Kısmi olanlar notlarıyla; bölüm bölüm.
 - `workspace.disaster` Afet Analizi (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 - `workspace.plan3d` 3D Plan (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 
-#### Araçlar (4 / 76; ayrıca 2 iki platformda da bekliyor)
+#### Araçlar (0 / 76; ayrıca 2 iki platformda da bekliyor)
 
-- `selectCircle` Daireyle seç
-- `selectContaining` İçeren alanı seç
-- `selectFence` Çitle seç
-- `stationOffset` Dik ayak ölç
 - `stakeout` Aplikasyon (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)) — Aplikasyon aracı hazır değil. Hesap menüsündeki `calc.stakeout` penceresi ayrıdır ve çalışır.
 - `subdivide` İfraz (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)) — İfraz hesabı henüz yok. Alan ve hisse kuralları bağımsız referans ve kurum kabulü ister (CLAUDE.md §7, §23; TODOS.md GIS-06, GIS-13).
 
@@ -166,4 +144,4 @@ Yok.
 
 ## Test başvurusu
 
-68 / 188 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+62 / 188 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
