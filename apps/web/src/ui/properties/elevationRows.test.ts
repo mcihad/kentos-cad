@@ -29,14 +29,19 @@ describe('a Kot row says what the vertices hold', () => {
     expect(rowOf([0, 0])).toMatchObject({ value: '0.000', unit: 'm' });
   });
 
-  it('the range, lowest to highest with an en dash between spaces, when they differ', () => {
-    expect(rowOf([105.25, 98.5, 101])).toMatchObject({ value: '98.500 – 105.250 m' });
+  it('the range, lowest to highest with an en dash and no spaces, when they differ', () => {
+    expect(rowOf([105.25, 98.5, 101])).toMatchObject({ value: '98.500–105.250 m' });
     expect(rowOf([105.25, 98.5, 101]).unit).toBeUndefined();
     expect(rowOf([105.25, 98.5, 101]).note).toBeUndefined();
   });
 
+  it('a four-digit range (Sivas, Suşehri: 1100 to 1300 m) is its numbers, the dash and the unit: 1098.500–1105.250 m', () => {
+    expect(rowOf([1098.5, 1105.25, 1101])).toMatchObject({ value: '1098.500–1105.250 m' });
+    expect(rowOf([1098.5, null, 1305.25])).toMatchObject({ value: '1098.500–1305.250 m', note: '(bazı köşeler kotsuz)' });
+  });
+
   it('the range of those that have one, with the remark that some vertices have none', () => {
-    expect(rowOf([105.25, null, 98.5])).toMatchObject({ value: '98.500 – 105.250 m', note: '(bazı köşeler kotsuz)' });
+    expect(rowOf([105.25, null, 98.5])).toMatchObject({ value: '98.500–105.250 m', note: '(bazı köşeler kotsuz)' });
     // Those that have one agree: the value, with the remark.
     expect(rowOf([100, null, 100])).toMatchObject({ value: '100.000', unit: 'm', note: '(bazı köşeler kotsuz)' });
   });
@@ -44,7 +49,7 @@ describe('a Kot row says what the vertices hold', () => {
   it('numbers go through the project’s formatter: its decimals', () => {
     const f = toolHarness();
     (f.ctx.format as unknown as { prefs: { lengthDecimals: { set(n: number): void } } }).prefs.lengthDecimals.set(1);
-    expect(elevationRow(f.ctx, 'Kot', [98.54, 105.26])).toMatchObject({ value: '98.5 – 105.3 m' });
+    expect(elevationRow(f.ctx, 'Kot', [98.54, 105.26])).toMatchObject({ value: '98.5–105.3 m' });
   });
 
   it('is not editable without a writer (a locked layer)', () => {
@@ -126,7 +131,7 @@ describe('a polyline’s or an area’s Kot', () => {
   it('shows the range with a remark when some vertices have none, and the value or kot yok otherwise', () => {
     const h = toolHarness();
     const partial = h.add({ kind: 'polyline', pts: [pt(0, 0), pt(5, 0), pt(9, 0), pt(9, 4)], zs: [98.5, null, 105.25, 101] });
-    expect(pathElevationRow(h.ctx, get(h, partial), false)).toMatchObject({ label: 'Kot', value: '98.500 – 105.250 m', note: '(bazı köşeler kotsuz)' });
+    expect(pathElevationRow(h.ctx, get(h, partial), false)).toMatchObject({ label: 'Kot', value: '98.500–105.250 m', note: '(bazı köşeler kotsuz)' });
     const level = h.add({ kind: 'polyline', pts: [pt(0, 0), pt(5, 0)], zs: [40, 40] });
     expect(pathElevationRow(h.ctx, get(h, level), false)).toMatchObject({ value: '40.000', unit: 'm' });
     const bare = h.add({ kind: 'polyline', pts: [pt(0, 0), pt(5, 0)] });
@@ -148,7 +153,7 @@ describe('a polyline’s or an area’s Kot', () => {
   it('the range includes the holes', () => {
     const h = toolHarness();
     const e = h.add({ kind: 'polygon', pts: SQUARE, zs: [10, 10, 10, 10], holes: [{ pts: [pt(2, 2), pt(4, 2), pt(4, 4)], zs: [12, 12, 12] }] });
-    expect(pathElevationRow(h.ctx, get(h, e), false)).toMatchObject({ value: '10.000 – 12.000 m' });
+    expect(pathElevationRow(h.ctx, get(h, e), false)).toMatchObject({ value: '10.000–12.000 m' });
   });
 
   it('an empty value clears every vertex', () => {

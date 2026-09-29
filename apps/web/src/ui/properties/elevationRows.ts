@@ -11,7 +11,7 @@ import type { PropRow } from '../widgets/PropertyGrid';
  * says the same words.
  *
  * - A line has `Kot (başlangıç)` and `Kot (bitiş)`; a polyline or an area has `Kot` for all its vertices, holes
- *   included: `kot yok`, the one value, or the range `98.500 – 105.250 m` with, when some vertices have none, the
+ *   included: `kot yok`, the one value, or the range `1098.500–1105.250 m` with, when some vertices have none, the
  *   remark `(bazı köşeler kotsuz)` under it.
  * - Typing a number sets that end, or every vertex; emptying the row clears it: none, not 0. It writes through
  *   Kot ver's operation, one undo step named Kot ver.
@@ -49,7 +49,7 @@ export function elevationRow(ctx: AppContext, label: string, zs: readonly (numbe
   const f = ctx.format;
   const editor = elevationEditor(write);
   const s = summarizeElevations(zs);
-  const range = (min: number, max: number) => `${f.length(min, false)} – ${f.length(max, false)} m`;
+  const range = (min: number, max: number) => `${f.length(min, false)}–${f.length(max, false)} m`;
   switch (s.kind) {
     case 'none':
       return { label, value: 'kot yok', numeric: true, editor };

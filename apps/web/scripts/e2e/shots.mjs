@@ -1596,19 +1596,20 @@ function adr0142Scenes(bare, clickWorld) {
   /** The log emptied and the status bar's flash of the last message put out: nothing of an earlier scene shows. */
   const QUIET = `(() => { window.kentos.log.clear(); document.querySelector('.status__flash')?.removeAttribute('data-show'); })()`;
   // A line with both ends, a polyline with a range and two vertices without an elevation (one at the end), an area
-  // with a hole and every vertex elevated, a spot with its height and a circle (takes none).
+  // with a hole and every vertex elevated, a spot with its height and a circle (takes none). The heights are four-digit,
+  // as the Anatolian plateau's are (Sivas, Suşehri: 1100 to 1300 m): the widest text the rows and tags must hold.
   const OBJECTS = FIT(`
     const P = (fx, fy) => ({ x: c.x + fx * u, y: c.y + fy * u });
-    const line = add({ kind: 'line', a: P(-2.3, 1.05), b: P(-0.9, 1.3), za: 100.25, zb: 104.75, color: '#3B82F6' });
-    const path = add({ kind: 'polyline', pts: [P(-2.3, -0.9), P(-1.4, -0.3), P(-0.5, -0.75), P(0.4, -0.15), P(0.9, -0.5)], zs: [98.5, null, 105.25, 101, null], color: '#E5484D' });
+    const line = add({ kind: 'line', a: P(-2.3, 1.05), b: P(-0.9, 1.3), za: 1100.25, zb: 1104.75, color: '#3B82F6' });
+    const path = add({ kind: 'polyline', pts: [P(-2.3, -0.9), P(-1.4, -0.3), P(-0.5, -0.75), P(0.4, -0.15), P(0.9, -0.5)], zs: [1098.5, null, 1105.25, 1101, null], color: '#E5484D' });
     const area = add({
       kind: 'polygon',
       pts: [P(0.4, 0.4), P(2.0, 0.4), P(2.0, 1.4), P(0.4, 1.4)],
-      zs: [96.4, 97.1, 98.9, 97.8],
-      holes: [{ pts: [P(0.9, 0.7), P(1.5, 0.7), P(1.5, 1.1), P(0.9, 1.1)], zs: [97.5, 97.5, 97.9, 97.9] }],
+      zs: [1096.4, 1097.1, 1098.9, 1097.8],
+      holes: [{ pts: [P(0.9, 0.7), P(1.5, 0.7), P(1.5, 1.1), P(0.9, 1.1)], zs: [1097.5, 1097.5, 1097.9, 1097.9] }],
       color: '#3B82F6',
     });
-    const spot = add({ kind: 'point', p: P(1.7, -0.6), z: 118.5 });
+    const spot = add({ kind: 'point', p: P(1.7, -0.6), z: 1118.5 });
     const circle = add({ kind: 'circle', c: P(-1.6, 0.25), r: 0.3 * u, color: '#8B8B8B' });
     window.__elev = { line: line.id, path: path.id, area: area.id, spot: spot.id, circle: circle.id };`);
   const selectNames = (...names) => `(() => { const k = window.kentos; const o = window.__elev; k.selection.set([${names.map((n) => `o.${n}`).join(', ')}]); })()`;
