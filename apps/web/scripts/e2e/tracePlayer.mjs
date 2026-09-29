@@ -190,16 +190,21 @@ export async function replacePointer() {
   }
 }
 /**
- * The page pixel of a trace point. A point off the drawing (under the ribbon
- * or a panel) would silently miss the canvas, so it stops the trace instead.
+ * The page point of a trace point, not rounded to a whole pixel: the view's
+ * centre may fall between pixels (a drawing area of odd size), and a rounded
+ * pointer would land half a pixel off the point the trace names (0.0625 m at
+ * 0.125 m/px), where the desktop, which takes fractional pointers, lands on
+ * it. Chrome carries the fraction to the pointer events the app reads. A
+ * point off the drawing (under the ribbon or a panel) would silently miss
+ * the canvas, so it stops the trace instead.
  */
 async function toScreen([de, dn]) {
   const [x, y, inside] = await b.eval(`(() => {
     const k = window.kentos;
     const s = k.view.camera.worldToScreen({ x: ${origin.x + de}, y: ${origin.y + dn} });
     const r = k.view.clientRect();
-    const x = Math.round(s.x + r.left);
-    const y = Math.round(s.y + r.top);
+    const x = s.x + r.left;
+    const y = s.y + r.top;
     return [x, y, document.elementFromPoint(x, y)?.tagName === 'CANVAS'];
   })()`);
   if (!inside) throw new Error(`[${de}, ${dn}] çizim alanının dışında (${x}, ${y} px); izin noktalarını README'deki kutuda tutun.`);
