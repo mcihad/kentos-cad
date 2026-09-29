@@ -4,6 +4,7 @@ import { Signal } from '../core/signal';
 import type { Entity } from '../model/entities';
 import { dist, type Vec2 } from '../model/geometry';
 import { entityGrips, moveGrip } from '../model/ops/grips';
+import { withoutElevations } from '../product/elevation';
 import { geometryOf } from '../product/entitiesEdit';
 import { gripElevation, hasVertexElevation, nearestVertex } from '../product/elevationValues';
 import { writeEdit } from './editCommand';
@@ -110,7 +111,8 @@ export class SelectTool implements Tool {
     const moved = e ? moveGrip(e, g.index, p) : null;
     if (!e) log.warn('Tutamacın nesnesi artık çizimde yok (silinmiş ya da geri alınmış); tutamaç bırakıldı.');
     else if (!moved) log.warn('Bu konum geçersiz bir şekil oluşturuyor; tutamaç yerinde bırakıldı.');
-    else if (dist(g.origin, p) > 1e-9) writeEdit(this.ctx, 'grip', [{ kind: 'update', uid: g.uid, geometry: geometryOf(moved as unknown as EditGeometry) as unknown as EditGeometry }]);
+    // No elevations go with it: the moved vertex keeps its own by place, as every other does (docs/adr/0142, 0143).
+    else if (dist(g.origin, p) > 1e-9) writeEdit(this.ctx, 'grip', [{ kind: 'update', uid: g.uid, geometry: withoutElevations(geometryOf(moved as unknown as EditGeometry)) as unknown as EditGeometry }]);
     this.endGrip();
   }
 

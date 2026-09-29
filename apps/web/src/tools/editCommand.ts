@@ -4,6 +4,7 @@ import type { EntitiesEdited } from '../contracts/generated/EntitiesEdited';
 import type { EntityEdit } from '../contracts/generated/EntityEdit';
 import type { EntityGeometry as EditGeometry } from '../contracts/generated/EntityGeometry';
 import type { Entity, EntityGeometry } from '../model/entities';
+import { withoutElevations } from '../product/elevation';
 import { entitiesEdit } from '../product/entitiesEdit';
 import { mapElevations } from '../product/elevationValues';
 
@@ -30,8 +31,12 @@ export function uidOf(ctx: AppContext, e: Entity | number): string {
   return ctx.doc.uidOf(typeof e === 'number' ? e : e.id) ?? '';
 }
 
-/** A geometry the core computed, as the command takes it: the command writes only its own fields. */
-export const editGeometry = (g: EntityGeometry): EditGeometry => g as unknown as EditGeometry;
+/**
+ * A geometry the core computed, as the command takes it: the command writes only its own fields, an area's parts
+ * (docs/adr/0143) among them, and no elevations (the core has none): each vertex takes its own from the objects the
+ * edit names (docs/adr/0142). The `zs` an object the core gave back still carries are the old ones.
+ */
+export const editGeometry = (g: EntityGeometry): EditGeometry => withoutElevations(g) as unknown as EditGeometry;
 
 /** The slots of the objects an edit made, in its order. */
 export function createdIds(ctx: AppContext, out: EntitiesEdited): number[] {
