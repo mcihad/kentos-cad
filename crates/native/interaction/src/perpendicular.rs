@@ -160,6 +160,7 @@ impl Perpendicular {
         let line = EntityGeometry::Line {
             a: wire(a),
             b: wire(b),
+            zs: None,
         };
         match points::write_objects(vec![line], Some(operation), cx) {
             Some(_) => Added::Written,

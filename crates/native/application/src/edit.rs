@@ -155,6 +155,8 @@ pub fn label(operation: EditOperation) -> &'static str {
         EditOperation::Reverse => "Yönü çevir",
         EditOperation::Simplify => "Sadeleştir",
         EditOperation::Cleanup => "Çizimi temizle",
+        // Kot ver (docs/adr/0142).
+        EditOperation::Elevation => "Kot ver",
     }
 }
 
@@ -305,8 +307,10 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
             | EditOperation::Offset
     );
     let mut lost = 0;
-    let mut elevate = |mut entity: Entity, from: &Entity| -> Entity {
-        if sources.is_empty() {
+    // Elevations written with the geometry are written as they are (Kot ver,
+    // Öznitelikler, a script): `entity_of` already holds them.
+    let mut elevate = |mut entity: Entity, from: &Entity, geometry: &EntityGeometry| -> Entity {
+        if written(geometry) || sources.is_empty() {
             return entity;
         }
         let before = elevation::paths(from);
@@ -322,7 +326,7 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
             EntityEdit::Update { uid, geometry } => checked.changed.push(Changed {
                 slot,
                 uid: uid.clone(),
-                entity: elevate(entity_of(geometry, base.clone()), entity),
+                entity: elevate(entity_of(geometry, base.clone()), entity, geometry),
             }),
             EntityEdit::Replace {
                 uid,
@@ -337,6 +341,7 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
                         inherited(base, slot.0, keep_data.unwrap_or(false)),
                     ),
                     entity,
+                    geometry,
                 ),
             }),
             EntityEdit::Add {
@@ -346,6 +351,7 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
             } => checked.created.push(elevate(
                 entity_of(geometry, inherited(base, 0, keep_data.unwrap_or(false))),
                 entity,
+                geometry,
             )),
             EntityEdit::Remove { uid } => checked.removed.push((slot, uid.clone())),
         }
@@ -411,7 +417,9 @@ pub(crate) fn check_geometry(
                 at(".pts"),
             )));
         }
-        EntityGeometry::Polygon { pts, bulges, holes } => {
+        EntityGeometry::Polygon {
+            pts, bulges, holes, ..
+        } => {
             if !ring_closes(pts.len(), bulges.as_deref()) {
                 return Err(Stop::Failed(error(
                     codes::TOO_FEW_CORNERS,
@@ -471,6 +479,19 @@ pub(crate) fn check_geometry(
         }
         _ => {}
     }
+    // Elevations as written (docs/adr/0142): one for each vertex.
+    for (zs, n, path) in written_elevations(g) {
+        if zs.len() != n {
+            return Err(Stop::Failed(error(
+                codes::INVALID_ELEVATIONS,
+                format!(
+                    "Kotların sayısı köşelerin sayısıyla aynı olmalı; {n} köşeye {} kot verildi. Her köşeye bir kot verin; kotsuz köşeye null.",
+                    zs.len()
+                ),
+                at(&path),
+            )));
+        }
+    }
     if !finite(g) {
         return Err(Stop::Failed(error(
             codes::NOT_FINITE,
@@ -493,6 +514,40 @@ pub(crate) fn check_geometry(
     Ok(())
 }
 
+/// Whether the geometry carries its elevations (docs/adr/0142).
+fn written(g: &EntityGeometry) -> bool {
+    matches!(
+        g,
+        EntityGeometry::Line { zs: Some(_), .. }
+            | EntityGeometry::Polyline { zs: Some(_), .. }
+            | EntityGeometry::Polygon { zs: Some(_), .. }
+    )
+}
+
+/// A geometry's written elevations (docs/adr/0142): each list with its
+/// vertex count and its path.
+fn written_elevations(g: &EntityGeometry) -> Vec<(&[Option<f64>], usize, String)> {
+    let mut out: Vec<(&[Option<f64>], usize, String)> = Vec::new();
+    match g {
+        EntityGeometry::Line { zs: Some(zs), .. } => out.push((zs, 2, ".zs".into())),
+        EntityGeometry::Polyline {
+            pts, zs: Some(zs), ..
+        } => out.push((zs, pts.len(), ".zs".into())),
+        EntityGeometry::Polygon { pts, zs, holes, .. } => {
+            if let Some(zs) = zs {
+                out.push((zs, pts.len(), ".zs".into()));
+            }
+            for (h, ring) in holes.iter().flatten().enumerate() {
+                if let Some(zs) = &ring.zs {
+                    out.push((zs, ring.pts.len(), format!(".holes[{h}].zs")));
+                }
+            }
+        }
+        _ => {}
+    }
+    out
+}
+
 /// Every number of a geometry is finite.
 fn finite(g: &EntityGeometry) -> bool {
     fn pt(p: &Vec2) -> bool {
@@ -504,21 +559,26 @@ fn finite(g: &EntityGeometry) -> bool {
     fn values(vs: &Option<Vec<f64>>) -> bool {
         vs.iter().flatten().all(|v| v.is_finite())
     }
+    fn heights(zs: &Option<Vec<Option<f64>>>) -> bool {
+        zs.iter().flatten().flatten().all(|z| z.is_finite())
+    }
     match g {
         EntityGeometry::Point { p, z } => pt(p) && z.is_none_or(f64::is_finite),
-        EntityGeometry::Line { a, b } => pt(a) && pt(b),
-        EntityGeometry::Polyline { pts: p, bulges } => pts(p) && values(bulges),
+        EntityGeometry::Line { a, b, zs } => pt(a) && pt(b) && heights(zs),
+        EntityGeometry::Polyline { pts: p, bulges, zs } => pts(p) && values(bulges) && heights(zs),
         EntityGeometry::Polygon {
             pts: p,
             bulges,
             holes,
+            zs,
         } => {
             pts(p)
                 && values(bulges)
+                && heights(zs)
                 && holes
                     .iter()
                     .flatten()
-                    .all(|h| pts(&h.pts) && values(&h.bulges))
+                    .all(|h| pts(&h.pts) && values(&h.bulges) && heights(&h.zs))
         }
         EntityGeometry::Circle { c, r } => pt(c) && r.is_finite(),
         EntityGeometry::Arc { c, r, a0, a1 } => {

@@ -14,7 +14,7 @@ Aynı dosyaları iki uygulama koşar: web `apps/web/src/product/fixtures.test.ts
 | `v1/cad.circle.create.json` | `cad.circle.create` v1 (ADR 0032) | 23 |
 | `v1/cad.arc.create.json` | `cad.arc.create` v1 (ADR 0032) | 23 |
 | `v1/cad.entities.transform.json` | `cad.entities.transform` v1 (ADR 0037; hizalama ADR 0047) | 38 |
-| `v1/cad.entities.edit.json` | `cad.entities.edit` v1 (ADR 0047; `properties` işlemi, Öznitelikler; alan işlemleri, ADR 0065; tutamaçların `grip`, `straightEdge`, `arcEdge` işlemleri; ADR 0140'ın `split`, `reverse`, `simplify`, `cleanup` işlemleri; köşe kotunun taşınması ve `elevation_lost` uyarısı, ADR 0142) | 56 |
+| `v1/cad.entities.edit.json` | `cad.entities.edit` v1 (ADR 0047; `properties` işlemi, Öznitelikler; alan işlemleri, ADR 0065; tutamaçların `grip`, `straightEdge`, `arcEdge` işlemleri; ADR 0140'ın `split`, `reverse`, `simplify`, `cleanup` işlemleri; köşe kotunun taşınması, `elevation_lost` uyarısı ve Kot ver'in `elevation` işlemi, ADR 0142) | 61 |
 | `v1/cad.entities.array.json` | `cad.entities.array` v1 (ADR 0047; ADR 0140'ın `path` yerleşimi) | 30 |
 | `v1/cad.entities.create.json` | `cad.entities.create` v1 (ADR 0057; `hatch` işlemi ADR 0062; `boundary`, ADR 0065; Hesap pencerelerinin `traverse`, `polarSurvey`, `forwardIntersection`, `resection` işlemleri; ADR 0140'ın `pointsBetween`, `intersectPoint`, `dimensionChain`, `dimensionBaseline` işlemleri) | 33 |
 | `v1/cad.entities.set.json` | `cad.entities.set` v1 (Öznitelikler: katman, renk, sembol, öznitelik, etiket) | 30 |

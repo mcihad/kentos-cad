@@ -183,6 +183,7 @@ class EditOperation(_StrEnum):
     - ``reverse``: Yönü çevir: an object drawn the other way round, its outline the same.
     - ``simplify``: Sadeleştir: a path's vertices within a tolerance of its outline dropped.
     - ``cleanup``: Çizimi temizle: objects repeated on their layer and empty ones
+    - ``elevation``: Kot ver (docs/adr/0142): objects' vertices given elevations as the
     """
     OFFSET = "offset"
     TRIM = "trim"
@@ -210,9 +211,10 @@ class EditOperation(_StrEnum):
     REVERSE = "reverse"
     SIMPLIFY = "simplify"
     CLEANUP = "cleanup"
+    ELEVATION = "elevation"
 
 
-EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup"]
+EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation"]
 """The names of :class:`EditOperation`, for a plain string."""
 
 
@@ -4639,14 +4641,22 @@ class PointEntityGeometry(EntityGeometry):
 
 @dataclass(kw_only=True, slots=True)
 class LineEntityGeometry(EntityGeometry):
+    """
+    Attributes:
+        zs: The vertices' elevations as written (docs/adr/0142): its two ends, `null` for one without; all `null`: none. Absent:
+            each vertex takes one from the objects the edit names.
+    """
     TAG_VALUE: ClassVar[str] = "line"
     a: Vec2
     b: Vec2
+    zs: list[float | None] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "line"}
         out["a"] = _vec2_out(self.a)
         out["b"] = _vec2_out(self.b)
+        if self.zs is not UNSET:
+            out["zs"] = None if self.zs is None else [None if e0 is None else float(e0) for e0 in self.zs]
         return out
 
     @classmethod
@@ -4654,6 +4664,7 @@ class LineEntityGeometry(EntityGeometry):
         return cls(
             a=Vec2.from_json(data["a"]),
             b=Vec2.from_json(data["b"]),
+            zs=UNSET if "zs" not in data else None if data["zs"] is None else [None if e0 is None else float(e0) for e0 in data["zs"]],
         )
 
 
@@ -4661,16 +4672,23 @@ class LineEntityGeometry(EntityGeometry):
 class PolylineEntityGeometry(EntityGeometry):
     """An open path: vertices and DXF bulges (tan(θ/4), CCW positive), the
     one at vertex i bending the edge to vertex i + 1.
+    Attributes:
+        zs: The vertices' elevations as written (docs/adr/0142): as many as
+            the vertices, `null` for one without; all `null`: none. Absent:
+            each vertex takes one from the objects the edit names.
     """
     TAG_VALUE: ClassVar[str] = "polyline"
     pts: list[Vec2]
     bulges: list[float] | None | Unset = UNSET
+    zs: list[float | None] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "polyline"}
         out["pts"] = [_vec2_out(e0) for e0 in self.pts]
         if self.bulges is not UNSET:
             out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
+        if self.zs is not UNSET:
+            out["zs"] = None if self.zs is None else [None if e0 is None else float(e0) for e0 in self.zs]
         return out
 
     @classmethod
@@ -4678,16 +4696,23 @@ class PolylineEntityGeometry(EntityGeometry):
         return cls(
             pts=[Vec2.from_json(e0) for e0 in data["pts"]],
             bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
+            zs=UNSET if "zs" not in data else None if data["zs"] is None else [None if e0 is None else float(e0) for e0 in data["zs"]],
         )
 
 
 @dataclass(kw_only=True, slots=True)
 class PolygonEntityGeometry(EntityGeometry):
-    """A closed area: its ring and, when it has any, its holes."""
+    """A closed area: its ring and, when it has any, its holes.
+    Attributes:
+        zs: The vertices' elevations as written (docs/adr/0142): as many as
+            the vertices, `null` for one without; all `null`: none. The holes' come with them (`RingGeometry.zs`). Absent:
+            each vertex takes one from the objects the edit names.
+    """
     TAG_VALUE: ClassVar[str] = "polygon"
     pts: list[Vec2]
     bulges: list[float] | None | Unset = UNSET
     holes: list[RingGeometry] | None | Unset = UNSET
+    zs: list[float | None] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "polygon"}
@@ -4696,6 +4721,8 @@ class PolygonEntityGeometry(EntityGeometry):
             out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
         if self.holes is not UNSET:
             out["holes"] = None if self.holes is None else [e0.to_json() for e0 in self.holes]
+        if self.zs is not UNSET:
+            out["zs"] = None if self.zs is None else [None if e0 is None else float(e0) for e0 in self.zs]
         return out
 
     @classmethod
@@ -4704,6 +4731,7 @@ class PolygonEntityGeometry(EntityGeometry):
             pts=[Vec2.from_json(e0) for e0 in data["pts"]],
             bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
             holes=UNSET if "holes" not in data else None if data["holes"] is None else [RingGeometry.from_json(e0) for e0 in data["holes"]],
+            zs=UNSET if "zs" not in data else None if data["zs"] is None else [None if e0 is None else float(e0) for e0 in data["zs"]],
         )
 
 

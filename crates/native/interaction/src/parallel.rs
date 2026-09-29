@@ -186,11 +186,13 @@ impl Parallel {
                     pts: wire_all(pts),
                     bulges: None,
                     holes: None,
+                    zs: None,
                 }
             } else {
                 EntityGeometry::Polyline {
                     pts: wire_all(pts),
                     bulges: None,
+                    zs: None,
                 }
             }
         };

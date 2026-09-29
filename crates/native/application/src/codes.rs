@@ -50,6 +50,9 @@ pub const INVALID_PATH: &str = "invalid_path";
 /// A warning: an edit could not carry the elevations of an object's vertices
 /// to what it wrote (docs/adr/0142).
 pub const ELEVATION_LOST: &str = "elevation_lost";
+/// Elevations written with a geometry that are not one for each vertex
+/// (`cad.entities.edit`, docs/adr/0142).
+pub const INVALID_ELEVATIONS: &str = "invalid_elevations";
 /// No object given (`cad.entities.create`).
 pub const NO_OBJECTS: &str = "no_objects";
 /// A text whose text is empty or only white space (`cad.entities.edit`, `cad.entities.create`).

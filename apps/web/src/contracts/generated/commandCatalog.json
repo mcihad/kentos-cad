@@ -18343,6 +18343,11 @@
                 "const": "cleanup",
                 "description": "Çizimi temizle: objects repeated on their layer and empty ones\ndeleted, vertices repeated in a row dropped.",
                 "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot ver (docs/adr/0142): objects' vertices given elevations as the\ngeometry's `zs` says: the same value, the old ones raised, or none.",
+                "type": "string"
               }
             ]
           },
@@ -18486,6 +18491,20 @@
                   "kind": {
                     "const": "line",
                     "type": "string"
+                  },
+                  "zs": {
+                    "description": "The vertices' elevations as written (docs/adr/0142): its two ends, `null` for one without; all `null`: none. Absent:\neach vertex takes one from the objects the edit names.",
+                    "items": {
+                      "format": "double",
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
                   }
                 },
                 "required": [
@@ -18517,6 +18536,20 @@
                       "$ref": "#/$defs/Vec2"
                     },
                     "type": "array"
+                  },
+                  "zs": {
+                    "description": "The vertices' elevations as written (docs/adr/0142): as many as\nthe vertices, `null` for one without; all `null`: none. Absent:\neach vertex takes one from the objects the edit names.",
+                    "items": {
+                      "format": "double",
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
                   }
                 },
                 "required": [
@@ -18556,6 +18589,20 @@
                       "$ref": "#/$defs/Vec2"
                     },
                     "type": "array"
+                  },
+                  "zs": {
+                    "description": "The vertices' elevations as written (docs/adr/0142): as many as\nthe vertices, `null` for one without; all `null`: none. The holes' come with them (`RingGeometry.zs`). Absent:\neach vertex takes one from the objects the edit names.",
+                    "items": {
+                      "format": "double",
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
                   }
                 },
                 "required": [
@@ -21830,6 +21877,20 @@
                   "kind": {
                     "const": "line",
                     "type": "string"
+                  },
+                  "zs": {
+                    "description": "The vertices' elevations as written (docs/adr/0142): its two ends, `null` for one without; all `null`: none. Absent:\neach vertex takes one from the objects the edit names.",
+                    "items": {
+                      "format": "double",
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
                   }
                 },
                 "required": [
@@ -21861,6 +21922,20 @@
                       "$ref": "#/$defs/Vec2"
                     },
                     "type": "array"
+                  },
+                  "zs": {
+                    "description": "The vertices' elevations as written (docs/adr/0142): as many as\nthe vertices, `null` for one without; all `null`: none. Absent:\neach vertex takes one from the objects the edit names.",
+                    "items": {
+                      "format": "double",
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
                   }
                 },
                 "required": [
@@ -21900,6 +21975,20 @@
                       "$ref": "#/$defs/Vec2"
                     },
                     "type": "array"
+                  },
+                  "zs": {
+                    "description": "The vertices' elevations as written (docs/adr/0142): as many as\nthe vertices, `null` for one without; all `null`: none. The holes' come with them (`RingGeometry.zs`). Absent:\neach vertex takes one from the objects the edit names.",
+                    "items": {
+                      "format": "double",
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
                   }
                 },
                 "required": [

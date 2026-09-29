@@ -763,6 +763,134 @@
       "steps": [
         {"op": "execute", "input": {"operation": "arcEdge", "changes": [{"kind": "update", "uid": "$uidOf:1", "geometry": {"kind": "arc", "c": {"x": 487010, "y": 4420050}, "r": 10, "a0": 3.141592653589793, "a1": 6.283185307179586}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:1"], "created": [], "removed": [], "revision": "$current"}, "warnings": [{"code": "elevation_lost", "message": "1 nesnenin kotu bu işlemde korunmadı.", "path": "changes"}]}, "expect": {"entities": {"1": {"id": 1, "layerId": "yapi", "attrs": {}, "kind": "arc", "c": {"x": 487010, "y": 4420050}, "r": 10, "a0": 3.141592653589793, "a1": 6.283185307179586}}, "revision": "changed"}}
       ]
+    },
+    {
+      "name": "Kot ver, sabit: her köşeye yazılan kot; tek adım, adı Kot ver",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ürün komutu",
+        "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "hybrid", "drawingFont": "barlow"},
+        "origin": {"x": 487000, "y": 4420000},
+        "layers": [
+          {"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {"kind": "line", "id": 1, "layerId": "yapi", "attrs": {}, "a": {"x": 487000, "y": 4420050}, "b": {"x": 487020, "y": 4420050}, "za": 10, "zb": 20},
+          {"kind": "polyline", "id": 2, "layerId": "yapi", "attrs": {}, "pts": [{"x": 487000, "y": 4420060}, {"x": 487010, "y": 4420060}, {"x": 487010, "y": 4420070}], "zs": [1, 2, null]}
+        ],
+        "styles": {"items": [], "categories": []}
+      },
+      "steps": [
+        {"op": "execute", "input": {"operation": "elevation", "changes": [{"kind": "update", "uid": "$uidOf:2", "geometry": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420060}, {"x": 487010, "y": 4420060}, {"x": 487010, "y": 4420070}], "zs": [100, 100, 100]}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:2"], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"id": 2, "layerId": "yapi", "attrs": {}, "kind": "polyline", "pts": [{"x": 487000, "y": 4420060}, {"x": 487010, "y": 4420060}, {"x": 487010, "y": 4420070}], "zs": [100, 100, 100]}}, "canUndo": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Kot ver", "expect": {"entities": {"2": {"kind": "polyline", "id": 2, "layerId": "yapi", "attrs": {}, "pts": [{"x": 487000, "y": 4420060}, {"x": 487010, "y": 4420060}, {"x": 487010, "y": 4420070}], "zs": [1, 2, null]}}, "canUndo": false}}
+      ]
+    },
+    {
+      "name": "Kot ver, artır: yazıldığı gibi; kotsuz köşe kotsuz kalır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ürün komutu",
+        "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "hybrid", "drawingFont": "barlow"},
+        "origin": {"x": 487000, "y": 4420000},
+        "layers": [
+          {"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {"kind": "line", "id": 1, "layerId": "yapi", "attrs": {}, "a": {"x": 487000, "y": 4420050}, "b": {"x": 487020, "y": 4420050}, "za": 10, "zb": 20},
+          {"kind": "polyline", "id": 2, "layerId": "yapi", "attrs": {}, "pts": [{"x": 487000, "y": 4420060}, {"x": 487010, "y": 4420060}, {"x": 487010, "y": 4420070}], "zs": [1, 2, null]}
+        ],
+        "styles": {"items": [], "categories": []}
+      },
+      "steps": [
+        {"op": "execute", "input": {"operation": "elevation", "changes": [{"kind": "update", "uid": "$uidOf:2", "geometry": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420060}, {"x": 487010, "y": 4420060}, {"x": 487010, "y": 4420070}], "zs": [11, 12, null]}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:2"], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"id": 2, "layerId": "yapi", "attrs": {}, "kind": "polyline", "pts": [{"x": 487000, "y": 4420060}, {"x": 487010, "y": 4420060}, {"x": 487010, "y": 4420070}], "zs": [11, 12, null]}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "Kot ver, sıfırla: hepsi null olan kotlar kot yok demektir; çizginin za ve zb'si gider",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ürün komutu",
+        "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "hybrid", "drawingFont": "barlow"},
+        "origin": {"x": 487000, "y": 4420000},
+        "layers": [
+          {"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {"kind": "line", "id": 1, "layerId": "yapi", "attrs": {}, "a": {"x": 487000, "y": 4420050}, "b": {"x": 487020, "y": 4420050}, "za": 10, "zb": 20},
+          {"kind": "polyline", "id": 2, "layerId": "yapi", "attrs": {}, "pts": [{"x": 487000, "y": 4420060}, {"x": 487010, "y": 4420060}, {"x": 487010, "y": 4420070}], "zs": [1, 2, null]}
+        ],
+        "styles": {"items": [], "categories": []}
+      },
+      "steps": [
+        {"op": "execute", "input": {"operation": "elevation", "changes": [{"kind": "update", "uid": "$uidOf:1", "geometry": {"kind": "line", "a": {"x": 487000, "y": 4420050}, "b": {"x": 487020, "y": 4420050}, "zs": [null, null]}}, {"kind": "update", "uid": "$uidOf:2", "geometry": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420060}, {"x": 487010, "y": 4420060}, {"x": 487010, "y": 4420070}], "zs": [null, null, null]}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:1", "$uidOf:2"], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"1": {"id": 1, "layerId": "yapi", "attrs": {}, "kind": "line", "a": {"x": 487000, "y": 4420050}, "b": {"x": 487020, "y": 4420050}}, "2": {"id": 2, "layerId": "yapi", "attrs": {}, "kind": "polyline", "pts": [{"x": 487000, "y": 4420060}, {"x": 487010, "y": 4420060}, {"x": 487010, "y": 4420070}]}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "Kot ver, çizgi: iki ucun kotu zs ile yazılır, nesnede za ve zb olur; yalnız biri verilirse öbürü yazılmaz",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ürün komutu",
+        "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "hybrid", "drawingFont": "barlow"},
+        "origin": {"x": 487000, "y": 4420000},
+        "layers": [
+          {"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {"kind": "line", "id": 1, "layerId": "yapi", "attrs": {}, "a": {"x": 487000, "y": 4420050}, "b": {"x": 487020, "y": 4420050}, "za": 10, "zb": 20},
+          {"kind": "polyline", "id": 2, "layerId": "yapi", "attrs": {}, "pts": [{"x": 487000, "y": 4420060}, {"x": 487010, "y": 4420060}, {"x": 487010, "y": 4420070}], "zs": [1, 2, null]}
+        ],
+        "styles": {"items": [], "categories": []}
+      },
+      "steps": [
+        {"op": "execute", "input": {"operation": "elevation", "changes": [{"kind": "update", "uid": "$uidOf:1", "geometry": {"kind": "line", "a": {"x": 487000, "y": 4420050}, "b": {"x": 487020, "y": 4420050}, "zs": [5, null]}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:1"], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"1": {"id": 1, "layerId": "yapi", "attrs": {}, "kind": "line", "a": {"x": 487000, "y": 4420050}, "b": {"x": 487020, "y": 4420050}, "za": 5}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "Kot ver, ret: kotlar köşe sayısı kadar değilse ya da sonlu değilse hiçbir şey yazılmaz",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ürün komutu",
+        "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "hybrid", "drawingFont": "barlow"},
+        "origin": {"x": 487000, "y": 4420000},
+        "layers": [
+          {"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {"kind": "line", "id": 1, "layerId": "yapi", "attrs": {}, "a": {"x": 487000, "y": 4420050}, "b": {"x": 487020, "y": 4420050}, "za": 10, "zb": 20},
+          {"kind": "polyline", "id": 2, "layerId": "yapi", "attrs": {}, "pts": [{"x": 487000, "y": 4420060}, {"x": 487010, "y": 4420060}, {"x": 487010, "y": 4420070}], "zs": [1, 2, null]}
+        ],
+        "styles": {"items": [], "categories": []}
+      },
+      "steps": [
+        {"op": "execute", "input": {"operation": "elevation", "changes": [{"kind": "update", "uid": "$uidOf:2", "geometry": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420060}, {"x": 487010, "y": 4420060}, {"x": 487010, "y": 4420070}], "zs": [1, 2]}}]}, "result": {"status": "failed", "error": {"code": "invalid_elevations", "message": "Kotların sayısı köşelerin sayısıyla aynı olmalı; 3 köşeye 2 kot verildi. Her köşeye bir kot verin; kotsuz köşeye null.", "path": "changes[0].geometry.zs"}}, "expect": {"ids": [1, 2], "canUndo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"operation": "elevation", "changes": [{"kind": "update", "uid": "$uidOf:1", "geometry": {"kind": "line", "a": {"x": 487000, "y": 4420050}, "b": {"x": 487020, "y": 4420050}, "zs": [1, 2, 3]}}]}, "result": {"status": "failed", "error": {"code": "invalid_elevations", "message": "Kotların sayısı köşelerin sayısıyla aynı olmalı; 2 köşeye 3 kot verildi. Her köşeye bir kot verin; kotsuz köşeye null.", "path": "changes[0].geometry.zs"}}, "expect": {"ids": [1, 2], "canUndo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"operation": "elevation", "changes": [{"kind": "update", "uid": "$uidOf:2", "geometry": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420060}, {"x": 487010, "y": 4420060}, {"x": 487010, "y": 4420070}], "zs": [1, 2, 3]}}]}, "nonFinite": {"changes[0].geometry.zs[1]": "Infinity"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "1. değişikliğin geometrisinde sonlu olmayan bir değer var (NaN ya da sonsuz). Geometriyi sonlu sayılarla verin.", "path": "changes[0].geometry"}}, "expect": {"ids": [1, 2], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
     }
   ]
 }

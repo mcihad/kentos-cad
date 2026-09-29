@@ -31,6 +31,7 @@ fn line(ax: f64, ay: f64, bx: f64, by: f64) -> EntityGeometry {
     EntityGeometry::Line {
         a: Vec2 { x: ax, y: ay },
         b: Vec2 { x: bx, y: by },
+        zs: None,
     }
 }
 

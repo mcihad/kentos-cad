@@ -10,4 +10,21 @@ import type { Vec2 } from "./Vec2";
  * label, symbol). Coordinates are x east (Y), y north (X), in the project's
  * units (m), float64; angles in radians unless said otherwise.
  */
-export type EntityGeometry = { "kind": "point", p: Vec2, z?: number, } | { "kind": "line", a: Vec2, b: Vec2, } | { "kind": "polyline", pts: Array<Vec2>, bulges?: Array<number>, } | { "kind": "polygon", pts: Array<Vec2>, bulges?: Array<number>, holes?: Array<RingGeometry>, } | { "kind": "circle", c: Vec2, r: number, } | { "kind": "arc", c: Vec2, r: number, a0: number, a1: number, } | { "kind": "ellipse", c: Vec2, major: Vec2, ratio: number, t0: number, t1: number, } | { "kind": "spline", pts: Array<Vec2>, closed: boolean, } | { "kind": "xline", p: Vec2, dir: Vec2, } | { "kind": "ray", p: Vec2, dir: Vec2, } | { "kind": "text", p: Vec2, text: string, height: number, rotation: number, } | { "kind": "dimension", a: Vec2, b: Vec2, offset: number, height: number, text?: string, style?: DimensionStyle, angle?: number, c?: Vec2, } | { "kind": "hatch", ring: Array<Vec2>, holes?: Array<Array<Vec2>>, pattern: HatchPattern, };
+export type EntityGeometry = { "kind": "point", p: Vec2, z?: number, } | { "kind": "line", a: Vec2, b: Vec2, 
+/**
+ * The vertices' elevations as written (docs/adr/0142): its two ends, `null` for one without; all `null`: none. Absent:
+ * each vertex takes one from the objects the edit names.
+ */
+zs?: Array<number | null>, } | { "kind": "polyline", pts: Array<Vec2>, bulges?: Array<number>, 
+/**
+ * The vertices' elevations as written (docs/adr/0142): as many as
+ * the vertices, `null` for one without; all `null`: none. Absent:
+ * each vertex takes one from the objects the edit names.
+ */
+zs?: Array<number | null>, } | { "kind": "polygon", pts: Array<Vec2>, bulges?: Array<number>, holes?: Array<RingGeometry>, 
+/**
+ * The vertices' elevations as written (docs/adr/0142): as many as
+ * the vertices, `null` for one without; all `null`: none. The holes' come with them (`RingGeometry.zs`). Absent:
+ * each vertex takes one from the objects the edit names.
+ */
+zs?: Array<number | null>, } | { "kind": "circle", c: Vec2, r: number, } | { "kind": "arc", c: Vec2, r: number, a0: number, a1: number, } | { "kind": "ellipse", c: Vec2, major: Vec2, ratio: number, t0: number, t1: number, } | { "kind": "spline", pts: Array<Vec2>, closed: boolean, } | { "kind": "xline", p: Vec2, dir: Vec2, } | { "kind": "ray", p: Vec2, dir: Vec2, } | { "kind": "text", p: Vec2, text: string, height: number, rotation: number, } | { "kind": "dimension", a: Vec2, b: Vec2, offset: number, height: number, text?: string, style?: DimensionStyle, angle?: number, c?: Vec2, } | { "kind": "hatch", ring: Array<Vec2>, holes?: Array<Array<Vec2>>, pattern: HatchPattern, };

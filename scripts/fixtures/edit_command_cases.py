@@ -957,6 +957,62 @@ cases.append({
     ],
 })
 
+# Kot ver and Öznitelikler write the elevations with the geometry (`zs`, a line's two ends): written as they
+# are, all null none; not one for each vertex refused.
+PATH2 = {"kind": "polyline", "pts": Z_PATH}
+
+cases.append({
+    "name": "Kot ver, sabit: her köşeye yazılan kot; tek adım, adı Kot ver",
+    "setup": Z_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "elevation", "changes": [{"kind": "update", "uid": uid(2), "geometry": {**PATH2, "zs": [100, 100, 100]}}]}, "result": done(changed=[uid(2)]),
+         "expect": {"entities": {"2": z_updated(2, PATH2, zs=[100, 100, 100])}, "canUndo": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Kot ver", "expect": {"entities": {"2": ZE(2)}, "canUndo": False}},
+    ],
+})
+
+cases.append({
+    "name": "Kot ver, artır: yazıldığı gibi; kotsuz köşe kotsuz kalır",
+    "setup": Z_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "elevation", "changes": [{"kind": "update", "uid": uid(2), "geometry": {**PATH2, "zs": [11, 12, None]}}]}, "result": done(changed=[uid(2)]),
+         "expect": {"entities": {"2": z_updated(2, PATH2, zs=[11, 12, None])}, "revision": "changed"}},
+    ],
+})
+
+cases.append({
+    "name": "Kot ver, sıfırla: hepsi null olan kotlar kot yok demektir; çizginin za ve zb'si gider",
+    "setup": Z_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "elevation", "changes": [{"kind": "update", "uid": uid(1), "geometry": {**line(487000, 4420050, 487020, 4420050), "zs": [None, None]}}, {"kind": "update", "uid": uid(2), "geometry": {**PATH2, "zs": [None, None, None]}}]},
+         "result": done(changed=[uid(1), uid(2)]),
+         "expect": {"entities": {"1": z_updated(1, line(487000, 4420050, 487020, 4420050)), "2": z_updated(2, PATH2)}, "revision": "changed"}},
+    ],
+})
+
+cases.append({
+    "name": "Kot ver, çizgi: iki ucun kotu zs ile yazılır, nesnede za ve zb olur; yalnız biri verilirse öbürü yazılmaz",
+    "setup": Z_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "elevation", "changes": [{"kind": "update", "uid": uid(1), "geometry": {**line(487000, 4420050, 487020, 4420050), "zs": [5, None]}}]}, "result": done(changed=[uid(1)]),
+         "expect": {"entities": {"1": z_updated(1, line(487000, 4420050, 487020, 4420050), za=5)}, "revision": "changed"}},
+    ],
+})
+
+ELEVATIONS_MESSAGE = "Kotların sayısı köşelerin sayısıyla aynı olmalı; {} köşeye {} kot verildi. Her köşeye bir kot verin; kotsuz köşeye null."
+cases.append({
+    "name": "Kot ver, ret: kotlar köşe sayısı kadar değilse ya da sonlu değilse hiçbir şey yazılmaz",
+    "setup": Z_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "elevation", "changes": [{"kind": "update", "uid": uid(2), "geometry": {**PATH2, "zs": [1, 2]}}]},
+         "result": failed("invalid_elevations", ELEVATIONS_MESSAGE.format(3, 2), "changes[0].geometry.zs"), "expect": {"ids": Z_IDS, "canUndo": False, "dirty": False, "revision": "same"}},
+        {"op": "execute", "input": {"operation": "elevation", "changes": [{"kind": "update", "uid": uid(1), "geometry": {**line(487000, 4420050, 487020, 4420050), "zs": [1, 2, 3]}}]},
+         "result": failed("invalid_elevations", ELEVATIONS_MESSAGE.format(2, 3), "changes[0].geometry.zs"), "expect": {"ids": Z_IDS, "canUndo": False, "dirty": False, "revision": "same"}},
+        {"op": "execute", "input": {"operation": "elevation", "changes": [{"kind": "update", "uid": uid(2), "geometry": {**PATH2, "zs": [1, 2, 3]}}]}, "nonFinite": {"changes[0].geometry.zs[1]": "Infinity"},
+         "result": failed("not_finite", not_finite_message(1), "changes[0].geometry"), "expect": {"ids": Z_IDS, "canUndo": False, "dirty": False, "revision": "same"}},
+    ],
+})
+
 write(
     "cad.entities.edit",
     "Nesneleri düzenle: doğrulama, plan, yazma, geri alma",

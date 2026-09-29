@@ -65,14 +65,15 @@ export const EDIT_LABEL: Record<EditOperation, string> = {
   reverse: 'Yönü çevir',
   simplify: 'Sadeleştir',
   cleanup: 'Çizimi temizle',
+  elevation: 'Kot ver',
 };
 
 /** The contract's geometry fields by kind (`EntityGeometry`): what the command writes of a geometry. */
 const FIELDS: Record<EntityGeometry['kind'], readonly string[]> = {
   point: ['p', 'z'],
-  line: ['a', 'b'],
-  polyline: ['pts', 'bulges'],
-  polygon: ['pts', 'bulges', 'holes'],
+  line: ['a', 'b', 'zs'],
+  polyline: ['pts', 'bulges', 'zs'],
+  polygon: ['pts', 'bulges', 'holes', 'zs'],
   circle: ['c', 'r'],
   arc: ['c', 'r', 'a0', 'a1'],
   ellipse: ['c', 'major', 'ratio', 't0', 't1'],
@@ -183,10 +184,44 @@ export function checkGeometry(g: EntityGeometry, i: number, list = 'changes', wh
   }
   if (g.kind === 'text' && isBlank(g.text))
     return failed(error('empty_text', 'Yazının metni boş olamaz; yalnız boşluktan oluşan metin de boştur. Yazıya bir metin verin.', at('.text')));
-  if (!geometryIsFinite(g as unknown as Entity))
+  // Elevations as written (docs/adr/0142): one for each vertex.
+  const elevations = writtenElevations(g);
+  for (const [zs, n, path] of elevations)
+    if (zs.length !== n)
+      return failed(error('invalid_elevations', `Kotların sayısı köşelerin sayısıyla aynı olmalı; ${n} köşeye ${zs.length} kot verildi. Her köşeye bir kot verin; kotsuz köşeye null.`, at(path)));
+  if (!geometryIsFinite(g as unknown as Entity) || elevations.some(([zs]) => zs.some((z) => z !== null && !Number.isFinite(z))))
     return failed(error('not_finite', `${i + 1}. ${whose} geometrisinde sonlu olmayan bir değer var (NaN ya da sonsuz). Geometriyi sonlu sayılarla verin.`, at('')));
   if ((g.kind === 'circle' || g.kind === 'arc') && !(g.r > 0)) return failed(error('invalid_radius', 'Yarıçap sıfırdan büyük olmalı. Pozitif bir yarıçap verin.', at('.r')));
   return null;
+}
+
+/** A geometry's written elevations (docs/adr/0142): each list with its vertex count and its path. */
+function writtenElevations(g: EntityGeometry): [readonly (number | null)[], number, string][] {
+  const out: [readonly (number | null)[], number, string][] = [];
+  if (g.kind === 'line' && g.zs) out.push([g.zs, 2, '.zs']);
+  if ((g.kind === 'polyline' || g.kind === 'polygon') && g.zs) out.push([g.zs, g.pts.length, '.zs']);
+  if (g.kind === 'polygon') for (const [h, ring] of (g.holes ?? []).entries()) if (ring.zs) out.push([ring.zs, ring.pts.length, `.holes[${h}].zs`]);
+  return out;
+}
+
+/**
+ * Written elevations as the object holds them (docs/adr/0142): a line's two as `za` and `zb`, a path's
+ * or a hole's all null as none. In their places, so an edit that changes nothing stays no edit.
+ */
+function held(init: NewEntity): NewEntity {
+  const out = init as unknown as Record<string, unknown>;
+  const none = (zs: unknown) => Array.isArray(zs) && zs.every((z) => z === null);
+  if (init.kind === 'line' && Array.isArray(out.zs)) {
+    const [za, zb] = out.zs as (number | null)[];
+    delete out.zs;
+    if (za != null) out.za = za;
+    else delete out.za;
+    if (zb != null) out.zb = zb;
+    else delete out.zb;
+  }
+  if ((init.kind === 'polyline' || init.kind === 'polygon') && none(out.zs)) delete out.zs;
+  if (init.kind === 'polygon' && init.holes) init.holes = init.holes.map((h) => (none(h.zs) ? (({ zs: _zs, ...ring }) => ring)(h) : h));
+  return init;
 }
 
 /** The checks in the contract's order: why nothing may be written, or what may. */
@@ -242,7 +277,9 @@ function check(doc: CadDocument, input: EntitiesEdit): Stop | Checked {
   // reshapes, and its vertices take theirs by where they lie.
   const byPlace = offset || input.operation === 'grip' || input.operation === 'stretch' || input.operation === 'properties';
   let lost = 0;
-  const elevate = (init: NewEntity, from: Entity): NewEntity => {
+  // Elevations written with the geometry are written as they are (Kot ver, Öznitelikler, a script).
+  const elevate = (init: NewEntity, from: Entity, g: EntityGeometry): NewEntity => {
+    if ('zs' in g && g.zs !== undefined) return held(init);
     if (!sources.length) return init;
     const before = elevatedPaths(from);
     if (!carryInto(init, sources, byPlace ? before : [], offset) && hasElevation(before)) lost++;
@@ -250,9 +287,9 @@ function check(doc: CadDocument, input: EntitiesEdit): Stop | Checked {
   };
   for (const [i, c] of input.changes.entries()) {
     const e = found[i];
-    if (c.kind === 'update') checked.changed.push({ id: e.id, uid: c.uid, init: elevate(reshaped(e, c.geometry), e) });
-    else if (c.kind === 'replace') checked.changed.push({ id: e.id, uid: c.uid, init: elevate(inherited(e, c.geometry, c.keepData === true), e) });
-    else if (c.kind === 'add') checked.created.push(elevate(inherited(e, c.geometry, c.keepData === true), e));
+    if (c.kind === 'update') checked.changed.push({ id: e.id, uid: c.uid, init: elevate(reshaped(e, c.geometry), e, c.geometry) });
+    else if (c.kind === 'replace') checked.changed.push({ id: e.id, uid: c.uid, init: elevate(inherited(e, c.geometry, c.keepData === true), e, c.geometry) });
+    else if (c.kind === 'add') checked.created.push(elevate(inherited(e, c.geometry, c.keepData === true), e, c.geometry));
     else checked.removed.push({ id: e.id, uid: c.uid });
   }
   if (lost) checked.warnings.push({ code: 'elevation_lost', message: `${lost} nesnenin kotu bu işlemde korunmadı.`, path: 'changes' });

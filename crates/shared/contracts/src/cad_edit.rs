@@ -96,6 +96,9 @@ pub enum EditOperation {
     /// Çizimi temizle: objects repeated on their layer and empty ones
     /// deleted, vertices repeated in a row dropped.
     Cleanup,
+    /// Kot ver (docs/adr/0142): objects' vertices given elevations as the
+    /// geometry's `zs` says: the same value, the old ones raised, or none.
+    Elevation,
 }
 
 /// A drawing object's geometry alone: its kind and the fields that place and
@@ -117,6 +120,11 @@ pub enum EntityGeometry {
     Line {
         a: Vec2,
         b: Vec2,
+        /// The vertices' elevations as written (docs/adr/0142): its two ends, `null` for one without; all `null`: none. Absent:
+        /// each vertex takes one from the objects the edit names.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        zs: Option<Vec<Option<f64>>>,
     },
     /// An open path: vertices and DXF bulges (tan(θ/4), CCW positive), the
     /// one at vertex i bending the edge to vertex i + 1.
@@ -125,6 +133,12 @@ pub enum EntityGeometry {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         bulges: Option<Vec<f64>>,
+        /// The vertices' elevations as written (docs/adr/0142): as many as
+        /// the vertices, `null` for one without; all `null`: none. Absent:
+        /// each vertex takes one from the objects the edit names.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        zs: Option<Vec<Option<f64>>>,
     },
     /// A closed area: its ring and, when it has any, its holes.
     Polygon {
@@ -135,6 +149,12 @@ pub enum EntityGeometry {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         holes: Option<Vec<RingGeometry>>,
+        /// The vertices' elevations as written (docs/adr/0142): as many as
+        /// the vertices, `null` for one without; all `null`: none. The holes' come with them (`RingGeometry.zs`). Absent:
+        /// each vertex takes one from the objects the edit names.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        zs: Option<Vec<Option<f64>>>,
     },
     Circle {
         c: Vec2,

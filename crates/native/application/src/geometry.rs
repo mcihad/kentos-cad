@@ -309,31 +309,52 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
     Some(out)
 }
 
+/// Written elevations as an object holds them (docs/adr/0142): a list with
+/// none in it is no list.
+fn held(zs: Option<Vec<Option<f64>>>) -> Option<Vec<Option<f64>>> {
+    zs.filter(|z| z.iter().any(Option::is_some))
+}
+
 /// An object of `geometry` with the fields every object has from `base`:
 /// what `cad.entities.edit` writes (docs/adr/0047). A polyline has no holes.
 pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
     match geometry.clone() {
         EntityGeometry::Point { p, z } => Entity::Point(PointEntity { base, p, z }),
-        EntityGeometry::Line { a, b } => Entity::Line(LineEntity {
-            base,
-            a,
-            b,
-            za: None,
-            zb: None,
-        }),
-        EntityGeometry::Polyline { pts, bulges } => Entity::Polyline(PathEntity {
+        EntityGeometry::Line { a, b, zs } => {
+            let z = |k: usize| zs.as_ref().and_then(|zs| zs.get(k).copied().flatten());
+            Entity::Line(LineEntity {
+                base,
+                a,
+                b,
+                za: z(0),
+                zb: z(1),
+            })
+        }
+        EntityGeometry::Polyline { pts, bulges, zs } => Entity::Polyline(PathEntity {
             base,
             pts,
             bulges,
             holes: None,
-            zs: None,
+            zs: held(zs),
         }),
-        EntityGeometry::Polygon { pts, bulges, holes } => Entity::Polygon(PathEntity {
-            base,
+        EntityGeometry::Polygon {
             pts,
             bulges,
             holes,
-            zs: None,
+            zs,
+        } => Entity::Polygon(PathEntity {
+            base,
+            pts,
+            bulges,
+            holes: holes.map(|hs| {
+                hs.into_iter()
+                    .map(|mut h| {
+                        h.zs = held(h.zs);
+                        h
+                    })
+                    .collect()
+            }),
+            zs: held(zs),
         }),
         EntityGeometry::Circle { c, r } => Entity::Circle(CircleEntity { base, c, r }),
         EntityGeometry::Arc { c, r, a0, a1 } => Entity::Arc(ArcEntity { base, c, r, a0, a1 }),
@@ -408,15 +429,21 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
 pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
     Some(match shape {
         Shape::Point { p: at, z } => EntityGeometry::Point { p: p(at), z },
-        Shape::Line { a, b } => EntityGeometry::Line { a: p(a), b: p(b) },
+        Shape::Line { a, b } => EntityGeometry::Line {
+            a: p(a),
+            b: p(b),
+            zs: None,
+        },
         Shape::Polyline { pts, bulges, .. } => EntityGeometry::Polyline {
             pts: back(pts),
             bulges,
+            zs: None,
         },
         Shape::Polygon { pts, bulges, holes } => EntityGeometry::Polygon {
             pts: back(pts),
             bulges,
             holes: holes.map(|hs| hs.into_iter().map(ring_back).collect()),
+            zs: None,
         },
         Shape::Circle { c, r } => EntityGeometry::Circle { c: p(c), r },
         Shape::Arc { c, r, a0, a1 } => EntityGeometry::Arc { c: p(c), r, a0, a1 },
