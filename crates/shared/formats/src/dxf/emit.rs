@@ -21,9 +21,10 @@ use super::hatch::{Edge, Hatch, Path};
 use super::strings::{mtext_lines, text_codes};
 use super::xdata::{Meta, caret_decode};
 use crate::geom::{
-    Similarity, Tf, arc_points, arc_steps, bulge_path_points, dist, ellipse_from, finite, has_arcs,
-    ocs_tf, ring_area, ring_contains, to_core, v,
+    Similarity, Tf, arc_points, arc_steps, bulge_path_points, bulge_path_zs, dist, ellipse_from,
+    finite, has_arcs, ocs_tf, ocs_z, ring_area, ring_contains, to_core, v,
 };
+use crate::gis::CLOSING_Z;
 use crate::math::{TAU, atan2, cos, deg, hypot, norm_angle, rad, sin, sin_cos_deg};
 use crate::nurbs;
 use crate::report::Report;
@@ -79,6 +80,11 @@ pub struct Ctx {
 }
 
 impl Ctx {
+    /// The world Z of a Z in the object's own frame, under the inserts above it.
+    pub fn z(&self, local: f64) -> f64 {
+        self.z_offset + self.z_scale * local
+    }
+
     pub fn model() -> Ctx {
         Ctx {
             tf: Tf::IDENTITY,
@@ -224,6 +230,38 @@ fn apply_meta(meta: &Meta, e: &mut Entity) {
     {
         b.line_weight = Some(app);
     }
+    if !meta.no_z.is_empty() {
+        no_elevations(e, &meta.no_z);
+    }
+}
+
+/// The vertices KentOS's data says have no elevation lose the 0 DXF wrote for
+/// them, while it still is 0 (a height edited in another program wins).
+fn no_elevations(e: &mut Entity, vertices: &[usize]) {
+    match e {
+        Entity::Line(l) => {
+            if vertices.contains(&0) && l.za == Some(0.0) {
+                l.za = None;
+            }
+            if vertices.contains(&1) && l.zb == Some(0.0) {
+                l.zb = None;
+            }
+        }
+        Entity::Polyline(p) | Entity::Polygon(p) => {
+            let Some(zs) = p.zs.as_mut() else { return };
+            for &i in vertices {
+                if let Some(z) = zs.get_mut(i)
+                    && *z == Some(0.0)
+                {
+                    *z = None;
+                }
+            }
+            if zs.iter().all(Option::is_none) {
+                p.zs = None;
+            }
+        }
+        _ => {}
+    }
 }
 
 fn kind_name(e: &Entity) -> &'static str {
@@ -338,6 +376,30 @@ impl<'l> Emitter<'l> {
         }
     }
 
+    /// The elevations of an object's vertices from the Z the file gives them
+    /// (`locals`, in the object's own frame) under the inserts above it
+    /// (docs/adr/0142): none, unless some vertex is above or below 0, or
+    /// something says the zeros are heights: `own` (an elevation the object
+    /// itself has, a LWPOLYLINE's 38), an insert set at a height, or KentOS's
+    /// data. A file's 0 is no elevation: the Z of a 2D drawing is 0. Once one
+    /// vertex has an elevation every vertex has its own, 0 too; a Z the maps
+    /// make infinite is none.
+    fn heights(
+        ctx: &Ctx,
+        e: &Parsed,
+        locals: impl Iterator<Item = f64> + Clone,
+        own: bool,
+    ) -> Option<Vec<Option<f64>>> {
+        let world = |z: f64| Some(ctx.z(z)).filter(|z| z.is_finite());
+        let says = own || ctx.z_offset != 0.0 || e.meta.as_ref().is_some_and(|m| m.z);
+        // Most drawings have none: look before making a list.
+        let some = locals.clone().filter_map(world);
+        if !(some.clone().any(|z| z != 0.0) || (says && some.clone().next().is_some())) {
+            return None;
+        }
+        Some(locals.map(world).collect())
+    }
+
     /// The colour override: none for BYLAYER, the insert's colour for BYBLOCK.
     fn color_of(&self, e: &Parsed, ctx: &Ctx) -> Option<String> {
         match e.common.color {
@@ -385,7 +447,7 @@ impl<'l> Emitter<'l> {
                 Entity::Polygon(h) => RingGeometry {
                     pts: h.pts.clone(),
                     bulges: h.bulges.clone(),
-                    zs: None,
+                    zs: h.zs.clone(),
                 },
                 _ => continue,
             };
@@ -435,13 +497,18 @@ impl<'l> Emitter<'l> {
         let ext = e.common.extrusion;
         match &e.kind {
             Kind::Line { a, b: bb } => {
+                let zs = Self::heights(ctx, e, [a[2], bb[2]].into_iter(), false);
+                let (za, zb) = match zs.as_deref() {
+                    Some([za, zb]) => (*za, *zb),
+                    _ => (None, None),
+                };
                 let (a, bb) = (ctx.tf.apply(xy(*a)), ctx.tf.apply(xy(*bb)));
                 self.push(Entity::Line(LineEntity {
                     base: b(),
                     a,
                     b: bb,
-                    za: None,
-                    zb: None,
+                    za,
+                    zb,
                 }));
             }
             Kind::Point { p } => {
@@ -449,7 +516,7 @@ impl<'l> Emitter<'l> {
                     return;
                 }
                 let z = ctx.z_offset + ctx.z_scale * p[2];
-                // KentOS data says when an elevation of 0 is data, not the lack of one.
+                // KentOS data says when an elevation of 0 is data, not the lack of one (as it does of a line's and a path's).
                 let kept = e.meta.as_ref().is_some_and(|m| m.z);
                 self.push(Entity::Point(PointEntity {
                     base: b(),
@@ -510,8 +577,15 @@ impl<'l> Emitter<'l> {
                         e.line,
                     );
                 }
+                // An elevation of the plane is every vertex's (a mirrored plane's Z runs the other way).
+                let zs = Self::heights(
+                    ctx,
+                    e,
+                    pts.iter().map(|p| ocs_z(ext, p[0], p[1], *elevation)),
+                    *elevation != 0.0,
+                );
                 let pts: Vec<Vec2> = pts.iter().map(|p| v(p[0], p[1])).collect();
-                self.path(m, pts, bulges.clone(), *closed, b(), e);
+                self.path(m, pts, bulges.clone(), *closed, zs, b(), e);
             }
             Kind::Polyline {
                 flags,
@@ -884,27 +958,39 @@ impl<'l> Emitter<'l> {
         }
     }
 
-    /// A vertex path (LWPOLYLINE, 2D POLYLINE) in object coordinates: bulges kept while the map keeps shapes.
+    /// A vertex path (LWPOLYLINE, POLYLINE) in object coordinates, with the
+    /// elevation of each vertex when it has them (`heights`): bulges kept while
+    /// the map keeps shapes.
+    #[allow(clippy::too_many_arguments)]
     fn path(
         &mut self,
         m: Tf,
         pts: Vec<Vec2>,
         mut bulges: Vec<f64>,
         closed: bool,
+        zs: Option<Vec<Option<f64>>>,
         b: EntityBase,
         e: &Parsed,
     ) {
         let mut pts = pts;
+        let mut zs = zs.filter(|z| z.len() == pts.len());
         bulges.resize(pts.len(), 0.0);
         // A closed path that repeats its first vertex: the repeat is not a corner.
         if closed && pts.len() > 1 && pts.first() == pts.last() {
             pts.pop();
             bulges.pop();
+            if let Some(z) = zs.as_mut() {
+                // Its own height goes with it; the first vertex keeps its own, and that is said when they differ.
+                let last = z.pop().flatten();
+                if last.is_some() && last != z.first().copied().flatten() {
+                    self.note(CLOSING_Z.0, CLOSING_Z.1, e.line);
+                }
+            }
         }
         if pts.len() < 2 {
             return self.skip(&e.name, "iki köşesi yok", e.line);
         }
-        let (pts, bulges) = match (has_arcs(&bulges), m.similarity()) {
+        let (pts, bulges, zs) = match (has_arcs(&bulges), m.similarity()) {
             (_, Some(s)) => {
                 let pts: Vec<Vec2> = pts.iter().map(|p| m.apply(*p)).collect();
                 let bulges: Vec<f64> = if s.mirror {
@@ -912,21 +998,24 @@ impl<'l> Emitter<'l> {
                 } else {
                     bulges
                 };
-                (pts, bulges)
+                (pts, bulges, zs)
             }
-            (false, None) => (pts.iter().map(|p| m.apply(*p)).collect(), bulges),
+            (false, None) => (pts.iter().map(|p| m.apply(*p)).collect(), bulges, zs),
             (true, None) => {
                 // A stretched arc is an elliptic arc; the model's paths hold circular arcs only.
                 let ring = bulge_path_points(&pts, &bulges, closed);
+                // The points sampled along an arc edge take the elevation the edge has there.
+                let zs = zs.map(|z| bulge_path_zs(&pts, &bulges, &z, closed));
                 self.note(
                     &e.name,
                     "yaylı kenarları eşit olmayan ölçekle eklendiği için noktalara bölündü",
                     e.line,
                 );
                 let n = ring.len();
-                (ring.iter().map(|p| m.apply(*p)).collect(), vec![0.0; n])
+                (ring.iter().map(|p| m.apply(*p)).collect(), vec![0.0; n], zs)
             }
         };
+        let zs = zs.filter(|z| z.len() == pts.len() && z.iter().any(Option::is_some));
         let open = !closed;
         let mut bulges = bulges;
         if open {
@@ -939,7 +1028,7 @@ impl<'l> Emitter<'l> {
                 pts,
                 bulges,
                 holes: None,
-                zs: None,
+                zs,
             }));
         } else {
             self.push(Entity::Polyline(PathEntity {
@@ -947,7 +1036,7 @@ impl<'l> Emitter<'l> {
                 pts,
                 bulges,
                 holes: None,
-                zs: None,
+                zs,
             }));
         }
     }
@@ -982,16 +1071,24 @@ impl<'l> Emitter<'l> {
             );
         }
         if flags & 8 != 0 {
-            // 3D polyline: world coordinates, straight segments.
+            // 3D polyline: world coordinates, straight segments, a height at each vertex.
             let pts: Vec<Vec2> = verts.iter().map(|x| xy(x.p)).collect();
-            return self.path(ctx.tf, pts, Vec::new(), closed, b, e);
+            let zs = Self::heights(ctx, e, verts.iter().map(|x| x.p[2]), false);
+            return self.path(ctx.tf, pts, Vec::new(), closed, zs, b, e);
         }
         let Some(m) = ocs(ctx, ext, elevation) else {
             return self.skip(&e.name, "doğrultusu (210) geçersiz", e.line);
         };
+        // A 2D polyline's elevation is its plane's: every vertex's, as a LWPOLYLINE's.
+        let zs = Self::heights(
+            ctx,
+            e,
+            verts.iter().map(|x| ocs_z(ext, x.p[0], x.p[1], elevation)),
+            elevation != 0.0,
+        );
         let pts: Vec<Vec2> = verts.iter().map(|x| xy(x.p)).collect();
         let bulges: Vec<f64> = verts.iter().map(|x| x.bulge).collect();
-        self.path(m, pts, bulges, closed, b, e);
+        self.path(m, pts, bulges, closed, zs, b, e);
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -1075,7 +1172,7 @@ impl<'l> Emitter<'l> {
                 }
             }
         };
-        self.path(Tf::IDENTITY, pts, Vec::new(), closed, b, e);
+        self.path(Tf::IDENTITY, pts, Vec::new(), closed, None, b, e);
     }
 
     #[allow(clippy::too_many_arguments)]

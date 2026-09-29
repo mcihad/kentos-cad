@@ -1,0 +1,852 @@
+999
+Heights of DXF entities read into vertex elevations (docs/adr/0142); crates/shared/formats/tests/dxf.rs works each out from this file.
+999
+ENTITIES in order: 0-2 LINE with both ends, none, one end above 0; 3-5 3D POLYLINE open with a 0 among the heights, closed, all 0;
+999
+6-9 LWPOLYLINE with an elevation, with 38 = 0, with an arc, on a mirrored plane; 10 2D POLYLINE with an elevation; 11-12 INSERT of PLAN
+999
+(a LINE, a LWPOLYLINE at 38 = 0, a 3D POLYLINE and a 2D LINE) at Z 100 and with its Z scaled by 2; 13 POINT; 14-17 KentOS data:
+999
+zeros that are heights, a vertex with none, and a mark gone stale.
+  0
+SECTION
+  2
+HEADER
+  9
+$ACADVER
+  1
+AC1015
+  9
+$DWGCODEPAGE
+  3
+ANSI_1254
+  9
+$INSUNITS
+ 70
+6
+  0
+ENDSEC
+  0
+SECTION
+  2
+TABLES
+  0
+TABLE
+  2
+LAYER
+ 70
+3
+  0
+LAYER
+  2
+0
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  2
+KOT
+ 70
+0
+ 62
+3
+  6
+CONTINUOUS
+  0
+LAYER
+  2
+PLAN
+ 70
+0
+ 62
+5
+  6
+CONTINUOUS
+  0
+ENDTAB
+  0
+ENDSEC
+  0
+SECTION
+  2
+BLOCKS
+  0
+BLOCK
+  8
+0
+  2
+PLAN
+ 70
+0
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+  3
+PLAN
+  0
+LINE
+  8
+0
+ 10
+0.0
+ 20
+0.0
+ 30
+1.0
+ 11
+10.0
+ 21
+0.0
+ 31
+2.0
+  0
+LWPOLYLINE
+  8
+0
+ 90
+2
+ 70
+0
+ 38
+0.0
+ 10
+0.0
+ 20
+0.0
+ 10
+10.0
+ 20
+0.0
+  0
+POLYLINE
+  8
+0
+ 66
+1
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 70
+8
+  0
+VERTEX
+  8
+0
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 70
+32
+  0
+VERTEX
+  8
+0
+ 10
+5.0
+ 20
+0.0
+ 30
+5.0
+ 70
+32
+  0
+VERTEX
+  8
+0
+ 10
+10.0
+ 20
+0.0
+ 30
+10.0
+ 70
+32
+  0
+SEQEND
+  8
+0
+  0
+LINE
+  8
+0
+ 10
+0.0
+ 20
+1.0
+ 30
+0.0
+ 11
+10.0
+ 21
+1.0
+ 31
+0.0
+  0
+ENDBLK
+  0
+ENDSEC
+  0
+SECTION
+  2
+ENTITIES
+  0
+LINE
+  8
+KOT
+ 10
+100.0
+ 20
+200.0
+ 30
+105.5
+ 11
+110.0
+ 21
+200.0
+ 31
+107.25
+  0
+LINE
+  8
+KOT
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 11
+5.0
+ 21
+5.0
+ 31
+0.0
+  0
+LINE
+  8
+KOT
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 11
+5.0
+ 21
+5.0
+ 31
+12.5
+  0
+POLYLINE
+  8
+KOT
+ 66
+1
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 70
+8
+  0
+VERTEX
+  8
+KOT
+ 10
+0.0
+ 20
+0.0
+ 30
+10.0
+ 70
+32
+  0
+VERTEX
+  8
+KOT
+ 10
+10.0
+ 20
+0.0
+ 30
+12.5
+ 70
+32
+  0
+VERTEX
+  8
+KOT
+ 10
+10.0
+ 20
+10.0
+ 30
+0.0
+ 70
+32
+  0
+VERTEX
+  8
+KOT
+ 10
+0.0
+ 20
+10.0
+ 30
+15.25
+ 70
+32
+  0
+SEQEND
+  8
+KOT
+  0
+POLYLINE
+  8
+KOT
+ 66
+1
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 70
+9
+  0
+VERTEX
+  8
+KOT
+ 10
+0.0
+ 20
+0.0
+ 30
+20.0
+ 70
+32
+  0
+VERTEX
+  8
+KOT
+ 10
+10.0
+ 20
+0.0
+ 30
+21.0
+ 70
+32
+  0
+VERTEX
+  8
+KOT
+ 10
+10.0
+ 20
+10.0
+ 30
+22.0
+ 70
+32
+  0
+VERTEX
+  8
+KOT
+ 10
+0.0
+ 20
+10.0
+ 30
+23.0
+ 70
+32
+  0
+SEQEND
+  8
+KOT
+  0
+POLYLINE
+  8
+KOT
+ 66
+1
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 70
+8
+  0
+VERTEX
+  8
+KOT
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 70
+32
+  0
+VERTEX
+  8
+KOT
+ 10
+10.0
+ 20
+0.0
+ 30
+0.0
+ 70
+32
+  0
+VERTEX
+  8
+KOT
+ 10
+10.0
+ 20
+10.0
+ 30
+0.0
+ 70
+32
+  0
+SEQEND
+  8
+KOT
+  0
+LWPOLYLINE
+  8
+KOT
+ 90
+3
+ 70
+0
+ 38
+250.5
+ 10
+0.0
+ 20
+0.0
+ 10
+10.0
+ 20
+0.0
+ 10
+10.0
+ 20
+10.0
+  0
+LWPOLYLINE
+  8
+KOT
+ 90
+4
+ 70
+1
+ 38
+0.0
+ 10
+0.0
+ 20
+0.0
+ 10
+10.0
+ 20
+0.0
+ 10
+10.0
+ 20
+10.0
+ 10
+0.0
+ 20
+10.0
+  0
+LWPOLYLINE
+  8
+KOT
+ 90
+3
+ 70
+0
+ 38
+-12.75
+ 10
+0.0
+ 20
+0.0
+ 42
+1.0
+ 10
+2.0
+ 20
+0.0
+ 10
+2.0
+ 20
+5.0
+  0
+LWPOLYLINE
+  8
+KOT
+ 90
+3
+ 70
+0
+ 38
+-5.0
+ 10
+1.0
+ 20
+1.0
+ 10
+3.0
+ 20
+1.0
+ 10
+3.0
+ 20
+4.0
+210
+0.0
+220
+0.0
+230
+-1.0
+  0
+POLYLINE
+  8
+KOT
+ 66
+1
+ 10
+0.0
+ 20
+0.0
+ 30
+42.0
+ 70
+0
+  0
+VERTEX
+  8
+KOT
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+  0
+VERTEX
+  8
+KOT
+ 10
+4.0
+ 20
+0.0
+ 30
+0.0
+  0
+VERTEX
+  8
+KOT
+ 10
+4.0
+ 20
+4.0
+ 30
+0.0
+  0
+SEQEND
+  8
+KOT
+  0
+INSERT
+  8
+PLAN
+  2
+PLAN
+ 10
+1000.0
+ 20
+2000.0
+ 30
+100.0
+  0
+INSERT
+  8
+PLAN
+  2
+PLAN
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 41
+1.0
+ 42
+1.0
+ 43
+2.0
+  0
+POINT
+  8
+KOT
+ 10
+7.0
+ 20
+7.0
+ 30
+88.8
+  0
+LINE
+  8
+KOT
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 11
+1.0
+ 21
+1.0
+ 31
+0.0
+1001
+KENTOS
+1002
+{
+1000
+z
+1002
+}
+1002
+{
+1000
+noz
+1000
+2
+1002
+}
+  0
+POLYLINE
+  8
+KOT
+ 66
+1
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 70
+8
+1001
+KENTOS
+1002
+{
+1000
+z
+1002
+}
+  0
+VERTEX
+  8
+KOT
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 70
+32
+  0
+VERTEX
+  8
+KOT
+ 10
+1.0
+ 20
+0.0
+ 30
+0.0
+ 70
+32
+  0
+VERTEX
+  8
+KOT
+ 10
+1.0
+ 20
+1.0
+ 30
+0.0
+ 70
+32
+  0
+SEQEND
+  8
+KOT
+  0
+POLYLINE
+  8
+KOT
+ 66
+1
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 70
+8
+1001
+KENTOS
+1002
+{
+1000
+noz
+1000
+2
+1002
+}
+  0
+VERTEX
+  8
+KOT
+ 10
+0.0
+ 20
+0.0
+ 30
+5.0
+ 70
+32
+  0
+VERTEX
+  8
+KOT
+ 10
+1.0
+ 20
+0.0
+ 30
+0.0
+ 70
+32
+  0
+VERTEX
+  8
+KOT
+ 10
+1.0
+ 20
+1.0
+ 30
+7.0
+ 70
+32
+  0
+SEQEND
+  8
+KOT
+  0
+POLYLINE
+  8
+KOT
+ 66
+1
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 70
+8
+1001
+KENTOS
+1002
+{
+1000
+noz
+1000
+1
+1002
+}
+  0
+VERTEX
+  8
+KOT
+ 10
+0.0
+ 20
+0.0
+ 30
+5.0
+ 70
+32
+  0
+VERTEX
+  8
+KOT
+ 10
+1.0
+ 20
+0.0
+ 30
+0.0
+ 70
+32
+  0
+VERTEX
+  8
+KOT
+ 10
+1.0
+ 20
+1.0
+ 30
+7.0
+ 70
+32
+  0
+SEQEND
+  8
+KOT
+  0
+ENDSEC
+  0
+EOF

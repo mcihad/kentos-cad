@@ -17,7 +17,8 @@
 //! 1002 {  1000 curve    1070 <0|1>               1002 }   a SPLINE through its fit points is KentOS's curve (1: closed)
 //! 1002 {  1000 arc      1040 <a0> 1040 <a1>      1002 }   the arc's angles in radians, exactly
 //! 1002 {  1000 pattern  1040 <angle> 1040 <gap>  1002 }   the hatch's angle and spacing, exactly
-//! 1002 {  1000 z                                 1002 }   the point has an elevation, even 0
+//! 1002 {  1000 z                                 1002 }   the object's elevations are data, even when all 0 (a point's, a line's, a path's)
+//! 1002 {  1000 noz      <hex string>             1002 }   the vertices with no elevation, while the others have one: a bit each (docs/adr/0142)
 //! 1002 {  1000 dimension <style> 1040 <offset> 1040 <height>
 //!         [1002 { 1000 text <string> 1002 }] [1002 { 1000 center 1040 <x> 1040 <y> 1002 }]
 //!                                                1002 }   a DIMENSION is this KentOS dimension
@@ -61,8 +62,12 @@ pub struct Meta {
     pub arc: Option<(f64, f64)>,
     /// Hatch angle (degrees) and spacing.
     pub pattern: Option<(f64, f64)>,
-    /// The point's elevation is data even when it is 0.
+    /// The object's elevations are data even when they are all 0: a DXF
+    /// point, line or 3D polyline with nothing but zeros has none, unless told.
     pub z: bool,
+    /// The vertices (in the order written) that have no elevation while the
+    /// object has some: DXF writes them as 0. Ascending, without repeats.
+    pub no_z: Vec<usize>,
     /// The DIMENSION is a KentOS dimension (`dimension.rs`).
     pub dimension: Option<DimMeta>,
 }
@@ -88,6 +93,32 @@ impl Meta {
 }
 
 // ── Writing ─────────────────────────────────────────────────────────────
+
+/// Vertex numbers (ascending) as a bit mask in hex: character `k` holds the
+/// vertices 4k to 4k + 3, the lowest as its lowest bit. A fixed size however
+/// many vertices are named.
+fn mask_encode(indices: &[usize]) -> String {
+    let len = indices.iter().max().map_or(0, |m| m / 4 + 1);
+    let mut nibbles = vec![0u8; len];
+    for &i in indices {
+        nibbles[i / 4] |= 1 << (i % 4);
+    }
+    nibbles
+        .iter()
+        .map(|n| char::from_digit(u32::from(*n), 16).unwrap_or('0'))
+        .collect()
+}
+
+/// The vertex numbers a mask names (anything that is not a hex digit names
+/// none). No more of it is read than a writer can give an object (`MAX_BYTES`).
+fn mask_decode(mask: &str) -> Vec<usize> {
+    let mut out = Vec::new();
+    for (k, c) in mask.chars().take(MAX_BYTES).enumerate() {
+        let n = c.to_digit(16).unwrap_or(0);
+        out.extend((0..4).filter(|j| n & (1 << j) != 0).map(|j| 4 * k + j));
+    }
+    out
+}
 
 /// A string in DXF's caret notation: control characters as "^" and the
 /// character 64 above, the caret itself as "^ ".
@@ -189,6 +220,9 @@ pub fn groups(meta: &Meta) -> Vec<(i32, String)> {
     }
     if meta.z {
         item("z", &mut out, |_| {});
+    }
+    if !meta.no_z.is_empty() {
+        item("noz", &mut out, |o| string(&mask_encode(&meta.no_z), o));
     }
     if let Some(d) = &meta.dimension {
         item("dimension", &mut out, |o| {
@@ -390,6 +424,7 @@ pub fn read(groups: &[(i32, String)]) -> Option<Meta> {
                 }
             }
             "z" => m.z = true,
+            "noz" => m.no_z = text(a).map(|t| mask_decode(&t)).unwrap_or_default(),
             "dimension" => m.dimension = dimension(&values).or(m.dimension),
             _ => {}
         }
@@ -444,6 +479,7 @@ mod tests {
             arc: Some((0.1 + 0.2, -1.0 / 3.0)),
             pattern: Some((45.0, 2.5e-3)),
             z: true,
+            no_z: vec![0, 3, 4, 9, 4001],
             dimension: Some(DimMeta {
                 style: "diameter".into(),
                 offset: 0.1 + 0.2,
@@ -512,6 +548,31 @@ mod tests {
         ]))
         .expect("data");
         assert_eq!(m.label.as_deref(), Some("yarım"));
+    }
+
+    #[test]
+    fn a_mask_names_its_vertices_and_only_them() {
+        assert_eq!(mask_encode(&[]), "");
+        assert_eq!(mask_encode(&[0]), "1");
+        assert_eq!(mask_encode(&[1, 3]), "a");
+        assert_eq!(mask_encode(&[0, 1, 2, 3, 4]), "f1");
+        for indices in [
+            vec![],
+            vec![0],
+            vec![7],
+            vec![0, 1, 2, 3],
+            vec![5, 6, 4000, 4001],
+        ] {
+            assert_eq!(mask_decode(&mask_encode(&indices)), indices);
+        }
+        // A size that grows with the highest vertex, not with how many are named; letters other than hex digits name none.
+        assert_eq!(mask_encode(&[4000]).len(), 1001);
+        assert_eq!(mask_decode("z1G"), vec![4]);
+        let meta = Meta {
+            no_z: vec![1, 2],
+            ..Meta::default()
+        };
+        assert_eq!(read(&groups(&meta)), Some(meta));
     }
 
     #[test]

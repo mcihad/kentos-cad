@@ -782,3 +782,116 @@ fn an_object_takes_its_own_line_weight_and_a_block_member_its_inserts() {
         ]
     );
 }
+
+/// A line's two elevations.
+fn ends(e: &Entity) -> (Option<f64>, Option<f64>) {
+    match e {
+        Entity::Line(l) => (l.za, l.zb),
+        other => panic!("not a line: {other:?}"),
+    }
+}
+
+/// A path's or an area's vertex elevations.
+fn heights(e: &Entity) -> Option<Vec<Option<f64>>> {
+    match e {
+        Entity::Polyline(p) | Entity::Polygon(p) => p.zs.clone(),
+        other => panic!("not a path: {other:?}"),
+    }
+}
+
+/// Every vertex has this elevation, one of `n`.
+fn all(z: f64, n: usize) -> Option<Vec<Option<f64>>> {
+    Some(vec![Some(z); n])
+}
+
+#[test]
+fn vertices_take_the_heights_a_file_gives_them() {
+    let r = read("elevations.dxf");
+    let e = &r.entities;
+    assert_eq!(e.len(), 24, "{:?}", r.report);
+    assert!(r.report.skipped.is_empty(), "{:?}", r.report.skipped);
+    // Lines: both ends, a 2D one (Z 0 is no elevation), and one end at 0 with the other above it.
+    assert_eq!(ends(&e[0]), (Some(105.5), Some(107.25)));
+    assert_eq!(ends(&e[1]), (None, None));
+    assert_eq!(ends(&e[2]), (Some(0.0), Some(12.5)));
+    // 3D polylines: a 0 among the heights stays a height; one that is 0 all along is a 2D one.
+    assert_eq!(heights(&e[3]), Some(vec![Some(10.0), Some(12.5), Some(0.0), Some(15.25)]));
+    assert!(matches!(e[3], Entity::Polyline(_)) && matches!(e[4], Entity::Polygon(_)));
+    assert_eq!(heights(&e[4]), Some(vec![Some(20.0), Some(21.0), Some(22.0), Some(23.0)]));
+    assert_eq!(heights(&e[5]), None);
+    // LWPOLYLINEs: the elevation is every vertex's; 0 is none; an arc stays; a mirrored plane's Z runs the other way.
+    assert_eq!(heights(&e[6]), all(250.5, 3));
+    assert_eq!(heights(&e[7]), None);
+    let Entity::Polyline(arc) = &e[8] else {
+        panic!("{:?}", e[8])
+    };
+    assert_eq!((arc.bulges.clone(), heights(&e[8])), (Some(vec![1.0, 0.0]), all(-12.75, 3)));
+    let Entity::Polyline(mirrored) = &e[9] else {
+        panic!("{:?}", e[9])
+    };
+    assert_eq!(mirrored.pts, vec![v(-1.0, 1.0), v(-3.0, 1.0), v(-3.0, 4.0)]);
+    assert_eq!(heights(&e[9]), all(5.0, 3));
+    // A 2D POLYLINE's elevation is its plane's.
+    assert_eq!(heights(&e[10]), all(42.0, 3));
+    // The block at Z 100: a LINE at 1 and 2, a LWPOLYLINE at 38 = 0 and a 2D LINE (an insert at a height
+    // gives what is inside it that height) and a 3D POLYLINE at 0, 5 and 10; all on the insert's layer.
+    assert_eq!(ends(&e[11]), (Some(101.0), Some(102.0)));
+    let Entity::Line(l) = &e[11] else { panic!() };
+    assert_eq!((l.a, l.b, l.base.layer_id.as_str()), (v(1000.0, 2000.0), v(1010.0, 2000.0), "PLAN"));
+    assert_eq!(heights(&e[12]), all(100.0, 2));
+    assert_eq!(heights(&e[13]), Some(vec![Some(100.0), Some(105.0), Some(110.0)]));
+    assert_eq!(ends(&e[14]), (Some(100.0), Some(100.0)));
+    // The same block at Z 0 with its Z scaled by 2: heights stretch, and what has none still has none.
+    assert_eq!(ends(&e[15]), (Some(2.0), Some(4.0)));
+    assert_eq!(heights(&e[16]), None);
+    assert_eq!(heights(&e[17]), Some(vec![Some(0.0), Some(10.0), Some(20.0)]));
+    assert_eq!(ends(&e[18]), (None, None));
+    let Entity::Point(p) = &e[19] else {
+        panic!("{:?}", e[19])
+    };
+    assert_eq!(p.z, Some(88.8));
+    // KentOS's data: zeros that are heights, a vertex with none, and a mark gone stale (the vertex it
+    // names has a height of its own now, another program's edit wins).
+    assert_eq!(ends(&e[20]), (Some(0.0), None));
+    assert_eq!(heights(&e[21]), all(0.0, 3));
+    assert_eq!(heights(&e[22]), Some(vec![Some(5.0), None, Some(7.0)]));
+    assert_eq!(heights(&e[23]), Some(vec![Some(5.0), Some(0.0), Some(7.0)]));
+    // The report says how many objects came with elevations, once, as a fact of the file.
+    let facts: Vec<(&str, &str)> = r
+        .report
+        .source
+        .iter()
+        .map(|f| (f.label.as_str(), f.value.as_str()))
+        .collect();
+    assert!(facts.contains(&("Kotlu nesne", "19")), "{facts:?}");
+}
+
+#[test]
+fn a_closed_polyline_that_repeats_its_first_vertex_keeps_the_firsts_height() {
+    let vertex = |x: &str, y: &str, z: &str| groups(&[(0, "VERTEX"), (8, "0"), (10, x), (20, y), (30, z), (70, "32")]);
+    let mut entities = groups(&[(0, "POLYLINE"), (8, "0"), (66, "1"), (10, "0"), (20, "0"), (30, "0"), (70, "9")]);
+    for v in [("0", "0", "10"), ("4", "0", "11"), ("4", "4", "12"), ("0", "4", "13"), ("0", "0", "99")] {
+        entities.extend(vertex(v.0, v.1, v.2));
+    }
+    entities.extend(groups(&[(0, "SEQEND"), (8, "0")]));
+    let r = dxf::read(&dxf_of(&[("ENTITIES", entities)]), &DxfReadOptions::default()).expect("read");
+    assert_eq!(r.entities.len(), 1, "{:?}", r.report);
+    assert_eq!(heights(&r.entities[0]), Some(vec![Some(10.0), Some(11.0), Some(12.0), Some(13.0)]));
+    let said = r.report.notes.iter().find(|n| n.what == "Halka kapanışının Z'si");
+    assert_eq!(said.map(|n| n.count), Some(1), "{:?}", r.report.notes);
+}
+
+#[test]
+fn a_drawing_without_a_height_says_nothing_of_heights() {
+    // Nothing above 0 in the file: no elevation on any object, and no fact of them.
+    let r = read("hatch.dxf");
+    assert!(!r.report.source.iter().any(|f| f.label == "Kotlu nesne"));
+    assert!(r.entities.iter().all(|e| !kentos_formats::import::has_elevation(e)));
+    // The block of blocks.dxf sits at Z 100: what is drawn in it stands there, the point and the lines alike.
+    let r = read("blocks.dxf");
+    assert!(r.report.source.iter().any(|f| f.label == "Kotlu nesne"));
+    let Some(Entity::Line(l)) = r.entities.iter().find(|e| matches!(e, Entity::Line(_))) else {
+        panic!("no line")
+    };
+    assert_eq!((l.za, l.zb), (Some(100.0), Some(100.0)));
+}

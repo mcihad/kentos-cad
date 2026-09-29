@@ -1024,3 +1024,243 @@ fn an_objects_line_weight_goes_out_as_370_and_comes_back_exactly() {
     let weights: Vec<Option<f64>> = read(&edited).entities.iter().map(|e| e.base().line_weight).collect();
     assert_eq!(weights[1], Some(0.5));
 }
+
+/// FNV-1a over a file's bytes (64 bits): a fingerprint to hold a written file to.
+fn fnv64(bytes: &[u8]) -> u64 {
+    bytes
+        .iter()
+        .fold(0xcbf2_9ce4_8422_2325, |h, b| (h ^ u64::from(*b)).wrapping_mul(0x0000_0100_0000_01b3))
+}
+
+/// A drawing without elevations is the file it was before elevations were
+/// (docs/adr/0142): the same bytes, so nothing an old reader was given changes.
+/// The length and fingerprint are those the writer gave for `objects()` before
+/// the elevations existed.
+#[test]
+fn a_drawing_without_elevations_is_written_byte_for_byte_as_before() {
+    let (bytes, report) = dxf::write(&input(objects()));
+    assert_eq!((bytes.len(), fnv64(&bytes)), (38014, 0x5452_5a32_43b1_f0e6));
+    // And it says nothing of elevations.
+    assert!(report.notes.iter().all(|n| n.what != "Kot (Z)" && n.what != "Kotsuz köşe"));
+}
+
+/// Objects with elevations: lines, paths with a vertex without one, areas with holes, and paths with arcs.
+fn elevated() -> Vec<Entity> {
+    let third = 1.0 / 3.0;
+    let square = || vec![tm(0.0, 0.0), tm(40.0, 0.0), tm(40.0, 30.0), tm(0.0, 30.0)];
+    vec![
+        // 0-2: a line with both ends, one with an end without, and one at 0 on purpose.
+        Entity::Line(LineEntity {
+            base: base("parsel"),
+            a: tm(0.0, 0.0),
+            b: tm(12.5, 3.25),
+            za: Some(105.5 + third),
+            zb: Some(-107.25),
+        }),
+        Entity::Line(LineEntity {
+            base: base("parsel"),
+            a: tm(1.0, 1.0),
+            b: tm(2.0, 2.0),
+            za: None,
+            zb: Some(12.0),
+        }),
+        Entity::Line(LineEntity {
+            base: base("parsel"),
+            a: tm(3.0, 3.0),
+            b: tm(4.0, 4.0),
+            za: Some(0.0),
+            zb: Some(0.0),
+        }),
+        // 3-4: a path whose second vertex has none, with the label and attributes DXF cannot hold; one at 0 on purpose.
+        Entity::Polyline(PathEntity {
+            base: with("yol", |b| {
+                b.label = Some("Y1".into());
+                b.attrs.insert("Ad".into(), "Cadde".into());
+            }),
+            pts: vec![tm(0.0, 0.0), tm(10.0, 0.0), tm(10.0, 10.0), tm(0.0, 10.0)],
+            bulges: None,
+            holes: None,
+            zs: Some(vec![Some(10.0), None, Some(12.5 + third), Some(-3.0)]),
+        }),
+        Entity::Polyline(PathEntity {
+            base: base("yol"),
+            pts: vec![tm(0.0, 5.0), tm(3.0, 7.0), tm(9.0, 9.0)],
+            bulges: None,
+            holes: None,
+            zs: Some(vec![Some(0.0), Some(0.0), Some(0.0)]),
+        }),
+        // 5: an area whose outline has a vertex without a height, with a hole that has them and one that has none.
+        Entity::Polygon(PathEntity {
+            base: with("parsel", |b| b.label = Some("123".into())),
+            pts: square(),
+            bulges: None,
+            holes: Some(vec![
+                RingGeometry {
+                    pts: vec![tm(5.0, 5.0), tm(10.0, 5.0), tm(10.0, 10.0), tm(5.0, 10.0)],
+                    bulges: None,
+                    zs: Some(vec![Some(100.5), Some(100.5), Some(101.5), Some(101.5)]),
+                },
+                RingGeometry {
+                    pts: vec![tm(20.0, 20.0), tm(25.0, 20.0), tm(25.0, 25.0)],
+                    bulges: None,
+                    zs: None,
+                },
+            ]),
+            zs: Some(vec![Some(100.0), Some(101.0), None, Some(103.0)]),
+        }),
+        // 6-7: arcs at one height (a LWPOLYLINE holds one), at 0 on purpose.
+        Entity::Polyline(PathEntity {
+            base: base("yol"),
+            pts: vec![tm(0.0, 20.0), tm(10.0, 20.0), tm(10.0, 30.0)],
+            bulges: Some(vec![0.5, 0.0]),
+            holes: None,
+            zs: Some(vec![Some(250.5); 3]),
+        }),
+        Entity::Polygon(PathEntity {
+            base: base("yapi"),
+            pts: vec![tm(50.0, 0.0), tm(60.0, 0.0), tm(55.0, 8.0)],
+            bulges: Some(vec![0.0, -0.25, 0.0]),
+            holes: None,
+            zs: Some(vec![Some(0.0); 3]),
+        }),
+        // 8: arcs at several heights: DXF has no 3D polyline with arcs.
+        Entity::Polyline(PathEntity {
+            base: base("yol"),
+            pts: vec![tm(0.0, 40.0), tm(10.0, 40.0), tm(10.0, 50.0)],
+            bulges: Some(vec![1.0, 0.0]),
+            holes: None,
+            zs: Some(vec![Some(1.0), Some(2.0), Some(3.0)]),
+        }),
+    ]
+}
+
+#[test]
+fn elevations_read_back_as_the_same_objects() {
+    let objects = elevated();
+    let (text, report) = write(&input(objects.clone()));
+    let r = read(&text);
+    assert_eq!(r.entities.len(), objects.len(), "{:#?}", r.report);
+    for (i, (got, sent)) in r.entities.iter().zip(&objects).enumerate() {
+        let mut want = expected(sent, &layer_name);
+        // Arcs at several heights were written without: the arcs stayed, the heights did not.
+        if i == 8 {
+            let Entity::Polyline(p) = &mut want else {
+                panic!()
+            };
+            p.zs = None;
+        }
+        assert_eq!(*got, want, "object {i}");
+    }
+    assert!(r.report.skipped.is_empty(), "{:?}", r.report.skipped);
+    // How many objects have elevations is a fact of the file, as it comes back.
+    assert!(
+        r.report.source.iter().any(|f| (f.label.as_str(), f.value.as_str()) == ("Kotlu nesne", "8")),
+        "{:?}",
+        r.report.source
+    );
+    // The writer says what it did with them.
+    let noted: Vec<(&str, u32)> = report.notes.iter().map(|n| (n.what.as_str(), n.count)).collect();
+    let n = |what: &str, part: &str| {
+        report
+            .notes
+            .iter()
+            .find(|i| i.what == what && i.reason.contains(part))
+            .map(|i| i.count)
+    };
+    assert_eq!(n("Kot (Z)", "LINE'ın Z'si"), Some(3), "{noted:?}");
+    assert_eq!(n("Kot (Z)", "3B çoklu çizgi (POLYLINE) olarak"), Some(3), "{noted:?}");
+    assert_eq!(n("Kot (Z)", "köşe kotları aynı"), Some(2), "{noted:?}");
+    assert_eq!(n("Kot (Z)", "köşe kotları farklı"), Some(1), "{noted:?}");
+    assert_eq!(n("Kotsuz köşe", "0 yazıldı"), Some(3), "{noted:?}");
+    assert!(report.skipped.is_empty(), "{:?}", report.skipped);
+}
+
+#[test]
+fn a_path_with_elevations_is_a_3d_polyline_and_a_line_holds_its_ends_heights() {
+    let all = elevated();
+    let (text, _) = write(&input(all[..6].to_vec()));
+    let p = pairs(&text);
+    // The lines: each end's Z, 0 where an end has none.
+    let lines = entities_of(&p, "LINE");
+    let z = |l: &Vec<(i32, &str)>| (group(l, 30).map(|s| s.parse::<f64>().expect("z")), group(l, 31).map(|s| s.parse::<f64>().expect("z")));
+    assert_eq!(z(&lines[0]), (Some(105.5 + 1.0 / 3.0), Some(-107.25)));
+    assert_eq!(z(&lines[1]), (Some(0.0), Some(12.0)));
+    // The paths and the area's outline and elevated hole: 3D polylines (the flat hole stays a LWPOLYLINE), each closed by its own flag.
+    let polylines = entities_of(&p, "POLYLINE");
+    assert_eq!(polylines.len(), 4);
+    let flags: Vec<&str> = polylines.iter().filter_map(|e| group(e, 70)).collect();
+    assert_eq!(flags, ["8", "8", "9", "9"]);
+    assert!(polylines.iter().all(|e| group(e, 100) == Some("AcDbEntity") && e.contains(&(100, "AcDb3dPolyline")) && group(e, 66) == Some("1")));
+    assert_eq!(entities_of(&p, "LWPOLYLINE").len(), 1);
+    // A vertex has its own Z, 0 where it has none, and every VERTEX and SEQEND has a handle, an owner and a layer of its own.
+    let vertices = entities_of(&p, "VERTEX");
+    assert_eq!(vertices.len(), 4 + 3 + 4 + 4);
+    let first: Vec<f64> = vertices[..4].iter().map(|v| group(v, 30).expect("z").parse().expect("z")).collect();
+    assert_eq!(first, [10.0, 0.0, 12.5 + 1.0 / 3.0, -3.0]);
+    assert!(vertices.iter().all(|v| v.contains(&(100, "AcDb3dPolylineVertex")) && group(v, 70) == Some("32") && group(v, 330).is_some() && group(v, 8).is_some()));
+    let ends = entities_of(&p, "SEQEND");
+    assert_eq!(ends.len(), 4);
+    // KentOS's data rides between a polyline's header and its vertices: the vertex without an elevation (the
+    // second), the label and the attribute.
+    let header = &polylines[0];
+    assert!(header.contains(&(1001, "KENTOS")) && header.contains(&(1000, "label")) && header.contains(&(1000, "attr")));
+    let at = header.iter().position(|x| *x == (1000, "noz")).expect("noz");
+    assert_eq!(header[at + 1], (1000, "2"));
+    // Handles stay unique, owners real, in a drawing of nothing else.
+    let handles: Vec<&str> = p.iter().filter(|x| x.0 == 5).map(|x| x.1).collect();
+    let unique: HashSet<&str> = handles.iter().copied().collect();
+    assert_eq!(unique.len(), handles.len());
+    assert!(p.iter().filter(|x| x.0 == 330 && x.1 != "0").all(|x| unique.contains(x.1)));
+}
+
+#[test]
+fn a_path_with_arcs_keeps_them_and_holds_one_elevation_at_most() {
+    let all = elevated();
+    let (text, _) = write(&input(vec![all[6].clone(), all[7].clone(), all[8].clone()]));
+    let p = pairs(&text);
+    assert!(entities_of(&p, "POLYLINE").is_empty());
+    let lw = entities_of(&p, "LWPOLYLINE");
+    assert_eq!(lw.len(), 3);
+    // At one height it is the LWPOLYLINE's own elevation (38), 0 too (KentOS's data says it is on purpose); at several, none.
+    assert_eq!(group(&lw[0], 38), Some("250.5"));
+    assert_eq!(group(&lw[1], 38), Some("0.0"));
+    assert!(lw[1].contains(&(1000, "z")));
+    assert_eq!(group(&lw[2], 38), None);
+    // The arcs are there in all three.
+    assert!(lw.iter().all(|e| e.iter().any(|x| x.0 == 42)));
+}
+
+#[test]
+fn what_cannot_be_written_is_left_out_and_said() {
+    let bad = |za: f64| {
+        Entity::Line(LineEntity {
+            base: base("parsel"),
+            a: tm(0.0, 0.0),
+            b: tm(1.0, 1.0),
+            za: Some(za),
+            zb: None,
+        })
+    };
+    let path = Entity::Polyline(PathEntity {
+        base: base("yol"),
+        pts: vec![tm(0.0, 0.0), tm(1.0, 0.0)],
+        bulges: None,
+        holes: None,
+        zs: Some(vec![Some(1.0), Some(f64::INFINITY)]),
+    });
+    let (text, report) = write(&input(vec![bad(f64::NAN), path, bad(5.0)]));
+    let r = read(&text);
+    // The two objects with a height that is no number are not written; the line with a good one is.
+    assert_eq!(r.entities.len(), 1);
+    assert_eq!(report.skipped.iter().map(|i| (i.what.as_str(), i.count)).collect::<Vec<_>>(), [("Çizgi", 1), ("Çoklu çizgi", 1)]);
+    // A list of elevations that does not match the vertices is flat: nothing to write it from.
+    let short = Entity::Polyline(PathEntity {
+        base: base("yol"),
+        pts: vec![tm(0.0, 0.0), tm(1.0, 0.0), tm(2.0, 0.0)],
+        bulges: None,
+        holes: None,
+        zs: Some(vec![Some(1.0)]),
+    });
+    let (text, _) = write(&input(vec![short]));
+    assert!(entities_of(&pairs(&text), "POLYLINE").is_empty());
+}

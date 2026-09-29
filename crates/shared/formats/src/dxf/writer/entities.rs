@@ -3,13 +3,17 @@
 //! XLINE and RAY their direction, HATCH its rings and a user-defined
 //! pattern); what DXF cannot say rides along in KentOS's extended data
 //! (labels, attributes, symbols, exact arc angles and hatch patterns).
-//! Three kinds change form:
+//! Three kinds change form (and elevations, docs/adr/0142, change a fourth):
 //! - a polygon's holes are closed polylines of their own, linked to it;
 //! - a spline is a cubic B-spline that is the app's curve span by span
 //!   (the shared core's Bézier form), with the app's points as fit points;
 //! - a dimension is a DXF DIMENSION drawn by an anonymous block of its own
 //!   (the app's lines and ticks, the value as MTEXT), with the definition
-//!   points another program measures from (`dimension.rs`).
+//!   points another program measures from (`dimension.rs`);
+//! - a polyline or polygon with elevations is a 3D POLYLINE, one Z at each
+//!   vertex (a LWPOLYLINE holds a single elevation); a line's are the Z of
+//!   its LINE. A vertex with no elevation is written as 0 and KentOS's data
+//!   says so, so a KentOS import gets the same drawing back.
 
 use std::collections::BTreeMap;
 
@@ -27,7 +31,8 @@ use super::super::xdata::{self, DimMeta, Meta};
 use super::layers::Layers;
 use super::template::MODEL_SPACE;
 use super::{Handles, Out};
-use crate::geom::v;
+use crate::geom::{has_arcs, v};
+use crate::gis::Zs;
 use crate::math::{PI, TAU, atan2, deg, hypot, norm_angle, rad, sin_cos_deg};
 use crate::num::dxf_real;
 use crate::report::Report;
@@ -82,18 +87,43 @@ fn nums_ok(xs: &[f64]) -> bool {
     xs.iter().all(|x| x.is_finite())
 }
 
+fn zs_ok(zs: &Zs) -> bool {
+    zs.iter().flatten().flatten().all(|z| z.is_finite())
+}
+
+/// A path's elevations when it has an elevation somewhere and as many
+/// entries as vertices (else the path is flat).
+fn elevations(zs: &Zs, vertices: usize) -> Option<&[Option<f64>]> {
+    zs.as_deref()
+        .filter(|z| z.len() == vertices && z.iter().any(Option::is_some))
+}
+
+/// What the elevations of an object's vertices need of KentOS's data: the
+/// vertices without one (DXF says 0 for them), and that a 0 is data when
+/// every elevation is 0 (a DXF reader takes 0 for none).
+fn elevation_meta(m: &mut Meta, zs: &[Option<f64>]) {
+    m.no_z = zs
+        .iter()
+        .enumerate()
+        .filter_map(|(i, z)| z.is_none().then_some(i))
+        .collect();
+    m.z = zs.iter().flatten().all(|&z| z == 0.0);
+}
+
 /// Every number of an object is finite (a file can hold nothing else).
 fn finite(e: &Entity) -> bool {
     match e {
         Entity::Point(p) => ok(p.p) && p.z.is_none_or(f64::is_finite),
-        Entity::Line(l) => ok(l.a) && ok(l.b),
+        Entity::Line(l) => {
+            ok(l.a) && ok(l.b) && l.za.is_none_or(f64::is_finite) && l.zb.is_none_or(f64::is_finite)
+        }
         Entity::Polyline(p) | Entity::Polygon(p) => {
             all_ok(&p.pts)
+                && zs_ok(&p.zs)
                 && p.bulges.as_deref().is_none_or(nums_ok)
-                && p.holes
-                    .iter()
-                    .flatten()
-                    .all(|h| all_ok(&h.pts) && h.bulges.as_deref().is_none_or(nums_ok))
+                && p.holes.iter().flatten().all(|h| {
+                    all_ok(&h.pts) && zs_ok(&h.zs) && h.bulges.as_deref().is_none_or(nums_ok)
+                })
         }
         Entity::Circle(c) => ok(c.c) && c.r.is_finite(),
         Entity::Arc(a) => ok(a.c) && nums_ok(&[a.r, a.a0, a.a1]),
@@ -247,7 +277,7 @@ impl Writer<'_> {
     }
 
     /// The object's extended data, last of its groups (without the attributes if they are too large for AutoCAD).
-    fn end(&mut self, meta: Meta) {
+    fn end(&mut self, mut meta: Meta) {
         let mut groups = xdata::groups(&meta);
         if xdata::size(&groups) > xdata::MAX_BYTES {
             self.report.note(
@@ -255,12 +285,20 @@ impl Writer<'_> {
                 "bir nesnenin etiketi, öznitelikleri ve sembolü AutoCAD'in nesne başına genişletilmiş veri sınırını (16 KB) aştığı için yazılmadı",
                 0,
             );
-            groups = xdata::groups(&Meta {
-                label: None,
-                attrs: Default::default(),
-                symbol: None,
-                ..meta
-            });
+            meta.label = None;
+            meta.attrs = Default::default();
+            meta.symbol = None;
+            groups = xdata::groups(&meta);
+            // The vertices without an elevation are the last thing to go.
+            if xdata::size(&groups) > xdata::MAX_BYTES && !meta.no_z.is_empty() {
+                self.report.note(
+                    "Kotsuz köşe",
+                    "köşe sayısı KentOS verisinin sığacağından çok; kotsuz köşeler KentOS'a geri okununca 0 kotlu olur",
+                    0,
+                );
+                meta.no_z = Vec::new();
+                groups = xdata::groups(&meta);
+            }
         }
         self.out.xdata(&groups);
     }
@@ -290,11 +328,23 @@ impl Writer<'_> {
             Entity::Line(l) => {
                 self.begin("LINE", &l.base);
                 self.out.str(100, "AcDbLine");
-                self.out.xyz(10, l.a);
-                self.out.xyz(11, l.b);
+                self.out.xy(10, l.a);
+                self.out.real(30, l.za.unwrap_or(0.0));
+                self.out.xy(11, l.b);
+                self.out.real(31, l.zb.unwrap_or(0.0));
                 self.grow(l.a);
                 self.grow(l.b);
-                self.end(Self::base_meta(&l.base));
+                let mut m = Self::base_meta(&l.base);
+                if l.za.is_some() || l.zb.is_some() {
+                    elevation_meta(&mut m, &[l.za, l.zb]);
+                    self.report.note(
+                        "Kot (Z)",
+                        "çizgilerin uç kotları LINE'ın Z'si (30, 31) olarak yazıldı",
+                        0,
+                    );
+                    self.without_elevation(&m);
+                }
+                self.end(m);
                 true
             }
             Entity::Polyline(p) => self.path(p, false),
@@ -371,18 +421,23 @@ impl Writer<'_> {
         self.grow_round(c, r);
     }
 
+    /// A LWPOLYLINE; `elevation` is its one elevation (group 38), when it has one.
     fn lwpolyline(
         &mut self,
         base: &EntityBase,
         pts: &[Vec2],
         bulges: Option<&[f64]>,
         closed: bool,
+        elevation: Option<f64>,
         meta: Meta,
     ) -> u64 {
         let h = self.begin("LWPOLYLINE", base);
         self.out.str(100, "AcDbPolyline");
         self.out.int(90, pts.len() as i64);
         self.out.int(70, i64::from(closed));
+        if let Some(z) = elevation {
+            self.out.real(38, z);
+        }
         for (i, p) in pts.iter().enumerate() {
             self.out.xy(10, *p);
             let b = bulges.and_then(|b| b.get(i)).copied().unwrap_or(0.0);
@@ -396,6 +451,114 @@ impl Writer<'_> {
         h
     }
 
+    /// Says when vertices without an elevation were written as 0 (`elevation_meta`).
+    fn without_elevation(&mut self, m: &Meta) {
+        if !m.no_z.is_empty() {
+            self.report.note(
+                "Kotsuz köşe",
+                "kotu olmayan köşeler 0 yazıldı (başka programlar onları 0 kotlu görür); KentOS geri okurken kotsuz sayar",
+                0,
+            );
+        }
+    }
+
+    /// A 3D POLYLINE: one Z at each vertex (0 where a vertex has none), the
+    /// KentOS data of the object between its header and its vertices.
+    fn polyline3d(
+        &mut self,
+        base: &EntityBase,
+        pts: &[Vec2],
+        zs: &[Option<f64>],
+        closed: bool,
+        meta: Meta,
+    ) -> u64 {
+        let h = self.begin("POLYLINE", base);
+        self.out.str(100, "AcDb3dPolyline");
+        // Vertices follow; the header's point is the origin.
+        self.out.int(66, 1);
+        self.out.xyz(10, v(0.0, 0.0));
+        self.out.int(70, 8 | i64::from(closed));
+        self.end(meta);
+        let layers = self.layers;
+        let layer = layers.name_of(&base.layer_id).unwrap_or("0");
+        for (i, p) in pts.iter().enumerate() {
+            self.sub_entity("VERTEX", layer);
+            self.out.str(100, "AcDbVertex");
+            self.out.str(100, "AcDb3dPolylineVertex");
+            self.out.xy(10, *p);
+            self.out
+                .real(30, zs.get(i).copied().flatten().unwrap_or(0.0));
+            self.out.int(70, 32);
+            self.grow(*p);
+        }
+        self.sub_entity("SEQEND", layer);
+        h
+    }
+
+    /// The head of an entity that belongs to another (a VERTEX, a SEQEND): type, handle, owner and layer.
+    fn sub_entity(&mut self, kind: &str, layer: &str) {
+        let h = self.handles.take();
+        self.out.str(0, kind);
+        self.out.handle(5, h);
+        self.out.handle(330, MODEL_SPACE);
+        self.out.str(100, "AcDbEntity");
+        self.out.str(8, layer);
+    }
+
+    /// A polyline or polygon (or a hole of one, `outline` false) with elevations. DXF holds
+    /// them at the vertex only in a 3D POLYLINE, which has no arcs: a path with arcs keeps its
+    /// arcs and holds one elevation for all its vertices (a LWPOLYLINE's 38) when they share
+    /// it, else it is written without (both said).
+    fn elevated(
+        &mut self,
+        (base, pts, bulges): (&EntityBase, &[Vec2], Option<&[f64]>),
+        zs: &[Option<f64>],
+        closed: bool,
+        outline: bool,
+        mut meta: Meta,
+    ) -> u64 {
+        if !bulges.is_some_and(has_arcs) {
+            elevation_meta(&mut meta, zs);
+            if outline {
+                self.report.note(
+                    "Kot (Z)",
+                    "kotlu çoklu çizgi ve alanlar 3B çoklu çizgi (POLYLINE) olarak yazıldı",
+                    0,
+                );
+            }
+            self.without_elevation(&meta);
+            return self.polyline3d(base, pts, zs, closed, meta);
+        }
+        let level = zs
+            .first()
+            .copied()
+            .flatten()
+            .filter(|z| zs.iter().all(|w| *w == Some(*z)));
+        match level {
+            Some(z) => {
+                if outline {
+                    self.report.note(
+                        "Kot (Z)",
+                        "yaylı çoklu çizginin köşe kotları aynı; DXF'in 3B çoklu çizgisi yay taşımadığı için çoklu çizginin yüksekliği (38) olarak yazıldı",
+                        0,
+                    );
+                }
+                meta.z = z == 0.0;
+                self.lwpolyline(base, pts, bulges, closed, Some(z), meta)
+            }
+            None => {
+                if outline {
+                    self.report.note(
+                        "Kot (Z)",
+                        "yaylı çoklu çizginin köşe kotları farklı; DXF'in 3B çoklu çizgisi yay taşımadığı için kotlar yazılmadı, yaylar korundu",
+                        0,
+                    );
+                }
+                self.lwpolyline(base, pts, bulges, closed, None, meta)
+            }
+        }
+    }
+
     /// A polyline or polygon; a polygon's holes follow as closed polylines naming it.
     fn path(&mut self, p: &PathEntity, closed: bool) -> bool {
         let what = if closed {
@@ -407,13 +570,17 @@ impl Writer<'_> {
             self.report.skip(what, "iki köşesi yok; yazılmadı", 0);
             return false;
         }
-        let owner = self.lwpolyline(
-            &p.base,
-            &p.pts,
-            p.bulges.as_deref(),
-            closed,
-            Self::base_meta(&p.base),
-        );
+        let meta = Self::base_meta(&p.base);
+        let owner = match elevations(&p.zs, p.pts.len()) {
+            Some(zs) => self.elevated(
+                (&p.base, &p.pts, p.bulges.as_deref()),
+                zs,
+                closed,
+                true,
+                meta,
+            ),
+            None => self.lwpolyline(&p.base, &p.pts, p.bulges.as_deref(), closed, None, meta),
+        };
         let holes = if closed {
             p.holes.as_deref().unwrap_or(&[])
         } else {
@@ -428,7 +595,11 @@ impl Writer<'_> {
                 hole_of: Some(owner),
                 ..Meta::default()
             };
-            self.lwpolyline(&p.base, &hole.pts, hole.bulges.as_deref(), true, meta);
+            let ring = (&p.base, hole.pts.as_slice(), hole.bulges.as_deref());
+            match elevations(&hole.zs, hole.pts.len()) {
+                Some(zs) => self.elevated(ring, zs, true, false, meta),
+                None => self.lwpolyline(ring.0, ring.1, ring.2, true, None, meta),
+            };
         }
         if !holes.is_empty() {
             self.report.note(

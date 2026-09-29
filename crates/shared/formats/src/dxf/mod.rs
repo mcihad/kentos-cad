@@ -3,10 +3,15 @@
 //! decides how strings decode; blocks are exploded into their objects with
 //! the full insertion transform (nested, arrays); objects in paper space
 //! and kinds the model cannot hold are counted and reported, never a reason
-//! to stop. Z is dropped, except a POINT's elevation. Units are reported,
-//! never applied: survey drawings often declare millimetres while holding
-//! metres (§23: no silent rescale). KentOS's own extended data (`xdata`)
-//! gives back what a KentOS export could not say in DXF.
+//! to stop. Heights are kept where the model has a place for them
+//! (docs/adr/0142): a POINT's Z, a LINE's two, a 3D POLYLINE's at each vertex,
+//! and a LWPOLYLINE's or 2D POLYLINE's elevation at every vertex (blocks give
+//! them their insert's Z too); a Z of 0 is no elevation, as in any 2D
+//! drawing, unless KentOS's data says it is one. The Z of a SPLINE, a
+//! 3DFACE, a HATCH and the like is dropped. Units are reported, never
+//! applied: survey drawings often declare millimetres while holding metres
+//! (§23: no silent rescale). KentOS's own extended data (`xdata`) gives back
+//! what a KentOS export could not say in DXF.
 
 pub mod aci;
 mod dimension;
