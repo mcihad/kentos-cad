@@ -73,7 +73,7 @@ const FIELDS: Record<EntityGeometry['kind'], readonly string[]> = {
   point: ['p', 'z'],
   line: ['a', 'b', 'zs'],
   polyline: ['pts', 'bulges', 'zs'],
-  polygon: ['pts', 'bulges', 'holes', 'zs'],
+  polygon: ['pts', 'bulges', 'holes', 'zs', 'parts'],
   circle: ['c', 'r'],
   arc: ['c', 'r', 'a0', 'a1'],
   ellipse: ['c', 'major', 'ratio', 't0', 't1'],
@@ -175,6 +175,26 @@ export function checkGeometry(g: EntityGeometry, i: number, list = 'changes', wh
             at(`.holes[${h}].pts`),
           ),
         );
+    // A multi-part area's other parts close as its own ring does (docs/adr/0143); the first is the area's own.
+    for (const [k, part] of (g.parts ?? []).entries()) {
+      if (!ringCloses(part.pts, part.bulges))
+        return failed(
+          error(
+            'too_few_corners',
+            `${k + 2}. parçanın en az 3 köşesi olmalı (kenarlarından biri yaysa 2); ${part.pts.length} köşe verildi. Eksik köşeleri ekleyin ya da parçayı çıkarın.`,
+            at(`.parts[${k}].pts`),
+          ),
+        );
+      for (const [h, ring] of (part.holes ?? []).entries())
+        if (!ringCloses(ring.pts, ring.bulges))
+          return failed(
+            error(
+              'too_few_corners',
+              `${k + 2}. parçanın ${h + 1}. deliğinin en az 3 köşesi olmalı (kenarlarından biri yaysa 2); ${ring.pts.length} köşe verildi. Eksik köşeleri ekleyin ya da deliği çıkarın.`,
+              at(`.parts[${k}].holes[${h}].pts`),
+            ),
+          );
+    }
   }
   if (g.kind === 'hatch') {
     if (g.ring.length < 3) return failed(error('too_few_corners', `Taramanın en az 3 köşesi olmalı; ${g.ring.length} köşe verildi. Eksik köşeleri ekleyin.`, at('.ring')));
@@ -200,9 +220,19 @@ function writtenElevations(g: EntityGeometry): [readonly (number | null)[], numb
   const out: [readonly (number | null)[], number, string][] = [];
   if (g.kind === 'line' && g.zs) out.push([g.zs, 2, '.zs']);
   if ((g.kind === 'polyline' || g.kind === 'polygon') && g.zs) out.push([g.zs, g.pts.length, '.zs']);
-  if (g.kind === 'polygon') for (const [h, ring] of (g.holes ?? []).entries()) if (ring.zs) out.push([ring.zs, ring.pts.length, `.holes[${h}].zs`]);
+  if (g.kind === 'polygon') {
+    for (const [h, ring] of (g.holes ?? []).entries()) if (ring.zs) out.push([ring.zs, ring.pts.length, `.holes[${h}].zs`]);
+    // A multi-part area's other parts (docs/adr/0143).
+    for (const [k, part] of (g.parts ?? []).entries()) {
+      if (part.zs) out.push([part.zs, part.pts.length, `.parts[${k}].zs`]);
+      for (const [h, ring] of (part.holes ?? []).entries()) if (ring.zs) out.push([ring.zs, ring.pts.length, `.parts[${k}].holes[${h}].zs`]);
+    }
+  }
   return out;
 }
+
+/** Whether the geometry carries its elevations (docs/adr/0142): a multi-part area's when its own or a part's list is given (docs/adr/0143). */
+const written = (g: EntityGeometry): boolean => ('zs' in g && g.zs !== undefined) || (g.kind === 'polygon' && !!g.parts?.some((part) => part.zs !== undefined));
 
 /**
  * Written elevations as the object holds them (docs/adr/0142): a line's two as `za` and `zb`, a path's
@@ -220,7 +250,10 @@ function held(init: NewEntity): NewEntity {
     else delete out.zb;
   }
   if ((init.kind === 'polyline' || init.kind === 'polygon') && none(out.zs)) delete out.zs;
-  if (init.kind === 'polygon' && init.holes) init.holes = init.holes.map((h) => (none(h.zs) ? (({ zs: _zs, ...ring }) => ring)(h) : h));
+  const bare = <T extends { zs?: (number | null)[] }>(ring: T): T => (none(ring.zs) ? (({ zs: _zs, ...rest }) => rest as T)(ring) : ring);
+  if (init.kind === 'polygon' && init.holes) init.holes = init.holes.map(bare);
+  // A part's elevations, and its holes', are held as the area's own are (docs/adr/0143).
+  if (init.kind === 'polygon' && init.parts) init.parts = init.parts.map((part) => ({ ...bare(part), ...(part.holes && { holes: part.holes.map(bare) }) }));
   return init;
 }
 
@@ -279,7 +312,7 @@ function check(doc: CadDocument, input: EntitiesEdit): Stop | Checked {
   let lost = 0;
   // Elevations written with the geometry are written as they are (Kot ver, Öznitelikler, a script).
   const elevate = (init: NewEntity, from: Entity, g: EntityGeometry): NewEntity => {
-    if ('zs' in g && g.zs !== undefined) return held(init);
+    if (written(g)) return held(init);
     if (!sources.length) return init;
     const before = elevatedPaths(from);
     if (!carryInto(init, sources, byPlace ? before : [], offset) && hasElevation(before)) lost++;

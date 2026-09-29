@@ -1,4 +1,4 @@
-import type { Entity, NewEntity } from '../model/entities';
+import type { Entity, NewEntity, RingGeometry } from '../model/entities';
 import type { Vec2 } from '../model/geometry';
 import { carryElevations, type Elevated } from '../model/ops/elevation';
 
@@ -21,8 +21,10 @@ const path = (p: Paths, closed: boolean): Elevated => ({
 
 /**
  * An object's paths with their elevations, null for a vertex without one: a
- * line's two ends, a polyline, a polygon's outer ring then its holes; nothing
- * for the other kinds.
+ * line's two ends, a polyline, a polygon's outer ring then its holes, then
+ * each other part's ring and holes (docs/adr/0143); nothing for the other
+ * kinds. The desktop's is `crates/native/application/src/elevation.rs`
+ * `paths`: the order is the one every elevation index goes by.
  */
 export function elevatedPaths(e: Entity | NewEntity): Elevated[] {
   switch (e.kind) {
@@ -31,10 +33,26 @@ export function elevatedPaths(e: Entity | NewEntity): Elevated[] {
     case 'polyline':
       return [path(e, false)];
     case 'polygon':
-      return [path(e, true), ...(e.holes ?? []).map((h) => path(h, true))];
+      return [path(e, true), ...(e.holes ?? []).map((h) => path(h, true)), ...(e.parts ?? []).flatMap((part) => [path(part, true), ...(part.holes ?? []).map((h) => path(h, true))])];
     default:
       return [];
   }
+}
+
+/**
+ * `g`, a geometry, without any vertex elevation it carries: an area's `zs`, its holes', and each part's and its
+ * holes' (docs/adr/0142, 0143); the rest as it is. What the core computes has none, so what a tool writes of it
+ * leaves each vertex to take its own from the objects the edit names (`carryInto`). Elevations that ride along on
+ * an object the core gave back are the object's old ones, and no longer fit its vertices once they moved, were
+ * dropped or turned round.
+ */
+export function withoutElevations<T extends object>(g: T): T {
+  const out = { ...g } as Record<string, unknown>;
+  delete out.zs;
+  // The holes and parts of an area are rings of their own (a hatch's holes are lists of points: nothing to take out).
+  for (const key of ['holes', 'parts'])
+    if (Array.isArray(out[key])) out[key] = (out[key] as unknown[]).map((ring) => (ring !== null && typeof ring === 'object' && !Array.isArray(ring) ? withoutElevations(ring) : ring));
+  return out as T;
 }
 
 /** Whether a vertex of the paths has an elevation. */
@@ -73,12 +91,23 @@ export function carryInto(e: NewEntity, sources: readonly Elevated[], same: read
       if (zs) out.zs = zs;
       else delete out.zs;
       let any = zs !== undefined;
-      if (e.kind === 'polygon' && e.holes)
-        e.holes = e.holes.map((h, i) => {
+      // The rings after the outer one, in `elevatedPaths`' order: the holes, then each part's ring and its holes.
+      let k = 1;
+      const holes = (list: RingGeometry[]) =>
+        list.map((h) => {
           const { zs: _old, ...ring } = h;
-          const hz = run(h.pts, true, i + 1);
+          const hz = run(h.pts, true, k++);
           any ||= hz !== undefined;
           return hz ? { ...ring, zs: hz } : ring;
+        });
+      if (e.kind === 'polygon' && e.holes) e.holes = holes(e.holes);
+      if (e.kind === 'polygon' && e.parts)
+        e.parts = e.parts.map((part) => {
+          const { zs: _z, holes: _h, bulges, ...rest } = part;
+          const pz = run(part.pts, true, k++);
+          any ||= pz !== undefined;
+          // As the typed columns lay a part out: its ring, its arcs, its elevations, its holes.
+          return { ...rest, ...(bulges && { bulges }), ...(pz && { zs: pz }), ...(part.holes && { holes: holes(part.holes) }) };
         });
       return any;
     }
