@@ -641,6 +641,26 @@ export class CoreStore {
     return typed(() => this.raw.enclosing(x, y));
   }
 
+  /** `[id, area, id, area, …]`: the closed shapes around the point, smallest first (docs/adr/0141). */
+  containing(x: number, y: number): Float64Array {
+    return typed(() => this.raw.containing(x, y));
+  }
+
+  /** Ids of the objects the fence `[x0, y0, x1, y1, …]` crosses; a point within `tol` counts. */
+  inFence(fence: Float64Array, tol: number): Float64Array {
+    return typed(() => this.raw.inFence(fence, tol));
+  }
+
+  /** Ids of the objects wholly inside the circle, or also those it touches when `crossing`. */
+  inCircle(x: number, y: number, r: number, crossing: boolean): Float64Array {
+    return typed(() => this.raw.inCircle(x, y, r, crossing));
+  }
+
+  /** Ids of the objects lying far from the rest of the drawing (Kapsam denetimi). */
+  extentOutliers(): Float64Array {
+    return typed(() => this.raw.extentOutliers());
+  }
+
   /** Packed edges: `0, ax, ay, bx, by` (segment) or `1, cx, cy, r, a0, sweep` (arc). */
   edgesIn(minX: number, minY: number, maxX: number, maxY: number, except?: number): Float64Array {
     return typed(() => this.raw.edgesIn(minX, minY, maxX, maxY, except !== undefined, except ?? 0));

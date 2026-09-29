@@ -17,6 +17,7 @@ pub mod labels;
 mod pack;
 pub mod pick;
 pub mod processing;
+mod select;
 mod rtree;
 pub mod snap;
 pub mod tools;

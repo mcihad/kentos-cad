@@ -351,7 +351,10 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
     },
 
     // Görünüm
-    { id: 'view.zoomExtents', title: 'Tümünü göster', category: V, icon: 'zoomExtents', aliases: ['ZE', 'TUMU'], run: () => view.zoomExtents() },
+    { id: 'view.zoomExtents', title: 'Tümünü göster', category: V, icon: 'zoomExtents', aliases: ['ZE', 'TUMU', 'LIMITBUL'], run: () => view.zoomExtents() },
+    { ...pending(ctx, 'view.previous', 'Önceki görünüm', V, 'viewPrevious'), aliases: ['ZP', 'ONCEKIGORUNUM', 'ONCEKIPENCERE'] },
+    { ...pending(ctx, 'view.next', 'Sonraki görünüm', V, 'viewNext'), aliases: ['ZN', 'SONRAKIGORUNUM', 'SONRAKIPENCERE'] },
+    { ...pending(ctx, 'view.extentCheck', 'Kapsam denetimi', V, 'extentCheck'), aliases: ['KAPSAM', 'KAPSAMDENETIM', 'EXTENTCHECK'] },
     { id: 'view.zoomIn', title: 'Yakınlaştır', category: V, icon: 'zoomIn', run: () => view.zoomBy(1.5) },
     { id: 'view.zoomOut', title: 'Uzaklaştır', category: V, icon: 'zoomOut', run: () => view.zoomBy(1 / 1.5) },
     {
@@ -515,7 +518,7 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       category: K,
       icon: 'crsQuery',
       description: 'Tıklanan (kenetli) noktanın Y ve X’ini, noktanın kotu varsa onu da iletiye yazar; her tıklama bir okumadır, Esc bitirir. Çizime bir şey yazılmaz.',
-      aliases: ['KOORDINATOKU', 'ID', 'NOKTAOKU'],
+      aliases: ['KOORDINATOKU', 'ID', 'NOKTAOKU', 'XYZSOR'],
       run: () => tools.run(new CoordinateReadTool(ctx), 'Koordinat oku'),
     },
     pending(ctx, 'analysis.volume', 'Hacim hesabı…', A, 'volume'),

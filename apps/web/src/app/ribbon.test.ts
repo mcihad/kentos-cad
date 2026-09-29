@@ -89,10 +89,14 @@ describe('ribbon', () => {
     const pano = home.panels.find((p) => p.label === 'Pano')!;
     expect(pano.items[0]).toEqual({ kind: 'command', id: 'edit.paste', size: 'large' });
     expect(pano.items.slice(1).every((i) => i.kind === 'command' && i.size === 'small')).toBe(true);
-    expect(home.panels.find((p) => p.label === 'Seçim')!.items.every((i) => i.kind === 'command' && i.size === 'small')).toBe(true);
+    const seçim = home.panels.find((p) => p.label === 'Seçim')!;
+    expect(seçim.items.every((i) => i.kind !== 'builtin' && i.size === 'small')).toBe(true);
+    // Seç ▾: the ways of selecting are one split button (docs/adr/0141).
+    const selecting = seçim.items.find((i) => i.kind === 'split');
+    expect(selecting?.kind === 'split' && selecting.entries.map((e) => e.command)).toEqual(['tool.select', 'tool.selectFence', 'tool.selectCircle', 'tool.selectContaining']);
     const ölçme = tabs.find((t) => t.id === 'map')!.panels.find((p) => p.label === 'Ölçme')!;
-    // Three tools and none of them main: small, three to a column.
-    expect(sized(ölçme.items)).toEqual(['tool.measure:small', 'tool.area:small', 'tool.measureAngle:small']);
+    // Four tools and none of them main: small, three to a column.
+    expect(sized(ölçme.items)).toEqual(['tool.measure:small', 'tool.area:small', 'tool.measureAngle:small', 'tool.stationOffset:small']);
     const curve = tabs.find((t) => t.id === 'draw')!.panels.find((p) => p.label === 'Eğri')!;
     expect(sized(curve.items)).toEqual(['tool.circle▾:large', 'tool.arc▾:large', 'tool.ellipse:small', 'tool.spline:small', 'tool.sector:small']);
     expect(curve.overflow).toEqual(['tool.donut']);

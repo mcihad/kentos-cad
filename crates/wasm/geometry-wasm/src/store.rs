@@ -403,6 +403,41 @@ impl GeometryStore {
             })
     }
 
+    /// `[id, area, id, area, …]`: the visible closed shapes around the
+    /// point, smallest first (İçeren alanı seç, docs/adr/0141).
+    pub fn containing(&self, x: f64, y: f64) -> Vec<f64> {
+        self.inner
+            .containing(Vec2::new(x, y))
+            .into_iter()
+            .flat_map(|(id, area)| [id, area])
+            .collect()
+    }
+
+    /// Ids of visible objects the fence `[x0, y0, x1, y1, …]` crosses; a
+    /// point within `tol` counts (Çitle seç).
+    #[wasm_bindgen(js_name = inFence)]
+    pub fn in_fence(&self, fence: &[f64], tol: f64) -> Vec<f64> {
+        let pts: Vec<Vec2> = fence
+            .chunks_exact(2)
+            .map(|c| Vec2::new(c[0], c[1]))
+            .collect();
+        self.inner.in_fence(&pts, tol)
+    }
+
+    /// Ids of visible objects wholly inside the circle, or also those it
+    /// touches when `crossing` (Daireyle seç).
+    #[wasm_bindgen(js_name = inCircle)]
+    pub fn in_circle(&self, x: f64, y: f64, r: f64, crossing: bool) -> Vec<f64> {
+        self.inner.in_circle(Vec2::new(x, y), r, crossing)
+    }
+
+    /// Ids of visible objects lying far from the rest of the drawing
+    /// (Kapsam denetimi).
+    #[wasm_bindgen(js_name = extentOutliers)]
+    pub fn extent_outliers(&self) -> Vec<f64> {
+        self.inner.extent_outliers()
+    }
+
     /// What the overlay draws in the view at `scale` px/m (eight numbers per
     /// record, see `Store::labels`); `editing` is left out when `has_editing`.
     #[allow(clippy::too_many_arguments)]

@@ -337,4 +337,37 @@ export class PickIndex {
     this.sync();
     return Array.from(this.store.inRect(r.minX, r.minY, r.maxX, r.maxY, crossing));
   }
+
+  /**
+   * The visible closed shapes around `p` with their areas, smallest first:
+   * parcel, block, district (İçeren alanı seç, docs/adr/0141).
+   */
+  containing(p: Vec2): { entity: Entity; area: number }[] {
+    this.sync();
+    const r = this.store.containing(p.x, p.y);
+    const out: { entity: Entity; area: number }[] = [];
+    for (let i = 0; i + 1 < r.length; i += 2) {
+      const entity = this.doc.get(r[i]);
+      if (entity) out.push({ entity, area: r[i + 1] });
+    }
+    return out;
+  }
+
+  /** What the fence (an open path) crosses; a point within `tol` counts (Çitle seç). */
+  inFence(fence: readonly Vec2[], tol: number): number[] {
+    this.sync();
+    return Array.from(this.store.inFence(Float64Array.from(fence.flatMap((p) => [p.x, p.y])), tol));
+  }
+
+  /** What lies wholly inside the circle, or also what it touches when `crossing` (Daireyle seç). */
+  inCircle(c: Vec2, r: number, crossing: boolean): number[] {
+    this.sync();
+    return Array.from(this.store.inCircle(c.x, c.y, r, crossing));
+  }
+
+  /** The visible objects lying far from the rest of the drawing (Kapsam denetimi). */
+  extentOutliers(): number[] {
+    this.sync();
+    return Array.from(this.store.extentOutliers());
+  }
 }

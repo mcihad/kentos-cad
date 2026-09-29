@@ -8,6 +8,9 @@ const grip = (x: number, y: number) => `<rect x="${x - 1.5}" y="${y - 1.5}" widt
 export const ICONS = {
   // Tools
   select: '<path d="M5 3.2 15 9.3l-4.4 1.2-2.3 4.3z"/>',
+  selectFence: `<path d="M6 3.5v6M14 10.5v6"/><path d="M2.5 11 9 5.5l4 7 4.5-4" stroke-dasharray="2.2 1.5"/>${grip(2.5, 11)}${grip(17.5, 8.5)}`,
+  selectCircle: '<circle cx="10" cy="10" r="7.2" stroke-dasharray="2.4 1.6"/><path d="M7 12.6h6L10 7z"/>',
+  selectContaining: '<rect x="2.5" y="2.5" width="15" height="15"/><rect x="6" y="6" width="8" height="8" stroke-width="2"/><circle cx="10" cy="10" r="1.1" fill="currentColor" stroke="none"/>',
   pan: '<path d="M7.2 10V4.7a1.2 1.2 0 0 1 2.4 0V9M9.6 8.6V3.6a1.2 1.2 0 0 1 2.4 0V9M12 9V4.8a1.2 1.2 0 0 1 2.4 0V11c0 3.4-2 6-5.3 6-2.2 0-3.5-1.2-4.6-3.1l-1.6-2.8a1.25 1.25 0 0 1 2.1-1.4L7.2 12"/>',
   point: '<path d="M10 3.5v13M3.5 10h13"/><circle cx="10" cy="10" r="3.2"/>',
   line: `<path d="M4.5 15.5 15.5 4.5"/>${grip(4.5, 15.5)}${grip(15.5, 4.5)}`,
@@ -51,6 +54,7 @@ export const ICONS = {
   pointsBetween: `<path d="M3 14 17 6"/><circle cx="7.7" cy="11.3" r="1.25"/><circle cx="10" cy="10" r="1.25"/><circle cx="12.3" cy="8.7" r="1.25"/>${grip(3, 14)}${grip(17, 6)}`,
   intersectPoint: `<circle cx="7.5" cy="11" r="4.6"/><circle cx="12.5" cy="11" r="4.6"/><circle cx="10" cy="7.15" r="1.4" fill="currentColor"/>${grip(7.5, 11)}${grip(12.5, 11)}`,
   measureAngle: `<path d="M3.5 16h13M3.5 16 13 5"/><path d="M9.5 16a6 6 0 0 0-2.1-4.55"/><path d="M11.4 13.2h2.4" stroke-width="1.1"/>${grip(3.5, 16)}`,
+  stationOffset: `<path d="M3 13h14"/><path d="M12 13V5.8" stroke-dasharray="2 1.5"/><path d="M12 10.8h2.2V13"/><circle cx="12" cy="4.6" r="1.4"/><path d="M3 16.2h9M3 15v2.4M12 15v2.4" stroke-width="1.1"/>${grip(3, 13)}${grip(17, 13)}`,
   dimContinue: '<path d="M3 5.5v10M10 5.5v10M17 5.5v10M3 12.5h14"/><path d="m5.1 11.3-2.1 1.2 2.1 1.2M7.9 11.3l2.1 1.2-2.1 1.2M12.1 11.3l-2.1 1.2 2.1 1.2M14.9 11.3l2.1 1.2-2.1 1.2"/>',
   dimBaseline: '<path d="M3.5 4v12.5M10 10v6.5M16.5 5.5v11M3.5 13h6.5M3.5 8h13"/><path d="m5.5 12-2 1 2 1M8 12l2 1-2 1M5.5 7l-2 1 2 1M14.5 7l2 1-2 1"/>',
   arrayPath: '<path d="M3 16c2.7-6.4 7.4-10.3 14-11" stroke-dasharray="2 1.6"/><rect x="2" y="12.5" width="3.2" height="3.2"/><rect x="7" y="7.6" width="3.2" height="3.2"/><rect x="13" y="4" width="3.2" height="3.2"/>',
@@ -118,6 +122,9 @@ export const ICONS = {
   zoomExtents: '<path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4"/><rect x="7" y="7" width="6" height="6"/>',
   zoomWindow: '<rect x="2.5" y="2.5" width="10" height="8" stroke-dasharray="2 1.6"/><circle cx="12" cy="12" r="3.2"/><path d="m14.4 14.4 3 3"/>',
   zoomSelection: '<path d="M10 2.5v3M10 14.5v3M2.5 10h3M14.5 10h3"/><circle cx="10" cy="10" r="4.5"/><circle cx="10" cy="10" r="1" fill="currentColor"/>',
+  viewPrevious: '<path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4"/><path d="M11.5 6.5 8 10l3.5 3.5"/>',
+  viewNext: '<path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4"/><path d="M8.5 6.5 12 10l-3.5 3.5"/>',
+  extentCheck: '<path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4"/><rect x="5.5" y="5.5" width="5" height="5"/><circle cx="14.2" cy="14.2" r="1.4" fill="currentColor" stroke="none"/>',
   layers: '<path d="m10 3 7 3.8-7 3.8-7-3.8z"/><path d="m3 10.3 7 3.8 7-3.8"/><path d="m3 13.6 7 3.9 7-3.9"/>',
   layerAdd: '<path d="m9 3 6.5 3.5L9 10 2.5 6.5z"/><path d="m2.5 10 6.5 3.5 2-1.1M15.5 11.5v6M12.5 14.5h6"/>',
   folderAdd: '<path d="M2.5 15.5v-10h5l1.5 2h8.5v3"/><path d="M2.5 15.5h9M15 11.5v6M12 14.5h6"/>',
