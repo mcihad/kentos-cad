@@ -183,18 +183,62 @@ pub fn carry_elevations(
         .collect()
 }
 
-pub(crate) static OPS: &[Op] = &[op!(
-    "carryElevations",
-    |pts: Vec<Vec2>, closed: bool, same: Option<Elevated>, sources: Vec<Elevated>, offset: bool| {
-        carry_elevations(
-            &pts,
-            closed,
-            same.as_ref(),
-            &sources,
-            if offset { Carry::Offset } else { Carry::Along },
-        )
+/// A path's length in space (docs/adr/0142): each edge's plan length (an
+/// arc's along its curve) with the rise between its ends, `√(plan² + rise²)`;
+/// `None` unless every vertex has an elevation. The plan length stays the
+/// measure of record (areas, perimeters, dimensions); this one is shown beside it.
+pub fn length_3d(
+    pts: &[Vec2],
+    bulges: Option<&[f64]>,
+    closed: bool,
+    zs: &[Option<f64>],
+) -> Option<f64> {
+    if pts.len() < 2 || zs.len() != pts.len() {
+        return None;
     }
-)];
+    let n = pts.len();
+    let count = if closed { n } else { n - 1 };
+    let mut sum = 0.0;
+    for i in 0..count {
+        let j = (i + 1) % n;
+        let (a, b) = (pts[i], pts[j]);
+        let plan = match bulges
+            .and_then(|v| v.get(i))
+            .and_then(|&v| bulge_arc(a, b, v))
+        {
+            Some(arc) => arc.r * arc.sweep.abs(),
+            None => js_hypot(b.x - a.x, b.y - a.y),
+        };
+        let rise = zs[j]? - zs[i]?;
+        sum += js_hypot(plan, rise);
+    }
+    Some(sum)
+}
+
+pub(crate) static OPS: &[Op] = &[
+    op!(
+        "carryElevations",
+        |pts: Vec<Vec2>,
+         closed: bool,
+         same: Option<Elevated>,
+         sources: Vec<Elevated>,
+         offset: bool| {
+            carry_elevations(
+                &pts,
+                closed,
+                same.as_ref(),
+                &sources,
+                if offset { Carry::Offset } else { Carry::Along },
+            )
+        }
+    ),
+    op!("length3d", |pts: Vec<Vec2>,
+                     bulges: Option<Vec<f64>>,
+                     closed: bool,
+                     zs: Vec<Option<f64>>| {
+        length_3d(&pts, bulges.as_deref(), closed, &zs)
+    }),
+];
 
 #[cfg(test)]
 mod tests {
@@ -312,6 +356,36 @@ mod tests {
             Carry::Along,
         );
         assert_eq!(got, [Some(3.0), Some(2.0), Some(1.0)]);
+    }
+
+    #[test]
+    fn the_length_in_space_adds_the_rise_to_each_edge() {
+        // 30 m in plan rising 40 m is 50 m; then 10 m level: 60 m in all.
+        let pts = [v(0.0, 0.0), v(30.0, 0.0), v(40.0, 0.0)];
+        let zs = [Some(0.0), Some(40.0), Some(40.0)];
+        assert_eq!(length_3d(&pts, None, false, &zs), Some(60.0));
+        // Closed: the closing edge counts, 40 m level back.
+        assert_eq!(
+            length_3d(&pts, None, true, &zs),
+            Some(60.0 + js_hypot(40.0, 40.0))
+        );
+        // A vertex without an elevation: no length in space.
+        assert_eq!(
+            length_3d(&pts, None, false, &[Some(0.0), None, Some(1.0)]),
+            None
+        );
+        // A half circle of 10 m chord is 5π long in plan; rising 5π it is 5π√2.
+        let arc = length_3d(
+            &[v(0.0, 0.0), v(10.0, 0.0)],
+            Some(&[1.0, 0.0]),
+            false,
+            &[Some(0.0), Some(5.0 * crate::jsmath::PI)],
+        )
+        .unwrap();
+        assert!(
+            (arc - 5.0 * crate::jsmath::PI * std::f64::consts::SQRT_2).abs() < 1e-9,
+            "{arc}"
+        );
     }
 
     #[test]
