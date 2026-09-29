@@ -1,9 +1,11 @@
 //! What the GIS readers (GeoJSON, Shapefile; docs/adr/0046) share: the four
-//! kinds of object a GIS file holds (a point with its height, a line, a
-//! path and an area with holes) made into the app's objects with their
-//! attributes, the layers in the order they are met, the extent, and the
-//! object limit. Coordinates are kept as read: never rounded, reprojected
-//! or reordered (CLAUDE.md §5, §23).
+//! kinds of object a GIS file holds (a point, a line, a path and an area
+//! with holes, each with the heights the file gave its vertices) made into
+//! the app's objects with their attributes, the layers in the order they are
+//! met, the extent, and the object limit. Coordinates are kept as read:
+//! never rounded, reprojected or reordered (CLAUDE.md §5, §23). A height is
+//! a vertex's elevation (docs/adr/0142): one a vertex was not given is none,
+//! not 0.
 
 use std::collections::BTreeMap;
 
@@ -17,6 +19,33 @@ use crate::report::Report;
 /// Objects a reader makes when the caller sets no limit.
 pub const DEFAULT_LIMIT: usize = 1_000_000;
 
+/// The elevation of each vertex of a run: none when no vertex has one, else
+/// one entry per vertex, `None` for a vertex without.
+pub type Zs = Option<Vec<Option<f64>>>;
+
+/// A run of vertices and their elevations: a path, or a ring of an area
+/// (without a repeated closing point).
+#[derive(Clone, Debug, PartialEq)]
+pub struct Ring {
+    pub pts: Vec<Vec2>,
+    pub zs: Zs,
+}
+
+impl Ring {
+    /// A run of vertices with the height (if any) the file gave each: none at
+    /// all leaves the run flat, as does a count that does not match.
+    pub fn new(pts: Vec<Vec2>, heights: impl IntoIterator<Item = Option<f64>>) -> Ring {
+        let zs: Vec<Option<f64>> = heights.into_iter().collect();
+        let zs = (zs.len() == pts.len() && zs.iter().any(Option::is_some)).then_some(zs);
+        Ring { pts, zs }
+    }
+
+    /// A run of vertices without heights.
+    pub fn flat(pts: Vec<Vec2>) -> Ring {
+        Ring { pts, zs: None }
+    }
+}
+
 /// One object of a GIS file.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Shape {
@@ -24,17 +53,22 @@ pub enum Shape {
         p: Vec2,
         z: Option<f64>,
     },
-    Line(Vec2, Vec2),
-    Polyline(Vec<Vec2>),
+    Line {
+        a: Vec2,
+        b: Vec2,
+        za: Option<f64>,
+        zb: Option<f64>,
+    },
+    Polyline(Ring),
     /// An outline and its holes (rings without a repeated closing point).
-    Polygon(Vec<Vec2>, Vec<Vec<Vec2>>),
+    Polygon(Ring, Vec<Ring>),
 }
 
 impl Shape {
     fn kind(&self) -> &'static str {
         match self {
             Shape::Point { .. } => "point",
-            Shape::Line(..) => "line",
+            Shape::Line { .. } => "line",
             Shape::Polyline(_) => "polyline",
             Shape::Polygon(..) => "polygon",
         }
@@ -96,13 +130,13 @@ impl Collect {
         self.report.count(shape.kind());
         match &shape {
             Shape::Point { p, .. } => self.extend(*p),
-            Shape::Line(a, b) => {
+            Shape::Line { a, b, .. } => {
                 self.extend(*a);
                 self.extend(*b);
             }
-            Shape::Polyline(pts) => pts.iter().for_each(|p| self.extend(*p)),
+            Shape::Polyline(r) => r.pts.iter().for_each(|p| self.extend(*p)),
             // Holes lie inside their outline.
-            Shape::Polygon(pts, _) => pts.iter().for_each(|p| self.extend(*p)),
+            Shape::Polygon(r, _) => r.pts.iter().for_each(|p| self.extend(*p)),
         }
         let base = EntityBase {
             id: 0,
@@ -115,35 +149,29 @@ impl Collect {
         };
         self.entities.push(match shape {
             Shape::Point { p, z } => Entity::Point(PointEntity { base, p, z }),
-            Shape::Line(a, b) => Entity::Line(LineEntity {
+            Shape::Line { a, b, za, zb } => Entity::Line(LineEntity { base, a, b, za, zb }),
+            Shape::Polyline(r) => Entity::Polyline(PathEntity {
                 base,
-                a,
-                b,
-                za: None,
-                zb: None,
-            }),
-            Shape::Polyline(pts) => Entity::Polyline(PathEntity {
-                base,
-                pts,
+                pts: r.pts,
                 bulges: None,
                 holes: None,
-                zs: None,
+                zs: r.zs,
             }),
-            Shape::Polygon(pts, holes) => Entity::Polygon(PathEntity {
+            Shape::Polygon(r, holes) => Entity::Polygon(PathEntity {
                 base,
-                pts,
+                pts: r.pts,
                 bulges: None,
                 holes: (!holes.is_empty()).then(|| {
                     holes
                         .into_iter()
-                        .map(|pts| RingGeometry {
-                            pts,
+                        .map(|h| RingGeometry {
+                            pts: h.pts,
                             bulges: None,
-                            zs: None,
+                            zs: h.zs,
                         })
                         .collect()
                 }),
-                zs: None,
+                zs: r.zs,
             }),
         });
     }
@@ -230,13 +258,30 @@ pub fn shoelace(ring: &[Vec2]) -> f64 {
     s
 }
 
-/// A ring without its closing point (the last one, when it equals the first exactly).
-pub fn open_ring(mut ring: Vec<Vec2>) -> (Vec<Vec2>, bool) {
-    let closed = ring.len() > 1 && ring.first() == ring.last();
+/// What the readers say of a ring whose closing point held another elevation
+/// than the first point (`open_ring`): the report's item and its reason.
+pub const CLOSING_Z: (&str, &str) = (
+    "Halka kapanışının Z'si",
+    "kapanış konumu ilkiyle x ve y'de aynı ama Z'si farklı; alanın köşesi ilk konumun Z'sini aldı",
+);
+
+/// A ring without its closing point (the last one, when it equals the first
+/// in x and y exactly): whether it had one, and whether that point held
+/// another elevation than the first (the vertex keeps the first's).
+pub fn open_ring(mut ring: Ring) -> (Ring, bool, bool) {
+    let closed = ring.pts.len() > 1 && ring.pts.first() == ring.pts.last();
+    let mut differs = false;
     if closed {
-        ring.pop();
+        ring.pts.pop();
+        if let Some(zs) = ring.zs.as_mut() {
+            let closing = zs.pop().flatten();
+            differs = closing.is_some() && closing != zs.first().copied().flatten();
+            if zs.iter().all(Option::is_none) {
+                ring.zs = None;
+            }
+        }
     }
-    (ring, closed)
+    (ring, closed, differs)
 }
 
 #[cfg(test)]
@@ -260,7 +305,17 @@ mod tests {
             &none,
             None,
         );
-        c.add(Shape::Line(v(0.0, 0.0), v(5.0, -1.0)), "", &none, Some("L"));
+        c.add(
+            Shape::Line {
+                a: v(0.0, 0.0),
+                b: v(5.0, -1.0),
+                za: None,
+                zb: None,
+            },
+            "",
+            &none,
+            Some("L"),
+        );
         c.add(
             Shape::Point {
                 p: v(9.0, 9.0),
@@ -300,9 +355,40 @@ mod tests {
     fn shoelace_is_positive_counter_clockwise_and_rings_lose_their_closing_point() {
         let ccw = [v(0.0, 0.0), v(2.0, 0.0), v(2.0, 2.0), v(0.0, 2.0)];
         assert_eq!(shoelace(&ccw), 8.0);
-        let (ring, closed) = open_ring(vec![v(0.0, 0.0), v(1.0, 0.0), v(1.0, 1.0), v(0.0, 0.0)]);
-        assert_eq!((ring.len(), closed), (3, true));
-        let (ring, closed) = open_ring(vec![v(0.0, 0.0), v(1.0, 0.0), v(1.0, 1.0)]);
-        assert_eq!((ring.len(), closed), (3, false));
+        let flat = |pts: Vec<Vec2>| Ring::flat(pts);
+        let (ring, closed, differs) = open_ring(flat(vec![
+            v(0.0, 0.0),
+            v(1.0, 0.0),
+            v(1.0, 1.0),
+            v(0.0, 0.0),
+        ]));
+        assert_eq!((ring.pts.len(), closed, differs), (3, true, false));
+        let (ring, closed, _) = open_ring(flat(vec![v(0.0, 0.0), v(1.0, 0.0), v(1.0, 1.0)]));
+        assert_eq!((ring.pts.len(), closed), (3, false));
+    }
+
+    #[test]
+    fn a_ring_keeps_the_elevations_it_was_given_and_the_firsts_at_its_closing() {
+        // Only vertices with a height make a run elevated; a count that does not match makes it flat.
+        let pts = || vec![v(0.0, 0.0), v(1.0, 0.0), v(1.0, 1.0), v(0.0, 0.0)];
+        assert_eq!(Ring::new(pts(), [None; 4]).zs, None);
+        assert_eq!(Ring::new(pts(), [Some(1.0)]).zs, None);
+        let (ring, closed, differs) =
+            open_ring(Ring::new(pts(), [Some(10.0), None, Some(12.0), Some(10.0)]));
+        assert_eq!(
+            (ring.zs, closed, differs),
+            (Some(vec![Some(10.0), None, Some(12.0)]), true, false)
+        );
+        // The closing position with another height goes, and it is said; without one it goes unsaid.
+        let (ring, _, differs) = open_ring(Ring::new(pts(), [Some(10.0), None, None, Some(9.0)]));
+        assert_eq!(
+            (ring.zs, differs),
+            (Some(vec![Some(10.0), None, None]), true)
+        );
+        let (_, _, differs) = open_ring(Ring::new(pts(), [Some(10.0), None, None, None]));
+        assert!(!differs);
+        // A height only the closing position had leaves the ring flat, and that is said.
+        let (ring, _, differs) = open_ring(Ring::new(pts(), [None, None, None, Some(9.0)]));
+        assert_eq!((ring.zs, differs), (None, true));
     }
 }

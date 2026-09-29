@@ -32,6 +32,15 @@ fn pts(p: &[Vec2]) -> Value {
     Value::Array(p.iter().map(|q| xy(*q)).collect())
 }
 
+/// A run's elevations: a number a vertex, null where it has none (docs/adr/0142).
+fn zs(z: &[Option<f64>]) -> Value {
+    Value::Array(
+        z.iter()
+            .map(|z| z.map_or(Value::Null, |z| json!(z)))
+            .collect(),
+    )
+}
+
 /// The reading in the rules' canonical form (docs/adr/0046).
 fn canonical(r: &ImportResult, encoding: Option<&str>) -> Value {
     let objects: Vec<Value> = r
@@ -52,21 +61,43 @@ fn canonical(r: &ImportResult, encoding: Option<&str>) -> Value {
                     o.insert("kind".into(), json!("line"));
                     o.insert("a".into(), xy(l.a));
                     o.insert("b".into(), xy(l.b));
+                    for (key, z) in [("za", l.za), ("zb", l.zb)] {
+                        if let Some(z) = z {
+                            o.insert(key.into(), json!(z));
+                        }
+                    }
                     &l.base
                 }
                 Entity::Polyline(p) => {
                     o.insert("kind".into(), json!("polyline"));
                     o.insert("pts".into(), pts(&p.pts));
+                    if let Some(z) = &p.zs {
+                        o.insert("zs".into(), zs(z));
+                    }
                     &p.base
                 }
                 Entity::Polygon(p) => {
                     o.insert("kind".into(), json!("polygon"));
                     o.insert("pts".into(), pts(&p.pts));
+                    if let Some(z) = &p.zs {
+                        o.insert("zs".into(), zs(z));
+                    }
                     if let Some(h) = p.holes.as_ref().filter(|h| !h.is_empty()) {
                         o.insert(
                             "holes".into(),
                             Value::Array(h.iter().map(|r| pts(&r.pts)).collect()),
                         );
+                        // One entry a hole: its elevations, or null; only when some hole has any.
+                        if h.iter().any(|r| r.zs.is_some()) {
+                            o.insert(
+                                "holeZs".into(),
+                                Value::Array(
+                                    h.iter()
+                                        .map(|r| r.zs.as_deref().map_or(Value::Null, zs))
+                                        .collect(),
+                                ),
+                            );
+                        }
                     }
                     &p.base
                 }
@@ -216,9 +247,42 @@ fn the_reports_say_what_was_left_out_and_why() {
             .any(|(l, v)| *l == "Kodlama" && v.starts_with("CP857")),
         "{facts:?}"
     );
+    // Heights are kept now: a PolygonZ says how many objects have them, and drops none of its Z.
     let (r, _) = read_fixture("alanlarz");
     let noted: Vec<&str> = r.report.notes.iter().map(|i| i.what.as_str()).collect();
-    assert!(noted.contains(&"Z (yükseklik)"), "{noted:?}");
+    assert!(!noted.contains(&"Z (yükseklik)"), "{noted:?}");
+    let fact = |r: &ImportResult, label: &str| {
+        r.report
+            .source
+            .iter()
+            .find(|f| f.label == label)
+            .map(|f| f.value.clone())
+    };
+    assert_eq!(fact(&r, "Kotlu nesne").as_deref(), Some("1"));
+    // A Z that is not a number leaves that vertex without one, and is said (the record's, once).
+    let (r, _) = read_fixture("yollarz");
+    let said = r.report.notes.iter().find(|i| i.what == "Sonlu olmayan Z");
+    assert_eq!(said.map(|i| i.count), Some(1), "{:?}", r.report.notes);
+    assert_eq!(fact(&r, "Kotlu nesne").as_deref(), Some("4"));
+    // A ring whose closing position holds another height than the first says so; the first's height stays.
+    let (r, _) = read_fixture("bare-polygon");
+    let said = r
+        .report
+        .notes
+        .iter()
+        .find(|i| i.what == "Halka kapanışının Z'si");
+    assert_eq!(said.map(|i| i.count), Some(1), "{:?}", r.report.notes);
+    // Numbers of the fixtures without heights are as they were: no fact, no note.
+    let (r, _) = read_fixture("parseller");
+    assert!(fact(&r, "Kotlu nesne").is_none());
+    assert!(
+        r.report
+            .notes
+            .iter()
+            .all(|i| i.what != "Sonlu olmayan Z" && i.what != "Halka kapanışının Z'si"),
+        "{:?}",
+        r.report.notes
+    );
 }
 
 /// Exports: `<name>.input.json` written as `<name>.geojson` (committed; the

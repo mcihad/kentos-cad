@@ -3,17 +3,18 @@
 //! checked against the bytes there are, so no file can make the reader
 //! read past its end or allocate what it does not hold.
 //!
-//! Points keep their height (PointZ, MultiPointZ); lines and areas are
-//! plane in the app, so their Z is dropped, and M (measure) values always
-//! are; both are said. An area's rings are sorted as the specification
-//! defines them: clockwise rings are outlines, counter-clockwise ones holes
-//! of the first outline that contains them (the rules, which the
-//! independent reader in tools/formats/gis.py follows too, are in
-//! docs/adr/0046).
+//! Points keep their height (PointZ, MultiPointZ) and so does every vertex
+//! of a line or an area (PolyLineZ, PolygonZ; docs/adr/0142): a Z that is
+//! not a number is a vertex without an elevation, and said. M (measure)
+//! values are always dropped, and said. An area's rings are sorted as the
+//! specification defines them: clockwise rings are outlines,
+//! counter-clockwise ones holes of the first outline that contains them (the
+//! rules, which the independent reader in tools/formats/gis.py follows too,
+//! are in docs/adr/0046).
 
 use kentos_contracts::Vec2;
 
-use crate::gis::{Shape, open_ring, shoelace};
+use crate::gis::{Ring, Shape, open_ring, shoelace};
 
 /// The main file's header.
 pub struct Header {
@@ -24,8 +25,10 @@ pub struct Header {
 /// What reading the records found that the report says (per file).
 #[derive(Default)]
 pub struct Found {
-    /// Records whose lines or areas had heights (dropped).
-    pub z_dropped: u32,
+    /// Records of lines or areas with a Z that is not a number (that vertex has no elevation).
+    pub z_missing: u32,
+    /// Areas whose closing point held another Z than the first point (the first's is kept).
+    pub closing_z: u32,
     /// Records with M values (dropped).
     pub m: u32,
     /// Records shorter than their shape needs.
@@ -275,30 +278,48 @@ pub fn shapes(c: &[u8], out: &mut Vec<Shape>, found: &mut Found) {
                     f64_le(c, base + 16 * i + 8).unwrap_or(f64::NAN),
                 )
             };
-            let parts: Vec<Vec<Vec2>> = (0..np)
+            // A Z type's heights, after the points and their range: one a vertex, none where it is not a number.
+            let z_raw = |i: usize| -> Option<f64> {
+                if z_type {
+                    f64_le(c, pts_end + 16 + 8 * i)
+                } else {
+                    None
+                }
+            };
+            if (0..n).any(|i| z_raw(i).is_some_and(|z| !z.is_finite())) {
+                found.z_missing += 1;
+            }
+            let parts: Vec<Ring> = (0..np)
                 .map(|k| {
                     let end = starts.get(k + 1).copied().unwrap_or(n);
-                    (starts[k]..end).map(at).collect()
+                    let range = starts[k]..end;
+                    Ring::new(
+                        range.clone().map(at).collect(),
+                        range.map(|i| z_raw(i).filter(|z| z.is_finite())),
+                    )
                 })
                 .collect();
-            if z_type && n > 0 {
-                found.z_dropped += 1;
-            }
-            let finite = |pts: &[Vec2]| pts.iter().all(|p| p.x.is_finite() && p.y.is_finite());
+            let finite = |r: &Ring| r.pts.iter().all(|p| p.x.is_finite() && p.y.is_finite());
             if matches!(t, 3 | 13 | 23) {
-                for pts in parts {
-                    if !finite(&pts) {
+                for r in parts {
+                    if !finite(&r) {
                         found.not_finite += 1;
                         continue;
                     }
-                    match pts.len() {
-                        0 | 1 => found.short_parts += 1,
-                        2 => out.push(Shape::Line(pts[0], pts[1])),
-                        _ => out.push(Shape::Polyline(pts)),
+                    match r.pts.as_slice() {
+                        [] | [_] => found.short_parts += 1,
+                        &[a, b] => {
+                            let (za, zb) = match r.zs.as_deref() {
+                                Some([za, zb]) => (*za, *zb),
+                                _ => (None, None),
+                            };
+                            out.push(Shape::Line { a, b, za, zb });
+                        }
+                        _ => out.push(Shape::Polyline(r)),
                     }
                 }
             } else {
-                if !parts.iter().all(|p| finite(p)) {
+                if !parts.iter().all(finite) {
                     found.not_finite += 1;
                     return;
                 }
@@ -327,16 +348,17 @@ fn contains(ring: &[Vec2], p: Vec2) -> bool {
 }
 
 /// An area record's rings as areas with holes.
-fn areas(parts: Vec<Vec<Vec2>>, out: &mut Vec<Shape>, found: &mut Found) {
+fn areas(parts: Vec<Ring>, out: &mut Vec<Shape>, found: &mut Found) {
     // (part index, ring, clockwise)
-    let mut rings: Vec<(usize, Vec<Vec2>, bool)> = Vec::new();
-    for (k, pts) in parts.into_iter().enumerate() {
-        let (ring, _) = open_ring(pts);
-        if ring.len() < 3 {
+    let mut rings: Vec<(usize, Ring, bool)> = Vec::new();
+    for (k, part) in parts.into_iter().enumerate() {
+        let (ring, _, differs) = open_ring(part);
+        found.closing_z += u32::from(differs);
+        if ring.pts.len() < 3 {
             found.short_rings += 1;
             continue;
         }
-        let s = shoelace(&ring);
+        let s = shoelace(&ring.pts);
         if s == 0.0 {
             found.short_rings += 1;
             continue;
@@ -355,7 +377,7 @@ fn areas(parts: Vec<Vec<Vec2>>, out: &mut Vec<Shape>, found: &mut Found) {
         return;
     }
     // Outlines in part order; each hole to the first outline holding its first vertex.
-    let mut polys: Vec<(usize, Vec<Vec2>, Vec<Vec<Vec2>>)> = rings
+    let mut polys: Vec<(usize, Ring, Vec<Ring>)> = rings
         .iter()
         .filter(|r| r.2)
         .map(|(k, ring, _)| (*k, ring.clone(), Vec::new()))
@@ -367,7 +389,7 @@ fn areas(parts: Vec<Vec<Vec2>>, out: &mut Vec<Shape>, found: &mut Found) {
         }
         match polys[..outlines]
             .iter()
-            .position(|(_, o, _)| contains(o, ring[0]))
+            .position(|(_, o, _)| ring.pts.first().is_some_and(|&p| contains(&o.pts, p)))
         {
             Some(i) => polys[i].2.push(ring),
             None => {
@@ -438,12 +460,111 @@ mod tests {
         let Shape::Polygon(o, h) = &out[0] else {
             panic!()
         };
-        assert_eq!((o[0], h.len()), (v(0.0, 0.0), 0));
+        assert_eq!((o.pts[0], h.len()), (v(0.0, 0.0), 0));
         let Shape::Polygon(_, h) = &out[1] else {
             panic!()
         };
         assert_eq!(h.len(), 1);
         assert_eq!(found.lone_holes, 1);
+    }
+
+    /// A PolyLineZ (13) or PolygonZ (15) record, a Z block after the points and no M block.
+    fn record_z(t: i32, parts: &[&[(f64, f64, f64)]]) -> Vec<u8> {
+        let n: usize = parts.iter().map(|p| p.len()).sum();
+        let mut c = Vec::new();
+        c.extend_from_slice(&t.to_le_bytes());
+        c.extend_from_slice(&[0u8; 32]);
+        c.extend_from_slice(&(parts.len() as i32).to_le_bytes());
+        c.extend_from_slice(&(n as i32).to_le_bytes());
+        let mut start = 0;
+        for p in parts {
+            c.extend_from_slice(&(start as i32).to_le_bytes());
+            start += p.len();
+        }
+        for (x, y, _) in parts.iter().flat_map(|p| p.iter()) {
+            c.extend_from_slice(&x.to_le_bytes());
+            c.extend_from_slice(&y.to_le_bytes());
+        }
+        let zs: Vec<f64> = parts.iter().flat_map(|p| p.iter().map(|q| q.2)).collect();
+        let finite = || zs.iter().copied().filter(|z| z.is_finite());
+        let lo = finite().fold(f64::INFINITY, f64::min);
+        let hi = finite().fold(f64::NEG_INFINITY, f64::max);
+        c.extend_from_slice(&lo.to_le_bytes());
+        c.extend_from_slice(&hi.to_le_bytes());
+        for z in &zs {
+            c.extend_from_slice(&z.to_le_bytes());
+        }
+        c
+    }
+
+    #[test]
+    fn the_z_of_lines_and_areas_is_each_vertexs_elevation() {
+        // A PolyLineZ: a part of two points is a line with its two heights, a part of three a path;
+        // a Z that is not a number leaves that vertex without one, and is counted; a 0 is a height.
+        let nan = f64::NAN;
+        let record = record_z(
+            13,
+            &[
+                &[(0.0, 0.0, 1.5), (10.0, 0.0, -2.5)],
+                &[(0.0, 5.0, 10.0), (5.0, 5.0, nan), (9.0, 5.0, 0.0)],
+            ],
+        );
+        let (mut out, mut found) = (Vec::new(), Found::default());
+        shapes(&record, &mut out, &mut found);
+        assert_eq!(
+            out[0],
+            Shape::Line {
+                a: v(0.0, 0.0),
+                b: v(10.0, 0.0),
+                za: Some(1.5),
+                zb: Some(-2.5)
+            }
+        );
+        let Shape::Polyline(path) = &out[1] else {
+            panic!("{:?}", out[1])
+        };
+        assert_eq!(path.zs, Some(vec![Some(10.0), None, Some(0.0)]));
+        assert_eq!((found.z_missing, found.not_finite), (1, 0));
+        // Without a Z block the same shapes are flat.
+        let mut flat = record_z(13, &[&[(0.0, 0.0, 1.0), (10.0, 0.0, 2.0)]]);
+        flat[..4].copy_from_slice(&3i32.to_le_bytes());
+        let mut out = Vec::new();
+        shapes(&flat, &mut out, &mut Found::default());
+        assert_eq!(
+            out,
+            [Shape::Line {
+                a: v(0.0, 0.0),
+                b: v(10.0, 0.0),
+                za: None,
+                zb: None
+            }]
+        );
+        // A PolygonZ: the outline and its hole each keep their heights; the closing point's own
+        // Z (another than the first's) goes, and is counted.
+        let outline = [
+            (0.0, 0.0, 100.0),
+            (0.0, 10.0, 101.0),
+            (10.0, 10.0, 102.0),
+            (10.0, 0.0, 103.0),
+            (0.0, 0.0, 99.0),
+        ];
+        let hole = [
+            (2.0, 2.0, 100.5),
+            (4.0, 2.0, 100.5),
+            (4.0, 4.0, 101.5),
+            (2.0, 2.0, 100.5),
+        ];
+        let (mut out, mut found) = (Vec::new(), Found::default());
+        shapes(&record_z(15, &[&outline, &hole]), &mut out, &mut found);
+        let Shape::Polygon(o, h) = &out[0] else {
+            panic!("{:?}", out[0])
+        };
+        assert_eq!(
+            o.zs,
+            Some(vec![Some(100.0), Some(101.0), Some(102.0), Some(103.0)])
+        );
+        assert_eq!(h[0].zs, Some(vec![Some(100.5), Some(100.5), Some(101.5)]));
+        assert_eq!((found.closing_z, found.z_missing), (1, 0));
     }
 
     #[test]

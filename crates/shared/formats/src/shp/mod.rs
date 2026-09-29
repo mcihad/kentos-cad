@@ -1,12 +1,13 @@
 //! ESRI Shapefile in (docs/adr/0046): one layer from its files, chosen
 //! together: the shapes (.shp), their index (.shx, only checked: the
 //! records are read in order), the attribute table (.dbf), the coordinate
-//! system (.prj) and the table's code page (.cpg). Points keep their
-//! height; lines, paths and areas with holes are plane; M values are
-//! dropped; each record's attributes go on every object it makes. What is
-//! dropped or converted is counted in the report. A zipped Shapefile is
-//! read the same way from inside the archive ([`zip_layers`], [`read_zip`];
-//! docs/adr/0053): each .shp in it is a layer, its parts found by name.
+//! system (.prj) and the table's code page (.cpg). Points and the vertices
+//! of lines, paths and areas with holes keep their height (docs/adr/0142);
+//! M values are dropped; each record's attributes go on every object it
+//! makes. What is dropped or converted is counted in the report. A zipped
+//! Shapefile is read the same way from inside the archive ([`zip_layers`],
+//! [`read_zip`]; docs/adr/0053): each .shp in it is a layer, its parts found
+//! by name.
 
 pub mod dbf;
 pub mod prj;
@@ -223,11 +224,12 @@ pub fn read(files: &Files, opts: &ShapefileReadOptions) -> Result<ImportResult, 
         "Shapefile belirtiminde yok; alınmadı",
     );
     r.note_n(
-        "Z (yükseklik)",
-        "çizgi ve alanların Z değerleri alınmadı: yalnız noktalar Z taşır",
+        "Sonlu olmayan Z",
+        "kaydın sayı olmayan Z'li köşeleri kotsuz alındı",
         0,
-        found.z_dropped,
+        found.z_missing,
     );
+    r.note_n(crate::gis::CLOSING_Z.0, crate::gis::CLOSING_Z.1, 0, found.closing_z);
     r.note_n(
         "M (ölçü) değerleri",
         "KentOS nesneleri M taşımaz; alınmadı",

@@ -4,11 +4,12 @@
 //! objects, and where the view shows the objects once they are in, with a
 //! note on the far strays it leaves out. The desktop and the web read these
 //! from the result, so the two place an import alike (the web's `viewOf` is
-//! [`view_of`] on four numbers).
+//! [`view_of`] on four numbers). And how many objects came with elevations
+//! (docs/adr/0142), a fact of the file every reader says the same way.
 
 use std::collections::{BTreeMap, HashMap};
 
-use kentos_contracts::{Bounds, Entity, ImportResult, ReportItem, Vec2};
+use kentos_contracts::{Bounds, Entity, ImportResult, ReportItem, SourceFact, Vec2};
 
 use crate::math::hypot;
 
@@ -65,6 +66,20 @@ pub fn defining_bounds(e: &Entity) -> Option<Bounds> {
         Entity::Hatch(e) => e.ring.iter().for_each(&mut add),
     }
     b
+}
+
+/// Whether an object has an elevation: a point's, an end of a line, a vertex
+/// of a path, or of a hole of an area (docs/adr/0142).
+pub fn has_elevation(e: &Entity) -> bool {
+    let some = |zs: &Option<Vec<Option<f64>>>| zs.iter().flatten().any(Option::is_some);
+    match e {
+        Entity::Point(p) => p.z.is_some(),
+        Entity::Line(l) => l.za.is_some() || l.zb.is_some(),
+        Entity::Polyline(p) | Entity::Polygon(p) => {
+            some(&p.zs) || p.holes.iter().flatten().any(|h| some(&h.zs))
+        }
+        _ => false,
+    }
 }
 
 fn union<'a>(it: impl Iterator<Item = &'a Bounds>) -> Option<Bounds> {
@@ -193,6 +208,13 @@ pub fn summarise(result: &mut ImportResult) {
     }
     result.view = union_but(&boxes, &far);
     result.report.notes.extend(note);
+    let elevated = result.entities.iter().filter(|e| has_elevation(e)).count();
+    if elevated > 0 {
+        result.report.source.push(SourceFact {
+            label: "Kotlu nesne".into(),
+            value: elevated.to_string(),
+        });
+    }
 }
 
 /// The strays, said: how many, on which layers, and where the first is

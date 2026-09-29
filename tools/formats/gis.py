@@ -8,6 +8,13 @@ and the objects in reading order. Python's standard library only, never KentOS
 code: the rules and the public specifications are its only sources, so the
 Rust reader can be compared with it float for float.
 
+Heights (docs/adr/0142): a vertex's elevation is the third number of a GeoJSON
+position and the Z of a PolyLineZ or PolygonZ point (a Z that is not a number
+is none). A line gives `za` and `zb` when its ends have one, a path or an area
+`zs` (one entry per vertex, null where a vertex has none) when any vertex has
+one, and an area's holes `holeZs` (one list, or null, per hole) when any hole's
+vertex has one; a point keeps its `z` as before.
+
     python3 tools/formats/gis.py read PATH [--layer NAME]
 
 PATH is a GeoJSON file or a `.shp`; the .dbf, .prj and .cpg beside a .shp are
@@ -50,12 +57,43 @@ def point_geometry(x, y, z):
     return {"p": [x, y]} if z is None else {"p": [x, y], "z": z}
 
 
+# A vertex is (x, y, z), z None when it has no elevation; a path or a ring is a list of them.
+
+
+def xy(vertices):
+    return [[x, y] for x, y, _ in vertices]
+
+
+def elevations(vertices):
+    """The elevations of a path's or a ring's vertices, or None when no vertex has one."""
+    zs = [z for _, _, z in vertices]
+    return zs if any(z is not None for z in zs) else None
+
+
+def line_geometry(a, b):
+    geometry = {"a": [a[0], a[1]], "b": [b[0], b[1]]}
+    for key, vertex in (("za", a), ("zb", b)):
+        if vertex[2] is not None:
+            geometry[key] = vertex[2]
+    return geometry
+
+
+def path_geometry(vertices):
+    zs = elevations(vertices)
+    return {"pts": xy(vertices)} if zs is None else {"pts": xy(vertices), "zs": zs}
+
+
 def polygon_geometry(outline, holes):
-    return {"pts": outline, "holes": holes} if holes else {"pts": outline}
+    geometry = path_geometry(outline)
+    if holes:
+        geometry["holes"] = [xy(hole) for hole in holes]
+        if any(elevations(hole) is not None for hole in holes):
+            geometry["holeZs"] = [elevations(hole) for hole in holes]
+    return geometry
 
 
 def open_ring(ring):
-    """A ring without its closing position: the last one goes when it equals the first (x and y, exactly)."""
+    """A ring without its closing position: the last one goes when it equals the first (x and y, exactly; the first keeps its z)."""
     if ring and ring[-1][0] == ring[0][0] and ring[-1][1] == ring[0][1]:
         return ring[:-1]
     return ring
@@ -202,6 +240,11 @@ def position(value):
     return numbers if finite(*numbers) else None
 
 
+def vertex(p):
+    """A position's (x, y, z): z None when it has two numbers."""
+    return (p[0], p[1], p[2] if len(p) > 2 else None)
+
+
 def gj_point(coords, target):
     p = position(coords)
     if p is not None:
@@ -214,10 +257,11 @@ def gj_line_string(coords, target):
     positions = [position(p) for p in coords]
     if any(p is None for p in positions):
         return  # a bad position: the whole LineString gives nothing
-    if len(positions) == 2:
-        target.add("line", {"a": positions[0][:2], "b": positions[1][:2]})
-    elif len(positions) > 2:
-        target.add("polyline", {"pts": [p[:2] for p in positions]})
+    vertices = [vertex(p) for p in positions]
+    if len(vertices) == 2:
+        target.add("line", line_geometry(*vertices))
+    elif len(vertices) > 2:
+        target.add("polyline", path_geometry(vertices))
 
 
 def gj_polygon(coords, target):
@@ -226,10 +270,11 @@ def gj_polygon(coords, target):
     rings = [[position(p) for p in ring] for ring in coords]
     if any(p is None for ring in rings for p in ring):
         return  # anything bad anywhere: the whole Polygon gives nothing
-    outline = open_ring([p[:2] for p in rings[0]])
+    rings = [[vertex(p) for p in ring] for ring in rings]
+    outline = open_ring(rings[0])
     if len(outline) < 3:
         return
-    holes = [h for h in (open_ring([p[:2] for p in ring]) for ring in rings[1:]) if len(h) >= 3]
+    holes = [h for h in (open_ring(ring) for ring in rings[1:]) if len(h) >= 3]
     target.add("polygon", polygon_geometry(outline, holes))
 
 
@@ -351,7 +396,8 @@ def needed(shape_type, base, n):
 
 
 def shp_parts(content, shape_type):
-    """The parts of a PolyLine or Polygon record, each a list of [x, y]; None when the record gives nothing."""
+    """The parts of a PolyLine or Polygon record, each a list of (x, y, z); z is the height of a Z type's point (None
+    where it is not a number, and for every point of the other types); None when the record gives nothing."""
     if len(content) < 44:
         return None
     nparts, npoints = struct.unpack_from("<2i", content, 36)
@@ -360,8 +406,13 @@ def shp_parts(content, shape_type):
     starts = [*struct.unpack_from(f"<{nparts}i", content, 44), npoints]
     if nparts and (starts[0] != 0 or any(starts[i] > starts[i + 1] for i in range(nparts))):
         return None  # parts must run from 0, non-decreasing, up to the point count
-    xy = struct.unpack_from(f"<{2 * npoints}d", content, 44 + 4 * nparts)
-    points = [[xy[2 * i], xy[2 * i + 1]] for i in range(npoints)]
+    coordinates = struct.unpack_from(f"<{2 * npoints}d", content, 44 + 4 * nparts)
+    if shape_type in (13, 15):  # after the points: the z range, then one z each
+        zs = struct.unpack_from(f"<{npoints}d", content, 44 + 4 * nparts + 16 * npoints + 16)
+        zs = [z if math.isfinite(z) else None for z in zs]
+    else:
+        zs = [None] * npoints
+    points = [(coordinates[2 * i], coordinates[2 * i + 1], zs[i]) for i in range(npoints)]
     return [points[starts[i] : starts[i + 1]] for i in range(nparts)]
 
 
@@ -370,20 +421,20 @@ def signed_area(ring):
     total = 0.0
     n = len(ring)
     for i in range(n):
-        x0, y0 = ring[i]
-        x1, y1 = ring[(i + 1) % n]
+        x0, y0 = ring[i][0], ring[i][1]
+        x1, y1 = ring[(i + 1) % n][0], ring[(i + 1) % n][1]
         total += x0 * y1 - x1 * y0
     return total / 2
 
 
 def contains(ring, point):
     """Even-odd ray casting written exactly as the rules give it (edge i runs from vertex i-1, cyclic)."""
-    px, py = point
+    px, py = point[0], point[1]
     inside = False
     j = len(ring) - 1
     for i in range(len(ring)):
-        xi, yi = ring[i]
-        xj, yj = ring[j]
+        xi, yi = ring[i][0], ring[i][1]
+        xj, yj = ring[j][0], ring[j][1]
         if (yi > py) != (yj > py) and px < (xj - xi) * (py - yi) / (yj - yi) + xi:
             inside = not inside
         j = i
@@ -438,16 +489,16 @@ def shp_objects(content):
     if shape_type in POLYLINES:
         pairs = []
         for part in shp_parts(content, shape_type) or []:
-            if not all(finite(x, y) for x, y in part):
+            if not all(finite(x, y) for x, y, _ in part):
                 continue  # a bad point: that part nothing
             if len(part) == 2:
-                pairs.append(("line", {"a": part[0], "b": part[1]}))
+                pairs.append(("line", line_geometry(*part)))
             elif len(part) > 2:
-                pairs.append(("polyline", {"pts": part}))
+                pairs.append(("polyline", path_geometry(part)))
         return pairs
     if shape_type in POLYGONS:
         parts = shp_parts(content, shape_type)
-        if not parts or not all(finite(x, y) for part in parts for x, y in part):
+        if not parts or not all(finite(x, y) for part in parts for x, y, _ in part):
             return []  # a bad point: the whole record nothing
         return [("polygon", polygon_geometry(ring, holes)) for ring, holes in shp_polygons(parts)]
     return []  # Null, MultiPatch and unknown shape types give nothing

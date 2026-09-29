@@ -9,8 +9,10 @@
 //!   LineString → line (two positions) or path; Polygon → area, holes kept,
 //!   the repeated closing position dropped, ring order as written; the
 //!   Multi* kinds and GeometryCollection → one object per part.
-//! - Heights on lines and areas are dropped (the app's paths are plane),
-//!   and said; so are numbers after the third of a position.
+//! - A position's third number is that vertex's elevation, in a line, a path
+//!   or a ring as in a point (docs/adr/0142); a position without one has
+//!   none, even next to positions that have (RFC 7946 lets them mix). The
+//!   numbers after the third are dropped, and said.
 //! - Attributes: text as it is, numbers as the file wrote them, true and
 //!   false, nested values as compact JSON text; null leaves the attribute out.
 //! - A part whose coordinates are not positions of finite numbers gives
@@ -20,7 +22,7 @@ use std::collections::BTreeMap;
 
 use kentos_contracts::{CrsSource, DeclaredCrs, GeoJsonReadOptions, ImportResult, Vec2};
 
-use crate::gis::{Collect, Shape, open_ring};
+use crate::gis::{CLOSING_Z, Collect, Ring, Shape, open_ring};
 use crate::json::{JsonError, Reader, Value};
 
 /// The geometry types of RFC 7946 §1.4.
@@ -275,18 +277,7 @@ impl Shapes<'_> {
         }
     }
 
-    /// Heights of lines and areas are not kept, nor numbers after the third.
-    fn plane(&mut self, ps: &[Pos]) {
-        if ps.iter().any(|p| p.z.is_some()) {
-            self.c.report.note(
-                "Z (yükseklik)",
-                "çizgi ve alanların Z değerleri alınmadı: yalnız noktalar Z taşır",
-                self.line,
-            );
-        }
-        self.more(ps);
-    }
-
+    /// Numbers after the third are not kept.
     fn more(&mut self, ps: &[Pos]) {
         if ps.iter().any(|p| p.more) {
             self.c.report.note(
@@ -405,16 +396,24 @@ impl Shapes<'_> {
             Ok(ps) => ps,
             Err(b) => return self.bad(b, "o LineString"),
         };
-        self.plane(&ps);
-        let pts: Vec<Vec2> = ps.iter().map(|p| Vec2 { x: p.x, y: p.y }).collect();
-        match pts.len() {
-            0 | 1 => self.c.report.skip(
+        self.more(&ps);
+        match ps.as_slice() {
+            [] | [_] => self.c.report.skip(
                 "Kısa LineString",
                 "ikiden az konumu var; çizgi olamaz, alınmadı",
                 self.line,
             ),
-            2 => self.out.push(Shape::Line(pts[0], pts[1])),
-            _ => self.out.push(Shape::Polyline(pts)),
+            [a, b] => self.out.push(Shape::Line {
+                a: Vec2 { x: a.x, y: a.y },
+                b: Vec2 { x: b.x, y: b.y },
+                za: a.z,
+                zb: b.z,
+            }),
+            _ => {
+                let pts: Vec<Vec2> = ps.iter().map(|p| Vec2 { x: p.x, y: p.y }).collect();
+                let path = Ring::new(pts, ps.iter().map(|p| p.z));
+                self.out.push(Shape::Polyline(path));
+            }
         }
     }
 
@@ -428,18 +427,21 @@ impl Shapes<'_> {
             Nest::Pos(_) => return self.bad(Bad::Invalid, "o Polygon"),
         };
         for r in &rings {
-            self.plane(r);
+            self.more(r);
         }
-        let mut rings = rings
-            .into_iter()
-            .map(|r| open_ring(r.iter().map(|p| Vec2 { x: p.x, y: p.y }).collect()));
-        let Some((outline, closed)) = rings.next() else {
+        let mut rings = rings.into_iter().map(|r| {
+            open_ring(Ring::new(
+                r.iter().map(|p| Vec2 { x: p.x, y: p.y }).collect(),
+                r.iter().map(|p| p.z),
+            ))
+        });
+        let Some((outline, closed, differs)) = rings.next() else {
             return self
                 .c
                 .report
                 .skip("Boş Polygon", "halkası yok; alınmadı", self.line);
         };
-        if outline.len() < 3 {
+        if outline.pts.len() < 3 {
             return self.c.report.skip(
                 "Kısa halka",
                 "dış sınırın üçten az köşesi var; alan olamaz, alınmadı",
@@ -447,9 +449,10 @@ impl Shapes<'_> {
             );
         }
         let mut unclosed = !closed;
+        let mut closing_z = differs;
         let mut holes = Vec::new();
-        for (ring, closed) in rings {
-            if ring.len() < 3 {
+        for (ring, closed, differs) in rings {
+            if ring.pts.len() < 3 {
                 self.c.report.skip(
                     "Kısa delik",
                     "üçten az köşesi var; alan deliksiz alındı",
@@ -458,7 +461,11 @@ impl Shapes<'_> {
                 continue;
             }
             unclosed |= !closed;
+            closing_z |= differs;
             holes.push(ring);
+        }
+        if closing_z {
+            self.c.report.note(CLOSING_Z.0, CLOSING_Z.1, self.line);
         }
         if unclosed {
             self.c.report.note(
@@ -908,6 +915,56 @@ mod tests {
                 .collect::<Vec<_>>(),
             vec![("Parseller", 3), ("yol", 1)]
         );
+    }
+
+    #[test]
+    fn the_third_number_of_a_position_is_that_vertexs_elevation() {
+        let r = read_str(
+            r#"{"type":"FeatureCollection","features":[
+              {"type":"Feature","geometry":{"type":"LineString","coordinates":[[0,0,5],[1,1]]}},
+              {"type":"Feature","geometry":{"type":"LineString","coordinates":[[0,0],[1,1,2.5],[2,0,0,99],[3,0]]}},
+              {"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[0,0,1],[4,0,2],[4,4],[0,4,4],[0,0,9]],[[1,1,5],[2,1],[2,2,7],[1,1,5]],[[3,3],[3.5,3],[3.5,3.5],[3,3]]]}},
+              {"type":"Feature","geometry":{"type":"LineString","coordinates":[[0,0],[1,1],[2,2]]}}
+            ]}"#,
+        );
+        let Entity::Line(l) = &r.entities[0] else {
+            panic!("{:?}", r.entities[0])
+        };
+        assert_eq!((l.za, l.zb), (Some(5.0), None));
+        let Entity::Polyline(p) = &r.entities[1] else {
+            panic!("{:?}", r.entities[1])
+        };
+        // A position without a third number has no elevation, next to one that has; a 0 is a height.
+        assert_eq!(p.zs, Some(vec![None, Some(2.5), Some(0.0), None]));
+        let Entity::Polygon(g) = &r.entities[2] else {
+            panic!("{:?}", r.entities[2])
+        };
+        // The closing position goes with its own height (9), the first vertex keeps its 1: said once.
+        assert_eq!(g.zs, Some(vec![Some(1.0), Some(2.0), None, Some(4.0)]));
+        let holes = g.holes.as_ref().expect("holes");
+        assert_eq!(holes[0].zs, Some(vec![Some(5.0), None, Some(7.0)]));
+        assert_eq!(holes[1].zs, None);
+        let Entity::Polyline(flat) = &r.entities[3] else {
+            panic!("{:?}", r.entities[3])
+        };
+        assert_eq!(flat.zs, None);
+        let said = |what: &str| {
+            r.report
+                .notes
+                .iter()
+                .find(|n| n.what == what)
+                .map(|n| n.count)
+        };
+        assert_eq!(
+            said("Halka kapanışının Z'si"),
+            Some(1),
+            "{:?}",
+            r.report.notes
+        );
+        assert_eq!(said("Konumun 4. ve sonraki sayıları"), Some(1));
+        assert_eq!(said("Z (yükseklik)"), None);
+        let fact = r.report.source.iter().find(|f| f.label == "Kotlu nesne");
+        assert_eq!(fact.map(|f| f.value.as_str()), Some("3"));
     }
 
     #[test]

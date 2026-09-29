@@ -9,7 +9,7 @@
 use kentos_contracts::Vec2;
 use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::geom::arc::DEFAULT_STEP;
-use kentos_geometry_core::geom::bulge::bulge_path_outline;
+use kentos_geometry_core::geom::bulge::{bulge_arc, bulge_path_outline};
 use kentos_geometry_core::geometry::{point_in_polygon, signed_area};
 
 use crate::math::{TAU, atan2, cos, hypot, norm_angle, sin, sin_cos_deg};
@@ -196,6 +196,20 @@ pub fn ocs_tf(n: [f64; 3], elevation: f64) -> Option<Tf> {
     })
 }
 
+/// The world Z of the object-coordinate point (x, y) of a plane at
+/// `elevation` (docs/adr/0142): the elevation itself for the usual +Z
+/// extrusion, its negative for (0, 0, −1), and a slope over x and y for a
+/// tilted plane.
+pub fn ocs_z(n: [f64; 3], x: f64, y: f64, elevation: f64) -> f64 {
+    if n == [0.0, 0.0, 1.0] {
+        return elevation;
+    }
+    match ocs_axes(n) {
+        Some((ax, ay, nz)) => ax[2] * x + ay[2] * y + nz[2] * elevation,
+        None => elevation,
+    }
+}
+
 /// An ellipse in the model's form: centre, major axis, minor/major ratio ≤ 1, parameters t0 → t1 (equal: whole).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct EllipseParts {
@@ -302,6 +316,49 @@ pub fn bulge_path_points(pts: &[Vec2], bulges: &[f64], closed: bool) -> Vec<Vec2
         .into_iter()
         .map(|p| v(p.x, p.y))
         .collect()
+}
+
+/// The elevations of `bulge_path_points`'s points, one for each and in the
+/// same order (docs/adr/0142): a vertex keeps its own, a point sampled along
+/// an arc edge takes the linear blend of the edge's two ends by arc length
+/// (the samples are equally spaced), and none when an end has none. `zs` has
+/// an entry per vertex.
+pub fn bulge_path_zs(
+    pts: &[Vec2],
+    bulges: &[f64],
+    zs: &[Option<f64>],
+    closed: bool,
+) -> Vec<Option<f64>> {
+    if !has_arcs(bulges) {
+        return zs.to_vec();
+    }
+    let n = pts.len();
+    let segments = if closed { n } else { n.saturating_sub(1) };
+    let mut out = Vec::with_capacity(zs.len());
+    for i in 0..segments {
+        let j = (i + 1) % n;
+        let (za, zb) = (zs.get(i).copied().flatten(), zs.get(j).copied().flatten());
+        out.push(za);
+        let bulge = bulges.get(i).copied().unwrap_or(0.0);
+        let (a, b) = (
+            CoreVec2::new(pts[i].x, pts[i].y),
+            CoreVec2::new(pts[j].x, pts[j].y),
+        );
+        let Some(arc) = bulge_arc(a, b, bulge) else {
+            continue;
+        };
+        let steps = arc_steps(arc.sweep);
+        for k in 1..steps {
+            out.push(match (za, zb) {
+                (Some(a), Some(b)) => Some(a + (b - a) * (k as f64 / steps as f64)),
+                _ => None,
+            });
+        }
+    }
+    if !closed && n > 0 {
+        out.push(zs.get(n - 1).copied().flatten());
+    }
+    out
 }
 
 /// Absolute area of a ring (the shared core's shoelace, taken from its first point).
@@ -436,5 +493,51 @@ mod tests {
         );
         assert_eq!((open.len(), open.last()), (38, Some(&v(2.0, 5.0))));
         assert!(has_arcs(&[0.0, -1.0]) && !has_arcs(&[0.0, 1e-13]) && !has_arcs(&[]));
+    }
+
+    #[test]
+    fn a_planes_elevation_is_the_worlds_z_of_its_points() {
+        // The usual plane: the elevation as written; mirrored, its negative.
+        assert_eq!(ocs_z([0.0, 0.0, 1.0], 3.0, 4.0, 12.5), 12.5);
+        assert_eq!(ocs_z([0.0, 0.0, -1.0], 3.0, 4.0, 12.5), -12.5);
+        assert_eq!(ocs_z([0.0, 0.0, -1.0], 3.0, 4.0, 0.0), 0.0);
+        // A plane tilted 45° about the x axis (normal (0, −1, 1)/√2): z grows with the object's y.
+        let s = std::f64::consts::FRAC_1_SQRT_2;
+        let z = ocs_z([0.0, -s, s], 0.0, 10.0, 0.0);
+        assert!((z - 10.0 * s).abs() < 1e-12, "{z}");
+        // No direction: the elevation itself, never a panic.
+        assert_eq!(ocs_z([0.0, 0.0, 0.0], 1.0, 2.0, 7.0), 7.0);
+    }
+
+    #[test]
+    fn elevations_along_arc_edges_blend_their_ends() {
+        // A half circle from (0, 0) to (2, 0), 100 → 200, then a straight edge back to 300.
+        let pts = [v(0.0, 0.0), v(2.0, 0.0), v(2.0, 5.0)];
+        let bulges = [1.0, 0.0];
+        let zs = [Some(100.0), Some(200.0), Some(300.0)];
+        let ring = bulge_path_points(&pts, &bulges, false);
+        let out = bulge_path_zs(&pts, &bulges, &zs, false);
+        assert_eq!(out.len(), ring.len());
+        assert_eq!(
+            (out[0], out[ring.len() - 2], out[ring.len() - 1]),
+            (Some(100.0), Some(200.0), Some(300.0))
+        );
+        // Half a turn is 36 segments: the middle sample is halfway, each step 1/36 of the rise.
+        assert_eq!(out[18], Some(150.0));
+        assert!(out[1..36].windows(2).all(|w| w[0] < w[1]));
+        // An end without an elevation leaves the arc's samples without one; a straight path keeps its own.
+        let out = bulge_path_zs(&pts, &bulges, &[Some(1.0), None, Some(3.0)], false);
+        assert!(out[1..36].iter().all(Option::is_none));
+        assert_eq!((out[0], out[36], out[37]), (Some(1.0), None, Some(3.0)));
+        assert_eq!(
+            bulge_path_zs(&pts, &[0.0, 0.0], &[Some(1.0), None, Some(3.0)], false),
+            [Some(1.0), None, Some(3.0)]
+        );
+        // A closed ring gives one point per vertex and its arcs' samples, none for a closing point.
+        let closed = bulge_path_points(&pts, &[1.0, 0.0, 0.0], true);
+        assert_eq!(
+            bulge_path_zs(&pts, &[1.0, 0.0, 0.0], &zs, true).len(),
+            closed.len()
+        );
     }
 }

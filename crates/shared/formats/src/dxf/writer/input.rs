@@ -56,12 +56,16 @@ struct Fields {
     attrs: Option<BTreeMap<String, String>>,
     label: Option<String>,
     symbol: Option<String>,
+    line_weight: Option<f64>,
     p: Option<Vec2>,
     z: Option<f64>,
     a: Option<Vec2>,
     b: Option<Vec2>,
+    za: Option<f64>,
+    zb: Option<f64>,
     c: Option<Vec2>,
     pts: Option<Vec<Vec2>>,
+    zs: Option<Vec<Option<f64>>>,
     bulges: Option<Vec<f64>>,
     holes: Option<Vec<Hole>>,
     r: Option<f64>,
@@ -97,7 +101,7 @@ impl Fields {
             attrs: need(self.attrs, "attrs")?,
             label: self.label,
             symbol: self.symbol,
-            line_weight: None,
+            line_weight: self.line_weight,
         };
         let rings = |holes: Option<Vec<Hole>>| -> Result<Option<Vec<RingGeometry>>, E> {
             holes
@@ -125,6 +129,7 @@ impl Fields {
                 })
                 .transpose()
         };
+        let zs = self.zs;
         let path =
             |base: EntityBase, pts: Option<Vec<Vec2>>, bulges, holes| -> Result<PathEntity, E> {
                 Ok(PathEntity {
@@ -132,7 +137,7 @@ impl Fields {
                     pts: need(pts, "pts")?,
                     bulges,
                     holes: rings(holes)?,
-                    zs: None,
+                    zs,
                 })
             };
         let construction = |base: EntityBase,
@@ -155,8 +160,8 @@ impl Fields {
                 base,
                 a: need(self.a, "a")?,
                 b: need(self.b, "b")?,
-                za: None,
-                zb: None,
+                za: self.za,
+                zb: self.zb,
             }),
             "polyline" => Entity::Polyline(path(base, self.pts, self.bulges, self.holes)?),
             "polygon" => Entity::Polygon(path(base, self.pts, self.bulges, self.holes)?),
@@ -254,12 +259,16 @@ impl<'de> Deserialize<'de> for Wire {
                         "attrs" => f.attrs = Some(map.next_value()?),
                         "label" => f.label = map.next_value()?,
                         "symbol" => f.symbol = map.next_value()?,
+                        "lineWeight" => f.line_weight = map.next_value()?,
                         "p" => f.p = Some(map.next_value()?),
                         "z" => f.z = map.next_value()?,
                         "a" => f.a = Some(map.next_value()?),
                         "b" => f.b = Some(map.next_value()?),
+                        "za" => f.za = map.next_value()?,
+                        "zb" => f.zb = map.next_value()?,
                         "c" => f.c = map.next_value()?,
                         "pts" => f.pts = Some(map.next_value()?),
+                        "zs" => f.zs = map.next_value()?,
                         "bulges" => f.bulges = map.next_value()?,
                         "holes" => f.holes = map.next_value()?,
                         "r" => f.r = Some(map.next_value()?),
@@ -362,7 +371,11 @@ mod tests {
       {"kind":"dimension","id":13,"layerId":"a","attrs":{},"a":{"x":0,"y":0},"b":{"x":10,"y":0},"offset":2,"height":0.5,"text":"10.00","style":"linear","angle":0},
       {"kind":"dimension","id":14,"layerId":"a","attrs":{},"a":{"x":0,"y":0},"b":{"x":10,"y":0},"offset":6,"height":1,"style":"angular","c":{"x":-1,"y":-1}},
       {"kind":"hatch","id":15,"layerId":"a","attrs":{},"ring":[{"x":0,"y":0},{"x":4,"y":0},{"x":4,"y":4}],
-       "holes":[[{"x":1,"y":1},{"x":2,"y":1},{"x":2,"y":2}]],"pattern":{"type":"cross","angle":45,"spacing":0.75}}
+       "holes":[[{"x":1,"y":1},{"x":2,"y":1},{"x":2,"y":2}]],"pattern":{"type":"cross","angle":45,"spacing":0.75}},
+      {"kind":"line","id":16,"layerId":"a","attrs":{},"lineWeight":0.35,"a":{"x":0,"y":0},"b":{"x":3,"y":4},"za":10.5,"zb":null},
+      {"kind":"polyline","id":17,"layerId":"a","attrs":{},"pts":[{"x":0,"y":0},{"x":1,"y":0},{"x":2,"y":0}],"zs":[1.5,null,-2]},
+      {"kind":"polygon","id":18,"layerId":"a","attrs":{},"lineWeight":0,"pts":[{"x":0,"y":0},{"x":9,"y":0},{"x":9,"y":9}],"zs":[0,1,2],
+       "holes":[{"pts":[{"x":1,"y":1},{"x":2,"y":1},{"x":2,"y":2}],"zs":[null,5,6]}]}
     ]"##;
 
     fn doc(objects: &str) -> String {
@@ -377,7 +390,23 @@ mod tests {
         let ours = input_from_json(&text).expect("input");
         let derived: DxfWriteInput = serde_json::from_str(&text).expect("contract");
         assert_eq!(ours, derived);
-        assert_eq!(ours.entities.len(), 15);
+        assert_eq!(ours.entities.len(), 18);
+        // What the contract's code reads, this reads too: an object's own weight and its vertices' elevations.
+        let Entity::Line(l) = &ours.entities[15] else {
+            panic!("{:?}", ours.entities[15])
+        };
+        assert_eq!(
+            (l.base.line_weight, l.za, l.zb),
+            (Some(0.35), Some(10.5), None)
+        );
+        let Entity::Polygon(g) = &ours.entities[17] else {
+            panic!("{:?}", ours.entities[17])
+        };
+        assert_eq!(g.zs, Some(vec![Some(0.0), Some(1.0), Some(2.0)]));
+        assert_eq!(
+            g.holes.as_ref().map(|h| h[0].zs.clone()),
+            Some(Some(vec![None, Some(5.0), Some(6.0)]))
+        );
         // And back from the contract's own JSON.
         let again =
             input_from_json(&serde_json::to_string(&derived).expect("json")).expect("input");

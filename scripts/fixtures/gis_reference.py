@@ -340,6 +340,79 @@ GEOJSON["nonfinite"] = r'''{
 }
 '''
 
+# Heights (docs/adr/0142): the third number of a position is that vertex's elevation, in a line, a path and a ring as in
+# a point; a position with two numbers has none, even among positions with three (RFC 7946 lets them mix). 0 and
+# negative numbers are heights; the fourth number goes. A ring's closing position goes, and its height with it.
+GEOJSON["kotlu"] = r'''{
+  "type": "FeatureCollection",
+  "name": "kotlu",
+  "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::5256" } },
+  "features": [
+    {
+      "type": "Feature",
+      "kentos": { "layer": "Kot cizgisi", "label": "K-1" },
+      "properties": { "tur": "iki konum, ikisi de kotlu" },
+      "geometry": { "type": "LineString", "coordinates": [[486512.3456, 4420187.1234, 1021.345], [486562.3456, 4420187.1234, 1019.8765]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "tur": "iki konum, yalniz ilki kotlu" },
+      "geometry": { "type": "LineString", "coordinates": [[486570.0, 4420190.0, 1018.5], [486580.0, 4420195.0]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "tur": "sifir ve eksi kot" },
+      "geometry": { "type": "LineString", "coordinates": [[486600.0, 4420200.0, 10.5], [486610.0, 4420210.0, 11.25], [486620.0, 4420215.0, 0], [486630.0, 4420225.0, -2.5]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "tur": "karisik konumlar" },
+      "geometry": { "type": "LineString", "coordinates": [[486640.0, 4420230.0], [486650.0, 4420240.0, 55.5], [486660.0, 4420245.0], [486670.0, 4420250.0, 57.25]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "tur": "coklu cizgi, bir uyesi kotlu" },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [[486700.0, 4420300.0, 100.0], [486710.0, 4420310.0, 101.5], [486720.0, 4420320.0, 103.0]],
+          [[486730.0, 4420330.0], [486740.0, 4420340.0], [486750.0, 4420350.0]]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "kentos": { "layer": "Parsel", "label": "P-7" },
+      "properties": { "tur": "kotlu parsel: kotlu delik, kotsuz delik" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [[486800.0, 4420400.0, 900.0], [486850.0, 4420400.0, 902.5], [486850.0, 4420450.0, 905.0], [486800.0, 4420450.0, 901.25], [486800.0, 4420400.0, 900.0]],
+          [[486810.0, 4420410.0, 901.0], [486820.0, 4420410.0, 901.5], [486820.0, 4420420.0, 902.0], [486810.0, 4420410.0, 901.0]],
+          [[486830.0, 4420430.0], [486840.0, 4420430.0], [486840.0, 4420440.0], [486830.0, 4420430.0]]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "tur": "dort sayili konumlar" },
+      "geometry": { "type": "LineString", "coordinates": [[486900.0, 4420500.0, 800.0, 1.0], [486910.0, 4420510.0, 801.0, 2.0], [486920.0, 4420520.0, 802.0, 3.0]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "tur": "koleksiyon" },
+      "geometry": {
+        "type": "GeometryCollection",
+        "geometries": [
+          { "type": "LineString", "coordinates": [[487000.0, 4420600.0, 700.0], [487010.0, 4420610.0, 701.0]] },
+          { "type": "MultiPolygon", "coordinates": [[[[487100.0, 4420700.0, 600.0], [487110.0, 4420700.0, 601.0], [487110.0, 4420710.0], [487100.0, 4420700.0, 600.0]]]] }
+        ]
+      }
+    }
+  ]
+}
+'''
+
 # ── .prj texts (WKT 1) ──────────────────────────────────────────────────
 
 TUREF_TM36_ESRI = (
@@ -484,6 +557,27 @@ SHAPEFILES = {
         cpg="KOI8-R",
         prj=LAMBERT_ESRI,
     ),
+    "yollarz": dict(
+        type=13,  # PolyLineZ (M too), ED50 / TM30
+        shapes=[
+            # A part of two points is a line with both heights, a part of four a path (a 0 and a negative height are heights).
+            [
+                [(415000.5, 4540000.25, 812.5, 0.0), (415100.75, 4540050.5, 815.25, 1.0)],
+                [(415200.0, 4540100.0, 820.0, 2.0), (415250.5, 4540180.25, 0.0, 3.0), (415330.125, 4540210.0, -1.5, 4.0), (415400.0, 4540300.5, 830.75, 5.0)],
+            ],
+            # A Z that is not a number: that vertex has no elevation, the others keep theirs.
+            [[(415600.0, 4540500.0, 900.0, 10.0), (415650.25, 4540575.5, math.nan, 11.0), (415700.5, 4540600.0, 905.5, 12.0)]],
+            # A part of one point gives nothing (its attribute row is still this record's).
+            [[(415800.0, 4540700.0, 1.0, 20.0)]],
+            # Every height 0: a Z type says they are heights.
+            [[(416000.0, 4540800.0, 0.0, 30.0), (416050.0, 4540850.0, 0.0, 31.0), (416100.0, 4540900.0, 0.0, 32.0)]],
+        ],
+        codec="cp1254",
+        ldid=0xCA,
+        fields=[("AD", "C", 30, 0), ("KOD", "N", 4, 0)],
+        rows=[(False, ["Kotlu Yol", "1"]), (False, ["Çevre Yolu", "2"]), (False, ["Tek Nokta", "3"]), (False, ["Sıfır Kotlu", "4"])],
+        prj=ED50_TM30_OGC,
+    ),
     "alanlarz": dict(
         type=15,  # PolygonZ
         shapes=[
@@ -542,13 +636,19 @@ def m_values(shape_type, points):
     return [p[3] if shape_type in HAS_Z else p[2] for p in points]
 
 
+def value_range(values):
+    """(least, greatest) of the values that are numbers: a Z that is not one (NaN) has no place in a range."""
+    numbers = [v for v in values if math.isfinite(v)]
+    return (min(numbers), max(numbers)) if numbers else (0.0, 0.0)
+
+
 def measures(shape_type, points):
     """The z block (Z types) and the m block after the x, y values: a range, then one value per point."""
     out = b""
     for present, values in ((shape_type in HAS_Z, z_values), (shape_type in HAS_M, m_values)):
         if present:
             v = values(shape_type, points)
-            out += struct.pack(f"<2d{len(v)}d", min(v), max(v), *v)
+            out += struct.pack(f"<2d{len(v)}d", *value_range(v), *v)
     return out
 
 
@@ -579,8 +679,8 @@ def shapefile(shape_type, shapes):
         index += struct.pack(">2i", at // 2, len(c) // 2)
         at += 8 + len(c)
     points = [p for s in shapes for p in shape_points(shape_type, s)]
-    zr = (min(z_values(shape_type, points)), max(z_values(shape_type, points))) if shape_type in HAS_Z else (0.0, 0.0)
-    mr = (min(m_values(shape_type, points)), max(m_values(shape_type, points))) if shape_type in HAS_M else (0.0, 0.0)
+    zr = value_range(z_values(shape_type, points)) if shape_type in HAS_Z else (0.0, 0.0)
+    mr = value_range(m_values(shape_type, points)) if shape_type in HAS_M else (0.0, 0.0)
 
     def header(length):
         return struct.pack(">7i", 9994, 0, 0, 0, 0, 0, length // 2) + struct.pack("<2i8d", 1000, shape_type, *extent(points), *zr, *mr)
@@ -656,6 +756,12 @@ PARSEL = [
     {"ADA": "102", "PARSEL": "1", "MALİK": "Şükrü Öğüt", "NİTELİK": "Bağ"},
     {"ADA": "103", "PARSEL": "14", "MALİK": "İlkay Ünal", "NİTELİK": "Zeytinlik"},
 ]
+YOLZ = [
+    {"AD": "Kotlu Yol", "KOD": "1"},
+    {"AD": "Çevre Yolu", "KOD": "2"},
+    {"AD": "Tek Nokta", "KOD": "3"},
+    {"AD": "Sıfır Kotlu", "KOD": "4"},
+]
 KUYU = [
     {"AD": "Şifalı Kuyu 1", "DERINLIK": "120.50", "SU": "true", "OLCUM": "2025-03-14"},
     {"AD": "Işıklı Çeşme Kuyusu", "DERINLIK": "85.00", "SU": "false", "OLCUM": "1.3.25"},
@@ -669,7 +775,7 @@ SUMMARY = {
             {"kind": "point", "layer": "ornek", "p": [28.9784, 41.0082], "z": 39.25, "attrs": F2_ATTRS},
             {"kind": "point", "p": [29.0277, 41.0422], "z": None, "attrs": F2_ATTRS},
             {"kind": "line", "a": [27.1428, 38.4237], "b": [27.2, 38.46], "attrs": {"tur": "yol"}},
-            {"kind": "polyline", "pts": [[30.7133, 36.8969], [30.72, 36.9], [30.7288, 36.8841], [30.74, 36.89]], "attrs": {}},
+            {"kind": "polyline", "pts": [[30.7133, 36.8969], [30.72, 36.9], [30.7288, 36.8841], [30.74, 36.89]], "zs": [None, 12.5, None, None], "attrs": {}},
             {"kind": "line", "a": [35.4787, 38.7312], "b": [35.49, 38.74], "attrs": {"tur": "dere"}},
             {"kind": "polyline", "pts": [[35.5, 38.75], [35.51, 38.76], [35.52, 38.755]], "attrs": {"tur": "dere"}},
             {
@@ -714,7 +820,9 @@ SUMMARY = {
                 "layer": "bare-polygon",
                 "label": None,
                 "pts": [[29.1, 40.2], [29.2, 40.2], [29.2, 40.3], [29.1, 40.3]],
+                "zs": [100.0, 101.5, 102.25, 100.75],  # the closing position's 99.0 went with it
                 "holes": [[[29.15, 40.25], [29.15, 40.28], [29.18, 40.28], [29.18, 40.25]]],
+                "holeZs": None,
                 "attrs": {},
             }
         ],
@@ -808,21 +916,97 @@ SUMMARY = {
                 "layer": "alanlarz",
                 "label": None,
                 "pts": [[487000.0, 4420000.0], [487000.0, 4420100.0], [487100.0, 4420100.0], [487100.0, 4420000.0]],
+                "zs": [910.0, 912.5, 915.0, 911.25],
                 "holes": [
                     [[487010.0, 4420010.0], [487030.0, 4420010.0], [487030.0, 4420030.0], [487010.0, 4420030.0]],
                     [[487060.5, 4420060.5], [487080.25, 4420060.5], [487070.125, 4420080.75]],
                 ],
+                "holeZs": [[910.5, 910.75, 911.0, 911.5], [913.0, 913.25, 914.0]],
                 "attrs": {"AD": "Café Rüzgâr", "KOD": "17"},
             }
+        ],
+    },
+    "yollarz": {
+        "declaredSrid": 2320,
+        "encoding": "Windows-1254",
+        "objects": [
+            {"kind": "line", "layer": "yollarz", "a": [415000.5, 4540000.25], "b": [415100.75, 4540050.5], "za": 812.5, "zb": 815.25, "attrs": YOLZ[0]},
+            {
+                "kind": "polyline",
+                "pts": [[415200.0, 4540100.0], [415250.5, 4540180.25], [415330.125, 4540210.0], [415400.0, 4540300.5]],
+                "zs": [820.0, 0.0, -1.5, 830.75],
+                "attrs": YOLZ[0],
+            },
+            {"kind": "polyline", "pts": [[415600.0, 4540500.0], [415650.25, 4540575.5], [415700.5, 4540600.0]], "zs": [900.0, None, 905.5], "attrs": YOLZ[1]},
+            {"kind": "polyline", "pts": [[416000.0, 4540800.0], [416050.0, 4540850.0], [416100.0, 4540900.0]], "zs": [0.0, 0.0, 0.0], "attrs": YOLZ[3]},
+        ],
+    },
+    "kotlu": {
+        "declaredSrid": 5256,
+        "objects": [
+            {
+                "kind": "line",
+                "layer": "Kot cizgisi",
+                "a": [486512.3456, 4420187.1234],
+                "b": [486562.3456, 4420187.1234],
+                "za": 1021.345,
+                "zb": 1019.8765,
+                "label": "K-1",
+                "attrs": {"tur": "iki konum, ikisi de kotlu"},
+            },
+            {"kind": "line", "layer": "kotlu", "a": [486570.0, 4420190.0], "b": [486580.0, 4420195.0], "za": 1018.5, "zb": None, "attrs": {"tur": "iki konum, yalniz ilki kotlu"}},
+            {
+                "kind": "polyline",
+                "pts": [[486600.0, 4420200.0], [486610.0, 4420210.0], [486620.0, 4420215.0], [486630.0, 4420225.0]],
+                "zs": [10.5, 11.25, 0.0, -2.5],
+                "attrs": {"tur": "sifir ve eksi kot"},
+            },
+            {
+                "kind": "polyline",
+                "pts": [[486640.0, 4420230.0], [486650.0, 4420240.0], [486660.0, 4420245.0], [486670.0, 4420250.0]],
+                "zs": [None, 55.5, None, 57.25],
+                "attrs": {"tur": "karisik konumlar"},
+            },
+            {"kind": "polyline", "pts": [[486700.0, 4420300.0], [486710.0, 4420310.0], [486720.0, 4420320.0]], "zs": [100.0, 101.5, 103.0], "attrs": {"tur": "coklu cizgi, bir uyesi kotlu"}},
+            {"kind": "polyline", "pts": [[486730.0, 4420330.0], [486740.0, 4420340.0], [486750.0, 4420350.0]], "zs": None, "attrs": {"tur": "coklu cizgi, bir uyesi kotlu"}},
+            {
+                "kind": "polygon",
+                "layer": "Parsel",
+                "label": "P-7",
+                "pts": [[486800.0, 4420400.0], [486850.0, 4420400.0], [486850.0, 4420450.0], [486800.0, 4420450.0]],
+                "zs": [900.0, 902.5, 905.0, 901.25],
+                "holes": [
+                    [[486810.0, 4420410.0], [486820.0, 4420410.0], [486820.0, 4420420.0]],
+                    [[486830.0, 4420430.0], [486840.0, 4420430.0], [486840.0, 4420440.0]],
+                ],
+                "holeZs": [[901.0, 901.5, 902.0], None],
+                "attrs": {"tur": "kotlu parsel: kotlu delik, kotsuz delik"},
+            },
+            {
+                "kind": "polyline",
+                "layer": "kotlu",
+                "pts": [[486900.0, 4420500.0], [486910.0, 4420510.0], [486920.0, 4420520.0]],
+                "zs": [800.0, 801.0, 802.0],
+                "attrs": {"tur": "dort sayili konumlar"},
+            },
+            {"kind": "line", "a": [487000.0, 4420600.0], "b": [487010.0, 4420610.0], "za": 700.0, "zb": 701.0, "attrs": {"tur": "koleksiyon"}},
+            {
+                "kind": "polygon",
+                "pts": [[487100.0, 4420700.0], [487110.0, 4420700.0], [487110.0, 4420710.0]],
+                "zs": [600.0, 601.0, None],
+                "holes": None,
+                "holeZs": None,
+                "attrs": {"tur": "koleksiyon"},
+            },
         ],
     },
 }
 
 KEYS = {
     "point": ("kind", "layer", "p", "z", "label", "attrs"),
-    "line": ("kind", "layer", "a", "b", "label", "attrs"),
-    "polyline": ("kind", "layer", "pts", "label", "attrs"),
-    "polygon": ("kind", "layer", "pts", "holes", "label", "attrs"),
+    "line": ("kind", "layer", "a", "b", "za", "zb", "label", "attrs"),
+    "polyline": ("kind", "layer", "pts", "zs", "label", "attrs"),
+    "polygon": ("kind", "layer", "pts", "zs", "holes", "holeZs", "label", "attrs"),
 }
 
 
@@ -990,11 +1174,11 @@ def verify_shapefile(name, spec, files):
         at += 8 + 2 * words
     if at != len(shp):
         fail(".shp kayıtları dosyanın sonunda bitmiyor")
-    if decoded != [normal(shape_type, s) for s in spec["shapes"]]:
+    if bits(decoded) != bits([normal(shape_type, s) for s in spec["shapes"]]):  # by bits: a NaN is not equal to itself
         fail(".shp'den geri okunan şekiller yazılanlar değil")
     points = [p for s in spec["shapes"] for p in shape_points(shape_type, s)]
-    zr = (min(z_values(shape_type, points)), max(z_values(shape_type, points))) if shape_type in HAS_Z else (0.0, 0.0)
-    mr = (min(m_values(shape_type, points)), max(m_values(shape_type, points))) if shape_type in HAS_M else (0.0, 0.0)
+    zr = value_range(z_values(shape_type, points)) if shape_type in HAS_Z else (0.0, 0.0)
+    mr = value_range(m_values(shape_type, points)) if shape_type in HAS_M else (0.0, 0.0)
     if struct.unpack_from("<8d", shp, 36) != (*extent(points), *zr, *mr):
         fail(".shp başlığının kapsamı ya da z/m aralıkları noktalarınki değil")
     if len(shx) != 100 + 8 * len(decoded) or shx[:24] != shp[:24] or shx[28:100] != shp[28:100] or struct.unpack_from(">i", shx, 24)[0] * 2 != len(shx):
@@ -1074,7 +1258,7 @@ def reparse(shape_type, c, fail):
     for present in (shape_type in HAS_Z, shape_type in HAS_M):
         if present:
             low, high, *values = struct.unpack_from(f"<{2 + n}d", c, at)
-            if (low, high) != (min(values), max(values)):
+            if (low, high) != value_range(values):
                 fail("kaydın z ya da m aralığı değerlerininki değil")
             columns.append(values)
             at += 16 + 8 * n
@@ -1131,6 +1315,67 @@ def path_of(obj):
     return None
 
 
+def fz(z):
+    """An elevation as a float, None staying None (the input's JSON may hold an integer)."""
+    return None if z is None else float(z)
+
+
+def zs_of(entity):
+    """The elevations the writer takes from an input object: one entry a vertex as floats (None where a vertex has none), or None
+    when no vertex has one or the list does not have as many entries as the object has vertices (it is flat then)."""
+    zs = entity.get("zs")
+    if not isinstance(zs, list) or len(zs) != len(entity.get("pts", [])) or all(z is None for z in zs):
+        return None
+    return [fz(z) for z in zs]
+
+
+def path_zs(obj):
+    """The elevations of a read line, path or area as one list (None: none), a line's being its ends'."""
+    if obj["kind"] == "line":
+        zs = [obj.get("za"), obj.get("zb")]
+        return zs if any(z is not None for z in zs) else None
+    return obj.get("zs")
+
+
+def turned_with_z(ring, zs, sign):
+    """`right_hand` for a ring and the elevations of its vertices (or None): they turn with their vertices."""
+    if float_area2(ring) * sign < 0:
+        return [ring[0], *ring[:0:-1]], None if zs is None else [zs[0], *zs[:0:-1]]
+    return ring, zs
+
+
+def arc_elevations(entity, obj, closed):
+    """What is wrong with the elevations of a path or ring with arcs, sampled by the writer: each vertex is in the output at its own
+    coordinates with its own elevation, and the points between two neighbours (the samples of their arc edge, equally spaced) take the
+    blend of their two elevations by their place along it, none when either neighbour has none."""
+    path, zs, want = path_of(obj) if not closed else obj["pts"], path_zs(obj), zs_of(entity)
+    if want is None:
+        return [] if zs is None else ["kotsuz yaylı nesne kotlu yazılmış"]
+    if zs is None or len(zs) != len(path):
+        return ["yaylı nesnenin kotları noktalarıyla aynı sayıda değil"]
+    pts = [xy_of(p) for p in entity["pts"]]
+    where = {}
+    for i, p in enumerate(pts):
+        found = [j for j, q in enumerate(path) if bits(q) == bits(p)]
+        if len(found) != 1:
+            return [f"{i}. köşe çıktıda yok ya da birden çok"]
+        where[i] = found[0]
+    problems = []
+    order = sorted(range(len(pts)), key=lambda i: where[i])
+    for i in order:
+        if bits(zs[where[i]]) != bits(want[i]):
+            problems.append(f"{i}. köşenin kotu {zs[where[i]]!r}, girdideki {want[i]!r}")
+    for a, b in zip(order, order[1:] + ([order[0]] if closed else [])):
+        first, span = where[a], (where[b] - where[a]) % len(path) if closed else where[b] - where[a]
+        for k in range(1, span):
+            expect = None if want[a] is None or want[b] is None else want[a] + (want[b] - want[a]) * k / span
+            got = zs[(first + k) % len(path)]
+            if (expect is None) != (got is None) or (expect is not None and abs(got - expect) > 1e-9 * max(1.0, abs(expect))):
+                problems.append(f"{a}. ile {b}. köşe arasındaki {k}. noktanın kotu {got!r}, beklenen {expect!r}")
+                break
+    return problems
+
+
 def near(p, q, tol):
     return math.hypot(p[0] - q[0], p[1] - q[1]) <= tol
 
@@ -1151,23 +1396,37 @@ def exported(entity, obj):
         wrong = obj["kind"] != "point" or bits(obj["p"]) != bits(xy_of(entity["p"]))
         return ["konum ya da z girdidekiyle aynı değil"] if wrong or bits(obj.get("z")) != bits(float(entity["z"]) if "z" in entity else None) else []
     if kind == "line":
-        return [] if obj["kind"] == "line" and bits([obj["a"], obj["b"]]) == bits([xy_of(entity["a"]), xy_of(entity["b"])]) else ["uçlar girdidekiler değil"]
+        ends = [fz(entity.get("za")), fz(entity.get("zb"))]
+        ends = ends if any(z is not None for z in ends) else None
+        good = obj["kind"] == "line" and bits([obj["a"], obj["b"]]) == bits([xy_of(entity["a"]), xy_of(entity["b"])])
+        return [] if good and bits(path_zs(obj)) == bits(ends) else ["uçlar ya da kotları girdidekiler değil"]
     if kind == "polyline" and not has_arcs(entity.get("bulges")):
         pts = [xy_of(p) for p in entity["pts"]]
         good = path is not None and (obj["kind"] == "line") == (len(pts) == 2) and bits(path) == bits(pts)
-        return [] if good else ["noktalar girdidekiler değil (iki noktalı yol çizgi olarak okunur)"]
+        if not good:
+            return ["noktalar girdidekiler değil (iki noktalı yol çizgi olarak okunur)"]
+        return [] if bits(path_zs(obj)) == bits(zs_of(entity)) else ["köşe kotları girdidekiler değil"]
     if kind == "hatch" or (kind == "polygon" and not polygon_arcs(entity)):
         if kind == "polygon":
-            outline, holes = [xy_of(p) for p in entity["pts"]], [[xy_of(p) for p in h["pts"]] for h in entity.get("holes", [])]
+            outline, out_z = [xy_of(p) for p in entity["pts"]], zs_of(entity)
+            holes = [([xy_of(p) for p in h["pts"]], zs_of(h)) for h in entity.get("holes", [])]
         else:
-            outline, holes = [xy_of(p) for p in entity["ring"]], [[xy_of(p) for p in h] for h in entity.get("holes", [])]
-        want = [right_hand(h, -1) for h in holes if len(h) >= 3]
-        good = obj["kind"] == "polygon" and bits(obj["pts"]) == bits(right_hand(outline, 1)) and bits(obj.get("holes", [])) == bits(want)
-        return [] if good else ["halkalar girdidekiler değil ya da sağ el kuralına göre (ilk köşe yerinde) döndürülmemiş"]
+            outline, out_z = [xy_of(p) for p in entity["ring"]], None
+            holes = [([xy_of(p) for p in h], None) for h in entity.get("holes", [])]
+        want_outline, want_z = turned_with_z(outline, out_z, 1)
+        kept = [turned_with_z(h, hz, -1) for h, hz in holes if len(h) >= 3]
+        want_hole_z = [hz for _, hz in kept] if any(hz is not None for _, hz in kept) else None
+        good = obj["kind"] == "polygon" and bits(obj["pts"]) == bits(want_outline) and bits(obj.get("holes", [])) == bits([h for h, _ in kept])
+        if not good:
+            return ["halkalar girdidekiler değil ya da sağ el kuralına göre (ilk köşe yerinde) döndürülmemiş"]
+        zs_good = bits(obj.get("zs")) == bits(want_z) and bits(obj.get("holeZs")) == bits(want_hole_z)
+        return [] if zs_good else ["halkaların köşe kotları girdidekiler değil ya da köşeleriyle birlikte döndürülmemiş"]
     if kind == "polygon":  # with arcs
         holes = obj.get("holes", [])
         good = obj["kind"] == "polygon" and len(obj["pts"]) >= 3 and float_area2(obj["pts"]) >= 0 and len(holes) == len(entity.get("holes", []))
-        return [] if good and all(len(h) >= 3 and float_area2(h) <= 0 for h in holes) else ["yaylı alan en az üç noktalı, sağ el kuralında ve girdideki kadar delikli değil"]
+        if not (good and all(len(h) >= 3 and float_area2(h) <= 0 for h in holes)):
+            return ["yaylı alan en az üç noktalı, sağ el kuralında ve girdideki kadar delikli değil"]
+        return arc_elevations(entity, obj, True)
     if kind == "circle":
         c, r = xy_of(entity["c"]), float(entity["r"])
         good = obj["kind"] == "polyline" and len(path) == 73 and bits(path[0]) == bits(path[-1]) and on_circle(path, c, r)
@@ -1186,7 +1445,7 @@ def exported(entity, obj):
             return ["kapalı eğrinin ilk ve son noktası aynı değil"]
         if kind == "spline" and not entity.get("closed") and bits([path[0], path[-1]]) != bits([xy_of(entity["pts"][0]), xy_of(entity["pts"][-1])]):
             return ["açık eğri ilk kontrol noktasından başlayıp sonuncusunda bitmiyor"]
-        return []
+        return arc_elevations(entity, obj, False) if kind == "polyline" else []
     return [f"bilinmeyen tür {kind!r}"]
 
 
