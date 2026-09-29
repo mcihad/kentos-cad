@@ -129,7 +129,10 @@ impl SetElevation {
             .filter(|slot| doc.get(*slot).is_some_and(elevation::takes))
             .collect();
         if takers.is_empty() {
+            // The selection changed under the tool: back to picking, as a confirmed
+            // selection of such objects goes (the web's tool does the same).
             cx.say(Level::Warn, NONE_TAKES);
+            self.back = true;
             return;
         }
         let open: Vec<Slot> = takers
@@ -296,6 +299,13 @@ impl Stages for SetElevation {
     fn back(&mut self, _cx: &mut Context<'_>) -> bool {
         self.back = true;
         true
+    }
+
+    /// Enter (or a right click) at the number does what Esc does: the web's
+    /// tools step back before they are left.
+    fn confirm(&mut self, _cx: &mut Context<'_>) -> Flow {
+        self.back = true;
+        Flow::Stay
     }
 
     fn take_repick(&mut self) -> bool {

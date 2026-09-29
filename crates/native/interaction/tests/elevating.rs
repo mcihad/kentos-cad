@@ -272,7 +272,7 @@ fn esc_steps_back_one_step_from_the_number_to_the_picking_and_then_out() {
 }
 
 #[test]
-fn enter_with_nothing_selected_leaves_and_at_the_number_step_too() {
+fn enter_with_nothing_selected_leaves_and_at_the_number_step_goes_back_as_esc_does() {
     let mut b = bench();
     let s = scene(&mut b);
     b.start("setElevation");
@@ -281,7 +281,24 @@ fn enter_with_nothing_selected_leaves_and_at_the_number_step_too() {
     select(&mut b, &[s.line]);
     b.start("setElevation");
     b.confirm();
-    assert!(!b.session.is_running(), "at the number step it leaves too");
+    assert!(b.session.is_running(), "at the number step it steps back");
+    assert_eq!(prompt(&b), PICKING);
+    assert_eq!(b.selected(), [s.line.0], "the selection stays");
+}
+
+#[test]
+fn a_selection_that_no_longer_takes_an_elevation_goes_back_to_picking() {
+    let mut b = bench();
+    let s = scene(&mut b);
+    select(&mut b, &[s.line]);
+    b.start("setElevation");
+    assert_eq!(prompt(&b), NUMBER);
+    // The line goes while the number is asked for (another hand, an undo).
+    assert_eq!(b.doc.remove(&[s.line]), 1);
+    let before = b.log.len();
+    assert!(b.type_text("5"));
+    assert_eq!(said(&b, before), [format!("warn: {NONE_TAKES}")]);
+    assert_eq!(prompt(&b), PICKING);
 }
 
 #[test]
