@@ -10,6 +10,7 @@ import { centreBulge, offsetAlong, radialPoint, radiusBulge, unitToward } from '
 import { parseNumber } from './coordinateInput';
 import { fixedLayerLocked, PointInputTool } from './drawTools';
 import { drawTag, strokePath, tint } from './preview';
+import { writeOnStandardLayer } from './standardLayer';
 import type { ToolPointer } from './Tool';
 
 /**
@@ -339,7 +340,8 @@ export class PathTool extends PointInputTool {
 
   /**
    * A parcel is written by the product command `cad.entities.create` on the
-   * parcel layer (docs/adr/0057), in the current colour: the next number on
+   * parcel layer (docs/adr/0057), opened first when the drawing lacks it
+   * (docs/adr/0067), in the current colour: the next number on
    * that layer as its label and its Parsel, Nitelik “Arsa”, the other
    * attributes left for Öznitelikler. The deed area is left empty too: it is
    * the title deed's, not the drawing's (CLAUDE.md §7, §23); the log gives
@@ -359,7 +361,8 @@ export class PathTool extends PointInputTool {
       attrs: { Ada: '', Parsel: String(next), Mahalle: '', Nitelik: 'Arsa', 'Tapu alanı (m²)': '', Pafta: '' },
       label: String(next),
     };
-    const result = entitiesCreate.execute({ doc: this.ctx.doc }, { layerId, objects: [parcel] });
+    // A drawing without the parcel layer gets it, in the parcel's own undo step (tools/standardLayer.ts).
+    const result = writeOnStandardLayer(this.ctx, layerId, 'parsel', () => entitiesCreate.execute({ doc: this.ctx.doc }, { layerId, objects: [parcel] }));
     if (result.status !== 'completed') {
       if ('error' in result) this.ctx.log.warn(result.error.message);
       return;

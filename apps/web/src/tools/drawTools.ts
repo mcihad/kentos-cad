@@ -14,6 +14,7 @@ import { parseNumber } from './coordinateInput';
 import * as createCommand from './createCommand';
 import { drawTag, strokePath } from './preview';
 import type { Tool, ToolPointer } from './Tool';
+import { writeOnStandardLayer } from './standardLayer';
 import { writableLayer } from './targetLayer';
 import { constrainPoint, drawTracking, pointFromText, type Tracking } from './tracking';
 
@@ -394,13 +395,16 @@ export class PointTool extends PointInputTool {
 
   /**
    * Writes one point through the product command `cad.point.create`
-   * (docs/adr/0032): the tool's own layer (the spot elevations') or the
-   * active one, and the current colour, explicit in its input (CMD-07).
+   * (docs/adr/0032): the tool's own layer (the spot elevations', opened first
+   * when the drawing lacks it, docs/adr/0067) or the active one, and the
+   * current colour, explicit in its input (CMD-07).
    */
   private writePoint(fields: { p: Vec2; z?: number; label?: string; attrs?: Record<string, string> }): void {
     if (this.layerId && fixedLayerLocked(this.ctx, this.layerId, this.label)) return;
     const layerId = this.layerId ?? this.ctx.doc.layers.active.value;
-    this.written(pointCreate.execute({ doc: this.ctx.doc }, { layerId, ...fields, ...this.colour() }));
+    const write = () => pointCreate.execute({ doc: this.ctx.doc }, { layerId, ...fields, ...this.colour() });
+    // A drawing without the elevation layer gets it, in the point's own undo step (tools/standardLayer.ts).
+    this.written(this.layerId ? writeOnStandardLayer(this.ctx, layerId, 'kot noktası', write) : write());
   }
 
   override pointerDown(p: ToolPointer): void {
