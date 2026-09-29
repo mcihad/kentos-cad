@@ -21,7 +21,7 @@ use kentos_geometry_core::entity::{Shape, polygon_ring};
 use kentos_geometry_core::geom::arrangement::{Area, Ring};
 use kentos_geometry_core::geom::hatch::hatch_lines;
 use kentos_geometry_core::geom::region::{inside_area, net_area, subtract_areas};
-use kentos_geometry_core::ops::areas::area_of_entity;
+use kentos_geometry_core::ops::areas::areas_of_entity;
 use kentos_geometry_core::tools::point_text::js_trim;
 
 use crate::Vec2;
@@ -100,8 +100,8 @@ pub struct Hatch {
     /// The boundary layer's name, as of the last call.
     boundary_name: Option<String>,
     /// Kapalı nesne: the boundary object's region with its islands cut out,
-    /// kept while the drawing stays as it was (revision, object).
-    cache: Option<(u64, f64, Vec<Area>)>,
+    /// kept while the drawing stays as it was (revision, object, part).
+    cache: Option<(u64, f64, usize, Vec<Area>)>,
     faces: Option<faces::Faces>,
     /// The region under the cursor, and its hatch lines when the preview draws them.
     hover: Option<Area>,
@@ -150,7 +150,14 @@ impl Hatch {
         let store = cx.spatial.store();
         let (id, _) = store.enclosing(p)?;
         let item = store.get(id)?;
-        let base = area_of_entity(&item.shape)?;
+        // A multi-part area's part the point is in (docs/adr/0143); one area is itself.
+        let mut areas = areas_of_entity(&item.shape);
+        let part = if areas.len() == 1 {
+            0
+        } else {
+            areas.iter().position(|a| inside_area(a, p))?
+        };
+        let base = areas.swap_remove(part);
         if !self.memory.hatch_islands {
             return Some(base);
         }
@@ -158,7 +165,7 @@ impl Hatch {
         if self
             .cache
             .as_ref()
-            .is_none_or(|(r, cached, _)| *r != revision || *cached != id)
+            .is_none_or(|(r, cached, k, _)| *r != revision || *cached != id || *k != part)
         {
             // Closed objects inside or across it, smaller than it: a block
             // around a parcel is not an island (the web's `islandsOf`).
@@ -167,15 +174,15 @@ impl Hatch {
                 .overlapping(&item.bounds, None)
                 .into_iter()
                 .filter(|it| it.id != id && !matches!(it.shape, Shape::Hatch { .. }))
-                .filter_map(|it| area_of_entity(&it.shape))
+                .flat_map(|it| areas_of_entity(&it.shape))
                 .filter(|a| net_area(a) < size * (1.0 - 1e-9))
                 .collect();
             let parts = subtract_areas(std::slice::from_ref(&base), &islands);
-            self.cache = Some((revision, id, parts));
+            self.cache = Some((revision, id, part, parts));
         }
         self.cache
             .as_ref()
-            .and_then(|(_, _, parts)| parts.iter().find(|a| inside_area(a, p)).cloned())
+            .and_then(|(_, _, _, parts)| parts.iter().find(|a| inside_area(a, p)).cloned())
     }
 
     /// Sınır: çizgiler: the face of the visible line work around `p`.

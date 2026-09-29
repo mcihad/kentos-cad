@@ -263,3 +263,45 @@ fn too_dense_a_pattern_is_refused() {
     b.click(0.0, 30.0);
     assert_eq!(b.doc.entities().count(), count + 1);
 }
+
+/// A multi-part parcel (docs/adr/0143): the parcel gets a 10 × 10 m part
+/// away from everything; a click in it fills that part alone, and a click in
+/// the first part still leaves the building out.
+#[test]
+fn a_click_in_a_part_of_a_multi_part_parcel_fills_that_part() {
+    let mut b = bench();
+    // The parcel: the largest area of the drawing.
+    let (slot, parcel) = (1..=b.doc.entities().count() as u32 + 8)
+        .map(kentos_domain::Slot)
+        .filter_map(|s| match b.doc.get(s) {
+            Some(e @ Entity::Polygon(p)) => {
+                Some((kentos_interaction::measures(e).0?, s, p.clone()))
+            }
+            _ => None,
+        })
+        .max_by(|a, b| a.0.total_cmp(&b.0))
+        .map(|(_, s, p)| (s, p))
+        .expect("the parcel");
+    let at = |x: f64, y: f64| Wire { x: E + x, y: N + y };
+    let mut two = parcel;
+    two.parts = Some(vec![kentos_contracts::AreaPart {
+        pts: vec![
+            at(40.0, 20.0),
+            at(50.0, 20.0),
+            at(50.0, 30.0),
+            at(40.0, 30.0),
+        ],
+        bulges: None,
+        holes: None,
+        zs: None,
+    }]);
+    assert!(b.doc.update(slot, Entity::Polygon(two)));
+    b.click(45.0, 25.0);
+    let (bx, holes, _, area) = newest(&b);
+    assert_eq!((bx, holes), ([40.0, 20.0, 50.0, 30.0], 0));
+    assert!(near(area, 100.0), "{area}");
+    b.click(-12.0, 8.0);
+    let (bx, holes, _, area) = newest(&b);
+    assert_eq!((bx, holes), ([-28.0, -6.0, -8.0, 10.0], 1));
+    assert!(near(area, 272.0), "{area}");
+}

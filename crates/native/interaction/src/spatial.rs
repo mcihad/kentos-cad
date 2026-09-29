@@ -235,18 +235,18 @@ impl Spatial {
             let records = f.get(i..i + 3 * count).unwrap_or_default();
             i += 3 * count;
             let Some(slot) = slot(id) else { continue };
-            out.push(GripSet {
+            out.push(GripSet::new(
                 slot,
-                points: records
+                records
                     .chunks_exact(3)
                     .map(|r| Vec2::new(r[0], r[1]))
                     .collect(),
-                segments: records
+                records
                     .chunks_exact(3)
                     .map(|r| (r[2] >= 0.0).then_some(r[2] as usize))
                     .collect(),
                 vertices,
-            });
+            ));
         }
         out
     }
@@ -406,21 +406,67 @@ pub struct GripSet {
     pub points: Vec<Vec2>,
     /// The segment a mid grip splits or bends; none for the other grips.
     pub segments: Vec<Option<usize>>,
-    /// A path's vertex count; 0 for the other kinds.
+    /// A path's vertex count (a multi-part area's first part's); 0 for the other kinds.
     pub vertices: usize,
+    /// For each mid grip, its ring's first vertex (an index into `points`)
+    /// and vertex count; none for the other grips. A multi-part area's later
+    /// parts each have a ring of their own (docs/adr/0143).
+    pub rings: Vec<Option<(usize, usize)>>,
 }
 
 impl GripSet {
+    /// The grips as the store lists them, each mid grip's ring found in one
+    /// pass: a ring's mid grips run from its segment 0 right after its
+    /// vertices; an open path's run is one shorter than its vertices.
+    pub fn new(
+        slot: Slot,
+        points: Vec<Vec2>,
+        segments: Vec<Option<usize>>,
+        vertices: usize,
+    ) -> Self {
+        let mut rings = vec![None; segments.len()];
+        let mut k = 0;
+        while k < segments.len() {
+            if segments[k] != Some(0) {
+                k += 1;
+                continue;
+            }
+            let run = segments[k..]
+                .iter()
+                .enumerate()
+                .take_while(|(j, s)| **s == Some(*j))
+                .count();
+            let count = if k == vertices && run + 1 == vertices {
+                vertices
+            } else {
+                run
+            };
+            if let Some(first) = k.checked_sub(count) {
+                rings[k..k + run].fill(Some((first, count)));
+            }
+            k += run;
+        }
+        GripSet {
+            slot,
+            points,
+            segments,
+            vertices,
+            rings,
+        }
+    }
+
     /// Whether grip `index` is shown and can be taken: a mid grip only while
     /// its segment is at least 28 px long on the area, to tell it from the
     /// vertices (the web's `midGripVisible`).
     pub fn shown(&self, index: usize, view: &dyn crate::tool::View) -> bool {
-        let Some(Some(segment)) = self.segments.get(index) else {
+        let (Some(Some(segment)), Some(Some((first, count)))) =
+            (self.segments.get(index), self.rings.get(index))
+        else {
             return true;
         };
         let (Some(&a), Some(&b)) = (
-            self.points.get(*segment),
-            self.points.get((segment + 1) % self.vertices.max(1)),
+            self.points.get(first + segment),
+            self.points.get(first + (segment + 1) % (*count).max(1)),
         ) else {
             return true;
         };

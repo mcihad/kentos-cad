@@ -115,14 +115,45 @@ fn a_mid_grip_adds_a_corner_and_a_short_segment_hides_it() {
     assert!(set.shown(first, &common::Camera));
     // A segment shorter than 28 px on the area offers no mid grip: 2 m is 16 px.
     let (a, c) = (Vec2::new(E, N), Vec2::new(E + 2.0, N));
-    let short = GripSet {
-        slot: Slot(9),
-        points: vec![a, c, Vec2::new(E + 1.0, N), Vec2::new(E + 1.0, N)],
-        segments: vec![None, None, Some(0), Some(1)],
-        vertices: 2,
-    };
+    let short = GripSet::new(
+        Slot(9),
+        vec![a, c, Vec2::new(E + 1.0, N), Vec2::new(E + 1.0, N)],
+        vec![None, None, Some(0), Some(1)],
+        2,
+    );
     assert!(short.shown(0, &common::Camera), "a vertex always shows");
     assert!(!short.shown(2, &common::Camera));
+    // A multi-part area (docs/adr/0143): a 2 m square, then a 10 m one. Each mid grip is
+    // measured on its own part's edge: the second part's show, the first part's do not.
+    let square = |x: f64, side: f64| {
+        [(0.0, 0.0), (side, 0.0), (side, side), (0.0, side)]
+            .map(|(dx, dy)| Vec2::new(E + x + dx, N + dy))
+            .to_vec()
+    };
+    let mids = |ring: &[Vec2]| -> Vec<Vec2> {
+        (0..ring.len())
+            .map(|i| {
+                let (p, q) = (ring[i], ring[(i + 1) % ring.len()]);
+                Vec2::new((p.x + q.x) / 2.0, (p.y + q.y) / 2.0)
+            })
+            .collect()
+    };
+    let (small, big) = (square(0.0, 2.0), square(20.0, 10.0));
+    let points: Vec<Vec2> = [small.clone(), mids(&small), big.clone(), mids(&big)].concat();
+    let segments: Vec<Option<usize>> = [
+        vec![None; 4],
+        (0..4).map(Some).collect(),
+        vec![None; 4],
+        (0..4).map(Some).collect(),
+    ]
+    .concat();
+    let two = GripSet::new(Slot(10), points, segments, 4);
+    assert!((4..8).all(|i| !two.shown(i, &common::Camera)), "2 m: 16 px");
+    assert!(
+        (12..16).all(|i| two.shown(i, &common::Camera)),
+        "10 m: 80 px"
+    );
+    assert_eq!(two.rings[12], Some((8, 4)));
 }
 
 #[test]

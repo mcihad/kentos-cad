@@ -132,6 +132,25 @@ def with_hole():
     )
 
 
+def two_parts():
+    """A multi-part area (docs/adr/0143): every part's area, perimeter and
+    corners; the centroid weighted by each part's area, exact; the box of all."""
+    outer = [(X0, Y0), (X0 + 50, Y0), (X0 + 50, Y0 + 40), (X0, Y0 + 40)]
+    hole = [(X0 + 10, Y0 + 10), (X0 + 10, Y0 + 20), (X0 + 25, Y0 + 20), (X0 + 25, Y0 + 10)]
+    other = [(X0 + 80, Y0 + 5), (X0 + 100, Y0 + 5), (X0 + 100, Y0 + 35), (X0 + 80, Y0 + 35)]
+    a1, c1 = area_centroid(outer, [hole])
+    a2, c2 = area_centroid(other)
+    area = a1 + a2
+    centroid = ((a1 * c1[0] + a2 * c2[0]) / area, (a1 * c1[1] + a2 * c2[1]) / area)
+    length = math.fsum([path_length(outer, True), path_length(hole, True), path_length(other, True)])
+    return (
+        "iki parçalı alan (büyüğü delikli)",
+        {"kind": "polygon", "pts": [P(*p) for p in outer], "holes": [{"pts": [P(*p) for p in hole]}],
+         "parts": [{"pts": [P(*p) for p in other]}]},
+        values(length, area, centroid, box(outer + other), 12),
+    )
+
+
 def half_disk_edge():
     # A 20 × 10 rectangle whose top edge, from (20, 10) to (0, 10), is a half
     # circle bulging outward (counter-clockwise ring, bulge 1 on edge 2).
@@ -209,7 +228,7 @@ def collinear():
 
 def build():
     cases = []
-    for make in [square, clockwise_l, with_hole, half_disk_edge, hatch_with_hole, circle, line, polyline, point, collinear]:
+    for make in [square, clockwise_l, with_hole, half_disk_edge, hatch_with_hole, circle, line, polyline, point, collinear, two_parts]:
         name, entity, expected = make()[:3]
         entity = {"id": len(cases) + 1, "layerId": "a", "attrs": {}, **entity}
         cases.append({"name": name, "entity": entity, "values": expected})

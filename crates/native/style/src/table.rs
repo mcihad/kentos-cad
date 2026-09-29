@@ -38,12 +38,21 @@ pub fn kind_label(e: &Entity) -> &'static str {
     }
 }
 
-/// Corners of a path or area, holes included (`vertexCount`, `$köşe`).
+/// Corners of a path or area, holes included, every part of a multi-part
+/// area (docs/adr/0143) (`vertexCount`, `$köşe`).
 pub fn vertex_count(e: &Entity) -> Option<f64> {
+    let ring = |pts: usize, holes: &Option<Vec<kentos_contracts::RingGeometry>>| {
+        pts + holes.iter().flatten().map(|h| h.pts.len()).sum::<usize>()
+    };
     let n = match e {
         Entity::Polyline(p) => p.pts.len(),
         Entity::Polygon(p) => {
-            p.pts.len() + p.holes.iter().flatten().map(|h| h.pts.len()).sum::<usize>()
+            ring(p.pts.len(), &p.holes)
+                + p.parts
+                    .iter()
+                    .flatten()
+                    .map(|q| ring(q.pts.len(), &q.holes))
+                    .sum::<usize>()
         }
         Entity::Line(_) => 2,
         Entity::Spline(s) => s.pts.len(),

@@ -25,6 +25,9 @@ fn xy(p: [f64; 2]) -> Value {
 /// A hole of an area: its vertices and their elevations (docs/adr/0142).
 pub(crate) type Hole<'a> = (&'a [[f64; 2]], &'a [Option<f64>]);
 
+/// A part of a multi-part area: its ring and its holes' rings (docs/adr/0143).
+pub(crate) type Part<'a> = (&'a [[f64; 2]], &'a [&'a [[f64; 2]]]);
+
 /// One object of a scene: its kind's fields and its layer.
 pub(crate) struct Objects(Vec<Value>);
 
@@ -117,9 +120,9 @@ impl Objects {
 
     /// An area of several parts, each its ring and holes, the first the
     /// area's own (docs/adr/0143).
-    pub(crate) fn parts(&mut self, layer: &str, parts: &[(&[[f64; 2]], &[&[[f64; 2]]])]) -> u32 {
+    pub(crate) fn parts(&mut self, layer: &str, parts: &[Part<'_>]) -> u32 {
         let ring = |pts: &[[f64; 2]]| Value::Array(pts.iter().map(|p| xy(*p)).collect());
-        let part = |(pts, holes): &(&[[f64; 2]], &[&[[f64; 2]]])| {
+        let part = |(pts, holes): &Part<'_>| {
             let mut fields = json!({ "pts": ring(pts) });
             if !holes.is_empty() {
                 let holes: Vec<Value> = holes.iter().map(|h| json!({ "pts": ring(h) })).collect();

@@ -52,13 +52,20 @@ fn boxed(b: Option<Bounds>, what: Geometry) -> Option<f64> {
     })
 }
 
-/// Corners of a path or area, holes included (the web's `vertexCount`).
+/// Corners of a path or area, holes included, every part of a multi-part
+/// area (docs/adr/0143) (the web's `vertexCount`).
 pub fn vertices(s: &Shape) -> Option<f64> {
     let n = match s {
         Shape::Polyline { pts, .. } | Shape::Spline { pts, .. } => pts.len(),
-        Shape::Polygon { pts, holes, .. } => {
-            pts.len() + holes.iter().flatten().map(|h| h.pts.len()).sum::<usize>()
-        }
+        Shape::Polygon { .. } => area_parts(s)
+            .iter()
+            .map(|part| match part {
+                Shape::Polygon { pts, holes, .. } => {
+                    pts.len() + holes.iter().flatten().map(|h| h.pts.len()).sum::<usize>()
+                }
+                _ => 0,
+            })
+            .sum(),
         Shape::Line { .. } => 2,
         Shape::Point { .. } => 1,
         _ => return None,
