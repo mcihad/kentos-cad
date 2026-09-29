@@ -18,7 +18,7 @@ import type { BackendKind, RenderBackend } from '../render/types';
 import { webgpuSupported } from '../render/webgpu/support';
 import type { ToolPointer } from '../tools/Tool';
 import { Camera } from './Camera';
-import { drawCrosshair, drawGrips, drawLabels, drawNorthArrow, drawObjectTracking, drawScaleBar, drawSnap, midGripVisible } from './overlay';
+import { drawCrosshair, drawGrips, drawLabels, drawNorthArrow, drawObjectTracking, drawScaleBar, drawSnap, GRIP_HIT_PX, midGripVisible } from './overlay';
 import { alongTrack, trackAngles, trackPoint, type TrackHit } from './objectTracking';
 import { ViewNavigation } from './viewHistory';
 import { symbolScaleOf } from './symbolScale';
@@ -439,7 +439,7 @@ export class ViewportController {
       return !!e && !doc.layers.isLocked(e.layerId);
     });
     let found: { id: number; index: number } | null = null;
-    let bestD = 6; // px
+    let bestD = GRIP_HIT_PX;
     for (const set of this.picker.grips(editable))
       for (let index = 0; index < set.points.length; index++) {
         if (!midGripVisible(set, index, this.camera)) continue;

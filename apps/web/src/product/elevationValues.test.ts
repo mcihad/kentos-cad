@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Entity } from '../model/entities';
-import { elevationAt, gripElevation, hasVertexElevation, mapElevations, spaceLength, summarizeElevations, takesElevation, vertexElevations } from './elevationValues';
+import { elevationAt, gripElevation, hasVertexElevation, mapElevations, nearestVertex, spaceLength, summarizeElevations, takesElevation, vertexElevations } from './elevationValues';
 
 /**
  * The vertex elevations the interface reads and writes (docs/adr/0142): what a list of them comes to, the length in
@@ -116,6 +116,36 @@ describe('the elevation under a grip', () => {
     expect(gripElevation({ ...base, kind: 'point', p: p(0, 0), z: 4 }, 0)).toBe(4);
     expect(gripElevation({ ...base, kind: 'point', p: p(0, 0) }, 0)).toBeNull();
     expect(gripElevation({ ...base, kind: 'circle', c: p(0, 0), r: 1 }, 0)).toBeNull();
+  });
+});
+
+describe('the vertex nearest a point', () => {
+  it('a point, a line’s ends, a path’s vertices, an area’s ring and its holes: the place, the elevation and how far', () => {
+    expect(nearestVertex({ ...base, kind: 'point', p: p(1, 2), z: 4 }, p(1, 3), 2)).toEqual({ at: p(1, 2), z: 4, d: 1 });
+    expect(nearestVertex({ ...base, kind: 'point', p: p(1, 2) }, p(1, 2), 2)).toEqual({ at: p(1, 2), z: null, d: 0 });
+    const l = line([0, 0], [5, 0], 1);
+    expect(nearestVertex(l, p(0, 1), 3)).toEqual({ at: p(0, 0), z: 1, d: 1 });
+    expect(nearestVertex(l, p(4, 0), 3)).toEqual({ at: p(5, 0), z: null, d: 1 });
+    const path = poly('polyline', [[0, 0], [50, 0], [90, 40]], [1, null, 3]);
+    expect(nearestVertex(path, p(89, 39), 3)?.z).toBe(3);
+    expect(nearestVertex(path, p(50, 1), 3)).toMatchObject({ z: null, d: 1 });
+    const holed = poly('polygon', SQUARE, [1, 2, 3, 4], { holes: [{ pts: [p(2, 2), p(4, 2), p(4, 4)], zs: [7, 8, 9] }] });
+    expect(nearestVertex(holed, p(4, 2.5), 1)).toMatchObject({ at: p(4, 2), z: 8 });
+    expect(nearestVertex(holed, p(10, 9), 1.5)).toMatchObject({ at: p(10, 10), z: 3 });
+  });
+
+  it('the nearest of several within reach, and none beyond it (the reach is inclusive)', () => {
+    const twin = poly('polyline', [[0, 0], [4, 0]], [null, 55]);
+    expect(nearestVertex(twin, p(3, 0), 6)).toMatchObject({ z: 55, d: 1 });
+    expect(nearestVertex(twin, p(1, 0), 6)).toMatchObject({ z: null, d: 1 });
+    expect(nearestVertex(twin, p(0, 6), 6)).toMatchObject({ z: null, d: 6 });
+    expect(nearestVertex(twin, p(0, 6.001), 6)).toBeNull();
+    // A box corner is nearer than the reach in x and y, farther than it in distance.
+    expect(nearestVertex(twin, p(5, 5), 5)).toBeNull();
+  });
+
+  it('nothing for a kind without vertices to grip', () => {
+    expect(nearestVertex({ ...base, kind: 'circle', c: p(0, 0), r: 1 }, p(1, 0), 5)).toBeNull();
   });
 });
 

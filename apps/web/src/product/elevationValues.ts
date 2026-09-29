@@ -43,6 +43,43 @@ export function hasVertexElevation(e: Entity): boolean {
   }
 }
 
+/**
+ * The vertex of a point, line, polyline or area (holes included) nearest to `p`, when it is within `within` (m,
+ * inclusive): its place, its elevation (null for one without) and its distance. Where the grips of those kinds
+ * stand: the select tool's tag looks for the one the pointer rests on, on every move, so this makes no
+ * allocation per vertex and turns most away by their box alone. Null for other kinds or when none is that near.
+ */
+export function nearestVertex(e: Entity, p: Vec2, within: number): { at: Vec2; z: number | null; d: number } | null {
+  let best: { at: Vec2; z: number | null; d: number } | null = null;
+  let reach = within;
+  const test = (v: Vec2, z: number | null | undefined) => {
+    const dx = v.x - p.x;
+    if (dx > reach || dx < -reach) return;
+    const dy = v.y - p.y;
+    if (dy > reach || dy < -reach) return;
+    const d = Math.hypot(dx, dy);
+    if (d <= reach) {
+      reach = d;
+      best = { at: v, z: z ?? null, d };
+    }
+  };
+  switch (e.kind) {
+    case 'point':
+      test(e.p, e.z);
+      break;
+    case 'line':
+      test(e.a, e.za);
+      test(e.b, e.zb);
+      break;
+    case 'polyline':
+    case 'polygon':
+      for (let i = 0; i < e.pts.length; i++) test(e.pts[i], e.zs?.[i]);
+      if (e.kind === 'polygon') for (const h of e.holes ?? []) for (let i = 0; i < h.pts.length; i++) test(h.pts[i], h.zs?.[i]);
+      break;
+  }
+  return best;
+}
+
 /** What a list of elevations comes to, as the Kot rows say it (`kot yok`, a value, a range). */
 export type ElevationSummary =
   /** No vertex has one. */

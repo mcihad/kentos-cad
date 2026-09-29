@@ -386,6 +386,9 @@ export function drawNorthArrow(g: CanvasRenderingContext2D, cam: Camera, pal: Ca
   g.restore();
 }
 
+/** How near (CSS px) the pointer must be to take a grip, and to be said to rest on one (the select tool's tag). */
+export const GRIP_HIT_PX = 6;
+
 /** A mid grip is offered only when its segment is long enough on screen to tell it from the vertices. */
 export function midGripVisible(set: GripSet, index: number, cam: Camera): boolean {
   const seg = set.segments[index];

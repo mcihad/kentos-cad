@@ -1,12 +1,14 @@
 import type { AppContext } from '../app/context';
 import type { EntityGeometry as EditGeometry } from '../contracts/generated/EntityGeometry';
 import { Signal } from '../core/signal';
+import type { Entity } from '../model/entities';
 import { dist, type Vec2 } from '../model/geometry';
 import { entityGrips, moveGrip } from '../model/ops/grips';
 import { geometryOf } from '../product/entitiesEdit';
-import { gripElevation, hasVertexElevation } from '../product/elevationValues';
+import { gripElevation, hasVertexElevation, nearestVertex } from '../product/elevationValues';
 import { writeEdit } from './editCommand';
 import type { ViewTransform } from '../viewport/Camera';
+import { GRIP_HIT_PX } from '../viewport/overlay';
 import { drawSelectionBox, drawTag, strokeGeometry, strokePath } from './preview';
 import type { Tool, ToolPointer } from './Tool';
 import { constrainPoint, drawTracking, pointFromText, type Tracking } from './tracking';
@@ -132,24 +134,34 @@ export class SelectTool implements Tool {
 
   /**
    * The tag of the grip under `at` when the vertex it stands on has an elevation (docs/adr/0142): `Kot 105.250 m`
-   * beside the pointer. A vertex without one, a mid grip and a grip of another kind have no tag.
+   * beside the pointer. A vertex without one has none, and neither has a mid grip or a grip of another kind. The
+   * nearest vertex of the selected objects within the grips' aperture is the one (as `gripAt` finds a grip), looked
+   * for among the vertices themselves: `gripAt` builds every grip of the selection, which the pointer must not
+   * cost on each move over a selection of contours.
    */
   private gripTagAt(at: Vec2): string | null {
     const { doc, selection, view, format } = this.ctx;
     // A selection too big to have grips (`gripAt`'s limit) has no tags.
     if (selection.size === 0 || selection.size > 150) return null;
-    let elevated = false;
+    const editable: Entity[] = [];
     for (const id of selection.ids.value) {
       const e = doc.get(id);
-      if (e && hasVertexElevation(e)) {
-        elevated = true;
-        break;
+      if (e && !doc.layers.isLocked(e.layerId)) editable.push(e);
+    }
+    // A selection with no elevation costs nothing more.
+    if (!editable.some(hasVertexElevation)) return null;
+    // In metres, at the pointer: no vertex of the selection is brought to the screen.
+    const camera = view.camera;
+    const where = camera.screenToWorld(at);
+    let reach = GRIP_HIT_PX / camera.scale;
+    let z: number | null = null;
+    for (const e of editable) {
+      const v = nearestVertex(e, where, reach);
+      if (v) {
+        reach = v.d;
+        z = v.z;
       }
     }
-    if (!elevated) return null;
-    const hit = view.gripAt(at);
-    const e = hit && doc.get(hit.id);
-    const z = e ? gripElevation(e, hit.index) : null;
     return z === null ? null : `Kot ${format.length(z)}`;
   }
 
