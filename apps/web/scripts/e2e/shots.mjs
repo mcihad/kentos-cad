@@ -1637,6 +1637,13 @@ function adr0142Scenes(bare, clickWorld) {
     await ui.sleep(300);
   };
   const propsClose = async (ui) => (await section(ui, 'Genel', true), await ui.eval(UNDO_ALL), await ribbonOff(ui));
+  /** The objects on bare ground with some selected, the select tool active. */
+  const selected = async (ui, names) => {
+    await bare(ui, OBJECTS, { ribbonTab: 'modify' });
+    await ui.eval(`window.kentos.log.clear()`);
+    await ui.eval(selectNames(...names));
+    await ui.sleep(300);
+  };
   return [
     { id: 'elevation-step', open: async (ui) => (await started(ui, SAMPLE), await ui.move(2, 2)) },
     { id: 'elevation-raise-step', open: async (ui) => (await started(ui, SAMPLE, ['A']), await ui.move(2, 2)) },
@@ -1648,6 +1655,19 @@ function adr0142Scenes(bare, clickWorld) {
     { id: 'props-polyline', open: async (ui) => props(ui, ['path']), close: propsClose },
     { id: 'props-polygon', open: async (ui) => props(ui, ['area']), close: propsClose },
     { id: 'props-several', open: async (ui) => props(ui, ['line', 'path', 'area', 'circle']), close: propsClose },
+    // A grip of the polyline: its third vertex has an elevation, the second none. The tag beside the pointer resting on
+    // it; then the grip clicked and carried, its tag with the distance and the elevation the vertex keeps.
+    { id: 'grip-tag', open: async (ui) => (await selected(ui, ['path']), await hoverU(ui, -0.5, -0.75)) },
+    { id: 'grip-tag-none', open: async (ui) => (await selected(ui, ['path']), await hoverU(ui, -1.4, -0.3)) },
+    {
+      id: 'grip-tag-moving',
+      open: async (ui) => {
+        await selected(ui, ['path']);
+        await clickWorld(ui, AU(-0.5, -0.75));
+        await ui.sleep(250);
+        await hoverU(ui, -0.1, -1.15);
+      },
+    },
   ];
 }
 

@@ -4,6 +4,7 @@ import { Signal } from '../core/signal';
 import { dist, type Vec2 } from '../model/geometry';
 import { entityGrips, moveGrip } from '../model/ops/grips';
 import { geometryOf } from '../product/entitiesEdit';
+import { gripElevation, hasVertexElevation } from '../product/elevationValues';
 import { writeEdit } from './editCommand';
 import type { ViewTransform } from '../viewport/Camera';
 import { drawSelectionBox, drawTag, strokeGeometry, strokePath } from './preview';
@@ -39,6 +40,8 @@ export class SelectTool implements Tool {
   private gripPoint: Vec2 | null = null;
   private tracking: Tracking | null = null;
   private lastClick: { id: number; time: number } | null = null;
+  /** Where the pointer rests over the drawing, for the tag of a grip that has an elevation. */
+  private hoverScreen: Vec2 | null = null;
   private readonly ctx: AppContext;
 
   constructor(ctx: AppContext) {
@@ -76,6 +79,7 @@ export class SelectTool implements Tool {
   }
 
   deactivate(): void {
+    this.hoverScreen = null;
     this.ctx.selection.hover.set(null);
   }
 
@@ -110,6 +114,7 @@ export class SelectTool implements Tool {
 
   pointerDown(p: ToolPointer): void {
     if (p.button !== 0) return;
+    this.hoverScreen = null;
     if (this.grip?.hot) return this.commitGrip(this.gripPoint ?? p.world);
     const hit = this.ctx.view.gripAt(p.screen);
     if (hit) {
@@ -123,6 +128,29 @@ export class SelectTool implements Tool {
     this.start = { screen: p.screen, world: p.raw };
     this.current = this.start;
     this.dragging = false;
+  }
+
+  /**
+   * The tag of the grip under `at` when the vertex it stands on has an elevation (docs/adr/0142): `Kot 105.250 m`
+   * beside the pointer. A vertex without one, a mid grip and a grip of another kind have no tag.
+   */
+  private gripTagAt(at: Vec2): string | null {
+    const { doc, selection, view, format } = this.ctx;
+    // A selection too big to have grips (`gripAt`'s limit) has no tags.
+    if (selection.size === 0 || selection.size > 150) return null;
+    let elevated = false;
+    for (const id of selection.ids.value) {
+      const e = doc.get(id);
+      if (e && hasVertexElevation(e)) {
+        elevated = true;
+        break;
+      }
+    }
+    if (!elevated) return null;
+    const hit = view.gripAt(at);
+    const e = hit && doc.get(hit.id);
+    const z = e ? gripElevation(e, hit.index) : null;
+    return z === null ? null : `Kot ${format.length(z)}`;
   }
 
   pointerMove(p: ToolPointer): void {
@@ -142,7 +170,9 @@ export class SelectTool implements Tool {
       if (this.dragging) this.ctx.view.requestOverlay();
       return;
     }
-    const hit = this.ctx.view.pick(p.screen);
+    this.hoverScreen = p.screen;
+    // On a grip that has a tag the pointer is on the vertex, not on the object: no highlight, and no card over the tag.
+    const hit = this.gripTagAt(p.screen) === null ? this.ctx.view.pick(p.screen) : null;
     this.ctx.selection.hover.set(hit?.id ?? null);
   }
 
@@ -201,12 +231,24 @@ export class SelectTool implements Tool {
       const moved = e ? moveGrip(e, this.grip.index, this.gripPoint) : null;
       if (moved) strokeGeometry(g, view, moved, { color: pal.accent, dash: [4, 3], width: 1.5 });
       strokePath(g, view, [this.grip.origin, this.gripPoint], { color: pal.accent, dash: [2, 3] });
-      drawTag(g, view.worldToScreen(this.gripPoint), [this.ctx.format.length(dist(this.grip.origin, this.gripPoint))], pal.accent, pal.labelHalo);
+      // The vertex keeps its elevation as it moves (docs/adr/0142): the tag says which.
+      const z = e ? gripElevation(e, this.grip.index) : null;
+      const lines = [this.ctx.format.length(dist(this.grip.origin, this.gripPoint)), ...(z === null ? [] : [`Kot ${this.ctx.format.length(z)}`])];
+      drawTag(g, view.worldToScreen(this.gripPoint), lines, pal.accent, pal.labelHalo);
       if (this.tracking) drawTracking(g, view, this.tracking, this.gripPoint, pal.accent, pal.labelHalo);
       return;
     }
-    if (!this.dragging || !this.start || !this.current) return;
-    drawSelectionBox(g, this.start.screen, this.current.screen, this.ctx.view.palette.snap);
+    if (this.start) {
+      if (this.dragging && this.current) drawSelectionBox(g, this.start.screen, this.current.screen, this.ctx.view.palette.snap);
+      return;
+    }
+    // The pointer left the drawing: no tag.
+    const at = this.ctx.view.cursorWorld.value ? this.hoverScreen : null;
+    const tag = at && this.gripTagAt(at);
+    if (at && tag) {
+      const pal = this.ctx.view.palette;
+      drawTag(g, at, [tag], pal.accent, pal.labelHalo);
+    }
   }
 }
 
