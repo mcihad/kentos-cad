@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Entity } from '../model/entities';
-import { elevationAt, gripElevation, hasVertexElevation, mapElevations, nearestVertex, spaceLength, summarizeElevations, takesElevation, vertexElevations } from './elevationValues';
+import { elevationAt, gripElevation, hasVertexElevation, mapElevations, nearestVertex, spaceLength, summarizeElevations, takesElevation, uniformElevation, vertexElevations } from './elevationValues';
 
 /**
  * The vertex elevations the interface reads and writes (docs/adr/0142): what a list of them comes to, the length in
@@ -38,6 +38,33 @@ describe('vertex elevations', () => {
   });
 });
 
+describe('the one elevation of every vertex of an object', () => {
+  it('the number all its vertices have, null when none has one, mixed otherwise', () => {
+    expect(uniformElevation(line([0, 0], [5, 0], 7, 7))).toBe(7);
+    expect(uniformElevation(line([0, 0], [5, 0], 7, 8))).toBe('mixed');
+    expect(uniformElevation(line([0, 0], [5, 0], 7))).toBe('mixed');
+    expect(uniformElevation(line([0, 0], [5, 0]))).toBeNull();
+    // 0 is an elevation.
+    expect(uniformElevation(line([0, 0], [5, 0], 0, 0))).toBe(0);
+    expect(uniformElevation(poly('polyline', SQUARE.slice(0, 3), [4, 4, 4]))).toBe(4);
+    expect(uniformElevation(poly('polyline', SQUARE.slice(0, 3), [4, null, 4]))).toBe('mixed');
+    expect(uniformElevation(poly('polyline', SQUARE.slice(0, 3), [4, 4, 5]))).toBe('mixed');
+    expect(uniformElevation(poly('polyline', SQUARE.slice(0, 3)))).toBeNull();
+    expect(uniformElevation({ ...base, kind: 'point', p: p(0, 0), z: 3 })).toBe(3);
+    expect(uniformElevation({ ...base, kind: 'point', p: p(0, 0) })).toBeNull();
+    expect(uniformElevation({ ...base, kind: 'circle', c: p(0, 0), r: 1 })).toBeNull();
+  });
+
+  it('an area’s holes are part of it: all the same, or mixed', () => {
+    const ring = (zs?: (number | null)[]) => ({ pts: [p(2, 2), p(4, 2), p(4, 4)], ...(zs ? { zs } : {}) });
+    expect(uniformElevation(poly('polygon', SQUARE, [4, 4, 4, 4], { holes: [ring([4, 4, 4])] }))).toBe(4);
+    expect(uniformElevation(poly('polygon', SQUARE, [4, 4, 4, 4], { holes: [ring([4, 4, 5])] }))).toBe('mixed');
+    expect(uniformElevation(poly('polygon', SQUARE, [4, 4, 4, 4], { holes: [ring()] }))).toBe('mixed');
+    // A hole with an elevation and a ring without any (the ring's first vertex has none): mixed.
+    expect(uniformElevation(poly('polygon', SQUARE, undefined, { holes: [ring([4, 4, 4])] }))).toBe('mixed');
+  });
+});
+
 describe('what a list of elevations comes to', () => {
   it('none, one value, a range, and a range of those that have one', () => {
     expect(summarizeElevations([null, null])).toEqual({ kind: 'none' });
@@ -49,6 +76,13 @@ describe('what a list of elevations comes to', () => {
     expect(summarizeElevations([105.25, null, 98.5])).toEqual({ kind: 'partial', min: 98.5, max: 105.25 });
     // The ones that have an elevation agree: a partial value, not a range of one.
     expect(summarizeElevations([100, null, 100])).toEqual({ kind: 'partial', min: 100, max: 100 });
+  });
+
+  it('a path of hundreds of thousands of vertices (a spread into Math.min would overflow the call)', () => {
+    const zs = Array.from({ length: 400_000 }, (_, i) => 1000 + (i % 250));
+    expect(summarizeElevations(zs)).toEqual({ kind: 'range', min: 1000, max: 1249 });
+    zs[7] = null;
+    expect(summarizeElevations(zs)).toEqual({ kind: 'partial', min: 1000, max: 1249 });
   });
 });
 

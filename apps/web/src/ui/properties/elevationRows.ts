@@ -1,6 +1,6 @@
 import type { AppContext } from '../../app/context';
 import type { Entity } from '../../model/entities';
-import { spaceLength, summarizeElevations, takesElevation, vertexElevations } from '../../product/elevationValues';
+import { spaceLength, summarizeElevations, takesElevation, uniformElevation, vertexElevations } from '../../product/elevationValues';
 import { parseNumber } from '../../tools/coordinateInput';
 import { writeElevations } from '../../tools/editCommand';
 import type { PropRow } from '../widgets/PropertyGrid';
@@ -91,9 +91,16 @@ export function spaceRow(ctx: AppContext, e: Entity): PropRow[] {
 export function commonElevationRow(ctx: AppContext, ents: readonly Entity[], locked: boolean): PropRow[] {
   const takers = ents.filter(takesElevation);
   if (!takers.length) return [];
-  const zs = takers.flatMap(vertexElevations);
   const write = locked ? undefined : (v: number | null) => void writeElevations(ctx, takers, () => v);
-  const { kind } = summarizeElevations(zs);
+  // Each object's own answer, compared: a selection of tens of thousands of objects must not be flattened.
+  let common: number | null | 'mixed' | undefined;
+  for (const e of takers) {
+    const u = uniformElevation(e);
+    if (common === undefined) common = u;
+    else if (u !== common) common = 'mixed';
+    if (common === 'mixed') break;
+  }
   // The one value, or none; anything else (different values, some vertices without one) has no value to show.
-  return [kind === 'value' || kind === 'none' ? elevationRow(ctx, 'Kot', zs, write) : { label: 'Kot', value: 'Çeşitli', editor: elevationEditor(write) }];
+  if (common === 'mixed') return [{ label: 'Kot', value: 'Çeşitli', editor: elevationEditor(write) }];
+  return [elevationRow(ctx, 'Kot', [common ?? null], write)];
 }

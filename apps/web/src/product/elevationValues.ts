@@ -80,6 +80,26 @@ export function nearestVertex(e: Entity, p: Vec2, within: number): { at: Vec2; z
   return best;
 }
 
+/**
+ * The one elevation every vertex of the object has: that number; null when none has one (also a kind that takes
+ * none); `'mixed'` when they differ or some vertices lack one. Cheap on a large selection: an object without
+ * elevations answers at once, one with them stops at the first vertex that differs, and nothing is allocated.
+ */
+export function uniformElevation(e: Entity): number | null | 'mixed' {
+  if (e.kind === 'point') return e.z ?? null;
+  if (e.kind === 'line') return e.za === undefined && e.zb === undefined ? null : e.za !== undefined && e.za === e.zb ? e.za : 'mixed';
+  if ((e.kind !== 'polyline' && e.kind !== 'polygon') || !hasVertexElevation(e)) return null;
+  const first = e.zs?.[0];
+  if (first == null) return 'mixed';
+  const same = (zs: readonly (number | null)[] | undefined, n: number) => {
+    for (let i = 0; i < n; i++) if (zs?.[i] !== first) return false;
+    return true;
+  };
+  if (!same(e.zs, e.pts.length)) return 'mixed';
+  if (e.kind === 'polygon') for (const h of e.holes ?? []) if (!same(h.zs, h.pts.length)) return 'mixed';
+  return first;
+}
+
 /** What a list of elevations comes to, as the Kot rows say it (`kot yok`, a value, a range). */
 export type ElevationSummary =
   /** No vertex has one. */
@@ -92,11 +112,18 @@ export type ElevationSummary =
   | { kind: 'partial'; min: number; max: number };
 
 export function summarizeElevations(zs: readonly (number | null)[]): ElevationSummary {
-  const have = zs.filter((z): z is number => z !== null);
-  if (!have.length) return { kind: 'none' };
-  const min = Math.min(...have);
-  const max = Math.max(...have);
-  if (have.length < zs.length) return { kind: 'partial', min, max };
+  // A loop, not `Math.min(...zs)`: a path of a few hundred thousand vertices would overflow the call's arguments.
+  let min = Infinity;
+  let max = -Infinity;
+  let have = 0;
+  for (const z of zs) {
+    if (z === null) continue;
+    have++;
+    if (z < min) min = z;
+    if (z > max) max = z;
+  }
+  if (!have) return { kind: 'none' };
+  if (have < zs.length) return { kind: 'partial', min, max };
   return min === max ? { kind: 'value', z: min } : { kind: 'range', min, max };
 }
 
