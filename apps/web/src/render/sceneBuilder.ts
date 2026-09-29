@@ -83,7 +83,8 @@ export function buildSceneLayer(id: string, entities: readonly Entity[], style: 
       case 'polygon':
         if (g?.cls !== 'fill') break;
         for (const r of g.rings) b.lines.path(r, origin, true);
-        if (style.fill || opts.overrideFill) fills.add(b.fill, g.rings);
+        // Each part of a multi-part area (docs/adr/0143) is a polygon of its own for the triangles.
+        if (style.fill || opts.overrideFill) for (const part of g.parts ?? [g.rings]) fills.add(b.fill, part);
         break;
       case 'hatch':
         if (g?.cls !== 'fill') break;

@@ -18,7 +18,16 @@ export type GeometryClass = 'marker' | 'line' | 'fill';
 export type StyledGeometry =
   | { readonly cls: 'marker'; readonly point: Vec2 }
   | { readonly cls: 'line'; readonly paths: readonly { readonly pts: readonly Vec2[]; readonly closed: boolean }[] }
-  | { readonly cls: 'fill'; readonly rings: readonly (readonly Vec2[])[] };
+  | {
+      readonly cls: 'fill';
+      /** Every ring: an area's outer ring, then its holes; a multi-part area's, part after part. */
+      readonly rings: readonly (readonly Vec2[])[];
+      /**
+       * A multi-part area's parts (docs/adr/0143), each its outer ring then its holes, so each part is
+       * filled as a polygon of its own; absent for one part, whose rings are `rings`.
+       */
+      readonly parts?: readonly (readonly (readonly Vec2[])[])[];
+    };
 
 /**
  * Areas are polygons and hatches; circles and ellipses stay curves (as in
@@ -43,6 +52,7 @@ export function geometryClassOf(e: Entity): GeometryClass | null {
 const MARKER = 1;
 const LINE = 2;
 const FILL = 3;
+const FILLS = 4;
 const SOURCE = -1;
 const REVERSED = -2;
 
@@ -75,15 +85,20 @@ export class DrawnReader {
     this.buf = buf;
   }
 
-  private points(e: Entity, k: number): readonly Vec2[] {
+  /** `n` points the record writes out, x and y each. */
+  private written(n: number): readonly Vec2[] {
     const b = this.buf;
-    const n = b[this.at++];
-    if (n === SOURCE) return ownPoints(e, k);
-    if (n === REVERSED) return [...ownPoints(e, k)].reverse();
     const out: Vec2[] = new Array(n);
     for (let i = 0; i < n; i++) out[i] = { x: b[this.at + 2 * i], y: b[this.at + 2 * i + 1] };
     this.at += 2 * n;
     return out;
+  }
+
+  private points(e: Entity, k: number): readonly Vec2[] {
+    const n = this.buf[this.at++];
+    if (n === SOURCE) return ownPoints(e, k);
+    if (n === REVERSED) return [...ownPoints(e, k)].reverse();
+    return this.written(n);
   }
 
   /** The next record, for `e`: the object it was asked for. */
@@ -109,6 +124,19 @@ export class DrawnReader {
         const rings: (readonly Vec2[])[] = [];
         for (let k = 0; k < count; k++) rings.push(this.points(e, k));
         return { cls: 'fill', rings };
+      }
+      case FILLS: {
+        // A multi-part area (docs/adr/0143): its parts, each a fill with its holes.
+        const count = b[this.at++];
+        const parts: (readonly Vec2[])[][] = [];
+        for (let k = 0; k < count; k++) {
+          const rings: (readonly Vec2[])[] = [];
+          const n = b[this.at++];
+          // The points are always written out: a reference could not say which part it means.
+          for (let i = 0; i < n; i++) rings.push(this.written(b[this.at++]));
+          parts.push(rings);
+        }
+        return { cls: 'fill', rings: parts.flat(), parts };
       }
       default:
         return null;
