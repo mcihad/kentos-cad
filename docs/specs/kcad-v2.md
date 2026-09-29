@@ -1,6 +1,6 @@
 # KCAD v2: KentOS proje dosyası (`.kcad`) bayt spesifikasyonu
 
-- **Sürüm:** kap 2.0, belge şeması 2, KentOS CBOR profili 1.
+- **Sürüm:** kap 2.0, belge şeması 2 (yazıcı gerektiğinde 3 ya da 4 yazar, §6.1), KentOS CBOR profili 1.
 - **Durum:** kabul edildi (2026-09-26, [ADR 0025](../adr/0025-kcad-v2-encoding.md)). Yön [ADR 0011](../adr/0011-kcad-binary-snapshot.md)'den, kimlikler [ADR 0014](../adr/0014-persistent-entity-identity.md)'ten gelir.
 - **Kapsam:** TODOS.md `FILE-01..08`, `FILE-12`, `FILE-22`, `FILE-23`.
 - **Başvuru uygulamaları:** Rust kodlayıcı ve çözücü `crates/shared/kcad` (`kentos-kcad`); tarayıcıda aynı kod `crates/wasm/formats-wasm` ile; bağımsız Python okuyucusu `tools/kcad/kcad.py`; bayt düzeyinde örnekler `fixtures/kcad/v2`.
@@ -148,9 +148,9 @@ Yük, RFC 8949 CBOR'unun bu bölümle daraltılmış bir alt kümesidir. Profil 
 
 - **En kısa tam sayı ve uzunluk:** bir öğenin argümanı (tam sayının değeri ya da dizgi, dizi, harita uzunluğu) 0–23 ise ilk bayta gömülür; 24–255 bir, 256–65 535 iki, 65 536–2³²−1 dört, daha büyüğü sekiz ek baytla yazılır. Daha uzun biçim `non_shortest`'tir.
 - **Belirli uzunluk:** her dizgi, dizi ve harita uzunluğunu önden yazar.
-- **Harita anahtarları** metindir (`non_text_key`) ve **kodlanmış anahtar baytlarına göre sözlük sırasındadır** (RFC 8949 §4.2.1). Metin anahtarlarda bu şuna eşittir: önce UTF-8 uzunluğu kısa olan, uzunluk eşitse baytça küçük olan. Örnek: `p` < `uid` < `attrs` < `layerId` < `lineWeight`.
+- **Harita anahtarları** metindir (`non_text_key`) ve **kodlanmış anahtar baytlarına göre sözlük sırasındadır** (RFC 8949 §4.2.1). Metin anahtarlarda bu şuna eşittir: önce UTF-8 uzunluğu kısa olan, uzunluk eşitse baytça küçük olan. Örnek: `p` < `zs` < `uid` < `attrs` < `layerId` < `lineWeight`.
   - Sırasız anahtar `unsorted_keys`, aynı anahtarın ikinci kez gelmesi `duplicate_key`'dir. Sıra kodlanmış baytlarla denetlendiği için iki denetim tek karşılaştırmadır.
-- **Yok olan değer yazılmaz:** isteğe bağlı bir alanın değeri yoksa anahtar da yoktur. Şemalı alanlarda `null` yazılmaz (§6).
+- **Yok olan değer yazılmaz:** isteğe bağlı bir alanın değeri yoksa anahtar da yoktur. Şemalı alanlarda `null` yazılmaz (§6); tek istisna köşe kotlarının listesidir: `zs` köşe başına bir öğe taşır, kotsuz köşe `null`'dır (§6.6).
 - Dosyada zaman damgası, rastgele sayı ya da yazıcıya özgü bilgi yoktur; aynı belge her kayıtta aynı baytları verir.
 
 ### 5.3 Sayılar
@@ -159,7 +159,7 @@ Yük, RFC 8949 CBOR'unun bu bölümle daraltılmış bir alt kümesidir. Profil 
 - **NaN, +∞ ve −∞ hiçbir yerde yazılamaz** (`non_finite`). Çizim geometrisi sonlu sayıdır; JSON ile çalışan istemciler de bu değerleri taşıyamaz.
 - **−0 yazılabilir ve olduğu gibi korunur** (`80 00 … 00` işaret biti). Okuyucu −0'ı +0'a çevirmez; −0 ile +0 farklı dosya baytları verir.
 - **Tam sayılar** şemanın verdiği aralıktadır (§6); şemalı bir float alanına tam sayı yazılamaz (`wrong_type`), şemalı bir tam sayı alanına float yazılamaz.
-- **Kesin ondalık ve hisse değerleri** float olarak yazılmaz. Belge şeması 2'de böyle bir alan yoktur (öznitelikler metindir). Eklendiğinde sözleşmedeki kesin biçimleriyle yazılır: ondalık, üssüz ondalık metin (`"748.5151"`, `DecimalString`); hisse, pay ve paydası ondalık metin olan harita (`ShareValue`) (CLAUDE.md §23.1).
+- **Kesin ondalık ve hisse değerleri** float olarak yazılmaz. Belge şemalarında (2, 3, 4) böyle bir alan yoktur (öznitelikler metindir). Eklendiğinde sözleşmedeki kesin biçimleriyle yazılır: ondalık, üssüz ondalık metin (`"748.5151"`, `DecimalString`); hisse, pay ve paydası ondalık metin olan harita (`ShareValue`) (CLAUDE.md §23.1).
 
 ### 5.4 Metin
 
@@ -185,7 +185,7 @@ Profil hiçbir CBOR etiketi kullanmaz. ADR 0014 kimlikler için UUID etiketini (
 - Etiket her nesneye 2 bayt ekler ve profile “bu etiket nerede geçerli” kuralını getirir.
 - Genel CBOR araçları etiketsiz dosyayı da çözer; kimlik 16 baytlık bayt dizgisi olarak görünür.
 
-## 6. Belge şeması 2
+## 6. Belge şeması 2, 3 ve 4
 
 ### 6.1 Kök
 
@@ -194,12 +194,16 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2` ya da `3`; değilse `schema_version` |
+| `version` | tam sayı | `2`, `3` ya da `4`; değilse `schema_version` |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
 
-**Şema 3**, şema 2'nin kendisi ve nesnenin kendi çizgi kalınlığıdır (`lineWeight`, §6.6; ADR 0139). Yazıcı `3`'ü **yalnız bir nesnenin kendi kalınlığı varken** yazar; başka her çizim şema 2'dir ve eskisiyle bayt bayt aynıdır, bu yüzden şema 2 okuyucusu onu açmaya devam eder. Şema 2 yükünde `lineWeight` bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/line-weight-in-schema-2.kcad`). Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) iki şemada da aynıdır; şema dosyanın neyi taşıdığını söyler.
+**Şema 3**, şema 2'nin kendisi ve nesnenin kendi çizgi kalınlığıdır (`lineWeight`, §6.6; ADR 0139). Yazıcı `3`'ü **yalnız bir nesnenin kendi kalınlığı varken** yazar; başka her çizim şema 2'dir ve eskisiyle bayt bayt aynıdır, bu yüzden şema 2 okuyucusu onu açmaya devam eder. Şema 2 yükünde `lineWeight` bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/line-weight-in-schema-2.kcad`).
+
+**Şema 4**, şema 3'ün kendisi ve köşe kotlarıdır (çizgide `za`, `zb`; çoklu çizgide, alanda ve alanın deliğinde `zs`; §6.6; ADR 0142). Yazıcı `4`'ü **yalnız bir nesnede köşe kotu alanı varken** yazar: bir çizginin bir ucunun kotu, bir çoklu çizginin, alanın ya da alanın bir deliğinin `zs`'i (hepsi `null` olan bir `zs` de alandır). Başka her çizim şema 2 ya da 3'tür ve eskisiyle bayt bayt aynıdır, bu yüzden eski okuyucular kotsuz çizimi açmaya devam eder. Şema 2 ve 3 yükünde kot alanları bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/elevation-in-schema-2.kcad`, `elevation-in-schema-3.kcad`). Şema 4 şema 3'ü kapsar: nesnenin kendi kalınlığı orada da yazılır.
+
+Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: kotu olan çizim 4, kotu olmayıp nesne kalınlığı olan 3, ikisi de olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
 
 ### 6.2 Belge
 
@@ -230,6 +234,7 @@ Bilinmeyen bir anahtar `unknown_field`, eksik zorunlu anahtar `missing_field`'d�
 | kimlik | bayt dizgisi: 16 | RFC 9562 UUID'nin 16 baytı, ağ sırasıyla; boş (nil, 16 sıfır) olamaz; boy yanlışsa `bad_value` |
 | özet | bayt dizgisi: 32 | SHA-256 |
 | float | `FB` binary64 | sonlu (§5.3) |
+| kot listesi | dizi: float ya da `null` | yalnız şema 4 (§6.6): köşe başına bir öğe, sonlu float (metre) ya da kotsuz köşe için `null`; başka türde öğe `wrong_type` |
 | tam sayı (u32, u16) | ana tür 0 | aralık dışı `bad_value` |
 | numaralı metin | metin | tabloda verilen değerlerden biri; değilse `bad_value` |
 
@@ -310,16 +315,16 @@ Yanlış CBOR türü (float yerine tam sayı, nokta yerine harita) `wrong_type`'
 | `label` | metin | | nesnenin etiketi |
 | `symbol` | metin | | katman stilinin yerine kitaplık sembolü |
 | `layerId` | metin | evet | nesnenin katmanı |
-| `lineWeight` | float | | yalnız şema 3: nesnenin kendi çizgi kalınlığı, kağıtta mm, `0` en ince çizgi; `0`…`100` dışı `bad_value`; yoksa katmana göre |
+| `lineWeight` | float | | yalnız şema 3 ve 4: nesnenin kendi çizgi kalınlığı, kağıtta mm, `0` en ince çizgi; `0`…`100` dışı `bad_value`; yoksa katmana göre |
 
 **Türlere göre alanlar** (ortak alanlarla birlikte aynı haritada, sıralı):
 
 | Tür | Alanlar |
 |---|---|
 | `point` | `p` nokta; `z` float (isteğe bağlı, kot) |
-| `line` | `a`, `b` nokta |
-| `polyline` | `pts` nokta listesi; `bulges` float dizisi (isteğe bağlı) |
-| `polygon` | `pts` nokta listesi; `bulges` float dizisi (isteğe bağlı); `holes` halka dizisi (isteğe bağlı) |
+| `line` | `a`, `b` nokta; `za`, `zb` float (isteğe bağlı; yalnız şema 4: uçların kotu) |
+| `polyline` | `pts` nokta listesi; `bulges` float dizisi (isteğe bağlı); `zs` kot listesi (isteğe bağlı; yalnız şema 4) |
+| `polygon` | `pts` nokta listesi; `bulges` float dizisi (isteğe bağlı); `holes` halka dizisi (isteğe bağlı); `zs` kot listesi (isteğe bağlı; yalnız şema 4) |
 | `circle` | `c` nokta; `r` float |
 | `arc` | `c` nokta; `r`, `a0`, `a1` float (radyan, saat yönünün tersine `a0` → `a1`) |
 | `ellipse` | `c`, `major` nokta; `ratio`, `t0`, `t1` float |
@@ -329,8 +334,16 @@ Yanlış CBOR türü (float yerine tam sayı, nokta yerine harita) `wrong_type`'
 | `dimension` | `a`, `b` nokta; `offset`, `height` float; isteğe bağlı: `c` nokta, `text` metin, `angle` float, `style` numaralı metin (`aligned`, `linear`, `angular`, `radius`, `diameter`) |
 | `hatch` | `ring` nokta listesi; `holes` nokta listesi dizisi (isteğe bağlı); `pattern` harita: `type` (`solid`, `lines`, `cross`), `angle` float, `spacing` float |
 
-- **Halka** (`polygon`'un deliği): `pts` nokta listesi (zorunlu), `bulges` float dizisi (isteğe bağlı).
+- **Halka** (`polygon`'un deliği): `pts` nokta listesi (zorunlu), `bulges` float dizisi (isteğe bağlı), `zs` kot listesi (isteğe bağlı; yalnız şema 4). Halkanın anahtarları kodlanmış sırasıyla `zs` < `pts` < `bulges`'tir.
 - **Yay değeri** (`bulges`): DXF'teki gibi `tan(θ/4)`, saat yönünün tersi artı; `bulges[i]` `pts[i] → pts[i+1]` kenarınındır, kapalı şekilde son değer kapanış kenarınındır. Yaylar, delikler, elips ve eğri parametreleri tanım olarak saklanır; ekranda çizilen üçgen ya da kısa parçalar dosyaya girmez (`FILE-08`).
+- **Köşe kotları** (şema 4; ADR 0142):
+  - **Anlamı:** metre, projenin düşey datumunda; sonlu bir float, eksi olabilir (deniz altı, kazı), aralık sınırı yoktur. Hangi yükseklik olduğu (ortometrik, elipsoidal) proje ayarının işidir, dosya biçiminin değil.
+  - **Çizgi:** `za` başlangıcın, `zb` bitişin kotudur, her biri kendi başına isteğe bağlıdır. Kotsuz ucun anahtarı hiç yazılmaz (§5.2); `null` yazılmaz ve okunmaz (`wrong_type`).
+  - **Çoklu çizgi, alan ve delik:** `zs`, `pts` ile **aynı uzunlukta**, köşe başına bir öğedir: sonlu float ya da `null`. `null` kotsuz köşedir; 0 değildir, “kot yok” ayrı bir durumdur. Opak kısımlar (§6.7) dışında şemalı bir alanda yazılan tek `null` budur. Uzunluğu `pts`'ten farklı bir `zs` `bad_value`'dur (yolu `…/zs`).
+  - **Okuma sırası:** `zs` anahtarı `pts`'ten önce geldiği için okuyucu uzunluğu haritanın sonunda, iki alanı da okuyunca denetler.
+  - **Yazıcı** `zs`'i verildiği gibi yazar, hepsi `null` olan da: yazılan baytlar okununca çizimle aynı çıkmalıdır. Hiçbir köşenin kotu yoksa alanı hiç üretmemek üreticinin işidir (ADR 0142).
+  - **Sonlu olmayan kot** (NaN, ±∞) hiçbir float gibi yazılamaz ve okunamaz: `non_finite` (§5.3). Kotun yerinde tam sayı ya da başka tür `wrong_type`'tır.
+  - **Şema:** kot alanları yalnız şema 4'te vardır (§6.1). Nokta kendi `z`'sini önceki şemalardan beri taşır; daire, yay, elips, yazı, ölçü ve tarama kot almaz.
 - Ölçü, blok, dış başvuru, yüzey ve katı gibi yeni türler ileride şemaya ya da zorunlu bir uzantıya eklenir; eski okuyucu onları tanımadığını söyler.
 
 ### 6.7 Proje stilleri ve opak değerler
@@ -433,10 +446,10 @@ Okuyucular kodu sabit tutar (programlar ve örnek dosyalar için); ileti Türkç
 | `cbor_trailing` | CBOR | yükte öğeden sonra bayt var |
 | `schema_format` | şema | yük bir KentOS çizimi değil |
 | `schema_version` | şema | belge şeması sürümü okunamıyor |
-| `unknown_field` | şema | bilinmeyen alan |
+| `unknown_field` | şema | bilinmeyen alan (eski şemada yeni alan dahil) |
 | `missing_field` | şema | zorunlu alan yok |
 | `wrong_type` | şema | alanın CBOR türü yanlış |
-| `bad_value` | şema | değer geçersiz (numaralı metin, aralık, boy, nil kimlik) |
+| `bad_value` | şema | değer geçersiz (numaralı metin, aralık, boy, nil kimlik, kot sayısı) |
 | `unknown_kind` | şema | bilinmeyen nesne türü |
 | `duplicate_uid` | şema | aynı kalıcı kimlik iki nesnede |
 
@@ -510,7 +523,7 @@ Anahtar sırasına dikkat: `name` (4) < `layers` (6) < `origin` < `styles` < `en
 - **Ana sürüm** yalnız kap düzeni uyumsuz değişince artar (başlık alanlarının yeri, bütünlük yöntemi).
 - **Küçük sürüm** yeni bir kodek, bayrak, uzantı ya da isteğe bağlı başlık alanı getirir. Yazıcı `minReaderMinor`'ı yalnız o yeni şeyi gerçekten kullandığında yükseltir.
 - **Belge şeması sürümü** şema uyumsuz değişince artar (alan anlamı, zorunluluk). Yeni bir nesne türü ya da alan da şema sürümünü ya da bir zorunlu uzantıyı gerektirir: 2.0 okuyucusu bilmediği alanı ve türü reddeder.
-  - Yazıcı şema sürümünü, `minReaderMinor` gibi, dosyada **gerçekten kullandığı** en yeni alana göre yazar: nesne kalınlığı olmayan çizim şema 2'dir (§6.1).
+  - Yazıcı şema sürümünü, `minReaderMinor` gibi, dosyada **gerçekten kullandığı** en yeni alana göre yazar: köşe kotu olmayan ve nesne kalınlığı olmayan çizim şema 2'dir, yalnız nesne kalınlığı olan 3, köşe kotu olan 4 (§6.1).
 - **Profil** değişirse (etiket kullanımı gibi) yeni bir `encoding` kimliği alır.
 - Her değişiklik bu belgeyi, `fixtures/kcad/v2`'yi, Rust kodlayıcısını ve `tools/kcad/kcad.py`'yi birlikte günceller; eski örnek dosyalar okunmaya devam eder.
 

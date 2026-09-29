@@ -55,6 +55,9 @@ DOCUMENT_VERSION = 2
 # Schema 3: schema 2 and an object's own line weight (`lineWeight`, mm; docs/adr/0139).
 SCHEMA_WITH_LINE_WEIGHTS = 3
 MAX_LINE_WEIGHT = 100.0
+# Schema 4: schema 3 and vertex elevations (`za`, `zb` of a line, `zs` of a polyline, a polygon and a hole; docs/adr/0142).
+SCHEMA_WITH_ELEVATIONS = 4
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS)
 
 
 class KcadError(Exception):
@@ -274,7 +277,7 @@ def decode_payload(payload):
     return value
 
 
-# ── Document schema 2 (spec §6) ─────────────────────────────────────────
+# ── Document schemas 2, 3 and 4 (spec §6) ───────────────────────────────
 
 
 class _Schema:
@@ -284,8 +287,9 @@ class _Schema:
         self.path = []
         self.uids = []
         self.seen = set()
-        # Whether objects may have their own line weight (schema 3).
+        # What the payload's schema lets an object hold: its own line weight (schema 3 and 4), vertex elevations (schema 4).
         self.weights = False
+        self.elevations = False
 
     def where(self):
         return "/".join(self.path) or "(kök)"
@@ -427,10 +431,11 @@ class _Schema:
         if v.get("format") != DOCUMENT_FORMAT:
             self.fail("schema_format", f"KentOS çizimi değil (format ≠ {DOCUMENT_FORMAT})")
         version = v.get("version")
-        if type(version) is not int or version not in (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS):
-            self.fail("schema_version", f"belge şeması sürümü {version!r} okunamıyor (desteklenen: {DOCUMENT_VERSION}, {SCHEMA_WITH_LINE_WEIGHTS})")
-        # In schema 2 an object's line weight is an unknown field.
-        self.weights = version == SCHEMA_WITH_LINE_WEIGHTS
+        if type(version) is not int or version not in SCHEMAS:
+            self.fail("schema_version", f"belge şeması sürümü {version!r} okunamıyor (desteklenen: {', '.join(map(str, SCHEMAS))})")
+        # In an older schema these fields are unknown ones.
+        self.weights = version >= SCHEMA_WITH_LINE_WEIGHTS
+        self.elevations = version >= SCHEMA_WITH_ELEVATIONS
         checked = self.fields({"format": (self.text, True), "version": (self.uint(32), True), "document": (self.document, True)})(v)
         return checked["document"]
 
@@ -555,6 +560,8 @@ class _Schema:
         self.path.append(kind)
         try:
             fields = self.fields(table)(body)
+            if kind in ("polyline", "polygon"):
+                self.same_length(fields)
         finally:
             self.path.pop()
         fields.pop("uid")
@@ -577,20 +584,38 @@ class _Schema:
             self.fail("bad_value", f"çizgi kalınlığı {w} mm; 0 ile {MAX_LINE_WEIGHT:g} arasında olmalı")
         return w
 
+    def elevation(self, v):
+        """A vertex's elevation: a float, or `null` for a vertex without one (§6.6)."""
+        return None if v is None else self.float(v)
+
+    def same_length(self, obj):
+        """One elevation per vertex (§6.6): `zs` as long as `pts`. Keys come in encoded order, `zs` before `pts`, so this is checked once the map is read."""
+        if "zs" in obj and len(obj["zs"]) != len(obj["pts"]):
+            self.path.append("zs")
+            self.fail("bad_value", f"{len(obj['zs'])} kot var ama {len(obj['pts'])} köşe var; her köşenin bir kotu olmalı (kotsuz köşe için null)")
+
     def ring(self, v):
-        return self.fields({"pts": (self.array(self.point), True), "bulges": (self.array(self.float), False)})(v)
+        table = {"pts": (self.array(self.point), True), "bulges": (self.array(self.float), False)}
+        if self.elevations:
+            table["zs"] = (self.array(self.elevation), False)
+        ring = self.fields(table)(v)
+        self.same_length(ring)
+        return ring
 
 
 def _path(s, holes):
     table = {"pts": (s.array(s.point), True), "bulges": (s.array(s.float), False)}
     if holes:
         table["holes"] = (s.array(s.ring), False)
+    if s.elevations:
+        table["zs"] = (s.array(s.elevation), False)
     return table
 
 
 ENTITY_KINDS = {
     "point": lambda s: {"p": (s.point, True), "z": (s.float, False)},
-    "line": lambda s: {"a": (s.point, True), "b": (s.point, True)},
+    # A line's end without an elevation has no key: `null` is not written there (§5.2).
+    "line": lambda s: {"a": (s.point, True), "b": (s.point, True), **({"za": (s.float, False), "zb": (s.float, False)} if s.elevations else {})},
     "polyline": lambda s: _path(s, holes=False),
     "polygon": lambda s: _path(s, holes=True),
     "circle": lambda s: {"c": (s.point, True), "r": (s.float, True)},
