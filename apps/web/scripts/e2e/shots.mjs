@@ -1424,7 +1424,8 @@ function adr0141Scenes(bare, clickWorld) {
     },
     {
       id: 'extentcheck-none',
-      open: async (ui) => (await ribbonOn(ui, { ribbonTab: 'view', ...LOGGED }), await ui.eval(HOME), await ui.eval(`window.kentos.log.clear()`), await ui.eval(`window.kentos.commands.execute('view.extentCheck')`), await ui.sleep(400)),
+      // The panel opens under the drawing first (the view is resized), then the sheet is put in view.
+      open: async (ui) => (await ribbonOn(ui, { ribbonTab: 'view', ...LOGGED }), await ui.sleep(400), await ui.eval(HOME), await ui.eval(`window.kentos.log.clear()`), await ui.eval(`window.kentos.commands.execute('view.extentCheck')`), await ui.sleep(400)),
     },
     { id: 'layers-zoom-menu', open: async (ui) => (await ribbonOn(ui), await ui.eval(HOME), await menuOn(ui, LAYER_ROW)) },
     { id: 'layers-zoom-group-menu', open: async (ui) => (await ribbonOn(ui), await ui.eval(HOME), await menuOn(ui, GROUP_ROW)) },
