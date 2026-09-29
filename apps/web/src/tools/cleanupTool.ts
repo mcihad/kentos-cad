@@ -5,7 +5,7 @@ import type { ViewTransform } from '../viewport/Camera';
 import { editGeometry, uidOf, writeEdit } from './editCommand';
 import { MAX_GHOSTS, SelectionFirstTool } from './modifyTools';
 import { strokeGeometry } from './preview';
-import { markVertices, outlinesOf } from './reshapePreview';
+import { markVertices, outlinesOf, pathRings } from './reshapePreview';
 
 /**
  * Çizimi temizle (docs/adr/0140): finds what a drawing carries twice or
@@ -140,8 +140,7 @@ function anchorOf(e: Entity) {
   return o ?? ('p' in g ? g.p : null);
 }
 
-/** The vertices of a path that repeat the one before them (the ones cleaning drops). */
-function repeatedIn(e: Entity) {
-  const rings = e.kind === 'polyline' ? [e.pts] : e.kind === 'polygon' ? [e.pts, ...(e.holes ?? []).map((h) => h.pts)] : [];
-  return rings.flatMap((pts) => pts.filter((p, i) => i > 0 && Math.hypot(p.x - pts[i - 1].x, p.y - pts[i - 1].y) <= 1e-9));
+/** The vertices of a path, an area's every part included, that repeat the one before them (the ones cleaning drops). */
+export function repeatedIn(e: Entity) {
+  return pathRings(e).flatMap((pts) => pts.filter((p, i) => i > 0 && Math.hypot(p.x - pts[i - 1].x, p.y - pts[i - 1].y) <= 1e-9));
 }

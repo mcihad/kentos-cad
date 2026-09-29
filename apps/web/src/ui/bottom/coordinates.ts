@@ -3,8 +3,9 @@ import type { Vec2 } from '../../model/geometry';
 
 /**
  * What the coordinate list shows of one object. Its vertices come in rings
- * (a polygon's outer ring, then each hole, as the core lists them), so an
- * edge never joins two rings. Its area and length are the object's own, as
+ * (a polygon's outer ring, then each hole, as the core lists them, then each
+ * other part's ring and holes, docs/adr/0143), so an edge never joins two
+ * rings. Its area and length are the object's own, as
  * the core measures them and the properties panel shows them: arcs of bulged
  * edges followed, holes taken out of the area and counted in the perimeter.
  * They are never measured from the vertex list, which strings the rings
@@ -21,7 +22,10 @@ export interface VertexListing {
 export function vertexListing(e: Entity): VertexListing {
   const pts = entityVertices(e);
   const closed = e.kind === 'polygon';
-  const sizes = e.kind === 'polygon' ? [e.pts.length, ...(e.holes ?? []).map((h) => h.pts.length)] : [pts.length];
+  const sizes =
+    e.kind === 'polygon'
+      ? [e.pts.length, ...(e.holes ?? []).map((h) => h.pts.length), ...(e.parts ?? []).flatMap((part) => [part.pts.length, ...(part.holes ?? []).map((h) => h.pts.length)])]
+      : [pts.length];
   const rings: [number, number][] = [];
   let at = 0;
   for (const n of sizes) {

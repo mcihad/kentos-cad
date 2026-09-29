@@ -22,6 +22,24 @@ describe('the coordinate list of one object', () => {
     expect(l.length).toBeCloseTo(40 + 8, 12);
   });
 
+  it('lists every part of a multi-part area, an edge never leaving its ring (docs/adr/0143)', () => {
+    // Two 10×10 parcels, the first with a 2×2 hole, the second with a 4×4 hole.
+    const parcels: Entity = {
+      ...base,
+      kind: 'polygon',
+      pts: square(0, 0, 10),
+      holes: [{ pts: square(4, 4, 2).reverse() }],
+      parts: [{ pts: square(20, 0, 10), holes: [{ pts: square(23, 3, 4).reverse() }] }],
+    };
+    const l = vertexListing(parcels);
+    // The rings: 0–3, 4–7 (its hole), 8–11 (the second part), 12–15 (its hole).
+    expect(l.pts).toHaveLength(16);
+    expect(l.pts[8]).toEqual(v(20, 0));
+    expect([l.next(3), l.next(7), l.next(8), l.next(11), l.next(15)]).toEqual([0, 4, 9, 8, 12]);
+    expect(l.area).toBeCloseTo(96 + 84, 12);
+    expect(l.length).toBeCloseTo(48 + 56, 12);
+  });
+
   it('follows the arc of a bulged edge and leaves an open path open', () => {
     // A half disc: a diameter of 2 and a bulge of 1 (a half turn) back.
     const halfDisc: Entity = { ...base, kind: 'polygon', pts: [v(0, 0), v(2, 0)], bulges: [0, 1] };

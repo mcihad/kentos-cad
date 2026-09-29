@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PolylineEntity } from '../model/entities';
-import { CleanupTool } from './cleanupTool';
+import { CleanupTool, repeatedIn } from './cleanupTool';
 import { at, pt, recorder, toolHarness } from './toolHarness';
 
 /**
@@ -98,5 +98,18 @@ describe('Çizimi temizle', () => {
     const tool = h.use(new CleanupTool(h.ctx));
     tool.activate();
     expect(tool.prompt.value).toContain('temizlenecek bir şey yok');
+  });
+});
+
+describe('the vertices Çizimi temizle marks', () => {
+  it('are those repeated in a row, in every part of an area and its holes (docs/adr/0143)', () => {
+    const h = toolHarness();
+    const area = h.add({
+      kind: 'polygon',
+      pts: [pt(0, 0), pt(10, 0), pt(10, 0), pt(10, 10)],
+      holes: [{ pts: [pt(2, 2), pt(4, 2), pt(4, 4), pt(4, 4)] }],
+      parts: [{ pts: [pt(20, 0), pt(30, 0), pt(30, 10), pt(30, 10), pt(20, 10)], holes: [{ pts: [pt(22, 2), pt(22, 2), pt(24, 4)] }] }],
+    });
+    expect(repeatedIn(area)).toEqual([pt(10, 0), pt(4, 4), pt(30, 10), pt(22, 2)]);
   });
 });

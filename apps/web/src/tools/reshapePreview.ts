@@ -22,6 +22,16 @@ export function outlinesOf(geom: EntityGeometry): { pts: Vec2[]; closed: boolean
   return [{ pts: entityOutline(geom, 64), closed: geom.kind === 'circle' }];
 }
 
+/**
+ * The rings of a path or an area as lists of points: a polyline's points; an area's outer ring, its holes, then each
+ * other part's ring and holes (docs/adr/0143). Nothing for another kind.
+ */
+export function pathRings(e: Entity): Vec2[][] {
+  if (e.kind === 'polyline') return [e.pts];
+  if (e.kind !== 'polygon') return [];
+  return [e.pts, ...(e.holes ?? []).map((h) => h.pts), ...(e.parts ?? []).flatMap((part) => [part.pts, ...(part.holes ?? []).map((h) => h.pts)])];
+}
+
 /** Arrowheads along a path of the drawing, one every `gap` screen pixels, pointing the way it runs; a dot marks its start. */
 export function strokeDirection(g: CanvasRenderingContext2D, view: ViewTransform, pts: readonly Vec2[], closed: boolean, color: string, halo: string, gap = 64): void {
   const s = pts.map((p) => view.worldToScreen(p));

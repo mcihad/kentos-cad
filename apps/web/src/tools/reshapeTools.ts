@@ -9,7 +9,7 @@ import { editGeometry, uidOf, writeEdit } from './editCommand';
 import { MAX_GHOSTS, SelectionFirstTool } from './modifyTools';
 import { SelectionActionTool } from './editTools';
 import { drawTag, strokeGeometry } from './preview';
-import { markVertices, strokeDirections } from './reshapePreview';
+import { markVertices, pathRings, strokeDirections } from './reshapePreview';
 
 /**
  * Tools that reshape whole objects with one value (docs/adr/0140): every
@@ -313,11 +313,10 @@ export class SimplifyTool extends ValueReshapeTool<{ tolerance: number }> {
   }
 }
 
-/** The vertices `before` has that `after` no longer has: the ones a simplification dropped. */
+/** The vertices `before` has that `after` no longer has: the ones a simplification dropped, in every part of an area. */
 export function removedVertices(before: Entity, after: Entity): Vec2[] {
-  const rings = (e: Entity): Vec2[][] => (e.kind === 'polyline' ? [e.pts] : e.kind === 'polygon' ? [e.pts, ...(e.holes ?? []).map((h) => h.pts)] : []);
-  const kept = new Set(rings(after).flat().map((p) => `${p.x},${p.y}`));
-  return rings(before)
+  const kept = new Set(pathRings(after).flat().map((p) => `${p.x},${p.y}`));
+  return pathRings(before)
     .flat()
     .filter((p) => !kept.has(`${p.x},${p.y}`));
 }

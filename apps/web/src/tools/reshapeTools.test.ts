@@ -261,6 +261,14 @@ describe('Sadeleştir', () => {
     const after = { ...before, pts: [pt(0, 0), pt(20, 0), pt(20, 10)] } as Entity;
     expect(removedVertices(before, after)).toEqual([pt(5, 0.004), pt(10, 0), pt(15, 0.006)]);
   });
+
+  it('in every part of an area (docs/adr/0143)', () => {
+    const h = toolHarness();
+    const ring = (x: number) => [pt(x, 0), pt(x + 5, 0.004), pt(x + 10, 0), pt(x + 10, 10)];
+    const before = h.add({ kind: 'polygon', pts: ring(0), holes: [{ pts: ring(100) }], parts: [{ pts: ring(200), holes: [{ pts: ring(300) }] }] });
+    const after = { ...before, pts: [ring(0)[0], ring(0)[2], ring(0)[3]], holes: [{ pts: ring(100) }], parts: [{ pts: ring(200).filter((_, i) => i !== 1), holes: [{ pts: ring(300).filter((_, i) => i !== 1) }] }] } as Entity;
+    expect(removedVertices(before, after)).toEqual([pt(5, 0.004), pt(205, 0.004), pt(305, 0.004)]);
+  });
 });
 
 describe('Yönü çevir', () => {
