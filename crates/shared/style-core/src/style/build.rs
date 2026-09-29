@@ -330,6 +330,13 @@ pub struct LayerObjects<'a> {
     pub texts: &'a str,
     pub text_lens: &'a [i32],
     pub numbers: &'a [f64],
+    /// A block's inserts (docs/adr/0144): for every insert among `ids`, in
+    /// their order, one set per piece of its block (`Store::block_pieces_json`):
+    /// the set its simple look draws that piece with (its own colour and line
+    /// weight, else the insert's, else the layer's; a hatch piece its
+    /// pattern). An insert is drawn piece by piece, each with the object's
+    /// symbols and values; the simple look (and the fallback) by its piece's set.
+    pub pieces: &'a [i32],
 }
 
 /// Draws the objects of one layer: the batches in draw order.
@@ -373,6 +380,7 @@ pub fn build_layer(
     };
     let mut sink = BatchSink::new(origin);
     let mut buf = Vec::new();
+    let mut piece_at = 0usize;
     for (i, &id) in o.ids.iter().enumerate() {
         let [mode, a, simple, color] = [
             o.objects[4 * i],
@@ -380,123 +388,158 @@ pub fn build_layer(
             o.objects[4 * i + 2],
             o.objects[4 * i + 3],
         ];
-        if mode == MODE_SKIP {
-            continue;
-        }
         let Some(item) = store.get(id) else {
             continue;
         };
-        let geom = styled_geometry(&item.shape, clip, &mut buf);
-        if mode == MODE_DIMENSION {
-            // Dimensions keep their own hairline look: their layout lines. Drawn at every scale
-            // (the TypeScript kept the previous object's rule range here).
-            if let Some(Geom::Line(paths)) = &geom {
-                let hair = StrokeStyle {
-                    color: usize::try_from(color)
-                        .ok()
-                        .and_then(|c| program.colors.get(c))
-                        .cloned()
-                        .unwrap_or_default(),
-                    opacity: 1.0,
-                    width: 0.0,
-                    unit: PrimUnit::Px,
-                    dash: None,
-                    dash_offset: 0.0,
-                    cap: "butt".into(),
-                    join: "miter".into(),
-                    blur: 0.0,
-                    level: LEVEL_LINE + 500.0,
-                };
-                sink.set_scale(Scale::default());
-                for (pts, _) in paths {
-                    sink.stroke(&hair, pts, false);
-                }
-            }
+        // An insert: its pieces, each with its own simple look (docs/adr/0144).
+        let pieces = item.expanded.as_ref().map(|x| {
+            let sets = o.pieces.get(piece_at..piece_at + x.shapes.len());
+            piece_at += x.shapes.len();
+            (x, sets)
+        });
+        if mode == MODE_SKIP {
             continue;
         }
-        let Some(geom) = geom else {
-            continue;
-        };
-        let cls = class_of(&geom);
         let values = RowValues {
             program,
             table: &table,
             i,
         };
-        let set_at = |k: i32| usize::try_from(k).ok().and_then(|k| program.sets.get(k));
-        let own;
-        let sets: Vec<Resolved> = match mode {
-            MODE_SET => set_at(a)
-                .map(|symbols| Resolved {
-                    symbols,
-                    scale: Scale::default(),
-                })
-                .into_iter()
-                .collect(),
-            MODE_OWN => {
-                let r = usize::try_from(a)
-                    .ok()
-                    .and_then(|k| program.refs.get(k))
-                    .cloned();
-                own = match cls {
-                    SymbolType::Marker => SymbolSet {
-                        marker: r,
-                        ..SymbolSet::default()
-                    },
-                    SymbolType::Line => SymbolSet {
-                        line: r,
-                        ..SymbolSet::default()
-                    },
-                    SymbolType::Fill => SymbolSet {
-                        fill: r,
-                        ..SymbolSet::default()
-                    },
-                };
-                vec![Resolved {
-                    symbols: &own,
-                    scale: Scale::default(),
-                }]
-            }
-            MODE_RENDERER => program
-                .renderer
-                .as_ref()
-                .map_or_else(Vec::new, |r| resolve_renderer(r, &values)),
-            _ => Vec::new(),
+        let mut one = |shape: &Shape, a: i32, simple: i32, sink: &mut BatchSink| {
+            draw_object(
+                shape,
+                [mode, a, simple, color],
+                program,
+                &values,
+                &env,
+                clip,
+                &mut buf,
+                sink,
+            );
         };
-        // No matching rule or category: the renderer leaves the object out (as in QGIS).
-        let mut drew = false;
-        for r in &sets {
-            sink.set_scale(r.scale);
-            if let Some(symbol) = program.symbol(slot(r.symbols, cls)) {
-                compile_symbol(
-                    symbol,
-                    &geom,
-                    &values,
-                    &env,
-                    &mut sink,
-                    level_base(symbol.kind),
-                );
-                drew = true;
-            } else if cls == SymbolType::Fill {
-                // An area without a fill symbol takes the line symbol on its edges.
-                let Some(edge) = program.symbol(r.symbols.line.as_ref()) else {
-                    continue;
-                };
-                compile_symbol(edge, &geom, &values, &env, &mut sink, LEVEL_LINE);
-                drew = true;
+        match pieces {
+            Some((x, sets)) => {
+                for (k, shape) in x.shapes.iter().enumerate() {
+                    let set = sets.and_then(|s| s.get(k)).copied().unwrap_or(simple);
+                    one(shape, if mode == MODE_SET { set } else { a }, set, &mut sink);
+                }
             }
-        }
-        // Matched, but nothing for this kind of geometry (or the symbol is gone): the simple look, never nothing.
-        if let Some(first) = sets.first()
-            && !drew
-        {
-            sink.set_scale(first.scale);
-            if let Some(fallback) = set_at(simple).and_then(|s| program.symbol(slot(s, cls))) {
-                compile_symbol(fallback, &geom, &values, &env, &mut sink, level_base(cls));
-            }
+            None => one(&item.shape, a, simple, &mut sink),
         }
     }
     Ok(sink.finish())
+}
+
+/// One object's geometry (or one piece of an insert's) through its symbols:
+/// `[mode, a, simple, color]` as the page gave them for the object.
+#[allow(clippy::too_many_arguments)]
+fn draw_object(
+    shape: &Shape,
+    [mode, a, simple, color]: [i32; 4],
+    program: &Program,
+    values: &RowValues<'_, '_>,
+    env: &Env<'_>,
+    clip: Option<&Bounds>,
+    buf: &mut Vec<f64>,
+    sink: &mut BatchSink,
+) {
+    let geom = styled_geometry(shape, clip, buf);
+    if mode == MODE_DIMENSION {
+        // Dimensions keep their own hairline look: their layout lines. Drawn at every scale
+        // (the TypeScript kept the previous object's rule range here).
+        if let Some(Geom::Line(paths)) = &geom {
+            let hair = StrokeStyle {
+                color: usize::try_from(color)
+                    .ok()
+                    .and_then(|c| program.colors.get(c))
+                    .cloned()
+                    .unwrap_or_default(),
+                opacity: 1.0,
+                width: 0.0,
+                unit: PrimUnit::Px,
+                dash: None,
+                dash_offset: 0.0,
+                cap: "butt".into(),
+                join: "miter".into(),
+                blur: 0.0,
+                level: LEVEL_LINE + 500.0,
+            };
+            sink.set_scale(Scale::default());
+            for (pts, _) in paths {
+                sink.stroke(&hair, pts, false);
+            }
+        }
+        return;
+    }
+    let Some(geom) = geom else {
+        return;
+    };
+    let cls = class_of(&geom);
+    let set_at = |k: i32| usize::try_from(k).ok().and_then(|k| program.sets.get(k));
+    let own;
+    let sets: Vec<Resolved> = match mode {
+        MODE_SET => set_at(a)
+            .map(|symbols| Resolved {
+                symbols,
+                scale: Scale::default(),
+            })
+            .into_iter()
+            .collect(),
+        MODE_OWN => {
+            let r = usize::try_from(a)
+                .ok()
+                .and_then(|k| program.refs.get(k))
+                .cloned();
+            own = match cls {
+                SymbolType::Marker => SymbolSet {
+                    marker: r,
+                    ..SymbolSet::default()
+                },
+                SymbolType::Line => SymbolSet {
+                    line: r,
+                    ..SymbolSet::default()
+                },
+                SymbolType::Fill => SymbolSet {
+                    fill: r,
+                    ..SymbolSet::default()
+                },
+            };
+            vec![Resolved {
+                symbols: &own,
+                scale: Scale::default(),
+            }]
+        }
+        MODE_RENDERER => program
+            .renderer
+            .as_ref()
+            .map_or_else(Vec::new, |r| resolve_renderer(r, values)),
+        _ => Vec::new(),
+    };
+    // No matching rule or category: the renderer leaves the object out (as in QGIS).
+    let mut drew = false;
+    for r in &sets {
+        sink.set_scale(r.scale);
+        if let Some(symbol) = program.symbol(slot(r.symbols, cls)) {
+            compile_symbol(symbol, &geom, values, env, sink, level_base(symbol.kind));
+            drew = true;
+        } else if cls == SymbolType::Fill {
+            // An area without a fill symbol takes the line symbol on its edges.
+            let Some(edge) = program.symbol(r.symbols.line.as_ref()) else {
+                continue;
+            };
+            compile_symbol(edge, &geom, values, env, sink, LEVEL_LINE);
+            drew = true;
+        }
+    }
+    // Matched, but nothing for this kind of geometry (or the symbol is gone): the simple look, never nothing.
+    if let Some(first) = sets.first()
+        && !drew
+    {
+        sink.set_scale(first.scale);
+        if let Some(fallback) = set_at(simple).and_then(|s| program.symbol(slot(s, cls))) {
+            compile_symbol(fallback, &geom, values, env, sink, level_base(cls));
+        }
+    }
 }
 
 // ── One symbol on one object (previews, legends, tests) ────────────────

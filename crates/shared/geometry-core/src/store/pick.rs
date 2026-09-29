@@ -77,51 +77,54 @@ impl Store {
         let mut edge: Option<(f64, f64)> = None;
         let mut area: Option<(f64, f64)> = None;
         for it in self.near(p, tol * 1.5) {
-            let e = &it.shape;
-            let d = edge_distance(e, p, self.font);
-            let t = if matches!(
-                e,
-                Shape::Point { .. } | Shape::Text { .. } | Shape::Insert { .. }
-            ) {
-                tol * 1.5
-            } else {
-                tol
-            };
-            if d <= t && edge.is_none_or(|(_, best)| d < best) {
-                edge = Some((it.id, d));
-            }
-            if !self.flags(it).pick_interior {
-                continue;
-            }
-            let a = match e {
-                Shape::Hatch { ring, holes, .. }
-                    if point_in_polygon(p, ring)
-                        && !holes.iter().flatten().any(|h| point_in_polygon(p, h)) =>
+            let interior = self.flags(it).pick_interior;
+            // An insert by its pieces (docs/adr/0144), each as an object of its own would be.
+            for e in it.shapes() {
+                let d = edge_distance(e, p, self.font);
+                let t = if matches!(
+                    e,
+                    Shape::Point { .. } | Shape::Text { .. } | Shape::Insert { .. }
+                ) {
+                    tol * 1.5
+                } else {
+                    tol
+                };
+                if d <= t && edge.is_none_or(|(_, best)| d < best) {
+                    edge = Some((it.id, d));
+                }
+                if !interior {
+                    continue;
+                }
+                let a = match e {
+                    Shape::Hatch { ring, holes, .. }
+                        if point_in_polygon(p, ring)
+                            && !holes.iter().flatten().any(|h| point_in_polygon(p, h)) =>
+                    {
+                        // Slightly smaller than its boundary so the hatch wins over the parcel it fills.
+                        Some(entity_area(e).unwrap_or(0.0) * 0.999)
+                    }
+                    // Net area: a parcel with a building hole still loses to the building.
+                    Shape::Polygon { .. } if inside_polygon(e, p) => {
+                        Some(entity_area(e).unwrap_or(0.0))
+                    }
+                    Shape::Circle { c, r } if js_hypot(p.x - c.x, p.y - c.y) < *r => Some(PI * r * r),
+                    Shape::Ellipse {
+                        c,
+                        major,
+                        ratio,
+                        t0,
+                        t1,
+                    } => {
+                        let g = ellipse_geom(*c, *major, *ratio, *t0, *t1);
+                        (is_full_ellipse(&g) && inside_ellipse(&g, p)).then(|| ellipse_area(&g))
+                    }
+                    _ => None,
+                };
+                if let Some(a) = a
+                    && area.is_none_or(|(_, best)| a < best)
                 {
-                    // Slightly smaller than its boundary so the hatch wins over the parcel it fills.
-                    Some(entity_area(e).unwrap_or(0.0) * 0.999)
+                    area = Some((it.id, a));
                 }
-                // Net area: a parcel with a building hole still loses to the building.
-                Shape::Polygon { .. } if inside_polygon(e, p) => {
-                    Some(entity_area(e).unwrap_or(0.0))
-                }
-                Shape::Circle { c, r } if js_hypot(p.x - c.x, p.y - c.y) < *r => Some(PI * r * r),
-                Shape::Ellipse {
-                    c,
-                    major,
-                    ratio,
-                    t0,
-                    t1,
-                } => {
-                    let g = ellipse_geom(*c, *major, *ratio, *t0, *t1);
-                    (is_full_ellipse(&g) && inside_ellipse(&g, p)).then(|| ellipse_area(&g))
-                }
-                _ => None,
-            };
-            if let Some(a) = a
-                && area.is_none_or(|(_, best)| a < best)
-            {
-                area = Some((it.id, a));
             }
         }
         edge.or(area).map(|(id, _)| id)
@@ -199,7 +202,7 @@ impl Store {
     pub fn edges_in(&self, r: &Bounds, except: Option<f64>) -> Vec<Edge> {
         self.overlapping(r, except)
             .into_iter()
-            .flat_map(|it| entity_edges(&it.shape))
+            .flat_map(|it| it.shapes().iter().flat_map(entity_edges))
             .collect()
     }
 
@@ -230,7 +233,7 @@ impl Store {
                     && b.max_x >= r.min_x
                     && b.min_y <= r.max_y
                     && b.max_y >= r.min_y);
-            if over && touches_rect(&it.shape, r) {
+            if over && it.shapes().iter().any(|s| touches_rect(s, r)) {
                 out.push(it.id);
             }
         }

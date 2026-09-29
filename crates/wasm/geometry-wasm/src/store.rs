@@ -267,6 +267,43 @@ impl GeometryStore {
             .map_err(|e| JsError::new(&format!("Geometri deposu katmanları okuyamadı: {e}")))
     }
 
+    /// The drawing's block definitions (docs/adr/0144), the contract's JSON
+    /// (`[{ id, base, entities, … }]`): every insert is placed again.
+    #[wasm_bindgen(js_name = setBlocks)]
+    pub fn set_blocks(&mut self, blocks: &str) -> Result<(), JsError> {
+        self.inner
+            .set_blocks_json(blocks)
+            .map_err(|e| JsError::new(&format!("Geometri deposu blok tanımlarını okuyamadı: {e}")))
+    }
+
+    /// A block's pieces as the drawn `GROUP` records and the `LABEL_PIECE_*`
+    /// labels number them (their geometry relative to the base point, their
+    /// own colour and line weight), as JSON; nothing for an unknown block.
+    #[wasm_bindgen(js_name = blockPieces)]
+    pub fn block_pieces(&self, block: &str) -> Option<String> {
+        self.inner.block_pieces_json(block)
+    }
+
+    /// An insert's pieces as placed (`blockPieces`' layout, in the drawing's
+    /// coordinates); nothing for any other object.
+    #[wasm_bindgen(js_name = insertPieces)]
+    pub fn insert_pieces(&self, id: f64) -> Option<String> {
+        self.inner.insert_pieces_json(id)
+    }
+
+    /// Patlat of an insert (docs/adr/0144 §3), the entity as JSON: its
+    /// definition one level open, as `explodeEntity`'s answer (`{ pieces }`
+    /// or `{ error }`).
+    #[wasm_bindgen(js_name = explodeInsert)]
+    pub fn explode_insert(&self, entity: &str) -> Result<String, JsError> {
+        let e = Json::parse(entity)
+            .and_then(|v| Entity::from_json(&v))
+            .map_err(|e| JsError::new(&format!("Patlatılacak blok okunamadı: {e}")))?;
+        let mut out = String::new();
+        json::ToJson::write_json(&self.inner.blocks().explode(&e), &mut out);
+        Ok(out)
+    }
+
     /// Label rules by kind for layers without a label style: `{ polygon, circle, point, polyline, line }`.
     #[wasm_bindgen(js_name = setLabelDefaults)]
     pub fn set_label_defaults(&mut self, defaults: &str) -> Result<(), JsError> {
@@ -629,7 +666,8 @@ impl GeometryStore {
 
     /// A layer through the style engine (`kentos_style_core::style::build`):
     /// `objects` four numbers per id (how it is drawn, its set or symbol, the
-    /// set of its simple look, its colour), the program's table of values
+    /// set of its simple look, its colour), `pieces` the sets of every
+    /// insert's pieces in turn (docs/adr/0144), the program's table of values
     /// (`texts`, `text_lens`, `numbers`), the box construction lines are
     /// clipped to, the origin the batches are relative to, the plot scale and
     /// whether symbol sizes are on the screen (paper mm drawn as px).
@@ -640,6 +678,7 @@ impl GeometryStore {
         program: &StyleProgram,
         ids: &[f64],
         objects: &[i32],
+        pieces: &[i32],
         texts: &str,
         text_lens: &[i32],
         numbers: &[f64],
@@ -663,6 +702,7 @@ impl GeometryStore {
                 texts,
                 text_lens,
                 numbers,
+                pieces,
             },
             clip.as_ref(),
             Vec2::new(origin_x, origin_y),

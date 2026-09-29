@@ -100,6 +100,21 @@ impl Seen {
                 [d.a, d.b].iter().chain(&d.c).map(|v| [v.x, v.y]).collect(),
                 Vec::new(),
             ),
+            // An insert's point, and where the definition's points one metre
+            // east and north of its base go: turn, scale and mirror (docs/adr/0144).
+            Entity::Insert(i) => {
+                let (s, c) = i.rotation.sin_cos();
+                let k = if i.mirror { -1.0 } else { 1.0 };
+                let (x, y, m) = (i.p.x, i.p.y, i.scale);
+                (
+                    vec![
+                        [x, y],
+                        [x + m * c, y + m * s],
+                        [x - m * k * s, y + m * k * c],
+                    ],
+                    Vec::new(),
+                )
+            }
             _ => (Vec::new(), Vec::new()),
         };
         let (center, radius) = match e {

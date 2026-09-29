@@ -5,12 +5,16 @@
 //! own symbol, the simple look's set, the colour), gives the core the
 //! symbols, sets and assets they refer to and the objects' values for the
 //! expressions; the core compiles and packs the batches next to the geometry
-//! store (`kentos_style_core::style::build::build_layer`).
+//! store (`kentos_style_core::style::build::build_layer`). A block's insert
+//! (docs/adr/0144) also says, for each piece of its block, the set its simple
+//! look draws the piece with: the piece's own colour and line weight, else
+//! the insert's, else the layer's; a hatch piece its pattern.
 
 use std::collections::{HashMap, HashSet};
 
 use kentos_contracts::{Entity, LayerStyle};
 use kentos_geometry_core::Vec2;
+use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::jsmath::{js_max, js_round};
 use kentos_geometry_core::store::Store;
@@ -20,6 +24,8 @@ use kentos_style_core::style::build::{
     build_layer as core_build,
 };
 use serde_json::{Map, Value, json};
+
+use kentos_native_application::geometry::{edit_geometry, entity_of};
 
 use crate::library::StyleLibrary;
 use crate::simple::{hatch_symbol_of, symbols_of_layer_style};
@@ -65,6 +71,8 @@ pub struct BuildOptions<'a> {
 pub struct LayerCall {
     pub program: String,
     pub objects: Vec<i32>,
+    /// Every insert's pieces' sets, insert after insert (`LayerObjects::pieces`).
+    pub pieces: Vec<i32>,
     pub table: ExprTable,
     /// An expression reads an object's place in the run (`$sıra`): the
     /// layer's objects must be built as one run to draw as they do.
@@ -176,6 +184,17 @@ impl Interned {
         k
     }
 
+    /// The simple look's set for a colour and a line weight, made once.
+    fn simple(&mut self, style: &LayerStyle, color: &str, weight: f64, hairlines: bool) -> i32 {
+        let key = (color.to_owned(), weight.to_bits());
+        if let Some(&s) = self.simple.get(&key) {
+            return s;
+        }
+        let s = self.set(symbols_of_layer_style(style, color, weight, hairlines));
+        self.simple.insert(key, s);
+        s
+    }
+
     fn own(&mut self, id: &str) -> i32 {
         if let Some(&k) = self.ref_index.get(id) {
             return k;
@@ -187,25 +206,50 @@ impl Interned {
     }
 }
 
-/// The page's part of a layer build: the program, the objects' numbers and the value table.
-pub fn layer_call(style: &LayerStyle, entities: &[&Entity], opts: &BuildOptions) -> LayerCall {
+/// The page's part of a layer build: the program, the objects' numbers and
+/// the value table; `store` holds the inserts' pieces.
+pub fn layer_call(
+    style: &LayerStyle,
+    entities: &[&Entity],
+    opts: &BuildOptions,
+    store: &Store,
+) -> LayerCall {
     let mut it = Interned::default();
     let mut objects = Vec::with_capacity(4 * entities.len());
+    let mut pieces = Vec::new();
     for e in entities {
         let base = e.base();
         let color = base.color.as_deref().unwrap_or(&style.color);
         let c = it.color(color);
         // The object's own weight, else its layer's (docs/adr/0139).
         let weight = base.line_weight.unwrap_or(style.line_weight);
-        let key = (color.to_owned(), weight.to_bits());
-        let s = match it.simple.get(&key) {
-            Some(&s) => s,
-            None => {
-                let s = it.set(symbols_of_layer_style(style, color, weight, opts.hairlines));
-                it.simple.insert(key, s);
-                s
+        let s = it.simple(style, color, weight, opts.hairlines);
+        // A block's insert: each piece's own look (docs/adr/0144).
+        if let Entity::Insert(_) = e
+            && let Some(x) = store
+                .get(f64::from(base.id))
+                .and_then(|item| item.expanded.as_deref())
+        {
+            for (i, shape) in x.shapes.iter().enumerate() {
+                let color = x.colors.get(i).cloned().flatten();
+                let color = color.as_deref().unwrap_or(color_of(base, style));
+                let weight = x
+                    .weights
+                    .get(i)
+                    .copied()
+                    .flatten()
+                    .unwrap_or(weight);
+                let hatch = match shape {
+                    Shape::Hatch { .. } => edit_geometry(shape.clone())
+                        .map(|g| entity_of(&g, base.clone())),
+                    _ => None,
+                };
+                pieces.push(match hatch {
+                    Some(Entity::Hatch(h)) => it.set(json!({ "fill": hatch_symbol_of(&h, color) })),
+                    _ => it.simple(style, color, weight, opts.hairlines),
+                });
             }
-        };
+        }
         let (mode, a) = match e {
             Entity::Text(_) => (MODE_SKIP, 0),
             Entity::Dimension(_) => (MODE_DIMENSION, 0),
@@ -259,9 +303,15 @@ pub fn layer_call(style: &LayerStyle, entities: &[&Entity], opts: &BuildOptions)
     LayerCall {
         program,
         objects,
+        pieces,
         table: ExprTable::default(),
         reads_index: false,
     }
+}
+
+/// An object's colour: its own, else its layer's.
+fn color_of<'a>(base: &'a kentos_contracts::EntityBase, style: &'a LayerStyle) -> &'a str {
+    base.color.as_deref().unwrap_or(&style.color)
 }
 
 /// Builds one layer: the page's call and the core's batches, in draw order.
@@ -271,7 +321,7 @@ pub fn build_layer(
     entities: &[&Entity],
     opts: &BuildOptions,
 ) -> Result<(LayerCall, Batches), String> {
-    let mut call = layer_call(style, entities, opts);
+    let mut call = layer_call(style, entities, opts, store);
     let program = Program::read(&call.program)?;
     call.reads_index = program.needs.index;
     call.table = expr_table(&program.fields, program.needs, entities, opts.layer_name);
@@ -279,6 +329,7 @@ pub fn build_layer(
     let objects = LayerObjects {
         ids: &ids,
         objects: &call.objects,
+        pieces: &call.pieces,
         texts: &call.table.texts,
         text_lens: &call.table.lens,
         numbers: &call.table.numbers,

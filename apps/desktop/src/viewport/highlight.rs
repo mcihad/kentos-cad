@@ -11,12 +11,15 @@
 //! Iced's canvas, which tessellates its paths on the CPU in every frame the
 //! view moves (ADR 0029): with 100 172 objects selected the part is built
 //! once in 42 ms and costs no CPU per frame; the canvas took 109 ms a frame.
+//!
+//! A block's insert is highlighted by its pieces as the geometry store placed
+//! them (docs/adr/0144).
 
 use std::sync::Arc;
 
 use kentos_contracts::Entity;
 use kentos_domain::Slot;
-use kentos_interaction::Selection;
+use kentos_interaction::{Selection, Spatial};
 use kentos_render_wgpu::scene::{self, Highlight};
 use kentos_render_wgpu::{Bounds, Rgba8, ScenePart};
 
@@ -59,7 +62,8 @@ const PARALLEL_FROM: usize = 2048;
 
 impl Viewport {
     /// The selection's part and the hovered object's, from the cache when
-    /// nothing they depend on changed.
+    /// nothing they depend on changed; `spatial` places the blocks' inserts.
+    #[allow(clippy::too_many_arguments)]
     pub(super) fn highlights(
         &self,
         doc: &Document,
@@ -68,6 +72,7 @@ impl Viewport {
         fixed: &ScenePart,
         curves: &ScenePart,
         clip: &Bounds,
+        spatial: Option<&Spatial>,
     ) -> (Arc<ScenePart>, Arc<ScenePart>) {
         let key = HighlightKey {
             generation: self.generation,
@@ -81,7 +86,8 @@ impl Viewport {
         };
         let ring = kentos_render_wgpu::layout::marker_shape::RING;
         let build = |ids: &mut dyn Iterator<Item = Slot>, style: Highlight| {
-            let objects = ids.filter_map(|slot| doc.model.get(slot));
+            let mut pieces = Vec::new();
+            let objects = objects_of(doc, spatial, ids, &mut pieces);
             Arc::new(scene::build_highlight(
                 objects,
                 &style,
@@ -104,11 +110,13 @@ impl Viewport {
                 // A large selection (select all, a window over a map) is built on
                 // the machine's cores; the part is the one built in turn.
                 let part = if selection.len() >= PARALLEL_FROM {
-                    let objects: Vec<&Entity> = selection
-                        .ids()
-                        .iter()
-                        .filter_map(|slot| doc.model.get(*slot))
-                        .collect();
+                    let mut pieces = Vec::new();
+                    let objects = objects_of(
+                        doc,
+                        spatial,
+                        &mut selection.ids().iter().copied(),
+                        &mut pieces,
+                    );
                     let threads = std::thread::available_parallelism()
                         .map_or(1, |n| n.get())
                         .clamp(1, 8);
@@ -156,6 +164,29 @@ impl Viewport {
     }
 }
 
+/// The objects to highlight, a block's insert by its pieces (docs/adr/0144),
+/// which `pieces` holds.
+fn objects_of<'a>(
+    doc: &'a Document,
+    spatial: Option<&Spatial>,
+    ids: &mut dyn Iterator<Item = Slot>,
+    pieces: &'a mut Vec<Entity>,
+) -> Vec<&'a Entity> {
+    let mut objects = Vec::new();
+    for slot in ids {
+        let Some(e) = doc.model.get(slot) else {
+            continue;
+        };
+        match spatial.and_then(|s| s.pieces(e)) {
+            Some(placed) => pieces.extend(placed),
+            None => objects.push(e),
+        }
+    }
+    let pieces: &'a Vec<Entity> = pieces;
+    objects.extend(pieces.iter());
+    objects
+}
+
 #[cfg(test)]
 mod tests {
     use iced::{Point, Rectangle};
@@ -187,17 +218,17 @@ mod tests {
         let mut selection = Selection::new();
         let ids: Vec<Slot> = doc.model.entities().map(|e| Slot(e.base().id)).collect();
         selection.set(ids.iter().copied().take(ids.len() - 1));
-        let (sel, hover) = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip);
+        let (sel, hover) = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip, None);
         assert!(!sel.segments.is_empty() && hover.segments.is_empty());
         selection.set_hover(ids.last().copied());
-        let (sel2, hover2) = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip);
+        let (sel2, hover2) = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip, None);
         assert_eq!(sel2.id, sel.id, "the selection's part is kept");
         assert_ne!(hover2.id, hover.id);
-        let (sel3, hover3) = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip);
+        let (sel3, hover3) = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip, None);
         assert_eq!((sel3.id, hover3.id), (sel.id, hover2.id), "nothing changed");
         // A selected object is not hovered over its own highlight.
         selection.set_hover(ids.first().copied());
-        let (_, hover4) = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip);
+        let (_, hover4) = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip, None);
         assert!(hover4.segments.is_empty() && hover4.fills.is_empty());
         // Its colour and layer: after every layer of the scene.
         assert!(sel.segments.iter().all(|s| s.color == accent.0));
@@ -305,10 +336,10 @@ mod tests {
             selection.set(doc.model.entities().map(|e| Slot(e.base().id)));
             let accent = Rgba8::rgb(0x4c, 0x9b, 0xe8);
             let t = Instant::now();
-            let (part, _) = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip);
+            let (part, _) = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip, None);
             let part_time = t.elapsed();
             let t = Instant::now();
-            let _ = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip);
+            let _ = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip, None);
             let cached = t.elapsed();
 
             // The same highlight on Iced's canvas: every frame the view moves.

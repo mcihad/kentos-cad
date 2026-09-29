@@ -94,7 +94,13 @@ impl Store {
             .collect();
         self.candidates(&super::padded(q, tol))
             .into_iter()
-            .filter(|it| self.flags(it).visible && crosses(&it.shape, fence, &segs, tol, self.font))
+            .filter(|it| {
+                self.flags(it).visible
+                    && it
+                        .shapes()
+                        .iter()
+                        .any(|s| crosses(s, fence, &segs, tol, self.font))
+            })
             .map(|it| it.id)
             .collect()
     }
@@ -118,8 +124,9 @@ impl Store {
             if !self.flags(it).visible {
                 continue;
             }
-            let e = &it.shape;
-            let inside = !infinite(e) && {
+            // An insert by its pieces (docs/adr/0144).
+            let shapes = it.shapes();
+            let inside = !shapes.iter().any(infinite) && {
                 let b = &it.bounds;
                 let corners = [
                     Vec2::new(b.min_x, b.min_y),
@@ -127,9 +134,17 @@ impl Store {
                     Vec2::new(b.max_x, b.max_y),
                     Vec2::new(b.min_x, b.max_y),
                 ];
-                corners.iter().all(within) || outline(e, self.font).iter().all(within)
+                corners.iter().all(within)
+                    || shapes
+                        .iter()
+                        .all(|e| outline(e, self.font).iter().all(within))
             };
-            if inside || (crossing && touches_circle(e, c, r, self.font)) {
+            if inside
+                || (crossing
+                    && shapes
+                        .iter()
+                        .any(|e| touches_circle(e, c, r, self.font)))
+            {
                 out.push(it.id);
             }
         }

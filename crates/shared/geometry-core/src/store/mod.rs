@@ -11,8 +11,16 @@
 //! (infinite lines, empty or non-finite boxes), are scanned directly. Each
 //! query then applies the exact test the TypeScript applied, in the
 //! document's order, so the tree only makes it faster.
+//!
+//! A block's insert (docs/adr/0144) is one object whose geometry is its
+//! definition's pieces placed by its similarity (`crate::block`), expanded
+//! when it is put and again when the definitions change (`set_blocks`): it
+//! is drawn, picked, snapped and selected by its pieces, and its insertion
+//! point is its grip and a snap point.
 
 pub mod draw;
+#[cfg(test)]
+mod inserts;
 pub mod labels;
 mod pack;
 pub mod pick;
@@ -26,8 +34,10 @@ pub use pack::{Packer, array_packed_objects, transform_packed_objects};
 
 use std::collections::{HashMap, HashSet};
 use std::hash::{BuildHasherDefault, Hasher};
+use std::sync::Arc;
 
 use crate::api::json::{FromJson, Json};
+use crate::block::Blocks;
 use crate::entity::{Entity, Shape, entity_bounds_in};
 use crate::geometry::{Bounds, empty_bounds, is_empty_bounds};
 use crate::jsmath::{js_max, js_min};
@@ -53,6 +63,15 @@ const UNLISTED: LayerFlags = LayerFlags {
     label: None,
 };
 
+/// An insert's pieces in the drawing's coordinates, and the colour and line
+/// weight each draws with when it has its own (docs/adr/0144).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Expanded {
+    pub shapes: Vec<Shape>,
+    pub colors: Vec<Option<String>>,
+    pub weights: Vec<Option<f64>>,
+}
+
 /// One object: its id, geometry, layer and cached box.
 #[derive(Clone, Debug)]
 pub struct Item {
@@ -62,11 +81,22 @@ pub struct Item {
     pub bounds: Bounds,
     /// Whether it carries a label (`e.label`, non-empty).
     pub label: bool,
+    /// A block's insert: its definition's pieces placed (none for an
+    /// unknown or empty block, which is its insertion point alone).
+    pub expanded: Option<Arc<Expanded>>,
     /// Its place in the document's order.
     order: u64,
 }
 
 impl Item {
+    /// The shapes the queries test: an insert's pieces, or the object's own shape.
+    pub fn shapes(&self) -> &[Shape] {
+        match &self.expanded {
+            Some(x) => &x.shapes,
+            None => std::slice::from_ref(&self.shape),
+        }
+    }
+
     /// Infinite lines and boxes the tree cannot hold: always candidates, decided by the exact test.
     fn special(&self) -> bool {
         let b = &self.bounds;
@@ -147,6 +177,8 @@ pub struct Store {
     vacated_orders: IdSet,
     /// The drawing typeface text boxes are measured in (`ProjectSettings.drawingFont`).
     font: Font,
+    /// The drawing's block definitions, flattened (`set_blocks`).
+    blocks: Blocks,
 }
 
 /// An object read from the document's JSON: its id, layer, label and geometry.
@@ -218,7 +250,7 @@ impl Store {
     /// putting many objects calls `put_many` (or a packed form), which does.
     pub fn put(&mut self, id: f64, layer_id: &str, label: bool, shape: Shape) {
         let layer = self.layer_index(layer_id);
-        let bounds = entity_bounds_in(&shape, self.font);
+        let (expanded, bounds) = self.expansion(&shape);
         let key = id.to_bits();
         let slot = match self.by_id.get(&key) {
             Some(&s) => {
@@ -229,6 +261,7 @@ impl Store {
                     layer,
                     bounds,
                     label,
+                    expanded,
                     order,
                 });
                 s
@@ -242,6 +275,7 @@ impl Store {
                     layer,
                     bounds,
                     label,
+                    expanded,
                     order,
                 };
                 if returning.is_none() {
@@ -299,29 +333,92 @@ impl Store {
     }
 
     /// The drawing typeface: text boxes (picking, window selection, extents) follow its letters. A
-    /// change measures every text again.
+    /// change measures every text again, and every insert (its pieces may be texts).
     pub fn set_font(&mut self, font: Font) {
         if font == self.font {
             return;
         }
         self.font = font;
         let texts: Vec<u32> = (0..self.slots.len() as u32)
-            .filter(|&s| matches!(&self.slots[s as usize], Some(it) if matches!(it.shape, Shape::Text { .. })))
+            .filter(|&s| matches!(&self.slots[s as usize], Some(it) if matches!(it.shape, Shape::Text { .. } | Shape::Insert { .. })))
             .collect();
         for s in &texts {
-            if let Some(it) = self.slots[*s as usize].as_mut() {
-                it.bounds = entity_bounds_in(&it.shape, font);
+            let fresh = self.slots[*s as usize]
+                .as_ref()
+                .map(|it| self.expansion(&it.shape));
+            if let (Some(it), Some((expanded, bounds))) = (self.slots[*s as usize].as_mut(), fresh) {
+                it.bounds = bounds;
+                it.expanded = expanded;
             }
             self.loosen(*s);
         }
         self.maybe_rebuild();
     }
 
+    /// The drawing's block definitions (docs/adr/0144): every insert is
+    /// expanded again, whether its definition changed or not (a definition
+    /// is flattened once, however many inserts use it).
+    pub fn set_blocks(&mut self, blocks: Blocks) {
+        self.blocks = blocks;
+        let inserts: Vec<u32> = (0..self.slots.len() as u32)
+            .filter(|&s| matches!(&self.slots[s as usize], Some(it) if matches!(it.shape, Shape::Insert { .. })))
+            .collect();
+        for s in &inserts {
+            let fresh = self.slots[*s as usize]
+                .as_ref()
+                .map(|it| self.expansion(&it.shape));
+            if let (Some(it), Some((expanded, bounds))) = (self.slots[*s as usize].as_mut(), fresh) {
+                it.bounds = bounds;
+                it.expanded = expanded;
+            }
+            self.loosen(*s);
+        }
+        self.maybe_rebuild();
+    }
+
+    /// `set_blocks` from the contract's JSON of the definitions (`[{ id, base, entities, … }]`).
+    pub fn set_blocks_json(&mut self, text: &str) -> Result<(), String> {
+        let blocks = Blocks::from_json(&Json::parse(text)?)?;
+        self.set_blocks(blocks);
+        Ok(())
+    }
+
+    /// The drawing's definitions, flattened.
+    pub fn blocks(&self) -> &Blocks {
+        &self.blocks
+    }
+
+    /// An object's pieces and box: an insert's placed definition, its box
+    /// around the pieces and the insertion point (a snap point and its grip);
+    /// any other object its own box.
+    fn expansion(&self, shape: &Shape) -> (Option<Arc<Expanded>>, Bounds) {
+        let mut b = entity_bounds_in(shape, self.font);
+        if !matches!(shape, Shape::Insert { .. }) {
+            return (None, b);
+        }
+        let pieces = self.blocks.expand(shape);
+        if pieces.is_empty() {
+            return (None, b);
+        }
+        let mut x = Expanded::default();
+        for piece in pieces {
+            let pb = entity_bounds_in(&piece.shape, self.font);
+            b.min_x = js_min(b.min_x, pb.min_x);
+            b.min_y = js_min(b.min_y, pb.min_y);
+            b.max_x = js_max(b.max_x, pb.max_x);
+            b.max_y = js_max(b.max_y, pb.max_y);
+            x.shapes.push(piece.shape);
+            x.colors.push(piece.color);
+            x.weights.push(piece.line_weight);
+        }
+        (Some(Arc::new(x)), b)
+    }
+
     pub fn font(&self) -> Font {
         self.font
     }
 
-    /// Empties the store (the layer table and label defaults stay).
+    /// Empties the store (the layer table, label defaults and block definitions stay).
     pub fn clear(&mut self) {
         let layers = (
             std::mem::take(&mut self.layer_ids),
@@ -329,10 +426,12 @@ impl Store {
         );
         let defaults = self.label_defaults;
         let font = self.font;
+        let blocks = std::mem::take(&mut self.blocks);
         *self = Store::default();
         (self.layer_ids, self.flags) = layers;
         self.label_defaults = defaults;
         self.font = font;
+        self.blocks = blocks;
     }
 
     /// Replaces the layer table: every node of the layer tree with its flags

@@ -1,4 +1,5 @@
-import type { Entity } from '../model/entities';
+import type { BlockPiece } from '../model/blocks';
+import type { Entity, HatchEntity } from '../model/entities';
 import { exprTable, type ExprNeeds, type ExprTable } from '../model/expression/expression';
 import type { Bounds, Vec2 } from '../model/geometry';
 import type { LayerStyle } from '../model/layers';
@@ -30,8 +31,12 @@ export interface StyleSources {
 export interface GeometrySource {
   /** What these objects draw, one record each (style/geometry.ts `DrawnReader`); `oriented`: rings turned for the style engine; `clip`: the box construction lines are clipped to. */
   drawn(ids: readonly number[], oriented: boolean, clip?: Bounds): Float64Array;
-  /** A styled layer's batches (`CoreStore.buildStyled`). */
-  styled(program: CoreStyleProgram, ids: readonly number[], objects: Int32Array, table: ExprTable, clip: Bounds | null, origin: Vec2, plotScale: number, screen?: boolean): { json: string; data: Float32Array };
+  /** A styled layer's batches (`CoreStore.buildStyled`); `pieces`: every insert's pieces' sets in turn. */
+  styled(program: CoreStyleProgram, ids: readonly number[], objects: Int32Array, pieces: Int32Array, table: ExprTable, clip: Bounds | null, origin: Vec2, plotScale: number, screen?: boolean): { json: string; data: Float32Array };
+  /** A block's pieces, as `GROUP` records number them (docs/adr/0144); null for an unknown block. */
+  blockPieces(block: string): readonly BlockPiece[] | null;
+  /** An insert's pieces as placed; null for any other object. */
+  insertPieces(id: number): readonly BlockPiece[] | null;
 }
 
 export interface StyledBuildOptions {
@@ -120,7 +125,15 @@ export function buildStyledLayer(id: string, entities: readonly Entity[], style:
   const refs: string[] = [];
   const refIndex = new Map<string, number>();
   const simple = new Map<string, number>();
+  const simpleOf = (color: string, weight: number) => {
+    const key = `${color}\u0000${weight}`;
+    let s = simple.get(key);
+    if (s === undefined) simple.set(key, (s = setOf(symbolsOfLayerStyle(style, color, opts.hairlines, weight))));
+    return s;
+  };
   const objects = new Int32Array(4 * entities.length);
+  // Every insert's pieces' sets in turn (docs/adr/0144): each piece's own colour and weight, else the insert's; a hatch its pattern.
+  const pieces: number[] = [];
   entities.forEach((e, i) => {
     const color = e.color ?? style.color;
     let c = colorIndex.get(color);
@@ -130,9 +143,17 @@ export function buildStyledLayer(id: string, entities: readonly Entity[], style:
     }
     // The object's own weight, else its layer's (docs/adr/0139): the simple look by colour and weight.
     const weight = e.lineWeight ?? style.lineWeight;
-    const key = `${color}\u0000${weight}`;
-    let s = simple.get(key);
-    if (s === undefined) simple.set(key, (s = setOf(symbolsOfLayerStyle(style, color, opts.hairlines, weight))));
+    const s = simpleOf(color, weight);
+    if (e.kind === 'insert') {
+      const table = opts.geometry.blockPieces(e.block);
+      // A hatch piece's pattern turns and grows with the insert: read as placed, only for a block that has one.
+      const placed = table?.some((p) => p.kind === 'hatch') ? opts.geometry.insertPieces(e.id) : null;
+      table?.forEach((p, k) => {
+        const own = placed?.[k] ?? p;
+        const pieceColor = p.color ?? color;
+        pieces.push(own.kind === 'hatch' ? setOf({ fill: hatchSymbolOf(own as HatchEntity, pieceColor) }) : simpleOf(pieceColor, p.lineWeight ?? weight));
+      });
+    }
     let mode = RENDERER;
     let a = 0;
     if (e.kind === 'text') mode = SKIP;
@@ -168,7 +189,7 @@ export function buildStyledLayer(id: string, entities: readonly Entity[], style:
   try {
     const needs = Object.fromEntries(NEEDS.map((k, i) => [k, !!(program.needs & (1 << i))])) as unknown as ExprNeeds;
     const table = exprTable(program.fields, needs, entities, opts.layerName);
-    const out = opts.geometry.styled(program, entities.map((e) => e.id), objects, table, opts.clip ?? null, opts.origin, opts.plotScale, opts.screen);
+    const out = opts.geometry.styled(program, entities.map((e) => e.id), objects, Int32Array.from(pieces), table, opts.clip ?? null, opts.origin, opts.plotScale, opts.screen);
     return { id, lines: [], fills: [], points: [], styled: styledBatches(out.json, out.data, { palette: opts.palette, plotScale: opts.plotScale, asset: (a) => opts.library.asset(a) }) };
   } finally {
     program.free();

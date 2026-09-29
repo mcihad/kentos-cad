@@ -127,15 +127,55 @@ class Projection {
 const same: Pick = (v) => v;
 
 /**
+ * The fields each kind may have, besides the ones every object has: what the
+ * contract holds. A drawing's objects are packed by it (io/columns.ts), a
+ * block's objects projected by it in the head (without a persistent id);
+ * anything else an object carries is reported, not written.
+ */
+const COMMON = ['kind', 'id', 'uid', 'layerId', 'color', 'attrs', 'label', 'symbol', 'lineWeight'];
+export const OBJECT_FIELDS: Record<string, ReadonlySet<string>> = Object.fromEntries(
+  Object.entries({
+    point: ['p', 'z'],
+    line: ['a', 'b', 'za', 'zb'],
+    polyline: ['pts', 'bulges', 'zs'],
+    polygon: ['pts', 'bulges', 'holes', 'zs', 'parts'],
+    circle: ['c', 'r'],
+    arc: ['c', 'r', 'a0', 'a1'],
+    ellipse: ['c', 'major', 'ratio', 't0', 't1'],
+    spline: ['pts', 'closed'],
+    xline: ['p', 'dir'],
+    ray: ['p', 'dir'],
+    text: ['p', 'text', 'height', 'rotation'],
+    dimension: ['a', 'b', 'offset', 'height', 'text', 'style', 'angle', 'c'],
+    hatch: ['ring', 'holes', 'pattern'],
+    insert: ['block', 'p', 'scale', 'rotation', 'mirror'],
+  }).map(([k, f]) => [k, new Set([...COMMON, ...f])]),
+);
+
+/** A block's objects' picks by kind: their kind's fields but the persistent id (docs/adr/0144). */
+const BLOCK_OBJECT: Record<string, Record<string, Pick>> = Object.fromEntries(
+  Object.entries(OBJECT_FIELDS).map(([kind, fields]) => [kind, Object.fromEntries([...fields].filter((f) => f !== 'uid').map((f) => [f, same]))]),
+);
+
+/**
  * The drawing without its objects reduced to the contract's fields, fresh
  * objects all the way down; what else it held is counted in `dropped`
  * (`belge.layers.style.glow`). The objects are packed field by field
- * (io/columns.ts), which counts theirs. Opaque parts (project styles,
- * renderers) are the style engine's own and stay whole.
+ * (io/columns.ts), which counts theirs; a block's objects travel here, in
+ * its definition (docs/adr/0144). Opaque parts (project styles, renderers)
+ * are the style engine's own and stay whole.
  */
 export function projectHead(head: DrawingHead): { head: DrawingHead; dropped: Dropped } {
   const p = new Projection();
   const vec = (v: unknown, where: string) => p.fields(v, { x: same, y: same }, where);
+  // An object of an unknown kind stays whole: the file's reader names it.
+  const blockObject: Pick = (v, where) => {
+    const picks = isObj(v) ? BLOCK_OBJECT[v.kind as string] : undefined;
+    return picks ? p.fields(v, picks, `${where}.${(v as Obj).kind as string}`) : v;
+  };
+  const attribute: Pick = (v, where) => p.fields(v, { tag: same, prompt: same, value: same, p: vec, height: same, rotation: same }, where);
+  const block: Pick = (v, where) =>
+    p.fields(v, { id: same, name: same, base: vec, entities: (x, w) => p.list(blockObject)(x, w), attributes: (x, w) => p.list(attribute)(x, w), description: same }, where);
   const label = (v: unknown, where: string) =>
     p.fields(
       v,
@@ -175,6 +215,7 @@ export function projectHead(head: DrawingHead): { head: DrawingHead; dropped: Dr
       styles: (x, w) => p.fields(x, { items: same, categories: same }, w),
       projectId: same,
       migratedFrom: (x, w) => p.fields(x, { format: same, version: same, sourceSha256: same }, w),
+      blocks: (x, w) => p.list(block)(x, w),
     },
     'belge',
   );

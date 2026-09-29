@@ -22,6 +22,7 @@ const REASON: Record<SyncConflict['reason'], string> = {
 const KIND: Record<string, string> = {
   point: 'Nokta', line: 'Çizgi', polyline: 'Çoklu çizgi', polygon: 'Alan', circle: 'Daire', arc: 'Yay', ellipse: 'Elips',
   spline: 'Eğri', xline: 'Yardımcı çizgi', ray: 'Işın', text: 'Yazı', dimension: 'Ölçü', hatch: 'Tarama',
+  insert: 'Blok',
 };
 
 export function openConflictDialog(ctx: AppContext): void {

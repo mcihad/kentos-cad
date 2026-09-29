@@ -106,6 +106,7 @@ fn whole_layers_as_frozen() {
                 texts: c["table"]["texts"].as_str().unwrap_or_default(),
                 text_lens: &lens,
                 numbers: &numbers,
+                pieces: &[],
             },
             clip.as_ref(),
             origin,

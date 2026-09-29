@@ -1,4 +1,4 @@
-import type { Entity } from './entities';
+import type { Entity, EntityGeometry } from './entities';
 import type { Vec2 } from './geometry';
 
 /**
@@ -46,6 +46,13 @@ export interface BlockDefinition {
   attributes?: AttributeDefinition[];
   description?: string;
 }
+
+/**
+ * A block's piece as the geometry store gives it (`PickIndex.blockPieces`):
+ * a shape (never an insert) with the colour and line weight it draws with
+ * when it has its own (or a nested insert's).
+ */
+export type BlockPiece = EntityGeometry & { color?: string; lineWeight?: number };
 
 /** The deepest nesting of blocks. */
 export const MAX_BLOCK_DEPTH = 16;

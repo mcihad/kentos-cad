@@ -1274,6 +1274,7 @@ pub(crate) fn kind_name(kind: &str) -> &'static str {
         "text" => "yazı",
         "dimension" => "ölçü",
         "hatch" => "tarama",
+        "insert" => "blok",
         _ => "diğer",
     }
 }

@@ -94,6 +94,24 @@ describe('the drawing packed for the worker', () => {
     expect(out.dropped).toEqual({ 'polyline.note': 1, 'polygon.note': 1, 'point.p.w': 1, 'belge.layers.style.glow': 1 });
     expect(difference(unpackSnapshot(out.drawing), all)).toBeNull();
   });
+
+  it("carries a drawing's block definitions in the head with the contract's fields (docs/adr/0144)", () => {
+    const all = drawing('blocks.json');
+    expect(difference(unpackSnapshot(pack(all)), all)).toBeNull();
+    const extra = structuredClone(all) as unknown as { blocks: Record<string, unknown>[] };
+    const [pole, rogar] = extra.blocks as { entities: Record<string, unknown>[]; attributes?: Record<string, unknown>[] }[];
+    pole.entities[1].note = 'bilinmeyen';
+    pole.entities[0].uid = '0192f5a1-1111-7000-8000-00000000000f';
+    rogar.attributes![0].font = 'Barlow';
+    extra.blocks[0].color = '#FF0000';
+    const { entities, uids, ...head } = extra as unknown as DocumentSnapshotV2;
+    const out = packDrawing(
+      head,
+      entities.map((e, i) => ({ ...e, uid: uids[i] })),
+    );
+    expect(out.dropped).toEqual({ 'belge.blocks.entities.insert.note': 1, 'belge.blocks.entities.point.uid': 1, 'belge.blocks.attributes.font': 1, 'belge.blocks.color': 1 });
+    expect(difference(unpackSnapshot(out.drawing), all)).toBeNull();
+  });
 });
 
 describe.skipIf(!formatsBuilt)('KCAD v2 in the browser (formats WASM module)', () => {
@@ -144,6 +162,8 @@ describe.skipIf(!formatsBuilt)('KCAD v2 in the browser (formats WASM module)', (
       ['migrated.json', 'migrated.kcad'],
       ['line-weights.json', 'line-weights.kcad'],
       ['elevations.json', 'elevations.kcad'],
+      // Schema 6: the definitions from the page's head, as the Python writer wrote them (docs/adr/0144).
+      ['blocks.json', 'blocks.kcad'],
     ]) {
       expect(encodeWith(m, pack(drawing(content))), file).toEqual(read(file));
     }

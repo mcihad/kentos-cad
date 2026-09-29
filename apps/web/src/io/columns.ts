@@ -1,6 +1,6 @@
 import type { DocumentSnapshotV2 } from '../contracts/generated/DocumentSnapshotV2';
 import type { Entity as ContractEntity } from '../contracts/generated/Entity';
-import { KcadError, exactJson, projectHead, type Dropped } from './kcad';
+import { KcadError, OBJECT_FIELDS, exactJson, projectHead, type Dropped } from './kcad';
 
 /**
  * A drawing as typed columns (docs/adr/0030, TODOS.md FILE-15): how the page
@@ -66,30 +66,6 @@ const HOLE_ELEVATIONS = 2;
 const PART_BULGES = 1;
 const PART_ELEVATIONS = 2;
 const PART_HOLES = 4;
-
-/**
- * The fields each kind may have, besides the ones every object has: what the
- * contract holds. Anything else an object carries is reported, not written.
- */
-const COMMON = ['kind', 'id', 'uid', 'layerId', 'color', 'attrs', 'label', 'symbol', 'lineWeight'];
-const FIELDS: Record<string, ReadonlySet<string>> = Object.fromEntries(
-  Object.entries({
-    point: ['p', 'z'],
-    line: ['a', 'b', 'za', 'zb'],
-    polyline: ['pts', 'bulges', 'zs'],
-    polygon: ['pts', 'bulges', 'holes', 'zs', 'parts'],
-    circle: ['c', 'r'],
-    arc: ['c', 'r', 'a0', 'a1'],
-    ellipse: ['c', 'major', 'ratio', 't0', 't1'],
-    spline: ['pts', 'closed'],
-    xline: ['p', 'dir'],
-    ray: ['p', 'dir'],
-    text: ['p', 'text', 'height', 'rotation'],
-    dimension: ['a', 'b', 'offset', 'height', 'text', 'style', 'angle', 'c'],
-    hatch: ['ring', 'holes', 'pattern'],
-    insert: ['block', 'p', 'scale', 'rotation', 'mirror'],
-  }).map(([k, f]) => [k, new Set([...COMMON, ...f])]),
-);
 
 /**
  * Orders text as UTF-8 bytes (code points) do: the contract's attribute map
@@ -299,7 +275,7 @@ class Packer {
     if (k === undefined) throw unwritable('unknown_kind', this.where, `“${kind}” nesne türü bilinmiyor`);
     this.kinds.push(k);
     this.uid(e.uid);
-    const known = FIELDS[kind];
+    const known = OBJECT_FIELDS[kind];
     for (const key in e) if (!known.has(key) && (e as unknown as Record<string, unknown>)[key] !== undefined) this.drop(`${kind}.${key}`);
     const flagsAt = this.ints.n + 1;
     const attrs = e.attrs as Record<string, unknown>;

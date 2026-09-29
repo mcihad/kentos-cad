@@ -73,6 +73,12 @@ pub const LABEL_CENTER: f64 = 2.0;
 pub const LABEL_CORNER: f64 = 3.0;
 pub const LABEL_BESIDE: f64 = 4.0;
 pub const LABEL_ALONG: f64 = 5.0;
+/// A text among a block's pieces (docs/adr/0144): x, y its insertion point,
+/// a its rotation, b its height as placed, c the piece's place.
+pub const LABEL_PIECE_TEXT: f64 = 6.0;
+/// A dimension among a block's pieces: x, y its value's place, a its angle,
+/// b the value, c the piece's place, d its text height as placed.
+pub const LABEL_PIECE_DIMENSION: f64 = 7.0;
 
 /// Numbers per label record.
 pub const LABEL_STRIDE: usize = 8;
@@ -108,7 +114,9 @@ impl Store {
     ///   value, c 1 for an angle (0 length), d the prefix (0 none, 1 "R ", 2 "Ø ");
     /// - text: x, y its insertion point, a its rotation;
     /// - centre and beside: x, y the anchor; corner: x, y the box's top left;
-    /// - along: x, y and a, b the two vertices the label sits between.
+    /// - along: x, y and a, b the two vertices the label sits between;
+    /// - a block's text or dimension pieces (`LABEL_PIECE_TEXT`,
+    ///   `LABEL_PIECE_DIMENSION`), before the insert's own label.
     ///
     /// `editing` is left out (the inline editor draws it).
     pub fn labels(&self, view: &Bounds, scale: f64, editing: Option<f64>) -> Vec<f64> {
@@ -128,6 +136,55 @@ impl Store {
             }
             if Some(it.id) == editing {
                 continue;
+            }
+            // A block's texts and dimension values, where its pieces are placed (docs/adr/0144).
+            if let Some(x) = &it.expanded {
+                for (i, s) in x.shapes.iter().enumerate() {
+                    match s {
+                        Shape::Text {
+                            p,
+                            height,
+                            rotation,
+                            ..
+                        } => {
+                            let px = height * scale;
+                            if px < 5.0 || px > 240.0 {
+                                continue;
+                            }
+                            out.extend([
+                                it.id,
+                                LABEL_PIECE_TEXT,
+                                p.x,
+                                p.y,
+                                *rotation,
+                                *height,
+                                i as f64,
+                                0.0,
+                            ]);
+                        }
+                        Shape::Dimension { height, .. } => {
+                            let px = height * scale;
+                            let Some(l) = dimension_geom(s).and_then(|g| layout_dimension(&g))
+                            else {
+                                continue;
+                            };
+                            if px < 5.0 || px > 240.0 {
+                                continue;
+                            }
+                            out.extend([
+                                it.id,
+                                LABEL_PIECE_DIMENSION,
+                                l.text_at.x,
+                                l.text_at.y,
+                                l.rotation,
+                                l.value,
+                                i as f64,
+                                *height,
+                            ]);
+                        }
+                        _ => {}
+                    }
+                }
             }
             match &it.shape {
                 Shape::Dimension { height, .. } => {

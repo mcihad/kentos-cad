@@ -15,7 +15,12 @@
 //! - `FILL, rings`, then per ring its points (outer ring first);
 //! - `FILLS, parts`, then per part `rings` and per ring its points, a
 //!   multi-part area's (docs/adr/0143): each part is drawn as a `FILL`
-//!   would be, its points always given (no reference).
+//!   would be, its points always given (no reference);
+//! - `GROUP, n`, then `n` times a piece's place among its block's pieces
+//!   and the piece's own record (never `NONE` nor another `GROUP`), a
+//!   block's insert (docs/adr/0144): its pieces placed, their points always
+//!   given. The host draws each with the piece's own colour and line weight
+//!   when it has them (`Store::block_pieces_json`), else the insert's.
 //!
 //! Points are `n, x0, y0, …`, or `SOURCE` / `REVERSED`: the object's own
 //! points for that path or ring (a line's two ends; a polyline's or
@@ -41,6 +46,8 @@ pub const LINE: f64 = 2.0;
 pub const FILL: f64 = 3.0;
 /// A multi-part area: its parts' fills in one record (docs/adr/0143).
 pub const FILLS: f64 = 4.0;
+/// A block's insert: its pieces' records, each after its place (docs/adr/0144).
+pub const GROUP: f64 = 5.0;
 /// The object's own points, as they are.
 pub const SOURCE: f64 = -1.0;
 /// The object's own points, last to first.
@@ -112,6 +119,12 @@ fn path(out: &mut Vec<f64>, closed: bool, pts: &[Vec2]) {
 /// rings turned for the style engine; otherwise as the object has them.
 /// `clip`: the box construction lines are clipped to (none: not drawn).
 pub fn drawn(s: &Shape, oriented: bool, clip: Option<&Bounds>, out: &mut Vec<f64>) {
+    drawn_record(s, oriented, clip, true, out);
+}
+
+/// `drawn`, with the object's own points referred to (`refs`) or written
+/// out: a block's piece is no object of the drawing, so its points go as they are.
+fn drawn_record(s: &Shape, oriented: bool, clip: Option<&Bounds>, refs: bool, out: &mut Vec<f64>) {
     match s {
         // An insert shows its insertion point until the store expands its block (docs/adr/0144).
         Shape::Point { p, .. } | Shape::Insert { p, .. } => out.extend([MARKER, p.x, p.y]),
@@ -125,14 +138,23 @@ pub fn drawn(s: &Shape, oriented: bool, clip: Option<&Bounds>, out: &mut Vec<f64
             }
             None => out.push(NONE),
         },
-        Shape::Line { .. } => out.extend([LINE, 1.0, 0.0, SOURCE]),
-        Shape::Polyline { bulges, .. } => {
+        Shape::Line { a, b } => {
+            out.extend([LINE, 1.0]);
+            if refs {
+                out.extend([0.0, SOURCE]);
+            } else {
+                path(out, false, &[*a, *b]);
+            }
+        }
+        Shape::Polyline { pts, bulges, .. } => {
             out.extend([LINE, 1.0]);
             // As the TypeScript tested it: any bulge list (even all zero) is tessellated.
             if bulges.is_some() {
                 path(out, false, &entity_outline(s, OUTLINE_SEGMENTS));
-            } else {
+            } else if refs {
                 out.extend([0.0, SOURCE]);
+            } else {
+                path(out, false, pts);
             }
         }
         Shape::Polygon { .. } if is_multi_part(s) => {
@@ -165,7 +187,7 @@ pub fn drawn(s: &Shape, oriented: bool, clip: Option<&Bounds>, out: &mut Vec<f64
                 if has_bulges(bulges) {
                     ring(out, &polygon_ring(pts, bulges), false, ccw);
                 } else {
-                    ring(out, pts, true, ccw);
+                    ring(out, pts, refs, ccw);
                 }
             };
             outer(out, pts, bulges.as_deref(), true);
@@ -206,12 +228,47 @@ pub fn drawn(s: &Shape, oriented: bool, clip: Option<&Bounds>, out: &mut Vec<f64
         }
         Shape::Hatch { ring: r, holes, .. } => {
             out.extend([FILL, (1 + holes.as_ref().map_or(0, Vec::len)) as f64]);
-            ring(out, r, true, oriented.then_some(true));
+            ring(out, r, refs, oriented.then_some(true));
             for h in holes.iter().flatten() {
-                ring(out, h, true, oriented.then_some(false));
+                ring(out, h, refs, oriented.then_some(false));
             }
         }
     }
+}
+
+/// One piece in a pieces list: its fields, its own colour and line weight.
+fn piece_json(out: &mut String, i: usize, s: &Shape, color: Option<&str>, weight: Option<f64>) {
+    if i > 0 {
+        out.push(',');
+    }
+    out.push('{');
+    let mut first = true;
+    s.write_fields(out, &mut first);
+    if let Some(c) = color {
+        crate::api::json::field(out, &mut first, "color", c);
+    }
+    if let Some(w) = &weight {
+        crate::api::json::field(out, &mut first, "lineWeight", w);
+    }
+    out.push('}');
+}
+
+/// A `GROUP` record: every piece that draws something, after its place.
+fn group(pieces: &[Shape], oriented: bool, clip: Option<&Bounds>, out: &mut Vec<f64>) {
+    let at = out.len();
+    out.extend([GROUP, 0.0]);
+    let mut n = 0.0;
+    for (i, s) in pieces.iter().enumerate() {
+        let before = out.len();
+        out.push(i as f64);
+        drawn_record(s, oriented, clip, false, out);
+        if out.get(before + 1) == Some(&NONE) {
+            out.truncate(before);
+        } else {
+            n += 1.0;
+        }
+    }
+    out[at + 1] = n;
 }
 
 /// Bits of a `measures` record: which values the object has.
@@ -261,11 +318,55 @@ impl Store {
         let mut out = Vec::new();
         for &id in ids {
             match self.get(id) {
-                Some(it) => drawn(&it.shape, oriented, clip, &mut out),
+                Some(it) => match &it.expanded {
+                    Some(x) => group(&x.shapes, oriented, clip, &mut out),
+                    None => drawn(&it.shape, oriented, clip, &mut out),
+                },
                 None => out.push(NONE),
             }
         }
         out
+    }
+
+    /// A block's pieces as the host draws them (docs/adr/0144): each piece
+    /// of the flattened definition in order, its fields (relative to the
+    /// base point) with its own `color` and `lineWeight` when it has them;
+    /// what `GROUP` records and `LABEL_PIECE_*` labels refer to by place.
+    /// None for a block the drawing does not define.
+    pub fn block_pieces_json(&self, block: &str) -> Option<String> {
+        let flat = self.blocks().get(block)?;
+        let mut out = String::from("[");
+        for (i, piece) in flat.pieces.iter().enumerate() {
+            piece_json(
+                &mut out,
+                i,
+                &piece.shape,
+                piece.color.as_deref(),
+                piece.line_weight,
+            );
+        }
+        out.push(']');
+        Some(out)
+    }
+
+    /// An insert's pieces as placed (`block_pieces_json`'s layout, in the
+    /// drawing's coordinates): what a host reads of a piece that changes
+    /// with the placing, such as a hatch piece's pattern. None for any
+    /// object but an insert of a known block.
+    pub fn insert_pieces_json(&self, id: f64) -> Option<String> {
+        let x = self.get(id)?.expanded.as_ref()?;
+        let mut out = String::from("[");
+        for (i, s) in x.shapes.iter().enumerate() {
+            piece_json(
+                &mut out,
+                i,
+                s,
+                x.colors.get(i).and_then(|c| c.as_deref()),
+                x.weights.get(i).copied().flatten(),
+            );
+        }
+        out.push(']');
+        Some(out)
     }
 
     /// Geometry values of these objects for expressions (see `measure_record`).

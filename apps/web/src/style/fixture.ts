@@ -38,8 +38,10 @@ export function encodeFloat32(x: number): number | string {
 export function captureStyled(index: PickIndex, seen: (c: StyledCall) => void): GeometrySource {
   return {
     drawn: (ids, oriented, clip) => index.drawn(ids, oriented, clip),
-    styled: (program, ids, objects, table, clip, origin, plotScale, screen) => {
-      const out = index.styled(program, ids, objects, table, clip, origin, plotScale, screen);
+    blockPieces: (block) => index.blockPieces(block),
+    insertPieces: (id) => index.insertPieces(id),
+    styled: (program, ids, objects, pieces, table, clip, origin, plotScale, screen) => {
+      const out = index.styled(program, ids, objects, pieces, table, clip, origin, plotScale, screen);
       seen({
         program: program.json,
         objects: [...objects],

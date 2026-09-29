@@ -363,6 +363,7 @@ fn build(program: &str, objects: &[Obj], origin: Vec2) -> (Vec<Json>, Vec<f32>) 
         texts: &texts,
         text_lens: &lens,
         numbers: &numbers,
+        pieces: &[],
     };
     let out = build_layer(&store, &program, &objects, None, origin, 1000.0, false).expect("build");
     let Json::Arr(batches) = Json::parse(&out.json).expect("json") else {

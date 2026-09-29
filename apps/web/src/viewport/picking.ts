@@ -1,4 +1,5 @@
 import { DisposableStore } from '../core/disposable';
+import type { BlockPiece } from '../model/blocks';
 import type { CadDocument } from '../model/document';
 import type { Entity } from '../model/entities';
 import type { Bounds, Vec2 } from '../model/geometry';
@@ -73,6 +74,10 @@ export class PickIndex {
   private readonly pending = new Set<number>();
   private reload = true;
   private layersDirty = true;
+  /** The block definitions changed since they were sent (docs/adr/0144). */
+  private blocksDirty = true;
+  /** Blocks' pieces as the store numbers them, by block id, until the definitions change. */
+  private readonly pieceTables = new Map<string, readonly BlockPiece[] | null>();
   private timer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(doc: CadDocument) {
@@ -91,6 +96,12 @@ export class PickIndex {
     );
     this.d.add(doc.layers.events.on('structure', () => (this.layersDirty = true)));
     this.d.add(doc.layers.events.on('state', () => (this.layersDirty = true)));
+    this.d.add(
+      doc.blocks.subscribe(() => {
+        this.blocksDirty = true;
+        this.pieceTables.clear();
+      }),
+    );
     this.soon();
   }
 
@@ -124,6 +135,11 @@ export class PickIndex {
 
   /** Brings the store up to date before a query. */
   private sync(): void {
+    // The definitions first: the inserts put next are placed with them.
+    if (this.blocksDirty) {
+      this.blocksDirty = false;
+      this.store.setBlocks(JSON.stringify(this.doc.blocks.value));
+    }
     if (this.reload) {
       this.reload = false;
       this.pending.clear();
@@ -320,10 +336,34 @@ export class PickIndex {
     return this.store.evaluateExpression(source, ids, texts, textLens, numbers, scale, want);
   }
 
-  /** A layer through the style engine, next to its geometry (render/styledLayer.ts). */
-  styled(program: CoreStyleProgram, ids: readonly number[], objects: Int32Array, table: ExprTable, clip: Bounds | null, origin: Vec2, plotScale: number, screen = false): { json: string; data: Float32Array } {
+  /** A layer through the style engine, next to its geometry (render/styledLayer.ts); `pieces`: every insert's pieces' sets. */
+  styled(program: CoreStyleProgram, ids: readonly number[], objects: Int32Array, pieces: Int32Array, table: ExprTable, clip: Bounds | null, origin: Vec2, plotScale: number, screen = false): { json: string; data: Float32Array } {
     this.sync();
-    return this.store.buildStyled(program, Float64Array.from(ids), objects, table, clip, origin, plotScale, screen);
+    return this.store.buildStyled(program, Float64Array.from(ids), objects, pieces, table, clip, origin, plotScale, screen);
+  }
+
+  /**
+   * A block's pieces as the store numbers them in `GROUP` records and piece
+   * labels (docs/adr/0144): each its kind and fields relative to the base
+   * point, its own colour and line weight when it has them. Null for a block
+   * the drawing does not define. Kept until the definitions change.
+   */
+  blockPieces(block: string): readonly BlockPiece[] | null {
+    this.sync();
+    let table = this.pieceTables.get(block);
+    if (table === undefined) {
+      const json = this.store.blockPieces(block);
+      table = json === undefined ? null : (JSON.parse(json) as BlockPiece[]);
+      this.pieceTables.set(block, table);
+    }
+    return table;
+  }
+
+  /** An insert's pieces as placed (the drawing's coordinates), or null for any other object. */
+  insertPieces(id: number): readonly BlockPiece[] | null {
+    this.sync();
+    const json = this.store.insertPieces(id);
+    return json === undefined ? null : (JSON.parse(json) as BlockPiece[]);
   }
 
   /** Ids of objects on every layer whose box overlaps `r`, in the document's order (the processing tools' "visible" scope). */

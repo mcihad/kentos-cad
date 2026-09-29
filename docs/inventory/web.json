@@ -3328,7 +3328,8 @@
         "desktop": "implemented"
       },
       "tests": [
-        "fixtures/interaction/v1/move-copy.json"
+        "fixtures/interaction/v1/move-copy.json",
+        "fixtures/interaction/v1/usage-blocks-view.json"
       ]
     },
     {
@@ -3903,7 +3904,8 @@
         "fixtures/interaction/v1/arc-variants.json",
         "fixtures/interaction/v1/line-chain.json",
         "fixtures/interaction/v1/navigation.json",
-        "fixtures/interaction/v1/point-calc.json"
+        "fixtures/interaction/v1/point-calc.json",
+        "fixtures/interaction/v1/usage-blocks-view.json"
       ]
     },
     {
@@ -4045,7 +4047,8 @@
         "desktop": "implemented"
       },
       "tests": [
-        "fixtures/interaction/v1/mirror.json"
+        "fixtures/interaction/v1/mirror.json",
+        "fixtures/interaction/v1/usage-blocks-view.json"
       ]
     },
     {
@@ -4084,7 +4087,8 @@
       },
       "tests": [
         "apps/web/scripts/e2e/smoke.mjs",
-        "fixtures/interaction/v1/move-copy.json"
+        "fixtures/interaction/v1/move-copy.json",
+        "fixtures/interaction/v1/usage-blocks-view.json"
       ]
     },
     {
@@ -4783,7 +4787,8 @@
         "desktop": "implemented"
       },
       "tests": [
-        "fixtures/interaction/v1/rotate-scale.json"
+        "fixtures/interaction/v1/rotate-scale.json",
+        "fixtures/interaction/v1/usage-blocks-view.json"
       ]
     },
     {
@@ -4819,7 +4824,8 @@
         "desktop": "implemented"
       },
       "tests": [
-        "fixtures/interaction/v1/rotate-scale.json"
+        "fixtures/interaction/v1/rotate-scale.json",
+        "fixtures/interaction/v1/usage-blocks-view.json"
       ]
     },
     {
@@ -6959,7 +6965,8 @@
         "desktop": "implemented"
       },
       "tests": [
-        "fixtures/interaction/v1/move-copy.json"
+        "fixtures/interaction/v1/move-copy.json",
+        "fixtures/interaction/v1/usage-blocks-view.json"
       ]
     },
     {
@@ -7406,7 +7413,8 @@
         "fixtures/interaction/v1/arc-variants.json",
         "fixtures/interaction/v1/line-chain.json",
         "fixtures/interaction/v1/navigation.json",
-        "fixtures/interaction/v1/point-calc.json"
+        "fixtures/interaction/v1/point-calc.json",
+        "fixtures/interaction/v1/usage-blocks-view.json"
       ]
     },
     {
@@ -7515,7 +7523,8 @@
         "desktop": "implemented"
       },
       "tests": [
-        "fixtures/interaction/v1/mirror.json"
+        "fixtures/interaction/v1/mirror.json",
+        "fixtures/interaction/v1/usage-blocks-view.json"
       ]
     },
     {
@@ -7543,7 +7552,8 @@
       },
       "tests": [
         "apps/web/scripts/e2e/smoke.mjs",
-        "fixtures/interaction/v1/move-copy.json"
+        "fixtures/interaction/v1/move-copy.json",
+        "fixtures/interaction/v1/usage-blocks-view.json"
       ]
     },
     {
@@ -8065,7 +8075,8 @@
         "desktop": "implemented"
       },
       "tests": [
-        "fixtures/interaction/v1/rotate-scale.json"
+        "fixtures/interaction/v1/rotate-scale.json",
+        "fixtures/interaction/v1/usage-blocks-view.json"
       ]
     },
     {
@@ -8092,7 +8103,8 @@
         "desktop": "implemented"
       },
       "tests": [
-        "fixtures/interaction/v1/rotate-scale.json"
+        "fixtures/interaction/v1/rotate-scale.json",
+        "fixtures/interaction/v1/usage-blocks-view.json"
       ]
     },
     {

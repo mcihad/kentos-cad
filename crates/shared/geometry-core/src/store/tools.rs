@@ -187,7 +187,9 @@ pub fn outline_paths(s: &Shape, out: &mut Vec<f64>) {
         }
     };
     match s {
-        Shape::Point { p, .. } | Shape::Text { p, .. } => path(out, 2.0, &[*p]),
+        Shape::Point { p, .. } | Shape::Text { p, .. } | Shape::Insert { p, .. } => {
+            path(out, 2.0, &[*p])
+        }
         Shape::Dimension { .. } => {
             if let Some(l) = dimension_geom(s).and_then(|g| layout_dimension(&g)) {
                 for [a, b] in l.lines {
@@ -269,7 +271,8 @@ impl Store {
             if !loose_box(it) && !overlaps(&it.bounds, &whole) {
                 continue;
             }
-            for ed in entity_edges(&it.shape) {
+            // An insert's pieces cut and stop as objects of their own (docs/adr/0144).
+            for ed in it.shapes().iter().flat_map(entity_edges) {
                 hits.clear();
                 near.search(&edge_box(&ed), &mut hits);
                 if !hits.is_empty() {
@@ -296,7 +299,8 @@ impl Store {
             if !loose_box(it) && !reach.may_meet(&grow(it.bounds)) {
                 continue;
             }
-            for ed in entity_edges(&it.shape) {
+            // An insert's pieces cut and stop as objects of their own (docs/adr/0144).
+            for ed in it.shapes().iter().flat_map(entity_edges) {
                 if reach.may_meet(&edge_box(&ed)) {
                     edges.push(ed);
                 }
@@ -320,7 +324,10 @@ impl Store {
                 if n > limit {
                     break;
                 }
-                outline_paths(&transform_shape(&it.shape, m), &mut out);
+                // An insert's ghost is its pieces (docs/adr/0144).
+                for s in it.shapes() {
+                    outline_paths(&transform_shape(s, m), &mut out);
+                }
             }
         }
         out

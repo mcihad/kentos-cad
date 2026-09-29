@@ -161,163 +161,170 @@ impl Store {
         let mut nearby: Vec<Nearby> = Vec::new();
         for it in self.near(p, tol) {
             let id = it.id;
-            let e = &it.shape;
-            match e {
-                Shape::Ellipse {
-                    c,
-                    major,
-                    ratio,
-                    t0,
-                    t1,
-                } => {
-                    let g = ellipse_geom(*c, *major, *ratio, *t0, *t1);
-                    ch.consider(SnapKind::Center, *c, id);
-                    for t in quadrant_params(&g) {
-                        ch.consider(SnapKind::Quadrant, ellipse_point(&g, t), id);
-                    }
-                    if !is_full_ellipse(&g) {
-                        ch.consider(SnapKind::Endpoint, ellipse_point(&g, *t0), id);
-                        ch.consider(SnapKind::Endpoint, ellipse_point(&g, *t1), id);
-                    }
-                    // Exact on the curve (its chords only serve crossings).
-                    ch.consider(
-                        SnapKind::Nearest,
-                        ellipse_point(&g, closest_param(&g, p)),
-                        id,
-                    );
-                    if let Some(f) = from {
-                        ch.consider(
-                            SnapKind::Perpendicular,
-                            ellipse_point(&g, closest_param(&g, f)),
-                            id,
-                        );
-                        for t in ellipse_tangent_points(&g, f) {
-                            ch.consider(SnapKind::Tangent, t, id);
-                        }
-                    }
-                    for ed in entity_edges(e) {
-                        if closest_on_edge(&ed, p).d <= tol {
-                            nearby.push(Nearby {
-                                id,
-                                ed,
-                                ell: Some(g),
-                            });
-                        }
-                    }
-                    continue;
-                }
-                Shape::Point { p: q, .. }
-                | Shape::Text { p: q, .. }
-                | Shape::Insert { p: q, .. } => {
-                    ch.consider(SnapKind::Node, *q, id);
-                    continue;
-                }
-                Shape::Circle { c, .. } => {
-                    ch.consider(SnapKind::Center, *c, id);
-                    for q in entity_vertices(e).into_iter().skip(1) {
-                        ch.consider(SnapKind::Quadrant, q, id);
-                    }
-                }
-                Shape::Arc { c, r, a0, a1 } => {
-                    let g = ArcGeom {
-                        c: *c,
-                        r: *r,
-                        a0: *a0,
-                        a1: *a1,
-                    };
-                    ch.consider(SnapKind::Center, *c, id);
-                    ch.consider(SnapKind::Endpoint, arc_start(&g), id);
-                    ch.consider(SnapKind::Endpoint, arc_end(&g), id);
-                    ch.consider(SnapKind::Midpoint, arc_mid(&g), id);
-                }
-                Shape::Spline { pts, closed } => {
-                    for (i, q) in pts.iter().enumerate() {
-                        let end = !closed && (i == 0 || i == pts.len() - 1);
-                        ch.consider(
-                            if end {
-                                SnapKind::Endpoint
-                            } else {
-                                SnapKind::Node
-                            },
-                            *q,
-                            id,
-                        );
-                    }
-                }
-                Shape::Dimension { a, b, c, .. } => {
-                    ch.consider(SnapKind::Node, *a, id);
-                    ch.consider(SnapKind::Node, *b, id);
-                    if let Some(c) = c {
-                        ch.consider(SnapKind::Node, *c, id);
-                    }
-                    if let Some(l) = dimension_geom(e).and_then(|g| layout_dimension(&g)) {
-                        ch.consider(SnapKind::Endpoint, l.d1, id);
-                        ch.consider(SnapKind::Endpoint, l.d2, id);
-                    }
-                }
-                // Its boundary is snapped through the outline object itself.
-                Shape::Hatch { .. } => continue,
-                Shape::Line { .. }
-                | Shape::Polyline { .. }
-                | Shape::Polygon { .. }
-                | Shape::Xline { .. }
-                | Shape::Ray { .. } => {
-                    // A multi-part area part by part, each as one area (docs/adr/0143).
-                    for s in area_parts(e).iter() {
-                        let pts = entity_vertices(s);
-                        let bulges = match s {
-                            Shape::Polyline { bulges, .. } | Shape::Polygon { bulges, .. } => {
-                                bulges.as_deref()
-                            }
-                            _ => None,
-                        };
-                        for q in &pts {
-                            ch.consider(SnapKind::Endpoint, *q, id);
-                        }
-                        // A polygon's vertices include its holes', as the TypeScript walked them.
-                        let n = if matches!(s, Shape::Polygon { .. }) {
-                            pts.len()
-                        } else {
-                            pts.len().saturating_sub(1)
-                        };
-                        for i in 0..n {
-                            let a = pts[i];
-                            let b = pts[(i + 1) % pts.len()];
-                            let bulge = bulge_at(bulges, i);
-                            // A straight segment's midpoint lies in its box; a far box cannot offer one.
-                            if bulge == 0.0 && box_out_of_reach(a, b, p, tol) {
-                                continue;
-                            }
-                            ch.consider(SnapKind::Midpoint, segment_mid(a, b, bulge), id);
-                            if let Some(arc) = bulge_arc(a, b, bulge) {
-                                ch.consider(SnapKind::Center, arc.c, id);
-                            }
-                        }
-                    }
-                }
+            // A block's insertion point, then its pieces as objects of their own (docs/adr/0144).
+            if it.expanded.is_some()
+                && let Shape::Insert { p: q, .. } = &it.shape
+            {
+                ch.consider(SnapKind::Node, *q, id);
             }
-            for ed in entity_edges(e) {
-                // Out at the overview a contour of hundreds of segments crosses the aperture with a few:
-                // the rest are left out by their box before the closest point is worked out.
-                if let Edge::Seg { a, b } = ed
-                    && box_out_of_reach(a, b, p, tol)
-                {
-                    continue;
-                }
-                let c = closest_on_edge(&ed, p);
-                if c.d > tol {
-                    continue;
-                }
-                nearby.push(Nearby { id, ed, ell: None });
-                ch.consider(SnapKind::Nearest, c.p, id);
-                if let Some(f) = from {
-                    if let Some(foot) = perpendicular_foot(&ed, f) {
-                        ch.consider(SnapKind::Perpendicular, foot, id);
-                    }
-                    if let Edge::Arc { c, r, a0, sweep } = ed {
-                        for t in tangent_points(f, c, r) {
-                            if on_edge_arc(a0, sweep, atan2(t.y - c.y, t.x - c.x)) {
+            for e in it.shapes() {
+                match e {
+                    Shape::Ellipse {
+                        c,
+                        major,
+                        ratio,
+                        t0,
+                        t1,
+                    } => {
+                        let g = ellipse_geom(*c, *major, *ratio, *t0, *t1);
+                        ch.consider(SnapKind::Center, *c, id);
+                        for t in quadrant_params(&g) {
+                            ch.consider(SnapKind::Quadrant, ellipse_point(&g, t), id);
+                        }
+                        if !is_full_ellipse(&g) {
+                            ch.consider(SnapKind::Endpoint, ellipse_point(&g, *t0), id);
+                            ch.consider(SnapKind::Endpoint, ellipse_point(&g, *t1), id);
+                        }
+                        // Exact on the curve (its chords only serve crossings).
+                        ch.consider(
+                            SnapKind::Nearest,
+                            ellipse_point(&g, closest_param(&g, p)),
+                            id,
+                        );
+                        if let Some(f) = from {
+                            ch.consider(
+                                SnapKind::Perpendicular,
+                                ellipse_point(&g, closest_param(&g, f)),
+                                id,
+                            );
+                            for t in ellipse_tangent_points(&g, f) {
                                 ch.consider(SnapKind::Tangent, t, id);
+                            }
+                        }
+                        for ed in entity_edges(e) {
+                            if closest_on_edge(&ed, p).d <= tol {
+                                nearby.push(Nearby {
+                                    id,
+                                    ed,
+                                    ell: Some(g),
+                                });
+                            }
+                        }
+                        continue;
+                    }
+                    Shape::Point { p: q, .. }
+                    | Shape::Text { p: q, .. }
+                    | Shape::Insert { p: q, .. } => {
+                        ch.consider(SnapKind::Node, *q, id);
+                        continue;
+                    }
+                    Shape::Circle { c, .. } => {
+                        ch.consider(SnapKind::Center, *c, id);
+                        for q in entity_vertices(e).into_iter().skip(1) {
+                            ch.consider(SnapKind::Quadrant, q, id);
+                        }
+                    }
+                    Shape::Arc { c, r, a0, a1 } => {
+                        let g = ArcGeom {
+                            c: *c,
+                            r: *r,
+                            a0: *a0,
+                            a1: *a1,
+                        };
+                        ch.consider(SnapKind::Center, *c, id);
+                        ch.consider(SnapKind::Endpoint, arc_start(&g), id);
+                        ch.consider(SnapKind::Endpoint, arc_end(&g), id);
+                        ch.consider(SnapKind::Midpoint, arc_mid(&g), id);
+                    }
+                    Shape::Spline { pts, closed } => {
+                        for (i, q) in pts.iter().enumerate() {
+                            let end = !closed && (i == 0 || i == pts.len() - 1);
+                            ch.consider(
+                                if end {
+                                    SnapKind::Endpoint
+                                } else {
+                                    SnapKind::Node
+                                },
+                                *q,
+                                id,
+                            );
+                        }
+                    }
+                    Shape::Dimension { a, b, c, .. } => {
+                        ch.consider(SnapKind::Node, *a, id);
+                        ch.consider(SnapKind::Node, *b, id);
+                        if let Some(c) = c {
+                            ch.consider(SnapKind::Node, *c, id);
+                        }
+                        if let Some(l) = dimension_geom(e).and_then(|g| layout_dimension(&g)) {
+                            ch.consider(SnapKind::Endpoint, l.d1, id);
+                            ch.consider(SnapKind::Endpoint, l.d2, id);
+                        }
+                    }
+                    // Its boundary is snapped through the outline object itself.
+                    Shape::Hatch { .. } => continue,
+                    Shape::Line { .. }
+                    | Shape::Polyline { .. }
+                    | Shape::Polygon { .. }
+                    | Shape::Xline { .. }
+                    | Shape::Ray { .. } => {
+                        // A multi-part area part by part, each as one area (docs/adr/0143).
+                        for s in area_parts(e).iter() {
+                            let pts = entity_vertices(s);
+                            let bulges = match s {
+                                Shape::Polyline { bulges, .. } | Shape::Polygon { bulges, .. } => {
+                                    bulges.as_deref()
+                                }
+                                _ => None,
+                            };
+                            for q in &pts {
+                                ch.consider(SnapKind::Endpoint, *q, id);
+                            }
+                            // A polygon's vertices include its holes', as the TypeScript walked them.
+                            let n = if matches!(s, Shape::Polygon { .. }) {
+                                pts.len()
+                            } else {
+                                pts.len().saturating_sub(1)
+                            };
+                            for i in 0..n {
+                                let a = pts[i];
+                                let b = pts[(i + 1) % pts.len()];
+                                let bulge = bulge_at(bulges, i);
+                                // A straight segment's midpoint lies in its box; a far box cannot offer one.
+                                if bulge == 0.0 && box_out_of_reach(a, b, p, tol) {
+                                    continue;
+                                }
+                                ch.consider(SnapKind::Midpoint, segment_mid(a, b, bulge), id);
+                                if let Some(arc) = bulge_arc(a, b, bulge) {
+                                    ch.consider(SnapKind::Center, arc.c, id);
+                                }
+                            }
+                        }
+                    }
+                }
+                for ed in entity_edges(e) {
+                    // Out at the overview a contour of hundreds of segments crosses the aperture with a few:
+                    // the rest are left out by their box before the closest point is worked out.
+                    if let Edge::Seg { a, b } = ed
+                        && box_out_of_reach(a, b, p, tol)
+                    {
+                        continue;
+                    }
+                    let c = closest_on_edge(&ed, p);
+                    if c.d > tol {
+                        continue;
+                    }
+                    nearby.push(Nearby { id, ed, ell: None });
+                    ch.consider(SnapKind::Nearest, c.p, id);
+                    if let Some(f) = from {
+                        if let Some(foot) = perpendicular_foot(&ed, f) {
+                            ch.consider(SnapKind::Perpendicular, foot, id);
+                        }
+                        if let Edge::Arc { c, r, a0, sweep } = ed {
+                            for t in tangent_points(f, c, r) {
+                                if on_edge_arc(a0, sweep, atan2(t.y - c.y, t.x - c.x)) {
+                                    ch.consider(SnapKind::Tangent, t, id);
+                                }
                             }
                         }
                     }

@@ -472,6 +472,26 @@ export class CoreStore {
     typed(() => this.raw.setLayers(json));
   }
 
+  /** The drawing's block definitions (docs/adr/0144), the contract's JSON: every insert is placed again. */
+  setBlocks(json: string): void {
+    typed(() => this.raw.setBlocks(json));
+  }
+
+  /** A block's pieces as `GROUP` records and piece labels number them (JSON), or undefined for an unknown block. */
+  blockPieces(block: string): string | undefined {
+    return typed(() => this.raw.blockPieces(block));
+  }
+
+  /** An insert's pieces as placed (JSON), or undefined for any other object. */
+  insertPieces(id: number): string | undefined {
+    return typed(() => this.raw.insertPieces(id));
+  }
+
+  /** Patlat of an insert (docs/adr/0144 §3): `{ pieces }` or `{ error }` as JSON. */
+  explodeInsert(entityJson: string): string {
+    return typed(() => this.raw.explodeInsert(entityJson));
+  }
+
   /** Label rules by kind for layers without a label style. */
   setLabelDefaults(json: string): void {
     typed(() => this.raw.setLabelDefaults(json));
@@ -557,14 +577,15 @@ export class CoreStore {
   /**
    * A layer through the style engine (crates/shared/style-core/src/style/build.rs):
    * `objects` four numbers per id (how it is drawn, its set or symbol, the set
-   * of its simple look, its colour), the program's table of values, the box
+   * of its simple look, its colour), `pieces` the sets of every insert's pieces
+   * in turn (docs/adr/0144), the program's table of values, the box
    * construction lines are clipped to, the batches' origin, the plot scale, and
    * whether symbol sizes are on the screen (paper mm drawn as px, steady while zooming).
    * The batches' descriptions (JSON) and their numbers one after another.
    */
-  buildStyled(program: CoreStyleProgram, ids: Float64Array, objects: Int32Array, table: { texts: string; lens: Int32Array; numbers: Float64Array }, clip: { minX: number; minY: number; maxX: number; maxY: number } | null, origin: { x: number; y: number }, plotScale: number, screen = false): { json: string; data: Float32Array } {
+  buildStyled(program: CoreStyleProgram, ids: Float64Array, objects: Int32Array, pieces: Int32Array, table: { texts: string; lens: Int32Array; numbers: Float64Array }, clip: { minX: number; minY: number; maxX: number; maxY: number } | null, origin: { x: number; y: number }, plotScale: number, screen = false): { json: string; data: Float32Array } {
     return typed(() => {
-      const r = this.raw.buildStyled(program.raw, ids, objects, table.texts, table.lens, table.numbers, clip !== null, clip?.minX ?? 0, clip?.minY ?? 0, clip?.maxX ?? 0, clip?.maxY ?? 0, origin.x, origin.y, plotScale, screen);
+      const r = this.raw.buildStyled(program.raw, ids, objects, pieces, table.texts, table.lens, table.numbers, clip !== null, clip?.minX ?? 0, clip?.minY ?? 0, clip?.maxX ?? 0, clip?.maxY ?? 0, origin.x, origin.y, plotScale, screen);
       const json = r.json;
       return { json, data: r.intoData() };
     });

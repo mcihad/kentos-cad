@@ -1,4 +1,5 @@
 import type { CrosshairSize } from '../app/state';
+import type { BlockPiece } from '../model/blocks';
 import type { CadDocument } from '../model/document';
 import { dist, type Vec2 } from '../model/geometry';
 import type { DimensionLayout } from '../model/geom/dimension';
@@ -93,6 +94,7 @@ export function drawLabels(
   pal: CanvasPalette,
   spots: Float64Array,
   dimensionText: (l: Pick<DimensionLayout, 'prefix' | 'unit' | 'value'>) => string,
+  pieces: (block: string) => readonly BlockPiece[] | null = () => null,
 ): void {
   const layers = doc.layers;
   const ink = { fg: pal.fg, 'fg-dim': pal.fgDim, label: pal.label } as const;
@@ -132,6 +134,35 @@ export function drawLabels(
       g.textBaseline = 'alphabetic';
       haloText(g, e.text, 0, 0, pal.label, pal.labelHalo);
       g.restore();
+      continue;
+    }
+    // A block's texts and dimension values (docs/adr/0144), as its own objects draw theirs.
+    if ((what === LABEL.pieceText || what === LABEL.pieceDimension) && e.kind === 'insert') {
+      const piece = pieces(e.block)?.[spots[i + 6]];
+      const s = cam.worldToScreen({ x, y });
+      if (what === LABEL.pieceText && piece?.kind === 'text') {
+        const px = spots[i + 5] * cam.scale;
+        g.save();
+        g.translate(s.x, s.y);
+        g.rotate((-spots[i + 4] * Math.PI) / 180);
+        g.font = `italic 400 ${px.toFixed(1)}px ${pal.drawingFont}`;
+        g.textAlign = 'left';
+        g.textBaseline = 'alphabetic';
+        haloText(g, piece.text, 0, 0, pal.label, pal.labelHalo);
+        g.restore();
+      } else if (what === LABEL.pieceDimension && piece?.kind === 'dimension') {
+        const px = spots[i + 7] * cam.scale;
+        g.save();
+        g.translate(s.x, s.y);
+        g.rotate((-spots[i + 4] * Math.PI) / 180);
+        g.font = `500 ${px.toFixed(1)}px ${pal.drawingFont}`;
+        g.textAlign = 'center';
+        g.textBaseline = 'alphabetic';
+        const color = e.color ?? layers.get(e.layerId)?.style.color;
+        const measured = { value: spots[i + 5], unit: piece.style === 'angular' ? ('angle' as const) : ('length' as const), prefix: piece.style === 'radius' ? 'R ' : piece.style === 'diameter' ? 'Ø ' : '' };
+        haloText(g, piece.text || dimensionText(measured), 0, 0, !color || color === 'fg' || color === 'fg-dim' ? pal.label : resolveColor(color, pal), pal.labelHalo);
+        g.restore();
+      }
       continue;
     }
     const st = layers.get(e.layerId)?.style.label ?? DEFAULT_LABELS[e.kind];

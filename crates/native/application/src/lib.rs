@@ -31,6 +31,7 @@
 
 pub mod arc;
 pub mod array;
+pub mod blocks;
 mod checks;
 pub mod circle;
 pub mod codes;

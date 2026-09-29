@@ -19,20 +19,28 @@
 //!   picking and the label rule, as `layerTable` sends them; sent again only
 //!   when the table changed.
 //!
+//! - **Blocks as the document holds them** (docs/adr/0144): the definitions
+//!   are sent again when one of them changed (the document keeps each
+//!   shared, so a pointer says it), before the objects, so every insert is
+//!   placed with the definitions of its revision.
+//!
 //! Queries answer by slot. What they decide is the store's, rule for rule
 //! the web's: points and edges before interiors, the smallest area, window
 //! and crossing boxes, the snap kinds' weights.
 
-use kentos_contracts::{Entity, LabelPlacement, LabelStyle, LayerNode};
+use std::sync::Arc;
+
+use kentos_contracts::{BlockDefinition, Entity, LabelPlacement, LabelStyle, LayerNode};
 use kentos_domain::{ChangeMark, Changes, Document, LayerTree, Slot};
 use kentos_geometry_core::entity::{Shape, entity_area, entity_length, entity_vertices};
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::store::labels::{
-    LABEL_ALONG, LABEL_BESIDE, LABEL_CENTER, LABEL_CORNER, LABEL_DIMENSION, LABEL_STRIDE,
-    LABEL_TEXT, LabelRule, Placement,
+    LABEL_ALONG, LABEL_BESIDE, LABEL_CENTER, LABEL_CORNER, LABEL_DIMENSION, LABEL_PIECE_DIMENSION,
+    LABEL_PIECE_TEXT, LABEL_STRIDE, LABEL_TEXT, LabelRule, Placement,
 };
 use kentos_geometry_core::store::snap::SnapHit;
 use kentos_geometry_core::store::{LayerFlags, Store};
+use kentos_native_application::blocks::{core_blocks, piece_entities};
 use kentos_native_application::geometry::{drawing_font, shape};
 
 use crate::Vec2;
@@ -47,6 +55,8 @@ pub struct Spatial {
     revision: Option<u64>,
     /// The layer table sent last.
     layers: Vec<(String, LayerFlags)>,
+    /// The block definitions sent last.
+    blocks: Vec<Arc<BlockDefinition>>,
     /// How many times every object was read (a drawing opened, or the journal fell behind).
     reloads: u64,
 }
@@ -74,6 +84,8 @@ impl Spatial {
         );
         self.store
             .set_font(drawing_font(doc.settings().drawing_font));
+        self.blocks = doc.blocks().to_vec();
+        self.store.set_blocks(core_blocks(&self.blocks));
         self.store.put_many(doc.entities().map(record));
         self.mark = doc.change_mark();
         self.revision = Some(doc.revision());
@@ -91,6 +103,13 @@ impl Spatial {
         }
         self.store
             .set_font(drawing_font(doc.settings().drawing_font));
+        let blocks = doc.blocks();
+        if blocks.len() != self.blocks.len()
+            || blocks.iter().zip(&self.blocks).any(|(a, b)| !Arc::ptr_eq(a, b))
+        {
+            self.blocks = blocks.to_vec();
+            self.store.set_blocks(core_blocks(&self.blocks));
+        }
         match doc.changes_since(self.mark) {
             Changes::All => return self.reload(doc),
             Changes::Slots(slots) => {
@@ -129,6 +148,18 @@ impl Spatial {
     /// The store, for queries this type does not wrap.
     pub fn store(&self) -> &Store {
         &self.store
+    }
+
+    /// A block's insert as the objects it draws (docs/adr/0144): its pieces
+    /// as the store placed them, each with its own colour and line weight,
+    /// else the insert's. None for any other object, or an insert of a
+    /// block the drawing does not define.
+    pub fn pieces(&self, e: &Entity) -> Option<Vec<Entity>> {
+        if !matches!(e, Entity::Insert(_)) {
+            return None;
+        }
+        let item = self.store.get(f64::from(e.base().id))?;
+        item.expanded.as_ref().map(|x| piece_entities(e, x))
     }
 
     /// The most specific visible object within `tol` world units of `at`
@@ -306,11 +337,49 @@ impl Spatial {
                         a: at,
                         b: Vec2::new(r[4], r[5]),
                     }
+                } else if what == LABEL_PIECE_TEXT {
+                    let Shape::Text { text, .. } = self.piece(r[0], r[6])? else {
+                        return None;
+                    };
+                    LabelSpot::PieceText {
+                        slot,
+                        at,
+                        rotation: r[4],
+                        height: r[5],
+                        text,
+                    }
+                } else if what == LABEL_PIECE_DIMENSION {
+                    let Shape::Dimension { text, style, .. } = self.piece(r[0], r[6])? else {
+                        return None;
+                    };
+                    LabelSpot::PieceDimension {
+                        slot,
+                        at,
+                        angle: r[4],
+                        value: r[5],
+                        height: r[7],
+                        text: text.filter(|t| !t.is_empty()),
+                        angular: style.as_deref() == Some("angular"),
+                        prefix: match style.as_deref() {
+                            Some("radius") => "R ",
+                            Some("diameter") => "Ø ",
+                            _ => "",
+                        },
+                    }
                 } else {
                     return None;
                 })
             })
             .collect()
+    }
+
+    /// Piece `place` of the insert `id`'s block, as its definition holds it.
+    fn piece(&self, id: f64, place: f64) -> Option<Shape> {
+        let Shape::Insert { block, .. } = &self.store.get(id)?.shape else {
+            return None;
+        };
+        let flat = self.store.blocks().get(block)?;
+        flat.pieces.get(place as usize).map(|p| p.shape.clone())
     }
 
     /// How many times every object was read again: once per opened drawing
@@ -331,7 +400,7 @@ impl Spatial {
 
 /// One thing a view draws as text (the store's label records, typed).
 /// Points are in world units; angles in degrees, counter-clockwise.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum LabelSpot {
     /// A dimension's value at its place, turned by `angle`; `angular`: an
     /// angle (else a length); `prefix` "R " or "Ø " for a radius or diameter.
@@ -353,6 +422,27 @@ pub enum LabelSpot {
     Beside { slot: Slot, at: Vec2 },
     /// A label along the edge from `a` to `b`.
     Along { slot: Slot, a: Vec2, b: Vec2 },
+    /// A text among a block's pieces (docs/adr/0144): at its placed
+    /// insertion point, turned by `rotation`, `height` as placed.
+    PieceText {
+        slot: Slot,
+        at: Vec2,
+        rotation: f64,
+        height: f64,
+        text: String,
+    },
+    /// A dimension's value among a block's pieces, as `Dimension`, its own
+    /// text when it has one and `height` as placed.
+    PieceDimension {
+        slot: Slot,
+        at: Vec2,
+        angle: f64,
+        value: f64,
+        height: f64,
+        text: Option<String>,
+        angular: bool,
+        prefix: &'static str,
+    },
 }
 
 /// An object's characteristic vertices, as the shared core gives them for

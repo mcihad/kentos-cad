@@ -247,7 +247,9 @@ impl Labels<'_> {
                 | LabelSpot::Center { slot, .. }
                 | LabelSpot::Corner { slot, .. }
                 | LabelSpot::Beside { slot, .. }
-                | LabelSpot::Along { slot, .. } => *slot,
+                | LabelSpot::Along { slot, .. }
+                | LabelSpot::PieceText { slot, .. }
+                | LabelSpot::PieceDimension { slot, .. } => *slot,
             };
             // A label whose place is taken is not drawn: known before its
             // object, style and text are looked at (an overview offers
@@ -313,6 +315,70 @@ impl Labels<'_> {
                     },
                     self.colors.halo,
                 ),
+                // A block's texts and dimension values (docs/adr/0144), as its own objects draw theirs.
+                (
+                    LabelSpot::PieceText {
+                        at,
+                        rotation,
+                        height,
+                        text,
+                        ..
+                    },
+                    _,
+                ) => draw(
+                    frame,
+                    &Piece {
+                        text,
+                        at: self.screen(*at),
+                        angle: (-rotation.to_radians()) as f32,
+                        size: (height * self.camera.scale) as f32,
+                        font: drawing_fonts::font(self.font, 400, true),
+                        anchor: Anchor::LeftBaseline,
+                        color: self.colors.label,
+                    },
+                    self.colors.halo,
+                ),
+                (
+                    LabelSpot::PieceDimension {
+                        at,
+                        angle,
+                        value,
+                        height,
+                        text,
+                        angular,
+                        prefix,
+                        ..
+                    },
+                    _,
+                ) => {
+                    let text = match text {
+                        Some(own) => own.clone(),
+                        None => dimension_text(
+                            &self.format,
+                            prefix,
+                            if *angular { "angle" } else { "length" },
+                            *value,
+                        ),
+                    };
+                    let color = self.ink_of(
+                        base.color
+                            .as_deref()
+                            .or(layer.map(|l| l.style.color.as_str())),
+                    );
+                    draw(
+                        frame,
+                        &Piece {
+                            text: &text,
+                            at: self.screen(*at),
+                            angle: (-angle.to_radians()) as f32,
+                            size: (height * self.camera.scale) as f32,
+                            font: drawing_fonts::font(self.font, 500, false),
+                            anchor: Anchor::CenterBaseline,
+                            color,
+                        },
+                        self.colors.halo,
+                    );
+                }
                 (LabelSpot::Dimension { .. } | LabelSpot::Text { .. }, _) => {}
                 (spot, entity) => {
                     let own = layer.and_then(|l| l.style.label.clone());
@@ -347,7 +413,10 @@ impl Labels<'_> {
                 let (a, c) = (self.screen(a), self.screen(b));
                 Some(Point::new((a.x + c.x) / 2.0, (a.y + c.y) / 2.0))
             }
-            LabelSpot::Dimension { .. } | LabelSpot::Text { .. } => None,
+            LabelSpot::Dimension { .. }
+            | LabelSpot::Text { .. }
+            | LabelSpot::PieceText { .. }
+            | LabelSpot::PieceDimension { .. } => None,
         }
     }
 
@@ -425,7 +494,10 @@ impl Labels<'_> {
                     draw(frame, &piece(mid, angle, Anchor::CenterMiddle), halo);
                 }
             }
-            LabelSpot::Dimension { .. } | LabelSpot::Text { .. } => {}
+            LabelSpot::Dimension { .. }
+            | LabelSpot::Text { .. }
+            | LabelSpot::PieceText { .. }
+            | LabelSpot::PieceDimension { .. } => {}
         }
     }
 }
@@ -685,7 +757,9 @@ fn slots(spots: &[LabelSpot]) -> Vec<kentos_domain::Slot> {
             | LabelSpot::Center { slot, .. }
             | LabelSpot::Corner { slot, .. }
             | LabelSpot::Beside { slot, .. }
-            | LabelSpot::Along { slot, .. } => *slot,
+            | LabelSpot::Along { slot, .. }
+            | LabelSpot::PieceText { slot, .. }
+            | LabelSpot::PieceDimension { slot, .. } => *slot,
         })
         .collect()
 }

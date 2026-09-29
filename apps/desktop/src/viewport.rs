@@ -453,7 +453,9 @@ impl Viewport {
         let styled = styling.map(|s| self.styled_scene(doc, &palette, s));
         let (origin, fixed, curves, construction, clip) =
             self.scene_with(doc, canvas, &palette, &settings, styled.is_none());
-        let (selected, hovered) = self.highlights(doc, selection, accent, &fixed, &curves, &clip);
+        let spatial = styling.map(|s| s.spatial);
+        let (selected, hovered) =
+            self.highlights(doc, selection, accent, &fixed, &curves, &clip, spatial);
         // The grid under everything (Izgara, F7).
         let grid = if self.grid_shown {
             self.grid(canvas, origin)

@@ -27,7 +27,12 @@ export type StyledGeometry =
        * filled as a polygon of its own; absent for one part, whose rings are `rings`.
        */
       readonly parts?: readonly (readonly (readonly Vec2[])[])[];
-    };
+    }
+  /**
+   * A block's insert (docs/adr/0144): its pieces placed, each its place among
+   * the block's pieces (`PickIndex.blockPieces`) and its own geometry.
+   */
+  | { readonly cls: 'group'; readonly items: readonly { readonly piece: number; readonly geometry: StyledGeometry }[] };
 
 /**
  * Areas are polygons and hatches; circles and ellipses stay curves (as in
@@ -55,6 +60,7 @@ const MARKER = 1;
 const LINE = 2;
 const FILL = 3;
 const FILLS = 4;
+const GROUP = 5;
 const SOURCE = -1;
 const REVERSED = -2;
 
@@ -139,6 +145,17 @@ export class DrawnReader {
           parts.push(rings);
         }
         return { cls: 'fill', rings: parts.flat(), parts };
+      }
+      case GROUP: {
+        // A block's pieces, each after its place; their points are always written out.
+        const count = b[this.at++];
+        const items: { piece: number; geometry: StyledGeometry }[] = [];
+        for (let k = 0; k < count; k++) {
+          const piece = b[this.at++];
+          const geometry = this.read(e);
+          if (geometry) items.push({ piece, geometry });
+        }
+        return { cls: 'group', items };
       }
       default:
         return null;

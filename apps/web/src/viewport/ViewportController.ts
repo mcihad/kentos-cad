@@ -1131,7 +1131,7 @@ export class ViewportController {
       const lg = cache.canvas.getContext('2d')!;
       lg.setTransform(dpr, 0, 0, dpr, 0, 0);
       lg.clearRect(0, 0, view.width, view.height);
-      drawLabels(lg, this.ctx.doc, view, this.palette, this.picker.labels(view.visibleBounds(), view.scale, this.editingId), (l) => this.dimensionText(l));
+      drawLabels(lg, this.ctx.doc, view, this.palette, this.picker.labels(view.visibleBounds(), view.scale, this.editingId), (l) => this.dimensionText(l), (b) => this.picker.blockPieces(b));
       cache.key = key;
       cache.center = view.center;
       sx = -mx * dpr;
