@@ -1,3 +1,4 @@
+import type { CommandWarning } from '../contracts/generated/CommandWarning';
 import type { EditOperation } from '../contracts/generated/EditOperation';
 import type { EntitiesEdit } from '../contracts/generated/EntitiesEdit';
 import type { EntitiesEdited } from '../contracts/generated/EntitiesEdited';
@@ -11,6 +12,7 @@ import type { Entity, NewEntity } from '../model/entities';
 import { geometryIsFinite, SHAPE_FIELDS } from '../model/ops/transform';
 import { checkRevision, error, failed, isBlank, validated, type Stop } from './checks';
 import type { ProductCommand } from './command';
+import { carryInto, elevatedPaths, hasElevation } from './elevation';
 
 /**
  * `cad.entities.edit` v1 (docs/adr/0047): objects named by their persistent
@@ -89,6 +91,8 @@ interface Checked {
   created: NewEntity[];
   /** The objects to delete: slot and id, in the input's order. */
   removed: { id: number; uid: string }[];
+  /** That elevations were lost (docs/adr/0142). */
+  warnings: CommandWarning[];
 }
 
 /** The id a change names and the field that holds it: `uid`, or `from` for an `add`. */
@@ -228,14 +232,30 @@ function check(doc: CadDocument, input: EntitiesEdit): Stop | Checked {
     const name = doc.layers.get(layerId)?.name ?? layerId;
     return failed(error('layer_locked', `“${name}” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın.`, `changes[${i}].${named(c)[1]}`));
   }
-  const checked: Checked = { changed: [], created: [], removed: [] };
+  const checked: Checked = { changed: [], created: [], removed: [], warnings: [] };
+  // The elevations of the objects the edit names, for what it writes (docs/adr/0142); nothing to carry
+  // when none has one.
+  const sources = found.flatMap((e) => elevatedPaths(e)).filter((p) => hasElevation([p]));
+  const offset = input.operation === 'offset';
+  // The object keeps its own vertices, moved (a grip, Esnet, a typed coordinate), or Ötele's copy has one
+  // for each of its source's: a vertex takes the elevation of the one in its place. Any other edit cuts or
+  // reshapes, and its vertices take theirs by where they lie.
+  const byPlace = offset || input.operation === 'grip' || input.operation === 'stretch' || input.operation === 'properties';
+  let lost = 0;
+  const elevate = (init: NewEntity, from: Entity): NewEntity => {
+    if (!sources.length) return init;
+    const before = elevatedPaths(from);
+    if (!carryInto(init, sources, byPlace ? before : [], offset) && hasElevation(before)) lost++;
+    return init;
+  };
   for (const [i, c] of input.changes.entries()) {
     const e = found[i];
-    if (c.kind === 'update') checked.changed.push({ id: e.id, uid: c.uid, init: reshaped(e, c.geometry) });
-    else if (c.kind === 'replace') checked.changed.push({ id: e.id, uid: c.uid, init: inherited(e, c.geometry, c.keepData === true) });
-    else if (c.kind === 'add') checked.created.push(inherited(e, c.geometry, c.keepData === true));
+    if (c.kind === 'update') checked.changed.push({ id: e.id, uid: c.uid, init: elevate(reshaped(e, c.geometry), e) });
+    else if (c.kind === 'replace') checked.changed.push({ id: e.id, uid: c.uid, init: elevate(inherited(e, c.geometry, c.keepData === true), e) });
+    else if (c.kind === 'add') checked.created.push(elevate(inherited(e, c.geometry, c.keepData === true), e));
     else checked.removed.push({ id: e.id, uid: c.uid });
   }
+  if (lost) checked.warnings.push({ code: 'elevation_lost', message: `${lost} nesnenin kotu bu işlemde korunmadı.`, path: 'changes' });
   return checked;
 }
 
@@ -271,7 +291,7 @@ export const entitiesEdit: ProductCommand<EntitiesEdit, EntitiesEdited, Entities
         removed: checked.removed.map((r) => r.uid),
         revision: String(cx.doc.revision),
       },
-      warnings: [],
+      warnings: checked.warnings,
     };
   },
 
@@ -294,7 +314,7 @@ export const entitiesEdit: ProductCommand<EntitiesEdit, EntitiesEdited, Entities
     return {
       status: 'completed',
       output: { changed: checked.changed.map((c) => c.uid), created, removed: checked.removed.map((r) => r.uid), revision: String(doc.revision) },
-      warnings: [],
+      warnings: checked.warnings,
     };
   },
 };

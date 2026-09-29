@@ -38,6 +38,7 @@ mod context;
 pub mod create;
 pub mod delete;
 pub mod edit;
+pub mod elevation;
 pub mod geometry;
 pub mod line;
 pub mod point;

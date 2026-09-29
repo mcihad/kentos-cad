@@ -836,6 +836,127 @@ cases.append({
     ],
 })
 
+# ── Elevations (docs/adr/0142) ─────────────────────────────────────────
+# The geometry comes without elevations; each vertex of what the edit writes takes one from the objects it
+# names: on a source vertex its elevation; for a moving edit (grip, Esnet, Öznitelikler) and Ötele's copy the
+# one in its place; on a source edge the edge's, linearly along it; an open result's end on a source's
+# straight extension its grade carried on; Ötele the closest point's. Worked here by hand.
+
+Z_ENTITIES = [
+    {"kind": "line", "id": 1, "layerId": "yapi", "attrs": {}, "a": P(487000, 4420050), "b": P(487020, 4420050), "za": 10, "zb": 20},
+    {"kind": "polyline", "id": 2, "layerId": "yapi", "attrs": {}, "pts": [P(487000, 4420060), P(487010, 4420060), P(487010, 4420070)], "zs": [1, 2, None]},
+]
+Z_SETUP = {**SETUP, "entities": Z_ENTITIES}
+Z_IDS = [e["id"] for e in Z_ENTITIES]
+Z_BY_ID = {e["id"]: e for e in Z_ENTITIES}
+
+
+def ZE(i):
+    return json.loads(json.dumps(Z_BY_ID[i]))
+
+
+def z_line(ax, ay, bx, by, slot, za=None, zb=None):
+    """A line an edit writes from object 1 (replace or add): its layer, no attributes; its elevations."""
+    out = {**line(ax, ay, bx, by), "id": slot, "layerId": "yapi", "attrs": {}}
+    if za is not None:
+        out["za"] = za
+    if zb is not None:
+        out["zb"] = zb
+    return out
+
+
+def z_updated(i, geometry, **fields):
+    """`update` of object i with elevations of its own: the geometry replaced, the elevations as given."""
+    out = {k: v for k, v in ZE(i).items() if k not in ("kind", "za", "zb", "zs") and k not in GEOMETRY[ZE(i)["kind"]]}
+    out.update(json.loads(json.dumps(geometry)))
+    out.update(fields)
+    return out
+
+
+Z_PATH = [P(487000, 4420060), P(487010, 4420060), P(487010, 4420070)]
+
+cases.append({
+    "name": "Kot, Kır: iki parçanın yeni uçları kotu kenar boyunca doğrusal alır (10–20 m kenarın 8. metresi 14, 12. metresi 16); tek adımda geri alınır",
+    "setup": Z_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "break", "changes": [{"kind": "replace", "uid": uid(1), "geometry": line(487000, 4420050, 487008, 4420050)}, {"kind": "add", "from": uid(1), "geometry": line(487012, 4420050, 487020, 4420050)}]},
+         "result": done(changed=[uid(1)], created=[uid(3)]),
+         "expect": {"ids": Z_IDS + [3], "entities": {"1": z_line(487000, 4420050, 487008, 4420050, 1, 10, 14), "3": z_line(487012, 4420050, 487020, 4420050, 3, 16, 20)}, "canUndo": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Kır", "expect": {"ids": Z_IDS, "entities": {"1": ZE(1)}, "canUndo": False}},
+    ],
+})
+
+cases.append({
+    "name": "Kot, Uzat: uzayan uç kenarın eğimini sürdürür (metrede 0,5; 30. metre 25)",
+    "setup": Z_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "extend", "changes": [{"kind": "update", "uid": uid(1), "geometry": line(487000, 4420050, 487030, 4420050)}]}, "result": done(changed=[uid(1)]),
+         "expect": {"entities": {"1": z_updated(1, line(487000, 4420050, 487030, 4420050), za=10, zb=25)}, "revision": "changed"}},
+    ],
+})
+
+added = {"kind": "polyline", "pts": [P(487000, 4420060), P(487005, 4420060), P(487010, 4420060), P(487010, 4420070)]}
+cases.append({
+    "name": "Kot, Köşe ekle: yeni köşe kenarının iki ucu arasında (1 ile 2 arası 1,5); kotsuz köşe kotsuz kalır (null, 0 değil)",
+    "setup": Z_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "vertexAdd", "changes": [{"kind": "update", "uid": uid(2), "geometry": added}]}, "result": done(changed=[uid(2)]),
+         "expect": {"entities": {"2": z_updated(2, added, zs=[1, 1.5, 2, None])}, "revision": "changed"}},
+    ],
+})
+
+moved = {"kind": "polyline", "pts": [P(487000, 4420060), P(487012, 4420058), P(487010, 4420070)]}
+cases.append({
+    "name": "Kot, tutamaç: taşınan köşe kendi kotunu korur",
+    "setup": Z_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "grip", "changes": [{"kind": "update", "uid": uid(2), "geometry": moved}]}, "result": done(changed=[uid(2)]),
+         "expect": {"entities": {"2": z_updated(2, moved, zs=[1, 2, None])}, "revision": "changed"}},
+    ],
+})
+
+turned = {"kind": "polyline", "pts": list(reversed(Z_PATH))}
+cases.append({
+    "name": "Kot, Yönü çevir: kotlar köşeleriyle döner",
+    "setup": Z_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "reverse", "changes": [{"kind": "update", "uid": uid(2), "geometry": turned}]}, "result": done(changed=[uid(2)]),
+         "expect": {"entities": {"2": z_updated(2, turned, zs=[None, 2, 1])}, "revision": "changed"}},
+    ],
+})
+
+copy = {"kind": "polyline", "pts": [P(487000, 4420061), P(487009, 4420061), P(487009, 4420070)]}
+cases.append({
+    "name": "Kot, Ötele: kopyanın her köşesi kaynaktaki karşılığının kotunu alır",
+    "setup": Z_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "offset", "changes": [{"kind": "add", "from": uid(2), "geometry": copy}]}, "result": done(created=[uid(3)]),
+         "expect": {"ids": Z_IDS + [3], "entities": {"3": {**copy, "id": 3, "layerId": "yapi", "attrs": {}, "zs": [1, 2, None]}}, "revision": "changed"}},
+    ],
+})
+
+cases.append({
+    "name": "Kot, Patlat: çizgiler kenarlarının uç kotlarını alır; kotsuz uç yazılmaz",
+    "setup": Z_SETUP,
+    "steps": [
+        {"op": "captureUid", "id": 2, "as": "yol"},
+        {"op": "execute", "input": {"operation": "explode", "changes": [{"kind": "remove", "uid": uid(2)}, {"kind": "add", "from": uid(2), "geometry": line(487000, 4420060, 487010, 4420060)}, {"kind": "add", "from": uid(2), "geometry": line(487010, 4420060, 487010, 4420070)}]},
+         "result": done(created=[uid(3), uid(4)], removed=["$uid:yol"]),
+         "expect": {"ids": [1, 3, 4], "entities": {"3": z_line(487000, 4420060, 487010, 4420060, 3, 1, 2), "4": z_line(487010, 4420060, 487010, 4420070, 4, 2)}, "revision": "changed"}},
+    ],
+})
+
+bowed = {"kind": "arc", "c": P(487010, 4420050), "r": 10, "a0": math.pi, "a1": 2 * math.pi}
+cases.append({
+    "name": "Kot, taşınamayan: yaya dönen çizginin kotu korunamaz; yazılır ve uyarılır",
+    "setup": Z_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "arcEdge", "changes": [{"kind": "update", "uid": uid(1), "geometry": bowed}]},
+         "result": {**done(changed=[uid(1)]), "warnings": [{"code": "elevation_lost", "message": "1 nesnenin kotu bu işlemde korunmadı.", "path": "changes"}]},
+         "expect": {"entities": {"1": z_updated(1, bowed)}, "revision": "changed"}},
+    ],
+})
+
 write(
     "cad.entities.edit",
     "Nesneleri düzenle: doğrulama, plan, yazma, geri alma",

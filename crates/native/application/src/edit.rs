@@ -25,15 +25,17 @@
 use std::collections::HashSet;
 
 use kentos_contracts::{
-    CommandError, CommandResult, EditOperation, EntitiesEdit, EntitiesEditPlan, EntitiesEdited,
-    Entity, EntityBase, EntityEdit, EntityGeometry, Vec2,
+    CommandError, CommandResult, CommandWarning, EditOperation, EntitiesEdit, EntitiesEditPlan,
+    EntitiesEdited, Entity, EntityBase, EntityEdit, EntityGeometry, Vec2,
 };
 use kentos_domain::{Document, Slot, Uuid};
+use kentos_geometry_core::ops::elevation::{Carry, Elevated};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error, is_blank};
 /// The stable codes of the answers (`CommandError.code`, `CommandWarning.code`).
 pub use crate::codes;
+use crate::elevation;
 use crate::geometry::entity_of;
 
 /// Checks `input` against the document, writing nothing.
@@ -58,7 +60,7 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &EntitiesEdit) -> CommandResult<En
                 removed: checked.removed.into_iter().map(|(_, uid)| uid).collect(),
                 revision: cx.doc.revision().to_string(),
             },
-            warnings: Vec::new(),
+            warnings: checked.warnings,
         },
         Err(stop) => stop.into(),
     }
@@ -76,6 +78,7 @@ pub fn execute(
         Err(stop) => return stop.into(),
     };
     let label = label(input.operation);
+    let warnings = checked.warnings;
     let changed_uids: Vec<String> = checked.changed.iter().map(|c| c.uid.clone()).collect();
     let removed_uids: Vec<String> = checked.removed.iter().map(|(_, uid)| uid.clone()).collect();
     let written = cx.doc.transact(label, |doc| {
@@ -115,7 +118,7 @@ pub fn execute(
             removed: removed_uids,
             revision: doc.revision().to_string(),
         },
-        warnings: Vec::new(),
+        warnings,
     }
 }
 
@@ -168,6 +171,8 @@ struct Checked {
     changed: Vec<Changed>,
     created: Vec<Entity>,
     removed: Vec<(Slot, String)>,
+    /// That elevations were lost (docs/adr/0142).
+    warnings: Vec<CommandWarning>,
 }
 
 /// The id a change names and the field that holds it: `uid`, or `from` for an `add`.
@@ -274,6 +279,42 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
         changed: Vec::new(),
         created: Vec::new(),
         removed: Vec::new(),
+        warnings: Vec::new(),
+    };
+    // The elevations of the objects the edit names, for what it writes
+    // (docs/adr/0142); nothing to carry when none has one.
+    let sources: Vec<Elevated> = found
+        .iter()
+        .flat_map(|(_, e)| elevation::paths(e))
+        .filter(|p| elevation::elevated(std::slice::from_ref(p)))
+        .collect();
+    let how = if input.operation == EditOperation::Offset {
+        Carry::Offset
+    } else {
+        Carry::Along
+    };
+    // The object keeps its own vertices, moved (a grip, Esnet, a typed
+    // coordinate), or Ötele's copy has one for each of its source's: a
+    // vertex takes the elevation of the one in its place. Any other edit
+    // cuts or reshapes, and its vertices take theirs by where they lie.
+    let by_place = matches!(
+        input.operation,
+        EditOperation::Grip
+            | EditOperation::Stretch
+            | EditOperation::Properties
+            | EditOperation::Offset
+    );
+    let mut lost = 0;
+    let mut elevate = |mut entity: Entity, from: &Entity| -> Entity {
+        if sources.is_empty() {
+            return entity;
+        }
+        let before = elevation::paths(from);
+        let same = if by_place { before.as_slice() } else { &[] };
+        if !elevation::carry(&mut entity, &sources, same, how) && elevation::elevated(&before) {
+            lost += 1;
+        }
+        entity
     };
     for (change, (slot, entity)) in input.changes.iter().zip(found) {
         let base = entity.base();
@@ -281,7 +322,7 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
             EntityEdit::Update { uid, geometry } => checked.changed.push(Changed {
                 slot,
                 uid: uid.clone(),
-                entity: entity_of(geometry, base.clone()),
+                entity: elevate(entity_of(geometry, base.clone()), entity),
             }),
             EntityEdit::Replace {
                 uid,
@@ -290,21 +331,31 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
             } => checked.changed.push(Changed {
                 slot,
                 uid: uid.clone(),
-                entity: entity_of(
-                    geometry,
-                    inherited(base, slot.0, keep_data.unwrap_or(false)),
+                entity: elevate(
+                    entity_of(
+                        geometry,
+                        inherited(base, slot.0, keep_data.unwrap_or(false)),
+                    ),
+                    entity,
                 ),
             }),
             EntityEdit::Add {
                 geometry,
                 keep_data,
                 ..
-            } => checked.created.push(entity_of(
-                geometry,
-                inherited(base, 0, keep_data.unwrap_or(false)),
+            } => checked.created.push(elevate(
+                entity_of(geometry, inherited(base, 0, keep_data.unwrap_or(false))),
+                entity,
             )),
             EntityEdit::Remove { uid } => checked.removed.push((slot, uid.clone())),
         }
+    }
+    if lost > 0 {
+        checked.warnings.push(CommandWarning {
+            code: codes::ELEVATION_LOST.into(),
+            message: format!("{lost} nesnenin kotu bu işlemde korunmadı."),
+            path: Some("changes".into()),
+        });
     }
     Ok(checked)
 }

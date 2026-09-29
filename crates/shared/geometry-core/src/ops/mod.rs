@@ -5,6 +5,7 @@ pub mod breaking;
 pub mod curve_cuts;
 pub mod edge_labels;
 pub mod edges;
+pub mod elevation;
 pub mod explode;
 pub mod fillet;
 pub mod grips;

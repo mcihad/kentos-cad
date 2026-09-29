@@ -62,21 +62,17 @@ Sahibin kararı (29 Eylül): `.kcad` şemasını değiştiren işler kendi özel
 
 ### 4. Hesap ve düzenleme
 
-- **Dönüşümler:** taşı, kopyala, döndür, ölçekle, aynala, dizi ve hizala yalnız düzlemde çalışır; kot değişmez. Ölçekle de kotu ölçeklemez: belge 2.5B'dir (TODOS.md `NUM-09`).
-- **Yeni köşenin kotu,** üzerinde durduğu kenarın iki ucunun kotundan, kenar boyunca doğrusal hesaplanır. Bu şu işlemlerde geçerlidir:
-  - tutamaçla ya da Köşe ekle ile eklenen köşe;
-  - Buda'nın ve Kır'ın kesme noktası;
-  - Parçala'nın parçaları;
-  - Köşe yuvarla'nın ve Pah'ın yeni uçları;
-  - alan işlemlerinde kesişimden doğan köşe (kaynağın kenarından).
-  Kenarın bir ucu kotsuzsa yeni köşe de kotsuzdur.
-- **Uzat:** yeni ucun kotu, son kenarın eğimiyle doğrusal sürer. Son kenar kotsuzsa uç kotsuzdur.
-- **Ötele:** her yeni köşe kaynaktaki karşılığının kotunu alır.
-- **Birleştir:** kotlar köşeleriyle gider.
-- **Patlat:** çoklu çizginin parçaları kotlarını `za`, `zb` olarak taşır.
-- **Sadeleştir:** kalan köşeler kotlarını korur.
-- **İçine tıklayarak alan ve Tarama'nın bölgesi:** bu adımda kotsuzdur.
-- **Kotu henüz taşıyamayan işlem** kotu sessizce silmez: işlem yapılır, kotun düştüğü uyarıyla söylenir ("2 nesnenin kotu bu işlemde korunmadı."). Hangi işlemlerin taşıdığı bu ADR'nin sınamasıdır.
+- **Dönüşümler:** taşı, kopyala, döndür, ölçekle, aynala, dizi ve hizala yalnız düzlemde çalışır; kot köşeleriyle, deliklerinki de, olduğu gibi gider (`with_shape`, web'de `withGeometry`). Ölçekle de kotu ölçeklemez: belge 2.5B'dir (TODOS.md `NUM-09`).
+- **Düzenlemenin yazdığı köşelerin kotu** (`cad.entities.edit`). Çekirdeğin geometrisi kotsuz gelir. İşleyici (iki platformda aynı) her köşeye kotu, komutun adını verdiği nesnelerden, ortak çekirdeğin kuralıyla verir (`ops::elevation::carry_elevations`). İlk uyan kural geçerlidir:
+  1. Bir kaynak köşesiyle çakışan köşe (1 µm) onun kotunu alır: Yönü çevir, Patlat, Birleştir, Sadeleştir, köşe silme.
+  2. Köşeyi kendisi taşıyan işlemde (tutamaç, Esnet, Öznitelikler'e yazılan koordinat) ve Ötele'nin kopyasında, köşe sayısı aynıysa, aynı sıradaki köşenin kotu geçer.
+  3. Bir kaynak kenarının üstündeki köşe (1 µm), kenarın iki ucunun kotundan kenar boyunca doğrusal kot alır: düz kenarda uzunlukla, yayda açıyla. Buda, Kır, Parçala, Köşe ekle, Köşe yuvarla ve Pah'ın uçları, alan işlemlerinin kesişimleri böyledir. Kenarın bir ucu kotsuzsa yeni köşe de kotsuzdur.
+  4. Açık yolun ucu, bir kaynağın düz uç kenarının uzantısındaysa, o kenarın eğimi sürer (Uzat, Uzat-kısalt).
+  5. Ötele'de öbür köşeler kaynağın en yakın noktasının kotunu alır.
+
+  Hiçbir kural uymazsa köşe kotsuzdur.
+- **Kotu taşıyamayan sonuç** kotu sessizce silmez. Sonuç yazılır ve komut uyarır: `elevation_lost`, "n nesnenin kotu bu işlemde korunmadı.", yol `changes`. Örneğin kotlu çizgi yaya dönerse yay kot taşımaz.
+- **İçine tıklayarak alan ve Tarama'nın bölgesi** bu adımda kotsuzdur.
 - **Uzunluk:**
   - Düzlem uzunluğu değişmez; alan, çevre, kenar ölçüsü ve ölçülendirme hep düzlemde kalır.
   - Bütün köşeleri kotlu nesnenin 3B uzunluğu ayrı bir değerdir (`length_3d`). Öznitelikler panelinde ve üzerine gelme kartında "3B uzunluk" olarak görünür.

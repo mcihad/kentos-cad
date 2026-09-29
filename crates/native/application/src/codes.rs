@@ -47,6 +47,9 @@ pub const INVALID_FILL: &str = "invalid_fill";
 /// A path array's path that is not a line, an arc, a circle or a polyline,
 /// or has no length (`cad.entities.array`, docs/adr/0140).
 pub const INVALID_PATH: &str = "invalid_path";
+/// A warning: an edit could not carry the elevations of an object's vertices
+/// to what it wrote (docs/adr/0142).
+pub const ELEVATION_LOST: &str = "elevation_lost";
 /// No object given (`cad.entities.create`).
 pub const NO_OBJECTS: &str = "no_objects";
 /// A text whose text is empty or only white space (`cad.entities.edit`, `cad.entities.create`).
