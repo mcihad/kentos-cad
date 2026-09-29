@@ -95,3 +95,14 @@ describe('Netcad adları', () => {
     for (const [typed, id] of names) expect(claimants(typed), typed).toEqual([id]);
   });
 });
+
+describe('takma adlar', () => {
+  it('no alias of any command is claimed by a second one: a typed name starts one command', () => {
+    const commands = registry();
+    const owners = new Map<string, string[]>();
+    for (const c of commands.all())
+      for (const a of new Set((c.aliases ?? []).map(foldTurkish))) owners.set(a, [...(owners.get(a) ?? []), c.id]);
+    const shared = [...owners].filter(([, ids]) => ids.length > 1).map(([a, ids]) => `${a}: ${ids.join(', ')}`);
+    expect(shared).toEqual([]);
+  });
+});
