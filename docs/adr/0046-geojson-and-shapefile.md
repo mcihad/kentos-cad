@@ -73,7 +73,7 @@
   - LineString: iki konum çizgidir, daha fazlası yoldur, ikiden azı alınmaz. MultiLineString: üye başına.
   - Polygon: ilk halka dış sınır, öbürleri deliktir. Son konum ilkiyle x ve y'de tam aynıysa düşer. Kapanmamış halka olduğu gibi alınır, raporlanır. Üçten az köşeli dış sınır alanı düşürür; delik düşer. Halka yönü değiştirilmez.
   - MultiPolygon: üye başına. GeometryCollection: üye başına, iç içe.
-  - Z yalnız noktada kalır. Çizgi ve alanda düşer, raporlanır; dördüncü ve sonraki sayılar da.
+  - Z yalnız noktada kalır. Çizgi ve alanda düşer, raporlanır; dördüncü ve sonraki sayılar da. (29 Eylül: [ADR 0142](0142-vertex-elevation.md) ile çizgi ve alanın köşe kotu da okunur ve yazılır; dördüncü ve sonraki sayılar düşmeye devam eder.)
 - Konum en az iki sayıdan oluşan bir dizidir. Değilse ya da x, y, z sonlu değilse (`1e999`) en küçük birim alınmaz: nokta, LineString, MultiLineString üyesi, bütün Polygon, MultiPolygon üyesi, GeometryCollection üyesi. Geri kalanı okunur.
 - Öznitelikler, `properties`'in üyeleri:
   - metin olduğu gibi; sayı dosyanın yazdığı gibi (`1.50`, `1e3`, `-0.0`);

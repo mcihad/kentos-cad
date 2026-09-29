@@ -46,9 +46,16 @@ function canonical(r: ImportResult, encoding?: string): unknown {
     } else if (e.kind === 'line') {
       o.a = xy(e.a);
       o.b = xy(e.b);
+      // Vertex elevations (docs/adr/0142), as the fixtures' canonical keys name them (gis/README.md).
+      if (e.za != null) o.za = e.za;
+      if (e.zb != null) o.zb = e.zb;
     } else if (e.kind === 'polyline' || e.kind === 'polygon') {
       o.pts = e.pts.map(xy);
-      if (e.kind === 'polygon' && e.holes?.length) o.holes = e.holes.map((h) => h.pts.map(xy));
+      if (e.zs) o.zs = e.zs;
+      if (e.kind === 'polygon' && e.holes?.length) {
+        o.holes = e.holes.map((h) => h.pts.map(xy));
+        if (e.holes.some((h) => h.zs)) o.holeZs = e.holes.map((h) => h.zs ?? null);
+      }
     } else throw new Error(`a GIS reader made a ${e.kind}`);
     if (e.label !== undefined && e.label !== null) o.label = e.label;
     o.attrs = e.attrs;

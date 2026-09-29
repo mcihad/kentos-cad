@@ -48,18 +48,37 @@ Sahibin kararı (29 Eylül): `.kcad` şemasını değiştiren işler kendi özel
 
 ### 3. Değişim biçimleri
 
+- **Sıfır kuralı** (DXF, NCZ): her yerde Z'si 0 olan nesne kotsuzdur. 2B çizimler sahte sıfır kot almaz. Bir köşesi sıfırdan farklıysa bütün köşeler, sıfırlar da, kotunu korur. Ayrıca şu nesneler kotludur:
+  - yüksekteki bir bloğun içindeki nesne;
+  - düzlem yüksekliği olan nesne;
+  - KentOS'un `xdata`'sı "bu sıfırlar veridir" diyen nesne.
 - **DXF okuma:**
   - LINE'ın 10/11 Z'leri → `za`, `zb`.
   - 3B POLYLINE'ın (70 bayrağı 8) köşe Z'leri → `zs`.
-  - LWPOLYLINE'ın yüksekliği (38) sıfırdan farklıysa bütün köşelerin kotudur. Sıfır yükseklik, 2B çizimlerin çoğunda anlamsız olduğundan kot sayılmaz.
-  - Blokların içindekiler aynı kuralla okunur, eklemenin Z'si eklenir.
-- **DXF yazma:** kotlu çoklu çizgi 3B POLYLINE, kotlu çizgi Z'li LINE olur. Kotsuz köşe 0 yazılır ve KentOS'un verisi (`xdata`) onun kotsuz olduğunu söyler. Rapor bunu söyler.
-- **Shapefile:** PolyLineZ ve PolygonZ'nin Z'leri okunur.
+  - LWPOLYLINE'ın yüksekliği (38) ve 2B POLYLINE'ın başlık yüksekliği bütün köşelerin kotudur. Ekstrüzyon hesaba katılır: aynalı düzlemde kot eksidir, eğik düzlemde köşeden köşeye değişir.
+  - Blokların içindekiler aynı kuralla okunur, eklemenin Z'si (Z ölçeğiyle) eklenir.
+  - Kapanan çoklu çizgi ilk köşesini tekrarlıyorsa ilk köşenin kotu kalır; farklıysa not düşülür.
+  - 3DFACE, SPLINE, LEADER ve HATCH'in Z'si bu adımda düşer.
+- **DXF yazma:**
+  - Kotlu çoklu çizgi ve alan 3B POLYLINE, kotlu çizgi Z'li LINE (30, 31) olur.
+  - Kotsuz köşe 0 yazılır. KentOS'un verisi (`xdata` `noz`, köşe başına bir bit) onun kotsuz olduğunu söyler; KentOS geri okurken kotsuz sayar. Başka bir program o köşenin Z'sini değiştirmişse işaret geçersiz sayılır.
+  - Yaylı çoklu çizgi 3B POLYLINE olamaz:
+    - köşe kotları eşitse LWPOLYLINE yüksekliği (38) olarak kayıpsız yazılır;
+    - farklıysa yaylar korunur, kotlar yazılmaz ve rapor bunu söyler.
+  - Kotsuz çizim eskisiyle bayt bayt aynıdır.
+- **Shapefile:**
+  - PolyLineZ ve PolygonZ'nin Z'leri okunur, deliklerinki de.
+  - Z türünde 0 bir kottur.
+  - Sonlu olmayan Z köşeyi kotsuz bırakır ve not düşülür.
 - **GeoJSON:**
-  - Okurken koordinatın üçüncü sayısı kottur.
-  - Yazarken kotlu köşe üç sayıyla yazılır. Kotsuz köşe iki sayıyla yazılır; aynı dizide ikisi karışabilir, RFC 7946 buna izin verir.
-- **Netcad NCZ:** okuyucu her köşenin Z'sini zaten okur (`ncz::format::Coord.z`, kaydın +24'ündeki f32). Bugün içe aktarma onu yalnız noktada tutar; çizgi ve alanlara da geçer. Z'nin yerinde kalem kalınlığı duran kayıtlar (`coords[0].z`, okuyucunun notu) kot sayılmaz.
-- **Rapor:** her okuyucu kaç nesnenin kotlu geldiğini raporuna yazar.
+  - Okurken koordinatın üçüncü sayısı kottur; iki sayılı konum kotsuzdur. Dördüncü ve sonraki sayılar düşer, raporlanır.
+  - Yazarken kotlu köşe üç sayıyla, kotsuz köşe iki sayıyla yazılır; aynı dizide ikisi karışabilir (RFC 7946). Yayın örneklenen noktaları iki ucun kotunu yay boyunca paylaşır.
+  - Kotsuz çıktı eskisiyle bayt bayt aynıdır.
+- **Netcad NCZ:**
+  - Okuyucu her köşenin Z'sini zaten okur (`ncz::format::Coord.z`). Çizginin iki Z'si, çoklu çizginin köşe Z'leri ve noktadan noktaya çizilen kapalı alan kot olur; sıfır kuralı geçerlidir.
+  - Kutu, pafta, üçgen, akıllı nesne ve sıkıştırılmış eğri köşeleri kot almaz: Z'leri ya uydurma 0'dır ya da okunmaz.
+  - Z'nin yerinde kalem kalınlığı duran noktalar kot sayılmaz.
+- **Rapor:** her içe aktarma, raporun kaynak bilgisinde kotlu nesneleri sayar: "Kotlu nesne: n". Eski "Z (yükseklik) düştü" notu kalktı.
 
 ### 4. Hesap ve düzenleme
 
