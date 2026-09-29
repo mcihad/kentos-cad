@@ -320,4 +320,35 @@ mod tests {
             "{sizes:?}"
         );
     }
+
+    #[test]
+    fn union_and_intersection_of_a_multi_part_area_add_up() {
+        // |A ∪ B| + |A ∩ B| = |A| + |B| within a square millimetre (docs/adr/0143), A the
+        // holed square and the 4 m square, B a slanted band across both and the hole.
+        use crate::geom::region::{intersect_area_sets, net_area, union_areas};
+        let a = areas_of_entity(&two());
+        let band = crate::ops::areas::area_of_entity(&Shape::Polygon {
+            pts: vec![
+                Vec2::new(-3.0, 3.5),
+                Vec2::new(27.0, 1.25),
+                Vec2::new(27.5, 5.75),
+                Vec2::new(-2.5, 7.0),
+            ],
+            bulges: Some(vec![0.0, 0.0, 0.2, 0.0]),
+            holes: None,
+            parts: None,
+        })
+        .expect("a band");
+        let sum = |list: &[crate::geom::arrangement::Area]| list.iter().map(net_area).sum::<f64>();
+        let mut all = a.clone();
+        all.push(band.clone());
+        let union = sum(&union_areas(&all));
+        let common = sum(&intersect_area_sets(&[a.clone(), vec![band.clone()]]));
+        let (sa, sb) = (sum(&a), net_area(&band));
+        assert!(common > 0.0 && union < sa + sb);
+        assert!(
+            (union + common - (sa + sb)).abs() < 1e-6,
+            "{union} + {common} ≠ {sa} + {sb}"
+        );
+    }
 }
