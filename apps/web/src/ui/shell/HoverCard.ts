@@ -1,6 +1,8 @@
 import type { AppContext } from '../../app/context';
+import type { Formatter } from '../../app/format';
 import { watchAll } from '../../core/signal';
 import { ENTITY_KIND_LABEL, entityArea, entityLength, type Entity } from '../../model/entities';
+import { spaceLength } from '../../product/elevationValues';
 import { Component } from '../Component';
 import { h, replaceChildren } from '../dom';
 import { colorSwatch } from '../layers/swatch';
@@ -85,22 +87,8 @@ export class HoverCard extends Component {
   private content(e: Entity): HTMLElement[] {
     const { doc, format, view } = this.ctx;
     const layer = doc.layers.get(e.layerId);
-    const rows: [string, string][] = [];
     const a = e.attrs;
-    if (a.Ada) rows.push(['Ada', a.Ada]);
-    if (a.Mahalle) rows.push(['Mahalle', a.Mahalle]);
-    if (a.Nitelik) rows.push(['Nitelik', a.Nitelik]);
-    // Registered (tapu) area next to the computed one: the difference is what a surveyor checks.
-    const deed = deedAreaText(a);
-    if (deed !== null) rows.push(['Tapu alanı', deed]);
-    const area = entityArea(e);
-    if (area !== null) rows.push([deed !== null ? 'Hesaplanan alan' : 'Alan', format.area(area)]);
-    if (e.kind === 'polygon' && e.holes?.length) rows.push(['Ada (delik)', String(e.holes.length)]);
-    const length = entityLength(e);
-    if (length !== null) rows.push([e.kind === 'polygon' || e.kind === 'circle' ? 'Çevre' : 'Uzunluk', format.length(length)]);
-    if (e.kind === 'circle' || e.kind === 'arc') rows.push(['Yarıçap', format.length(e.r)]);
-    if (e.kind === 'text') rows.push(['Metin', e.text]);
-    if (e.kind === 'point' && e.z !== undefined) rows.push(['Kot', format.length(e.z)]);
+    const rows = cardRows(e, format);
     return [
       h(
         'div',
@@ -113,4 +101,31 @@ export class HoverCard extends Component {
       ...(rows.length ? [h('dl', { class: 'hover-card__rows' }, rows.map(([k, v]) => [h('dt', null, k), h('dd', { class: 'num' }, v)]))] : []),
     ];
   }
+}
+
+/**
+ * The rows under the card's head, name and value: the parcel's data, the areas, the length or perimeter and, beside
+ * it, the length in space when every vertex has an elevation (`3B uzunluk`, `3B çevre`; docs/adr/0142), the radius,
+ * a text, a point's elevation.
+ */
+export function cardRows(e: Entity, format: Formatter): [string, string][] {
+  const rows: [string, string][] = [];
+  const a = e.attrs;
+  if (a.Ada) rows.push(['Ada', a.Ada]);
+  if (a.Mahalle) rows.push(['Mahalle', a.Mahalle]);
+  if (a.Nitelik) rows.push(['Nitelik', a.Nitelik]);
+  // Registered (tapu) area next to the computed one: the difference is what a surveyor checks.
+  const deed = deedAreaText(a);
+  if (deed !== null) rows.push(['Tapu alanı', deed]);
+  const area = entityArea(e);
+  if (area !== null) rows.push([deed !== null ? 'Hesaplanan alan' : 'Alan', format.area(area)]);
+  if (e.kind === 'polygon' && e.holes?.length) rows.push(['Ada (delik)', String(e.holes.length)]);
+  const length = entityLength(e);
+  if (length !== null) rows.push([e.kind === 'polygon' || e.kind === 'circle' ? 'Çevre' : 'Uzunluk', format.length(length)]);
+  const space = spaceLength(e);
+  if (space) rows.push([space.label, format.length(space.value)]);
+  if (e.kind === 'circle' || e.kind === 'arc') rows.push(['Yarıçap', format.length(e.r)]);
+  if (e.kind === 'text') rows.push(['Metin', e.text]);
+  if (e.kind === 'point' && e.z !== undefined) rows.push(['Kot', format.length(e.z)]);
+  return rows;
 }

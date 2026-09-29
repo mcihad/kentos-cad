@@ -1659,6 +1659,9 @@ function adr0142Scenes(bare, clickWorld) {
     // it; then the grip clicked and carried, its tag with the distance and the elevation the vertex keeps.
     { id: 'grip-tag', open: async (ui) => (await selected(ui, ['path']), await hoverU(ui, -0.5, -0.75)) },
     { id: 'grip-tag-none', open: async (ui) => (await selected(ui, ['path']), await hoverU(ui, -1.4, -0.3)) },
+    // The hover card (select tool, the pointer at rest on an object): 3B uzunluk of the line and 3B çevre of the area.
+    { id: 'hover-card-line', open: async (ui) => (await selected(ui, []), await hoverU(ui, -1.6, 1.175), await ui.sleep(700)) },
+    { id: 'hover-card-area', open: async (ui) => (await selected(ui, []), await hoverU(ui, 0.65, 0.9), await ui.sleep(700)) },
     // Koordinat oku on vertices: one without an elevation, then two that have one (the last one's tag has the Z).
     {
       id: 'coord-read-vertex',
