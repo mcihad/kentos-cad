@@ -4,15 +4,15 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 192 | 179 | 0 | 13 |
-| Araçlar | 80 | 78 | 0 | 2 |
+| Komutlar | 193 | 180 | 0 | 13 |
+| Araçlar | 81 | 79 | 0 | 2 |
 | İşlem araçları | 4 | 4 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
 | Çalışma modları | 5 | 3 | 0 | 2 |
 | Ayarlar | 68 | 68 | 0 | 0 |
 | Tarayıcı depoları | 10 | 10 | 0 | 0 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 239 | 239 | 0 | 0 |
-| Pencereler ve paneller | 65 | 65 | 0 | 0 |
+| Pencereler ve paneller | 66 | 66 | 0 | 0 |
 
 ## Kısmi (0)
 
@@ -50,15 +50,15 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 174 | 0 | 0 | 13 | 5 | 192 |
-| Araçlar | 78 | 0 | 0 | 2 | 0 | 80 |
+| Komutlar | 175 | 0 | 0 | 13 | 5 | 193 |
+| Araçlar | 79 | 0 | 0 | 2 | 0 | 81 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
 | Çalışma modları | 3 | 0 | 0 | 2 | 0 | 5 |
 | Ayarlar | 59 | 0 | 0 | 0 | 9 | 68 |
 | Tarayıcı depoları | 8 | 0 | 0 | 0 | 2 | 10 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 239 | 0 | 0 | 0 | 0 | 239 |
-| Pencereler ve paneller | 59 | 2 | 0 | 0 | 4 | 65 |
+| Pencereler ve paneller | 60 | 2 | 0 | 0 | 4 | 66 |
 
 Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
 
@@ -91,7 +91,7 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (0 / 192; ayrıca 13 iki platformda da bekliyor)
+#### Komutlar (0 / 193; ayrıca 13 iki platformda da bekliyor)
 
 - `analysis.slope` Eğim analizi… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `analysis.volume` Hacim hesabı… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
@@ -107,7 +107,7 @@ Kısmi olanlar notlarıyla; bölüm bölüm.
 - `workspace.disaster` Afet Analizi (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 - `workspace.plan3d` 3D Plan (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 
-#### Araçlar (0 / 80; ayrıca 2 iki platformda da bekliyor)
+#### Araçlar (0 / 81; ayrıca 2 iki platformda da bekliyor)
 
 - `stakeout` Aplikasyon (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)) — Aplikasyon aracı hazır değil. Hesap menüsündeki `calc.stakeout` penceresi ayrıdır ve çalışır.
 - `subdivide` İfraz (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)) — İfraz hesabı henüz yok. Alan ve hisse kuralları bağımsız referans ve kurum kabulü ister (CLAUDE.md §7, §23; TODOS.md GIS-06, GIS-13).
@@ -137,11 +137,11 @@ Yok.
 
 Yok.
 
-#### Pencereler ve paneller (2 / 65)
+#### Pencereler ve paneller (2 / 66)
 
 - `apps/web/src/ui/svgedit/svgExport.ts#openExportDialog` openExportDialog (kısmi) (masaüstünde: apps/desktop/src/style/svgedit/files/export.rs (ADR 0095)) — PNG panoya kopyalanamaz: masaüstünün panosu yalnız metin tutar (SVG kopyalanır). PNG dosyaya yazılır.
 - `apps/web/src/ui/svgedit/svgImport.ts#openImportDialog` openImportDialog (kısmi) (masaüstünde: apps/desktop/src/style/svgedit/files/import.rs, read.rs (ADR 0095)) — Katı XML olarak okunamayan ve onarılamayan dosya ayrıştırıcının nedeniyle (satır, sütun) reddedilir; web'in son çaresi tarayıcının hoşgörülü HTML ayrıştırıcısıdır.
 
 ## Test başvurusu
 
-63 / 192 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+63 / 193 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

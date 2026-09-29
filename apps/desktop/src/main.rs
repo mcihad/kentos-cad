@@ -9,6 +9,7 @@ mod app_menu;
 mod appearance;
 #[cfg(test)]
 mod appearance_tokens_tests;
+mod blocks;
 mod bottom;
 mod calc;
 mod catalog;

@@ -19,14 +19,14 @@
   },
   "summary": {
     "commands": {
-      "total": 192,
-      "implemented": 179,
+      "total": 193,
+      "implemented": 180,
       "partial": 0,
       "pending": 13
     },
     "tools": {
-      "total": 80,
-      "implemented": 78,
+      "total": 81,
+      "implemented": 79,
       "partial": 0,
       "pending": 2
     },
@@ -67,26 +67,26 @@
       "pending": 0
     },
     "screens": {
-      "total": 65,
-      "implemented": 65,
+      "total": 66,
+      "implemented": 66,
       "partial": 0,
       "pending": 0
     },
     "commandsWithoutPlace": [],
     "commandsWithoutTests": 63,
-    "commandsOnDesktop": 174,
+    "commandsOnDesktop": 175,
     "desktop": {
       "commands": {
-        "total": 192,
-        "implemented": 174,
+        "total": 193,
+        "implemented": 175,
         "partial": 0,
         "pending": 13,
         "none": 0,
         "n/a": 5
       },
       "tools": {
-        "total": 80,
-        "implemented": 78,
+        "total": 81,
+        "implemented": 79,
         "partial": 0,
         "pending": 2,
         "none": 0,
@@ -141,8 +141,8 @@
         "n/a": 0
       },
       "screens": {
-        "total": 65,
-        "implemented": 59,
+        "total": 66,
+        "implemented": 60,
         "partial": 2,
         "pending": 0,
         "none": 0,
@@ -3030,6 +3030,38 @@
       ]
     },
     {
+      "id": "tool.blockDefine",
+      "title": "Blok oluştur",
+      "category": "Blok",
+      "icon": "blockDefine",
+      "description": "Seçili nesnelerden, taban noktası ve adıyla bir blok tanımlar; istenirse nesnelerin yerine bloğun bir yerleştirmesini koyar.",
+      "aliases": [
+        "BLOCK",
+        "BLOKOLUSTUR",
+        "BLOKTANIMLA"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Çizim › Blok"
+      ],
+      "ribbon": [
+        "Çizim › Blok"
+      ],
+      "quickAccess": false,
+      "toolbox": true,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/block-define.json"
+      ]
+    },
+    {
       "id": "tool.blockInsert",
       "title": "Blok ekle",
       "category": "Blok",
@@ -3058,6 +3090,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "fixtures/interaction/v1/block-define.json",
         "fixtures/interaction/v1/block-insert.json"
       ]
     },
@@ -3260,6 +3293,7 @@
       },
       "tests": [
         "apps/web/scripts/e2e/smoke.mjs",
+        "fixtures/interaction/v1/block-define.json",
         "fixtures/interaction/v1/circle-methods.json"
       ]
     },
@@ -3935,6 +3969,7 @@
         "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/visual.mjs",
         "fixtures/interaction/v1/arc-variants.json",
+        "fixtures/interaction/v1/block-define.json",
         "fixtures/interaction/v1/line-chain.json",
         "fixtures/interaction/v1/navigation.json",
         "fixtures/interaction/v1/point-calc.json",
@@ -6808,6 +6843,31 @@
       ]
     },
     {
+      "id": "blockDefine",
+      "label": "Blok oluştur",
+      "icon": "blockDefine",
+      "group": "block",
+      "aliases": [
+        "BLOCK",
+        "BLOKOLUSTUR",
+        "BLOKTANIMLA"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 3,
+      "description": "Seçili nesnelerden, taban noktası ve adıyla bir blok tanımlar; istenirse nesnelerin yerine bloğun bir yerleştirmesini koyar.",
+      "productCommand": "cad.blocks.define",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/block-define.json"
+      ]
+    },
+    {
       "id": "blockInsert",
       "label": "Blok ekle",
       "icon": "blockInsert",
@@ -6829,6 +6889,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "fixtures/interaction/v1/block-define.json",
         "fixtures/interaction/v1/block-insert.json"
       ]
     },
@@ -6972,6 +7033,7 @@
       },
       "tests": [
         "apps/web/scripts/e2e/smoke.mjs",
+        "fixtures/interaction/v1/block-define.json",
         "fixtures/interaction/v1/circle-methods.json"
       ]
     },
@@ -7470,6 +7532,7 @@
         "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/visual.mjs",
         "fixtures/interaction/v1/arc-variants.json",
+        "fixtures/interaction/v1/block-define.json",
         "fixtures/interaction/v1/line-chain.json",
         "fixtures/interaction/v1/navigation.json",
         "fixtures/interaction/v1/point-calc.json",
@@ -13501,6 +13564,18 @@
       "desktopWhere": "apps/desktop/src/app_menu/ (ADR 0050)"
     },
     {
+      "id": "apps/web/src/ui/blocks/BlockDefineDialog.ts#openBlockDefineDialog",
+      "name": "openBlockDefineDialog",
+      "role": "window",
+      "source": "apps/web/src/ui/blocks/BlockDefineDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/blocks.rs (ADR 0144)"
+    },
+    {
       "id": "apps/web/src/ui/bottom/BottomPanel.ts#BottomPanel",
       "name": "BottomPanel",
       "role": "panel",
@@ -14557,6 +14632,7 @@
           {
             "label": "Blok",
             "items": [
+              "tool.blockDefine",
               "tool.blockInsert"
             ]
           }
@@ -15660,6 +15736,10 @@
             "label": "Blok",
             "icon": "more",
             "items": [
+              {
+                "command": "tool.blockDefine",
+                "size": "large"
+              },
               {
                 "command": "tool.blockInsert",
                 "size": "large"
@@ -17545,6 +17625,10 @@
               "icon": "more",
               "items": [
                 {
+                  "command": "tool.blockDefine",
+                  "size": "large"
+                },
+                {
                   "command": "tool.blockInsert",
                   "size": "large"
                 }
@@ -19091,6 +19175,10 @@
               "label": "Blok",
               "icon": "more",
               "items": [
+                {
+                  "command": "tool.blockDefine",
+                  "size": "large"
+                },
                 {
                   "command": "tool.blockInsert",
                   "size": "large"

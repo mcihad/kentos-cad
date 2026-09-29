@@ -1126,6 +1126,7 @@ impl App {
             Asking::SymbolDesigner => self.designer_view(),
             Asking::ModelDesigner => self.model_designer_view(),
             Asking::SvgEditor => self.svgedit_view(),
+            Asking::BlockDefine => self.block_define_view(),
         }
     }
 }

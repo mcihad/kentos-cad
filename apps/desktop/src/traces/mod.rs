@@ -18,6 +18,8 @@
 //!   command line when a letter is typed on the drawing, letting it go when a
 //!   tool starts from it) run on the model too. A test holds the model to the
 //!   real widget;
+//! - a `dialog` step uses the open window's controls by their words: the
+//!   message each sends (`answers.rs`), as a click or typing would;
 //! - `run` is the command's message, as a ribbon button sends it;
 //!   `saveAndReopen` is Ctrl+S and Ctrl+O with the file picker answered by a
 //!   temporary file, and the app's own tasks run to their end.
@@ -33,8 +35,10 @@
 //! | `keyboard.rs` | the variants and the keyboards that type a trace |
 //! | `command_line.rs` | the model of the command line while it has the keyboard |
 //! | `player.rs` | the player: steps as window events, what a step can see |
+//! | `answers.rs` | the controls of an open window a `dialog` step uses |
 //! | `compare.rs` | expectations against what the app shows |
 
+mod answers;
 mod command_line;
 mod compare;
 mod format;
@@ -43,6 +47,7 @@ mod player;
 
 use std::path::{Path, PathBuf};
 
+pub use answers::Control;
 pub use format::Trace;
 pub use keyboard::{VARIANTS, Variant};
 pub use player::Player;
@@ -142,6 +147,10 @@ mod tests {
             save_and_reopen: None,
             shift: None,
             shot: None,
+            dialog: None,
+            fill: None,
+            check: None,
+            press: None,
             expect: None,
             note: None,
         });

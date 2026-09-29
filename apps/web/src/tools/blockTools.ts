@@ -2,6 +2,7 @@ import type { ViewTransform } from '../viewport/Camera';
 import type { Vec2 } from '../model/geometry';
 import { parseNumber } from './coordinateInput';
 import { PointInputTool } from './drawTools';
+import { SelectionFirstTool } from './modifyTools';
 import { strokePaths } from './preview';
 
 /**
@@ -107,5 +108,30 @@ export class BlockInsertTool extends PointInputTool {
     const paths = this.ctx.view.blockOutlines(block, this.hover, BlockInsertTool.scale, (BlockInsertTool.rotation * Math.PI) / 180, BlockInsertTool.mirror);
     strokePaths(g, view, paths, { color: this.ctx.view.palette.accent, dash: [4, 3] });
     this.drawTracking(g, view);
+  }
+}
+
+/**
+ * Blok oluştur: the objects are picked first (click, window; a selection made
+ * before the tool is taken as it is), then the base point, clicked or typed;
+ * the window that names the block opens then (`ctx.blocks.define`,
+ * ui/blocks/BlockDefineDialog.ts) and writes it through `cad.blocks.define`.
+ * Objects on a locked layer are taken too: the definition copies them. The
+ * desktop's `kentos_interaction::block_define` does the same.
+ */
+export class BlockDefineTool extends SelectionFirstTool {
+  readonly id = 'blockDefine';
+  protected readonly label = 'Blok oluştur';
+
+  protected begin(): void {}
+
+  protected stagePrompt(): string {
+    return 'taban noktasına tıklayın ya da Y,X yazın';
+  }
+
+  protected point(p: Vec2): void {
+    const uids = this.selectedUids();
+    this.ctx.tools.exit();
+    this.ctx.blocks.define(p, uids);
   }
 }

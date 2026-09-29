@@ -92,6 +92,9 @@ pub enum ViewChange {
     /// Objects picked for a window's field ([`crate::pick_objects::PickObjects`],
     /// docs/adr/0088): kept (the selection holds them), or left (Esc).
     PickedObjects(bool),
+    /// Blok oluştur's base point ([`crate::block_define`], docs/adr/0144): the
+    /// host opens the window that names a block of the selected objects.
+    DefineBlock(Vec2),
 }
 
 /// Where a text field opens and how its text will look: its start, height in

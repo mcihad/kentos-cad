@@ -128,6 +128,17 @@ pub fn name_ok(name: &str) -> bool {
     !name.chars().all(char::is_whitespace)
 }
 
+/// The first “Blok n” (n = 1, 2, …) that no name of `taken` is, names
+/// compared by [`name_key`]: what Blok oluştur offers.
+pub fn free_name<'a>(taken: impl IntoIterator<Item = &'a str>) -> String {
+    let keys: std::collections::HashSet<String> = taken.into_iter().map(name_key).collect();
+    let mut n = 1_u64;
+    while keys.contains(&name_key(&format!("Blok {n}"))) {
+        n += 1;
+    }
+    format!("Blok {n}")
+}
+
 /// Whether an insert's scale is allowed: positive and finite.
 pub fn scale_ok(scale: f64) -> bool {
     scale.is_finite() && scale > 0.0
@@ -338,6 +349,17 @@ mod tests {
         );
         // Unicode's White_Space: U+0085 is, U+FEFF is not (the web's list is the same).
         assert!(!name_ok("\u{85}\u{3000}") && name_ok("\u{feff}") && !name_ok(""));
+    }
+
+    #[test]
+    fn the_first_free_name_is_offered() {
+        assert_eq!(free_name([]), "Blok 1");
+        assert_eq!(free_name(["Blok 1", "BLOK 2"]), "Blok 3");
+        assert_eq!(free_name(["blok 1", "Blok 3"]), "Blok 2");
+        assert_eq!(free_name(["Rögar"]), "Blok 1");
+        // A window trims a name with `str::trim` (the web's `trimName` is the same).
+        let trimmed = ["  Rögar \t", "\u{85}Direk\u{3000}", "\u{feff}A", " "].map(str::trim);
+        assert_eq!(trimmed, ["Rögar", "Direk", "\u{feff}A", ""]);
     }
 
     #[test]

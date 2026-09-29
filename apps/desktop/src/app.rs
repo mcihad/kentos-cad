@@ -137,6 +137,8 @@ pub enum Dialog {
     /// Projeyi paylaş for the open project (cloud/share.rs); over the
     /// catalog the window is the catalog's.
     Share,
+    /// Blok oluştur's window (blocks.rs, docs/adr/0144); the window is `App::blocks`.
+    BlockDefine,
 }
 
 /// Where the app goes once the drawing on screen is left (cloud/leaving.rs).
@@ -235,6 +237,8 @@ pub enum Message {
     TextField(crate::text_field::Event),
     /// Öznitelikler: an edit or a section toggled (properties/).
     Properties(crate::properties::Event),
+    /// Blok oluştur's window (blocks.rs).
+    Blocks(crate::blocks::Event),
     /// The rollover card's wait is over, for this hover (hover_card.rs).
     HoverCard(u64),
     /// The pointer rested on a snap past the tracking dwell (tracking.rs).
@@ -373,6 +377,8 @@ pub struct App {
     /// next task: the keyboard, its text chosen, the keyboard back.
     pub(crate) text_field: Option<crate::text_field::Open>,
     pub(crate) text_field_focus: bool,
+    /// The block windows (blocks.rs, docs/adr/0144).
+    pub(crate) blocks: crate::blocks::Blocks,
     pub(crate) text_field_select: bool,
     pub(crate) text_field_release: bool,
     /// Öznitelikler's closed sections, by id, while the app runs (the web's `collapsed`).
@@ -583,6 +589,7 @@ impl App {
             snap_once: None,
             text_field: None,
             text_field_focus: false,
+            blocks: crate::blocks::Blocks::default(),
             text_field_select: false,
             text_field_release: false,
             props_closed: std::collections::HashSet::new(),
@@ -792,6 +799,7 @@ impl App {
         let task = Task::batch([
             task,
             self.text_field_tasks(),
+            self.blocks_tasks(),
             self.follow_hover(),
             self.follow_tracking(),
             self.follow_log(Instant::now()),
@@ -929,6 +937,7 @@ impl App {
             Message::DrawingMenu(event) => self.drawing_menu_event(event),
             Message::TextField(event) => self.text_field_event(event),
             Message::Properties(event) => self.properties_event(event),
+            Message::Blocks(event) => self.blocks_event(event),
             Message::HoverCard(version) => self.hover_card_due(version),
             Message::TrackDwell(number) => {
                 self.tracking.dwell_due(number);

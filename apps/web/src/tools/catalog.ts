@@ -1,5 +1,5 @@
 import { TextTool } from './annotateTools';
-import { BlockInsertTool } from './blockTools';
+import { BlockDefineTool, BlockInsertTool } from './blockTools';
 import { DimensionTool } from './dimensionTool';
 import { HatchTool } from './hatchTool';
 import { ArcTool, CircleTool, SplineTool } from './curveTools';
@@ -38,6 +38,7 @@ import type { ToolDescriptor } from './Tool';
 import { arcCreate } from '../product/arcCreate';
 import { circleCreate } from '../product/circleCreate';
 import { entitiesArray } from '../product/entitiesArray';
+import { blocksDefine } from '../product/blocksDefine';
 import { entitiesCreate } from '../product/entitiesCreate';
 import { entitiesDelete } from '../product/entitiesDelete';
 import { entitiesEdit } from '../product/entitiesEdit';
@@ -100,6 +101,7 @@ const defs: Def[] = [
   { id: 'revcloud', rare: true, label: 'Revizyon bulutu', icon: 'revcloud', group: 'annotate', aliases: ['REVCLOUD', 'BULUT'], description: 'Değişen yeri çevreleyen, dışa bombeli yaylardan kapalı bulut çizer; dikdörtgen ya da çokgen.', steps: ['Dikdörtgenin iki köşesine tıklayın (ya da “Çokgen” ile köşelere tıklayıp sağ tıklayın).', '“Yay boyu” yay uzunluğunu kâğıt milimetresi olarak ayarlar.'], productCommand: polygonCreate.id, create: (c) => new RevCloudTool(c) },
   { id: 'hatch', primary: true, label: 'Tarama', icon: 'hatch', group: 'annotate', shortcut: 'H', aliases: ['H', 'HATCH', 'TARAMA'], description: 'Tıklanan kapalı alanı desenle tarar; D ile desen değişir.', steps: ['Taranacak kapalı alanın içine tıklayın.', 'Deseni üstteki “Desen” düğmesiyle değiştirin.'], productCommand: entitiesCreate.id, create: (c) => new HatchTool(c) },
   // Blok (docs/adr/0144)
+  { id: 'blockDefine', label: 'Blok oluştur', icon: 'blockDefine', group: 'block', aliases: ['BLOCK', 'BLOKOLUSTUR', 'BLOKTANIMLA'], description: 'Seçili nesnelerden, taban noktası ve adıyla bir blok tanımlar; istenirse nesnelerin yerine bloğun bir yerleştirmesini koyar.', steps: ['Nesnelere tıklayın ya da pencereyle seçin, sonra sağ tıklayın. Önceden seçiliyse bu adım atlanır.', 'Taban noktasına tıklayın ya da Y,X yazın: bloğun yerleştirmeleri bu noktadan konur.', 'Açılan pencerede adı yazın; “Seçilenleri blokla değiştir” nesnelerin yerine bloğu koyar.'], productCommand: blocksDefine.id, create: (c) => new BlockDefineTool(c) },
   { id: 'blockInsert', label: 'Blok ekle', icon: 'blockInsert', group: 'block', aliases: ['INSERT', 'BLOKEKLE', 'SEMBOLEKLE'], description: 'Çizimde tanımlı bir bloğu tıklanan ya da yazılan noktalara yerleştirir; ölçeği, dönüşü ve aynalanması seçilir.', steps: ['Yerleştirme noktasına tıklayın ya da Y,X yazın: her tık bir yerleştirmedir.', '“Blok” sıradaki bloğa geçer; “Ölçek” ve “Dönüş” (derece) yazılır, “Aynala” bloğu x ekseninde aynalar.', 'Sağ tık ya da Enter bitirir.'], productCommand: entitiesCreate.id, create: (c) => new BlockInsertTool(c) },
 
   // Dönüştür

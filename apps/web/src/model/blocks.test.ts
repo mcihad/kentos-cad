@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { blocksFault, blockFaultMessage, checkDefinitions, checkNesting, nameKey, nameOk, type BlockDefinition } from './blocks';
+import { blocksFault, blockFaultMessage, checkDefinitions, checkNesting, freeBlockName, nameKey, nameOk, trimName, type BlockDefinition } from './blocks';
 import type { Entity } from './entities';
 
 /**
@@ -23,6 +23,16 @@ describe('block rules (docs/adr/0144)', () => {
     // White space as Rust's `char::is_whitespace` has it: U+0085 is, U+FEFF is not.
     expect([nameOk(' \t'), nameOk('\u0085　'), nameOk('﻿'), nameOk('')]).toEqual([false, false, true, false]);
     expect(blocksFault([block(1, ' \t')], [])).toEqual({ kind: 'emptyName', definition: 0 });
+  });
+
+  it('offer the first free “Blok n”, names folded', () => {
+    const named = (...names: string[]) => names.map((name) => ({ name }));
+    expect(freeBlockName([])).toBe('Blok 1');
+    expect(freeBlockName(named('Blok 1', 'BLOK 2'))).toBe('Blok 3');
+    expect(freeBlockName(named('blok 1', 'Blok 3'))).toBe('Blok 2');
+    expect(freeBlockName(named('Rögar'))).toBe('Blok 1');
+    // Trimmed as Rust's `str::trim`: U+0085 goes, U+FEFF stays.
+    expect([trimName('  Rögar \t'), trimName('\u0085Direk\u3000'), trimName('\ufeffA'), trimName(' ')]).toEqual(['Rögar', 'Direk', '\ufeffA', '']);
   });
 
   it('keep ids and tags once', () => {

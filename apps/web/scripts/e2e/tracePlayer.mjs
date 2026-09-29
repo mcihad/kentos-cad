@@ -284,9 +284,79 @@ async function saveAndReopen() {
   await b.waitFor('!window.kentos.files.busy.value', 8000);
 }
 
+/** The title of the window on top, or null: the \`dialog\` a step sees. */
+const TOP_TITLE = `([...document.querySelectorAll('.dialog-backdrop .dialog__title')].at(-1)?.textContent ?? null)`;
+
+/**
+ * A control of the window on top by its words (a field's or a box's label, a button's text), brought into view:
+ * where to click it, whether it is checked and whether it is off; null when the window has none.
+ */
+const control = (selector, words) =>
+  b.eval(`(() => {
+    const d = [...document.querySelectorAll('.dialog-backdrop .dialog')].at(-1);
+    const words = (el) => (el.getAttribute('aria-label') ?? el.closest('label')?.textContent ?? el.textContent ?? '').trim();
+    const el = d && [...d.querySelectorAll(${JSON.stringify(selector)})].find((el) => words(el) === ${JSON.stringify(words)});
+    if (!el) return null;
+    el.scrollIntoView({ block: 'nearest' });
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2, checked: el.checked ?? null };
+  })()`);
+
+/** Ctrl+A in the field that has the focus: all its text chosen (the editing command goes with the key, as CDP needs it). */
+async function chooseAll() {
+  const base = { key: 'a', code: 'KeyA', windowsVirtualKeyCode: 65, modifiers: 2 };
+  await b.send('Input.dispatchKeyEvent', { type: 'rawKeyDown', ...base, commands: ['selectAll'] });
+  await b.send('Input.dispatchKeyEvent', { type: 'keyUp', ...base });
+}
+
+/** A left click at a page point (a window's control). */
+async function clickAt({ x, y }) {
+  await mouse('mouseMoved', x, y);
+  await mouse('mousePressed', x, y, { button: 'left', clickCount: 1 });
+  await mouse('mouseReleased', x, y, { button: 'left', clickCount: 1 });
+  await sleep(40);
+}
+
+/**
+ * A \`dialog\` step: waits for the window titled so (a window is loaded when first opened), then, as a user does
+ * with the mouse and the keyboard, types over its fields (\`fill\`, by label: clicked, all chosen, the text typed),
+ * sets its check boxes (\`check\`, by their words) and presses its button (\`press\`, by its words). A button that
+ * is off takes the click and does nothing, as it would. The desktop answers the same controls (answers.rs).
+ */
+async function answer(step) {
+  try {
+    await b.waitFor(`${TOP_TITLE} === ${JSON.stringify(step.dialog)}`, 8000);
+  } catch {
+    const open = await b.eval(TOP_TITLE);
+    throw new Error(`“${step.dialog}” penceresi açık değil (açık: ${open === null ? 'yok' : `“${open}”`})`);
+  }
+  const missing = (what) => new Error(`“${step.dialog}” penceresinde ${what} yok`);
+  for (const [label, text] of Object.entries(step.fill ?? {})) {
+    const at = await control('input, textarea', label);
+    if (!at) throw missing(`“${label}” alanı`);
+    await clickAt(at);
+    await chooseAll();
+    if (text) await b.send('Input.insertText', { text });
+    else await press('Delete');
+    await sleep(40);
+  }
+  for (const [words, on] of Object.entries(step.check ?? {})) {
+    const at = await control('input[type=checkbox]', words);
+    if (!at) throw missing(`“${words}” kutusu`);
+    if (at.checked !== on) await clickAt(at);
+  }
+  if (step.press !== undefined) {
+    const at = await control('button', step.press);
+    if (!at) throw missing(`“${step.press}” düğmesi`);
+    await clickAt(at);
+  }
+  await sleep(60);
+}
+
 async function act(step) {
   // A picture is asked for (`shot`): no action, no expectation.
   if (step.shot !== undefined) return;
+  if (step.dialog !== undefined) return answer(step);
   if (step.run) return void (await b.eval(`window.kentos.commands.execute(${JSON.stringify(step.run)})`));
   if (step.key) return press(step.key);
   if (step.text !== undefined) {
@@ -389,6 +459,7 @@ const observe = (mark) =>
         return t && { point: [t.point.x, t.point.y], lines: t.lines.map((l) => ({ origin: [l.origin.x, l.origin.y], angle: l.angle })) };
       })(),
       ids: [...k.doc.all()].map((e) => e.id),
+      dialog: ${TOP_TITLE},
     };
   })()`);
 
@@ -488,6 +559,8 @@ export async function play(t, { onShot } = {}) {
       break;
     }
     if (!step.expect) continue;
+    // A window opens once its module has loaded (CLAUDE.md §20) and closes at once: the step waits for it.
+    if ('dialog' in step.expect) await b.waitFor(`${TOP_TITLE} === ${JSON.stringify(step.expect.dialog)}`, 8000).catch(() => {});
     const bad = compare(step.expect, await observe(mark), t);
     if (bad.length) problems.push(`${label}: ${bad.join('; ')}`);
   }

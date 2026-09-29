@@ -95,6 +95,8 @@ impl App {
             match change {
                 // Yazı's field opens over the drawing (text_field.rs).
                 ViewChange::Text(field) => self.open_text_field(field),
+                // Blok oluştur's base point: the window that names the block (blocks.rs).
+                ViewChange::DefineBlock(base) => self.open_block_define(base),
                 // Çizimden: the point goes to the window that asked, which opens again (calc/).
                 ViewChange::Picked(p) => {
                     if !self.processing_picked(p) {

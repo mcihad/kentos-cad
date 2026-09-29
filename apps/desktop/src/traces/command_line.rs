@@ -57,7 +57,10 @@ impl CommandLine {
     /// widget with an id the player follows; an operation that does not act
     /// on its focus (a text selection, a custom operation) cannot be
     /// followed, and stops the trace rather than let the widget's state go
-    /// wrong unseen.
+    /// wrong unseen. A window's field the app gives the keyboard to (Blok
+    /// oluştur's name) is there too: what an operation does to it (the
+    /// keyboard, its text chosen) is not the command line's, so it is let
+    /// be; a `dialog` step fills the field whatever it holds.
     pub fn operate(&mut self, operation: &mut dyn Operation) -> Result<Option<Message>, String> {
         let mut text_box = TextBox {
             focused: self.focused,
@@ -65,12 +68,16 @@ impl CommandLine {
             unfollowed: None,
         };
         let id = Id::new(COMMAND_INPUT);
+        let mut window_field = WindowField::default();
+        let window_id = Id::new(crate::blocks::NAME_FIELD);
         let mut visit = |operation: &mut dyn Operation| {
             let bounds = Rectangle::default();
             operation.container(None, bounds);
             operation.traverse(&mut |operation| {
                 operation.focusable(Some(&id), bounds, &mut text_box);
                 operation.text_input(Some(&id), bounds, &mut text_box);
+                operation.focusable(Some(&window_id), bounds, &mut window_field);
+                operation.text_input(Some(&window_id), bounds, &mut window_field);
             });
             match operation.finish() {
                 Outcome::Chain(next) => Some(next),
@@ -86,7 +93,7 @@ impl CommandLine {
                 "iz, oynatıcının izleyemediği bir widget işlemi üretti: komut satırında {what}"
             ));
         }
-        if !text_box.touched {
+        if !text_box.touched && !window_field.touched {
             return Err(
                 "iz, oynatıcının izleyemediği bir widget işlemi üretti: komut satırının odağına dokunmuyor"
                     .to_owned(),
@@ -177,6 +184,55 @@ fn list_key(
         // Esc clears what is typed, the list or not (ADR 0018).
         (Named::Escape, _) if !value.is_empty() => Some(vec![Message::CommandInput(String::new())]),
         _ => None,
+    }
+}
+
+/// A window's field as a widget operation sees it: whether the operation
+/// did anything to it (took or gave the keyboard, chose its text).
+#[derive(Default)]
+struct WindowField {
+    focused: bool,
+    touched: bool,
+}
+
+impl Focusable for WindowField {
+    fn is_focused(&self) -> bool {
+        self.focused
+    }
+
+    fn focus(&mut self) {
+        self.focused = true;
+        self.touched = true;
+    }
+
+    fn unfocus(&mut self) {
+        self.focused = false;
+    }
+}
+
+impl TextInput for WindowField {
+    fn text(&self) -> &str {
+        ""
+    }
+
+    fn move_cursor_to_front(&mut self) {
+        self.touched = true;
+    }
+
+    fn move_cursor_to_end(&mut self) {
+        self.touched = true;
+    }
+
+    fn move_cursor_to(&mut self, _position: usize) {
+        self.touched = true;
+    }
+
+    fn select_all(&mut self) {
+        self.touched = true;
+    }
+
+    fn select_range(&mut self, _start: usize, _end: usize) {
+        self.touched = true;
     }
 }
 

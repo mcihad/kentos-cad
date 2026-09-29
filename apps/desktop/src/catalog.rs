@@ -183,6 +183,7 @@ pub const PORTED: &[&str] = &[
     // out, through cad.entities.create as “Tarama” (docs/adr/0062).
     "tool.hatch",
     // Blocks (docs/adr/0144).
+    "tool.blockDefine",
     "tool.blockInsert",
     // Alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine
     // tıklayarak alan; into the document as the web's (docs/adr/0065).

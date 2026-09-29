@@ -9,6 +9,7 @@ import type { AppSettingsSection } from '../ui/settings/AppSettingsDialog';
 import type { ProjectSettingsSection } from '../ui/settings/ProjectSettingsDialog';
 import { AppShell } from '../ui/shell/AppShell';
 import { ViewportController } from '../viewport/ViewportController';
+import { createBlocks } from './blocks';
 import { Clipboard } from './clipboard';
 import { registerCoreCommands, showTheme } from './commands';
 import type { AppContext } from './context';
@@ -88,6 +89,8 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
     // The visible area and the geometry store are read lazily: the viewport exists only after the context.
     processing: createProcessing(doc, selection, () => ctx.view.camera.visibleBounds(), { inBox: (r) => ctx.view.inBox(r), measures: (ids) => ctx.view.measures(ids), evaluateExpression: (...a) => ctx.view.evaluateExpression(...a) }),
     styles: createStyles(doc, system),
+    // Blok oluştur's window is loaded when first opened (CLAUDE.md §20).
+    blocks: createBlocks((base, uids) => lazy(ctx, import('../ui/blocks/BlockDefineDialog'), (m) => m.openBlockDefineDialog(ctx, base, uids))),
     server: new ServerStatus(),
   } as AppContext & { tools: ToolManager; view: ViewportController; files: DocumentFiles; cloud: CloudSession; recovery: RecoveryCopies };
   ctx.tools = new ToolManager(ctx);

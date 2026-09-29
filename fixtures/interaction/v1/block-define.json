@@ -1,0 +1,104 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "block-define",
+  "title": "Blok oluştur (ADR 0144): üç ağaç pencereyle seçilip yerlerinde kalarak “Ağaç dizisi” olur; çizilen vana simgesi seçilir, yazılan taban noktası adı soran pencereyi açar; alınmış ad Oluştur'u kapatır; “Vana” olarak tanımlanır, nesneler yerleştirmeyle değiştirilir; tek adımda geri alınır ve yinelenir; Blok ekle yeni bloğu sunar",
+  "source": "ADR 0144, 4. adım",
+  "covers": ["CAD-04"],
+  "document": "blocks.kcad",
+  "view": { "center": [487020, 4420010], "metresPerPixel": 0.0625 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "clickTolerance": 0.0625,
+  "steps": [
+    {
+      "run": "tool.blockDefine",
+      "note": "Seçim yok: araç önce nesneleri seçtirir.",
+      "expect": { "tool": "blockDefine", "prompt": "Blok oluştur: nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın (0 seçili)" }
+    },
+    { "drag": [[-10.5, 9], [5.8, 6]], "note": "Soldan sağa pencere: yalnız içinde kalan üç ağaç.", "expect": { "selected": [9, 10, 11] } },
+    { "rightClick": [5.8, 6], "note": "Sağ tık seçimi onaylar: sıra taban noktasında.", "expect": { "prompt": "Blok oluştur: taban noktasına tıklayın ya da Y,X yazın" } },
+    { "move": [0, 0] },
+    { "text": "487018,4420017.5" },
+    {
+      "key": "Enter",
+      "note": "Taban noktası ortadaki ağaç: araç biter, adı soran pencere açılır.",
+      "expect": { "tool": "select", "dialog": "Blok oluştur", "selected": [9, 10, 11] }
+    },
+    {
+      "dialog": "Blok oluştur",
+      "fill": { "Ad": "Ağaç dizisi" },
+      "check": { "Seçilenleri blokla değiştir": false },
+      "press": "Oluştur",
+      "note": "Seçilenler yerinde kalır: çizim değişmez, blok iç içe üç Ağaç'tan oluşur.",
+      "expect": { "dialog": null, "entities": 12, "log": "success", "logged": ["“Ağaç dizisi” bloğu tanımlandı: 3 nesne."], "selected": [9, 10, 11], "canUndo": true }
+    },
+    { "key": "Esc", "note": "Seçim bırakılır.", "expect": { "selected": [] } },
+    { "run": "tool.circle", "note": "Vana simgesi: çember ve içinden geçen çizgi, yazılan koordinatlarla." },
+    { "move": [0, 0], "note": "İmleç çizimde: yazılan değer imlecin yanındaki alana gider, Enter odağı çizime geri verir." },
+    { "text": "487032,4420011.5" },
+    { "key": "Enter" },
+    { "text": "0.6" },
+    { "key": "Enter", "expect": { "entities": 13, "newest": { "kind": "circle", "center": [12, 1.5], "radius": 0.6 } } },
+    { "key": "Esc", "expect": { "tool": "select" } },
+    { "run": "tool.line" },
+    { "text": "487031.4,4420011.5" },
+    { "key": "Enter" },
+    { "text": "487032.6,4420011.5" },
+    { "key": "Enter", "expect": { "entities": 14, "newest": { "kind": "line", "points": [[11.4, 1.5], [12.6, 1.5]] } } },
+    { "key": "Esc", "expect": { "tool": "select" } },
+    {
+      "run": "tool.blockDefine",
+      "note": "Seçim yok: araç önce nesneleri seçtirir.",
+      "expect": { "tool": "blockDefine", "prompt": "Blok oluştur: nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın (0 seçili)" }
+    },
+    { "drag": [[11, 2.5], [13, 0.5]], "note": "Soldan sağa pencere: yalnız içinde kalanlar, çember ve çizgi.", "expect": { "selected": [13, 14] } },
+    {
+      "rightClick": [13, 0.5],
+      "note": "Sağ tık seçimi onaylar: sıra taban noktasında.",
+      "expect": { "prompt": "Blok oluştur: taban noktasına tıklayın ya da Y,X yazın" }
+    },
+    { "text": "487032,4420011.5" },
+    {
+      "key": "Enter",
+      "note": "Taban noktası çemberin merkezi: araç biter, adı soran pencere açılır.",
+      "expect": { "tool": "select", "dialog": "Blok oluştur", "entities": 14, "selected": [13, 14] }
+    },
+    {
+      "dialog": "Blok oluştur",
+      "fill": { "Ad": "Rögar" },
+      "press": "Oluştur",
+      "note": "Ad çizimde var: Oluştur kapalıdır, pencere açık kalır.",
+      "expect": { "dialog": "Blok oluştur", "entities": 14 }
+    },
+    {
+      "dialog": "Blok oluştur",
+      "fill": { "Ad": "Vana", "Açıklama": "Su vanası" },
+      "check": { "Seçilenleri blokla değiştir": true },
+      "press": "Oluştur",
+      "note": "Kutu yeniden açılır: çember ve çizgi silinir, yerlerine taban noktasında yerleştirme konur ve seçilir.",
+      "expect": {
+        "dialog": null,
+        "entities": 13,
+        "log": "success",
+        "logged": ["“Vana” bloğu tanımlandı: 2 nesne. Nesneler yerleştirmeyle değiştirildi."],
+        "newest": { "kind": "insert", "points": [[12, 1.5], [13, 1.5], [12, 2.5]] },
+        "selected": [15]
+      }
+    },
+    {
+      "key": "Ctrl+Z",
+      "note": "Tanım ve değiştirme tek adımdır: çember ve çizgi geri gelir.",
+      "expect": { "entities": 14, "canRedo": true, "newest": { "kind": "line", "points": [[11.4, 1.5], [12.6, 1.5]] } }
+    },
+    { "key": "Ctrl+Y", "expect": { "entities": 13, "canRedo": false, "newest": { "kind": "insert", "points": [[12, 1.5], [13, 1.5], [12, 2.5]] } } },
+    {
+      "run": "tool.blockInsert",
+      "note": "Tanımlanan blok, Blok ekle'nin sıradaki bloğudur.",
+      "expect": {
+        "tool": "blockInsert",
+        "prompt": "Blok ekle: “Vana” için yerleştirme noktasına tıklayın [Blok (B) / Ölçek (Ö): 1.0000 / Dönüş (D): 0.0000° / Aynala (A): kapalı]"
+      }
+    },
+    { "key": "Enter", "expect": { "tool": "select", "entities": 13 } }
+  ]
+}

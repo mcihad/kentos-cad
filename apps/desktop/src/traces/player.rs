@@ -21,6 +21,7 @@ use crate::keys;
 use crate::marks::snap_name;
 use crate::viewport::{self, Gesture};
 
+use super::answers::Control;
 use super::command_line::CommandLine;
 use super::compare::compare;
 use super::folder;
@@ -166,6 +167,8 @@ pub struct Observation {
     pub track_points: Vec<[f64; 2]>,
     /// The lock, absolute.
     pub track: Option<TrackSeen>,
+    /// The open window's title (answers.rs).
+    pub dialog: Option<String>,
 }
 
 /// Object tracking's lock as a step sees it: the point and each line's origin and angle.
@@ -371,6 +374,9 @@ impl<'a> Player<'a> {
             self.press(&chord_stroke("Ctrl+S", self.variant.layout)?)?;
             return self.press(&chord_stroke("Ctrl+O", self.variant.layout)?);
         }
+        if let Some(title) = &step.dialog {
+            return self.answer(title, step);
+        }
         if step.expect.is_some() || step.shot.is_some() {
             return Ok(());
         }
@@ -487,6 +493,30 @@ impl<'a> Player<'a> {
             mouse::Cursor::Available(b),
         )?;
         self.clock += Duration::from_millis(40);
+        Ok(())
+    }
+
+    /// A `dialog` step: the window titled `title` is open; its fields are
+    /// filled, its boxes set and its button pressed, each through the
+    /// message the control sends (answers.rs).
+    fn answer(&mut self, title: &str, step: &Step) -> Result<(), String> {
+        let open = self.app.dialog_title();
+        if open.as_deref() != Some(title) {
+            let open = open.map_or_else(|| "yok".to_owned(), |t| format!("“{t}”"));
+            return Err(format!("“{title}” penceresi açık değil (açık: {open})"));
+        }
+        let fills = step.fill.iter().flat_map(|f| f.0.iter());
+        let mut controls: Vec<Control<'_>> = fills
+            .map(|(label, text)| Control::Fill(label, text))
+            .collect();
+        let checks = step.check.iter().flat_map(|c| c.0.iter());
+        controls.extend(checks.map(|(words, on)| Control::Check(words, *on)));
+        controls.extend(step.press.as_deref().map(Control::Press));
+        for control in controls {
+            if let Some(message) = self.app.dialog_control(control)? {
+                self.apply(message)?;
+            }
+        }
         Ok(())
     }
 
@@ -629,6 +659,7 @@ impl<'a> Player<'a> {
                         .map(|l| ([l.origin.x, l.origin.y], l.angle))
                         .collect(),
                 }),
+            dialog: app.dialog_title(),
         }
     }
 }
@@ -674,6 +705,9 @@ fn describe(step: &Step) -> String {
         format!("focus {target}")
     } else if step.save_and_reopen.is_some() {
         "saveAndReopen".to_owned()
+    } else if let Some(title) = &step.dialog {
+        let press = step.press.as_deref().map_or_else(String::new, |p| format!(" → {p}"));
+        format!("dialog {title}{press}")
     } else if let Some(name) = &step.shot {
         format!("shot {name}")
     } else {

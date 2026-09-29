@@ -206,7 +206,7 @@ export abstract class SelectionFirstTool implements Tool {
   }
 
   /** The selected objects' persistent ids, as the commands name them. */
-  private selectedUids(): string[] {
+  protected selectedUids(): string[] {
     const { doc } = this.ctx;
     return [...this.ctx.selection.ids.value].map((id) => doc.uidOf(id)).filter((uid): uid is string => uid !== undefined);
   }

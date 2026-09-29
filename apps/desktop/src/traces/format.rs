@@ -84,6 +84,15 @@ pub struct Step {
     /// A named picture of the app as it is now (usage scenarios, `kentos-cad
     /// kullan`); a test run passes over it.
     pub(super) shot: Option<String>,
+    /// The open window, by its title, answered with `fill`, `check` and
+    /// `press`, in that order (answers.rs).
+    pub(super) dialog: Option<String>,
+    /// Its fields by label, each typed over with this text, in order.
+    pub(super) fill: Option<InOrder<String>>,
+    /// Its check boxes by their words, each set on or off, in order.
+    pub(super) check: Option<InOrder<bool>>,
+    /// Its button with these words, pressed last.
+    pub(super) press: Option<String>,
     pub(super) expect: Option<Expect>,
     /// For the reader; not checked.
     #[allow(dead_code)]
@@ -133,6 +142,9 @@ pub struct Expect {
     pub(super) track: Option<Option<TrackExpect>>,
     /// Objects by their ids, each as `newest` is read (docs/adr/0037): a moved one in place.
     pub(super) objects: Option<Vec<Newest>>,
+    /// The open window's title; `null` (none) and absent differ.
+    #[serde(default, deserialize_with = "present")]
+    pub(super) dialog: Option<Option<String>>,
 }
 
 /// The expected lock: its point (within `clickTolerance`) and its lines in
@@ -164,6 +176,34 @@ pub struct Newest {
     /// A circle's or an arc's centre, relative to the view's centre (docs/adr/0032).
     pub(super) center: Option<[f64; 2]>,
     pub(super) radius: Option<f64>,
+}
+
+/// A JSON object's members in the order they are written (a `dialog` step's
+/// fields and boxes are used in that order, as on the web).
+#[derive(Debug)]
+pub struct InOrder<T>(pub(super) Vec<(String, T)>);
+
+impl<'de, T: Deserialize<'de>> Deserialize<'de> for InOrder<T> {
+    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        struct Members<T>(std::marker::PhantomData<T>);
+        impl<'de, T: Deserialize<'de>> serde::de::Visitor<'de> for Members<T> {
+            type Value = InOrder<T>;
+            fn expecting(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                f.write_str("an object")
+            }
+            fn visit_map<A: serde::de::MapAccess<'de>>(
+                self,
+                mut map: A,
+            ) -> Result<Self::Value, A::Error> {
+                let mut members = Vec::new();
+                while let Some(member) = map.next_entry()? {
+                    members.push(member);
+                }
+                Ok(InOrder(members))
+            }
+        }
+        d.deserialize_map(Members(std::marker::PhantomData))
+    }
 }
 
 /// A field that is there, even as `null`.

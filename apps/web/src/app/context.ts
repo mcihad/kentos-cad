@@ -4,6 +4,7 @@ import type { CadDocument } from '../model/document';
 import type { Selection } from '../model/selection';
 import type { ToolManager } from '../tools/ToolManager';
 import type { ViewportController } from '../viewport/ViewportController';
+import type { BlockService } from './blocks';
 import type { Clipboard } from './clipboard';
 import type { CloudSession } from './cloud/session';
 import type { RecoveryCopies } from './recovery';
@@ -44,6 +45,8 @@ export interface AppContext {
   readonly processing: ProcessingService;
   /** Style library: system, user and project symbols (see docs/STYLE.md). */
   readonly styles: StyleService;
+  /** Blocks: the window that names a new block (app/blocks.ts, docs/adr/0144). */
+  readonly blocks: BlockService;
   /** Local drawing files (.kcad): save, save as, open (app/fileIO.ts). */
   readonly files: DocumentFiles;
   /** Local recovery copies of unsaved work, offered after a crash (app/recovery.ts, docs/adr/0030). */

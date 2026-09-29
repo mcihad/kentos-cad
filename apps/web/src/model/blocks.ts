@@ -92,6 +92,24 @@ export function nameOk(name: string): boolean {
   return false;
 }
 
+/** `name` without white space at either end, as Rust's `str::trim` has it (Unicode White_Space): a name as a window takes it. */
+export function trimName(name: string): string {
+  const cs = [...name];
+  let a = 0;
+  let b = cs.length;
+  while (a < b && WHITE_SPACE.has(cs[a])) a++;
+  while (b > a && WHITE_SPACE.has(cs[b - 1])) b--;
+  return cs.slice(a, b).join('');
+}
+
+/** The first “Blok n” (n = 1, 2, …) no name of `blocks` is, names compared by `nameKey`: what Blok oluştur offers. */
+export function freeBlockName(blocks: readonly { name: string }[]): string {
+  const taken = new Set(blocks.map((b) => nameKey(b.name)));
+  let n = 1;
+  while (taken.has(nameKey(`Blok ${n}`))) n++;
+  return `Blok ${n}`;
+}
+
 /** Whether an insert's scale is allowed: positive and finite. */
 export function scaleOk(scale: number): boolean {
   return Number.isFinite(scale) && scale > 0;
