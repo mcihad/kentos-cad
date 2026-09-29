@@ -269,6 +269,9 @@ pub const PORTED: &[&str] = &[
     // Kot ver (docs/adr/0142): the vertices of the selection given elevations, through
     // cad.entities.edit as Kot ver; Sabit, Artır and Sıfırla are its methods.
     "tool.setElevation",
+    // Çok parçalı alan (docs/adr/0143): the parts joined into one area, an area split into its parts.
+    "tool.partsJoin",
+    "tool.partsSplit",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

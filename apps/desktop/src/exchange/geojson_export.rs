@@ -72,18 +72,26 @@ impl State {
     }
 }
 
-/// A path or area with an arc among its edges (a bulge), holes included.
+/// A path or area with an arc among its edges (a bulge), holes included,
+/// in any part of a multi-part area (docs/adr/0143; the web's `hasArcs`).
 fn bulged(e: &Entity) -> bool {
     let arcs = |b: &Option<Vec<f64>>| {
         b.as_ref()
             .is_some_and(|b| b.iter().any(|v| v.abs() > 1e-12))
     };
+    let holes = |holes: &Option<Vec<kentos_contracts::RingGeometry>>| {
+        holes
+            .as_ref()
+            .is_some_and(|holes| holes.iter().any(|r| arcs(&r.bulges)))
+    };
     match e {
         Entity::Polyline(p) | Entity::Polygon(p) => {
             arcs(&p.bulges)
-                || p.holes
-                    .as_ref()
-                    .is_some_and(|holes| holes.iter().any(|r| arcs(&r.bulges)))
+                || holes(&p.holes)
+                || p.parts
+                    .iter()
+                    .flatten()
+                    .any(|q| arcs(&q.bulges) || holes(&q.holes))
         }
         _ => false,
     }
@@ -434,5 +442,27 @@ impl App {
             ));
         }
         words::summary(lines)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use kentos_contracts::Entity;
+
+    /// An arc in a later part, or in its hole, makes the area curved (docs/adr/0143).
+    #[test]
+    fn an_arc_in_any_part_is_a_curve() {
+        let area = |part: &str| -> Entity {
+            serde_json::from_str(&format!(
+                r#"{{"kind":"polygon","id":1,"layerId":"a","attrs":{{}},"pts":[{{"x":0,"y":0}},{{"x":9,"y":0}},{{"x":9,"y":9}}],"parts":[{part}]}}"#
+            ))
+            .expect("an area")
+        };
+        let plain = r#"{"pts":[{"x":20,"y":0},{"x":29,"y":0},{"x":29,"y":9}]}"#;
+        let arced = r#"{"pts":[{"x":20,"y":0},{"x":29,"y":0},{"x":29,"y":9}],"bulges":[0,0.5,0]}"#;
+        let hole = r#"{"pts":[{"x":20,"y":0},{"x":29,"y":0},{"x":29,"y":9}],"holes":[{"pts":[{"x":21,"y":1},{"x":22,"y":1},{"x":22,"y":2}],"bulges":[0,0,0.3]}]}"#;
+        assert!(!super::bulged(&area(plain)));
+        assert!(super::bulged(&area(arced)));
+        assert!(super::bulged(&area(hole)));
     }
 }

@@ -1,6 +1,7 @@
 //! The drawing and the steps of the pictures of docs/adr/0143 (multi-part
 //! areas): a parcel of three parts selected, its grips on every part and
-//! Öznitelikler's Parça sayısı, and the hover card with its Parça row.
+//! Öznitelikler's Parça sayısı, the hover card with its Parça row, and
+//! Değiştir's Parçaları birleştir on two parcels.
 //! `tools_screens` takes them in the dark and the light theme at 1440×900
 //! and 1100×650:
 //!
@@ -14,7 +15,7 @@ use kentos_domain::Slot;
 use kentos_ui::widget::docking;
 
 use crate::app::{App, Message};
-use crate::tools_scenes::{Objects, hover, open};
+use crate::tools_scenes::{Objects, hover, open, run};
 use crate::tools_screens::Scene;
 
 /// Parcel 12 of three parts (the largest with a hole), a neighbouring
@@ -48,6 +49,7 @@ pub(crate) fn parts_ground() -> Objects {
 }
 
 pub(crate) const PARCEL: Slot = Slot(1);
+pub(crate) const NEIGHBOUR: Slot = Slot(2);
 
 /// Öznitelikler with the room to show its Geometri rows: the dock's upper
 /// stack folded to its header and the drawing's own rows shut.
@@ -79,6 +81,15 @@ pub(crate) fn scenes() -> Vec<Scene> {
             open(app, parts_ground());
             hover(app, [44.0, 8.0]);
             app.hover_card_due(app.selection.hover_version());
+        }),
+        // Değiştir's Parçaları birleştir on the parcel and its neighbour: one area of four parts.
+        ("parcalari-birlestir", |app| {
+            open(app, parts_ground());
+            app.tab = "modify";
+            app.selection.set([PARCEL, NEIGHBOUR]);
+            run(app, "tool.partsJoin");
+            panel_room(app);
+            hover(app, [52.0, 34.0]);
         }),
     ]
 }

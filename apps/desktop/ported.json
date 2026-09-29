@@ -170,7 +170,9 @@
     "tool.selectFence",
     "tool.selectCircle",
     "tool.selectContaining",
-    "tool.setElevation"
+    "tool.setElevation",
+    "tool.partsJoin",
+    "tool.partsSplit"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

@@ -101,6 +101,13 @@ impl State {
     }
 }
 
+/// An area with a hole in any of its parts (docs/adr/0143; the web's `hasIslands`).
+fn islanded(e: &Entity) -> bool {
+    let some =
+        |h: &Option<Vec<kentos_contracts::RingGeometry>>| h.as_ref().is_some_and(|h| !h.is_empty());
+    matches!(e, Entity::Polygon(p) if some(&p.holes) || p.parts.iter().flatten().any(|q| some(&q.holes)))
+}
+
 impl App {
     /// The scope's objects (web `scopeEntities`).
     pub(super) fn scope_entities(&self, scope: Scope) -> Vec<&Entity> {
@@ -462,10 +469,7 @@ impl App {
             .iter()
             .find(|(k, _)| *k == "dimension")
             .map_or(0, |(_, n)| *n);
-        let islands = list
-            .iter()
-            .filter(|e| matches!(e, Entity::Polygon(p) if p.holes.as_ref().is_some_and(|h| !h.is_empty())))
-            .count();
+        let islands = list.iter().filter(|e| islanded(e)).count();
         let data = list.iter().any(|e| {
             let b = e.base();
             b.label.is_some() || b.symbol.is_some() || !b.attrs.is_empty()
@@ -537,4 +541,26 @@ impl App {
 /// a length without its unit (the web's `dimensionText`).
 pub fn dimension_text(format: &Format, prefix: &str, unit: &str, value: f64) -> String {
     format.dimension(prefix, unit, value)
+}
+
+#[cfg(test)]
+mod tests {
+    use kentos_contracts::Entity;
+
+    /// An area whose only hole is in a later part has islands (docs/adr/0143).
+    #[test]
+    fn a_hole_in_any_part_is_an_island() {
+        let area = |parts: &str| -> Entity {
+            serde_json::from_str(&format!(
+                r#"{{"kind":"polygon","id":1,"layerId":"a","attrs":{{}},"pts":[{{"x":0,"y":0}},{{"x":9,"y":0}},{{"x":9,"y":9}}]{parts}}}"#
+            ))
+            .expect("an area")
+        };
+        assert!(!super::islanded(&area("")));
+        let hole = r#""holes":[{"pts":[{"x":21,"y":1},{"x":22,"y":1},{"x":22,"y":2}]}]"#;
+        let part = format!(
+            r#","parts":[{{"pts":[{{"x":20,"y":0}},{{"x":29,"y":0}},{{"x":29,"y":9}}],{hole}}}]"#
+        );
+        assert!(super::islanded(&area(&part)));
+    }
 }

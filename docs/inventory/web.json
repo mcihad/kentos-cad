@@ -73,23 +73,23 @@
       "pending": 0
     },
     "commandsWithoutPlace": [],
-    "commandsWithoutTests": 65,
-    "commandsOnDesktop": 171,
+    "commandsWithoutTests": 63,
+    "commandsOnDesktop": 173,
     "desktop": {
       "commands": {
         "total": 191,
-        "implemented": 171,
+        "implemented": 173,
         "partial": 0,
         "pending": 13,
-        "none": 2,
+        "none": 0,
         "n/a": 5
       },
       "tools": {
         "total": 79,
-        "implemented": 75,
+        "implemented": 77,
         "partial": 0,
         "pending": 2,
-        "none": 2,
+        "none": 0,
         "n/a": 0
       },
       "processing": {
@@ -4259,9 +4259,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/areas.json"
+      ]
     },
     {
       "id": "tool.partsSplit",
@@ -4289,9 +4291,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/areas.json"
+      ]
     },
     {
       "id": "tool.perpIn",
@@ -7664,9 +7668,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/areas.json"
+      ]
     },
     {
       "id": "partsSplit",
@@ -7687,9 +7693,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/areas.json"
+      ]
     },
     {
       "id": "perpIn",

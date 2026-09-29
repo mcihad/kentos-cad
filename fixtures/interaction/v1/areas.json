@@ -2,7 +2,7 @@
   "format": "kentos.interaction-trace",
   "version": 1,
   "id": "areas",
-  "title": "Alan işlemleri: iki parseli tıklayarak seçip birleştirme ve geri alma; alanı tıklanan noktalarla bölme; iki seçimle alan çıkarma; çizgilerin kapattığı yerin içine tıklayarak alan; alanı delikli çoklu çizgilere çevirme",
+  "title": "Alan işlemleri: iki parseli tıklayarak seçip birleştirme ve geri alma; alanı tıklanan noktalarla bölme; iki seçimle alan çıkarma; çizgilerin kapattığı yerin içine tıklayarak alan; alanı delikli çoklu çizgilere çevirme; değmeyen iki alanı tek, çok parçalı alanda birleştirip parçalarına ayırma ve geri alma (ADR 0143)",
   "source": "Web'in alan araçları (areaTools.ts: AreaUnionTool, AreaSplitTool, AreaSubtractTool, BoundaryTool, ToPolylineTool), ADR 0065",
   "covers": ["UX-01", "UX-09"],
   "document": "areas.kcad",
@@ -38,6 +38,14 @@
     { "key": "Esc", "expect": { "selected": [] } },
     { "run": "tool.toPolyline", "expect": { "tool": "toPolyline" } },
     { "click": [20, -7], "note": "Delikli parsel seçilir." },
-    { "key": "Enter", "note": "Dış halka parselin kendisi, delik ayrı çoklu çizgi.", "expect": { "tool": "select", "entities": 12, "log": "success" } }
+    { "key": "Enter", "note": "Dış halka parselin kendisi, delik ayrı çoklu çizgi.", "expect": { "tool": "select", "entities": 12, "log": "success" } },
+    { "key": "Esc", "note": "Esc seçimi bırakır.", "expect": { "selected": [] } },
+    { "run": "tool.partsJoin", "note": "Parçaları birleştir: seçim yokken araç önce seçtirir (Alan birleştir gibi).", "expect": { "tool": "partsJoin", "entities": 12 } },
+    { "click": [2, 8], "note": "Parsel 1 seçilir.", "expect": { "selected": [1] } },
+    { "click": [-23, -10], "note": "Ona değmeyen, çizgilerin kapattığı alan da seçilir.", "expect": { "selected": [1, 14] } },
+    { "key": "Enter", "note": "Değmeyen iki alan tek, iki parçalı alan olur: ilk seçilen yerini ve kimliğini verir, ikincisi silinir.", "expect": { "tool": "select", "entities": 11, "selected": [1], "log": "success" } },
+    { "run": "tool.partsSplit", "note": "Parçalara ayır: seçili çok parçalı alan hemen ayrılır; ilk parça yerinde kalır, ikinci parça yeni alan olur.", "expect": { "tool": "select", "entities": 12, "log": "success" } },
+    { "key": "Ctrl+Z", "note": "Tek adım: “Parçalara ayır”.", "expect": { "entities": 11, "canRedo": true } },
+    { "key": "Ctrl+Z", "note": "Tek adım: “Parçaları birleştir”; ikinci alan yerine döner.", "expect": { "entities": 12, "canRedo": true } }
   ]
 }

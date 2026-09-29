@@ -73,7 +73,8 @@ fn closest(name: &str) -> Icon {
         | "trim" | "break" => Icon::Line,
         "polyline" | "spline" | "join" | "toPolyline" | "offset" | "vertex" => Icon::Polyline,
         "polygon" | "area" | "areaUnion" | "areaIntersect" | "areaSubtract" | "areaSplit"
-        | "boundary" | "toArea" | "parcel" | "subdivide" | "hatch" | "revcloud" => Icon::Polygon,
+        | "partsJoin" | "partsSplit" | "boundary" | "toArea" | "parcel" | "subdivide" | "hatch"
+        | "revcloud" => Icon::Polygon,
         "rectangle" | "rectangle3" | "regularPolygon" | "array" | "arrayPolar" | "align" => {
             Icon::Rectangle
         }
