@@ -4,21 +4,21 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 188 | 175 | 0 | 13 |
-| Araçlar | 76 | 74 | 0 | 2 |
+| Komutlar | 189 | 175 | 0 | 14 |
+| Araçlar | 77 | 74 | 0 | 3 |
 | İşlem araçları | 4 | 4 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
 | Çalışma modları | 5 | 3 | 0 | 2 |
 | Ayarlar | 68 | 68 | 0 | 0 |
 | Tarayıcı depoları | 10 | 10 | 0 | 0 |
-| `.kcad` alanları (v1 okunur, v2 yazılır) | 203 | 203 | 0 | 0 |
+| `.kcad` alanları (v1 okunur, v2 yazılır) | 207 | 207 | 0 | 0 |
 | Pencereler ve paneller | 65 | 65 | 0 | 0 |
 
 ## Kısmi (0)
 
 Yok.
 
-## Bekleyen (17)
+## Bekleyen (19)
 
 - Komutlar: `analysis.slope` Eğim analizi…
 - Komutlar: `analysis.volume` Hacim hesabı…
@@ -29,10 +29,12 @@ Yok.
 - Komutlar: `map.parcelReport` Parsel alan çizelgesi
 - Komutlar: `map.profile` Boy kesit al…
 - Komutlar: `map.sheet` Pafta bölümlemesi…
+- Komutlar: `tool.setElevation` Kot ver
 - Komutlar: `tool.stakeout` Aplikasyon
 - Komutlar: `tool.subdivide` İfraz
 - Komutlar: `workspace.disaster` Afet Analizi — Yakında
 - Komutlar: `workspace.plan3d` 3D Plan — Yakında
+- Araçlar: `setElevation` Kot ver
 - Araçlar: `stakeout` Aplikasyon — Aplikasyon aracı hazır değil. Hesap menüsündeki `calc.stakeout` penceresi ayrıdır ve çalışır.
 - Araçlar: `subdivide` İfraz — İfraz hesabı henüz yok. Alan ve hisse kuralları bağımsız referans ve kurum kabulü ister (CLAUDE.md §7, §23; TODOS.md GIS-06, GIS-13).
 - Çalışma modları: `disaster` Afet ve risk analizi
@@ -50,14 +52,14 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 170 | 0 | 0 | 13 | 5 | 188 |
-| Araçlar | 74 | 0 | 0 | 2 | 0 | 76 |
+| Komutlar | 170 | 0 | 1 | 13 | 5 | 189 |
+| Araçlar | 74 | 0 | 1 | 2 | 0 | 77 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
 | Çalışma modları | 3 | 0 | 0 | 2 | 0 | 5 |
 | Ayarlar | 59 | 0 | 0 | 0 | 9 | 68 |
 | Tarayıcı depoları | 8 | 0 | 0 | 0 | 2 | 10 |
-| `.kcad` alanları (v1 okunur, v2 yazılır) | 203 | 0 | 0 | 0 | 0 | 203 |
+| `.kcad` alanları (v1 okunur, v2 yazılır) | 207 | 0 | 0 | 0 | 0 | 207 |
 | Pencereler ve paneller | 59 | 2 | 0 | 0 | 4 | 65 |
 
 Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
@@ -91,8 +93,9 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (0 / 188; ayrıca 13 iki platformda da bekliyor)
+#### Komutlar (1 / 189; ayrıca 13 iki platformda da bekliyor)
 
+- `tool.setElevation` Kot ver
 - `analysis.slope` Eğim analizi… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `analysis.volume` Hacim hesabı… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `crs.transform` Datum dönüşümü (ED50 ↔ TUREF)… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
@@ -107,8 +110,9 @@ Kısmi olanlar notlarıyla; bölüm bölüm.
 - `workspace.disaster` Afet Analizi (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 - `workspace.plan3d` 3D Plan (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 
-#### Araçlar (0 / 76; ayrıca 2 iki platformda da bekliyor)
+#### Araçlar (1 / 77; ayrıca 2 iki platformda da bekliyor)
 
+- `setElevation` Kot ver
 - `stakeout` Aplikasyon (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)) — Aplikasyon aracı hazır değil. Hesap menüsündeki `calc.stakeout` penceresi ayrıdır ve çalışır.
 - `subdivide` İfraz (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)) — İfraz hesabı henüz yok. Alan ve hisse kuralları bağımsız referans ve kurum kabulü ister (CLAUDE.md §7, §23; TODOS.md GIS-06, GIS-13).
 
@@ -133,7 +137,7 @@ Yok.
 
 Yok.
 
-#### `.kcad` alanları (v1 okunur, v2 yazılır) (0 / 203)
+#### `.kcad` alanları (v1 okunur, v2 yazılır) (0 / 207)
 
 Yok.
 
@@ -144,4 +148,4 @@ Yok.
 
 ## Test başvurusu
 
-62 / 188 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+63 / 189 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

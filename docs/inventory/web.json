@@ -19,16 +19,16 @@
   },
   "summary": {
     "commands": {
-      "total": 188,
+      "total": 189,
       "implemented": 175,
       "partial": 0,
-      "pending": 13
+      "pending": 14
     },
     "tools": {
-      "total": 76,
+      "total": 77,
       "implemented": 74,
       "partial": 0,
-      "pending": 2
+      "pending": 3
     },
     "processing": {
       "total": 4,
@@ -61,8 +61,8 @@
       "pending": 0
     },
     "fileFields": {
-      "total": 203,
-      "implemented": 203,
+      "total": 207,
+      "implemented": 207,
       "partial": 0,
       "pending": 0
     },
@@ -73,23 +73,23 @@
       "pending": 0
     },
     "commandsWithoutPlace": [],
-    "commandsWithoutTests": 62,
+    "commandsWithoutTests": 63,
     "commandsOnDesktop": 170,
     "desktop": {
       "commands": {
-        "total": 188,
+        "total": 189,
         "implemented": 170,
         "partial": 0,
         "pending": 13,
-        "none": 0,
+        "none": 1,
         "n/a": 5
       },
       "tools": {
-        "total": 76,
+        "total": 77,
         "implemented": 74,
         "partial": 0,
         "pending": 2,
-        "none": 0,
+        "none": 1,
         "n/a": 0
       },
       "processing": {
@@ -133,8 +133,8 @@
         "n/a": 2
       },
       "fileFields": {
-        "total": 203,
-        "implemented": 203,
+        "total": 207,
+        "implemented": 207,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -4914,6 +4914,36 @@
       ]
     },
     {
+      "id": "tool.setElevation",
+      "title": "Kot ver",
+      "category": "Düzenle",
+      "icon": "setElevation",
+      "description": "Seçili çizgi, çoklu çizgi, alan ve noktaların köşelerine kot verir: hepsine aynı değer, var olana fark ya da kotu silme.",
+      "aliases": [
+        "KOTVER",
+        "KTV",
+        "SETELEVATION"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Değiştir › Kot"
+      ],
+      "ribbon": [
+        "Değiştir › Kot"
+      ],
+      "quickAccess": false,
+      "toolbox": true,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
       "id": "tool.simplify",
       "title": "Sadeleştir",
       "category": "Düzenle",
@@ -8072,6 +8102,34 @@
         "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/ribbon.test.ts"
       ]
+    },
+    {
+      "id": "setElevation",
+      "label": "Kot ver",
+      "icon": "setElevation",
+      "group": "modify",
+      "section": "elevation",
+      "aliases": [
+        "KOTVER",
+        "KTV",
+        "SETELEVATION"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [
+        "Sabit",
+        "Artır",
+        "Sıfırla"
+      ],
+      "steps": 3,
+      "description": "Seçili çizgi, çoklu çizgi, alan ve noktaların köşelerine kot verir: hepsine aynı değer, var olana fark ya da kotu silme.",
+      "productCommand": "cad.entities.edit",
+      "status": "pending",
+      "platforms": {
+        "web": "pending",
+        "desktop": "none"
+      },
+      "tests": []
     },
     {
       "id": "simplify",
@@ -11953,6 +12011,32 @@
       }
     },
     {
+      "id": "LineEntity.za",
+      "contract": "LineEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "za",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LineEntity.zb",
+      "contract": "LineEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "zb",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "LineType",
       "contract": "LineType",
       "rust": "crates/shared/contracts/src/layer.rs",
@@ -12130,6 +12214,19 @@
       "rust": "crates/shared/contracts/src/entity.rs",
       "field": "symbol",
       "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "PathEntity.zs",
+      "contract": "PathEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "zs",
+      "type": "Array<number | null>",
       "optional": true,
       "status": "implemented",
       "platforms": {
@@ -12456,6 +12553,19 @@
       "field": "pts",
       "type": "Array<Vec2>",
       "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RingGeometry.zs",
+      "contract": "RingGeometry",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "zs",
+      "type": "Array<number | null>",
+      "optional": true,
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -13893,6 +14003,12 @@
             ]
           },
           {
+            "label": "Kot",
+            "items": [
+              "tool.setElevation"
+            ]
+          },
+          {
             "label": "",
             "items": [
               {
@@ -15136,6 +15252,39 @@
               "tool.simplify",
               "tool.cleanup"
             ],
+            "keep": false
+          },
+          {
+            "label": "Kot",
+            "icon": "more",
+            "items": [
+              {
+                "split": [
+                  {
+                    "command": "tool.setElevation",
+                    "title": "Kot ver",
+                    "label": "Sabit"
+                  },
+                  {
+                    "command": "tool.setElevation",
+                    "option": "A",
+                    "title": "Kot ver",
+                    "label": "Artır",
+                    "description": "Her köşenin kotuna yazılan farkı ekler; kotsuz köşe kotsuz kalır"
+                  },
+                  {
+                    "command": "tool.setElevation",
+                    "option": "S",
+                    "title": "Kot ver",
+                    "label": "Sıfırla",
+                    "description": "Köşelerin kotunu siler: kot yok, 0 değil"
+                  }
+                ],
+                "key": "setElevation",
+                "size": "large"
+              }
+            ],
+            "overflow": [],
             "keep": false
           },
           {
@@ -16962,6 +17111,39 @@
               "keep": false
             },
             {
+              "label": "Kot",
+              "icon": "more",
+              "items": [
+                {
+                  "split": [
+                    {
+                      "command": "tool.setElevation",
+                      "title": "Kot ver",
+                      "label": "Sabit"
+                    },
+                    {
+                      "command": "tool.setElevation",
+                      "option": "A",
+                      "title": "Kot ver",
+                      "label": "Artır",
+                      "description": "Her köşenin kotuna yazılan farkı ekler; kotsuz köşe kotsuz kalır"
+                    },
+                    {
+                      "command": "tool.setElevation",
+                      "option": "S",
+                      "title": "Kot ver",
+                      "label": "Sıfırla",
+                      "description": "Köşelerin kotunu siler: kot yok, 0 değil"
+                    }
+                  ],
+                  "key": "setElevation",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
               "label": "Oluştur ve çevir",
               "icon": "more",
               "items": [
@@ -18377,6 +18559,39 @@
               "keep": false
             },
             {
+              "label": "Kot",
+              "icon": "more",
+              "items": [
+                {
+                  "split": [
+                    {
+                      "command": "tool.setElevation",
+                      "title": "Kot ver",
+                      "label": "Sabit"
+                    },
+                    {
+                      "command": "tool.setElevation",
+                      "option": "A",
+                      "title": "Kot ver",
+                      "label": "Artır",
+                      "description": "Her köşenin kotuna yazılan farkı ekler; kotsuz köşe kotsuz kalır"
+                    },
+                    {
+                      "command": "tool.setElevation",
+                      "option": "S",
+                      "title": "Kot ver",
+                      "label": "Sıfırla",
+                      "description": "Köşelerin kotunu siler: kot yok, 0 değil"
+                    }
+                  ],
+                  "key": "setElevation",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
               "label": "Oluştur ve çevir",
               "icon": "more",
               "items": [
@@ -19197,6 +19412,7 @@
     "split": "<path d=\"M3 14.5 7.3 12.2M9.2 11.2l1.6-.8M12.7 9.4 17 7.1\"/><path d=\"m7.4 9.4 1.9 4M10.6 7.6l1.9 4\" stroke-width=\"1.1\"/><rect x=\"1.5\" y=\"13\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15.5\" y=\"5.6\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "cleanup": "<path d=\"M14.5 2.8 10.4 9\"/><path d=\"M6.4 9.4h7.2l1.2 7.1H5.2z\"/><path d=\"M8.1 12.2v4.3M10 12.2v4.3M11.9 12.2v4.3\"/>",
     "matchProperties": "<path d=\"m11.4 3.2 5.4 5.4-5.1 5.1-5.4-5.4z\"/><path d=\"M6.3 8.3 3.2 16.8l8.5-3.1\"/><path d=\"M4.6 12.9 7 15.4\"/>",
+    "setElevation": "<path d=\"M3 16.5h14\"/><path d=\"M10 13.5V3.5\"/><path d=\"m7 6.5 3-3 3 3\"/><path d=\"M13.5 13.5h3M13.5 10.5h2\" stroke-width=\"1.1\"/><rect x=\"8.5\" y=\"12\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "sector": "<path d=\"M5 15.5V4.5a11 11 0 0 1 11 11z\" fill=\"currentColor\" fill-opacity=\".14\"/><rect x=\"3.5\" y=\"14\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"3.5\" y=\"3\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"14.5\" y=\"14\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "pointsBetween": "<path d=\"M3 14 17 6\"/><circle cx=\"7.7\" cy=\"11.3\" r=\"1.25\"/><circle cx=\"10\" cy=\"10\" r=\"1.25\"/><circle cx=\"12.3\" cy=\"8.7\" r=\"1.25\"/><rect x=\"1.5\" y=\"12.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15.5\" y=\"4.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "intersectPoint": "<circle cx=\"7.5\" cy=\"11\" r=\"4.6\"/><circle cx=\"12.5\" cy=\"11\" r=\"4.6\"/><circle cx=\"10\" cy=\"7.15\" r=\"1.4\" fill=\"currentColor\"/><rect x=\"6\" y=\"9.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"11\" y=\"9.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",

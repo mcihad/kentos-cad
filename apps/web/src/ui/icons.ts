@@ -50,6 +50,7 @@ export const ICONS = {
   split: `<path d="M3 14.5 7.3 12.2M9.2 11.2l1.6-.8M12.7 9.4 17 7.1"/><path d="m7.4 9.4 1.9 4M10.6 7.6l1.9 4" stroke-width="1.1"/>${grip(3, 14.5)}${grip(17, 7.1)}`,
   cleanup: '<path d="M14.5 2.8 10.4 9"/><path d="M6.4 9.4h7.2l1.2 7.1H5.2z"/><path d="M8.1 12.2v4.3M10 12.2v4.3M11.9 12.2v4.3"/>',
   matchProperties: '<path d="m11.4 3.2 5.4 5.4-5.1 5.1-5.4-5.4z"/><path d="M6.3 8.3 3.2 16.8l8.5-3.1"/><path d="M4.6 12.9 7 15.4"/>',
+  setElevation: `<path d="M3 16.5h14"/><path d="M10 13.5V3.5"/><path d="m7 6.5 3-3 3 3"/><path d="M13.5 13.5h3M13.5 10.5h2" stroke-width="1.1"/>${grip(10, 13.5)}`,
   sector: `<path d="M5 15.5V4.5a11 11 0 0 1 11 11z" fill="currentColor" fill-opacity=".14"/>${grip(5, 15.5)}${grip(5, 4.5)}${grip(16, 15.5)}`,
   pointsBetween: `<path d="M3 14 17 6"/><circle cx="7.7" cy="11.3" r="1.25"/><circle cx="10" cy="10" r="1.25"/><circle cx="12.3" cy="8.7" r="1.25"/>${grip(3, 14)}${grip(17, 6)}`,
   intersectPoint: `<circle cx="7.5" cy="11" r="4.6"/><circle cx="12.5" cy="11" r="4.6"/><circle cx="10" cy="7.15" r="1.4" fill="currentColor"/>${grip(7.5, 11)}${grip(12.5, 11)}`,

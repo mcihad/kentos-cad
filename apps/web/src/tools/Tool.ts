@@ -109,7 +109,7 @@ export const TOOL_GROUP_LABEL: Record<ToolGroup, string> = {
 export const TOOL_SECTIONS = {
   draw: { line: 'Çizgi', curve: 'Eğri', shape: 'Şekil', construction: 'Yardımcı', point: 'Nokta' },
   transform: { move: 'Dönüştür', array: 'Dizi' },
-  modify: { edge: 'Kenar', corner: 'Köşe', object: 'Nesne' },
+  modify: { edge: 'Kenar', corner: 'Köşe', object: 'Nesne', elevation: 'Kot' },
   area: { create: 'Oluştur ve çevir', boolean: 'Birleştir ve böl' },
   map: { parcel: 'Parsel', field: 'Arazi', measure: 'Ölçme' },
 } as const satisfies Partial<Record<ToolGroup, Record<string, string>>>;
