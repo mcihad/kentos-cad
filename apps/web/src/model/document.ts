@@ -873,11 +873,13 @@ export class CadDocument {
  * when nothing would change, which is not an edit (docs/adr/0020). Holes
  * belong to polygons and a hatch's islands: a polygon that trimming or
  * breaking opens into a polyline loses them, a hatch that moves keeps them.
+ * Parts belong to polygons only (docs/adr/0143).
  */
 function updateOp(before: DrawingEntity | undefined, patch: Partial<Entity>): Extract<Op, { type: 'update' }> | null {
   if (!before) return null;
   const after = { ...before, ...patch, id: before.id, uid: before.uid } as DrawingEntity;
   if (after.kind !== 'polygon' && after.kind !== 'hatch' && 'holes' in after) delete (after as { holes?: unknown }).holes;
+  if (after.kind !== 'polygon' && 'parts' in after) delete (after as { parts?: unknown }).parts;
   return sameJson(before, after) ? null : { type: 'update', before, after };
 }
 

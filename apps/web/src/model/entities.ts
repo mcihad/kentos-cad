@@ -83,6 +83,18 @@ export interface PolylineEntity extends EntityBase {
    * one (not 0); undefined when no vertex has one (docs/adr/0142).
    */
   zs?: (number | null)[];
+  /**
+   * A multi-part area's parts past its first, whose own are the fields above
+   * (docs/adr/0143); undefined for a one-part area, never on a polyline.
+   */
+  parts?: AreaPart[];
+}
+/** A part of a multi-part area past its first: its ring, arcs, holes and elevations, as a polygon's own. */
+export interface AreaPart {
+  pts: Vec2[];
+  bulges?: number[];
+  holes?: RingGeometry[];
+  zs?: (number | null)[];
 }
 /** A closed ring of vertices with DXF bulges (outer boundary or hole). */
 export interface RingGeometry {

@@ -846,6 +846,40 @@ class ArcPlan(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class AreaPart(_Model):
+    """A part of a multi-part area past its first (docs/adr/0143): its outer
+    ring in vertex + bulge form, its holes and its vertices' elevations, as
+    the area's own fields hold the first part's.
+    Attributes:
+        zs: Each vertex's elevation, as the area's own `zs` (docs/adr/0142).
+    """
+    pts: list[Vec2]
+    bulges: list[float] | None | Unset = UNSET
+    holes: list[RingGeometry] | None | Unset = UNSET
+    zs: list[float | None] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        if self.bulges is not UNSET:
+            out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
+        if self.holes is not UNSET:
+            out["holes"] = None if self.holes is None else [e0.to_json() for e0 in self.holes]
+        if self.zs is not UNSET:
+            out["zs"] = None if self.zs is None else [None if e0 is None else float(e0) for e0 in self.zs]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AreaPart:
+        return cls(
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
+            holes=UNSET if "holes" not in data else None if data["holes"] is None else [RingGeometry.from_json(e0) for e0 in data["holes"]],
+            zs=UNSET if "zs" not in data else None if data["zs"] is None else [None if e0 is None else float(e0) for e0 in data["zs"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class Bounds(_Model):
     min_x: float
     min_y: float
@@ -2804,6 +2838,8 @@ class PathEntity(_Model):
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
             object (docs/adr/0139).
+        parts: A polygon's parts past its first, whose own are the fields above;
+            absent for a one-part area, never on a polyline (docs/adr/0143).
         symbol: Library symbol overriding the layer's style.
         zs: Each vertex's elevation, m, as many as `pts`; `null` for a vertex
             without one (not 0); absent when no vertex has one (docs/adr/0142).
@@ -2817,6 +2853,7 @@ class PathEntity(_Model):
     holes: list[RingGeometry] | None | Unset = UNSET
     label: str | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
+    parts: list[AreaPart] | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     zs: list[float | None] | None | Unset = UNSET
 
@@ -2836,6 +2873,8 @@ class PathEntity(_Model):
             out["label"] = self.label
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.parts is not UNSET:
+            out["parts"] = None if self.parts is None else [e0.to_json() for e0 in self.parts]
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         if self.zs is not UNSET:
@@ -2854,6 +2893,7 @@ class PathEntity(_Model):
             holes=UNSET if "holes" not in data else None if data["holes"] is None else [RingGeometry.from_json(e0) for e0 in data["holes"]],
             label=data.get("label", UNSET),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            parts=UNSET if "parts" not in data else None if data["parts"] is None else [AreaPart.from_json(e0) for e0 in data["parts"]],
             symbol=data.get("symbol", UNSET),
             zs=UNSET if "zs" not in data else None if data["zs"] is None else [None if e0 is None else float(e0) for e0 in data["zs"]],
         )
@@ -5186,6 +5226,7 @@ __all__ = [
     "ArcEntity",
     "ArcEntityGeometry",
     "ArcPlan",
+    "AreaPart",
     "AreaUnit",
     "AreaUnitName",
     "ArrayLayout",

@@ -377,6 +377,18 @@ function elevationsAt(v: unknown, n: number, w: string, what: string): void {
   });
 }
 
+/** A polygon's or a part's holes (`prefix` names the part): rings of 3 or more vertices, with bulges and elevations. */
+function holesAt(holes: unknown[], w: string, prefix: string): void {
+  holes.forEach((h, i) => {
+    const name = `${prefix}ada ${i + 1}`;
+    if (!isObj(h)) fail(at(w, name), 'nesne olmalı');
+    const ring = h as Record<string, unknown>;
+    const k = pointsAt(ring.pts, w, name, 3);
+    if (ring.bulges !== undefined && numbersAt(ring.bulges, w, `${name} › bulge`) > k) fail(at(w, `${name} › bulge`), 'köşe sayısından uzun olamaz');
+    if (ring.zs !== undefined) elevationsAt(ring.zs, k, w, `${name} › kotlar`);
+  });
+}
+
 function entity(v: unknown, where: string, layers: ReadonlySet<string>, ids: Set<number>, keepUid = false): Entity {
   if (!isObj(v)) return fail(where, 'nesne olmalı');
   if (!keepUid && 'uid' in v) delete v.uid;
@@ -415,12 +427,22 @@ function entity(v: unknown, where: string, layers: ReadonlySet<string>, ids: Set
       if (v.zs !== undefined) elevationsAt(v.zs, n, w, 'kotlar');
       if (v.holes !== undefined) {
         if (kind !== 'polygon' || !Array.isArray(v.holes)) fail(at(w, 'adalar'), 'yalnızca kapalı alanda, liste olarak');
-        (v.holes as unknown[]).forEach((h, i) => {
-          if (!isObj(h)) fail(at(w, `ada ${i + 1}`), 'nesne olmalı');
-          const ring = h as Record<string, unknown>;
-          const k = pointsAt(ring.pts, w, `ada ${i + 1}`, 3);
-          if (ring.bulges !== undefined && numbersAt(ring.bulges, w, `ada ${i + 1} › bulge`) > k) fail(at(w, `ada ${i + 1} › bulge`), 'köşe sayısından uzun olamaz');
-          if (ring.zs !== undefined) elevationsAt(ring.zs, k, w, `ada ${i + 1} › kotlar`);
+        holesAt(v.holes as unknown[], w, '');
+      }
+      // A multi-part area's other parts (docs/adr/0143): each as the area's own ring, with its holes.
+      if (v.parts !== undefined) {
+        if (kind !== 'polygon' || !Array.isArray(v.parts)) fail(at(w, 'parçalar'), 'yalnızca kapalı alanda, liste olarak');
+        (v.parts as unknown[]).forEach((p, i) => {
+          const name = `parça ${i + 2}`;
+          if (!isObj(p)) fail(at(w, name), 'nesne olmalı');
+          const part = p as Record<string, unknown>;
+          const k = pointsAt(part.pts, w, name, 2);
+          if (part.bulges !== undefined && numbersAt(part.bulges, w, `${name} › bulge`) > k) fail(at(w, `${name} › bulge`), 'köşe sayısından uzun olamaz');
+          if (part.zs !== undefined) elevationsAt(part.zs, k, w, `${name} › kotlar`);
+          if (part.holes !== undefined) {
+            if (!Array.isArray(part.holes)) fail(at(w, `${name} › adalar`), 'liste olmalı');
+            holesAt(part.holes as unknown[], w, `${name} › `);
+          }
         });
       }
       break;

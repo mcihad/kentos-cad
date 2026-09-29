@@ -1,23 +1,25 @@
-//! The objects of document schemas 2, 3 and 4 read from a payload
+//! The objects of document schemas 2 to 5 read from a payload
 //! (docs/specs/kcad-v2.md §6.6): each a one-key map, its kind and then its
 //! fields, read into the contract's `Entity` with the persistent id the file
 //! gives it; the ids are unique in a file. Schema 3 adds an object's own line
 //! weight (`lineWeight`, docs/adr/0139), schema 4 the vertex elevations (`za`,
-//! `zb`, `zs`, docs/adr/0142); in an older schema they are unknown fields.
+//! `zb`, `zs`, docs/adr/0142), schema 5 an area's parts (`parts`,
+//! docs/adr/0143); in an older schema they are unknown fields.
 
 use std::collections::{BTreeMap, HashSet};
 
 use kentos_contracts::{
-    ArcEntity, CircleEntity, ConstructionEntity, DimensionEntity, DimensionStyle, EllipseEntity,
-    Entity, EntityBase, EntityId, HatchEntity, HatchPattern, HatchPatternType, LineEntity,
-    MAX_LINE_WEIGHT, PathEntity, PointEntity, RingGeometry, SplineEntity, TextEntity, Vec2,
+    ArcEntity, AreaPart, CircleEntity, ConstructionEntity, DimensionEntity, DimensionStyle,
+    EllipseEntity, Entity, EntityBase, EntityId, HatchEntity, HatchPattern, HatchPatternType,
+    LineEntity, MAX_LINE_WEIGHT, PathEntity, PointEntity, RingGeometry, SplineEntity, TextEntity,
+    Vec2,
 };
 
 use super::{PREALLOCATE, floats, id16, list, map, named, point, points, required, text, unknown};
 use crate::cbor::{Reader, Seg};
 use crate::error::{Code, KcadError};
 use crate::watch::{EVERY, Step};
-use crate::{SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_LINE_WEIGHTS};
+use crate::{SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_PARTS};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Kind {
@@ -57,8 +59,10 @@ const KINDS: &[(&str, Kind)] = &[
 pub(super) struct Features {
     /// Schema 3 and up: an object's own line weight (`lineWeight`).
     weights: bool,
-    /// Schema 4: the vertex elevations (`za`, `zb`, `zs`).
+    /// Schema 4 and up: the vertex elevations (`za`, `zb`, `zs`).
     elevations: bool,
+    /// Schema 5: an area's parts (`parts`).
+    parts: bool,
 }
 
 impl Features {
@@ -66,6 +70,7 @@ impl Features {
         Self {
             weights: schema >= SCHEMA_WITH_LINE_WEIGHTS,
             elevations: schema >= SCHEMA_WITH_ELEVATIONS,
+            parts: schema >= SCHEMA_WITH_PARTS,
         }
     }
 }
@@ -84,7 +89,9 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
             }
             Kind::Polyline => matches!(key, "pts" | "bulges") || (has.elevations && key == "zs"),
             Kind::Polygon => {
-                matches!(key, "pts" | "bulges" | "holes") || (has.elevations && key == "zs")
+                matches!(key, "pts" | "bulges" | "holes")
+                    || (has.elevations && key == "zs")
+                    || (has.parts && key == "parts")
             }
             Kind::Circle => matches!(key, "c" | "r"),
             Kind::Arc => matches!(key, "c" | "r" | "a0" | "a1"),
@@ -136,6 +143,7 @@ struct Fields {
     zs: Option<Vec<Option<f64>>>,
     zs_at: usize,
     rings: Option<Vec<RingGeometry>>,
+    parts: Option<Vec<AreaPart>>,
     loops: Option<Vec<Vec<Vec2>>>,
     closed: Option<bool>,
     text: Option<String>,
@@ -272,6 +280,7 @@ fn object(
             }
             "holes" if kind == Kind::Polygon => f.rings = Some(list(r, |r, _| ring(r, has))?),
             "holes" => f.loops = Some(list(r, |r, _| points(r))?),
+            "parts" => f.parts = Some(list(r, |r, _| part(r, has))?),
             "closed" => f.closed = Some(r.bool()?),
             "text" => f.text = Some(text(r)?),
             "style" => {
@@ -337,6 +346,7 @@ fn build(
                 bulges: f.bulges.take(),
                 holes: f.rings.take(),
                 zs,
+                parts: f.parts.take(),
             };
             if kind == Kind::Polygon {
                 Entity::Polygon(path)
@@ -426,6 +436,33 @@ fn ring(r: &mut Reader<'_>, has: Features) -> Result<RingGeometry, KcadError> {
     let pts = required(r, pts, "pts")?;
     let zs = as_long_as(r, zs, zs_at, pts.len())?;
     Ok(RingGeometry { pts, bulges, zs })
+}
+
+/// A part of a multi-part area past its first (§6.6, docs/adr/0143): its
+/// ring, arcs, holes and elevations, as the area's own fields are.
+fn part(r: &mut Reader<'_>, has: Features) -> Result<AreaPart, KcadError> {
+    let (mut pts, mut bulges, mut holes, mut zs, mut zs_at) = (None, None, None, None, 0);
+    map(r, |r, key| {
+        match key {
+            "pts" => pts = Some(points(r)?),
+            "bulges" => bulges = Some(floats(r)?),
+            "holes" => holes = Some(list(r, |r, _| ring(r, has))?),
+            "zs" if has.elevations => {
+                zs_at = r.position();
+                zs = Some(elevations(r)?);
+            }
+            _ => return Err(unknown(r)),
+        }
+        Ok(())
+    })?;
+    let pts = required(r, pts, "pts")?;
+    let zs = as_long_as(r, zs, zs_at, pts.len())?;
+    Ok(AreaPart {
+        pts,
+        bulges,
+        holes,
+        zs,
+    })
 }
 
 /// A list of elevations: metres, `null` for a vertex without one (§6.6).

@@ -255,10 +255,19 @@ def ring(r):
     return cmap(fields(r, {"pts": (points, True), "bulges": (floats, False), "zs": (elevations, False)}, "ring"))
 
 
+def part(pt):
+    """A part of a multi-part area past its first (schema 5, docs/adr/0143): its ring, arcs, holes and elevations."""
+    assert "zs" not in pt or len(pt["zs"]) == len(pt["pts"]), "parça: kot sayısı köşe sayısına eşit olmalı"
+    table = {"pts": (points, True), "bulges": (floats, False), "holes": (lambda h: array([ring(r) for r in h]), False), "zs": (elevations, False)}
+    return cmap(fields(pt, table, "part"))
+
+
 def path_fields(holes):
     table = {"pts": (points, True), "bulges": (floats, False), "zs": (elevations, False)}
     if holes:
         table["holes"] = (lambda h: array([ring(r) for r in h]), False)
+        # Schema 5 (docs/adr/0143): only an area has parts.
+        table["parts"] = (lambda ps: array([part(pt) for pt in ps]), False)
     return table
 
 
@@ -339,13 +348,16 @@ def document(d):
 
 
 def schema_of(entities):
-    """The oldest schema that holds the objects: 4 with a vertex elevation (docs/adr/0142), 3 with an object's own
-    line weight (docs/adr/0139), else 2: a drawing without either stays as it was, byte for byte."""
+    """The oldest schema that holds the objects: 5 with an area's parts (docs/adr/0143), 4 with a vertex elevation
+    (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without any stays as it
+    was, byte for byte."""
 
     def elevated(e):
         holes = e.get("holes", []) if e["kind"] == "polygon" else []
         return any(k in e for k in ("za", "zb", "zs")) or any("zs" in h for h in holes)
 
+    if any(e["kind"] == "polygon" and "parts" in e for e in entities):
+        return 5
     if any(elevated(e) for e in entities):
         return 4
     return 3 if any("lineWeight" in e for e in entities) else 2
@@ -521,7 +533,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-5.kcad"] = container(root(cmap(parts), version=b"\x05"))
+    files["schema-version-6.kcad"] = container(root(cmap(parts), version=b"\x06"))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -561,6 +573,13 @@ def broken(minimal_content, minimal_file):
     files["elevation-infinity.kcad"] = in_schema(4, line(zb=infinity))
     files["elevation-int.kcad"] = in_schema(4, path("polyline", 3, zs=array([f64(101.5), uint(102), f64(103.25)])))
     files["line-elevation-null.kcad"] = in_schema(4, line(za=b"\xf6"))
+    # An area's parts are schema 5's (docs/adr/0143): in schema 4 an unknown field, on a polyline too; a part's `zs`
+    # has one entry per vertex, as the area's own.
+    square = lambda dx: array([point({"x": one["p"]["x"] + dx + x, "y": one["p"]["y"] + y}) for x, y in ((0, 0), (1, 0), (1, 1), (0, 1))])
+    files["parts-in-schema-4.kcad"] = in_schema(4, path("polygon", 4, parts=array([cmap({"pts": square(5)})])))
+    files["parts-on-polyline.kcad"] = in_schema(5, path("polyline", 3, parts=array([cmap({"pts": square(5)})])))
+    files["part-elevation-wrong-length.kcad"] = in_schema(5, path("polygon", 4, parts=array([cmap({"pts": square(5), "zs": elevations([1.0, 2.0])})])))
+    files["part-without-points.kcad"] = in_schema(5, path("polygon", 4, parts=array([cmap({"bulges": array([f64(0.5)])})])))
     files["unknown-kind.kcad"] = container(with_parts({**parts, "entities": array([cmap({"block": cmap({**body, "uid": blob(uid_bytes(m["uids"][0]))})})])}))
     files["two-kinds.kcad"] = container(with_parts({**parts, "entities": array([cmap({"line": cmap({}), "point": cmap({**body, "uid": blob(uid_bytes(m["uids"][0]))})})])}))
     files["point-three-numbers.kcad"] = container(with_parts({**parts, "origin": array([f64(1.0), f64(2.0), f64(3.0)])}))
@@ -613,6 +632,7 @@ def build():
     out["migrated.kcad"] = container(document(moved))
     out["line-weights.kcad"] = container(document(load("line-weights.json")))
     out["elevations.kcad"] = container(document(load("elevations.json")))
+    out["parts.kcad"] = container(document(load("parts.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

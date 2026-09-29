@@ -156,6 +156,7 @@ impl Collect {
                 bulges: None,
                 holes: None,
                 zs: r.zs,
+                parts: None,
             }),
             Shape::Polygon(r, holes) => Entity::Polygon(PathEntity {
                 base,
@@ -172,6 +173,7 @@ impl Collect {
                         .collect()
                 }),
                 zs: r.zs,
+                parts: None,
             }),
         });
     }

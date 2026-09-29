@@ -61,8 +61,8 @@
       "pending": 0
     },
     "fileFields": {
-      "total": 207,
-      "implemented": 207,
+      "total": 212,
+      "implemented": 212,
       "partial": 0,
       "pending": 0
     },
@@ -133,8 +133,8 @@
         "n/a": 2
       },
       "fileFields": {
-        "total": 207,
-        "implemented": 207,
+        "total": 212,
+        "implemented": 212,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -10265,6 +10265,58 @@
       }
     },
     {
+      "id": "AreaPart.bulges",
+      "contract": "AreaPart",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "bulges",
+      "type": "Array<number>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "AreaPart.holes",
+      "contract": "AreaPart",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "holes",
+      "type": "Array<RingGeometry>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "AreaPart.pts",
+      "contract": "AreaPart",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "pts",
+      "type": "Array<Vec2>",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "AreaPart.zs",
+      "contract": "AreaPart",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "zs",
+      "type": "Array<number | null>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "AreaUnit",
       "contract": "AreaUnit",
       "rust": "crates/shared/contracts/src/document.rs",
@@ -12188,6 +12240,19 @@
       "rust": "crates/shared/contracts/src/entity.rs",
       "field": "lineWeight",
       "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "PathEntity.parts",
+      "contract": "PathEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "parts",
+      "type": "Array<AreaPart>",
       "optional": true,
       "status": "implemented",
       "platforms": {

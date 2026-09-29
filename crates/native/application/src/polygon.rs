@@ -205,5 +205,6 @@ fn polygon(input: PolygonCreate, id: u32) -> Entity {
         bulges: input.bulges,
         holes: input.holes,
         zs: None,
+        parts: None,
     })
 }

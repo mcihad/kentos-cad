@@ -1,6 +1,6 @@
 //! The objects written in document schema 2, 3 when one has its own line
-//! weight, or 4 when one has vertex elevations (docs/specs/kcad-v2.md §6.6,
-//! docs/adr/0139, docs/adr/0142):
+//! weight, 4 when one has vertex elevations, or 5 when an area has parts
+//! (docs/specs/kcad-v2.md §6.6, docs/adr/0139, docs/adr/0142, docs/adr/0143):
 //! each a one-key map, its kind and then its fields, whose keys are sorted per
 //! object (they depend on the kind); every object with its persistent id,
 //! unique and not nil.
@@ -8,7 +8,8 @@
 use std::collections::{BTreeMap, HashSet};
 
 use kentos_contracts::{
-    DocumentSnapshotV2, Entity, EntityId, HatchPattern, MAX_LINE_WEIGHT, RingGeometry, Vec2,
+    AreaPart, DocumentSnapshotV2, Entity, EntityId, HatchPattern, MAX_LINE_WEIGHT, RingGeometry,
+    Vec2,
 };
 
 use super::Encoder;
@@ -31,6 +32,8 @@ enum Val<'d> {
     /// Elevations and the number of vertices they belong to (one each, §6.6).
     Elevations(&'d [Option<f64>], usize),
     Rings(&'d [RingGeometry]),
+    /// A multi-part area's parts past its first (§6.6).
+    Parts(&'d [AreaPart]),
     Loops(&'d [Vec<Vec2>]),
     Pattern(&'d HatchPattern),
 }
@@ -133,6 +136,16 @@ impl<'d> Encoder<'d> {
                     }
                     f.push(("holes", Val::Rings(h)));
                 }
+                if let Some(parts) = &e.parts {
+                    if matches!(entity, Entity::Polyline(_)) {
+                        self.path.push(Seg::Name(kind));
+                        return Err(self.fail(
+                            Code::BadValue,
+                            "çoklu çizginin parçası olamaz; yalnız kapalı alan çok parçalı olur",
+                        ));
+                    }
+                    f.push(("parts", Val::Parts(parts)));
+                }
             }
             Entity::Circle(e) => {
                 f.push(("c", Val::Point(&e.c)));
@@ -234,6 +247,32 @@ impl<'d> Encoder<'d> {
         Ok(())
     }
 
+    /// A polygon's (or a part's) holes, each ring's keys in encoded order.
+    fn rings(&mut self, rings: &'d [RingGeometry]) -> Result<(), KcadError> {
+        self.open(rings.len(), false)?;
+        for (i, ring) in rings.iter().enumerate() {
+            self.at(Seg::Index(i), |e| {
+                let optional = usize::from(ring.bulges.is_some()) + usize::from(ring.zs.is_some());
+                e.open(1 + optional, true)?;
+                // zs (2), pts (3), bulges (6).
+                if let Some(zs) = &ring.zs {
+                    e.key("zs");
+                    e.at(Seg::Name("zs"), |e| e.elevations(zs, ring.pts.len()))?;
+                }
+                e.key("pts");
+                e.at(Seg::Name("pts"), |e| e.points(&ring.pts))?;
+                if let Some(b) = &ring.bulges {
+                    e.key("bulges");
+                    e.at(Seg::Name("bulges"), |e| e.floats(b))?;
+                }
+                e.close();
+                Ok(())
+            })?;
+        }
+        self.close();
+        Ok(())
+    }
+
     fn val(&mut self, v: Val<'d>) -> Result<(), KcadError> {
         match v {
             Val::Text(t) => self.text(t),
@@ -262,21 +301,27 @@ impl<'d> Encoder<'d> {
                 self.close();
                 Ok(())
             }
-            Val::Rings(rings) => {
-                self.open(rings.len(), false)?;
-                for (i, ring) in rings.iter().enumerate() {
+            Val::Rings(rings) => self.rings(rings),
+            Val::Parts(parts) => {
+                self.open(parts.len(), false)?;
+                for (i, part) in parts.iter().enumerate() {
                     self.at(Seg::Index(i), |e| {
-                        let optional =
-                            usize::from(ring.bulges.is_some()) + usize::from(ring.zs.is_some());
+                        let optional = usize::from(part.zs.is_some())
+                            + usize::from(part.holes.is_some())
+                            + usize::from(part.bulges.is_some());
                         e.open(1 + optional, true)?;
-                        // zs (2), pts (3), bulges (6).
-                        if let Some(zs) = &ring.zs {
+                        // zs (2), pts (3), holes (5), bulges (6).
+                        if let Some(zs) = &part.zs {
                             e.key("zs");
-                            e.at(Seg::Name("zs"), |e| e.elevations(zs, ring.pts.len()))?;
+                            e.at(Seg::Name("zs"), |e| e.elevations(zs, part.pts.len()))?;
                         }
                         e.key("pts");
-                        e.at(Seg::Name("pts"), |e| e.points(&ring.pts))?;
-                        if let Some(b) = &ring.bulges {
+                        e.at(Seg::Name("pts"), |e| e.points(&part.pts))?;
+                        if let Some(h) = &part.holes {
+                            e.key("holes");
+                            e.at(Seg::Name("holes"), |e| e.rings(h))?;
+                        }
+                        if let Some(b) = &part.bulges {
                             e.key("bulges");
                             e.at(Seg::Name("bulges"), |e| e.floats(b))?;
                         }

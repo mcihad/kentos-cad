@@ -145,6 +145,7 @@ fn objects() -> Vec<Entity> {
             bulges: Some(vec![0.0, 0.4142135623730951, 0.0]),
             holes: None,
             zs: None,
+            parts: None,
         }),
         Entity::Polyline(PathEntity {
             base: base("yol"),
@@ -152,6 +153,7 @@ fn objects() -> Vec<Entity> {
             bulges: None,
             holes: None,
             zs: None,
+            parts: None,
         }),
         Entity::Polygon(PathEntity {
             base: with("parsel", |b| {
@@ -176,6 +178,7 @@ fn objects() -> Vec<Entity> {
                 },
             ]),
             zs: None,
+            parts: None,
         }),
         Entity::Polygon(PathEntity {
             base: with("yapi", |b| b.color = Some("#7fb2e5".into())),
@@ -183,6 +186,7 @@ fn objects() -> Vec<Entity> {
             bulges: None,
             holes: None,
             zs: None,
+            parts: None,
         }),
         Entity::Circle(CircleEntity {
             base: base("parsel"),
@@ -1081,6 +1085,7 @@ fn elevated() -> Vec<Entity> {
             bulges: None,
             holes: None,
             zs: Some(vec![Some(10.0), None, Some(12.5 + third), Some(-3.0)]),
+            parts: None,
         }),
         Entity::Polyline(PathEntity {
             base: base("yol"),
@@ -1088,6 +1093,7 @@ fn elevated() -> Vec<Entity> {
             bulges: None,
             holes: None,
             zs: Some(vec![Some(0.0), Some(0.0), Some(0.0)]),
+            parts: None,
         }),
         // 5: an area whose outline has a vertex without a height, with a hole that has them and one that has none.
         Entity::Polygon(PathEntity {
@@ -1107,6 +1113,7 @@ fn elevated() -> Vec<Entity> {
                 },
             ]),
             zs: Some(vec![Some(100.0), Some(101.0), None, Some(103.0)]),
+            parts: None,
         }),
         // 6-7: arcs at one height (a LWPOLYLINE holds one), at 0 on purpose.
         Entity::Polyline(PathEntity {
@@ -1115,6 +1122,7 @@ fn elevated() -> Vec<Entity> {
             bulges: Some(vec![0.5, 0.0]),
             holes: None,
             zs: Some(vec![Some(250.5); 3]),
+            parts: None,
         }),
         Entity::Polygon(PathEntity {
             base: base("yapi"),
@@ -1122,6 +1130,7 @@ fn elevated() -> Vec<Entity> {
             bulges: Some(vec![0.0, -0.25, 0.0]),
             holes: None,
             zs: Some(vec![Some(0.0); 3]),
+            parts: None,
         }),
         // 8: arcs at several heights: DXF has no 3D polyline with arcs.
         Entity::Polyline(PathEntity {
@@ -1130,6 +1139,7 @@ fn elevated() -> Vec<Entity> {
             bulges: Some(vec![1.0, 0.0]),
             holes: None,
             zs: Some(vec![Some(1.0), Some(2.0), Some(3.0)]),
+            parts: None,
         }),
     ]
 }
@@ -1247,6 +1257,7 @@ fn what_cannot_be_written_is_left_out_and_said() {
         bulges: None,
         holes: None,
         zs: Some(vec![Some(1.0), Some(f64::INFINITY)]),
+        parts: None,
     });
     let (text, report) = write(&input(vec![bad(f64::NAN), path, bad(5.0)]));
     let r = read(&text);
@@ -1260,6 +1271,7 @@ fn what_cannot_be_written_is_left_out_and_said() {
         bulges: None,
         holes: None,
         zs: Some(vec![Some(1.0)]),
+        parts: None,
     });
     let (text, _) = write(&input(vec![short]));
     assert!(entities_of(&pairs(&text), "POLYLINE").is_empty());

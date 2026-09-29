@@ -75,6 +75,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
             bulges: None,
             holes: None,
             zs: None,
+            parts: None,
         }));
         let mut id = [
             0x01, 0x92, 0xf5, 0xa0, 0x7c, 0x3e, 0x70, 0x00, 0x80, 0, 0, 0, 0, 0, 0, 0,

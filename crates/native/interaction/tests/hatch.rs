@@ -246,6 +246,7 @@ fn too_dense_a_pattern_is_refused() {
         bulges: None,
         holes: None,
         zs: None,
+        parts: None,
     });
     b.doc.add(square).expect("a slot");
     let count = b.doc.entities().count();

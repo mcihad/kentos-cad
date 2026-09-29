@@ -58,6 +58,7 @@ fn drawing(side: usize) -> Document {
                 bulges: None,
                 holes: None,
                 zs: None,
+                parts: None,
             }));
         }
         let mut b = base("cizim");

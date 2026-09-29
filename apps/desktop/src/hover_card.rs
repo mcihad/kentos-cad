@@ -393,6 +393,7 @@ mod tests {
                     zs: hole,
                 }]),
                 zs: Some(vec![Some(7.0); 4]),
+                parts: None,
             })
         };
         let flat = rows_of(&area(Some(vec![Some(7.0); 4])));

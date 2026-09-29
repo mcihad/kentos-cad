@@ -244,6 +244,7 @@ impl Bench {
             bulges: None,
             holes: None,
             zs: None,
+            parts: None,
         };
         let entity = if closed {
             Entity::Polygon(path)

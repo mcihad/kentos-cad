@@ -57,7 +57,9 @@ SCHEMA_WITH_LINE_WEIGHTS = 3
 MAX_LINE_WEIGHT = 100.0
 # Schema 4: schema 3 and vertex elevations (`za`, `zb` of a line, `zs` of a polyline, a polygon and a hole; docs/adr/0142).
 SCHEMA_WITH_ELEVATIONS = 4
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS)
+# Schema 5: schema 4 and multi-part areas (`parts` of a polygon; docs/adr/0143).
+SCHEMA_WITH_PARTS = 5
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS)
 
 
 class KcadError(Exception):
@@ -287,9 +289,11 @@ class _Schema:
         self.path = []
         self.uids = []
         self.seen = set()
-        # What the payload's schema lets an object hold: its own line weight (schema 3 and 4), vertex elevations (schema 4).
+        # What the payload's schema lets an object hold: its own line weight (schema 3 and up), vertex elevations
+        # (schema 4 and up), an area's parts (schema 5).
         self.weights = False
         self.elevations = False
+        self.parts = False
 
     def where(self):
         return "/".join(self.path) or "(kök)"
@@ -436,6 +440,7 @@ class _Schema:
         # In an older schema these fields are unknown ones.
         self.weights = version >= SCHEMA_WITH_LINE_WEIGHTS
         self.elevations = version >= SCHEMA_WITH_ELEVATIONS
+        self.parts = version >= SCHEMA_WITH_PARTS
         checked = self.fields({"format": (self.text, True), "version": (self.uint(32), True), "document": (self.document, True)})(v)
         return checked["document"]
 
@@ -602,11 +607,23 @@ class _Schema:
         self.same_length(ring)
         return ring
 
+    def part(self, v):
+        """A part of a multi-part area past its first (§6.6): its ring, arcs, holes and elevations, as the area's own."""
+        table = {"pts": (self.array(self.point), True), "bulges": (self.array(self.float), False), "holes": (self.array(self.ring), False)}
+        if self.elevations:
+            table["zs"] = (self.array(self.elevation), False)
+        part = self.fields(table)(v)
+        self.same_length(part)
+        return part
+
 
 def _path(s, holes):
     table = {"pts": (s.array(s.point), True), "bulges": (s.array(s.float), False)}
     if holes:
         table["holes"] = (s.array(s.ring), False)
+        # Only an area has parts (schema 5).
+        if s.parts:
+            table["parts"] = (s.array(s.part), False)
     if s.elevations:
         table["zs"] = (s.array(s.elevation), False)
     return table

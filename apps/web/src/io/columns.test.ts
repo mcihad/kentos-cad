@@ -137,6 +137,30 @@ describe('the page packs a drawing into typed columns', () => {
     expect(packDrawing(head, [holed as unknown as PageEntity]).dropped).toEqual({ 'polygon.holes.note': 1 });
   });
 
+  it('carries a multi-part area: each part after the holes, with its arcs, elevations and holes', () => {
+    const parts = [
+      { pts: [P(20, 0), P(30, 0), P(30, 10), P(20, 10)], bulges: [0, 0.5], zs: [101.5, null, -0, 3] },
+      { pts: [P(40, 0), P(52, 0), P(46, 12)], holes: [{ pts: [P(45, 2), P(47, 2), P(46, 4)], zs: [1, null, 2] }] },
+    ];
+    const area = { ...base(), kind: 'polygon', pts: [P(0, 0), P(10, 0), P(10, 10), P(0, 10)], holes: [{ pts: [P(1, 1), P(2, 1), P(2, 2)] }], parts } as PageEntity;
+    const empty = { ...base(), kind: 'polygon', pts: [P(0, 0), P(1, 0), P(1, 1)], parts: [] } as PageEntity;
+    const { drawing, dropped } = packDrawing(head, [area, empty]);
+    expect(dropped).toEqual({});
+    const back = unpackSnapshot(drawing);
+    const want: DocumentSnapshotV2 = { ...head, entities: [area, empty].map(({ uid: _u, ...e }) => e as DocumentSnapshotV2['entities'][number]), uids: [area.uid!, empty.uid!] };
+    expect(difference(back, want)).toBeNull();
+    // The layout (docs/adr/0143): the ring's 4 vertices, 1 hole (flags 0, 3 vertices), then 2 parts,
+    // the first with bulges and elevations (flags 3), the second with holes only (flags 4).
+    const ints = [...drawing.columns.ints];
+    expect(ints.slice(4, 10)).toEqual([4, 1, 0, 3, 2, 3]);
+    // A part's unknown field is dropped and counted, its own fields are not.
+    const noted = { ...area, parts: [{ ...parts[0], note: 'bilinmeyen' }] } as unknown as PageEntity;
+    expect(packDrawing(head, [noted]).dropped).toEqual({ 'polygon.parts.note': 1 });
+    // A polyline has no parts: counted, never written.
+    const path = { ...base(), kind: 'polyline', pts: [P(0, 0), P(1, 1)], parts: [] } as unknown as PageEntity;
+    expect(packDrawing(head, [path]).dropped).toEqual({ 'polyline.parts': 1 });
+  });
+
   it('orders text as UTF-8 bytes do, beyond U+FFFF too', () => {
     const words = ['b', 'a', 'ab', '10', '2', 'İ', 'z', '￿', '𐀀', '', 'Ç'];
     const utf8 = (s: string) => [...new TextEncoder().encode(s)];

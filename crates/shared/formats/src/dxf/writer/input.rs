@@ -138,6 +138,7 @@ impl Fields {
                     bulges,
                     holes: rings(holes)?,
                     zs,
+                    parts: None,
                 })
             };
         let construction = |base: EntityBase,

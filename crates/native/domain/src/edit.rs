@@ -411,12 +411,14 @@ impl Document {
 }
 
 /// `entity` as the object at `slot` after an update: the slot's id, and no
-/// holes on a polyline (a polygon opened by an edit loses them, web `updateOp`).
-/// A hatch keeps its islands, on the web too since docs/adr/0020's fix.
+/// holes or parts on a polyline (a polygon opened by an edit loses them, web
+/// `updateOp`; docs/adr/0143). A hatch keeps its islands, on the web too
+/// since docs/adr/0020's fix.
 fn changed(mut entity: Entity, slot: Slot) -> Entity {
     base_mut(&mut entity).id = slot.0;
     if let Entity::Polyline(path) = &mut entity {
         path.holes = None;
+        path.parts = None;
     }
     entity
 }

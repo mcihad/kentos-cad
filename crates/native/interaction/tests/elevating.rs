@@ -62,6 +62,7 @@ fn polyline(b: &mut Bench, y: f64, z: Option<Vec<Option<f64>>>) -> Slot {
             bulges: None,
             holes: None,
             zs: z,
+            parts: None,
         }),
     )
 }
@@ -80,6 +81,7 @@ fn area(b: &mut Bench, z: Option<Vec<Option<f64>>>, hole: Option<Vec<Option<f64>
                 zs: hole,
             }]),
             zs: z,
+            parts: None,
         }),
     )
 }
@@ -407,6 +409,7 @@ fn everything_but_the_elevations_stays_layer_colour_attributes_label_geometry() 
         bulges: None,
         holes: None,
         zs: None,
+        parts: None,
     };
     e.base.color = Some("#E5484D".into());
     e.base.attrs.insert("Ada".into(), "12".into());

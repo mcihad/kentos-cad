@@ -33,6 +33,7 @@ fn polyline(b: &mut Bench) -> Slot {
             bulges: None,
             holes: None,
             zs: zs(&[Some(1.5), None, Some(3.25)]),
+            parts: None,
         }))
         .expect("a slot")
 }
@@ -51,6 +52,7 @@ fn area(b: &mut Bench) -> Slot {
                 zs: zs(&[Some(7.0), Some(8.0), Some(9.0)]),
             }]),
             zs: zs(&[Some(1.0), Some(2.0), Some(3.0), Some(4.0)]),
+            parts: None,
         }))
         .expect("a slot")
 }

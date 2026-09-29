@@ -32,7 +32,7 @@
 //! | every object | layer, flags, attributes | line weight? | colour?, label?, symbol?, key and value per attribute |
 //! | point | | p, z? | |
 //! | line | | a, b, za?, zb? | |
-//! | polyline, polygon | n; m if bulges; e if elevations; h if holes, then per hole: hole flags, k, j if bulges, d if elevations | pts (2n), bulges (m), zs (e), per hole: pts (2k), bulges (j), zs (d) | |
+//! | polyline, polygon | n; m if bulges; e if elevations; h if holes, then per hole: hole flags, k, j if bulges, d if elevations; q if parts, then per part: part flags, n, m if bulges, e if elevations, h if holes and its holes as above | pts (2n), bulges (m), zs (e), per hole: pts (2k), bulges (j), zs (d); per part: pts, bulges, zs, its holes' | |
 //! | circle | | c, r | |
 //! | arc | | c, r, a0, a1 | |
 //! | ellipse | | c, major, ratio, t0, t1 | |
@@ -45,10 +45,14 @@
 //! A point is two floats, x then y. Flags: 1 colour, 2 label, 4 symbol, 8
 //! line weight (docs/adr/0139); a
 //! kind's optional fields from bit 8 up, in the order the table names them
-//! (point: z; line: za, zb; polyline and polygon: bulges, holes, zs;
-//! dimension: text, style, angle, c; hatch: holes). A hole's flags: 1 bulges,
-//! 2 elevations. Dimension styles and hatch pattern types are numbered in the
-//! contract's order.
+//! (point: z; line: za, zb; polyline and polygon: bulges, holes, zs; polygon:
+//! parts; dimension: text, style, angle, c; hatch: holes). A hole's flags: 1
+//! bulges, 2 elevations; a part's: 1 bulges, 2 elevations, 4 holes. Dimension
+//! styles and hatch pattern types are numbered in the contract's order.
+//!
+//! A multi-part area (docs/adr/0143) lays out its first part as every
+//! polygon does, then its other parts, each as a polygon without flags of its
+//! own would be: its flags, then its vertices, bulges, elevations and holes.
 //!
 //! Vertex elevations (docs/adr/0142): a line's ends are two optional floats.
 //! A path's or a hole's `zs` is a list, its length (`e`, `d`) and then one
@@ -64,9 +68,9 @@
 use std::collections::{BTreeMap, HashMap};
 
 use kentos_contracts::{
-    ArcEntity, CircleEntity, ConstructionEntity, DimensionEntity, DimensionStyle, EllipseEntity,
-    Entity, EntityBase, EntityId, HatchEntity, HatchPattern, HatchPatternType, LineEntity,
-    PathEntity, PointEntity, RingGeometry, SplineEntity, TextEntity, Vec2,
+    ArcEntity, AreaPart, CircleEntity, ConstructionEntity, DimensionEntity, DimensionStyle,
+    EllipseEntity, Entity, EntityBase, EntityId, HatchEntity, HatchPattern, HatchPatternType,
+    LineEntity, PathEntity, PointEntity, RingGeometry, SplineEntity, TextEntity, Vec2,
 };
 
 use crate::error::{Code, KcadError};
@@ -96,6 +100,9 @@ const WEIGHT: u32 = 8;
 const OPT: [u32; 4] = [1 << 8, 1 << 9, 1 << 10, 1 << 11];
 const HOLE_BULGES: u32 = 1;
 const HOLE_ELEVATIONS: u32 = 2;
+const PART_BULGES: u32 = 1;
+const PART_ELEVATIONS: u32 = 2;
+const PART_HOLES: u32 = 4;
 
 const DIMENSION_STYLES: [DimensionStyle; 5] = [
     DimensionStyle::Aligned,
@@ -201,6 +208,29 @@ impl Packer {
         self.out.floats.extend_from_slice(list);
     }
 
+    /// A polygon's or a part's holes: their count, then each hole's flags,
+    /// vertices, bulges and elevations.
+    fn holes(&mut self, holes: &[RingGeometry]) {
+        self.int(count(holes.len()));
+        for RingGeometry { pts, bulges, zs } in holes {
+            let mut hole = 0;
+            if bulges.is_some() {
+                hole |= HOLE_BULGES;
+            }
+            if zs.is_some() {
+                hole |= HOLE_ELEVATIONS;
+            }
+            self.int(hole);
+            self.points(pts);
+            if let Some(b) = bulges {
+                self.numbers(b);
+            }
+            if let Some(z) = zs {
+                self.elevations(z);
+            }
+        }
+    }
+
     /// A list of elevations: its length, then the numbers; NaN stands for a
     /// vertex without one.
     fn elevations(&mut self, list: &[Option<f64>]) {
@@ -287,6 +317,7 @@ impl Packer {
                     bulges,
                     holes,
                     zs,
+                    parts,
                 } = path;
                 self.points(pts);
                 if let Some(b) = bulges {
@@ -299,22 +330,38 @@ impl Packer {
                 }
                 if let Some(holes) = holes {
                     flags |= OPT[1];
-                    self.int(count(holes.len()));
-                    for RingGeometry { pts, bulges, zs } in holes {
-                        let mut hole = 0;
+                    self.holes(holes);
+                }
+                if let Some(parts) = parts {
+                    flags |= OPT[3];
+                    self.int(count(parts.len()));
+                    for AreaPart {
+                        pts,
+                        bulges,
+                        holes,
+                        zs,
+                    } in parts
+                    {
+                        let mut part = 0;
                         if bulges.is_some() {
-                            hole |= HOLE_BULGES;
+                            part |= PART_BULGES;
                         }
                         if zs.is_some() {
-                            hole |= HOLE_ELEVATIONS;
+                            part |= PART_ELEVATIONS;
                         }
-                        self.int(hole);
+                        if holes.is_some() {
+                            part |= PART_HOLES;
+                        }
+                        self.int(part);
                         self.points(pts);
                         if let Some(b) = bulges {
                             self.numbers(b);
                         }
                         if let Some(z) = zs {
                             self.elevations(z);
+                        }
+                        if let Some(holes) = holes {
+                            self.holes(holes);
                         }
                     }
                 }
@@ -540,6 +587,35 @@ impl<'c> Cursor<'c> {
         Ok(out)
     }
 
+    /// A polygon's or a part's holes (their count, then each hole's flags and lists).
+    fn holes(&mut self) -> Result<Vec<RingGeometry>, KcadError> {
+        let h = self.usize()?;
+        if h > self.cols.ints.len() {
+            return Err(broken("delik sayısı tam sayılardan fazla"));
+        }
+        let mut rings = Vec::with_capacity(h);
+        for _ in 0..h {
+            let hole = self.int()?;
+            if hole & !(HOLE_BULGES | HOLE_ELEVATIONS) != 0 {
+                return Err(broken(&format!("deliğin bayrakları {hole:#x}")));
+            }
+            rings.push(RingGeometry {
+                pts: self.points()?,
+                bulges: if hole & HOLE_BULGES != 0 {
+                    Some(self.numbers()?)
+                } else {
+                    None
+                },
+                zs: if hole & HOLE_ELEVATIONS != 0 {
+                    Some(self.elevations()?)
+                } else {
+                    None
+                },
+            });
+        }
+        Ok(rings)
+    }
+
     /// A list of elevations (its length, then the numbers): NaN is a vertex without one.
     fn elevations(&mut self) -> Result<Vec<Option<f64>>, KcadError> {
         let n = self.usize()?;
@@ -680,7 +756,8 @@ fn allowed(kind: u8) -> u32 {
     match kind {
         0 => OPT[0],
         1 => OPT[0] | OPT[1],
-        2 | 3 => OPT[0] | OPT[1] | OPT[2],
+        2 => OPT[0] | OPT[1] | OPT[2],
+        3 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
         11 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
         12 => OPT[0],
         _ => 0,
@@ -712,32 +789,42 @@ fn geometry(
             let pts = c.points()?;
             let bulges = if has(0) { Some(c.numbers()?) } else { None };
             let zs = if has(2) { Some(c.elevations()?) } else { None };
-            let holes = if has(1) {
-                let h = c.usize()?;
-                if h > c.cols.ints.len() {
-                    return Err(broken("delik sayısı tam sayılardan fazla"));
+            let holes = if has(1) { Some(c.holes()?) } else { None };
+            let parts = if has(3) {
+                let q = c.usize()?;
+                if q > c.cols.ints.len() {
+                    return Err(broken("parça sayısı tam sayılardan fazla"));
                 }
-                let mut rings = Vec::with_capacity(h);
-                for _ in 0..h {
-                    let hole = c.int()?;
-                    if hole & !(HOLE_BULGES | HOLE_ELEVATIONS) != 0 {
-                        return Err(broken(&format!("deliğin bayrakları {hole:#x}")));
+                let mut parts = Vec::with_capacity(q);
+                for _ in 0..q {
+                    let part = c.int()?;
+                    if part & !(PART_BULGES | PART_ELEVATIONS | PART_HOLES) != 0 {
+                        return Err(broken(&format!("parçanın bayrakları {part:#x}")));
                     }
-                    rings.push(RingGeometry {
-                        pts: c.points()?,
-                        bulges: if hole & HOLE_BULGES != 0 {
-                            Some(c.numbers()?)
-                        } else {
-                            None
-                        },
-                        zs: if hole & HOLE_ELEVATIONS != 0 {
-                            Some(c.elevations()?)
-                        } else {
-                            None
-                        },
+                    let pts = c.points()?;
+                    let bulges = if part & PART_BULGES != 0 {
+                        Some(c.numbers()?)
+                    } else {
+                        None
+                    };
+                    let zs = if part & PART_ELEVATIONS != 0 {
+                        Some(c.elevations()?)
+                    } else {
+                        None
+                    };
+                    let holes = if part & PART_HOLES != 0 {
+                        Some(c.holes()?)
+                    } else {
+                        None
+                    };
+                    parts.push(AreaPart {
+                        pts,
+                        bulges,
+                        holes,
+                        zs,
                     });
                 }
-                Some(rings)
+                Some(parts)
             } else {
                 None
             };
@@ -747,6 +834,7 @@ fn geometry(
                 bulges,
                 holes,
                 zs,
+                parts,
             };
             if kind == 3 {
                 Entity::Polygon(path)
@@ -1100,6 +1188,7 @@ mod tests {
                 },
             ]),
             zs: Some(vec![Some(10.0), None, Some(12.0)]),
+            parts: None,
         });
         let entities = vec![line, polygon];
         let uids = vec![id(1), id(2)];

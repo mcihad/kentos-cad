@@ -106,6 +106,27 @@ pub struct RingGeometry {
     pub zs: Option<Vec<Option<f64>>>,
 }
 
+/// A part of a multi-part area past its first (docs/adr/0143): its outer
+/// ring in vertex + bulge form, its holes and its vertices' elevations, as
+/// the area's own fields hold the first part's.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AreaPart {
+    pub pts: Vec<Vec2>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub bulges: Option<Vec<f64>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub holes: Option<Vec<RingGeometry>>,
+    /// Each vertex's elevation, as the area's own `zs` (docs/adr/0142).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub zs: Option<Vec<Option<f64>>>,
+}
+
 /// Polyline or polygon: vertices, DXF bulges (tan(θ/4), CCW positive) and, for polygons, holes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -127,6 +148,11 @@ pub struct PathEntity {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub zs: Option<Vec<Option<f64>>>,
+    /// A polygon's parts past its first, whose own are the fields above;
+    /// absent for a one-part area, never on a polyline (docs/adr/0143).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub parts: Option<Vec<AreaPart>>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

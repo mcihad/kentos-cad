@@ -376,6 +376,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
                     .then(|| (0..rng.below(4)).map(|_| rng.float()).collect()),
                 holes: None,
                 zs: None,
+                parts: None,
             }),
             2 => Entity::Polygon(PathEntity {
                 base: b,
@@ -391,6 +392,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
                         .collect()
                 }),
                 zs: None,
+                parts: None,
             }),
             3 => Entity::Circle(CircleEntity {
                 base: b,
@@ -589,6 +591,7 @@ fn the_writer_refuses_what_a_reader_would_refuse() {
                 bulges: None,
                 holes: Some(vec![]),
                 zs: None,
+                parts: None,
             })
         },
         Code::BadValue,

@@ -150,4 +150,31 @@ describe('.kcad v2 content (docs/specs/kcad-v2.md)', () => {
     expect(err((d) => (d.migratedFrom = { format: 'kentos.document', version: 2, sourceSha256: 'ab'.repeat(32) }))).toContain('Göç kaynağı');
     expect(err((d) => ((d as { version: number }).version = 1))).toContain('sürümü 1');
   });
+
+  it('carries a multi-part area and refuses parts that could not be drawn, saying which (docs/adr/0143)', () => {
+    const good = toSnapshotV2(snapshotSampleDocument());
+    const at = good.entities.findIndex((e) => e.kind === 'polygon');
+    const square = (x: number) => [0, 1, 2, 3].map((i) => ({ x: x + (i === 1 || i === 2 ? 1 : 0), y: i >= 2 ? 1 : 0 }));
+    const read = (mutate: (e: Record<string, unknown>) => void) => {
+      const d = structuredClone(good);
+      mutate(d.entities[at] as unknown as Record<string, unknown>);
+      const r = readSnapshotV2(d);
+      return r.ok ? r.content : r.error;
+    };
+    const two = read((e) => (e.parts = [{ pts: square(5), zs: [1, null, 2, 3], holes: [{ pts: square(5.25).slice(0, 3) }] }]));
+    if (typeof two === 'string') throw new Error(two);
+    const doc = blank();
+    doc.replaceWith(two);
+    const area = [...doc.all()][at];
+    expect(area.kind === 'polygon' && area.parts?.[0].zs).toEqual([1, null, 2, 3]);
+    // Only an area has parts; a part is at least two vertices; its lists as long as its vertices.
+    const line = good.entities.findIndex((e) => e.kind === 'polyline');
+    const d = structuredClone(good);
+    (d.entities[line] as unknown as Record<string, unknown>).parts = [];
+    const r = readSnapshotV2(d);
+    expect(r.ok ? null : r.error).toContain('parçalar: yalnızca kapalı alanda');
+    expect(read((e) => (e.parts = [{ pts: square(5).slice(0, 1) }]))).toContain('parça 2');
+    expect(read((e) => (e.parts = [{ pts: square(5), zs: [1] }]))).toContain('parça 2 › kotlar');
+    expect(read((e) => (e.parts = [{ pts: square(5), holes: [{ pts: square(5).slice(0, 2) }] }]))).toContain('parça 2 › ada 1');
+  });
 });

@@ -267,6 +267,7 @@ mod tests {
                         bulges: None,
                         holes: None,
                         zs: None,
+                        parts: None,
                     }));
                     id += 1;
                 }

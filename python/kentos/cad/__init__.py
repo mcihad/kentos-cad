@@ -41,6 +41,7 @@ __all__ = [
     "ArcEntity",
     "ArcEntityGeometry",
     "ArcPlan",
+    "AreaPart",
     "AreaUnit",
     "AreaUnitName",
     "ArrayLayout",

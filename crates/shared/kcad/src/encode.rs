@@ -1,4 +1,4 @@
-//! Document schemas 2, 3 and 4 written from the contract (docs/specs/kcad-v2.md
+//! Document schemas 2 to 5 written from the contract (docs/specs/kcad-v2.md
 //! §6) in KentOS CBOR profile 1: the oldest schema that holds what the drawing
 //! has (`schema_of`). The writer keeps the rules the reader enforces, so it
 //! never writes a file a reader refuses: finite floats, the length and depth
@@ -23,7 +23,7 @@ use serde_json::Value;
 use crate::cbor::{MAX_DEPTH, MAX_ITEMS, MAX_STRING, Seg, Writer, key_order, render};
 use crate::error::{Code, KcadError};
 use crate::watch::{Step, Watch, report};
-use crate::{SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_LINE_WEIGHTS};
+use crate::{SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_PARTS};
 use names::{
     angle_unit, area_unit, drawing_font, label_ink, label_placement, line_type, point_symbol,
     workspace,
@@ -484,18 +484,20 @@ impl<'d> Encoder<'d> {
     }
 }
 
-/// The oldest schema that holds the objects: 4 when one has a vertex
-/// elevation, 3 when one has its own line weight, else 2. A drawing without
-/// either stays as it always was, byte for byte.
+/// The oldest schema that holds the objects: 5 when an area has parts, 4
+/// when an object has a vertex elevation, 3 when one has its own line weight,
+/// else 2. A drawing without any stays as it always was, byte for byte.
 fn schema_of(entities: &[Entity]) -> u32 {
     let mut schema = DOCUMENT_VERSION_2;
     for e in entities {
-        if has_elevation(e) {
+        if matches!(e, Entity::Polygon(p) if p.parts.is_some()) {
             // The newest: nothing later in the drawing can change it.
-            return SCHEMA_WITH_ELEVATIONS;
+            return SCHEMA_WITH_PARTS;
         }
-        if e.base().line_weight.is_some() {
-            schema = SCHEMA_WITH_LINE_WEIGHTS;
+        if has_elevation(e) {
+            schema = SCHEMA_WITH_ELEVATIONS;
+        } else if e.base().line_weight.is_some() {
+            schema = schema.max(SCHEMA_WITH_LINE_WEIGHTS);
         }
     }
     schema
@@ -541,7 +543,7 @@ mod tests {
     #[test]
     fn the_fixed_keys_are_in_encoded_order() {
         // The maps whose keys the writer writes by hand, in the order it writes them.
-        let maps: [&[&str]; 10] = [
+        let maps: [&[&str]; 11] = [
             &["format", "version", "document"],
             &[
                 "name",
@@ -595,6 +597,8 @@ mod tests {
             &["type", "angle", "spacing"],
             // A polygon's hole (docs/adr/0142).
             &["zs", "pts", "bulges"],
+            // A polygon's part (docs/adr/0143).
+            &["zs", "pts", "holes", "bulges"],
         ];
         for keys in maps {
             assert!(

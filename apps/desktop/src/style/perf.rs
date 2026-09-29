@@ -87,6 +87,7 @@ fn drawing(n: usize) -> Document {
             bulges: None,
             holes: None,
             zs: None,
+            parts: None,
         }));
         entities.push(Entity::Point(PointEntity {
             base: base("nokta"),
@@ -113,6 +114,7 @@ fn drawing(n: usize) -> Document {
                 bulges: None,
                 holes: None,
                 zs: None,
+                parts: None,
             }));
         }
     }

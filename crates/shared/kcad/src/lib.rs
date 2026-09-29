@@ -9,11 +9,12 @@
 //!   binary64 floats only (NaN and infinities refused, −0 kept), text keys in
 //!   RFC 8949 §4.2.1 order without duplicates, no tags; depth, length and size
 //!   limits. Written here: no CBOR crate (owner's decision, 2026-09-26).
-//! - **Document schemas 2, 3 and 4** (`encode`, `decode`): the contract
+//! - **Document schemas 2 to 5** (`encode`, `decode`): the contract
 //!   `DocumentSnapshotV2`, every object with its 16-byte persistent id
 //!   (docs/adr/0014); the open document's slots never enter the file. Schema 3
-//!   adds an object's own line weight, schema 4 vertex elevations; a writer
-//!   writes the oldest schema that holds what the drawing has.
+//!   adds an object's own line weight, schema 4 vertex elevations, schema 5
+//!   multi-part areas; a writer writes the oldest schema that holds what the
+//!   drawing has.
 //!
 //! One implementation for every platform (CLAUDE.md §14): the desktop app and
 //! the server call it natively, the browser through the formats WASM module
@@ -75,11 +76,19 @@ pub const SCHEMA_WITH_LINE_WEIGHTS: u32 = 3;
 /// of those still opens it.
 pub const SCHEMA_WITH_ELEVATIONS: u32 = 4;
 
+/// Document schema 5 (docs/specs/kcad-v2.md §6.1): schema 4 and multi-part
+/// areas, a polygon's `parts` (docs/adr/0143). A writer writes it only when an
+/// area has them: a drawing without one stays schema 4, 3 or 2, byte for byte,
+/// and a reader of those still opens it; one of those refuses a drawing that
+/// has them rather than keep only each area's first part.
+pub const SCHEMA_WITH_PARTS: u32 = 5;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 3] = [
+pub const SCHEMAS: [u32; 4] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
+    SCHEMA_WITH_PARTS,
 ];
 
 /// The file a drawing is saved as.

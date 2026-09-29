@@ -336,6 +336,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             bulges,
             holes: None,
             zs: held(zs),
+            parts: None,
         }),
         EntityGeometry::Polygon {
             pts,
@@ -355,6 +356,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
                     .collect()
             }),
             zs: held(zs),
+            parts: None,
         }),
         EntityGeometry::Circle { c, r } => Entity::Circle(CircleEntity { base, c, r }),
         EntityGeometry::Arc { c, r, a0, a1 } => Entity::Arc(ArcEntity { base, c, r, a0, a1 }),

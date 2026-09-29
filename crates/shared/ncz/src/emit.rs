@@ -389,7 +389,7 @@ impl Emitter {
                     self.grow(*p);
                 }
                 let zs = heights(&e.coords);
-                self.push(layer, Entity::Polyline(PathEntity { base: b, pts, bulges: None, holes: None, zs }));
+                self.push(layer, Entity::Polyline(PathEntity { base: b, pts, bulges: None, holes: None, zs, parts: None }));
             }
             Kind::MapSheet => {
                 note(&mut b, "Pafta", &e.label);
@@ -462,7 +462,7 @@ impl Emitter {
                 for p in &pts {
                     self.grow(*p);
                 }
-                self.push(layer, Entity::Polygon(PathEntity { base: b, pts, bulges: None, holes: None, zs: None }));
+                self.push(layer, Entity::Polygon(PathEntity { base: b, pts, bulges: None, holes: None, zs: None, parts: None }));
                 self.framed += 1;
             }
             Err(why) => {
@@ -495,7 +495,7 @@ impl Emitter {
             self.grow(*p);
         }
         let zs = zs.filter(|z| z.iter().any(Option::is_some));
-        self.push(layer, Entity::Polygon(PathEntity { base: b, pts, bulges: None, holes: None, zs }));
+        self.push(layer, Entity::Polygon(PathEntity { base: b, pts, bulges: None, holes: None, zs, parts: None }));
         Ok(())
     }
 
@@ -614,8 +614,8 @@ impl Emitter {
                     let base = next_base();
                     let entity = match (pts.as_slice(), closed) {
                         ([a, z], false) => Entity::Line(LineEntity { base, a: *a, b: *z, za: None, zb: None }),
-                        (_, true) => Entity::Polygon(PathEntity { base, pts, bulges: None, holes: None, zs: None }),
-                        _ => Entity::Polyline(PathEntity { base, pts, bulges: None, holes: None, zs: None }),
+                        (_, true) => Entity::Polygon(PathEntity { base, pts, bulges: None, holes: None, zs: None, parts: None }),
+                        _ => Entity::Polyline(PathEntity { base, pts, bulges: None, holes: None, zs: None, parts: None }),
                     };
                     self.push_smart(layer, entity);
                 }

@@ -684,6 +684,7 @@ impl<'l> Emitter<'l> {
                     bulges: None,
                     holes: None,
                     zs: None,
+                    parts: None,
                 }));
                 if *solid {
                     self.note(
@@ -780,6 +781,7 @@ impl<'l> Emitter<'l> {
                     bulges: None,
                     holes: None,
                     zs: None,
+                    parts: None,
                 }));
                 self.note(
                     "Kılavuz (LEADER)",
@@ -1029,6 +1031,7 @@ impl<'l> Emitter<'l> {
                 bulges,
                 holes: None,
                 zs,
+                parts: None,
             }));
         } else {
             self.push(Entity::Polyline(PathEntity {
@@ -1037,6 +1040,7 @@ impl<'l> Emitter<'l> {
                 bulges,
                 holes: None,
                 zs,
+                parts: None,
             }));
         }
     }

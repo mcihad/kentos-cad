@@ -160,6 +160,9 @@ fn validate(e: &Entity) -> Result<(), String> {
             if x.holes.is_some() {
                 return Err("Çoklu çizginin adası olamaz".into());
             }
+            if x.parts.is_some() {
+                return Err("Çoklu çizginin parçası olamaz; yalnız kapalı alan çok parçalı olur".into());
+            }
         }
         Polygon(x) => {
             check_len("Alan", x.pts.len(), 3)?;
@@ -167,6 +170,15 @@ fn validate(e: &Entity) -> Result<(), String> {
             for h in x.holes.iter().flatten() {
                 check_len("Ada", h.pts.len(), 3)?;
                 check_bulges("Ada", &h.bulges, h.pts.len())?;
+            }
+            // A multi-part area's other parts, each as the area's own ring (docs/adr/0143).
+            for p in x.parts.iter().flatten() {
+                check_len("Alanın parçası", p.pts.len(), 3)?;
+                check_bulges("Alanın parçası", &p.bulges, p.pts.len())?;
+                for h in p.holes.iter().flatten() {
+                    check_len("Ada", h.pts.len(), 3)?;
+                    check_bulges("Ada", &h.bulges, h.pts.len())?;
+                }
             }
         }
         Circle(x) => positive("Yarıçap", x.r)?,
@@ -198,13 +210,16 @@ fn validate(e: &Entity) -> Result<(), String> {
     Ok(())
 }
 
-/// Whether the geometry alone holds the object (no arcs, no empty hole list).
+/// Whether the geometry alone holds the object (no arcs, no empty hole list;
+/// a multi-part area's projection holds only its first part so far, so its
+/// definition is its source: docs/adr/0143).
 fn geometry_is_source(e: &Entity) -> bool {
     match e {
         Entity::Point(_) | Entity::Line(_) => true,
         Entity::Polyline(x) => x.bulges.is_none() && x.holes.is_none(),
         Entity::Polygon(x) => {
             x.bulges.is_none()
+                && x.parts.is_none()
                 && x.holes
                     .as_ref()
                     .is_none_or(|hs| !hs.is_empty() && hs.iter().all(|h| h.bulges.is_none()))
@@ -434,6 +449,30 @@ mod tests {
             serde_json::json!({ "kind": "point", "id": 1, "layerId": "p", "attrs": {}, "lineWeight": 101.0, "p": { "x": 0, "y": 0 } }),
         );
         assert!(to_stored(&heavy, 5256).unwrap_err().contains("çizgi kalınlığı"));
+    }
+
+    #[test]
+    fn a_multi_part_area_keeps_its_definition_and_every_part() {
+        // docs/adr/0143: the projection holds the first part only so far; the definition is the source.
+        let two = entity(serde_json::json!({ "kind": "polygon", "id": 1, "layerId": "p", "attrs": { "Ada": "101" },
+            "pts": [{ "x": 0, "y": 0 }, { "x": 10, "y": 0 }, { "x": 10, "y": 10 }],
+            "parts": [{ "pts": [{ "x": 20, "y": 0 }, { "x": 30, "y": 0 }, { "x": 30, "y": 10 }], "zs": [1.5, null, 2.0] }] }));
+        let s = to_stored(&two, 5256).unwrap();
+        assert_eq!(s.source_kind, "cad");
+        assert!(s.cad_definition.as_ref().unwrap().get("parts").is_some());
+        let mut again = from_stored(&s).unwrap();
+        if let Entity::Polygon(x) = &mut again {
+            x.base.id = 1;
+        }
+        assert_eq!(again, two);
+        // A part is refused as the area's own ring would be; a polyline has none.
+        let thin = entity(serde_json::json!({ "kind": "polygon", "id": 1, "layerId": "p", "attrs": {},
+            "pts": [{ "x": 0, "y": 0 }, { "x": 10, "y": 0 }, { "x": 10, "y": 10 }],
+            "parts": [{ "pts": [{ "x": 20, "y": 0 }, { "x": 30, "y": 0 }] }] }));
+        assert!(to_stored(&thin, 5256).unwrap_err().contains("Alanın parçası"));
+        let path = entity(serde_json::json!({ "kind": "polyline", "id": 1, "layerId": "p", "attrs": {},
+            "pts": [{ "x": 0, "y": 0 }, { "x": 10, "y": 0 }], "parts": [] }));
+        assert!(to_stored(&path, 5256).unwrap_err().contains("parçası olamaz"));
     }
 
     #[test]

@@ -424,6 +424,7 @@ mod tests {
                 zs: hole,
             }]),
             zs,
+            parts: None,
         })
     }
 
@@ -434,6 +435,7 @@ mod tests {
             bulges: None,
             holes: None,
             zs,
+            parts: None,
         })
     }
 

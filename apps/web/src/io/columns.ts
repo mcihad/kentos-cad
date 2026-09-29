@@ -55,12 +55,16 @@ const WEIGHT = 8;
 /**
  * A kind's optional fields from bit 8 up, in the order the Rust module's table
  * names them (point: z; line: za, zb; polyline and polygon: bulges, holes, zs;
- * dimension: text, style, angle, c; hatch: holes).
+ * polygon: parts; dimension: text, style, angle, c; hatch: holes).
  */
 const OPT = [1 << 8, 1 << 9, 1 << 10, 1 << 11] as const;
 /** A hole's flags: its bulges, its elevations (docs/adr/0142). */
 const HOLE_BULGES = 1;
 const HOLE_ELEVATIONS = 2;
+/** A part's flags: its bulges, its elevations, its holes (docs/adr/0143). */
+const PART_BULGES = 1;
+const PART_ELEVATIONS = 2;
+const PART_HOLES = 4;
 
 /**
  * The fields each kind may have, besides the ones every object has: what the
@@ -72,7 +76,7 @@ const FIELDS: Record<string, ReadonlySet<string>> = Object.fromEntries(
     point: ['p', 'z'],
     line: ['a', 'b', 'za', 'zb'],
     polyline: ['pts', 'bulges', 'zs'],
-    polygon: ['pts', 'bulges', 'holes', 'zs'],
+    polygon: ['pts', 'bulges', 'holes', 'zs', 'parts'],
     circle: ['c', 'r'],
     arc: ['c', 'r', 'a0', 'a1'],
     ellipse: ['c', 'major', 'ratio', 't0', 't1'],
@@ -226,6 +230,23 @@ class Packer {
    * checked here, so the page says where: as many as the vertices, each a
    * finite number or null.
    */
+  /**
+   * A polygon's or a part's holes (`field`: `holes`, `parts/0/holes`): their count, then each hole's
+   * flags, vertices, bulges and elevations.
+   */
+  holes(list: unknown, field: string, kind: string): void {
+    if (!Array.isArray(list)) throw unwritable('wrong_type', `${this.where}/${field}`, 'ada listesi olmalı');
+    const dotted = field.replace(/\/\d+\//g, '.');
+    this.int(list.length);
+    (list as { pts: unknown[]; bulges?: unknown; zs?: unknown }[]).forEach((h, i) => {
+      for (const key in h) if (key !== 'pts' && key !== 'bulges' && key !== 'zs') this.drop(`${kind}.${dotted}.${key}`);
+      this.int((h.bulges !== undefined ? HOLE_BULGES : 0) | (h.zs !== undefined ? HOLE_ELEVATIONS : 0));
+      this.points(h.pts, `${dotted}.pts`, kind);
+      if (h.bulges !== undefined) this.numbers(h.bulges, `${field}/${i}/bulges`);
+      if (h.zs !== undefined) this.elevations(h.zs, `${field}/${i}/zs`, h.pts.length);
+    });
+  }
+
   elevations(list: unknown, field: string, vertices: number): void {
     if (!Array.isArray(list)) throw unwritable('wrong_type', `${this.where}/${field}`, 'kot listesi olmalı');
     if (list.length !== vertices) throw unwritable('bad_value', `${this.where}/${field}`, `${list.length} kot var ama ${vertices} köşe var; her köşenin bir kotu olmalı (kotsuz köşe için null)`);
@@ -320,15 +341,22 @@ class Packer {
         // A polyline's holes are not the contract's: counted as dropped above, never written.
         const holes = e.kind === 'polygon' ? e.holes : undefined;
         if (holes !== undefined) {
-          if (!Array.isArray(holes)) throw unwritable('wrong_type', `${this.where}/holes`, 'ada listesi olmalı');
           flags |= OPT[1];
-          this.int(holes.length);
-          holes.forEach((h, i) => {
-            for (const key in h) if (key !== 'pts' && key !== 'bulges' && key !== 'zs') this.drop(`${kind}.holes.${key}`);
-            this.int((h.bulges !== undefined ? HOLE_BULGES : 0) | (h.zs !== undefined ? HOLE_ELEVATIONS : 0));
-            this.points(h.pts, 'holes.pts', kind);
-            if (h.bulges !== undefined) this.numbers(h.bulges, `holes/${i}/bulges`);
-            if (h.zs !== undefined) this.elevations(h.zs, `holes/${i}/zs`, h.pts.length);
+          this.holes(holes, 'holes', kind);
+        }
+        // A multi-part area's other parts (docs/adr/0143): after the holes, each part's flags and lists.
+        const parts = e.kind === 'polygon' ? e.parts : undefined;
+        if (parts !== undefined) {
+          if (!Array.isArray(parts)) throw unwritable('wrong_type', `${this.where}/parts`, 'parça listesi olmalı');
+          flags |= OPT[3];
+          this.int(parts.length);
+          parts.forEach((p, i) => {
+            for (const key in p) if (key !== 'pts' && key !== 'bulges' && key !== 'holes' && key !== 'zs') this.drop(`${kind}.parts.${key}`);
+            this.int((p.bulges !== undefined ? PART_BULGES : 0) | (p.zs !== undefined ? PART_ELEVATIONS : 0) | (p.holes !== undefined ? PART_HOLES : 0));
+            this.points(p.pts, 'parts.pts', kind);
+            if (p.bulges !== undefined) this.numbers(p.bulges, `parts/${i}/bulges`);
+            if (p.zs !== undefined) this.elevations(p.zs, `parts/${i}/zs`, p.pts.length);
+            if (p.holes !== undefined) this.holes(p.holes, `parts/${i}/holes`, kind);
           });
         }
         break;
@@ -500,6 +528,20 @@ export class ColumnsReader {
     return out;
   }
 
+  /** A polygon's or a part's holes (their count, then each hole's flags and lists). */
+  private holes(): Record<string, unknown>[] {
+    const h = this.readInt();
+    const holes = [];
+    for (let k = 0; k < h; k++) {
+      const hf = this.readInt();
+      const ring: Record<string, unknown> = { pts: this.pts() };
+      if (hf & HOLE_BULGES) ring.bulges = this.nums();
+      if (hf & HOLE_ELEVATIONS) ring.zs = this.elevs();
+      holes.push(ring);
+    }
+    return holes;
+  }
+
   /** A list of elevations (its length, then the numbers): NaN is a vertex without one, null. */
   private elevs(): (number | null)[] {
     const n = this.readInt();
@@ -571,17 +613,19 @@ export class ColumnsReader {
         e.pts = this.pts();
         if (has(0)) e.bulges = this.nums();
         if (has(2)) e.zs = this.elevs();
-        if (has(1)) {
-          const h = this.readInt();
-          const holes = [];
-          for (let k = 0; k < h; k++) {
-            const hf = this.readInt();
-            const ring: Record<string, unknown> = { pts: this.pts() };
-            if (hf & HOLE_BULGES) ring.bulges = this.nums();
-            if (hf & HOLE_ELEVATIONS) ring.zs = this.elevs();
-            holes.push(ring);
+        if (has(1)) e.holes = this.holes();
+        if (has(3)) {
+          const q = this.readInt();
+          const parts = [];
+          for (let k = 0; k < q; k++) {
+            const pf = this.readInt();
+            const part: Record<string, unknown> = { pts: this.pts() };
+            if (pf & PART_BULGES) part.bulges = this.nums();
+            if (pf & PART_ELEVATIONS) part.zs = this.elevs();
+            if (pf & PART_HOLES) part.holes = this.holes();
+            parts.push(part);
           }
-          e.holes = holes;
+          e.parts = parts;
         }
         break;
       case 'circle':

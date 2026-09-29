@@ -107,6 +107,54 @@
             ],
             "type": "object"
           },
+          "AreaPart": {
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "properties": {
+              "bulges": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "holes": {
+                "items": {
+                  "$ref": "#/$defs/RingGeometry"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, as the area's own `zs` (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "pts"
+            ],
+            "type": "object"
+          },
           "AreaUnit": {
             "enum": [
               "m2",
@@ -1148,6 +1196,16 @@
                 "minimum": 0.0,
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "parts": {
+                "description": "A polygon's parts past its first, whose own are the fields above;\nabsent for a one-part area, never on a polyline (docs/adr/0143).",
+                "items": {
+                  "$ref": "#/$defs/AreaPart"
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               },
@@ -8763,6 +8821,54 @@
             ],
             "type": "object"
           },
+          "AreaPart": {
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "properties": {
+              "bulges": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "holes": {
+                "items": {
+                  "$ref": "#/$defs/RingGeometry"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, as the area's own `zs` (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "pts"
+            ],
+            "type": "object"
+          },
           "CircleEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -9511,6 +9617,16 @@
                 "minimum": 0.0,
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "parts": {
+                "description": "A polygon's parts past its first, whose own are the fields above;\nabsent for a one-part area, never on a polyline (docs/adr/0143).",
+                "items": {
+                  "$ref": "#/$defs/AreaPart"
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               },
@@ -10130,6 +10246,54 @@
             ],
             "type": "object"
           },
+          "AreaPart": {
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "properties": {
+              "bulges": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "holes": {
+                "items": {
+                  "$ref": "#/$defs/RingGeometry"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, as the area's own `zs` (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "pts"
+            ],
+            "type": "object"
+          },
           "CircleEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -10878,6 +11042,16 @@
                 "minimum": 0.0,
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "parts": {
+                "description": "A polygon's parts past its first, whose own are the fields above;\nabsent for a one-part area, never on a polyline (docs/adr/0143).",
+                "items": {
+                  "$ref": "#/$defs/AreaPart"
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               },
@@ -11458,6 +11632,54 @@
             ],
             "type": "object"
           },
+          "AreaPart": {
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "properties": {
+              "bulges": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "holes": {
+                "items": {
+                  "$ref": "#/$defs/RingGeometry"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, as the area's own `zs` (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "pts"
+            ],
+            "type": "object"
+          },
           "CircleEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -12206,6 +12428,16 @@
                 "minimum": 0.0,
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "parts": {
+                "description": "A polygon's parts past its first, whose own are the fields above;\nabsent for a one-part area, never on a polyline (docs/adr/0143).",
+                "items": {
+                  "$ref": "#/$defs/AreaPart"
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               },
@@ -12928,6 +13160,54 @@
             ],
             "type": "object"
           },
+          "AreaPart": {
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "properties": {
+              "bulges": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "holes": {
+                "items": {
+                  "$ref": "#/$defs/RingGeometry"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, as the area's own `zs` (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "pts"
+            ],
+            "type": "object"
+          },
           "CircleEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -13676,6 +13956,16 @@
                 "minimum": 0.0,
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "parts": {
+                "description": "A polygon's parts past its first, whose own are the fields above;\nabsent for a one-part area, never on a polyline (docs/adr/0143).",
+                "items": {
+                  "$ref": "#/$defs/AreaPart"
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               },
@@ -14241,6 +14531,54 @@
             ],
             "type": "object"
           },
+          "AreaPart": {
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "properties": {
+              "bulges": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "holes": {
+                "items": {
+                  "$ref": "#/$defs/RingGeometry"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, as the area's own `zs` (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "pts"
+            ],
+            "type": "object"
+          },
           "CircleEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -14989,6 +15327,16 @@
                 "minimum": 0.0,
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "parts": {
+                "description": "A polygon's parts past its first, whose own are the fields above;\nabsent for a one-part area, never on a polyline (docs/adr/0143).",
+                "items": {
+                  "$ref": "#/$defs/AreaPart"
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               },
@@ -15564,6 +15912,54 @@
             ],
             "type": "object"
           },
+          "AreaPart": {
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "properties": {
+              "bulges": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "holes": {
+                "items": {
+                  "$ref": "#/$defs/RingGeometry"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, as the area's own `zs` (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "pts"
+            ],
+            "type": "object"
+          },
           "CircleEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -16312,6 +16708,16 @@
                 "minimum": 0.0,
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "parts": {
+                "description": "A polygon's parts past its first, whose own are the fields above;\nabsent for a one-part area, never on a polyline (docs/adr/0143).",
+                "items": {
+                  "$ref": "#/$defs/AreaPart"
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               },
@@ -17008,6 +17414,54 @@
             ],
             "type": "object"
           },
+          "AreaPart": {
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "properties": {
+              "bulges": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "holes": {
+                "items": {
+                  "$ref": "#/$defs/RingGeometry"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, as the area's own `zs` (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "pts"
+            ],
+            "type": "object"
+          },
           "CircleEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -17756,6 +18210,16 @@
                 "minimum": 0.0,
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "parts": {
+                "description": "A polygon's parts past its first, whose own are the fields above;\nabsent for a one-part area, never on a polyline (docs/adr/0143).",
+                "items": {
+                  "$ref": "#/$defs/AreaPart"
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               },
@@ -19134,6 +19598,54 @@
             ],
             "type": "object"
           },
+          "AreaPart": {
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "properties": {
+              "bulges": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "holes": {
+                "items": {
+                  "$ref": "#/$defs/RingGeometry"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, as the area's own `zs` (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "pts"
+            ],
+            "type": "object"
+          },
           "CircleEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -19882,6 +20394,16 @@
                 "minimum": 0.0,
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "parts": {
+                "description": "A polygon's parts past its first, whose own are the fields above;\nabsent for a one-part area, never on a polyline (docs/adr/0143).",
+                "items": {
+                  "$ref": "#/$defs/AreaPart"
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               },
@@ -20593,6 +21115,54 @@
             ],
             "type": "object"
           },
+          "AreaPart": {
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "properties": {
+              "bulges": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "holes": {
+                "items": {
+                  "$ref": "#/$defs/RingGeometry"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, as the area's own `zs` (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "pts"
+            ],
+            "type": "object"
+          },
           "CircleEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -21341,6 +21911,16 @@
                 "minimum": 0.0,
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "parts": {
+                "description": "A polygon's parts past its first, whose own are the fields above;\nabsent for a one-part area, never on a polyline (docs/adr/0143).",
+                "items": {
+                  "$ref": "#/$defs/AreaPart"
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               },
@@ -22572,6 +23152,54 @@
             ],
             "type": "object"
           },
+          "AreaPart": {
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "properties": {
+              "bulges": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "holes": {
+                "items": {
+                  "$ref": "#/$defs/RingGeometry"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, as the area's own `zs` (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "pts"
+            ],
+            "type": "object"
+          },
           "CircleEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -23320,6 +23948,16 @@
                 "minimum": 0.0,
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "parts": {
+                "description": "A polygon's parts past its first, whose own are the fields above;\nabsent for a one-part area, never on a polyline (docs/adr/0143).",
+                "items": {
+                  "$ref": "#/$defs/AreaPart"
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               },
@@ -24027,6 +24665,54 @@
             ],
             "type": "object"
           },
+          "AreaPart": {
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "properties": {
+              "bulges": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "holes": {
+                "items": {
+                  "$ref": "#/$defs/RingGeometry"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, as the area's own `zs` (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "pts"
+            ],
+            "type": "object"
+          },
           "CircleEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -24775,6 +25461,16 @@
                 "minimum": 0.0,
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "parts": {
+                "description": "A polygon's parts past its first, whose own are the fields above;\nabsent for a one-part area, never on a polyline (docs/adr/0143).",
+                "items": {
+                  "$ref": "#/$defs/AreaPart"
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               },

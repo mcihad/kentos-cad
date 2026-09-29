@@ -540,6 +540,7 @@ fn path_z(app: &mut App, zs: Option<Vec<Option<f64>>>) -> u32 {
             bulges: None,
             holes: None,
             zs,
+            parts: None,
         }),
     )
 }
@@ -568,6 +569,7 @@ fn area_z(app: &mut App, zs: Option<Vec<Option<f64>>>, hole: Option<Vec<Option<f
                 zs: hole,
             }]),
             zs,
+            parts: None,
         }),
     )
 }
