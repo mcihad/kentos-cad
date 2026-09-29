@@ -23,6 +23,11 @@ export interface ToolPointer {
 
 export type ToolCursor = 'pick' | 'cross' | 'grab';
 
+/** What was held when a tool was confirmed from the keyboard (Shift+Enter). */
+export interface ConfirmMods {
+  readonly shift?: boolean;
+}
+
 /**
  * Interactive tool contract. The viewport feeds pointer events, the command
  * line feeds typed input; the tool never touches the DOM directly.
@@ -41,8 +46,8 @@ export interface Tool {
   pointerUp?(p: ToolPointer): void;
   /** Typed coordinate, number or option. Return false when not understood. */
   input?(text: string): boolean;
-  /** Enter, Space or right click. */
-  confirm?(): void;
+  /** Enter, Space or right click; Shift+Enter says `shift` (Çitle seç adds to the selection then, docs/adr/0141). */
+  confirm?(mods?: ConfirmMods): void;
   /**
    * Ctrl+Z while the tool runs: takes back its newest step (a point of the
    * draft) and returns true; false when nothing is pending, and the

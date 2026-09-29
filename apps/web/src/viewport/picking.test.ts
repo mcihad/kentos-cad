@@ -49,6 +49,9 @@ function compare(g: Gen, doc: CadDocument, live: PickIndex, fresh: PickIndex): s
   const clip = g.chance(0.6) ? sceneRect(g, sceneCursor(g, doc), [20, 200, 5000]) : undefined;
   const target = all.length ? g.pick(all) : null;
   const enc = (x: { entity: Entity; ring: unknown } | null) => x && { id: x.entity.id, ring: x.ring };
+  // The selection queries of docs/adr/0141: a fence of two to four points, a circle.
+  const fence = Array.from({ length: g.int(2, 4) }, () => sceneCursor(g, doc));
+  const radius = g.pick([0.05, 1, 10, 100, 2000]);
   const queries: [string, (s: PickIndex) => unknown][] = [
     ['hit', (s) => s.hit(p, tol)?.id ?? null],
     ['hitEdge', (s) => s.hitEdge(p, tol)?.id ?? null],
@@ -67,6 +70,11 @@ function compare(g: Gen, doc: CadDocument, live: PickIndex, fresh: PickIndex): s
     ['measure', (s) => s.measure(selected)],
     ['extent', (s) => [s.extent(selected), s.extent()]],
     ['inBox', (s) => s.inBox(view)],
+    ['containing', (s) => s.containing(p).map((x) => [x.entity.id, x.area])],
+    ['inFence', (s) => s.inFence(fence, tol)],
+    ['inCircle (içeride)', (s) => s.inCircle(c, radius, false)],
+    ['inCircle (kesişen)', (s) => s.inCircle(c, radius, true)],
+    ['extentOutliers', (s) => s.extentOutliers()],
     ['drawn', (s) => Array.from(s.drawn(list, oriented, clip))],
     ['measures', (s) => Array.from(s.measures(list))],
     ...(target

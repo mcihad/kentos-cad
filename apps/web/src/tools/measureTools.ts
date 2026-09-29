@@ -51,12 +51,12 @@ export class DistanceTool extends PathTool {
   }
 
   protected override option(key: string): boolean {
-    if (key === 'S') {
+    // Where the chip is offered: before the first point, and while it is on. A chain under way is not turned into rays.
+    if (key === 'S' && (!this.pts.length || this.fixed)) {
       DistanceTool.fixed = !DistanceTool.fixed;
-      // Rays, not arcs: back to straight legs.
-      if (DistanceTool.fixed) super.option('D');
-      this.refreshPrompt();
-      this.ctx.view.requestOverlay();
+      // A run of one kind is not carried over into the other: it starts again, with straight legs.
+      super.option('D');
+      this.reset();
       return true;
     }
     if (this.fixed && key !== 'G') return false;

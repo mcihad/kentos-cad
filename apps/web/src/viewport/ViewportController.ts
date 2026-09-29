@@ -349,6 +349,21 @@ export class ViewportController {
     return this.picker.inRect(r, crossing);
   }
 
+  /** Çitle seç (docs/adr/0141): the visible objects the fence, a path of points, crosses; a point within the pick aperture counts. */
+  inFence(fence: readonly Vec2[]): number[] {
+    return this.picker.inFence(fence, this.worldTolerance(this.ctx.prefs.pickAperture.value));
+  }
+
+  /** Daireyle seç: the visible objects wholly inside the circle, and with `crossing` those it touches too. */
+  inCircle(c: Vec2, r: number, crossing: boolean): number[] {
+    return this.picker.inCircle(c, r, crossing);
+  }
+
+  /** İçeren alanı seç: the visible closed shapes around a point with their areas, smallest first. */
+  containing(p: Vec2): { entity: Entity; area: number }[] {
+    return this.picker.containing(p);
+  }
+
   /** Edge-only pick for modify tools (ignores polygon interiors, points and text). */
   pickEdge(screen: Vec2, filter?: (e: Entity) => boolean): Entity | null {
     return this.picker.hitEdge(this.camera.screenToWorld(screen), this.ctx.prefs.pickAperture.value / this.camera.scale, filter);

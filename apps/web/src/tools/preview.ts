@@ -132,13 +132,16 @@ export function drawArea(
   g.restore();
 }
 
+/** The window selection's blue (what lies fully inside); a crossing takes the snap colour. */
+const WINDOW_COLOR = '#6DB3F2';
+
 /**
  * Selection box between two screen points: left→right is a window (solid,
  * blue: fully inside), right→left a crossing (dashed, snap colour: touching).
  */
 export function drawSelectionBox(g: CanvasRenderingContext2D, a: Vec2, b: Vec2, crossingColor: string): void {
   const crossing = b.x < a.x;
-  const color = crossing ? crossingColor : '#6DB3F2';
+  const color = crossing ? crossingColor : WINDOW_COLOR;
   g.save();
   g.fillStyle = color;
   g.globalAlpha = 0.1;
@@ -147,6 +150,27 @@ export function drawSelectionBox(g: CanvasRenderingContext2D, a: Vec2, b: Vec2, 
   g.strokeStyle = color;
   g.setLineDash(crossing ? [5, 4] : []);
   g.strokeRect(Math.min(a.x, b.x) + 0.5, Math.min(a.y, b.y) + 0.5, Math.abs(b.x - a.x), Math.abs(b.y - a.y));
+  g.restore();
+}
+
+/**
+ * The circle of Daireyle seç: dashed, its inside lightly filled, in the window's blue when it takes what
+ * lies wholly inside and in `crossingColor` when it takes what it touches too, as the selection box is.
+ */
+export function drawSelectionCircle(g: CanvasRenderingContext2D, view: ViewTransform, c: Vec2, r: number, crossing: boolean, crossingColor: string): void {
+  const s = view.worldToScreen(c);
+  const color = crossing ? crossingColor : WINDOW_COLOR;
+  g.save();
+  g.beginPath();
+  g.arc(s.x, s.y, r * view.scale, 0, Math.PI * 2);
+  g.fillStyle = color;
+  g.globalAlpha = 0.1;
+  g.fill();
+  g.globalAlpha = 1;
+  g.strokeStyle = color;
+  g.lineWidth = 1.5;
+  g.setLineDash([5, 4]);
+  g.stroke();
   g.restore();
 }
 

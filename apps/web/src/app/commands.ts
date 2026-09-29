@@ -7,7 +7,7 @@ import { treeLocked } from '../ui/layers/treeRights';
 import { CoordinateReadTool } from '../tools/coordinateTool';
 import { pasteEntities, PasteTool } from '../tools/editTools';
 import { Signal } from '../core/signal';
-import { TOOL_GROUP_LABEL } from '../tools/Tool';
+import { TOOL_GROUP_LABEL, type ConfirmMods } from '../tools/Tool';
 import type { AppContext } from './context';
 import type { ThemeId } from './appearance';
 import { checkExtent } from './extentCheck';
@@ -594,9 +594,10 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       id: 'tool.confirm',
       title: 'Onayla',
       category: 'Komut',
-      run: () => {
+      // Shift+Enter comes with `{ shift: true }` (app/keybindings.ts).
+      run: (args) => {
         const t = tools.active;
-        t.confirm ? t.confirm() : tools.repeatLast();
+        t.confirm ? t.confirm(args as ConfirmMods | undefined) : tools.repeatLast();
       },
     },
     { id: 'tool.repeat', title: 'Son komutu yinele', category: 'Komut', run: () => tools.repeatLast() },

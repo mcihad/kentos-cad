@@ -138,6 +138,25 @@ describe('Mesafe ölç: Sabit ilk nokta', () => {
     tool.input('S');
   });
 
+  it('is offered where it works: not in the middle of a chain, and off again in the middle of rays', () => {
+    const h = toolHarness();
+    const tool = distance(h, false);
+    tool.pointerDown(at(0, 0));
+    tool.pointerDown(at(10, 0));
+    // A chain under way is not turned into rays.
+    expect(tool.input('S')).toBe(false);
+    expect(keys(tool)).toEqual(['Y', 'U', 'G', 'Enter']);
+    tool.confirm();
+    tool.input('S');
+    tool.pointerDown(at(0, 0));
+    tool.pointerDown(at(10, 0));
+    expect(tool.pointCount).toBe(2);
+    // Off in the middle of rays: a run of one kind is not carried over into the other, it starts again.
+    expect(tool.input('S')).toBe(true);
+    expect(tool.pointCount).toBe(0);
+    expect(tool.prompt.value).toBe('Mesafe ölç: ilk noktayı belirtin [Sabit ilk nokta (S)]');
+  });
+
   it('Geri takes the last ray back', () => {
     const h = toolHarness();
     const tool = distance(h, true);
@@ -159,15 +178,17 @@ describe('Mesafe ölç: Sabit ilk nokta', () => {
     expect(h.said().filter((t) => /^\d+: /.test(t))).toEqual(['1: 10.000 m, semt 100.0000 g', '2: 10.000 m, semt 0.0000 g']);
   });
 
-  it('refers perpendicular snaps to the first point', () => {
+  it('refers perpendicular snaps to the first point, as a chain refers them to the last', () => {
     const h = toolHarness();
-    const tool = distance(h, true);
-    expect(tool.snapFrom()).toBeNull();
-    tool.pointerDown(at(5, 6));
-    tool.pointerDown(at(9, 9));
-    expect(tool.snapFrom()).toEqual(pt(5, 6));
-    tool.input('S');
-    expect(tool.snapFrom()).toEqual(pt(9, 9));
+    const rays = distance(h, true);
+    expect(rays.snapFrom()).toBeNull();
+    rays.pointerDown(at(5, 6));
+    rays.pointerDown(at(9, 9));
+    expect(rays.snapFrom()).toEqual(pt(5, 6));
+    const chain = distance(h, false);
+    chain.pointerDown(at(5, 6));
+    chain.pointerDown(at(9, 9));
+    expect(chain.snapFrom()).toEqual(pt(9, 9));
   });
 
   it('is kept for the session: the next Mesafe ölç starts with it on', () => {

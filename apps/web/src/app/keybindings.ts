@@ -50,6 +50,8 @@ export function registerDefaultKeybindings(ctx: AppContext): void {
   keymap.bind('Ctrl+,', 'tools.options', global);
   keymap.bind('Esc', 'tool.cancel');
   keymap.bind('Enter', 'tool.confirm');
+  // Çitle seç ends and adds to the selection (docs/adr/0141).
+  keymap.bind('Shift+Enter', 'tool.confirm', { args: { shift: true } });
   // As in AutoCAD, Space is a second Enter (docs/adr/0018); the command line is a click away.
   keymap.bind('Space', 'tool.confirm');
 

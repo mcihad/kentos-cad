@@ -44,7 +44,7 @@ export function toolHarness() {
     selection: new Selection(),
     format: new Formatter({ lengthDecimals: new Signal(3), areaDecimals: new Signal(2), areaUnit: new Signal('m2' as const), angleUnit: new Signal('grad' as const) }),
     settings: { color: new Signal<string | null>(null), lineWeight: new Signal<number | null>(null), ortho: new Signal(false), polar: new Signal(false) },
-    prefs: { snapAperture: new Signal(8), polarIncrement: new Signal(15) },
+    prefs: { snapAperture: new Signal(8), pickAperture: new Signal(8), polarIncrement: new Signal(15) },
     view: {
       palette,
       requestOverlay: () => {},

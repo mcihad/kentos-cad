@@ -1429,12 +1429,104 @@ function adr0141Scenes(bare, clickWorld) {
     { id: 'layers-zoom-menu', open: async (ui) => (await ribbonOn(ui), await ui.eval(HOME), await menuOn(ui, LAYER_ROW)) },
     { id: 'layers-zoom-group-menu', open: async (ui) => (await ribbonOn(ui), await ui.eval(HOME), await menuOn(ui, GROUP_ROW)) },
     ...queryScenes(bare, clickWorld),
+    ...selectionScenes(bare, clickWorld),
+  ];
+}
+
+// The scenes of docs/adr/0141 draw in `u`: a sixth of the view's width, or a 3.4th of its height where the log takes the
+// height (1100×650), so what they draw fits both. `FIT` is `SCRATCH` with `u`, `AU` a point in fractions of it.
+const FIT = (body) => SCRATCH(`const u = Math.min(w, (b.maxY - b.minY) / 3.4); ${body}`);
+const AU = (fx, fy) => FIT(`return [c.x + ${fx} * u, c.y + ${fy} * u];`);
+async function clickAllU(ui, clickWorld, ...pts) {
+  for (const [fx, fy] of pts) {
+    await clickWorld(ui, AU(fx, fy));
+    await ui.sleep(250);
+  }
+}
+const hoverU = async (ui, fx, fy) => hoverAt(ui, ...(await ui.eval(AU(fx, fy))));
+
+// Faz 3: the selection tools, each on bare ground with the history open under the drawing.
+function selectionScenes(bare, clickWorld) {
+  const none = FIT('return 0;');
+  const inputOption = (ui, key) => ui.eval(`window.kentos.tools.active.input('${key}')`);
+  const started = async (ui, id, scratch = none, fields = {}) => {
+    await bare(ui, scratch, { ribbonTab: 'home', ...LOGGED, ...fields });
+    await ui.eval(`window.kentos.log.clear()`);
+    await startTool(ui, id);
+  };
+  /** Kesişen set to exactly this (it is kept for the session). */
+  const crossing = async (ui, want) => {
+    const on = await ui.eval(`window.kentos.tools.active.prompt.value.includes('Kesişen (K): açık')`);
+    if (on !== want) await inputOption(ui, 'K');
+  };
+  // Six upright lines, two squares, a circle and a spot, spread across the view; the fence runs through most of them.
+  const SCATTER = FIT(`
+    for (const x of [-2.3, -1.4, -0.5, 0.4, 1.3, 2.2]) add({ kind: 'line', a: { x: c.x + x * u, y: c.y - 1.1 * u }, b: { x: c.x + x * u, y: c.y + 0.9 * u }, color: '#3B82F6' });
+    const sq = (x0, y0, x1, y1) => add({ kind: 'polygon', pts: [{ x: c.x + x0 * u, y: c.y + y0 * u }, { x: c.x + x1 * u, y: c.y + y0 * u }, { x: c.x + x1 * u, y: c.y + y1 * u }, { x: c.x + x0 * u, y: c.y + y1 * u }], color: '#E5484D' });
+    sq(-1.1, -0.5, -0.7, -0.1);
+    sq(0.7, 0.1, 1.1, 0.5);
+    add({ kind: 'circle', c: { x: c.x + 0.05 * u, y: c.y - 0.5 * u }, r: 0.3 * u, color: '#E5484D' });
+    add({ kind: 'point', p: { x: c.x + 1.75 * u, y: c.y - 0.55 * u } });
+    add({ kind: 'point', p: { x: c.x - 1.9 * u, y: c.y + 0.6 * u } });`);
+  const FENCE = [[-2.6, -0.3], [-1.0, -0.3], [0.6, -0.55], [1.8, -0.55], [2.5, 0.3]];
+  const fence = async (ui) => {
+    await started(ui, 'selectFence', SCATTER);
+    await clickAllU(ui, clickWorld, ...FENCE);
+  };
+  // Daireyle seç: what lies inside the circle, what it only touches, and the frame around all of it.
+  const CLUSTER = FIT(`
+    const sq = (x0, y0, x1, y1, o = {}) => add({ kind: 'polygon', pts: [{ x: c.x + x0 * u, y: c.y + y0 * u }, { x: c.x + x1 * u, y: c.y + y0 * u }, { x: c.x + x1 * u, y: c.y + y1 * u }, { x: c.x + x0 * u, y: c.y + y1 * u }], ...o });
+    sq(-2.5, -1.4, 2.5, 1.4, { color: '#8B8B8B' });
+    sq(-0.6, -0.5, -0.1, 0.0, { color: '#E5484D' });
+    sq(0.2, 0.1, 0.7, 0.6, { color: '#E5484D' });
+    sq(0.9, -0.6, 1.4, -0.1, { color: '#E5484D' });
+    add({ kind: 'line', a: { x: c.x - 1.8 * u, y: c.y + 0.5 * u }, b: { x: c.x + 0.4 * u, y: c.y + 1.0 * u }, color: '#3B82F6' });
+    add({ kind: 'line', a: { x: c.x - 0.3 * u, y: c.y - 0.95 * u }, b: { x: c.x + 2 * u, y: c.y - 0.75 * u }, color: '#3B82F6' });
+    add({ kind: 'point', p: { x: c.x - 0.8 * u, y: c.y + 0.4 * u } });
+    add({ kind: 'point', p: { x: c.x + 2.2 * u, y: c.y + 1.0 * u } });`);
+  const circle = async (ui, on) => {
+    await started(ui, 'selectCircle', CLUSTER);
+    await crossing(ui, on);
+    await clickWorld(ui, AU(0.2, 0.05));
+    await ui.sleep(250);
+  };
+  // İçeren alanı seç: a parcel in a block in a district; the same place clicked again and again.
+  const NESTED = FIT(`
+    const sq = (cx, cy, half, o = {}) => add({ kind: 'polygon', pts: [{ x: c.x + (cx - half) * u, y: c.y + (cy - half * 0.7) * u }, { x: c.x + (cx + half) * u, y: c.y + (cy - half * 0.7) * u }, { x: c.x + (cx + half) * u, y: c.y + (cy + half * 0.7) * u }, { x: c.x + (cx - half) * u, y: c.y + (cy + half * 0.7) * u }], ...o });
+    sq(0.5, 0, 0.35, { color: '#E5484D' });
+    sq(0.3, 0, 1.2, { color: '#3B82F6' });
+    sq(0, 0, 2.5, { color: '#8B8B8B' });`);
+  const containing = async (ui, clicks) => {
+    await started(ui, 'selectContaining', NESTED);
+    for (let i = 0; i < clicks; i++) {
+      await clickWorld(ui, AU(0.55, 0.05));
+      await ui.sleep(250);
+    }
+  };
+  return [
+    { id: 'selectfence-preview', open: async (ui) => (await fence(ui), await hoverU(ui, 2.6, 0.85)) },
+    { id: 'selectfence-result', open: async (ui) => (await fence(ui), await pressEnter(ui), await ui.move(2, 2)) },
+    { id: 'selectcircle-preview', open: async (ui) => (await circle(ui, true), await hoverU(ui, 1.35, 0.05)) },
+    { id: 'selectcircle-result', open: async (ui) => (await circle(ui, true), await clickWorld(ui, AU(1.35, 0.05)), await ui.move(2, 2)) },
+    { id: 'selectcircle-window-result', open: async (ui) => (await circle(ui, false), await clickWorld(ui, AU(1.35, 0.05)), await ui.move(2, 2)) },
+    { id: 'selectcontaining-first', open: async (ui) => (await containing(ui, 1), await ui.move(2, 2)) },
+    { id: 'selectcontaining-second', open: async (ui) => (await containing(ui, 2), await hoverU(ui, 0.55, 0.05)) },
+    {
+      id: 'select-split-list',
+      open: async (ui) => {
+        await ribbonOn(ui, { ribbonTab: 'home' });
+        await ui.eval(`(() => { const k = window.kentos; k.view.camera.fit(k.doc.homeView); k.log.clear(); })()`);
+        await ui.clickSel('.ribbon__strip [data-split="select"] .rsplit__arrow');
+        await ui.waitFor(`!!document.querySelector('.menu')`);
+        await ui.sleep(300);
+      },
+    },
   ];
 }
 
 // Faz 2: the query tools, each on bare ground with the history open under the drawing.
 function queryScenes(bare, clickWorld) {
-  const none = SCRATCH('return 0;');
+  const none = FIT('return 0;');
   const inputOption = (ui, key) => ui.eval(`window.kentos.tools.active.input('${key}')`);
   /** The tool's toggles (kept for the session) set to exactly these: `chip` is the prompt's text for it. */
   const toggle = async (ui, key, chip, want) => {
@@ -1450,45 +1542,45 @@ function queryScenes(bare, clickWorld) {
   const rays = async (ui) => {
     await started(ui, 'measure');
     await toggle(ui, 'S', 'Sabit ilk nokta (S)', true);
-    await clickAll(ui, clickWorld, [-1.6, -0.5], [0.4, -1.3], [1.8, -0.3], [0.9, 1.2]);
+    await clickAllU(ui, clickWorld, [-1.6, -0.5], [0.4, -1.3], [1.8, -0.3], [0.9, 1.2]);
   };
   // Alan hesapla: a block of four lines with a square island in it, and a second, smaller region beside it.
-  const REGIONS = SCRATCH(`
-    const box = (x0, y0, x1, y1) => [[x0, y0, x1, y0], [x1, y0, x1, y1], [x1, y1, x0, y1], [x0, y1, x0, y0]].forEach(([ax, ay, bx, by]) => add({ kind: 'line', a: { x: c.x + ax * w, y: c.y + ay * w }, b: { x: c.x + bx * w, y: c.y + by * w } }));
+  const REGIONS = FIT(`
+    const box = (x0, y0, x1, y1) => [[x0, y0, x1, y0], [x1, y0, x1, y1], [x1, y1, x0, y1], [x0, y1, x0, y0]].forEach(([ax, ay, bx, by]) => add({ kind: 'line', a: { x: c.x + ax * u, y: c.y + ay * u }, b: { x: c.x + bx * u, y: c.y + by * u } }));
     box(-2.4, -1.2, 0.8, 1.3);
     box(1.3, -0.6, 2.4, 0.6);
-    add({ kind: 'polygon', pts: [{ x: c.x - 1.4 * w, y: c.y - 0.3 * w }, { x: c.x - 0.4 * w, y: c.y - 0.3 * w }, { x: c.x - 0.4 * w, y: c.y + 0.5 * w }, { x: c.x - 1.4 * w, y: c.y + 0.5 * w }], color: '#3B82F6' });`);
+    add({ kind: 'polygon', pts: [{ x: c.x - 1.4 * u, y: c.y - 0.3 * u }, { x: c.x - 0.4 * u, y: c.y - 0.3 * u }, { x: c.x - 0.4 * u, y: c.y + 0.5 * u }, { x: c.x - 1.4 * u, y: c.y + 0.5 * u }], color: '#3B82F6' });`);
   const inside = async (ui, id = 'area') => {
     await started(ui, id, REGIONS);
     await toggle(ui, 'I', 'İçine tıkla (I)', true);
   };
   return [
-    { id: 'measure-fixed-preview', open: async (ui) => (await rays(ui), await hoverFrac(ui, -1.9, 1.0)) },
+    { id: 'measure-fixed-preview', open: async (ui) => (await rays(ui), await hoverU(ui, -1.9, 1.0)) },
     { id: 'measure-fixed-result', open: async (ui) => (await rays(ui), await pressEnter(ui), await ui.move(2, 2)) },
-    { id: 'measure-fixed-off', open: async (ui) => (await started(ui, 'measure'), await toggle(ui, 'S', 'Sabit ilk nokta (S)', false), await hoverFrac(ui, 0, 0)) },
-    { id: 'area-inside-preview', open: async (ui) => (await inside(ui), await hoverFrac(ui, -1.9, -0.9)) },
-    { id: 'area-inside-result', open: async (ui) => (await inside(ui), await clickWorld(ui, AT(-1.9, -0.9)), await hoverFrac(ui, 1.85, 0)) },
-    { id: 'area-inside-none', open: async (ui) => (await inside(ui), await clickWorld(ui, AT(0.9, -1.0)), await ui.move(2, 2)) },
+    { id: 'measure-fixed-off', open: async (ui) => (await started(ui, 'measure'), await toggle(ui, 'S', 'Sabit ilk nokta (S)', false), await hoverU(ui, 0, 0)) },
+    { id: 'area-inside-preview', open: async (ui) => (await inside(ui), await hoverU(ui, -1.9, -0.9)) },
+    { id: 'area-inside-result', open: async (ui) => (await inside(ui), await clickWorld(ui, AU(-1.9, -0.9)), await hoverU(ui, 1.85, 0)) },
+    { id: 'area-inside-none', open: async (ui) => (await inside(ui), await clickWorld(ui, AU(0.9, -1.0)), await ui.move(2, 2)) },
     {
       id: 'area-draw-result',
       open: async (ui) => {
         await inside(ui);
-        await clickWorld(ui, AT(-1.9, -0.9));
+        await clickWorld(ui, AU(-1.9, -0.9));
         await inputOption(ui, 'A');
         await ui.sleep(300);
-        await hoverFrac(ui, 1.85, 0);
+        await hoverU(ui, 1.85, 0);
       },
     },
     {
       id: 'station-base',
-      open: async (ui) => (await started(ui, 'stationOffset'), await clickAll(ui, clickWorld, [-2.0, -0.6], [2.0, 0.5]), await hoverFrac(ui, 0.2, 0.4)),
+      open: async (ui) => (await started(ui, 'stationOffset'), await clickAllU(ui, clickWorld, [-2.0, -0.6], [2.0, 0.5]), await hoverU(ui, 0.2, 0.4)),
     },
     {
       id: 'station-point',
       open: async (ui) => {
         await started(ui, 'stationOffset');
-        await clickAll(ui, clickWorld, [-2.0, -0.6], [2.0, 0.5], [-0.9, 0.6]);
-        await hoverFrac(ui, 0.9, -0.9);
+        await clickAllU(ui, clickWorld, [-2.0, -0.6], [2.0, 0.5], [-0.9, 0.6]);
+        await hoverU(ui, 0.9, -0.9);
       },
     },
   ];
