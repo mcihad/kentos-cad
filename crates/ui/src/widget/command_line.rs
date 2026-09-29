@@ -575,6 +575,11 @@ impl<'a, Message: Clone + 'a> From<CommandLine<'a, Message>> for Element<'a, Mes
         let name_width = name_width(offered);
         let expand = on_expand.map(|on_expand| on_expand(!expanded));
         let log_height = expanded_height.unwrap_or_else(expanded_log_height);
+        // While a prompt offers chips its words need the room: the controls
+        // keep their icons and say their names in a tip.
+        let compact = prompt
+            .as_ref()
+            .is_some_and(|p| !p.options.is_empty() || !p.menus.is_empty());
 
         Element::new(Console {
             log: if lines == 0 {
@@ -591,7 +596,7 @@ impl<'a, Message: Clone + 'a> From<CommandLine<'a, Message>> for Element<'a, Mes
                 &callbacks,
                 focus.clone(),
             ),
-            controls: controls(expanded, expand.is_some()),
+            controls: controls(expanded, expand.is_some(), compact),
             input_id: id,
             value,
             suggestions,
@@ -1013,9 +1018,12 @@ enum Control {
     Expand,
 }
 
-fn controls<'a>(expanded: bool, can_expand: bool) -> Element<'a, Control> {
-    let control = |glyph: Icon, name: &'a str| {
-        button(
+/// `compact`: the icons alone, each name in its tip (a prompt's chips need the room).
+fn controls<'a>(expanded: bool, can_expand: bool, compact: bool) -> Element<'a, Control> {
+    let control = |glyph: Icon, name: &'static str, press: Option<Control>| {
+        let face: Element<'a, Control> = if compact {
+            icon(glyph).size(12.0).into()
+        } else {
             row![
                 icon(glyph).size(12.0),
                 text(name)
@@ -1023,14 +1031,27 @@ fn controls<'a>(expanded: bool, can_expand: bool) -> Element<'a, Control> {
                     .size(typography::caption())
             ]
             .spacing(5)
-            .align_y(Center),
-        )
-        .padding([3, 7])
-        .style(style::button::ghost)
+            .align_y(Center)
+            .into()
+        };
+        let button: Element<'a, Control> = button(face)
+            .padding([3, 7])
+            .style(style::button::ghost)
+            .on_press_maybe(press)
+            .into();
+        if compact {
+            crate::widget::tip(
+                button,
+                crate::widget::Tip::new(name),
+                iced::widget::tooltip::Position::Top,
+            )
+        } else {
+            button
+        }
     };
 
     row![
-        control(Icon::Terminal, "Komutlar").on_press(Control::Browse),
+        control(Icon::Terminal, "Komutlar", Some(Control::Browse)),
         control(
             if expanded {
                 Icon::ChevronDown
@@ -1038,8 +1059,8 @@ fn controls<'a>(expanded: bool, can_expand: bool) -> Element<'a, Control> {
                 Icon::ChevronUp
             },
             "Geçmiş",
-        )
-        .on_press_maybe(can_expand.then_some(Control::Expand)),
+            can_expand.then_some(Control::Expand),
+        ),
     ]
     .spacing(2)
     .into()
