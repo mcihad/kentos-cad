@@ -451,6 +451,13 @@ pub struct App {
     pub crosshair: crate::marks::CrosshairSize,
     /// The middle button pans the drawing: no crosshair meanwhile (input.rs).
     pub panning: bool,
+    /// The views left by navigating, for Önceki and Sonraki görünüm; session
+    /// state that never enters the drawing (navigation.rs, docs/adr/0141).
+    pub(crate) view_history: kentos_interaction::ViewHistory,
+    /// The Kaydır tool's drag has recorded the view it left (navigation.rs).
+    pub(crate) pan_recorded: bool,
+    /// The time the wheel's passes are told by: the clock's, unless a test sets it (navigation.rs).
+    pub(crate) view_clock: Option<std::time::Duration>,
     /// The object whose rollover card shows (hover_card.rs).
     pub hover_card: Option<kentos_domain::Slot>,
     /// The hover the card's wait was started for (`Selection::hover_version`).
@@ -620,6 +627,9 @@ impl App {
             hover_info: true,
             crosshair: crate::marks::CrosshairSize::default(),
             panning: false,
+            view_history: kentos_interaction::ViewHistory::new(),
+            pan_recorded: false,
+            view_clock: None,
             hover_card: None,
             hover_seen: 0,
             calc: crate::calc::Calc::default(),
@@ -1189,6 +1199,8 @@ impl App {
         self.cancel();
         self.selected_layer = None;
         self.viewport.opened(&doc);
+        // The views left belong to the drawing they were left on (docs/adr/0141).
+        self.view_history.clear();
         self.spatial.reload(&doc.model);
         self.styles.follow_project(Some(doc.model.styles()));
         self.selection = Selection::new();
@@ -1245,6 +1257,10 @@ impl App {
         }
         if crate::view_commands::COMMANDS.contains(&id) {
             return self.view_command(id);
+        }
+        // Önceki and Sonraki görünüm, Kapsam denetimi (navigation.rs, docs/adr/0141).
+        if crate::navigation::COMMANDS.contains(&id) {
+            return self.navigation_command(id);
         }
         match id {
             // The drawing on screen is left first: its unsent cloud work to its draft, or the question.
@@ -1305,12 +1321,14 @@ impl App {
             "view.bottomPanel" => self.toggle_bottom(),
             "view.coords" => self.show_bottom(crate::bottom::BottomTab::Coords),
             crate::catalog::PYTHON_CONSOLE => self.toggle_python(),
-            "view.zoomIn" => self.zoom_in(),
-            "view.zoomOut" => self.zoom_out(),
-            "view.zoomExtents" => self
-                .viewport
-                .update(viewport::Event::Extents, self.document.as_ref()),
-            "view.zoomSelection" => self.zoom_selection(),
+            // The navigation commands keep the view they leave (navigation.rs, docs/adr/0141).
+            "view.zoomIn" => self.navigating(Self::zoom_in),
+            "view.zoomOut" => self.navigating(Self::zoom_out),
+            "view.zoomExtents" => self.navigating(|app| {
+                app.viewport
+                    .update(viewport::Event::Extents, app.document.as_ref());
+            }),
+            "view.zoomSelection" => self.navigating(Self::zoom_selection),
             "commandline.focus" => return operation::focus(COMMAND_INPUT),
             "help.about" => self.dialog = Some(Dialog::About),
             "help.shortcuts" => return self.open_shortcuts(),
@@ -1397,6 +1415,10 @@ impl App {
             }
             "edit.redo" => doc.is_some_and(kentos_domain::Document::can_redo),
             "edit.deselect" | "view.zoomSelection" => !self.selection.is_empty(),
+            // Only where there is a view to go to (docs/adr/0141).
+            "view.previous" => self.view_history.can_back(),
+            "view.next" => self.view_history.can_forward(),
+            "view.extentCheck" => doc.is_some(),
             id if crate::clipboard::COMMANDS.contains(&id) => self.clipboard_available(id),
             "server.check" => !self.server_checking,
             id if id.starts_with("cloud.") => self.cloud_available(id),

@@ -46,6 +46,7 @@ mod message_log;
 #[cfg(test)]
 mod message_log_tests;
 mod modes;
+mod navigation;
 mod opening;
 #[cfg(test)]
 mod perf;

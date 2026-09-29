@@ -50,20 +50,26 @@ impl App {
     /// it fits, 96 px in from the edges (the web's `zoomToSelection`,
     /// docs/adr/0056); nothing with no selection (the web's command is off).
     pub(crate) fn zoom_selection(&mut self) {
-        let Some(doc) = &self.document else {
-            return;
-        };
         if self.selection.is_empty() {
             return;
         }
-        self.spatial.sync(&doc.model);
         let ids: Vec<f64> = self
             .selection
             .ids()
             .iter()
             .map(|slot| f64::from(slot.0))
             .collect();
-        if let Some(bounds) = self.spatial.store().extent(Some(&ids)) {
+        self.zoom_to_objects(&ids);
+    }
+
+    /// The view on the box of these objects (by slot), as large as it fits,
+    /// 96 px in from the edges: Seçime yakınlaştır's and Katmana yakınlaştır's.
+    pub(crate) fn zoom_to_objects(&mut self, ids: &[f64]) {
+        let Some(doc) = &self.document else {
+            return;
+        };
+        self.spatial.sync(&doc.model);
+        if let Some(bounds) = self.spatial.store().extent(Some(ids)) {
             self.viewport.change(ViewChange::Fit {
                 bounds,
                 padding: SELECTION_PADDING,

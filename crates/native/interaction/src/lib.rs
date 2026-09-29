@@ -58,6 +58,8 @@
 //!   ([`dimension_chain`]); phase 3's fence for trim and extend
 //!   ([`trim`], `fence`), the two sides and deleted source of offset
 //!   ([`offset`]) and the array along a path ([`array_path`]);
+//! - the view history of docs/adr/0141 ([`view_history`]): the views left by
+//!   navigating, for Önceki and Sonraki görünüm;
 //! - the geometry store kept in step with the document ([`Spatial`]): what
 //!   a click picks, a box selects and a point snaps to;
 //! - [`Format`]: numbers as the web shows them in messages and the tag.
@@ -144,6 +146,7 @@ pub mod text;
 mod tool;
 pub mod trim;
 pub mod vertex;
+pub mod view_history;
 
 pub use clipboard::Clipboard;
 pub use format::{Format, fixed};
@@ -165,6 +168,7 @@ pub use spatial::{
     GripSet, LabelSpot, Spatial, arc_sweep, dimension_layout, full_ellipse, measures, vertices,
 };
 pub use tool::{Area, Label};
+pub use view_history::{ViewHistory, Viewpoint};
 pub use tool::{
     Context, Corners, Cursor, DimensionMode, Draft, Flow, LengthenMode, Marker, MarkerShape,
     Memory, Pointer, Preview, Stroke, Tag, TextField, Tone, Tool, View, ViewChange, snap_kinds,

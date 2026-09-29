@@ -106,7 +106,15 @@ impl App {
                         let _ = self.builder_picked(keep);
                     }
                 }
-                change => self.viewport.change(change),
+                // Kaydır: the first step of a drag records the view it leaves; Pencere
+                // yakınlaştır's box is a navigation (navigation.rs, docs/adr/0141).
+                ViewChange::Pan { dx, dy } => {
+                    if !std::mem::replace(&mut self.pan_recorded, true) {
+                        self.view_history.record(self.viewpoint());
+                    }
+                    self.viewport.change(ViewChange::Pan { dx, dy });
+                }
+                change => self.navigating(|app| app.viewport.change(change)),
             }
         }
         for line in log {
@@ -238,8 +246,12 @@ impl App {
         ) {
             self.close_text_field(true);
         }
+        // The wheel, the middle button and its double click move the view: the
+        // history keeps what they leave (navigation.rs, docs/adr/0141).
+        let (before, was_panning) = (self.viewpoint(), self.panning);
         let doc = self.document.as_ref();
         self.viewport.update(event.clone(), doc);
+        self.keep_view(&event, before, was_panning);
         // No crosshair while the middle button pans (the web's `panFrom`): a
         // pan reports itself, and the first plain move after it ends it.
         match event {
@@ -257,6 +269,8 @@ impl App {
                 self.with_tool(|s, cx| s.pointer_move(&p, cx));
             }
             viewport::Event::Pressed(at) => {
+                // A new drag of Kaydır records its start again.
+                self.pan_recorded = false;
                 // A click on the drawing takes the keyboard from any text field
                 // and the layer tree: the value field closes without applying
                 // (web: it loses focus).
@@ -277,6 +291,7 @@ impl App {
                 }
             }
             viewport::Event::Released(at) => {
+                self.pan_recorded = false;
                 let p = self.pointer_at(at);
                 self.with_tool(|s, cx| s.pointer_up(&p, cx));
             }

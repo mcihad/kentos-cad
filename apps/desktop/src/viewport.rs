@@ -38,8 +38,8 @@ use iced::widget::{container, shader, stack};
 use iced::{Element, Fill, Point, Rectangle, Vector, mouse, wgpu};
 
 use kentos_contracts::{DrawingFont, Entity, LayerNode};
-use kentos_interaction::{Cursor, Selection, ViewChange};
-use kentos_render_wgpu::camera::FIT_PADDING;
+use kentos_interaction::{Cursor, Selection, ViewChange, Viewpoint};
+use kentos_render_wgpu::camera::{FIT_PADDING, MAX_SCALE, MIN_SCALE};
 use kentos_render_wgpu::scene::{self, lod};
 use kentos_render_wgpu::styled::StyledScene;
 use kentos_render_wgpu::{
@@ -692,6 +692,25 @@ impl Viewport {
             // The app opens the text field (text_field.rs), or its window again
             // with the picked point (calc/); the camera stays.
             ViewChange::Text(_) | ViewChange::Picked(_) | ViewChange::PickedObjects(_) => {}
+        }
+        self.cursor = at.map(|[x, y]| self.camera.screen_to_world(x, y));
+    }
+
+    /// Where the camera stands, for the view history (docs/adr/0141).
+    pub fn viewpoint(&self) -> Viewpoint {
+        Viewpoint {
+            center: self.camera.center,
+            scale: self.camera.scale,
+        }
+    }
+
+    /// The camera back at a recorded view. The pointer stays where it is on
+    /// the area, as with any view change, so the world point under it follows.
+    pub fn restore(&mut self, view: Viewpoint) {
+        let at = self.cursor.map(|c| self.camera.world_to_screen(c));
+        self.camera.center_on(view.center);
+        if view.scale.is_finite() && view.scale > 0.0 {
+            self.camera.scale = view.scale.clamp(MIN_SCALE, MAX_SCALE);
         }
         self.cursor = at.map(|[x, y]| self.camera.screen_to_world(x, y));
     }

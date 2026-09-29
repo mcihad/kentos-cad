@@ -162,7 +162,10 @@
     "style.clearSymbol",
     "style.legend",
     "style.svgEditor",
-    "file.import.ncz"
+    "file.import.ncz",
+    "view.previous",
+    "view.next",
+    "view.extentCheck"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

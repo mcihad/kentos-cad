@@ -173,6 +173,16 @@ impl Spatial {
             .collect()
     }
 
+    /// Kapsam denetimi (docs/adr/0141, `Store::extent_outliers`): the visible
+    /// objects lying far from the rest of the drawing, in the document's order.
+    pub fn extent_outliers(&self) -> Vec<Slot> {
+        self.store
+            .extent_outliers()
+            .into_iter()
+            .filter_map(slot)
+            .collect()
+    }
+
     /// The object snap near `at` within `tol` world units among `kinds`
     /// (`SnapKind::bit`s); `from` is the running command's last point, for
     /// perpendicular and tangent snaps (`PickIndex.snap`).

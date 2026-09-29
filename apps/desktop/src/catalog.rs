@@ -255,6 +255,10 @@ pub const PORTED: &[&str] = &[
     "style.svgEditor",
     // Netcad NCZ in, through the same window as DXF (exchange/drawing_import.rs, docs/adr/0138).
     "file.import.ncz",
+    // Navigation of docs/adr/0141 (navigation.rs): the views left, and the objects far from the drawing.
+    "view.previous",
+    "view.next",
+    "view.extentCheck",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

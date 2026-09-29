@@ -52,6 +52,8 @@ pub enum Event {
     Isolate(String),
     /// Nesnelerini seç: the objects of a layer, or of every layer of a group.
     SelectObjects(String),
+    /// Katmana yakınlaştır, Gruba yakınlaştır: the view on those objects (docs/adr/0141).
+    ZoomTo(String),
     Color(String, String),
     LineType(String, LineType),
     LineWeight(String, f64),
@@ -151,6 +153,10 @@ impl App {
             self.ask_remove_layer(id);
             return Task::none();
         }
+        if let Event::ZoomTo(id) = &event {
+            self.zoom_to_layer(id);
+            return Task::none();
+        }
         if let Event::Rename(id) = &event {
             let name = self
                 .document
@@ -219,9 +225,33 @@ impl App {
                     Err(refusal) => self.warn(refusal.to_string()),
                 }
             }
-            Event::Rename(_) | Event::Remove(_) => {}
+            Event::Rename(_) | Event::Remove(_) | Event::ZoomTo(_) => {}
         }
         Task::none()
+    }
+
+    /// Katmana yakınlaştır, Gruba yakınlaştır: the view on the box of the
+    /// layer's objects, or of those of every layer below a group; it goes into
+    /// the view history like any navigation (docs/adr/0141). A layer with no
+    /// objects has nothing to show: the menu offers it dimmed.
+    fn zoom_to_layer(&mut self, id: &str) {
+        let Some(doc) = &self.document else {
+            return;
+        };
+        let Some(node) = doc.model.layers().get(id) else {
+            return;
+        };
+        let mut layers = Vec::new();
+        leaves(node, &mut layers);
+        let ids: Vec<f64> = doc
+            .model
+            .entities()
+            .filter(|e| layers.contains(&e.base().layer_id.as_str()))
+            .map(|e| f64::from(e.base().id))
+            .collect();
+        if !ids.is_empty() {
+            self.navigating(|app| app.zoom_to_objects(&ids));
+        }
     }
 
     /// Sil (the web's `LayersPanel.remove`): what the drawing refuses (the
@@ -349,6 +379,14 @@ impl App {
             .item("Tüm katmanları göster", Message::Run("layer.showAll"))
             .separator()
             .item("Nesnelerini seç", event(Event::SelectObjects(id.clone())))
+            .item(
+                if is_layer {
+                    "Katmana yakınlaştır"
+                } else {
+                    "Gruba yakınlaştır"
+                },
+                (self.objects_below(node) > 0).then(|| event(Event::ZoomTo(id.clone()))),
+            )
             .separator();
         if is_layer {
             let style = &node.style;
@@ -399,6 +437,13 @@ impl App {
             .icon(crate::icons::from_web(Some("trash")))
             // The web's `formatChord`: Delete is “Del”, Space “Boşluk”.
             .shortcut("Del")
+    }
+
+    /// How many objects a layer, or every layer below a group, holds.
+    fn objects_below(&self, node: &LayerNode) -> usize {
+        self.document
+            .as_ref()
+            .map_or(0, |doc| doc.count_below(node))
     }
 
     /// The layer's colour menu, from its swatch (the web's `colorItems`): the ink colours,
