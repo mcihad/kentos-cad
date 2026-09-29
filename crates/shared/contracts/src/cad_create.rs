@@ -57,6 +57,14 @@ pub enum CreateOperation {
     ForwardIntersection,
     /// Geriden kestirme: the station found from three known points (Hesap menu).
     Resection,
+    /// Ara nokta: points on the line between two points (docs/adr/0140).
+    PointsBetween,
+    /// Kesişim noktası: the point where two distances, two bearings or two lines meet.
+    IntersectPoint,
+    /// Zincir ölçü: the next dimension of a chain.
+    DimensionChain,
+    /// Baz ölçü: a dimension measured from the base dimension's first point.
+    DimensionBaseline,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

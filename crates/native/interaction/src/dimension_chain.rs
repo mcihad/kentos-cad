@@ -211,7 +211,11 @@ impl DimensionChain {
             angle: g.angle,
             c: None,
         };
-        let Some(out) = points::write_objects(vec![geometry], None, cx) else {
+        let operation = match self.kind {
+            Kind::Continue => kentos_contracts::CreateOperation::DimensionChain,
+            Kind::Baseline => kentos_contracts::CreateOperation::DimensionBaseline,
+        };
+        let Some(out) = points::write_objects(vec![geometry], Some(operation), cx) else {
             return;
         };
         let uid = out.created.first().and_then(|u| Uuid::parse_str(u).ok());

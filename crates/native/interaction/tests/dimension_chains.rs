@@ -79,7 +79,7 @@ fn a_chain_measures_on_from_the_end_of_the_last_dimension() {
     assert!(near(d.offset, 3.0));
     assert_eq!(dimensions(&b), 3);
     // Each dimension is its own undo step.
-    assert_eq!(b.doc.undo().as_deref(), Some("Ekle"));
+    assert_eq!(b.doc.undo().as_deref(), Some("Zincir ölçü"));
     assert_eq!(dimensions(&b), 2);
     // Enter ends.
     b.confirm();
@@ -106,7 +106,7 @@ fn a_baseline_stacks_lines_three_text_heights_apart() {
     assert_eq!((rel(d.a), rel(d.b)), ([0.0, 0.0], [21.0, 0.0]));
     assert!(near(d.offset, 18.0), "the second level: {d:?}");
     assert_eq!(dimensions(&b), 3);
-    assert_eq!(b.doc.undo().as_deref(), Some("Ekle"));
+    assert_eq!(b.doc.undo().as_deref(), Some("Baz ölçü"));
     assert_eq!(dimensions(&b), 2);
 }
 

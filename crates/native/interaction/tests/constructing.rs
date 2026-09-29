@@ -270,7 +270,7 @@ fn equal_parts_show_their_points_and_a_typed_count_writes_them() {
     assert_eq!(b.last_text(), Some("5 nokta kondu."));
     assert_eq!(b.last_level(), Some(Level::Success));
     // One undo step for all of them; the count is kept.
-    assert_eq!(b.doc.undo().as_deref(), Some("Ekle"));
+    assert_eq!(b.doc.undo().as_deref(), Some("Ara nokta"));
     assert_eq!(b.doc.len(), 0);
     assert_eq!(b.memory.between_parts, 6);
     // It asks for two more points; Enter now writes at the kept count.
@@ -403,7 +403,7 @@ fn two_distances_offer_both_meetings_and_a_click_chooses() {
         Some("Kesişim noktası kondu: Y 487003.000  X 4419996.000")
     );
     assert_eq!(b.last_level(), Some(Level::Success));
-    assert_eq!(b.doc.undo().as_deref(), Some("Ekle"));
+    assert_eq!(b.doc.undo().as_deref(), Some("Kesişim noktası"));
     assert_eq!(b.doc.len(), 0);
     assert_eq!(b.memory.meeting_distance, 5.0);
 }
@@ -569,7 +569,7 @@ fn two_lines_meet_where_they_extend_to() {
     );
     b.click(2.0, -1.0);
     assert!(near2(newest_point(&b), [2.0, 0.0]));
-    assert_eq!(b.doc.undo().as_deref(), Some("Ekle"));
+    assert_eq!(b.doc.undo().as_deref(), Some("Kesişim noktası"));
     // Parallel lines do not meet: the fourth point is asked again.
     let mut b = Bench::new("intersectPoint");
     assert!(b.type_text("L"));

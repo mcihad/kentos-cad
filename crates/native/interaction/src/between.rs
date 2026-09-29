@@ -176,7 +176,13 @@ impl PointsBetween {
                 z: None,
             })
             .collect();
-        if points::write_objects(objects, None, cx).is_some() {
+        if points::write_objects(
+            objects,
+            Some(kentos_contracts::CreateOperation::PointsBetween),
+            cx,
+        )
+        .is_some()
+        {
             cx.say(Level::Success, format!("{n} nokta kondu."));
         }
         self.d.reset();

@@ -21292,6 +21292,26 @@
                 "const": "resection",
                 "description": "Geriden kestirme: the station found from three known points (Hesap menu).",
                 "type": "string"
+              },
+              {
+                "const": "pointsBetween",
+                "description": "Ara nokta: points on the line between two points (docs/adr/0140).",
+                "type": "string"
+              },
+              {
+                "const": "intersectPoint",
+                "description": "Kesişim noktası: the point where two distances, two bearings or two lines meet.",
+                "type": "string"
+              },
+              {
+                "const": "dimensionChain",
+                "description": "Zincir ölçü: the next dimension of a chain.",
+                "type": "string"
+              },
+              {
+                "const": "dimensionBaseline",
+                "description": "Baz ölçü: a dimension measured from the base dimension's first point.",
+                "type": "string"
               }
             ]
           },

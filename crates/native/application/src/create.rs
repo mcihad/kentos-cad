@@ -108,6 +108,11 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         Some(CreateOperation::PolarSurvey) => "Kutupsal alım",
         Some(CreateOperation::ForwardIntersection) => "Önden kestirme",
         Some(CreateOperation::Resection) => "Geriden kestirme",
+        // The drawing tools of docs/adr/0140.
+        Some(CreateOperation::PointsBetween) => "Ara nokta",
+        Some(CreateOperation::IntersectPoint) => "Kesişim noktası",
+        Some(CreateOperation::DimensionChain) => "Zincir ölçü",
+        Some(CreateOperation::DimensionBaseline) => "Baz ölçü",
     }
 }
 

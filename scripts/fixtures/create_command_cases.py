@@ -303,6 +303,29 @@ cases.append({
     ],
 })
 
+# The drawing tools of ADR 0140 that add through this command name their steps.
+BETWEEN = [O(point(487005, 4420000)), O(point(487010, 4420000))]
+MEETING = [O(point(487004, 4420003))]
+CHAINED = [O({"kind": "dimension", "a": P(487010, 4420000), "b": P(487016, 4420000), "offset": 2, "height": 0.5, "style": "linear", "angle": 0})]
+BASED = [O({"kind": "dimension", "a": P(487000, 4420000), "b": P(487018, 4420000), "offset": 3.5, "height": 0.5, "style": "linear", "angle": 0})]
+cases.append({
+    "name": "Ara nokta, Kesişim noktası, Zincir ölçü ve Baz ölçü (ADR 0140): her biri tek adımdır, adı aracın adıdır",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "pointsBetween", "objects": BETWEEN}, "result": done([3, 4]),
+         "expect": {"ids": IDS + [3, 4], "entities": {"3": made(BETWEEN[0], 3), "4": made(BETWEEN[1], 4)}, "revision": "changed"}},
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "intersectPoint", "objects": MEETING}, "result": done([5]),
+         "expect": {"entities": {"5": made(MEETING[0], 5)}, "revision": "changed"}},
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "dimensionChain", "objects": CHAINED}, "result": done([6]),
+         "expect": {"entities": {"6": made(CHAINED[0], 6)}, "revision": "changed"}},
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "dimensionBaseline", "objects": BASED}, "result": done([7]),
+         "expect": {"ids": IDS + [3, 4, 5, 6, 7], "entities": {"7": made(BASED[0], 7)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Baz ölçü", "expect": {"ids": IDS + [3, 4, 5, 6]}},
+        {"op": "undo", "returns": "Zincir ölçü", "expect": {"ids": IDS + [3, 4, 5]}},
+        {"op": "undo", "returns": "Kesişim noktası", "expect": {"ids": IDS + [3, 4]}},
+        {"op": "undo", "returns": "Ara nokta", "expect": {"ids": IDS, "canUndo": False, "canRedo": True}},
+    ],
+})
+
 cases.append({
     "name": "Hesap penceresi gizli katmana da yazar, uyarıyla",
     "steps": [

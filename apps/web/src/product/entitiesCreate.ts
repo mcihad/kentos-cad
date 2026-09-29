@@ -41,6 +41,10 @@ export const CREATE_LABEL: Record<CreateOperation, string> = {
   polarSurvey: 'Kutupsal alım',
   forwardIntersection: 'Önden kestirme',
   resection: 'Geriden kestirme',
+  pointsBetween: 'Ara nokta',
+  intersectPoint: 'Kesişim noktası',
+  dimensionChain: 'Zincir ölçü',
+  dimensionBaseline: 'Baz ölçü',
 };
 
 /** The checks in the contract's order: why nothing may be written, or the warnings when it may. */

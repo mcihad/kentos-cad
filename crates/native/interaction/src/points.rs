@@ -110,25 +110,6 @@ pub(crate) fn write_ring(
     }
 }
 
-/// One point written through the product command `cad.point.create`
-/// (docs/adr/0140): the active layer and the current colour explicit in its
-/// input (CMD-07); its own object and its own undo step. The point's slot,
-/// or `None` when the command refused (its reason said).
-pub(crate) fn write_point(p: Vec2, cx: &mut Context<'_>) -> Option<u32> {
-    use kentos_native_application::{ExecutionContext, point};
-    let input = kentos_contracts::PointCreate {
-        layer_id: cx.doc.layers().active().to_owned(),
-        p: wire(p),
-        z: None,
-        label: None,
-        color: cx.draft.color.map(str::to_owned),
-        attrs: None,
-        expected_revision: None,
-    };
-    let result = point::execute(&mut ExecutionContext::new(cx.doc), input);
-    written(result, cx).map(|written| written.id)
-}
-
 /// Objects a tool built (an ellipse, a spline, a perpendicular …) written
 /// through the product command `cad.entities.create` (docs/adr/0057): the
 /// active layer and the current colour explicit in its input (CMD-07; the
