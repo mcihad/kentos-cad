@@ -72,7 +72,7 @@
   - Point → nokta, üçüncü sayı Z'dir. MultiPoint → konum başına nokta.
   - LineString: iki konum çizgidir, daha fazlası yoldur, ikiden azı alınmaz. MultiLineString: üye başına.
   - Polygon: ilk halka dış sınır, öbürleri deliktir. Son konum ilkiyle x ve y'de tam aynıysa düşer. Kapanmamış halka olduğu gibi alınır, raporlanır. Üçten az köşeli dış sınır alanı düşürür; delik düşer. Halka yönü değiştirilmez.
-  - MultiPolygon: üye başına. GeometryCollection: üye başına, iç içe.
+  - MultiPolygon: üye başına. GeometryCollection: üye başına, iç içe. (29 Eylül: [ADR 0143](0143-multi-part-area.md) ile MultiPolygon, okunabilen üyelerinin tek, çok parçalı alanıdır; parçalar üye sırasıyla gelir, tek üye kalırsa düz alandır.)
   - Z yalnız noktada kalır. Çizgi ve alanda düşer, raporlanır; dördüncü ve sonraki sayılar da. (29 Eylül: [ADR 0142](0142-vertex-elevation.md) ile çizgi ve alanın köşe kotu da okunur ve yazılır; dördüncü ve sonraki sayılar düşmeye devam eder.)
 - Konum en az iki sayıdan oluşan bir dizidir. Değilse ya da x, y, z sonlu değilse (`1e999`) en küçük birim alınmaz: nokta, LineString, MultiLineString üyesi, bütün Polygon, MultiPolygon üyesi, GeometryCollection üyesi. Geri kalanı okunur.
 - Öznitelikler, `properties`'in üyeleri:
@@ -105,6 +105,7 @@
   - Delik, ilk köşesini tutan ilk dış sınıra gider (çift-tek ışın). Hiçbir dış sınır tutmazsa kendi başına alan olur, raporlanır.
   - Saat yönünde halkası olmayan kayıtta her halka ayrı alandır.
   - Alanlar dış sınırlarının parça sırasıyla gelir.
+  - (29 Eylül: [ADR 0143](0143-multi-part-area.md) ile bir kayıt tek alandır: yukarıdaki alanlar onun parçalarıdır, aynı sırayla; tek parça kalırsa düz alandır.)
 - DBF (dBASE III):
   - n'inci kaydın öznitelikleri n'inci şeklindir. Silinmiş kaydın şekli alınmaz. Yalnız tam kayıtlar sayılır.
   - Alanlar: C (sondaki boşluk ve NUL silinir; boşsa bırakılır); N, F (iki uçtan silinir; metin olduğu gibi); L (`T t Y y` → `true`, `F f N n` → `false`, başkası bırakılır); D (`YYYYMMDD` → `YYYY-MM-DD`, `00000000` ve boş bırakılır).

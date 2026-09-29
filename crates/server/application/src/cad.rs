@@ -1,8 +1,11 @@
 //! A drawing object (`Entity`, the contract) as a stored feature and back
 //! (CLAUDE.md §15, docs/adr/0006).
 //!
-//! - Point, line, straight polyline and straight polygon: the PostGIS
-//!   geometry is the source, written and read as EWKB (every bit kept).
+//! - Point, line, straight polyline and straight polygon (a multi-part area
+//!   a MultiPolygon, docs/adr/0143) without vertex elevations: the PostGIS
+//!   geometry is the source, written and read as EWKB (every bit kept). The
+//!   geometry is 2D, so an object with elevations keeps its definition
+//!   (docs/adr/0142).
 //! - Everything else: `cad_definition` (the entity's geometric fields exactly
 //!   as in the contract) is the source; the geometry is its linear projection
 //!   within `PROJECTION_TOLERANCE`, made by `geometry-core`, and null for
@@ -161,7 +164,9 @@ fn validate(e: &Entity) -> Result<(), String> {
                 return Err("Çoklu çizginin adası olamaz".into());
             }
             if x.parts.is_some() {
-                return Err("Çoklu çizginin parçası olamaz; yalnız kapalı alan çok parçalı olur".into());
+                return Err(
+                    "Çoklu çizginin parçası olamaz; yalnız kapalı alan çok parçalı olur".into(),
+                );
             }
         }
         Polygon(x) => {
@@ -210,19 +215,27 @@ fn validate(e: &Entity) -> Result<(), String> {
     Ok(())
 }
 
-/// Whether the geometry alone holds the object (no arcs, no empty hole list;
-/// a multi-part area's projection holds only its first part so far, so its
-/// definition is its source: docs/adr/0143).
+/// Whether the geometry alone holds the object: no arcs, no empty hole or
+/// part list, and no vertex elevation (the geometry is 2D, docs/adr/0142);
+/// a multi-part area's parts likewise (docs/adr/0143).
 fn geometry_is_source(e: &Entity) -> bool {
+    let flat =
+        |bulges: &Option<Vec<f64>>, zs: &Option<Vec<Option<f64>>>| bulges.is_none() && zs.is_none();
+    let area = |bulges, zs, holes: &Option<Vec<kentos_contracts::RingGeometry>>| {
+        flat(bulges, zs)
+            && holes
+                .as_ref()
+                .is_none_or(|hs| !hs.is_empty() && hs.iter().all(|h| flat(&h.bulges, &h.zs)))
+    };
     match e {
-        Entity::Point(_) | Entity::Line(_) => true,
-        Entity::Polyline(x) => x.bulges.is_none() && x.holes.is_none(),
+        Entity::Point(_) => true,
+        Entity::Line(x) => x.za.is_none() && x.zb.is_none(),
+        Entity::Polyline(x) => flat(&x.bulges, &x.zs) && x.holes.is_none(),
         Entity::Polygon(x) => {
-            x.bulges.is_none()
-                && x.parts.is_none()
-                && x.holes
-                    .as_ref()
-                    .is_none_or(|hs| !hs.is_empty() && hs.iter().all(|h| h.bulges.is_none()))
+            area(&x.bulges, &x.zs, &x.holes)
+                && x.parts.as_ref().is_none_or(|ps| {
+                    !ps.is_empty() && ps.iter().all(|p| area(&p.bulges, &p.zs, &p.holes))
+                })
         }
         _ => false,
     }
@@ -243,7 +256,19 @@ fn projection(e: &Entity) -> Option<Geometry> {
         Entity::Polygon(x) => {
             let mut rings = vec![ring(&x.pts, &x.bulges)];
             rings.extend(x.holes.iter().flatten().map(|h| ring(&h.pts, &h.bulges)));
-            Geometry::Polygon(rings)
+            match x.parts.as_deref() {
+                // A multi-part area is a MultiPolygon, its own rings the first member (docs/adr/0143).
+                Some(parts) if !parts.is_empty() => {
+                    let mut polygons = vec![rings];
+                    polygons.extend(parts.iter().map(|p| {
+                        let mut rings = vec![ring(&p.pts, &p.bulges)];
+                        rings.extend(p.holes.iter().flatten().map(|h| ring(&h.pts, &h.bulges)));
+                        rings
+                    }));
+                    Geometry::MultiPolygon(polygons)
+                }
+                _ => Geometry::Polygon(rings),
+            }
         }
         Entity::Circle(x) => Geometry::Polygon(vec![circle_ring(p(x.c), x.r, tol)]),
         Entity::Arc(x) => {
@@ -340,6 +365,18 @@ fn ring_value(r: &[P]) -> Value {
     Value::Array(r.iter().copied().map(xy).collect())
 }
 
+/// An area's (or a part's) `pts` and `holes` from its rings, the outline first.
+fn area_value(m: &mut Map<String, Value>, rings: &[Vec<P>]) {
+    m.insert("pts".into(), ring_value(&rings[0]));
+    if rings.len() > 1 {
+        let holes: Vec<Value> = rings[1..]
+            .iter()
+            .map(|r| serde_json::json!({ "pts": ring_value(r) }))
+            .collect();
+        m.insert("holes".into(), Value::Array(holes));
+    }
+}
+
 /// Rebuilds the object from a feature row (`entity.id` is 0: the browser numbers objects itself).
 pub fn from_stored(s: &Stored) -> Result<Entity, String> {
     let mut map = match (s.source_kind, &s.cad_definition) {
@@ -363,14 +400,19 @@ pub fn from_stored(s: &Stored) -> Result<Entity, String> {
                     m.insert("pts".into(), ring_value(&l));
                 }
                 ("polygon", Geometry::Polygon(rings)) if !rings.is_empty() => {
-                    m.insert("pts".into(), ring_value(&rings[0]));
-                    if rings.len() > 1 {
-                        let holes: Vec<Value> = rings[1..]
-                            .iter()
-                            .map(|r| serde_json::json!({ "pts": ring_value(r) }))
-                            .collect();
-                        m.insert("holes".into(), Value::Array(holes));
-                    }
+                    area_value(&mut m, &rings);
+                }
+                // The first member is the area's own rings, the others its parts (docs/adr/0143).
+                ("polygon", Geometry::MultiPolygon(polygons))
+                    if polygons.len() > 1 && polygons.iter().all(|p| !p.is_empty()) =>
+                {
+                    area_value(&mut m, &polygons[0]);
+                    let parts = polygons[1..].iter().map(|rings| {
+                        let mut part = Map::new();
+                        area_value(&mut part, rings);
+                        Value::Object(part)
+                    });
+                    m.insert("parts".into(), Value::Array(parts.collect()));
                 }
                 (kind, g) => {
                     return Err(format!("{kind} nesnesinin geometrisi beklenmedik: {g:?}"));
@@ -440,39 +482,118 @@ mod tests {
         );
         let s = to_stored(&circle, 5256).unwrap();
         assert_eq!(s.line_weight, Some(0.0));
-        assert!(s.cad_definition.as_ref().unwrap().get("lineWeight").is_none());
+        assert!(
+            s.cad_definition
+                .as_ref()
+                .unwrap()
+                .get("lineWeight")
+                .is_none()
+        );
         assert_eq!(from_stored(&s).unwrap().base().line_weight, Some(0.0));
         // Without one, none; past 100 mm, refused.
-        let plain = entity(serde_json::json!({ "kind": "point", "id": 1, "layerId": "p", "attrs": {}, "p": { "x": 0, "y": 0 } }));
+        let plain = entity(
+            serde_json::json!({ "kind": "point", "id": 1, "layerId": "p", "attrs": {}, "p": { "x": 0, "y": 0 } }),
+        );
         assert_eq!(to_stored(&plain, 5256).unwrap().line_weight, None);
         let heavy = entity(
             serde_json::json!({ "kind": "point", "id": 1, "layerId": "p", "attrs": {}, "lineWeight": 101.0, "p": { "x": 0, "y": 0 } }),
         );
-        assert!(to_stored(&heavy, 5256).unwrap_err().contains("çizgi kalınlığı"));
+        assert!(
+            to_stored(&heavy, 5256)
+                .unwrap_err()
+                .contains("çizgi kalınlığı")
+        );
+    }
+
+    /// The object read back, its id as it went in (the browser numbers objects itself).
+    fn back(s: &Stored, id: u32) -> Entity {
+        let mut again = from_stored(s).unwrap();
+        match &mut again {
+            Entity::Polygon(x) | Entity::Polyline(x) => x.base.id = id,
+            Entity::Line(x) => x.base.id = id,
+            _ => {}
+        }
+        again
     }
 
     #[test]
-    fn a_multi_part_area_keeps_its_definition_and_every_part() {
-        // docs/adr/0143: the projection holds the first part only so far; the definition is the source.
-        let two = entity(serde_json::json!({ "kind": "polygon", "id": 1, "layerId": "p", "attrs": { "Ada": "101" },
+    fn a_multi_part_area_is_a_multi_polygon() {
+        // docs/adr/0143: straight, its MultiPolygon is the source, every part and hole kept.
+        let two = entity(
+            serde_json::json!({ "kind": "polygon", "id": 1, "layerId": "p", "attrs": { "Ada": "101" },
             "pts": [{ "x": 0, "y": 0 }, { "x": 10, "y": 0 }, { "x": 10, "y": 10 }],
-            "parts": [{ "pts": [{ "x": 20, "y": 0 }, { "x": 30, "y": 0 }, { "x": 30, "y": 10 }], "zs": [1.5, null, 2.0] }] }));
+            "parts": [{ "pts": [{ "x": 20, "y": 0 }, { "x": 30, "y": 0 }, { "x": 30, "y": 10 }],
+                "holes": [{ "pts": [{ "x": 25, "y": 1 }, { "x": 28, "y": 1 }, { "x": 28, "y": 4 }] }] }] }),
+        );
         let s = to_stored(&two, 5256).unwrap();
-        assert_eq!(s.source_kind, "cad");
-        assert!(s.cad_definition.as_ref().unwrap().get("parts").is_some());
-        let mut again = from_stored(&s).unwrap();
-        if let Entity::Polygon(x) = &mut again {
-            x.base.id = 1;
-        }
-        assert_eq!(again, two);
-        // A part is refused as the area's own ring would be; a polyline has none.
-        let thin = entity(serde_json::json!({ "kind": "polygon", "id": 1, "layerId": "p", "attrs": {},
+        assert_eq!(s.source_kind, "geom");
+        let (g, _) = ewkb::decode(s.geom.as_deref().unwrap()).unwrap();
+        assert!(matches!(&g, Geometry::MultiPolygon(p) if p.len() == 2 && p[1].len() == 2));
+        assert_eq!(back(&s, 1), two);
+        // With an elevation or an arc, the definition is the source and the projection still every part.
+        let arced = entity(
+            serde_json::json!({ "kind": "polygon", "id": 1, "layerId": "p", "attrs": {},
             "pts": [{ "x": 0, "y": 0 }, { "x": 10, "y": 0 }, { "x": 10, "y": 10 }],
-            "parts": [{ "pts": [{ "x": 20, "y": 0 }, { "x": 30, "y": 0 }] }] }));
-        assert!(to_stored(&thin, 5256).unwrap_err().contains("Alanın parçası"));
-        let path = entity(serde_json::json!({ "kind": "polyline", "id": 1, "layerId": "p", "attrs": {},
-            "pts": [{ "x": 0, "y": 0 }, { "x": 10, "y": 0 }], "parts": [] }));
-        assert!(to_stored(&path, 5256).unwrap_err().contains("parçası olamaz"));
+            "parts": [{ "pts": [{ "x": 20, "y": 0 }, { "x": 30, "y": 0 }, { "x": 30, "y": 10 }], "bulges": [0, 0.5, 0] }] }),
+        );
+        let s = to_stored(&arced, 5256).unwrap();
+        assert_eq!(s.source_kind, "cad");
+        let (g, _) = ewkb::decode(s.geom.as_deref().unwrap()).unwrap();
+        assert!(matches!(&g, Geometry::MultiPolygon(p) if p.len() == 2));
+        assert_eq!(back(&s, 1), arced);
+        let high = entity(
+            serde_json::json!({ "kind": "polygon", "id": 1, "layerId": "p", "attrs": {},
+            "pts": [{ "x": 0, "y": 0 }, { "x": 10, "y": 0 }, { "x": 10, "y": 10 }],
+            "parts": [{ "pts": [{ "x": 20, "y": 0 }, { "x": 30, "y": 0 }, { "x": 30, "y": 10 }], "zs": [1.5, null, 2.0] }] }),
+        );
+        let s = to_stored(&high, 5256).unwrap();
+        assert_eq!(s.source_kind, "cad");
+        assert_eq!(back(&s, 1), high);
+        // An empty part list is kept as it is.
+        let empty = entity(
+            serde_json::json!({ "kind": "polygon", "id": 1, "layerId": "p", "attrs": {},
+            "pts": [{ "x": 0, "y": 0 }, { "x": 10, "y": 0 }, { "x": 10, "y": 10 }], "parts": [] }),
+        );
+        assert_eq!(back(&to_stored(&empty, 5256).unwrap(), 1), empty);
+        // A part is refused as the area's own ring would be; a polyline has none.
+        let thin = entity(
+            serde_json::json!({ "kind": "polygon", "id": 1, "layerId": "p", "attrs": {},
+            "pts": [{ "x": 0, "y": 0 }, { "x": 10, "y": 0 }, { "x": 10, "y": 10 }],
+            "parts": [{ "pts": [{ "x": 20, "y": 0 }, { "x": 30, "y": 0 }] }] }),
+        );
+        assert!(
+            to_stored(&thin, 5256)
+                .unwrap_err()
+                .contains("Alanın parçası")
+        );
+        let path = entity(
+            serde_json::json!({ "kind": "polyline", "id": 1, "layerId": "p", "attrs": {},
+            "pts": [{ "x": 0, "y": 0 }, { "x": 10, "y": 0 }], "parts": [] }),
+        );
+        assert!(
+            to_stored(&path, 5256)
+                .unwrap_err()
+                .contains("parçası olamaz")
+        );
+    }
+
+    #[test]
+    fn vertex_elevations_keep_the_definition() {
+        // docs/adr/0142: the geometry is 2D; a line's ends, a path's or an area's vertices keep theirs.
+        for json in [
+            serde_json::json!({ "kind": "line", "id": 1, "layerId": "p", "attrs": {},
+                "a": { "x": 0, "y": 0 }, "b": { "x": 10, "y": 0 }, "za": 12.5 }),
+            serde_json::json!({ "kind": "polyline", "id": 1, "layerId": "p", "attrs": {},
+                "pts": [{ "x": 0, "y": 0 }, { "x": 10, "y": 0 }], "zs": [null, -0.5] }),
+            serde_json::json!({ "kind": "polygon", "id": 1, "layerId": "p", "attrs": {},
+                "pts": [{ "x": 0, "y": 0 }, { "x": 10, "y": 0 }, { "x": 10, "y": 10 }],
+                "holes": [{ "pts": [{ "x": 5, "y": 1 }, { "x": 8, "y": 1 }, { "x": 8, "y": 4 }], "zs": [1, 2, 3] }] }),
+        ] {
+            let e = entity(json);
+            let s = to_stored(&e, 5256).unwrap();
+            assert_eq!(s.source_kind, "cad", "{e:?}");
+            assert_eq!(back(&s, 1), e);
+        }
     }
 
     #[test]

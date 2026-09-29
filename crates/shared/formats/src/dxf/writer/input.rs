@@ -11,9 +11,9 @@ use std::collections::BTreeMap;
 use std::fmt;
 
 use kentos_contracts::{
-    ArcEntity, CircleEntity, ConstructionEntity, DimensionEntity, DimensionStyle, DxfWriteInput,
-    DxfWriteLayer, EllipseEntity, Entity, EntityBase, HatchEntity, HatchPattern, LineEntity,
-    PathEntity, PointEntity, RingGeometry, SplineEntity, TextEntity, Vec2,
+    ArcEntity, AreaPart, CircleEntity, ConstructionEntity, DimensionEntity, DimensionStyle,
+    DxfWriteInput, DxfWriteLayer, EllipseEntity, Entity, EntityBase, HatchEntity, HatchPattern,
+    LineEntity, PathEntity, PointEntity, RingGeometry, SplineEntity, TextEntity, Vec2,
 };
 use serde::de::value::{MapAccessDeserializer, SeqAccessDeserializer};
 use serde::de::{self, Deserialize, Deserializer, IgnoredAny, MapAccess, SeqAccess, Visitor};
@@ -68,6 +68,7 @@ struct Fields {
     zs: Option<Vec<Option<f64>>>,
     bulges: Option<Vec<f64>>,
     holes: Option<Vec<Hole>>,
+    parts: Option<Vec<AreaPart>>,
     r: Option<f64>,
     a0: Option<f64>,
     a1: Option<f64>,
@@ -129,7 +130,7 @@ impl Fields {
                 })
                 .transpose()
         };
-        let zs = self.zs;
+        let (zs, parts) = (self.zs, self.parts);
         let path =
             |base: EntityBase, pts: Option<Vec<Vec2>>, bulges, holes| -> Result<PathEntity, E> {
                 Ok(PathEntity {
@@ -138,7 +139,7 @@ impl Fields {
                     bulges,
                     holes: rings(holes)?,
                     zs,
-                    parts: None,
+                    parts,
                 })
             };
         let construction = |base: EntityBase,
@@ -272,6 +273,7 @@ impl<'de> Deserialize<'de> for Wire {
                         "zs" => f.zs = map.next_value()?,
                         "bulges" => f.bulges = map.next_value()?,
                         "holes" => f.holes = map.next_value()?,
+                        "parts" => f.parts = map.next_value()?,
                         "r" => f.r = Some(map.next_value()?),
                         "a0" => f.a0 = Some(map.next_value()?),
                         "a1" => f.a1 = Some(map.next_value()?),
@@ -376,7 +378,10 @@ mod tests {
       {"kind":"line","id":16,"layerId":"a","attrs":{},"lineWeight":0.35,"a":{"x":0,"y":0},"b":{"x":3,"y":4},"za":10.5,"zb":null},
       {"kind":"polyline","id":17,"layerId":"a","attrs":{},"pts":[{"x":0,"y":0},{"x":1,"y":0},{"x":2,"y":0}],"zs":[1.5,null,-2]},
       {"kind":"polygon","id":18,"layerId":"a","attrs":{},"lineWeight":0,"pts":[{"x":0,"y":0},{"x":9,"y":0},{"x":9,"y":9}],"zs":[0,1,2],
-       "holes":[{"pts":[{"x":1,"y":1},{"x":2,"y":1},{"x":2,"y":2}],"zs":[null,5,6]}]}
+       "holes":[{"pts":[{"x":1,"y":1},{"x":2,"y":1},{"x":2,"y":2}],"zs":[null,5,6]}]},
+      {"kind":"polygon","id":19,"layerId":"a","attrs":{},"pts":[{"x":0,"y":0},{"x":9,"y":0},{"x":9,"y":9}],
+       "parts":[{"pts":[{"x":20,"y":0},{"x":29,"y":0},{"x":29,"y":9}],"bulges":[0,0.5,0],"zs":[1,null,2],
+        "holes":[{"pts":[{"x":21,"y":1},{"x":22,"y":1},{"x":22,"y":2}]}]}]}
     ]"##;
 
     fn doc(objects: &str) -> String {
@@ -391,7 +396,7 @@ mod tests {
         let ours = input_from_json(&text).expect("input");
         let derived: DxfWriteInput = serde_json::from_str(&text).expect("contract");
         assert_eq!(ours, derived);
-        assert_eq!(ours.entities.len(), 18);
+        assert_eq!(ours.entities.len(), 19);
         // What the contract's code reads, this reads too: an object's own weight and its vertices' elevations.
         let Entity::Line(l) = &ours.entities[15] else {
             panic!("{:?}", ours.entities[15])
@@ -407,6 +412,15 @@ mod tests {
         assert_eq!(
             g.holes.as_ref().map(|h| h[0].zs.clone()),
             Some(Some(vec![None, Some(5.0), Some(6.0)]))
+        );
+        // A multi-part area's parts (docs/adr/0143).
+        let Entity::Polygon(g) = &ours.entities[18] else {
+            panic!("{:?}", ours.entities[18])
+        };
+        let parts = g.parts.as_deref().expect("parts");
+        assert_eq!(
+            (parts.len(), parts[0].holes.as_ref().map(Vec::len)),
+            (1, Some(1))
         );
         // And back from the contract's own JSON.
         let again =

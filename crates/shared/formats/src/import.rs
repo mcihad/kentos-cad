@@ -50,7 +50,14 @@ pub fn defining_bounds(e: &Entity) -> Option<Bounds> {
             add(&e.a);
             add(&e.b);
         }
-        Entity::Polyline(e) | Entity::Polygon(e) => e.pts.iter().for_each(&mut add),
+        Entity::Polyline(e) | Entity::Polygon(e) => {
+            e.pts.iter().for_each(&mut add);
+            // Every part of a multi-part area (docs/adr/0143).
+            e.parts
+                .iter()
+                .flatten()
+                .for_each(|p| p.pts.iter().for_each(&mut add));
+        }
         Entity::Circle(e) => square(&e.c, e.r).iter().for_each(&mut add),
         Entity::Arc(e) => square(&e.c, e.r).iter().for_each(&mut add),
         Entity::Ellipse(e) => square(&e.c, hypot(e.major.x, e.major.y))
@@ -69,14 +76,19 @@ pub fn defining_bounds(e: &Entity) -> Option<Bounds> {
 }
 
 /// Whether an object has an elevation: a point's, an end of a line, a vertex
-/// of a path, or of a hole of an area (docs/adr/0142).
+/// of a path, or of a hole or a part of an area (docs/adr/0142, 0143).
 pub fn has_elevation(e: &Entity) -> bool {
     let some = |zs: &Option<Vec<Option<f64>>>| zs.iter().flatten().any(Option::is_some);
     match e {
         Entity::Point(p) => p.z.is_some(),
         Entity::Line(l) => l.za.is_some() || l.zb.is_some(),
         Entity::Polyline(p) | Entity::Polygon(p) => {
-            some(&p.zs) || p.holes.iter().flatten().any(|h| some(&h.zs))
+            some(&p.zs)
+                || p.holes.iter().flatten().any(|h| some(&h.zs))
+                || p.parts
+                    .iter()
+                    .flatten()
+                    .any(|part| some(&part.zs) || part.holes.iter().flatten().any(|h| some(&h.zs)))
         }
         _ => false,
     }

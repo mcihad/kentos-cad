@@ -238,13 +238,13 @@ pub fn read(files: &Files, opts: &ShapefileReadOptions) -> Result<ImportResult, 
     );
     r.note_n(
         "Dış sınırsız delik",
-        "hiçbir dış sınırın (saat yönünde halka) içinde değil; ayrı alan olarak alındı",
+        "hiçbir dış sınırın (saat yönünde halka) içinde değil; alanın ayrı bir parçası olarak alındı",
         0,
         found.lone_holes,
     );
     r.note_n(
         "Yönsüz halkalar",
-        "kayıtta saat yönünde halka yok; her halka ayrı alan olarak alındı",
+        "kayıtta saat yönünde halka yok; her halka alanın ayrı bir parçası olarak alındı",
         0,
         found.no_outline,
     );

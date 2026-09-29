@@ -2,7 +2,8 @@
 //! writes (`ST_AsEWKB`). Coordinates travel as raw IEEE doubles, so a value
 //! comes back with every bit (text forms such as WKT round to 15 digits).
 //! Only what KentOS stores is supported: points (optionally with Z), line
-//! strings and polygons, with an SRID.
+//! strings, polygons and multi-polygons (a multi-part area, docs/adr/0143),
+//! with an SRID.
 
 use crate::Vec2;
 
@@ -18,6 +19,8 @@ pub enum Geometry {
     LineString(Vec<Vec2>),
     /// Rings without the closing point (written closed, read back open).
     Polygon(Vec<Vec<Vec2>>),
+    /// Polygons as [`Geometry::Polygon`]'s rings.
+    MultiPolygon(Vec<Vec<Vec<Vec2>>>),
 }
 
 fn put_u32(out: &mut Vec<u8>, v: u32) {
@@ -37,13 +40,22 @@ fn put_points(out: &mut Vec<u8>, pts: &[Vec2], close: bool) {
     }
 }
 
-/// Little-endian EWKB with the SRID.
+fn put_rings(out: &mut Vec<u8>, rings: &[Vec<Vec2>]) {
+    put_u32(out, rings.len() as u32);
+    for ring in rings {
+        put_points(out, ring, true);
+    }
+}
+
+/// Little-endian EWKB with the SRID; a multi-polygon's members carry none,
+/// as PostGIS writes them.
 pub fn encode(geometry: &Geometry, srid: u32) -> Vec<u8> {
     let mut out = vec![1u8];
     let (kind, z) = match geometry {
         Geometry::Point { z, .. } => (1, z.is_some()),
         Geometry::LineString(_) => (2, false),
         Geometry::Polygon(_) => (3, false),
+        Geometry::MultiPolygon(_) => (6, false),
     };
     put_u32(&mut out, kind | SRID_FLAG | if z { Z_FLAG } else { 0 });
     put_u32(&mut out, srid);
@@ -56,10 +68,13 @@ pub fn encode(geometry: &Geometry, srid: u32) -> Vec<u8> {
             }
         }
         Geometry::LineString(pts) => put_points(&mut out, pts, false),
-        Geometry::Polygon(rings) => {
-            put_u32(&mut out, rings.len() as u32);
-            for ring in rings {
-                put_points(&mut out, ring, true);
+        Geometry::Polygon(rings) => put_rings(&mut out, rings),
+        Geometry::MultiPolygon(polygons) => {
+            put_u32(&mut out, polygons.len() as u32);
+            for rings in polygons {
+                out.push(1);
+                put_u32(&mut out, 3);
+                put_rings(&mut out, rings);
             }
         }
     }
@@ -113,6 +128,20 @@ impl Reader<'_> {
             .map(|_| Ok(Vec2::new(self.f64()?, self.f64()?)))
             .collect()
     }
+    /// A polygon's rings, each read back open.
+    fn rings(&mut self) -> Result<Vec<Vec<Vec2>>, String> {
+        let n = self.u32()? as usize;
+        let mut rings = Vec::with_capacity(n.min(1024));
+        for _ in 0..n {
+            let mut ring = self.points()?;
+            if ring.len() < 2 || ring.first() != ring.last() {
+                return Err("EWKB halkası kapalı değil".into());
+            }
+            ring.pop();
+            rings.push(ring);
+        }
+        Ok(rings)
+    }
 }
 
 /// Reads EWKB (either byte order); returns the geometry and its SRID (0 when absent).
@@ -131,18 +160,19 @@ pub fn decode(bytes: &[u8]) -> Result<(Geometry, u32), String> {
             Geometry::Point { p, z }
         }
         2 if !z => Geometry::LineString(r.points()?),
-        3 if !z => {
+        3 if !z => Geometry::Polygon(r.rings()?),
+        6 if !z => {
             let n = r.u32()? as usize;
-            let mut rings = Vec::with_capacity(n.min(1024));
+            let mut polygons = Vec::with_capacity(n.min(1024));
             for _ in 0..n {
-                let mut ring = r.points()?;
-                if ring.len() < 2 || ring.first() != ring.last() {
-                    return Err("EWKB halkası kapalı değil".into());
+                // Each member is a WKB polygon of its own byte order, without an SRID.
+                r.little = r.take::<1>()? == [1];
+                if r.u32()? != 3 {
+                    return Err("EWKB çoklu poligonunun üyesi poligon değil".into());
                 }
-                ring.pop();
-                rings.push(ring);
+                polygons.push(r.rings()?);
             }
-            Geometry::Polygon(rings)
+            Geometry::MultiPolygon(polygons)
         }
         other => {
             return Err(format!(
@@ -194,12 +224,55 @@ mod tests {
                 vec![tm(0.0, 0.0), tm(10.0, 0.0), tm(10.0, 10.0)],
                 vec![tm(1.0, 1.0), tm(2.0, 1.0), tm(2.0, 2.0)],
             ]),
+            Geometry::MultiPolygon(vec![
+                vec![
+                    vec![tm(0.0, 0.0), tm(10.0, 0.0), tm(10.0, 10.0)],
+                    vec![tm(1.0, 1.0), tm(2.0, 1.0), tm(2.0, 2.0)],
+                ],
+                vec![vec![tm(20.0, 0.0), tm(30.0, 0.0), tm(30.0, 10.0)]],
+            ]),
         ] {
             let (back, srid) = decode(&encode(&g, 5256)).unwrap();
             assert_eq!(srid, 5256);
             let bits = |g: &Geometry| format!("{:?}", encode(g, 0));
             assert_eq!(bits(&back), bits(&g));
         }
+    }
+
+    #[test]
+    fn matches_postgis_bytes_for_a_multi_polygon() {
+        // SELECT ST_AsEWKB('SRID=4326;MULTIPOLYGON(((0 0,1 0,1 1,0 0)))'::geometry):
+        // the head with the SRID, then each member without one.
+        let g = Geometry::MultiPolygon(vec![vec![vec![
+            Vec2::new(0.0, 0.0),
+            Vec2::new(1.0, 0.0),
+            Vec2::new(1.0, 1.0),
+        ]]]);
+        let hex: String = encode(&g, 4326)
+            .iter()
+            .map(|b| format!("{b:02X}"))
+            .collect();
+        let (zero, one) = ("0000000000000000", "000000000000F03F");
+        let points = [zero, zero, one, zero, one, one, zero, zero].concat();
+        // Order, type 6 with the SRID flag, SRID, one member; the member's order, type 3, one ring of four points.
+        let head = "01".to_string() + "06000020" + "E6100000" + "01000000";
+        let member = "01".to_string() + "03000000" + "01000000" + "04000000";
+        assert_eq!(hex, head + &member + &points);
+        // A member in big-endian order reads too.
+        let mut big = encode(&g, 4326);
+        let at = 13;
+        big.splice(at.., {
+            let mut m = vec![0u8];
+            m.extend_from_slice(&3u32.to_be_bytes());
+            m.extend_from_slice(&1u32.to_be_bytes());
+            m.extend_from_slice(&4u32.to_be_bytes());
+            for (x, y) in [(0.0f64, 0.0f64), (1.0, 0.0), (1.0, 1.0), (0.0, 0.0)] {
+                m.extend_from_slice(&x.to_be_bytes());
+                m.extend_from_slice(&y.to_be_bytes());
+            }
+            m
+        });
+        assert_eq!(decode(&big).unwrap(), (g, 4326));
     }
 
     #[test]

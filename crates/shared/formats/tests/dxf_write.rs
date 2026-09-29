@@ -1276,3 +1276,51 @@ fn what_cannot_be_written_is_left_out_and_said() {
     let (text, _) = write(&input(vec![short]));
     assert!(entities_of(&pairs(&text), "POLYLINE").is_empty());
 }
+
+/// A multi-part area (docs/adr/0143): DXF has no such object, so each part
+/// is a closed polyline carrying the object's data, its holes linked to it.
+/// Read back, the parts are areas of their own, each with its holes.
+#[test]
+fn a_multi_part_area_is_one_closed_polyline_a_part() {
+    let ring = |x: f64| vec![tm(x, 0.0), tm(x + 10.0, 0.0), tm(x + 10.0, 10.0), tm(x, 10.0)];
+    let hole = RingGeometry {
+        pts: vec![tm(22.0, 2.0), tm(24.0, 2.0), tm(24.0, 4.0)],
+        bulges: None,
+        zs: None,
+    };
+    let area = Entity::Polygon(PathEntity {
+        base: with("parsel", |b| {
+            b.attrs.insert("Ada".into(), "101".into());
+            b.label = Some("101/5".into());
+        }),
+        pts: ring(0.0),
+        bulges: None,
+        holes: None,
+        zs: None,
+        parts: Some(vec![kentos_contracts::AreaPart {
+            pts: ring(20.0),
+            bulges: None,
+            holes: Some(vec![hole.clone()]),
+            zs: None,
+        }]),
+    });
+    let (text, report) = write(&input(vec![area]));
+    assert_eq!(entities_of(&pairs(&text), "LWPOLYLINE").len(), 3);
+    assert!(report.notes.iter().any(|n| n.what == "Çok parçalı alan"), "{:?}", report.notes);
+    assert_eq!(report.counts.get("polygon"), Some(&1));
+    let back = read(&text);
+    let areas: Vec<&PathEntity> = back
+        .entities
+        .iter()
+        .map(|e| match e {
+            Entity::Polygon(p) => p,
+            other => panic!("{other:?}"),
+        })
+        .collect();
+    assert_eq!(areas.len(), 2);
+    assert_eq!((areas[0].pts.clone(), areas[0].holes.clone()), (ring(0.0), None));
+    assert_eq!((areas[1].pts.clone(), areas[1].holes.clone()), (ring(20.0), Some(vec![hole])));
+    for a in areas {
+        assert_eq!((a.base.attrs.get("Ada").map(String::as_str), a.base.label.as_deref()), (Some("101"), Some("101/5")));
+    }
+}

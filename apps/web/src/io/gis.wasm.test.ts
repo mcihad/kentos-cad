@@ -36,7 +36,20 @@ async function load(): Promise<Formats> {
 const decode = (b: Uint8Array) => JSON.parse(new TextDecoder().decode(b)) as ImportResult;
 const xy = (p: { x: number; y: number }) => [p.x, p.y];
 
-/** The reading in the rules' canonical form (docs/adr/0046). */
+type Ring = { pts: { x: number; y: number }[]; zs?: (number | null)[] | null };
+
+/** An area's (or a part's) outline, elevations and holes in the canonical form: `holeZs` only when some hole has elevations. */
+function area(o: Record<string, unknown>, a: Ring & { holes?: Ring[] | null }): Record<string, unknown> {
+  o.pts = a.pts.map(xy);
+  if (a.zs) o.zs = a.zs;
+  if (a.holes?.length) {
+    o.holes = a.holes.map((h) => h.pts.map(xy));
+    if (a.holes.some((h) => h.zs)) o.holeZs = a.holes.map((h) => h.zs ?? null);
+  }
+  return o;
+}
+
+/** The reading in the rules' canonical form (docs/adr/0046); a multi-part area's parts past the first in `parts` (docs/adr/0143). */
 function canonical(r: ImportResult, encoding?: string): unknown {
   const objects = r.entities.map((e) => {
     const o: Record<string, unknown> = { kind: e.kind, layer: e.layerId };
@@ -49,13 +62,12 @@ function canonical(r: ImportResult, encoding?: string): unknown {
       // Vertex elevations (docs/adr/0142), as the fixtures' canonical keys name them (gis/README.md).
       if (e.za != null) o.za = e.za;
       if (e.zb != null) o.zb = e.zb;
-    } else if (e.kind === 'polyline' || e.kind === 'polygon') {
+    } else if (e.kind === 'polyline') {
       o.pts = e.pts.map(xy);
       if (e.zs) o.zs = e.zs;
-      if (e.kind === 'polygon' && e.holes?.length) {
-        o.holes = e.holes.map((h) => h.pts.map(xy));
-        if (e.holes.some((h) => h.zs)) o.holeZs = e.holes.map((h) => h.zs ?? null);
-      }
+    } else if (e.kind === 'polygon') {
+      area(o, e);
+      if (e.parts?.length) o.parts = e.parts.map((part) => area({}, part));
     } else throw new Error(`a GIS reader made a ${e.kind}`);
     if (e.label !== undefined && e.label !== null) o.label = e.label;
     o.attrs = e.attrs;

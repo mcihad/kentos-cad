@@ -784,8 +784,14 @@ SUMMARY = {
                 "holes": [[[32.45, 37.85], [32.5, 37.9], [32.55, 37.85]]],
                 "attrs": {"tur": "park"},
             },
-            {"kind": "polygon", "pts": [[39.7, 40.98], [39.74, 40.98], [39.74, 41.02], [39.7, 41.02]], "holes": None, "attrs": {"tur": "ada"}},
-            {"kind": "polygon", "pts": [[41.25, 39.88], [41.3, 39.88], [41.32, 39.9], [41.3, 39.92], [41.25, 39.92]], "holes": None},
+            # A MultiPolygon is one area, its members its parts (docs/adr/0143); the second member is left unclosed.
+            {
+                "kind": "polygon",
+                "pts": [[39.7, 40.98], [39.74, 40.98], [39.74, 41.02], [39.7, 41.02]],
+                "holes": None,
+                "parts": [{"pts": [[41.25, 39.88], [41.3, 39.88], [41.32, 39.9], [41.3, 39.92], [41.25, 39.92]]}],
+                "attrs": {"tur": "ada"},
+            },
             {"kind": "point", "p": [43.3833, 38.4942], "z": None, "attrs": {"tur": "koleksiyon"}},
             {"kind": "polyline", "pts": [[43.38, 38.49], [43.4, 38.5], [43.42, 38.505]], "attrs": {"tur": "koleksiyon"}},
             {"kind": "point", "layer": "ornek", "p": [34.5, 39.1], "z": 1100.5, "label": None, "attrs": {"tur": "dort sayi"}},
@@ -876,11 +882,17 @@ SUMMARY = {
                 "holes": [[[29.0603, 40.1903], [29.0609, 40.1903], [29.0609, 40.1907], [29.0603, 40.1907]]],
                 "attrs": PARSEL[0],
             },
-            {"kind": "polygon", "pts": [[29.062, 40.19], [29.062, 40.1908], [29.0628, 40.1908], [29.0628, 40.19]], "holes": None, "attrs": PARSEL[1]},
+            # One record of two outlines is one area of two parts, the hole with its own outline (docs/adr/0143).
             {
                 "kind": "polygon",
-                "pts": [[29.063, 40.19], [29.063, 40.1912], [29.0642, 40.1912], [29.0642, 40.19]],
-                "holes": [[[29.0633, 40.1903], [29.0639, 40.1903], [29.0639, 40.1909], [29.0633, 40.1909]]],
+                "pts": [[29.062, 40.19], [29.062, 40.1908], [29.0628, 40.1908], [29.0628, 40.19]],
+                "holes": None,
+                "parts": [
+                    {
+                        "pts": [[29.063, 40.19], [29.063, 40.1912], [29.0642, 40.1912], [29.0642, 40.19]],
+                        "holes": [[[29.0633, 40.1903], [29.0639, 40.1903], [29.0639, 40.1909], [29.0633, 40.1909]]],
+                    }
+                ],
                 "attrs": PARSEL[1],
             },
             {"kind": "polygon", "pts": [[29.065, 40.19], [29.066, 40.19], [29.066, 40.191], [29.065, 40.191]], "holes": None, "attrs": PARSEL[2]},
@@ -1006,7 +1018,7 @@ KEYS = {
     "point": ("kind", "layer", "p", "z", "label", "attrs"),
     "line": ("kind", "layer", "a", "b", "za", "zb", "label", "attrs"),
     "polyline": ("kind", "layer", "pts", "zs", "label", "attrs"),
-    "polygon": ("kind", "layer", "pts", "zs", "holes", "holeZs", "label", "attrs"),
+    "polygon": ("kind", "layer", "pts", "zs", "holes", "holeZs", "parts", "label", "attrs"),
 }
 
 
@@ -1392,6 +1404,15 @@ def full_turn(ellipse):
 def exported(entity, obj):
     """What is wrong with the object read back from one written entity (nothing: an empty list)."""
     kind, path = entity["kind"], path_of(obj)
+    if kind == "polygon" and entity.get("parts"):
+        # A multi-part area is a MultiPolygon: each part read back as a plain area is (docs/adr/0143).
+        if obj["kind"] != "polygon":
+            return ["çok parçalı alan alan olarak okunmadı"]
+        want = [{**entity, "parts": None}, *({**part, "kind": "polygon"} for part in entity["parts"])]
+        got = [obj, *({**part, "kind": "polygon"} for part in obj.get("parts", []))]
+        if len(got) != len(want):
+            return [f"{len(got)} parça okundu, girdide {len(want)} parça var"]
+        return [f"{k + 1}. parça: {p}" for k, (e, o) in enumerate(zip(want, got)) for p in exported(e, o)]
     if kind == "point":
         wrong = obj["kind"] != "point" or bits(obj["p"]) != bits(xy_of(entity["p"]))
         return ["konum ya da z girdidekiyle aynı değil"] if wrong or bits(obj.get("z")) != bits(float(entity["z"]) if "z" in entity else None) else []

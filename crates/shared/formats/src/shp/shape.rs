@@ -10,7 +10,8 @@
 //! specification defines them: clockwise rings are outlines,
 //! counter-clockwise ones holes of the first outline that contains them (the
 //! rules, which the independent reader in tools/formats/gis.py follows too,
-//! are in docs/adr/0046).
+//! are in docs/adr/0046). A record is one area: several outlines are its
+//! parts, in the record's order (docs/adr/0143).
 
 use kentos_contracts::Vec2;
 
@@ -347,7 +348,8 @@ fn contains(ring: &[Vec2], p: Vec2) -> bool {
     inside
 }
 
-/// An area record's rings as areas with holes.
+/// An area record's rings as one area, its outlines its parts, each with
+/// its holes (docs/adr/0143).
 fn areas(parts: Vec<Ring>, out: &mut Vec<Shape>, found: &mut Found) {
     // (part index, ring, clockwise)
     let mut rings: Vec<(usize, Ring, bool)> = Vec::new();
@@ -369,11 +371,10 @@ fn areas(parts: Vec<Ring>, out: &mut Vec<Shape>, found: &mut Found) {
         return;
     }
     if !rings.iter().any(|r| r.2) {
-        // No clockwise ring: every ring is an area of its own.
+        // No clockwise ring: every ring is a part of its own.
         found.no_outline += 1;
-        for (_, ring, _) in rings {
-            out.push(Shape::Polygon(ring, Vec::new()));
-        }
+        let parts = rings.into_iter().map(|(_, ring, _)| (ring, Vec::new()));
+        out.extend(Shape::area(parts.collect()));
         return;
     }
     // Outlines in part order; each hole to the first outline holding its first vertex.
@@ -399,9 +400,12 @@ fn areas(parts: Vec<Ring>, out: &mut Vec<Shape>, found: &mut Found) {
         }
     }
     polys.sort_by_key(|p| p.0);
-    for (_, outline, holes) in polys {
-        out.push(Shape::Polygon(outline, holes));
-    }
+    out.extend(Shape::area(
+        polys
+            .into_iter()
+            .map(|(_, outline, holes)| (outline, holes))
+            .collect(),
+    ));
 }
 
 #[cfg(test)]
@@ -437,6 +441,7 @@ mod tests {
     #[test]
     fn clockwise_rings_are_outlines_and_holes_find_theirs() {
         // Two clockwise outlines; a hole inside the second; a hole inside neither.
+        // The record is one area of three parts, in the record's order (docs/adr/0143).
         let a: &[(f64, f64)] = &[
             (0.0, 0.0),
             (0.0, 10.0),
@@ -456,16 +461,20 @@ mod tests {
         let mut out = Vec::new();
         let mut found = Found::default();
         shapes(&polygon(&[a, hole, b, lone]), &mut out, &mut found);
-        assert_eq!(out.len(), 3);
-        let Shape::Polygon(o, h) = &out[0] else {
-            panic!()
+        assert_eq!(out.len(), 1);
+        let Shape::Parts(parts) = &out[0] else {
+            panic!("{:?}", out[0])
         };
-        assert_eq!((o.pts[0], h.len()), (v(0.0, 0.0), 0));
-        let Shape::Polygon(_, h) = &out[1] else {
-            panic!()
-        };
-        assert_eq!(h.len(), 1);
+        let firsts: Vec<(Vec2, usize)> = parts.iter().map(|(o, h)| (o.pts[0], h.len())).collect();
+        assert_eq!(
+            firsts,
+            [(v(0.0, 0.0), 0), (v(20.0, 0.0), 1), (v(50.0, 50.0), 0)]
+        );
         assert_eq!(found.lone_holes, 1);
+        // One outline stays a plain area.
+        let mut out = Vec::new();
+        shapes(&polygon(&[a]), &mut out, &mut found);
+        assert!(matches!(out.as_slice(), [Shape::Polygon(_, h)] if h.is_empty()));
     }
 
     /// A PolyLineZ (13) or PolygonZ (15) record, a Z block after the points and no M block.

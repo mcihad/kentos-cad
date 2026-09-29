@@ -9,7 +9,8 @@
 //! said: curves (circles, arcs, ellipses, splines, bulged paths) sampled
 //! exactly as the app samples its own; hatches as their areas; area rings
 //! turned to RFC 7946's right-hand rule. Text, dimensions and infinite
-//! lines are left out. Attributes are written as text properties; layer and
+//! lines are left out. A multi-part area is a MultiPolygon (docs/adr/0143).
+//! Attributes are written as text properties; layer and
 //! label ride in the `kentos` member, which KentOS reads back. A vertex with
 //! an elevation is a position of three numbers, one without a position of
 //! two (docs/adr/0142): RFC 7946 lets a list mix them; a point sampled along
@@ -50,6 +51,8 @@ enum Geometry {
     Line(Ring),
     /// Closed rings, the outline first, turned to the right-hand rule.
     Area(Vec<Ring>),
+    /// A multi-part area: each part's rings as [`Geometry::Area`]'s.
+    Areas(Vec<Vec<Ring>>),
 }
 
 fn from_core(pts: Vec<CoreVec2>) -> Vec<Vec2> {
@@ -177,23 +180,29 @@ fn geometry(e: &Entity, rep: &mut Report) -> Option<Geometry> {
             }
         }
         Entity::Polygon(p) => {
-            let mut arcs = p.bulges.as_deref().is_some_and(has_arcs);
-            let ring = |pts: &[Vec2], bulges: Option<&[f64]>, zs: &Zs| {
+            let mut arcs = false;
+            let mut ring = |pts: &[Vec2], bulges: Option<&[f64]>, zs: &Zs| {
+                arcs |= bulges.is_some_and(has_arcs);
                 let outline = from_core(polygon_ring(&to_core(pts), bulges));
                 let zs = heights(zs, pts.len())
                     .map(|z| bulge_path_zs(pts, bulges.unwrap_or(&[]), z, true));
                 Ring::new(outline, zs.into_iter().flatten())
             };
-            let outline = ring(&p.pts, p.bulges.as_deref(), &p.zs);
-            let holes: Vec<Ring> = p
-                .holes
-                .iter()
-                .flatten()
-                .map(|h| {
-                    arcs |= h.bulges.as_deref().is_some_and(has_arcs);
-                    ring(&h.pts, h.bulges.as_deref(), &h.zs)
-                })
-                .collect();
+            // The area's own fields are its first part (docs/adr/0143).
+            let mut parts = vec![(
+                ring(&p.pts, p.bulges.as_deref(), &p.zs),
+                p.holes
+                    .iter()
+                    .flatten()
+                    .map(|h| ring(&h.pts, h.bulges.as_deref(), &h.zs))
+                    .collect::<Vec<_>>(),
+            )];
+            for part in p.parts.iter().flatten() {
+                let holes = part.holes.iter().flatten();
+                let holes = holes.map(|h| ring(&h.pts, h.bulges.as_deref(), &h.zs));
+                let holes: Vec<Ring> = holes.collect();
+                parts.push((ring(&part.pts, part.bulges.as_deref(), &part.zs), holes));
+            }
             if arcs {
                 rep.note(
                     "Yaylı alan",
@@ -201,7 +210,20 @@ fn geometry(e: &Entity, rep: &mut Report) -> Option<Geometry> {
                     0,
                 );
             }
-            area(outline, holes, rep)
+            let several = parts.len() > 1;
+            let mut areas: Vec<Vec<Ring>> = Vec::new();
+            for (outline, holes) in parts {
+                match area(outline, holes, rep) {
+                    Some(Geometry::Area(rings)) => areas.push(rings),
+                    _ if several => rep.skip("Parça", "üçten az köşesi var; yazılmadı", 0),
+                    _ => {}
+                }
+            }
+            match areas.len() {
+                0 => None,
+                1 => areas.pop().map(Geometry::Area),
+                _ => Some(Geometry::Areas(areas)),
+            }
         }
         Entity::Circle(c) => {
             let pts = from_core(tessellate_circle(core(c.c), c.r, SEGMENTS));
@@ -288,6 +310,10 @@ fn geometry(e: &Entity, rep: &mut Report) -> Option<Geometry> {
         Geometry::Area(rings) => rings
             .iter()
             .all(|r| r.pts.iter().all(finite) && zs_finite(&r.zs)),
+        Geometry::Areas(parts) => parts
+            .iter()
+            .flatten()
+            .all(|r| r.pts.iter().all(finite) && zs_finite(&r.zs)),
     };
     if !ok {
         rep.skip(
@@ -300,6 +326,7 @@ fn geometry(e: &Entity, rep: &mut Report) -> Option<Geometry> {
     let mixes = match &g {
         Geometry::Line(r) => mixed(&[r]),
         Geometry::Area(rings) => mixed(&rings.iter().collect::<Vec<_>>()),
+        Geometry::Areas(parts) => mixed(&parts.iter().flatten().collect::<Vec<_>>()),
         Geometry::Point(..) => false,
     };
     if mixes {
@@ -347,17 +374,33 @@ fn write_geometry(g: &Geometry, out: &mut String) {
             positions(ring, out);
         }
         Geometry::Area(rings) => {
-            out.push_str("{\"type\":\"Polygon\",\"coordinates\":[");
-            for (i, r) in rings.iter().enumerate() {
-                if i > 0 {
+            out.push_str("{\"type\":\"Polygon\",\"coordinates\":");
+            polygon(rings, out);
+        }
+        Geometry::Areas(parts) => {
+            out.push_str("{\"type\":\"MultiPolygon\",\"coordinates\":[");
+            for (k, rings) in parts.iter().enumerate() {
+                if k > 0 {
                     out.push(',');
                 }
-                positions(r, out);
+                polygon(rings, out);
             }
             out.push(']');
         }
     }
     out.push('}');
+}
+
+/// A Polygon's coordinates: its rings, the outline first.
+fn polygon(rings: &[Ring], out: &mut String) {
+    out.push('[');
+    for (i, r) in rings.iter().enumerate() {
+        if i > 0 {
+            out.push(',');
+        }
+        positions(r, out);
+    }
+    out.push(']');
 }
 
 fn kind(e: &Entity) -> &'static str {

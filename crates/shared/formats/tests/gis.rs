@@ -8,7 +8,9 @@
 
 use std::path::{Path, PathBuf};
 
-use kentos_contracts::{Entity, GeoJsonReadOptions, ImportResult, ShapefileReadOptions, Vec2};
+use kentos_contracts::{
+    Entity, GeoJsonReadOptions, ImportResult, RingGeometry, ShapefileReadOptions, Vec2,
+};
 use kentos_formats::{geojson, shp};
 use serde_json::{Map, Value, json};
 
@@ -41,7 +43,39 @@ fn zs(z: &[Option<f64>]) -> Value {
     )
 }
 
-/// The reading in the rules' canonical form (docs/adr/0046).
+/// An area's (or a part's) outline, elevations and holes, in the canonical
+/// form: `holeZs` only when some hole has elevations.
+fn area(
+    o: &mut Map<String, Value>,
+    p: &[Vec2],
+    z: &Option<Vec<Option<f64>>>,
+    holes: &Option<Vec<RingGeometry>>,
+) {
+    o.insert("pts".into(), pts(p));
+    if let Some(z) = z {
+        o.insert("zs".into(), zs(z));
+    }
+    if let Some(h) = holes.as_ref().filter(|h| !h.is_empty()) {
+        o.insert(
+            "holes".into(),
+            Value::Array(h.iter().map(|r| pts(&r.pts)).collect()),
+        );
+        // One entry a hole: its elevations, or null; only when some hole has any.
+        if h.iter().any(|r| r.zs.is_some()) {
+            o.insert(
+                "holeZs".into(),
+                Value::Array(
+                    h.iter()
+                        .map(|r| r.zs.as_deref().map_or(Value::Null, zs))
+                        .collect(),
+                ),
+            );
+        }
+    }
+}
+
+/// The reading in the rules' canonical form (docs/adr/0046); a multi-part
+/// area's parts past the first in `parts` (docs/adr/0143).
 fn canonical(r: &ImportResult, encoding: Option<&str>) -> Value {
     let objects: Vec<Value> = r
         .entities
@@ -78,26 +112,14 @@ fn canonical(r: &ImportResult, encoding: Option<&str>) -> Value {
                 }
                 Entity::Polygon(p) => {
                     o.insert("kind".into(), json!("polygon"));
-                    o.insert("pts".into(), pts(&p.pts));
-                    if let Some(z) = &p.zs {
-                        o.insert("zs".into(), zs(z));
-                    }
-                    if let Some(h) = p.holes.as_ref().filter(|h| !h.is_empty()) {
-                        o.insert(
-                            "holes".into(),
-                            Value::Array(h.iter().map(|r| pts(&r.pts)).collect()),
-                        );
-                        // One entry a hole: its elevations, or null; only when some hole has any.
-                        if h.iter().any(|r| r.zs.is_some()) {
-                            o.insert(
-                                "holeZs".into(),
-                                Value::Array(
-                                    h.iter()
-                                        .map(|r| r.zs.as_deref().map_or(Value::Null, zs))
-                                        .collect(),
-                                ),
-                            );
-                        }
+                    area(&mut o, &p.pts, &p.zs, &p.holes);
+                    if let Some(parts) = p.parts.as_ref().filter(|p| !p.is_empty()) {
+                        let parts = parts.iter().map(|part| {
+                            let mut m = Map::new();
+                            area(&mut m, &part.pts, &part.zs, &part.holes);
+                            Value::Object(m)
+                        });
+                        o.insert("parts".into(), Value::Array(parts.collect()));
                     }
                     &p.base
                 }

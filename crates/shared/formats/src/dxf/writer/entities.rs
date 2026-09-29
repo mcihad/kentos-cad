@@ -4,7 +4,9 @@
 //! pattern); what DXF cannot say rides along in KentOS's extended data
 //! (labels, attributes, symbols, exact arc angles and hatch patterns).
 //! Three kinds change form (and elevations, docs/adr/0142, change a fourth):
-//! - a polygon's holes are closed polylines of their own, linked to it;
+//! - a polygon's holes are closed polylines of their own, linked to it; a
+//!   multi-part area's parts too, each carrying the object's data, its
+//!   holes linked to it (DXF has no such object, docs/adr/0143);
 //! - a spline is a cubic B-spline that is the app's curve span by span
 //!   (the shared core's Bézier form), with the app's points as fit points;
 //! - a dimension is a DXF DIMENSION drawn by an anonymous block of its own
@@ -118,11 +120,19 @@ fn finite(e: &Entity) -> bool {
             ok(l.a) && ok(l.b) && l.za.is_none_or(f64::is_finite) && l.zb.is_none_or(f64::is_finite)
         }
         Entity::Polyline(p) | Entity::Polygon(p) => {
-            all_ok(&p.pts)
-                && zs_ok(&p.zs)
-                && p.bulges.as_deref().is_none_or(nums_ok)
-                && p.holes.iter().flatten().all(|h| {
-                    all_ok(&h.pts) && zs_ok(&h.zs) && h.bulges.as_deref().is_none_or(nums_ok)
+            let ring = |pts: &[Vec2], zs: &Zs, bulges: Option<&[f64]>| {
+                all_ok(pts) && zs_ok(zs) && bulges.is_none_or(nums_ok)
+            };
+            let holes = |holes: &Option<Vec<kentos_contracts::RingGeometry>>| {
+                holes
+                    .iter()
+                    .flatten()
+                    .all(|h| ring(&h.pts, &h.zs, h.bulges.as_deref()))
+            };
+            ring(&p.pts, &p.zs, p.bulges.as_deref())
+                && holes(&p.holes)
+                && p.parts.iter().flatten().all(|part| {
+                    ring(&part.pts, &part.zs, part.bulges.as_deref()) && holes(&part.holes)
                 })
         }
         Entity::Circle(c) => ok(c.c) && c.r.is_finite(),
@@ -605,6 +615,30 @@ impl Writer<'_> {
             self.report.note(
                 "Adalı alan",
                 "adaları ayrı kapalı çoklu çizgiler olarak yazıldı (KentOS'a geri okununca yine adalı alan olur)",
+                0,
+            );
+        }
+        // A multi-part area's other parts: each a closed polyline with the object's data.
+        let parts = if closed {
+            p.parts.as_deref().unwrap_or(&[])
+        } else {
+            &[]
+        };
+        for part in parts {
+            let part = PathEntity {
+                base: p.base.clone(),
+                pts: part.pts.clone(),
+                bulges: part.bulges.clone(),
+                holes: part.holes.clone(),
+                zs: part.zs.clone(),
+                parts: None,
+            };
+            self.path(&part, true);
+        }
+        if !parts.is_empty() {
+            self.report.note(
+                "Çok parçalı alan",
+                "DXF'te çok parçalı alan yok: her parça nesnenin verisini taşıyan ayrı kapalı çoklu çizgi olarak yazıldı (KentOS'a geri okununca ayrı alanlar olur)",
                 0,
             );
         }

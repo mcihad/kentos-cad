@@ -15,6 +15,12 @@ is none). A line gives `za` and `zb` when its ends have one, a path or an area
 one, and an area's holes `holeZs` (one list, or null, per hole) when any hole's
 vertex has one; a point keeps its `z` as before.
 
+Multi-part areas (docs/adr/0143): a MultiPolygon is one area of the members that
+read, and a Shapefile Polygon record is one area of its outlines (each with its
+holes), parts in order. The first part is the object's own `pts`, `zs`, `holes`
+and `holeZs`; the others are listed in `parts`, each an object of the same keys.
+An area of one part has no `parts`.
+
     python3 tools/formats/gis.py read PATH [--layer NAME]
 
 PATH is a GeoJSON file or a `.shp`; the .dbf, .prj and .cpg beside a .shp are
@@ -89,6 +95,14 @@ def polygon_geometry(outline, holes):
         geometry["holes"] = [xy(hole) for hole in holes]
         if any(elevations(hole) is not None for hole in holes):
             geometry["holeZs"] = [elevations(hole) for hole in holes]
+    return geometry
+
+
+def area_geometry(areas):
+    """One area of (outline, holes) pairs: the first part the object's own keys, the others in `parts`."""
+    geometry = polygon_geometry(*areas[0])
+    if len(areas) > 1:
+        geometry["parts"] = [polygon_geometry(outline, holes) for outline, holes in areas[1:]]
     return geometry
 
 
@@ -264,18 +278,33 @@ def gj_line_string(coords, target):
         target.add("polyline", path_geometry(vertices))
 
 
-def gj_polygon(coords, target):
+def gj_area(coords):
+    """A Polygon's (or a MultiPolygon member's) (outline, holes), or None when it gives nothing."""
     if not isinstance(coords, list) or not coords or not all(isinstance(ring, list) for ring in coords):
-        return
+        return None
     rings = [[position(p) for p in ring] for ring in coords]
     if any(p is None for ring in rings for p in ring):
-        return  # anything bad anywhere: the whole Polygon gives nothing
+        return None  # anything bad anywhere: the whole Polygon gives nothing
     rings = [[vertex(p) for p in ring] for ring in rings]
     outline = open_ring(rings[0])
     if len(outline) < 3:
-        return
+        return None
     holes = [h for h in (open_ring(ring) for ring in rings[1:]) if len(h) >= 3]
-    target.add("polygon", polygon_geometry(outline, holes))
+    return outline, holes
+
+
+def gj_polygon(coords, target):
+    area = gj_area(coords)
+    if area is not None:
+        target.add("polygon", polygon_geometry(*area))
+
+
+def gj_multi_polygon(coords, target):
+    """One area of the members that give one, parts in order; nothing when none does."""
+    if isinstance(coords, list):
+        areas = [a for a in (gj_area(member) for member in coords) if a is not None]
+        if areas:
+            target.add("polygon", area_geometry(areas))
 
 
 def gj_each(read):
@@ -295,7 +324,7 @@ COORDINATE_READERS = {
     "LineString": gj_line_string,
     "MultiLineString": gj_each(gj_line_string),
     "Polygon": gj_polygon,
-    "MultiPolygon": gj_each(gj_polygon),
+    "MultiPolygon": gj_multi_polygon,
 }
 GEOMETRY_TYPES = (*COORDINATE_READERS, "GeometryCollection")
 
@@ -443,7 +472,8 @@ def contains(ring, point):
 
 def shp_polygons(parts):
     """A record's rings as (outline, holes): clockwise rings are outlines, counter-clockwise ones go to the
-    first clockwise outline holding their first vertex or stand alone; zero-area and short rings give nothing."""
+    first clockwise outline holding their first vertex or stand alone; zero-area and short rings give nothing.
+    The pairs are the parts of the record's one area, in the record's order."""
     shells, holes = [], []
     for index, part in enumerate(parts):
         ring = open_ring(part)
@@ -500,7 +530,8 @@ def shp_objects(content):
         parts = shp_parts(content, shape_type)
         if not parts or not all(finite(x, y) for part in parts for x, y, _ in part):
             return []  # a bad point: the whole record nothing
-        return [("polygon", polygon_geometry(ring, holes)) for ring, holes in shp_polygons(parts)]
+        areas = shp_polygons(parts)
+        return [("polygon", area_geometry(areas))] if areas else []  # one record, one area
     return []  # Null, MultiPatch and unknown shape types give nothing
 
 

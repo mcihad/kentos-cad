@@ -7,8 +7,10 @@
 //!
 //! - Point → point (with its height when the position has a third number);
 //!   LineString → line (two positions) or path; Polygon → area, holes kept,
-//!   the repeated closing position dropped, ring order as written; the
-//!   Multi* kinds and GeometryCollection → one object per part.
+//!   the repeated closing position dropped, ring order as written;
+//!   MultiPolygon → one area of the members that read, parts in order
+//!   (docs/adr/0143); MultiPoint, MultiLineString and GeometryCollection →
+//!   one object per member.
 //! - A position's third number is that vertex's elevation, in a line, a path
 //!   or a ring as in a point (docs/adr/0142); a position without one has
 //!   none, even next to positions that have (RFC 7946 lets them mix). The
@@ -377,12 +379,19 @@ impl Shapes<'_> {
                 Nest::Pos(_) => self.bad(Bad::Invalid, "MultiLineString"),
             },
             "Polygon" => self.polygon(coords),
-            // MultiPolygon: the last of the seven.
+            // MultiPolygon: the last of the seven. One area, its members its parts
+            // (docs/adr/0143); a member that does not read is said and left out.
             _ => match coords {
                 Nest::List(items) => {
-                    self.multi("MultiPolygon");
-                    for i in items {
-                        self.polygon(i);
+                    let parts: Vec<_> = items.iter().filter_map(|i| self.area(i)).collect();
+                    match Shape::area(parts) {
+                        Some(area) => self.out.push(area),
+                        None if items.is_empty() => self.c.report.skip(
+                            "Boş MultiPolygon",
+                            "parçası yok; alınmadı",
+                            self.line,
+                        ),
+                        None => {}
                     }
                 }
                 Nest::Bad(b) => self.bad(*b, "MultiPolygon"),
@@ -418,13 +427,30 @@ impl Shapes<'_> {
     }
 
     fn polygon(&mut self, n: &Nest) {
+        if let Some((outline, holes)) = self.area(n) {
+            self.out.push(Shape::Polygon(outline, holes));
+        }
+    }
+
+    /// A Polygon's (or a MultiPolygon member's) outline and holes; none,
+    /// said in the report, when it cannot be an area.
+    fn area(&mut self, n: &Nest) -> Option<(Ring, Vec<Ring>)> {
         let rings: Vec<Vec<Pos>> = match n {
             Nest::List(rs) => match rs.iter().map(positions).collect() {
                 Ok(v) => v,
-                Err(b) => return self.bad(b, "o Polygon"),
+                Err(b) => {
+                    self.bad(b, "o Polygon");
+                    return None;
+                }
             },
-            Nest::Bad(b) => return self.bad(*b, "o Polygon"),
-            Nest::Pos(_) => return self.bad(Bad::Invalid, "o Polygon"),
+            Nest::Bad(b) => {
+                self.bad(*b, "o Polygon");
+                return None;
+            }
+            Nest::Pos(_) => {
+                self.bad(Bad::Invalid, "o Polygon");
+                return None;
+            }
         };
         for r in &rings {
             self.more(r);
@@ -436,17 +462,18 @@ impl Shapes<'_> {
             ))
         });
         let Some((outline, closed, differs)) = rings.next() else {
-            return self
-                .c
+            self.c
                 .report
                 .skip("Boş Polygon", "halkası yok; alınmadı", self.line);
+            return None;
         };
         if outline.pts.len() < 3 {
-            return self.c.report.skip(
+            self.c.report.skip(
                 "Kısa halka",
                 "dış sınırın üçten az köşesi var; alan olamaz, alınmadı",
                 self.line,
             );
+            return None;
         }
         let mut unclosed = !closed;
         let mut closing_z = differs;
@@ -474,7 +501,7 @@ impl Shapes<'_> {
                 self.line,
             );
         }
-        self.out.push(Shape::Polygon(outline, holes));
+        Some((outline, holes))
     }
 }
 

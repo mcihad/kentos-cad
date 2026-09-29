@@ -10,8 +10,8 @@
 use std::collections::BTreeMap;
 
 use kentos_contracts::{
-    Bounds, DeclaredCrs, Entity, EntityBase, ImportLayer, ImportResult, LineEntity, LineType,
-    PathEntity, PointEntity, RingGeometry, Vec2,
+    AreaPart, Bounds, DeclaredCrs, Entity, EntityBase, ImportLayer, ImportResult, LineEntity,
+    LineType, PathEntity, PointEntity, RingGeometry, Vec2,
 };
 
 use crate::report::Report;
@@ -62,6 +62,10 @@ pub enum Shape {
     Polyline(Ring),
     /// An outline and its holes (rings without a repeated closing point).
     Polygon(Ring, Vec<Ring>),
+    /// An area of two or more parts, each an outline and its holes, in the
+    /// file's order: a MultiPolygon, a Shapefile record of several outlines
+    /// (docs/adr/0143). Made by [`Shape::area`].
+    Parts(Vec<(Ring, Vec<Ring>)>),
 }
 
 impl Shape {
@@ -70,9 +74,35 @@ impl Shape {
             Shape::Point { .. } => "point",
             Shape::Line { .. } => "line",
             Shape::Polyline(_) => "polyline",
-            Shape::Polygon(..) => "polygon",
+            Shape::Polygon(..) | Shape::Parts(_) => "polygon",
         }
     }
+
+    /// One area of `parts`: none of none, an area of one, a multi-part area
+    /// of more (docs/adr/0143).
+    pub fn area(mut parts: Vec<(Ring, Vec<Ring>)>) -> Option<Shape> {
+        match parts.len() {
+            0 => None,
+            1 => parts
+                .pop()
+                .map(|(outline, holes)| Shape::Polygon(outline, holes)),
+            _ => Some(Shape::Parts(parts)),
+        }
+    }
+}
+
+/// An area's holes as the contract has them (none for none).
+fn holes_of(holes: Vec<Ring>) -> Option<Vec<RingGeometry>> {
+    (!holes.is_empty()).then(|| {
+        holes
+            .into_iter()
+            .map(|h| RingGeometry {
+                pts: h.pts,
+                bulges: None,
+                zs: h.zs,
+            })
+            .collect()
+    })
 }
 
 /// The objects read so far and what was said about them.
@@ -137,6 +167,11 @@ impl Collect {
             Shape::Polyline(r) => r.pts.iter().for_each(|p| self.extend(*p)),
             // Holes lie inside their outline.
             Shape::Polygon(r, _) => r.pts.iter().for_each(|p| self.extend(*p)),
+            Shape::Parts(parts) => {
+                for (r, _) in parts {
+                    r.pts.iter().for_each(|p| self.extend(*p));
+                }
+            }
         }
         let base = EntityBase {
             id: 0,
@@ -162,19 +197,34 @@ impl Collect {
                 base,
                 pts: r.pts,
                 bulges: None,
-                holes: (!holes.is_empty()).then(|| {
-                    holes
-                        .into_iter()
-                        .map(|h| RingGeometry {
-                            pts: h.pts,
-                            bulges: None,
-                            zs: h.zs,
-                        })
-                        .collect()
-                }),
+                holes: holes_of(holes),
                 zs: r.zs,
                 parts: None,
             }),
+            // The first part is the area's own fields, the others its parts.
+            Shape::Parts(parts) => {
+                let mut parts = parts.into_iter();
+                let Some((r, holes)) = parts.next() else {
+                    return;
+                };
+                Entity::Polygon(PathEntity {
+                    base,
+                    pts: r.pts,
+                    bulges: None,
+                    holes: holes_of(holes),
+                    zs: r.zs,
+                    parts: Some(
+                        parts
+                            .map(|(r, holes)| AreaPart {
+                                pts: r.pts,
+                                bulges: None,
+                                holes: holes_of(holes),
+                                zs: r.zs,
+                            })
+                            .collect(),
+                    ),
+                })
+            }
         });
     }
 
