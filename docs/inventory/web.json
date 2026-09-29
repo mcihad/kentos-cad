@@ -20,15 +20,15 @@
   "summary": {
     "commands": {
       "total": 189,
-      "implemented": 175,
+      "implemented": 176,
       "partial": 0,
-      "pending": 14
+      "pending": 13
     },
     "tools": {
       "total": 77,
-      "implemented": 74,
+      "implemented": 75,
       "partial": 0,
-      "pending": 3
+      "pending": 2
     },
     "processing": {
       "total": 4,
@@ -74,22 +74,22 @@
     },
     "commandsWithoutPlace": [],
     "commandsWithoutTests": 63,
-    "commandsOnDesktop": 170,
+    "commandsOnDesktop": 171,
     "desktop": {
       "commands": {
         "total": 189,
-        "implemented": 170,
+        "implemented": 171,
         "partial": 0,
         "pending": 13,
-        "none": 1,
+        "none": 0,
         "n/a": 5
       },
       "tools": {
         "total": 77,
-        "implemented": 74,
+        "implemented": 75,
         "partial": 0,
         "pending": 2,
-        "none": 1,
+        "none": 0,
         "n/a": 0
       },
       "processing": {
@@ -1511,7 +1511,7 @@
       "title": "GeoJSON…",
       "category": "Dosya",
       "icon": "import",
-      "description": "GeoJSON dosyasını (RFC 7946) içe aktarır: noktalar (Z ile), çizgiler, çoklu çizgiler ve delikli alanlar; özellikler metin öznitelik olur. Dosyanın dediği koordinat sistemi gösterilir; projeninkinden başkaysa alınmaz, koordinatlar dönüştürülmez.",
+      "description": "GeoJSON dosyasını (RFC 7946) içe aktarır: noktalar, çizgiler, çoklu çizgiler ve delikli alanlar, köşe kotlarıyla (Z); özellikler metin öznitelik olur. Dosyanın dediği koordinat sistemi gösterilir; projeninkinden başkaysa alınmaz, koordinatlar dönüştürülmez.",
       "aliases": [
         "GEOJSON",
         "GEOJSONAL"
@@ -1613,7 +1613,7 @@
       "title": "Shapefile…",
       "category": "Dosya",
       "icon": "import",
-      "description": "Shapefile katmanını içe aktarır: .shp, .shx, .dbf, .prj ve .cpg dosyaları birlikte seçilir. Noktalar (Z ile), çizgiler ve delikli alanlar; .dbf alanları metin öznitelik olur. .prj'deki sistem gösterilir; projeninkinden başkaysa alınmaz. .zip henüz açılmaz.",
+      "description": "Shapefile katmanını içe aktarır: .shp, .shx, .dbf, .prj ve .cpg dosyaları birlikte seçilir. Noktalar, çizgiler ve delikli alanlar, köşe kotlarıyla (Z); .dbf alanları metin öznitelik olur. .prj'deki sistem gösterilir; projeninkinden başkaysa alınmaz. .zip henüz açılmaz.",
       "aliases": [
         "SHP",
         "SHPAL",
@@ -4936,10 +4936,10 @@
       "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -8124,10 +8124,10 @@
       "steps": 3,
       "description": "Seçili çizgi, çoklu çizgi, alan ve noktaların köşelerine kot verir: hepsine aynı değer, var olana fark ya da kotu silme.",
       "productCommand": "cad.entities.edit",
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "none"
+        "web": "implemented",
+        "desktop": "implemented"
       },
       "tests": []
     },

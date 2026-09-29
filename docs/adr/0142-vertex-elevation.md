@@ -110,6 +110,12 @@ Sahibin kararı (29 Eylül): `.kcad` şemasını değiştiren işler kendi özel
   Kot ver `cad.entities.edit`'in yeni `elevation` işlemiyle yazar: tek geri alma adımı, kilitli katmanda ret, iki platformda ortak durumlar (`fixtures/commands/v1`, bağımsız Python denetimiyle).
 - **Nokta:** noktanın `z`'si olduğu gibi kalır. Kot ver noktaya da yazar.
 - **Koordinat oku ve kenet:** kotlu köşede kotu da söyler: "Y … X … Z …".
+- **İki platformun ortak ayrıntıları** (29 Eylül):
+  - Kot ver'in ikinci adımında Enter ve sağ tık Esc gibidir: seçmeye dönülür, seçim kalır. Seçim araç çalışırken kot alamaz hâle gelirse araç bunu söyler ve seçmeye döner.
+  - Artır yalnız yükselttiği nesneleri sayar; Sabit ve Sıfırla kilitsiz, kot alan her nesneyi sayar.
+  - "(bazı köşeler kotsuz)" değerin altında ikinci satırdır: panel ikisine birden dar gelir.
+  - Çoklu seçimde tek Kot satırı vardır: bütün köşeler aynıysa değer, hiçbirinde kot yoksa "kot yok", başka durumda "Çeşitli".
+  - Tutamaç etiketi üzerine gelince de çıkar, noktanın tutamacında da. Kotlu tutamacın üstünde nesne vurgulanmaz, üzerine gelme kartı açılmaz: kart etiketi örterdi.
 
 ### 6. İş sırası
 

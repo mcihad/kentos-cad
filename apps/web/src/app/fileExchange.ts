@@ -71,7 +71,7 @@ export function registerFileExchangeCommands(ctx: AppContext): void {
       category: 'Dosya',
       icon: 'import',
       description:
-        "GeoJSON dosyasını (RFC 7946) içe aktarır: noktalar (Z ile), çizgiler, çoklu çizgiler ve delikli alanlar; özellikler metin öznitelik olur. Dosyanın dediği koordinat sistemi gösterilir; projeninkinden başkaysa alınmaz, koordinatlar dönüştürülmez.",
+        "GeoJSON dosyasını (RFC 7946) içe aktarır: noktalar, çizgiler, çoklu çizgiler ve delikli alanlar, köşe kotlarıyla (Z); özellikler metin öznitelik olur. Dosyanın dediği koordinat sistemi gösterilir; projeninkinden başkaysa alınmaz, koordinatlar dönüştürülmez.",
       aliases: ['GEOJSON', 'GEOJSONAL'],
       run: () => importWith(ctx, GEOJSON_FILES, 'GeoJSON', () => import('../ui/io/GisImportDialog'), (m, file) => m.openGeoJsonImport(ctx, file, GEOJSON_FILES)),
     },
@@ -81,7 +81,7 @@ export function registerFileExchangeCommands(ctx: AppContext): void {
       category: 'Dosya',
       icon: 'import',
       description:
-        "Shapefile katmanını içe aktarır: .shp, .shx, .dbf, .prj ve .cpg dosyaları birlikte seçilir. Noktalar (Z ile), çizgiler ve delikli alanlar; .dbf alanları metin öznitelik olur. .prj'deki sistem gösterilir; projeninkinden başkaysa alınmaz. .zip henüz açılmaz.",
+        "Shapefile katmanını içe aktarır: .shp, .shx, .dbf, .prj ve .cpg dosyaları birlikte seçilir. Noktalar, çizgiler ve delikli alanlar, köşe kotlarıyla (Z); .dbf alanları metin öznitelik olur. .prj'deki sistem gösterilir; projeninkinden başkaysa alınmaz. .zip henüz açılmaz.",
       aliases: ['SHP', 'SHPAL', 'SHAPEFILE'],
       run: () => importManyWith(ctx, SHAPEFILE_FILES, 'Shapefile', () => import('../ui/io/GisImportDialog'), (m, files) => m.openShapefileImport(ctx, files, SHAPEFILE_FILES)),
     },

@@ -277,7 +277,7 @@ pub const PORTED: &[&str] = &[
 const DESKTOP_DESCRIPTIONS: &[(&str, &str)] = &[
     (
         "file.import.shp",
-        "Shapefile katmanını içe aktarır: .shp, .shx, .dbf, .prj ve .cpg dosyaları birlikte ya da katmanın .zip arşivi seçilir (arşivdeki her .shp bir katmandır, biri seçilir). Noktalar (Z ile), çizgiler ve delikli alanlar; .dbf alanları metin öznitelik olur. .prj'deki sistem gösterilir; projeninkinden başkaysa alınmaz.",
+        "Shapefile katmanını içe aktarır: .shp, .shx, .dbf, .prj ve .cpg dosyaları birlikte ya da katmanın .zip arşivi seçilir (arşivdeki her .shp bir katmandır, biri seçilir). Noktalar, çizgiler ve delikli alanlar, köşe kotlarıyla (Z); .dbf alanları metin öznitelik olur. .prj'deki sistem gösterilir; projeninkinden başkaysa alınmaz.",
     ),
     (
         "view.commandSearch",

@@ -121,7 +121,7 @@ describe.skipIf(!loader)('NCZ WASM module', () => {
     // Each corner in millimetres, (easting, northing), south-west first.
     const frame = (name: string) => {
       const e = r.entities.find((x) => x.attrs['Pafta'] === name);
-      return e?.kind === 'polygon' ? e.pts.map((p) => [Math.round(p.x * 1000), Math.round(p.y * 1000)]) : e;
+      return e?.kind === 'polygon' ? e.pts.map((p) => [Math.round(p.x * 1000), Math.round(p.y * 1000)]) : undefined;
     };
     expect(frame('GB')).toEqual([
       [421_758_834, 4_450_753_176],
