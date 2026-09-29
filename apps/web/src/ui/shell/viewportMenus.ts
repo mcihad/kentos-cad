@@ -1,18 +1,10 @@
 import { commandItem, resolveMenu } from '../../app/menus';
 import type { AppContext } from '../../app/context';
-import type { EditOperation } from '../../contracts/generated/EditOperation';
-import type { EntityGeometry as EditGeometry } from '../../contracts/generated/EntityGeometry';
 import type { Disposable } from '../../core/disposable';
-import type { EntityGeometry, PolylineEntity } from '../../model/entities';
-import { bulgeAt, bulgeRingArea, isArcBulge, segmentMid } from '../../model/geom/bulge';
-import { holeGrip, midGripSegment } from '../../model/ops/grips';
-import { insertVertex, removeVertex } from '../../model/ops/vertex';
-import { EDIT_LABEL, geometryOf } from '../../product/entitiesEdit';
-import { uidOf, writeEdit } from '../../tools/editCommand';
 import { SNAP_LABEL, type SnapKind } from '../../viewport/picking';
-import type { Vec2 } from '../../model/geometry';
 import { canCalcPoint } from '../../tools/pointCalc';
 import { calcMenuItems } from './calcMenu';
+import { gripItems } from './gripMenu';
 import { parsePrompt, runPromptOption } from '../promptOptions';
 import { PopupMenu, type MenuItem } from '../widgets/PopupMenu';
 
@@ -105,54 +97,4 @@ function idleItems(ctx: AppContext): MenuItem[] {
   ]).filter((it, i, arr) => !(it.kind === 'separator' && (i === 0 || arr[i - 1].kind === 'separator')));
   if (last && items[0]) items[0].label = `Yinele: ${last}`;
   return items;
-}
-
-/** Actions for the grip under the cursor of a selected polyline or polygon. */
-function gripItems(ctx: AppContext, screen: Vec2): MenuItem[] {
-  const hit = ctx.view.gripAt(screen);
-  const e = hit && ctx.doc.get(hit.id);
-  // Hole vertices only move by dragging; editing a hole's shape needs Patlat.
-  if (!hit || !e || (e.kind !== 'polyline' && e.kind !== 'polygon') || holeGrip(e, hit.index)) return [];
-  const seg = midGripSegment(e, hit.index);
-  // Through the product command cad.entities.edit, the step named after the operation. The object's geometry
-  // is kept but for what the edit gives (a hole stays); its bulges only when the edit gives them.
-  const apply = (operation: EditOperation, r: { geometry: EntityGeometry } | { error: string }) => {
-    if ('error' in r) return ctx.log.warn(r.error);
-    const geometry = { ...geometryOf(e as unknown as EditGeometry), bulges: undefined, ...r.geometry } as unknown as EditGeometry;
-    if (writeEdit(ctx, operation, [{ kind: 'update', uid: uidOf(ctx, e), geometry }])) ctx.log.success(`${EDIT_LABEL[operation]}: tamam.`);
-  };
-  if (seg === null) {
-    return [
-      { kind: 'header', label: `Köşe ${hit.index + 1}` },
-      { label: 'Köşeyi sil', icon: 'erase', run: () => apply('vertexRemove', removeVertex(e, hit.index)) },
-      { kind: 'separator' },
-    ];
-  }
-  const n = e.pts.length;
-  const a = e.pts[seg];
-  const b = e.pts[(seg + 1) % n];
-  const arc = isArcBulge(bulgeAt(e.bulges, seg));
-  return [
-    { kind: 'header', label: `Kenar ${seg + 1}` },
-    { label: 'Ortasına köşe ekle', icon: 'vertex', run: () => apply('vertexAdd', insertVertex(e, seg, segmentMid(a, b, bulgeAt(e.bulges, seg)))) },
-    arc
-      ? { label: 'Düz kenar yap', icon: 'line', run: () => apply('straightEdge', withBulge(e, seg, 0)) }
-      : { label: 'Yaya dönüştür', icon: 'arc', run: () => apply('arcEdge', withBulge(e, seg, outwardBulge(e))) },
-    { kind: 'separator' },
-  ];
-}
-
-/**
- * A gentle arc (sagitta = a quarter of the chord) bowing out of a ring, or
- * to the right of an open path; its mid grip then shapes it further.
- */
-function outwardBulge(e: PolylineEntity): number {
-  if (e.kind !== 'polygon') return 0.5;
-  // Outside of a counter-clockwise ring is right of travel, where a positive bulge bows.
-  return bulgeRingArea(e.pts, e.bulges) > 0 ? 0.5 : -0.5;
-}
-
-function withBulge(e: PolylineEntity, seg: number, bulge: number): { geometry: EntityGeometry } {
-  const bulges = e.pts.map((_, i) => (i === seg ? bulge : bulgeAt(e.bulges, i)));
-  return { geometry: { kind: e.kind, pts: e.pts, ...(bulges.some(isArcBulge) && { bulges }) } };
 }
