@@ -78,7 +78,14 @@ export function strokeGeometry(
     return;
   }
   strokePath(g, view, entityOutline(geom, 64), { ...opts, closed: geom.kind === 'polygon' || geom.kind === 'circle' });
-  if (geom.kind === 'polygon') for (const h of geom.holes ?? []) strokePath(g, view, polygonRing(h), { ...opts, closed: true });
+  if (geom.kind === 'polygon') {
+    for (const h of geom.holes ?? []) strokePath(g, view, polygonRing(h), { ...opts, closed: true });
+    // The other parts of a multi-part area (docs/adr/0143), each with its holes.
+    for (const part of geom.parts ?? []) {
+      strokePath(g, view, polygonRing(part), { ...opts, closed: true });
+      for (const h of part.holes ?? []) strokePath(g, view, polygonRing(h), { ...opts, closed: true });
+    }
+  }
 }
 
 /**

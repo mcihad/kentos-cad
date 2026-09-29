@@ -230,8 +230,13 @@ export class VertexTool extends EdgePickTool {
   private plan(e: Entity, p: ToolPointer): { entity: Entity; remove: number | null; seg: number; at: Vec2 } {
     const tol = this.ctx.view.worldTolerance(VERTEX_PX);
     if (e.kind === 'polyline' || e.kind === 'polygon') {
-      const i = e.pts.findIndex((q) => dist(q, p.raw) <= tol);
-      if (i >= 0) return { entity: e, remove: i, seg: -1, at: e.pts[i] };
+      // The outer vertices of every part, part after part, as the core's `removeVertex` counts them (docs/adr/0143).
+      let offset = 0;
+      for (const ring of [e.pts, ...(e.parts ?? []).map((part) => part.pts)]) {
+        const i = ring.findIndex((q) => dist(q, p.raw) <= tol);
+        if (i >= 0) return { entity: e, remove: offset + i, seg: -1, at: ring[i] };
+        offset += ring.length;
+      }
     }
     return { entity: e, remove: null, seg: e.kind === 'line' ? 0 : nearestSegment(e, p.raw), at: p.raw };
   }
@@ -245,8 +250,9 @@ export class VertexTool extends EdgePickTool {
     const r = a.remove !== null ? removeVertex(e, a.remove) : insertVertex(e, a.seg, a.at);
     if ('error' in r) return this.ctx.log.warn(r.error);
     const operation = a.remove !== null ? 'vertexRemove' : 'vertexAdd';
-    // The whole geometry is written (docs/adr/0047): a closed area keeps its holes, the core's path is the outer ring.
-    const geometry = r.geometry.kind === 'polygon' && e.kind === 'polygon' && e.holes?.length ? { ...r.geometry, holes: e.holes } : r.geometry;
+    // The whole geometry is written (docs/adr/0047): a closed area keeps its holes, the core's path is the outer ring;
+    // a multi-part area comes back whole, every part with its holes, as the core made it (docs/adr/0143).
+    const geometry = r.geometry.kind === 'polygon' && e.kind === 'polygon' && e.holes?.length && !e.parts?.length ? { ...r.geometry, holes: e.holes } : r.geometry;
     const written =
       r.geometry.kind !== e.kind ? this.replace(operation, e, [r.geometry]) : writeEdit(this.ctx, operation, [{ kind: 'update', uid: uidOf(this.ctx, e), geometry: editGeometry(geometry) }]) !== null;
     if (written) this.ctx.log.success(a.remove !== null ? 'Köşe silindi.' : 'Köşe eklendi.');

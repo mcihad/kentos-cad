@@ -1,11 +1,9 @@
 import type { EntityEdit } from '../contracts/generated/EntityEdit';
 import { entityGeometry, type Entity, type EntityGeometry, type LineEntity, type PolylineEntity } from '../model/entities';
 import type { Vec2 } from '../model/geometry';
-import { bulgeAt } from '../model/geom/bulge';
-import { chamferLines, cornerOfPath, filletLines } from '../model/ops/fillet';
-import { nearestSegment } from '../model/ops/vertex';
+import { chamferLines, cornerInPath, filletLines } from '../model/ops/fillet';
 import type { ViewTransform } from '../viewport/Camera';
-import { chamferLine, cornerNear, filletArc, filletRadiusFor, linesCornerAt, offsetAlong, pulledDistance, vertexCorner, type CornerGeom } from './constructions';
+import { chamferLine, cornerNear, filletArc, filletRadiusFor, linesCornerAt, offsetAlong, pathCornerAt, pulledDistance, sharedCorner, type CornerGeom } from './constructions';
 import { parseNumber } from './coordinateInput';
 import { EdgePickTool } from './edgeTools';
 import { editGeometry, uidOf, writeEdit } from './editCommand';
@@ -37,23 +35,22 @@ const HOVER_PX = 12;
 /** The corner's geometry alone, for the core (its entities stay out of the call). */
 const geomOf = (c: Corner): CornerGeom => ({ at: c.at, u1: c.u1, u2: c.u2, reach: c.reach, phi: c.phi });
 
-/** The corner at vertex `i` of a path; `known` when the core has found it already (`cornerNear`). */
+/**
+ * The corner at outer vertex `i` of a path, an area's vertices counted part after part (docs/adr/0143); `known`
+ * when the core has found it already (`cornerNear`).
+ */
 function pathCorner(e: PolylineEntity, i: number, known?: CornerGeom): Corner | null {
-  const n = e.pts.length;
-  const closed = e.kind === 'polygon';
-  if (!closed && (i <= 0 || i >= n - 1)) return null;
-  const iPrev = (i - 1 + n) % n;
-  const g = known ?? vertexCorner(e.pts[iPrev], e.pts[i], e.pts[(i + 1) % n], bulgeAt(e.bulges, iPrev), bulgeAt(e.bulges, i));
+  const g = known ?? pathCornerAt(e, i);
   if (!g) return null;
   return {
     ...g,
     entities: [e],
     plan: (op) => {
-      const r = cornerOfPath(e.pts, e.bulges, closed, i, op);
+      const r = cornerInPath(e, i, op);
       if ('error' in r) return r;
-      // The whole geometry is written (docs/adr/0047): a closed area keeps its holes.
-      const holes = e.kind === 'polygon' && e.holes?.length ? { holes: e.holes } : {};
-      return { updates: [{ entity: e, geometry: { kind: e.kind, pts: r.pts, ...(r.bulges && { bulges: r.bulges }), ...holes } as EntityGeometry }], add: null };
+      // The whole geometry is written (docs/adr/0047): the corner is done on its own part, which keeps its holes,
+      // and an area's other parts stay (docs/adr/0143); the core gives all of it.
+      return { updates: [{ entity: e, geometry: r.geometry }], add: null };
     },
   };
 }
@@ -182,14 +179,9 @@ abstract class CornerTool extends EdgePickTool {
     }
     if (a.entity.id !== b.entity.id || a.entity.kind === 'line') return { error: 'Çoklu çizgide köşe için köşenin kendisine ya da aynı nesnenin iki komşu kenarına tıklayın.' };
     const e = a.entity as PolylineEntity;
-    const n = e.pts.length;
-    const i = nearestSegment(e, a.pick);
-    const j = nearestSegment(e, b.pick);
-    let v = -1;
-    if (j === i + 1) v = j;
-    else if (i === j + 1) v = i;
-    else if (e.kind === 'polygon' && ((i === n - 1 && j === 0) || (j === n - 1 && i === 0))) v = 0;
-    if (v < 0) return { error: 'Seçilen kenarlar komşu değil; ortak köşesi olan iki kenar seçin.' };
+    // The vertex the two edges share, on one ring of one part (the core's rule, docs/adr/0143).
+    const v = sharedCorner(e, a.pick, b.pick);
+    if (v === null) return { error: 'Seçilen kenarlar komşu değil; ortak köşesi olan iki kenar seçin.' };
     return pathCorner(e, v) ?? { error: 'Bu köşenin kenarlarından biri yay; yalnızca düz kenarlar arasındaki köşe işlenebilir.' };
   }
 

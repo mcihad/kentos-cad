@@ -80,6 +80,18 @@ export interface CornerGeom {
 
 /** The corner at a path vertex between the segment from `prev` and the one to `next`; null beside an arc or on a straight run. */
 export const vertexCorner = op<(prev: Vec2, at: Vec2, next: Vec2, bulgeIn: number, bulgeOut: number) => CornerGeom | null>('vertexCorner');
+/**
+ * The corner at outer vertex `index` of a polyline or an area, an area's vertices counted part after part (its own
+ * ring first, then each other part's, holes never; docs/adr/0143). Null past the last vertex, at an open path's end,
+ * beside an arc and on a straight run.
+ */
+export const pathCornerAt = op<(e: Entity, index: number) => CornerGeom | null>('pathCornerAt');
+/**
+ * The vertex two picked edges of one path share: each pick's nearest edge, both on one outer ring and neighbours;
+ * its index counts as `pathCornerAt`'s. Null for edges that are not neighbours on one ring (a hole's edges, edges of
+ * two parts).
+ */
+export const sharedCorner = op<(e: Entity, a: Vec2, b: Vec2) => number | null>('sharedCorner');
 /** Corner of two lines picked at p1 and p2; each keeps the side its pick point is on. */
 export const linesCornerAt = op<(a1: Vec2, b1: Vec2, p1: Vec2, a2: Vec2, b2: Vec2, p2: Vec2) => CornerGeom | null>('linesCornerAt');
 /** How far the cursor has been pulled along the nearer side, rounded to a step that suits the zoom. */
@@ -98,7 +110,8 @@ export type CornerSite = { kind: 'vertex'; object: number; vertex: number } | { 
  * The corner nearest `p` within `tol` among the candidates (lines, polylines,
  * closed areas): a path vertex, or two lines whose ends lie within `same` of
  * each other; the first on a tie (docs/adr/0047). Each line of a pair keeps
- * the side of its far end.
+ * the side of its far end. A vertex site's `vertex` counts an area's outer
+ * vertices part after part (docs/adr/0143), as `pathCornerAt` does.
  */
 export const cornerNear = op<(candidates: readonly Entity[], p: Vec2, tol: number, same: number) => { site: CornerSite; corner: CornerGeom } | null>('cornerNear');
 

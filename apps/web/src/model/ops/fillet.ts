@@ -1,6 +1,8 @@
 import { op } from '../../wasm/core';
+import type { Entity, EntityGeometry } from '../entities';
 import type { Vec2 } from '../geometry';
 import type { ArcGeom } from '../geom/arc';
+import { entityOp } from './entityOp';
 
 /** Corners of two lines and of a path's vertex, computed by the geometry core (docs/adr/0008). */
 
@@ -35,6 +37,14 @@ export type CornerResult = { pts: Vec2[]; bulges?: number[] } | { error: string 
  * by an arc segment or a straight cut.
  */
 export const cornerOfPath = op<(pts: readonly Vec2[], bulges: readonly number[] | undefined, closed: boolean, index: number, op: { radius: number } | { d1: number; d2: number }) => CornerResult>('cornerOfPath');
+
+/**
+ * `cornerOfPath` on the object itself: rounds or cuts the corner at outer vertex `index` of a polyline or an area,
+ * an area's vertices counted part after part (docs/adr/0143). The corner is done on its own part, which keeps its
+ * holes; the other parts are kept. The whole geometry comes back (kind, pts, bulges, holes, parts), or why not.
+ * Throws past the last vertex, as `cornerOfPath` does.
+ */
+export const cornerInPath = entityOp<(e: Entity, index: number, op: { radius: number } | { d1: number; d2: number }) => { geometry: EntityGeometry } | { error: string }>('cornerInPath');
 
 /**
  * Every corner of a closed ring rounded (`radius`) or cut (`d1`, `d2`), the

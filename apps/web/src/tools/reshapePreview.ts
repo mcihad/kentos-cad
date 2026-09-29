@@ -5,10 +5,20 @@ import { strokePath } from './preview';
 
 /** Preview drawing of the reshaping tools (docs/adr/0140): direction arrows, marked vertices, the pieces of a split. */
 
-/** The paths of an object's outline, in the order it runs: an area's ring and its holes, each closed. */
+/**
+ * The paths of an object's outline, in the order it runs: an area's ring and its holes, each closed, then each
+ * other part's ring and holes (docs/adr/0143).
+ */
 export function outlinesOf(geom: EntityGeometry): { pts: Vec2[]; closed: boolean }[] {
   if (geom.kind === 'point' || geom.kind === 'text' || geom.kind === 'dimension') return [];
-  if (geom.kind === 'polygon') return [{ pts: entityOutline(geom, 64), closed: true }, ...(geom.holes ?? []).map((h) => ({ pts: polygonRing(h), closed: true }))];
+  if (geom.kind === 'polygon') {
+    const ring = (r: { pts: Vec2[]; bulges?: number[] }) => ({ pts: polygonRing(r), closed: true });
+    return [
+      { pts: entityOutline(geom, 64), closed: true },
+      ...(geom.holes ?? []).map(ring),
+      ...(geom.parts ?? []).flatMap((part) => [ring(part), ...(part.holes ?? []).map(ring)]),
+    ];
+  }
   return [{ pts: entityOutline(geom, 64), closed: geom.kind === 'circle' }];
 }
 
