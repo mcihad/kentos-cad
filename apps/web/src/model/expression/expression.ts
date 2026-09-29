@@ -96,7 +96,7 @@ export function compileExpression(source: string): CompileResult {
 /** Message for the dialog: "12. karakterde: …". */
 export const expressionError = (r: Extract<CompileResult, { ok: false }>) => (r.at > 1 ? `${r.at}. karakterde: ${r.error}` : r.error);
 
-/** Corners of a path or area (holes included), for $köşe. */
+/** Corners of a path or area (holes included; a multi-part area's every part's ring and holes, docs/adr/0143), for $köşe. */
 export function vertexCount(e: Entity): number | null {
   switch (e.kind) {
     case 'polyline':
@@ -104,6 +104,10 @@ export function vertexCount(e: Entity): number | null {
     case 'polygon': {
       let n = e.pts.length;
       for (const h of e.holes ?? []) n += h.pts.length;
+      for (const part of e.parts ?? []) {
+        n += part.pts.length;
+        for (const h of part.holes ?? []) n += h.pts.length;
+      }
       return n;
     }
     case 'line':
