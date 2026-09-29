@@ -88,6 +88,7 @@ impl App {
                 memory: &mut self.memory,
                 view_changes: &mut changes,
                 tracking: &self.tracking,
+                shift: self.modifiers.shift(),
             },
         );
         for change in changes {
@@ -666,6 +667,13 @@ impl App {
     /// desktop runs (ADR 0017); while a command runs, + and − begin a value
     /// and zoom only when none runs (ADR 0018).
     pub(crate) fn shortcut(&self, chord: &str) -> Option<&'static str> {
+        // Shift with Enter confirms as Enter does: what a selecting tool finds
+        // then joins the selection (docs/adr/0141).
+        let chord = if chord == "Shift+Enter" {
+            "Enter"
+        } else {
+            chord
+        };
         let command = catalog()
             .commands()
             .iter()

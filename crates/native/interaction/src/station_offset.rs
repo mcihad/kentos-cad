@@ -278,13 +278,11 @@ impl Tool for StationOffset {
             .push(Stroke::solid(vec![a, b], false).width(2.0).tone(Tone::Snap));
         preview.labels.push(label(a, "A"));
         preview.labels.push(label(b, "B"));
-        preview
-            .markers
-            .extend(self.read.iter().map(|&at| Marker {
-                at,
-                shape: MarkerShape::Ring(3.5),
-                tone: Tone::Accent,
-            }));
+        preview.markers.extend(self.read.iter().map(|&at| Marker {
+            at,
+            shape: MarkerShape::Ring(3.5),
+            tone: Tone::Accent,
+        }));
         let Some(p) = hover else {
             return preview;
         };

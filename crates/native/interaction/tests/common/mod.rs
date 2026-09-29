@@ -102,6 +102,7 @@ impl Bench {
             memory: &mut self.memory,
             view_changes: &mut self.views,
             tracking: &self.tracking,
+            shift: self.shift,
         };
         act(&mut self.session, &mut cx)
     }

@@ -61,7 +61,10 @@
 //! - docs/adr/0141: the view history ([`view_history`]), the views left by
 //!   navigating, for Önceki and Sonraki görünüm; Mesafe ölç's fixed first point
 //!   and Alan hesapla's İçine tıkla and Alan olarak çiz ([`path`]); Dik ayak
-//!   ölç ([`station_offset`]);
+//!   ölç ([`station_offset`]); Çitle seç, Daireyle seç and İçeren alanı seç
+//!   ([`select_fence`], [`select_circle`], [`select_containing`]), which select
+//!   what a fence crosses, a circle holds or touches and the areas around a
+//!   point, and go back to Seç;
 //! - the geometry store kept in step with the document ([`Spatial`]): what
 //!   a click picks, a box selects and a point snaps to;
 //! - [`Format`]: numbers as the web shows them in messages and the tag.
@@ -138,6 +141,9 @@ pub mod rotated;
 pub mod scale;
 pub mod sector;
 pub mod select;
+pub mod select_circle;
+pub mod select_containing;
+pub mod select_fence;
 mod selection;
 mod session;
 pub mod spatial;

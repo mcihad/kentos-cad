@@ -975,6 +975,16 @@ pub(crate) fn station_ground() -> Objects {
     o
 }
 
+/// A parcel in a block in a district, one closed object round the other.
+pub(crate) fn nested_ground() -> Objects {
+    let mut o = Objects::new();
+    let square = |x0: f64, y0: f64, x1: f64, y1: f64| [[x0, y0], [x1, y0], [x1, y1], [x0, y1]];
+    o.path("parsel", &square(0.0, 0.0, 60.0, 40.0), true);
+    o.path("yol", &square(8.0, 6.0, 44.0, 34.0), true);
+    o.path("cizim", &square(16.0, 12.0, 30.0, 26.0), true);
+    o
+}
+
 // ── docs/adr/0141: the scenes ───────────────────────────────────────────────
 
 /// Kapsam denetimi, Mesafe ölç's fixed first point, İçine tıkla and Alan olarak çiz, Dik ayak ölç.
@@ -1052,6 +1062,58 @@ fn query_scenes() -> Vec<Scene> {
             click(app, [22.0, 14.0]);
             click(app, [22.0, 30.0]);
             hover(app, [46.0, 12.0]);
+        }),
+        ("cit-sec-onizleme", |app| {
+            open(app, fence_roads());
+            run(app, "tool.selectFence");
+            click(app, [4.0, 30.0]);
+            click(app, [30.0, 12.0]);
+            hover(app, [56.0, 20.0]);
+        }),
+        ("cit-sec-sonuc", |app| {
+            open(app, fence_roads());
+            run(app, "tool.selectFence");
+            click(app, [4.0, 30.0]);
+            click(app, [30.0, 12.0]);
+            click(app, [56.0, 20.0]);
+            forget(app);
+            run(app, "tool.confirm");
+            hover(app, [28.0, 34.0]);
+        }),
+        ("daire-sec-kesisen-onizleme", |app| {
+            open(app, corners());
+            run(app, "tool.selectCircle");
+            typed(app, "k");
+            click(app, [26.0, 18.0]);
+            hover(app, [40.0, 26.0]);
+        }),
+        ("daire-sec-sonuc", |app| {
+            open(app, corners());
+            run(app, "tool.selectCircle");
+            typed(app, "k");
+            click(app, [26.0, 18.0]);
+            forget(app);
+            click(app, [40.0, 26.0]);
+            hover(app, [30.0, 40.0]);
+        }),
+        ("daire-sec-icinde-sonuc", |app| {
+            open(app, corners());
+            run(app, "tool.selectCircle");
+            click(app, [37.0, 30.0]);
+            forget(app);
+            click(app, [37.0, 41.0]);
+            hover(app, [4.0, 40.0]);
+        }),
+        ("iceren-alan-onizleme", |app| {
+            open(app, nested_ground());
+            run(app, "tool.selectContaining");
+            hover(app, [22.0, 19.0]);
+        }),
+        ("iceren-alan-2-3", |app| {
+            open(app, nested_ground());
+            run(app, "tool.selectContaining");
+            click(app, [22.0, 19.0]);
+            click(app, [22.0, 19.0]);
         }),
     ]
 }

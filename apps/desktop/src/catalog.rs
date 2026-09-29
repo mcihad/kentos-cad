@@ -261,6 +261,11 @@ pub const PORTED: &[&str] = &[
     "view.extentCheck",
     // Dik ayak ölç (docs/adr/0141): a point read against a line, to the log.
     "tool.stationOffset",
+    // The selecting tools of docs/adr/0141, Giriş › Seçim's Seç ▾: what a fence crosses, a
+    // circle holds or touches, and the areas around a point.
+    "tool.selectFence",
+    "tool.selectCircle",
+    "tool.selectContaining",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

@@ -50,15 +50,14 @@ use crate::rotated::{self, RotatedRectangle};
 use crate::scale::{self, Scale};
 use crate::select::{Select, SelectBox};
 use crate::spatial::Spatial;
-use crate::station_offset;
 use crate::stretch::{self, Stretch};
 use crate::tool::{Context, Cursor, Draft, Flow, Pointer, Preview, Tool, View};
 use crate::trim::{self, Boundary};
 use crate::vertex::{self, Vertex};
 use crate::{
     angle, area, between, boundary, cleanup, construction, coordinate, dimension, dimension_chain,
-    divide, donut, ellipse, hatch, match_properties, meeting, parallel, revcloud, sector, spline,
-    split, text,
+    divide, donut, ellipse, hatch, match_properties, meeting, parallel, revcloud, sector,
+    select_circle, select_containing, select_fence, spline, split, station_offset, text,
 };
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
@@ -139,8 +138,11 @@ pub const TOOLS: &[&str] = &[
     dimension_chain::BASELINE_ID,
     // Phase 3: the array along a path (Çit, İki yana and Kaynağı sil are options of existing tools).
     array_path::ID,
-    // docs/adr/0141: Dik ayak ölç.
+    // docs/adr/0141: Dik ayak ölç, then the selecting tools that go back to Seç.
     station_offset::ID,
+    select_fence::ID,
+    select_circle::ID,
+    select_containing::ID,
 ];
 
 /// What a tool running over another one suspended (docs/adr/0083).
@@ -256,6 +258,9 @@ impl Session {
             }
             array_path::ID => Box::new(crate::array_path::ArrayPath::tool()),
             station_offset::ID => Box::new(station_offset::StationOffset::new()),
+            select_fence::ID => Box::new(select_fence::SelectFence::new()),
+            select_circle::ID => Box::new(select_circle::SelectCircle::new()),
+            select_containing::ID => Box::new(select_containing::SelectContaining::new()),
             _ => return false,
         };
         // Kaydır is not repeated: Enter while panning repeats the command

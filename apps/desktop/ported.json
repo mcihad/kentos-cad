@@ -166,7 +166,10 @@
     "view.previous",
     "view.next",
     "view.extentCheck",
-    "tool.stationOffset"
+    "tool.stationOffset",
+    "tool.selectFence",
+    "tool.selectCircle",
+    "tool.selectContaining"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

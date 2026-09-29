@@ -183,6 +183,37 @@ impl Spatial {
             .collect()
     }
 
+    /// The visible closed shapes around `at` with their areas, smallest first
+    /// (`Store::containing`, docs/adr/0141): a parcel, then the block and the
+    /// district that hold it. Equal areas keep the document's order.
+    pub fn containing(&self, at: Vec2) -> Vec<(Slot, f64)> {
+        self.store
+            .containing(at)
+            .into_iter()
+            .filter_map(|(id, area)| Some((slot(id)?, area)))
+            .collect()
+    }
+
+    /// The visible objects a fence (an open path) crosses (`Store::in_fence`):
+    /// an edge, a text's body, or a point within `tol` world units of it.
+    pub fn in_fence(&self, fence: &[Vec2], tol: f64) -> Vec<Slot> {
+        self.store
+            .in_fence(fence, tol)
+            .into_iter()
+            .filter_map(slot)
+            .collect()
+    }
+
+    /// The visible objects wholly inside a circle, and with `crossing` those
+    /// it touches too (`Store::in_circle`).
+    pub fn in_circle(&self, centre: Vec2, radius: f64, crossing: bool) -> Vec<Slot> {
+        self.store
+            .in_circle(centre, radius, crossing)
+            .into_iter()
+            .filter_map(slot)
+            .collect()
+    }
+
     /// The object snap near `at` within `tol` world units among `kinds`
     /// (`SnapKind::bit`s); `from` is the running command's last point, for
     /// perpendicular and tangent snaps (`PickIndex.snap`).

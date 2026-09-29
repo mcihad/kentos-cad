@@ -3,13 +3,18 @@
 //! the message log, and what they write is one named undo step. The tools'
 //! own mechanics are `crates/native/interaction/tests`. Test code only.
 
+use iced::keyboard::key::{Code, Named, Physical};
+use iced::keyboard::{Key, Modifiers};
 use iced::{Point, Rectangle, Size};
+use kentos_domain::Slot;
 use kentos_interaction::Level;
 
 use crate::app::{App, Message};
+use crate::catalog::{Standing, catalog};
 use crate::files_testing::{app_with_drawing as sample, last_said};
+use crate::keys::KeyPress;
 use crate::tools_scenes::{
-    click, far_ground, islands_ground, open, run, station_ground, survey_ground,
+    click, far_ground, islands_ground, open, run, station_ground, survey_ground, typed,
 };
 use crate::viewport::Event;
 
@@ -155,4 +160,106 @@ fn kapsam_denetimi_selects_what_lies_far_and_says_how_many() {
     );
     assert_eq!(app.selection.len(), 2);
     assert_eq!(app.last_level, Some(Level::Warn));
+}
+
+/// Enter, with the modifiers held.
+fn enter(app: &mut App, modifiers: Modifiers) {
+    app.modifiers = modifiers;
+    let _ = app.update(Message::Key(KeyPress {
+        key: Key::Named(Named::Enter),
+        physical: Physical::Code(Code::Enter),
+        modifiers,
+        text: None,
+        repeat: false,
+    }));
+    app.modifiers = Modifiers::default();
+}
+
+#[test]
+fn the_selecting_tools_of_the_sec_list_run_and_leave_by_escape() {
+    let mut app = app_with_drawing();
+    for (id, tool) in [
+        ("tool.selectFence", "selectFence"),
+        ("tool.selectCircle", "selectCircle"),
+        ("tool.selectContaining", "selectContaining"),
+    ] {
+        assert_eq!(
+            catalog().get(id).map(|c| c.standing),
+            Some(Standing::Ported),
+            "{id}"
+        );
+        run(&mut app, id);
+        assert_eq!(app.session.tool_id(), tool);
+        assert_eq!(app.log.last().map(|l| l.level), Some(Level::Command));
+        run(&mut app, "tool.cancel");
+        assert_eq!(app.session.tool_id(), "select", "{id} leaves by Esc");
+    }
+}
+
+/// A fence along y = 2 crosses the two parcels and not the building inside the first.
+#[test]
+fn a_fence_selects_and_shift_with_enter_adds_to_the_selection() {
+    let mut app = app_with_drawing();
+    open(&mut app, islands_ground());
+    let fence = |app: &mut App| {
+        run(app, "tool.selectFence");
+        click(app, [-4.0, 2.0]);
+        click(app, [48.0, 2.0]);
+    };
+    // Enter replaces what was selected.
+    app.selection.set([Slot(3)]);
+    fence(&mut app);
+    enter(&mut app, Modifiers::default());
+    assert_eq!(last_said(&app), "Çit 2 nesneyi kesti; seçildi.");
+    assert_eq!(app.selection.ids(), [Slot(1), Slot(2)]);
+    assert_eq!(app.session.tool_id(), "select", "back to Seç");
+    // Shift with Enter adds to it.
+    app.selection.set([Slot(3)]);
+    fence(&mut app);
+    enter(&mut app, Modifiers::SHIFT);
+    assert_eq!(app.selection.ids(), [Slot(3), Slot(1), Slot(2)]);
+    assert_eq!(app.session.tool_id(), "select");
+}
+
+#[test]
+fn daireyle_sec_kesisen_chip_is_pressed_and_kept() {
+    let mut app = app_with_drawing();
+    open(&mut app, islands_ground());
+    run(&mut app, "tool.selectCircle");
+    assert_eq!(
+        prompt(&app),
+        "Daireyle seç: dairenin merkezine tıklayın [Kesişen (K)]"
+    );
+    chip(&mut app, "K");
+    assert!(app.memory.circle_crossing);
+    // A circle round the building's middle: it holds the building; touching takes the parcels.
+    click(&mut app, [11.0, 9.0]);
+    typed(&mut app, "5");
+    assert_eq!(last_said(&app), "Daireye dokunan 2 nesne; seçildi.");
+    assert_eq!(app.selection.ids(), [Slot(1), Slot(3)]);
+    assert_eq!(app.session.tool_id(), "select");
+    run(&mut app, "tool.selectCircle");
+    assert!(prompt(&app).ends_with("[Kesişen (K): açık]"));
+}
+
+#[test]
+fn icerenalani_sec_takes_the_area_a_click_is_in_and_stays() {
+    let mut app = app_with_drawing();
+    open(&mut app, islands_ground());
+    run(&mut app, "tool.selectContaining");
+    click(&mut app, [4.0, 16.0]);
+    // The parcel as an object: 24 × 20 m (its building is another object, not a hole).
+    assert_eq!(last_said(&app), "Alan seçildi (1/1, 480.00 m²).");
+    assert_eq!(app.selection.ids(), [Slot(1)]);
+    assert_eq!(
+        app.session.tool_id(),
+        "selectContaining",
+        "it stays for more clicks"
+    );
+    click(&mut app, [34.0, 10.0]);
+    assert_eq!(app.selection.ids(), [Slot(2)]);
+    // A right click is Enter: back to Seç, the selection kept.
+    run(&mut app, "tool.confirm");
+    assert_eq!(app.session.tool_id(), "select");
+    assert_eq!(app.selection.ids(), [Slot(2)]);
 }

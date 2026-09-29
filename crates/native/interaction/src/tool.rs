@@ -330,11 +330,13 @@ pub struct Memory {
     pub path_spacing: f64,
     pub path_by_spacing: bool,
     pub path_align: bool,
-    /// Mesafe ölç's “Sabit ilk nokta” (every point is measured from the first)
-    /// and Alan hesapla's “İçine tıkla” (a click inside a closed region
-    /// measures it; docs/adr/0141).
+    /// Mesafe ölç's “Sabit ilk nokta” (every point is measured from the first),
+    /// Alan hesapla's “İçine tıkla” (a click inside a closed region measures
+    /// it) and Daireyle seç's “Kesişen” (touching objects are selected too;
+    /// docs/adr/0141).
     pub measure_fixed: bool,
     pub area_inside: bool,
+    pub circle_crossing: bool,
 }
 
 /// A short list of numbers typed as one answer (Ara nokta's distances and
@@ -444,6 +446,7 @@ impl Default for Memory {
             path_align: true,
             measure_fixed: false,
             area_inside: false,
+            circle_crossing: false,
         }
     }
 }
@@ -469,6 +472,10 @@ pub struct Context<'a> {
     /// Object tracking's points and lock (docs/adr/0085): a typed distance
     /// goes along the line the cursor is locked to.
     pub tracking: &'a ObjectTracking,
+    /// Shift is held now: what a selecting tool finds is added to the
+    /// selection instead of replacing it (docs/adr/0141). A pointer event
+    /// carries it too ([`Pointer::shift`]); this is for Enter and the like.
+    pub shift: bool,
 }
 
 impl Context<'_> {

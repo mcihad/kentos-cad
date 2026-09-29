@@ -62,6 +62,16 @@ impl Selection {
         }
     }
 
+    /// What a selecting tool found (docs/adr/0141): it replaces the selection,
+    /// or with `add` (Shift held) joins it.
+    pub fn take(&mut self, ids: impl IntoIterator<Item = Slot>, add: bool) {
+        if add {
+            self.add(ids);
+        } else {
+            self.set(ids);
+        }
+    }
+
     /// Selects or deselects one (the web's `toggle`: Shift with a click).
     pub fn toggle(&mut self, id: Slot) {
         if self.set.remove(&id) {

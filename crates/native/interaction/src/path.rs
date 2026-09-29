@@ -452,10 +452,7 @@ impl Path {
     /// İçine tıkla: the region around `p` is measured, as a ring drawn is.
     fn click_inside(&mut self, p: Vec2, cx: &mut Context<'_>) {
         let Some(region) = self.face(p, cx) else {
-            cx.say(
-                Level::Warn,
-                "Tıklanan noktayı çevreleyen kapalı bölge yok.",
-            );
+            cx.say(Level::Warn, "Tıklanan noktayı çevreleyen kapalı bölge yok.");
             return;
         };
         let f = cx.format();
@@ -955,7 +952,10 @@ impl Tool for Path {
         let label = self.shape.label();
         let n = self.pts.len();
         if self.inside_mode() {
-            return self.first_chips(Prompt::new(label, "alanı ölçülecek bölgenin içine tıklayın"));
+            return self.first_chips(Prompt::new(
+                label,
+                "alanı ölçülecek bölgenin içine tıklayın",
+            ));
         }
         if n == 0 {
             return self.first_chips(Prompt::new(label, "ilk noktayı belirtin"));
