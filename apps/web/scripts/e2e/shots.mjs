@@ -21,7 +21,7 @@
 // Giriş and narrowed, the quick access bar's menu, right clicks on a command, an added one, a fixed one and a tab, a
 // tool's methods and a family under their split buttons, the folded ribbon open); tools (docs/adr/0140: the tabs of
 // the new drawing and editing tools, their split buttons, each tool at work).
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createServer } from 'vite';
 import { launch, OUT, sleep } from './cdp.mjs';
@@ -1592,6 +1592,7 @@ function queryScenes(bare, clickWorld) {
 // the Kot rows of Öznitelikler, the tag of a grip that has an elevation, Koordinat oku on a vertex and the hover card's
 // 3D length. Five objects on bare ground carry the scenes; their slots are kept in `window.__elev`.
 function adr0142Scenes(bare, clickWorld) {
+  const none = FIT('return 0;');
   // A line with both ends, a polyline with a range and two vertices without an elevation (one at the end), an area
   // with a hole and every vertex elevated, a spot with its height and a circle (takes none).
   const OBJECTS = FIT(`
@@ -1659,6 +1660,19 @@ function adr0142Scenes(bare, clickWorld) {
     // it; then the grip clicked and carried, its tag with the distance and the elevation the vertex keeps.
     { id: 'grip-tag', open: async (ui) => (await selected(ui, ['path']), await hoverU(ui, -0.5, -0.75)) },
     { id: 'grip-tag-none', open: async (ui) => (await selected(ui, ['path']), await hoverU(ui, -1.4, -0.3)) },
+    // GeoJSON içe aktar over the fixture with elevations (fixtures/formats/v1/gis/kotlu.geojson, EPSG:5256 like the
+    // project): the file line's facts say how many objects came with them (Kotlu nesne).
+    {
+      id: 'import-geojson-elevations',
+      open: async (ui) => {
+        const bytes = readFileSync(new URL('../../../../fixtures/formats/v1/gis/kotlu.geojson', import.meta.url)).toString('base64');
+        await bare(ui, none);
+        await ui.eval(`import('/src/ui/io/GisImportDialog.ts').then((m) => m.openGeoJsonImport(window.kentos, { name: 'kotlu.geojson', bytes: Uint8Array.from(atob('${bytes}'), (c) => c.charCodeAt(0)) }, { description: 'GeoJSON', accept: { 'application/geo+json': ['.geojson', '.json'] } }))`);
+        await ui.waitFor(`!!document.querySelector('.dialog--io .io-table')`, 15000);
+        await ui.sleep(500);
+      },
+      close: async (ui) => (await ui.escapeAll(2), await ui.eval(UNDO_ALL), await ribbonOff(ui)),
+    },
     // The hover card (select tool, the pointer at rest on an object): 3B uzunluk of the line and 3B çevre of the area.
     { id: 'hover-card-line', open: async (ui) => (await selected(ui, []), await hoverU(ui, -1.6, 1.175), await ui.sleep(700)) },
     { id: 'hover-card-area', open: async (ui) => (await selected(ui, []), await hoverU(ui, 0.65, 0.9), await ui.sleep(700)) },
