@@ -17,7 +17,8 @@
 //! - Its rows are the web's, in its order: Ada, Mahalle, Nitelik; the deed
 //!   area as the deed says it beside the computed one (“Hesaplanan alan”),
 //!   since their difference is what a surveyor checks; holes; perimeter or
-//!   length; radius; a text's text; a point's elevation.
+//!   length, and beside it the length in space (docs/adr/0142) when every
+//!   vertex has an elevation; radius; a text's text; a point's elevation.
 
 use std::time::Duration;
 
@@ -26,6 +27,7 @@ use iced::widget::{container, row};
 use iced::{Center, Color, Element, Padding, Point, Right, Vector};
 use kentos_contracts::Entity;
 use kentos_domain::Document as Model;
+use kentos_interaction::elevation::space_length;
 use kentos_interaction::{Format, measures};
 use kentos_ui::label;
 use kentos_ui::style;
@@ -151,6 +153,10 @@ pub(crate) fn card(
             "Uzunluk"
         };
         rows.push((name, format.length(length), true));
+        // The length in space beside it, when every vertex has an elevation (docs/adr/0142).
+        if let Some((name, length)) = space_length(e) {
+            rows.push((name, format.length(length), true));
+        }
     }
     match e {
         Entity::Circle(c) => rows.push(("Yarıçap", format.length(c.r), true)),
@@ -323,6 +329,113 @@ mod tests {
         let Some(Entity::Circle(_)) = doc.model.get(Slot(5)) else {
             panic!("a circle");
         };
+    }
+
+    /// docs/adr/0142: beside the length or the perimeter, the one in space, when every vertex has an elevation.
+    #[test]
+    fn the_length_in_space_follows_the_plan_one_when_every_vertex_has_an_elevation() {
+        use kentos_contracts::{EntityBase, LineEntity, PathEntity, RingGeometry, Vec2 as Wire};
+
+        let app = app_with_drawing();
+        let doc = app.document.as_ref().expect("open");
+        let format = Format::of(doc.settings());
+        let black = |_: &str| Color::BLACK;
+        let base = || EntityBase {
+            id: 0,
+            layer_id: "cizim".into(),
+            color: None,
+            attrs: Default::default(),
+            label: None,
+            symbol: None,
+            line_weight: None,
+        };
+        let at = |x: f64, y: f64| Wire {
+            x: 487_000.0 + x,
+            y: 4_420_000.0 + y,
+        };
+        let rows_of = |e: &Entity| -> Vec<(&'static str, String)> {
+            card(e, &doc.model, &format, black)
+                .rows
+                .into_iter()
+                .map(|(name, value, _)| (name, value))
+                .collect()
+        };
+        // 40 m in plan rising 9 m: 41 m in space.
+        let line = |za, zb| {
+            Entity::Line(LineEntity {
+                base: base(),
+                a: at(0.0, 0.0),
+                b: at(40.0, 0.0),
+                za,
+                zb,
+            })
+        };
+        assert_eq!(
+            rows_of(&line(Some(100.0), Some(109.0))),
+            [
+                ("Uzunluk", "40.000 m".to_owned()),
+                ("3B uzunluk", "41.000 m".to_owned())
+            ]
+        );
+        // An end without one, or none at all: the plan length alone, as before.
+        for e in [line(Some(100.0), None), line(None, None)] {
+            assert_eq!(rows_of(&e), [("Uzunluk", "40.000 m".to_owned())]);
+        }
+        // An area: the perimeter, its hole's too, then the one in space; the hole is counted closed.
+        let area = |hole: Option<Vec<Option<f64>>>| {
+            Entity::Polygon(PathEntity {
+                base: base(),
+                pts: vec![at(0.0, 0.0), at(20.0, 0.0), at(20.0, 10.0), at(0.0, 10.0)],
+                bulges: None,
+                holes: Some(vec![RingGeometry {
+                    pts: vec![at(4.0, 3.0), at(8.0, 3.0), at(8.0, 5.0), at(4.0, 5.0)],
+                    bulges: None,
+                    zs: hole,
+                }]),
+                zs: Some(vec![Some(7.0); 4]),
+            })
+        };
+        let flat = rows_of(&area(Some(vec![Some(7.0); 4])));
+        let names: Vec<&str> = flat.iter().map(|r| r.0).collect();
+        assert_eq!(names, ["Alan", "Ada (delik)", "Çevre", "3B çevre"]);
+        assert_eq!(flat[2].1, "72.000 m");
+        assert_eq!(flat[3].1, "72.000 m");
+        // A hole without elevations: no perimeter in space.
+        let names: Vec<&str> = rows_of(&area(None)).iter().map(|r| r.0).collect();
+        assert_eq!(names, ["Alan", "Ada (delik)", "Çevre"]);
+    }
+
+    /// docs/adr/0142: on the grip of a vertex with an elevation the tag beside the pointer says it
+    /// and the pointer is on the vertex, not on the object: no hover, so no card; anywhere else on
+    /// the object the card shows.
+    #[test]
+    fn the_card_keeps_away_from_the_tag_of_a_grip_with_an_elevation() {
+        use iced::{Point, Rectangle, Size};
+
+        use crate::elevation_scenes::{KERB, elevation_ground};
+        use crate::tools_scenes::{hover, open};
+
+        let mut app = app_with_drawing();
+        let area = Rectangle::new(Point::ORIGIN, Size::new(1000.0, 800.0));
+        let _ = app.update(Message::Viewport(crate::viewport::Event::Resized(area)));
+        open(&mut app, elevation_ground());
+        app.selection.set([KERB]);
+        let doc = app.document.as_ref().expect("open");
+        app.spatial.sync(&doc.model);
+        // On the kerb's third vertex, which has 104 m: the tag shows, and nothing is hovered.
+        hover(&mut app, [26.0, 22.0]);
+        assert_eq!(app.selection.hover(), None);
+        let _ = app.follow_hover();
+        app.hover_card_due(app.selection.hover_version());
+        assert_eq!(app.hover_card, None);
+        assert!(app.hover_card_view().is_none());
+        // Along the kerb, off its grips: the kerb is hovered, and its card shows.
+        hover(&mut app, [30.0, 22.0]);
+        assert_eq!(app.selection.hover(), Some(KERB));
+        let _ = app.follow_hover();
+        app.hover_card_due(app.selection.hover_version());
+        assert_eq!(app.hover_card, Some(KERB));
+        assert!(app.hover_card_view().is_some());
     }
 
     #[test]
