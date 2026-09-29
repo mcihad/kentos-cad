@@ -198,12 +198,31 @@ Her fazda:
 
 ## Sonuçlar
 
-- On altı yeni araç ve üç seçenek katalogda yerini aldı; şerit ve menüler bunları gösteriyor.
+- On altı yeni araç ve üç seçenek iki platformda çalışıyor (29 Eylül). Şerit, menüler, araç kutusu ve masaüstünün şeridi onları envanterden gösteriyor.
 - Hesap tek yerde, çekirdekte. Web ile masaüstü aynı sonucu aynı fonksiyondan alır.
+- Çizimi temizle'nin yinelenen araması, nesnelerin başladığı yere göre 1 µm'lik kovalarda yapılır (50 000 nesne milisaniyelerde). Kova, 1e-9 m kuralını değiştirmez.
+- `cad.entities.create`'e dört tür eklendi: `pointsBetween`, `intersectPoint`, `dimensionChain`, `dimensionBaseline`. Bu araçların adımları kendi adlarını taşır. Kesişim noktası da bu komutla yazar.
+- Özellik kopyala `cad.entities.set` ile yazar; adımı iki platformda "Özellik kopyala" adlı bir gruptur. Kaynakta olmayan renk, kalınlık ya da sembol hedefte de temizlenir.
+- **İki platformun ortak seçenek harfleri:**
+  - Parçala: E, U, K.
+  - Ara nokta: E, U, O.
+  - Kesişim noktası: D, L, U.
+  - Buda ve Uzat'ın çiti: C (Ç de olur), K.
+  - Ötele: N, I, S; paylaşılan `edge-tools` izi bu sırayı sınar.
+  - Yol boyunca dizi: A, N, H.
+  - Zincir ve baz ölçü: S.
+  - Daire diliminin yazılan açıları doğudan saat yönünün tersine ölçülür (yay aracının kuralı). Kesişim noktasının doğrultuları ise kuzeyden saat yönüne semttir.
 - **Açık kalanlar:** lider, koordinat ve yay uzunluğu ölçüleri (yeni nesne türü), bul-değiştir, ifraz.
 
 ## Doğrulama
 
+- **29 Eylül'deki koşu:**
+  - `cargo test -p kentos-geometry-core`, `-p kentos-native-application`, `-p kentos-interaction`;
+  - `cargo test -p kentos-desktop` (536);
+  - clippy `-D warnings`;
+  - `pnpm typecheck`, web'in bütün Vitest takımı ve `pnpm e2e:interaction` (37 iz, üç biçim);
+  - `pnpm py:test`.
+- **Resimler:** `.run/shots/arac-*` (masaüstü) ve `apps/web/scripts/e2e/out/shots/tools/` (web); her aracın önizlemesi ve sonucu, iki tema ve iki boyut.
 - Çekirdek: `cargo test -p kentos-geometry-core`, her yeni hesap için birim ve sınır testleri:
   - yaya komşu köşe;
   - sığmayan yarıçap;
