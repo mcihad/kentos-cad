@@ -357,12 +357,13 @@ impl Packer {
                 self.put(&[0.0, p.x, p.y, flag(z.is_some()), z.unwrap_or(f64::NAN)]);
             }
             Shape::Line { a, b } => self.put(&[1.0, a.x, a.y, b.x, b.y]),
+            // An empty part list is a one-part area, laid out as kind 3 (the web's `packEntities`).
             Shape::Polygon {
                 pts,
                 bulges,
                 holes,
                 parts: Some(parts),
-            } => {
+            } if !parts.is_empty() => {
                 self.put(&[13.0]);
                 self.path(pts, bulges.as_deref(), holes.as_deref());
                 self.put(&[parts.len() as f64]);
