@@ -57,7 +57,8 @@ use crate::vertex::{self, Vertex};
 use crate::{
     angle, area, between, boundary, cleanup, construction, coordinate, dimension, dimension_chain,
     divide, donut, ellipse, hatch, match_properties, meeting, parallel, revcloud, sector,
-    select_circle, select_containing, select_fence, spline, split, station_offset, text,
+    select_circle, select_containing, select_fence, set_elevation, spline, split, station_offset,
+    text,
 };
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
@@ -143,6 +144,8 @@ pub const TOOLS: &[&str] = &[
     select_fence::ID,
     select_circle::ID,
     select_containing::ID,
+    // docs/adr/0142: Kot ver.
+    set_elevation::ID,
 ];
 
 /// What a tool running over another one suspended (docs/adr/0083).
@@ -261,6 +264,7 @@ impl Session {
             select_fence::ID => Box::new(select_fence::SelectFence::new()),
             select_circle::ID => Box::new(select_circle::SelectCircle::new()),
             select_containing::ID => Box::new(select_containing::SelectContaining::new()),
+            set_elevation::ID => Box::new(set_elevation::SetElevation::tool()),
             _ => return false,
         };
         // Kaydır is not repeated: Enter while panning repeats the command

@@ -266,6 +266,9 @@ pub const PORTED: &[&str] = &[
     "tool.selectFence",
     "tool.selectCircle",
     "tool.selectContaining",
+    // Kot ver (docs/adr/0142): the vertices of the selection given elevations, through
+    // cad.entities.edit as Kot ver; Sabit, Artır and Sıfırla are its methods.
+    "tool.setElevation",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

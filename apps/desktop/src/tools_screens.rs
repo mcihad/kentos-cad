@@ -99,6 +99,12 @@ fn pointed_scenes() -> Vec<Pointed> {
             |app| app.tab = "home",
             |s, app| open_split(s, app, "select"),
         ),
+        // docs/adr/0142: Kot ver's three ways, the list of its split button.
+        (
+            "kot-ver-yontemler",
+            |app| app.tab = "modify",
+            |s, app| open_split(s, app, "setElevation"),
+        ),
     ]
 }
 
@@ -123,6 +129,7 @@ fn ribbon_scenes() -> Vec<Scene> {
 fn scenes() -> Vec<Scene> {
     let mut all = ribbon_scenes();
     all.extend(crate::tools_scenes::scenes());
+    all.extend(crate::elevation_scenes::scenes());
     all
 }
 

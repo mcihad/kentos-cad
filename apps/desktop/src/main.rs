@@ -19,6 +19,10 @@ mod crs;
 mod document;
 mod drawing_fonts;
 mod drawing_menus;
+#[cfg(test)]
+mod elevation_scenes;
+#[cfg(test)]
+mod elevation_tests;
 mod exchange;
 mod expression;
 #[cfg(test)]

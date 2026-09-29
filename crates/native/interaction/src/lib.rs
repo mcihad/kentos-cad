@@ -65,6 +65,11 @@
 //!   ([`select_fence`], [`select_circle`], [`select_containing`]), which select
 //!   what a fence crosses, a circle holds or touches and the areas around a
 //!   point, and go back to Seç;
+//! - docs/adr/0142: vertex elevations. Kot ver ([`set_elevation`]) gives the
+//!   vertices of lines, polylines, areas and points theirs (Sabit, Artır,
+//!   Sıfırla) through `cad.entities.edit`; [`elevation`] reads them for
+//!   Öznitelikler, the grip's tag, Koordinat oku and the hover card, and
+//!   builds what Kot ver and Öznitelikler write;
 //! - the geometry store kept in step with the document ([`Spatial`]): what
 //!   a click picks, a box selects and a point snaps to;
 //! - [`Format`]: numbers as the web shows them in messages and the tag.
@@ -100,6 +105,7 @@ pub mod dimension_chain;
 pub mod divide;
 pub mod donut;
 mod edge;
+pub mod elevation;
 pub mod ellipse;
 pub mod erase;
 mod faces;
@@ -146,6 +152,7 @@ pub mod select_containing;
 pub mod select_fence;
 mod selection;
 mod session;
+pub mod set_elevation;
 pub mod spatial;
 pub mod spline;
 pub mod split;

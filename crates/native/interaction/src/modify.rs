@@ -133,6 +133,17 @@ pub trait Stages {
     fn overlay(&self) -> Preview {
         Preview::default()
     }
+    /// Whether the stages take a point computed elsewhere (the point
+    /// calculator's) as a click. Kot ver takes numbers only.
+    fn takes_points(&self) -> bool {
+        true
+    }
+    /// After a call in the stages: whether the tool goes back to picking its
+    /// objects (Kot ver after a write, and on Esc). Asked once per call; the
+    /// selection is the stage's to keep or to clear.
+    fn take_repick(&mut self) -> bool {
+        false
+    }
 }
 
 /// A press on the drawing while picking: where it began and where the pointer is.
@@ -215,7 +226,18 @@ impl<S: Stages> Modify<S> {
         if flow == Flow::Exit {
             self.done = true;
         }
+        self.pick_again();
         self.refresh(cx);
+    }
+
+    /// Goes back to picking objects when a stage asked to.
+    fn pick_again(&mut self) {
+        if self.stages.take_repick() {
+            self.picking = true;
+            self.press = None;
+            self.hover = None;
+            self.tracking = None;
+        }
     }
 }
 
@@ -223,7 +245,7 @@ impl<S: Stages> Tool for Modify<S> {
     /// A computed point in the stages, not while picking (the web's
     /// `SelectionFirstTool.acceptPoint`).
     fn accepts_points(&self) -> bool {
-        true
+        self.stages.takes_points()
     }
 
     fn accept_point(&mut self, p: Vec2, cx: &mut Context<'_>) -> bool {
@@ -410,6 +432,7 @@ impl<S: Stages> Tool for Modify<S> {
         if self.picking || self.done || !self.stages.back(cx) {
             return false;
         }
+        self.pick_again();
         self.refresh(cx);
         true
     }

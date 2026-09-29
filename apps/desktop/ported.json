@@ -169,7 +169,8 @@
     "tool.stationOffset",
     "tool.selectFence",
     "tool.selectCircle",
-    "tool.selectContaining"
+    "tool.selectContaining",
+    "tool.setElevation"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

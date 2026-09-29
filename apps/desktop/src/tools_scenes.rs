@@ -22,11 +22,14 @@ fn xy(p: [f64; 2]) -> Value {
     json!({ "x": E + p[0], "y": N + p[1] })
 }
 
+/// A hole of an area: its vertices and their elevations (docs/adr/0142).
+pub(crate) type Hole<'a> = (&'a [[f64; 2]], &'a [Option<f64>]);
+
 /// One object of a scene: its kind's fields and its layer.
 pub(crate) struct Objects(Vec<Value>);
 
 impl Objects {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self(Vec::new())
     }
 
@@ -39,11 +42,55 @@ impl Objects {
         id
     }
 
-    fn line(&mut self, layer: &str, a: [f64; 2], b: [f64; 2]) -> u32 {
+    pub(crate) fn line(&mut self, layer: &str, a: [f64; 2], b: [f64; 2]) -> u32 {
         self.push(layer, json!({ "kind": "line", "a": xy(a), "b": xy(b) }))
     }
 
-    fn path(&mut self, layer: &str, pts: &[[f64; 2]], closed: bool) -> u32 {
+    /// A line with the elevations of its two ends (docs/adr/0142).
+    pub(crate) fn line_z(
+        &mut self,
+        layer: &str,
+        a: [f64; 2],
+        b: [f64; 2],
+        z: [Option<f64>; 2],
+    ) -> u32 {
+        let mut fields = json!({ "kind": "line", "a": xy(a), "b": xy(b) });
+        if let Some(za) = z[0] {
+            fields["za"] = json!(za);
+        }
+        if let Some(zb) = z[1] {
+            fields["zb"] = json!(zb);
+        }
+        self.push(layer, fields)
+    }
+
+    /// A polyline or an area with an elevation for each vertex, `None` for one
+    /// without (docs/adr/0142); an area's holes come with theirs.
+    pub(crate) fn path_z(
+        &mut self,
+        layer: &str,
+        pts: &[[f64; 2]],
+        closed: bool,
+        zs: &[Option<f64>],
+        holes: &[Hole<'_>],
+    ) -> u32 {
+        let kind = if closed { "polygon" } else { "polyline" };
+        let pts: Vec<Value> = pts.iter().map(|p| xy(*p)).collect();
+        let mut fields = json!({ "kind": kind, "pts": pts, "zs": zs });
+        if !holes.is_empty() {
+            let rings: Vec<Value> = holes
+                .iter()
+                .map(|(pts, zs)| {
+                    let pts: Vec<Value> = pts.iter().map(|p| xy(*p)).collect();
+                    json!({ "pts": pts, "zs": zs })
+                })
+                .collect();
+            fields["holes"] = Value::Array(rings);
+        }
+        self.push(layer, fields)
+    }
+
+    pub(crate) fn path(&mut self, layer: &str, pts: &[[f64; 2]], closed: bool) -> u32 {
         let kind = if closed { "polygon" } else { "polyline" };
         let pts: Vec<Value> = pts.iter().map(|p| xy(*p)).collect();
         self.push(layer, json!({ "kind": kind, "pts": pts }))
@@ -56,7 +103,7 @@ impl Objects {
         )
     }
 
-    fn point(&mut self, layer: &str, at: [f64; 2], z: Option<f64>) -> u32 {
+    pub(crate) fn point(&mut self, layer: &str, at: [f64; 2], z: Option<f64>) -> u32 {
         let mut fields = json!({ "kind": "point", "p": xy(at) });
         if let Some(z) = z {
             fields["z"] = json!(z);
@@ -64,7 +111,7 @@ impl Objects {
         self.push(layer, fields)
     }
 
-    fn circle(&mut self, layer: &str, c: [f64; 2], r: f64) -> u32 {
+    pub(crate) fn circle(&mut self, layer: &str, c: [f64; 2], r: f64) -> u32 {
         self.push(layer, json!({ "kind": "circle", "c": xy(c), "r": r }))
     }
 
@@ -143,7 +190,7 @@ pub(crate) fn typed(app: &mut App, text: &str) {
 }
 
 /// The message log emptied, so that what the next step says is all it shows.
-fn forget(app: &mut App) {
+pub(crate) fn forget(app: &mut App) {
     let _ = app.update(Message::HistoryCleared);
 }
 
