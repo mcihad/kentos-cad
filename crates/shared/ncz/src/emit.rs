@@ -14,6 +14,11 @@
 //! | Netcad 8 smart object | its symbol: circles, lines and texts, turned and scaled as the object; its values as attributes of the symbol's first object |
 //! | other smart objects | a point (no rectangle) or an area, the token as an attribute |
 //!
+//! A point keeps its height, and a line, a polyline and an area the height of
+//! each vertex (docs/adr/0142), when the record has any (`heights`): a record
+//! whose Z is 0 everywhere is a 2D one, and the vertices the reader made up
+//! (a rectangle's, a sheet's, a triangle's two others) have none to give.
+//!
 //! A record's own colour is kept only where it is not its layer's; black and
 //! white are the app's `ink`, which is black on paper and white on a dark
 //! drawing, as DXF colour 7 is. The texts Netcad writes on an area (a parcel
@@ -137,6 +142,16 @@ impl Place {
             y: self.at.y + (x * self.sin + y * self.cos),
         }
     }
+}
+
+/// The elevations a record's vertices hold, in the objects' form (docs/adr/0142):
+/// none unless some vertex has a Z above or below 0 (a 2D drawing's Z is 0, and
+/// so is what Netcad writes for a vertex it has no height for); a Z that is not a
+/// number is none. Only a record whose vertices the file gave (a line, a
+/// polyline, an area drawn point by point) says what its heights are.
+fn heights(coords: &[format::Coord]) -> Option<Vec<Option<f64>>> {
+    let zs: Vec<Option<f64>> = coords.iter().map(|c| c.z.is_finite().then_some(c.z)).collect();
+    zs.iter().flatten().any(|&z| z != 0.0).then_some(zs)
 }
 
 /// A rotation in [0°, 360°): the file's, a NaN none.
@@ -344,7 +359,11 @@ impl Emitter {
                 let (a, z) = (a.ok_or(BAD)?, z.ok_or(BAD)?);
                 self.grow(v(a));
                 self.grow(v(z));
-                self.push(layer, Entity::Line(LineEntity { base: b, a: v(a), b: v(z), za: None, zb: None }));
+                let (za, zb) = match heights(&[*a, *z]).as_deref() {
+                    Some([za, zb]) => (*za, *zb),
+                    _ => (None, None),
+                };
+                self.push(layer, Entity::Line(LineEntity { base: b, a: v(a), b: v(z), za, zb }));
             }
             Kind::Polyline => {
                 if !e.coords.iter().all(finite) {
@@ -358,7 +377,8 @@ impl Emitter {
                 for p in &pts {
                     self.grow(*p);
                 }
-                self.push(layer, Entity::Polyline(PathEntity { base: b, pts, bulges: None, holes: None, zs: None }));
+                let zs = heights(&e.coords);
+                self.push(layer, Entity::Polyline(PathEntity { base: b, pts, bulges: None, holes: None, zs }));
             }
             Kind::Polygon | Kind::MapSheet | Kind::Triangle => {
                 let key = if e.kind == Kind::MapSheet { "Pafta" } else { "Etiket" };
@@ -419,8 +439,13 @@ impl Emitter {
             return Err("koordinatı sayı değil ya da ±100 000 km dışında");
         }
         let mut pts: Vec<Vec2> = e.coords.iter().map(|c| Vec2 { x: c.x, y: c.y }).collect();
+        // Only a ring the file drew point by point has heights; a rectangle's and a sheet's corners are made up here.
+        let mut zs = if e.kind == Kind::Polygon { heights(&e.coords) } else { None };
         while pts.len() >= 2 && pts.last() == pts.first() {
             pts.pop();
+            if let Some(z) = zs.as_mut() {
+                z.pop();
+            }
         }
         if pts.len() < 3 {
             return Err("kapalı şekil üç köşeye ulaşmıyor");
@@ -428,7 +453,8 @@ impl Emitter {
         for p in &pts {
             self.grow(*p);
         }
-        self.push(layer, Entity::Polygon(PathEntity { base: b, pts, bulges: None, holes: None, zs: None }));
+        let zs = zs.filter(|z| z.iter().any(Option::is_some));
+        self.push(layer, Entity::Polygon(PathEntity { base: b, pts, bulges: None, holes: None, zs }));
         Ok(())
     }
 
@@ -898,6 +924,66 @@ mod tests {
         let p = Place::new(Vec2 { x: 100.0, y: 50.0 }, 0.5, 90.0);
         assert_eq!(p.apply((10.0, 0.0)), Vec2 { x: 100.0, y: 55.0 });
         assert_eq!(p.apply((0.0, 10.0)), Vec2 { x: 95.0, y: 50.0 });
+    }
+
+    /// A record of `kind` on one layer whose vertices the file gave (x easting, y northing, z).
+    fn record(kind: Kind, coords: &[(f64, f64, f64)]) -> format::Entity {
+        format::Entity {
+            kind,
+            layer_name: "KOT".into(),
+            coords: coords.iter().map(|&(x, y, z)| format::Coord { x, y, z }).collect(),
+            ..format::Entity::default()
+        }
+    }
+
+    #[test]
+    fn heights_come_from_the_vertices_the_file_gave_and_from_nothing_else() {
+        use crate::format::Sink;
+        let mut em = Emitter::new(&NczReadOptions::default());
+        let ring = |z: [f64; 4]| [(0.0, 0.0, z[0]), (10.0, 0.0, z[1]), (10.0, 10.0, z[2]), (0.0, 10.0, z[3]), (0.0, 0.0, z[0])];
+        for e in [
+            // 0-2: lines: both ends, a 2D one (Z 0 is no elevation), one end at 0 with the other above it
+            record(Kind::Line, &[(1.0, 2.0, 105.5), (3.0, 4.0, 107.25)]),
+            record(Kind::Line, &[(1.0, 2.0, 0.0), (3.0, 4.0, 0.0)]),
+            record(Kind::Line, &[(1.0, 2.0, 0.0), (3.0, 4.0, 12.5)]),
+            // 3-5: polylines: a 0 among the heights is a height; all 0; a Z that is not a number leaves its vertex without
+            record(Kind::Polyline, &[(0.0, 0.0, 10.0), (10.0, 0.0, 0.0), (10.0, 10.0, 12.5)]),
+            record(Kind::Polyline, &[(0.0, 0.0, 0.0), (10.0, 0.0, 0.0)]),
+            record(Kind::Polyline, &[(0.0, 0.0, 10.0), (10.0, 0.0, f64::NAN), (10.0, 10.0, -2.5)]),
+            // 6-7: areas drawn point by point: the closing vertex goes with its height; all 0
+            record(Kind::Polygon, &ring([1.0, 2.0, 3.0, 4.0])),
+            record(Kind::Polygon, &ring([0.0; 4])),
+            // 8-10: corners the reader made up (a sheet's, a rectangle's) or knows one of (a triangle's) have no height to give
+            record(Kind::MapSheet, &ring([5.0, 5.0, 5.0, 5.0])),
+            record(Kind::Triangle, &[(0.0, 0.0, 5.0), (10.0, 0.0, 0.0), (0.0, 10.0, 0.0)]),
+            record(Kind::SmartObject, &ring([7.0, 7.0, 7.0, 7.0])),
+        ] {
+            assert!(em.entity(&e));
+        }
+        let report = std::mem::take(&mut em.report).import();
+        assert!(report.skipped.is_empty());
+        let out = &em.out;
+        let Entity::Line(l) = &out[0] else { panic!("{:?}", out[0]) };
+        assert_eq!((l.za, l.zb), (Some(105.5), Some(107.25)));
+        for i in [1, 2] {
+            let Entity::Line(l) = &out[i] else { panic!("{:?}", out[i]) };
+            assert_eq!((l.za, l.zb), if i == 1 { (None, None) } else { (Some(0.0), Some(12.5)) });
+        }
+        let zs = |i: usize| match &out[i] {
+            Entity::Polyline(p) | Entity::Polygon(p) => p.zs.clone(),
+            other => panic!("{other:?}"),
+        };
+        assert_eq!(zs(3), Some(vec![Some(10.0), Some(0.0), Some(12.5)]));
+        assert_eq!(zs(4), None);
+        assert_eq!(zs(5), Some(vec![Some(10.0), None, Some(-2.5)]));
+        assert!(matches!(out[6], Entity::Polygon(_)));
+        assert_eq!(zs(6), Some(vec![Some(1.0), Some(2.0), Some(3.0), Some(4.0)]));
+        assert_eq!(zs(7), None);
+        assert_eq!((zs(8), zs(9), zs(10)), (None, None, None));
+        // The heights are counted where every import says it: as a fact of the file.
+        let mut result = ImportResult { entities: out.clone(), layers: Vec::new(), report, bounds: None, declared_crs: None, view: None };
+        kentos_formats::import::summarise(&mut result);
+        assert!(result.report.source.iter().any(|f| (f.label.as_str(), f.value.as_str()) == ("Kotlu nesne", "5")), "{:?}", result.report.source);
     }
 
     #[test]
