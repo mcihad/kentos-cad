@@ -262,8 +262,8 @@ describe('Alan hesapla: İçine tıkla', () => {
     square(h);
     const tool = area(h, true);
     tool.pointerDown(at(1, 1));
-    // 100 m² less the 2 m island; the perimeter is the outline of the region.
-    expect(h.said().at(-1)).toBe('Alan 96.00 m²   Çevre 40.000 m');
+    // 100 m² less the 2 m island; the perimeter is the outline's 40 m and the island's 8 m, as a polygon's.
+    expect(h.said().at(-1)).toBe('Alan 96.00 m²   Çevre 48.000 m');
   });
 
   it('writes nothing to the drawing', () => {
@@ -291,7 +291,7 @@ describe('Alan hesapla: İçine tıkla', () => {
     square(h);
     const tool = area(h, true);
     expect(tool.input('1,1')).toBe(true);
-    expect(h.said().at(-1)).toBe('Alan 96.00 m²   Çevre 40.000 m');
+    expect(h.said().at(-1)).toBe('Alan 96.00 m²   Çevre 48.000 m');
   });
 
   it('takes no object snap: the click is where the cursor is', () => {
@@ -309,7 +309,7 @@ describe('Alan hesapla: İçine tıkla', () => {
     tool.pointerMove(at(1, 1));
     const { g, view, texts } = canvasLog();
     tool.draw(g, view);
-    expect(texts).toEqual(['Alan 96.00 m²', 'Çevre 40.000 m', '1 ada']);
+    expect(texts).toEqual(['Alan 96.00 m²', 'Çevre 48.000 m', '1 ada']);
   });
 
   it('is kept for the session', () => {

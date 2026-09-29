@@ -29,8 +29,8 @@
 //!   before the first point and while it is on; Yay and Uzunluk do not apply.
 //! - Alan hesapla's İçine tıkla (I) measures the region a click is inside, as
 //!   İçine tıklayarak alan finds it: the visible line work's face, closed
-//!   groups inside it as holes (the area is net of them; the perimeter is the
-//!   outer ring's). After a measurement Alan olarak çiz (A) writes
+//!   groups inside it as holes (the area is net of them; the perimeter counts
+//!   them, as a polygon's). After a measurement Alan olarak çiz (A) writes
 //!   the ring last measured (holes included) to the active layer through
 //!   `cad.polygon.create`, one undo step named “Alan olarak çiz”.
 //!
@@ -805,10 +805,14 @@ fn js_parse_int(text: &str) -> Option<u64> {
     Some(digits.parse().unwrap_or(u64::MAX))
 }
 
-/// The perimeter of a region as İçine tıkla says it: its outer ring's; the
-/// islands are taken out of the area, not added to the perimeter (as the web says it).
+/// The perimeter of a region as İçine tıkla says it: its outer ring's and its
+/// islands', as a polygon's (`measure::polygon_perimeter`, holes included as in
+/// GIS): the region drawn with Alan olarak çiz shows the same in Öznitelikler.
 fn perimeter(region: &Region) -> f64 {
-    bulge_path_length(&region.outer.pts, region.outer.bulges.as_deref(), true)
+    std::iter::once(&region.outer)
+        .chain(&region.holes)
+        .map(|r| bulge_path_length(&r.pts, r.bulges.as_deref(), true))
+        .sum()
 }
 
 /// A region as the web's `drawArea` draws an area: its outer ring and holes, lightly filled.

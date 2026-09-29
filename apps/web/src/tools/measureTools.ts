@@ -102,6 +102,14 @@ export class DistanceTool extends PathTool {
   }
 }
 
+/**
+ * A region's perimeter as İçine tıkla says it: its outer ring's and its islands', as a polygon's
+ * (holes included, as in GIS): the region drawn with Alan olarak çiz shows the same in Öznitelikler.
+ */
+function regionPerimeter(area: Area): number {
+  return [area.outer, ...area.holes].reduce((sum, r) => sum + bulgePathLength(r.pts, r.bulges, true), 0);
+}
+
 /** An area as measured: its outer ring, its holes, and its net area (m²). */
 interface Measured {
   ring: Ring;
@@ -188,7 +196,7 @@ export class AreaMeasureTool extends PathTool {
     if (!area) return void this.ctx.log.warn('Tıklanan noktayı çevreleyen kapalı bölge yok.');
     const f = this.ctx.format;
     const net = netArea(area);
-    this.ctx.log.success(`Alan ${f.area(net)}   Çevre ${f.length(bulgePathLength(area.outer.pts, area.outer.bulges, true))}`);
+    this.ctx.log.success(`Alan ${f.area(net)}   Çevre ${f.length(regionPerimeter(area))}`);
     this.measured = { ring: area.outer, holes: area.holes, area: net };
     this.refreshPrompt();
     this.ctx.view.requestOverlay();
@@ -235,7 +243,7 @@ export class AreaMeasureTool extends PathTool {
     const at = this.hover;
     if (!area || !at) return;
     drawArea(g, view, area, { color: pal.accent, fill: tint(pal.accent, 0.16), width: 2 });
-    const lines = [`Alan ${f.area(netArea(area))}`, `Çevre ${f.length(bulgePathLength(area.outer.pts, area.outer.bulges, true))}`];
+    const lines = [`Alan ${f.area(netArea(area))}`, `Çevre ${f.length(regionPerimeter(area))}`];
     if (area.holes.length) lines.push(`${area.holes.length} ada`);
     drawTag(g, view.worldToScreen(at), lines, pal.accent, pal.labelHalo);
   }

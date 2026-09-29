@@ -206,19 +206,20 @@ fn a_click_inside_a_region_measures_it_and_nothing_is_written() {
 }
 
 #[test]
-fn islands_are_holes_of_the_area_and_the_perimeter_is_the_outer_ring() {
+fn islands_are_holes_of_the_area_and_count_in_the_perimeter() {
     let mut b = bench("area");
     b.type_text("i");
-    // Parcel 8 with its 4 × 4 m hole: 100 − 16 m² net; the perimeter is the 40 m of its outer ring.
+    // Parcel 8 with its 4 × 4 m hole: 100 − 16 m² net; the perimeter is its outer
+    // ring's 40 m and the hole's 16 m, as a polygon's (holes included, as in GIS).
     b.move_to(19.0, -10.0);
     assert_eq!(
         tag(&b),
-        ["Alan 84.00 m²", "Çevre 40.000 m", "1 ada"],
+        ["Alan 84.00 m²", "Çevre 56.000 m", "1 ada"],
         "the label says what the click would measure"
     );
     let before = b.log.len();
     b.click(19.0, -10.0);
-    assert_eq!(said(&b, before), ["Alan 84.00 m²   Çevre 40.000 m"]);
+    assert_eq!(said(&b, before), ["Alan 84.00 m²   Çevre 56.000 m"]);
     // In the hole itself: its own region.
     let before = b.log.len();
     b.click(23.0, -10.0);
