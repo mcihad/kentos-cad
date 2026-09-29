@@ -355,6 +355,54 @@ pub fn elide(text: &str, size: f32, room: f32) -> std::borrow::Cow<'_, str> {
     std::borrow::Cow::Owned(format!("{}…", kept.trim_end()))
 }
 
+/// Arayüz metninin gerçek genişliği (piksel): metin geçerli yazı tipiyle
+/// dizilerek ölçülür, web'in ölçtüğü gibi; `strong` yarı kalın metin için.
+/// Her metin, yazı tipi ve boyut için bir kez dizilir. Şerit panellerini
+/// sığdırmak için: [`text_width`]'in payı şeridi web'den erken küçültür.
+pub fn measured_width(text: &str, size: f32, strong: bool) -> f32 {
+    let font = if strong { ui_strong() } else { ui() };
+    MEASURED.with(|cache| {
+        let mut cache = cache.borrow_mut();
+        let widths = cache.entry((font, size.to_bits())).or_default();
+        if let Some(width) = widths.get(text) {
+            return *width;
+        }
+        let width = shaped_width(text, size, font);
+        // The ribbon's words are few; a runaway cache is only emptied.
+        if widths.len() >= MEASURED_MAX {
+            widths.clear();
+        }
+        widths.insert(text.to_owned(), width);
+        width
+    })
+}
+
+/// Ölçülen genişliklerin bir yazı tipi ve boyuttaki en çok sayısı.
+const MEASURED_MAX: usize = 4096;
+
+type Measured = std::collections::HashMap<(Font, u32), std::collections::HashMap<String, f32>>;
+
+thread_local! {
+    static MEASURED: std::cell::RefCell<Measured> = std::cell::RefCell::default();
+}
+
+fn shaped_width(text: &str, size: f32, font: Font) -> f32 {
+    use iced::advanced::text::{self as core, Paragraph as _};
+    type Paragraph = <iced::Renderer as core::Renderer>::Paragraph;
+    Paragraph::with_text(core::Text {
+        content: text,
+        bounds: iced::Size::INFINITE,
+        size: iced::Pixels(size),
+        line_height: iced::widget::text::LineHeight::default(),
+        font,
+        align_x: core::Alignment::Default,
+        align_y: iced::alignment::Vertical::Top,
+        shaping: core::Shaping::Advanced,
+        wrapping: iced::widget::text::Wrapping::None,
+    })
+    .min_width()
+}
+
 /// Yarı kalın arayüz metninin yaklaşık genişliği.
 pub fn strong_width(text: &str, size: f32) -> f32 {
     current().text_width(text, size, true)

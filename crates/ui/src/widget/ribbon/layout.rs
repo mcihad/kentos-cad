@@ -222,7 +222,7 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
 
     /// Başlık satırının genişliği.
     fn foot_width(&self) -> f32 {
-        let title = typography::text_width(&self.title, foot_size());
+        let title = typography::measured_width(&self.title, foot_size(), false);
         let more = if self.more.is_some() {
             3.0 + 10.0 + 10.0
         } else {
@@ -235,7 +235,7 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
     /// Tek düğmeye katlanmış hâlinin genişliği.
     fn folded_width(&self) -> f32 {
         let s = typography::scaled;
-        let label = typography::text_width(&self.title, typography::caption()) + 14.0;
+        let label = typography::measured_width(&self.title, typography::caption(), false) + 14.0;
         label.ceil().clamp(s(50.0), s(110.0))
     }
 
@@ -299,7 +299,8 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
                     button = button.id(more.clone());
                 }
                 // The tip over the ▾, as the web's (the chevron is its icon).
-                let chevron = 5.0 + typography::text_width(&self.title, foot_size()) + 3.0 + 4.0;
+                let chevron =
+                    5.0 + typography::measured_width(&self.title, foot_size(), false) + 3.0 + 4.0;
                 let more = key_tip(
                     tip(
                         button,

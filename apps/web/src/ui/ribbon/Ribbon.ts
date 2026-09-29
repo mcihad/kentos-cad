@@ -379,7 +379,10 @@ export class Ribbon extends Component {
    * until every other panel shows icons only; only folding into one button
    * comes before they shrink further. A step that would not save width (a
    * lone large button made small) is skipped, and such a panel waits its
-   * turn for the level it would reach.
+   * turn for the level it would reach. The room the last step leaves over
+   * goes back, the kept panels first and then left to right: each panel
+   * returns to its largest form that still fits, so more buttons keep their
+   * names.
    */
   private fit(): void {
     this.fitBar();
@@ -415,6 +418,19 @@ export class Ribbon extends Component {
       if (to === null) break;
       total -= widths[pick][levels[pick]] - widths[pick][to];
       levels[pick] = to;
+    }
+    if (total <= available) {
+      const back = view.panels.map((_, i) => i).sort((a, b) => Number(!view.panels[a].model.keep) - Number(!view.panels[b].model.keep) || a - b);
+      for (const i of back) {
+        // While a kept panel is shrunk the others stay at icons.
+        const whole = view.panels.every((p, k) => !p.model.keep || levels[k] === 0);
+        const floor = view.panels[i].model.keep || whole ? 0 : 2;
+        const here = widths[i][levels[i]];
+        const l = LEVELS.find((l) => l >= floor && l < levels[i] && total - here + widths[i][l] <= available);
+        if (l === undefined) continue;
+        total += widths[i][l] - here;
+        levels[i] = l;
+      }
     }
     // A folded panel that unfolds takes its controls back from the pop-up first.
     if (this.pop && levels[view.panels.indexOf(this.pop.panel)] !== 3) this.closePop();

@@ -235,7 +235,7 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
     fn label_width(&self) -> f32 {
         self.label
             .lines()
-            .map(|line| typography::text_width(line, typography::caption()))
+            .map(|line| typography::measured_width(line, typography::caption(), false))
             .fold(0.0, f32::max)
     }
 

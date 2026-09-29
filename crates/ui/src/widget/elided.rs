@@ -34,6 +34,7 @@ pub struct Elided<'a> {
     font: Option<Font>,
     line_height: LineHeight,
     width: Length,
+    reserve: f32,
     style: Box<dyn Fn(&Theme) -> text::Style + 'a>,
 }
 
@@ -45,6 +46,7 @@ impl<'a> Elided<'a> {
             font: None,
             line_height: LineHeight::default(),
             width: Length::Shrink,
+            reserve: 0.0,
             style: Box::new(|_| text::Style::default()),
         }
     }
@@ -67,6 +69,14 @@ impl<'a> Elided<'a> {
     /// Kapladığı genişlik; varsayılan metin kadar (en çok verilen yer).
     pub fn width(mut self, width: impl Into<Length>) -> Self {
         self.width = width.into();
+        self
+    }
+
+    /// Satırda arkasından gelenlere bırakılan genişlik (piksel): metin verilen
+    /// yerin bu kadar eksiğine sığar. Web'de `flex: none` komşularının yanında
+    /// kısalan metin (komut satırının istemi ve çipleri).
+    pub fn reserve(mut self, px: f32) -> Self {
+        self.reserve = px.max(0.0);
         self
     }
 
@@ -150,7 +160,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Elided<'_> {
         let size = self.size.unwrap_or_else(|| renderer.default_size().0);
         let font = self.font.unwrap_or_else(|| renderer.default_font());
         let limits = limits.width(self.width);
-        let room = limits.max().width;
+        let room = (limits.max().width - self.reserve).max(0.0);
         let key = (
             self.content.to_string(),
             room.to_bits(),

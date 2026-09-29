@@ -95,6 +95,11 @@ const GLYPH_COLUMN: f32 = 14.0;
 const GAP: f32 = 6.0;
 /// Kutunun soldaki ve sağdaki iç boşluğu.
 const PADDING_X: f32 = 10.0;
+/// Yazı kutusunun en dar hâli (web'de `.cmdline__field`'in `min-width`'i):
+/// istemin çipleri ne kadar yer tutsa da yazılan değer görünür kalır.
+const FIELD_MIN: f32 = 80.0;
+/// İstem satırında komut adı, istem ve çipler arasındaki boşluk.
+const ASK_SPACING: f32 = 8.0;
 /// Soluklaşma: her eski satırın saydamlığı bu kadar azalır, en az
 /// `FADE_FLOOR` olur.
 const FADE_STEP: f32 = 0.22;
@@ -876,7 +881,11 @@ fn input_row<'a, Message: Clone + 'a>(
     let mut placeholder = placeholder;
 
     if let Some(prompt) = prompt {
-        let mut ask = Row::new().spacing(8).align_y(Center);
+        let mut ask = Row::new().spacing(ASK_SPACING).align_y(Center);
+        // The chips keep their width and the field its minimum; the prompt's
+        // words give way with an ellipsis (the web's `.cmdline__text`).
+        let reserve =
+            chips_width(&prompt.options, &prompt.menus) + GAP + typography::from_default(FIELD_MIN);
 
         if let Some(command) = prompt.command {
             ask = ask.push(
@@ -890,16 +899,21 @@ fn input_row<'a, Message: Clone + 'a>(
             );
         }
 
-        ask = ask.push(label::body(prompt.text));
+        ask = ask.push(
+            crate::widget::elided::Elided::new(prompt.text)
+                .font(typography::ui())
+                .size(typography::body())
+                .reserve(reserve),
+        );
 
         for option in prompt.options {
             let mut face = Row::new()
-                .push(label::body(option.label))
+                .push(label::body(option.label).wrapping(Wrapping::None))
                 .spacing(6)
                 .align_y(Center);
 
             if let Some(key) = option.key {
-                face = face.push(label::mono_caption(key));
+                face = face.push(label::mono_caption(key).wrapping(Wrapping::None));
             }
 
             ask = ask.push(
@@ -915,7 +929,7 @@ fn input_row<'a, Message: Clone + 'a>(
             if let Some(glyph) = chip.icon {
                 face = face.push(icon(glyph).size(14.0));
             }
-            face = face.push(label::body(chip.label));
+            face = face.push(label::body(chip.label).wrapping(Wrapping::None));
             // Framed like the options; the menu button draws its hover and press over it.
             let face = container(face).padding([1, 7]).style(|theme: &Theme| {
                 let t = Tokens::of(theme);
@@ -969,6 +983,25 @@ fn input_row<'a, Message: Clone + 'a>(
         .width(Fill)
         .align_y(Center)
         .into()
+}
+
+/// İstemin seçenek ve menü çiplerinin tuttuğu genişlik, önlerindeki
+/// boşluklarla; yazılar gerçek yazı tipiyle ölçülür. Çipler kısalmaz.
+fn chips_width<Message>(options: &[Keyword<'_, Message>], menus: &[MenuChip<'_, Message>]) -> f32 {
+    let body = typography::body();
+    // Both sides' padding and the border.
+    let frame = 2.0 * 7.0 + 2.0;
+    let options = options.iter().map(|option| {
+        let key = option.key.as_ref().map_or(0.0, |key| {
+            6.0 + typography::mono_width(key, typography::caption())
+        });
+        ASK_SPACING + frame + typography::measured_width(&option.label, body, false) + key
+    });
+    let menus = menus.iter().map(|chip| {
+        let glyph = chip.icon.map_or(0.0, |_| 14.0 + 5.0);
+        ASK_SPACING + frame + typography::measured_width(&chip.label, body, false) + glyph
+    });
+    options.chain(menus).sum()
 }
 
 /// Komut kutusunun kendi denetimleri: sağ uçtaki düğmeler.

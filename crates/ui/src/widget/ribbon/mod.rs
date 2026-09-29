@@ -573,8 +573,10 @@ fn fitted<'a, Message: Clone + 'a>(
 /// her panel bir adım inmeden hiçbiri iki adım inmez, önce en sağdaki.
 /// `keep` paneller öbürleri yalnız ikona inene kadar büyük düğmelerini
 /// korur; yalnız tek düğmeye katlanmak onlardan önce gelir. Genişlik
-/// kazandırmayan adım atlanır. `widths[i][l]`: panelin `l` seviyesindeki
-/// genişliği. Sonuç seviyeler ve en küçük hâlin de sığmadığı.
+/// kazandırmayan adım atlanır. Son adımdan artan yer geri verilir: önce
+/// `keep` paneller, sonra soldan sağa, her panel hâlâ sığan en büyük hâline
+/// döner; böylece daha çok düğme adıyla görünür. `widths[i][l]`: panelin `l`
+/// seviyesindeki genişliği. Sonuç seviyeler ve en küçük hâlin de sığmadığı.
 pub fn fit(widths: &[[f32; 4]], keep: &[bool], available: f32) -> (Vec<u8>, bool) {
     let mut levels = vec![0u8; widths.len()];
     let mut total: f32 = widths.iter().map(|w| w[0]).sum();
@@ -599,6 +601,22 @@ pub fn fit(widths: &[[f32; 4]], keep: &[bool], available: f32) -> (Vec<u8>, bool
         let Some((i, l)) = pick else { break };
         total -= widths[i][usize::from(levels[i])] - widths[i][usize::from(l)];
         levels[i] = l;
+    }
+    if total <= available {
+        let mut back: Vec<usize> = (0..widths.len()).collect();
+        back.sort_by_key(|&i| (!kept(i), i));
+        for i in back {
+            // While a kept panel is shrunk the others stay at icons.
+            let whole = (0..widths.len()).all(|k| !kept(k) || levels[k] == 0);
+            let floor = if kept(i) || whole { 0 } else { 2 };
+            let here = widths[i][usize::from(levels[i])];
+            if let Some(l) = (floor..levels[i])
+                .find(|&l| total - here + widths[i][usize::from(l)] <= available)
+            {
+                total += widths[i][usize::from(l)] - here;
+                levels[i] = l;
+            }
+        }
     }
     (levels, total > available + 0.5)
 }
