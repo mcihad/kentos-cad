@@ -28,7 +28,12 @@ export function vertexElevations(e: Entity): (number | null)[] {
   return elevatedPaths(e).flatMap((p) => p.zs);
 }
 
-/** Whether any vertex has an elevation (the cheap check before the rest: nothing is allocated). */
+const hasOne = (z: number | null) => z !== null;
+const anyOne = (zs: readonly (number | null)[] | undefined) => !!zs?.some(hasOne);
+const ringHasOne = (ring: { zs?: (number | null)[] }) => anyOne(ring.zs);
+const partHasOne = (part: { zs?: (number | null)[]; holes?: { zs?: (number | null)[] }[] }) => anyOne(part.zs) || !!part.holes?.some(ringHasOne);
+
+/** Whether any vertex has an elevation (the cheap check before the rest: nothing is made for it, however many parts an area has). */
 export function hasVertexElevation(e: Entity): boolean {
   switch (e.kind) {
     case 'point':
@@ -36,12 +41,9 @@ export function hasVertexElevation(e: Entity): boolean {
     case 'line':
       return e.za !== undefined || e.zb !== undefined;
     case 'polyline':
-      return !!e.zs?.some((z) => z !== null);
-    case 'polygon': {
-      const some = (zs: readonly (number | null)[] | undefined) => !!zs?.some((z) => z !== null);
-      const holes = (list: readonly { zs?: (number | null)[] }[] | undefined) => !!list?.some((h) => some(h.zs));
-      return some(e.zs) || holes(e.holes) || !!e.parts?.some((part) => some(part.zs) || holes(part.holes));
-    }
+      return anyOne(e.zs);
+    case 'polygon':
+      return anyOne(e.zs) || !!e.holes?.some(ringHasOne) || !!e.parts?.some(partHasOne);
     default:
       return false;
   }
