@@ -116,6 +116,31 @@ describe.skipIf(!loader)('NCZ WASM module', () => {
     expect(r.view).toEqual(r.bounds);
   });
 
+  it('draws a map sheet as its cell, turned in the zone the file names', async () => {
+    const r = await read('08-pafta.ncz');
+    // Each corner in millimetres, (easting, northing), south-west first.
+    const frame = (name: string) => {
+      const e = r.entities.find((x) => x.attrs['Pafta'] === name);
+      return e?.kind === 'polygon' ? e.pts.map((p) => [Math.round(p.x * 1000), Math.round(p.y * 1000)]) : e;
+    };
+    expect(frame('GB')).toEqual([
+      [421_758_834, 4_450_753_176],
+      [422_291_094, 4_450_747_687],
+      [422_298_227, 4_451_441_691],
+      [421_766_016, 4_451_447_181],
+    ]);
+    expect(frame('KD')?.[0]).toEqual([422_298_227, 4_451_441_691]);
+    // A sheet of round local coordinates is no grid cell's: it keeps the box, and the report says why.
+    expect(frame('YEREL-1')).toEqual([
+      [421_400_000, 4_448_400_000],
+      [421_400_000, 4_449_100_000],
+      [421_940_000, 4_449_100_000],
+      [421_940_000, 4_448_400_000],
+    ]);
+    expect(r.report.notes.find((n) => n.what === 'Pafta çerçevesi')?.count).toBe(4);
+    expect(r.report.skipped.find((s) => s.what === 'Pafta çerçevesinin gerçek biçimi')?.count).toBe(1);
+  });
+
   it('smart layers first even for the frames of older smart objects', async () => {
     const r = await read('02-akilli-nesne.ncz');
     expect(layers(r)).toEqual([

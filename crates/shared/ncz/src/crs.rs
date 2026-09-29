@@ -6,9 +6,11 @@
 //! Only what the bytes say for certain becomes an EPSG code: a three-degree
 //! zone's byte is its central meridian (the Suşehri plan's 39 comes with
 //! `SRS=5257`, TUREF / TM39), and a geographic declaration is the datum's
-//! longitude and latitude. What a six-degree zone's byte means is not known,
-//! so such a statement is shown as the file writes it, with no code: a
-//! statement is never guessed into a system.
+//! longitude and latitude. What a six-degree zone's byte means has not been
+//! seen in a file, so such a statement is shown as the file writes it, with
+//! no code: a statement is never guessed into a system. (A map sheet's frame
+//! reads it as the UTM zone number, the owner's reading, and keeps the file's
+//! box unless the result is a cell of a sheet grid: `sheet`.)
 
 use kentos_contracts::{CrsSource, DeclaredCrs};
 

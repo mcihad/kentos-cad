@@ -7,7 +7,8 @@
 //! | Symbol, Block | a point; the symbol code (`Sembol`) or block name (`Blok`) as an attribute |
 //! | Line | a line |
 //! | Polyline | a polyline |
-//! | Polygon, MapSheet, Triangle | a closed area, the repeated first vertex left out |
+//! | Polygon, Triangle | a closed area, the repeated first vertex left out |
+//! | MapSheet | a closed area: its cell's four corners in the zone the file names (`sheet`), or the box the file keeps; the sheet's name the `Pafta` attribute |
 //! | Circle | a circle, centre and radius (not the plugin's 72 chords) |
 //! | Arc | an arc, its ends from the plugin's own reading of the angles |
 //! | Text | a text on its baseline, height and rotation |
@@ -38,6 +39,7 @@ use kentos_formats::watch::{STOPPED, Watch};
 use kentos_geometry_core::text::{Font, width_em};
 
 use crate::format::{self, Header, Kind, Outcome, RAD_TO_DEG, SmartClass};
+use crate::sheet::{self, Kept, Zone};
 use crate::symbols::{self, Anchor, Stroke};
 use crate::{attributes, crs};
 
@@ -189,11 +191,17 @@ struct Emitter {
     unsized_objects: u32,
     centred_texts: u32,
     bounds: Option<Bounds>,
+    /// The zone the file's MPROJ names, for its sheets' frames; or why there is none.
+    zone: Result<Zone, Kept>,
+    /// Sheets drawn as their cell, and those that keep the file's box, by why.
+    framed: u32,
+    boxed: BTreeMap<Kept, u32>,
 }
 
 impl format::Sink for Emitter {
     fn begin(&mut self, final_header: &Header) -> bool {
         self.fin = final_header.clone();
+        self.zone = sheet::zone(final_header);
         true
     }
 
@@ -252,6 +260,9 @@ impl Emitter {
             unsized_objects: 0,
             centred_texts: 0,
             bounds: None,
+            zone: Err(Kept::Unsaid),
+            framed: 0,
+            boxed: BTreeMap::new(),
         }
     }
 
@@ -380,9 +391,12 @@ impl Emitter {
                 let zs = heights(&e.coords);
                 self.push(layer, Entity::Polyline(PathEntity { base: b, pts, bulges: None, holes: None, zs }));
             }
-            Kind::Polygon | Kind::MapSheet | Kind::Triangle => {
-                let key = if e.kind == Kind::MapSheet { "Pafta" } else { "Etiket" };
-                note(&mut b, key, &e.label);
+            Kind::MapSheet => {
+                note(&mut b, "Pafta", &e.label);
+                self.sheet(e, layer, b)?;
+            }
+            Kind::Polygon | Kind::Triangle => {
+                note(&mut b, "Etiket", &e.label);
                 self.area(e, layer, b)?;
             }
             Kind::SmartObject if e.smart != SmartClass::None => self.planet(e, layer, b)?,
@@ -427,6 +441,33 @@ impl Emitter {
                         rotation,
                     }),
                 );
+            }
+        }
+        Ok(())
+    }
+
+    /// A pafta: the file keeps the box of its cell in the file's zone, and the cell is a turned
+    /// quadrilateral there; its four corners when the file names the zone and the box is a
+    /// grid cell's, the box otherwise (`sheet`).
+    fn sheet(&mut self, e: &format::Entity, layer: usize, b: EntityBase) -> Result<(), &'static str> {
+        let (xs, ys) = (e.coords.iter().map(|c| c.x), e.coords.iter().map(|c| c.y));
+        let target = [xs.clone().fold(f64::INFINITY, f64::min), ys.clone().fold(f64::INFINITY, f64::min), xs.fold(f64::NEG_INFINITY, f64::max), ys.fold(f64::NEG_INFINITY, f64::max)];
+        let frame = match &self.zone {
+            Ok(zone) => sheet::frame(&zone.tm, target).ok_or(Kept::NoCell),
+            Err(why) => Err(*why),
+        };
+        match frame {
+            Ok(corners) => {
+                let pts: Vec<Vec2> = corners.iter().map(|&[x, y]| Vec2 { x, y }).collect();
+                for p in &pts {
+                    self.grow(*p);
+                }
+                self.push(layer, Entity::Polygon(PathEntity { base: b, pts, bulges: None, holes: None, zs: None }));
+                self.framed += 1;
+            }
+            Err(why) => {
+                self.area(e, layer, b)?;
+                *self.boxed.entry(why).or_default() += 1;
             }
         }
         Ok(())
@@ -703,6 +744,22 @@ impl Emitter {
                 ),
                 0,
                 self.widths,
+            );
+        }
+        if let Ok(zone) = &self.zone {
+            self.report.note_n(
+                "Pafta çerçevesi",
+                &format!("dosyanın bildirdiği {} sisteminde gerçek biçimiyle, dönük dörtgen olarak çizildi: dosya bir paftanın yalnız sınırlayıcı kutusunu saklar", zone.name),
+                0,
+                self.framed,
+            );
+        }
+        for (why, &n) in &self.boxed {
+            self.report.skip_n(
+                "Pafta çerçevesinin gerçek biçimi",
+                &format!("bulunamadı, pafta dosyanın sakladığı sınırlayıcı kutu olarak çizildi: {}", why.reason()),
+                0,
+                n,
             );
         }
         self.report

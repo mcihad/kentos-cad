@@ -12,7 +12,9 @@
 //! Rules, the formats crate's:
 //! - coordinates are the float64 the file holds, never rounded, rescaled or
 //!   reprojected (§5, §23); what the file says of its system is reported as
-//!   `declaredCrs` and asked about, never applied;
+//!   `declaredCrs` and asked about, never applied. A map sheet's frame is the
+//!   one computed shape: the file keeps only the box of its cell, and the
+//!   cell's corners are worked out in the zone the file names (`sheet`);
 //! - nothing a file holds may crash the reader: records that do not read are
 //!   counted and reported in Turkish;
 //! - one pass per table and record walk, no quadratic behaviour.
@@ -29,6 +31,7 @@ pub mod attributes;
 mod crs;
 mod emit;
 pub mod format;
+mod sheet;
 mod symbols;
 
 pub use emit::read;

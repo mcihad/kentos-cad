@@ -47,6 +47,20 @@
 - Pencere GeoJSON'daki gibi sorar. Sistem projeninkinden başkaysa içe aktarma kapalıdır.
 - Hiçbir şey dönüştürülmez (CLAUDE.md §5).
 
+**Pafta çerçevesi** (29 Eylül, sahibin kararı). Pafta kaydı (tür 11) iki nokta ve paftanın adını saklar. İki nokta, paftanın coğrafi hücresinin (1/1000: 22,5″ × 22,5″) dosyanın TM dilimine izdüşümünün sınırlayıcı kutusudur. Hücre TM'de meridyen yakınsaması kadar dönük bir dörtgendir (TM39'da, 38° D'de 0,64°). Eklenti ve ilk taşıma kutuyu eksenlere paralel dikdörtgen çizdi; komşu paftalar üst üste bindi (Suşehri'nin PINDEX_1000 katmanı: kuzeyde 5,5 m, doğuda 7 m).
+
+- Hücre kutusundan geri bulunur (`sheet.rs`). Aranan, köşelerinin izdüşümü dosyadaki kutuyu veren enlem ve boylamlardır. Hücre orta meridyeni kesiyorsa paralellerin meridyendeki noktaları da kutuya girer. Çözüm Newton yöntemiyledir: sayısal Jacobi, 4×4 denklem, 2–3 adımda 1 µm'nin altı. 1 cm'den uzak kalan çözüm reddedilir.
+- Dilim ve elipsoit dosyanın MPROJ bloğundan gelir, çizimin sisteminden değil:
+  - 3° dilimde orta meridyen dilim baytıdır, ölçek 1;
+  - 6° dilimde bayt UTM numarasıdır: orta meridyen 6·dilim − 183°, ölçek 0,9996;
+  - datum 0 WGS84, 1 (ITRF) GRS80, 4 ve 254 (ED50) Uluslararası 1924 elipsoidi.
+- TM, PROJ'un `tmerc`'idir (Poder ve Engsager'in 6. derece Krüger serisi), libm ile. Testler PROJ'un sayılarını tutar.
+- Yerel bir pafta dönük dörtgene çevrilmesin diye hücre bir ızgaranın hücresi olmalıdır: güney-batı köşesi, enlemde ve boylamda hücre boyunun tam katıdır (1e-3 içinde).
+- Bulunan hücrenin dört köşesi (güney-batı, güney-doğu, kuzey-doğu, kuzey-batı; saat yönünün tersine) bir kez milimetreye yuvarlanır: komşu paftaların ortak köşesi tek noktadır.
+- Bulunamazsa kutu kalır: MPROJ yoksa, sistem TM ya da UTM değilse, datum bilinmiyorsa ya da kutu bir ızgara hücresinin değilse. Rapor kaçının, neden kaldığını söyler.
+- Bu, “hiçbir şey dönüştürülmez” kuralının tek istisnasıdır. Dosya çerçeveyi değil kutusunu saklar; çerçeve dosyanın kendi sisteminde hesaplanır, çizimin sistemine dönüştürülmez.
+- Suşehri'de 127 paftanın hepsi dört köşelidir. 96 köşe dört paftada, 15 köşe üç paftada, 30 köşe iki paftada ortaktır; 19 köşe tek paftanındır.
+
 **Alınamayanlar** türüyle, sayısıyla ve Türkçe nedeniyle raporlanır.
 
 - Nesne başına çizgi kalınlığı şimdilik raporda kalır: model onu henüz taşımıyor.
@@ -143,7 +157,7 @@ SwiftShader'lı başsız tarayıcı yarım milyon nesneyi karede saniyelerle çi
 
 **Testler:**
 
-- `crates/shared/ncz/tests/fixtures.rs`: yedi fixture. `scripts/fixtures/ncz_reference.py` dosyaları blok blok, uzaklıklarından yazar; beklenen değerler o betikten elle çıkarılmıştır.
+- `crates/shared/ncz/tests/fixtures.rs`: sekiz fixture. `08-pafta.ncz`, TM39'daki 2×2 pafta bloğunu ve yerel bir paftayı tutar. `scripts/fixtures/ncz_reference.py` dosyaları blok blok, uzaklıklarından yazar; beklenen değerler o betikten elle çıkarılmıştır.
 - Aynı dosyaları tarayıcıdaki NCZ modülü de okur (`apps/web/src/io/ncz.wasm.test.ts`).
 - DXF modülünün tarayıcı testi: `io/dxf.wasm.test.ts`.
 - Kare kare yazma: `io/drawingImport.test.ts` (tek adım, Durdur, reddedilen nesne, kilitli katman) ve masaüstünün `exchange/tests.rs`'i.

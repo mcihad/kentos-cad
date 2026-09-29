@@ -15,7 +15,9 @@ KentOSCad, 28 September 2026) and from there to Rust.
 What is not from the plugin: reading Netcad 8's smart objects ("akıllı nesne": the
 settlement, construction, road-width, plan-note and function-name symbols of Planet)
 and drawing them (`src/symbols.rs`), sweeping unknown blocks for geometry, the line
-width at +28, and the mapping to KentOS's objects (`src/emit.rs`). Those were worked
+width at +28, a map sheet's true frame in the zone the file names (`src/sheet.rs`;
+the plugin draws the box the file keeps), and the mapping to KentOS's objects
+(`src/emit.rs`). Those were worked
 out from real plans; nothing publishes them.
 
 "Jeomatik" is the author's trademark; it is named here only to identify the source.

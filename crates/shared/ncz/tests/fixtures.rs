@@ -73,11 +73,12 @@ fn every_record_type_on_its_layer_with_the_files_system() {
     let Entity::Text(t) = &r.entities[6] else { panic!("{:?}", r.entities[6]) };
     assert_eq!((t.text.as_str(), t.height), ("ADA 101 PARSEL ş", 2.5));
     assert!((t.rotation - 30.0).abs() < 1e-6, "{}", t.rotation);
-    // The map sheet is its outline, named by its sheet.
+    // The map sheet is its outline, named by its sheet: its box of round local coordinates is
+    // no grid cell's, so it stays the box the file keeps, and the report says so.
     let sheet = r.entities.iter().find(|e| attr(e, "Pafta").is_some()).expect("the sheet");
     assert_eq!(attr(sheet, "Pafta"), Some("H40-D-07-B-1-C"));
     let skipped: Vec<&str> = r.report.skipped.iter().map(|s| s.what.as_str()).collect();
-    assert_eq!(skipped, ["NCZ türü 8", "NCZ türü 14"]);
+    assert_eq!(skipped, ["NCZ türü 8", "NCZ türü 14", "Pafta çerçevesinin gerçek biçimi"]);
     // One record gives a pen, 2 tenths of a millimetre: the line in the container, and only it
     // takes its own weight; the others are drawn in their layer's (docs/adr/0139).
     let weighed: Vec<(usize, f64)> = r
@@ -207,6 +208,51 @@ fn netcad_8_smart_objects_become_their_symbols_on_the_layers_drawn_on_top() {
     }
     // Where the view shows it: every object is near the others, nothing is a stray.
     assert_eq!(r.view, r.bounds);
+}
+
+/// A frame's corners in millimetres, (easting, northing).
+fn millimetres(e: &Entity) -> Vec<(i64, i64)> {
+    let Entity::Polygon(p) = e else { panic!("{e:?}") };
+    p.pts.iter().map(|v| ((v.x * 1000.0).round() as i64, (v.y * 1000.0).round() as i64)).collect()
+}
+
+#[test]
+fn a_sheets_frame_is_its_cell_turned_in_the_zone_the_file_names() {
+    let r = read("08-pafta.ncz");
+    assert_eq!(counts(&r), [("polygon", 5)]);
+    assert_eq!(layers(&r), [("PINDEX_1000", "ink", 4), ("YEREL", "ink", 1)]);
+    let sheet = |name: &str| r.entities.iter().find(|e| attr(e, "Pafta") == Some(name)).unwrap_or_else(|| panic!("{name}"));
+    // The file keeps the box of each 22.5″ cell in TM39 (ITRF); the frame is the cell itself,
+    // turned by the meridian convergence: south-west, south-east, north-east and north-west,
+    // to the millimetre, PROJ's corners (+proj=tmerc +lon_0=39 +k=1 +x_0=500000 +ellps=GRS80).
+    let frames = [
+        ("GB", [(421_758_834, 4_450_753_176), (422_291_094, 4_450_747_687), (422_298_227, 4_451_441_691), (421_766_016, 4_451_447_181)]),
+        ("GD", [(422_291_094, 4_450_747_687), (422_823_354, 4_450_742_235), (422_830_439, 4_451_436_239), (422_298_227, 4_451_441_691)]),
+        ("KB", [(421_766_016, 4_451_447_181), (422_298_227, 4_451_441_691), (422_305_362, 4_452_135_696), (421_773_199, 4_452_141_186)]),
+        ("KD", [(422_298_227, 4_451_441_691), (422_830_439, 4_451_436_239), (422_837_524, 4_452_130_244), (422_305_362, 4_452_135_696)]),
+    ];
+    for (name, corners) in frames {
+        assert_eq!(millimetres(sheet(name)), corners, "{name}");
+    }
+    // Neighbours meet: the block's middle corner is one point of all four sheets.
+    let Entity::Polygon(gb) = sheet("GB") else { unreachable!() };
+    let middle = gb.pts[2];
+    assert_eq!((middle.x, middle.y), (422_298.227, 4_451_441.691));
+    for (name, at) in [("GD", 3), ("KB", 1), ("KD", 0)] {
+        let Entity::Polygon(p) = sheet(name) else { unreachable!() };
+        assert_eq!(p.pts[at], middle, "{name}");
+    }
+    // A sheet of round local coordinates is no grid cell's: it keeps the box.
+    assert_eq!(
+        millimetres(sheet("YEREL-1")),
+        [(421_400_000, 4_448_400_000), (421_400_000, 4_449_100_000), (421_940_000, 4_449_100_000), (421_940_000, 4_448_400_000)]
+    );
+    let framed = r.report.notes.iter().find(|n| n.what == "Pafta çerçevesi").expect("the frames' note");
+    assert_eq!(framed.count, 4);
+    assert!(framed.reason.starts_with("dosyanın bildirdiği ITRF TM39 sisteminde gerçek biçimiyle"), "{}", framed.reason);
+    let kept = r.report.skipped.iter().find(|s| s.what == "Pafta çerçevesinin gerçek biçimi").expect("the box kept");
+    assert_eq!(kept.count, 1);
+    assert!(kept.reason.ends_with("(yerel pafta)"), "{}", kept.reason);
 }
 
 #[test]

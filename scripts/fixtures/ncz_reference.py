@@ -455,6 +455,30 @@ def seed_planet():
     return s
 
 
+# The four 1/1000 sheets of a 2×2 block in TM39 starting at 40°11′15″ N
+# 38°04′52.5″ E, each as the file keeps it: its name and the box of its 22.5″
+# cell projected into the zone (K, D least, then greatest), PROJ's numbers
+# (+proj=tmerc +lon_0=39 +k=1 +x_0=500000 +ellps=GRS80).
+SHEETS = [
+    ('GB', (4450747.686980942, 421758.8335489006), (4451447.180690602, 422298.2273740889)),
+    ('GD', (4450742.235219674, 422291.0940323713), (4451441.6912473785, 422830.4388321189)),
+    ('KB', (4451441.6912473785, 421766.0157596478), (4452141.185894171, 422305.3616443881)),
+    ('KD', (4451436.239282718, 422298.2273740889), (4452135.696246419, 422837.5242272436)),
+]
+
+
+def seed_sheets():
+    """Map sheets in the zone the file names (ITRF, TM39): the block above, whose
+    frames are their cells, and a sheet of round local coordinates, whose box is
+    no grid cell's."""
+    s = mproj(3, 1, 39) + tiled_xml('SRS="5257"')
+    s += layer_table(['0', 'PINDEX_1000', 'YEREL'])
+    for name, a, b in SHEETS:
+        s += map_sheet(a, b, name, layer=1)
+    s += map_sheet((N0 + 400, E0 + 400), (N0 + 1100, E0 + 940), 'YEREL-1', layer=2)
+    return s
+
+
 def seed_truncated():
     """The first seed cut in the middle of a block."""
     whole = seed_everything()
@@ -469,6 +493,7 @@ SEEDS = {
     '05-oznitelik-tablolari.ncz': seed_attributes,
     '06-kesik.ncz': seed_truncated,
     '07-akilli-nesneler.ncz': seed_planet,
+    '08-pafta.ncz': seed_sheets,
 }
 
 
