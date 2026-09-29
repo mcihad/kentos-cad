@@ -547,7 +547,13 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
         }
         Entity::Polyline(p) | Entity::Polygon(p) => {
             let polygon = matches!(e, Entity::Polygon(_));
-            geo.push(Row::figure("Köşe sayısı", p.pts.len().to_string()));
+            // A multi-part area's corners, parts and holes are every part's (docs/adr/0143).
+            let parts = p.parts.as_deref().unwrap_or(&[]);
+            let corners = p.pts.len() + parts.iter().map(|q| q.pts.len()).sum::<usize>();
+            geo.push(Row::figure("Köşe sayısı", corners.to_string()));
+            if !parts.is_empty() {
+                geo.push(Row::figure("Parça sayısı", (parts.len() + 1).to_string()));
+            }
             geo.extend(elevation_row(
                 "Kot",
                 Elevations::of_object(e),
@@ -561,8 +567,13 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             geo.extend(space_length(e, &f));
             if polygon {
                 // Net area: the holes (adalar) are taken out already.
-                if let Some(holes) = p.holes.as_ref().filter(|h| !h.is_empty()) {
-                    geo.push(Row::figure("Ada (delik)", holes.len().to_string()));
+                let holes = p.holes.iter().flatten().count()
+                    + parts
+                        .iter()
+                        .map(|q| q.holes.iter().flatten().count())
+                        .sum::<usize>();
+                if holes > 0 {
+                    geo.push(Row::figure("Ada (delik)", holes.to_string()));
                 }
                 geo.extend(area(area_of.unwrap_or(0.0)));
             }

@@ -1081,3 +1081,34 @@ fn screens() {
 /// in the 1440 × 900 window (read off the pictures).
 const YAZI_Y: f32 = 620.0;
 const KATMAN_Y: f32 = 618.0;
+
+/// A multi-part area (docs/adr/0143): its corners, holes, perimeter and area
+/// are every part's, and a row says how many parts it has. Parcel 4
+/// (12 × 10 m) gets a 10 × 10 m part with a 2 × 2 m hole.
+#[test]
+fn a_multi_part_area_counts_every_part() {
+    let mut app = objects();
+    click(&mut app, -18.0, 9.0);
+    let doc = app.document.as_mut().expect("open");
+    let Some(Entity::Polygon(mut p)) = doc.model.get(Slot(4)).cloned() else {
+        panic!("the parcel");
+    };
+    let at = |x: f64, y: f64| Wire { x: E + x, y: N + y };
+    p.parts = Some(vec![kentos_contracts::AreaPart {
+        pts: vec![at(30.0, 0.0), at(40.0, 0.0), at(40.0, 10.0), at(30.0, 10.0)],
+        bulges: None,
+        holes: Some(vec![kentos_contracts::RingGeometry {
+            pts: vec![at(34.0, 4.0), at(34.0, 6.0), at(36.0, 6.0), at(36.0, 4.0)],
+            bulges: None,
+            zs: None,
+        }]),
+        zs: None,
+    }]);
+    assert!(doc.model.update(Slot(4), Entity::Polygon(p)));
+    assert_eq!(value(&app, "Geometri", "Köşe sayısı"), "8");
+    assert_eq!(value(&app, "Geometri", "Parça sayısı"), "2");
+    assert_eq!(value(&app, "Geometri", "Ada (delik)"), "1");
+    // 44 + 40 + 8 m; 120 + 100 − 4 m².
+    assert_eq!(value(&app, "Geometri", "Çevre"), "92.000 m");
+    assert_eq!(value(&app, "Geometri", "Alan"), "216.00 m²");
+}

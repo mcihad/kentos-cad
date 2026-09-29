@@ -141,10 +141,20 @@ pub(crate) fn card(
         };
         rows.push((name, format.area(area), true));
     }
-    if let Entity::Polygon(p) = e
-        && let Some(holes) = p.holes.as_ref().filter(|h| !h.is_empty())
-    {
-        rows.push(("Ada (delik)", holes.len().to_string(), true));
+    if let Entity::Polygon(p) = e {
+        // A multi-part area's parts, and every part's holes (docs/adr/0143).
+        let parts = p.parts.as_deref().unwrap_or(&[]);
+        if !parts.is_empty() {
+            rows.push(("Parça", (parts.len() + 1).to_string(), true));
+        }
+        let holes = p.holes.iter().flatten().count()
+            + parts
+                .iter()
+                .map(|q| q.holes.iter().flatten().count())
+                .sum::<usize>();
+        if holes > 0 {
+            rows.push(("Ada (delik)", holes.to_string(), true));
+        }
     }
     if let Some(length) = length {
         let name = if matches!(e, Entity::Polygon(_) | Entity::Circle(_)) {
@@ -320,6 +330,23 @@ mod tests {
         assert_eq!(super::deed_area_text(Some("723.525")), Some(("723.525 m²".to_owned(), true)));
         assert_eq!(super::deed_area_text(Some("723abc")), Some(("723abc".to_owned(), false)));
         assert_eq!(super::deed_area_text(Some("  ")), None);
+        // A multi-part area: its parts, and every part's holes (docs/adr/0143).
+        let Entity::Polygon(mut two) = parcel.clone() else {
+            panic!("an area");
+        };
+        two.parts = Some(vec![kentos_contracts::AreaPart {
+            pts: two.pts.clone(),
+            bulges: None,
+            holes: two.holes.clone(),
+            zs: None,
+        }]);
+        let c = card(&Entity::Polygon(two), &doc.model, &format, black);
+        let rows: Vec<(&str, &str)> = c.rows.iter().map(|r| (r.0, r.1.as_str())).collect();
+        assert_eq!(
+            rows.iter().map(|r| r.0).collect::<Vec<_>>(),
+            ["Ada", "Alan", "Parça", "Ada (delik)", "Çevre"]
+        );
+        assert_eq!((rows[2].1, rows[3].1), ("2", "2"));
         let circle = doc.model.get(Slot(5)).expect("the circle");
         let c = card(circle, &doc.model, &format, black);
         assert_eq!(c.title, "Daire");
