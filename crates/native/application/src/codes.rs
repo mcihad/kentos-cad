@@ -63,3 +63,26 @@ pub const NOTHING_TO_SET: &str = "nothing_to_set";
 pub const INVALID_ATTRIBUTE: &str = "invalid_attribute";
 /// A line weight that is not a number from 0 to 100 mm (`cad.entities.set`, docs/adr/0139).
 pub const INVALID_LINE_WEIGHT: &str = "invalid_line_weight";
+/// An insert's scale that is not above zero (its geometry, docs/adr/0144).
+pub const INVALID_SCALE: &str = "invalid_scale";
+/// A block the drawing does not define (an insert's geometry, `cad.blocks.edit`).
+pub const UNKNOWN_BLOCK: &str = "unknown_block";
+/// A block name empty or only white space (`cad.blocks.define`, `cad.blocks.edit`).
+pub const EMPTY_NAME: &str = "empty_name";
+/// A block name the drawing already has, Turkish case folded.
+pub const DUPLICATE_BLOCK: &str = "duplicate_block";
+/// A definition that would hold itself, directly or through others.
+pub const BLOCK_CYCLE: &str = "block_cycle";
+/// Blocks that would be nested deeper than 16 levels.
+pub const BLOCK_TOO_DEEP: &str = "block_too_deep";
+/// `replace` without the layer the insert goes on.
+pub const NO_LAYER: &str = "no_layer";
+/// No block given where the operation needs one (`cad.blocks.edit`).
+pub const NO_BLOCK: &str = "no_block";
+/// No base point given to `rebase` (`cad.blocks.edit`).
+pub const NO_BASE: &str = "no_base";
+/// A definition an insert uses, in the drawing or in another definition (`cad.blocks.edit`).
+pub const BLOCK_IN_USE: &str = "block_in_use";
+/// A block rule the checks before it did not see, as the document said it
+/// (never expected: the commands check the document's own rules first).
+pub const BLOCK_REFUSED: &str = "block_refused";

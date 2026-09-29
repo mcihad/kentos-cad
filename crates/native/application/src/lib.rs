@@ -32,6 +32,8 @@
 pub mod arc;
 pub mod array;
 pub mod blocks;
+pub mod blocks_define;
+pub mod blocks_edit;
 mod checks;
 pub mod circle;
 pub mod codes;
@@ -84,4 +86,13 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     ),
     // Öznitelikler's layer, colour, symbol, attributes and label ([`set`], docs/adr/0066).
     (CAD_ENTITIES_SET, CAD_ENTITIES_SET_VERSION),
+    // Blok oluştur and the Bloklar panel ([`blocks_define`], [`blocks_edit`], docs/adr/0144).
+    (
+        kentos_contracts::CAD_BLOCKS_DEFINE,
+        kentos_contracts::CAD_BLOCKS_DEFINE_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_BLOCKS_EDIT,
+        kentos_contracts::CAD_BLOCKS_EDIT_VERSION,
+    ),
 ];

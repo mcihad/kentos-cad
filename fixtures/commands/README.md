@@ -14,10 +14,12 @@ Aynı dosyaları iki uygulama koşar: web `apps/web/src/product/fixtures.test.ts
 | `v1/cad.circle.create.json` | `cad.circle.create` v1 (ADR 0032) | 23 |
 | `v1/cad.arc.create.json` | `cad.arc.create` v1 (ADR 0032) | 23 |
 | `v1/cad.entities.transform.json` | `cad.entities.transform` v1 (ADR 0037; hizalama ADR 0047) | 38 |
-| `v1/cad.entities.edit.json` | `cad.entities.edit` v1 (ADR 0047; `properties` işlemi, Öznitelikler; alan işlemleri, ADR 0065; tutamaçların `grip`, `straightEdge`, `arcEdge` işlemleri; ADR 0140'ın `split`, `reverse`, `simplify`, `cleanup` işlemleri; köşe kotunun taşınması, `elevation_lost` uyarısı ve Kot ver'in `elevation` işlemi, ADR 0142) | 61 |
+| `v1/cad.entities.edit.json` | `cad.entities.edit` v1 (ADR 0047; `properties` işlemi, Öznitelikler; alan işlemleri, ADR 0065; tutamaçların `grip`, `straightEdge`, `arcEdge` işlemleri; ADR 0140'ın `split`, `reverse`, `simplify`, `cleanup` işlemleri; köşe kotunun taşınması, `elevation_lost` uyarısı ve Kot ver'in `elevation` işlemi, ADR 0142; çok parçalı alan, ADR 0143; yerleştirmenin geometrisi ve Patlat'ın kendi alanlı `add`'leri, ADR 0144) | 73 |
 | `v1/cad.entities.array.json` | `cad.entities.array` v1 (ADR 0047; ADR 0140'ın `path` yerleşimi) | 30 |
-| `v1/cad.entities.create.json` | `cad.entities.create` v1 (ADR 0057; `hatch` işlemi ADR 0062; `boundary`, ADR 0065; Hesap pencerelerinin `traverse`, `polarSurvey`, `forwardIntersection`, `resection` işlemleri; ADR 0140'ın `pointsBetween`, `intersectPoint`, `dimensionChain`, `dimensionBaseline` işlemleri) | 33 |
-| `v1/cad.entities.set.json` | `cad.entities.set` v1 (Öznitelikler: katman, renk, sembol, öznitelik, etiket) | 30 |
+| `v1/cad.entities.create.json` | `cad.entities.create` v1 (ADR 0057; `hatch` işlemi ADR 0062; `boundary`, ADR 0065; Hesap pencerelerinin `traverse`, `polarSurvey`, `forwardIntersection`, `resection` işlemleri; ADR 0140'ın `pointsBetween`, `intersectPoint`, `dimensionChain`, `dimensionBaseline` işlemleri; blok yerleştirmesi, ADR 0144) | 36 |
+| `v1/cad.entities.set.json` | `cad.entities.set` v1 (Öznitelikler: katman, renk, kalınlık, sembol, öznitelik, etiket) | 32 |
+| `v1/cad.blocks.define.json` | `cad.blocks.define` v1 (ADR 0144: Blok oluştur) | 23 |
+| `v1/cad.blocks.edit.json` | `cad.blocks.edit` v1 (ADR 0144: Bloklar paneli) | 22 |
 
 ## Dosya
 
@@ -46,6 +48,7 @@ Aynı dosyaları iki uygulama koşar: web `apps/web/src/product/fixtures.test.ts
 | `undo`, `redo` | `returns` | Belgenin geri alması ya da yinelemesi; `returns` adımın adıdır (`"Ekle"`) ya da `null` |
 | `captureRevision` | `as` | Belgenin şimdiki sürümünü bu adla saklar |
 | `captureUid` | `id`, `as` | Nesnenin kalıcı kimliğini bu adla saklar |
+| `captureBlock` | `name`, `as` | Bu adlı blok tanımının kimliğini (ADR 0144) bu adla saklar |
 
 Her adımda `expect` (aşağıda) ve `note` de bulunabilir. Komut adımında `result` zorunludur.
 
@@ -64,6 +67,8 @@ Sürüm ve kalıcı kimlik iki uygulamada aynı sayı değildir; dosya onları a
 | `"$uid"` | — | yazılan nesnenin kalıcı kimliği: küçük harfli, tireli bir UUID ve `output.id` yuvasındaki nesnenin kimliği |
 | `$uid:ad` (bir metnin içinde de) | `captureUid` ile `ad` adıyla alınan kalıcı kimlik | aynı; bir iletinin içinde de (`“$uid:a” kimlikli nesne çizimde yok…`) |
 | `"$uidOf:22"` | 22 yuvasındaki nesnenin şimdiki kalıcı kimliği | aynı, adımdan sonra: bir komutun az önce yazdığı kopyanın kimliği |
+| `"$blockOf:Ad"` | çizimdeki o adlı bloğun kimliği (Türkçe harf katlamasıyla) | aynı, adımdan sonra: az önce tanımlanan bloğun kimliği; `expect.entities`'te de (yerleştirmenin `block`'u) |
+| `"$block:ad"` | `captureBlock` ile `ad` adıyla alınan blok kimliği | aynı; `expect.entities`'te de |
 
 **Sürüm neden yalnız karşılaştırılır?** Sürüm bir sayaçtır; sözleşmesi eşitliktir. Web açılışı bir kez sayar, masaüstü saymaz (ADR 0020). Kimlik yeni nesnede rastgeledir (UUIDv7, ADR 0014).
 
@@ -78,6 +83,8 @@ Yalnız yazılan alanlar denetlenir.
 | `canUndo`, `canRedo`, `dirty` | doğru/yanlış |
 | `revision` | `"same"`: adımdan önceki sürümle aynı; `"changed"`: farklı |
 | `uids` | `{ "kimlik": ad }`: nesnenin kalıcı kimliği `captureUid`'in bu adla sakladığıdır; `"new"`: saklananların hiçbiri değildir |
+| `blocks` | çizimin blok tanımları sırasıyla, her biri kimliği hariç, alan alan eşit (ADR 0144) |
+| `blockIds` | `{ "ad": kimlik }`: o adlı bloğun kimliği; `"new"`: kurulumdakilerin ve `captureBlock`'un sakladıklarının hiçbiri değildir; `"$block:ad"` ya da kimliğin kendisi |
 
 ## Kurallar
 

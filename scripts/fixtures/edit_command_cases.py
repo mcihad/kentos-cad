@@ -80,6 +80,7 @@ GEOMETRY = {
     "text": ["p", "text", "height", "rotation"],
     "dimension": ["a", "b", "offset", "height", "text", "style", "angle", "c"],
     "hatch": ["ring", "holes", "pattern"],
+    "insert": ["block", "p", "scale", "rotation", "mirror"],
 }
 
 
@@ -88,9 +89,12 @@ def E(i):
 
 
 def reshaped(e, geometry):
-    """`update` of the object `e`: another geometry; every other field of its own stays."""
+    """`update` of the object `e`: another geometry; every other field of its own stays.
+    An insert is mirrored or has no `mirror` (docs/adr/0144)."""
     out = {k: v for k, v in e.items() if k != "kind" and k not in GEOMETRY[e["kind"]]}
     out.update(json.loads(json.dumps(geometry)))
+    if out.get("kind") == "insert" and out.get("mirror") is not True:
+        out.pop("mirror", None)
     return out
 
 
@@ -753,7 +757,13 @@ def setup_lines(s, indent):
     out.append(f'{pad}  "entities": [')
     out.append(",\n".join(f"{pad}    {compact(e)}" for e in s["entities"]))
     out.append(f"{pad}  ],")
-    out.append(f'{pad}  "styles": {compact(s["styles"])}')
+    if "blocks" not in s:
+        out.append(f'{pad}  "styles": {compact(s["styles"])}')
+        return out
+    out.append(f'{pad}  "styles": {compact(s["styles"])},')
+    out.append(f'{pad}  "blocks": [')
+    out.append(",\n".join(f"{pad}    {compact(b)}" for b in s["blocks"]))
+    out.append(f"{pad}  ]")
     return out
 
 
@@ -1139,10 +1149,129 @@ cases.append({
     ],
 })
 
+
+# ── Blocks (docs/adr/0144) ────────────────────────────────────────────
+# An insert in a drawing of its own: Öznitelikler writes its placement (`update`), Patlat opens it into its
+# definition's objects, each an `add` with its own layer, colour, line weight, attributes and label when it has
+# them; what it does not give comes from the insert.
+ROGAR_ID = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"
+MISSING_BLOCK = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4fff"
+ROGAR_BLOCK = {"id": ROGAR_ID, "name": "Rögar", "base": P(0, 0), "entities": [
+    {"kind": "circle", "id": 1, "layerId": "0", "attrs": {}, "c": P(0, 0), "r": 1},
+    {"kind": "line", "id": 2, "layerId": "yapi", "color": "#3E63DD", "attrs": {"Tür": "Kapak"}, "label": "K", "lineWeight": 0.35, "a": P(-1, 0), "b": P(1, 0)},
+]}
+INSERT = {"kind": "insert", "id": 9, "layerId": "yapi", "color": "#E5484D", "attrs": {"NO": "R-1"}, "block": ROGAR_ID, "p": P(487080, 4420000), "scale": 2, "rotation": 0}
+B_SETUP = {**SETUP, "entities": ENTITIES + [INSERT], "blocks": [ROGAR_BLOCK]}
+B_IDS = IDS + [9]
+B_NOTHING = {"ids": B_IDS, "canUndo": False, "canRedo": False, "dirty": False, "revision": "same"}
+
+
+def placement(p, scale, rotation, mirror=None, block=ROGAR_ID):
+    g = {"kind": "insert", "block": block, "p": p, "scale": scale, "rotation": rotation}
+    if mirror is not None:
+        g["mirror"] = mirror
+    return g
+
+
+def B_E9():
+    return json.loads(json.dumps(INSERT))
+
+
+cases.append({
+    "name": "Öznitelikler: yerleştirmenin yeri, ölçeği, dönüşü ve aynalanması (update); öbür alanları kalır; false aynalama yazılmaz",
+    "setup": B_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": uid(9), "geometry": placement(P(487085, 4420005), 3, HALF_PI, True)}]},
+         "result": done(changed=[uid(9)]), "expect": {"entities": {"9": reshaped(B_E9(), placement(P(487085, 4420005), 3, HALF_PI, True))}, "revision": "changed"}},
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": uid(9), "geometry": placement(P(487085, 4420005), 3, HALF_PI, False)}]},
+         "result": done(changed=[uid(9)]), "expect": {"entities": {"9": reshaped(B_E9(), placement(P(487085, 4420005), 3, HALF_PI))}, "revision": "changed"}},
+        {"op": "undo", "returns": "Değiştir"},
+        {"op": "undo", "returns": "Değiştir", "expect": {"entities": {"9": B_E9()}, "canUndo": False}},
+    ],
+})
+
+cases.append({
+    "name": "Patlat: yerleştirme bloğunun nesnelerine açılır; parça kendi katmanı, rengi, kalınlığı, öznitelikleri ve etiketiyle, vermediği yerleştirmeninkidir; tek adım",
+    "setup": B_SETUP,
+    "steps": [
+        {"op": "captureUid", "id": 9, "as": "rogar"},
+        {"op": "execute", "input": {"operation": "explode", "changes": [
+            {"kind": "add", "from": "$uid:rogar", "geometry": {"kind": "circle", "c": P(487080, 4420000), "r": 2}},
+            {"kind": "add", "from": "$uid:rogar", "geometry": line(487078, 4420000, 487082, 4420000), "layerId": "yapi", "color": "#3E63DD", "lineWeight": 0.35, "attrs": {"Tür": "Kapak"}, "label": "K"},
+            {"kind": "remove", "uid": "$uid:rogar"}]},
+         "result": done(created=[uid(10), uid(11)], removed=["$uid:rogar"]),
+         "expect": {"ids": IDS + [10, 11], "entities": {
+             "10": {"kind": "circle", "id": 10, "layerId": "yapi", "color": "#E5484D", "attrs": {}, "c": P(487080, 4420000), "r": 2},
+             "11": {"kind": "line", "id": 11, "layerId": "yapi", "color": "#3E63DD", "attrs": {"Tür": "Kapak"}, "label": "K", "lineWeight": 0.35, "a": P(487078, 4420000), "b": P(487082, 4420000)}},
+             "uids": {"10": "new", "11": "new"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Patlat", "expect": {"ids": B_IDS, "entities": {"9": B_E9()}, "uids": {"9": "rogar"}, "canUndo": False}},
+    ],
+})
+
+cases.append({
+    "name": "add'in kendi katmanı: çizimde olmalı, grup olmamalı, kilitli olmamalı (kilitli grubun katmanı da); gizli katmana yazılır",
+    "setup": B_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "explode", "changes": [{"kind": "add", "from": uid(9), "geometry": line(487078, 4420000, 487082, 4420000), "layerId": "yok"}]},
+         "result": failed("layer_not_found", "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.", "changes[0].layerId"), "expect": B_NOTHING},
+        {"op": "execute", "input": {"operation": "explode", "changes": [{"kind": "add", "from": uid(9), "geometry": line(487078, 4420000, 487082, 4420000), "layerId": "arsiv"}]},
+         "result": failed("not_a_layer", "“Arşiv” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.", "changes[0].layerId"), "expect": B_NOTHING},
+        {"op": "execute", "input": {"operation": "explode", "changes": [{"kind": "add", "from": uid(9), "geometry": line(487078, 4420000, 487082, 4420000), "layerId": "kilitli"}]},
+         "result": failed("layer_locked", "“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.", "changes[0].layerId"), "expect": B_NOTHING},
+        {"op": "execute", "input": {"operation": "explode", "changes": [{"kind": "add", "from": uid(9), "geometry": line(487078, 4420000, 487082, 4420000), "layerId": "eski"}]},
+         "result": failed("layer_locked", "“Eski” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.", "changes[0].layerId"), "expect": B_NOTHING},
+        {"op": "execute", "input": {"operation": "explode", "changes": [{"kind": "add", "from": uid(9), "geometry": line(487078, 4420000, 487082, 4420000), "layerId": "gizli"}]},
+         "result": done(created=[uid(10)]), "expect": {"entities": {"10": {"kind": "line", "id": 10, "layerId": "gizli", "color": "#E5484D", "attrs": {}, "a": P(487078, 4420000), "b": P(487082, 4420000)}}, "revision": "changed"}},
+    ],
+})
+
+WEIGHT = "Çizgi kalınlığı 0 ile 100 mm arasında bir sayı olmalı (0 en ince çizgidir). Bir kalınlık ya da “Katmana göre” seçin."
+
+cases.append({
+    "name": "add'in kendi kalınlığı 0 ile 100 mm arasındadır; değişikliğin geometrisinden sonra, sonrakinden önce denetlenir",
+    "setup": B_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "explode", "changes": [
+            {"kind": "add", "from": uid(9), "geometry": line(487078, 4420000, 487082, 4420000), "lineWeight": 101},
+            {"kind": "add", "from": uid(9), "geometry": {"kind": "polyline", "pts": [P(487078, 4420000)]}}]},
+         "result": failed("invalid_line_weight", WEIGHT, "changes[0].lineWeight"), "expect": B_NOTHING},
+        {"op": "execute", "input": {"operation": "explode", "changes": [{"kind": "add", "from": uid(9), "geometry": line(487078, 4420000, 487082, 4420000), "lineWeight": 1}]},
+         "nonFinite": {"changes[0].lineWeight": "NaN"}, "result": failed("invalid_line_weight", WEIGHT, "changes[0].lineWeight"), "expect": B_NOTHING},
+        {"op": "execute", "input": {"operation": "explode", "changes": [{"kind": "add", "from": uid(9), "geometry": line(487078, 4420000, 487082, 4420000), "lineWeight": 0}]},
+         "result": done(created=[uid(10)]), "expect": {"entities": {"10": {"kind": "line", "id": 10, "layerId": "yapi", "color": "#E5484D", "attrs": {}, "lineWeight": 0, "a": P(487078, 4420000), "b": P(487082, 4420000)}}, "revision": "changed"}},
+    ],
+})
+
+cases.append({
+    "name": "yerleştirmenin bloğu çizimin olmalı: unknown_block; kilitli katman denetiminden sonra",
+    "setup": B_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": uid(9), "geometry": placement(P(487080, 4420000), 2, 0, block=MISSING_BLOCK)}]},
+         "result": failed("unknown_block", f"“{MISSING_BLOCK}” kimlikli blok çizimde tanımlı değil: silinmiş ya da başka bir çizimin olabilir. Çizimde tanımlı bir bloğun kimliğini verin.", "changes[0].geometry.block"), "expect": B_NOTHING},
+        {"op": "execute", "input": {"operation": "properties", "changes": [
+            {"kind": "update", "uid": uid(9), "geometry": placement(P(487080, 4420000), 2, 0, block=MISSING_BLOCK)},
+            {"kind": "update", "uid": uid(5), "geometry": line(487000, 4420031, 487010, 4420031)}]},
+         "result": failed("layer_locked", "“Kilitli katman” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın.", "changes[1].uid"), "expect": B_NOTHING},
+    ],
+})
+
+cases.append({
+    "name": "yerleştirmenin ölçeği sıfırdan büyük olmalı: invalid_scale; sonlu değilse not_finite",
+    "setup": B_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": uid(9), "geometry": placement(P(487080, 4420000), 0, 0)}]},
+         "result": failed("invalid_scale", "Blok ölçeği sıfırdan büyük olmalı. Pozitif bir ölçek verin.", "changes[0].geometry.scale"), "expect": B_NOTHING},
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": uid(9), "geometry": placement(P(487080, 4420000), -2, 0)}]},
+         "result": failed("invalid_scale", "Blok ölçeği sıfırdan büyük olmalı. Pozitif bir ölçek verin.", "changes[0].geometry.scale"), "expect": B_NOTHING},
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": uid(9), "geometry": placement(P(487080, 4420000), 2, 0)}]},
+         "nonFinite": {"changes[0].geometry.scale": "NaN"}, "result": failed("not_finite", "1. değişikliğin geometrisinde sonlu olmayan bir değer var (NaN ya da sonsuz). Geometriyi sonlu sayılarla verin.", "changes[0].geometry"), "expect": B_NOTHING},
+    ],
+})
+
 write(
     "cad.entities.edit",
     "Nesneleri düzenle: doğrulama, plan, yazma, geri alma",
-    "ADR 0047. Denetim sırası: en az bir değişiklik; her değişikliğin kimliğinin yazımı (add'de from); her geometrinin nokta sayısı, yazının boş olmayan metni, sonlu sayıları ve yarıçapı; beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması; bir nesnenin tek değişiklikle değişmesi; hiçbir nesnenin kilitli katmanda olmaması (düzenleme bütün yazılır ya da hiç). update yalnız geometriyi değiştirir; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır, simgesi gelmez; add bir nesneden yeni nesne yapar, onun katmanını ve rengini alır. Adım işlemin adıdır: Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle, Köşe sil, Esnet; Öznitelikler'in (properties) adımı Değiştir; alan araçlarınınki Alan birleştir, Alan kesiştir, Alan çıkar, Alan böl, Alana çevir, Çizgiye çevir, Parçaları birleştir, Parçalara ayır; ADR 0140'ın araçlarınınki Parçala, Yönü çevir, Sadeleştir, Çizimi temizle (Tüm köşeleri yuvarla ve Tüm köşelere pah Köşe yuvarla ve Pah'tır). Kapalı alanın halkası (dış halka ya da delik) en az 3 köşelidir; iki kenarından biri yaysa (yay değeri 0 değil; verilmeyen 0 sayılır) 2 köşeli olabilir. Taramanın halkası en az 3 köşelidir. Kurulumdaki en büyük kimlik 8; yeni nesneler 9'dan başlar; properties durumlarının kendi kurulumu vardır. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+    "ADR 0047. Denetim sırası: en az bir değişiklik; her değişikliğin kimliğinin yazımı (add'de from); her geometrinin nokta sayısı, yazının boş olmayan metni, sonlu sayıları ve yarıçapı; beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması; bir nesnenin tek değişiklikle değişmesi; hiçbir nesnenin kilitli katmanda olmaması (düzenleme bütün yazılır ya da hiç). update yalnız geometriyi değiştirir; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır, simgesi gelmez; add bir nesneden yeni nesne yapar, onun katmanını ve rengini alır. Adım işlemin adıdır: Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle, Köşe sil, Esnet; Öznitelikler'in (properties) adımı Değiştir; alan araçlarınınki Alan birleştir, Alan kesiştir, Alan çıkar, Alan böl, Alana çevir, Çizgiye çevir, Parçaları birleştir, Parçalara ayır; ADR 0140'ın araçlarınınki Parçala, Yönü çevir, Sadeleştir, Çizimi temizle (Tüm köşeleri yuvarla ve Tüm köşelere pah Köşe yuvarla ve Pah'tır). Kapalı alanın halkası (dış halka ya da delik) en az 3 köşelidir; iki kenarından biri yaysa (yay değeri 0 değil; verilmeyen 0 sayılır) 2 köşeli olabilir. Taramanın halkası en az 3 köşelidir. add'e verilen katman, renk, kalınlık, öznitelik ve etiket yeni nesnenin kendisinindir; katmanı çizimde olmalı, grup ve kilitli olmamalı; kalınlığı 0 ile 100 mm arasındadır; yerleştirmenin bloğu çizimin olmalı (unknown_block), ölçeği sıfırdan büyük (invalid_scale), aynalama yalnız true yazılır (ADR 0144). Kurulumdaki en büyük kimlik 8; yeni nesneler 9'dan başlar; properties ve blok durumlarının kendi kurulumu vardır. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
     cases,
 )
 print(f"{len(cases)} cases" + (" match" if "--check" in sys.argv[1:] else " written"))

@@ -35,12 +35,26 @@ class Case:
         self.at = at
         self.revisions: dict[str, str] = {}
         self.uids: dict[str, str] = {}
+        # Block ids taken by `captureBlock`, and the setup's (docs/adr/0144).
+        self.blocks: dict[str, str] = {}
+        self.setup_blocks = [b.id for b in self.doc.blocks()]
 
     def slots(self) -> dict[int, cad.Record]:
         return {r.entity.id: r for r in self.doc.entities(page_size=10_000)}
 
+    def block_named(self, name: str) -> cad.BlockDefinition | None:
+        """The drawing's block of that name, Turkish case folded."""
+        key = fold(name)
+        return next((b for b in self.doc.blocks() if fold(b.name) == key), None)
+
     def fill(self, value: Any, at: str) -> Any:
         if isinstance(value, str):
+            if value.startswith("$blockOf:"):
+                block = self.block_named(value[len("$blockOf:"):])
+                assert block is not None, f"{at}: {value}: no such block"
+                return block.id
+            if value.startswith("$block:"):
+                return self.blocks[value[len("$block:"):]]
             if value.startswith("$uidOf:"):
                 slot = int(value[len("$uidOf:"):])
                 record = self.slots().get(slot)
@@ -73,6 +87,10 @@ class Case:
                 self.revisions[step["as"]] = self.doc.revision
             elif op == "captureUid":
                 self.uids[step["as"]] = self.slots()[step["id"]].uid
+            elif op == "captureBlock":
+                block = self.block_named(step["name"])
+                assert block is not None, f"{at}: no block {step['name']}"
+                self.blocks[step["as"]] = block.id
             else:
                 raise AssertionError(f"{at}: unknown op {op}")
             self.check(step.get("expect"), before, at)
@@ -111,7 +129,7 @@ class Case:
                 slots = self.slots()
                 for slot, entity in want.items():
                     record = slots.get(int(slot))
-                    same(None if record is None else record.entity.to_json(), entity, f"{at}: object {slot}")
+                    same(None if record is None else record.entity.to_json(), self.block_ids(entity, at), f"{at}: object {slot}")
             elif key in ("canUndo", "canRedo", "dirty"):
                 flag = {"canUndo": info.can_undo, "canRedo": info.can_redo, "dirty": info.dirty}[key]
                 assert flag == want, f"{at}: {key} {flag}"
@@ -126,8 +144,38 @@ class Case:
                         assert uid not in self.uids.values(), f"{at}: {slot} is not new"
                     else:
                         assert self.uids[name] == uid, f"{at}: {slot} is not {name}"
+            elif key == "blocks":
+                got = []
+                for b in self.doc.blocks():
+                    data = b.to_json()
+                    data.pop("id")
+                    got.append(data)
+                same(got, want, f"{at}: blocks")
+            elif key == "blockIds":
+                for name, id in want.items():
+                    block = self.block_named(name)
+                    assert block is not None, f"{at}: no block {name}"
+                    if id == "new":
+                        assert block.id not in self.setup_blocks and block.id not in self.blocks.values(), f"{at}: {name} is not new"
+                    else:
+                        assert block.id == self.fill(id, at), f"{at}: {name} is {block.id}"
             else:
                 raise AssertionError(f"{at}: unknown expectation {key}")
+
+    def block_ids(self, value: Any, at: str) -> Any:
+        """An expected object with its block ids filled in (`$blockOf:Ad`, `$block:name`); nothing else is a placeholder."""
+        if isinstance(value, str):
+            return self.fill(value, at) if value.startswith(("$blockOf:", "$block:")) else value
+        if isinstance(value, list):
+            return [self.block_ids(v, at) for v in value]
+        if isinstance(value, dict):
+            return {k: self.block_ids(v, at) for k, v in value.items()}
+        return value
+
+
+def fold(name: str) -> str:
+    """A block name as names are compared: Turkish I (I → ı, İ → i), then lower case, character by character."""
+    return "".join("ı" if c == "I" else "i" if c == "İ" else c.lower() for c in name)
 
 
 def wire(outcome: cad.Outcome[Any]) -> dict[str, Any]:

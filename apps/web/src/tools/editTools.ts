@@ -3,7 +3,7 @@ import type { EntityEdit } from '../contracts/generated/EntityEdit';
 import type { EntityGeometry as EditGeometry } from '../contracts/generated/EntityGeometry';
 import type { NewObject } from '../contracts/generated/NewObject';
 import { Signal } from '../core/signal';
-import { ENTITY_KIND_LABEL, type Entity, type NewEntity } from '../model/entities';
+import { ENTITY_KIND_LABEL, type Entity, type EntityGeometry, type NewEntity } from '../model/entities';
 import { dist, type Bounds, type Vec2 } from '../model/geometry';
 import { translation } from '../model/geom/affine';
 import { dimensionLabel } from '../model/geom/dimension';
@@ -84,6 +84,26 @@ export class JoinTool extends SelectionActionTool {
   }
 }
 
+/**
+ * A block's object exploded from the insert `from` (docs/adr/0144): an `add` with the object's own layer when the
+ * drawing has it as a layer (else the insert's), its colour and line weight (the insert's when it has none: the core
+ * gives them), its attributes and label.
+ */
+function blockPiece(ctx: AppContext, from: string, piece: EntityGeometry & Record<string, unknown>): EntityEdit {
+  const layer = typeof piece.layerId === 'string' && ctx.doc.layers.get(piece.layerId)?.type === 'layer' ? piece.layerId : undefined;
+  const attrs = piece.attrs && typeof piece.attrs === 'object' ? (piece.attrs as Record<string, string>) : undefined;
+  return {
+    kind: 'add',
+    from,
+    geometry: editGeometry(piece),
+    ...(layer !== undefined && { layerId: layer }),
+    ...(typeof piece.color === 'string' && { color: piece.color }),
+    ...(typeof piece.lineWeight === 'number' && { lineWeight: piece.lineWeight }),
+    ...(attrs && { attrs: { ...attrs } }),
+    ...(typeof piece.label === 'string' && { label: piece.label }),
+  };
+}
+
 export class ExplodeTool extends SelectionActionTool {
   readonly id = 'explode';
   protected readonly label = 'Patlat';
@@ -96,14 +116,22 @@ export class ExplodeTool extends SelectionActionTool {
     let exploded = 0;
     let firstError: string | null = null;
     for (const e of targets) {
-      const r = explodeEntity(e, (l) => dimensionLabel(undefined, l, { length: (m) => format.length(m, false), angle: (a) => format.angle(a) }), this.ctx.doc.settings.drawingFont.value);
+      // A block's insert opens into its definition's objects, one level (docs/adr/0144): each keeps its own layer,
+      // colour, line weight and data; what it lacks is the insert's.
+      const r =
+        e.kind === 'insert'
+          ? this.ctx.view.explodeInsert(e)
+          : explodeEntity(e, (l) => dimensionLabel(undefined, l, { length: (m) => format.length(m, false), angle: (a) => format.angle(a) }), this.ctx.doc.settings.drawingFont.value);
       if ('error' in r) {
         firstError ??= r.error;
         continue;
       }
       const uid = uidOf(this.ctx, e);
       exploded++;
-      changes.push({ kind: 'remove', uid }, ...r.pieces.map((piece): EntityEdit => ({ kind: 'add', from: uid, geometry: editGeometry(piece) })));
+      changes.push(
+        { kind: 'remove', uid },
+        ...r.pieces.map((piece): EntityEdit => (e.kind === 'insert' ? blockPiece(this.ctx, uid, piece as EntityGeometry & Record<string, unknown>) : { kind: 'add', from: uid, geometry: editGeometry(piece) })),
+      );
     }
     if (firstError && !exploded) return log.warn(firstError);
     const out = writeEdit(this.ctx, 'explode', changes);

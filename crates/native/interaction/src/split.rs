@@ -363,11 +363,7 @@ fn write_pieces(parts: &[(Slot, Vec<Shape>)], cx: &mut Context<'_>) -> Option<(u
             keep_data: Some(true),
         });
         for geometry in geometries {
-            changes.push(EntityEdit::Add {
-                from: uid.clone(),
-                geometry,
-                keep_data: Some(true),
-            });
+            changes.push(EntityEdit::add(uid.clone(), geometry, Some(true)));
         }
     }
     if changes.is_empty() {

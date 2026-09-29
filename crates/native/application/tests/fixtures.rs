@@ -10,7 +10,10 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use kentos_domain::contracts::{CAD_ENTITIES_SET, EntitiesCreate, EntitiesSetProperties};
+use kentos_domain::contracts::{
+    BlockId, BlocksDefine, BlocksEdit, CAD_BLOCKS_DEFINE, CAD_BLOCKS_EDIT, CAD_ENTITIES_SET,
+    EntitiesCreate, EntitiesSetProperties,
+};
 use kentos_domain::contracts::{
     ArcCreate, ArrayLayout, CAD_ARC_CREATE, CAD_CIRCLE_CREATE, CAD_ENTITIES_ARRAY,
     CAD_ENTITIES_DELETE, CAD_ENTITIES_EDIT, CAD_ENTITIES_TRANSFORM, CAD_LINE_CREATE,
@@ -21,8 +24,8 @@ use kentos_domain::contracts::{
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::create;
 use kentos_native_application::{
-    DESKTOP_COMMANDS, ExecutionContext, arc, array, circle, delete, edit, line, point, polygon,
-    polyline, set, transform,
+    DESKTOP_COMMANDS, ExecutionContext, arc, array, blocks_define, blocks_edit, circle, delete,
+    edit, line, point, polygon, polyline, set, transform,
 };
 use serde_json::{Value, json};
 
@@ -34,6 +37,10 @@ struct State {
     revisions: HashMap<String, String>,
     /// Persistent ids taken by `captureUid`.
     uids: HashMap<String, Uuid>,
+    /// Block ids taken by `captureBlock` (docs/adr/0144).
+    blocks: HashMap<String, BlockId>,
+    /// The ids of the setup's definitions: a new one is none of them.
+    setup_blocks: Vec<BlockId>,
 }
 
 const STEP_KEYS: &[&str] = &[
@@ -44,6 +51,7 @@ const STEP_KEYS: &[&str] = &[
     "returns",
     "as",
     "id",
+    "name",
     "expect",
     "note",
 ];
@@ -74,9 +82,26 @@ fn expect_same(got: &Value, want: &Value, what: &str, at: &str) -> Outcome<()> {
 /// document's revision now, `$name` one `captureRevision` took; `$uid:name`,
 /// anywhere in a text (an id list, a message), the persistent id
 /// `captureUid` took, lowercase with hyphens; `$uidOf:12`, the persistent id
-/// the object in slot 12 has now (a copy a command just wrote).
+/// the object in slot 12 has now (a copy a command just wrote);
+/// `$blockOf:Rögar`, the id of the drawing's block of that name now, and
+/// `$block:name`, one `captureBlock` took (docs/adr/0144).
 fn fill(value: &Value, doc: &Document, state: &State, at: &str) -> Outcome<Value> {
     Ok(match value {
+        Value::String(text) if text.starts_with("$blockOf:") => {
+            let name = &text["$blockOf:".len()..];
+            let block = doc
+                .block_named(name)
+                .ok_or_else(|| format!("{at}: “{name}” bloğu çizimde yok"))?;
+            Value::String(block.id.to_text())
+        }
+        Value::String(text) if text.starts_with("$block:") => {
+            let name = &text["$block:".len()..];
+            let id = state
+                .blocks
+                .get(name)
+                .ok_or_else(|| format!("{at}: “{name}” blok kimliği alınmadı"))?;
+            Value::String(id.to_text())
+        }
         Value::String(text) if text.starts_with("$uidOf:") => {
             let slot = text["$uidOf:".len()..]
                 .parse::<u32>()
@@ -110,6 +135,29 @@ fn fill(value: &Value, doc: &Document, state: &State, at: &str) -> Outcome<Value
             fields
                 .iter()
                 .map(|(k, v)| Ok((k.clone(), fill(v, doc, state, at)?)))
+                .collect::<Outcome<_>>()?,
+        ),
+        other => other.clone(),
+    })
+}
+
+/// An expected object with its block ids filled in (`$blockOf:Ad`,
+/// `$block:name`, docs/adr/0144); nothing else of it is read as a placeholder.
+fn block_ids(value: &Value, doc: &Document, state: &State, at: &str) -> Outcome<Value> {
+    Ok(match value {
+        Value::String(text) if text.starts_with("$blockOf:") || text.starts_with("$block:") => {
+            fill(value, doc, state, at)?
+        }
+        Value::Array(items) => Value::Array(
+            items
+                .iter()
+                .map(|v| block_ids(v, doc, state, at))
+                .collect::<Outcome<_>>()?,
+        ),
+        Value::Object(fields) => Value::Object(
+            fields
+                .iter()
+                .map(|(k, v)| Ok((k.clone(), block_ids(v, doc, state, at)?)))
                 .collect::<Outcome<_>>()?,
         ),
         other => other.clone(),
@@ -224,6 +272,20 @@ impl Input for EntitiesDelete {
     /// No number: the input is ids.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
+    }
+}
+
+impl Input for BlocksDefine {
+    /// `base.x`, `base.y`.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        coordinate(&mut self.base, "base", path)
+    }
+}
+
+impl Input for BlocksEdit {
+    /// `base.x`, `base.y` (which the step's input must give).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        coordinate(self.base.as_mut()?, "base", path)
     }
 }
 
@@ -345,6 +407,16 @@ impl Input for EntitiesEdit {
     /// `changes[0].geometry.a.x`, `changes[1].geometry.r`, `changes[0].geometry.pts[1].y`,
     /// `changes[2].geometry.bulges[0]` …
     fn number(&mut self, path: &str) -> Option<&mut f64> {
+        // An add's own line weight (docs/adr/0144): `changes[0].lineWeight`.
+        if let Some(i) = path
+            .strip_prefix("changes[")
+            .and_then(|rest| rest.strip_suffix("].lineWeight"))
+        {
+            return match self.changes.get_mut(i.parse::<usize>().ok()?)? {
+                EntityEdit::Add { line_weight, .. } => line_weight.as_mut(),
+                _ => None,
+            };
+        }
         let (i, rest) = path.strip_prefix("changes[")?.split_once("].geometry.")?;
         let geometry = match self.changes.get_mut(i.parse::<usize>().ok()?)? {
             EntityEdit::Update { geometry, .. }
@@ -473,6 +545,13 @@ fn geometry_number<'a>(geometry: &'a mut EntityGeometry, rest: &str) -> Option<&
             "height" => Some(height),
             _ => coordinate(a, "a", rest).or_else(|| coordinate(b, "b", rest)),
         },
+        EntityGeometry::Insert {
+            p, scale, rotation, ..
+        } => match rest {
+            "scale" => Some(scale),
+            "rotation" => Some(rotation),
+            _ => coordinate(p, "p", rest),
+        },
         EntityGeometry::Hatch { ring, pattern, .. } => match rest {
             "pattern.angle" => Some(&mut pattern.angle),
             "pattern.spacing" => Some(&mut pattern.spacing),
@@ -552,6 +631,8 @@ fn run_op(
         CAD_ENTITIES_ARRAY => run!(array, EntitiesArray),
         kentos_domain::contracts::CAD_ENTITIES_CREATE => run!(create, EntitiesCreate),
         CAD_ENTITIES_SET => run!(set, EntitiesSetProperties),
+        CAD_BLOCKS_DEFINE => run!(blocks_define, BlocksDefine),
+        CAD_BLOCKS_EDIT => run!(blocks_edit, BlocksEdit),
         other => return Err(format!("{at}: {other} için koşucu yok")),
     }
     .map_err(|e| format!("{at}: sonuç yazılamadı: {e}"))
@@ -624,6 +705,15 @@ fn run_step(
                 .revisions
                 .insert(name.to_owned(), doc.revision().to_string());
         }
+        "captureBlock" => {
+            let name = step["as"].as_str().ok_or(format!("{at}: “as” yok"))?;
+            let block = step["name"].as_str().ok_or(format!("{at}: “name” yok"))?;
+            let id = doc
+                .block_named(block)
+                .map(|b| b.id)
+                .ok_or(format!("{at}: “{block}” bloğu yok"))?;
+            state.blocks.insert(name.to_owned(), id);
+        }
         "captureUid" => {
             let name = step["as"].as_str().ok_or(format!("{at}: “as” yok"))?;
             let id = step["id"].as_u64().and_then(|n| u32::try_from(n).ok());
@@ -669,7 +759,8 @@ fn check(
                         .transpose()
                         .map_err(|e| format!("{at}: {e}"))?
                         .unwrap_or(Value::Null);
-                    expect_same(&got, entity, &format!("nesne {id}"), at)?;
+                    let entity = block_ids(entity, doc, state, at)?;
+                    expect_same(&got, &entity, &format!("nesne {id}"), at)?;
                 }
             }
             "canUndo" => expect_same(&json!(doc.can_undo()), want, "canUndo", at)?,
@@ -708,6 +799,50 @@ fn check(
                     }
                 }
             }
+            // The drawing's definitions in order, each without its id (docs/adr/0144).
+            "blocks" => {
+                let got: Vec<Value> = doc
+                    .blocks()
+                    .iter()
+                    .map(|b| {
+                        let mut v = serde_json::to_value(&**b).map_err(|e| format!("{at}: {e}"))?;
+                        if let Some(fields) = v.as_object_mut() {
+                            fields.remove("id");
+                        }
+                        Ok(v)
+                    })
+                    .collect::<Outcome<_>>()?;
+                expect_same(&json!(got), want, "bloklar", at)?;
+            }
+            // A definition's id by its name: "new" (none the setup had nor
+            // `captureBlock` took), "$block:name" or the id itself.
+            "blockIds" => {
+                for (name, id) in want.as_object().unwrap_or(&empty) {
+                    let got = doc
+                        .block_named(name)
+                        .map(|b| b.id)
+                        .ok_or(format!("{at}: “{name}” bloğu yok"))?;
+                    match id.as_str() {
+                        Some("new")
+                            if state.setup_blocks.contains(&got)
+                                || state.blocks.values().any(|b| *b == got) =>
+                        {
+                            return Err(format!("{at}: “{name}” bloğunun kimliği yeni değil"));
+                        }
+                        Some("new") => {}
+                        Some(text) => {
+                            let wanted = fill(&json!(text), doc, state, at)?;
+                            expect_same(
+                                &json!(got.to_text()),
+                                &wanted,
+                                &format!("“{name}” bloğunun kimliği"),
+                                at,
+                            )?;
+                        }
+                        None => return Err(format!("{at}: blok kimliği metin olmalı")),
+                    }
+                }
+            }
             // A misspelt expectation would otherwise pass unchecked.
             other => return Err(format!("{at}: bilinmeyen beklenti “{other}”")),
         }
@@ -726,7 +861,10 @@ fn run_case(command: &str, setup: &Value, case: &Value, at: &str) -> Outcome<()>
     if steps.is_empty() {
         return Err(format!("{at}: adım yok"));
     }
-    let mut state = State::default();
+    let mut state = State {
+        setup_blocks: doc.blocks().iter().map(|b| b.id).collect(),
+        ..State::default()
+    };
     for (i, step) in steps.iter().enumerate() {
         let op = step["op"].as_str().unwrap_or("?");
         run_step(

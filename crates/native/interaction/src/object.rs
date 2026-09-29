@@ -14,7 +14,9 @@
 //! - Patlat: a polyline or a closed area comes apart into lines and arcs, a
 //!   spline into a polyline, a dimension into lines and its text, a
 //!   patterned hatch into lines; the pieces are new objects from it (its
-//!   layer and colour) and become the selection.
+//!   layer and colour) and become the selection. A block's insert opens into
+//!   its definition's objects, one level, each with its own layer, colour
+//!   and data (docs/adr/0144).
 //!
 //! Both write one undo step through `cad.entities.edit`. The chains and the
 //! pieces are the shared core's (`join_entities`, `explode_entity`).
@@ -29,6 +31,7 @@ use kentos_geometry_core::ops::curve_cuts::Cut;
 use kentos_geometry_core::ops::explode::explode_entity;
 use kentos_geometry_core::ops::join::join_entities;
 use kentos_geometry_core::tools::point_text::parse_number;
+use kentos_native_application::blocks::core_entity;
 use kentos_native_application::geometry::{drawing_font, shape};
 
 use crate::Vec2;
@@ -217,7 +220,16 @@ impl ObjectAction {
         let mut first_error: Option<String> = None;
         for slot in targets {
             let Some(e) = cx.doc.get(*slot) else { continue };
-            match explode_entity(&shape(e), &Self::value_text(e, &f), font) {
+            // A block's insert opens into its definition's objects, one level
+            // (docs/adr/0144): each keeps its own layer, colour, line weight
+            // and data; what it lacks is the insert's.
+            let cut = if let Entity::Insert(_) = e {
+                cx.spatial.store().blocks().explode(&core_entity(e))
+            } else {
+                explode_entity(&shape(e), &Self::value_text(e, &f), font)
+            };
+            let insert = matches!(e, Entity::Insert(_));
+            match cut {
                 Cut::Error(error) => {
                     first_error.get_or_insert(error);
                 }
@@ -226,13 +238,14 @@ impl ObjectAction {
                     exploded += 1;
                     changes.push(EntityEdit::Remove { uid: uid.clone() });
                     for piece in pieces {
-                        if let Some(geometry) = edge::geometry(&piece.shape) {
-                            changes.push(EntityEdit::Add {
-                                from: uid.clone(),
-                                geometry,
-                                keep_data: None,
-                            });
-                        }
+                        let Some(geometry) = edge::geometry(&piece.shape) else {
+                            continue;
+                        };
+                        changes.push(if insert {
+                            block_piece(cx.doc, &uid, geometry, &piece)
+                        } else {
+                            EntityEdit::add(uid.clone(), geometry, None)
+                        });
                     }
                 }
             }
@@ -261,6 +274,54 @@ impl ObjectAction {
             Level::Success,
             format!("{exploded} nesne patlatıldı: {n} parça.{skipped}"),
         );
+    }
+}
+
+/// A block's object exploded from the insert `from` (docs/adr/0144): an
+/// `add` with the object's own layer when the drawing has it as a layer (else
+/// the insert's), its colour and line weight (the insert's when it has none:
+/// the core gives them), its attributes and label.
+fn block_piece(
+    doc: &kentos_domain::Document,
+    from: &str,
+    geometry: kentos_contracts::EntityGeometry,
+    piece: &CoreEntity,
+) -> EntityEdit {
+    let field = |name: &str| piece.rest.iter().find(|(k, _)| k == name).map(|(_, v)| v);
+    let text = |name: &str| match field(name) {
+        Some(Json::Str(s)) => Some(s.clone()),
+        _ => None,
+    };
+    let layer_id = text("layerId").filter(|id| {
+        doc.layers()
+            .get(id)
+            .is_some_and(|n| n.kind == kentos_contracts::LayerNodeType::Layer)
+    });
+    let line_weight = match field("lineWeight") {
+        Some(Json::Num(w)) => Some(*w),
+        _ => None,
+    };
+    let attrs = match field("attrs") {
+        Some(Json::Obj(fields)) => Some(
+            fields
+                .iter()
+                .filter_map(|(k, v)| match v {
+                    Json::Str(s) => Some((k.clone(), s.clone())),
+                    _ => None,
+                })
+                .collect(),
+        ),
+        _ => None,
+    };
+    EntityEdit::Add {
+        from: from.to_owned(),
+        geometry,
+        keep_data: None,
+        layer_id,
+        color: text("color"),
+        line_weight,
+        attrs,
+        label: text("label"),
     }
 }
 

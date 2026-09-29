@@ -154,6 +154,11 @@ impl PySession {
         text(self.inner.layers())
     }
 
+    /// The block definitions in the drawing's order (docs/adr/0144).
+    fn blocks(&self) -> PyResult<String> {
+        text(&self.inner.blocks())
+    }
+
     /// A page of objects: `bbox` is `(min_x, min_y, max_x, max_y)`, `after`
     /// the cursor a page gave.
     #[pyo3(signature = (layer = None, kinds = None, bbox = None, after = None, limit = None))]

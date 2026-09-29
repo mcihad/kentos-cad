@@ -141,6 +141,11 @@ impl Session {
         self.doc.layers().nodes()
     }
 
+    /// The block definitions in the drawing's order (docs/adr/0144).
+    pub fn blocks(&self) -> Vec<&kentos_contracts::BlockDefinition> {
+        self.doc.blocks().iter().map(|b| &**b).collect()
+    }
+
     /// A page of objects.
     pub fn entities(
         &self,

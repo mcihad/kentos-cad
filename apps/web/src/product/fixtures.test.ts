@@ -29,6 +29,10 @@ interface Expect {
   revision?: 'same' | 'changed';
   /** Object → the name of a persistent id taken with `captureUid`, or "new": one taken by none. */
   uids?: Record<string, string>;
+  /** The drawing's block definitions in order, each without its id (docs/adr/0144). */
+  blocks?: Json[];
+  /** A definition's name → its id: "new" (none the setup had nor `captureBlock` took), "$block:name" or the id itself. */
+  blockIds?: Record<string, string>;
 }
 
 interface Step {
@@ -39,6 +43,7 @@ interface Step {
   returns?: Json;
   as?: string;
   id?: number;
+  name?: string;
   expect?: Expect;
   note?: string;
 }
@@ -59,8 +64,8 @@ interface Fixture {
   cases: Case[];
 }
 
-const STEP_KEYS: readonly string[] = ['op', 'input', 'nonFinite', 'result', 'returns', 'as', 'id', 'expect', 'note'];
-const EXPECT_KEYS: readonly string[] = ['ids', 'entities', 'canUndo', 'canRedo', 'dirty', 'revision', 'uids'];
+const STEP_KEYS: readonly string[] = ['op', 'input', 'nonFinite', 'result', 'returns', 'as', 'id', 'name', 'expect', 'note'];
+const EXPECT_KEYS: readonly string[] = ['ids', 'entities', 'canUndo', 'canRedo', 'dirty', 'revision', 'uids', 'blocks', 'blockIds'];
 const NON_FINITE = { NaN: Number.NaN, Infinity: Number.POSITIVE_INFINITY, '-Infinity': Number.NEGATIVE_INFINITY } as const;
 
 const files = import.meta.glob<string>('../../../../fixtures/commands/v1/*.json', { query: '?raw', import: 'default', eager: true });
@@ -80,6 +85,9 @@ class Run {
   private readonly command: ProductCommand<unknown, unknown, unknown>;
   private readonly revisions = new Map<string, string>();
   private readonly uids = new Map<string, string>();
+  /** Block ids taken by `captureBlock`, and the setup's (docs/adr/0144). */
+  private readonly blocks = new Map<string, string>();
+  private readonly setupBlocks: readonly string[];
 
   constructor(setup: Json, command: ProductCommand<unknown, unknown, unknown>) {
     this.command = command;
@@ -87,14 +95,26 @@ class Run {
     if (!read.ok) throw new Error(`Kurulum dosyası okunamadı: ${read.error}`);
     this.doc = new CadDocument({ name: read.content.name, layers: new LayerStore([], ''), origin: read.content.origin });
     this.doc.replaceWith(read.content);
+    this.setupBlocks = this.doc.blocks.value.map((b) => b.id);
   }
 
   /**
    * `value` with its `$…` placeholders filled in: `$current` is the revision now, `$name` one taken by
    * `captureRevision`; `$uid:name`, anywhere in a text (an id list, a message), the persistent id taken by `captureUid`;
-   * `$uidOf:12`, the persistent id the object in slot 12 has now (a copy a command just wrote).
+   * `$uidOf:12`, the persistent id the object in slot 12 has now (a copy a command just wrote); `$blockOf:Rögar`,
+   * the id of the drawing's block of that name now, and `$block:name`, one `captureBlock` took (docs/adr/0144).
    */
   private fill(value: Json, where: string): Json {
+    if (typeof value === 'string' && value.startsWith('$blockOf:')) {
+      const block = this.doc.blockNamed(value.slice('$blockOf:'.length));
+      if (!block) throw new Error(`${where}: ${value}: o adda blok yok`);
+      return block.id;
+    }
+    if (typeof value === 'string' && value.startsWith('$block:')) {
+      const id = this.blocks.get(value.slice('$block:'.length));
+      if (id === undefined) throw new Error(`${where}: ${value}: blok kimliği alınmadı`);
+      return id;
+    }
     if (typeof value === 'string' && value.startsWith('$uidOf:')) {
       const uid = this.doc.uidOf(Number(value.slice('$uidOf:'.length)));
       if (uid === undefined) throw new Error(`${where}: ${value}: o yuvada nesne yok`);
@@ -115,6 +135,14 @@ class Run {
     }
     if (Array.isArray(value)) return value.map((v) => this.fill(v, where));
     if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, this.fill(v, where)]));
+    return value;
+  }
+
+  /** An expected object with its block ids filled in (`$blockOf:Ad`, `$block:name`, docs/adr/0144); nothing else of it is read as a placeholder. */
+  private blockIds(value: Json, where: string): Json {
+    if (typeof value === 'string') return value.startsWith('$blockOf:') || value.startsWith('$block:') ? this.fill(value, where) : value;
+    if (Array.isArray(value)) return value.map((v) => this.blockIds(v, where));
+    if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, this.blockIds(v, where)]));
     return value;
   }
 
@@ -139,6 +167,12 @@ class Run {
       case 'captureRevision':
         this.revisions.set(s.as!, String(this.doc.revision));
         break;
+      case 'captureBlock': {
+        const block = this.doc.blockNamed(s.name!);
+        if (!block) throw new Error(`${where}: “${s.name}” bloğu yok`);
+        this.blocks.set(s.as!, block.id);
+        break;
+      }
       case 'captureUid': {
         const uid = this.doc.uidOf(s.id!);
         if (uid === undefined) throw new Error(`${where}: ${s.id} nesnesi yok`);
@@ -189,11 +223,24 @@ class Run {
     ).toEqual([]);
     const doc = this.doc;
     if (e.ids) expect([...doc.all()].map((x) => x.id), `${where}: nesneler`).toEqual(e.ids);
-    for (const [id, want] of Object.entries(e.entities ?? {})) expect(withoutUid(doc.get(Number(id))), `${where}: nesne ${id}`).toEqual(want);
+    for (const [id, want] of Object.entries(e.entities ?? {})) expect(withoutUid(doc.get(Number(id))), `${where}: nesne ${id}`).toEqual(this.blockIds(want, where));
     if (e.canUndo !== undefined) expect(doc.canUndo.value, `${where}: canUndo`).toBe(e.canUndo);
     if (e.canRedo !== undefined) expect(doc.canRedo.value, `${where}: canRedo`).toBe(e.canRedo);
     if (e.dirty !== undefined) expect(doc.dirty.value, `${where}: dirty`).toBe(e.dirty);
     if (e.revision) expect(doc.revision === before ? 'same' : 'changed', `${where}: sürüm`).toBe(e.revision);
+    if (e.blocks)
+      expect(
+        doc.blocks.value.map(({ id: _id, ...rest }) => rest),
+        `${where}: bloklar`,
+      ).toEqual(e.blocks);
+    for (const [name, want] of Object.entries(e.blockIds ?? {})) {
+      const block = doc.blockNamed(name);
+      expect(block, `${where}: “${name}” bloğu`).toBeDefined();
+      if (want === 'new') {
+        expect([...this.setupBlocks, ...this.blocks.values()], `${where}: “${name}” bloğunun kimliği yeni olmalı`).not.toContain(block!.id);
+        expect(isUuid(block!.id), `${where}: “${name}” bloğunun kimliği`).toBe(true);
+      } else expect(block!.id, `${where}: “${name}” bloğunun kimliği`).toBe(this.fill(want, where));
+    }
     for (const [id, name] of Object.entries(e.uids ?? {})) {
       const uid = doc.uidOf(Number(id));
       expect(isUuid(uid), `${where}: ${id} nesnesinin kalıcı kimliği`).toBe(true);

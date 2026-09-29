@@ -23,6 +23,7 @@ use ts_rs::TS;
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
 use crate::entity::{AreaPart, DimensionStyle, Entity, HatchPattern, RingGeometry, Vec2};
+use crate::identity::BlockId;
 
 /// Reshapes, splits, joins and explodes objects in one undo step.
 pub const CAD_ENTITIES_EDIT: &str = "cad.entities.edit";
@@ -239,12 +240,25 @@ pub enum EntityGeometry {
         holes: Option<Vec<Vec<Vec2>>>,
         pattern: HatchPattern,
     },
+    /// A block placed (docs/adr/0144): the definition's base point goes to
+    /// `p`, its objects are mirrored in the definition's x axis when
+    /// `mirror`, scaled by `scale` (above 0) and turned by `rotation`
+    /// (radians, counter-clockwise) about `p`. The block is the drawing's.
+    Insert {
+        block: BlockId,
+        p: Vec2,
+        scale: f64,
+        rotation: f64,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        mirror: bool,
+    },
 }
 
 impl EntityGeometry {
     /// Whether an object of this geometry is drawn with lines, so it takes
-    /// the current line weight: not a point, a text, a dimension or a hatch
-    /// (docs/adr/0139; `Entity::draws_lines`).
+    /// the current line weight: not a point, a text, a dimension, a hatch or
+    /// an insert (docs/adr/0139; `Entity::draws_lines`).
     pub fn draws_lines(&self) -> bool {
         !matches!(
             self,
@@ -252,6 +266,7 @@ impl EntityGeometry {
                 | EntityGeometry::Text { .. }
                 | EntityGeometry::Dimension { .. }
                 | EntityGeometry::Hatch { .. }
+                | EntityGeometry::Insert { .. }
         )
     }
 }
@@ -285,9 +300,11 @@ pub enum EntityEdit {
         #[cfg_attr(feature = "ts", ts(optional))]
         keep_data: Option<bool>,
     },
-    /// A new object made from `from`: its layer and colour; its attributes and
-    /// label only with `keepData` (an offset copy, a piece of a break or an
-    /// explode, a fillet's arc).
+    /// A new object made from `from`: its layer, colour and line weight; its
+    /// attributes and label only with `keepData` (an offset copy, a piece of
+    /// a break or an explode, a fillet's arc). A field given here is the new
+    /// object's own instead: a block's object exploded keeps its layer,
+    /// colour, line weight, attributes and label (docs/adr/0144).
     Add {
         #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
         from: String,
@@ -296,12 +313,55 @@ pub enum EntityEdit {
         #[serde(rename = "keepData", default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         keep_data: Option<bool>,
+        /// The layer it goes on: a layer's id (`LayerNode.id`), not a group's.
+        #[serde(rename = "layerId", default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        layer_id: Option<String>,
+        /// Its own colour (`EntityBase.color`).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        color: Option<String>,
+        /// Its own line weight, paper mm, 0 to 100 (`EntityBase.line_weight`).
+        #[serde(
+            rename = "lineWeight",
+            default,
+            skip_serializing_if = "Option::is_none"
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
+        line_weight: Option<f64>,
+        /// Its attributes, whatever `keepData` says.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        attrs: Option<std::collections::BTreeMap<String, String>>,
+        /// Its label, whatever `keepData` says.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        label: Option<String>,
     },
     /// The object is deleted.
     Remove {
         #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
         uid: String,
     },
+}
+
+impl EntityEdit {
+    /// A new object made from `from` with nothing of its own but its
+    /// geometry: what the modify tools write (a block's objects exploded give
+    /// their own layer, colour and data, docs/adr/0144).
+    pub fn add(from: String, geometry: EntityGeometry, keep_data: Option<bool>) -> EntityEdit {
+        EntityEdit::Add {
+            from,
+            geometry,
+            keep_data,
+            layer_id: None,
+            color: None,
+            line_weight: None,
+            attrs: None,
+            label: None,
+        }
+    }
 }
 
 /// Input of `cad.entities.edit` v1: changes to objects named by their
@@ -321,15 +381,19 @@ pub enum EntityEdit {
 /// belong together, so an edit is written whole or not at all.
 ///
 /// Refusals (`CommandError.code`), checked in this order: `no_changes`,
-/// `invalid_uid` (each change's id in order), then each geometry in order:
-/// `too_few_points` (a polyline), `too_few_corners` (a closed area's ring or
-/// hole with fewer than 3 corners, or 2 whose two edges are both straight, a
-/// bulge absent or 0; a hatch's ring or hole with fewer than 3), `empty_text`
-/// (a text whose text is empty or only white space, Unicode's `White_Space`),
-/// `not_finite`, `invalid_radius`;
+/// `invalid_uid` (each change's id in order), then each change in order: its
+/// geometry's `too_few_points` (a polyline), `too_few_corners` (a closed
+/// area's ring or hole with fewer than 3 corners, or 2 whose two edges are
+/// both straight, a bulge absent or 0; a hatch's ring or hole with fewer
+/// than 3), `empty_text` (a text whose text is empty or only white space,
+/// Unicode's `White_Space`), `invalid_elevations`, `not_finite`,
+/// `invalid_radius`, `invalid_scale` (an insert's), and an `add`'s own
+/// `invalid_line_weight`;
 /// then `invalid_revision`, `revision_conflict` (status `conflict`),
 /// `entity_not_found` (each id in order), `repeated_entity` (an object
-/// changed twice), `layer_locked`; on the desktop also `slots_exhausted`.
+/// changed twice), `layer_locked`; an `add`'s own layer: `layer_not_found`,
+/// `not_a_layer`, `layer_locked`; `unknown_block` (each insert's block, in
+/// order); on the desktop also `slots_exhausted`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

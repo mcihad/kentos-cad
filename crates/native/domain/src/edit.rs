@@ -37,6 +37,7 @@ pub mod labels {
     pub const BLOCK_ADD: &str = "Blok tanımla";
     pub const BLOCK_CHANGE: &str = "Blok değiştir";
     pub const BLOCK_REMOVE: &str = "Blok sil";
+    pub const BLOCK_PURGE: &str = "Blokları temizle";
 }
 
 /// Every slot (`u32`) has been given out in this document; nothing was added.

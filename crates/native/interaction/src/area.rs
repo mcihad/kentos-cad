@@ -120,11 +120,7 @@ fn add_result(areas: &[Area], from: &str, keep_data: bool, one: bool) -> Vec<Ent
     }
     one_area(areas)
         .and_then(|e| edit_geometry(e.shape))
-        .map(|geometry| EntityEdit::Add {
-            from: from.to_owned(),
-            geometry,
-            keep_data: Some(keep_data),
-        })
+        .map(|geometry| EntityEdit::add(from.to_owned(), geometry, Some(keep_data)))
         .into_iter()
         .collect()
 }
@@ -202,11 +198,7 @@ fn add_areas(areas: &[Area], from: &str, keep_data: bool) -> Vec<EntityEdit> {
     areas
         .iter()
         .filter_map(|a| edit_geometry(polygon_of_area(a).shape))
-        .map(|geometry| EntityEdit::Add {
-            from: from.to_owned(),
-            geometry,
-            keep_data: Some(keep_data),
-        })
+        .map(|geometry| EntityEdit::add(from.to_owned(), geometry, Some(keep_data)))
         .collect()
 }
 
@@ -453,16 +445,18 @@ impl AreaAction {
                 },
             });
             let parts = p.parts.iter().flatten();
-            changes.extend(parts.map(|part| EntityEdit::Add {
-                from: uid.clone(),
-                geometry: EntityGeometry::Polygon {
-                    pts: part.pts.clone(),
-                    bulges: part.bulges.clone(),
-                    holes: part.holes.clone(),
-                    zs: part.zs.clone(),
-                    parts: None,
-                },
-                keep_data: Some(true),
+            changes.extend(parts.map(|part| {
+                EntityEdit::add(
+                    uid.clone(),
+                    EntityGeometry::Polygon {
+                        pts: part.pts.clone(),
+                        bulges: part.bulges.clone(),
+                        holes: part.holes.clone(),
+                        zs: part.zs.clone(),
+                        parts: None,
+                    },
+                    Some(true),
+                )
             }));
             each.push((*slot, p.parts.as_ref().map_or(0, Vec::len)));
         }
@@ -682,11 +676,7 @@ impl AreaAction {
                         keep_data: Some(true),
                     });
                 } else {
-                    changes.push(EntityEdit::Add {
-                        from: uid.clone(),
-                        geometry,
-                        keep_data: Some(false),
-                    });
+                    changes.push(EntityEdit::add(uid.clone(), geometry, Some(false)));
                     more += 1;
                 }
             }

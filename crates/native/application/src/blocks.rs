@@ -29,7 +29,8 @@ pub fn core_blocks(blocks: &[Arc<BlockDefinition>]) -> Blocks {
 }
 
 /// An object as the core takes it: its shape, and the fields a block's
-/// flattening reads (its layer, its own colour and line weight).
+/// flattening and Patlat read (its layer, its own colour and line weight,
+/// its attributes, label and symbol), as the web's JSON gives them.
 pub fn core_entity(e: &Entity) -> CoreEntity {
     let base = e.base();
     let mut rest = vec![
@@ -38,6 +39,21 @@ pub fn core_entity(e: &Entity) -> CoreEntity {
     ];
     if let Some(c) = &base.color {
         rest.push(("color".to_owned(), Json::Str(c.clone())));
+    }
+    rest.push((
+        "attrs".to_owned(),
+        Json::Obj(
+            base.attrs
+                .iter()
+                .map(|(k, v)| (k.clone(), Json::Str(v.clone())))
+                .collect(),
+        ),
+    ));
+    if let Some(label) = &base.label {
+        rest.push(("label".to_owned(), Json::Str(label.clone())));
+    }
+    if let Some(symbol) = &base.symbol {
+        rest.push(("symbol".to_owned(), Json::Str(symbol.clone())));
     }
     if let Some(w) = base.line_weight {
         rest.push(("lineWeight".to_owned(), Json::Num(w)));

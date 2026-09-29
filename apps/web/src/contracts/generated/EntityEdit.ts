@@ -13,4 +13,24 @@ keepData?: boolean, } | { "kind": "add", from: string, geometry: EntityGeometry,
 /**
  * True: the attributes and the label carry over.
  */
-keepData?: boolean, } | { "kind": "remove", uid: string, };
+keepData?: boolean, 
+/**
+ * The layer it goes on: a layer's id (`LayerNode.id`), not a group's.
+ */
+layerId?: string, 
+/**
+ * Its own colour (`EntityBase.color`).
+ */
+color?: string, 
+/**
+ * Its own line weight, paper mm, 0 to 100 (`EntityBase.line_weight`).
+ */
+lineWeight?: number, 
+/**
+ * Its attributes, whatever `keepData` says.
+ */
+attrs?: { [key in string]: string }, 
+/**
+ * Its label, whatever `keepData` says.
+ */
+label?: string, } | { "kind": "remove", uid: string, };

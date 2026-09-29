@@ -148,6 +148,9 @@ class DesktopSession(_document.SessionBase):
     def layers(self) -> str:
         return self._ask("layers")
 
+    def blocks(self) -> str:
+        return self._ask("blocks")
+
     def entities(
         self,
         layer: str | None = None,

@@ -10,7 +10,7 @@ import { isUuid } from '../core/uuid';
 import type { CadDocument } from '../model/document';
 import type { Entity, NewEntity } from '../model/entities';
 import { geometryIsFinite, SHAPE_FIELDS } from '../model/ops/transform';
-import { checkRevision, error, failed, isBlank, validated, type Stop } from './checks';
+import { checkLayer, checkLineWeight, checkRevision, error, failed, isBlank, validated, type Stop } from './checks';
 import type { ProductCommand } from './command';
 import { carryInto, elevatedPaths, hasElevation } from './elevation';
 
@@ -32,9 +32,11 @@ import { carryInto, elevatedPaths, hasElevation } from './elevation';
  * The checks, in order (the first that fails answers): at least one change,
  * each change's id lowercase UUID text with hyphens; every geometry, in
  * order: enough points for its kind, a text that is not blank, every number
- * finite, a positive radius; the expected revision (checks.ts); each id
- * names an object; no object changed twice; no object on a locked layer (an
- * edit is written whole or not at all).
+ * finite, a positive radius, an insert's positive scale, and an `add`'s own
+ * line weight; the expected revision (checks.ts); each id names an object;
+ * no object changed twice; no object on a locked layer (an edit is written
+ * whole or not at all); an `add`'s own layer; every insert's block is the
+ * drawing's (docs/adr/0144).
  */
 
 /** The undo step's name: the tool's (docs/adr/0047); Öznitelikler's is the document's own “Değiştir”. */
@@ -85,6 +87,7 @@ const FIELDS: Record<EntityGeometry['kind'], readonly string[]> = {
   text: ['p', 'text', 'height', 'rotation'],
   dimension: ['a', 'b', 'offset', 'height', 'text', 'style', 'angle', 'c'],
   hatch: ['ring', 'holes', 'pattern'],
+  insert: ['block', 'p', 'scale', 'rotation', 'mirror'],
 };
 
 interface Checked {
@@ -106,6 +109,8 @@ export function geometryOf(g: EntityGeometry): Record<string, unknown> {
   const src = g as unknown as Record<string, unknown>;
   const out: Record<string, unknown> = { kind: g.kind };
   for (const key of FIELDS[g.kind]) if (src[key] !== undefined) out[key] = structuredClone(src[key]);
+  // An insert is mirrored or has no `mirror` (docs/adr/0144): false is not written.
+  if (g.kind === 'insert' && out.mirror !== true) delete out.mirror;
   return out;
 }
 
@@ -143,6 +148,17 @@ function inherited(e: Entity, g: EntityGeometry, keepData: boolean): NewEntity {
     attrs: keepData ? { ...e.attrs } : {},
     label: keepData ? e.label : undefined,
   } as unknown as NewEntity;
+}
+
+/** A new object with what its `add` gives of its own instead of `from`'s (docs/adr/0144). */
+function own(init: NewEntity, c: Extract<EntityEdit, { kind: 'add' }>): NewEntity {
+  const out = init as unknown as Record<string, unknown>;
+  if (c.layerId !== undefined) out.layerId = c.layerId;
+  if (c.color !== undefined) out.color = c.color;
+  if (c.lineWeight !== undefined) out.lineWeight = c.lineWeight;
+  if (c.attrs !== undefined) out.attrs = { ...c.attrs };
+  if (c.label !== undefined) out.label = c.label;
+  return init;
 }
 
 /**
@@ -214,6 +230,23 @@ export function checkGeometry(g: EntityGeometry, i: number, list = 'changes', wh
   if (!geometryIsFinite(g as unknown as Entity) || elevations.some(([zs]) => zs.some((z) => z !== null && !Number.isFinite(z))))
     return failed(error('not_finite', `${i + 1}. ${whose} geometrisinde sonlu olmayan bir değer var (NaN ya da sonsuz). Geometriyi sonlu sayılarla verin.`, at('')));
   if ((g.kind === 'circle' || g.kind === 'arc') && !(g.r > 0)) return failed(error('invalid_radius', 'Yarıçap sıfırdan büyük olmalı. Pozitif bir yarıçap verin.', at('.r')));
+  // An insert's scale (docs/adr/0144).
+  if (g.kind === 'insert' && !(g.scale > 0)) return failed(error('invalid_scale', 'Blok ölçeği sıfırdan büyük olmalı. Pozitif bir ölçek verin.', at('.scale')));
+  return null;
+}
+
+/** Every insert among the geometries names a block of the drawing, in order (docs/adr/0144): `unknown_block` at `{list}[i].geometry.block`. */
+export function checkBlocks(doc: CadDocument, geometries: readonly (EntityGeometry | null)[], list: string): Stop | null {
+  const known = new Set(doc.blocks.value.map((b) => b.id));
+  for (const [i, g] of geometries.entries())
+    if (g?.kind === 'insert' && !known.has(g.block))
+      return failed(
+        error(
+          'unknown_block',
+          `“${g.block}” kimlikli blok çizimde tanımlı değil: silinmiş ya da başka bir çizimin olabilir. Çizimde tanımlı bir bloğun kimliğini verin.`,
+          `${list}[${i}].geometry.block`,
+        ),
+      );
   return null;
 }
 
@@ -274,7 +307,7 @@ function check(doc: CadDocument, input: EntitiesEdit): Stop | Checked {
       );
   }
   for (const [i, c] of input.changes.entries()) {
-    const stop = c.kind === 'remove' ? null : checkGeometry(c.geometry, i);
+    const stop = (c.kind === 'remove' ? null : checkGeometry(c.geometry, i)) ?? (c.kind === 'add' ? checkLineWeight(c.lineWeight, `changes[${i}].lineWeight`) : null);
     if (stop) return stop;
   }
   const stop = checkRevision(doc, input.expectedRevision);
@@ -302,6 +335,18 @@ function check(doc: CadDocument, input: EntitiesEdit): Stop | Checked {
     const name = doc.layers.get(layerId)?.name ?? layerId;
     return failed(error('layer_locked', `“${name}” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın.`, `changes[${i}].${named(c)[1]}`));
   }
+  // A new object's own layer: known, a layer, not locked (a block's object exploded, docs/adr/0144).
+  for (const [i, c] of input.changes.entries()) {
+    if (c.kind !== 'add' || c.layerId === undefined) continue;
+    const layer = checkLayer(doc, c.layerId, `changes[${i}].layerId`);
+    if (!Array.isArray(layer)) return layer;
+  }
+  const blocks = checkBlocks(
+    doc,
+    input.changes.map((c) => (c.kind === 'remove' ? null : c.geometry)),
+    'changes',
+  );
+  if (blocks) return blocks;
   const checked: Checked = { changed: [], created: [], removed: [], warnings: [] };
   // The elevations of the objects the edit names, for what it writes (docs/adr/0142); nothing to carry
   // when none has one.
@@ -324,7 +369,7 @@ function check(doc: CadDocument, input: EntitiesEdit): Stop | Checked {
     const e = found[i];
     if (c.kind === 'update') checked.changed.push({ id: e.id, uid: c.uid, init: elevate(reshaped(e, c.geometry), e, c.geometry) });
     else if (c.kind === 'replace') checked.changed.push({ id: e.id, uid: c.uid, init: elevate(inherited(e, c.geometry, c.keepData === true), e, c.geometry) });
-    else if (c.kind === 'add') checked.created.push(elevate(inherited(e, c.geometry, c.keepData === true), e, c.geometry));
+    else if (c.kind === 'add') checked.created.push(elevate(own(inherited(e, c.geometry, c.keepData === true), c), e, c.geometry));
     else checked.removed.push({ id: e.id, uid: c.uid });
   }
   if (lost) checked.warnings.push({ code: 'elevation_lost', message: `${lost} nesnenin kotu bu işlemde korunmadı.`, path: 'changes' });

@@ -70,6 +70,26 @@ AreaUnitName = Literal["m2", "donum", "ha"]
 """The names of :class:`AreaUnit`, for a plain string."""
 
 
+class BlockEditOperation(_StrEnum):
+    """What `cad.blocks.edit` does; it names the undo step.
+
+    - ``rename``: A new name (“Blok değiştir”).
+    - ``redefine``: New objects from the drawing's (“Blok değiştir”): every insert shows them.
+    - ``rebase``: A new base point (“Blok değiştir”): every insert shifts by the difference.
+    - ``remove``: A definition no insert uses deleted (“Blok sil”).
+    - ``purge``: Every definition no insert uses deleted (“Blokları temizle”).
+    """
+    RENAME = "rename"
+    REDEFINE = "redefine"
+    REBASE = "rebase"
+    REMOVE = "remove"
+    PURGE = "purge"
+
+
+BlockEditOperationName = Literal["rename", "redefine", "rebase", "remove", "purge"]
+"""The names of :class:`BlockEditOperation`, for a plain string."""
+
+
 class CheckpointKind(_StrEnum):
     """What a checkpoint keeps.
 
@@ -588,6 +608,7 @@ class EntityGeometry(_Union):
     - :class:`TextEntityGeometry` (``kind: text``)
     - :class:`DimensionEntityGeometry` (``kind: dimension``)
     - :class:`HatchEntityGeometry` (``kind: hatch``)
+    - :class:`InsertEntityGeometry` (``kind: insert``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -881,6 +902,390 @@ class AreaPart(_Model):
             bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
             holes=UNSET if "holes" not in data else None if data["holes"] is None else [RingGeometry.from_json(e0) for e0 in data["holes"]],
             zs=UNSET if "zs" not in data else None if data["zs"] is None else [None if e0 is None else float(e0) for e0 in data["zs"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AttributeDefinition(_Model):
+    """One attribute an insert shows as text (docs/adr/0144 §7): the insert's
+    attribute `tag`, else `value`, written at `p` in the definition's
+    coordinates, moved with the insert.
+    Attributes:
+        height: Metres, in the definition's size.
+        rotation: Degrees, counter-clockwise from east, as a text's.
+        prompt: What Blok ekle asks for it.
+        value: The default value.
+    """
+    tag: str
+    p: Vec2
+    height: float
+    rotation: float
+    prompt: str | None | Unset = UNSET
+    value: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["tag"] = self.tag
+        out["p"] = _vec2_out(self.p)
+        out["height"] = float(self.height)
+        out["rotation"] = float(self.rotation)
+        if self.prompt is not UNSET:
+            out["prompt"] = self.prompt
+        if self.value is not UNSET:
+            out["value"] = self.value
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AttributeDefinition:
+        return cls(
+            tag=data["tag"],
+            p=Vec2.from_json(data["p"]),
+            height=float(data["height"]),
+            rotation=float(data["rotation"]),
+            prompt=data.get("prompt", UNSET),
+            value=data.get("value", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlockDefined(_Model):
+    """Output of `cad.blocks.define` v1.
+    Attributes:
+        block: The new definition's id.
+        removed: With `replace`: the objects deleted, in the input's order.
+        revision: The document's revision after the write, as decimal text.
+        insert: With `replace`: the insert's persistent id and its slot.
+    """
+    block: str
+    removed: list[str]
+    revision: str
+    id: int | None | Unset = UNSET
+    insert: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["block"] = self.block
+        out["removed"] = list(self.removed)
+        out["revision"] = self.revision
+        if self.id is not UNSET:
+            out["id"] = self.id
+        if self.insert is not UNSET:
+            out["insert"] = self.insert
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlockDefined:
+        return cls(
+            block=data["block"],
+            removed=list(data["removed"]),
+            revision=data["revision"],
+            id=data.get("id", UNSET),
+            insert=data.get("insert", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlockDefinition(_Model):
+    """A block definition (docs/adr/0144): objects drawn once, placed many
+    times. Its objects' ids are local to it; their layer is kept, but an
+    insert draws them on its own layer (the DXF's layer 0), each with its own
+    colour or line weight when it has one.
+    Attributes:
+        name: Unique in the drawing, Turkish case folded.
+        base: The point placed at an insert's `p`, in the definition's coordinates.
+        attributes: The texts an insert shows from its attributes (ATTDEF).
+    """
+    id: str
+    name: str
+    base: Vec2
+    entities: list[Entity]
+    attributes: list[AttributeDefinition] | Unset = UNSET
+    description: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["base"] = _vec2_out(self.base)
+        out["entities"] = [e0.to_json() for e0 in self.entities]
+        if self.attributes is not UNSET:
+            out["attributes"] = [e0.to_json() for e0 in self.attributes]
+        if self.description is not UNSET:
+            out["description"] = self.description
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlockDefinition:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            base=Vec2.from_json(data["base"]),
+            entities=[Entity.from_json(e0) for e0 in data["entities"]],
+            attributes=[AttributeDefinition.from_json(e0) for e0 in data["attributes"]] if "attributes" in data else UNSET,
+            description=data.get("description", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlocksDefine(_Model):
+    """Input of `cad.blocks.define` v1: a new definition made of the objects
+    named by their persistent ids, copied as they are (their coordinates,
+    layers, colours and data; local ids 1, 2, … in the input's order), with
+    the base point given. Everything the command depends on is here (TODOS.md
+    CMD-07): Blok oluştur fills `layerId` from the active layer.
+
+    With `replace` the objects are deleted and an insert of the new block
+    takes their place at the base point (scale 1, no turn) on `layerId`, in
+    the same undo step, “Blok tanımla”.
+
+    An id given twice is one object.
+
+    Refusals (`CommandError.code`), checked in this order: `empty_name` (a
+    name empty or only white space), `no_entities`, `invalid_uid` (each id in
+    order), `not_finite` (the base point), `no_layer` (`replace` without
+    `layerId`); then `invalid_revision`, `revision_conflict` (status
+    `conflict`), `entity_not_found` (each id in order), `duplicate_block`
+    (the name taken, Turkish case folded), `block_too_deep`; with `replace`
+    `layer_not_found`, `not_a_layer`, `layer_locked` (the insert's layer),
+    then `layer_locked` for an object on a locked layer (it is taken into the
+    definition, but not deleted); on the desktop also `slots_exhausted`.
+    Warning: `layer_hidden` (the insert's layer).
+    Attributes:
+        name: The block's name, unique in the drawing (Turkish case folded).
+        base: The point an insert places, in the drawing's coordinates.
+        uids: The objects it is made of, at least one, by persistent id.
+        description: What the block is.
+        expected_revision: The document revision the input was prepared against, as decimal text
+            (from a plan, or the document). When given and the document is no
+            longer at it, nothing is written and the answer is `conflict`.
+        layer_id: With `replace`: the layer the insert goes on, a layer's id.
+        replace: True: the objects are replaced by an insert of the new block.
+    """
+    name: str
+    base: Vec2
+    uids: list[str]
+    description: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    layer_id: str | None | Unset = UNSET
+    replace: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["base"] = _vec2_out(self.base)
+        out["uids"] = list(self.uids)
+        if self.description is not UNSET:
+            out["description"] = self.description
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.layer_id is not UNSET:
+            out["layerId"] = self.layer_id
+        if self.replace is not UNSET:
+            out["replace"] = self.replace
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlocksDefine:
+        return cls(
+            name=data["name"],
+            base=Vec2.from_json(data["base"]),
+            uids=list(data["uids"]),
+            description=data.get("description", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            layer_id=data.get("layerId", UNSET),
+            replace=data.get("replace", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlocksDefinePlan(_Model):
+    """What `cad.blocks.define` would write (plan mode); nothing is written.
+    Attributes:
+        block: The definition as execute would write it; its id the nil UUID, as the
+            id is given when it is written.
+        removed: With `replace`: the objects execute would delete, in the input's order.
+        revision: The document revision the plan was made against.
+        insert: With `replace`: the insert as execute would write it, `id` 0 and its
+            `block` the nil UUID.
+    """
+    block: BlockDefinition
+    removed: list[str]
+    revision: str
+    insert: Entity | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["block"] = self.block.to_json()
+        out["removed"] = list(self.removed)
+        out["revision"] = self.revision
+        if self.insert is not UNSET:
+            out["insert"] = None if self.insert is None else self.insert.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlocksDefinePlan:
+        return cls(
+            block=BlockDefinition.from_json(data["block"]),
+            removed=list(data["removed"]),
+            revision=data["revision"],
+            insert=UNSET if "insert" not in data else None if data["insert"] is None else Entity.from_json(data["insert"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlocksEdit(_Model):
+    """Input of `cad.blocks.edit` v1: one change of the drawing's definitions, as
+    one undo step named after the operation. A definition is named by its id.
+
+    - `rename`: `block`, `name`;
+    - `redefine`: `block`, `uids` (the objects it is made of now, copied as
+      `cad.blocks.define` copies them), `base` (absent: kept), `replace` and
+      `layerId` as `cad.blocks.define` has them;
+    - `rebase`: `block`, `base`;
+    - `remove`: `block`;
+    - `purge`: nothing; a definition only unused ones use goes too.
+
+    What would change nothing (the same name, base point or objects; nothing
+    unused to purge) writes nothing: the answer is completed, with nothing in
+    `changed` and `removed`.
+
+    Refusals (`CommandError.code`), checked in this order: `no_block` (none
+    given where the operation needs one); `rename`: `empty_name`; `redefine`:
+    `no_entities`, `invalid_uid` (each id in order), `not_finite` (the base
+    point), `no_layer`; `rebase`: `no_base`, `not_finite`; then
+    `invalid_revision`, `revision_conflict` (status `conflict`),
+    `unknown_block`; `rename`: `duplicate_block`; `redefine`:
+    `entity_not_found`, `block_cycle` (an object is an
+    insert of this block or of one holding it), `block_too_deep`, with
+    `replace` the layer checks of `cad.blocks.define`; `remove`: `block_in_use`
+    (inserts of it in the drawing or in another definition).
+    Attributes:
+        base: `rebase`: the new base point; `redefine`: the base point (absent: kept).
+        block: The definition; every operation but `purge`.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        layer_id: `redefine` with `replace`: the layer the insert goes on.
+        name: `rename`: the new name.
+        replace: `redefine`: true, the objects are replaced by an insert of the block.
+        uids: `redefine`: the objects it is made of now, by persistent id.
+    """
+    operation: BlockEditOperation | BlockEditOperationName
+    base: Vec2 | None | Unset = UNSET
+    block: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    layer_id: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    replace: bool | None | Unset = UNSET
+    uids: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        if self.base is not UNSET:
+            out["base"] = None if self.base is None else _vec2_out(self.base)
+        if self.block is not UNSET:
+            out["block"] = self.block
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.layer_id is not UNSET:
+            out["layerId"] = self.layer_id
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.replace is not UNSET:
+            out["replace"] = self.replace
+        if self.uids is not UNSET:
+            out["uids"] = None if self.uids is None else list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlocksEdit:
+        return cls(
+            operation=_enum_in(BlockEditOperation, data["operation"]),
+            base=UNSET if "base" not in data else None if data["base"] is None else Vec2.from_json(data["base"]),
+            block=data.get("block", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            layer_id=data.get("layerId", UNSET),
+            name=data.get("name", UNSET),
+            replace=data.get("replace", UNSET),
+            uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlocksEditPlan(_Model):
+    """What `cad.blocks.edit` would write (plan mode); nothing is written.
+    Attributes:
+        changed: The definitions as execute would write them (`rename`, `redefine`, `rebase`).
+        removed: The definitions execute would delete (`remove`, `purge`).
+        deleted: `redefine` with `replace`: the objects execute would delete.
+        revision: The document revision the plan was made against.
+        insert: `redefine` with `replace`: the insert as execute would write it, `id` 0.
+    """
+    changed: list[BlockDefinition]
+    removed: list[str]
+    deleted: list[str]
+    revision: str
+    insert: Entity | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = [e0.to_json() for e0 in self.changed]
+        out["removed"] = list(self.removed)
+        out["deleted"] = list(self.deleted)
+        out["revision"] = self.revision
+        if self.insert is not UNSET:
+            out["insert"] = None if self.insert is None else self.insert.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlocksEditPlan:
+        return cls(
+            changed=[BlockDefinition.from_json(e0) for e0 in data["changed"]],
+            removed=list(data["removed"]),
+            deleted=list(data["deleted"]),
+            revision=data["revision"],
+            insert=UNSET if "insert" not in data else None if data["insert"] is None else Entity.from_json(data["insert"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlocksEdited(_Model):
+    """Output of `cad.blocks.edit` v1.
+    Attributes:
+        changed: The definitions changed (`rename`, `redefine`, `rebase`).
+        removed: The definitions deleted (`remove`, `purge`), in the drawing's order.
+        deleted: `redefine` with `replace`: the objects deleted, in the input's order.
+        revision: The document's revision after the write (the same when nothing was
+            written), as decimal text.
+        insert: `redefine` with `replace`: the insert's persistent id and its slot.
+    """
+    changed: list[str]
+    removed: list[str]
+    deleted: list[str]
+    revision: str
+    id: int | None | Unset = UNSET
+    insert: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = list(self.changed)
+        out["removed"] = list(self.removed)
+        out["deleted"] = list(self.deleted)
+        out["revision"] = self.revision
+        if self.id is not UNSET:
+            out["id"] = self.id
+        if self.insert is not UNSET:
+            out["insert"] = self.insert
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlocksEdited:
+        return cls(
+            changed=list(data["changed"]),
+            removed=list(data["removed"]),
+            deleted=list(data["deleted"]),
+            revision=data["revision"],
+            id=data.get("id", UNSET),
+            insert=data.get("insert", UNSET),
         )
 
 
@@ -1648,10 +2053,11 @@ class EntitiesCreate(_Model):
     `too_few_corners` (a closed area's or a hatch's ring or hole, by
     `cad.entities.edit`'s rule: a closed area's may have 2 corners when an
     edge is an arc), `empty_text` (a text whose text is empty or only white space),
-    `not_finite`, `invalid_radius`, `invalid_line_weight` (the object's weight
-    not from 0 to 100 mm); then `invalid_revision`,
-    `revision_conflict` (status `conflict`), `layer_not_found`,
-    `not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`.
+    `invalid_elevations`, `not_finite`, `invalid_radius`, `invalid_scale` (an
+    insert's), `invalid_line_weight` (the object's weight not from 0 to 100
+    mm); then `invalid_revision`, `revision_conflict` (status `conflict`),
+    `layer_not_found`, `not_a_layer`, `layer_locked`, `unknown_block` (each
+    insert's block, in order; docs/adr/0144); on the desktop also `slots_exhausted`.
     Warning: `layer_hidden` (they are written all the same).
     Attributes:
         layer_id: The layer they go on: a layer's id (`LayerNode.id`), not a group's.
@@ -1868,15 +2274,19 @@ class EntitiesEdit(_Model):
     belong together, so an edit is written whole or not at all.
 
     Refusals (`CommandError.code`), checked in this order: `no_changes`,
-    `invalid_uid` (each change's id in order), then each geometry in order:
-    `too_few_points` (a polyline), `too_few_corners` (a closed area's ring or
-    hole with fewer than 3 corners, or 2 whose two edges are both straight, a
-    bulge absent or 0; a hatch's ring or hole with fewer than 3), `empty_text`
-    (a text whose text is empty or only white space, Unicode's `White_Space`),
-    `not_finite`, `invalid_radius`;
+    `invalid_uid` (each change's id in order), then each change in order: its
+    geometry's `too_few_points` (a polyline), `too_few_corners` (a closed
+    area's ring or hole with fewer than 3 corners, or 2 whose two edges are
+    both straight, a bulge absent or 0; a hatch's ring or hole with fewer
+    than 3), `empty_text` (a text whose text is empty or only white space,
+    Unicode's `White_Space`), `invalid_elevations`, `not_finite`,
+    `invalid_radius`, `invalid_scale` (an insert's), and an `add`'s own
+    `invalid_line_weight`;
     then `invalid_revision`, `revision_conflict` (status `conflict`),
     `entity_not_found` (each id in order), `repeated_entity` (an object
-    changed twice), `layer_locked`; on the desktop also `slots_exhausted`.
+    changed twice), `layer_locked`; an `add`'s own layer: `layer_not_found`,
+    `not_a_layer`, `layer_locked`; `unknown_block` (each insert's block, in
+    order); on the desktop also `slots_exhausted`.
     Attributes:
         operation: The modify tool the edit comes from; it names the undo step: Ötele,
             Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt,
@@ -4692,23 +5102,45 @@ class ReplaceEntityEdit(EntityEdit):
 
 @dataclass(kw_only=True, slots=True)
 class AddEntityEdit(EntityEdit):
-    """A new object made from `from`: its layer and colour; its attributes and
-    label only with `keepData` (an offset copy, a piece of a break or an
-    explode, a fillet's arc).
+    """A new object made from `from`: its layer, colour and line weight; its
+    attributes and label only with `keepData` (an offset copy, a piece of
+    a break or an explode, a fillet's arc). A field given here is the new
+    object's own instead: a block's object exploded keeps its layer,
+    colour, line weight, attributes and label (docs/adr/0144).
     Attributes:
+        attrs: Its attributes, whatever `keepData` says.
+        color: Its own colour (`EntityBase.color`).
         keep_data: True: the attributes and the label carry over.
+        label: Its label, whatever `keepData` says.
+        layer_id: The layer it goes on: a layer's id (`LayerNode.id`), not a group's.
+        line_weight: Its own line weight, paper mm, 0 to 100 (`EntityBase.line_weight`).
     """
     TAG_VALUE: ClassVar[str] = "add"
     from_: str
     geometry: EntityGeometry
+    attrs: dict[str, str] | None | Unset = UNSET
+    color: str | None | Unset = UNSET
     keep_data: bool | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    layer_id: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "add"}
         out["from"] = self.from_
         out["geometry"] = self.geometry.to_json()
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.color is not UNSET:
+            out["color"] = self.color
         if self.keep_data is not UNSET:
             out["keepData"] = self.keep_data
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.layer_id is not UNSET:
+            out["layerId"] = self.layer_id
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         return out
 
     @classmethod
@@ -4716,7 +5148,12 @@ class AddEntityEdit(EntityEdit):
         return cls(
             from_=data["from"],
             geometry=EntityGeometry.from_json(data["geometry"]),
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            color=data.get("color", UNSET),
             keep_data=data.get("keepData", UNSET),
+            label=data.get("label", UNSET),
+            layer_id=data.get("layerId", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
         )
 
 
@@ -5102,6 +5539,41 @@ class HatchEntityGeometry(EntityGeometry):
 
 
 @dataclass(kw_only=True, slots=True)
+class InsertEntityGeometry(EntityGeometry):
+    """A block placed (docs/adr/0144): the definition's base point goes to
+    `p`, its objects are mirrored in the definition's x axis when
+    `mirror`, scaled by `scale` (above 0) and turned by `rotation`
+    (radians, counter-clockwise) about `p`. The block is the drawing's.
+    """
+    TAG_VALUE: ClassVar[str] = "insert"
+    block: str
+    p: Vec2
+    scale: float
+    rotation: float
+    mirror: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "insert"}
+        out["block"] = self.block
+        out["p"] = _vec2_out(self.p)
+        out["scale"] = float(self.scale)
+        out["rotation"] = float(self.rotation)
+        if self.mirror is not UNSET:
+            out["mirror"] = self.mirror
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> InsertEntityGeometry:
+        return cls(
+            block=data["block"],
+            p=Vec2.from_json(data["p"]),
+            scale=float(data["scale"]),
+            rotation=float(data["rotation"]),
+            mirror=data.get("mirror", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CreateFeatureChange(FeatureChange):
     """A new object; the client picks the UUID so a retry cannot create it twice."""
     TAG_VALUE: ClassVar[str] = "create"
@@ -5293,7 +5765,7 @@ _ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "p
 _ENTITY_EDIT: dict[str, type[EntityEdit]] = {"update": UpdateEntityEdit, "replace": ReplaceEntityEdit, "add": AddEntityEdit, "remove": RemoveEntityEdit}
 
 
-_ENTITY_GEOMETRY: dict[str, type[EntityGeometry]] = {"point": PointEntityGeometry, "line": LineEntityGeometry, "polyline": PolylineEntityGeometry, "polygon": PolygonEntityGeometry, "circle": CircleEntityGeometry, "arc": ArcEntityGeometry, "ellipse": EllipseEntityGeometry, "spline": SplineEntityGeometry, "xline": XlineEntityGeometry, "ray": RayEntityGeometry, "text": TextEntityGeometry, "dimension": DimensionEntityGeometry, "hatch": HatchEntityGeometry}
+_ENTITY_GEOMETRY: dict[str, type[EntityGeometry]] = {"point": PointEntityGeometry, "line": LineEntityGeometry, "polyline": PolylineEntityGeometry, "polygon": PolygonEntityGeometry, "circle": CircleEntityGeometry, "arc": ArcEntityGeometry, "ellipse": EllipseEntityGeometry, "spline": SplineEntityGeometry, "xline": XlineEntityGeometry, "ray": RayEntityGeometry, "text": TextEntityGeometry, "dimension": DimensionEntityGeometry, "hatch": HatchEntityGeometry, "insert": InsertEntityGeometry}
 
 
 _FEATURE_CHANGE: dict[str, type[FeatureChange]] = {"create": CreateFeatureChange, "update": UpdateFeatureChange, "delete": DeleteFeatureChange}
@@ -5318,6 +5790,16 @@ __all__ = [
     "AreaUnit",
     "AreaUnitName",
     "ArrayLayout",
+    "AttributeDefinition",
+    "BlockDefined",
+    "BlockDefinition",
+    "BlockEditOperation",
+    "BlockEditOperationName",
+    "BlocksDefine",
+    "BlocksDefinePlan",
+    "BlocksEdit",
+    "BlocksEditPlan",
+    "BlocksEdited",
     "Bounds",
     "Checkpoint",
     "CheckpointChange",
@@ -5381,6 +5863,7 @@ __all__ = [
     "HatchPatternType",
     "HatchPatternTypeName",
     "InsertEntity",
+    "InsertEntityGeometry",
     "InvitationChange",
     "InvitationRevoke",
     "InvitationState",

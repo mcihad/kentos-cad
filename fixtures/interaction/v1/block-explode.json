@@ -1,0 +1,56 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "block-explode",
+  "title": "Patlat ve bloklar (ADR 0144): yerleştirme tanımının nesnelerine bir düzey açılır, iç içe olan yerleştirme kalır ve o da patlatılır; taramalı ve yazılı blok; her patlatma tek adımda geri alınır",
+  "source": "ADR 0144, 3. adım",
+  "covers": ["CAD-04"],
+  "document": "blocks.kcad",
+  "view": { "center": [487020, 4420010], "metresPerPixel": 0.0625 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "clickTolerance": 0.0625,
+  "steps": [
+    { "click": [-6, 4.8], "note": "Batıdaki direk.", "expect": { "tool": "select", "selected": [7] } },
+    {
+      "run": "tool.explode",
+      "note": "Direk temeline, koluna ve lambasına açılır: temel ve kol direğin katmanında, lamba iç içe bir yerleştirme olarak kalır, direkle döner.",
+      "expect": {
+        "tool": "select",
+        "entities": 14,
+        "selected": [13, 14, 15],
+        "log": "success",
+        "logged": ["1 nesne patlatıldı: 3 parça."],
+        "newest": { "kind": "insert", "points": [[-6, 2], [-6, 1], [-5, 2]] },
+        "objects": [
+          { "id": 13, "kind": "polygon", "points": [[-6.3, 5.1], [-6.3, 4.5], [-5.7, 4.5], [-5.7, 5.1]] },
+          { "id": 14, "kind": "line", "points": [[-6, 4.5], [-6, 2.35]] }
+        ]
+      }
+    },
+    { "key": "Esc", "note": "Seçili parçaya tıklamak seçimi daraltmaz: önce seçim bırakılır.", "expect": { "selected": [] } },
+    { "click": [-6.35, 2], "note": "Lambanın çemberinin batısı (kolun ucu çemberin kuzeyinde): lamba şimdi kendi başına bir yerleştirme.", "expect": { "selected": [15] } },
+    {
+      "run": "tool.explode",
+      "note": "Lamba da açılır: bir daire ve iki çapraz çizgi.",
+      "expect": { "entities": 16, "selected": [16, 17, 18], "logged": ["1 nesne patlatıldı: 3 parça."], "newest": { "kind": "line" }, "objects": [{ "id": 16, "kind": "circle" }] }
+    },
+    { "key": "Ctrl+Z", "note": "Her patlatma kendi adımıdır.", "expect": { "entities": 14, "objects": [{ "id": 15, "kind": "insert", "points": [[-6, 2], [-6, 1], [-5, 2]] }] } },
+    { "key": "Ctrl+Z", "expect": { "entities": 12, "objects": [{ "id": 7, "kind": "insert", "points": [[-6, 4.8], [-6, 3.8], [-5, 4.8]] }] } },
+    { "click": [-4, -7], "note": "Trafo.", "expect": { "selected": [12] } },
+    {
+      "run": "tool.explode",
+      "note": "Kutusu, taraması ve yazısı trafonun katmanına ve yerine açılır; geri alınan parçaların yuvaları yeniden verilmez.",
+      "expect": {
+        "entities": 14,
+        "selected": [19, 20, 21],
+        "logged": ["1 nesne patlatıldı: 3 parça."],
+        "newest": { "kind": "text" },
+        "objects": [
+          { "id": 19, "kind": "polygon", "points": [[-5.5, -8], [-2.5, -8], [-2.5, -6], [-5.5, -6]] },
+          { "id": 20, "kind": "hatch" }
+        ]
+      }
+    },
+    { "key": "Ctrl+Z", "expect": { "entities": 12, "canUndo": false } }
+  ]
+}

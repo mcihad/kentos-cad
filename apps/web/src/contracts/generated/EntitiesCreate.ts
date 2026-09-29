@@ -16,10 +16,11 @@ import type { NewObject } from "./NewObject";
  * `too_few_corners` (a closed area's or a hatch's ring or hole, by
  * `cad.entities.edit`'s rule: a closed area's may have 2 corners when an
  * edge is an arc), `empty_text` (a text whose text is empty or only white space),
- * `not_finite`, `invalid_radius`, `invalid_line_weight` (the object's weight
- * not from 0 to 100 mm); then `invalid_revision`,
- * `revision_conflict` (status `conflict`), `layer_not_found`,
- * `not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`.
+ * `invalid_elevations`, `not_finite`, `invalid_radius`, `invalid_scale` (an
+ * insert's), `invalid_line_weight` (the object's weight not from 0 to 100
+ * mm); then `invalid_revision`, `revision_conflict` (status `conflict`),
+ * `layer_not_found`, `not_a_layer`, `layer_locked`, `unknown_block` (each
+ * insert's block, in order; docs/adr/0144); on the desktop also `slots_exhausted`.
  * Warning: `layer_hidden` (they are written all the same).
  */
 export type EntitiesCreate = { 

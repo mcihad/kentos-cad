@@ -91,15 +91,15 @@ export function checkRevision(doc: CadDocument, expected: string | null | undefi
  * The locked and hidden texts are the drawing tools' own words
  * (tools/targetLayer.ts), kept since the tools write through here.
  */
-export function checkLayer(doc: CadDocument, id: string): Stop | CommandWarning[] {
+export function checkLayer(doc: CadDocument, id: string, path = 'layerId'): Stop | CommandWarning[] {
   const layers = doc.layers;
   const node = layers.get(id);
-  if (!node) return failed(error('layer_not_found', `“${id}” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.`, 'layerId'));
+  if (!node) return failed(error('layer_not_found', `“${id}” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.`, path));
   if (node.type !== 'layer')
-    return failed(error('not_a_layer', `“${node.name}” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.`, 'layerId'));
+    return failed(error('not_a_layer', `“${node.name}” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.`, path));
   if (layers.isLocked(id))
-    return failed(error('layer_locked', `“${node.name}” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.`, 'layerId'));
-  return layers.isVisible(id) ? [] : [{ code: 'layer_hidden', message: `“${node.name}” katmanı gizli; çizilen nesne görünmeyecek.`, path: 'layerId' }];
+    return failed(error('layer_locked', `“${node.name}” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.`, path));
+  return layers.isVisible(id) ? [] : [{ code: 'layer_hidden', message: `“${node.name}” katmanı gizli; çizilen nesne görünmeyecek.`, path }];
 }
 
 /**

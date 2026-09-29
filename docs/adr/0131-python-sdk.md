@@ -81,7 +81,7 @@ Katalogda 33 komut var:
 
 ## Sonuçlar
 
-- 33 komutun hepsi tiplidir. Katalog değişip Python yeniden üretilmezse `sdk.py --check` ve kapsama testi düşer (PY-16).
+- 33 komutun hepsi tiplidir (ADR 0144'ün blok komutlarıyla 35). Katalog değişip Python yeniden üretilmezse `sdk.py --check` ve kapsama testi düşer (PY-16).
 - **Masaüstüne gömülü Python sonraki dilimdir** (PY-01..05): konsol ve betik paneli. Aynı `kentos.cad` o zaman açık çizimin `Document`'iyle çalışacak. MCP de aynı çekirdeği kullanacak.
 - **Açık kalanlar:**
   - Web'de Python yok (Pyodide, PY-18..22).

@@ -116,11 +116,7 @@ pub(crate) fn replace_changes(doc: &Document, slot: Slot, pieces: &[Shape]) -> V
         None => changes.push(EntityEdit::Remove { uid: id.clone() }),
     }
     for piece in geometries {
-        changes.push(EntityEdit::Add {
-            from: id.clone(),
-            geometry: piece,
-            keep_data: keep,
-        });
+        changes.push(EntityEdit::add(id.clone(), piece, keep));
     }
     changes
 }

@@ -1,7 +1,7 @@
 import { DisposableStore } from '../core/disposable';
 import type { BlockPiece } from '../model/blocks';
 import type { CadDocument } from '../model/document';
-import type { Entity } from '../model/entities';
+import type { Entity, EntityGeometry } from '../model/entities';
 import type { Bounds, Vec2 } from '../model/geometry';
 import type { Affine } from '../model/geom/affine';
 import type { Edge } from '../model/geom/intersect';
@@ -357,6 +357,17 @@ export class PickIndex {
       this.pieceTables.set(block, table);
     }
     return table;
+  }
+
+  /**
+   * Patlat of an insert (docs/adr/0144 §3): its definition's objects one
+   * level open, placed as the insert places them, each with its own fields
+   * (the insert's colour and line weight when it has none, the insert's layer
+   * when its own is the block's); or why not.
+   */
+  explodeInsert(e: Entity): { pieces: (EntityGeometry & Record<string, unknown>)[] } | { error: string } {
+    this.sync();
+    return JSON.parse(this.store.explodeInsert(JSON.stringify(e))) as { pieces: (EntityGeometry & Record<string, unknown>)[] } | { error: string };
   }
 
   /** An insert's pieces as placed (the drawing's coordinates), or null for any other object. */

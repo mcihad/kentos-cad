@@ -16,11 +16,15 @@
 //! 1. at least one change; every change's id lowercase UUID text with
 //!    hyphens (in order);
 //! 2. every geometry, in order: enough points for its kind, a text that is
-//!    not blank, every number finite, a circle's or an arc's radius above zero;
+//!    not blank, every number finite, a circle's or an arc's radius above
+//!    zero, an insert's scale above zero; an `add`'s own line weight;
 //! 3. the expected revision (every command's, `checks.rs`);
 //! 4. every id names an object of the document (in order);
 //! 5. no object changed twice;
-//! 6. no object on a locked layer: an edit is written whole or not at all.
+//! 6. no object on a locked layer: an edit is written whole or not at all;
+//! 7. a new object's own layer (an `add` that gives one): known, a layer,
+//!    not locked;
+//! 8. every insert's block is the drawing's (docs/adr/0144).
 
 use std::collections::HashSet;
 
@@ -223,6 +227,9 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
         if let Some(g) = geometry_of(change) {
             check_geometry(g, "changes", i, "değişikliğin")?;
         }
+        if let EntityEdit::Add { line_weight, .. } = change {
+            checks::line_weight(*line_weight, &format!("changes[{i}].lineWeight"))?;
+        }
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
     // Every id names an object, in order.
@@ -279,6 +286,25 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
             )));
         }
     }
+    // A new object's own layer: known, a layer, not locked (a block's object exploded, docs/adr/0144).
+    for (i, change) in input.changes.iter().enumerate() {
+        if let EntityEdit::Add {
+            layer_id: Some(layer),
+            ..
+        } = change
+        {
+            checks::layer_at(doc, layer, &format!("changes[{i}].layerId"))?;
+        }
+    }
+    check_blocks(
+        doc,
+        input
+            .changes
+            .iter()
+            .enumerate()
+            .filter_map(|(i, c)| Some((i, geometry_of(c)?))),
+        "changes",
+    )?;
     let mut checked = Checked {
         changed: Vec::new(),
         created: Vec::new(),
@@ -349,12 +375,34 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
             EntityEdit::Add {
                 geometry,
                 keep_data,
+                layer_id,
+                color,
+                line_weight,
+                attrs,
+                label,
                 ..
-            } => checked.created.push(elevate(
-                entity_of(geometry, inherited(base, 0, keep_data.unwrap_or(false))),
-                entity,
-                geometry,
-            )),
+            } => {
+                // What is given is the new object's own; the rest comes from `from` (docs/adr/0144).
+                let mut own = inherited(base, 0, keep_data.unwrap_or(false));
+                if let Some(layer) = layer_id {
+                    own.layer_id = layer.clone();
+                }
+                if let Some(color) = color {
+                    own.color = Some(color.clone());
+                }
+                if let Some(weight) = line_weight {
+                    own.line_weight = Some(*weight);
+                }
+                if let Some(attrs) = attrs {
+                    own.attrs = attrs.clone();
+                }
+                if let Some(label) = label {
+                    own.label = Some(label.clone());
+                }
+                checked
+                    .created
+                    .push(elevate(entity_of(geometry, own), entity, geometry));
+            }
             EntityEdit::Remove { uid } => checked.removed.push((slot, uid.clone())),
         }
     }
@@ -545,6 +593,39 @@ pub(crate) fn check_geometry(
             at(".r"),
         )));
     }
+    // An insert's scale (docs/adr/0144).
+    if let EntityGeometry::Insert { scale, .. } = g
+        && *scale <= 0.0
+    {
+        return Err(Stop::Failed(error(
+            codes::INVALID_SCALE,
+            "Blok ölçeği sıfırdan büyük olmalı. Pozitif bir ölçek verin.".into(),
+            at(".scale"),
+        )));
+    }
+    Ok(())
+}
+
+/// Every insert among the geometries names a block of the drawing, in
+/// order (docs/adr/0144): `unknown_block` at `{list}[i].geometry.block`.
+pub(crate) fn check_blocks<'a>(
+    doc: &Document,
+    geometries: impl Iterator<Item = (usize, &'a EntityGeometry)>,
+    list: &str,
+) -> Result<(), Stop> {
+    for (i, g) in geometries {
+        if let EntityGeometry::Insert { block, .. } = g
+            && doc.block(*block).is_none()
+        {
+            return Err(Stop::Failed(error(
+                codes::UNKNOWN_BLOCK,
+                format!(
+                    "“{block}” kimlikli blok çizimde tanımlı değil: silinmiş ya da başka bir çizimin olabilir. Çizimde tanımlı bir bloğun kimliğini verin."
+                ),
+                Some(format!("{list}[{i}].geometry.block")),
+            )));
+        }
+    }
     Ok(())
 }
 
@@ -685,5 +766,8 @@ fn finite(g: &EntityGeometry) -> bool {
                 && pattern.angle.is_finite()
                 && pattern.spacing.is_finite()
         }
+        EntityGeometry::Insert {
+            p, scale, rotation, ..
+        } => pt(p) && scale.is_finite() && rotation.is_finite(),
     }
 }

@@ -62,7 +62,9 @@ class Coverage(unittest.TestCase):
             for side in ("input", "output", "plan"):
                 if side in c:
                     names.add(c[side]["title"])
-                    names.update(c[side].get("$defs", {}))
+                    # A named text that is no choice (a block's id) is a plain `str`, as the generator writes it.
+                    defs = c[side].get("$defs", {}).items()
+                    names.update(n for n, d in defs if not (d.get("type") == "string" and "enum" not in d))
         missing = sorted(n for n in names if not hasattr(types, n))
         self.assertEqual(missing, [])
 

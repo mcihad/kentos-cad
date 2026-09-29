@@ -167,11 +167,7 @@ impl Offset {
         let mut changes: Vec<EntityEdit> = shapes
             .iter()
             .filter_map(edge::geometry)
-            .map(|geometry| EntityEdit::Add {
-                from: from.clone(),
-                geometry,
-                keep_data: None,
-            })
+            .map(|geometry| EntityEdit::add(from.clone(), geometry, None))
             .collect();
         let copies = changes.len();
         if copies == 0 {

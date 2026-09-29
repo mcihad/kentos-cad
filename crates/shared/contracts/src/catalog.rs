@@ -1205,7 +1205,7 @@ pub fn catalog() -> CommandCatalog {
                       Seçili nesnenin tutamacı sürüklenince grip işlemiyle (adımı Tutamaçla düzenle), tutamacın menüsü Ortasına köşe ekle ve Köşeyi sil için vertexAdd ve vertexRemove, Düz kenar yap ve Yaya dönüştür için straightEdge ve arcEdge işlemleriyle yazar. \
                       Parçala, Yönü çevir, Sadeleştir ve Çizimi temizle split, reverse, simplify ve cleanup işlemleriyle, Tüm köşeleri yuvarla ve Tüm köşelere pah fillet ve chamfer işlemleriyle yazar. \
                       update nesnenin geometrisini değiştirir, öbür alanları kalır; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır; \
-                      add bir nesneden yeni nesne yapar, katmanını ve rengini alır; remove nesneyi siler. Bir nesne tek bir değişiklikle değişir. Yazının metni boş olamaz; kapalı alanın halkası en az 3 köşelidir, kenarlarından biri yaysa 2. \
+                      add bir nesneden yeni nesne yapar, katmanını, rengini ve kalınlığını alır; add'e verilen katman, renk, kalınlık, öznitelik ve etiket yeni nesnenin kendisinindir (Patlat bir bloğun nesnelerini kendi katman, renk ve verileriyle böyle çıkarır); remove nesneyi siler. Bir nesne tek bir değişiklikle değişir. Yazının metni boş olamaz; kapalı alanın halkası en az 3 köşelidir, kenarlarından biri yaysa 2. \
                       Kilitli katmandaki nesne değişmez, ondan nesne yapılmaz: böyle bir nesne verilirse hiçbir şey yazılmaz. \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
                       Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider."
@@ -1342,7 +1342,7 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_ENTITIES_CREATE_VERSION,
             title: "Nesneleri ekle".into(),
             summary: "Verilen nesneleri bir katmana yazar; hepsi tek geri alma adımındadır, adı “Ekle” ya da aracın ya da hesabın adı (Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan oluştur, Poligon hesabı, Kutupsal alım, Önden kestirme, Geriden kestirme). \
-                      Her nesne geometrisiyle verilir, cad.entities.edit'teki gibi: nokta, çizgi, çoklu çizgi, kapalı alan, daire, yay, elips, eğri, yardımcı çizgi, ışın, yazı, ölçü, tarama; renk, öznitelik ve etiket isteğe bağlıdır. \
+                      Her nesne geometrisiyle verilir, cad.entities.edit'teki gibi: nokta, çizgi, çoklu çizgi, kapalı alan, daire, yay, elips, eğri, yardımcı çizgi, ışın, yazı, ölçü, tarama, blok yerleştirmesi (çizimde tanımlı bir blok, ölçeği pozitif); renk, öznitelik ve etiket isteğe bağlıdır. \
                       Elips, Eğri, Yardımcı çizgi, Işın, Halka, Paralel çizgi, Dik in, Dik çık ve Böl araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar; Yazı, Ölçülendirme, Tarama, Parsel oluştur ve İçine tıklayarak alan da. \
                       Hesap menüsünün pencereleri (Poligon hesabı, Kutupsal alım, Önden ve Geriden kestirme) bulduğu noktaları adları, etiketleri ve öznitelikleriyle bu komutla çizime ekler. \
                       Kilitli katmana hiçbir şey yazılmaz; gizli katmana uyarıyla yazılır. \
@@ -1473,6 +1473,106 @@ pub fn catalog() -> CommandCatalog {
                         "operation": "attributes",
                         "expectedRevision": "37"
                     }),
+                    output: None,
+                },
+            ],
+        },
+        // Blok oluştur and the Bloklar panel (docs/adr/0144), held together by
+        // fixtures/commands/v1/cad.blocks.define.json and cad.blocks.edit.json.
+        CommandDescriptor {
+            id: crate::CAD_BLOCKS_DEFINE.into(),
+            version: crate::CAD_BLOCKS_DEFINE_VERSION,
+            title: "Blok tanımla".into(),
+            summary: "Kalıcı kimlikleriyle verilen nesnelerden, verilen adla ve taban noktasıyla yeni bir blok tanımı yapar; tek geri alma adımı, adı Blok tanımla. \
+                      Nesneler olduğu gibi, koordinatları, katmanları, renkleri ve verileriyle kopyalanır; blok iç içe olabilir, en çok 16 düzey. Ad boş olamaz ve çizimde bir kez bulunur (büyük küçük harf Türkçe kurallarıyla ayırt edilmez). \
+                      replace ile nesneler silinir, yerine yeni bloğun taban noktasına, layerId katmanına bir yerleştirmesi konur (ölçek 1, dönüş yok); kilitli katmandaki nesne tanıma girer ama silinmez, böyle bir nesne varsa replace reddedilir. \
+                      Blok oluştur aracı bu komutla yazar; blok cad.entities.create'in insert geometrisiyle yerleştirilir, Patlat onu cad.entities.edit ile açar. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
+                      Yerel çizim izin istemez; veritabanı projesi blokları henüz saklamaz."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Web, CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::BlocksDefine>(),
+            output: schema::<crate::BlockDefined>(),
+            plan: Some(schema::<crate::BlocksDefinePlan>()),
+            examples: vec![
+                CommandExample {
+                    title: "Rögar: bir çember ve yazısı, taban noktası çemberin merkezi".into(),
+                    input: json!({
+                        "name": "Rögar",
+                        "base": { "x": 423510.0, "y": 4512300.0 },
+                        "uids": [
+                            "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+                            "01925f3e-7c1b-7a10-8c21-3b4d5e6f7081"
+                        ]
+                    }),
+                    output: Some(json!({
+                        "block": "01925f3e-7c1c-7b22-8d33-4c5e6f708192",
+                        "removed": [],
+                        "revision": "39"
+                    })),
+                },
+                CommandExample {
+                    title: "Seçilenleri blokla değiştir: nesneler gider, yerine bloğun bir yerleştirmesi gelir".into(),
+                    input: json!({
+                        "name": "Aydınlatma direği",
+                        "base": { "x": 423520.0, "y": 4512305.0 },
+                        "uids": [
+                            "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+                            "01925f3e-7c1b-7a10-8c21-3b4d5e6f7081"
+                        ],
+                        "replace": true,
+                        "layerId": "aydinlatma"
+                    }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_BLOCKS_EDIT.into(),
+            version: crate::CAD_BLOCKS_EDIT_VERSION,
+            title: "Blok tanımını değiştir".into(),
+            summary: "Bir blok tanımını kimliğiyle değiştirir; tek geri alma adımı, adı işlemin: rename yeni ad (Blok değiştir), redefine içindekileri kalıcı kimlikleriyle verilen nesnelerden yeniden kurar (Blok değiştir), rebase taban noktasını taşır (Blok değiştir), remove kullanılmayan tanımı siler (Blok sil), purge kullanılmayan bütün tanımları siler (Blokları temizle). \
+                      Tanım değişince bütün yerleştirmeleri yenisini gösterir. Çizimde ya da başka bir tanımda yerleştirmesi olan tanım silinmez; tanım kendini içeremez, en çok 16 düzey iç içe olabilir. \
+                      redefine'da replace ile nesneler silinir, yerine tanımın bir yerleştirmesi konur. Bir şey değiştirmeyen istek hiçbir şey yazmaz. \
+                      Bloklar paneli bu komutla yazar. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
+                      Yerel çizim izin istemez; veritabanı projesi blokları henüz saklamaz."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Web, CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::BlocksEdit>(),
+            output: schema::<crate::BlocksEdited>(),
+            plan: Some(schema::<crate::BlocksEditPlan>()),
+            examples: vec![
+                CommandExample {
+                    title: "Yeniden adlandır".into(),
+                    input: json!({
+                        "operation": "rename",
+                        "block": "01925f3e-7c1c-7b22-8d33-4c5e6f708192",
+                        "name": "Kanalizasyon rögarı"
+                    }),
+                    output: Some(json!({
+                        "changed": ["01925f3e-7c1c-7b22-8d33-4c5e6f708192"],
+                        "removed": [],
+                        "deleted": [],
+                        "revision": "40"
+                    })),
+                },
+                CommandExample {
+                    title: "Kullanılmayan bütün blokları temizle".into(),
+                    input: json!({ "operation": "purge" }),
                     output: None,
                 },
             ],
@@ -1645,6 +1745,12 @@ mod tests {
                         serde_json::from_value::<crate::EntitiesSetProperties>(e.input.clone())
                             .map(|_| ())
                     }
+                    crate::CAD_BLOCKS_DEFINE => {
+                        serde_json::from_value::<crate::BlocksDefine>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_BLOCKS_EDIT => {
+                        serde_json::from_value::<crate::BlocksEdit>(e.input.clone()).map(|_| ())
+                    }
                     other => panic!("{other}: add its input type to this test"),
                 };
                 parsed.unwrap_or_else(|err| panic!("{}: {}: {err}", d.id, e.title));
@@ -1692,6 +1798,14 @@ mod tests {
                         }
                         crate::CAD_ENTITIES_SET => {
                             serde_json::from_value::<crate::EntitiesPropertiesSet>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_BLOCKS_DEFINE => {
+                            serde_json::from_value::<crate::BlockDefined>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_BLOCKS_EDIT => {
+                            serde_json::from_value::<crate::BlocksEdited>(output.clone())
                                 .map(|_| ())
                         }
                         other => panic!("{other}: add its output type to this test"),

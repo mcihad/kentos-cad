@@ -374,6 +374,11 @@ export class ViewportController {
     return this.picker.enclosing(world);
   }
 
+  /** Patlat of a block's insert: its definition's objects placed, each with its own fields (docs/adr/0144); or why not. */
+  explodeInsert(e: Entity): ReturnType<PickIndex['explodeInsert']> {
+    return this.picker.explodeInsert(e);
+  }
+
   /** A dimension's measured value as drawn: prefix and value in project units (length without unit). */
   dimensionText(l: Pick<DimensionLayout, 'prefix' | 'unit' | 'value'>): string {
     const f = this.ctx.format;

@@ -70,17 +70,20 @@ Stil sembolleri (ADR 0090–0094) başka bir kavramdır. Onlar katmanın görün
 ### 4. Komutlar
 
 - **`cad.blocks.define` v1:**
-  - Girdi: ad, taban noktası ve nesneler (kimlikleriyle).
+  - Girdi: ad, taban noktası ve nesneler (kimlikleriyle), isteğe bağlı açıklama; `replace` ile yerleştirmenin katmanı (`layerId`; Blok oluştur etkin katmanı verir, verilmezse `no_layer`).
+  - Nesneler olduğu gibi kopyalanır (geometri, katman, renk, kalınlık, öznitelik, etiket, sembol); yerel kimlikleri girdinin sırasıyla 1'den; iki kez verilen kimlik tek nesnedir.
   - Yeni tanım yazılır. `replace` ile seçilen nesneler silinir, yerine tanımın taban noktasına bir yerleştirme konur. Hepsi tek adımda.
   - Kilitli katmandaki nesne tanıma alınır ama `replace` ile silinmez: nesnelerden biri kilitliyse `replace` reddedilir.
-- **Yerleştirme:** `cad.entities.create`'in geometrisi `insert` türünü alır.
+- **Yerleştirme:** `cad.entities.create`'in ve `cad.entities.edit`'in geometrisi (`EntityGeometry`) `insert` türünü alır: blok, yer, ölçek, dönüş, aynalama (yalnız true yazılır). Blok çizimin olmalı (`unknown_block`, katman denetiminden sonra), ölçek sıfırdan büyük (`invalid_scale`).
+- **Patlat:** `cad.entities.edit`'in `add` değişikliği isteğe bağlı kendi katmanını, rengini, kalınlığını, özniteliklerini ve etiketini alır; verilen alan `from`'unkinin yerine geçer. Patlat bir yerleştirmeyi tanımının nesnelerine böyle açar: nesnenin katmanı çizimde katman olarak varsa o, yoksa yerleştirmeninki; rengi ve kalınlığı yoksa yerleştirmeninki (çekirdek verir); öznitelikleri ve etiketi kendisinin. Verilen katman var, grup değil, kilitli değil olmalı (`changes[i].layerId`); kalınlık 0 ile 100 mm arasındadır.
 - **`cad.blocks.edit` v1:**
   - `rename`: yeniden adlandırma;
   - `redefine`: içindekileri seçilen nesnelerden yeniden kurma; bütün yerleştirmeler güncellenir;
   - `rebase`: taban noktasını taşıma;
   - `remove`: kullanılmayan tanımı silme;
-  - `purge`: kullanılmayanların hepsini silme.
-  - Her biri tek geri alma adımıdır.
+  - `purge`: kullanılmayanların hepsini silme; yalnız kullanılmayanların kullandıkları da gider.
+  - Her biri tek geri alma adımıdır: rename, redefine, rebase “Blok değiştir”, remove “Blok sil”, purge “Blokları temizle”. Bir şey değiştirmeyen istek hiçbir şey yazmaz.
+- **Hata kodları:** `empty_name`, `no_entities`, `no_layer`, `no_block`, `no_base`, `unknown_block`, `duplicate_block` (Türkçe harf katlamasıyla, ileti ilk tanımın adını verir), `block_cycle`, `block_too_deep`, `block_in_use`; iletiler belgelerin sözleridir (`kentos_contracts::blocks`). Plan tanımı boş UUID kimlikle, yerleştirmeyi yuva 0 ile verir.
 - Ortak durumlar `fixtures/commands/v1`'de, bağımsız Python denetimiyle; iki platform geçer.
 
 ### 5. Değişim biçimleri ve sunucu
@@ -129,7 +132,7 @@ Stil sembolleri (ADR 0090–0094) başka bir kavramdır. Onlar katmanın görün
 
 1. **Sözleşme ve `.kcad` şema 6.** Tanımlar, `insert`, tipli sütunlar, belirtim, Python okuyucu ve yazıcı, örnekler. İki belge tanımları geri alınabilir durum olarak taşır. *(29 Eylül: tamam, iki platformda. Çekirdeğin `Shape::Insert`'i de bu adımda geldi: dönüşümler benzerliği birleştirir, depo yerleştirmeyi ekleme noktasıyla çizer ve seçer; açılım 2. adımdır. Veritabanı projesi blokları 5. adıma dek açık bir iletiyle reddeder.)*
 2. **Çekirdek.** Açılım, depo (çizim, seçme, kenet, kutu), dönüşümler, Patlat, iki çizici. *(29 Eylül: tamam, iki platformda; Patlat 3. adımda. `kentos_geometry_core::block` tanımı bir kez düzleştirir: iç içe yerleştirmeler benzerlikleriyle açılır, kendi rengi ve kalınlığı olmayan iç nesne iç yerleştirmeninkini alır, parçalar taban noktasına göre tutulur, çeyrek dönüşler tamdır. Depo yerleştirmeyi parçalarıyla çizer (`GROUP` kaydı), seçer (parçaya tıklama, kapalı parçanın içi, pencere, kesişim, çit, daire), kenetler (parçaların noktaları, ekleme noktası düğüm), kutusunu parçalardan alır; tanım değişince her yerleştirme yeniden açılır. Bloğun yazıları ve ölçü değerleri yerleştikleri yerde çizilir (`LABEL_PIECE_TEXT`, `LABEL_PIECE_DIMENSION`). Stil çekirdeği parçaları kendi renk ve kalınlıklarıyla, yoksa yerleştirmeninkiyle çizer; tarama parçası yerleşmiş deseniyle döner. Vurgu ve dönüşüm hayaleti parçalarladır. `usage-blocks-view` izi iki platformda, üç varyantta ve resimleriyle. Web'in kaydı tanımları düşürüyordu (`projectHead`); düzeltildi, sayfanın yolundan `blocks.kcad` bayt bayt yazılır. Patlat, yerleştirme yaratmayla birlikte 3. adımdadır: sözleşmenin geometrisi `insert`'i o adımda alır.)*
-3. **Komutlar.** `cad.blocks.define`, `insert` yaratma, `cad.blocks.edit`; ortak durumlar.
+3. **Komutlar.** `cad.blocks.define`, `insert` yaratma, `cad.blocks.edit`; ortak durumlar. *(29 Eylül: tamam, iki platformda. Sözleşme `cad_blocks.rs`, `EntityGeometry::Insert`, `add`'in kendi alanları; masaüstü `blocks_define.rs`, `blocks_edit.rs`, web `blocksDefine.ts`, `blocksEdit.ts`; ortak durumlar bağımsız Python üreticisiyle (`scripts/fixtures/blocks_command_cases.py`: 23 + 22; `cad.entities.create` ve `cad.entities.edit`'e yerleştirme ve Patlat durumları), üç koşucu (web, masaüstü, Python SDK) geçer; koşucularda `captureBlock`, `$blockOf:`, `$block:`, `blocks`, `blockIds`. Patlat iki platformda yerleştirmeyi açar (`block-explode` izi üç varyantta). Başsız sunucu, MCP (14 çizim komutu) ve Python SDK (`kentos.cad.blocks`, `Document.blocks()`) yeni komutları taşır.)*
 4. **Araçlar ve arayüz.** Blok oluştur, Blok ekle, Bloklar paneli, Öznitelikler; `usage-blocks` senaryosu ve resimler.
 5. **Biçimler ve sunucu.** DXF okuma ve yazma, GeoJSON, PostGIS.
 6. **Öznitelik tanımları.** Gösterim, soru, düzenleme, DXF ATTDEF ve ATTRIB.

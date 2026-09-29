@@ -9,7 +9,7 @@ import type { CadDocument } from '../model/document';
 import type { NewEntity } from '../model/entities';
 import { checkLineWeight, checkLayer, checkRevision, error, failed, validated, type Stop } from './checks';
 import type { ProductCommand } from './command';
-import { checkGeometry, geometryOf } from './entitiesEdit';
+import { checkBlocks, checkGeometry, geometryOf } from './entitiesEdit';
 
 /**
  * `cad.entities.create` v1 (docs/adr/0057): new objects of any kind on a
@@ -54,7 +54,16 @@ function check(doc: CadDocument, input: EntitiesCreate): Stop | CommandWarning[]
     const stop = checkGeometry(o.geometry, i, 'objects', 'nesnenin') ?? checkLineWeight(o.lineWeight, `objects[${i}].lineWeight`);
     if (stop) return stop;
   }
-  return checkRevision(doc, input.expectedRevision) ?? checkLayer(doc, input.layerId);
+  const stop = checkRevision(doc, input.expectedRevision);
+  if (stop) return stop;
+  const layer = checkLayer(doc, input.layerId);
+  if (!Array.isArray(layer)) return layer;
+  // An insert's block is the drawing's (docs/adr/0144).
+  return checkBlocks(
+    doc,
+    input.objects.map((o) => o.geometry),
+    'objects',
+  ) ?? layer;
 }
 
 /** An object as the document stores it: its own copies of every field, never the caller's objects. */

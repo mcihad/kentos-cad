@@ -12,8 +12,10 @@
 //! 1. at least one object;
 //! 2. every geometry, in order, by `cad.entities.edit`'s rules: enough
 //!    points for its kind, every number finite, a circle's or an arc's
-//!    radius above zero; and its line weight from 0 to 100 mm when given;
-//! 3. the expected revision, then the layer (every create command's, `checks.rs`).
+//!    radius above zero, an insert's scale above zero; and its line weight
+//!    from 0 to 100 mm when given;
+//! 3. the expected revision, then the layer (every create command's, `checks.rs`);
+//! 4. every insert's block is the drawing's (docs/adr/0144).
 
 use kentos_contracts::{
     CommandResult, CommandWarning, CreateOperation, EntitiesCreate, EntitiesCreatePlan,
@@ -25,7 +27,7 @@ use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};
 /// The stable codes of the answers (`CommandError.code`, `CommandWarning.code`).
 pub use crate::codes;
-use crate::edit::check_geometry;
+use crate::edit::{check_blocks, check_geometry};
 use crate::geometry::entity_of;
 
 /// Checks `input` against the document, writing nothing.
@@ -131,7 +133,18 @@ fn check(doc: &Document, input: &EntitiesCreate) -> Result<Vec<CommandWarning>, 
         checks::line_weight(object.line_weight, &format!("objects[{i}].lineWeight"))?;
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
-    checks::layer(doc, &input.layer_id)
+    let warnings = checks::layer(doc, &input.layer_id)?;
+    // An insert's block is the drawing's (docs/adr/0144).
+    check_blocks(
+        doc,
+        input
+            .objects
+            .iter()
+            .enumerate()
+            .map(|(i, o)| (i, &o.geometry)),
+        "objects",
+    )?;
+    Ok(warnings)
 }
 
 /// The objects `input` describes, as the document stores them: slot 0 (given

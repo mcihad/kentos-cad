@@ -19457,7 +19457,7 @@
       "id": "cad.entities.edit",
       "version": 1,
       "title": "Nesneleri düzenle",
-      "summary": "Kalıcı kimlikleriyle verilen nesnelere yeni geometri verir, onları parçalarla değiştirir, onlardan yeni nesneler yapar ya da onları siler; hepsi tek geri alma adımında, işlemin adıyla. Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle/sil ve Esnet araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar; Öznitelikler panelinin geometri satırları ve yerinde yazı düzenleyicisi de properties işlemiyle (adımı Değiştir), alan araçları da (Alan birleştir, kesiştir, çıkar, böl, Alana çevir, Çizgiye çevir) kendi adlarıyla bu komutla yazar. Seçili nesnenin tutamacı sürüklenince grip işlemiyle (adımı Tutamaçla düzenle), tutamacın menüsü Ortasına köşe ekle ve Köşeyi sil için vertexAdd ve vertexRemove, Düz kenar yap ve Yaya dönüştür için straightEdge ve arcEdge işlemleriyle yazar. Parçala, Yönü çevir, Sadeleştir ve Çizimi temizle split, reverse, simplify ve cleanup işlemleriyle, Tüm köşeleri yuvarla ve Tüm köşelere pah fillet ve chamfer işlemleriyle yazar. update nesnenin geometrisini değiştirir, öbür alanları kalır; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır; add bir nesneden yeni nesne yapar, katmanını ve rengini alır; remove nesneyi siler. Bir nesne tek bir değişiklikle değişir. Yazının metni boş olamaz; kapalı alanın halkası en az 3 köşelidir, kenarlarından biri yaysa 2. Kilitli katmandaki nesne değişmez, ondan nesne yapılmaz: böyle bir nesne verilirse hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
+      "summary": "Kalıcı kimlikleriyle verilen nesnelere yeni geometri verir, onları parçalarla değiştirir, onlardan yeni nesneler yapar ya da onları siler; hepsi tek geri alma adımında, işlemin adıyla. Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle/sil ve Esnet araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar; Öznitelikler panelinin geometri satırları ve yerinde yazı düzenleyicisi de properties işlemiyle (adımı Değiştir), alan araçları da (Alan birleştir, kesiştir, çıkar, böl, Alana çevir, Çizgiye çevir) kendi adlarıyla bu komutla yazar. Seçili nesnenin tutamacı sürüklenince grip işlemiyle (adımı Tutamaçla düzenle), tutamacın menüsü Ortasına köşe ekle ve Köşeyi sil için vertexAdd ve vertexRemove, Düz kenar yap ve Yaya dönüştür için straightEdge ve arcEdge işlemleriyle yazar. Parçala, Yönü çevir, Sadeleştir ve Çizimi temizle split, reverse, simplify ve cleanup işlemleriyle, Tüm köşeleri yuvarla ve Tüm köşelere pah fillet ve chamfer işlemleriyle yazar. update nesnenin geometrisini değiştirir, öbür alanları kalır; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır; add bir nesneden yeni nesne yapar, katmanını, rengini ve kalınlığını alır; add'e verilen katman, renk, kalınlık, öznitelik ve etiket yeni nesnenin kendisinindir (Patlat bir bloğun nesnelerini kendi katman, renk ve verileriyle böyle çıkarır); remove nesneyi siler. Bir nesne tek bir değişiklikle değişir. Yazının metni boş olamaz; kapalı alanın halkası en az 3 köşelidir, kenarlarından biri yaysa 2. Kilitli katmandaki nesne değişmez, ondan nesne yapılmaz: böyle bir nesne verilirse hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -19520,6 +19520,11 @@
               "pts"
             ],
             "type": "object"
+          },
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
           },
           "DimensionStyle": {
             "enum": [
@@ -19736,8 +19741,25 @@
                 "type": "object"
               },
               {
-                "description": "A new object made from `from`: its layer and colour; its attributes and\nlabel only with `keepData` (an offset copy, a piece of a break or an\nexplode, a fillet's arc).",
+                "description": "A new object made from `from`: its layer, colour and line weight; its\nattributes and label only with `keepData` (an offset copy, a piece of\na break or an explode, a fillet's arc). A field given here is the new\nobject's own instead: a block's object exploded keeps its layer,\ncolour, line weight, attributes and label (docs/adr/0144).",
                 "properties": {
+                  "attrs": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Its attributes, whatever `keepData` says.",
+                    "type": [
+                      "object",
+                      "null"
+                    ]
+                  },
+                  "color": {
+                    "description": "Its own colour (`EntityBase.color`).",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
                   "from": {
                     "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
                     "type": "string"
@@ -19755,6 +19777,30 @@
                   "kind": {
                     "const": "add",
                     "type": "string"
+                  },
+                  "label": {
+                    "description": "Its label, whatever `keepData` says.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "layerId": {
+                    "description": "The layer it goes on: a layer's id (`LayerNode.id`), not a group's.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "lineWeight": {
+                    "description": "Its own line weight, paper mm, 0 to 100 (`EntityBase.line_weight`).",
+                    "format": "double",
+                    "maximum": 100.0,
+                    "minimum": 0.0,
+                    "type": [
+                      "number",
+                      "null"
+                    ]
                   }
                 },
                 "required": [
@@ -20235,6 +20281,40 @@
                   "pattern"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A block placed (docs/adr/0144): the definition's base point goes to\n`p`, its objects are mirrored in the definition's x axis when\n`mirror`, scaled by `scale` (above 0) and turned by `rotation`\n(radians, counter-clockwise) about `p`. The block is the drawing's.",
+                "properties": {
+                  "block": {
+                    "$ref": "#/$defs/BlockId"
+                  },
+                  "kind": {
+                    "const": "insert",
+                    "type": "string"
+                  },
+                  "mirror": {
+                    "type": "boolean"
+                  },
+                  "p": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "rotation": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "scale": {
+                    "format": "double",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "block",
+                  "p",
+                  "scale",
+                  "rotation"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -20328,7 +20408,7 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.entities.edit` v1: changes to objects named by their\npersistent ids, written as one undo step named after `operation`. The\nmodify tools give the objects they picked and the geometry the shared\ncore computed (TODOS.md CMD-07); the command reads no selection, layer or\nview.\n\nThe changes are made in their order, against the document as it was\nbefore them: an `add` may come from an object the same edit replaces or\ndeletes. An object is changed (`update`, `replace`, `remove`) by one\nchange at most.\n\nAn object on a locked layer (by itself or a group above it) is not\nchanged, and nothing is made from it: when one is named, nothing is\nwritten and the answer is `layer_locked`. The pieces of a split object\nbelong together, so an edit is written whole or not at all.\n\nRefusals (`CommandError.code`), checked in this order: `no_changes`,\n`invalid_uid` (each change's id in order), then each geometry in order:\n`too_few_points` (a polyline), `too_few_corners` (a closed area's ring or\nhole with fewer than 3 corners, or 2 whose two edges are both straight, a\nbulge absent or 0; a hatch's ring or hole with fewer than 3), `empty_text`\n(a text whose text is empty or only white space, Unicode's `White_Space`),\n`not_finite`, `invalid_radius`;\nthen `invalid_revision`, `revision_conflict` (status `conflict`),\n`entity_not_found` (each id in order), `repeated_entity` (an object\nchanged twice), `layer_locked`; on the desktop also `slots_exhausted`.",
+        "description": "Input of `cad.entities.edit` v1: changes to objects named by their\npersistent ids, written as one undo step named after `operation`. The\nmodify tools give the objects they picked and the geometry the shared\ncore computed (TODOS.md CMD-07); the command reads no selection, layer or\nview.\n\nThe changes are made in their order, against the document as it was\nbefore them: an `add` may come from an object the same edit replaces or\ndeletes. An object is changed (`update`, `replace`, `remove`) by one\nchange at most.\n\nAn object on a locked layer (by itself or a group above it) is not\nchanged, and nothing is made from it: when one is named, nothing is\nwritten and the answer is `layer_locked`. The pieces of a split object\nbelong together, so an edit is written whole or not at all.\n\nRefusals (`CommandError.code`), checked in this order: `no_changes`,\n`invalid_uid` (each change's id in order), then each change in order: its\ngeometry's `too_few_points` (a polyline), `too_few_corners` (a closed\narea's ring or hole with fewer than 3 corners, or 2 whose two edges are\nboth straight, a bulge absent or 0; a hatch's ring or hole with fewer\nthan 3), `empty_text` (a text whose text is empty or only white space,\nUnicode's `White_Space`), `invalid_elevations`, `not_finite`,\n`invalid_radius`, `invalid_scale` (an insert's), and an `add`'s own\n`invalid_line_weight`;\nthen `invalid_revision`, `revision_conflict` (status `conflict`),\n`entity_not_found` (each id in order), `repeated_entity` (an object\nchanged twice), `layer_locked`; an `add`'s own layer: `layer_not_found`,\n`not_a_layer`, `layer_locked`; `unknown_block` (each insert's block, in\norder); on the desktop also `slots_exhausted`.",
         "properties": {
           "changes": {
             "description": "What changes, at least one.",
@@ -23397,7 +23477,7 @@
       "id": "cad.entities.create",
       "version": 1,
       "title": "Nesneleri ekle",
-      "summary": "Verilen nesneleri bir katmana yazar; hepsi tek geri alma adımındadır, adı “Ekle” ya da aracın ya da hesabın adı (Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan oluştur, Poligon hesabı, Kutupsal alım, Önden kestirme, Geriden kestirme). Her nesne geometrisiyle verilir, cad.entities.edit'teki gibi: nokta, çizgi, çoklu çizgi, kapalı alan, daire, yay, elips, eğri, yardımcı çizgi, ışın, yazı, ölçü, tarama; renk, öznitelik ve etiket isteğe bağlıdır. Elips, Eğri, Yardımcı çizgi, Işın, Halka, Paralel çizgi, Dik in, Dik çık ve Böl araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar; Yazı, Ölçülendirme, Tarama, Parsel oluştur ve İçine tıklayarak alan da. Hesap menüsünün pencereleri (Poligon hesabı, Kutupsal alım, Önden ve Geriden kestirme) bulduğu noktaları adları, etiketleri ve öznitelikleriyle bu komutla çizime ekler. Kilitli katmana hiçbir şey yazılmaz; gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
+      "summary": "Verilen nesneleri bir katmana yazar; hepsi tek geri alma adımındadır, adı “Ekle” ya da aracın ya da hesabın adı (Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan oluştur, Poligon hesabı, Kutupsal alım, Önden kestirme, Geriden kestirme). Her nesne geometrisiyle verilir, cad.entities.edit'teki gibi: nokta, çizgi, çoklu çizgi, kapalı alan, daire, yay, elips, eğri, yardımcı çizgi, ışın, yazı, ölçü, tarama, blok yerleştirmesi (çizimde tanımlı bir blok, ölçeği pozitif); renk, öznitelik ve etiket isteğe bağlıdır. Elips, Eğri, Yardımcı çizgi, Işın, Halka, Paralel çizgi, Dik in, Dik çık ve Böl araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar; Yazı, Ölçülendirme, Tarama, Parsel oluştur ve İçine tıklayarak alan da. Hesap menüsünün pencereleri (Poligon hesabı, Kutupsal alım, Önden ve Geriden kestirme) bulduğu noktaları adları, etiketleri ve öznitelikleriyle bu komutla çizime ekler. Kilitli katmana hiçbir şey yazılmaz; gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -23460,6 +23540,11 @@
               "pts"
             ],
             "type": "object"
+          },
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
           },
           "CreateOperation": {
             "description": "The drawing tool or Hesap window whose step has its own name; without\none the step is “Ekle”, as for every object a drawing tool adds.",
@@ -23997,6 +24082,40 @@
                   "pattern"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A block placed (docs/adr/0144): the definition's base point goes to\n`p`, its objects are mirrored in the definition's x axis when\n`mirror`, scaled by `scale` (above 0) and turned by `rotation`\n(radians, counter-clockwise) about `p`. The block is the drawing's.",
+                "properties": {
+                  "block": {
+                    "$ref": "#/$defs/BlockId"
+                  },
+                  "kind": {
+                    "const": "insert",
+                    "type": "string"
+                  },
+                  "mirror": {
+                    "type": "boolean"
+                  },
+                  "p": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "rotation": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "scale": {
+                    "format": "double",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "block",
+                  "p",
+                  "scale",
+                  "rotation"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -24137,7 +24256,7 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.entities.create` v1: new objects on a named layer, written\nas one undo step. Everything the command depends on is here (TODOS.md\nCMD-07): the tool fills `layerId` from the active layer and each object's\n`color` from the current colour; the command reads neither.\n\nThe objects are written in their order, each with a new persistent id.\nThe undo step is named after `operation`, or “Ekle”.\n\nRefusals (`CommandError.code`), checked in this order: `no_objects`, then\neach object's geometry in order: `too_few_points` (a polyline),\n`too_few_corners` (a closed area's or a hatch's ring or hole, by\n`cad.entities.edit`'s rule: a closed area's may have 2 corners when an\nedge is an arc), `empty_text` (a text whose text is empty or only white space),\n`not_finite`, `invalid_radius`, `invalid_line_weight` (the object's weight\nnot from 0 to 100 mm); then `invalid_revision`,\n`revision_conflict` (status `conflict`), `layer_not_found`,\n`not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`.\nWarning: `layer_hidden` (they are written all the same).",
+        "description": "Input of `cad.entities.create` v1: new objects on a named layer, written\nas one undo step. Everything the command depends on is here (TODOS.md\nCMD-07): the tool fills `layerId` from the active layer and each object's\n`color` from the current colour; the command reads neither.\n\nThe objects are written in their order, each with a new persistent id.\nThe undo step is named after `operation`, or “Ekle”.\n\nRefusals (`CommandError.code`), checked in this order: `no_objects`, then\neach object's geometry in order: `too_few_points` (a polyline),\n`too_few_corners` (a closed area's or a hatch's ring or hole, by\n`cad.entities.edit`'s rule: a closed area's may have 2 corners when an\nedge is an arc), `empty_text` (a text whose text is empty or only white space),\n`invalid_elevations`, `not_finite`, `invalid_radius`, `invalid_scale` (an\ninsert's), `invalid_line_weight` (the object's weight not from 0 to 100\nmm); then `invalid_revision`, `revision_conflict` (status `conflict`),\n`layer_not_found`, `not_a_layer`, `layer_locked`, `unknown_block` (each\ninsert's block, in order; docs/adr/0144); on the desktop also `slots_exhausted`.\nWarning: `layer_hidden` (they are written all the same).",
         "properties": {
           "expectedRevision": {
             "description": "The document revision the input was prepared against, as decimal text\n(from a plan, or the document). When given and the document is no\nlonger at it, nothing is written and the answer is `conflict`.",
@@ -27184,6 +27303,3266 @@
             "uids": [
               "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
             ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.blocks.define",
+      "version": 1,
+      "title": "Blok tanımla",
+      "summary": "Kalıcı kimlikleriyle verilen nesnelerden, verilen adla ve taban noktasıyla yeni bir blok tanımı yapar; tek geri alma adımı, adı Blok tanımla. Nesneler olduğu gibi, koordinatları, katmanları, renkleri ve verileriyle kopyalanır; blok iç içe olabilir, en çok 16 düzey. Ad boş olamaz ve çizimde bir kez bulunur (büyük küçük harf Türkçe kurallarıyla ayırt edilmez). replace ile nesneler silinir, yerine yeni bloğun taban noktasına, layerId katmanına bir yerleştirmesi konur (ölçek 1, dönüş yok); kilitli katmandaki nesne tanıma girer ama silinmez, böyle bir nesne varsa replace reddedilir. Blok oluştur aracı bu komutla yazar; blok cad.entities.create'in insert geometrisiyle yerleştirilir, Patlat onu cad.entities.edit ile açar. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; veritabanı projesi blokları henüz saklamaz.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.blocks.define` v1: a new definition made of the objects\nnamed by their persistent ids, copied as they are (their coordinates,\nlayers, colours and data; local ids 1, 2, … in the input's order), with\nthe base point given. Everything the command depends on is here (TODOS.md\nCMD-07): Blok oluştur fills `layerId` from the active layer.\n\nWith `replace` the objects are deleted and an insert of the new block\ntakes their place at the base point (scale 1, no turn) on `layerId`, in\nthe same undo step, “Blok tanımla”.\n\nAn id given twice is one object.\n\nRefusals (`CommandError.code`), checked in this order: `empty_name` (a\nname empty or only white space), `no_entities`, `invalid_uid` (each id in\norder), `not_finite` (the base point), `no_layer` (`replace` without\n`layerId`); then `invalid_revision`, `revision_conflict` (status\n`conflict`), `entity_not_found` (each id in order), `duplicate_block`\n(the name taken, Turkish case folded), `block_too_deep`; with `replace`\n`layer_not_found`, `not_a_layer`, `layer_locked` (the insert's layer),\nthen `layer_locked` for an object on a locked layer (it is taken into the\ndefinition, but not deleted); on the desktop also `slots_exhausted`.\nWarning: `layer_hidden` (the insert's layer).",
+        "properties": {
+          "base": {
+            "$ref": "#/$defs/Vec2",
+            "description": "The point an insert places, in the drawing's coordinates."
+          },
+          "description": {
+            "description": "What the block is.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text\n(from a plan, or the document). When given and the document is no\nlonger at it, nothing is written and the answer is `conflict`.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layerId": {
+            "description": "With `replace`: the layer the insert goes on, a layer's id.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "description": "The block's name, unique in the drawing (Turkish case folded).",
+            "type": "string"
+          },
+          "replace": {
+            "description": "True: the objects are replaced by an insert of the new block.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "uids": {
+            "description": "The objects it is made of, at least one, by persistent id.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "base",
+          "uids"
+        ],
+        "title": "BlocksDefine",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.blocks.define` v1.",
+        "properties": {
+          "block": {
+            "$ref": "#/$defs/BlockId",
+            "description": "The new definition's id."
+          },
+          "id": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "insert": {
+            "description": "With `replace`: the insert's persistent id and its slot.",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "removed": {
+            "description": "With `replace`: the objects deleted, in the input's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "block",
+          "removed",
+          "revision"
+        ],
+        "title": "BlockDefined",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "ArcEntity": {
+            "description": "Arc from `a0` to `a1` (radians), always counter-clockwise.",
+            "properties": {
+              "a0": {
+                "format": "double",
+                "type": "number"
+              },
+              "a1": {
+                "format": "double",
+                "type": "number"
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "c": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "r": {
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "c",
+              "r",
+              "a0",
+              "a1"
+            ],
+            "type": "object"
+          },
+          "AreaPart": {
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "properties": {
+              "bulges": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "holes": {
+                "items": {
+                  "$ref": "#/$defs/RingGeometry"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, as the area's own `zs` (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "pts"
+            ],
+            "type": "object"
+          },
+          "AttributeDefinition": {
+            "description": "One attribute an insert shows as text (docs/adr/0144 §7): the insert's\nattribute `tag`, else `value`, written at `p` in the definition's\ncoordinates, moved with the insert.",
+            "properties": {
+              "height": {
+                "description": "Metres, in the definition's size.",
+                "format": "double",
+                "type": "number"
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "prompt": {
+                "description": "What Blok ekle asks for it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "rotation": {
+                "description": "Degrees, counter-clockwise from east, as a text's.",
+                "format": "double",
+                "type": "number"
+              },
+              "tag": {
+                "type": "string"
+              },
+              "value": {
+                "description": "The default value.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "tag",
+              "p",
+              "height",
+              "rotation"
+            ],
+            "type": "object"
+          },
+          "BlockDefinition": {
+            "description": "A block definition (docs/adr/0144): objects drawn once, placed many\ntimes. Its objects' ids are local to it; their layer is kept, but an\ninsert draws them on its own layer (the DXF's layer 0), each with its own\ncolour or line weight when it has one.",
+            "properties": {
+              "attributes": {
+                "description": "The texts an insert shows from its attributes (ATTDEF).",
+                "items": {
+                  "$ref": "#/$defs/AttributeDefinition"
+                },
+                "type": "array"
+              },
+              "base": {
+                "$ref": "#/$defs/Vec2",
+                "description": "The point placed at an insert's `p`, in the definition's coordinates."
+              },
+              "description": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "entities": {
+                "items": {
+                  "$ref": "#/$defs/Entity"
+                },
+                "type": "array"
+              },
+              "id": {
+                "$ref": "#/$defs/BlockId"
+              },
+              "name": {
+                "description": "Unique in the drawing, Turkish case folded.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "base",
+              "entities"
+            ],
+            "type": "object"
+          },
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          "CircleEntity": {
+            "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "c": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "r": {
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "c",
+              "r"
+            ],
+            "type": "object"
+          },
+          "ConstructionEntity": {
+            "description": "Construction line or ray: base point and unit direction.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dir": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "p",
+              "dir"
+            ],
+            "type": "object"
+          },
+          "DimensionEntity": {
+            "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
+            "properties": {
+              "a": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "angle": {
+                "description": "Linear: measured direction in degrees (0 = ΔY, 90 = ΔX).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "b": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "c": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Angular: the vertex."
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "offset": {
+                "format": "double",
+                "type": "number"
+              },
+              "style": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "a",
+              "b",
+              "offset",
+              "height"
+            ],
+            "type": "object"
+          },
+          "DimensionStyle": {
+            "enum": [
+              "aligned",
+              "linear",
+              "angular",
+              "radius",
+              "diameter"
+            ],
+            "type": "string"
+          },
+          "EllipseEntity": {
+            "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "c": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "major": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "ratio": {
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "t0": {
+                "format": "double",
+                "type": "number"
+              },
+              "t1": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "c",
+              "major",
+              "ratio",
+              "t0",
+              "t1"
+            ],
+            "type": "object"
+          },
+          "Entity": {
+            "description": "Any drawing object, tagged by `kind` as in the TypeScript model.",
+            "oneOf": [
+              {
+                "$ref": "#/$defs/PointEntity",
+                "properties": {
+                  "kind": {
+                    "const": "point",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/LineEntity",
+                "properties": {
+                  "kind": {
+                    "const": "line",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/PathEntity",
+                "properties": {
+                  "kind": {
+                    "const": "polyline",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/PathEntity",
+                "properties": {
+                  "kind": {
+                    "const": "polygon",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/CircleEntity",
+                "properties": {
+                  "kind": {
+                    "const": "circle",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/ArcEntity",
+                "properties": {
+                  "kind": {
+                    "const": "arc",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/EllipseEntity",
+                "properties": {
+                  "kind": {
+                    "const": "ellipse",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/SplineEntity",
+                "properties": {
+                  "kind": {
+                    "const": "spline",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/ConstructionEntity",
+                "properties": {
+                  "kind": {
+                    "const": "xline",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/ConstructionEntity",
+                "properties": {
+                  "kind": {
+                    "const": "ray",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/TextEntity",
+                "properties": {
+                  "kind": {
+                    "const": "text",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/DimensionEntity",
+                "properties": {
+                  "kind": {
+                    "const": "dimension",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/HatchEntity",
+                "properties": {
+                  "kind": {
+                    "const": "hatch",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/InsertEntity",
+                "description": "A block placed in the drawing (docs/adr/0144).",
+                "properties": {
+                  "kind": {
+                    "const": "insert",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "HatchEntity": {
+            "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "holes": {
+                "items": {
+                  "items": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "pattern": {
+                "$ref": "#/$defs/HatchPattern"
+              },
+              "ring": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "ring",
+              "pattern"
+            ],
+            "type": "object"
+          },
+          "HatchPattern": {
+            "properties": {
+              "angle": {
+                "description": "Degrees, counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "spacing": {
+                "description": "Metres.",
+                "format": "double",
+                "type": "number"
+              },
+              "type": {
+                "$ref": "#/$defs/HatchPatternType"
+              }
+            },
+            "required": [
+              "type",
+              "angle",
+              "spacing"
+            ],
+            "type": "object"
+          },
+          "HatchPatternType": {
+            "enum": [
+              "solid",
+              "lines",
+              "cross"
+            ],
+            "type": "string"
+          },
+          "InsertEntity": {
+            "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "block": {
+                "$ref": "#/$defs/BlockId",
+                "description": "The definition's id."
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mirror": {
+                "description": "Mirrored in the definition's x axis, before the turn.",
+                "type": "boolean"
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Where the definition's base point goes."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "scale": {
+                "description": "Positive and finite; 1 is the definition's size.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "block",
+              "p",
+              "scale",
+              "rotation"
+            ],
+            "type": "object"
+          },
+          "LineEntity": {
+            "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
+            "properties": {
+              "a": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "b": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "za": {
+                "description": "The start's elevation, m; absent = none (docs/adr/0142).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "zb": {
+                "description": "The end's elevation, m; absent = none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "a",
+              "b"
+            ],
+            "type": "object"
+          },
+          "PathEntity": {
+            "description": "Polyline or polygon: vertices, DXF bulges (tan(θ/4), CCW positive) and, for polygons, holes.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bulges": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "holes": {
+                "items": {
+                  "$ref": "#/$defs/RingGeometry"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "parts": {
+                "description": "A polygon's parts past its first, whose own are the fields above;\nabsent for a one-part area, never on a polyline (docs/adr/0143).",
+                "items": {
+                  "$ref": "#/$defs/AreaPart"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "pts"
+            ],
+            "type": "object"
+          },
+          "PointEntity": {
+            "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "z": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "p"
+            ],
+            "type": "object"
+          },
+          "RingGeometry": {
+            "description": "A closed ring in vertex + bulge form (a polygon hole).",
+            "properties": {
+              "bulges": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "pts"
+            ],
+            "type": "object"
+          },
+          "SplineEntity": {
+            "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "closed": {
+                "type": "boolean"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "pts": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "pts",
+              "closed"
+            ],
+            "type": "object"
+          },
+          "TextEntity": {
+            "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "Metres.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "rotation": {
+                "description": "Degrees, counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "p",
+              "text",
+              "height",
+              "rotation"
+            ],
+            "type": "object"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.blocks.define` would write (plan mode); nothing is written.",
+        "properties": {
+          "block": {
+            "$ref": "#/$defs/BlockDefinition",
+            "description": "The definition as execute would write it; its id the nil UUID, as the\nid is given when it is written."
+          },
+          "insert": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Entity"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "With `replace`: the insert as execute would write it, `id` 0 and its\n`block` the nil UUID."
+          },
+          "removed": {
+            "description": "With `replace`: the objects execute would delete, in the input's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document revision the plan was made against.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "block",
+          "removed",
+          "revision"
+        ],
+        "title": "BlocksDefinePlan",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Rögar: bir çember ve yazısı, taban noktası çemberin merkezi",
+          "input": {
+            "base": {
+              "x": 423510.0,
+              "y": 4512300.0
+            },
+            "name": "Rögar",
+            "uids": [
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+              "01925f3e-7c1b-7a10-8c21-3b4d5e6f7081"
+            ]
+          },
+          "output": {
+            "block": "01925f3e-7c1c-7b22-8d33-4c5e6f708192",
+            "removed": [],
+            "revision": "39"
+          }
+        },
+        {
+          "title": "Seçilenleri blokla değiştir: nesneler gider, yerine bloğun bir yerleştirmesi gelir",
+          "input": {
+            "base": {
+              "x": 423520.0,
+              "y": 4512305.0
+            },
+            "layerId": "aydinlatma",
+            "name": "Aydınlatma direği",
+            "replace": true,
+            "uids": [
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+              "01925f3e-7c1b-7a10-8c21-3b4d5e6f7081"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.blocks.edit",
+      "version": 1,
+      "title": "Blok tanımını değiştir",
+      "summary": "Bir blok tanımını kimliğiyle değiştirir; tek geri alma adımı, adı işlemin: rename yeni ad (Blok değiştir), redefine içindekileri kalıcı kimlikleriyle verilen nesnelerden yeniden kurar (Blok değiştir), rebase taban noktasını taşır (Blok değiştir), remove kullanılmayan tanımı siler (Blok sil), purge kullanılmayan bütün tanımları siler (Blokları temizle). Tanım değişince bütün yerleştirmeleri yenisini gösterir. Çizimde ya da başka bir tanımda yerleştirmesi olan tanım silinmez; tanım kendini içeremez, en çok 16 düzey iç içe olabilir. redefine'da replace ile nesneler silinir, yerine tanımın bir yerleştirmesi konur. Bir şey değiştirmeyen istek hiçbir şey yazmaz. Bloklar paneli bu komutla yazar. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; veritabanı projesi blokları henüz saklamaz.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "BlockEditOperation": {
+            "description": "What `cad.blocks.edit` does; it names the undo step.",
+            "oneOf": [
+              {
+                "const": "rename",
+                "description": "A new name (“Blok değiştir”).",
+                "type": "string"
+              },
+              {
+                "const": "redefine",
+                "description": "New objects from the drawing's (“Blok değiştir”): every insert shows them.",
+                "type": "string"
+              },
+              {
+                "const": "rebase",
+                "description": "A new base point (“Blok değiştir”): every insert shifts by the difference.",
+                "type": "string"
+              },
+              {
+                "const": "remove",
+                "description": "A definition no insert uses deleted (“Blok sil”).",
+                "type": "string"
+              },
+              {
+                "const": "purge",
+                "description": "Every definition no insert uses deleted (“Blokları temizle”).",
+                "type": "string"
+              }
+            ]
+          },
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.blocks.edit` v1: one change of the drawing's definitions, as\none undo step named after the operation. A definition is named by its id.\n\n- `rename`: `block`, `name`;\n- `redefine`: `block`, `uids` (the objects it is made of now, copied as\n  `cad.blocks.define` copies them), `base` (absent: kept), `replace` and\n  `layerId` as `cad.blocks.define` has them;\n- `rebase`: `block`, `base`;\n- `remove`: `block`;\n- `purge`: nothing; a definition only unused ones use goes too.\n\nWhat would change nothing (the same name, base point or objects; nothing\nunused to purge) writes nothing: the answer is completed, with nothing in\n`changed` and `removed`.\n\nRefusals (`CommandError.code`), checked in this order: `no_block` (none\ngiven where the operation needs one); `rename`: `empty_name`; `redefine`:\n`no_entities`, `invalid_uid` (each id in order), `not_finite` (the base\npoint), `no_layer`; `rebase`: `no_base`, `not_finite`; then\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`unknown_block`; `rename`: `duplicate_block`; `redefine`:\n`entity_not_found`, `block_cycle` (an object is an\ninsert of this block or of one holding it), `block_too_deep`, with\n`replace` the layer checks of `cad.blocks.define`; `remove`: `block_in_use`\n(inserts of it in the drawing or in another definition).",
+        "properties": {
+          "base": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Vec2"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "`rebase`: the new base point; `redefine`: the base point (absent: kept)."
+          },
+          "block": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/BlockId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The definition; every operation but `purge`."
+          },
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layerId": {
+            "description": "`redefine` with `replace`: the layer the insert goes on.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "description": "`rename`: the new name.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/BlockEditOperation"
+          },
+          "replace": {
+            "description": "`redefine`: true, the objects are replaced by an insert of the block.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "uids": {
+            "description": "`redefine`: the objects it is made of now, by persistent id.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "BlocksEdit",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.blocks.edit` v1.",
+        "properties": {
+          "changed": {
+            "description": "The definitions changed (`rename`, `redefine`, `rebase`).",
+            "items": {
+              "$ref": "#/$defs/BlockId"
+            },
+            "type": "array"
+          },
+          "deleted": {
+            "description": "`redefine` with `replace`: the objects deleted, in the input's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "id": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "insert": {
+            "description": "`redefine` with `replace`: the insert's persistent id and its slot.",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "removed": {
+            "description": "The definitions deleted (`remove`, `purge`), in the drawing's order.",
+            "items": {
+              "$ref": "#/$defs/BlockId"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision after the write (the same when nothing was\nwritten), as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "changed",
+          "removed",
+          "deleted",
+          "revision"
+        ],
+        "title": "BlocksEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "ArcEntity": {
+            "description": "Arc from `a0` to `a1` (radians), always counter-clockwise.",
+            "properties": {
+              "a0": {
+                "format": "double",
+                "type": "number"
+              },
+              "a1": {
+                "format": "double",
+                "type": "number"
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "c": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "r": {
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "c",
+              "r",
+              "a0",
+              "a1"
+            ],
+            "type": "object"
+          },
+          "AreaPart": {
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "properties": {
+              "bulges": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "holes": {
+                "items": {
+                  "$ref": "#/$defs/RingGeometry"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, as the area's own `zs` (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "pts"
+            ],
+            "type": "object"
+          },
+          "AttributeDefinition": {
+            "description": "One attribute an insert shows as text (docs/adr/0144 §7): the insert's\nattribute `tag`, else `value`, written at `p` in the definition's\ncoordinates, moved with the insert.",
+            "properties": {
+              "height": {
+                "description": "Metres, in the definition's size.",
+                "format": "double",
+                "type": "number"
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "prompt": {
+                "description": "What Blok ekle asks for it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "rotation": {
+                "description": "Degrees, counter-clockwise from east, as a text's.",
+                "format": "double",
+                "type": "number"
+              },
+              "tag": {
+                "type": "string"
+              },
+              "value": {
+                "description": "The default value.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "tag",
+              "p",
+              "height",
+              "rotation"
+            ],
+            "type": "object"
+          },
+          "BlockDefinition": {
+            "description": "A block definition (docs/adr/0144): objects drawn once, placed many\ntimes. Its objects' ids are local to it; their layer is kept, but an\ninsert draws them on its own layer (the DXF's layer 0), each with its own\ncolour or line weight when it has one.",
+            "properties": {
+              "attributes": {
+                "description": "The texts an insert shows from its attributes (ATTDEF).",
+                "items": {
+                  "$ref": "#/$defs/AttributeDefinition"
+                },
+                "type": "array"
+              },
+              "base": {
+                "$ref": "#/$defs/Vec2",
+                "description": "The point placed at an insert's `p`, in the definition's coordinates."
+              },
+              "description": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "entities": {
+                "items": {
+                  "$ref": "#/$defs/Entity"
+                },
+                "type": "array"
+              },
+              "id": {
+                "$ref": "#/$defs/BlockId"
+              },
+              "name": {
+                "description": "Unique in the drawing, Turkish case folded.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "base",
+              "entities"
+            ],
+            "type": "object"
+          },
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          "CircleEntity": {
+            "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "c": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "r": {
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "c",
+              "r"
+            ],
+            "type": "object"
+          },
+          "ConstructionEntity": {
+            "description": "Construction line or ray: base point and unit direction.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dir": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "p",
+              "dir"
+            ],
+            "type": "object"
+          },
+          "DimensionEntity": {
+            "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
+            "properties": {
+              "a": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "angle": {
+                "description": "Linear: measured direction in degrees (0 = ΔY, 90 = ΔX).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "b": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "c": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Angular: the vertex."
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "offset": {
+                "format": "double",
+                "type": "number"
+              },
+              "style": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "a",
+              "b",
+              "offset",
+              "height"
+            ],
+            "type": "object"
+          },
+          "DimensionStyle": {
+            "enum": [
+              "aligned",
+              "linear",
+              "angular",
+              "radius",
+              "diameter"
+            ],
+            "type": "string"
+          },
+          "EllipseEntity": {
+            "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "c": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "major": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "ratio": {
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "t0": {
+                "format": "double",
+                "type": "number"
+              },
+              "t1": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "c",
+              "major",
+              "ratio",
+              "t0",
+              "t1"
+            ],
+            "type": "object"
+          },
+          "Entity": {
+            "description": "Any drawing object, tagged by `kind` as in the TypeScript model.",
+            "oneOf": [
+              {
+                "$ref": "#/$defs/PointEntity",
+                "properties": {
+                  "kind": {
+                    "const": "point",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/LineEntity",
+                "properties": {
+                  "kind": {
+                    "const": "line",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/PathEntity",
+                "properties": {
+                  "kind": {
+                    "const": "polyline",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/PathEntity",
+                "properties": {
+                  "kind": {
+                    "const": "polygon",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/CircleEntity",
+                "properties": {
+                  "kind": {
+                    "const": "circle",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/ArcEntity",
+                "properties": {
+                  "kind": {
+                    "const": "arc",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/EllipseEntity",
+                "properties": {
+                  "kind": {
+                    "const": "ellipse",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/SplineEntity",
+                "properties": {
+                  "kind": {
+                    "const": "spline",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/ConstructionEntity",
+                "properties": {
+                  "kind": {
+                    "const": "xline",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/ConstructionEntity",
+                "properties": {
+                  "kind": {
+                    "const": "ray",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/TextEntity",
+                "properties": {
+                  "kind": {
+                    "const": "text",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/DimensionEntity",
+                "properties": {
+                  "kind": {
+                    "const": "dimension",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/HatchEntity",
+                "properties": {
+                  "kind": {
+                    "const": "hatch",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/InsertEntity",
+                "description": "A block placed in the drawing (docs/adr/0144).",
+                "properties": {
+                  "kind": {
+                    "const": "insert",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "HatchEntity": {
+            "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "holes": {
+                "items": {
+                  "items": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "pattern": {
+                "$ref": "#/$defs/HatchPattern"
+              },
+              "ring": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "ring",
+              "pattern"
+            ],
+            "type": "object"
+          },
+          "HatchPattern": {
+            "properties": {
+              "angle": {
+                "description": "Degrees, counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "spacing": {
+                "description": "Metres.",
+                "format": "double",
+                "type": "number"
+              },
+              "type": {
+                "$ref": "#/$defs/HatchPatternType"
+              }
+            },
+            "required": [
+              "type",
+              "angle",
+              "spacing"
+            ],
+            "type": "object"
+          },
+          "HatchPatternType": {
+            "enum": [
+              "solid",
+              "lines",
+              "cross"
+            ],
+            "type": "string"
+          },
+          "InsertEntity": {
+            "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "block": {
+                "$ref": "#/$defs/BlockId",
+                "description": "The definition's id."
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mirror": {
+                "description": "Mirrored in the definition's x axis, before the turn.",
+                "type": "boolean"
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Where the definition's base point goes."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "scale": {
+                "description": "Positive and finite; 1 is the definition's size.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "block",
+              "p",
+              "scale",
+              "rotation"
+            ],
+            "type": "object"
+          },
+          "LineEntity": {
+            "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
+            "properties": {
+              "a": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "b": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "za": {
+                "description": "The start's elevation, m; absent = none (docs/adr/0142).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "zb": {
+                "description": "The end's elevation, m; absent = none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "a",
+              "b"
+            ],
+            "type": "object"
+          },
+          "PathEntity": {
+            "description": "Polyline or polygon: vertices, DXF bulges (tan(θ/4), CCW positive) and, for polygons, holes.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bulges": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "holes": {
+                "items": {
+                  "$ref": "#/$defs/RingGeometry"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "parts": {
+                "description": "A polygon's parts past its first, whose own are the fields above;\nabsent for a one-part area, never on a polyline (docs/adr/0143).",
+                "items": {
+                  "$ref": "#/$defs/AreaPart"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "pts"
+            ],
+            "type": "object"
+          },
+          "PointEntity": {
+            "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "z": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "p"
+            ],
+            "type": "object"
+          },
+          "RingGeometry": {
+            "description": "A closed ring in vertex + bulge form (a polygon hole).",
+            "properties": {
+              "bulges": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "pts"
+            ],
+            "type": "object"
+          },
+          "SplineEntity": {
+            "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "closed": {
+                "type": "boolean"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "pts": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "pts",
+              "closed"
+            ],
+            "type": "object"
+          },
+          "TextEntity": {
+            "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "Metres.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "rotation": {
+                "description": "Degrees, counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "p",
+              "text",
+              "height",
+              "rotation"
+            ],
+            "type": "object"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.blocks.edit` would write (plan mode); nothing is written.",
+        "properties": {
+          "changed": {
+            "description": "The definitions as execute would write them (`rename`, `redefine`, `rebase`).",
+            "items": {
+              "$ref": "#/$defs/BlockDefinition"
+            },
+            "type": "array"
+          },
+          "deleted": {
+            "description": "`redefine` with `replace`: the objects execute would delete.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "insert": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Entity"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "`redefine` with `replace`: the insert as execute would write it, `id` 0."
+          },
+          "removed": {
+            "description": "The definitions execute would delete (`remove`, `purge`).",
+            "items": {
+              "$ref": "#/$defs/BlockId"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document revision the plan was made against.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "changed",
+          "removed",
+          "deleted",
+          "revision"
+        ],
+        "title": "BlocksEditPlan",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Yeniden adlandır",
+          "input": {
+            "block": "01925f3e-7c1c-7b22-8d33-4c5e6f708192",
+            "name": "Kanalizasyon rögarı",
+            "operation": "rename"
+          },
+          "output": {
+            "changed": [
+              "01925f3e-7c1c-7b22-8d33-4c5e6f708192"
+            ],
+            "deleted": [],
+            "removed": [],
+            "revision": "40"
+          }
+        },
+        {
+          "title": "Kullanılmayan bütün blokları temizle",
+          "input": {
+            "operation": "purge"
           }
         }
       ]

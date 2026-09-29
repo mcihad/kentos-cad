@@ -6,10 +6,10 @@
 //! field is carried over as it is, float64 bit for bit.
 
 use kentos_contracts::{
-    ArcEntity, AreaPart, CircleEntity, ConstructionEntity, DimensionEntity, DimensionStyle,
-    DrawingFont, EllipseEntity, Entity, EntityBase, EntityGeometry, HatchEntity,
-    HatchPattern as ContractPattern, HatchPatternType, LineEntity, PathEntity, PointEntity,
-    RingGeometry, SplineEntity, TextEntity, Vec2 as Point,
+    ArcEntity, AreaPart, BlockId, CircleEntity, ConstructionEntity, DimensionEntity,
+    DimensionStyle, DrawingFont, EllipseEntity, Entity, EntityBase, EntityGeometry, HatchEntity,
+    HatchPattern as ContractPattern, HatchPatternType, InsertEntity, LineEntity, PathEntity,
+    PointEntity, RingGeometry, SplineEntity, TextEntity, Vec2 as Point,
 };
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::entity::{HatchPattern, Part, Shape};
@@ -527,13 +527,27 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             holes,
             pattern,
         }),
+        EntityGeometry::Insert {
+            block,
+            p,
+            scale,
+            rotation,
+            mirror,
+        } => Entity::Insert(InsertEntity {
+            base,
+            block,
+            p,
+            scale,
+            rotation,
+            mirror,
+        }),
     }
 }
 
 /// A shape the core computed as `cad.entities.edit` takes it: its kind and
 /// geometry fields, float64 bit for bit; a polyline's holes are left out.
-/// None for a dimension style or a hatch pattern the contract does not
-/// know (the core carries them as names).
+/// None for a dimension style, a hatch pattern or a block id the contract
+/// does not know (the core carries them as names).
 pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
     Some(match shape {
         Shape::Point { p: at, z } => EntityGeometry::Point { p: p(at), z },
@@ -632,8 +646,20 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
                 spacing: pattern.spacing,
             },
         },
-        // `cad.entities.edit` writes no insert (docs/adr/0144 §4).
-        Shape::Insert { .. } => return None,
+        // A block's id the contract does not read is none of the drawing's.
+        Shape::Insert {
+            block,
+            p: at,
+            scale,
+            rotation,
+            mirror,
+        } => EntityGeometry::Insert {
+            block: BlockId::parse(&block)?,
+            p: p(at),
+            scale,
+            rotation,
+            mirror: mirror == Some(true),
+        },
     })
 }
 

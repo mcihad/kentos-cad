@@ -60,8 +60,11 @@ SETUP = {
 
 def made(obj, slot, layer_id="yapi"):
     """An object as the document stores it: its geometry, its slot, the input's
-    layer, and its colour, attributes (none: empty) and label when given."""
+    layer, and its colour, attributes (none: empty) and label when given. An
+    insert is mirrored or has no `mirror` (docs/adr/0144)."""
     out = json.loads(json.dumps(obj["geometry"]))
+    if out["kind"] == "insert" and out.get("mirror") is not True:
+        out.pop("mirror", None)
     out["id"] = slot
     out["layerId"] = layer_id
     if "color" in obj:
@@ -539,6 +542,47 @@ cases.append({
     ],
 })
 
+# ── Blocks (docs/adr/0144): Blok ekle writes an insert of a block the drawing defines ──
+ROGAR_ID = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"
+MISSING_BLOCK = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4fff"
+B_SETUP = {**SETUP, "blocks": [{"id": ROGAR_ID, "name": "Rögar", "base": P(0, 0), "entities": [
+    {"kind": "circle", "id": 1, "layerId": "0", "attrs": {}, "c": P(0, 0), "r": 1}]}]}
+INSERT = {"kind": "insert", "block": ROGAR_ID, "p": P(487080, 4420000), "scale": 2, "rotation": 0.5}
+
+cases.append({
+    "name": "Blok ekle: yerleştirme öznitelikleri ve etiketiyle; aynalı olan mirror taşır, false yazılmaz; tek adım “Ekle”",
+    "setup": B_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(INSERT, attrs={"NO": "R-9"}, label="R-9"), O({**INSERT, "mirror": True}), O({**INSERT, "mirror": False})]},
+         "result": done([3, 4, 5]),
+         "expect": {"ids": IDS + [3, 4, 5], "entities": {"3": made(O(INSERT, attrs={"NO": "R-9"}, label="R-9"), 3), "4": made(O({**INSERT, "mirror": True}), 4), "5": made(O(INSERT), 5)},
+                    "uids": {"3": "new", "4": "new", "5": "new"}, "canUndo": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Ekle", "expect": {"ids": IDS, "canUndo": False}},
+    ],
+})
+
+cases.append({
+    "name": "yerleştirmenin bloğu çizimin olmalı: unknown_block, sırayla; katman denetiminden sonra",
+    "setup": B_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(INSERT), O({**INSERT, "block": MISSING_BLOCK})]},
+         "result": failed("unknown_block", f"“{MISSING_BLOCK}” kimlikli blok çizimde tanımlı değil: silinmiş ya da başka bir çizimin olabilir. Çizimde tanımlı bir bloğun kimliğini verin.", "objects[1].geometry.block"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "kilitli", "objects": [O({**INSERT, "block": MISSING_BLOCK})]}, "result": locked("Kilitli katman"), "expect": NOTHING},
+    ],
+})
+
+cases.append({
+    "name": "yerleştirmenin ölçeği sıfırdan büyük olmalı: invalid_scale; sonlu değilse not_finite; ikisi de sürümden önce",
+    "setup": B_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**INSERT, "scale": 0})], "expectedRevision": "999"},
+         "result": failed("invalid_scale", "Blok ölçeği sıfırdan büyük olmalı. Pozitif bir ölçek verin.", "objects[0].geometry.scale"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(INSERT), O({**INSERT, "scale": -1})]},
+         "result": failed("invalid_scale", "Blok ölçeği sıfırdan büyük olmalı. Pozitif bir ölçek verin.", "objects[1].geometry.scale"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(INSERT)]}, "nonFinite": {"objects[0].geometry.rotation": "Infinity"}, "result": not_finite(1), "expect": NOTHING},
+    ],
+})
+
 
 # White space other than the plain space, escaped so a reader sees it (the empty text case).
 INVISIBLE = "\u0085\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000\ufeff"
@@ -573,6 +617,8 @@ def write(command, title, note, cases):
         lines = ["    {", f'      "name": {compact(c["name"])},']
         if "note" in c:
             lines.append(f'      "note": {compact(c["note"])},')
+        if "setup" in c:
+            lines.append(f'      "setup": {compact(c["setup"])},')
         lines.append('      "steps": [')
         lines.append(",\n".join(f"        {compact(st)}" for st in c["steps"]))
         lines.append("      ]")
@@ -595,7 +641,7 @@ def write(command, title, note, cases):
 write(
     "cad.entities.create",
     "Nesneleri ekle: doğrulama, plan, yazma, geri alma",
-    "ADR 0057. Denetim sırası: en az bir nesne; her nesnenin geometrisi, sırayla, cad.entities.edit'in kurallarıyla (nokta ve köşe sayısı: kapalı alanın halkası en az 3 köşeli, iki kenarından biri yaysa 2; yazının boş olmayan metni, sonlu sayılar, yarıçap); beklenen sürümün yazımı, sonra çizimin sürümü; katman (var, grup değil, kilitli değil; gizliyse uyarı). Nesne verilen geometrisi, girdinin katmanı ve verildiyse rengi, öznitelikleri (yoksa boş) ve etiketiyle yazılır. Adım “Ekle” ya da işlemin adıdır: Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan oluştur. Kurulumdaki en büyük kimlik 2; yeni nesneler 3'ten başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+    "ADR 0057. Denetim sırası: en az bir nesne; her nesnenin geometrisi, sırayla, cad.entities.edit'in kurallarıyla (nokta ve köşe sayısı: kapalı alanın halkası en az 3 köşeli, iki kenarından biri yaysa 2; yazının boş olmayan metni, sonlu sayılar, yarıçap); beklenen sürümün yazımı, sonra çizimin sürümü; katman (var, grup değil, kilitli değil; gizliyse uyarı). Nesne verilen geometrisi, girdinin katmanı ve verildiyse rengi, öznitelikleri (yoksa boş) ve etiketiyle yazılır. Adım “Ekle” ya da işlemin adıdır: Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan oluştur. Blok yerleştirmesi (ADR 0144) çizimde tanımlı bir bloğu adlandırır (unknown_block, katmandan sonra, sırayla), ölçeği sıfırdan büyüktür (invalid_scale); aynalama yalnız true yazılır; blok durumlarının kendi kurulumu vardır. Kurulumdaki en büyük kimlik 2; yeni nesneler 3'ten başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
     cases,
 )
 print(f"{len(cases)} cases" + (" match" if "--check" in sys.argv[1:] else " written"))

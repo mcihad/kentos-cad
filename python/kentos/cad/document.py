@@ -23,6 +23,7 @@ from .. import _native
 from ._runtime import _enum_out, _Model, decode, dumps
 from .errors import NotRunHere, UnknownObject, host_error
 from .types import (
+    BlockDefinition,
     Bounds,
     DrawingFont,
     DrawingFontName,
@@ -58,6 +59,9 @@ class SessionBase:
         raise NotImplementedError
 
     def layers(self) -> str:
+        raise NotImplementedError
+
+    def blocks(self) -> str:
         raise NotImplementedError
 
     def entities(
@@ -307,6 +311,11 @@ class Document:
     def layers(self) -> list[LayerNode]:
         """The layer tree: groups and layers, with their styles and flags."""
         return [decode(LayerNode, n, "Document.layers") for n in json.loads(self._session.layers())]
+
+    def blocks(self) -> list[BlockDefinition]:
+        """The block definitions in the drawing's order (docs/adr/0144): each its
+        id, name, base point and objects (their ids local to it)."""
+        return [decode(BlockDefinition, b, "Document.blocks") for b in json.loads(self._session.blocks())]
 
     def all_layers(self) -> Iterator[LayerNode]:
         """Every layer of the tree (not the groups), depth first."""

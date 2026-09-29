@@ -3,14 +3,14 @@
 //! JSON (the catalog's wire form, `status`-tagged).
 
 use kentos_contracts::{
-    ArcCreate, CircleCreate, EntitiesArray, EntitiesCreate, EntitiesDelete, EntitiesEdit,
-    EntitiesSetProperties, EntitiesTransform, LineCreate, PointCreate, PolygonCreate,
-    PolylineCreate,
+    ArcCreate, BlocksDefine, BlocksEdit, CircleCreate, EntitiesArray, EntitiesCreate,
+    EntitiesDelete, EntitiesEdit, EntitiesSetProperties, EntitiesTransform, LineCreate,
+    PointCreate, PolygonCreate, PolylineCreate,
 };
 use kentos_domain::Document;
 use kentos_native_application::{
-    DESKTOP_COMMANDS, ExecutionContext, arc, array, circle, create, delete, edit, line, point,
-    polygon, polyline, set, transform,
+    DESKTOP_COMMANDS, ExecutionContext, arc, array, blocks_define, blocks_edit, circle, create,
+    delete, edit, line, point, polygon, polyline, set, transform,
 };
 use serde_json::Value;
 
@@ -95,6 +95,8 @@ pub fn run(
         kentos_contracts::CAD_ENTITIES_ARRAY => run!(array, EntitiesArray),
         kentos_contracts::CAD_ENTITIES_CREATE => run!(create, EntitiesCreate),
         kentos_contracts::CAD_ENTITIES_SET => run!(set, EntitiesSetProperties),
+        kentos_contracts::CAD_BLOCKS_DEFINE => run!(blocks_define, BlocksDefine),
+        kentos_contracts::CAD_BLOCKS_EDIT => run!(blocks_edit, BlocksEdit),
         other => return Err(refusal(other)),
     };
     answer.map_err(|e| {

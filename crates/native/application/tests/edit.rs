@@ -45,11 +45,7 @@ fn trim(doc: &Document) -> EntitiesEdit {
                 geometry: line(487000.0, 4420000.0, 487008.0, 4420000.0),
                 keep_data: None,
             },
-            EntityEdit::Add {
-                from: target,
-                geometry: line(487012.0, 4420000.0, 487020.0, 4420000.0),
-                keep_data: None,
-            },
+            EntityEdit::add(target, line(487012.0, 4420000.0, 487020.0, 4420000.0), None),
         ],
         expected_revision: None,
     }

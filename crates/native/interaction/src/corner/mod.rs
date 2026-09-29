@@ -255,11 +255,7 @@ impl CornerTool {
             let Some(geometry) = edge::geometry(&piece) else {
                 return;
             };
-            let change = EntityEdit::Add {
-                from,
-                geometry,
-                keep_data: None,
-            };
+            let change = EntityEdit::add(from, geometry, None);
             if edge::write(self.operation(), vec![change], cx).is_none() {
                 return;
             }
@@ -278,11 +274,7 @@ impl CornerTool {
         if let Some((like, s)) = &plan.add {
             let from = edge::uid(cx.doc, *like);
             if let Some(geometry) = edge::geometry(s) {
-                changes.push(EntityEdit::Add {
-                    from,
-                    geometry,
-                    keep_data: None,
-                });
+                changes.push(EntityEdit::add(from, geometry, None));
             }
         }
         if edge::write(self.operation(), changes, cx).is_none() {

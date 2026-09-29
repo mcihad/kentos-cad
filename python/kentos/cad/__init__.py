@@ -27,7 +27,7 @@ from .document import *  # noqa: F403
 from .errors import *  # noqa: F403
 from .types import *  # noqa: F403
 
-from . import arc, circle, entities, line, point, polygon, polyline, project  # noqa: E402  isort: skip
+from . import arc, blocks, circle, entities, line, point, polygon, polyline, project  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -45,6 +45,16 @@ __all__ = [
     "AreaUnit",
     "AreaUnitName",
     "ArrayLayout",
+    "AttributeDefinition",
+    "BlockDefined",
+    "BlockDefinition",
+    "BlockEditOperation",
+    "BlockEditOperationName",
+    "BlocksDefine",
+    "BlocksDefinePlan",
+    "BlocksEdit",
+    "BlocksEditPlan",
+    "BlocksEdited",
     "Bounds",
     "BoundsLike",
     "Busy",
@@ -125,6 +135,7 @@ __all__ = [
     "HatchPatternTypeName",
     "HostError",
     "InsertEntity",
+    "InsertEntityGeometry",
     "InvalidInput",
     "InvitationChange",
     "InvitationRevoke",
@@ -254,6 +265,7 @@ __all__ = [
     "XlineEntity",
     "XlineEntityGeometry",
     "arc",
+    "blocks",
     "catalog",
     "circle",
     "command",

@@ -137,8 +137,13 @@ pub(crate) fn revision(doc: &Document, expected: Option<&str>) -> Result<(), Sto
 /// warning. The locked and hidden texts are the drawing tools' own words
 /// (web `tools/targetLayer.ts`), kept since the tools write through here.
 pub(crate) fn layer(doc: &Document, id: &str) -> Result<Vec<CommandWarning>, Stop> {
+    layer_at(doc, id, "layerId")
+}
+
+/// [`layer`], its refusals and warning at `path` (`changes[2].layerId`).
+pub(crate) fn layer_at(doc: &Document, id: &str, path: &str) -> Result<Vec<CommandWarning>, Stop> {
     let layers = doc.layers();
-    let at = || Some("layerId".to_owned());
+    let at = || Some(path.to_owned());
     let Some(node) = layers.get(id) else {
         return Err(Stop::Failed(error(
             codes::LAYER_NOT_FOUND,

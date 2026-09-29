@@ -135,7 +135,7 @@ def layer_not_found(i):
 
 NOTHING = {"ids": IDS, "canUndo": False, "canRedo": False, "dirty": False, "revision": "same"}
 NO_ENTITIES = "Özellikleri değişecek nesne verilmedi. En az bir nesnenin kalıcı kimliğini verin."
-NOTHING_TO_SET = "Değişecek özellik verilmedi. Katman, renk, sembol, öznitelik ya da etiket verin."
+NOTHING_TO_SET = "Değişecek özellik verilmedi. Katman, renk, kalınlık, sembol, öznitelik ya da etiket verin."
 INVALID_ATTRIBUTE = "Öznitelik adı boş olamaz; yalnız boşluktan oluşan ad da boştur. Özniteliğe bir ad verin."
 UID_MESSAGE = "“{}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın."
 MISSING = "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
@@ -207,6 +207,38 @@ cases.append({
          "expect": {"entities": {"1": after(1, color=None)}, "revision": "changed"}},
         {"op": "undo", "returns": "Renk değiştir", "expect": {"entities": {"1": E(1)}}},
         {"op": "undo", "returns": "Renk değiştir", "expect": {"entities": {"2": E(2), "3": E(3)}, "canUndo": False}},
+    ],
+})
+
+
+def weighted(i, weight):
+    """The object with its own line weight (docs/adr/0139), written after its other fields."""
+    e = E(i)
+    e["lineWeight"] = weight
+    return e
+
+
+WEIGHT = "Çizgi kalınlığı 0 ile 100 mm arasında bir sayı olmalı (0 en ince çizgidir). Bir kalınlık ya da “Katmana göre” seçin."
+
+cases.append({
+    "name": "Kalınlık değiştir: nesnenin kendi kalınlığı verilir (ADR 0139); aynısı değişiklik değildir; null nesneyi katmanının kalınlığına döndürür; her yazma kendi adımıdır",
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(2, 3), "lineWeight": 0.35, "operation": "lineWeight"}, "result": done([2, 3]),
+         "expect": {"entities": {"2": weighted(2, 0.35), "3": weighted(3, 0.35)}, "revision": "changed"}},
+        {"op": "execute", "input": {"uids": uids(2), "lineWeight": 0.35, "operation": "lineWeight"}, "result": done([]), "expect": {"revision": "same"}},
+        {"op": "execute", "input": {"uids": uids(3), "lineWeight": None, "operation": "lineWeight"}, "result": done([3]),
+         "expect": {"entities": {"3": E(3)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Kalınlık değiştir", "note": "Öznitelikler'in Kalınlık ▾ satırının adımı.", "expect": {"entities": {"3": weighted(3, 0.35)}}},
+        {"op": "undo", "returns": "Kalınlık değiştir", "expect": {"entities": {"2": E(2), "3": E(3)}, "canUndo": False}},
+    ],
+})
+
+cases.append({
+    "name": "kalınlık 0 ile 100 mm arasında bir sayı olmalı; NaN da değildir: invalid_line_weight (yolu lineWeight); hiçbir şey yazılmaz",
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(1), "lineWeight": 100.5, "operation": "lineWeight"}, "result": failed("invalid_line_weight", WEIGHT, "lineWeight"), "expect": NOTHING},
+        {"op": "execute", "input": {"uids": uids(1), "lineWeight": -0.25, "operation": "lineWeight"}, "result": failed("invalid_line_weight", WEIGHT, "lineWeight"), "expect": NOTHING},
+        {"op": "execute", "input": {"uids": uids(1), "lineWeight": 0.35, "operation": "lineWeight"}, "nonFinite": {"lineWeight": "NaN"}, "result": failed("invalid_line_weight", WEIGHT, "lineWeight"), "expect": NOTHING},
     ],
 })
 

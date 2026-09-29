@@ -20,15 +20,19 @@ import type { EntityEdit } from "./EntityEdit";
  * belong together, so an edit is written whole or not at all.
  *
  * Refusals (`CommandError.code`), checked in this order: `no_changes`,
- * `invalid_uid` (each change's id in order), then each geometry in order:
- * `too_few_points` (a polyline), `too_few_corners` (a closed area's ring or
- * hole with fewer than 3 corners, or 2 whose two edges are both straight, a
- * bulge absent or 0; a hatch's ring or hole with fewer than 3), `empty_text`
- * (a text whose text is empty or only white space, Unicode's `White_Space`),
- * `not_finite`, `invalid_radius`;
+ * `invalid_uid` (each change's id in order), then each change in order: its
+ * geometry's `too_few_points` (a polyline), `too_few_corners` (a closed
+ * area's ring or hole with fewer than 3 corners, or 2 whose two edges are
+ * both straight, a bulge absent or 0; a hatch's ring or hole with fewer
+ * than 3), `empty_text` (a text whose text is empty or only white space,
+ * Unicode's `White_Space`), `invalid_elevations`, `not_finite`,
+ * `invalid_radius`, `invalid_scale` (an insert's), and an `add`'s own
+ * `invalid_line_weight`;
  * then `invalid_revision`, `revision_conflict` (status `conflict`),
  * `entity_not_found` (each id in order), `repeated_entity` (an object
- * changed twice), `layer_locked`; on the desktop also `slots_exhausted`.
+ * changed twice), `layer_locked`; an `add`'s own layer: `layer_not_found`,
+ * `not_a_layer`, `layer_locked`; `unknown_block` (each insert's block, in
+ * order); on the desktop also `slots_exhausted`.
  */
 export type EntitiesEdit = { 
 /**

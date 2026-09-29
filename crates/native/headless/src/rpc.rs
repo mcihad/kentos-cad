@@ -41,6 +41,8 @@ pub fn call(doc: &mut Document, method: &str, params: &Value) -> Result<Value, H
         }
         "summary" => Ok(summary(doc)),
         "layers" => to_value(doc.layers().nodes()),
+        // The block definitions in the drawing's order (docs/adr/0144).
+        "blocks" => to_value(&doc.blocks().iter().map(|b| &**b).collect::<Vec<_>>()),
         "entities" => {
             let filter = Filter {
                 layer: optional_text(params, "layer")?,

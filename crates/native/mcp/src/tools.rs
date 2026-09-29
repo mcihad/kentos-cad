@@ -321,10 +321,17 @@ fn command_tool(c: &Value) -> Value {
         Some(required) => required.insert(0, json!("drawing")),
         None => schema["required"] = json!(["drawing"]),
     }
-    // Deleting, editing, moving and setting change what is there; the rest adds.
+    // Deleting, editing, moving and setting change what is there, and so do
+    // a block's changes; the rest adds (a block defined with `replace`
+    // deletes its objects too).
     let destructive = matches!(
         id,
-        "cad.entities.delete" | "cad.entities.edit" | "cad.entities.transform" | "cad.entities.set"
+        "cad.entities.delete"
+            | "cad.entities.edit"
+            | "cad.entities.transform"
+            | "cad.entities.set"
+            | "cad.blocks.define"
+            | "cad.blocks.edit"
     );
     let description = format!(
         "{}\n\nSonuç CommandResult'tır: status completed (output, warnings) ya da failed, needs_input, \

@@ -171,16 +171,17 @@ class _EntitiesCreate(LocalCommand[EntitiesCreate, EntitiesCreated, EntitiesCrea
     çizgi, Dik in, Dik çık, Böl, Tarama, Alan oluştur, Poligon hesabı, Kutupsal alım,
     Önden kestirme, Geriden kestirme). Her nesne geometrisiyle verilir,
     cad.entities.edit'teki gibi: nokta, çizgi, çoklu çizgi, kapalı alan, daire, yay,
-    elips, eğri, yardımcı çizgi, ışın, yazı, ölçü, tarama; renk, öznitelik ve etiket
-    isteğe bağlıdır. Elips, Eğri, Yardımcı çizgi, Işın, Halka, Paralel çizgi, Dik in,
-    Dik çık ve Böl araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede
-    gösterdiklerini bu komutla yazar; Yazı, Ölçülendirme, Tarama, Parsel oluştur ve
-    İçine tıklayarak alan da. Hesap menüsünün pencereleri (Poligon hesabı, Kutupsal
-    alım, Önden ve Geriden kestirme) bulduğu noktaları adları, etiketleri ve
-    öznitelikleriyle bu komutla çizime ekler. Kilitli katmana hiçbir şey yazılmaz; gizli
-    katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o sürümde değilse
-    hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine
-    değişiklik project.changes ile gider.
+    elips, eğri, yardımcı çizgi, ışın, yazı, ölçü, tarama, blok yerleştirmesi (çizimde
+    tanımlı bir blok, ölçeği pozitif); renk, öznitelik ve etiket isteğe bağlıdır. Elips,
+    Eğri, Yardımcı çizgi, Işın, Halka, Paralel çizgi, Dik in, Dik çık ve Böl araçları
+    geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla
+    yazar; Yazı, Ölçülendirme, Tarama, Parsel oluştur ve İçine tıklayarak alan da. Hesap
+    menüsünün pencereleri (Poligon hesabı, Kutupsal alım, Önden ve Geriden kestirme)
+    bulduğu noktaları adları, etiketleri ve öznitelikleriyle bu komutla çizime ekler.
+    Kilitli katmana hiçbir şey yazılmaz; gizli katmana uyarıyla yazılır.
+    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+    conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes
+    ile gider.
     """
     __slots__ = ()
     id = "cad.entities.create"
@@ -206,16 +207,16 @@ class _EntitiesCreate(LocalCommand[EntitiesCreate, EntitiesCreated, EntitiesCrea
         çık, Böl, Tarama, Alan oluştur, Poligon hesabı, Kutupsal alım, Önden kestirme,
         Geriden kestirme). Her nesne geometrisiyle verilir, cad.entities.edit'teki gibi:
         nokta, çizgi, çoklu çizgi, kapalı alan, daire, yay, elips, eğri, yardımcı çizgi,
-        ışın, yazı, ölçü, tarama; renk, öznitelik ve etiket isteğe bağlıdır. Elips, Eğri,
-        Yardımcı çizgi, Işın, Halka, Paralel çizgi, Dik in, Dik çık ve Böl araçları
-        geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla
-        yazar; Yazı, Ölçülendirme, Tarama, Parsel oluştur ve İçine tıklayarak alan da. Hesap
-        menüsünün pencereleri (Poligon hesabı, Kutupsal alım, Önden ve Geriden kestirme)
-        bulduğu noktaları adları, etiketleri ve öznitelikleriyle bu komutla çizime ekler.
-        Kilitli katmana hiçbir şey yazılmaz; gizli katmana uyarıyla yazılır.
-        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-        conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes
-        ile gider.
+        ışın, yazı, ölçü, tarama, blok yerleştirmesi (çizimde tanımlı bir blok, ölçeği
+        pozitif); renk, öznitelik ve etiket isteğe bağlıdır. Elips, Eğri, Yardımcı çizgi,
+        Işın, Halka, Paralel çizgi, Dik in, Dik çık ve Böl araçları geometriyi ortak
+        geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar; Yazı,
+        Ölçülendirme, Tarama, Parsel oluştur ve İçine tıklayarak alan da. Hesap menüsünün
+        pencereleri (Poligon hesabı, Kutupsal alım, Önden ve Geriden kestirme) bulduğu
+        noktaları adları, etiketleri ve öznitelikleriyle bu komutla çizime ekler. Kilitli
+        katmana hiçbir şey yazılmaz; gizli katmana uyarıyla yazılır. expectedRevision
+        verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.
 
         Args:
             doc: The drawing it works on.
@@ -396,12 +397,15 @@ class _EntitiesEdit(LocalCommand[EntitiesEdit, EntitiesEdited, EntitiesEditPlan]
     fillet ve chamfer işlemleriyle yazar. update nesnenin geometrisini değiştirir, öbür
     alanları kalır; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı
     ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır; add bir nesneden yeni
-    nesne yapar, katmanını ve rengini alır; remove nesneyi siler. Bir nesne tek bir
-    değişiklikle değişir. Yazının metni boş olamaz; kapalı alanın halkası en az 3
-    köşelidir, kenarlarından biri yaysa 2. Kilitli katmandaki nesne değişmez, ondan
-    nesne yapılmaz: böyle bir nesne verilirse hiçbir şey yazılmaz. expectedRevision
-    verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
-    Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.
+    nesne yapar, katmanını, rengini ve kalınlığını alır; add'e verilen katman, renk,
+    kalınlık, öznitelik ve etiket yeni nesnenin kendisinindir (Patlat bir bloğun
+    nesnelerini kendi katman, renk ve verileriyle böyle çıkarır); remove nesneyi siler.
+    Bir nesne tek bir değişiklikle değişir. Yazının metni boş olamaz; kapalı alanın
+    halkası en az 3 köşelidir, kenarlarından biri yaysa 2. Kilitli katmandaki nesne
+    değişmez, ondan nesne yapılmaz: böyle bir nesne verilirse hiçbir şey yazılmaz.
+    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+    conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes
+    ile gider.
     """
     __slots__ = ()
     id = "cad.entities.edit"
@@ -437,12 +441,14 @@ class _EntitiesEdit(LocalCommand[EntitiesEdit, EntitiesEdited, EntitiesEditPlan]
         işlemleriyle yazar. update nesnenin geometrisini değiştirir, öbür alanları kalır;
         replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır,
         öznitelikleri ve etiketi keepData ile kalır; add bir nesneden yeni nesne yapar,
-        katmanını ve rengini alır; remove nesneyi siler. Bir nesne tek bir değişiklikle
-        değişir. Yazının metni boş olamaz; kapalı alanın halkası en az 3 köşelidir,
-        kenarlarından biri yaysa 2. Kilitli katmandaki nesne değişmez, ondan nesne yapılmaz:
-        böyle bir nesne verilirse hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim
-        o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin
-        istemez; bulut projesine değişiklik project.changes ile gider.
+        katmanını, rengini ve kalınlığını alır; add'e verilen katman, renk, kalınlık,
+        öznitelik ve etiket yeni nesnenin kendisinindir (Patlat bir bloğun nesnelerini kendi
+        katman, renk ve verileriyle böyle çıkarır); remove nesneyi siler. Bir nesne tek bir
+        değişiklikle değişir. Yazının metni boş olamaz; kapalı alanın halkası en az 3
+        köşelidir, kenarlarından biri yaysa 2. Kilitli katmandaki nesne değişmez, ondan
+        nesne yapılmaz: böyle bir nesne verilirse hiçbir şey yazılmaz. expectedRevision
+        verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.
 
         Args:
             doc: The drawing it works on.

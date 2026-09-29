@@ -3587,7 +3587,7 @@
       "title": "Patlat",
       "category": "Düzenle",
       "icon": "explode",
-      "description": "Çoklu çizgi ve alanı çizgi ve yaylara, eğriyi çoklu çizgiye, ölçüyü çizgi ve yazıya ayırır.",
+      "description": "Çoklu çizgi ve alanı çizgi ve yaylara, eğriyi çoklu çizgiye, ölçüyü çizgi ve yazıya, blok yerleştirmesini bloğun nesnelerine ayırır.",
       "aliases": [
         "X",
         "EXPLODE",
@@ -3616,6 +3616,7 @@
       },
       "tests": [
         "apps/web/src/app/netcadNames.test.ts",
+        "fixtures/interaction/v1/block-explode.json",
         "fixtures/interaction/v1/object-tools.json"
       ]
     },
@@ -7176,7 +7177,7 @@
       "rare": false,
       "methods": [],
       "steps": 2,
-      "description": "Çoklu çizgi ve alanı çizgi ve yaylara, eğriyi çoklu çizgiye, ölçüyü çizgi ve yazıya ayırır.",
+      "description": "Çoklu çizgi ve alanı çizgi ve yaylara, eğriyi çoklu çizgiye, ölçüyü çizgi ve yazıya, blok yerleştirmesini bloğun nesnelerine ayırır.",
       "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
@@ -7185,6 +7186,7 @@
       },
       "tests": [
         "apps/web/src/app/netcadNames.test.ts",
+        "fixtures/interaction/v1/block-explode.json",
         "fixtures/interaction/v1/object-tools.json"
       ]
     },

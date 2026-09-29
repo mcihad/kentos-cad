@@ -1,4 +1,6 @@
 import { arcCreate } from './arcCreate';
+import { blocksDefine } from './blocksDefine';
+import { blocksEdit } from './blocksEdit';
 import { circleCreate } from './circleCreate';
 import type { ProductCommand } from './command';
 import { entitiesArray } from './entitiesArray';
@@ -19,7 +21,23 @@ import { polylineCreate } from './polylineCreate';
  * `SERVER_COMMANDS` are kept to theirs: a command in the catalog without a
  * handler here, or a handler without its catalog entry, fails there.
  */
-export const WEB_COMMANDS: readonly ProductCommand<never, unknown, unknown>[] = [polygonCreate, lineCreate, polylineCreate, entitiesDelete, pointCreate, circleCreate, arcCreate, entitiesTransform, entitiesEdit, entitiesArray, entitiesCreate, entitiesSet];
+export const WEB_COMMANDS: readonly ProductCommand<never, unknown, unknown>[] = [
+  polygonCreate,
+  lineCreate,
+  polylineCreate,
+  entitiesDelete,
+  pointCreate,
+  circleCreate,
+  arcCreate,
+  entitiesTransform,
+  entitiesEdit,
+  entitiesArray,
+  entitiesCreate,
+  entitiesSet,
+  // Blok oluştur and the Bloklar panel (docs/adr/0144).
+  blocksDefine,
+  blocksEdit,
+];
 
 /** The handler of a command id and version; undefined for one the web does not run (never guessed). */
 export function findProductCommand(id: string, version: number): ProductCommand<never, unknown, unknown> | undefined {
