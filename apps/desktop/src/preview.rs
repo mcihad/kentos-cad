@@ -12,7 +12,7 @@
 //! float64 camera; the float32 canvas gets only screen offsets.
 
 use iced::widget::canvas::{self, LineDash, Path, Stroke};
-use iced::widget::{Space, canvas as canvas_widget, column, container, pin, row, stack, text};
+use iced::widget::{Space, canvas as canvas_widget, column, container, row, stack, text};
 use iced::{Color, Element, Fill, Point, Rectangle, Renderer, Theme, Vector, border, mouse};
 
 use kentos_interaction::{MarkerShape, Preview, Tone, Vec2};
@@ -60,15 +60,14 @@ pub fn layer<'a>(
             .into(),
         );
         if let Some(tag) = tag {
+            // Below right of the cursor; on its other side where the drawing's
+            // edge would cut the tag off (the web's `drawTag`).
             let at = screen(tag.at);
-            layers.push(
-                pin(measurement(tag.lines, tag_tone, snap))
-                    .x(at.x.round() + 16.0)
-                    .y(at.y.round() + 16.0)
-                    .width(Fill)
-                    .height(Fill)
-                    .into(),
-            );
+            layers.push(beside(
+                measurement(tag.lines, tag_tone, snap),
+                Point::new(at.x.round(), at.y.round()),
+                Vector::new(16.0, 16.0),
+            ));
         }
     }
     if let Some((value, at)) = field {
