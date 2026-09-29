@@ -154,6 +154,34 @@ Dik ayak `geom::survey::side_offsets`'tir (vardı). İçine tıkla, İçine tık
    - envanter.
 2. **Web ve masaüstü:** her platform dört fazı yapar: gezinme, sorgu, seçim, adların denenmesi. Her faz çalışır, sınanır ve resimle gösterilir.
 
+### Uygulamada verilen kararlar
+
+İki platform aynı kararları uygular.
+
+- **Seçenek çipleri:**
+  - Sabit ilk nokta (S) ve İçine tıkla (I) yalnız ilk noktadan önce ve açıkken görünür. Ortak iz `measure-parcel` ilk noktadan sonraki seçenek listesini aynen denetler.
+  - Birini açmak ya da kapatmak ölçümü baştan başlatır.
+  - Alan olarak çiz (A) ilk noktadan önce ve bir ölçümden sonra görünür.
+- **İçine tıkla'nın çevresi** adaların çevresini de sayar, çokgeninki gibi (`measure::polygon_perimeter`, CBS'deki gibi). Alan olarak çiz'le çizilen alan Öznitelikler'de aynı çevreyi gösterir.
+- **Çitle seç:** Shift+sağ tık kenet menüsünü açtığı için seçime ekleme şu iki yolla olur:
+  - son tıkta Shift basılıyken;
+  - Shift+Enter ile.
+  Çitle ve Daireyle seç bir şey bulamasa da Seç'e döner.
+- **Görünüm geçmişi:**
+  - Hiçbir şeyi değiştirmeyen gezinme kaydedilmez.
+  - Kaydırma ilk kıpırdamada kaydedilir.
+  - Geri ve ileri, şimdiki görünümle aynı kaydı atlar.
+  - Çizim açılınca bütünü gösterilir ama kaydedilmez.
+- **Dik ayak ölç:** yalnız Boy işaretlidir (U+2212). A ve B, öbür araçlarda olduğu gibi koordinatlarıyla iletiye yazılır.
+- **Ek iletiler:**
+  - `alanı ölçülecek bölgenin içine tıklayın`
+  - `Çit için en az iki nokta gerekir; ikinci noktayı gösterin.`
+  - `B noktası A ile çakışıyor; hattın sonu için başka bir nokta gösterin.`
+  - `Yarıçap sıfırdan büyük olmalı.`
+- **Takma adlar:**
+  - `ARA` yalnız Komut ara'nın, `APLIKASYON` Aplikasyon penceresinin, `ALANHESAP` Öznitelik hesapla'nındır.
+  - Envanter, bir adı iki komuta veren durumu reddeder (`pnpm inventory`); iki platform da adı oradan okur.
+
 ## Sonuçlar
 
 - Netcad kullanıcısı önceki pencereye döner, uzak nesneyi bulur, dik ayağı ölçer, çitle ve içeren alanla seçer. Adlarını yazarak komutları bulur.
