@@ -66,6 +66,8 @@ export const EDIT_LABEL: Record<EditOperation, string> = {
   simplify: 'Sadeleştir',
   cleanup: 'Çizimi temizle',
   elevation: 'Kot ver',
+  partsJoin: 'Parçaları birleştir',
+  partsSplit: 'Parçalara ayır',
 };
 
 /** The contract's geometry fields by kind (`EntityGeometry`): what the command writes of a geometry. */
