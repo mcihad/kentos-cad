@@ -4,7 +4,7 @@
 
 use iced::widget::{Column, button, column, container, row, text};
 use iced::{Center, Element, Fill, Length};
-use kentos_contracts::{Bounds, ReportItem};
+use kentos_contracts::{Bounds, ReportItem, SourceFact};
 use kentos_interaction::Format;
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::style;
@@ -55,6 +55,17 @@ pub fn summary<'a, Message: 'a>(lines: Vec<Element<'a, Message>>) -> Element<'a,
         .width(Fill)
         .style(style::container::bordered)
         .into()
+}
+
+/// What the reader said of the file, as the file's line says it: every fact in
+/// its order, `Feature: 8, Kotlu nesne: 9`. One of them is how many objects came
+/// with elevations, there only when some did (docs/adr/0142).
+pub fn facts(facts: &[SourceFact]) -> String {
+    facts
+        .iter()
+        .map(|f| format!("{}: {}", f.label, f.value))
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 /// The picked file: its name and a line of facts.

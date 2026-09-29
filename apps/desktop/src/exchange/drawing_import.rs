@@ -628,13 +628,7 @@ impl App {
         let srid = self.project_srid();
         let r = s.result.as_deref();
         let meta = match (r, &s.failed) {
-            (Some(r), _) => r
-                .report
-                .source
-                .iter()
-                .map(|f| format!("{}: {}", f.label, f.value))
-                .collect::<Vec<_>>()
-                .join(", "),
+            (Some(r), _) => words::facts(&r.report.source),
             (None, Some(_)) => "okunamadı".to_owned(),
             (None, None) => "okunuyor…".to_owned(),
         };

@@ -9,6 +9,7 @@ use kentos_contracts::Entity;
 
 use super::gis_import::{self, Source};
 use super::tests::{count, run, said, send};
+use super::words;
 use super::{Event, Kind, Picked, Window, dxf_export, geojson_export};
 use crate::app::{App, Dialog, Message, Picker};
 use crate::crs::Note;
@@ -177,6 +178,59 @@ fn a_zipped_shapefile_offers_its_layers_one_at_a_time() {
         .find(|n| n.name == "katmanlar.zip")
         .expect("a group named after the archive");
     assert_eq!(group.children[0].name, "yollar");
+}
+
+/// docs/adr/0142: the file's line says how many objects came with elevations, as the
+/// DXF and NCZ windows say it (`words::facts`), and only when some did.
+#[test]
+fn the_file_line_says_how_many_objects_came_with_elevations_and_only_when_some_did() {
+    let elevated = |app: &App| {
+        let r = window(app).result.as_ref().expect("read");
+        r.entities
+            .iter()
+            .filter(|e| kentos_interaction::elevation::has_any(e))
+            .count()
+    };
+    let line = |app: &App| {
+        let r = window(app).result.as_ref().expect("read");
+        words::facts(&r.report.source)
+    };
+    // GeoJSON: nine of the ten objects of kotlu.geojson have a third number in a position.
+    let mut app = app_with_drawing();
+    app.picker = Picker::File(gis("kotlu.geojson"));
+    run(&mut app, "file.import.geojson");
+    assert_eq!(elevated(&app), 9);
+    let text = line(&app);
+    assert!(text.ends_with(", Kotlu nesne: 9"), "{text}");
+    // A file without any: no such fact.
+    let mut app = app_with_drawing();
+    app.picker = Picker::File(gis("feature-epsg.geojson"));
+    run(&mut app, "file.import.geojson");
+    assert_eq!(elevated(&app), 0);
+    assert!(!line(&app).contains("Kotlu"), "{}", line(&app));
+    // Shapefile: PolyLineZ's Z; the fact follows the layer's parts in the window's line.
+    let mut app = app_with_drawing();
+    let files = ["yollarz.shp", "yollarz.shx", "yollarz.dbf", "yollarz.prj"]
+        .map(picked)
+        .to_vec();
+    send(
+        &mut app,
+        Event::PickedMany(Kind::Shapefile, Some(Ok(files))),
+    );
+    let n = elevated(&app);
+    assert!(n > 0, "the fixture has lines with a Z");
+    let text = line(&app);
+    assert!(text.ends_with(&format!(", Kotlu nesne: {n}")), "{text}");
+    // The same roads without a Z.
+    let plain = ["yollar.shp", "yollar.shx", "yollar.dbf", "yollar.prj"]
+        .map(picked)
+        .to_vec();
+    let mut app = app_with_drawing();
+    send(
+        &mut app,
+        Event::PickedMany(Kind::Shapefile, Some(Ok(plain))),
+    );
+    assert!(!line(&app).contains("Kotlu"), "{}", line(&app));
 }
 
 #[test]
