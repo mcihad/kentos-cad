@@ -7,13 +7,14 @@ use std::borrow::Cow;
 
 use kentos_contracts::{DimensionStyle, Entity, HatchPatternType};
 use kentos_domain::{LayerTree, Slot};
+use kentos_interaction::elevation::{self, Summary as Elevations};
 use kentos_interaction::{
     Format, Vec2, angle_deg, arc_sweep, bearing_grad, dimension_layout, dist, fixed, full_ellipse,
     measures,
 };
 use kentos_ui::icon::Icon;
 
-use super::{Event, Field};
+use super::{Event, Field, Spot};
 use crate::app::Message;
 use crate::document::{Document, crs_name};
 use crate::selecting::kind_title;
@@ -71,6 +72,9 @@ pub(crate) struct Row {
     pub numeric: bool,
     pub unit: Option<Cow<'static, str>>,
     pub editor: Option<Editor>,
+    /// A note under the row above it, quiet: no name, no cell (Kot's “(bazı
+    /// köşeler kotsuz)”, docs/adr/0142).
+    pub note: bool,
 }
 
 /// How a row is edited.
@@ -116,6 +120,15 @@ impl Row {
             numeric: false,
             unit: None,
             editor: None,
+            note: false,
+        }
+    }
+
+    /// A quiet line under the row above it, with no name of its own.
+    fn note(text: &str) -> Self {
+        Self {
+            note: true,
+            ..Self::text("", text)
         }
     }
 
@@ -405,6 +418,25 @@ fn takes_symbol(e: &Entity) -> bool {
     !matches!(e, Entity::Text(_) | Entity::Dimension(_))
 }
 
+/// A Kot row (docs/adr/0142): the elevations as `summary` says them, in
+/// metres: a value or a range beside its unit, or `kot yok`; with vertices
+/// that have none, a note under it names them.
+fn elevation_row(
+    label: &'static str,
+    summary: Elevations,
+    f: &Format,
+    editor: Option<Editor>,
+) -> Vec<Row> {
+    let (text, unit) = summary.shown(f);
+    let row = match unit {
+        Some(unit) => Row::figure(label, text).unit(unit),
+        None => Row::text(label, text),
+    };
+    let mut rows = vec![row.editor(editor)];
+    rows.extend(summary.note().map(Row::note));
+    rows
+}
+
 fn v(p: kentos_contracts::Vec2) -> Vec2 {
     Vec2::new(p.x, p.y)
 }
@@ -417,6 +449,14 @@ fn degrees(rad: f64) -> String {
 /// Degrees brought into [0, 360) with four decimals.
 fn turn(deg: f64) -> String {
     fixed(((deg % 360.0) + 360.0) % 360.0, 4)
+}
+
+/// `3B uzunluk` of a line or a polyline, `3B çevre` of an area, when every
+/// vertex has an elevation (docs/adr/0142): the length in space beside the
+/// plan one, which stays the measure of record.
+fn space_length(e: &Entity, f: &Format) -> Option<Row> {
+    let (label, length) = elevation::space_length(e)?;
+    Some(Row::figure(label, f.length_bare(length)).unit("m"))
 }
 
 /// One object's sections: Genel, Geometri, and Öznitelik bilgileri when it has attributes.
@@ -486,22 +526,39 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             }
         }
         Entity::Line(l) => {
-            geo.extend([
-                len("Başlangıç Y", l.a.x),
-                len("Başlangıç X", l.a.y),
-                len("Bitiş Y", l.b.x),
-                len("Bitiş X", l.b.y),
-                metres("Uzunluk", dist(v(l.a), v(l.b))),
-                bearing(v(l.a), v(l.b)),
-            ]);
+            // Each end's elevation follows its coordinates (docs/adr/0142).
+            geo.extend([len("Başlangıç Y", l.a.x), len("Başlangıç X", l.a.y)]);
+            geo.extend(elevation_row(
+                "Kot (başlangıç)",
+                Elevations::of(&[l.za]),
+                &f,
+                number(Field::Elevation(slot, Spot::Start)),
+            ));
+            geo.extend([len("Bitiş Y", l.b.x), len("Bitiş X", l.b.y)]);
+            geo.extend(elevation_row(
+                "Kot (bitiş)",
+                Elevations::of(&[l.zb]),
+                &f,
+                number(Field::Elevation(slot, Spot::End)),
+            ));
+            geo.push(metres("Uzunluk", dist(v(l.a), v(l.b))));
+            geo.extend(space_length(e, &f));
+            geo.push(bearing(v(l.a), v(l.b)));
         }
         Entity::Polyline(p) | Entity::Polygon(p) => {
             let polygon = matches!(e, Entity::Polygon(_));
             geo.push(Row::figure("Köşe sayısı", p.pts.len().to_string()));
+            geo.extend(elevation_row(
+                "Kot",
+                Elevations::of_object(e),
+                &f,
+                number(Field::Elevation(slot, Spot::All)),
+            ));
             geo.push(metres(
                 if polygon { "Çevre" } else { "Uzunluk" },
                 length_of.unwrap_or(0.0),
             ));
+            geo.extend(space_length(e, &f));
             if polygon {
                 // Net area: the holes (adalar) are taken out already.
                 if let Some(holes) = p.holes.as_ref().filter(|h| !h.is_empty()) {
@@ -697,6 +754,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                     numeric: looks_numeric(value),
                     unit: None,
                     editor: edit(Editor::Text(Field::Attribute(slot, key.clone()))),
+                    note: false,
                 })
                 .collect(),
         });
@@ -759,12 +817,30 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
     rows.push(
         Row::text("Sembol", symbol_text(doc, symbol)).editor(edit(symbol_editor(doc, symbol))),
     );
+    let f = Format::of(doc.settings());
+    // The vertices' elevations of the lines, polylines, areas and points (docs/adr/0142), all
+    // together as one list, as the web's row takes them: the value when every vertex has the
+    // same, `kot yok` when none has one, else Çeşitli. What takes no elevation is left out.
+    let takers: Vec<Slot> = objects
+        .iter()
+        .filter(|e| elevation::takes(e))
+        .map(|e| Slot(e.base().id))
+        .collect();
+    if !takers.is_empty() {
+        let summary = Elevations::of_objects(objects.iter().copied());
+        let editor = edit(Editor::Number(Field::Elevations(takers)));
+        match summary {
+            Elevations::Value(_) | Elevations::None => {
+                rows.extend(elevation_row("Kot", summary, &f, editor));
+            }
+            _ => rows.push(Row::text("Kot", "Çeşitli").editor(editor)),
+        }
+    }
     let mut sections = vec![Section {
         id: "general",
         title: "Ortak özellikler",
         rows,
     }];
-    let f = Format::of(doc.settings());
     let mut totals = Vec::new();
     if length > 0.0 {
         totals.push(Row::figure("Toplam uzunluk", f.length_bare(length)).unit("m"));

@@ -34,8 +34,10 @@ use std::collections::BTreeMap;
 
 use kentos_contracts::{Entity, EntitiesSetProperties, HatchPatternType, PropertiesOperation};
 use kentos_domain::Slot;
+use kentos_interaction::elevation::{self, Change};
 use kentos_interaction::properties;
 use kentos_ui::label;
+use kentos_ui::style;
 use kentos_ui::widget::property_grid::{self, PropertySheet};
 use kentos_ui::widget::{EditCell, Menu, swatch};
 
@@ -79,6 +81,22 @@ pub enum Field {
     TextAngle(Slot),
     /// An attribute, by its key.
     Attribute(Slot, String),
+    /// A line's start or end elevation, or every vertex's of a polyline or an
+    /// area: a number sets it, an empty text clears it (docs/adr/0142).
+    Elevation(Slot, Spot),
+    /// Every vertex's elevation of these lines, polylines, areas and points.
+    Elevations(Vec<Slot>),
+}
+
+/// Which vertices of an object a Kot cell sets.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Spot {
+    /// A line's start.
+    Start,
+    /// A line's end.
+    End,
+    /// Every vertex, a polyline's or an area's (its holes' too).
+    All,
 }
 
 /// JavaScript's `parseFloat(text.replace(',', '.'))`, as the web reads the
@@ -239,6 +257,11 @@ impl App {
     /// A row's value: text, an editable cell or a drop-down.
     fn cell<'a>(&'a self, row: Row) -> Element<'a, Message> {
         let unit = row.unit.clone();
+        if row.note {
+            return container(label::caption(row.value).style(style::text::muted))
+                .padding([0, 6])
+                .into();
+        }
         match row.editor {
             None => property_grid::value(row.value, row.numeric, unit.map(|u| u.into_owned())),
             Some(Editor::Text(field) | Editor::Number(field)) => {
@@ -353,9 +376,35 @@ fn set_input(
     }
 }
 
+/// A Kot cell's text into the drawing (docs/adr/0142): a number sets the
+/// elevation of the vertices it stands for, an empty text clears it, and
+/// anything else changes nothing (the web's `parseElevation`). What to say:
+/// the command's refusal.
+fn commit_elevation(
+    model: &mut kentos_domain::Document,
+    slots: &[Slot],
+    spot: Spot,
+    text: &str,
+) -> Vec<String> {
+    let Some(value) = elevation::parse_typed(text) else {
+        return Vec::new();
+    };
+    let change = match spot {
+        Spot::Start => Change::End(0, value),
+        Spot::End => Change::End(1, value),
+        Spot::All => Change::Set(value),
+    };
+    properties::set_elevations(model, slots, change)
+}
+
 /// A cell's text into the drawing, as the web's editors take it; what they
 /// do not take changes nothing. What to say: the command's refusal.
 fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec<String> {
+    match field {
+        Field::Elevation(slot, spot) => return commit_elevation(model, &[*slot], *spot, text),
+        Field::Elevations(slots) => return commit_elevation(model, slots, Spot::All, text),
+        _ => {}
+    }
     if let Field::Attribute(slot, key) = field {
         let Some(base) = model.get(*slot).map(Entity::base) else {
             return Vec::new();
@@ -383,6 +432,8 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::TextHeight(s)
         | Field::TextAngle(s)
         | Field::Attribute(s, _) => *s,
+        // Taken above.
+        Field::Elevation(..) | Field::Elevations(_) => return Vec::new(),
     };
     let Some(mut e) = model.get(slot).cloned() else {
         return Vec::new();

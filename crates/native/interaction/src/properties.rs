@@ -5,7 +5,9 @@
 //! through `cad.entities.set`; a value of the geometry (a point's Y, a text,
 //! a hatch's spacing) through `cad.entities.edit`, operation `properties`,
 //! the step “Değiştir”. The command's refusal or warnings are what the host
-//! says, as warnings; the undo steps are named as before.
+//! says, as warnings; the undo steps are named as before. The Kot rows
+//! (docs/adr/0142) write the vertices' elevations through the same command's
+//! operation `elevation`, the step “Kot ver”.
 
 use kentos_contracts::{
     CommandResult, EditOperation, EntitiesEdit, EntitiesSetProperties, Entity, EntityEdit,
@@ -13,6 +15,8 @@ use kentos_contracts::{
 use kentos_domain::{Document, Slot};
 use kentos_native_application::geometry::{edit_geometry, shape};
 use kentos_native_application::{ExecutionContext, edit, set};
+
+use crate::elevation::{self, Change};
 
 /// The persistent ids of the objects in these slots, as the commands name them.
 pub fn uids_of(doc: &Document, slots: &[Slot]) -> Vec<String> {
@@ -42,6 +46,37 @@ pub fn set_geometry(doc: &mut Document, slot: Slot, entity: &Entity) -> Vec<Stri
             uid: uid.to_string(),
             geometry,
         }],
+        expected_revision: None,
+    };
+    said(edit::execute(&mut ExecutionContext::new(doc), input))
+}
+
+/// The vertices' elevations of the lines, polylines, areas and points in
+/// `slots` as `change` says (docs/adr/0142), through `cad.entities.edit`'s operation
+/// `elevation`: each object's own geometry with its elevations explicit, one
+/// undo step, “Kot ver”. What the change would leave as it is is not written
+/// (no step for it), and nothing is written when nothing changes; what to say:
+/// the command's refusal (a locked layer), or its warnings.
+pub fn set_elevations(doc: &mut Document, slots: &[Slot], change: Change) -> Vec<String> {
+    let changes: Vec<EntityEdit> = slots
+        .iter()
+        .filter_map(|&slot| {
+            let e = doc.get(slot).filter(|e| elevation::takes(e))?;
+            if elevation::leaves(e, change) {
+                return None;
+            }
+            Some(EntityEdit::Update {
+                uid: doc.uid(slot)?.to_string(),
+                geometry: elevation::geometry_with(e, change)?,
+            })
+        })
+        .collect();
+    if changes.is_empty() {
+        return Vec::new();
+    }
+    let input = EntitiesEdit {
+        operation: EditOperation::Elevation,
+        changes,
         expected_revision: None,
     };
     said(edit::execute(&mut ExecutionContext::new(doc), input))
