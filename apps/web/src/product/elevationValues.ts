@@ -1,8 +1,8 @@
 import type { EntityGeometry as EditGeometry } from '../contracts/generated/EntityGeometry';
-import type { Entity } from '../model/entities';
+import type { Entity, RingGeometry } from '../model/entities';
 import type { Vec2 } from '../model/geometry';
 import { length3d } from '../model/ops/elevation';
-import { holeGrip } from '../model/ops/grips';
+import { gripPart, holeGrip } from '../model/ops/grips';
 import { geometryOf } from './entitiesEdit';
 import { elevatedPaths } from './elevation';
 
@@ -20,7 +20,8 @@ export const takesElevation = (e: { kind: Entity['kind'] }): boolean => e.kind =
 
 /**
  * Every vertex's elevation, in one order: a point's `z`; a line's two ends; a polyline's vertices; a polygon's outer
- * ring, then each hole's. Empty for a kind without elevations.
+ * ring, then each hole's, then each other part's ring and its holes (docs/adr/0143). Empty for a kind without
+ * elevations.
  */
 export function vertexElevations(e: Entity): (number | null)[] {
   if (e.kind === 'point') return [e.z ?? null];
@@ -36,8 +37,11 @@ export function hasVertexElevation(e: Entity): boolean {
       return e.za !== undefined || e.zb !== undefined;
     case 'polyline':
       return !!e.zs?.some((z) => z !== null);
-    case 'polygon':
-      return !!e.zs?.some((z) => z !== null) || !!e.holes?.some((h) => h.zs?.some((z) => z !== null));
+    case 'polygon': {
+      const some = (zs: readonly (number | null)[] | undefined) => !!zs?.some((z) => z !== null);
+      const holes = (list: readonly { zs?: (number | null)[] }[] | undefined) => !!list?.some((h) => some(h.zs));
+      return some(e.zs) || holes(e.holes) || !!e.parts?.some((part) => some(part.zs) || holes(part.holes));
+    }
     default:
       return false;
   }
@@ -72,10 +76,21 @@ export function nearestVertex(e: Entity, p: Vec2, within: number): { at: Vec2; z
       test(e.b, e.zb);
       break;
     case 'polyline':
-    case 'polygon':
-      for (let i = 0; i < e.pts.length; i++) test(e.pts[i], e.zs?.[i]);
-      if (e.kind === 'polygon') for (const h of e.holes ?? []) for (let i = 0; i < h.pts.length; i++) test(h.pts[i], h.zs?.[i]);
+    case 'polygon': {
+      const ring = (pts: readonly Vec2[], zs: readonly (number | null)[] | undefined) => {
+        for (let i = 0; i < pts.length; i++) test(pts[i], zs?.[i]);
+      };
+      ring(e.pts, e.zs);
+      if (e.kind === 'polygon') {
+        for (const h of e.holes ?? []) ring(h.pts, h.zs);
+        // The other parts of a multi-part area (docs/adr/0143): each ring, its holes.
+        for (const part of e.parts ?? []) {
+          ring(part.pts, part.zs);
+          for (const h of part.holes ?? []) ring(h.pts, h.zs);
+        }
+      }
       break;
+    }
   }
   return best;
 }
@@ -96,7 +111,13 @@ export function uniformElevation(e: Entity): number | null | 'mixed' {
     return true;
   };
   if (!same(e.zs, e.pts.length)) return 'mixed';
-  if (e.kind === 'polygon') for (const h of e.holes ?? []) if (!same(h.zs, h.pts.length)) return 'mixed';
+  if (e.kind === 'polygon') {
+    for (const h of e.holes ?? []) if (!same(h.zs, h.pts.length)) return 'mixed';
+    for (const part of e.parts ?? []) {
+      if (!same(part.zs, part.pts.length)) return 'mixed';
+      for (const h of part.holes ?? []) if (!same(h.zs, h.pts.length)) return 'mixed';
+    }
+  }
   return first;
 }
 
@@ -129,8 +150,8 @@ export function summarizeElevations(zs: readonly (number | null)[]): ElevationSu
 
 /**
  * The length in space beside the plan one, when every vertex has an elevation: `3B uzunluk` of a line or a
- * polyline, `3B çevre` of an area (its outer ring and every hole, all closed, as the plan perimeter counts them).
- * Null for anything else or when a vertex has none.
+ * polyline, `3B çevre` of an area (its outer ring and every hole, all closed, as the plan perimeter counts them, of
+ * every part, docs/adr/0143). Null for anything else or when a vertex has none.
  */
 export function spaceLength(e: Entity): { label: '3B uzunluk' | '3B çevre'; value: number } | null {
   if (e.kind !== 'line' && e.kind !== 'polyline' && e.kind !== 'polygon') return null;
@@ -149,7 +170,7 @@ export function spaceLength(e: Entity): { label: '3B uzunluk' | '3B çevre'; val
 /**
  * The elevation of the vertex a grip stands on, or null: a mid grip is no vertex, and a vertex may have none.
  * `index` counts as the core lists the grips (`entityGrips`): a path's vertices, then one mid grip per edge, then
- * the vertices of each hole.
+ * the vertices of each hole; a multi-part area's part after part (docs/adr/0143).
  */
 export function gripElevation(e: Entity, index: number): number | null {
   switch (e.kind) {
@@ -160,9 +181,15 @@ export function gripElevation(e: Entity, index: number): number | null {
     case 'polyline':
       return index < e.pts.length ? (e.zs?.[index] ?? null) : null;
     case 'polygon': {
-      if (index < e.pts.length) return e.zs?.[index] ?? null;
+      // The grip's own part and its place there; the first part is the area's own fields.
+      const at = e.parts?.length ? gripPart(e, index) : { part: 0, index };
+      if (!at) return null;
+      const own = at.part === 0 ? e : e.parts?.[at.part - 1];
+      if (!own) return null;
+      if (at.index < own.pts.length) return own.zs?.[at.index] ?? null;
+      // `holeGrip` counts within the grip's own part.
       const hole = holeGrip(e, index);
-      return hole ? (e.holes?.[hole.hole]?.zs?.[hole.vertex] ?? null) : null;
+      return hole ? (own.holes?.[hole.hole]?.zs?.[hole.vertex] ?? null) : null;
     }
     default:
       return null;
@@ -185,9 +212,9 @@ export function elevationAt(e: Entity, p: Vec2): number | null {
 
 /**
  * The object's own geometry with each vertex's elevation `f` gives, as `cad.entities.edit` takes it (the operation
- * `elevation`): `zs` for a line (its two ends), a polyline and an area (each hole's in its own `zs`), `z` for a
- * point (none when `f` says null). `f` gets the vertex's elevation and its place in `vertexElevations`' order. Null
- * for a kind without elevations.
+ * `elevation`): `zs` for a line (its two ends), a polyline and an area (each hole's in its own `zs`, each other
+ * part's and its holes' in theirs, docs/adr/0143), `z` for a point (none when `f` says null). `f` gets the vertex's
+ * elevation and its place in `vertexElevations`' order. Null for a kind without elevations.
  */
 export function mapElevations(e: Entity, f: (z: number | null, index: number) => number | null): EditGeometry | null {
   if (!takesElevation(e)) return null;
@@ -204,7 +231,14 @@ export function mapElevations(e: Entity, f: (z: number | null, index: number) =>
   else if (e.kind === 'polyline' || e.kind === 'polygon') {
     const nulls = (n: number) => Array.from({ length: n }, () => null);
     g.zs = run(e.zs ?? nulls(e.pts.length));
-    if (e.kind === 'polygon' && e.holes) g.holes = e.holes.map((h) => ({ ...structuredClone(h), zs: run(h.zs ?? nulls(h.pts.length)) }));
+    const holes = (list: readonly RingGeometry[]) => list.map((h) => ({ ...structuredClone(h), zs: run(h.zs ?? nulls(h.pts.length)) }));
+    if (e.kind === 'polygon' && e.holes) g.holes = holes(e.holes);
+    // Each other part's ring, then its holes: `vertexElevations`' order.
+    if (e.kind === 'polygon' && e.parts)
+      g.parts = e.parts.map((part) => {
+        const zs = run(part.zs ?? nulls(part.pts.length));
+        return { ...structuredClone(part), zs, ...(part.holes && { holes: holes(part.holes) }) };
+      });
   }
   return g as unknown as EditGeometry;
 }
