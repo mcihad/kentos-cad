@@ -64,3 +64,42 @@ describe('the hover card’s 3B uzunluk and 3B çevre', () => {
     ]);
   });
 });
+
+/** A multi-part area's rows (docs/adr/0143): its parts, and the islands of every part, as the desktop's card orders them. */
+describe('the hover card’s Parça and Ada (delik) of a multi-part area', () => {
+  const format = new Formatter({ lengthDecimals: new Signal(3), areaDecimals: new Signal(2), areaUnit: new Signal('m2' as const), angleUnit: new Signal('grad' as const) });
+  const p = (x: number, y: number) => ({ x, y });
+  const square = (x: number, y: number, size: number) => ({ pts: [p(x, y), p(x + size, y), p(x + size, y + size), p(x, y + size)] });
+  const parcel = { id: 4, layerId: 'parsel', attrs: { Ada: '101' }, kind: 'polygon', ...square(0, 0, 10), holes: [square(2, 2, 2)] };
+  const rows = (e: object) => cardRows({ ...parcel, ...e } as Entity, format);
+  const names = (list: [string, string][]) => list.map(([k]) => k);
+
+  it('a one-part area has no Parça row: Ada, Alan, Ada (delik), Çevre', () => {
+    expect(names(rows({}))).toEqual(['Ada', 'Alan', 'Ada (delik)', 'Çevre']);
+    expect(names(rows({ parts: [] }))).toEqual(['Ada', 'Alan', 'Ada (delik)', 'Çevre']);
+  });
+
+  it('a multi-part area shows Parça after the area and before Ada (delik), and counts every part’s holes', () => {
+    const two = rows({ parts: [{ ...square(20, 0, 10), holes: [square(22, 2, 2), square(26, 6, 2)] }] });
+    expect(names(two)).toEqual(['Ada', 'Alan', 'Parça', 'Ada (delik)', 'Çevre']);
+    expect(two.find(([k]) => k === 'Parça')?.[1]).toBe('2');
+    // The area's own hole and the second part's two.
+    expect(two.find(([k]) => k === 'Ada (delik)')?.[1]).toBe('3');
+    // Area and perimeter are the core's, part-aware: both parts, the islands taken out.
+    expect(two.find(([k]) => k === 'Alan')?.[1]).toBe('188.00 m²');
+    expect(two.find(([k]) => k === 'Çevre')?.[1]).toBe('104.000 m');
+  });
+
+  it('an area whose holes are all in a later part still shows Ada (delik); no holes anywhere shows none', () => {
+    const later = rows({ holes: undefined, parts: [{ ...square(20, 0, 10), holes: [square(22, 2, 2)] }, square(40, 0, 10)] });
+    expect(names(later)).toEqual(['Ada', 'Alan', 'Parça', 'Ada (delik)', 'Çevre']);
+    expect(later.find(([k]) => k === 'Parça')?.[1]).toBe('3');
+    expect(later.find(([k]) => k === 'Ada (delik)')?.[1]).toBe('1');
+    expect(names(rows({ holes: undefined, parts: [square(20, 0, 10)] }))).toEqual(['Ada', 'Alan', 'Parça', 'Çevre']);
+  });
+
+  it('with a registered area the order is Tapu alanı, Hesaplanan alan, Parça', () => {
+    const deed = rows({ attrs: { Ada: '101', 'Tapu alanı (m²)': '188' }, parts: [square(20, 0, 10)] });
+    expect(names(deed)).toEqual(['Ada', 'Tapu alanı', 'Hesaplanan alan', 'Parça', 'Ada (delik)', 'Çevre']);
+  });
+});

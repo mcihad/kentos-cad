@@ -13,6 +13,7 @@ import { DRAW_COLORS, LINE_WEIGHTS, weightText } from '../toolbar/fields';
 import type { MenuItem } from '../widgets/PopupMenu';
 import { PropertyGrid, type PropRow, type PropSection } from '../widgets/PropertyGrid';
 import { commonElevationRow, lineEndRow, pathElevationRow, spaceRow } from './elevationRows';
+import { cornerRows, holeRows } from './pathRows';
 import { setGeometry, setProperties, uidsOf } from './write';
 
 /**
@@ -249,12 +250,12 @@ export class PropertiesPanel extends Panel {
         break;
       case 'polyline':
       case 'polygon': {
-        geo.push({ label: 'Köşe sayısı', value: String(e.pts.length), numeric: true });
+        geo.push(...cornerRows(e));
         geo.push(pathElevationRow(this.ctx, e, locked));
         geo.push(num(e.kind === 'polygon' ? 'Çevre' : 'Uzunluk', entityLength(e)!, 'm'), ...spaceRow(this.ctx, e));
         if (e.kind === 'polygon') {
           // Net area: holes (adalar) are already taken out.
-          if (e.holes?.length) geo.push({ label: 'Ada (delik)', value: String(e.holes.length), numeric: true });
+          geo.push(...holeRows(e));
           geo.push(...area(entityArea(e)!));
         }
         break;

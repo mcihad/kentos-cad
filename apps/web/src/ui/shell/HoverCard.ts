@@ -2,6 +2,7 @@ import type { AppContext } from '../../app/context';
 import type { Formatter } from '../../app/format';
 import { watchAll } from '../../core/signal';
 import { ENTITY_KIND_LABEL, entityArea, entityLength, type Entity } from '../../model/entities';
+import { pathCounts } from '../../model/pathCounts';
 import { spaceLength } from '../../product/elevationValues';
 import { Component } from '../Component';
 import { h, replaceChildren } from '../dom';
@@ -119,7 +120,12 @@ export function cardRows(e: Entity, format: Formatter): [string, string][] {
   if (deed !== null) rows.push(['Tapu alanı', deed]);
   const area = entityArea(e);
   if (area !== null) rows.push([deed !== null ? 'Hesaplanan alan' : 'Alan', format.area(area)]);
-  if (e.kind === 'polygon' && e.holes?.length) rows.push(['Ada (delik)', String(e.holes.length)]);
+  if (e.kind === 'polygon') {
+    // A multi-part area's parts, and every part's holes (docs/adr/0143).
+    const { parts, holes } = pathCounts(e);
+    if (e.parts?.length) rows.push(['Parça', String(parts)]);
+    if (holes) rows.push(['Ada (delik)', String(holes)]);
+  }
   const length = entityLength(e);
   if (length !== null) rows.push([e.kind === 'polygon' || e.kind === 'circle' ? 'Çevre' : 'Uzunluk', format.length(length)]);
   const space = spaceLength(e);
