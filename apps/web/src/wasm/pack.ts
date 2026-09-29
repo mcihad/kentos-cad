@@ -12,6 +12,11 @@
 const KIND: Record<string, number> = { point: 0, line: 1, polyline: 2, polygon: 3, circle: 4, arc: 5, ellipse: 6, xline: 7, ray: 8, spline: 9, text: 10, dimension: 11, hatch: 12 };
 /** Kinds by their number (`KIND` the other way). */
 const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'xline', 'ray', 'spline', 'text', 'dimension', 'hatch'] as const;
+/**
+ * A multi-part area (docs/adr/0143): its first part as a polygon's fields, then the count of the other
+ * parts and each of them as a path. A one-part area stays the polygon's number, laid out as it always was.
+ */
+const MULTI_PART = 13;
 
 interface XY {
   x: number;
@@ -66,7 +71,7 @@ export function packEntities(list: Iterable<object>): Packed {
     out.push(vs.length);
     for (const v of vs) num(v);
   };
-  const path = (e: Fields) => {
+  const path = (e: Record<string, unknown>) => {
     points(e.pts);
     values(e.bulges);
     const holes = e.holes as { pts?: unknown; bulges?: unknown }[] | undefined;
@@ -81,8 +86,11 @@ export function packEntities(list: Iterable<object>): Packed {
     }
   };
   for (const e of list as Iterable<Fields>) {
-    const kind = KIND[e.kind];
+    let kind = KIND[e.kind];
     if (kind === undefined) throw new Error(`Geometri deposu “${String(e.kind)}” türünü tanımıyor.`);
+    // An area with parts past its first has a number of its own (the others are as they always were).
+    const parts = kind === 3 && Array.isArray(e.parts) && e.parts.length ? (e.parts as Record<string, unknown>[]) : null;
+    if (parts) kind = MULTI_PART;
     num(e.id);
     out.push(str(e.layerId), e.label ? 1 : 0, kind);
     switch (kind) {
@@ -98,6 +106,11 @@ export function packEntities(list: Iterable<object>): Packed {
       case 2:
       case 3:
         path(e);
+        break;
+      case MULTI_PART:
+        path(e);
+        out.push(parts!.length);
+        for (const part of parts!) path(part);
         break;
       case 4:
         pt(e.c);
@@ -219,12 +232,22 @@ export function unpackEntities(p: Packed): Unpacked[] {
     }
     return list;
   };
+  /** A path of a multi-part area past its first: points, bulges and holes. */
+  const part = (): { pts: XY[]; bulges?: number[]; holes?: { pts: XY[]; bulges?: number[] }[] } => {
+    const pts = points();
+    const bulges = values();
+    const holes = rings();
+    const out: { pts: XY[]; bulges?: number[]; holes?: { pts: XY[]; bulges?: number[] }[] } = { pts };
+    if (bulges) out.bulges = bulges;
+    if (holes) out.holes = holes;
+    return out;
+  };
   while (at < nums.length) {
     const id = num();
     const layerId = str() ?? '';
     const labelled = flag();
     const code = num();
-    const kind = KINDS[code];
+    const kind = code === MULTI_PART ? 'polygon' : KINDS[code];
     let g: Geometry;
     switch (kind) {
       case 'point': {
@@ -247,6 +270,8 @@ export function unpackEntities(p: Packed): Unpacked[] {
         g = { kind, pts };
         if (bulges) g.bulges = bulges;
         if (holes) g.holes = holes;
+        // A multi-part area: the count of its other parts, then each of them.
+        if (code === MULTI_PART) g.parts = Array.from({ length: num() }, part);
         break;
       }
       case 'circle': {
