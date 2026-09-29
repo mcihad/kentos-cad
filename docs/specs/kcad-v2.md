@@ -343,7 +343,7 @@ Yanlış CBOR türü (float yerine tam sayı, nokta yerine harita) `wrong_type`'
   - **Okuma sırası:** `zs` anahtarı `pts`'ten önce geldiği için okuyucu uzunluğu haritanın sonunda, iki alanı da okuyunca denetler.
   - **Yazıcı** `zs`'i verildiği gibi yazar, hepsi `null` olan da: yazılan baytlar okununca çizimle aynı çıkmalıdır. Hiçbir köşenin kotu yoksa alanı hiç üretmemek üreticinin işidir (ADR 0142).
   - **Sonlu olmayan kot** (NaN, ±∞) hiçbir float gibi yazılamaz ve okunamaz: `non_finite` (§5.3). Kotun yerinde tam sayı ya da başka tür `wrong_type`'tır.
-  - **Şema:** kot alanları yalnız şema 4'te vardır (§6.1). Nokta kendi `z`'sini önceki şemalardan beri taşır; daire, yay, elips, yazı, ölçü ve tarama kot almaz.
+  - **Şema:** kot alanları yalnız şema 4'te vardır (§6.1). Nokta kendi `z`'sini önceki şemalardan beri taşır; daire, yay, elips, eğri, yardımcı çizgi, ışın, yazı, ölçü ve tarama kot almaz.
 - Ölçü, blok, dış başvuru, yüzey ve katı gibi yeni türler ileride şemaya ya da zorunlu bir uzantıya eklenir; eski okuyucu onları tanımadığını söyler.
 
 ### 6.7 Proje stilleri ve opak değerler
