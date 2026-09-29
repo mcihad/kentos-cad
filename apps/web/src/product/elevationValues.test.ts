@@ -79,7 +79,7 @@ describe('what a list of elevations comes to', () => {
   });
 
   it('a path of hundreds of thousands of vertices (a spread into Math.min would overflow the call)', () => {
-    const zs = Array.from({ length: 400_000 }, (_, i) => 1000 + (i % 250));
+    const zs: (number | null)[] = Array.from({ length: 400_000 }, (_, i) => 1000 + (i % 250));
     expect(summarizeElevations(zs)).toEqual({ kind: 'range', min: 1000, max: 1249 });
     zs[7] = null;
     expect(summarizeElevations(zs)).toEqual({ kind: 'partial', min: 1000, max: 1249 });
