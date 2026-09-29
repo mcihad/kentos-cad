@@ -19,14 +19,14 @@
   },
   "summary": {
     "commands": {
-      "total": 189,
-      "implemented": 176,
+      "total": 191,
+      "implemented": 178,
       "partial": 0,
       "pending": 13
     },
     "tools": {
-      "total": 77,
-      "implemented": 75,
+      "total": 79,
+      "implemented": 77,
       "partial": 0,
       "pending": 2
     },
@@ -73,23 +73,23 @@
       "pending": 0
     },
     "commandsWithoutPlace": [],
-    "commandsWithoutTests": 63,
+    "commandsWithoutTests": 65,
     "commandsOnDesktop": 171,
     "desktop": {
       "commands": {
-        "total": 189,
+        "total": 191,
         "implemented": 171,
         "partial": 0,
         "pending": 13,
-        "none": 0,
+        "none": 2,
         "n/a": 5
       },
       "tools": {
-        "total": 77,
+        "total": 79,
         "implemented": 75,
         "partial": 0,
         "pending": 2,
-        "none": 0,
+        "none": 2,
         "n/a": 0
       },
       "processing": {
@@ -4234,6 +4234,66 @@
       ]
     },
     {
+      "id": "tool.partsJoin",
+      "title": "Parçaları birleştir",
+      "category": "Alan",
+      "icon": "partsJoin",
+      "description": "Seçili alanları tek, çok parçalı alan yapar: örtüşenler tek parçada birleşir, parçalar büyükten küçüğe dizilir; ilk seçilen alan yerini, kimliğini ve özniteliklerini verir.",
+      "aliases": [
+        "PARCABIRLESTIR",
+        "PARCALARIBIRLESTIR"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Değiştir › Alan işlemleri › Birleştir ve böl"
+      ],
+      "ribbon": [
+        "Değiştir › Birleştir ve böl",
+        "Seçim › Birleştir ve böl"
+      ],
+      "quickAccess": false,
+      "toolbox": true,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "tool.partsSplit",
+      "title": "Parçalara ayır",
+      "category": "Alan",
+      "icon": "partsSplit",
+      "description": "Çok parçalı alanı her parçası için bir alana ayırır: ilk parça alanın yerinde kalır, öbürleri öznitelikleriyle yeni alan olur.",
+      "aliases": [
+        "PARCALARAAYIR",
+        "PARCAAYIR"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Değiştir › Alan işlemleri › Birleştir ve böl"
+      ],
+      "ribbon": [
+        "Değiştir › Birleştir ve böl",
+        "Seçim › Birleştir ve böl"
+      ],
+      "quickAccess": false,
+      "toolbox": true,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
       "id": "tool.perpIn",
       "title": "Dik in",
       "category": "Çizim",
@@ -7584,6 +7644,52 @@
         "apps/web/scripts/e2e/smoke.mjs",
         "fixtures/interaction/v1/measure-parcel.json"
       ]
+    },
+    {
+      "id": "partsJoin",
+      "label": "Parçaları birleştir",
+      "icon": "partsJoin",
+      "group": "area",
+      "section": "boolean",
+      "aliases": [
+        "PARCABIRLESTIR",
+        "PARCALARIBIRLESTIR"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 2,
+      "description": "Seçili alanları tek, çok parçalı alan yapar: örtüşenler tek parçada birleşir, parçalar büyükten küçüğe dizilir; ilk seçilen alan yerini, kimliğini ve özniteliklerini verir.",
+      "productCommand": "cad.entities.edit",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "partsSplit",
+      "label": "Parçalara ayır",
+      "icon": "partsSplit",
+      "group": "area",
+      "section": "boolean",
+      "aliases": [
+        "PARCALARAAYIR",
+        "PARCAAYIR"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 2,
+      "description": "Çok parçalı alanı her parçası için bir alana ayırır: ilk parça alanın yerinde kalır, öbürleri öznitelikleriyle yeni alan olur.",
+      "productCommand": "cad.entities.edit",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
     },
     {
       "id": "perpIn",
@@ -14093,6 +14199,8 @@
                       "tool.areaUnion",
                       "tool.areaIntersect",
                       "tool.areaSubtract",
+                      "tool.partsJoin",
+                      "tool.partsSplit",
                       "tool.areaSplit"
                     ]
                   }
@@ -15387,6 +15495,14 @@
                 "size": "large"
               },
               {
+                "command": "tool.partsJoin",
+                "size": "small"
+              },
+              {
+                "command": "tool.partsSplit",
+                "size": "small"
+              },
+              {
                 "command": "tool.areaSplit",
                 "size": "large"
               }
@@ -16103,6 +16219,14 @@
               {
                 "command": "tool.areaSubtract",
                 "size": "large"
+              },
+              {
+                "command": "tool.partsJoin",
+                "size": "small"
+              },
+              {
+                "command": "tool.partsSplit",
+                "size": "small"
               },
               {
                 "command": "tool.areaSplit",
@@ -17243,6 +17367,14 @@
                   "size": "large"
                 },
                 {
+                  "command": "tool.partsJoin",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.partsSplit",
+                  "size": "small"
+                },
+                {
                   "command": "tool.areaSplit",
                   "size": "large"
                 }
@@ -17757,6 +17889,14 @@
                 {
                   "command": "tool.areaSubtract",
                   "size": "large"
+                },
+                {
+                  "command": "tool.partsJoin",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.partsSplit",
+                  "size": "small"
                 },
                 {
                   "command": "tool.areaSplit",
@@ -18691,6 +18831,14 @@
                   "size": "large"
                 },
                 {
+                  "command": "tool.partsJoin",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.partsSplit",
+                  "size": "small"
+                },
+                {
                   "command": "tool.areaSplit",
                   "size": "large"
                 }
@@ -19376,6 +19524,14 @@
                   "size": "large"
                 },
                 {
+                  "command": "tool.partsJoin",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.partsSplit",
+                  "size": "small"
+                },
+                {
                   "command": "tool.areaSplit",
                   "size": "large"
                 }
@@ -19514,6 +19670,8 @@
     "areaIntersect": "<path d=\"M3 3h9v9H3zM8 8h9v9H8z\" stroke-dasharray=\"2 1.6\"/><path d=\"M8 8h4v4H8z\" fill=\"currentColor\" fill-opacity=\".55\"/>",
     "areaSubtract": "<path d=\"M3 3h14v7h-6v7H3z\" fill=\"currentColor\" fill-opacity=\".22\"/><path d=\"M11 10h6v7h-6\" stroke-dasharray=\"2 1.6\"/>",
     "areaSplit": "<path d=\"M4 4h12v12H4z\" fill=\"currentColor\" fill-opacity=\".16\"/><path d=\"M2 14.5 18 5.5\"/>",
+    "partsJoin": "<path d=\"M3 3h6v6H3z\" fill=\"currentColor\" fill-opacity=\".22\"/><path d=\"M11 11h6v6h-6z\" fill=\"currentColor\" fill-opacity=\".22\"/><path d=\"M9 9l2 2\"/>",
+    "partsSplit": "<path d=\"M2 2h13L2 15z\" fill=\"currentColor\" fill-opacity=\".22\"/><path d=\"M18 5v13H5z\" fill=\"currentColor\" fill-opacity=\".22\"/>",
     "toPolyline": "<path d=\"M5.6 16 3.8 8l6-4.5 6.5 3.5-1.8 9H8\"/><rect x=\"2.3\" y=\"6.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"8.3\" y=\"2\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"14.8\" y=\"5.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"13\" y=\"14.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"4.1\" y=\"14.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "snapEndpoint": "<path d=\"M3.5 16.5 11 9\" stroke-dasharray=\"2 1.6\"/><rect x=\"10.5\" y=\"3.5\" width=\"6\" height=\"6\"/>",
     "snapMidpoint": "<path d=\"M3 16.5 6.6 13M13.4 7 17 3.5\" stroke-dasharray=\"2 1.6\"/><path d=\"m10 5.8 4 7H6z\"/>",

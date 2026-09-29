@@ -1,10 +1,12 @@
 import type { AppContext } from '../app/context';
+import type { AreaPart } from '../contracts/generated/AreaPart';
 import type { EntityEdit } from '../contracts/generated/EntityEdit';
+import type { EntityGeometry as EditGeometry } from '../contracts/generated/EntityGeometry';
 import { Signal } from '../core/signal';
-import { entityGeometry, type Entity } from '../model/entities';
+import { entityGeometry, type Entity, type PolylineEntity } from '../model/entities';
 import { dist, type Vec2 } from '../model/geometry';
-import { entityFaceIndex, intersectAreas, netArea, splitArea, subtractAreas, unionAreas, type Area, type Source } from '../model/geom/region';
-import { areaOfEntity, lineSource, polygonOfArea, polylinesOfPolygon } from '../model/ops/areas';
+import { entityFaceIndex, intersectAreaSets, netArea, splitArea, subtractAreas, unionAreas, type Area, type Source } from '../model/geom/region';
+import { areaOfEntity, areasOfEntity, lineSource, oneArea, polygonOfArea, polylinesOfPolygon } from '../model/ops/areas';
 import type { ViewTransform } from '../viewport/Camera';
 import { writeObjects } from './createCommand';
 import { createdIds, editGeometry, uidOf, writeEdit } from './editCommand';
@@ -24,9 +26,31 @@ import { VisibleFaces } from './visibleFaces';
  * through the product commands, one undo step named after the tool: the
  * changes of `cad.entities.edit`, İçine tıklayarak alan `cad.entities.create`
  * (docs/adr/0065). Objects on locked layers are left out before the command.
+ *
+ * Birleştir, kesiştir and çıkar take a multi-part area whole, as the union of
+ * its parts; with Tek nesne (T) their result is one multi-part area rather
+ * than an area a piece. Parçaları birleştir makes the selected areas one
+ * multi-part area in the first one's place, Parçalara ayır the reverse
+ * (docs/adr/0143). The desktop's are `crates/native/interaction/src/area.rs`.
  */
 
 const AREA_KINDS = 'kapalı alan, daire, elips ya da kapalı eğri';
+
+/**
+ * Tek nesne (T) of Alan birleştir, kesiştir and çıkar: their result one
+ * multi-part area (the desktop's `Memory.area_one_object`). One flag for the
+ * three, off until asked.
+ */
+const oneObject = { on: false };
+
+/** An option's value as the prompt says it. */
+const yesNo = (on: boolean) => (on ? 'evet' : 'hayır');
+
+/** The prompt's Tek nesne option. */
+const oneObjectOption = () => `Tek nesne (T): ${yesNo(oneObject.on)}`;
+
+/** Whether a typed answer is the option key `key`. */
+const isKey = (text: string, key: string) => text.trim().toLocaleUpperCase('tr-TR') === key;
 
 interface Picked {
   e: Entity;
@@ -38,6 +62,19 @@ const areasOf = (list: readonly Entity[]): Picked[] =>
   list.flatMap((e) => {
     const a = areaOfEntity(e);
     return a ? [{ e, a }] : [];
+  });
+
+/** An object that encloses areas, and all of them: a multi-part area's parts, the one area of anything else (docs/adr/0143). */
+interface Whole {
+  e: Entity;
+  parts: Area[];
+}
+
+/** The entities of `list` that enclose areas, each with all of them. */
+const wholesOf = (list: readonly Entity[]): Whole[] =>
+  list.flatMap((e) => {
+    const parts = areasOfEntity(e);
+    return parts.length ? [{ e, parts }] : [];
   });
 
 const totalArea = (list: readonly Area[]) => list.reduce((s, a) => s + netArea(a), 0);
@@ -61,6 +98,16 @@ function addAreas(ctx: AppContext, areas: readonly Area[], from: Entity, keepDat
   return areas.map((a): EntityEdit => ({ kind: 'add', from: uid, geometry: editGeometry(polygonOfArea(a)), keepData }));
 }
 
+/**
+ * New areas made from `from` as `addAreas` makes them; with `one` (Tek nesne) and two or more of them, one add: a
+ * multi-part area of them all, the largest part first.
+ */
+function addResult(ctx: AppContext, areas: readonly Area[], from: Entity, keepData: boolean, one: boolean): EntityEdit[] {
+  if (!one || areas.length < 2) return addAreas(ctx, areas, from, keepData);
+  const geometry = oneArea(areas);
+  return geometry ? [{ kind: 'add', from: uidOf(ctx, from), geometry: editGeometry(geometry), keepData }] : [];
+}
+
 /** `e` goes (`remove`). */
 const removal = (ctx: AppContext, e: Entity): EntityEdit => ({ kind: 'remove', uid: uidOf(ctx, e) });
 
@@ -76,16 +123,30 @@ export class AreaUnionTool extends SelectionActionTool {
   readonly id = 'areaUnion';
   protected readonly label = 'Alan birleştir';
 
+  protected override pickHint(): string {
+    return `[${oneObjectOption()}]`;
+  }
+
+  override input(text: string): boolean {
+    if (this.picking && isKey(text, 'T')) {
+      oneObject.on = !oneObject.on;
+      this.refresh();
+      return true;
+    }
+    return super.input(text);
+  }
+
   protected run(targets: Entity[]): void {
     const { log, selection, format } = this.ctx;
-    const list = areasOf(targets);
+    const list = wholesOf(targets);
     if (list.length < 2) return log.warn(`Birleştirmek için en az iki alan seçin (${AREA_KINDS}).`);
-    const result = unionAreas(list.map((x) => x.a));
+    const result = unionAreas(list.flatMap((x) => x.parts));
+    const one = oneObject.on;
     // The first picked area lends its layer, colour and data (tevhit: the parcel kept).
-    const out = writeEdit(this.ctx, 'areaUnion', [...list.map((x) => removal(this.ctx, x.e)), ...addAreas(this.ctx, result, list[0].e)]);
+    const out = writeEdit(this.ctx, 'areaUnion', [...list.map((x) => removal(this.ctx, x.e)), ...addResult(this.ctx, result, list[0].e, true, one)]);
     if (!out) return;
     selection.set(createdIds(this.ctx, out));
-    const parts = result.length === 1 ? 'tek alan' : `${result.length} ayrı alan (birbirine değmeyenler ayrı kalır)`;
+    const parts = result.length === 1 ? 'tek alan' : one ? `${result.length} parçalı tek alan` : `${result.length} ayrı alan (birbirine değmeyenler ayrı kalır)`;
     log.success(`${list.length} alan birleştirildi: ${parts}, toplam ${format.area(totalArea(result))}.`);
   }
 }
@@ -96,41 +157,46 @@ export class AreaIntersectTool extends SelectionActionTool {
   private static erase = false;
 
   protected override pickHint(): string {
-    return `[Kaynakları sil (S): ${AreaIntersectTool.erase ? 'evet' : 'hayır'}]`;
+    return `[Kaynakları sil (S): ${yesNo(AreaIntersectTool.erase)} / ${oneObjectOption()}]`;
   }
 
   override input(text: string): boolean {
-    if (this.picking && text.trim().toLocaleUpperCase('tr-TR') === 'S') {
-      AreaIntersectTool.erase = !AreaIntersectTool.erase;
-      this.refresh();
-      return true;
-    }
-    return super.input(text);
+    if (this.picking && isKey(text, 'S')) AreaIntersectTool.erase = !AreaIntersectTool.erase;
+    else if (this.picking && isKey(text, 'T')) oneObject.on = !oneObject.on;
+    else return super.input(text);
+    this.refresh();
+    return true;
   }
 
   protected run(targets: Entity[]): void {
     const { log, selection, format } = this.ctx;
-    const list = areasOf(targets);
+    const list = wholesOf(targets);
     if (list.length < 2) return log.warn(`Kesiştirmek için en az iki alan seçin (${AREA_KINDS}).`);
-    const result = intersectAreas(list.map((x) => x.a));
+    // Each object is taken whole: a multi-part area meets what any of its parts meets.
+    const result = intersectAreaSets(list.map((x) => x.parts));
     if (!result.length) return log.warn('Seçili alanların ortak bir parçası yok.');
+    const { on: one } = oneObject;
     const erase = AreaIntersectTool.erase;
     // Kept sources keep their data; the overlap is a new, blank area. Erased, it takes the first one's data.
-    const out = writeEdit(this.ctx, 'areaIntersect', [...(erase ? list.map((x) => removal(this.ctx, x.e)) : []), ...addAreas(this.ctx, result, list[0].e, erase)]);
+    const out = writeEdit(this.ctx, 'areaIntersect', [...(erase ? list.map((x) => removal(this.ctx, x.e)) : []), ...addResult(this.ctx, result, list[0].e, erase, one)]);
     if (!out) return;
     selection.set(createdIds(this.ctx, out));
-    log.success(`Ortak alan: ${format.area(totalArea(result))}${result.length > 1 ? ` (${result.length} parça)` : ''}${erase ? '; kaynaklar silindi' : ''}.`);
+    const pieces = result.length > 1 ? (one ? ` (${result.length} parçalı tek alan)` : ` (${result.length} parça)`) : '';
+    log.success(`Ortak alan: ${format.area(totalArea(result))}${pieces}${erase ? '; kaynaklar silindi' : ''}.`);
   }
 }
 
 // ── Çıkar ──────────────────────────────────────────────────────────────
 
-/** Two selections: the areas to cut from, then the areas to take away. */
+/**
+ * Two selections: the areas to cut from, then the areas to take away. An object is taken whole, a multi-part
+ * area's parts together (docs/adr/0143).
+ */
 export class AreaSubtractTool extends SelectionFirstTool {
   readonly id = 'areaSubtract';
   protected readonly label = 'Alan çıkar';
   private static eraseCutters = false;
-  private from: Picked[] | null = null;
+  private from: Whole[] | null = null;
 
   override activate(): void {
     this.from = null;
@@ -140,7 +206,7 @@ export class AreaSubtractTool extends SelectionFirstTool {
   protected override refresh(): void {
     const n = this.ctx.selection.size;
     const step = this.from
-      ? `çıkarılacak alanları seçin, bitince sağ tıklayın (${n} seçili) [Çıkarılanları sil (S): ${AreaSubtractTool.eraseCutters ? 'evet' : 'hayır'}]`
+      ? `çıkarılacak alanları seçin, bitince sağ tıklayın (${n} seçili) [Çıkarılanları sil (S): ${yesNo(AreaSubtractTool.eraseCutters)} / ${oneObjectOption()}]`
       : `kesilecek alanları seçin, bitince sağ tıklayın (${n} seçili)`;
     this.prompt.set(`${this.label}: ${step}`);
     this.ctx.view.requestOverlay();
@@ -148,7 +214,7 @@ export class AreaSubtractTool extends SelectionFirstTool {
 
   protected begin(): void {
     const { doc, log, selection } = this.ctx;
-    const picked = areasOf(this.targets());
+    const picked = wholesOf(this.targets());
     this.picking = true;
     selection.clear();
     if (!this.from) {
@@ -164,18 +230,20 @@ export class AreaSubtractTool extends SelectionFirstTool {
     queueMicrotask(() => this.ctx.tools.exit());
   }
 
-  private apply(from: Picked[], cutters: Picked[]): void {
+  private apply(from: Whole[], cutters: Whole[]): void {
     const { doc, log, selection, format } = this.ctx;
-    const cut = cutters.map((x) => x.a);
+    const cut = cutters.flatMap((x) => x.parts);
     const changes: EntityEdit[] = [];
     let changed = 0;
     let gone = 0;
     const erase = AreaSubtractTool.eraseCutters;
+    const { on: one } = oneObject;
     for (const t of from) {
-      const rest = subtractAreas([t.a], cut);
+      const rest = subtractAreas(t.parts, cut);
       // Untouched areas stay as they are (a circle is not turned into a polygon for nothing).
-      if (rest.length === 1 && Math.abs(totalArea(rest) - netArea(t.a)) <= 1e-9 * Math.max(1, netArea(t.a))) continue;
-      changes.push(removal(this.ctx, t.e), ...addAreas(this.ctx, rest, t.e));
+      const size = totalArea(t.parts);
+      if (rest.length === t.parts.length && Math.abs(totalArea(rest) - size) <= 1e-9 * Math.max(1, size)) continue;
+      changes.push(removal(this.ctx, t.e), ...addResult(this.ctx, rest, t.e, true, one));
       changed++;
       if (!rest.length) gone++;
     }
@@ -186,17 +254,16 @@ export class AreaSubtractTool extends SelectionFirstTool {
     if (!out) return;
     const created = createdIds(this.ctx, out);
     selection.set(created);
-    const left = format.area(totalArea(created.map((id) => areaOfEntity(doc.get(id)!)!)));
+    const left = format.area(totalArea(created.flatMap((id) => areasOfEntity(doc.get(id)!))));
     log.success(`${changed} alandan çıkarıldı; kalan ${left}${gone ? `, ${gone} alan tamamen silindi` : ''}${erase ? '; çıkarılan alanlar silindi' : ''}.`);
   }
 
   override input(text: string): boolean {
-    if (this.picking && this.from && text.trim().toLocaleUpperCase('tr-TR') === 'S') {
-      AreaSubtractTool.eraseCutters = !AreaSubtractTool.eraseCutters;
-      this.refresh();
-      return true;
-    }
-    return super.input(text);
+    if (this.picking && this.from && isKey(text, 'S')) AreaSubtractTool.eraseCutters = !AreaSubtractTool.eraseCutters;
+    else if (this.picking && this.from && isKey(text, 'T')) oneObject.on = !oneObject.on;
+    else return super.input(text);
+    this.refresh();
+    return true;
   }
 
   protected stagePrompt(): string {
@@ -207,7 +274,105 @@ export class AreaSubtractTool extends SelectionFirstTool {
   override draw(g: CanvasRenderingContext2D, view: ViewTransform): void {
     super.draw(g, view);
     const pal = this.ctx.view.palette;
-    for (const f of this.from ?? []) drawArea(g, view, f.a, { color: pal.accent, width: 2 });
+    // The areas to cut from, every part of each.
+    for (const f of this.from ?? []) for (const a of f.parts) drawArea(g, view, a, { color: pal.accent, width: 2 });
+  }
+}
+
+// ── Parçaları birleştir, parçalara ayır ────────────────────────────────
+
+/** A polygon's own fields or a part's as the contract has a part: each field only when it has it. */
+function ownPart(p: { pts: Vec2[]; bulges?: number[]; holes?: AreaPart['holes']; zs?: (number | null)[] }): AreaPart {
+  return { pts: p.pts, ...(p.bulges && { bulges: p.bulges }), ...(p.holes && { holes: p.holes }), ...(p.zs && { zs: p.zs }) };
+}
+
+/** A polygon geometry of one part, for `cad.entities.edit`: the part's fields as they are, elevations too, and no parts. */
+const partGeometry = (p: AreaPart): Extract<EditGeometry, { kind: 'polygon' }> => ({ kind: 'polygon', ...ownPart(p) });
+
+/**
+ * An object's parts as the contract has them, each with its size (net area, elevations left out): a polygon's own
+ * fields, then its parts; anything else that encloses an area, the area as a polygon (no elevations).
+ */
+function contractParts(x: Whole): { size: number; part: AreaPart }[] {
+  const { e } = x;
+  if (e.kind !== 'polygon') return x.parts.map((a) => ({ size: netArea(a), part: ownPart(polygonOfArea(a) as AreaPart) }));
+  return [ownPart(e), ...(e.parts ?? [])].map((part) => {
+    // A part with no area (too few corners) is kept, sized 0.
+    const a = areaOfEntity({ kind: 'polygon', pts: part.pts, ...(part.bulges && { bulges: part.bulges }), ...(part.holes && { holes: part.holes }) });
+    return { size: a ? netArea(a) : 0, part };
+  });
+}
+
+/**
+ * Parçaları birleştir: the selected areas become one multi-part area in the first one's place (it keeps its slot,
+ * persistent id, layer and data; the others go). When no two overlap, every part is kept as it was, its elevations
+ * too, the largest first; else the overlapping ones merge into one part (docs/adr/0143).
+ */
+export class PartsJoinTool extends SelectionActionTool {
+  readonly id = 'partsJoin';
+  protected readonly label = 'Parçaları birleştir';
+
+  protected run(targets: Entity[]): void {
+    const { log, selection, format } = this.ctx;
+    const list = wholesOf(targets);
+    if (list.length < 2) return log.warn(`Parçaları birleştirmek için en az iki alan seçin (${AREA_KINDS}).`);
+    const all = list.flatMap((x) => x.parts);
+    const merged = unionAreas(all);
+    const size = totalArea(all);
+    const apart = merged.length === all.length && Math.abs(totalArea(merged) - size) <= 1e-9 * Math.max(1, size);
+    let geometry: EditGeometry | null;
+    if (apart) {
+      // Each part as the contract has it, sized by its area, from the largest down (the sort is stable).
+      const [first, ...rest] = list
+        .flatMap(contractParts)
+        .sort((a, b) => b.size - a.size)
+        .map((x) => x.part);
+      geometry = { ...partGeometry(first), parts: rest };
+    } else {
+      const one = oneArea(merged);
+      geometry = one && editGeometry(one);
+    }
+    if (!geometry) return;
+    // The first picked lends its place, id, layer and data; a circle becomes the area.
+    const first = list[0].e;
+    const uid = uidOf(this.ctx, first);
+    const out = writeEdit(this.ctx, 'partsJoin', [
+      first.kind === 'polygon' ? { kind: 'update', uid, geometry } : { kind: 'replace', uid, geometry, keepData: true },
+      ...list.slice(1).map((x) => removal(this.ctx, x.e)),
+    ]);
+    if (!out) return;
+    selection.set([first.id]);
+    const [pieces, total, note] = apart ? [all.length, size, ''] : [merged.length, totalArea(merged), 'örtüşenler birleşti, '];
+    log.success(`${list.length} alan tek alanda birleşti: ${note}${pieces} parça, toplam ${format.area(total)}.`);
+  }
+}
+
+/**
+ * Parçalara ayır: each multi-part area becomes an area a part; the first part keeps the area's slot and persistent
+ * id, the others are new with its layer and data, each part as it was, elevations too (docs/adr/0143).
+ */
+export class PartsSplitTool extends SelectionActionTool {
+  readonly id = 'partsSplit';
+  protected readonly label = 'Parçalara ayır';
+
+  protected run(targets: Entity[]): void {
+    const { log, selection } = this.ctx;
+    const areas = targets.filter((e): e is PolylineEntity => e.kind === 'polygon' && !!e.parts?.length);
+    if (!areas.length) return log.warn('Parçalarına ayrılacak çok parçalı bir alan seçin.');
+    const changes: EntityEdit[] = [];
+    for (const e of areas) {
+      const uid = uidOf(this.ctx, e);
+      changes.push({ kind: 'update', uid, geometry: partGeometry(ownPart(e)) });
+      for (const part of e.parts ?? []) changes.push({ kind: 'add', from: uid, geometry: partGeometry(part), keepData: true });
+    }
+    const out = writeEdit(this.ctx, 'partsSplit', changes);
+    if (!out) return;
+    // Each area followed by the objects made from it.
+    const made = createdIds(this.ctx, out);
+    let k = 0;
+    const created = areas.flatMap((e) => [e.id, ...made.slice(k, (k += e.parts?.length ?? 0))]);
+    selection.set(created);
+    log.success(`${areas.length} alan parçalarına ayrıldı (${created.length} alan).`);
   }
 }
 

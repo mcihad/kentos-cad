@@ -88,6 +88,8 @@ export const ICONS = {
   areaIntersect: '<path d="M3 3h9v9H3zM8 8h9v9H8z" stroke-dasharray="2 1.6"/><path d="M8 8h4v4H8z" fill="currentColor" fill-opacity=".55"/>',
   areaSubtract: '<path d="M3 3h14v7h-6v7H3z" fill="currentColor" fill-opacity=".22"/><path d="M11 10h6v7h-6" stroke-dasharray="2 1.6"/>',
   areaSplit: '<path d="M4 4h12v12H4z" fill="currentColor" fill-opacity=".16"/><path d="M2 14.5 18 5.5"/>',
+  partsJoin: '<path d="M3 3h6v6H3z" fill="currentColor" fill-opacity=".22"/><path d="M11 11h6v6h-6z" fill="currentColor" fill-opacity=".22"/><path d="M9 9l2 2"/>',
+  partsSplit: '<path d="M2 2h13L2 15z" fill="currentColor" fill-opacity=".22"/><path d="M18 5v13H5z" fill="currentColor" fill-opacity=".22"/>',
   toPolyline: `<path d="M5.6 16 3.8 8l6-4.5 6.5 3.5-1.8 9H8"/>${grip(3.8, 8)}${grip(9.8, 3.5)}${grip(16.3, 7)}${grip(14.5, 16)}${grip(5.6, 16)}`,
 
   // Object snaps: the marker (solid) as drawn on the canvas, on its context geometry (dashed).

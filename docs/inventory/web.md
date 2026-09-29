@@ -4,8 +4,8 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 189 | 176 | 0 | 13 |
-| Araçlar | 77 | 75 | 0 | 2 |
+| Komutlar | 191 | 178 | 0 | 13 |
+| Araçlar | 79 | 77 | 0 | 2 |
 | İşlem araçları | 4 | 4 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
 | Çalışma modları | 5 | 3 | 0 | 2 |
@@ -50,8 +50,8 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 171 | 0 | 0 | 13 | 5 | 189 |
-| Araçlar | 75 | 0 | 0 | 2 | 0 | 77 |
+| Komutlar | 171 | 0 | 2 | 13 | 5 | 191 |
+| Araçlar | 75 | 0 | 2 | 2 | 0 | 79 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
 | Çalışma modları | 3 | 0 | 0 | 2 | 0 | 5 |
@@ -91,8 +91,10 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (0 / 189; ayrıca 13 iki platformda da bekliyor)
+#### Komutlar (2 / 191; ayrıca 13 iki platformda da bekliyor)
 
+- `tool.partsJoin` Parçaları birleştir
+- `tool.partsSplit` Parçalara ayır
 - `analysis.slope` Eğim analizi… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `analysis.volume` Hacim hesabı… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `crs.transform` Datum dönüşümü (ED50 ↔ TUREF)… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
@@ -107,8 +109,10 @@ Kısmi olanlar notlarıyla; bölüm bölüm.
 - `workspace.disaster` Afet Analizi (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 - `workspace.plan3d` 3D Plan (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 
-#### Araçlar (0 / 77; ayrıca 2 iki platformda da bekliyor)
+#### Araçlar (2 / 79; ayrıca 2 iki platformda da bekliyor)
 
+- `partsJoin` Parçaları birleştir
+- `partsSplit` Parçalara ayır
 - `stakeout` Aplikasyon (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)) — Aplikasyon aracı hazır değil. Hesap menüsündeki `calc.stakeout` penceresi ayrıdır ve çalışır.
 - `subdivide` İfraz (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)) — İfraz hesabı henüz yok. Alan ve hisse kuralları bağımsız referans ve kurum kabulü ister (CLAUDE.md §7, §23; TODOS.md GIS-06, GIS-13).
 
@@ -144,4 +148,4 @@ Yok.
 
 ## Test başvurusu
 
-63 / 189 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+65 / 191 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

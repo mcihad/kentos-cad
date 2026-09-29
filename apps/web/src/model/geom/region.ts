@@ -34,6 +34,12 @@ export const unionAreas = op<(list: readonly Area[]) => Area[]>('unionAreas');
 /** What all the areas have in common. */
 export const intersectAreas = op<(list: readonly Area[]) => Area[]>('intersectAreas');
 
+/**
+ * What all the sets have in common, each set the areas of one object (a multi-part area's parts, docs/adr/0143):
+ * a set covers what any of its areas covers, so an object is taken whole. One set is the union of its areas.
+ */
+export const intersectAreaSets = op<(sets: readonly (readonly Area[])[]) => Area[]>('intersectAreaSets');
+
 /** `from` with everything covered by `cutters` removed. */
 export const subtractAreas = op<(from: readonly Area[], cutters: readonly Area[]) => Area[]>('subtractAreas');
 

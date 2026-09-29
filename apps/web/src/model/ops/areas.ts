@@ -21,6 +21,13 @@ export const areaOfEntity = op<(e: EntityGeometry) => Area | null>('areaOfEntity
  */
 export const areasOfEntity = op<(e: EntityGeometry) => Area[]>('areasOfEntity');
 
+/**
+ * The areas as one multi-part area, the largest part first (a command's order, docs/adr/0143; equal sizes keep
+ * theirs): the polygon geometry with the other parts in `parts`. One area is a plain area, none gives null.
+ * `oneObject` (Tek nesne) of the area tools writes its result with it.
+ */
+export const oneArea = entityOp<(areas: readonly Area[]) => EntityGeometry | null>('oneArea');
+
 /** Polygon geometry of an area (holes only when there are some). */
 export const polygonOfArea = entityOp<(a: Area) => EntityGeometry>('polygonOfArea');
 
