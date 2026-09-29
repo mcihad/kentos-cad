@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { isUuid } from '../core/uuid';
+import type { BlockDefinition } from './blocks';
 import { CadDocument, Refusal } from './document';
 import type { Entity, NewEntity } from './entities';
 import { LayerStore, type LayerInit, type LayerStyle } from './layers';
@@ -47,6 +48,10 @@ interface Expect {
   settings?: Record<string, Json>;
   /** Object → the name of a persistent id taken with `captureUid`, or "new": one taken by none. */
   uids?: Record<string, string>;
+  /** The block definitions' names, in order (docs/adr/0144). */
+  blocks?: string[];
+  /** Block id → fields: name, base, description, and the counts of its entities and attributes. */
+  blockFields?: Record<string, Record<string, Json>>;
 }
 
 interface Step {
@@ -71,7 +76,7 @@ interface Fixture {
   scenarios: Scenario[];
 }
 
-const EXPECT_KEYS: readonly string[] = ['ids', 'count', 'entities', 'byLayer', 'canUndo', 'canRedo', 'dirty', 'revision', 'layers', 'activeLayer', 'tree', 'name', 'settings', 'uids'];
+const EXPECT_KEYS: readonly string[] = ['ids', 'count', 'entities', 'byLayer', 'canUndo', 'canRedo', 'dirty', 'revision', 'layers', 'activeLayer', 'tree', 'name', 'settings', 'uids', 'blocks', 'blockFields'];
 
 /**
  * An object as the fixtures write it: persistent ids are random (UUIDv7) or
@@ -217,6 +222,15 @@ class Run {
         return doc.name.set(s.name as string);
       case 'setSettings':
         return doc.settings.assign(patchOf(s.patch) as Partial<ProjectSettingsData>);
+      // Block definitions (docs/adr/0144); a refusal is caught as a fixture's own `throw` is.
+      case 'addBlock':
+        return doc.addBlock(s.block as BlockDefinition);
+      case 'updateBlock':
+        return doc.updateBlock(s.block as BlockDefinition);
+      case 'removeBlock':
+        return doc.removeBlock(s.id as string);
+      case 'blockRemovalRefused':
+        return doc.blockRemovalRefused(s.id as string);
       default:
         throw new Error(`${where}: bilinmeyen işlem “${s.op}”`);
     }
@@ -228,6 +242,22 @@ class Run {
     expect(Object.keys(e).filter((k) => !EXPECT_KEYS.includes(k)), `${where}: bilinmeyen beklenti`).toEqual([]);
     const doc = this.doc;
     if (e.ids) expect([...doc.all()].map((x) => x.id), `${where}: nesneler`).toEqual(e.ids);
+    if (e.blocks) expect(doc.blocks.value.map((b) => b.name), `${where}: bloklar`).toEqual(e.blocks);
+    for (const [id, fields] of Object.entries(e.blockFields ?? {})) {
+      const block = doc.block(id);
+      expect(block, `${where}: ${id} bloğu`).toBeDefined();
+      const got: Record<string, Json> = {
+        name: block!.name,
+        base: { ...block!.base },
+        description: block!.description ?? null,
+        entities: block!.entities.length,
+        attributes: block!.attributes?.length ?? 0,
+      };
+      for (const [field, want] of Object.entries(fields)) {
+        expect(field in got, `${where}: ${id} bloğu › bilinmeyen alan ${field}`).toBe(true);
+        expect(got[field], `${where}: ${id} bloğu › ${field}`).toEqual(want);
+      }
+    }
     if (e.count !== undefined) expect(doc.size, `${where}: nesne sayısı`).toBe(e.count);
     for (const [id, want] of Object.entries(e.entities ?? {})) expect(withoutUid(doc.get(Number(id))), `${where}: nesne ${id}`).toEqual(want);
     for (const [id, name] of Object.entries(e.uids ?? {})) {

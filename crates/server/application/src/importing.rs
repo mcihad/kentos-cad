@@ -71,8 +71,19 @@ pub(crate) async fn read(
         })
 }
 
-/// The file's objects as feature rows, each under its persistent id.
+/// The file's objects as feature rows, each under its persistent id. A
+/// database project keeps no block definitions yet (docs/adr/0144 §5): a
+/// file with them is refused whole rather than lose them.
 pub(crate) fn objects(doc: &DocumentSnapshotV2) -> AppResult<Vec<(Uuid, Stored)>> {
+    if !doc.blocks.is_empty() {
+        return Err(AppError::invalid_at(
+            "blocks",
+            format!(
+                "Dosyada {} blok tanımı var; veritabanı projesi blokları henüz saklayamıyor. Dosyayı dosya projesi olarak yükleyin.",
+                doc.blocks.len()
+            ),
+        ));
+    }
     doc.uids
         .iter()
         .zip(&doc.entities)

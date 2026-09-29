@@ -79,7 +79,10 @@ impl Store {
         for it in self.near(p, tol * 1.5) {
             let e = &it.shape;
             let d = edge_distance(e, p, self.font);
-            let t = if matches!(e, Shape::Point { .. } | Shape::Text { .. }) {
+            let t = if matches!(
+                e,
+                Shape::Point { .. } | Shape::Text { .. } | Shape::Insert { .. }
+            ) {
                 tol * 1.5
             } else {
                 tol
@@ -131,7 +134,12 @@ impl Store {
         let mut out: Vec<(f64, f64)> = self
             .near(p, tol)
             .into_iter()
-            .filter(|it| !matches!(it.shape, Shape::Point { .. } | Shape::Text { .. }))
+            .filter(|it| {
+                !matches!(
+                    it.shape,
+                    Shape::Point { .. } | Shape::Text { .. } | Shape::Insert { .. }
+                )
+            })
             .map(|it| (it.id, edge_distance(&it.shape, p, self.font)))
             .filter(|&(_, d)| d <= tol)
             .collect();
@@ -234,7 +242,10 @@ impl Store {
 /// text's whole body, a dimension's value text.
 pub fn edge_distance(e: &Shape, p: Vec2, font: Font) -> f64 {
     match e {
-        Shape::Point { p: q, .. } => return js_hypot(p.x - q.x, p.y - q.y),
+        // An insert is clicked at its insertion point until its block is expanded (docs/adr/0144).
+        Shape::Point { p: q, .. } | Shape::Insert { p: q, .. } => {
+            return js_hypot(p.x - q.x, p.y - q.y);
+        }
         Shape::Text {
             p: at,
             text,

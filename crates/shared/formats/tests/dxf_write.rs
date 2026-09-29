@@ -452,19 +452,7 @@ fn read(text: &str) -> ImportResult {
 /// What the reader should give back for `e`: the same object, on the DXF layer (by name).
 fn expected(e: &Entity, layer_of: &dyn Fn(&str) -> String) -> Entity {
     let mut e = e.clone();
-    let b = match &mut e {
-        Entity::Point(x) => &mut x.base,
-        Entity::Line(x) => &mut x.base,
-        Entity::Polyline(x) | Entity::Polygon(x) => &mut x.base,
-        Entity::Circle(x) => &mut x.base,
-        Entity::Arc(x) => &mut x.base,
-        Entity::Ellipse(x) => &mut x.base,
-        Entity::Spline(x) => &mut x.base,
-        Entity::Xline(x) | Entity::Ray(x) => &mut x.base,
-        Entity::Text(x) => &mut x.base,
-        Entity::Dimension(x) => &mut x.base,
-        Entity::Hatch(x) => &mut x.base,
-    };
+    let b = e.base_mut();
     b.layer_id = layer_of(&b.layer_id);
     // The reader numbers nothing: the app gives imported objects their ids.
     b.id = 0;

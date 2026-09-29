@@ -61,8 +61,8 @@
       "pending": 0
     },
     "fileFields": {
-      "total": 212,
-      "implemented": 212,
+      "total": 239,
+      "implemented": 239,
       "partial": 0,
       "pending": 0
     },
@@ -133,8 +133,8 @@
         "n/a": 2
       },
       "fileFields": {
-        "total": 212,
-        "implemented": 212,
+        "total": 239,
+        "implemented": 239,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -3431,7 +3431,8 @@
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
-        "fixtures/interaction/v1/dimensions.json"
+        "fixtures/interaction/v1/dimensions.json",
+        "fixtures/interaction/v1/usage-parcel.json"
       ]
     },
     {
@@ -3760,7 +3761,8 @@
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
-        "fixtures/interaction/v1/hatches.json"
+        "fixtures/interaction/v1/hatches.json",
+        "fixtures/interaction/v1/usage-parcel.json"
       ]
     },
     {
@@ -4230,7 +4232,8 @@
       "tests": [
         "apps/web/src/app/menus.test.ts",
         "apps/web/src/app/workspaces.test.ts",
-        "fixtures/interaction/v1/measure-parcel.json"
+        "fixtures/interaction/v1/measure-parcel.json",
+        "fixtures/interaction/v1/usage-parcel.json"
       ]
     },
     {
@@ -5136,7 +5139,8 @@
         "desktop": "implemented"
       },
       "tests": [
-        "fixtures/interaction/v1/spot-divide.json"
+        "fixtures/interaction/v1/spot-divide.json",
+        "fixtures/interaction/v1/usage-parcel.json"
       ]
     },
     {
@@ -7034,7 +7038,8 @@
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
-        "fixtures/interaction/v1/dimensions.json"
+        "fixtures/interaction/v1/dimensions.json",
+        "fixtures/interaction/v1/usage-parcel.json"
       ]
     },
     {
@@ -7286,7 +7291,8 @@
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
-        "fixtures/interaction/v1/hatches.json"
+        "fixtures/interaction/v1/hatches.json",
+        "fixtures/interaction/v1/usage-parcel.json"
       ]
     },
     {
@@ -7646,7 +7652,8 @@
         "apps/web/src/app/menus.test.ts",
         "apps/web/src/app/workspaces.test.ts",
         "apps/web/scripts/e2e/smoke.mjs",
-        "fixtures/interaction/v1/measure-parcel.json"
+        "fixtures/interaction/v1/measure-parcel.json",
+        "fixtures/interaction/v1/usage-parcel.json"
       ]
     },
     {
@@ -8137,8 +8144,8 @@
         "apps/web/src/app/menus.test.ts",
         "apps/web/src/app/ribbon.test.ts",
         "apps/web/src/app/workspaces.test.ts",
-        "apps/web/scripts/e2e/interaction.mjs",
         "apps/web/scripts/e2e/layout.mjs",
+        "apps/web/scripts/e2e/tracePlayer.mjs",
         "fixtures/interaction/v1/select-delete.json"
       ]
     },
@@ -8347,7 +8354,8 @@
         "desktop": "implemented"
       },
       "tests": [
-        "fixtures/interaction/v1/spot-divide.json"
+        "fixtures/interaction/v1/spot-divide.json",
+        "fixtures/interaction/v1/usage-parcel.json"
       ]
     },
     {
@@ -10446,6 +10454,173 @@
       }
     },
     {
+      "id": "AttributeDefinition.height",
+      "contract": "AttributeDefinition",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "height",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "AttributeDefinition.p",
+      "contract": "AttributeDefinition",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "p",
+      "type": "Vec2",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "AttributeDefinition.prompt",
+      "contract": "AttributeDefinition",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "prompt",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "AttributeDefinition.rotation",
+      "contract": "AttributeDefinition",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "rotation",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "AttributeDefinition.tag",
+      "contract": "AttributeDefinition",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "tag",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "AttributeDefinition.value",
+      "contract": "AttributeDefinition",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "value",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "BlockDefinition.attributes",
+      "contract": "BlockDefinition",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "attributes",
+      "type": "Array<AttributeDefinition>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "BlockDefinition.base",
+      "contract": "BlockDefinition",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "base",
+      "type": "Vec2",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "BlockDefinition.description",
+      "contract": "BlockDefinition",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "description",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "BlockDefinition.entities",
+      "contract": "BlockDefinition",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "entities",
+      "type": "Array<Entity>",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "BlockDefinition.id",
+      "contract": "BlockDefinition",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "id",
+      "type": "BlockId",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "BlockDefinition.name",
+      "contract": "BlockDefinition",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "name",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "BlockId",
+      "contract": "BlockId",
+      "rust": "crates/shared/contracts/src/identity.rs",
+      "type": "string",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "Bounds.maxX",
       "contract": "Bounds",
       "rust": "crates/shared/contracts/src/document.rs",
@@ -10957,6 +11132,19 @@
       }
     },
     {
+      "id": "DocumentSnapshotV1.blocks",
+      "contract": "DocumentSnapshotV1",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "blocks",
+      "type": "Array<BlockDefinition>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "DocumentSnapshotV1.entities",
       "contract": "DocumentSnapshotV1",
       "rust": "crates/shared/contracts/src/document.rs",
@@ -11080,6 +11268,19 @@
       "field": "activeLayer",
       "type": "string",
       "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DocumentSnapshotV2.blocks",
+      "contract": "DocumentSnapshotV2",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "blocks",
+      "type": "Array<BlockDefinition>",
+      "optional": true,
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -11473,6 +11674,10 @@
         {
           "kind": "hatch",
           "type": "HatchEntity"
+        },
+        {
+          "kind": "insert",
+          "type": "InsertEntity"
         }
       ],
       "status": "implemented",
@@ -11670,6 +11875,162 @@
         "lines",
         "cross"
       ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "InsertEntity.attrs",
+      "contract": "InsertEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "attrs",
+      "type": "{ [key in string]: string }",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "InsertEntity.block",
+      "contract": "InsertEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "block",
+      "type": "BlockId",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "InsertEntity.color",
+      "contract": "InsertEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "color",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "InsertEntity.id",
+      "contract": "InsertEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "id",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "InsertEntity.label",
+      "contract": "InsertEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "label",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "InsertEntity.layerId",
+      "contract": "InsertEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "layerId",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "InsertEntity.lineWeight",
+      "contract": "InsertEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "lineWeight",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "InsertEntity.mirror",
+      "contract": "InsertEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "mirror",
+      "type": "boolean",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "InsertEntity.p",
+      "contract": "InsertEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "p",
+      "type": "Vec2",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "InsertEntity.rotation",
+      "contract": "InsertEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "rotation",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "InsertEntity.scale",
+      "contract": "InsertEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "scale",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "InsertEntity.symbol",
+      "contract": "InsertEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "symbol",
+      "type": "string",
+      "optional": true,
       "status": "implemented",
       "platforms": {
         "web": "implemented",

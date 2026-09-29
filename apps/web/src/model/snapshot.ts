@@ -5,6 +5,7 @@ import type { LayerNode as ContractLayerNode } from '../contracts/generated/Laye
 import type { V1Identities } from '../contracts/generated/V1Identities';
 import { isUuid } from '../core/uuid';
 import { crsBySrid } from '../geo/crs';
+import { blockFaultMessage, definitionsFault, type AttributeDefinition, type BlockDefinition } from './blocks';
 import type { CadDocument, DocumentContent } from './document';
 import { MAX_LINE_WEIGHT, type Entity } from './entities';
 import type { LayerInit } from './layers';
@@ -54,6 +55,7 @@ export function toSnapshot(doc: CadDocument): DocumentSnapshotV1 {
     styles: { items: structuredClone([...doc.styles.value.items]), categories: structuredClone([...doc.styles.value.categories]) },
   };
   if (doc.homeView) snap.homeView = { ...doc.homeView };
+  if (doc.blocks.value.length) snap.blocks = structuredClone([...doc.blocks.value]) as DocumentSnapshotV1['blocks'];
   return snap;
 }
 
@@ -75,6 +77,8 @@ export function snapshotHead(doc: CadDocument): Omit<DocumentSnapshotV2, 'entiti
     styles: { items: structuredClone([...doc.styles.value.items]), categories: structuredClone([...doc.styles.value.categories]) },
   };
   if (doc.homeView) head.homeView = { ...doc.homeView };
+  // The definitions travel with the head, not in the columns (docs/adr/0144).
+  if (doc.blocks.value.length) head.blocks = structuredClone([...doc.blocks.value]) as DocumentSnapshotV2['blocks'];
   if (doc.projectId) head.projectId = doc.projectId;
   if (doc.migratedFrom) head.migratedFrom = { ...doc.migratedFrom };
   return head;
@@ -117,7 +121,7 @@ export function readSnapshot(text: string): ReadResult {
 /**
  * Reads a v2 drawing in the contract's JSON form into document content,
  * checked like a v1 file (the drawing's own rules: known CRS, layers, vertex
- * counts, spec §6.10), its objects given the persistent ids the drawing
+ * counts, spec §6.11), its objects given the persistent ids the drawing
  * holds, one each. The app reads a file in stages instead
  * (`readDrawingHead`, `DrawingObjects`): the same rules.
  */
@@ -163,16 +167,20 @@ export function readDrawingHead(data: unknown, version: 1 | 2): { ok: true; head
 export class DrawingObjects {
   private readonly leaves: ReadonlySet<string>;
   private readonly v2: boolean;
+  private readonly blocks: ReadonlySet<string>;
   private readonly slots = new Set<number>();
   private readonly uids = new Set<string>();
-  constructor(leaves: ReadonlySet<string>, version: 1 | 2) {
+  /** `blocks`: the definitions of the drawing's head, which its inserts must name. */
+  constructor(leaves: ReadonlySet<string>, version: 1 | 2, blocks: readonly BlockDefinition[] = []) {
     this.leaves = leaves;
     this.v2 = version === DOCUMENT_VERSION_2;
+    this.blocks = new Set(blocks.map((b) => b.id));
   }
   check(v: unknown, index: number): Entity {
     try {
       const uid = isObj(v) ? v.uid : undefined;
       const e = entity(v, `Nesne ${index + 1}`, this.leaves, this.slots, this.v2);
+      if (e.kind === 'insert' && !this.blocks.has(e.block)) fail(`Nesne ${index + 1} (insert) › blok`, `${e.block} çizimde tanımlı değil`);
       if (this.v2) {
         if (!isUuid(uid) || this.uids.has(uid)) fail(`Nesne ${index + 1} (${e.kind}) › kalıcı kimlik`, 'küçük harfli, tireli, benzersiz bir UUID olmalı');
         this.uids.add(uid as string);
@@ -258,14 +266,20 @@ const numbersAt = (v: unknown, w: string, f: string): number => {
   return v.length;
 };
 
-const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'spline', 'xline', 'ray', 'text', 'dimension', 'hatch'] as const;
+const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'spline', 'xline', 'ray', 'text', 'dimension', 'hatch', 'insert'] as const;
 const LINE_TYPES = ['continuous', 'dashed', 'dashdot', 'dotted'] as const;
 
 function parse(data: unknown, version = DOCUMENT_VERSION): DocumentContent {
   if (!isObj(data)) throw new Bad('KentOS çizim dosyası değil (format ≠ kentos.document).');
   const { content, leaves } = head(data, version);
   const ids = new Set<number>();
-  const entities = (data.entities as unknown[]).map((e, i) => entity(e, `Nesne ${i + 1}`, leaves, ids));
+  // A drawing's inserts name its definitions (docs/adr/0144), as `DrawingObjects` checks them one by one.
+  const blocks = new Set((content.blocks ?? []).map((b) => b.id));
+  const entities = (data.entities as unknown[]).map((e, i) => {
+    const read = entity(e, `Nesne ${i + 1}`, leaves, ids);
+    if (read.kind === 'insert' && !blocks.has(read.block)) fail(`Nesne ${i + 1} (insert) › blok`, `${read.block} çizimde tanımlı değil`);
+    return read;
+  });
   return { ...content, entities, ...(version === DOCUMENT_VERSION_2 ? identities(data, entities) : {}) };
 }
 
@@ -286,9 +300,11 @@ function head(data: Record<string, unknown>, version: number): { content: Omit<D
   if (!Array.isArray(data.entities)) fail('Nesneler', 'liste olmalı');
   const styles = isObj(data.styles) && Array.isArray(data.styles.items) && Array.isArray(data.styles.categories) ? data.styles : fail('Proje stilleri', '{items, categories} olmalı');
   const hv = data.homeView;
+  const blocks = data.blocks === undefined ? [] : definitions(data.blocks);
   return {
     leaves,
     content: {
+      blocks,
       name: str(data.name, 'Ad'),
       settings: {
         srid,
@@ -335,6 +351,44 @@ function source(data: Record<string, unknown>): Pick<DocumentContent, 'projectId
       : fail('Göç kaynağı', 'kentos.document sürüm 1 ve 64 onaltılık haneli SHA-256 olmalı'),
   );
   return { projectId: projectId ?? null, migratedFrom: migratedFrom ?? null };
+}
+
+/**
+ * The block definitions (docs/adr/0144), each checked field by field, its
+ * objects as a drawing's (their layers need not be in the tree: an insert
+ * draws them on its own), then the block rules over the list, said in the
+ * documents' words.
+ */
+function definitions(v: unknown): BlockDefinition[] {
+  if (!Array.isArray(v)) return fail('Bloklar', 'liste olmalı');
+  const list = v.map((d, i): BlockDefinition => {
+    const where = `Blok ${i + 1}`;
+    if (!isObj(d)) return fail(where, 'nesne olmalı');
+    const name = str(d.name, `${where} › ad`);
+    const w = `${where} (“${name}”)`;
+    if (!isUuid(d.id)) fail(`${w} › kimlik`, 'küçük harfli, tireli bir UUID olmalı');
+    const base = vec(d.base, `${w} › taban noktası`);
+    if (!Array.isArray(d.entities)) fail(`${w} › nesneler`, 'liste olmalı');
+    const ids = new Set<number>();
+    const entities = (d.entities as unknown[]).map((e, k) => entity(e, `${w} › nesne ${k + 1}`, null, ids));
+    const block: BlockDefinition = { id: d.id as string, name, base, entities };
+    if (d.attributes !== undefined) {
+      if (!Array.isArray(d.attributes)) fail(`${w} › öznitelikler`, 'liste olmalı');
+      block.attributes = (d.attributes as unknown[]).map((a, k): AttributeDefinition => {
+        const aw = `${w} › öznitelik ${k + 1}`;
+        if (!isObj(a)) return fail(aw, 'nesne olmalı');
+        const out: AttributeDefinition = { tag: str(a.tag, `${aw} › etiket`), p: vec(a.p, `${aw} › konum`), height: num(a.height, `${aw} › yükseklik`), rotation: num(a.rotation, `${aw} › açı`) };
+        if (a.prompt !== undefined) out.prompt = str(a.prompt, `${aw} › soru`);
+        if (a.value !== undefined) out.value = str(a.value, `${aw} › varsayılan`);
+        return out;
+      });
+    }
+    if (d.description !== undefined) block.description = str(d.description, `${w} › açıklama`);
+    return block;
+  });
+  const fault = definitionsFault(list);
+  if (fault) fail('Bloklar', blockFaultMessage(fault, (i) => list[i]?.name ?? ''));
+  return list;
 }
 
 function layer(v: unknown, where: string): LayerInit {
@@ -389,7 +443,8 @@ function holesAt(holes: unknown[], w: string, prefix: string): void {
   });
 }
 
-function entity(v: unknown, where: string, layers: ReadonlySet<string>, ids: Set<number>, keepUid = false): Entity {
+/** `layers`: the layers an object may be on; null for a block definition's object, whose layer need not be in the tree. */
+function entity(v: unknown, where: string, layers: ReadonlySet<string> | null, ids: Set<number>, keepUid = false): Entity {
   if (!isObj(v)) return fail(where, 'nesne olmalı');
   if (!keepUid && 'uid' in v) delete v.uid;
   const kind = (KINDS as readonly unknown[]).includes(v.kind) ? (v.kind as (typeof KINDS)[number]) : oneOf(v.kind, KINDS, at(where, 'tür'));
@@ -401,7 +456,7 @@ function entity(v: unknown, where: string, layers: ReadonlySet<string>, ids: Set
   }
   ids.add(id as number);
   const layerId = strAt(v.layerId, w, 'katman');
-  if (!layers.has(layerId)) fail(at(w, 'katman'), `“${layerId}” katmanı dosyada yok`);
+  if (layers && !layers.has(layerId)) fail(at(w, 'katman'), `“${layerId}” katmanı dosyada yok`);
   const attrs = isObj(v.attrs) ? v.attrs : fail(at(w, 'öznitelikler'), 'nesne olmalı');
   for (const k in attrs) if (typeof attrs[k] !== 'string') str(attrs[k], at(w, `öznitelik “${k}”`));
   if (v.lineWeight !== undefined) {
@@ -501,6 +556,14 @@ function entity(v: unknown, where: string, layers: ReadonlySet<string>, ids: Set
       numAt(p.spacing, w, 'desen aralığı');
       break;
     }
+    // A block placed (docs/adr/0144): its definition's id, a positive scale, `mirror` only when true.
+    case 'insert':
+      if (!isUuid(v.block)) fail(at(w, 'blok'), 'küçük harfli, tireli bir UUID olmalı');
+      pointAt(v.p, w, 'konum');
+      if (numAt(v.scale, w, 'ölçek') <= 0) fail(at(w, 'ölçek'), 'pozitif olmalı');
+      numAt(v.rotation, w, 'dönüş');
+      if (v.mirror !== undefined && v.mirror !== true) fail(at(w, 'aynalı'), 'yalnız true yazılır; aynalı olmayanda alan yoktur');
+      break;
   }
   // Checked field by field above; the object is kept as read (optional fields included).
   return v as unknown as Entity;

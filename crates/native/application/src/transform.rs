@@ -69,7 +69,7 @@ pub fn plan(
                     .map(|mut e| {
                         // A copy's slot is given when it is written.
                         if copy {
-                            base_mut(&mut e).id = 0;
+                            e.base_mut().id = 0;
                         }
                         e
                     })
@@ -393,6 +393,9 @@ pub(crate) fn finite_shape(s: &Shape) -> bool {
     }
     match s {
         Shape::Point { p, z } => pt(p) && z.is_none_or(f64::is_finite),
+        Shape::Insert {
+            p, scale, rotation, ..
+        } => pt(p) && scale.is_finite() && rotation.is_finite(),
         Shape::Line { a, b } => pt(a) && pt(b),
         Shape::Polyline {
             pts: p,
@@ -470,21 +473,5 @@ pub(crate) fn finite_shape(s: &Shape) -> bool {
                 && pattern.angle.is_finite()
                 && pattern.spacing.is_finite()
         }
-    }
-}
-
-pub(crate) fn base_mut(e: &mut Entity) -> &mut kentos_contracts::EntityBase {
-    match e {
-        Entity::Point(e) => &mut e.base,
-        Entity::Line(e) => &mut e.base,
-        Entity::Polyline(e) | Entity::Polygon(e) => &mut e.base,
-        Entity::Circle(e) => &mut e.base,
-        Entity::Arc(e) => &mut e.base,
-        Entity::Ellipse(e) => &mut e.base,
-        Entity::Spline(e) => &mut e.base,
-        Entity::Xline(e) | Entity::Ray(e) => &mut e.base,
-        Entity::Text(e) => &mut e.base,
-        Entity::Dimension(e) => &mut e.base,
-        Entity::Hatch(e) => &mut e.base,
     }
 }

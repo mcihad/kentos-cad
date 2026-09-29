@@ -34,6 +34,9 @@ pub mod labels {
     pub const LAYER_REMOVE: &str = "Katman sil";
     pub const LAYER_ADD: &str = "Katman ekle";
     pub const GROUP_ADD: &str = "Grup ekle";
+    pub const BLOCK_ADD: &str = "Blok tanımla";
+    pub const BLOCK_CHANGE: &str = "Blok değiştir";
+    pub const BLOCK_REMOVE: &str = "Blok sil";
 }
 
 /// Every slot (`u32`) has been given out in this document; nothing was added.

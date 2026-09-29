@@ -1063,7 +1063,26 @@ def load() -> tuple[dict, dict[str, dict]]:
             for name, d in s.get("$defs", {}).items():
                 put(name, d)
             put(s["title"], {k: v for k, v in s.items() if k not in ("$schema", "$defs", "title")})
-    return catalog, schemas
+    return catalog, inline_texts(schemas)
+
+
+def inline_texts(schemas: dict[str, dict]) -> dict[str, dict]:
+    """A named text that is no choice (a block's id: a UUID, docs/adr/0144)
+    is a plain `str` in Python: each reference to it becomes the text itself."""
+    texts = {n: s for n, s in schemas.items() if s.get("type") == "string" and "enum" not in s}
+
+    def walk(node):
+        if isinstance(node, dict):
+            ref = node.get("$ref")
+            if isinstance(ref, str) and ref_name(ref) in texts:
+                rest = {k: walk(v) for k, v in node.items() if k != "$ref"}
+                return {**texts[ref_name(ref)], **rest}
+            return {k: walk(v) for k, v in node.items()}
+        if isinstance(node, list):
+            return [walk(v) for v in node]
+        return node
+
+    return {n: walk(s) for n, s in schemas.items() if n not in texts}
 
 
 def exports_of(path: Path) -> list[str]:

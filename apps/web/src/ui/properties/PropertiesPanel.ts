@@ -408,6 +408,17 @@ export class PropertiesPanel extends Panel {
           num('Konum X', e.p.y),
         );
         break;
+      // Read only until blocks' tools (docs/adr/0144 §6); the desktop shows the same rows.
+      case 'insert':
+        geo.push(
+          { label: 'Blok', value: this.ctx.doc.block(e.block)?.name ?? '(tanımsız)' },
+          num('Konum Y', e.p.x),
+          num('Konum X', e.p.y),
+          { label: 'Ölçek', value: e.scale.toFixed(4), numeric: true },
+          { label: 'Dönüş', value: ((e.rotation * 180) / Math.PI).toFixed(4), numeric: true, unit: '°' },
+          { label: 'Aynalı', value: e.mirror ? 'Evet' : 'Hayır' },
+        );
+        break;
     }
 
     const sections: PropSection[] = [general, { id: 'geometry', title: 'Geometri', rows: geo }];

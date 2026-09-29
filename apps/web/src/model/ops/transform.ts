@@ -40,6 +40,8 @@ export const SHAPE_FIELDS: Record<EntityKind, readonly string[]> = {
   text: ['p', 'text', 'height', 'rotation'],
   dimension: ['a', 'b', 'offset', 'height', 'text', 'style', 'angle', 'c'],
   hatch: ['ring', 'holes', 'pattern'],
+  // A block's placement (docs/adr/0144); `mirror` only when true.
+  insert: ['block', 'p', 'scale', 'rotation', 'mirror'],
 };
 
 /**

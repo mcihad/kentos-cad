@@ -38,7 +38,7 @@ use crate::checks::{self, Stop};
 /// The stable codes of the answers (`CommandError.code`, `CommandWarning.code`).
 pub use crate::codes;
 use crate::geometry::{drawing_font, shape, with_shape};
-use crate::transform::{base_mut, finite_shape};
+use crate::transform::finite_shape;
 
 /// Less than this far apart, a spacing or a fill angle is none (the web's
 /// tools took a nanometre, or a nano-degree, as zero).
@@ -363,7 +363,7 @@ fn check(doc: &Document, input: &EntitiesArray) -> Result<Checked, Stop> {
                 return Err(refuse(codes::NOT_FINITE, "Nesne kopyalanamadı.", "layout"));
             };
             // A copy's slot is given when it is written.
-            base_mut(&mut copy).id = 0;
+            copy.base_mut().id = 0;
             copies.push(copy);
         }
     }

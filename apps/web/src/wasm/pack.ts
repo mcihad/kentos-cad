@@ -9,7 +9,7 @@
  * This only packs and reads: no coordinate is computed here.
  */
 
-const KIND: Record<string, number> = { point: 0, line: 1, polyline: 2, polygon: 3, circle: 4, arc: 5, ellipse: 6, xline: 7, ray: 8, spline: 9, text: 10, dimension: 11, hatch: 12 };
+const KIND: Record<string, number> = { point: 0, line: 1, polyline: 2, polygon: 3, circle: 4, arc: 5, ellipse: 6, xline: 7, ray: 8, spline: 9, text: 10, dimension: 11, hatch: 12, insert: 14 };
 /** Kinds by their number (`KIND` the other way). */
 const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'xline', 'ray', 'spline', 'text', 'dimension', 'hatch'] as const;
 /**
@@ -17,6 +17,8 @@ const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse
  * parts and each of them as a path. A one-part area stays the polygon's number, laid out as it always was.
  */
 const MULTI_PART = 13;
+/** A block's insert (docs/adr/0144): its point, scale, turn, mirror flag and the block's id. */
+const INSERT = 14;
 
 interface XY {
   x: number;
@@ -168,6 +170,12 @@ export function packEntities(list: Iterable<object>): Packed {
         num(pattern?.spacing);
         break;
       }
+      case INSERT:
+        pt(e.p);
+        num(e.scale);
+        num(e.rotation);
+        out.push(e.mirror === true ? 1 : 0, str(e.block));
+        break;
     }
   }
   return { nums: Float64Array.from(out), strings: JSON.stringify(strings) };
@@ -247,7 +255,7 @@ export function unpackEntities(p: Packed): Unpacked[] {
     const layerId = str() ?? '';
     const labelled = flag();
     const code = num();
-    const kind = code === MULTI_PART ? 'polygon' : KINDS[code];
+    const kind = code === MULTI_PART ? 'polygon' : code === INSERT ? 'insert' : KINDS[code];
     let g: Geometry;
     switch (kind) {
       case 'point': {
@@ -339,6 +347,15 @@ export function unpackEntities(p: Packed): Unpacked[] {
         g = { kind, ring };
         if (holes) g.holes = holes;
         g.pattern = { type, angle, spacing: num() };
+        break;
+      }
+      case 'insert': {
+        const p = pt();
+        const scale = num();
+        const rotation = num();
+        const mirror = flag();
+        g = { kind, block: str() ?? '', p, scale, rotation };
+        if (mirror) g.mirror = true;
         break;
       }
       default:

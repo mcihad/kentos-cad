@@ -87,6 +87,7 @@ pub fn new_project(o: &NewProject) -> Result<DocumentSnapshotV1, String> {
         active_layer: STANDARD_ACTIVE_LAYER.to_owned(),
         entities: Vec::new(),
         styles: ProjectStyles::default(),
+        blocks: Vec::new(),
     })
 }
 

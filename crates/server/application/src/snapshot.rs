@@ -209,6 +209,8 @@ pub async fn read(
         entities,
         uids,
         styles: serde_json::from_value(styles).map_err(bad)?,
+        // A database project keeps no block definitions yet (docs/adr/0144 §5).
+        blocks: Vec::new(),
         project_id: Some(ProjectId(*access.project.as_bytes())),
         migrated_from: None,
     };

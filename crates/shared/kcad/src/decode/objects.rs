@@ -1,25 +1,29 @@
-//! The objects of document schemas 2 to 5 read from a payload
+//! The objects of document schemas 2 to 6 read from a payload
 //! (docs/specs/kcad-v2.md §6.6): each a one-key map, its kind and then its
 //! fields, read into the contract's `Entity` with the persistent id the file
 //! gives it; the ids are unique in a file. Schema 3 adds an object's own line
 //! weight (`lineWeight`, docs/adr/0139), schema 4 the vertex elevations (`za`,
 //! `zb`, `zs`, docs/adr/0142), schema 5 an area's parts (`parts`,
-//! docs/adr/0143); in an older schema they are unknown fields.
+//! docs/adr/0143), schema 6 the `insert` kind (docs/adr/0144); in an older
+//! schema they are unknown fields or kinds. A block definition's objects are
+//! read the same way, without persistent ids.
 
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use kentos_contracts::{
-    ArcEntity, AreaPart, CircleEntity, ConstructionEntity, DimensionEntity, DimensionStyle,
-    EllipseEntity, Entity, EntityBase, EntityId, HatchEntity, HatchPattern, HatchPatternType,
-    LineEntity, MAX_LINE_WEIGHT, PathEntity, PointEntity, RingGeometry, SplineEntity, TextEntity,
-    Vec2,
+    ArcEntity, AreaPart, BlockDefinition, BlockId, CircleEntity, ConstructionEntity,
+    DimensionEntity, DimensionStyle, EllipseEntity, Entity, EntityBase, EntityId, HatchEntity,
+    HatchPattern, HatchPatternType, InsertEntity, LineEntity, MAX_LINE_WEIGHT, PathEntity,
+    PointEntity, RingGeometry, SplineEntity, TextEntity, Vec2,
 };
 
 use super::{PREALLOCATE, floats, id16, list, map, named, point, points, required, text, unknown};
 use crate::cbor::{Reader, Seg};
 use crate::error::{Code, KcadError};
 use crate::watch::{EVERY, Step};
-use crate::{SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_PARTS};
+use crate::{
+    SCHEMA_WITH_BLOCKS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_PARTS,
+};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Kind {
@@ -36,6 +40,7 @@ enum Kind {
     Text,
     Dimension,
     Hatch,
+    Insert,
 }
 
 const KINDS: &[(&str, Kind)] = &[
@@ -52,6 +57,7 @@ const KINDS: &[(&str, Kind)] = &[
     ("text", Kind::Text),
     ("dimension", Kind::Dimension),
     ("hatch", Kind::Hatch),
+    ("insert", Kind::Insert),
 ];
 
 /// What a payload's schema lets an object hold beyond schema 2's fields.
@@ -61,8 +67,13 @@ pub(super) struct Features {
     weights: bool,
     /// Schema 4 and up: the vertex elevations (`za`, `zb`, `zs`).
     elevations: bool,
-    /// Schema 5: an area's parts (`parts`).
+    /// Schema 5 and up: an area's parts (`parts`).
     parts: bool,
+    /// Schema 6: block definitions and the `insert` kind.
+    pub(super) blocks: bool,
+    /// Whether an object has its persistent id (`uid`): the drawing's do, a
+    /// block definition's do not.
+    uids: bool,
 }
 
 impl Features {
@@ -71,6 +82,16 @@ impl Features {
             weights: schema >= SCHEMA_WITH_LINE_WEIGHTS,
             elevations: schema >= SCHEMA_WITH_ELEVATIONS,
             parts: schema >= SCHEMA_WITH_PARTS,
+            blocks: schema >= SCHEMA_WITH_BLOCKS,
+            uids: true,
+        }
+    }
+
+    /// The same for a block definition's objects.
+    pub(super) fn without_uids(self) -> Self {
+        Self {
+            uids: false,
+            ..self
         }
     }
 }
@@ -78,10 +99,9 @@ impl Features {
 /// Whether a kind's map may hold `key` (the fields every kind has, then its
 /// own, then what the payload's schema adds).
 fn allowed(kind: Kind, key: &str, has: Features) -> bool {
-    matches!(
-        key,
-        "uid" | "attrs" | "color" | "label" | "symbol" | "layerId"
-    ) || (has.weights && key == "lineWeight")
+    matches!(key, "attrs" | "color" | "label" | "symbol" | "layerId")
+        || (has.uids && key == "uid")
+        || (has.weights && key == "lineWeight")
         || match kind {
             Kind::Point => matches!(key, "p" | "z"),
             Kind::Line => {
@@ -104,6 +124,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                 "a" | "b" | "c" | "text" | "angle" | "style" | "height" | "offset"
             ),
             Kind::Hatch => matches!(key, "ring" | "holes" | "pattern"),
+            Kind::Insert => matches!(key, "block" | "p" | "scale" | "rotation" | "mirror"),
         }
 }
 
@@ -149,16 +170,24 @@ struct Fields {
     text: Option<String>,
     style: Option<DimensionStyle>,
     pattern: Option<HatchPattern>,
+    block: Option<BlockId>,
+    /// Where the insert's `block` is in the payload (for an unknown block).
+    block_at: usize,
+    scale: Option<f64>,
+    mirror: Option<bool>,
 }
 
-/// The objects and their persistent ids, each id once (§6.8). The project
-/// (`name`, `layers`, the number of objects) is reported first, then the
-/// objects every few thousand.
+/// The objects and their persistent ids, each id once (§6.8); each insert
+/// naming one of `blocks` (`index` their ids' places). The project (`name`,
+/// `layers`, the number of objects) is reported first, then the objects
+/// every few thousand.
 pub(super) fn objects(
     r: &mut Reader<'_>,
     name: Option<&str>,
     layers: usize,
     has: Features,
+    blocks: &[BlockDefinition],
+    index: &HashMap<BlockId, usize>,
 ) -> Result<(Vec<Entity>, Vec<EntityId>), KcadError> {
     let n = r.array()?;
     r.report(Step::Project {
@@ -175,7 +204,17 @@ pub(super) fn objects(
             r.report(Step::Reading { done: i, total: n })?;
         }
         r.push(Seg::Index(i));
-        let (entity, uid) = object(r, i, has)?;
+        let (entity, uid, block_at) = object(r, i, has)?;
+        if let Entity::Insert(insert) = &entity
+            && !index.contains_key(&insert.block)
+        {
+            r.pop();
+            return Err(super::blocks::unknown_block(r, i, block_at, blocks));
+        }
+        // `has.uids`: `object` gave the id or refused the object.
+        let Some(uid) = uid else {
+            return Err(r.fail(Code::MissingField, "zorunlu alan yok (uid)"));
+        };
         if !seen.insert(uid) {
             r.push(Seg::Name("uid"));
             let e = r.fail(
@@ -198,12 +237,15 @@ pub(super) fn objects(
 // baseline code until the function is called again (no on-stack replacement), so the
 // work of each object must be a function called once per object, not inlined into the
 // one loop that runs once for the whole drawing (docs/adr/0030).
+//
+// The object, its persistent id (`None` when `has` says objects have none)
+// and, for an insert, where its `block` is.
 #[inline(never)]
-fn object(
+pub(super) fn object(
     r: &mut Reader<'_>,
     index: usize,
     has: Features,
-) -> Result<(Entity, EntityId), KcadError> {
+) -> Result<(Entity, Option<EntityId>, usize), KcadError> {
     let (n, at) = r.map()?;
     if n != 1 {
         return Err(r.fail_at(
@@ -215,7 +257,11 @@ fn object(
     let mut previous = None;
     let name = r.key(&mut previous)?;
     r.push(Seg::Key(name));
-    let Some(&(_, kind)) = KINDS.iter().find(|(k, _)| *k == name) else {
+    let Some(&(_, kind)) = KINDS
+        .iter()
+        .find(|(k, _)| *k == name)
+        .filter(|(_, kind)| has.blocks || *kind != Kind::Insert)
+    else {
         return Err(r.fail(
             Code::UnknownKind,
             &format!(
@@ -296,15 +342,46 @@ fn object(
                 )?)
             }
             "pattern" => f.pattern = Some(pattern(r)?),
+            "block" => {
+                f.block_at = r.position();
+                f.block = Some(BlockId(id16(r)?));
+            }
+            "scale" => {
+                let at = r.position();
+                let scale = r.float()?;
+                if !kentos_contracts::blocks::scale_ok(scale) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        &format!("blok ölçeği {scale}; pozitif olmalı"),
+                    ));
+                }
+                f.scale = Some(scale);
+            }
+            "mirror" => {
+                let at = r.position();
+                if !r.bool()? {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "aynalama false yazılmaz; aynalı olmayan yerleştirmede alan yoktur",
+                    ));
+                }
+                f.mirror = Some(true);
+            }
             _ => return Err(unknown(r)),
         }
         Ok(())
     })?;
     let entity = build(r, kind, index, &mut f)?;
-    let uid = required(r, f.uid, "uid")?;
+    let uid = if has.uids {
+        Some(required(r, f.uid, "uid")?)
+    } else {
+        None
+    };
     r.pop();
     r.leave();
-    Ok((entity, uid))
+    Ok((entity, uid, f.block_at))
 }
 
 fn build(
@@ -414,6 +491,14 @@ fn build(
             ring: required(r, f.ring.take(), "ring")?,
             holes: f.loops.take(),
             pattern: required(r, f.pattern.take(), "pattern")?,
+        }),
+        Kind::Insert => Entity::Insert(InsertEntity {
+            base,
+            block: required(r, f.block, "block")?,
+            p: required(r, f.p, "p")?,
+            scale: required(r, f.scale, "scale")?,
+            rotation: required(r, f.rotation, "rotation")?,
+            mirror: f.mirror.unwrap_or(false),
         }),
     })
 }

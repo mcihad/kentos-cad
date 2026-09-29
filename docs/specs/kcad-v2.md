@@ -185,7 +185,7 @@ Profil hiçbir CBOR etiketi kullanmaz. ADR 0014 kimlikler için UUID etiketini (
 - Etiket her nesneye 2 bayt ekler ve profile “bu etiket nerede geçerli” kuralını getirir.
 - Genel CBOR araçları etiketsiz dosyayı da çözer; kimlik 16 baytlık bayt dizgisi olarak görünür.
 
-## 6. Belge şeması 2, 3, 4 ve 5
+## 6. Belge şeması 2, 3, 4, 5 ve 6
 
 ### 6.1 Kök
 
@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`, `3`, `4` ya da `5`; değilse `schema_version` |
+| `version` | tam sayı | `2`, `3`, `4`, `5` ya da `6`; değilse `schema_version` |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -205,7 +205,9 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 
 **Şema 5**, şema 4'ün kendisi ve çok parçalı alandır (`polygon`'un `parts`'ı, §6.6; ADR 0143). Yazıcı `5`'i **yalnız bir alanın `parts` alanı varken** yazar (boş bir `parts` da alandır). Başka her çizim şema 2, 3 ya da 4'tür ve eskisiyle bayt bayt aynıdır. Şema 2, 3 ve 4 yükünde `parts` bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/parts-in-schema-4.kcad`): eski okuyucu çok parçalı alanı sessizce tek parçaya indirmez, dosyayı açmaz. Şema 5 şema 4'ü kapsar: köşe kotu ve nesne kalınlığı orada da yazılır.
 
-Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: çok parçalı alanı olan çizim 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
+**Şema 6**, şema 5'in kendisi ve bloklardır: belgenin `blocks` alanı (§6.2, §6.9) ve `insert` nesne türü (§6.6; ADR 0144). Yazıcı `6`'yı **yalnız çizimde bir blok tanımı varken** yazar; tanımsız bir yerleştirme zaten yazılamaz (`unknown_block`). Başka her çizim şema 2–5'tir ve eskisiyle bayt bayt aynıdır. Şema 2–5 yükünde `blocks` bilinmeyen alan (`unknown_field`, `fixtures/kcad/v2/broken/blocks-in-schema-5.kcad`), `insert` bilinmeyen türdür (`unknown_kind`, `insert-in-schema-5.kcad`): eski okuyucu blokları sessizce düşürmez, dosyayı açmaz. Şema 6 şema 5'i kapsar: parçalı alan, köşe kotu ve nesne kalınlığı orada da, tanımların nesnelerinde de yazılır.
+
+Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: blok tanımı olan çizim 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
 
 ### 6.2 Belge
 
@@ -214,6 +216,7 @@ Tablolar anahtarları **dosyadaki sırasıyla** verir (§5.2). “Zorunlu” sü
 | Anahtar | Tür | Zorunlu | Anlamı |
 |---|---|---|---|
 | `name` | metin | evet | projenin adı |
+| `blocks` | dizi: blok tanımı (§6.9) | | yalnız şema 6: blok tanımları, sırasıyla; boş dizi yazılmaz (`bad_value`) |
 | `layers` | dizi: katman (§6.5) | evet | katman ağacının üst düzeyi, sırasıyla |
 | `origin` | nokta | evet | yerel orijin: verinin yakınında bir çapa (GPU ona göre çalışır) |
 | `styles` | harita (§6.7) | evet | projenin kendi stil kitaplığı |
@@ -311,22 +314,22 @@ Yanlış CBOR türü (float yerine tam sayı, nokta yerine harita) `wrong_type`'
 
 | Anahtar | Tür | Zorunlu | Anlamı |
 |---|---|---|---|
-| `uid` | kimlik | evet | kalıcı nesne kimliği (§6.8) |
+| `uid` | kimlik | evet | kalıcı nesne kimliği (§6.8); bir blok tanımının nesnesinde yoktur, orada bilinmeyen alandır (§6.9) |
 | `attrs` | harita: metin → metin | evet | öznitelikler (boş olabilir); v2'de değerler metindir |
 | `color` | metin | | renk; yoksa katmana göre |
 | `label` | metin | | nesnenin etiketi |
 | `symbol` | metin | | katman stilinin yerine kitaplık sembolü |
 | `layerId` | metin | evet | nesnenin katmanı |
-| `lineWeight` | float | | yalnız şema 3, 4 ve 5: nesnenin kendi çizgi kalınlığı, kağıtta mm, `0` en ince çizgi; `0`…`100` dışı `bad_value`; yoksa katmana göre |
+| `lineWeight` | float | | yalnız şema 3 ve sonrası: nesnenin kendi çizgi kalınlığı, kağıtta mm, `0` en ince çizgi; `0`…`100` dışı `bad_value`; yoksa katmana göre |
 
 **Türlere göre alanlar** (ortak alanlarla birlikte aynı haritada, sıralı):
 
 | Tür | Alanlar |
 |---|---|
 | `point` | `p` nokta; `z` float (isteğe bağlı, kot) |
-| `line` | `a`, `b` nokta; `za`, `zb` float (isteğe bağlı; yalnız şema 4 ve 5: uçların kotu) |
-| `polyline` | `pts` nokta listesi; `bulges` float dizisi (isteğe bağlı); `zs` kot listesi (isteğe bağlı; yalnız şema 4 ve 5) |
-| `polygon` | `pts` nokta listesi; `bulges` float dizisi (isteğe bağlı); `holes` halka dizisi (isteğe bağlı); `zs` kot listesi (isteğe bağlı; yalnız şema 4 ve 5); `parts` parça dizisi (isteğe bağlı; yalnız şema 5) |
+| `line` | `a`, `b` nokta; `za`, `zb` float (isteğe bağlı; yalnız şema 4 ve sonrası: uçların kotu) |
+| `polyline` | `pts` nokta listesi; `bulges` float dizisi (isteğe bağlı); `zs` kot listesi (isteğe bağlı; yalnız şema 4 ve sonrası) |
+| `polygon` | `pts` nokta listesi; `bulges` float dizisi (isteğe bağlı); `holes` halka dizisi (isteğe bağlı); `zs` kot listesi (isteğe bağlı; yalnız şema 4 ve sonrası); `parts` parça dizisi (isteğe bağlı; yalnız şema 5 ve sonrası) |
 | `circle` | `c` nokta; `r` float |
 | `arc` | `c` nokta; `r`, `a0`, `a1` float (radyan, saat yönünün tersine `a0` → `a1`) |
 | `ellipse` | `c`, `major` nokta; `ratio`, `t0`, `t1` float |
@@ -335,8 +338,9 @@ Yanlış CBOR türü (float yerine tam sayı, nokta yerine harita) `wrong_type`'
 | `text` | `p` nokta; `text` metin; `height` float (m); `rotation` float (derece, doğudan saat yönünün tersine) |
 | `dimension` | `a`, `b` nokta; `offset`, `height` float; isteğe bağlı: `c` nokta, `text` metin, `angle` float, `style` numaralı metin (`aligned`, `linear`, `angular`, `radius`, `diameter`) |
 | `hatch` | `ring` nokta listesi; `holes` nokta listesi dizisi (isteğe bağlı); `pattern` harita: `type` (`solid`, `lines`, `cross`), `angle` float, `spacing` float |
+| `insert` | yalnız şema 6 (§6.9): `block` kimlik (tanımın `id`'si); `p` nokta; `scale` float (pozitif; değilse `bad_value`); `rotation` float (radyan, doğudan saat yönünün tersine); `mirror` bool (isteğe bağlı; yalnız `true` yazılır, `false` `bad_value`) |
 
-- **Halka** (`polygon`'un ya da parçanın deliği): `pts` nokta listesi (zorunlu), `bulges` float dizisi (isteğe bağlı), `zs` kot listesi (isteğe bağlı; yalnız şema 4 ve 5). Halkanın anahtarları kodlanmış sırasıyla `zs` < `pts` < `bulges`'tir.
+- **Halka** (`polygon`'un ya da parçanın deliği): `pts` nokta listesi (zorunlu), `bulges` float dizisi (isteğe bağlı), `zs` kot listesi (isteğe bağlı; yalnız şema 4 ve sonrası). Halkanın anahtarları kodlanmış sırasıyla `zs` < `pts` < `bulges`'tir.
 - **Parça** (şema 5; ADR 0143): çok parçalı alanın ilk parçasının ötesindeki bir parçası. Alanın kendi `pts`, `bulges`, `holes` ve `zs`'i ilk parçadır; `parts` öbürlerini sırasıyla tutar. Parça haritası: `pts` nokta listesi (zorunlu), `bulges` float dizisi, `holes` halka dizisi, `zs` kot listesi (isteğe bağlı); alanlarının kuralları alanın kendi alanlarınınkiyle aynıdır. Anahtarları kodlanmış sırasıyla `zs` < `pts` < `holes` < `bulges`'tir.
   - Parçaların sırası anlamlıdır ve korunur. Okuyucu parçaların örtüşmesini denetlemez, deliklerin dış halkanın içinde olmasını denetlemediği gibi.
   - Yazıcı `parts`'ı verildiği gibi yazar, boş olanı da. Tek parçalı alanda alanı hiç üretmemek üreticinin işidir.
@@ -349,8 +353,9 @@ Yanlış CBOR türü (float yerine tam sayı, nokta yerine harita) `wrong_type`'
   - **Okuma sırası:** `zs` anahtarı `pts`'ten önce geldiği için okuyucu uzunluğu haritanın sonunda, iki alanı da okuyunca denetler.
   - **Yazıcı** `zs`'i verildiği gibi yazar, hepsi `null` olan da: yazılan baytlar okununca çizimle aynı çıkmalıdır. Hiçbir köşenin kotu yoksa alanı hiç üretmemek üreticinin işidir (ADR 0142).
   - **Sonlu olmayan kot** (NaN, ±∞) hiçbir float gibi yazılamaz ve okunamaz: `non_finite` (§5.3). Kotun yerinde tam sayı ya da başka tür `wrong_type`'tır.
-  - **Şema:** kot alanları yalnız şema 4'te vardır (§6.1). Nokta kendi `z`'sini önceki şemalardan beri taşır; daire, yay, elips, eğri, yardımcı çizgi, ışın, yazı, ölçü ve tarama kot almaz.
-- Ölçü, blok, dış başvuru, yüzey ve katı gibi yeni türler ileride şemaya ya da zorunlu bir uzantıya eklenir; eski okuyucu onları tanımadığını söyler.
+  - **Şema:** kot alanları şema 4'te gelir (§6.1). Nokta kendi `z`'sini önceki şemalardan beri taşır; daire, yay, elips, eğri, yardımcı çizgi, ışın, yazı, ölçü ve tarama kot almaz.
+- **Yerleştirme** (`insert`, şema 6; ADR 0144): tanımın nesneleri, tanımın taban noktasından `p`'ye taşınmış, `mirror` ise tanımın x ekseninde aynalanmış, `scale` ile ölçeklenmiş ve `rotation` kadar döndürülmüş hâliyle çizilir. Dönüşüm benzerliktir; şekiller türlerini korur. Anahtarları kodlanmış sırasıyla `p` < `block` < `scale` < `mirror` < `rotation`'dır (ortak alanlarla birlikte sıralanır). Tanımın öznitelik tanımlarının değerleri yerleştirmenin `attrs`'ındadır.
+- Dış başvuru, yüzey ve katı gibi yeni türler ileride şemaya ya da zorunlu bir uzantıya eklenir; eski okuyucu onları tanımadığını söyler.
 
 ### 6.7 Proje stilleri ve opak değerler
 
@@ -383,11 +388,34 @@ Yanlış CBOR türü (float yerine tam sayı, nokta yerine harita) `wrong_type`'
 
 2.0'da tanımlı tek göç v1'den olduğu için başka `format` ve `version` değerleri `bad_value`'dur. Nesnelerin eski yerel kimlikleri ayrıca yazılmaz: aynı v1 dosyasından türetilen kimlikler zaten dosyadaki `uid`'lerdir.
 
-### 6.9 Dosyaya girmeyenler
+### 6.9 Bloklar
+
+Şema 6'da belgenin `blocks` alanı blok tanımlarının dizisidir (ADR 0144). Her tanım bir haritadır (anahtarlar kodlanmış sırasıyla):
+
+| Anahtar | Tür | Zorunlu | Anlamı |
+|---|---|---|---|
+| `id` | kimlik | evet | tanımın kalıcı kimliği; yerleştirmeler onu gösterir |
+| `base` | nokta | evet | taban noktası, tanımın kendi koordinatlarında |
+| `name` | metin | evet | tanımın adı |
+| `entities` | dizi: nesne (§6.6) | evet | tanımın nesneleri, sırasıyla; `uid`'leri yoktur |
+| `attributes` | dizi: öznitelik tanımı | | yerleştirmenin yazı olarak gösterdiği öznitelikler; boş dizi yazılmaz (`bad_value`) |
+| `description` | metin | | açıklama |
+
+**Öznitelik tanımı** haritası: `p` nokta (evet), `tag` metin (evet), `value` metin (varsayılan değer), `height` float (evet, m), `prompt` metin (Blok ekle'nin sorusu), `rotation` float (evet, derece, bir yazınınki gibi). Anahtarları bu sıradadır.
+
+- **Tanımın nesneleri** belgenin nesneleriyle aynı biçimdedir (§6.6), yalnız `uid` taşımazlar: kimlikleri tanımın içinde yereldir. Okuyucu onlara tanımın içinde 1, 2, 3, … yuvalarını verir. Katmanları saklanır ama ağaçta bulunmaları gerekmez: yerleştirme onları kendi katmanıyla çizer.
+- **Kurallar** (okuyucu ve yazıcı aynı sırayla denetler; web ve masaüstü belgeleri de aynı kurallarla, `kentos_contracts::blocks`):
+  1. Tanımlar sırasıyla: adı boş ya da yalnız boşluk olamaz (`bad_value`); kimliği (`duplicate_block`) ve adı (`duplicate_block`, Türkçe büyük/küçük harf ayrımı yapılmadan: I → ı, İ → i, öbür harfler Unicode'un küçük harfiyle) bir kezdir; öznitelik etiketi boş olamaz ve tanımda bir kezdir (`bad_value`).
+  2. Tanımların nesnelerindeki yerleştirmeler bilinen bir tanımı gösterir (`unknown_block`); bir yerleştirme listede kendisinden sonra gelen bir tanımı da gösterebilir.
+  3. Hiçbir tanım kendini doğrudan ya da başka tanımlar yoluyla içeremez (`block_cycle`); iç içelik en çok 16 düzeydir, içinde yerleştirme olmayan tanım bir düzeydir (`block_too_deep`). Derinlik önce aranır ve yığın 16'yı geçmez: 16'dan uzun bir döngü `block_too_deep` olarak söylenir.
+  4. Belgenin kendi nesnelerindeki her yerleştirme bir tanımı gösterir (`unknown_block`).
+- Hatanın yolu yerleştirmenin `…/insert/block` alanını ya da tanımın kendisini (`document/blocks/<sıra>`) gösterir.
+
+### 6.10 Dosyaya girmeyenler
 
 Çalışma yuvaları, seçim, geri alma ve yineleme geçmişi, kirli bayrağı, kamera, GPU tamponları, seçme ve kenet indeksleri, tarayıcı ve cihaz durumu (localStorage, IndexedDB taslakları), kullanıcı ve cihaz tercihleri dosyaya yazılmaz (`FILE-05`). Parola, belirteç ve imzalı adres yazılmaz (`SYNC-13`).
 
-### 6.10 Belge kuralları
+### 6.11 Belge kuralları
 
 Dosya biçimi geçerli olsa da uygulamalar açılışta çizimin kendi kurallarını ayrıca denetler (v1'deki gibi; web `model/snapshot.ts`, masaüstü `kentos_domain::Document`):
 
@@ -458,6 +486,10 @@ Okuyucular kodu sabit tutar (programlar ve örnek dosyalar için); ileti Türkç
 | `bad_value` | şema | değer geçersiz (numaralı metin, aralık, boy, nil kimlik, kot sayısı) |
 | `unknown_kind` | şema | bilinmeyen nesne türü |
 | `duplicate_uid` | şema | aynı kalıcı kimlik iki nesnede |
+| `duplicate_block` | şema | aynı kimlik ya da ad iki blok tanımında (§6.9) |
+| `unknown_block` | şema | yerleştirme tanımlı olmayan bir bloğu gösteriyor |
+| `block_cycle` | şema | blok kendini doğrudan ya da dolaylı içeriyor |
+| `block_too_deep` | şema | bloklar 16 düzeyden derin iç içe |
 
 ## 10. Örnek: en küçük çizim
 

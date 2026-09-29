@@ -143,7 +143,7 @@ impl Reader<'_> {
     }
 
     fn shape(&mut self, kind: f64) -> Result<Shape, String> {
-        if !(kind >= 0.0 && kind <= 13.0 && kind.fract() == 0.0) {
+        if !(kind >= 0.0 && kind <= 14.0 && kind.fract() == 0.0) {
             return Err(format!(
                 "paketin {}. sayısı bilinmeyen bir nesne türü ({kind})",
                 self.at
@@ -174,6 +174,19 @@ impl Reader<'_> {
                         holes,
                         parts: None,
                     }
+                }
+            }
+            14 => {
+                let p = self.pt()?;
+                let scale = self.num()?;
+                let rotation = self.num()?;
+                let mirror = self.flag()?;
+                Shape::Insert {
+                    p,
+                    scale,
+                    rotation,
+                    mirror: mirror.then_some(true),
+                    block: self.string()?.unwrap_or_default(),
                 }
             }
             13 => {
@@ -449,6 +462,25 @@ impl Packer {
                 }
                 let kind = self.string(&pattern.kind);
                 self.put(&[kind, pattern.angle, pattern.spacing]);
+            }
+            // docs/adr/0144: the insertion point, scale, turn, mirror flag and the block's id.
+            Shape::Insert {
+                block,
+                p,
+                scale,
+                rotation,
+                mirror,
+            } => {
+                let b = self.string(block);
+                self.put(&[
+                    14.0,
+                    p.x,
+                    p.y,
+                    *scale,
+                    *rotation,
+                    flag(mirror.unwrap_or(false)),
+                    b,
+                ]);
             }
         }
     }

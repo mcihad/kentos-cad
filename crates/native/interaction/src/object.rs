@@ -89,6 +89,7 @@ impl ObjectAction {
             Shape::Text { .. } => "yazı",
             Shape::Dimension { .. } => "ölçü",
             Shape::Hatch { .. } => "tarama",
+            Shape::Insert { .. } => "blok",
         }
     }
 

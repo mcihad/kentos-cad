@@ -157,6 +157,7 @@ pub fn new_document(o: &NewProject) -> Result<Document, String> {
             entities: Vec::new(),
             uids: Vec::new(),
             styles: v1.styles,
+            blocks: v1.blocks,
             project_id: None,
             migrated_from: None,
         },

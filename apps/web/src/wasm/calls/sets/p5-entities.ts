@@ -15,8 +15,12 @@ function angle(g: Gen): number {
   return g.chance(0.3) ? g.pick([0, Math.PI / 2, Math.PI, 1.5 * Math.PI, TAU]) : g.num(-TAU, TAU);
 }
 
-/** A random entity of any kind, with the fields the core must hand back untouched. */
-export function entity(g: Gen, kind = g.pick(KINDS)): Entity {
+/**
+ * A random entity of any kind, with the fields the core must hand back
+ * untouched. A block's insert only when asked for: the recorded call sets'
+ * streams stay as they were (docs/adr/0144).
+ */
+export function entity(g: Gen, kind: (typeof KINDS)[number] | 'insert' = g.pick(KINDS)): Entity {
   const attrs: Record<string, string> = g.chance(0.5) ? { Ada: String(g.int(1, 999)), Parsel: String(g.int(1, 99)) } : {};
   const base = { id: g.int(1, 9999), layerId: g.pick(['parsel', 'bina', 'taslak']), attrs, ...(g.chance(0.3) ? { label: 'P' + g.int(1, 99) } : {}), ...(g.chance(0.2) ? { color: '#aa3322' } : {}), ...(g.chance(0.2) ? { symbol: 'mpyy:konut' } : {}) };
   const ring = (n: number) => g.ring(n, g.num(3, 30), g.chance(0.3));
@@ -64,6 +68,8 @@ export function entity(g: Gen, kind = g.pick(KINDS)): Entity {
       const c = r[0];
       return { ...base, kind, ring: r, ...(g.chance(0.4) ? { holes: [[v(c.x - 0.5, c.y), v(c.x + 0.5, c.y), v(c.x, c.y + 0.5)]] } : {}), pattern: { type: g.pick(['solid', 'lines', 'cross'] as const), angle: g.num(0, 180), spacing: g.num(0.1, 3) } };
     }
+    case 'insert':
+      return { ...base, kind, block: `0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d${String(g.int(0, 9999)).padStart(4, '0')}`, p: g.pt(), scale: g.num(0.05, 20), rotation: g.num(0, TAU), ...(g.chance(0.5) ? { mirror: true } : {}) };
   }
 }
 

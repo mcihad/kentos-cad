@@ -8,19 +8,21 @@
 //! - every prefix of every valid fixture, and each fixture's payload cut and
 //!   mutated byte by byte inside a valid container;
 //! - random drawings (−0, subnormals, extremes, Unicode, deep layer trees,
-//!   opaque values, own line weights, vertex elevations) written, read back
-//!   equal, written again to the same bytes, each in the schema it needs;
+//!   opaque values, own line weights, vertex elevations, nested blocks)
+//!   written, read back equal, written again to the same bytes, each in the
+//!   schema it needs;
 //! - what the writer refuses, with its code.
 
 use std::collections::BTreeMap;
 
 use kentos_kcad::Code;
 use kentos_kcad::contracts::{
-    AngleUnit, AreaUnit, Bounds, CircleEntity, DocumentSnapshotV2, DrawingFont, Entity, EntityBase,
-    EntityId, HatchEntity, HatchPattern, HatchPatternType, LabelInk, LabelPlacement, LabelStyle,
-    LayerNode, LayerNodeType, LayerStyle, LineEntity, LineType, MigrationSource, PathEntity,
-    PointEntity, PointStyle, PointSymbol, ProjectId, ProjectSettings, ProjectStyles, RingGeometry,
-    TextEntity, Vec2, Workspace,
+    AngleUnit, AreaUnit, AttributeDefinition, BlockDefinition, BlockId, Bounds, CircleEntity,
+    DocumentSnapshotV2, DrawingFont, Entity, EntityBase, EntityId, HatchEntity, HatchPattern,
+    HatchPatternType, InsertEntity, LabelInk, LabelPlacement, LabelStyle, LayerNode, LayerNodeType,
+    LayerStyle, LineEntity, LineType, MigrationSource, PathEntity, PointEntity, PointStyle,
+    PointSymbol, ProjectId, ProjectSettings, ProjectStyles, RingGeometry, TextEntity, Vec2,
+    Workspace,
 };
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -448,20 +450,27 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
             items: (0..rng.below(3)).map(|_| opaque(rng, 0)).collect(),
             categories: (0..rng.below(3)).map(|_| opaque(rng, 0)).collect(),
         },
+        blocks: Vec::new(),
         project_id: rng.chance(50).then(|| ProjectId(rng.uid())),
         migrated_from: rng.chance(30).then(|| MigrationSource::v1("ab".repeat(32))),
     }
 }
 
-/// Own line weights and vertex elevations put on a random drawing from a
-/// stream of their own, so the drawings the other tests get do not change.
-/// `mode` 0 leaves it as it is (schema 2); 1 gives objects their own line
-/// weight (schema 3); 2 gives lines elevations at their ends and paths, their
-/// holes too, one per vertex with some vertices without (schema 4). Returns
-/// the schema the drawing needs.
+/// Own line weights, vertex elevations and blocks put on a random drawing
+/// from a stream of their own, so the drawings the other tests get do not
+/// change. `mode` 0 leaves it as it is (schema 2); 1 gives objects their own
+/// line weight (schema 3); 2 gives lines elevations at their ends and paths,
+/// their holes too, one per vertex with some vertices without (schema 4); 3
+/// gives it block definitions, each holding some of its objects and an insert
+/// of the one before, and inserts of them (schema 6). Returns the schema the
+/// drawing needs.
 fn with_schema(doc: &mut DocumentSnapshotV2, mode: u64, rng: &mut Rng) -> u8 {
     if mode == 0 {
         return 2;
+    }
+    if mode == 3 {
+        with_blocks(doc, rng);
+        return 6;
     }
     // A line to be sure of what the drawing has.
     let layer = doc.active_layer.clone();
@@ -508,6 +517,63 @@ fn with_schema(doc: &mut DocumentSnapshotV2, mode: u64, rng: &mut Rng) -> u8 {
     4
 }
 
+fn with_blocks(doc: &mut DocumentSnapshotV2, rng: &mut Rng) {
+    let layer = doc.active_layer.clone();
+    let mut blocks: Vec<BlockDefinition> = Vec::new();
+    for k in 0..1 + rng.below(3) as usize {
+        let mut inside: Vec<Entity> = Vec::new();
+        for e in &doc.entities {
+            if rng.chance(50) {
+                inside.push(e.clone());
+            }
+        }
+        if let Some(before) = blocks.last() {
+            inside.push(insert(rng, &layer, before.id));
+        }
+        // The slots a reader gives a definition's objects: 1, 2, 3 … in its own order.
+        for (i, e) in inside.iter_mut().enumerate() {
+            e.base_mut().id = i as u32 + 1;
+        }
+        let attributes = (0..rng.below(3))
+            .map(|a| AttributeDefinition {
+                tag: format!("ETİKET{a}"),
+                prompt: rng.chance(50).then(|| rng.text()),
+                value: rng.chance(50).then(|| rng.text()),
+                p: point(rng),
+                height: rng.float(),
+                rotation: rng.float(),
+            })
+            .collect();
+        blocks.push(BlockDefinition {
+            id: BlockId(rng.uid()),
+            // Distinct however the text folds: the last characters differ.
+            name: format!("{} {k}", rng.text()),
+            base: point(rng),
+            entities: inside,
+            attributes,
+            description: rng.chance(50).then(|| rng.text()),
+        });
+    }
+    for _ in 0..1 + rng.below(4) {
+        let id = blocks[rng.below(blocks.len() as u64) as usize].id;
+        doc.entities.push(insert(rng, &layer, id));
+        doc.uids.push(EntityId(rng.uid()));
+    }
+    doc.blocks = blocks;
+}
+
+fn insert(rng: &mut Rng, layer: &str, block: BlockId) -> Entity {
+    let scale = rng.float().abs();
+    Entity::Insert(InsertEntity {
+        base: base(rng, layer),
+        block,
+        p: point(rng),
+        scale: if scale > 0.0 { scale } else { 1.0 },
+        rotation: rng.float(),
+        mirror: rng.chance(50),
+    })
+}
+
 /// A vertex's elevation: none, or any finite float64 (−0, subnormals and the extremes too).
 fn elevation(rng: &mut Rng) -> Option<f64> {
     rng.chance(75).then(|| rng.float())
@@ -529,7 +595,7 @@ fn random_drawings_round_trip_bit_for_bit_and_write_the_same_bytes_again() {
     let mut rng = Rng(20_260_926);
     for round in 0..600 {
         let mut doc = drawing(&mut rng);
-        let schema = with_schema(&mut doc, round % 3, &mut Rng(0x5eed_0000 + round));
+        let schema = with_schema(&mut doc, round % 4, &mut Rng(0x5eed_0000 + round));
         let bytes = kentos_kcad::encode_verified(&doc)
             .unwrap_or_else(|e| panic!("round {round}: {} {e}", e.code.as_str()));
         assert_eq!(schema_of(&bytes), schema, "round {round}: the schema");
@@ -606,6 +672,53 @@ fn the_writer_refuses_what_a_reader_would_refuse() {
         },
         Code::TooDeep,
     );
+    // The block rules (docs/adr/0144).
+    let layer = good.active_layer.clone();
+    let block = |rng: &mut Rng, name: &str, inside: Vec<Entity>| BlockDefinition {
+        id: BlockId(rng.uid()),
+        name: name.to_owned(),
+        base: point(rng),
+        entities: inside,
+        attributes: Vec::new(),
+        description: None,
+    };
+    let mut rng = Rng(6);
+    let a = block(&mut rng, "Direk", Vec::new());
+    let stranger = BlockId(rng.uid());
+    let unknown = insert(&mut rng, &layer, stranger);
+    refuse(&|d| d.entities[0] = unknown.clone(), Code::UnknownBlock);
+    let mut scaled = insert(&mut rng, &layer, a.id);
+    if let Entity::Insert(i) = &mut scaled {
+        i.scale = 0.0;
+    }
+    refuse(
+        &|d| {
+            d.blocks = vec![a.clone()];
+            d.entities[0] = scaled.clone();
+        },
+        Code::BadValue,
+    );
+    let twin = block(&mut rng, "DİREK", Vec::new());
+    refuse(
+        &|d| d.blocks = vec![a.clone(), twin.clone()],
+        Code::DuplicateBlock,
+    );
+    let mut itself = block(&mut rng, "Kendi", Vec::new());
+    itself.entities.push(insert(&mut rng, &layer, itself.id));
+    refuse(&|d| d.blocks = vec![itself.clone()], Code::BlockCycle);
+    let mut chain: Vec<BlockDefinition> = Vec::new();
+    for n in 0..17 {
+        let inside = chain
+            .last()
+            .map(|b| vec![insert(&mut rng, &layer, b.id)])
+            .unwrap_or_default();
+        chain.push(block(&mut rng, &format!("K{n}"), inside));
+    }
+    refuse(&|d| d.blocks = chain.clone(), Code::BlockTooDeep);
+    refuse(
+        &|d| d.blocks = vec![block(&mut Rng(7), "  ", Vec::new())],
+        Code::BadValue,
+    );
 }
 
 #[test]
@@ -640,7 +753,7 @@ fn random_drawings_cross_the_browsers_typed_boundary_unchanged() {
     let mut rng = Rng(20_260_927);
     for round in 0..600 {
         let mut doc = drawing(&mut rng);
-        let schema = with_schema(&mut doc, round % 3, &mut Rng(0x5eed_1000 + round));
+        let schema = with_schema(&mut doc, round % 4, &mut Rng(0x5eed_1000 + round));
         let want = kentos_kcad::encode(&doc).expect("writes");
         assert_eq!(schema_of(&want), schema, "round {round}: the schema");
         let (head, cols) = kentos_kcad::split(doc).expect("splits");

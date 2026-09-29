@@ -101,6 +101,8 @@ fn snapshot(info: &ProjectInfo, project: Uuid, objects: Objects) -> DocumentSnap
         entities,
         uids,
         styles: info.styles.clone(),
+        // A database project keeps no block definitions yet (docs/adr/0144 §5).
+        blocks: Vec::new(),
         project_id: Some(ProjectId(project.into_bytes())),
         migrated_from: None,
     }

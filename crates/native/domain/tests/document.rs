@@ -305,7 +305,7 @@ fn isolating_an_unknown_layer_changes_nothing() {
 #[test]
 fn the_last_slot_is_given_and_then_adding_is_refused_whole() {
     let mut snapshot = sample();
-    entity_base_mut(&mut snapshot.entities[0]).id = u32::MAX - 1;
+    Entity::base_mut(&mut snapshot.entities[0]).id = u32::MAX - 1;
     let mut doc = Document::from_snapshot(snapshot).expect("opens");
     let before = doc.len();
     assert_eq!(doc.add(point("parsel", 1.0)), Ok(Slot(u32::MAX)));
@@ -361,22 +361,6 @@ fn changes_name_every_object_an_applied_op_touched() {
     // A document read afresh has an empty journal: an old mark reads everything again.
     let fresh = empty();
     assert_eq!(fresh.changes_since(doc.change_mark()), Changes::All);
-}
-
-fn entity_base_mut(entity: &mut Entity) -> &mut EntityBase {
-    match entity {
-        Entity::Point(e) => &mut e.base,
-        Entity::Line(e) => &mut e.base,
-        Entity::Polyline(e) | Entity::Polygon(e) => &mut e.base,
-        Entity::Circle(e) => &mut e.base,
-        Entity::Arc(e) => &mut e.base,
-        Entity::Ellipse(e) => &mut e.base,
-        Entity::Spline(e) => &mut e.base,
-        Entity::Xline(e) | Entity::Ray(e) => &mut e.base,
-        Entity::Text(e) => &mut e.base,
-        Entity::Dimension(e) => &mut e.base,
-        Entity::Hatch(e) => &mut e.base,
-    }
 }
 
 /// A layer without an id gets `layer-N` after the largest `layer-N` the file

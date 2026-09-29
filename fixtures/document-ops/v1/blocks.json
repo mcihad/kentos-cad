@@ -1,0 +1,976 @@
+{
+ "format": "kentos.document-ops",
+ "version": 1,
+ "title": "Blok tanımları: ekleme, değiştirme, silme; geri alınabilir, blok kurallarıyla",
+ "note": "Blok tanımları (ADR 0144) çizimin geri alınabilir verisidir. addBlock tanımı sona ekler (adım “Blok tanımla”), updateBlock aynı kimlikli tanımı yerinde değiştirir (“Blok değiştir”; aynısı ya da bilinmeyen kimlik false döner, bir şey değiştirmez), removeBlock tanımı siler (“Blok sil”; bilinmeyen kimlik false; geri alma yerine koyar). Kurallar kentos_contracts::blocks'tadır: ad boş olamaz ve Türkçe büyük/küçük harf ayrımı yapılmadan bir kezdir (I→ı, İ→i), kimlik bir kezdir, öznitelik etiketi bir kezdir, tanımdaki yerleştirme bilinen bir bloğu gösterir, blok kendini doğrudan ya da dolaylı içeremez, iç içelik en çok 16 düzeydir. Kuralı bozan düzenleme reddedilir (catch), hiçbir şey değişmez. Çizimde ya da başka bir tanımda yerleştirilmiş blok silinemez; blockRemovalRefused nedenini ya da null döndürür. Tanımın nesnelerinin katmanı ağaçta olmak zorunda değildir.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Bloklar",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "hybrid",
+   "drawingFont": "barlow"
+  },
+  "origin": {
+   "x": 486500,
+   "y": 4420100
+  },
+  "layers": [
+   {
+    "id": "a",
+    "name": "Altyapı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.18
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "a",
+  "entities": [
+   {
+    "id": 1,
+    "kind": "point",
+    "layerId": "a",
+    "p": {
+     "x": 486510,
+     "y": 4420110
+    },
+    "attrs": {}
+   },
+   {
+    "id": 2,
+    "kind": "insert",
+    "layerId": "a",
+    "attrs": {
+     "NO": "R-12"
+    },
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+    "p": {
+     "x": 486520,
+     "y": 4420110
+    },
+    "scale": 1,
+    "rotation": 0
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  },
+  "blocks": [
+   {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+    "name": "Rögar",
+    "base": {
+     "x": 0,
+     "y": 0
+    },
+    "entities": [
+     {
+      "id": 1,
+      "kind": "circle",
+      "layerId": "0",
+      "c": {
+       "x": 0,
+       "y": 0
+      },
+      "r": 0.6,
+      "attrs": {}
+     }
+    ]
+   }
+  ]
+ },
+ "scenarios": [
+  {
+   "name": "Blok tanımla: sona eklenir, tek adım; geri alma kaldırır, yineleme aynı yerine getirir",
+   "steps": [
+    {
+     "op": "check",
+     "expect": {
+      "blocks": [
+       "Rögar"
+      ],
+      "canUndo": false,
+      "dirty": false
+     }
+    },
+    {
+     "op": "addBlock",
+     "block": {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002",
+      "name": "Direk",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": [
+       {
+        "id": 1,
+        "kind": "line",
+        "layerId": "0",
+        "a": {
+         "x": -0.6,
+         "y": 0
+        },
+        "b": {
+         "x": 0.6,
+         "y": 0
+        },
+        "attrs": {}
+       }
+      ]
+     },
+     "returns": null,
+     "expect": {
+      "blocks": [
+       "Rögar",
+       "Direk"
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed",
+      "blockFields": {
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002": {
+        "name": "Direk",
+        "base": {
+         "x": 0,
+         "y": 0
+        },
+        "entities": 1,
+        "attributes": 0,
+        "description": null
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Blok tanımla",
+     "expect": {
+      "blocks": [
+       "Rögar"
+      ],
+      "canUndo": false,
+      "canRedo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "redo",
+     "returns": "Blok tanımla",
+     "expect": {
+      "blocks": [
+       "Rögar",
+       "Direk"
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ad Türkçe büyük/küçük harf ayrımı yapılmadan bir kez; kimlik bir kez; boş ad yok. Reddedilen tanım hiçbir şeyi değiştirmez",
+   "steps": [
+    {
+     "op": "addBlock",
+     "block": {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0003",
+      "name": "RÖGAR",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": []
+     },
+     "catch": "Çizimde “Rögar” adında bir blok var; başka bir ad verin.",
+     "expect": {
+      "blocks": [
+       "Rögar"
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "addBlock",
+     "block": {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+      "name": "Kapak",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": []
+     },
+     "catch": "Bu kimlikte bir blok zaten var; blok eklenmedi.",
+     "expect": {
+      "blocks": [
+       "Rögar"
+      ],
+      "revision": "same"
+     }
+    },
+    {
+     "op": "addBlock",
+     "block": {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0004",
+      "name": " 　",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": []
+     },
+     "catch": "Blok adı boş olamaz; bir ad yazın.",
+     "expect": {
+      "blocks": [
+       "Rögar"
+      ],
+      "revision": "same"
+     }
+    },
+    {
+     "op": "addBlock",
+     "block": {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0005",
+      "name": "IŞIK",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": []
+     },
+     "returns": null,
+     "expect": {
+      "blocks": [
+       "Rögar",
+       "IŞIK"
+      ]
+     }
+    },
+    {
+     "op": "addBlock",
+     "block": {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0006",
+      "name": "ışık",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": []
+     },
+     "catch": "Çizimde “IŞIK” adında bir blok var; başka bir ad verin.",
+     "note": "I'nın küçüğü ı, İ'ninki i: IŞIK ile ışık aynı ad, ISIK başka.",
+     "expect": {
+      "blocks": [
+       "Rögar",
+       "IŞIK"
+      ],
+      "revision": "same"
+     }
+    },
+    {
+     "op": "addBlock",
+     "block": {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0007",
+      "name": "ISIK",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": []
+     },
+     "returns": null,
+     "expect": {
+      "blocks": [
+       "Rögar",
+       "IŞIK",
+       "ISIK"
+      ]
+     }
+    },
+    {
+     "op": "addBlock",
+     "block": {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0008",
+      "name": "Etiketli",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": [],
+      "attributes": [
+       {
+        "tag": "NO",
+        "p": {
+         "x": 0,
+         "y": 0
+        },
+        "height": 0.5,
+        "rotation": 0
+       },
+       {
+        "tag": "NO",
+        "p": {
+         "x": 0,
+         "y": 1
+        },
+        "height": 0.5,
+        "rotation": 0
+       }
+      ]
+     },
+     "catch": "“Etiketli” bloğunda bir öznitelik etiketi iki kez var; her etiket bir kez olmalı.",
+     "expect": {
+      "blocks": [
+       "Rögar",
+       "IŞIK",
+       "ISIK"
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Blok değiştir: yerinde, tek adım; aynısı ya da bilinmeyen kimlik bir şey değiştirmez; geri alma eski tanımı getirir",
+   "steps": [
+    {
+     "op": "updateBlock",
+     "block": {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+      "name": "Kanal rögarı",
+      "base": {
+       "x": 1,
+       "y": 0
+      },
+      "entities": [
+       {
+        "id": 1,
+        "kind": "circle",
+        "layerId": "0",
+        "c": {
+         "x": 0,
+         "y": 0
+        },
+        "r": 0.6,
+        "attrs": {}
+       },
+       {
+        "id": 2,
+        "kind": "line",
+        "layerId": "0",
+        "a": {
+         "x": -0.6,
+         "y": 0
+        },
+        "b": {
+         "x": 0.6,
+         "y": 0
+        },
+        "attrs": {}
+       }
+      ],
+      "description": "Kanalizasyon"
+     },
+     "returns": true,
+     "expect": {
+      "blocks": [
+       "Kanal rögarı"
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "blockFields": {
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001": {
+        "name": "Kanal rögarı",
+        "base": {
+         "x": 1,
+         "y": 0
+        },
+        "entities": 2,
+        "attributes": 0,
+        "description": "Kanalizasyon"
+       }
+      }
+     }
+    },
+    {
+     "op": "updateBlock",
+     "block": {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+      "name": "Kanal rögarı",
+      "base": {
+       "x": 1,
+       "y": 0
+      },
+      "entities": [
+       {
+        "id": 1,
+        "kind": "circle",
+        "layerId": "0",
+        "c": {
+         "x": 0,
+         "y": 0
+        },
+        "r": 0.6,
+        "attrs": {}
+       },
+       {
+        "id": 2,
+        "kind": "line",
+        "layerId": "0",
+        "a": {
+         "x": -0.6,
+         "y": 0
+        },
+        "b": {
+         "x": 0.6,
+         "y": 0
+        },
+        "attrs": {}
+       }
+      ],
+      "description": "Kanalizasyon"
+     },
+     "returns": false,
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "updateBlock",
+     "block": {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0009",
+      "name": "Yok",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": []
+     },
+     "returns": false,
+     "expect": {
+      "blocks": [
+       "Kanal rögarı"
+      ],
+      "revision": "same"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Blok değiştir",
+     "expect": {
+      "blocks": [
+       "Rögar"
+      ],
+      "canUndo": false,
+      "blockFields": {
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001": {
+        "name": "Rögar",
+        "base": {
+         "x": 0,
+         "y": 0
+        },
+        "entities": 1,
+        "description": null
+       }
+      }
+     }
+    },
+    {
+     "op": "redo",
+     "returns": "Blok değiştir",
+     "expect": {
+      "blocks": [
+       "Kanal rögarı"
+      ],
+      "blockFields": {
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001": {
+        "entities": 2
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yerleştirilmiş blok silinmez; yerleştirmesi silinince silinir; geri alma sırayla getirir",
+   "steps": [
+    {
+     "op": "blockRemovalRefused",
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+     "returns": "“Rögar” bloğu çizimde 1 kez yerleştirilmiş; silinemez. Önce yerleştirmelerini silin."
+    },
+    {
+     "op": "removeBlock",
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+     "catch": "“Rögar” bloğu çizimde 1 kez yerleştirilmiş; silinemez. Önce yerleştirmelerini silin.",
+     "expect": {
+      "blocks": [
+       "Rögar"
+      ],
+      "canUndo": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "remove",
+     "ids": [
+      2
+     ],
+     "expect": {
+      "ids": [
+       1
+      ]
+     }
+    },
+    {
+     "op": "blockRemovalRefused",
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+     "returns": null
+    },
+    {
+     "op": "removeBlock",
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+     "returns": true,
+     "expect": {
+      "blocks": [],
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "removeBlock",
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+     "returns": false,
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Blok sil",
+     "expect": {
+      "blocks": [
+       "Rögar"
+      ],
+      "ids": [
+       1
+      ]
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Sil",
+     "expect": {
+      "blocks": [
+       "Rögar"
+      ],
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": false
+     }
+    },
+    {
+     "op": "redo",
+     "returns": "Sil",
+     "expect": {
+      "ids": [
+       1
+      ]
+     }
+    },
+    {
+     "op": "redo",
+     "returns": "Blok sil",
+     "expect": {
+      "blocks": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Başka bloğun içindeki blok silinmez; blok kendini içeremez; bilinmeyen bloğun yerleştirmesi tanıma giremez",
+   "steps": [
+    {
+     "op": "addBlock",
+     "block": {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002",
+      "name": "Direk",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": [
+       {
+        "id": 1,
+        "kind": "insert",
+        "layerId": "0",
+        "attrs": {},
+        "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+        "p": {
+         "x": 0,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      ]
+     },
+     "returns": null,
+     "expect": {
+      "blocks": [
+       "Rögar",
+       "Direk"
+      ]
+     }
+    },
+    {
+     "op": "remove",
+     "ids": [
+      2
+     ],
+     "expect": {
+      "ids": [
+       1
+      ]
+     }
+    },
+    {
+     "op": "removeBlock",
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+     "catch": "“Rögar” bloğu “Direk” bloğunun içinde kullanılıyor; silinemez.",
+     "expect": {
+      "blocks": [
+       "Rögar",
+       "Direk"
+      ],
+      "revision": "same"
+     }
+    },
+    {
+     "op": "updateBlock",
+     "block": {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+      "name": "Rögar",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": [
+       {
+        "id": 1,
+        "kind": "circle",
+        "layerId": "0",
+        "c": {
+         "x": 0,
+         "y": 0
+        },
+        "r": 0.6,
+        "attrs": {}
+       },
+       {
+        "id": 2,
+        "kind": "insert",
+        "layerId": "0",
+        "attrs": {},
+        "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002",
+        "p": {
+         "x": 0,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      ]
+     },
+     "catch": "“Rögar” bloğu kendini içeremez (doğrudan ya da başka bloklar yoluyla).",
+     "expect": {
+      "blockFields": {
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001": {
+        "entities": 1
+       }
+      },
+      "revision": "same"
+     }
+    },
+    {
+     "op": "addBlock",
+     "block": {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000a",
+      "name": "Kendi",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": [
+       {
+        "id": 1,
+        "kind": "insert",
+        "layerId": "0",
+        "attrs": {},
+        "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000a",
+        "p": {
+         "x": 0,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      ]
+     },
+     "catch": "“Kendi” bloğu kendini içeremez (doğrudan ya da başka bloklar yoluyla).",
+     "expect": {
+      "blocks": [
+       "Rögar",
+       "Direk"
+      ],
+      "revision": "same"
+     }
+    },
+    {
+     "op": "addBlock",
+     "block": {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000b",
+      "name": "Yetim",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": [
+       {
+        "id": 1,
+        "kind": "insert",
+        "layerId": "0",
+        "attrs": {},
+        "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000c",
+        "p": {
+         "x": 0,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      ]
+     },
+     "catch": "Yerleştirilen blok çizimde tanımlı değil.",
+     "expect": {
+      "blocks": [
+       "Rögar",
+       "Direk"
+      ],
+      "revision": "same"
+     }
+    },
+    {
+     "op": "removeBlock",
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002",
+     "returns": true,
+     "expect": {
+      "blocks": [
+       "Rögar"
+      ]
+     }
+    },
+    {
+     "op": "removeBlock",
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+     "returns": true,
+     "expect": {
+      "blocks": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "İşlem: tanım ve yerleştirmesi tek adım; hata ikisini birden geri alır",
+   "steps": [
+    {
+     "op": "transact",
+     "label": "Blok oluştur",
+     "steps": [
+      {
+       "op": "addBlock",
+       "block": {
+        "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002",
+        "name": "Direk",
+        "base": {
+         "x": 0,
+         "y": 0
+        },
+        "entities": [
+         {
+          "id": 1,
+          "kind": "line",
+          "layerId": "0",
+          "a": {
+           "x": -0.6,
+           "y": 0
+          },
+          "b": {
+           "x": 0.6,
+           "y": 0
+          },
+          "attrs": {}
+         }
+        ]
+       },
+       "returns": null
+      },
+      {
+       "op": "add",
+       "entity": {
+        "kind": "insert",
+        "layerId": "a",
+        "attrs": {},
+        "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002",
+        "p": {
+         "x": 486530,
+         "y": 4420110
+        },
+        "scale": 2,
+        "rotation": 0.5
+       },
+       "returns": 3
+      }
+     ],
+     "expect": {
+      "blocks": [
+       "Rögar",
+       "Direk"
+      ],
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Blok oluştur",
+     "expect": {
+      "blocks": [
+       "Rögar"
+      ],
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": false
+     }
+    },
+    {
+     "op": "redo",
+     "returns": "Blok oluştur",
+     "expect": {
+      "blocks": [
+       "Rögar",
+       "Direk"
+      ],
+      "ids": [
+       1,
+       2,
+       3
+      ]
+     }
+    },
+    {
+     "op": "transact",
+     "label": "Blok oluştur",
+     "throw": "İptal edildi",
+     "steps": [
+      {
+       "op": "addBlock",
+       "block": {
+        "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000d",
+        "name": "Lamba",
+        "base": {
+         "x": 0,
+         "y": 0
+        },
+        "entities": [
+         {
+          "id": 1,
+          "kind": "line",
+          "layerId": "0",
+          "a": {
+           "x": -0.6,
+           "y": 0
+          },
+          "b": {
+           "x": 0.6,
+           "y": 0
+          },
+          "attrs": {}
+         }
+        ]
+       },
+       "returns": null
+      },
+      {
+       "op": "updateBlock",
+       "block": {
+        "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+        "name": "Rögar 2",
+        "base": {
+         "x": 0,
+         "y": 0
+        },
+        "entities": [
+         {
+          "id": 1,
+          "kind": "circle",
+          "layerId": "0",
+          "c": {
+           "x": 0,
+           "y": 0
+          },
+          "r": 0.6,
+          "attrs": {}
+         }
+        ]
+       },
+       "returns": true
+      }
+     ],
+     "catch": "İptal edildi",
+     "expect": {
+      "blocks": [
+       "Rögar",
+       "Direk"
+      ],
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -9,12 +9,12 @@
 //!   binary64 floats only (NaN and infinities refused, −0 kept), text keys in
 //!   RFC 8949 §4.2.1 order without duplicates, no tags; depth, length and size
 //!   limits. Written here: no CBOR crate (owner's decision, 2026-09-26).
-//! - **Document schemas 2 to 5** (`encode`, `decode`): the contract
+//! - **Document schemas 2 to 6** (`encode`, `decode`): the contract
 //!   `DocumentSnapshotV2`, every object with its 16-byte persistent id
 //!   (docs/adr/0014); the open document's slots never enter the file. Schema 3
 //!   adds an object's own line weight, schema 4 vertex elevations, schema 5
-//!   multi-part areas; a writer writes the oldest schema that holds what the
-//!   drawing has.
+//!   multi-part areas, schema 6 blocks; a writer writes the oldest schema that
+//!   holds what the drawing has.
 //!
 //! One implementation for every platform (CLAUDE.md §14): the desktop app and
 //! the server call it natively, the browser through the formats WASM module
@@ -37,6 +37,7 @@
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+mod blocks;
 mod cbor;
 pub mod columns;
 mod decode;
@@ -83,12 +84,20 @@ pub const SCHEMA_WITH_ELEVATIONS: u32 = 4;
 /// has them rather than keep only each area's first part.
 pub const SCHEMA_WITH_PARTS: u32 = 5;
 
+/// Document schema 6 (docs/specs/kcad-v2.md §6.1): schema 5 and blocks, the
+/// document's `blocks` and the `insert` kind (docs/adr/0144). A writer writes
+/// it only when the drawing has a definition or an insert: any other stays 5
+/// or older, byte for byte, and a reader of those still opens it; one of
+/// those refuses a drawing that has them rather than drop them.
+pub const SCHEMA_WITH_BLOCKS: u32 = 6;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 4] = [
+pub const SCHEMAS: [u32; 5] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
     SCHEMA_WITH_PARTS,
+    SCHEMA_WITH_BLOCKS,
 ];
 
 /// The file a drawing is saved as.

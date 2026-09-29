@@ -1072,5 +1072,12 @@ fn shape(entity: &Entity) -> Shape {
                 spacing: h.pattern.spacing,
             },
         },
+        Entity::Insert(i) => Shape::Insert {
+            block: i.block.to_text(),
+            p: v(&i.p),
+            scale: i.scale,
+            rotation: i.rotation,
+            mirror: i.mirror.then_some(true),
+        },
     }
 }

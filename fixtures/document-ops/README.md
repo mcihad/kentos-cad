@@ -34,7 +34,7 @@ Her adımda `op` ve işleme göre alanlar bulunur. Bütün adımlarda şu alanla
 
 - `expect`: adımdan sonraki durum (aşağıda);
 - `returns`: işlemin döndürdüğü değer;
-- `catch`: adım bu iletiyle hata vermeli (bir `transact`'ın `throw`'u ya da belgenin reddettiği düzenleme, `removeLayer`, `addLayer`). Hata orada yakalanır, sonra `expect` denetlenir;
+- `catch`: adım bu iletiyle hata vermeli (bir `transact`'ın `throw`'u ya da belgenin reddettiği düzenleme, `removeLayer`, `addLayer`, `addBlock`, `updateBlock`, `removeBlock`). Hata orada yakalanır, sonra `expect` denetlenir;
 - `note`.
 
 | `op` | Alanlar | Web | Masaüstü (`kentos_domain::Document`) | Döndürdüğü |
@@ -69,6 +69,10 @@ Her adımda `op` ve işleme göre alanlar bulunur. Bütün adımlarda şu alanla
 | `uniqueLayerName` | `base` | `layers.uniqueName` | `LayerTree::unique_name` | ad |
 | `setName` | `name` | `name.set` | `set_name` | |
 | `setSettings` | `patch`: ayar alanları | `settings.assign` | `set_settings` (yamalı tam ayarlar) | |
+| `addBlock` | `block`: blok tanımı (`BlockDefinition`, ADR 0144) | `addBlock` (reddi `Refusal`; adım “Blok tanımla”) | `add_block` (reddi `Refusal`) | `null` |
+| `updateBlock` | `block`: aynı kimlikli tanımın yeni hâli | `updateBlock` (adım “Blok değiştir”) | `update_block` | değişti mi |
+| `removeBlock` | `id`: tanımın kimliği | `removeBlock` (adım “Blok sil”) | `remove_block` | silindi mi |
+| `blockRemovalRefused` | `id` | `blockRemovalRefused` | `block_removal_refused` | ret iletisi ya da `null` |
 
 - **Yama** web'deki gibi sığdır: yamanın her alanı nesnenin (ya da stilin) aynı adlı alanının yerine geçer; `null` alanı siler (web'de `undefined`). Nesnenin kimliği yamayla değişmez. Masaüstü tam nesne alır: koşucu yamayı JSON üstünde nesneye uygular ve sonucu verir.
 - **`transact`:** `steps` işlemin gövdesidir, içinde başka `transact` olabilir. `throw` verilmişse gövde adımlarından sonra bu iletiyle hata verir. Yakalanmayan hata dıştaki işleme geçer, en dışta senaryoyu düşürür.
@@ -92,6 +96,8 @@ Yalnız yazılan alanlar denetlenir.
 | `name` | çizimin adı |
 | `settings` | `{ "alan": değer }`: proje ayarlarının yazılan alanları |
 | `uids` | `{ "kimlik": ad }`: nesnenin kalıcı kimliği `captureUid`'in bu adla sakladığıdır; `"new"`: saklananların hiçbiri değildir |
+| `blocks` | blok tanımlarının adları, sırasıyla |
+| `blockFields` | `{ "blok kimliği": { name, base, description, entities, attributes } }`: tanımın adı, taban noktası, açıklaması (`null`: yok), nesne ve öznitelik tanımı sayısı |
 
 **Kalıcı kimlik neden yalnız karşılaştırılır?** Yeni nesnenin kimliği rastgeledir (UUIDv7), açılan v1 dosyasınınki dosyanın içeriğinden türetilir (UUIDv5, ADR 0014). Fixture elle yazıldığından değeri yazamaz; kimlik aynı senaryoda alınan kimliklerle karşılaştırılır. `entities` karşılaştırmasına kalıcı kimlik girmez.
 

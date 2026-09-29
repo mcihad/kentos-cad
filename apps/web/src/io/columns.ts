@@ -42,7 +42,7 @@ export type DrawingHead = Omit<DocumentSnapshotV2, 'entities' | 'uids'>;
 export type PageEntity = ContractEntity & { uid?: string };
 
 /** The kinds, numbered as `kinds` holds them. */
-export const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'spline', 'xline', 'ray', 'text', 'dimension', 'hatch'] as const;
+export const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'spline', 'xline', 'ray', 'text', 'dimension', 'hatch', 'insert'] as const;
 const KIND = new Map<string, number>(KINDS.map((k, i) => [k, i]));
 const DIMENSION_STYLES = ['aligned', 'linear', 'angular', 'radius', 'diameter'] as const;
 const HATCH_PATTERNS = ['solid', 'lines', 'cross'] as const;
@@ -55,7 +55,8 @@ const WEIGHT = 8;
 /**
  * A kind's optional fields from bit 8 up, in the order the Rust module's table
  * names them (point: z; line: za, zb; polyline and polygon: bulges, holes, zs;
- * polygon: parts; dimension: text, style, angle, c; hatch: holes).
+ * polygon: parts; dimension: text, style, angle, c; hatch: holes; insert:
+ * mirror). A block's definitions travel in the head, not here (docs/adr/0144).
  */
 const OPT = [1 << 8, 1 << 9, 1 << 10, 1 << 11] as const;
 /** A hole's flags: its bulges, its elevations (docs/adr/0142). */
@@ -86,6 +87,7 @@ const FIELDS: Record<string, ReadonlySet<string>> = Object.fromEntries(
     text: ['p', 'text', 'height', 'rotation'],
     dimension: ['a', 'b', 'offset', 'height', 'text', 'style', 'angle', 'c'],
     hatch: ['ring', 'holes', 'pattern'],
+    insert: ['block', 'p', 'scale', 'rotation', 'mirror'],
   }).map(([k, f]) => [k, new Set([...COMMON, ...f])]),
 );
 
@@ -428,6 +430,15 @@ class Packer {
         }
         break;
       }
+      // docs/adr/0144: p, scale, turn; the block's id as text; mirror a flag (only true is written).
+      case 'insert':
+        this.point(e.p, 'p', kind);
+        this.float(e.scale, 'scale');
+        this.float(e.rotation, 'rotation');
+        this.text(e.block, 'block');
+        if (e.mirror === true) flags |= OPT[0];
+        else if (e.mirror !== undefined) throw unwritable('bad_value', `${this.where}/mirror`, 'aynalama yalnız true yazılır; aynalı olmayanda alan yoktur');
+        break;
     }
     return flags;
   }
@@ -682,6 +693,13 @@ export class ColumnsReader {
         }
         break;
       }
+      case 'insert':
+        e.p = this.pt();
+        e.scale = this.num();
+        e.rotation = this.num();
+        e.block = this.readText();
+        if (has(0)) e.mirror = true;
+        break;
     }
     return e as unknown as ContractEntity & { uid: string };
   }

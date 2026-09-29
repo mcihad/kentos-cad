@@ -33,7 +33,10 @@ use crate::layer::LineType;
 ///    columns for a vertex without an elevation.
 /// 11: multi-part areas (docs/adr/0143): `.kcad` document schema 5 and the typed columns' layout,
 ///    a polygon's `parts` after its holes, each part's flags, ring, bulges, elevations and holes.
-pub const FORMATS_VERSION: u32 = 11;
+/// 12: blocks (docs/adr/0144): `.kcad` document schema 6, the definitions in the drawing's JSON
+///    and the `insert` kind in the typed columns (kind 13: p, scale, rotation, the block's id as
+///    text, mirror a flag).
+pub const FORMATS_VERSION: u32 = 12;
 
 // ── Every import ────────────────────────────────────────────────────────
 

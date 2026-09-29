@@ -76,7 +76,8 @@ pub fn entity_edges(e: &Shape) -> Vec<Edge> {
                 b: Vec2::new(p.x + dir.x * r, p.y + dir.y * r),
             }]
         }
-        Shape::Point { .. } | Shape::Text { .. } => Vec::new(),
+        // An insert's edges are its definition's, which the store expands (docs/adr/0144).
+        Shape::Point { .. } | Shape::Text { .. } | Shape::Insert { .. } => Vec::new(),
     }
 }
 

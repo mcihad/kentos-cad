@@ -283,7 +283,7 @@ fn same_shape(a: &Shape, b: &Shape) -> bool {
 fn anchor(s: &Shape) -> Option<f64> {
     let x = match s {
         Shape::Line { a, b } => js_min(a.x, b.x),
-        Shape::Point { p, .. } | Shape::Text { p, .. } => p.x,
+        Shape::Point { p, .. } | Shape::Text { p, .. } | Shape::Insert { p, .. } => p.x,
         Shape::Polyline { pts, .. } | Shape::Polygon { pts, .. } | Shape::Spline { pts, .. } => {
             pts.first()?.x
         }

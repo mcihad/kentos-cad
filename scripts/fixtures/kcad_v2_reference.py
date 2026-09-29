@@ -114,7 +114,7 @@ def opaque(v):
     raise TypeError(type(v))
 
 
-# ── Document schemas 2, 3 and 4 (spec §6), from the contract's JSON form ─
+# ── Document schemas 2 to 6 (spec §6), from the contract's JSON form ────
 
 
 def uid_bytes(u):
@@ -299,10 +299,13 @@ KINDS = {
         "holes": (lambda h: array([points(r) for r in h]), False),
         "pattern": (lambda p: cmap(fields(p, {"type": (enum(("solid", "lines", "cross")), True), "angle": (f64, True), "spacing": (f64, True)}, "pattern")), True),
     },
+    # Schema 6 (docs/adr/0144): the definition's id; `mirror` only when true.
+    "insert": {"block": (lambda u: blob(uid_bytes(u)), True), "p": (point, True), "scale": (f64, True), "rotation": (f64, True), "mirror": (lambda b: boolean(b) if b is True else None, False)},
 }
 
 
 def entity(e, uid, index):
+    """An object; `uid` None for a block definition's object, which has no persistent id (schema 6)."""
     kind = e["kind"]
     assert e["id"] == index + 1, f"nesne {index}: kimlik {e['id']}, dosya sırası {index + 1} vermeli"
     assert "zs" not in e or len(e["zs"]) == len(e["pts"]), f"nesne {index} ({kind}): kot sayısı köşe sayısına eşit olmalı"
@@ -317,8 +320,28 @@ def entity(e, uid, index):
         **KINDS[kind],
     }
     body = fields({k: v for k, v in e.items() if k not in ("kind", "id")}, table, f"nesne {index} ({kind})")
-    body["uid"] = blob(uid_bytes(uid))
+    assert body.get("mirror", True) is not None, f"nesne {index}: mirror yalnız true yazılır"
+    if uid is not None:
+        body["uid"] = blob(uid_bytes(uid))
     return cmap({kind: cmap(body)})
+
+
+def attribute(a):
+    return cmap(fields(a, {"tag": (text, True), "prompt": (text, False), "value": (text, False), "p": (point, True), "height": (f64, True), "rotation": (f64, True)}, "öznitelik"))
+
+
+def definition(b):
+    """A block definition (schema 6, docs/adr/0144): its objects written as the drawing's, without persistent ids."""
+    assert b.get("attributes", [None]), "boş öznitelik listesi yazılmaz"
+    table = {
+        "id": (lambda u: blob(uid_bytes(u)), True),
+        "name": (text, True),
+        "base": (point, True),
+        "entities": (lambda es: array([entity(e, None, i) for i, e in enumerate(es)]), True),
+        "attributes": (lambda xs: array([attribute(a) for a in xs]), False),
+        "description": (text, False),
+    }
+    return cmap(fields(b, table, f"blok {b.get('name')}"))
 
 
 def document(d):
@@ -335,6 +358,7 @@ def document(d):
             "layers": (lambda ls: array([layer(n) for n in ls]), True),
             "activeLayer": (text, True),
             "entities": (lambda es: array([entity(e, u, i) for i, (e, u) in enumerate(zip(es, d["uids"]))]), True),
+            "blocks": (lambda bs: array([definition(b) for b in bs]), False),
             "styles": (lambda s: cmap(fields(s, {"items": (lambda xs: array([opaque(x) for x in xs]), True), "categories": (lambda xs: array([opaque(x) for x in xs]), True)}, "styles")), True),
             "projectId": (lambda u: blob(uid_bytes(u)), False),
             "migratedFrom": (
@@ -344,13 +368,16 @@ def document(d):
         },
         "belge",
     )
-    return root(cmap(body), version=uint(schema_of(d["entities"])))
+    assert d.get("blocks", [None]), "boş blok listesi yazılmaz"
+    return root(cmap(body), version=uint(schema_of(d["entities"], d.get("blocks"))))
 
 
-def schema_of(entities):
-    """The oldest schema that holds the objects: 5 with an area's parts (docs/adr/0143), 4 with a vertex elevation
-    (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without any stays as it
-    was, byte for byte."""
+def schema_of(entities, blocks=None):
+    """The oldest schema that holds the drawing: 6 with block definitions (docs/adr/0144), 5 with an area's parts
+    (docs/adr/0143), 4 with a vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139),
+    else 2: a drawing without any stays as it was, byte for byte."""
+    if blocks:
+        return 6
 
     def elevated(e):
         holes = e.get("holes", []) if e["kind"] == "polygon" else []
@@ -533,7 +560,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-6.kcad"] = container(root(cmap(parts), version=b"\x06"))
+    files["schema-version-7.kcad"] = container(root(cmap(parts), version=b"\x07"))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -580,6 +607,43 @@ def broken(minimal_content, minimal_file):
     files["parts-on-polyline.kcad"] = in_schema(5, path("polyline", 3, parts=array([cmap({"pts": square(5)})])))
     files["part-elevation-wrong-length.kcad"] = in_schema(5, path("polygon", 4, parts=array([cmap({"pts": square(5), "zs": elevations([1.0, 2.0])})])))
     files["part-without-points.kcad"] = in_schema(5, path("polygon", 4, parts=array([cmap({"bulges": array([f64(0.5)])})])))
+    # Blocks are schema 6's (docs/adr/0144): in schema 5 `blocks` is an unknown field and `insert` an unknown kind.
+    # A definition's objects have no persistent id; its name (Turkish case folded) and id are once in a drawing; an
+    # insert names a definition, its scale is positive, `mirror` is written only when true; no definition holds
+    # itself, and nesting is at most 16 levels; the lists the writer leaves out when empty are never empty.
+    def block_id(n):
+        return f"0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d{n:04x}"
+
+    def insert_of(n, **extra):
+        return cmap({"insert": cmap({**common, "block": blob(uid_bytes(block_id(n))), "p": point(one["p"]), "scale": f64(1.0), "rotation": f64(0.0), **extra})})
+
+    def content_insert(n, **extra):
+        return cmap({"insert": cmap({"attrs": cmap({}), "layerId": text("0"), "block": blob(uid_bytes(block_id(n))), "p": point({"x": 0.0, "y": 0.0}), "scale": f64(1.0), "rotation": f64(0.0), **extra})})
+
+    circle = cmap({"circle": cmap({"attrs": cmap({}), "layerId": text("0"), "c": point({"x": 0.0, "y": 0.0}), "r": f64(0.5)})})
+
+    def block(n, name, inside=None, **extra):
+        return cmap({"id": blob(uid_bytes(block_id(n))), "base": point({"x": 0.0, "y": 0.0}), "name": text(name), "entities": array(inside if inside is not None else [circle]), **extra})
+
+    def with_blocks(blocks, entities=None, version=6):
+        entries = {**parts, "blocks": array(blocks), "entities": array(entities if entities is not None else [insert_of(1)])}
+        return container(root(cmap(entries), version=uint(version)))
+
+    files["blocks-in-schema-5.kcad"] = with_blocks([block(1, "Rögar")], entities=[], version=5)
+    files["insert-in-schema-5.kcad"] = in_schema(5, insert_of(1))
+    files["unknown-block.kcad"] = with_blocks([block(1, "Rögar")], entities=[insert_of(2)])
+    files["unknown-block-inside.kcad"] = with_blocks([block(1, "Rögar", [content_insert(3)])])
+    files["duplicate-block-name.kcad"] = with_blocks([block(1, "Direk"), block(2, "DİREK")])
+    files["duplicate-block-id.kcad"] = with_blocks([block(1, "Direk"), block(1, "Lamba")])
+    files["blank-block-name.kcad"] = with_blocks([block(1, " \u3000")])
+    files["block-cycle.kcad"] = with_blocks([block(1, "A", [content_insert(2)]), block(2, "B", [circle, content_insert(1)])])
+    files["block-too-deep.kcad"] = with_blocks([block(n, f"K{n}", [content_insert(n + 1)] if n < 17 else None) for n in range(1, 18)])
+    files["block-object-uid.kcad"] = with_blocks([block(1, "Rögar", [cmap({"circle": cmap({"attrs": cmap({}), "layerId": text("0"), "uid": blob(uid_bytes(m["uids"][0])), "c": point({"x": 0.0, "y": 0.0}), "r": f64(0.5)})})])])
+    files["insert-scale-zero.kcad"] = with_blocks([block(1, "Rögar")], entities=[insert_of(1, scale=f64(0.0))])
+    files["insert-mirror-false.kcad"] = with_blocks([block(1, "Rögar")], entities=[insert_of(1, mirror=boolean(False))])
+    files["empty-blocks.kcad"] = with_blocks([], entities=[])
+    files["empty-attributes.kcad"] = with_blocks([block(1, "Rögar", attributes=array([]))])
+    files["duplicate-attribute-tag.kcad"] = with_blocks([block(1, "Rögar", attributes=array([cmap({"p": point({"x": 0.0, "y": 0.0}), "tag": text("NO"), "height": f64(0.5), "rotation": f64(0.0)})] * 2))])
     files["unknown-kind.kcad"] = container(with_parts({**parts, "entities": array([cmap({"block": cmap({**body, "uid": blob(uid_bytes(m["uids"][0]))})})])}))
     files["two-kinds.kcad"] = container(with_parts({**parts, "entities": array([cmap({"line": cmap({}), "point": cmap({**body, "uid": blob(uid_bytes(m["uids"][0]))})})])}))
     files["point-three-numbers.kcad"] = container(with_parts({**parts, "origin": array([f64(1.0), f64(2.0), f64(3.0)])}))
@@ -633,6 +697,7 @@ def build():
     out["line-weights.kcad"] = container(document(load("line-weights.json")))
     out["elevations.kcad"] = container(document(load("elevations.json")))
     out["parts.kcad"] = container(document(load("parts.json")))
+    out["blocks.kcad"] = container(document(load("blocks.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

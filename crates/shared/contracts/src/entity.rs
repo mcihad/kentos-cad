@@ -239,6 +239,86 @@ pub struct TextEntity {
     pub rotation: f64,
 }
 
+/// A block placed in the drawing (docs/adr/0144): its definition drawn
+/// moved from the definition's base point to `p`, mirrored in the
+/// definition's x axis when `mirror`, then scaled and turned about `p`. The
+/// transform is a similarity: shapes keep their kind. The insert's own
+/// attributes carry the values of the definition's attribute definitions.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct InsertEntity {
+    #[serde(flatten)]
+    #[cfg_attr(feature = "ts", ts(flatten))]
+    pub base: EntityBase,
+    /// The definition's id.
+    pub block: crate::identity::BlockId,
+    /// Where the definition's base point goes.
+    pub p: Vec2,
+    /// Positive and finite; 1 is the definition's size.
+    pub scale: f64,
+    /// Radians, counter-clockwise from east.
+    pub rotation: f64,
+    /// Mirrored in the definition's x axis, before the turn.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub mirror: bool,
+}
+
+/// A block definition (docs/adr/0144): objects drawn once, placed many
+/// times. Its objects' ids are local to it; their layer is kept, but an
+/// insert draws them on its own layer (the DXF's layer 0), each with its own
+/// colour or line weight when it has one.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BlockDefinition {
+    pub id: crate::identity::BlockId,
+    /// Unique in the drawing, Turkish case folded.
+    pub name: String,
+    /// The point placed at an insert's `p`, in the definition's coordinates.
+    pub base: Vec2,
+    pub entities: Vec<Entity>,
+    /// The texts an insert shows from its attributes (ATTDEF).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<AttributeDefinition>>", optional))]
+    pub attributes: Vec<AttributeDefinition>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub description: Option<String>,
+}
+
+/// One attribute an insert shows as text (docs/adr/0144 §7): the insert's
+/// attribute `tag`, else `value`, written at `p` in the definition's
+/// coordinates, moved with the insert.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AttributeDefinition {
+    pub tag: String,
+    /// What Blok ekle asks for it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub prompt: Option<String>,
+    /// The default value.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub value: Option<String>,
+    pub p: Vec2,
+    /// Metres, in the definition's size.
+    pub height: f64,
+    /// Degrees, counter-clockwise from east, as a text's.
+    pub rotation: f64,
+}
+
+/// The deepest nesting of blocks: a definition holding inserts of
+/// definitions holding inserts, and so on (docs/adr/0144).
+pub const MAX_BLOCK_DEPTH: usize = 16;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -339,6 +419,8 @@ pub enum Entity {
     Text(TextEntity),
     Dimension(DimensionEntity),
     Hatch(HatchEntity),
+    /// A block placed in the drawing (docs/adr/0144).
+    Insert(InsertEntity),
 }
 
 impl Entity {
@@ -348,7 +430,11 @@ impl Entity {
     pub fn draws_lines(&self) -> bool {
         !matches!(
             self,
-            Entity::Point(_) | Entity::Text(_) | Entity::Dimension(_) | Entity::Hatch(_)
+            Entity::Point(_)
+                | Entity::Text(_)
+                | Entity::Dimension(_)
+                | Entity::Hatch(_)
+                | Entity::Insert(_)
         )
     }
 
@@ -366,6 +452,7 @@ impl Entity {
             Entity::Text(e) => &e.base,
             Entity::Dimension(e) => &e.base,
             Entity::Hatch(e) => &e.base,
+            Entity::Insert(e) => &e.base,
         }
     }
 
@@ -384,6 +471,7 @@ impl Entity {
             Entity::Text(e) => &mut e.base,
             Entity::Dimension(e) => &mut e.base,
             Entity::Hatch(e) => &mut e.base,
+            Entity::Insert(e) => &mut e.base,
         }
     }
 
@@ -403,6 +491,7 @@ impl Entity {
             Entity::Text(_) => "text",
             Entity::Dimension(_) => "dimension",
             Entity::Hatch(_) => "hatch",
+            Entity::Insert(_) => "insert",
         }
     }
 }

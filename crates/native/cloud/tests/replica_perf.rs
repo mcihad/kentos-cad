@@ -119,6 +119,7 @@ fn opened(n: usize) -> Opened {
         entities: (0..n).map(|i| parcel(i, 0.0)).collect(),
         uids: (0..n).map(|i| EntityId(uid(i).into_bytes())).collect(),
         styles: ProjectStyles::default(),
+        blocks: Vec::new(),
         project_id: Some(kentos_contracts::ProjectId(project.into_bytes())),
         migrated_from: None,
     };

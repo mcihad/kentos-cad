@@ -113,7 +113,8 @@ fn path(out: &mut Vec<f64>, closed: bool, pts: &[Vec2]) {
 /// `clip`: the box construction lines are clipped to (none: not drawn).
 pub fn drawn(s: &Shape, oriented: bool, clip: Option<&Bounds>, out: &mut Vec<f64>) {
     match s {
-        Shape::Point { p, .. } => out.extend([MARKER, p.x, p.y]),
+        // An insert shows its insertion point until the store expands its block (docs/adr/0144).
+        Shape::Point { p, .. } | Shape::Insert { p, .. } => out.extend([MARKER, p.x, p.y]),
         Shape::Text { .. } => out.push(NONE),
         Shape::Dimension { .. } => match dimension_geom(s).and_then(|d| layout_dimension(&d)) {
             Some(l) => {

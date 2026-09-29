@@ -1,15 +1,16 @@
 //! The objects written in document schema 2, 3 when one has its own line
-//! weight, 4 when one has vertex elevations, or 5 when an area has parts
-//! (docs/specs/kcad-v2.md §6.6, docs/adr/0139, docs/adr/0142, docs/adr/0143):
-//! each a one-key map, its kind and then its fields, whose keys are sorted per
-//! object (they depend on the kind); every object with its persistent id,
-//! unique and not nil.
+//! weight, 4 when one has vertex elevations, 5 when an area has parts, or 6
+//! with blocks (docs/specs/kcad-v2.md §6.6, docs/adr/0139, docs/adr/0142,
+//! docs/adr/0143, docs/adr/0144): each a one-key map, its kind and then its
+//! fields, whose keys are sorted per object (they depend on the kind); every
+//! object of the drawing with its persistent id, unique and not nil, a block
+//! definition's objects without one.
 
 use std::collections::{BTreeMap, HashSet};
 
 use kentos_contracts::{
-    AreaPart, DocumentSnapshotV2, Entity, EntityId, HatchPattern, MAX_LINE_WEIGHT, RingGeometry,
-    Vec2,
+    AreaPart, BlockId, DocumentSnapshotV2, Entity, EntityId, HatchPattern, MAX_LINE_WEIGHT,
+    RingGeometry, Vec2,
 };
 
 use super::Encoder;
@@ -19,12 +20,13 @@ use crate::error::{Code, KcadError};
 use crate::watch::{EVERY, Step};
 
 /// One field of an object, before the fields are sorted by key.
-enum Val<'d> {
+pub(super) enum Val<'d> {
     Text(&'d str),
     Name(&'static str),
     Float(f64),
     Bool(bool),
     Uid(&'d EntityId),
+    Block(&'d BlockId),
     Point(&'d Vec2),
     Points(&'d [Vec2]),
     Floats(&'d [f64]),
@@ -57,7 +59,7 @@ impl<'d> Encoder<'d> {
                     &format!("kalıcı kimlik {uid} iki nesnede var"),
                 ));
             }
-            self.object(entity, uid, &mut fields)?;
+            self.object(entity, Some(uid), &mut fields)?;
             self.path.pop();
         }
         self.close();
@@ -68,17 +70,21 @@ impl<'d> Encoder<'d> {
     // baseline code until the function is called again (no on-stack replacement), so the
     // work of each object must be a function called once per object, not inlined into the
     // one loop that runs once for the whole drawing (docs/adr/0030).
+    //
+    // `uid` is `None` for a block definition's object (docs/adr/0144).
     #[inline(never)]
-    fn object(
+    pub(super) fn object(
         &mut self,
         entity: &'d Entity,
-        uid: &'d EntityId,
+        uid: Option<&'d EntityId>,
         f: &mut Vec<(&'static str, Val<'d>)>,
     ) -> Result<(), KcadError> {
         let kind = entity.kind();
         let base = entity.base();
         f.clear();
-        f.push(("uid", Val::Uid(uid)));
+        if let Some(uid) = uid {
+            f.push(("uid", Val::Uid(uid)));
+        }
         f.push(("attrs", Val::Attrs(&base.attrs)));
         f.push(("layerId", Val::Text(&base.layer_id)));
         if let Some(c) = &base.color {
@@ -203,6 +209,16 @@ impl<'d> Encoder<'d> {
                 }
                 f.push(("pattern", Val::Pattern(&e.pattern)));
             }
+            // The scale was checked with the block rules (`body`).
+            Entity::Insert(e) => {
+                f.push(("block", Val::Block(&e.block)));
+                f.push(("p", Val::Point(&e.p)));
+                f.push(("scale", Val::Float(e.scale)));
+                f.push(("rotation", Val::Float(e.rotation)));
+                if e.mirror {
+                    f.push(("mirror", Val::Bool(true)));
+                }
+            }
         }
         f.sort_by(|a, b| key_order(a.0, b.0));
         self.open(1, true)?;
@@ -286,6 +302,7 @@ impl<'d> Encoder<'d> {
                 Ok(())
             }
             Val::Uid(id) => self.id(&id.0),
+            Val::Block(id) => self.id(&id.0),
             Val::Point(p) => self.point(p),
             Val::Points(list) => self.points(list),
             Val::Floats(list) => self.floats(list),

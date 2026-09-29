@@ -169,6 +169,13 @@ pub fn shape(entity: &Entity) -> Shape {
                 spacing: h.pattern.spacing,
             },
         },
+        Entity::Insert(i) => Shape::Insert {
+            block: i.block.to_text(),
+            p: v(&i.p),
+            scale: i.scale,
+            rotation: i.rotation,
+            mirror: i.mirror.then_some(true),
+        },
     }
 }
 
@@ -290,6 +297,22 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
         (Entity::Circle(e), Shape::Circle { c, r }) => {
             e.c = p(c);
             e.r = r;
+        }
+        // A transform keeps the block and composes the rest (docs/adr/0144 §3).
+        (
+            Entity::Insert(e),
+            Shape::Insert {
+                p: at,
+                scale,
+                rotation,
+                mirror,
+                ..
+            },
+        ) => {
+            e.p = p(at);
+            e.scale = scale;
+            e.rotation = rotation;
+            e.mirror = mirror.unwrap_or(false);
         }
         (Entity::Arc(e), Shape::Arc { c, r, a0, a1 }) => {
             e.c = p(c);
@@ -609,6 +632,8 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
                 spacing: pattern.spacing,
             },
         },
+        // `cad.entities.edit` writes no insert (docs/adr/0144 §4).
+        Shape::Insert { .. } => return None,
     })
 }
 

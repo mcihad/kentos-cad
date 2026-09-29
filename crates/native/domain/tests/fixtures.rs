@@ -11,7 +11,9 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use kentos_domain::contracts::{DocumentSnapshotV1, Entity, LayerNodeType, LayerStyle};
+use kentos_domain::contracts::{
+    BlockDefinition, BlockId, DocumentSnapshotV1, Entity, LayerNodeType, LayerStyle,
+};
 use kentos_domain::{Document, Group, NewLayer, Slot, Uuid, default_style};
 use serde_json::{Map, Value, json};
 
@@ -388,6 +390,20 @@ fn apply(doc: &mut Document, state: &mut State, step: &Value, at: &str) -> Outco
             }
         }
         "uniqueLayerName" => json!(doc.layers().unique_name(text(step, "base", at)?)),
+        // Block definitions (docs/adr/0144); a refusal is caught as a fixture's own `throw` is.
+        "addBlock" => match doc.add_block(block_of(step, at)?) {
+            Ok(()) => Value::Null,
+            Err(refusal) => return Err(Stop::Thrown(refusal.0)),
+        },
+        "updateBlock" => match doc.update_block(block_of(step, at)?) {
+            Ok(changed) => json!(changed),
+            Err(refusal) => return Err(Stop::Thrown(refusal.0)),
+        },
+        "removeBlock" => match doc.remove_block(block_id(step, at)?) {
+            Ok(removed) => json!(removed),
+            Err(refusal) => return Err(Stop::Thrown(refusal.0)),
+        },
+        "blockRemovalRefused" => json!(doc.block_removal_refused(block_id(step, at)?)),
         "setName" => {
             doc.set_name(text(step, "name", at)?);
             Value::Null
@@ -402,6 +418,18 @@ fn apply(doc: &mut Document, state: &mut State, step: &Value, at: &str) -> Outco
         }
         other => return fail(format!("{at}: bilinmeyen işlem “{other}”")),
     })
+}
+
+fn block_of(step: &Value, at: &str) -> Outcome<BlockDefinition> {
+    serde_json::from_value(step.get("block").cloned().unwrap_or(Value::Null))
+        .or_else(|e| fail(format!("{at}: blok okunamadı: {e}")))
+}
+
+fn block_id(step: &Value, at: &str) -> Outcome<BlockId> {
+    match BlockId::parse(text(step, "id", at)?) {
+        Some(id) => Ok(id),
+        None => fail(format!("{at}: blok kimliği değil")),
+    }
 }
 
 fn check(
@@ -516,6 +544,30 @@ fn check(
                             }
                         };
                         expect_same(&got, value, &format!("“{id}” katmanı › {field}"), at)?;
+                    }
+                }
+            }
+            "blocks" => {
+                let names: Vec<&str> = doc.blocks().iter().map(|b| b.name.as_str()).collect();
+                expect_same(&json!(names), want, "bloklar", at)?;
+            }
+            "blockFields" => {
+                for (id, fields) in want.as_object().unwrap_or(&empty) {
+                    let Some(block) = BlockId::parse(id).and_then(|id| doc.block(id)) else {
+                        return fail(format!("{at}: {id} bloğu yok"));
+                    };
+                    for (field, value) in fields.as_object().unwrap_or(&empty) {
+                        let got = match field.as_str() {
+                            "name" => json!(block.name),
+                            "base" => json!(block.base),
+                            "description" => json!(block.description),
+                            "entities" => json!(block.entities.len()),
+                            "attributes" => json!(block.attributes.len()),
+                            other => {
+                                return fail(format!("{at}: bilinmeyen blok alanı “{other}”"));
+                            }
+                        };
+                        expect_same(&got, value, &format!("{id} bloğu › {field}"), at)?;
                     }
                 }
             }

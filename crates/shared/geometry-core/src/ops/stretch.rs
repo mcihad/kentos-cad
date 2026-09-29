@@ -41,6 +41,20 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
             a: mv(*a),
             b: mv(*b),
         })?,
+        // A block moves whole when its insertion point is in the window (docs/adr/0144).
+        Shape::Insert {
+            block,
+            p,
+            scale,
+            rotation,
+            mirror,
+        } => inside(*p, r).then(|| Shape::Insert {
+            block: block.clone(),
+            p: mv(*p),
+            scale: *scale,
+            rotation: *rotation,
+            mirror: *mirror,
+        })?,
         // Arc segments keep their bulge, so they bend with their moved ends.
         Shape::Polyline { pts, bulges, holes } => any(pts).then(|| Shape::Polyline {
             pts: pts.iter().map(|&p| mv(p)).collect(),

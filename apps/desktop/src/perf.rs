@@ -125,6 +125,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
         entities,
         uids,
         styles: ProjectStyles::default(),
+        blocks: Vec::new(),
         project_id: None,
         migrated_from: None,
     }

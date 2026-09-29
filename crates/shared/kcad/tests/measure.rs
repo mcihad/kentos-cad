@@ -101,6 +101,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
         entities,
         uids,
         styles: ProjectStyles::default(),
+        blocks: Vec::new(),
         project_id: None,
         migrated_from: None,
     }
@@ -136,6 +137,7 @@ fn a_large_drawing() {
         active_layer: doc.active_layer.clone(),
         entities: doc.entities.clone(),
         styles: doc.styles.clone(),
+        blocks: Vec::new(),
     };
     let t = Instant::now();
     let json = serde_json::to_vec(&v1).expect("v1 JSON");

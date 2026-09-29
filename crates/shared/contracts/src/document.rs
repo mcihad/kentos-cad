@@ -144,6 +144,13 @@ pub struct DocumentSnapshotV1 {
     pub active_layer: String,
     pub entities: Vec<Entity>,
     pub styles: ProjectStyles,
+    /// Block definitions (docs/adr/0144); none in a drawing without blocks.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::entity::BlockDefinition>>", optional)
+    )]
+    pub blocks: Vec<crate::entity::BlockDefinition>,
 }
 
 /// Where a drawing kept as v2 was migrated from: the v1 file it was opened
@@ -207,6 +214,13 @@ pub struct DocumentSnapshotV2 {
     /// Each object's persistent id, in the order of `entities`.
     pub uids: Vec<EntityId>,
     pub styles: ProjectStyles,
+    /// Block definitions (docs/adr/0144); none in a drawing without blocks.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::entity::BlockDefinition>>", optional)
+    )]
+    pub blocks: Vec<crate::entity::BlockDefinition>,
     /// The project's persistent id, when it has one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

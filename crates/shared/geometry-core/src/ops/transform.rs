@@ -252,6 +252,32 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
                 pattern,
             }
         }
+        // A block's similarity composed with `m` (docs/adr/0144 §3): the
+        // insertion point moves, the scale takes the length scale, the turn
+        // adds `m`'s; a reflection flips `mirror` and runs the turn backwards
+        // (R(θ)·M·R(ρ) = R(θ − ρ)·M).
+        Shape::Insert {
+            block,
+            p,
+            scale,
+            rotation,
+            mirror,
+        } => {
+            let theta = atan2(m[1], m[0]);
+            let flip = is_reflection(m);
+            let mirrored = mirror.unwrap_or(false) != flip;
+            Shape::Insert {
+                block: block.clone(),
+                p: apply(m, *p),
+                scale: scale * s,
+                rotation: norm_angle(if flip {
+                    theta - rotation
+                } else {
+                    theta + rotation
+                }),
+                mirror: mirrored.then_some(true),
+            }
+        }
         Shape::Text {
             p,
             text,
@@ -335,5 +361,74 @@ mod tests {
             }
         }
         assert!(transform_entities(&list, &[]).is_empty());
+    }
+
+    /// A block's similarity composed by hand (docs/adr/0144 §3): the
+    /// insertion point moves with the transform, the scale takes its length
+    /// scale, the turn adds its own; a reflection flips `mirror` and turns
+    /// the other way (R(θ)·M·R(ρ) = R(θ − ρ)·M).
+    #[test]
+    fn an_insert_composes_its_similarity() {
+        use crate::geom::affine::{mirror, scaling};
+        use std::f64::consts::{FRAC_PI_2, PI, TAU};
+        let block = entity(
+            r#"{"id":1,"layerId":"a","attrs":{},"kind":"insert","block":"0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001","p":{"x":3,"y":4},"scale":2,"rotation":0.25}"#,
+        );
+        let parts = |e: &Entity| match &e.shape {
+            Shape::Insert {
+                block,
+                p,
+                scale,
+                rotation,
+                mirror,
+            } => (block.clone(), *p, *scale, *rotation, *mirror),
+            other => panic!("{other:?}"),
+        };
+        let near = |a: f64, b: f64| (a - b).abs() < 1e-12;
+        let moved = parts(&transform_entity(&block, &translation(10.0, -5.0)));
+        assert_eq!(moved.1, Vec2::new(13.0, -1.0));
+        assert_eq!((moved.2, moved.3, moved.4), (2.0, 0.25, None));
+        assert_eq!(moved.0, "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001");
+        let turned = parts(&transform_entity(
+            &block,
+            &rotation(FRAC_PI_2, Vec2::new(0.0, 0.0)),
+        ));
+        assert!(
+            near(turned.1.x, -4.0) && near(turned.1.y, 3.0),
+            "{:?}",
+            turned.1
+        );
+        assert!(near(turned.3, 0.25 + FRAC_PI_2) && turned.2 == 2.0 && turned.4.is_none());
+        let scaled = parts(&transform_entity(
+            &block,
+            &scaling(2.0, Vec2::new(0.0, 0.0)),
+        ));
+        assert_eq!(
+            (scaled.1, scaled.2, scaled.3),
+            (Vec2::new(6.0, 8.0), 4.0, 0.25)
+        );
+        // Mirrored in the x axis: the turn runs backwards, into [0, 2π).
+        let x_axis = mirror(Vec2::new(0.0, 0.0), Vec2::new(1.0, 0.0));
+        let once = transform_entity(&block, &x_axis);
+        let flipped = parts(&once);
+        assert_eq!((flipped.1, flipped.4), (Vec2::new(3.0, -4.0), Some(true)));
+        assert!(near(flipped.3, TAU - 0.25), "{}", flipped.3);
+        // Twice is the block as it was, not mirrored.
+        let back = parts(&transform_entity(&once, &x_axis));
+        assert_eq!((back.1, back.4), (Vec2::new(3.0, 4.0), None));
+        assert!(near(back.3, 0.25), "{}", back.3);
+        // In the y axis: a half turn after the x axis's mirror.
+        let y_axis = mirror(Vec2::new(0.0, 0.0), Vec2::new(0.0, 1.0));
+        let other = parts(&transform_entity(&block, &y_axis));
+        assert_eq!((other.1, other.4), (Vec2::new(-3.0, 4.0), Some(true)));
+        assert!(near(other.3, PI - 0.25), "{}", other.3);
+        // The JSON keeps `mirror` only when true.
+        let json = |e: &Entity| {
+            let mut out = String::new();
+            crate::api::json::ToJson::write_json(e, &mut out);
+            out
+        };
+        assert!(json(&once).contains(r#""mirror":true"#), "{}", json(&once));
+        assert!(!json(&block).contains("mirror"), "{}", json(&block));
     }
 }

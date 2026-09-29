@@ -28,6 +28,7 @@
 //!   in v1 and become typed when the style core moves to Rust.
 
 pub mod api;
+pub mod blocks;
 pub mod cad;
 pub mod cad_array;
 pub mod cad_create;

@@ -2,7 +2,7 @@ import { op } from '../wasm/core';
 import type { Bounds, Vec2 } from './geometry';
 import type { DimensionStyle } from './geom/dimension';
 
-export type EntityKind = 'point' | 'line' | 'polyline' | 'polygon' | 'circle' | 'arc' | 'ellipse' | 'spline' | 'xline' | 'ray' | 'text' | 'dimension' | 'hatch';
+export type EntityKind = 'point' | 'line' | 'polyline' | 'polygon' | 'circle' | 'arc' | 'ellipse' | 'spline' | 'xline' | 'ray' | 'text' | 'dimension' | 'hatch' | 'insert';
 
 /**
  * Half-length (1000 km) used when an infinite line meets finite geometry on
@@ -184,6 +184,26 @@ export interface TextEntity extends EntityBase {
   /** Degrees, counter-clockwise from east. */
   rotation: number;
 }
+/**
+ * A block placed in the drawing (docs/adr/0144): its definition (`block`,
+ * model/blocks.ts) moved from its base point to `p`, mirrored in its x axis
+ * when `mirror`, scaled and turned about `p`: a similarity, so shapes keep
+ * their kind. Its attributes carry the values of the definition's attribute
+ * definitions.
+ */
+export interface InsertEntity extends EntityBase {
+  kind: 'insert';
+  /** The definition's persistent id (UUID). */
+  block: string;
+  /** Where the definition's base point goes. */
+  p: Vec2;
+  /** Positive; 1 is the definition's size. */
+  scale: number;
+  /** Radians, counter-clockwise from east (as an arc's angles, not a text's degrees). */
+  rotation: number;
+  /** Mirrored in the definition's x axis, before the turn; absent when not (a file never holds false). */
+  mirror?: boolean;
+}
 
 export type Entity =
   | PointEntity
@@ -196,7 +216,8 @@ export type Entity =
   | SplineEntity
   | TextEntity
   | DimensionEntity
-  | HatchEntity;
+  | HatchEntity
+  | InsertEntity;
 
 /** An object of a drawing, as `CadDocument` gives it out: always with its persistent id. */
 export type DrawingEntity = Entity & { uid: string };
@@ -218,6 +239,7 @@ export const ENTITY_KIND_LABEL: Record<EntityKind, string> = {
   text: 'Yazı',
   dimension: 'Ölçü',
   hatch: 'Tarama',
+  insert: 'Blok',
 };
 
 export const HATCH_PATTERN_LABEL: Record<HatchPatternType, string> = {
@@ -282,11 +304,11 @@ export type EntityGeometry = DistributiveOmit<Entity, 'id' | 'uid' | 'layerId' |
 
 /**
  * Whether an object is drawn with lines, so its own line weight shows and a
- * new one takes the current weight: not a point, a text, a dimension or a
- * hatch (docs/adr/0139; the desktop's `Entity::draws_lines`).
+ * new one takes the current weight: not a point, a text, a dimension, a
+ * hatch or a block (docs/adr/0139; the desktop's `Entity::draws_lines`).
  */
 export function drawsLines(e: { kind: Entity['kind'] }): boolean {
-  return e.kind !== 'point' && e.kind !== 'text' && e.kind !== 'dimension' && e.kind !== 'hatch';
+  return e.kind !== 'point' && e.kind !== 'text' && e.kind !== 'dimension' && e.kind !== 'hatch' && e.kind !== 'insert';
 }
 
 /** Geometry-only view of an entity (drops ids, layer, colour, attributes, label, symbol and line weight). */

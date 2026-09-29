@@ -116,19 +116,7 @@ fn positive(what: &str, v: f64) -> Result<(), String> {
 /// Rules the contract's types cannot say: point counts, positive sizes, text lengths.
 fn validate(e: &Entity) -> Result<(), String> {
     use Entity::*;
-    let base = match e {
-        Point(x) => &x.base,
-        Line(x) => &x.base,
-        Polyline(x) | Polygon(x) => &x.base,
-        Circle(x) => &x.base,
-        Arc(x) => &x.base,
-        Ellipse(x) => &x.base,
-        Spline(x) => &x.base,
-        Xline(x) | Ray(x) => &x.base,
-        Text(x) => &x.base,
-        Dimension(x) => &x.base,
-        Hatch(x) => &x.base,
-    };
+    let base = e.base();
     if base.layer_id.is_empty() || base.layer_id.len() > 200 {
         return Err("katman kimliği boş ya da çok uzun".into());
     }
@@ -209,6 +197,13 @@ fn validate(e: &Entity) -> Result<(), String> {
                 check_len("Tarama adası", h.len(), 3)?;
             }
             positive("Tarama aralığı", x.pattern.spacing)?;
+        }
+        // Its definition would have to be the project's (docs/adr/0144 §5): a later step.
+        Insert(_) => {
+            return Err(
+                "Blok yerleştirmesi veritabanı projesinde henüz saklanamıyor; bloğu patlatın ya da dosya projesi kullanın"
+                    .into(),
+            );
         }
         Point(_) | Line(_) => {}
     }
@@ -304,6 +299,8 @@ fn projection(e: &Entity) -> Option<Geometry> {
             rings.extend(x.holes.iter().flatten().map(|h| pts(h)));
             Geometry::Polygon(rings)
         }
+        // Refused before (`validate`); its expansion's collection comes with blocks' server step.
+        Entity::Insert(_) => return None,
     })
 }
 

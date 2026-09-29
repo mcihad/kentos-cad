@@ -4,14 +4,18 @@
 //! neither calls the other. The web keeps its TypeScript document.
 //!
 //! What a `.kcad` file holds lives here: settings, the layer tree, the objects
-//! with their persistent ids, the project's styles, and the project's id and
-//! migration source when it has them (docs/specs/kcad-v2.md). The edits are
-//! in `edit.rs`, transactions and the undo history in `history.rs`, reading
-//! and writing snapshots in `snapshot.rs`.
+//! with their persistent ids, the block definitions, the project's styles, and
+//! the project's id and migration source when it has them
+//! (docs/specs/kcad-v2.md). The edits are in `edit.rs` and `blocks.rs`,
+//! transactions and the undo history in `history.rs`, reading and writing
+//! snapshots in `snapshot.rs`.
 
 use std::ops::Range;
+use std::sync::Arc;
 
-use kentos_contracts::{Bounds, Entity, MigrationSource, ProjectSettings, ProjectStyles, Vec2};
+use kentos_contracts::{
+    BlockDefinition, Bounds, Entity, MigrationSource, ProjectSettings, ProjectStyles, Vec2,
+};
 
 use crate::history::History;
 use crate::identity::{Slot, Uuid};
@@ -29,6 +33,9 @@ pub struct Document {
     pub(crate) origin: Vec2,
     pub(crate) home_view: Option<Bounds>,
     pub(crate) styles: ProjectStyles,
+    /// The block definitions (docs/adr/0144, blocks.rs), each shared: a reader
+    /// that follows them keeps the list and compares its entries by pointer.
+    pub(crate) blocks: Vec<Arc<BlockDefinition>>,
     /// The project's persistent id, when it has one: derived from a v1 file,
     /// or read from a v2 file (docs/adr/0014). Not an edit; a v2 file keeps it.
     pub(crate) project_id: Option<Uuid>,
@@ -153,6 +160,7 @@ impl Document {
             origin: self.origin,
             home_view: self.home_view,
             styles: self.styles.clone(),
+            blocks: self.blocks.clone(),
             project_id: self.project_id,
             migrated_from: self.migrated_from.clone(),
             layers: self.layers.clone(),

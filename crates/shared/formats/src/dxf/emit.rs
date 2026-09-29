@@ -188,28 +188,12 @@ fn same_angle(a: f64, b: f64) -> bool {
     d < 1e-9 || TAU - d < 1e-9
 }
 
-fn base_mut(e: &mut Entity) -> &mut EntityBase {
-    match e {
-        Entity::Point(x) => &mut x.base,
-        Entity::Line(x) => &mut x.base,
-        Entity::Polyline(x) | Entity::Polygon(x) => &mut x.base,
-        Entity::Circle(x) => &mut x.base,
-        Entity::Arc(x) => &mut x.base,
-        Entity::Ellipse(x) => &mut x.base,
-        Entity::Spline(x) => &mut x.base,
-        Entity::Xline(x) | Entity::Ray(x) => &mut x.base,
-        Entity::Text(x) => &mut x.base,
-        Entity::Dimension(x) => &mut x.base,
-        Entity::Hatch(x) => &mut x.base,
-    }
-}
-
 /// What KentOS's extended data adds to the objects an entity became: the
 /// label, attributes and symbol, and the app's own name of a colour DXF
 /// holds as a number (only while the number is still what it names: a
 /// colour changed in another program wins).
 fn apply_meta(meta: &Meta, e: &mut Entity) {
-    let b = base_mut(e);
+    let b = e.base_mut();
     if meta.label.is_some() {
         b.label.clone_from(&meta.label);
     }
@@ -264,24 +248,6 @@ fn no_elevations(e: &mut Entity, vertices: &[usize]) {
     }
 }
 
-fn kind_name(e: &Entity) -> &'static str {
-    match e {
-        Entity::Point(_) => "point",
-        Entity::Line(_) => "line",
-        Entity::Polyline(_) => "polyline",
-        Entity::Polygon(_) => "polygon",
-        Entity::Circle(_) => "circle",
-        Entity::Arc(_) => "arc",
-        Entity::Ellipse(_) => "ellipse",
-        Entity::Spline(_) => "spline",
-        Entity::Xline(_) => "xline",
-        Entity::Ray(_) => "ray",
-        Entity::Text(_) => "text",
-        Entity::Dimension(_) => "dimension",
-        Entity::Hatch(_) => "hatch",
-    }
-}
-
 /// Points that tell where an object lies (for the extent shown before the import).
 fn anchor_points(e: &Entity) -> Vec<Vec2> {
     match e {
@@ -299,6 +265,7 @@ fn anchor_points(e: &Entity) -> Vec<Vec2> {
         Entity::Text(t) => vec![t.p],
         Entity::Dimension(d) => vec![d.a, d.b],
         Entity::Hatch(h) => h.ring.clone(),
+        Entity::Insert(i) => vec![i.p],
     }
 }
 
@@ -313,21 +280,9 @@ impl<'l> Emitter<'l> {
             self.out.truncated += 1;
             return;
         }
-        let layer = match &e {
-            Entity::Point(x) => &x.base.layer_id,
-            Entity::Line(x) => &x.base.layer_id,
-            Entity::Polyline(x) | Entity::Polygon(x) => &x.base.layer_id,
-            Entity::Circle(x) => &x.base.layer_id,
-            Entity::Arc(x) => &x.base.layer_id,
-            Entity::Ellipse(x) => &x.base.layer_id,
-            Entity::Spline(x) => &x.base.layer_id,
-            Entity::Xline(x) | Entity::Ray(x) => &x.base.layer_id,
-            Entity::Text(x) => &x.base.layer_id,
-            Entity::Dimension(x) => &x.base.layer_id,
-            Entity::Hatch(x) => &x.base.layer_id,
-        };
+        let layer = &e.base().layer_id;
         *self.out.per_layer.entry(layer.clone()).or_insert(0) += 1;
-        self.out.report.count(kind_name(&e));
+        self.out.report.count(e.kind());
         for p in anchor_points(&e) {
             self.out.extend_bounds(p);
         }

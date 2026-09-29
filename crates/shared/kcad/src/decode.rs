@@ -1,10 +1,12 @@
-//! Document schemas 2, 3 and 4 read from a payload (docs/specs/kcad-v2.md §6),
+//! Document schemas 2 to 6 read from a payload (docs/specs/kcad-v2.md §6),
 //! straight into the contract (`DocumentSnapshotV2`): item by item, no
 //! intermediate tree, so memory follows the drawing, not what a file claims.
 //! Every map is checked for its keys (unknown ones are refused, required ones
 //! must be there) and every value for its type; the objects get the slots
-//! 1, 2, 3 … in file order. The objects themselves are read in `objects.rs`.
+//! 1, 2, 3 … in file order. The objects themselves are read in `objects.rs`,
+//! the block definitions in `blocks.rs`.
 
+mod blocks;
 mod objects;
 
 use kentos_contracts::{
@@ -224,9 +226,11 @@ fn root(r: &mut Reader<'_>) -> Result<DocumentSnapshotV2, KcadError> {
 }
 
 /// The document; `schema` is its payload's (2, 3 with objects' line weights,
-/// or 4 with vertex elevations too).
+/// 4 with vertex elevations too, 5 with areas' parts, 6 with blocks).
 fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError> {
+    let has = Features::of(schema);
     let mut name = None;
+    let mut blocks: Option<blocks::Definitions> = None;
     let mut layers = None;
     let mut origin = None;
     let mut styles = None;
@@ -239,16 +243,22 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
     map(r, |r, key| {
         match key {
             "name" => name = Some(text(r)?),
+            "blocks" if has.blocks => blocks = Some(blocks::definitions(r, has)?),
             "layers" => layers = Some(list(r, |r, _| layer(r))?),
             "origin" => origin = Some(point(r)?),
             "styles" => styles = Some(project_styles(r)?),
-            // Name and layers come first in the encoded order: the project is known before its objects.
+            // Name, blocks and layers come first in the encoded order: the project and its
+            // blocks are known before its objects.
             "entities" => {
+                let none = Default::default();
+                let (list, index) = blocks.as_ref().map_or((&[][..], &none), |(l, i)| (&l[..], i));
                 entities = Some(objects(
                     r,
                     name.as_deref(),
                     layers.as_ref().map_or(0, Vec::len),
-                    Features::of(schema),
+                    has,
+                    list,
+                    index,
                 )?)
             }
             "homeView" => home_view = Some(bounds(r)?),
@@ -279,6 +289,7 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
         entities,
         uids,
         styles,
+        blocks: blocks.map(|(list, _)| list).unwrap_or_default(),
         project_id,
         migrated_from,
     })

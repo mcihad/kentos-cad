@@ -205,7 +205,9 @@ fn outline(e: &Shape, font: Font) -> Vec<Vec2> {
 /// holding a fence point), a point within `tol`.
 fn crosses(e: &Shape, fence: &[Vec2], segs: &[Edge], tol: f64, font: Font) -> bool {
     match e {
-        Shape::Point { p, .. } => segs.iter().any(|s| closest_on_edge(s, *p).d <= tol),
+        Shape::Point { p, .. } | Shape::Insert { p, .. } => {
+            segs.iter().any(|s| closest_on_edge(s, *p).d <= tol)
+        }
         Shape::Text {
             p,
             text,

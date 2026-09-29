@@ -41,7 +41,7 @@
 - **Anahtar adları v1 sözleşmesinin adlarıdır** (`layerId`, `pts`, `bulges` …); dosya kendini anlatır, Python okuyucusu ve spesifikasyon okunaklı kalır. Nokta `[x, y]`, sınırlar `[minX, minY, maxX, maxY]` dizisidir.
 - **Nesne tek anahtarlı haritadır:** `{"polygon": {…}}`. Tür önce okunur, alanlar türe göre denetlenir; ayrı `kind` anahtarı da gerekmez (nesne başına 4 bayt az). Tür sürümü ayrı yazılmaz; şema sürümü hepsini sürümler.
 - **Katı:** bilinmeyen alan, bilinmeyen tür, eksik zorunlu alan, yanlış tür ve aralık dışı değer açık hatadır (`DOM-06`). v1 okuyucusu bilmediğini sessizce atıyordu; v2 hiçbir şeyi sessizce atmaz.
-- **Belge kuralları** (katman başvurusu, bilinen SRID, köşe sayıları) dosya biçiminin değil çizimin kurallarıdır: uygulamaların okuyucuları v1'deki gibi denetler (spec §6.10). Kodek biçimi, tipleri ve kimlikleri denetler.
+- **Belge kuralları** (katman başvurusu, bilinen SRID, köşe sayıları) dosya biçiminin değil çizimin kurallarıdır: uygulamaların okuyucuları v1'deki gibi denetler (spec §6.11). Kodek biçimi, tipleri ve kimlikleri denetler.
 
 ### Kimlik (ADR 0014, dilim 4)
 

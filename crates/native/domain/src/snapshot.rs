@@ -11,8 +11,9 @@ use std::collections::HashSet;
 use std::sync::Arc;
 
 use kentos_contracts::{
-    DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2, DocumentSnapshotV1, DocumentSnapshotV2,
-    Entity, EntityId, LayerNode, LayerNodeType, MigrationSource, ProjectId, v1_uids,
+    BlockDefinition, DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2, DocumentSnapshotV1,
+    DocumentSnapshotV2, Entity, EntityId, LayerNode, LayerNodeType, MigrationSource, ProjectId,
+    v1_uids,
 };
 
 use crate::document::Document;
@@ -39,7 +40,7 @@ impl Document {
     /// layer, or an object's id is not a unique positive number or its layer
     /// is not a layer of the file (as the web's reader refuses them).
     pub fn from_snapshot(snapshot: DocumentSnapshotV1) -> Result<Self, String> {
-        check(&snapshot.layers, &snapshot.entities)?;
+        check(&snapshot.layers, &snapshot.entities, &snapshot.blocks)?;
         let ids = v1_uids(&snapshot)?;
         Ok(Self::build(Parts {
             uids: ids
@@ -58,7 +59,7 @@ impl Document {
     /// it, the project its id and source record. Refused like `from_snapshot`,
     /// and when the ids are not one per object, unique and not nil.
     pub fn from_snapshot_v2(snapshot: DocumentSnapshotV2) -> Result<Self, String> {
-        check(&snapshot.layers, &snapshot.entities)?;
+        check(&snapshot.layers, &snapshot.entities, &snapshot.blocks)?;
         if snapshot.uids.len() != snapshot.entities.len() {
             return Err(format!(
                 "Kalıcı kimlikler: {} nesne ama {} kimlik var",
@@ -86,6 +87,7 @@ impl Document {
             entities,
             uids,
             styles,
+            blocks,
             project_id,
             migrated_from,
             ..
@@ -102,6 +104,7 @@ impl Document {
                 active_layer,
                 entities,
                 styles,
+                blocks,
             },
             uids: uids.iter().map(|u| Uuid::from_bytes(u.0)).collect(),
             project_id: project_id.map(|p| Uuid::from_bytes(p.0)),
@@ -119,6 +122,7 @@ impl Document {
             active_layer,
             entities,
             styles,
+            blocks,
             ..
         } = parts.snapshot;
         let largest = entities.iter().map(|e| e.base().id).max().unwrap_or(0);
@@ -135,6 +139,7 @@ impl Document {
             origin,
             home_view,
             styles,
+            blocks: blocks.into_iter().map(Arc::new).collect(),
             project_id: parts.project_id,
             migrated_from: parts.migrated_from,
             layers: LayerTree::new(layers, &active_layer),
@@ -161,6 +166,7 @@ impl Document {
             active_layer: self.layers.active().to_owned(),
             entities: self.entities().cloned().collect(),
             styles: self.styles.clone(),
+            blocks: self.block_list(),
         }
     }
 
@@ -185,15 +191,35 @@ impl Document {
             entities,
             uids,
             styles: self.styles.clone(),
+            blocks: self.block_list(),
             project_id: self.project_id.map(|p| ProjectId(p.into_bytes())),
             migrated_from: self.migrated_from.clone(),
         }
     }
 }
 
+impl Document {
+    /// Deep copies of the definitions, in order, for a snapshot.
+    fn block_list(&self) -> Vec<BlockDefinition> {
+        self.blocks.iter().map(|b| (**b).clone()).collect()
+    }
+}
+
 /// What the document itself needs of a file; field by field validation of the
-/// objects is the reader's (web: `model/snapshot.ts`; v2: `kentos-kcad`).
-fn check(layers: &[LayerNode], entities: &[Entity]) -> Result<(), String> {
+/// objects is the reader's (web: `model/snapshot.ts`; v2: `kentos-kcad`). The
+/// blocks keep their rules (docs/adr/0144); a definition's objects keep their
+/// own layers, which need not be in the tree (an insert draws them on its own).
+fn check(
+    layers: &[LayerNode],
+    entities: &[Entity],
+    blocks: &[BlockDefinition],
+) -> Result<(), String> {
+    kentos_contracts::blocks::check(blocks, entities).map_err(|fault| {
+        format!(
+            "Bloklar: {}",
+            fault.message(|i| blocks.get(i).map_or("", |b| b.name.as_str()))
+        )
+    })?;
     let mut leaves = HashSet::new();
     collect_leaves(layers, &mut leaves);
     if leaves.is_empty() {

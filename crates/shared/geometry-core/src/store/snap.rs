@@ -206,7 +206,9 @@ impl Store {
                     }
                     continue;
                 }
-                Shape::Point { p: q, .. } | Shape::Text { p: q, .. } => {
+                Shape::Point { p: q, .. }
+                | Shape::Text { p: q, .. }
+                | Shape::Insert { p: q, .. } => {
                     ch.consider(SnapKind::Node, *q, id);
                     continue;
                 }

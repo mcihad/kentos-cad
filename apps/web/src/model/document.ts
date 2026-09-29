@@ -2,6 +2,7 @@ import type { MigrationSource } from '../contracts/generated/MigrationSource';
 import { Emitter } from '../core/emitter';
 import { Signal } from '../core/signal';
 import { isUuid, uuidv7 } from '../core/uuid';
+import { blockFaultMessage, blockUses, definitionsFault, nameKey, type BlockDefinition } from './blocks';
 import { entityBounds, type DrawingEntity, type Entity, type NewEntity } from './entities';
 import type { CrsDef } from '../geo/crs';
 import { ProjectSettings, type ProjectSettingsData } from './projectSettings';
@@ -29,7 +30,14 @@ type Op =
    * while the active layer is still `before`, so undo and redo leave a layer
    * made active by hand in between as it is.
    */
-  | { type: 'layerActive'; before: string; after: string };
+  | { type: 'layerActive'; before: string; after: string }
+  /**
+   * A block definition added at `index` of the list (docs/adr/0144), and its
+   * inverse, which takes it out; a definition changed in place, by its id.
+   */
+  | { type: 'blockAdd'; index: number; block: BlockDefinition }
+  | { type: 'blockRemove'; index: number; block: BlockDefinition }
+  | { type: 'blockUpdate'; before: BlockDefinition; after: BlockDefinition };
 
 /** A layer tree node as a history step keeps it, and its place: the parent group (null: the top) and the index there. */
 interface LayerPlace {
@@ -44,6 +52,13 @@ const isLayerTreeOp = (o: Op): o is Extract<Op, { type: 'layerRemove' | 'layerAd
 /** Whether an op is about layers (their tree, style or the active one) rather than an object. */
 const isLayerOp = (o: Op): o is Extract<Op, { type: 'layerStyle' | 'layerRemove' | 'layerAdd' | 'layerActive' }> =>
   o.type === 'layerStyle' || o.type === 'layerActive' || isLayerTreeOp(o);
+
+/** Whether an op changes the block definitions. */
+const isBlockOp = (o: Op): o is Extract<Op, { type: 'blockAdd' | 'blockRemove' | 'blockUpdate' }> =>
+  o.type === 'blockAdd' || o.type === 'blockRemove' || o.type === 'blockUpdate';
+
+/** Whether an op adds, removes or changes an object. */
+const isObjectOp = (o: Op): o is Extract<Op, { type: 'add' | 'remove' | 'update' }> => o.type === 'add' || o.type === 'remove' || o.type === 'update';
 
 /** The ids of a node and of every node under it. */
 function nodeIds(node: LayerNode, out: string[] = []): string[] {
@@ -107,6 +122,8 @@ export interface DocumentContent {
   activeLayer: string;
   entities: readonly Entity[];
   styles: ProjectStyles;
+  /** Block definitions (docs/adr/0144); none when absent. */
+  blocks?: readonly BlockDefinition[];
   projectId?: string | null;
   migratedFrom?: MigrationSource | null;
 }
@@ -127,6 +144,12 @@ export class CadDocument {
   readonly layers: LayerStore;
   /** Symbols and assets that belong to this project (docs/STYLE.md §5), saved with the file. */
   readonly styles = new Signal<ProjectStyles>({ items: [], categories: [] });
+  /**
+   * The block definitions in the drawing's order (docs/adr/0144): undoable
+   * state, changed only by `addBlock`, `updateBlock`, `removeBlock` (and
+   * undo, redo, a rolled back transaction), each time as a new list.
+   */
+  readonly blocks = new Signal<readonly BlockDefinition[]>([]);
   /** Where the view opens (the project's start extent); all objects when unset. */
   homeView: Bounds | null = null;
   /**
@@ -499,6 +522,83 @@ export class CadDocument {
     return null;
   }
 
+  // ── Block definitions (docs/adr/0144; the desktop's domain/blocks.rs) ──
+
+  /** The definition with this id. */
+  block(id: string): BlockDefinition | undefined {
+    return this.blocks.value.find((b) => b.id === id);
+  }
+
+  /** The definition with this name, compared as names are (Turkish case folded). */
+  blockNamed(name: string): BlockDefinition | undefined {
+    const key = nameKey(name);
+    return this.blocks.value.find((b) => nameKey(b.name) === key);
+  }
+
+  /** How many inserts of the definition the drawing's own objects hold (not those inside other definitions). */
+  blockUses(id: string): number {
+    return blockUses(this.entities.values(), id);
+  }
+
+  /**
+   * Adds a definition after the others: one undo step “Blok tanımla” (into
+   * the open transaction or group, if one is). Refused with a `Refusal`,
+   * nothing changed, when it breaks a block rule (its name or id taken, an
+   * insert of an unknown block in it, a cycle, too deep). The drawing keeps
+   * its own copy.
+   */
+  addBlock(block: BlockDefinition): void {
+    const next = [...this.blocks.value, block];
+    this.refuseBlocks(next);
+    this.record({ type: 'blockAdd', index: this.blocks.value.length, block: structuredClone(block) }, 'Blok tanımla');
+  }
+
+  /**
+   * Replaces the definition with the same id, in its place: one undo step
+   * “Blok değiştir”; every insert of it shows the new one. False when no
+   * definition has the id or nothing changes; refused as `addBlock` is.
+   */
+  updateBlock(block: BlockDefinition): boolean {
+    const list = this.blocks.value;
+    const index = list.findIndex((b) => b.id === block.id);
+    if (index < 0 || sameJson(list[index], block)) return false;
+    const next = list.map((b, i) => (i === index ? block : b));
+    this.refuseBlocks(next);
+    this.record({ type: 'blockUpdate', before: list[index], after: structuredClone(block) }, 'Blok değiştir');
+    return true;
+  }
+
+  /**
+   * Removes a definition no insert uses: one undo step “Blok sil”; undo puts
+   * it back in its place. False when no definition has the id; refused with
+   * a `Refusal` as `blockRemovalRefused` says.
+   */
+  removeBlock(id: string): boolean {
+    const list = this.blocks.value;
+    const index = list.findIndex((b) => b.id === id);
+    if (index < 0) return false;
+    const refused = this.blockRemovalRefused(id);
+    if (refused) throw new Refusal(refused);
+    this.record({ type: 'blockRemove', index, block: list[index] }, 'Blok sil');
+    return true;
+  }
+
+  /** Why `removeBlock(id)` would refuse, or null: an insert of the definition in the drawing, or in another definition. */
+  blockRemovalRefused(id: string): string | null {
+    const block = this.block(id);
+    if (!block) return null;
+    const placed = this.blockUses(id);
+    if (placed > 0) return `“${block.name}” bloğu çizimde ${placed} kez yerleştirilmiş; silinemez. Önce yerleştirmelerini silin.`;
+    const holder = this.blocks.value.find((b) => b.id !== id && blockUses(b.entities, id) > 0);
+    return holder ? `“${block.name}” bloğu “${holder.name}” bloğunun içinde kullanılıyor; silinemez.` : null;
+  }
+
+  /** Throws the refusal a list of definitions earns, in the documents' words. */
+  private refuseBlocks(list: readonly BlockDefinition[]): void {
+    const fault = definitionsFault(list);
+    if (fault) throw new Refusal(blockFaultMessage(fault, (i) => list[i]?.name ?? ''));
+  }
+
   /** Changes an object; it keeps its slot and persistent id, whatever the patch holds. */
   update(id: number, patch: Partial<Entity>): void {
     const op = updateOp(this.entities.get(id), patch);
@@ -590,6 +690,7 @@ export class CadDocument {
     this.settings.assign(data.settings);
     this.name.set(data.name);
     this.styles.set(data.styles);
+    this.blocks.set(data.blocks ?? []);
     this.undoStack = [];
     this.redoStack = [];
     this.syncHistory();
@@ -664,7 +765,7 @@ export class CadDocument {
     const slots = new Set<number>();
     const uids = new Set<string>();
     for (const o of ops) {
-      if (isLayerOp(o)) continue;
+      if (!isObjectOp(o)) continue;
       const e = o.type === 'update' ? o.after : o.entity;
       slots.add(e.id);
       uids.add(e.uid);
@@ -697,7 +798,7 @@ export class CadDocument {
   forgetHistoryOf(ids: ReadonlySet<number>, uids: ReadonlySet<string> = new Set()): void {
     if (!ids.size && !uids.size) return;
     const hit = (e: DrawingEntity) => ids.has(e.id) || uids.has(e.uid);
-    const touches = (tx: Transaction) => tx.ops.some((o) => (o.type === 'update' ? hit(o.before) : isLayerOp(o) ? false : hit(o.entity)));
+    const touches = (tx: Transaction) => tx.ops.some((o) => (o.type === 'update' ? hit(o.before) : isObjectOp(o) ? hit(o.entity) : false));
     this.undoStack = this.undoStack.filter((tx) => !touches(tx));
     this.redoStack = this.redoStack.filter((tx) => !touches(tx));
     this.syncHistory();
@@ -765,7 +866,16 @@ export class CadDocument {
     const touched: number[] = [];
     const uids: string[] = [];
     let layerStyles = false;
+    let blocks: readonly BlockDefinition[] | null = null;
     for (const op of ops) {
+      // Definitions are found by id; the list is replaced, never changed in place (`blocks` hears it once).
+      if (isBlockOp(op)) {
+        const list: readonly BlockDefinition[] = blocks ?? this.blocks.value;
+        if (op.type === 'blockAdd') blocks = [...list.slice(0, op.index), op.block, ...list.slice(op.index)];
+        else if (op.type === 'blockRemove') blocks = list.filter((b) => b.id !== op.block.id);
+        else blocks = list.map((b) => (b.id === op.after.id ? op.after : b));
+        continue;
+      }
       if (isLayerOp(op)) {
         this.applyingLayers = true;
         try {
@@ -802,6 +912,7 @@ export class CadDocument {
       }
     }
     if (this.unsorted) this.sortByPlace(layerIds);
+    if (blocks) this.blocks.set(blocks);
     if (layerIds.size) this.events.emit('changed', { layerIds });
     if (attrIds.length) this.events.emit('attrs', { ids: attrIds });
     if (touched.length || layerStyles) this.events.emit('touched', { ids: touched, uids, layerStyles, external: this.external });
@@ -884,6 +995,9 @@ function updateOp(before: DrawingEntity | undefined, patch: Partial<Entity>): Ex
 }
 
 function invert(op: Op): Op {
+  if (op.type === 'blockAdd') return { ...op, type: 'blockRemove' };
+  if (op.type === 'blockRemove') return { ...op, type: 'blockAdd' };
+  if (op.type === 'blockUpdate') return { ...op, before: op.after, after: op.before };
   if (op.type === 'layerStyle') return { ...op, before: op.after, after: op.before };
   if (op.type === 'layerActive') return { ...op, before: op.after, after: op.before };
   if (op.type === 'layerRemove') return { ...op, type: 'layerAdd' };

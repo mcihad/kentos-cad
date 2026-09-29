@@ -43,6 +43,14 @@ pub enum Code {
     BadValue,
     UnknownKind,
     DuplicateUid,
+    /// Two block definitions with one id or one name (docs/adr/0144).
+    DuplicateBlock,
+    /// An insert naming no definition of the drawing.
+    UnknownBlock,
+    /// A definition holding itself, directly or through others.
+    BlockCycle,
+    /// Definitions nested deeper than `MAX_BLOCK_DEPTH`.
+    BlockTooDeep,
     /// A writer's own check (§12): the bytes it made did not read back to the drawing.
     VerifyFailed,
     /// Not the file's fault: the user stopped the work (`watch`, docs/adr/0030).
@@ -92,6 +100,10 @@ impl Code {
             Code::BadValue => "bad_value",
             Code::UnknownKind => "unknown_kind",
             Code::DuplicateUid => "duplicate_uid",
+            Code::DuplicateBlock => "duplicate_block",
+            Code::UnknownBlock => "unknown_block",
+            Code::BlockCycle => "block_cycle",
+            Code::BlockTooDeep => "block_too_deep",
             Code::VerifyFailed => "verify_failed",
             Code::Cancelled => "cancelled",
             Code::BadColumns => "bad_columns",

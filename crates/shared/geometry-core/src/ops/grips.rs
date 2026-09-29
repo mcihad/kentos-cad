@@ -25,7 +25,8 @@ pub fn entity_grips(e: &Shape) -> Vec<Vec2> {
         return area_parts(e).iter().flat_map(entity_grips).collect();
     }
     match e {
-        Shape::Point { p, .. } | Shape::Text { p, .. } => vec![*p],
+        // An insert's one grip is its insertion point (docs/adr/0144 §3).
+        Shape::Point { p, .. } | Shape::Text { p, .. } | Shape::Insert { p, .. } => vec![*p],
         Shape::Line { a, b } => vec![*a, *b],
         Shape::Polyline { pts, bulges, .. } | Shape::Polygon { pts, bulges, .. } => {
             let polygon = matches!(e, Shape::Polygon { .. });
@@ -181,6 +182,19 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
     }
     let shape = match &e.shape {
         Shape::Point { z, .. } => Shape::Point { p, z: *z },
+        Shape::Insert {
+            block,
+            scale,
+            rotation,
+            mirror,
+            ..
+        } => Shape::Insert {
+            block: block.clone(),
+            p,
+            scale: *scale,
+            rotation: *rotation,
+            mirror: *mirror,
+        },
         Shape::Text {
             text,
             height,

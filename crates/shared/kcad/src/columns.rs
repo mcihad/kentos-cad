@@ -41,14 +41,19 @@
 //! | text | | p, height, rotation | text |
 //! | dimension | style if any | a, b, offset, height, angle if any, c if any | text if any |
 //! | hatch | n, pattern type; h if holes, then k per hole | ring (2n), pattern angle, spacing, per hole: pts (2k) | |
+//! | insert | | p, scale, rotation | block (its id as UUID text) |
 //!
 //! A point is two floats, x then y. Flags: 1 colour, 2 label, 4 symbol, 8
 //! line weight (docs/adr/0139); a
 //! kind's optional fields from bit 8 up, in the order the table names them
 //! (point: z; line: za, zb; polyline and polygon: bulges, holes, zs; polygon:
-//! parts; dimension: text, style, angle, c; hatch: holes). A hole's flags: 1
-//! bulges, 2 elevations; a part's: 1 bulges, 2 elevations, 4 holes. Dimension
-//! styles and hatch pattern types are numbered in the contract's order.
+//! parts; dimension: text, style, angle, c; hatch: holes; insert: mirror). A
+//! hole's flags: 1 bulges, 2 elevations; a part's: 1 bulges, 2 elevations, 4
+//! holes. Dimension styles and hatch pattern types are numbered in the
+//! contract's order.
+//!
+//! Block definitions (docs/adr/0144) are not objects of the drawing: they
+//! travel in the contract's JSON with the name, settings and layers.
 //!
 //! A multi-part area (docs/adr/0143) lays out its first part as every
 //! polygon does, then its other parts, each as a polygon without flags of its
@@ -68,15 +73,16 @@
 use std::collections::{BTreeMap, HashMap};
 
 use kentos_contracts::{
-    ArcEntity, AreaPart, CircleEntity, ConstructionEntity, DimensionEntity, DimensionStyle,
-    EllipseEntity, Entity, EntityBase, EntityId, HatchEntity, HatchPattern, HatchPatternType,
-    LineEntity, PathEntity, PointEntity, RingGeometry, SplineEntity, TextEntity, Vec2,
+    ArcEntity, AreaPart, BlockId, CircleEntity, ConstructionEntity, DimensionEntity,
+    DimensionStyle, EllipseEntity, Entity, EntityBase, EntityId, HatchEntity, HatchPattern,
+    HatchPatternType, InsertEntity, LineEntity, PathEntity, PointEntity, RingGeometry,
+    SplineEntity, TextEntity, Vec2,
 };
 
 use crate::error::{Code, KcadError};
 
 /// The kinds, numbered as `kinds` holds them.
-pub const KINDS: [&str; 13] = [
+pub const KINDS: [&str; 14] = [
     "point",
     "line",
     "polyline",
@@ -90,6 +96,7 @@ pub const KINDS: [&str; 13] = [
     "text",
     "dimension",
     "hatch",
+    "insert",
 ];
 
 const COLOR: u32 = 1;
@@ -163,6 +170,7 @@ fn kind_index(entity: &Entity) -> u8 {
         Entity::Text(_) => 10,
         Entity::Dimension(_) => 11,
         Entity::Hatch(_) => 12,
+        Entity::Insert(_) => 13,
     }
 }
 
@@ -471,6 +479,21 @@ impl Packer {
                     }
                 }
             }
+            Entity::Insert(InsertEntity {
+                base: _,
+                block,
+                p,
+                scale,
+                rotation,
+                mirror,
+            }) => {
+                self.point(p);
+                self.out.floats.extend([*scale, *rotation]);
+                self.text(&block.to_text());
+                if *mirror {
+                    flags |= OPT[0];
+                }
+            }
         }
         flags
     }
@@ -759,7 +782,7 @@ fn allowed(kind: u8) -> u32 {
         2 => OPT[0] | OPT[1] | OPT[2],
         3 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
         11 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
-        12 => OPT[0],
+        12 | 13 => OPT[0],
         _ => 0,
     }
 }
@@ -922,7 +945,7 @@ fn geometry(
                 c: corner,
             })
         }
-        _ => {
+        12 => {
             let ring = c.points()?;
             let v = c.usize()?;
             let kind = *HATCH_PATTERNS
@@ -947,6 +970,21 @@ fn geometry(
                     angle,
                     spacing,
                 },
+            })
+        }
+        _ => {
+            let p = c.point()?;
+            let (scale, rotation) = (c.float()?, c.float()?);
+            let text = c.text(|| place("block"))?;
+            let block =
+                BlockId::parse(&text).ok_or_else(|| broken(&format!("blok kimliği “{text}”")))?;
+            Entity::Insert(InsertEntity {
+                base,
+                block,
+                p,
+                scale,
+                rotation,
+                mirror: has(0),
             })
         }
     })

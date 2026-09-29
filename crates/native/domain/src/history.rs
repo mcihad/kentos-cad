@@ -11,13 +11,15 @@
 //! - the undo history keeps the last 200 steps; a new step clears redo.
 //!
 //! Only undoable data are ops: objects, layer styles, a layer's addition and
-//! removal (with the objects on it), and the active layer an addition set.
+//! removal (with the objects on it), the active layer an addition set, and
+//! the block definitions (docs/adr/0144).
 //! Layer visibility, lock, names and fold, and a layer made active by hand,
 //! are changed at once and never recorded (web).
 
 use std::collections::{HashSet, VecDeque};
+use std::sync::Arc;
 
-use kentos_contracts::{LayerNode, LayerStyle};
+use kentos_contracts::{BlockDefinition, LayerNode, LayerStyle};
 
 use crate::changes::Journal;
 use crate::document::Document;
@@ -68,6 +70,21 @@ pub(crate) enum Op {
         before: String,
         after: String,
     },
+    /// A block definition added at `index` of the list (blocks.rs), and its
+    /// inverse, which takes it out; shared, so a step keeps no copy.
+    BlockAdd {
+        index: usize,
+        block: Arc<BlockDefinition>,
+    },
+    BlockRemove {
+        index: usize,
+        block: Arc<BlockDefinition>,
+    },
+    /// The same definition (its id) before and after.
+    BlockUpdate {
+        before: Arc<BlockDefinition>,
+        after: Arc<BlockDefinition>,
+    },
 }
 
 /// A tree node as a step keeps it (children, flags, style), and where it
@@ -107,6 +124,18 @@ impl Op {
             Op::LayerRemove(place) => Op::LayerAdd(place.clone()),
             Op::LayerAdd(place) => Op::LayerRemove(place.clone()),
             Op::LayerActive { before, after } => Op::LayerActive {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::BlockAdd { index, block } => Op::BlockRemove {
+                index: *index,
+                block: block.clone(),
+            },
+            Op::BlockRemove { index, block } => Op::BlockAdd {
+                index: *index,
+                block: block.clone(),
+            },
+            Op::BlockUpdate { before, after } => Op::BlockUpdate {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -374,7 +403,10 @@ impl Document {
                 Op::LayerStyle { .. }
                 | Op::LayerRemove(_)
                 | Op::LayerAdd(_)
-                | Op::LayerActive { .. } => false,
+                | Op::LayerActive { .. }
+                | Op::BlockAdd { .. }
+                | Op::BlockRemove { .. }
+                | Op::BlockUpdate { .. } => false,
             })
         };
         self.history.undo.retain(|step| !touches(step));
@@ -466,6 +498,11 @@ impl Document {
                 if self.layers.active() == before {
                     self.layers.set_active(after);
                 }
+                return;
+            }
+            // Not objects: a reader compares the definitions themselves (blocks.rs).
+            Op::BlockAdd { .. } | Op::BlockRemove { .. } | Op::BlockUpdate { .. } => {
+                self.apply_block_op(op);
                 return;
             }
         };

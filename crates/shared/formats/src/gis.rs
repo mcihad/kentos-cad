@@ -243,7 +243,7 @@ impl Collect {
         let mut layers: Vec<ImportLayer> = Vec::new();
         let mut index: BTreeMap<String, usize> = BTreeMap::new();
         for e in &mut self.entities {
-            let base = entity_base(e);
+            let base = Entity::base_mut(e);
             if base.layer_id.is_empty() {
                 base.layer_id = default_layer.to_string();
             }
@@ -273,22 +273,6 @@ impl Collect {
         };
         crate::import::summarise(&mut result);
         result
-    }
-}
-
-fn entity_base(e: &mut Entity) -> &mut EntityBase {
-    match e {
-        Entity::Point(x) => &mut x.base,
-        Entity::Line(x) => &mut x.base,
-        Entity::Polyline(x) | Entity::Polygon(x) => &mut x.base,
-        Entity::Circle(x) => &mut x.base,
-        Entity::Arc(x) => &mut x.base,
-        Entity::Ellipse(x) => &mut x.base,
-        Entity::Spline(x) => &mut x.base,
-        Entity::Xline(x) | Entity::Ray(x) => &mut x.base,
-        Entity::Text(x) => &mut x.base,
-        Entity::Dimension(x) => &mut x.base,
-        Entity::Hatch(x) => &mut x.base,
     }
 }
 

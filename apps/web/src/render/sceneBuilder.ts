@@ -100,6 +100,8 @@ export function buildSceneLayer(id: string, entities: readonly Entity[], style: 
         }
         break;
       case 'point':
+      // A block shows its insertion point until the store expands it (docs/adr/0144), as on the desktop.
+      case 'insert':
         b.points.push(e.p.x - origin.x, e.p.y - origin.y);
         break;
       case 'text':

@@ -24,7 +24,7 @@ import { packEntities, unpackEntities } from './pack';
 
 const env = (globalThis as unknown as { process?: { env: Record<string, string | undefined> } }).process?.env ?? {};
 const ROUNDS = Number(env.TRANSFORM_ROUNDS ?? 200);
-const KINDS: EntityKind[] = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'xline', 'ray', 'spline', 'text', 'dimension', 'hatch'];
+const KINDS: EntityKind[] = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'xline', 'ray', 'spline', 'text', 'dimension', 'hatch', 'insert'];
 
 /** The first difference: keys in order, numbers bit for bit (NaN equals NaN, −0 is not 0). */
 function difference(a: unknown, b: unknown, path = ''): string | null {
@@ -147,8 +147,8 @@ describe('move, copy and paste through the geometry store, packed', () => {
     expect(failures.slice(0, 5).join('\n')).toBe('');
     const point = back.at(-2)!.geometry;
     expect([Object.is((point.p as { x: number }).x, -0), Number.isNaN((point.p as { y: number }).y), Object.is(point.z, -0)]).toEqual([true, true, true]);
-    // 13 is the multi-part area (docs/adr/0143); the first number that is no kind is 14.
-    expect(() => unpackEntities({ nums: Float64Array.of(1, 0, 0, 14), strings: '["a"]' })).toThrow(/bilinmeyen bir nesne türü/);
+    // 13 is the multi-part area (docs/adr/0143), 14 a block's insert (docs/adr/0144); the first number that is no kind is 15.
+    expect(() => unpackEntities({ nums: Float64Array.of(1, 0, 0, 15), strings: '["a"]' })).toThrow(/bilinmeyen bir nesne türü/);
   });
 
   it('gives what the JSON call gives, bit for bit, on random objects and affines', () => {

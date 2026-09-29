@@ -153,8 +153,17 @@ macro_rules! uuid_impls {
     };
 }
 
+/// A block definition's persistent id (docs/adr/0144): given when the
+/// definition is made (UUIDv7), kept by renaming and redefining; inserts name
+/// their definition by it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "ts", ts(export, type = "string"))]
+pub struct BlockId(pub [u8; 16]);
+
 uuid_impls!(EntityId);
 uuid_impls!(ProjectId);
+uuid_impls!(BlockId);
 
 /// Reads a UUID written lowercase with hyphens (8-4-4-4-12), as `uuid_text` writes it.
 pub fn uuid_from_text(text: &str) -> Option<[u8; 16]> {
@@ -390,6 +399,7 @@ pub fn migrate_v1(snapshot: DocumentSnapshotV1) -> Result<DocumentSnapshotV2, St
         active_layer,
         entities,
         styles,
+        blocks,
         ..
     } = snapshot;
     Ok(DocumentSnapshotV2 {
@@ -404,6 +414,7 @@ pub fn migrate_v1(snapshot: DocumentSnapshotV1) -> Result<DocumentSnapshotV2, St
         entities,
         uids: ids.entities.iter().map(|&(_, uid)| EntityId(uid)).collect(),
         styles,
+        blocks,
         project_id: Some(ProjectId(ids.project)),
         migrated_from: Some(MigrationSource::v1(ids.source_sha256)),
     })

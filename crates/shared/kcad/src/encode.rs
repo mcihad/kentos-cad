@@ -1,16 +1,19 @@
-//! Document schemas 2 to 5 written from the contract (docs/specs/kcad-v2.md
+//! Document schemas 2 to 6 written from the contract (docs/specs/kcad-v2.md
 //! §6) in KentOS CBOR profile 1: the oldest schema that holds what the drawing
 //! has (`schema_of`). The writer keeps the rules the reader enforces, so it
 //! never writes a file a reader refuses: finite floats, the length and depth
-//! limits, unique non-nil ids, no `null` renderer, no holes on a polyline;
-//! otherwise it stops with the place and the reason.
+//! limits, unique non-nil ids, no `null` renderer, no holes on a polyline,
+//! the block rules (`kentos_contracts::blocks`); otherwise it stops with the
+//! place and the reason.
 //!
 //! Keys are written in their encoded order (RFC 8949 §4.2.1): by hand in the
 //! maps whose keys are fixed, sorted per object for the objects, whose fields
 //! depend on the kind; the reader checks that order, and the fixtures hold the
 //! bytes the independent Python writer gives. The objects are written in
-//! `objects.rs`, the enumerations' names are in `names.rs`.
+//! `objects.rs`, the block definitions in `blocks.rs`, the enumerations'
+//! names in `names.rs`.
 
+mod blocks;
 mod names;
 mod objects;
 
@@ -23,7 +26,9 @@ use serde_json::Value;
 use crate::cbor::{MAX_DEPTH, MAX_ITEMS, MAX_STRING, Seg, Writer, key_order, render};
 use crate::error::{Code, KcadError};
 use crate::watch::{Step, Watch, report};
-use crate::{SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_PARTS};
+use crate::{
+    SCHEMA_WITH_BLOCKS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_PARTS,
+};
 use names::{
     angle_unit, area_unit, drawing_font, label_ink, label_placement, line_type, point_symbol,
     workspace,
@@ -173,7 +178,7 @@ impl<'d> Encoder<'d> {
                 ),
             ));
         }
-        let schema = schema_of(&doc.entities);
+        let schema = schema_of(doc);
         self.open(3, true)?;
         self.key("format");
         self.w.text(DOCUMENT_FORMAT);
@@ -196,13 +201,24 @@ impl<'d> Encoder<'d> {
                 ),
             ));
         }
-        let optional = usize::from(doc.home_view.is_some())
+        if let Err(fault) = kentos_contracts::blocks::check(&doc.blocks, &doc.entities) {
+            let said = crate::blocks::said(&fault, &doc.blocks);
+            self.path.push(Seg::Name(said.list));
+            self.path.extend(said.path);
+            return Err(self.fail(said.code, &said.what));
+        }
+        let optional = usize::from(!doc.blocks.is_empty())
+            + usize::from(doc.home_view.is_some())
             + usize::from(doc.project_id.is_some())
             + usize::from(doc.migrated_from.is_some());
         self.open(7 + optional, true)?;
-        // name (4), layers origin styles (6), entities homeView settings (8), projectId (9), activeLayer (11), migratedFrom (12).
+        // name (4), blocks layers origin styles (6), entities homeView settings (8), projectId (9), activeLayer (11), migratedFrom (12).
         self.key("name");
         self.at(Seg::Name("name"), |e| e.text(&doc.name))?;
+        if !doc.blocks.is_empty() {
+            self.key("blocks");
+            self.at(Seg::Name("blocks"), |e| e.blocks(&doc.blocks))?;
+        }
         self.key("layers");
         self.at(Seg::Name("layers"), |e| e.layers(&doc.layers))?;
         self.key("origin");
@@ -484,12 +500,17 @@ impl<'d> Encoder<'d> {
     }
 }
 
-/// The oldest schema that holds the objects: 5 when an area has parts, 4
-/// when an object has a vertex elevation, 3 when one has its own line weight,
-/// else 2. A drawing without any stays as it always was, byte for byte.
-fn schema_of(entities: &[Entity]) -> u32 {
+/// The oldest schema that holds the drawing: 6 when it has block
+/// definitions, 5 when an area has parts, 4 when an object has a vertex
+/// elevation, 3 when one has its own line weight, else 2. A drawing without
+/// any stays as it always was, byte for byte. (An insert needs a definition:
+/// one without is refused before the schema is written.)
+fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
+    if !doc.blocks.is_empty() {
+        return SCHEMA_WITH_BLOCKS;
+    }
     let mut schema = DOCUMENT_VERSION_2;
-    for e in entities {
+    for e in &doc.entities {
         if matches!(e, Entity::Polygon(p) if p.parts.is_some()) {
             // The newest: nothing later in the drawing can change it.
             return SCHEMA_WITH_PARTS;
@@ -543,10 +564,11 @@ mod tests {
     #[test]
     fn the_fixed_keys_are_in_encoded_order() {
         // The maps whose keys the writer writes by hand, in the order it writes them.
-        let maps: [&[&str]; 11] = [
+        let maps: [&[&str]; 13] = [
             &["format", "version", "document"],
             &[
                 "name",
+                "blocks",
                 "layers",
                 "origin",
                 "styles",
@@ -599,6 +621,16 @@ mod tests {
             &["zs", "pts", "bulges"],
             // A polygon's part (docs/adr/0143).
             &["zs", "pts", "holes", "bulges"],
+            // A block definition and an attribute definition (docs/adr/0144).
+            &[
+                "id",
+                "base",
+                "name",
+                "entities",
+                "attributes",
+                "description",
+            ],
+            &["p", "tag", "value", "height", "prompt", "rotation"],
         ];
         for keys in maps {
             assert!(

@@ -290,6 +290,15 @@ fn geometry(e: &Entity, rep: &mut Report) -> Option<Geometry> {
             rep.skip("Ölçü", "GeoJSON'da ölçü nesnesi yok; yazılmadı", 0);
             return None;
         }
+        // A GeometryCollection of its expansion comes with blocks' exchange step (docs/adr/0144 §5).
+        Entity::Insert(_) => {
+            rep.skip(
+                "Blok",
+                "blok yerleştirmesi GeoJSON'a henüz yazılamıyor; yazılmadı",
+                0,
+            );
+            return None;
+        }
         Entity::Xline(_) | Entity::Ray(_) => {
             rep.skip(
                 "Sonsuz doğru",
@@ -403,40 +412,6 @@ fn polygon(rings: &[Ring], out: &mut String) {
     out.push(']');
 }
 
-fn kind(e: &Entity) -> &'static str {
-    match e {
-        Entity::Point(_) => "point",
-        Entity::Line(_) => "line",
-        Entity::Polyline(_) => "polyline",
-        Entity::Polygon(_) => "polygon",
-        Entity::Circle(_) => "circle",
-        Entity::Arc(_) => "arc",
-        Entity::Ellipse(_) => "ellipse",
-        Entity::Spline(_) => "spline",
-        Entity::Xline(_) => "xline",
-        Entity::Ray(_) => "ray",
-        Entity::Text(_) => "text",
-        Entity::Dimension(_) => "dimension",
-        Entity::Hatch(_) => "hatch",
-    }
-}
-
-fn base(e: &Entity) -> &kentos_contracts::EntityBase {
-    match e {
-        Entity::Point(x) => &x.base,
-        Entity::Line(x) => &x.base,
-        Entity::Polyline(x) | Entity::Polygon(x) => &x.base,
-        Entity::Circle(x) => &x.base,
-        Entity::Arc(x) => &x.base,
-        Entity::Ellipse(x) => &x.base,
-        Entity::Spline(x) => &x.base,
-        Entity::Xline(x) | Entity::Ray(x) => &x.base,
-        Entity::Text(x) => &x.base,
-        Entity::Dimension(x) => &x.base,
-        Entity::Hatch(x) => &x.base,
-    }
-}
-
 /// Writes the objects as a GeoJSON FeatureCollection.
 pub fn write(input: &GeoJsonWriteInput) -> (Vec<u8>, ExportReport) {
     let names: HashMap<&str, &str> = input
@@ -469,7 +444,7 @@ pub fn write(input: &GeoJsonWriteInput) -> (Vec<u8>, ExportReport) {
         let Some(g) = geometry(e, &mut rep) else {
             continue;
         };
-        let b = base(e);
+        let b = e.base();
         if b.color.is_some() || b.symbol.is_some() {
             rep.note(
                 "Renk ve sembol",
@@ -510,7 +485,7 @@ pub fn write(input: &GeoJsonWriteInput) -> (Vec<u8>, ExportReport) {
             out.push('}');
         }
         out.push('}');
-        rep.count(kind(e));
+        rep.count(e.kind());
     }
     out.push_str("\n]}\n");
     (out.into_bytes(), rep.export())

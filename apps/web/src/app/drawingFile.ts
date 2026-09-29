@@ -117,7 +117,7 @@ async function readV2(bytes: Uint8Array, deps: ReadDeps, watch: ReadWatch): Prom
     const styles = projectStylesProblem(head.head.content.styles);
     if (styles) return { ok: false, error: `${styles}.` };
     const reader = new ColumnsReader(packed.columns);
-    const entities = await checkObjects(reader.count, () => reader.next(), new DrawingObjects(head.head.leaves, 2), watch);
+    const entities = await checkObjects(reader.count, () => reader.next(), new DrawingObjects(head.head.leaves, 2, head.head.content.blocks), watch);
     if (!entities) return cancelled;
     if (!reader.done) throw new KcadError('bad_columns', 'Dosya biçim modülünden gelen çizimde nesnelerden sonra fazladan değer var; açık çizime dokunulmadı. Bu bir yazılım hatasıdır: durumu bildirin.');
     return { ok: true, content: { ...head.head.content, entities }, format: 'v2' };
@@ -147,7 +147,7 @@ async function readV1(text: string, deps: ReadDeps, watch: ReadWatch): Promise<R
   watch.progress?.({ stage: 'project', name: head.head.content.name, layers: head.head.content.layers.length, objects: list.length });
   let entities: Entity[] | null;
   try {
-    entities = await checkObjects(list.length, (i) => list[i], new DrawingObjects(head.head.leaves, 1), watch);
+    entities = await checkObjects(list.length, (i) => list[i], new DrawingObjects(head.head.leaves, 1, head.head.content.blocks), watch);
   } catch (e) {
     return { ok: false, error: message(e) };
   }

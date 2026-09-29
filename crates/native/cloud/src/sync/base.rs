@@ -167,6 +167,8 @@ impl ProjectSync {
                 entities,
                 uids,
                 styles: self.meta_base.styles.clone(),
+                // A database project keeps no block definitions yet (docs/adr/0144 §5).
+                blocks: Vec::new(),
                 project_id: Some(ProjectId(self.project.into_bytes())),
                 migrated_from: None,
             },

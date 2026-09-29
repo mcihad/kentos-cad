@@ -39,25 +39,6 @@ use crate::math::{PI, TAU, atan2, deg, hypot, norm_angle, rad, sin_cos_deg};
 use crate::num::dxf_real;
 use crate::report::Report;
 
-/// The app's name for a kind (the export report counts by it).
-fn kind_name(e: &Entity) -> &'static str {
-    match e {
-        Entity::Point(_) => "point",
-        Entity::Line(_) => "line",
-        Entity::Polyline(_) => "polyline",
-        Entity::Polygon(_) => "polygon",
-        Entity::Circle(_) => "circle",
-        Entity::Arc(_) => "arc",
-        Entity::Ellipse(_) => "ellipse",
-        Entity::Spline(_) => "spline",
-        Entity::Xline(_) => "xline",
-        Entity::Ray(_) => "ray",
-        Entity::Text(_) => "text",
-        Entity::Dimension(_) => "dimension",
-        Entity::Hatch(_) => "hatch",
-    }
-}
-
 /// How the report names a kind (Turkish, as the app's ENTITY_KIND_LABEL).
 fn kind_label(e: &Entity) -> &'static str {
     match e {
@@ -74,6 +55,7 @@ fn kind_label(e: &Entity) -> &'static str {
         Entity::Text(_) => "Yazı",
         Entity::Dimension(_) => "Ölçü",
         Entity::Hatch(_) => "Tarama",
+        Entity::Insert(_) => "Blok",
     }
 }
 
@@ -153,6 +135,7 @@ fn finite(e: &Entity) -> bool {
                 && h.holes.iter().flatten().all(|r| all_ok(r))
                 && nums_ok(&[h.pattern.angle, h.pattern.spacing])
         }
+        Entity::Insert(i) => ok(i.p) && nums_ok(&[i.scale, i.rotation]),
     }
 }
 
@@ -407,9 +390,18 @@ impl Writer<'_> {
             Entity::Text(t) => self.text(t, &t.base, Self::base_meta(&t.base)),
             Entity::Dimension(d) => self.dimension(d),
             Entity::Hatch(h) => self.hatch(h),
+            // BLOCK and INSERT come with blocks' DXF step (docs/adr/0144 §5); until then said, not written.
+            Entity::Insert(_) => {
+                self.report.skip(
+                    kind_label(e),
+                    "blok yerleştirmesi DXF'e henüz blok olarak yazılamıyor; yazılmadı",
+                    0,
+                );
+                false
+            }
         };
         if written {
-            self.report.count(kind_name(e));
+            self.report.count(e.kind());
         }
     }
 

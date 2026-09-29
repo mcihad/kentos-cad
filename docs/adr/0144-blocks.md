@@ -127,7 +127,7 @@ Stil sembolleri (ADR 0090–0094) başka bir kavramdır. Onlar katmanın görün
 
 ### 9. İş sırası
 
-1. **Sözleşme ve `.kcad` şema 6.** Tanımlar, `insert`, tipli sütunlar, belirtim, Python okuyucu ve yazıcı, örnekler. İki belge tanımları geri alınabilir durum olarak taşır.
+1. **Sözleşme ve `.kcad` şema 6.** Tanımlar, `insert`, tipli sütunlar, belirtim, Python okuyucu ve yazıcı, örnekler. İki belge tanımları geri alınabilir durum olarak taşır. *(29 Eylül: tamam, iki platformda. Çekirdeğin `Shape::Insert`'i de bu adımda geldi: dönüşümler benzerliği birleştirir, depo yerleştirmeyi ekleme noktasıyla çizer ve seçer; açılım 2. adımdır. Veritabanı projesi blokları 5. adıma dek açık bir iletiyle reddeder.)*
 2. **Çekirdek.** Açılım, depo (çizim, seçme, kenet, kutu), dönüşümler, Patlat, iki çizici.
 3. **Komutlar.** `cad.blocks.define`, `insert` yaratma, `cad.blocks.edit`; ortak durumlar.
 4. **Araçlar ve arayüz.** Blok oluştur, Blok ekle, Bloklar paneli, Öznitelikler; `usage-blocks` senaryosu ve resimler.

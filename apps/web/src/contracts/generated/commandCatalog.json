@@ -163,6 +163,11 @@
             ],
             "type": "string"
           },
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "CircleEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -674,6 +679,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/InsertEntity",
+                "description": "A block placed in the drawing (docs/adr/0144).",
+                "properties": {
+                  "kind": {
+                    "const": "insert",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -848,6 +867,88 @@
               "cross"
             ],
             "type": "string"
+          },
+          "InsertEntity": {
+            "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "block": {
+                "$ref": "#/$defs/BlockId",
+                "description": "The definition's id."
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mirror": {
+                "description": "Mirrored in the definition's x axis, before the turn.",
+                "type": "boolean"
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Where the definition's base point goes."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "scale": {
+                "description": "Positive and finite; 1 is the definition's size.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "block",
+              "p",
+              "scale",
+              "rotation"
+            ],
+            "type": "object"
           },
           "LabelInk": {
             "enum": [
@@ -8869,6 +8970,11 @@
             ],
             "type": "object"
           },
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "CircleEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -9367,6 +9473,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/InsertEntity",
+                "description": "A block placed in the drawing (docs/adr/0144).",
+                "properties": {
+                  "kind": {
+                    "const": "insert",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -9479,6 +9599,88 @@
               "cross"
             ],
             "type": "string"
+          },
+          "InsertEntity": {
+            "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "block": {
+                "$ref": "#/$defs/BlockId",
+                "description": "The definition's id."
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mirror": {
+                "description": "Mirrored in the definition's x axis, before the turn.",
+                "type": "boolean"
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Where the definition's base point goes."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "scale": {
+                "description": "Positive and finite; 1 is the definition's size.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "block",
+              "p",
+              "scale",
+              "rotation"
+            ],
+            "type": "object"
           },
           "LineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -10294,6 +10496,11 @@
             ],
             "type": "object"
           },
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "CircleEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -10792,6 +10999,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/InsertEntity",
+                "description": "A block placed in the drawing (docs/adr/0144).",
+                "properties": {
+                  "kind": {
+                    "const": "insert",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -10904,6 +11125,88 @@
               "cross"
             ],
             "type": "string"
+          },
+          "InsertEntity": {
+            "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "block": {
+                "$ref": "#/$defs/BlockId",
+                "description": "The definition's id."
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mirror": {
+                "description": "Mirrored in the definition's x axis, before the turn.",
+                "type": "boolean"
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Where the definition's base point goes."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "scale": {
+                "description": "Positive and finite; 1 is the definition's size.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "block",
+              "p",
+              "scale",
+              "rotation"
+            ],
+            "type": "object"
           },
           "LineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -11680,6 +11983,11 @@
             ],
             "type": "object"
           },
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "CircleEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -12178,6 +12486,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/InsertEntity",
+                "description": "A block placed in the drawing (docs/adr/0144).",
+                "properties": {
+                  "kind": {
+                    "const": "insert",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -12290,6 +12612,88 @@
               "cross"
             ],
             "type": "string"
+          },
+          "InsertEntity": {
+            "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "block": {
+                "$ref": "#/$defs/BlockId",
+                "description": "The definition's id."
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mirror": {
+                "description": "Mirrored in the definition's x axis, before the turn.",
+                "type": "boolean"
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Where the definition's base point goes."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "scale": {
+                "description": "Positive and finite; 1 is the definition's size.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "block",
+              "p",
+              "scale",
+              "rotation"
+            ],
+            "type": "object"
           },
           "LineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -13208,6 +13612,11 @@
             ],
             "type": "object"
           },
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "CircleEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -13706,6 +14115,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/InsertEntity",
+                "description": "A block placed in the drawing (docs/adr/0144).",
+                "properties": {
+                  "kind": {
+                    "const": "insert",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -13818,6 +14241,88 @@
               "cross"
             ],
             "type": "string"
+          },
+          "InsertEntity": {
+            "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "block": {
+                "$ref": "#/$defs/BlockId",
+                "description": "The definition's id."
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mirror": {
+                "description": "Mirrored in the definition's x axis, before the turn.",
+                "type": "boolean"
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Where the definition's base point goes."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "scale": {
+                "description": "Positive and finite; 1 is the definition's size.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "block",
+              "p",
+              "scale",
+              "rotation"
+            ],
+            "type": "object"
           },
           "LineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -14579,6 +15084,11 @@
             ],
             "type": "object"
           },
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "CircleEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -15077,6 +15587,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/InsertEntity",
+                "description": "A block placed in the drawing (docs/adr/0144).",
+                "properties": {
+                  "kind": {
+                    "const": "insert",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -15189,6 +15713,88 @@
               "cross"
             ],
             "type": "string"
+          },
+          "InsertEntity": {
+            "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "block": {
+                "$ref": "#/$defs/BlockId",
+                "description": "The definition's id."
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mirror": {
+                "description": "Mirrored in the definition's x axis, before the turn.",
+                "type": "boolean"
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Where the definition's base point goes."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "scale": {
+                "description": "Positive and finite; 1 is the definition's size.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "block",
+              "p",
+              "scale",
+              "rotation"
+            ],
+            "type": "object"
           },
           "LineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -15960,6 +16566,11 @@
             ],
             "type": "object"
           },
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "CircleEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -16458,6 +17069,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/InsertEntity",
+                "description": "A block placed in the drawing (docs/adr/0144).",
+                "properties": {
+                  "kind": {
+                    "const": "insert",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -16570,6 +17195,88 @@
               "cross"
             ],
             "type": "string"
+          },
+          "InsertEntity": {
+            "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "block": {
+                "$ref": "#/$defs/BlockId",
+                "description": "The definition's id."
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mirror": {
+                "description": "Mirrored in the definition's x axis, before the turn.",
+                "type": "boolean"
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Where the definition's base point goes."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "scale": {
+                "description": "Positive and finite; 1 is the definition's size.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "block",
+              "p",
+              "scale",
+              "rotation"
+            ],
+            "type": "object"
           },
           "LineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -17462,6 +18169,11 @@
             ],
             "type": "object"
           },
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "CircleEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -17960,6 +18672,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/InsertEntity",
+                "description": "A block placed in the drawing (docs/adr/0144).",
+                "properties": {
+                  "kind": {
+                    "const": "insert",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -18072,6 +18798,88 @@
               "cross"
             ],
             "type": "string"
+          },
+          "InsertEntity": {
+            "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "block": {
+                "$ref": "#/$defs/BlockId",
+                "description": "The definition's id."
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mirror": {
+                "description": "Mirrored in the definition's x axis, before the turn.",
+                "type": "boolean"
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Where the definition's base point goes."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "scale": {
+                "description": "Positive and finite; 1 is the definition's size.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "block",
+              "p",
+              "scale",
+              "rotation"
+            ],
+            "type": "object"
           },
           "LineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -19714,6 +20522,11 @@
             ],
             "type": "object"
           },
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "CircleEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -20212,6 +21025,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/InsertEntity",
+                "description": "A block placed in the drawing (docs/adr/0144).",
+                "properties": {
+                  "kind": {
+                    "const": "insert",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -20324,6 +21151,88 @@
               "cross"
             ],
             "type": "string"
+          },
+          "InsertEntity": {
+            "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "block": {
+                "$ref": "#/$defs/BlockId",
+                "description": "The definition's id."
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mirror": {
+                "description": "Mirrored in the definition's x axis, before the turn.",
+                "type": "boolean"
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Where the definition's base point goes."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "scale": {
+                "description": "Positive and finite; 1 is the definition's size.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "block",
+              "p",
+              "scale",
+              "rotation"
+            ],
+            "type": "object"
           },
           "LineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -21231,6 +22140,11 @@
             ],
             "type": "object"
           },
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "CircleEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -21729,6 +22643,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/InsertEntity",
+                "description": "A block placed in the drawing (docs/adr/0144).",
+                "properties": {
+                  "kind": {
+                    "const": "insert",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -21841,6 +22769,88 @@
               "cross"
             ],
             "type": "string"
+          },
+          "InsertEntity": {
+            "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "block": {
+                "$ref": "#/$defs/BlockId",
+                "description": "The definition's id."
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mirror": {
+                "description": "Mirrored in the definition's x axis, before the turn.",
+                "type": "boolean"
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Where the definition's base point goes."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "scale": {
+                "description": "Positive and finite; 1 is the definition's size.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "block",
+              "p",
+              "scale",
+              "rotation"
+            ],
+            "type": "object"
           },
           "LineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -23326,6 +24336,11 @@
             ],
             "type": "object"
           },
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "CircleEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -23824,6 +24839,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/InsertEntity",
+                "description": "A block placed in the drawing (docs/adr/0144).",
+                "properties": {
+                  "kind": {
+                    "const": "insert",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -23936,6 +24965,88 @@
               "cross"
             ],
             "type": "string"
+          },
+          "InsertEntity": {
+            "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "block": {
+                "$ref": "#/$defs/BlockId",
+                "description": "The definition's id."
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mirror": {
+                "description": "Mirrored in the definition's x axis, before the turn.",
+                "type": "boolean"
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Where the definition's base point goes."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "scale": {
+                "description": "Positive and finite; 1 is the definition's size.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "block",
+              "p",
+              "scale",
+              "rotation"
+            ],
+            "type": "object"
           },
           "LineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -24839,6 +25950,11 @@
             ],
             "type": "object"
           },
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "CircleEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -25337,6 +26453,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/InsertEntity",
+                "description": "A block placed in the drawing (docs/adr/0144).",
+                "properties": {
+                  "kind": {
+                    "const": "insert",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -25449,6 +26579,88 @@
               "cross"
             ],
             "type": "string"
+          },
+          "InsertEntity": {
+            "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "block": {
+                "$ref": "#/$defs/BlockId",
+                "description": "The definition's id."
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mirror": {
+                "description": "Mirrored in the definition's x axis, before the turn.",
+                "type": "boolean"
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Where the definition's base point goes."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "scale": {
+                "description": "Positive and finite; 1 is the definition's size.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "block",
+              "p",
+              "scale",
+              "rotation"
+            ],
+            "type": "object"
           },
           "LineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",

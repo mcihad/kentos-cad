@@ -139,6 +139,19 @@ pub enum Shape {
         holes: Option<Vec<Vec<Vec2>>>,
         pattern: HatchPattern,
     },
+    /// A block placed in the drawing (docs/adr/0144): the definition `block`
+    /// (its id) moved from its base point to `p`, mirrored in its x axis when
+    /// `mirror`, scaled by `scale` and turned by `rotation` (radians) about
+    /// `p`. Its own geometry is the insertion point until the store expands
+    /// the definition; the transforms compose its similarity exactly.
+    Insert {
+        block: String,
+        p: Vec2,
+        scale: f64,
+        rotation: f64,
+        /// `Some(true)` when mirrored; never `Some(false)` (a file writes no false).
+        mirror: Option<bool>,
+    },
 }
 
 crate::json_tagged!(Shape, "kind",
@@ -155,6 +168,7 @@ crate::json_tagged!(Shape, "kind",
     Text => "text" { p, text, height, rotation },
     Dimension => "dimension" { a, b, offset, height, text, style, angle, c },
     Hatch => "hatch" { ring, holes, pattern },
+    Insert => "insert" { block, p, scale, rotation, mirror },
 );
 
 /// An entity: its geometry and every other field, untouched and in order.
@@ -272,7 +286,7 @@ pub fn tessellate_circle(c: Vec2, r: f64, segments: f64) -> Vec<Vec2> {
 /// Characteristic vertices: grips, snapping and coordinate tables.
 pub fn entity_vertices(e: &Shape) -> Vec<Vec2> {
     match e {
-        Shape::Point { p, .. } | Shape::Text { p, .. } => vec![*p],
+        Shape::Point { p, .. } | Shape::Text { p, .. } | Shape::Insert { p, .. } => vec![*p],
         Shape::Line { a, b } => vec![*a, *b],
         Shape::Polyline { pts, .. } => pts.clone(),
         // Part after part, each its ring's then its holes' (docs/adr/0143).
@@ -689,7 +703,8 @@ pub fn entity_anchor(e: &Shape) -> Option<Vec2> {
         Shape::Point { p, .. }
         | Shape::Text { p, .. }
         | Shape::Xline { p, .. }
-        | Shape::Ray { p, .. } => *p,
+        | Shape::Ray { p, .. }
+        | Shape::Insert { p, .. } => *p,
     })
 }
 

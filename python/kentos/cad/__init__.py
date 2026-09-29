@@ -124,6 +124,7 @@ __all__ = [
     "HatchPatternType",
     "HatchPatternTypeName",
     "HostError",
+    "InsertEntity",
     "InvalidInput",
     "InvitationChange",
     "InvitationRevoke",

@@ -738,6 +738,21 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 len("Konum X", t.p.y),
             ]);
         }
+        // Read only until blocks' tools (docs/adr/0144 §6).
+        Entity::Insert(i) => {
+            let name = doc
+                .model
+                .block(i.block)
+                .map_or_else(|| "(tanımsız)".to_owned(), |b| b.name.clone());
+            geo.extend([
+                Row::text("Blok", name),
+                len("Konum Y", i.p.x),
+                len("Konum X", i.p.y),
+                Row::figure("Ölçek", fixed(i.scale, 4)),
+                Row::figure("Dönüş", degrees(i.rotation)).unit("°"),
+                Row::text("Aynalı", if i.mirror { "Evet" } else { "Hayır" }),
+            ]);
+        }
     }
 
     let mut sections = vec![

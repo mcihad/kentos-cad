@@ -518,6 +518,7 @@ class Entity(_Union):
     - :class:`TextEntity` (``kind: text``)
     - :class:`DimensionEntity` (``kind: dimension``)
     - :class:`HatchEntity` (``kind: hatch``)
+    - :class:`InsertEntity` (``kind: insert``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -2413,6 +2414,80 @@ class HatchPattern(_Model):
             type=_enum_in(HatchPatternType, data["type"]),
             angle=float(data["angle"]),
             spacing=float(data["spacing"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class InsertEntity(Entity):
+    """A block placed in the drawing (docs/adr/0144): its definition drawn
+    moved from the definition's base point to `p`, mirrored in the
+    definition's x axis when `mirror`, then scaled and turned about `p`. The
+    transform is a similarity: shapes keep their kind. The insert's own
+    attributes carry the values of the definition's attribute definitions.
+    Attributes:
+        attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        block: The definition's id.
+        p: Where the definition's base point goes.
+        scale: Positive and finite; 1 is the definition's size.
+        rotation: Radians, counter-clockwise from east.
+        color: Colour override; absent = the layer's colour ("katmana göre").
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139).
+        mirror: Mirrored in the definition's x axis, before the turn.
+        symbol: Library symbol overriding the layer's style.
+    """
+    TAG_VALUE: ClassVar[str] = "insert"
+    id: int
+    layer_id: str
+    attrs: dict[str, str]
+    block: str
+    p: Vec2
+    scale: float
+    rotation: float
+    color: str | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    mirror: bool | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "insert"}
+        out["id"] = self.id
+        out["layerId"] = self.layer_id
+        out["attrs"] = dict(self.attrs)
+        out["block"] = self.block
+        out["p"] = _vec2_out(self.p)
+        out["scale"] = float(self.scale)
+        out["rotation"] = float(self.rotation)
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.mirror is not UNSET:
+            out["mirror"] = self.mirror
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> InsertEntity:
+        return cls(
+            id=data["id"],
+            layer_id=data["layerId"],
+            attrs=dict(data["attrs"]),
+            block=data["block"],
+            p=Vec2.from_json(data["p"]),
+            scale=float(data["scale"]),
+            rotation=float(data["rotation"]),
+            color=data.get("color", UNSET),
+            label=data.get("label", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            mirror=data.get("mirror", UNSET),
+            symbol=data.get("symbol", UNSET),
         )
 
 
@@ -5212,7 +5287,7 @@ class AlignTransform(Transform):
 _ARRAY_LAYOUT: dict[str, type[ArrayLayout]] = {"grid": GridArrayLayout, "polar": PolarArrayLayout, "path": PathArrayLayout}
 
 
-_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity}
+_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity}
 
 
 _ENTITY_EDIT: dict[str, type[EntityEdit]] = {"update": UpdateEntityEdit, "replace": ReplaceEntityEdit, "add": AddEntityEdit, "remove": RemoveEntityEdit}
@@ -5305,6 +5380,7 @@ __all__ = [
     "HatchPattern",
     "HatchPatternType",
     "HatchPatternTypeName",
+    "InsertEntity",
     "InvitationChange",
     "InvitationRevoke",
     "InvitationState",

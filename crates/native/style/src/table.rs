@@ -35,6 +35,7 @@ pub fn kind_label(e: &Entity) -> &'static str {
         Entity::Text(_) => "Yazı",
         Entity::Dimension(_) => "Ölçü",
         Entity::Hatch(_) => "Tarama",
+        Entity::Insert(_) => "Blok",
     }
 }
 

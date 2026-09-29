@@ -18,8 +18,9 @@ The reader checks the container (signature, versions, lengths, SHA-256),
 decodes the payload by the KentOS CBOR profile (definite lengths, shortest
 integers, binary64 floats only, text keys in RFC 8949 §4.2.1 order, no
 duplicates, no tags, size and depth limits) and then checks the document
-schema. The document rules the apps add on top (layer references, known CRS,
-vertex counts; spec §6.10) are not checked here.
+schema, the block rules with it (§6.9). The document rules the apps add on
+top (layer references, known CRS, vertex counts; spec §6.11) are not checked
+here.
 """
 
 import hashlib
@@ -59,7 +60,12 @@ MAX_LINE_WEIGHT = 100.0
 SCHEMA_WITH_ELEVATIONS = 4
 # Schema 5: schema 4 and multi-part areas (`parts` of a polygon; docs/adr/0143).
 SCHEMA_WITH_PARTS = 5
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS)
+# Schema 6: schema 5 and blocks (the document's `blocks`, the `insert` kind; docs/adr/0144).
+SCHEMA_WITH_BLOCKS = 6
+MAX_BLOCK_DEPTH = 16
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS)
+# Unicode's White_Space characters: a block's name is not made of these alone.
+WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
 
 class KcadError(Exception):
@@ -279,7 +285,7 @@ def decode_payload(payload):
     return value
 
 
-# ── Document schemas 2, 3 and 4 (spec §6) ───────────────────────────────
+# ── Document schemas 2 to 6 (spec §6) ───────────────────────────────────
 
 
 class _Schema:
@@ -290,10 +296,15 @@ class _Schema:
         self.uids = []
         self.seen = set()
         # What the payload's schema lets an object hold: its own line weight (schema 3 and up), vertex elevations
-        # (schema 4 and up), an area's parts (schema 5).
+        # (schema 4 and up), an area's parts (schema 5 and up), blocks (schema 6).
         self.weights = False
         self.elevations = False
         self.parts = False
+        self.blocks = False
+        # While a block definition's objects are read: how many so far (they have no persistent ids).
+        self.inside = None
+        # The definitions' ids and places, once read; where each insert inside them is.
+        self.index = {}
 
     def where(self):
         return "/".join(self.path) or "(kök)"
@@ -441,6 +452,7 @@ class _Schema:
         self.weights = version >= SCHEMA_WITH_LINE_WEIGHTS
         self.elevations = version >= SCHEMA_WITH_ELEVATIONS
         self.parts = version >= SCHEMA_WITH_PARTS
+        self.blocks = version >= SCHEMA_WITH_BLOCKS
         checked = self.fields({"format": (self.text, True), "version": (self.uint(32), True), "document": (self.document, True)})(v)
         return checked["document"]
 
@@ -448,6 +460,7 @@ class _Schema:
         d = self.fields(
             {
                 "name": (self.text, True),
+                **({"blocks": (self.definitions, False)} if self.blocks else {}),
                 "layers": (self.array(self.layer), True),
                 "origin": (self.point, True),
                 "styles": (self.fields({"items": (self.array(self.any), True), "categories": (self.array(self.any), True)}), True),
@@ -473,6 +486,8 @@ class _Schema:
         out["entities"] = d["entities"]
         out["uids"] = list(self.uids)
         out["styles"] = d["styles"]
+        if "blocks" in d:
+            out["blocks"] = d["blocks"]
         if "projectId" in d:
             out["projectId"] = d["projectId"]
         if "migratedFrom" in d:
@@ -557,7 +572,7 @@ class _Schema:
         if len(v) != 1:
             self.fail("bad_value", f"nesne haritasında tek anahtar (tür) olmalı, {len(v)} var")
         ((kind, body),) = v.items()
-        if kind not in ENTITY_KINDS:
+        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks):
             self.path.append(kind)
             self.fail("unknown_kind", f"“{kind}” nesne türü bilinmiyor")
         table = dict(self.common())
@@ -567,14 +582,142 @@ class _Schema:
             fields = self.fields(table)(body)
             if kind in ("polyline", "polygon"):
                 self.same_length(fields)
+            # The drawing's own insert names a definition read before it (`blocks` comes before `entities`).
+            if kind == "insert" and self.inside is None and fields["block"] not in self.index:
+                self.path.append("block")
+                self.fail("unknown_block", "yerleştirilen blok çizimde tanımlı değil")
         finally:
             self.path.pop()
-        fields.pop("uid")
-        return {"kind": kind, "id": len(self.uids), **fields}
+        if self.inside is None:
+            fields.pop("uid")
+            return {"kind": kind, "id": len(self.uids), **fields}
+        self.inside += 1
+        return {"kind": kind, "id": self.inside, **fields}
+
+    # Blocks (§6.9, docs/adr/0144).
+
+    def definitions(self, v):
+        if type(v) is list and not v:
+            self.fail("bad_value", "blok listesi boş; tanımı olmayan çizimde alan yazılmaz")
+        blocks = self.array(self.definition)(v)
+        self.check_blocks(blocks)
+        self.index = {b["id"]: i for i, b in enumerate(blocks)}
+        return blocks
+
+    def definition(self, v):
+        def content(x):
+            self.inside = 0
+            try:
+                return self.array(self.entity)(x)
+            finally:
+                self.inside = None
+
+        def attributes(x):
+            if type(x) is list and not x:
+                self.fail("bad_value", "öznitelik listesi boş; öznitelik tanımı yoksa alan yazılmaz")
+            return self.array(self.attribute)(x)
+
+        d = self.fields(
+            {
+                "id": (self.id16, True),
+                "base": (self.point, True),
+                "name": (self.text, True),
+                "entities": (content, True),
+                "attributes": (attributes, False),
+                "description": (self.text, False),
+            }
+        )(v)
+        return {k: d[k] for k in ("id", "name", "base", "entities", "attributes", "description") if k in d}
+
+    def attribute(self, v):
+        a = self.fields(
+            {
+                "p": (self.point, True),
+                "tag": (self.text, True),
+                "value": (self.text, False),
+                "height": (self.float, True),
+                "prompt": (self.text, False),
+                "rotation": (self.float, True),
+            }
+        )(v)
+        return {k: a[k] for k in ("tag", "prompt", "value", "p", "height", "rotation") if k in a}
+
+    def scale(self, v):
+        x = self.float(v)
+        if not x > 0.0:
+            self.fail("bad_value", f"blok ölçeği {x}; pozitif olmalı")
+        return x
+
+    def mirror(self, v):
+        if self.bool(v) is not True:
+            self.fail("bad_value", "aynalama false yazılmaz; aynalı olmayan yerleştirmede alan yoktur")
+        return True
+
+    def check_blocks(self, blocks):
+        """The block rules over the whole list, in their order: each definition's name, id and tags; the inserts in
+        the definitions; then the nesting. The first broken one is said at its definition."""
+        ids, names = {}, {}
+        for i, b in enumerate(blocks):
+            self.path.append(str(i))
+            if all(c in WHITE_SPACE for c in b["name"]):
+                self.path.append("name")
+                self.fail("bad_value", "blok adı boş ya da yalnız boşluk olamaz")
+            if b["id"] in ids:
+                self.path.append("id")
+                self.fail("duplicate_block", f"blok kimliği {b['id']} {ids[b['id']] + 1}. tanımda da var")
+            ids[b["id"]] = i
+            key = name_key(b["name"])
+            if key in names:
+                self.path.append("name")
+                self.fail("duplicate_block", f"“{b['name']}” adı {names[key] + 1}. tanımda da var")
+            names[key] = i
+            tags = {}
+            for a, attribute in enumerate(b.get("attributes", [])):
+                self.path += ["attributes", str(a), "tag"]
+                if not attribute["tag"]:
+                    self.fail("bad_value", "öznitelik etiketi boş")
+                if attribute["tag"] in tags:
+                    self.fail("bad_value", f"“{attribute['tag']}” etiketi {tags[attribute['tag']] + 1}. öznitelikte de var")
+                tags[attribute["tag"]] = a
+                del self.path[-3:]
+            self.path.pop()
+        for i, b in enumerate(blocks):
+            for j, e in enumerate(b["entities"]):
+                if e["kind"] == "insert" and e["block"] not in ids:
+                    self.path += [str(i), "entities", str(j), "insert", "block"]
+                    self.fail("unknown_block", "yerleştirilen blok çizimde tanımlı değil")
+        depth = [0] * len(blocks)
+        stack = []
+
+        def visit(i):
+            stack.append(i)
+            deepest = 0
+            for e in blocks[i]["entities"]:
+                if e["kind"] != "insert":
+                    continue
+                k = ids[e["block"]]
+                if depth[k] == 0:
+                    if k in stack:
+                        self.path.append(str(k))
+                        self.fail("block_cycle", f"“{blocks[k]['name']}” bloğu kendini içeriyor")
+                    if len(stack) == MAX_BLOCK_DEPTH:
+                        self.path.append(str(stack[0]))
+                        self.fail("block_too_deep", f"bloklar {MAX_BLOCK_DEPTH} düzeyden derin iç içe")
+                    visit(k)
+                if len(stack) + depth[k] > MAX_BLOCK_DEPTH:
+                    self.path.append(str(stack[0]))
+                    self.fail("block_too_deep", f"bloklar {MAX_BLOCK_DEPTH} düzeyden derin iç içe")
+                deepest = max(deepest, depth[k])
+            stack.pop()
+            depth[i] = deepest + 1
+
+        for i in range(len(blocks)):
+            if depth[i] == 0:
+                visit(i)
 
     def common(self):
         return {
-            "uid": (self.uid, True),
+            **({"uid": (self.uid, True)} if self.inside is None else {}),
             "attrs": (self.attrs, True),
             "color": (self.text, False),
             "label": (self.text, False),
@@ -657,7 +800,14 @@ ENTITY_KINDS = {
         "holes": (s.array(s.array(s.point)), False),
         "pattern": (s.fields({"type": (s.enum(("solid", "lines", "cross")), True), "angle": (s.float, True), "spacing": (s.float, True)}), True),
     },
+    # Schema 6 (docs/adr/0144): `mirror` only when true.
+    "insert": lambda s: {"block": (s.id16, True), "p": (s.point, True), "scale": (s.scale, True), "rotation": (s.float, True), "mirror": (s.mirror, False)},
 }
+
+
+def name_key(name):
+    """A block's name as names are compared: each character lowercased, Turkish I (I → ı, İ → i)."""
+    return "".join("ı" if c == "I" else "i" if c == "İ" else c.lower() for c in name)
 
 
 def uuid_text(raw):

@@ -124,6 +124,7 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
         active_layer: "parsel".into(),
         entities,
         styles: ProjectStyles::default(),
+        blocks: Vec::new(),
     };
     Document::new(snapshot, None).expect("opens")
 }

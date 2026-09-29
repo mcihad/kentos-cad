@@ -36,6 +36,8 @@ export type StyledGeometry =
 export function geometryClassOf(e: Entity): GeometryClass | null {
   switch (e.kind) {
     case 'point':
+    // Its insertion point until the store expands the block (docs/adr/0144).
+    case 'insert':
       return 'marker';
     case 'polygon':
     case 'hatch':
