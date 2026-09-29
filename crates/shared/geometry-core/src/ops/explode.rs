@@ -33,11 +33,22 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
                 Cut::Pieces(pieces)
             }
         }
-        Shape::Polygon { pts, bulges, holes } => {
-            // A polygon's holes come apart too.
+        Shape::Polygon {
+            pts,
+            bulges,
+            holes,
+            parts,
+        } => {
+            // A polygon's holes come apart too, and every part's (docs/adr/0143).
             let mut pieces = segment_pieces(pts, bulges.as_deref(), true);
             for h in holes.iter().flatten() {
                 pieces.extend(segment_pieces(&h.pts, h.bulges.as_deref(), true));
+            }
+            for part in parts.iter().flatten() {
+                pieces.extend(segment_pieces(&part.pts, part.bulges.as_deref(), true));
+                for h in part.holes.iter().flatten() {
+                    pieces.extend(segment_pieces(&h.pts, h.bulges.as_deref(), true));
+                }
             }
             if pieces.is_empty() {
                 Cut::Error("Patlatılacak bir kenar yok.".into())
@@ -55,6 +66,7 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
                     pts: out,
                     bulges: None,
                     holes: None,
+                    parts: None,
                 }
             } else {
                 Shape::Polyline {

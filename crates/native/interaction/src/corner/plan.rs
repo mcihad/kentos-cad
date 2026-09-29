@@ -1,20 +1,18 @@
 //! What a size does to a corner (the web's `Corner.plan` and `piece`): the
 //! sides' new geometry and the arc or the cut, from the shared core
-//! (`corner_of_path`, `fillet_lines`, `chamfer_lines`, `fillet_arc`,
+//! (`corner_in_path`, `fillet_lines`, `chamfer_lines`, `fillet_arc`,
 //! `chamfer_line`).
 
-use kentos_contracts::Entity;
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::Shape;
+use kentos_geometry_core::ops::curve_cuts::Geometry;
 use kentos_geometry_core::ops::fillet::{
-    Chamfer, Corner as Joined, CornerOp, CornerResult, Fillet, Seg, chamfer_lines, corner_of_path,
-    fillet_lines,
+    Chamfer, Corner as Joined, CornerOp, Fillet, Seg, chamfer_lines, corner_in_path, fillet_lines,
 };
 use kentos_geometry_core::tools::editing::{chamfer_line, fillet_arc};
 use kentos_native_application::geometry::shape;
 
 use super::site::{Corner, Site, line_of};
-use crate::Vec2;
 
 /// A size: a fillet's radius, or a chamfer's two distances.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -44,32 +42,14 @@ pub(super) fn plan(c: &Corner, op: Op, doc: &Document) -> Result<Plan, String> {
     match c.site {
         Site::Vertex { slot, vertex } => {
             let e = doc.get(slot).ok_or_else(String::new)?;
-            let (Entity::Polyline(path) | Entity::Polygon(path)) = e else {
-                return Err(String::new());
-            };
-            let closed = matches!(e, Entity::Polygon(_));
-            let pts: Vec<Vec2> = path.pts.iter().map(|p| Vec2::new(p.x, p.y)).collect();
-            match corner_of_path(&pts, path.bulges.as_deref(), closed, vertex, &op.core())? {
-                CornerResult::Error(error) => Err(error),
-                CornerResult::Path(p) => {
-                    // The whole geometry is written (docs/adr/0047): a closed area keeps its holes.
-                    let s = match shape(e) {
-                        Shape::Polygon { holes, .. } => Shape::Polygon {
-                            pts: p.pts,
-                            bulges: p.bulges,
-                            holes,
-                        },
-                        _ => Shape::Polyline {
-                            pts: p.pts,
-                            bulges: p.bulges,
-                            holes: None,
-                        },
-                    };
-                    Ok(Plan {
-                        updates: vec![(slot, s)],
-                        add: None,
-                    })
-                }
+            // The whole geometry is written (docs/adr/0047): the corner's part keeps its
+            // holes, the area its other parts (docs/adr/0143).
+            match corner_in_path(&shape(e), vertex, &op.core())? {
+                Geometry::Error(error) => Err(error),
+                Geometry::Ok(done) => Ok(Plan {
+                    updates: vec![(slot, done.shape)],
+                    add: None,
+                }),
             }
         }
         Site::Lines {

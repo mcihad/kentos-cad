@@ -2,7 +2,9 @@
 //! order is stable: `move_grip` reads the index the way `entity_grips` lists it.
 
 use crate::api::Op;
-use crate::entity::{Entity, Shape, dimension_geom, ellipse_geom};
+use crate::entity::{
+    Entity, Shape, area_parts, dimension_geom, ellipse_geom, is_multi_part, locate_part, replace_part,
+};
 use crate::geom::affine::translation;
 use crate::geom::arc::{ArcGeom, arc_end, arc_mid, arc_start, arc_through};
 use crate::geom::arrangement::Ring;
@@ -18,6 +20,10 @@ use crate::vec2::Vec2;
 const DIRECTION_GRIP: f64 = 10.0;
 
 pub fn entity_grips(e: &Shape) -> Vec<Vec2> {
+    // A multi-part area's grips are its parts', part after part (docs/adr/0143).
+    if is_multi_part(e) {
+        return area_parts(e).iter().flat_map(entity_grips).collect();
+    }
     match e {
         Shape::Point { p, .. } | Shape::Text { p, .. } => vec![*p],
         Shape::Line { a, b } => vec![*a, *b],
@@ -100,7 +106,12 @@ fn segment_count(e: &Shape) -> Option<usize> {
 }
 
 /// Segment index of a path's mid grip (grip indices after the vertices), else None.
+/// A multi-part area's grip counts in its own part (`grip_part` says which).
 pub fn mid_grip_segment(e: &Shape, index: usize) -> Option<usize> {
+    if is_multi_part(e) {
+        let (k, local) = grip_part(e, index)?;
+        return mid_grip_segment(&area_parts(e)[k], local);
+    }
     let (Shape::Polyline { pts, .. } | Shape::Polygon { pts, .. }) = e else {
         return None;
     };
@@ -118,7 +129,12 @@ pub struct HoleGrip {
 
 crate::json_struct!(HoleGrip { hole, vertex });
 
+/// A multi-part area's grip counts in its own part (`grip_part` says which).
 pub fn hole_grip(e: &Shape, index: usize) -> Option<HoleGrip> {
+    if is_multi_part(e) {
+        let (k, local) = grip_part(e, index)?;
+        return hole_grip(&area_parts(e)[k], local);
+    }
     let Shape::Polygon {
         pts,
         holes: Some(holes),
@@ -144,8 +160,25 @@ fn replace_at(pts: &[Vec2], index: usize, p: Vec2) -> Vec<Vec2> {
         .collect()
 }
 
+/// The part of a multi-part area that grip `index` belongs to, and the
+/// grip's index within that part as `entity_grips` lists it there; `(0,
+/// index)` for any other shape (docs/adr/0143).
+pub fn grip_part(e: &Shape, index: usize) -> Option<(usize, usize)> {
+    if !is_multi_part(e) {
+        return Some((0, index));
+    }
+    locate_part(&area_parts(e), index, |part| entity_grips(part).len())
+}
+
 /// Entity with grip `index` moved to `p` (same id), or None when the result would be degenerate.
 pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
+    // A multi-part area: the grip's part moves it, the others stay.
+    if is_multi_part(&e.shape) {
+        let (k, local) = grip_part(&e.shape, index)?;
+        let part = area_parts(&e.shape)[k].clone();
+        let moved = move_grip(&Entity::new(part), local, p)?;
+        return Some(e.with(replace_part(&e.shape, k, moved.shape)?));
+    }
     let shape = match &e.shape {
         Shape::Point { z, .. } => Shape::Point { p, z: *z },
         Shape::Text {
@@ -166,10 +199,15 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
                 Shape::Line { a: *a, b: p }
             }
         }
-        Shape::Polyline { pts, bulges, holes } | Shape::Polygon { pts, bulges, holes } => {
+        Shape::Polyline { pts, bulges, holes } | Shape::Polygon { pts, bulges, holes, .. } => {
             let rebuild = |pts: Vec<Vec2>, bulges: Option<Vec<f64>>, holes: Option<Vec<Ring>>| {
                 match e.shape {
-                    Shape::Polygon { .. } => Shape::Polygon { pts, bulges, holes },
+                    Shape::Polygon { .. } => Shape::Polygon {
+                        pts,
+                        bulges,
+                        holes,
+                        parts: None,
+                    },
                     _ => Shape::Polyline { pts, bulges, holes },
                 }
             };

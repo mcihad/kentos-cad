@@ -49,4 +49,5 @@ pub(super) static TABLES: &[&[Op]] = &[
     crate::processing::numbering::OPS,
     crate::processing::edge_lengths::OPS,
     crate::ops::elevation::OPS,
+    crate::ops::parts::OPS,
 ];

@@ -10,6 +10,8 @@
 //!   bowing out of a ring or to the right of an open path.
 //!
 //! A hole's vertices only move by dragging (a hole's shape needs Patlat).
+//! A multi-part area's grip acts on its own part, the others kept
+//! (docs/adr/0143); the heading counts in that part.
 //! Each action writes through `cad.entities.edit`, its operation naming the
 //! step (Köşe sil, Köşe ekle, Düz kenar yap, Yaya dönüştür); the object's
 //! geometry stays but for what the action gives, so a hole stays. The
@@ -18,10 +20,10 @@
 
 use kentos_contracts::{EditOperation, EntitiesEdit, EntityEdit};
 use kentos_domain::Slot;
-use kentos_geometry_core::entity::Shape;
+use kentos_geometry_core::entity::{Shape, area_parts, replace_part};
 use kentos_geometry_core::geom::bulge::{bulge_at, bulge_ring_area, is_arc_bulge, segment_mid};
 use kentos_geometry_core::ops::curve_cuts::Geometry;
-use kentos_geometry_core::ops::grips::{hole_grip, mid_grip_segment};
+use kentos_geometry_core::ops::grips::{grip_part, hole_grip, mid_grip_segment};
 use kentos_geometry_core::ops::vertex::{insert_vertex, remove_vertex};
 use kentos_geometry_core::vec2::Vec2;
 use kentos_native_application::geometry::{edit_geometry, shape};
@@ -36,6 +38,8 @@ use crate::tool::Context;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct GripMenu {
     pub slot: Slot,
+    /// The part of a multi-part area the grip is on (0: its first part, or any other object).
+    pub part: usize,
     pub target: Target,
 }
 
@@ -127,19 +131,23 @@ fn path(s: &Shape) -> Option<Path<'_>> {
 /// area): none when no selected path's grip is there, or it is a hole's vertex.
 pub fn at(screen: [f64; 2], cx: &Context<'_>) -> Option<GripMenu> {
     let (slot, index, _) = grip_at(screen, cx)?;
-    let s = shape(cx.doc.get(slot)?);
-    let bulges = path(&s)?.bulges;
-    if hole_grip(&s, index).is_some() {
+    let whole = shape(cx.doc.get(slot)?);
+    // The grip's own part and its index there (docs/adr/0143).
+    let (part, index) = grip_part(&whole, index)?;
+    let parts = area_parts(&whole);
+    let s = parts.get(part)?;
+    let bulges = path(s)?.bulges;
+    if hole_grip(s, index).is_some() {
         return None;
     }
-    let target = match mid_grip_segment(&s, index) {
+    let target = match mid_grip_segment(s, index) {
         None => Target::Vertex(index),
         Some(segment) => Target::Edge {
             segment,
             arc: is_arc_bulge(bulge_at(bulges, segment)),
         },
     };
-    Some(GripMenu { slot, target })
+    Some(GripMenu { slot, part, target })
 }
 
 /// Does `action` on the menu's object, through `cad.entities.edit`, and
@@ -148,7 +156,12 @@ pub fn apply(menu: GripMenu, action: GripAction, cx: &mut Context<'_>) {
     let (Some(e), Some(uid)) = (cx.doc.get(menu.slot).cloned(), cx.doc.uid(menu.slot)) else {
         return;
     };
-    let s = shape(&e);
+    let whole = shape(&e);
+    // The menu's part is edited, the object's other parts kept (docs/adr/0143).
+    let parts = area_parts(&whole);
+    let Some(s) = parts.get(menu.part).cloned() else {
+        return;
+    };
     let Some(Path {
         pts,
         bulges,
@@ -197,8 +210,17 @@ pub fn apply(menu: GripMenu, action: GripAction, cx: &mut Context<'_>) {
             return;
         }
     };
-    // The object's geometry stays but for what the action gives: a hole stays.
-    let Some(geometry) = edit_geometry(keep_holes(&s, edited)) else {
+    // The object's geometry stays but for what the action gives: a hole stays, the other parts too.
+    let edited = keep_holes(&s, edited);
+    let edited = if parts.len() > 1 {
+        match replace_part(&whole, menu.part, edited) {
+            Some(joined) => joined,
+            None => return,
+        }
+    } else {
+        edited
+    };
+    let Some(geometry) = edit_geometry(edited) else {
         return;
     };
     let input = EntitiesEdit {
@@ -250,6 +272,7 @@ fn with_bulge(
             pts: pts.to_vec(),
             bulges,
             holes: None,
+            parts: None,
         }
     } else {
         Shape::Polyline {
@@ -272,6 +295,7 @@ fn keep_holes(before: &Shape, edited: Shape) -> Shape {
             pts,
             bulges,
             holes: Some(holes.clone()),
+            parts: None,
         },
         (_, edited) => edited,
     }

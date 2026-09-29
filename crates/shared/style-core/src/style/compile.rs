@@ -34,6 +34,8 @@ pub enum Geom {
     /// Paths and whether each is closed.
     Line(Vec<(Vec<Vec2>, bool)>),
     Fill(Vec<Vec<Vec2>>),
+    /// A multi-part area: each part's rings, drawn as a `Fill` each (docs/adr/0143).
+    Fills(Vec<Vec<Vec<Vec2>>>),
 }
 
 /// The object's values for its symbol's expressions, as each use reads them.
@@ -774,12 +776,21 @@ pub fn compile_symbol(
     sink: &mut dyn Sink,
     level_base: f64,
 ) {
+    // A multi-part area: every part as one area (docs/adr/0143).
+    if let Geom::Fills(parts) = geom {
+        for rings in parts {
+            compile_symbol(symbol, &Geom::Fill(rings.clone()), t, env, sink, level_base);
+        }
+        return;
+    }
     match symbol.kind {
         SymbolType::Marker => {
             let at = match geom {
                 Geom::Marker(p) => Some(*p),
                 Geom::Fill(rings) => interior_point(rings),
                 Geom::Line(paths) => line_middle(paths),
+                // Taken part by part above.
+                Geom::Fills(_) => None,
             };
             let Some(at) = at else {
                 return;
@@ -798,7 +809,7 @@ pub fn compile_symbol(
                     rings = r.iter().map(|pts| (pts.clone(), true)).collect::<Vec<_>>();
                     &rings
                 }
-                Geom::Marker(_) => &[],
+                Geom::Marker(_) | Geom::Fills(_) => &[],
             };
             for (i, l) in symbol.layers.iter().enumerate() {
                 for (pts, closed) in paths {
@@ -818,7 +829,7 @@ pub fn compile_symbol(
                         .collect::<Vec<_>>();
                     &closed
                 }
-                Geom::Marker(_) => &[],
+                Geom::Marker(_) | Geom::Fills(_) => &[],
             };
             if rings.is_empty() {
                 return;

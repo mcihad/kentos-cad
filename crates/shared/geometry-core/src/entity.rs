@@ -5,6 +5,8 @@
 //! came, so operations that return `{ ...e, … }` in TypeScript give them
 //! back unchanged (docs/adr/0008).
 
+use std::borrow::Cow;
+
 use crate::api::json::{FromJson, Json, ToJson, write_str};
 use crate::api::{Op, json};
 use crate::geom::arc::{
@@ -39,6 +41,30 @@ pub struct HatchPattern {
 
 crate::json_struct!(HatchPattern { kind => "type", angle, spacing });
 
+/// A part of a multi-part area past its first (docs/adr/0143): its ring in
+/// vertex + bulge form and its holes, as the area's own fields hold the
+/// first part's. Its vertices' elevations stay with the host, as a hole's do.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Part {
+    pub pts: Vec<Vec2>,
+    pub bulges: Option<Vec<f64>>,
+    pub holes: Option<Vec<Ring>>,
+}
+
+crate::json_struct!(Part { pts, bulges, holes });
+
+impl Part {
+    /// The part as a one-part area.
+    pub fn shape(&self) -> Shape {
+        Shape::Polygon {
+            pts: self.pts.clone(),
+            bulges: self.bulges.clone(),
+            holes: self.holes.clone(),
+            parts: None,
+        }
+    }
+}
+
 /// The geometry of an entity, tagged by `kind` as in TypeScript.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Shape {
@@ -59,6 +85,9 @@ pub enum Shape {
         pts: Vec<Vec2>,
         bulges: Option<Vec<f64>>,
         holes: Option<Vec<Ring>>,
+        /// A multi-part area's parts past its first, whose own are the
+        /// fields above (docs/adr/0143); `area_parts` takes it part by part.
+        parts: Option<Vec<Part>>,
     },
     Circle {
         c: Vec2,
@@ -116,7 +145,7 @@ crate::json_tagged!(Shape, "kind",
     Point => "point" { p, z },
     Line => "line" { a, b },
     Polyline => "polyline" { pts, bulges, holes },
-    Polygon => "polygon" { pts, bulges, holes },
+    Polygon => "polygon" { pts, bulges, holes, parts },
     Circle => "circle" { c, r },
     Arc => "arc" { c, r, a0, a1 },
     Ellipse => "ellipse" { c, major, ratio, t0, t1 },
@@ -246,6 +275,10 @@ pub fn entity_vertices(e: &Shape) -> Vec<Vec2> {
         Shape::Point { p, .. } | Shape::Text { p, .. } => vec![*p],
         Shape::Line { a, b } => vec![*a, *b],
         Shape::Polyline { pts, .. } => pts.clone(),
+        // Part after part, each its ring's then its holes' (docs/adr/0143).
+        Shape::Polygon { .. } if is_multi_part(e) => {
+            area_parts(e).iter().flat_map(entity_vertices).collect()
+        }
         Shape::Polygon { pts, holes, .. } => match holes {
             Some(h) if !h.is_empty() => pts
                 .iter()
@@ -376,8 +409,11 @@ pub fn polygon_ring(pts: &[Vec2], bulges: Option<&[f64]>) -> Vec<Vec2> {
     }
 }
 
-/// Hole rings of a polygon (arcs tessellated) or a hatch; empty for anything else.
+/// Hole rings of a polygon, of every part (arcs tessellated), or a hatch; empty for anything else.
 pub fn polygon_holes(e: &Shape) -> Vec<Vec<Vec2>> {
+    if is_multi_part(e) {
+        return area_parts(e).iter().flat_map(polygon_holes).collect();
+    }
     match e {
         Shape::Polygon { holes: Some(h), .. } => h
             .iter()
@@ -388,12 +424,121 @@ pub fn polygon_holes(e: &Shape) -> Vec<Vec<Vec2>> {
     }
 }
 
-/// Whether p is inside a path's outer ring and outside its holes (tessellated test).
-pub fn inside_polygon(e: &Shape, p: Vec2) -> bool {
-    let (pts, bulges, holes) = match e {
-        Shape::Polyline { pts, bulges, holes } | Shape::Polygon { pts, bulges, holes } => {
-            (pts, bulges, holes)
+/// An area's parts, each a one-part area (the first its own fields); any
+/// other shape, a one-part area among them, as itself (docs/adr/0143). What
+/// holds for one polygon holds part by part: measure, draw, pick and snap so.
+pub fn area_parts(e: &Shape) -> Cow<'_, [Shape]> {
+    match e {
+        Shape::Polygon {
+            pts,
+            bulges,
+            holes,
+            parts: Some(parts),
+        } if !parts.is_empty() => {
+            let mut out = Vec::with_capacity(parts.len() + 1);
+            out.push(Shape::Polygon {
+                pts: pts.clone(),
+                bulges: bulges.clone(),
+                holes: holes.clone(),
+                parts: None,
+            });
+            out.extend(parts.iter().map(Part::shape));
+            Cow::Owned(out)
         }
+        _ => Cow::Borrowed(std::slice::from_ref(e)),
+    }
+}
+
+/// What an edit that runs along one ring (Kır, Buda, Parçala) says of a
+/// multi-part area: it would not know which part, and must not lose the
+/// others (docs/adr/0143).
+pub const MULTI_PART_REFUSED: &str =
+    "Bu işlem çok parçalı alanda çalışmaz; önce Parçalara ayır ile alanı parçalarına ayırın.";
+
+/// Whether an area has parts past its first.
+pub fn is_multi_part(e: &Shape) -> bool {
+    matches!(e, Shape::Polygon { parts: Some(p), .. } if !p.is_empty())
+}
+
+/// One area of `areas` in order, their parts flattened: the first part's
+/// fields its own, the others its parts; none for no area or a shape that is
+/// not one (docs/adr/0143).
+pub fn join_parts(areas: &[Shape]) -> Option<Shape> {
+    let mut all = Vec::new();
+    for a in areas {
+        for part in area_parts(a).iter() {
+            let Shape::Polygon {
+                pts, bulges, holes, ..
+            } = part
+            else {
+                return None;
+            };
+            all.push(Part {
+                pts: pts.clone(),
+                bulges: bulges.clone(),
+                holes: holes.clone(),
+            });
+        }
+    }
+    let mut it = all.into_iter();
+    let first = it.next()?;
+    let rest: Vec<Part> = it.collect();
+    Some(Shape::Polygon {
+        pts: first.pts,
+        bulges: first.bulges,
+        holes: first.holes,
+        parts: (!rest.is_empty()).then_some(rest),
+    })
+}
+
+/// Where `index` falls among an area's parts when each part counts
+/// `count(part)` indices (its vertices, its edges, its grips): the part and
+/// the index within it; none past the last part.
+pub fn locate_part(
+    parts: &[Shape],
+    index: usize,
+    count: impl Fn(&Shape) -> usize,
+) -> Option<(usize, usize)> {
+    let mut i = index;
+    for (k, part) in parts.iter().enumerate() {
+        let n = count(part);
+        if i < n {
+            return Some((k, i));
+        }
+        i -= n;
+    }
+    None
+}
+
+/// A path's outer vertices: a polyline's, or an area part's ring; 0 for
+/// anything else. Outer vertex indices count an area's parts so, part after
+/// part (docs/adr/0143).
+pub fn outer_count(e: &Shape) -> usize {
+    match e {
+        Shape::Polyline { pts, .. } | Shape::Polygon { pts, .. } => pts.len(),
+        _ => 0,
+    }
+}
+
+/// The area with part `k` (0: the area's own fields) replaced by `part`, a
+/// one-part area; none when `k` is past its parts or `part` is no area.
+pub fn replace_part(e: &Shape, k: usize, part: Shape) -> Option<Shape> {
+    let mut parts = area_parts(e).into_owned();
+    *parts.get_mut(k)? = part;
+    join_parts(&parts)
+}
+
+/// Whether p is inside a path's outer ring and outside its holes, in any of
+/// an area's parts (tessellated test).
+pub fn inside_polygon(e: &Shape, p: Vec2) -> bool {
+    if is_multi_part(e) {
+        return area_parts(e).iter().any(|part| inside_polygon(part, p));
+    }
+    let (pts, bulges, holes) = match e {
+        Shape::Polyline { pts, bulges, holes }
+        | Shape::Polygon {
+            pts, bulges, holes, ..
+        } => (pts, bulges, holes),
         _ => return false,
     };
     point_in_polygon(p, &polygon_ring(pts, bulges.as_deref()))
@@ -438,6 +583,16 @@ pub fn entity_bounds(e: &Shape) -> Bounds {
 
 pub fn entity_bounds_in(e: &Shape, font: Font) -> Bounds {
     let mut b = empty_bounds();
+    if is_multi_part(e) {
+        // Every part's box (docs/adr/0143).
+        for part in area_parts(e).iter() {
+            let pb = entity_bounds_in(part, font);
+            for q in [Vec2::new(pb.min_x, pb.min_y), Vec2::new(pb.max_x, pb.max_y)] {
+                extend_bounds(&mut b, q, 0.0);
+            }
+        }
+        return b;
+    }
     match e {
         Shape::Circle { c, r } => {
             extend_bounds(&mut b, *c, *r);
@@ -505,6 +660,18 @@ pub fn entity_bounds_in(e: &Shape, font: Font) -> Bounds {
 /// Where a label sits; None for a path without vertices (the TypeScript's undefined).
 pub fn entity_anchor(e: &Shape) -> Option<Vec2> {
     Some(match e {
+        // A multi-part area's label goes on its largest part (docs/adr/0143).
+        Shape::Polygon { .. } if is_multi_part(e) => {
+            let parts = area_parts(e);
+            let mut best: Option<(f64, &Shape)> = None;
+            for part in parts.iter() {
+                let a = entity_area(part).unwrap_or(0.0);
+                if best.is_none_or(|(most, _)| a > most) {
+                    best = Some((a, part));
+                }
+            }
+            return best.and_then(|(_, part)| entity_anchor(part));
+        }
         Shape::Polygon { pts, bulges, .. } => centroid(&polygon_ring(pts, bulges.as_deref())),
         Shape::Circle { c, .. } | Shape::Ellipse { c, .. } => *c,
         Shape::Arc { c, r, a0, a1 } => arc_mid(&ArcGeom {
@@ -529,7 +696,14 @@ pub fn entity_anchor(e: &Shape) -> Option<Vec2> {
 pub fn entity_length(e: &Shape) -> Option<f64> {
     match e {
         Shape::Line { a, b } => Some(path_length(&[*a, *b], false)),
-        Shape::Polyline { pts, bulges, holes } | Shape::Polygon { pts, bulges, holes } => {
+        // A multi-part area's perimeter is its parts' (docs/adr/0143).
+        Shape::Polygon { .. } if is_multi_part(e) => {
+            Some(area_parts(e).iter().filter_map(entity_length).sum())
+        }
+        Shape::Polyline { pts, bulges, holes }
+        | Shape::Polygon {
+            pts, bulges, holes, ..
+        } => {
             // A polygon's perimeter includes its holes (as in GIS).
             let closed = matches!(e, Shape::Polygon { .. });
             let holes = holes.iter().flatten().fold(0.0, |s, h| {
@@ -560,7 +734,13 @@ pub fn entity_length(e: &Shape) -> Option<f64> {
 
 pub fn entity_area(e: &Shape) -> Option<f64> {
     match e {
-        Shape::Polygon { pts, bulges, holes } => {
+        // A multi-part area's area is its parts' (docs/adr/0143).
+        Shape::Polygon { .. } if is_multi_part(e) => {
+            Some(area_parts(e).iter().filter_map(entity_area).sum())
+        }
+        Shape::Polygon {
+            pts, bulges, holes, ..
+        } => {
             let holes = holes.iter().flatten().fold(0.0, |s, h| {
                 s + bulge_ring_area(&h.pts, h.bulges.as_deref()).abs()
             });

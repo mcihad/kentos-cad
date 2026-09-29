@@ -14,7 +14,7 @@
 use std::cell::RefCell;
 
 use kentos_geometry_core::entity::{
-    Shape, entity_anchor, entity_area, entity_bounds, entity_length,
+    Shape, area_parts, entity_anchor, entity_area, entity_bounds, entity_length, is_multi_part,
 };
 use kentos_geometry_core::geom::bulge::{bulge_arc, bulge_at, segment_mid};
 use kentos_geometry_core::geometry::{Bounds, is_empty_bounds};
@@ -135,8 +135,26 @@ fn area_centroid<'r>(
 /// The centroid: of the area for an area (holes removed), a circle and a
 /// whole ellipse; the anchor for everything else and for an empty area.
 pub fn centroid(s: &Shape) -> Option<Vec2> {
+    // A multi-part area's is its parts' centroids weighted by their areas (docs/adr/0143).
+    if is_multi_part(s) {
+        let (mut total, mut sx, mut sy) = (0.0, 0.0, 0.0);
+        for part in area_parts(s).iter() {
+            let (Some(c), Some(a)) = (centroid(part), entity_area(part)) else {
+                continue;
+            };
+            total += a;
+            sx += a * c.x;
+            sy += a * c.y;
+        }
+        if total > 0.0 && total.is_finite() {
+            return Some(Vec2::new(sx / total, sy / total));
+        }
+        return entity_anchor(s);
+    }
     let area = match s {
-        Shape::Polygon { pts, bulges, holes } => area_centroid(
+        Shape::Polygon {
+            pts, bulges, holes, ..
+        } => area_centroid(
             (pts, bulges.as_deref()),
             holes
                 .iter()

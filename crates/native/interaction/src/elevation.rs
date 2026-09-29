@@ -14,7 +14,7 @@
 
 use kentos_contracts::{Entity, EntityGeometry};
 use kentos_geometry_core::ops::elevation::{ON, length_3d};
-use kentos_geometry_core::ops::grips::hole_grip;
+use kentos_geometry_core::ops::grips::{grip_part, hole_grip};
 use kentos_geometry_core::tools::point_text::{is_js_space, js_trim, parse_number};
 use kentos_native_application::elevation::paths;
 use kentos_native_application::geometry::{edit_geometry, shape};
@@ -50,7 +50,15 @@ pub fn has_any(e: &Entity) -> bool {
         Entity::Point(p) => p.z.is_some(),
         Entity::Line(l) => l.za.is_some() || l.zb.is_some(),
         Entity::Polyline(p) => any(&p.zs),
-        Entity::Polygon(p) => any(&p.zs) || p.holes.iter().flatten().any(|h| any(&h.zs)),
+        Entity::Polygon(p) => {
+            let holes = |hs: &Option<Vec<kentos_contracts::RingGeometry>>| {
+                hs.iter().flatten().any(|h| any(&h.zs))
+            };
+            // Every part's too (docs/adr/0143).
+            any(&p.zs)
+                || holes(&p.holes)
+                || p.parts.iter().flatten().any(|q| any(&q.zs) || holes(&q.holes))
+        }
         _ => false,
     }
 }
@@ -130,6 +138,13 @@ impl Tally {
                 self.ring(&p.zs, p.pts.len());
                 for hole in p.holes.iter().flatten() {
                     self.ring(&hole.zs, hole.pts.len());
+                }
+                // Every other part, its ring and holes (docs/adr/0143).
+                for part in p.parts.iter().flatten() {
+                    self.ring(&part.zs, part.pts.len());
+                    for hole in part.holes.iter().flatten() {
+                        self.ring(&hole.zs, hole.pts.len());
+                    }
                 }
             }
             _ => {}
@@ -257,8 +272,29 @@ pub fn space_length(e: &Entity) -> Option<(&'static str, f64)> {
 /// The elevation of the vertex a grip stands on, or none: a mid grip is no
 /// vertex, and a vertex may have none. `index` counts as the core lists the
 /// grips (`entity_grips`): a path's vertices, then one mid grip for each
-/// edge, then the vertices of each hole.
+/// edge, then the vertices of each hole; a multi-part area's part after part
+/// (docs/adr/0143).
 pub fn grip_elevation(e: &Entity, index: usize) -> Option<f64> {
+    if let Entity::Polygon(p) = e
+        && p.parts.as_ref().is_some_and(|ps| !ps.is_empty())
+    {
+        let (k, local) = grip_part(&shape(e), index)?;
+        if k == 0 {
+            let mut first = p.clone();
+            first.parts = None;
+            return grip_elevation(&Entity::Polygon(first), local);
+        }
+        let part = p.parts.as_ref()?.get(k - 1)?;
+        let one = kentos_contracts::PathEntity {
+            base: p.base.clone(),
+            pts: part.pts.clone(),
+            bulges: part.bulges.clone(),
+            holes: part.holes.clone(),
+            zs: part.zs.clone(),
+            parts: None,
+        };
+        return grip_elevation(&Entity::Polygon(one), local);
+    }
     match e {
         Entity::Point(p) => p.z.filter(|_| index == 0),
         Entity::Line(l) => match index {
@@ -368,11 +404,23 @@ pub fn geometry_with(e: &Entity, change: Change) -> Option<EntityGeometry> {
         (EntityGeometry::Polyline { zs, .. }, Entity::Polyline(_)) => {
             *zs = paths(e).into_iter().next().map(|p| run(p.zs));
         }
-        (EntityGeometry::Polygon { zs, holes, .. }, Entity::Polygon(_)) => {
+        (
+            EntityGeometry::Polygon {
+                zs, holes, parts, ..
+            },
+            Entity::Polygon(_),
+        ) => {
+            // `paths`' order: the ring, its holes, then each other part's ring and holes.
             let mut rings = paths(e).into_iter();
             *zs = rings.next().map(|p| run(p.zs));
-            for (hole, path) in holes.iter_mut().flatten().zip(rings) {
-                hole.zs = Some(run(path.zs));
+            for hole in holes.iter_mut().flatten() {
+                hole.zs = rings.next().map(|p| run(p.zs));
+            }
+            for part in parts.iter_mut().flatten() {
+                part.zs = rings.next().map(|p| run(p.zs));
+                for hole in part.holes.iter_mut().flatten() {
+                    hole.zs = rings.next().map(|p| run(p.zs));
+                }
             }
         }
         _ => return None,

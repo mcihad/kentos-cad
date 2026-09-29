@@ -21,13 +21,16 @@
 //! | 10 text | p.x, p.y, height, rotation, text |
 //! | 11 dimension | a.x, a.y, b.x, b.y, offset, height, text?, style?, hasAngle, angle, hasC, c.x, c.y |
 //! | 12 hatch | points, hatch holes, pattern type, angle, spacing |
+//! | 13 multi-part polygon | path, holes, part count, then per part: path, holes |
 //!
 //! `layer`, `text` and `style` are indices into the strings (−1: none);
 //! `label` is 1 for a non-empty label. `points` is a count n and 2n
 //! coordinates; a `path` is points and bulges (a count, −1 for none, then
 //! the values); `holes` is a count (−1 for none) of paths; `hatch holes` a
 //! count (−1 for none) of point lists. A field left out (`z`, `angle`, `c`)
-//! still takes its numbers, NaN.
+//! still takes its numbers, NaN. A multi-part area (docs/adr/0143) is kind
+//! 13, its first part as a polygon's fields and its other parts after them;
+//! a one-part area stays kind 3, laid out as it always was.
 //!
 //! The store answers in the same layout (`Packer`): moved, copied, arrayed
 //! and pasted objects come back as numbers, not JSON
@@ -37,7 +40,7 @@
 use std::collections::HashMap;
 
 use super::Store;
-use crate::entity::{HatchPattern, Shape};
+use crate::entity::{HatchPattern, Part, Shape};
 use crate::geom::affine::Affine;
 use crate::geom::arrangement::Ring;
 use crate::ops::transform::transform_shape;
@@ -140,7 +143,7 @@ impl Reader<'_> {
     }
 
     fn shape(&mut self, kind: f64) -> Result<Shape, String> {
-        if !(kind >= 0.0 && kind <= 12.0 && kind.fract() == 0.0) {
+        if !(kind >= 0.0 && kind <= 13.0 && kind.fract() == 0.0) {
             return Err(format!(
                 "paketin {}. sayısı bilinmeyen bir nesne türü ({kind})",
                 self.at
@@ -165,7 +168,28 @@ impl Reader<'_> {
                 if kind == 2.0 {
                     Shape::Polyline { pts, bulges, holes }
                 } else {
-                    Shape::Polygon { pts, bulges, holes }
+                    Shape::Polygon {
+                        pts,
+                        bulges,
+                        holes,
+                        parts: None,
+                    }
+                }
+            }
+            13 => {
+                let (pts, bulges, holes) = self.path()?;
+                let n = self.count()?;
+                let parts = (0..n)
+                    .map(|_| {
+                        let (pts, bulges, holes) = self.path()?;
+                        Ok(Part { pts, bulges, holes })
+                    })
+                    .collect::<Result<Vec<_>, String>>()?;
+                Shape::Polygon {
+                    pts,
+                    bulges,
+                    holes,
+                    parts: Some(parts),
                 }
             }
             4 => Shape::Circle {
@@ -312,6 +336,17 @@ impl Packer {
         }
     }
 
+    /// A path: its points, bulges and holes.
+    fn path(&mut self, pts: &[Vec2], bulges: Option<&[f64]>, holes: Option<&[Ring]>) {
+        self.points(pts);
+        self.values(bulges);
+        self.put(&[count(holes)]);
+        for h in holes.into_iter().flatten() {
+            self.points(&h.pts);
+            self.values(h.bulges.as_deref());
+        }
+    }
+
     /// One object: `id, layer, label, kind`, then the kind's fields.
     pub fn object(&mut self, id: f64, layer: &str, label: bool, shape: &Shape) {
         let layer = self.string(layer);
@@ -322,16 +357,26 @@ impl Packer {
                 self.put(&[0.0, p.x, p.y, flag(z.is_some()), z.unwrap_or(f64::NAN)]);
             }
             Shape::Line { a, b } => self.put(&[1.0, a.x, a.y, b.x, b.y]),
-            Shape::Polyline { pts, bulges, holes } | Shape::Polygon { pts, bulges, holes } => {
+            Shape::Polygon {
+                pts,
+                bulges,
+                holes,
+                parts: Some(parts),
+            } => {
+                self.put(&[13.0]);
+                self.path(pts, bulges.as_deref(), holes.as_deref());
+                self.put(&[parts.len() as f64]);
+                for p in parts {
+                    self.path(&p.pts, p.bulges.as_deref(), p.holes.as_deref());
+                }
+            }
+            Shape::Polyline { pts, bulges, holes }
+            | Shape::Polygon {
+                pts, bulges, holes, ..
+            } => {
                 let polygon = matches!(shape, Shape::Polygon { .. });
                 self.put(&[if polygon { 3.0 } else { 2.0 }]);
-                self.points(pts);
-                self.values(bulges.as_deref());
-                self.put(&[count(holes.as_deref())]);
-                for h in holes.iter().flatten() {
-                    self.points(&h.pts);
-                    self.values(h.bulges.as_deref());
-                }
+                self.path(pts, bulges.as_deref(), holes.as_deref());
             }
             Shape::Circle { c, r } => self.put(&[4.0, c.x, c.y, *r]),
             Shape::Arc { c, r, a0, a1 } => self.put(&[5.0, c.x, c.y, *r, *a0, *a1]),

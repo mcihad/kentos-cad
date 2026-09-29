@@ -10,7 +10,10 @@
 
 use super::Store;
 use super::pick::edge_distance;
-use crate::entity::{Shape, ellipse_geom, entity_area, entity_outline, inside_polygon, text_box};
+use crate::entity::{
+    Shape, area_parts, ellipse_geom, entity_area, entity_outline, inside_polygon, is_multi_part,
+    text_box,
+};
 use crate::geom::ellipse::{ellipse_area, inside_ellipse, is_full_ellipse};
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges};
 use crate::geometry::{Bounds, point_in_polygon, signed_area};
@@ -189,6 +192,11 @@ fn outline(e: &Shape, font: Font) -> Vec<Vec2> {
             height,
             rotation,
         } => text_box(*p, text, *height, *rotation, font),
+        // Every part of a multi-part area: all of them must be inside (docs/adr/0143).
+        _ if is_multi_part(e) => area_parts(e)
+            .iter()
+            .flat_map(|part| entity_outline(part, 64.0))
+            .collect(),
         _ => entity_outline(e, 64.0),
     }
 }

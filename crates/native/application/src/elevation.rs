@@ -28,7 +28,8 @@ fn path(
 
 /// An object's paths with their elevations, `None` for a vertex without
 /// one: a line's two ends, a polyline, a polygon's outer ring then its
-/// holes; nothing for the other kinds.
+/// holes, then each other part's ring and holes (docs/adr/0143); nothing
+/// for the other kinds.
 pub fn paths(e: &Entity) -> Vec<Elevated> {
     match e {
         Entity::Line(l) => vec![Elevated {
@@ -38,14 +39,26 @@ pub fn paths(e: &Entity) -> Vec<Elevated> {
             zs: vec![l.za, l.zb],
         }],
         Entity::Polyline(p) => vec![path(&p.pts, &p.bulges, false, &p.zs)],
-        Entity::Polygon(p) => std::iter::once(path(&p.pts, &p.bulges, true, &p.zs))
-            .chain(
-                p.holes
-                    .iter()
-                    .flatten()
-                    .map(|h| path(&h.pts, &h.bulges, true, &h.zs)),
-            )
-            .collect(),
+        Entity::Polygon(p) => {
+            let mut out: Vec<Elevated> = std::iter::once(path(&p.pts, &p.bulges, true, &p.zs))
+                .chain(
+                    p.holes
+                        .iter()
+                        .flatten()
+                        .map(|h| path(&h.pts, &h.bulges, true, &h.zs)),
+                )
+                .collect();
+            for part in p.parts.iter().flatten() {
+                out.push(path(&part.pts, &part.bulges, true, &part.zs));
+                out.extend(
+                    part.holes
+                        .iter()
+                        .flatten()
+                        .map(|h| path(&h.pts, &h.bulges, true, &h.zs)),
+                );
+            }
+            out
+        }
         _ => Vec::new(),
     }
 }
@@ -78,9 +91,22 @@ pub fn carry(entity: &mut Entity, sources: &[Elevated], same: &[Elevated], how: 
         Entity::Polygon(p) => {
             p.zs = run(&p.pts, true, 0);
             let mut any = p.zs.is_some();
-            for (i, h) in p.holes.iter_mut().flatten().enumerate() {
-                h.zs = run(&h.pts, true, i + 1);
+            let mut k = 1;
+            for h in p.holes.iter_mut().flatten() {
+                h.zs = run(&h.pts, true, k);
                 any |= h.zs.is_some();
+                k += 1;
+            }
+            // Every other part, in `paths`' order (docs/adr/0143).
+            for part in p.parts.iter_mut().flatten() {
+                part.zs = run(&part.pts, true, k);
+                any |= part.zs.is_some();
+                k += 1;
+                for h in part.holes.iter_mut().flatten() {
+                    h.zs = run(&h.pts, true, k);
+                    any |= h.zs.is_some();
+                    k += 1;
+                }
             }
             any
         }

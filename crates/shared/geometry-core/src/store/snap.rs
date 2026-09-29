@@ -5,7 +5,7 @@
 //! does. Candidates come in the document's order, as the TypeScript's did.
 
 use super::Store;
-use crate::entity::{Shape, dimension_geom, ellipse_geom, entity_vertices};
+use crate::entity::{Shape, area_parts, dimension_geom, ellipse_geom, entity_vertices};
 use crate::geom::arc::{ArcGeom, arc_end, arc_mid, arc_start};
 use crate::geom::bulge::{bulge_arc, bulge_at, segment_mid};
 use crate::geom::dimension::layout_dimension;
@@ -260,33 +260,36 @@ impl Store {
                 | Shape::Polygon { .. }
                 | Shape::Xline { .. }
                 | Shape::Ray { .. } => {
-                    let pts = entity_vertices(e);
-                    let bulges = match e {
-                        Shape::Polyline { bulges, .. } | Shape::Polygon { bulges, .. } => {
-                            bulges.as_deref()
+                    // A multi-part area part by part, each as one area (docs/adr/0143).
+                    for s in area_parts(e).iter() {
+                        let pts = entity_vertices(s);
+                        let bulges = match s {
+                            Shape::Polyline { bulges, .. } | Shape::Polygon { bulges, .. } => {
+                                bulges.as_deref()
+                            }
+                            _ => None,
+                        };
+                        for q in &pts {
+                            ch.consider(SnapKind::Endpoint, *q, id);
                         }
-                        _ => None,
-                    };
-                    for q in &pts {
-                        ch.consider(SnapKind::Endpoint, *q, id);
-                    }
-                    // A polygon's vertices include its holes', as the TypeScript walked them.
-                    let n = if matches!(e, Shape::Polygon { .. }) {
-                        pts.len()
-                    } else {
-                        pts.len().saturating_sub(1)
-                    };
-                    for i in 0..n {
-                        let a = pts[i];
-                        let b = pts[(i + 1) % pts.len()];
-                        let bulge = bulge_at(bulges, i);
-                        // A straight segment's midpoint lies in its box; a far box cannot offer one.
-                        if bulge == 0.0 && box_out_of_reach(a, b, p, tol) {
-                            continue;
-                        }
-                        ch.consider(SnapKind::Midpoint, segment_mid(a, b, bulge), id);
-                        if let Some(arc) = bulge_arc(a, b, bulge) {
-                            ch.consider(SnapKind::Center, arc.c, id);
+                        // A polygon's vertices include its holes', as the TypeScript walked them.
+                        let n = if matches!(s, Shape::Polygon { .. }) {
+                            pts.len()
+                        } else {
+                            pts.len().saturating_sub(1)
+                        };
+                        for i in 0..n {
+                            let a = pts[i];
+                            let b = pts[(i + 1) % pts.len()];
+                            let bulge = bulge_at(bulges, i);
+                            // A straight segment's midpoint lies in its box; a far box cannot offer one.
+                            if bulge == 0.0 && box_out_of_reach(a, b, p, tol) {
+                                continue;
+                            }
+                            ch.consider(SnapKind::Midpoint, segment_mid(a, b, bulge), id);
+                            if let Some(arc) = bulge_arc(a, b, bulge) {
+                                ch.consider(SnapKind::Center, arc.c, id);
+                            }
                         }
                     }
                 }
@@ -615,6 +618,7 @@ mod tests {
                             pts,
                             bulges,
                             holes: None,
+                            parts: None,
                         },
                     );
                 }
@@ -715,6 +719,7 @@ mod tests {
                         pts: (0..3).map(|_| near(rng)).collect(),
                         bulges: None,
                     }]),
+                    parts: None,
                 },
             };
             add(&mut s, shape);
@@ -850,6 +855,7 @@ mod tests {
                     ],
                     bulges: None,
                     holes: None,
+                    parts: None,
                 },
             );
         }

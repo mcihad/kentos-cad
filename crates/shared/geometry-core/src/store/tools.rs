@@ -16,8 +16,8 @@
 use super::rtree::{PackedTree, overlaps};
 use super::{Item, Packer, Store};
 use crate::entity::{
-    Entity, Shape, dimension_geom, ellipse_geom, entity_area, entity_length, entity_outline,
-    polygon_ring,
+    Entity, Shape, area_parts, dimension_geom, ellipse_geom, entity_area, entity_length,
+    entity_outline, is_multi_part, polygon_ring,
 };
 use crate::geom::affine::Affine;
 use crate::geom::bulge::{bulge_arc, bulge_at};
@@ -172,6 +172,13 @@ fn loose_box(it: &Item) -> bool {
 /// (`apps/web/src/tools/preview.ts`): `flags, n, x0, y0, …` per path, flags 0 open,
 /// 1 closed, 2 a marker (points and text: one point, drawn as a square).
 pub fn outline_paths(s: &Shape, out: &mut Vec<f64>) {
+    // A multi-part area's parts, each as one area's rings (docs/adr/0143).
+    if is_multi_part(s) {
+        for part in area_parts(s).iter() {
+            outline_paths(part, out);
+        }
+        return;
+    }
     let path = |out: &mut Vec<f64>, flags: f64, pts: &[Vec2]| {
         out.push(flags);
         out.push(pts.len() as f64);

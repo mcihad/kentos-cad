@@ -17,7 +17,7 @@ use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::store::Store;
 use kentos_geometry_core::store::draw::{
-    FILL, LINE, MARKER, REVERSED, SOURCE, drawn, measure_record,
+    FILL, FILLS, LINE, MARKER, REVERSED, SOURCE, drawn, measure_record,
 };
 
 use super::batch::{BatchSink, Batches};
@@ -46,7 +46,7 @@ fn class_of(g: &Geom) -> SymbolType {
     match g {
         Geom::Marker(_) => SymbolType::Marker,
         Geom::Line(_) => SymbolType::Line,
-        Geom::Fill(_) => SymbolType::Fill,
+        Geom::Fill(_) | Geom::Fills(_) => SymbolType::Fill,
     }
 }
 
@@ -150,6 +150,15 @@ pub fn styled_geometry(s: &Shape, clip: Option<&Bounds>, buf: &mut Vec<f64>) -> 
     } else if kind == FILL {
         let count = r.next() as usize;
         Some(Geom::Fill((0..count).map(|k| r.points(k)).collect()))
+    } else if kind == FILLS {
+        // A multi-part area's parts, each its rings, their points always given (docs/adr/0143).
+        let parts = r.next() as usize;
+        let mut out = Vec::with_capacity(parts.min(1 << 16));
+        for _ in 0..parts {
+            let count = r.next() as usize;
+            out.push((0..count).map(|_| r.points(0)).collect());
+        }
+        Some(Geom::Fills(out))
     } else {
         None
     }

@@ -267,6 +267,7 @@ pub fn offset_ellipse(e: &EllipseGeom, d: f64, through: Vec2) -> Geometry {
             pts,
             bulges: None,
             holes: None,
+            parts: None,
         }
     } else {
         Shape::Polyline {

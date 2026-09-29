@@ -4,7 +4,7 @@
 //! curve, since an area has only straight and circular edges.
 
 use crate::api::Op;
-use crate::entity::{Entity, Shape, ellipse_geom};
+use crate::entity::{Entity, Shape, area_parts, ellipse_geom, entity_vertices, is_multi_part};
 use crate::geom::arc::{ArcGeom, arc_end, arc_start};
 use crate::geom::arrangement::{Area, Ring, Source};
 use crate::geom::bulge::{bulge_at, has_bulges};
@@ -28,10 +28,23 @@ fn ring(pts: Vec<Vec2>, bulges: Option<Vec<f64>>) -> Ring {
     }
 }
 
+/// The areas an entity encloses: a multi-part area's parts one by one
+/// (docs/adr/0143), any other closed entity's one; empty for open or
+/// non-area entities.
+pub fn areas_of_entity(e: &Shape) -> Vec<Area> {
+    area_parts(e).iter().filter_map(area_of_entity).collect()
+}
+
 /// The area an entity encloses, or None for open or non-area entities. Hatches are fills, not areas.
+/// A multi-part area is more than one: `areas_of_entity` takes it part by part.
 pub fn area_of_entity(e: &Shape) -> Option<Area> {
+    if is_multi_part(e) {
+        return None;
+    }
     match e {
-        Shape::Polygon { pts, bulges, holes } => (pts.len() >= 2).then(|| Area {
+        Shape::Polygon {
+            pts, bulges, holes, ..
+        } => (pts.len() >= 2).then(|| Area {
             outer: ring(pts.clone(), bulges.clone()),
             holes: holes
                 .iter()
@@ -110,13 +123,22 @@ pub fn polygon_of_area(a: &Area) -> Entity {
         pts: a.outer.pts.clone(),
         bulges: a.outer.bulges.clone(),
         holes: (!a.holes.is_empty()).then(|| a.holes.clone()),
+        parts: None,
     })
 }
 
-/// A path's rings as closed polylines (first point repeated at the end): outer first, then holes.
+/// A path's rings as closed polylines (first point repeated at the end): outer first, then holes;
+/// a multi-part area's part after part.
 pub fn polylines_of_polygon(e: &Shape) -> Result<Vec<Entity>, String> {
+    if is_multi_part(e) {
+        let mut out = Vec::new();
+        for part in area_parts(e).iter() {
+            out.extend(polylines_of_polygon(part)?);
+        }
+        return Ok(out);
+    }
     let (pts, bulges, holes) = match e {
-        Shape::Polyline { pts, bulges, holes } | Shape::Polygon { pts, bulges, holes } => {
+        Shape::Polyline { pts, bulges, holes } | Shape::Polygon { pts, bulges, holes, .. } => {
             (pts, bulges, holes)
         }
         _ => return Err("çoklu çizgi ya da kapalı alan bekleniyordu".into()),
@@ -157,12 +179,8 @@ pub fn line_source(entities: &[Entity]) -> Source {
         match &e.shape {
             Shape::Line { a, b } => points.extend([*a, *b]),
             Shape::Polyline { pts, .. } => points.extend_from_slice(pts),
-            Shape::Polygon { pts, holes, .. } => {
-                points.extend_from_slice(pts);
-                for h in holes.iter().flatten() {
-                    points.extend_from_slice(&h.pts);
-                }
-            }
+            // Every part's ring and holes (docs/adr/0143).
+            Shape::Polygon { .. } => points.extend(entity_vertices(&e.shape)),
             Shape::Arc { c, r, a0, a1 } => {
                 let g = ArcGeom {
                     c: *c,

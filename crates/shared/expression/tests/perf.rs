@@ -402,6 +402,7 @@ fn typed_and_shapes(sizes: &[usize], runs: usize, warm: usize) -> Vec<(String, S
                     ],
                     bulges: None,
                     holes: None,
+                    parts: None,
                 }
             })
             .collect();

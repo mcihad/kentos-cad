@@ -2,7 +2,9 @@
 //! segment split by a new vertex keeps its circle.
 
 use crate::api::Op;
-use crate::entity::{Entity, Shape};
+use crate::entity::{
+    Entity, Shape, area_parts, is_multi_part, locate_part, outer_count, replace_part,
+};
 use crate::geom::bulge::{
     bulge_arc, bulge_at, bulge_of_sweep, bulge_path_edges, clean_bulge_path, is_arc_bulge,
 };
@@ -32,27 +34,65 @@ pub fn nearest_segment(e: &Shape, p: Vec2) -> usize {
 /// ring (the vertex tool's `nearHole`, docs/adr/0047): there the tool says
 /// that a hole's corners move with grips. False for anything else.
 pub fn near_hole(e: &Shape, p: Vec2) -> bool {
-    let Shape::Polygon {
-        pts,
-        bulges,
-        holes: Some(holes),
-    } = e
-    else {
-        return false;
-    };
-    if holes.is_empty() {
-        return false;
-    }
-    let nearest = |edges: Vec<Edge>| {
+    let nearest = |edges: &[Edge]| {
         edges
             .iter()
             .fold(f64::INFINITY, |m, ed| js_min(m, closest_on_edge(ed, p).d))
     };
-    let inner: Vec<Edge> = holes
-        .iter()
-        .flat_map(|h| bulge_path_edges(&h.pts, h.bulges.as_deref(), true))
-        .collect();
-    nearest(inner) < nearest(bulge_path_edges(pts, bulges.as_deref(), true))
+    // Every part's rings: its outer ring against its holes (docs/adr/0143).
+    let (mut outer, mut inner) = (Vec::new(), Vec::new());
+    for part in area_parts(e).iter() {
+        let Shape::Polygon {
+            pts, bulges, holes, ..
+        } = part
+        else {
+            return false;
+        };
+        outer.extend(bulge_path_edges(pts, bulges.as_deref(), true));
+        for h in holes.iter().flatten() {
+            inner.extend(bulge_path_edges(&h.pts, h.bulges.as_deref(), true));
+        }
+    }
+    !inner.is_empty() && nearest(&inner) < nearest(&outer)
+}
+
+/// `edit` of the part of a multi-part area that holds `index` (counted by
+/// `count` per part), the part keeping its holes, the others as they are
+/// (docs/adr/0143); what `edit` refuses is the area's refusal.
+fn in_part(
+    e: &Shape,
+    index: usize,
+    count: impl Fn(&Shape) -> usize,
+    edit: impl FnOnce(&Shape, usize) -> Result<Geometry, String>,
+) -> Result<Geometry, String> {
+    let parts = area_parts(e);
+    let Some((k, local)) = locate_part(&parts, index, count) else {
+        return Err(format!("{}. öğe yok.", index + 1));
+    };
+    let holes = match &parts[k] {
+        Shape::Polygon { holes, .. } => holes.clone(),
+        _ => None,
+    };
+    Ok(match edit(&parts[k], local)? {
+        Geometry::Ok(done) => {
+            let part = match done.shape {
+                Shape::Polygon {
+                    pts, bulges, parts, ..
+                } => Shape::Polygon {
+                    pts,
+                    bulges,
+                    holes,
+                    parts,
+                },
+                other => other,
+            };
+            match replace_part(e, k, part) {
+                Some(shape) => Geometry::Ok(Entity::new(shape)),
+                None => Geometry::Error("Parça kapalı alan olarak kalmalı.".into()),
+            }
+        }
+        refused => refused,
+    })
 }
 
 fn path_shape(closed: bool, pts: Vec<Vec2>, bulges: Option<Vec<f64>>) -> Shape {
@@ -61,6 +101,7 @@ fn path_shape(closed: bool, pts: Vec<Vec2>, bulges: Option<Vec<f64>>) -> Shape {
             pts,
             bulges,
             holes: None,
+            parts: None,
         }
     } else {
         Shape::Polyline {
@@ -82,6 +123,15 @@ fn splice(v: &mut Vec<f64>, start: usize, items: &[f64]) {
 /// a two-segment polyline; an arc segment is split into two arcs on its
 /// circle. Err where the TypeScript reads a segment that is not there.
 pub fn insert_vertex(e: &Shape, seg: usize, p: Vec2) -> Result<Geometry, String> {
+    // `seg` counts every part's edges, part after part (`entity_edges`).
+    if is_multi_part(e) {
+        return in_part(
+            e,
+            seg,
+            |part| entity_edges(part).len(),
+            |part, local| insert_vertex(part, local, p),
+        );
+    }
     let (pts, bulges, closed) = match e {
         Shape::Line { a, b } => {
             let q = closest_on_edge(&Edge::Seg { a: *a, b: *b }, p);
@@ -147,6 +197,13 @@ pub fn insert_vertex(e: &Shape, seg: usize, p: Vec2) -> Result<Geometry, String>
 
 /// Removes vertex `index`; its two segments merge into one straight segment.
 pub fn remove_vertex(e: &Shape, index: usize) -> Geometry {
+    // `index` counts every part's outer vertices, part after part.
+    if is_multi_part(e) {
+        return in_part(e, index, outer_count, |part, local| {
+            Ok(remove_vertex(part, local))
+        })
+        .unwrap_or_else(Geometry::Error);
+    }
     let (pts, bulges, closed) = match e {
         Shape::Polyline { pts, bulges, .. } => (pts, bulges.as_deref(), false),
         Shape::Polygon { pts, bulges, .. } => (pts, bulges.as_deref(), true),

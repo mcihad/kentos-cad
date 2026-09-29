@@ -3,7 +3,7 @@
 //! the removed part runs counter-clockwise from p1 to p2.
 
 use crate::api::Op;
-use crate::entity::{Entity, Shape};
+use crate::entity::{Entity, MULTI_PART_REFUSED, Shape, is_multi_part};
 use crate::geom::bulge::bulge_ring_area;
 use crate::jsmath::{js_max, js_min};
 use crate::op;
@@ -21,6 +21,9 @@ pub fn break_entity(e: &Entity, p1: Vec2, p2: Vec2) -> Cut {
     }
     if let Some(c) = construction_of(s) {
         return break_construction(&c, p1, p2);
+    }
+    if is_multi_part(s) {
+        return Cut::Error(MULTI_PART_REFUSED.into());
     }
     if !matches!(
         s,

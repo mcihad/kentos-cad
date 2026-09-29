@@ -24,7 +24,24 @@ pub struct EdgePath<'a> {
     pub bulges: Option<&'a [f64]>,
 }
 
-/// The labelled path of an object, if it has one.
+/// The labelled paths of an object: one, or a multi-part area's ring of
+/// each part (docs/adr/0143); none for an object without edges to label.
+pub fn edge_paths(s: &Shape) -> Vec<EdgePath<'_>> {
+    let mut out: Vec<EdgePath<'_>> = edge_path(s).into_iter().collect();
+    if let Shape::Polygon {
+        parts: Some(parts), ..
+    } = s
+    {
+        out.extend(parts.iter().map(|p| EdgePath {
+            pts: Cow::Borrowed(&p.pts),
+            closed: true,
+            bulges: p.bulges.as_deref(),
+        }));
+    }
+    out
+}
+
+/// The labelled path of an object, if it has one (a multi-part area's first part's).
 pub fn edge_path(s: &Shape) -> Option<EdgePath<'_>> {
     match s {
         Shape::Line { a, b } => Some(EdgePath {
@@ -125,7 +142,7 @@ pub(crate) static OPS: &[Op] = &[op!(
         let mut ids = Vec::new();
         let mut paths = Vec::new();
         for e in &entities {
-            if let Some(p) = edge_path(&e.shape) {
+            for p in edge_paths(&e.shape) {
                 ids.push(id_of(e));
                 paths.push(p);
             }

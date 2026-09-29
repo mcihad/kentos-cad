@@ -3,7 +3,7 @@
 //! the entity lies in the window.
 
 use crate::api::Op;
-use crate::entity::{Entity, Shape, entity_geometry};
+use crate::entity::{Entity, Part, Shape, entity_geometry};
 use crate::geom::arc::{ArcGeom, arc_end, arc_mid, arc_start, arc_through};
 use crate::geom::arrangement::Ring;
 use crate::geometry::Bounds;
@@ -51,18 +51,41 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
             pts: pts.iter().map(|&p| mv(p)).collect(),
             closed: *closed,
         })?,
-        Shape::Polygon { pts, bulges, holes } => {
-            if !any(pts) && !holes.iter().flatten().any(|h| any(&h.pts)) {
+        Shape::Polygon {
+            pts,
+            bulges,
+            holes,
+            parts,
+        } => {
+            let touched = |pts: &[Vec2], holes: &Option<Vec<Ring>>| {
+                any(pts) || holes.iter().flatten().any(|h| any(&h.pts))
+            };
+            // Every part of a multi-part area moves the vertices it has in the window (docs/adr/0143).
+            if !touched(pts, holes)
+                && !parts.iter().flatten().any(|p| touched(&p.pts, &p.holes))
+            {
                 return None;
             }
-            Shape::Polygon {
-                pts: pts.iter().map(|&p| mv(p)).collect(),
-                bulges: bulges.clone(),
-                holes: holes.as_ref().map(|hs| {
+            let moved_holes = |holes: &Option<Vec<Ring>>| {
+                holes.as_ref().map(|hs| {
                     hs.iter()
                         .map(|h| Ring {
                             pts: h.pts.iter().map(|&p| mv(p)).collect(),
                             bulges: h.bulges.clone(),
+                        })
+                        .collect()
+                })
+            };
+            Shape::Polygon {
+                pts: pts.iter().map(|&p| mv(p)).collect(),
+                bulges: bulges.clone(),
+                holes: moved_holes(holes),
+                parts: parts.as_ref().map(|ps| {
+                    ps.iter()
+                        .map(|p| Part {
+                            pts: p.pts.iter().map(|&q| mv(q)).collect(),
+                            bulges: p.bulges.clone(),
+                            holes: moved_holes(&p.holes),
                         })
                         .collect()
                 }),

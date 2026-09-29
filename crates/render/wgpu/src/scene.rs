@@ -34,7 +34,7 @@ use kentos_contracts::{
     DimensionStyle, DocumentSnapshotV1, DrawingFont, Entity, HatchEntity, HatchPatternType,
     LayerNode, LayerNodeType, PathEntity, PointSymbol, RingGeometry,
 };
-use kentos_geometry_core::entity::{HatchPattern, Shape, dimension_geom, entity_bounds_in};
+use kentos_geometry_core::entity::{HatchPattern, Part, Shape, dimension_geom, entity_bounds_in};
 use kentos_geometry_core::geom::arc::sweep;
 use kentos_geometry_core::geom::arrangement::Ring;
 use kentos_geometry_core::geom::bulge::has_bulges;
@@ -164,6 +164,12 @@ pub fn build_fixed<D: Drawing + ?Sized>(doc: &D, palette: &Palette, origin: Vec2
                     let mut rings = vec![points(&p.pts)];
                     rings.extend(p.holes.iter().flatten().map(|h| points(&h.pts)));
                     b.polygon(&rings, color, layer.fill);
+                    // Every part is straight here: an arc anywhere sends the area to the curves.
+                    for q in p.parts.iter().flatten() {
+                        let mut rings = vec![points(&q.pts)];
+                        rings.extend(q.holes.iter().flatten().map(|h| points(&h.pts)));
+                        b.polygon(&rings, color, layer.fill);
+                    }
                 }
                 Entity::Hatch(h) => b.hatch(h, color),
                 Entity::Dimension(_) => {
@@ -350,6 +356,9 @@ fn curves(
                             .map(|h| bulge_path(&points(&h.pts), h.bulges.as_deref(), true, tol)),
                     );
                     b.polygon(&rings, color, layer.fill);
+                    for rings in other_parts(p, tol) {
+                        b.polygon(&rings, color, layer.fill);
+                    }
                 }
                 Entity::Circle(c) if valid_radius(c.r) => {
                     b.path(&circle_ring(v(&c.c), c.r, tol), true, color);
@@ -519,6 +528,9 @@ fn highlight_one(b: &mut Builder, entity: &Entity, style: &Highlight, tol: f64, 
                     .map(|h| bulge_path(&points(&h.pts), h.bulges.as_deref(), true, tol)),
             );
             b.polygon(&rings, color, style.fill);
+            for rings in other_parts(p, tol) {
+                b.polygon(&rings, color, style.fill);
+            }
         }
         Entity::Hatch(h) => {
             let mut rings = vec![points(&h.ring)];
@@ -706,12 +718,16 @@ fn entity_color(entity: &Entity, layer: &DrawLayer<'_>, palette: &Palette) -> Rg
         .unwrap_or(layer.color)
 }
 
+/// Whether an area has an arc edge anywhere: its ring, a hole, another part's (docs/adr/0143).
 fn polygon_curved(p: &PathEntity) -> bool {
-    has_bulges(p.bulges.as_deref())
-        || p.holes
-            .iter()
-            .flatten()
-            .any(|h| has_bulges(h.bulges.as_deref()))
+    let curved = |bulges: &Option<Vec<f64>>, holes: &Option<Vec<RingGeometry>>| {
+        has_bulges(bulges.as_deref())
+            || holes
+                .iter()
+                .flatten()
+                .any(|h| has_bulges(h.bulges.as_deref()))
+    };
+    curved(&p.bulges, &p.holes) || p.parts.iter().flatten().any(|q| curved(&q.bulges, &q.holes))
 }
 
 fn valid_radius(r: f64) -> bool {
@@ -941,6 +957,25 @@ fn ring(r: &RingGeometry) -> Ring {
     }
 }
 
+/// A multi-part area's parts past its first, each its ring and holes with
+/// their arcs tessellated (docs/adr/0143); none for a one-part area.
+fn other_parts(p: &PathEntity, tol: f64) -> Vec<Vec<Vec<Vec2>>> {
+    p.parts
+        .iter()
+        .flatten()
+        .map(|q| {
+            let mut rings = vec![bulge_path(&points(&q.pts), q.bulges.as_deref(), true, tol)];
+            rings.extend(
+                q.holes
+                    .iter()
+                    .flatten()
+                    .map(|h| bulge_path(&points(&h.pts), h.bulges.as_deref(), true, tol)),
+            );
+            rings
+        })
+        .collect()
+}
+
 /// An object's geometry as the geometry core takes it (its own `Shape`).
 fn shape(entity: &Entity) -> Shape {
     match entity {
@@ -958,6 +993,16 @@ fn shape(entity: &Entity) -> Shape {
             pts: points(&p.pts),
             bulges: p.bulges.clone(),
             holes: p.holes.as_ref().map(|hs| hs.iter().map(ring).collect()),
+            // Every part of a multi-part area (docs/adr/0143).
+            parts: p.parts.as_ref().map(|ps| {
+                ps.iter()
+                    .map(|q| Part {
+                        pts: points(&q.pts),
+                        bulges: q.bulges.clone(),
+                        holes: q.holes.as_ref().map(|hs| hs.iter().map(ring).collect()),
+                    })
+                    .collect()
+            }),
         },
         Entity::Circle(c) => Shape::Circle { c: v(&c.c), r: c.r },
         Entity::Arc(a) => Shape::Arc {

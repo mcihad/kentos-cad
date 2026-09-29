@@ -70,7 +70,7 @@ GEOMETRY = {
     "point": ["p", "z"],
     "line": ["a", "b"],
     "polyline": ["pts", "bulges", "holes"],
-    "polygon": ["pts", "bulges", "holes"],
+    "polygon": ["pts", "bulges", "holes", "parts"],
     "circle": ["c", "r"],
     "arc": ["c", "r", "a0", "a1"],
     "ellipse": ["c", "major", "ratio", "t0", "t1"],
@@ -1010,6 +1010,86 @@ cases.append({
          "result": failed("invalid_elevations", ELEVATIONS_MESSAGE.format(2, 3), "changes[0].geometry.zs"), "expect": {"ids": Z_IDS, "canUndo": False, "dirty": False, "revision": "same"}},
         {"op": "execute", "input": {"operation": "elevation", "changes": [{"kind": "update", "uid": uid(2), "geometry": {**PATH2, "zs": [1, 2, 3]}}]}, "nonFinite": {"changes[0].geometry.zs[1]": "Infinity"},
          "result": failed("not_finite", not_finite_message(1), "changes[0].geometry"), "expect": {"ids": Z_IDS, "canUndo": False, "dirty": False, "revision": "same"}},
+    ],
+})
+
+# ── Multi-part areas (docs/adr/0143) ───────────────────────────────────
+# The geometry is the whole area: its parts come with it, and none means one part. A part's ring closes as the
+# area's does; its elevations, written, are one per vertex; not written, each vertex takes one by the rules
+# above, part by part in the order ring, holes, then each other part's ring and holes.
+
+P_FIRST = [P(487000, 4420080), P(487010, 4420080), P(487010, 4420090), P(487000, 4420090)]
+P_SECOND = [P(487020, 4420080), P(487030, 4420080), P(487030, 4420090), P(487020, 4420090)]
+P_HOLE = {"pts": [P(487024, 4420084), P(487026, 4420084), P(487026, 4420086), P(487024, 4420086)]}
+P_ENTITIES = [
+    {"kind": "polygon", "id": 1, "layerId": "yapi", "attrs": {"Ada": "102"}, "pts": P_FIRST, "zs": [1, 2, 3, 4],
+     "parts": [{"pts": P_SECOND, "holes": [P_HOLE], "zs": [5, 6, 7, 8]}]},
+]
+P_SETUP = {**SETUP, "entities": P_ENTITIES}
+P_IDS = [1]
+
+
+def PA():
+    return json.loads(json.dumps(P_ENTITIES[0]))
+
+
+def p_updated(geometry, **fields):
+    """`update` of the multi-part area: the geometry replaced (its parts with it), the elevations as given."""
+    out = {k: v for k, v in PA().items() if k not in ("kind", "zs") and k not in GEOMETRY["polygon"]}
+    out.update(json.loads(json.dumps(geometry)))
+    out.update(fields)
+    return out
+
+
+P_MOVED = [P(487019, 4420079)] + P_SECOND[1:]
+cases.append({
+    "name": "Çok parçalı alan, tutamaç: ikinci parçanın köşesi taşınır; ilk parça, deliği ve bütün kotlar kalır (taşınan köşe kendi kotunu korur); tek adım",
+    "setup": P_SETUP,
+    "steps": [
+        {"op": "captureUid", "id": 1, "as": "ada"},
+        {"op": "execute", "input": {"operation": "grip", "changes": [{"kind": "update", "uid": uid(1), "geometry": {"kind": "polygon", "pts": P_FIRST, "parts": [{"pts": P_MOVED, "holes": [P_HOLE]}]}}]},
+         "result": done(changed=[uid(1)]),
+         "expect": {"ids": P_IDS, "entities": {"1": p_updated({"kind": "polygon", "pts": P_FIRST, "parts": [{"pts": P_MOVED, "holes": [P_HOLE], "zs": [5, 6, 7, 8]}]}, zs=[1, 2, 3, 4])},
+                    "uids": {"1": "ada"}, "canUndo": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Tutamaçla düzenle", "expect": {"entities": {"1": PA()}, "uids": {"1": "ada"}, "canUndo": False}},
+    ],
+})
+
+cases.append({
+    "name": "Çok parçalı alan: parçasız geometri alanı tek parçalı yapar (geometri bütün alandır)",
+    "setup": P_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "grip", "changes": [{"kind": "update", "uid": uid(1), "geometry": {"kind": "polygon", "pts": P_FIRST}}]},
+         "result": done(changed=[uid(1)]),
+         "expect": {"entities": {"1": p_updated({"kind": "polygon", "pts": P_FIRST}, zs=[1, 2, 3, 4])}, "revision": "changed"}},
+    ],
+})
+
+PART_TOO_FEW = "{}. parçanın en az 3 köşesi olmalı (kenarlarından biri yaysa 2); {} köşe verildi. Eksik köşeleri ekleyin ya da parçayı çıkarın."
+PART_HOLE_TOO_FEW = "{}. parçanın {}. deliğinin en az 3 köşesi olmalı (kenarlarından biri yaysa 2); {} köşe verildi. Eksik köşeleri ekleyin ya da deliği çıkarın."
+cases.append({
+    "name": "Çok parçalı alan: parçanın halkası ve deliği alanınki gibi kapanmalı; kapanmayan reddedilir, hiçbir şey yazılmaz",
+    "setup": P_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "grip", "changes": [{"kind": "update", "uid": uid(1), "geometry": {"kind": "polygon", "pts": P_FIRST, "parts": [{"pts": P_SECOND[:2]}]}}]},
+         "result": failed("too_few_corners", PART_TOO_FEW.format(2, 2), "changes[0].geometry.parts[0].pts"), "expect": {"ids": P_IDS, "canUndo": False, "dirty": False, "revision": "same"}},
+        {"op": "execute", "input": {"operation": "grip", "changes": [{"kind": "update", "uid": uid(1), "geometry": {"kind": "polygon", "pts": P_FIRST, "parts": [{"pts": P_SECOND, "holes": [{"pts": P_HOLE["pts"][:2]}]}]}}]},
+         "result": failed("too_few_corners", PART_HOLE_TOO_FEW.format(2, 1, 2), "changes[0].geometry.parts[0].holes[0].pts"), "expect": {"ids": P_IDS, "canUndo": False, "dirty": False, "revision": "same"}},
+        {"op": "execute", "input": {"operation": "grip", "changes": [{"kind": "update", "uid": uid(1), "geometry": {"kind": "polygon", "pts": P_FIRST, "parts": [{"pts": P_SECOND, "bulges": [0, 0, 0, 0]}]}}]}, "nonFinite": {"changes[0].geometry.parts[0].bulges[2]": "NaN"},
+         "result": failed("not_finite", not_finite_message(1), "changes[0].geometry"), "expect": {"ids": P_IDS, "canUndo": False, "dirty": False, "revision": "same"}},
+    ],
+})
+
+cases.append({
+    "name": "Kot ver, çok parçalı alan: her parçanın köşelerine yazılan kotlar yazıldığı gibi; parça kotu köşe sayısı kadar değilse reddedilir",
+    "setup": P_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "elevation", "changes": [{"kind": "update", "uid": uid(1), "geometry": {"kind": "polygon", "pts": P_FIRST, "zs": [9, 9, 9, 9], "parts": [{"pts": P_SECOND, "holes": [{**P_HOLE, "zs": [9, 9, 9, None]}], "zs": [9, 9, 9, 9]}]}}]},
+         "result": done(changed=[uid(1)]),
+         "expect": {"entities": {"1": p_updated({"kind": "polygon", "pts": P_FIRST, "parts": [{"pts": P_SECOND, "holes": [{**P_HOLE, "zs": [9, 9, 9, None]}], "zs": [9, 9, 9, 9]}]}, zs=[9, 9, 9, 9])}, "canUndo": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Kot ver", "expect": {"entities": {"1": PA()}, "canUndo": False}},
+        {"op": "execute", "input": {"operation": "elevation", "changes": [{"kind": "update", "uid": uid(1), "geometry": {"kind": "polygon", "pts": P_FIRST, "parts": [{"pts": P_SECOND, "zs": [1, 2]}]}}]},
+         "result": failed("invalid_elevations", ELEVATIONS_MESSAGE.format(4, 2), "changes[0].geometry.parts[0].zs"), "expect": {"ids": P_IDS, "canRedo": True, "revision": "same"}},
     ],
 })
 

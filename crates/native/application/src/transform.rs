@@ -30,6 +30,7 @@ use kentos_contracts::{
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::entity::Shape;
+use kentos_geometry_core::geom::arrangement::Ring;
 use kentos_geometry_core::geom::affine::{Affine, similarity};
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::ops::transform::transform_shape;
@@ -397,11 +398,6 @@ pub(crate) fn finite_shape(s: &Shape) -> bool {
             pts: p,
             bulges,
             holes,
-        }
-        | Shape::Polygon {
-            pts: p,
-            bulges,
-            holes,
         } => {
             pts(p)
                 && values(bulges)
@@ -409,6 +405,27 @@ pub(crate) fn finite_shape(s: &Shape) -> bool {
                     .iter()
                     .flatten()
                     .all(|h| pts(&h.pts) && values(&h.bulges))
+        }
+        Shape::Polygon {
+            pts: p,
+            bulges,
+            holes,
+            parts,
+        } => {
+            let ring_ok = |p: &[Vec2], bulges: &Option<Vec<f64>>, holes: &Option<Vec<Ring>>| {
+                pts(p)
+                    && values(bulges)
+                    && holes
+                        .iter()
+                        .flatten()
+                        .all(|h| pts(&h.pts) && values(&h.bulges))
+            };
+            // Every part of a multi-part area too (docs/adr/0143).
+            ring_ok(p, bulges, holes)
+                && parts
+                    .iter()
+                    .flatten()
+                    .all(|q| ring_ok(&q.pts, &q.bulges, &q.holes))
         }
         Shape::Circle { c, r } => pt(c) && r.is_finite(),
         Shape::Arc { c, r, a0, a1 } => pt(c) && r.is_finite() && a0.is_finite() && a1.is_finite(),

@@ -4,7 +4,7 @@
 
 use crate::api::Op;
 use crate::api::json::{FromJson, Json, read_field};
-use crate::entity::{Entity, Shape, ellipse_geom};
+use crate::entity::{Entity, Shape, ellipse_geom, is_multi_part};
 use crate::geom::arc::norm_angle;
 use crate::geom::bulge::{bulge_of_sweep, clean_bulge_path};
 use crate::geom::ellipse::{closest_param, ellipse_point, is_full_ellipse};
@@ -31,6 +31,10 @@ crate::json_struct!(Path {
 });
 
 pub fn path_of(e: &Shape) -> Option<Path> {
+    // A multi-part area is no one path: its rings do not run on into each other (docs/adr/0143).
+    if is_multi_part(e) {
+        return None;
+    }
     let edges = entity_edges(e);
     if edges.is_empty() {
         return None;

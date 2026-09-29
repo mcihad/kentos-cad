@@ -26,7 +26,7 @@ use std::collections::HashSet;
 
 use kentos_contracts::{
     CommandError, CommandResult, CommandWarning, EditOperation, EntitiesEdit, EntitiesEditPlan,
-    EntitiesEdited, Entity, EntityBase, EntityEdit, EntityGeometry, Vec2,
+    EntitiesEdited, Entity, EntityBase, EntityEdit, EntityGeometry, RingGeometry, Vec2,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::ops::elevation::{Carry, Elevated};
@@ -418,7 +418,11 @@ pub(crate) fn check_geometry(
             )));
         }
         EntityGeometry::Polygon {
-            pts, bulges, holes, ..
+            pts,
+            bulges,
+            holes,
+            parts,
+            ..
         } => {
             if !ring_closes(pts.len(), bulges.as_deref()) {
                 return Err(Stop::Failed(error(
@@ -441,6 +445,34 @@ pub(crate) fn check_geometry(
                         ),
                         at(&format!(".holes[{h}].pts")),
                     )));
+                }
+            }
+            // A multi-part area's other parts close as its own ring does (docs/adr/0143).
+            for (k, part) in parts.iter().flatten().enumerate() {
+                if !ring_closes(part.pts.len(), part.bulges.as_deref()) {
+                    return Err(Stop::Failed(error(
+                        codes::TOO_FEW_CORNERS,
+                        format!(
+                            "{}. parçanın en az 3 köşesi olmalı (kenarlarından biri yaysa 2); {} köşe verildi. Eksik köşeleri ekleyin ya da parçayı çıkarın.",
+                            k + 2,
+                            part.pts.len()
+                        ),
+                        at(&format!(".parts[{k}].pts")),
+                    )));
+                }
+                for (h, ring) in part.holes.iter().flatten().enumerate() {
+                    if !ring_closes(ring.pts.len(), ring.bulges.as_deref()) {
+                        return Err(Stop::Failed(error(
+                            codes::TOO_FEW_CORNERS,
+                            format!(
+                                "{}. parçanın {}. deliğinin en az 3 köşesi olmalı (kenarlarından biri yaysa 2); {} köşe verildi. Eksik köşeleri ekleyin ya da deliği çıkarın.",
+                                k + 2,
+                                h + 1,
+                                ring.pts.len()
+                            ),
+                            at(&format!(".parts[{k}].holes[{h}].pts")),
+                        )));
+                    }
                 }
             }
         }
@@ -514,14 +546,16 @@ pub(crate) fn check_geometry(
     Ok(())
 }
 
-/// Whether the geometry carries its elevations (docs/adr/0142).
+/// Whether the geometry carries its elevations (docs/adr/0142): a
+/// multi-part area's when its own or a part's list is given (docs/adr/0143).
 fn written(g: &EntityGeometry) -> bool {
-    matches!(
-        g,
-        EntityGeometry::Line { zs: Some(_), .. }
-            | EntityGeometry::Polyline { zs: Some(_), .. }
-            | EntityGeometry::Polygon { zs: Some(_), .. }
-    )
+    match g {
+        EntityGeometry::Line { zs, .. } | EntityGeometry::Polyline { zs, .. } => zs.is_some(),
+        EntityGeometry::Polygon { zs, parts, .. } => {
+            zs.is_some() || parts.iter().flatten().any(|p| p.zs.is_some())
+        }
+        _ => false,
+    }
 }
 
 /// A geometry's written elevations (docs/adr/0142): each list with its
@@ -533,13 +567,30 @@ fn written_elevations(g: &EntityGeometry) -> Vec<(&[Option<f64>], usize, String)
         EntityGeometry::Polyline {
             pts, zs: Some(zs), ..
         } => out.push((zs, pts.len(), ".zs".into())),
-        EntityGeometry::Polygon { pts, zs, holes, .. } => {
+        EntityGeometry::Polygon {
+            pts,
+            zs,
+            holes,
+            parts,
+            ..
+        } => {
             if let Some(zs) = zs {
                 out.push((zs, pts.len(), ".zs".into()));
             }
             for (h, ring) in holes.iter().flatten().enumerate() {
                 if let Some(zs) = &ring.zs {
                     out.push((zs, ring.pts.len(), format!(".holes[{h}].zs")));
+                }
+            }
+            // A multi-part area's other parts (docs/adr/0143).
+            for (k, part) in parts.iter().flatten().enumerate() {
+                if let Some(zs) = &part.zs {
+                    out.push((zs, part.pts.len(), format!(".parts[{k}].zs")));
+                }
+                for (h, ring) in part.holes.iter().flatten().enumerate() {
+                    if let Some(zs) = &ring.zs {
+                        out.push((zs, ring.pts.len(), format!(".parts[{k}].holes[{h}].zs")));
+                    }
                 }
             }
         }
@@ -571,14 +622,21 @@ fn finite(g: &EntityGeometry) -> bool {
             bulges,
             holes,
             zs,
+            parts,
         } => {
-            pts(p)
-                && values(bulges)
-                && heights(zs)
-                && holes
+            let holes_ok = |holes: &Option<Vec<RingGeometry>>| {
+                holes
                     .iter()
                     .flatten()
                     .all(|h| pts(&h.pts) && values(&h.bulges) && heights(&h.zs))
+            };
+            pts(p)
+                && values(bulges)
+                && heights(zs)
+                && holes_ok(holes)
+                && parts.iter().flatten().all(|q| {
+                    pts(&q.pts) && values(&q.bulges) && heights(&q.zs) && holes_ok(&q.holes)
+                })
         }
         EntityGeometry::Circle { c, r } => pt(c) && r.is_finite(),
         EntityGeometry::Arc { c, r, a0, a1 } => {

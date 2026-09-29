@@ -12,7 +12,10 @@
 //!   outside the clip box, a dimension without a layout);
 //! - `MARKER, x, y`;
 //! - `LINE, paths`, then per path `closed` (0 or 1) and its points;
-//! - `FILL, rings`, then per ring its points (outer ring first).
+//! - `FILL, rings`, then per ring its points (outer ring first);
+//! - `FILLS, parts`, then per part `rings` and per ring its points, a
+//!   multi-part area's (docs/adr/0143): each part is drawn as a `FILL`
+//!   would be, its points always given (no reference).
 //!
 //! Points are `n, x0, y0, …`, or `SOURCE` / `REVERSED`: the object's own
 //! points for that path or ring (a line's two ends; a polyline's or
@@ -22,8 +25,8 @@
 use super::Store;
 use crate::api::Op;
 use crate::entity::{
-    Entity, Shape, dimension_geom, entity_anchor, entity_area, entity_length, entity_outline,
-    is_closed_outline, polygon_ring,
+    Entity, Shape, area_parts, dimension_geom, entity_anchor, entity_area, entity_length,
+    entity_outline, is_closed_outline, is_multi_part, polygon_ring,
 };
 use crate::geom::bulge::has_bulges;
 use crate::geom::dimension::layout_dimension;
@@ -36,6 +39,8 @@ pub const NONE: f64 = 0.0;
 pub const MARKER: f64 = 1.0;
 pub const LINE: f64 = 2.0;
 pub const FILL: f64 = 3.0;
+/// A multi-part area: its parts' fills in one record (docs/adr/0143).
+pub const FILLS: f64 = 4.0;
 /// The object's own points, as they are.
 pub const SOURCE: f64 = -1.0;
 /// The object's own points, last to first.
@@ -129,7 +134,30 @@ pub fn drawn(s: &Shape, oriented: bool, clip: Option<&Bounds>, out: &mut Vec<f64
                 out.extend([0.0, SOURCE]);
             }
         }
-        Shape::Polygon { pts, bulges, holes } => {
+        Shape::Polygon { .. } if is_multi_part(s) => {
+            let parts = area_parts(s);
+            out.extend([FILLS, parts.len() as f64]);
+            for part in parts.iter() {
+                let Shape::Polygon {
+                    pts, bulges, holes, ..
+                } = part
+                else {
+                    continue;
+                };
+                out.push((1 + holes.as_ref().map_or(0, Vec::len)) as f64);
+                let ring_of = |out: &mut Vec<f64>, pts: &[Vec2], bulges: Option<&[f64]>, ccw: bool| {
+                    // Always the points themselves: a reference could not say which part.
+                    ring(out, &polygon_ring(pts, bulges), false, oriented.then_some(ccw));
+                };
+                ring_of(out, pts, bulges.as_deref(), true);
+                for h in holes.iter().flatten() {
+                    ring_of(out, &h.pts, h.bulges.as_deref(), false);
+                }
+            }
+        }
+        Shape::Polygon {
+            pts, bulges, holes, ..
+        } => {
             out.extend([FILL, (1 + holes.as_ref().map_or(0, Vec::len)) as f64]);
             let outer = |out: &mut Vec<f64>, pts: &[Vec2], bulges: Option<&[f64]>, ccw: bool| {
                 let ccw = oriented.then_some(ccw);

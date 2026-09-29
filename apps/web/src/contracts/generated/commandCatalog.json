@@ -18665,6 +18665,54 @@
       "cost": "instant",
       "input": {
         "$defs": {
+          "AreaPart": {
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "properties": {
+              "bulges": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "holes": {
+                "items": {
+                  "$ref": "#/$defs/RingGeometry"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, as the area's own `zs` (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "pts"
+            ],
+            "type": "object"
+          },
           "DimensionStyle": {
             "enum": [
               "aligned",
@@ -19047,6 +19095,16 @@
                   "kind": {
                     "const": "polygon",
                     "type": "string"
+                  },
+                  "parts": {
+                    "description": "A multi-part area's parts past its first, each its ring, arcs,\nholes and elevations (docs/adr/0143). The geometry is the whole\narea: absent, it has one part, so an edit of a multi-part area\nwrites every part.",
+                    "items": {
+                      "$ref": "#/$defs/AreaPart"
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
                   },
                   "pts": {
                     "items": {
@@ -22335,6 +22393,54 @@
       "cost": "instant",
       "input": {
         "$defs": {
+          "AreaPart": {
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "properties": {
+              "bulges": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "holes": {
+                "items": {
+                  "$ref": "#/$defs/RingGeometry"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "zs": {
+                "description": "Each vertex's elevation, as the area's own `zs` (docs/adr/0142).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "pts"
+            ],
+            "type": "object"
+          },
           "CreateOperation": {
             "description": "The drawing tool or Hesap window whose step has its own name; without\none the step is “Ekle”, as for every object a drawing tool adds.",
             "oneOf": [
@@ -22549,6 +22655,16 @@
                   "kind": {
                     "const": "polygon",
                     "type": "string"
+                  },
+                  "parts": {
+                    "description": "A multi-part area's parts past its first, each its ring, arcs,\nholes and elevations (docs/adr/0143). The geometry is the whole\narea: absent, it has one part, so an edit of a multi-part area\nwrites every part.",
+                    "items": {
+                      "$ref": "#/$defs/AreaPart"
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
                   },
                   "pts": {
                     "items": {

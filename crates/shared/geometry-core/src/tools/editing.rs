@@ -6,7 +6,7 @@
 //! tools computed inline before (docs/adr/0008, S5, 0047).
 
 use crate::api::Op;
-use crate::entity::{Entity, Shape, entity_bounds_in};
+use crate::entity::{Entity, Shape, area_parts, entity_bounds_in, locate_part, outer_count};
 use crate::geom::affine::{Affine, align, compose, rotation, translation};
 use crate::geom::arc::{ArcGeom, norm_angle};
 use crate::geom::bulge::bulge_at;
@@ -15,7 +15,9 @@ use crate::geom::intersect::line_line;
 use crate::geometry::{dist, empty_bounds, is_empty_bounds};
 use crate::jsmath::{PI, acos, atan2, cos, js_max, js_min, js_round, or, pow, sin, tan};
 use crate::op;
+use crate::ops::edges::entity_edges;
 use crate::ops::path::{path_of, point_at_s, tangent_at_s};
+use crate::ops::vertex::nearest_segment;
 use crate::text::Font;
 use crate::tools::point_input::midpoint;
 use crate::vec2::Vec2;
@@ -501,34 +503,87 @@ pub fn corner_near(candidates: &[Shape], p: Vec2, tol: f64, same: f64) -> Option
                     }
                 }
             }
-            Shape::Polyline { pts, bulges, .. } | Shape::Polygon { pts, bulges, .. } => {
-                let closed = matches!(e, Shape::Polygon { .. });
-                let n = pts.len();
-                for (k, q) in pts.iter().enumerate() {
-                    if dist(*q, p) > tol || (!closed && (k == 0 || k + 1 >= n)) {
-                        continue;
+            // Every part's vertices, counted part after part (docs/adr/0143).
+            Shape::Polyline { .. } | Shape::Polygon { .. } => {
+                let mut offset = 0;
+                for part in area_parts(e).iter() {
+                    for (k, q) in part_points(part).iter().enumerate() {
+                        if dist(*q, p) <= tol {
+                            let vertex = offset + k;
+                            consider(
+                                CornerSite::Vertex { object: i, vertex },
+                                path_corner_at(part, k),
+                            );
+                        }
                     }
-                    let prev = (k + n - 1) % n;
-                    let corner = vertex_corner(
-                        pts[prev],
-                        *q,
-                        pts[(k + 1) % n],
-                        bulge_at(bulges.as_deref(), prev),
-                        bulge_at(bulges.as_deref(), k),
-                    );
-                    consider(
-                        CornerSite::Vertex {
-                            object: i,
-                            vertex: k,
-                        },
-                        corner,
-                    );
+                    offset += outer_count(part);
                 }
             }
             _ => {}
         }
     }
     best.map(|(hit, _)| hit)
+}
+
+/// A polyline's vertices or an area part's ring (none for anything else).
+fn part_points(e: &Shape) -> &[Vec2] {
+    match e {
+        Shape::Polyline { pts, .. } | Shape::Polygon { pts, .. } => pts,
+        _ => &[],
+    }
+}
+
+/// The corner at outer vertex `index` of a path (the web's `pathCorner`),
+/// an area's vertices counted part after part (docs/adr/0143): none past the
+/// last vertex, at an open path's end, beside an arc or on a straight run.
+pub fn path_corner_at(e: &Shape, index: usize) -> Option<CornerGeom> {
+    let parts = area_parts(e);
+    let (k, i) = locate_part(&parts, index, outer_count)?;
+    let (pts, bulges, closed) = match &parts[k] {
+        Shape::Polyline { pts, bulges, .. } => (pts, bulges.as_deref(), false),
+        Shape::Polygon { pts, bulges, .. } => (pts, bulges.as_deref(), true),
+        _ => return None,
+    };
+    let n = pts.len();
+    if !closed && (i == 0 || i + 1 >= n) {
+        return None;
+    }
+    let prev = (i + n - 1) % n;
+    vertex_corner(
+        pts[prev],
+        pts[i],
+        pts[(i + 1) % n],
+        bulge_at(bulges, prev),
+        bulge_at(bulges, i),
+    )
+}
+
+/// The vertex two picked edges of one path share (the web's
+/// `cornerOfPicks`): each pick's nearest edge, both on one outer ring and
+/// neighbours. Its index counts an area's vertices part after part
+/// (docs/adr/0143); none when the edges are not neighbours on one ring.
+pub fn shared_corner(e: &Shape, a: Vec2, b: Vec2) -> Option<usize> {
+    let parts = area_parts(e);
+    let edges = |s: &Shape| entity_edges(s).len();
+    let (ka, i) = locate_part(&parts, nearest_segment(e, a), edges)?;
+    let (kb, j) = locate_part(&parts, nearest_segment(e, b), edges)?;
+    let n = outer_count(&parts[ka]);
+    let closed = matches!(parts[ka], Shape::Polygon { .. });
+    // A hole's edges come after its ring's: they have no corner here.
+    let ring = if closed { n } else { n.saturating_sub(1) };
+    if ka != kb || i >= ring || j >= ring {
+        return None;
+    }
+    let v = if j == i + 1 {
+        j
+    } else if i == j + 1 {
+        i
+    } else if closed && ((i == n - 1 && j == 0) || (j == n - 1 && i == 0)) {
+        0
+    } else {
+        return None;
+    };
+    Some(parts[..ka].iter().map(outer_count).sum::<usize>() + v)
 }
 
 /// The vertex and arm points of an angular dimension.
@@ -691,6 +746,12 @@ pub(crate) static OPS: &[Op] = &[
         let shapes: Vec<Shape> = candidates.into_iter().map(|e| e.shape).collect();
         corner_near(&shapes, p, tol, same)
     }),
+    op!("pathCornerAt", |e: Entity, index: usize| path_corner_at(
+        &e.shape, index
+    )),
+    op!("sharedCorner", |e: Entity, a: Vec2, b: Vec2| shared_corner(
+        &e.shape, a, b
+    )),
     op!("vertexArms", |c: Vec2, p1: Vec2, p2: Vec2, loc: Vec2| {
         vertex_arms(c, p1, p2, loc)
     }),

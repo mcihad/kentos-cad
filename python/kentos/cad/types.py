@@ -4744,6 +4744,10 @@ class PolylineEntityGeometry(EntityGeometry):
 class PolygonEntityGeometry(EntityGeometry):
     """A closed area: its ring and, when it has any, its holes.
     Attributes:
+        parts: A multi-part area's parts past its first, each its ring, arcs,
+            holes and elevations (docs/adr/0143). The geometry is the whole
+            area: absent, it has one part, so an edit of a multi-part area
+            writes every part.
         zs: The vertices' elevations as written (docs/adr/0142): as many as
             the vertices, `null` for one without; all `null`: none. The holes' come with them (`RingGeometry.zs`). Absent:
             each vertex takes one from the objects the edit names.
@@ -4752,6 +4756,7 @@ class PolygonEntityGeometry(EntityGeometry):
     pts: list[Vec2]
     bulges: list[float] | None | Unset = UNSET
     holes: list[RingGeometry] | None | Unset = UNSET
+    parts: list[AreaPart] | None | Unset = UNSET
     zs: list[float | None] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -4761,6 +4766,8 @@ class PolygonEntityGeometry(EntityGeometry):
             out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
         if self.holes is not UNSET:
             out["holes"] = None if self.holes is None else [e0.to_json() for e0 in self.holes]
+        if self.parts is not UNSET:
+            out["parts"] = None if self.parts is None else [e0.to_json() for e0 in self.parts]
         if self.zs is not UNSET:
             out["zs"] = None if self.zs is None else [None if e0 is None else float(e0) for e0 in self.zs]
         return out
@@ -4771,6 +4778,7 @@ class PolygonEntityGeometry(EntityGeometry):
             pts=[Vec2.from_json(e0) for e0 in data["pts"]],
             bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
             holes=UNSET if "holes" not in data else None if data["holes"] is None else [RingGeometry.from_json(e0) for e0 in data["holes"]],
+            parts=UNSET if "parts" not in data else None if data["parts"] is None else [AreaPart.from_json(e0) for e0 in data["parts"]],
             zs=UNSET if "zs" not in data else None if data["zs"] is None else [None if e0 is None else float(e0) for e0 in data["zs"]],
         )
 

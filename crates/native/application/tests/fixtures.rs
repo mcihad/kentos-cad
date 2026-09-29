@@ -390,10 +390,34 @@ fn geometry_number<'a>(geometry: &'a mut EntityGeometry, rest: &str) -> Option<&
             }
             coordinate(a, "a", rest).or_else(|| coordinate(b, "b", rest))
         }
-        EntityGeometry::Polyline { pts, bulges, zs }
-        | EntityGeometry::Polygon {
-            pts, bulges, zs, ..
+        EntityGeometry::Polyline { pts, bulges, zs } => {
+            if rest.starts_with("pts[") {
+                point_number(pts, rest)
+            } else if rest.starts_with("zs[") {
+                elevation_number(zs, rest)
+            } else {
+                bulge_number(bulges, rest)
+            }
+        }
+        EntityGeometry::Polygon {
+            pts,
+            bulges,
+            zs,
+            parts,
+            ..
         } => {
+            // A part's own numbers: `parts[0].pts[1].x`, `parts[0].bulges[2]`, `parts[0].zs[1]` (docs/adr/0143).
+            if let Some(after) = rest.strip_prefix("parts[") {
+                let (k, inner) = after.split_once("].")?;
+                let part = parts.as_mut()?.get_mut(k.parse::<usize>().ok()?)?;
+                return if inner.starts_with("pts[") {
+                    point_number(&mut part.pts, inner)
+                } else if inner.starts_with("zs[") {
+                    elevation_number(&mut part.zs, inner)
+                } else {
+                    bulge_number(&mut part.bulges, inner)
+                };
+            }
             if rest.starts_with("pts[") {
                 point_number(pts, rest)
             } else if rest.starts_with("zs[") {

@@ -6,11 +6,9 @@
 use kentos_contracts::Entity;
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::Shape;
-use kentos_geometry_core::geom::bulge::bulge_at;
 use kentos_geometry_core::ops::fillet::Seg;
-use kentos_geometry_core::ops::vertex::nearest_segment;
 use kentos_geometry_core::tools::editing::{
-    CornerGeom, CornerSite, corner_near, lines_corner_at, vertex_corner,
+    CornerGeom, CornerSite, corner_near, lines_corner_at, path_corner_at, shared_corner,
 };
 use kentos_native_application::geometry::shape;
 
@@ -68,27 +66,14 @@ pub(super) fn line_of(e: &Entity) -> Option<Seg> {
     }
 }
 
-/// A path's corner at vertex `i` (the web's `pathCorner`): none at an open
-/// path's end, beside an arc or on a straight run.
+/// A path's corner at vertex `i` (the web's `pathCorner`), an area's
+/// vertices counted part after part (docs/adr/0143): none at an open path's
+/// end, beside an arc or on a straight run (the core's `path_corner_at`).
 pub(super) fn path_corner(slot: Slot, e: &Entity, i: usize) -> Option<Corner> {
-    let (Entity::Polyline(path) | Entity::Polygon(path)) = e else {
-        return None;
-    };
-    let closed = matches!(e, Entity::Polygon(_));
-    let n = path.pts.len();
-    if i >= n || (!closed && (i == 0 || i + 1 >= n)) {
+    if !matches!(e, Entity::Polyline(_) | Entity::Polygon(_)) {
         return None;
     }
-    let prev = (i + n - 1) % n;
-    let p = |k: usize| Vec2::new(path.pts[k].x, path.pts[k].y);
-    let bulges = path.bulges.as_deref();
-    let geom = vertex_corner(
-        p(prev),
-        p(i),
-        p((i + 1) % n),
-        bulge_at(bulges, prev),
-        bulge_at(bulges, i),
-    )?;
+    let geom = path_corner_at(&shape(e), i)?;
     Some(Corner {
         site: Site::Vertex { slot, vertex: i },
         geom,
@@ -163,30 +148,13 @@ pub(super) fn corner_of_picks(
             geom,
         });
     }
-    if a.0 != b.0 || matches!(ea, Entity::Line(_)) {
+    if a.0 != b.0 || !matches!(ea, Entity::Polyline(_) | Entity::Polygon(_)) {
         return Err(
             "Çoklu çizgide köşe için köşenin kendisine ya da aynı nesnenin iki komşu kenarına tıklayın.",
         );
     }
-    let (Entity::Polyline(path) | Entity::Polygon(path)) = ea else {
-        return Err(
-            "Çoklu çizgide köşe için köşenin kendisine ya da aynı nesnenin iki komşu kenarına tıklayın.",
-        );
-    };
-    let n = path.pts.len();
-    let s = shape(ea);
-    let (i, j) = (nearest_segment(&s, a.1), nearest_segment(&s, b.1));
-    let closed = matches!(ea, Entity::Polygon(_));
-    let v = if j == i + 1 {
-        Some(j)
-    } else if i == j + 1 {
-        Some(i)
-    } else if closed && n > 0 && ((i == n - 1 && j == 0) || (j == n - 1 && i == 0)) {
-        Some(0)
-    } else {
-        None
-    };
-    let v = v.ok_or("Seçilen kenarlar komşu değil; ortak köşesi olan iki kenar seçin.")?;
+    let v = shared_corner(&shape(ea), a.1, b.1)
+        .ok_or("Seçilen kenarlar komşu değil; ortak köşesi olan iki kenar seçin.")?;
     path_corner(a.0, ea, v).ok_or(
         "Bu köşenin kenarlarından biri yay; yalnızca düz kenarlar arasındaki köşe işlenebilir.",
     )

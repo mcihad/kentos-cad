@@ -3,7 +3,7 @@
 //! arc length; cuts are the s values where boundaries cross it.
 
 use crate::api::Op;
-use crate::entity::{Entity, Shape};
+use crate::entity::{Entity, MULTI_PART_REFUSED, Shape, is_multi_part};
 use crate::geom::arc::norm_angle;
 use crate::geom::bulge::{bulge_arc, bulge_at, bulge_of_sweep};
 use crate::geom::intersect::{
@@ -36,6 +36,9 @@ pub fn trim_entity(target: &Entity, pick: Vec2, boundaries: &[Edge]) -> Cut {
     }
     if let Some(c) = construction_of(s) {
         return trim_construction(&c, pick, boundaries);
+    }
+    if is_multi_part(s) {
+        return Cut::Error(MULTI_PART_REFUSED.into());
     }
     let Some(path) = path_of(s) else {
         return Cut::Error("Bu nesne budanamaz.".into());
@@ -294,6 +297,7 @@ mod tests {
             ],
             bulges: None,
             holes: None,
+            parts: None,
         });
         // A fence across the square from west to east, then on north of it.
         let fence = [

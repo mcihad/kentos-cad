@@ -3,8 +3,10 @@
 //! ellipses and construction lines by their own rules.
 
 use crate::api::Op;
-use crate::entity::{Entity, Shape};
-use crate::geom::bulge::has_bulges;
+use crate::entity::{Entity, Shape, area_parts, inside_polygon, is_multi_part, join_parts};
+use crate::geom::arrangement::{Area, Ring};
+use crate::geom::bulge::{bulge_ring_area, has_bulges};
+use crate::geom::region::union_areas;
 use crate::geom::intersect::{Edge, closest_on_edge};
 use crate::geom::offset::{OffsetResult, offset_bulge_path, offset_path, side_of};
 use crate::jsmath::{js_hypot, js_min};
@@ -21,6 +23,7 @@ fn path_shape(closed: bool, pts: Vec<Vec2>, bulges: Option<Vec<f64>>) -> Shape {
             pts,
             bulges,
             holes: None,
+            parts: None,
         }
     } else {
         Shape::Polyline {
@@ -31,10 +34,66 @@ fn path_shape(closed: bool, pts: Vec<Vec2>, bulges: Option<Vec<f64>>) -> Shape {
     }
 }
 
+/// A multi-part area's parallel (docs/adr/0143): every part's ring to the
+/// side `through` is on of the whole area (inside it: inward, outside:
+/// outward), as one part's ring is offset; rings that meet are joined, a
+/// part that closes up inward is left out.
+fn offset_parts(e: &Shape, distance: f64, through: Vec2) -> Geometry {
+    let inward = inside_polygon(e, through);
+    let mut areas = Vec::new();
+    for part in area_parts(e).iter() {
+        let Shape::Polygon { pts, bulges, .. } = part else {
+            continue;
+        };
+        // Left of travel is inside a counter-clockwise ring.
+        let ccw = bulge_ring_area(pts, bulges.as_deref()) > 0.0;
+        let d = if inward == ccw { distance } else { -distance };
+        let ring = match bulges.as_deref() {
+            Some(bs) if has_bulges(Some(bs)) => match offset_bulge_path(pts, bs, d, true) {
+                OffsetResult::Path { pts, bulges } => Ring {
+                    pts,
+                    bulges: Some(bulges),
+                },
+                OffsetResult::Error { .. } => continue,
+            },
+            _ => {
+                let out = offset_path(pts, d, true);
+                if out.len() < 3 {
+                    continue;
+                }
+                Ring {
+                    pts: out,
+                    bulges: None,
+                }
+            }
+        };
+        areas.push(Area {
+            outer: ring,
+            holes: Vec::new(),
+        });
+    }
+    let shapes: Vec<Shape> = union_areas(&areas)
+        .into_iter()
+        .map(|a| Shape::Polygon {
+            pts: a.outer.pts,
+            bulges: a.outer.bulges,
+            holes: (!a.holes.is_empty()).then_some(a.holes),
+            parts: None,
+        })
+        .collect();
+    match join_parts(&shapes) {
+        Some(shape) => Geometry::Ok(Entity::new(shape)),
+        None => Geometry::Error("Öteleme sonucu geçerli bir şekil oluşmadı.".into()),
+    }
+}
+
 /// Parallel copy at `distance`, on the side of `through`.
 pub fn offset_entity(e: &Shape, distance: f64, through: Vec2) -> Geometry {
     if !(distance > 0.0) {
         return Geometry::Error("Öteleme mesafesi sıfırdan büyük olmalı.".into());
+    }
+    if is_multi_part(e) {
+        return offset_parts(e, distance, through);
     }
     match e {
         Shape::Line { a, b } => {

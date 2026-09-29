@@ -446,3 +446,99 @@ fn a_vertex_is_added_on_an_edge_and_removed_at_a_vertex() {
     b.confirm();
     assert_eq!(b.session.tool_id(), "vertex");
 }
+
+/// The closed area 10 with a second part, a 6 m counter-clockwise square
+/// from (30, −14) (docs/adr/0143); its first part's points.
+fn with_second_part(b: &mut Bench) -> Vec<[f64; 2]> {
+    use kentos_contracts::{AreaPart, Vec2 as Wire};
+    let Some(Entity::Polygon(mut area)) = b.doc.get(Slot(10)).cloned() else {
+        panic!("the area");
+    };
+    let at = |x: f64, y: f64| Wire {
+        x: common::E + x,
+        y: common::N + y,
+    };
+    area.parts = Some(vec![AreaPart {
+        pts: vec![
+            at(30.0, -14.0),
+            at(36.0, -14.0),
+            at(36.0, -8.0),
+            at(30.0, -8.0),
+        ],
+        bulges: None,
+        holes: None,
+        zs: None,
+    }]);
+    let first = path(b, 10);
+    assert!(b.doc.update(Slot(10), Entity::Polygon(area)));
+    first
+}
+
+/// The second part's points and bulges, the first part checked unchanged.
+fn second_part(b: &Bench, first: &[[f64; 2]]) -> (Vec<[f64; 2]>, Option<Vec<f64>>) {
+    assert_eq!(path(b, 10), first, "the first part stays");
+    let Some(Entity::Polygon(p)) = b.doc.get(Slot(10)) else {
+        panic!("the area");
+    };
+    let part = &p.parts.as_ref().expect("the second part")[0];
+    (
+        part.pts.iter().map(|q| rel(*q)).collect(),
+        part.bulges.clone(),
+    )
+}
+
+/// Köşe yuvarla on a multi-part area: the second part's corner is found
+/// and rounded there, the first part as it was (docs/adr/0143).
+#[test]
+fn a_fillet_rounds_a_corner_of_another_part() {
+    let mut b = bench(&[]);
+    let first = with_second_part(&mut b);
+    b.start("fillet");
+    b.click(36.2, -8.2);
+    assert!(b.type_text("1"));
+    assert_eq!(b.last_text(), Some("Köşe 1.000 m yarıçapla yuvarlandı."));
+    let (pts, bulges) = second_part(&b, &first);
+    assert!(near(
+        &pts,
+        &[
+            [30.0, -14.0],
+            [36.0, -14.0],
+            [36.0, -9.0],
+            [35.0, -8.0],
+            [30.0, -8.0]
+        ]
+    ));
+    let arcs: Vec<f64> = bulges.into_iter().flatten().filter(|b| *b != 0.0).collect();
+    assert_eq!(arcs.len(), 1);
+    assert!((arcs[0].abs() - (std::f64::consts::PI / 8.0).tan()).abs() < 1e-12);
+    assert_eq!(b.doc.undo().as_deref(), Some("Köşe yuvarla"));
+}
+
+/// Köşe ekle/sil on a multi-part area (docs/adr/0143): a vertex of the
+/// second part is removed and one added on its edge, the first part as it was.
+#[test]
+fn a_vertex_of_another_part_is_added_and_removed_there() {
+    let mut b = bench(&[]);
+    let first = with_second_part(&mut b);
+    let part = |b: &Bench| second_part(b, &first).0;
+    b.start("vertex");
+    b.click(36.0, -8.0);
+    assert_eq!(b.last_text(), Some("Köşe silindi."));
+    assert!(near(
+        &part(&b),
+        &[[30.0, -14.0], [36.0, -14.0], [30.0, -8.0]]
+    ));
+    assert_eq!(b.doc.undo().as_deref(), Some("Köşe sil"));
+    b.click(33.0, -14.0);
+    assert_eq!(b.last_text(), Some("Köşe eklendi."));
+    assert!(near(
+        &part(&b),
+        &[
+            [30.0, -14.0],
+            [33.0, -14.0],
+            [36.0, -14.0],
+            [36.0, -8.0],
+            [30.0, -8.0]
+        ]
+    ));
+}

@@ -6,7 +6,7 @@
 
 use crate::api::Op;
 use crate::api::json::{ToJson, field};
-use crate::entity::{Entity, Shape};
+use crate::entity::{Entity, Shape, area_parts, is_multi_part, join_parts};
 use crate::geom::arrangement::Ring;
 use crate::geom::bulge::{BulgePath, bulge_at, clean_bulge_path, is_arc_bulge, reverse_bulge_path};
 use crate::geometry::dist_to_segment;
@@ -190,6 +190,22 @@ pub fn all_corners(e: &Entity, op: &CornerOp) -> Option<Reshaped> {
     if !positive {
         return None;
     }
+    // A multi-part area: every part's corners (docs/adr/0143).
+    if is_multi_part(&e.shape) {
+        let (mut shapes, mut done, mut skipped) = (Vec::new(), 0, 0);
+        for part in area_parts(&e.shape).iter() {
+            let r = all_corners(&e.with(part.clone()), op)?;
+            done += r.done;
+            skipped += r.skipped;
+            shapes.push(r.entity.shape);
+        }
+        return Some(Reshaped {
+            entity: e.with(join_parts(&shapes)?),
+            done,
+            skipped,
+            deviation: 0.0,
+        });
+    }
     let (shape, done, skipped) = match &e.shape {
         Shape::Polyline { pts, bulges, holes } => {
             let (p, done, skipped) = all_corners_of_path(pts, bulges.as_deref(), false, op);
@@ -203,7 +219,9 @@ pub fn all_corners(e: &Entity, op: &CornerOp) -> Option<Reshaped> {
                 skipped,
             )
         }
-        Shape::Polygon { pts, bulges, holes } => {
+        Shape::Polygon {
+            pts, bulges, holes, ..
+        } => {
             let (p, mut done, mut skipped) = all_corners_of_path(pts, bulges.as_deref(), true, op);
             let holes = holes.as_ref().map(|hs| {
                 hs.iter()
@@ -223,6 +241,7 @@ pub fn all_corners(e: &Entity, op: &CornerOp) -> Option<Reshaped> {
                     pts: p.pts,
                     bulges: p.bulges,
                     holes,
+                    parts: None,
                 },
                 done,
                 skipped,
@@ -244,6 +263,14 @@ pub fn all_corners(e: &Entity, op: &CornerOp) -> Option<Reshaped> {
 /// for kinds without a direction of their own here: arcs and ellipses always
 /// run counter-clockwise, circles, points, text, dimensions and hatches.
 pub fn reverse(e: &Entity) -> Option<Entity> {
+    // A multi-part area: every part runs the other way (docs/adr/0143).
+    if is_multi_part(&e.shape) {
+        let shapes: Option<Vec<Shape>> = area_parts(&e.shape)
+            .iter()
+            .map(|part| reverse(&e.with(part.clone())).map(|r| r.shape))
+            .collect();
+        return Some(e.with(join_parts(&shapes?)?));
+    }
     let shape = match &e.shape {
         Shape::Line { a, b } => Shape::Line { a: *b, b: *a },
         Shape::Polyline { pts, bulges, holes } => {
@@ -254,9 +281,12 @@ pub fn reverse(e: &Entity) -> Option<Entity> {
                 holes: holes.clone(),
             }
         }
-        Shape::Polygon { pts, bulges, holes } => {
+        Shape::Polygon {
+            pts, bulges, holes, ..
+        } => {
             let r = reverse_bulge_path(pts, bulges.as_deref(), true);
             Shape::Polygon {
+                parts: None,
                 pts: r.pts,
                 bulges: bulges.as_ref().and(r.bulges),
                 holes: holes.as_ref().map(|hs| {
@@ -418,6 +448,22 @@ pub fn simplify(e: &Entity, tol: f64) -> Option<Reshaped> {
     if !(tol > 0.0) {
         return None;
     }
+    // A multi-part area: every part (docs/adr/0143).
+    if is_multi_part(&e.shape) {
+        let (mut shapes, mut removed, mut deviation) = (Vec::new(), 0, 0.0);
+        for part in area_parts(&e.shape).iter() {
+            let r = simplify(&e.with(part.clone()), tol)?;
+            removed += r.done;
+            deviation = js_max(deviation, r.deviation);
+            shapes.push(r.entity.shape);
+        }
+        return Some(Reshaped {
+            entity: e.with(join_parts(&shapes)?),
+            done: removed,
+            skipped: 0,
+            deviation,
+        });
+    }
     let (shape, removed, deviation) = match &e.shape {
         Shape::Polyline { pts, bulges, holes } => {
             let (p, removed, dev) = simplify_path(pts, bulges.as_deref(), false, tol);
@@ -431,7 +477,9 @@ pub fn simplify(e: &Entity, tol: f64) -> Option<Reshaped> {
                 dev,
             )
         }
-        Shape::Polygon { pts, bulges, holes } => {
+        Shape::Polygon {
+            pts, bulges, holes, ..
+        } => {
             let (p, mut removed, mut dev) = simplify_path(pts, bulges.as_deref(), true, tol);
             let holes = holes.as_ref().map(|hs| {
                 hs.iter()
@@ -451,6 +499,7 @@ pub fn simplify(e: &Entity, tol: f64) -> Option<Reshaped> {
                     pts: p.pts,
                     bulges: p.bulges,
                     holes,
+                    parts: None,
                 },
                 removed,
                 dev,
@@ -486,6 +535,7 @@ mod tests {
             pts: pts.iter().map(|&(x, y)| v(x, y)).collect(),
             bulges: None,
             holes: None,
+            parts: None,
         })
     }
 
@@ -590,6 +640,7 @@ mod tests {
                 pts: vec![v(10.0, 10.0), v(10.0, 20.0), v(20.0, 20.0), v(20.0, 10.0)],
                 bulges: None,
             }]),
+            parts: None,
         });
         let r = all_corners(&e, &CornerOp::Radius(1.0)).expect("rounded");
         assert_eq!((r.done, r.skipped), (8, 0));

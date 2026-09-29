@@ -6,8 +6,8 @@
 
 use super::{Item, Store, padded};
 use crate::entity::{
-    Shape, dimension_geom, ellipse_geom, entity_area, entity_outline, inside_polygon,
-    is_closed_outline, polygon_holes, polygon_ring, text_box,
+    Shape, area_parts, dimension_geom, ellipse_geom, entity_area, entity_outline, inside_polygon,
+    is_closed_outline, is_multi_part, polygon_holes, polygon_ring, text_box,
 };
 use crate::geom::dimension::layout_dimension;
 use crate::geom::ellipse::{ellipse_area, inside_ellipse, is_full_ellipse, tessellate_ellipse};
@@ -147,6 +147,13 @@ impl Store {
         for it in self.near(p, 0.0) {
             let e = &it.shape;
             let ring = match e {
+                // The part `p` is in, of a multi-part area (docs/adr/0143).
+                Shape::Polygon { .. } if is_multi_part(e) => area_parts(e).iter().find_map(|part| {
+                    let Shape::Polygon { pts, bulges, .. } = part else {
+                        return None;
+                    };
+                    inside_polygon(part, p).then(|| polygon_ring(pts, bulges.as_deref()))
+                }),
                 Shape::Polygon { pts, bulges, .. } => {
                     inside_polygon(e, p).then(|| polygon_ring(pts, bulges.as_deref()))
                 }
@@ -275,6 +282,10 @@ fn rect_corner(r: &Bounds, i: usize) -> Vec2 {
 /// Whether an object touches a box: a point of its outline inside, the box's
 /// centre inside its area, or an edge (a hole's included) crossing the box.
 pub fn touches_rect(e: &Shape, r: &Bounds) -> bool {
+    // A multi-part area touches it when one of its parts does (docs/adr/0143).
+    if is_multi_part(e) {
+        return area_parts(e).iter().any(|part| touches_rect(part, r));
+    }
     let pts = entity_outline(e, 32.0);
     let in_r = |q: &Vec2| q.x >= r.min_x && q.x <= r.max_x && q.y >= r.min_y && q.y <= r.max_y;
     if pts.iter().any(in_r) {

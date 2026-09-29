@@ -22,7 +22,7 @@ use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
-use crate::entity::{DimensionStyle, Entity, HatchPattern, RingGeometry, Vec2};
+use crate::entity::{AreaPart, DimensionStyle, Entity, HatchPattern, RingGeometry, Vec2};
 
 /// Reshapes, splits, joins and explodes objects in one undo step.
 pub const CAD_ENTITIES_EDIT: &str = "cad.entities.edit";
@@ -155,6 +155,13 @@ pub enum EntityGeometry {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         zs: Option<Vec<Option<f64>>>,
+        /// A multi-part area's parts past its first, each its ring, arcs,
+        /// holes and elevations (docs/adr/0143). The geometry is the whole
+        /// area: absent, it has one part, so an edit of a multi-part area
+        /// writes every part.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        parts: Option<Vec<AreaPart>>,
     },
     Circle {
         c: Vec2,

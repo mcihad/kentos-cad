@@ -298,3 +298,49 @@ fn the_grip_menu_edits_a_vertex_or_an_edge_through_the_command() {
         None
     );
 }
+
+/// A multi-part area's grip menu acts on the grip's own part and keeps the
+/// others (docs/adr/0143): a second part, a 6 m square from (0, 20), is
+/// added to area 4; its corner and its edge's middle offer what any area's
+/// do, and the headings count in that part.
+#[test]
+fn the_grip_menu_edits_the_part_its_grip_is_on() {
+    use kentos_contracts::AreaPart;
+    use kentos_interaction::grip_menu::{self, GripAction};
+    let mut b = bench(&[4]);
+    let Some(Entity::Polygon(mut area)) = b.doc.get(Slot(4)).cloned() else {
+        panic!("the area");
+    };
+    let at = |de: f64, dn: f64| Wire { x: E + de, y: N + dn };
+    area.parts = Some(vec![AreaPart {
+        pts: vec![at(0.0, 20.0), at(6.0, 20.0), at(6.0, 26.0), at(0.0, 26.0)],
+        bulges: None,
+        holes: None,
+        zs: None,
+    }]);
+    let first = (area.pts.clone(), area.bulges.clone());
+    assert!(b.doc.update(Slot(4), Entity::Polygon(area)));
+    let part = |b: &Bench| match b.doc.get(Slot(4)) {
+        Some(Entity::Polygon(p)) => {
+            assert_eq!((p.pts.clone(), p.bulges.clone()), first, "the first part stays");
+            let q = &p.parts.as_ref().expect("the second part")[0];
+            (q.pts.iter().map(|&w| rel(w)).collect::<Vec<_>>(), q.bulges.clone())
+        }
+        _ => panic!("the area"),
+    };
+    let corner = b
+        .run(|_, cx| grip_menu::at(on_screen(6.0, 26.0), cx))
+        .expect("the part's corner");
+    assert_eq!((corner.part, corner.header()), (1, "Köşe 3".to_owned()));
+    let edge = b
+        .run(|_, cx| grip_menu::at(on_screen(3.0, 20.0), cx))
+        .expect("the part's bottom edge's middle");
+    assert_eq!((edge.part, edge.header()), (1, "Kenar 1".to_owned()));
+    b.run(|_, cx| grip_menu::apply(edge, GripAction::ArcEdge, cx));
+    assert_eq!(b.last_text(), Some("Yaya dönüştür: tamam."));
+    assert_eq!(part(&b).1, Some(vec![0.5, 0.0, 0.0, 0.0]));
+    assert_eq!(b.doc.undo().as_deref(), Some("Yaya dönüştür"));
+    b.run(|_, cx| grip_menu::apply(corner, GripAction::RemoveVertex, cx));
+    assert_eq!(b.last_text(), Some("Köşe sil: tamam."));
+    assert_eq!(part(&b).0, [[0.0, 20.0], [6.0, 20.0], [0.0, 26.0]]);
+}

@@ -96,6 +96,7 @@ fn to_geometry(c: &Chain, tol: f64) -> Result<Entity, String> {
             pts: clean.pts,
             bulges: clean.bulges,
             holes: None,
+            parts: None,
         }
     } else {
         Shape::Polyline {

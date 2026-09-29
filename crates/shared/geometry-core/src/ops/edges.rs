@@ -2,7 +2,9 @@
 //! part in intersection, trimming, extending and snapping by giving its edges.
 
 use crate::api::Op;
-use crate::entity::{CONSTRUCTION_REACH, Entity, Shape, dimension_geom, ellipse_geom};
+use crate::entity::{
+    CONSTRUCTION_REACH, Entity, Shape, area_parts, dimension_geom, ellipse_geom, is_multi_part,
+};
 use crate::geom::arc::sweep;
 use crate::geom::bulge::bulge_path_edges;
 use crate::geom::dimension::layout_dimension;
@@ -18,7 +20,13 @@ pub fn entity_edges(e: &Shape) -> Vec<Edge> {
     match e {
         Shape::Line { a, b } => vec![Edge::Seg { a: *a, b: *b }],
         Shape::Polyline { pts, bulges, .. } => bulge_path_edges(pts, bulges.as_deref(), false),
-        Shape::Polygon { pts, bulges, holes } => {
+        // Part after part, each its ring's then its holes' (docs/adr/0143).
+        Shape::Polygon { .. } if is_multi_part(e) => {
+            area_parts(e).iter().flat_map(entity_edges).collect()
+        }
+        Shape::Polygon {
+            pts, bulges, holes, ..
+        } => {
             let mut out = bulge_path_edges(pts, bulges.as_deref(), true);
             for h in holes.iter().flatten() {
                 out.extend(bulge_path_edges(&h.pts, h.bulges.as_deref(), true));

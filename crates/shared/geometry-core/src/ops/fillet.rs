@@ -3,11 +3,13 @@
 
 use crate::api::Op;
 use crate::api::json::{FromJson, Json, Nullable, ToJson, field, read_field};
+use crate::entity::{Entity, Shape, area_parts, locate_part, outer_count, replace_part};
 use crate::geom::arc::{ArcGeom, norm_angle, sweep};
 use crate::geom::bulge::{BulgePath, bulge_at, clean_bulge_path};
 use crate::geom::intersect::line_line;
 use crate::jsmath::{PI, acos, atan2, js_hypot, js_max, js_min, js_sign, sin, tan};
 use crate::op;
+use crate::ops::curve_cuts::Geometry;
 use crate::vec2::Vec2;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -297,6 +299,48 @@ pub fn corner_of_path(
     )))
 }
 
+/// Rounds or cuts the corner at outer vertex `index` of a path (the corner
+/// tools' vertex corner, docs/adr/0047), an area's vertices counted part
+/// after part: the corner is done on its own part, which keeps its holes,
+/// the other parts as they are (docs/adr/0143). Why not, as
+/// [`corner_of_path`] says; Err past the last vertex.
+pub fn corner_in_path(e: &Shape, index: usize, op: &CornerOp) -> Result<Geometry, String> {
+    let parts = area_parts(e);
+    let Some((k, i)) = locate_part(&parts, index, outer_count) else {
+        return Err(format!("{}. köşe yok.", index + 1));
+    };
+    let (pts, bulges, holes) = match &parts[k] {
+        Shape::Polyline { pts, bulges, .. } => (pts, bulges, None),
+        Shape::Polygon {
+            pts, bulges, holes, ..
+        } => (pts, bulges, Some(holes.clone())),
+        _ => return Err("Köşe yalnızca çoklu çizgide ve kapalı alanda işlenir.".into()),
+    };
+    let path = match corner_of_path(pts, bulges.as_deref(), holes.is_some(), i, op)? {
+        CornerResult::Path(path) => path,
+        CornerResult::Error(error) => return Ok(Geometry::Error(error)),
+    };
+    let part = match holes {
+        Some(holes) => Shape::Polygon {
+            pts: path.pts,
+            bulges: path.bulges,
+            holes,
+            parts: None,
+        },
+        None => Shape::Polyline {
+            pts: path.pts,
+            bulges: path.bulges,
+            holes: None,
+        },
+    };
+    let shape = if parts.len() > 1 {
+        replace_part(e, k, part).ok_or("Parça kapalı alan olarak kalmalı.")?
+    } else {
+        part
+    };
+    Ok(Geometry::Ok(Entity::new(shape)))
+}
+
 /// Every corner of a closed ring rounded (`radius`) or cut (`d1`, `d2`):
 /// the rectangle tool's corner style (`RectangleTool`, AutoCAD RECTANG's
 /// Fillet and Chamfer; docs/adr/0032). Corners are done last first, so the
@@ -338,6 +382,9 @@ pub(crate) static OPS: &[Op] = &[
                          index: usize,
                          op: CornerOp| {
         corner_of_path(&pts, bulges.as_deref(), closed, index, &op)
+    }),
+    op!("cornerInPath", |e: Entity, index: usize, op: CornerOp| {
+        corner_in_path(&e.shape, index, &op)
     }),
     op!("cornersOfRing", |ring: Vec<Vec2>, op: CornerOp| {
         corners_of_ring(&ring, &op)

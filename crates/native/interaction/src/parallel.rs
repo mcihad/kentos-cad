@@ -187,6 +187,7 @@ impl Parallel {
                     bulges: None,
                     holes: None,
                     zs: None,
+                    parts: None,
                 }
             } else {
                 EntityGeometry::Polyline {

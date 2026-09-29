@@ -66,18 +66,25 @@ impl Vertex {
     /// on the nearest segment (a line's only one).
     fn plan(e: &Entity, p: &Pointer, cx: &Context<'_>) -> Action {
         let tol = cx.view.world_length(VERTEX_PX);
-        if let Entity::Polyline(path) | Entity::Polygon(path) = e
-            && let Some(i) = path
-                .pts
-                .iter()
-                .position(|q| dist(Vec2::new(q.x, q.y), p.raw) <= tol)
-        {
-            let q = path.pts[i];
-            return Action {
-                remove: Some(i),
-                seg: 0,
-                at: Vec2::new(q.x, q.y),
-            };
+        if let Entity::Polyline(path) | Entity::Polygon(path) = e {
+            // Every part's outer vertices, part after part, as the core's `remove_vertex`
+            // counts them (docs/adr/0143).
+            let rings = std::iter::once(&path.pts).chain(path.parts.iter().flatten().map(|q| &q.pts));
+            let mut offset = 0;
+            for ring in rings {
+                if let Some(i) = ring
+                    .iter()
+                    .position(|q| dist(Vec2::new(q.x, q.y), p.raw) <= tol)
+                {
+                    let q = ring[i];
+                    return Action {
+                        remove: Some(offset + i),
+                        seg: 0,
+                        at: Vec2::new(q.x, q.y),
+                    };
+                }
+                offset += ring.len();
+            }
         }
         let seg = match e {
             Entity::Line(_) => 0,
@@ -162,15 +169,20 @@ impl Tool for Vertex {
         };
         let same_kind = std::mem::discriminant(&g) == std::mem::discriminant(&s);
         let written = if same_kind {
-            // The whole geometry is written (docs/adr/0047): a closed area keeps its holes.
+            // The whole geometry is written (docs/adr/0047): a closed area keeps its holes,
+            // a multi-part area its parts as the core gives them back (docs/adr/0143).
             let g = match (g, &s) {
-                (Shape::Polygon { pts, bulges, .. }, Shape::Polygon { holes, .. }) => {
+                (
                     Shape::Polygon {
-                        pts,
-                        bulges,
-                        holes: holes.clone(),
-                    }
-                }
+                        pts, bulges, parts, ..
+                    },
+                    Shape::Polygon { holes, .. },
+                ) => Shape::Polygon {
+                    pts,
+                    bulges,
+                    holes: holes.clone(),
+                    parts,
+                },
                 (g, _) => g,
             };
             let uid = edge::uid(cx.doc, slot);

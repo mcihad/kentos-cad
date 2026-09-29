@@ -11,7 +11,7 @@ use std::collections::HashMap;
 
 use crate::api::Op;
 use crate::api::json::{Json, ToJson, field};
-use crate::entity::{Entity, Shape};
+use crate::entity::{Entity, Part, Shape, area_parts, is_multi_part, join_parts};
 use crate::geom::arrangement::Ring;
 use crate::geom::bulge::{BulgePath, clean_bulge_path};
 use crate::geom::intersect::Edge;
@@ -184,6 +184,17 @@ fn same_bulges(a: Option<&[f64]>, b: Option<&[f64]>) -> bool {
     })
 }
 
+/// A multi-part area's other parts, the same ones in the same order (docs/adr/0143).
+fn same_parts(a: Option<&[Part]>, b: Option<&[Part]>) -> bool {
+    let (a, b) = (a.unwrap_or_default(), b.unwrap_or_default());
+    a.len() == b.len()
+        && a.iter().zip(b).all(|(p, q)| {
+            same_pts(&p.pts, &q.pts)
+                && same_bulges(p.bulges.as_deref(), q.bulges.as_deref())
+                && same_rings(p.holes.as_deref(), q.holes.as_deref())
+        })
+}
+
 fn same_rings(a: Option<&[Ring]>, b: Option<&[Ring]>) -> bool {
     let (a, b) = (a.unwrap_or(&[]), b.unwrap_or(&[]));
     a.len() == b.len()
@@ -211,17 +222,29 @@ fn same_shape(a: &Shape, b: &Shape) -> bool {
                 holes: h2,
             },
         )
-        | (
-            Shape::Polygon { pts, bulges, holes },
+        => {
+            same_pts(pts, p2)
+                && same_bulges(bulges.as_deref(), b2.as_deref())
+                && same_rings(holes.as_deref(), h2.as_deref())
+        }
+        (
+            Shape::Polygon {
+                pts,
+                bulges,
+                holes,
+                parts,
+            },
             Shape::Polygon {
                 pts: p2,
                 bulges: b2,
                 holes: h2,
+                parts: q2,
             },
         ) => {
             same_pts(pts, p2)
                 && same_bulges(bulges.as_deref(), b2.as_deref())
                 && same_rings(holes.as_deref(), h2.as_deref())
+                && same_parts(parts.as_deref(), q2.as_deref())
         }
         (Shape::Circle { c, r }, Shape::Circle { c: d, r: s }) => same_pt(*c, *d) && same(*r, *s),
         (
@@ -345,39 +368,21 @@ pub fn cleanup_findings(list: &[Entity]) -> Findings {
                     holes: holes.clone(),
                 })
             }
-            Shape::Polygon { pts, bulges, holes } => {
-                let outer = without_repeats(pts, bulges.as_deref(), true);
-                let inner: Option<Vec<Option<BulgePath>>> = holes.as_ref().map(|hs| {
-                    hs.iter()
-                        .map(|h| without_repeats(&h.pts, h.bulges.as_deref(), true))
-                        .collect()
-                });
-                let any_hole = inner
-                    .as_ref()
-                    .is_some_and(|v| v.iter().any(Option::is_some));
-                (outer.is_some() || any_hole).then(|| {
-                    let o = outer.unwrap_or_else(|| BulgePath {
-                        pts: pts.clone(),
-                        bulges: bulges.clone(),
-                    });
-                    Shape::Polygon {
-                        pts: o.pts,
-                        bulges: o.bulges,
-                        holes: holes.as_ref().map(|hs| {
-                            hs.iter()
-                                .zip(inner.unwrap_or_default())
-                                .map(|(h, c)| match c {
-                                    Some(c) => Ring {
-                                        pts: c.pts,
-                                        bulges: c.bulges,
-                                    },
-                                    None => h.clone(),
-                                })
-                                .collect()
-                        }),
-                    }
+            // A multi-part area: every part's repeats (docs/adr/0143).
+            Shape::Polygon { .. } if is_multi_part(&e.shape) => {
+                let parts = area_parts(&e.shape);
+                let fixed: Vec<Option<Shape>> = parts.iter().map(area_without_repeats).collect();
+                fixed.iter().any(Option::is_some).then(|| {
+                    let shapes: Vec<Shape> = parts
+                        .iter()
+                        .zip(fixed)
+                        .map(|(p, c)| c.unwrap_or_else(|| p.clone()))
+                        .collect();
+                    join_parts(&shapes)
                 })
+                .flatten()
             }
+            Shape::Polygon { .. } => area_without_repeats(&e.shape),
             _ => None,
         };
         if let Some(shape) = shape {
@@ -393,7 +398,52 @@ pub fn cleanup_findings(list: &[Entity]) -> Findings {
     }
 }
 
+/// A one-part area without its repeated vertices, its holes' too; none when it has none.
+fn area_without_repeats(s: &Shape) -> Option<Shape> {
+    let Shape::Polygon {
+        pts, bulges, holes, ..
+    } = s
+    else {
+        return None;
+    };
+    let outer = without_repeats(pts, bulges.as_deref(), true);
+    let inner: Option<Vec<Option<BulgePath>>> = holes.as_ref().map(|hs| {
+        hs.iter()
+            .map(|h| without_repeats(&h.pts, h.bulges.as_deref(), true))
+            .collect()
+    });
+    let any_hole = inner
+        .as_ref()
+        .is_some_and(|v| v.iter().any(Option::is_some));
+    (outer.is_some() || any_hole).then(|| {
+        let o = outer.unwrap_or_else(|| BulgePath {
+            pts: pts.clone(),
+            bulges: bulges.clone(),
+        });
+        Shape::Polygon {
+            pts: o.pts,
+            bulges: o.bulges,
+            holes: holes.as_ref().map(|hs| {
+                hs.iter()
+                    .zip(inner.unwrap_or_default())
+                    .map(|(h, c)| match c {
+                        Some(c) => Ring {
+                            pts: c.pts,
+                            bulges: c.bulges,
+                        },
+                        None => h.clone(),
+                    })
+                    .collect()
+            }),
+            parts: None,
+        }
+    })
+}
+
 fn count(s: &Shape) -> usize {
+    if is_multi_part(s) {
+        return area_parts(s).iter().map(count).sum();
+    }
     match s {
         Shape::Polyline { pts, holes, .. } | Shape::Polygon { pts, holes, .. } => {
             pts.len()
@@ -546,6 +596,7 @@ mod tests {
             pts: vec![v(0.0, 0.0), v(1.0, 0.0), v(1.0, 1.0)],
             bulges: None,
             holes: None,
+            parts: None,
         });
         assert!(
             split_equal(&area, 2.0).is_none(),
@@ -585,6 +636,7 @@ mod tests {
                     pts: vec![v(0.0, 0.0), v(1.0, 0.0), v(1.0, 1.0), v(0.0, 1.0)],
                     bulges: None,
                     holes: None,
+                    parts: None,
                 },
             )
         };

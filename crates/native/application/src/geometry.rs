@@ -6,13 +6,13 @@
 //! field is carried over as it is, float64 bit for bit.
 
 use kentos_contracts::{
-    ArcEntity, CircleEntity, ConstructionEntity, DimensionEntity, DimensionStyle, DrawingFont,
-    EllipseEntity, Entity, EntityBase, EntityGeometry, HatchEntity,
+    ArcEntity, AreaPart, CircleEntity, ConstructionEntity, DimensionEntity, DimensionStyle,
+    DrawingFont, EllipseEntity, Entity, EntityBase, EntityGeometry, HatchEntity,
     HatchPattern as ContractPattern, HatchPatternType, LineEntity, PathEntity, PointEntity,
     RingGeometry, SplineEntity, TextEntity, Vec2 as Point,
 };
 use kentos_geometry_core::Vec2;
-use kentos_geometry_core::entity::{HatchPattern, Shape};
+use kentos_geometry_core::entity::{HatchPattern, Part, Shape};
 use kentos_geometry_core::geom::arrangement::Ring;
 use kentos_geometry_core::text::Font;
 
@@ -28,6 +28,15 @@ fn ring(r: &RingGeometry) -> Ring {
     Ring {
         pts: points(&r.pts),
         bulges: r.bulges.clone(),
+    }
+}
+
+/// A part of a multi-part area as the core takes it (docs/adr/0143).
+fn part(p: &AreaPart) -> Part {
+    Part {
+        pts: points(&p.pts),
+        bulges: p.bulges.clone(),
+        holes: p.holes.as_ref().map(|hs| hs.iter().map(ring).collect()),
     }
 }
 
@@ -104,6 +113,7 @@ pub fn shape(entity: &Entity) -> Shape {
             pts: points(&p.pts),
             bulges: p.bulges.clone(),
             holes: p.holes.as_ref().map(|hs| hs.iter().map(ring).collect()),
+            parts: p.parts.as_ref().map(|ps| ps.iter().map(part).collect()),
         },
         Entity::Circle(c) => Shape::Circle { c: v(&c.c), r: c.r },
         Entity::Arc(a) => Shape::Arc {
@@ -178,6 +188,48 @@ fn ring_back(r: Ring) -> RingGeometry {
     }
 }
 
+/// The core's holes back, each keeping the elevations of the hole it was
+/// when its vertex count is the same (a transform moves each vertex and
+/// keeps it; docs/adr/0142).
+fn holes_back(holes: Option<Vec<Ring>>, before: Option<&[RingGeometry]>) -> Option<Vec<RingGeometry>> {
+    holes.map(|hs| {
+        hs.into_iter()
+            .enumerate()
+            .map(|(i, h)| {
+                let mut ring = ring_back(h);
+                ring.zs = before
+                    .and_then(|b| b.get(i))
+                    .filter(|b| b.pts.len() == ring.pts.len())
+                    .and_then(|b| b.zs.clone());
+                ring
+            })
+            .collect()
+    })
+}
+
+/// The core's parts back, each keeping its own elevations and its holes'
+/// as `holes_back` does (docs/adr/0143).
+fn parts_back(parts: Option<Vec<Part>>, before: Option<&[AreaPart]>) -> Option<Vec<AreaPart>> {
+    parts.map(|ps| {
+        ps.into_iter()
+            .enumerate()
+            .map(|(i, p)| {
+                let was = before.and_then(|b| b.get(i));
+                let pts = back(p.pts);
+                let zs = was
+                    .filter(|w| w.pts.len() == pts.len())
+                    .and_then(|w| w.zs.clone());
+                AreaPart {
+                    holes: holes_back(p.holes, was.and_then(|w| w.holes.as_deref())),
+                    pts,
+                    bulges: p.bulges,
+                    zs,
+                }
+            })
+            .collect()
+    })
+}
+
 /// `entity` with `shape` as its geometry: the core's answer for it (a moved,
 /// rotated, scaled or mirrored copy of its own shape). Every other field is
 /// kept, as the web's `withGeometry` keeps them; the geometry fields are the
@@ -195,26 +247,42 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
             e.b = p(b);
         }
         (Entity::Polyline(e), Shape::Polyline { pts, bulges, holes })
-        | (Entity::Polygon(e), Shape::Polygon { pts, bulges, holes }) => {
+        | (
+            Entity::Polygon(e),
+            Shape::Polygon {
+                pts,
+                bulges,
+                holes,
+                parts: None,
+            },
+        ) => {
             e.pts = back(pts);
             e.bulges = bulges;
             // A transform moves each vertex and keeps it: the elevations stay
             // with their vertices, the holes' too (docs/adr/0142).
             let before = e.holes.take();
-            e.holes = holes.map(|hs| {
-                hs.into_iter()
-                    .enumerate()
-                    .map(|(i, h)| {
-                        let mut ring = ring_back(h);
-                        ring.zs = before
-                            .as_ref()
-                            .and_then(|b| b.get(i))
-                            .filter(|b| b.pts.len() == ring.pts.len())
-                            .and_then(|b| b.zs.clone());
-                        ring
-                    })
-                    .collect()
-            });
+            e.holes = holes_back(holes, before.as_deref());
+            e.parts = None;
+            if e.zs.as_ref().is_some_and(|zs| zs.len() != e.pts.len()) {
+                e.zs = None;
+            }
+        }
+        (
+            Entity::Polygon(e),
+            Shape::Polygon {
+                pts,
+                bulges,
+                holes,
+                parts: Some(parts),
+            },
+        ) => {
+            e.pts = back(pts);
+            e.bulges = bulges;
+            let before = e.holes.take();
+            e.holes = holes_back(holes, before.as_deref());
+            // Every part too, with its elevations and its holes' (docs/adr/0143).
+            let was = e.parts.take();
+            e.parts = parts_back(Some(parts), was.as_deref());
             if e.zs.as_ref().is_some_and(|zs| zs.len() != e.pts.len()) {
                 e.zs = None;
             }
@@ -343,21 +411,36 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             bulges,
             holes,
             zs,
-        } => Entity::Polygon(PathEntity {
-            base,
-            pts,
-            bulges,
-            holes: holes.map(|hs| {
-                hs.into_iter()
-                    .map(|mut h| {
-                        h.zs = held(h.zs);
-                        h
-                    })
-                    .collect()
-            }),
-            zs: held(zs),
-            parts: None,
-        }),
+            parts,
+        } => {
+            let holes_held = |hs: Option<Vec<RingGeometry>>| {
+                hs.map(|hs| {
+                    hs.into_iter()
+                        .map(|mut h| {
+                            h.zs = held(h.zs);
+                            h
+                        })
+                        .collect::<Vec<_>>()
+                })
+            };
+            Entity::Polygon(PathEntity {
+                base,
+                pts,
+                bulges,
+                holes: holes_held(holes),
+                zs: held(zs),
+                // Every part as written, its elevations and its holes' held as the area's (docs/adr/0143).
+                parts: parts.map(|ps| {
+                    ps.into_iter()
+                        .map(|mut p| {
+                            p.zs = held(p.zs);
+                            p.holes = holes_held(p.holes);
+                            p
+                        })
+                        .collect()
+                }),
+            })
+        }
         EntityGeometry::Circle { c, r } => Entity::Circle(CircleEntity { base, c, r }),
         EntityGeometry::Arc { c, r, a0, a1 } => Entity::Arc(ArcEntity { base, c, r, a0, a1 }),
         EntityGeometry::Ellipse {
@@ -441,11 +524,17 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             bulges,
             zs: None,
         },
-        Shape::Polygon { pts, bulges, holes } => EntityGeometry::Polygon {
+        Shape::Polygon {
+            pts,
+            bulges,
+            holes,
+            parts,
+        } => EntityGeometry::Polygon {
             pts: back(pts),
             bulges,
             holes: holes.map(|hs| hs.into_iter().map(ring_back).collect()),
             zs: None,
+            parts: parts_back(parts, None),
         },
         Shape::Circle { c, r } => EntityGeometry::Circle { c: p(c), r },
         Shape::Arc { c, r, a0, a1 } => EntityGeometry::Arc { c: p(c), r, a0, a1 },
@@ -606,5 +695,39 @@ mod tests {
             },
         };
         assert_eq!(edit_geometry(odd), None);
+    }
+
+    /// A multi-part area (docs/adr/0143) to the core and back, and through
+    /// the edit command's geometry, is itself: every part, its arcs and
+    /// holes; a move keeps each vertex's elevation, a part's and its holes'.
+    #[test]
+    fn a_multi_part_area_goes_to_the_core_and_back_with_its_elevations() {
+        let text = r#"{"kind":"polygon","id":4,"layerId":"a","attrs":{"Ada":"104"},"pts":[{"x":0,"y":0},{"x":4,"y":0},{"x":4,"y":4}],"zs":[1,null,3],"parts":[{"pts":[{"x":10,"y":0},{"x":14,"y":0},{"x":14,"y":4},{"x":10,"y":4}],"bulges":[0,0.5,0,0],"holes":[{"pts":[{"x":11,"y":1},{"x":12,"y":1},{"x":12,"y":2}],"zs":[7,8,null]}],"zs":[4,5,6,-0.0]}]}"#;
+        let e = entity(text);
+        let again = with_shape(&e, shape(&e)).expect("the same kind");
+        assert_eq!(serde_json::to_string(&again).unwrap(), serde_json::to_string(&e).unwrap());
+        // Moved 100 m east: every elevation stays with its vertex.
+        let moved = kentos_geometry_core::ops::transform::transform_shape(
+            &shape(&e),
+            &kentos_geometry_core::geom::affine::translation(100.0, 0.0),
+        );
+        let Some(Entity::Polygon(p)) = with_shape(&e, moved) else {
+            panic!("an area");
+        };
+        let part = &p.parts.as_ref().expect("parts")[0];
+        assert_eq!(part.pts[0].x, 110.0);
+        assert_eq!(part.zs, Some(vec![Some(4.0), Some(5.0), Some(6.0), Some(-0.0)]));
+        assert_eq!(part.holes.as_ref().expect("a hole")[0].zs, Some(vec![Some(7.0), Some(8.0), None]));
+        assert_eq!(p.zs, Some(vec![Some(1.0), None, Some(3.0)]));
+        // Through the edit command's geometry: the parts come along, their elevations as the geometry says.
+        let g = edit_geometry(shape(&e)).expect("a geometry");
+        let EntityGeometry::Polygon { parts: Some(parts), .. } = &g else {
+            panic!("{g:?}");
+        };
+        assert_eq!(parts.len(), 1);
+        let written = entity_of(&g, e.base().clone());
+        let Entity::Polygon(w) = written else { panic!() };
+        assert_eq!(w.parts.as_ref().map(Vec::len), Some(1));
+        assert_eq!(w.parts.as_ref().unwrap()[0].pts, p.parts.as_ref().unwrap()[0].pts.iter().map(|q| Point { x: q.x - 100.0, y: q.y }).collect::<Vec<_>>());
     }
 }

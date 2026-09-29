@@ -7,7 +7,7 @@
 use super::{Store, padded};
 use crate::entity::Shape;
 use crate::geometry::Bounds;
-use crate::processing::edge_lengths::{edge_lengths, edge_path};
+use crate::processing::edge_lengths::{edge_lengths, edge_paths};
 use crate::processing::numbering::{CornerRing, CornerWalk, number_corners};
 use crate::vec2::Vec2;
 
@@ -40,12 +40,25 @@ impl Store {
         let mut inputs = Vec::new();
         for &id in ids {
             match self.get(id).map(|it| &it.shape) {
-                Some(Shape::Polygon { pts, holes, .. }) => {
+                Some(Shape::Polygon {
+                    pts, holes, parts, ..
+                }) => {
                     let mut rings = vec![CornerRing { pts, closed: true }];
                     rings.extend(holes.iter().flatten().map(|h| CornerRing {
                         pts: &h.pts,
                         closed: true,
                     }));
+                    // A multi-part area's other parts, each ring then its holes (docs/adr/0143).
+                    for part in parts.iter().flatten() {
+                        rings.push(CornerRing {
+                            pts: &part.pts,
+                            closed: true,
+                        });
+                        rings.extend(part.holes.iter().flatten().map(|h| CornerRing {
+                            pts: &h.pts,
+                            closed: true,
+                        }));
+                    }
                     inputs.push(rings);
                 }
                 Some(Shape::Polyline { pts, .. }) => {
@@ -76,7 +89,8 @@ impl Store {
         let mut owners = Vec::new();
         let mut paths = Vec::new();
         for &id in ids {
-            if let Some(p) = self.get(id).and_then(|it| edge_path(&it.shape)) {
+            let Some(it) = self.get(id) else { continue };
+            for p in edge_paths(&it.shape) {
                 owners.push(id);
                 paths.push(p);
             }
