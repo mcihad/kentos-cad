@@ -55,7 +55,8 @@ use crate::tool::{Context, Cursor, Draft, Flow, Pointer, Preview, Tool, View};
 use crate::trim::{self, Boundary};
 use crate::vertex::{self, Vertex};
 use crate::{
-    angle, area, between, boundary, cleanup, construction, coordinate, dimension, dimension_chain,
+    angle, area, between, block_insert, boundary, cleanup, construction, coordinate, dimension,
+    dimension_chain,
     divide, donut, ellipse, hatch, match_properties, meeting, parallel, revcloud, sector,
     select_circle, select_containing, select_fence, set_elevation, spline, split, station_offset,
     text,
@@ -113,6 +114,8 @@ pub const TOOLS: &[&str] = &[
     text::ID,
     dimension::ID,
     hatch::ID,
+    // Blocks (docs/adr/0144).
+    block_insert::ID,
     // Alan işlemleri (docs/adr/0065).
     area::UNION_ID,
     area::INTERSECT_ID,
@@ -236,6 +239,7 @@ impl Session {
             text::ID => Box::new(crate::text::Text::new()),
             dimension::ID => Box::new(crate::dimension::Dimension::new()),
             hatch::ID => Box::new(crate::hatch::Hatch::new()),
+            block_insert::ID => Box::new(crate::block_insert::BlockInsert::new()),
             area::UNION_ID => Box::new(crate::area::AreaAction::union()),
             area::INTERSECT_ID => Box::new(crate::area::AreaAction::intersect()),
             area::SUBTRACT_ID => Box::new(crate::area::AreaSubtract::tool()),

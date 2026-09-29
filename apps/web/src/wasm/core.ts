@@ -522,6 +522,11 @@ export class CoreStore {
     return typed(() => this.raw.transformOutlines(ids, affines, limit));
   }
 
+  /** Outlines of a block placed as an insert would place it (docs/adr/0144), as `transformOutlines`; empty for an unknown block. */
+  insertOutlines(block: string, x: number, y: number, scale: number, rotation: number, mirror: boolean): Float64Array {
+    return typed(() => this.raw.insertOutlines(block, x, y, scale, rotation, mirror));
+  }
+
   /**
    * These objects moved by each affine (six numbers each), affine after
    * affine, as `transformEntities` gives them: packed as `putPacked` reads

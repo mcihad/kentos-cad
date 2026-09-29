@@ -287,6 +287,15 @@ export class PickIndex {
   }
 
   /**
+   * Outlines of a block placed as an insert would place it (docs/adr/0144): Blok ekle's ghost, and at the
+   * origin with scale 1 the Bloklar panel's picture. Empty for a block the drawing does not define.
+   */
+  blockOutlines(block: string, p: Vec2, scale = 1, rotation = 0, mirror = false): Float64Array {
+    this.sync();
+    return this.store.insertOutlines(block, p.x, p.y, scale, rotation, mirror);
+  }
+
+  /**
    * `transformEntities(list, affines)` done by the store on its own copies
    * (move, copy, rotate, scale, mirror, arrays): only the new geometry
    * comes back, packed, so no object crosses as JSON (docs/adr/0008). The

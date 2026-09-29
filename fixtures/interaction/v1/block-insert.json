@@ -1,0 +1,59 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "block-insert",
+  "title": "Blok ekle (ADR 0144): çizimin ilk bloğu yazılan noktaya; Blok (B) sıradakine geçer; Ölçek, Dönüş ve Aynala ile yerleştirme; araç açıkken Ctrl+Z son yerleştirmeyi geri alır; Enter bitirir",
+  "source": "ADR 0144, 4. adım",
+  "covers": ["CAD-04"],
+  "document": "blocks.kcad",
+  "view": { "center": [487020, 4420010], "metresPerPixel": 0.0625 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "clickTolerance": 0.0625,
+  "steps": [
+    {
+      "run": "tool.blockInsert",
+      "note": "Çizimin ilk bloğu: Rögar.",
+      "expect": {
+        "tool": "blockInsert",
+        "options": ["B", "Ö", "D", "A"],
+        "prompt": "Blok ekle: “Rögar” için yerleştirme noktasına tıklayın [Blok (B) / Ölçek (Ö): 1.0000 / Dönüş (D): 0.0000° / Aynala (A): kapalı]"
+      }
+    },
+    { "move": [0, 0], "note": "İmleç çizimde: yazılan değer imlecin yanındaki alana gider, Enter odağı çizime geri verir." },
+    { "text": "487025,4420008.5" },
+    {
+      "key": "Enter",
+      "note": "Yazılan nokta kesindir; araç bir sonrakini bekler.",
+      "expect": { "tool": "blockInsert", "entities": 13, "log": "info", "newest": { "kind": "insert", "points": [[5, -1.5], [6, -1.5], [5, -0.5]] } }
+    },
+    { "key": "B", "expect": { "prompt": "Blok ekle: “Lamba” için yerleştirme noktasına tıklayın [Blok (B) / Ölçek (Ö): 1.0000 / Dönüş (D): 0.0000° / Aynala (A): kapalı]" } },
+    { "key": "B", "expect": { "prompt": "Blok ekle: “Aydınlatma direği” için yerleştirme noktasına tıklayın [Blok (B) / Ölçek (Ö): 1.0000 / Dönüş (D): 0.0000° / Aynala (A): kapalı]" } },
+    { "key": "O", "note": "O, Ö seçeneğini seçer: ölçek sorulur.", "expect": { "prompt": "Blok ekle: ölçeği yazın [Blok (B) / Ölçek (Ö): 1.0000 / Dönüş (D): 0.0000° / Aynala (A): kapalı]" } },
+    { "text": "0" },
+    { "key": "Enter", "note": "Ölçek sıfırdan büyük olmalı; soru sürer.", "expect": { "log": "warn", "logged": ["Ölçek sıfırdan büyük olmalı."], "entities": 13 } },
+    { "text": "2" },
+    { "key": "Enter" },
+    { "key": "D" },
+    { "text": "90" },
+    { "key": "Enter" },
+    { "key": "A", "expect": { "prompt": "Blok ekle: “Aydınlatma direği” için yerleştirme noktasına tıklayın [Blok (B) / Ölçek (Ö): 2.0000 / Dönüş (D): 90.0000° / Aynala (A): açık]" } },
+    { "move": [2, 6], "note": "Önizleme: imleçte bloğun hayaleti." },
+    {
+      "click": [2, 6],
+      "note": "İki katı, 90° dönmüş, aynalı direk.",
+      "expect": { "entities": 14, "newest": { "kind": "insert", "points": [[2, 6], [2, 8], [4, 6]] } }
+    },
+    { "key": "Ctrl+Z", "note": "Araç açıkken Ctrl+Z son yerleştirmeyi geri alır; araç sürer.", "expect": { "tool": "blockInsert", "entities": 13 } },
+    { "key": "B", "note": "Bellek başladığı gibi bırakılır: Rögar, ölçek 1, dönüş 0, aynalama kapalı." },
+    { "key": "B" },
+    { "key": "B" },
+    { "key": "O" },
+    { "text": "1" },
+    { "key": "Enter" },
+    { "key": "D" },
+    { "text": "0" },
+    { "key": "Enter" },
+    { "key": "A", "expect": { "prompt": "Blok ekle: “Rögar” için yerleştirme noktasına tıklayın [Blok (B) / Ölçek (Ö): 1.0000 / Dönüş (D): 0.0000° / Aynala (A): kapalı]" } },
+    { "key": "Enter", "note": "Enter bitirir.", "expect": { "tool": "select", "entities": 13 } }
+  ]
+}

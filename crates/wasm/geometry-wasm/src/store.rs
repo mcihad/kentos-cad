@@ -566,6 +566,23 @@ impl GeometryStore {
             .transform_outlines(ids, &affines_of(affines), limit as usize)
     }
 
+    /// Outlines of a block placed as an insert would place it (docs/adr/0144):
+    /// Blok ekle's ghost, and the Bloklar panel's picture at the origin; as
+    /// `transformOutlines`, nothing for a block the drawing does not define.
+    #[wasm_bindgen(js_name = insertOutlines)]
+    pub fn insert_outlines(
+        &self,
+        block: &str,
+        x: f64,
+        y: f64,
+        scale: f64,
+        rotation: f64,
+        mirror: bool,
+    ) -> Vec<f64> {
+        self.inner
+            .insert_outlines(block, Vec2::new(x, y), scale, rotation, mirror)
+    }
+
     /// These objects moved by each affine (six numbers each), affine after
     /// affine, as `transformEntities` gives them, packed as `putPacked`
     /// reads them (`Store::transform_packed`): move, copy, arrays and paste

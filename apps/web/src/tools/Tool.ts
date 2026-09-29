@@ -87,13 +87,14 @@ export function takesTypedInput(activeId: string, tool: Pick<Tool, 'activeGrip'>
   return activeId !== 'select' || !!tool.activeGrip?.();
 }
 
-export type ToolGroup = 'select' | 'draw' | 'annotate' | 'transform' | 'modify' | 'area' | 'map';
+export type ToolGroup = 'select' | 'draw' | 'annotate' | 'block' | 'transform' | 'modify' | 'area' | 'map';
 
 /** Short on purpose: these are the toolbox section headings. */
 export const TOOL_GROUP_LABEL: Record<ToolGroup, string> = {
   select: 'Seçim',
   draw: 'Çizim',
   annotate: 'Açıklama',
+  block: 'Blok',
   transform: 'Dönüştür',
   modify: 'Düzenle',
   area: 'Alan',

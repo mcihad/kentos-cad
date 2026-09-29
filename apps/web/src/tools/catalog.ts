@@ -1,4 +1,5 @@
 import { TextTool } from './annotateTools';
+import { BlockInsertTool } from './blockTools';
 import { DimensionTool } from './dimensionTool';
 import { HatchTool } from './hatchTool';
 import { ArcTool, CircleTool, SplineTool } from './curveTools';
@@ -98,6 +99,8 @@ const defs: Def[] = [
   { id: 'dimBaseline', family: 'dimension', label: 'Baz ölçü', icon: 'dimBaseline', group: 'annotate', aliases: ['DIMBASELINE', 'DBA', 'BAZOLCU'], description: 'Son ölçünün ilk noktasından ölçülen ölçüleri üst üste dizer.', steps: ['Son çizilen hizalı ya da doğrusal ölçüden devam eder; yoksa bir ölçüye tıklayın (“Ölçü seç” başka ölçü seçtirir).', 'Sonraki noktalara tıklayın: her tık ilk noktadan bir ölçü ekler; çizgiler yazı yüksekliğinin üç katı aralıkla üst üste dizilir.', 'Sağ tık ya da Enter bitirir.'], productCommand: entitiesCreate.id, create: (c) => new DimBaselineTool(c) },
   { id: 'revcloud', rare: true, label: 'Revizyon bulutu', icon: 'revcloud', group: 'annotate', aliases: ['REVCLOUD', 'BULUT'], description: 'Değişen yeri çevreleyen, dışa bombeli yaylardan kapalı bulut çizer; dikdörtgen ya da çokgen.', steps: ['Dikdörtgenin iki köşesine tıklayın (ya da “Çokgen” ile köşelere tıklayıp sağ tıklayın).', '“Yay boyu” yay uzunluğunu kâğıt milimetresi olarak ayarlar.'], productCommand: polygonCreate.id, create: (c) => new RevCloudTool(c) },
   { id: 'hatch', primary: true, label: 'Tarama', icon: 'hatch', group: 'annotate', shortcut: 'H', aliases: ['H', 'HATCH', 'TARAMA'], description: 'Tıklanan kapalı alanı desenle tarar; D ile desen değişir.', steps: ['Taranacak kapalı alanın içine tıklayın.', 'Deseni üstteki “Desen” düğmesiyle değiştirin.'], productCommand: entitiesCreate.id, create: (c) => new HatchTool(c) },
+  // Blok (docs/adr/0144)
+  { id: 'blockInsert', label: 'Blok ekle', icon: 'blockInsert', group: 'block', aliases: ['INSERT', 'BLOKEKLE', 'SEMBOLEKLE'], description: 'Çizimde tanımlı bir bloğu tıklanan ya da yazılan noktalara yerleştirir; ölçeği, dönüşü ve aynalanması seçilir.', steps: ['Yerleştirme noktasına tıklayın ya da Y,X yazın: her tık bir yerleştirmedir.', '“Blok” sıradaki bloğa geçer; “Ölçek” ve “Dönüş” (derece) yazılır, “Aynala” bloğu x ekseninde aynalar.', 'Sağ tık ya da Enter bitirir.'], productCommand: entitiesCreate.id, create: (c) => new BlockInsertTool(c) },
 
   // Dönüştür
   { id: 'move', primary: true, label: 'Taşı', icon: 'move', group: 'transform', section: 'move', shortcut: 'Shift+M', aliases: ['M', 'MOVE', 'TASI'], description: 'Seçili nesneleri temel noktadan hedefe taşır.', steps: ['Nesnelere tıklayın ya da pencereyle seçin, sonra sağ tıklayın. Önceden seçiliyse bu adım atlanır.', 'Temel noktaya tıklayın.', 'Hedef noktaya tıklayın.'], productCommand: entitiesTransform.id, create: (c) => new MoveTool(c, { id: 'move', label: 'Taşı', copy: false }) },

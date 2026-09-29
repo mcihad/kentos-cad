@@ -178,3 +178,35 @@ fn a_moved_insert_shows_its_pieces_as_the_ghost() {
     ];
     assert!(ghost.windows(ring.len()).any(|w| w == ring), "{ghost:?}");
 }
+
+#[test]
+fn a_block_is_outlined_where_an_insert_would_place_it() {
+    let s = store();
+    // Blok ekle's ghost: the 2×1 rectangle doubled at (50, 60), then a quarter turn (exact).
+    let ring = |pts: [f64; 8]| {
+        let mut r = vec![1.0, 4.0];
+        r.extend(pts);
+        r
+    };
+    let flat = s.insert_outlines("r", Vec2::new(50.0, 60.0), 2.0, 0.0, false);
+    let want = ring([50.0, 60.0, 54.0, 60.0, 54.0, 62.0, 50.0, 62.0]);
+    assert!(flat.windows(want.len()).any(|w| w == want), "{flat:?}");
+    let turned = s.insert_outlines(
+        "r",
+        Vec2::new(50.0, 60.0),
+        2.0,
+        std::f64::consts::FRAC_PI_2,
+        false,
+    );
+    let want = ring([50.0, 60.0, 50.0, 64.0, 48.0, 64.0, 48.0, 60.0]);
+    assert!(turned.windows(want.len()).any(|w| w == want), "{turned:?}");
+    // Mirrored in the definition's x axis first: the rectangle hangs below.
+    let mirrored = s.insert_outlines("r", Vec2::new(50.0, 60.0), 2.0, 0.0, true);
+    let want = ring([50.0, 60.0, 54.0, 60.0, 54.0, 58.0, 50.0, 58.0]);
+    assert!(mirrored.windows(want.len()).any(|w| w == want), "{mirrored:?}");
+    // A block the drawing does not define has no outline.
+    assert!(
+        s.insert_outlines("yok", Vec2::new(0.0, 0.0), 1.0, 0.0, false)
+            .is_empty()
+    );
+}

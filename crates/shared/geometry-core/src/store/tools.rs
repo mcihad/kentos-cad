@@ -333,6 +333,32 @@ impl Store {
         out
     }
 
+    /// Outlines of a block placed as an insert would place it (docs/adr/0144):
+    /// Blok ekle's ghost at the cursor, and at the origin with scale 1 the
+    /// Bloklar panel's picture. Nothing for a block the drawing does not
+    /// define. See `outline_paths` for the layout.
+    pub fn insert_outlines(
+        &self,
+        block: &str,
+        p: Vec2,
+        scale: f64,
+        rotation: f64,
+        mirror: bool,
+    ) -> Vec<f64> {
+        let insert = Shape::Insert {
+            block: block.to_owned(),
+            p,
+            scale,
+            rotation,
+            mirror: mirror.then_some(true),
+        };
+        let mut out = Vec::new();
+        for piece in self.blocks().expand(&insert) {
+            outline_paths(&piece.shape, &mut out);
+        }
+        out
+    }
+
     /// Objects moved by each affine in turn, as `transformEntities` gives
     /// them, packed as `put_packed` reads them (`Packer`): move, copy,
     /// rotate, scale, mirror, arrays and paste transform the store's own

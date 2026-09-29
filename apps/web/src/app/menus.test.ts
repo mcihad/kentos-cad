@@ -52,7 +52,7 @@ describe('menus from the catalog', () => {
 
   it('turn tool sections into blocks and merge blocks with the same title', () => {
     const draw = menuBlocks(menuById('draw')!.items, TOOL_CATALOG);
-    expect(draw.map((b) => b.label)).toEqual(['Çizgi', 'Eğri', 'Şekil', 'Yardımcı', 'Nokta', 'Açıklama']);
+    expect(draw.map((b) => b.label)).toEqual(['Çizgi', 'Eğri', 'Şekil', 'Yardımcı', 'Nokta', 'Açıklama', 'Blok']);
     const map = menuBlocks(menuById('map')!.items, TOOL_CATALOG);
     expect(map.map((b) => b.label)).toEqual(['Parsel', 'Arazi', 'Ölçme', 'Pafta']);
     expect(map[0].items).toEqual(['tool.parcel', 'tool.subdivide', 'map.parcelReport', 'map.edgeLengths']);

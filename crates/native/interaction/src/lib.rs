@@ -91,6 +91,7 @@ pub mod area;
 pub mod array;
 pub mod array_path;
 pub mod between;
+pub mod block_insert;
 pub mod boundary;
 pub mod breaking;
 pub mod calc;

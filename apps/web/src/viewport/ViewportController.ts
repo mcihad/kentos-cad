@@ -374,6 +374,11 @@ export class ViewportController {
     return this.picker.enclosing(world);
   }
 
+  /** Outlines of a block placed as an insert would place it (docs/adr/0144): Blok ekle's ghost, the Bloklar panel's picture. */
+  blockOutlines(block: string, p: Vec2, scale = 1, rotation = 0, mirror = false): Float64Array {
+    return this.picker.blockOutlines(block, p, scale, rotation, mirror);
+  }
+
   /** Patlat of a block's insert: its definition's objects placed, each with its own fields (docs/adr/0144); or why not. */
   explodeInsert(e: Entity): ReturnType<PickIndex['explodeInsert']> {
     return this.picker.explodeInsert(e);

@@ -28,6 +28,10 @@ export const ICONS = {
   text: '<path d="M4.5 5V3.8h11V5M10 3.8v12.4M7.5 16.2h5"/>',
   dimension: '<path d="M3.5 5v10M16.5 5v10M3.5 12h13"/><path d="m5.8 10.5-2.3 1.5 2.3 1.5M14.2 10.5l2.3 1.5-2.3 1.5"/><path d="M8 8.5h4"/>',
   hatch: '<rect x="3.5" y="3.5" width="13" height="13"/><path d="m3.5 9.5 6-6M3.5 15.5l12-12M9.5 16.5l7-7"/>',
+  // Blocks (docs/adr/0144): a symbol placed at its grip; objects gathered round a base grip; a shelf of symbols.
+  blockInsert: `<rect x="8.5" y="3.5" width="8" height="8" rx="1.2"/><circle cx="12.5" cy="7.5" r="2"/><path d="M3.5 16.5 8.5 11.5"/>${grip(3.5, 16.5)}`,
+  blockDefine: `<rect x="3.5" y="3.5" width="13" height="13" rx="1" stroke-dasharray="2.2 1.6"/><circle cx="8" cy="8" r="2"/><path d="m10.8 13.2 2.2-4 2.2 4z"/>${grip(3.5, 16.5)}`,
+  blocks: '<rect x="3" y="3" width="6" height="6" rx="1"/><rect x="11" y="3" width="6" height="6" rx="1"/><rect x="3" y="11" width="6" height="6" rx="1"/><circle cx="14" cy="14" r="3"/>',
   move: '<path d="M10 2.5v15M2.5 10h15"/><path d="M7.8 4.7 10 2.5l2.2 2.2M7.8 15.3l2.2 2.2 2.2-2.2M4.7 7.8 2.5 10l2.2 2.2M15.3 7.8l2.2 2.2-2.2 2.2"/>',
   copy: '<rect x="3.5" y="7.5" width="9" height="9" rx="1"/><path d="M7.5 7.5v-4h9v9h-4"/>',
   rotate: '<path d="M16 10.5A6 6 0 1 1 13.6 5.7"/><path d="M14 2.6v3.5h-3.5"/>',

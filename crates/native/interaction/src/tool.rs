@@ -340,6 +340,12 @@ pub struct Memory {
     pub measure_fixed: bool,
     pub area_inside: bool,
     pub circle_crossing: bool,
+    /// Blok ekle's block, scale, turn in degrees and mirror
+    /// (`BlockInsertTool.block`, `.scale`, `.rotation`, `.mirror`; docs/adr/0144).
+    pub block_insert: Option<kentos_contracts::BlockId>,
+    pub block_scale: f64,
+    pub block_rotation: f64,
+    pub block_mirror: bool,
 }
 
 /// A short list of numbers typed as one answer (Ara nokta's distances and
@@ -451,6 +457,10 @@ impl Default for Memory {
             measure_fixed: false,
             area_inside: false,
             circle_crossing: false,
+            block_insert: None,
+            block_scale: 1.0,
+            block_rotation: 0.0,
+            block_mirror: false,
         }
     }
 }
