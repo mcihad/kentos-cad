@@ -263,6 +263,8 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
     let mut defined: HashMap<BlockId, Written> = HashMap::new();
     let mut points = false;
     let no_values = BTreeMap::new();
+    // What an insert's attribute texts show, where (docs/adr/0144 §7): the shared core's.
+    let placing = crate::blocks::Placing::with_attributes(&input.blocks);
     for def in order {
         let Some(name) = names.get(&def.id) else {
             continue;
@@ -286,6 +288,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
                 defining: true,
                 names: &names,
                 defined: &defined,
+                placing: &placing,
             };
             for e in &def.entities {
                 w.entity(e);
@@ -293,6 +296,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
             points |= w.points;
             w.extent
         };
+        let tags = blocks::tags(def, name, &mut report);
         blocks::block(
             &mut blocks,
             &mut handles,
@@ -300,6 +304,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
             (record, name),
             def,
             &objects,
+            &tags,
         );
         records.push((record, name.clone()));
         defined.insert(
@@ -307,6 +312,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
             Written {
                 base: def.base,
                 extent,
+                tags,
             },
         );
     }
@@ -327,6 +333,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
             defining: false,
             names: &names,
             defined: &defined,
+            placing: &placing,
         };
         for e in &input.entities {
             w.entity(e);

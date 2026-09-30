@@ -113,7 +113,7 @@ $PDSIZE
   9
 $HANDSEED
   5
-44
+4F
   9
 $TILEMODE
  70
@@ -613,7 +613,7 @@ Continuous
   0
 LAYER
   5
-42
+4D
 330
 1
 100
@@ -647,7 +647,7 @@ fg-dim
   0
 LAYER
   5
-43
+4E
 330
 1
 100
@@ -1029,7 +1029,7 @@ Direk
   0
 BLOCK_RECORD
   5
-3A
+3D
 330
 9
 100
@@ -1237,7 +1237,7 @@ AcDbBlockBegin
   2
 Direk
  70
-0
+2
  10
 1.0
  20
@@ -1389,9 +1389,101 @@ Lamba
  50
 90.0
   0
-ENDBLK
+ATTDEF
   5
 39
+330
+33
+100
+AcDbEntity
+  8
+0
+100
+AcDbText
+ 10
+1.5
+ 20
+5.0
+ 30
+0.0
+ 40
+0.4
+  1
+?
+100
+AcDbAttributeDefinition
+  3
+Direk numarası
+  2
+No
+ 70
+0
+  0
+ATTDEF
+  5
+3A
+330
+33
+100
+AcDbEntity
+  8
+0
+100
+AcDbText
+ 10
+1.5
+ 20
+4.4
+ 30
+0.0
+ 40
+0.3
+  1
+
+100
+AcDbAttributeDefinition
+  3
+Lamba türü
+  2
+Tür
+ 70
+0
+  0
+ATTDEF
+  5
+3B
+330
+33
+100
+AcDbEntity
+  8
+0
+100
+AcDbText
+ 10
+0.5
+ 20
+3.5
+ 30
+0.0
+ 40
+0.25
+  1
+2.5 m
+ 50
+90.0
+100
+AcDbAttributeDefinition
+  3
+
+  2
+Kol_boyu
+ 70
+0
+  0
+ENDBLK
+  5
+3C
 330
 33
 100
@@ -1403,9 +1495,9 @@ AcDbBlockEnd
   0
 BLOCK
   5
-3C
+3F
 330
-3A
+3D
 100
 AcDbEntity
   8
@@ -1429,9 +1521,9 @@ Ağaç_Çınar
   0
 CIRCLE
   5
-3B
+3E
 330
-3A
+3D
 100
 AcDbEntity
   8
@@ -1453,9 +1545,9 @@ AcDbCircle
   0
 ENDBLK
   5
-3D
+40
 330
-3A
+3D
 100
 AcDbEntity
   8
@@ -1471,7 +1563,7 @@ ENTITIES
   0
 INSERT
   5
-3E
+41
 330
 17
 100
@@ -1484,6 +1576,8 @@ Yapı
 15026253
 100
 AcDbBlockReference
+ 66
+1
   2
 Direk
  10
@@ -1507,19 +1601,9 @@ KENTOS
 1000
 attr
 1000
-No
+Malzeme
 1000
-7
-1002
-}
-1002
-{
-1000
-attr
-1000
-Tür
-1000
-LED
+Çelik
 1002
 }
 1002
@@ -1531,9 +1615,121 @@ turn
 1002
 }
   0
+ATTRIB
+  5
+42
+330
+41
+100
+AcDbEntity
+  8
+Yapı
+ 62
+13
+420
+15026253
+100
+AcDbText
+ 10
+452357.1155058315
+ 20
+4412358.340260532
+ 30
+0.0
+ 40
+1.0
+  1
+7
+ 50
+185.72957795130822
+100
+AcDbAttribute
+  2
+No
+ 70
+0
+  0
+ATTRIB
+  5
+43
+330
+41
+100
+AcDbEntity
+  8
+Yapı
+ 62
+13
+420
+15026253
+100
+AcDbText
+ 10
+452356.9657557065
+ 20
+4412359.83276678
+ 30
+0.0
+ 40
+0.75
+  1
+LED
+ 50
+185.72957795130822
+100
+AcDbAttribute
+  2
+Tür
+ 70
+0
+  0
+ATTRIB
+  5
+44
+330
+41
+100
+AcDbEntity
+  8
+Yapı
+ 62
+13
+420
+15026253
+100
+AcDbText
+ 10
+452354.25362010585
+ 20
+4412361.82194261
+ 30
+0.0
+ 40
+0.625
+  1
+2.5 m
+ 50
+95.72957795130822
+100
+AcDbAttribute
+  2
+Kol_boyu
+ 70
+0
+  0
+SEQEND
+  5
+45
+330
+41
+100
+AcDbEntity
+  8
+Yapı
+  0
 INSERT
   5
-3F
+46
 330
 17
 100
@@ -1542,6 +1738,8 @@ AcDbEntity
 Parsel sınırı
 100
 AcDbBlockReference
+ 66
+1
   2
 Direk
  10
@@ -1559,9 +1757,105 @@ Direk
  50
 0.0
   0
+ATTRIB
+  5
+47
+330
+46
+100
+AcDbEntity
+  8
+Parsel sınırı
+100
+AcDbText
+ 10
+452375.623
+ 20
+4412368.678
+ 30
+0.0
+ 40
+0.4
+  1
+?
+100
+AcDbAttribute
+  2
+No
+ 70
+0
+  0
+ATTRIB
+  5
+48
+330
+46
+100
+AcDbEntity
+  8
+Parsel sınırı
+100
+AcDbText
+ 10
+452375.623
+ 20
+4412368.078000001
+ 30
+0.0
+ 40
+0.3
+  1
+
+100
+AcDbAttribute
+  2
+Tür
+ 70
+0
+  0
+ATTRIB
+  5
+49
+330
+46
+100
+AcDbEntity
+  8
+Parsel sınırı
+100
+AcDbText
+ 10
+452374.623
+ 20
+4412367.178
+ 30
+0.0
+ 40
+0.25
+  1
+2.5 m
+ 50
+90.0
+100
+AcDbAttribute
+  2
+Kol_boyu
+ 70
+0
+  0
+SEQEND
+  5
+4A
+330
+46
+100
+AcDbEntity
+  8
+Parsel sınırı
+  0
 INSERT
   5
-40
+4B
 330
 17
 100
@@ -1589,7 +1883,7 @@ Ağaç_Çınar
   0
 LINE
   5
-41
+4C
 330
 17
 100

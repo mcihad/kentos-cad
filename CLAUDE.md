@@ -25,7 +25,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   (ADR 0021, 0027), nokta, daire, yay, dikdörtgen, döndürülmüş dikdörtgen ve düzgün
   çokgendir (ADR 0032); elips, eğri, yardımcı çizgi, ışın, paralel çizgi, dik in ve dik çık, halka,
   revizyon bulutu, kot noktası ve böl (ADR 0057); yazı ve çizimin üstündeki yazı kutusu (ADR 0060);
-  ölçülendirme: hizalı, doğrusal, açı, yarıçap ve çap (ADR 0061); tarama: kapalı nesneyle ya da çizgilerle, adalarıyla (ADR 0062); köşe kotu: çizginin, çoklu çizginin ve alanın köşe kotları, Kot ver, Öznitelikler'in kot ve 3B uzunluk satırları (ADR 0142); çok parçalı alan: parçalar ve delikleri, Parçaları birleştir, Parçalara ayır, alan işlemlerinde Tek nesne (ADR 0143); blok: Blok oluştur, Blok ekle, Bloklar paneli, Blok öznitelikleri penceresi, Öznitelikler'de yerleştirme ve blok öznitelikleri, Patlat; DXF'in blokları tanım ve yerleştirme olarak gelir, “Blokları patlat” seçeneğiyle (ADR 0144);
+  ölçülendirme: hizalı, doğrusal, açı, yarıçap ve çap (ADR 0061); tarama: kapalı nesneyle ya da çizgilerle, adalarıyla (ADR 0062); köşe kotu: çizginin, çoklu çizginin ve alanın köşe kotları, Kot ver, Öznitelikler'in kot ve 3B uzunluk satırları (ADR 0142); çok parçalı alan: parçalar ve delikleri, Parçaları birleştir, Parçalara ayır, alan işlemlerinde Tek nesne (ADR 0143); blok: Blok oluştur, Blok ekle, Bloklar paneli, Blok öznitelikleri penceresi, Öznitelikler'de yerleştirme ve blok öznitelikleri, Patlat; DXF'in blokları tanım ve yerleştirme olarak gelir ve gider, öznitelikleri ATTDEF ve ATTRIB olarak, “Blokları patlat” seçeneğiyle (ADR 0144);
   alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine tıklayarak alan (ADR 0065);
   mesafe ölç, alan hesapla ve parsel oluştur (ADR 0067); seçili nesnelerin tutamaçları ve üzerine gelme kartı (ADR 0068);
   Hesap pencereleri: poligon hesabı, kutupsal alım, önden ve geriden kestirme, aplikasyon (ADR 0070, 0071);
@@ -163,7 +163,7 @@ python3 scripts/fonts/drawing_fonts.py --check   # masaüstünün çizim yazı t
 python3 scripts/fonts/ui_fonts.py --check   # KentOS UI'ın Noto Sans ve Roboto'sunu web'in WOFF2'lerinden denetle; --advance genişlik tahminlerini ölçer
 KENTOS_WRITE_GIS_EXPORTS=1 cargo test -p kentos-formats --test gis   # GeoJSON yazıcısının örnek çıktısını yeniden yaz; farkı okuyun
 KENTOS_WRITE_DXF=1 cargo test -p kentos-formats --test dxf_write   # DXF yazıcısının örnek çıktısını (fixtures/formats/v1/dxf-write) yeniden yaz; farkı okuyun
-python3 scripts/fixtures/dxf_write_reference.py --check   # DXF yazıcısının blok örneğini KentOS kodu olmadan denetle (ADR 0144)
+python3 scripts/fixtures/dxf_write_reference.py --check   # DXF yazıcısının blok ve öznitelik örneğini KentOS kodu olmadan denetle (ADR 0144)
 pnpm e2e:cloud           # gerçek API/PostGIS cloud akışı
 KENTOS_E2E_DB=scratch pnpm e2e:cloud   # aynı akış geçici veritabanında (bu yapının migration'ları), kentos_cad'e dokunmadan
 KENTOS_E2E_SERVER=…/target/debug node apps/web/scripts/e2e/cloud.mjs   # aynı akış başka bir yapının sunucusuyla (ADR 0038)
@@ -531,19 +531,16 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
 
 İşi devralan için kalınan yer; bir sonraki devirde bu bölümü yenileyin.
 
-- Sürmekte: blok ([ADR 0144](docs/adr/0144-blocks.md), TODOS.md `CAD-04`). 1–5. adımlar iki
-  platformda tamam: sözleşme ve şema 6, çekirdek, komutlar, araçlar ve arayüz; DXF okuma ve yazma
-  (5a, 5b), GeoJSON (5c); veritabanı projesi (5d: göç 0012, `project.changes`'in blokları ve izdüşüm;
-  web ve masaüstü istemcilerinde blok izleyicisi, olayda `GET …/blocks`, çakışma, “veri silmeden
-  üstün”, taslak; masaüstünde yerel kopya). Geliştirme veritabanı `kentos_cad` 0012'de. 6. adım
-  öznitelik tanımları: 6a (çekirdek, gösterim, Patlat, Öznitelikler'in “Blok öznitelikleri”; yerleştirmenin
-  öznitelikleri çekirdeğin şeklinde ve depo paketinde), 6b-1 (`cad.blocks.edit`'in `attributes` işlemi),
-  6b-2 (Blok öznitelikleri penceresi, `block.attributes`), 6b-3 (Blok ekle'nin Öznitelik değerleri sorusu) ve
-  6c-1 (DXF'ten ATTDEF ve ATTRIB okuma) tamam; sırada 6c-2 (DXF'e ATTDEF ve ATTRIB yazma, bağımsız Python denetimi).
-  Ondan önce çok parçalı alan (ADR 0143, `CAD-14`) ve köşe kotu (ADR 0142, `CAD-13`).
-- Bloktan sonra, sahibin sırasıyla (ADR 0143 Bağlam): yazı ekleri, lider ve yeni ölçü türleri. Her biri
-  `.kcad` şemasını değiştiren kendi özelliği ve şema adımıyla gelir; önce ADR yazılır, adımlar ADR 0142,
-  0143 ve 0144'teki gibi iki platformda, ortak fixture'larla ilerler.
+- Bitti (30 Eylül): blok ([ADR 0144](docs/adr/0144-blocks.md), TODOS.md `CAD-04`), 1–6. adımlar iki
+  platformda: sözleşme ve şema 6, çekirdek, komutlar, araçlar ve arayüz; DXF okuma ve yazma, GeoJSON,
+  veritabanı projesi (göç 0012, iki istemcide blok izleyicisi; geliştirme veritabanı `kentos_cad` 0012'de);
+  öznitelik tanımları (gösterim, Patlat, Öznitelikler'in “Blok öznitelikleri”, Blok öznitelikleri penceresi,
+  Blok ekle'nin Öznitelik değerleri sorusu, DXF'in ATTDEF ve ATTRIB'i iki yönde). Xref, dinamik blok ve
+  blok düzenleme kipi kapsam dışı (ADR 0144 §8). Ondan önce çok parçalı alan (ADR 0143, `CAD-14`) ve köşe
+  kotu (ADR 0142, `CAD-13`).
+- Sırada, sahibin sırasıyla (ADR 0143 Bağlam): yazı ekleri, lider ve yeni ölçü türleri. Her biri `.kcad`
+  şemasını değiştiren kendi özelliği ve şema adımıyla gelir; önce ADR yazılır, adımlar ADR 0142, 0143 ve
+  0144'teki gibi iki platformda, ortak fixture'larla ilerler.
 - Bilinen açık: web `pnpm e2e` duman testinde üç test ADR 0143'ten önce de düşüyordu: “toolbox
   shows every tool without scrolling” (79 araç kaydırma istiyor), nokta hesaplayıcının “yan nokta
   30/5” adımı ve “Layers panel: counts follow add, undo and redo”. Kök nedenleri araştırılmadı.

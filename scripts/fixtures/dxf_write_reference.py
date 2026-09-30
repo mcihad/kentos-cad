@@ -20,6 +20,15 @@ library and no KentOS code:
   degrees; KentOS's data carries the exact radians exactly when the degrees
   do not give them back; an insert of a block the input does not have is
   not written;
+- a block with attribute definitions (docs/adr/0144 §7) is flagged so (70 2)
+  and has an ATTDEF for each after its objects, on 0: its place, height,
+  default, turn (none when 0), prompt and tag (white space and control
+  characters "_", a tag taken before "_2"); an insert of it says attributes
+  follow (66 1) and is followed by an ATTRIB for each, owned by it, on its
+  layer: the text it shows (its value, else the default, else nothing),
+  placed as the insert places the definition (height times the scale; the
+  turn as a text's under the insert's similarity, a mirrored one turned a
+  half turn more to stay readable, within 1e-9), then a SEQEND of its own;
 - every handle is unique and every owner names a handle of the file.
 
     python3 scripts/fixtures/dxf_write_reference.py --check
@@ -97,6 +106,28 @@ def kentos(e: list[tuple[int, str]]) -> dict[str, list[str]]:
     return items
 
 
+def kentos_attrs(e: list[tuple[int, str]]) -> dict[str, str]:
+    """KentOS's attributes on an entity (its "attr" items): key -> value."""
+    out: dict[str, str] = {}
+    at = next((i for i, g in enumerate(e) if g == (1001, "KENTOS")), None)
+    if at is None:
+        return out
+    i = at + 1
+    while i < len(e):
+        if e[i] == (1002, "{") and i + 1 < len(e) and e[i + 1] == (1000, "attr"):
+            k = i + 2
+            values = []
+            while k < len(e) and e[k] != (1002, "}"):
+                values.append(e[k][1])
+                k += 1
+            ensure(len(values) == 2, f"an attribute is a key and a value: {values}")
+            out[values[0]] = values[1]
+            i = k + 1
+        else:
+            i += 1
+    return out
+
+
 def valid(name: str) -> str:
     s = "".join("_" if (ord(c) < 32 or c in REFUSED) else c for c in name.strip())[:255]
     return s or "Blok"
@@ -166,6 +197,67 @@ def check_look(o: list[tuple[int, str]], e: dict, layers: dict[str, str], where:
         ensure(group(o, 370) == "-2", f"{where}: BYBLOCK weight (370 -2)")
 
 
+def dxf_tags(b: dict) -> list[str]:
+    taken: set[str] = set()
+    out = []
+    for a in b.get("attributes") or []:
+        base = "".join("_" if (c.isspace() or ord(c) < 32) else c for c in a["tag"])
+        tag, k = base, 2
+        while tag.upper() in taken:
+            tag = f"{base}_{k}"
+            k += 1
+        taken.add(tag.upper())
+        out.append(tag)
+    return out
+
+
+def close(a: float, b: float, tol: float = 1e-9) -> bool:
+    return abs(a - b) <= tol * max(1.0, abs(b))
+
+
+def placed(e: dict, base: dict, q: dict) -> tuple[float, float]:
+    flip = -1.0 if e.get("mirror") else 1.0
+    s = float(e["scale"])
+    x, y = s * (q["x"] - base["x"]), flip * s * (q["y"] - base["y"])
+    c, n = math.cos(e["rotation"]), math.sin(e["rotation"])
+    return e["p"]["x"] + c * x - n * y, e["p"]["y"] + n * x + c * y
+
+
+def placed_turn(e: dict, degrees: float) -> float:
+    # A text's direction under the insert's similarity; mirrored, a half turn more (readable).
+    a = degrees * math.pi / 180.0
+    flip = -1.0 if e.get("mirror") else 1.0
+    dx, dy = math.cos(a), flip * math.sin(a)
+    c, n = math.cos(e["rotation"]), math.sin(e["rotation"])
+    turn = math.atan2(n * dx + c * dy, c * dx - n * dy) * 180.0 / math.pi
+    if e.get("mirror"):
+        turn += 180.0
+    return ((turn % 360.0) + 360.0) % 360.0
+
+
+def check_attributes(o: list[list[tuple[int, str]]], e: dict, b: dict, layer: str, own: str, where: str) -> None:
+    """An insert's ATTRIBs and SEQEND (`o`: the entities after it; `own`: its handle)."""
+    attributes = b.get("attributes") or []
+    tags = dxf_tags(b)
+    ensure(len(o) > len(attributes) and o[len(attributes)][0] == (0, "SEQEND"), f"{where}: {len(attributes)} ATTRIB, then SEQEND")
+    ensure(group(o[len(attributes)], 330) == own, f"{where}: its SEQEND is its own")
+    for k, (a, tag) in enumerate(zip(attributes, tags)):
+        r = o[k]
+        w = f"{where} › {a['tag']}"
+        ensure(r[0] == (0, "ATTRIB"), f"{w}: an ATTRIB")
+        ensure(group(r, 330) == own, f"{w}: owned by its insert")
+        ensure(group(r, 8) == layer, f"{w}: on the insert's layer")
+        ensure(group(r, 2) == tag, f"{w}: tag {tag!r}")
+        value = (e.get("attrs") or {}).get(a["tag"]) or a.get("value") or ""
+        ensure(group(r, 1) == value, f"{w}: shows {value!r}, not {group(r, 1)!r}")
+        x, y = placed(e, b["base"], a["p"])
+        ensure(close(float(group(r, 10)), x) and close(float(group(r, 20)), y), f"{w}: placed at {x}, {y}")
+        ensure(close(float(group(r, 40)), a["height"] * float(e["scale"])), f"{w}: its height times the scale")
+        turn = placed_turn(e, a["rotation"])
+        got = float(group(r, 50) or 0.0)
+        ensure(close(got, turn) or (turn == 0.0 and group(r, 50) is None), f"{w}: turned {turn}°, not {got}°")
+
+
 def check_insert(o: list[tuple[int, str]], e: dict, name: str, where: str) -> None:
     ensure(group(o, 2) == name, f"{where}: places {name!r}, not {group(o, 2)!r}")
     ensure(float(group(o, 10)) == e["p"]["x"] and float(group(o, 20)) == e["p"]["y"], f"{where}: its point")
@@ -212,13 +304,25 @@ def check(name: str) -> list[str]:
         rec = record_of[names[b["id"]]]
         ensure(group(head, 330) == rec, f"{b['name']}: the BLOCK is its record's")
         ensure(float(group(head, 10)) == b["base"]["x"] and float(group(head, 20)) == b["base"]["y"], f"{b['name']}: base point")
-        ensure(group(head, 70) == "0", f"{b['name']}: not anonymous")
+        flags = "2" if b.get("attributes") else "0"
+        ensure(group(head, 70) == flags, f"{b['name']}: not anonymous, flagged {flags} (attribute definitions)")
         if b.get("description"):
             one = "".join(" " if ord(c) < 32 else c for c in b["description"])
             ensure(group(head, 4) == one, f"{b['name']}: its description on one line")
         end = next(k for k in range(i, len(blocks)) if blocks[k][0] == (0, "ENDBLK"))
-        objects = blocks[i + 1 : end]
+        # Its attribute definitions follow its objects.
+        attributes = b.get("attributes") or []
+        defs = blocks[end - len(attributes) : end]
+        objects = blocks[i + 1 : end - len(attributes)]
         ensure(group(blocks[end], 330) == rec, f"{b['name']}: ENDBLK is its record's")
+        for a, tag, d in zip(attributes, dxf_tags(b), defs):
+            w = f"{b['name']} › {a['tag']}"
+            ensure(d[0] == (0, "ATTDEF") and group(d, 330) == rec and group(d, 8) == "0", f"{w}: an ATTDEF of its record on 0")
+            ensure(float(group(d, 10)) == a["p"]["x"] and float(group(d, 20)) == a["p"]["y"] and float(group(d, 40)) == a["height"], f"{w}: its place and height")
+            ensure(group(d, 1) == (a.get("value") or ""), f"{w}: its default")
+            ensure(group(d, 3) == (a.get("prompt") or ""), f"{w}: its prompt")
+            ensure(group(d, 2) == tag and group(d, 70) == "0", f"{w}: tag {tag!r}, visible")
+            ensure((group(d, 50) is None) if a["rotation"] == 0 else float(group(d, 50)) == a["rotation"], f"{w}: its turn")
         kinds = [k for e in b["entities"] for k in written_kinds(e)]
         ensure([o[0][1] for o in objects] == kinds, f"{b['name']}: objects {kinds}")
         k = 0
@@ -234,21 +338,35 @@ def check(name: str) -> list[str]:
                 for h in objects[k + 1 : k + len(written_kinds(e))]:
                     ensure(kentos(h).get("hole") == [own], f"{where}: its hole names it")
             k += len(written_kinds(e))
-        said.append(f"{names[b['id']]}: {len(objects)} nesne")
+        said.append(f"{names[b['id']]}: {len(objects)} nesne" + (f" ve {len(attributes)} ATTDEF" if attributes else ""))
         i = end
 
-    # The drawing's inserts.
-    placed = [e for e in split(section(p, "ENTITIES")) if e[0] == (0, "INSERT")]
+    # The drawing's inserts, each with its ATTRIBs after it.
+    drawn = split(section(p, "ENTITIES"))
+    at = [k for k, e in enumerate(drawn) if e[0] == (0, "INSERT")]
     given = [e for e in spec["entities"] if e["kind"] == "insert" and e["block"] in names]
-    ensure(len(placed) == len(given), f"{len(given)} inserts written, the unknown block's left out")
-    for n, (o, e) in enumerate(zip(placed, given)):
+    ensure(len(at) == len(given), f"{len(given)} inserts written, the unknown block's left out")
+    by_id = {b["id"]: b for b in spec["blocks"]}
+    attributed = 0
+    for n, (k, e) in enumerate(zip(at, given)):
+        o = drawn[k]
         where = f"yerleştirme {n + 1}"
         ensure(group(o, 330) == "17", f"{where}: in model space")
         ensure(group(o, 8) == layers[e["layerId"]], f"{where}: on its layer")
         check_insert(o, e, names[e["block"]], where)
-        attrs = [g for g in o if g[0] == 1000]
-        for k, v in e["attrs"].items():
-            ensure(any(a == (1000, k) for a in attrs) and any(a == (1000, v) for a in attrs), f"{where}: attribute {k}={v}")
+        b = by_id[e["block"]]
+        if b.get("attributes"):
+            ensure(group(o, 66) == "1", f"{where}: attributes follow (66 1)")
+            check_attributes(drawn[k + 1 :], e, b, layers[e["layerId"]], group(o, 5), where)
+            attributed += 1
+        else:
+            ensure(group(o, 66) is None, f"{where}: no attributes follow")
+        # The values of its block's attributes go out once, as its ATTRIBs; KentOS's data holds the others.
+        defined = {a["tag"] for a in b.get("attributes") or []}
+        others = {k: v for k, v in e["attrs"].items() if k not in defined}
+        ensure(kentos_attrs(o) == others, f"{where}: KentOS's data holds its other attributes {others}")
+    if attributed:
+        said.append(f"{attributed} yerleştirmenin ATTRIB'leri")
 
     # Handles unique; owners name handles of the file.
     body = p[next(k for k, g in enumerate(p) if g == (2, "CLASSES")) :]

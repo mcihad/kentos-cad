@@ -521,7 +521,20 @@ impl App {
             .map_or(0, |(_, n)| *n);
         if inserts > 0 {
             let blocks = placed_blocks(doc.model.blocks(), list.iter().copied());
-            lines.push(words::text_line(Line::Info, format!("{inserts} blok yerleştirmesi INSERT, yerleştirdikleri {blocks} blok içlerindekilerle birlikte BLOCK olarak yazılır; KentOS'a blok olarak geri okunur.")));
+            // A block with attribute definitions goes with ATTDEFs, its inserts with ATTRIBs (docs/adr/0144 §7).
+            let attributed = list.iter().any(|e| match e {
+                kentos_contracts::Entity::Insert(i) => doc
+                    .model
+                    .block(i.block)
+                    .is_some_and(|b| !b.attributes.is_empty()),
+                _ => false,
+            });
+            let how = if attributed {
+                ", öznitelikleri ATTDEF ve ATTRIB olarak"
+            } else {
+                ""
+            };
+            lines.push(words::text_line(Line::Info, format!("{inserts} blok yerleştirmesi INSERT, yerleştirdikleri {blocks} blok içlerindekilerle birlikte BLOCK olarak yazılır{how}; KentOS'a blok olarak geri okunur.")));
         }
         if islands > 0 {
             lines.push(words::text_line(Line::Info, format!("{islands} adalı alanın adaları ayrı kapalı çoklu çizgiler olarak yazılır; KentOS'a geri okununca yine adalı alan olur.")));

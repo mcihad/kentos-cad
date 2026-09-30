@@ -200,6 +200,8 @@ pub(super) struct Writer<'a> {
     /// The blocks' DXF names, and the definitions written so far.
     pub names: &'a HashMap<BlockId, String>,
     pub defined: &'a HashMap<BlockId, Written>,
+    /// What an insert's attribute texts show, where (docs/adr/0144 §7).
+    pub placing: &'a crate::blocks::Placing,
 }
 
 impl Writer<'_> {
@@ -423,7 +425,9 @@ impl Writer<'_> {
     /// An INSERT (docs/adr/0144 §5): its block's name, its point, its scale
     /// in X, Y (−Y when mirrored: the definition's x axis) and Z, its turn in
     /// degrees (the exact radians in KentOS's data when degrees lose a bit).
-    /// Its extent is its block's, placed.
+    /// Its extent is its block's, placed. With attribute definitions its
+    /// block's (§7): an ATTRIB for each, its text as the insert shows it (its
+    /// value, else the default) where KentOS shows it, then SEQEND.
     fn insert(&mut self, i: &InsertEntity) -> bool {
         let (names, defined) = (self.names, self.defined);
         let Some(name) = names.get(&i.block) else {
@@ -448,8 +452,13 @@ impl Writer<'_> {
                 .skip("Blok", "ölçeği sıfır ya da negatif; yazılmadı", 0);
             return false;
         }
-        self.begin("INSERT", &i.base);
+        let h = self.begin("INSERT", &i.base);
         self.out.str(100, "AcDbBlockReference");
+        // Attributes follow.
+        let attributed = !block.tags.is_empty();
+        if attributed {
+            self.out.int(66, 1);
+        }
         self.out.str(2, name);
         self.out.xyz(10, i.p);
         self.out.real(41, i.scale);
@@ -458,6 +467,10 @@ impl Writer<'_> {
         let degrees = deg(i.rotation);
         self.out.real(50, degrees);
         let mut m = Self::base_meta(&i.base);
+        // Its attributes' values go out once, as ATTRIBs (§7): another program edits those.
+        for (tag, _) in &block.tags {
+            m.attrs.remove(tag);
+        }
         if turn_of(degrees) != i.rotation {
             m.turn = Some(i.rotation);
         }
@@ -475,7 +488,55 @@ impl Writer<'_> {
             None => self.grow(i.p),
         }
         self.end(m);
+        if attributed {
+            self.attributes(i, h, &block.tags);
+        }
         true
+    }
+
+    /// An insert's ATTRIBs and their SEQEND, owned by the insert `owner` (§7).
+    fn attributes(&mut self, i: &InsertEntity, owner: u64, tags: &[(String, String)]) {
+        let layers = self.layers;
+        let layer = layers.name_of(&i.base.layer_id).unwrap_or("0").to_owned();
+        let placing = self.placing;
+        for (tag, t) in placing.attribute_texts(i) {
+            let Some((_, dxf)) = tags.iter().find(|(own, _)| *own == tag) else {
+                continue;
+            };
+            let h = self.handles.take();
+            self.out.str(0, "ATTRIB");
+            self.out.handle(5, h);
+            self.out.handle(330, owner);
+            self.out.str(100, "AcDbEntity");
+            self.out.str(8, &layer);
+            if let Some(c) = &i.base.color {
+                let (dc, _) = aci::from_app(c);
+                self.out.int(62, i64::from(dc.aci));
+                if let Some(rgb) = dc.rgb {
+                    self.out.int(420, rgb);
+                }
+            }
+            let value = blocks::one_line(&t.text);
+            if value != t.text {
+                self.report.note("Öznitelik", blocks::ONE_LINE, 0);
+            }
+            self.out.str(100, "AcDbText");
+            self.out.xyz(10, t.p);
+            self.out.real(40, t.height);
+            self.out.str(1, &value);
+            if t.rotation != 0.0 {
+                self.out.real(50, t.rotation);
+            }
+            self.out.str(100, "AcDbAttribute");
+            self.out.str(2, dxf);
+            self.out.int(70, 0);
+        }
+        let h = self.handles.take();
+        self.out.str(0, "SEQEND");
+        self.out.handle(5, h);
+        self.out.handle(330, owner);
+        self.out.str(100, "AcDbEntity");
+        self.out.str(8, &layer);
     }
 
     /// An ARC (angles in degrees as DXF has them; the exact radians in the extended data when degrees lose a bit).

@@ -9,7 +9,7 @@
 //! ```text
 //! 1001 KENTOS
 //! 1002 {  1000 label    <string>                 1002 }   the object's label (parcel number, point name)
-//! 1002 {  1000 attr     <string> <string>        1002 }   one GIS attribute: key, value
+//! 1002 {  1000 attr     <string> <string>        1002 }   one GIS attribute: key, value (an INSERT's ATTRIBs hold its block's, docs/adr/0144 §7)
 //! 1002 {  1000 symbol   <string>                 1002 }   the library symbol drawn for it
 //! 1002 {  1000 color    <string>                 1002 }   the colour as the app names it ("fg", "#7fb2e5")
 //! 1002 {  1000 weight   1040 <mm>                1002 }   the object's own line weight, exactly (370 holds the nearest DXF one)

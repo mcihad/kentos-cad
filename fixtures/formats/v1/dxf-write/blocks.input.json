@@ -1,6 +1,6 @@
 {
   "entities": [
-    { "kind": "insert", "id": 1, "layerId": "yapi", "attrs": { "No": "7", "Tür": "LED" }, "color": "#E5484D", "block": "018f3a2b-0000-7000-8000-000000000001", "p": { "x": 452355.123, "y": 4412365.678 }, "scale": 2.5, "rotation": 0.1, "mirror": true },
+    { "kind": "insert", "id": 1, "layerId": "yapi", "attrs": { "No": "7", "Tür": "LED", "Malzeme": "Çelik" }, "color": "#E5484D", "block": "018f3a2b-0000-7000-8000-000000000001", "p": { "x": 452355.123, "y": 4412365.678 }, "scale": 2.5, "rotation": 0.1, "mirror": true },
     { "kind": "insert", "id": 2, "layerId": "parsel", "attrs": {}, "block": "018f3a2b-0000-7000-8000-000000000001", "p": { "x": 452375.123, "y": 4412365.678 }, "scale": 1, "rotation": 0 },
     { "kind": "insert", "id": 3, "layerId": "parsel", "attrs": {}, "block": "018f3a2b-0000-7000-8000-000000000004", "p": { "x": 452395.123, "y": 4412365.678 }, "scale": 0.5, "rotation": 4.71238898038469 },
     { "kind": "insert", "id": 4, "layerId": "parsel", "attrs": {}, "block": "018f3a2b-0000-7000-8000-000000000009", "p": { "x": 452405.123, "y": 4412365.678 }, "scale": 1, "rotation": 0 },
@@ -24,6 +24,11 @@
         { "kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": { "x": 1, "y": 2 }, "b": { "x": 1, "y": 8 } },
         { "kind": "polygon", "id": 2, "layerId": "", "attrs": {}, "pts": [{ "x": 0, "y": 1 }, { "x": 2, "y": 1 }, { "x": 2, "y": 3 }, { "x": 0, "y": 3 }], "holes": [{ "pts": [{ "x": 0.5, "y": 1.5 }, { "x": 1.5, "y": 1.5 }, { "x": 1.5, "y": 2.5 }] }] },
         { "kind": "insert", "id": 3, "layerId": "", "attrs": {}, "block": "018f3a2b-0000-7000-8000-000000000002", "p": { "x": 1, "y": 8 }, "scale": 1, "rotation": 1.5707963267948966 }
+      ],
+      "attributes": [
+        { "tag": "No", "prompt": "Direk numarası", "value": "?", "p": { "x": 1.5, "y": 5 }, "height": 0.4, "rotation": 0 },
+        { "tag": "Tür", "prompt": "Lamba türü", "p": { "x": 1.5, "y": 4.4 }, "height": 0.3, "rotation": 0 },
+        { "tag": "Kol boyu", "value": "2.5 m", "p": { "x": 0.5, "y": 3.5 }, "height": 0.25, "rotation": 90 }
       ]
     },
     {

@@ -202,7 +202,6 @@ fn xy(p: P3) -> Vec2 {
     v(p[0], p[1])
 }
 
-
 /// A TEXT's, an ATTRIB's or an ATTDEF's groups that place it.
 struct Text<'a> {
     ext: P3,
@@ -265,14 +264,16 @@ fn same_angle(a: f64, b: f64) -> bool {
 /// What KentOS's extended data adds to the objects an entity became: the
 /// label, attributes and symbol, and the app's own name of a colour DXF
 /// holds as a number (only while the number is still what it names: a
-/// colour changed in another program wins).
+/// colour changed in another program wins). An insert's ATTRIB values are
+/// its attributes already and win over KentOS's data under the same tag.
 fn apply_meta(meta: &Meta, e: &mut Entity) {
     let b = e.base_mut();
     if meta.label.is_some() {
         b.label.clone_from(&meta.label);
     }
-    b.attrs
-        .extend(meta.attrs.iter().map(|(k, v)| (k.clone(), v.clone())));
+    for (k, v) in &meta.attrs {
+        b.attrs.entry(k.clone()).or_insert_with(|| v.clone());
+    }
     if meta.symbol.is_some() {
         b.symbol.clone_from(&meta.symbol);
     }

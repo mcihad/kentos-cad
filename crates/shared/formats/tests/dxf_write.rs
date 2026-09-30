@@ -1004,28 +1004,51 @@ fn an_objects_line_weight_goes_out_as_370_and_comes_back_exactly() {
             zb: None,
         })
     };
-    let objects = vec![line(Some(0.35), 0.0), line(Some(0.33), 1.0), line(Some(0.0), 2.0), line(None, 3.0)];
+    let objects = vec![
+        line(Some(0.35), 0.0),
+        line(Some(0.33), 1.0),
+        line(Some(0.0), 2.0),
+        line(None, 3.0),
+    ];
     let (text, report) = write(&input(objects.clone()));
     let p = pairs(&text);
-    let written: Vec<Option<&str>> = entities_of(&p, "LINE").iter().map(|e| group(e, 370)).collect();
+    let written: Vec<Option<&str>> = entities_of(&p, "LINE")
+        .iter()
+        .map(|e| group(e, 370))
+        .collect();
     assert_eq!(written, [Some("35"), Some("35"), Some("0"), None]);
-    assert!(report.notes.iter().any(|n| n.what == "Nesne kalınlığı"), "{:?}", report.notes);
+    assert!(
+        report.notes.iter().any(|n| n.what == "Nesne kalınlığı"),
+        "{:?}",
+        report.notes
+    );
     let back = read(&text);
     let weights: Vec<Option<f64>> = back.entities.iter().map(|e| e.base().line_weight).collect();
     assert_eq!(weights, [Some(0.35), Some(0.33), Some(0.0), None]);
     // Another program sets the second one to 0.50 mm: its 370 wins over KentOS's stale 0.33.
-    let at = text.match_indices("  0\r\nLINE\r\n").nth(1).expect("the second LINE").0;
+    let at = text
+        .match_indices("  0\r\nLINE\r\n")
+        .nth(1)
+        .expect("the second LINE")
+        .0;
     let (head, rest) = text.split_at(at);
-    let edited = format!("{head}{}", rest.replacen("370\r\n35\r\n", "370\r\n50\r\n", 1));
-    let weights: Vec<Option<f64>> = read(&edited).entities.iter().map(|e| e.base().line_weight).collect();
+    let edited = format!(
+        "{head}{}",
+        rest.replacen("370\r\n35\r\n", "370\r\n50\r\n", 1)
+    );
+    let weights: Vec<Option<f64>> = read(&edited)
+        .entities
+        .iter()
+        .map(|e| e.base().line_weight)
+        .collect();
     assert_eq!(weights[1], Some(0.5));
 }
 
 /// FNV-1a over a file's bytes (64 bits): a fingerprint to hold a written file to.
 fn fnv64(bytes: &[u8]) -> u64 {
-    bytes
-        .iter()
-        .fold(0xcbf2_9ce4_8422_2325, |h, b| (h ^ u64::from(*b)).wrapping_mul(0x0000_0100_0000_01b3))
+    bytes.iter().fold(0xcbf2_9ce4_8422_2325, |h, b| {
+        (h ^ u64::from(*b)).wrapping_mul(0x0000_0100_0000_01b3)
+    })
 }
 
 /// A drawing without elevations is the file it was before elevations were
@@ -1037,7 +1060,12 @@ fn a_drawing_without_elevations_is_written_byte_for_byte_as_before() {
     let (bytes, report) = dxf::write(&input(objects()));
     assert_eq!((bytes.len(), fnv64(&bytes)), (38014, 0x5452_5a32_43b1_f0e6));
     // And it says nothing of elevations.
-    assert!(report.notes.iter().all(|n| n.what != "Kot (Z)" && n.what != "Kotsuz köşe"));
+    assert!(
+        report
+            .notes
+            .iter()
+            .all(|n| n.what != "Kot (Z)" && n.what != "Kotsuz köşe")
+    );
 }
 
 /// Objects with elevations: lines, paths with a vertex without one, areas with holes, and paths with arcs.
@@ -1156,12 +1184,19 @@ fn elevations_read_back_as_the_same_objects() {
     assert!(r.report.skipped.is_empty(), "{:?}", r.report.skipped);
     // How many objects have elevations is a fact of the file, as it comes back.
     assert!(
-        r.report.source.iter().any(|f| (f.label.as_str(), f.value.as_str()) == ("Kotlu nesne", "8")),
+        r.report
+            .source
+            .iter()
+            .any(|f| (f.label.as_str(), f.value.as_str()) == ("Kotlu nesne", "8")),
         "{:?}",
         r.report.source
     );
     // The writer says what it did with them.
-    let noted: Vec<(&str, u32)> = report.notes.iter().map(|n| (n.what.as_str(), n.count)).collect();
+    let noted: Vec<(&str, u32)> = report
+        .notes
+        .iter()
+        .map(|n| (n.what.as_str(), n.count))
+        .collect();
     let n = |what: &str, part: &str| {
         report
             .notes
@@ -1170,7 +1205,11 @@ fn elevations_read_back_as_the_same_objects() {
             .map(|i| i.count)
     };
     assert_eq!(n("Kot (Z)", "LINE'ın Z'si"), Some(3), "{noted:?}");
-    assert_eq!(n("Kot (Z)", "3B çoklu çizgi (POLYLINE) olarak"), Some(3), "{noted:?}");
+    assert_eq!(
+        n("Kot (Z)", "3B çoklu çizgi (POLYLINE) olarak"),
+        Some(3),
+        "{noted:?}"
+    );
     assert_eq!(n("Kot (Z)", "köşe kotları aynı"), Some(2), "{noted:?}");
     assert_eq!(n("Kot (Z)", "köşe kotları farklı"), Some(1), "{noted:?}");
     assert_eq!(n("Kotsuz köşe", "0 yazıldı"), Some(3), "{noted:?}");
@@ -1184,7 +1223,12 @@ fn a_path_with_elevations_is_a_3d_polyline_and_a_line_holds_its_ends_heights() {
     let p = pairs(&text);
     // The lines: each end's Z, 0 where an end has none.
     let lines = entities_of(&p, "LINE");
-    let z = |l: &Vec<(i32, &str)>| (group(l, 30).map(|s| s.parse::<f64>().expect("z")), group(l, 31).map(|s| s.parse::<f64>().expect("z")));
+    let z = |l: &Vec<(i32, &str)>| {
+        (
+            group(l, 30).map(|s| s.parse::<f64>().expect("z")),
+            group(l, 31).map(|s| s.parse::<f64>().expect("z")),
+        )
+    };
     assert_eq!(z(&lines[0]), (Some(105.5 + 1.0 / 3.0), Some(-107.25)));
     assert_eq!(z(&lines[1]), (Some(0.0), Some(12.0)));
     // The paths and the area's outline and elevated hole: 3D polylines (the flat hole stays a LWPOLYLINE), each closed by its own flag.
@@ -1192,27 +1236,50 @@ fn a_path_with_elevations_is_a_3d_polyline_and_a_line_holds_its_ends_heights() {
     assert_eq!(polylines.len(), 4);
     let flags: Vec<&str> = polylines.iter().filter_map(|e| group(e, 70)).collect();
     assert_eq!(flags, ["8", "8", "9", "9"]);
-    assert!(polylines.iter().all(|e| group(e, 100) == Some("AcDbEntity") && e.contains(&(100, "AcDb3dPolyline")) && group(e, 66) == Some("1")));
+    assert!(polylines.iter().all(|e| group(e, 100) == Some("AcDbEntity")
+        && e.contains(&(100, "AcDb3dPolyline"))
+        && group(e, 66) == Some("1")));
     assert_eq!(entities_of(&p, "LWPOLYLINE").len(), 1);
     // A vertex has its own Z, 0 where it has none, and every VERTEX and SEQEND has a handle, an owner and a layer of its own.
     let vertices = entities_of(&p, "VERTEX");
     assert_eq!(vertices.len(), 4 + 3 + 4 + 4);
-    let first: Vec<f64> = vertices[..4].iter().map(|v| group(v, 30).expect("z").parse().expect("z")).collect();
+    let first: Vec<f64> = vertices[..4]
+        .iter()
+        .map(|v| group(v, 30).expect("z").parse().expect("z"))
+        .collect();
     assert_eq!(first, [10.0, 0.0, 12.5 + 1.0 / 3.0, -3.0]);
-    assert!(vertices.iter().all(|v| v.contains(&(100, "AcDb3dPolylineVertex")) && group(v, 70) == Some("32") && group(v, 330).is_some() && group(v, 8).is_some()));
+    assert!(
+        vertices
+            .iter()
+            .all(|v| v.contains(&(100, "AcDb3dPolylineVertex"))
+                && group(v, 70) == Some("32")
+                && group(v, 330).is_some()
+                && group(v, 8).is_some())
+    );
     let ends = entities_of(&p, "SEQEND");
     assert_eq!(ends.len(), 4);
     // KentOS's data rides between a polyline's header and its vertices: the vertex without an elevation (the
     // second), the label and the attribute.
     let header = &polylines[0];
-    assert!(header.contains(&(1001, "KENTOS")) && header.contains(&(1000, "label")) && header.contains(&(1000, "attr")));
-    let at = header.iter().position(|x| *x == (1000, "noz")).expect("noz");
+    assert!(
+        header.contains(&(1001, "KENTOS"))
+            && header.contains(&(1000, "label"))
+            && header.contains(&(1000, "attr"))
+    );
+    let at = header
+        .iter()
+        .position(|x| *x == (1000, "noz"))
+        .expect("noz");
     assert_eq!(header[at + 1], (1000, "2"));
     // Handles stay unique, owners real, in a drawing of nothing else.
     let handles: Vec<&str> = p.iter().filter(|x| x.0 == 5).map(|x| x.1).collect();
     let unique: HashSet<&str> = handles.iter().copied().collect();
     assert_eq!(unique.len(), handles.len());
-    assert!(p.iter().filter(|x| x.0 == 330 && x.1 != "0").all(|x| unique.contains(x.1)));
+    assert!(
+        p.iter()
+            .filter(|x| x.0 == 330 && x.1 != "0")
+            .all(|x| unique.contains(x.1))
+    );
 }
 
 #[test]
@@ -1255,7 +1322,14 @@ fn what_cannot_be_written_is_left_out_and_said() {
     let r = read(&text);
     // The two objects with a height that is no number are not written; the line with a good one is.
     assert_eq!(r.entities.len(), 1);
-    assert_eq!(report.skipped.iter().map(|i| (i.what.as_str(), i.count)).collect::<Vec<_>>(), [("Çizgi", 1), ("Çoklu çizgi", 1)]);
+    assert_eq!(
+        report
+            .skipped
+            .iter()
+            .map(|i| (i.what.as_str(), i.count))
+            .collect::<Vec<_>>(),
+        [("Çizgi", 1), ("Çoklu çizgi", 1)]
+    );
     // A list of elevations that does not match the vertices is flat: nothing to write it from.
     let short = Entity::Polyline(PathEntity {
         base: base("yol"),
@@ -1274,7 +1348,14 @@ fn what_cannot_be_written_is_left_out_and_said() {
 /// Read back, the parts are areas of their own, each with its holes.
 #[test]
 fn a_multi_part_area_is_one_closed_polyline_a_part() {
-    let ring = |x: f64| vec![tm(x, 0.0), tm(x + 10.0, 0.0), tm(x + 10.0, 10.0), tm(x, 10.0)];
+    let ring = |x: f64| {
+        vec![
+            tm(x, 0.0),
+            tm(x + 10.0, 0.0),
+            tm(x + 10.0, 10.0),
+            tm(x, 10.0),
+        ]
+    };
     let hole = RingGeometry {
         pts: vec![tm(22.0, 2.0), tm(24.0, 2.0), tm(24.0, 4.0)],
         bulges: None,
@@ -1298,7 +1379,11 @@ fn a_multi_part_area_is_one_closed_polyline_a_part() {
     });
     let (text, report) = write(&input(vec![area]));
     assert_eq!(entities_of(&pairs(&text), "LWPOLYLINE").len(), 3);
-    assert!(report.notes.iter().any(|n| n.what == "Çok parçalı alan"), "{:?}", report.notes);
+    assert!(
+        report.notes.iter().any(|n| n.what == "Çok parçalı alan"),
+        "{:?}",
+        report.notes
+    );
     assert_eq!(report.counts.get("polygon"), Some(&1));
     let back = read(&text);
     let areas: Vec<&PathEntity> = back
@@ -1310,10 +1395,22 @@ fn a_multi_part_area_is_one_closed_polyline_a_part() {
         })
         .collect();
     assert_eq!(areas.len(), 2);
-    assert_eq!((areas[0].pts.clone(), areas[0].holes.clone()), (ring(0.0), None));
-    assert_eq!((areas[1].pts.clone(), areas[1].holes.clone()), (ring(20.0), Some(vec![hole])));
+    assert_eq!(
+        (areas[0].pts.clone(), areas[0].holes.clone()),
+        (ring(0.0), None)
+    );
+    assert_eq!(
+        (areas[1].pts.clone(), areas[1].holes.clone()),
+        (ring(20.0), Some(vec![hole]))
+    );
     for a in areas {
-        assert_eq!((a.base.attrs.get("Ada").map(String::as_str), a.base.label.as_deref()), (Some("101"), Some("101/5")));
+        assert_eq!(
+            (
+                a.base.attrs.get("Ada").map(String::as_str),
+                a.base.label.as_deref()
+            ),
+            (Some("101"), Some("101/5"))
+        );
     }
 }
 
@@ -1435,14 +1532,23 @@ fn blocks_of<'a>(p: &[(i32, &'a str)]) -> Vec<Block<'a>> {
     let mut i = 0;
     while i < p.len() {
         if p[i] == (0, "BLOCK") {
-            let head_end = p[i + 1..].iter().position(|x| x.0 == 0).map_or(p.len(), |k| i + 1 + k);
+            let head_end = p[i + 1..]
+                .iter()
+                .position(|x| x.0 == 0)
+                .map_or(p.len(), |k| i + 1 + k);
             let head = &p[i..head_end];
             let (name, owner) = (group(head, 2).unwrap_or(""), group(head, 330).unwrap_or(""));
-            let end = p[i..].iter().position(|x| *x == (0, "ENDBLK")).map_or(p.len(), |k| i + k);
+            let end = p[i..]
+                .iter()
+                .position(|x| *x == (0, "ENDBLK"))
+                .map_or(p.len(), |k| i + k);
             let mut objects = Vec::new();
             let mut k = head_end;
             while k < end {
-                let next = p[k + 1..end].iter().position(|x| x.0 == 0).map_or(end, |j| k + 1 + j);
+                let next = p[k + 1..end]
+                    .iter()
+                    .position(|x| x.0 == 0)
+                    .map_or(end, |j| k + 1 + j);
                 objects.push(p[k..next].to_vec());
                 k = next;
             }
@@ -1483,16 +1589,30 @@ fn blocks_are_written_as_blocks_their_inserts_as_inserts() {
     let lamba = &blocks[2].2;
     // The bulb: on 0 with its own colour (true colour 0xF5D90A), BYBLOCK weight; the arm: on its own layer, BYBLOCK colour.
     assert_eq!(
-        (group(&lamba[0], 8), group(&lamba[0], 420), group(&lamba[0], 370)),
+        (
+            group(&lamba[0], 8),
+            group(&lamba[0], 420),
+            group(&lamba[0], 370)
+        ),
         (Some("0"), Some("16111882"), Some("-2"))
     );
     assert_eq!(
-        (group(&lamba[1], 8), group(&lamba[1], 62), group(&lamba[1], 370)),
+        (
+            group(&lamba[1], 8),
+            group(&lamba[1], 62),
+            group(&lamba[1], 370)
+        ),
         (Some("Yapı"), Some("0"), Some("-2"))
     );
     let direk = &blocks[3].2;
-    let nested = direk.iter().find(|o| o[0] == (0, "INSERT")).expect("the lamp's insert");
-    assert_eq!((group(nested, 2), group(nested, 50)), (Some("Lamba"), Some("90.0")));
+    let nested = direk
+        .iter()
+        .find(|o| o[0] == (0, "INSERT"))
+        .expect("the lamp's insert");
+    assert_eq!(
+        (group(nested, 2), group(nested, 50)),
+        (Some("Lamba"), Some("90.0"))
+    );
     let inserts = entities_of(&p, "INSERT");
     let placed: Vec<Vec<(i32, &str)>> = inserts
         .iter()
@@ -1503,24 +1623,49 @@ fn blocks_are_written_as_blocks_their_inserts_as_inserts() {
     let first = &placed[0];
     assert_eq!(
         [2, 8, 41, 42, 43].map(|c| group(first, c)),
-        [Some("Direk"), Some("Yapı"), Some("2.5"), Some("-2.5"), Some("2.5")]
+        [
+            Some("Direk"),
+            Some("Yapı"),
+            Some("2.5"),
+            Some("-2.5"),
+            Some("2.5")
+        ]
     );
     let degrees: f64 = group(first, 50).expect("50").parse().expect("degrees");
     assert_eq!(degrees, 0.1 * 180.0 / std::f64::consts::PI);
     // What was not written is said; the unused block is not a note.
     let skipped: Vec<&str> = report.skipped.iter().map(|s| s.reason.as_str()).collect();
-    assert_eq!(skipped, ["bloğunun tanımı dışa aktarılanlarda yok; yazılmadı"]);
+    assert_eq!(
+        skipped,
+        ["bloğunun tanımı dışa aktarılanlarda yok; yazılmadı"]
+    );
     assert!(!text.contains("Kullanılmayan"));
     assert_eq!(report.counts.get("insert"), Some(&2));
-    assert_eq!(report.counts.get("circle"), None, "a block's objects are not the drawing's");
+    assert_eq!(
+        report.counts.get("circle"),
+        None,
+        "a block's objects are not the drawing's"
+    );
     // The header's extent holds the inserts' blocks, placed: the mirrored, scaled pole reaches 15 m.
     let at = |name: &str, code: i32| -> f64 {
         let i = p.iter().position(|&x| x == (9, name)).expect(name);
-        p[i..].iter().find(|x| x.0 == code).map(|x| x.1.parse().expect("number")).expect("value")
+        p[i..]
+            .iter()
+            .find(|x| x.0 == code)
+            .map(|x| x.1.parse().expect("number"))
+            .expect("value")
     };
-    assert!(at("$EXTMIN", 20) < X0 + 20.0 - 14.0, "{}", at("$EXTMIN", 20));
+    assert!(
+        at("$EXTMIN", 20) < X0 + 20.0 - 14.0,
+        "{}",
+        at("$EXTMIN", 20)
+    );
     let unique: HashSet<&str> = p.iter().filter(|x| x.0 == 5).map(|x| x.1).collect();
-    assert_eq!(unique.len(), p.iter().filter(|x| x.0 == 5).count(), "handles are unique");
+    assert_eq!(
+        unique.len(),
+        p.iter().filter(|x| x.0 == 5).count(),
+        "handles are unique"
+    );
 }
 
 /// KentOS's own file reads back as the same blocks and inserts: the
@@ -1540,7 +1685,13 @@ fn blocks_read_back_as_the_same_blocks() {
         e.base_mut().layer_id = layer.into();
         e
     };
-    let given = |n: u8| input.blocks.iter().find(|b| b.id == block_id(n)).expect("given");
+    let given = |n: u8| {
+        input
+            .blocks
+            .iter()
+            .find(|b| b.id == block_id(n))
+            .expect("given")
+    };
     assert_eq!(lamba.base, given(2).base);
     assert_eq!(
         lamba.entities,
@@ -1555,8 +1706,20 @@ fn blocks_read_back_as_the_same_blocks() {
         panic!("{:?}", direk.entities[2])
     };
     assert_eq!(
-        (nested.block, nested.p, nested.scale, nested.rotation, nested.mirror),
-        (lamba.id, v(1.0, 8.0), 1.0, std::f64::consts::FRAC_PI_2, false)
+        (
+            nested.block,
+            nested.p,
+            nested.scale,
+            nested.rotation,
+            nested.mirror
+        ),
+        (
+            lamba.id,
+            v(1.0, 8.0),
+            1.0,
+            std::f64::consts::FRAC_PI_2,
+            false
+        )
     );
     let inserts: Vec<&InsertEntity> = r
         .entities
@@ -1580,9 +1743,15 @@ fn blocks_read_back_as_the_same_blocks() {
         (direk.id, first.p, 2.5, 0.1, true)
     );
     assert_eq!(inserts[0].base.color.as_deref(), Some("#E5484D"));
-    assert_eq!(inserts[0].base.attrs.get("No").map(String::as_str), Some("7"));
+    assert_eq!(
+        inserts[0].base.attrs.get("No").map(String::as_str),
+        Some("7")
+    );
     assert_eq!(inserts[0].base.layer_id, "Yapı");
-    assert_eq!((inserts[1].scale, inserts[1].rotation, inserts[1].mirror), (1.0, 0.0, false));
+    assert_eq!(
+        (inserts[1].scale, inserts[1].rotation, inserts[1].mirror),
+        (1.0, 0.0, false)
+    );
 }
 
 /// Names DXF cannot take as they are, and a block that holds itself.
@@ -1595,15 +1764,29 @@ fn block_names_dxf_refuses_change_and_a_block_holding_itself_is_written_once() {
             definition(2, "KAPI", v(0.0, 0.0), vec![dot()]),
             definition(3, "*Adsız", v(0.0, 0.0), vec![dot()]),
             definition(4, "Ağaç/Çınar", v(0.0, 0.0), vec![dot()]),
-            definition(5, "Döngü", v(0.0, 0.0), vec![dot(), insert("", 5, v(1.0, 0.0), 1.0, 0.0, false)]),
+            definition(
+                5,
+                "Döngü",
+                v(0.0, 0.0),
+                vec![dot(), insert("", 5, v(1.0, 0.0), 1.0, 0.0, false)],
+            ),
         ],
-        ..input((1..=5).map(|n| insert("parsel", n, tm(f64::from(n), 0.0), 1.0, 0.0, false)).collect())
+        ..input(
+            (1..=5)
+                .map(|n| insert("parsel", n, tm(f64::from(n), 0.0), 1.0, 0.0, false))
+                .collect(),
+        )
     };
     let (text, report) = write(&input);
     let r = read(&text);
     let names: Vec<&str> = r.blocks.iter().map(|b| b.name.as_str()).collect();
     assert_eq!(names, ["Kapi", "KAPI (2)", "_Adsız", "Ağaç_Çınar", "Döngü"]);
-    let notes: Vec<&str> = report.notes.iter().filter(|n| n.what == "Blok adı").map(|n| n.reason.as_str()).collect();
+    let notes: Vec<&str> = report
+        .notes
+        .iter()
+        .filter(|n| n.what == "Blok adı")
+        .map(|n| n.reason.as_str())
+        .collect();
     assert_eq!(
         notes,
         [
@@ -1613,12 +1796,25 @@ fn block_names_dxf_refuses_change_and_a_block_holding_itself_is_written_once() {
         ]
     );
     assert!(
-        report.skipped.iter().any(|s| s.reason == "“Döngü” bloğu kendini içeriyor; o yerleştirme yazılmadı"),
+        report
+            .skipped
+            .iter()
+            .any(|s| s.reason == "“Döngü” bloğu kendini içeriyor; o yerleştirme yazılmadı"),
         "{:?}",
         report.skipped
     );
-    assert_eq!(r.blocks[4].entities.len(), 1, "written once, without its insert of itself");
-    assert_eq!(r.entities.iter().filter(|e| matches!(e, Entity::Insert(_))).count(), 5);
+    assert_eq!(
+        r.blocks[4].entities.len(),
+        1,
+        "written once, without its insert of itself"
+    );
+    assert_eq!(
+        r.entities
+            .iter()
+            .filter(|e| matches!(e, Entity::Insert(_)))
+            .count(),
+        5
+    );
 }
 
 /// The blocks' fixture (`fixtures/formats/v1/dxf-write/blocks.input.json`,
@@ -1638,7 +1834,8 @@ fn the_blocks_fixture_is_written_to_its_committed_bytes() {
         std::fs::write(&path, &bytes).expect("written");
     }
     assert!(
-        String::from_utf8(bytes).expect("UTF-8") == std::fs::read_to_string(&path).expect("the committed file"),
+        String::from_utf8(bytes).expect("UTF-8")
+            == std::fs::read_to_string(&path).expect("the committed file"),
         "the writer's bytes differ from blocks.dxf (KENTOS_WRITE_DXF=1 rewrites it; read the difference first)"
     );
     let notes: Vec<(&str, &str)> = report
@@ -1661,10 +1858,182 @@ fn the_blocks_fixture_is_written_to_its_committed_bytes() {
                 "Adalı alan",
                 "adaları ayrı kapalı çoklu çizgiler olarak yazıldı (KentOS'a geri okununca yine adalı alan olur)"
             ),
-            ("Blok açıklaması", "DXF'te açıklama tek satırdır; satır sonları boşluk oldu"),
+            (
+                "Öznitelik etiketi",
+                "“Direk” bloğunun “Kol boyu” etiketi “Kol_boyu” olarak yazıldı (DXF'te etiket boşluk içermez, büyük küçük harf ayırmaz)"
+            ),
+            (
+                "Blok açıklaması",
+                "DXF'te açıklama tek satırdır; satır sonları boşluk oldu"
+            ),
         ]
     );
     let skipped: Vec<&str> = report.skipped.iter().map(|s| s.reason.as_str()).collect();
-    assert_eq!(skipped, ["bloğunun tanımı dışa aktarılanlarda yok; yazılmadı"]);
+    assert_eq!(
+        skipped,
+        ["bloğunun tanımı dışa aktarılanlarda yok; yazılmadı"]
+    );
 }
 
+/// The blocks' fixture's input (`fixtures/formats/v1/dxf-write/blocks.input.json`).
+fn blocks_input() -> DxfWriteInput {
+    let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/formats/v1/dxf-write");
+    let json = std::fs::read_to_string(dir.join("blocks.input.json")).expect("the input");
+    dxf::input_from_json(&json).expect("the writer reads it")
+}
+
+/// The attributes of the inserts of the block named `name`, in the file's order.
+fn insert_values<'a>(r: &'a ImportResult, name: &str) -> Vec<Vec<(&'a str, &'a str)>> {
+    let id = r
+        .blocks
+        .iter()
+        .find(|b| b.name == name)
+        .map(|b| b.id)
+        .expect("the block");
+    r.entities
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Insert(i) if i.block == id => Some(
+                i.base
+                    .attrs
+                    .iter()
+                    .map(|(k, v)| (k.as_str(), v.as_str()))
+                    .collect(),
+            ),
+            _ => None,
+        })
+        .collect()
+}
+
+/// A block's attribute definitions and its inserts' values go out as ATTDEF
+/// and ATTRIB and come back (docs/adr/0144 §7; the blocks fixture's Direk):
+/// the tags as DXF wrote them, the values as the inserts showed them (a
+/// default shown comes back as the insert's value), the other attributes
+/// from KentOS's data, and no ATTRIB comes back as a text of its own.
+#[test]
+fn attributes_go_out_as_attdef_and_attrib_and_come_back() {
+    let input = blocks_input();
+    let (text, _) = write(&input);
+    let r = read(&text);
+    let direk = r.blocks.iter().find(|b| b.name == "Direk").expect("Direk");
+    let given = input
+        .blocks
+        .iter()
+        .find(|b| b.name == "Direk")
+        .expect("Direk given");
+    let back: Vec<(&str, Option<&str>, Option<&str>)> = direk
+        .attributes
+        .iter()
+        .map(|a| (a.tag.as_str(), a.prompt.as_deref(), a.value.as_deref()))
+        .collect();
+    assert_eq!(
+        back,
+        [
+            ("No", Some("Direk numarası"), Some("?")),
+            ("Tür", Some("Lamba türü"), None),
+            ("Kol_boyu", None, Some("2.5 m")),
+        ]
+    );
+    for (a, g) in direk.attributes.iter().zip(&given.attributes) {
+        assert_eq!(
+            (a.p, a.height, a.rotation),
+            (g.p, g.height, g.rotation),
+            "{}",
+            a.tag
+        );
+    }
+    assert_eq!(
+        insert_values(&r, "Direk"),
+        [
+            vec![
+                ("Kol_boyu", "2.5 m"),
+                ("Malzeme", "Çelik"),
+                ("No", "7"),
+                ("Tür", "LED")
+            ],
+            vec![("Kol_boyu", "2.5 m"), ("No", "?"), ("Tür", "")],
+        ]
+    );
+    assert!(
+        !r.entities.iter().any(|e| matches!(e, Entity::Text(_))),
+        "no ATTRIB comes back as a text"
+    );
+}
+
+/// An insert's attribute values go out once, as its ATTRIBs: an ATTRIB
+/// another program edited comes back edited, and an ATTRIB wins over
+/// KentOS's data under its tag (§7).
+#[test]
+fn an_attrib_edited_elsewhere_wins() {
+    let (text, _) = write(&blocks_input());
+    // KentOS's data of the first insert holds only its other attribute.
+    let p = pairs(&text);
+    let first = entities_of(&p, "INSERT")
+        .into_iter()
+        .find(|e| group(e, 2) == Some("Direk"))
+        .expect("Direk's first insert");
+    let data: Vec<&str> = first.iter().filter(|g| g.0 == 1000).map(|g| g.1).collect();
+    assert!(
+        data.contains(&"Malzeme") && !data.contains(&"No") && !data.contains(&"Tür"),
+        "{data:?}"
+    );
+    // Another program sets its No to 8.
+    let seven = "AcDbAttribute\r\n  2\r\nNo\r\n";
+    let at = text.find("  0\r\nATTRIB\r\n").expect("an ATTRIB");
+    let (head, rest) = text.split_at(at);
+    let (value, tag) = (
+        rest.find("  1\r\n7\r\n").expect("a 7"),
+        rest.find(seven).expect("No's ATTRIB"),
+    );
+    assert!(value < tag, "the first ATTRIB is No's, 7");
+    let edited = format!("{head}{}", rest.replacen("  1\r\n7\r\n", "  1\r\n8\r\n", 1));
+    let back = read(&edited);
+    let values = insert_values(&back, "Direk");
+    assert_eq!(
+        values[0].iter().find(|(k, _)| *k == "No"),
+        Some(&("No", "8"))
+    );
+    // KentOS's data says No is “Çelik” (a hand edit): the ATTRIB's 7 wins.
+    let clash = text.replacen("1000\r\nMalzeme\r\n", "1000\r\nNo\r\n", 1);
+    assert_ne!(clash, text);
+    let back = read(&clash);
+    let values = insert_values(&back, "Direk");
+    assert_eq!(
+        values[0],
+        [("Kol_boyu", "2.5 m"), ("No", "7"), ("Tür", "LED")]
+    );
+}
+
+/// DXF's attribute texts are one line: a line break in a value, a default
+/// or a prompt becomes a space, and is said.
+#[test]
+fn an_attribute_text_on_more_lines_is_written_on_one_and_said() {
+    let mut input = blocks_input();
+    let said = |input: &DxfWriteInput| {
+        write(input)
+            .1
+            .notes
+            .iter()
+            .filter(|n| n.what == "Öznitelik")
+            .count()
+    };
+    assert_eq!(said(&input), 0);
+    if let Entity::Insert(i) = &mut input.entities[0] {
+        i.base.attrs.insert("No".into(), "7\nA".into());
+    }
+    let (text, _) = write(&input);
+    assert!(text.contains("  1\r\n7 A\r\n"), "the value on one line");
+    assert_eq!(said(&input), 1);
+    let mut input = blocks_input();
+    let direk = input
+        .blocks
+        .iter_mut()
+        .find(|b| b.name == "Direk")
+        .expect("Direk");
+    direk.attributes[0].prompt = Some("Direk\nnumarası".into());
+    assert_eq!(said(&input), 1);
+    let r = read(&write(&input).0);
+    let back = r.blocks.iter().find(|b| b.name == "Direk").expect("Direk");
+    assert_eq!(back.attributes[0].prompt.as_deref(), Some("Direk numarası"));
+}

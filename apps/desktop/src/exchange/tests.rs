@@ -392,6 +392,32 @@ fn screens() {
                 &mut app,
                 &format!("aktar-{mode}-11-dxf-oznitelikler-alindi"),
             );
+
+            // Out to DXF again: the window says the attributes go as ATTDEF and ATTRIB, and the
+            // file written comes back into a new drawing with its inserts' values.
+            let dir = scratch(&format!("screens-attributes-{mode}"));
+            let path = dir.join("oznitelikler.dxf");
+            app.picker = Picker::File(path.clone());
+            run(&mut app, "file.export.dxf");
+            send(
+                &mut app,
+                Event::DxfExport(dxf_export::Event::Scope(dxf_export::Scope::All)),
+            );
+            picture(&mut app, &format!("aktar-{mode}-12-dxf-ver-oznitelikler"));
+            send(&mut app, Event::DxfExport(dxf_export::Event::Run));
+            let mut app = fresh();
+            app.picker = Picker::File(path);
+            run(&mut app, "file.import.dxf");
+            picture(&mut app, &format!("aktar-{mode}-13-dxf-oznitelikler-geri"));
+            send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
+            app.selection.set(Vec::<kentos_domain::Slot>::new());
+            app.viewport.camera.fit(&frame, 48.0);
+            let _ = app.update(Message::Run("block.panel"));
+            picture(
+                &mut app,
+                &format!("aktar-{mode}-14-dxf-oznitelikler-geri-alindi"),
+            );
+            let _ = std::fs::remove_dir_all(&dir);
         }
     }
 }
@@ -419,6 +445,79 @@ fn a_dxfs_attribute_definitions_come_in_with_its_blocks() {
         _ => None,
     });
     assert_eq!(valued.as_deref(), Some("R-12"));
+}
+
+/// A block's attributes go out to DXF as ATTDEF and ATTRIB and come back
+/// (docs/adr/0144 §7): attributes.dxf imported, written as a DXF and read
+/// again gives ROGAR's attribute definitions, and each insert the values it
+/// showed (a default shown comes back as its value) and its other attributes.
+#[test]
+fn a_blocks_attributes_go_out_to_dxf_and_come_back() {
+    let mut app = app_with_drawing();
+    app.picker = Picker::File(fixture("attributes.dxf"));
+    run(&mut app, "file.import.dxf");
+    send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
+    let dir = scratch("export-dxf-attributes");
+    let path = dir.join("oznitelikler.dxf");
+    app.picker = Picker::File(path.clone());
+    run(&mut app, "file.export.dxf");
+    send(
+        &mut app,
+        Event::DxfExport(dxf_export::Event::Scope(dxf_export::Scope::All)),
+    );
+    send(&mut app, Event::DxfExport(dxf_export::Event::Run));
+    assert!(
+        said(&app, "“oznitelikler.dxf” yazıldı:"),
+        "{}",
+        last_said(&app)
+    );
+    let back =
+        kentos_formats::dxf::read(&std::fs::read(&path).expect("written"), &Default::default())
+            .expect("reads");
+    let _ = std::fs::remove_dir_all(&dir);
+    let model = &app.document.as_ref().expect("open").model;
+    let rogar = model
+        .blocks()
+        .iter()
+        .find(|b| b.name == "ROGAR")
+        .expect("ROGAR");
+    let written = back
+        .blocks
+        .iter()
+        .find(|b| b.name == "ROGAR")
+        .expect("ROGAR written");
+    assert_eq!(written.attributes, rogar.attributes);
+    let mine: Vec<&kentos_contracts::InsertEntity> = model
+        .entities()
+        .filter_map(|e| match e {
+            Entity::Insert(i) if i.block == rogar.id => Some(i),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(mine.len(), 2);
+    for i in mine {
+        let theirs = back
+            .entities
+            .iter()
+            .find_map(|e| match e {
+                Entity::Insert(t) if t.block == written.id && t.p == i.p => Some(t),
+                _ => None,
+            })
+            .expect("the insert written");
+        let mut shown = i.base.attrs.clone();
+        for a in &rogar.attributes {
+            let value = i
+                .base
+                .attrs
+                .get(&a.tag)
+                .filter(|v| !v.is_empty())
+                .or(a.value.as_ref())
+                .cloned()
+                .unwrap_or_default();
+            shown.insert(a.tag.clone(), value);
+        }
+        assert_eq!(theirs.base.attrs, shown, "{:?}", i.p);
+    }
 }
 
 fn blocks_of(app: &App) -> Vec<String> {

@@ -160,6 +160,8 @@ class DxfExportDialog {
     const names = new Map<string, number>();
     for (const l of layers) names.set(l.name.trim().toUpperCase(), (names.get(l.name.trim().toUpperCase()) ?? 0) + 1);
     const repeated = [...names.values()].some((n) => n > 1);
+    // A block with attribute definitions goes with ATTDEFs, its inserts with ATTRIBs (docs/adr/0144 §7).
+    const attributed = list.some((e) => e.kind === 'insert' && !!ctx.doc.block(e.block)?.attributes?.length);
     replaceChildren(
       this.summary,
       list.length
@@ -167,7 +169,10 @@ class DxfExportDialog {
         : summaryLine('warn', 'Yazılacak nesne yok. Başka bir kapsam ya da en az bir katman seçin.'),
       dimensions ? summaryLine('info', `${dimensions} ölçü DXF ölçüsü olarak yazılır ve KentOS'taki gibi görünür; başka bir program ölçüyü düzenlerse kendi kurallarıyla yeniden çizer. KentOS'a ölçü olarak geri okunur.`) : null,
       inserts
-        ? summaryLine('info', `${inserts} blok yerleştirmesi INSERT, yerleştirdikleri ${placedBlocks(ctx.doc.blocks.value, list)} blok içlerindekilerle birlikte BLOCK olarak yazılır; KentOS'a blok olarak geri okunur.`)
+        ? summaryLine(
+            'info',
+            `${inserts} blok yerleştirmesi INSERT, yerleştirdikleri ${placedBlocks(ctx.doc.blocks.value, list)} blok içlerindekilerle birlikte BLOCK olarak yazılır${attributed ? ', öznitelikleri ATTDEF ve ATTRIB olarak' : ''}; KentOS'a blok olarak geri okunur.`,
+          )
         : null,
       islands ? summaryLine('info', `${islands} adalı alanın adaları ayrı kapalı çoklu çizgiler olarak yazılır; KentOS'a geri okununca yine adalı alan olur.`) : null,
       data ? summaryLine('info', 'Etiketler, öznitelikler ve semboller nesnelerle birlikte KentOS verisi olarak yazılır: başka programlar göstermez, KentOS geri okur.') : null,

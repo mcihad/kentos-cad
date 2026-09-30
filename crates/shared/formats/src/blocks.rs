@@ -13,9 +13,10 @@ use kentos_contracts::{
     Vec2,
 };
 use kentos_geometry_core::Vec2 as CoreVec2;
-use kentos_geometry_core::block::{Blocks, Definition};
+use kentos_geometry_core::api::json::Json;
+use kentos_geometry_core::block::{Attribute, Blocks, Definition};
 use kentos_geometry_core::entity::{
-    Entity as CoreEntity, HatchPattern as CorePattern, Part, Shape,
+    Attrs, Entity as CoreEntity, HatchPattern as CorePattern, Part, Shape,
 };
 use kentos_geometry_core::geom::arrangement::Ring;
 
@@ -24,6 +25,16 @@ pub struct Placing(Blocks);
 
 impl Placing {
     pub fn new(blocks: &[BlockDefinition]) -> Placing {
+        Self::of(blocks, false)
+    }
+
+    /// With the definitions' attribute definitions (docs/adr/0144 §7): the
+    /// DXF writer's ATTRIBs (`attribute_texts`).
+    pub fn with_attributes(blocks: &[BlockDefinition]) -> Placing {
+        Self::of(blocks, true)
+    }
+
+    fn of(blocks: &[BlockDefinition], attributes: bool) -> Placing {
         Placing(Blocks::new(
             blocks
                 .iter()
@@ -35,11 +46,75 @@ impl Placing {
                         .iter()
                         .map(|e| CoreEntity::new(shape(e)))
                         .collect(),
-                    // Attributes are texts, which these formats leave out of a block.
-                    attributes: Vec::new(),
+                    // Attributes are texts, which GeoJSON leaves out of a block.
+                    attributes: if attributes {
+                        b.attributes
+                            .iter()
+                            .map(|a| Attribute {
+                                tag: a.tag.clone(),
+                                value: a.value.clone().unwrap_or_default(),
+                                p: core(a.p),
+                                height: a.height,
+                                rotation: a.rotation,
+                            })
+                            .collect()
+                    } else {
+                        Vec::new()
+                    },
                 })
                 .collect(),
         ))
+    }
+
+    /// An insert's attribute texts as it shows them (§7): each tag of its
+    /// block's attribute definitions, in their order, with its text placed,
+    /// the insert's value or else the default (empty when neither).
+    pub fn attribute_texts(&self, i: &InsertEntity) -> Vec<(String, TextEntity)> {
+        let mut insert = shape(&Entity::Insert(i.clone()));
+        if let Shape::Insert { attrs, .. } = &mut insert {
+            *attrs = Some(Attrs(
+                i.base
+                    .attrs
+                    .iter()
+                    .map(|(k, v)| (k.clone(), Json::Str(v.clone())))
+                    .collect(),
+            ));
+        }
+        self.0
+            .expand(&insert)
+            .into_iter()
+            .filter_map(|piece| {
+                let tag = piece.attribute?;
+                let Shape::Text {
+                    p,
+                    text,
+                    height,
+                    rotation,
+                } = piece.shape
+                else {
+                    return None;
+                };
+                let base = EntityBase {
+                    id: 0,
+                    layer_id: String::new(),
+                    color: None,
+                    attrs: Default::default(),
+                    label: None,
+                    symbol: None,
+                    line_weight: None,
+                };
+                Some((
+                    tag,
+                    TextEntity {
+                        base,
+                        p: back(p),
+                        text,
+                        height,
+                        rotation,
+                    },
+                ))
+            })
+            .collect()
     }
 
     /// An insert's objects placed, in its block's order; none for a block

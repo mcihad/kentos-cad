@@ -1933,6 +1933,11 @@ const dxfBlocksIn = async (ui) => (await dxfBlocksOpen(ui), await ui.clickText('
 const DXF_ATTRIBUTES = readFileSync(new URL('../../../../fixtures/formats/v1/attributes.dxf', import.meta.url)).toString('base64');
 const OPEN_DXF_ATTRIBUTES = `import('/src/ui/io/DrawingImportDialog.ts').then((m) => m.openDxfImport(window.kentos, { name: 'attributes.dxf', bytes: Uint8Array.from(atob('${DXF_ATTRIBUTES}'), (c) => c.charCodeAt(0)) }, { description: 'DXF', accept: { 'application/dxf': ['.dxf'] } }))`;
 const dxfAttributesOpen = async (ui) => (await ui.eval(OPEN_DXF_ATTRIBUTES), await ui.waitFor(DXF_READ, 15000));
+const dxfAttributesIn = async (ui) => (await dxfAttributesOpen(ui), await ui.clickText('.dialog--io .btn--primary', 'İçe aktar'), await ui.waitFor(`!document.querySelector('.dialog--io')`, 8000));
+/** The attribute fixture's inserts, framed, nothing chosen, the Bloklar panel open. */
+const FRAME_ATTRIBUTES = `(() => { const k = window.kentos; k.selection.clear(); k.view.camera.fit({ minX: 487089, minY: 4420197.5, maxX: 487114.5, maxY: 4420203 }, 48); k.view.requestRender(); k.commands.execute('block.panel'); })()`;
+/** A save picker that keeps what is written in the page (window.__disk.bytes); the user's picker kept aside. */
+const CAPTURE_SAVE = `(() => { const disk = (window.__disk = { bytes: null, picker: window.kentos.files.picker }); window.kentos.files.picker = { save: async (name) => ({ name, createWritable: async () => { const parts = []; return { write: async (d) => parts.push(d), close: async () => { disk.bytes = new Uint8Array(await new Blob(parts).arrayBuffer()); } }; } }), open: async () => null }; })()`;
 SCENES.blocks = [
   // Read a second time: the names are the drawing's now, and the window says which new names they take.
   { id: 'import-dxf-blocks', open: async (ui) => (await dxfBlocksIn(ui), await dxfBlocksOpen(ui), await ui.sleep(400)) },
@@ -1977,8 +1982,41 @@ SCENES.blocks = [
       await dxfAttributesOpen(ui);
       await ui.clickText('.dialog--io .btn--primary', 'İçe aktar');
       await ui.waitFor(`!document.querySelector('.dialog--io')`, 8000);
-      await ui.eval(`(() => { const k = window.kentos; k.selection.clear(); k.view.camera.fit({ minX: 487089, minY: 4420197.5, maxX: 487114.5, maxY: 4420203 }, 48); k.view.requestRender(); })()`);
-      await ui.eval(`window.kentos.commands.execute('block.panel')`);
+      await ui.eval(FRAME_ATTRIBUTES);
+      await ui.sleep(600);
+    },
+  },
+  // In, then DXF dışa aktar over the whole drawing: the summary says the attributes go as ATTDEF and ATTRIB.
+  {
+    id: 'export-dxf-attributes',
+    open: async (ui) => {
+      await dxfAttributesIn(ui);
+      await ui.eval(`window.kentos.commands.execute('file.export.dxf')`);
+      await ui.waitFor(`!!document.querySelector('.dialog--io .io-summary')`, 15000);
+      await ui.clickText('.dialog--io .seg__opt', 'Tümü');
+      await ui.sleep(400);
+    },
+  },
+  // Written with Dışa aktar, the import undone and the written file taken in again: the inserts show the values
+  // they showed (the definitions' ATTDEFs, the inserts' ATTRIBs), the log says what went out and what came in.
+  {
+    id: 'import-dxf-attributes-back',
+    open: async (ui) => {
+      await ui.eval(`(() => { const u = window.kentos.ui; u.bottomHeight.set(190); u.bottomTab.set('history'); u.bottomExpanded.set(true); })()`);
+      await dxfAttributesIn(ui);
+      await ui.eval(CAPTURE_SAVE);
+      await ui.eval(`window.kentos.commands.execute('file.export.dxf')`);
+      await ui.waitFor(`!!document.querySelector('.dialog--io .io-summary')`, 15000);
+      await ui.clickText('.dialog--io .seg__opt', 'Tümü');
+      await ui.clickText('.dialog--io .btn--primary', 'Dışa aktar');
+      await ui.waitFor(`!document.querySelector('.dialog--io') && !!window.__disk.bytes`, 15000);
+      await ui.eval(`(() => { window.kentos.files.picker = window.__disk.picker; })()`);
+      await ui.eval(UNDO_ALL);
+      await ui.eval(`import('/src/ui/io/DrawingImportDialog.ts').then((m) => m.openDxfImport(window.kentos, { name: 'oznitelikler.dxf', bytes: window.__disk.bytes }, { description: 'DXF', accept: { 'application/dxf': ['.dxf'] } }))`);
+      await ui.waitFor(DXF_READ, 15000);
+      await ui.clickText('.dialog--io .btn--primary', 'İçe aktar');
+      await ui.waitFor(`!document.querySelector('.dialog--io')`, 8000);
+      await ui.eval(FRAME_ATTRIBUTES);
       await ui.sleep(600);
     },
   },

@@ -8,7 +8,9 @@
 //! insert draws them in its own, as KentOS does. A name keeps its letters:
 //! a character DXF refuses becomes "_" (“*” among them: a name starting
 //! with it is an anonymous block), and a name DXF's case-blind comparison
-//! takes for another's gets " (2)"; every change is said.
+//! takes for another's gets " (2)"; every change is said. A definition's
+//! attribute definitions (§7) follow its objects as ATTDEFs; a tag's white
+//! space and control characters become "_" (DXF's tags have none), and said.
 
 use std::collections::{HashMap, HashSet};
 
@@ -20,11 +22,57 @@ use crate::geom::v;
 use crate::math::{cos, sin};
 use crate::report::Report;
 
-/// A definition written: its base point and the extent of its objects in
-/// its own coordinates (none when it draws nothing).
+/// A definition written: its base point, the extent of its objects in its
+/// own coordinates (none when it draws nothing), and its attributes' tags
+/// with the DXF tags they were written as (§7).
 pub(super) struct Written {
     pub base: Vec2,
     pub extent: Option<Bounds>,
+    pub tags: Vec<(String, String)>,
+}
+
+/// A definition's attribute tags as DXF writes them (§7): white space and
+/// control characters "_", a tag taken by an earlier one "_2", "_3" …; every
+/// change said.
+pub(super) fn tags(
+    def: &BlockDefinition,
+    name: &str,
+    report: &mut Report,
+) -> Vec<(String, String)> {
+    let mut taken: HashSet<String> = HashSet::new();
+    let mut out = Vec::with_capacity(def.attributes.len());
+    for a in &def.attributes {
+        let base: String = a
+            .tag
+            .chars()
+            .map(|c| {
+                if c.is_whitespace() || c.is_control() {
+                    '_'
+                } else {
+                    c
+                }
+            })
+            .collect();
+        let mut tag = base.clone();
+        let mut k = 2;
+        while taken.contains(&tag.to_uppercase()) {
+            tag = format!("{base}_{k}");
+            k += 1;
+        }
+        taken.insert(tag.to_uppercase());
+        if tag != a.tag {
+            report.note(
+                "Öznitelik etiketi",
+                &format!(
+                    "“{name}” bloğunun “{}” etiketi “{tag}” olarak yazıldı (DXF'te etiket boşluk içermez, büyük küçük harf ayırmaz)",
+                    a.tag
+                ),
+                0,
+            );
+        }
+        out.push((a.tag.clone(), tag));
+    }
+    out
 }
 
 /// The DXF name of every definition written, and what changed on the way (said).
@@ -155,6 +203,7 @@ pub(super) fn block(
     (record, name): (u64, &str),
     def: &BlockDefinition,
     body: &Out,
+    tags: &[(String, String)],
 ) {
     let h = handles.take();
     out.str(0, "BLOCK");
@@ -164,7 +213,8 @@ pub(super) fn block(
     out.str(8, "0");
     out.str(100, "AcDbBlockBegin");
     out.str(2, name);
-    out.int(70, 0);
+    // 2: the block has attribute definitions.
+    out.int(70, if def.attributes.is_empty() { 0 } else { 2 });
     out.xyz(10, def.base);
     out.str(3, name);
     out.str(1, "");
@@ -183,6 +233,34 @@ pub(super) fn block(
         out.str(4, &line);
     }
     out.s.push_str(&body.s);
+    // Its attribute definitions (§7), after its objects: on 0, the insert's.
+    for (a, (_, tag)) in def.attributes.iter().zip(tags) {
+        let (given, asked) = (
+            a.value.as_deref().unwrap_or(""),
+            a.prompt.as_deref().unwrap_or(""),
+        );
+        let (value, prompt) = (one_line(given), one_line(asked));
+        if value != given || prompt != asked {
+            report.note("Öznitelik", ONE_LINE, 0);
+        }
+        let h = handles.take();
+        out.str(0, "ATTDEF");
+        out.handle(5, h);
+        out.handle(330, record);
+        out.str(100, "AcDbEntity");
+        out.str(8, "0");
+        out.str(100, "AcDbText");
+        out.xyz(10, a.p);
+        out.real(40, a.height);
+        out.str(1, &value);
+        if a.rotation != 0.0 {
+            out.real(50, a.rotation);
+        }
+        out.str(100, "AcDbAttributeDefinition");
+        out.str(3, &prompt);
+        out.str(2, tag);
+        out.int(70, 0);
+    }
     let h = handles.take();
     out.str(0, "ENDBLK");
     out.handle(5, h);
@@ -190,4 +268,15 @@ pub(super) fn block(
     out.str(100, "AcDbEntity");
     out.str(8, "0");
     out.str(100, "AcDbBlockEnd");
+}
+
+/// What an attribute's text lost on the way to DXF's one line (said).
+pub(super) const ONE_LINE: &str =
+    "satır sonları ve denetim karakterleri boşluk oldu (DXF'te öznitelik tek satırdır)";
+
+/// A text as DXF's one line holds it: control characters become spaces.
+pub(super) fn one_line(text: &str) -> String {
+    text.chars()
+        .map(|c| if c.is_control() { ' ' } else { c })
+        .collect()
 }
