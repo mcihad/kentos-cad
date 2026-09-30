@@ -73,7 +73,7 @@
       "pending": 0
     },
     "commandsWithoutPlace": [],
-    "commandsWithoutTests": 65,
+    "commandsWithoutTests": 63,
     "commandsOnDesktop": 177,
     "desktop": {
       "commands": {
@@ -241,7 +241,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/usage-blocks.json"
+      ]
     },
     {
       "id": "block.purge",
@@ -272,7 +274,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/usage-blocks.json"
+      ]
     },
     {
       "id": "calc.forward",
@@ -3121,7 +3125,8 @@
         "desktop": "implemented"
       },
       "tests": [
-        "fixtures/interaction/v1/block-define.json"
+        "fixtures/interaction/v1/block-define.json",
+        "fixtures/interaction/v1/usage-blocks.json"
       ]
     },
     {
@@ -3156,7 +3161,8 @@
       },
       "tests": [
         "fixtures/interaction/v1/block-define.json",
-        "fixtures/interaction/v1/block-insert.json"
+        "fixtures/interaction/v1/block-insert.json",
+        "fixtures/interaction/v1/usage-blocks.json"
       ]
     },
     {
@@ -3359,7 +3365,8 @@
       "tests": [
         "apps/web/scripts/e2e/smoke.mjs",
         "fixtures/interaction/v1/block-define.json",
-        "fixtures/interaction/v1/circle-methods.json"
+        "fixtures/interaction/v1/circle-methods.json",
+        "fixtures/interaction/v1/usage-blocks.json"
       ]
     },
     {
@@ -3748,7 +3755,8 @@
       "tests": [
         "apps/web/src/app/netcadNames.test.ts",
         "fixtures/interaction/v1/block-explode.json",
-        "fixtures/interaction/v1/object-tools.json"
+        "fixtures/interaction/v1/object-tools.json",
+        "fixtures/interaction/v1/usage-blocks.json"
       ]
     },
     {
@@ -4038,7 +4046,8 @@
         "fixtures/interaction/v1/line-chain.json",
         "fixtures/interaction/v1/navigation.json",
         "fixtures/interaction/v1/point-calc.json",
-        "fixtures/interaction/v1/usage-blocks-view.json"
+        "fixtures/interaction/v1/usage-blocks-view.json",
+        "fixtures/interaction/v1/usage-blocks.json"
       ]
     },
     {
@@ -6929,7 +6938,8 @@
         "desktop": "implemented"
       },
       "tests": [
-        "fixtures/interaction/v1/block-define.json"
+        "fixtures/interaction/v1/block-define.json",
+        "fixtures/interaction/v1/usage-blocks.json"
       ]
     },
     {
@@ -6955,7 +6965,8 @@
       },
       "tests": [
         "fixtures/interaction/v1/block-define.json",
-        "fixtures/interaction/v1/block-insert.json"
+        "fixtures/interaction/v1/block-insert.json",
+        "fixtures/interaction/v1/usage-blocks.json"
       ]
     },
     {
@@ -7099,7 +7110,8 @@
       "tests": [
         "apps/web/scripts/e2e/smoke.mjs",
         "fixtures/interaction/v1/block-define.json",
-        "fixtures/interaction/v1/circle-methods.json"
+        "fixtures/interaction/v1/circle-methods.json",
+        "fixtures/interaction/v1/usage-blocks.json"
       ]
     },
     {
@@ -7371,7 +7383,8 @@
       "tests": [
         "apps/web/src/app/netcadNames.test.ts",
         "fixtures/interaction/v1/block-explode.json",
-        "fixtures/interaction/v1/object-tools.json"
+        "fixtures/interaction/v1/object-tools.json",
+        "fixtures/interaction/v1/usage-blocks.json"
       ]
     },
     {
@@ -7601,7 +7614,8 @@
         "fixtures/interaction/v1/line-chain.json",
         "fixtures/interaction/v1/navigation.json",
         "fixtures/interaction/v1/point-calc.json",
-        "fixtures/interaction/v1/usage-blocks-view.json"
+        "fixtures/interaction/v1/usage-blocks-view.json",
+        "fixtures/interaction/v1/usage-blocks.json"
       ]
     },
     {
