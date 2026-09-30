@@ -2143,6 +2143,24 @@ function textToolScenes() {
     await ui.move(2, 2);
     await ui.sleep(300);
   };
+  /** Metin dosyası yerleştir (4d): a file of parcel names, Yazı at 3 mm and orta sol; the lines' boxes about the pointer. */
+  const PARCELS = ['Ada 101 Parsel 1', 'Ada 101 Parsel 2', 'Ada 101 Parsel 3', '', 'Ada 102 Parsel 1', 'Ada 102 Parsel 2'].join('\n');
+  const textFile = async (ui) => {
+    await ground(ui, LOGGED);
+    await ui.eval(`(() => {
+      const k = window.kentos;
+      const bytes = new TextEncoder().encode(${JSON.stringify(PARCELS)});
+      k.files.picker = { ...k.files.picker, open: async () => ({ name: 'parseller.txt', async getFile() { return new Blob([bytes]); } }) };
+    })()`);
+    await startTool(ui, 'text');
+    await ui.eval(`(() => { const t = window.kentos.tools.active; t.input('Y'); t.input('3'); t.chooseOption('H', 'sol orta'); })()`);
+    await startTool(ui, 'placeTextFile');
+    await ui.sleep(300);
+    await hoverAt(ui, ...(await ui.eval(FILE_AT)));
+  };
+  // The first line 3 × 1.5 × 3 m over Ada 101's line, so that the empty fourth falls on Ada 101 whatever `u` is
+  // (the desktop's `text_scenes` puts it there too).
+  const FILE_AT = FIT(`return [c.x - 1.6 * u, c.y + 13.5];`);
   const upside = async (ui) => {
     await ribbonOn(ui, { ribbonTab: 'modify', ...LOGGED });
     await ui.eval(CLEAR_VIEW);
@@ -2170,6 +2188,8 @@ function textToolScenes() {
     { id: 'text-props-align-menu', open: async (ui) => (await props(ui, ['a']), await menuOpen(ui, '.panel--props [data-prop-key="geometry:Hiza"]')), close },
     { id: 'text-props-several', open: async (ui) => props(ui, ['a', 'b']), close },
     { id: 'find-replace', open: findWindow, close: async (ui) => (await ui.escapeAll(2), await ui.eval(UNDO_ALL)) },
+    { id: 'text-file-preview', open: textFile, close },
+    { id: 'text-file-done', open: async (ui) => (await textFile(ui), await ui.clickAt(...(await ui.eval(PAGE_AT(...(await ui.eval(FILE_AT)))))), await ui.move(2, 2)), close },
     { id: 'readable-selected', open: upside, close },
     { id: 'readable-done', open: async (ui) => (await upside(ui), await startTool(ui, 'readable'), await ui.move(2, 2)), close },
   ];

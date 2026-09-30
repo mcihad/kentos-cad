@@ -58,7 +58,7 @@ use crate::{
     angle, area, between, block_define, block_insert, boundary, cleanup, construction, coordinate,
     dimension, dimension_chain, divide, donut, ellipse, hatch, match_properties, meeting, parallel,
     revcloud, sector, select_circle, select_containing, select_fence, set_elevation, spline, split,
-    station_offset, text,
+    station_offset, text, text_file,
 };
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
@@ -112,6 +112,7 @@ pub const TOOLS: &[&str] = &[
     point::SPOT_ID,
     divide::ID,
     text::ID,
+    text_file::ID,
     dimension::ID,
     hatch::ID,
     // Blocks (docs/adr/0144).
@@ -239,6 +240,7 @@ impl Session {
             point::SPOT_ID => Box::new(Point::spot()),
             divide::ID => Box::new(crate::divide::Divide::new()),
             text::ID => Box::new(crate::text::Text::new()),
+            text_file::ID => Box::new(crate::text_file::PlaceTextFile::new()),
             dimension::ID => Box::new(crate::dimension::Dimension::new()),
             hatch::ID => Box::new(crate::hatch::Hatch::new()),
             block_define::ID => Box::new(crate::block_define::BlockDefine::tool()),
@@ -570,6 +572,15 @@ impl Session {
         };
         self.settle(cx);
         taken
+    }
+
+    /// The file the running tool asked for (Metin dosyası yerleştir): its
+    /// name and bytes, or none (the picker cancelled).
+    pub fn file_given(&mut self, file: Option<(&str, &[u8])>, cx: &mut Context<'_>) {
+        if let Some(tool) = self.tool.as_mut() {
+            tool.file_given(file, cx);
+        }
+        self.settle(cx);
     }
 
     /// The values the running tool's option `key` chooses between (Yazı's

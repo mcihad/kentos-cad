@@ -692,13 +692,15 @@ impl Viewport {
             ViewChange::Pan { dx, dy } => self.camera.pan_by(dx, dy),
             ViewChange::Fit { bounds, padding } => self.camera.fit(&bounds, padding),
             // The app opens the text field (text_field.rs), its window again
-            // with the picked point (calc/), Blok oluştur's (blocks.rs) or Blok
-            // ekle's values (attribute_values.rs); the camera stays.
+            // with the picked point (calc/), Blok oluştur's (blocks.rs), Blok
+            // ekle's values (attribute_values.rs) or a text file's dialog
+            // (text_file.rs); the camera stays.
             ViewChange::Text(_)
             | ViewChange::Picked(_)
             | ViewChange::PickedObjects(_)
             | ViewChange::DefineBlock(_)
-            | ViewChange::AttributeValues(_) => {}
+            | ViewChange::AttributeValues(_)
+            | ViewChange::OpenTextFile => {}
         }
         self.cursor = at.map(|[x, y]| self.camera.screen_to_world(x, y));
     }

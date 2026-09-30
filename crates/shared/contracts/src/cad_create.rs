@@ -65,6 +65,8 @@ pub enum CreateOperation {
     DimensionChain,
     /// Baz ölçü: a dimension measured from the base dimension's first point.
     DimensionBaseline,
+    /// Metin dosyası yerleştir (docs/adr/0145 §6): a text file's lines as texts.
+    TextFile,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

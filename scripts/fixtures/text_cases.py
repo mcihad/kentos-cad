@@ -5,8 +5,8 @@ yap's turn.
     python3 scripts/fixtures/text_cases.py           # writes the files
     python3 scripts/fixtures/text_cases.py --check   # writes nothing; compares
 
-Writes fixtures/text/v1/increment.json, pattern.json, readable.json and
-realign.json. The
+Writes fixtures/text/v1/increment.json, pattern.json, readable.json,
+realign.json and file.json. The
 rules are written here from the ADR on their own, not from an
 implementation's output; the geometry core (crates/shared/geometry-core,
 `text::edit` and `TextPlace::readable`, natively and through WASM) is held to
@@ -30,6 +30,10 @@ them.
   a and b its alignment's shares along and up (the box is 0.23 h under the
   baseline and 1.15 h over it: 0.92 is the sum). Its turn is 180° more, taken
   from 0 up to 360. Any other text is left alone.
+- Metin dosyası yerleştir's file (§6): its lines end at \\r\\n, \\n or \\r, a
+  last line break ends the last line, a byte order mark is no letter, each
+  line is trimmed as JavaScript trims; refused: not UTF-8, more than 10 000
+  lines, nothing but empty lines.
 - Hizayı değiştir (Öznitelikler's Hiza, §6): the text stays where it is; its
   point becomes the new alignment's point of the same box: it moves by
   w·(a′ − a) along its baseline and h·(b′ − b) up from it, a, b the old
@@ -252,6 +256,77 @@ REALIGN = [
 ]
 
 
+MAX_LINES = 10_000
+
+
+def file_lines(data):
+    """The file's lines, or why it is refused (a kind): not UTF-8, more than
+    10 000 lines, nothing but empty lines. (More than 1 MB is left to the
+    runners' own tests: the file would not sit in a fixture.)"""
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError:
+        return {"error": "notUtf8"}
+    if text.startswith("﻿"):
+        text = text[1:]
+    pieces = []
+    line = ""
+    i = 0
+    while i < len(text):
+        c = text[i]
+        if c == "\r":
+            if i + 1 < len(text) and text[i + 1] == "\n":
+                i += 1
+            pieces.append(line)
+            line = ""
+        elif c == "\n":
+            pieces.append(line)
+            line = ""
+        else:
+            line += c
+        i += 1
+    pieces.append(line)
+    if pieces and pieces[-1] == "":
+        pieces.pop()
+    if len(pieces) > MAX_LINES:
+        return {"error": "tooMany"}
+    trimmed = [js_trim(p) for p in pieces]
+    if not any(trimmed):
+        return {"error": "empty"}
+    return {"lines": trimmed} if len(trimmed) <= 20 else {"count": len(trimmed), "first": trimmed[0], "last": trimmed[-1]}
+
+
+# JavaScript's String.prototype.trim: its white space and line terminators.
+JS_SPACE = set("\t\n\x0b\x0c\r \xa0                　﻿")
+
+
+def js_trim(s):
+    a, b = 0, len(s)
+    while a < b and s[a] in JS_SPACE:
+        a += 1
+    while b > a and s[b - 1] in JS_SPACE:
+        b -= 1
+    return s[a:b]
+
+
+FILE = [
+    # name, bytes
+    ("satırlar \\n ile", "Ada 101\nAda 102".encode()),
+    ("Windows satır sonları, son satır sonu", "Ada 101\r\nAda 102\r\n".encode()),
+    ("eski Mac satır sonları", "Ada 101\rAda 102".encode()),
+    ("boş satır yerini tutar", "Ada 101\n\nAda 103".encode()),
+    ("satırlar kırpılır (sekme, boşluk)", "  Ada 101  \n\tPark\t".encode()),
+    ("bayt sırası işareti harf değildir", "﻿Ada 101\n".encode()),
+    ("sondaki iki satır sonu: bir boş satır kalır", "Ada 101\n\n".encode()),
+    ("Türkçe harfler", "Çınaraltı Sokağı\nİğdır Caddesi".encode()),
+    ("yalnız boş satırlar: boş", "\n  \n\t\n".encode()),
+    ("boş dosya", b""),
+    ("UTF-8 değil (Latin-5 ş)", b"Kar\xfe\xfdyaka"),
+    ("tam 10 000 satır", ("a\n" * 10_000).encode()),
+    ("10 001 satır: çok", ("a\n" * 10_001).encode()),
+]
+
+
 def build():
     increment_cases = [{"name": n, "text": t, "next": increment(t)} for n, t in INCREMENT]
     pattern_cases = [
@@ -272,6 +347,15 @@ def build():
         c["to"] = to
         c["expect"] = realign(p, h, rot, align, to, width)
         realign_cases.append(c)
+    file_cases = []
+    for n, data in FILE:
+        c = {"name": n}
+        try:
+            c["text"] = data.decode("utf-8")
+        except UnicodeDecodeError:
+            c["hex"] = data.hex()
+        c["expect"] = file_lines(data)
+        file_cases.append(c)
     common = {"format": "kentos.text-cases", "version": 1}
     return {
         "increment.json": {
@@ -291,6 +375,12 @@ def build():
             "title": "Okunur yap: ters okunan yazı kutusunun ortası çevresinde yarım döner (ADR 0145 §3)",
             "note": "Dönüşü 0–360'a getirilince 90°'den büyük, en çok 270° olan yazı ters okunur. Noktası eski taban çizgisi boyunca w·(1 − 2a), ona dik h·(0,92 − 2b) kayar (w genişlik, h yükseklik, a ve b hizanın boyuna ve yukarı payları; kutu taban çizgisinin 0,23 h altından 1,15 h üstüne); dönüşü 180° artar, 0–360'a getirilir. Öbürleri değişmez (null). Genişlik burada verilir: çekirdekte yazı tipinin ölçüsüdür.",
             "cases": readable_cases,
+        },
+        "file.json": {
+            **common,
+            "title": "Metin dosyası yerleştir: dosyanın satırları (ADR 0145 §6)",
+            "note": "Satırlar \\r\\n, \\n ya da \\r ile biter; son satır sonu son satırı bitirir; bayt sırası işareti harf değildir; her satır JavaScript'in trim'iyle kırpılır, boş satır yerini tutar. Reddedilir: UTF-8 olmayan (notUtf8), 10 000'den çok satırlı (tooMany), yalnız boş satırlı (empty). 1 MB sınırı koşucuların kendi testlerindedir. Girdi `text` (UTF-8) ya da `hex` (baytlar); uzun sonuç `count`, `first`, `last` ile.",
+            "cases": file_cases,
         },
         "realign.json": {
             **common,

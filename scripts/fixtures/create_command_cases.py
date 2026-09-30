@@ -609,6 +609,20 @@ cases.append({
          "expect": {"entities": {str(3 + i): made(o, 3 + i) for i, o in enumerate(dressed_texts)}, "revision": "changed"}},
     ],
 })
+# Metin dosyası yerleştir (docs/adr/0145 §6): a file's lines, 1.5 heights apart down the texts' up, one step.
+file_texts = [
+    O({**TEXT, "text": "Ada 101", "rotation": 0, "align": "middleCenter"}),
+    O({**TEXT, "text": "Ada 102", "rotation": 0, "align": "middleCenter", "p": P(487060, 4420097)}),
+]
+cases.append({
+    "name": "Metin dosyası yerleştir: satırların yazıları tek adımda, adı “Metin dosyası yerleştir” (ADR 0145 §6)",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "textFile", "objects": file_texts}, "result": done([3, 4]),
+         "expect": {"ids": IDS + [3, 4], "entities": {str(3 + i): made(o, 3 + i) for i, o in enumerate(file_texts)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Metin dosyası yerleştir", "expect": {"ids": IDS, "canUndo": False}},
+    ],
+})
+
 cases.append({
     "name": "yazının genişlik çarpanı 0'dan büyük, en çok 100: invalid_width_factor, yolu nesnenin; sonlu olmayan önce not_finite (ADR 0145)",
     "steps": [

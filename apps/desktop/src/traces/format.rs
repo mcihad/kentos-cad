@@ -30,6 +30,9 @@ pub struct Trace {
     #[serde(default)]
     pub prefs: Prefs,
     pub click_tolerance: f64,
+    /// A file of the traces' folder the open dialog answers with (Metin
+    /// dosyası yerleştir's, docs/adr/0145 §6); none: the trace's own drawing file.
+    pub open_file: Option<String>,
     pub steps: Vec<Step>,
 }
 

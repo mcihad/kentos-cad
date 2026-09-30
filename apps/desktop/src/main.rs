@@ -90,6 +90,7 @@ mod snapshot;
 mod start;
 mod style;
 mod text_field;
+mod text_file;
 mod traces;
 #[cfg(test)]
 mod ui_screens;

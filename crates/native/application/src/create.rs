@@ -115,6 +115,8 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         Some(CreateOperation::IntersectPoint) => "Kesişim noktası",
         Some(CreateOperation::DimensionChain) => "Zincir ölçü",
         Some(CreateOperation::DimensionBaseline) => "Baz ölçü",
+        // Metin dosyası yerleştir (docs/adr/0145 §6).
+        Some(CreateOperation::TextFile) => "Metin dosyası yerleştir",
     }
 }
 

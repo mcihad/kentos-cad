@@ -244,6 +244,8 @@ async function setUp(t) {
   origin = { x: t.view.center[0], y: t.view.center[1] };
   pointer = null;
   const doc = readFileSync(join(TRACE_DIR, t.document), 'utf8');
+  // A file of the traces' folder the open dialog answers with (Metin dosyası yerleştir's, docs/adr/0145 §6).
+  const opened = t.openFile ? [...readFileSync(join(TRACE_DIR, t.openFile))] : null;
   await b.eval(`(async () => {
     const k = window.kentos;
     k.tools.activate('select');
@@ -264,6 +266,8 @@ async function setUp(t) {
       },
     });
     k.files.picker = { async save() { return handle('${FILE}'); }, async open() { return handle('${FILE}'); } };
+    const opened = ${JSON.stringify(opened)};
+    if (opened) k.files.picker.open = async () => ({ name: ${JSON.stringify(t.openFile ?? '')}, async getFile() { return new Blob([new Uint8Array(opened)]); } });
     k.files.ask = async () => 'drop';
     for (const [key, v] of Object.entries(${JSON.stringify(t.draft ?? {})})) k.settings[key].set(v);
     for (const [key, v] of Object.entries(${JSON.stringify(t.prefs ?? {})})) k.prefs[key].set(v);

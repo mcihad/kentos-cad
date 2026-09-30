@@ -32,6 +32,8 @@ export const ICONS = {
   polygon: `<path d="m3.8 8 6-4.5 6.5 3.5-1.8 9H5.6z" fill="currentColor" fill-opacity=".14"/>${grip(3.8, 8)}${grip(9.8, 3.5)}${grip(16.3, 7)}${grip(14.5, 16)}${grip(5.6, 16)}`,
   spline: `<path d="M3 15c2.6-8.5 5.8-8.5 7 0 1.2 8.2 4.5 4 7-9"/>${grip(3, 15)}${grip(17, 6)}`,
   text: '<path d="M4.5 5V3.8h11V5M10 3.8v12.4M7.5 16.2h5"/>',
+  // Metin dosyası yerleştir (docs/adr/0145 §6): a page with its corner turned, a T on it.
+  textFile: '<path d="M5 2.5h7l3 3v12H5z"/><path d="M12 2.5v3h3"/><path d="M7.5 9.5h5M10 9.5v5"/>',
   // Bul ve değiştir (docs/adr/0145 §6): the looking glass, and an arrow to what the words become.
   findReplace: '<circle cx="8" cy="8" r="4.3"/><path d="m11.1 11.1 2.4 2.4"/><path d="M10.5 17h6.5m-2-2 2 2-2 2"/>',
   // Okunur yap (docs/adr/0145 §6): a T inside the turning arrow.

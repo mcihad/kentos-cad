@@ -257,6 +257,8 @@ pub enum Message {
     /// Blok ekle's Öznitelik değerleri (attribute_values.rs).
     AttributeValues(crate::attribute_values::Event),
     FindReplace(crate::find_replace::Event),
+    /// Metin dosyası yerleştir's file: its name and bytes, or none (text_file.rs).
+    TextFile(Option<(String, Vec<u8>)>),
     /// The rollover card's wait is over, for this hover (hover_card.rs).
     HoverCard(u64),
     /// The pointer rested on a snap past the tracking dwell (tracking.rs).
@@ -408,6 +410,8 @@ pub struct App {
     pub(crate) attribute_values: Option<crate::attribute_values::Window>,
     /// Bul ve değiştir's window, while it is open (find_replace.rs).
     pub(crate) find_replace: Option<crate::find_replace::Window>,
+    /// Metin dosyası yerleştir asked for its file: the dialog opens after the update (text_file.rs).
+    pub(crate) text_file_wanted: bool,
     pub(crate) text_field_select: bool,
     pub(crate) text_field_release: bool,
     /// Öznitelikler's closed sections, by id, while the app runs (the web's `collapsed`).
@@ -627,6 +631,7 @@ impl App {
             block_attributes: None,
             attribute_values: None,
             find_replace: None,
+            text_file_wanted: false,
             text_field_select: false,
             text_field_release: false,
             props_closed: std::collections::HashSet::new(),
@@ -839,6 +844,7 @@ impl App {
             self.blocks_tasks(),
             self.attribute_values_tasks(),
             self.find_replace_tasks(),
+            self.text_file_tasks(),
             self.follow_hover(),
             self.follow_tracking(),
             self.follow_log(Instant::now()),
@@ -984,6 +990,7 @@ impl App {
             Message::BlockAttributes(event) => return self.block_attributes_event(event),
             Message::AttributeValues(event) => self.attribute_values_event(event),
             Message::FindReplace(event) => return self.find_replace_event(event),
+            Message::TextFile(file) => self.text_file_given(file),
             Message::HoverCard(version) => self.hover_card_due(version),
             Message::TrackDwell(number) => {
                 self.tracking.dwell_due(number);

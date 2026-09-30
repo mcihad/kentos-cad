@@ -109,12 +109,50 @@ fn find_window(app: &mut App) {
     }
 }
 
+/// Metin dosyası yerleştir (4d): a file of parcel names read through the
+/// picker, Yazı at 3 mm and orta sol; the lines' boxes about the pointer.
+fn text_file(app: &mut App) {
+    open(app, texts_ground());
+    let file = std::env::temp_dir().join("kentos-parseller.txt");
+    std::fs::write(
+        &file,
+        "Ada 101 Parsel 1\nAda 101 Parsel 2\nAda 101 Parsel 3\n\nAda 102 Parsel 1\nAda 102 Parsel 2\n",
+    )
+    .expect("the scene's file");
+    app.picker = crate::app::Picker::File(file);
+    run(app, "tool.text");
+    typed(app, "Y");
+    typed(app, "3");
+    let _ = app.update(Message::PromptChoice("H", "sol orta"));
+    let _ = app.update(Message::Run("tool.cancel"));
+    let task = app.update(Message::Run("tool.placeTextFile"));
+    crate::files_testing::drive(app, task);
+    // The view drawn back so that the six lines, 3 m high, fit in it.
+    let centre = crate::tools_scenes::at(app, [26.0, 12.0]);
+    let _ = app.update(Message::Viewport(crate::viewport::Event::Zoomed {
+        factor: 0.6,
+        at: centre,
+    }));
+    forget(app);
+    hover(app, TEXT_FILE_AT);
+}
+
+/// Where the first line goes: 1.6 of the web's `u` (10 m here) left of the
+/// ground's centre and 3 × 1.5 × 3 m over Ada 101's line, so that the empty
+/// fourth line falls on Ada 101, as the web's `FILE_AT` puts it.
+const TEXT_FILE_AT: [f64; 2] = [10.0, 25.5];
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
         ("yazi-secenekleri", tool),
         ("yazi-oznitelikler", |app| props(app, &[ADA])),
         ("yazi-oznitelikler-coklu", |app| props(app, &[ADA, YOL])),
         ("bul-degistir", find_window),
+        ("metin-dosyasi", text_file),
+        ("metin-dosyasi-sonuc", |app| {
+            text_file(app);
+            crate::tools_scenes::click(app, TEXT_FILE_AT);
+        }),
         ("okunur-yap-secim", upside),
         ("okunur-yap-sonuc", |app| {
             upside(app);

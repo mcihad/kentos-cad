@@ -124,6 +124,7 @@ class CreateOperation(_StrEnum):
     - ``intersectPoint``: Kesişim noktası: the point where two distances, two bearings or two lines meet.
     - ``dimensionChain``: Zincir ölçü: the next dimension of a chain.
     - ``dimensionBaseline``: Baz ölçü: a dimension measured from the base dimension's first point.
+    - ``textFile``: Metin dosyası yerleştir (docs/adr/0145 §6): a text file's lines as texts.
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -139,9 +140,10 @@ class CreateOperation(_StrEnum):
     INTERSECT_POINT = "intersectPoint"
     DIMENSION_CHAIN = "dimensionChain"
     DIMENSION_BASELINE = "dimensionBaseline"
+    TEXT_FILE = "textFile"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 

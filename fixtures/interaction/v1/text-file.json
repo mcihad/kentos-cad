@@ -1,0 +1,20 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "text-file",
+  "title": "Metin dosyası yerleştir (ADR 0145 §6): araç başlarken dosya sorulur; satırlar Yazı'nın seçenekleriyle alt alta, 1,5 yükseklik aralıkla yazılır, boş satır yerini tutar; tek adımda geri alınır",
+  "source": "Web'in PlaceTextFileTool'u (textFileTool.ts), masaüstünün kentos_interaction::text_file'ı; cad.entities.create textFile, ADR 0145",
+  "covers": ["UX-01", "CMD-04"],
+  "document": "empty.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.125 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.125,
+  "openFile": "satirlar.txt",
+  "steps": [
+    { "run": "tool.placeTextFile", "note": "Araç başlarken metin dosyası sorulur (iz satirlar.txt'yi verir).", "expect": { "tool": "placeTextFile" } },
+    { "move": [2, 8], "note": "Satırların kutuları imleçle gelir.", "expect": { "prompt": "Metin dosyası yerleştir: ilk satırın başlangıcına tıklayın [“satirlar.txt”: 3 yazı; Yazı'nın seçenekleriyle: 2.5 mm, 0°, sol taban]", "entities": 0 } },
+    { "click": [2, 8], "note": "Üç satır alt alta 1,5 yükseklik aralıkla yazılır, boş satır yerini tutar; araç biter.", "expect": { "tool": "select", "entities": 3, "log": "success", "logged": ["“satirlar.txt”: 3 satır yazı olarak yerleştirildi."], "objects": [{ "id": 1, "kind": "text", "text": "Ada 101", "points": [[2, 8]] }, { "id": 2, "kind": "text", "text": "Ada 102", "points": [[2, 4.25]] }, { "id": 3, "kind": "text", "text": "Ada 104", "points": [[2, -3.25]] }] } },
+    { "key": "Ctrl+Z", "note": "Tek adımda geri alınır.", "expect": { "entities": 0, "canUndo": false } }
+  ]
+}

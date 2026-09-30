@@ -25696,6 +25696,11 @@
                 "const": "dimensionBaseline",
                 "description": "Baz ölçü: a dimension measured from the base dimension's first point.",
                 "type": "string"
+              },
+              {
+                "const": "textFile",
+                "description": "Metin dosyası yerleştir (docs/adr/0145 §6): a text file's lines as texts.",
+                "type": "string"
               }
             ]
           },

@@ -140,6 +140,7 @@
     "tool.simplify",
     "tool.readable",
     "text.findReplace",
+    "tool.placeTextFile",
     "tool.cleanup",
     "tool.matchProperties",
     "tool.sector",

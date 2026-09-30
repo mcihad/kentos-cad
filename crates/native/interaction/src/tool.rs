@@ -99,6 +99,9 @@ pub enum ViewChange {
     /// ([`crate::block_insert`], docs/adr/0144 §7): the host asks their
     /// values and gives them back with [`Tool::values_given`].
     AttributeValues(kentos_contracts::BlockId),
+    /// Metin dosyası yerleştir's file ([`crate::text_file`], docs/adr/0145 §6):
+    /// the host picks one and gives back its name and bytes with [`Tool::file_given`].
+    OpenTextFile,
 }
 
 /// Where a text field opens and how its text will look: its start, height in
@@ -762,6 +765,9 @@ pub trait Tool {
     /// The answer of a text field it asked for ([`ViewChange::Text`]): the
     /// typed text (Enter, a click elsewhere), or none (Esc).
     fn text_typed(&mut self, _text: Option<&str>, _cx: &mut Context<'_>) {}
+    /// The file it asked for ([`ViewChange::OpenTextFile`]): its name and
+    /// bytes, or none (the picker cancelled).
+    fn file_given(&mut self, _file: Option<(&str, &[u8])>, _cx: &mut Context<'_>) {}
     /// The answer of the values it asked for ([`ViewChange::AttributeValues`]):
     /// the attributes to write (Yerleştir), or none (Vazgeç, Esc).
     fn values_given(

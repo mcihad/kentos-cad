@@ -55,6 +55,12 @@ export class TextTool extends PointInputTool {
   /** The last text this run wrote: Artır's next field starts from it. */
   private lastText: string | null = null;
 
+  /** Yazı's options as they are now: Metin dosyası yerleştir writes its lines with them (docs/adr/0145 §6). */
+  static options(): { heightMm: number; angle: number; align: TextAlign | null; widthFactor: number; mask: boolean } {
+    const S = TextTool;
+    return { heightMm: S.heightMm, angle: S.angle, align: S.align, widthFactor: S.widthFactor, mask: S.mask };
+  }
+
   protected promptFor(): string {
     const S = TextTool;
     switch (this.stage) {

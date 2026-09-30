@@ -164,6 +164,7 @@ pub mod split;
 pub mod station_offset;
 pub mod stretch;
 pub mod text;
+pub mod text_file;
 mod tool;
 pub mod trim;
 pub mod vertex;

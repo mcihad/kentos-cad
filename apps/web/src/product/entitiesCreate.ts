@@ -45,6 +45,7 @@ export const CREATE_LABEL: Record<CreateOperation, string> = {
   intersectPoint: 'Kesişim noktası',
   dimensionChain: 'Zincir ölçü',
   dimensionBaseline: 'Baz ölçü',
+  textFile: 'Metin dosyası yerleştir',
 };
 
 /** The checks in the contract's order: why nothing may be written, or the warnings when it may. */

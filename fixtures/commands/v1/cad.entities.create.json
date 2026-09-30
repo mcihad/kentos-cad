@@ -321,6 +321,13 @@
       ]
     },
     {
+      "name": "Metin dosyası yerleştir: satırların yazıları tek adımda, adı “Metin dosyası yerleştir” (ADR 0145 §6)",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "textFile", "objects": [{"geometry": {"kind": "text", "p": {"x": 487060, "y": 4420100}, "text": "Ada 101", "height": 2, "rotation": 0, "align": "middleCenter"}}, {"geometry": {"kind": "text", "p": {"x": 487060, "y": 4420097}, "text": "Ada 102", "height": 2, "rotation": 0, "align": "middleCenter"}}]}, "result": {"status": "completed", "output": {"created": ["$uidOf:3", "$uidOf:4"], "ids": [3, 4], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4], "entities": {"3": {"kind": "text", "p": {"x": 487060, "y": 4420100}, "text": "Ada 101", "height": 2, "rotation": 0, "align": "middleCenter", "id": 3, "layerId": "yapi", "attrs": {}}, "4": {"kind": "text", "p": {"x": 487060, "y": 4420097}, "text": "Ada 102", "height": 2, "rotation": 0, "align": "middleCenter", "id": 4, "layerId": "yapi", "attrs": {}}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Metin dosyası yerleştir", "expect": {"ids": [1, 2], "canUndo": false}}
+      ]
+    },
+    {
       "name": "yazının genişlik çarpanı 0'dan büyük, en çok 100: invalid_width_factor, yolu nesnenin; sonlu olmayan önce not_finite (ADR 0145)",
       "steps": [
         {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "text", "p": {"x": 487060, "y": 4420100}, "text": "Ada 101", "height": 2, "rotation": 30}}, {"geometry": {"kind": "text", "p": {"x": 487060, "y": 4420100}, "text": "Ada 101", "height": 2, "rotation": 30, "widthFactor": 0}}]}, "result": {"status": "failed", "error": {"code": "invalid_width_factor", "message": "Yazının genişlik çarpanı 0'dan büyük, en çok 100 olmalı; 0 verildi. Çarpanı bu aralıkta verin ya da alanı kaldırın (1).", "path": "objects[1].geometry.widthFactor"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},

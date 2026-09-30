@@ -261,7 +261,10 @@ impl<'a> Player<'a> {
             field_at: None,
             field_fresh: false,
         };
-        player.app.picker = Picker::File(player.file.clone());
+        player.app.picker = Picker::File(match &trace.open_file {
+            Some(name) => super::folder().join(name),
+            None => player.file.clone(),
+        });
         // Object tracking's dwell passes on the player's clock (`rest`), never
         // on a thread's: a move that crosses a snap acquires nothing (docs/adr/0085).
         player.app.dwell_on_time = false;

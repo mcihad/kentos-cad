@@ -541,9 +541,10 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   kotu (ADR 0142, `CAD-13`).
 - Sürmekte: yazı ekleri ([ADR 0145](docs/adr/0145-text-extras.md), TODOS.md `CAD-15`, `.kcad` şema 7):
   hiza, genişlik çarpanı, zemin; Okunur yap, Artır, Bul ve değiştir, Metin dosyası yerleştir; DXF ve NCZ
-  hizası tahminsiz. 1–3. adımlar (sözleşme ve şema 7, çekirdek ve çizim, komutlar), 4a (Yazı'nın seçenekleri,
-  Öznitelikler'in satırları, komut satırının “Diğer” çipi), 4b (Okunur yap) ve 4c (Bul ve değiştir) tamam; sırada 4d Metin
-  dosyası yerleştir, sonra 5. adım biçimler (DXF, NCZ). Ondan sonra, sahibin sırasıyla (ADR 0143 Bağlam):
+  hizası tahminsiz. 1–4. adımlar tamam: sözleşme ve şema 7, çekirdek ve çizim, komutlar; araçlar ve arayüz
+  (4a Yazı'nın seçenekleri, Öznitelikler'in satırları, komut satırının “Diğer” çipi; 4b Okunur yap; 4c Bul ve
+  değiştir; 4d Metin dosyası yerleştir). Sırada 5. adım biçimler (DXF okuma ve yazma, NCZ çapaları; ADR 0145 §7).
+  Ondan sonra, sahibin sırasıyla (ADR 0143 Bağlam):
   lider ve yeni ölçü türleri. Her biri `.kcad` şemasını değiştiren kendi özelliği ve şema adımıyla gelir;
   önce ADR yazılır, adımlar ADR 0142–0145'teki gibi iki platformda, ortak fixture'larla ilerler.
 - Bilinen açık: web `pnpm e2e` duman testinde üç test ADR 0143'ten önce de düşüyordu: “toolbox
