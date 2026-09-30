@@ -226,6 +226,19 @@ export function readEntityList(list: readonly unknown[], layers: ReadonlySet<str
   }
 }
 
+/**
+ * Block definitions that come from outside a drawing file (a DXF import,
+ * docs/adr/0144 §5) checked exactly like a file's: every field of each and
+ * of its objects, then the block rules over the list.
+ */
+export function readBlockDefinitions(list: unknown): { ok: true; blocks: BlockDefinition[] } | { ok: false; error: string } {
+  try {
+    return { ok: true, blocks: definitions(list) };
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
+  }
+}
+
 // ── Validation ─────────────────────────────────────────────────────────
 // A large drawing has millions of vertices: the checks make no string and
 // no copy unless one fails. `w` is an object's own place ("Nesne 12 (arc)"),

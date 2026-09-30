@@ -28,11 +28,11 @@ export function field(label: string, control: Child, hint?: Child, size: 'auto' 
   return h('div', { class: `io-field${size === 'auto' ? '' : ` io-field--${size}`}` }, h('span', { class: 'io-field__label' }, label), control, hint ? h('p', { class: 'io-field__hint' }, hint) : null);
 }
 
-/** A checkbox with its text, laid out as a field (label above) so a row lines up. */
-export function checkField(label: string, text: string, checked: boolean, onChange: (v: boolean) => void, key: string): HTMLElement {
+/** A checkbox with its text, laid out as a field (label above, an optional hint under it) so a row lines up. */
+export function checkField(label: string, text: string, checked: boolean, onChange: (v: boolean) => void, key: string, hint?: string): HTMLElement {
   const box = h('input', { type: 'checkbox', checked, dataset: { key } });
   box.addEventListener('change', () => onChange(box.checked));
-  return field(label, h('label', { class: 'io-check' }, box, text));
+  return field(label, h('label', { class: 'io-check' }, box, text), hint);
 }
 
 export interface Choice<T extends string> {

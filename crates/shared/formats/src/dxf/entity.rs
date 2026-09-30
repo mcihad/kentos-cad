@@ -110,6 +110,8 @@ pub enum Kind {
         width: f64,
         style: String,
         hidden: bool,
+        /// An ATTRIB's tag (group 2): the insert's attribute it gives a value to; empty for a TEXT.
+        tag: String,
     },
     MText {
         p: P3,
@@ -447,6 +449,11 @@ pub fn parse(
             width: g.num_or(41, 1.0)?,
             style: g.string(7),
             hidden: name == "ATTRIB" && g.int(70) & 1 == 1,
+            tag: if name == "ATTRIB" {
+                g.string(2)
+            } else {
+                String::new()
+            },
         },
         "MTEXT" => {
             // The text is split over 3 groups (250-character chunks) and a final 1.

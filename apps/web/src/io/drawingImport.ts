@@ -3,7 +3,7 @@ import type { Entity as ContractEntity } from '../contracts/generated/Entity';
 import type { CadDocument } from '../model/document';
 import type { NewEntity } from '../model/entities';
 import { readEntityList } from '../model/snapshot';
-import { makeLayers, prepareImport, unusable, type ImportPlan, type Prepared } from './apply';
+import { addBlocks, importedBlocks, makeLayers, pointAt, prepareImport, strayInsert, unusable, type ImportPlan, type ImportedBlocks, type Prepared } from './apply';
 import type { ImportedDrawing } from './client';
 import { ColumnsReader } from './columns';
 
@@ -12,9 +12,10 @@ import { ColumnsReader } from './columns';
  * the drawing. A small one goes in at once (`importedEntities`, then
  * `applyImport`); a large one a slice of time at a time (`ProgressiveImport`),
  * so the page keeps drawing and the objects appear as they go in, yet as ONE
- * undo step: its layers and every object are made inside a document group,
- * which `stop` reverts whole. The desktop does the same with the same
- * numbers (apps/desktop/src/exchange/apply.rs `Progressive`).
+ * undo step: its layers, its block definitions (docs/adr/0144 §5) and every
+ * object are made inside a document group, which `stop` reverts whole. The
+ * desktop does the same with the same numbers (apps/desktop/src/exchange/apply.rs
+ * `Progressive`).
  */
 
 /** Up to this many objects go in at once; more go in a slice of time at a time. */
@@ -56,36 +57,52 @@ export class ProgressiveImport {
   readonly total: number;
   /** The layers made for the import, by name. */
   readonly created: readonly string[];
+  /** The block definitions taken in, and the names changed on the way. */
+  readonly blocks: number;
+  readonly renamed: readonly [string, string][];
   private readonly doc: CadDocument;
   private readonly label: string;
   private readonly prepared: Prepared;
+  /** The reader's block id → the drawing's, and the drawing's ids an insert may place. */
+  private readonly ids: ReadonlyMap<string, string>;
+  private readonly known: ReadonlySet<string>;
   private readonly reader: ColumnsReader;
   private readonly group: { end(): void; cancel(): void };
   private read = 0;
   private written = 0;
   private over = false;
 
-  private constructor(doc: CadDocument, d: ImportedDrawing, plan: ImportPlan, prepared: Prepared) {
+  private constructor(doc: CadDocument, d: ImportedDrawing, plan: ImportPlan, prepared: Prepared, blocks: ImportedBlocks) {
     this.doc = doc;
     this.label = plan.label;
     this.prepared = prepared;
+    this.ids = blocks.ids;
+    this.known = new Set(blocks.ids.values());
+    this.blocks = blocks.defs.length;
+    this.renamed = blocks.renamed;
     this.reader = new ColumnsReader(d.columns);
     this.total = d.result.layers.reduce((n, l) => n + (prepared.targets.has(l.name) ? l.count : 0), 0);
     this.group = doc.beginGroup(plan.label);
     try {
-      this.created = doc.transact(plan.label, () => makeLayers(doc, plan, prepared));
+      this.created = doc.transact(plan.label, () => {
+        const made = makeLayers(doc, plan, prepared);
+        addBlocks(doc, blocks);
+        return made;
+      });
     } catch (e) {
       this.group.cancel();
       throw e;
     }
   }
 
-  /** Opens the group and makes the layers; the reason in words when the import cannot go in. */
+  /** Opens the group, makes the layers and adds the blocks; the reason in words when the import cannot go in. */
   static start(doc: CadDocument, d: ImportedDrawing, plan: ImportPlan): ProgressiveImport | { error: string } {
     const prepared = prepareImport(doc, plan);
     if ('error' in prepared) return prepared;
+    const blocks = importedBlocks(doc, d.result.blocks);
+    if ('error' in blocks) return blocks;
     try {
-      return new ProgressiveImport(doc, d, plan, prepared);
+      return new ProgressiveImport(doc, d, plan, prepared, blocks);
     } catch (e) {
       return { error: e instanceof Error ? e.message : String(e) };
     }
@@ -118,11 +135,13 @@ export class ProgressiveImport {
           const { uid: _placeholder, ...e } = r.next();
           this.read++;
           const layerId = targets.get(e.layerId);
-          if (layerId) chunk.push({ ...e, layerId, id: chunk.length + 1 });
+          if (layerId) chunk.push(pointAt({ ...e, layerId, id: chunk.length + 1 }, this.ids));
         }
         if (chunk.length) {
           const checked = readEntityList(chunk, valid, 'İçe aktarılan nesne', this.written);
           if (!checked.ok) return this.fail(unusable(checked.error));
+          const stray = strayInsert(checked.entities, this.known, this.written);
+          if (stray) return this.fail(stray);
           this.written += this.doc.transact(this.label, () => this.doc.addMany(checked.entities as unknown as NewEntity[], this.label)).length;
         }
         if (performance.now() - start >= budgetMs) return 'more';

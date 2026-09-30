@@ -1,16 +1,20 @@
+import type { BlockDefinition as ContractBlock } from '../contracts/generated/BlockDefinition';
 import type { Entity as ContractEntity } from '../contracts/generated/Entity';
 import { foldTurkish } from '../core/text';
+import { uuidv7 } from '../core/uuid';
+import { importNames, type BlockDefinition } from '../model/blocks';
 import type { CadDocument } from '../model/document';
 import type { NewEntity } from '../model/entities';
 import type { LayerNode, LayerStyle } from '../model/layers';
-import { readEntityList } from '../model/snapshot';
+import { readBlockDefinitions, readEntityList } from '../model/snapshot';
 
 /**
- * Puts what a reader produced into the drawing. The objects are checked
- * like a `.kcad` file's first, so nothing changes if one is unusable; then
- * the new layers are made and every object goes in, all as ONE undo step
- * with one change event (CLAUDE.md §4.8, §7): undo takes the objects and
- * the layers made for them.
+ * Puts what a reader produced into the drawing. The objects and block
+ * definitions are checked like a `.kcad` file's first, so nothing changes if
+ * one is unusable; then the new layers are made, the definitions added and
+ * every object goes in, all as ONE undo step with one change event
+ * (CLAUDE.md §4.8, §7): undo takes the objects, the blocks and the layers
+ * made for them. The desktop's is apps/desktop/src/exchange/apply.rs.
  */
 
 /** Where the objects of one source layer go. */
@@ -27,7 +31,77 @@ export interface ImportPlan {
   group?: string;
 }
 
-export type Applied = { ok: true; ids: number[]; created: string[] } | { ok: false; error: string };
+export type Applied =
+  | {
+      ok: true;
+      ids: number[];
+      created: string[];
+      /** The block definitions taken in, and the names changed on the way: as the file says, as it went in. */
+      blocks: number;
+      renamed: [string, string][];
+    }
+  | { ok: false; error: string };
+
+/**
+ * The blocks an import brings (docs/adr/0144 §5), ready to go in: each a
+ * new id and a name the drawing does not have yet (`importNames`), the
+ * inserts among their objects pointing at the new ids.
+ */
+export interface ImportedBlocks {
+  readonly defs: readonly BlockDefinition[];
+  /** The reader's block id → the drawing's. */
+  readonly ids: ReadonlyMap<string, string>;
+  readonly renamed: [string, string][];
+}
+
+/** The message for block definitions a reader produced that the drawing refuses. */
+const unusableBlocks = (why: string) => `Dosyadan okunan bloklar çizime uymuyor (${why}). Hiçbir şey eklenmedi; dosyayla birlikte bildirin.`;
+
+/** Checks a reader's block definitions and readies them for the drawing (nothing changes); the reason in words when one is unusable. */
+export function importedBlocks(doc: CadDocument, blocks: readonly ContractBlock[] = []): ImportedBlocks | { error: string } {
+  if (!blocks.length) return { defs: [], ids: new Map(), renamed: [] };
+  const read = readBlockDefinitions(blocks);
+  if (!read.ok) return { error: unusableBlocks(read.error) };
+  const names = importNames(
+    doc.blocks.value.map((b) => b.name),
+    read.blocks.map((b) => b.name),
+  );
+  const ids = new Map(read.blocks.map((b) => [b.id, uuidv7()]));
+  const renamed: [string, string][] = [];
+  const defs = read.blocks.map((b, i): BlockDefinition => {
+    if (names[i] !== b.name) renamed.push([b.name, names[i]]);
+    return { ...b, id: ids.get(b.id)!, name: names[i], entities: b.entities.map((e) => pointAt(e, ids)) };
+  });
+  return { defs, ids, renamed };
+}
+
+/** Adds the definitions (inside the import's transaction); a refusal in the import's words. */
+export function addBlocks(doc: CadDocument, blocks: ImportedBlocks): void {
+  for (const b of blocks.defs) {
+    try {
+      doc.addBlock(b);
+    } catch (e) {
+      throw new Error(unusableBlocks(e instanceof Error ? e.message : String(e)));
+    }
+  }
+}
+
+/**
+ * The first object placing a block the import did not bring (a reader never
+ * makes one, and the drawing could not save it), in the import's words;
+ * `before` objects were checked in earlier chunks.
+ */
+export function strayInsert(entities: readonly { kind: string; block?: string }[], known: ReadonlySet<string>, before = 0): string | null {
+  const i = entities.findIndex((e) => e.kind === 'insert' && !known.has(e.block ?? ''));
+  return i < 0 ? null : unusable(`İçe aktarılan nesne ${before + i + 1} (insert) › blok: ${entities[i].block} çizimde tanımlı değil`);
+}
+
+/** An insert placing its block by the id it has in the drawing. */
+export function pointAt<E extends { kind: string }>(e: E, ids: ReadonlyMap<string, string>): E {
+  if (e.kind !== 'insert') return e;
+  const id = ids.get((e as E & { block: string }).block);
+  return id ? { ...e, block: id } : e;
+}
 
 /** The project layer with this name, ignoring case and Turkish marks (DXF layer names ignore case). */
 export function layerNamed(doc: CadDocument, name: string): LayerNode | undefined {
@@ -108,22 +182,31 @@ export function makeLayers(doc: CadDocument, plan: ImportPlan, prepared: Prepare
 /** The message for objects a reader produced that the drawing refuses. */
 export const unusable = (why: string) => `Dosyadan okunan nesneler çizime uymuyor (${why}). Hiçbir şey eklenmedi; dosyayla birlikte bildirin.`;
 
-export function applyImport(doc: CadDocument, entities: readonly ContractEntity[], plan: ImportPlan): Applied {
+export function applyImport(doc: CadDocument, entities: readonly ContractEntity[], plan: ImportPlan, blocks: readonly ContractBlock[] = []): Applied {
   const prepared = prepareImport(doc, plan);
   if ('error' in prepared) return { ok: false, error: prepared.error };
+  const imported = importedBlocks(doc, blocks);
+  if ('error' in imported) return { ok: false, error: imported.error };
   // Checked with the final layer ids and numbered 1…n; the document gives them their own ids.
   const chosen: unknown[] = [];
   for (const e of entities) {
     const layerId = prepared.targets.get(e.layerId);
-    if (layerId) chosen.push({ ...e, layerId, id: chosen.length + 1 });
+    if (layerId) chosen.push(pointAt({ ...e, layerId, id: chosen.length + 1 }, imported.ids));
   }
   const checked = readEntityList(chosen, prepared.valid, 'İçe aktarılan nesne');
   if (!checked.ok) return { ok: false, error: unusable(checked.error) };
+  const stray = strayInsert(checked.entities, new Set(imported.ids.values()));
+  if (stray) return { ok: false, error: stray };
 
   let created: string[] = [];
-  const added = doc.transact(plan.label, () => {
-    created = makeLayers(doc, plan, prepared);
-    return doc.addMany(checked.entities as unknown as NewEntity[], plan.label);
-  });
-  return { ok: true, ids: added.map((e) => e.id), created };
+  try {
+    const added = doc.transact(plan.label, () => {
+      created = makeLayers(doc, plan, prepared);
+      addBlocks(doc, imported);
+      return doc.addMany(checked.entities as unknown as NewEntity[], plan.label);
+    });
+    return { ok: true, ids: added.map((e) => e.id), created, blocks: imported.defs.length, renamed: imported.renamed };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
 }

@@ -3,6 +3,7 @@ import type { FileKind, PickedFile } from '../../app/fileIO';
 import type { Bounds } from '../../contracts/generated/Bounds';
 import type { ImportLayer } from '../../contracts/generated/ImportLayer';
 import type { ReportItem } from '../../contracts/generated/ReportItem';
+import type { ImportResult } from '../../contracts/generated/ImportResult';
 import { applyImport, layerNamed, type ImportPlan, type LayerTarget } from '../../io/apply';
 import { formats, type ImportedDrawing } from '../../io/client';
 import { AT_ONCE, ProgressiveImport, importedEntities, viewOf } from '../../io/drawingImport';
@@ -10,21 +11,26 @@ import { KcadError } from '../../io/kcad';
 import { h, replaceChildren } from '../dom';
 import { colorSwatch } from '../layers/swatch';
 import { Dialog } from '../widgets/Dialog';
-import { CrsQuestion, extentLine, fileLine, kindCounts, reportLines, reportText, summaryLine } from './common';
+import { importNames } from '../../model/blocks';
+import { checkField, CrsQuestion, extentLine, fileLine, kindCounts, reportLines, reportText, summaryLine } from './common';
 import { writeImport } from './importing';
 
 /**
  * DXF içe aktar and NCZ içe aktar (docs/adr/0138). The worker reads the
  * whole file once, in the module of its format (crates/wasm/dxf-wasm,
  * crates/wasm/ncz-wasm, loaded the first time such a file is imported), and
- * says how far it is; the window shows the source's layers with their object
- * counts and where each goes (a project layer with the same name, or a new
- * layer in a group named after the file), the report, and the coordinate
- * system question (an NCZ says its system; a DXF says nothing). Everything
- * chosen goes in as one undo step: at once when it is small, a frame at a
- * time when it is large (io/drawingImport.ts), the window closing and a panel
- * counting the objects while the drawing fills in. The desktop's window is
- * the same (apps/desktop/src/exchange/drawing_import.rs).
+ * says how far it is; a DXF's blocks are kept as definitions its inserts
+ * place, or opened into their objects when Blokları patlat is chosen
+ * (docs/adr/0144 §5; changing it reads the file again). The window shows the
+ * source's layers with their object counts and where each goes (a project
+ * layer with the same name, or a new layer in a group named after the file),
+ * the report, and the coordinate system question (an NCZ says its system; a
+ * DXF says nothing). Everything chosen goes in as one undo step, the block
+ * definitions with it, each under a name the drawing does not have yet
+ * (“Kapı (2)”): at once when it is small, a frame at a time when it is large
+ * (io/drawingImport.ts), the window closing and a panel counting the objects
+ * while the drawing fills in. The desktop's window is the same
+ * (apps/desktop/src/exchange/drawing_import.rs).
  */
 
 /** The file's format: what it is read with and what the window says. */
@@ -51,6 +57,33 @@ export function openNczImport(ctx: AppContext, file: PickedFile, kind: FileKind)
 const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
 const count = (n: number) => n.toLocaleString('tr-TR');
 
+/** Blokları patlat, in the desktop's words (apps/desktop/src/exchange/drawing_import.rs). */
+const EXPLODE = 'Blokları patlat';
+const EXPLODE_HINT =
+  'Kapalıyken bloklar çizime blok tanımı olarak girer, yerleştirmeleri blok kalır; açıkken yerlerine içlerindeki nesneler alınır. Değiştirince dosya yeniden okunur.';
+/** Renamed blocks named in a line, at most. */
+const RENAMES_SHOWN = 5;
+
+/** ““KAPI” → “KAPI (2)”, “Rögar” → “Rögar (2)” ve 3 tane daha”. */
+function renames(list: readonly [string, string][]): string {
+  const shown = list.slice(0, RENAMES_SHOWN).map(([was, now]) => `“${was}” → “${now}”`).join(', ');
+  const more = list.length - RENAMES_SHOWN;
+  return more > 0 ? `${shown} ve ${more} tane daha` : shown;
+}
+
+/** The block definitions that go in with the objects, and the names the drawing already has that they will not take. */
+export function blocksLine(taken: readonly string[], r: ImportResult): string | null {
+  const blocks = r.blocks ?? [];
+  if (!blocks.length) return null;
+  const names = importNames(
+    taken,
+    blocks.map((b) => b.name),
+  );
+  const renamed = blocks.flatMap((b, i): [string, string][] => (names[i] !== b.name ? [[b.name, names[i]]] : []));
+  const line = `${blocks.length} blok tanımı da alınacak; yerleştirmeleri blok olarak kalır.`;
+  return renamed.length ? `${line} Adı çizimde olan ${renamed.length} blok yeni adla alınacak: ${renames(renamed)}.` : line;
+}
+
 /** At least this much around what was imported (one point alone is shown in context). */
 const MIN_SPAN = 20;
 
@@ -67,8 +100,11 @@ class DrawingImportDialog {
   private closed = false;
   /** Source layer names left out by the user. */
   private readonly excluded = new Set<string>();
+  /** Blokları patlat (a DXF's): its inserts opened into their objects. */
+  private explode = false;
   private readonly crs: CrsQuestion;
   private readonly fileHost = h('div');
+  private readonly optionsHost = h('div', { class: 'io-row' });
   private readonly layersHost = h('div', { class: 'io-table-wrap' });
   private readonly summaryHost = h('div', { class: 'io-summary' });
   private readonly status = h('span', { class: 'io-status', role: 'status' });
@@ -89,7 +125,7 @@ class DrawingImportDialog {
       title: SOURCE[source].title,
       width: 900,
       className: 'dialog--io',
-      content: [this.fileHost, this.layersHost, this.summaryHost, this.crs.el],
+      content: [this.fileHost, this.optionsHost, this.layersHost, this.summaryHost, this.crs.el],
       footer: [other, this.status, cancel, this.primary],
       onClose: () => {
         this.closed = true;
@@ -100,17 +136,35 @@ class DrawingImportDialog {
     other.addEventListener('click', () => void this.pickAnother());
     cancel.addEventListener('click', () => this.dialog.close());
     this.primary.addEventListener('click', () => this.run());
+    if (source === 'dxf')
+      replaceChildren(
+        this.optionsHost,
+        checkField(
+          'Bloklar',
+          EXPLODE,
+          this.explode,
+          (on) => {
+            this.explode = on;
+            // The same file again: the layers left out stay out.
+            void this.read(true);
+          },
+          'explode',
+          EXPLODE_HINT,
+        ),
+      );
+    else this.optionsHost.hidden = true;
     void this.read();
   }
 
-  private async read(): Promise<void> {
+  /** Reads the file with the window's options; `keep`: the same file again, its layers left out stay out. */
+  private async read(keep = false): Promise<void> {
     // A read still under way (another file picked) ends first: one request at a time goes to the worker.
     if (this.reading !== null) formats().cancel();
     const gen = ++this.generation;
     this.drawing = null;
     this.failed = null;
     this.reading = 0;
-    this.excluded.clear();
+    if (!keep) this.excluded.clear();
     this.render();
     this.say('');
     const progress = (p: { stage: string; done?: number; total?: number }) => {
@@ -119,11 +173,12 @@ class DrawingImportDialog {
       this.showReading();
     };
     try {
-      // The bytes go to the worker without a copy (the window does not need them again).
+      // An NCZ's bytes go to the worker without a copy (the window does not need them again); a
+      // DXF's go as a copy, the file read again when Blokları patlat changes.
       const d =
         this.source === 'ncz'
           ? await formats().readNcz(this.file.bytes, { maxEntities: 0, drawingFont: this.ctx.doc.settings.drawingFont.value }, progress)
-          : await formats().readDxf(this.file.bytes, { maxEntities: 0 }, progress);
+          : await formats().readDxf(this.file.bytes.slice(), { maxEntities: 0, explodeBlocks: this.explode }, progress);
       if (gen !== this.generation || this.closed) return;
       this.drawing = d;
       // An NCZ says what its coordinates are in (its projection blocks); a DXF says nothing.
@@ -245,6 +300,11 @@ class DrawingImportDialog {
         ? summaryLine('ok', `${count(total)} nesne alınacak: ${kindCounts(counts)}.${created ? ` ${created} yeni katman “${this.file.name}” grubunda kurulacak.` : ''}`)
         : summaryLine('warn', 'Alınacak nesne yok; en az bir katman seçin.'),
     ];
+    const blocks = blocksLine(
+      this.ctx.doc.blocks.value.map((b) => b.name),
+      r,
+    );
+    if (blocks) lines.push(summaryLine('info', blocks));
     if (total > AT_ONCE)
       lines.push(summaryLine('info', 'Nesneler çizime parça parça yazılır: pencere kapanır, çizim doldukça görünür, sağ alttaki panel sayar ve Durdur hepsini geri alır.'));
     lines.push(...reportLines(r.report.notes, 'info'), ...reportLines(r.report.skipped, 'warn'));
@@ -286,18 +346,18 @@ class DrawingImportDialog {
     const total = included.reduce((n, l) => n + l.count, 0);
 
     if (total <= AT_ONCE) {
-      const applied = applyImport(ctx.doc, importedEntities(d, new Set(layers.keys())), plan);
+      const applied = applyImport(ctx.doc, importedEntities(d, new Set(layers.keys())), plan, d.result.blocks);
       if (!applied.ok) {
         this.say(applied.error, 'error');
         return;
       }
       this.dialog.close();
       if (view) zoomTo(ctx, view);
-      said(ctx, name, applied.ids.length, layers.size, applied.created, skipped);
+      said(ctx, name, applied.ids.length, layers.size, applied, skipped);
       return;
     }
 
-    // A large file: the layers now, the objects a frame at a time, one undo step.
+    // A large file: the layers and blocks now, the objects a frame at a time, one undo step.
     const work = ProgressiveImport.start(ctx.doc, d, plan);
     if ('error' in work) {
       this.say(work.error, 'error');
@@ -308,7 +368,7 @@ class DrawingImportDialog {
     // The view goes where the file is first, so the drawing fills in before the user's eyes.
     if (view) zoomTo(ctx, view);
     writeImport(ctx, name, work, (w) => {
-      if (w.kind === 'done') said(ctx, name, w.objects, layers.size, work.created, skipped);
+      if (w.kind === 'done') said(ctx, name, w.objects, layers.size, work, skipped);
       else if (w.kind === 'stopped') ctx.log.warn(`“${name}” içe aktarılması durduruldu; çizim olduğu gibi kaldı.`);
       else ctx.log.error(w.error);
     });
@@ -326,9 +386,18 @@ function zoomTo(ctx: AppContext, b: Bounds): void {
   ctx.view.camera.fit({ minX, minY, maxX, maxY });
 }
 
+/** What an import made besides its objects: the new layers, the block definitions and the names changed on the way. */
+interface Made {
+  readonly created: readonly string[];
+  readonly blocks: number;
+  readonly renamed: readonly [string, string][];
+}
+
 /** What went in, said in the message log (the desktop's `import_said`). */
-function said(ctx: AppContext, name: string, objects: number, layers: number, created: readonly string[], skipped: readonly ReportItem[]): void {
-  const into = created.length ? `; ${created.length} yeni katman “${name}” grubunda` : '';
-  ctx.log.success(`“${name}”: ${count(objects)} nesne ${layers} katmana alındı${into}. Tek adımda geri alınabilir.`);
+function said(ctx: AppContext, name: string, objects: number, layers: number, made: Made, skipped: readonly ReportItem[]): void {
+  const into = made.created.length ? `; ${made.created.length} yeni katman “${name}” grubunda` : '';
+  const blocks = made.blocks ? `; ${made.blocks} blok tanımı eklendi` : '';
+  ctx.log.success(`“${name}”: ${count(objects)} nesne ${layers} katmana alındı${into}${blocks}. Tek adımda geri alınabilir.`);
+  if (made.renamed.length) ctx.log.info(`“${name}” içindeki ${made.renamed.length} bloğun adı çizimde vardı; yeni adla alındı: ${renames(made.renamed)}.`);
   if (skipped.length) ctx.log.warn(`“${name}” içinde alınmayanlar: ${skipped.map(reportText).join(' ')}`);
 }

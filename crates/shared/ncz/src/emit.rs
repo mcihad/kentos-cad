@@ -944,6 +944,7 @@ pub fn read(bytes: &[u8], opts: &NczReadOptions, watch: &mut dyn Watch) -> Resul
         bounds: em.bounds,
         declared_crs: crs::declared(&fin),
         view: None,
+        blocks: Vec::new(),
     };
     kentos_formats::import::summarise(&mut result);
     let _ = watch.step(crate::PROGRESS_TOTAL, crate::PROGRESS_TOTAL);
@@ -1038,7 +1039,7 @@ mod tests {
         assert_eq!(zs(7), None);
         assert_eq!((zs(8), zs(9), zs(10)), (None, None, None));
         // The heights are counted where every import says it: as a fact of the file.
-        let mut result = ImportResult { entities: out.clone(), layers: Vec::new(), report, bounds: None, declared_crs: None, view: None };
+        let mut result = ImportResult { entities: out.clone(), layers: Vec::new(), report, bounds: None, declared_crs: None, view: None, blocks: Vec::new() };
         kentos_formats::import::summarise(&mut result);
         assert!(result.report.source.iter().any(|f| (f.label.as_str(), f.value.as_str()) == ("Kotlu nesne", "5")), "{:?}", result.report.source);
     }

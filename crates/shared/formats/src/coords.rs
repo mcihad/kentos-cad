@@ -692,6 +692,7 @@ pub fn read(bytes: &[u8], opts: &CoordReadOptions) -> CoordRead {
                 bounds,
                 declared_crs: None,
                 view: None,
+                blocks: Vec::new(),
             };
             crate::import::summarise(&mut result);
             result

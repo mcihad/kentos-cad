@@ -297,6 +297,7 @@ impl<'a> Reader<'a> {
             let head = self.lex.until_zero()?;
             let g = |code: i32| head.iter().find(|x| x.code == code);
             let name = g(2).map(|x| self.dec.string(x.value)).unwrap_or_default();
+            let description = g(4).map(|x| self.dec.string(x.value)).unwrap_or_default();
             let coord = |code: i32| g(code).and_then(|x| parse_real(x.text())).unwrap_or(0.0);
             let flags = g(70).and_then(|x| parse_int(x.text())).unwrap_or(0);
             let base = [coord(10), coord(20), coord(30)];
@@ -321,9 +322,15 @@ impl<'a> Reader<'a> {
                     Err((reason, line)) => skipped.push((kind, reason, line)),
                 }
             }
+            let key = name.to_uppercase();
+            if !self.lib.blocks.contains_key(&key) {
+                self.lib.order.push(key.clone());
+            }
             self.lib.blocks.insert(
-                name.to_uppercase(),
+                key,
                 Block {
+                    name,
+                    description,
                     base,
                     entities,
                     xref: flags & 4 != 0,
@@ -368,6 +375,28 @@ pub fn read_watched(
     opts: &DxfReadOptions,
     watch: &mut dyn Watch,
 ) -> Result<ImportResult, String> {
+    match read_once(bytes, opts, watch, false)? {
+        Some(result) => Ok(result),
+        // The blocks nest deeper than a drawing's may: read again, every insert opened.
+        None => {
+            let opened = DxfReadOptions {
+                explode_blocks: true,
+                ..opts.clone()
+            };
+            read_once(bytes, &opened, watch, true)?
+                .ok_or_else(|| "Bloklar açılarak da okunamadı.".to_string())
+        }
+    }
+}
+
+/// One reading; none when the blocks nest too deep to keep (the caller reads
+/// again with them opened). `deep`: this is that reading (said in the report).
+fn read_once(
+    bytes: &[u8],
+    opts: &DxfReadOptions,
+    watch: &mut dyn Watch,
+    deep: bool,
+) -> Result<Option<ImportResult>, String> {
     let total = bytes.len().max(1) as u64;
     let mut ask = |pos: usize| watch.step((pos as u64).min(total) * 950 / total, 1000);
     if bytes.starts_with(b"AutoCAD Binary DXF") {
@@ -448,9 +477,24 @@ pub fn read_watched(
         return Err("Dosyada DXF bölümü yok; bir ASCII DXF dosyası seçin.".into());
     }
     let lib = std::mem::take(&mut rd.lib);
-    let mut em = Emitter { lib: &lib, out };
+    let mut em = Emitter::new(&lib, out, opts.explode_blocks);
     for (kind, reason, line) in block_skips {
         em.out.report.skip(&kind, &reason, line);
+    }
+    if deep {
+        em.out.report.note(
+            "Blok",
+            &format!("bloklar {} düzeyden derin iç içe; bloklar patlatılarak alındı", kentos_contracts::MAX_BLOCK_DEPTH),
+            0,
+        );
+    }
+    // Blocks kept as definitions, read before the drawing's objects place them (docs/adr/0144 §5).
+    let mut defs = Vec::new();
+    if !opts.explode_blocks {
+        match em.define_blocks() {
+            Some(d) => defs = d,
+            None => return Ok(None),
+        }
     }
     if pending_entities {
         let model = Ctx::model();
@@ -474,6 +518,11 @@ pub fn read_watched(
         }
     }
     em.merge_holes();
+    let blocks = if opts.explode_blocks {
+        Vec::new()
+    } else {
+        em.keep_used(defs)
+    };
     let mut out = em.out;
     // Layers the objects landed on: the table's (in its order), then any it lacked.
     let mut layers: Vec<ImportLayer> = Vec::new();
@@ -545,7 +594,8 @@ pub fn read_watched(
         bounds: out.bounds,
         declared_crs: None,
         view: None,
+        blocks,
     };
     crate::import::summarise(&mut result);
-    Ok(result)
+    Ok(Some(result))
 }

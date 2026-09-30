@@ -139,6 +139,30 @@ pub fn free_name<'a>(taken: impl IntoIterator<Item = &'a str>) -> String {
     format!("Blok {n}")
 }
 
+/// The names the blocks an import brings go in as (docs/adr/0144 §5): each
+/// its own, or “Ad (2)”, “Ad (3)” … when the drawing or a block before it in
+/// the import has that name (names compared by [`name_key`]). The web's
+/// `importNames` is the same.
+pub fn import_names<'a>(
+    taken: impl IntoIterator<Item = &'a str>,
+    incoming: impl IntoIterator<Item = &'a str>,
+) -> Vec<String> {
+    let mut keys: std::collections::HashSet<String> = taken.into_iter().map(name_key).collect();
+    incoming
+        .into_iter()
+        .map(|name| {
+            let mut out = name.to_owned();
+            let mut k = 2_u64;
+            while keys.contains(&name_key(&out)) {
+                out = format!("{name} ({k})");
+                k += 1;
+            }
+            keys.insert(name_key(&out));
+            out
+        })
+        .collect()
+}
+
 /// An insert's turn in radians from degrees as typed (Blok ekle's Dönüş,
 /// Öznitelikler): taken into 0–360°, then (d · π) / 180, so a quarter turn
 /// is the core's exact one. The web's `turnOf` is the same.
@@ -422,6 +446,17 @@ mod tests {
             ]
         );
         assert_eq!(turn_of(30.0), 30.0 * PI / 180.0);
+    }
+
+    #[test]
+    fn imported_names_step_aside_from_the_drawings_and_each_other() {
+        let names = import_names(
+            ["Rögar", "KAPI (2)"],
+            ["RÖGAR", "Kapı", "KAPI", "kapı", "Ağaç"],
+        );
+        // “Kapı” and “KAPI” are one name (I folds to ı) and the drawing has “KAPI (2)”: the second takes (3), the third (4).
+        assert_eq!(names, ["RÖGAR (2)", "Kapı", "KAPI (3)", "kapı (4)", "Ağaç"]);
+        assert_eq!(import_names([], ["A", "a", "A"]), ["A", "a (2)", "A (3)"]);
     }
 
     #[test]

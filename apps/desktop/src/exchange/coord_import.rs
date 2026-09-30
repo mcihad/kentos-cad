@@ -461,7 +461,7 @@ impl App {
         let Some(doc) = &mut self.document else {
             return;
         };
-        match apply::apply_import(&mut doc.model, result.entities, &plan) {
+        match apply::apply_import(&mut doc.model, result.entities, Vec::new(), &plan) {
             Err(error) => {
                 if let Some(Window::CoordImport(s)) = &mut self.exchange {
                     s.importing = false;

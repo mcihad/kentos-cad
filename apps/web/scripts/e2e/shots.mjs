@@ -20,7 +20,8 @@
 // a number input, the tools searched and one carried, the unsaved question); ribbon (the key tips on the tabs, on
 // Giriş and narrowed, the quick access bar's menu, right clicks on a command, an added one, a fixed one and a tab, a
 // tool's methods and a family under their split buttons, the folded ribbon open); tools (docs/adr/0140: the tabs of
-// the new drawing and editing tools, their split buttons, each tool at work).
+// the new drawing and editing tools, their split buttons, each tool at work); blocks (docs/adr/0144: DXF içe aktar
+// over a file with blocks read a second time, Blokları patlat clicked, the imported blocks in the Bloklar panel).
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createServer } from 'vite';
@@ -1922,6 +1923,40 @@ async function openStyled(ui, layerId, kind) {
 }
 /** The value expression, typed and left (its change event). */
 const setStyleExpr = (text) => `(() => { const i = document.querySelector('.dialog--lstyle .lsty__expr'); i.value = ${JSON.stringify(text)}; i.dispatchEvent(new Event('change')); })()`;
+// DXF içe aktar over the fixture with blocks (fixtures/formats/v1/blocks.dxf, docs/adr/0144 §5), the way a user
+// works it: the window read, İçe aktar and Blokları patlat clicked with the mouse.
+const DXF_BLOCKS = readFileSync(new URL('../../../../fixtures/formats/v1/blocks.dxf', import.meta.url)).toString('base64');
+const OPEN_DXF_BLOCKS = `import('/src/ui/io/DrawingImportDialog.ts').then((m) => m.openDxfImport(window.kentos, { name: 'blocks.dxf', bytes: Uint8Array.from(atob('${DXF_BLOCKS}'), (c) => c.charCodeAt(0)) }, { description: 'DXF', accept: { 'application/dxf': ['.dxf'] } }))`;
+const DXF_READ = `!!document.querySelector('.dialog--io .io-table') && !document.querySelector('.dialog--io .io-reading')`;
+const dxfBlocksOpen = async (ui) => (await ui.eval(OPEN_DXF_BLOCKS), await ui.waitFor(DXF_READ, 15000));
+const dxfBlocksIn = async (ui) => (await dxfBlocksOpen(ui), await ui.clickText('.dialog--io .btn--primary', 'İçe aktar'), await ui.waitFor(`!document.querySelector('.dialog--io')`, 8000));
+SCENES.blocks = [
+  // Read a second time: the names are the drawing's now, and the window says which new names they take.
+  { id: 'import-dxf-blocks', open: async (ui) => (await dxfBlocksIn(ui), await dxfBlocksOpen(ui), await ui.sleep(400)) },
+  {
+    id: 'import-dxf-blocks-explode',
+    open: async (ui) => {
+      await dxfBlocksOpen(ui);
+      await ui.clickText('.dialog--io .io-check', 'Blokları patlat');
+      await ui.waitFor(`${DXF_READ} && document.querySelector('.dialog--io .io-summary')?.textContent.includes('Blokları patlat seçili')`, 15000);
+      await ui.sleep(400);
+    },
+  },
+  // In: the drawing shows the inserts, the Bloklar panel the four definitions and the message log what went in.
+  {
+    id: 'import-dxf-blocks-done',
+    open: async (ui) => {
+      await ui.eval(`(() => { const u = window.kentos.ui; u.bottomHeight.set(190); u.bottomTab.set('history'); u.bottomExpanded.set(true); })()`);
+      await dxfBlocksIn(ui);
+      await ui.eval(`window.kentos.commands.execute('block.panel')`);
+      await ui.sleep(600);
+    },
+  },
+].map((s) => ({
+  close: async (ui) => (await ui.escapeAll(2), await ui.eval(UNDO_ALL), await ui.eval(`(() => { const u = window.kentos.ui; u.dockTab.set('layers'); u.bottomExpanded.set(false); })()`)),
+  ...s,
+}));
+
 /** The n-th rule's condition (0 is the first), typed and left. */
 const setRuleFilter = (n, text) =>
   `(() => { const i = document.querySelectorAll('.dialog--lstyle .rule input[aria-label="Koşul"]')[${n}]; i.value = ${JSON.stringify(text)}; i.dispatchEvent(new Event('change')); })()`;

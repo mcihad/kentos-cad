@@ -111,6 +111,24 @@ export function freeBlockName(blocks: readonly { name: string }[]): string {
 }
 
 /**
+ * The names the blocks an import brings go in as (docs/adr/0144 §5): each
+ * its own, or “Ad (2)”, “Ad (3)” … when the drawing or a block before it in
+ * the import has that name (names compared by `nameKey`). The contracts'
+ * `blocks::import_names` is the same.
+ */
+export function importNames(taken: Iterable<string>, incoming: Iterable<string>): string[] {
+  const keys = new Set([...taken].map(nameKey));
+  const out: string[] = [];
+  for (const name of incoming) {
+    let chosen = name;
+    for (let k = 2; keys.has(nameKey(chosen)); k++) chosen = `${name} (${k})`;
+    keys.add(nameKey(chosen));
+    out.push(chosen);
+  }
+  return out;
+}
+
+/**
  * An insert's turn in radians from degrees as typed (Blok ekle's Dönüş,
  * Öznitelikler): taken into 0–360°, then (d · π) / 180, so a quarter turn is
  * the core's exact one. The contracts' `blocks::turn_of` is the same.

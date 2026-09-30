@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import type { BlockDefinition as ContractBlock } from '../contracts/generated/BlockDefinition';
 import type { Entity as ContractEntity } from '../contracts/generated/Entity';
 import { CadDocument } from '../model/document';
+import type { Entity } from '../model/entities';
 import { LayerStore } from '../model/layers';
 import { applyImport, layerNamed, type LayerTarget } from './apply';
 
@@ -97,5 +99,54 @@ describe('applyImport', () => {
     const r = applyImport(doc, [point('0', 1, 2)], plan);
     expect(r.ok).toBe(true);
     expect(doc.undo()).toBe('DXF: plan.dxf');
+  });
+});
+
+/** A block id as the reader numbers them (1, 2, …). */
+const readerId = (n: number) => `00000000-0000-0000-0000-${n.toString(16).padStart(12, '0')}`;
+const insert = (layerId: string, n: number): ContractEntity => ({ kind: 'insert', id: 0, layerId, attrs: {}, block: readerId(n), p: { x: 5, y: 5 }, scale: 1, rotation: 0 });
+/** A reader's block: one line and, when given, an insert of another; its objects numbered as the reader numbers them. */
+const block = (n: number, name: string, inner?: number): ContractBlock => ({
+  id: readerId(n),
+  name,
+  base: { x: 0, y: 0 },
+  entities: [line('0'), ...(inner ? [insert('0', inner)] : [])].map((e, k) => ({ ...e, id: k + 1 })),
+});
+const onto = { label: 'DXF: plan.dxf', layers: new Map<string, LayerTarget>([['0', { kind: 'existing', id: 'a' }]]) };
+
+/** The file's blocks with its objects (docs/adr/0144 §5), in the desktop's cases (apps/desktop/src/exchange/apply.rs). */
+describe('applyImport with blocks', () => {
+  it('adds the blocks with the objects in one step, each under a new id and a name the drawing does not have', () => {
+    const doc = makeDoc();
+    doc.addBlock({ id: '018f0000-0000-7000-8000-000000000009', name: 'KAPI', base: { x: 0, y: 0 }, entities: [{ ...line('0'), id: 1 } as unknown as Entity] });
+    const r = applyImport(doc, [insert('0', 2), line('0')], onto, [block(1, 'No'), block(2, 'Kapı', 1)]);
+    if (!r.ok) throw new Error(r.error);
+    expect(r.blocks).toBe(2);
+    expect(r.renamed).toEqual([['Kapı', 'Kapı (2)']]);
+    expect(doc.blocks.value.map((b) => b.name)).toEqual(['KAPI', 'No', 'Kapı (2)']);
+    const [, no, kapi] = doc.blocks.value;
+    expect([no.id, kapi.id]).not.toContain(readerId(1));
+    const placed = doc.get(r.ids[0]);
+    expect(placed?.kind === 'insert' && placed.block).toBe(kapi.id);
+    const inner = kapi.entities[1];
+    expect(inner.kind === 'insert' && inner.block).toBe(no.id);
+    // One step: undo takes the objects and the definitions.
+    expect(doc.undo()).toBe('DXF: plan.dxf');
+    expect(doc.size).toBe(0);
+    expect(doc.blocks.value.map((b) => b.name)).toEqual(['KAPI']);
+    expect(doc.redo()).toBe('DXF: plan.dxf');
+    expect(doc.blocks.value).toHaveLength(3);
+  });
+
+  it('refuses an insert of a block the file did not bring, and a block with a number that is not finite, changing nothing', () => {
+    const doc = makeDoc();
+    const stray = applyImport(doc, [line('0'), insert('0', 1), insert('0', 7)], onto, [block(1, 'No')]);
+    expect(!stray.ok && stray.error).toContain('(İçe aktarılan nesne 3 (insert) › blok: 00000000-0000-0000-0000-000000000007 çizimde tanımlı değil)');
+    const far = { ...block(2, 'Uzak'), base: { x: null, y: 0 } } as unknown as ContractBlock;
+    const bad = applyImport(doc, [line('0')], onto, [block(1, 'No'), far]);
+    expect(!bad.ok && bad.error).toContain('Dosyadan okunan bloklar çizime uymuyor (Blok 2 (“Uzak”) › taban noktası.x: sonlu bir sayı olmalı)');
+    expect(doc.size).toBe(0);
+    expect(doc.blocks.value).toEqual([]);
+    expect(doc.canUndo.value).toBe(false);
   });
 });

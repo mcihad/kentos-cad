@@ -4,4 +4,10 @@ export type DxfReadOptions = {
 /**
  * Stop after this many objects (0: one million); the rest is counted and reported.
  */
-maxEntities: number, };
+maxEntities: number, 
+/**
+ * Blokları patlat: every insert opened into its objects, no definitions
+ * kept (docs/adr/0144 §5). Off, a block is a definition and an insert
+ * places it; the inserts a block cannot hold are opened all the same.
+ */
+explodeBlocks?: boolean, };

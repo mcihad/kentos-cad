@@ -25,7 +25,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   (ADR 0021, 0027), nokta, daire, yay, dikdörtgen, döndürülmüş dikdörtgen ve düzgün
   çokgendir (ADR 0032); elips, eğri, yardımcı çizgi, ışın, paralel çizgi, dik in ve dik çık, halka,
   revizyon bulutu, kot noktası ve böl (ADR 0057); yazı ve çizimin üstündeki yazı kutusu (ADR 0060);
-  ölçülendirme: hizalı, doğrusal, açı, yarıçap ve çap (ADR 0061); tarama: kapalı nesneyle ya da çizgilerle, adalarıyla (ADR 0062); köşe kotu: çizginin, çoklu çizginin ve alanın köşe kotları, Kot ver, Öznitelikler'in kot ve 3B uzunluk satırları (ADR 0142); çok parçalı alan: parçalar ve delikleri, Parçaları birleştir, Parçalara ayır, alan işlemlerinde Tek nesne (ADR 0143);
+  ölçülendirme: hizalı, doğrusal, açı, yarıçap ve çap (ADR 0061); tarama: kapalı nesneyle ya da çizgilerle, adalarıyla (ADR 0062); köşe kotu: çizginin, çoklu çizginin ve alanın köşe kotları, Kot ver, Öznitelikler'in kot ve 3B uzunluk satırları (ADR 0142); çok parçalı alan: parçalar ve delikleri, Parçaları birleştir, Parçalara ayır, alan işlemlerinde Tek nesne (ADR 0143); blok: Blok oluştur, Blok ekle, Bloklar paneli, Öznitelikler'de yerleştirme, Patlat; DXF'in blokları tanım ve yerleştirme olarak gelir, “Blokları patlat” seçeneğiyle (ADR 0144);
   alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine tıklayarak alan (ADR 0065);
   mesafe ölç, alan hesapla ve parsel oluştur (ADR 0067); seçili nesnelerin tutamaçları ve üzerine gelme kartı (ADR 0068);
   Hesap pencereleri: poligon hesabı, kutupsal alım, önden ve geriden kestirme, aplikasyon (ADR 0070, 0071);
@@ -525,20 +525,25 @@ Tek ayrıntılı yol haritası [TODOS.md](TODOS.md)'dir. Buraya ikinci checkbox
 listesi, eski Faz A–F sırası veya her tamamlanan commit'in dökümünü eklemeyin.
 Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde saklayın.
 
-### 10.1 Devir notu (29 Eylül 2026)
+### 10.1 Devir notu (30 Eylül 2026)
 
 İşi devralan için kalınan yer; bir sonraki devirde bu bölümü yenileyin.
 
-- Son biten: çok parçalı alan ([ADR 0143](docs/adr/0143-multi-part-area.md), TODOS.md `CAD-14`),
-  iki platformda beş adımıyla. Ondan önce köşe kotu (ADR 0142, `CAD-13`) ve NCZ paftaları (ADR 0138).
-- Sıradaki iş, sahibin sırasıyla (ADR 0143 Bağlam): blok, sonra yazı ekleri, lider ve yeni ölçü
-  türleri. Her biri `.kcad` şemasını değiştiren kendi özelliği ve şema adımıyla gelir (blok şema 6);
-  önce ADR yazılır, adımlar ADR 0142 ve 0143'teki gibi iki platformda, ortak fixture'larla ilerler.
+- Sürmekte: blok ([ADR 0144](docs/adr/0144-blocks.md), TODOS.md `CAD-04`). 1–4. adımlar (sözleşme ve
+  şema 6, çekirdek, komutlar, araçlar ve arayüz) ve 5a (DXF okuma: bloklar tanım olarak, “Blokları
+  patlat”) iki platformda tamam. Sırada 5b DXF yazma (BLOCK, blok kaydı, INSERT; iç içe tanımlar önce),
+  5c GeoJSON (yerleştirme açılımının GeometryCollection'ıyla), 5d PostGIS (kaynak `cad_definition`,
+  tanımlar tablosu, göç o adımda), 6 öznitelik tanımları (ATTDEF/ATTRIB; o adımda ATTRIB'in görünen
+  yazısı ayrıca yazı olarak alınmayı bırakır). Ondan önce çok parçalı alan (ADR 0143, `CAD-14`) ve
+  köşe kotu (ADR 0142, `CAD-13`).
+- Bloktan sonra, sahibin sırasıyla (ADR 0143 Bağlam): yazı ekleri, lider ve yeni ölçü türleri. Her biri
+  `.kcad` şemasını değiştiren kendi özelliği ve şema adımıyla gelir; önce ADR yazılır, adımlar ADR 0142,
+  0143 ve 0144'teki gibi iki platformda, ortak fixture'larla ilerler.
 - Bilinen açık: web `pnpm e2e` duman testinde üç test ADR 0143'ten önce de düşüyordu: “toolbox
   shows every tool without scrolling” (79 araç kaydırma istiyor), nokta hesaplayıcının “yan nokta
   30/5” adımı ve “Layers panel: counts follow add, undo and redo”. Kök nedenleri araştırılmadı.
-- Çalışma düzeni: masaüstü ve çekirdek bir oturumda, web tarafı talimatla (ajan) yapıldı; her iş
-  commit'lenir, push yalnız sahip isteyince yapılır.
+- Çalışma düzeni: çekirdek, masaüstü ve web aynı oturumda (29 Eylül akşamından beri alt ajan yok); her
+  iş iki platformda kullanılarak resimlenir, commit'lenir; push yalnız sahip isteyince yapılır.
 
 ## 11. Teknik borç
 

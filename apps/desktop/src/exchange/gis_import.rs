@@ -460,7 +460,7 @@ impl App {
         let Some(doc) = &mut self.document else {
             return;
         };
-        match apply::apply_import(&mut doc.model, result.entities.clone(), &plan) {
+        match apply::apply_import(&mut doc.model, result.entities.clone(), Vec::new(), &plan) {
             Err(error) => {
                 if let Some(Window::GisImport(s)) = &mut self.exchange {
                     s.status = Some((true, error));

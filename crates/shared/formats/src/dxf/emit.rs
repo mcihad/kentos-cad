@@ -8,10 +8,11 @@
 
 use std::collections::{BTreeMap, HashMap};
 
+use kentos_contracts::blocks::{nesting, turn_of};
 use kentos_contracts::{
-    ArcEntity, Bounds, CircleEntity, ConstructionEntity, EllipseEntity, Entity, EntityBase,
-    HatchEntity, HatchPattern, HatchPatternType, LineEntity, MAX_LINE_WEIGHT, PathEntity,
-    PointEntity, RingGeometry, SplineEntity, TextEntity, Vec2,
+    ArcEntity, BlockDefinition, BlockId, Bounds, CircleEntity, ConstructionEntity, EllipseEntity, Entity,
+    EntityBase, HatchEntity, HatchPattern, HatchPatternType, InsertEntity, LineEntity,
+    MAX_LINE_WEIGHT, PathEntity, PointEntity, RingGeometry, SplineEntity, TextEntity, Vec2,
 };
 
 use super::aci;
@@ -43,6 +44,10 @@ fn text_em(text: &str) -> f64 {
 
 #[derive(Clone, Debug)]
 pub struct Block {
+    /// The name as the file spells it (the library's key is upper case).
+    pub name: String,
+    /// What the block is (group 4), when the file says.
+    pub description: String,
     pub base: P3,
     pub entities: Vec<Parsed>,
     pub xref: bool,
@@ -52,6 +57,8 @@ pub struct Block {
 #[derive(Default)]
 pub struct Library {
     pub blocks: HashMap<String, Block>,
+    /// The blocks' upper-case names in the file's order.
+    pub order: Vec<String>,
     /// Upper-case layer name → the layer's colour for BYBLOCK children of inserts on it.
     pub layer_colors: HashMap<String, String>,
     /// Upper-case layer name → the layer's line weight (mm), for BYBLOCK children of inserts on it.
@@ -77,6 +84,9 @@ pub struct Ctx {
     pub chain: Vec<String>,
     /// Inside a dimension's block: its definition points are not drawing content.
     pub in_dimension: bool,
+    /// Reading a block kept as a definition (docs/adr/0144 §5): its objects
+    /// go on layer 0, their own layer's colour and weight written on them.
+    pub definition: bool,
 }
 
 impl Ctx {
@@ -95,6 +105,17 @@ impl Ctx {
             byblock_weight: None,
             chain: Vec::new(),
             in_dimension: false,
+            definition: false,
+        }
+    }
+
+    /// Where a kept block's own objects are read: its own frame, nothing
+    /// above it; `name` (upper case) catches an insert of itself.
+    pub fn definition(name: &str) -> Ctx {
+        Ctx {
+            chain: vec![name.to_string()],
+            definition: true,
+            ..Ctx::model()
         }
     }
 }
@@ -248,6 +269,68 @@ fn no_elevations(e: &mut Entity, vertices: &[usize]) {
     }
 }
 
+/// The id the reader gives the `n`th block it keeps (1, 2, …): the app gives
+/// each a new one when it takes them in.
+fn block_id(n: usize) -> BlockId {
+    BlockId((n as u128).to_be_bytes())
+}
+
+/// Leaves out every insert inside a definition that places a block holding
+/// that definition (a cycle through other blocks; one holding itself is
+/// caught as it is read), each said.
+fn break_cycles(defs: &mut [BlockDefinition], report: &mut Report) {
+    let index: HashMap<BlockId, usize> = defs.iter().enumerate().map(|(i, d)| (d.id, i)).collect();
+    loop {
+        let mut cut = None;
+        'find: for (a, d) in defs.iter().enumerate() {
+            for (k, e) in d.entities.iter().enumerate() {
+                if let Entity::Insert(i) = e
+                    && let Some(&b) = index.get(&i.block)
+                    && reaches(defs, &index, b, a)
+                {
+                    cut = Some((a, k));
+                    break 'find;
+                }
+            }
+        }
+        let Some((a, k)) = cut else {
+            return;
+        };
+        defs[a].entities.remove(k);
+        report.skip(
+            "Blok (INSERT)",
+            &format!(
+                "“{}” bloğu başka bloklar yoluyla kendini içeriyor; o yerleştirme alınmadı",
+                defs[a].name
+            ),
+            0,
+        );
+    }
+}
+
+/// Whether the definition at `from` places the one at `to`, directly or
+/// through others.
+fn reaches(defs: &[BlockDefinition], index: &HashMap<BlockId, usize>, from: usize, to: usize) -> bool {
+    let mut seen = vec![false; defs.len()];
+    let mut stack = vec![from];
+    while let Some(d) = stack.pop() {
+        if d == to {
+            return true;
+        }
+        if std::mem::replace(&mut seen[d], true) {
+            continue;
+        }
+        for e in &defs[d].entities {
+            if let Entity::Insert(i) = e
+                && let Some(&b) = index.get(&i.block)
+            {
+                stack.push(b);
+            }
+        }
+    }
+    false
+}
+
 /// Points that tell where an object lies (for the extent shown before the import).
 fn anchor_points(e: &Entity) -> Vec<Vec2> {
     match e {
@@ -269,13 +352,147 @@ fn anchor_points(e: &Entity) -> Vec<Vec2> {
     }
 }
 
+/// Where an INSERT puts its block: the point, the scales, the turn in
+/// degrees and, for a MINSERT, its columns, rows and their spacing.
+pub struct Placed {
+    pub p: P3,
+    pub scale: P3,
+    pub rotation: f64,
+    pub array: (i64, i64, f64, f64),
+}
+
 pub struct Emitter<'l> {
     pub lib: &'l Library,
     pub out: Out,
+    /// Blocks kept as definitions (all but Blokları patlat's; docs/adr/0144
+    /// §5): upper-case name → the id the reader gave it.
+    pub kept: HashMap<String, BlockId>,
+    /// Kept blocks with objects on a layer other than 0, and the first one's line.
+    off_layer: HashMap<BlockId, u32>,
+    /// Blokları patlat: every insert is opened, none kept.
+    explode: bool,
+    /// A definition's objects are being read: they are not the drawing's.
+    defining: bool,
 }
 
 impl<'l> Emitter<'l> {
+    pub fn new(lib: &'l Library, out: Out, explode: bool) -> Emitter<'l> {
+        Emitter {
+            lib,
+            out,
+            kept: HashMap::new(),
+            off_layer: HashMap::new(),
+            explode,
+            defining: false,
+        }
+    }
+
+    /// Reads every block the file names (not an anonymous one, not an
+    /// external reference) as a definition, in the file's order: its objects
+    /// in its own frame, on layer 0 (docs/adr/0144 §5), ids 1, 2, … as the
+    /// reader numbers them. An insert inside one that would make a block hold
+    /// itself is left out, and said. AutoCAD's own blocks (a name starting
+    /// with “_”: dimension arrows) are left out unless an insert places them.
+    /// None, and the file's inserts opened, when blocks nest deeper than a
+    /// drawing allows (the caller reads again with Blokları patlat).
+    pub fn define_blocks(&mut self) -> Option<Vec<BlockDefinition>> {
+        let lib = self.lib;
+        let names: Vec<&String> = lib
+            .order
+            .iter()
+            .filter(|n| !n.starts_with('*') && lib.blocks.get(*n).is_some_and(|b| !b.xref))
+            .collect();
+        for (i, n) in names.iter().enumerate() {
+            self.kept.insert((*n).clone(), block_id(i + 1));
+        }
+        let mut defs = Vec::with_capacity(names.len());
+        for n in names {
+            let block = &lib.blocks[n];
+            let off = block
+                .entities
+                .iter()
+                .find(|x| x.common.layer != "0" && !matches!(x.kind, Kind::Unsupported(_)));
+            if let Some(x) = off {
+                self.off_layer.insert(self.kept[n], x.line);
+            }
+            let drawing = std::mem::take(&mut self.out.entities);
+            self.defining = true;
+            let ctx = Ctx::definition(n);
+            for x in &block.entities {
+                self.emit(x, &ctx);
+            }
+            self.defining = false;
+            let entities = std::mem::replace(&mut self.out.entities, drawing);
+            defs.push(BlockDefinition {
+                id: self.kept[n],
+                name: block.name.clone(),
+                base: v(block.base[0], block.base[1]),
+                entities,
+                attributes: Vec::new(),
+                description: (!block.description.trim().is_empty())
+                    .then(|| block.description.clone()),
+            });
+        }
+        break_cycles(&mut defs, &mut self.out.report);
+        // Deeper than a drawing's blocks may nest (the rule of `blocks::nesting`).
+        let index: HashMap<BlockId, usize> = defs.iter().enumerate().map(|(i, d)| (d.id, i)).collect();
+        nesting(&defs, &index).ok()?;
+        for d in &mut defs {
+            for (k, e) in d.entities.iter_mut().enumerate() {
+                e.base_mut().id = k as u32 + 1;
+            }
+        }
+        Some(defs)
+    }
+
+    /// Leaves out AutoCAD's own blocks (“_…”) that no insert places, in the
+    /// drawing or in a definition kept; says how many blocks came and how many
+    /// of them nothing places.
+    pub fn keep_used(&mut self, defs: Vec<BlockDefinition>) -> Vec<BlockDefinition> {
+        let placed = |id: BlockId, entities: &[Entity]| {
+            entities
+                .iter()
+                .any(|e| matches!(e, Entity::Insert(i) if i.block == id))
+        };
+        let used: Vec<bool> = defs
+            .iter()
+            .map(|d| {
+                placed(d.id, &self.out.entities) || defs.iter().any(|o| placed(d.id, &o.entities))
+            })
+            .collect();
+        let kept: Vec<(BlockDefinition, bool)> = defs
+            .into_iter()
+            .zip(used)
+            .filter(|(d, used)| *used || !d.name.starts_with('_'))
+            .collect();
+        let unused = kept.iter().filter(|(_, used)| !used).count();
+        // An insert draws a definition's objects on its own layer (docs/adr/0144 §1): an object on a
+        // layer of its own keeps that layer's look, not whether it is hidden or locked.
+        for (d, _) in &kept {
+            if let Some(&line) = self.off_layer.get(&d.id) {
+                self.note(
+                    "Blok (BLOCK)",
+                    "tanımında 0 dışındaki katmanlarda nesne var: yerleştirmenin katmanında, kendi katmanlarının renk ve kalınlığıyla çizilirler; o katmanların gizliliği ve kilidi uygulanmaz",
+                    line,
+                );
+            }
+        }
+        if !kept.is_empty() {
+            let mut fact = format!("{} tanım", kept.len());
+            if unused > 0 {
+                fact.push_str(&format!(" ({unused} tanesi yerleştirilmemiş)"));
+            }
+            self.out.report.fact("Blok", fact);
+        }
+        kept.into_iter().map(|(d, _)| d).collect()
+    }
+
     fn push(&mut self, e: Entity) {
+        // A definition's objects are counted and placed by its inserts, not here.
+        if self.defining {
+            self.out.entities.push(e);
+            return;
+        }
         if self.out.entities.len() >= self.out.limit {
             self.out.truncated += 1;
             return;
@@ -299,7 +516,11 @@ impl<'l> Emitter<'l> {
 
     /// The layer an object goes on: children on layer 0 take the insert's layer.
     /// Spelled as the LAYER table spells it: "parsel" on an entity is the table's "PARSEL".
+    /// A definition's objects are all on 0: its inserts' layer draws them.
     fn layer_of(&self, e: &Parsed, ctx: &Ctx) -> String {
+        if ctx.definition {
+            return "0".to_string();
+        }
         match (&ctx.layer, e.common.layer.as_str()) {
             (Some(l), "0") => l.clone(),
             (_, name) => self
@@ -312,13 +533,31 @@ impl<'l> Emitter<'l> {
     }
 
     /// Its own line weight (docs/adr/0139): none for BYLAYER and the drawing's
-    /// default, the insert's for BYBLOCK, else the group's millimetres.
-    fn weight_of(e: &Parsed, ctx: &Ctx) -> Option<f64> {
+    /// default, the insert's for BYBLOCK, else the group's millimetres. In a
+    /// definition BYLAYER on a layer other than 0 is that layer's weight, and
+    /// BYBLOCK at its top is none (the insert's, when it is drawn).
+    fn weight_of(&self, e: &Parsed, ctx: &Ctx) -> Option<f64> {
         match e.common.weight {
+            Weight::ByLayer if ctx.definition => {
+                let layer = Self::own_layer(e, ctx)?;
+                self.lib.layer_weights.get(&layer.to_uppercase()).copied()
+            }
             Weight::ByLayer | Weight::Default => None,
+            Weight::ByBlock if ctx.definition && ctx.layer.is_none() => None,
             Weight::ByBlock => ctx.byblock_weight,
             Weight::Mm(w) => Some(w),
         }
+    }
+
+    /// In a definition, the layer whose look a BYLAYER object keeps: its
+    /// own, or an opened insert's for a child on 0; none on 0 itself (the
+    /// kept block's inserts give it theirs).
+    fn own_layer<'e>(e: &'e Parsed, ctx: &'e Ctx) -> Option<&'e str> {
+        let layer = match (&ctx.layer, e.common.layer.as_str()) {
+            (Some(l), "0") => l.as_str(),
+            (_, name) => name,
+        };
+        (layer != "0").then_some(layer)
     }
 
     /// What an insert hands its BYBLOCK children: its own weight, or its layer's.
@@ -356,9 +595,17 @@ impl<'l> Emitter<'l> {
     }
 
     /// The colour override: none for BYLAYER, the insert's colour for BYBLOCK.
+    /// In a definition BYLAYER on a layer other than 0 is that layer's colour
+    /// (its look kept on layer 0), and BYBLOCK at its top is none (the
+    /// insert's colour, when it is drawn).
     fn color_of(&self, e: &Parsed, ctx: &Ctx) -> Option<String> {
         match e.common.color {
+            Color::ByLayer if ctx.definition => {
+                let layer = Self::own_layer(e, ctx)?;
+                self.lib.layer_colors.get(&layer.to_uppercase()).cloned()
+            }
             Color::ByLayer => None,
+            Color::ByBlock if ctx.definition && ctx.layer.is_none() => None,
             Color::ByBlock => Some(ctx.byblock.clone()),
             Color::Aci(n) => Some(aci::color(n)),
             Color::True(rgb) => Some(aci::true_color(rgb)),
@@ -447,7 +694,7 @@ impl<'l> Emitter<'l> {
         }
         let layer = self.layer_of(e, ctx);
         let color = self.color_of(e, ctx);
-        let weight = Self::weight_of(e, ctx);
+        let weight = self.weight_of(e, ctx);
         let b = || base(&layer, color.clone(), weight);
         let ext = e.common.extrusion;
         match &e.kind {
@@ -567,6 +814,7 @@ impl<'l> Emitter<'l> {
                 width,
                 style,
                 hidden,
+                ..
             } => {
                 if *hidden {
                     return self.skip(
@@ -667,9 +915,34 @@ impl<'l> Emitter<'l> {
                 attribs,
                 bad_attribs,
             } => {
-                self.insert(
-                    ctx, e, &layer, name, *p, *scale, *rotation, *cols, *rows, *dc, *dr,
-                );
+                let attrs: BTreeMap<String, String> = attribs
+                    .iter()
+                    .filter_map(|a| match &a.kind {
+                        Kind::Text { tag, text, .. } if !tag.is_empty() => {
+                            Some((tag.clone(), text.clone()))
+                        }
+                        _ => None,
+                    })
+                    .collect();
+                let placed = Placed {
+                    p: *p,
+                    scale: *scale,
+                    rotation: *rotation,
+                    array: (*cols, *rows, *dc, *dr),
+                };
+                if self.keep_insert(ctx, e, &layer, name, &placed, attrs) {
+                    if attribs.iter().any(|a| matches!(&a.kind, Kind::Text { hidden: false, .. })) {
+                        self.note(
+                            "Blok özniteliği (ATTRIB)",
+                            "değeri yerleştirmenin özniteliği oldu; görünen yazısı ayrıca yazı olarak alındı",
+                            e.line,
+                        );
+                    }
+                } else {
+                    self.insert(
+                        ctx, e, &layer, name, *p, *scale, *rotation, *cols, *rows, *dc, *dr,
+                    );
+                }
                 // Attributes are already placed in the insert's own frame.
                 for a in attribs {
                     self.emit(a, ctx);
@@ -1432,18 +1705,91 @@ impl<'l> Emitter<'l> {
                 byblock_weight,
                 chain: chain.clone(),
                 in_dimension: ctx.in_dimension,
+                definition: ctx.definition,
             };
             for child_entity in &block.entities {
                 self.emit(child_entity, &child);
             }
         }
-        if ctx.chain.is_empty() {
+        if ctx.chain.is_empty() && self.explode {
             self.note(
                 "Blok (INSERT)",
-                "KentOS'ta blok nesnesi yok: bloklar patlatılarak, içindeki nesneler olarak alındı",
+                "Blokları patlat seçili: bloklar patlatılarak, içindeki nesneler olarak alındı",
                 e.line,
             );
         }
+    }
+
+    /// An insert of a block kept as a definition, written as one
+    /// (docs/adr/0144 §5): where it is, its scale (the same in X and Y), its
+    /// turn and its mirroring, its attributes' values. What a definition's
+    /// insert cannot say (an array, unequal scales, a slanted plane, an
+    /// insert inside an opened one) is opened instead, and said why; false
+    /// then. The insert's Z is not kept (a block's insert is flat).
+    fn keep_insert(
+        &mut self,
+        ctx: &Ctx,
+        e: &Parsed,
+        layer: &str,
+        name: &str,
+        placed: &Placed,
+        attrs: BTreeMap<String, String>,
+    ) -> bool {
+        let key = name.to_uppercase();
+        let Some(&id) = self.kept.get(&key) else {
+            if name.starts_with('*') && !self.explode && ctx.tf.is_identity() {
+                self.note(
+                    "Adsız blok (INSERT)",
+                    "adsız blok (dinamik blok ya da grup) blok olarak tutulmaz; patlatılarak alındı",
+                    e.line,
+                );
+            }
+            return false;
+        };
+        let why = if !ctx.tf.is_identity() {
+            Some("açılan bir bloğun içinde; onunla birlikte patlatılarak alındı")
+        } else if placed.array.0 * placed.array.1 > 1 {
+            Some("blok dizisi (MINSERT) patlatılarak alındı")
+        } else if super::extrusion_z(e.common.extrusion) != 1.0 {
+            Some("eğik düzlemdeki yerleştirme patlatılarak alındı")
+        } else {
+            let [sx, sy, _] = placed.scale;
+            let equal = sx != 0.0 && (sx.abs() - sy.abs()).abs() <= sx.abs() * 1e-9;
+            (!equal).then_some("X ve Y ölçeği eşit olmayan yerleştirme patlatılarak alındı")
+        };
+        if let Some(why) = why {
+            if !ctx.definition || ctx.tf.is_identity() {
+                self.note("Blok (INSERT)", why, e.line);
+            }
+            return false;
+        }
+        if ctx.chain.contains(&key) {
+            self.skip(
+                "Blok (INSERT)",
+                &format!("“{name}” bloğu kendini içeriyor; o yerleştirme alınmadı"),
+                e.line,
+            );
+            return true;
+        }
+        let [sx, sy, _] = placed.scale;
+        // Mirrored when the two scales have unlike signs; a negative X is a
+        // half turn of the mirror in the block's x axis (the model's).
+        let mirror = (sx < 0.0) != (sy < 0.0);
+        let degrees = placed.rotation + if sx < 0.0 { 180.0 } else { 0.0 };
+        if placed.p[2] != 0.0 && !ctx.definition {
+            self.note("Blok (INSERT)", "yerleştirmenin yüksekliği (Z) alınmadı", e.line);
+        }
+        let mut base = base(layer, self.color_of(e, ctx), self.weight_of(e, ctx));
+        base.attrs = attrs;
+        self.push(Entity::Insert(InsertEntity {
+            base,
+            block: id,
+            p: v(placed.p[0], placed.p[1]),
+            scale: sx.abs(),
+            rotation: turn_of(degrees),
+            mirror,
+        }));
+        true
     }
 
     fn anonymous_block(&mut self, ctx: &Ctx, e: &Parsed, layer: &str, block: &str, what: &str) {

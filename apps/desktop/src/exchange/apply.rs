@@ -12,8 +12,11 @@
 use std::collections::{HashMap, HashSet};
 use std::time::{Duration, Instant};
 
-use kentos_contracts::{Entity, LayerNode, LayerNodeType, LayerStyle, Vec2};
-use kentos_domain::{Document, Group, NewLayer, Slot};
+use kentos_contracts::blocks::import_names;
+use kentos_contracts::{
+    BlockDefinition, BlockId, Entity, LayerNode, LayerNodeType, LayerStyle, Vec2,
+};
+use kentos_domain::{Document, Group, NewLayer, Slot, Uuid};
 
 /// Where the objects of one source layer go.
 #[derive(Clone, Debug, PartialEq)]
@@ -45,6 +48,84 @@ pub struct Applied {
     pub slots: Vec<Slot>,
     /// The names of the layers made.
     pub created: Vec<String>,
+    /// The block definitions taken in, and the names changed on the way:
+    /// as the file says, as it went in (docs/adr/0144 §5).
+    pub blocks: usize,
+    pub renamed: Vec<(String, String)>,
+}
+
+/// The blocks an import brings (docs/adr/0144 §5), ready to go in: each a
+/// new id and a name the drawing does not have yet (`blocks::import_names`),
+/// the inserts among their objects pointing at the new ids.
+#[derive(Debug, Default)]
+pub struct ImportedBlocks {
+    defs: Vec<BlockDefinition>,
+    ids: HashMap<BlockId, BlockId>,
+    renamed: Vec<(String, String)>,
+}
+
+impl ImportedBlocks {
+    pub fn new(doc: &Document, blocks: Vec<BlockDefinition>) -> Self {
+        let names = import_names(
+            doc.blocks().iter().map(|b| b.name.as_str()),
+            blocks.iter().map(|b| b.name.as_str()),
+        );
+        let ids: HashMap<BlockId, BlockId> = blocks
+            .iter()
+            .map(|b| (b.id, BlockId(*Uuid::now_v7().as_bytes())))
+            .collect();
+        let mut renamed = Vec::new();
+        let defs = blocks
+            .into_iter()
+            .zip(names)
+            .map(|(mut b, name)| {
+                if name != b.name {
+                    renamed.push((std::mem::replace(&mut b.name, name), b.name.clone()));
+                }
+                b.id = ids[&b.id];
+                for e in &mut b.entities {
+                    point_at(e, &ids);
+                }
+                b
+            })
+            .collect();
+        Self { defs, ids, renamed }
+    }
+
+    /// The definitions into the drawing (inside the import's transaction).
+    fn add(&mut self, doc: &mut Document) -> Result<(), String> {
+        for d in std::mem::take(&mut self.defs) {
+            doc.add_block(d).map_err(|r| {
+                format!(
+                    "Dosyanın blokları çizime uymuyor ({r}). Hiçbir şey eklenmedi; dosyayla birlikte bildirin."
+                )
+            })?;
+        }
+        Ok(())
+    }
+}
+
+/// The first object placing a block the import did not bring (a reader never
+/// makes one, and the drawing could not save it), in the web's words; `before`
+/// objects were checked in earlier batches.
+fn stray_insert(entities: &[Entity], known: &HashSet<BlockId>, before: usize) -> Option<String> {
+    entities.iter().enumerate().find_map(|(i, e)| match e {
+        Entity::Insert(e) if !known.contains(&e.block) => Some(format!(
+            "Dosyadan okunan nesneler çizime uymuyor (İçe aktarılan nesne {} (insert) › blok: {} çizimde tanımlı değil). Hiçbir şey eklenmedi; dosyayla birlikte bildirin.",
+            before + i + 1,
+            e.block
+        )),
+        _ => None,
+    })
+}
+
+/// An insert placed by its block's new id.
+fn point_at(e: &mut Entity, ids: &HashMap<BlockId, BlockId>) {
+    if let Entity::Insert(i) = e
+        && let Some(&id) = ids.get(&i.block)
+    {
+        i.block = id;
+    }
 }
 
 /// The web's `foldTurkish`: trimmed, upper case, the Turkish letters as plain
@@ -217,30 +298,51 @@ fn make_layers(
     Ok(created)
 }
 
-/// `e` onto its target layer, or none when its layer is left out.
-fn retarget(mut e: Entity, targets: &HashMap<String, String>) -> Option<Entity> {
+/// `e` onto its target layer, or none when its layer is left out; an insert
+/// placing its block by the id it has in the drawing.
+fn retarget(
+    mut e: Entity,
+    targets: &HashMap<String, String>,
+    ids: &HashMap<BlockId, BlockId>,
+) -> Option<Entity> {
     let layer = targets.get(&e.base().layer_id)?.clone();
     e.base_mut().layer_id = layer;
+    point_at(&mut e, ids);
     Some(e)
 }
 
+/// Everything an import chose into the drawing as ONE undo step: the new
+/// layers, the block definitions (docs/adr/0144 §5), then the objects.
 pub fn apply_import(
     doc: &mut Document,
     entities: Vec<Entity>,
+    blocks: Vec<BlockDefinition>,
     plan: &ImportPlan,
 ) -> Result<Applied, String> {
     let mut prepared = prepare(doc, plan)?;
+    let mut imported = ImportedBlocks::new(doc, blocks);
+    let count = imported.defs.len();
     let chosen: Vec<Entity> = entities
         .into_iter()
-        .filter_map(|e| retarget(e, &prepared.targets))
+        .filter_map(|e| retarget(e, &prepared.targets, &imported.ids))
         .collect();
+    let known: HashSet<BlockId> = imported.ids.values().copied().collect();
+    if let Some(error) = stray_insert(&chosen, &known, 0) {
+        return Err(error);
+    }
     let mut created = Vec::new();
     let slots = doc.transact(&plan.label, |doc| {
         created = make_layers(doc, plan, &mut prepared)?;
+        imported.add(doc)?;
         doc.add_many(chosen, &plan.label)
             .map_err(|e| format!("{e}. Hiçbir nesne eklenmedi."))
     })?;
-    Ok(Applied { slots, created })
+    Ok(Applied {
+        slots,
+        created,
+        blocks: count,
+        renamed: imported.renamed,
+    })
 }
 
 /// Objects written between two looks at the clock.
@@ -254,6 +356,12 @@ const BATCH: usize = 2048;
 pub struct Progressive {
     group: Option<Group>,
     targets: HashMap<String, String>,
+    /// The reader's block id → the drawing's, and the drawing's ids an insert may place.
+    ids: HashMap<BlockId, BlockId>,
+    known: HashSet<BlockId>,
+    /// The block definitions taken in, and the names changed on the way.
+    pub blocks: usize,
+    pub renamed: Vec<(String, String)>,
     entities: std::vec::IntoIter<Entity>,
     label: String,
     total: usize,
@@ -265,10 +373,20 @@ pub struct Progressive {
 impl Progressive {
     /// Checks the targets, opens the group and makes the new layers in it;
     /// nothing is left behind when a target refuses. The objects come with [`feed`](Self::feed).
-    pub fn start(doc: &mut Document, plan: &ImportPlan) -> Result<Self, String> {
+    pub fn start(
+        doc: &mut Document,
+        blocks: Vec<BlockDefinition>,
+        plan: &ImportPlan,
+    ) -> Result<Self, String> {
         let mut prepared = prepare(doc, plan)?;
+        let mut imported = ImportedBlocks::new(doc, blocks);
+        let count = imported.defs.len();
         let group = doc.begin_group(&plan.label);
-        let made = doc.transact(&plan.label, |doc| make_layers(doc, plan, &mut prepared));
+        let made = doc.transact(&plan.label, |doc| {
+            let created = make_layers(doc, plan, &mut prepared)?;
+            imported.add(doc)?;
+            Ok(created)
+        });
         let created = match made {
             Ok(c) => c,
             Err(e) => {
@@ -279,6 +397,10 @@ impl Progressive {
         Ok(Self {
             group: Some(group),
             targets: prepared.targets,
+            known: imported.ids.values().copied().collect(),
+            ids: imported.ids,
+            blocks: count,
+            renamed: imported.renamed,
             total: 0,
             entities: Vec::new().into_iter(),
             label: plan.label.clone(),
@@ -318,11 +440,15 @@ impl Progressive {
             let mut batch = Vec::with_capacity(BATCH);
             for e in self.entities.by_ref().take(BATCH) {
                 self.seen += 1;
-                if let Some(e) = retarget(e, &self.targets) {
+                if let Some(e) = retarget(e, &self.targets, &self.ids) {
                     batch.push(e);
                 }
             }
             let last = self.seen >= self.total;
+            if let Some(error) = stray_insert(&batch, &self.known, self.slots.len()) {
+                self.cancel(doc);
+                return Err(error);
+            }
             if !batch.is_empty() {
                 match doc.add_many(batch, &self.label) {
                     Ok(slots) => self.slots.extend(slots),
@@ -434,6 +560,25 @@ pub fn unusable_text(place: usize, kind: &str) -> String {
     )
 }
 
+/// The first block definition with a number that is not finite (its base
+/// point, or one of its objects'), said as the import window says it: the
+/// web checks an import's definitions as a file's (`readBlockDefinitions`).
+pub fn unusable_block(blocks: &[BlockDefinition]) -> Option<String> {
+    blocks.iter().enumerate().find_map(|(i, b)| {
+        let what = if b.base.x.is_finite() && b.base.y.is_finite() {
+            let (place, kind) = unusable(&b.entities)?;
+            format!("nesne {place} ({kind})")
+        } else {
+            "taban noktası".to_owned()
+        };
+        Some(format!(
+            "Dosyadan okunan bloklar çizime uymuyor (Blok {} (“{}”) › {what}: sonlu olmayan bir sayı taşıyor). Hiçbir şey eklenmedi; dosyayla birlikte bildirin.",
+            i + 1,
+            b.name
+        ))
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeMap;
@@ -514,7 +659,7 @@ mod tests {
             layers: vec![("0".into(), LayerTarget::Existing(target))],
             group: None,
         };
-        let applied = apply_import(&mut doc, objects, &plan).expect("applied");
+        let applied = apply_import(&mut doc, objects, Vec::new(), &plan).expect("applied");
         assert_eq!(applied.slots.len(), 1000);
         assert_eq!(doc.len(), 1000);
         // Coordinates exactly as read; ids are the document's.
@@ -559,6 +704,7 @@ mod tests {
         let applied = apply_import(
             &mut doc,
             vec![line("PARSEL"), line("YOL"), line("DEFPOINTS")],
+            Vec::new(),
             &plan,
         )
         .expect("applied");
@@ -615,6 +761,7 @@ mod tests {
         let again = apply_import(
             &mut doc,
             vec![line("PARSEL")],
+            Vec::new(),
             &ImportPlan {
                 label: "DXF: plan.dxf".into(),
                 layers: vec![("PARSEL".into(), LayerTarget::Existing(parsel))],
@@ -638,6 +785,7 @@ mod tests {
         let locked = apply_import(
             &mut doc,
             vec![point("0", 1.0, 2.0)],
+            Vec::new(),
             &ImportPlan {
                 label: "x".into(),
                 layers: vec![("0".into(), LayerTarget::Existing("k".into()))],
@@ -653,6 +801,7 @@ mod tests {
         let missing = apply_import(
             &mut doc,
             vec![point("0", 1.0, 2.0)],
+            Vec::new(),
             &ImportPlan {
                 label: "x".into(),
                 layers: vec![
@@ -674,6 +823,164 @@ mod tests {
         assert_eq!(doc.len(), 0);
         assert_eq!(doc.layers().leaves().len(), before);
         assert!(!doc.can_undo());
+    }
+
+    /// A reader's block: its id, name, one line and, when given, an insert of another.
+    fn block(n: u8, name: &str, inner: Option<u8>) -> BlockDefinition {
+        let mut entities = vec![line("0")];
+        if let Some(k) = inner {
+            entities.push(insert("0", k));
+        }
+        // Numbered 1, 2, … as the reader numbers a definition's objects.
+        for (k, e) in (1..).zip(&mut entities) {
+            e.base_mut().id = k;
+        }
+        BlockDefinition {
+            id: BlockId((u128::from(n)).to_be_bytes()),
+            name: name.into(),
+            base: Vec2 { x: 0.0, y: 0.0 },
+            entities,
+            attributes: Vec::new(),
+            description: None,
+        }
+    }
+
+    fn insert(layer: &str, n: u8) -> Entity {
+        Entity::Insert(kentos_contracts::InsertEntity {
+            base: base(layer),
+            block: BlockId((u128::from(n)).to_be_bytes()),
+            p: Vec2 { x: 5.0, y: 5.0 },
+            scale: 1.0,
+            rotation: 0.0,
+            mirror: false,
+        })
+    }
+
+    /// The file's blocks go in with its objects, in the same step (docs/adr/0144 §5): each
+    /// under a new id and a name the drawing does not have yet, the inserts (the drawing's
+    /// and those inside definitions) placing the new ids.
+    #[test]
+    fn blocks_go_in_with_the_objects_under_free_names() {
+        let mut doc = doc();
+        doc.add_block(BlockDefinition {
+            name: "KAPI".into(),
+            ..block(9, "", None)
+        })
+        .expect("the drawing's own");
+        let plan = ImportPlan {
+            label: "DXF: plan.dxf".into(),
+            layers: vec![("0".into(), LayerTarget::Existing("a".into()))],
+            group: None,
+        };
+        let blocks = vec![block(1, "No", None), block(2, "Kapı", Some(1))];
+        let applied = apply_import(&mut doc, vec![insert("0", 2), line("0")], blocks, &plan)
+            .expect("applied");
+        assert_eq!(applied.blocks, 2);
+        assert_eq!(applied.renamed, [("Kapı".to_owned(), "Kapı (2)".to_owned())]);
+        let names: Vec<&str> = doc.blocks().iter().map(|b| b.name.as_str()).collect();
+        assert_eq!(names, ["KAPI", "No", "Kapı (2)"]);
+        let (no, kapi) = (doc.blocks()[1].id, doc.blocks()[2].id);
+        assert!(![no, kapi].contains(&BlockId((1u128).to_be_bytes())), "new ids");
+        let Some(Entity::Insert(placed)) = doc.get(applied.slots[0]) else {
+            panic!("an insert")
+        };
+        assert_eq!(placed.block, kapi);
+        let Entity::Insert(inner) = &doc.blocks()[2].entities[1] else {
+            panic!("the nested insert")
+        };
+        assert_eq!(inner.block, no);
+        // One step: undo takes the objects and the definitions.
+        assert_eq!(doc.undo().as_deref(), Some("DXF: plan.dxf"));
+        assert_eq!(doc.len(), 0);
+        assert_eq!(doc.blocks().len(), 1);
+        assert_eq!(doc.redo().as_deref(), Some("DXF: plan.dxf"));
+        assert_eq!(doc.blocks().len(), 3);
+    }
+
+    /// A large import's blocks go in when it starts, inside its one step; Durdur takes them back.
+    #[test]
+    fn a_large_import_adds_its_blocks_first_and_durdur_takes_them_back() {
+        let mut doc = doc();
+        let plan = ImportPlan {
+            label: "DXF: büyük.dxf".into(),
+            layers: vec![("0".into(), LayerTarget::Existing("a".into()))],
+            group: None,
+        };
+        let mut work = Progressive::start(&mut doc, vec![block(1, "No", None)], &plan)
+            .expect("started");
+        assert_eq!(work.blocks, 1);
+        let id = doc.blocks()[0].id;
+        work.feed(vec![insert("0", 1); 3]);
+        while !work.step(&mut doc, std::time::Duration::from_secs(1)).expect("steps") {}
+        assert!(doc.entities().all(|e| matches!(e, Entity::Insert(i) if i.block == id)));
+        assert_eq!(doc.len(), 3);
+        assert_eq!(doc.undo().as_deref(), Some("DXF: büyük.dxf"));
+        assert!(doc.blocks().is_empty());
+
+        let mut stopped = Progressive::start(&mut doc, vec![block(1, "No", None)], &plan)
+            .expect("started");
+        stopped.feed(vec![insert("0", 1)]);
+        stopped.stop(&mut doc);
+        assert!(doc.blocks().is_empty());
+        assert_eq!(doc.len(), 0);
+    }
+
+    /// An insert of a block the file did not bring changes nothing, and is said.
+    #[test]
+    fn an_insert_of_a_block_the_file_did_not_bring_is_refused() {
+        let mut doc = doc();
+        let plan = ImportPlan {
+            label: "DXF: plan.dxf".into(),
+            layers: vec![("0".into(), LayerTarget::Existing("a".into()))],
+            group: None,
+        };
+        let refused = apply_import(
+            &mut doc,
+            vec![line("0"), insert("0", 1), insert("0", 7)],
+            vec![block(1, "No", None)],
+            &plan,
+        )
+        .expect_err("refused");
+        assert!(
+            refused.contains(
+                "(İçe aktarılan nesne 3 (insert) › blok: 00000000-0000-0000-0000-000000000007 çizimde tanımlı değil)"
+            ),
+            "{refused}"
+        );
+        assert!(doc.blocks().is_empty());
+        assert_eq!(doc.len(), 0);
+        assert!(!doc.can_undo());
+
+        let mut work = Progressive::start(&mut doc, vec![block(1, "No", None)], &plan)
+            .expect("started");
+        work.feed(vec![insert("0", 1), insert("0", 7)]);
+        let stopped = work.step(&mut doc, std::time::Duration::from_secs(1));
+        assert!(
+            stopped.expect_err("refused").contains("(İçe aktarılan nesne 2 (insert)"),
+        );
+        assert!(doc.blocks().is_empty());
+        assert_eq!(doc.len(), 0);
+        assert!(!doc.can_undo());
+    }
+
+    #[test]
+    fn a_block_with_a_number_that_is_not_finite_is_found() {
+        let good = block(1, "No", None);
+        assert_eq!(unusable_block(std::slice::from_ref(&good)), None);
+        let mut far = block(2, "Uzak", None);
+        far.base.x = f64::INFINITY;
+        let mut bad = block(3, "Bozuk", None);
+        bad.entities.push(point("0", f64::NAN, 0.0));
+        assert!(
+            unusable_block(&[good.clone(), far])
+                .expect("found")
+                .contains("(Blok 2 (“Uzak”) › taban noktası: sonlu olmayan bir sayı taşıyor)")
+        );
+        assert!(
+            unusable_block(&[good, bad])
+                .expect("found")
+                .contains("(Blok 2 (“Bozuk”) › nesne 2 (point): sonlu olmayan bir sayı taşıyor)")
+        );
     }
 
     #[test]

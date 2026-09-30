@@ -270,6 +270,7 @@ impl Collect {
             bounds: self.bounds,
             declared_crs: declared,
             view: None,
+            blocks: Vec::new(),
         };
         crate::import::summarise(&mut result);
         result

@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use crate::document::Bounds;
-use crate::entity::{Entity, Vec2};
+use crate::entity::{BlockDefinition, Entity, Vec2};
 use crate::layer::LineType;
 
 /// Version of this boundary; the WASM module reports the one it was built with.
@@ -36,7 +36,9 @@ use crate::layer::LineType;
 /// 12: blocks (docs/adr/0144): `.kcad` document schema 6, the definitions in the drawing's JSON
 ///    and the `insert` kind in the typed columns (kind 13: p, scale, rotation, the block's id as
 ///    text, mirror a flag).
-pub const FORMATS_VERSION: u32 = 12;
+/// 13: DXF blocks kept (docs/adr/0144 §5): `ImportResult.blocks`, the definitions an import's
+///    inserts place, and `DxfReadOptions.explode_blocks` (Blokları patlat).
+pub const FORMATS_VERSION: u32 = 13;
 
 // ── Every import ────────────────────────────────────────────────────────
 
@@ -170,6 +172,13 @@ pub struct ImportResult {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub view: Option<Bounds>,
+    /// The block definitions the objects' inserts place (a DXF's BLOCKs,
+    /// docs/adr/0144 §5), in the file's order: ids the reader numbered (the
+    /// app gives them new ones and a name the drawing does not have yet),
+    /// their objects on layer "0". None when blocks were exploded.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockDefinition>>", optional))]
+    pub blocks: Vec<BlockDefinition>,
 }
 
 // ── Coordinate lists (Netcad NCN, TXT, CSV) ─────────────────────────────
@@ -364,6 +373,12 @@ pub struct CoordWriteInput {
 pub struct DxfReadOptions {
     /// Stop after this many objects (0: one million); the rest is counted and reported.
     pub max_entities: u32,
+    /// Blokları patlat: every insert opened into its objects, no definitions
+    /// kept (docs/adr/0144 §5). Off, a block is a definition and an insert
+    /// places it; the inserts a block cannot hold are opened all the same.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub explode_blocks: bool,
 }
 
 /// A layer as the DXF writer receives it. DXF layers are flat and their

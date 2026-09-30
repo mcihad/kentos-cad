@@ -2,14 +2,17 @@
 //!
 //! The shared reader reads the whole file once on a thread of its own and
 //! says how far it is (the window's bar), and Vazgeç stops it: a DXF with its
-//! blocks exploded and object coordinate systems applied; an NCZ with Netcad
+//! blocks kept as definitions its inserts place, or opened into their objects
+//! when Blokları patlat is chosen (docs/adr/0144 §5; changing it reads the
+//! file again), and object coordinate systems applied; an NCZ with Netcad
 //! 8's smart objects drawn as their symbols and its declared coordinate
 //! system (docs/adr/0138). The window shows the source's layers with their
 //! object counts and where each goes (a project layer with the same name, or
 //! a new layer in a group named after the file), the report, and the
 //! coordinate system question.
 //!
-//! Everything chosen goes in as one undo step. A small file goes in at once;
+//! Everything chosen goes in as one undo step, the block definitions with
+//! it, each under a name the drawing does not have yet (“Kapı (2)”). A small file goes in at once;
 //! a large one a slice of time at a time, one slice per frame
 //! (`apply::Progressive`): the window closes, the drawing fills in as the
 //! objects arrive, a panel counts them and Durdur takes everything back.
@@ -23,6 +26,7 @@ use std::time::{Duration, Instant};
 use iced::futures::channel::mpsc;
 use iced::widget::{Column, column, container, row};
 use iced::{Bottom, Center, Element, Fill, Length, Right, Task};
+use kentos_contracts::blocks::import_names;
 use kentos_contracts::{DxfReadOptions, ImportLayer, ImportResult, LayerStyle, NczReadOptions, ReportItem};
 use kentos_domain::Slot;
 use kentos_formats::import;
@@ -55,6 +59,12 @@ const SLICE_LEAST: Duration = Duration::from_millis(10);
 const SLICE_MOST: Duration = Duration::from_millis(50);
 /// Least time between two progress messages of a read.
 const PROGRESS_EVERY: Duration = Duration::from_millis(50);
+
+/// Blokları patlat, in the web's words (`ui/io/DrawingImportDialog.ts`).
+const EXPLODE: &str = "Blokları patlat";
+const EXPLODE_HINT: &str = "Kapalıyken bloklar çizime blok tanımı olarak girer, yerleştirmeleri blok kalır; açıkken yerlerine içlerindeki nesneler alınır. Değiştirince dosya yeniden okunur.";
+/// Renamed blocks named in a line, at most.
+const RENAMES_SHOWN: usize = 5;
 
 /// The file's format: what it is read with and what the window says.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -107,6 +117,8 @@ pub struct State {
     unusable: Option<String>,
     /// Source layer names left out by the user.
     excluded: BTreeSet<String>,
+    /// Blokları patlat (a DXF's): its inserts opened into their objects.
+    explode: bool,
     crs: CrsQuestion,
     /// What the footer says, and whether it is an error.
     status: Option<(bool, String)>,
@@ -132,6 +144,8 @@ pub enum Event {
     },
     Toggle(String),
     ToggleAll,
+    /// Blokları patlat on or off: the file is read again.
+    Explode,
     Crs(u32),
     Another,
     Run,
@@ -145,6 +159,29 @@ pub enum Event {
 
 fn event(e: Event) -> Message {
     message(Exchange::DrawingImport(e))
+}
+
+/// What an import made besides its objects: the new layers, the block
+/// definitions and the names changed on the way (as the file says, as it went in).
+struct Made<'a> {
+    layers: &'a [String],
+    blocks: usize,
+    renamed: &'a [(String, String)],
+}
+
+/// ““KAPI” → “KAPI (2)”, “Rögar” → “Rögar (2)” ve 3 tane daha”.
+fn renames(list: &[(String, String)]) -> String {
+    let shown: Vec<String> = list
+        .iter()
+        .take(RENAMES_SHOWN)
+        .map(|(was, now)| format!("“{was}” → “{now}”"))
+        .collect();
+    let more = list.len().saturating_sub(RENAMES_SHOWN);
+    if more > 0 {
+        format!("{} ve {more} tane daha", shown.join(", "))
+    } else {
+        shown.join(", ")
+    }
 }
 
 /// An import going into the drawing a frame at a time (`App::importing`).
@@ -212,30 +249,49 @@ impl App {
     /// Opens the window on `file` and reads it on a thread of its own.
     pub(super) fn drawing_import_picked(&mut self, source: Source, file: Picked) -> Task<Message> {
         let srid = self.project_srid();
-        // “Başka dosya…” keeps the chosen coordinate system of a file that says nothing.
-        let crs = match &self.exchange {
-            Some(Window::DrawingImport(s)) if s.source == Source::Dxf && source == Source::Dxf => s.crs.clone(),
-            _ => CrsQuestion::new(srid),
+        // “Başka dosya…” keeps the chosen coordinate system of a file that says nothing, and Blokları patlat.
+        let (crs, explode) = match &self.exchange {
+            Some(Window::DrawingImport(s)) if s.source == Source::Dxf && source == Source::Dxf => {
+                (s.crs.clone(), s.explode)
+            }
+            _ => (CrsQuestion::new(srid), false),
         };
         if let Some(Window::DrawingImport(s)) = &self.exchange {
             s.stop_reading();
         }
-        let read = READS.fetch_add(1, Ordering::Relaxed) + 1;
-        let stop = Arc::new(AtomicBool::new(false));
-        let bytes = file.bytes.clone();
-        let font = self.drawing_font_id();
         self.open_window(Window::DrawingImport(State {
             source,
             file,
-            read,
-            reading: Some((0.0, stop.clone())),
+            read: 0,
+            reading: None,
             result: None,
             failed: None,
             unusable: None,
             excluded: BTreeSet::new(),
+            explode,
             crs,
             status: None,
         }));
+        self.read_drawing()
+    }
+
+    /// Reads the window's file with its options on a thread of its own; a
+    /// read under way stops, and its late answer is dropped.
+    fn read_drawing(&mut self) -> Task<Message> {
+        let font = self.drawing_font_id();
+        let Some(Window::DrawingImport(s)) = &mut self.exchange else {
+            return Task::none();
+        };
+        s.stop_reading();
+        let read = READS.fetch_add(1, Ordering::Relaxed) + 1;
+        let stop = Arc::new(AtomicBool::new(false));
+        s.read = read;
+        s.reading = Some((0.0, stop.clone()));
+        s.result = None;
+        s.failed = None;
+        s.unusable = None;
+        s.status = None;
+        let (source, bytes, explode) = (s.source, s.file.bytes.clone(), s.explode);
         let (out, replies) = mpsc::unbounded::<Event>();
         let spawned = std::thread::Builder::new()
             .name("kentos-ice-aktar".into())
@@ -257,7 +313,10 @@ impl App {
                 let result = match source {
                     Source::Dxf => kentos_formats::dxf::read_watched(
                         &bytes,
-                        &DxfReadOptions { max_entities: 0 },
+                        &DxfReadOptions {
+                            max_entities: 0,
+                            explode_blocks: explode,
+                        },
                         &mut watch,
                     ),
                     Source::Ncz => kentos_ncz::read(
@@ -269,11 +328,11 @@ impl App {
                         &mut watch,
                     ),
                 };
-                let unusable = result
-                    .as_ref()
-                    .ok()
-                    .and_then(|r| apply::unusable(&r.entities))
-                    .map(|(place, kind)| apply::unusable_text(place, kind));
+                let unusable = result.as_ref().ok().and_then(|r| {
+                    apply::unusable(&r.entities)
+                        .map(|(place, kind)| apply::unusable_text(place, kind))
+                        .or_else(|| apply::unusable_block(&r.blocks))
+                });
                 let _ = out.unbounded_send(Event::Read {
                     read,
                     result: result.map(Arc::new),
@@ -300,6 +359,12 @@ impl App {
                 return self.pick(kind);
             }
             Event::Run => return self.run_drawing_import(),
+            Event::Explode => {
+                if let Some(Window::DrawingImport(s)) = &mut self.exchange {
+                    s.explode = !s.explode;
+                }
+                return self.read_drawing();
+            }
             Event::Cancel => {
                 self.close_exchange();
                 return Task::none();
@@ -365,7 +430,12 @@ impl App {
                 }
             }
             Event::Crs(srid) => s.crs.pick(srid),
-            Event::Another | Event::Run | Event::Cancel | Event::Frame | Event::Stop => {}
+            Event::Another
+            | Event::Run
+            | Event::Explode
+            | Event::Cancel
+            | Event::Frame
+            | Event::Stop => {}
         }
         Task::none()
     }
@@ -427,7 +497,7 @@ impl App {
         };
 
         if result.entities.len() <= AT_ONCE {
-            match apply::apply_import(&mut doc.model, result.entities.clone(), &plan) {
+            match apply::apply_import(&mut doc.model, result.entities.clone(), result.blocks.clone(), &plan) {
                 Err(error) => {
                     if let Some(Window::DrawingImport(s)) = &mut self.exchange {
                         s.status = Some((true, error));
@@ -435,14 +505,19 @@ impl App {
                 }
                 Ok(applied) => {
                     self.close_exchange();
-                    self.import_done(&name, chosen, &applied.slots, &applied.created, &skipped);
+                    let made = Made {
+                        layers: &applied.created,
+                        blocks: applied.blocks,
+                        renamed: &applied.renamed,
+                    };
+                    self.import_done(&name, chosen, &applied.slots, &made, &skipped);
                 }
             }
             return Task::none();
         }
 
-        // A large file: the layers now, the objects a frame at a time, one undo step.
-        match Progressive::start(&mut doc.model, &plan) {
+        // A large file: the layers and blocks now, the objects a frame at a time, one undo step.
+        match Progressive::start(&mut doc.model, result.blocks.clone(), &plan) {
             Err(error) => {
                 if let Some(Window::DrawingImport(s)) = &mut self.exchange {
                     s.status = Some((true, error));
@@ -498,7 +573,12 @@ impl App {
             Ok(true) => {
                 if let Some(job) = self.importing.take() {
                     // The view went there when the writing began (and the user may have moved it since).
-                    self.import_said(&job.name, job.layers, job.work.slots.len(), &job.work.created, &job.skipped);
+                    let made = Made {
+                        layers: &job.work.created,
+                        blocks: job.work.blocks,
+                        renamed: &job.work.renamed,
+                    };
+                    self.import_said(&job.name, job.layers, job.work.slots.len(), &made, &job.skipped);
                 }
             }
             Err(error) => {
@@ -521,31 +601,40 @@ impl App {
         );
     }
 
-    fn import_done(
-        &mut self,
-        name: &str,
-        chosen: usize,
-        slots: &[Slot],
-        created: &[String],
-        skipped: &[ReportItem],
-    ) {
+    fn import_done(&mut self, name: &str, chosen: usize, slots: &[Slot], made: &Made<'_>, skipped: &[ReportItem]) {
         self.zoom_to(slots);
-        self.import_said(name, chosen, slots.len(), created, skipped);
+        self.import_said(name, chosen, slots.len(), made, skipped);
     }
 
-    fn import_said(&mut self, name: &str, chosen: usize, count: usize, created: &[String], skipped: &[ReportItem]) {
-        let into = if created.is_empty() {
+    /// What went in, said in the message log (the web's `said`).
+    fn import_said(&mut self, name: &str, chosen: usize, count: usize, made: &Made<'_>, skipped: &[ReportItem]) {
+        let into = if made.layers.is_empty() {
             String::new()
         } else {
-            format!("; {} yeni katman “{name}” grubunda", created.len())
+            format!("; {} yeni katman “{name}” grubunda", made.layers.len())
+        };
+        let blocks = if made.blocks == 0 {
+            String::new()
+        } else {
+            format!("; {} blok tanımı eklendi", made.blocks)
         };
         self.say(
             Level::Success,
             format!(
-                "“{name}”: {} nesne {chosen} katmana alındı{into}. Tek adımda geri alınabilir.",
+                "“{name}”: {} nesne {chosen} katmana alındı{into}{blocks}. Tek adımda geri alınabilir.",
                 grouped(count as f64)
             ),
         );
+        if !made.renamed.is_empty() {
+            self.say(
+                Level::Info,
+                format!(
+                    "“{name}” içindeki {} bloğun adı çizimde vardı; yeni adla alındı: {}.",
+                    made.renamed.len(),
+                    renames(made.renamed)
+                ),
+            );
+        }
         if !skipped.is_empty() {
             let skipped: Vec<String> = skipped.iter().map(words::report_text).collect();
             self.warn(format!("“{name}” içinde alınmayanlar: {}", skipped.join(" ")));
@@ -634,7 +723,15 @@ impl App {
         };
         let mut body = Column::new()
             .spacing(12)
-            .push(words::file_line(&s.file.name, meta))
+            .push(words::file_line(&s.file.name, meta));
+        if s.source == Source::Dxf {
+            body = body.push(words::field(
+                "Bloklar",
+                words::check(s.explode, EXPLODE, Some(event(Event::Explode))),
+                Some(EXPLODE_HINT.to_owned()),
+            ));
+        }
+        body = body
             .push(self.drawing_layers(s))
             .push(self.drawing_summary(s))
             .push(
@@ -785,6 +882,9 @@ impl App {
         } else {
             words::text_line(Line::Warn, "Alınacak nesne yok; en az bir katman seçin.")
         }];
+        if let Some(blocks) = self.blocks_line(r) {
+            lines.push(words::text_line(Line::Info, blocks));
+        }
         if total as usize > AT_ONCE {
             lines.push(words::text_line(
                 Line::Info,
@@ -803,6 +903,37 @@ impl App {
             ));
         }
         words::summary(lines)
+    }
+
+    /// The block definitions that go in with the objects, and the names the
+    /// drawing already has that they will not take (the web's `blocksLine`).
+    fn blocks_line(&self, r: &ImportResult) -> Option<String> {
+        if r.blocks.is_empty() {
+            return None;
+        }
+        let taken = self
+            .document
+            .as_ref()
+            .map(|d| d.model.blocks().iter().map(|b| b.name.as_str()).collect::<Vec<_>>())
+            .unwrap_or_default();
+        let names = import_names(taken, r.blocks.iter().map(|b| b.name.as_str()));
+        let renamed: Vec<(String, String)> = r
+            .blocks
+            .iter()
+            .zip(names)
+            .filter(|(b, n)| b.name != *n)
+            .map(|(b, n)| (b.name.clone(), n))
+            .collect();
+        let n = r.blocks.len();
+        let mut line = format!("{n} blok tanımı da alınacak; yerleştirmeleri blok olarak kalır.");
+        if !renamed.is_empty() {
+            line.push_str(&format!(
+                " Adı çizimde olan {} blok yeni adla alınacak: {}.",
+                renamed.len(),
+                renames(&renamed)
+            ));
+        }
+        Some(line)
     }
 
     /// The open drawing's coordinate system.

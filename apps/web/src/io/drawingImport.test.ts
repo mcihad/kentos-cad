@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ImportLayer } from '../contracts/generated/ImportLayer';
+import type { ImportResult } from '../contracts/generated/ImportResult';
 import { CadDocument } from '../model/document';
 import { LayerStore } from '../model/layers';
 import type { LayerTarget } from './apply';
@@ -28,8 +29,8 @@ const head: DrawingHead = {
 
 const ZERO = '00000000-0000-0000-0000-000000000000';
 
-/** A drawing a reader imported: `n` points on PARSEL and one line on YOL, as the worker hands it over. */
-function imported(n: number, extra: PageEntity[] = []): ImportedDrawing {
+/** A drawing a reader imported: `n` points on PARSEL and one line on YOL, as the worker hands it over; its blocks, if any. */
+function imported(n: number, extra: PageEntity[] = [], blocks?: ImportResult['blocks']): ImportedDrawing {
   const objects: PageEntity[] = [
     ...Array.from({ length: n }, (_, i): PageEntity => ({ kind: 'point', id: i + 1, uid: ZERO, layerId: 'PARSEL', attrs: {}, p: { x: 421000 + i, y: 4448000 } })),
     { kind: 'line', id: n + 1, uid: ZERO, layerId: 'YOL', attrs: {}, a: { x: 0, y: 0 }, b: { x: 1, y: 1 } },
@@ -38,7 +39,7 @@ function imported(n: number, extra: PageEntity[] = []): ImportedDrawing {
   const layer = (name: string, count: number): ImportLayer => ({ name, color: 'ink', visible: true, locked: false, lineType: 'continuous', count, kinds: {} });
   const { drawing } = packDrawing(head, objects);
   return {
-    result: { entities: [], layers: [layer('PARSEL', n + extra.length), layer('YOL', 1)], report: { counts: {}, source: [], notes: [], skipped: [] } },
+    result: { entities: [], layers: [layer('PARSEL', n + extra.length), layer('YOL', 1)], report: { counts: {}, source: [], notes: [], skipped: [] }, ...(blocks && { blocks }) },
     columns: drawing.columns,
   };
 }
@@ -116,6 +117,31 @@ describe('ProgressiveImport', () => {
     expect(typeof r === 'object' && r.error).toMatch(/^Dosyadan okunan nesneler çizime uymuyor \(İçe aktarılan nesne 3001 \(circle\)/);
     expect(doc.size).toBe(0);
     expect(doc.undo()).toBeNull();
+  });
+
+  it('adds a large import’s blocks when it starts, inside its one step; Durdur takes them back (docs/adr/0144 §5)', () => {
+    const NO = '00000000-0000-0000-0000-000000000001';
+    const no = [{ id: NO, name: 'No', base: { x: 0, y: 0 }, entities: [{ kind: 'line' as const, id: 1, layerId: '0', attrs: {}, a: { x: 0, y: 0 }, b: { x: 1, y: 0 } }] }];
+    const placed = (i: number): PageEntity => ({ kind: 'insert', id: 0, uid: ZERO, layerId: 'PARSEL', attrs: {}, block: NO, p: { x: i, y: 0 }, scale: 1, rotation: 0 });
+    const doc = makeDoc();
+    const work = ProgressiveImport.start(doc, imported(3, [placed(1), placed(2)], no), plan([['PARSEL', { kind: 'existing', id: 'a' }]]));
+    if ('error' in work) throw new Error(work.error);
+    expect(work.blocks).toBe(1);
+    const id = doc.blocks.value[0].id;
+    expect(id).not.toBe(NO);
+    let r: ReturnType<ProgressiveImport['step']>;
+    do r = work.step(0);
+    while (r === 'more');
+    expect(r).toBe('done');
+    expect([...doc.all()].filter((e) => e.kind === 'insert').map((e) => e.kind === 'insert' && e.block)).toEqual([id, id]);
+    expect(doc.undo()).toBe('NCZ: plan.ncz');
+    expect(doc.blocks.value).toEqual([]);
+
+    const stopped = ProgressiveImport.start(doc, imported(3, [placed(1)], no), plan([['PARSEL', { kind: 'existing', id: 'a' }]]));
+    if ('error' in stopped) throw new Error(stopped.error);
+    stopped.stop();
+    expect(doc.blocks.value).toEqual([]);
+    expect(doc.size).toBe(0);
   });
 
   it('refuses to start while another edit is open, and onto a locked layer', () => {

@@ -4,7 +4,9 @@
 //! array inserts, hatches with islands, dimensions, and files that are not
 //! DXF at all. Expected values are worked out by hand from the file.
 
-use kentos_contracts::{DxfReadOptions, Entity, HatchPatternType, ImportResult, LineType, Vec2};
+use kentos_contracts::{
+    BlockId, DxfReadOptions, Entity, HatchPatternType, ImportResult, LineType, Vec2,
+};
 use kentos_formats::dxf;
 use kentos_formats::math::{cos, sin};
 
@@ -20,6 +22,15 @@ fn fixture(name: &str) -> Vec<u8> {
 
 fn read(name: &str) -> ImportResult {
     dxf::read(&fixture(name), &DxfReadOptions::default()).unwrap_or_else(|e| panic!("{name}: {e}"))
+}
+
+/// Read with Blokları patlat: every insert opened into its objects, as before blocks (docs/adr/0144 §5).
+fn opened(name: &str) -> ImportResult {
+    let opts = DxfReadOptions {
+        explode_blocks: true,
+        ..DxfReadOptions::default()
+    };
+    dxf::read(&fixture(name), &opts).unwrap_or_else(|e| panic!("{name}: {e}"))
 }
 
 fn near(a: Vec2, b: Vec2) -> bool {
@@ -264,9 +275,196 @@ fn the_mirrored_object_coordinate_system() {
     assert!((el.ratio - 0.5).abs() < 1e-15);
 }
 
+/// blocks.dxf with its blocks kept (docs/adr/0144 §5), worked out by hand:
+/// NO, KAPI, DAIRE and KENDI are definitions 1–4 in the file's order, their
+/// objects on layer 0 (NO's BYBLOCK circle takes no colour: the insert's);
+/// KAPI holds NO as an insert (at 10, 0; twice as large; a quarter turn) and
+/// its point at Z 1.5. In the drawing KAPI's insert stands at (1000, 2000),
+/// turned a quarter, blue; its Z of 100 is not kept. NO's 2 × 2 array and
+/// DAIRE's unequal scales are opened as before, and said; KENDI's insert of
+/// itself is left out of its definition; YOK has no definition.
+#[test]
+fn blocks_are_kept_as_definitions_and_inserts_place_them() {
+    let r = read("blocks.dxf");
+    let names: Vec<(&str, BlockId)> = r.blocks.iter().map(|b| (b.name.as_str(), b.id)).collect();
+    let id = |n: u8| {
+        let mut bytes = [0u8; 16];
+        bytes[15] = n;
+        BlockId(bytes)
+    };
+    assert_eq!(
+        names,
+        [
+            ("NO", id(1)),
+            ("KAPI", id(2)),
+            ("DAIRE", id(3)),
+            ("KENDI", id(4))
+        ]
+    );
+    let no = &r.blocks[0];
+    assert_eq!((no.base.x, no.base.y), (1.0, 1.0));
+    let [Entity::Circle(c), Entity::Line(l)] = no.entities.as_slice() else {
+        panic!("{:?}", no.entities)
+    };
+    assert_eq!(
+        (
+            c.c,
+            c.r,
+            c.base.color.as_deref(),
+            c.base.layer_id.as_str(),
+            c.base.id
+        ),
+        (v(1.0, 1.0), 0.5, None, "0", 1)
+    );
+    assert_eq!(
+        (l.a, l.b, l.base.layer_id.as_str(), l.base.id),
+        (v(1.0, 1.0), v(2.0, 1.0), "0", 2)
+    );
+    let [Entity::Insert(inner), Entity::Point(pt)] = r.blocks[1].entities.as_slice() else {
+        panic!("{:?}", r.blocks[1].entities)
+    };
+    assert_eq!(
+        (
+            inner.block,
+            inner.p,
+            inner.scale,
+            inner.rotation,
+            inner.mirror
+        ),
+        (id(1), v(10.0, 0.0), 2.0, PI / 2.0, false)
+    );
+    assert_eq!((pt.p, pt.z), (v(3.0, 4.0), Some(1.5)));
+    assert!(
+        r.blocks[3].entities.is_empty(),
+        "KENDI's insert of itself is left out"
+    );
+
+    /// An insert as the test reads it: its block, where, scale, turn, layer and colour.
+    type Placed<'a> = (BlockId, Vec2, f64, f64, &'a str, Option<&'a str>);
+    let inserts: Vec<Placed> = r
+        .entities
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Insert(i) => Some((
+                i.block,
+                i.p,
+                i.scale,
+                i.rotation,
+                i.base.layer_id.as_str(),
+                i.base.color.as_deref(),
+            )),
+            _ => None,
+        })
+        .collect();
+    let blue = kentos_formats::dxf::aci::color(5);
+    assert_eq!(
+        inserts,
+        [
+            (
+                id(2),
+                v(1000.0, 2000.0),
+                1.0,
+                PI / 2.0,
+                "KAPILAR",
+                Some(blue.as_str())
+            ),
+            (id(4), v(0.0, 0.0), 1.0, 0.0, "0", None),
+        ]
+    );
+    // NO's array is opened as before: its four circles; DAIRE's unequal scales an ellipse.
+    let circles = r
+        .entities
+        .iter()
+        .filter(|e| matches!(e, Entity::Circle(_)))
+        .count();
+    assert_eq!(circles, 4);
+    assert!(r.entities.iter().any(|e| matches!(e, Entity::Ellipse(_))));
+    let notes: Vec<&str> = r.report.notes.iter().map(|n| n.reason.as_str()).collect();
+    for said in [
+        "blok dizisi (MINSERT) patlatılarak alındı",
+        "X ve Y ölçeği eşit olmayan yerleştirme patlatılarak alındı",
+        "yerleştirmenin yüksekliği (Z) alınmadı",
+    ] {
+        assert!(notes.contains(&said), "{said}: {notes:?}");
+    }
+    // NO's line is on DETAY: drawn on its insert's layer with DETAY's look, and said.
+    let other = r
+        .report
+        .notes
+        .iter()
+        .find(|n| n.what == "Blok (BLOCK)")
+        .expect("the note on NO's layers");
+    assert_eq!(other.lines, [53]);
+    assert!(other.reason.contains("gizliliği ve kilidi uygulanmaz"));
+    let reasons: Vec<&str> = r.report.skipped.iter().map(|s| s.reason.as_str()).collect();
+    assert!(
+        reasons
+            .iter()
+            .any(|s| s.contains("“KENDI” bloğu kendini içeriyor")),
+        "{reasons:?}"
+    );
+    assert!(
+        reasons
+            .iter()
+            .any(|s| s.contains("“YOK” blok tanımı dosyada yok")),
+        "{reasons:?}"
+    );
+    let facts: Vec<(&str, &str)> = r
+        .report
+        .source
+        .iter()
+        .map(|f| (f.label.as_str(), f.value.as_str()))
+        .collect();
+    assert!(
+        facts.contains(&("Blok", "4 tanım (1 tanesi yerleştirilmemiş)")),
+        "{facts:?}"
+    );
+    // Blokları patlat: no definition, every insert opened.
+    let open = opened("blocks.dxf");
+    assert!(open.blocks.is_empty());
+    assert!(!open.entities.iter().any(|e| matches!(e, Entity::Insert(_))));
+}
+
+#[test]
+fn an_anonymous_block_is_opened_and_said_why() {
+    // The file's only block is an anonymous one (a dynamic block's copy): nothing is kept, its
+    // insert is opened, and the report says why, not that Blokları patlat was chosen.
+    let blocks = groups(&[
+        (0, "BLOCK"),
+        (2, "*U1"),
+        (70, "1"),
+        (10, "0"),
+        (20, "0"),
+        (0, "LINE"),
+        (8, "0"),
+        (10, "0"),
+        (20, "0"),
+        (11, "1"),
+        (21, "0"),
+        (0, "ENDBLK"),
+    ]);
+    let entities = groups(&[(0, "INSERT"), (8, "0"), (2, "*U1"), (10, "5"), (20, "5")]);
+    let bytes = dxf_of(&[("BLOCKS", blocks), ("ENTITIES", entities)]);
+    let r = dxf::read(&bytes, &DxfReadOptions::default()).expect("read");
+    assert!(r.blocks.is_empty());
+    let [Entity::Line(l)] = r.entities.as_slice() else {
+        panic!("{:?}", r.entities)
+    };
+    assert_eq!((l.a, l.b), (v(5.0, 5.0), v(6.0, 5.0)));
+    let notes: Vec<&str> = r.report.notes.iter().map(|n| n.reason.as_str()).collect();
+    assert!(
+        notes.contains(&"adsız blok (dinamik blok ya da grup) blok olarak tutulmaz; patlatılarak alındı"),
+        "{notes:?}"
+    );
+    assert!(
+        !notes.iter().any(|n| n.starts_with("Blokları patlat")),
+        "{notes:?}"
+    );
+}
+
 #[test]
 fn nested_and_array_inserts_with_attributes() {
-    let r = read("blocks.dxf");
+    let r = opened("blocks.dxf");
     let circles: Vec<(Vec2, f64, Option<String>, String)> = r
         .entities
         .iter()
@@ -542,7 +740,10 @@ fn an_attribute_that_cannot_be_read_is_reported() {
     ]);
     let r = dxf::read(
         &dxf_of(&[("BLOCKS", blocks), ("ENTITIES", entities)]),
-        &DxfReadOptions::default(),
+        &DxfReadOptions {
+            explode_blocks: true,
+            ..DxfReadOptions::default()
+        },
     )
     .expect("read");
     // The block's point arrives; the broken attribute is named with its line and why.
@@ -596,7 +797,11 @@ fn nested_blocks_that_draw_nothing_cannot_stall_the_reader() {
     let entities = groups(&[(0, "INSERT"), (8, "0"), (2, "L0"), (10, "0"), (20, "0")]);
     let bytes = dxf_of(&[("BLOCKS", blocks), ("ENTITIES", entities)]);
     let t0 = std::time::Instant::now();
-    let r = dxf::read(&bytes, &DxfReadOptions { max_entities: 1000 }).expect("read");
+    let opts = DxfReadOptions {
+        max_entities: 1000,
+        explode_blocks: true,
+    };
+    let r = dxf::read(&bytes, &opts).expect("read");
     assert!(t0.elapsed().as_secs() < 5);
     assert!(r.entities.is_empty());
     assert!(
@@ -699,7 +904,11 @@ fn a_large_file_reads_in_one_pass() {
     assert_eq!(l.a, v(59_999.5, 119_998.25));
     // Far below a second even unoptimised; a quadratic pass would take minutes.
     assert!(t0.elapsed().as_secs() < 20);
-    let limited = dxf::read(text.as_bytes(), &DxfReadOptions { max_entities: 1000 }).expect("read");
+    let limit = DxfReadOptions {
+        max_entities: 1000,
+        ..DxfReadOptions::default()
+    };
+    let limited = dxf::read(text.as_bytes(), &limit).expect("read");
     assert_eq!(limited.entities.len(), 1000);
     assert!(skipped(&limited, "Nesne sınırı").is_some());
 }
@@ -749,17 +958,39 @@ fn an_object_takes_its_own_line_weight_and_a_block_member_its_inserts() {
         g
     };
     let insert = |layer: &str, weight: &str| {
-        groups(&[(0, "INSERT"), (2, "KAPI"), (8, layer), (370, weight), (10, "10"), (20, "10")])
+        groups(&[
+            (0, "INSERT"),
+            (2, "KAPI"),
+            (8, layer),
+            (370, weight),
+            (10, "10"),
+            (20, "10"),
+        ])
     };
     let mut entities = Vec::new();
-    for w in [Some("35"), Some("0"), Some("-1"), Some("-3"), None, Some("x"), Some("211")] {
+    for w in [
+        Some("35"),
+        Some("0"),
+        Some("-1"),
+        Some("-3"),
+        None,
+        Some("x"),
+        Some("211"),
+    ] {
         entities.extend(line(w));
     }
     entities.extend(insert("0", "50"));
     entities.extend(insert("KALIN", "-1"));
     let r = dxf::read(
-        &dxf_of(&[("TABLES", tables), ("BLOCKS", blocks), ("ENTITIES", entities)]),
-        &DxfReadOptions::default(),
+        &dxf_of(&[
+            ("TABLES", tables),
+            ("BLOCKS", blocks),
+            ("ENTITIES", entities),
+        ]),
+        &DxfReadOptions {
+            explode_blocks: true,
+            ..DxfReadOptions::default()
+        },
     )
     .expect("read");
     let weights: Vec<Option<f64>> = r.entities.iter().map(|e| e.base().line_weight).collect();
@@ -806,7 +1037,7 @@ fn all(z: f64, n: usize) -> Option<Vec<Option<f64>>> {
 
 #[test]
 fn vertices_take_the_heights_a_file_gives_them() {
-    let r = read("elevations.dxf");
+    let r = opened("elevations.dxf");
     let e = &r.entities;
     assert_eq!(e.len(), 24, "{:?}", r.report);
     assert!(r.report.skipped.is_empty(), "{:?}", r.report.skipped);
@@ -815,9 +1046,15 @@ fn vertices_take_the_heights_a_file_gives_them() {
     assert_eq!(ends(&e[1]), (None, None));
     assert_eq!(ends(&e[2]), (Some(0.0), Some(12.5)));
     // 3D polylines: a 0 among the heights stays a height; one that is 0 all along is a 2D one.
-    assert_eq!(heights(&e[3]), Some(vec![Some(10.0), Some(12.5), Some(0.0), Some(15.25)]));
+    assert_eq!(
+        heights(&e[3]),
+        Some(vec![Some(10.0), Some(12.5), Some(0.0), Some(15.25)])
+    );
     assert!(matches!(e[3], Entity::Polyline(_)) && matches!(e[4], Entity::Polygon(_)));
-    assert_eq!(heights(&e[4]), Some(vec![Some(20.0), Some(21.0), Some(22.0), Some(23.0)]));
+    assert_eq!(
+        heights(&e[4]),
+        Some(vec![Some(20.0), Some(21.0), Some(22.0), Some(23.0)])
+    );
     assert_eq!(heights(&e[5]), None);
     // LWPOLYLINEs: the elevation is every vertex's; 0 is none; an arc stays; a mirrored plane's Z runs the other way.
     assert_eq!(heights(&e[6]), all(250.5, 3));
@@ -825,7 +1062,10 @@ fn vertices_take_the_heights_a_file_gives_them() {
     let Entity::Polyline(arc) = &e[8] else {
         panic!("{:?}", e[8])
     };
-    assert_eq!((arc.bulges.clone(), heights(&e[8])), (Some(vec![1.0, 0.0]), all(-12.75, 3)));
+    assert_eq!(
+        (arc.bulges.clone(), heights(&e[8])),
+        (Some(vec![1.0, 0.0]), all(-12.75, 3))
+    );
     let Entity::Polyline(mirrored) = &e[9] else {
         panic!("{:?}", e[9])
     };
@@ -837,14 +1077,23 @@ fn vertices_take_the_heights_a_file_gives_them() {
     // gives what is inside it that height) and a 3D POLYLINE at 0, 5 and 10; all on the insert's layer.
     assert_eq!(ends(&e[11]), (Some(101.0), Some(102.0)));
     let Entity::Line(l) = &e[11] else { panic!() };
-    assert_eq!((l.a, l.b, l.base.layer_id.as_str()), (v(1000.0, 2000.0), v(1010.0, 2000.0), "PLAN"));
+    assert_eq!(
+        (l.a, l.b, l.base.layer_id.as_str()),
+        (v(1000.0, 2000.0), v(1010.0, 2000.0), "PLAN")
+    );
     assert_eq!(heights(&e[12]), all(100.0, 2));
-    assert_eq!(heights(&e[13]), Some(vec![Some(100.0), Some(105.0), Some(110.0)]));
+    assert_eq!(
+        heights(&e[13]),
+        Some(vec![Some(100.0), Some(105.0), Some(110.0)])
+    );
     assert_eq!(ends(&e[14]), (Some(100.0), Some(100.0)));
     // The same block at Z 0 with its Z scaled by 2: heights stretch, and what has none still has none.
     assert_eq!(ends(&e[15]), (Some(2.0), Some(4.0)));
     assert_eq!(heights(&e[16]), None);
-    assert_eq!(heights(&e[17]), Some(vec![Some(0.0), Some(10.0), Some(20.0)]));
+    assert_eq!(
+        heights(&e[17]),
+        Some(vec![Some(0.0), Some(10.0), Some(20.0)])
+    );
     assert_eq!(ends(&e[18]), (None, None));
     let Entity::Point(p) = &e[19] else {
         panic!("{:?}", e[19])
@@ -868,16 +1117,50 @@ fn vertices_take_the_heights_a_file_gives_them() {
 
 #[test]
 fn a_closed_polyline_that_repeats_its_first_vertex_keeps_the_firsts_height() {
-    let vertex = |x: &str, y: &str, z: &str| groups(&[(0, "VERTEX"), (8, "0"), (10, x), (20, y), (30, z), (70, "32")]);
-    let mut entities = groups(&[(0, "POLYLINE"), (8, "0"), (66, "1"), (10, "0"), (20, "0"), (30, "0"), (70, "9")]);
-    for v in [("0", "0", "10"), ("4", "0", "11"), ("4", "4", "12"), ("0", "4", "13"), ("0", "0", "99")] {
+    let vertex = |x: &str, y: &str, z: &str| {
+        groups(&[
+            (0, "VERTEX"),
+            (8, "0"),
+            (10, x),
+            (20, y),
+            (30, z),
+            (70, "32"),
+        ])
+    };
+    let mut entities = groups(&[
+        (0, "POLYLINE"),
+        (8, "0"),
+        (66, "1"),
+        (10, "0"),
+        (20, "0"),
+        (30, "0"),
+        (70, "9"),
+    ]);
+    for v in [
+        ("0", "0", "10"),
+        ("4", "0", "11"),
+        ("4", "4", "12"),
+        ("0", "4", "13"),
+        ("0", "0", "99"),
+    ] {
         entities.extend(vertex(v.0, v.1, v.2));
     }
     entities.extend(groups(&[(0, "SEQEND"), (8, "0")]));
-    let r = dxf::read(&dxf_of(&[("ENTITIES", entities)]), &DxfReadOptions::default()).expect("read");
+    let r = dxf::read(
+        &dxf_of(&[("ENTITIES", entities)]),
+        &DxfReadOptions::default(),
+    )
+    .expect("read");
     assert_eq!(r.entities.len(), 1, "{:?}", r.report);
-    assert_eq!(heights(&r.entities[0]), Some(vec![Some(10.0), Some(11.0), Some(12.0), Some(13.0)]));
-    let said = r.report.notes.iter().find(|n| n.what == "Halka kapanışının Z'si");
+    assert_eq!(
+        heights(&r.entities[0]),
+        Some(vec![Some(10.0), Some(11.0), Some(12.0), Some(13.0)])
+    );
+    let said = r
+        .report
+        .notes
+        .iter()
+        .find(|n| n.what == "Halka kapanışının Z'si");
     assert_eq!(said.map(|n| n.count), Some(1), "{:?}", r.report.notes);
 }
 
@@ -886,9 +1169,13 @@ fn a_drawing_without_a_height_says_nothing_of_heights() {
     // Nothing above 0 in the file: no elevation on any object, and no fact of them.
     let r = read("hatch.dxf");
     assert!(!r.report.source.iter().any(|f| f.label == "Kotlu nesne"));
-    assert!(r.entities.iter().all(|e| !kentos_formats::import::has_elevation(e)));
+    assert!(
+        r.entities
+            .iter()
+            .all(|e| !kentos_formats::import::has_elevation(e))
+    );
     // The block of blocks.dxf sits at Z 100: what is drawn in it stands there, the point and the lines alike.
-    let r = read("blocks.dxf");
+    let r = opened("blocks.dxf");
     assert!(r.report.source.iter().any(|f| f.label == "Kotlu nesne"));
     let Some(Entity::Line(l)) = r.entities.iter().find(|e| matches!(e, Entity::Line(_))) else {
         panic!("no line")

@@ -74,9 +74,9 @@ describe.skipIf(!loader)('DXF WASM module', () => {
     expect((await load()).dxfVersion()).toBe(FORMATS_VERSION);
   });
 
-  it('reads DXF: layers from the table, exploded blocks with exact coordinates, the report', async () => {
+  it('reads DXF: layers from the table, blocks kept or exploded with exact coordinates, the report', async () => {
     const w = await load();
-    const read = (name: string) => imported(w.readDxf(fixture(name), JSON.stringify({ maxEntities: 0 }), quiet));
+    const read = (name: string, explodeBlocks = false) => imported(w.readDxf(fixture(name), JSON.stringify({ maxEntities: 0, explodeBlocks }), quiet));
     const e = read('entities.dxf');
     expect(e.layers.map((l) => [l.name, l.color, l.visible, l.locked])).toEqual([
       ['0', 'ink', true, false],
@@ -91,7 +91,24 @@ describe.skipIf(!loader)('DXF WASM module', () => {
       { x: 452010.25, y: 4412005.75 },
     ]);
     expect(e.report.skipped.map((s) => s.what)).toEqual(['IMAGE', 'Kâğıt uzayı nesnesi']);
-    const b = read('blocks.dxf');
+    // Blocks kept (docs/adr/0144 §5): the definitions in the file's order, numbered 1, 2, …; inserts place them.
+    const kept = read('blocks.dxf');
+    const id = (n: number) => `00000000-0000-0000-0000-${n.toString(16).padStart(12, '0')}`;
+    expect(kept.blocks?.map((d) => [d.name, d.id])).toEqual([
+      ['NO', id(1)],
+      ['KAPI', id(2)],
+      ['DAIRE', id(3)],
+      ['KENDI', id(4)],
+    ]);
+    const inserts = kept.entities.flatMap((x) => (x.kind === 'insert' ? [[x.block, x.p, x.scale, x.rotation, x.layerId]] : []));
+    expect(inserts).toEqual([
+      [id(2), { x: 1000, y: 2000 }, 1, Math.PI / 2, 'KAPILAR'],
+      [id(4), { x: 0, y: 0 }, 1, 0, '0'],
+    ]);
+    expect(kept.report.source).toContainEqual({ label: 'Blok', value: '4 tanım (1 tanesi yerleştirilmemiş)' });
+    // Blokları patlat: every insert opened into its objects.
+    const b = read('blocks.dxf', true);
+    expect(b.blocks).toBeUndefined();
     const circle = b.entities.find((x) => x.kind === 'circle');
     expect(circle?.kind === 'circle' && [circle.c, circle.r, circle.layerId]).toEqual([{ x: 1000, y: 2010 }, 1, 'KAPILAR']);
     const point = b.entities.find((x) => x.kind === 'point');

@@ -292,8 +292,94 @@ fn screens() {
             let mut app = fresh();
             run(&mut app, "file.export.ncn");
             picture(&mut app, &format!("aktar-{mode}-6-koordinat-ver"));
+
+            // A DXF with blocks, read a second time: its names are the drawing's now (docs/adr/0144 §5).
+            let mut app = fresh();
+            app.picker = Picker::File(fixture("blocks.dxf"));
+            run(&mut app, "file.import.dxf");
+            send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
+            app.picker = Picker::File(fixture("blocks.dxf"));
+            run(&mut app, "file.import.dxf");
+            picture(&mut app, &format!("aktar-{mode}-7-dxf-bloklar"));
+            send(&mut app, Event::DrawingImport(drawing_import::Event::Explode));
+            picture(&mut app, &format!("aktar-{mode}-8-dxf-bloklari-patlat"));
         }
     }
+}
+
+fn blocks_of(app: &App) -> Vec<String> {
+    let model = &app.document.as_ref().expect("open").model;
+    model.blocks().iter().map(|b| b.name.clone()).collect()
+}
+
+fn inserts(app: &App) -> usize {
+    let model = &app.document.as_ref().expect("open").model;
+    model
+        .entities()
+        .filter(|e| matches!(e, Entity::Insert(_)))
+        .count()
+}
+
+/// A DXF's blocks go in as definitions its inserts place, in the import's one
+/// step, each under a name the drawing does not have yet; Blokları patlat
+/// reads the file again and opens every insert (docs/adr/0144 §5).
+#[test]
+fn a_dxfs_blocks_go_in_as_definitions_and_blokları_patlat_opens_them() {
+    let mut app = app_with_drawing();
+    let (before, had) = (count(&app), blocks_of(&app));
+    app.picker = Picker::File(fixture("blocks.dxf"));
+    run(&mut app, "file.import.dxf");
+    send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
+    assert_eq!(app.dialog, None, "{:?}", app.exchange);
+    assert_eq!(blocks_of(&app)[had.len()..], ["NO", "KAPI", "DAIRE", "KENDI"]);
+    assert_eq!(inserts(&app), 2);
+    assert!(
+        app.log.lines().any(|l| l.text.contains("; 4 blok tanımı eklendi. Tek adımda geri alınabilir.")),
+        "{}",
+        last_said(&app)
+    );
+
+    // The same file again: its names are taken now.
+    app.picker = Picker::File(fixture("blocks.dxf"));
+    run(&mut app, "file.import.dxf");
+    send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
+    assert_eq!(
+        blocks_of(&app)[had.len() + 4..],
+        ["NO (2)", "KAPI (2)", "DAIRE (2)", "KENDI (2)"]
+    );
+    assert!(said(
+        &app,
+        "“blocks.dxf” içindeki 4 bloğun adı çizimde vardı; yeni adla alındı: “NO” → “NO (2)”, “KAPI” → “KAPI (2)”"
+    ));
+    assert_eq!(inserts(&app), 4);
+
+    // Each import is one step; then Blokları patlat: no definition, no insert.
+    let _ = app.update(Message::Run("edit.undo"));
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!((count(&app), blocks_of(&app)), (before, had.clone()));
+    app.picker = Picker::File(fixture("blocks.dxf"));
+    run(&mut app, "file.import.dxf");
+    send(&mut app, Event::DrawingImport(drawing_import::Event::Explode));
+    let Some(Window::DrawingImport(state)) = &app.exchange else {
+        panic!("the DXF window");
+    };
+    assert!(format!("{state:?}").contains("reading: None"), "read again");
+    send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
+    assert_eq!(blocks_of(&app), had);
+    assert_eq!(inserts(&app), 0);
+    assert!(count(&app) > before);
+    // A new window keeps blocks; “Başka dosya…” keeps the window's choice.
+    let explode = |app: &App| match &app.exchange {
+        Some(Window::DrawingImport(state)) => format!("{state:?}").contains("explode: true"),
+        _ => panic!("the DXF window"),
+    };
+    app.picker = Picker::File(fixture("blocks.dxf"));
+    run(&mut app, "file.import.dxf");
+    assert!(!explode(&app));
+    send(&mut app, Event::DrawingImport(drawing_import::Event::Explode));
+    app.picker = Picker::File(fixture("entities.dxf"));
+    send(&mut app, Event::DrawingImport(drawing_import::Event::Another));
+    assert!(explode(&app));
 }
 
 /// A DXF of `n` lines on one layer, 1 m apart: large enough to go in a frame at a time.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { blocksFault, blockFaultMessage, checkDefinitions, checkNesting, freeBlockName, nameKey, nameOk, placed, placements, trimName, turnOf, type BlockDefinition } from './blocks';
+import { blocksFault, blockFaultMessage, checkDefinitions, checkNesting, freeBlockName, importNames, nameKey, nameOk, placed, placements, trimName, turnOf, type BlockDefinition } from './blocks';
 import type { Entity } from './entities';
 
 /**
@@ -33,6 +33,12 @@ describe('block rules (docs/adr/0144)', () => {
     expect(freeBlockName(named('Rögar'))).toBe('Blok 1');
     // Trimmed as Rust's `str::trim`: U+0085 goes, U+FEFF stays.
     expect([trimName('  Rögar \t'), trimName('\u0085Direk\u3000'), trimName('\ufeffA'), trimName(' ')]).toEqual(['Rögar', 'Direk', '\ufeffA', '']);
+  });
+
+  it('give imported blocks names the drawing and the import do not have yet', () => {
+    // “Kapı” and “KAPI” are one name (I folds to ı) and the drawing has “KAPI (2)”: the second takes (3), the third (4).
+    expect(importNames(['Rögar', 'KAPI (2)'], ['RÖGAR', 'Kapı', 'KAPI', 'kapı', 'Ağaç'])).toEqual(['RÖGAR (2)', 'Kapı', 'KAPI (3)', 'kapı (4)', 'Ağaç']);
+    expect(importNames([], ['A', 'a', 'A'])).toEqual(['A', 'a (2)', 'A (3)']);
   });
 
   it('turn typed degrees into radians within a turn, quarter turns exact', () => {
