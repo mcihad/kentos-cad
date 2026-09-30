@@ -37,12 +37,15 @@ use super::super::dimension::{self as dim, Definition};
 use super::super::xdata::{self, DimMeta, Meta};
 use super::blocks::{self, Written};
 use super::layers::Layers;
-use super::{Handles, Out};
+use super::{Handles, Justified, Out};
 use crate::geom::{has_arcs, v};
 use crate::gis::Zs;
 use crate::math::{PI, TAU, atan2, deg, hypot, norm_angle, rad, sin_cos_deg};
 use crate::num::dxf_real;
 use crate::report::Report;
+
+/// A text's mask in DXF, said in the report (docs/adr/0145 §7).
+const MASK: &str = "DXF yazısının zemini yoktur: zemin KentOS verisi olarak yazıldı; başka programlar göstermez, KentOS geri okur";
 
 /// How the report names a kind (Turkish, as the app's ENTITY_KIND_LABEL).
 fn kind_label(e: &Entity) -> &'static str {
@@ -412,7 +415,11 @@ impl Writer<'_> {
                 self.end(Self::base_meta(&x.base));
                 true
             }
-            Entity::Text(t) => self.text(t, &t.base, Self::base_meta(&t.base)),
+            Entity::Text(t) => {
+                let mut meta = Self::base_meta(&t.base);
+                meta.mask = t.mask;
+                self.text(t, &t.base, meta)
+            }
             Entity::Dimension(d) => self.dimension(d),
             Entity::Hatch(h) => self.hatch(h),
             Entity::Insert(i) => self.insert(i),
@@ -521,15 +528,23 @@ impl Writer<'_> {
                 self.report.note("Öznitelik", blocks::ONE_LINE, 0);
             }
             self.out.str(100, "AcDbText");
-            self.out.xyz(10, t.p);
-            self.out.real(40, t.height);
-            self.out.str(1, &value);
-            if t.rotation != 0.0 {
-                self.out.real(50, t.rotation);
-            }
+            let vertical = self.out.text(
+                &value,
+                &value,
+                &Justified {
+                    p: t.p,
+                    height: t.height,
+                    rotation: t.rotation,
+                    align: t.align,
+                    width_factor: t.width_factor,
+                },
+            );
             self.out.str(100, "AcDbAttribute");
             self.out.str(2, dxf);
             self.out.int(70, 0);
+            if vertical != 0 {
+                self.out.int(74, vertical);
+            }
         }
         let h = self.handles.take();
         self.out.str(0, "SEQEND");
@@ -881,15 +896,26 @@ impl Writer<'_> {
                 0,
             );
         }
+        if t.mask {
+            self.report.note("Yazı zemini", MASK, 0);
+        }
         self.begin("TEXT", base);
         self.out.str(100, "AcDbText");
-        self.out.xyz(10, t.p);
-        self.out.real(40, t.height);
-        self.out.str(1, &value);
-        if t.rotation != 0.0 {
-            self.out.real(50, t.rotation);
-        }
+        let vertical = self.out.text(
+            &value,
+            &value,
+            &Justified {
+                p: t.p,
+                height: t.height,
+                rotation: t.rotation,
+                align: t.align,
+                width_factor: t.width_factor,
+            },
+        );
         self.out.str(100, "AcDbText");
+        if vertical != 0 {
+            self.out.int(73, vertical);
+        }
         self.grow(t.p);
         self.end(meta);
         true

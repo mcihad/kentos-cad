@@ -20,6 +20,7 @@
 //! 1002 {  1000 turn     1040 <radians>         1002 }   an INSERT's turn, exactly (docs/adr/0144 §5)
 //! 1002 {  1000 z                                 1002 }   the object's elevations are data, even when all 0 (a point's, a line's, a path's)
 //! 1002 {  1000 noz      <hex string>             1002 }   the vertices with no elevation, while the others have one: a bit each (docs/adr/0142)
+//! 1002 {  1000 mask                              1002 }   the text is drawn over a mask of the drawing's background (docs/adr/0145; DXF's TEXT has none)
 //! 1002 {  1000 dimension <style> 1040 <offset> 1040 <height>
 //!         [1002 { 1000 text <string> 1002 }] [1002 { 1000 center 1040 <x> 1040 <y> 1002 }]
 //!                                                1002 }   a DIMENSION is this KentOS dimension
@@ -73,6 +74,8 @@ pub struct Meta {
     pub no_z: Vec<usize>,
     /// The DIMENSION is a KentOS dimension (`dimension.rs`).
     pub dimension: Option<DimMeta>,
+    /// The TEXT is drawn over a mask (docs/adr/0145 §7).
+    pub mask: bool,
 }
 
 /// What a DXF dimension does not say of a KentOS dimension. The reader
@@ -229,6 +232,9 @@ pub fn groups(meta: &Meta) -> Vec<(i32, String)> {
     }
     if !meta.no_z.is_empty() {
         item("noz", &mut out, |o| string(&mask_encode(&meta.no_z), o));
+    }
+    if meta.mask {
+        item("mask", &mut out, |_| {});
     }
     if let Some(d) = &meta.dimension {
         item("dimension", &mut out, |o| {
@@ -432,6 +438,7 @@ pub fn read(groups: &[(i32, String)]) -> Option<Meta> {
             "turn" => m.turn = real(a).or(m.turn),
             "z" => m.z = true,
             "noz" => m.no_z = text(a).map(|t| mask_decode(&t)).unwrap_or_default(),
+            "mask" => m.mask = true,
             "dimension" => m.dimension = dimension(&values).or(m.dimension),
             _ => {}
         }
@@ -495,6 +502,7 @@ mod tests {
                 text: Some("Ø {12} \\P ^".into()),
                 center: Some((452_345.123, 4_412_345.678)),
             }),
+            mask: true,
         };
         let out = groups(&meta);
         assert_eq!(out[0], (1001, "KENTOS".to_string()));

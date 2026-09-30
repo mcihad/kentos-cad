@@ -6,7 +6,7 @@
 //! origin is its `N0, E0` (northing 4 448 000, easting 421 000), and a file's
 //! northing is the app's y, its easting the app's x.
 
-use kentos_contracts::{CrsSource, Entity, ImportResult, NczReadOptions};
+use kentos_contracts::{CrsSource, Entity, ImportResult, NczReadOptions, TextAlign, TextEntity};
 use kentos_formats::watch::{Quiet, STOPPED, Steps};
 
 const N0: f64 = 4_448_000.0;
@@ -191,6 +191,21 @@ fn netcad_8_smart_objects_become_their_symbols_on_the_layers_drawn_on_top() {
     let name = r.entities.iter().find(|x| x.base().layer_id == "SM_FONKADI").expect("the name");
     let Entity::Text(t) = name else { panic!("{name:?}") };
     assert_eq!(t.text, "TEKNOLOJİ GELİŞTİRME BÖLGESİ");
+    // A symbol's text stands on its anchor with the anchor's alignment (docs/adr/0145 §7):
+    // the function's name from the middle of its left, a settlement's values centred;
+    // nothing is placed by a guess of its width.
+    assert_eq!(t.align, Some(TextAlign::MiddleLeft));
+    let settled: Vec<&TextEntity> = r
+        .entities
+        .iter()
+        .filter_map(|x| match x {
+            Entity::Text(t) if t.base.layer_id == "SM_YERLESIM" => Some(t),
+            _ => None,
+        })
+        .collect();
+    assert!(settled.iter().any(|t| t.align == Some(TextAlign::MiddleCenter)), "{settled:?}");
+    assert!(settled.iter().all(|t| t.align.is_some()), "{settled:?}");
+    assert!(r.report.notes.iter().all(|x| x.what != "Akıllı nesne yazısı"));
     // A class nothing knows stays where it is, as a point with its values.
     let odd = r.entities.iter().find(|x| attr(x, "Renk").is_some()).expect("the unknown one");
     let Entity::Point(p) = odd else { panic!("{odd:?}") };

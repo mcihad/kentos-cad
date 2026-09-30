@@ -477,6 +477,11 @@ impl App {
             let b = e.base();
             b.label.is_some() || b.symbol.is_some() || !b.attrs.is_empty()
         });
+        // A text's mask is KentOS's alone: DXF's TEXT has none (docs/adr/0145 §7).
+        let masked = list
+            .iter()
+            .filter(|e| matches!(e, kentos_contracts::Entity::Text(t) if t.mask))
+            .count();
         let themed = nodes
             .iter()
             .any(|l| THEMED.contains(&l.style.color.as_str()))
@@ -541,6 +546,9 @@ impl App {
         }
         if data {
             lines.push(words::text_line(Line::Info, "Etiketler, öznitelikler ve semboller nesnelerle birlikte KentOS verisi olarak yazılır: başka programlar göstermez, KentOS geri okur."));
+        }
+        if masked > 0 {
+            lines.push(words::text_line(Line::Info, format!("{masked} yazının zemini KentOS verisi olarak yazılır: DXF yazısında zemin yoktur, başka programlar göstermez; KentOS geri okur.")));
         }
         if themed {
             lines.push(words::text_line(Line::Info, "Tema renkleri DXF'te sabit renk olur (ana mürekkep 7, ikincil 8); KentOS'a geri okununca yine tema rengidir."));

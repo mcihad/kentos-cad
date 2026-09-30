@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Independent check of the DXF writer's blocks (docs/adr/0144 §5).
+"""Independent check of the DXF writer's blocks (docs/adr/0144 §5) and texts (docs/adr/0145 §7).
 
 Reads `fixtures/formats/v1/dxf-write/<name>.input.json` (the writer's input,
 written by hand) and `<name>.dxf` (what the writer made of it, committed) and
@@ -29,6 +29,17 @@ library and no KentOS code:
   placed as the insert places the definition (height times the scale; the
   turn as a text's under the insert's similarity, a mirrored one turned a
   half turn more to stay readable, within 1e-9), then a SEQEND of its own;
+- a text (a TEXT, an ATTRIB, an ATTDEF; docs/adr/0145 §7) without an
+  alignment starts at its point (10) and has no 11, 72 or 73; an aligned one
+  stands on its alignment point (11) exactly (an ATTRIB's where its insert
+  places it, within 1e-9), its 72 and 73 (an attribute's 74) name its
+  alignment (none written for 0), 72 and 11 before the second subclass
+  marker, the vertical after it; its start (10) is its alignment's share of
+  its height under 11 across its baseline (within 1e-8 m) and its share of
+  its width back along it, the width every text of the same words, height
+  and width factor implies being one (within 1e-8 m) and an average letter
+  of 0.3 to 0.9 of its height; its width factor is 41 (none for 1); a
+  masked TEXT has KentOS's "mask" item, no other has;
 - every handle is unique and every owner names a handle of the file.
 
     python3 scripts/fixtures/dxf_write_reference.py --check
@@ -215,6 +226,67 @@ def close(a: float, b: float, tol: float = 1e-9) -> bool:
     return abs(a - b) <= tol * max(1.0, abs(b))
 
 
+# KentOS's alignments as DXF's 72 and 73 (an attribute's 74): row by column.
+JUSTIFY = {
+    "baselineCenter": (1, 0), "baselineRight": (2, 0),
+    "bottomLeft": (0, 1), "bottomCenter": (1, 1), "bottomRight": (2, 1),
+    "middleLeft": (0, 2), "middleCenter": (1, 2), "middleRight": (2, 2),
+    "topLeft": (0, 3), "topCenter": (1, 3), "topRight": (2, 3),
+}
+# Up from the baseline, in heights: the bottom is a fifth of a height under it.
+ROWS = {"baseline": 0.0, "bottom": -0.2, "middle": 0.5, "top": 1.0}
+COLUMNS = {"Left": 0.0, "Center": 0.5, "Right": 1.0}
+
+
+def after(o: list[tuple[int, str]], marker: str) -> int:
+    return next(k for k, g in enumerate(o) if g == (100, marker) and k > 0 and o[:k].count((100, marker)) == (1 if marker == "AcDbText" else 0))
+
+
+def check_place(o: list[tuple[int, str]], p: tuple[float, float], exact: bool, t: dict, marker: str, vertical: int,
+                shown: str, widths: dict, where: str) -> None:
+    """A text's 10, 11, 72, 73 or 74 and 41 (`t`: its height, rotation, align, widthFactor)."""
+    x10, y10 = float(group(o, 10)), float(group(o, 20))
+    wf = t.get("widthFactor")
+    ensure((group(o, 41) is None) if wf is None else float(group(o, 41)) == wf, f"{where}: width factor {wf}")
+    split_at = after(o, marker)
+    head, tail = o[:split_at], o[split_at:]
+    align = t.get("align")
+    if align is None:
+        ensure(x10 == p[0] and y10 == p[1], f"{where}: starts at its point")
+        ensure(all(c not in (11, 72) for c, _ in o) and group(tail, vertical) is None, f"{where}: not justified")
+        return
+    h, v = JUSTIFY[align]
+    x11, y11 = float(group(o, 11)), float(group(o, 21))
+    if exact:
+        ensure(x11 == p[0] and y11 == p[1], f"{where}: stands on its point (11) exactly")
+    else:
+        ensure(close(x11, p[0]) and close(y11, p[1]), f"{where}: stands where its insert places it (11)")
+    ensure(group(head, 11) is not None and group(tail, 11) is None, f"{where}: 11 before the {marker} marker")
+    ensure((group(o, 72) is None) if h == 0 else (group(head, 72) == str(h)), f"{where}: 72 {h}")
+    ensure(all(c != vertical for c, _ in head), f"{where}: {vertical} after the {marker} marker")
+    ensure((group(tail, vertical) is None) if v == 0 else (group(tail, vertical) == str(v)), f"{where}: {vertical} {v}")
+    row = next(r for r in ROWS if align.startswith(r))
+    column = next(c for c in COLUMNS if align.endswith(c))
+    a = math.radians(float(t["rotation"]))
+    dx, dy = x11 - x10, y11 - y10
+    across = -dx * math.sin(a) + dy * math.cos(a)
+    run = dx * math.cos(a) + dy * math.sin(a)
+    height = float(t["height"])
+    ensure(abs(across - ROWS[row] * height) <= 1e-8, f"{where}: starts {ROWS[row]} of its height under 11, not {across / height}")
+    if COLUMNS[column] == 0.0:
+        ensure(abs(run) <= 1e-8, f"{where}: starts on 11's side")
+    else:
+        widths.setdefault((shown, height, wf or 1.0), []).append((run / COLUMNS[column], where))
+
+
+def check_widths(widths: dict) -> None:
+    for (shown, height, wf), found in widths.items():
+        ws = [w for w, _ in found]
+        ensure(max(ws) - min(ws) <= 1e-8, f"{shown!r}: one width, not {ws}")
+        letter = ws[0] / (height * wf * len(shown))
+        ensure(0.3 <= letter <= 0.9, f"{shown!r}: an average letter {letter} of its height")
+
+
 def placed(e: dict, base: dict, q: dict) -> tuple[float, float]:
     flip = -1.0 if e.get("mirror") else 1.0
     s = float(e["scale"])
@@ -235,7 +307,7 @@ def placed_turn(e: dict, degrees: float) -> float:
     return ((turn % 360.0) + 360.0) % 360.0
 
 
-def check_attributes(o: list[list[tuple[int, str]]], e: dict, b: dict, layer: str, own: str, where: str) -> None:
+def check_attributes(o: list[list[tuple[int, str]]], e: dict, b: dict, layer: str, own: str, where: str, widths: dict) -> None:
     """An insert's ATTRIBs and SEQEND (`o`: the entities after it; `own`: its handle)."""
     attributes = b.get("attributes") or []
     tags = dxf_tags(b)
@@ -251,11 +323,16 @@ def check_attributes(o: list[list[tuple[int, str]]], e: dict, b: dict, layer: st
         value = (e.get("attrs") or {}).get(a["tag"]) or a.get("value") or ""
         ensure(group(r, 1) == value, f"{w}: shows {value!r}, not {group(r, 1)!r}")
         x, y = placed(e, b["base"], a["p"])
-        ensure(close(float(group(r, 10)), x) and close(float(group(r, 20)), y), f"{w}: placed at {x}, {y}")
         ensure(close(float(group(r, 40)), a["height"] * float(e["scale"])), f"{w}: its height times the scale")
         turn = placed_turn(e, a["rotation"])
         got = float(group(r, 50) or 0.0)
         ensure(close(got, turn) or (turn == 0.0 and group(r, 50) is None), f"{w}: turned {turn}°, not {got}°")
+        shown_at = {**a, "height": float(group(r, 40)), "rotation": got}
+        if a.get("align") is None:
+            ensure(close(float(group(r, 10)), x) and close(float(group(r, 20)), y), f"{w}: placed at {x}, {y}")
+            ensure(group(r, 11) is None, f"{w}: not justified")
+        else:
+            check_place(r, (x, y), False, shown_at, "AcDbAttribute", 74, value, widths, w)
 
 
 def check_insert(o: list[tuple[int, str]], e: dict, name: str, where: str) -> None:
@@ -281,6 +358,7 @@ def check(name: str) -> list[str]:
     order = walk(spec["blocks"], spec["entities"])
     names = dxf_names(order)
     said = []
+    widths: dict = {}
 
     # Records and BLOCKs, in the walk's order after model and paper space.
     tables = section(p, "TABLES")
@@ -318,7 +396,8 @@ def check(name: str) -> list[str]:
         for a, tag, d in zip(attributes, dxf_tags(b), defs):
             w = f"{b['name']} › {a['tag']}"
             ensure(d[0] == (0, "ATTDEF") and group(d, 330) == rec and group(d, 8) == "0", f"{w}: an ATTDEF of its record on 0")
-            ensure(float(group(d, 10)) == a["p"]["x"] and float(group(d, 20)) == a["p"]["y"] and float(group(d, 40)) == a["height"], f"{w}: its place and height")
+            ensure(float(group(d, 40)) == a["height"], f"{w}: its height")
+            check_place(d, (a["p"]["x"], a["p"]["y"]), True, a, "AcDbAttributeDefinition", 74, tag, widths, w)
             ensure(group(d, 1) == (a.get("value") or ""), f"{w}: its default")
             ensure(group(d, 3) == (a.get("prompt") or ""), f"{w}: its prompt")
             ensure(group(d, 2) == tag and group(d, 70) == "0", f"{w}: tag {tag!r}, visible")
@@ -357,7 +436,7 @@ def check(name: str) -> list[str]:
         b = by_id[e["block"]]
         if b.get("attributes"):
             ensure(group(o, 66) == "1", f"{where}: attributes follow (66 1)")
-            check_attributes(drawn[k + 1 :], e, b, layers[e["layerId"]], group(o, 5), where)
+            check_attributes(drawn[k + 1 :], e, b, layers[e["layerId"]], group(o, 5), where, widths)
             attributed += 1
         else:
             ensure(group(o, 66) is None, f"{where}: no attributes follow")
@@ -367,6 +446,22 @@ def check(name: str) -> list[str]:
         ensure(kentos_attrs(o) == others, f"{where}: KentOS's data holds its other attributes {others}")
     if attributed:
         said.append(f"{attributed} yerleştirmenin ATTRIB'leri")
+
+    # The drawing's texts (docs/adr/0145 §7), in the input's order.
+    texts = [e for e in spec["entities"] if e["kind"] == "text"]
+    written = [e for e in drawn if e[0] == (0, "TEXT")]
+    ensure(len(written) == len(texts), f"{len(texts)} TEXTs")
+    for n, (e, o) in enumerate(zip(texts, written)):
+        where = f"yazı {n + 1} ({e['text']})"
+        ensure(group(o, 8) == layers[e["layerId"]], f"{where}: on its layer")
+        ensure(group(o, 1) == e["text"] and float(group(o, 40)) == e["height"], f"{where}: its words and height")
+        ensure((group(o, 50) is None) if e["rotation"] == 0 else float(group(o, 50)) == e["rotation"], f"{where}: its turn")
+        check_place(o, (e["p"]["x"], e["p"]["y"]), True, e, "AcDbText", 73, e["text"], widths, where)
+        ensure(("mask" in kentos(o)) == bool(e.get("mask")), f"{where}: KentOS's mask item exactly when masked")
+    check_widths(widths)
+    if texts:
+        aligned = sum(1 for e in texts if e.get("align"))
+        said.append(f"{len(texts)} yazı ({aligned} hizalı, {sum(1 for e in texts if e.get('mask'))} zeminli)")
 
     # Handles unique; owners name handles of the file.
     body = p[next(k for k, g in enumerate(p) if g == (2, "CLASSES")) :]

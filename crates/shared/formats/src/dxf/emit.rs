@@ -12,14 +12,15 @@ use kentos_contracts::blocks::{nesting, turn_of};
 use kentos_contracts::{
     ArcEntity, AttributeDefinition, BlockDefinition, BlockId, Bounds, CircleEntity,
     ConstructionEntity, EllipseEntity, Entity, EntityBase, HatchEntity, HatchPattern,
-    HatchPatternType, InsertEntity, LineEntity, MAX_LINE_WEIGHT, PathEntity, PointEntity,
-    RingGeometry, SplineEntity, TextEntity, Vec2,
+    HatchPatternType, InsertEntity, LineEntity, MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, PathEntity,
+    PointEntity, RingGeometry, SplineEntity, TextAlign, TextEntity, Vec2, width_factor_ok,
 };
 
 use super::aci;
 use super::dimension;
 use super::entity::{Color, Kind, P3, Parsed, Vertex, Weight};
 use super::hatch::{Edge, Hatch, Path};
+use super::justify;
 use super::strings::{mtext_lines, text_codes};
 use super::xdata::{Meta, caret_decode};
 use crate::geom::{
@@ -217,9 +218,16 @@ struct Text<'a> {
 }
 
 /// A text at `anchor` whose baseline runs at `rotation` degrees (object
-/// coordinates) as `m` places it: its start, turn (degrees, from 0 up to 360)
-/// and height; none when `m` flattens it.
-fn mapped_text(m: Tf, anchor: Vec2, rotation: f64, height: f64) -> Option<(Vec2, f64, f64)> {
+/// coordinates) as `m` places it: its anchor, turn (degrees, from 0 up to
+/// 360), height and what its width factor is multiplied by (a non-uniform
+/// scale widens or narrows it: its baseline scales by one factor, its height
+/// by another); none when `m` flattens it.
+fn mapped_text(
+    m: Tf,
+    anchor: Vec2,
+    rotation: f64,
+    height: f64,
+) -> Option<(Vec2, f64, f64, f64)> {
     let (s, c) = sin_cos_deg(rotation);
     let d = m.linear(v(c, s));
     let u = m.linear(v(-s, c));
@@ -242,12 +250,34 @@ fn mapped_text(m: Tf, anchor: Vec2, rotation: f64, height: f64) -> Option<(Vec2,
     } else {
         rot.rem_euclid(360.0)
     };
-    let h = if m.is_identity() {
-        height
+    let area = (d.x * u.y - d.y * u.x).abs();
+    if !(area > 0.0) {
+        return None;
+    }
+    let (h, widen) = if m.is_identity() {
+        (height, 1.0)
     } else {
-        height * (d.x * u.y - d.y * u.x).abs() / ld
+        (height * area / ld, ld * ld / area)
     };
-    Some((m.apply(anchor), if rot >= 360.0 { 0.0 } else { rot }, h))
+    Some((m.apply(anchor), if rot >= 360.0 { 0.0 } else { rot }, h, widen))
+}
+
+/// A width factor as a text holds it: none for 1 (to a billionth, what a
+/// turn or a uniform scale leaves of it), at most `MAX_WIDTH_FACTOR`.
+fn width_factor_of(f: f64) -> Option<f64> {
+    ((f - 1.0).abs() > 1e-9).then_some(f.min(MAX_WIDTH_FACTOR))
+}
+
+/// Where a text stands (docs/adr/0145 §7), in object coordinates `m` places.
+struct Frame {
+    m: Tf,
+    /// The point of the text `align` names.
+    anchor: Vec2,
+    rotation: f64,
+    height: f64,
+    align: Option<TextAlign>,
+    /// 1: neither narrowed nor widened.
+    width_factor: f64,
 }
 
 /// The world transform of an entity in object coordinates at `elevation`.
@@ -264,8 +294,9 @@ fn same_angle(a: f64, b: f64) -> bool {
 /// What KentOS's extended data adds to the objects an entity became: the
 /// label, attributes and symbol, and the app's own name of a colour DXF
 /// holds as a number (only while the number is still what it names: a
-/// colour changed in another program wins). An insert's ATTRIB values are
-/// its attributes already and win over KentOS's data under the same tag.
+/// colour changed in another program wins), a text's mask. An insert's
+/// ATTRIB values are its attributes already and win over KentOS's data
+/// under the same tag.
 fn apply_meta(meta: &Meta, e: &mut Entity) {
     let b = e.base_mut();
     if meta.label.is_some() {
@@ -291,6 +322,12 @@ fn apply_meta(meta: &Meta, e: &mut Entity) {
     }
     if !meta.no_z.is_empty() {
         no_elevations(e, &meta.no_z);
+    }
+    // A mask is KentOS's alone: DXF's TEXT has none (docs/adr/0145 §7).
+    if meta.mask
+        && let Entity::Text(t) = e
+    {
+        t.mask = true;
     }
 }
 
@@ -952,6 +989,7 @@ impl<'l> Emitter<'l> {
                 rotation,
                 text,
                 spacing,
+                fill,
                 style,
             } => self.mtext(
                 ctx,
@@ -963,6 +1001,7 @@ impl<'l> Emitter<'l> {
                 *rotation,
                 text,
                 *spacing,
+                *fill,
                 style,
                 b(),
                 e,
@@ -1557,23 +1596,26 @@ impl<'l> Emitter<'l> {
             style,
         };
         match self.text_frame(ctx, &t, &words, e) {
-            Ok((m, anchor, rot, height)) => self.push_text(m, anchor, rot, height, words, b),
+            Ok(frame) => self.push_text(&frame, words, false, b),
             Err(why) => self.skip(&e.name, why, e.line),
         }
     }
 
-    /// Where a text starts in object coordinates, its turn and its height
-    /// (`words` its decoded text, whose width places a justified one): KentOS
-    /// texts start at their lower left, so a justified text's start is worked
-    /// out from its estimated width, and said. Why not, when it cannot be placed.
+    /// Where a text stands (docs/adr/0145 §7; `words` its decoded text): a
+    /// justified one (72 and 73, an attribute's 72 and 74) on its alignment
+    /// point, 11 (10 when the file has none), with that alignment; an aligned
+    /// (72 = 3) or fitted (72 = 5) one from 10 towards 11, its height or its
+    /// width factor worked out from its width in Arimo, and said. Its width
+    /// factor is its 41 when that may be one (else 1, said). Why not, when it
+    /// cannot be placed.
     fn text_frame(
         &mut self,
         ctx: &Ctx,
         t: &Text<'_>,
         words: &str,
         e: &Parsed,
-    ) -> Result<(Tf, Vec2, f64, f64), &'static str> {
-        let height = if t.height > 0.0 {
+    ) -> Result<Frame, &'static str> {
+        let mut height = if t.height > 0.0 {
             t.height
         } else {
             self.lib
@@ -1588,44 +1630,71 @@ impl<'l> Emitter<'l> {
         let Some(m) = ocs(ctx, t.ext, t.p[2]) else {
             return Err("doğrultusu (210) geçersiz");
         };
-        let (p, halign, valign) = (t.p, t.halign, t.valign);
-        let (s, c) = sin_cos_deg(t.rotation);
-        let (mut anchor, mut rot) = (v(p[0], p[1]), t.rotation);
-        // Justified text: 11 is the anchor (AutoCAD puts the start point in 10 too, other writers may not).
-        if (halign != 0 || valign != 0)
-            && let Some(q) = t.p2
-        {
-            {
-                let q = v(q[0], q[1]);
-                let w = text_em(words) * height * t.width.abs().max(0.01);
-                if halign == 3 || halign == 5 {
-                    // Aligned and fit: the text runs from 10 to 11.
-                    rot = deg(atan2(q.y - p[1], q.x - p[0]));
-                } else if anchor == q || (p[0] == 0.0 && p[1] == 0.0) {
-                    let along = match halign {
-                        1 | 4 => w / 2.0,
-                        2 => w,
-                        _ => 0.0,
-                    };
-                    let up = match (halign, valign) {
-                        (4, _) | (_, 2) => height / 2.0,
-                        (_, 3) => height,
-                        (_, 1) => -0.2 * height,
-                        _ => 0.0,
-                    };
-                    anchor = v(q.x - c * along + s * up, q.y - s * along - c * up);
-                    self.note("Hizalı yazı", "KentOS yazıları sol alt köşeden yerleşir; konum yazı genişliği tahmin edilerek hesaplandı", e.line);
+        let mut width_factor = t.width;
+        if !width_factor_ok(width_factor) {
+            self.note(
+                "Yazı genişliği (41)",
+                "0'dan büyük ve en çok 100 olmayan genişlik çarpanı yerine 1 alındı",
+                e.line,
+            );
+            width_factor = 1.0;
+        }
+        let start = v(t.p[0], t.p[1]);
+        let second = t.p2.map(|q| v(q[0], q[1]));
+        if t.halign == justify::ALIGNED || t.halign == justify::FIT {
+            let mut rotation = t.rotation;
+            let em = text_em(words);
+            if let Some(q) = second {
+                let run = hypot(q.x - start.x, q.y - start.y);
+                if run > 0.0 && em > 0.0 {
+                    rotation = deg(atan2(q.y - start.y, q.x - start.x));
+                    if t.halign == justify::ALIGNED {
+                        height = run / (em * width_factor);
+                        self.note(
+                            "Hizalı yazı (72 = 3)",
+                            "iki noktasının arasına yerleşti; yüksekliği yazının Arimo'daki genişliğinden hesaplandı",
+                            e.line,
+                        );
+                    } else {
+                        width_factor = (run / (em * height)).min(MAX_WIDTH_FACTOR);
+                        self.note(
+                            "Sığdırılmış yazı (72 = 5)",
+                            "iki noktasının arasına yerleşti; genişlik çarpanı yazının Arimo'daki genişliğinden hesaplandı",
+                            e.line,
+                        );
+                    }
                 }
             }
+            return Ok(Frame {
+                m,
+                anchor: start,
+                rotation,
+                height,
+                align: None,
+                width_factor,
+            });
         }
-        Ok((m, anchor, rot, height))
+        let align = justify::align_of(t.halign, t.valign);
+        // AutoCAD writes a justified text's start (10) as it draws it; where the text stands is 11.
+        let anchor = match align {
+            Some(_) => second.unwrap_or(start),
+            None => start,
+        };
+        Ok(Frame {
+            m,
+            anchor,
+            rotation: t.rotation,
+            height,
+            align,
+            width_factor,
+        })
     }
 
     /// An attribute definition (ATTDEF, docs/adr/0144 §7). A constant one is
     /// a text wherever it is (the block's fixed text). Otherwise, in a block
     /// read as a definition it is one of the definition's attributes: its
-    /// tag, prompt and default, placed as a text is (a justified one's start
-    /// worked out from its default's width, else its tag's); an invisible
+    /// tag, prompt and default, placed as a text is (docs/adr/0145 §7: an
+    /// aligned or fitted one measured by its default, else its tag); an invisible
     /// one is not taken (the inserts' values stay their attributes); one
     /// without a tag, or with a tag taken before, is left out; each is said.
     /// Outside a definition (the drawing, an opened block) it is no drawing
@@ -1678,13 +1747,14 @@ impl<'l> Emitter<'l> {
         } else {
             value.clone()
         };
-        let placed = self
-            .text_frame(ctx, t, &words, e)
-            .map(|(m, anchor, rot, height)| mapped_text(m, anchor, rot, height));
+        let placed = self.text_frame(ctx, t, &words, e).map(|f| {
+            let mapped = mapped_text(f.m, f.anchor, f.rotation, f.height);
+            (mapped, f)
+        });
         match placed {
             Err(why) => self.skip(WHAT, why, e.line),
-            Ok(None) => self.skip(WHAT, "doğrultusu (210) geçersiz", e.line),
-            Ok(Some((p, rotation, height))) => {
+            Ok((None, _)) => self.skip(WHAT, "doğrultusu (210) geçersiz", e.line),
+            Ok((Some((p, rotation, height, widen)), f)) => {
                 let prompt = text_codes(&caret_decode(prompt));
                 self.out.attributes.push(AttributeDefinition {
                     tag: tag.to_owned(),
@@ -1693,8 +1763,8 @@ impl<'l> Emitter<'l> {
                     p,
                     height,
                     rotation,
-                    align: None,
-                    width_factor: None,
+                    align: f.align,
+                    width_factor: width_factor_of(f.width_factor * widen),
                 });
             }
         }
@@ -1722,17 +1792,11 @@ impl<'l> Emitter<'l> {
             .collect()
     }
 
-    /// A text at `anchor` whose baseline runs at `rotation` degrees (object coordinates).
-    fn push_text(
-        &mut self,
-        m: Tf,
-        anchor: Vec2,
-        rotation: f64,
-        height: f64,
-        text: String,
-        b: EntityBase,
-    ) {
-        let Some((p, rotation, height)) = mapped_text(m, anchor, rotation, height) else {
+    /// A text where `f` stands it; `mask`: over a mask of its own (an
+    /// MTEXT's background fill; KentOS's data gives a TEXT's).
+    fn push_text(&mut self, f: &Frame, text: String, mask: bool, b: EntityBase) {
+        let Some((p, rotation, height, widen)) = mapped_text(f.m, f.anchor, f.rotation, f.height)
+        else {
             return;
         };
         self.push(Entity::Text(TextEntity {
@@ -1741,9 +1805,9 @@ impl<'l> Emitter<'l> {
             text,
             height,
             rotation,
-            align: None,
-            width_factor: None,
-            mask: false,
+            align: f.align,
+            width_factor: width_factor_of(f.width_factor * widen),
+            mask,
         }));
     }
 
@@ -1759,6 +1823,7 @@ impl<'l> Emitter<'l> {
         rotation: Option<f64>,
         text: &str,
         spacing: f64,
+        fill: i64,
         style: &str,
         b: EntityBase,
         e: &Parsed,
@@ -1802,36 +1867,41 @@ impl<'l> Emitter<'l> {
         let up = v(-dir.y, dir.x);
         let angle = deg(atan2(dir.y, dir.x));
         let gap = height * 5.0 / 3.0 * if spacing > 0.0 { spacing } else { 1.0 };
-        let n = lines.len() as f64;
-        let block = height + (n - 1.0) * gap;
-        let row = (attach.clamp(1, 9) - 1) / 3;
-        let col = (attach.clamp(1, 9) - 1) % 3;
-        let top = match row {
+        // Its attachment point is each line's alignment (docs/adr/0145 §7):
+        // the lines hang a gap apart, the first one's point on the insertion
+        // point (top), the middle of them all (middle) or the last one's (bottom).
+        let align = justify::attachment(attach);
+        let last = (lines.len() - 1) as f64 * gap;
+        let first = match (attach.clamp(1, 9) - 1) / 3 {
             0 => 0.0,
-            1 => block / 2.0,
-            _ => block,
+            1 => last / 2.0,
+            _ => last,
         };
+        // A background fill (90: 1 its colour, 2 the drawing's) is a mask; 16 is a frame alone.
+        let mask = fill & 3 != 0;
         let mut kept = 0;
         for (i, line) in lines.iter().enumerate() {
             if line.trim().is_empty() {
                 continue;
             }
-            let w = text_em(line) * height;
-            let along = match col {
-                1 => -w / 2.0,
-                2 => -w,
-                _ => 0.0,
+            let over = first - i as f64 * gap;
+            let frame = Frame {
+                m: ctx.tf,
+                anchor: v(p[0] + up.x * over, p[1] + up.y * over),
+                rotation: angle,
+                height,
+                align: Some(align),
+                width_factor: 1.0,
             };
-            let down = top - height - i as f64 * gap;
-            let at = v(
-                p[0] + dir.x * along + up.x * down,
-                p[1] + dir.y * along + up.y * down,
-            );
-            self.push_text(ctx.tf, at, angle, height, line.clone(), b.clone());
+            self.push_text(&frame, line.clone(), mask, b.clone());
             kept += 1;
         }
         if kept > 1 {
-            self.note("Çok satırlı yazı (MTEXT)", "satırlarına bölündü; biçimlendirme kaldırıldı, konum yazı genişliği tahmin edilerek hesaplandı", e.line);
+            self.note(
+                "Çok satırlı yazı (MTEXT)",
+                "satırlarına bölündü; biçimlendirme kaldırıldı",
+                e.line,
+            );
         } else if text.contains('\\') || text.contains('{') {
             self.note(
                 "Çok satırlı yazı (MTEXT)",

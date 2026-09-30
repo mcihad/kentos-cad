@@ -1,0 +1,30 @@
+{
+  "entities": [
+    { "kind": "text", "id": 1, "layerId": "yazi", "attrs": {}, "p": {"x": 452345.123, "y": 4412345.678}, "text": "Ada 101", "height": 2.5, "rotation": 30, "widthFactor": 0.8 },
+    { "kind": "text", "id": 2, "layerId": "yazi", "attrs": {}, "p": {"x": 452365.123, "y": 4412345.678}, "text": "Ada 101", "height": 2.5, "rotation": 30, "align": "baselineCenter", "widthFactor": 0.8 },
+    { "kind": "text", "id": 3, "layerId": "yazi", "attrs": {}, "p": {"x": 452385.123, "y": 4412345.678}, "text": "Ada 101", "height": 2.5, "rotation": 30, "align": "baselineRight", "widthFactor": 0.8 },
+    { "kind": "text", "id": 4, "layerId": "yazi", "attrs": {}, "p": {"x": 452345.123, "y": 4412355.678}, "text": "Ada 101", "height": 2.5, "rotation": 30, "align": "bottomLeft", "widthFactor": 0.8 },
+    { "kind": "text", "id": 5, "layerId": "yazi", "attrs": {}, "p": {"x": 452365.123, "y": 4412355.678}, "text": "Ada 101", "height": 2.5, "rotation": 30, "align": "bottomCenter", "widthFactor": 0.8 },
+    { "kind": "text", "id": 6, "layerId": "yazi", "attrs": {}, "p": {"x": 452385.123, "y": 4412355.678}, "text": "Ada 101", "height": 2.5, "rotation": 30, "align": "bottomRight", "widthFactor": 0.8 },
+    { "kind": "text", "id": 7, "layerId": "yazi", "attrs": {}, "p": {"x": 452345.123, "y": 4412365.678}, "text": "Ada 101", "height": 2.5, "rotation": 30, "align": "middleLeft", "widthFactor": 0.8 },
+    { "kind": "text", "id": 8, "layerId": "yazi", "attrs": {}, "p": {"x": 452365.123, "y": 4412365.678}, "text": "Ada 101", "height": 2.5, "rotation": 30, "align": "middleCenter", "widthFactor": 0.8 },
+    { "kind": "text", "id": 9, "layerId": "yazi", "attrs": {}, "p": {"x": 452385.123, "y": 4412365.678}, "text": "Ada 101", "height": 2.5, "rotation": 30, "align": "middleRight", "widthFactor": 0.8 },
+    { "kind": "text", "id": 10, "layerId": "yazi", "attrs": {}, "p": {"x": 452345.123, "y": 4412375.678}, "text": "Ada 101", "height": 2.5, "rotation": 30, "align": "topLeft", "widthFactor": 0.8 },
+    { "kind": "text", "id": 11, "layerId": "yazi", "attrs": {}, "p": {"x": 452365.123, "y": 4412375.678}, "text": "Ada 101", "height": 2.5, "rotation": 30, "align": "topCenter", "widthFactor": 0.8 },
+    { "kind": "text", "id": 12, "layerId": "yazi", "attrs": {}, "p": {"x": 452385.123, "y": 4412375.678}, "text": "Ada 101", "height": 2.5, "rotation": 30, "align": "topRight", "widthFactor": 0.8 },
+    { "kind": "text", "id": 13, "layerId": "yazi", "attrs": {}, "p": {"x": 452415.123, "y": 4412345.678}, "text": "Zeminli yazı", "height": 2, "rotation": 0, "align": "middleCenter", "mask": true },
+    { "kind": "text", "id": 14, "layerId": "yazi", "attrs": {}, "p": {"x": 452415.123, "y": 4412355.678}, "text": "Zeminli", "height": 2, "rotation": 0, "mask": true },
+    { "kind": "text", "id": 15, "layerId": "yazi", "attrs": {}, "p": {"x": 452415.123, "y": 4412365.678}, "text": "Düz", "height": 2, "rotation": 0 },
+    { "kind": "insert", "id": 16, "layerId": "yazi", "attrs": {"No": "12"}, "block": "018f3a2b-0000-7000-8000-000000000101", "p": {"x": 452435.123, "y": 4412345.678}, "scale": 2, "rotation": 0.5 }
+  ],
+  "layers": [
+    {"id": "yazi", "name": "Yazı", "path": [], "color": "#7FB2E5", "visible": true, "locked": false, "lineType": "continuous", "lineWeight": 0.25}
+  ],
+  "scale": 1000,
+  "lengthDecimals": 3,
+  "grads": true,
+  "dimensionValues": {},
+  "blocks": [
+    {"id": "018f3a2b-0000-7000-8000-000000000101", "name": "Etiket", "base": {"x": 0, "y": 0}, "entities": [{"kind": "circle", "id": 1, "layerId": "", "attrs": {}, "c": {"x": 0, "y": 0}, "r": 1}], "attributes": [{"tag": "No", "prompt": "Numara", "value": "0", "p": {"x": 0, "y": 1.5}, "height": 1, "rotation": 0, "align": "bottomCenter", "widthFactor": 1.2}]}
+  ]
+}

@@ -138,7 +138,7 @@ impl Placing {
 }
 
 /// A text's alignment as the geometry core names it (docs/adr/0145).
-fn core_align(a: kentos_contracts::TextAlign) -> Option<kentos_geometry_core::text::TextAlign> {
+pub(crate) fn core_align(a: kentos_contracts::TextAlign) -> Option<kentos_geometry_core::text::TextAlign> {
     kentos_geometry_core::text::TextAlign::from_name(a.name())
 }
 

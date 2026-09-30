@@ -31,7 +31,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use kentos_contracts::{
     ArcEntity, Bounds, CircleEntity, Entity, EntityBase, ImportLayer, ImportResult, LineEntity,
-    LineType, NczReadOptions, PathEntity, PointEntity, TextEntity, Vec2,
+    LineType, NczReadOptions, PathEntity, PointEntity, TextAlign, TextEntity, Vec2,
 };
 use kentos_formats::math::{TAU, cos, hypot, norm_angle, rad, sin, sin_cos_deg};
 use kentos_formats::report::Report;
@@ -189,7 +189,6 @@ struct Emitter {
     drawn: BTreeMap<SmartClass, u32>,
     undrawn: BTreeMap<SmartClass, u32>,
     unsized_objects: u32,
-    centred_texts: u32,
     bounds: Option<Bounds>,
     /// The zone the file's MPROJ names, for its sheets' frames; or why there is none.
     zone: Result<Zone, Kept>,
@@ -258,7 +257,6 @@ impl Emitter {
             drawn: BTreeMap::new(),
             undrawn: BTreeMap::new(),
             unsized_objects: 0,
-            centred_texts: 0,
             bounds: None,
             zone: Err(Kept::Unsaid),
             framed: 0,
@@ -638,21 +636,9 @@ impl Emitter {
                         if line.trim().is_empty() {
                             continue;
                         }
-                        let w = width_em(line, font) * height;
-                        let dx = match anchor {
-                            Anchor::MiddleCentre => -w / 2.0,
-                            Anchor::MiddleRight => -w,
-                            Anchor::BaselineLeft | Anchor::MiddleLeft | Anchor::TopLeft => 0.0,
-                        };
-                        let dy = match anchor {
-                            Anchor::BaselineLeft => 0.0,
-                            Anchor::MiddleLeft | Anchor::MiddleCentre | Anchor::MiddleRight => -height / 2.0,
-                            Anchor::TopLeft => -height,
-                        } - i as f64 * LINE_PITCH * height;
-                        if *anchor != Anchor::BaselineLeft {
-                            self.centred_texts += 1;
-                        }
-                        let p = place.apply((at.0 + dx, at.1 + dy));
+                        // Its anchor is its alignment (docs/adr/0145 §7): each line stands on its
+                        // own, a pitch under the one before.
+                        let p = place.apply((at.0, at.1 - i as f64 * LINE_PITCH * height));
                         self.grow(p);
                         let base = next_base();
                         self.push_smart(
@@ -663,7 +649,7 @@ impl Emitter {
                                 text: line.clone(),
                                 height: height * size,
                                 rotation: place.rotation,
-                                align: None,
+                                align: align_of(*anchor),
                                 width_factor: None,
                                 mask: false,
                             }),
@@ -721,14 +707,6 @@ impl Emitter {
         }
         self.report
             .note_n("Akıllı nesne boyutu", "okunamadı; Netcad'in varsayılanı olan 1 ile çizildi", 0, self.unsized_objects);
-        if self.centred_texts > 0 {
-            self.report.note_n(
-                "Akıllı nesne yazısı",
-                "KentOS yazıları sol alt köşeden yerleşir; ortalı yazıların konumu çizimin yazı tipiyle ölçülerek hesaplandı",
-                0,
-                self.centred_texts,
-            );
-        }
         self.report.note_n(
             "Akıllı nesne (nokta)",
             "okunabilir bir dikdörtgeni yok; yerinde nokta olarak alındı, adı öznitelik",
@@ -882,6 +860,17 @@ fn properties(e: &format::Entity) -> BTreeMap<String, String> {
 /// `text` broken to `width` at the spaces, measured in the drawing's face;
 /// paragraphs stay on their own lines, and a word longer than the width
 /// stands alone on one.
+/// The alignment a symbol's text anchor names (docs/adr/0145 §7).
+fn align_of(anchor: Anchor) -> Option<TextAlign> {
+    match anchor {
+        Anchor::BaselineLeft => None,
+        Anchor::MiddleLeft => Some(TextAlign::MiddleLeft),
+        Anchor::MiddleCentre => Some(TextAlign::MiddleCenter),
+        Anchor::MiddleRight => Some(TextAlign::MiddleRight),
+        Anchor::TopLeft => Some(TextAlign::TopLeft),
+    }
+}
+
 fn wrapped(text: &str, width: f64, height: f64, font: Font) -> Vec<String> {
     let mut out = Vec::new();
     for paragraph in text.split('\n') {

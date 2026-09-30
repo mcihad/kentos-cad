@@ -1,0 +1,932 @@
+999
+Texts of docs/adr/0145 §7; crates/shared/formats/tests/dxf.rs works each out from this file.
+999
+Blocks: ETIKET (a circle and an ATTDEF NO centred in the middle, 41 0.9), YAZILI (a TEXT at 41 0.5).
+999
+ENTITIES in order: SOL; the eleven other alignments 30 m apart (72/73, the anchor 11; 10 stale or 0);
+999
+MIDDLE (72 4); GENIS (41 0.8, 30 degrees); BOZUK (41 -1.5); HIZALI (72 3) and SIGDIR (72 5) between 10 and 11;
+999
+TEK NOKTA (72 1, 73 2, no 11); ZEMINLI (KentOS data: mask); MTEXT at 71 1 on two lines, at 71 5 with 90 1,
+999
+at 71 9 on three lines, at 71 7 with 90 16 (a frame, no fill); ETIKET with its ATTRIB; YAZILI at X scale 3
+999
+(opened); YAZILI with an ATTRIB its block does not define (72 2, 74 3).
+  0
+SECTION
+  2
+HEADER
+  9
+$ACADVER
+  1
+AC1027
+  9
+$INSUNITS
+ 70
+6
+  0
+ENDSEC
+  0
+SECTION
+  2
+TABLES
+  0
+TABLE
+  2
+APPID
+ 70
+1
+  0
+APPID
+  2
+KENTOS
+ 70
+0
+  0
+ENDTAB
+  0
+ENDSEC
+  0
+SECTION
+  2
+BLOCKS
+  0
+BLOCK
+  8
+0
+  2
+ETIKET
+ 70
+2
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+  3
+ETIKET
+  0
+CIRCLE
+  8
+0
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 40
+1.0
+  0
+ATTDEF
+100
+AcDbEntity
+  8
+0
+100
+AcDbText
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 40
+0.5
+  1
+0
+ 41
+0.9
+ 72
+1
+ 11
+1.5
+ 21
+0.0
+ 31
+0.0
+100
+AcDbAttributeDefinition
+  3
+Numara
+  2
+NO
+ 70
+0
+ 74
+2
+  0
+ENDBLK
+  8
+0
+  0
+BLOCK
+  8
+0
+  2
+YAZILI
+ 70
+0
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+  3
+YAZILI
+  0
+TEXT
+100
+AcDbEntity
+  8
+0
+100
+AcDbText
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 40
+1.0
+  1
+OLCEK
+ 41
+0.5
+100
+AcDbText
+  0
+ENDBLK
+  8
+0
+  0
+ENDSEC
+  0
+SECTION
+  2
+ENTITIES
+  0
+TEXT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbText
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 40
+2.0
+  1
+SOL
+100
+AcDbText
+  0
+TEXT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbText
+ 10
+100.0
+ 20
+100.0
+ 30
+0.0
+ 40
+2.0
+  1
+ORTA
+ 72
+1
+ 11
+30.0
+ 21
+0.0
+ 31
+0.0
+100
+AcDbText
+  0
+TEXT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbText
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 40
+2.0
+  1
+SAG
+ 72
+2
+ 11
+60.0
+ 21
+0.0
+ 31
+0.0
+100
+AcDbText
+  0
+TEXT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbText
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 40
+2.0
+  1
+SOL ALT
+ 11
+0.0
+ 21
+10.0
+ 31
+0.0
+100
+AcDbText
+ 73
+1
+  0
+TEXT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbText
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 40
+2.0
+  1
+ORTA ALT
+ 72
+1
+ 11
+30.0
+ 21
+10.0
+ 31
+0.0
+100
+AcDbText
+ 73
+1
+  0
+TEXT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbText
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 40
+2.0
+  1
+SAG ALT
+ 72
+2
+ 11
+60.0
+ 21
+10.0
+ 31
+0.0
+100
+AcDbText
+ 73
+1
+  0
+TEXT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbText
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 40
+2.0
+  1
+SOL ORTA
+ 11
+0.0
+ 21
+20.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbText
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 40
+2.0
+  1
+ORTA ORTA
+ 72
+1
+ 11
+30.0
+ 21
+20.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbText
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 40
+2.0
+  1
+SAG ORTA
+ 72
+2
+ 11
+60.0
+ 21
+20.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbText
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 40
+2.0
+  1
+SOL UST
+ 11
+0.0
+ 21
+30.0
+ 31
+0.0
+100
+AcDbText
+ 73
+3
+  0
+TEXT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbText
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 40
+2.0
+  1
+ORTA UST
+ 72
+1
+ 11
+30.0
+ 21
+30.0
+ 31
+0.0
+100
+AcDbText
+ 73
+3
+  0
+TEXT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbText
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 40
+2.0
+  1
+SAG UST
+ 72
+2
+ 11
+60.0
+ 21
+30.0
+ 31
+0.0
+100
+AcDbText
+ 73
+3
+  0
+TEXT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbText
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 40
+2.0
+  1
+MIDDLE
+ 72
+4
+ 11
+100.0
+ 21
+0.0
+ 31
+0.0
+100
+AcDbText
+  0
+TEXT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbText
+ 10
+100.0
+ 20
+10.0
+ 30
+0.0
+ 40
+2.0
+  1
+GENIS
+ 50
+30.0
+ 41
+0.8
+100
+AcDbText
+  0
+TEXT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbText
+ 10
+100.0
+ 20
+20.0
+ 30
+0.0
+ 40
+2.0
+  1
+BOZUK
+ 41
+-1.5
+100
+AcDbText
+  0
+TEXT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbText
+ 10
+130.0
+ 20
+0.0
+ 30
+0.0
+ 40
+1.0
+  1
+HIZALI
+ 72
+3
+ 11
+140.0
+ 21
+0.0
+ 31
+0.0
+100
+AcDbText
+  0
+TEXT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbText
+ 10
+130.0
+ 20
+10.0
+ 30
+0.0
+ 40
+2.0
+  1
+SIGDIR
+ 72
+5
+ 11
+130.0
+ 21
+20.0
+ 31
+0.0
+100
+AcDbText
+  0
+TEXT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbText
+ 10
+160.0
+ 20
+0.0
+ 30
+0.0
+ 40
+2.0
+  1
+TEK NOKTA
+ 72
+1
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbText
+ 10
+160.0
+ 20
+10.0
+ 30
+0.0
+ 40
+2.0
+  1
+ZEMINLI
+100
+AcDbText
+1001
+KENTOS
+1002
+{
+1000
+mask
+1002
+}
+  0
+MTEXT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbMText
+ 10
+0.0
+ 20
+50.0
+ 30
+0.0
+ 40
+2.0
+ 71
+1
+ 72
+1
+  1
+UST SOL\PIKINCI
+  0
+MTEXT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbMText
+ 10
+30.0
+ 20
+50.0
+ 30
+0.0
+ 40
+2.0
+ 71
+5
+ 72
+1
+  1
+MERKEZ
+ 90
+1
+ 63
+1
+ 45
+1.5
+441
+0
+  0
+MTEXT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbMText
+ 10
+60.0
+ 20
+50.0
+ 30
+0.0
+ 40
+3.0
+ 71
+9
+ 72
+1
+  1
+A\PB\PC
+  0
+MTEXT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbMText
+ 10
+0.0
+ 20
+70.0
+ 30
+0.0
+ 40
+2.0
+ 71
+7
+ 72
+1
+  1
+ALT SOL
+ 90
+16
+  0
+INSERT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbBlockReference
+ 66
+1
+  2
+ETIKET
+ 10
+190.0
+ 20
+0.0
+ 30
+0.0
+  0
+ATTRIB
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbText
+ 10
+190.0
+ 20
+0.0
+ 30
+0.0
+ 40
+0.5
+  1
+7
+ 41
+0.9
+ 72
+1
+ 11
+191.5
+ 21
+0.0
+ 31
+0.0
+100
+AcDbAttribute
+  2
+NO
+ 70
+0
+ 74
+2
+  0
+SEQEND
+  8
+YAZI
+  0
+INSERT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbBlockReference
+  2
+YAZILI
+ 10
+200.0
+ 20
+20.0
+ 30
+0.0
+ 41
+3.0
+ 42
+1.0
+ 43
+1.0
+  0
+INSERT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbBlockReference
+ 66
+1
+  2
+YAZILI
+ 10
+220.0
+ 20
+0.0
+ 30
+0.0
+  0
+ATTRIB
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbText
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 40
+1.0
+  1
+SERBEST
+ 41
+1.0
+ 72
+2
+ 11
+225.0
+ 21
+5.0
+ 31
+0.0
+100
+AcDbAttribute
+  2
+NOT
+ 70
+0
+ 74
+3
+  0
+SEQEND
+  8
+YAZI
+  0
+ENDSEC
+  0
+EOF

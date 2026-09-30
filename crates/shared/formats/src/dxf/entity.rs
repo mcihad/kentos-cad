@@ -127,6 +127,9 @@ pub enum Kind {
         rotation: Option<f64>,
         text: String,
         spacing: f64,
+        /// Its background fill (90; docs/adr/0145 §7): 1 in its colour, 2 in
+        /// the drawing's, 16 a frame alone; 0 none.
+        fill: i64,
         style: String,
     },
     /// SOLID and TRACE (object coordinates, corner order 1 2 4 3) or 3DFACE (world, 1 2 3 4).
@@ -480,6 +483,7 @@ pub fn parse(
                 rotation: g.num(50)?,
                 text,
                 spacing: g.num_or(44, 1.0)?,
+                fill: g.int(90),
                 style: g.string(7),
             }
         }

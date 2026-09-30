@@ -230,12 +230,26 @@ describe.skipIf(!loader)('DXF WASM module', () => {
   });
 
   // Both platforms write the same bytes (crates/shared/formats/tests/dxf_write.rs; scripts/fixtures/dxf_write_reference.py checks them).
-  it('writes the blocks fixture to its committed bytes, as the native writer does', async () => {
+  it.each(['blocks', 'texts'])('writes the %s fixture to its committed bytes, as the native writer does', async (name) => {
     const w = await load();
-    const out = w.writeDxf(new TextDecoder().decode(fixture('dxf-write/blocks.input.json')));
+    const out = w.writeDxf(new TextDecoder().decode(fixture(`dxf-write/${name}.input.json`)));
     const bytes = out.takeBytes();
     out.free();
-    expect(new TextDecoder().decode(bytes)).toBe(new TextDecoder().decode(fixture('dxf-write/blocks.dxf')));
+    expect(new TextDecoder().decode(bytes)).toBe(new TextDecoder().decode(fixture(`dxf-write/${name}.dxf`)));
+  });
+
+  // docs/adr/0145 §7: a text's alignment, width factor and mask cross the columns (crates/shared/formats/tests/dxf.rs has the whole file).
+  it('reads texts with their alignment, width factor and mask', async () => {
+    const w = await load();
+    const r = imported(w.readDxf(fixture('texts.dxf'), JSON.stringify({ maxEntities: 0 }), quiet));
+    const texts = r.entities.flatMap((x) => (x.kind === 'text' ? [[x.text, x.p, x.align ?? null, x.widthFactor ?? null, x.mask ?? false]] : []));
+    expect(texts[1]).toEqual(['ORTA', { x: 30, y: 0 }, 'baselineCenter', null, false]);
+    expect(texts[13]).toEqual(['GENIS', { x: 100, y: 10 }, null, 0.8, false]);
+    expect(texts[18]).toEqual(['ZEMINLI', { x: 160, y: 10 }, null, null, true]);
+    expect(texts[21]).toEqual(['MERKEZ', { x: 30, y: 50 }, 'middleCenter', null, true]);
+    expect(texts[26]).toEqual(['OLCEK', { x: 200, y: 20 }, null, 1.5, false]);
+    const etiket = r.blocks?.find((b) => b.name === 'ETIKET');
+    expect(etiket?.attributes?.map((a) => [a.tag, a.p, a.align, a.widthFactor])).toEqual([['NO', { x: 1.5, y: 0 }, 'middleCenter', 0.9]]);
   });
 
   it('says how far a read is, to its end', async () => {

@@ -18,6 +18,7 @@ mod dimension;
 mod emit;
 mod entity;
 mod hatch;
+mod justify;
 mod lexer;
 mod strings;
 mod writer;

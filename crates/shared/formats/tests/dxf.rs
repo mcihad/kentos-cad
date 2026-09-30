@@ -5,7 +5,7 @@
 //! DXF at all. Expected values are worked out by hand from the file.
 
 use kentos_contracts::{
-    BlockId, DxfReadOptions, Entity, HatchPatternType, ImportResult, LineType, Vec2,
+    BlockId, DxfReadOptions, Entity, HatchPatternType, ImportResult, LineType, TextAlign, Vec2,
 };
 use kentos_formats::dxf;
 use kentos_formats::math::{cos, sin};
@@ -180,12 +180,16 @@ fn every_kind_with_layers_colours_and_the_turkish_code_page() {
     let Entity::Text(t) = &e[12] else {
         panic!("{:?}", e[12])
     };
-    assert_eq!((t.text.as_str(), t.p), ("Birinci satır", v(10.0, 18.0)));
+    // An MTEXT's lines hang from its attachment point, each aligned by it (docs/adr/0145 §7).
+    assert_eq!(
+        (t.text.as_str(), t.p, t.align),
+        ("Birinci satır", v(10.0, 20.0), Some(TextAlign::TopLeft))
+    );
     let Entity::Text(t) = &e[13] else {
         panic!("{:?}", e[13])
     };
-    assert_eq!(t.text, "Ikinci satır");
-    assert!(near(t.p, v(10.0, 18.0 - 2.0 * 5.0 / 3.0)), "{:?}", t.p);
+    assert_eq!((t.text.as_str(), t.align), ("Ikinci satır", Some(TextAlign::TopLeft)));
+    assert!(near(t.p, v(10.0, 20.0 - 2.0 * 5.0 / 3.0)), "{:?}", t.p);
     let Entity::Polygon(p) = &e[14] else {
         panic!("{:?}", e[14])
     };
@@ -626,8 +630,9 @@ fn a_dimension_is_its_block_exploded() {
         Entity::Text(t) =>
             t.base.layer_id == "OLCU"
                 && t.text == "10.00"
-                // Centred on 5: moved left by half its width in Arial's measures (Arimo).
-                && (t.p.x - (5.0 - text_width("10.00") * 0.5 / 2.0)).abs() < 1e-12,
+                // Standing on its MTEXT's attachment point, the bottom's centre (docs/adr/0145 §7).
+                && t.p == v(5.0, 5.5)
+                && t.align == Some(TextAlign::BottomCenter),
         _ => false,
     }));
     assert!(r.report.notes.iter().any(|n| n.what == "Ölçü (DIMENSION)"));
@@ -1224,17 +1229,25 @@ fn a_blocks_attribute_definitions_come_in_as_its_attributes() {
             )
         })
         .collect();
-    // ORTA starts as the drawing's twin TEXT, justified the same way on (487130, 4420211.2), starts from its point.
+    // ORTA stands centred on its baseline at its alignment point (11), as the drawing's twin
+    // TEXT at (487130, 4420211.2) does (docs/adr/0145 §7).
     let twin = r
         .entities
         .iter()
         .find_map(|e| match e {
-            Entity::Text(t) if t.text == "MERKEZ" => Some(t.p),
+            Entity::Text(t) if t.text == "MERKEZ" => Some((t.p, t.align)),
             _ => None,
         })
         .expect("the twin text");
-    let orta = v(twin.x - 487130.0, twin.y - 4420210.0);
-    assert!(orta.x < 0.0, "{twin:?}");
+    assert_eq!(
+        twin,
+        (v(487130.0, 4420211.2), Some(TextAlign::BaselineCenter))
+    );
+    let orta = v(0.0, 1.2);
+    assert_eq!(
+        rogar.attributes.iter().map(|a| a.align).collect::<Vec<_>>(),
+        [None, None, Some(TextAlign::BaselineCenter)]
+    );
     assert_eq!(
         attributes[..2],
         [
@@ -1254,7 +1267,7 @@ fn a_blocks_attribute_definitions_come_in_as_its_attributes() {
         (tag, prompt, value, height, rotation),
         ("ORTA", Some("Orta"), Some("MERKEZ"), 0.3, 0.0)
     );
-    assert!(near(p, orta), "{p:?} ≠ {orta:?}");
+    assert_eq!(p, orta);
     // The circle, and the constant SABIT as a text of the block.
     let [Entity::Circle(c), Entity::Text(fixed)] = rogar.entities.as_slice() else {
         panic!("{:?}", rogar.entities)
@@ -1317,4 +1330,111 @@ fn an_opened_blocks_attributes_come_in_as_texts() {
         .collect();
     assert_eq!(texts, ["SBT", "R-12", "101.35", "ekstra", "SBT", "MERKEZ"]);
     assert!(skipped(&r, "Görünmez öznitelik (ATTRIB)").is_some());
+}
+
+/// A text as the texts' test reads it: words, place, height, turn, alignment,
+/// width factor and mask.
+type Placed<'a> = (&'a str, Vec2, f64, f64, Option<TextAlign>, Option<f64>, bool);
+
+fn placed(e: &Entity) -> Placed<'_> {
+    let Entity::Text(t) = e else {
+        panic!("not a text: {e:?}")
+    };
+    (
+        t.text.as_str(),
+        t.p,
+        t.height,
+        t.rotation,
+        t.align,
+        t.width_factor,
+        t.mask,
+    )
+}
+
+/// Texts of docs/adr/0145 §7 (fixtures/formats/v1/texts.dxf; the places
+/// worked out by hand): a justified TEXT stands on its alignment point (11)
+/// with the alignment its 72 and 73 name, whatever its 10 says; 72 = 4 is
+/// the middle's centre; one without an 11 stands on its 10; 41 is its width
+/// factor when it may be one; aligned (72 = 3) and fitted (72 = 5) ones lie
+/// between their points, their height or width factor from their width in
+/// Arimo, said; KentOS's data gives a mask. An MTEXT's attachment point is
+/// its lines' alignment, the lines a gap (5/3 of the height) apart from it;
+/// its background fill (90: 1 or 2, not a frame's 16) a mask. An attribute
+/// definition and an ATTRIB its block does not define are justified as a
+/// TEXT is; a non-uniform scale widens an opened block's text.
+#[test]
+fn texts_take_their_alignment_width_factor_and_mask() {
+    use TextAlign::*;
+    let r = read("texts.dxf");
+    let e = &r.entities;
+    let at = |i: usize| placed(&e[i]);
+    let h = 2.0;
+    assert_eq!(at(0), ("SOL", v(0.0, 0.0), h, 0.0, None, None, false));
+    assert_eq!(at(1), ("ORTA", v(30.0, 0.0), h, 0.0, Some(BaselineCenter), None, false));
+    assert_eq!(at(2), ("SAG", v(60.0, 0.0), h, 0.0, Some(BaselineRight), None, false));
+    let rows = [
+        ["SOL ALT", "ORTA ALT", "SAG ALT"],
+        ["SOL ORTA", "ORTA ORTA", "SAG ORTA"],
+        ["SOL UST", "ORTA UST", "SAG UST"],
+    ];
+    let aligns = [
+        [BottomLeft, BottomCenter, BottomRight],
+        [MiddleLeft, MiddleCenter, MiddleRight],
+        [TopLeft, TopCenter, TopRight],
+    ];
+    for (row, (words, aligns)) in rows.iter().zip(aligns).enumerate() {
+        for (col, (words, align)) in words.iter().zip(aligns).enumerate() {
+            let p = v(30.0 * col as f64, 10.0 * (row + 1) as f64);
+            assert_eq!(at(3 + 3 * row + col), (*words, p, h, 0.0, Some(align), None, false));
+        }
+    }
+    assert_eq!(at(12), ("MIDDLE", v(100.0, 0.0), h, 0.0, Some(MiddleCenter), None, false));
+    assert_eq!(at(13), ("GENIS", v(100.0, 10.0), h, 30.0, None, Some(0.8), false));
+    assert_eq!(at(14), ("BOZUK", v(100.0, 20.0), h, 0.0, None, None, false));
+    assert!(noted(&r, "Yazı genişliği (41)").is_some_and(|n| n.contains("1 alındı")));
+    // HIZALI runs 10 m at a width factor of 1: its height makes it that long.
+    let (words, p, height, rotation, align, widths, mask) = at(15);
+    assert_eq!((words, p, rotation, align, widths, mask), ("HIZALI", v(130.0, 0.0), 0.0, None, None, false));
+    assert!((height - 10.0 / text_width("HIZALI")).abs() < 1e-12, "{height}");
+    assert!(noted(&r, "Hizalı yazı (72 = 3)").is_some());
+    // SIGDIR runs 10 m up at a height of 2: its width factor makes it that long.
+    let (words, p, height, rotation, align, widths, mask) = at(16);
+    assert_eq!((words, p, height, align, mask), ("SIGDIR", v(130.0, 10.0), 2.0, None, false));
+    assert!((rotation - 90.0).abs() < 1e-12, "{rotation}");
+    let fitted = widths.expect("a width factor");
+    assert!((fitted - 10.0 / (text_width("SIGDIR") * 2.0)).abs() < 1e-12, "{fitted}");
+    assert!(noted(&r, "Sığdırılmış yazı (72 = 5)").is_some());
+    assert_eq!(at(17), ("TEK NOKTA", v(160.0, 0.0), h, 0.0, Some(MiddleCenter), None, false));
+    assert_eq!(at(18), ("ZEMINLI", v(160.0, 10.0), h, 0.0, None, None, true));
+    // MTEXT: the top's left, on two lines.
+    assert_eq!(at(19), ("UST SOL", v(0.0, 50.0), h, 0.0, Some(TopLeft), None, false));
+    let (words, p, _, _, align, _, _) = at(20);
+    assert_eq!((words, align), ("IKINCI", Some(TopLeft)));
+    assert!(near(p, v(0.0, 50.0 - 2.0 * 5.0 / 3.0)), "{p:?}");
+    assert_eq!(at(21), ("MERKEZ", v(30.0, 50.0), h, 0.0, Some(MiddleCenter), None, true));
+    // The bottom's right, on three lines 3 × 5/3 = 5 apart: the last on the insertion point.
+    for (i, (words, y)) in [("A", 60.0), ("B", 55.0), ("C", 50.0)].into_iter().enumerate() {
+        assert_eq!(at(22 + i), (words, v(60.0, y), 3.0, 0.0, Some(BottomRight), None, false));
+    }
+    assert_eq!(at(25), ("ALT SOL", v(0.0, 70.0), h, 0.0, Some(BottomLeft), None, false));
+    // ETIKET's insert holds its value; its definition's attribute is justified as a TEXT.
+    let Entity::Insert(etiket) = &e[26] else {
+        panic!("{:?}", e[26])
+    };
+    assert_eq!(etiket.base.attrs.get("NO").map(String::as_str), Some("7"));
+    let definition = r.blocks.iter().find(|b| b.name == "ETIKET").expect("ETIKET");
+    let [no] = definition.attributes.as_slice() else {
+        panic!("{:?}", definition.attributes)
+    };
+    assert_eq!(
+        (no.tag.as_str(), no.p, no.height, no.align, no.width_factor),
+        ("NO", v(1.5, 0.0), 0.5, Some(MiddleCenter), Some(0.9))
+    );
+    // YAZILI at an X scale of 3 opens: 0.5 × 3 wide at the same height.
+    assert_eq!(at(27), ("OLCEK", v(200.0, 20.0), 1.0, 0.0, None, Some(1.5), false));
+    assert!(matches!(&e[28], Entity::Insert(_)));
+    assert_eq!(at(29), ("SERBEST", v(225.0, 5.0), 1.0, 0.0, Some(TopRight), None, false));
+    assert_eq!(e.len(), 30);
+    // Nothing is placed by a guess of its width any more.
+    assert!(r.report.notes.iter().all(|n| !n.reason.contains("tahmin")), "{:?}", r.report.notes);
 }

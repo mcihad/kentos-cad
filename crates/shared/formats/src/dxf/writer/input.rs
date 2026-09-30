@@ -14,7 +14,7 @@ use kentos_contracts::{
     ArcEntity, AreaPart, AttributeDefinition, BlockDefinition, BlockId, CircleEntity,
     ConstructionEntity, DimensionEntity, DimensionStyle, DxfWriteInput, DxfWriteLayer,
     EllipseEntity, Entity, EntityBase, HatchEntity, HatchPattern, InsertEntity, LineEntity,
-    PathEntity, PointEntity, RingGeometry, SplineEntity, TextEntity, Vec2,
+    PathEntity, PointEntity, RingGeometry, SplineEntity, TextAlign, TextEntity, Vec2,
 };
 use serde::de::value::{MapAccessDeserializer, SeqAccessDeserializer};
 use serde::de::{self, Deserialize, Deserializer, IgnoredAny, MapAccess, SeqAccess, Visitor};
@@ -82,6 +82,9 @@ struct Fields {
     text: Option<String>,
     height: Option<f64>,
     rotation: Option<f64>,
+    align: Option<TextAlign>,
+    width_factor: Option<f64>,
+    mask: Option<bool>,
     offset: Option<f64>,
     style: Option<DimensionStyle>,
     angle: Option<f64>,
@@ -204,9 +207,9 @@ impl Fields {
                 text: need(self.text, "text")?,
                 height: need(self.height, "height")?,
                 rotation: need(self.rotation, "rotation")?,
-                align: None,
-                width_factor: None,
-                mask: false,
+                align: self.align,
+                width_factor: self.width_factor,
+                mask: self.mask.unwrap_or(false),
             }),
             "dimension" => Entity::Dimension(DimensionEntity {
                 base,
@@ -302,6 +305,9 @@ impl<'de> Deserialize<'de> for Wire {
                         "text" => f.text = map.next_value()?,
                         "height" => f.height = Some(map.next_value()?),
                         "rotation" => f.rotation = Some(map.next_value()?),
+                        "align" => f.align = map.next_value()?,
+                        "widthFactor" => f.width_factor = map.next_value()?,
+                        "mask" => f.mask = map.next_value()?,
                         "offset" => f.offset = Some(map.next_value()?),
                         "style" => f.style = map.next_value()?,
                         "angle" => f.angle = map.next_value()?,
@@ -428,7 +434,8 @@ mod tests {
       {"kind":"spline","id":9,"layerId":"a","attrs":{},"pts":[{"x":0,"y":0},{"x":1,"y":1},{"x":2,"y":0}],"closed":true},
       {"kind":"xline","id":10,"layerId":"a","attrs":{},"p":{"x":0,"y":0},"dir":{"x":0.6,"y":0.8}},
       {"kind":"ray","id":11,"layerId":"a","attrs":{},"p":{"x":0,"y":0},"dir":{"x":0,"y":-1}},
-      {"kind":"text","id":12,"layerId":"a","attrs":{},"p":{"x":1,"y":1},"text":"Ağaç ^ %%d","height":2.5,"rotation":33.3},
+      {"kind":"text","id":12,"layerId":"a","attrs":{},"p":{"x":1,"y":1},"text":"Ağaç ^ %%d","height":2.5,"rotation":33.3,
+       "align":"topRight","widthFactor":0.75,"mask":true},
       {"kind":"dimension","id":13,"layerId":"a","attrs":{},"a":{"x":0,"y":0},"b":{"x":10,"y":0},"offset":2,"height":0.5,"text":"10.00","style":"linear","angle":0},
       {"kind":"dimension","id":14,"layerId":"a","attrs":{},"a":{"x":0,"y":0},"b":{"x":10,"y":0},"offset":6,"height":1,"style":"angular","c":{"x":-1,"y":-1}},
       {"kind":"hatch","id":15,"layerId":"a","attrs":{},"ring":[{"x":0,"y":0},{"x":4,"y":0},{"x":4,"y":4}],
@@ -452,7 +459,8 @@ mod tests {
                    {"kind":"insert","id":2,"layerId":"0","attrs":{},"block":"018f3a2b-0000-7000-8000-000000000002","p":{"x":0,"y":6},"scale":1,"rotation":1.5707963267948966}]},
       {"id":"018f3a2b-0000-7000-8000-000000000002","name":"Lamba","base":{"x":0,"y":0},
        "entities":[{"kind":"circle","id":1,"layerId":"cizim","attrs":{},"color":"#f5d90a","c":{"x":0,"y":0},"r":0.4}],
-       "attributes":[{"tag":"GUC","p":{"x":0.5,"y":0},"height":0.25,"rotation":0,"prompt":"Güç","value":"150 W"}]}
+       "attributes":[{"tag":"GUC","p":{"x":0.5,"y":0},"height":0.25,"rotation":0,"prompt":"Güç","value":"150 W",
+                      "align":"middleLeft","widthFactor":1.25}]}
     ]"##;
 
     fn doc(objects: &str) -> String {

@@ -154,6 +154,8 @@ class DxfExportDialog {
     const inserts = kinds.get('insert') ?? 0;
     const islands = list.filter(hasIslands).length;
     const data = list.some((e) => e.label || e.symbol || Object.keys(e.attrs).length);
+    // A text's mask is KentOS's alone: DXF's TEXT has none (docs/adr/0145 §7).
+    const masked = list.filter((e) => e.kind === 'text' && e.mask).length;
     const themed = layers.some((l) => THEMED.has(l.style.color)) || list.some((e) => e.color && THEMED.has(e.color));
     const styled = layers.filter((l) => l.style.renderer || l.style.fill).length;
     const hidden = layers.filter((l) => !ctx.doc.layers.isVisible(l.id)).length;
@@ -176,6 +178,7 @@ class DxfExportDialog {
         : null,
       islands ? summaryLine('info', `${islands} adalı alanın adaları ayrı kapalı çoklu çizgiler olarak yazılır; KentOS'a geri okununca yine adalı alan olur.`) : null,
       data ? summaryLine('info', 'Etiketler, öznitelikler ve semboller nesnelerle birlikte KentOS verisi olarak yazılır: başka programlar göstermez, KentOS geri okur.') : null,
+      masked ? summaryLine('info', `${masked} yazının zemini KentOS verisi olarak yazılır: DXF yazısında zemin yoktur, başka programlar göstermez; KentOS geri okur.`) : null,
       themed ? summaryLine('info', "Tema renkleri DXF'te sabit renk olur (ana mürekkep 7, ikincil 8); KentOS'a geri okununca yine tema rengidir.") : null,
       styled ? summaryLine('info', `${styled} katmanın stili (semboller, dolgular) DXF'e yazılmaz; rengi, çizgi tipi ve kalınlığı yazılır.`) : null,
       repeated ? summaryLine('info', "Aynı adlı katmanlar DXF'te grup adlarıyla ayrılır (“Grup - Katman”); DXF katmanları düz bir listedir.") : null,

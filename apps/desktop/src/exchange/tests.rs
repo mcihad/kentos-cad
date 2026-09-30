@@ -418,6 +418,49 @@ fn screens() {
                 &format!("aktar-{mode}-14-dxf-oznitelikler-geri-alindi"),
             );
             let _ = std::fs::remove_dir_all(&dir);
+
+            // Texts (docs/adr/0145 §7): the window says what became of the aligned and
+            // fitted ones; in, each stands on its alignment point (selected: its grip
+            // shows it); out again, the window says the masks are KentOS's. The web's
+            // are `shots.mjs texts` (import-dxf-texts…, export-dxf-texts).
+            let mut app = fresh();
+            app.picker = Picker::File(fixture("texts.dxf"));
+            run(&mut app, "file.import.dxf");
+            picture(&mut app, &format!("aktar-{mode}-15-dxf-yazilar"));
+            send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
+            let texts: Vec<kentos_domain::Slot> = app
+                .document
+                .as_ref()
+                .expect("open")
+                .model
+                .entities()
+                .filter(|e| matches!(e, Entity::Text(_)))
+                .map(|e| kentos_domain::Slot(e.base().id))
+                .collect();
+            app.selection.set(texts);
+            // The twelve alignments and the MTEXTs, then the aligned, fitted, widened and
+            // masked ones with the blocks.
+            for (frame, name) in [
+                ((-6.0, -4.0, 68.0, 76.0), "16-dxf-yazilar-hizalar"),
+                ((92.0, -4.0, 232.0, 26.0), "17-dxf-yazilar-digerleri"),
+            ] {
+                let (min_x, min_y, max_x, max_y) = frame;
+                let frame = kentos_render_wgpu::Bounds {
+                    min_x,
+                    min_y,
+                    max_x,
+                    max_y,
+                };
+                app.viewport.camera.fit(&frame, 24.0);
+                picture(&mut app, &format!("aktar-{mode}-{name}"));
+            }
+            app.selection.set(Vec::<kentos_domain::Slot>::new());
+            run(&mut app, "file.export.dxf");
+            send(
+                &mut app,
+                Event::DxfExport(dxf_export::Event::Scope(dxf_export::Scope::All)),
+            );
+            picture(&mut app, &format!("aktar-{mode}-18-dxf-ver-yazilar"));
         }
     }
 }

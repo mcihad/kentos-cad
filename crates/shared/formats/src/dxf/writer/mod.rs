@@ -34,8 +34,9 @@ pub use input::{WriteInput, input_from_json};
 use std::collections::{BTreeMap, HashMap};
 use std::fmt::Write as _;
 
-use kentos_contracts::{BlockId, Bounds, DxfWriteInput, ExportReport, Vec2};
+use kentos_contracts::{BlockId, Bounds, DxfWriteInput, ExportReport, TextAlign, Vec2};
 
+use super::justify;
 use crate::num::dxf_real;
 use crate::report::Report;
 use blocks::Written;
@@ -110,6 +111,44 @@ impl Out {
             self.str(*code, v);
         }
     }
+
+    /// A text's AcDbText groups (a TEXT's, an ATTRIB's or an ATTDEF's;
+    /// docs/adr/0145 §7): where it starts (10; `shown` measured, what a
+    /// program that does not justify draws there), its height, its value,
+    /// turn (none at 0) and width factor (41, none at 1); justified, its
+    /// horizontal justification (72, none at 0) and its alignment point (11),
+    /// where it stands. Its vertical justification is returned: it follows the
+    /// next subclass marker (a TEXT's 73, an attribute's 74; none at 0).
+    pub fn text(&mut self, value: &str, shown: &str, t: &Justified) -> i64 {
+        let start = justify::start(t.p, shown, t.height, t.rotation, t.align, t.width_factor);
+        self.xyz(10, start);
+        self.real(40, t.height);
+        self.str(1, value);
+        if t.rotation != 0.0 {
+            self.real(50, t.rotation);
+        }
+        if let Some(f) = t.width_factor {
+            self.real(41, f);
+        }
+        let Some(a) = t.align else {
+            return 0;
+        };
+        let (h, v) = justify::groups_of(a);
+        if h != 0 {
+            self.int(72, h);
+        }
+        self.xyz(11, t.p);
+        v
+    }
+}
+
+/// Where a text stands and how (docs/adr/0145 §7), as `Out::text` writes it.
+pub(crate) struct Justified {
+    pub p: Vec2,
+    pub height: f64,
+    pub rotation: f64,
+    pub align: Option<TextAlign>,
+    pub width_factor: Option<f64>,
 }
 
 /// Handles for the drawing's own records and entities, after the template's.

@@ -2061,7 +2061,47 @@ SCENES.texts = [
   { id: 'text-extras-mask', open: async (ui) => (await openTextExtras(ui), await ui.eval(closeIn(487108, 4419985, 2.5 / 0.85)), await ui.sleep(400)) },
   { id: 'text-extras-turned', open: async (ui) => (await openTextExtras(ui), await ui.eval(closeIn(487118, 4420025, 5 / 0.85)), await ui.sleep(400)) },
   ...textToolScenes(),
+  ...dxfTextScenes(),
 ];
+
+// DXF içe aktar over the texts' fixture (fixtures/formats/v1/texts.dxf, docs/adr/0145 §7), the way a user works it:
+// the window says what became of the aligned and fitted texts; in, every text selected so that its grip shows where it
+// stands; out again, the window says the masks are KentOS's. The desktop's are `exchange::tests::screens` (aktar-*-15…18).
+function dxfTextScenes() {
+  const bytes = readFileSync(new URL('../../../../fixtures/formats/v1/texts.dxf', import.meta.url)).toString('base64');
+  const open = `import('/src/ui/io/DrawingImportDialog.ts').then((m) => m.openDxfImport(window.kentos, { name: 'texts.dxf', bytes: Uint8Array.from(atob('${bytes}'), (c) => c.charCodeAt(0)) }, { description: 'DXF', accept: { 'application/dxf': ['.dxf'] } }))`;
+  const read = async (ui) => (await ui.eval(open), await ui.waitFor(DXF_READ, 15000));
+  const into = async (ui) => (await read(ui), await ui.clickText('.dialog--io .btn--primary', 'İçe aktar'), await ui.waitFor(`!document.querySelector('.dialog--io')`, 8000));
+  const close = async (ui) => (await ui.escapeAll(2), await ui.eval(UNDO_ALL));
+  return [
+    { id: 'import-dxf-texts', open: async (ui) => (await read(ui), await ui.sleep(400)), close },
+    // The twelve alignments and the MTEXTs, then the aligned, fitted, widened and masked ones with the blocks.
+    ...[
+      ['import-dxf-texts-aligns', '{ minX: -6, minY: -4, maxX: 68, maxY: 76 }'],
+      ['import-dxf-texts-others', '{ minX: 92, minY: -4, maxX: 232, maxY: 26 }'],
+    ].map(([id, frame]) => ({
+      id,
+      open: async (ui) => {
+        await into(ui);
+        await ui.eval(`(() => { const k = window.kentos; k.selection.set([...k.doc.all()].filter((e) => e.kind === 'text' && k.doc.layers.get(e.layerId)?.name === 'YAZI').map((e) => e.id)); k.view.camera.fit(${frame}, 24); k.view.requestRender(); })()`);
+        await ui.move(2, 2);
+        await ui.sleep(600);
+      },
+      close,
+    })),
+    {
+      id: 'export-dxf-texts',
+      open: async (ui) => {
+        await into(ui);
+        await ui.eval(`window.kentos.commands.execute('file.export.dxf')`);
+        await ui.waitFor(`!!document.querySelector('.dialog--io .io-summary')`, 15000);
+        await ui.clickText('.dialog--io .seg__opt', 'Tümü');
+        await ui.sleep(400);
+      },
+      close,
+    },
+  ];
+}
 
 // Yazı's options and Öznitelikler's text rows (docs/adr/0145 §6, step 4a): the tool with Hiza sağ üst, Genişlik 0.8,
 // Zemin and Artır on, its box about the pointer; the Hiza menu from the command line's chip; one text's rows and the

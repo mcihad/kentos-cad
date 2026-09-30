@@ -25,7 +25,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   (ADR 0021, 0027), nokta, daire, yay, dikdörtgen, döndürülmüş dikdörtgen ve düzgün
   çokgendir (ADR 0032); elips, eğri, yardımcı çizgi, ışın, paralel çizgi, dik in ve dik çık, halka,
   revizyon bulutu, kot noktası ve böl (ADR 0057); yazı ve çizimin üstündeki yazı kutusu (ADR 0060);
-  ölçülendirme: hizalı, doğrusal, açı, yarıçap ve çap (ADR 0061); tarama: kapalı nesneyle ya da çizgilerle, adalarıyla (ADR 0062); köşe kotu: çizginin, çoklu çizginin ve alanın köşe kotları, Kot ver, Öznitelikler'in kot ve 3B uzunluk satırları (ADR 0142); çok parçalı alan: parçalar ve delikleri, Parçaları birleştir, Parçalara ayır, alan işlemlerinde Tek nesne (ADR 0143); blok: Blok oluştur, Blok ekle, Bloklar paneli, Blok öznitelikleri penceresi, Öznitelikler'de yerleştirme ve blok öznitelikleri, Patlat; DXF'in blokları tanım ve yerleştirme olarak gelir ve gider, öznitelikleri ATTDEF ve ATTRIB olarak, “Blokları patlat” seçeneğiyle (ADR 0144);
+  ölçülendirme: hizalı, doğrusal, açı, yarıçap ve çap (ADR 0061); tarama: kapalı nesneyle ya da çizgilerle, adalarıyla (ADR 0062); köşe kotu: çizginin, çoklu çizginin ve alanın köşe kotları, Kot ver, Öznitelikler'in kot ve 3B uzunluk satırları (ADR 0142); çok parçalı alan: parçalar ve delikleri, Parçaları birleştir, Parçalara ayır, alan işlemlerinde Tek nesne (ADR 0143); blok: Blok oluştur, Blok ekle, Bloklar paneli, Blok öznitelikleri penceresi, Öznitelikler'de yerleştirme ve blok öznitelikleri, Patlat; DXF'in blokları tanım ve yerleştirme olarak gelir ve gider, öznitelikleri ATTDEF ve ATTRIB olarak, “Blokları patlat” seçeneğiyle (ADR 0144); yazı ekleri: yazının ve öznitelik tanımının on iki noktalı hizası ve genişlik çarpanı, yazının zemini, Yazı'nın Hiza, Genişlik, Zemin ve Artır seçenekleri, Okunur yap, Bul ve değiştir, Metin dosyası yerleştir; DXF'in 72/73'ü, 41'i, MTEXT'in yerleşim noktası ve zemini, NCZ'nin çapaları tahminsiz (ADR 0145);
   alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine tıklayarak alan (ADR 0065);
   mesafe ölç, alan hesapla ve parsel oluştur (ADR 0067); seçili nesnelerin tutamaçları ve üzerine gelme kartı (ADR 0068);
   Hesap pencereleri: poligon hesabı, kutupsal alım, önden ve geriden kestirme, aplikasyon (ADR 0070, 0071);
@@ -532,21 +532,15 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
 
 İşi devralan için kalınan yer; bir sonraki devirde bu bölümü yenileyin.
 
-- Bitti (30 Eylül): blok ([ADR 0144](docs/adr/0144-blocks.md), TODOS.md `CAD-04`), 1–6. adımlar iki
-  platformda: sözleşme ve şema 6, çekirdek, komutlar, araçlar ve arayüz; DXF okuma ve yazma, GeoJSON,
-  veritabanı projesi (göç 0012, iki istemcide blok izleyicisi; geliştirme veritabanı `kentos_cad` 0012'de);
-  öznitelik tanımları (gösterim, Patlat, Öznitelikler'in “Blok öznitelikleri”, Blok öznitelikleri penceresi,
-  Blok ekle'nin Öznitelik değerleri sorusu, DXF'in ATTDEF ve ATTRIB'i iki yönde). Xref, dinamik blok ve
-  blok düzenleme kipi kapsam dışı (ADR 0144 §8). Ondan önce çok parçalı alan (ADR 0143, `CAD-14`) ve köşe
-  kotu (ADR 0142, `CAD-13`).
-- Sürmekte: yazı ekleri ([ADR 0145](docs/adr/0145-text-extras.md), TODOS.md `CAD-15`, `.kcad` şema 7):
-  hiza, genişlik çarpanı, zemin; Okunur yap, Artır, Bul ve değiştir, Metin dosyası yerleştir; DXF ve NCZ
-  hizası tahminsiz. 1–4. adımlar tamam: sözleşme ve şema 7, çekirdek ve çizim, komutlar; araçlar ve arayüz
-  (4a Yazı'nın seçenekleri, Öznitelikler'in satırları, komut satırının “Diğer” çipi; 4b Okunur yap; 4c Bul ve
-  değiştir; 4d Metin dosyası yerleştir). Sırada 5. adım biçimler (DXF okuma ve yazma, NCZ çapaları; ADR 0145 §7).
-  Ondan sonra, sahibin sırasıyla (ADR 0143 Bağlam):
-  lider ve yeni ölçü türleri. Her biri `.kcad` şemasını değiştiren kendi özelliği ve şema adımıyla gelir;
-  önce ADR yazılır, adımlar ADR 0142–0145'teki gibi iki platformda, ortak fixture'larla ilerler.
+- Bitti (30 Eylül): yazı ekleri ([ADR 0145](docs/adr/0145-text-extras.md), TODOS.md `CAD-15`, `.kcad` şema 7),
+  1–5. adımlar iki platformda: sözleşme ve şema 7; çekirdek ve çizim; komutlar; araçlar ve arayüz (Yazı'nın
+  Hiza, Genişlik, Zemin ve Artır seçenekleri, Öznitelikler'in satırları, komut satırının “Diğer” çipi, Okunur yap,
+  Bul ve değiştir, Metin dosyası yerleştir); biçimler (DXF okuma ve yazma, NCZ çapaları; `texts.dxf` ve
+  `dxf-write/texts` bağımsız denetimle). Ondan önce blok (ADR 0144, `CAD-04`), çok parçalı alan (ADR 0143,
+  `CAD-14`) ve köşe kotu (ADR 0142, `CAD-13`).
+- Sırada, sahibin sırasıyla (ADR 0143 Bağlam): lider, sonra yeni ölçü türleri. Her biri `.kcad` şemasını
+  değiştiren kendi özelliği ve şema adımıyla gelir; önce ADR yazılır, adımlar ADR 0142–0145'teki gibi iki
+  platformda, ortak fixture'larla ilerler.
 - Bilinen açık: web `pnpm e2e` duman testinde üç test ADR 0143'ten önce de düşüyordu: “toolbox
   shows every tool without scrolling” (79 araç kaydırma istiyor), nokta hesaplayıcının “yan nokta
   30/5” adımı ve “Layers panel: counts follow add, undo and redo”. Kök nedenleri araştırılmadı.

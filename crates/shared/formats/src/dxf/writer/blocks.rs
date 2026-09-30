@@ -17,7 +17,7 @@ use std::collections::{HashMap, HashSet};
 use kentos_contracts::{BlockDefinition, BlockId, Bounds, Entity, InsertEntity, Vec2};
 
 use super::layers::{REFUSED, key, valid_name};
-use super::{Handles, Out};
+use super::{Handles, Justified, Out};
 use crate::geom::v;
 use crate::math::{cos, sin};
 use crate::report::Report;
@@ -250,16 +250,25 @@ pub(super) fn block(
         out.str(100, "AcDbEntity");
         out.str(8, "0");
         out.str(100, "AcDbText");
-        out.xyz(10, a.p);
-        out.real(40, a.height);
-        out.str(1, &value);
-        if a.rotation != 0.0 {
-            out.real(50, a.rotation);
-        }
+        // A block's definition shows its attributes' tags.
+        let vertical = out.text(
+            &value,
+            tag,
+            &Justified {
+                p: a.p,
+                height: a.height,
+                rotation: a.rotation,
+                align: a.align,
+                width_factor: a.width_factor,
+            },
+        );
         out.str(100, "AcDbAttributeDefinition");
         out.str(3, &prompt);
         out.str(2, tag);
         out.int(70, 0);
+        if vertical != 0 {
+            out.int(74, vertical);
+        }
     }
     let h = handles.take();
     out.str(0, "ENDBLK");

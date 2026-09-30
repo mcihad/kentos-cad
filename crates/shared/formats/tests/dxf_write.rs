@@ -1833,20 +1833,7 @@ fn block_names_dxf_refuses_change_and_a_block_holding_itself_is_written_once() {
 /// checks them against the input without KentOS's code.
 #[test]
 fn the_blocks_fixture_is_written_to_its_committed_bytes() {
-    let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../../fixtures/formats/v1/dxf-write");
-    let text = std::fs::read_to_string(dir.join("blocks.input.json")).expect("the input");
-    let input = dxf::input_from_json(&text).expect("the writer reads it");
-    let (bytes, report) = dxf::write(&input);
-    let path = dir.join("blocks.dxf");
-    if std::env::var_os("KENTOS_WRITE_DXF").is_some() {
-        std::fs::write(&path, &bytes).expect("written");
-    }
-    assert!(
-        String::from_utf8(bytes).expect("UTF-8")
-            == std::fs::read_to_string(&path).expect("the committed file"),
-        "the writer's bytes differ from blocks.dxf (KENTOS_WRITE_DXF=1 rewrites it; read the difference first)"
-    );
+    let report = written_as_committed("blocks");
     let notes: Vec<(&str, &str)> = report
         .notes
         .iter()
@@ -1884,12 +1871,92 @@ fn the_blocks_fixture_is_written_to_its_committed_bytes() {
     );
 }
 
-/// The blocks' fixture's input (`fixtures/formats/v1/dxf-write/blocks.input.json`).
-fn blocks_input() -> DxfWriteInput {
+/// A writer fixture's input (`fixtures/formats/v1/dxf-write/<name>.input.json`).
+fn fixture_input(name: &str) -> DxfWriteInput {
     let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../../fixtures/formats/v1/dxf-write");
-    let json = std::fs::read_to_string(dir.join("blocks.input.json")).expect("the input");
+    let json = std::fs::read_to_string(dir.join(format!("{name}.input.json"))).expect("the input");
     dxf::input_from_json(&json).expect("the writer reads it")
+}
+
+/// The blocks' fixture's input (`fixtures/formats/v1/dxf-write/blocks.input.json`).
+fn blocks_input() -> DxfWriteInput {
+    fixture_input("blocks")
+}
+
+/// A writer fixture written: its bytes are the committed `<name>.dxf`
+/// (`KENTOS_WRITE_DXF=1` rewrites it; read the difference first); its report.
+fn written_as_committed(name: &str) -> ExportReport {
+    let (bytes, report) = dxf::write(&fixture_input(name));
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/formats/v1/dxf-write")
+        .join(format!("{name}.dxf"));
+    if std::env::var_os("KENTOS_WRITE_DXF").is_some() {
+        std::fs::write(&path, &bytes).expect("written");
+    }
+    assert!(
+        String::from_utf8(bytes).expect("UTF-8")
+            == std::fs::read_to_string(&path).expect("the committed file"),
+        "the writer's bytes differ from {name}.dxf (KENTOS_WRITE_DXF=1 rewrites it; read the difference first)"
+    );
+    report
+}
+
+/// The texts' fixture (`fixtures/formats/v1/dxf-write/texts.input.json`,
+/// docs/adr/0145 §7) goes out as its committed bytes, which
+/// `scripts/fixtures/dxf_write_reference.py` checks without KentOS's code;
+/// the masks are said.
+#[test]
+fn the_texts_fixture_is_written_to_its_committed_bytes() {
+    let report = written_as_committed("texts");
+    let notes: Vec<(&str, &str, u32)> = report
+        .notes
+        .iter()
+        .map(|n| (n.what.as_str(), n.reason.as_str(), n.count))
+        .collect();
+    assert_eq!(
+        notes,
+        [(
+            "Yazı zemini",
+            "DXF yazısının zemini yoktur: zemin KentOS verisi olarak yazıldı; başka programlar göstermez, KentOS geri okur",
+            2
+        )]
+    );
+    assert!(report.skipped.is_empty(), "{:?}", report.skipped);
+}
+
+/// Texts go out justified (72, 73 and 11; an attribute's 72, 74 and 11),
+/// widened (41) and masked (KentOS's data) and come back as they were:
+/// every alignment at its point exactly, the block's attribute definition
+/// and its insert's value (docs/adr/0145 §7).
+#[test]
+fn texts_read_back_with_their_alignment_width_factor_and_mask() {
+    let input = fixture_input("texts");
+    let (text, _) = write(&input);
+    let r = read(&text);
+    let texts = |entities: &[Entity]| -> Vec<Entity> {
+        entities
+            .iter()
+            .filter(|e| matches!(e, Entity::Text(_)))
+            .map(|e| {
+                let mut e = e.clone();
+                let b = e.base_mut();
+                b.id = 0;
+                b.layer_id.clear();
+                e
+            })
+            .collect()
+    };
+    assert_eq!(texts(&r.entities), texts(&input.entities));
+    assert!(r.report.notes.is_empty(), "{:?}", r.report.notes);
+    let [etiket] = r.blocks.as_slice() else {
+        panic!("{:?}", r.blocks)
+    };
+    assert_eq!(etiket.attributes, input.blocks[0].attributes);
+    let Some(Entity::Insert(i)) = r.entities.iter().find(|e| matches!(e, Entity::Insert(_))) else {
+        panic!("no insert")
+    };
+    assert_eq!(i.base.attrs.get("No").map(String::as_str), Some("12"));
 }
 
 /// The attributes of the inserts of the block named `name`, in the file's order.
