@@ -1,6 +1,7 @@
-//! A text's editing rules (docs/adr/0145 §3) against the shared cases
+//! A text's editing rules (docs/adr/0145 §3, §6) against the shared cases
 //! (fixtures/text/v1, written from the rules by scripts/fixtures/text_cases.py):
-//! Artır's next number, Bul ve değiştir's matching and Okunur yap's turn,
+//! Artır's next number, Bul ve değiştir's matching, Okunur yap's turn and
+//! the point a new alignment gives,
 //! through the core's call table, as the web calls them through WASM
 //! (apps/web/src/model/textEdit.test.ts).
 
@@ -79,5 +80,19 @@ fn okunur_yap_turns_what_reads_upside_down_about_its_box() {
             "{}",
             c["name"]
         );
+    }
+}
+
+#[test]
+fn hizayı_değiştir_keeps_the_text_where_it_is() {
+    let cases = cases("realign.json");
+    assert!(cases.len() >= 5);
+    for c in cases {
+        let got = call("textRealign", json!([c, c["to"]]));
+        let num = |v: &Value| v.as_f64().expect("a number");
+        for k in ["x", "y"] {
+            let (g, w) = (num(&got[k]), num(&c["expect"][k]));
+            assert!((g - w).abs() <= 1e-9, "{}: {k} {g} ≠ {w}", c["name"]);
+        }
     }
 }

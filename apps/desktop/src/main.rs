@@ -99,6 +99,8 @@ mod parts_scenes;
 #[cfg(test)]
 mod query_tests;
 #[cfg(test)]
+mod text_scenes;
+#[cfg(test)]
 mod tools_scenes;
 #[cfg(test)]
 mod tools_screens;

@@ -21,11 +21,11 @@ use crate::files_testing::{app_with_drawing, find_text, find_texts};
 pub(crate) type Scene = (&'static str, fn(&mut App));
 
 /// What a click on the window opens over a scene (a menu).
-type Pointing = fn(&mut Snapshot, &mut App);
+pub(crate) type Pointing = fn(&mut Snapshot, &mut App);
 
 /// A picture that needs the pointer at the window itself: what brings the app
 /// to it, then what a click opens over it (a menu).
-type Pointed = (&'static str, fn(&mut App), Pointing);
+pub(crate) type Pointed = (&'static str, fn(&mut App), Pointing);
 
 /// Any picture: its name, what brings the app to it, and the click over it, if any.
 type Shot = (&'static str, fn(&mut App), Option<Pointing>);
@@ -64,7 +64,13 @@ fn open_split(snapshot: &mut Snapshot, app: &mut App, key: &str) {
 }
 
 /// A click (or a right click) on a caption of the window.
-fn press_caption(snapshot: &mut Snapshot, app: &mut App, caption: &str, right: bool, arrow: bool) {
+pub(crate) fn press_caption(
+    snapshot: &mut Snapshot,
+    app: &mut App,
+    caption: &str,
+    right: bool,
+    arrow: bool,
+) {
     let at = caption_at(snapshot, app, caption, arrow);
     let mut update = |app: &mut App, message: Message| {
         let _ = app.update(message);
@@ -79,7 +85,8 @@ fn press_caption(snapshot: &mut Snapshot, app: &mut App, caption: &str, right: b
 
 /// Pictures of menus the new commands are in (docs/adr/0141): the layer tree's, and Seç ▾.
 fn pointed_scenes() -> Vec<Pointed> {
-    vec![
+    let mut all = crate::text_scenes::pointed();
+    let menus: Vec<Pointed> = vec![
         (
             "katman-menu-katman",
             |_| {},
@@ -105,7 +112,9 @@ fn pointed_scenes() -> Vec<Pointed> {
             |app| app.tab = "modify",
             |s, app| open_split(s, app, "setElevation"),
         ),
-    ]
+    ];
+    all.extend(menus);
+    all
 }
 
 /// The ribbon tabs the new tools sit in.
@@ -131,6 +140,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::tools_scenes::scenes());
     all.extend(crate::elevation_scenes::scenes());
     all.extend(crate::parts_scenes::scenes());
+    all.extend(crate::text_scenes::scenes());
     all
 }
 

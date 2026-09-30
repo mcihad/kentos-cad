@@ -5,7 +5,7 @@ import type { MenuItem } from './PopupMenu';
 
 export type PropEditor =
   | { type: 'text' | 'number'; commit: (value: string) => void }
-  | { type: 'select'; items: () => MenuItem[]; display: () => { text: string; swatch?: string } };
+  | { type: 'select'; items: () => MenuItem[]; display: () => { text: string; swatch?: string; icon?: string } };
 
 export interface PropRow {
   label: string;
@@ -68,8 +68,10 @@ export class PropertyGrid {
     }
     if (e.type === 'select') {
       const dd = new Dropdown({ ariaLabel: r.label, className: 'dropdown--cell', items: e.items });
-      const { text, swatch } = e.display();
-      dd.set(swatch ? h('span', { class: 'swatch', style: `--swatch:${swatch}` }) : null, h('span', { class: 'dropdown__text' }, text));
+      const { text, swatch, icon: glyph } = e.display();
+      // A swatch (a colour) or an icon (a text's alignment, docs/adr/0145) before the value.
+      const lead = swatch ? h('span', { class: 'swatch', style: `--swatch:${swatch}` }) : glyph ? icon(glyph, 16) : null;
+      dd.set(lead, h('span', { class: 'dropdown__text' }, text));
       dd.el.dataset.propKey = key;
       return dd.el;
     }

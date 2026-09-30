@@ -1,0 +1,104 @@
+//! The drawing and the steps of the pictures of docs/adr/0145 §6 (Yazı's
+//! options and Öznitelikler's text rows): the tool with Hiza sağ üst,
+//! Genişlik 0.8, Zemin and Artır on, its box about the pointer, and the Hiza
+//! menu from the command line's chip; one text's rows and their Hiza
+//! drop-down; two texts that differ (Çeşitli). The web's are
+//! `shots.mjs texts` (`text-options`, `text-props` …). `tools_screens` takes
+//! them in the dark and the light theme at 1440×900 and 1100×650:
+//!
+//! ```text
+//! KENTOS_SHOTS_ONLY=yazi-secenekleri cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! ```
+//!
+//! Test code only.
+
+use kentos_domain::Slot;
+use kentos_ui::widget::docking;
+
+use iced::keyboard::key::Named;
+use kentos_ui::snapshot::Input;
+
+use crate::app::{App, Message};
+use crate::files_testing::find_text;
+use crate::tools_scenes::{Objects, forget, hover, open, run, typed};
+use crate::tools_screens::{Pointed, Scene, press_caption};
+
+/// A square and a line across it, a centred, narrowed and masked text on
+/// the line in the square, and a plain one turned 20°: slots 1 to 4.
+fn texts_ground() -> Objects {
+    let mut o = Objects::new();
+    o.path(
+        "cizim",
+        &[[4.0, 4.0], [22.0, 4.0], [22.0, 20.0], [4.0, 20.0]],
+        true,
+    );
+    o.line("cizim", [0.0, 12.0], [52.0, 12.0]);
+    let a = o.text("cizim", [13.0, 12.0], "Ada 101", 1.6, 0.0);
+    o.text_extras(a, Some("middleCenter"), Some(0.8), true);
+    o.text("cizim", [34.0, 17.0], "Yol 12", 1.6, 20.0);
+    o
+}
+
+const ADA: Slot = Slot(3);
+const YOL: Slot = Slot(4);
+
+/// Yazı with its options set as a user sets them: Hiza from its menu, the
+/// others typed; the pointer where the next text goes.
+fn tool(app: &mut App) {
+    open(app, texts_ground());
+    run(app, "tool.text");
+    let _ = app.update(Message::PromptChoice("H", "sağ üst"));
+    for option in ["G", "0.8", "Z", "R"] {
+        typed(app, option);
+    }
+    forget(app);
+    hover(app, [40.0, 6.0]);
+}
+
+/// The texts selected, Öznitelikler with the room to show its Geometri rows:
+/// the dock's upper stack folded to its header and Genel shut.
+fn props(app: &mut App, slots: &[Slot]) {
+    open(app, texts_ground());
+    app.selection.set(slots.iter().copied());
+    let upper = docking::Slot::Docked(docking::Side::Right, 0);
+    let _ = app.update(Message::Dock(docking::Event::Collapsed(upper, true)));
+    let _ = app.update(Message::Properties(crate::properties::Event::Toggle(
+        "general",
+    )));
+}
+
+pub(crate) fn scenes() -> Vec<Scene> {
+    vec![
+        ("yazi-secenekleri", tool),
+        ("yazi-oznitelikler", |app| props(app, &[ADA])),
+        ("yazi-oznitelikler-coklu", |app| props(app, &[ADA, YOL])),
+    ]
+}
+
+/// The Hiza menus: the command line's chip (in a narrow window, Diğer's
+/// menu with Hiza's open over it), and Öznitelikler's drop-down.
+pub(crate) fn pointed() -> Vec<Pointed> {
+    vec![
+        ("yazi-hiza-menusu", tool, |s, app| {
+            if find_text(s, app, "Hiza: sağ üst").is_some() {
+                press_caption(s, app, "Hiza: sağ üst", false, false);
+                return;
+            }
+            press_caption(s, app, "Diğer", false, false);
+            let mut update = |app: &mut App, message: Message| {
+                let _ = app.update(message);
+            };
+            s.settle(app, App::view, &mut update);
+            // Hiza, Diğer's first row, opened from the keyboard as a user may:
+            // ↓ to it, → into its menu.
+            for key in [Named::ArrowDown, Named::ArrowRight] {
+                s.input(app, App::view, &mut update, Input::Key(key));
+            }
+        }),
+        (
+            "yazi-oznitelikler-hiza",
+            |app| props(app, &[ADA]),
+            |s, app| press_caption(s, app, "Orta", false, false),
+        ),
+    ]
+}

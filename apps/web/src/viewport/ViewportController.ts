@@ -3,7 +3,7 @@ import { DisposableStore, listen } from '../core/disposable';
 import { Emitter } from '../core/emitter';
 import { Signal } from '../core/signal';
 import { changedDefinitions } from '../model/blocks';
-import type { Entity } from '../model/entities';
+import type { Entity, TextAlign } from '../model/entities';
 import { dimensionLabel, type DimensionLayout } from '../model/geom/dimension';
 import type { Affine } from '../model/geom/affine';
 import type { Edge } from '../model/geom/intersect';
@@ -38,6 +38,12 @@ export interface TextInputRequest {
   height: number;
   /** Degrees, counter-clockwise from east. */
   rotation: number;
+  /** Which point of the text `at` is (docs/adr/0145); none: the left of its baseline. */
+  align?: TextAlign | null;
+  /** The letters' width times this; none: 1. */
+  widthFactor?: number;
+  /** What the field opens with, selected (Yazı's Artır); none: empty. */
+  initial?: string;
   commit(text: string): void;
   cancel(): void;
 }

@@ -402,6 +402,15 @@ impl<Message> Menu<Message> {
             .any(|item| matches!(item, Item::Command(command) if command.swatch.is_some()))
     }
 
+    /// İkonlu bir seçenek (radio) komutu var mı: varsa ikonlar kendi
+    /// sütununda, seçilinin noktası önünde gösterilir (web'in `menu__check`
+    /// ve `menu__icon` sütunları; yazının hizası, ADR 0145).
+    fn has_radio_icons(&self) -> bool {
+        self.items.iter().any(
+            |item| matches!(item, Item::Command(command) if command.radio && command.icon.is_some()),
+        )
+    }
+
     /// Menüde gösterilecek bir şey var mı. Sondaki bölücü sayılmaz.
     pub fn is_empty(&self) -> bool {
         self.items
@@ -533,7 +542,9 @@ impl<Message> Menu<Message> {
             })
             .fold(0.0, f32::max);
 
-        (widest + ICON_SLOT + 8.0 + 16.0 + PADDING * 2.0 + 8.0)
+        // The icons' own column beside the radios' dots: 16 and the gap.
+        let icons = if self.has_radio_icons() { 24.0 } else { 0.0 };
+        (widest + icons + ICON_SLOT + 8.0 + 16.0 + PADDING * 2.0 + 8.0)
             .clamp(typography::scaled(MIN_WIDTH), typography::scaled(MAX_WIDTH))
     }
 }
@@ -1569,11 +1580,12 @@ fn panel<'a, Message: 'a>(
     boxed: fn(&Theme) -> container::Style,
 ) -> Element<'a, Message> {
     let swatches = menu.has_swatches();
+    let radio_icons = menu.has_radio_icons();
     let rows = menu
         .items
         .iter()
         .enumerate()
-        .map(|(index, item)| item_row(item, highlighted == Some(index), swatches));
+        .map(|(index, item)| item_row(item, highlighted == Some(index), swatches, radio_icons));
 
     container(Column::with_children(rows))
         .padding(PADDING)
@@ -1586,6 +1598,7 @@ fn item_row<'a, Message: 'a>(
     item: &Item<Message>,
     highlighted: bool,
     swatches: bool,
+    radio_icons: bool,
 ) -> Element<'a, Message> {
     let detail = match item {
         Item::Command(command) => command.detail.clone(),
@@ -1598,10 +1611,12 @@ fn item_row<'a, Message: 'a>(
     let (mark, text, shortcut, submenu, enabled, danger, sample) = match item {
         Item::Command(command) => (
             // A check shows its ✓ when on, a radio its dot, else its own icon
-            // (e.g. a snap kind's marker).
+            // (e.g. a snap kind's marker); in a menu of radios with icons the
+            // icon has a column of its own.
             match (command.checked, command.radio) {
                 (Some(true), true) => Mark::Dot,
                 (Some(true), false) => Mark::Icon(Icon::Check),
+                _ if radio_icons => Mark::None,
                 _ => command.icon.map_or(Mark::None, Mark::Icon),
             },
             command.label.clone(),
@@ -1660,6 +1675,16 @@ fn item_row<'a, Message: 'a>(
     let mut content = row![container(slot).width(ICON_SLOT).center_x(ICON_SLOT)]
         .spacing(8)
         .align_y(Center);
+    if radio_icons {
+        let glyph = match item {
+            Item::Command(command) => command.icon,
+            _ => None,
+        };
+        content = content.push(match glyph {
+            Some(glyph) => icon(glyph).size(16.0).into(),
+            None => Element::from(space::horizontal().width(16)),
+        });
+    }
     if swatches {
         content = content.push(match sample {
             Some(color) => crate::widget::swatch(color),
@@ -1807,6 +1832,23 @@ mod tests {
             panic!("the last command");
         };
         assert!(red.radio && red.checked == Some(true) && red.swatch.is_some());
+    }
+
+    #[test]
+    fn radios_with_icons_give_the_icons_a_column_and_a_wider_menu() {
+        // Long enough a label that neither menu is at its least width.
+        const LONG: &str = "Taban çizgisinin sağında, yazının sonunda";
+        let bare = Menu::new()
+            .radio("Sol üst", false, 1_u8)
+            .radio(LONG, true, 2_u8);
+        assert!(!bare.has_radio_icons());
+        let pictured = Menu::new()
+            .radio("Sol üst", false, 1_u8)
+            .radio(LONG, true, 2_u8)
+            .icon(Icon::Check);
+        assert!(pictured.has_radio_icons());
+        assert!(bare.width() > typography::scaled(MIN_WIDTH));
+        assert!(pictured.width() > bare.width());
     }
 
     #[test]

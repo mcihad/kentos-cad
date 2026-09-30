@@ -5,7 +5,7 @@ import { SNAP_LABEL, type SnapKind } from '../../viewport/picking';
 import { canCalcPoint } from '../../tools/pointCalc';
 import { calcMenuItems } from './calcMenu';
 import { gripItems } from './gripMenu';
-import { parsePrompt, runPromptOption } from '../promptOptions';
+import { choiceItems, parsePrompt, runPromptOption } from '../promptOptions';
 import { PopupMenu, type MenuItem } from '../widgets/PopupMenu';
 
 /** Snap kinds offered as one-shot overrides, in the order surveyors reach for them. */
@@ -58,7 +58,12 @@ function commandItems(ctx: AppContext): MenuItem[] {
     ...(options.length
       ? [
           { kind: 'separator' as const },
-          ...options.map((o): MenuItem => ({ label: o.value ? `${o.label}: ${o.value}` : o.label, hint: o.key, run: () => runPromptOption(ctx, o.key) })),
+          // An option that offers values (Yazı's Hiza, docs/adr/0145 §6) opens them as a submenu.
+          ...options.map((o): MenuItem => {
+            const label = o.value ? `${o.label}: ${o.value}` : o.label;
+            const items = choiceItems(ctx, o.key);
+            return items ? { label, hint: o.key, items } : { label, hint: o.key, run: () => runPromptOption(ctx, o.key) };
+          }),
         ]
       : []),
     { kind: 'separator' },

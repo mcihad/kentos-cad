@@ -43,3 +43,16 @@ export function setGeometry(ctx: AppContext, e: Entity, patch: Record<string, un
   const geometry = { ...geometryOf(e as unknown as EditGeometry), ...patch } as unknown as EditGeometry;
   return writeEdit(ctx, 'properties', [{ kind: 'update', uid: uidOf(ctx, e), geometry }]);
 }
+
+/**
+ * Several objects, each with some fields of its geometry changed, written in one step “Değiştir” (Öznitelikler's
+ * rows over a selection, docs/adr/0145 §6); nothing when none changes. The command's answer, or null when it refused.
+ */
+export function setGeometries(ctx: AppContext, changes: readonly { e: Entity; patch: Record<string, unknown> }[]): EntitiesEdited | null {
+  if (!changes.length) return null;
+  return writeEdit(
+    ctx,
+    'properties',
+    changes.map(({ e, patch }) => ({ kind: 'update', uid: uidOf(ctx, e), geometry: { ...geometryOf(e as unknown as EditGeometry), ...patch } as unknown as EditGeometry })),
+  );
+}

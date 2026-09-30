@@ -284,6 +284,9 @@ pub enum Message {
     CommandFocus(bool),
     /// An option button of the running command's prompt (its key: `G`, `Enter`).
     PromptOption(&'static str),
+    /// A value an option offers, chosen from its menu: the option's key and
+    /// what typing the value gives (Yazı's Hiza, docs/adr/0145 §6).
+    PromptChoice(&'static str, &'static str),
     /// Nokta hesapla: a construction over the running command (docs/adr/0083).
     PointCalc(kentos_interaction::point_calc::CalcKind),
     /// A key press no text box captured (keys.rs); routed by ADR 0018.
@@ -945,6 +948,7 @@ impl App {
                 }
             }
             Message::PromptOption(key) => return self.prompt_option(key),
+            Message::PromptChoice(key, typed) => return self.prompt_choice(key, typed),
             Message::PointCalc(kind) => return self.start_point_calc(kind),
             Message::Key(press) => return self.key(press),
             Message::Modifiers(modifiers) => {

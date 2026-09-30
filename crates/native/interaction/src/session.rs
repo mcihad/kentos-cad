@@ -570,6 +570,25 @@ impl Session {
         taken
     }
 
+    /// The values the running tool's option `key` chooses between (Yazı's
+    /// Hiza, docs/adr/0145 §6); none without a tool or such an option.
+    pub fn option_choices(&self, key: &str) -> Vec<crate::tool::OptionChoice> {
+        self.tool
+            .as_ref()
+            .map_or_else(Vec::new, |tool| tool.option_choices(key))
+    }
+
+    /// One of the values of the running tool's option `key` chosen, as
+    /// typing the key and then `typed`; false when this step takes none.
+    pub fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
+        let taken = self
+            .tool
+            .as_mut()
+            .is_some_and(|tool| tool.choose_option(key, typed, cx));
+        self.settle(cx);
+        taken
+    }
+
     /// A tool that finished with that call leaves: the web's modify tools
     /// call `ctx.tools.exit()` once their transform is written. One run over
     /// a suspended command hands it its point, and the command may finish

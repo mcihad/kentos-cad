@@ -51,6 +51,11 @@ pub struct Seen {
     pub radius: Option<f64>,
     /// A text's content (docs/adr/0144 §7).
     pub text: Option<String>,
+    /// A text's alignment's name (none: the left of the baseline), width
+    /// factor and mask (docs/adr/0145).
+    pub align: Option<String>,
+    pub width_factor: Option<f64>,
+    pub mask: Option<bool>,
 }
 
 impl Seen {
@@ -136,6 +141,18 @@ impl Seen {
                 Entity::Text(t) => Some(t.text.clone()),
                 _ => None,
             },
+            align: match e {
+                Entity::Text(t) => t.align.map(|a| a.name().to_owned()),
+                _ => None,
+            },
+            width_factor: match e {
+                Entity::Text(t) => Some(t.width_factor.unwrap_or(1.0)),
+                _ => None,
+            },
+            mask: match e {
+                Entity::Text(t) => Some(t.mask),
+                _ => None,
+            },
         }
     }
 }
@@ -200,6 +217,11 @@ pub struct Player<'a> {
     /// The command line's own state: its keyboard, its suggestion list, its focus reports.
     line: CommandLine,
     file: PathBuf,
+    /// Where Yazı's field over the drawing was open after the last step, and
+    /// whether it opened since and nothing was typed in it yet: Artır's
+    /// number in it is chosen, and typing replaces it (the widget's `select_all`).
+    field_at: Option<Vec2>,
+    field_fresh: bool,
 }
 
 impl<'a> Player<'a> {
@@ -230,6 +252,8 @@ impl<'a> Player<'a> {
             clock: Instant::now(),
             line: CommandLine::default(),
             file,
+            field_at: None,
+            field_fresh: false,
         };
         player.app.picker = Picker::File(player.file.clone());
         // Object tracking's dwell passes on the player's clock (`rest`), never
@@ -312,6 +336,16 @@ impl<'a> Player<'a> {
     }
 
     fn act(&mut self, step: &Step) -> Result<(), String> {
+        let done = self.act_step(step);
+        let at = self.app.text_field.as_ref().map(|f| f.at);
+        if at.is_some() && at != self.field_at {
+            self.field_fresh = true;
+        }
+        self.field_at = at;
+        done
+    }
+
+    fn act_step(&mut self, step: &Step) -> Result<(), String> {
         if let Some(id) = &step.run {
             let command = crate::catalog::catalog()
                 .get(id)
@@ -319,9 +353,22 @@ impl<'a> Player<'a> {
             return self.apply(Message::Run(command.id));
         }
         if let Some(key) = &step.key {
+            // Yazı's field over the drawing: Enter keeps what is typed (its text box's submit).
+            if key == "Enter" && self.app.text_field.is_some() {
+                return self.apply(Message::TextField(crate::text_field::Event::Keep));
+            }
             return self.press(&chord_stroke(key, self.variant.layout)?);
         }
         if let Some(text) = &step.text {
+            // Yazı's field takes what is typed; Artır's number, chosen as it opened, is typed over.
+            if let Some(open) = &self.app.text_field {
+                let now = if std::mem::take(&mut self.field_fresh) {
+                    text.clone()
+                } else {
+                    format!("{}{text}", open.text)
+                };
+                return self.apply(Message::TextField(crate::text_field::Event::Input(now)));
+            }
             for ch in text.chars() {
                 self.press(&stroke_for(&ch.to_string(), self.variant.layout)?)?;
             }

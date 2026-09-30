@@ -8,6 +8,7 @@ use std::borrow::Cow;
 use kentos_contracts::{DimensionStyle, Entity, HatchPatternType};
 use kentos_domain::{LayerTree, Slot};
 use kentos_interaction::elevation::{self, Summary as Elevations};
+use kentos_interaction::text;
 use kentos_interaction::{
     Format, Vec2, angle_deg, arc_sweep, bearing_grad, dimension_layout, dist, fixed, full_ellipse,
     measures,
@@ -59,7 +60,8 @@ pub(crate) enum Summary {
 #[derive(Clone)]
 pub(crate) struct Section {
     pub id: &'static str,
-    pub title: &'static str,
+    /// Its heading; a count in some (“Yazılar (3)”).
+    pub title: Cow<'static, str>,
     pub rows: Vec<Row>,
 }
 
@@ -84,10 +86,12 @@ pub(crate) enum Editor {
     Text(Field),
     /// A number cell; the field reads the number as the web does.
     Number(Field),
-    /// A drop-down: what it shows (a colour value for the swatch) and its choices.
+    /// A drop-down: what it shows (a colour value for the swatch, or a web
+    /// icon's name before it) and its choices.
     Select {
         text: String,
         swatch: Option<String>,
+        icon: Option<&'static str>,
         items: Vec<Choice>,
     },
 }
@@ -95,10 +99,12 @@ pub(crate) enum Editor {
 /// One entry of a drop-down.
 #[derive(Clone)]
 pub(crate) enum Choice {
-    /// One of a group; a colour value for its swatch; not enabled when locked.
+    /// One of a group; a colour value for its swatch, or a web icon's name
+    /// (a text's alignment); not enabled when locked.
     Pick {
         label: String,
         swatch: Option<String>,
+        icon: Option<&'static str>,
         chosen: bool,
         enabled: bool,
         message: Message,
@@ -241,7 +247,7 @@ fn document_section(doc: &Document) -> Section {
         .map_or_else(|| "—".to_owned(), |n| layer_path(layers, &n.id));
     Section {
         id: "doc",
-        title: "Çizim",
+        title: "Çizim".into(),
         rows: vec![
             Row::text("Dosya", doc.name()),
             Row::text(
@@ -292,6 +298,7 @@ fn weight_editor(ids: &[Slot], current: Option<Option<f64>>) -> Editor {
         Choice::Pick {
             label: "Katmana göre".to_owned(),
             swatch: None,
+            icon: None,
             chosen: current == Some(None),
             enabled: true,
             message: set(None),
@@ -301,6 +308,7 @@ fn weight_editor(ids: &[Slot], current: Option<Option<f64>>) -> Editor {
     items.extend(weights.into_iter().map(|w| Choice::Pick {
         label: weight_label(w),
         swatch: None,
+        icon: None,
         chosen: current == Some(Some(w)),
         enabled: true,
         message: set(Some(w)),
@@ -308,6 +316,7 @@ fn weight_editor(ids: &[Slot], current: Option<Option<f64>>) -> Editor {
     Editor::Select {
         text: weight_text(current),
         swatch: None,
+        icon: None,
         items,
     }
 }
@@ -338,12 +347,14 @@ fn layer_editor(doc: &Document, ids: &[Slot], current: Option<&str>) -> Editor {
     Editor::Select {
         text: shown.map_or_else(|| "Çeşitli".to_owned(), |n| n.name.clone()),
         swatch: shown.map(|n| n.style.color.clone()),
+        icon: None,
         items: layers
             .leaves()
             .into_iter()
             .map(|l| Choice::Pick {
                 label: layer_path(layers, &l.id),
                 swatch: Some(l.style.color.clone()),
+                icon: None,
                 chosen: Some(l.id.as_str()) == current,
                 enabled: !layers.is_locked(&l.id),
                 message: Message::Properties(Event::Layer(ids.to_vec(), l.id.clone())),
@@ -364,6 +375,7 @@ fn color_editor(ids: &[Slot], current: Option<Option<&str>>) -> Editor {
         Choice::Pick {
             label: "Katmana göre".to_owned(),
             swatch: None,
+            icon: None,
             chosen: current == Some(None),
             enabled: true,
             message: set(None),
@@ -373,6 +385,7 @@ fn color_editor(ids: &[Slot], current: Option<Option<&str>>) -> Editor {
     items.extend(DRAW_COLORS.iter().map(|(name, value)| Choice::Pick {
         label: (*name).to_owned(),
         swatch: Some((*value).to_owned()),
+        icon: None,
         chosen: current == Some(Some(*value)),
         enabled: true,
         message: set(Some(value)),
@@ -380,6 +393,7 @@ fn color_editor(ids: &[Slot], current: Option<Option<&str>>) -> Editor {
     Editor::Select {
         text: known.map_or_else(|| color_text(current), |(name, _)| (*name).to_owned()),
         swatch: known.map(|(_, value)| (*value).to_owned()),
+        icon: None,
         items,
     }
 }
@@ -389,10 +403,12 @@ fn symbol_editor(doc: &Document, current: Option<Option<&str>>) -> Editor {
     Editor::Select {
         text: symbol_text(doc, current),
         swatch: None,
+        icon: None,
         items: vec![
             Choice::Pick {
                 label: "Katman stiline göre".to_owned(),
                 swatch: None,
+                icon: None,
                 chosen: current == Some(None),
                 enabled: true,
                 message: Message::Run("style.clearSymbol"),
@@ -707,11 +723,13 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             let pattern = Editor::Select {
                 text: name(h.pattern.kind).to_owned(),
                 swatch: None,
+                icon: None,
                 items: PATTERNS
                     .iter()
                     .map(|(t, n)| Choice::Pick {
                         label: (*n).to_owned(),
                         swatch: None,
+                        icon: None,
                         chosen: *t == h.pattern.kind,
                         enabled: true,
                         message: Message::Properties(Event::Pattern(slot, *t)),
@@ -734,9 +752,10 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 Row::figure("Açı", fixed(t.rotation, 2))
                     .unit("°")
                     .editor(number(Field::TextAngle(slot))),
-                len("Konum Y", t.p.x),
-                len("Konum X", t.p.y),
             ]);
+            // Hiza, Genişlik çarpanı and Zemin (docs/adr/0145 §6).
+            geo.extend(text_rows(&[t], &ids, locked));
+            geo.extend([len("Konum Y", t.p.x), len("Konum X", t.p.y)]);
         }
         // The block, its place, scale, turn and mirroring, through
         // `cad.entities.edit`'s properties (docs/adr/0144 §6), as the web's.
@@ -748,6 +767,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             let blocks = Editor::Select {
                 text: name.clone(),
                 swatch: None,
+                icon: None,
                 items: doc
                     .model
                     .blocks()
@@ -755,6 +775,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                     .map(|b| Choice::Pick {
                         label: b.name.clone(),
                         swatch: None,
+                        icon: None,
                         chosen: b.id == i.block,
                         enabled: true,
                         message: Message::Properties(Event::InsertBlock(slot, b.id)),
@@ -765,11 +786,13 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             let mirror = Editor::Select {
                 text: yes_no(i.mirror).to_owned(),
                 swatch: None,
+                icon: None,
                 items: [true, false]
                     .into_iter()
                     .map(|m| Choice::Pick {
                         label: yes_no(m).to_owned(),
                         swatch: None,
+                        icon: None,
                         chosen: m == i.mirror,
                         enabled: true,
                         message: Message::Properties(Event::InsertMirror(slot, m)),
@@ -792,12 +815,12 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
     let mut sections = vec![
         Section {
             id: "general",
-            title: "Genel",
+            title: "Genel".into(),
             rows: general,
         },
         Section {
             id: "geometry",
-            title: "Geometri",
+            title: "Geometri".into(),
             rows: geo,
         },
     ];
@@ -823,7 +846,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
     if !tags.is_empty() {
         sections.push(Section {
             id: "blockAttrs",
-            title: "Blok öznitelikleri",
+            title: "Blok öznitelikleri".into(),
             rows: tags
                 .iter()
                 .map(|(tag, value)| Row {
@@ -845,7 +868,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
     if !others.is_empty() {
         sections.push(Section {
             id: "attrs",
-            title: "Öznitelik bilgileri",
+            title: "Öznitelik bilgileri".into(),
             rows: others
                 .into_iter()
                 .map(|(key, value)| Row {
@@ -863,6 +886,72 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
 }
 
 /// A value that reads as a number: `12`, `-3,5` (the web's `/^-?\d+([.,]\d+)?$/`).
+/// A text's Hiza, Genişlik çarpanı and Zemin rows (docs/adr/0145 §6), for one
+/// text or the texts of a selection: their common value, or “Çeşitli”. A new
+/// alignment keeps each text where it is; the texts are written in one step
+/// “Değiştir”. On a locked layer they only show. The web's `textRows`.
+fn text_rows(texts: &[&kentos_contracts::TextEntity], slots: &[Slot], locked: bool) -> Vec<Row> {
+    const MIXED: &str = "Çeşitli";
+    let common = |of: &dyn Fn(&kentos_contracts::TextEntity) -> String| {
+        let first = of(texts[0]);
+        texts.iter().all(|t| of(t) == first).then_some(first)
+    };
+    let align = texts
+        .iter()
+        .all(|t| t.align == texts[0].align)
+        .then_some(texts[0].align);
+    let factor = common(&|t| text::width_factor_text(t.width_factor.unwrap_or(1.0)));
+    let mask = texts
+        .iter()
+        .all(|t| t.mask == texts[0].mask)
+        .then_some(texts[0].mask);
+    let on_off = |on: bool| if on { "Açık" } else { "Kapalı" };
+    let align_text = align.map_or_else(|| MIXED.to_owned(), |a| text::align_label(a).to_owned());
+    let mask_text = mask.map_or(MIXED, on_off).to_owned();
+    let edit = |editor: Editor| (!locked).then_some(editor);
+    let aligns = Editor::Select {
+        text: align_text.clone(),
+        swatch: None,
+        icon: align.map(text::align_icon),
+        items: text::ALIGNS
+            .iter()
+            .map(|&(a, _, label, icon)| Choice::Pick {
+                label: label.to_owned(),
+                swatch: None,
+                icon: Some(icon),
+                chosen: align == Some(a),
+                enabled: true,
+                message: Message::Properties(Event::TextAlign(slots.to_vec(), a)),
+            })
+            .collect(),
+    };
+    let masks = Editor::Select {
+        text: mask_text.clone(),
+        swatch: None,
+        icon: None,
+        items: [true, false]
+            .into_iter()
+            .map(|on| Choice::Pick {
+                label: on_off(on).to_owned(),
+                swatch: None,
+                icon: None,
+                chosen: mask == Some(on),
+                enabled: true,
+                message: Message::Properties(Event::TextMask(slots.to_vec(), on)),
+            })
+            .collect(),
+    };
+    let factor_row = match factor {
+        Some(value) => Row::figure("Genişlik çarpanı", value),
+        None => Row::text("Genişlik çarpanı", MIXED),
+    };
+    vec![
+        Row::text("Hiza", align_text).editor(edit(aligns)),
+        factor_row.editor(edit(Editor::Number(Field::TextWidth(slots.to_vec())))),
+        Row::text("Zemin", mask_text).editor(edit(masks)),
+    ]
+}
+
 fn looks_numeric(value: &str) -> bool {
     let digits = value.strip_prefix('-').unwrap_or(value);
     let mut parts = digits.splitn(2, ['.', ',']);
@@ -938,9 +1027,29 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
     }
     let mut sections = vec![Section {
         id: "general",
-        title: "Ortak özellikler",
+        title: "Ortak özellikler".into(),
         rows,
     }];
+    // The selection's texts: their Hiza, Genişlik çarpanı and Zemin, common or Çeşitli (docs/adr/0145 §6).
+    let texts: Vec<&kentos_contracts::TextEntity> = objects
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Text(t) => Some(t),
+            _ => None,
+        })
+        .collect();
+    if !texts.is_empty() {
+        let slots: Vec<Slot> = texts.iter().map(|t| Slot(t.base.id)).collect();
+        sections.push(Section {
+            id: "texts",
+            title: if texts.len() == objects.len() {
+                "Yazı".into()
+            } else {
+                format!("Yazılar ({})", texts.len()).into()
+            },
+            rows: text_rows(&texts, &slots, any_locked),
+        });
+    }
     let mut totals = Vec::new();
     if length > 0.0 {
         totals.push(Row::figure("Toplam uzunluk", f.length_bare(length)).unit("m"));
@@ -951,7 +1060,7 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
     if !totals.is_empty() {
         sections.push(Section {
             id: "totals",
-            title: "Toplamlar",
+            title: "Toplamlar".into(),
             rows: totals,
         });
     }

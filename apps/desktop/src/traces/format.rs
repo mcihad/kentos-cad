@@ -178,6 +178,13 @@ pub struct Newest {
     pub(super) radius: Option<f64>,
     /// A text's content, exact (docs/adr/0144 §7).
     pub(super) text: Option<String>,
+    /// A text's alignment by its name, `null` the left of the baseline, its
+    /// width factor (1 without one) and mask (docs/adr/0145); absent, not compared.
+    #[serde(default, deserialize_with = "present")]
+    pub(super) align: Option<Option<String>>,
+    #[serde(rename = "widthFactor")]
+    pub(super) width_factor: Option<f64>,
+    pub(super) mask: Option<bool>,
 }
 
 /// A JSON object's members in the order they are written (a `dialog` step's

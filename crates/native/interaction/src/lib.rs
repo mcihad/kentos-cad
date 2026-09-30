@@ -191,5 +191,6 @@ pub use tool::{Area, Label};
 pub use view_history::{ViewHistory, Viewpoint};
 pub use tool::{
     Context, Corners, Cursor, DimensionMode, Draft, Flow, LengthenMode, Marker, MarkerShape,
-    Memory, Pointer, Preview, Stroke, Tag, TextField, Tone, Tool, View, ViewChange, snap_kinds,
+    Memory, OptionChoice, Pointer, Preview, Stroke, Tag, TextField, Tone, Tool, View, ViewChange,
+    snap_kinds,
 };

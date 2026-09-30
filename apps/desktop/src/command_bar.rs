@@ -13,7 +13,7 @@
 use iced::widget::{Row, button, container, opaque, row, text};
 use iced::{Center, Element, Fill, Padding};
 
-use kentos_ui::icon::{Tone, icon};
+use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::theme::{Tokens, typography};
@@ -75,7 +75,19 @@ impl App {
                 .size(typography::body()),
         );
         let options = p.options.iter().map(|o| {
-            let mut face = row![label::caption(o.label)].spacing(6).align_y(Center);
+            // An option that offers values (Yazı's Hiza, docs/adr/0145 §6): the
+            // chosen one's picture first, a ▾, and its menu on a click.
+            let menu = self.choice_menu(o.key);
+            let chosen = self
+                .session
+                .option_choices(o.key)
+                .into_iter()
+                .find(|c| c.checked);
+            let mut face = row![].spacing(6).align_y(Center);
+            if let Some(c) = chosen {
+                face = face.push(icon(crate::icons::from_web(Some(c.icon))).size(14.0));
+            }
+            face = face.push(label::caption(o.label));
             if let Some(value) = &o.value {
                 face = face.push(text(value.clone()).size(typography::caption()).style(
                     |theme: &iced::Theme| text::Style {
@@ -83,17 +95,38 @@ impl App {
                     },
                 ));
             }
+            if menu.is_some() {
+                face = face.push(icon(Icon::ChevronDown).size(12.0).tone(Tone::Muted));
+            }
             let face = face.push(key(o.key));
-            button(face)
-                .on_press(Message::PromptOption(o.key))
-                .padding(Padding {
-                    top: 2.0,
-                    right: 4.0,
-                    bottom: 2.0,
-                    left: 9.0,
-                })
-                .style(style::button::keyword)
-                .into()
+            let padding = Padding {
+                top: 2.0,
+                right: 4.0,
+                bottom: 2.0,
+                left: 9.0,
+            };
+            match menu {
+                Some(menu) => {
+                    let face = container(face)
+                        .padding(padding)
+                        .style(|theme: &iced::Theme| {
+                            let t = Tokens::of(theme);
+                            container::Style {
+                                text_color: Some(t.text),
+                                border: iced::border::rounded(kentos_ui::theme::shape::radius(3.0))
+                                    .width(1.0)
+                                    .color(t.border),
+                                ..container::Style::default()
+                            }
+                        });
+                    kentos_ui::widget::MenuButton::new(face, move || menu.clone()).into()
+                }
+                None => button(face)
+                    .on_press(Message::PromptOption(o.key))
+                    .padding(padding)
+                    .style(style::button::keyword)
+                    .into(),
+            }
         });
         // The step and its notes (a current value, a hint), as the web's `cmdbar__note`: smaller, muted.
         let step = p.notes.iter().fold(

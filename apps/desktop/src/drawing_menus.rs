@@ -102,6 +102,19 @@ pub enum Event {
 }
 
 impl App {
+    /// The values the running tool's option `key` chooses between, as a menu
+    /// of radios with their pictures (Yazı's Hiza, docs/adr/0145 §6; the
+    /// web's `choiceItems`); none when it offers none.
+    pub(crate) fn choice_menu(&self, key: &'static str) -> Option<Menu<Message>> {
+        let choices = self.session.option_choices(key);
+        (!choices.is_empty()).then(|| {
+            choices.into_iter().fold(Menu::new(), |menu, c| {
+                menu.radio(c.label, c.checked, Message::PromptChoice(key, c.typed))
+                    .icon(crate::icons::from_web(Some(c.icon)))
+            })
+        })
+    }
+
     /// The right button went down on the drawing; with Shift, the snap menu opens.
     pub(crate) fn right_pressed(&mut self, at: Point) {
         // The drawing takes the keyboard from the layer tree (web: its blur).
@@ -272,9 +285,13 @@ impl App {
                 Some(value) => format!("{}: {value}", option.label),
                 None => option.label.to_owned(),
             };
-            menu = menu
-                .item(label, Message::PromptOption(option.key))
-                .shortcut(option.key);
+            // An option that offers values (Yazı's Hiza, docs/adr/0145 §6) opens them as a submenu.
+            menu = match self.choice_menu(option.key) {
+                Some(choices) => menu.submenu(label, choices),
+                None => menu
+                    .item(label, Message::PromptOption(option.key))
+                    .shortcut(option.key),
+            };
         }
         let mut menu = menu.separator();
         if self.session.can_calc_point() {

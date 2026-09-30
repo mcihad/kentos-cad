@@ -201,6 +201,54 @@ export type TextAlign = 'baselineCenter' | 'baselineRight' | 'bottomLeft' | 'bot
 /** Every alignment, in the contract's order (`TextAlign::ALL`). */
 export const TEXT_ALIGNS: readonly TextAlign[] = ['baselineCenter', 'baselineRight', 'bottomLeft', 'bottomCenter', 'bottomRight', 'middleLeft', 'middleCenter', 'middleRight', 'topLeft', 'topCenter', 'topRight'];
 
+/**
+ * The alignment picker's rows (docs/adr/0145 §6): top, middle, bottom and the baseline, each left, centre and right;
+ * null is the left of the baseline, a text without the field. The desktop's `text::ALIGN_ROWS` is the same.
+ */
+export const TEXT_ALIGN_ROWS: readonly (readonly (TextAlign | null)[])[] = [
+  ['topLeft', 'topCenter', 'topRight'],
+  ['middleLeft', 'middleCenter', 'middleRight'],
+  ['bottomLeft', 'bottomCenter', 'bottomRight'],
+  [null, 'baselineCenter', 'baselineRight'],
+];
+
+const ALIGN_NAME: Record<TextAlign | 'baselineLeft', string> = {
+  topLeft: 'sol üst',
+  topCenter: 'orta üst',
+  topRight: 'sağ üst',
+  middleLeft: 'sol orta',
+  middleCenter: 'orta',
+  middleRight: 'sağ orta',
+  bottomLeft: 'sol alt',
+  bottomCenter: 'orta alt',
+  bottomRight: 'sağ alt',
+  baselineLeft: 'sol taban',
+  baselineCenter: 'orta taban',
+  baselineRight: 'sağ taban',
+};
+
+/** An alignment's name as Yazı, its menu and Öznitelikler write it, in lower case: “sol taban”, “orta”, “sağ üst”. */
+export const textAlignName = (a: TextAlign | null | undefined): string => ALIGN_NAME[a ?? 'baselineLeft'];
+
+/** A name as typed, folded: lower case, Turkish letters without their marks, nothing but letters (“Sağ-üst” → “sagust”). */
+const foldName = (s: string): string =>
+  s
+    .toLocaleLowerCase('tr-TR')
+    .replace(/[çğıöşü]/g, (c) => ({ ç: 'c', ğ: 'g', ı: 'i', ö: 'o', ş: 's', ü: 'u' })[c] ?? c)
+    .replace(/[^a-z]/g, '');
+
+/**
+ * The alignment a typed name is (Yazı's Hiza, docs/adr/0145 §6), written together or apart, with or without the
+ * Turkish marks (“sağüst”, “sag-ust”; “orta” and “ortaorta” are the middle): null is the left of the baseline,
+ * undefined no alignment's name. The desktop's `text::align_from_name` reads the same.
+ */
+export function textAlignFromName(typed: string): TextAlign | null | undefined {
+  const folded = foldName(typed);
+  if (folded === 'ortaorta') return 'middleCenter';
+  for (const [align, name] of Object.entries(ALIGN_NAME)) if (foldName(name) === folded) return align === 'baselineLeft' ? null : (align as TextAlign);
+  return undefined;
+}
+
 /** The widest a text's letters may be drawn, times their width (`MAX_WIDTH_FACTOR` in the contracts). */
 export const MAX_WIDTH_FACTOR = 100;
 

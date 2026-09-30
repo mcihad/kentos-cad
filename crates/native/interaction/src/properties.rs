@@ -11,9 +11,13 @@
 
 use kentos_contracts::{
     CommandResult, EditOperation, EntitiesEdit, EntitiesSetProperties, Entity, EntityEdit,
+    TextAlign, TextEntity,
 };
 use kentos_domain::{Document, Slot};
-use kentos_native_application::geometry::{edit_geometry, shape};
+use kentos_geometry_core::entity::TextPlace;
+use kentos_geometry_core::text::Font;
+use kentos_geometry_core::vec2::Vec2;
+use kentos_native_application::geometry::{drawing_font, edit_geometry, shape};
 use kentos_native_application::{ExecutionContext, edit, set};
 
 use crate::elevation::{self, Change};
@@ -80,6 +84,96 @@ pub fn set_elevations(doc: &mut Document, slots: &[Slot], change: Change) -> Vec
         expected_revision: None,
     };
     said(edit::execute(&mut ExecutionContext::new(doc), input))
+}
+
+/// Several objects, each given its entity's geometry in its place, in one
+/// step “Değiştir” (Öznitelikler's rows over a selection, docs/adr/0145 §6);
+/// nothing when none is given. What to say: the command's refusal.
+pub fn set_geometries(doc: &mut Document, changes: &[(Slot, Entity)]) -> Vec<String> {
+    let changes: Vec<EntityEdit> = changes
+        .iter()
+        .filter_map(|(slot, entity)| {
+            Some(EntityEdit::Update {
+                uid: doc.uid(*slot)?.to_string(),
+                geometry: edit_geometry(shape(entity))?,
+            })
+        })
+        .collect();
+    if changes.is_empty() {
+        return Vec::new();
+    }
+    let input = EntitiesEdit {
+        operation: EditOperation::Properties,
+        changes,
+        expected_revision: None,
+    };
+    said(edit::execute(&mut ExecutionContext::new(doc), input))
+}
+
+/// The texts in `slots` changed by `change`, those it changes, in one step
+/// “Değiştir” (Öznitelikler's Hiza, Genişlik çarpanı and Zemin, docs/adr/0145
+/// §6); what to say: the command's refusal.
+fn change_texts(
+    doc: &mut Document,
+    slots: &[Slot],
+    change: impl Fn(&TextEntity, Font) -> Option<TextEntity>,
+) -> Vec<String> {
+    let font = drawing_font(doc.settings().drawing_font);
+    let changes: Vec<(Slot, Entity)> = slots
+        .iter()
+        .filter_map(|&slot| match doc.get(slot) {
+            Some(Entity::Text(t)) => Some((slot, Entity::Text(change(t, font)?))),
+            _ => None,
+        })
+        .collect();
+    set_geometries(doc, &changes)
+}
+
+/// The texts in `slots` given the alignment `to` (none: the left of the
+/// baseline), each where it is: its point moves to that alignment's point of
+/// its box (the core's `TextPlace::realigned`). The web's `textRows` Hiza.
+pub fn realign_texts(doc: &mut Document, slots: &[Slot], to: Option<TextAlign>) -> Vec<String> {
+    change_texts(doc, slots, |t, font| {
+        (t.align != to).then(|| {
+            let place = TextPlace {
+                p: Vec2::new(t.p.x, t.p.y),
+                text: &t.text,
+                height: t.height,
+                rotation: t.rotation,
+                align: t.align.and_then(core_align),
+                width_factor: t.width_factor,
+            };
+            let p = place.realigned(to.and_then(core_align), font);
+            TextEntity {
+                p: kentos_contracts::Vec2 { x: p.x, y: p.y },
+                align: to,
+                ..t.clone()
+            }
+        })
+    })
+}
+
+/// The texts in `slots` with the width factor `factor` about their points
+/// (1: none); the command refuses one out of its range and says why.
+pub fn set_text_width(doc: &mut Document, slots: &[Slot], factor: f64) -> Vec<String> {
+    change_texts(doc, slots, |t, _| {
+        (t.width_factor.unwrap_or(1.0) != factor).then(|| TextEntity {
+            width_factor: Some(factor),
+            ..t.clone()
+        })
+    })
+}
+
+/// The texts in `slots` with their mask on or off.
+pub fn set_text_mask(doc: &mut Document, slots: &[Slot], mask: bool) -> Vec<String> {
+    change_texts(doc, slots, |t, _| {
+        (t.mask != mask).then(|| TextEntity { mask, ..t.clone() })
+    })
+}
+
+/// The contract's alignment as the geometry core names it (the same names).
+fn core_align(a: TextAlign) -> Option<kentos_geometry_core::text::TextAlign> {
+    kentos_geometry_core::text::TextAlign::from_name(a.name())
 }
 
 /// A command's answer as the host says it: nothing but its warnings when it

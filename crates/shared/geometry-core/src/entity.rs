@@ -726,6 +726,27 @@ impl<'a> TextPlace<'a> {
         ))
     }
 
+    /// Hizayı değiştir (docs/adr/0145 §6, Öznitelikler's Hiza): the point of
+    /// its box `to` is, so it stays where it is with that alignment.
+    pub fn realigned(&self, to: Option<TextAlign>, font: Font) -> Vec2 {
+        self.realigned_at(to, self.width(font))
+    }
+
+    /// `realigned` with its width given (fixtures/text/v1/realign.json): its
+    /// point moves w·(a′ − a) along its baseline and h·(b′ − b) up from it,
+    /// a, b its alignment's shares and a′, b′ those of `to`.
+    pub fn realigned_at(&self, to: Option<TextAlign>, width: f64) -> Vec2 {
+        let shares = |a: Option<TextAlign>| a.map_or((0.0, 0.0), |a| (a.along(), a.up()));
+        let ((a, b), (a2, b2)) = (shares(self.align), shares(to));
+        let (u, v) = self.axes();
+        let along = width * (a2 - a);
+        let up = self.height * (b2 - b);
+        Vec2::new(
+            self.p.x + u.x * along + v.x * up,
+            self.p.y + u.y * along + v.y * up,
+        )
+    }
+
     /// The box its mask fills (docs/adr/0145 §4): its outline with a tenth
     /// of its height around it.
     pub fn mask(&self, font: Font) -> Vec<Vec2> {
@@ -988,6 +1009,8 @@ pub(crate) static OPS: &[Op] = &[
         .collect::<Vec<_>>()),
     // Okunur yap: a text's new point and turn, none when it reads (`text_readable_json`).
     op!("textReadable", |t: Json| text_readable_json(&t)),
+    // Hizayı değiştir: a text's point with the alignment `to` (null: the left of the baseline), where it stays.
+    op!("textRealign", |t: Json, to: Option<TextAlign>| text_realign_json(&t, to)),
     op!("isClosedOutline", |e: Entity| is_closed_outline(&e.shape)),
     op!("entityBounds", |e: Entity| entity_bounds(&e.shape)),
     op!("entityAnchor", |e: Entity| entity_anchor(&e.shape)),
@@ -1028,6 +1051,28 @@ fn text_readable_json(v: &Json) -> Result<Option<Turned>, String> {
         None => place.readable(font),
     };
     Ok(turned.map(|(p, rotation)| Turned { p, rotation }))
+}
+
+/// `textRealign` takes a text as `textReadable` does, and the alignment it is to have.
+fn text_realign_json(v: &Json, to: Option<TextAlign>) -> Result<Vec2, String> {
+    let font = match v.get("font") {
+        Json::Str(id) => Font::from_id(id),
+        _ => Font::DEFAULT,
+    };
+    let text: Option<String> = json::read_field(v, "text")?;
+    let place = TextPlace {
+        p: json::read_field(v, "p")?,
+        text: text.as_deref().unwrap_or(""),
+        height: json::read_field(v, "height")?,
+        rotation: json::read_field(v, "rotation")?,
+        align: json::read_field(v, "align")?,
+        width_factor: json::read_field(v, "widthFactor")?,
+    };
+    let width: Option<f64> = json::read_field(v, "width")?;
+    Ok(match width {
+        Some(w) => place.realigned_at(to, w),
+        None => place.realigned(to, font),
+    })
 }
 
 /// `textBox` takes any object with p, text, height and rotation, and an alignment and width factor

@@ -5,7 +5,8 @@ yap's turn.
     python3 scripts/fixtures/text_cases.py           # writes the files
     python3 scripts/fixtures/text_cases.py --check   # writes nothing; compares
 
-Writes fixtures/text/v1/increment.json, pattern.json and readable.json. The
+Writes fixtures/text/v1/increment.json, pattern.json, readable.json and
+realign.json. The
 rules are written here from the ADR on their own, not from an
 implementation's output; the geometry core (crates/shared/geometry-core,
 `text::edit` and `TextPlace::readable`, natively and through WASM) is held to
@@ -29,6 +30,10 @@ them.
   a and b its alignment's shares along and up (the box is 0.23 h under the
   baseline and 1.15 h over it: 0.92 is the sum). Its turn is 180° more, taken
   from 0 up to 360. Any other text is left alone.
+- Hizayı değiştir (Öznitelikler's Hiza, §6): the text stays where it is; its
+  point becomes the new alignment's point of the same box: it moves by
+  w·(a′ − a) along its baseline and h·(b′ − b) up from it, a, b the old
+  alignment's shares and a′, b′ the new one's.
 """
 import json
 import math
@@ -224,6 +229,29 @@ READABLE = [
 ]
 
 
+def realign(p, height, rotation, align, to, width):
+    a, b = SHARES[align]
+    a2, b2 = SHARES[to]
+    t = math.radians(rotation)
+    ux, uy = math.cos(t), math.sin(t)
+    vx, vy = -uy, ux
+    along = width * (a2 - a)
+    up = height * (b2 - b)
+    return {"x": p[0] + ux * along + vx * up, "y": p[1] + uy * along + vy * up}
+
+
+REALIGN = [
+    # name, p, height, rotation, align (old), to (new), width
+    ("sol tabandan ortaya", (487100.0, 4420200.0), 2.0, 0.0, None, "middleCenter", 10.0),
+    ("ortadan sol tabana: eskiye döner", (487105.0, 4420201.0), 2.0, 0.0, "middleCenter", None, 10.0),
+    ("sağ üstten sol alta", (487100.0, 4420200.0), 2.5, 0.0, "topRight", "bottomLeft", 8.0),
+    ("30° dönük, sol tabandan sağ tabana", (487100.0, 4420200.0), 2.0, 30.0, None, "baselineRight", 12.0),
+    ("200° dönük, orta alttan sağ ortaya", (486512.34, 4420187.52), 1.5, 200.0, "bottomCenter", "middleRight", 6.4),
+    ("aynı hiza: yer değişmez", (487100.0, 4420200.0), 2.0, 45.0, "topCenter", "topCenter", 9.0),
+    ("eksi dönüş: −90°, sol üstten orta tabana", (0.0, 0.0), 3.0, -90.0, "topLeft", "baselineCenter", 12.25),
+]
+
+
 def build():
     increment_cases = [{"name": n, "text": t, "next": increment(t)} for n, t in INCREMENT]
     pattern_cases = [
@@ -236,6 +264,14 @@ def build():
         if align:
             c["align"] = align
         readable_cases.append(c)
+    realign_cases = []
+    for n, p, h, rot, align, to, width in REALIGN:
+        c = {"name": n, "p": {"x": p[0], "y": p[1]}, "height": h, "rotation": rot, "width": width}
+        if align:
+            c["align"] = align
+        c["to"] = to
+        c["expect"] = realign(p, h, rot, align, to, width)
+        realign_cases.append(c)
     common = {"format": "kentos.text-cases", "version": 1}
     return {
         "increment.json": {
@@ -255,6 +291,12 @@ def build():
             "title": "Okunur yap: ters okunan yazı kutusunun ortası çevresinde yarım döner (ADR 0145 §3)",
             "note": "Dönüşü 0–360'a getirilince 90°'den büyük, en çok 270° olan yazı ters okunur. Noktası eski taban çizgisi boyunca w·(1 − 2a), ona dik h·(0,92 − 2b) kayar (w genişlik, h yükseklik, a ve b hizanın boyuna ve yukarı payları; kutu taban çizgisinin 0,23 h altından 1,15 h üstüne); dönüşü 180° artar, 0–360'a getirilir. Öbürleri değişmez (null). Genişlik burada verilir: çekirdekte yazı tipinin ölçüsüdür.",
             "cases": readable_cases,
+        },
+        "realign.json": {
+            **common,
+            "title": "Hizayı değiştir: yazı yerinde kalır, noktası kutunun yeni hizadaki noktası olur (ADR 0145 §6)",
+            "note": "Noktası taban çizgisi boyunca w·(a′ − a), ona dik h·(b′ − b) kayar (w genişlik, h yükseklik; a, b eski, a′, b′ yeni hizanın boyuna ve yukarı payları; hizasız: sol taban, 0 ve 0). Dönüş değişmez. to: null sol taban çizgisidir. Genişlik burada verilir: çekirdekte yazı tipinin ölçüsüdür.",
+            "cases": realign_cases,
         },
     }
 

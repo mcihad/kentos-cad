@@ -73,7 +73,7 @@
       "pending": 0
     },
     "commandsWithoutPlace": [],
-    "commandsWithoutTests": 63,
+    "commandsWithoutTests": 62,
     "commandsOnDesktop": 178,
     "desktop": {
       "commands": {
@@ -5500,7 +5500,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/text-options.json"
+      ]
     },
     {
       "id": "tool.toArea",
@@ -8741,7 +8743,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/text-options.json"
+      ]
     },
     {
       "id": "toArea",
@@ -20662,6 +20666,18 @@
     "trash": "<path d=\"M4 5.5h12M8 5.5v-2h4v2M5.6 5.5l.8 11h7.2l.8-11\"/><path d=\"M8.6 8.5v5M11.4 8.5v5\"/>",
     "star": "<path d=\"m10 3.2 2.1 4.3 4.7.7-3.4 3.3.8 4.7-4.2-2.2-4.2 2.2.8-4.7-3.4-3.3 4.7-.7z\"/>",
     "starOn": "<path d=\"m10 3.2 2.1 4.3 4.7.7-3.4 3.3.8 4.7-4.2-2.2-4.2 2.2.8-4.7-3.4-3.3 4.7-.7z\" fill=\"currentColor\" fill-opacity=\".35\"/>",
-    "archive": "<path d=\"M3 4.5h14v3H3z\"/><path d=\"M4.5 7.5v8h11v-8M8.2 10.5h3.6\"/>"
+    "archive": "<path d=\"M3 4.5h14v3H3z\"/><path d=\"M4.5 7.5v8h11v-8M8.2 10.5h3.6\"/>",
+    "textAlignTopLeft": "<rect x=\"3\" y=\"4.5\" width=\"14\" height=\"11\" rx=\"1\" stroke-dasharray=\"2 1.6\"/><path d=\"M3 12.5h14\" stroke-width=\"1\"/><circle cx=\"3\" cy=\"4.5\" r=\"2.6\" fill=\"currentColor\" stroke=\"none\"/>",
+    "textAlignTopCenter": "<rect x=\"3\" y=\"4.5\" width=\"14\" height=\"11\" rx=\"1\" stroke-dasharray=\"2 1.6\"/><path d=\"M3 12.5h14\" stroke-width=\"1\"/><circle cx=\"10\" cy=\"4.5\" r=\"2.6\" fill=\"currentColor\" stroke=\"none\"/>",
+    "textAlignTopRight": "<rect x=\"3\" y=\"4.5\" width=\"14\" height=\"11\" rx=\"1\" stroke-dasharray=\"2 1.6\"/><path d=\"M3 12.5h14\" stroke-width=\"1\"/><circle cx=\"17\" cy=\"4.5\" r=\"2.6\" fill=\"currentColor\" stroke=\"none\"/>",
+    "textAlignMiddleLeft": "<rect x=\"3\" y=\"4.5\" width=\"14\" height=\"11\" rx=\"1\" stroke-dasharray=\"2 1.6\"/><path d=\"M3 12.5h14\" stroke-width=\"1\"/><circle cx=\"3\" cy=\"8.5\" r=\"2.6\" fill=\"currentColor\" stroke=\"none\"/>",
+    "textAlignMiddleCenter": "<rect x=\"3\" y=\"4.5\" width=\"14\" height=\"11\" rx=\"1\" stroke-dasharray=\"2 1.6\"/><path d=\"M3 12.5h14\" stroke-width=\"1\"/><circle cx=\"10\" cy=\"8.5\" r=\"2.6\" fill=\"currentColor\" stroke=\"none\"/>",
+    "textAlignMiddleRight": "<rect x=\"3\" y=\"4.5\" width=\"14\" height=\"11\" rx=\"1\" stroke-dasharray=\"2 1.6\"/><path d=\"M3 12.5h14\" stroke-width=\"1\"/><circle cx=\"17\" cy=\"8.5\" r=\"2.6\" fill=\"currentColor\" stroke=\"none\"/>",
+    "textAlignBottomLeft": "<rect x=\"3\" y=\"4.5\" width=\"14\" height=\"11\" rx=\"1\" stroke-dasharray=\"2 1.6\"/><path d=\"M3 12.5h14\" stroke-width=\"1\"/><circle cx=\"3\" cy=\"15.5\" r=\"2.6\" fill=\"currentColor\" stroke=\"none\"/>",
+    "textAlignBottomCenter": "<rect x=\"3\" y=\"4.5\" width=\"14\" height=\"11\" rx=\"1\" stroke-dasharray=\"2 1.6\"/><path d=\"M3 12.5h14\" stroke-width=\"1\"/><circle cx=\"10\" cy=\"15.5\" r=\"2.6\" fill=\"currentColor\" stroke=\"none\"/>",
+    "textAlignBottomRight": "<rect x=\"3\" y=\"4.5\" width=\"14\" height=\"11\" rx=\"1\" stroke-dasharray=\"2 1.6\"/><path d=\"M3 12.5h14\" stroke-width=\"1\"/><circle cx=\"17\" cy=\"15.5\" r=\"2.6\" fill=\"currentColor\" stroke=\"none\"/>",
+    "textAlignBaselineLeft": "<rect x=\"3\" y=\"4.5\" width=\"14\" height=\"11\" rx=\"1\" stroke-dasharray=\"2 1.6\"/><path d=\"M3 12.5h14\" stroke-width=\"1\"/><circle cx=\"3\" cy=\"12.5\" r=\"2.6\" fill=\"currentColor\" stroke=\"none\"/>",
+    "textAlignBaselineCenter": "<rect x=\"3\" y=\"4.5\" width=\"14\" height=\"11\" rx=\"1\" stroke-dasharray=\"2 1.6\"/><path d=\"M3 12.5h14\" stroke-width=\"1\"/><circle cx=\"10\" cy=\"12.5\" r=\"2.6\" fill=\"currentColor\" stroke=\"none\"/>",
+    "textAlignBaselineRight": "<rect x=\"3\" y=\"4.5\" width=\"14\" height=\"11\" rx=\"1\" stroke-dasharray=\"2 1.6\"/><path d=\"M3 12.5h14\" stroke-width=\"1\"/><circle cx=\"17\" cy=\"12.5\" r=\"2.6\" fill=\"currentColor\" stroke=\"none\"/>"
   }
 }

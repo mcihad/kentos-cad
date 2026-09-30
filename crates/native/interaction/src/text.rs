@@ -8,7 +8,12 @@
 //! - Yükseklik (Y) asks for the height in paper millimetres (the project's
 //!   plot scale makes it metres), Açı (A) for the angle in degrees or two
 //!   clicks along an edge (a direction pointing left is turned around, kept
-//!   readable); both stay for as long as the app lives;
+//!   readable); both stay for as long as the app lives, and so do (docs/adr/0145
+//!   §6) Hiza (H: the point of the text the click is, from its menu or its
+//!   name typed together, “sağüst”), Genişlik (G: the letters' width factor),
+//!   Zemin (Z: the box filled with the drawing's colour) and Artır (R: the
+//!   next field opens with the last text's number one more; the last text is
+//!   this run's);
 //! - a locked active layer is said at the click and no field opens (the
 //!   web's newest rule); Esc leaves the tool, and inside the field it only
 //!   drops the text (the host's).
@@ -16,8 +21,9 @@
 //! The text is written through `cad.entities.create` (docs/adr/0057): the
 //! active layer, one undo step (“Ekle”), “Yazı eklendi: “…”” said.
 
-use kentos_contracts::EntityGeometry;
+use kentos_contracts::{EntityGeometry, MAX_WIDTH_FACTOR, TextAlign, width_factor_ok};
 use kentos_geometry_core::geometry::dist;
+use kentos_geometry_core::text::edit::increment;
 use kentos_geometry_core::tools::drawing::text_angle;
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number, point_from_text};
 
@@ -27,7 +33,8 @@ use crate::log::Level;
 use crate::points::{self, Taken};
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{
-    Context, Flow, Memory, Pointer, Preview, Stroke, Tag, TextField, Tone, Tool, ViewChange,
+    Context, Flow, Marker, MarkerShape, Memory, OptionChoice, Pointer, Preview, Stroke, Tag,
+    TextField, Tone, Tool, ViewChange,
 };
 
 /// The text tool's id: its command is `tool.text`.
@@ -44,8 +51,155 @@ enum Stage {
     Pos,
     Height,
     Angle,
+    /// Hiza: its name typed, or chosen from its menu.
+    Align,
+    /// Genişlik: the width factor typed.
+    Width,
     /// The field is open at `at`.
     Typing,
+}
+
+/// The alignments in the picker's order (docs/adr/0145 §6), row by row (top,
+/// middle, bottom, the baseline; left, centre, right): the value (none: the
+/// left of the baseline, a text without the field), its name as the prompt
+/// writes it, at the head of a menu row, and the web's icon. The web's
+/// `TEXT_ALIGN_ROWS` and `textAlignName` are the same.
+pub const ALIGNS: [(Option<TextAlign>, &str, &str, &str); 12] = [
+    (
+        Some(TextAlign::TopLeft),
+        "sol üst",
+        "Sol üst",
+        "textAlignTopLeft",
+    ),
+    (
+        Some(TextAlign::TopCenter),
+        "orta üst",
+        "Orta üst",
+        "textAlignTopCenter",
+    ),
+    (
+        Some(TextAlign::TopRight),
+        "sağ üst",
+        "Sağ üst",
+        "textAlignTopRight",
+    ),
+    (
+        Some(TextAlign::MiddleLeft),
+        "sol orta",
+        "Sol orta",
+        "textAlignMiddleLeft",
+    ),
+    (
+        Some(TextAlign::MiddleCenter),
+        "orta",
+        "Orta",
+        "textAlignMiddleCenter",
+    ),
+    (
+        Some(TextAlign::MiddleRight),
+        "sağ orta",
+        "Sağ orta",
+        "textAlignMiddleRight",
+    ),
+    (
+        Some(TextAlign::BottomLeft),
+        "sol alt",
+        "Sol alt",
+        "textAlignBottomLeft",
+    ),
+    (
+        Some(TextAlign::BottomCenter),
+        "orta alt",
+        "Orta alt",
+        "textAlignBottomCenter",
+    ),
+    (
+        Some(TextAlign::BottomRight),
+        "sağ alt",
+        "Sağ alt",
+        "textAlignBottomRight",
+    ),
+    (None, "sol taban", "Sol taban", "textAlignBaselineLeft"),
+    (
+        Some(TextAlign::BaselineCenter),
+        "orta taban",
+        "Orta taban",
+        "textAlignBaselineCenter",
+    ),
+    (
+        Some(TextAlign::BaselineRight),
+        "sağ taban",
+        "Sağ taban",
+        "textAlignBaselineRight",
+    ),
+];
+
+fn align_row(
+    a: Option<TextAlign>,
+) -> &'static (Option<TextAlign>, &'static str, &'static str, &'static str) {
+    ALIGNS.iter().find(|row| row.0 == a).unwrap_or(&ALIGNS[9])
+}
+
+/// An alignment's name, lower case: “sol taban”, “orta”, “sağ üst”.
+pub fn align_name(a: Option<TextAlign>) -> &'static str {
+    align_row(a).1
+}
+
+/// An alignment's name at the head of a menu row or a cell: “Sol taban”.
+pub fn align_label(a: Option<TextAlign>) -> &'static str {
+    align_row(a).2
+}
+
+/// An alignment's icon in the web's set (`ui/icons.ts`).
+pub fn align_icon(a: Option<TextAlign>) -> &'static str {
+    align_row(a).3
+}
+
+/// A name as typed, folded (the web's `foldName`): lower case, Turkish
+/// letters without their marks, nothing but letters (“Sağ-üst” → “sagust”).
+fn fold_name(s: &str) -> String {
+    s.chars()
+        .flat_map(|c| match c {
+            'I' => vec!['ı'],
+            'İ' => vec!['i'],
+            _ => c.to_lowercase().collect(),
+        })
+        .map(|c| match c {
+            'ç' => 'c',
+            'ğ' => 'g',
+            'ı' => 'i',
+            'ö' => 'o',
+            'ş' => 's',
+            'ü' => 'u',
+            c => c,
+        })
+        .filter(char::is_ascii_lowercase)
+        .collect()
+}
+
+/// The alignment a typed name is (Hiza), written together or apart, with or
+/// without the Turkish marks (“sağüst”, “sag-ust”; “orta” and “ortaorta”
+/// are the middle); none when it names none. The web's `textAlignFromName`.
+pub fn align_from_name(typed: &str) -> Option<Option<TextAlign>> {
+    let folded = fold_name(typed);
+    if folded == "ortaorta" {
+        return Some(Some(TextAlign::MiddleCenter));
+    }
+    ALIGNS
+        .iter()
+        .find(|row| fold_name(row.1) == folded)
+        .map(|row| row.0)
+}
+
+/// A width factor as Yazı's prompt and Öznitelikler write it: `+f.toFixed(4)`
+/// (“0.8”, “1”).
+pub fn width_factor_text(f: f64) -> String {
+    trimmed(f, 4)
+}
+
+/// `açık` or `kapalı`, as the prompt says a switch.
+fn on_off(on: bool) -> &'static str {
+    if on { "açık" } else { "kapalı" }
 }
 
 /// The text tool.
@@ -62,6 +216,8 @@ pub struct Text {
     box_height: f64,
     /// What the session remembered and the project's units, as of the last call.
     seen: Option<(Memory, Format)>,
+    /// The last text this run wrote: Artır's next field starts from it.
+    last_text: Option<String>,
 }
 
 /// The active layer's lock sentence, when it is locked (the drawing tools' words).
@@ -103,16 +259,40 @@ impl Text {
         }
     }
 
-    fn option(&mut self, key: &str) -> bool {
+    fn option(&mut self, key: &str, cx: &mut Context<'_>) -> bool {
         if self.stage != Stage::Pos {
             return false;
         }
-        self.stage = match key {
-            "Y" => Stage::Height,
-            "A" => Stage::Angle,
+        match key {
+            "Y" => self.stage = Stage::Height,
+            "A" => {
+                self.stage = Stage::Angle;
+                self.angle_from = None;
+            }
+            "H" => self.stage = Stage::Align,
+            "G" => self.stage = Stage::Width,
+            "Z" => cx.memory.text_mask = !cx.memory.text_mask,
+            "R" => cx.memory.text_increment = !cx.memory.text_increment,
             _ => return false,
-        };
-        self.angle_from = None;
+        }
+        true
+    }
+
+    /// A typed or chosen alignment: kept, and the tool waits for the click
+    /// again; a word that names none is said.
+    fn take_align(&mut self, typed: &str, cx: &mut Context<'_>) -> bool {
+        match align_from_name(typed) {
+            Some(a) => {
+                cx.memory.text_align = a;
+                self.stage = Stage::Pos;
+            }
+            None => cx.say(
+                Level::Warn,
+                format!(
+                    "“{typed}” bir hiza adı değil. Hizayı menüden seçin ya da adını bitişik yazın: solüst, ortaüst, sağüst, solorta, orta, sağorta, solalt, ortaalt, sağalt, soltaban, ortataban, sağtaban."
+                ),
+            ),
+        }
         true
     }
 
@@ -140,13 +320,24 @@ impl Text {
             Stage::Pos => {
                 self.at = Some(p);
                 self.stage = Stage::Typing;
+                let m = *cx.memory;
+                // Artır: the last text's number one more; a text that ends with
+                // no number comes back as it is (docs/adr/0145 §3).
+                let initial = self
+                    .last_text
+                    .as_deref()
+                    .filter(|_| m.text_increment)
+                    .map(|t| increment(t).unwrap_or_else(|| t.to_owned()));
                 cx.view_changes.push(ViewChange::Text(TextField {
                     at: p,
-                    height: paper(cx.memory.text_height_mm, cx),
-                    rotation: cx.memory.text_angle,
+                    height: paper(m.text_height_mm, cx),
+                    rotation: m.text_angle,
+                    align: m.text_align,
+                    width_factor: m.text_width_factor,
+                    initial,
                 }));
             }
-            Stage::Height | Stage::Typing => {}
+            Stage::Height | Stage::Align | Stage::Width | Stage::Typing => {}
         }
     }
 
@@ -178,13 +369,27 @@ impl Tool for Text {
     fn prompt(&self) -> Prompt {
         let memory = self.seen.map_or_else(Memory::default, |(m, _)| m);
         match self.stage {
-            Stage::Height => Prompt::new(LABEL, "kâğıt üzerindeki yazı yüksekliğini mm olarak yazın"),
+            Stage::Height => {
+                Prompt::new(LABEL, "kâğıt üzerindeki yazı yüksekliğini mm olarak yazın")
+            }
             Stage::Angle if self.angle_from.is_some() => {
                 Prompt::new(LABEL, "doğrultunun ikinci noktasına tıklayın")
             }
             Stage::Angle => Prompt::new(
                 LABEL,
                 "açıyı yazın (derece) ya da doğrultu için iki noktaya tıklayın",
+            ),
+            Stage::Align => Prompt::new(
+                LABEL,
+                "hizayı seçin ya da adını bitişik yazın: sağüst, orta, soltaban …",
+            )
+            .option_with("Hiza", "H", align_name(memory.text_align)),
+            Stage::Width => Prompt::new(
+                LABEL,
+                format!(
+                    "genişlik çarpanını yazın (1: harflerin kendi eni; 0'dan büyük, en çok {})",
+                    js_number(MAX_WIDTH_FACTOR)
+                ),
             ),
             Stage::Typing => Prompt::new(
                 LABEL,
@@ -196,7 +401,11 @@ impl Tool for Text {
                     "Y",
                     format!("{} mm", js_number(memory.text_height_mm)),
                 )
-                .option_with("Açı", "A", format!("{}°", trimmed(memory.text_angle, 4))),
+                .option_with("Açı", "A", format!("{}°", trimmed(memory.text_angle, 4)))
+                .option_with("Hiza", "H", align_name(memory.text_align))
+                .option_with("Genişlik", "G", width_factor_text(memory.text_width_factor))
+                .option_with("Zemin", "Z", on_off(memory.text_mask))
+                .option_with("Artır", "R", on_off(memory.text_increment)),
         }
     }
 
@@ -217,7 +426,8 @@ impl Tool for Text {
         let (point, tracking) = points::constrain(self.last(), p, cx);
         self.d.tracking = tracking;
         self.d.hover = Some(point);
-        self.box_height = paper(cx.memory.text_height_mm, cx).max(cx.view.world_length(LEAST_BOX_PX));
+        self.box_height =
+            paper(cx.memory.text_height_mm, cx).max(cx.view.world_length(LEAST_BOX_PX));
         self.see(cx);
     }
 
@@ -229,8 +439,10 @@ impl Tool for Text {
 
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
         let t = js_trim(text);
-        let done = if self.option(&upper_tr(t)) {
+        let done = if self.option(&upper_tr(t), cx) {
             true
+        } else if self.stage == Stage::Align {
+            self.take_align(t, cx)
         } else {
             match (self.stage, parse_number(t)) {
                 (Stage::Height, Some(n)) if n > 0.0 => {
@@ -246,6 +458,22 @@ impl Tool for Text {
                     true
                 }
                 (Stage::Angle, None) => false,
+                (Stage::Width, Some(n)) => {
+                    if width_factor_ok(n) {
+                        cx.memory.text_width_factor = n;
+                        self.stage = Stage::Pos;
+                    } else {
+                        cx.say(
+                            Level::Warn,
+                            format!(
+                                "Genişlik çarpanı 0'dan büyük, en çok {} olmalı; {t} verildi. Harflerin kendi eni için 1 yazın.",
+                                js_number(MAX_WIDTH_FACTOR)
+                            ),
+                        );
+                    }
+                    true
+                }
+                (Stage::Width, None) => false,
                 _ => {
                     match point_from_text(text, self.last(), self.d.hover, |d| cx.track_along(d)) {
                         Some(p) => {
@@ -261,25 +489,58 @@ impl Tool for Text {
         done
     }
 
+    /// Hiza's menu: the twelve points, row by row (docs/adr/0145 §6), while
+    /// the tool waits for a click or for one.
+    fn option_choices(&self, key: &str) -> Vec<OptionChoice> {
+        if key != "H" || !matches!(self.stage, Stage::Pos | Stage::Align) {
+            return Vec::new();
+        }
+        let chosen = self
+            .seen
+            .map_or_else(Memory::default, |(m, _)| m)
+            .text_align;
+        ALIGNS
+            .iter()
+            .map(|&(a, typed, label, icon)| OptionChoice {
+                label,
+                typed,
+                icon,
+                checked: a == chosen,
+            })
+            .collect()
+    }
+
+    fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
+        if key != "H" || !matches!(self.stage, Stage::Pos | Stage::Align) {
+            return false;
+        }
+        let taken = self.take_align(typed, cx);
+        self.see(cx);
+        taken
+    }
+
     /// The field's answer: the text to add, or none (Esc, nothing typed).
     fn text_typed(&mut self, text: Option<&str>, cx: &mut Context<'_>) {
         if self.stage != Stage::Typing {
             return;
         }
         if let (Some(p), Some(text)) = (self.at, text.map(js_trim).filter(|t| !t.is_empty())) {
+            let m = *cx.memory;
+            // The defaults are no fields: the left of the baseline, a factor of 1, no mask.
             let geometry = EntityGeometry::Text {
                 p: points::wire(p),
                 text: text.to_owned(),
-                height: paper(cx.memory.text_height_mm, cx),
-                rotation: cx.memory.text_angle,
-                align: None,
-                width_factor: None,
-                mask: false,
+                height: paper(m.text_height_mm, cx),
+                rotation: m.text_angle,
+                align: m.text_align,
+                width_factor: (m.text_width_factor != 1.0).then_some(m.text_width_factor),
+                mask: m.text_mask,
             };
             if let Some(out) = points::write_objects(vec![geometry], None, cx)
                 && let Some(&id) = out.ids.first()
             {
                 self.d.note(id, cx);
+                self.last_text = Some(text.to_owned());
                 cx.say(Level::Success, format!("Yazı eklendi: “{text}”"));
             }
         }
@@ -328,19 +589,38 @@ impl Tool for Text {
                     ..Preview::default()
                 }
             }
+            // Four heights wide times the width factor, placed about the
+            // pointer as the alignment says (docs/adr/0145), the pointer's point marked.
             (Stage::Pos, _) => {
                 let a = memory.text_angle.to_radians();
                 let (dx, dy) = (a.cos(), a.sin());
                 let height = self.box_height;
-                let width = height * 4.0;
-                let along = Vec2::new(h.x + dx * width, h.y + dy * width);
-                let up = |p: Vec2| Vec2::new(p.x - dy * height, p.y + dx * height);
+                let width = height * 4.0 * memory.text_width_factor;
+                let (along, up) = memory
+                    .text_align
+                    .map_or((0.0, 0.0), |a| (a.along(), a.up()));
+                // A point of the box, `x` along its baseline and `y` up from it, counted from its start.
+                let (x0, y0) = (-along * width, -up * height);
+                let at = |x: f64, y: f64| {
+                    let (x, y) = (x0 + x, y0 + y);
+                    Vec2::new(h.x + dx * x - dy * y, h.y + dy * x + dx * y)
+                };
                 Preview {
                     strokes: vec![Stroke {
-                        pts: vec![h, along, up(along), up(h)],
+                        pts: vec![
+                            at(0.0, 0.0),
+                            at(width, 0.0),
+                            at(width, height),
+                            at(0.0, height),
+                        ],
                         closed: true,
                         dash: Some([3.0, 3.0]),
                         width: 1.0,
+                        tone: Tone::Accent,
+                    }],
+                    markers: vec![Marker {
+                        at: h,
+                        shape: MarkerShape::Ring(2.5),
                         tone: Tone::Accent,
                     }],
                     ..Preview::default()

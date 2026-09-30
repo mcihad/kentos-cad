@@ -23,7 +23,7 @@ fn rows(app: &App) -> Vec<(String, Vec<Row>)> {
     app.properties_panel(doc)
         .sections
         .into_iter()
-        .map(|s| (s.title.to_owned(), s.rows))
+        .map(|s| (s.title.into_owned(), s.rows))
         .collect()
 }
 
@@ -1340,4 +1340,221 @@ fn block_attribute_screens() {
             }
         }
     }
+}
+
+/// Two texts for the text rows (docs/adr/0145 §6): one plain, 30° turned;
+/// one centred, narrowed and masked.
+fn two_texts(app: &mut App) -> (u32, u32) {
+    let text = |p: Wire, text: &str, rotation: f64| TextEntity {
+        base: base("cizim"),
+        p,
+        text: text.to_owned(),
+        height: 2.0,
+        rotation,
+        align: None,
+        width_factor: None,
+        mask: false,
+    };
+    let a = add(
+        app,
+        Entity::Text(text(
+            Wire {
+                x: E + 10.0,
+                y: N + 20.0,
+            },
+            "Ada 101",
+            30.0,
+        )),
+    );
+    let b = add(
+        app,
+        Entity::Text(TextEntity {
+            align: Some(kentos_contracts::TextAlign::MiddleCenter),
+            width_factor: Some(0.8),
+            mask: true,
+            ..text(
+                Wire {
+                    x: E + 10.0,
+                    y: N + 10.0,
+                },
+                "Ada 102",
+                0.0,
+            )
+        }),
+    );
+    (a, b)
+}
+
+fn text_of(app: &App, slot: u32) -> TextEntity {
+    match entity(app, slot) {
+        Entity::Text(t) => t,
+        other => panic!("a text: {other:?}"),
+    }
+}
+
+/// A text's box as it is drawn (the drawing's Barlow), to a micrometre.
+fn text_box(_app: &App, t: &TextEntity) -> Vec<[i64; 2]> {
+    let font = kentos_geometry_core::text::Font::from_id("barlow");
+    let place = kentos_geometry_core::entity::TextPlace {
+        p: kentos_geometry_core::vec2::Vec2::new(t.p.x, t.p.y),
+        text: &t.text,
+        height: t.height,
+        rotation: t.rotation,
+        align: t
+            .align
+            .and_then(|a| kentos_geometry_core::text::TextAlign::from_name(a.name())),
+        width_factor: t.width_factor,
+    };
+    place
+        .outline(font)
+        .iter()
+        .map(|q| [(q.x * 1e6).round() as i64, (q.y * 1e6).round() as i64])
+        .collect()
+}
+
+/// Öznitelikler's Hiza, Genişlik çarpanı and Zemin (docs/adr/0145 §6): one
+/// text's values, the twelve points with their pictures; the web's are
+/// apps/web/src/ui/properties/textRows.test.ts.
+#[test]
+fn a_texts_rows_show_its_alignment_width_factor_and_mask() {
+    let mut app = objects();
+    let (_, b) = two_texts(&mut app);
+    select(&mut app, &[b]);
+    assert_eq!(value(&app, "Geometri", "Hiza"), "Orta");
+    assert_eq!(value(&app, "Geometri", "Genişlik çarpanı"), "0.8");
+    assert_eq!(value(&app, "Geometri", "Zemin"), "Açık");
+    let rows = rows(&app);
+    let hiza = rows
+        .iter()
+        .flat_map(|(_, rows)| rows)
+        .find(|r| r.label == "Hiza")
+        .expect("Hiza");
+    let Some(Editor::Select { icon, items, .. }) = &hiza.editor else {
+        panic!("a drop-down");
+    };
+    assert_eq!(*icon, Some("textAlignMiddleCenter"));
+    let picks: Vec<(String, bool, Option<&str>)> = items
+        .iter()
+        .filter_map(|c| match c {
+            Choice::Pick {
+                label,
+                chosen,
+                icon,
+                ..
+            } => Some((label.clone(), *chosen, *icon)),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(picks.len(), 12);
+    assert_eq!(
+        picks[3],
+        ("Sol orta".to_owned(), false, Some("textAlignMiddleLeft"))
+    );
+    assert_eq!(
+        picks[4],
+        ("Orta".to_owned(), true, Some("textAlignMiddleCenter"))
+    );
+}
+
+/// Over a selection the texts' rows say Çeşitli where they differ; a new
+/// alignment keeps each where it is, in one step.
+#[test]
+fn a_new_alignment_keeps_each_text_where_it_is() {
+    let mut app = objects();
+    let (a, b) = two_texts(&mut app);
+    select(&mut app, &[a, b]);
+    for label in ["Hiza", "Genişlik çarpanı", "Zemin"] {
+        assert_eq!(value(&app, "Yazı", label), "Çeşitli");
+    }
+    let before = [
+        text_box(&app, &text_of(&app, a)),
+        text_box(&app, &text_of(&app, b)),
+    ];
+    let (pa, pb) = (text_of(&app, a).p, text_of(&app, b).p);
+    event(
+        &mut app,
+        Event::TextAlign(
+            vec![Slot(a), Slot(b)],
+            Some(kentos_contracts::TextAlign::TopRight),
+        ),
+    );
+    let (ta, tb) = (text_of(&app, a), text_of(&app, b));
+    assert_eq!(
+        (ta.align, tb.align),
+        (
+            Some(kentos_contracts::TextAlign::TopRight),
+            Some(kentos_contracts::TextAlign::TopRight)
+        )
+    );
+    assert_eq!([text_box(&app, &ta), text_box(&app, &tb)], before);
+    assert_ne!(ta.p, pa);
+    assert_eq!(value(&app, "Yazı", "Hiza"), "Sağ üst");
+    assert_eq!(undo_label(&mut app).as_deref(), Some("Değiştir"));
+    let (ta, tb) = (text_of(&app, a), text_of(&app, b));
+    assert_eq!(
+        (ta.p, tb.p, ta.align, tb.align),
+        (
+            pa,
+            pb,
+            None,
+            Some(kentos_contracts::TextAlign::MiddleCenter)
+        )
+    );
+    // The left of the baseline takes the field away; the text still stays.
+    let before = text_box(&app, &tb);
+    event(&mut app, Event::TextAlign(vec![Slot(b)], None));
+    let tb = text_of(&app, b);
+    assert_eq!((tb.align, text_box(&app, &tb)), (None, before));
+}
+
+/// Genişlik çarpanı about each text's point, 1 as no field, a refusal said;
+/// Zemin on and off, nothing written when nothing changes.
+#[test]
+fn width_factor_and_mask_are_written_to_the_texts() {
+    let mut app = objects();
+    let (a, b) = two_texts(&mut app);
+    let (sa, sb) = (Slot(a), Slot(b));
+    event(
+        &mut app,
+        Event::Commit(Field::TextWidth(vec![sa, sb]), "1,5".to_owned()),
+    );
+    let pb = text_of(&app, b).p;
+    assert_eq!(
+        (
+            text_of(&app, a).width_factor,
+            text_of(&app, b).width_factor,
+            text_of(&app, b).p
+        ),
+        (Some(1.5), Some(1.5), pb)
+    );
+    event(
+        &mut app,
+        Event::Commit(Field::TextWidth(vec![sa]), "1".to_owned()),
+    );
+    assert_eq!(text_of(&app, a).width_factor, None);
+    event(
+        &mut app,
+        Event::Commit(Field::TextWidth(vec![sb]), "0".to_owned()),
+    );
+    assert_eq!(text_of(&app, b).width_factor, Some(1.5));
+    assert_eq!(
+        warned(&app).as_deref(),
+        Some(
+            "Yazının genişlik çarpanı 0'dan büyük, en çok 100 olmalı; 0 verildi. Çarpanı bu aralıkta verin ya da alanı kaldırın (1)."
+        )
+    );
+    // Zemin: b has one already, so turning it on writes nothing.
+    let revision = |app: &App| app.document.as_ref().map_or(0, |d| d.model.revision());
+    let before = revision(&app);
+    event(&mut app, Event::TextMask(vec![sb], true));
+    assert_eq!(revision(&app), before);
+    event(&mut app, Event::TextMask(vec![sa, sb], true));
+    assert_eq!((text_of(&app, a).mask, text_of(&app, b).mask), (true, true));
+    event(&mut app, Event::TextMask(vec![sa, sb], false));
+    assert_eq!(
+        (text_of(&app, a).mask, text_of(&app, b).mask),
+        (false, false)
+    );
+    assert_eq!(undo_label(&mut app).as_deref(), Some("Değiştir"));
+    assert_eq!((text_of(&app, a).mask, text_of(&app, b).mask), (true, true));
 }

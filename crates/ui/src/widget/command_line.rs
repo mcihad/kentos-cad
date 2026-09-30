@@ -98,6 +98,14 @@ const PADDING_X: f32 = 10.0;
 /// Yazı kutusunun en dar hâli (web'de `.cmdline__field`'in `min-width`'i):
 /// istemin çipleri ne kadar yer tutsa da yazılan değer görünür kalır.
 const FIELD_MIN: f32 = 80.0;
+/// The least of the step's words kept before an option gives way to the
+/// “Diğer” chip ([`Prompt::fit`]).
+const STEP_MIN: f32 = 120.0;
+/// The controls at the right while a prompt offers chips: two icon buttons
+/// (12 wide, 7 padding each side), 2 apart.
+const CONTROLS_COMPACT: f32 = 2.0 * (12.0 + 14.0) + 2.0;
+/// The chip that holds the options a narrow line has no room for.
+const MORE: &str = "Diğer";
 /// İstem satırında komut adı, istem ve çipler arasındaki boşluk.
 const ASK_SPACING: f32 = 8.0;
 /// Soluklaşma: her eski satırın saydamlığı bu kadar azalır, en az
@@ -268,6 +276,9 @@ pub struct Prompt<'a, Message> {
     command: Option<Fragment<'a>>,
     text: Fragment<'a>,
     options: Vec<Keyword<'a, Message>>,
+    /// Options a narrow line had no room for ([`Prompt::fit`]): in the
+    /// “Diğer” chip's menu, still found by typing.
+    hidden: Vec<Keyword<'a, Message>>,
     /// Chips that open a menu above them (Nokta hesabı): never chosen by typing.
     menus: Vec<MenuChip<'a, Message>>,
     placeholder: Option<Fragment<'a>>,
@@ -285,6 +296,15 @@ struct Keyword<'a, Message> {
     key: Option<Fragment<'a>>,
     description: Option<Fragment<'a>>,
     message: Message,
+    /// The values it chooses between (Yazı's Hiza): a click opens them
+    /// above it instead of sending `message`; typing still chooses it.
+    choices: Option<Choices<Message>>,
+}
+
+struct Choices<Message> {
+    /// The chosen value's picture, before the label.
+    icon: Option<Icon>,
+    menu: crate::widget::Menu<Message>,
 }
 
 impl<'a, Message> Prompt<'a, Message> {
@@ -294,6 +314,7 @@ impl<'a, Message> Prompt<'a, Message> {
             command: None,
             text: text.into_fragment(),
             options: Vec::new(),
+            hidden: Vec::new(),
             menus: Vec::new(),
             placeholder: None,
         }
@@ -336,11 +357,90 @@ impl<'a, Message> Prompt<'a, Message> {
             key: None,
             description: None,
             message,
+            choices: None,
         });
         self
     }
 
-    /// Son eklenen seçeneğin klavye karşılığı (ör. "Enter"); yalnızca
+    /// Son eklenen seçeneğin seçtiği değerler (ör. yazının hizası): çip
+    /// tıklanınca `menu` üstünde açılır, `icon` seçili değerin resmidir.
+    /// Yazılınca seçenek yine kendi mesajını gönderir.
+    pub fn choices(mut self, icon: Option<Icon>, menu: crate::widget::Menu<Message>) -> Self {
+        if let Some(option) = self.options.last_mut() {
+            option.choices = Some(Choices { icon, menu });
+        }
+        self
+    }
+
+        /// Options that do not fit a command line `width` wide go, from the
+    /// last one back, into a “Diğer” chip's menu at the head of the menu
+    /// chips: the step's words keep at least their first letters, the field
+    /// its least width, and every option stays a click away (one that
+    /// offers values, as a submenu). A prompt that fits is left as it is.
+    pub fn fit(mut self, width: f32) -> Self
+    where
+        Message: Clone,
+    {
+        let token = self.command.as_ref().map_or(0.0, |command| {
+            typography::mono_width(command, typography::caption()) + 12.0 + ASK_SPACING
+        });
+        // The row's own room: its paddings, the compact controls at the right, the glyph,
+        // the gaps, the field's least width and the step's least words.
+        let room = width
+            - 2.0 * PADDING_X
+            - 8.0
+            - CONTROLS_COMPACT
+            - GLYPH_COLUMN
+            - 2.0 * GAP
+            - typography::from_default(FIELD_MIN)
+            - typography::from_default(STEP_MIN)
+            - token;
+        if chips_width(&self.options, &self.menus) <= room {
+            return self;
+        }
+        let more = {
+            let frame = 2.0 * 7.0 + 2.0;
+            ASK_SPACING + frame + 14.0 + 5.0 + typography::measured_width(MORE, typography::body(), false)
+        };
+        while !self.options.is_empty() && chips_width(&self.options, &self.menus) + more > room {
+            self.hidden.extend(self.options.pop());
+        }
+        self.hidden.reverse();
+        let menu = self
+            .hidden
+            .iter()
+            .fold(crate::widget::Menu::new(), |menu, option| {
+                let label = option.label.to_string();
+                match &option.choices {
+                    Some(choices) => {
+                        let menu = menu.submenu(label, choices.menu.clone());
+                        match choices.icon {
+                            Some(glyph) => menu.icon(glyph),
+                            None => menu,
+                        }
+                    }
+                    None => {
+                        let menu = menu.item(label, option.message.clone());
+                        match &option.key {
+                            Some(key) => menu.shortcut(key.to_string()),
+                            None => menu,
+                        }
+                    }
+                }
+            });
+        self.menus.insert(
+            0,
+            MenuChip {
+                label: MORE.into_fragment(),
+                icon: Some(Icon::More),
+                menu,
+                tip: Some("Satıra sığmayan seçenekler".to_owned()),
+            },
+        );
+        self
+    }
+
+/// Son eklenen seçeneğin klavye karşılığı (ör. "Enter"); yalnızca
     /// gösterilir.
     pub fn key(mut self, key: impl IntoFragment<'a>) -> Self {
         if let Some(option) = self.options.last_mut() {
@@ -377,6 +477,7 @@ impl<'a, Message> Prompt<'a, Message> {
 
         self.options
             .iter()
+            .chain(&self.hidden)
             .find(|option| keyword_matches(&option.label, &input))
             .map(|option| &option.message)
     }
@@ -912,21 +1013,42 @@ fn input_row<'a, Message: Clone + 'a>(
         );
 
         for option in prompt.options {
-            let mut face = Row::new()
-                .push(label::body(option.label).wrapping(Wrapping::None))
-                .spacing(6)
-                .align_y(Center);
+            let mut face = Row::new().spacing(6).align_y(Center);
+            if let Some(glyph) = option.choices.as_ref().and_then(|c| c.icon) {
+                face = face.push(icon(glyph).size(14.0));
+            }
+            face = face.push(label::body(option.label).wrapping(Wrapping::None));
+            if option.choices.is_some() {
+                face = face.push(icon(Icon::ChevronDown).size(12.0).tone(Tone::Muted));
+            }
 
             if let Some(key) = option.key {
                 face = face.push(label::mono_caption(key).wrapping(Wrapping::None));
             }
 
-            ask = ask.push(
-                button(face)
-                    .on_press(option.message)
-                    .padding([1, 7])
-                    .style(style::button::keyword),
-            );
+            ask = ask.push(match option.choices {
+                // Framed like the menu chips; the menu button draws its hover and press over it.
+                Some(choices) => {
+                    let face = container(face).padding([1, 7]).style(|theme: &Theme| {
+                        let t = Tokens::of(theme);
+                        container::Style {
+                            text_color: Some(t.text),
+                            border: border::rounded(crate::theme::shape::radius(3.0))
+                                .width(1.0)
+                                .color(t.border),
+                            ..container::Style::default()
+                        }
+                    });
+                    let menu = choices.menu;
+                    crate::widget::MenuButton::new(face, move || menu.clone()).into()
+                }
+                None => Element::from(
+                    button(face)
+                        .on_press(option.message)
+                        .padding([1, 7])
+                        .style(style::button::keyword),
+                ),
+            });
         }
 
         for chip in prompt.menus {
@@ -1000,7 +1122,11 @@ fn chips_width<Message>(options: &[Keyword<'_, Message>], menus: &[MenuChip<'_, 
         let key = option.key.as_ref().map_or(0.0, |key| {
             6.0 + typography::mono_width(key, typography::caption())
         });
-        ASK_SPACING + frame + typography::measured_width(&option.label, body, false) + key
+        // A chooser's picture and its ▾, each with the gap before it.
+        let choices = option.choices.as_ref().map_or(0.0, |c| {
+            c.icon.map_or(0.0, |_| 14.0 + 6.0) + 12.0 + 6.0
+        });
+        ASK_SPACING + frame + typography::measured_width(&option.label, body, false) + key + choices
     });
     let menus = menus.iter().map(|chip| {
         let glyph = chip.icon.map_or(0.0, |_| 14.0 + 5.0);
@@ -1128,6 +1254,7 @@ fn suggestions<'a, Message: Clone>(
         prompt
             .options
             .iter()
+            .chain(&prompt.hidden)
             .filter(|option| input.is_empty() || keyword_matches(&option.label, &input))
             .map(|option| Suggestion {
                 target: Target::Option {
@@ -2384,6 +2511,50 @@ mod tests {
         assert_eq!(prompt.find("KAPAT"), Some(&2));
         assert_eq!(prompt.find("bitir"), None);
         assert_eq!(prompt.find(" "), None);
+    }
+
+    #[test]
+    fn options_a_narrow_line_has_no_room_for_go_into_diğer() {
+        let six = || {
+            Prompt::new("yazının başlangıcına tıklayın")
+                .command("Yazı")
+                .option("Yükseklik: 2.5 mm", 1)
+                .key("Y")
+                .option("Açı: 0°", 2)
+                .key("A")
+                .option("Hiza: sol taban", 3)
+                .key("H")
+                .choices(None, crate::widget::Menu::new().radio("Orta", false, 30))
+                .option("Genişlik: 1", 4)
+                .key("G")
+                .option("Zemin: kapalı", 5)
+                .key("Z")
+                .option("Artır: kapalı", 6)
+                .key("R")
+        };
+        // Wide: every option is a chip.
+        let wide = six().fit(2400.0);
+        assert_eq!((wide.options.len(), wide.menus.len()), (6, 0));
+        // Narrow: the last ones go into Diğer, in their order, and are still found by typing.
+        let narrow = six().fit(760.0);
+        let shown: Vec<String> = narrow.options.iter().map(|o| o.label.to_string()).collect();
+        let hidden: Vec<String> = narrow.hidden.iter().map(|o| o.label.to_string()).collect();
+        assert!(!shown.is_empty() && !hidden.is_empty(), "{shown:?} {hidden:?}");
+        assert_eq!(shown.len() + hidden.len(), 6);
+        assert_eq!(hidden.last().map(String::as_str), Some("Artır: kapalı"));
+        assert_eq!(narrow.menus[0].label.to_string(), "Diğer");
+        assert_eq!(narrow.find("artır"), Some(&6));
+        // What is shown and the Diğer chip fit the line's room.
+        let room = 760.0
+            - 2.0 * PADDING_X
+            - 8.0
+            - CONTROLS_COMPACT
+            - GLYPH_COLUMN
+            - 2.0 * GAP
+            - typography::from_default(FIELD_MIN)
+            - typography::from_default(STEP_MIN)
+            - (typography::mono_width("Yazı", typography::caption()) + 12.0 + ASK_SPACING);
+        assert!(chips_width(&narrow.options, &narrow.menus) <= room);
     }
 
     #[test]

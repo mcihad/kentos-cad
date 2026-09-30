@@ -660,6 +660,20 @@ impl App {
         }
     }
 
+    /// A value an option offers chosen from its menu, as if its key and the
+    /// value had been typed (the web's `runPromptChoice`, docs/adr/0145 §6).
+    pub(crate) fn prompt_choice(
+        &mut self,
+        key: &'static str,
+        typed: &'static str,
+    ) -> Task<Message> {
+        self.echo_value(format!("{key} {typed}"));
+        if self.with_tool(|s, cx| s.choose_option(key, typed, cx)) != Some(true) {
+            self.warn(format!("“{key}” seçeneği şu adımda kullanılamıyor."));
+        }
+        Task::none()
+    }
+
     /// A tool's method from its ribbon menu (docs/adr/0032), as the web's
     /// `runEntry`: the tool starts, then its option goes in as if typed. A
     /// method the tool refuses now says so; a tool that did not start has

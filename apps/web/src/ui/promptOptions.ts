@@ -1,6 +1,8 @@
 import type { AppContext } from '../app/context';
 import { echo } from './bottom/logPlan';
 import { h } from './dom';
+import { icon } from './icons';
+import { PopupMenu, type MenuItem } from './widgets/PopupMenu';
 
 /**
  * Tool prompts follow one convention: "Araç: adım [Seçenek (TUŞ) / Seçenek
@@ -73,19 +75,45 @@ export function runPromptOption(ctx: AppContext, key: string): void {
   ctx.view.focus();
 }
 
-/** Option buttons: label, current value and the key that does the same. */
+/** A value an option offers chosen from its menu, as if its key and the value had been typed (Yazı's Hiza). */
+export function runPromptChoice(ctx: AppContext, key: string, typed: string): void {
+  ctx.log.command(echo(`${key} ${typed}`));
+  if (!ctx.tools.active.chooseOption?.(key, typed)) ctx.log.warn(`“${key}” seçeneği şu adımda kullanılamıyor.`);
+  ctx.view.focus();
+}
+
+/** The menu of the values an option offers (docs/adr/0145 §6), or null when it offers none. */
+export function choiceItems(ctx: AppContext, key: string): MenuItem[] | null {
+  const choices = ctx.tools.active.optionChoices?.(key);
+  if (!choices?.length) return null;
+  return choices.map((c) => ({ label: c.label, icon: c.icon, radio: true, checked: c.checked, run: () => runPromptChoice(ctx, key, c.typed) }));
+}
+
+/**
+ * Option buttons: label, current value and the key that does the same. An option that offers values (Yazı's Hiza)
+ * shows the chosen one's icon before its label and opens their menu above it; its key still goes in by typing.
+ */
 export function optionButtons(ctx: AppContext, options: readonly PromptOption[], cls: string): HTMLElement[] {
   return options.map((o) => {
+    const choices = ctx.tools.active.optionChoices?.(o.key) ?? null;
+    const chosen = choices?.find((c) => c.checked)?.icon;
     const b = h(
       'button',
-      { class: cls, type: 'button', title: `${o.label}${o.value ? `: ${o.value}` : ''} (${o.key})` },
+      { class: cls, type: 'button', title: `${o.label}${o.value ? `: ${o.value}` : ''} (${o.key})`, ...(choices && { 'aria-haspopup': 'menu' }) },
+      chosen ? icon(chosen, 14) : null,
       h('span', null, o.label),
       o.value ? h('span', { class: `${cls}-value` }, o.value) : null,
+      choices ? h('span', { class: `${cls}-more` }, icon('chevronDown', 12)) : null,
       h('kbd', { class: `${cls}-key` }, o.key),
     );
     // Keep focus where it is (the drawing) and act on click.
     b.addEventListener('pointerdown', (e) => e.preventDefault());
-    b.addEventListener('click', () => runPromptOption(ctx, o.key));
+    b.addEventListener('click', () => {
+      const items = choiceItems(ctx, o.key);
+      if (!items) return runPromptOption(ctx, o.key);
+      const r = b.getBoundingClientRect();
+      PopupMenu.open(items, { x: r.left, y: r.top - 4 }, { minWidth: Math.max(180, r.width) });
+    });
     return b;
   });
 }

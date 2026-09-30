@@ -32,6 +32,15 @@ export interface ConfirmMods {
  * Interactive tool contract. The viewport feeds pointer events, the command
  * line feeds typed input; the tool never touches the DOM directly.
  */
+/** One value an option offers in its menu (Yazı's Hiza, docs/adr/0145 §6). */
+export interface OptionChoice {
+  label: string;
+  /** What typing it after the option's key gives (“sağ üst”): the command history says it. */
+  typed: string;
+  icon?: string;
+  checked: boolean;
+}
+
 export interface Tool {
   readonly id: string;
   /** Text the command line shows while the tool waits for input. */
@@ -46,6 +55,13 @@ export interface Tool {
   pointerUp?(p: ToolPointer): void;
   /** Typed coordinate, number or option. Return false when not understood. */
   input?(text: string): boolean;
+  /**
+   * The values an option chooses between, for its button and the right-button menu to offer as a menu (Yazı's
+   * Hiza, docs/adr/0145 §6); none: the button sends the key.
+   */
+  optionChoices?(key: string): readonly OptionChoice[] | null;
+  /** One of `optionChoices(key)` chosen, as typing the key and then `typed`; false when this step takes none. */
+  chooseOption?(key: string, typed: string): boolean;
   /** Enter, Space or right click; Shift+Enter says `shift` (Çitle seç adds to the selection then, docs/adr/0141). */
   confirm?(mods?: ConfirmMods): void;
   /**

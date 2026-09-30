@@ -67,6 +67,10 @@ pub enum Event {
     InsertBlock(Slot, BlockId),
     /// Aynalı ▾ of an insert.
     InsertMirror(Slot, bool),
+    /// Hiza ▾ of texts: each keeps where it is (docs/adr/0145 §6); none, the left of the baseline.
+    TextAlign(Vec<Slot>, Option<kentos_contracts::TextAlign>),
+    /// Zemin ▾ of texts.
+    TextMask(Vec<Slot>, bool),
 }
 
 /// The value a cell edits.
@@ -92,6 +96,8 @@ pub enum Field {
     Elevation(Slot, Spot),
     /// Every vertex's elevation of these lines, polylines, areas and points.
     Elevations(Vec<Slot>),
+    /// Texts' width factor: out of its range the command says why (docs/adr/0145).
+    TextWidth(Vec<Slot>),
     /// An insert's place (Y, X), scale (above zero) and turn (degrees typed).
     InsertX(Slot),
     InsertY(Slot),
@@ -286,6 +292,7 @@ impl App {
             Some(Editor::Select {
                 text,
                 swatch,
+                icon,
                 items,
             }) => {
                 // Colours resolved now: the menu is built again at every opening.
@@ -302,11 +309,19 @@ impl App {
                         (choice, color)
                     })
                     .collect();
-                property_grid::choice(
-                    text,
-                    swatch.map(|value| self.drawing_color(&value)),
-                    move || menu(&items),
-                )
+                match icon {
+                    // A picture before the value (a text's alignment, docs/adr/0145).
+                    Some(name) => property_grid::icon_choice(
+                        text,
+                        crate::icons::from_web(Some(name)),
+                        move || menu(&items),
+                    ),
+                    None => property_grid::choice(
+                        text,
+                        swatch.map(|value| self.drawing_color(&value)),
+                        move || menu(&items),
+                    ),
+                }
             }
         }
     }
@@ -376,6 +391,8 @@ impl App {
                 }
                 _ => Vec::new(),
             },
+            Event::TextAlign(slots, to) => properties::realign_texts(model, &slots, to),
+            Event::TextMask(slots, on) => properties::set_text_mask(model, &slots, on),
             Event::Commit(field, text) => commit(model, &field, &text),
         };
         for text in said {
@@ -430,6 +447,15 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
     match field {
         Field::Elevation(slot, spot) => return commit_elevation(model, &[*slot], *spot, text),
         Field::Elevations(slots) => return commit_elevation(model, slots, Spot::All, text),
+        // Any finite number: the command refuses one out of range and says why.
+        Field::TextWidth(slots) => {
+            let n = web_number(text);
+            return if n.is_finite() {
+                properties::set_text_width(model, slots, n)
+            } else {
+                Vec::new()
+            };
+        }
         _ => {}
     }
     if let Field::Attribute(slot, key) = field {
@@ -464,7 +490,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::InsertTurn(s)
         | Field::Attribute(s, _) => *s,
         // Taken above.
-        Field::Elevation(..) | Field::Elevations(_) => return Vec::new(),
+        Field::Elevation(..) | Field::Elevations(_) | Field::TextWidth(_) => return Vec::new(),
     };
     let Some(mut e) = model.get(slot).cloned() else {
         return Vec::new();
@@ -551,12 +577,15 @@ fn menu(items: &[(Choice, Option<Color>)]) -> Menu<Message> {
                 chosen,
                 enabled,
                 message,
+                icon,
                 ..
             } => {
                 let menu = menu.radio(label.clone(), *chosen, enabled.then(|| message.clone()));
-                match color {
-                    Some(color) => menu.swatch(*color),
-                    None => menu,
+                // A colour's swatch, or a picture (a text's alignment, docs/adr/0145).
+                match (color, icon) {
+                    (Some(color), _) => menu.swatch(*color),
+                    (None, Some(name)) => menu.icon(crate::icons::from_web(Some(name))),
+                    (None, None) => menu,
                 }
             }
             Choice::Separator => menu.separator(),

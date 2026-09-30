@@ -2,7 +2,7 @@ import type { AppContext } from '../../app/context';
 import { watchAll } from '../../core/signal';
 import { attributeRows, turnOf } from '../../model/blocks';
 import { DIMENSION_STYLE_LABEL, layoutDimension } from '../../model/geom/dimension';
-import { ENTITY_KIND_LABEL, HATCH_PATTERN_LABEL, drawsLines, entityArea, entityLength, type Entity, type HatchPatternType } from '../../model/entities';
+import { ENTITY_KIND_LABEL, HATCH_PATTERN_LABEL, drawsLines, entityArea, entityLength, type Entity, type HatchPatternType, type TextEntity } from '../../model/entities';
 import { angleDeg, bearingGrad, dist } from '../../model/geometry';
 import { sweep } from '../../model/geom/arc';
 import { isFullEllipse, majorLength } from '../../model/geom/ellipse';
@@ -15,6 +15,7 @@ import type { MenuItem } from '../widgets/PopupMenu';
 import { PropertyGrid, type PropRow, type PropSection } from '../widgets/PropertyGrid';
 import { commonElevationRow, lineEndRow, pathElevationRow, spaceRow } from './elevationRows';
 import { cornerRows, holeRows } from './pathRows';
+import { textRows } from './textRows';
 import { setGeometry, setProperties, uidsOf } from './write';
 
 /**
@@ -405,6 +406,8 @@ export class PropertiesPanel extends Panel {
                   },
                 },
           },
+          // Hiza, Genişlik çarpanı and Zemin (docs/adr/0145 §6).
+          ...textRows(this.ctx, [e], locked),
           num('Konum Y', e.p.x),
           num('Konum X', e.p.y),
         );
@@ -524,6 +527,9 @@ export class PropertiesPanel extends Panel {
     if (length > 0) totals.push({ label: 'Toplam uzunluk', value: f.length(length, false), numeric: true, unit: 'm' });
     if (area > 0) totals.push({ label: 'Toplam alan', value: f.area(area, false), numeric: true, unit: f.areaUnitLabel });
     const sections: PropSection[] = [{ id: 'general', title: 'Ortak özellikler', rows }];
+    // The selection's texts: their Hiza, Genişlik çarpanı and Zemin, common or “Çeşitli” (docs/adr/0145 §6).
+    const texts = ents.filter((e): e is TextEntity => e.kind === 'text');
+    if (texts.length) sections.push({ id: 'texts', title: texts.length === ents.length ? 'Yazı' : `Yazılar (${texts.length})`, rows: textRows(this.ctx, texts, anyLocked) });
     if (totals.length) sections.push({ id: 'totals', title: 'Toplamlar', rows: totals });
     return sections;
   }

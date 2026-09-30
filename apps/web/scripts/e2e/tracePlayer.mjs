@@ -360,7 +360,14 @@ async function act(step) {
   if (step.run) return void (await b.eval(`window.kentos.commands.execute(${JSON.stringify(step.run)})`));
   if (step.key) return press(step.key);
   if (step.text !== undefined) {
-    for (const ch of step.text) await press(ch);
+    for (const ch of step.text) {
+      // A capital typed into a text field other than the command line (Yazı's field over the drawing) is Shift and
+      // the letter, as a keyboard types it; on the drawing an option letter goes without Shift (Shift+H is Kaydır).
+      const capital =
+        /^\p{Lu}$/u.test(ch) &&
+        (await b.eval(`(() => { const a = document.activeElement; return a instanceof HTMLInputElement && !a.classList.contains('cmdline__input'); })()`));
+      await press(capital ? `Shift+${ch.toLocaleLowerCase('tr-TR')}` : ch);
+    }
     return;
   }
   if (step.move) {
@@ -429,7 +436,18 @@ const observe = (mark) =>
     const along = (e, t) => [e.c.x + e.major.x * Math.cos(t) - e.major.y * e.ratio * Math.sin(t), e.c.y + e.major.y * Math.cos(t) + e.major.x * e.ratio * Math.sin(t)];
     const ellipse = (e) => (e.t0 === e.t1 ? [0, 1, 2, 3].map((i) => along(e, (i * Math.PI) / 2)) : [along(e, e.t0), along(e, e.t1)]);
     const pts = (e) => (e.pts ? e.pts.map((p) => [p.x, p.y]) : e.kind === 'line' ? [[e.a.x, e.a.y], [e.b.x, e.b.y]] : e.kind === 'point' ? [[e.p.x, e.p.y]] : e.kind === 'arc' ? [e.a0, e.a1].map((a) => [e.c.x + e.r * Math.cos(a), e.c.y + e.r * Math.sin(a)]) : e.kind === 'ellipse' ? ellipse(e) : e.kind === 'xline' || e.kind === 'ray' ? [[e.p.x, e.p.y], [e.p.x + e.dir.x, e.p.y + e.dir.y]] : e.kind === 'dimension' ? [e.a, e.b, ...(e.c ? [e.c] : [])].map((p) => [p.x, p.y]) : e.kind === 'insert' ? placed(e) : e.kind === 'text' ? [[e.p.x, e.p.y]] : null);
-    const shape = (e) => ({ kind: e.kind, pts: pts(e), bulges: e.bulges ?? [], center: e.c ? [e.c.x, e.c.y] : null, radius: e.r ?? null, text: e.kind === 'text' ? e.text : null });
+    const shape = (e) => ({
+      kind: e.kind,
+      pts: pts(e),
+      bulges: e.bulges ?? [],
+      center: e.c ? [e.c.x, e.c.y] : null,
+      radius: e.r ?? null,
+      text: e.kind === 'text' ? e.text : null,
+      // A text's alignment (null: the left of the baseline), width factor and mask (docs/adr/0145).
+      align: e.kind === 'text' ? (e.align ?? null) : null,
+      widthFactor: e.kind === 'text' ? (e.widthFactor ?? 1) : null,
+      mask: e.kind === 'text' ? e.mask === true : null,
+    });
     return {
       tool: k.tools.activeId.value,
       points: k.tools.active.pointCount ?? 0,
@@ -484,6 +502,9 @@ function compareShape(name, have, want, t) {
     bad.push(`${name}.radius: ${have.radius}, beklenen ${want.radius} (±${t.clickTolerance} m)`);
   // A text's content is exact (docs/adr/0144 §7: an exploded attribute's value).
   if (want.text !== undefined && have.text !== want.text) bad.push(`${name}.text: ${JSON.stringify(have.text)}, beklenen ${JSON.stringify(want.text)}`);
+  // A text's alignment, width factor and mask (docs/adr/0145), exact.
+  for (const key of ['align', 'widthFactor', 'mask'])
+    if (want[key] !== undefined && have[key] !== want[key]) bad.push(`${name}.${key}: ${JSON.stringify(have[key])}, beklenen ${JSON.stringify(want[key])}`);
   if (want.arcs !== undefined) {
     const arcs = have.bulges.filter((bulge) => bulge !== 0).length;
     if (arcs !== want.arcs) bad.push(`${name}.arcs: ${arcs}, beklenen ${want.arcs}`);

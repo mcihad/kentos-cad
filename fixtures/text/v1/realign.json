@@ -1,0 +1,118 @@
+{
+  "format": "kentos.text-cases",
+  "version": 1,
+  "title": "Hizayı değiştir: yazı yerinde kalır, noktası kutunun yeni hizadaki noktası olur (ADR 0145 §6)",
+  "note": "Noktası taban çizgisi boyunca w·(a′ − a), ona dik h·(b′ − b) kayar (w genişlik, h yükseklik; a, b eski, a′, b′ yeni hizanın boyuna ve yukarı payları; hizasız: sol taban, 0 ve 0). Dönüş değişmez. to: null sol taban çizgisidir. Genişlik burada verilir: çekirdekte yazı tipinin ölçüsüdür.",
+  "cases": [
+    {
+      "name": "sol tabandan ortaya",
+      "p": {
+        "x": 487100.0,
+        "y": 4420200.0
+      },
+      "height": 2.0,
+      "rotation": 0.0,
+      "width": 10.0,
+      "to": "middleCenter",
+      "expect": {
+        "x": 487105.0,
+        "y": 4420201.0
+      }
+    },
+    {
+      "name": "ortadan sol tabana: eskiye döner",
+      "p": {
+        "x": 487105.0,
+        "y": 4420201.0
+      },
+      "height": 2.0,
+      "rotation": 0.0,
+      "width": 10.0,
+      "align": "middleCenter",
+      "to": null,
+      "expect": {
+        "x": 487100.0,
+        "y": 4420200.0
+      }
+    },
+    {
+      "name": "sağ üstten sol alta",
+      "p": {
+        "x": 487100.0,
+        "y": 4420200.0
+      },
+      "height": 2.5,
+      "rotation": 0.0,
+      "width": 8.0,
+      "align": "topRight",
+      "to": "bottomLeft",
+      "expect": {
+        "x": 487092.0,
+        "y": 4420197.0
+      }
+    },
+    {
+      "name": "30° dönük, sol tabandan sağ tabana",
+      "p": {
+        "x": 487100.0,
+        "y": 4420200.0
+      },
+      "height": 2.0,
+      "rotation": 30.0,
+      "width": 12.0,
+      "to": "baselineRight",
+      "expect": {
+        "x": 487110.3923048454,
+        "y": 4420206.0
+      }
+    },
+    {
+      "name": "200° dönük, orta alttan sağ ortaya",
+      "p": {
+        "x": 486512.34,
+        "y": 4420187.52
+      },
+      "height": 1.5,
+      "rotation": 200.0,
+      "width": 6.4,
+      "align": "bottomCenter",
+      "to": "middleRight",
+      "expect": {
+        "x": 486509.69210476405,
+        "y": 4420185.438858289
+      }
+    },
+    {
+      "name": "aynı hiza: yer değişmez",
+      "p": {
+        "x": 487100.0,
+        "y": 4420200.0
+      },
+      "height": 2.0,
+      "rotation": 45.0,
+      "width": 9.0,
+      "align": "topCenter",
+      "to": "topCenter",
+      "expect": {
+        "x": 487100.0,
+        "y": 4420200.0
+      }
+    },
+    {
+      "name": "eksi dönüş: −90°, sol üstten orta tabana",
+      "p": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "height": 3.0,
+      "rotation": -90.0,
+      "width": 12.25,
+      "align": "topLeft",
+      "to": "baselineCenter",
+      "expect": {
+        "x": -2.9999999999999996,
+        "y": -6.125
+      }
+    }
+  ]
+}

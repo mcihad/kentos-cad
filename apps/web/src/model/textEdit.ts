@@ -3,9 +3,10 @@ import type { TextAlign } from './entities';
 import type { Vec2 } from './geometry';
 
 /**
- * A text's editing rules (docs/adr/0145 §3), computed by the geometry core
- * (crates/shared/geometry-core/src/text/edit.rs, `TextPlace::readable`): Artır's
- * next number, Bul ve değiştir's matching and Okunur yap's turn. The desktop
+ * A text's editing rules (docs/adr/0145 §3, §6), computed by the geometry core
+ * (crates/shared/geometry-core/src/text/edit.rs, `TextPlace::readable`, `::realigned`):
+ * Artır's next number, Bul ve değiştir's matching, Okunur yap's turn and the
+ * point a new alignment gives. The desktop
  * calls the same functions natively; fixtures/text/v1 holds both to the
  * independent reference.
  */
@@ -37,3 +38,9 @@ export interface ReadableText {
 
 /** Okunur yap: a text that reads upside down, turned half round about its box's middle; null when it reads. */
 export const textReadable = op<(t: ReadableText) => { p: Vec2; rotation: number } | null>('textReadable');
+
+/**
+ * Hizayı değiştir (docs/adr/0145 §6, Öznitelikler's Hiza): the point of the text's box the alignment `to` is (null:
+ * the left of its baseline), so the text stays where it is with it.
+ */
+export const textRealign = op<(t: ReadableText, to: TextAlign | null) => Vec2>('textRealign');

@@ -73,6 +73,8 @@ impl CommandLine {
         let window_ids = [
             Id::new(crate::blocks::NAME_FIELD),
             Id::new(crate::attribute_values::FIRST_FIELD),
+            // Yazı's field over the drawing (text_field.rs).
+            Id::new(crate::text_field::ID),
         ];
         let mut visit = |operation: &mut dyn Operation| {
             let bounds = Rectangle::default();

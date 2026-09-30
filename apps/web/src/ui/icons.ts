@@ -3,6 +3,12 @@
  * icon shows where its clicks go. Stroke = currentColor, 1.4 px.
  */
 const grip = (x: number, y: number) => `<rect x="${x - 1.5}" y="${y - 1.5}" width="3" height="3" fill="currentColor" stroke="none"/>`;
+/**
+ * A text's alignment (docs/adr/0145 §6): the text's box, dashed, its baseline and, filled, the point `p` is. Left,
+ * centre and right are x 3, 10 and 17; top, middle, baseline and bottom y 4.5, 8.5, 12.5 and 15.5.
+ */
+const textAlign = (x: number, y: number) =>
+  `<rect x="3" y="4.5" width="14" height="11" rx="1" stroke-dasharray="2 1.6"/><path d="M3 12.5h14" stroke-width="1"/><circle cx="${x}" cy="${y}" r="2.6" fill="currentColor" stroke="none"/>`;
 
 // Exported for the feature inventory: the desktop draws the same icons from it (docs/adr/0054).
 export const ICONS = {
@@ -239,6 +245,19 @@ export const ICONS = {
   star: '<path d="m10 3.2 2.1 4.3 4.7.7-3.4 3.3.8 4.7-4.2-2.2-4.2 2.2.8-4.7-3.4-3.3 4.7-.7z"/>',
   starOn: '<path d="m10 3.2 2.1 4.3 4.7.7-3.4 3.3.8 4.7-4.2-2.2-4.2 2.2.8-4.7-3.4-3.3 4.7-.7z" fill="currentColor" fill-opacity=".35"/>',
   archive: '<path d="M3 4.5h14v3H3z"/><path d="M4.5 7.5v8h11v-8M8.2 10.5h3.6"/>',
+  // Yazı's Hiza and Öznitelikler (docs/adr/0145 §6): `textAlign` + the alignment's name, the left of the baseline too.
+  textAlignTopLeft: textAlign(3, 4.5),
+  textAlignTopCenter: textAlign(10, 4.5),
+  textAlignTopRight: textAlign(17, 4.5),
+  textAlignMiddleLeft: textAlign(3, 8.5),
+  textAlignMiddleCenter: textAlign(10, 8.5),
+  textAlignMiddleRight: textAlign(17, 8.5),
+  textAlignBottomLeft: textAlign(3, 15.5),
+  textAlignBottomCenter: textAlign(10, 15.5),
+  textAlignBottomRight: textAlign(17, 15.5),
+  textAlignBaselineLeft: textAlign(3, 12.5),
+  textAlignBaselineCenter: textAlign(10, 12.5),
+  textAlignBaselineRight: textAlign(17, 12.5),
 } as const;
 
 export type IconName = keyof typeof ICONS;

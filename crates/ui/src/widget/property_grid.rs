@@ -261,9 +261,27 @@ pub fn choice<'a, Message: Clone + 'a>(
     swatch: Option<Color>,
     menu: impl Fn() -> Menu<Message> + 'a,
 ) -> Element<'a, Message> {
+    choice_with(text, swatch.map(crate::widget::swatch), menu)
+}
+
+/// [`choice`] with a picture before its value instead of a swatch (a
+/// text's alignment in KentOS CAD).
+pub fn icon_choice<'a, Message: Clone + 'a>(
+    text: impl IntoFragment<'a>,
+    glyph: Icon,
+    menu: impl Fn() -> Menu<Message> + 'a,
+) -> Element<'a, Message> {
+    choice_with(text, Some(icon(glyph).size(16.0).into()), menu)
+}
+
+fn choice_with<'a, Message: Clone + 'a>(
+    text: impl IntoFragment<'a>,
+    lead: Option<Element<'a, Message>>,
+    menu: impl Fn() -> Menu<Message> + 'a,
+) -> Element<'a, Message> {
     let mut face = row![].spacing(6).align_y(Center);
-    if let Some(color) = swatch {
-        face = face.push(crate::widget::swatch(color));
+    if let Some(lead) = lead {
+        face = face.push(lead);
     }
     face = face
         .push(

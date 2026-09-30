@@ -76,7 +76,7 @@ pub trait View {
 /// Pencere yakınlaştır fits a box. The web's tools move `ctx.view.camera`
 /// themselves; here the host's camera takes the changes, in order, right
 /// after the call that made them.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum ViewChange {
     /// The view follows the pointer by logical pixels, right and down (the web's `camera.panBy`).
     Pan { dx: f64, dy: f64 },
@@ -102,12 +102,30 @@ pub enum ViewChange {
 }
 
 /// Where a text field opens and how its text will look: its start, height in
-/// metres and angle in degrees counter-clockwise from east.
-#[derive(Clone, Copy, Debug, PartialEq)]
+/// metres and angle in degrees counter-clockwise from east, which point of
+/// the text `at` is and its letters' width factor (docs/adr/0145), and what
+/// it opens with, selected (Yazı's Artır).
+#[derive(Clone, Debug, PartialEq)]
 pub struct TextField {
     pub at: Vec2,
     pub height: f64,
     pub rotation: f64,
+    pub align: Option<kentos_contracts::TextAlign>,
+    pub width_factor: f64,
+    pub initial: Option<String>,
+}
+
+/// One value an option offers in its menu (Yazı's Hiza, docs/adr/0145 §6;
+/// the web's `OptionChoice`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct OptionChoice {
+    pub label: &'static str,
+    /// What typing it after the option's key gives (“sağ üst”): the command
+    /// history says it.
+    pub typed: &'static str,
+    /// The web's icon (`ui/icons.ts`).
+    pub icon: &'static str,
+    pub checked: bool,
 }
 
 /// The pointer's look over the drawing while a tool runs (the web's `Tool.cursor`):
@@ -294,6 +312,12 @@ pub struct Memory {
     /// Yazı's height in paper millimetres and angle in degrees (`TextTool.heightMm`, `.angle`).
     pub text_height_mm: f64,
     pub text_angle: f64,
+    /// Yazı's Hiza (none: the left of the baseline), Genişlik, Zemin and
+    /// Artır (`TextTool.align`, `.widthFactor`, `.mask`, `.increment`; docs/adr/0145 §6).
+    pub text_align: Option<kentos_contracts::TextAlign>,
+    pub text_width_factor: f64,
+    pub text_mask: bool,
+    pub text_increment: bool,
     /// Tarama's pattern (an index into its presets), whether the region is
     /// found by the line work rather than a closed object, and whether closed
     /// objects inside are left out (`HatchTool.preset`, `.byLines`, `.islands`).
@@ -437,6 +461,10 @@ impl Default for Memory {
             divide_by_step: false,
             text_height_mm: 2.5,
             text_angle: 0.0,
+            text_align: None,
+            text_width_factor: 1.0,
+            text_mask: false,
+            text_increment: false,
             hatch_preset: 0,
             hatch_by_lines: false,
             hatch_islands: true,
@@ -704,6 +732,17 @@ pub trait Tool {
     fn pointer_up(&mut self, _p: &Pointer, _cx: &mut Context<'_>) {}
     /// Typed text: a coordinate, a number or an option. False when not understood.
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool;
+    /// The values an option chooses between, for its chip and the right
+    /// button's menu to offer as a menu (Yazı's Hiza, docs/adr/0145 §6; the
+    /// web's `optionChoices`); none: the chip sends the key.
+    fn option_choices(&self, _key: &str) -> Vec<OptionChoice> {
+        Vec::new()
+    }
+    /// One of `option_choices(key)` chosen, as typing the key and then
+    /// `typed`; false when this step takes none (the web's `chooseOption`).
+    fn choose_option(&mut self, _key: &str, _typed: &str, _cx: &mut Context<'_>) -> bool {
+        false
+    }
     /// Enter, Space or a quick right click.
     fn confirm(&mut self, cx: &mut Context<'_>) -> Flow;
     /// Whether the tool takes a confirm at all (the web's `Tool.confirm`

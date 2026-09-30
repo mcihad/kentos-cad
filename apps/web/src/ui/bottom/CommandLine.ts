@@ -9,11 +9,14 @@ import { takesTypedInput } from '../../tools/Tool';
 import { Component } from '../Component';
 import { h, replaceChildren } from '../dom';
 import { icon } from '../icons';
-import { optionButtons, optionForKey, parsePrompt, runPromptOption } from '../promptOptions';
+import { choiceItems, optionButtons, optionForKey, parsePrompt, runPromptOption, type PromptOption } from '../promptOptions';
 import { echo } from './logPlan';
 import { calcMenuItems } from '../shell/calcMenu';
 import { SNAP_LABEL } from '../../viewport/picking';
-import { PopupMenu } from '../widgets/PopupMenu';
+import { PopupMenu, type MenuItem } from '../widgets/PopupMenu';
+
+/** The least of the step's words kept before an option gives way to “Diğer”, CSS px at type scale 1 (the desktop's `STEP_MIN`). */
+const STEP_MIN = 120;
 
 /**
  * AutoCAD/Netcad-style command line. Accepts command aliases (L, PL,
@@ -32,6 +35,11 @@ export class CommandLine extends Component {
   private history: string[] = [];
   private historyIndex = -1;
   private readonly ctx: AppContext;
+  /** The running command's option chips and their options, in order; how many of the last are in “Diğer”. */
+  private chips: HTMLElement[] = [];
+  private options: readonly PromptOption[] = [];
+  private folded = 0;
+  private readonly more: HTMLElement;
 
   constructor(ctx: AppContext) {
     super();
@@ -57,6 +65,18 @@ export class CommandLine extends Component {
     );
 
     // The manager publishes a new tool's prompt before its id; follow both, and what the strip would show.
+    // Options the line has no room for go into this chip's menu (fit).
+    this.more = h('button', { class: 'cmdline__chip cmdline__more', type: 'button', title: 'Satıra sığmayan seçenekler', 'aria-haspopup': 'menu', hidden: true }, icon('more', 14), h('span', null, 'Diğer'));
+    this.d.add(listen(this.more, 'pointerdown', (e) => e.preventDefault()));
+    this.d.add(
+      listen(this.more, 'click', () => {
+        const r = this.more.getBoundingClientRect();
+        PopupMenu.open(this.foldedItems(), { x: r.left, y: r.top - 4 }, { minWidth: 220 });
+      }),
+    );
+    const resize = new ResizeObserver(() => this.fit());
+    resize.observe(this.el);
+    this.d.add(() => resize.disconnect());
     this.d.add(watchAll([ctx.tools.prompt, ctx.tools.activeId, ctx.prefs.commandBar, ctx.view.snapOverride], () => this.setPrompt(ctx.tools.prompt.value)));
     this.setPrompt(ctx.tools.prompt.value);
     this.d.add(listen(this.input, 'input', () => this.suggest()));
@@ -116,10 +136,45 @@ export class CommandLine extends Component {
 
   private setPrompt(prompt: string): void {
     const p = parsePrompt(prompt);
+    this.chips = [];
+    this.options = [];
     if (!p.tool) return replaceChildren(this.prompt, h('b', null, p.step));
     const notes = p.notes.length ? ` (${p.notes.join('; ')})` : '';
     // Options are buttons here too; typing their letter still works.
-    replaceChildren(this.prompt, h('span', { class: 'cmdline__text' }, h('b', null, p.tool), `: ${p.step}${notes}`), ...optionButtons(this.ctx, p.options, 'cmdline__chip'), ...this.stripParts());
+    const text = h('span', { class: 'cmdline__text' }, h('b', null, p.tool), `: ${p.step}${notes}`);
+    this.chips = optionButtons(this.ctx, p.options, 'cmdline__chip');
+    this.options = p.options;
+    replaceChildren(this.prompt, text, ...this.chips, this.more, ...this.stripParts());
+    // The step keeps its first letters however many options there are.
+    if (this.chips.length) {
+      const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ui-scale')) || 1;
+      text.style.minWidth = `${Math.min(text.scrollWidth, STEP_MIN * scale)}px`;
+    }
+    this.fit();
+  }
+
+  /**
+   * Options the line has no room for go, from the last one back, into the “Diğer” chip's menu: the step's words keep
+   * their first letters and every option stays a click away (one that offers values, as a submenu). The desktop's
+   * `Prompt::fit` is the same.
+   */
+  private fit(): void {
+    const n = this.chips.length;
+    for (let folded = 0; folded <= n; folded++) {
+      this.chips.forEach((chip, i) => (chip.hidden = i >= n - folded));
+      this.more.hidden = folded === 0;
+      this.folded = folded;
+      if (folded === n || this.prompt.scrollWidth <= this.prompt.clientWidth + 1) return;
+    }
+  }
+
+  /** The options in “Diğer”, as the right button's menu offers them. */
+  private foldedItems(): MenuItem[] {
+    return this.options.slice(this.options.length - this.folded).map((o) => {
+      const label = o.value ? `${o.label}: ${o.value}` : o.label;
+      const items = choiceItems(this.ctx, o.key);
+      return items ? { label, hint: o.key, items } : { label, hint: o.key, run: () => runPromptOption(this.ctx, o.key) };
+    });
   }
 
   /** What only the strip over the drawing showed, here while it is off: Nokta hesabı, and a one-shot snap with its ×. */

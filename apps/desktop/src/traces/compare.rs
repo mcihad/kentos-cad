@@ -275,6 +275,28 @@ fn compare_shape(name: &str, want: &Newest, seen: Option<&Seen>, trace: &Trace) 
     {
         bad.push(format!("{name}.text: {:?}, beklenen {text:?}", seen.text));
     }
+    // A text's alignment, width factor and mask (docs/adr/0145), exact.
+    if let Some(align) = &want.align
+        && seen.align != *align
+    {
+        bad.push(format!(
+            "{name}.align: {:?}, beklenen {align:?}",
+            seen.align
+        ));
+    }
+    if let Some(factor) = want.width_factor
+        && seen.width_factor != Some(factor)
+    {
+        bad.push(format!(
+            "{name}.widthFactor: {:?}, beklenen {factor}",
+            seen.width_factor
+        ));
+    }
+    if let Some(mask) = want.mask
+        && seen.mask != Some(mask)
+    {
+        bad.push(format!("{name}.mask: {:?}, beklenen {mask}", seen.mask));
+    }
     if let Some(arcs) = want.arcs {
         let have = bulges.iter().filter(|b| **b != 0.0).count();
         if have != arcs {

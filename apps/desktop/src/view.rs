@@ -776,7 +776,17 @@ impl App {
 
     /// The command line (the web's `CommandLine`): one row, the history is the
     /// bottom panel's (bottom.rs); its Geçmiş button opens and closes the panel.
+    /// Built at its own width: options it has no room for go into its “Diğer”
+    /// chip (the web's `CommandLine.fit`).
     pub(crate) fn command_line(&self) -> Element<'_, Message> {
+        container(iced::widget::responsive(move |size| {
+            self.command_line_at(size.width)
+        }))
+        .height(kentos_ui::widget::command_line::height(0, false))
+        .into()
+    }
+
+    fn command_line_at(&self, width: f32) -> Element<'_, Message> {
         let line = CommandLine::new(&self.typed, &self.command_input).id(COMMAND_INPUT);
         // A running command's step already says what to type; a hint (the
         // widget's own “Komut yazın” too) would repeat it and, in a narrow
@@ -795,7 +805,7 @@ impl App {
             .commands(commands)
             .suggest_commands(!self.session.is_running() && !self.session.grip_active());
         let open = self.command_expanded;
-        line.prompt(self.line_prompt())
+        line.prompt(self.line_prompt().map(|prompt| prompt.fit(width)))
             .on_input(Message::CommandInput)
             .on_submit(Message::CommandSubmitted)
             .on_run(Message::CommandRun)
@@ -827,7 +837,21 @@ impl App {
                             Some(value) => format!("{}: {value}", o.label),
                             None => o.label.to_owned(),
                         };
-                        prompt.option(name, Message::PromptOption(o.key)).key(o.key)
+                        let prompt = prompt.option(name, Message::PromptOption(o.key)).key(o.key);
+                        // An option that offers values (Yazı's Hiza) opens them from its chip,
+                        // the chosen one's picture before its name (docs/adr/0145 §6).
+                        match self.choice_menu(o.key) {
+                            Some(menu) => {
+                                let chosen = self
+                                    .session
+                                    .option_choices(o.key)
+                                    .into_iter()
+                                    .find(|c| c.checked)
+                                    .map(|c| crate::icons::from_web(Some(c.icon)));
+                                prompt.choices(chosen, menu)
+                            }
+                            None => prompt,
+                        }
                     },
                 )
             })

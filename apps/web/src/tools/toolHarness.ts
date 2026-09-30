@@ -8,6 +8,7 @@ import { LayerStore } from '../model/layers';
 import { entityEdges } from '../model/ops/edges';
 import { extendEntity, trimEntity } from '../model/ops/trim';
 import { Selection } from '../model/selection';
+import type { TextInputRequest } from '../viewport/ViewportController';
 import type { ToolPointer } from './Tool';
 
 /**
@@ -34,7 +35,14 @@ export function toolHarness() {
     origin: { x: 0, y: 0 },
   });
   const log = new MessageLog();
-  const state = { hit: null as Entity | null, inWindow: [] as number[], exited: 0, tool: null as { cancel?(): boolean } | null };
+  const state = {
+    hit: null as Entity | null,
+    inWindow: [] as number[],
+    exited: 0,
+    tool: null as { cancel?(): boolean } | null,
+    /** The text fields the tool asked for (Yazı), oldest first. */
+    textInputs: [] as TextInputRequest[],
+  };
   const palette = { accent: '#0af', snap: '#fa0', danger: '#f33', fg: '#eee', labelHalo: '#000' };
   /** The edges of every object but `except`: the boundaries the store hands trim and extend. */
   const boundaries = (except: Entity) => [...doc.all()].filter((e) => e.id !== except.id).flatMap((e) => entityEdges(e));
@@ -59,6 +67,8 @@ export function toolHarness() {
       extend: (target: Entity, at: { x: number; y: number }) => extendEntity(target, at, boundaries(target)),
       ghosts: () => new Float64Array(),
       dimensionText: (l: { value: number }) => l.value.toFixed(3),
+      requestTextInput: (req: TextInputRequest) => void state.textInputs.push(req),
+      focus: () => {},
     },
     // The manager's `exit` (tools/ToolManager.ts): the running tool's `cancel` first, and it leaves when that says no.
     tools: { exit: () => void (state.tool?.cancel?.() || state.exited++) },

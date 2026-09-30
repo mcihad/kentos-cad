@@ -2060,7 +2060,72 @@ SCENES.texts = [
   { id: 'text-extras', open: openTextExtras },
   { id: 'text-extras-mask', open: async (ui) => (await openTextExtras(ui), await ui.eval(closeIn(487108, 4419985, 2.5 / 0.85)), await ui.sleep(400)) },
   { id: 'text-extras-turned', open: async (ui) => (await openTextExtras(ui), await ui.eval(closeIn(487118, 4420025, 5 / 0.85)), await ui.sleep(400)) },
+  ...textToolScenes(),
 ];
+
+// Yazı's options and Öznitelikler's text rows (docs/adr/0145 §6, step 4a): the tool with Hiza sağ üst, Genişlik 0.8,
+// Zemin and Artır on, its box about the pointer; the Hiza menu from the command line's chip; one text's rows and the
+// Hiza drop-down; two texts that differ (Çeşitli). The texts stand on bare ground over a line and a square.
+function textToolScenes() {
+  const TEXTS = FIT(`
+    const P = (fx, fy) => ({ x: c.x + fx * u, y: c.y + fy * u });
+    const h = 0.16 * u;
+    add({ kind: 'polygon', pts: [P(-2.2, -0.8), P(-0.4, -0.8), P(-0.4, 0.8), P(-2.2, 0.8)] });
+    add({ kind: 'line', a: P(-2.5, 0), b: P(2.5, 0) });
+    const first = add({ kind: 'text', p: P(-1.3, 0), text: 'Ada 101', height: h, rotation: 0, align: 'middleCenter', widthFactor: 0.8, mask: true });
+    const second = add({ kind: 'text', p: P(0.9, 0.5), text: 'Yol 12', height: h, rotation: 20 });
+    window.__texts = { a: first.id, b: second.id };`);
+  const choose = (...names) => `(() => { const k = window.kentos; const o = window.__texts; k.selection.set([${names.map((n) => `o.${n}`).join(', ')}]); })()`;
+  const ground = async (ui, fields) => {
+    await ribbonOn(ui, { ribbonTab: 'draw', ...fields });
+    await ui.eval(CLEAR_VIEW);
+    await ui.sleep(300);
+    await ui.eval(TEXTS);
+    await ui.eval(`window.kentos.log.clear()`);
+  };
+  /** The tool with its options set as a user sets them, the pointer where the next text goes. */
+  const tool = async (ui) => {
+    await ground(ui, LOGGED);
+    await startTool(ui, 'text');
+    await ui.eval(`(() => { const t = window.kentos.tools.active; t.chooseOption('H', 'sağ üst'); for (const o of ['G', '0.8', 'Z', 'R']) t.input(o); })()`);
+    await hoverU(ui, 1.2, -0.55);
+  };
+  /** A section of Öznitelikler folded or opened, whichever it is not now. */
+  const fold = async (ui, title, open) => {
+    const head = `[...document.querySelectorAll('.panel--props .props__section')].find((b) => b.textContent.includes(${JSON.stringify(title)}))`;
+    if (await ui.eval(`(() => { const b = ${head}; return !!b && (b.getAttribute('aria-expanded') === 'true') !== ${open}; })()`)) await ui.clickText('.panel--props .props__section', title);
+  };
+  /** Öznitelikler over the dock (the layer tree at its least) with Genel folded, the texts selected. */
+  const props = async (ui, names) => {
+    await ground(ui, { layersFraction: 0.15 });
+    await ui.eval(choose(...names));
+    await ui.move(2, 2);
+    await ui.sleep(400);
+    await fold(ui, 'Genel', false);
+    await ui.move(2, 2);
+    await ui.sleep(300);
+  };
+  const menuOpen = async (ui, sel) => (await ui.clickSel(sel), await ui.waitFor(`!!document.querySelector('.menu')`), await ui.sleep(300));
+  const close = async (ui) => (await fold(ui, 'Genel', true), await ui.eval(UNDO_ALL), await ribbonOff(ui));
+  return [
+    { id: 'text-options', open: tool, close },
+    {
+      id: 'text-options-align-menu',
+      // Hiza's chip, or in a narrow window Diğer's menu with Hiza's open over it.
+      open: async (ui) => {
+        await tool(ui);
+        const chip = '.cmdline__chip[aria-haspopup="menu"]:not(.cmdline__more):not([hidden])';
+        if (await ui.eval(`!!document.querySelector('${chip}')`)) return menuOpen(ui, chip);
+        await menuOpen(ui, '.cmdline__more');
+        await ui.hoverText('.menu .menu__item', 'Hiza');
+      },
+      close,
+    },
+    { id: 'text-props', open: async (ui) => props(ui, ['a']), close },
+    { id: 'text-props-align-menu', open: async (ui) => (await props(ui, ['a']), await menuOpen(ui, '.panel--props [data-prop-key="geometry:Hiza"]')), close },
+    { id: 'text-props-several', open: async (ui) => props(ui, ['a', 'b']), close },
+  ];
+}
 
 /** The n-th rule's condition (0 is the first), typed and left. */
 const setRuleFilter = (n, text) =>

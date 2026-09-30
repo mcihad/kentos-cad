@@ -136,6 +136,42 @@ impl Objects {
         self.push(layer, fields)
     }
 
+    /// A text: its start, words, height in metres and turn in degrees, and
+    /// its alignment, width factor and mask when it has them (docs/adr/0145).
+    pub(crate) fn text(
+        &mut self,
+        layer: &str,
+        at: [f64; 2],
+        words: &str,
+        height: f64,
+        turn: f64,
+    ) -> u32 {
+        self.push(
+            layer,
+            json!({ "kind": "text", "p": xy(at), "text": words, "height": height, "rotation": turn }),
+        )
+    }
+
+    /// A text's extras (docs/adr/0145): its alignment's name, width factor and mask.
+    pub(crate) fn text_extras(
+        &mut self,
+        id: u32,
+        align: Option<&str>,
+        width_factor: Option<f64>,
+        mask: bool,
+    ) {
+        let e = &mut self.0[id as usize - 1];
+        if let Some(align) = align {
+            e["align"] = json!(align);
+        }
+        if let Some(factor) = width_factor {
+            e["widthFactor"] = json!(factor);
+        }
+        if mask {
+            e["mask"] = json!(true);
+        }
+    }
+
     /// An object's attributes and label.
     pub(crate) fn data(&mut self, id: u32, attrs: &[(&str, &str)], label: Option<&str>) {
         let e = &mut self.0[id as usize - 1];

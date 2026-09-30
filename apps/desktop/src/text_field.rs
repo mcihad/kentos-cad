@@ -59,14 +59,19 @@ pub enum Event {
 }
 
 impl App {
-    /// Yazı asked for a field where its text will start.
+    /// Yazı asked for a field where its text will start: it stands where the
+    /// text will by its alignment (docs/adr/0145), and Artır's next number
+    /// comes in it, chosen, so typing replaces it and Enter keeps it.
     pub(crate) fn open_text_field(&mut self, field: TextField) {
+        let (along, up) = field.align.map_or((0.0, 0.0), |a| (a.along(), a.up()));
+        let text = field.initial.unwrap_or_default();
+        self.text_field_select = !text.is_empty();
         self.text_field = Some(Open {
             at: field.at,
             height: field.height,
-            along: 0.0,
-            up: 0.0,
-            text: String::new(),
+            along,
+            up,
+            text,
             placeholder: "Yazıyı yazın".to_owned(),
             hint: "Enter: ekle · Esc: vazgeç",
             editing: None,

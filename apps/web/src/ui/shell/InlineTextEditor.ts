@@ -71,10 +71,13 @@ export class InlineTextEditor extends Component {
   private openNew(req: TextInputRequest): void {
     this.close(true);
     this.session = { kind: 'new', req };
-    this.input.value = '';
+    // Artır's next number, selected: typing replaces it, Enter keeps it (docs/adr/0145 §6).
+    this.input.value = req.initial ?? '';
     this.input.placeholder = 'Yazıyı yazın';
     this.hint.textContent = 'Enter: ekle · Esc: vazgeç';
-    this.show({ at: req.at, height: req.height, rotation: req.rotation, along: 0, up: 0, widthFactor: 1 });
+    // The field stands where the text will, by its alignment and width factor.
+    const [along, up] = textAlignShares(req.align ?? null);
+    this.show({ at: req.at, height: req.height, rotation: req.rotation, along, up, widthFactor: req.widthFactor ?? 1 });
   }
 
   private show(place: Placement): void {
@@ -82,7 +85,8 @@ export class InlineTextEditor extends Component {
     this.el.hidden = false;
     this.position();
     this.input.focus();
-    if (this.session?.kind !== 'edit') return;
+    // A text being edited, or Artır's next number: selected, so typing replaces it.
+    if (this.session?.kind !== 'edit' && !this.input.value) return;
     this.input.select();
     // A double click that opened the editor ends on top of it; its default
     // word selection would replace ours, so select again afterwards.
