@@ -1953,6 +1953,17 @@ SCENES.blocks = [
       await ui.sleep(400);
     },
   },
+  // In, then GeoJSON dışa aktar over the whole drawing: an insert is its block's objects placed (GeometryCollection).
+  {
+    id: 'export-geojson-blocks',
+    open: async (ui) => {
+      await dxfBlocksIn(ui);
+      await ui.eval(`window.kentos.commands.execute('file.export.geojson')`);
+      await ui.waitFor(`!!document.querySelector('.dialog--io .io-summary')`, 15000);
+      await ui.clickText('.dialog--io .seg__opt', 'Tümü');
+      await ui.sleep(400);
+    },
+  },
   // In: the drawing shows the inserts, the Bloklar panel the four definitions and the message log what went in.
   {
     id: 'import-dxf-blocks-done',

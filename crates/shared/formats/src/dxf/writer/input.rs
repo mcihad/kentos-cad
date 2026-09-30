@@ -342,6 +342,29 @@ struct Definition {
     description: Option<String>,
 }
 
+/// The block definitions of a writer's input, their objects read by `Wire`
+/// (the GeoJSON writer reads them with it too).
+#[derive(Default)]
+pub(crate) struct Definitions(pub(crate) Vec<BlockDefinition>);
+
+impl<'de> Deserialize<'de> for Definitions {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Definitions, D::Error> {
+        let list = Vec::<Definition>::deserialize(d)?;
+        Ok(Definitions(
+            list.into_iter()
+                .map(|d| BlockDefinition {
+                    id: d.id,
+                    name: d.name,
+                    base: d.base,
+                    entities: d.entities.0,
+                    attributes: d.attributes,
+                    description: d.description,
+                })
+                .collect(),
+        ))
+    }
+}
+
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Input {
@@ -353,7 +376,7 @@ struct Input {
     #[serde(default)]
     dimension_values: BTreeMap<u32, String>,
     #[serde(default)]
-    blocks: Vec<Definition>,
+    blocks: Definitions,
 }
 
 /// A `DxfWriteInput` read with this module's visitor for the objects. The
@@ -372,18 +395,7 @@ impl<'de> Deserialize<'de> for WriteInput {
             length_decimals: i.length_decimals,
             grads: i.grads,
             dimension_values: i.dimension_values,
-            blocks: i
-                .blocks
-                .into_iter()
-                .map(|d| BlockDefinition {
-                    id: d.id,
-                    name: d.name,
-                    base: d.base,
-                    entities: d.entities.0,
-                    attributes: d.attributes,
-                    description: d.description,
-                })
-                .collect(),
+            blocks: i.blocks.0,
         }))
     }
 }

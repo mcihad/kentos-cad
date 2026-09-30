@@ -189,6 +189,8 @@ impl App {
             } else {
                 name
             },
+            // An insert is written as its block's objects placed (docs/adr/0144 §5).
+            blocks: doc.model.blocks().iter().map(|b| (**b).clone()).collect(),
         };
         if let Some(Window::GeoJsonExport(s)) = &mut self.exchange {
             s.writing = true;
@@ -419,6 +421,13 @@ impl App {
             lines.push(words::text_line(
                 Line::Info,
                 format!("{hatches} tarama alan (Polygon) olarak yazılır; deseni yazılmaz."),
+            ));
+        }
+        let inserts = list.iter().filter(|e| e.kind() == "insert").count();
+        if inserts > 0 {
+            lines.push(words::text_line(
+                Line::Info,
+                format!("{inserts} blok yerleştirmesi, bloğunun nesneleriyle açılmış olarak (GeometryCollection) yazılır; GeoJSON'da blok yoktur, KentOS'a ayrı nesneler olarak geri okunur."),
             ));
         }
         if areas > 0 {

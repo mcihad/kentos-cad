@@ -40,7 +40,9 @@ use crate::layer::LineType;
 ///    inserts place, and `DxfReadOptions.explode_blocks` (Blokları patlat).
 /// 14: DXF blocks written (docs/adr/0144 §5): `DxfWriteInput.blocks`, and the writers' objects
 ///    take inserts.
-pub const FORMATS_VERSION: u32 = 14;
+/// 15: GeoJSON writes an insert as its block's objects placed (docs/adr/0144 §5):
+///    `GeoJsonWriteInput.blocks`.
+pub const FORMATS_VERSION: u32 = 15;
 
 // ── Every import ────────────────────────────────────────────────────────
 
@@ -518,4 +520,9 @@ pub struct GeoJsonWriteInput {
     pub srid: u32,
     /// The collection's `name` (the drawing's).
     pub name: String,
+    /// The drawing's block definitions (docs/adr/0144 §5): an insert is
+    /// written as its block's objects placed, one GeometryCollection.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockDefinition>>", optional))]
+    pub blocks: Vec<BlockDefinition>,
 }

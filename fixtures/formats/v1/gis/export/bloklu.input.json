@@ -1,0 +1,48 @@
+{
+  "name": "Bloklu pafta",
+  "srid": 5256,
+  "layers": [
+    { "id": "altyapi", "name": "Altyapı" },
+    { "id": "cizim", "name": "Çizim" }
+  ],
+  "blocks": [
+    { "id": "018f3a2b-0000-7000-8000-000000000001", "name": "Rögar", "base": { "x": 0, "y": 0 },
+      "entities": [
+        { "kind": "circle", "id": 1, "layerId": "", "attrs": {}, "c": { "x": 0, "y": 0 }, "r": 0.6 },
+        { "kind": "line", "id": 2, "layerId": "", "attrs": {}, "a": { "x": -0.6, "y": 0 }, "b": { "x": 0.6, "y": 0 } }
+      ] },
+    { "id": "018f3a2b-0000-7000-8000-000000000002", "name": "Direk", "base": { "x": 1, "y": 2 },
+      "entities": [
+        { "kind": "point", "id": 1, "layerId": "", "attrs": { "Not": "taban" }, "p": { "x": 1, "y": 2 } },
+        { "kind": "polyline", "id": 2, "layerId": "", "attrs": {}, "pts": [ { "x": 1, "y": 2 }, { "x": 1, "y": 8 }, { "x": 3, "y": 8.5 } ] },
+        { "kind": "polygon", "id": 3, "layerId": "", "attrs": {},
+          "pts": [ { "x": 0, "y": 1 }, { "x": 2, "y": 1 }, { "x": 2, "y": 3 }, { "x": 0, "y": 3 } ],
+          "holes": [ { "pts": [ { "x": 0.5, "y": 1.5 }, { "x": 1.5, "y": 1.5 }, { "x": 1.5, "y": 2.5 } ] } ] },
+        { "kind": "insert", "id": 4, "layerId": "", "attrs": {}, "block": "018f3a2b-0000-7000-8000-000000000001", "p": { "x": 3, "y": 8.5 }, "scale": 0.5, "rotation": 1.5707963267948966 }
+      ] },
+    { "id": "018f3a2b-0000-7000-8000-000000000003", "name": "Yazılı", "base": { "x": 0, "y": 0 },
+      "entities": [
+        { "kind": "text", "id": 1, "layerId": "", "attrs": {}, "p": { "x": 0, "y": 0 }, "text": "T", "height": 1, "rotation": 0 },
+        { "kind": "line", "id": 2, "layerId": "", "attrs": {}, "a": { "x": 0, "y": -1 }, "b": { "x": 2, "y": -1 } }
+      ] },
+    { "id": "018f3a2b-0000-7000-8000-000000000004", "name": "Yalnız yazı", "base": { "x": 0, "y": 0 },
+      "entities": [
+        { "kind": "text", "id": 1, "layerId": "", "attrs": {}, "p": { "x": 0, "y": 0 }, "text": "Y", "height": 1, "rotation": 0 }
+      ] }
+  ],
+  "entities": [
+    { "kind": "insert", "id": 1, "layerId": "altyapi", "attrs": { "No": "R-12", "Derinlik": "2.40" }, "label": "R-12",
+      "block": "018f3a2b-0000-7000-8000-000000000001", "p": { "x": 512345.5, "y": 4423456.25 }, "scale": 1, "rotation": 0 },
+    { "kind": "insert", "id": 2, "layerId": "altyapi", "attrs": { "Tür": "Aydınlatma" },
+      "block": "018f3a2b-0000-7000-8000-000000000002", "p": { "x": 512400.125, "y": 4423500.5 }, "scale": 2, "rotation": 1.5707963267948966, "mirror": true },
+    { "kind": "insert", "id": 3, "layerId": "altyapi", "attrs": {},
+      "block": "018f3a2b-0000-7000-8000-000000000002", "p": { "x": 512410, "y": 4423510 }, "scale": 1.5, "rotation": 0.3 },
+    { "kind": "insert", "id": 4, "layerId": "cizim", "attrs": {},
+      "block": "018f3a2b-0000-7000-8000-000000000003", "p": { "x": 512420, "y": 4423520 }, "scale": 1, "rotation": 0 },
+    { "kind": "insert", "id": 5, "layerId": "cizim", "attrs": {},
+      "block": "018f3a2b-0000-7000-8000-000000000004", "p": { "x": 512430, "y": 4423530 }, "scale": 1, "rotation": 0 },
+    { "kind": "insert", "id": 6, "layerId": "cizim", "attrs": {},
+      "block": "018f3a2b-0000-7000-8000-000000000009", "p": { "x": 512440, "y": 4423540 }, "scale": 1, "rotation": 0 },
+    { "kind": "point", "id": 7, "layerId": "cizim", "attrs": {}, "p": { "x": 512450, "y": 4423550 } }
+  ]
+}

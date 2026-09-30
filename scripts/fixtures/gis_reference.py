@@ -1470,6 +1470,86 @@ def exported(entity, obj):
     return [f"bilinmeyen tür {kind!r}"]
 
 
+# ── Blocks (docs/adr/0144 §5): an insert is its block's objects placed, one GeometryCollection ──────
+# The placement is worked out here from the rule alone: a definition's point goes, relative to its base
+# point, through the insert's mirror in the x axis, its scale, its turn and its point; a nested insert
+# places its block's objects inside the definition first. Quarter turns are exact, as KentOS makes them.
+
+QUARTERS = {0: (0.0, 1.0), 1: (1.0, 0.0), 2: (0.0, -1.0), 3: (-1.0, 0.0)}
+PLACED = 1e-6  # metres: what a placed coordinate may differ by (the drawing's own math, not its rounding)
+
+
+def similarity(p, scale, rotation, mirror):
+    """(a, b, c, d, e, f): x' = a·x + c·y + e, y' = b·x + d·y + f."""
+    k = rotation / (math.pi / 2)
+    s, c = QUARTERS[round(k) % 4] if k == round(k) else (math.sin(rotation), math.cos(rotation))
+    m = -1.0 if mirror else 1.0
+    return (scale * c, scale * s, -scale * m * s, scale * m * c, float(p["x"]), float(p["y"]))
+
+
+def after(m1, m2):
+    """m1 after m2."""
+    a1, b1, c1, d1, e1, f1 = m1
+    a2, b2, c2, d2, e2, f2 = m2
+    return (a1 * a2 + c1 * b2, b1 * a2 + d1 * b2, a1 * c2 + c1 * d2, b1 * c2 + d1 * d2, a1 * e2 + c1 * f2 + e1, b1 * e2 + d1 * f2 + f1)
+
+
+def apply(m, p):
+    a, b, c, d, e, f = m
+    x, y = float(p["x"]), float(p["y"])
+    return [a * x + c * y + e, b * x + d * y + f]
+
+
+def block_pieces(block_id, blocks, m, depth=0):
+    """(object, matrix to the drawing) of every object a block draws that GeoJSON holds, nested blocks opened."""
+    b = blocks.get(block_id)
+    if b is None or depth > 16:
+        return []
+    to_base = after(m, (1.0, 0.0, 0.0, 1.0, -float(b["base"]["x"]), -float(b["base"]["y"])))
+    out = []
+    for e in b["entities"]:
+        if e["kind"] == "insert":
+            out += block_pieces(e["block"], blocks, after(to_base, similarity(e["p"], e["scale"], e["rotation"], e.get("mirror", False))), depth + 1)
+        elif e["kind"] not in UNWRITTEN:
+            out.append((e, to_base))
+    return out
+
+
+def close(p, q):
+    return abs(p[0] - q[0]) <= PLACED and abs(p[1] - q[1]) <= PLACED
+
+
+def all_close(ps, qs):
+    return len(ps) == len(qs) and all(close(p, q) for p, q in zip(ps, qs))
+
+
+def placed_piece(entity, m, obj):
+    """What is wrong with an insert's member read back, against the block's object placed by `m`."""
+    kind = entity["kind"]
+    scale = math.hypot(m[0], m[1])
+    if kind == "point":
+        return [] if obj["kind"] == "point" and close(obj["p"], apply(m, entity["p"])) else ["yerleşmiş nokta yerinde değil"]
+    if kind == "line":
+        good = obj["kind"] == "line" and all_close([obj["a"], obj["b"]], [apply(m, entity["a"]), apply(m, entity["b"])])
+        return [] if good else ["yerleşmiş çizginin uçları yerinde değil"]
+    if kind == "polyline" and not has_arcs(entity.get("bulges")):
+        return [] if all_close(path_of(obj) or [], [apply(m, q) for q in entity["pts"]]) else ["yerleşmiş yolun noktaları yerinde değil"]
+    if kind == "polygon" and not polygon_arcs(entity) and not entity.get("parts"):
+        outline = right_hand([apply(m, q) for q in entity["pts"]], 1)
+        holes = [right_hand([apply(m, q) for q in h["pts"]], -1) for h in entity.get("holes", []) if len(h["pts"]) >= 3]
+        got_holes = obj.get("holes", [])
+        good = obj["kind"] == "polygon" and all_close(obj["pts"], outline) and len(got_holes) == len(holes)
+        good = good and all(all_close(g, h) for g, h in zip(got_holes, holes))
+        return [] if good else ["yerleşmiş alanın halkaları yerinde ya da sağ el kuralında değil"]
+    if kind == "circle":
+        # Sampled around a centre placed at map coordinates: its points are as far from it as the float steps there allow.
+        c, r = apply(m, entity["c"]), float(entity["r"]) * scale
+        good = obj["kind"] == "polyline" and len(obj["pts"]) == 73 and bits(obj["pts"][0]) == bits(obj["pts"][-1])
+        on = all(abs(math.hypot(x - c[0], y - c[1]) - r) <= PLACED for x, y in obj["pts"])
+        return [] if good and on else ["yerleşmiş daire 73 noktalı, kapalı ve yerleşmiş çemberin üstünde bir yol değil"]
+    return [f"blokta denetlenmeyen tür {kind!r} (fixture'a eklemeden önce kuralını yazın)"]
+
+
 def check_export(name, spec, data):
     """One written pair: the document's shape and crs, then every object read back against its entity."""
     try:
@@ -1486,12 +1566,20 @@ def check_export(name, spec, data):
     if result["declaredSrid"] != srid:
         problems.append(f"export/{name}: okunan SRID {result['declaredSrid']}, girdininki {srid}")
     layers = {layer["id"]: layer["name"] for layer in spec["layers"]}
-    entities = [e for e in spec["entities"] if e["kind"] not in UNWRITTEN]
+    blocks = {b["id"]: b for b in spec.get("blocks", [])}
+    # (the object read back, the input object whose feature it is, the block's object and its placement for an insert's member)
+    expected = []
+    for e in spec["entities"]:
+        if e["kind"] == "insert":
+            placing = similarity(e["p"], e["scale"], e["rotation"], e.get("mirror", False))
+            expected += [(e, piece, m) for piece, m in block_pieces(e["block"], blocks, placing)]
+        elif e["kind"] not in UNWRITTEN:
+            expected.append((e, None, None))
     objects = result["objects"]
-    if len(objects) != len(entities):
-        return problems + [f"export/{name}: {len(objects)} nesne okundu, yazılabilen {len(entities)} nesne var"]
-    for i, (entity, obj) in enumerate(zip(entities, objects)):
-        where = f"export/{name}: {i}. nesne (kimlik {entity.get('id')}, {entity['kind']})"
+    if len(objects) != len(expected):
+        return problems + [f"export/{name}: {len(objects)} nesne okundu, yazılabilen {len(expected)} nesne var"]
+    for i, ((entity, piece, m), obj) in enumerate(zip(expected, objects)):
+        where = f"export/{name}: {i}. nesne (kimlik {entity.get('id')}, {entity['kind']}{'' if piece is None else ' › ' + piece['kind']})"
         label = entity.get("label") if isinstance(entity.get("label"), str) and entity.get("label") else None
         # A layer missing from the list is not named: the object reads back on the default layer (the document's name).
         layer = layers.get(entity.get("layerId"), spec["name"] or name)
@@ -1501,7 +1589,7 @@ def check_export(name, spec, data):
             problems.append(f"{where}: etiket {obj.get('label')!r}, beklenen {label!r} (None: etiket yok)")
         if obj["attrs"] != entity.get("attrs", {}):
             problems.append(f"{where}: öznitelikler girdidekiler değil")
-        problems += [f"{where}: {p}" for p in exported(entity, obj)]
+        problems += [f"{where}: {p}" for p in (exported(entity, obj) if piece is None else placed_piece(piece, m, obj))]
     return problems
 
 

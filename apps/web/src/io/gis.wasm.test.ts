@@ -141,8 +141,8 @@ describe.skipIf(!loader)('GIS files in the formats WASM module (docs/adr/0046)',
     }
   });
 
-  // Until blocks' GeoJSON step (docs/adr/0144 §5) an insert is read, said and left out; it once failed the whole export.
-  it('says an insert is left out instead of refusing the export', async () => {
+  // An insert of a block the input lacks is said and left out (docs/adr/0144 §5); an insert once failed the whole export.
+  it('says an insert of an unknown block is left out instead of refusing the export', async () => {
     const w = await load();
     const input = {
       name: 'bloklu',

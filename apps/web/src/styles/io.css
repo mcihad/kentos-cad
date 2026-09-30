@@ -140,10 +140,12 @@
 .io-table td.io-table__skip {
   color: var(--c-text-3);
 }
-/* A layer's name (its path in the tree) wraps: a long one does not push the counts and notes out of view. */
-.io-table td.io-table__name {
+/* A layer's name (its path in the tree) and what happens to it wrap at their words: a long one does not
+   push the counts out of view, and neither squeezes the other to a letter. */
+.io-table td.io-table__name,
+.io-table td.io-table__skip {
   white-space: normal;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 .io-table tr[data-error] td {
   color: var(--c-text-3);

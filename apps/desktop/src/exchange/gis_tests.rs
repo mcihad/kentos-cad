@@ -8,9 +8,9 @@ use std::path::PathBuf;
 use kentos_contracts::Entity;
 
 use super::gis_import::{self, Source};
-use super::tests::{count, run, said, send};
+use super::tests::{count, fixture, run, said, send};
 use super::words;
-use super::{Event, Kind, Picked, Window, dxf_export, geojson_export};
+use super::{Event, Kind, Picked, Window, drawing_import, dxf_export, geojson_export};
 use crate::app::{App, Dialog, Message, Picker};
 use crate::crs::Note;
 use crate::files_testing::{app_with_drawing, last_said, scratch};
@@ -305,6 +305,69 @@ fn a_geojson_export_writes_what_the_reader_takes_back() {
     assert!(!model.is_dirty(), "an export is not an edit");
 }
 
+/// A DXF's blocks going out to GeoJSON (docs/adr/0144 §5): an insert is its
+/// block's objects placed, one GeometryCollection read back as those
+/// objects on the insert's layer; an insert of a block that draws nothing is
+/// left out and said.
+#[test]
+fn a_geojson_export_writes_an_insert_as_its_blocks_objects() {
+    let mut app = app_with_drawing();
+    app.picker = Picker::File(fixture("blocks.dxf"));
+    run(&mut app, "file.import.dxf");
+    send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
+    let dir = scratch("export-geojson-blocks");
+    let path = dir.join("bloklar.geojson");
+    app.picker = Picker::File(path.clone());
+    run(&mut app, "file.export.geojson");
+    send(
+        &mut app,
+        Event::GeoJsonExport(geojson_export::Event::Scope(dxf_export::Scope::All)),
+    );
+    send(&mut app, Event::GeoJsonExport(geojson_export::Event::Run));
+    assert!(
+        said(&app, "“bloklar.geojson” yazıldı:"),
+        "{}",
+        last_said(&app)
+    );
+    let log: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
+    assert!(
+        log.iter().any(|l| l.contains("GeometryCollection")),
+        "{log:?}"
+    );
+    let back = kentos_formats::geojson::read(
+        &std::fs::read(&path).expect("written"),
+        &kentos_contracts::GeoJsonReadOptions {
+            layer: "bloklar".into(),
+            max_entities: 0,
+        },
+    )
+    .expect("reads");
+    let model = &app.document.as_ref().expect("open").model;
+    let plain = model
+        .entities()
+        .filter(|e| {
+            !matches!(
+                e,
+                Entity::Text(_)
+                    | Entity::Dimension(_)
+                    | Entity::Xline(_)
+                    | Entity::Ray(_)
+                    | Entity::Insert(_)
+            )
+        })
+        .count();
+    // KAPI's insert: its point, and the nested NO's circle and line; KENDI draws nothing and is left out.
+    assert_eq!(back.entities.len(), plain + 3);
+    assert!(
+        back.entities
+            .iter()
+            .filter(|e| e.base().layer_id == "KAPILAR")
+            .count()
+            >= 3
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
 /// Pictures of the GeoJSON and Shapefile windows for the owner, dark and
 /// light, at 1440×900 and at the smallest window (1100×650), written to
 /// `.run/shots` (never committed); not run by default:
@@ -380,6 +443,18 @@ fn screens() {
             let mut app = fresh();
             run(&mut app, "file.export.geojson");
             picture(&mut app, &format!("gis-{mode}-6-geojson-ver"));
+
+            // With a DXF's blocks: the window says how an insert is written.
+            let mut app = fresh();
+            app.picker = Picker::File(fixture("blocks.dxf"));
+            run(&mut app, "file.import.dxf");
+            send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
+            run(&mut app, "file.export.geojson");
+            send(
+                &mut app,
+                Event::GeoJsonExport(geojson_export::Event::Scope(dxf_export::Scope::All)),
+            );
+            picture(&mut app, &format!("gis-{mode}-7-geojson-ver-bloklar"));
         }
     }
 }

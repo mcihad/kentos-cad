@@ -10,6 +10,9 @@
 //! exactly as the app samples its own; hatches as their areas; area rings
 //! turned to RFC 7946's right-hand rule. Text, dimensions and infinite
 //! lines are left out. A multi-part area is a MultiPolygon (docs/adr/0143).
+//! GeoJSON has no blocks: an insert is its block's objects placed (the
+//! core's expansion, nested blocks opened), one GeometryCollection with the
+//! insert's attributes (docs/adr/0144 §5); it reads back as those objects.
 //! Attributes are written as text properties; layer and
 //! label ride in the `kentos` member, which KentOS reads back. A vertex with
 //! an elevation is a position of three numbers, one without a position of
@@ -28,7 +31,8 @@ use kentos_geometry_core::geom::ellipse::{is_full_ellipse, tessellate_ellipse};
 use kentos_geometry_core::geom::spline::catmull_rom;
 use serde::{Deserialize, Deserializer};
 
-use crate::dxf::Objects;
+use crate::blocks::Placing;
+use crate::dxf::{Definitions, Objects};
 use crate::geom::{bulge_path_zs, has_arcs, to_core};
 use crate::gis::{Ring, Zs, open_ring, shoelace};
 use crate::json::quote;
@@ -53,6 +57,8 @@ enum Geometry {
     Area(Vec<Ring>),
     /// A multi-part area: each part's rings as [`Geometry::Area`]'s.
     Areas(Vec<Vec<Ring>>),
+    /// An insert's placed objects (docs/adr/0144 §5).
+    Collection(Vec<Geometry>),
 }
 
 fn from_core(pts: Vec<CoreVec2>) -> Vec<Vec2> {
@@ -146,7 +152,7 @@ fn mixed(rings: &[&Ring]) -> bool {
 }
 
 /// What an object becomes, or None (said in the report).
-fn geometry(e: &Entity, rep: &mut Report) -> Option<Geometry> {
+fn geometry(e: &Entity, blocks: &Placing, rep: &mut Report) -> Option<Geometry> {
     let g = match e {
         Entity::Point(p) => Some(Geometry::Point(p.p, p.z)),
         Entity::Line(l) => Some(Geometry::Line(Ring::new(vec![l.a, l.b], [l.za, l.zb]))),
@@ -290,14 +296,34 @@ fn geometry(e: &Entity, rep: &mut Report) -> Option<Geometry> {
             rep.skip("Ölçü", "GeoJSON'da ölçü nesnesi yok; yazılmadı", 0);
             return None;
         }
-        // A GeometryCollection of its expansion comes with blocks' exchange step (docs/adr/0144 §5).
-        Entity::Insert(_) => {
-            rep.skip(
+        Entity::Insert(i) => {
+            let pieces = blocks.placed(i);
+            if pieces.is_empty() {
+                rep.skip(
+                    "Blok",
+                    "bloğunun tanımı dışa aktarılanlarda yok ya da blok boş; yazılmadı",
+                    0,
+                );
+                return None;
+            }
+            let members: Vec<Geometry> = pieces
+                .iter()
+                .filter_map(|p| geometry(p, blocks, rep))
+                .collect();
+            if members.is_empty() {
+                rep.skip(
+                    "Blok",
+                    "bloğunda GeoJSON'a yazılabilecek nesne yok; yazılmadı",
+                    0,
+                );
+                return None;
+            }
+            rep.note(
                 "Blok",
-                "blok yerleştirmesi GeoJSON'a henüz yazılamıyor; yazılmadı",
+                "yerleştirmeler bloklarının nesneleriyle, açılmış olarak (GeometryCollection) yazıldı; GeoJSON'da blok yoktur, KentOS'a ayrı nesneler olarak geri okunur",
                 0,
             );
-            return None;
+            Some(Geometry::Collection(members))
         }
         Entity::Xline(_) | Entity::Ray(_) => {
             rep.skip(
@@ -323,6 +349,8 @@ fn geometry(e: &Entity, rep: &mut Report) -> Option<Geometry> {
             .iter()
             .flatten()
             .all(|r| r.pts.iter().all(finite) && zs_finite(&r.zs)),
+        // Each member was checked (and said) as the object it is.
+        Geometry::Collection(_) => true,
     };
     if !ok {
         rep.skip(
@@ -336,7 +364,7 @@ fn geometry(e: &Entity, rep: &mut Report) -> Option<Geometry> {
         Geometry::Line(r) => mixed(&[r]),
         Geometry::Area(rings) => mixed(&rings.iter().collect::<Vec<_>>()),
         Geometry::Areas(parts) => mixed(&parts.iter().flatten().collect::<Vec<_>>()),
-        Geometry::Point(..) => false,
+        Geometry::Point(..) | Geometry::Collection(_) => false,
     };
     if mixes {
         rep.note(
@@ -396,6 +424,16 @@ fn write_geometry(g: &Geometry, out: &mut String) {
             }
             out.push(']');
         }
+        Geometry::Collection(members) => {
+            out.push_str("{\"type\":\"GeometryCollection\",\"geometries\":[");
+            for (k, g) in members.iter().enumerate() {
+                if k > 0 {
+                    out.push(',');
+                }
+                write_geometry(g, out);
+            }
+            out.push(']');
+        }
     }
     out.push('}');
 }
@@ -439,9 +477,10 @@ pub fn write(input: &GeoJsonWriteInput) -> (Vec<u8>, ExportReport) {
         );
     }
     out.push_str(",\"features\":[\n");
+    let blocks = Placing::new(&input.blocks);
     let mut first = true;
     for e in &input.entities {
-        let Some(g) = geometry(e, &mut rep) else {
+        let Some(g) = geometry(e, &blocks, &mut rep) else {
             continue;
         };
         let b = e.base();
@@ -498,6 +537,8 @@ struct Input {
     layers: Vec<GeoJsonLayer>,
     srid: u32,
     name: String,
+    #[serde(default)]
+    blocks: Definitions,
 }
 
 /// A `GeoJsonWriteInput` read with the DXF writer's visitor for the objects
@@ -512,6 +553,7 @@ impl<'de> Deserialize<'de> for WriteInput {
             layers: i.layers,
             srid: i.srid,
             name: i.name,
+            blocks: i.blocks.0,
         }))
     }
 }

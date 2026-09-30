@@ -146,6 +146,7 @@ class GeoJsonExportDialog {
     const written = list.filter((e) => !UNWRITTEN.has(e.kind));
     const curves = list.filter((e) => CURVES.has(e.kind) || hasArcs(e)).length;
     const hatches = kinds.get('hatch') ?? 0;
+    const inserts = kinds.get('insert') ?? 0;
     const areas = list.filter((e) => e.kind === 'polygon' || e.kind === 'hatch').length;
     const unwritten = list.length - written.length;
     const data = list.some((e) => e.label || Object.keys(e.attrs).length);
@@ -166,6 +167,7 @@ class GeoJsonExportDialog {
           ),
       curves ? summaryLine('info', `${curves} eğri (daire, yay, elips, spline, yaylı çizgi) GeoJSON'da olmadığı için uygulamanın kendi örneklemesiyle (turda 72 adım) çizgiye çevrilir.`) : null,
       hatches ? summaryLine('info', `${hatches} tarama alan (Polygon) olarak yazılır; deseni yazılmaz.`) : null,
+      inserts ? summaryLine('info', `${inserts} blok yerleştirmesi, bloğunun nesneleriyle açılmış olarak (GeometryCollection) yazılır; GeoJSON'da blok yoktur, KentOS'a ayrı nesneler olarak geri okunur.`) : null,
       areas ? summaryLine('info', "Alan halkaları RFC 7946'nın sağ el kuralına göre yazılır (dış sınır saat yönünün tersine); köşeler değişmez.") : null,
       unwritten ? summaryLine('warn', `${unwritten} yazı, ölçü ya da sonsuz doğru GeoJSON'da gösterilemez; yazılmaz.`) : null,
       data ? summaryLine('info', 'Öznitelikler metin özellik (properties) olarak yazılır; katman ve etiket KentOS\'un “kentos” üyesinde: KentOS geri okur, öbür programlar yok sayar.') : null,
@@ -187,6 +189,8 @@ class GeoJsonExportDialog {
       }),
       srid: ctx.doc.crs.value.srid,
       name: ctx.doc.name.value.replace(/\.kcad$/i, '') || 'cizim',
+      // An insert is written as its block's objects placed (docs/adr/0144 §5).
+      blocks: [...ctx.doc.blocks.value],
     };
     this.writing = true;
     this.primary.disabled = true;

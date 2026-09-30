@@ -361,6 +361,70 @@ fn exports_are_written_as_committed_and_read_back() {
     }
 }
 
+/// An insert is its block's objects placed, one GeometryCollection with the
+/// insert's attributes (docs/adr/0144 §5): the export of `bloklu` says so,
+/// leaves out a block's text, a block that draws nothing GeoJSON holds and a
+/// block the input lacks, and reads back as the objects, each with its
+/// insert's attributes (the placed coordinates are checked by
+/// scripts/fixtures/gis_reference.py from the rule alone).
+#[test]
+fn an_insert_is_its_blocks_objects_placed() {
+    let path = dir().join("export/bloklu.input.json");
+    let input = geojson::input_from_json(std::str::from_utf8(&read_file(&path)).expect("utf8"))
+        .expect("the input");
+    let (bytes, report) = geojson::write(&input);
+    assert_eq!(report.counts.get("insert"), Some(&4));
+    assert!(
+        report
+            .notes
+            .iter()
+            .any(|n| n.what == "Blok" && n.reason.contains("GeometryCollection") && n.count == 4),
+        "{:?}",
+        report.notes
+    );
+    let skipped: Vec<(&str, &str)> = report
+        .skipped
+        .iter()
+        .map(|s| (s.what.as_str(), s.reason.as_str()))
+        .collect();
+    assert_eq!(
+        skipped,
+        [
+            ("Yazı", "GeoJSON'da yazı nesnesi yok; yazılmadı"),
+            (
+                "Blok",
+                "bloğunda GeoJSON'a yazılabilecek nesne yok; yazılmadı"
+            ),
+            (
+                "Blok",
+                "bloğunun tanımı dışa aktarılanlarda yok ya da blok boş; yazılmadı"
+            ),
+        ]
+    );
+    let back = geojson::read(
+        &bytes,
+        &GeoJsonReadOptions {
+            layer: "bloklu".into(),
+            max_entities: 0,
+        },
+    )
+    .expect("reads");
+    // Rögar: its circle and line; Direk twice: point, path, area, the nested Rögar's circle and line;
+    // Yazılı: its line; then the point.
+    let kinds: Vec<&str> = back.entities.iter().map(|e| e.kind()).collect();
+    assert_eq!(
+        kinds,
+        [
+            "polyline", "line", "point", "polyline", "polygon", "polyline", "line", "point",
+            "polyline", "polygon", "polyline", "line", "line", "point"
+        ]
+    );
+    let first = back.entities[0].base();
+    assert_eq!(first.label.as_deref(), Some("R-12"));
+    assert_eq!(first.attrs.get("No").map(String::as_str), Some("R-12"));
+    assert!(back.blocks.is_empty(), "GeoJSON has no blocks");
+}
+
 /// A small deterministic generator (xorshift) for damaged bytes.
 struct Noise(u64);
 
