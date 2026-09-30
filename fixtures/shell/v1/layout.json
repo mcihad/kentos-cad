@@ -84,7 +84,8 @@
    "kind": "enum",
    "values": [
     "layers",
-    "processing"
+    "processing",
+    "blocks"
    ]
   },
   "processingTab": {
@@ -473,6 +474,60 @@
     "ribbonSplits": {
      "circle": "tool.circle|2N"
     },
+    "ribbonToolbox": false
+   }
+  },
+  {
+   "title": "the Bloklar tab in front is kept (docs/adr/0144)",
+   "stored": "{\"dockTab\":\"blocks\",\"toolboxFolded\":[]}",
+   "layout": {
+    "theme": "dark",
+    "rightVisible": true,
+    "dockWidth": 312,
+    "layersFraction": 0.5,
+    "bottomExpanded": false,
+    "bottomHeight": 190,
+    "bottomTab": "history",
+    "toolboxVisible": true,
+    "toolboxDocked": false,
+    "toolboxX": 12,
+    "toolboxY": 12,
+    "toolboxColumns": 3,
+    "toolboxFolded": [],
+    "dockTab": "blocks",
+    "processingTab": "tools",
+    "processingFolded": [],
+    "ribbonTab": "home",
+    "ribbonCollapsed": false,
+    "ribbonQuickAccess": [],
+    "ribbonSplits": {},
+    "ribbonToolbox": false
+   }
+  },
+  {
+   "title": "a dock tab the dock does not have is not taken",
+   "stored": "{\"dockTab\":\"styles\",\"toolboxFolded\":[]}",
+   "layout": {
+    "theme": "dark",
+    "rightVisible": true,
+    "dockWidth": 312,
+    "layersFraction": 0.5,
+    "bottomExpanded": false,
+    "bottomHeight": 190,
+    "bottomTab": "history",
+    "toolboxVisible": true,
+    "toolboxDocked": false,
+    "toolboxX": 12,
+    "toolboxY": 12,
+    "toolboxColumns": 3,
+    "toolboxFolded": [],
+    "dockTab": "layers",
+    "processingTab": "tools",
+    "processingFolded": [],
+    "ribbonTab": "home",
+    "ribbonCollapsed": false,
+    "ribbonQuickAccess": [],
+    "ribbonSplits": {},
     "ribbonToolbox": false
    }
   },

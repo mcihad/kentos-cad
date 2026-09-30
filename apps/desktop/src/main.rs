@@ -10,6 +10,7 @@ mod appearance;
 #[cfg(test)]
 mod appearance_tokens_tests;
 mod blocks;
+mod blocks_panel;
 mod bottom;
 mod calc;
 mod catalog;

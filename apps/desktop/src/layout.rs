@@ -222,10 +222,10 @@ impl App {
             .texts("processingFolded")
             .map(str::to_owned)
             .collect();
-        let in_front = if keeper.text("dockTab") == "processing" {
-            Panel::Processing
-        } else {
-            Panel::Layers
+        let in_front = match keeper.text("dockTab") {
+            "processing" => Panel::Processing,
+            "blocks" => Panel::Blocks,
+            _ => Panel::Layers,
         };
         let fraction = keeper.number("layersFraction");
         let visible = keeper.flag("rightVisible");
@@ -311,24 +311,23 @@ impl App {
     pub(crate) fn follow_layout(&mut self, now: Instant) {
         let visible = self.right_panel_shown();
         let docks = self.hidden_docks.as_ref().unwrap_or(&self.docks);
-        let processing_in_front = docks.slot(Panel::Layers).is_some_and(|slot| {
+        // The tab in front in Katmanlar' slot: Katmanlar, İşlemler or Bloklar.
+        let in_front = docks.slot(Panel::Layers).and_then(|slot| {
             docks
                 .stacks(Side::Right)
                 .iter()
                 .enumerate()
-                .any(|(i, stack)| {
-                    slot == kentos_ui::widget::docking::Slot::Docked(Side::Right, i)
-                        && stack.active() == Some(Panel::Processing)
-                })
+                .find(|(i, _)| slot == kentos_ui::widget::docking::Slot::Docked(Side::Right, *i))
+                .and_then(|(_, stack)| stack.active())
         });
         let keeper = &mut self.layout;
         keeper.keep("rightVisible", Value::from(visible), now);
         keeper.keep(
             "dockTab",
-            Value::from(if processing_in_front {
-                "processing"
-            } else {
-                "layers"
+            Value::from(match in_front {
+                Some(Panel::Processing) => "processing",
+                Some(Panel::Blocks) => "blocks",
+                _ => "layers",
             }),
             now,
         );

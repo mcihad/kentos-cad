@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 193,
-      "implemented": 180,
+      "total": 195,
+      "implemented": 182,
       "partial": 0,
       "pending": 13
     },
@@ -67,18 +67,18 @@
       "pending": 0
     },
     "screens": {
-      "total": 66,
-      "implemented": 66,
+      "total": 67,
+      "implemented": 67,
       "partial": 0,
       "pending": 0
     },
     "commandsWithoutPlace": [],
-    "commandsWithoutTests": 63,
-    "commandsOnDesktop": 175,
+    "commandsWithoutTests": 65,
+    "commandsOnDesktop": 177,
     "desktop": {
       "commands": {
-        "total": 193,
-        "implemented": 175,
+        "total": 195,
+        "implemented": 177,
         "partial": 0,
         "pending": 13,
         "none": 0,
@@ -141,8 +141,8 @@
         "n/a": 0
       },
       "screens": {
-        "total": 66,
-        "implemented": 60,
+        "total": 67,
+        "implemented": 61,
         "partial": 2,
         "pending": 0,
         "none": 0,
@@ -212,6 +212,67 @@
       },
       "tests": [],
       "desktopWhere": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)"
+    },
+    {
+      "id": "block.panel",
+      "title": "Bloklar",
+      "category": "Blok",
+      "icon": "blocks",
+      "description": "Çizimin bloklarını önizlemeleri ve yerleştirme sayılarıyla gösteren paneli açar: ekle, yeniden adlandır, taban noktası, yeniden tanımla, sil.",
+      "aliases": [
+        "BLOKLAR",
+        "BLOCKS",
+        "BLOKLISTESI"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "Çizim › Blok"
+      ],
+      "ribbon": [
+        "Çizim › Blok"
+      ],
+      "quickAccess": false,
+      "toolbox": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "block.purge",
+      "title": "Blokları temizle",
+      "category": "Blok",
+      "icon": "cleanup",
+      "description": "Hiçbir yerleştirmesi olmayan blok tanımlarını tek adımda siler.",
+      "aliases": [
+        "PURGE",
+        "BLOKTEMIZLE"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "Çizim › Blok"
+      ],
+      "ribbon": [
+        "Çizim › Blok"
+      ],
+      "quickAccess": false,
+      "toolbox": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/blocks/BlocksPanel.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
     },
     {
       "id": "calc.forward",
@@ -3051,7 +3112,9 @@
       "quickAccess": false,
       "toolbox": true,
       "hiddenIn": [],
-      "uiSources": [],
+      "uiSources": [
+        "apps/web/src/ui/blocks/BlocksPanel.ts"
+      ],
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -3083,7 +3146,9 @@
       "quickAccess": false,
       "toolbox": true,
       "hiddenIn": [],
-      "uiSources": [],
+      "uiSources": [
+        "apps/web/src/ui/blocks/BlocksPanel.ts"
+      ],
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -13576,6 +13641,18 @@
       "desktopWhere": "apps/desktop/src/blocks.rs (ADR 0144)"
     },
     {
+      "id": "apps/web/src/ui/blocks/BlocksPanel.ts#BlocksPanel",
+      "name": "BlocksPanel",
+      "role": "panel",
+      "source": "apps/web/src/ui/blocks/BlocksPanel.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/blocks_panel.rs (ADR 0144)"
+    },
+    {
       "id": "apps/web/src/ui/bottom/BottomPanel.ts#BottomPanel",
       "name": "BottomPanel",
       "role": "panel",
@@ -14633,7 +14710,9 @@
             "label": "Blok",
             "items": [
               "tool.blockDefine",
-              "tool.blockInsert"
+              "tool.blockInsert",
+              "block.panel",
+              "block.purge"
             ]
           }
         ]
@@ -15738,11 +15817,19 @@
             "items": [
               {
                 "command": "tool.blockDefine",
-                "size": "large"
+                "size": "small"
               },
               {
                 "command": "tool.blockInsert",
-                "size": "large"
+                "size": "small"
+              },
+              {
+                "command": "block.panel",
+                "size": "small"
+              },
+              {
+                "command": "block.purge",
+                "size": "small"
               }
             ],
             "overflow": [],
@@ -17626,11 +17713,19 @@
               "items": [
                 {
                   "command": "tool.blockDefine",
-                  "size": "large"
+                  "size": "small"
                 },
                 {
                   "command": "tool.blockInsert",
-                  "size": "large"
+                  "size": "small"
+                },
+                {
+                  "command": "block.panel",
+                  "size": "small"
+                },
+                {
+                  "command": "block.purge",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -19177,11 +19272,19 @@
               "items": [
                 {
                   "command": "tool.blockDefine",
-                  "size": "large"
+                  "size": "small"
                 },
                 {
                   "command": "tool.blockInsert",
-                  "size": "large"
+                  "size": "small"
+                },
+                {
+                  "command": "block.panel",
+                  "size": "small"
+                },
+                {
+                  "command": "block.purge",
+                  "size": "small"
                 }
               ],
               "overflow": [],

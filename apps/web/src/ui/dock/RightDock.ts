@@ -6,18 +6,20 @@ import { h } from '../dom';
 import { LayersPanel } from '../layers/LayersPanel';
 import { ProcessingPanel } from '../processing/ProcessingPanel';
 import { PropertiesPanel } from '../properties/PropertiesPanel';
+import { BlocksPanel } from '../blocks/BlocksPanel';
 import { splitter } from '../widgets/Splitter';
 import { dockTabs } from './dockTabs';
 import { filterOf } from '../../app/workspaces';
 
 /**
- * Right dock: the upper slot holds the layer tree or the processing
- * toolbox (tabs), attributes sit below, split by a draggable divider.
+ * Right dock: the upper slot holds the layer tree, the processing toolbox or
+ * the blocks (tabs), attributes sit below, split by a draggable divider.
  */
 export class RightDock extends Component {
   readonly el: HTMLElement;
   readonly processing: ProcessingPanel;
   private readonly layers: LayersPanel;
+  private readonly blocks: BlocksPanel;
   private readonly props: PropertiesPanel;
 
   constructor(ctx: AppContext) {
@@ -25,11 +27,14 @@ export class RightDock extends Component {
     const { ui } = ctx;
     this.layers = new LayersPanel(ctx);
     this.processing = new ProcessingPanel(ctx);
+    this.blocks = new BlocksPanel(ctx);
     this.props = new PropertiesPanel(ctx);
     this.layers.setTabs(dockTabs(ctx, 'layers'));
     this.processing.setTabs(dockTabs(ctx, 'processing'));
+    this.blocks.setTabs(dockTabs(ctx, 'blocks'));
     this.layers.el.classList.add('dock__top');
     this.processing.el.classList.add('dock__top');
+    this.blocks.el.classList.add('dock__top');
 
     let startFrac = 0;
     let height = 1;
@@ -45,25 +50,27 @@ export class RightDock extends Component {
     });
     this.d.add(split.dispose);
 
-    this.el = h('aside', { class: 'dock', 'aria-label': 'Katmanlar, işlemler ve öznitelikler' }, this.layers.el, this.processing.el, split.el, this.props.el);
+    this.el = h('aside', { class: 'dock', 'aria-label': 'Katmanlar, işlemler, bloklar ve öznitelikler' }, this.layers.el, this.processing.el, this.blocks.el, split.el, this.props.el);
     this.d.add(ui.layersFraction.subscribe((f) => this.el.style.setProperty('--layers-frac', String(f)), true));
     const sync = () => {
       // A work mode without processing (CAD) keeps the layers in the slot, whatever tab was last open.
       const processing = filterOf(ctx).menu('processing');
       for (const b of this.el.querySelectorAll<HTMLElement>('[data-dock-tab="processing"]')) b.hidden = !processing;
-      const tab = processing ? ui.dockTab.value : 'layers';
+      const tab = processing || ui.dockTab.value !== 'processing' ? ui.dockTab.value : 'layers';
       this.layers.el.hidden = tab !== 'layers';
       this.processing.el.hidden = tab !== 'processing';
-      const top = tab === 'layers' ? this.layers : this.processing;
+      this.blocks.el.hidden = tab !== 'blocks';
+      const top = tab === 'layers' ? this.layers : tab === 'processing' ? this.processing : this.blocks;
       this.el.dataset.layout = top.collapsed.value ? 'props' : this.props.collapsed.value ? 'top' : 'split';
     };
-    this.d.add(watchAll([ui.dockTab, this.layers.collapsed, this.processing.collapsed, this.props.collapsed, ctx.doc.settings.workspace], sync));
+    this.d.add(watchAll([ui.dockTab, this.layers.collapsed, this.processing.collapsed, this.blocks.collapsed, this.props.collapsed, ctx.doc.settings.workspace], sync));
     sync();
   }
 
   override dispose(): void {
     this.layers.dispose();
     this.processing.dispose();
+    this.blocks.dispose();
     this.props.dispose();
     super.dispose();
   }

@@ -583,6 +583,17 @@ impl GeometryStore {
             .insert_outlines(block, Vec2::new(x, y), scale, rotation, mirror)
     }
 
+    /// A drawing point in the own coordinates of the definition the insert
+    /// `id` places (docs/adr/0144): the Bloklar panel's new base point shown
+    /// on that insert. `[x, y]`, or empty for an object that is not an
+    /// insert of a known block.
+    #[wasm_bindgen(js_name = insertLocal)]
+    pub fn insert_local(&self, id: f64, x: f64, y: f64) -> Vec<f64> {
+        self.inner
+            .insert_local(id, Vec2::new(x, y))
+            .map_or_else(Vec::new, |p| vec![p.x, p.y])
+    }
+
     /// These objects moved by each affine (six numbers each), affine after
     /// affine, as `transformEntities` gives them, packed as `putPacked`
     /// reads them (`Store::transform_packed`): move, copy, arrays and paste

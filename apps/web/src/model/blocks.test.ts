@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { blocksFault, blockFaultMessage, checkDefinitions, checkNesting, freeBlockName, nameKey, nameOk, trimName, type BlockDefinition } from './blocks';
+import { blocksFault, blockFaultMessage, checkDefinitions, checkNesting, freeBlockName, nameKey, nameOk, placed, placements, trimName, type BlockDefinition } from './blocks';
 import type { Entity } from './entities';
 
 /**
@@ -33,6 +33,19 @@ describe('block rules (docs/adr/0144)', () => {
     expect(freeBlockName(named('Rögar'))).toBe('Blok 1');
     // Trimmed as Rust's `str::trim`: U+0085 goes, U+FEFF stays.
     expect([trimName('  Rögar \t'), trimName('\u0085Direk\u3000'), trimName('\ufeffA'), trimName(' ')]).toEqual(['Rögar', 'Direk', '\ufeffA', '']);
+  });
+
+  it('count placements in the drawing and in the definitions', () => {
+    // A twice in the drawing and twice in B; B once in C; C once in the drawing; an unknown block's insert is no one's.
+    const blocks = [block(1, 'A'), block(2, 'B', [1, 1]), block(3, 'C', [2]), block(4, 'D')];
+    const found = placements(blocks, [insert(1), insert(3), insert(1, 2), insert(9)]);
+    expect(found).toEqual([
+      { drawing: 2, nested: 2 },
+      { drawing: 0, nested: 1 },
+      { drawing: 1, nested: 0 },
+      { drawing: 0, nested: 0 },
+    ]);
+    expect(found.map(placed)).toEqual([true, true, true, false]);
   });
 
   it('keep ids and tags once', () => {

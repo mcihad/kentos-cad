@@ -122,6 +122,35 @@ export function blockUses(entities: Iterable<Entity>, block: string): number {
   return n;
 }
 
+/**
+ * How often a definition is placed: its inserts among the drawing's own
+ * objects, and inside definitions (the Bloklar panel's count; a block placed
+ * anywhere is not deleted). The contracts' `blocks::Placements`.
+ */
+export interface Placements {
+  drawing: number;
+  nested: number;
+}
+
+/** Every definition's placements, in the definitions' order: one pass over the drawing's objects and one over the definitions'. */
+export function placements(blocks: readonly BlockDefinition[], drawing: Iterable<Entity>): Placements[] {
+  const at = new Map(blocks.map((b, i) => [b.id, i]));
+  const out = blocks.map(() => ({ drawing: 0, nested: 0 }));
+  for (const e of drawing) {
+    const k = e.kind === 'insert' ? at.get(e.block) : undefined;
+    if (k !== undefined) out[k].drawing++;
+  }
+  for (const b of blocks)
+    for (const e of b.entities) {
+      const k = e.kind === 'insert' ? at.get(e.block) : undefined;
+      if (k !== undefined) out[k].nested++;
+    }
+  return out;
+}
+
+/** Whether an insert places it anywhere. */
+export const placed = (p: Placements): boolean => p.drawing + p.nested > 0;
+
 /** The definitions checked on their own (names, ids, tags): each id's place, or the fault. */
 export function checkDefinitions(blocks: readonly BlockDefinition[]): { index: Map<string, number> } | { fault: BlockFault } {
   const index = new Map<string, number>();

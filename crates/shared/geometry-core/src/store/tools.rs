@@ -359,6 +359,27 @@ impl Store {
         out
     }
 
+    /// A drawing point in the own coordinates of the definition an insert
+    /// places (`block::insert_local`): the Bloklar panel's new base point
+    /// shown on that insert. `None` for an object that is not an insert of a
+    /// block the drawing defines, or an insert that has no inverse.
+    pub fn insert_local(&self, id: f64, at: Vec2) -> Option<Vec2> {
+        let it = self.get(id)?;
+        let Shape::Insert {
+            block,
+            p,
+            scale,
+            rotation,
+            mirror,
+        } = &it.shape
+        else {
+            return None;
+        };
+        let base = self.blocks().get(block)?.base;
+        let mirror = mirror.unwrap_or(false);
+        crate::block::insert_local(base, *p, *scale, *rotation, mirror, at)
+    }
+
     /// Objects moved by each affine in turn, as `transformEntities` gives
     /// them, packed as `put_packed` reads them (`Packer`): move, copy,
     /// rotate, scale, mirror, arrays and paste transform the store's own

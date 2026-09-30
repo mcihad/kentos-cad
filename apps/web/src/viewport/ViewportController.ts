@@ -379,6 +379,11 @@ export class ViewportController {
     return this.picker.blockOutlines(block, p, scale, rotation, mirror);
   }
 
+  /** A drawing point in the own coordinates of the definition the insert `id` places (docs/adr/0144); null when it is none. */
+  insertLocal(id: number, p: Vec2): Vec2 | null {
+    return this.picker.insertLocal(id, p);
+  }
+
   /** Patlat of a block's insert: its definition's objects placed, each with its own fields (docs/adr/0144); or why not. */
   explodeInsert(e: Entity): ReturnType<PickIndex['explodeInsert']> {
     return this.picker.explodeInsert(e);

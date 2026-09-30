@@ -129,6 +129,19 @@ fn changes_are_written_together_a_quarter_second_after_the_last() {
     assert_eq!(in_front(&again), Some(Panel::Layers));
 }
 
+/// Bloklar in front of Katmanlar' slot is kept, and shown so at the next start (docs/adr/0144).
+#[test]
+fn the_blocks_tab_in_front_is_kept_and_shown_again() {
+    let dir = scratch("bloklar");
+    let mut app = opened(&dir);
+    let _ = app.update(Message::Run("block.panel"));
+    assert_eq!(in_front(&app), Some(Panel::Blocks));
+    assert_eq!(app.layout.kept()["dockTab"], "blocks");
+    let due = app.layout.due().expect("a change waits");
+    app.layout.write(due, false);
+    assert_eq!(in_front(&opened(&dir)), Some(Panel::Blocks));
+}
+
 #[test]
 fn a_narrower_window_shows_less_and_keeps_the_wish() {
     let dir = scratch("dar");

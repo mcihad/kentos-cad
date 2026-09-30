@@ -46,6 +46,8 @@ pub enum Panel {
     Layers,
     /// İşlemler: the processing toolbox and this session's runs, a tab beside Katmanlar (processing/panel.rs).
     Processing,
+    /// Bloklar: the drawing's blocks, a tab beside Katmanlar and İşlemler (blocks_panel.rs, docs/adr/0144).
+    Blocks,
     Properties,
 }
 
@@ -54,6 +56,7 @@ impl Panel {
         match self {
             Panel::Layers => "Katmanlar",
             Panel::Processing => "İşlemler",
+            Panel::Blocks => "Bloklar",
             Panel::Properties => "Öznitelikler",
         }
     }
@@ -62,6 +65,7 @@ impl Panel {
         match self {
             Panel::Layers => Icon::Layers,
             Panel::Processing => crate::icons::from_web(Some("processing")),
+            Panel::Blocks => crate::icons::from_web(Some("blocks")),
             Panel::Properties => Icon::Properties,
         }
     }
@@ -69,8 +73,9 @@ impl Panel {
     fn layout() -> Docks<Panel> {
         let mut docks = Docks::new();
         docks.dock(Panel::Layers, Side::Right);
-        // İşlemler shares the top slot with Katmanlar, as the web's tabs; Katmanlar in front.
+        // İşlemler and Bloklar share the top slot with Katmanlar, as the web's tabs; Katmanlar in front.
         docks.dock(Panel::Processing, Side::Right);
+        docks.dock(Panel::Blocks, Side::Right);
         docks.update(kentos_ui::widget::docking::Event::Selected(Panel::Layers));
         docks.split(Panel::Properties, Side::Right);
         docks.set_size(Side::Right, DOCK_WIDTH);
@@ -239,6 +244,8 @@ pub enum Message {
     Properties(crate::properties::Event),
     /// Blok oluştur's window (blocks.rs).
     Blocks(crate::blocks::Event),
+    /// Bloklar panel (blocks_panel.rs).
+    BlocksPanel(crate::blocks_panel::Event),
     /// The rollover card's wait is over, for this hover (hover_card.rs).
     HoverCard(u64),
     /// The pointer rested on a snap past the tracking dwell (tracking.rs).
@@ -379,6 +386,8 @@ pub struct App {
     pub(crate) text_field_focus: bool,
     /// The block windows (blocks.rs, docs/adr/0144).
     pub(crate) blocks: crate::blocks::Blocks,
+    /// The Bloklar panel (blocks_panel.rs).
+    pub(crate) blocks_panel: crate::blocks_panel::PanelState,
     pub(crate) text_field_select: bool,
     pub(crate) text_field_release: bool,
     /// Öznitelikler's closed sections, by id, while the app runs (the web's `collapsed`).
@@ -590,6 +599,7 @@ impl App {
             text_field: None,
             text_field_focus: false,
             blocks: crate::blocks::Blocks::default(),
+            blocks_panel: crate::blocks_panel::PanelState::default(),
             text_field_select: false,
             text_field_release: false,
             props_closed: std::collections::HashSet::new(),
@@ -861,6 +871,7 @@ impl App {
             }
             self.close_text_field(true);
             self.layers_keyboard = false;
+            self.blocks_panel.keyboard = false;
         }
         match message {
             Message::Run(id) => return self.run(id),
@@ -911,6 +922,7 @@ impl App {
                 if focused {
                     self.field = None;
                     self.layers_keyboard = false;
+                    self.blocks_panel.keyboard = false;
                 }
             }
             Message::PromptOption(key) => return self.prompt_option(key),
@@ -938,6 +950,7 @@ impl App {
             Message::TextField(event) => self.text_field_event(event),
             Message::Properties(event) => self.properties_event(event),
             Message::Blocks(event) => self.blocks_event(event),
+            Message::BlocksPanel(event) => return self.blocks_panel_event(event),
             Message::HoverCard(version) => self.hover_card_due(version),
             Message::TrackDwell(number) => {
                 self.tracking.dwell_due(number);
@@ -1349,6 +1362,9 @@ impl App {
             // Edits, not undo steps (layering.rs).
             "layer.new" => self.new_layer(),
             "layer.newGroup" => self.new_group(),
+            // The blocks (blocks_panel.rs, docs/adr/0144).
+            "block.panel" => self.show_blocks_panel(),
+            "block.purge" => self.purge_blocks(),
             "edit.undo" => self.undo(),
             "edit.redo" => self.step_history(false),
             "tool.confirm" => return self.confirm(),
@@ -1432,6 +1448,7 @@ impl App {
             "server.check" => !self.server_checking,
             id if id.starts_with("cloud.") => self.cloud_available(id),
             "layer.new" | "layer.newGroup" => self.tree_locked().is_none(),
+            "block.purge" => doc.is_some_and(|d| !d.blocks().is_empty()),
             // Katman stili opens for the active layer: not for a group.
             "style.layerStyle" => doc.is_some_and(|d| {
                 d.layers()

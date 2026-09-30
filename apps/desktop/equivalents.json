@@ -185,6 +185,7 @@
     },
     "apps/web/src/ui/appmenu/AppMenu.ts#openAppMenu": { "desktop": "implemented", "where": "apps/desktop/src/app_menu/ (ADR 0050)" },
     "apps/web/src/ui/blocks/BlockDefineDialog.ts#openBlockDefineDialog": { "desktop": "implemented", "where": "apps/desktop/src/blocks.rs (ADR 0144)" },
+    "apps/web/src/ui/blocks/BlocksPanel.ts#BlocksPanel": { "desktop": "implemented", "where": "apps/desktop/src/blocks_panel.rs (ADR 0144)" },
     "apps/web/src/ui/bottom/BottomPanel.ts#BottomPanel": { "desktop": "implemented", "where": "apps/desktop/src/bottom.rs, message_log.rs, log_plan.rs (ADR 0058, 0114)" },
     "apps/web/src/ui/bottom/CommandLine.ts#CommandLine": { "desktop": "implemented", "where": "apps/desktop/src/view.rs, input.rs, message_log.rs (KentOS UI CommandLine, tek satır; ADR 0114)" },
     "apps/web/src/ui/calc/IntersectionDialog.ts#openIntersection": { "desktop": "implemented", "where": "apps/desktop/src/calc/intersection.rs (ADR 0071)" },

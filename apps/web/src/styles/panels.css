@@ -93,6 +93,19 @@
 .panel__tabs .tab[aria-selected='true'] .icon {
   color: var(--c-accent-text);
 }
+/* A narrow dock shows the tabs behind by their icon only (their name in the tooltip), as the
+   desktop's docking does, so the panel's count and buttons keep their room. */
+.panel__head[data-tabbed] {
+  container-type: inline-size;
+}
+@container (max-width: 440px) {
+  .panel__tabs .tab[aria-selected='false'] {
+    padding: 0 6px;
+  }
+  .panel__tabs .tab[aria-selected='false'] > span {
+    display: none;
+  }
+}
 .panel__meta {
   flex: 1;
   min-width: 0;
@@ -579,4 +592,51 @@
   padding: 0;
   border: 0;
   pointer-events: none;
+}
+
+/* Bloklar's search with its buttons beside it. */
+.panel__toolbar.blk__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.blk__toolbar .field--search {
+  flex: 1;
+  min-width: 0;
+}
+/* Bloklar (ui/blocks/BlocksPanel.ts, docs/adr/0144): a picture of the block, its name over its
+   description, and how many inserts place it; the row Blok ekle places next carries the accent bar. */
+.panel--blocks .tree {
+  --row-h: calc(46px * var(--ui-scale));
+}
+.blk__thumb {
+  flex: none;
+  width: calc(34px * var(--ui-scale));
+  height: calc(34px * var(--ui-scale));
+  margin-right: 8px;
+  border: 1px solid var(--c-line-soft);
+  border-radius: var(--r-sm);
+  background: var(--c-panel-head);
+  /* The picture's ink (read by the script). */
+  color: var(--c-text-2);
+}
+.tree__row[data-active] .blk__thumb {
+  border-color: var(--c-accent-line);
+}
+.blk__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.blk__text .tree__name {
+  flex: none;
+}
+.blk__about {
+  overflow: hidden;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

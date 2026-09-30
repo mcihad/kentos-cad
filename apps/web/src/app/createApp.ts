@@ -9,7 +9,7 @@ import type { AppSettingsSection } from '../ui/settings/AppSettingsDialog';
 import type { ProjectSettingsSection } from '../ui/settings/ProjectSettingsDialog';
 import { AppShell } from '../ui/shell/AppShell';
 import { ViewportController } from '../viewport/ViewportController';
-import { createBlocks } from './blocks';
+import { createBlocks, registerBlockCommands } from './blocks';
 import { Clipboard } from './clipboard';
 import { registerCoreCommands, showTheme } from './commands';
 import type { AppContext } from './context';
@@ -133,6 +133,7 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
     show: (tab) => shell?.showProcessing(tab),
   });
   registerStyleCommands(ctx);
+  registerBlockCommands(ctx);
   registerFileExchangeCommands(ctx);
   registerCalcCommands(ctx);
   // The open cloud project as the rename and delete dialogs name it.

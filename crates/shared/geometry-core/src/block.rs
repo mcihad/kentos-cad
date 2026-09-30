@@ -237,6 +237,30 @@ pub fn insert_matrix(base: Vec2, p: Vec2, scale: f64, rotation: f64, mirror: boo
     )
 }
 
+/// Where a drawing point falls in a definition's own coordinates for an
+/// insert of it: `insert_matrix` undone. The Bloklar panel's new base point
+/// is shown on an insert and taken back into the definition. A scale of
+/// zero (or one not finite) has no inverse: `None`. Quarter turns are exact,
+/// as `placement` makes them.
+pub fn insert_local(
+    base: Vec2,
+    p: Vec2,
+    scale: f64,
+    rotation: f64,
+    mirror: bool,
+    at: Vec2,
+) -> Option<Vec2> {
+    if !(scale.is_finite() && scale != 0.0) {
+        return None;
+    }
+    let (s, c) = quarter_turn(rotation).unwrap_or_else(|| (sin(rotation), cos(rotation)));
+    let (dx, dy) = ((at.x - p.x) / scale, (at.y - p.y) / scale);
+    // R⁻¹ is R's transpose; M is its own inverse.
+    let (x, y) = (c * dx + s * dy, -s * dx + c * dy);
+    let k = if mirror { -1.0 } else { 1.0 };
+    Some(Vec2::new(base.x + x, base.y + k * y))
+}
+
 /// `(sin, cos)` of an exact quarter turn, as its double is written.
 fn quarter_turn(a: f64) -> Option<(f64, f64)> {
     const HALF: f64 = PI / 2.0;
@@ -428,6 +452,33 @@ mod tests {
             corners(&pieces[0].shape),
             [(0.0, 0.0), (0.0, -2.0), (-1.0, -2.0), (-1.0, 0.0)]
         );
+    }
+
+    /// A drawing point on an insert back in the definition's coordinates,
+    /// worked by hand: base (1.5, 1), placed at (−4, −7) twice as large, a
+    /// quarter turn, mirrored. The definition's (2.5, 1) is (1, 0) from the
+    /// base: mirrored (1, 0), turned (0, 1), doubled (0, 2): at (−4, −5).
+    /// Its (1.5, 0) is (0, −1): mirrored (0, 1), turned (−1, 0), doubled
+    /// (−2, 0): at (−6, −7).
+    #[test]
+    fn a_point_on_an_insert_goes_back_into_the_definition() {
+        let base = Vec2::new(1.5, 1.0);
+        let p = Vec2::new(-4.0, -7.0);
+        let quarter = PI / 2.0;
+        // The insertion point is the base point, however it is placed.
+        for (rotation, mirror) in [(0.0, false), (quarter, true), (PI, false), (-quarter, true)] {
+            assert_eq!(insert_local(base, p, 2.0, rotation, mirror, p), Some(base));
+        }
+        let back = |x, y| insert_local(base, p, 2.0, quarter, true, Vec2::new(x, y));
+        assert_eq!(back(-4.0, -5.0), Some(Vec2::new(2.5, 1.0)));
+        assert_eq!(back(-6.0, -7.0), Some(Vec2::new(1.5, 0.0)));
+        // Any turn: there and back through `insert_matrix`.
+        let local = Vec2::new(3.25, -0.5);
+        let at = crate::geom::affine::apply(&insert_matrix(base, p, 0.8, 0.3, true), local);
+        let back = insert_local(base, p, 0.8, 0.3, true, at).expect("a scale");
+        assert!((back.x - local.x).abs() < 1e-12 && (back.y - local.y).abs() < 1e-12);
+        assert_eq!(insert_local(base, p, 0.0, 0.0, false, p), None);
+        assert_eq!(insert_local(base, p, f64::NAN, 0.0, false, p), None);
     }
 
     /// Two levels: Direk holds Rögar turned a quarter at (10, 0), coloured

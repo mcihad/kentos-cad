@@ -115,6 +115,8 @@
     "tool.hatch",
     "tool.blockDefine",
     "tool.blockInsert",
+    "block.panel",
+    "block.purge",
     "tool.measure",
     "tool.area",
     "tool.parcel",

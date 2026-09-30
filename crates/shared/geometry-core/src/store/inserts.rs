@@ -210,3 +210,16 @@ fn a_block_is_outlined_where_an_insert_would_place_it() {
             .is_empty()
     );
 }
+
+#[test]
+fn a_point_on_an_insert_is_found_in_its_definition() {
+    let s = store();
+    // Rögar at (100, 200) twice as large: its base (1, 0) is the insertion
+    // point; the rectangle's far corner (3, 1) is at (104, 202).
+    let local = |x, y| s.insert_local(1.0, Vec2::new(x, y));
+    assert_eq!(local(100.0, 200.0), Some(Vec2::new(1.0, 0.0)));
+    assert_eq!(local(104.0, 202.0), Some(Vec2::new(3.0, 1.0)));
+    // Not an insert.
+    assert_eq!(s.insert_local(2.0, Vec2::new(90.0, 190.0)), None);
+    assert_eq!(s.insert_local(9.0, Vec2::new(0.0, 0.0)), None);
+}

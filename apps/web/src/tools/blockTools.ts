@@ -1,3 +1,4 @@
+import { Signal } from '../core/signal';
 import type { ViewTransform } from '../viewport/Camera';
 import type { Vec2 } from '../model/geometry';
 import { parseNumber } from './coordinateInput';
@@ -24,8 +25,14 @@ const NO_BLOCK = 'Çizimde blok yok; önce Blok oluştur ile bir blok tanımlay�
 export class BlockInsertTool extends PointInputTool {
   readonly id = 'blockInsert';
   protected readonly label = 'Blok ekle';
-  /** The block placed last, or chosen (the Bloklar panel): its id. */
-  static block: string | null = null;
+  /** The block placed last, or chosen (the Bloklar panel marks it): its id. */
+  static readonly chosen = new Signal<string | null>(null);
+  static get block(): string | null {
+    return BlockInsertTool.chosen.value;
+  }
+  static set block(id: string | null) {
+    BlockInsertTool.chosen.set(id);
+  }
   static scale = 1;
   /** Degrees, counter-clockwise from east. */
   static rotation = 0;

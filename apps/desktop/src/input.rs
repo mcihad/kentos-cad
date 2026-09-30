@@ -99,7 +99,7 @@ impl App {
                 ViewChange::DefineBlock(base) => self.open_block_define(base),
                 // Çizimden: the point goes to the window that asked, which opens again (calc/).
                 ViewChange::Picked(p) => {
-                    if !self.processing_picked(p) {
+                    if !self.processing_picked(p) && !self.blocks_picked(p) {
                         self.calc_picked(p);
                     }
                 }
@@ -280,6 +280,7 @@ impl App {
                 self.field = None;
                 self.line_focused = false;
                 self.layers_keyboard = false;
+                self.blocks_panel.keyboard = false;
                 // The snap is taken again here, never from the last move (CLAUDE.md §4.7).
                 let p = self.pointer_at(at);
                 let running = self.session.is_running();
@@ -494,6 +495,12 @@ impl App {
         // 1. The layer tree has the keyboard: its keys are its own (layer_tree.rs).
         if self.layers_keyboard
             && let Some(task) = self.layer_key(&press)
+        {
+            return task;
+        }
+        // 1. So has the Bloklar list, once a row was pressed (blocks_panel.rs).
+        if self.blocks_panel.keyboard
+            && let Some(task) = self.blocks_key(&press)
         {
             return task;
         }

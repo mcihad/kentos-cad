@@ -527,6 +527,11 @@ export class CoreStore {
     return typed(() => this.raw.insertOutlines(block, x, y, scale, rotation, mirror));
   }
 
+  /** A drawing point in the own coordinates of the definition the insert `id` places (docs/adr/0144); empty when it is not an insert of a known block. */
+  insertLocal(id: number, x: number, y: number): Float64Array {
+    return typed(() => this.raw.insertLocal(id, x, y));
+  }
+
   /**
    * These objects moved by each affine (six numbers each), affine after
    * affine, as `transformEntities` gives them: packed as `putPacked` reads

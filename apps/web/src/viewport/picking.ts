@@ -296,6 +296,16 @@ export class PickIndex {
   }
 
   /**
+   * A drawing point in the own coordinates of the definition the insert `id` places (docs/adr/0144): the
+   * Bloklar panel's new base point shown on that insert. Null when `id` is not an insert of a known block.
+   */
+  insertLocal(id: number, p: Vec2): Vec2 | null {
+    this.sync();
+    const at = this.store.insertLocal(id, p.x, p.y);
+    return at.length === 2 ? { x: at[0], y: at[1] } : null;
+  }
+
+  /**
    * `transformEntities(list, affines)` done by the store on its own copies
    * (move, copy, rotate, scale, mirror, arrays): only the new geometry
    * comes back, packed, so no object crosses as JSON (docs/adr/0008). The

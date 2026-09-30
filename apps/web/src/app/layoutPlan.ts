@@ -11,7 +11,7 @@
 
 export type Theme = 'dark' | 'light';
 export type BottomTab = 'history' | 'coords' | 'messages';
-export type DockTab = 'layers' | 'processing';
+export type DockTab = 'layers' | 'processing' | 'blocks';
 export type ProcessingTab = 'tools' | 'history';
 
 export interface UiLayoutData {
@@ -30,7 +30,7 @@ export interface UiLayoutData {
   toolboxColumns: 2 | 3;
   /** Toolbox groups folded by the user (ToolGroup ids). */
   toolboxFolded: string[];
-  /** Right dock content: layer tree and attributes, or the processing toolbox. */
+  /** Right dock's upper slot: the layer tree, the processing toolbox or the blocks (attributes below). */
   dockTab: DockTab;
   processingTab: ProcessingTab;
   /** Processing categories folded in the toolbox. */
@@ -107,7 +107,7 @@ export const LAYOUT_FIELDS: { readonly [K in keyof UiLayoutData]: FieldRule } = 
   toolboxY: { kind: 'number' },
   toolboxColumns: { kind: 'columns' },
   toolboxFolded: { kind: 'texts' },
-  dockTab: { kind: 'enum', values: ['layers', 'processing'] },
+  dockTab: { kind: 'enum', values: ['layers', 'processing', 'blocks'] },
   processingTab: { kind: 'enum', values: ['tools', 'history'] },
   processingFolded: { kind: 'texts' },
   ribbonTab: { kind: 'text' },

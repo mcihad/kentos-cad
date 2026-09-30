@@ -148,7 +148,7 @@ pub(crate) const FIELDS: [(&str, Rule); 21] = [
     ),
     ("toolboxColumns", Rule::Columns),
     ("toolboxFolded", Rule::Texts),
-    ("dockTab", Rule::Enum(&["layers", "processing"])),
+    ("dockTab", Rule::Enum(&["layers", "processing", "blocks"])),
     ("processingTab", Rule::Enum(&["tools", "history"])),
     ("processingFolded", Rule::Texts),
     ("ribbonTab", Rule::Text),

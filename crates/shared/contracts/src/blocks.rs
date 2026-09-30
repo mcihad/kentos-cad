@@ -153,6 +153,53 @@ pub fn uses(entities: &[Entity], block: BlockId) -> usize {
         .count()
 }
 
+/// How often a definition is placed: its inserts among the drawing's own
+/// objects, and inside definitions (the Bloklar panel's count; a block placed
+/// anywhere is not deleted).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Placements {
+    pub drawing: usize,
+    pub nested: usize,
+}
+
+impl Placements {
+    /// Whether an insert places it anywhere.
+    pub fn used(self) -> bool {
+        self.drawing + self.nested > 0
+    }
+}
+
+/// Every definition's placements, in the definitions' order: one pass over
+/// the drawing's objects and one over the definitions'.
+pub fn placements<'a, B: Borrow<BlockDefinition>>(
+    blocks: &[B],
+    drawing: impl IntoIterator<Item = &'a Entity>,
+) -> Vec<Placements> {
+    let at: HashMap<BlockId, usize> = blocks
+        .iter()
+        .enumerate()
+        .map(|(i, b)| (b.borrow().id, i))
+        .collect();
+    let mut out = vec![Placements::default(); blocks.len()];
+    for e in drawing {
+        if let Entity::Insert(i) = e
+            && let Some(&k) = at.get(&i.block)
+        {
+            out[k].drawing += 1;
+        }
+    }
+    for b in blocks {
+        for e in &b.borrow().entities {
+            if let Entity::Insert(i) = e
+                && let Some(&k) = at.get(&i.block)
+            {
+                out[k].nested += 1;
+            }
+        }
+    }
+    out
+}
+
 /// A drawing's blocks and its own objects checked whole.
 pub fn check<B: Borrow<BlockDefinition>>(
     blocks: &[B],
@@ -360,6 +407,33 @@ mod tests {
         // A window trims a name with `str::trim` (the web's `trimName` is the same).
         let trimmed = ["  Rögar \t", "\u{85}Direk\u{3000}", "\u{feff}A", " "].map(str::trim);
         assert_eq!(trimmed, ["Rögar", "Direk", "\u{feff}A", ""]);
+    }
+
+    /// A is placed twice in the drawing and twice in B; B once in C; C once
+    /// in the drawing; an insert of a block the drawing does not define is
+    /// no one's.
+    #[test]
+    fn placements_count_the_drawing_and_the_definitions() {
+        let blocks = [
+            block(1, "A", &[]),
+            block(2, "B", &[1, 1]),
+            block(3, "C", &[2]),
+            block(4, "D", &[]),
+        ];
+        let drawing = [
+            insert(1, 1.0),
+            insert(3, 1.0),
+            insert(1, 2.0),
+            insert(9, 1.0),
+        ];
+        let found = placements(&blocks, &drawing);
+        let placed = |drawing, nested| Placements { drawing, nested };
+        assert_eq!(
+            found,
+            [placed(2, 2), placed(0, 1), placed(1, 0), placed(0, 0)]
+        );
+        let used: Vec<bool> = found.iter().map(|p| p.used()).collect();
+        assert_eq!(used, [true, true, true, false]);
     }
 
     #[test]
