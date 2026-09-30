@@ -14,8 +14,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use kentos_contracts::{
-    DOCUMENT_FORMAT, DOCUMENT_VERSION_2, DocumentSnapshotV2, Entity, EntityId, LayerNode,
-    ProjectId, ProjectSettings, ProjectStyles,
+    BlockDefinition, BlockId, DOCUMENT_FORMAT, DOCUMENT_VERSION_2, DocumentSnapshotV2, Entity,
+    EntityId, LayerNode, ProjectId, ProjectSettings, ProjectStyles,
 };
 use kentos_domain::Document;
 use serde::{Deserialize, Serialize};
@@ -41,6 +41,13 @@ pub struct BaseMeta {
     pub styles: ProjectStyles,
 }
 
+/// A block definition as the server has it, with its version (docs/adr/0144 §5).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct BaseBlock {
+    pub version: String,
+    pub block: BlockDefinition,
+}
+
 /// One change of what this device knows the server has.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct BaseStep {
@@ -52,6 +59,9 @@ pub struct BaseStep {
     pub remove: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub meta: Option<BaseMeta>,
+    /// The server's block definitions, whole, when they changed (a few, and rarely).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub blocks: Option<Vec<BaseBlock>>,
 }
 
 impl BaseStep {
@@ -60,6 +70,7 @@ impl BaseStep {
             && self.put.is_empty()
             && self.remove.is_empty()
             && self.meta.is_none()
+            && self.blocks.is_none()
     }
 }
 
@@ -70,6 +81,7 @@ pub(super) struct Gathered {
     remove: BTreeSet<Uuid>,
     meta: bool,
     cursor: bool,
+    blocks: bool,
 }
 
 /// The whole base at one moment, for rewriting the copy (a compaction).
@@ -78,6 +90,8 @@ pub struct BaseSnapshot {
     /// The server's drawing: its objects in id order, as an opening numbers them.
     pub snapshot: DocumentSnapshotV2,
     pub versions: Vec<(Uuid, String)>,
+    /// Each block definition's version (the definitions are the snapshot's).
+    pub block_versions: Vec<(BlockId, String)>,
     pub meta_version: String,
     pub cursor: String,
 }
@@ -107,6 +121,11 @@ impl ProjectSync {
         self.gathered.cursor = true;
     }
 
+    /// What the server has of the block definitions changed.
+    pub(super) fn gathered_blocks(&mut self) {
+        self.gathered.blocks = true;
+    }
+
     /// What this device came to know of the server since the last call:
     /// append it to the local copy before writing the next device draft.
     pub fn take_base_step(&mut self) -> Option<BaseStep> {
@@ -132,13 +151,22 @@ impl ProjectSync {
                 layers: self.meta_base.layers.clone(),
                 styles: self.meta_base.styles.clone(),
             }),
+            blocks: g.blocks.then(|| {
+                self.known_block_list()
+                    .into_iter()
+                    .map(|(_, version, block)| BaseBlock {
+                        version,
+                        block: (*block).clone(),
+                    })
+                    .collect()
+            }),
         };
         (!step.is_empty()).then_some(step)
     }
 
-    /// The whole base now, for rewriting the local copy: the objects the
-    /// server has at their versions, its metadata, and the cursor. The
-    /// origin, view and this user's active layer are the drawing's.
+    /// The whole base now, for rewriting the local copy: the objects and the
+    /// block definitions the server has at their versions, its metadata, and
+    /// the cursor. The origin, view and this user's active layer are the drawing's.
     pub fn base(&self, doc: &Document) -> BaseSnapshot {
         let mut ids: Vec<&Uuid> = self.known.keys().collect();
         ids.sort();
@@ -154,6 +182,7 @@ impl ProjectSync {
             versions.push((*id, t.version.clone()));
         }
         let active = doc.layers().active().to_owned();
+        let known_blocks = self.known_block_list();
         BaseSnapshot {
             snapshot: DocumentSnapshotV2 {
                 format: DOCUMENT_FORMAT.to_owned(),
@@ -167,12 +196,12 @@ impl ProjectSync {
                 entities,
                 uids,
                 styles: self.meta_base.styles.clone(),
-                // A database project keeps no block definitions yet (docs/adr/0144 §5).
-                blocks: Vec::new(),
+                blocks: known_blocks.iter().map(|(_, _, b)| (**b).clone()).collect(),
                 project_id: Some(ProjectId(self.project.into_bytes())),
                 migrated_from: None,
             },
             versions,
+            block_versions: known_blocks.into_iter().map(|(id, v, _)| (id, v)).collect(),
             meta_version: self.meta_version.clone(),
             cursor: self.cursor.clone(),
         }

@@ -296,6 +296,23 @@ pub enum Event {
         session: u64,
         result: Result<ProjectInfo, ApiFailure>,
     },
+    /// The server's block definitions for a definition's conflict (docs/adr/0144 §5):
+    /// taken with the metadata's info, when that conflicted too.
+    TheirBlocks {
+        session: u64,
+        info: Option<ProjectInfo>,
+        result: Result<Vec<kentos_contracts::BlockRecord>, ApiFailure>,
+    },
+    /// The same, for keeping mine over them.
+    MineBlocks {
+        session: u64,
+        result: Result<Vec<kentos_contracts::BlockRecord>, ApiFailure>,
+    },
+    /// The same, after the server refused to remove a definition still placed there.
+    GiveBackBlocks {
+        session: u64,
+        result: Result<Vec<kentos_contracts::BlockRecord>, ApiFailure>,
+    },
     /// The server's tree after it refused ours (docs/adr/0081).
     ServerTree {
         session: u64,
@@ -601,6 +618,9 @@ impl App {
             | Event::KeepMine
             | Event::TakeTheirs
             | Event::TheirInfo { .. }
+            | Event::TheirBlocks { .. }
+            | Event::MineBlocks { .. }
+            | Event::GiveBackBlocks { .. }
             | Event::ServerTree { .. } => self.follow_event(event),
             Event::FileSaved { .. } | Event::KeptSent { .. } => self.file_event(event),
             Event::FileEvents { .. }

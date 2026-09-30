@@ -12,7 +12,7 @@
 
 use std::future::Future;
 
-use kentos_contracts::{EventPage, FeatureRecord, FileRevisions, ProjectInfo};
+use kentos_contracts::{BlockRecord, Entity, EventPage, FeatureRecord, FileRevisions, ProjectInfo};
 use uuid::Uuid;
 
 use crate::api::Cloud;
@@ -74,9 +74,24 @@ pub fn file_revisions_now(
     run(async move { retrying(|| cloud.file_revisions(tenant, project)).await })
 }
 
+/// The project's block definitions as the server has them now (`GET
+/// …/blocks`, docs/adr/0144 §5), passing failures tried again first: a
+/// definition's conflict is chosen on with them, and a refused removal of
+/// one still placed puts it back from them.
+pub fn blocks_now(
+    cloud: &Cloud,
+    tenant: Uuid,
+    project: Uuid,
+) -> impl Future<Output = Result<Vec<BlockRecord>, ApiFailure>> + Send + 'static {
+    let cloud = cloud.clone();
+    run(async move { Ok(retrying(|| cloud.blocks(tenant, project)).await?.blocks) })
+}
+
 /// What the server has now of what `incoming` names: the objects others
-/// created or changed (the ones it still has) and, when the metadata
-/// changed, the project's info. Passing failures are tried again.
+/// created or changed (the ones it still has), when the metadata changed
+/// the project's info, and its block definitions when the events named some
+/// or an object they bring is an insert (the drawing may lack its block).
+/// Passing failures are tried again.
 pub fn fetch(
     cloud: &Cloud,
     tenant: Uuid,
@@ -86,6 +101,7 @@ pub fn fetch(
     let cloud = cloud.clone();
     let ids = incoming.fetch.clone();
     let meta = incoming.meta;
+    let named = !incoming.blocks.is_empty();
     run(async move {
         let mut records: Vec<FeatureRecord> = Vec::with_capacity(ids.len());
         for part in ids.chunks(FETCH) {
@@ -97,6 +113,15 @@ pub fn fetch(
         } else {
             None
         };
-        Ok(Remote { records, info })
+        let blocks = if named || records.iter().any(|r| matches!(r.entity, Entity::Insert(_))) {
+            Some(retrying(|| cloud.blocks(tenant, project)).await?.blocks)
+        } else {
+            None
+        };
+        Ok(Remote {
+            records,
+            info,
+            blocks,
+        })
     })
 }

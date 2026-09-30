@@ -38,7 +38,7 @@ class _BlocksDefine(LocalCommand[BlocksDefine, BlockDefined, BlocksDefinePlan]):
     komutla yazar; blok cad.entities.create'in insert geometrisiyle yerleştirilir,
     Patlat onu cad.entities.edit ile açar. expectedRevision verilmişse ve çizim o
     sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez;
-    veritabanı projesi blokları henüz saklamaz.
+    bulut projesine değişiklik project.changes ile gider.
     """
     __slots__ = ()
     id = "cad.blocks.define"
@@ -72,8 +72,8 @@ class _BlocksDefine(LocalCommand[BlocksDefine, BlockDefined, BlocksDefinePlan]):
         varsa replace reddedilir. Blok oluştur aracı bu komutla yazar; blok
         cad.entities.create'in insert geometrisiyle yerleştirilir, Patlat onu
         cad.entities.edit ile açar. expectedRevision verilmişse ve çizim o sürümde değilse
-        hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; veritabanı
-        projesi blokları henüz saklamaz.
+        hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine
+        değişiklik project.changes ile gider.
 
         Args:
             doc: The drawing it works on.
@@ -172,8 +172,8 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
     iç içe olabilir. redefine'da replace ile nesneler silinir, yerine tanımın bir
     yerleştirmesi konur. Bir şey değiştirmeyen istek hiçbir şey yazmaz. Bloklar paneli
     bu komutla yazar. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
-    yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; veritabanı projesi blokları
-    henüz saklamaz.
+    yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik
+    project.changes ile gider.
     """
     __slots__ = ()
     id = "cad.blocks.edit"
@@ -208,7 +208,8 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         redefine'da replace ile nesneler silinir, yerine tanımın bir yerleştirmesi konur.
         Bir şey değiştirmeyen istek hiçbir şey yazmaz. Bloklar paneli bu komutla yazar.
         expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-        conflict olur. Yerel çizim izin istemez; veritabanı projesi blokları henüz saklamaz.
+        conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes
+        ile gider.
 
         Args:
             doc: The drawing it works on.

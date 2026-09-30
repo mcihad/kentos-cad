@@ -256,6 +256,33 @@ pub fn placed_blocks<'a, B: Borrow<BlockDefinition>>(
     seen.len()
 }
 
+/// The definitions `changed` and every definition placing one of them,
+/// however deep: what an insert of any of them shows changes with them (a
+/// drawing redrawn after an edit, a server placing inserts anew,
+/// docs/adr/0144 §5).
+pub fn reaching<B: Borrow<BlockDefinition>>(
+    blocks: &[B],
+    changed: &HashSet<BlockId>,
+) -> HashSet<BlockId> {
+    let mut out = changed.clone();
+    loop {
+        let before = out.len();
+        for b in blocks {
+            let b = b.borrow();
+            if !out.contains(&b.id)
+                && b.entities
+                    .iter()
+                    .any(|e| matches!(e, Entity::Insert(i) if out.contains(&i.block)))
+            {
+                out.insert(b.id);
+            }
+        }
+        if out.len() == before {
+            return out;
+        }
+    }
+}
+
 /// A drawing's blocks and its own objects checked whole.
 pub fn check<B: Borrow<BlockDefinition>>(
     blocks: &[B],
@@ -430,6 +457,20 @@ mod tests {
             attributes: Vec::new(),
             description: None,
         }
+    }
+
+    /// C holds B, B holds A, D holds nothing: a change of A reaches B and C, not D.
+    #[test]
+    fn a_change_reaches_every_definition_placing_it() {
+        let blocks = [
+            block(1, "A", &[]),
+            block(2, "B", &[1]),
+            block(3, "C", &[2]),
+            block(4, "D", &[]),
+        ];
+        let reached = reaching(&blocks, &HashSet::from([id(1)]));
+        assert_eq!(reached, HashSet::from([id(1), id(2), id(3)]));
+        assert_eq!(reaching(&blocks, &HashSet::new()), HashSet::new());
     }
 
     #[test]

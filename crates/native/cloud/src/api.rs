@@ -19,7 +19,7 @@ use std::sync::{Arc, RwLock};
 use std::time::Duration;
 
 use kentos_contracts::{
-    ApiError, AuthConfig, CatalogSort, CatalogView, CommandEnvelope, EventPage, FeaturePage,
+    ApiError, AuthConfig, BlockList, CatalogSort, CatalogView, CommandEnvelope, EventPage, FeaturePage,
     FileRevisions, FileUpload, FileUploadBegin, Health, LoginRequest, Me, ProjectAccessList,
     ProjectCheckpoints, ProjectCreate, ProjectDetails, ProjectInfo, ProjectInvitations,
     ProjectPage, ProjectType, ShareCandidates,
@@ -671,6 +671,15 @@ impl Cloud {
                 url
             });
         self.get(url)
+    }
+
+    /// A database project's block definitions with their versions (`GET …/blocks`, docs/adr/0144 §5).
+    pub fn blocks(
+        &self,
+        tenant: Uuid,
+        project: Uuid,
+    ) -> impl Future<Output = Result<BlockList, ApiFailure>> + Send + 'static {
+        self.get(self.inner.project_url(tenant, project, "/blocks"))
     }
 
     /// A product command on the project the envelope names; the answer is the

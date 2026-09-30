@@ -93,16 +93,13 @@ impl Spatial {
         self.sync_layers(doc.layers());
     }
 
-    /// Brings the store up to date with `doc`: the objects touched since the
-    /// last sync and the layer table, when it changed. Nothing is read while
-    /// the document's revision and journal are where they were.
+    /// Brings the store up to date with `doc`: the block definitions and the
+    /// objects touched since the last sync, and the layer table, when they
+    /// changed. No object is read while the document's revision and journal
+    /// are where they were.
     pub fn sync(&mut self, doc: &Document) {
-        let mark = doc.change_mark();
-        if mark == self.mark && self.revision == Some(doc.revision()) {
-            return;
-        }
-        self.store
-            .set_font(drawing_font(doc.settings().drawing_font));
+        // The definitions first, whatever else moved: another editor's change of
+        // them moves neither the journal nor the revision (docs/adr/0144 §5).
         let blocks = doc.blocks();
         if blocks.len() != self.blocks.len()
             || blocks.iter().zip(&self.blocks).any(|(a, b)| !Arc::ptr_eq(a, b))
@@ -110,6 +107,12 @@ impl Spatial {
             self.blocks = blocks.to_vec();
             self.store.set_blocks(core_blocks(&self.blocks));
         }
+        let mark = doc.change_mark();
+        if mark == self.mark && self.revision == Some(doc.revision()) {
+            return;
+        }
+        self.store
+            .set_font(drawing_font(doc.settings().drawing_font));
         match doc.changes_since(self.mark) {
             Changes::All => return self.reload(doc),
             Changes::Slots(slots) => {

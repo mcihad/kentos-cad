@@ -361,12 +361,19 @@ impl App {
     }
 }
 
-/// A conflict's object as a row says it: its kind and layer, its label.
+/// A conflict's object as a row says it: its kind and layer, its label; a
+/// block definition by its name (docs/adr/0144 §5).
 pub(super) fn describe(
     doc: &crate::document::Document,
     id: &str,
     server: Option<&kentos_contracts::Entity>,
 ) -> String {
+    if let Some(block) = kentos_cloud::sync::block_of_key(id) {
+        return match doc.model.block(block) {
+            Some(b) => format!("Blok tanımı · {}", b.name),
+            None => "Blok tanımı".to_owned(),
+        };
+    }
     let here = crate::cloud::uuid(id)
         .and_then(|uid| doc.model.slot_of(uid))
         .and_then(|slot| doc.model.get(slot));

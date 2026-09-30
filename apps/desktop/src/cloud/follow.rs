@@ -15,14 +15,17 @@
 //! (`fetch_arrived`). When the server refuses our tree because a layer it
 //! drops still holds objects, the missed events come in at once
 //! (`catch_up`), then the server's tree, and the layers others drew on are
-//! given back (`give_back_to`).
+//! given back (`give_back_to`). Block definitions (docs/adr/0144 §5): a
+//! definition's conflict is chosen on with the server's list read first, and
+//! a refused removal of one still placed there puts it back from that list
+//! once the missed events are in (`give_back_blocks_with`).
 
 use std::time::Instant;
 
 use iced::Task;
 use kentos_cloud::follow::{self, EVENTS_PAGE};
 use kentos_cloud::{ApiFailure, Incoming, Remote, SaveState, Taken, given_back_text};
-use kentos_contracts::{ConflictReason, EventPage, ProjectInfo};
+use kentos_contracts::{BlockRecord, ConflictReason, EventPage, ProjectInfo};
 
 use crate::app::{App, Dialog, Message, Then};
 use crate::cloud::live::conflict_text;
@@ -135,44 +138,29 @@ impl App {
             Event::Access { session, result } => return self.access(session, result),
             Event::ServerTree { session, result } => return self.server_tree_came(session, result),
             Event::KeepMine => {
+                let client = self.cloud.signed_in().cloned();
                 let Some(live) = self.cloud.live.as_mut() else {
                     return Task::none();
                 };
                 // The user chose: a give-back on its way has nothing left to answer.
                 live.give_back = false;
                 live.giving = None;
-                live.sync.keep_mine();
-                live.send_soon();
-                self.close_conflicts();
-                self.output("Sizin değişiklikleriniz kaydediliyor.");
-                return Task::batch([self.after_server_step(), self.live_tick(Instant::now())]);
-            }
-            Event::TakeTheirs => {
-                let client = self.cloud.signed_in().cloned();
-                let Some(live) = self.cloud.live.as_mut() else {
-                    return Task::none();
-                };
-                live.give_back = false;
-                live.giving = None;
-                let meta = live
-                    .sync
-                    .conflicts()
-                    .iter()
-                    .any(|c| c.reason == ConflictReason::Project);
-                if !meta {
-                    return self.take_theirs(None);
+                live.giving_blocks = None;
+                if !live.sync.conflicts_blocks() {
+                    return self.keep_mine(None);
                 }
-                // The metadata's conflict takes the project's info as it is now.
+                // A definition's conflict goes over the server's definition as it is now.
                 let Some(client) = client else {
-                    self.warn("Bulut oturumu açık değil; sunucudaki proje bilgileri alınamadı. Yeniden giriş yapın.");
+                    self.warn("Bulut oturumu açık değil; sunucudaki blok tanımları alınamadı. Yeniden giriş yapın.");
                     return Task::none();
                 };
                 let session = live.session;
-                return Task::perform(client.project(live.tenant, live.project), move |result| {
-                    crate::cloud::msg(Event::TheirInfo { session, result })
-                });
+                return Task::perform(
+                    follow::blocks_now(&client, live.tenant, live.project),
+                    move |result| crate::cloud::msg(Event::MineBlocks { session, result }),
+                );
             }
-            Event::TheirInfo { session, result } => {
+            Event::MineBlocks { session, result } => {
                 if self
                     .cloud
                     .live
@@ -182,11 +170,129 @@ impl App {
                     return Task::none();
                 }
                 match result {
-                    Ok(info) => return self.take_theirs(Some(info)),
+                    Ok(list) => return self.keep_mine(Some(list)),
+                    Err(failure) => self.warn(format!(
+                        "Sunucudaki blok tanımları alınamadı: {}",
+                        failure.message
+                    )),
+                }
+            }
+            Event::TakeTheirs => {
+                let client = self.cloud.signed_in().cloned();
+                let Some(live) = self.cloud.live.as_mut() else {
+                    return Task::none();
+                };
+                live.give_back = false;
+                live.giving = None;
+                live.giving_blocks = None;
+                let meta = live
+                    .sync
+                    .conflicts()
+                    .iter()
+                    .any(|c| c.reason == ConflictReason::Project);
+                let blocks = live.sync.conflicts_blocks();
+                if !meta && !blocks {
+                    return self.take_theirs(None, None);
+                }
+                // The metadata's conflict takes the project's info as it is now, a
+                // definition's the server's definitions.
+                let Some(client) = client else {
+                    self.warn("Bulut oturumu açık değil; sunucudaki proje bilgileri alınamadı. Yeniden giriş yapın.");
+                    return Task::none();
+                };
+                let session = live.session;
+                if !meta {
+                    return Task::perform(
+                        follow::blocks_now(&client, live.tenant, live.project),
+                        move |result| {
+                            crate::cloud::msg(Event::TheirBlocks {
+                                session,
+                                info: None,
+                                result,
+                            })
+                        },
+                    );
+                }
+                return Task::perform(client.project(live.tenant, live.project), move |result| {
+                    crate::cloud::msg(Event::TheirInfo { session, result })
+                });
+            }
+            Event::TheirInfo { session, result } => {
+                let client = self.cloud.signed_in().cloned();
+                let Some(live) = self.cloud.live.as_ref().filter(|l| l.session == session) else {
+                    return Task::none();
+                };
+                match result {
+                    Ok(info) if live.sync.conflicts_blocks() => {
+                        let Some(client) = client else {
+                            self.warn("Bulut oturumu açık değil; sunucudaki blok tanımları alınamadı. Yeniden giriş yapın.");
+                            return Task::none();
+                        };
+                        return Task::perform(
+                            follow::blocks_now(&client, live.tenant, live.project),
+                            move |result| {
+                                crate::cloud::msg(Event::TheirBlocks {
+                                    session,
+                                    info: Some(info),
+                                    result,
+                                })
+                            },
+                        );
+                    }
+                    Ok(info) => return self.take_theirs(Some(info), None),
                     Err(failure) => self.warn(format!(
                         "Sunucudaki proje bilgileri alınamadı: {}",
                         failure.message
                     )),
+                }
+            }
+            Event::TheirBlocks {
+                session,
+                info,
+                result,
+            } => {
+                if self
+                    .cloud
+                    .live
+                    .as_ref()
+                    .is_none_or(|l| l.session != session)
+                {
+                    return Task::none();
+                }
+                match result {
+                    Ok(list) => return self.take_theirs(info, Some(list)),
+                    Err(failure) => self.warn(format!(
+                        "Sunucudaki blok tanımları alınamadı: {}",
+                        failure.message
+                    )),
+                }
+            }
+            Event::GiveBackBlocks { session, result } => {
+                if self
+                    .cloud
+                    .live
+                    .as_ref()
+                    .is_none_or(|l| l.session != session)
+                {
+                    return Task::none();
+                }
+                match result {
+                    Ok(list) => return self.give_back_blocks_with(list),
+                    Err(failure) => {
+                        let conflict = self
+                            .cloud
+                            .live
+                            .as_ref()
+                            .filter(|l| l.sync.state() == SaveState::Conflict)
+                            .map(|l| conflict_text(&l.sync));
+                        self.warn(format!(
+                            "Blok tanımları sunucudakilerle karşılaştırılamadı: {}",
+                            failure.message
+                        ));
+                        if let Some(text) = conflict {
+                            self.warn(text);
+                        }
+                    }
                 }
             }
             _ => {}
@@ -299,10 +405,15 @@ impl App {
             }
             Ok(taken) => {
                 live.poll_at = Instant::now();
-                // A refused tree waited for these events (docs/adr/0081).
+                // A refused tree, or a refused removal of a block definition, waited
+                // for these events (docs/adr/0081, 0144 §5).
                 let give_back = std::mem::take(&mut live.give_back);
                 let asks = give_back && live.sync.may_give_back(&doc.model);
-                let conflict = (give_back && !asks && live.sync.state() == SaveState::Conflict)
+                let asks_blocks = give_back && live.sync.may_give_back_blocks();
+                let conflict = (give_back
+                    && !asks
+                    && !asks_blocks
+                    && live.sync.state() == SaveState::Conflict)
                     .then(|| conflict_text(&live.sync));
                 self.report(&taken);
                 if let Some(text) = conflict {
@@ -313,12 +424,19 @@ impl App {
                 // server's tree for a refused one, or the objects that waited
                 // for a layer these events brought, or the next wait.
                 let step = self.after_server_step();
+                let blocks = if asks_blocks {
+                    self.server_blocks()
+                } else {
+                    Task::none()
+                };
                 let next = if asks {
                     self.server_tree()
+                } else if asks_blocks {
+                    self.poll()
                 } else {
                     self.fetch_arrived().unwrap_or_else(|| self.poll())
                 };
-                Task::batch([ended, step, next])
+                Task::batch([ended, step, blocks, next])
             }
         }
     }
@@ -340,6 +458,10 @@ impl App {
         for kept in &taken.kept {
             self.warn(kept.text());
         }
+        // Block definitions kept, put back or renamed (docs/adr/0144 §5).
+        for note in &taken.notes {
+            self.warn(note.clone());
+        }
     }
 
     /// What waited for an open edit to end, now that it has.
@@ -354,8 +476,11 @@ impl App {
         if let Some(info) = live.giving.take() {
             return self.give_back_to(info);
         }
-        if let Some(info) = live.theirs.take() {
-            return self.take_theirs(info);
+        if let Some(list) = live.giving_blocks.take() {
+            return self.give_back_blocks_with(list);
+        }
+        if let Some((info, blocks)) = live.theirs.take() {
+            return self.take_theirs(info, blocks);
         }
         match live.taking.take() {
             Some((incoming, remote, full)) => self.take(incoming, remote, full),
@@ -363,31 +488,100 @@ impl App {
         }
     }
 
-    /// The server's copies of the conflicts (`info`: the metadata's, when it conflicted).
-    fn take_theirs(&mut self, info: Option<ProjectInfo>) -> Task<Message> {
+    /// Keeps this drawing's copies of the conflicts (`blocks`: the server's
+    /// block definitions, read for a definition's conflict).
+    fn keep_mine(&mut self, blocks: Option<Vec<BlockRecord>>) -> Task<Message> {
+        let (Some(live), Some(doc)) = (self.cloud.live.as_mut(), self.document.as_ref()) else {
+            return Task::none();
+        };
+        live.sync.keep_mine(&doc.model, blocks.as_deref());
+        live.send_soon();
+        self.close_conflicts();
+        self.output("Sizin değişiklikleriniz kaydediliyor.");
+        Task::batch([self.after_server_step(), self.live_tick(Instant::now())])
+    }
+
+    /// The server's copies of the conflicts (`info`: the metadata's, when it
+    /// conflicted; `blocks`: the block definitions, when one conflicted).
+    fn take_theirs(&mut self, info: Option<ProjectInfo>, blocks: Option<Vec<BlockRecord>>) -> Task<Message> {
         let (Some(live), Some(doc)) = (self.cloud.live.as_mut(), self.document.as_mut()) else {
             return Task::none();
         };
-        match live.sync.take_theirs(&mut doc.model, info.as_ref()) {
+        match live.sync.take_theirs(&mut doc.model, info.as_ref(), blocks.as_deref()) {
             Err(_) => {
-                live.theirs = Some(info);
+                live.theirs = Some((info, blocks));
                 Task::none()
             }
-            Ok(kept) => {
+            Ok(taken) => {
                 if live.sync.all_sent() {
                     let revision = doc.model.revision();
                     doc.model.mark_saved(revision);
                 }
                 self.close_conflicts();
                 self.output("Sunucudaki hâller alındı.");
-                for layer in &kept {
+                for layer in &taken.kept {
                     self.warn(layer.text());
+                }
+                for note in &taken.notes {
+                    self.warn(note.clone());
                 }
                 // The server's tree may bring the layer objects waited for.
                 let arrived = self.fetch_arrived().unwrap_or_else(Task::none);
                 Task::batch([self.after_server_step(), arrived])
             }
         }
+    }
+
+    /// The missed events are in after a refused removal of a block definition
+    /// still placed there: the server's definitions now (docs/adr/0144 §5).
+    fn server_blocks(&mut self) -> Task<Message> {
+        let client = self.cloud.signed_in().cloned();
+        let Some(live) = self.cloud.live.as_ref() else {
+            return Task::none();
+        };
+        let Some(client) = client else {
+            let text = conflict_text(&live.sync);
+            self.warn(text);
+            return Task::none();
+        };
+        let session = live.session;
+        Task::perform(
+            follow::blocks_now(&client, live.tenant, live.project),
+            move |result| crate::cloud::msg(Event::GiveBackBlocks { session, result }),
+        )
+    }
+
+    /// The definitions whose removal the server refused come back from its
+    /// list (`ProjectSync::give_back_blocks`), each said once; what is left
+    /// goes at once when nothing else refused, otherwise the conflict is said.
+    fn give_back_blocks_with(&mut self, list: Vec<BlockRecord>) -> Task<Message> {
+        let (Some(live), Some(doc)) = (self.cloud.live.as_mut(), self.document.as_mut()) else {
+            return Task::none();
+        };
+        let notes = match live.sync.give_back_blocks(&mut doc.model, &list) {
+            Ok(notes) => notes,
+            Err(why) if doc.model.is_busy() => {
+                // An edit is open: once it ends.
+                let _ = why;
+                live.giving_blocks = Some(list);
+                return Task::none();
+            }
+            Err(why) => vec![why],
+        };
+        let conflict =
+            (live.sync.state() == SaveState::Conflict).then(|| conflict_text(&live.sync));
+        if conflict.is_none() {
+            live.send_soon();
+        }
+        for note in notes {
+            self.warn(note);
+        }
+        if let Some(text) = conflict {
+            self.warn(text);
+        }
+        let step = self.after_server_step();
+        let send = self.live_tick(Instant::now());
+        Task::batch([step, send])
     }
 
     /// The missed events are in after a refused tree: the server's tree now

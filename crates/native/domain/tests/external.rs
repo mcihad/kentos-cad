@@ -67,7 +67,7 @@ fn another_editors_objects_come_in_without_an_undo_step_or_an_unsaved_mark() {
     doc.apply_external(External {
         put: vec![(uid, point("a", 10.0)), (fresh, point("b", 20.0))],
         remove: vec![Uuid::now_v7()],
-        meta: None,
+        ..External::default()
     })
     .unwrap();
     // The known object keeps its slot; the new one takes the next slot.
@@ -154,7 +154,7 @@ fn a_bad_change_or_an_open_edit_changes_nothing() {
     let twice = External {
         put: vec![(uid, point("a", 9.0))],
         remove: vec![uid],
-        meta: None,
+        ..External::default()
     };
     assert!(doc.apply_external(twice).unwrap_err().contains("iki kez"));
     let nil = External {
@@ -315,4 +315,86 @@ fn another_editors_object_on_an_added_layer_drops_its_step() {
     assert_eq!(doc.undo().as_deref(), Some("Katman ekle"));
     assert_eq!(tops(&doc), ["g", "c", "iki"]);
     assert!(!doc.can_undo());
+}
+
+/// A definition whose id ends in `n`, with a line and inserts of the blocks `inside`.
+fn block(n: u8, name: &str, inside: &[u8]) -> kentos_domain::contracts::BlockDefinition {
+    let id = |n: u8| format!("00000000-0000-7000-8000-00000000b{n:03x}");
+    let mut entities = vec![serde_json::json!({ "kind": "line", "id": 1, "layerId": "", "attrs": {},
+        "a": { "x": 0, "y": 0 }, "b": { "x": 1, "y": 0 } })];
+    for (k, b) in inside.iter().enumerate() {
+        entities.push(serde_json::json!({ "kind": "insert", "id": k + 2, "layerId": "", "attrs": {},
+            "block": id(*b), "p": { "x": 0, "y": 0 }, "scale": 1, "rotation": 0 }));
+    }
+    serde_json::from_value(serde_json::json!({ "id": id(n), "name": name, "base": { "x": 0, "y": 0 }, "entities": entities }))
+        .expect("a definition")
+}
+
+fn blocks_only(list: Vec<kentos_domain::contracts::BlockDefinition>) -> External {
+    External {
+        blocks: Some(list),
+        ..External::default()
+    }
+}
+
+#[test]
+fn block_definitions_come_in_quietly_and_an_unchanged_one_keeps_its_object() {
+    let (mut doc, _, _) = saved_two();
+    let a = block(1, "A", &[]);
+    doc.add_block(a.clone()).unwrap();
+    let revision = doc.revision();
+    doc.mark_saved(revision);
+    let kept = doc.blocks()[0].clone();
+    let generation = doc.generation();
+    doc.apply_external(blocks_only(vec![a.clone(), block(2, "B", &[1])]))
+        .unwrap();
+    let names: Vec<&str> = doc.blocks().iter().map(|b| b.name.as_str()).collect();
+    assert_eq!(names, ["A", "B"]);
+    assert!(std::sync::Arc::ptr_eq(&doc.blocks()[0], &kept), "A kept its object");
+    assert!(!doc.is_dirty() && doc.revision() == revision);
+    assert!(doc.generation() > generation, "what the drawing shows changed");
+    // A did not change: the step that made it stays.
+    assert_eq!(doc.undo().as_deref(), Some("Blok tanımla"));
+}
+
+#[test]
+fn steps_that_changed_a_definition_someone_else_changed_or_place_a_gone_one_go() {
+    let (mut doc, _, _) = saved_two();
+    doc.add_block(block(1, "A", &[])).unwrap();
+    doc.add_block(block(2, "B", &[])).unwrap();
+    let insert: Entity = serde_json::from_value(serde_json::json!({ "kind": "insert", "id": 0, "layerId": "a",
+        "attrs": {}, "block": "00000000-0000-7000-8000-00000000b002", "p": { "x": 5, "y": 5 }, "scale": 1, "rotation": 0 }))
+    .unwrap();
+    let placed = doc.add(insert).unwrap();
+    doc.remove(&[placed]);
+    let renamed = kentos_domain::contracts::BlockDefinition {
+        name: "A2".into(),
+        ..block(1, "A", &[])
+    };
+    assert!(doc.update_block(renamed).unwrap());
+    // Someone else renamed A and removed B: every one of these steps touched one of them.
+    let theirs = kentos_domain::contracts::BlockDefinition {
+        name: "A3".into(),
+        ..block(1, "A", &[])
+    };
+    doc.apply_external(blocks_only(vec![theirs])).unwrap();
+    let mut left = Vec::new();
+    while let Some(step) = doc.undo() {
+        left.push(step);
+    }
+    assert_eq!(left, ["Ekle", "Ekle"], "only the two points' steps are left");
+    assert_eq!(doc.blocks().len(), 1);
+    assert_eq!(doc.blocks()[0].name, "A3");
+}
+
+#[test]
+fn a_list_that_breaks_a_block_rule_changes_nothing() {
+    let (mut doc, _, _) = saved_two();
+    doc.add_block(block(1, "A", &[])).unwrap();
+    let twice = doc.apply_external(blocks_only(vec![block(1, "X", &[]), block(3, "x", &[])]));
+    assert!(twice.unwrap_err().contains("“X” adında bir blok var"));
+    let unknown = doc.apply_external(blocks_only(vec![block(4, "D", &[5])]));
+    assert!(unknown.unwrap_err().contains("tanımlı değil"));
+    assert_eq!(doc.blocks()[0].name, "A");
+    assert_eq!(doc.undo().as_deref(), Some("Blok tanımla"));
 }

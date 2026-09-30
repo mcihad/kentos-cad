@@ -21,16 +21,18 @@
 //! Other editors' commits come in through remote.rs. What is not sent yet,
 //! and the command on its way, go to a device draft (draft.rs, drafts.rs)
 //! that a new opening puts back, so a crash loses nothing and a command
-//! whose answer was lost is still answered once.
+//! whose answer was lost is still answered once. Block definitions go with
+//! the objects (blocks.rs, docs/adr/0144 §5).
 
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::time::Duration;
 
 use kentos_contracts::{
-    CommandEnvelope, CommitResult, ConflictReason, Entity, FeatureChange, FeatureRecord, LayerNode,
-    PROJECT_CHANGES, PROJECT_CHANGES_VERSION, ProjectChanges, ProjectPatch, ProjectSettings,
-    ProjectStyles,
+    BlockId, BlockRecord, CommandEnvelope, CommitResult, ConflictReason, Entity, FeatureChange,
+    FeatureRecord, LayerNode, PROJECT_CHANGES, PROJECT_CHANGES_VERSION, ProjectChanges,
+    ProjectPatch, ProjectSettings, ProjectStyles,
 };
+use std::sync::Arc;
 use kentos_domain::{ChangeMark, Changes, Document, Slot};
 use uuid::Uuid;
 
@@ -191,6 +193,7 @@ impl Meta {
 struct Inflight {
     envelope: CommandEnvelope,
     planned: Vec<Planned>,
+    blocks: Vec<PlannedBlock>,
     meta: Option<Meta>,
 }
 
@@ -223,6 +226,12 @@ pub struct ProjectSync {
     tenant: Uuid,
     project: Uuid,
     known: HashMap<Uuid, Tracked>,
+    /// What the server has of the block definitions (blocks.rs).
+    known_blocks: HashMap<BlockId, TrackedBlock>,
+    /// How many definition changes wait, as the last look found them (`observe`).
+    pending_blocks: usize,
+    /// Definition changes from a device draft the drawing could not take: kept in the next draft, unsent, as `held`.
+    held_blocks: BTreeMap<BlockId, DraftBlock>,
     /// Objects that may differ from the server, in id order (batches are the same every time).
     dirty: BTreeSet<Uuid>,
     /// The persistent id each slot held when last seen.
@@ -258,7 +267,7 @@ pub struct ProjectSync {
 impl ProjectSync {
     /// The autosave of a database project just opened; `None` for a file project.
     pub fn new(opened: &Opened) -> Option<Self> {
-        let Source::Database { versions } = &opened.source else {
+        let Source::Database { versions, blocks } = &opened.source else {
             return None;
         };
         let doc = &opened.document;
@@ -285,10 +294,13 @@ impl ProjectSync {
         } else {
             SaveState::ReadOnly
         };
-        Some(Self {
+        let mut sync = Self {
             tenant: opened.tenant,
             project: opened.project,
             known,
+            known_blocks: HashMap::new(),
+            pending_blocks: 0,
+            held_blocks: BTreeMap::new(),
             dirty: BTreeSet::new(),
             slots,
             mark: doc.change_mark(),
@@ -307,7 +319,11 @@ impl ProjectSync {
             gathered: base::Gathered::default(),
             waiting: BTreeMap::new(),
             tries: 0,
-        })
+        };
+        sync.opened_blocks(doc, blocks);
+        // What the opening read is known already: not a step for the local copy.
+        sync.gathered = base::Gathered::default();
+        Some(sync)
     }
 
     pub fn state(&self) -> SaveState {
@@ -343,9 +359,14 @@ impl ProjectSync {
         self.meta_dirty && !self.can_edit_meta
     }
 
-    /// Objects (and the metadata) waiting to be sent.
+    /// The server's version of a block definition as last seen (tests, diagnostics).
+    pub fn block_version_of(&self, id: BlockId) -> Option<&str> {
+        self.known_blocks.get(&id).map(|t| t.version.as_str())
+    }
+
+    /// Objects, block definitions (as the last look found them) and the metadata waiting to be sent.
     pub fn pending(&self) -> usize {
-        self.dirty.len() + usize::from(self.sends_meta())
+        self.dirty.len() + self.pending_blocks + usize::from(self.sends_meta())
     }
 
     /// Whether sending can go on: a writer's project that has not ended, with no conflict open.
@@ -398,6 +419,7 @@ impl ProjectSync {
         }
         self.mark = doc.change_mark();
         self.meta_dirty = self.meta_base.patch(doc).is_some();
+        self.pending_blocks = self.plan_blocks(doc).len();
         if !self.can_write {
             if !self.state.ended() {
                 self.state = SaveState::ReadOnly;
@@ -456,7 +478,7 @@ impl ProjectSync {
 
     /// Whether the object has changes here the server does not have: not sent
     /// yet, or in the command on its way.
-    fn busy_locally(&self, doc: &Document, id: Uuid) -> bool {
+    pub(super) fn busy_locally(&self, doc: &Document, id: Uuid) -> bool {
         self.plan(doc, id).is_some()
             || self
                 .inflight
@@ -490,14 +512,19 @@ impl ProjectSync {
             .as_ref()
             .and_then(|patch| patch.layers.as_deref())
             .map_or_else(BTreeSet::new, |tree| self.leaving(doc, tree));
+        // Block definitions: made and changed ones first, inner before outer, in
+        // commands of at most BATCH changes; removed ones once every object goes.
+        let (upserts, deletes) = self.ordered_blocks(doc, self.plan_blocks(doc));
+        let mut blocks: Vec<PlannedBlock> = upserts.iter().take(BATCH).cloned().collect();
         let order = leaving
             .iter()
             .chain(self.dirty.iter().filter(|id| !leaving.contains(id)));
         let mut planned = Vec::new();
         let mut settled = Vec::new();
         let mut seen = 0;
+        let waiting = self.dirty.len().max(leaving.len());
         for &id in order {
-            if planned.len() >= BATCH {
+            if planned.len() + blocks.len() >= BATCH {
                 break;
             }
             seen += 1;
@@ -509,8 +536,12 @@ impl ProjectSync {
         for id in settled {
             self.dirty.remove(&id);
         }
+        if seen >= waiting && blocks.len() == upserts.len() {
+            let room = BATCH.saturating_sub(planned.len() + blocks.len());
+            blocks.extend(deletes.into_iter().take(room));
+        }
         let patch = if seen < leaving.len() { None } else { full };
-        if planned.is_empty() && patch.is_none() {
+        if planned.is_empty() && blocks.is_empty() && patch.is_none() {
             if self.state != SaveState::ReadOnly {
                 self.state = SaveState::Saved;
             }
@@ -528,11 +559,16 @@ impl ProjectSync {
                 Planned::Create { .. } => {}
             }
         }
+        for b in &blocks {
+            if let Some(v) = b.expected() {
+                expected.insert(block_key(b.id()), v.to_owned());
+            }
+        }
         if patch.is_some() {
             expected.insert(PROJECT_KEY.to_string(), self.meta_version.clone());
         }
         let input = ProjectChanges {
-            blocks: Vec::new(),
+            blocks: blocks.iter().map(PlannedBlock::change).collect(),
             features: planned.iter().map(Planned::change).collect(),
             project: patch.clone(),
         };
@@ -549,6 +585,7 @@ impl ProjectSync {
         self.inflight = Some(Inflight {
             envelope: envelope.clone(),
             planned,
+            blocks,
             meta: patch.map(|_| Meta::of(doc)),
         });
         self.state = SaveState::Saving;
@@ -591,6 +628,27 @@ impl ProjectSync {
                 self.dirty.remove(&id);
             }
         }
+        for b in &f.blocks {
+            let id = b.id();
+            match b {
+                PlannedBlock::Delete { .. } => self.forget_block(id),
+                PlannedBlock::Create { block } | PlannedBlock::Update { block, .. } => {
+                    match result.versions.get(&block_key(id)) {
+                        Some(version) => self.know_block(
+                            id,
+                            TrackedBlock {
+                                version: version.clone(),
+                                block: block.clone(),
+                            },
+                        ),
+                        None => self.forget_block(id),
+                    }
+                }
+            }
+            // A change of it sent from here replaces one an earlier draft could not put in.
+            self.held_blocks.remove(&id);
+        }
+        self.pending_blocks = self.plan_blocks(doc).len();
         if let Some(meta) = f.meta {
             self.meta_version = result.meta_version.clone();
             self.meta_base = meta;
@@ -660,12 +718,34 @@ impl ProjectSync {
     /// Ends the conflicts by keeping this drawing's copies: each goes over the
     /// server's version now, or is created again under its id when the server
     /// no longer has it; the metadata goes over the server's metadata version.
-    pub fn keep_mine(&mut self) {
+    /// A block definition's conflict carries no server copy: `blocks` is the
+    /// server's list read for it (`GET …/blocks`); without it such a conflict
+    /// stays, for the next try.
+    pub fn keep_mine(&mut self, doc: &Document, blocks: Option<&[BlockRecord]>) {
+        let mut left = Vec::new();
         for c in std::mem::take(&mut self.conflicts) {
             if c.reason == ConflictReason::Project {
                 if let Some(v) = c.actual {
                     self.meta_version = v;
                     self.meta_known();
+                }
+                continue;
+            }
+            if let Some(id) = block_of_key(&c.id) {
+                let Some(list) = blocks else {
+                    left.push(c);
+                    continue;
+                };
+                // Mine goes over the server's version as it is now, or is made again.
+                match list.iter().find(|r| r.block.id == id) {
+                    Some(r) => self.know_block(
+                        id,
+                        TrackedBlock {
+                            version: r.version.clone(),
+                            block: Arc::new(r.block.clone()),
+                        },
+                    ),
+                    None => self.forget_block(id),
                 }
                 continue;
             }
@@ -684,11 +764,20 @@ impl ProjectSync {
             }
             self.dirty.insert(id);
         }
-        self.state = if self.can_write {
+        self.conflicts = left;
+        self.pending_blocks = self.plan_blocks(doc).len();
+        self.state = if !self.conflicts.is_empty() {
+            SaveState::Conflict
+        } else if self.can_write {
             SaveState::Pending
         } else {
             SaveState::ReadOnly
         };
+    }
+
+    /// Whether a block definition is among the conflicts: choosing needs the server's list first.
+    pub fn conflicts_blocks(&self) -> bool {
+        self.conflicts.iter().any(|c| block_of_key(&c.id).is_some())
     }
 
     /// The server's answer to what this account may do in the project now
@@ -710,12 +799,18 @@ impl ProjectSync {
 }
 
 mod base;
+mod blocks;
 mod draft;
 mod remote;
 #[cfg(test)]
+mod block_tests;
+#[cfg(test)]
 mod tests;
 
+use blocks::{PlannedBlock, TrackedBlock, block_key};
+pub use blocks::{block_of_key, kept_block_text, renamed_block_text, restored_block_text, unmerged_text};
+
 pub(crate) use base::objects_by_id;
-pub use base::{BaseMeta, BaseObject, BaseSnapshot, BaseStep};
-pub use draft::{DRAFT_VERSION, Draft, DraftChange, DraftMeta, Restored};
+pub use base::{BaseBlock, BaseMeta, BaseObject, BaseSnapshot, BaseStep};
+pub use draft::{DRAFT_VERSION, Draft, DraftBlock, DraftChange, DraftMeta, Restored};
 pub use remote::{GivenBack, Incoming, KeptLayer, Remote, Taken, given_back_text};

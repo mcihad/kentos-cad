@@ -545,6 +545,10 @@ impl App {
                     for name in &restored.given_back {
                         said.push((true, given_back_text(name)));
                     }
+                    // A block definition that gave way to a name, a removal left out (docs/adr/0144 §5).
+                    for note in restored.notes {
+                        said.push((true, note));
+                    }
                     if restored.conflicts > 0 {
                         said.push((true, format!(
                             "Taslaktaki {} değişikliğin dayandığı sürümü sunucuda başkası değiştirmiş: kayıt çakışması. Durum çubuğundaki Çakışma'ya tıklayıp seçin.",

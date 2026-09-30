@@ -22,7 +22,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
 
-use kentos_contracts::{Entity, LayerNode, LayerNodeType, LayerStyle};
+use kentos_contracts::{BlockDefinition, BlockId, Entity, LayerNode, LayerNodeType, LayerStyle};
 use kentos_domain::{ChangeMark, Changes, Slot, SlotMap};
 use kentos_geometry_core::store::Store;
 use kentos_native_style::StylePalette;
@@ -95,9 +95,25 @@ pub struct StyledCache {
     /// Each object's layer and part when last built, for objects since
     /// removed or moved; the layer's id shared, not copied per object.
     slot_part: SlotMap<(Arc<str>, u64)>,
+    /// The block definitions when last built: the document keeps an unchanged
+    /// definition's `Arc`, so a changed one is found by pointer.
+    blocks: Vec<Arc<BlockDefinition>>,
     scene: StyledScene,
     /// What the last rebuild cost, and how many layer parts it built.
     pub last_build: Option<(Duration, usize)>,
+}
+
+/// The definitions made, changed or removed between two lists of the
+/// document's (an unchanged definition keeps its `Arc`).
+fn changed_blocks(before: &[Arc<BlockDefinition>], after: &[Arc<BlockDefinition>]) -> HashSet<BlockId> {
+    let was: HashMap<BlockId, &Arc<BlockDefinition>> = before.iter().map(|b| (b.id, b)).collect();
+    let now: HashSet<BlockId> = after.iter().map(|b| b.id).collect();
+    after
+        .iter()
+        .filter(|b| !was.get(&b.id).is_some_and(|w| Arc::ptr_eq(w, b)))
+        .map(|b| b.id)
+        .chain(before.iter().map(|b| b.id).filter(|id| !now.contains(id)))
+        .collect()
 }
 
 /// Is `e` an infinite line or a ray (clipped to a box around the view)?
@@ -217,6 +233,24 @@ impl StyledCache {
                     }
                 }
             }
+        }
+        // A definition changed (an edit, an undo, another editor's; docs/adr/0144): the
+        // parts holding an insert of it, or of one placing it, are built again.
+        let changed = changed_blocks(&self.blocks, doc.blocks());
+        if !all && !changed.is_empty() {
+            let reached = kentos_contracts::blocks::reaching(doc.blocks(), &changed);
+            for e in doc.entities() {
+                if let Entity::Insert(i) = e
+                    && reached.contains(&i.block)
+                    && self.layers.contains_key(e.base().layer_id.as_str())
+                    && let Some(place) = doc.place(Slot(e.base().id))
+                {
+                    dirty_part(&mut dirty, &e.base().layer_id, place / PART_PLACES);
+                }
+            }
+        }
+        if !changed.is_empty() {
+            self.blocks = doc.blocks().to_vec();
         }
         let clip = match self.clip {
             Some(c) if !clip_stale(view, &c) => c,

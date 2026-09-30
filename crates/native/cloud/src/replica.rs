@@ -9,9 +9,9 @@
 //! - `bilgi.json`: the project as it was last listed (name, workspace, role,
 //!   state, storage), replaced whole; the offline catalog reads only these.
 //! - `taban-<n>.kcad` and `taban-<n>.json`: the server's drawing at one
-//!   moment (KCAD v2, every object under its persistent id) with each
-//!   object's version, the metadata version, the event cursor and, for a
-//!   file project, the revision it is.
+//!   moment (KCAD v2, every object under its persistent id, the block
+//!   definitions) with each object's and definition's version, the metadata
+//!   version, the event cursor and, for a file project, the revision it is.
 //! - `taban-<n>.log` (database projects): what came to be known after that
 //!   moment, one [`BaseStep`] per line, each flushed to the disk as it is
 //!   added (`ProjectSync::take_base_step`). A line cut short by a crash is
@@ -36,8 +36,8 @@ use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use kentos_contracts::{
-    DOCUMENT_FORMAT, DOCUMENT_VERSION_2, DocumentSnapshotV2, EntityId, ProjectId, ProjectInfo,
-    ProjectStorage,
+    BlockId, DOCUMENT_FORMAT, DOCUMENT_VERSION_2, DocumentSnapshotV2, EntityId, ProjectId,
+    ProjectInfo, ProjectStorage,
 };
 use kentos_domain::Document;
 use serde::{Deserialize, Serialize};
@@ -92,6 +92,9 @@ struct Head {
     storage: ProjectStorage,
     /// Each object's version (database projects).
     versions: BTreeMap<String, String>,
+    /// Each block definition's version (database projects; none in a copy written before them).
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    blocks: BTreeMap<String, String>,
     meta_version: String,
     cursor: String,
     /// The revision it is (file projects).
@@ -360,9 +363,9 @@ impl Replica {
     /// call it before a device draft goes back in, so the copy is the
     /// server's drawing, not this device's unsent work.
     pub fn reset(&mut self, opened: &Opened) -> Result<(), ReplicaError> {
-        let (versions, revision) = match &opened.source {
-            Source::Database { versions } => (versions.clone(), None),
-            Source::File { revision } => (Vec::new(), revision.clone()),
+        let (versions, blocks, revision) = match &opened.source {
+            Source::Database { versions, blocks } => (versions.clone(), blocks.clone(), None),
+            Source::File { revision } => (Vec::new(), Vec::new(), revision.clone()),
         };
         self.list_as(&opened.info)?;
         self.write_generation(
@@ -372,6 +375,10 @@ impl Replica {
                 version: VERSION,
                 storage: opened.info.storage,
                 versions: versions
+                    .into_iter()
+                    .map(|(id, v)| (id.to_string(), v))
+                    .collect(),
+                blocks: blocks
                     .into_iter()
                     .map(|(id, v)| (id.to_string(), v))
                     .collect(),
@@ -393,6 +400,11 @@ impl Replica {
                 storage: ProjectStorage::Database,
                 versions: base
                     .versions
+                    .iter()
+                    .map(|(id, v)| (id.to_string(), v.clone()))
+                    .collect(),
+                blocks: base
+                    .block_versions
                     .iter()
                     .map(|(id, v)| (id.to_string(), v.clone()))
                     .collect(),
@@ -515,6 +527,13 @@ impl Replica {
                         snapshot.layers = m.layers;
                         snapshot.styles = m.styles;
                     }
+                    if let Some(list) = step.blocks {
+                        head.blocks = list
+                            .iter()
+                            .map(|b| (b.block.id.to_string(), b.version.clone()))
+                            .collect();
+                        snapshot.blocks = list.into_iter().map(|b| b.block).collect();
+                    }
                 }
                 let mut versions = Vec::with_capacity(objects.len());
                 snapshot.entities.clear();
@@ -525,7 +544,16 @@ impl Replica {
                     snapshot.uids.push(EntityId(id.into_bytes()));
                     versions.push((id, version));
                 }
-                Source::Database { versions }
+                let blocks: Vec<(BlockId, String)> = head
+                    .blocks
+                    .iter()
+                    .filter_map(|(id, v)| {
+                        Uuid::parse_str(id)
+                            .ok()
+                            .map(|id| (BlockId(id.into_bytes()), v.clone()))
+                    })
+                    .collect();
+                Source::Database { versions, blocks }
             }
         };
         snapshot.format = DOCUMENT_FORMAT.to_owned();

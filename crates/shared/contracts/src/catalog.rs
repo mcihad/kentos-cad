@@ -1488,7 +1488,7 @@ pub fn catalog() -> CommandCatalog {
                       replace ile nesneler silinir, yerine yeni bloğun taban noktasına, layerId katmanına bir yerleştirmesi konur (ölçek 1, dönüş yok); kilitli katmandaki nesne tanıma girer ama silinmez, böyle bir nesne varsa replace reddedilir. \
                       Blok oluştur aracı bu komutla yazar; blok cad.entities.create'in insert geometrisiyle yerleştirilir, Patlat onu cad.entities.edit ile açar. \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
-                      Yerel çizim izin istemez; veritabanı projesi blokları henüz saklamaz."
+                      Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider."
                 .into(),
             aliases: vec![],
             effect: CommandEffect::Document,
@@ -1542,7 +1542,7 @@ pub fn catalog() -> CommandCatalog {
                       Tanım değişince bütün yerleştirmeleri yenisini gösterir. Çizimde ya da başka bir tanımda yerleştirmesi olan tanım silinmez; tanım kendini içeremez, en çok 16 düzey iç içe olabilir. \
                       redefine'da replace ile nesneler silinir, yerine tanımın bir yerleştirmesi konur. Bir şey değiştirmeyen istek hiçbir şey yazmaz. \
                       Bloklar paneli bu komutla yazar. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
-                      Yerel çizim izin istemez; veritabanı projesi blokları henüz saklamaz."
+                      Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider."
                 .into(),
             aliases: vec![],
             effect: CommandEffect::Document,

@@ -22,21 +22,27 @@
 //!   draft, unsent, and the user is told;
 //! - a layer the draft's tree drops that still holds the server's objects
 //!   (someone drew on it before the removal went) stays, and the user is
-//!   told (the web's `restoreDraft`, 36d87de; docs/adr/0081).
+//!   told (the web's `restoreDraft`, 36d87de; docs/adr/0081);
+//! - block definitions (docs/adr/0144 §5) the same way: made and changed
+//!   ones go in inner first, before the objects that may place them, a name
+//!   someone else took meanwhile giving way (“Kapı (2)”); a removal is left
+//!   out while the drawing's objects or definitions still place it; one the
+//!   list cannot take stays in the next draft, unsent.
 
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use kentos_contracts::{
-    CommandEnvelope, ConflictReason, Entity, FeatureChange, FeatureRecord, ProjectChanges,
-    ProjectPatch,
+    BlockChange, BlockDefinition, BlockId, CommandEnvelope, ConflictReason, Entity, FeatureChange,
+    FeatureRecord, ProjectChanges, ProjectPatch,
 };
 use kentos_domain::{Document, External, ExternalMeta, Slot};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use super::blocks::{block_key, renamed_block_text, takes};
 use super::remote::{is_layer, tree_ids, with_nodes_from};
-use super::{Conflict, Inflight, Meta, PROJECT_KEY, Planned, ProjectSync, SaveState};
+use super::{Conflict, Inflight, Meta, PROJECT_KEY, Planned, PlannedBlock, ProjectSync, SaveState};
 
 /// The draft format this code writes (the web's `DRAFT_VERSION`).
 pub const DRAFT_VERSION: u32 = 2;
@@ -47,6 +53,14 @@ pub const DRAFT_VERSION: u32 = 2;
 pub struct DraftChange {
     pub base: Option<String>,
     pub entity: Option<Entity>,
+}
+
+/// One block definition's unsent state: what it should become (`None`:
+/// removed) and the server version it was based on (`None`: the server does not have it).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct DraftBlock {
+    pub base: Option<String>,
+    pub block: Option<BlockDefinition>,
 }
 
 /// Unsent metadata: the patch and the metadata version it was based on.
@@ -65,6 +79,9 @@ pub struct Draft {
     pub user_id: String,
     /// By the object's persistent id, lowercase with hyphens.
     pub changes: BTreeMap<String, DraftChange>,
+    /// By the block definition's id; none when no definition waits.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub blocks: BTreeMap<String, DraftBlock>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub meta: Option<DraftMeta>,
     /// The command on its way: sent again with its key when the draft comes back.
@@ -85,6 +102,8 @@ pub struct Restored {
     pub resends: bool,
     /// Changes kept aside, unsent (the drawing could not take them), with the reason, in Turkish.
     pub held: Vec<String>,
+    /// What else the user hears (a block definition that gave way to a name, a removal left out).
+    pub notes: Vec<String>,
     /// Layers the draft's tree drops that stay for the server's objects on
     /// them, by name (said with `given_back_text`).
     pub given_back: Vec<String>,
@@ -94,6 +113,23 @@ fn now_ms() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map_or(0, |d| u64::try_from(d.as_millis()).unwrap_or(u64::MAX))
+}
+
+/// A definition change a command was planned from, read back from its envelope.
+fn planned_block_of(change: &BlockChange, expected: &BTreeMap<String, String>) -> Option<PlannedBlock> {
+    Some(match change {
+        BlockChange::Create { block } => PlannedBlock::Create {
+            block: std::sync::Arc::new(block.clone()),
+        },
+        BlockChange::Update { block } => PlannedBlock::Update {
+            block: std::sync::Arc::new(block.clone()),
+            expected: expected.get(&block_key(block.id))?.clone(),
+        },
+        BlockChange::Delete { id } => PlannedBlock::Delete {
+            id: *id,
+            expected: expected.get(&block_key(*id))?.clone(),
+        },
+    })
 }
 
 /// The work a command was planned from, read back from its envelope.
@@ -131,6 +167,154 @@ impl Meta {
 }
 
 impl ProjectSync {
+    /// A draft's block definition changes as the list the drawing takes (none:
+    /// it keeps its own), the conflicts of those the server moved past, and
+    /// what could not go in, held for the next draft (see the module comment).
+    /// `change`: the draft's objects, which the removals are counted after.
+    fn restore_blocks(
+        &mut self,
+        doc: &Document,
+        changes: &BTreeMap<String, DraftBlock>,
+        carried: &HashSet<BlockId>,
+        change: &External,
+        conflicts: &mut Vec<Conflict>,
+        restored: &mut Restored,
+    ) -> Option<Vec<BlockDefinition>> {
+        let mut upserts: Vec<(BlockId, DraftBlock)> = Vec::new();
+        let mut removals: Vec<BlockId> = Vec::new();
+        for (key, c) in changes {
+            let Some(id) = Uuid::parse_str(key).ok().map(|u| BlockId(u.into_bytes())) else {
+                restored.held.push(format!("{key}: bir blok kimliği değil; değişiklik atlandı"));
+                continue;
+            };
+            // Changed in this opening already: the newer change wins.
+            if self.block_differs(doc, id) {
+                continue;
+            }
+            let server = self.known_blocks.get(&id).map(|t| t.version.clone());
+            if c.block.is_none() && server.is_none() && doc.block(id).is_none() {
+                continue;
+            }
+            if !carried.contains(&id) && c.base != server {
+                conflicts.push(Conflict {
+                    id: block_key(id),
+                    reason: if server.is_some() {
+                        ConflictReason::Changed
+                    } else {
+                        ConflictReason::Deleted
+                    },
+                    server: None,
+                    expected: c.base.clone(),
+                    actual: server,
+                });
+            }
+            match &c.block {
+                Some(_) => upserts.push((id, c.clone())),
+                None => removals.push(id),
+            }
+        }
+        if upserts.is_empty() && removals.is_empty() {
+            return None;
+        }
+        let mut list: Vec<BlockDefinition> = doc.blocks().iter().map(|b| (**b).clone()).collect();
+        // Inner first: a definition after the ones it places.
+        let depth = {
+            let mut all = list.clone();
+            for (id, c) in &upserts {
+                if let Some(b) = &c.block {
+                    match all.iter_mut().find(|x| x.id == *id) {
+                        Some(slot) => *slot = b.clone(),
+                        None => all.push(b.clone()),
+                    }
+                }
+            }
+            let index: HashMap<BlockId, usize> = all.iter().enumerate().map(|(i, b)| (b.id, i)).collect();
+            let depth = kentos_contracts::blocks::nesting(&all, &index).unwrap_or_default();
+            move |id: BlockId| index.get(&id).and_then(|&i| depth.get(i)).copied().unwrap_or(0)
+        };
+        upserts.sort_by_key(|(id, _)| depth(*id));
+        for (id, c) in upserts {
+            let Some(mut block) = c.block.clone() else {
+                continue;
+            };
+            let others: Vec<&str> = list.iter().filter(|b| b.id != id).map(|b| b.name.as_str()).collect();
+            if others.iter().any(|n| kentos_contracts::blocks::name_key(n) == kentos_contracts::blocks::name_key(&block.name)) {
+                let name = kentos_contracts::blocks::import_names(others.iter().copied(), [block.name.as_str()])
+                    .into_iter()
+                    .next()
+                    .unwrap_or_else(|| block.name.clone());
+                restored.notes.push(renamed_block_text(&block.name, &name));
+                block.name = name;
+            }
+            let mut candidate = list.clone();
+            match candidate.iter_mut().find(|b| b.id == id) {
+                Some(slot) => *slot = block.clone(),
+                None => candidate.push(block.clone()),
+            }
+            let refs: Vec<&BlockDefinition> = candidate.iter().collect();
+            match takes(&refs) {
+                Ok(()) => list = candidate,
+                Err(why) => {
+                    restored.held.push(format!(
+                        "“{}” blok tanımı çizime konamadı ({why}); değişiklik bu cihazda saklanıyor, gönderilmedi",
+                        block.name
+                    ));
+                    conflicts.retain(|k| k.id != block_key(id));
+                    self.held_blocks.insert(id, c);
+                }
+            }
+        }
+        // A removal waits for the draft's objects: one still placed by them, or by a definition that stays, stays.
+        let removed_objects: HashSet<Uuid> = change.remove.iter().copied().collect();
+        let put: HashMap<Uuid, &Entity> = change.put.iter().map(|(id, e)| (*id, e)).collect();
+        let mut placed: HashSet<BlockId> = HashSet::new();
+        for e in doc.entities() {
+            let uid = doc.uid(Slot(e.base().id));
+            if uid.is_some_and(|u| removed_objects.contains(&u) || put.contains_key(&u)) {
+                continue;
+            }
+            if let Entity::Insert(i) = e {
+                placed.insert(i.block);
+            }
+        }
+        for e in put.values() {
+            if let Entity::Insert(i) = e {
+                placed.insert(i.block);
+            }
+        }
+        let mut gone: HashSet<BlockId> = removals.iter().copied().filter(|id| list.iter().any(|b| b.id == *id)).collect();
+        loop {
+            let inside: HashSet<BlockId> = list
+                .iter()
+                .filter(|b| !gone.contains(&b.id))
+                .flat_map(|b| b.entities.iter())
+                .filter_map(|e| match e {
+                    Entity::Insert(i) => Some(i.block),
+                    _ => None,
+                })
+                .collect();
+            let stays: Vec<BlockId> = gone
+                .iter()
+                .copied()
+                .filter(|id| placed.contains(id) || inside.contains(id))
+                .collect();
+            if stays.is_empty() {
+                break;
+            }
+            for id in stays {
+                gone.remove(&id);
+                conflicts.retain(|k| k.id != block_key(id));
+                let name = list.iter().find(|b| b.id == id).map_or_else(String::new, |b| b.name.clone());
+                restored
+                    .notes
+                    .push(format!("“{name}” bloğu başka birinin yerleştirmesinde kullanılıyor; taslaktaki silinmesi uygulanmadı."));
+            }
+        }
+        list.retain(|b| !gone.contains(&b.id));
+        let same = list.len() == doc.blocks().len() && list.iter().zip(doc.blocks()).all(|(a, b)| *a == **b);
+        (!same).then_some(list)
+    }
+
     /// What of this project is not on the server, for the device: `None`
     /// when nothing is (the stored draft is then removed). A viewer's own
     /// edits are never kept (they were told so).
@@ -164,6 +348,37 @@ impl ProjectSync {
             };
             changes.insert(id.to_string(), change);
         }
+        let mut blocks: BTreeMap<String, DraftBlock> = self
+            .held_blocks
+            .iter()
+            .map(|(id, b)| (id.to_string(), b.clone()))
+            .collect();
+        for p in self.plan_blocks(doc) {
+            let (id, change) = match p {
+                PlannedBlock::Create { block } => (
+                    block.id,
+                    DraftBlock {
+                        base: None,
+                        block: Some((*block).clone()),
+                    },
+                ),
+                PlannedBlock::Update { block, expected } => (
+                    block.id,
+                    DraftBlock {
+                        base: Some(expected),
+                        block: Some((*block).clone()),
+                    },
+                ),
+                PlannedBlock::Delete { id, expected } => (
+                    id,
+                    DraftBlock {
+                        base: Some(expected),
+                        block: None,
+                    },
+                ),
+            };
+            blocks.insert(id.to_string(), change);
+        }
         let meta = if self.sends_meta() {
             self.meta_base.patch(doc).map(|patch| DraftMeta {
                 base: self.meta_version.clone(),
@@ -173,13 +388,14 @@ impl ProjectSync {
             None
         };
         let inflight = self.inflight.as_ref().map(|f| f.envelope.clone());
-        if changes.is_empty() && meta.is_none() && inflight.is_none() {
+        if changes.is_empty() && blocks.is_empty() && meta.is_none() && inflight.is_none() {
             return None;
         }
         Some(Draft {
             version: DRAFT_VERSION,
             user_id: user_id.to_owned(),
             changes,
+            blocks,
             meta,
             inflight,
             updated: now_ms(),
@@ -199,6 +415,7 @@ impl ProjectSync {
         let mut restored = Restored::default();
         // The command on its way goes again first, with its key; its changes are its own.
         let mut carried: HashSet<Uuid> = HashSet::new();
+        let mut carried_blocks: HashSet<BlockId> = HashSet::new();
         if let Some(envelope) = draft.inflight
             && self.inflight.is_none()
         {
@@ -210,11 +427,18 @@ impl ProjectSync {
                         .filter_map(|c| planned_of(c, &envelope.expected_versions))
                         .collect();
                     carried.extend(planned.iter().map(Planned::id));
+                    let blocks: Vec<PlannedBlock> = input
+                        .blocks
+                        .iter()
+                        .filter_map(|c| planned_block_of(c, &envelope.expected_versions))
+                        .collect();
+                    carried_blocks.extend(blocks.iter().map(PlannedBlock::id));
                     let meta = input.project.as_ref().map(|patch| self.meta_base.patched(patch));
                     self.own.insert(envelope.request_id.clone());
                     self.inflight = Some(Inflight {
                         envelope,
                         planned,
+                        blocks,
                         meta,
                     });
                     restored.resends = true;
@@ -336,10 +560,17 @@ impl ProjectSync {
             }
             touched.push(id);
         }
+        // The block definitions: made and changed ones into the list before the objects
+        // that may place them, removals once those objects are counted.
+        let blocks_back = self.restore_blocks(doc, &draft.blocks, &carried_blocks, &change, &mut conflicts, &mut restored);
+        if let Some(list) = &blocks_back {
+            change.blocks = Some(list.clone());
+        }
         let meta_back = change.meta.is_some();
         self.apply(doc, change)?;
         // It is this user's work, not sent yet.
-        restored.changed = touched.len() + usize::from(meta_back);
+        restored.changed = touched.len() + usize::from(meta_back) + usize::from(blocks_back.is_some());
+        self.pending_blocks = self.plan_blocks(doc).len();
         self.dirty.extend(touched);
         if meta_back {
             self.meta_dirty = true;

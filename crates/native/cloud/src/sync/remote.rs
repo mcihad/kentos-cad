@@ -21,17 +21,21 @@
 //! - when the server refuses our tree because a layer it drops still holds
 //!   others' objects, that layer is given back (`give_back`, 36d87de);
 //! - a deletion of the project ends the sync; an archiving ends it after
-//!   the events before it came in.
+//!   the events before it came in;
+//! - block definitions the events name come from the server's list with
+//!   the objects, in one change (blocks.rs, docs/adr/0144 §5); a refused
+//!   removal of one still placed there puts it back (`give_back_blocks`).
 
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 
 use kentos_contracts::{
-    ConflictReason, EventPage, FeatureOp, FeatureRecord, LayerNode, LayerNodeType,
-    PROJECT_ACCESS_CHANGED, PROJECT_ARCHIVED, PROJECT_DELETED, ProjectInfo,
+    BlockId, BlockRecord, ConflictReason, Entity, EventPage, FeatureOp, FeatureRecord, LayerNode,
+    LayerNodeType, PROJECT_ACCESS_CHANGED, PROJECT_ARCHIVED, PROJECT_DELETED, ProjectInfo,
 };
 use kentos_domain::{Document, External, ExternalMeta, Slot};
 use uuid::Uuid;
 
+use super::blocks::{Taking, block_of_key, restored_block_text, unmerged_text};
 use super::{Conflict, Meta, PROJECT_KEY, ProjectSync, SaveState, Tracked};
 
 /// What a page of events asks of the drawing ([`ProjectSync::incoming`]).
@@ -43,6 +47,8 @@ pub struct Incoming {
     pub removed: Vec<Uuid>,
     /// Their name, settings, layer tree or styles changed: fetch the project's info.
     pub meta: bool,
+    /// Block definitions others made, changed or removed: fetch the server's list.
+    pub blocks: Vec<BlockId>,
     /// Someone changed who may do what here: ask the server what this account may do (`set_access`).
     pub access: bool,
     /// The project was archived: nothing is sent after these events come in.
@@ -54,7 +60,7 @@ pub struct Incoming {
 impl Incoming {
     /// Whether anything must be fetched before [`ProjectSync::take_remote`].
     pub fn needs_fetch(&self) -> bool {
-        !self.fetch.is_empty() || self.meta
+        !self.fetch.is_empty() || self.meta || !self.blocks.is_empty()
     }
 }
 
@@ -65,6 +71,9 @@ pub struct Remote {
     pub records: Vec<FeatureRecord>,
     /// The project's metadata now, when it changed.
     pub info: Option<ProjectInfo>,
+    /// The project's block definitions now, when the events named some or
+    /// an object they bring is an insert (`GET …/blocks`).
+    pub blocks: Option<Vec<BlockRecord>>,
 }
 
 /// What taking others' changes did.
@@ -76,6 +85,8 @@ pub struct Taken {
     pub conflicts: usize,
     /// Layers the new tree dropped that stay for their unsent objects.
     pub kept: Vec<KeptLayer>,
+    /// What else the user hears (block definitions kept, put back or renamed).
+    pub notes: Vec<String>,
 }
 
 /// A layer another editor removed that stays in this drawing: it holds
@@ -255,6 +266,14 @@ impl ProjectSync {
                     }
                 }
                 incoming.meta |= event.meta;
+                for b in &event.blocks {
+                    if let Ok(id) = Uuid::parse_str(&b.id) {
+                        let id = BlockId(id.into_bytes());
+                        if !incoming.blocks.contains(&id) {
+                            incoming.blocks.push(id);
+                        }
+                    }
+                }
             }
             if event.kind == PROJECT_ARCHIVED {
                 // The events before it still come in; nothing is sent after it.
@@ -388,8 +407,42 @@ impl ProjectSync {
                 }
             }
         }
-        taken.changed = change.put.len() + change.remove.len();
+        // Block definitions (docs/adr/0144 §5): the server's list, in the same change as the objects.
+        let mut learned = None;
+        if let Some(server) = &remote.blocks {
+            let named: HashSet<BlockId> = incoming.blocks.iter().copied().collect();
+            match self.merge_with_objects(doc, server, Some(&named), &HashSet::new(), &change) {
+                Ok(merge) => {
+                    taken.changed += differing(doc, &merge.list);
+                    for c in merge.conflicts {
+                        self.conflict(c);
+                        taken.conflicts += 1;
+                    }
+                    taken.notes.extend(merge.notes);
+                    change.blocks = Some(merge.list);
+                    learned = Some(merge.learned);
+                }
+                Err(why) => {
+                    taken.notes.push(unmerged_text(&why));
+                    // Objects placing a block this drawing lacks wait for the next opening.
+                    let have: HashSet<BlockId> = doc.blocks().iter().map(|b| b.id).collect();
+                    let lacking: HashSet<Uuid> = change
+                        .put
+                        .iter()
+                        .filter(|(_, e)| matches!(e, Entity::Insert(i) if !have.contains(&i.block)))
+                        .map(|(id, _)| *id)
+                        .collect();
+                    change.put.retain(|(id, _)| !lacking.contains(id));
+                    tracked.retain(|(id, _)| !lacking.contains(id));
+                }
+            }
+        }
+        taken.changed += change.put.len() + change.remove.len();
         self.apply(doc, change)?;
+        if let Some(learned) = learned {
+            self.learned_blocks(doc, learned);
+        }
+        self.pending_blocks = self.plan_blocks(doc).len();
         for (layer, id) in waits {
             self.wait(layer, id);
         }
@@ -421,15 +474,18 @@ impl ProjectSync {
     }
 
     /// Ends the conflicts by taking the server's copies (`info`: the project's
-    /// metadata now, for a conflict of the metadata): the drawing's own
-    /// changes of those objects are dropped, as a change from outside. A
-    /// server copy on a layer the drawing will not have waits for it, as in
-    /// `take_remote`. Refused, with nothing changed, while an edit is open.
+    /// metadata now, for a conflict of the metadata; `blocks`: its block
+    /// definitions now, for a definition's conflict, which stays without it):
+    /// the drawing's own changes of those objects are dropped, as a change
+    /// from outside. A server copy on a layer the drawing will not have waits
+    /// for it, as in `take_remote`. Refused, with nothing changed, while an
+    /// edit is open.
     pub fn take_theirs(
         &mut self,
         doc: &mut Document,
         info: Option<&ProjectInfo>,
-    ) -> Result<Vec<KeptLayer>, String> {
+        blocks: Option<&[BlockRecord]>,
+    ) -> Result<Taken, String> {
         if doc.is_busy() {
             return Err(BUSY.to_owned());
         }
@@ -447,8 +503,9 @@ impl ProjectSync {
             _ => doc.layers().nodes().to_vec(),
         };
         let mut waits = Vec::new();
+        let mut taken = Taken::default();
         for c in &self.conflicts {
-            if c.reason == ConflictReason::Project {
+            if c.reason == ConflictReason::Project || block_of_key(&c.id).is_some() {
                 continue;
             }
             let Ok(id) = Uuid::parse_str(&c.id) else {
@@ -474,9 +531,31 @@ impl ProjectSync {
                 }
             }
         }
+        // The definitions in conflict as the server has them, with the objects that may place them.
+        let force: HashSet<BlockId> = self.conflicts.iter().filter_map(|c| block_of_key(&c.id)).collect();
+        let mut learned = None;
+        let mut blocks_left = !force.is_empty() && blocks.is_none();
+        if let Some(server) = blocks
+            && !force.is_empty()
+        {
+            match self.merge_with_objects(doc, server, Some(&HashSet::new()), &force, &change) {
+                Ok(merge) => {
+                    taken.notes.extend(merge.notes);
+                    change.blocks = Some(merge.list);
+                    learned = Some(merge.learned);
+                }
+                Err(why) => {
+                    taken.notes.push(unmerged_text(&why));
+                    blocks_left = true;
+                }
+            }
+        }
         // The objects' conflicts end first, so they no longer count as unsent
         // when the server's tree comes (a layer kept, as in take_remote).
         self.apply(doc, change)?;
+        if let Some(learned) = learned {
+            self.learned_blocks(doc, learned);
+        }
         for (layer, id) in waits {
             self.wait(layer, id);
         }
@@ -515,15 +594,127 @@ impl ProjectSync {
         if let Some((version, server_tree)) = new_meta {
             self.took_meta(doc, version, server_tree);
         }
-        self.conflicts.clear();
-        self.state = if !self.can_write {
+        // A definition's conflict without the server's list stays, for the next try.
+        self.conflicts
+            .retain(|c| blocks_left && block_of_key(&c.id).is_some());
+        self.pending_blocks = self.plan_blocks(doc).len();
+        self.state = if !self.conflicts.is_empty() {
+            SaveState::Conflict
+        } else if !self.can_write {
             SaveState::ReadOnly
         } else if self.pending() > 0 {
             SaveState::Pending
         } else {
             SaveState::Saved
         };
-        Ok(kept)
+        taken.kept = kept;
+        Ok(taken)
+    }
+
+    /// The server's definitions merged with a change of objects coming in
+    /// (`change`: what places a block once it is in).
+    fn merge_with_objects(
+        &self,
+        doc: &Document,
+        server: &[BlockRecord],
+        events: Option<&HashSet<BlockId>>,
+        force: &HashSet<BlockId>,
+        change: &External,
+    ) -> Result<super::blocks::BlockMerge, String> {
+        let leaving: HashSet<Uuid> = change
+            .remove
+            .iter()
+            .copied()
+            .chain(change.put.iter().map(|(id, _)| *id))
+            .collect();
+        let arriving: Vec<BlockId> = change
+            .put
+            .iter()
+            .filter_map(|(_, e)| match e {
+                Entity::Insert(i) => Some(i.block),
+                _ => None,
+            })
+            .collect();
+        let mut placed = || {
+            let mut out: HashSet<BlockId> = arriving.iter().copied().collect();
+            for e in doc.entities() {
+                if let Entity::Insert(i) = e
+                    && !doc.uid(Slot(e.base().id)).is_some_and(|u| leaving.contains(&u))
+                {
+                    out.insert(i.block);
+                }
+            }
+            out
+        };
+        self.merge_blocks(doc, server, &Taking { events, force }, &mut placed)
+    }
+
+    /// Whether a refusal is the server's guard against removing a block
+    /// definition still placed there (someone else's insert): a definition's
+    /// conflict whose version is the one expected (a version conflict's
+    /// differ). Then the missed events come in first, and `give_back_blocks`
+    /// with the server's list.
+    pub fn may_give_back_blocks(&self) -> bool {
+        self.conflicts.iter().any(|c| {
+            block_of_key(&c.id).is_some() && c.expected.is_some() && c.expected == c.actual
+        })
+    }
+
+    /// The server refused to remove block definitions still placed there:
+    /// data wins over the removal, as with layers. Each such definition the
+    /// drawing still lacks (the events that came in did not bring it back)
+    /// comes back from the server's list (`server`), said once; those
+    /// conflicts end, and what is left goes again when nothing else refused.
+    /// Refused, with nothing changed, while an edit is open.
+    pub fn give_back_blocks(
+        &mut self,
+        doc: &mut Document,
+        server: &[BlockRecord],
+    ) -> Result<Vec<String>, String> {
+        if doc.is_busy() {
+            return Err(BUSY.to_owned());
+        }
+        self.observe(doc);
+        let guarded: Vec<BlockId> = self
+            .conflicts
+            .iter()
+            .filter(|c| c.expected.is_some() && c.expected == c.actual)
+            .filter_map(|c| block_of_key(&c.id))
+            .collect();
+        let missing: HashSet<BlockId> = guarded.iter().copied().filter(|id| doc.block(*id).is_none()).collect();
+        let mut notes = Vec::new();
+        if !missing.is_empty() {
+            let merge = self
+                .merge_with_objects(doc, server, Some(&HashSet::new()), &missing, &External::default())
+                .map_err(|why| unmerged_text(&why))?;
+            let learned = merge.learned;
+            self.apply(
+                doc,
+                External {
+                    blocks: Some(merge.list),
+                    ..External::default()
+                },
+            )?;
+            self.learned_blocks(doc, learned);
+            for id in &missing {
+                if let Some(b) = doc.block(*id) {
+                    notes.push(restored_block_text(&b.name));
+                }
+            }
+        }
+        let keys: HashSet<String> = guarded.iter().map(|id| super::blocks::block_key(*id)).collect();
+        self.conflicts.retain(|c| !keys.contains(&c.id));
+        self.pending_blocks = self.plan_blocks(doc).len();
+        if self.conflicts.is_empty() && !self.state.ended() {
+            self.state = if !self.can_write {
+                SaveState::ReadOnly
+            } else if self.pending() > 0 {
+                SaveState::Pending
+            } else {
+                SaveState::Saved
+            };
+        }
+        Ok(notes)
     }
 
     /// The server's metadata is the drawing's now, at `version`. With a
@@ -745,4 +936,16 @@ impl ProjectSync {
         }
         Ok(())
     }
+}
+
+/// How many definitions differ between the drawing's list and `list`: made, changed or removed.
+fn differing(doc: &Document, list: &[kentos_contracts::BlockDefinition]) -> usize {
+    let now: HashMap<BlockId, &kentos_contracts::BlockDefinition> = list.iter().map(|b| (b.id, b)).collect();
+    let was: HashSet<BlockId> = doc.blocks().iter().map(|b| b.id).collect();
+    let changed = doc
+        .blocks()
+        .iter()
+        .filter(|b| now.get(&b.id).is_none_or(|n| **n != ***b))
+        .count();
+    changed + list.iter().filter(|b| !was.contains(&b.id)).count()
 }

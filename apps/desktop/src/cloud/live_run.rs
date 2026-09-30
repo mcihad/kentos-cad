@@ -328,6 +328,60 @@ fn upload(r: &mut Runner, name: &str, storage: ProjectStorage, shot: Option<&str
     });
 }
 
+/// A block definition made here with one line and a circle, placed once on
+/// “Çizim” at `x`, as Blok oluştur and Blok ekle write them: its id.
+fn define_block(r: &mut Runner, name: &str, x: f64) -> String {
+    let id = Uuid::now_v7().to_string();
+    let block: kentos_contracts::BlockDefinition = serde_json::from_value(serde_json::json!({
+        "id": id, "name": name, "base": { "x": 0, "y": 0 },
+        "entities": [
+            { "kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": { "x": -2, "y": 0 }, "b": { "x": 2, "y": 0 } },
+            { "kind": "circle", "id": 2, "layerId": "", "attrs": {}, "c": { "x": 0, "y": 0 }, "r": 1.5 }
+        ]
+    }))
+    .expect("a definition");
+    let insert: Entity = serde_json::from_value(serde_json::json!({
+        "kind": "insert", "id": 0, "layerId": "cizim", "attrs": {}, "block": id,
+        "p": { "x": x, "y": 4_420_225.0 }, "scale": 2, "rotation": 0
+    }))
+    .expect("an insert");
+    let doc = r.app.document.as_mut().expect("open");
+    doc.model.add_block(block).expect("defined");
+    doc.model.add(insert).expect("placed");
+    r.send(Message::Modifiers(iced::keyboard::Modifiers::default()));
+    id
+}
+
+/// Renames the block definition `id` here, as the Bloklar panel does.
+fn rename_block(r: &mut Runner, id: &str, name: &str) {
+    let doc = r.app.document.as_mut().expect("open");
+    let block = doc
+        .model
+        .blocks()
+        .iter()
+        .find(|b| b.id.to_string() == id)
+        .map(|b| (**b).clone())
+        .expect("defined");
+    assert!(
+        doc.model
+            .update_block(kentos_contracts::BlockDefinition {
+                name: name.into(),
+                ..block
+            })
+            .expect("renamed")
+    );
+    r.send(Message::Modifiers(iced::keyboard::Modifiers::default()));
+}
+
+fn block_name(app: &App, id: &str) -> Option<String> {
+    let doc = app.document.as_ref()?;
+    doc.model
+        .blocks()
+        .iter()
+        .find(|b| b.id.to_string() == id)
+        .map(|b| b.name.clone())
+}
+
 /// The open project shared with `user` as an editor (ayşe's session).
 fn share(r: &Runner, user: &str) {
     let (tenant, project) = ids(&r.app);
@@ -444,6 +498,52 @@ fn cloud_live() {
     r.shot("09-cakisma-penceresi");
     r.cloud(Event::KeepMine);
     r.until("benimkini koru", Duration::from_secs(15), saved);
+
+    // 6b. Block definitions (docs/adr/0144 §5): one made here and placed reaches the
+    //     server; the other editor's rename arrives; renamed on both sides, the conflict
+    //     window names the block, and mine is kept over the server's list read for it.
+    let block = define_block(&mut r, "Rögar", 486_560.0);
+    r.until("blok kaydı", Duration::from_secs(15), saved);
+    let listed = web(&server, &["blocks", "mehmet", &tenant, &project]);
+    assert!(
+        listed["blocks"]
+            .as_array()
+            .is_some_and(|l| l.iter().any(|b| b["name"] == "Rögar")),
+        "{listed}"
+    );
+    web(
+        &server,
+        &["rename-block", "mehmet", &tenant, &project, &block, "Rögar (web)"],
+    );
+    r.until("web'in blok adı", Duration::from_secs(15), |a| {
+        block_name(a, &block).as_deref() == Some("Rögar (web)")
+    });
+    r.send(Message::Run("block.panel"));
+    r.run_for(Duration::from_millis(300));
+    r.shot("09b-blok-adi-geldi");
+    rename_block(&mut r, &block, "Rögar (masaüstü)");
+    web(
+        &server,
+        &["rename-block", "mehmet", &tenant, &project, &block, "Rögar (web 2)"],
+    );
+    r.until("blok çakışması", Duration::from_secs(20), |a| {
+        a.cloud
+            .live
+            .as_ref()
+            .is_some_and(|l| l.sync.conflicts_blocks())
+    });
+    r.send(Message::Run("cloud.conflicts"));
+    assert_eq!(r.app.dialog, Some(Dialog::Conflicts));
+    r.shot("09c-blok-cakismasi");
+    r.cloud(Event::KeepMine);
+    r.until("blokta benimkini koru", Duration::from_secs(15), saved);
+    let listed = web(&server, &["blocks", "mehmet", &tenant, &project]);
+    assert!(
+        listed["blocks"]
+            .as_array()
+            .is_some_and(|l| l.iter().any(|b| b["name"] == "Rögar (masaüstü)")),
+        "{listed}"
+    );
 
     // 7. The server goes away while signed in: Bağlantı yok, then it comes back.
     server.stop();
@@ -926,11 +1026,12 @@ fn catalog_live(
         listed(db_project.to_owned()),
     );
     r.cloud(Event::CatalogPick(db_project.to_owned()));
+    // The sample's 13 objects and the block's insert of step 6b.
     r.until("bilgiler", Duration::from_secs(15), |a| {
         a.cloud
             .catalog
             .as_ref()
-            .is_some_and(|c| matches!(&c.details, Details::Database(d) if d.feature_count == "13"))
+            .is_some_and(|c| matches!(&c.details, Details::Database(d) if d.feature_count == "14"))
     });
     r.shot("24-katalog-bilgiler");
     share_live(r, mehmet, stamp);

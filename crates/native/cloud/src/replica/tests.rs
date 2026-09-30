@@ -9,7 +9,7 @@ use kentos_contracts::{
 };
 use kentos_domain::Slot;
 
-use crate::sync::{BaseMeta, BaseObject, ProjectSync};
+use crate::sync::{BaseBlock, BaseMeta, BaseObject, ProjectSync};
 
 const SAMPLE: &str = include_str!("../../../../../fixtures/document/v1/sample.json");
 
@@ -60,7 +60,10 @@ fn opened(storage: ProjectStorage) -> Opened {
         },
         document,
         source: match storage {
-            ProjectStorage::Database => Source::Database { versions },
+            ProjectStorage::Database => Source::Database {
+                versions,
+                blocks: Vec::new(),
+            },
             ProjectStorage::File => Source::File {
                 revision: Some(Revision {
                     number: 3,
@@ -113,7 +116,7 @@ fn a_project_opened_online_opens_again_offline_as_it_was() {
     assert_eq!(by_uid(&back.document), by_uid(&o.document));
     // The same versions; in the server's id order, as an opening from the server has them.
     let sorted = |s: &Source| match s {
-        Source::Database { versions } => {
+        Source::Database { versions, .. } => {
             let mut v = versions.clone();
             v.sort();
             v
@@ -163,7 +166,7 @@ fn what_came_to_be_known_is_kept_step_by_step() {
                 },
             ],
             remove: vec![second.to_string()],
-            meta: None,
+            ..BaseStep::default()
         })
         .unwrap();
     replica
@@ -180,7 +183,7 @@ fn what_came_to_be_known_is_kept_step_by_step() {
         .unwrap();
     assert_eq!(replica.steps().unwrap(), 2);
     let back = replica.load().unwrap().unwrap();
-    let Source::Database { versions } = &back.source else {
+    let Source::Database { versions, .. } = &back.source else {
         panic!()
     };
     let version: BTreeMap<Uuid, String> = versions.iter().cloned().collect();
@@ -354,4 +357,68 @@ fn a_project_the_server_ended_opens_read_only_and_says_why() {
         .unwrap();
     assert!(store.list("http://127.0.0.1:8787", "ayse").is_empty());
     let _ = fs::remove_dir_all(dir);
+}
+
+/// A definition with one line, its id ending in `n`.
+fn block(n: u8, name: &str) -> kentos_contracts::BlockDefinition {
+    serde_json::from_value(serde_json::json!({
+        "id": format!("00000000-0000-7000-8000-00000000b{n:03x}"), "name": name, "base": { "x": 0, "y": 0 },
+        "entities": [{ "kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": { "x": 0, "y": 0 }, "b": { "x": 1, "y": 0 } }]
+    }))
+    .unwrap()
+}
+
+#[test]
+fn block_definitions_are_kept_with_their_versions_step_by_step() {
+    let (dir, store) = store();
+    let mut o = opened(ProjectStorage::Database);
+    let a = block(1, "Kapı");
+    let mut snap = o.document.to_snapshot_v2();
+    snap.blocks = vec![a.clone()];
+    o.document = Document::from_snapshot_v2(snap).unwrap();
+    if let Source::Database { blocks, .. } = &mut o.source {
+        *blocks = vec![(a.id, "3".into())];
+    }
+    let mut replica = open(&store, &o);
+    replica.reset(&o).unwrap();
+    let back = replica.load().unwrap().unwrap();
+    let Source::Database { blocks, .. } = &back.source else {
+        panic!()
+    };
+    assert_eq!(blocks, &[(a.id, "3".to_string())]);
+    assert_eq!(back.document.blocks()[0].name, "Kapı");
+    // Another editor's rename and a new definition, as a step: the whole list.
+    let b = block(2, "Ağaç");
+    let renamed = kentos_contracts::BlockDefinition {
+        name: "Kapı 2".into(),
+        ..a.clone()
+    };
+    replica
+        .append(&BaseStep {
+            blocks: Some(vec![
+                BaseBlock {
+                    version: "4".into(),
+                    block: renamed,
+                },
+                BaseBlock {
+                    version: "5".into(),
+                    block: b.clone(),
+                },
+            ]),
+            ..BaseStep::default()
+        })
+        .unwrap();
+    let back = replica.load().unwrap().unwrap();
+    let Source::Database { blocks, .. } = &back.source else {
+        panic!()
+    };
+    let names: Vec<&str> = back.document.blocks().iter().map(|b| b.name.as_str()).collect();
+    assert_eq!(names, ["Kapı 2", "Ağaç"]);
+    assert!(blocks.contains(&(a.id, "4".to_string())) && blocks.contains(&(b.id, "5".to_string())));
+    // A compaction writes them whole, with their versions.
+    let sync = ProjectSync::new(&back).unwrap();
+    replica.compact(&sync.base(&back.document)).unwrap();
+    let again = replica.load().unwrap().unwrap();
+    assert_eq!(again.document.blocks().len(), 2);
+    drop(dir);
 }

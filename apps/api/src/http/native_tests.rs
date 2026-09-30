@@ -15,7 +15,7 @@ use kentos_cloud::{
     Source, Uploaded, conflicting_revision, open, project_create, save_revision, upload_new,
 };
 use kentos_contracts::{
-    AuthConfig, CatalogView, CommitResult, DocumentSnapshotV1, DocumentSnapshotV2, Entity,
+    AuthConfig, BlockDefinition, CatalogView, CommitResult, DocumentSnapshotV1, DocumentSnapshotV2, Entity,
     EntityId, FileUploadBegin, GrantRole, PointEntity, ProjectAccessChange, ProjectState,
     ProjectStorage, TenantRole,
 };
@@ -376,7 +376,7 @@ async fn a_drawing_becomes_a_database_project_and_edits_go_back_object_by_object
         by_uid(&opened.document.to_snapshot_v2()),
         by_uid(&drawing.to_snapshot_v2())
     );
-    let Source::Database { versions } = &opened.source else {
+    let Source::Database { versions, .. } = &opened.source else {
         panic!("{:?}", opened.source)
     };
     assert!(versions.len() == 13 && versions.iter().all(|(_, v)| v == "1"));
@@ -475,7 +475,7 @@ async fn two_editors_of_one_object_meet_in_a_conflict() {
         (uid.to_string(), Some("2"))
     );
     // Dilek keeps hers: it goes over Ayşe's version, and the server has it.
-    sd.keep_mine();
+    sd.keep_mine(&d.document, None);
     send_all(&dilek, &mut sd, &d.document).await.unwrap();
     let back = open(&ayse, tenant, project, None).await.unwrap();
     let slot = back.document.slot_of(uid).unwrap();
@@ -613,6 +613,153 @@ async fn other_editors_changes_come_in_by_following_the_events() {
         .await
         .unwrap_err();
     assert!(far.resync(), "{far:?}");
+    db.close().await;
+}
+
+/// Takes in the events after the sync's cursor, as the desktop's following does.
+async fn follow_up(cloud: &Cloud, tenant: Uuid, project: Uuid, sync: &mut ProjectSync, doc: &mut Document) -> kentos_cloud::Taken {
+    let page = follow::events(cloud, tenant, project, sync.cursor())
+        .await
+        .unwrap();
+    let incoming = sync.incoming(&page);
+    let remote = follow::fetch(cloud, tenant, project, &incoming)
+        .await
+        .unwrap();
+    sync.take_remote(doc, incoming, remote).unwrap()
+}
+
+/// Block definitions between two desktops through the server (docs/adr/0144
+/// §5): Ayşe's definition goes with its insert in one command and comes to
+/// Dilek from the events; Dilek places it too, and Ayşe, not having heard,
+/// removes it with her own insert: the server keeps it for Dilek's insert,
+/// and once Ayşe's missed events are in it is back without a question, her
+/// insert's removal gone. A rename on both sides is a conflict; Ayşe keeps
+/// hers over Dilek's, read from the server. Opened again, the drawing has
+/// the definition at its version.
+#[tokio::test]
+async fn block_definitions_go_between_two_desktops_through_the_server() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let tenant = office(&db).await;
+    let base = serve(&db).await;
+    let ayse = signed_in(&base, "ayse").await;
+    let drawing = sample();
+    let (info, _) = upload_new(
+        &ayse,
+        tenant,
+        project_create(&drawing, "Ada 107", ProjectStorage::Database),
+        kcad(&drawing),
+        Uuid::new_v4(),
+    )
+    .await
+    .unwrap();
+    let project = Uuid::parse_str(&info.id).unwrap();
+    ayse.command::<ProjectAccessChange>(envelope(
+        tenant,
+        project,
+        "project.share",
+        1,
+        Uuid::new_v4(),
+        BTreeMap::new(),
+        json!({ "userId": admin::user_id(&db.owner, "dilek").await.unwrap().to_string(), "role": GrantRole::Editor }),
+    ))
+    .await
+    .unwrap();
+    let dilek = signed_in(&base, "dilek").await;
+    let mut a = open(&ayse, tenant, project, None).await.unwrap();
+    let mut d = open(&dilek, tenant, project, None).await.unwrap();
+    let mut sa = ProjectSync::new(&a).unwrap();
+    let mut sd = ProjectSync::new(&d).unwrap();
+
+    // Ayşe's definition and her insert of it, in one command.
+    let kapi: BlockDefinition = serde_json::from_value(json!({
+        "id": Uuid::now_v7().to_string(), "name": "Kapı", "base": { "x": 0, "y": 0 },
+        "entities": [{ "kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": { "x": -1, "y": 0 }, "b": { "x": 1, "y": 0 } }]
+    }))
+    .unwrap();
+    let insert = |x: f64| -> Entity {
+        serde_json::from_value(json!({ "kind": "insert", "id": 0, "layerId": "cizim", "attrs": {},
+            "block": kapi.id.to_string(), "p": { "x": x, "y": 4420210.0 }, "scale": 1, "rotation": 0 }))
+        .unwrap()
+    };
+    a.document.add_block(kapi.clone()).unwrap();
+    let hers = a.document.add(insert(486600.0)).unwrap();
+    let hers = a.document.uid(hers).unwrap();
+    sa.observe(&a.document);
+    send_all(&ayse, &mut sa, &a.document).await.unwrap();
+    assert!(sa.all_sent() && sa.block_version_of(kapi.id).is_some());
+
+    // Dilek takes both in from the events.
+    let taken = follow_up(&dilek, tenant, project, &mut sd, &mut d.document).await;
+    assert_eq!(taken.conflicts, 0);
+    assert_eq!(d.document.blocks().len(), 1);
+    assert!(d.document.slot_of(hers).is_some());
+    assert!(!d.document.is_dirty());
+
+    // Dilek places it too; Ayşe, not having heard, removes her insert and the definition.
+    let his = d.document.add(insert(486700.0)).unwrap();
+    let his = d.document.uid(his).unwrap();
+    sd.observe(&d.document);
+    send_all(&dilek, &mut sd, &d.document).await.unwrap();
+    let hers_slot = a.document.slot_of(hers).unwrap();
+    a.document.remove(&[hers_slot]);
+    assert!(a.document.remove_block(kapi.id).unwrap());
+    let refused = send_all(&ayse, &mut sa, &a.document).await.unwrap_err();
+    assert!(refused.conflict(), "{refused:?}");
+    assert!(sa.may_give_back_blocks(), "the guard: the version is the one expected");
+    // Her missed events bring Dilek's insert, and with it the definition, back.
+    let taken = follow_up(&ayse, tenant, project, &mut sa, &mut a.document).await;
+    assert!(a.document.slot_of(his).is_some());
+    assert_eq!(a.document.blocks().len(), 1, "{:?}", taken.notes);
+    let list = follow::blocks_now(&ayse, tenant, project).await.unwrap();
+    let notes = sa.give_back_blocks(&mut a.document, &list).unwrap();
+    assert!(notes.is_empty(), "nothing was missing any more: {notes:?}");
+    assert!(sa.conflicts().is_empty());
+    send_all(&ayse, &mut sa, &a.document).await.unwrap();
+    assert!(sa.all_sent());
+    let server = follow::blocks_now(&ayse, tenant, project).await.unwrap();
+    assert_eq!(server.len(), 1, "the definition stays");
+
+    // Renamed on both sides: a conflict; Ayşe keeps hers over Dilek's version.
+    follow_up(&dilek, tenant, project, &mut sd, &mut d.document).await;
+    assert!(d.document.slot_of(hers).is_none(), "Ayşe's insert is gone for Dilek too");
+    d.document
+        .update_block(BlockDefinition {
+            name: "Kapı (Dilek)".into(),
+            ..kapi.clone()
+        })
+        .unwrap();
+    sd.observe(&d.document);
+    send_all(&dilek, &mut sd, &d.document).await.unwrap();
+    a.document
+        .update_block(BlockDefinition {
+            name: "Kapı (Ayşe)".into(),
+            ..kapi.clone()
+        })
+        .unwrap();
+    sa.observe(&a.document);
+    let refused = send_all(&ayse, &mut sa, &a.document).await.unwrap_err();
+    assert!(refused.conflict() && sa.conflicts_blocks() && !sa.may_give_back_blocks());
+    let list = follow::blocks_now(&ayse, tenant, project).await.unwrap();
+    sa.keep_mine(&a.document, Some(&list));
+    send_all(&ayse, &mut sa, &a.document).await.unwrap();
+    let taken = follow_up(&dilek, tenant, project, &mut sd, &mut d.document).await;
+    assert_eq!(taken.conflicts, 0);
+    assert_eq!(d.document.blocks()[0].name, "Kapı (Ayşe)");
+
+    // Opened again from the server: the definition at its version, the drawings alike.
+    let back = open(&ayse, tenant, project, None).await.unwrap();
+    assert_eq!(back.document.blocks()[0].name, "Kapı (Ayşe)");
+    let Source::Database { blocks, .. } = &back.source else {
+        panic!("a database project");
+    };
+    assert_eq!(blocks.len(), 1);
+    assert_eq!(Some(blocks[0].1.as_str()), sa.block_version_of(kapi.id));
+    assert_eq!(
+        by_uid(&back.document.to_snapshot_v2()),
+        by_uid(&d.document.to_snapshot_v2())
+    );
     db.close().await;
 }
 
@@ -1061,7 +1208,7 @@ async fn a_long_offline_spell_past_the_kept_events_reopens_and_loses_nothing() {
         Some("Ayşe")
     );
     // Ayşe keeps hers: everything goes out, nothing was lost.
-    sync.keep_mine();
+    sync.keep_mine(&a.document, None);
     send_all(&ayse, &mut sync, &a.document).await.unwrap();
     replica.compact(&sync.base(&a.document)).unwrap();
     drafts.remove(&key).unwrap();

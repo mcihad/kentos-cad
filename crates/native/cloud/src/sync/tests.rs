@@ -12,7 +12,7 @@ use crate::open::{Opened, Source};
 
 const SAMPLE: &str = include_str!("../../../../../fixtures/document/v1/sample.json");
 
-fn opened(permissions: Vec<ProjectPermission>, state: ProjectState) -> Opened {
+pub(super) fn opened(permissions: Vec<ProjectPermission>, state: ProjectState) -> Opened {
     let s = DocumentSnapshotV1::from_json(SAMPLE).unwrap();
     let document = Document::from_snapshot(s.clone()).unwrap();
     let versions = document
@@ -48,11 +48,14 @@ fn opened(permissions: Vec<ProjectPermission>, state: ProjectState) -> Opened {
             storage: ProjectStorage::Database,
         },
         document,
-        source: Source::Database { versions },
+        source: Source::Database {
+            versions,
+            blocks: Vec::new(),
+        },
     }
 }
 
-fn editor() -> Opened {
+pub(super) fn editor() -> Opened {
     opened(
         vec![
             ProjectPermission::Read,
@@ -63,7 +66,7 @@ fn editor() -> Opened {
     )
 }
 
-fn point(x: f64) -> Entity {
+pub(super) fn point(x: f64) -> Entity {
     let mut e = DocumentSnapshotV1::from_json(SAMPLE).unwrap().entities[0].clone();
     if let Entity::Point(PointEntity { p, .. }) = &mut e {
         p.x = x;
@@ -71,12 +74,12 @@ fn point(x: f64) -> Entity {
     e
 }
 
-fn input(env: &CommandEnvelope) -> ProjectChanges {
+pub(super) fn input(env: &CommandEnvelope) -> ProjectChanges {
     serde_json::from_value(env.input.clone()).unwrap()
 }
 
 /// The server's answer: every created or updated object at `revision`.
-fn committed(env: &CommandEnvelope, revision: u64) -> CommitResult {
+pub(super) fn committed(env: &CommandEnvelope, revision: u64) -> CommitResult {
     let changes = input(env);
     let mut versions = BTreeMap::new();
     let mut deleted = Vec::new();
@@ -227,7 +230,7 @@ fn a_conflict_stops_sending_until_mine_is_kept() {
     assert!(!sync.wants_to_send());
     o.document.add(point(486601.0)).unwrap();
     assert_eq!(sync.next(&o.document), None);
-    sync.keep_mine();
+    sync.keep_mine(&o.document, None);
     let env = sync.next(&o.document).unwrap();
     assert_eq!(
         env.expected_versions
@@ -391,7 +394,7 @@ fn refusals_end_or_stop_as_on_the_web() {
 
 use kentos_contracts::{EventFeature, EventPage, EventRecord, FeatureOp};
 
-fn event(
+pub(super) fn event(
     seq: u64,
     request: Option<&str>,
     features: &[(Uuid, FeatureOp)],
@@ -416,12 +419,12 @@ fn event(
     }
 }
 
-fn page(events: Vec<EventRecord>) -> EventPage {
+pub(super) fn page(events: Vec<EventRecord>) -> EventPage {
     let next = events.last().map_or("9".to_string(), |e| e.seq.clone());
     EventPage { events, next }
 }
 
-fn record(id: Uuid, version: &str, entity: Entity) -> FeatureRecord {
+pub(super) fn record(id: Uuid, version: &str, entity: Entity) -> FeatureRecord {
     FeatureRecord {
         id: id.to_string(),
         version: version.into(),
@@ -476,6 +479,7 @@ fn others_objects_come_in_and_this_syncs_own_are_skipped() {
                     record(theirs, "3", point(486950.0)),
                 ],
                 info: None,
+                blocks: None,
             },
         )
         .unwrap();
@@ -532,6 +536,7 @@ fn an_object_changed_here_and_elsewhere_is_a_conflict_until_theirs_is_taken() {
             Remote {
                 records: vec![record(id, "5", point(486800.0))],
                 info: None,
+                blocks: None,
             },
         )
         .unwrap();
@@ -553,7 +558,7 @@ fn an_object_changed_here_and_elsewhere_is_a_conflict_until_theirs_is_taken() {
         ]
     );
     // Theirs: the server's copy comes in, the removed one goes, nothing is left to send.
-    sync.take_theirs(&mut o.document, None).unwrap();
+    sync.take_theirs(&mut o.document, None, None).unwrap();
     assert_eq!(x_of(&o.document, id), Some(486800.0));
     assert!(o.document.slot_of(gone).is_none());
     assert_eq!(sync.version_of(id), Some("5"));
@@ -591,6 +596,7 @@ fn new_metadata_comes_first_so_objects_on_its_new_layer_come_in() {
             Remote {
                 records: vec![record(a, "2", on_new.clone())],
                 info: None,
+                blocks: None,
             },
         )
         .unwrap();
@@ -611,6 +617,7 @@ fn new_metadata_comes_first_so_objects_on_its_new_layer_come_in() {
         Remote {
             records: vec![record(b, "3", on_new.clone())],
             info: Some(info),
+            blocks: None,
         },
     )
     .unwrap();
@@ -647,6 +654,7 @@ fn metadata_changed_here_and_elsewhere_is_a_conflict() {
             Remote {
                 records: vec![],
                 info: Some(info.clone()),
+                blocks: None,
             },
         )
         .unwrap();
@@ -654,7 +662,7 @@ fn metadata_changed_here_and_elsewhere_is_a_conflict() {
     assert_eq!(sync.conflicts()[0].id, PROJECT_KEY);
     assert_eq!(o.document.layers().get("bina").unwrap().name, "Yapılar");
     // Mine: the renamed layer goes over the server's metadata version.
-    sync.keep_mine();
+    sync.keep_mine(&o.document, None);
     let env = sync.next(&o.document).unwrap();
     assert_eq!(
         env.expected_versions.get(PROJECT_KEY).map(String::as_str),
@@ -671,10 +679,11 @@ fn metadata_changed_here_and_elsewhere_is_a_conflict() {
         Remote {
             records: vec![],
             info: Some(info.clone()),
+            blocks: None,
         },
     )
     .unwrap();
-    sync.take_theirs(&mut o.document, Some(&info)).unwrap();
+    sync.take_theirs(&mut o.document, Some(&info), None).unwrap();
     assert_eq!(o.document.name(), "Ada 101 (yeni ad)");
     assert_eq!(o.document.layers().get("bina").unwrap().name, "Bina");
     assert_eq!(sync.next(&o.document), None);
@@ -717,6 +726,7 @@ fn a_deleted_project_ends_the_sync_and_an_archived_one_after_its_events() {
         Remote {
             records: vec![record(id, "4", point(486900.0))],
             info: None,
+            blocks: None,
         },
     )
     .unwrap();
@@ -740,6 +750,7 @@ fn changes_from_outside_wait_while_an_edit_is_open() {
     let remote = Remote {
         records: vec![record(id, "2", point(486900.0))],
         info: None,
+        blocks: None,
     };
     let group = o.document.begin_group("Taşı");
     assert!(
@@ -760,7 +771,7 @@ fn changes_from_outside_wait_while_an_edit_is_open() {
 // ── Device drafts (draft.rs) ───────────────────────────────────────────────
 
 /// The same project opened again: a fresh sync of what the server has.
-fn reopened(o: &Opened) -> Opened {
+pub(super) fn reopened(o: &Opened) -> Opened {
     opened(o.info.access.permissions.clone(), o.info.state)
 }
 
@@ -899,7 +910,7 @@ fn a_draft_the_server_moved_past_is_a_conflict_and_a_lost_layer_is_held() {
     // Meanwhile someone else saved the object: the new opening has it at version 3.
     let mut again = reopened(&o);
     let versions = match &mut again.source {
-        Source::Database { versions } => versions,
+        Source::Database { versions, .. } => versions,
         other => panic!("{other:?}"),
     };
     versions.iter_mut().find(|(v, _)| *v == id).unwrap().1 = "3".into();
@@ -916,7 +927,7 @@ fn a_draft_the_server_moved_past_is_a_conflict_and_a_lost_layer_is_held() {
     // The held change is never sent, but the next draft keeps it.
     let kept = sync.draft(&again.document, "ayse").unwrap();
     assert!(kept.changes.contains_key(&lost.to_string()));
-    sync.keep_mine();
+    sync.keep_mine(&o.document, None);
     let env = sync.next(&again.document).unwrap();
     assert!(
         input(&env)
@@ -989,6 +1000,7 @@ fn every_change_of_the_servers_side_is_a_base_step() {
         Remote {
             records: vec![record(first, "7", point(486900.0))],
             info: None,
+            blocks: None,
         },
     )
     .unwrap();
@@ -1029,6 +1041,7 @@ fn a_version_this_device_knows_is_not_taken_again_nor_a_conflict() {
             Remote {
                 records: vec![record(first, "5", point(486700.0))],
                 info: None,
+                blocks: None,
             },
         )
         .unwrap();
@@ -1137,6 +1150,7 @@ fn a_removed_layer_stays_while_it_holds_unsent_objects() {
             Remote {
                 records: vec![],
                 info: Some(info),
+                blocks: None,
             },
         )
         .unwrap();
@@ -1200,6 +1214,7 @@ fn a_removed_layer_with_everything_sent_goes() {
             Remote {
                 records: vec![],
                 info: Some(info),
+                blocks: None,
             },
         )
         .unwrap();
@@ -1232,11 +1247,12 @@ fn taking_the_servers_metadata_keeps_a_layer_with_unsent_objects() {
             Remote {
                 records: vec![],
                 info: Some(info.clone()),
+                blocks: None,
             },
         )
         .unwrap();
     assert_eq!(taken.conflicts, 1);
-    let kept = sync.take_theirs(&mut o.document, Some(&info)).unwrap();
+    let kept = sync.take_theirs(&mut o.document, Some(&info), None).unwrap().kept;
     assert_eq!(kept.len(), 1);
     assert_eq!(o.document.layers().get("parsel").unwrap().name, "Parsel");
     assert!(o.document.layers().get("bina").is_some());
@@ -1282,6 +1298,7 @@ fn take_commit(
         Remote {
             records,
             info: None,
+            blocks: None,
         },
     )
     .unwrap()
@@ -1301,6 +1318,7 @@ fn take_arrived(sync: &mut ProjectSync, doc: &mut Document, records: Vec<Feature
         Remote {
             records,
             info: None,
+            blocks: None,
         },
     )
     .unwrap()
@@ -1561,7 +1579,7 @@ fn with_their_metadata_changed_too_the_conflict_stays_with_the_layer_back() {
     assert_eq!(open, [PROJECT_KEY]);
     assert_eq!(sync.state(), SaveState::Conflict);
     assert!(o.document.layers().get("cizim").is_some());
-    sync.keep_mine();
+    sync.keep_mine(&o.document, None);
     let env = sync.next(&o.document).unwrap();
     let c = input(&env);
     assert!(c.project.is_none(), "our tree is the server's again");
@@ -1613,7 +1631,7 @@ fn a_draft_dropping_a_layer_someone_drew_on_since_keeps_it() {
     let slot = again.document.add(on_layer("cizim", 486610.0)).unwrap();
     let theirs = again.document.uid(slot).unwrap();
     match &mut again.source {
-        Source::Database { versions } => versions.push((theirs, "5".into())),
+        Source::Database { versions, .. } => versions.push((theirs, "5".into())),
         other => panic!("{other:?}"),
     }
     let mut sync = ProjectSync::new(&again).unwrap();

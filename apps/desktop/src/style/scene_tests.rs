@@ -355,3 +355,39 @@ fn the_parts_draw_what_the_layer_built_whole_draws() {
         );
     }
 }
+
+#[test]
+fn a_changed_definition_draws_its_inserts_again() {
+    let library = kentos_native_style::system::library();
+    let mut doc = drawing(10, None);
+    let block: kentos_contracts::BlockDefinition = serde_json::from_value(json!({
+        "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001", "name": "Rögar", "base": { "x": 0, "y": 0 },
+        "entities": [{ "kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": { "x": -2, "y": 0 }, "b": { "x": 2, "y": 0 } }]
+    }))
+    .expect("a definition");
+    doc.model.add_block(block.clone()).expect("defined");
+    let insert: Entity = serde_json::from_value(json!({
+        "kind": "insert", "id": 0, "layerId": "yol", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+        "p": { "x": 486_500.0, "y": 4_420_500.0 }, "scale": 1.0, "rotation": 0.0
+    }))
+    .expect("an insert");
+    doc.model.add(insert).expect("placed");
+    let mut spatial = Spatial::of(&doc.model);
+    let mut cache = StyledCache::default();
+    let before = scene_of(&mut cache, &doc, &mut spatial, &library);
+    // A new base point: the insert draws its line elsewhere.
+    let moved = kentos_contracts::BlockDefinition {
+        base: Vec2 { x: 5.0, y: 5.0 },
+        ..block
+    };
+    assert!(doc.model.update_block(moved).expect("changed"));
+    let after = scene_of(&mut cache, &doc, &mut spatial, &library);
+    assert!(
+        !Arc::ptr_eq(&after.layers[0], &before.layers[0]),
+        "yol, which holds the insert, is built again"
+    );
+    assert!(
+        Arc::ptr_eq(&after.layers[1], &before.layers[1]),
+        "parsel, which does not, stays"
+    );
+}

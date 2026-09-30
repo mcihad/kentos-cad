@@ -6,6 +6,8 @@
 //   node apps/desktop/scripts/web-client.mjs whoami <login>
 //   node apps/desktop/scripts/web-client.mjs move-point <login> <tenant> <project> <id> <dx>
 //   node apps/desktop/scripts/web-client.mjs save-file <login> <tenant> <project>
+//   node apps/desktop/scripts/web-client.mjs blocks <login> <tenant> <project>
+//   node apps/desktop/scripts/web-client.mjs rename-block <login> <tenant> <project> <id> <name>
 //
 // The server is KENTOS_LIVE_API; the password KENTOS_DEV_PASSWORD, which is
 // never printed. Each command prints one JSON line.
@@ -71,6 +73,22 @@ if (command === 'whoami') {
     envelope(tenant, project, 'project.file.commit', { uploadId: upload.id }, { '@file': current }),
   );
   console.log(JSON.stringify({ revision: committed.revision }));
+} else if (command === 'blocks') {
+  // The project's block definitions (docs/adr/0144 §5): each one's id, name and version.
+  const [tenant, project] = args;
+  const list = await call('GET', `/v1/tenants/${tenant}/projects/${project}/blocks`);
+  console.log(JSON.stringify({ blocks: list.blocks.map((r) => ({ id: r.block.id, name: r.block.name, version: r.version })) }));
+} else if (command === 'rename-block') {
+  const [tenant, project, id, name] = args;
+  const list = await call('GET', `/v1/tenants/${tenant}/projects/${project}/blocks`);
+  const record = list.blocks.find((r) => r.block.id === id);
+  if (!record) throw new Error(`${id} bloğu projede yok`);
+  const result = await call(
+    'POST',
+    `/v1/tenants/${tenant}/projects/${project}/commands`,
+    envelope(tenant, project, 'project.changes', { features: [], blocks: [{ op: 'update', block: { ...record.block, name } }] }, { [`block:${id}`]: record.version }),
+  );
+  console.log(JSON.stringify({ version: result.versions[`block:${id}`] }));
 } else {
   throw new Error(`bilinmeyen komut: ${command}`);
 }

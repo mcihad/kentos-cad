@@ -4,8 +4,9 @@
 //! - **a database project:** its objects page by page (the web's 2000), each
 //!   under the server's id as its persistent id (docs/adr/0026), with the
 //!   server's version of each kept as the base of the changes sent later
-//!   (sync.rs). Pages are separate reads; like the web, the events after the
-//!   cursor read with the metadata bring the rest in.
+//!   (sync.rs); its block definitions come with the metadata, with their
+//!   versions (docs/adr/0144 §5). Pages are separate reads; like the web,
+//!   the events after the cursor read with the metadata bring the rest in.
 //! - **a file project:** its newest revision, checked against the SHA-256 the
 //!   list gives and decoded with the shared codec (docs/adr/0031); one with
 //!   nothing saved yet opens empty, with its metadata.
@@ -17,8 +18,8 @@
 use std::future::Future;
 
 use kentos_contracts::{
-    DOCUMENT_FORMAT, DOCUMENT_VERSION_2, DocumentSnapshotV2, EntityId, FeatureRecord, ProjectId,
-    ProjectInfo, ProjectPermission, ProjectState, ProjectStorage,
+    BlockId, DOCUMENT_FORMAT, DOCUMENT_VERSION_2, DocumentSnapshotV2, EntityId, FeatureRecord,
+    ProjectId, ProjectInfo, ProjectPermission, ProjectState, ProjectStorage,
 };
 use kentos_domain::Document;
 use uuid::Uuid;
@@ -42,8 +43,11 @@ pub struct Revision {
 #[derive(Clone, Debug, PartialEq)]
 pub enum Source {
     /// Object by object: the server's version of each when it was read, the
-    /// base of the changes sent from here (sync.rs).
-    Database { versions: Vec<(Uuid, String)> },
+    /// base of the changes sent from here (sync.rs); and each block definition's.
+    Database {
+        versions: Vec<(Uuid, String)>,
+        blocks: Vec<(BlockId, String)>,
+    },
     /// A file project at this revision; `None` before its first save. A save
     /// is based on it (`expectedVersions["@file"]`).
     File { revision: Option<Revision> },
@@ -86,7 +90,7 @@ type Objects = Vec<(EntityId, kentos_contracts::Entity)>;
 /// Each object's version on the server.
 type Versions = Vec<(Uuid, String)>;
 
-/// A drawing of the project's metadata and these objects.
+/// A drawing of the project's metadata, its block definitions and these objects.
 fn snapshot(info: &ProjectInfo, project: Uuid, objects: Objects) -> DocumentSnapshotV2 {
     let (uids, entities) = objects.into_iter().unzip();
     DocumentSnapshotV2 {
@@ -101,8 +105,7 @@ fn snapshot(info: &ProjectInfo, project: Uuid, objects: Objects) -> DocumentSnap
         entities,
         uids,
         styles: info.styles.clone(),
-        // A database project keeps no block definitions yet (docs/adr/0144 §5).
-        blocks: Vec::new(),
+        blocks: info.blocks.iter().map(|r| r.block.clone()).collect(),
         project_id: Some(ProjectId(project.into_bytes())),
         migrated_from: None,
     }
@@ -177,13 +180,18 @@ async fn database(
         after = page.next;
     }
     let (objects, versions) = objects_of(&info, records)?;
+    let blocks = info
+        .blocks
+        .iter()
+        .map(|r| (r.block.id, r.version.clone()))
+        .collect();
     let document = build(info.name.clone(), snapshot(&info, project, objects)).await?;
     Ok(Opened {
         tenant,
         project,
         info,
         document,
-        source: Source::Database { versions },
+        source: Source::Database { versions, blocks },
     })
 }
 

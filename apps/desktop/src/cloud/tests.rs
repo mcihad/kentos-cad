@@ -161,6 +161,7 @@ fn opened(info: ProjectInfo) -> Opened {
                     )
                 })
                 .collect(),
+            blocks: Vec::new(),
         },
         ProjectStorage::File => Source::File {
             revision: Some(Revision {
@@ -1027,6 +1028,7 @@ fn others_changes_are_waited_for_and_asked_for_again_at_once() {
                     entity: theirs.clone(),
                 }],
                 info: None,
+                blocks: None,
             }),
         },
     );
@@ -1114,6 +1116,7 @@ fn fetched(app: &mut App, ids: &[Uuid], cursor: &str) {
                     })
                     .collect(),
                 info: None,
+                blocks: None,
             }),
         },
     );

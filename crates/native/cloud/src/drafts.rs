@@ -197,6 +197,7 @@ mod tests {
             version: DRAFT_VERSION,
             user_id: user.into(),
             changes: BTreeMap::new(),
+            blocks: BTreeMap::new(),
             meta: None,
             inflight: None,
             updated: 1,

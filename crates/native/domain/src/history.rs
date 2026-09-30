@@ -19,7 +19,7 @@
 use std::collections::{HashSet, VecDeque};
 use std::sync::Arc;
 
-use kentos_contracts::{BlockDefinition, LayerNode, LayerStyle};
+use kentos_contracts::{BlockDefinition, BlockId, Entity, LayerNode, LayerStyle};
 
 use crate::changes::Journal;
 use crate::document::Document;
@@ -452,6 +452,34 @@ impl Document {
             .collect();
         self.history.undo = undo;
         self.history.redo = redo;
+    }
+
+    /// Drops the undo and redo steps that change one of the `changed`
+    /// definitions (someone else's now), or that place or hold one of the
+    /// `gone` ones: undoing them would revert that change, or put back an
+    /// insert of a block the drawing no longer has (the web's
+    /// `forgetBlockHistory`, docs/adr/0144 §5).
+    pub(crate) fn forget_block_history(&mut self, changed: &HashSet<BlockId>, gone: &HashSet<BlockId>) {
+        if changed.is_empty() {
+            return;
+        }
+        let places = |e: &Entity| matches!(e, Entity::Insert(i) if gone.contains(&i.block));
+        let holds = |b: &BlockDefinition| !gone.is_empty() && b.entities.iter().any(places);
+        let touches = |step: &Step| {
+            step.ops.iter().any(|op| match op {
+                Op::BlockUpdate { before, after } => {
+                    changed.contains(&after.id) || holds(before) || holds(after)
+                }
+                Op::BlockAdd { block, .. } | Op::BlockRemove { block, .. } => {
+                    changed.contains(&block.id) || holds(block)
+                }
+                Op::Update { before, after } => places(&before.entity) || places(&after.entity),
+                Op::Add(s) | Op::Remove(s) => places(&s.entity),
+                _ => false,
+            })
+        };
+        self.history.undo.retain(|step| !touches(step));
+        self.history.redo.retain(|step| !touches(step));
     }
 
     /// Drops the undo and redo steps that change the layer tree: another

@@ -14,11 +14,18 @@
 //! keeps its slot, a new one gets the next slot. A change that names an id
 //! twice, or the nil id, is refused before anything happens, and so is any
 //! change while a transaction or a group is open.
+//!
+//! Block definitions (docs/adr/0144 §5) come as the whole list the drawing
+//! takes, in its order; a definition that did not change keeps its `Arc`,
+//! so readers that compare them by pointer see only the changed ones. A
+//! list that breaks a block rule is refused before anything happens. The
+//! steps that change a definition that differs now, or that place or hold
+//! one that is gone, are dropped.
 
 use std::collections::HashSet;
 use std::sync::Arc;
 
-use kentos_contracts::{Entity, LayerNode, ProjectSettings, ProjectStyles};
+use kentos_contracts::{BlockDefinition, Entity, LayerNode, ProjectSettings, ProjectStyles};
 
 use crate::document::Document;
 use crate::history::Op;
@@ -44,11 +51,13 @@ pub struct External {
     /// Objects removed; ids the drawing does not have are skipped.
     pub remove: Vec<Uuid>,
     pub meta: Option<ExternalMeta>,
+    /// The block definitions the drawing takes, whole and in order; none: they stay.
+    pub blocks: Option<Vec<BlockDefinition>>,
 }
 
 impl External {
     pub fn is_empty(&self) -> bool {
-        self.put.is_empty() && self.remove.is_empty() && self.meta.is_none()
+        self.put.is_empty() && self.remove.is_empty() && self.meta.is_none() && self.blocks.is_none()
     }
 }
 
@@ -73,6 +82,37 @@ impl Document {
                 ));
             }
         }
+        // The definitions checked whole first: an unchanged one keeps its `Arc`.
+        let blocks = match &change.blocks {
+            Some(list) => {
+                kentos_contracts::blocks::check(list, &[]).map_err(|fault| {
+                    format!(
+                        "Gelen blok tanımları kurala uymuyor ({}); değişiklik uygulanmadı.",
+                        fault.message(|i| list.get(i).map_or("", |b| b.name.as_str()))
+                    )
+                })?;
+                let mut changed = HashSet::new();
+                let next: Vec<Arc<BlockDefinition>> = list
+                    .iter()
+                    .map(|b| match self.blocks.iter().find(|w| w.id == b.id) {
+                        Some(was) if **was == *b => was.clone(),
+                        _ => {
+                            changed.insert(b.id);
+                            Arc::new(b.clone())
+                        }
+                    })
+                    .collect();
+                let gone: HashSet<_> = self
+                    .blocks
+                    .iter()
+                    .map(|b| b.id)
+                    .filter(|id| !list.iter().any(|b| b.id == *id))
+                    .collect();
+                changed.extend(gone.iter().copied());
+                Some((next, changed, gone))
+            }
+            None => None,
+        };
         let added = change
             .put
             .iter()
@@ -127,7 +167,16 @@ impl Document {
                 ops.push(Op::Remove(stored.clone()));
             }
         }
-        let changed = !ops.is_empty() || change.meta.is_some();
+        let blocks_changed = blocks.as_ref().is_some_and(|(_, c, _)| !c.is_empty());
+        let changed = !ops.is_empty() || change.meta.is_some() || blocks_changed;
+        // The definitions before the objects: an insert that comes is placed with them.
+        let mut forget_blocks = None;
+        if let Some((next, changed, gone)) = blocks
+            && !changed.is_empty()
+        {
+            self.blocks = next;
+            forget_blocks = Some((changed, gone));
+        }
         for op in &ops {
             self.apply_op(op);
         }
@@ -149,6 +198,9 @@ impl Document {
             }
         }
         self.forget_history_of(&slots, &named);
+        if let Some((changed, gone)) = forget_blocks {
+            self.forget_block_history(&changed, &gone);
+        }
         // Another editor's object on a layer a step added (or took away):
         // undoing that step would take the layer from under it, so the step goes.
         self.forget_layer_history(&on_layers);

@@ -7,7 +7,7 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::{BlockDefinition, BlockId, BlockList, BlockRecord, Entity};
+use kentos_contracts::{BlockDefinition, BlockId, BlockList, BlockRecord};
 use kentos_formats::blocks::Placing;
 use serde_json::Value;
 use sqlx::{Postgres, Transaction};
@@ -109,22 +109,7 @@ pub(crate) async fn insert_all(
 /// The definitions whose placed objects change when `changed` change: they
 /// and every definition placing one of them, however deep.
 pub(crate) fn affected(blocks: &[BlockDefinition], changed: &HashSet<BlockId>) -> HashSet<BlockId> {
-    let mut out = changed.clone();
-    loop {
-        let before = out.len();
-        for b in blocks {
-            if !out.contains(&b.id)
-                && b.entities
-                    .iter()
-                    .any(|e| matches!(e, Entity::Insert(i) if out.contains(&i.block)))
-            {
-                out.insert(b.id);
-            }
-        }
-        if out.len() == before {
-            return out;
-        }
-    }
+    kentos_contracts::blocks::reaching(blocks, changed)
 }
 
 /// The inserts placing one of `blocks` get their geometry anew from

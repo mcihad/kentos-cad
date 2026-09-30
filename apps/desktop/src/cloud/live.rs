@@ -74,8 +74,12 @@ pub struct Live {
     pub(super) poll_tries: u32,
     /// Others' changes fetched while an edit was open: taken once it ends.
     pub(super) taking: Option<(kentos_cloud::Incoming, kentos_cloud::Remote, bool)>,
-    /// The server's copies chosen while an edit was open: taken once it ends.
-    pub(super) theirs: Option<Option<kentos_contracts::ProjectInfo>>,
+    /// The server's copies chosen while an edit was open (its info and block
+    /// definitions, when asked for): taken once it ends.
+    pub(super) theirs: Option<(
+        Option<kentos_contracts::ProjectInfo>,
+        Option<Vec<kentos_contracts::BlockRecord>>,
+    )>,
     /// `polling` holds the long poll, not a fetch: a request that must not
     /// wait for the next commit may take its place (docs/adr/0081).
     pub(super) long_poll: bool,
@@ -85,6 +89,9 @@ pub struct Live {
     pub(super) give_back: bool,
     /// The server's tree for that, come while an edit was open: used once it ends.
     pub(super) giving: Option<kentos_contracts::ProjectInfo>,
+    /// The server's block definitions after it refused to remove one still
+    /// placed there, come while an edit was open: used once it ends.
+    pub(super) giving_blocks: Option<Vec<kentos_contracts::BlockRecord>>,
     pub told: Told,
     /// When the server last answered a save (milliseconds since 1970; the save cell's tip).
     pub last_saved: Option<i64>,
@@ -125,6 +132,7 @@ impl Live {
             long_poll: false,
             give_back: false,
             giving: None,
+            giving_blocks: None,
             told: Told::default(),
             last_saved: None,
         }
@@ -439,10 +447,13 @@ impl App {
                     }
                     ended = live.sync.state().ended();
                     // The server's guard may have refused our tree for a layer
-                    // someone drew on meanwhile: the missed events come first,
-                    // then those layers are given back (follow.rs, docs/adr/0081);
-                    // the conflict is said then, if it stays.
-                    give_back = !ended && live.sync.may_give_back(&doc.model);
+                    // someone drew on meanwhile, or the removal of a block
+                    // definition someone placed: the missed events come first,
+                    // then those layers or definitions are given back (follow.rs,
+                    // docs/adr/0081, 0144 §5); the conflict is said then, if it stays.
+                    give_back = !ended
+                        && (live.sync.may_give_back(&doc.model)
+                            || live.sync.may_give_back_blocks());
                     if give_back {
                         live.give_back = true;
                     } else if !ended {

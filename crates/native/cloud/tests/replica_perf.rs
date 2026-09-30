@@ -159,6 +159,7 @@ fn opened(n: usize) -> Opened {
         document,
         source: Source::Database {
             versions: (0..n).map(|i| (uid(i), "1".to_string())).collect(),
+            blocks: Vec::new(),
         },
     }
 }
