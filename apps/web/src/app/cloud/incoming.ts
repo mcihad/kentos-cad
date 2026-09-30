@@ -33,8 +33,12 @@ export function projectStylesProblem(styles: { items: readonly unknown[]; catego
   return check.issues.length ? `proje stillerinde sorun var (${check.issues[0]})` : null;
 }
 
-/** Metadata and objects as document content, numbered 1…n in the given order, or the reason they are unreadable. */
-export function readIncoming(meta: IncomingMeta, entities: readonly unknown[]): Checked {
+/**
+ * Metadata and objects as document content, numbered 1…n in the given
+ * order, or the reason they are unreadable; `blocks`, the block definitions
+ * (docs/adr/0144), checked like a file's and placed by its inserts.
+ */
+export function readIncoming(meta: IncomingMeta, entities: readonly unknown[], blocks: readonly unknown[] = []): Checked {
   const snapshot = {
     format: DOCUMENT_FORMAT,
     version: DOCUMENT_VERSION,
@@ -46,6 +50,7 @@ export function readIncoming(meta: IncomingMeta, entities: readonly unknown[]): 
     activeLayer: meta.activeLayer,
     entities: entities.map((e, i) => ({ ...(e as object), id: i + 1 })),
     styles: meta.styles,
+    ...(blocks.length ? { blocks } : {}),
   };
   const read = readSnapshot(JSON.stringify(snapshot));
   if (!read.ok) return read;
@@ -60,8 +65,8 @@ export function readIncoming(meta: IncomingMeta, entities: readonly unknown[]): 
  * ids come beside the objects). An id that is not a UUID as KentOS writes
  * it refuses the project, like any unreadable object.
  */
-export function readProject(meta: IncomingMeta, records: readonly { id: string; entity: unknown }[]): Checked {
-  const read = readIncoming(meta, records.map((r) => r.entity));
+export function readProject(meta: IncomingMeta, records: readonly { id: string; entity: unknown }[], blocks: readonly unknown[] = []): Checked {
+  const read = readIncoming(meta, records.map((r) => r.entity), blocks);
   if (!read.ok) return read;
   const entities = read.content.entities as Entity[];
   for (let i = 0; i < entities.length; i++) {
@@ -84,8 +89,13 @@ export function metaOf(doc: CadDocument): IncomingMeta {
   };
 }
 
-/** Objects checked against the drawing's layers, in order; or the reason. */
-export function readEntities(doc: CadDocument, entities: readonly unknown[]): { ok: true; entities: Entity[] } | { ok: false; error: string } {
-  const read = readIncoming(metaOf(doc), entities);
+/**
+ * Objects checked against the drawing's layers and the block definitions
+ * their inserts may place (by default the drawing's), in order; or the reason.
+ */
+export function readEntities(doc: CadDocument, entities: readonly unknown[], blocks: readonly { id: string }[] = doc.blocks.value): { ok: true; entities: Entity[] } | { ok: false; error: string } {
+  // An insert's check asks only whether its block is there: stand-ins, so the definitions are not checked again.
+  const stand = blocks.map((b, i) => ({ id: b.id, name: `b${i}`, base: { x: 0, y: 0 }, entities: [] }));
+  const read = readIncoming(metaOf(doc), entities, stand);
   return read.ok ? { ok: true, entities: [...read.content.entities] } : read;
 }

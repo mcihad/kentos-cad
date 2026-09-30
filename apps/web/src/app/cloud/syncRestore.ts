@@ -1,12 +1,14 @@
+import type { BlockChange } from '../../contracts/generated/BlockChange';
 import type { ProjectPatch } from '../../contracts/generated/ProjectPatch';
 import type { ExternalMeta } from '../../model/document';
 import type { Entity } from '../../model/entities';
 import { ApiFailure } from './api';
-import type { Draft } from './drafts';
+import type { Draft, DraftBlock } from './drafts';
 import { readIncoming } from './incoming';
 import { givenBackText, treeIds, withNodesFrom } from './keptLayers';
+import { draftRemovals, draftUpserts, takeServerBlocks } from './syncBlocks';
 import type { SyncConflict, SyncCore } from './syncCore';
-import { metaParts } from './tracker';
+import { blockKey, metaParts } from './tracker';
 
 export type Restored = { waiting: true } | { waiting: false; conflicts: SyncConflict[]; changed: boolean };
 
@@ -23,19 +25,27 @@ export type Restored = { waiting: true } | { waiting: false; conflicts: SyncConf
  * no answer from the server: the whole draft is kept for the next attempt.
  * An object edited since the project reopened keeps that newer edit. A
  * change the drawing cannot take (its layer is gone, say) stays in the
- * device draft, unsent, and the user is told (`SyncCore.held`).
+ * device draft, unsent, and the user is told (`SyncCore.held`). Block
+ * definitions (docs/adr/0144 §5) come back the same way, before the objects
+ * that may place them; a removal only once those objects are in
+ * (syncBlocks.ts).
  */
 export async function restoreDraft(core: SyncCore, draft: Draft): Promise<Restored> {
   const { o, tracker } = core;
   const doc = o.doc;
   // Changes the lost command carried; once it is answered they are the server's, not a draft's.
   const carried = new Map<string, string | null>();
+  const carriedBlocks = new Map<string, string | null>();
   if (draft.inflight) {
-    const sent = (draft.inflight.input as { features?: { op: string; id: string; entity?: unknown }[] }).features ?? [];
+    const input = draft.inflight.input as { features?: { op: string; id: string; entity?: unknown }[]; blocks?: BlockChange[] };
+    const sent = input.features ?? [];
     try {
       for (const f of sent) carried.set(f.id, f.op === 'delete' ? null : JSON.stringify(f.entity));
+      for (const b of input.blocks ?? []) carriedBlocks.set(b.op === 'delete' ? b.id : b.block.id, b.op === 'delete' ? null : JSON.stringify(b.block));
       await o.api.command(draft.inflight);
       core.own.add(draft.inflight.requestId);
+      // Its definitions before its objects, which may place them; a change made here since stays over them.
+      if (carriedBlocks.size) await takeServerBlocks(core, new Set(), true);
       await core.takeServerCopies(sent.map((f) => f.id));
       if (core.closed) return { waiting: false, conflicts: [], changed: false };
     } catch (e) {
@@ -47,6 +57,7 @@ export async function restoreDraft(core: SyncCore, draft: Draft): Promise<Restor
       }
       // Refused for good (a conflict or a rule): its changes stay in the draft and are checked below.
       carried.clear();
+      carriedBlocks.clear();
     }
   }
   // Which changes still wait, and which moved on the server meanwhile.
@@ -63,6 +74,16 @@ export async function restoreDraft(core: SyncCore, draft: Draft): Promise<Restor
     if (change.base !== serverVersion) moved.push(id);
   }
   const conflicts: SyncConflict[] = [];
+  // The same for the block definitions.
+  const blockWaiting: [string, DraftBlock][] = [];
+  for (const [id, change] of Object.entries(draft.blocks ?? {})) {
+    if (carriedBlocks.has(id) && carriedBlocks.get(id) === (change.block ? JSON.stringify(change.block) : null)) continue;
+    if (core.blocks.differs(doc, id)) continue;
+    const serverVersion = core.blocks.get(id)?.version ?? null;
+    if (!change.block && serverVersion === null && !doc.block(id)) continue;
+    blockWaiting.push([id, change]);
+    if (change.base !== serverVersion) conflicts.push({ featureId: blockKey(id), reason: serverVersion === null ? 'deleted' : 'changed', server: null, actual: serverVersion });
+  }
   if (moved.length) {
     const fresh = await o.api.featuresById(o.tenantId, o.projectId, moved);
     if (core.closed) return { waiting: false, conflicts: [], changed: false };
@@ -110,6 +131,8 @@ export async function restoreDraft(core: SyncCore, draft: Draft): Promise<Restor
     }
   }
   if (meta) doc.applyExternal({ meta });
+  // The draft's definitions before its objects, which may place them.
+  const blocksPut = draftUpserts(core, blockWaiting);
   // Checked against the layers the drawing has now (the draft's own tree included).
   const good = core.checked(
     waiting.flatMap(([id, c]) => (c.entity ? [{ key: id, entity: c.entity }] : [])),
@@ -131,8 +154,21 @@ export async function restoreDraft(core: SyncCore, draft: Draft): Promise<Restor
     touched.push(id);
   }
   doc.applyExternal({ put, remove });
+  // Removed definitions once the objects are in: one still placed stays.
+  const blocksGone = draftRemovals(
+    core,
+    blockWaiting.filter(([, c]) => !c.block).map(([id]) => id),
+  );
   for (const id of touched) core.dirty.add(id);
   if (meta) core.metaDirty = true;
+  if (blocksPut.length || blocksGone.length) core.blocksDirty = true;
   // A change kept aside is not in the drawing: there is nothing to choose between for it yet.
-  return { waiting: false, conflicts: conflicts.filter((c) => !core.held.has(c.featureId)), changed: touched.length > 0 || !!meta };
+  const aside = (c: SyncConflict) => core.held.has(c.featureId) || [...core.heldBlocks.keys()].some((id) => blockKey(id) === c.featureId);
+  // A removal the drawing kept (still placed) is no longer the draft's: nothing to choose either.
+  const dropped = new Set(blockWaiting.filter(([id, c]) => !c.block && !blocksGone.includes(id)).map(([id]) => blockKey(id)));
+  return {
+    waiting: false,
+    conflicts: conflicts.filter((c) => !aside(c) && !dropped.has(c.featureId)),
+    changed: touched.length > 0 || !!meta || blocksPut.length > 0 || blocksGone.length > 0,
+  };
 }

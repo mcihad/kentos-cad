@@ -724,9 +724,16 @@ export class CadDocument {
    * UUID, comes twice, belongs to another object of the drawing or would
    * change an object's own refuses the whole change before anything
    * happens. Refused while an edit is open.
+   *
+   * `blocks`: the drawing's block definitions become these, in this order
+   * (docs/adr/0144 §5); a definition that did not change keeps its object.
+   * A list that breaks a block rule refuses the whole change. Undo and redo
+   * steps that change a definition that differs now, or that place or hold
+   * one that is gone, are dropped.
    */
-  applyExternal(changes: { put?: readonly Entity[]; remove?: readonly number[]; meta?: ExternalMeta }): void {
+  applyExternal(changes: { put?: readonly Entity[]; remove?: readonly number[]; meta?: ExternalMeta; blocks?: readonly BlockDefinition[] }): void {
     if (this.busy) throw new Error('Açık bir düzenleme varken dışarıdan gelen değişiklik uygulanamaz.');
+    const blocks = changes.blocks ? this.externalBlocks(changes.blocks) : null;
     const given = new Set<string>();
     for (const e of changes.put ?? []) {
       if (e.uid === undefined) continue;
@@ -751,6 +758,8 @@ export class CadDocument {
     this.quiet++;
     this.external = true;
     try {
+      // The definitions first: whoever hears of the objects places their inserts with them.
+      if (blocks?.changed.size) this.blocks.set(blocks.list);
       if (ops.length) this.applyAll(ops);
       const m = changes.meta;
       if (m?.layers) this.layers.reset(m.layers, m.activeLayer ?? this.layers.active.value);
@@ -771,6 +780,7 @@ export class CadDocument {
       uids.add(e.uid);
     }
     this.forgetHistoryOf(slots, uids);
+    if (blocks?.changed.size) this.forgetBlockHistory(blocks.changed, blocks.gone);
     // Another editor's object on a layer a step added (or took away): undoing that step would take the
     // layer from under it, so the step goes.
     const onLayers = new Set((changes.put ?? []).map((e) => e.layerId));
@@ -788,6 +798,49 @@ export class CadDocument {
       this.redoStack = this.redoStack.filter((tx) => !touchesTree(tx));
       this.syncHistory();
     }
+  }
+
+  /**
+   * Block definitions from elsewhere, checked whole before anything
+   * changes: the list the drawing takes (an unchanged definition keeps its
+   * object), the ids whose definition differs now or is gone, and those gone.
+   */
+  private externalBlocks(list: readonly BlockDefinition[]): { list: BlockDefinition[]; changed: Set<string>; gone: Set<string> } {
+    const fault = definitionsFault(list);
+    if (fault) throw new Error(`Gelen blok tanımları kurala uymuyor (${blockFaultMessage(fault, (i) => list[i]?.name ?? '')}); değişiklik uygulanmadı.`);
+    const before = new Map(this.blocks.value.map((b) => [b.id, b]));
+    const changed = new Set<string>();
+    const next = list.map((b) => {
+      const was = before.get(b.id);
+      if (was && sameJson(was, b)) return was;
+      changed.add(b.id);
+      return structuredClone(b);
+    });
+    const kept = new Set(next.map((b) => b.id));
+    const gone = new Set([...before.keys()].filter((id) => !kept.has(id)));
+    for (const id of gone) changed.add(id);
+    return { list: next, changed, gone };
+  }
+
+  /**
+   * Drops the undo and redo steps that change one of the `changed`
+   * definitions (someone else's now), or that place or hold one of the
+   * `gone` ones: undoing them would revert that change, or put back an
+   * insert of a block the drawing no longer has.
+   */
+  private forgetBlockHistory(changed: ReadonlySet<string>, gone: ReadonlySet<string>): void {
+    const places = (e: Entity) => e.kind === 'insert' && gone.has(e.block);
+    const holds = (b: BlockDefinition) => gone.size > 0 && b.entities.some(places);
+    const touches = (tx: Transaction) =>
+      tx.ops.some((o) => {
+        if (o.type === 'blockUpdate') return changed.has(o.after.id) || holds(o.before) || holds(o.after);
+        if (o.type === 'blockAdd' || o.type === 'blockRemove') return changed.has(o.block.id) || holds(o.block);
+        if (o.type === 'update') return places(o.before) || places(o.after);
+        return (o.type === 'add' || o.type === 'remove') && places(o.entity);
+      });
+    this.undoStack = this.undoStack.filter((tx) => !touches(tx));
+    this.redoStack = this.redoStack.filter((tx) => !touches(tx));
+    this.syncHistory();
   }
 
   /**

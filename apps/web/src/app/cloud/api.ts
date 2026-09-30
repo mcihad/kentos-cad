@@ -1,5 +1,6 @@
 import type { ApiError } from '../../contracts/generated/ApiError';
 import type { AuthConfig } from '../../contracts/generated/AuthConfig';
+import type { BlockList } from '../../contracts/generated/BlockList';
 import type { CatalogSort } from '../../contracts/generated/CatalogSort';
 import type { CatalogView } from '../../contracts/generated/CatalogView';
 import type { CommandEnvelope } from '../../contracts/generated/CommandEnvelope';
@@ -157,6 +158,8 @@ export interface CloudApi {
   deleteProject(tenant: string, project: string): Promise<void>;
   features(tenant: string, project: string, after: string | null, limit: number, signal?: AbortSignal): Promise<FeaturePage>;
   featuresById(tenant: string, project: string, ids: readonly string[]): Promise<FeaturePage>;
+  /** A database project's block definitions with their versions (`GET …/blocks`, docs/adr/0144 §5). */
+  blocks(tenant: string, project: string): Promise<BlockList>;
   command(envelope: CommandEnvelope): Promise<CommitResult>;
   events(tenant: string, project: string, after: string): Promise<EventPage>;
   /** Who may use a project and why (needs `project.share`). */
@@ -343,6 +346,9 @@ export class HttpCloudApi implements CloudApi {
   }
   featuresById(tenant: string, project: string, ids: readonly string[]) {
     return this.call<FeaturePage>('GET', `${this.base(tenant, project)}/features?ids=${ids.map(encodeURIComponent).join(',')}`);
+  }
+  blocks(tenant: string, project: string) {
+    return this.call<BlockList>('GET', `${this.base(tenant, project)}/blocks`);
   }
   command(envelope: CommandEnvelope) {
     return this.call<CommitResult>('POST', `${this.base(envelope.tenantId, envelope.projectId)}/commands`, envelope);

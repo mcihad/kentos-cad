@@ -156,10 +156,10 @@ const client = () => ({
     if (set) this.cookie = set.split(';')[0];
     return { status: res.status, body: res.status === 204 ? null : await res.json() };
   },
-  commit(tenantId, projectId, features, expected) {
+  commit(tenantId, projectId, features, expected, blocks) {
     return this.call('POST', `/v1/tenants/${tenantId}/projects/${projectId}/commands`, {
       commandName: 'project.changes', version: 1, tenantId, projectId, requestId: `e2e-${crypto.randomUUID()}`,
-      idempotencyKey: crypto.randomUUID(), expectedVersions: expected, input: { features },
+      idempotencyKey: crypto.randomUUID(), expectedVersions: expected, input: { features, ...(blocks ? { blocks } : {}) },
     });
   },
   /** A catalog or lifecycle command (docs/adr/0028). */
@@ -372,6 +372,53 @@ try {
       made.layer && made.objects === 2 && !removed.layer && removed.objects === 0 && step === 'Katman sil' && back.layer && back.objects === 2,
       JSON.stringify({ made, removed, step, back }),
     );
+  }
+
+  // Block definitions (docs/adr/0144 §5): one made and placed here is saved with its insert; Mehmet renames it
+  // and places it too, which arrives live; he takes his insert back, and the definition removed here with its
+  // last insert leaves the server.
+  {
+    const pbase = `/v1/tenants/${project.tenantId}/projects/${project.projectId}`;
+    const saved = () => b.waitFor(`window.kentos.cloud.sync.value.state.value === 'saved' && !window.kentos.doc.dirty.value`, 15000);
+    const layer = await b.eval('window.kentos.doc.layers.active.value');
+    const made = await b.eval(`(() => {
+      const d = window.kentos.doc;
+      const id = crypto.randomUUID();
+      const arm = (k, a, b) => ({ kind: 'line', id: k, layerId: '', a, b, attrs: {} });
+      d.addBlock({ id, name: 'E2E Rögar', base: { x: 0, y: 0 }, entities: [arm(1, { x: -4, y: 0 }, { x: 4, y: 0 }), arm(2, { x: 0, y: -4 }, { x: 0, y: 4 }), { kind: 'circle', id: 3, layerId: '', c: { x: 0, y: 0 }, r: 3, attrs: {} }] });
+      const ins = d.add({ kind: 'insert', layerId: ${JSON.stringify(layer)}, block: id, p: { x: ${X + 20}, y: ${N + 20} }, scale: 1, rotation: 0, attrs: {} });
+      return { id, insert: ins.uid, slot: ins.id };
+    })()`);
+    await saved();
+    const listed = await mehmet.call('GET', `${pbase}/blocks`);
+    const there = listed.body.blocks?.find((r) => r.block.id === made.id);
+    const insertThere = (await mehmet.call('GET', `${pbase}/features?ids=${made.insert}`)).body.features?.[0];
+    check('a block made and placed here is saved with its insert', there?.block.name === 'E2E Rögar' && insertThere?.entity.block === made.id, `v${there?.version}`);
+    const his = crypto.randomUUID();
+    const hisInsert = { kind: 'insert', id: 1, layerId: layer, block: made.id, p: { x: X + 45, y: N + 20 }, scale: 1.5, rotation: 0.4, attrs: {} };
+    const renamed = await mehmet.commit(project.tenantId, project.projectId, [{ op: 'create', id: his, entity: hisInsert }], { [`block:${made.id}`]: there?.version }, [{ op: 'update', block: { ...there?.block, name: 'E2E Rögar kapağı' } }]);
+    await b.waitFor(`window.kentos.doc.block(${JSON.stringify(made.id)})?.name === 'E2E Rögar kapağı' && !!window.kentos.doc.byUid(${JSON.stringify(his)})`, 8000).catch(() => {});
+    const arrived = await b.eval(`(() => { const d = window.kentos.doc; return { name: d.block(${JSON.stringify(made.id)})?.name, his: d.byUid(${JSON.stringify(his)})?.kind, dirty: d.dirty.value }; })()`);
+    check('the other editor’s rename and insert arrive live, with no unsaved mark', renamed.status === 200 && arrived.name === 'E2E Rögar kapağı' && arrived.his === 'insert' && !arrived.dirty, `${renamed.status} ${renamed.body.message ?? ''} ${JSON.stringify(arrived)}`);
+    // The two inserts and the Bloklar panel, which counts them.
+    const dockWas = await b.eval('window.kentos.ui.dockTab.value');
+    await b.eval(`window.kentos.ui.dockTab.set('blocks')`);
+    await b.eval(`window.kentos.view.camera.fit({ minX: ${X}, minY: ${N + 5}, maxX: ${X + 65}, maxY: ${N + 35} }, 20)`);
+    await sleep(400);
+    await b.shot('cloud-blocks');
+    await b.eval(`window.kentos.ui.dockTab.set(${JSON.stringify(dockWas)})`);
+    const hisVersion = renamed.body.versions?.[his];
+    const back = await mehmet.commit(project.tenantId, project.projectId, [{ op: 'delete', id: his }], { [his]: hisVersion });
+    await b.waitFor(`!window.kentos.doc.byUid(${JSON.stringify(his)})`, 8000).catch(() => {});
+    await b.eval(`(() => { const d = window.kentos.doc; d.remove([${made.slot}]); d.removeBlock(${JSON.stringify(made.id)}); })()`);
+    await saved();
+    const left = await mehmet.call('GET', `${pbase}/blocks`);
+    check(
+      'removed here with its last insert, the definition leaves the server',
+      back.status === 200 && !left.body.blocks?.some((r) => r.block.id === made.id) && (await mehmet.call('GET', `${pbase}/features?ids=${made.insert}`)).body.features?.length === 0,
+      `${left.body.blocks?.length} tanım`,
+    );
+    await b.eval(`window.kentos.view.camera.fit({ minX: ${X - 50}, minY: ${N - 50}, maxX: ${X + 150}, maxY: ${N + 50} }, 20)`);
   }
 
   // Mehmet moves the line's end: the change arrives live, with no unsaved mark.

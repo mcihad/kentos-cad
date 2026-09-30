@@ -131,6 +131,16 @@ describe('device drafts written before persistent ids were the server’s', () =
     expect(now!.changes[s2]).toEqual({ base: '1', entity: null });
   });
 
+  it('reads the block definitions waiting in a draft, and names the ones it cannot', () => {
+    const [a, b, c] = [crypto.randomUUID(), crypto.randomUUID(), crypto.randomUUID()];
+    const block = { id: a, name: 'Kapı', base: { x: 0, y: 0 }, entities: [] };
+    const read = readDraft({ version: DRAFT_VERSION, userId: 'u1', changes: {}, blocks: { [a]: { base: null, block }, [b]: { base: '2', block: null }, 'yerel-1': { base: null, block }, [c]: { base: 3, block: null } }, updated: 1 })!;
+    expect(read.draft.blocks).toEqual({ [a]: { base: null, block }, [b]: { base: '2', block: null } });
+    expect(read.problems).toEqual(['yerel-1 blok tanımının değişikliği okunamadı', `${c} blok tanımının değişikliği okunamadı`]);
+    const odd = readDraft({ version: DRAFT_VERSION, userId: 'u1', changes: {}, blocks: [], updated: 1 })!;
+    expect([odd.draft.blocks, odd.problems]).toEqual([undefined, ['blok tanımı değişiklikleri okunamadı']]);
+  });
+
   it('reads the old format and the current one, and refuses what is not a draft', () => {
     const [a, b] = [crypto.randomUUID(), crypto.randomUUID()];
     const old = readDraft({ userId: 'u1', changes: { [a.toUpperCase()]: { base: '3', entity: null }, [b]: { base: null, entity: { kind: 'point' } } }, meta: undefined, inflight: undefined, updated: 5 })!;

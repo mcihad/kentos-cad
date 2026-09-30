@@ -1,5 +1,7 @@
+import type { BlockChange } from '../../contracts/generated/BlockChange';
 import type { FeatureChange } from '../../contracts/generated/FeatureChange';
 import type { ProjectPatch } from '../../contracts/generated/ProjectPatch';
+import { checkNesting, type BlockDefinition } from '../../model/blocks';
 import type { CadDocument } from '../../model/document';
 import type { Entity } from '../../model/entities';
 
@@ -88,6 +90,110 @@ export class Tracker {
   settled(doc: CadDocument, p: Planned): boolean {
     const cur = doc.byUid(p.id);
     return p.op === 'delete' ? !cur : !!cur && entityJson(cur) === p.json;
+  }
+}
+
+/**
+ * The key a block definition goes under in `expectedVersions`, a commit's
+ * `versions` and `deleted`, and a conflict (docs/adr/0144 §5; the
+ * contracts' `block_key`): objects go under their ids, the metadata under
+ * `@project`.
+ */
+export const blockKey = (id: string): string => `block:${id}`;
+
+/** The definition a conflict's or a commit's key names; null for an object's or the metadata's. */
+export const blockOfKey = (key: string): string | null => (key.startsWith('block:') ? key.slice(6) : null);
+
+/** A definition's text for comparison: the whole of it (its id is part of what the server keeps). */
+export const blockJson = (b: BlockDefinition): string => JSON.stringify(b);
+
+/** What one definition needs so the server matches the drawing. */
+export type PlannedBlock =
+  | { op: 'create'; id: string; block: BlockDefinition; json: string }
+  | { op: 'update'; id: string; block: BlockDefinition; json: string; expected: string }
+  | { op: 'delete'; id: string; expected: string };
+
+/** A planned change as a command carries it: a copy, so the command sent again after a lost answer is the same. */
+export function blockChangeOf(p: PlannedBlock): BlockChange {
+  if (p.op === 'delete') return { op: 'delete', id: p.id };
+  return { op: p.op, block: structuredClone(p.block) as unknown as Extract<BlockChange, { op: 'create' }>['block'] };
+}
+
+/**
+ * What the server has of each block definition (docs/adr/0144 §5), as the
+ * `Tracker` keeps it of objects: the version it last saw and the
+ * definition's text then. The changes are found by comparing the drawing's
+ * list with it, so an undo back to the saved state sends nothing.
+ */
+export class BlockTracker {
+  private readonly known = new Map<string, Tracked>();
+
+  get(id: string): Tracked | undefined {
+    return this.known.get(id);
+  }
+
+  /** The server has the definition at `version`, as `json`; null: the server does not have it. */
+  set(id: string, t: Tracked | null): void {
+    if (t) this.known.set(id, t);
+    else this.known.delete(id);
+  }
+
+  /** Every definition the server has, by id. */
+  ids(): IterableIterator<string> {
+    return this.known.keys();
+  }
+
+  /** Whether the drawing's definition with this id (or its absence) differs from what the server has. */
+  differs(doc: CadDocument, id: string): boolean {
+    const b = doc.block(id);
+    return (b ? blockJson(b) : null) !== (this.known.get(id)?.json ?? null);
+  }
+
+  /** What the server needs so its definitions match the drawing's: made and changed ones in the drawing's order, then removed ones. */
+  plan(doc: CadDocument): PlannedBlock[] {
+    const out: PlannedBlock[] = [];
+    const here = new Set<string>();
+    for (const block of doc.blocks.value) {
+      here.add(block.id);
+      const json = blockJson(block);
+      const t = this.known.get(block.id);
+      if (!t) out.push({ op: 'create', id: block.id, block, json });
+      else if (t.json !== json) out.push({ op: 'update', id: block.id, block, json, expected: t.version });
+    }
+    for (const [id, t] of this.known) if (!here.has(id)) out.push({ op: 'delete', id, expected: t.version });
+    return out;
+  }
+
+  /** The server accepted `p` at `version` (a delete: it no longer has the definition). */
+  acknowledge(p: PlannedBlock, version: string | undefined): void {
+    this.set(p.id, p.op === 'delete' || version === undefined ? null : { version, json: p.json });
+  }
+
+  /**
+   * `plan`'s changes in the order the server takes them a part at a time
+   * (docs/adr/0144 §5): made and changed definitions inner first, each after
+   * the ones it places, so every insert inside names one the server has or
+   * gets in the same command; removed ones outer first, so none is removed
+   * while a definition still there places it. Within a nesting depth, the
+   * drawing's order.
+   */
+  ordered(doc: CadDocument, planned: readonly PlannedBlock[]): { upserts: PlannedBlock[]; deletes: PlannedBlock[] } {
+    const upserts = planned.filter((p) => p.op !== 'delete');
+    const deletes = planned.filter((p) => p.op === 'delete');
+    // The drawing's definitions and the removed ones as the server last had them.
+    const gone = deletes.flatMap((p) => {
+      try {
+        return [JSON.parse(this.known.get(p.id)?.json ?? '') as BlockDefinition];
+      } catch {
+        return [];
+      }
+    });
+    const list = [...doc.blocks.value, ...gone];
+    const index = new Map(list.map((b, i) => [b.id, i]));
+    const nesting = checkNesting(list, index);
+    if ('fault' in nesting) return { upserts, deletes };
+    const depth = (p: PlannedBlock) => nesting.depth[index.get(p.id) ?? 0] ?? 0;
+    return { upserts: [...upserts].sort((a, b) => depth(a) - depth(b)), deletes: [...deletes].sort((a, b) => depth(b) - depth(a)) };
   }
 }
 

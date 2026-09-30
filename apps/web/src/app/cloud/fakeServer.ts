@@ -1,3 +1,6 @@
+import type { BlockChange } from '../../contracts/generated/BlockChange';
+import type { BlockDefinition as ContractBlock } from '../../contracts/generated/BlockDefinition';
+import type { BlockList } from '../../contracts/generated/BlockList';
 import type { CommandEnvelope } from '../../contracts/generated/CommandEnvelope';
 import type { CommitResult } from '../../contracts/generated/CommitResult';
 import type { DocumentSnapshotV2 } from '../../contracts/generated/DocumentSnapshotV2';
@@ -16,6 +19,7 @@ import type { ProjectPermission } from '../../contracts/generated/ProjectPermiss
 import type { ProjectRole } from '../../contracts/generated/ProjectRole';
 import type { FileUploadBegin } from '../../contracts/generated/FileUploadBegin';
 import type { ProjectSummary } from '../../contracts/generated/ProjectSummary';
+import { blockFaultMessage, definitionsFault, type BlockDefinition } from '../../model/blocks';
 import { ApiFailure, type CloudApi, type Transfer } from './api';
 import { FakeFiles } from './fakeFiles';
 import { FakeInvites } from './fakeInvites';
@@ -45,8 +49,8 @@ export const ROLE_PERMISSIONS: Record<Exclude<ProjectRole, 'owner'>, ProjectPerm
  * versions and 409s, idempotent replays, events with request ids, a
  * deleted project (410), an archived one (409 `project_archived`, the
  * lifecycle commands of docs/adr/0028), the caller's role and access taken
- * away (403 and 404, docs/adr/0015), and switches for a dead network and a
- * lost answer. Its file side (uploads, file revisions, the snapshot, the
+ * away (403 and 404, docs/adr/0015), block definitions with their rules
+ * (docs/adr/0144 §5), and switches for a dead network and a lost answer. Its file side (uploads, file revisions, the snapshot, the
  * import and checkpoints) is `files` (fakeFiles.ts), its invitations
  * `invites` (fakeInvites.ts). It follows
  * crates/server/application/src/changes.rs, lifecycle.rs and sharing.rs;
@@ -55,6 +59,8 @@ export const ROLE_PERMISSIONS: Record<Exclude<ProjectRole, 'owner'>, ProjectPerm
  */
 export class FakeServer implements CloudApi {
   store = new Map<string, { version: number; entity: ContractEntity }>();
+  /** Block definitions by id, in the order they were made (the server's `seq`). */
+  blockStore = new Map<string, { version: number; block: ContractBlock }>();
   meta: Pick<ProjectInfo, 'name' | 'settings' | 'layers' | 'activeLayer' | 'styles' | 'origin'>;
   metaVersion = 1;
   revision = 0;
@@ -110,6 +116,7 @@ export class FakeServer implements CloudApi {
       },
       imported: (doc: DocumentSnapshotV2) => {
         doc.entities.forEach((entity, i) => server.store.set(doc.uids[i], { version: 1, entity: structuredClone(entity) }));
+        for (const block of doc.blocks ?? []) server.blockStore.set(block.id, { version: 1, block: structuredClone(block) });
         Object.assign(server.meta, { settings: doc.settings, layers: doc.layers, activeLayer: doc.activeLayer, styles: doc.styles, origin: doc.origin });
         server.metaVersion++;
         server.revision = 0;
@@ -191,9 +198,21 @@ export class FakeServer implements CloudApi {
    * data revision, above any the same id had before it was deleted
    * (docs/adr/0026); a change adds one. Deleting removes the object.
    */
-  commitAs(requestId: string, changes: FeatureChange[], meta?: Partial<FakeServer['meta']>): EventRecord {
+  commitAs(requestId: string, changes: FeatureChange[], meta?: Partial<FakeServer['meta']>, blocks: readonly BlockChange[] = []): EventRecord {
     const out: EventRecord['features'] = [];
     const revision = this.revision + 1;
+    const blockEvents: NonNullable<EventRecord['blocks']> = [];
+    for (const c of blocks) {
+      if (c.op === 'delete') {
+        this.blockStore.delete(c.id);
+        blockEvents.push({ id: c.id, op: 'delete' });
+      } else {
+        const version = c.op === 'create' ? revision : (this.blockStore.get(c.block.id)?.version ?? 0) + 1;
+        // A changed definition keeps its place (the server's `seq`).
+        this.blockStore.set(c.block.id, { version, block: structuredClone(c.block) });
+        blockEvents.push({ id: c.block.id, op: c.op, version: String(version) });
+      }
+    }
     for (const c of changes) {
       if (c.op === 'delete') {
         this.store.delete(c.id);
@@ -209,9 +228,57 @@ export class FakeServer implements CloudApi {
       this.metaVersion++;
     }
     this.revision++;
-    const e: EventRecord = { seq: String(this.history.length + 1), dataRevision: String(this.revision), kind: 'project.changes', requestId, features: out, meta: !!meta };
+    const e: EventRecord = {
+      seq: String(this.history.length + 1),
+      dataRevision: String(this.revision),
+      kind: 'project.changes',
+      requestId,
+      features: out,
+      meta: !!meta,
+      ...(blockEvents.length ? { blocks: blockEvents } : {}),
+    };
     this.history.push(e);
     return e;
+  }
+
+  /** The block definitions as a command leaves them (a delete, then a create or update, in order), with its conflicts (crates/server/application/src/changes.rs, plan_blocks). */
+  private planBlocks(envelope: CommandEnvelope, changes: readonly BlockChange[], conflicts: FeatureConflict[]): { after: BlockDefinition[]; removed: { id: string; name: string; version: number }[] } {
+    const after = [...this.blockStore.values()].map((b) => b.block as unknown as BlockDefinition);
+    const removed: { id: string; name: string; version: number }[] = [];
+    const seen = new Set<string>();
+    changes.forEach((c, i) => {
+      const id = c.op === 'delete' ? c.id : c.block.id;
+      if (seen.has(id)) throw new ApiFailure(400, { error: 'invalid', path: `blocks[${i}]`, message: `${id} bloğu komutta birden çok kez geçiyor.` }, 'Geçersiz istek.');
+      seen.add(id);
+      const key = `block:${id}`;
+      const have = this.blockStore.get(id);
+      if (c.op === 'create') {
+        if (have) conflicts.push({ id: key, reason: 'exists', actual: String(have.version) });
+        after.push(c.block as unknown as BlockDefinition);
+        return;
+      }
+      const want = envelope.expectedVersions[key];
+      if (want === undefined) throw new ApiFailure(400, { error: 'invalid', path: `expectedVersions[${key}]`, message: `expectedVersions[${key}] eksik.` }, 'Geçersiz istek.');
+      if (!have) conflicts.push({ id: key, reason: 'deleted', expected: want });
+      else if (String(have.version) !== want) conflicts.push({ id: key, reason: 'changed', expected: want, actual: String(have.version) });
+      const at = after.findIndex((b) => b.id === id);
+      if (c.op === 'update') {
+        if (at >= 0) after[at] = c.block as unknown as BlockDefinition;
+        else after.push(c.block as unknown as BlockDefinition);
+      } else {
+        if (at >= 0) after.splice(at, 1);
+        if (have) removed.push({ id, name: have.block.name, version: have.version });
+      }
+    });
+    if (changes.length) {
+      for (const r of removed) {
+        const holder = after.find((b) => b.entities.some((e) => e.kind === 'insert' && e.block === r.id));
+        if (holder) throw new ApiFailure(400, { error: 'invalid', path: 'blocks', message: `“${r.name}” bloğu “${holder.name}” bloğunun içinde kullanılıyor; silinemez.` }, 'Geçersiz istek.');
+      }
+      const fault = definitionsFault(after);
+      if (fault) throw new ApiFailure(400, { error: 'invalid', path: 'blocks', message: blockFaultMessage(fault, (i) => after[i]?.name ?? '') }, 'Geçersiz istek.');
+    }
+    return { after, removed };
   }
 
   async command(envelope: CommandEnvelope): Promise<CommitResult> {
@@ -236,11 +303,18 @@ export class FakeServer implements CloudApi {
       throw new ApiFailure(409, { error: 'project_archived', message: `“${this.meta.name}” projesi arşivlenmiş; salt okunurdur.` }, 'Proje arşivlenmiş.');
     const input = envelope.input as ProjectChanges;
     const may = this.permissions();
-    if ((input.features.length && !may.includes('feature.write')) || (input.project && !may.includes('project.edit')))
+    const blockChanges = input.blocks ?? [];
+    if (((input.features.length || blockChanges.length) && !may.includes('feature.write')) || (input.project && !may.includes('project.edit')))
       throw new ApiFailure(403, { error: 'forbidden', message: `“${this.meta.name}” projesinde bu işlem için yetkiniz yok (feature.write); proje sahibinden ya da yöneticisinden isteyin.` }, 'Yetki yok.');
     const conflicts: FeatureConflict[] = [];
     if (input.project && envelope.expectedVersions['@project'] !== String(this.metaVersion))
       conflicts.push({ id: '@project', reason: 'project', expected: envelope.expectedVersions['@project'], actual: String(this.metaVersion) });
+    const blockPlan = this.planBlocks(envelope, blockChanges, conflicts);
+    input.features.forEach((c, i) => {
+      const e = c.op === 'delete' ? null : (c.entity as { kind: string; block?: string });
+      if (e?.kind === 'insert' && !blockPlan.after.some((b) => b.id === e.block))
+        throw new ApiFailure(400, { error: 'invalid', path: `features[${i}].entity`, message: `Değişiklik ${i + 1} (${c.id}): yerleştirilen blok projede tanımlı değil.` }, 'Geçersiz istek.');
+    });
     for (const c of input.features) {
       const have = this.store.get(c.id);
       if (c.op === 'create' && have) conflicts.push({ id: c.id, reason: 'exists', actual: String(have.version), current: this.record(c.id) });
@@ -271,14 +345,30 @@ export class FakeServer implements CloudApi {
       if (left) conflicts.push({ id: '@project', reason: 'project', expected: envelope.expectedVersions['@project'], actual: String(this.metaVersion) });
     }
     if (conflicts.length) throw new ApiFailure(409, { error: 'conflict', message: 'Çakışma', conflicts }, 'Çakışma');
-    const event = this.commitAs(envelope.requestId, input.features, input.project ? (input.project as Partial<FakeServer['meta']>) : undefined);
+    // A removed definition is placed by no object the command leaves (someone else's, or one not sent).
+    const written = new Set(input.features.map((c) => c.id));
+    for (const r of blockPlan.removed) {
+      const left = [...this.store].filter(([id, f]) => !written.has(id) && f.entity.kind === 'insert' && (f.entity as { block: string }).block === r.id).length;
+      if (left)
+        throw new ApiFailure(
+          409,
+          {
+            error: 'conflict',
+            message: `“${r.name}” bloğu kullanılıyor (çizimde ${left} yerleştirmesi; başka biri eklemiş olabilir); silinmedi.`,
+            conflicts: [{ id: `block:${r.id}`, reason: 'changed', expected: envelope.expectedVersions[`block:${r.id}`], actual: String(r.version) }],
+          },
+          'Çakışma',
+        );
+    }
+    const event = this.commitAs(envelope.requestId, input.features, input.project ? (input.project as Partial<FakeServer['meta']>) : undefined, blockChanges);
     const versions: Record<string, string> = {};
     for (const f of event.features) if (f.version) versions[f.id] = f.version;
+    for (const b of event.blocks ?? []) if (b.version) versions[`block:${b.id}`] = b.version;
     const result: CommitResult = {
       dataRevision: String(this.revision),
       metaVersion: String(this.metaVersion),
       versions,
-      deleted: event.features.filter((f) => f.op === 'delete').map((f) => f.id),
+      deleted: [...event.features.filter((f) => f.op === 'delete').map((f) => f.id), ...(event.blocks ?? []).filter((b) => b.op === 'delete').map((b) => `block:${b.id}`)],
       eventSeq: event.seq,
       replayed: false,
     };
@@ -298,6 +388,18 @@ export class FakeServer implements CloudApi {
     return { features: ids.map((id) => this.record(id)).filter((f): f is FeatureRecord => !!f) };
   }
 
+  /** The block definitions with their versions, in the order they were made. */
+  blockList(): NonNullable<ProjectInfo['blocks']> {
+    return [...this.blockStore.values()].map((b) => ({ version: String(b.version), block: structuredClone(b.block) }));
+  }
+
+  async blocks(_t: string, _p: string): Promise<BlockList> {
+    this.check();
+    this.hidden();
+    this.gone();
+    return { blocks: this.blockList() };
+  }
+
   async project(): Promise<ProjectInfo> {
     this.check();
     this.hidden();
@@ -311,6 +413,7 @@ export class FakeServer implements CloudApi {
       access: { role: this.role, via: this.role === 'owner' ? 'owner' : 'grant', permissions: this.permissions() },
       state: this.archived ? 'archived' : 'active',
       ...structuredClone(this.meta),
+      ...(this.blockStore.size ? { blocks: this.blockList() } : {}),
       metaVersion: String(this.metaVersion),
       dataRevision: String(this.revision),
       featureCount: String(this.store.size),

@@ -195,6 +195,30 @@ export function placedBlocks(blocks: readonly BlockDefinition[], objects: Iterab
 /** Whether an insert places it anywhere. */
 export const placed = (p: Placements): boolean => p.drawing + p.nested > 0;
 
+/**
+ * The definitions whose drawing may differ between two lists (a change, an
+ * undo, another editor's): the made, changed and removed ones (the document
+ * gives a changed definition a new object and keeps an unchanged one's), and
+ * every definition placing one of them, however deep. What an insert of any
+ * of them shows is drawn again.
+ */
+export function changedDefinitions(before: readonly BlockDefinition[], after: readonly BlockDefinition[]): Set<string> {
+  const was = new Map(before.map((b) => [b.id, b]));
+  const out = new Set<string>();
+  for (const b of after) if (was.get(b.id) !== b) out.add(b.id);
+  const kept = new Set(after.map((b) => b.id));
+  for (const id of was.keys()) if (!kept.has(id)) out.add(id);
+  for (let grew = out.size > 0; grew; ) {
+    grew = false;
+    for (const b of after)
+      if (!out.has(b.id) && b.entities.some((e) => e.kind === 'insert' && out.has(e.block))) {
+        out.add(b.id);
+        grew = true;
+      }
+  }
+  return out;
+}
+
 /** The definitions checked on their own (names, ids, tags): each id's place, or the fault. */
 export function checkDefinitions(blocks: readonly BlockDefinition[]): { index: Map<string, number> } | { fault: BlockFault } {
   const index = new Map<string, number>();

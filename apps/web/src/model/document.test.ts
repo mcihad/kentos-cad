@@ -236,6 +236,63 @@ describe('CadDocument history', () => {
   });
 });
 
+describe('CadDocument.applyExternal of block definitions (docs/adr/0144 §5)', () => {
+  const uid = (n: number) => `00000000-0000-7000-8000-00000000b${n.toString(16).padStart(3, '0')}`;
+  const line = { kind: 'line' as const, id: 1, layerId: '', a: { x: 0, y: 0 }, b: { x: 1, y: 0 }, attrs: {} };
+  const def = (n: number, name: string, inside: number[] = []) => ({
+    id: uid(n),
+    name,
+    base: { x: 0, y: 0 },
+    entities: [line, ...inside.map((b, k) => ({ kind: 'insert' as const, id: k + 2, layerId: '', block: uid(b), p: { x: 0, y: 0 }, scale: 1, rotation: 0, attrs: {} }))] as Entity[],
+  });
+  const insertOf = (n: number): NewEntity => ({ kind: 'insert', layerId: 'a', block: uid(n), p: { x: 5, y: 5 }, scale: 1, rotation: 0, attrs: {} });
+
+  it('takes the list quietly: no undo step, not an edit, an unchanged definition keeps its object', () => {
+    const doc = makeDoc();
+    const a = def(1, 'A');
+    doc.addBlock(a);
+    doc.markSaved(doc.revision);
+    const kept = doc.block(a.id);
+    const b = def(2, 'B', [1]);
+    doc.applyExternal({ blocks: [structuredClone(a), b] });
+    expect(doc.blocks.value).toEqual([a, b]);
+    expect(doc.block(a.id)).toBe(kept);
+    expect(doc.dirty.value).toBe(false);
+    // The step that made A stays: A did not change.
+    expect(doc.undo()).toBe('Blok tanımla');
+  });
+
+  it('drops the steps that changed a definition someone else changed, or that place one that is gone', () => {
+    const doc = makeDoc();
+    doc.addBlock(def(1, 'A'));
+    doc.addBlock(def(2, 'B'));
+    const placed = doc.add(insertOf(2));
+    doc.remove([placed.id]);
+    doc.updateBlock({ ...def(1, 'A'), name: 'A2' });
+    // Someone else renamed A and removed B: every step here touched one of them (A's making and its rename,
+    // B's making, the insert of B and its removal), so none is left to undo someone else's work.
+    doc.applyExternal({ blocks: [{ ...def(1, 'A'), name: 'A3' }] });
+    expect(doc.blocks.value.map((b) => b.name)).toEqual(['A3']);
+    const left: string[] = [];
+    for (let s = doc.undo(); s; s = doc.undo()) left.push(s);
+    expect(left).toEqual([]);
+    expect(doc.blocks.value.map((b) => b.name)).toEqual(['A3']);
+  });
+
+  it('keeps steps of other definitions, and refuses a list that breaks a rule, changing nothing', () => {
+    const doc = makeDoc();
+    doc.addBlock(def(1, 'A'));
+    doc.addBlock(def(2, 'B'));
+    doc.applyExternal({ blocks: [def(1, 'A'), { ...def(2, 'B'), base: { x: 1, y: 1 } }] });
+    // B changed: its step goes; A's stays.
+    expect(doc.undo()).toBe('Blok tanımla');
+    expect(doc.blocks.value.map((b) => b.name)).toEqual(['B']);
+    expect(() => doc.applyExternal({ blocks: [def(1, 'X'), def(3, 'x')] })).toThrow(/“X” adında bir blok var/);
+    expect(() => doc.applyExternal({ blocks: [def(4, 'D', [5])] })).toThrow(/tanımlı değil/);
+    expect(doc.blocks.value.map((b) => b.name)).toEqual(['B']);
+  });
+});
+
 describe('LayerStore', () => {
   it('changes a layer style as one undo step, restoring it exactly', () => {
     const doc = makeDoc();

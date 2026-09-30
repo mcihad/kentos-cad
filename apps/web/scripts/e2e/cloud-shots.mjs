@@ -5,7 +5,8 @@
 // tab and its forms; the share dialog with the find box, invitations and removing access; the project forms and
 // questions; renaming the open project; a file project's conflict; a file project's revisions (someone else's
 // revision heard, over unsaved work, the questions, the conflict, the history's marks, the log line, offline); the
-// access-lost notice; the status bar's cloud cells and the server cell's account menu; an invitation's page.
+// access-lost notice; the status bar's cloud cells and the server cell's account menu; a block definition's
+// conflict and the Bloklar panel after it (docs/adr/0144 §5); an invitation's page.
 // Pictures go to scripts/e2e/out/shots/cloud/<scene>-<theme>-<width>.png.
 //
 //   cargo build -q -p kentos-api --bin kentosd --example e2e_database
@@ -700,6 +701,50 @@ const SCENES = [
     await ui.snap('status-save-file-outdated');
     await ui.eval(`(() => { const f = ${file}; f.newer.set(null); f.progress.set(${before.progress}); f.state.set(${JSON.stringify(before.state)}); })()`);
     await ui.b.move(2, 2);
+  },
+  // ── Block definitions in a database project (docs/adr/0144 §5): someone else's rename while one here waits is a
+  // conflict that names the block; the server's copy taken, the Bloklar panel shows it with its inserts ──
+  async (ui) => {
+    if (only && !only.some((id) => id.startsWith('blocks-'))) return;
+    await ui.eval(`import('/src/ui/cloud/CatalogDialog.ts').then((m) => m.openCatalog(window.kentos, ${ids(P.survey)}))`);
+    await ui.waitFor(`document.querySelector('.catalog-row[aria-selected="true"]')?.textContent.startsWith(${JSON.stringify(P.survey.name)})`);
+    await ui.press('.dialog__foot .btn--primary', 'Aç');
+    await ui.waitFor(`window.kentos.cloud.project.value?.projectId === ${JSON.stringify(P.survey.projectId)} && window.kentos.cloud.link.value === 'online' && !document.querySelector('.dialog')`, 30000);
+    const sync = 'window.kentos.cloud.sync.value';
+    const id = await ui.eval(`(() => {
+      const d = window.kentos.doc;
+      const id = crypto.randomUUID();
+      const arm = (k, a, b) => ({ kind: 'line', id: k, layerId: '', a, b, attrs: {} });
+      d.addBlock({ id, name: 'Rögar', base: { x: 0, y: 0 }, entities: [arm(1, { x: -1.6, y: 0 }, { x: 1.6, y: 0 }), arm(2, { x: 0, y: -1.6 }, { x: 0, y: 1.6 }), { kind: 'circle', id: 3, layerId: '', c: { x: 0, y: 0 }, r: 1.1, attrs: {} }] });
+      for (const x of [8, 34, 58]) d.add({ kind: 'insert', layerId: 'yol', block: id, p: { x: ${O.x} + x, y: ${O.y} - 8 }, scale: 1, rotation: 0, attrs: {} });
+      return id;
+    })()`);
+    await ui.waitFor(`${sync}.state.value === 'saved'`, 15000);
+    try {
+      const there = (await mehmet.call('GET', `/v1/tenants/${P.survey.tenantId}/projects/${P.survey.projectId}/blocks`)).body.blocks.find((r) => r.block.id === id);
+      // His rename first, then one here before his is heard: the conflict names the block.
+      await mehmet.run(P.survey, 'project.changes', { features: [], blocks: [{ op: 'update', block: { ...there.block, name: 'Rögar kapağı (Mehmet)' } }] }, { [`block:${id}`]: there.version });
+      await ui.eval(`(() => { const d = window.kentos.doc; d.updateBlock({ ...d.block(${JSON.stringify(id)}), name: 'Rögar kapağı' }); window.kentos.commands.execute('file.save'); })()`);
+      await ui.waitFor(`${sync}.state.value === 'conflict'`, 15000);
+      await ui.run('cloud.conflicts');
+      await ui.waitFor(`!!document.querySelector('.cloud-conflicts')`);
+      await sleep(300);
+      await ui.snap('blocks-conflict');
+      await ui.pressTop('.dialog__foot .btn', 'Sunucudakini al');
+      await ui.waitFor(`${sync}.state.value === 'saved' && window.kentos.doc.block(${JSON.stringify(id)})?.name === 'Rögar kapağı (Mehmet)'`, 15000);
+      await ui.eval(`window.kentos.ui.dockTab.set('blocks')`);
+      // No tooltip of an earlier scene over the panel: the pointer and the focus leave the status bar.
+      await ui.b.move(300, 170);
+      await ui.eval(`(() => { document.activeElement?.blur?.(); window.kentos.view.focus(); })()`);
+      await sleep(400);
+      await ui.snap('blocks-panel');
+    } finally {
+      await ui.closeAll();
+      await ui
+        .eval(`(() => { const d = window.kentos.doc; d.remove([...d.all()].filter((e) => e.kind === 'insert' && e.block === ${JSON.stringify(id)}).map((e) => e.id)); d.removeBlock(${JSON.stringify(id)}); window.kentos.ui.dockTab.set('layers'); })()`)
+        .catch(() => {});
+      await ui.waitFor(`${sync}.state.value === 'saved'`, 15000).catch(() => {});
+    }
   },
 ];
 

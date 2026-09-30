@@ -2,6 +2,7 @@ import type { AppContext } from '../app/context';
 import { DisposableStore, listen } from '../core/disposable';
 import { Emitter } from '../core/emitter';
 import { Signal } from '../core/signal';
+import { changedDefinitions } from '../model/blocks';
 import type { Entity } from '../model/entities';
 import { dimensionLabel, type DimensionLayout } from '../model/geom/dimension';
 import type { Affine } from '../model/geom/affine';
@@ -590,6 +591,20 @@ export class ViewportController {
     d.add(
       doc.events.on('changed', ({ layerIds }) => {
         layerIds.forEach((id) => this.dirtyLayers.add(id));
+        this.highlightDirty = true;
+        this.requestRender();
+      }),
+    );
+    // A block definition changed (an edit, an undo, another editor's; docs/adr/0144): the layers holding an
+    // insert of it, or of one placing it, are drawn again, and their labels found again.
+    let blocks = doc.blocks.value;
+    d.add(
+      doc.blocks.subscribe((now) => {
+        const changed = changedDefinitions(blocks, now);
+        blocks = now;
+        if (!changed.size) return;
+        for (const e of doc.all()) if (e.kind === 'insert' && changed.has(e.block)) this.dirtyLayers.add(e.layerId);
+        stale();
         this.highlightDirty = true;
         this.requestRender();
       }),

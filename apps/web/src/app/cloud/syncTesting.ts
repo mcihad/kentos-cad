@@ -36,7 +36,7 @@ export function disposeAll(): void {
   open = [];
 }
 
-export function setup(opts: { canEditMeta?: boolean; canWrite?: boolean; drafts?: MemoryDraftStore; doc?: CadDocument; server?: FakeServer; records?: Records } = {}) {
+export function setup(opts: { canEditMeta?: boolean; canWrite?: boolean; drafts?: MemoryDraftStore; doc?: CadDocument; server?: FakeServer; records?: Records; blocks?: Records } = {}) {
   const doc = opts.doc ?? newDoc();
   const server = opts.server ?? serverFor(doc);
   const warnings: string[] = [];
@@ -55,6 +55,7 @@ export function setup(opts: { canEditMeta?: boolean; canWrite?: boolean; drafts?
     metaVersion: String(server.metaVersion),
     cursor: String(server.history.length),
     records: opts.records ?? [],
+    blocks: opts.blocks ?? [],
     warn: (t) => warnings.push(t),
     onDeleted: () => told.deleted++,
     onRevoked: (reason) => told.revoked.push(reason),
@@ -71,16 +72,21 @@ export function setup(opts: { canEditMeta?: boolean; canWrite?: boolean; drafts?
 /**
  * The project opened again from the server into a fresh drawing, as
  * `CloudSession.open` does it: every object under the server's id as its
- * persistent id; `records` for the sync.
+ * persistent id, the block definitions with the metadata; `records` and
+ * `blocks` for the sync.
  */
-export async function reopen(server: FakeServer): Promise<{ doc: CadDocument; records: Records }> {
+export async function reopen(server: FakeServer): Promise<{ doc: CadDocument; records: Records; blocks: Records }> {
   const doc = newDoc();
   const info = await server.project();
   const page = await server.features('t', 'p', null, 1_000_000);
-  const read = readProject(info, page.features);
+  const read = readProject(
+    info,
+    page.features,
+    (info.blocks ?? []).map((r) => r.block),
+  );
   if (!read.ok) throw new Error(read.error);
   doc.replaceWith(read.content);
-  return { doc, records: page.features.map((f) => ({ id: f.id, version: f.version })) };
+  return { doc, records: page.features.map((f) => ({ id: f.id, version: f.version })), blocks: (info.blocks ?? []).map((r) => ({ id: r.block.id, version: r.version })) };
 }
 
 /** The draft stored under the test key, as the current code writes it. */

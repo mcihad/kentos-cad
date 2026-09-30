@@ -579,8 +579,12 @@ export class CloudSession {
     return file;
   }
 
-  /** Makes the drawing on screen the open database project `info` (its objects' ids and versions in `records`). */
-  attach(info: ProjectInfo, records: { id: string; version: string }[], cursor: string): ProjectSync {
+  /**
+   * Makes the drawing on screen the open database project `info` (its
+   * objects' ids and versions in `records`, its block definitions' in
+   * `blocks`: by default the ones `info` lists).
+   */
+  attach(info: ProjectInfo, records: { id: string; version: string }[], cursor: string, blocks = (info.blocks ?? []).map((r) => ({ id: r.block.id, version: r.version }))): ProjectSync {
     const me = this.me.value!;
     const project = this.cloudProject(info, 'database');
     // Created right after the sync, which asks it when access may have changed.
@@ -598,6 +602,7 @@ export class CloudSession {
       metaVersion: info.metaVersion,
       cursor,
       records,
+      blocks,
       warn: (t) => this.ctx.log.warn(t),
       onDeleted: () => this.projectDeleted(project),
       onRevoked: (reason) => this.accessRevoked(project, reason),
@@ -653,8 +658,12 @@ export class CloudSession {
       after = page.next ?? null;
       progress(records.length, Math.max(total, records.length));
     } while (after);
-    // Each object's persistent id is the server's id for it.
-    const read = readProject(info, records);
+    // Each object's persistent id is the server's id for it; the block definitions come with the metadata.
+    const read = readProject(
+      info,
+      records,
+      (info.blocks ?? []).map((r) => r.block),
+    );
     if (!read.ok) throw new Error(`“${info.name}” okunamadı: ${read.error}`);
     if (stale()) return false;
     await this.sync.value?.flush().catch(() => false);

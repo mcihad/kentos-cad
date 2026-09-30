@@ -39,9 +39,10 @@ function hasLocks(nodes: readonly LayerNode[]): boolean {
   return nodes.some((n) => n.locked || hasLocks(n.children));
 }
 
-/** Where the drawing's objects are on the server once they are in: their versions and the event cursor. */
+/** Where the drawing's objects are on the server once they are in: their versions (and the block definitions') and the event cursor. */
 interface Landed {
   records: { id: string; version: string }[];
+  blocks: { id: string; version: string }[];
   cursor: string;
   metaVersion: string;
 }
@@ -73,7 +74,8 @@ async function uploadInBatches(s: CloudSession, info: ProjectInfo, progress: Pro
     cursor = result.eventSeq;
     metaVersion = result.metaVersion;
   }
-  return { records: sent.records, cursor, metaVersion };
+  // A server without the import keeps no block definitions either: the sync sends them, if it takes them.
+  return { records: sent.records, blocks: [], cursor, metaVersion };
 }
 
 export async function uploadAsDatabaseProject(
@@ -112,7 +114,7 @@ export async function uploadAsDatabaseProject(
     // The cursor after the import, and the counts to check it by.
     const now = await again(() => api.project(tenantId, info.id));
     const uids = ([...doc.all()] as DrawingEntity[]).map((e) => e.uid);
-    if (doc.revision !== encoded || Number(now.featureCount) !== uids.length || Number(objects) !== uids.length) {
+    if (doc.revision !== encoded || Number(now.featureCount) !== uids.length || Number(objects) !== uids.length || (now.blocks?.length ?? 0) !== doc.blocks.value.length) {
       // The drawing changed while it went up (or the server holds another count): the project has the drawing as it
       // was, and the drawing on screen stays local with its changes, rather than being tracked against the wrong copy.
       ctx.log.warn(
@@ -120,8 +122,13 @@ export async function uploadAsDatabaseProject(
       );
       return false;
     }
-    // Every object at version 1 (docs/adr/0036); this import's event is this window's own.
-    landed = { records: uids.map((id) => ({ id, version: '1' })), cursor: now.eventCursor, metaVersion: now.metaVersion };
+    // Every object at version 1 (docs/adr/0036), the block definitions at the versions the server lists; this import's event is this window's own.
+    landed = {
+      records: uids.map((id) => ({ id, version: '1' })),
+      blocks: (now.blocks ?? []).map((r) => ({ id: r.block.id, version: r.version })),
+      cursor: now.eventCursor,
+      metaVersion: now.metaVersion,
+    };
   } catch (e) {
     if (!importUnavailable(e)) throw await failedUpload(api, info, e);
     how = 'batches';
@@ -134,7 +141,7 @@ export async function uploadAsDatabaseProject(
     }
   }
   doc.applyExternal({ meta: { name } });
-  s.attach({ ...info, name, metaVersion: landed.metaVersion }, landed.records, landed.cursor);
+  s.attach({ ...info, name, metaVersion: landed.metaVersion }, landed.records, landed.cursor, landed.blocks);
   doc.markSaved(doc.revision);
   ctx.log.success(
     `“${name}” buluta yüklendi: ${landed.records.length} nesne${how === 'import' ? ', tek işlemde içe aktarıldı' : ''}. Bundan sonra değişiklikler kendiliğinden kaydedilir.`,

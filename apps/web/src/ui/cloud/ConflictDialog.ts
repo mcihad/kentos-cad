@@ -1,5 +1,6 @@
 import type { AppContext } from '../../app/context';
 import type { SyncConflict } from '../../app/cloud/sync';
+import { blockOfKey } from '../../app/cloud/tracker';
 import { h } from '../dom';
 import { Dialog } from '../widgets/Dialog';
 
@@ -34,6 +35,11 @@ export function openConflictDialog(ctx: AppContext): void {
   }
   const describe = (c: SyncConflict) => {
     if (c.reason === 'project') return 'Proje bilgileri (katman ağacı, ayarlar, ad, stiller)';
+    const block = blockOfKey(c.featureId);
+    if (block !== null) {
+      const name = ctx.doc.block(block)?.name;
+      return name ? `Blok tanımı · ${name}` : 'Blok tanımı';
+    }
     const e = ctx.doc.byUid(c.featureId);
     const layer = e ? (ctx.doc.layers.get(e.layerId)?.name ?? e.layerId) : '';
     return `${e ? KIND[e.kind] ?? e.kind : 'Nesne'}${layer ? ` · ${layer}` : ''}${e?.label ? ` · ${e.label}` : ''}`;

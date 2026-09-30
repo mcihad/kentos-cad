@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { blocksFault, blockFaultMessage, checkDefinitions, checkNesting, freeBlockName, importNames, nameKey, nameOk, placed, placedBlocks, placements, trimName, turnOf, type BlockDefinition } from './blocks';
+import { blocksFault, blockFaultMessage, changedDefinitions, checkDefinitions, checkNesting, freeBlockName, importNames, nameKey, nameOk, placed, placedBlocks, placements, trimName, turnOf, type BlockDefinition } from './blocks';
 import type { Entity } from './entities';
 
 /**
@@ -60,6 +60,16 @@ describe('block rules (docs/adr/0144)', () => {
     // What a DXF export of these objects writes: C, the B in it and the A in that; A alone; nothing for 9.
     const drawing = [insert(1), insert(3), insert(1, 2), insert(9)];
     expect([placedBlocks(blocks, drawing), placedBlocks(blocks, drawing.slice(0, 1)), placedBlocks(blocks, drawing.slice(3))]).toEqual([3, 1, 0]);
+  });
+
+  it('find the definitions whose inserts draw anew: changed, made or removed ones and those placing them', () => {
+    const [a, b, c, d] = [block(1, 'A'), block(2, 'B', [1]), block(3, 'C', [2]), block(4, 'D')];
+    const before = [a, b, c, d];
+    expect(changedDefinitions(before, [...before])).toEqual(new Set());
+    // A new A reaches B and C through their inserts, not D.
+    expect(changedDefinitions(before, [{ ...a, base: { x: 1, y: 1 } }, b, c, d])).toEqual(new Set([id(1), id(2), id(3)]));
+    // D removed and E made: each alone.
+    expect(changedDefinitions(before, [a, b, c, block(5, 'E')])).toEqual(new Set([id(4), id(5)]));
   });
 
   it('keep ids and tags once', () => {

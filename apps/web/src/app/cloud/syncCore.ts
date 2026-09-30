@@ -3,9 +3,9 @@ import type { FeatureRecord } from '../../contracts/generated/FeatureRecord';
 import type { CadDocument, ExternalMeta } from '../../model/document';
 import type { Entity } from '../../model/entities';
 import type { CloudApi } from './api';
-import type { DraftChange, DraftStore } from './drafts';
+import type { DraftBlock, DraftChange, DraftStore } from './drafts';
 import { readEntities, readIncoming } from './incoming';
-import { Tracker, entityJson, metaParts, type MetaParts, type Planned } from './tracker';
+import { BlockTracker, Tracker, blockJson, entityJson, metaParts, type MetaParts, type Planned, type PlannedBlock } from './tracker';
 import { forget, setAside } from './waiting';
 
 /**
@@ -64,6 +64,8 @@ export interface SyncOptions {
   cursor: string;
   /** What the server sent when the project was opened: each object's id (its `uid` in the drawing) and version. */
   records: readonly { id: string; version: string }[];
+  /** And each block definition's id and version (docs/adr/0144 §5); none when the project has none. */
+  blocks?: readonly { id: string; version: string }[];
   warn: (text: string) => void;
   /** The project was deleted on the server (an event or a refused command); called once. */
   onDeleted?: () => void;
@@ -81,6 +83,7 @@ export interface SyncOptions {
 export interface Inflight {
   envelope: CommandEnvelope;
   planned: Planned[];
+  blocks: PlannedBlock[];
   meta: MetaParts | null;
   revision: number;
 }
@@ -93,6 +96,14 @@ export class SyncCore {
   readonly tracker = new Tracker();
   /** Persistent ids of the objects that may differ from the server (edited here, not sent yet). */
   readonly dirty = new Set<string>();
+  /** What the server has of the block definitions (docs/adr/0144 §5). */
+  readonly blocks = new BlockTracker();
+  /** Whether the drawing's block definitions may differ from the server's (one was made, changed or removed here). */
+  blocksDirty = false;
+  /** Block changes from a device draft the drawing could not take: kept in the device draft, unsent, as `held`. */
+  readonly heldBlocks = new Map<string, DraftBlock>();
+  /** While the sync itself puts the server's definitions into the drawing: that is not an edit here. */
+  takingBlocks = false;
   /**
    * Changes from a device draft the drawing could not take (an object on a
    * layer that is gone, say): never sent, but written to the device draft
@@ -128,6 +139,10 @@ export class SyncCore {
       const e = o.doc.byUid(r.id);
       if (e) this.tracker.set(r.id, { version: r.version, json: entityJson(e) });
     }
+    for (const r of o.blocks ?? []) {
+      const b = o.doc.block(r.id);
+      if (b) this.blocks.set(r.id, { version: r.version, json: blockJson(b) });
+    }
     this.metaBase = metaParts(o.doc);
   }
 
@@ -135,9 +150,14 @@ export class SyncCore {
     return this.metaDirty && this.canEditMeta;
   }
 
-  /** Objects and the metadata waiting to be sent. */
+  /** The block definition changes waiting to be sent (none are looked for until one was made here). */
+  blockPlan(): PlannedBlock[] {
+    return this.blocksDirty ? this.blocks.plan(this.o.doc) : [];
+  }
+
+  /** Objects, block definitions and the metadata waiting to be sent. */
   pendingCount(): number {
-    return this.dirty.size + (this.sendsMeta() ? 1 : 0);
+    return this.dirty.size + this.blockPlan().length + (this.sendsMeta() ? 1 : 0);
   }
 
   /** Whether an object has unsent edits here (or is in the command on its way). */
@@ -156,19 +176,20 @@ export class SyncCore {
   /**
    * Objects that came from the server or the device, checked like a file; a
    * bad one is left out and reported (`bad`; by default a warning that the
-   * server sent it).
+   * server sent it). `blocks`: the definitions inserts may place, when not
+   * the drawing's (the ones a change brings with them).
    */
-  checked(list: readonly { key: string; entity: unknown }[], bad?: (key: string, error: string) => void): Map<string, Entity> {
+  checked(list: readonly { key: string; entity: unknown }[], bad?: (key: string, error: string) => void, blocks?: readonly { id: string }[]): Map<string, Entity> {
     const out = new Map<string, Entity>();
     if (!list.length) return out;
     // One check for the batch; only a failing batch is checked object by object, to name the bad one.
-    const all = readEntities(this.o.doc, list.map((i) => i.entity));
+    const all = readEntities(this.o.doc, list.map((i) => i.entity), blocks);
     if (all.ok) {
       list.forEach((item, i) => out.set(item.key, all.entities[i]));
       return out;
     }
     for (const item of list) {
-      const read = readEntities(this.o.doc, [item.entity]);
+      const read = readEntities(this.o.doc, [item.entity], blocks);
       if (read.ok) out.set(item.key, read.entities[0]);
       else if (bad) bad(item.key, read.error);
       else this.o.warn(`Buluttan gelen bir nesne okunamadı (${item.key}): ${read.error}`);

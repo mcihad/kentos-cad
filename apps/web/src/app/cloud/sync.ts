@@ -5,13 +5,14 @@ import type { FeatureConflict } from '../../contracts/generated/FeatureConflict'
 import type { ExternalMeta } from '../../model/document';
 import type { Entity } from '../../model/entities';
 import { ApiFailure } from './api';
-import { DRAFT_VERSION, keptDraftKey, readDraft, type Draft } from './drafts';
+import { DRAFT_VERSION, keptDraftKey, readDraft, type Draft, type DraftBlock } from './drafts';
 import { BATCH, PROJECT_ACCESS, PROJECT_ARCHIVED, PROJECT_DELETED, SyncCore, uuid, type Inflight, type SaveState, type SyncConflict, type SyncOptions } from './syncCore';
 import { applyEvents } from './syncRemote';
 import { restoreDraft } from './syncRestore';
 import { givenBackText, keepUnsentLayers, keptText, treeIds, treeText, withNodesFrom } from './keptLayers';
 import { fetchArrived, forget, setAside, waitingTexts } from './waiting';
-import { changeOf, entityJson, leavingObjects, metaParts, metaPatch, type Planned } from './tracker';
+import { applyMerge, mergeBlocks, placedIds, placesMissing, restoredBlockText, serverBlocks, takeServerBlocks, unmergedText, type BlockMerge } from './syncBlocks';
+import { blockChangeOf, blockKey, blockOfKey, changeOf, entityJson, leavingObjects, metaParts, metaPatch, type Planned } from './tracker';
 
 export type { SaveState, SyncConflict, SyncOptions } from './syncCore';
 
@@ -41,6 +42,11 @@ export type { SaveState, SyncConflict, SyncOptions } from './syncCore';
  * - The account's role changed while the project is open (`setAccess`, after
  *   a `project.access` event or a 403): without the right to write nothing
  *   is sent, and edits are kept on the device until it comes back.
+ * - Block definitions (docs/adr/0144 §5) go with the objects, found by
+ *   comparison as they are (tracker.ts): made and changed ones before any
+ *   object (an insert may place them), removed ones after every object (the
+ *   last insert placing one may go with it). Other editors' come from the
+ *   server's list (syncBlocks.ts).
  */
 
 /** What a change of the account's access did to the autosave (`ProjectSync.setAccess`). */
@@ -106,6 +112,12 @@ export class ProjectSync {
         if (!this.disposed && this.core.waiting.size) void fetchArrived(this.core).catch((e: Error) => this.o.warn(`Başka kullanıcıların nesneleri alınamadı: ${e.message}`));
       }),
       doc.layers.events.on('state', () => this.metaChanged()),
+      // A definition made, changed or removed here (not the server's, which the sync itself puts in).
+      doc.blocks.subscribe(() => {
+        if (this.core.takingBlocks) return;
+        this.core.blocksDirty = true;
+        this.changed();
+      }),
     );
   }
 
@@ -138,6 +150,11 @@ export class ProjectSync {
   /** The server's version of an object (by persistent id) as this sync last saw it; for tests and diagnostics. */
   versionOf(id: string): string | undefined {
     return this.core.tracker.get(id)?.version;
+  }
+
+  /** The same of a block definition. */
+  blockVersionOf(id: string): string | undefined {
+    return this.core.blocks.get(id)?.version;
   }
 
   private metaChanged(): void {
@@ -199,12 +216,17 @@ export class ProjectSync {
       const base = p.op === 'create' ? null : p.expected;
       changes[p.id] = { base, entity: p.op === 'delete' ? null : structuredClone(p.entity) };
     }
+    const blocks: Record<string, DraftBlock> = Object.fromEntries(core.heldBlocks);
+    for (const p of core.blockPlan())
+      blocks[p.id] = { base: p.op === 'create' ? null : p.expected, block: p.op === 'delete' ? null : (structuredClone(p.block) as unknown as DraftBlock['block']) };
     const patch = core.sendsMeta() ? metaPatch(this.o.doc, core.metaBase) : null;
-    if (!Object.keys(changes).length && !patch && !core.inflight) return null;
+    const hasBlocks = Object.keys(blocks).length > 0;
+    if (!Object.keys(changes).length && !hasBlocks && !patch && !core.inflight) return null;
     return {
       version: DRAFT_VERSION,
       userId: this.o.userId,
       changes,
+      ...(hasBlocks ? { blocks } : {}),
       meta: patch ? { base: core.metaVersion, patch } : undefined,
       inflight: core.inflight?.envelope,
       updated: Date.now(),
@@ -265,6 +287,11 @@ export class ProjectSync {
       if (this.disposed || this.ended || !this.writable) return false;
       const full = core.sendsMeta() ? metaPatch(doc, core.metaBase) : null;
       if (!full) core.metaDirty = core.metaDirty && !core.canEditMeta && metaPatch(doc, core.metaBase) !== null;
+      // Block definitions: made and changed ones first, inner before outer, in commands of at most BATCH changes.
+      const blockPlan = core.blockPlan();
+      if (!blockPlan.length) core.blocksDirty = false;
+      const { upserts, deletes } = core.blocks.ordered(doc, blockPlan);
+      const blocks = upserts.slice(0, BATCH);
       // A tree without a removed layer is refused while the server holds an object on that layer that the same
       // command neither deletes nor moves off. Those changes go first and the tree with the last of them;
       // objects on a layer the tree adds go with it or after it.
@@ -273,17 +300,20 @@ export class ProjectSync {
       const planned: Planned[] = [];
       let seen = 0;
       for (const id of order) {
-        if (planned.length >= BATCH) break;
+        if (planned.length + blocks.length >= BATCH) break;
         seen++;
         const p = core.tracker.plan(doc, id);
         if (p) planned.push(p);
         else core.dirty.delete(id);
       }
+      // Removed definitions once every object and every made one is going: outer before inner.
+      if (seen === order.length && blocks.length === upserts.length) blocks.push(...deletes.slice(0, BATCH - planned.length - blocks.length));
       const held = !!leaving && seen < leaving.size;
       const patch = held ? null : full;
-      if (!planned.length && !patch) break;
+      if (!planned.length && !blocks.length && !patch) break;
       const expectedVersions: Record<string, string> = {};
       for (const p of planned) if (p.op !== 'create') expectedVersions[p.id] = p.expected;
+      for (const b of blocks) if (b.op !== 'create') expectedVersions[blockKey(b.id)] = b.expected;
       if (patch) expectedVersions['@project'] = core.metaVersion;
       const envelope: CommandEnvelope = {
         commandName: 'project.changes',
@@ -293,9 +323,9 @@ export class ProjectSync {
         requestId: `web-${uuid()}`,
         idempotencyKey: uuid(),
         expectedVersions,
-        input: { features: planned.map(changeOf), ...(patch ? { project: patch } : {}) },
+        input: { features: planned.map(changeOf), ...(blocks.length ? { blocks: blocks.map(blockChangeOf) } : {}), ...(patch ? { project: patch } : {}) },
       };
-      core.inflight = { envelope, planned, meta: patch ? metaParts(doc) : null, revision: doc.revision };
+      core.inflight = { envelope, planned, blocks, meta: patch ? metaParts(doc) : null, revision: doc.revision };
       // Kept on the device before it goes: after a crash the same key is sent again.
       await this.saveDraft();
       if (this.disposed || !(await this.send(core.inflight))) return false;
@@ -304,7 +334,7 @@ export class ProjectSync {
     this.pending.set(0);
     this.state.set('saved');
     this.error.set('');
-    if (!core.dirty.size && !core.sendsMeta()) doc.markSaved(doc.revision);
+    if (!core.dirty.size && !core.sendsMeta() && !core.blockPlan().length) doc.markSaved(doc.revision);
     await this.saveDraft();
     return true;
   }
@@ -321,6 +351,11 @@ export class ProjectSync {
         core.tracker.acknowledge(p, result.versions[p.id]);
         if (core.tracker.settled(this.o.doc, p)) core.dirty.delete(p.id);
       }
+      for (const b of f.blocks) {
+        core.blocks.acknowledge(b, result.versions[blockKey(b.id)]);
+        // A change of it sent from here replaces one an earlier draft could not put in.
+        core.heldBlocks.delete(b.id);
+      }
       if (f.meta) {
         core.metaVersion = result.metaVersion;
         core.metaBase = f.meta;
@@ -336,7 +371,8 @@ export class ProjectSync {
       const failure = e instanceof ApiFailure ? e : new ApiFailure(0, {}, String(e));
       if (failure.code === 'conflict') {
         core.inflight = null;
-        const rest = await this.giveBackUsedLayers(failure.conflicts);
+        let rest = await this.giveBackUsedLayers(failure.conflicts);
+        if (!this.disposed) rest = await this.giveBackUsedBlocks(rest, f);
         if (this.disposed) return false;
         if (rest.length) this.enterConflicts(rest);
         // The guard's refusal alone, answered by giving the layers back: what is left goes again.
@@ -420,6 +456,43 @@ export class ProjectSync {
     return guardOnly ? list.filter((c) => c !== project) : list;
   }
 
+  /**
+   * The server refused to remove a definition that something there still
+   * places (someone else's insert, docs/adr/0144 §5): data wins over the
+   * removal, as with layers. The events we missed come first (the insert
+   * they bring puts the definition back, syncBlocks.ts); one still missing
+   * then is taken from the server. The refusal names the version it had and
+   * the one we expected, alike when nothing else refused it: those are
+   * answered here, the rest are asked.
+   */
+  private async giveBackUsedBlocks(list: readonly FeatureConflict[], f: Inflight): Promise<readonly FeatureConflict[]> {
+    const removed = new Set(f.blocks.filter((b) => b.op === 'delete').map((b) => b.id));
+    const used = list.filter((c) => {
+      const id = blockOfKey(c.id);
+      return id !== null && removed.has(id) && c.expected !== undefined && c.expected === c.actual;
+    });
+    if (!used.length) return list;
+    const { core } = this;
+    const doc = this.o.doc;
+    try {
+      const page = await this.o.api.events(this.o.tenantId, this.o.projectId, core.cursor);
+      if (page.events.length) await this.receive(page.events);
+      if (this.disposed) return list;
+      const missing = new Set(used.map((c) => blockOfKey(c.id)!).filter((id) => !doc.block(id)));
+      if (missing.size) {
+        if (!(await takeServerBlocks(core, missing))) return list;
+        for (const id of missing) {
+          const b = doc.block(id);
+          if (b) this.o.warn(restoredBlockText(b.name));
+        }
+      }
+    } catch (e) {
+      this.o.warn(`Blok tanımları sunucudakilerle karşılaştırılamadı: ${(e as Error).message}`);
+      return list;
+    }
+    return list.filter((c) => !used.includes(c));
+  }
+
   private enterConflicts(list: readonly FeatureConflict[]): void {
     this.addConflicts(list.map((c): SyncConflict => ({ featureId: c.id, reason: c.reason, server: c.current ?? null, actual: c.actual ?? null })));
   }
@@ -454,14 +527,30 @@ export class ProjectSync {
           core.metaVersion = m.version;
         }
       }
-      const objects = list.filter((c) => c.reason !== 'project');
+      const objects = list.filter((c) => c.reason !== 'project' && !blockOfKey(c.featureId));
+      const blocks = new Set(list.flatMap((c) => blockOfKey(c.featureId) ?? []));
       const records = new Map(objects.flatMap((c) => (c.server ? [[c.featureId, c.server] as const] : [])));
       // A server copy on a layer this drawing lacks waits for it (waiting.ts), checked against the tree it comes with.
       const aside = setAside(core, records);
-      const good = core.checked([...records].map(([key, r]) => ({ key, entity: r.entity })));
+      // The server's definitions, when some are in conflict or an object taken places one this drawing lacks.
+      const server = blocks.size || [...records.values()].some((r) => placesMissing(doc, r.entity)) ? await serverBlocks(core) : null;
+      if (this.disposed) return;
       // Decided once no edit is open, and applied at once: no edit slips in between.
       await core.whenIdle();
       if (this.disposed) return;
+      let merge: BlockMerge | null = null;
+      if (server) {
+        const taken = new Set(objects.map((c) => c.featureId));
+        const arriving = [...records].filter(([id]) => !aside.has(id)).map(([, r]) => r.entity);
+        const m = mergeBlocks(core, server, { force: blocks, events: new Set(), placed: () => placedIds(doc, (uid) => taken.has(uid), arriving) });
+        if ('error' in m) this.o.warn(unmergedText(m.error));
+        else merge = m;
+      }
+      const good = core.checked(
+        [...records].map(([key, r]) => ({ key, entity: r.entity })),
+        undefined,
+        merge?.list,
+      );
       const put: Entity[] = [];
       const remove: number[] = [];
       for (const c of objects) {
@@ -485,7 +574,11 @@ export class ProjectSync {
       }
       // The server's tree, but a layer it drops that still holds this device's unsent objects stays (keptLayers.ts).
       const keep = meta?.layers ? keepUnsentLayers(doc, meta.layers, (uid) => core.busyLocally(uid)) : null;
-      doc.applyExternal({ put, remove, meta: keep && meta ? { ...meta, layers: keep.layers } : meta });
+      const change = { put, remove, meta: keep && meta ? { ...meta, layers: keep.layers } : meta };
+      if (merge) {
+        applyMerge(core, merge, change);
+        for (const n of merge.notes) this.o.warn(n);
+      } else doc.applyExternal(change);
       if (meta) {
         core.metaBase = metaParts(doc);
         core.metaDirty = false;
@@ -502,6 +595,14 @@ export class ProjectSync {
       for (const c of list) {
         if (c.reason === 'project') {
           core.metaVersion = c.actual ?? core.metaVersion;
+          continue;
+        }
+        // A definition: mine goes over the server's version (none: it is made again). Its text there is not
+        // known here, so it differs from any: mine is sent whole.
+        const block = blockOfKey(c.featureId);
+        if (block) {
+          core.blocks.set(block, c.actual === null ? null : { version: c.actual, json: '' });
+          core.blocksDirty = true;
           continue;
         }
         // What the server has now is the base mine goes over (nothing: mine is created again).
@@ -619,8 +720,10 @@ export class ProjectSync {
         if (events.some((e) => e.kind === PROJECT_ACCESS)) this.o.onAccessChanged?.();
         const found = await applyEvents(this.core, events);
         if (!this.disposed) this.addConflicts(found);
-        // A layer kept from another editor's tree (keptLayers.ts) goes back to the server.
-        if (!this.disposed && this.core.metaDirty && !this.conflicts.value.length) this.changed();
+        // What arrived may settle what waited here (a definition removed here that came back).
+        if (!this.disposed) this.pending.set(this.core.pendingCount());
+        // A layer kept from another editor's tree (keptLayers.ts), or a definition kept or renamed (syncBlocks.ts), goes back to the server.
+        if (!this.disposed && (this.core.metaDirty || this.core.blockPlan().length > 0) && !this.conflicts.value.length) this.changed();
       })
       .catch((e) => this.o.warn(`Başka kullanıcıların değişiklikleri alınamadı: ${(e as Error).message}`));
     return this.remoteQueue;

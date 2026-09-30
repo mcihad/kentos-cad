@@ -1,3 +1,4 @@
+import type { BlockDefinition } from '../../contracts/generated/BlockDefinition';
 import type { CommandEnvelope } from '../../contracts/generated/CommandEnvelope';
 import type { Entity } from '../../contracts/generated/Entity';
 import type { ProjectPatch } from '../../contracts/generated/ProjectPatch';
@@ -19,6 +20,12 @@ export interface DraftChange {
   entity: Entity | null;
 }
 
+/** One block definition's unsent state (docs/adr/0144 §5): what it should become (null = removed) and the server version it was based on. */
+export interface DraftBlock {
+  base: string | null;
+  block: BlockDefinition | null;
+}
+
 /** The draft format this code writes; drafts written before persistent ids were the server's have no `version` (1). */
 export const DRAFT_VERSION = 2;
 
@@ -27,6 +34,8 @@ export interface Draft {
   userId: string;
   /** By the object's persistent id: its id on the server, and the `uid` it has in the drawing. */
   changes: Record<string, DraftChange>;
+  /** By the definition's id, in the order they were made or changed; none when no definition waits. */
+  blocks?: Record<string, DraftBlock>;
   meta?: { base: string; patch: ProjectPatch };
   inflight?: CommandEnvelope;
   updated: number;
@@ -94,13 +103,27 @@ export function readDraft(raw: unknown, newId: () => string = uuidv7): ReadDraft
     }
     changes[id] = { base, entity: value.entity as Entity | null };
   }
+  let blocks: Record<string, DraftBlock> | undefined;
+  if (raw.blocks !== undefined) {
+    blocks = {};
+    if (!isObj(raw.blocks)) problems.push('blok tanımı değişiklikleri okunamadı');
+    else
+      for (const [id, value] of Object.entries(raw.blocks)) {
+        // A definition is checked like a file's when it goes back into the drawing (syncBlocks.ts).
+        if (!isUuid(id) || !isObj(value) || !(value.base === null || typeof value.base === 'string') || !(value.block === null || isObj(value.block))) {
+          problems.push(`${id} blok tanımının değişikliği okunamadı`);
+          continue;
+        }
+        blocks[id] = { base: value.base as string | null, block: value.block as BlockDefinition | null };
+      }
+  }
   const meta = isObj(raw.meta) && typeof raw.meta.base === 'string' && isObj(raw.meta.patch) ? { base: raw.meta.base, patch: raw.meta.patch as ProjectPatch } : undefined;
   if (raw.meta !== undefined && !meta) problems.push('proje bilgisi değişikliği okunamadı');
   const f = raw.inflight;
   const inflight = isObj(f) && typeof f.idempotencyKey === 'string' && typeof f.requestId === 'string' && isObj(f.input) ? (f as unknown as CommandEnvelope) : undefined;
   if (f !== undefined && !inflight) problems.push('gönderilmekte olan komut okunamadı');
   return {
-    draft: { version: DRAFT_VERSION, userId: raw.userId, changes, meta, inflight, updated: typeof raw.updated === 'number' ? raw.updated : 0 },
+    draft: { version: DRAFT_VERSION, userId: raw.userId, changes, ...(blocks && Object.keys(blocks).length ? { blocks } : {}), meta, inflight, updated: typeof raw.updated === 'number' ? raw.updated : 0 },
     upgraded,
     problems,
   };

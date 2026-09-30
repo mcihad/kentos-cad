@@ -3,6 +3,7 @@ import type { FeatureRecord } from '../../contracts/generated/FeatureRecord';
 import type { Entity } from '../../model/entities';
 import { keepUnsentLayers, keptText, treeText } from './keptLayers';
 import { fetchArrived, forget, setAside } from './waiting';
+import { applyMerge, mergeBlocks, placedIds, placesMissing, serverBlocks, unmergedText, type BlockMerge } from './syncBlocks';
 import { BATCH, type SyncConflict, type SyncCore } from './syncCore';
 import { entityJson, metaParts } from './tracker';
 
@@ -13,17 +14,22 @@ import { entityJson, metaParts } from './tracker';
  * server's id as its persistent id (an object already here keeps its slot);
  * an object with unsent local edits is not overwritten but becomes a
  * conflict. New metadata comes first, since new objects may sit on a layer
- * it brings. Returns the conflicts found; the cursor moves past the last event.
+ * it brings. Block definitions the events changed come from the server's
+ * list, in the same change as the objects that may place them
+ * (syncBlocks.ts). Returns the conflicts found; the cursor moves past the
+ * last event.
  */
 export async function applyEvents(core: SyncCore, events: readonly EventRecord[]): Promise<SyncConflict[]> {
   if (!events.length) return [];
   const { o, tracker } = core;
   const last = events[events.length - 1].seq;
   const ops = new Map<string, 'create' | 'update' | 'delete'>();
+  const blocks = new Set<string>();
   let meta = false;
   for (const e of events) {
     if (e.requestId && core.own.has(e.requestId)) continue;
     for (const f of e.features) ops.set(f.id, f.op);
+    for (const b of e.blocks ?? []) blocks.add(b.id);
     meta ||= e.meta;
   }
   const wanted = [...ops].filter(([, op]) => op !== 'delete').map(([id]) => id);
@@ -32,6 +38,8 @@ export async function applyEvents(core: SyncCore, events: readonly EventRecord[]
     const page = await o.api.featuresById(o.tenantId, o.projectId, wanted.slice(i, i + BATCH));
     for (const f of page.features) fetched.set(f.id, f);
   }
+  // The server's definitions when the events changed some, or an object they bring places one this drawing lacks.
+  const server = blocks.size || [...fetched.values()].some((f) => placesMissing(o.doc, f.entity)) ? await serverBlocks(core) : null;
   if (core.closed) return [];
   const conflicts: SyncConflict[] = [];
   if (meta) {
@@ -55,11 +63,27 @@ export async function applyEvents(core: SyncCore, events: readonly EventRecord[]
   }
   // On a layer this drawing lacks (after the new tree): they wait for it (waiting.ts).
   const aside = setAside(core, fetched);
-  const good = core.checked([...fetched.values()].map((f) => ({ key: f.id, entity: f.entity })));
   // Decided once no edit is open, and applied at once: no edit slips in between.
   await core.whenIdle();
   if (core.closed) return [];
   const doc = o.doc;
+  let merge: BlockMerge | null = null;
+  if (server) {
+    // What places a block once these events are in: the objects they leave here, and those they bring.
+    const arriving = [...fetched.values()].filter((f) => !aside.has(f.id) && !core.busyLocally(f.id));
+    const leaving = (uid: string) => ops.has(uid) && !core.busyLocally(uid);
+    const m = mergeBlocks(core, server, { events: blocks, placed: () => placedIds(doc, leaving, arriving.map((f) => f.entity)) });
+    if ('error' in m) o.warn(unmergedText(m.error));
+    else {
+      merge = m;
+      conflicts.push(...m.conflicts);
+    }
+  }
+  const good = core.checked(
+    [...fetched.values()].map((f) => ({ key: f.id, entity: f.entity })),
+    undefined,
+    merge?.list,
+  );
   const put: Entity[] = [];
   const remove: number[] = [];
   for (const [featureId] of ops) {
@@ -88,7 +112,10 @@ export async function applyEvents(core: SyncCore, events: readonly EventRecord[]
       forget(core, featureId);
     }
   }
-  if (put.length || remove.length) doc.applyExternal({ put, remove });
+  if (merge) {
+    applyMerge(core, merge, { put, remove });
+    for (const n of merge.notes) o.warn(n);
+  } else if (put.length || remove.length) doc.applyExternal({ put, remove });
   core.cursor = last;
   // A tree these events brought may hold the layer objects were waiting for.
   await fetchArrived(core);
