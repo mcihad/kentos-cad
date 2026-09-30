@@ -107,7 +107,9 @@ impl Store {
                     Shape::Polygon { .. } if inside_polygon(e, p) => {
                         Some(entity_area(e).unwrap_or(0.0))
                     }
-                    Shape::Circle { c, r } if js_hypot(p.x - c.x, p.y - c.y) < *r => Some(PI * r * r),
+                    Shape::Circle { c, r } if js_hypot(p.x - c.x, p.y - c.y) < *r => {
+                        Some(PI * r * r)
+                    }
                     Shape::Ellipse {
                         c,
                         major,
@@ -159,12 +161,14 @@ impl Store {
             let e = &it.shape;
             let ring = match e {
                 // The part `p` is in, of a multi-part area (docs/adr/0143).
-                Shape::Polygon { .. } if is_multi_part(e) => area_parts(e).iter().find_map(|part| {
-                    let Shape::Polygon { pts, bulges, .. } = part else {
-                        return None;
-                    };
-                    inside_polygon(part, p).then(|| polygon_ring(pts, bulges.as_deref()))
-                }),
+                Shape::Polygon { .. } if is_multi_part(e) => {
+                    area_parts(e).iter().find_map(|part| {
+                        let Shape::Polygon { pts, bulges, .. } = part else {
+                            return None;
+                        };
+                        inside_polygon(part, p).then(|| polygon_ring(pts, bulges.as_deref()))
+                    })
+                }
                 Shape::Polygon { pts, bulges, .. } => {
                     inside_polygon(e, p).then(|| polygon_ring(pts, bulges.as_deref()))
                 }
@@ -202,7 +206,7 @@ impl Store {
     pub fn edges_in(&self, r: &Bounds, except: Option<f64>) -> Vec<Edge> {
         self.overlapping(r, except)
             .into_iter()
-            .flat_map(|it| it.shapes().iter().flat_map(entity_edges))
+            .flat_map(|it| it.shapes().flat_map(entity_edges))
             .collect()
     }
 
@@ -233,7 +237,7 @@ impl Store {
                     && b.max_x >= r.min_x
                     && b.min_y <= r.max_y
                     && b.max_y >= r.min_y);
-            if over && it.shapes().iter().any(|s| touches_rect(s, r)) {
+            if over && it.shapes().any(|s| touches_rect(s, r)) {
                 out.push(it.id);
             }
         }

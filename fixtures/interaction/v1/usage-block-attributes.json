@@ -1,0 +1,29 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "usage-block-attributes",
+  "title": "Kullanım: blok öznitelikleri; rögarlar numaralarını ve kotlarını kendi değerleriyle ya da varsayılanla yazar, kot yazısına tıklamak rögarı seçer, Öznitelikler bloğun özniteliklerini gösterir, varsayılanla yazılan rögar patlatılıp geri alınır",
+  "source": "Kullanım senaryosu (kentos-cad kullan, apps/web/scripts/e2e/use.mjs); ADR 0144, 6a adımı",
+  "covers": ["CAD-04"],
+  "document": "block-attributes.kcad",
+  "view": { "center": [487015, 4420008.5], "metresPerPixel": 0.03 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "clickTolerance": 0.03,
+  "steps": [
+    { "shot": "cizim", "note": "Batıdaki rögar kendi numarasını (R-12) ve kotunu (101.35) yazar; ortadakinin değeri yok: numara varsayılanla (R-?), kotun varsayılanı olmadığından kot yazılmaz." },
+    { "move": [-3.2, -0.4], "note": "Kot yazısının üstüne gelinir: yazı yerleştirmenin parçasıdır, rögar vurgulanır.", "expect": { "hover": 3 } },
+    { "shot": "uzerine-gelme" },
+    { "click": [-3.2, -0.4], "note": "Tıklama rögarı seçer; Öznitelikler'de Blok öznitelikleri: NO ve KOT, tanımın sırasıyla.", "expect": { "tool": "select", "selected": [3] } },
+    { "shot": "secili" },
+    { "key": "Esc", "expect": { "selected": [] } },
+    { "click": [4.25, 0], "note": "Ortadaki rögar: NO varsayılanıyla, KOT boş görünür.", "expect": { "selected": [4] } },
+    { "shot": "varsayilan" },
+    {
+      "run": "tool.explode",
+      "note": "Patlat: iki çember ve numara yazısı; boş kot yazı olmaz.",
+      "expect": { "entities": 7, "selected": [6, 7, 8], "logged": ["1 nesne patlatıldı: 3 parça."], "newest": { "kind": "text", "points": [[5.9, 0.15]], "text": "R-?" } }
+    },
+    { "shot": "patlatildi" },
+    { "key": "Ctrl+Z", "note": "Tek adımda geri alınır.", "expect": { "entities": 5, "canUndo": false } }
+  ]
+}

@@ -35,6 +35,8 @@ impl Placing {
                         .iter()
                         .map(|e| CoreEntity::new(shape(e)))
                         .collect(),
+                    // Attributes are texts, which these formats leave out of a block.
+                    attributes: Vec::new(),
                 })
                 .collect(),
         ))
@@ -216,12 +218,14 @@ fn shape(e: &Entity) -> Shape {
                 spacing: h.pattern.spacing,
             },
         },
+        // Its attributes show as texts, which these formats leave out of a block.
         Entity::Insert(i) => Shape::Insert {
             block: i.block.to_text(),
             p: core(i.p),
             scale: i.scale,
             rotation: i.rotation,
             mirror: i.mirror.then_some(true),
+            attrs: None,
         },
     }
 }

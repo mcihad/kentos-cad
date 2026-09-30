@@ -32,6 +32,24 @@ use crate::vec2::Vec2;
 /// on the CPU (`CONSTRUCTION_REACH`).
 pub const CONSTRUCTION_REACH: f64 = 1e6;
 
+/// An insert's attributes as the object holds them (`attrs`, docs/adr/0144
+/// §7): its block's attribute texts show the value under their tag.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Attrs(pub Vec<(String, Json)>);
+
+impl Attrs {
+    /// The value under `tag` an attribute text shows: a text that is not empty.
+    pub fn shown(&self, tag: &str) -> Option<&str> {
+        self.0
+            .iter()
+            .find(|(k, _)| k == tag)
+            .and_then(|(_, v)| match v {
+                Json::Str(s) if !s.is_empty() => Some(s.as_str()),
+                _ => None,
+            })
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct HatchPattern {
     pub kind: String,
@@ -151,6 +169,10 @@ pub enum Shape {
         rotation: f64,
         /// `Some(true)` when mirrored; never `Some(false)` (a file writes no false).
         mirror: Option<bool>,
+        /// Its attributes: what its block's attribute texts show (§7). Not
+        /// the geometry's JSON: an entity's `attrs` stay among its other
+        /// fields, where they were, and are read into it as well.
+        attrs: Option<Attrs>,
     },
 }
 
@@ -168,7 +190,7 @@ crate::json_tagged!(Shape, "kind",
     Text => "text" { p, text, height, rotation },
     Dimension => "dimension" { a, b, offset, height, text, style, angle, c },
     Hatch => "hatch" { ring, holes, pattern },
-    Insert => "insert" { block, p, scale, rotation, mirror },
+    Insert => "insert" { block, p, scale, rotation, mirror; attrs },
 );
 
 /// An entity: its geometry and every other field, untouched and in order.
@@ -200,7 +222,12 @@ impl FromJson for Entity {
         let Json::Obj(fields) = v else {
             return Err("nesne bekleniyordu".into());
         };
-        let shape = Shape::from_json(v)?;
+        let mut shape = Shape::from_json(v)?;
+        if let Shape::Insert { attrs, .. } = &mut shape
+            && let Json::Obj(fields) = v.get("attrs")
+        {
+            *attrs = Some(Attrs(fields.clone()));
+        }
         let kind = match v.get("kind") {
             Json::Str(k) => k.as_str(),
             _ => "",

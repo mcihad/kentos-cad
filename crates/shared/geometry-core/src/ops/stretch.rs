@@ -48,12 +48,14 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
             scale,
             rotation,
             mirror,
+            attrs,
         } => inside(*p, r).then(|| Shape::Insert {
             block: block.clone(),
             p: mv(*p),
             scale: *scale,
             rotation: *rotation,
             mirror: *mirror,
+            attrs: attrs.clone(),
         })?,
         // Arc segments keep their bulge, so they bend with their moved ends.
         Shape::Polyline { pts, bulges, holes } => any(pts).then(|| Shape::Polyline {
@@ -75,9 +77,7 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
                 any(pts) || holes.iter().flatten().any(|h| any(&h.pts))
             };
             // Every part of a multi-part area moves the vertices it has in the window (docs/adr/0143).
-            if !touched(pts, holes)
-                && !parts.iter().flatten().any(|p| touched(&p.pts, &p.holes))
-            {
+            if !touched(pts, holes) && !parts.iter().flatten().any(|p| touched(&p.pts, &p.holes)) {
                 return None;
             }
             let moved_holes = |holes: &Option<Vec<Ring>>| {

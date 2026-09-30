@@ -1,5 +1,5 @@
 import type { CrosshairSize } from '../app/state';
-import type { BlockPiece } from '../model/blocks';
+import { pieceText, type BlockPiece } from '../model/blocks';
 import type { CadDocument } from '../model/document';
 import { dist, type Vec2 } from '../model/geometry';
 import type { DimensionLayout } from '../model/geom/dimension';
@@ -141,6 +141,9 @@ export function drawLabels(
       const piece = pieces(e.block)?.[spots[i + 6]];
       const s = cam.worldToScreen({ x, y });
       if (what === LABEL.pieceText && piece?.kind === 'text') {
+        // An attribute's piece shows the insert's value, else its default (docs/adr/0144 §7).
+        const text = pieceText(piece, e.attrs);
+        if (!text) continue;
         const px = spots[i + 5] * cam.scale;
         g.save();
         g.translate(s.x, s.y);
@@ -148,7 +151,7 @@ export function drawLabels(
         g.font = `italic 400 ${px.toFixed(1)}px ${pal.drawingFont}`;
         g.textAlign = 'left';
         g.textBaseline = 'alphabetic';
-        haloText(g, piece.text, 0, 0, pal.label, pal.labelHalo);
+        haloText(g, text, 0, 0, pal.label, pal.labelHalo);
         g.restore();
       } else if (what === LABEL.pieceDimension && piece?.kind === 'dimension') {
         const px = spots[i + 7] * cam.scale;

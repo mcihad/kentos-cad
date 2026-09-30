@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { blocksFault, blockFaultMessage, changedDefinitions, checkDefinitions, checkNesting, freeBlockName, importNames, nameKey, nameOk, placed, placedBlocks, placements, trimName, turnOf, type BlockDefinition } from './blocks';
+import { attributeRows, blocksFault, blockFaultMessage, changedDefinitions, checkDefinitions, checkNesting, freeBlockName, importNames, nameKey, nameOk, pieceText, placed, placedBlocks, placements, trimName, turnOf, type BlockDefinition } from './blocks';
 import type { Entity } from './entities';
 
 /**
@@ -70,6 +70,32 @@ describe('block rules (docs/adr/0144)', () => {
     expect(changedDefinitions(before, [{ ...a, base: { x: 1, y: 1 } }, b, c, d])).toEqual(new Set([id(1), id(2), id(3)]));
     // D removed and E made: each alone.
     expect(changedDefinitions(before, [a, b, c, block(5, 'E')])).toEqual(new Set([id(4), id(5)]));
+  });
+
+  it('show an attribute’s value on an insert, else its default; nothing when both are empty', () => {
+    const attrs = { NO: 'R-12', KOT: '' };
+    expect(pieceText({ text: 'R-1', attribute: 'NO' }, attrs)).toBe('R-12');
+    // An empty value is no value: the default shows.
+    expect(pieceText({ text: '?', attribute: 'KOT' }, attrs)).toBe('?');
+    expect(pieceText({ text: '', attribute: 'KOT' }, attrs)).toBe('');
+    // A plain text of the block is itself whatever the insert holds.
+    expect(pieceText({ text: 'Rögar' }, { NO: 'x' })).toBe('Rögar');
+    const rogar: BlockDefinition = {
+      ...block(1, 'Rögar'),
+      attributes: [
+        { tag: 'NO', prompt: 'Rögar numarası', value: 'R-1', p: { x: 0, y: 0 }, height: 0.5, rotation: 0 },
+        { tag: 'KOT', p: { x: 0, y: -1 }, height: 0.4, rotation: 0 },
+      ],
+    };
+    expect(attributeRows(rogar, attrs)).toEqual([
+      { tag: 'NO', value: 'R-12' },
+      { tag: 'KOT', value: '' },
+    ]);
+    expect(attributeRows(rogar, {})).toEqual([
+      { tag: 'NO', value: 'R-1' },
+      { tag: 'KOT', value: '' },
+    ]);
+    expect(attributeRows(undefined, attrs)).toEqual([]);
   });
 
   it('keep ids and tags once', () => {

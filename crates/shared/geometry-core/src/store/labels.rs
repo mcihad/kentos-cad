@@ -141,14 +141,15 @@ impl Store {
             if let Some(x) = &it.expanded {
                 for (i, s) in x.shapes.iter().enumerate() {
                     match s {
+                        // An attribute's text that shows nothing has no label (docs/adr/0144 §7).
                         Shape::Text {
                             p,
+                            text,
                             height,
                             rotation,
-                            ..
                         } => {
                             let px = height * scale;
-                            if px < 5.0 || px > 240.0 {
+                            if px < 5.0 || px > 240.0 || text.is_empty() {
                                 continue;
                             }
                             out.extend([

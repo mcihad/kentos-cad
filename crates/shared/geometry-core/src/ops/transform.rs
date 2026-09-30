@@ -262,6 +262,7 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
             scale,
             rotation,
             mirror,
+            attrs,
         } => {
             let theta = atan2(m[1], m[0]);
             let flip = is_reflection(m);
@@ -276,6 +277,7 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
                     theta + rotation
                 }),
                 mirror: mirrored.then_some(true),
+                attrs: attrs.clone(),
             }
         }
         Shape::Text {
@@ -381,6 +383,7 @@ mod tests {
                 scale,
                 rotation,
                 mirror,
+                ..
             } => (block.clone(), *p, *scale, *rotation, *mirror),
             other => panic!("{other:?}"),
         };

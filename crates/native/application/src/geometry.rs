@@ -12,7 +12,8 @@ use kentos_contracts::{
     PointEntity, RingGeometry, SplineEntity, TextEntity, Vec2 as Point,
 };
 use kentos_geometry_core::Vec2;
-use kentos_geometry_core::entity::{HatchPattern, Part, Shape};
+use kentos_geometry_core::api::json::Json;
+use kentos_geometry_core::entity::{Attrs, HatchPattern, Part, Shape};
 use kentos_geometry_core::geom::arrangement::Ring;
 use kentos_geometry_core::text::Font;
 
@@ -169,12 +170,20 @@ pub fn shape(entity: &Entity) -> Shape {
                 spacing: h.pattern.spacing,
             },
         },
+        // Its attributes too: what its block's attribute texts show (docs/adr/0144 §7).
         Entity::Insert(i) => Shape::Insert {
             block: i.block.to_text(),
             p: v(&i.p),
             scale: i.scale,
             rotation: i.rotation,
             mirror: i.mirror.then_some(true),
+            attrs: Some(Attrs(
+                i.base
+                    .attrs
+                    .iter()
+                    .map(|(k, v)| (k.clone(), Json::Str(v.clone())))
+                    .collect(),
+            )),
         },
     }
 }
@@ -198,7 +207,10 @@ fn ring_back(r: Ring) -> RingGeometry {
 /// The core's holes back, each keeping the elevations of the hole it was
 /// when its vertex count is the same (a transform moves each vertex and
 /// keeps it; docs/adr/0142).
-fn holes_back(holes: Option<Vec<Ring>>, before: Option<&[RingGeometry]>) -> Option<Vec<RingGeometry>> {
+fn holes_back(
+    holes: Option<Vec<Ring>>,
+    before: Option<&[RingGeometry]>,
+) -> Option<Vec<RingGeometry>> {
     holes.map(|hs| {
         hs.into_iter()
             .enumerate()
@@ -653,6 +665,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             scale,
             rotation,
             mirror,
+            ..
         } => EntityGeometry::Insert {
             block: BlockId::parse(&block)?,
             p: p(at),
@@ -756,7 +769,10 @@ mod tests {
         let text = r#"{"kind":"polygon","id":4,"layerId":"a","attrs":{"Ada":"104"},"pts":[{"x":0,"y":0},{"x":4,"y":0},{"x":4,"y":4}],"zs":[1,null,3],"parts":[{"pts":[{"x":10,"y":0},{"x":14,"y":0},{"x":14,"y":4},{"x":10,"y":4}],"bulges":[0,0.5,0,0],"holes":[{"pts":[{"x":11,"y":1},{"x":12,"y":1},{"x":12,"y":2}],"zs":[7,8,null]}],"zs":[4,5,6,-0.0]}]}"#;
         let e = entity(text);
         let again = with_shape(&e, shape(&e)).expect("the same kind");
-        assert_eq!(serde_json::to_string(&again).unwrap(), serde_json::to_string(&e).unwrap());
+        assert_eq!(
+            serde_json::to_string(&again).unwrap(),
+            serde_json::to_string(&e).unwrap()
+        );
         // Moved 100 m east: every elevation stays with its vertex.
         let moved = kentos_geometry_core::ops::transform::transform_shape(
             &shape(&e),
@@ -767,18 +783,39 @@ mod tests {
         };
         let part = &p.parts.as_ref().expect("parts")[0];
         assert_eq!(part.pts[0].x, 110.0);
-        assert_eq!(part.zs, Some(vec![Some(4.0), Some(5.0), Some(6.0), Some(-0.0)]));
-        assert_eq!(part.holes.as_ref().expect("a hole")[0].zs, Some(vec![Some(7.0), Some(8.0), None]));
+        assert_eq!(
+            part.zs,
+            Some(vec![Some(4.0), Some(5.0), Some(6.0), Some(-0.0)])
+        );
+        assert_eq!(
+            part.holes.as_ref().expect("a hole")[0].zs,
+            Some(vec![Some(7.0), Some(8.0), None])
+        );
         assert_eq!(p.zs, Some(vec![Some(1.0), None, Some(3.0)]));
         // Through the edit command's geometry: the parts come along, their elevations as the geometry says.
         let g = edit_geometry(shape(&e)).expect("a geometry");
-        let EntityGeometry::Polygon { parts: Some(parts), .. } = &g else {
+        let EntityGeometry::Polygon {
+            parts: Some(parts), ..
+        } = &g
+        else {
             panic!("{g:?}");
         };
         assert_eq!(parts.len(), 1);
         let written = entity_of(&g, e.base().clone());
-        let Entity::Polygon(w) = written else { panic!() };
+        let Entity::Polygon(w) = written else {
+            panic!()
+        };
         assert_eq!(w.parts.as_ref().map(Vec::len), Some(1));
-        assert_eq!(w.parts.as_ref().unwrap()[0].pts, p.parts.as_ref().unwrap()[0].pts.iter().map(|q| Point { x: q.x - 100.0, y: q.y }).collect::<Vec<_>>());
+        assert_eq!(
+            w.parts.as_ref().unwrap()[0].pts,
+            p.parts.as_ref().unwrap()[0]
+                .pts
+                .iter()
+                .map(|q| Point {
+                    x: q.x - 100.0,
+                    y: q.y
+                })
+                .collect::<Vec<_>>()
+        );
     }
 }

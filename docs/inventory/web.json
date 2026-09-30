@@ -3754,8 +3754,10 @@
       },
       "tests": [
         "apps/web/src/app/netcadNames.test.ts",
+        "fixtures/interaction/v1/block-attributes.json",
         "fixtures/interaction/v1/block-explode.json",
         "fixtures/interaction/v1/object-tools.json",
+        "fixtures/interaction/v1/usage-block-attributes.json",
         "fixtures/interaction/v1/usage-blocks.json"
       ]
     },
@@ -7382,8 +7384,10 @@
       },
       "tests": [
         "apps/web/src/app/netcadNames.test.ts",
+        "fixtures/interaction/v1/block-attributes.json",
         "fixtures/interaction/v1/block-explode.json",
         "fixtures/interaction/v1/object-tools.json",
+        "fixtures/interaction/v1/usage-block-attributes.json",
         "fixtures/interaction/v1/usage-blocks.json"
       ]
     },

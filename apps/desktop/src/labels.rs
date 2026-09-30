@@ -315,29 +315,41 @@ impl Labels<'_> {
                     },
                     self.colors.halo,
                 ),
-                // A block's texts and dimension values (docs/adr/0144), as its own objects draw theirs.
+                // A block's texts and dimension values (docs/adr/0144), as its own objects draw theirs;
+                // an attribute's text the insert's value, else its default (§7).
                 (
                     LabelSpot::PieceText {
                         at,
                         rotation,
                         height,
                         text,
+                        attribute,
                         ..
                     },
                     _,
-                ) => draw(
-                    frame,
-                    &Piece {
+                ) => {
+                    let shown = kentos_interaction::spatial::shown_text(
                         text,
-                        at: self.screen(*at),
-                        angle: (-rotation.to_radians()) as f32,
-                        size: (height * self.camera.scale) as f32,
-                        font: drawing_fonts::font(self.font, 400, true),
-                        anchor: Anchor::LeftBaseline,
-                        color: self.colors.label,
-                    },
-                    self.colors.halo,
-                ),
+                        attribute.as_deref(),
+                        &base.attrs,
+                    );
+                    if shown.is_empty() {
+                        continue;
+                    }
+                    draw(
+                        frame,
+                        &Piece {
+                            text: shown,
+                            at: self.screen(*at),
+                            angle: (-rotation.to_radians()) as f32,
+                            size: (height * self.camera.scale) as f32,
+                            font: drawing_fonts::font(self.font, 400, true),
+                            anchor: Anchor::LeftBaseline,
+                            color: self.colors.label,
+                        },
+                        self.colors.halo,
+                    );
+                }
                 (
                     LabelSpot::PieceDimension {
                         at,

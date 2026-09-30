@@ -176,6 +176,8 @@ pub struct Newest {
     /// A circle's or an arc's centre, relative to the view's centre (docs/adr/0032).
     pub(super) center: Option<[f64; 2]>,
     pub(super) radius: Option<f64>,
+    /// A text's content, exact (docs/adr/0144 §7).
+    pub(super) text: Option<String>,
 }
 
 /// A JSON object's members in the order they are written (a `dialog` step's

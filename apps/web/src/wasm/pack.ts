@@ -17,7 +17,10 @@ const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse
  * parts and each of them as a path. A one-part area stays the polygon's number, laid out as it always was.
  */
 const MULTI_PART = 13;
-/** A block's insert (docs/adr/0144): its point, scale, turn, mirror flag and the block's id. */
+/**
+ * A block's insert (docs/adr/0144): its point, scale, turn, mirror flag, the block's id and its attributes' texts
+ * (a count, −1 for none, of tag and value strings: what its block's attribute texts show, §7).
+ */
 const INSERT = 14;
 
 interface XY {
@@ -170,12 +173,19 @@ export function packEntities(list: Iterable<object>): Packed {
         num(pattern?.spacing);
         break;
       }
-      case INSERT:
+      case INSERT: {
         pt(e.p);
         num(e.scale);
         num(e.rotation);
         out.push(e.mirror === true ? 1 : 0, str(e.block));
+        const attrs = e.attrs && typeof e.attrs === 'object' ? Object.entries(e.attrs).filter((kv): kv is [string, string] => typeof kv[1] === 'string') : null;
+        if (!attrs) out.push(-1);
+        else {
+          out.push(attrs.length);
+          for (const [tag, value] of attrs) out.push(str(tag), str(value));
+        }
         break;
+      }
     }
   }
   return { nums: Float64Array.from(out), strings: JSON.stringify(strings) };
@@ -356,6 +366,8 @@ export function unpackEntities(p: Packed): Unpacked[] {
         const mirror = flag();
         g = { kind, block: str() ?? '', p, scale, rotation };
         if (mirror) g.mirror = true;
+        // Its attributes are the object's data, not its geometry: read past.
+        for (let n = num(); n > 0; n--) at += 2;
         break;
       }
       default:

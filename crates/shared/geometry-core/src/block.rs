@@ -11,6 +11,13 @@
 //! to cancellation, and an exact quarter turn is exact: a 90°, 180° or 270°
 //! insert of whole-numbered geometry stays whole-numbered.
 //!
+//! Attribute definitions (docs/adr/0144 §7) are text pieces that carry their
+//! tag: an insert shows its own value under that tag, else the definition's
+//! default, which is the piece's text; the host picks the value where it
+//! draws, the place, size and turn are the core's. A nested insert's
+//! attributes are the definition's own: their values are taken in when the
+//! definition is flattened.
+//!
 //! The documents keep the block rules (known blocks, no cycles, at most 16
 //! levels; `kentos_contracts::blocks`); the core stays total all the same:
 //! an unknown block expands to nothing and a cycle stops where it closes.
@@ -19,7 +26,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::api::json::Json;
-use crate::entity::{Entity, Shape};
+use crate::entity::{Attrs, Entity, Shape};
 use crate::geom::affine::{Affine, compose, translation};
 use crate::jsmath::{PI, cos, sin};
 use crate::ops::curve_cuts::Cut;
@@ -29,31 +36,51 @@ use crate::vec2::Vec2;
 /// Nested definitions followed at most this deep (`MAX_BLOCK_DEPTH` in the contracts).
 pub const MAX_DEPTH: usize = 16;
 
-/// A definition as a host gives it: its id, its base point and its objects
-/// (each its geometry and every other field, as the drawing holds them).
+/// An attribute definition (docs/adr/0144 §7): the text an insert shows of
+/// its value under `tag`, in the definition's coordinates, as a text is.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Attribute {
+    pub tag: String,
+    /// The default value, shown when the insert has none ("" : none).
+    pub value: String,
+    pub p: Vec2,
+    pub height: f64,
+    /// Degrees, counter-clockwise from east, as a text's.
+    pub rotation: f64,
+}
+
+/// A definition as a host gives it: its id, its base point, its objects
+/// (each its geometry and every other field, as the drawing holds them) and
+/// its attribute definitions.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Definition {
     pub id: String,
     pub base: Vec2,
     pub entities: Vec<Entity>,
+    pub attributes: Vec<Attribute>,
 }
 
 /// One drawn piece of a block: a shape (never an insert), with the colour
 /// and line weight it draws with when it has its own (or inherits a nested
-/// insert's); `None` draws with the insert's, then its layer's.
+/// insert's); `None` draws with the insert's, then its layer's. An
+/// attribute's text carries its tag: the insert's value under it is shown,
+/// else the text (the default).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Piece {
     pub shape: Shape,
     pub color: Option<String>,
     pub line_weight: Option<f64>,
+    pub attribute: Option<String>,
 }
 
-/// A definition ready to place: its base point, its own objects (what Patlat
-/// gives back) and its pieces relative to the base point.
+/// A definition ready to place: its base point, its own objects and
+/// attribute definitions (what Patlat gives back) and its pieces relative
+/// to the base point.
 #[derive(Debug, PartialEq)]
 pub struct Flat {
     pub base: Vec2,
     pub entities: Vec<Entity>,
+    pub attributes: Vec<Attribute>,
     pub pieces: Vec<Piece>,
 }
 
@@ -76,7 +103,7 @@ impl Blocks {
     }
 
     /// The definitions read from their JSON: the contract's `BlockDefinition`
-    /// list (`[{ id, base, entities, … }]`; other fields are the documents').
+    /// list (`[{ id, base, entities, attributes?, … }]`; other fields are the documents').
     pub fn from_json(v: &Json) -> Result<Blocks, String> {
         let Json::Arr(list) = v else {
             return Err("blok tanımları bir dizi olmalı".into());
@@ -99,10 +126,21 @@ impl Blocks {
                         .map_err(|m| format!("[{i}].entities[{k}]: {m}"))
                 })
                 .collect::<Result<Vec<Entity>, String>>()?;
+            let attributes = match d.get("attributes") {
+                Json::Arr(list) => list
+                    .iter()
+                    .enumerate()
+                    .map(|(k, a)| {
+                        attribute_of(a).map_err(|m| format!("[{i}].attributes[{k}]: {m}"))
+                    })
+                    .collect::<Result<Vec<Attribute>, String>>()?,
+                _ => Vec::new(),
+            };
             defs.push(Definition {
                 id: id.clone(),
                 base,
                 entities,
+                attributes,
             });
         }
         Ok(Blocks::new(defs))
@@ -117,18 +155,30 @@ impl Blocks {
         self.by_id.get(id)
     }
 
-    /// An insert's pieces in the drawing's coordinates; none for an unknown
-    /// block or a shape that is not an insert.
+    /// An insert's pieces in the drawing's coordinates, an attribute's text
+    /// the value the insert shows (an empty text when it shows none); none
+    /// for an unknown block or a shape that is not an insert.
     pub fn expand(&self, insert: &Shape) -> Vec<Piece> {
         let Some((flat, m)) = self.placed(insert) else {
             return Vec::new();
         };
+        let values = insert_attrs(insert);
         flat.pieces
             .iter()
-            .map(|piece| Piece {
-                shape: transform_shape(&piece.shape, &m),
-                color: piece.color.clone(),
-                line_weight: piece.line_weight,
+            .map(|piece| {
+                let mut shape = transform_shape(&piece.shape, &m);
+                if let (Some(tag), Some(values), Shape::Text { text, .. }) =
+                    (&piece.attribute, values, &mut shape)
+                    && let Some(v) = values.shown(tag)
+                {
+                    v.clone_into(text);
+                }
+                Piece {
+                    shape,
+                    color: piece.color.clone(),
+                    line_weight: piece.line_weight,
+                    attribute: piece.attribute.clone(),
+                }
             })
             .collect()
     }
@@ -141,6 +191,7 @@ impl Blocks {
             scale,
             rotation,
             mirror,
+            ..
         } = insert
         else {
             return None;
@@ -156,13 +207,24 @@ impl Blocks {
     /// its objects placed as the insert places them; a nested insert stays
     /// an insert, its own similarity composed. An object keeps its own
     /// fields; one without a colour or line weight takes the insert's, one
-    /// without a layer (`""`, the block's) the insert's layer. The objects
-    /// come without ids (they are new objects).
+    /// without a layer (`""`, the block's) the insert's layer. The
+    /// definition's attributes become texts of the values the insert shows
+    /// (§7; an empty one none). The objects come without ids (they are new
+    /// objects).
     pub fn explode(&self, insert: &Entity) -> Cut {
         let Some((flat, m)) = self.placed(&insert.shape) else {
             return Cut::Error("Yerleştirilen blok çizimde tanımlı değil; patlatılamadı.".into());
         };
-        if flat.entities.is_empty() {
+        let values = insert_attrs(&insert.shape);
+        let shown: Vec<(&Attribute, String)> = flat
+            .attributes
+            .iter()
+            .filter_map(|a| {
+                let v = values.and_then(|v| v.shown(&a.tag)).unwrap_or(&a.value);
+                (!v.is_empty()).then(|| (a, v.to_owned()))
+            })
+            .collect();
+        if flat.entities.is_empty() && shown.is_empty() {
             return Cut::Error("Blokta patlatılacak nesne yok.".into());
         }
         // The definition's objects are in its own coordinates: to the base point first.
@@ -206,8 +268,73 @@ impl Blocks {
                     rest,
                 }
             })
+            .chain(shown.into_iter().map(|(a, text)| {
+                // An attribute's text on the insert's layer, in its colour and line weight.
+                let mut rest = vec![("attrs".to_owned(), Json::Obj(Vec::new()))];
+                for (key, value) in [
+                    ("layerId", &layer),
+                    ("color", &color),
+                    ("lineWeight", &weight),
+                ] {
+                    if let Some(v) = value {
+                        rest.push((key.to_owned(), v.clone()));
+                    }
+                }
+                Entity {
+                    shape: transform_shape(
+                        &Shape::Text {
+                            p: a.p,
+                            text,
+                            height: a.height,
+                            rotation: a.rotation,
+                        },
+                        &m,
+                    ),
+                    rest,
+                }
+            }))
             .collect();
         Cut::Pieces(pieces)
+    }
+}
+
+/// An attribute definition from its JSON (the contract's `AttributeDefinition`).
+fn attribute_of(v: &Json) -> Result<Attribute, String> {
+    let Json::Str(tag) = v.get("tag") else {
+        return Err("tag: metin bekleniyordu".into());
+    };
+    let value = match v.get("value") {
+        Json::Str(s) => s.clone(),
+        _ => String::new(),
+    };
+    let p = crate::api::json::read_field::<Vec2>(v, "p").map_err(|e| format!("p: {e}"))?;
+    let Json::Num(height) = v.get("height") else {
+        return Err("height: sayı bekleniyordu".into());
+    };
+    let Json::Num(rotation) = v.get("rotation") else {
+        return Err("rotation: sayı bekleniyordu".into());
+    };
+    Ok(Attribute {
+        tag: tag.clone(),
+        value,
+        p,
+        height: *height,
+        rotation: *rotation,
+    })
+}
+
+/// Whether a piece is an attribute's text that shows nothing (§7: neither
+/// the insert's value nor a default): it keeps its place among the pieces,
+/// but draws, picks, snaps and measures nothing.
+pub fn shows_nothing(piece: &Shape) -> bool {
+    matches!(piece, Shape::Text { text, .. } if text.is_empty())
+}
+
+/// An insert's attributes (docs/adr/0144 §7).
+fn insert_attrs(shape: &Shape) -> Option<&Attrs> {
+    match shape {
+        Shape::Insert { attrs, .. } => attrs.as_ref(),
+        _ => None,
     }
 }
 
@@ -305,6 +432,7 @@ fn flatten(
             scale,
             rotation,
             mirror,
+            attrs,
         } = &e.shape
         {
             flatten(block, sources, done, stack);
@@ -317,10 +445,22 @@ fn flatten(
                 &placement(*p, *scale, *rotation, mirror.unwrap_or(false)),
             );
             for piece in &inner.pieces {
+                // A nested insert's attribute shows its value, fixed in this definition.
+                let mut shape = transform_shape(&piece.shape, &m);
+                if let (Some(tag), Some(values), Shape::Text { text, .. }) =
+                    (&piece.attribute, attrs, &mut shape)
+                    && let Some(v) = values.shown(tag)
+                {
+                    v.clone_into(text);
+                }
+                if matches!(&shape, Shape::Text { text, .. } if text.is_empty()) {
+                    continue;
+                }
                 pieces.push(Piece {
-                    shape: transform_shape(&piece.shape, &m),
+                    shape,
                     color: piece.color.clone().or_else(|| own_color.clone()),
                     line_weight: piece.line_weight.or(own_weight),
+                    attribute: None,
                 });
             }
         } else {
@@ -328,8 +468,26 @@ fn flatten(
                 shape: transform_shape(&e.shape, &to_base),
                 color: own_color,
                 line_weight: own_weight,
+                attribute: None,
             });
         }
+    }
+    // Its own attributes: texts of the default, the tag telling the host to show the insert's value.
+    for a in &def.attributes {
+        pieces.push(Piece {
+            shape: transform_shape(
+                &Shape::Text {
+                    p: a.p,
+                    text: a.value.clone(),
+                    height: a.height,
+                    rotation: a.rotation,
+                },
+                &to_base,
+            ),
+            color: None,
+            line_weight: None,
+            attribute: Some(a.tag.clone()),
+        });
     }
     stack.pop();
     done.insert(
@@ -337,6 +495,7 @@ fn flatten(
         Arc::new(Flat {
             base: def.base,
             entities: def.entities.clone(),
+            attributes: def.attributes.clone(),
             pieces,
         }),
     );
@@ -382,6 +541,7 @@ mod tests {
                         PI / 2.0
                     )),
                 ],
+                attributes: Vec::new(),
             },
             Definition {
                 id: ROGAR.into(),
@@ -394,6 +554,7 @@ mod tests {
                         r##"{"kind":"line","id":2,"layerId":"","color":"#FF0000","attrs":{},"a":{"x":1,"y":0},"b":{"x":3,"y":1}}"##,
                     ),
                 ],
+                attributes: Vec::new(),
             },
         ])
     }
@@ -405,6 +566,7 @@ mod tests {
             scale,
             rotation,
             mirror: mirror.then_some(true),
+            attrs: None,
         }
     }
 
@@ -522,6 +684,7 @@ mod tests {
                 entities: vec![entity(
                     r#"{"kind":"insert","id":1,"layerId":"","attrs":{},"block":"b","p":{"x":0,"y":0},"scale":1,"rotation":0}"#,
                 )],
+                attributes: Vec::new(),
             },
             Definition {
                 id: "b".into(),
@@ -532,6 +695,7 @@ mod tests {
                         r#"{"kind":"insert","id":2,"layerId":"","attrs":{},"block":"a","p":{"x":0,"y":0},"scale":1,"rotation":0}"#,
                     ),
                 ],
+                attributes: Vec::new(),
             },
         ]);
         assert_eq!(ring.get("a").map(|f| f.pieces.len()), Some(1));
@@ -568,6 +732,7 @@ mod tests {
                 scale,
                 rotation,
                 mirror,
+                ..
             } => {
                 assert_eq!(block, ROGAR);
                 assert_eq!(

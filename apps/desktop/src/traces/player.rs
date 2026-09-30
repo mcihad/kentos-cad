@@ -14,7 +14,6 @@ use iced::{Point, Rectangle, Task, event, mouse, window};
 use kentos_contracts::{DocumentSnapshotV1, Entity};
 use kentos_render_wgpu::Vec2;
 
-
 use crate::app::{App, Message, Picker};
 use crate::document::Document;
 use crate::keys;
@@ -50,12 +49,14 @@ pub struct Seen {
     /// A circle's or an arc's centre (absolute) and radius (docs/adr/0032).
     pub center: Option<[f64; 2]>,
     pub radius: Option<f64>,
+    /// A text's content (docs/adr/0144 §7).
+    pub text: Option<String>,
 }
 
 impl Seen {
     /// An object as a step sees it: a path's corners; a line's two ends; a
-    /// point's place; an arc's start and end; a dimension's measured points
-    /// (the web runner's `shape`).
+    /// point's or a text's place; an arc's start and end; a dimension's
+    /// measured points (the web runner's `shape`).
     pub fn of(e: &Entity) -> Self {
         let (pts, bulges) = match e {
             Entity::Polygon(p) | Entity::Polyline(p) => (
@@ -64,6 +65,7 @@ impl Seen {
             ),
             Entity::Line(l) => (vec![[l.a.x, l.a.y], [l.b.x, l.b.y]], Vec::new()),
             Entity::Point(p) => (vec![[p.p.x, p.p.y]], Vec::new()),
+            Entity::Text(t) => (vec![[t.p.x, t.p.y]], Vec::new()),
             Entity::Arc(a) => (
                 [a.a0, a.a1]
                     .iter()
@@ -130,6 +132,10 @@ impl Seen {
             bulges,
             center,
             radius,
+            text: match e {
+                Entity::Text(t) => Some(t.text.clone()),
+                _ => None,
+            },
         }
     }
 }
@@ -706,7 +712,10 @@ fn describe(step: &Step) -> String {
     } else if step.save_and_reopen.is_some() {
         "saveAndReopen".to_owned()
     } else if let Some(title) = &step.dialog {
-        let press = step.press.as_deref().map_or_else(String::new, |p| format!(" → {p}"));
+        let press = step
+            .press
+            .as_deref()
+            .map_or_else(String::new, |p| format!(" → {p}"));
         format!("dialog {title}{press}")
     } else if let Some(name) = &step.shot {
         format!("shot {name}")

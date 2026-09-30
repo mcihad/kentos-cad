@@ -25,7 +25,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   (ADR 0021, 0027), nokta, daire, yay, dikdörtgen, döndürülmüş dikdörtgen ve düzgün
   çokgendir (ADR 0032); elips, eğri, yardımcı çizgi, ışın, paralel çizgi, dik in ve dik çık, halka,
   revizyon bulutu, kot noktası ve böl (ADR 0057); yazı ve çizimin üstündeki yazı kutusu (ADR 0060);
-  ölçülendirme: hizalı, doğrusal, açı, yarıçap ve çap (ADR 0061); tarama: kapalı nesneyle ya da çizgilerle, adalarıyla (ADR 0062); köşe kotu: çizginin, çoklu çizginin ve alanın köşe kotları, Kot ver, Öznitelikler'in kot ve 3B uzunluk satırları (ADR 0142); çok parçalı alan: parçalar ve delikleri, Parçaları birleştir, Parçalara ayır, alan işlemlerinde Tek nesne (ADR 0143); blok: Blok oluştur, Blok ekle, Bloklar paneli, Öznitelikler'de yerleştirme, Patlat; DXF'in blokları tanım ve yerleştirme olarak gelir, “Blokları patlat” seçeneğiyle (ADR 0144);
+  ölçülendirme: hizalı, doğrusal, açı, yarıçap ve çap (ADR 0061); tarama: kapalı nesneyle ya da çizgilerle, adalarıyla (ADR 0062); köşe kotu: çizginin, çoklu çizginin ve alanın köşe kotları, Kot ver, Öznitelikler'in kot ve 3B uzunluk satırları (ADR 0142); çok parçalı alan: parçalar ve delikleri, Parçaları birleştir, Parçalara ayır, alan işlemlerinde Tek nesne (ADR 0143); blok: Blok oluştur, Blok ekle, Bloklar paneli, Öznitelikler'de yerleştirme ve blok öznitelikleri, Patlat; DXF'in blokları tanım ve yerleştirme olarak gelir, “Blokları patlat” seçeneğiyle (ADR 0144);
   alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine tıklayarak alan (ADR 0065);
   mesafe ölç, alan hesapla ve parsel oluştur (ADR 0067); seçili nesnelerin tutamaçları ve üzerine gelme kartı (ADR 0068);
   Hesap pencereleri: poligon hesabı, kutupsal alım, önden ve geriden kestirme, aplikasyon (ADR 0070, 0071);
@@ -535,9 +535,12 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   platformda tamam: sözleşme ve şema 6, çekirdek, komutlar, araçlar ve arayüz; DXF okuma ve yazma
   (5a, 5b), GeoJSON (5c); veritabanı projesi (5d: göç 0012, `project.changes`'in blokları ve izdüşüm;
   web ve masaüstü istemcilerinde blok izleyicisi, olayda `GET …/blocks`, çakışma, “veri silmeden
-  üstün”, taslak; masaüstünde yerel kopya). Geliştirme veritabanı `kentos_cad` 0012'de. Sırada 6.
-  adım öznitelik tanımları (ATTDEF/ATTRIB; o adımda ATTRIB'in görünen yazısı ayrıca yazı olarak
-  alınmayı bırakır). Ondan önce çok parçalı alan (ADR 0143, `CAD-14`) ve köşe kotu (ADR 0142, `CAD-13`).
+  üstün”, taslak; masaüstünde yerel kopya). Geliştirme veritabanı `kentos_cad` 0012'de. 6. adım
+  öznitelik tanımları: 6a (çekirdek, gösterim, Patlat, Öznitelikler'in “Blok öznitelikleri”; yerleştirmenin
+  öznitelikleri çekirdeğin şeklinde ve depo paketinde) tamam; sırada 6b (Blok ekle'nin değer sorusu,
+  Bloklar panelinin “Öznitelikler…” penceresi, `cad.blocks.edit`'in `attributes` işlemi) ve 6c (DXF ATTDEF
+  ve ATTRIB; o adımda ATTRIB'in görünen yazısı ayrıca yazı olarak alınmayı bırakır). Ondan önce çok
+  parçalı alan (ADR 0143, `CAD-14`) ve köşe kotu (ADR 0142, `CAD-13`).
 - Bloktan sonra, sahibin sırasıyla (ADR 0143 Bağlam): yazı ekleri, lider ve yeni ölçü türleri. Her biri
   `.kcad` şemasını değiştiren kendi özelliği ve şema adımıyla gelir; önce ADR yazılır, adımlar ADR 0142,
   0143 ve 0144'teki gibi iki platformda, ortak fixture'larla ilerler.

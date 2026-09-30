@@ -89,12 +89,14 @@ pub struct Item {
 }
 
 impl Item {
-    /// The shapes the queries test: an insert's pieces, or the object's own shape.
-    pub fn shapes(&self) -> &[Shape] {
-        match &self.expanded {
-            Some(x) => &x.shapes,
-            None => std::slice::from_ref(&self.shape),
-        }
+    /// The shapes the queries test: an insert's pieces but an attribute's
+    /// text that shows nothing (docs/adr/0144 §7), or the object's own shape.
+    pub fn shapes(&self) -> impl Iterator<Item = &Shape> + Clone {
+        let (list, keep): (&[Shape], fn(&&Shape) -> bool) = match &self.expanded {
+            Some(x) => (&x.shapes, |s| !crate::block::shows_nothing(s)),
+            None => (std::slice::from_ref(&self.shape), |_| true),
+        };
+        list.iter().filter(keep)
     }
 
     /// Infinite lines and boxes the tree cannot hold: always candidates, decided by the exact test.
@@ -402,11 +404,14 @@ impl Store {
         }
         let mut x = Expanded::default();
         for piece in pieces {
-            let pb = entity_bounds_in(&piece.shape, self.font);
-            b.min_x = js_min(b.min_x, pb.min_x);
-            b.min_y = js_min(b.min_y, pb.min_y);
-            b.max_x = js_max(b.max_x, pb.max_x);
-            b.max_y = js_max(b.max_y, pb.max_y);
+            // An attribute's text that shows nothing stays in its place among the pieces, without a box.
+            if !crate::block::shows_nothing(&piece.shape) {
+                let pb = entity_bounds_in(&piece.shape, self.font);
+                b.min_x = js_min(b.min_x, pb.min_x);
+                b.min_y = js_min(b.min_y, pb.min_y);
+                b.max_x = js_max(b.max_x, pb.max_x);
+                b.max_y = js_max(b.max_y, pb.max_y);
+            }
             x.shapes.push(piece.shape);
             x.colors.push(piece.color);
             x.weights.push(piece.line_weight);

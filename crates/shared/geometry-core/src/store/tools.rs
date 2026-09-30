@@ -272,7 +272,7 @@ impl Store {
                 continue;
             }
             // An insert's pieces cut and stop as objects of their own (docs/adr/0144).
-            for ed in it.shapes().iter().flat_map(entity_edges) {
+            for ed in it.shapes().flat_map(entity_edges) {
                 hits.clear();
                 near.search(&edge_box(&ed), &mut hits);
                 if !hits.is_empty() {
@@ -300,7 +300,7 @@ impl Store {
                 continue;
             }
             // An insert's pieces cut and stop as objects of their own (docs/adr/0144).
-            for ed in it.shapes().iter().flat_map(entity_edges) {
+            for ed in it.shapes().flat_map(entity_edges) {
                 if reach.may_meet(&edge_box(&ed)) {
                     edges.push(ed);
                 }
@@ -351,10 +351,13 @@ impl Store {
             scale,
             rotation,
             mirror: mirror.then_some(true),
+            attrs: None,
         };
         let mut out = Vec::new();
         for piece in self.blocks().expand(&insert) {
-            outline_paths(&piece.shape, &mut out);
+            if !crate::block::shows_nothing(&piece.shape) {
+                outline_paths(&piece.shape, &mut out);
+            }
         }
         out
     }
@@ -371,6 +374,7 @@ impl Store {
             scale,
             rotation,
             mirror,
+            ..
         } = &it.shape
         else {
             return None;

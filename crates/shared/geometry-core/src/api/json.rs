@@ -554,15 +554,17 @@ macro_rules! json_struct {
 
 /// An enum tagged by a field, like TypeScript's discriminated unions:
 /// `json_tagged!(Edge, "kind", Seg => "seg" { a, b }, Arc => "arc" { c, r, a0, sweep })`.
+/// Fields after a `;` are not the variant's JSON (`Insert => "insert" { …; attrs }`):
+/// read as their default, not written; the owner fills them.
 #[macro_export]
 macro_rules! json_tagged {
-    ($t:ident, $tag:literal, $($v:ident => $name:literal { $($f:ident $(=> $n:literal)?),* $(,)? }),* $(,)?) => {
+    ($t:ident, $tag:literal, $($v:ident => $name:literal { $($f:ident $(=> $n:literal)?),* $(,)? $(; $($skip:ident),+)? }),* $(,)?) => {
         impl $t {
             /// The tag and fields, without the braces (to share an object with more fields).
             #[allow(dead_code)]
             pub fn write_fields(&self, out: &mut String, first: &mut bool) {
                 match self {
-                    $($t::$v { $($f),* } => {
+                    $($t::$v { $($f,)* .. } => {
                         $crate::api::json::field(out, first, $tag, $name);
                         $($crate::api::json::field(out, first, $crate::json_name!($f $(, $n)?), $f);)*
                     })*
@@ -589,7 +591,10 @@ macro_rules! json_tagged {
             fn from_json(v: &$crate::api::json::Json) -> Result<$t, String> {
                 let tag: String = $crate::api::json::read_field(v, $tag)?;
                 match tag.as_str() {
-                    $($name => Ok($t::$v { $($f: $crate::api::json::read_field(v, $crate::json_name!($f $(, $n)?))?),* }),)*
+                    $($name => Ok($t::$v {
+                        $($f: $crate::api::json::read_field(v, $crate::json_name!($f $(, $n)?))?,)*
+                        $($($skip: Default::default(),)+)?
+                    }),)*
                     other => Err(format!("{}: bilinmeyen tür “{}”", stringify!($t), other)),
                 }
             }

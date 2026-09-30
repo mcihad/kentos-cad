@@ -134,3 +134,45 @@ describe('a multi-part area packed (docs/adr/0143)', () => {
   });
 });
 
+
+describe('a block insert packed (docs/adr/0144)', () => {
+  /** Kapı: a 1 m line from its base point, with an attribute NO (default “?”) 0.25 m high at (0.5, 0.2). */
+  const KAPI = JSON.stringify([
+    {
+      id: 'k',
+      name: 'Kapı',
+      base: { x: 0, y: 0 },
+      entities: [{ kind: 'line', id: 1, layerId: '', attrs: {}, a: { x: 0, y: 0 }, b: { x: 1, y: 0 } }],
+      attributes: [{ tag: 'NO', value: '?', p: { x: 0.5, y: 0.2 }, height: 0.25, rotation: 0 }],
+    },
+  ]);
+  const insert = (id: number, y: number, attrs: Record<string, string>): Entity => ({ id, layerId: 'a', attrs, kind: 'insert', block: 'k', p: { x: 100, y }, scale: 2, rotation: 0 });
+
+  it('gives the store its attributes: the value an attribute text shows is what it is picked by (§7)', () => {
+    const list = [insert(1, 200, { NO: 'K-1234567', Malzeme: 'Beton' }), insert(2, 300, {}), insert(3, 400, { NO: '' })];
+    const packed = new CoreStore();
+    packed.setBlocks(KAPI);
+    const p = packEntities(list);
+    packed.putPacked(p.nums, p.strings);
+    const json = new CoreStore();
+    json.setBlocks(KAPI);
+    json.put(JSON.stringify(list));
+    for (const store of [packed, json]) {
+      // 1.8 m into “K-1234567” (0.5 m high at 101, 200.4): the insert; beside the others' “?”, nothing.
+      expect([store.hit(102.8, 200.6, 0.1), store.hit(102.8, 300.6, 0.1), store.hit(102.8, 400.6, 0.1)]).toEqual([1, undefined, undefined]);
+      store.dispose();
+    }
+  });
+
+  it('is read back as its geometry: the attributes are the object’s, not its shape’s', () => {
+    const list = [insert(1, 200, { NO: 'K7', KOT: '' }), { id: 2, layerId: 'a', attrs: {}, kind: 'point' as const, p: { x: 1, y: 2 } }];
+    const { nums } = packEntities(list);
+    // id, layer, label, kind 14, p, scale, rotation, mirror, block (string 1); then 2 tag and value pairs of strings.
+    expect(Array.from(nums.subarray(0, 15))).toEqual([1, 0, 0, 14, 100, 200, 2, 0, 0, 1, 2, 2, 3, 4, 5]);
+    const back = unpackEntities(packEntities(list));
+    expect(back.map((r) => r.geometry)).toEqual([
+      { kind: 'insert', block: 'k', p: { x: 100, y: 200 }, scale: 2, rotation: 0 },
+      { kind: 'point', p: { x: 1, y: 2 } },
+    ]);
+  });
+});

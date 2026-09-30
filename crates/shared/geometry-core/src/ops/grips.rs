@@ -3,7 +3,8 @@
 
 use crate::api::Op;
 use crate::entity::{
-    Entity, Shape, area_parts, dimension_geom, ellipse_geom, is_multi_part, locate_part, replace_part,
+    Entity, Shape, area_parts, dimension_geom, ellipse_geom, is_multi_part, locate_part,
+    replace_part,
 };
 use crate::geom::affine::translation;
 use crate::geom::arc::{ArcGeom, arc_end, arc_mid, arc_start, arc_through};
@@ -187,6 +188,7 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             scale,
             rotation,
             mirror,
+            attrs,
             ..
         } => Shape::Insert {
             block: block.clone(),
@@ -194,6 +196,7 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             scale: *scale,
             rotation: *rotation,
             mirror: *mirror,
+            attrs: attrs.clone(),
         },
         Shape::Text {
             text,
@@ -213,7 +216,10 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
                 Shape::Line { a: *a, b: p }
             }
         }
-        Shape::Polyline { pts, bulges, holes } | Shape::Polygon { pts, bulges, holes, .. } => {
+        Shape::Polyline { pts, bulges, holes }
+        | Shape::Polygon {
+            pts, bulges, holes, ..
+        } => {
             let rebuild = |pts: Vec<Vec2>, bulges: Option<Vec<f64>>, holes: Option<Vec<Ring>>| {
                 match e.shape {
                     Shape::Polygon { .. } => Shape::Polygon {

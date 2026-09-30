@@ -168,10 +168,16 @@ fn drawn_record(s: &Shape, oriented: bool, clip: Option<&Bounds>, refs: bool, ou
                     continue;
                 };
                 out.push((1 + holes.as_ref().map_or(0, Vec::len)) as f64);
-                let ring_of = |out: &mut Vec<f64>, pts: &[Vec2], bulges: Option<&[f64]>, ccw: bool| {
-                    // Always the points themselves: a reference could not say which part.
-                    ring(out, &polygon_ring(pts, bulges), false, oriented.then_some(ccw));
-                };
+                let ring_of =
+                    |out: &mut Vec<f64>, pts: &[Vec2], bulges: Option<&[f64]>, ccw: bool| {
+                        // Always the points themselves: a reference could not say which part.
+                        ring(
+                            out,
+                            &polygon_ring(pts, bulges),
+                            false,
+                            oriented.then_some(ccw),
+                        );
+                    };
                 ring_of(out, pts, bulges.as_deref(), true);
                 for h in holes.iter().flatten() {
                     ring_of(out, &h.pts, h.bulges.as_deref(), false);
@@ -236,8 +242,16 @@ fn drawn_record(s: &Shape, oriented: bool, clip: Option<&Bounds>, refs: bool, ou
     }
 }
 
-/// One piece in a pieces list: its fields, its own colour and line weight.
-fn piece_json(out: &mut String, i: usize, s: &Shape, color: Option<&str>, weight: Option<f64>) {
+/// One piece in a pieces list: its fields, its own colour and line weight,
+/// and an attribute's tag (the insert's value under it is shown, else the text).
+fn piece_json(
+    out: &mut String,
+    i: usize,
+    s: &Shape,
+    color: Option<&str>,
+    weight: Option<f64>,
+    attribute: Option<&str>,
+) {
     if i > 0 {
         out.push(',');
     }
@@ -249,6 +263,9 @@ fn piece_json(out: &mut String, i: usize, s: &Shape, color: Option<&str>, weight
     }
     if let Some(w) = &weight {
         crate::api::json::field(out, &mut first, "lineWeight", w);
+    }
+    if let Some(tag) = attribute {
+        crate::api::json::field(out, &mut first, "attribute", tag);
     }
     out.push('}');
 }
@@ -330,9 +347,11 @@ impl Store {
 
     /// A block's pieces as the host draws them (docs/adr/0144): each piece
     /// of the flattened definition in order, its fields (relative to the
-    /// base point) with its own `color` and `lineWeight` when it has them;
-    /// what `GROUP` records and `LABEL_PIECE_*` labels refer to by place.
-    /// None for a block the drawing does not define.
+    /// base point) with its own `color` and `lineWeight` when it has them,
+    /// and an attribute's `attribute` tag (§7: the insert's value under it
+    /// is shown, else the piece's text); what `GROUP` records and
+    /// `LABEL_PIECE_*` labels refer to by place. None for a block the drawing
+    /// does not define.
     pub fn block_pieces_json(&self, block: &str) -> Option<String> {
         let flat = self.blocks().get(block)?;
         let mut out = String::from("[");
@@ -343,6 +362,7 @@ impl Store {
                 &piece.shape,
                 piece.color.as_deref(),
                 piece.line_weight,
+                piece.attribute.as_deref(),
             );
         }
         out.push(']');
@@ -363,6 +383,7 @@ impl Store {
                 s,
                 x.colors.get(i).and_then(|c| c.as_deref()),
                 x.weights.get(i).copied().flatten(),
+                None,
             );
         }
         out.push(']');

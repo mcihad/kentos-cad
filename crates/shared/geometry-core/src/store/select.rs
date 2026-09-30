@@ -98,7 +98,6 @@ impl Store {
                 self.flags(it).visible
                     && it
                         .shapes()
-                        .iter()
                         .any(|s| crosses(s, fence, &segs, tol, self.font))
             })
             .map(|it| it.id)
@@ -125,8 +124,8 @@ impl Store {
                 continue;
             }
             // An insert by its pieces (docs/adr/0144).
-            let shapes = it.shapes();
-            let inside = !shapes.iter().any(infinite) && {
+            let mut shapes = it.shapes();
+            let inside = !shapes.clone().any(infinite) && {
                 let b = &it.bounds;
                 let corners = [
                     Vec2::new(b.min_x, b.min_y),
@@ -136,15 +135,10 @@ impl Store {
                 ];
                 corners.iter().all(within)
                     || shapes
-                        .iter()
+                        .clone()
                         .all(|e| outline(e, self.font).iter().all(within))
             };
-            if inside
-                || (crossing
-                    && shapes
-                        .iter()
-                        .any(|e| touches_circle(e, c, r, self.font)))
-            {
+            if inside || (crossing && shapes.any(|e| touches_circle(e, c, r, self.font))) {
                 out.push(it.id);
             }
         }

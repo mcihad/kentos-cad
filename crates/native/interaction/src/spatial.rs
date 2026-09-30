@@ -102,7 +102,10 @@ impl Spatial {
         // them moves neither the journal nor the revision (docs/adr/0144 §5).
         let blocks = doc.blocks();
         if blocks.len() != self.blocks.len()
-            || blocks.iter().zip(&self.blocks).any(|(a, b)| !Arc::ptr_eq(a, b))
+            || blocks
+                .iter()
+                .zip(&self.blocks)
+                .any(|(a, b)| !Arc::ptr_eq(a, b))
         {
             self.blocks = blocks.to_vec();
             self.store.set_blocks(core_blocks(&self.blocks));
@@ -341,7 +344,8 @@ impl Spatial {
                         b: Vec2::new(r[4], r[5]),
                     }
                 } else if what == LABEL_PIECE_TEXT {
-                    let Shape::Text { text, .. } = self.piece(r[0], r[6])? else {
+                    let piece = self.piece(r[0], r[6])?;
+                    let Shape::Text { text, .. } = piece.shape else {
                         return None;
                     };
                     LabelSpot::PieceText {
@@ -350,9 +354,10 @@ impl Spatial {
                         rotation: r[4],
                         height: r[5],
                         text,
+                        attribute: piece.attribute,
                     }
                 } else if what == LABEL_PIECE_DIMENSION {
-                    let Shape::Dimension { text, style, .. } = self.piece(r[0], r[6])? else {
+                    let Shape::Dimension { text, style, .. } = self.piece(r[0], r[6])?.shape else {
                         return None;
                     };
                     LabelSpot::PieceDimension {
@@ -377,12 +382,12 @@ impl Spatial {
     }
 
     /// Piece `place` of the insert `id`'s block, as its definition holds it.
-    fn piece(&self, id: f64, place: f64) -> Option<Shape> {
+    fn piece(&self, id: f64, place: f64) -> Option<kentos_geometry_core::block::Piece> {
         let Shape::Insert { block, .. } = &self.store.get(id)?.shape else {
             return None;
         };
         let flat = self.store.blocks().get(block)?;
-        flat.pieces.get(place as usize).map(|p| p.shape.clone())
+        flat.pieces.get(place as usize).cloned()
     }
 
     /// How many times every object was read again: once per opened drawing
@@ -433,6 +438,9 @@ pub enum LabelSpot {
         rotation: f64,
         height: f64,
         text: String,
+        /// An attribute's tag (docs/adr/0144 §7): the insert's value under it
+        /// is shown, else `text` (the default); `shown_text` says which.
+        attribute: Option<String>,
     },
     /// A dimension's value among a block's pieces, as `Dimension`, its own
     /// text when it has one and `height` as placed.
@@ -664,5 +672,41 @@ fn label_rule(style: &LabelStyle) -> LabelRule {
         min_scale: style.min_scale,
         max_scale: style.max_scale,
         min_feature_px: style.min_feature_px,
+    }
+}
+
+/// What a block's text piece shows on an insert with these attributes
+/// (docs/adr/0144 §7; the web's `pieceText`): an attribute's piece the
+/// insert's value under its tag, else its text (the default); any other its
+/// text. Empty: nothing is drawn.
+pub fn shown_text<'a>(
+    text: &'a str,
+    attribute: Option<&str>,
+    attrs: &'a std::collections::BTreeMap<String, String>,
+) -> &'a str {
+    attribute
+        .and_then(|tag| attrs.get(tag))
+        .map(String::as_str)
+        .filter(|v| !v.is_empty())
+        .unwrap_or(text)
+}
+
+#[cfg(test)]
+mod attribute_tests {
+    use super::shown_text;
+    use std::collections::BTreeMap;
+
+    #[test]
+    fn an_attribute_shows_the_inserts_value_else_its_default() {
+        let attrs = BTreeMap::from([
+            ("NO".to_owned(), "R-12".to_owned()),
+            ("KOT".to_owned(), String::new()),
+        ]);
+        assert_eq!(shown_text("R-1", Some("NO"), &attrs), "R-12");
+        // An empty value is no value: the default shows.
+        assert_eq!(shown_text("?", Some("KOT"), &attrs), "?");
+        assert_eq!(shown_text("", Some("KOT"), &attrs), "");
+        // A plain text of the block is itself.
+        assert_eq!(shown_text("Rögar", None, &attrs), "Rögar");
     }
 }

@@ -22,12 +22,15 @@
 //! | 11 dimension | a.x, a.y, b.x, b.y, offset, height, text?, style?, hasAngle, angle, hasC, c.x, c.y |
 //! | 12 hatch | points, hatch holes, pattern type, angle, spacing |
 //! | 13 multi-part polygon | path, holes, part count, then per part: path, holes |
+//! | 14 insert | p.x, p.y, scale, rotation, mirror, block, attributes |
 //!
 //! `layer`, `text` and `style` are indices into the strings (−1: none);
 //! `label` is 1 for a non-empty label. `points` is a count n and 2n
 //! coordinates; a `path` is points and bulges (a count, −1 for none, then
 //! the values); `holes` is a count (−1 for none) of paths; `hatch holes` a
-//! count (−1 for none) of point lists. A field left out (`z`, `angle`, `c`)
+//! count (−1 for none) of point lists; an insert's `attributes` a count
+//! (−1 for none) of tag and value pairs of strings, its text values (docs/adr/0144
+//! §7: what its block's attribute texts show). A field left out (`z`, `angle`, `c`)
 //! still takes its numbers, NaN. A multi-part area (docs/adr/0143) is kind
 //! 13, its first part as a polygon's fields and its other parts after them;
 //! a one-part area stays kind 3, laid out as it always was.
@@ -40,7 +43,8 @@
 use std::collections::HashMap;
 
 use super::Store;
-use crate::entity::{HatchPattern, Part, Shape};
+use crate::api::json::Json;
+use crate::entity::{Attrs, HatchPattern, Part, Shape};
 use crate::geom::affine::Affine;
 use crate::geom::arrangement::Ring;
 use crate::ops::transform::transform_shape;
@@ -181,12 +185,26 @@ impl Reader<'_> {
                 let scale = self.num()?;
                 let rotation = self.num()?;
                 let mirror = self.flag()?;
+                let block = self.string()?.unwrap_or_default();
+                let attrs = match self.int()? {
+                    None => None,
+                    Some(n) => Some(Attrs(
+                        (0..n)
+                            .map(|_| {
+                                let tag = self.string()?.unwrap_or_default();
+                                let value = self.string()?.unwrap_or_default();
+                                Ok((tag, Json::Str(value)))
+                            })
+                            .collect::<Result<Vec<_>, String>>()?,
+                    )),
+                };
                 Shape::Insert {
                     p,
                     scale,
                     rotation,
                     mirror: mirror.then_some(true),
-                    block: self.string()?.unwrap_or_default(),
+                    block,
+                    attrs,
                 }
             }
             13 => {
@@ -463,13 +481,15 @@ impl Packer {
                 let kind = self.string(&pattern.kind);
                 self.put(&[kind, pattern.angle, pattern.spacing]);
             }
-            // docs/adr/0144: the insertion point, scale, turn, mirror flag and the block's id.
+            // docs/adr/0144: the insertion point, scale, turn, mirror flag, the
+            // block's id, and its attributes' texts (§7: what its attribute texts show).
             Shape::Insert {
                 block,
                 p,
                 scale,
                 rotation,
                 mirror,
+                attrs,
             } => {
                 let b = self.string(block);
                 self.put(&[
@@ -481,6 +501,23 @@ impl Packer {
                     flag(mirror.unwrap_or(false)),
                     b,
                 ]);
+                match attrs {
+                    None => self.put(&[-1.0]),
+                    Some(Attrs(fields)) => {
+                        let texts: Vec<(&String, &String)> = fields
+                            .iter()
+                            .filter_map(|(k, v)| match v {
+                                Json::Str(s) => Some((k, s)),
+                                _ => None,
+                            })
+                            .collect();
+                        self.put(&[texts.len() as f64]);
+                        for (k, v) in texts {
+                            let pair = [self.string(k), self.string(v)];
+                            self.put(&pair);
+                        }
+                    }
+                }
             }
         }
     }
@@ -767,6 +804,60 @@ mod tests {
             let it = s.get(i as f64 + 1.0).unwrap();
             assert_eq!(json::to_string(&it.shape), json::to_string(want));
         }
+    }
+
+    /// A block's insert (docs/adr/0144) and its attributes' texts (§7): read
+    /// back as they went, a value that is not text left out.
+    #[test]
+    fn an_insert_carries_its_attributes_texts() {
+        use crate::api::json::Json;
+        use crate::entity::Attrs;
+        let text = |s: &str| Json::Str(s.to_owned());
+        let with = Shape::Insert {
+            block: "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001".into(),
+            p: Vec2::new(486520.25, 4420200.5),
+            scale: 2.0,
+            rotation: -0.0,
+            mirror: Some(true),
+            attrs: Some(Attrs(vec![
+                ("NO".into(), text("R-12")),
+                ("KOT".into(), text("")),
+                ("Sayı".into(), Json::Num(3.0)),
+            ])),
+        };
+        let without = Shape::Insert {
+            block: "b".into(),
+            p: Vec2::new(1.0, 2.0),
+            scale: 1.0,
+            rotation: 0.5,
+            mirror: None,
+            attrs: None,
+        };
+        let mut w = Packer::default();
+        w.object(1.0, "altyapi", false, &with);
+        w.object(2.0, "altyapi", true, &without);
+        let back = unpack(&w.nums, &w.strings).unwrap();
+        let Shape::Insert {
+            attrs,
+            rotation,
+            mirror,
+            ..
+        } = &back[0].3
+        else {
+            panic!("{:?}", back[0].3);
+        };
+        assert_eq!(
+            attrs,
+            &Some(Attrs(vec![
+                ("NO".into(), text("R-12")),
+                ("KOT".into(), text(""))
+            ]))
+        );
+        assert_eq!(
+            (rotation.to_bits(), *mirror),
+            ((-0.0f64).to_bits(), Some(true))
+        );
+        assert_eq!(back[1].3, without);
     }
 
     /// Without a store, the same records as `Store::transform_packed`:

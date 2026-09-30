@@ -459,7 +459,7 @@ fn space_length(e: &Entity, f: &Format) -> Option<Row> {
     Some(Row::figure(label, f.length_bare(length)).unit("m"))
 }
 
-/// One object's sections: Genel, Geometri, and Öznitelik bilgileri when it has attributes.
+/// One object's sections: Genel, Geometri, an insert's Blok öznitelikleri, and Öznitelik bilgileri when it has other attributes.
 fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
     let base = e.base();
     let slot = Slot(base.id);
@@ -801,13 +801,53 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             rows: geo,
         },
     ];
-    if !base.attrs.is_empty() {
+    // An insert's block attributes (docs/adr/0144 §7): the definition's tags in
+    // its order, with what the insert shows (its value, else the default).
+    let tags: Vec<(String, String)> = match e {
+        Entity::Insert(i) => doc
+            .model
+            .block(i.block)
+            .map(|b| {
+                b.attributes
+                    .iter()
+                    .map(|a| {
+                        let own = base.attrs.get(&a.tag).filter(|v| !v.is_empty());
+                        let shown = own.or(a.value.as_ref()).cloned().unwrap_or_default();
+                        (a.tag.clone(), shown)
+                    })
+                    .collect()
+            })
+            .unwrap_or_default(),
+        _ => Vec::new(),
+    };
+    if !tags.is_empty() {
+        sections.push(Section {
+            id: "blockAttrs",
+            title: "Blok öznitelikleri",
+            rows: tags
+                .iter()
+                .map(|(tag, value)| Row {
+                    label: Cow::Owned(tag.clone()),
+                    value: value.clone(),
+                    numeric: looks_numeric(value),
+                    unit: None,
+                    editor: edit(Editor::Text(Field::Attribute(slot, tag.clone()))),
+                    note: false,
+                })
+                .collect(),
+        });
+    }
+    let others: Vec<(&String, &String)> = base
+        .attrs
+        .iter()
+        .filter(|(key, _)| !tags.iter().any(|(tag, _)| tag == *key))
+        .collect();
+    if !others.is_empty() {
         sections.push(Section {
             id: "attrs",
             title: "Öznitelik bilgileri",
-            rows: base
-                .attrs
-                .iter()
+            rows: others
+                .into_iter()
                 .map(|(key, value)| Row {
                     label: Cow::Owned(key.clone()),
                     value: value.clone(),

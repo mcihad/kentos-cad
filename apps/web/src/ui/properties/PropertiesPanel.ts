@@ -1,6 +1,6 @@
 import type { AppContext } from '../../app/context';
 import { watchAll } from '../../core/signal';
-import { turnOf } from '../../model/blocks';
+import { attributeRows, turnOf } from '../../model/blocks';
 import { DIMENSION_STYLE_LABEL, layoutDimension } from '../../model/geom/dimension';
 import { ENTITY_KIND_LABEL, HATCH_PATTERN_LABEL, drawsLines, entityArea, entityLength, type Entity, type HatchPatternType } from '../../model/entities';
 import { angleDeg, bearingGrad, dist } from '../../model/geometry';
@@ -458,7 +458,22 @@ export class PropertiesPanel extends Panel {
     }
 
     const sections: PropSection[] = [general, { id: 'geometry', title: 'Geometri', rows: geo }];
-    const keys = Object.keys(e.attrs);
+    // An insert's block attributes (docs/adr/0144 §7): the definition's tags in its order, with what the insert shows.
+    const shown = e.kind === 'insert' ? attributeRows(this.ctx.doc.block(e.block), e.attrs) : [];
+    if (shown.length) {
+      sections.push({
+        id: 'blockAttrs',
+        title: 'Blok öznitelikleri',
+        rows: shown.map(({ tag, value }) => ({
+          label: tag,
+          value,
+          numeric: /^-?\d+([.,]\d+)?$/.test(value),
+          editor: locked ? undefined : { type: 'text', commit: (v: string) => setProperties(this.ctx, { uids: uidsOf(this.ctx, [e.id]), attrs: { [tag]: v }, operation: 'attributes' }) },
+        })),
+      });
+    }
+    const tags = new Set(shown.map((r) => r.tag));
+    const keys = Object.keys(e.attrs).filter((k) => !tags.has(k));
     if (keys.length) {
       sections.push({
         id: 'attrs',

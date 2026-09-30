@@ -8,7 +8,7 @@ use std::sync::Arc;
 
 use kentos_contracts::{BlockDefinition, Entity, EntityBase};
 use kentos_geometry_core::api::json::Json;
-use kentos_geometry_core::block::{Blocks, Definition};
+use kentos_geometry_core::block::{Attribute, Blocks, Definition};
 use kentos_geometry_core::entity::Entity as CoreEntity;
 use kentos_geometry_core::store::Expanded;
 
@@ -23,6 +23,17 @@ pub fn core_blocks(blocks: &[Arc<BlockDefinition>]) -> Blocks {
                 id: b.id.to_text(),
                 base: kentos_geometry_core::Vec2::new(b.base.x, b.base.y),
                 entities: b.entities.iter().map(core_entity).collect(),
+                attributes: b
+                    .attributes
+                    .iter()
+                    .map(|a| Attribute {
+                        tag: a.tag.clone(),
+                        value: a.value.clone().unwrap_or_default(),
+                        p: kentos_geometry_core::Vec2::new(a.p.x, a.p.y),
+                        height: a.height,
+                        rotation: a.rotation,
+                    })
+                    .collect(),
             })
             .collect(),
     )
@@ -66,13 +77,17 @@ pub fn core_entity(e: &Entity) -> CoreEntity {
 
 /// An insert's pieces as objects: each its placed shape, on the insert's
 /// layer, with its own colour and line weight, else the insert's; the
-/// insert's slot, no attributes. A piece the contract cannot hold is left out.
+/// insert's slot, no attributes. A piece the contract cannot hold, and an
+/// attribute's text that shows nothing (§7), is left out.
 pub fn piece_entities(insert: &Entity, x: &Expanded) -> Vec<Entity> {
     let own = insert.base();
     x.shapes
         .iter()
         .enumerate()
         .filter_map(|(i, s)| {
+            if kentos_geometry_core::block::shows_nothing(s) {
+                return None;
+            }
             let geometry = edit_geometry(s.clone())?;
             let base = EntityBase {
                 id: own.id,

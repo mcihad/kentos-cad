@@ -142,7 +142,10 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
         let have = got.track.as_ref().map(|t| {
             (
                 rel(t.point),
-                t.lines.iter().map(|(o, a)| (rel(*o), *a)).collect::<Vec<_>>(),
+                t.lines
+                    .iter()
+                    .map(|(o, a)| (rel(*o), *a))
+                    .collect::<Vec<_>>(),
             )
         });
         let same = match (want, &have) {
@@ -265,6 +268,12 @@ fn compare_shape(name: &str, want: &Newest, seen: Option<&Seen>, trace: &Trace) 
                 trace.click_tolerance
             ));
         }
+    }
+    // A text's content is exact (docs/adr/0144 §7: an exploded attribute's value).
+    if let Some(text) = &want.text
+        && seen.text.as_ref() != Some(text)
+    {
+        bad.push(format!("{name}.text: {:?}, beklenen {text:?}", seen.text));
     }
     if let Some(arcs) = want.arcs {
         let have = bulges.iter().filter(|b| **b != 0.0).count();

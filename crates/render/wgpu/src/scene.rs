@@ -727,7 +727,11 @@ fn polygon_curved(p: &PathEntity) -> bool {
                 .flatten()
                 .any(|h| has_bulges(h.bulges.as_deref()))
     };
-    curved(&p.bulges, &p.holes) || p.parts.iter().flatten().any(|q| curved(&q.bulges, &q.holes))
+    curved(&p.bulges, &p.holes)
+        || p.parts
+            .iter()
+            .flatten()
+            .any(|q| curved(&q.bulges, &q.holes))
 }
 
 fn valid_radius(r: f64) -> bool {
@@ -1072,12 +1076,14 @@ fn shape(entity: &Entity) -> Shape {
                 spacing: h.pattern.spacing,
             },
         },
+        // The scene draws no text: an attribute's value does not matter here.
         Entity::Insert(i) => Shape::Insert {
             block: i.block.to_text(),
             p: v(&i.p),
             scale: i.scale,
             rotation: i.rotation,
             mirror: i.mirror.then_some(true),
+            attrs: None,
         },
     }
 }

@@ -52,7 +52,25 @@ export interface BlockDefinition {
  * a shape (never an insert) with the colour and line weight it draws with
  * when it has its own (or a nested insert's).
  */
-export type BlockPiece = EntityGeometry & { color?: string; lineWeight?: number };
+export type BlockPiece = EntityGeometry & { color?: string; lineWeight?: number; attribute?: string };
+
+/**
+ * What a block's text piece shows on an insert with these attributes
+ * (docs/adr/0144 §7): an attribute's piece the insert's value under its tag,
+ * else its text (the default); any other its text. Empty: nothing is drawn.
+ */
+export function pieceText(piece: { text: string; attribute?: string }, attrs: Readonly<Record<string, string>>): string {
+  return (piece.attribute !== undefined && attrs[piece.attribute]) || piece.text;
+}
+
+/**
+ * The attribute rows of an insert of `block` (the Öznitelikler panel): each
+ * definition's tag, in its order, with the value the insert shows (its own,
+ * else the default).
+ */
+export function attributeRows(block: BlockDefinition | undefined, attrs: Readonly<Record<string, string>>): { tag: string; value: string }[] {
+  return (block?.attributes ?? []).map((a) => ({ tag: a.tag, value: attrs[a.tag] || a.value || '' }));
+}
 
 /** The deepest nesting of blocks. */
 export const MAX_BLOCK_DEPTH = 16;

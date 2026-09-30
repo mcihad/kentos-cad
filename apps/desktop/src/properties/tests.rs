@@ -449,7 +449,12 @@ fn an_insert_takes_its_block_place_scale_turn_and_mirroring() {
 
 fn block_of_name(app: &App, name: &str) -> kentos_contracts::BlockId {
     let model = &app.document.as_ref().expect("open").model;
-    model.blocks().iter().find(|b| b.name == name).expect("the block").id
+    model
+        .blocks()
+        .iter()
+        .find(|b| b.name == name)
+        .expect("the block")
+        .id
 }
 
 fn warned(app: &App) -> Option<String> {
@@ -470,7 +475,12 @@ fn what_the_commands_refuse_is_said_and_not_written() {
     let name = {
         let doc = app.document.as_mut().expect("open");
         doc.model.toggle_layer_locked(&layer);
-        doc.model.layers().get(&layer).expect("its layer").name.clone()
+        doc.model
+            .layers()
+            .get(&layer)
+            .expect("its layer")
+            .name
+            .clone()
     };
     let before = entity(&app, 4);
     event(
@@ -508,7 +518,9 @@ fn what_the_commands_refuse_is_said_and_not_written() {
     assert_eq!(t.text, "Park");
     assert_eq!(
         warned(&app).as_deref(),
-        Some("Yazının metni boş olamaz; yalnız boşluktan oluşan metin de boştur. Yazıya bir metin verin.")
+        Some(
+            "Yazının metni boş olamaz; yalnız boşluktan oluşan metin de boştur. Yazıya bir metin verin."
+        )
     );
 }
 
@@ -1179,4 +1191,147 @@ fn a_multi_part_area_counts_every_part() {
     // 44 + 40 + 8 m; 120 + 100 − 4 m².
     assert_eq!(value(&app, "Geometri", "Çevre"), "92.000 m");
     assert_eq!(value(&app, "Geometri", "Alan"), "216.00 m²");
+}
+
+/// The KCAD v2 blocks fixture (fixtures/kcad/v2/blocks.kcad): Rögar's attributes
+/// are NO (default "R-1") and KOT (no default); insert 1 has both, insert 2 none.
+fn blocks_drawing() -> App {
+    let (mut app, _) = App::boot(None);
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/kcad/v2/blocks.kcad"
+    );
+    let doc = crate::document::Document::read(std::path::Path::new(path)).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app
+}
+
+/// A section's labels in order.
+fn labels(app: &App, section: &str) -> Vec<String> {
+    rows(app)
+        .into_iter()
+        .find(|(title, _)| title == section)
+        .map(|(_, rows)| rows.into_iter().map(|r| r.label.into_owned()).collect())
+        .unwrap_or_default()
+}
+
+/// An insert's block attributes (docs/adr/0144 §7): the definition's tags in its
+/// order with what the insert shows, its own value else the default; they are
+/// not repeated among its other attributes. A cell writes the insert's value.
+#[test]
+fn an_insert_shows_its_block_attributes_and_a_cell_writes_its_value() {
+    let mut app = blocks_drawing();
+    select(&mut app, &[1]);
+    assert_eq!(labels(&app, "Blok öznitelikleri"), ["NO", "KOT"]);
+    assert_eq!(value(&app, "Blok öznitelikleri", "NO"), "R-12");
+    assert_eq!(value(&app, "Blok öznitelikleri", "KOT"), "101.35");
+    assert!(labels(&app, "Öznitelik bilgileri").is_empty());
+    // Without values: the default, and nothing for KOT.
+    select(&mut app, &[2]);
+    assert_eq!(value(&app, "Blok öznitelikleri", "NO"), "R-1");
+    assert_eq!(value(&app, "Blok öznitelikleri", "KOT"), "");
+    event(
+        &mut app,
+        Event::Commit(Field::Attribute(Slot(2), "NO".into()), "R-7".into()),
+    );
+    assert_eq!(
+        entity(&app, 2).base().attrs.get("NO").map(String::as_str),
+        Some("R-7")
+    );
+    assert_eq!(value(&app, "Blok öznitelikleri", "NO"), "R-7");
+    // An empty value gives the default back.
+    event(
+        &mut app,
+        Event::Commit(Field::Attribute(Slot(2), "NO".into()), String::new()),
+    );
+    assert_eq!(value(&app, "Blok öznitelikleri", "NO"), "R-1");
+    // An attribute that is not the block's stays among the others.
+    event(
+        &mut app,
+        Event::Commit(Field::Attribute(Slot(1), "Malzeme".into()), "Beton".into()),
+    );
+    select(&mut app, &[1]);
+    assert_eq!(labels(&app, "Öznitelik bilgileri"), ["Malzeme"]);
+    // The lighting pole has none: no section.
+    select(&mut app, &[3]);
+    assert!(labels(&app, "Blok öznitelikleri").is_empty());
+}
+
+/// Pictures of an insert's Blok öznitelikleri (docs/adr/0144 §7) over the
+/// block attributes trace's drawing (fixtures/interaction/v1/block-attributes.kcad),
+/// Genel and Geometri closed: the west manhole's own values, the middle one's
+/// default, its NO cell typed into (the default wiped) and written with Enter.
+/// `.run/shots/oznitelik-blok-*`.
+/// Not run by default: `cargo test -p kentos-desktop properties::tests::block_attribute_screens -- --ignored --nocapture`.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn block_attribute_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::{Input, Snapshot};
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let drawing = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/interaction/v1/block-attributes.kcad"
+    );
+    for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
+        for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
+            for (name, slot) in [
+                ("kendi", 3),
+                ("varsayilan", 4),
+                ("yaziliyor", 4),
+                ("yazildi", 4),
+            ] {
+                let (mut app, _) = App::boot(None);
+                let _ = app
+                    .settings
+                    .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+                app.apply_settings();
+                let doc =
+                    crate::document::Document::read(std::path::Path::new(drawing)).expect("opens");
+                let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+                let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+                let mut update = |app: &mut App, message| {
+                    let _ = app.update(message);
+                };
+                snapshot.settle(&mut app, App::view, &mut update);
+                app.viewport.camera.center = kentos_interaction::Vec2::new(487015.0, 4420008.5);
+                app.viewport.camera.scale = 1.0 / 0.03;
+                select(&mut app, &[slot]);
+                let _ = app.update(Message::Properties(Event::Toggle("general")));
+                let _ = app.update(Message::Properties(Event::Toggle("geometry")));
+                snapshot.settle(&mut app, App::view, &mut update);
+                if name == "yaziliyor" || name == "yazildi" {
+                    // The NO cell (read off the pictures); it opens with the default, R-?.
+                    let at = if height > 800.0 {
+                        iced::Point::new(1330.0, 709.0)
+                    } else {
+                        iced::Point::new(1000.0, 583.0)
+                    };
+                    snapshot.input(&mut app, App::view, &mut update, Input::Click(at));
+                    for _ in 0..3 {
+                        let back = Input::Key(iced::keyboard::key::Named::Backspace);
+                        snapshot.input(&mut app, App::view, &mut update, back);
+                    }
+                    snapshot.input(&mut app, App::view, &mut update, Input::Type("R-7".into()));
+                }
+                if name == "yazildi" {
+                    let enter = Input::Key(iced::keyboard::key::Named::Enter);
+                    snapshot.input(&mut app, App::view, &mut update, enter);
+                    let e = entity(&app, 4);
+                    assert_eq!(e.base().attrs.get("NO").map(String::as_str), Some("R-7"));
+                }
+                snapshot.settle(&mut app, App::view, &mut update);
+                let file = out.join(format!(
+                    "oznitelik-blok-{name}-{width}x{height}{suffix}.png"
+                ));
+                snapshot
+                    .render(app.view(), &app.theme())
+                    .save(&file)
+                    .expect("writes the picture");
+                println!("{}", file.display());
+            }
+        }
+    }
 }
