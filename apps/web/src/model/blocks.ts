@@ -110,6 +110,13 @@ export function freeBlockName(blocks: readonly { name: string }[]): string {
   return `Blok ${n}`;
 }
 
+/**
+ * An insert's turn in radians from degrees as typed (Blok ekle's Dönüş,
+ * Öznitelikler): taken into 0–360°, then (d · π) / 180, so a quarter turn is
+ * the core's exact one. The contracts' `blocks::turn_of` is the same.
+ */
+export const turnOf = (degrees: number): number => ((((degrees % 360) + 360) % 360) * Math.PI) / 180;
+
 /** Whether an insert's scale is allowed: positive and finite. */
 export function scaleOk(scale: number): boolean {
   return Number.isFinite(scale) && scale > 0;

@@ -384,6 +384,74 @@ fn texts_dimensions_and_hatches_take_what_the_web_takes() {
 }
 
 /// The last line said in the command history, when it is a warning.
+/// A block made of `slot`'s object from (E, N): with `replace`, the insert that took its place.
+fn block_of(
+    app: &mut App,
+    slot: u32,
+    name: &str,
+    replace: bool,
+) -> (kentos_contracts::BlockId, Option<u32>) {
+    let model = &mut app.document.as_mut().expect("open").model;
+    let uid = model.uid(Slot(slot)).expect("an object").to_string();
+    let input = kentos_contracts::BlocksDefine {
+        name: name.to_owned(),
+        base: Wire { x: E, y: N },
+        uids: vec![uid],
+        description: None,
+        replace: replace.then_some(true),
+        layer_id: replace.then(|| "cizim".to_owned()),
+        expected_revision: None,
+    };
+    let (out, _) = kentos_interaction::block_define::define(model, input).expect("defined");
+    (out.block, out.id)
+}
+
+/// An insert's rows take its block, place, scale (above zero), turn (degrees,
+/// within a turn) and mirroring, each a step of its own (docs/adr/0144 §6).
+#[test]
+fn an_insert_takes_its_block_place_scale_turn_and_mirroring() {
+    let mut app = objects();
+    let (_, insert) = block_of(&mut app, 1, "Direk", true);
+    let (rogar, _) = block_of(&mut app, 2, "Rögar", false);
+    let slot = insert.expect("an insert");
+    let s = Slot(slot);
+    select(&mut app, &[slot]);
+    assert!(editable(&app));
+    for (field, typed) in [
+        (Field::InsertX(s), "487010,5"),
+        (Field::InsertY(s), "4420020"),
+        (Field::InsertScale(s), "0"),
+        (Field::InsertScale(s), "2"),
+        (Field::InsertTurn(s), "-90"),
+    ] {
+        event(&mut app, Event::Commit(field, typed.to_owned()));
+    }
+    event(&mut app, Event::InsertMirror(s, true));
+    event(&mut app, Event::InsertBlock(s, rogar));
+    let Entity::Insert(i) = entity(&app, slot) else {
+        panic!("an insert");
+    };
+    let quarter = std::f64::consts::FRAC_PI_2;
+    assert_eq!(
+        (i.p.x, i.p.y, i.scale, i.rotation, i.mirror, i.block),
+        (487010.5, 4420020.0, 2.0, 3.0 * quarter, true, rogar)
+    );
+    assert_eq!(value(&app, "Geometri", "Blok"), "Rögar");
+    assert_eq!(value(&app, "Geometri", "Dönüş"), "270.0000 °");
+    assert_eq!(value(&app, "Geometri", "Aynalı"), "Evet");
+    // Each is its own step: the block goes back first.
+    assert!(undo_label(&mut app).is_some());
+    let Entity::Insert(i) = entity(&app, slot) else {
+        panic!("an insert");
+    };
+    assert_eq!(i.block, block_of_name(&app, "Direk"));
+}
+
+fn block_of_name(app: &App, name: &str) -> kentos_contracts::BlockId {
+    let model = &app.document.as_ref().expect("open").model;
+    model.blocks().iter().find(|b| b.name == name).expect("the block").id
+}
+
 fn warned(app: &App) -> Option<String> {
     app.log
         .last()

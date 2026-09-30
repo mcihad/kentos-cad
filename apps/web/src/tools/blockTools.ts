@@ -1,6 +1,7 @@
 import { Signal } from '../core/signal';
 import type { ViewTransform } from '../viewport/Camera';
 import type { Vec2 } from '../model/geometry';
+import { turnOf } from '../model/blocks';
 import { parseNumber } from './coordinateInput';
 import { PointInputTool } from './drawTools';
 import { SelectionFirstTool } from './modifyTools';
@@ -102,7 +103,7 @@ export class BlockInsertTool extends PointInputTool {
         block,
         p,
         scale: BlockInsertTool.scale,
-        rotation: (BlockInsertTool.rotation * Math.PI) / 180,
+        rotation: turnOf(BlockInsertTool.rotation),
         ...(BlockInsertTool.mirror && { mirror: true }),
       },
     ]);
@@ -112,7 +113,7 @@ export class BlockInsertTool extends PointInputTool {
   override draw(g: CanvasRenderingContext2D, view: ViewTransform): void {
     const block = BlockInsertTool.block;
     if (!this.hover || this.ask || !block) return;
-    const paths = this.ctx.view.blockOutlines(block, this.hover, BlockInsertTool.scale, (BlockInsertTool.rotation * Math.PI) / 180, BlockInsertTool.mirror);
+    const paths = this.ctx.view.blockOutlines(block, this.hover, BlockInsertTool.scale, turnOf(BlockInsertTool.rotation), BlockInsertTool.mirror);
     strokePaths(g, view, paths, { color: this.ctx.view.palette.accent, dash: [4, 3] });
     this.drawTracking(g, view);
   }

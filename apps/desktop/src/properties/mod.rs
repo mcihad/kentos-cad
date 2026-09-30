@@ -32,7 +32,9 @@ use iced::{Center, Color, Element, Fill, Theme};
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 
-use kentos_contracts::{Entity, EntitiesSetProperties, HatchPatternType, PropertiesOperation};
+use kentos_contracts::{
+    BlockId, Entity, EntitiesSetProperties, HatchPatternType, PropertiesOperation,
+};
 use kentos_domain::Slot;
 use kentos_interaction::elevation::{self, Change};
 use kentos_interaction::properties;
@@ -61,6 +63,10 @@ pub enum Event {
     Weight(Vec<Slot>, Option<f64>),
     /// Desen ▾ of a hatch.
     Pattern(Slot, HatchPatternType),
+    /// Blok ▾ of an insert: the block it places (docs/adr/0144).
+    InsertBlock(Slot, BlockId),
+    /// Aynalı ▾ of an insert.
+    InsertMirror(Slot, bool),
 }
 
 /// The value a cell edits.
@@ -86,6 +92,11 @@ pub enum Field {
     Elevation(Slot, Spot),
     /// Every vertex's elevation of these lines, polylines, areas and points.
     Elevations(Vec<Slot>),
+    /// An insert's place (Y, X), scale (above zero) and turn (degrees typed).
+    InsertX(Slot),
+    InsertY(Slot),
+    InsertScale(Slot),
+    InsertTurn(Slot),
 }
 
 /// Which vertices of an object a Kot cell sets.
@@ -349,6 +360,22 @@ impl App {
                 }
                 _ => Vec::new(),
             },
+            Event::InsertBlock(slot, block) => match model.get(slot) {
+                Some(Entity::Insert(i)) => {
+                    let mut i = i.clone();
+                    i.block = block;
+                    properties::set_geometry(model, slot, &Entity::Insert(i))
+                }
+                _ => Vec::new(),
+            },
+            Event::InsertMirror(slot, mirror) => match model.get(slot) {
+                Some(Entity::Insert(i)) => {
+                    let mut i = i.clone();
+                    i.mirror = mirror;
+                    properties::set_geometry(model, slot, &Entity::Insert(i))
+                }
+                _ => Vec::new(),
+            },
             Event::Commit(field, text) => commit(model, &field, &text),
         };
         for text in said {
@@ -431,6 +458,10 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::Text(s)
         | Field::TextHeight(s)
         | Field::TextAngle(s)
+        | Field::InsertX(s)
+        | Field::InsertY(s)
+        | Field::InsertScale(s)
+        | Field::InsertTurn(s)
         | Field::Attribute(s, _) => *s,
         // Taken above.
         Field::Elevation(..) | Field::Elevations(_) => return Vec::new(),
@@ -484,6 +515,22 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         }
         (Field::TextAngle(_), Entity::Text(t)) if finite => {
             t.rotation = ((n % 360.0) + 360.0) % 360.0;
+            true
+        }
+        (Field::InsertX(_), Entity::Insert(i)) if finite => {
+            i.p.x = n;
+            true
+        }
+        (Field::InsertY(_), Entity::Insert(i)) if finite => {
+            i.p.y = n;
+            true
+        }
+        (Field::InsertScale(_), Entity::Insert(i)) if finite && n > 0.0 => {
+            i.scale = n;
+            true
+        }
+        (Field::InsertTurn(_), Entity::Insert(i)) if finite => {
+            i.rotation = kentos_contracts::blocks::turn_of(n);
             true
         }
         _ => false,

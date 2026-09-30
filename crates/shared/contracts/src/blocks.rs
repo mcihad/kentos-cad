@@ -139,6 +139,13 @@ pub fn free_name<'a>(taken: impl IntoIterator<Item = &'a str>) -> String {
     format!("Blok {n}")
 }
 
+/// An insert's turn in radians from degrees as typed (Blok ekle's Dönüş,
+/// Öznitelikler): taken into 0–360°, then (d · π) / 180, so a quarter turn
+/// is the core's exact one. The web's `turnOf` is the same.
+pub fn turn_of(degrees: f64) -> f64 {
+    (((degrees % 360.0) + 360.0) % 360.0) * std::f64::consts::PI / 180.0
+}
+
 /// Whether an insert's scale is allowed: positive and finite.
 pub fn scale_ok(scale: f64) -> bool {
     scale.is_finite() && scale > 0.0
@@ -396,6 +403,25 @@ mod tests {
         );
         // Unicode's White_Space: U+0085 is, U+FEFF is not (the web's list is the same).
         assert!(!name_ok("\u{85}\u{3000}") && name_ok("\u{feff}") && !name_ok(""));
+    }
+
+    #[test]
+    fn typed_degrees_turn_into_radians_within_a_turn() {
+        use std::f64::consts::{FRAC_PI_2, PI};
+        let turns = [0.0, 90.0, 180.0, 270.0, -90.0, 450.0, -360.0].map(turn_of);
+        assert_eq!(
+            turns,
+            [
+                0.0,
+                FRAC_PI_2,
+                PI,
+                3.0 * FRAC_PI_2,
+                3.0 * FRAC_PI_2,
+                FRAC_PI_2,
+                0.0
+            ]
+        );
+        assert_eq!(turn_of(30.0), 30.0 * PI / 180.0);
     }
 
     #[test]

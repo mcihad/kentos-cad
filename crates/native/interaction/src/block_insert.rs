@@ -12,6 +12,7 @@
 //! - the ghost is the block as it would be placed at the cursor, from the
 //!   geometry store (`insert_outlines`).
 
+use kentos_contracts::blocks::turn_of;
 use kentos_contracts::{BlockId, EntityGeometry};
 use kentos_geometry_core::tools::point_text::{js_trim, point_from_text};
 
@@ -98,7 +99,7 @@ impl BlockInsert {
             block,
             p: wire(p),
             scale: m.block_scale,
-            rotation: m.block_rotation.to_radians(),
+            rotation: turn_of(m.block_rotation),
             mirror: m.block_mirror,
         }
     }
@@ -128,7 +129,7 @@ impl BlockInsert {
             &block.to_text(),
             h,
             m.block_scale,
-            m.block_rotation.to_radians(),
+            turn_of(m.block_rotation),
             m.block_mirror,
         );
         (self.ghost, self.marks) = ghosts(&paths);

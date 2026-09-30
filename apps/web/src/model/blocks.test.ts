@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { blocksFault, blockFaultMessage, checkDefinitions, checkNesting, freeBlockName, nameKey, nameOk, placed, placements, trimName, type BlockDefinition } from './blocks';
+import { blocksFault, blockFaultMessage, checkDefinitions, checkNesting, freeBlockName, nameKey, nameOk, placed, placements, trimName, turnOf, type BlockDefinition } from './blocks';
 import type { Entity } from './entities';
 
 /**
@@ -33,6 +33,11 @@ describe('block rules (docs/adr/0144)', () => {
     expect(freeBlockName(named('Rögar'))).toBe('Blok 1');
     // Trimmed as Rust's `str::trim`: U+0085 goes, U+FEFF stays.
     expect([trimName('  Rögar \t'), trimName('\u0085Direk\u3000'), trimName('\ufeffA'), trimName(' ')]).toEqual(['Rögar', 'Direk', '\ufeffA', '']);
+  });
+
+  it('turn typed degrees into radians within a turn, quarter turns exact', () => {
+    expect([0, 90, 180, 270, -90, 450, -360].map(turnOf)).toEqual([0, Math.PI / 2, Math.PI, 3 * (Math.PI / 2), 3 * (Math.PI / 2), Math.PI / 2, 0]);
+    expect(turnOf(30)).toBe((30 * Math.PI) / 180);
   });
 
   it('count placements in the drawing and in the definitions', () => {

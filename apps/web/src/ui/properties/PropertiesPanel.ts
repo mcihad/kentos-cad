@@ -1,5 +1,6 @@
 import type { AppContext } from '../../app/context';
 import { watchAll } from '../../core/signal';
+import { turnOf } from '../../model/blocks';
 import { DIMENSION_STYLE_LABEL, layoutDimension } from '../../model/geom/dimension';
 import { ENTITY_KIND_LABEL, HATCH_PATTERN_LABEL, drawsLines, entityArea, entityLength, type Entity, type HatchPatternType } from '../../model/entities';
 import { angleDeg, bearingGrad, dist } from '../../model/geometry';
@@ -408,17 +409,52 @@ export class PropertiesPanel extends Panel {
           num('Konum X', e.p.y),
         );
         break;
-      // Read only until blocks' tools (docs/adr/0144 §6); the desktop shows the same rows.
-      case 'insert':
+      // The block, its place, scale, turn and mirroring, through `cad.entities.edit`'s properties (docs/adr/0144 §6);
+      // the desktop's rows are the same. A scale not above zero is not taken; a turn is typed in degrees.
+      case 'insert': {
+        const name = this.ctx.doc.block(e.block)?.name ?? '(tanımsız)';
+        const numEdit = (patch: (x: number) => Record<string, unknown> | null) =>
+          locked
+            ? undefined
+            : ({
+                type: 'number',
+                commit: (t: string) => {
+                  const x = parseFloat(t.replace(',', '.'));
+                  const changed = Number.isFinite(x) ? patch(x) : null;
+                  if (changed) setGeometry(this.ctx, e, changed);
+                },
+              } as const);
+        const mirrored = e.mirror === true;
         geo.push(
-          { label: 'Blok', value: this.ctx.doc.block(e.block)?.name ?? '(tanımsız)' },
-          num('Konum Y', e.p.x),
-          num('Konum X', e.p.y),
-          { label: 'Ölçek', value: e.scale.toFixed(4), numeric: true },
-          { label: 'Dönüş', value: ((e.rotation * 180) / Math.PI).toFixed(4), numeric: true, unit: '°' },
-          { label: 'Aynalı', value: e.mirror ? 'Evet' : 'Hayır' },
+          {
+            label: 'Blok',
+            value: name,
+            editor: locked
+              ? undefined
+              : {
+                  type: 'select',
+                  display: () => ({ text: name }),
+                  items: () => this.ctx.doc.blocks.value.map((b) => ({ label: b.name, radio: true, checked: b.id === e.block, run: () => setGeometry(this.ctx, e, { block: b.id }) })),
+                },
+          },
+          { ...num('Konum Y', e.p.x), editor: numEdit((x) => ({ p: { ...e.p, x } })) },
+          { ...num('Konum X', e.p.y), editor: numEdit((y) => ({ p: { ...e.p, y } })) },
+          { label: 'Ölçek', value: e.scale.toFixed(4), numeric: true, editor: numEdit((x) => (x > 0 ? { scale: x } : null)) },
+          { label: 'Dönüş', value: ((e.rotation * 180) / Math.PI).toFixed(4), numeric: true, unit: '°', editor: numEdit((x) => ({ rotation: turnOf(x) })) },
+          {
+            label: 'Aynalı',
+            value: mirrored ? 'Evet' : 'Hayır',
+            editor: locked
+              ? undefined
+              : {
+                  type: 'select',
+                  display: () => ({ text: mirrored ? 'Evet' : 'Hayır' }),
+                  items: () => [true, false].map((m) => ({ label: m ? 'Evet' : 'Hayır', radio: true, checked: m === mirrored, run: () => setGeometry(this.ctx, e, { mirror: m }) })),
+                },
+          },
         );
         break;
+      }
     }
 
     const sections: PropSection[] = [general, { id: 'geometry', title: 'Geometri', rows: geo }];

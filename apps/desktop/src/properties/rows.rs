@@ -738,19 +738,53 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 len("Konum X", t.p.y),
             ]);
         }
-        // Read only until blocks' tools (docs/adr/0144 §6).
+        // The block, its place, scale, turn and mirroring, through
+        // `cad.entities.edit`'s properties (docs/adr/0144 §6), as the web's.
         Entity::Insert(i) => {
             let name = doc
                 .model
                 .block(i.block)
                 .map_or_else(|| "(tanımsız)".to_owned(), |b| b.name.clone());
+            let blocks = Editor::Select {
+                text: name.clone(),
+                swatch: None,
+                items: doc
+                    .model
+                    .blocks()
+                    .iter()
+                    .map(|b| Choice::Pick {
+                        label: b.name.clone(),
+                        swatch: None,
+                        chosen: b.id == i.block,
+                        enabled: true,
+                        message: Message::Properties(Event::InsertBlock(slot, b.id)),
+                    })
+                    .collect(),
+            };
+            let yes_no = |m: bool| if m { "Evet" } else { "Hayır" };
+            let mirror = Editor::Select {
+                text: yes_no(i.mirror).to_owned(),
+                swatch: None,
+                items: [true, false]
+                    .into_iter()
+                    .map(|m| Choice::Pick {
+                        label: yes_no(m).to_owned(),
+                        swatch: None,
+                        chosen: m == i.mirror,
+                        enabled: true,
+                        message: Message::Properties(Event::InsertMirror(slot, m)),
+                    })
+                    .collect(),
+            };
             geo.extend([
-                Row::text("Blok", name),
-                len("Konum Y", i.p.x),
-                len("Konum X", i.p.y),
-                Row::figure("Ölçek", fixed(i.scale, 4)),
-                Row::figure("Dönüş", degrees(i.rotation)).unit("°"),
-                Row::text("Aynalı", if i.mirror { "Evet" } else { "Hayır" }),
+                Row::text("Blok", name).editor(edit(blocks)),
+                len("Konum Y", i.p.x).editor(number(Field::InsertX(slot))),
+                len("Konum X", i.p.y).editor(number(Field::InsertY(slot))),
+                Row::figure("Ölçek", fixed(i.scale, 4)).editor(number(Field::InsertScale(slot))),
+                Row::figure("Dönüş", degrees(i.rotation))
+                    .unit("°")
+                    .editor(number(Field::InsertTurn(slot))),
+                Row::text("Aynalı", yes_no(i.mirror)).editor(edit(mirror)),
             ]);
         }
     }
