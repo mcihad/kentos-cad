@@ -11,9 +11,10 @@ use std::collections::BTreeMap;
 use std::fmt;
 
 use kentos_contracts::{
-    ArcEntity, AreaPart, CircleEntity, ConstructionEntity, DimensionEntity, DimensionStyle,
-    DxfWriteInput, DxfWriteLayer, EllipseEntity, Entity, EntityBase, HatchEntity, HatchPattern,
-    LineEntity, PathEntity, PointEntity, RingGeometry, SplineEntity, TextEntity, Vec2,
+    ArcEntity, AreaPart, AttributeDefinition, BlockDefinition, BlockId, CircleEntity,
+    ConstructionEntity, DimensionEntity, DimensionStyle, DxfWriteInput, DxfWriteLayer,
+    EllipseEntity, Entity, EntityBase, HatchEntity, HatchPattern, InsertEntity, LineEntity,
+    PathEntity, PointEntity, RingGeometry, SplineEntity, TextEntity, Vec2,
 };
 use serde::de::value::{MapAccessDeserializer, SeqAccessDeserializer};
 use serde::de::{self, Deserialize, Deserializer, IgnoredAny, MapAccess, SeqAccess, Visitor};
@@ -86,6 +87,9 @@ struct Fields {
     angle: Option<f64>,
     ring: Option<Vec<Vec2>>,
     pattern: Option<HatchPattern>,
+    block: Option<BlockId>,
+    scale: Option<f64>,
+    mirror: Option<bool>,
 }
 
 fn need<T, E: de::Error>(v: Option<T>, name: &'static str) -> Result<T, E> {
@@ -218,6 +222,14 @@ impl Fields {
                 holes: islands(self.holes)?,
                 pattern: need(self.pattern, "pattern")?,
             }),
+            "insert" => Entity::Insert(InsertEntity {
+                base,
+                block: need(self.block, "block")?,
+                p: need(self.p, "p")?,
+                scale: need(self.scale, "scale")?,
+                rotation: need(self.rotation, "rotation")?,
+                mirror: self.mirror.unwrap_or(false),
+            }),
             other => {
                 return Err(E::unknown_variant(
                     other,
@@ -235,6 +247,7 @@ impl Fields {
                         "text",
                         "dimension",
                         "hatch",
+                        "insert",
                     ],
                 ));
             }
@@ -291,6 +304,9 @@ impl<'de> Deserialize<'de> for Wire {
                         "angle" => f.angle = map.next_value()?,
                         "ring" => f.ring = Some(map.next_value()?),
                         "pattern" => f.pattern = Some(map.next_value()?),
+                        "block" => f.block = Some(map.next_value()?),
+                        "scale" => f.scale = Some(map.next_value()?),
+                        "mirror" => f.mirror = map.next_value()?,
                         _ => {
                             map.next_value::<IgnoredAny>()?;
                         }
@@ -313,6 +329,19 @@ impl<'de> Deserialize<'de> for Objects {
     }
 }
 
+/// A block definition, its objects read by `Wire` (docs/adr/0144 §5).
+#[derive(serde::Deserialize)]
+struct Definition {
+    id: BlockId,
+    name: String,
+    base: Vec2,
+    entities: Objects,
+    #[serde(default)]
+    attributes: Vec<AttributeDefinition>,
+    #[serde(default)]
+    description: Option<String>,
+}
+
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Input {
@@ -323,6 +352,8 @@ struct Input {
     grads: bool,
     #[serde(default)]
     dimension_values: BTreeMap<u32, String>,
+    #[serde(default)]
+    blocks: Vec<Definition>,
 }
 
 /// A `DxfWriteInput` read with this module's visitor for the objects. The
@@ -341,6 +372,18 @@ impl<'de> Deserialize<'de> for WriteInput {
             length_decimals: i.length_decimals,
             grads: i.grads,
             dimension_values: i.dimension_values,
+            blocks: i
+                .blocks
+                .into_iter()
+                .map(|d| BlockDefinition {
+                    id: d.id,
+                    name: d.name,
+                    base: d.base,
+                    entities: d.entities.0,
+                    attributes: d.attributes,
+                    description: d.description,
+                })
+                .collect(),
         }))
     }
 }
@@ -381,12 +424,25 @@ mod tests {
        "holes":[{"pts":[{"x":1,"y":1},{"x":2,"y":1},{"x":2,"y":2}],"zs":[null,5,6]}]},
       {"kind":"polygon","id":19,"layerId":"a","attrs":{},"pts":[{"x":0,"y":0},{"x":9,"y":0},{"x":9,"y":9}],
        "parts":[{"pts":[{"x":20,"y":0},{"x":29,"y":0},{"x":29,"y":9}],"bulges":[0,0.5,0],"zs":[1,null,2],
-        "holes":[{"pts":[{"x":21,"y":1},{"x":22,"y":1},{"x":22,"y":2}]}]}]}
+        "holes":[{"pts":[{"x":21,"y":1},{"x":22,"y":1},{"x":22,"y":2}]}]}]},
+      {"kind":"insert","id":20,"layerId":"a","attrs":{"No":"7"},"color":"#e5484d","block":"018f3a2b-0000-7000-8000-000000000001",
+       "p":{"x":452345.5,"y":4412345.25},"scale":2.5,"rotation":0.1,"mirror":true},
+      {"kind":"insert","id":21,"layerId":"a","attrs":{},"block":"018f3a2b-0000-7000-8000-000000000001","p":{"x":1,"y":1},"scale":1,"rotation":0}
+    ]"##;
+
+    /// A definition holding a line and a nested insert, and the one it nests.
+    const BLOCKS: &str = r##"[
+      {"id":"018f3a2b-0000-7000-8000-000000000001","name":"Direk","base":{"x":1,"y":2},"description":"Aydınlatma direği",
+       "entities":[{"kind":"line","id":1,"layerId":"0","attrs":{},"a":{"x":0,"y":0},"b":{"x":0,"y":6}},
+                   {"kind":"insert","id":2,"layerId":"0","attrs":{},"block":"018f3a2b-0000-7000-8000-000000000002","p":{"x":0,"y":6},"scale":1,"rotation":1.5707963267948966}]},
+      {"id":"018f3a2b-0000-7000-8000-000000000002","name":"Lamba","base":{"x":0,"y":0},
+       "entities":[{"kind":"circle","id":1,"layerId":"cizim","attrs":{},"color":"#f5d90a","c":{"x":0,"y":0},"r":0.4}],
+       "attributes":[{"tag":"GUC","p":{"x":0.5,"y":0},"height":0.25,"rotation":0,"prompt":"Güç","value":"150 W"}]}
     ]"##;
 
     fn doc(objects: &str) -> String {
         format!(
-            r##"{{"entities":{objects},"layers":[{{"id":"a","name":"A","path":["G"],"color":"ink","visible":true,"locked":false,"lineType":"dashdot","lineWeight":0.25}}],"scale":1000,"lengthDecimals":3,"grads":true,"dimensionValues":{{"14":"45.0000g"}}}}"##
+            r##"{{"entities":{objects},"layers":[{{"id":"a","name":"A","path":["G"],"color":"ink","visible":true,"locked":false,"lineType":"dashdot","lineWeight":0.25}}],"scale":1000,"lengthDecimals":3,"grads":true,"dimensionValues":{{"14":"45.0000g"}},"blocks":{BLOCKS}}}"##
         )
     }
 
@@ -396,7 +452,18 @@ mod tests {
         let ours = input_from_json(&text).expect("input");
         let derived: DxfWriteInput = serde_json::from_str(&text).expect("contract");
         assert_eq!(ours, derived);
-        assert_eq!(ours.entities.len(), 19);
+        assert_eq!(ours.entities.len(), 21);
+        // Inserts and the definitions they place, nested ones in them (docs/adr/0144 §5).
+        let Entity::Insert(i) = &ours.entities[19] else {
+            panic!("{:?}", ours.entities[19])
+        };
+        assert_eq!((i.scale, i.rotation, i.mirror), (2.5, 0.1, true));
+        let names: Vec<(&str, usize, usize)> = ours
+            .blocks
+            .iter()
+            .map(|b| (b.name.as_str(), b.entities.len(), b.attributes.len()))
+            .collect();
+        assert_eq!(names, [("Direk", 2, 0), ("Lamba", 1, 1)]);
         // What the contract's code reads, this reads too: an object's own weight and its vertices' elevations.
         let Entity::Line(l) = &ours.entities[15] else {
             panic!("{:?}", ours.entities[15])

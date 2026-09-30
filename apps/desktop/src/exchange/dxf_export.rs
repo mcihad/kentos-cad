@@ -13,6 +13,7 @@ use std::fmt;
 
 use iced::widget::{Column, column, row};
 use iced::{Center, Element, Fill, Length, Task};
+use kentos_contracts::blocks::placed_blocks;
 use kentos_contracts::{
     AngleUnit, DxfWriteInput, DxfWriteLayer, Entity, ExportReport, LayerNodeType,
 };
@@ -283,6 +284,8 @@ impl App {
             length_decimals: settings.length_decimals,
             grads: settings.angle_unit == AngleUnit::Grad,
             dimension_values,
+            // The writer takes those the objects place (docs/adr/0144 §5).
+            blocks: doc.model.blocks().iter().map(|b| (**b).clone()).collect(),
         };
         if let Some(Window::DxfExport(s)) = &mut self.exchange {
             s.writing = true;
@@ -511,6 +514,14 @@ impl App {
         }];
         if dimensions > 0 {
             lines.push(words::text_line(Line::Info, format!("{dimensions} ölçü DXF ölçüsü olarak yazılır ve KentOS'taki gibi görünür; başka bir program ölçüyü düzenlerse kendi kurallarıyla yeniden çizer. KentOS'a ölçü olarak geri okunur.")));
+        }
+        let inserts = kinds
+            .iter()
+            .find(|(k, _)| *k == "insert")
+            .map_or(0, |(_, n)| *n);
+        if inserts > 0 {
+            let blocks = placed_blocks(doc.model.blocks(), list.iter().copied());
+            lines.push(words::text_line(Line::Info, format!("{inserts} blok yerleştirmesi INSERT, yerleştirdikleri {blocks} blok içlerindekilerle birlikte BLOCK olarak yazılır; KentOS'a blok olarak geri okunur.")));
         }
         if islands > 0 {
             lines.push(words::text_line(Line::Info, format!("{islands} adalı alanın adaları ayrı kapalı çoklu çizgiler olarak yazılır; KentOS'a geri okununca yine adalı alan olur.")));

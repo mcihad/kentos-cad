@@ -416,13 +416,19 @@ impl<'l> Emitter<'l> {
                 self.off_layer.insert(self.kept[n], x.line);
             }
             let drawing = std::mem::take(&mut self.out.entities);
+            let handles = std::mem::take(&mut self.out.handles);
+            let holes = std::mem::take(&mut self.out.holes);
             self.defining = true;
             let ctx = Ctx::definition(n);
             for x in &block.entities {
                 self.emit(x, &ctx);
             }
+            // The rings KentOS wrote as polylines of their own go back into their polygons, as in the drawing.
+            self.merge_holes();
             self.defining = false;
             let entities = std::mem::replace(&mut self.out.entities, drawing);
+            self.out.handles = handles;
+            self.out.holes = holes;
             defs.push(BlockDefinition {
                 id: self.kept[n],
                 name: block.name.clone(),
@@ -516,12 +522,12 @@ impl<'l> Emitter<'l> {
 
     /// The layer an object goes on: children on layer 0 take the insert's layer.
     /// Spelled as the LAYER table spells it: "parsel" on an entity is the table's "PARSEL".
-    /// A definition's objects are all on 0: its inserts' layer draws them.
+    /// A definition's object on 0 has none of its own (`""`, the block's): its
+    /// insert's layer draws it and Patlat puts it there (docs/adr/0144 §3); one
+    /// on another layer names it, for Patlat (the import maps it to the
+    /// drawing's layer), while its insert's layer draws it.
     fn layer_of(&self, e: &Parsed, ctx: &Ctx) -> String {
-        if ctx.definition {
-            return "0".to_string();
-        }
-        match (&ctx.layer, e.common.layer.as_str()) {
+        let layer = match (&ctx.layer, e.common.layer.as_str()) {
             (Some(l), "0") => l.clone(),
             (_, name) => self
                 .lib
@@ -529,6 +535,11 @@ impl<'l> Emitter<'l> {
                 .get(&name.to_uppercase())
                 .cloned()
                 .unwrap_or_else(|| name.to_string()),
+        };
+        if ctx.definition && layer == "0" {
+            String::new()
+        } else {
+            layer
         }
     }
 
@@ -621,8 +632,10 @@ impl<'l> Emitter<'l> {
                 apply_meta(meta, x);
             }
         }
-        // Holes and the polygons they belong to are linked by handle, in model space (as KentOS writes them).
-        if ctx.chain.is_empty() && end == start + 1 {
+        // Holes and the polygons they belong to are linked by handle, in model space or in a
+        // kept block's own objects (as KentOS writes them).
+        let own = ctx.chain.is_empty() || (ctx.definition && ctx.chain.len() == 1);
+        if own && end == start + 1 {
             if let Some(h) = e.handle {
                 self.out.handles.insert(h, start);
             }
@@ -636,6 +649,8 @@ impl<'l> Emitter<'l> {
     /// ("adalı alan") once every object is read. A hole whose polygon is
     /// missing (not in the file, or not a polygon) stays a polygon of its own.
     pub fn merge_holes(&mut self) {
+        // A definition's objects are not counted (its inserts are).
+        let counted = !self.defining;
         let out = &mut self.out;
         let mut gone = vec![false; out.entities.len()];
         for (hole, owner) in std::mem::take(&mut out.holes) {
@@ -666,7 +681,10 @@ impl<'l> Emitter<'l> {
         out.entities.retain(|e| {
             let keep = !gone[i];
             i += 1;
-            if !keep && let Entity::Polygon(p) = e {
+            if !keep
+                && counted
+                && let Entity::Polygon(p) = e
+            {
                 if let Some(n) = per_layer.get_mut(&p.base.layer_id) {
                     *n -= 1;
                 }
@@ -1779,6 +1797,12 @@ impl<'l> Emitter<'l> {
         if placed.p[2] != 0.0 && !ctx.definition {
             self.note("Blok (INSERT)", "yerleştirmenin yüksekliği (Z) alınmadı", e.line);
         }
+        // KentOS's exact turn while the file's degrees are still those it wrote (an edit elsewhere wins).
+        let exact = e
+            .meta
+            .as_ref()
+            .and_then(|m| m.turn)
+            .filter(|t| sx > 0.0 && deg(*t) == placed.rotation);
         let mut base = base(layer, self.color_of(e, ctx), self.weight_of(e, ctx));
         base.attrs = attrs;
         self.push(Entity::Insert(InsertEntity {
@@ -1786,7 +1810,7 @@ impl<'l> Emitter<'l> {
             block: id,
             p: v(placed.p[0], placed.p[1]),
             scale: sx.abs(),
-            rotation: turn_of(degrees),
+            rotation: exact.unwrap_or_else(|| turn_of(degrees)),
             mirror,
         }));
         true

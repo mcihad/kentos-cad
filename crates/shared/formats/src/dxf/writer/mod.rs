@@ -13,7 +13,10 @@
 //! coordinate back bit for bit, and with KentOS's extended data (`xdata`)
 //! the same objects. What another program cannot show as KentOS does
 //! (labels, attributes, symbols, layer styles) is counted in the report.
+//! The blocks the objects place are BLOCKs, their inserts INSERTs
+//! (docs/adr/0144 §5, `blocks.rs`).
 
+mod blocks;
 mod entities;
 mod input;
 mod layers;
@@ -28,14 +31,17 @@ mod template;
 pub(crate) use input::Objects;
 pub use input::{WriteInput, input_from_json};
 
+use std::collections::{BTreeMap, HashMap};
 use std::fmt::Write as _;
 
-use kentos_contracts::{Bounds, DxfWriteInput, ExportReport, Vec2};
+use kentos_contracts::{BlockId, Bounds, DxfWriteInput, ExportReport, Vec2};
 
 use crate::num::dxf_real;
 use crate::report::Report;
+use blocks::Written;
 use entities::Writer;
 use layers::Layers;
+use template::MODEL_SPACE;
 
 /// DXF text as AutoCAD writes it: the group code right-aligned in three
 /// places, then the value, each on its own CRLF-ended line. The methods
@@ -248,10 +254,63 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
     };
     let layers = Layers::new(&input.layers, &mut report);
     let mut body = Out::default();
-    // The dimensions' own blocks and their block records.
+    // The blocks (the drawing's and the dimensions' own) and their block records.
     let mut blocks = Out::default();
     let mut records = Vec::new();
-    let (extent, points) = {
+    // The blocks the objects place, each written before the inserts of it (docs/adr/0144 §5).
+    let order = blocks::order(&input.blocks, &input.entities);
+    let names = blocks::names(order.iter().copied(), &mut report);
+    let mut defined: HashMap<BlockId, Written> = HashMap::new();
+    let mut points = false;
+    let no_values = BTreeMap::new();
+    for def in order {
+        let Some(name) = names.get(&def.id) else {
+            continue;
+        };
+        let record = handles.take();
+        let mut objects = Out::default();
+        let extent = {
+            let mut w = Writer {
+                out: &mut objects,
+                blocks: &mut blocks,
+                records: &mut records,
+                values: &no_values,
+                decimals: input.length_decimals,
+                grads: input.grads,
+                handles: &mut handles,
+                layers: &layers,
+                report: &mut report,
+                extent: None,
+                points: false,
+                owner: record,
+                defining: true,
+                names: &names,
+                defined: &defined,
+            };
+            for e in &def.entities {
+                w.entity(e);
+            }
+            points |= w.points;
+            w.extent
+        };
+        blocks::block(
+            &mut blocks,
+            &mut handles,
+            &mut report,
+            (record, name),
+            def,
+            &objects,
+        );
+        records.push((record, name.clone()));
+        defined.insert(
+            def.id,
+            Written {
+                base: def.base,
+                extent,
+            },
+        );
+    }
+    let extent = {
         let mut w = Writer {
             out: &mut body,
             blocks: &mut blocks,
@@ -264,11 +323,16 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
             report: &mut report,
             extent: None,
             points: false,
+            owner: MODEL_SPACE,
+            defining: false,
+            names: &names,
+            defined: &defined,
         };
         for e in &input.entities {
             w.entity(e);
         }
-        (w.extent, w.points)
+        points |= w.points;
+        w.extent
     };
     let mut tables = Out::default();
     tables.section("TABLES");

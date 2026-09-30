@@ -56,7 +56,9 @@ pub struct Applied {
 
 /// The blocks an import brings (docs/adr/0144 §5), ready to go in: each a
 /// new id and a name the drawing does not have yet (`blocks::import_names`),
-/// the inserts among their objects pointing at the new ids.
+/// the inserts among their objects pointing at the new ids, and each object
+/// on the drawing layer its source layer goes to, else on none of its own
+/// (`""`, the block's: Patlat puts it on the insert's layer).
 #[derive(Debug, Default)]
 pub struct ImportedBlocks {
     defs: Vec<BlockDefinition>,
@@ -65,7 +67,11 @@ pub struct ImportedBlocks {
 }
 
 impl ImportedBlocks {
-    pub fn new(doc: &Document, blocks: Vec<BlockDefinition>) -> Self {
+    pub fn new(
+        doc: &Document,
+        blocks: Vec<BlockDefinition>,
+        targets: &HashMap<String, String>,
+    ) -> Self {
         let names = import_names(
             doc.blocks().iter().map(|b| b.name.as_str()),
             blocks.iter().map(|b| b.name.as_str()),
@@ -85,6 +91,8 @@ impl ImportedBlocks {
                 b.id = ids[&b.id];
                 for e in &mut b.entities {
                     point_at(e, &ids);
+                    let base = e.base_mut();
+                    base.layer_id = targets.get(&base.layer_id).cloned().unwrap_or_default();
                 }
                 b
             })
@@ -320,7 +328,7 @@ pub fn apply_import(
     plan: &ImportPlan,
 ) -> Result<Applied, String> {
     let mut prepared = prepare(doc, plan)?;
-    let mut imported = ImportedBlocks::new(doc, blocks);
+    let mut imported = ImportedBlocks::new(doc, blocks, &prepared.targets);
     let count = imported.defs.len();
     let chosen: Vec<Entity> = entities
         .into_iter()
@@ -379,7 +387,7 @@ impl Progressive {
         plan: &ImportPlan,
     ) -> Result<Self, String> {
         let mut prepared = prepare(doc, plan)?;
-        let mut imported = ImportedBlocks::new(doc, blocks);
+        let mut imported = ImportedBlocks::new(doc, blocks, &prepared.targets);
         let count = imported.defs.len();
         let group = doc.begin_group(&plan.label);
         let made = doc.transact(&plan.label, |doc| {
@@ -827,7 +835,8 @@ mod tests {
 
     /// A reader's block: its id, name, one line and, when given, an insert of another.
     fn block(n: u8, name: &str, inner: Option<u8>) -> BlockDefinition {
-        let mut entities = vec![line("0")];
+        // On the block's layer (a DXF's 0), and on a source layer the import may not bring.
+        let mut entities = vec![line(""), line("DETAY")];
         if let Some(k) = inner {
             entities.push(insert("0", k));
         }
@@ -885,10 +894,17 @@ mod tests {
             panic!("an insert")
         };
         assert_eq!(placed.block, kapi);
-        let Entity::Insert(inner) = &doc.blocks()[2].entities[1] else {
+        let Entity::Insert(inner) = &doc.blocks()[2].entities[2] else {
             panic!("the nested insert")
         };
         assert_eq!(inner.block, no);
+        // The objects' layers: the block's stays none, an unbrought one none, a brought one the drawing's.
+        let layers: Vec<&str> = doc.blocks()[2]
+            .entities
+            .iter()
+            .map(|e| e.base().layer_id.as_str())
+            .collect();
+        assert_eq!(layers, ["", "", "a"]);
         // One step: undo takes the objects and the definitions.
         assert_eq!(doc.undo().as_deref(), Some("DXF: plan.dxf"));
         assert_eq!(doc.len(), 0);
@@ -979,7 +995,7 @@ mod tests {
         assert!(
             unusable_block(&[good, bad])
                 .expect("found")
-                .contains("(Blok 2 (“Bozuk”) › nesne 2 (point): sonlu olmayan bir sayı taşıyor)")
+                .contains("(Blok 2 (“Bozuk”) › nesne 3 (point): sonlu olmayan bir sayı taşıyor)")
         );
     }
 

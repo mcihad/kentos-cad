@@ -162,6 +162,8 @@ python3 scripts/fixtures/gis_reference.py --check   # GeoJSON/Shapefile fixture'
 python3 scripts/fonts/drawing_fonts.py --check   # masaüstünün çizim yazı tiplerini web'in WOFF2'lerinden denetle (ADR 0055)
 python3 scripts/fonts/ui_fonts.py --check   # KentOS UI'ın Noto Sans ve Roboto'sunu web'in WOFF2'lerinden denetle; --advance genişlik tahminlerini ölçer
 KENTOS_WRITE_GIS_EXPORTS=1 cargo test -p kentos-formats --test gis   # GeoJSON yazıcısının örnek çıktısını yeniden yaz; farkı okuyun
+KENTOS_WRITE_DXF=1 cargo test -p kentos-formats --test dxf_write   # DXF yazıcısının örnek çıktısını (fixtures/formats/v1/dxf-write) yeniden yaz; farkı okuyun
+python3 scripts/fixtures/dxf_write_reference.py --check   # DXF yazıcısının blok örneğini KentOS kodu olmadan denetle (ADR 0144)
 pnpm e2e:cloud           # gerçek API/PostGIS cloud akışı
 KENTOS_E2E_DB=scratch pnpm e2e:cloud   # aynı akış geçici veritabanında (bu yapının migration'ları), kentos_cad'e dokunmadan
 KENTOS_E2E_SERVER=…/target/debug node apps/web/scripts/e2e/cloud.mjs   # aynı akış başka bir yapının sunucusuyla (ADR 0038)
@@ -530,8 +532,8 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
 İşi devralan için kalınan yer; bir sonraki devirde bu bölümü yenileyin.
 
 - Sürmekte: blok ([ADR 0144](docs/adr/0144-blocks.md), TODOS.md `CAD-04`). 1–4. adımlar (sözleşme ve
-  şema 6, çekirdek, komutlar, araçlar ve arayüz) ve 5a (DXF okuma: bloklar tanım olarak, “Blokları
-  patlat”) iki platformda tamam. Sırada 5b DXF yazma (BLOCK, blok kaydı, INSERT; iç içe tanımlar önce),
+  şema 6, çekirdek, komutlar, araçlar ve arayüz), 5a (DXF okuma: bloklar tanım olarak, “Blokları
+  patlat”) ve 5b (DXF yazma: BLOCK, blok kaydı, INSERT) iki platformda tamam. Sırada
   5c GeoJSON (yerleştirme açılımının GeometryCollection'ıyla), 5d PostGIS (kaynak `cad_definition`,
   tanımlar tablosu, göç o adımda), 6 öznitelik tanımları (ATTDEF/ATTRIB; o adımda ATTRIB'in görünen
   yazısı ayrıca yazı olarak alınmayı bırakır). Ondan önce çok parçalı alan (ADR 0143, `CAD-14`) ve

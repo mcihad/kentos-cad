@@ -10,6 +10,7 @@ import { h, replaceChildren } from '../dom';
 import { colorSwatch } from '../layers/swatch';
 import { segmented } from '../widgets/controls';
 import { Dialog } from '../widgets/Dialog';
+import { placedBlocks } from '../../model/blocks';
 import { exportName, field, kindCounts, reportText, summaryLine } from './common';
 import { saveExport } from './save';
 import { SCOPE_LABEL, scopeEntities, type ExportScope } from './scope';
@@ -131,7 +132,7 @@ class DxfExportDialog {
         'tr',
         null,
         h('td', { class: 'io-table__line' }, box),
-        h('td', null, layer ? h('span', { class: 'swatch', style: `--swatch:${colorSwatch(layer.style.color, palette)}` }) : null, ' ', name),
+        h('td', { class: 'io-table__name' }, layer ? h('span', { class: 'swatch', style: `--swatch:${colorSwatch(layer.style.color, palette)}` }) : null, ' ', name),
         h('td', { class: 'num' }, String(all.get(id)?.length ?? 0)),
         h('td', { class: 'io-table__skip' }, state),
       );
@@ -150,6 +151,7 @@ class DxfExportDialog {
     for (const e of list) kinds.set(e.kind, (kinds.get(e.kind) ?? 0) + 1);
     const layers = [...chosen.keys()].map((id) => ctx.doc.layers.get(id)).filter((l) => !!l);
     const dimensions = kinds.get('dimension') ?? 0;
+    const inserts = kinds.get('insert') ?? 0;
     const islands = list.filter(hasIslands).length;
     const data = list.some((e) => e.label || e.symbol || Object.keys(e.attrs).length);
     const themed = layers.some((l) => THEMED.has(l.style.color)) || list.some((e) => e.color && THEMED.has(e.color));
@@ -164,6 +166,9 @@ class DxfExportDialog {
         ? summaryLine('ok', `${list.length} nesne ${chosen.size} katmanla yazılacak: ${kindCounts(kinds)}.`)
         : summaryLine('warn', 'Yazılacak nesne yok. Başka bir kapsam ya da en az bir katman seçin.'),
       dimensions ? summaryLine('info', `${dimensions} ölçü DXF ölçüsü olarak yazılır ve KentOS'taki gibi görünür; başka bir program ölçüyü düzenlerse kendi kurallarıyla yeniden çizer. KentOS'a ölçü olarak geri okunur.`) : null,
+      inserts
+        ? summaryLine('info', `${inserts} blok yerleştirmesi INSERT, yerleştirdikleri ${placedBlocks(ctx.doc.blocks.value, list)} blok içlerindekilerle birlikte BLOCK olarak yazılır; KentOS'a blok olarak geri okunur.`)
+        : null,
       islands ? summaryLine('info', `${islands} adalı alanın adaları ayrı kapalı çoklu çizgiler olarak yazılır; KentOS'a geri okununca yine adalı alan olur.`) : null,
       data ? summaryLine('info', 'Etiketler, öznitelikler ve semboller nesnelerle birlikte KentOS verisi olarak yazılır: başka programlar göstermez, KentOS geri okur.') : null,
       themed ? summaryLine('info', "Tema renkleri DXF'te sabit renk olur (ana mürekkep 7, ikincil 8); KentOS'a geri okununca yine tema rengidir.") : null,
@@ -204,6 +209,8 @@ class DxfExportDialog {
       lengthDecimals: settings.lengthDecimals.value,
       grads: settings.angleUnit.value === 'grad',
       dimensionValues,
+      // The writer takes those the objects place (docs/adr/0144 §5).
+      blocks: [...ctx.doc.blocks.value],
     };
     this.writing = true;
     this.primary.disabled = true;

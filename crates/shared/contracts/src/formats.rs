@@ -38,7 +38,9 @@ use crate::layer::LineType;
 ///    text, mirror a flag).
 /// 13: DXF blocks kept (docs/adr/0144 §5): `ImportResult.blocks`, the definitions an import's
 ///    inserts place, and `DxfReadOptions.explode_blocks` (Blokları patlat).
-pub const FORMATS_VERSION: u32 = 13;
+/// 14: DXF blocks written (docs/adr/0144 §5): `DxfWriteInput.blocks`, and the writers' objects
+///    take inserts.
+pub const FORMATS_VERSION: u32 = 14;
 
 // ── Every import ────────────────────────────────────────────────────────
 
@@ -426,6 +428,12 @@ pub struct DxfWriteInput {
     /// program that redraws it measures again.
     #[serde(default)]
     pub dimension_values: BTreeMap<u32, String>,
+    /// The drawing's block definitions (docs/adr/0144 §5): those the
+    /// objects' inserts place, and those nested in them, are written as
+    /// BLOCKs, inner ones first; the others are left out.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockDefinition>>", optional))]
+    pub blocks: Vec<BlockDefinition>,
 }
 
 /// What a writer did besides writing: counts, and anything it could not write as it was.

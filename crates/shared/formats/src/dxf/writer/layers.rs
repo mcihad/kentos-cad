@@ -23,7 +23,7 @@ const LINE_WEIGHTS: [i64; 24] = [
 ];
 
 /// Characters AutoCAD refuses in a symbol name.
-const REFUSED: &[char] = &[
+pub(super) const REFUSED: &[char] = &[
     '<', '>', '/', '\\', '"', ':', ';', '?', '*', '|', '=', '`', '\'',
 ];
 
@@ -75,7 +75,7 @@ pub(super) fn line_weight(mm: f64) -> (i64, bool) {
 }
 
 /// A name DXF accepts: refused and control characters as "_", no outer spaces, at most 255 characters.
-fn valid_name(name: &str) -> String {
+pub(super) fn valid_name(name: &str) -> String {
     let s: String = name
         .trim()
         .chars()
@@ -95,7 +95,7 @@ fn valid_name(name: &str) -> String {
     }
 }
 
-fn key(name: &str) -> String {
+pub(super) fn key(name: &str) -> String {
     name.to_uppercase()
 }
 

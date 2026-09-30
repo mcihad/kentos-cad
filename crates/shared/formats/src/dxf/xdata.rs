@@ -17,6 +17,7 @@
 //! 1002 {  1000 curve    1070 <0|1>               1002 }   a SPLINE through its fit points is KentOS's curve (1: closed)
 //! 1002 {  1000 arc      1040 <a0> 1040 <a1>      1002 }   the arc's angles in radians, exactly
 //! 1002 {  1000 pattern  1040 <angle> 1040 <gap>  1002 }   the hatch's angle and spacing, exactly
+//! 1002 {  1000 turn     1040 <radians>         1002 }   an INSERT's turn, exactly (docs/adr/0144 §5)
 //! 1002 {  1000 z                                 1002 }   the object's elevations are data, even when all 0 (a point's, a line's, a path's)
 //! 1002 {  1000 noz      <hex string>             1002 }   the vertices with no elevation, while the others have one: a bit each (docs/adr/0142)
 //! 1002 {  1000 dimension <style> 1040 <offset> 1040 <height>
@@ -62,6 +63,8 @@ pub struct Meta {
     pub arc: Option<(f64, f64)>,
     /// Hatch angle (degrees) and spacing.
     pub pattern: Option<(f64, f64)>,
+    /// An insert's turn in radians (its 50 holds degrees).
+    pub turn: Option<f64>,
     /// The object's elevations are data even when they are all 0: a DXF
     /// point, line or 3D polyline with nothing but zeros has none, unless told.
     pub z: bool,
@@ -217,6 +220,9 @@ pub fn groups(meta: &Meta) -> Vec<(i32, String)> {
             o.push((1040, dxf_real(angle)));
             o.push((1040, dxf_real(spacing)));
         });
+    }
+    if let Some(turn) = meta.turn {
+        item("turn", &mut out, |o| o.push((1040, dxf_real(turn))));
     }
     if meta.z {
         item("z", &mut out, |_| {});
@@ -423,6 +429,7 @@ pub fn read(groups: &[(i32, String)]) -> Option<Meta> {
                     m.pattern = Some((x, y));
                 }
             }
+            "turn" => m.turn = real(a).or(m.turn),
             "z" => m.z = true,
             "noz" => m.no_z = text(a).map(|t| mask_decode(&t)).unwrap_or_default(),
             "dimension" => m.dimension = dimension(&values).or(m.dimension),
@@ -478,6 +485,7 @@ mod tests {
             curve: Some(true),
             arc: Some((0.1 + 0.2, -1.0 / 3.0)),
             pattern: Some((45.0, 2.5e-3)),
+            turn: Some(0.1),
             z: true,
             no_z: vec![0, 3, 4, 9, 4001],
             dimension: Some(DimMeta {

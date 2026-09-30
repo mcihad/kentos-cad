@@ -194,6 +194,43 @@ fn a_dxf_export_writes_what_the_reader_reads_back() {
     );
 }
 
+/// A DXF's blocks go out as they came in (docs/adr/0144 §5): imported, the
+/// drawing written as a DXF, and that file imported again gives the same
+/// definitions and inserts; the window said how the blocks are written.
+#[test]
+fn a_dxfs_blocks_go_out_to_dxf_as_blocks() {
+    let mut app = app_with_drawing();
+    app.picker = Picker::File(fixture("blocks.dxf"));
+    run(&mut app, "file.import.dxf");
+    send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
+    let had = blocks_of(&app).len();
+    assert_eq!(inserts(&app), 2);
+    let dir = scratch("export-dxf-blocks");
+    let path = dir.join("bloklar.dxf");
+    app.picker = Picker::File(path.clone());
+    run(&mut app, "file.export.dxf");
+    send(
+        &mut app,
+        Event::DxfExport(dxf_export::Event::Scope(dxf_export::Scope::All)),
+    );
+    send(&mut app, Event::DxfExport(dxf_export::Event::Run));
+    assert!(said(&app, "“bloklar.dxf” yazıldı:"), "{}", last_said(&app));
+    let back = kentos_formats::dxf::read(&std::fs::read(&path).expect("written"), &Default::default())
+        .expect("reads");
+    // The blocks the inserts place, in the order the objects place them, each after the ones it
+    // holds (NO is inside KAPI); DAIRE, which nothing places, stays out.
+    let names: Vec<&str> = back.blocks.iter().map(|b| b.name.as_str()).collect();
+    assert_eq!(names, ["KENDI", "NO", "KAPI"]);
+    let placed = back
+        .entities
+        .iter()
+        .filter(|e| matches!(e, Entity::Insert(_)))
+        .count();
+    assert_eq!(placed, 2);
+    assert_eq!(had, 4, "DAIRE came in though nothing places it; it does not go out");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
 #[test]
 fn a_coordinate_list_export_writes_every_point_exactly() {
     let mut app = app_with_drawing();
@@ -303,6 +340,18 @@ fn screens() {
             picture(&mut app, &format!("aktar-{mode}-7-dxf-bloklar"));
             send(&mut app, Event::DrawingImport(drawing_import::Event::Explode));
             picture(&mut app, &format!("aktar-{mode}-8-dxf-bloklari-patlat"));
+
+            // The drawing with the file's blocks going out to DXF: the window says how they are written.
+            let mut app = fresh();
+            app.picker = Picker::File(fixture("blocks.dxf"));
+            run(&mut app, "file.import.dxf");
+            send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
+            run(&mut app, "file.export.dxf");
+            send(
+                &mut app,
+                Event::DxfExport(dxf_export::Event::Scope(dxf_export::Scope::All)),
+            );
+            picture(&mut app, &format!("aktar-{mode}-9-dxf-ver-bloklar"));
         }
     }
 }

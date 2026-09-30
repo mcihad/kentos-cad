@@ -1942,6 +1942,17 @@ SCENES.blocks = [
       await ui.sleep(400);
     },
   },
+  // In, then DXF dışa aktar over the whole drawing: the summary says how the inserts and their blocks are written.
+  {
+    id: 'export-dxf-blocks',
+    open: async (ui) => {
+      await dxfBlocksIn(ui);
+      await ui.eval(`window.kentos.commands.execute('file.export.dxf')`);
+      await ui.waitFor(`!!document.querySelector('.dialog--io .io-summary')`, 15000);
+      await ui.clickText('.dialog--io .seg__opt', 'Tümü');
+      await ui.sleep(400);
+    },
+  },
   // In: the drawing shows the inserts, the Bloklar panel the four definitions and the message log what went in.
   {
     id: 'import-dxf-blocks-done',

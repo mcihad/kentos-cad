@@ -1,0 +1,51 @@
+{
+  "entities": [
+    { "kind": "insert", "id": 1, "layerId": "yapi", "attrs": { "No": "7", "Tür": "LED" }, "color": "#E5484D", "block": "018f3a2b-0000-7000-8000-000000000001", "p": { "x": 452355.123, "y": 4412365.678 }, "scale": 2.5, "rotation": 0.1, "mirror": true },
+    { "kind": "insert", "id": 2, "layerId": "parsel", "attrs": {}, "block": "018f3a2b-0000-7000-8000-000000000001", "p": { "x": 452375.123, "y": 4412365.678 }, "scale": 1, "rotation": 0 },
+    { "kind": "insert", "id": 3, "layerId": "parsel", "attrs": {}, "block": "018f3a2b-0000-7000-8000-000000000004", "p": { "x": 452395.123, "y": 4412365.678 }, "scale": 0.5, "rotation": 4.71238898038469 },
+    { "kind": "insert", "id": 4, "layerId": "parsel", "attrs": {}, "block": "018f3a2b-0000-7000-8000-000000000009", "p": { "x": 452405.123, "y": 4412365.678 }, "scale": 1, "rotation": 0 },
+    { "kind": "line", "id": 5, "layerId": "parsel", "attrs": {}, "a": { "x": 452345.123, "y": 4412345.678 }, "b": { "x": 452415.123, "y": 4412345.678 } }
+  ],
+  "layers": [
+    { "id": "parsel", "name": "Parsel sınırı", "path": ["Kadastro"], "color": "fg-dim", "visible": true, "locked": false, "lineType": "continuous", "lineWeight": 0.18 },
+    { "id": "yapi", "name": "Yapı", "path": ["Kadastro"], "color": "#7FB2E5", "visible": true, "locked": false, "lineType": "continuous", "lineWeight": 0.25 }
+  ],
+  "scale": 1000,
+  "lengthDecimals": 3,
+  "grads": true,
+  "dimensionValues": {},
+  "blocks": [
+    {
+      "id": "018f3a2b-0000-7000-8000-000000000001",
+      "name": "Direk",
+      "base": { "x": 1, "y": 2 },
+      "description": "Aydınlatma direği\nçift kollu",
+      "entities": [
+        { "kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": { "x": 1, "y": 2 }, "b": { "x": 1, "y": 8 } },
+        { "kind": "polygon", "id": 2, "layerId": "", "attrs": {}, "pts": [{ "x": 0, "y": 1 }, { "x": 2, "y": 1 }, { "x": 2, "y": 3 }, { "x": 0, "y": 3 }], "holes": [{ "pts": [{ "x": 0.5, "y": 1.5 }, { "x": 1.5, "y": 1.5 }, { "x": 1.5, "y": 2.5 }] }] },
+        { "kind": "insert", "id": 3, "layerId": "", "attrs": {}, "block": "018f3a2b-0000-7000-8000-000000000002", "p": { "x": 1, "y": 8 }, "scale": 1, "rotation": 1.5707963267948966 }
+      ]
+    },
+    {
+      "id": "018f3a2b-0000-7000-8000-000000000002",
+      "name": "Lamba",
+      "base": { "x": 0, "y": 0 },
+      "entities": [
+        { "kind": "circle", "id": 1, "layerId": "", "attrs": {}, "color": "#F5D90A", "c": { "x": 0, "y": 0 }, "r": 0.4 },
+        { "kind": "line", "id": 2, "layerId": "yapi", "attrs": {}, "lineWeight": 0.35, "a": { "x": -0.5, "y": 0 }, "b": { "x": 0.5, "y": 0 } }
+      ]
+    },
+    {
+      "id": "018f3a2b-0000-7000-8000-000000000003",
+      "name": "Kullanılmayan",
+      "base": { "x": 0, "y": 0 },
+      "entities": [{ "kind": "point", "id": 1, "layerId": "", "attrs": {}, "p": { "x": 0, "y": 0 } }]
+    },
+    {
+      "id": "018f3a2b-0000-7000-8000-000000000004",
+      "name": "Ağaç/Çınar",
+      "base": { "x": 0, "y": 0 },
+      "entities": [{ "kind": "circle", "id": 1, "layerId": "", "attrs": {}, "c": { "x": 0, "y": 0 }, "r": 3 }]
+    }
+  ]
+}

@@ -163,6 +163,67 @@ describe.skipIf(!loader)('DXF WASM module', () => {
     expect(back.report.skipped).toEqual([]);
   });
 
+  // The web's drawing as it goes to the worker (docs/adr/0144 §5): its blocks with the objects, an insert placing
+  // one that holds another; written as BLOCKs and INSERTs, and read back as the same blocks and inserts.
+  it('writes the blocks the objects place as blocks, and reads them back', async () => {
+    const w = await load();
+    const LAMBA = '018f3a2b-0000-7000-8000-000000000002';
+    const DIREK = '018f3a2b-0000-7000-8000-000000000001';
+    const input: DxfWriteInput = {
+      entities: [
+        { kind: 'insert', id: 1, layerId: 'a', attrs: { No: '7' }, block: DIREK, p: { x: 452345.5, y: 4412345.25 }, scale: 2.5, rotation: 0.1, mirror: true },
+        { kind: 'line', id: 2, layerId: 'a', attrs: {}, a: { x: 452340, y: 4412340 }, b: { x: 452350, y: 4412340 } },
+      ],
+      layers: [{ id: 'a', name: 'Aydınlatma', path: [], color: 'ink', visible: true, locked: false, lineType: 'continuous', lineWeight: 0.25 }],
+      scale: 1000,
+      lengthDecimals: 3,
+      grads: true,
+      dimensionValues: {},
+      blocks: [
+        {
+          id: DIREK,
+          name: 'Direk',
+          base: { x: 1, y: 2 },
+          entities: [
+            { kind: 'line', id: 1, layerId: '', attrs: {}, a: { x: 1, y: 2 }, b: { x: 1, y: 8 } },
+            { kind: 'insert', id: 2, layerId: '', attrs: {}, block: LAMBA, p: { x: 1, y: 8 }, scale: 1, rotation: Math.PI / 2 },
+          ],
+        },
+        { id: LAMBA, name: 'Lamba', base: { x: 0, y: 0 }, entities: [{ kind: 'circle', id: 1, layerId: '', attrs: {}, color: '#F5D90A', c: { x: 0, y: 0 }, r: 0.4 }] },
+      ],
+    };
+    const out = w.writeDxf(JSON.stringify(input));
+    const bytes = out.takeBytes();
+    const report = JSON.parse(out.report) as ExportReport;
+    out.free();
+    expect(report.counts).toEqual({ insert: 1, line: 1 });
+    expect(report.skipped).toEqual([]);
+    const back = imported(w.readDxf(bytes, JSON.stringify({ maxEntities: 0 }), quiet));
+    expect(back.blocks?.map((b) => [b.name, b.base, b.entities.map((e) => e.kind)])).toEqual([
+      ['Lamba', { x: 0, y: 0 }, ['circle']],
+      ['Direk', { x: 1, y: 2 }, ['line', 'insert']],
+    ]);
+    const insert = back.entities.find((e) => e.kind === 'insert');
+    expect(insert?.kind === 'insert' && [insert.block, insert.p, insert.scale, insert.rotation, insert.mirror, insert.attrs, insert.layerId]).toEqual([
+      back.blocks?.[1].id,
+      { x: 452345.5, y: 4412345.25 },
+      2.5,
+      0.1,
+      true,
+      { No: '7' },
+      'Aydınlatma',
+    ]);
+  });
+
+  // Both platforms write the same bytes (crates/shared/formats/tests/dxf_write.rs; scripts/fixtures/dxf_write_reference.py checks them).
+  it('writes the blocks fixture to its committed bytes, as the native writer does', async () => {
+    const w = await load();
+    const out = w.writeDxf(new TextDecoder().decode(fixture('dxf-write/blocks.input.json')));
+    const bytes = out.takeBytes();
+    out.free();
+    expect(new TextDecoder().decode(bytes)).toBe(new TextDecoder().decode(fixture('dxf-write/blocks.dxf')));
+  });
+
   it('says how far a read is, to its end', async () => {
     const w = await load();
     const heard: [number, number][] = [];

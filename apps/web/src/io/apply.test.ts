@@ -105,12 +105,15 @@ describe('applyImport', () => {
 /** A block id as the reader numbers them (1, 2, …). */
 const readerId = (n: number) => `00000000-0000-0000-0000-${n.toString(16).padStart(12, '0')}`;
 const insert = (layerId: string, n: number): ContractEntity => ({ kind: 'insert', id: 0, layerId, attrs: {}, block: readerId(n), p: { x: 5, y: 5 }, scale: 1, rotation: 0 });
-/** A reader's block: one line and, when given, an insert of another; its objects numbered as the reader numbers them. */
+/**
+ * A reader's block: a line on the block's layer (a DXF's 0), one on a source layer the import may not bring
+ * and, when given, an insert of another; its objects numbered as the reader numbers them.
+ */
 const block = (n: number, name: string, inner?: number): ContractBlock => ({
   id: readerId(n),
   name,
   base: { x: 0, y: 0 },
-  entities: [line('0'), ...(inner ? [insert('0', inner)] : [])].map((e, k) => ({ ...e, id: k + 1 })),
+  entities: [line(''), line('DETAY'), ...(inner ? [insert('0', inner)] : [])].map((e, k) => ({ ...e, id: k + 1 })),
 });
 const onto = { label: 'DXF: plan.dxf', layers: new Map<string, LayerTarget>([['0', { kind: 'existing', id: 'a' }]]) };
 
@@ -128,8 +131,10 @@ describe('applyImport with blocks', () => {
     expect([no.id, kapi.id]).not.toContain(readerId(1));
     const placed = doc.get(r.ids[0]);
     expect(placed?.kind === 'insert' && placed.block).toBe(kapi.id);
-    const inner = kapi.entities[1];
+    const inner = kapi.entities[2];
     expect(inner.kind === 'insert' && inner.block).toBe(no.id);
+    // The objects' layers: the block's stays none, an unbrought one none, a brought one the drawing's.
+    expect(kapi.entities.map((e) => e.layerId)).toEqual(['', '', 'a']);
     // One step: undo takes the objects and the definitions.
     expect(doc.undo()).toBe('DXF: plan.dxf');
     expect(doc.size).toBe(0);

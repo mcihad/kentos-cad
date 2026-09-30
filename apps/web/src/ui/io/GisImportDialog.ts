@@ -202,7 +202,7 @@ class GisImportDialog {
         'tr',
         { dataset: t.locked ? { error: '' } : undefined },
         h('td', { class: 'io-table__line' }, box),
-        h('td', null, h('span', { class: 'swatch', style: `--swatch:${colorSwatch(l.color, palette)}` }), ' ', l.name),
+        h('td', { class: 'io-table__name' }, h('span', { class: 'swatch', style: `--swatch:${colorSwatch(l.color, palette)}` }), ' ', l.name),
         h('td', { class: 'num' }, String(l.count)),
         h('td', { class: 'io-table__skip' }, where),
       );

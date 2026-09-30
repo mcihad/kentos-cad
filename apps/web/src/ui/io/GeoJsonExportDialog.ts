@@ -127,7 +127,7 @@ class GeoJsonExportDialog {
         'tr',
         null,
         h('td', { class: 'io-table__line' }, box),
-        h('td', null, layer ? h('span', { class: 'swatch', style: `--swatch:${colorSwatch(layer.style.color, palette)}` }) : null, ' ', name),
+        h('td', { class: 'io-table__name' }, layer ? h('span', { class: 'swatch', style: `--swatch:${colorSwatch(layer.style.color, palette)}` }) : null, ' ', name),
         h('td', { class: 'num' }, String(all.get(id)?.length ?? 0)),
         h('td', { class: 'io-table__skip' }, layer ? `kentos.layer: “${layer.name}”` : 'katmansız'),
       );

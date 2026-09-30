@@ -314,11 +314,12 @@ fn blocks_are_kept_as_definitions_and_inserts_place_them() {
             c.base.layer_id.as_str(),
             c.base.id
         ),
-        (v(1.0, 1.0), 0.5, None, "0", 1)
+        (v(1.0, 1.0), 0.5, None, "", 1)
     );
+    // On 0: the block's layer (none of its own); on DETAY: named, for Patlat.
     assert_eq!(
         (l.a, l.b, l.base.layer_id.as_str(), l.base.id),
-        (v(1.0, 1.0), v(2.0, 1.0), "0", 2)
+        (v(1.0, 1.0), v(2.0, 1.0), "DETAY", 2)
     );
     let [Entity::Insert(inner), Entity::Point(pt)] = r.blocks[1].entities.as_slice() else {
         panic!("{:?}", r.blocks[1].entities)

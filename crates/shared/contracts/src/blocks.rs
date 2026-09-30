@@ -18,7 +18,7 @@
 //! fixtures (fixtures/document-ops/v1/blocks.json) hold the two together.
 
 use std::borrow::Borrow;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::entity::{BlockDefinition, Entity, MAX_BLOCK_DEPTH};
 use crate::identity::BlockId;
@@ -229,6 +229,31 @@ pub fn placements<'a, B: Borrow<BlockDefinition>>(
         }
     }
     out
+}
+
+/// How many definitions these objects place, with those nested in them: the
+/// blocks a DXF export writes (docs/adr/0144 §5). An insert of a block the
+/// list does not have places none.
+pub fn placed_blocks<'a, B: Borrow<BlockDefinition>>(
+    blocks: &[B],
+    objects: impl IntoIterator<Item = &'a Entity>,
+) -> usize {
+    let by_id: HashMap<BlockId, &BlockDefinition> =
+        blocks.iter().map(|b| (b.borrow().id, b.borrow())).collect();
+    let inserts = |e: &Entity| match e {
+        Entity::Insert(i) => Some(i.block),
+        _ => None,
+    };
+    let mut seen: HashSet<BlockId> = HashSet::new();
+    let mut open: Vec<BlockId> = objects.into_iter().filter_map(inserts).collect();
+    while let Some(id) = open.pop() {
+        if let Some(b) = by_id.get(&id)
+            && seen.insert(id)
+        {
+            open.extend(b.entities.iter().filter_map(inserts));
+        }
+    }
+    seen.len()
 }
 
 /// A drawing's blocks and its own objects checked whole.
@@ -495,6 +520,10 @@ mod tests {
         );
         let used: Vec<bool> = found.iter().map(|p| p.used()).collect();
         assert_eq!(used, [true, true, true, false]);
+        // What a DXF export of these objects writes: C, the B in it and the A in that; A alone; nothing for 9.
+        assert_eq!(placed_blocks(&blocks, &drawing), 3);
+        assert_eq!(placed_blocks(&blocks, &drawing[..1]), 1);
+        assert_eq!(placed_blocks(&blocks, &drawing[3..]), 0);
     }
 
     #[test]

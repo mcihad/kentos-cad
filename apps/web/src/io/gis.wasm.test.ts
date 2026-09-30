@@ -141,6 +141,25 @@ describe.skipIf(!loader)('GIS files in the formats WASM module (docs/adr/0046)',
     }
   });
 
+  // Until blocks' GeoJSON step (docs/adr/0144 §5) an insert is read, said and left out; it once failed the whole export.
+  it('says an insert is left out instead of refusing the export', async () => {
+    const w = await load();
+    const input = {
+      name: 'bloklu',
+      srid: 5256,
+      layers: [{ id: 'a', name: 'A' }],
+      entities: [
+        { kind: 'point', id: 1, layerId: 'a', attrs: {}, p: { x: 1, y: 2 } },
+        { kind: 'insert', id: 2, layerId: 'a', attrs: {}, block: '018f3a2b-0000-7000-8000-000000000001', p: { x: 5, y: 5 }, scale: 1, rotation: 0 },
+      ],
+    };
+    const out = w.writeGeoJson(JSON.stringify(input));
+    const report = JSON.parse(out.report) as ExportReport;
+    out.free();
+    expect(report.counts).toEqual({ point: 1 });
+    expect(report.skipped.map((s) => s.what)).toEqual(['Blok']);
+  });
+
   it('refuses what is not GeoJSON or not a Shapefile, with the reason', async () => {
     const w = await load();
     expect(() => w.readGeoJson(new TextEncoder().encode('{"type":"Topology"}'), JSON.stringify({ layer: 'x', maxEntities: 0 }))).toThrow(/Topology/);

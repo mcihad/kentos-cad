@@ -121,7 +121,7 @@ describe('ProgressiveImport', () => {
 
   it('adds a large import’s blocks when it starts, inside its one step; Durdur takes them back (docs/adr/0144 §5)', () => {
     const NO = '00000000-0000-0000-0000-000000000001';
-    const no = [{ id: NO, name: 'No', base: { x: 0, y: 0 }, entities: [{ kind: 'line' as const, id: 1, layerId: '0', attrs: {}, a: { x: 0, y: 0 }, b: { x: 1, y: 0 } }] }];
+    const no = [{ id: NO, name: 'No', base: { x: 0, y: 0 }, entities: [{ kind: 'line' as const, id: 1, layerId: '', attrs: {}, a: { x: 0, y: 0 }, b: { x: 1, y: 0 } }] }];
     const placed = (i: number): PageEntity => ({ kind: 'insert', id: 0, uid: ZERO, layerId: 'PARSEL', attrs: {}, block: NO, p: { x: i, y: 0 }, scale: 1, rotation: 0 });
     const doc = makeDoc();
     const work = ProgressiveImport.start(doc, imported(3, [placed(1), placed(2)], no), plan([['PARSEL', { kind: 'existing', id: 'a' }]]));

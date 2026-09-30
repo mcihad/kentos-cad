@@ -16,12 +16,17 @@
 //!   vertex (a LWPOLYLINE holds a single elevation); a line's are the Z of
 //!   its LINE. A vertex with no elevation is written as 0 and KentOS's data
 //!   says so, so a KentOS import gets the same drawing back.
+//!
+//! An insert is an INSERT of its block (docs/adr/0144 §5, `blocks.rs`); a
+//! definition's objects are written by a writer of their own, into their
+//! block.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 
+use kentos_contracts::blocks::turn_of;
 use kentos_contracts::{
-    Bounds, DimensionEntity, Entity, EntityBase, HatchEntity, HatchPatternType, PathEntity,
-    SplineEntity, TextEntity, Vec2,
+    BlockId, Bounds, DimensionEntity, Entity, EntityBase, HatchEntity, HatchPatternType,
+    InsertEntity, PathEntity, SplineEntity, TextEntity, Vec2,
 };
 use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::geom::intersect::Edge;
@@ -30,8 +35,8 @@ use kentos_geometry_core::geom::spline::catmull_rom_beziers;
 use super::super::aci;
 use super::super::dimension::{self as dim, Definition};
 use super::super::xdata::{self, DimMeta, Meta};
+use super::blocks::{self, Written};
 use super::layers::Layers;
-use super::template::MODEL_SPACE;
 use super::{Handles, Out};
 use crate::geom::{has_arcs, v};
 use crate::gis::Zs;
@@ -182,9 +187,19 @@ pub(super) struct Writer<'a> {
     pub handles: &'a mut Handles,
     pub layers: &'a Layers,
     pub report: &'a mut Report,
-    /// Extent of what was written (for the header and the opening view).
+    /// Extent of what was written (for the header and the opening view; a
+    /// definition's in its own coordinates).
     pub extent: Option<Bounds>,
     pub points: bool,
+    /// The block record the objects belong to: model space, or a definition's.
+    pub owner: u64,
+    /// A definition's objects are written (docs/adr/0144 §5): one without a
+    /// layer of its own on 0, BYBLOCK where it has no colour or weight of
+    /// its own; not counted (the drawing's objects are).
+    pub defining: bool,
+    /// The blocks' DXF names, and the definitions written so far.
+    pub names: &'a HashMap<BlockId, String>,
+    pub defined: &'a HashMap<BlockId, Written>,
 }
 
 impl Writer<'_> {
@@ -211,11 +226,13 @@ impl Writer<'_> {
         let h = self.handles.take();
         self.out.str(0, kind);
         self.out.handle(5, h);
-        self.out.handle(330, MODEL_SPACE);
+        self.out.handle(330, self.owner);
         self.out.str(100, "AcDbEntity");
         let layers = self.layers;
         let layer = match layers.name_of(&base.layer_id) {
             Some(name) => name,
+            // A definition's object without a layer of its own (or one not written) floats on 0.
+            None if self.defining => "0",
             None => {
                 self.report.note(
                     "Katman",
@@ -235,6 +252,12 @@ impl Writer<'_> {
             if let Some(rgb) = dc.rgb {
                 self.out.int(420, rgb);
             }
+        } else if self.defining {
+            // BYBLOCK: the insert's colour, as KentOS draws a block's object without one.
+            self.out.int(62, 0);
+        }
+        if self.defining && base.line_weight.is_none() {
+            self.out.int(370, -2);
         }
         // Its own line weight as the nearest one DXF has; the exact one goes in KentOS's data.
         if let Some(w) = base.line_weight {
@@ -390,19 +413,69 @@ impl Writer<'_> {
             Entity::Text(t) => self.text(t, &t.base, Self::base_meta(&t.base)),
             Entity::Dimension(d) => self.dimension(d),
             Entity::Hatch(h) => self.hatch(h),
-            // BLOCK and INSERT come with blocks' DXF step (docs/adr/0144 §5); until then said, not written.
-            Entity::Insert(_) => {
-                self.report.skip(
-                    kind_label(e),
-                    "blok yerleştirmesi DXF'e henüz blok olarak yazılamıyor; yazılmadı",
-                    0,
-                );
-                false
-            }
+            Entity::Insert(i) => self.insert(i),
         };
-        if written {
+        if written && !self.defining {
             self.report.count(e.kind());
         }
+    }
+
+    /// An INSERT (docs/adr/0144 §5): its block's name, its point, its scale
+    /// in X, Y (−Y when mirrored: the definition's x axis) and Z, its turn in
+    /// degrees (the exact radians in KentOS's data when degrees lose a bit).
+    /// Its extent is its block's, placed.
+    fn insert(&mut self, i: &InsertEntity) -> bool {
+        let (names, defined) = (self.names, self.defined);
+        let Some(name) = names.get(&i.block) else {
+            self.report.skip(
+                "Blok",
+                "bloğunun tanımı dışa aktarılanlarda yok; yazılmadı",
+                0,
+            );
+            return false;
+        };
+        // Only a block that holds itself (through others) is not written before its inserts.
+        let Some(block) = defined.get(&i.block) else {
+            self.report.skip(
+                "Blok",
+                &format!("“{name}” bloğu kendini içeriyor; o yerleştirme yazılmadı"),
+                0,
+            );
+            return false;
+        };
+        if !(i.scale > 0.0) {
+            self.report
+                .skip("Blok", "ölçeği sıfır ya da negatif; yazılmadı", 0);
+            return false;
+        }
+        self.begin("INSERT", &i.base);
+        self.out.str(100, "AcDbBlockReference");
+        self.out.str(2, name);
+        self.out.xyz(10, i.p);
+        self.out.real(41, i.scale);
+        self.out.real(42, if i.mirror { -i.scale } else { i.scale });
+        self.out.real(43, i.scale);
+        let degrees = deg(i.rotation);
+        self.out.real(50, degrees);
+        let mut m = Self::base_meta(&i.base);
+        if turn_of(degrees) != i.rotation {
+            m.turn = Some(i.rotation);
+        }
+        match block.extent {
+            Some(b) => {
+                for (x, y) in [
+                    (b.min_x, b.min_y),
+                    (b.max_x, b.min_y),
+                    (b.max_x, b.max_y),
+                    (b.min_x, b.max_y),
+                ] {
+                    self.grow(blocks::placed(i, block.base, v(x, y)));
+                }
+            }
+            None => self.grow(i.p),
+        }
+        self.end(m);
+        true
     }
 
     /// An ARC (angles in degrees as DXF has them; the exact radians in the extended data when degrees lose a bit).
@@ -502,7 +575,7 @@ impl Writer<'_> {
         let h = self.handles.take();
         self.out.str(0, kind);
         self.out.handle(5, h);
-        self.out.handle(330, MODEL_SPACE);
+        self.out.handle(330, self.owner);
         self.out.str(100, "AcDbEntity");
         self.out.str(8, layer);
     }
@@ -785,6 +858,14 @@ impl Writer<'_> {
         let def = dim::definition(d, &l);
         let own = d.text.clone().filter(|t| !t.is_empty());
         let shown = own.clone().or_else(|| self.values.get(&d.base.id).cloned());
+        if shown.is_none() && self.defining {
+            // The app's values are the drawing's dimensions' (by id); a block's are in its own ids.
+            self.report.note(
+                "Ölçü",
+                "blok içindeki ölçünün değeri bloğunda yazılmadı; başka programlar ölçüyü yeniden çizince ölçer, KentOS kendi ölçüsünü geri okur",
+                0,
+            );
+        }
         let middle = dim::text_middle(&l, d.height);
 
         // The block: the drawing on layer 0 in the dimension's colour (BYBLOCK), as AutoCAD writes it.

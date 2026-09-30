@@ -99,7 +99,7 @@ export class ProgressiveImport {
   static start(doc: CadDocument, d: ImportedDrawing, plan: ImportPlan): ProgressiveImport | { error: string } {
     const prepared = prepareImport(doc, plan);
     if ('error' in prepared) return prepared;
-    const blocks = importedBlocks(doc, d.result.blocks);
+    const blocks = importedBlocks(doc, d.result.blocks, prepared.targets);
     if ('error' in blocks) return blocks;
     try {
       return new ProgressiveImport(doc, d, plan, prepared, blocks);

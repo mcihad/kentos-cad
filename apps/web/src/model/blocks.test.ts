@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { blocksFault, blockFaultMessage, checkDefinitions, checkNesting, freeBlockName, importNames, nameKey, nameOk, placed, placements, trimName, turnOf, type BlockDefinition } from './blocks';
+import { blocksFault, blockFaultMessage, checkDefinitions, checkNesting, freeBlockName, importNames, nameKey, nameOk, placed, placedBlocks, placements, trimName, turnOf, type BlockDefinition } from './blocks';
 import type { Entity } from './entities';
 
 /**
@@ -57,6 +57,9 @@ describe('block rules (docs/adr/0144)', () => {
       { drawing: 0, nested: 0 },
     ]);
     expect(found.map(placed)).toEqual([true, true, true, false]);
+    // What a DXF export of these objects writes: C, the B in it and the A in that; A alone; nothing for 9.
+    const drawing = [insert(1), insert(3), insert(1, 2), insert(9)];
+    expect([placedBlocks(blocks, drawing), placedBlocks(blocks, drawing.slice(0, 1)), placedBlocks(blocks, drawing.slice(3))]).toEqual([3, 1, 0]);
   });
 
   it('keep ids and tags once', () => {

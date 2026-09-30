@@ -173,6 +173,25 @@ export function placements(blocks: readonly BlockDefinition[], drawing: Iterable
   return out;
 }
 
+/**
+ * How many definitions these objects place, with those nested in them: the
+ * blocks a DXF export writes (docs/adr/0144 §5; contracts `placed_blocks`).
+ * An insert of a block the list does not have places none.
+ */
+export function placedBlocks(blocks: readonly BlockDefinition[], objects: Iterable<Entity>): number {
+  const byId = new Map(blocks.map((b) => [b.id, b]));
+  const seen = new Set<string>();
+  const open: string[] = [];
+  for (const e of objects) if (e.kind === 'insert') open.push(e.block);
+  for (let id = open.pop(); id !== undefined; id = open.pop()) {
+    const b = byId.get(id);
+    if (!b || seen.has(id)) continue;
+    seen.add(id);
+    for (const e of b.entities) if (e.kind === 'insert') open.push(e.block);
+  }
+  return seen.size;
+}
+
 /** Whether an insert places it anywhere. */
 export const placed = (p: Placements): boolean => p.drawing + p.nested > 0;
 

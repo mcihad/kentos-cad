@@ -352,9 +352,10 @@ pub fn dimstyle_table(out: &mut Out) {
 }
 
 /// BLOCK_RECORD: model space and paper space, each pointing to its
-/// layout, and the dimensions' anonymous blocks (handle, name).
-pub fn block_record_table(out: &mut Out, anonymous: &[(u64, String)]) {
-    table(out, "BLOCK_RECORD", BLOCK_RECORD_TABLE, 2 + anonymous.len());
+/// layout, then the drawing's blocks and the dimensions' anonymous ones
+/// (handle, name), as they were written.
+pub fn block_record_table(out: &mut Out, records: &[(u64, String)]) {
+    table(out, "BLOCK_RECORD", BLOCK_RECORD_TABLE, 2 + records.len());
     for (handle, name, layout) in [
         (MODEL_SPACE, "*Model_Space", "1A"),
         (PAPER_SPACE, "*Paper_Space", "1E"),
@@ -371,7 +372,7 @@ pub fn block_record_table(out: &mut Out, anonymous: &[(u64, String)]) {
             &[(2, name), (340, layout), (70, "0"), (280, "1"), (281, "0")],
         );
     }
-    for (handle, name) in anonymous {
+    for (handle, name) in records {
         record(
             out,
             "BLOCK_RECORD",
@@ -386,8 +387,8 @@ pub fn block_record_table(out: &mut Out, anonymous: &[(u64, String)]) {
 }
 
 /// BLOCKS: the model and paper space blocks (the drawing itself is in
-/// ENTITIES), then the dimensions' own (`dimension_blocks`, written with them).
-pub fn blocks(out: &mut Out, dimension_blocks: &str) {
+/// ENTITIES), then the drawing's blocks and the dimensions' own (`written`).
+pub fn blocks(out: &mut Out, written: &str) {
     out.section("BLOCKS");
     for (begin, end, owner, name) in [
         (0x18, 0x19, "17", "*Model_Space"),
@@ -423,7 +424,7 @@ pub fn blocks(out: &mut Out, dimension_blocks: &str) {
             ],
         );
     }
-    out.s.push_str(dimension_blocks);
+    out.s.push_str(written);
     out.str(0, "ENDSEC");
 }
 

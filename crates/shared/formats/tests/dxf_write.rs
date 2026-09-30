@@ -8,10 +8,11 @@
 use std::collections::{BTreeMap, HashSet};
 
 use kentos_contracts::{
-    ArcEntity, CircleEntity, ConstructionEntity, DimensionEntity, DimensionStyle, DxfReadOptions,
-    DxfWriteInput, DxfWriteLayer, EllipseEntity, Entity, EntityBase, ExportReport, HatchEntity,
-    HatchPattern, HatchPatternType, ImportResult, LineEntity, LineType, PathEntity, PointEntity,
-    RingGeometry, SplineEntity, TextEntity, Vec2,
+    ArcEntity, BlockDefinition, BlockId, CircleEntity, ConstructionEntity, DimensionEntity,
+    DimensionStyle, DxfReadOptions, DxfWriteInput, DxfWriteLayer, EllipseEntity, Entity,
+    EntityBase, ExportReport, HatchEntity, HatchPattern, HatchPatternType, ImportResult,
+    InsertEntity, LineEntity, LineType, PathEntity, PointEntity, RingGeometry, SplineEntity,
+    TextEntity, Vec2,
 };
 use kentos_formats::dxf;
 use kentos_formats::math::{atan2, cos, sin};
@@ -437,6 +438,7 @@ fn input(entities: Vec<Entity>) -> DxfWriteInput {
         length_decimals: 3,
         grads: true,
         dimension_values,
+        blocks: Vec::new(),
     }
 }
 
@@ -925,6 +927,7 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
         length_decimals: 2,
         grads: false,
         dimension_values: BTreeMap::new(),
+        blocks: Vec::new(),
     });
     let r = read(&text);
     // Long values came in pieces and control characters in caret notation: the attributes are back as they were.
@@ -977,6 +980,7 @@ fn nothing_to_write_is_still_a_file_autocad_opens() {
         length_decimals: 3,
         grads: false,
         dimension_values: BTreeMap::new(),
+        blocks: Vec::new(),
     });
     let r = read(&text);
     assert!(r.entities.is_empty() && r.layers.is_empty());
@@ -1312,3 +1316,355 @@ fn a_multi_part_area_is_one_closed_polyline_a_part() {
         assert_eq!((a.base.attrs.get("Ada").map(String::as_str), a.base.label.as_deref()), (Some("101"), Some("101/5")));
     }
 }
+
+// ── Blocks (docs/adr/0144 §5) ───────────────────────────────────────────
+
+fn block_id(n: u8) -> BlockId {
+    let mut b = [0u8; 16];
+    b[0] = 0x01;
+    b[15] = n;
+    BlockId(b)
+}
+
+fn insert(layer: &str, block: u8, p: Vec2, scale: f64, rotation: f64, mirror: bool) -> Entity {
+    Entity::Insert(InsertEntity {
+        base: base(layer),
+        block: block_id(block),
+        p,
+        scale,
+        rotation,
+        mirror,
+    })
+}
+
+fn definition(n: u8, name: &str, base_point: Vec2, entities: Vec<Entity>) -> BlockDefinition {
+    BlockDefinition {
+        id: block_id(n),
+        name: name.into(),
+        base: base_point,
+        entities: entities
+            .into_iter()
+            .zip(1..)
+            .map(|(mut e, k)| {
+                e.base_mut().id = k;
+                e
+            })
+            .collect(),
+        attributes: Vec::new(),
+        description: None,
+    }
+}
+
+/// A street light: “Direk” holds a pole, a hatched base with a hole and a
+/// “Lamba”, which holds a coloured bulb and a line on the Yapı layer; an
+/// unused block; the drawing's two inserts of Direk (one turned by a turn
+/// degrees cannot hold exactly, mirrored, scaled, coloured, with an
+/// attribute) and one of a block the export does not have.
+fn lights() -> DxfWriteInput {
+    let bulb = Entity::Circle(CircleEntity {
+        base: with("", |b| b.color = Some("#F5D90A".into())),
+        c: v(0.0, 0.0),
+        r: 0.4,
+    });
+    let arm = Entity::Line(LineEntity {
+        base: base("yapi"),
+        a: v(-0.5, 0.0),
+        b: v(0.5, 0.0),
+        za: None,
+        zb: None,
+    });
+    let pole = Entity::Line(LineEntity {
+        base: base(""),
+        a: v(1.0, 2.0),
+        b: v(1.0, 8.0),
+        za: None,
+        zb: None,
+    });
+    let foot = Entity::Polygon(PathEntity {
+        base: base(""),
+        pts: vec![v(0.0, 1.0), v(2.0, 1.0), v(2.0, 3.0), v(0.0, 3.0)],
+        bulges: None,
+        holes: Some(vec![RingGeometry {
+            pts: vec![v(0.5, 1.5), v(1.5, 1.5), v(1.5, 2.5)],
+            bulges: None,
+            zs: None,
+        }]),
+        zs: None,
+        parts: None,
+    });
+    let mut first = insert("yapi", 1, tm(10.0, 20.0), 2.5, 0.1, true);
+    first.base_mut().color = Some("#E5484D".into());
+    first.base_mut().attrs.insert("No".into(), "7".into());
+    DxfWriteInput {
+        blocks: vec![
+            definition(
+                1,
+                "Direk",
+                v(1.0, 2.0),
+                vec![
+                    pole,
+                    foot,
+                    insert("", 2, v(1.0, 8.0), 1.0, std::f64::consts::FRAC_PI_2, false),
+                ],
+            ),
+            definition(2, "Lamba", v(0.0, 0.0), vec![bulb, arm]),
+            definition(3, "Kullanılmayan", v(0.0, 0.0), vec![pole_like()]),
+        ],
+        ..input(vec![
+            first,
+            insert("parsel", 1, tm(30.0, 20.0), 1.0, 0.0, false),
+            insert("parsel", 9, tm(40.0, 20.0), 1.0, 0.0, false),
+        ])
+    }
+}
+
+fn pole_like() -> Entity {
+    Entity::Point(PointEntity {
+        base: base(""),
+        p: v(0.0, 0.0),
+        z: None,
+    })
+}
+
+/// A BLOCK of the file: its name, its record's handle, the groups of its objects.
+type Block<'a> = (&'a str, &'a str, Vec<Vec<(i32, &'a str)>>);
+
+/// Each BLOCK of the file, in its order.
+fn blocks_of<'a>(p: &[(i32, &'a str)]) -> Vec<Block<'a>> {
+    let mut out = Vec::new();
+    let mut i = 0;
+    while i < p.len() {
+        if p[i] == (0, "BLOCK") {
+            let head_end = p[i + 1..].iter().position(|x| x.0 == 0).map_or(p.len(), |k| i + 1 + k);
+            let head = &p[i..head_end];
+            let (name, owner) = (group(head, 2).unwrap_or(""), group(head, 330).unwrap_or(""));
+            let end = p[i..].iter().position(|x| *x == (0, "ENDBLK")).map_or(p.len(), |k| i + k);
+            let mut objects = Vec::new();
+            let mut k = head_end;
+            while k < end {
+                let next = p[k + 1..end].iter().position(|x| x.0 == 0).map_or(end, |j| k + 1 + j);
+                objects.push(p[k..next].to_vec());
+                k = next;
+            }
+            out.push((name, owner, objects));
+            i = end;
+        } else {
+            i += 1;
+        }
+    }
+    out
+}
+
+/// The blocks are BLOCKs with their records, the ones they hold first, the
+/// unused one left out; their objects are the block's, on 0 or their own
+/// layer, BYBLOCK where they have no colour or weight of their own; the
+/// inserts are INSERTs (mirrored as −Y, turned in degrees); what cannot be
+/// written is said. The file still has what AutoCAD needs.
+#[test]
+fn blocks_are_written_as_blocks_their_inserts_as_inserts() {
+    let (text, report) = write(&lights());
+    let p = pairs(&text);
+    let records: Vec<(&str, &str)> = entities_of(&p, "BLOCK_RECORD")
+        .iter()
+        .map(|r| (group(r, 2).unwrap_or(""), group(r, 5).unwrap_or("")))
+        .collect();
+    let names: Vec<&str> = records.iter().map(|r| r.0).collect();
+    assert_eq!(names, ["*Model_Space", "*Paper_Space", "Lamba", "Direk"]);
+    let blocks = blocks_of(&p);
+    let written: Vec<&str> = blocks.iter().map(|b| b.0).collect();
+    assert_eq!(written, ["*Model_Space", "*Paper_Space", "Lamba", "Direk"]);
+    for (name, owner, objects) in &blocks[2..] {
+        let record = records.iter().find(|r| r.0 == *name).map(|r| r.1);
+        assert_eq!(Some(*owner), record, "{name}'s BLOCK is its record's");
+        for o in objects {
+            assert_eq!(group(o, 330), record, "{name}: {o:?}");
+        }
+    }
+    let lamba = &blocks[2].2;
+    // The bulb: on 0 with its own colour (true colour 0xF5D90A), BYBLOCK weight; the arm: on its own layer, BYBLOCK colour.
+    assert_eq!(
+        (group(&lamba[0], 8), group(&lamba[0], 420), group(&lamba[0], 370)),
+        (Some("0"), Some("16111882"), Some("-2"))
+    );
+    assert_eq!(
+        (group(&lamba[1], 8), group(&lamba[1], 62), group(&lamba[1], 370)),
+        (Some("Yapı"), Some("0"), Some("-2"))
+    );
+    let direk = &blocks[3].2;
+    let nested = direk.iter().find(|o| o[0] == (0, "INSERT")).expect("the lamp's insert");
+    assert_eq!((group(nested, 2), group(nested, 50)), (Some("Lamba"), Some("90.0")));
+    let inserts = entities_of(&p, "INSERT");
+    let placed: Vec<Vec<(i32, &str)>> = inserts
+        .iter()
+        .filter(|i| group(i, 330) == Some("17"))
+        .cloned()
+        .collect();
+    assert_eq!(placed.len(), 2, "the unknown block's insert is left out");
+    let first = &placed[0];
+    assert_eq!(
+        [2, 8, 41, 42, 43].map(|c| group(first, c)),
+        [Some("Direk"), Some("Yapı"), Some("2.5"), Some("-2.5"), Some("2.5")]
+    );
+    let degrees: f64 = group(first, 50).expect("50").parse().expect("degrees");
+    assert_eq!(degrees, 0.1 * 180.0 / std::f64::consts::PI);
+    // What was not written is said; the unused block is not a note.
+    let skipped: Vec<&str> = report.skipped.iter().map(|s| s.reason.as_str()).collect();
+    assert_eq!(skipped, ["bloğunun tanımı dışa aktarılanlarda yok; yazılmadı"]);
+    assert!(!text.contains("Kullanılmayan"));
+    assert_eq!(report.counts.get("insert"), Some(&2));
+    assert_eq!(report.counts.get("circle"), None, "a block's objects are not the drawing's");
+    // The header's extent holds the inserts' blocks, placed: the mirrored, scaled pole reaches 15 m.
+    let at = |name: &str, code: i32| -> f64 {
+        let i = p.iter().position(|&x| x == (9, name)).expect(name);
+        p[i..].iter().find(|x| x.0 == code).map(|x| x.1.parse().expect("number")).expect("value")
+    };
+    assert!(at("$EXTMIN", 20) < X0 + 20.0 - 14.0, "{}", at("$EXTMIN", 20));
+    let unique: HashSet<&str> = p.iter().filter(|x| x.0 == 5).map(|x| x.1).collect();
+    assert_eq!(unique.len(), p.iter().filter(|x| x.0 == 5).count(), "handles are unique");
+}
+
+/// KentOS's own file reads back as the same blocks and inserts: the
+/// definitions with their objects (a ring back in its polygon, a layer by
+/// its DXF name, none of its own as none), the inserts exactly (the turn
+/// from KentOS's data, the mirror from −Y, colour and attribute).
+#[test]
+fn blocks_read_back_as_the_same_blocks() {
+    let input = lights();
+    let (text, _) = write(&input);
+    let r = read(&text);
+    let names: Vec<&str> = r.blocks.iter().map(|b| b.name.as_str()).collect();
+    assert_eq!(names, ["Lamba", "Direk"]);
+    let (lamba, direk) = (&r.blocks[0], &r.blocks[1]);
+    let expect = |e: &Entity, layer: &str| {
+        let mut e = e.clone();
+        e.base_mut().layer_id = layer.into();
+        e
+    };
+    let given = |n: u8| input.blocks.iter().find(|b| b.id == block_id(n)).expect("given");
+    assert_eq!(lamba.base, given(2).base);
+    assert_eq!(
+        lamba.entities,
+        [
+            expect(&given(2).entities[0], ""),
+            expect(&given(2).entities[1], "Yapı")
+        ]
+    );
+    assert_eq!(direk.base, given(1).base);
+    assert_eq!(direk.entities[..2], given(1).entities[..2]);
+    let Entity::Insert(nested) = &direk.entities[2] else {
+        panic!("{:?}", direk.entities[2])
+    };
+    assert_eq!(
+        (nested.block, nested.p, nested.scale, nested.rotation, nested.mirror),
+        (lamba.id, v(1.0, 8.0), 1.0, std::f64::consts::FRAC_PI_2, false)
+    );
+    let inserts: Vec<&InsertEntity> = r
+        .entities
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Insert(i) => Some(i),
+            _ => None,
+        })
+        .collect();
+    let Entity::Insert(first) = &input.entities[0] else {
+        panic!("an insert")
+    };
+    assert_eq!(
+        (
+            inserts[0].block,
+            inserts[0].p,
+            inserts[0].scale,
+            inserts[0].rotation,
+            inserts[0].mirror
+        ),
+        (direk.id, first.p, 2.5, 0.1, true)
+    );
+    assert_eq!(inserts[0].base.color.as_deref(), Some("#E5484D"));
+    assert_eq!(inserts[0].base.attrs.get("No").map(String::as_str), Some("7"));
+    assert_eq!(inserts[0].base.layer_id, "Yapı");
+    assert_eq!((inserts[1].scale, inserts[1].rotation, inserts[1].mirror), (1.0, 0.0, false));
+}
+
+/// Names DXF cannot take as they are, and a block that holds itself.
+#[test]
+fn block_names_dxf_refuses_change_and_a_block_holding_itself_is_written_once() {
+    let dot = || pole_like();
+    let input = DxfWriteInput {
+        blocks: vec![
+            definition(1, "Kapi", v(0.0, 0.0), vec![dot()]),
+            definition(2, "KAPI", v(0.0, 0.0), vec![dot()]),
+            definition(3, "*Adsız", v(0.0, 0.0), vec![dot()]),
+            definition(4, "Ağaç/Çınar", v(0.0, 0.0), vec![dot()]),
+            definition(5, "Döngü", v(0.0, 0.0), vec![dot(), insert("", 5, v(1.0, 0.0), 1.0, 0.0, false)]),
+        ],
+        ..input((1..=5).map(|n| insert("parsel", n, tm(f64::from(n), 0.0), 1.0, 0.0, false)).collect())
+    };
+    let (text, report) = write(&input);
+    let r = read(&text);
+    let names: Vec<&str> = r.blocks.iter().map(|b| b.name.as_str()).collect();
+    assert_eq!(names, ["Kapi", "KAPI (2)", "_Adsız", "Ağaç_Çınar", "Döngü"]);
+    let notes: Vec<&str> = report.notes.iter().filter(|n| n.what == "Blok adı").map(|n| n.reason.as_str()).collect();
+    assert_eq!(
+        notes,
+        [
+            "“KAPI” bloğu “KAPI (2)” adıyla yazıldı (aynı adlı başka bir blok var; DXF blok adları büyük/küçük harf ayırmaz)",
+            "“*Adsız” bloğu “_Adsız” adıyla yazıldı (DXF'in kabul etmediği karakterler “_” oldu)",
+            "“Ağaç/Çınar” bloğu “Ağaç_Çınar” adıyla yazıldı (DXF'in kabul etmediği karakterler “_” oldu)",
+        ]
+    );
+    assert!(
+        report.skipped.iter().any(|s| s.reason == "“Döngü” bloğu kendini içeriyor; o yerleştirme yazılmadı"),
+        "{:?}",
+        report.skipped
+    );
+    assert_eq!(r.blocks[4].entities.len(), 1, "written once, without its insert of itself");
+    assert_eq!(r.entities.iter().filter(|e| matches!(e, Entity::Insert(_))).count(), 5);
+}
+
+/// The blocks' fixture (`fixtures/formats/v1/dxf-write/blocks.input.json`,
+/// written by hand) goes out as its committed bytes: `KENTOS_WRITE_DXF=1`
+/// rewrites them (read the difference first). The web's module writes the
+/// same bytes (`dxf.wasm.test.ts`), and `scripts/fixtures/dxf_write_reference.py`
+/// checks them against the input without KentOS's code.
+#[test]
+fn the_blocks_fixture_is_written_to_its_committed_bytes() {
+    let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/formats/v1/dxf-write");
+    let text = std::fs::read_to_string(dir.join("blocks.input.json")).expect("the input");
+    let input = dxf::input_from_json(&text).expect("the writer reads it");
+    let (bytes, report) = dxf::write(&input);
+    let path = dir.join("blocks.dxf");
+    if std::env::var_os("KENTOS_WRITE_DXF").is_some() {
+        std::fs::write(&path, &bytes).expect("written");
+    }
+    assert!(
+        String::from_utf8(bytes).expect("UTF-8") == std::fs::read_to_string(&path).expect("the committed file"),
+        "the writer's bytes differ from blocks.dxf (KENTOS_WRITE_DXF=1 rewrites it; read the difference first)"
+    );
+    let notes: Vec<(&str, &str)> = report
+        .notes
+        .iter()
+        .map(|n| (n.what.as_str(), n.reason.as_str()))
+        .collect();
+    assert_eq!(
+        notes,
+        [
+            (
+                "Katman rengi",
+                "“Parsel sınırı”: “fg-dim” (ikincil mürekkep) tema rengi DXF'te 8 (gri) oldu"
+            ),
+            (
+                "Blok adı",
+                "“Ağaç/Çınar” bloğu “Ağaç_Çınar” adıyla yazıldı (DXF'in kabul etmediği karakterler “_” oldu)"
+            ),
+            (
+                "Adalı alan",
+                "adaları ayrı kapalı çoklu çizgiler olarak yazıldı (KentOS'a geri okununca yine adalı alan olur)"
+            ),
+            ("Blok açıklaması", "DXF'te açıklama tek satırdır; satır sonları boşluk oldu"),
+        ]
+    );
+    let skipped: Vec<&str> = report.skipped.iter().map(|s| s.reason.as_str()).collect();
+    assert_eq!(skipped, ["bloğunun tanımı dışa aktarılanlarda yok; yazılmadı"]);
+}
+

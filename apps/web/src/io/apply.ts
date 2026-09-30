@@ -45,7 +45,9 @@ export type Applied =
 /**
  * The blocks an import brings (docs/adr/0144 §5), ready to go in: each a
  * new id and a name the drawing does not have yet (`importNames`), the
- * inserts among their objects pointing at the new ids.
+ * inserts among their objects pointing at the new ids, and each object on
+ * the drawing layer its source layer goes to, else on none of its own (`''`,
+ * the block's: Patlat puts it on the insert's layer).
  */
 export interface ImportedBlocks {
   readonly defs: readonly BlockDefinition[];
@@ -58,7 +60,7 @@ export interface ImportedBlocks {
 const unusableBlocks = (why: string) => `Dosyadan okunan bloklar çizime uymuyor (${why}). Hiçbir şey eklenmedi; dosyayla birlikte bildirin.`;
 
 /** Checks a reader's block definitions and readies them for the drawing (nothing changes); the reason in words when one is unusable. */
-export function importedBlocks(doc: CadDocument, blocks: readonly ContractBlock[] = []): ImportedBlocks | { error: string } {
+export function importedBlocks(doc: CadDocument, blocks: readonly ContractBlock[] = [], targets: ReadonlyMap<string, string> = new Map()): ImportedBlocks | { error: string } {
   if (!blocks.length) return { defs: [], ids: new Map(), renamed: [] };
   const read = readBlockDefinitions(blocks);
   if (!read.ok) return { error: unusableBlocks(read.error) };
@@ -70,7 +72,7 @@ export function importedBlocks(doc: CadDocument, blocks: readonly ContractBlock[
   const renamed: [string, string][] = [];
   const defs = read.blocks.map((b, i): BlockDefinition => {
     if (names[i] !== b.name) renamed.push([b.name, names[i]]);
-    return { ...b, id: ids.get(b.id)!, name: names[i], entities: b.entities.map((e) => pointAt(e, ids)) };
+    return { ...b, id: ids.get(b.id)!, name: names[i], entities: b.entities.map((e) => ({ ...pointAt(e, ids), layerId: targets.get(e.layerId) ?? '' })) };
   });
   return { defs, ids, renamed };
 }
@@ -185,7 +187,7 @@ export const unusable = (why: string) => `Dosyadan okunan nesneler çizime uymuy
 export function applyImport(doc: CadDocument, entities: readonly ContractEntity[], plan: ImportPlan, blocks: readonly ContractBlock[] = []): Applied {
   const prepared = prepareImport(doc, plan);
   if ('error' in prepared) return { ok: false, error: prepared.error };
-  const imported = importedBlocks(doc, blocks);
+  const imported = importedBlocks(doc, blocks, prepared.targets);
   if ('error' in imported) return { ok: false, error: imported.error };
   // Checked with the final layer ids and numbered 1…n; the document gives them their own ids.
   const chosen: unknown[] = [];
