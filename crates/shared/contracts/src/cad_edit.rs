@@ -22,7 +22,9 @@ use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
-use crate::entity::{AreaPart, DimensionStyle, Entity, HatchPattern, RingGeometry, Vec2};
+use crate::entity::{
+    AreaPart, DimensionStyle, Entity, HatchPattern, RingGeometry, TextAlign, Vec2,
+};
 use crate::identity::BlockId;
 
 /// Reshapes, splits, joins and explodes objects in one undo step.
@@ -106,6 +108,9 @@ pub enum EditOperation {
     /// Parçalara ayır (docs/adr/0143): a multi-part area becomes an area a
     /// part; the first part keeps its place, the others are new, with its data.
     PartsSplit,
+    /// Okunur yap (docs/adr/0145): texts that read upside down turned half
+    /// round, each box where it was.
+    Readable,
 }
 
 /// A drawing object's geometry alone: its kind and the fields that place and
@@ -209,6 +214,19 @@ pub enum EntityGeometry {
         text: String,
         height: f64,
         rotation: f64,
+        /// Where `p` is on the text; absent: the left of its baseline (docs/adr/0145).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        align: Option<TextAlign>,
+        /// The letters' width times this, the height kept; absent: 1. Over 0, at most 100.
+        #[serde(default, rename = "widthFactor", skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
+        width_factor: Option<f64>,
+        /// Its box filled with the drawing area's colour before it is drawn.
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        mask: bool,
     },
     /// A dimension from `a` to `b` (an angular one's vertex is `c`), its line
     /// `offset` metres away, its text `height` metres high; `text` replaces

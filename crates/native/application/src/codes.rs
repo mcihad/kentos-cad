@@ -92,6 +92,8 @@ pub const DUPLICATE_TAG: &str = "duplicate_tag";
 /// An attribute definition's text height that is not a finite number above
 /// zero (`cad.blocks.edit`).
 pub const INVALID_HEIGHT: &str = "invalid_height";
+/// A text's width factor not over 0 or over 100 (docs/adr/0145).
+pub const INVALID_WIDTH_FACTOR: &str = "invalid_width_factor";
 /// A block rule the checks before it did not see, as the document said it
 /// (never expected: the commands check the document's own rules first).
 pub const BLOCK_REFUSED: &str = "block_refused";

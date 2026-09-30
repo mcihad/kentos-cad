@@ -272,6 +272,9 @@ impl Tool for Text {
                 text: text.to_owned(),
                 height: paper(cx.memory.text_height_mm, cx),
                 rotation: cx.memory.text_angle,
+                align: None,
+                width_factor: None,
+                mask: false,
             };
             if let Some(out) = points::write_objects(vec![geometry], None, cx)
                 && let Some(&id) = out.ids.first()

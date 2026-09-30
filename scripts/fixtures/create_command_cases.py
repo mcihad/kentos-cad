@@ -65,6 +65,12 @@ def made(obj, slot, layer_id="yapi"):
     out = json.loads(json.dumps(obj["geometry"]))
     if out["kind"] == "insert" and out.get("mirror") is not True:
         out.pop("mirror", None)
+    # A text's defaults are no fields (docs/adr/0145): no mask, a width factor of 1.
+    if out["kind"] == "text":
+        if out.get("mask") is not True:
+            out.pop("mask", None)
+        if out.get("widthFactor") == 1:
+            out.pop("widthFactor")
     out["id"] = slot
     out["layerId"] = layer_id
     if "color" in obj:
@@ -580,6 +586,38 @@ cases.append({
         {"op": "execute", "input": {"layerId": "yapi", "objects": [O(INSERT), O({**INSERT, "scale": -1})]},
          "result": failed("invalid_scale", "Blok ölçeği sıfırdan büyük olmalı. Pozitif bir ölçek verin.", "objects[1].geometry.scale"), "expect": NOTHING},
         {"op": "execute", "input": {"layerId": "yapi", "objects": [O(INSERT)]}, "nonFinite": {"objects[0].geometry.rotation": "Infinity"}, "result": not_finite(1), "expect": NOTHING},
+    ],
+})
+
+
+# ── Yazı ekleri (docs/adr/0145) ────────────────────────────────────────
+
+
+def width_factor_message(w):
+    return f"Yazının genişlik çarpanı 0'dan büyük, en çok 100 olmalı; {w} verildi. Çarpanı bu aralıkta verin ya da alanı kaldırın (1)."
+
+
+dressed_texts = [
+    O({**TEXT, "align": "middleCenter", "widthFactor": 0.8, "mask": True}),
+    O({**TEXT, "text": "Ada 102", "align": "topRight"}),
+    O({**TEXT, "text": "Ada 103", "widthFactor": 1, "mask": False}),
+]
+cases.append({
+    "name": "yazının hizası, genişlik çarpanı ve zemini yazılır; 1 çarpan ve zeminsizlik alan değildir, yazılmaz (ADR 0145)",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": dressed_texts}, "result": done([3, 4, 5]),
+         "expect": {"entities": {str(3 + i): made(o, 3 + i) for i, o in enumerate(dressed_texts)}, "revision": "changed"}},
+    ],
+})
+cases.append({
+    "name": "yazının genişlik çarpanı 0'dan büyük, en çok 100: invalid_width_factor, yolu nesnenin; sonlu olmayan önce not_finite (ADR 0145)",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(TEXT), O({**TEXT, "widthFactor": 0})]},
+         "result": failed("invalid_width_factor", width_factor_message(0), "objects[1].geometry.widthFactor"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TEXT, "widthFactor": 101})]},
+         "result": failed("invalid_width_factor", width_factor_message(101), "objects[0].geometry.widthFactor"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TEXT, "widthFactor": 0.8})]}, "nonFinite": {"objects[0].geometry.widthFactor": "Infinity"},
+         "result": not_finite(1), "expect": NOTHING},
     ],
 })
 

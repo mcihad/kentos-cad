@@ -77,7 +77,7 @@ GEOMETRY = {
     "spline": ["pts", "closed"],
     "xline": ["p", "dir"],
     "ray": ["p", "dir"],
-    "text": ["p", "text", "height", "rotation"],
+    "text": ["p", "text", "height", "rotation", "align", "widthFactor", "mask"],
     "dimension": ["a", "b", "offset", "height", "text", "style", "angle", "c"],
     "hatch": ["ring", "holes", "pattern"],
     "insert": ["block", "p", "scale", "rotation", "mirror"],
@@ -95,6 +95,12 @@ def reshaped(e, geometry):
     out.update(json.loads(json.dumps(geometry)))
     if out.get("kind") == "insert" and out.get("mirror") is not True:
         out.pop("mirror", None)
+    # A text's defaults are no fields (docs/adr/0145): no mask, a width factor of 1.
+    if out.get("kind") == "text":
+        if out.get("mask") is not True:
+            out.pop("mask", None)
+        if out.get("widthFactor") == 1:
+            out.pop("widthFactor")
     return out
 
 
@@ -628,6 +634,60 @@ cases.append({
     "steps": [
         {"op": "plan", "input": properties(2, retyped),
          "result": {"status": "completed", "output": {"changed": [reshaped(PE(2), retyped)], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": PROPS_NOTHING},
+    ],
+})
+
+# ── Yazı ekleri (docs/adr/0145): alignment, width factor and mask go with a text's geometry ──
+
+sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
+from text_cases import readable  # noqa: E402  (the rule, written once, independently)
+
+
+def width_factor_message(w):
+    return f"Yazının genişlik çarpanı 0'dan büyük, en çok 100 olmalı; {w} verildi. Çarpanı bu aralıkta verin ya da alanı kaldırın (1)."
+
+
+dressed = geometry_of(2, rotation=200, align="middleCenter", widthFactor=0.8, mask=True)
+plain = geometry_of(2, rotation=200, widthFactor=1, mask=False)
+cases.append({
+    "name": "properties: yazının hizası, genişlik çarpanı ve zemini yazılır; verilmeyen kalkar, 1 çarpan ve zeminsizlik alan değildir (ADR 0145)",
+    "setup": PROPS_SETUP,
+    "steps": [
+        {"op": "execute", "input": properties(2, dressed), "result": done(changed=[uid(2)]),
+         "expect": {"entities": {"2": reshaped(PE(2), dressed)}, "revision": "changed"}},
+        {"op": "execute", "input": properties(2, plain), "result": done(changed=[uid(2)]),
+         "expect": {"entities": {"2": reshaped(PE(2), plain)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Değiştir", "expect": {"entities": {"2": reshaped(PE(2), dressed)}, "canUndo": True}},
+    ],
+})
+
+# Turned by the rule (fixtures/text/v1/readable.json), its width as the tool measures it: here 4.4 m.
+_turn = readable((dressed["p"]["x"], dressed["p"]["y"]), dressed["height"], dressed["rotation"], dressed["align"], 4.4)
+turned = {**dressed, "p": _turn["p"], "rotation": _turn["rotation"]}
+cases.append({
+    "name": "Okunur yap: ters okunan yazının yarım dönmüş geometrisi yazılır; hizası, çarpanı, zemini ve rengi kalır; adım “Okunur yap” (ADR 0145)",
+    "setup": PROPS_SETUP,
+    "steps": [
+        {"op": "execute", "input": properties(2, dressed), "result": done(changed=[uid(2)]),
+         "expect": {"entities": {"2": reshaped(PE(2), dressed)}, "revision": "changed"}},
+        {"op": "execute", "input": {"operation": "readable", "changes": [{"kind": "update", "uid": uid(2), "geometry": turned}]}, "result": done(changed=[uid(2)]),
+         "expect": {"entities": {"2": reshaped(PE(2), turned)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Okunur yap", "expect": {"entities": {"2": reshaped(PE(2), dressed)}}},
+    ],
+})
+
+cases.append({
+    "name": "yazının genişlik çarpanı 0'dan büyük, en çok 100: invalid_width_factor; sonlu olmayan önce not_finite (ADR 0145)",
+    "setup": PROPS_SETUP,
+    "steps": [
+        {"op": "execute", "input": properties(2, geometry_of(2, widthFactor=0)),
+         "result": failed("invalid_width_factor", width_factor_message(0), "changes[0].geometry.widthFactor"), "expect": PROPS_NOTHING},
+        {"op": "execute", "input": properties(2, geometry_of(2, widthFactor=150)),
+         "result": failed("invalid_width_factor", width_factor_message(150), "changes[0].geometry.widthFactor"), "expect": PROPS_NOTHING},
+        {"op": "execute", "input": properties(2, geometry_of(2, widthFactor=-1)),
+         "result": failed("invalid_width_factor", width_factor_message(-1), "changes[0].geometry.widthFactor"), "expect": PROPS_NOTHING},
+        {"op": "execute", "input": properties(2, geometry_of(2, widthFactor=0.8)), "nonFinite": {"changes[0].geometry.widthFactor": "NaN"},
+         "result": failed("not_finite", not_finite_message(1), "changes[0].geometry"), "expect": PROPS_NOTHING},
     ],
 })
 

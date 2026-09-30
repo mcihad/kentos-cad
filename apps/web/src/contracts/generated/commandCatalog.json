@@ -21625,6 +21625,11 @@
                 "const": "partsSplit",
                 "description": "Parçalara ayır (docs/adr/0143): a multi-part area becomes an area a\npart; the first part keeps its place, the others are new, with its data.",
                 "type": "string"
+              },
+              {
+                "const": "readable",
+                "description": "Okunur yap (docs/adr/0145): texts that read upside down turned half\nround, each box where it was.",
+                "type": "string"
               }
             ]
           },
@@ -22096,6 +22101,17 @@
               {
                 "description": "Text at `p`; `height` in metres, `rotation` in degrees counter-clockwise from east.",
                 "properties": {
+                  "align": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/TextAlign"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Where `p` is on the text; absent: the left of its baseline (docs/adr/0145)."
+                  },
                   "height": {
                     "format": "double",
                     "type": "number"
@@ -22103,6 +22119,10 @@
                   "kind": {
                     "const": "text",
                     "type": "string"
+                  },
+                  "mask": {
+                    "description": "Its box filled with the drawing area's colour before it is drawn.",
+                    "type": "boolean"
                   },
                   "p": {
                     "$ref": "#/$defs/Vec2"
@@ -22113,6 +22133,16 @@
                   },
                   "text": {
                     "type": "string"
+                  },
+                  "widthFactor": {
+                    "description": "The letters' width times this, the height kept; absent: 1. Over 0, at most 100.",
+                    "format": "double",
+                    "maximum": 100.0,
+                    "minimum": 0.0,
+                    "type": [
+                      "number",
+                      "null"
+                    ]
                   }
                 },
                 "required": [
@@ -22329,6 +22359,23 @@
               "pts"
             ],
             "type": "object"
+          },
+          "TextAlign": {
+            "description": "Which point of a text its `p` is (docs/adr/0145 §1): horizontally its\nleft, centre or right; vertically on its baseline, at its bottom (0.2 of\nits height under the baseline), its middle (half its height over it) or\nits top (its height over it). The left of the baseline, where a text\nalways stood, is no value but the field's absence: a text has one\nspelling.",
+            "enum": [
+              "baselineCenter",
+              "baselineRight",
+              "bottomLeft",
+              "bottomCenter",
+              "bottomRight",
+              "middleLeft",
+              "middleCenter",
+              "middleRight",
+              "topLeft",
+              "topCenter",
+              "topRight"
+            ],
+            "type": "string"
           },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
@@ -25981,6 +26028,17 @@
               {
                 "description": "Text at `p`; `height` in metres, `rotation` in degrees counter-clockwise from east.",
                 "properties": {
+                  "align": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/TextAlign"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Where `p` is on the text; absent: the left of its baseline (docs/adr/0145)."
+                  },
                   "height": {
                     "format": "double",
                     "type": "number"
@@ -25988,6 +26046,10 @@
                   "kind": {
                     "const": "text",
                     "type": "string"
+                  },
+                  "mask": {
+                    "description": "Its box filled with the drawing area's colour before it is drawn.",
+                    "type": "boolean"
                   },
                   "p": {
                     "$ref": "#/$defs/Vec2"
@@ -25998,6 +26060,16 @@
                   },
                   "text": {
                     "type": "string"
+                  },
+                  "widthFactor": {
+                    "description": "The letters' width times this, the height kept; absent: 1. Over 0, at most 100.",
+                    "format": "double",
+                    "maximum": 100.0,
+                    "minimum": 0.0,
+                    "type": [
+                      "number",
+                      "null"
+                    ]
                   }
                 },
                 "required": [
@@ -26261,6 +26333,23 @@
               "pts"
             ],
             "type": "object"
+          },
+          "TextAlign": {
+            "description": "Which point of a text its `p` is (docs/adr/0145 §1): horizontally its\nleft, centre or right; vertically on its baseline, at its bottom (0.2 of\nits height under the baseline), its middle (half its height over it) or\nits top (its height over it). The left of the baseline, where a text\nalways stood, is no value but the field's absence: a text has one\nspelling.",
+            "enum": [
+              "baselineCenter",
+              "baselineRight",
+              "bottomLeft",
+              "bottomCenter",
+              "bottomRight",
+              "middleLeft",
+              "middleCenter",
+              "middleRight",
+              "topLeft",
+              "topCenter",
+              "topRight"
+            ],
+            "type": "string"
           },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",

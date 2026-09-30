@@ -4,6 +4,7 @@ import type { BlockId } from "./BlockId";
 import type { DimensionStyle } from "./DimensionStyle";
 import type { HatchPattern } from "./HatchPattern";
 import type { RingGeometry } from "./RingGeometry";
+import type { TextAlign } from "./TextAlign";
 import type { Vec2 } from "./Vec2";
 
 /**
@@ -36,4 +37,16 @@ zs?: Array<number | null>,
  * area: absent, it has one part, so an edit of a multi-part area
  * writes every part.
  */
-parts?: Array<AreaPart>, } | { "kind": "circle", c: Vec2, r: number, } | { "kind": "arc", c: Vec2, r: number, a0: number, a1: number, } | { "kind": "ellipse", c: Vec2, major: Vec2, ratio: number, t0: number, t1: number, } | { "kind": "spline", pts: Array<Vec2>, closed: boolean, } | { "kind": "xline", p: Vec2, dir: Vec2, } | { "kind": "ray", p: Vec2, dir: Vec2, } | { "kind": "text", p: Vec2, text: string, height: number, rotation: number, } | { "kind": "dimension", a: Vec2, b: Vec2, offset: number, height: number, text?: string, style?: DimensionStyle, angle?: number, c?: Vec2, } | { "kind": "hatch", ring: Array<Vec2>, holes?: Array<Array<Vec2>>, pattern: HatchPattern, } | { "kind": "insert", block: BlockId, p: Vec2, scale: number, rotation: number, mirror?: boolean, };
+parts?: Array<AreaPart>, } | { "kind": "circle", c: Vec2, r: number, } | { "kind": "arc", c: Vec2, r: number, a0: number, a1: number, } | { "kind": "ellipse", c: Vec2, major: Vec2, ratio: number, t0: number, t1: number, } | { "kind": "spline", pts: Array<Vec2>, closed: boolean, } | { "kind": "xline", p: Vec2, dir: Vec2, } | { "kind": "ray", p: Vec2, dir: Vec2, } | { "kind": "text", p: Vec2, text: string, height: number, rotation: number, 
+/**
+ * Where `p` is on the text; absent: the left of its baseline (docs/adr/0145).
+ */
+align?: TextAlign, 
+/**
+ * The letters' width times this, the height kept; absent: 1. Over 0, at most 100.
+ */
+widthFactor?: number, 
+/**
+ * Its box filled with the drawing area's colour before it is drawn.
+ */
+mask?: boolean, } | { "kind": "dimension", a: Vec2, b: Vec2, offset: number, height: number, text?: string, style?: DimensionStyle, angle?: number, c?: Vec2, } | { "kind": "hatch", ring: Array<Vec2>, holes?: Array<Array<Vec2>>, pattern: HatchPattern, } | { "kind": "insert", block: BlockId, p: Vec2, scale: number, rotation: number, mirror?: boolean, };

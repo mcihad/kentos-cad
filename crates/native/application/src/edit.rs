@@ -163,6 +163,8 @@ pub fn label(operation: EditOperation) -> &'static str {
         EditOperation::Elevation => "Kot ver",
         EditOperation::PartsJoin => "Parçaları birleştir",
         EditOperation::PartsSplit => "Parçalara ayır",
+        // Okunur yap (docs/adr/0145).
+        EditOperation::Readable => "Okunur yap",
     }
 }
 
@@ -603,6 +605,22 @@ pub(crate) fn check_geometry(
             at(".scale"),
         )));
     }
+    // A text's width factor (docs/adr/0145).
+    if let EntityGeometry::Text {
+        width_factor: Some(w),
+        ..
+    } = g
+        && !kentos_contracts::width_factor_ok(*w)
+    {
+        return Err(Stop::Failed(error(
+            codes::INVALID_WIDTH_FACTOR,
+            format!(
+                "Yazının genişlik çarpanı 0'dan büyük, en çok {} olmalı; {w} verildi. Çarpanı bu aralıkta verin ya da alanı kaldırın (1).",
+                kentos_contracts::MAX_WIDTH_FACTOR
+            ),
+            at(".widthFactor"),
+        )));
+    }
     Ok(())
 }
 
@@ -738,8 +756,14 @@ fn finite(g: &EntityGeometry) -> bool {
             p,
             height,
             rotation,
+            width_factor,
             ..
-        } => pt(p) && height.is_finite() && rotation.is_finite(),
+        } => {
+            pt(p)
+                && height.is_finite()
+                && rotation.is_finite()
+                && width_factor.is_none_or(f64::is_finite)
+        }
         EntityGeometry::Dimension {
             a,
             b,

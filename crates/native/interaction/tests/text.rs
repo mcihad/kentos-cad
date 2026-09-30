@@ -115,3 +115,59 @@ fn enter_leaves_where_the_text_starts_and_steps_back_from_a_question() {
     b.confirm();
     assert!(!b.session.is_running());
 }
+
+/// An aligned, narrowed, masked text (docs/adr/0145) given new words in
+/// Öznitelikler or the text field keeps where it stands, how wide it is and
+/// its mask: the step “Değiştir” carries them; a width factor out of its
+/// range is refused, and nothing changes.
+#[test]
+fn a_texts_extras_stay_when_its_words_change() {
+    let mut b = Bench::new("text");
+    let aligned = |text: &str, width_factor: f64| {
+        Entity::Text(kentos_contracts::TextEntity {
+            base: common::base("cizim"),
+            p: kentos_contracts::Vec2 {
+                x: common::E + 3.0,
+                y: common::N + 1.0,
+            },
+            text: text.to_owned(),
+            height: 2.5,
+            rotation: 30.0,
+            align: Some(kentos_contracts::TextAlign::MiddleCenter),
+            width_factor: Some(width_factor),
+            mask: true,
+        })
+    };
+    let slot = b.doc.add(aligned("Ada 101", 0.8)).expect("a slot");
+    let said =
+        kentos_interaction::properties::set_geometry(&mut b.doc, slot, &aligned("Ada 102", 0.8));
+    assert!(said.is_empty(), "{said:?}");
+    let Some(Entity::Text(t)) = b.doc.get(slot) else {
+        panic!("a text at {slot:?}");
+    };
+    assert_eq!(t.text, "Ada 102");
+    assert_eq!(rel(t.p), [3.0, 1.0]);
+    assert_eq!(
+        (t.align, t.width_factor, t.mask),
+        (
+            Some(kentos_contracts::TextAlign::MiddleCenter),
+            Some(0.8),
+            true
+        )
+    );
+    // A width factor of 0 is refused, said as the command says it.
+    let said =
+        kentos_interaction::properties::set_geometry(&mut b.doc, slot, &aligned("Ada 103", 0.0));
+    assert_eq!(said.len(), 1, "{said:?}");
+    assert!(said[0].contains("genişlik çarpanı"), "{said:?}");
+    let Some(Entity::Text(t)) = b.doc.get(slot) else {
+        panic!("a text at {slot:?}");
+    };
+    assert_eq!((t.text.as_str(), t.width_factor), ("Ada 102", Some(0.8)));
+    // One step, “Değiştir”, takes the words back with their extras.
+    assert_eq!(b.doc.undo().as_deref(), Some("Değiştir"));
+    let Some(Entity::Text(t)) = b.doc.get(slot) else {
+        panic!("a text at {slot:?}");
+    };
+    assert_eq!((t.text.as_str(), t.mask), ("Ada 101", true));
+}

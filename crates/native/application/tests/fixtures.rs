@@ -541,10 +541,13 @@ fn geometry_number<'a>(geometry: &'a mut EntityGeometry, rest: &str) -> Option<&
             p,
             height,
             rotation,
+            width_factor,
             ..
         } => match rest {
             "height" => Some(height),
             "rotation" => Some(rotation),
+            // The width factor the case gives (docs/adr/0145).
+            "widthFactor" => width_factor.as_mut(),
             _ => coordinate(p, "p", rest),
         },
         EntityGeometry::Dimension {

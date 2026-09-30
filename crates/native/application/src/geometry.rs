@@ -506,20 +506,24 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
         }
         EntityGeometry::Xline { p, dir } => Entity::Xline(ConstructionEntity { base, p, dir }),
         EntityGeometry::Ray { p, dir } => Entity::Ray(ConstructionEntity { base, p, dir }),
+        // A width factor of 1 is no width factor (docs/adr/0145): one spelling.
         EntityGeometry::Text {
             p,
             text,
             height,
             rotation,
+            align,
+            width_factor,
+            mask,
         } => Entity::Text(TextEntity {
             base,
             p,
             text,
             height,
             rotation,
-            align: None,
-            width_factor: None,
-            mask: false,
+            align,
+            width_factor: width_factor.filter(|w| *w != 1.0),
+            mask,
         }),
         EntityGeometry::Dimension {
             a,
@@ -629,12 +633,17 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             text,
             height,
             rotation,
-            ..
+            align,
+            width_factor,
+            mask,
         } => EntityGeometry::Text {
             p: p(at),
             text,
             height,
             rotation,
+            align: align.and_then(|a| kentos_contracts::TextAlign::from_name(a.name())),
+            width_factor,
+            mask: mask == Some(true),
         },
         Shape::Dimension {
             a,

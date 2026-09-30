@@ -208,6 +208,7 @@ class EditOperation(_StrEnum):
     - ``elevation``: Kot ver (docs/adr/0142): objects' vertices given elevations as the
     - ``partsJoin``: Parçaları birleştir (docs/adr/0143): areas become one multi-part area
     - ``partsSplit``: Parçalara ayır (docs/adr/0143): a multi-part area becomes an area a
+    - ``readable``: Okunur yap (docs/adr/0145): texts that read upside down turned half
     """
     OFFSET = "offset"
     TRIM = "trim"
@@ -238,9 +239,10 @@ class EditOperation(_StrEnum):
     ELEVATION = "elevation"
     PARTS_JOIN = "partsJoin"
     PARTS_SPLIT = "partsSplit"
+    READABLE = "readable"
 
 
-EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit"]
+EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable"]
 """The names of :class:`EditOperation`, for a plain string."""
 
 
@@ -5618,12 +5620,20 @@ class RayEntityGeometry(EntityGeometry):
 
 @dataclass(kw_only=True, slots=True)
 class TextEntityGeometry(EntityGeometry):
-    """Text at `p`; `height` in metres, `rotation` in degrees counter-clockwise from east."""
+    """Text at `p`; `height` in metres, `rotation` in degrees counter-clockwise from east.
+    Attributes:
+        align: Where `p` is on the text; absent: the left of its baseline (docs/adr/0145).
+        mask: Its box filled with the drawing area's colour before it is drawn.
+        width_factor: The letters' width times this, the height kept; absent: 1. Over 0, at most 100.
+    """
     TAG_VALUE: ClassVar[str] = "text"
     p: Vec2
     text: str
     height: float
     rotation: float
+    align: TextAlign | TextAlignName | None | Unset = UNSET
+    mask: bool | Unset = UNSET
+    width_factor: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "text"}
@@ -5631,6 +5641,12 @@ class TextEntityGeometry(EntityGeometry):
         out["text"] = self.text
         out["height"] = float(self.height)
         out["rotation"] = float(self.rotation)
+        if self.align is not UNSET:
+            out["align"] = None if self.align is None else _enum_out(self.align)
+        if self.mask is not UNSET:
+            out["mask"] = self.mask
+        if self.width_factor is not UNSET:
+            out["widthFactor"] = None if self.width_factor is None else float(self.width_factor)
         return out
 
     @classmethod
@@ -5640,6 +5656,9 @@ class TextEntityGeometry(EntityGeometry):
             text=data["text"],
             height=float(data["height"]),
             rotation=float(data["rotation"]),
+            align=UNSET if "align" not in data else None if data["align"] is None else _enum_in(TextAlign, data["align"]),
+            mask=data.get("mask", UNSET),
+            width_factor=UNSET if "widthFactor" not in data else None if data["widthFactor"] is None else float(data["widthFactor"]),
         )
 
 

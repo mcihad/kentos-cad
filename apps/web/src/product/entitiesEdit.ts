@@ -8,7 +8,7 @@ import type { EntityEdit } from '../contracts/generated/EntityEdit';
 import type { EntityGeometry } from '../contracts/generated/EntityGeometry';
 import { isUuid } from '../core/uuid';
 import type { CadDocument } from '../model/document';
-import type { Entity, NewEntity } from '../model/entities';
+import { MAX_WIDTH_FACTOR, widthFactorOk, type Entity, type NewEntity } from '../model/entities';
 import { geometryIsFinite, SHAPE_FIELDS } from '../model/ops/transform';
 import { checkLayer, checkLineWeight, checkRevision, error, failed, isBlank, validated, type Stop } from './checks';
 import type { ProductCommand } from './command';
@@ -70,6 +70,8 @@ export const EDIT_LABEL: Record<EditOperation, string> = {
   elevation: 'Kot ver',
   partsJoin: 'Parçaları birleştir',
   partsSplit: 'Parçalara ayır',
+  // Okunur yap (docs/adr/0145).
+  readable: 'Okunur yap',
 };
 
 /** The contract's geometry fields by kind (`EntityGeometry`): what the command writes of a geometry. */
@@ -84,7 +86,7 @@ const FIELDS: Record<EntityGeometry['kind'], readonly string[]> = {
   spline: ['pts', 'closed'],
   xline: ['p', 'dir'],
   ray: ['p', 'dir'],
-  text: ['p', 'text', 'height', 'rotation'],
+  text: ['p', 'text', 'height', 'rotation', 'align', 'widthFactor', 'mask'],
   dimension: ['a', 'b', 'offset', 'height', 'text', 'style', 'angle', 'c'],
   hatch: ['ring', 'holes', 'pattern'],
   insert: ['block', 'p', 'scale', 'rotation', 'mirror'],
@@ -111,6 +113,11 @@ export function geometryOf(g: EntityGeometry): Record<string, unknown> {
   for (const key of FIELDS[g.kind]) if (src[key] !== undefined) out[key] = structuredClone(src[key]);
   // An insert is mirrored or has no `mirror` (docs/adr/0144): false is not written.
   if (g.kind === 'insert' && out.mirror !== true) delete out.mirror;
+  // A text's defaults are no fields (docs/adr/0145): no mask, a width factor of 1.
+  if (g.kind === 'text') {
+    if (out.mask !== true) delete out.mask;
+    if (out.widthFactor === 1) delete out.widthFactor;
+  }
   return out;
 }
 
@@ -232,6 +239,15 @@ export function checkGeometry(g: EntityGeometry, i: number, list = 'changes', wh
   if ((g.kind === 'circle' || g.kind === 'arc') && !(g.r > 0)) return failed(error('invalid_radius', 'Yarıçap sıfırdan büyük olmalı. Pozitif bir yarıçap verin.', at('.r')));
   // An insert's scale (docs/adr/0144).
   if (g.kind === 'insert' && !(g.scale > 0)) return failed(error('invalid_scale', 'Blok ölçeği sıfırdan büyük olmalı. Pozitif bir ölçek verin.', at('.scale')));
+  // A text's width factor (docs/adr/0145).
+  if (g.kind === 'text' && g.widthFactor != null && !widthFactorOk(g.widthFactor))
+    return failed(
+      error(
+        'invalid_width_factor',
+        `Yazının genişlik çarpanı 0'dan büyük, en çok ${MAX_WIDTH_FACTOR} olmalı; ${g.widthFactor} verildi. Çarpanı bu aralıkta verin ya da alanı kaldırın (1).`,
+        at('.widthFactor'),
+      ),
+    );
   return null;
 }
 
