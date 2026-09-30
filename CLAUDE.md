@@ -538,9 +538,11 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   Blok ekle'nin Öznitelik değerleri sorusu, DXF'in ATTDEF ve ATTRIB'i iki yönde). Xref, dinamik blok ve
   blok düzenleme kipi kapsam dışı (ADR 0144 §8). Ondan önce çok parçalı alan (ADR 0143, `CAD-14`) ve köşe
   kotu (ADR 0142, `CAD-13`).
-- Sırada, sahibin sırasıyla (ADR 0143 Bağlam): yazı ekleri, lider ve yeni ölçü türleri. Her biri `.kcad`
-  şemasını değiştiren kendi özelliği ve şema adımıyla gelir; önce ADR yazılır, adımlar ADR 0142, 0143 ve
-  0144'teki gibi iki platformda, ortak fixture'larla ilerler.
+- Sürmekte: yazı ekleri ([ADR 0145](docs/adr/0145-text-extras.md), TODOS.md `CAD-15`, `.kcad` şema 7):
+  hiza, genişlik çarpanı, zemin; Okunur yap, Artır, Bul ve değiştir, Metin dosyası yerleştir; DXF ve NCZ
+  hizası tahminsiz. Sıradaki adım 1 (sözleşme ve şema 7). Ondan sonra, sahibin sırasıyla (ADR 0143 Bağlam):
+  lider ve yeni ölçü türleri. Her biri `.kcad` şemasını değiştiren kendi özelliği ve şema adımıyla gelir;
+  önce ADR yazılır, adımlar ADR 0142–0145'teki gibi iki platformda, ortak fixture'larla ilerler.
 - Bilinen açık: web `pnpm e2e` duman testinde üç test ADR 0143'ten önce de düşüyordu: “toolbox
   shows every tool without scrolling” (79 araç kaydırma istiyor), nokta hesaplayıcının “yan nokta
   30/5” adımı ve “Layers panel: counts follow add, undo and redo”. Kök nedenleri araştırılmadı.
