@@ -296,6 +296,9 @@ fn texts_dimensions_and_hatches_take_what_the_web_takes() {
             text: "Ada".to_owned(),
             height: 2.5,
             rotation: 0.0,
+            align: None,
+            width_factor: None,
+            mask: false,
         }),
     );
     let s = Slot(text);
@@ -506,6 +509,9 @@ fn what_the_commands_refuse_is_said_and_not_written() {
             text: "Park".to_owned(),
             height: 2.5,
             rotation: 0.0,
+            align: None,
+            width_factor: None,
+            mask: false,
         }),
     );
     event(

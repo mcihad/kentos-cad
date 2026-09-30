@@ -1,0 +1,241 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Yazı ekleri",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "yazi",
+      "name": "Yazı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#3A7BD5",
+        "lineType": "continuous",
+        "lineWeight": 0.18
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "yazi",
+  "entities": [
+    {
+      "kind": "text",
+      "id": 1,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 500000.0,
+        "y": 4400030.0
+      },
+      "text": "Sol taban (alan yok)",
+      "height": 2.5,
+      "rotation": 0.0
+    },
+    {
+      "kind": "text",
+      "id": 2,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 500000.0,
+        "y": 4400025.0
+      },
+      "text": "Orta taban",
+      "height": 2.5,
+      "rotation": 0.0,
+      "align": "baselineCenter"
+    },
+    {
+      "kind": "text",
+      "id": 3,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 500000.0,
+        "y": 4400020.0
+      },
+      "text": "Sağ üst",
+      "height": 2.5,
+      "rotation": 0.0,
+      "align": "topRight"
+    },
+    {
+      "kind": "text",
+      "id": 4,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 500000.0,
+        "y": 4400015.0
+      },
+      "text": "Tam orta, dönük",
+      "height": 2.5,
+      "rotation": 30.0,
+      "align": "middleCenter"
+    },
+    {
+      "kind": "text",
+      "id": 5,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 500000.0,
+        "y": 4400010.0
+      },
+      "text": "Sıkıştırılmış",
+      "height": 2.5,
+      "rotation": 0.0,
+      "widthFactor": 0.6
+    },
+    {
+      "kind": "text",
+      "id": 6,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 500000.0,
+        "y": 4400005.0
+      },
+      "text": "Genişletilmiş ve zeminli",
+      "height": 2.5,
+      "rotation": 0.0,
+      "widthFactor": 1.5,
+      "mask": true
+    },
+    {
+      "kind": "text",
+      "id": 7,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 500000.0,
+        "y": 4400000.0
+      },
+      "text": "Hepsi birden",
+      "height": 2.5,
+      "rotation": 0.0,
+      "align": "bottomLeft",
+      "widthFactor": 0.8,
+      "mask": true
+    },
+    {
+      "kind": "insert",
+      "id": 8,
+      "layerId": "yazi",
+      "attrs": {
+        "NO": "R-7"
+      },
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0003",
+      "p": {
+        "x": 500040.0,
+        "y": 4400010.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+    }
+  ],
+  "uids": [
+    "0192f5a1-2222-7000-8000-000000000001",
+    "0192f5a1-2222-7000-8000-000000000002",
+    "0192f5a1-2222-7000-8000-000000000003",
+    "0192f5a1-2222-7000-8000-000000000004",
+    "0192f5a1-2222-7000-8000-000000000005",
+    "0192f5a1-2222-7000-8000-000000000006",
+    "0192f5a1-2222-7000-8000-000000000007",
+    "0192f5a1-2222-7000-8000-000000000008"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "blocks": [
+    {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0003",
+      "name": "Rögar",
+      "base": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "entities": [
+        {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "c": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "r": 0.6
+        },
+        {
+          "kind": "text",
+          "id": 2,
+          "layerId": "0",
+          "attrs": {},
+          "p": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "text": "R",
+          "height": 0.4,
+          "rotation": 0.0,
+          "align": "middleCenter"
+        }
+      ],
+      "attributes": [
+        {
+          "tag": "NO",
+          "prompt": "Rögar numarası",
+          "value": "R-?",
+          "p": {
+            "x": 0.8,
+            "y": 0.0
+          },
+          "height": 0.5,
+          "rotation": 0.0,
+          "align": "middleLeft",
+          "widthFactor": 0.9
+        },
+        {
+          "tag": "KOT",
+          "p": {
+            "x": 0.0,
+            "y": -0.8
+          },
+          "height": 0.4,
+          "rotation": 0.0,
+          "align": "topCenter"
+        }
+      ]
+    }
+  ]
+}

@@ -1,7 +1,8 @@
 //! The objects written in document schema 2, 3 when one has its own line
-//! weight, 4 when one has vertex elevations, 5 when an area has parts, or 6
-//! with blocks (docs/specs/kcad-v2.md §6.6, docs/adr/0139, docs/adr/0142,
-//! docs/adr/0143, docs/adr/0144): each a one-key map, its kind and then its
+//! weight, 4 when one has vertex elevations, 5 when an area has parts, 6
+//! with blocks, or 7 when a text has an alignment, a width factor or a mask
+//! (docs/specs/kcad-v2.md §6.6, docs/adr/0139, docs/adr/0142, docs/adr/0143,
+//! docs/adr/0144, docs/adr/0145): each a one-key map, its kind and then its
 //! fields, whose keys are sorted per object (they depend on the kind); every
 //! object of the drawing with its persistent id, unique and not nil, a block
 //! definition's objects without one.
@@ -10,7 +11,7 @@ use std::collections::{BTreeMap, HashSet};
 
 use kentos_contracts::{
     AreaPart, BlockId, DocumentSnapshotV2, Entity, EntityId, HatchPattern, MAX_LINE_WEIGHT,
-    RingGeometry, Vec2,
+    MAX_WIDTH_FACTOR, RingGeometry, Vec2, width_factor_ok,
 };
 
 use super::Encoder;
@@ -18,6 +19,11 @@ use super::names::{dimension_style, hatch_pattern};
 use crate::cbor::{Seg, key_order};
 use crate::error::{Code, KcadError};
 use crate::watch::{EVERY, Step};
+
+/// Why a width factor is refused (a text's or an attribute definition's, §6.6).
+pub(super) fn width_factor_words(w: f64) -> String {
+    format!("genişlik çarpanı {w}; 0'dan büyük, en çok {MAX_WIDTH_FACTOR} olmalı")
+}
 
 /// One field of an object, before the fields are sorted by key.
 pub(super) enum Val<'d> {
@@ -183,6 +189,21 @@ impl<'d> Encoder<'d> {
                 f.push(("text", Val::Text(&e.text)));
                 f.push(("height", Val::Float(e.height)));
                 f.push(("rotation", Val::Float(e.rotation)));
+                if let Some(a) = e.align {
+                    f.push(("align", Val::Name(a.name())));
+                }
+                if let Some(w) = e.width_factor {
+                    // Not finite: the float's own refusal (`non_finite`), with its place.
+                    if w.is_finite() && !width_factor_ok(w) {
+                        self.path.push(Seg::Name(kind));
+                        self.path.push(Seg::Name("widthFactor"));
+                        return Err(self.fail(Code::BadValue, &width_factor_words(w)));
+                    }
+                    f.push(("widthFactor", Val::Float(w)));
+                }
+                if e.mask {
+                    f.push(("mask", Val::Bool(true)));
+                }
             }
             Entity::Dimension(e) => {
                 f.push(("a", Val::Point(&e.a)));

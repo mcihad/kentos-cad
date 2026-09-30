@@ -45,6 +45,8 @@ export type PageEntity = ContractEntity & { uid?: string };
 export const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'spline', 'xline', 'ray', 'text', 'dimension', 'hatch', 'insert'] as const;
 const KIND = new Map<string, number>(KINDS.map((k, i) => [k, i]));
 const DIMENSION_STYLES = ['aligned', 'linear', 'angular', 'radius', 'diameter'] as const;
+/** A text's alignments, numbered as the columns hold them (the contract's `TextAlign::ALL`). */
+const TEXT_ALIGNS = ['baselineCenter', 'baselineRight', 'bottomLeft', 'bottomCenter', 'bottomRight', 'middleLeft', 'middleCenter', 'middleRight', 'topLeft', 'topCenter', 'topRight'] as const;
 const HATCH_PATTERNS = ['solid', 'lines', 'cross'] as const;
 
 const COLOR = 1;
@@ -55,8 +57,9 @@ const WEIGHT = 8;
 /**
  * A kind's optional fields from bit 8 up, in the order the Rust module's table
  * names them (point: z; line: za, zb; polyline and polygon: bulges, holes, zs;
- * polygon: parts; dimension: text, style, angle, c; hatch: holes; insert:
- * mirror). A block's definitions travel in the head, not here (docs/adr/0144).
+ * polygon: parts; text: align, width factor, mask (docs/adr/0145); dimension:
+ * text, style, angle, c; hatch: holes; insert: mirror). A block's definitions
+ * travel in the head, not here (docs/adr/0144).
  */
 const OPT = [1 << 8, 1 << 9, 1 << 10, 1 << 11] as const;
 /** A hole's flags: its bulges, its elevations (docs/adr/0142). */
@@ -366,11 +369,21 @@ class Packer {
         this.point(e.p, 'p', kind);
         this.point(e.dir, 'dir', kind);
         break;
+      // docs/adr/0145: the alignment its place in TEXT_ALIGNS, the width factor a float, the mask a flag (only true is written).
       case 'text':
         this.point(e.p, 'p', kind);
         this.float(e.height, 'height');
         this.float(e.rotation, 'rotation');
         this.text(e.text, 'text');
+        if (e.align !== undefined) {
+          const at = TEXT_ALIGNS.indexOf(e.align);
+          if (at < 0) throw unwritable('bad_value', `${this.where}/align`, `“${String(e.align)}” yazı hizası bilinmiyor`);
+          flags |= OPT[0];
+          this.int(at);
+        }
+        if (e.widthFactor !== undefined) (flags |= OPT[1]), this.float(e.widthFactor, 'widthFactor');
+        if (e.mask === true) flags |= OPT[2];
+        else if (e.mask !== undefined) throw unwritable('bad_value', `${this.where}/mask`, 'zemin yalnız true yazılır; zeminsiz yazıda alan yoktur');
         break;
       case 'dimension': {
         this.point(e.a, 'a', kind);
@@ -646,6 +659,9 @@ export class ColumnsReader {
         e.height = this.num();
         e.rotation = this.num();
         e.text = this.readText();
+        if (has(0)) e.align = TEXT_ALIGNS[this.readInt()];
+        if (has(1)) e.widthFactor = this.num();
+        if (has(2)) e.mask = true;
         break;
       case 'dimension':
         e.a = this.pt();

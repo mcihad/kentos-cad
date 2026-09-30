@@ -364,6 +364,9 @@ fn a_paste_goes_through_the_commands_in_one_step() {
         text: "   ".to_owned(),
         height: 2.0,
         rotation: 0.0,
+        align: None,
+        width_factor: None,
+        mask: false,
     });
     let mut blank = Clipboard::new();
     blank.set(vec![board.items()[0].clone(), text], None);

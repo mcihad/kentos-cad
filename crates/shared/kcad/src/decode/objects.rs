@@ -1,10 +1,11 @@
-//! The objects of document schemas 2 to 6 read from a payload
+//! The objects of document schemas 2 to 7 read from a payload
 //! (docs/specs/kcad-v2.md §6.6): each a one-key map, its kind and then its
 //! fields, read into the contract's `Entity` with the persistent id the file
 //! gives it; the ids are unique in a file. Schema 3 adds an object's own line
 //! weight (`lineWeight`, docs/adr/0139), schema 4 the vertex elevations (`za`,
 //! `zb`, `zs`, docs/adr/0142), schema 5 an area's parts (`parts`,
-//! docs/adr/0143), schema 6 the `insert` kind (docs/adr/0144); in an older
+//! docs/adr/0143), schema 6 the `insert` kind (docs/adr/0144), schema 7 a
+//! text's `align`, `widthFactor` and `mask` (docs/adr/0145); in an older
 //! schema they are unknown fields or kinds. A block definition's objects are
 //! read the same way, without persistent ids.
 
@@ -13,8 +14,9 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use kentos_contracts::{
     ArcEntity, AreaPart, BlockDefinition, BlockId, CircleEntity, ConstructionEntity,
     DimensionEntity, DimensionStyle, EllipseEntity, Entity, EntityBase, EntityId, HatchEntity,
-    HatchPattern, HatchPatternType, InsertEntity, LineEntity, MAX_LINE_WEIGHT, PathEntity,
-    PointEntity, RingGeometry, SplineEntity, TextEntity, Vec2,
+    HatchPattern, HatchPatternType, InsertEntity, LineEntity, MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR,
+    PathEntity, PointEntity, RingGeometry, SplineEntity, TextAlign, TextEntity, Vec2,
+    width_factor_ok,
 };
 
 use super::{PREALLOCATE, floats, id16, list, map, named, point, points, required, text, unknown};
@@ -23,6 +25,7 @@ use crate::error::{Code, KcadError};
 use crate::watch::{EVERY, Step};
 use crate::{
     SCHEMA_WITH_BLOCKS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_PARTS,
+    SCHEMA_WITH_TEXT_EXTRAS,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -69,8 +72,11 @@ pub(super) struct Features {
     elevations: bool,
     /// Schema 5 and up: an area's parts (`parts`).
     parts: bool,
-    /// Schema 6: block definitions and the `insert` kind.
+    /// Schema 6 and up: block definitions and the `insert` kind.
     pub(super) blocks: bool,
+    /// Schema 7: a text's alignment, width factor and mask, an attribute
+    /// definition's alignment and width factor.
+    pub(super) texts: bool,
     /// Whether an object has its persistent id (`uid`): the drawing's do, a
     /// block definition's do not.
     uids: bool,
@@ -83,6 +89,7 @@ impl Features {
             elevations: schema >= SCHEMA_WITH_ELEVATIONS,
             parts: schema >= SCHEMA_WITH_PARTS,
             blocks: schema >= SCHEMA_WITH_BLOCKS,
+            texts: schema >= SCHEMA_WITH_TEXT_EXTRAS,
             uids: true,
         }
     }
@@ -118,7 +125,10 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
             Kind::Ellipse => matches!(key, "c" | "major" | "ratio" | "t0" | "t1"),
             Kind::Spline => matches!(key, "pts" | "closed"),
             Kind::Xline | Kind::Ray => matches!(key, "p" | "dir"),
-            Kind::Text => matches!(key, "p" | "text" | "height" | "rotation"),
+            Kind::Text => {
+                matches!(key, "p" | "text" | "height" | "rotation")
+                    || (has.texts && matches!(key, "align" | "widthFactor" | "mask"))
+            }
             Kind::Dimension => matches!(
                 key,
                 "a" | "b" | "c" | "text" | "angle" | "style" | "height" | "offset"
@@ -175,6 +185,9 @@ struct Fields {
     block_at: usize,
     scale: Option<f64>,
     mirror: Option<bool>,
+    align: Option<TextAlign>,
+    width_factor: Option<f64>,
+    mask: Option<bool>,
 }
 
 /// The objects and their persistent ids, each id once (§6.8); each insert
@@ -369,6 +382,19 @@ pub(super) fn object(
                 }
                 f.mirror = Some(true);
             }
+            "align" => f.align = Some(text_align(r)?),
+            "widthFactor" => f.width_factor = Some(width_factor(r)?),
+            "mask" => {
+                let at = r.position();
+                if !r.bool()? {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "zemin false yazılmaz; zeminsiz yazıda alan yoktur",
+                    ));
+                }
+                f.mask = Some(true);
+            }
             _ => return Err(unknown(r)),
         }
         Ok(())
@@ -474,6 +500,9 @@ fn build(
             text: required(r, f.text.take(), "text")?,
             height: required(r, f.height, "height")?,
             rotation: required(r, f.rotation, "rotation")?,
+            align: f.align,
+            width_factor: f.width_factor,
+            mask: f.mask.unwrap_or(false),
         }),
         Kind::Dimension => Entity::Dimension(DimensionEntity {
             base,
@@ -607,4 +636,24 @@ fn pattern(r: &mut Reader<'_>) -> Result<HatchPattern, KcadError> {
         angle: required(r, angle, "angle")?,
         spacing: required(r, spacing, "spacing")?,
     })
+}
+
+/// A text's alignment by its name (§6.6); an unknown name is `bad_value`.
+pub(super) fn text_align(r: &mut Reader<'_>) -> Result<TextAlign, KcadError> {
+    let names: Vec<(&str, TextAlign)> = TextAlign::ALL.iter().map(|a| (a.name(), *a)).collect();
+    super::named(r, &names)
+}
+
+/// A width factor (§6.6): over 0, at most `MAX_WIDTH_FACTOR`; not finite is the float's `non_finite`.
+pub(super) fn width_factor(r: &mut Reader<'_>) -> Result<f64, KcadError> {
+    let at = r.position();
+    let w = r.float()?;
+    if !width_factor_ok(w) {
+        return Err(r.fail_at(
+            Code::BadValue,
+            at,
+            &format!("genişlik çarpanı {w}; 0'dan büyük, en çok {MAX_WIDTH_FACTOR} olmalı"),
+        ));
+    }
+    Ok(w)
 }

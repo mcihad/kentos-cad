@@ -584,6 +584,8 @@ mod tests {
             p: Vec2 { x: 0.0, y: 0.0 },
             height: 1.0,
             rotation: 0.0,
+            align: None,
+            width_factor: None,
         };
         let mut a = block(1, "A", &[]);
         a.attributes = vec![tag("NO"), tag("NO")];

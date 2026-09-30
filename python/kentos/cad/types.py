@@ -479,6 +479,31 @@ TenantKindName = Literal["organization", "personal"]
 """The names of :class:`TenantKind`, for a plain string."""
 
 
+class TextAlign(_StrEnum):
+    """Which point of a text its `p` is (docs/adr/0145 §1): horizontally its
+    left, centre or right; vertically on its baseline, at its bottom (0.2 of
+    its height under the baseline), its middle (half its height over it) or
+    its top (its height over it). The left of the baseline, where a text
+    always stood, is no value but the field's absence: a text has one
+    spelling.
+    """
+    BASELINE_CENTER = "baselineCenter"
+    BASELINE_RIGHT = "baselineRight"
+    BOTTOM_LEFT = "bottomLeft"
+    BOTTOM_CENTER = "bottomCenter"
+    BOTTOM_RIGHT = "bottomRight"
+    MIDDLE_LEFT = "middleLeft"
+    MIDDLE_CENTER = "middleCenter"
+    MIDDLE_RIGHT = "middleRight"
+    TOP_LEFT = "topLeft"
+    TOP_CENTER = "topCenter"
+    TOP_RIGHT = "topRight"
+
+
+TextAlignName = Literal["baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", "bottomRight", "middleLeft", "middleCenter", "middleRight", "topLeft", "topCenter", "topRight"]
+"""The names of :class:`TextAlign`, for a plain string."""
+
+
 class Workspace(_StrEnum):
     """The work mode a project opens in (`app/workspaces.ts`): which menus, ribbon
     tabs and tools the interface shows. Presentation only, never what the data
@@ -938,15 +963,19 @@ class AttributeDefinition(_Model):
     Attributes:
         height: Metres, in the definition's size.
         rotation: Degrees, counter-clockwise from east, as a text's.
+        align: Where `p` is on the text, as a text's (docs/adr/0145).
         prompt: What Blok ekle asks for it.
         value: The default value.
+        width_factor: The letters' width times this, as a text's (docs/adr/0145).
     """
     tag: str
     p: Vec2
     height: float
     rotation: float
+    align: TextAlign | TextAlignName | None | Unset = UNSET
     prompt: str | None | Unset = UNSET
     value: str | None | Unset = UNSET
+    width_factor: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -954,10 +983,14 @@ class AttributeDefinition(_Model):
         out["p"] = _vec2_out(self.p)
         out["height"] = float(self.height)
         out["rotation"] = float(self.rotation)
+        if self.align is not UNSET:
+            out["align"] = None if self.align is None else _enum_out(self.align)
         if self.prompt is not UNSET:
             out["prompt"] = self.prompt
         if self.value is not UNSET:
             out["value"] = self.value
+        if self.width_factor is not UNSET:
+            out["widthFactor"] = None if self.width_factor is None else float(self.width_factor)
         return out
 
     @classmethod
@@ -967,8 +1000,10 @@ class AttributeDefinition(_Model):
             p=Vec2.from_json(data["p"]),
             height=float(data["height"]),
             rotation=float(data["rotation"]),
+            align=UNSET if "align" not in data else None if data["align"] is None else _enum_in(TextAlign, data["align"]),
             prompt=data.get("prompt", UNSET),
             value=data.get("value", UNSET),
+            width_factor=UNSET if "widthFactor" not in data else None if data["widthFactor"] is None else float(data["widthFactor"]),
         )
 
 
@@ -4901,12 +4936,17 @@ class TextEntity(Entity):
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
         height: Metres.
         rotation: Degrees, counter-clockwise from east.
+        align: Where `p` is on the text; absent: the left of the baseline (docs/adr/0145).
         color: Colour override; absent = the layer's colour ("katmana göre").
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
             object (docs/adr/0139).
+        mask: The text's box is filled with the drawing area's colour before the
+            text is drawn (Netcad's “fon”): what lies under it does not show.
         symbol: Library symbol overriding the layer's style.
+        width_factor: The letters' width times this, the height kept (Netcad's “sıkışma”,
+            DXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.
     """
     TAG_VALUE: ClassVar[str] = "text"
     id: int
@@ -4916,10 +4956,13 @@ class TextEntity(Entity):
     text: str
     height: float
     rotation: float
+    align: TextAlign | TextAlignName | None | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
+    mask: bool | Unset = UNSET
     symbol: str | None | Unset = UNSET
+    width_factor: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "text"}
@@ -4930,14 +4973,20 @@ class TextEntity(Entity):
         out["text"] = self.text
         out["height"] = float(self.height)
         out["rotation"] = float(self.rotation)
+        if self.align is not UNSET:
+            out["align"] = None if self.align is None else _enum_out(self.align)
         if self.color is not UNSET:
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.mask is not UNSET:
+            out["mask"] = self.mask
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
+        if self.width_factor is not UNSET:
+            out["widthFactor"] = None if self.width_factor is None else float(self.width_factor)
         return out
 
     @classmethod
@@ -4950,10 +4999,13 @@ class TextEntity(Entity):
             text=data["text"],
             height=float(data["height"]),
             rotation=float(data["rotation"]),
+            align=UNSET if "align" not in data else None if data["align"] is None else _enum_in(TextAlign, data["align"]),
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            mask=data.get("mask", UNSET),
             symbol=data.get("symbol", UNSET),
+            width_factor=UNSET if "widthFactor" not in data else None if data["widthFactor"] is None else float(data["widthFactor"]),
         )
 
 
@@ -6088,6 +6140,8 @@ __all__ = [
     "SplineEntityGeometry",
     "TenantKind",
     "TenantKindName",
+    "TextAlign",
+    "TextAlignName",
     "TextEntity",
     "TextEntityGeometry",
     "Transform",

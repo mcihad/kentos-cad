@@ -1,13 +1,16 @@
-//! Block definitions written in document schema 6 (docs/specs/kcad-v2.md
-//! §6.9, docs/adr/0144): each its id, base point, name, objects (written as
-//! the drawing's are, without persistent ids: they are local to the
-//! definition), attribute definitions and description; keys in encoded order.
+//! Block definitions written in document schema 6, or 7 when an attribute
+//! definition has an alignment or a width factor (docs/specs/kcad-v2.md
+//! §6.9, docs/adr/0144, docs/adr/0145): each its id, base point, name,
+//! objects (written as the drawing's are, without persistent ids: they are
+//! local to the definition), attribute definitions and description; keys in
+//! encoded order.
 
-use kentos_contracts::{AttributeDefinition, BlockDefinition};
+use kentos_contracts::{AttributeDefinition, BlockDefinition, width_factor_ok};
 
 use super::Encoder;
+use super::objects::width_factor_words;
 use crate::cbor::Seg;
-use crate::error::KcadError;
+use crate::error::{Code, KcadError};
 
 impl<'d> Encoder<'d> {
     pub(super) fn blocks(&mut self, list: &'d [BlockDefinition]) -> Result<(), KcadError> {
@@ -57,13 +60,28 @@ impl<'d> Encoder<'d> {
         self.open(list.len(), false)?;
         for (i, a) in list.iter().enumerate() {
             self.path.push(Seg::Index(i));
-            let n = 4 + usize::from(a.value.is_some()) + usize::from(a.prompt.is_some());
+            let n = 4
+                + usize::from(a.value.is_some())
+                + usize::from(a.prompt.is_some())
+                + usize::from(a.align.is_some())
+                + usize::from(a.width_factor.is_some());
+            if let Some(w) = a.width_factor
+                && w.is_finite()
+                && !width_factor_ok(w)
+            {
+                self.path.push(Seg::Name("widthFactor"));
+                return Err(self.fail(Code::BadValue, &width_factor_words(w)));
+            }
             self.open(n, true)?;
-            // p (1), tag (3), value (5), height prompt (6), rotation (8).
+            // p (1), tag (3), align value (5), height prompt (6), rotation (8), widthFactor (11).
             self.key("p");
             self.at(Seg::Name("p"), |e| e.point(&a.p))?;
             self.key("tag");
             self.at(Seg::Name("tag"), |e| e.text(&a.tag))?;
+            if let Some(align) = a.align {
+                self.key("align");
+                self.at(Seg::Name("align"), |e| e.text(align.name()))?;
+            }
             if let Some(value) = &a.value {
                 self.key("value");
                 self.at(Seg::Name("value"), |e| e.text(value))?;
@@ -76,6 +94,10 @@ impl<'d> Encoder<'d> {
             }
             self.key("rotation");
             self.at(Seg::Name("rotation"), |e| e.float(a.rotation))?;
+            if let Some(w) = a.width_factor {
+                self.key("widthFactor");
+                self.at(Seg::Name("widthFactor"), |e| e.float(w))?;
+            }
             self.close();
             self.path.pop();
         }

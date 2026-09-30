@@ -583,6 +583,9 @@ fn what_takes_no_elevation_is_counted_on_a_line_of_its_own_after_the_result() {
             text: "Park".into(),
             height: 2.0,
             rotation: 0.0,
+            align: None,
+            width_factor: None,
+            mask: false,
         }),
     );
     let before_circle = b.doc.get(circle).cloned();

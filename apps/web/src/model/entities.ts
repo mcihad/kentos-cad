@@ -183,7 +183,29 @@ export interface TextEntity extends EntityBase {
   height: number;
   /** Degrees, counter-clockwise from east. */
   rotation: number;
+  /** Where `p` is on the text; absent: the left of the baseline (docs/adr/0145). */
+  align?: TextAlign;
+  /** The letters' width times this, the height kept; absent: 1 (over 0, at most `MAX_WIDTH_FACTOR`). */
+  widthFactor?: number;
+  /** The text's box filled with the drawing area's colour before the text: what lies under it does not show. */
+  mask?: boolean;
 }
+
+/**
+ * Which point of a text its `p` is (docs/adr/0145 §1): left, centre or right;
+ * on the baseline, at the bottom (0.2 of the height under it), the middle or
+ * the top. The left of the baseline is the field's absence, no value.
+ */
+export type TextAlign = 'baselineCenter' | 'baselineRight' | 'bottomLeft' | 'bottomCenter' | 'bottomRight' | 'middleLeft' | 'middleCenter' | 'middleRight' | 'topLeft' | 'topCenter' | 'topRight';
+
+/** Every alignment, in the contract's order (`TextAlign::ALL`). */
+export const TEXT_ALIGNS: readonly TextAlign[] = ['baselineCenter', 'baselineRight', 'bottomLeft', 'bottomCenter', 'bottomRight', 'middleLeft', 'middleCenter', 'middleRight', 'topLeft', 'topCenter', 'topRight'];
+
+/** The widest a text's letters may be drawn, times their width (`MAX_WIDTH_FACTOR` in the contracts). */
+export const MAX_WIDTH_FACTOR = 100;
+
+/** Whether `f` may be a width factor: over 0, at most `MAX_WIDTH_FACTOR` (NaN is not). */
+export const widthFactorOk = (f: number): boolean => f > 0 && f <= MAX_WIDTH_FACTOR;
 /**
  * A block placed in the drawing (docs/adr/0144): its definition (`block`,
  * model/blocks.ts) moved from its base point to `p`, mirrored in its x axis

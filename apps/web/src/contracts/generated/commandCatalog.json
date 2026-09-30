@@ -166,6 +166,17 @@
           "AttributeDefinition": {
             "description": "One attribute an insert shows as text (docs/adr/0144 §7): the insert's\nattribute `tag`, else `value`, written at `p` in the definition's\ncoordinates, moved with the insert.",
             "properties": {
+              "align": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextAlign"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where `p` is on the text, as a text's (docs/adr/0145)."
+              },
               "height": {
                 "description": "Metres, in the definition's size.",
                 "format": "double",
@@ -193,6 +204,16 @@
                 "description": "The default value.",
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "widthFactor": {
+                "description": "The letters' width times this, as a text's (docs/adr/0145).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
                   "null"
                 ]
               }
@@ -1809,9 +1830,37 @@
             ],
             "type": "object"
           },
+          "TextAlign": {
+            "description": "Which point of a text its `p` is (docs/adr/0145 §1): horizontally its\nleft, centre or right; vertically on its baseline, at its bottom (0.2 of\nits height under the baseline), its middle (half its height over it) or\nits top (its height over it). The left of the baseline, where a text\nalways stood, is no value but the field's absence: a text has one\nspelling.",
+            "enum": [
+              "baselineCenter",
+              "baselineRight",
+              "bottomLeft",
+              "bottomCenter",
+              "bottomRight",
+              "middleLeft",
+              "middleCenter",
+              "middleRight",
+              "topLeft",
+              "topCenter",
+              "topRight"
+            ],
+            "type": "string"
+          },
           "TextEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "align": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextAlign"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where `p` is on the text; absent: the left of the baseline (docs/adr/0145)."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -1855,6 +1904,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
+                "type": "boolean"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -1872,6 +1925,16 @@
               },
               "text": {
                 "type": "string"
+              },
+              "widthFactor": {
+                "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -3017,6 +3080,17 @@
           "AttributeDefinition": {
             "description": "One attribute an insert shows as text (docs/adr/0144 §7): the insert's\nattribute `tag`, else `value`, written at `p` in the definition's\ncoordinates, moved with the insert.",
             "properties": {
+              "align": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextAlign"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where `p` is on the text, as a text's (docs/adr/0145)."
+              },
               "height": {
                 "description": "Metres, in the definition's size.",
                 "format": "double",
@@ -3044,6 +3118,16 @@
                 "description": "The default value.",
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "widthFactor": {
+                "description": "The letters' width times this, as a text's (docs/adr/0145).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
                   "null"
                 ]
               }
@@ -4689,9 +4773,37 @@
               }
             ]
           },
+          "TextAlign": {
+            "description": "Which point of a text its `p` is (docs/adr/0145 §1): horizontally its\nleft, centre or right; vertically on its baseline, at its bottom (0.2 of\nits height under the baseline), its middle (half its height over it) or\nits top (its height over it). The left of the baseline, where a text\nalways stood, is no value but the field's absence: a text has one\nspelling.",
+            "enum": [
+              "baselineCenter",
+              "baselineRight",
+              "bottomLeft",
+              "bottomCenter",
+              "bottomRight",
+              "middleLeft",
+              "middleCenter",
+              "middleRight",
+              "topLeft",
+              "topCenter",
+              "topRight"
+            ],
+            "type": "string"
+          },
           "TextEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "align": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextAlign"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where `p` is on the text; absent: the left of the baseline (docs/adr/0145)."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -4735,6 +4847,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
+                "type": "boolean"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -4752,6 +4868,16 @@
               },
               "text": {
                 "type": "string"
+              },
+              "widthFactor": {
+                "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -11563,9 +11689,37 @@
             ],
             "type": "object"
           },
+          "TextAlign": {
+            "description": "Which point of a text its `p` is (docs/adr/0145 §1): horizontally its\nleft, centre or right; vertically on its baseline, at its bottom (0.2 of\nits height under the baseline), its middle (half its height over it) or\nits top (its height over it). The left of the baseline, where a text\nalways stood, is no value but the field's absence: a text has one\nspelling.",
+            "enum": [
+              "baselineCenter",
+              "baselineRight",
+              "bottomLeft",
+              "bottomCenter",
+              "bottomRight",
+              "middleLeft",
+              "middleCenter",
+              "middleRight",
+              "topLeft",
+              "topCenter",
+              "topRight"
+            ],
+            "type": "string"
+          },
           "TextEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "align": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextAlign"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where `p` is on the text; absent: the left of the baseline (docs/adr/0145)."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -11609,6 +11763,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
+                "type": "boolean"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -11626,6 +11784,16 @@
               },
               "text": {
                 "type": "string"
+              },
+              "widthFactor": {
+                "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -13089,9 +13257,37 @@
             ],
             "type": "object"
           },
+          "TextAlign": {
+            "description": "Which point of a text its `p` is (docs/adr/0145 §1): horizontally its\nleft, centre or right; vertically on its baseline, at its bottom (0.2 of\nits height under the baseline), its middle (half its height over it) or\nits top (its height over it). The left of the baseline, where a text\nalways stood, is no value but the field's absence: a text has one\nspelling.",
+            "enum": [
+              "baselineCenter",
+              "baselineRight",
+              "bottomLeft",
+              "bottomCenter",
+              "bottomRight",
+              "middleLeft",
+              "middleCenter",
+              "middleRight",
+              "topLeft",
+              "topCenter",
+              "topRight"
+            ],
+            "type": "string"
+          },
           "TextEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "align": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextAlign"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where `p` is on the text; absent: the left of the baseline (docs/adr/0145)."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -13135,6 +13331,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
+                "type": "boolean"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -13152,6 +13352,16 @@
               },
               "text": {
                 "type": "string"
+              },
+              "widthFactor": {
+                "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -14576,9 +14786,37 @@
             ],
             "type": "object"
           },
+          "TextAlign": {
+            "description": "Which point of a text its `p` is (docs/adr/0145 §1): horizontally its\nleft, centre or right; vertically on its baseline, at its bottom (0.2 of\nits height under the baseline), its middle (half its height over it) or\nits top (its height over it). The left of the baseline, where a text\nalways stood, is no value but the field's absence: a text has one\nspelling.",
+            "enum": [
+              "baselineCenter",
+              "baselineRight",
+              "bottomLeft",
+              "bottomCenter",
+              "bottomRight",
+              "middleLeft",
+              "middleCenter",
+              "middleRight",
+              "topLeft",
+              "topCenter",
+              "topRight"
+            ],
+            "type": "string"
+          },
           "TextEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "align": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextAlign"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where `p` is on the text; absent: the left of the baseline (docs/adr/0145)."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -14622,6 +14860,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
+                "type": "boolean"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -14639,6 +14881,16 @@
               },
               "text": {
                 "type": "string"
+              },
+              "widthFactor": {
+                "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -16205,9 +16457,37 @@
             ],
             "type": "object"
           },
+          "TextAlign": {
+            "description": "Which point of a text its `p` is (docs/adr/0145 §1): horizontally its\nleft, centre or right; vertically on its baseline, at its bottom (0.2 of\nits height under the baseline), its middle (half its height over it) or\nits top (its height over it). The left of the baseline, where a text\nalways stood, is no value but the field's absence: a text has one\nspelling.",
+            "enum": [
+              "baselineCenter",
+              "baselineRight",
+              "bottomLeft",
+              "bottomCenter",
+              "bottomRight",
+              "middleLeft",
+              "middleCenter",
+              "middleRight",
+              "topLeft",
+              "topCenter",
+              "topRight"
+            ],
+            "type": "string"
+          },
           "TextEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "align": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextAlign"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where `p` is on the text; absent: the left of the baseline (docs/adr/0145)."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -16251,6 +16531,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
+                "type": "boolean"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -16268,6 +16552,16 @@
               },
               "text": {
                 "type": "string"
+              },
+              "widthFactor": {
+                "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -17677,9 +17971,37 @@
             ],
             "type": "object"
           },
+          "TextAlign": {
+            "description": "Which point of a text its `p` is (docs/adr/0145 §1): horizontally its\nleft, centre or right; vertically on its baseline, at its bottom (0.2 of\nits height under the baseline), its middle (half its height over it) or\nits top (its height over it). The left of the baseline, where a text\nalways stood, is no value but the field's absence: a text has one\nspelling.",
+            "enum": [
+              "baselineCenter",
+              "baselineRight",
+              "bottomLeft",
+              "bottomCenter",
+              "bottomRight",
+              "middleLeft",
+              "middleCenter",
+              "middleRight",
+              "topLeft",
+              "topCenter",
+              "topRight"
+            ],
+            "type": "string"
+          },
           "TextEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "align": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextAlign"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where `p` is on the text; absent: the left of the baseline (docs/adr/0145)."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -17723,6 +18045,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
+                "type": "boolean"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -17740,6 +18066,16 @@
               },
               "text": {
                 "type": "string"
+              },
+              "widthFactor": {
+                "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -19159,9 +19495,37 @@
             ],
             "type": "object"
           },
+          "TextAlign": {
+            "description": "Which point of a text its `p` is (docs/adr/0145 §1): horizontally its\nleft, centre or right; vertically on its baseline, at its bottom (0.2 of\nits height under the baseline), its middle (half its height over it) or\nits top (its height over it). The left of the baseline, where a text\nalways stood, is no value but the field's absence: a text has one\nspelling.",
+            "enum": [
+              "baselineCenter",
+              "baselineRight",
+              "bottomLeft",
+              "bottomCenter",
+              "bottomRight",
+              "middleLeft",
+              "middleCenter",
+              "middleRight",
+              "topLeft",
+              "topCenter",
+              "topRight"
+            ],
+            "type": "string"
+          },
           "TextEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "align": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextAlign"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where `p` is on the text; absent: the left of the baseline (docs/adr/0145)."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -19205,6 +19569,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
+                "type": "boolean"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -19222,6 +19590,16 @@
               },
               "text": {
                 "type": "string"
+              },
+              "widthFactor": {
+                "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -20762,9 +21140,37 @@
             ],
             "type": "object"
           },
+          "TextAlign": {
+            "description": "Which point of a text its `p` is (docs/adr/0145 §1): horizontally its\nleft, centre or right; vertically on its baseline, at its bottom (0.2 of\nits height under the baseline), its middle (half its height over it) or\nits top (its height over it). The left of the baseline, where a text\nalways stood, is no value but the field's absence: a text has one\nspelling.",
+            "enum": [
+              "baselineCenter",
+              "baselineRight",
+              "bottomLeft",
+              "bottomCenter",
+              "bottomRight",
+              "middleLeft",
+              "middleCenter",
+              "middleRight",
+              "topLeft",
+              "topCenter",
+              "topRight"
+            ],
+            "type": "string"
+          },
           "TextEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "align": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextAlign"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where `p` is on the text; absent: the left of the baseline (docs/adr/0145)."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -20808,6 +21214,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
+                "type": "boolean"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -20825,6 +21235,16 @@
               },
               "text": {
                 "type": "string"
+              },
+              "widthFactor": {
+                "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -23195,9 +23615,37 @@
             ],
             "type": "object"
           },
+          "TextAlign": {
+            "description": "Which point of a text its `p` is (docs/adr/0145 §1): horizontally its\nleft, centre or right; vertically on its baseline, at its bottom (0.2 of\nits height under the baseline), its middle (half its height over it) or\nits top (its height over it). The left of the baseline, where a text\nalways stood, is no value but the field's absence: a text has one\nspelling.",
+            "enum": [
+              "baselineCenter",
+              "baselineRight",
+              "bottomLeft",
+              "bottomCenter",
+              "bottomRight",
+              "middleLeft",
+              "middleCenter",
+              "middleRight",
+              "topLeft",
+              "topCenter",
+              "topRight"
+            ],
+            "type": "string"
+          },
           "TextEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "align": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextAlign"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where `p` is on the text; absent: the left of the baseline (docs/adr/0145)."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -23241,6 +23689,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
+                "type": "boolean"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -23258,6 +23710,16 @@
               },
               "text": {
                 "type": "string"
+              },
+              "widthFactor": {
+                "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -24813,9 +25275,37 @@
             ],
             "type": "object"
           },
+          "TextAlign": {
+            "description": "Which point of a text its `p` is (docs/adr/0145 §1): horizontally its\nleft, centre or right; vertically on its baseline, at its bottom (0.2 of\nits height under the baseline), its middle (half its height over it) or\nits top (its height over it). The left of the baseline, where a text\nalways stood, is no value but the field's absence: a text has one\nspelling.",
+            "enum": [
+              "baselineCenter",
+              "baselineRight",
+              "bottomLeft",
+              "bottomCenter",
+              "bottomRight",
+              "middleLeft",
+              "middleCenter",
+              "middleRight",
+              "topLeft",
+              "topCenter",
+              "topRight"
+            ],
+            "type": "string"
+          },
           "TextEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "align": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextAlign"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where `p` is on the text; absent: the left of the baseline (docs/adr/0145)."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -24859,6 +25349,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
+                "type": "boolean"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -24876,6 +25370,16 @@
               },
               "text": {
                 "type": "string"
+              },
+              "widthFactor": {
+                "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -27048,9 +27552,37 @@
             ],
             "type": "object"
           },
+          "TextAlign": {
+            "description": "Which point of a text its `p` is (docs/adr/0145 §1): horizontally its\nleft, centre or right; vertically on its baseline, at its bottom (0.2 of\nits height under the baseline), its middle (half its height over it) or\nits top (its height over it). The left of the baseline, where a text\nalways stood, is no value but the field's absence: a text has one\nspelling.",
+            "enum": [
+              "baselineCenter",
+              "baselineRight",
+              "bottomLeft",
+              "bottomCenter",
+              "bottomRight",
+              "middleLeft",
+              "middleCenter",
+              "middleRight",
+              "topLeft",
+              "topCenter",
+              "topRight"
+            ],
+            "type": "string"
+          },
           "TextEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "align": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextAlign"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where `p` is on the text; absent: the left of the baseline (docs/adr/0145)."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -27094,6 +27626,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
+                "type": "boolean"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -27111,6 +27647,16 @@
               },
               "text": {
                 "type": "string"
+              },
+              "widthFactor": {
+                "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -28662,9 +29208,37 @@
             ],
             "type": "object"
           },
+          "TextAlign": {
+            "description": "Which point of a text its `p` is (docs/adr/0145 §1): horizontally its\nleft, centre or right; vertically on its baseline, at its bottom (0.2 of\nits height under the baseline), its middle (half its height over it) or\nits top (its height over it). The left of the baseline, where a text\nalways stood, is no value but the field's absence: a text has one\nspelling.",
+            "enum": [
+              "baselineCenter",
+              "baselineRight",
+              "bottomLeft",
+              "bottomCenter",
+              "bottomRight",
+              "middleLeft",
+              "middleCenter",
+              "middleRight",
+              "topLeft",
+              "topCenter",
+              "topRight"
+            ],
+            "type": "string"
+          },
           "TextEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "align": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextAlign"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where `p` is on the text; absent: the left of the baseline (docs/adr/0145)."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -28708,6 +29282,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
+                "type": "boolean"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -28725,6 +29303,16 @@
               },
               "text": {
                 "type": "string"
+              },
+              "widthFactor": {
+                "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -29104,6 +29692,17 @@
           "AttributeDefinition": {
             "description": "One attribute an insert shows as text (docs/adr/0144 §7): the insert's\nattribute `tag`, else `value`, written at `p` in the definition's\ncoordinates, moved with the insert.",
             "properties": {
+              "align": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextAlign"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where `p` is on the text, as a text's (docs/adr/0145)."
+              },
               "height": {
                 "description": "Metres, in the definition's size.",
                 "format": "double",
@@ -29131,6 +29730,16 @@
                 "description": "The default value.",
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "widthFactor": {
+                "description": "The letters' width times this, as a text's (docs/adr/0145).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
                   "null"
                 ]
               }
@@ -30256,9 +30865,37 @@
             ],
             "type": "object"
           },
+          "TextAlign": {
+            "description": "Which point of a text its `p` is (docs/adr/0145 §1): horizontally its\nleft, centre or right; vertically on its baseline, at its bottom (0.2 of\nits height under the baseline), its middle (half its height over it) or\nits top (its height over it). The left of the baseline, where a text\nalways stood, is no value but the field's absence: a text has one\nspelling.",
+            "enum": [
+              "baselineCenter",
+              "baselineRight",
+              "bottomLeft",
+              "bottomCenter",
+              "bottomRight",
+              "middleLeft",
+              "middleCenter",
+              "middleRight",
+              "topLeft",
+              "topCenter",
+              "topRight"
+            ],
+            "type": "string"
+          },
           "TextEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "align": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextAlign"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where `p` is on the text; absent: the left of the baseline (docs/adr/0145)."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -30302,6 +30939,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
+                "type": "boolean"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -30319,6 +30960,16 @@
               },
               "text": {
                 "type": "string"
+              },
+              "widthFactor": {
+                "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -30451,6 +31102,17 @@
           "AttributeDefinition": {
             "description": "One attribute an insert shows as text (docs/adr/0144 §7): the insert's\nattribute `tag`, else `value`, written at `p` in the definition's\ncoordinates, moved with the insert.",
             "properties": {
+              "align": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextAlign"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where `p` is on the text, as a text's (docs/adr/0145)."
+              },
               "height": {
                 "description": "Metres, in the definition's size.",
                 "format": "double",
@@ -30478,6 +31140,16 @@
                 "description": "The default value.",
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "widthFactor": {
+                "description": "The letters' width times this, as a text's (docs/adr/0145).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
                   "null"
                 ]
               }
@@ -30528,6 +31200,23 @@
           "BlockId": {
             "format": "uuid",
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          "TextAlign": {
+            "description": "Which point of a text its `p` is (docs/adr/0145 §1): horizontally its\nleft, centre or right; vertically on its baseline, at its bottom (0.2 of\nits height under the baseline), its middle (half its height over it) or\nits top (its height over it). The left of the baseline, where a text\nalways stood, is no value but the field's absence: a text has one\nspelling.",
+            "enum": [
+              "baselineCenter",
+              "baselineRight",
+              "bottomLeft",
+              "bottomCenter",
+              "bottomRight",
+              "middleLeft",
+              "middleCenter",
+              "middleRight",
+              "topLeft",
+              "topCenter",
+              "topRight"
+            ],
             "type": "string"
           },
           "Vec2": {
@@ -30824,6 +31513,17 @@
           "AttributeDefinition": {
             "description": "One attribute an insert shows as text (docs/adr/0144 §7): the insert's\nattribute `tag`, else `value`, written at `p` in the definition's\ncoordinates, moved with the insert.",
             "properties": {
+              "align": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextAlign"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where `p` is on the text, as a text's (docs/adr/0145)."
+              },
               "height": {
                 "description": "Metres, in the definition's size.",
                 "format": "double",
@@ -30851,6 +31551,16 @@
                 "description": "The default value.",
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "widthFactor": {
+                "description": "The letters' width times this, as a text's (docs/adr/0145).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
                   "null"
                 ]
               }
@@ -31976,9 +32686,37 @@
             ],
             "type": "object"
           },
+          "TextAlign": {
+            "description": "Which point of a text its `p` is (docs/adr/0145 §1): horizontally its\nleft, centre or right; vertically on its baseline, at its bottom (0.2 of\nits height under the baseline), its middle (half its height over it) or\nits top (its height over it). The left of the baseline, where a text\nalways stood, is no value but the field's absence: a text has one\nspelling.",
+            "enum": [
+              "baselineCenter",
+              "baselineRight",
+              "bottomLeft",
+              "bottomCenter",
+              "bottomRight",
+              "middleLeft",
+              "middleCenter",
+              "middleRight",
+              "topLeft",
+              "topCenter",
+              "topRight"
+            ],
+            "type": "string"
+          },
           "TextEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "align": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextAlign"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where `p` is on the text; absent: the left of the baseline (docs/adr/0145)."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -32022,6 +32760,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
+                "type": "boolean"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -32039,6 +32781,16 @@
               },
               "text": {
                 "type": "string"
+              },
+              "widthFactor": {
+                "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [

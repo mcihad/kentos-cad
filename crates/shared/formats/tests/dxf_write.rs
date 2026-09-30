@@ -265,6 +265,9 @@ fn objects() -> Vec<Entity> {
             text: "Ada 12 / Parsel 3 çğıöşüİ ^ %%d 100%".into(),
             height: 2.5,
             rotation: 33.3,
+            align: None,
+            width_factor: None,
+            mask: false,
         }),
         Entity::Text(TextEntity {
             base: base("yazi"),
@@ -272,6 +275,9 @@ fn objects() -> Vec<Entity> {
             text: " boşluklu ".into(),
             height: third,
             rotation: 0.0,
+            align: None,
+            width_factor: None,
+            mask: false,
         }),
         Entity::Hatch(HatchEntity {
             base: base("yapi"),
@@ -913,6 +919,9 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
             text: "iki\nsatır".into(),
             height: 1.0,
             rotation: 0.0,
+            align: None,
+            width_factor: None,
+            mask: false,
         }),
         Entity::Circle(CircleEntity {
             base: base("parsel"),

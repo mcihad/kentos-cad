@@ -407,6 +407,9 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
                 text: rng.text(),
                 height: rng.float(),
                 rotation: rng.float(),
+                align: None,
+                width_factor: None,
+                mask: false,
             }),
             _ => Entity::Hatch(HatchEntity {
                 base: b,
@@ -542,6 +545,8 @@ fn with_blocks(doc: &mut DocumentSnapshotV2, rng: &mut Rng) {
                 p: point(rng),
                 height: rng.float(),
                 rotation: rng.float(),
+                align: None,
+                width_factor: None,
             })
             .collect();
         blocks.push(BlockDefinition {

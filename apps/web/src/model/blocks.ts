@@ -1,4 +1,4 @@
-import type { Entity, EntityGeometry } from './entities';
+import type { Entity, EntityGeometry, TextAlign } from './entities';
 import type { Vec2 } from './geometry';
 
 /**
@@ -29,6 +29,10 @@ export interface AttributeDefinition {
   height: number;
   /** Degrees, counter-clockwise from east, as a text's. */
   rotation: number;
+  /** Where `p` is on the text, as a text's (docs/adr/0145). */
+  align?: TextAlign;
+  /** The letters' width times this, as a text's (docs/adr/0145). */
+  widthFactor?: number;
 }
 
 /**

@@ -243,6 +243,48 @@
         "height": "NaN",
         "rotation": 10.0
       }
+    },
+    {
+      "name": "hizası ve genişlik çarpanı satırda kalır (hücreleri yok; ADR 0145)",
+      "base": {
+        "x": 487010.0,
+        "y": 4420008.5
+      },
+      "from": {
+        "tag": "NO",
+        "prompt": "Rögar numarası",
+        "value": "R-?",
+        "p": {
+          "x": 487010.9,
+          "y": 4420008.65
+        },
+        "height": 0.5,
+        "rotation": 0,
+        "align": "middleCenter",
+        "widthFactor": 0.8
+      },
+      "cells": {
+        "tag": "NO",
+        "prompt": "Rögar numarası",
+        "value": "R-1",
+        "height": "0.5",
+        "rotation": "0",
+        "y": "0.9",
+        "x": "0.15"
+      },
+      "definition": {
+        "tag": "NO",
+        "prompt": "Rögar numarası",
+        "value": "R-1",
+        "p": {
+          "x": 487010.9,
+          "y": 4420008.65
+        },
+        "height": 0.5,
+        "rotation": 0,
+        "align": "middleCenter",
+        "widthFactor": 0.8
+      }
     }
   ],
   "newRows": [

@@ -319,6 +319,9 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, _feedback: &mut dyn Feedback) -> 
                 text: c.name.clone(),
                 height,
                 rotation: 0.0,
+                align: None,
+                width_factor: None,
+                mask: false,
             }));
         }
     }

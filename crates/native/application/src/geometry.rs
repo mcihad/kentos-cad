@@ -508,6 +508,9 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             text,
             height,
             rotation,
+            align: None,
+            width_factor: None,
+            mask: false,
         }),
         EntityGeometry::Dimension {
             a,

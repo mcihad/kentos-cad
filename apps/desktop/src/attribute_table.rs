@@ -4,10 +4,11 @@
 //! (degrees) and place as east (Y) and north (X) of the base point, in the
 //! block's own units. A number is written as a prompt writes it
 //! (`+n.toFixed(6)`); a cell left as it was shown gives back the exact value
-//! it showed, so a list saved unchanged is the list it was. Both pass
-//! fixtures/blocks/v1/attribute-table.json.
+//! it showed, so a list saved unchanged is the list it was. A definition's
+//! alignment and width factor (docs/adr/0145) have no cells: the row keeps
+//! them. Both pass fixtures/blocks/v1/attribute-table.json.
 
-use kentos_contracts::{AttributeDefinition, Vec2};
+use kentos_contracts::{AttributeDefinition, TextAlign, Vec2};
 use kentos_interaction::{fixed, js_trim};
 
 use crate::calc::grid::Col;
@@ -61,12 +62,14 @@ pub const COLUMNS: [Col; 7] = [
     },
 ];
 
-/// The exact values a row's numbers were shown from.
+/// The exact values a row's numbers were shown from, and what the row has no cells for.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Exact {
     pub height: f64,
     pub rotation: f64,
     pub p: Vec2,
+    pub align: Option<TextAlign>,
+    pub width_factor: Option<f64>,
 }
 
 /// A row: its cells' texts, and the exact values the numbers were shown from.
@@ -107,6 +110,8 @@ pub fn row_of(a: &AttributeDefinition, base: Vec2) -> Row {
             height: a.height,
             rotation: a.rotation,
             p: a.p,
+            align: a.align,
+            width_factor: a.width_factor,
         },
     }
 }
@@ -139,7 +144,8 @@ fn trimmed(text: &str) -> Option<String> {
 
 /// The definition a row gives: the tag, prompt and default trimmed (an
 /// empty prompt or default left out), the height (an empty cell is no
-/// height), the turn and the place (an empty cell is 0).
+/// height), the turn and the place (an empty cell is 0); its alignment and
+/// width factor as they were.
 pub fn definition_of(row: &Row, base: Vec2) -> AttributeDefinition {
     let (c, e) = (&row.cells, &row.exact);
     AttributeDefinition {
@@ -152,6 +158,8 @@ pub fn definition_of(row: &Row, base: Vec2) -> AttributeDefinition {
         },
         height: number_of(&c[HEIGHT], e.height, f64::NAN),
         rotation: number_of(&c[ROTATION], e.rotation, 0.0),
+        align: e.align,
+        width_factor: e.width_factor,
     }
 }
 
@@ -208,6 +216,8 @@ pub fn new_row(above: &[Row], base: Vec2, extent: Option<Extent>, height: f64) -
             height: h,
             rotation: 0.0,
             p,
+            align: None,
+            width_factor: None,
         },
     };
     placed(&row, p, base)
@@ -275,6 +285,8 @@ mod tests {
             p: vec2(&v["p"]),
             height: num(&v["height"]),
             rotation: num(&v["rotation"]),
+            align: v["align"].as_str().and_then(TextAlign::from_name),
+            width_factor: v["widthFactor"].as_f64(),
         }
     }
 
@@ -296,6 +308,8 @@ mod tests {
             && same(a.p.y, b.p.y)
             && same(a.height, b.height)
             && same(a.rotation, b.rotation)
+            && a.align == b.align
+            && a.width_factor == b.width_factor
     }
 
     fn fixture() -> Value {
@@ -360,6 +374,8 @@ mod tests {
                     height: num(&c["exactHeight"]),
                     rotation: 0.0,
                     p: vec2(&c["p"]),
+                    align: None,
+                    width_factor: None,
                 },
                 "{}",
                 c["name"]

@@ -177,4 +177,26 @@ describe('.kcad v2 content (docs/specs/kcad-v2.md)', () => {
     expect(read((e) => (e.parts = [{ pts: square(5), zs: [1] }]))).toContain('parça 2 › kotlar');
     expect(read((e) => (e.parts = [{ pts: square(5), holes: [{ pts: square(5).slice(0, 2) }] }]))).toContain('parça 2 › ada 1');
   });
+
+  it("carries a text's alignment, width factor and mask and refuses what the file would, saying where (docs/adr/0145)", () => {
+    const good = toSnapshotV2(snapshotSampleDocument());
+    const at = good.entities.findIndex((e) => e.kind === 'text');
+    const read = (mutate: (e: Record<string, unknown>) => void) => {
+      const d = structuredClone(good);
+      mutate(d.entities[at] as unknown as Record<string, unknown>);
+      const r = readSnapshotV2(d);
+      return r.ok ? r.content : r.error;
+    };
+    const extras = read((e) => Object.assign(e, { align: 'middleCenter', widthFactor: 0.8, mask: true }));
+    if (typeof extras === 'string') throw new Error(extras);
+    const doc = blank();
+    doc.replaceWith(extras);
+    const text = [...doc.all()][at];
+    expect(text.kind === 'text' && [text.align, text.widthFactor, text.mask]).toEqual(['middleCenter', 0.8, true]);
+    // The left of the baseline is no value but the field's absence; a width factor over 0, at most 100; mask only true.
+    expect(read((e) => (e.align = 'baselineLeft'))).toContain('hiza');
+    expect(read((e) => (e.widthFactor = 0))).toContain('genişlik çarpanı');
+    expect(read((e) => (e.widthFactor = 100.5))).toContain('en çok 100');
+    expect(read((e) => (e.mask = false))).toContain('zemin');
+  });
 });

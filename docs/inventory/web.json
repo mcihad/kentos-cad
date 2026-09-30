@@ -61,8 +61,8 @@
       "pending": 0
     },
     "fileFields": {
-      "total": 239,
-      "implemented": 239,
+      "total": 245,
+      "implemented": 245,
       "partial": 0,
       "pending": 0
     },
@@ -133,8 +133,8 @@
         "n/a": 2
       },
       "fileFields": {
-        "total": 239,
-        "implemented": 239,
+        "total": 245,
+        "implemented": 245,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -10712,6 +10712,19 @@
       }
     },
     {
+      "id": "AttributeDefinition.align",
+      "contract": "AttributeDefinition",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "align",
+      "type": "TextAlign",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "AttributeDefinition.height",
       "contract": "AttributeDefinition",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -10782,6 +10795,19 @@
       "rust": "crates/shared/contracts/src/entity.rs",
       "field": "value",
       "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "AttributeDefinition.widthFactor",
+      "contract": "AttributeDefinition",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "widthFactor",
+      "type": "number",
       "optional": true,
       "status": "implemented",
       "platforms": {
@@ -13488,6 +13514,42 @@
       }
     },
     {
+      "id": "TextAlign",
+      "contract": "TextAlign",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "values": [
+        "baselineCenter",
+        "baselineRight",
+        "bottomLeft",
+        "bottomCenter",
+        "bottomRight",
+        "middleLeft",
+        "middleCenter",
+        "middleRight",
+        "topLeft",
+        "topCenter",
+        "topRight"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "TextEntity.align",
+      "contract": "TextEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "align",
+      "type": "TextAlign",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "TextEntity.attrs",
       "contract": "TextEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -13579,6 +13641,19 @@
       }
     },
     {
+      "id": "TextEntity.mask",
+      "contract": "TextEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "mask",
+      "type": "boolean",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "TextEntity.p",
       "contract": "TextEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -13624,6 +13699,19 @@
       "field": "text",
       "type": "string",
       "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "TextEntity.widthFactor",
+      "contract": "TextEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "widthFactor",
+      "type": "number",
+      "optional": true,
       "status": "implemented",
       "platforms": {
         "web": "implemented",

@@ -10,7 +10,8 @@ shown as JavaScript's `String(+n.toFixed(6))` writes it (six decimals of the
 exact binary value, then the shortest text that reads back, never “-0”);
 arithmetic is IEEE double, as Python's floats are, in the rule's order. The
 web (apps/web/src/ui/blocks/attributeTable.test.ts) and the desktop
-(crates/native/interaction/tests/attribute_table.rs) read the file.
+(apps/desktop/src/attribute_table.rs) read the file. A definition's alignment
+and width factor (docs/adr/0145) have no cells: a row keeps them as they were.
 """
 import json
 import math
@@ -31,13 +32,17 @@ def P(x, y):
     return {"x": x, "y": y}
 
 
-def definition(tag, p, height, rotation=0, prompt=None, value=None):
+def definition(tag, p, height, rotation=0, prompt=None, value=None, align=None, width_factor=None):
     d = {"tag": tag}
     if prompt is not None:
         d["prompt"] = prompt
     if value is not None:
         d["value"] = value
     d.update({"p": p, "height": height, "rotation": rotation})
+    if align is not None:
+        d["align"] = align
+    if width_factor is not None:
+        d["widthFactor"] = width_factor
     return d
 
 
@@ -74,6 +79,7 @@ def json_number(n):
 BASE = P(487010.0, 4420008.5)
 NO = definition("NO", P(487010.9, 4420008.65), 0.5, prompt="Rögar numarası", value="R-?")
 KOT = definition("KOT", P(487010.9, 4420007.95), 0.4, rotation=12.5, prompt="Kapak kotu")
+ORTA = definition("NO", P(487010.9, 4420008.65), 0.5, prompt="Rögar numarası", value="R-?", align="middleCenter", width_factor=0.8)
 
 numbers = [[n, number_text(n)] for n in [0.0, 0.5, -0.55, 487010.9 - 487010.0, 4420008.65 - 4420008.5, -1e-9, 12.5, 1234567.1234567, 2.0000004]]
 
@@ -111,6 +117,13 @@ definitions = [
         "from": KOT,
         "cells": edited(KOT, BASE, height="abc", rotation="1e1", y="0.4.5"),
         "definition": definition("KOT", P(math.nan, KOT["p"]["y"]), math.nan, rotation=10.0, prompt="Kapak kotu"),
+    },
+    {
+        "name": "hizası ve genişlik çarpanı satırda kalır (hücreleri yok; ADR 0145)",
+        "base": BASE,
+        "from": ORTA,
+        "cells": edited(ORTA, BASE, value="R-1"),
+        "definition": definition("NO", ORTA["p"], 0.5, prompt="Rögar numarası", value="R-1", align="middleCenter", width_factor=0.8),
     },
 ]
 

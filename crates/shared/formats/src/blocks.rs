@@ -111,6 +111,9 @@ impl Placing {
                         text,
                         height,
                         rotation,
+                        align: None,
+                        width_factor: None,
+                        mask: false,
                     },
                 ))
             })
@@ -412,6 +415,9 @@ fn entity(s: &Shape) -> Option<Entity> {
             text: text.clone(),
             height: *height,
             rotation: *rotation,
+            align: None,
+            width_factor: None,
+            mask: false,
         }),
         Shape::Dimension {
             a,

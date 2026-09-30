@@ -28,6 +28,7 @@ use crate::error::{Code, KcadError};
 use crate::watch::{Step, Watch, report};
 use crate::{
     SCHEMA_WITH_BLOCKS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_PARTS,
+    SCHEMA_WITH_TEXT_EXTRAS,
 };
 use names::{
     angle_unit, area_unit, drawing_font, label_ink, label_placement, line_type, point_symbol,
@@ -500,12 +501,28 @@ impl<'d> Encoder<'d> {
     }
 }
 
-/// The oldest schema that holds the drawing: 6 when it has block
-/// definitions, 5 when an area has parts, 4 when an object has a vertex
+/// The oldest schema that holds the drawing: 7 when a text or an attribute
+/// definition has an alignment, a width factor or a mask, 6 when it has
+/// block definitions, 5 when an area has parts, 4 when an object has a vertex
 /// elevation, 3 when one has its own line weight, else 2. A drawing without
 /// any stays as it always was, byte for byte. (An insert needs a definition:
 /// one without is refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
+    let extras = |list: &[Entity]| {
+        list.iter().any(|e| {
+            matches!(e, Entity::Text(t) if t.align.is_some() || t.width_factor.is_some() || t.mask)
+        })
+    };
+    if extras(&doc.entities)
+        || doc.blocks.iter().any(|b| {
+            extras(&b.entities)
+                || b.attributes
+                    .iter()
+                    .any(|a| a.align.is_some() || a.width_factor.is_some())
+        })
+    {
+        return SCHEMA_WITH_TEXT_EXTRAS;
+    }
     if !doc.blocks.is_empty() {
         return SCHEMA_WITH_BLOCKS;
     }

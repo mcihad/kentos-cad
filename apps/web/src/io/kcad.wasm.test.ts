@@ -112,6 +112,21 @@ describe('the drawing packed for the worker', () => {
     expect(out.dropped).toEqual({ 'belge.blocks.entities.insert.note': 1, 'belge.blocks.entities.point.uid': 1, 'belge.blocks.attributes.font': 1, 'belge.blocks.color': 1 });
     expect(difference(unpackSnapshot(out.drawing), all)).toBeNull();
   });
+
+  it("carries a text's alignment, width factor and mask in the columns, an attribute definition's in the head (docs/adr/0145)", () => {
+    const all = drawing('texts.json');
+    const { entities, uids, ...head } = structuredClone(all);
+    const out = packDrawing(
+      head,
+      entities.map((e, i) => ({ ...e, uid: uids[i] })),
+    );
+    expect(out.dropped).toEqual({});
+    expect(difference(unpackSnapshot(out.drawing), all)).toBeNull();
+    // A mask of false and an unknown alignment are not written: the save stops with the place.
+    const bad = (extra: Record<string, unknown>) => () => packDrawing(head, [{ ...entities[0], ...extra, uid: uids[0] } as never]);
+    expect(bad({ mask: false })).toThrow(/mask/);
+    expect(bad({ align: 'baselineLeft' })).toThrow(/align/);
+  });
 });
 
 describe.skipIf(!formatsBuilt)('KCAD v2 in the browser (formats WASM module)', () => {
@@ -142,7 +157,7 @@ describe.skipIf(!formatsBuilt)('KCAD v2 in the browser (formats WASM module)', (
         valid++;
       }
     }
-    expect(valid).toBe(10);
+    expect(valid).toBe(11);
   });
 
   it('packs every file as the Rust codec does: the page and the module lay the columns out the same', async () => {

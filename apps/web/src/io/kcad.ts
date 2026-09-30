@@ -145,7 +145,7 @@ export const OBJECT_FIELDS: Record<string, ReadonlySet<string>> = Object.fromEnt
     spline: ['pts', 'closed'],
     xline: ['p', 'dir'],
     ray: ['p', 'dir'],
-    text: ['p', 'text', 'height', 'rotation'],
+    text: ['p', 'text', 'height', 'rotation', 'align', 'widthFactor', 'mask'],
     dimension: ['a', 'b', 'offset', 'height', 'text', 'style', 'angle', 'c'],
     hatch: ['ring', 'holes', 'pattern'],
     insert: ['block', 'p', 'scale', 'rotation', 'mirror'],
@@ -173,7 +173,7 @@ export function projectHead(head: DrawingHead): { head: DrawingHead; dropped: Dr
     const picks = isObj(v) ? BLOCK_OBJECT[v.kind as string] : undefined;
     return picks ? p.fields(v, picks, `${where}.${(v as Obj).kind as string}`) : v;
   };
-  const attribute: Pick = (v, where) => p.fields(v, { tag: same, prompt: same, value: same, p: vec, height: same, rotation: same }, where);
+  const attribute: Pick = (v, where) => p.fields(v, { tag: same, prompt: same, value: same, p: vec, height: same, rotation: same, align: same, widthFactor: same }, where);
   const block: Pick = (v, where) =>
     p.fields(v, { id: same, name: same, base: vec, entities: (x, w) => p.list(blockObject)(x, w), attributes: (x, w) => p.list(attribute)(x, w), description: same }, where);
   const label = (v: unknown, where: string) =>

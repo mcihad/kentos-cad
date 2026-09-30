@@ -7,7 +7,7 @@ import { definitionOf, newRow, numberText, rowOf, type Extent } from './attribut
  * The Blok öznitelikleri window's table (fixtures/blocks/v1/attribute-table.json,
  * written by scripts/fixtures/attribute_table_cases.py from the rule): a
  * definition as a row and back, and where a new row goes. The desktop reads
- * the same file (crates/native/interaction/tests/attribute_table.rs).
+ * the same file (apps/desktop/src/attribute_table.rs).
  */
 
 const files = import.meta.glob<string>('../../../../../fixtures/blocks/v1/attribute-table.json', { query: '?raw', import: 'default', eager: true });

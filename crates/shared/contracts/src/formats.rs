@@ -42,7 +42,10 @@ use crate::layer::LineType;
 ///    take inserts.
 /// 15: GeoJSON writes an insert as its block's objects placed (docs/adr/0144 §5):
 ///    `GeoJsonWriteInput.blocks`.
-pub const FORMATS_VERSION: u32 = 15;
+/// 16: a text's alignment, width factor and mask (docs/adr/0145): `.kcad` document schema 7,
+///    the text's optional fields in the typed columns (align an int, width factor a float, mask
+///    a flag) and an attribute definition's alignment and width factor in the drawing's JSON.
+pub const FORMATS_VERSION: u32 = 16;
 
 // ── Every import ────────────────────────────────────────────────────────
 

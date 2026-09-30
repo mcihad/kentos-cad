@@ -8,8 +8,9 @@ import { readNumber, type Row } from '../calc/read';
  * turn (degrees) and place as east (Y) and north (X) of the base point, in
  * the block's own units. A number is written as a prompt writes it
  * (`+n.toFixed(6)`); a cell left as it was shown gives back the exact value
- * it showed, so a list saved unchanged is the list it was. The desktop's
- * `kentos_interaction::attribute_table` is the same.
+ * it showed, so a list saved unchanged is the list it was. A definition's
+ * alignment and width factor (docs/adr/0145) have no cells: the row keeps
+ * them. The desktop's `apps/desktop/src/attribute_table.rs` is the same.
  */
 
 /** The table's columns: their keys, headings, units and whether they hold numbers. */
@@ -23,10 +24,10 @@ export const ATTRIBUTE_COLUMNS = [
   { key: 'x', label: 'X', unit: 'm', numeric: true },
 ] as const;
 
-/** A row: its cells' texts, and the exact values the numbers were shown from. */
+/** A row: its cells' texts, the exact values the numbers were shown from, and what the row has no cells for. */
 export interface AttributeRow {
   cells: Row;
-  exact: { height: number; rotation: number; p: Vec2 };
+  exact: { height: number; rotation: number; p: Vec2 } & Pick<AttributeDefinition, 'align' | 'widthFactor'>;
 }
 
 /** A number as a cell shows it: at most six decimals, no trailing zeros, never “-0”. */
@@ -44,7 +45,13 @@ export function rowOf(a: AttributeDefinition, base: Vec2): AttributeRow {
       y: numberText(a.p.x - base.x),
       x: numberText(a.p.y - base.y),
     },
-    exact: { height: a.height, rotation: a.rotation, p: { x: a.p.x, y: a.p.y } },
+    exact: {
+      height: a.height,
+      rotation: a.rotation,
+      p: { x: a.p.x, y: a.p.y },
+      ...(a.align && { align: a.align }),
+      ...(a.widthFactor !== undefined && { widthFactor: a.widthFactor }),
+    },
   };
 }
 
@@ -61,7 +68,8 @@ function coordinateOf(text: string | undefined, exact: number, from: number): nu
 /**
  * The definition a row gives: the tag, prompt and default trimmed (an empty
  * prompt or default left out), the height (an empty cell is no height), the
- * turn and the place (an empty cell is 0).
+ * turn and the place (an empty cell is 0); its alignment and width factor as
+ * they were.
  */
 export function definitionOf(row: AttributeRow, base: Vec2): AttributeDefinition {
   const { cells, exact } = row;
@@ -74,6 +82,8 @@ export function definitionOf(row: AttributeRow, base: Vec2): AttributeDefinition
     p: { x: coordinateOf(cells.y, exact.p.x, base.x), y: coordinateOf(cells.x, exact.p.y, base.y) },
     height: numberOf(cells.height, exact.height, Number.NaN),
     rotation: numberOf(cells.rotation, exact.rotation, 0),
+    ...(exact.align && { align: exact.align }),
+    ...(exact.widthFactor !== undefined && { widthFactor: exact.widthFactor }),
   };
 }
 

@@ -204,6 +204,9 @@ impl Fields {
                 text: need(self.text, "text")?,
                 height: need(self.height, "height")?,
                 rotation: need(self.rotation, "rotation")?,
+                align: None,
+                width_factor: None,
+                mask: false,
             }),
             "dimension" => Entity::Dimension(DimensionEntity {
                 base,

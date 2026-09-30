@@ -38,7 +38,7 @@
 //! | ellipse | | c, major, ratio, t0, t1 | |
 //! | spline | n, closed (0 or 1) | pts (2n) | |
 //! | xline, ray | | p, dir | |
-//! | text | | p, height, rotation | text |
+//! | text | align if any (its place in `TextAlign::ALL`) | p, height, rotation, width factor if any | text |
 //! | dimension | style if any | a, b, offset, height, angle if any, c if any | text if any |
 //! | hatch | n, pattern type; h if holes, then k per hole | ring (2n), pattern angle, spacing, per hole: pts (2k) | |
 //! | insert | | p, scale, rotation | block (its id as UUID text) |
@@ -47,7 +47,8 @@
 //! line weight (docs/adr/0139); a
 //! kind's optional fields from bit 8 up, in the order the table names them
 //! (point: z; line: za, zb; polyline and polygon: bulges, holes, zs; polygon:
-//! parts; dimension: text, style, angle, c; hatch: holes; insert: mirror). A
+//! parts; text: align, width factor, mask (no value; docs/adr/0145);
+//! dimension: text, style, angle, c; hatch: holes; insert: mirror). A
 //! hole's flags: 1 bulges, 2 elevations; a part's: 1 bulges, 2 elevations, 4
 //! holes. Dimension styles and hatch pattern types are numbered in the
 //! contract's order.
@@ -76,7 +77,7 @@ use kentos_contracts::{
     ArcEntity, AreaPart, BlockId, CircleEntity, ConstructionEntity, DimensionEntity,
     DimensionStyle, EllipseEntity, Entity, EntityBase, EntityId, HatchEntity, HatchPattern,
     HatchPatternType, InsertEntity, LineEntity, PathEntity, PointEntity, RingGeometry,
-    SplineEntity, TextEntity, Vec2,
+    SplineEntity, TextAlign, TextEntity, Vec2,
 };
 
 use crate::error::{Code, KcadError};
@@ -419,10 +420,25 @@ impl Packer {
                 text,
                 height,
                 rotation,
+                align,
+                width_factor,
+                mask,
             }) => {
                 self.point(p);
                 self.out.floats.extend([*height, *rotation]);
                 self.text(text);
+                if let Some(a) = align {
+                    flags |= OPT[0];
+                    let at = TextAlign::ALL.iter().position(|x| x == a).unwrap_or(0);
+                    self.int(count(at));
+                }
+                if let Some(w) = width_factor {
+                    flags |= OPT[1];
+                    self.float(*w);
+                }
+                if *mask {
+                    flags |= OPT[2];
+                }
             }
             Entity::Dimension(DimensionEntity {
                 base: _,
@@ -781,6 +797,7 @@ fn allowed(kind: u8) -> u32 {
         1 => OPT[0] | OPT[1],
         2 => OPT[0] | OPT[1] | OPT[2],
         3 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
+        10 => OPT[0] | OPT[1] | OPT[2],
         11 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
         12 | 13 => OPT[0],
         _ => 0,
@@ -906,13 +923,31 @@ fn geometry(
                 Entity::Ray(line)
             }
         }
-        10 => Entity::Text(TextEntity {
-            base,
-            p: c.point()?,
-            height: c.float()?,
-            rotation: c.float()?,
-            text: c.text(|| place("text"))?,
-        }),
+        10 => {
+            let (p, height, rotation) = (c.point()?, c.float()?, c.float()?);
+            let text = c.text(|| place("text"))?;
+            let align = if has(0) {
+                let v = c.usize()?;
+                Some(
+                    *TextAlign::ALL
+                        .get(v)
+                        .ok_or_else(|| broken(&format!("yazı hizası {v}")))?,
+                )
+            } else {
+                None
+            };
+            let width_factor = if has(1) { Some(c.float()?) } else { None };
+            Entity::Text(TextEntity {
+                base,
+                p,
+                text,
+                height,
+                rotation,
+                align,
+                width_factor,
+                mask: has(2),
+            })
+        }
         11 => {
             let (a, b) = (c.point()?, c.point()?);
             let (offset, height) = (c.float()?, c.float()?);

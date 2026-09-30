@@ -859,6 +859,41 @@
           }
         }
       ]
+    },
+    {
+      "name": "Yazının hizası, genişlik çarpanı ve zemini değişiklikte ve geri almada kalır",
+      "note": "ADR 0145: iki belge yazının yeni alanlarını olduğu gibi taşır; metni değiştiren bir yama onlara dokunmaz.",
+      "steps": [
+        {
+          "op": "add",
+          "entity": {"kind": "text", "layerId": "b", "p": {"x": 486560.5, "y": 4420180.25}, "text": "Ada 1284", "height": 2.5, "rotation": 30, "align": "middleCenter", "widthFactor": 0.8, "mask": true, "attrs": {}},
+          "returns": 6,
+          "expect": {
+            "entities": {
+              "6": {"id": 6, "kind": "text", "layerId": "b", "p": {"x": 486560.5, "y": 4420180.25}, "text": "Ada 1284", "height": 2.5, "rotation": 30, "align": "middleCenter", "widthFactor": 0.8, "mask": true, "attrs": {}}
+            }
+          }
+        },
+        {
+          "op": "update",
+          "id": 6,
+          "patch": {"text": "Ada 1285"},
+          "expect": {
+            "entities": {
+              "6": {"id": 6, "kind": "text", "layerId": "b", "p": {"x": 486560.5, "y": 4420180.25}, "text": "Ada 1285", "height": 2.5, "rotation": 30, "align": "middleCenter", "widthFactor": 0.8, "mask": true, "attrs": {}}
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Değiştir",
+          "expect": {
+            "entities": {
+              "6": {"id": 6, "kind": "text", "layerId": "b", "p": {"x": 486560.5, "y": 4420180.25}, "text": "Ada 1284", "height": 2.5, "rotation": 30, "align": "middleCenter", "widthFactor": 0.8, "mask": true, "attrs": {}}
+            }
+          }
+        }
+      ]
     }
   ]
 }

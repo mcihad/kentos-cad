@@ -1693,6 +1693,8 @@ impl<'l> Emitter<'l> {
                     p,
                     height,
                     rotation,
+                    align: None,
+                    width_factor: None,
                 });
             }
         }
@@ -1739,6 +1741,9 @@ impl<'l> Emitter<'l> {
             text,
             height,
             rotation,
+            align: None,
+            width_factor: None,
+            mask: false,
         }));
     }
 

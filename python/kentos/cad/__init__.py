@@ -252,6 +252,8 @@ __all__ = [
     "TenantKind",
     "TenantKindName",
     "TenantRef",
+    "TextAlign",
+    "TextAlignName",
     "TextEntity",
     "TextEntityGeometry",
     "Transform",

@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use kentos_contracts::blocks::{self, BlockFault};
 use kentos_contracts::{AttributeDefinition, BlockDefinition, BlockId, Entity};
 
-use super::objects::{Features, object};
+use super::objects::{self, Features, object, text_align};
 use super::{id16, list, map, point, required, text, unknown};
 use crate::cbor::Reader;
 use crate::error::{Code, KcadError};
@@ -97,7 +97,7 @@ fn definition(
             }
             "attributes" => {
                 let at = r.position();
-                let list = list(r, |r, _| attribute(r))?;
+                let list = list(r, |r, _| attribute(r, has))?;
                 if list.is_empty() {
                     return Err(r.fail_at(
                         Code::BadValue,
@@ -122,9 +122,12 @@ fn definition(
     })
 }
 
-fn attribute(r: &mut Reader<'_>) -> Result<AttributeDefinition, KcadError> {
+/// An attribute definition; `has`: whether the payload's schema gives it an
+/// alignment and a width factor (schema 7, docs/adr/0145).
+fn attribute(r: &mut Reader<'_>, has: Features) -> Result<AttributeDefinition, KcadError> {
     let (mut p, mut tag, mut value, mut height, mut prompt, mut rotation) =
         (None, None, None, None, None, None);
+    let (mut align, mut width_factor) = (None, None);
     map(r, |r, key| {
         match key {
             "p" => p = Some(point(r)?),
@@ -133,6 +136,8 @@ fn attribute(r: &mut Reader<'_>) -> Result<AttributeDefinition, KcadError> {
             "height" => height = Some(r.float()?),
             "prompt" => prompt = Some(text(r)?),
             "rotation" => rotation = Some(r.float()?),
+            "align" if has.texts => align = Some(text_align(r)?),
+            "widthFactor" if has.texts => width_factor = Some(objects::width_factor(r)?),
             _ => return Err(unknown(r)),
         }
         Ok(())
@@ -144,6 +149,8 @@ fn attribute(r: &mut Reader<'_>) -> Result<AttributeDefinition, KcadError> {
         p: required(r, p, "p")?,
         height: required(r, height, "height")?,
         rotation: required(r, rotation, "rotation")?,
+        align,
+        width_factor,
     })
 }
 

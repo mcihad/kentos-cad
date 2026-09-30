@@ -40,6 +40,10 @@ MAGIC = b"\x89KCAD\r\n\x1a\n"
 # ── CBOR, KentOS profile 1 (spec §5) ────────────────────────────────────
 
 
+# A text's alignments (spec §6.6, docs/adr/0145); the left of the baseline is the field's absence.
+TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", "bottomRight", "middleLeft", "middleCenter", "middleRight", "topLeft", "topCenter", "topRight")
+
+
 def head(major, arg):
     """An initial byte and its argument in the shortest form."""
     if arg < 24:
@@ -283,7 +287,16 @@ KINDS = {
     "spline": {"pts": (points, True), "closed": (boolean, True)},
     "xline": {"p": (point, True), "dir": (point, True)},
     "ray": {"p": (point, True), "dir": (point, True)},
-    "text": {"p": (point, True), "text": (text, True), "height": (f64, True), "rotation": (f64, True)},
+    # Schema 7 (docs/adr/0145): an alignment by name, a width factor, `mask` only when true.
+    "text": {
+        "p": (point, True),
+        "text": (text, True),
+        "height": (f64, True),
+        "rotation": (f64, True),
+        "align": (enum(TEXT_ALIGNS), False),
+        "widthFactor": (f64, False),
+        "mask": (lambda b: boolean(b) if b is True else None, False),
+    },
     "dimension": {
         "a": (point, True),
         "b": (point, True),
@@ -321,13 +334,17 @@ def entity(e, uid, index):
     }
     body = fields({k: v for k, v in e.items() if k not in ("kind", "id")}, table, f"nesne {index} ({kind})")
     assert body.get("mirror", True) is not None, f"nesne {index}: mirror yalnız true yazılır"
+    assert body.get("mask", True) is not None, f"nesne {index}: mask yalnız true yazılır"
     if uid is not None:
         body["uid"] = blob(uid_bytes(uid))
     return cmap({kind: cmap(body)})
 
 
 def attribute(a):
-    return cmap(fields(a, {"tag": (text, True), "prompt": (text, False), "value": (text, False), "p": (point, True), "height": (f64, True), "rotation": (f64, True)}, "öznitelik"))
+    table = {"tag": (text, True), "prompt": (text, False), "value": (text, False), "p": (point, True), "height": (f64, True), "rotation": (f64, True)}
+    # Schema 7 (docs/adr/0145): an alignment and a width factor, as a text's.
+    table.update({"align": (enum(TEXT_ALIGNS), False), "widthFactor": (f64, False)})
+    return cmap(fields(a, table, "öznitelik"))
 
 
 def definition(b):
@@ -373,9 +390,17 @@ def document(d):
 
 
 def schema_of(entities, blocks=None):
-    """The oldest schema that holds the drawing: 6 with block definitions (docs/adr/0144), 5 with an area's parts
+    """The oldest schema that holds the drawing: 7 with a text's or an attribute definition's alignment, width
+    factor or mask (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts
     (docs/adr/0143), 4 with a vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139),
     else 2: a drawing without any stays as it was, byte for byte."""
+    extras = ("align", "widthFactor", "mask")
+
+    def texts(es):
+        return any(e["kind"] == "text" and any(k in e for k in extras) for e in es)
+
+    if texts(entities) or any(texts(b["entities"]) or any(k in a for a in b.get("attributes", []) for k in extras) for b in blocks or []):
+        return 7
     if blocks:
         return 6
 
@@ -560,7 +585,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-7.kcad"] = container(root(cmap(parts), version=b"\x07"))
+    files["schema-version-8.kcad"] = container(root(cmap(parts), version=b"\x08"))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -644,6 +669,21 @@ def broken(minimal_content, minimal_file):
     files["empty-blocks.kcad"] = with_blocks([], entities=[])
     files["empty-attributes.kcad"] = with_blocks([block(1, "Rögar", attributes=array([]))])
     files["duplicate-attribute-tag.kcad"] = with_blocks([block(1, "Rögar", attributes=array([cmap({"p": point({"x": 0.0, "y": 0.0}), "tag": text("NO"), "height": f64(0.5), "rotation": f64(0.0)})] * 2))])
+    # A text's alignment, width factor and mask are schema 7's (docs/adr/0145): in schema 6 unknown fields, on a text
+    # and on an attribute definition; the left of the baseline is no value but the field's absence; a width factor is
+    # over 0 and at most 100; `mask` is written only when true.
+    def text_of(**extra):
+        return cmap({"text": cmap({**common, "p": point(one["p"]), "text": text("R-12"), "height": f64(2.5), "rotation": f64(0.0), **extra})})
+
+    files["text-align-in-schema-6.kcad"] = in_schema(6, text_of(align=text("middleCenter")))
+    files["attribute-align-in-schema-6.kcad"] = with_blocks([block(1, "Rögar", attributes=array([cmap({"p": point({"x": 0.0, "y": 0.0}), "tag": text("NO"), "align": text("middleLeft"), "height": f64(0.5), "rotation": f64(0.0)})]))])
+    files["text-align-baseline-left.kcad"] = in_schema(7, text_of(align=text("baselineLeft")))
+    files["text-align-unknown.kcad"] = in_schema(7, text_of(align=text("center")))
+    files["text-width-factor-zero.kcad"] = in_schema(7, text_of(widthFactor=f64(0.0)))
+    files["text-width-factor-too-wide.kcad"] = in_schema(7, text_of(widthFactor=f64(100.5)))
+    files["text-width-factor-nan.kcad"] = in_schema(7, text_of(widthFactor=b"\xfb\x7f\xf8\x00\x00\x00\x00\x00\x00"))
+    files["text-mask-false.kcad"] = in_schema(7, text_of(mask=boolean(False)))
+    files["attribute-width-factor-negative.kcad"] = with_blocks([block(1, "Rögar", attributes=array([cmap({"p": point({"x": 0.0, "y": 0.0}), "tag": text("NO"), "height": f64(0.5), "rotation": f64(0.0), "widthFactor": f64(-1.0)})]))], version=7)
     files["unknown-kind.kcad"] = container(with_parts({**parts, "entities": array([cmap({"block": cmap({**body, "uid": blob(uid_bytes(m["uids"][0]))})})])}))
     files["two-kinds.kcad"] = container(with_parts({**parts, "entities": array([cmap({"line": cmap({}), "point": cmap({**body, "uid": blob(uid_bytes(m["uids"][0]))})})])}))
     files["point-three-numbers.kcad"] = container(with_parts({**parts, "origin": array([f64(1.0), f64(2.0), f64(3.0)])}))
@@ -698,6 +738,7 @@ def build():
     out["elevations.kcad"] = container(document(load("elevations.json")))
     out["parts.kcad"] = container(document(load("parts.json")))
     out["blocks.kcad"] = container(document(load("blocks.json")))
+    out["texts.kcad"] = container(document(load("texts.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

@@ -9,12 +9,13 @@
 //!   binary64 floats only (NaN and infinities refused, −0 kept), text keys in
 //!   RFC 8949 §4.2.1 order without duplicates, no tags; depth, length and size
 //!   limits. Written here: no CBOR crate (owner's decision, 2026-09-26).
-//! - **Document schemas 2 to 6** (`encode`, `decode`): the contract
+//! - **Document schemas 2 to 7** (`encode`, `decode`): the contract
 //!   `DocumentSnapshotV2`, every object with its 16-byte persistent id
 //!   (docs/adr/0014); the open document's slots never enter the file. Schema 3
 //!   adds an object's own line weight, schema 4 vertex elevations, schema 5
-//!   multi-part areas, schema 6 blocks; a writer writes the oldest schema that
-//!   holds what the drawing has.
+//!   multi-part areas, schema 6 blocks, schema 7 a text's alignment, width
+//!   factor and mask; a writer writes the oldest schema that holds what the
+//!   drawing has.
 //!
 //! One implementation for every platform (CLAUDE.md §14): the desktop app and
 //! the server call it natively, the browser through the formats WASM module
@@ -91,13 +92,22 @@ pub const SCHEMA_WITH_PARTS: u32 = 5;
 /// those refuses a drawing that has them rather than drop them.
 pub const SCHEMA_WITH_BLOCKS: u32 = 6;
 
+/// Document schema 7 (docs/specs/kcad-v2.md §6.1): schema 6 and a text's
+/// alignment, width factor and mask (`align`, `widthFactor`, `mask`), the
+/// first two on an attribute definition too (docs/adr/0145). A writer writes
+/// it only when a text or an attribute definition has one: any other drawing
+/// stays 6 or older, byte for byte, and a reader of those still opens it; one
+/// of those refuses a drawing that has them rather than move its texts.
+pub const SCHEMA_WITH_TEXT_EXTRAS: u32 = 7;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 5] = [
+pub const SCHEMAS: [u32; 6] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
     SCHEMA_WITH_PARTS,
     SCHEMA_WITH_BLOCKS,
+    SCHEMA_WITH_TEXT_EXTRAS,
 ];
 
 /// The file a drawing is saved as.

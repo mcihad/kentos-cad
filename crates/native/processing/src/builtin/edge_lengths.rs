@@ -171,6 +171,9 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, _feedback: &mut dyn Feedback) -> 
                 ),
                 height,
                 rotation: l.rotation,
+                align: None,
+                width_factor: None,
+                mask: false,
             })
         })
         .collect();

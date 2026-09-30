@@ -108,6 +108,17 @@ fn check_bulges(what: &str, bulges: &Option<Vec<f64>>, points: usize) -> Result<
     }
 }
 
+/// A text's or an attribute definition's width factor, when it has one (docs/adr/0145).
+fn width_factor(w: Option<f64>) -> Result<(), String> {
+    match w {
+        Some(w) if !kentos_contracts::width_factor_ok(w) => Err(format!(
+            "Yazının genişlik çarpanı {w}; 0'dan büyük, en çok {} olmalı",
+            kentos_contracts::MAX_WIDTH_FACTOR
+        )),
+        _ => Ok(()),
+    }
+}
+
 fn positive(what: &str, v: f64) -> Result<(), String> {
     if v > 0.0 {
         Ok(())
@@ -194,6 +205,7 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
             if x.text.len() > 10_000 {
                 return Err("Yazı en çok 10 000 karakter olabilir".into());
             }
+            width_factor(x.width_factor)?;
         }
         Dimension(x) => positive("Ölçü yazısı yüksekliği", x.height)?,
         Hatch(x) => {
@@ -343,6 +355,9 @@ pub fn to_stored_block(block: &BlockDefinition) -> Result<(BlockDefinition, Valu
     }
     for (i, e) in block.entities.iter().enumerate() {
         validate(e, true).map_err(|why| format!("{}. nesnesi: {why}", i + 1))?;
+    }
+    for (i, a) in block.attributes.iter().enumerate() {
+        width_factor(a.width_factor).map_err(|why| format!("{}. özniteliği: {why}", i + 1))?;
     }
     Ok((block, value))
 }
@@ -789,10 +804,41 @@ mod tests {
                 serde_json::json!({ "kind": "ellipse", "id": 1, "layerId": "p", "attrs": {}, "c": { "x": 0, "y": 0 }, "major": { "x": 1, "y": 0 }, "ratio": 1.5, "t0": 0, "t1": 0 }),
                 "oranı",
             ),
+            (
+                serde_json::json!({ "kind": "text", "id": 1, "layerId": "p", "attrs": {}, "p": { "x": 0, "y": 0 }, "text": "A", "height": 2.5, "rotation": 0, "widthFactor": 0 }),
+                "genişlik çarpanı",
+            ),
         ];
         for (json, why) in cases {
             let err = to_stored(&entity(json), 5256, &none()).unwrap_err();
             assert!(err.contains(why), "{err}");
         }
+    }
+
+    /// A text's alignment, width factor and mask are kept with it (docs/adr/0145);
+    /// an attribute definition's width factor is checked as a text's.
+    #[test]
+    fn a_texts_extras_are_kept_and_checked() {
+        let t = entity(
+            serde_json::json!({ "kind": "text", "id": 1, "layerId": "p", "attrs": {}, "p": { "x": 3, "y": 4 }, "text": "Ada 1284",
+            "height": 2.5, "rotation": 30, "align": "middleCenter", "widthFactor": 0.8, "mask": true }),
+        );
+        let s = to_stored(&t, 5256, &none()).unwrap();
+        assert_eq!(s.source_kind, "cad");
+        let mut again = from_stored(&s).unwrap();
+        if let Entity::Text(x) = &mut again {
+            x.base.id = 1;
+        }
+        assert_eq!(again, t);
+        let block: BlockDefinition = serde_json::from_value(serde_json::json!({
+            "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0003", "name": "Rögar", "base": { "x": 0, "y": 0 }, "entities": [],
+            "attributes": [{ "tag": "NO", "p": { "x": 0, "y": 0 }, "height": 0.5, "rotation": 0, "align": "topLeft", "widthFactor": 150 }]
+        }))
+        .unwrap();
+        let err = to_stored_block(&block).unwrap_err();
+        assert!(
+            err.contains("1. özniteliği") && err.contains("genişlik çarpanı"),
+            "{err}"
+        );
     }
 }

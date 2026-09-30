@@ -62,8 +62,15 @@ SCHEMA_WITH_ELEVATIONS = 4
 SCHEMA_WITH_PARTS = 5
 # Schema 6: schema 5 and blocks (the document's `blocks`, the `insert` kind; docs/adr/0144).
 SCHEMA_WITH_BLOCKS = 6
+# Schema 7: schema 6 and a text's `align`, `widthFactor` and `mask`, an attribute definition's `align` and
+# `widthFactor` (docs/adr/0145).
+SCHEMA_WITH_TEXT_EXTRAS = 7
+# A text's alignments (spec §6.6); the left of the baseline is the field's absence, no value.
+TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", "bottomRight", "middleLeft", "middleCenter", "middleRight", "topLeft", "topCenter", "topRight")
+# The widest a text's letters may be drawn, times their width.
+MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -285,7 +292,7 @@ def decode_payload(payload):
     return value
 
 
-# ── Document schemas 2 to 6 (spec §6) ───────────────────────────────────
+# ── Document schemas 2 to 7 (spec §6) ───────────────────────────────────
 
 
 class _Schema:
@@ -296,11 +303,12 @@ class _Schema:
         self.uids = []
         self.seen = set()
         # What the payload's schema lets an object hold: its own line weight (schema 3 and up), vertex elevations
-        # (schema 4 and up), an area's parts (schema 5 and up), blocks (schema 6).
+        # (schema 4 and up), an area's parts (schema 5 and up), blocks (schema 6 and up), a text's extras (schema 7).
         self.weights = False
         self.elevations = False
         self.parts = False
         self.blocks = False
+        self.texts = False
         # While a block definition's objects are read: how many so far (they have no persistent ids).
         self.inside = None
         # The definitions' ids and places, once read; where each insert inside them is.
@@ -453,6 +461,7 @@ class _Schema:
         self.elevations = version >= SCHEMA_WITH_ELEVATIONS
         self.parts = version >= SCHEMA_WITH_PARTS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
+        self.texts = version >= SCHEMA_WITH_TEXT_EXTRAS
         checked = self.fields({"format": (self.text, True), "version": (self.uint(32), True), "document": (self.document, True)})(v)
         return checked["document"]
 
@@ -630,17 +639,29 @@ class _Schema:
         return {k: d[k] for k in ("id", "name", "base", "entities", "attributes", "description") if k in d}
 
     def attribute(self, v):
-        a = self.fields(
-            {
-                "p": (self.point, True),
-                "tag": (self.text, True),
-                "value": (self.text, False),
-                "height": (self.float, True),
-                "prompt": (self.text, False),
-                "rotation": (self.float, True),
-            }
-        )(v)
-        return {k: a[k] for k in ("tag", "prompt", "value", "p", "height", "rotation") if k in a}
+        table = {
+            "p": (self.point, True),
+            "tag": (self.text, True),
+            "value": (self.text, False),
+            "height": (self.float, True),
+            "prompt": (self.text, False),
+            "rotation": (self.float, True),
+        }
+        if self.texts:
+            table.update(text_extras(self, mask=False))
+        a = self.fields(table)(v)
+        return {k: a[k] for k in ("tag", "prompt", "value", "p", "height", "rotation", "align", "widthFactor") if k in a}
+
+    def width_factor(self, v):
+        x = self.float(v)
+        if not (0.0 < x <= MAX_WIDTH_FACTOR):
+            self.fail("bad_value", f"genişlik çarpanı {x}; 0'dan büyük, en çok {MAX_WIDTH_FACTOR:g} olmalı")
+        return x
+
+    def mask(self, v):
+        if self.bool(v) is not True:
+            self.fail("bad_value", "zemin false yazılmaz; zeminsiz yazıda alan yoktur")
+        return True
 
     def scale(self, v):
         x = self.float(v)
@@ -784,7 +805,13 @@ ENTITY_KINDS = {
     "spline": lambda s: {"pts": (s.array(s.point), True), "closed": (s.bool, True)},
     "xline": lambda s: {"p": (s.point, True), "dir": (s.point, True)},
     "ray": lambda s: {"p": (s.point, True), "dir": (s.point, True)},
-    "text": lambda s: {"p": (s.point, True), "text": (s.text, True), "height": (s.float, True), "rotation": (s.float, True)},
+    "text": lambda s: {
+        "p": (s.point, True),
+        "text": (s.text, True),
+        "height": (s.float, True),
+        "rotation": (s.float, True),
+        **(text_extras(s, mask=True) if s.texts else {}),
+    },
     "dimension": lambda s: {
         "a": (s.point, True),
         "b": (s.point, True),
@@ -803,6 +830,14 @@ ENTITY_KINDS = {
     # Schema 6 (docs/adr/0144): `mirror` only when true.
     "insert": lambda s: {"block": (s.id16, True), "p": (s.point, True), "scale": (s.scale, True), "rotation": (s.float, True), "mirror": (s.mirror, False)},
 }
+
+
+def text_extras(s, mask):
+    """Schema 7's fields of a text (`mask` too) or an attribute definition (docs/adr/0145)."""
+    table = {"align": (s.enum(TEXT_ALIGNS), False), "widthFactor": (s.width_factor, False)}
+    if mask:
+        table["mask"] = (s.mask, False)
+    return table
 
 
 def name_key(name):

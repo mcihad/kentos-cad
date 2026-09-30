@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`, `3`, `4`, `5` ya da `6`; değilse `schema_version` |
+| `version` | tam sayı | `2`, `3`, `4`, `5`, `6` ya da `7`; değilse `schema_version` |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -207,7 +207,9 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 
 **Şema 6**, şema 5'in kendisi ve bloklardır: belgenin `blocks` alanı (§6.2, §6.9) ve `insert` nesne türü (§6.6; ADR 0144). Yazıcı `6`'yı **yalnız çizimde bir blok tanımı varken** yazar; tanımsız bir yerleştirme zaten yazılamaz (`unknown_block`). Başka her çizim şema 2–5'tir ve eskisiyle bayt bayt aynıdır. Şema 2–5 yükünde `blocks` bilinmeyen alan (`unknown_field`, `fixtures/kcad/v2/broken/blocks-in-schema-5.kcad`), `insert` bilinmeyen türdür (`unknown_kind`, `insert-in-schema-5.kcad`): eski okuyucu blokları sessizce düşürmez, dosyayı açmaz. Şema 6 şema 5'i kapsar: parçalı alan, köşe kotu ve nesne kalınlığı orada da, tanımların nesnelerinde de yazılır.
 
-Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: blok tanımı olan çizim 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
+**Şema 7**, şema 6'nın kendisi ve yazı ekleridir: yazının `align`, `widthFactor` ve `mask`'ı (§6.6), öznitelik tanımının `align` ve `widthFactor`'ı (§6.9; ADR 0145). Yazıcı `7`'yi **yalnız bir yazıda ya da öznitelik tanımında bu alanlardan biri varken** yazar, belgenin ya da bir blok tanımının yazısında. Başka her çizim şema 2–6'dır ve eskisiyle bayt bayt aynıdır. Şema 2–6 yükünde bu alanlar bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/text-align-in-schema-6.kcad`, `attribute-align-in-schema-6.kcad`): eski okuyucu hizalı yazıyı sessizce sol alt noktasına taşımaz, dosyayı açmaz. Şema 7 şema 6'yı kapsar.
+
+Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: yazı eki olan çizim 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
 
 ### 6.2 Belge
 
@@ -335,7 +337,7 @@ Yanlış CBOR türü (float yerine tam sayı, nokta yerine harita) `wrong_type`'
 | `ellipse` | `c`, `major` nokta; `ratio`, `t0`, `t1` float |
 | `spline` | `pts` nokta listesi; `closed` bool |
 | `xline`, `ray` | `p`, `dir` nokta |
-| `text` | `p` nokta; `text` metin; `height` float (m); `rotation` float (derece, doğudan saat yönünün tersine) |
+| `text` | `p` nokta; `text` metin; `height` float (m); `rotation` float (derece, doğudan saat yönünün tersine); yalnız şema 7: `align` numaralı metin, `widthFactor` float, `mask` bool (isteğe bağlı; aşağıda) |
 | `dimension` | `a`, `b` nokta; `offset`, `height` float; isteğe bağlı: `c` nokta, `text` metin, `angle` float, `style` numaralı metin (`aligned`, `linear`, `angular`, `radius`, `diameter`) |
 | `hatch` | `ring` nokta listesi; `holes` nokta listesi dizisi (isteğe bağlı); `pattern` harita: `type` (`solid`, `lines`, `cross`), `angle` float, `spacing` float |
 | `insert` | yalnız şema 6 (§6.9): `block` kimlik (tanımın `id`'si); `p` nokta; `scale` float (pozitif; değilse `bad_value`); `rotation` float (radyan, doğudan saat yönünün tersine); `mirror` bool (isteğe bağlı; yalnız `true` yazılır, `false` `bad_value`) |
@@ -355,6 +357,11 @@ Yanlış CBOR türü (float yerine tam sayı, nokta yerine harita) `wrong_type`'
   - **Sonlu olmayan kot** (NaN, ±∞) hiçbir float gibi yazılamaz ve okunamaz: `non_finite` (§5.3). Kotun yerinde tam sayı ya da başka tür `wrong_type`'tır.
   - **Şema:** kot alanları şema 4'te gelir (§6.1). Nokta kendi `z`'sini önceki şemalardan beri taşır; daire, yay, elips, eğri, yardımcı çizgi, ışın, yazı, ölçü ve tarama kot almaz.
 - **Yerleştirme** (`insert`, şema 6; ADR 0144): tanımın nesneleri, tanımın taban noktasından `p`'ye taşınmış, `mirror` ise tanımın x ekseninde aynalanmış, `scale` ile ölçeklenmiş ve `rotation` kadar döndürülmüş hâliyle çizilir. Dönüşüm benzerliktir; şekiller türlerini korur. Anahtarları kodlanmış sırasıyla `p` < `block` < `scale` < `mirror` < `rotation`'dır (ortak alanlarla birlikte sıralanır). Tanımın öznitelik tanımlarının değerleri yerleştirmenin `attrs`'ındadır.
+- **Yazı ekleri** (şema 7; ADR 0145):
+  - **`align`**: `p`'nin yazının hangi noktası olduğu. Değerler: `baselineCenter`, `baselineRight`, `bottomLeft`, `bottomCenter`, `bottomRight`, `middleLeft`, `middleCenter`, `middleRight`, `topLeft`, `topCenter`, `topRight`. Yatayda sol, orta, sağ; düşeyde taban çizgisi, alt (taban çizgisinin 0,2 yükseklik altı), orta (yarım yükseklik üstü), üst (bir yükseklik üstü). Alan yoksa `p` taban çizgisinin soludur; bu bir değer değildir, `baselineLeft` bilinmeyen değerdir (`bad_value`). Başka bilinmeyen değer de `bad_value`'dur.
+  - **`widthFactor`**: harflerin eni bununla çarpılır, yükseklik değişmez. `0`'dan büyük, en çok `100`; değilse `bad_value`, sonlu değilse `non_finite`. Alan yoksa 1'dir; yazıcı verileni yazar, 1'i üretmemek üreticinin işidir.
+  - **`mask`**: yazının kutusu yazıdan önce çizim alanının zemin rengiyle doldurulur. Yalnız `true` yazılır; `false` `bad_value`'dur.
+  - Yazının anahtarları kodlanmış sırasıyla `p` < `mask` < `text` < `align` < `height` < `rotation` < `widthFactor`'dır (ortak alanlarla birlikte sıralanır).
 - Dış başvuru, yüzey ve katı gibi yeni türler ileride şemaya ya da zorunlu bir uzantıya eklenir; eski okuyucu onları tanımadığını söyler.
 
 ### 6.7 Proje stilleri ve opak değerler
@@ -401,7 +408,7 @@ Yanlış CBOR türü (float yerine tam sayı, nokta yerine harita) `wrong_type`'
 | `attributes` | dizi: öznitelik tanımı | | yerleştirmenin yazı olarak gösterdiği öznitelikler; boş dizi yazılmaz (`bad_value`) |
 | `description` | metin | | açıklama |
 
-**Öznitelik tanımı** haritası: `p` nokta (evet), `tag` metin (evet), `value` metin (varsayılan değer), `height` float (evet, m), `prompt` metin (Blok ekle'nin sorusu), `rotation` float (evet, derece, bir yazınınki gibi). Anahtarları bu sıradadır.
+**Öznitelik tanımı** haritası: `p` nokta (evet), `tag` metin (evet), `align` numaralı metin (yalnız şema 7), `value` metin (varsayılan değer), `height` float (evet, m), `prompt` metin (Blok ekle'nin sorusu), `rotation` float (evet, derece, bir yazınınki gibi), `widthFactor` float (yalnız şema 7). Anahtarları bu sıradadır. `align` ve `widthFactor`'ın anlamı ve kuralları yazınınkidir (§6.6, yazı ekleri).
 
 - **Tanımın nesneleri** belgenin nesneleriyle aynı biçimdedir (§6.6), yalnız `uid` taşımazlar: kimlikleri tanımın içinde yereldir. Okuyucu onlara tanımın içinde 1, 2, 3, … yuvalarını verir. Katmanları saklanır ama ağaçta bulunmaları gerekmez: yerleştirme onları kendi katmanıyla çizer.
 - **Kurallar** (okuyucu ve yazıcı aynı sırayla denetler; web ve masaüstü belgeleri de aynı kurallarla, `kentos_contracts::blocks`):

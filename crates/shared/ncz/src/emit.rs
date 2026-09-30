@@ -439,6 +439,9 @@ impl Emitter {
                         text: e.label.clone(),
                         height: e.text_height,
                         rotation,
+                        align: None,
+                        width_factor: None,
+                        mask: false,
                     }),
                 );
             }
@@ -660,6 +663,9 @@ impl Emitter {
                                 text: line.clone(),
                                 height: height * size,
                                 rotation: place.rotation,
+                                align: None,
+                                width_factor: None,
+                                mask: false,
                             }),
                         );
                     }

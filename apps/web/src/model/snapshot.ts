@@ -7,7 +7,7 @@ import { isUuid } from '../core/uuid';
 import { crsBySrid } from '../geo/crs';
 import { blockFaultMessage, definitionsFault, type AttributeDefinition, type BlockDefinition } from './blocks';
 import type { CadDocument, DocumentContent } from './document';
-import { MAX_LINE_WEIGHT, type Entity } from './entities';
+import { MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, TEXT_ALIGNS, widthFactorOk, type Entity, type TextAlign } from './entities';
 import type { LayerInit } from './layers';
 import { DRAWING_FONT_IDS, WORKSPACE_IDS } from './projectSettings';
 
@@ -393,6 +393,9 @@ function definitions(v: unknown): BlockDefinition[] {
         const out: AttributeDefinition = { tag: str(a.tag, `${aw} › etiket`), p: vec(a.p, `${aw} › konum`), height: num(a.height, `${aw} › yükseklik`), rotation: num(a.rotation, `${aw} › açı`) };
         if (a.prompt !== undefined) out.prompt = str(a.prompt, `${aw} › soru`);
         if (a.value !== undefined) out.value = str(a.value, `${aw} › varsayılan`);
+        textExtrasAt(a, aw);
+        if (a.align !== undefined) out.align = a.align as TextAlign;
+        if (a.widthFactor !== undefined) out.widthFactor = a.widthFactor as number;
         return out;
       });
     }
@@ -442,6 +445,12 @@ function elevationsAt(v: unknown, n: number, w: string, what: string): void {
   list.forEach((z, i) => {
     if (z !== null) numAt(z, w, `${what} ${i + 1}`);
   });
+}
+
+/** A text's or an attribute definition's alignment and width factor (docs/adr/0145), when it has them. */
+function textExtrasAt(v: Record<string, unknown>, w: string): void {
+  if (v.align !== undefined) oneOf(v.align, TEXT_ALIGNS, at(w, 'hiza'));
+  if (v.widthFactor !== undefined && !widthFactorOk(numAt(v.widthFactor, w, 'genişlik çarpanı'))) fail(at(w, 'genişlik çarpanı'), `0'dan büyük, en çok ${MAX_WIDTH_FACTOR} olmalı`);
 }
 
 /** A polygon's or a part's holes (`prefix` names the part): rings of 3 or more vertices, with bulges and elevations. */
@@ -546,6 +555,9 @@ function entity(v: unknown, where: string, layers: ReadonlySet<string> | null, i
       strAt(v.text, w, 'metin');
       numAt(v.height, w, 'yükseklik');
       numAt(v.rotation, w, 'açı');
+      textExtrasAt(v, w);
+      // The mask only when true (docs/adr/0145), as an insert's mirror.
+      if (v.mask !== undefined && v.mask !== true) fail(at(w, 'zemin'), 'yalnız true yazılır; zeminsiz yazıda alan yoktur');
       break;
     case 'dimension':
       pointAt(v.a, w, 'a');
