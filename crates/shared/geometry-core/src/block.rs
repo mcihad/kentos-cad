@@ -31,6 +31,7 @@ use crate::geom::affine::{Affine, compose, translation};
 use crate::jsmath::{PI, cos, sin};
 use crate::ops::curve_cuts::Cut;
 use crate::ops::transform::transform_shape;
+use crate::text::TextAlign;
 use crate::vec2::Vec2;
 
 /// Nested definitions followed at most this deep (`MAX_BLOCK_DEPTH` in the contracts).
@@ -47,6 +48,24 @@ pub struct Attribute {
     pub height: f64,
     /// Degrees, counter-clockwise from east, as a text's.
     pub rotation: f64,
+    /// Which point of the text `p` is, and its width factor, as a text's (docs/adr/0145).
+    pub align: Option<TextAlign>,
+    pub width_factor: Option<f64>,
+}
+
+impl Attribute {
+    /// Its text showing `text`, in the definition's coordinates.
+    pub fn shape(&self, text: String) -> Shape {
+        Shape::Text {
+            p: self.p,
+            text,
+            height: self.height,
+            rotation: self.rotation,
+            align: self.align,
+            width_factor: self.width_factor,
+            mask: None,
+        }
+    }
 }
 
 /// A definition as a host gives it: its id, its base point, its objects
@@ -281,15 +300,7 @@ impl Blocks {
                     }
                 }
                 Entity {
-                    shape: transform_shape(
-                        &Shape::Text {
-                            p: a.p,
-                            text,
-                            height: a.height,
-                            rotation: a.rotation,
-                        },
-                        &m,
-                    ),
+                    shape: transform_shape(&a.shape(text), &m),
                     rest,
                 }
             }))
@@ -320,6 +331,8 @@ fn attribute_of(v: &Json) -> Result<Attribute, String> {
         p,
         height: *height,
         rotation: *rotation,
+        align: crate::api::json::read_field(v, "align")?,
+        width_factor: crate::api::json::read_field(v, "widthFactor")?,
     })
 }
 
@@ -475,15 +488,7 @@ fn flatten(
     // Its own attributes: texts of the default, the tag telling the host to show the insert's value.
     for a in &def.attributes {
         pieces.push(Piece {
-            shape: transform_shape(
-                &Shape::Text {
-                    p: a.p,
-                    text: a.value.clone(),
-                    height: a.height,
-                    rotation: a.rotation,
-                },
-                &to_base,
-            ),
+            shape: transform_shape(&a.shape(a.value.clone()), &to_base),
             color: None,
             line_weight: None,
             attribute: Some(a.tag.clone()),

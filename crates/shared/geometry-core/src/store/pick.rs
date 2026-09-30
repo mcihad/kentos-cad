@@ -6,8 +6,8 @@
 
 use super::{Item, Store, padded};
 use crate::entity::{
-    Shape, area_parts, dimension_geom, ellipse_geom, entity_area, entity_outline, inside_polygon,
-    is_closed_outline, is_multi_part, polygon_holes, polygon_ring, text_box,
+    Shape, TextPlace, area_parts, dimension_geom, ellipse_geom, entity_area, entity_outline,
+    inside_polygon, is_closed_outline, is_multi_part, polygon_holes, polygon_ring,
 };
 use crate::geom::dimension::layout_dimension;
 use crate::geom::ellipse::{ellipse_area, inside_ellipse, is_full_ellipse, tessellate_ellipse};
@@ -253,14 +253,11 @@ pub fn edge_distance(e: &Shape, p: Vec2, font: Font) -> f64 {
         Shape::Point { p: q, .. } | Shape::Insert { p: q, .. } => {
             return js_hypot(p.x - q.x, p.y - q.y);
         }
-        Shape::Text {
-            p: at,
-            text,
-            height,
-            rotation,
-        } => {
-            // Anywhere on the text body counts as a hit.
-            let b = text_box(*at, text, *height, *rotation, font);
+        Shape::Text { p: at, .. } => {
+            // Anywhere on the text body counts as a hit, where its alignment puts it (docs/adr/0145).
+            let b = TextPlace::of(e)
+                .map(|t| t.outline(font))
+                .unwrap_or_default();
             if point_in_polygon(p, &b) {
                 return 0.0;
             }

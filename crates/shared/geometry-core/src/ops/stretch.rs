@@ -26,16 +26,12 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
     let geom = entity_geometry(e);
     let shape = match &geom.shape {
         Shape::Point { p, z } => inside(*p, r).then(|| Shape::Point { p: mv(*p), z: *z })?,
-        Shape::Text {
-            p,
-            text,
-            height,
-            rotation,
-        } => inside(*p, r).then(|| Shape::Text {
-            p: mv(*p),
-            text: text.clone(),
-            height: *height,
-            rotation: *rotation,
+        Shape::Text { p, .. } => inside(*p, r).then(|| {
+            let mut moved = geom.shape.clone();
+            if let Shape::Text { p: at, .. } = &mut moved {
+                *at = mv(*p);
+            }
+            moved
         })?,
         Shape::Line { a, b } => any(&[*a, *b]).then(|| Shape::Line {
             a: mv(*a),

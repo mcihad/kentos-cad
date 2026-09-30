@@ -11,8 +11,8 @@
 use super::Store;
 use super::pick::edge_distance;
 use crate::entity::{
-    Shape, area_parts, ellipse_geom, entity_area, entity_outline, inside_polygon, is_multi_part,
-    text_box,
+    Shape, TextPlace, area_parts, ellipse_geom, entity_area, entity_outline, inside_polygon,
+    is_multi_part,
 };
 use crate::geom::ellipse::{ellipse_area, inside_ellipse, is_full_ellipse};
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges};
@@ -195,12 +195,9 @@ impl Store {
 /// text's body.
 fn outline(e: &Shape, font: Font) -> Vec<Vec2> {
     match e {
-        Shape::Text {
-            p,
-            text,
-            height,
-            rotation,
-        } => text_box(*p, text, *height, *rotation, font),
+        Shape::Text { .. } => TextPlace::of(e)
+            .map(|t| t.outline(font))
+            .unwrap_or_default(),
         // Every part of a multi-part area: all of them must be inside (docs/adr/0143).
         _ if is_multi_part(e) => area_parts(e)
             .iter()
@@ -217,13 +214,10 @@ fn crosses(e: &Shape, fence: &[Vec2], segs: &[Edge], tol: f64, font: Font) -> bo
         Shape::Point { p, .. } | Shape::Insert { p, .. } => {
             segs.iter().any(|s| closest_on_edge(s, *p).d <= tol)
         }
-        Shape::Text {
-            p,
-            text,
-            height,
-            rotation,
-        } => {
-            let body = text_box(*p, text, *height, *rotation, font);
+        Shape::Text { .. } => {
+            let body = TextPlace::of(e)
+                .map(|t| t.outline(font))
+                .unwrap_or_default();
             fence.iter().any(|q| point_in_polygon(*q, &body))
                 || segs.iter().any(|s| {
                     (0..body.len()).any(|i| {

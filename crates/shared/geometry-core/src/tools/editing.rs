@@ -887,6 +887,9 @@ mod tests {
             text: "Ada 101".into(),
             height: 2.0,
             rotation: 0.0,
+            align: None,
+            width_factor: None,
+            mask: None,
         };
         let wide = shapes_middle(std::slice::from_ref(&text), Font::from_id("courier-prime"));
         let narrow = shapes_middle(std::slice::from_ref(&text), Font::DEFAULT);

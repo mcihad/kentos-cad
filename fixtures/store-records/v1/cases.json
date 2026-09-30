@@ -43,7 +43,8 @@
       {"kind": "polygon", "id": 21, "layerId": "parsel", "attrs": {}, "pts": [{"x": 487010, "y": 4420000}, {"x": 487014, "y": 4420000}, {"x": 487014, "y": 4420004}], "parts": [{"pts": [{"x": 487020, "y": 4420000}, {"x": 487030, "y": 4420000}, {"x": 487030, "y": 4420010}], "bulges": [0, 0.5, 0], "holes": [{"pts": [{"x": 487025, "y": 4420002}, {"x": 487028, "y": 4420002}, {"x": 487028, "y": 4420005}]}]}, {"pts": [{"x": 487040, "y": 4420000}, {"x": 487044, "y": 4420000}, {"x": 487044, "y": 4420004}], "zs": [1, 2, 3]}]},
       {"kind": "polygon", "id": 22, "layerId": "parsel", "attrs": {}, "pts": [{"x": 487050, "y": 4420000}, {"x": 487054, "y": 4420000}, {"x": 487054, "y": 4420004}], "parts": []},
       {"kind": "insert", "id": 23, "layerId": "cizim", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001", "p": {"x": 487060, "y": 4420010}, "scale": 1, "rotation": 0},
-      {"kind": "insert", "id": 24, "layerId": "yardimci", "attrs": {"NO": "R-3"}, "label": "R-3", "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001", "p": {"x": 487070.25, "y": 4420012.5}, "scale": 2.5, "rotation": 1.5707963267948966, "mirror": true}
+      {"kind": "insert", "id": 24, "layerId": "yardimci", "attrs": {"NO": "R-3"}, "label": "R-3", "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001", "p": {"x": 487070.25, "y": 4420012.5}, "scale": 2.5, "rotation": 1.5707963267948966, "mirror": true},
+      {"kind": "text", "id": 25, "layerId": "yazi", "attrs": {}, "p": {"x": 487080, "y": 4420020}, "text": "Ada 105", "height": 1.5, "rotation": 15, "align": "middleCenter", "widthFactor": 0.8, "mask": true}
     ],
     "styles": {"items": [], "categories": []},
     "blocks": [
@@ -64,8 +65,8 @@
     {"id": 11, "nums": [11, 0, 0, 9, 3, 486520, 4420200, 486530, 4420210, 486540, 4420205, 1], "strings": ["cizim"]},
     {"id": 12, "nums": [12, 0, 0, 7, 486520, 4420200, 0.6, 0.8], "strings": ["yardimci"]},
     {"id": 13, "nums": [13, 0, 0, 8, 486520, 4420200, -1, 0], "strings": ["yardimci"]},
-    {"id": 14, "nums": [14, 0, 0, 10, 486520, 4420200, 2, -30, 1], "strings": ["yazi", "Ada 104 ğüşıöç"]},
-    {"id": 15, "nums": [15, 0, 0, 10, 487000, 4420000, 0.5, 0, 0], "strings": ["yazi"], "note": "Aynı metin bir kez yazılır."},
+    {"id": 14, "nums": [14, 0, 0, 10, 486520, 4420200, 2, -30, 1, -1, "NaN", 0], "strings": ["yazi", "Ada 104 ğüşıöç"], "note": "Hizası (−1: yok), genişlik çarpanı (NaN: yok) ve zemin bayrağı (0) metinden sonra (ADR 0145)."},
+    {"id": 15, "nums": [15, 0, 0, 10, 487000, 4420000, 0.5, 0, 0, -1, "NaN", 0], "strings": ["yazi"], "note": "Aynı metin bir kez yazılır."},
     {"id": 16, "nums": [16, 0, 0, 11, 486520, 4420200, 486530, 4420200, 2, 0.5, -1, -1, 0, "NaN", 0, "NaN", "NaN"], "strings": ["olcu"], "note": "Olmayan yazı ve biçim -1; olmayan açı ve merkez yine de yerlerini alır (NaN)."},
     {"id": 17, "nums": [17, 0, 0, 11, 487000, 4420000, 487003, 4420004, -2, 0.5, 1, 2, 1, 90, 0, "NaN", "NaN"], "strings": ["olcu", "12,5 m", "linear"]},
     {"id": 18, "nums": [18, 0, 0, 11, 487010, 4420000, 487000, 4420010, 5, 1, -1, 1, 0, "NaN", 1, 487000, 4420000], "strings": ["olcu", "angular"]},
@@ -74,6 +75,7 @@
     {"id": 21, "nums": [21, 0, 0, 13, 3, 487010, 4420000, 487014, 4420000, 487014, 4420004, -1, -1, 2, 3, 487020, 4420000, 487030, 4420000, 487030, 4420010, 3, 0, 0.5, 0, 1, 3, 487025, 4420002, 487028, 4420002, 487028, 4420005, -1, 3, 487040, 4420000, 487044, 4420000, 487044, 4420004, -1, -1], "strings": ["parsel"], "note": "Çok parçalı alan (ADR 0143): tür 13; ilk parça alanın kendi alanları, sonra öbür parçaların sayısı ve her biri yol ve delikleriyle. Kotlar paketlenmez."},
     {"id": 22, "nums": [22, 0, 0, 3, 3, 487050, 4420000, 487054, 4420000, 487054, 4420004, -1, -1], "strings": ["parsel"], "note": "Boş parça listesi tek parçalı alandır: tür 3, eskisi gibi."},
     {"id": 23, "nums": [23, 0, 0, 14, 487060, 4420010, 1, 0, 0, 1, 0], "strings": ["cizim", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001"], "note": "Blok yerleştirmesi (ADR 0144): tür 14; ekleme noktası, ölçek, dönüş (radyan), aynalama bayrağı, bloğun kimliği metin tablosunda; öznitelikleri (§7): sıfır etiket ve değer çifti."},
-    {"id": 24, "nums": [24, 0, 1, 14, 487070.25, 4420012.5, 2.5, 1.5707963267948966, 1, 1, 1, 2, 3], "strings": ["yardimci", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001", "NO", "R-3"], "note": "Aynalı, etiketli, döndürülmüş yerleştirme; bir özniteliği: etiketi (NO) ve değeri (R-3) metin tablosunda, blok özniteliğinin göstereceği değer."}
+    {"id": 24, "nums": [24, 0, 1, 14, 487070.25, 4420012.5, 2.5, 1.5707963267948966, 1, 1, 1, 2, 3], "strings": ["yardimci", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001", "NO", "R-3"], "note": "Aynalı, etiketli, döndürülmüş yerleştirme; bir özniteliği: etiketi (NO) ve değeri (R-3) metin tablosunda, blok özniteliğinin göstereceği değer."},
+    {"id": 25, "nums": [25, 0, 0, 10, 487080, 4420020, 1.5, 15, 1, 6, 0.8, 1], "strings": ["yazi", "Ada 105"], "note": "Tam ortaya hizalı, sıkıştırılmış ve zeminli yazı (ADR 0145): hizanın TextAlign::ALL içindeki sırası 6 (middleCenter), genişlik çarpanı 0,8, zemin bayrağı 1."}
   ]
 }

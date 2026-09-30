@@ -10,6 +10,8 @@
  */
 
 const KIND: Record<string, number> = { point: 0, line: 1, polyline: 2, polygon: 3, circle: 4, arc: 5, ellipse: 6, xline: 7, ray: 8, spline: 9, text: 10, dimension: 11, hatch: 12, insert: 14 };
+/** A text's alignments, numbered as the store numbers them (`TextAlign::ALL`, docs/adr/0145). */
+const TEXT_ALIGNS = ['baselineCenter', 'baselineRight', 'bottomLeft', 'bottomCenter', 'bottomRight', 'middleLeft', 'middleCenter', 'middleRight', 'topLeft', 'topCenter', 'topRight'] as const;
 /** Kinds by their number (`KIND` the other way). */
 const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'xline', 'ray', 'spline', 'text', 'dimension', 'hatch'] as const;
 /**
@@ -143,11 +145,14 @@ export function packEntities(list: Iterable<object>): Packed {
         points(e.pts);
         out.push(e.closed ? 1 : 0);
         break;
+      // docs/adr/0145: the alignment's place in TEXT_ALIGNS (−1 none), the width factor (NaN none), the mask a flag.
       case 10:
         pt(e.p);
         num(e.height);
         num(e.rotation);
-        out.push(str(e.text));
+        out.push(str(e.text), typeof e.align === 'string' ? TEXT_ALIGNS.indexOf(e.align as (typeof TEXT_ALIGNS)[number]) : -1);
+        num(e.widthFactor);
+        out.push(e.mask === true ? 1 : 0);
         break;
       case 11:
         pt(e.a);
@@ -328,6 +333,11 @@ export function unpackEntities(p: Packed): Unpacked[] {
         const height = num();
         const rotation = num();
         g = { kind, p, text: str() ?? '', height, rotation };
+        const align = num();
+        if (align >= 0) g.align = TEXT_ALIGNS[align];
+        const widthFactor = num();
+        if (!Number.isNaN(widthFactor)) g.widthFactor = widthFactor;
+        if (flag()) g.mask = true;
         break;
       }
       case 'dimension': {

@@ -40,7 +40,10 @@ pub struct Open {
     pub at: Vec2,
     /// The text's height, metres: the field's type size follows it.
     pub height: f64,
-    pub centered: bool,
+    /// Where `at` is on the text: shares along its width (0 left, ½ centre, 1
+    /// right) and of its height over its baseline (its alignment, docs/adr/0145).
+    pub along: f64,
+    pub up: f64,
     pub text: String,
     pub placeholder: String,
     pub hint: &'static str,
@@ -61,7 +64,8 @@ impl App {
         self.text_field = Some(Open {
             at: field.at,
             height: field.height,
-            centered: false,
+            along: 0.0,
+            up: 0.0,
             text: String::new(),
             placeholder: "Yazıyı yazın".to_owned(),
             hint: "Enter: ekle · Esc: vazgeç",
@@ -105,7 +109,8 @@ impl App {
             Entity::Text(t) => Open {
                 at: Vec2::new(t.p.x, t.p.y),
                 height: t.height,
-                centered: false,
+                along: t.align.map_or(0.0, |a| a.along()),
+                up: t.align.map_or(0.0, |a| a.up()),
                 text: t.text.clone(),
                 placeholder: String::new(),
                 hint: "Enter: kaydet · Esc: vazgeç",
@@ -118,7 +123,8 @@ impl App {
                 Open {
                     at: layout.text_at,
                     height: d.height,
-                    centered: true,
+                    along: 0.5,
+                    up: 0.0,
                     text: d.text.clone().unwrap_or_default(),
                     // The measured value as drawn, shown when the text is cleared.
                     placeholder: crate::exchange::dimension_text(
@@ -216,15 +222,12 @@ impl App {
                 ..container::Style::default()
             },
         );
-        // Its baseline at the text's (the web's `translate(0, -85%)`); a
-        // dimension's value centred on its place.
+        // Its baseline at the text's (the web's `translate(0, -85%)`), moved by
+        // where the point is on the text: a dimension's value and a centred
+        // text centred on it, a text's middle or top over its baseline.
         let field_height = size * 1.25 + 4.0;
-        let left = if open.centered {
-            x as f32 - width / 2.0
-        } else {
-            x as f32
-        };
-        let top = y as f32 - field_height * 0.85;
+        let left = x as f32 - width * open.along as f32;
+        let top = y as f32 - field_height * 0.85 + size * open.up as f32;
         Some(
             pin(column![input, hint].spacing(2))
                 .x(left.max(0.0))

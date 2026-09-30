@@ -330,6 +330,8 @@ impl Spatial {
                         slot,
                         at,
                         rotation: r[4],
+                        width_factor: r[5],
+                        mask: r[6],
                     }
                 } else if what == LABEL_CENTER {
                     LabelSpot::Center { slot, at }
@@ -355,6 +357,8 @@ impl Spatial {
                         height: r[5],
                         text,
                         attribute: piece.attribute,
+                        width_factor: r[7],
+                        mask: r[8],
                     }
                 } else if what == LABEL_PIECE_DIMENSION {
                     let Shape::Dimension { text, style, .. } = self.piece(r[0], r[6])?.shape else {
@@ -420,8 +424,17 @@ pub enum LabelSpot {
         angular: bool,
         prefix: &'static str,
     },
-    /// A text object at its insertion point, turned by `rotation`.
-    Text { slot: Slot, at: Vec2, rotation: f64 },
+    /// A text object from where its baseline starts (its point moved by its
+    /// alignment, docs/adr/0145), turned by `rotation`, its letters
+    /// `width_factor` wide; `mask` the width of the box filled under it
+    /// (`TextPlace::mask`), 0 without a mask.
+    Text {
+        slot: Slot,
+        at: Vec2,
+        rotation: f64,
+        width_factor: f64,
+        mask: f64,
+    },
     /// A label centred on its anchor.
     Center { slot: Slot, at: Vec2 },
     /// A label at the top left of the object's box.
@@ -430,8 +443,9 @@ pub enum LabelSpot {
     Beside { slot: Slot, at: Vec2 },
     /// A label along the edge from `a` to `b`.
     Along { slot: Slot, a: Vec2, b: Vec2 },
-    /// A text among a block's pieces (docs/adr/0144): at its placed
-    /// insertion point, turned by `rotation`, `height` as placed.
+    /// A text among a block's pieces (docs/adr/0144): from where its placed
+    /// baseline starts, turned by `rotation`, `height` as placed, its width
+    /// factor and mask as a text's.
     PieceText {
         slot: Slot,
         at: Vec2,
@@ -441,6 +455,8 @@ pub enum LabelSpot {
         /// An attribute's tag (docs/adr/0144 §7): the insert's value under it
         /// is shown, else `text` (the default); `shown_text` says which.
         attribute: Option<String>,
+        width_factor: f64,
+        mask: f64,
     },
     /// A dimension's value among a block's pieces, as `Dimension`, its own
     /// text when it has one and `height` as placed.

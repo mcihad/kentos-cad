@@ -75,6 +75,20 @@ class LabelRoom {
 }
 
 /**
+ * A text's mask (docs/adr/0145), in the text's frame on screen (the baseline's start at 0, 0): its box a tenth of
+ * its height wider all round, 1.15 of the height over the baseline and 0.23 under (the store's `TextPlace::mask`),
+ * `width` pixels along, in the sheet's colour. Nothing when `width` is 0 (no mask).
+ */
+function maskText(g: CanvasRenderingContext2D, width: number, px: number, paper: string): void {
+  if (!(width > 0)) return;
+  const m = px * 0.1;
+  g.save();
+  g.fillStyle = paper;
+  g.fillRect(-m, -px * 1.15 - m, width + 2 * m, px * 1.38 + 2 * m);
+  g.restore();
+}
+
+/**
  * Entity labels and text. Which ones a frame draws and where comes from the
  * geometry store (`labels`: visible layer, box in view, text size on
  * screen, the LabelStyle's scale range and smallest feature; see
@@ -123,12 +137,15 @@ export function drawLabels(
       g.restore();
       continue;
     }
+    // x, y where the text's baseline starts (its point moved by its alignment); its width factor and mask (docs/adr/0145).
     if (what === LABEL.text && e.kind === 'text') {
       const px = e.height * cam.scale;
       const s = cam.worldToScreen({ x, y });
       g.save();
       g.translate(s.x, s.y);
       g.rotate((-spots[i + 4] * Math.PI) / 180);
+      maskText(g, spots[i + 6] * cam.scale, px, pal.paper);
+      if (spots[i + 5] !== 1) g.scale(spots[i + 5], 1);
       g.font = `italic 400 ${px.toFixed(1)}px ${pal.drawingFont}`;
       g.textAlign = 'left';
       g.textBaseline = 'alphabetic';
@@ -148,6 +165,8 @@ export function drawLabels(
         g.save();
         g.translate(s.x, s.y);
         g.rotate((-spots[i + 4] * Math.PI) / 180);
+        maskText(g, spots[i + 8] * cam.scale, px, pal.paper);
+        if (spots[i + 7] !== 1) g.scale(spots[i + 7], 1);
         g.font = `italic 400 ${px.toFixed(1)}px ${pal.drawingFont}`;
         g.textAlign = 'left';
         g.textBaseline = 'alphabetic';

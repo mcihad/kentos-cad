@@ -53,6 +53,108 @@ pub fn width_em(text: &str, font: Font) -> f64 {
     text.chars().map(|c| advance(font, c)).sum::<u32>() as f64 / 1000.0
 }
 
+/// Which point of a text its `p` is (docs/adr/0145 §1, the contract's
+/// `TextAlign`): horizontally its left, centre or right; vertically on its
+/// baseline, at its bottom (0.2 of its height under the baseline), its middle
+/// (half its height over it) or its top (its height over it). The left of the
+/// baseline, where a text always stood, is no value but its absence.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TextAlign {
+    BaselineCenter,
+    BaselineRight,
+    BottomLeft,
+    BottomCenter,
+    BottomRight,
+    MiddleLeft,
+    MiddleCenter,
+    MiddleRight,
+    TopLeft,
+    TopCenter,
+    TopRight,
+}
+
+impl TextAlign {
+    /// Every alignment, in the contract's order.
+    pub const ALL: [TextAlign; 11] = [
+        TextAlign::BaselineCenter,
+        TextAlign::BaselineRight,
+        TextAlign::BottomLeft,
+        TextAlign::BottomCenter,
+        TextAlign::BottomRight,
+        TextAlign::MiddleLeft,
+        TextAlign::MiddleCenter,
+        TextAlign::MiddleRight,
+        TextAlign::TopLeft,
+        TextAlign::TopCenter,
+        TextAlign::TopRight,
+    ];
+
+    /// Its name in the contract (`middleCenter`).
+    pub fn name(self) -> &'static str {
+        match self {
+            TextAlign::BaselineCenter => "baselineCenter",
+            TextAlign::BaselineRight => "baselineRight",
+            TextAlign::BottomLeft => "bottomLeft",
+            TextAlign::BottomCenter => "bottomCenter",
+            TextAlign::BottomRight => "bottomRight",
+            TextAlign::MiddleLeft => "middleLeft",
+            TextAlign::MiddleCenter => "middleCenter",
+            TextAlign::MiddleRight => "middleRight",
+            TextAlign::TopLeft => "topLeft",
+            TextAlign::TopCenter => "topCenter",
+            TextAlign::TopRight => "topRight",
+        }
+    }
+
+    /// The alignment named `name`; none for any other name.
+    pub fn from_name(name: &str) -> Option<TextAlign> {
+        TextAlign::ALL.into_iter().find(|a| a.name() == name)
+    }
+
+    /// Where `p` is along the text, as a share of its width: 0 left, ½ centre, 1 right.
+    pub fn along(self) -> f64 {
+        match self {
+            TextAlign::BottomLeft | TextAlign::MiddleLeft | TextAlign::TopLeft => 0.0,
+            TextAlign::BaselineCenter
+            | TextAlign::BottomCenter
+            | TextAlign::MiddleCenter
+            | TextAlign::TopCenter => 0.5,
+            TextAlign::BaselineRight
+            | TextAlign::BottomRight
+            | TextAlign::MiddleRight
+            | TextAlign::TopRight => 1.0,
+        }
+    }
+
+    /// Where `p` is over the baseline, as a share of the text's height: 0 the
+    /// baseline, −0.2 the bottom, ½ the middle, 1 the top.
+    pub fn up(self) -> f64 {
+        match self {
+            TextAlign::BaselineCenter | TextAlign::BaselineRight => 0.0,
+            TextAlign::BottomLeft | TextAlign::BottomCenter | TextAlign::BottomRight => -0.2,
+            TextAlign::MiddleLeft | TextAlign::MiddleCenter | TextAlign::MiddleRight => 0.5,
+            TextAlign::TopLeft | TextAlign::TopCenter | TextAlign::TopRight => 1.0,
+        }
+    }
+}
+
+impl crate::api::json::FromJson for TextAlign {
+    fn from_json(v: &crate::api::json::Json) -> Result<TextAlign, String> {
+        match v {
+            crate::api::json::Json::Str(s) => {
+                TextAlign::from_name(s).ok_or_else(|| format!("“{s}” yazı hizası bilinmiyor"))
+            }
+            _ => Err("yazı hizası metin olmalı".into()),
+        }
+    }
+}
+
+impl crate::api::json::ToJson for TextAlign {
+    fn write_json(&self, out: &mut String) {
+        crate::api::json::write_str(out, self.name());
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

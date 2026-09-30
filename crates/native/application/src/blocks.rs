@@ -32,6 +32,10 @@ pub fn core_blocks(blocks: &[Arc<BlockDefinition>]) -> Blocks {
                         p: kentos_geometry_core::Vec2::new(a.p.x, a.p.y),
                         height: a.height,
                         rotation: a.rotation,
+                        align: a.align.and_then(|x| {
+                            kentos_geometry_core::text::TextAlign::from_name(x.name())
+                        }),
+                        width_factor: a.width_factor,
                     })
                     .collect(),
             })

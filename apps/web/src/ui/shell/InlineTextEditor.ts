@@ -1,6 +1,6 @@
 import type { AppContext } from '../../app/context';
 import { listen } from '../../core/disposable';
-import type { Entity } from '../../model/entities';
+import { textAlignShares, type Entity } from '../../model/entities';
 import type { Vec2 } from '../../model/geometry';
 import { layoutDimension, type DimensionLayout } from '../../model/geom/dimension';
 import type { TextInputRequest } from '../../viewport/ViewportController';
@@ -74,7 +74,7 @@ export class InlineTextEditor extends Component {
     this.input.value = '';
     this.input.placeholder = 'Yazıyı yazın';
     this.hint.textContent = 'Enter: ekle · Esc: vazgeç';
-    this.show({ at: req.at, height: req.height, rotation: req.rotation, centered: false });
+    this.show({ at: req.at, height: req.height, rotation: req.rotation, along: 0, up: 0, widthFactor: 1 });
   }
 
   private show(place: Placement): void {
@@ -95,12 +95,15 @@ export class InlineTextEditor extends Component {
     const cam = this.ctx.view.camera;
     const s = cam.worldToScreen(p.at);
     const px = Math.max(13, Math.min(48, p.height * cam.scale));
+    // The field's baseline sits at 85% of its height; its point is `along` of its width and `up` heights over the
+    // baseline (the text's alignment, docs/adr/0145), and it turns and widens about that point.
+    const up = p.up * px;
     Object.assign(this.el.style, {
       left: `${s.x}px`,
       top: `${s.y}px`,
       fontSize: `${px}px`,
-      transform: `translate(${p.centered ? '-50%' : '0'}, -85%) rotate(${-p.rotation}deg)`,
-      transformOrigin: p.centered ? '50% 85%' : '0 85%',
+      transform: `translate(${-p.along * 100}%, calc(-85% + ${up}px)) rotate(${-p.rotation}deg) scaleX(${p.widthFactor})`,
+      transformOrigin: `${p.along * 100}% calc(85% - ${up}px)`,
     });
   }
 
@@ -131,16 +134,22 @@ interface Placement {
   at: Vec2;
   height: number;
   rotation: number;
-  centered: boolean;
+  /** Where `at` is on the text: shares along its width and of its height over the baseline (docs/adr/0145). */
+  along: number;
+  up: number;
+  widthFactor: number;
   /** A dimension's own value, shown when its text is cleared. */
   measured?: string;
 }
 
 function placementOf(e: Entity, view: { dimensionText(l: DimensionLayout): string }): Placement | null {
-  if (e.kind === 'text') return { at: e.p, height: e.height, rotation: e.rotation, centered: false };
+  if (e.kind === 'text') {
+    const [along, up] = textAlignShares(e.align ?? null);
+    return { at: e.p, height: e.height, rotation: e.rotation, along, up, widthFactor: e.widthFactor ?? 1 };
+  }
   if (e.kind === 'dimension') {
     const l = layoutDimension(e);
-    return l ? { at: l.textAt, height: e.height, rotation: l.rotation, centered: true, measured: view.dimensionText(l) } : null;
+    return l ? { at: l.textAt, height: e.height, rotation: l.rotation, along: 0.5, up: 0, widthFactor: 1, measured: view.dimensionText(l) } : null;
   }
   return null;
 }

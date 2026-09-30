@@ -25,7 +25,7 @@ use crate::geometry::{
 };
 use crate::jsmath::{PI, TAU, cos, js_max, sin};
 use crate::op;
-use crate::text::{Font, width_em};
+use crate::text::{Font, TextAlign, width_em};
 use crate::vec2::Vec2;
 
 /// Half-length (1000 km) an infinite line gets when it meets finite geometry
@@ -141,6 +141,12 @@ pub enum Shape {
         text: String,
         height: f64,
         rotation: f64,
+        /// Which point of the text `p` is; none: the left of its baseline (docs/adr/0145).
+        align: Option<TextAlign>,
+        /// The letters' width times this; none: 1.
+        width_factor: Option<f64>,
+        /// `Some(true)`: its box is filled with the drawing area's colour first; never `Some(false)`.
+        mask: Option<bool>,
     },
     Dimension {
         a: Vec2,
@@ -187,7 +193,7 @@ crate::json_tagged!(Shape, "kind",
     Xline => "xline" { p, dir },
     Ray => "ray" { p, dir },
     Spline => "spline" { pts, closed },
-    Text => "text" { p, text, height, rotation },
+    Text => "text" { p, text, height, rotation, align, width_factor => "widthFactor", mask },
     Dimension => "dimension" { a, b, offset, height, text, style, angle, c },
     Hatch => "hatch" { ring, holes, pattern },
     Insert => "insert" { block, p, scale, rotation, mirror; attrs },
@@ -589,16 +595,111 @@ pub fn inside_polygon(e: &Shape, p: Vec2) -> bool {
             .any(|h| point_in_polygon(p, &polygon_ring(&h.pts, h.bulges.as_deref())))
 }
 
-/// Rotated box of a text: its letters' advances in the drawing's typeface (`text`), one line tall and a
-/// little over for descenders and accents.
+/// Rotated box of a text at the left of its baseline: its letters' advances in the drawing's
+/// typeface (`text`), one line tall and a little over for descenders and accents.
 pub fn text_box(p: Vec2, text: &str, height: f64, rotation: f64, font: Font) -> Vec<Vec2> {
-    let w = width_em(text, font) * height;
-    let h = height * 1.15;
-    let r = (rotation * PI) / 180.0;
-    let ux = cos(r);
-    let uy = sin(r);
-    let at = |u: f64, v: f64| Vec2::new(p.x + ux * u - uy * v, p.y + uy * u + ux * v);
-    vec![at(0.0, -h * 0.2), at(w, -h * 0.2), at(w, h), at(0.0, h)]
+    TextPlace {
+        p,
+        text,
+        height,
+        rotation,
+        align: None,
+        width_factor: None,
+    }
+    .outline(font)
+}
+
+/// Where and how large a text is (a text object, a block's text piece, a
+/// draft): its `p`, which point of it `p` is, its height, turn and width
+/// factor (docs/adr/0145). Everything that measures a text measures it
+/// through this: its box, its pick, its label's origin and its mask.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct TextPlace<'a> {
+    pub p: Vec2,
+    pub text: &'a str,
+    pub height: f64,
+    /// Degrees, counter-clockwise from east.
+    pub rotation: f64,
+    pub align: Option<TextAlign>,
+    pub width_factor: Option<f64>,
+}
+
+impl<'a> TextPlace<'a> {
+    /// A text shape's place; none for any other shape.
+    pub fn of(s: &'a Shape) -> Option<TextPlace<'a>> {
+        match s {
+            Shape::Text {
+                p,
+                text,
+                height,
+                rotation,
+                align,
+                width_factor,
+                ..
+            } => Some(TextPlace {
+                p: *p,
+                text,
+                height: *height,
+                rotation: *rotation,
+                align: *align,
+                width_factor: *width_factor,
+            }),
+            _ => None,
+        }
+    }
+
+    /// Its width, metres: its letters' advances in `font` at its height,
+    /// times its width factor.
+    pub fn width(&self, font: Font) -> f64 {
+        width_em(self.text, font) * self.height * self.width_factor.unwrap_or(1.0)
+    }
+
+    /// Its direction along the baseline and up from it.
+    fn axes(&self) -> (Vec2, Vec2) {
+        let r = (self.rotation * PI) / 180.0;
+        let (c, s) = (cos(r), sin(r));
+        (Vec2::new(c, s), Vec2::new(-s, c))
+    }
+
+    /// Where its baseline starts, the point its letters are written from:
+    /// `p` less its alignment's share of its width along the baseline and
+    /// of its height up from it.
+    pub fn origin(&self, font: Font) -> Vec2 {
+        let Some(a) = self.align else {
+            return self.p;
+        };
+        let (u, v) = self.axes();
+        let along = a.along() * self.width(font);
+        let up = a.up() * self.height;
+        Vec2::new(
+            self.p.x - u.x * along - v.x * up,
+            self.p.y - u.y * along - v.y * up,
+        )
+    }
+
+    /// The box from `(x0, y0)` to `(x1, y1)` in metres of its own frame
+    /// (along its baseline and up from it), counted from its origin.
+    fn frame(&self, font: Font, (x0, y0): (f64, f64), (x1, y1): (f64, f64)) -> Vec<Vec2> {
+        let o = self.origin(font);
+        let (u, v) = self.axes();
+        let at = |x: f64, y: f64| Vec2::new(o.x + u.x * x + v.x * y, o.y + u.y * x + v.y * y);
+        vec![at(x0, y0), at(x1, y0), at(x1, y1), at(x0, y1)]
+    }
+
+    /// Its rotated box: its width from its origin, one line tall and a
+    /// little over for descenders and accents (0.23 of its height under
+    /// the baseline, 1.15 over it).
+    pub fn outline(&self, font: Font) -> Vec<Vec2> {
+        let h = self.height * 1.15;
+        self.frame(font, (0.0, -h * 0.2), (self.width(font), h))
+    }
+
+    /// The box its mask fills (docs/adr/0145 §4): its outline with a tenth
+    /// of its height around it.
+    pub fn mask(&self, font: Font) -> Vec<Vec2> {
+        let (h, m) = (self.height * 1.15, self.height * 0.1);
+        self.frame(font, (-m, -h * 0.2 - m), (self.width(font) + m, h + m))
+    }
 }
 
 /// Whether the outline is a closed ring.
@@ -639,13 +740,11 @@ pub fn entity_bounds_in(e: &Shape, font: Font) -> Bounds {
             extend_bounds(&mut b, *c, *r);
             return b;
         }
-        Shape::Text {
-            p,
-            text,
-            height,
-            rotation,
-        } => {
-            for q in text_box(*p, text, *height, *rotation, font) {
+        Shape::Text { .. } => {
+            for q in TextPlace::of(e)
+                .map(|t| t.outline(font))
+                .unwrap_or_default()
+            {
                 extend_bounds(&mut b, q, 0.0);
             }
             return b;
@@ -842,6 +941,9 @@ pub(crate) static OPS: &[Op] = &[
         &e.shape, p
     )),
     op!("textBox", |e: Json| text_box_json(&e)),
+    // Where a text's point is on it (docs/adr/0145): [along its width, up of its height]; none: [0, 0].
+    op!("textAlignShares", |a: Option<TextAlign>| a
+        .map_or([0.0, 0.0], |a| [a.along(), a.up()])),
     op!("isClosedOutline", |e: Entity| is_closed_outline(&e.shape)),
     op!("entityBounds", |e: Entity| entity_bounds(&e.shape)),
     op!("entityAnchor", |e: Entity| entity_anchor(&e.shape)),
@@ -850,18 +952,24 @@ pub(crate) static OPS: &[Op] = &[
     op!("entityGeometry", |e: Entity| entity_geometry(&e)),
 ];
 
-/// `textBox` takes any object with p, text, height and rotation (a text entity or a draft), and the
-/// drawing typeface as `font` (a `DrawingFont` id; Barlow without one).
+/// `textBox` takes any object with p, text, height and rotation, and an alignment and width factor
+/// when it has them (a text entity or a draft), and the drawing typeface as `font` (a `DrawingFont`
+/// id; Barlow without one).
 fn text_box_json(v: &Json) -> Result<Vec<Vec2>, String> {
     let font = match v.get("font") {
         Json::Str(id) => Font::from_id(id),
         _ => Font::DEFAULT,
     };
-    let p: Vec2 = json::read_field(v, "p")?;
     let text: String = json::read_field(v, "text")?;
-    let height: f64 = json::read_field(v, "height")?;
-    let rotation: f64 = json::read_field(v, "rotation")?;
-    Ok(text_box(p, &text, height, rotation, font))
+    let place = TextPlace {
+        p: json::read_field(v, "p")?,
+        text: &text,
+        height: json::read_field(v, "height")?,
+        rotation: json::read_field(v, "rotation")?,
+        align: json::read_field(v, "align")?,
+        width_factor: json::read_field(v, "widthFactor")?,
+    };
+    Ok(place.outline(font))
 }
 
 impl FromJson for Json {

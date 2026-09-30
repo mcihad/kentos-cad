@@ -206,7 +206,9 @@ enum Anchor {
 }
 
 /// One text to draw: at a point on screen, turned by `angle` radians
-/// clockwise on screen, `size` pixels high.
+/// clockwise on screen, `size` pixels high, its letters `width_factor`
+/// wide; `mask` pixels long, the box filled with the drawing area's colour
+/// under it first (a text object's, docs/adr/0145), 0 for none.
 struct Piece<'t> {
     text: &'t str,
     at: Point,
@@ -215,6 +217,8 @@ struct Piece<'t> {
     font: Font,
     anchor: Anchor,
     color: Color,
+    width_factor: f32,
+    mask: f32,
 }
 
 impl Labels<'_> {
@@ -298,11 +302,22 @@ impl Labels<'_> {
                             font: drawing_fonts::font(self.font, 500, false),
                             anchor: Anchor::CenterBaseline,
                             color,
+                            width_factor: 1.0,
+                            mask: 0.0,
                         },
                         self.colors.halo,
                     );
                 }
-                (LabelSpot::Text { at, rotation, .. }, Entity::Text(t)) => draw(
+                (
+                    LabelSpot::Text {
+                        at,
+                        rotation,
+                        width_factor,
+                        mask,
+                        ..
+                    },
+                    Entity::Text(t),
+                ) => draw(
                     frame,
                     &Piece {
                         text: &t.text,
@@ -312,6 +327,8 @@ impl Labels<'_> {
                         font: drawing_fonts::font(self.font, 400, true),
                         anchor: Anchor::LeftBaseline,
                         color: self.colors.label,
+                        width_factor: *width_factor as f32,
+                        mask: (mask * self.camera.scale) as f32,
                     },
                     self.colors.halo,
                 ),
@@ -324,6 +341,8 @@ impl Labels<'_> {
                         height,
                         text,
                         attribute,
+                        width_factor,
+                        mask,
                         ..
                     },
                     _,
@@ -346,6 +365,8 @@ impl Labels<'_> {
                             font: drawing_fonts::font(self.font, 400, true),
                             anchor: Anchor::LeftBaseline,
                             color: self.colors.label,
+                            width_factor: *width_factor as f32,
+                            mask: (mask * self.camera.scale) as f32,
                         },
                         self.colors.halo,
                     );
@@ -387,6 +408,8 @@ impl Labels<'_> {
                             font: drawing_fonts::font(self.font, 500, false),
                             anchor: Anchor::CenterBaseline,
                             color,
+                            width_factor: 1.0,
+                            mask: 0.0,
                         },
                         self.colors.halo,
                     );
@@ -466,6 +489,8 @@ impl Labels<'_> {
             font,
             anchor,
             color,
+            width_factor: 1.0,
+            mask: 0.0,
         };
         let halo = self.colors.halo;
         let Some(s) = self.anchor(spot) else {
@@ -619,7 +644,8 @@ fn draw(frame: &mut Frame, piece: &Piece<'_>, halo: Color) {
         align_y: Vertical::Top,
         shaping: text::Shaping::Advanced,
     };
-    if piece.angle.abs() < 1e-4 {
+    // Upright, plain text through the glyph cache; a width factor or a mask needs the frame's transform.
+    if piece.angle.abs() < 1e-4 && piece.width_factor == 1.0 && piece.mask <= 0.0 {
         let top_left = Point::new(piece.at.x + dx, piece.at.y + dy);
         // The halo as eight copies around the text, then the text.
         for i in 0..8 {
@@ -635,6 +661,21 @@ fn draw(frame: &mut Frame, piece: &Piece<'_>, halo: Color) {
     frame.with_save(|frame| {
         frame.translate(Vector::new(piece.at.x, piece.at.y));
         frame.rotate(piece.angle);
+        // The mask (docs/adr/0145): the text's box a tenth of its height wider all round,
+        // 1.15 of it over the baseline and 0.23 under (`TextPlace::mask`), in the area's colour.
+        if piece.mask > 0.0 {
+            let m = piece.size * 0.1;
+            frame.fill(
+                &Path::rectangle(
+                    Point::new(-m, -piece.size * 1.15 - m),
+                    Size::new(piece.mask + 2.0 * m, piece.size * 1.38 + 2.0 * m),
+                ),
+                halo,
+            );
+        }
+        if piece.width_factor != 1.0 {
+            frame.scale_nonuniform(Vector::new(piece.width_factor, 1.0));
+        }
         let glyphs = outlines(piece, dx, dy, || {
             let mut glyphs: Vec<Path> = Vec::new();
             text(Point::new(dx, dy), piece.color).draw_with(|path, _| glyphs.push(path));
@@ -906,6 +947,77 @@ fn screens() {
                 format!("yazi-yakin{suffix}")
             } else {
                 format!("yazi-{width}x{height}{suffix}")
+            };
+            let file = out.join(format!("{name}.png"));
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
+            println!("{}", file.display());
+        }
+    }
+}
+
+/// Text extras (docs/adr/0145) as the drawing shows them: the twelve
+/// alignments at their marked points, a turned centred text, width factors
+/// 0.6, 1 and 1.5, and a masked text next to one without over a hatch and a
+/// line (fixtures/interaction/v1/text-extras.kcad, the web's
+/// `shots.mjs texts`), dark and light, at 1440×900 and 1100×650, and
+/// closer in; `.run/shots/yazi-ekleri-*`:
+///
+/// ```text
+/// cargo test -p kentos-desktop labels::text_extras_screens -- --ignored --nocapture
+/// ```
+#[cfg(test)]
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn text_extras_screens() {
+    use kentos_ui::snapshot::Snapshot;
+
+    use crate::app::App;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let drawing = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/interaction/v1/text-extras.kcad"
+    );
+    for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
+        for (width, height, zoom, name) in [
+            (1440.0, 900.0, 1.0, ""),
+            (1100.0, 650.0, 1.0, ""),
+            (1440.0, 900.0, 2.5, "zemin"),
+            (1440.0, 900.0, 5.0, "donuk"),
+        ] {
+            let (mut app, _) = App::boot(None);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+            app.apply_settings();
+            let doc =
+                crate::document::Document::read(std::path::Path::new(drawing)).expect("opens");
+            let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+            let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+            let mut update = |app: &mut App, message| {
+                let _ = app.update(message);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let _ = app.update(Message::Run("view.zoomExtents"));
+            if zoom > 1.0 {
+                // Closer in: on the masked text, or on the turned one and its point.
+                let camera = &mut app.viewport.camera;
+                camera.center = if name == "zemin" {
+                    kentos_interaction::Vec2::new(487108.0, 4419985.0)
+                } else {
+                    kentos_interaction::Vec2::new(487118.0, 4420025.0)
+                };
+                camera.scale *= zoom;
+            }
+            snapshot.settle(&mut app, App::view, &mut update);
+            let name = if zoom > 1.0 {
+                format!("yazi-ekleri-{name}{suffix}")
+            } else {
+                format!("yazi-ekleri-{width}x{height}{suffix}")
             };
             let file = out.join(format!("{name}.png"));
             snapshot

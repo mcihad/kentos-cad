@@ -18,7 +18,7 @@
 //! | 6 ellipse | c.x, c.y, major.x, major.y, ratio, t0, t1 |
 //! | 7 xline, 8 ray | p.x, p.y, dir.x, dir.y |
 //! | 9 spline | points, closed |
-//! | 10 text | p.x, p.y, height, rotation, text |
+//! | 10 text | p.x, p.y, height, rotation, text, align, widthFactor, mask |
 //! | 11 dimension | a.x, a.y, b.x, b.y, offset, height, text?, style?, hasAngle, angle, hasC, c.x, c.y |
 //! | 12 hatch | points, hatch holes, pattern type, angle, spacing |
 //! | 13 multi-part polygon | path, holes, part count, then per part: path, holes |
@@ -48,6 +48,7 @@ use crate::entity::{Attrs, HatchPattern, Part, Shape};
 use crate::geom::affine::Affine;
 use crate::geom::arrangement::Ring;
 use crate::ops::transform::transform_shape;
+use crate::text::TextAlign;
 use crate::vec2::Vec2;
 
 /// A path's points, bulges and holes.
@@ -252,12 +253,29 @@ impl Reader<'_> {
                 pts: self.points()?,
                 closed: self.flag()?,
             },
-            10 => Shape::Text {
-                p: self.pt()?,
-                height: self.num()?,
-                rotation: self.num()?,
-                text: self.string()?.unwrap_or_default(),
-            },
+            10 => {
+                let (p, height, rotation) = (self.pt()?, self.num()?, self.num()?);
+                let text = self.string()?.unwrap_or_default();
+                // docs/adr/0145: the alignment's place in `TextAlign::ALL` (−1 none), the width
+                // factor (NaN none), the mask a flag.
+                let align =
+                    match self.int()? {
+                        Some(i) => Some(*TextAlign::ALL.get(i).ok_or_else(|| {
+                            format!("paketin {}. sayısı yazı hizası değil", self.at)
+                        })?),
+                        None => None,
+                    };
+                let w = self.num()?;
+                Shape::Text {
+                    p,
+                    text,
+                    height,
+                    rotation,
+                    align,
+                    width_factor: (!w.is_nan()).then_some(w),
+                    mask: self.flag()?.then_some(true),
+                }
+            }
             11 => {
                 let a = self.pt()?;
                 let b = self.pt()?;
@@ -433,9 +451,25 @@ impl Packer {
                 text,
                 height,
                 rotation,
+                align,
+                width_factor,
+                mask,
             } => {
                 let t = self.string(text);
-                self.put(&[10.0, p.x, p.y, *height, *rotation, t]);
+                let a = align.map_or(-1.0, |a| {
+                    TextAlign::ALL.iter().position(|x| *x == a).unwrap_or(0) as f64
+                });
+                self.put(&[
+                    10.0,
+                    p.x,
+                    p.y,
+                    *height,
+                    *rotation,
+                    t,
+                    a,
+                    width_factor.unwrap_or(f64::NAN),
+                    flag(*mask == Some(true)),
+                ]);
             }
             Shape::Dimension {
                 a,
@@ -654,7 +688,7 @@ mod tests {
             5.0,
             6.0,
             -1.0,
-            // A text.
+            // A text: no alignment, width factor or mask (docs/adr/0145).
             2.0,
             0.0,
             0.0,
@@ -664,6 +698,9 @@ mod tests {
             3.0,
             45.0,
             1.0,
+            -1.0,
+            f64::NAN,
+            0.0,
             // A linear dimension with an angle and no centre.
             3.0,
             0.0,
@@ -757,6 +794,8 @@ mod tests {
         r#"{"kind":"spline","pts":[],"closed":false}"#,
         r#"{"kind":"text","p":{"x":486520,"y":4420200},"text":"Ada 104 😀","height":2,"rotation":-30}"#,
         r#"{"kind":"text","p":{"x":1,"y":2},"text":"","height":0.5,"rotation":0}"#,
+        r#"{"kind":"text","p":{"x":486520,"y":4420200},"text":"Ada 104","height":2,"rotation":30,"align":"middleCenter","widthFactor":0.8,"mask":true}"#,
+        r#"{"kind":"text","p":{"x":0,"y":0},"text":"B","height":1,"rotation":0,"align":"topRight"}"#,
         r#"{"kind":"dimension","a":{"x":486520,"y":4420200},"b":{"x":486530,"y":4420200},"offset":2,"height":0.5}"#,
         r#"{"kind":"dimension","a":{"x":0,"y":0},"b":{"x":3,"y":4},"offset":-2,"height":0.5,"text":"12,5 m","style":"linear","angle":90}"#,
         r#"{"kind":"dimension","a":{"x":10,"y":0},"b":{"x":0,"y":10},"offset":5,"height":1,"text":"","style":"angular","c":{"x":0,"y":0}}"#,

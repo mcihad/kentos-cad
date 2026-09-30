@@ -1039,6 +1039,11 @@ fn shape(entity: &Entity) -> Shape {
             text: t.text.clone(),
             height: t.height,
             rotation: t.rotation,
+            align: t
+                .align
+                .and_then(|a| kentos_geometry_core::text::TextAlign::from_name(a.name())),
+            width_factor: t.width_factor,
+            mask: t.mask.then_some(true),
         },
         Entity::Dimension(d) => Shape::Dimension {
             a: v(&d.a),

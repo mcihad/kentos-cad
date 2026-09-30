@@ -56,6 +56,8 @@ impl Placing {
                                 p: core(a.p),
                                 height: a.height,
                                 rotation: a.rotation,
+                                align: a.align.and_then(core_align),
+                                width_factor: a.width_factor,
                             })
                             .collect()
                     } else {
@@ -90,6 +92,9 @@ impl Placing {
                     text,
                     height,
                     rotation,
+                    align,
+                    width_factor,
+                    mask,
                 } = piece.shape
                 else {
                     return None;
@@ -111,9 +116,9 @@ impl Placing {
                         text,
                         height,
                         rotation,
-                        align: None,
-                        width_factor: None,
-                        mask: false,
+                        align: align.and_then(contract_align),
+                        width_factor,
+                        mask: mask == Some(true),
                     },
                 ))
             })
@@ -130,6 +135,16 @@ impl Placing {
             .filter_map(|piece| entity(&piece.shape))
             .collect()
     }
+}
+
+/// A text's alignment as the geometry core names it (docs/adr/0145).
+fn core_align(a: kentos_contracts::TextAlign) -> Option<kentos_geometry_core::text::TextAlign> {
+    kentos_geometry_core::text::TextAlign::from_name(a.name())
+}
+
+/// The core's alignment as the contract names it.
+fn contract_align(a: kentos_geometry_core::text::TextAlign) -> Option<kentos_contracts::TextAlign> {
+    kentos_contracts::TextAlign::from_name(a.name())
 }
 
 fn core(p: Vec2) -> CoreVec2 {
@@ -273,6 +288,9 @@ fn shape(e: &Entity) -> Shape {
             text: t.text.clone(),
             height: t.height,
             rotation: t.rotation,
+            align: t.align.and_then(core_align),
+            width_factor: t.width_factor,
+            mask: t.mask.then_some(true),
         },
         Entity::Dimension(d) => Shape::Dimension {
             a: core(d.a),
@@ -409,15 +427,18 @@ fn entity(s: &Shape) -> Option<Entity> {
             text,
             height,
             rotation,
+            align,
+            width_factor,
+            mask,
         } => Entity::Text(TextEntity {
             base,
             p: back(*p),
             text: text.clone(),
             height: *height,
             rotation: *rotation,
-            align: None,
-            width_factor: None,
-            mask: false,
+            align: align.and_then(contract_align),
+            width_factor: *width_factor,
+            mask: *mask == Some(true),
         }),
         Shape::Dimension {
             a,

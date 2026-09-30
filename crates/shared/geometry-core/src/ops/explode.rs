@@ -117,6 +117,9 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
                 text,
                 height: *height,
                 rotation: l.rotation,
+                align: None,
+                width_factor: None,
+                mask: None,
             }));
             Cut::Pieces(pieces)
         }

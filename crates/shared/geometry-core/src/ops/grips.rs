@@ -202,12 +202,18 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             text,
             height,
             rotation,
+            align,
+            width_factor,
+            mask,
             ..
         } => Shape::Text {
             p,
             text: text.clone(),
             height: *height,
             rotation: *rotation,
+            align: *align,
+            width_factor: *width_factor,
+            mask: *mask,
         },
         Shape::Line { a, b } => {
             if index == 0 {

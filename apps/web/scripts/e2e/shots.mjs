@@ -2035,6 +2035,33 @@ SCENES.blocks = [
   ...s,
 }));
 
+// Text extras (docs/adr/0145) on fixtures/interaction/v1/text-extras.kcad, the scene the desktop's
+// `labels::text_extras_screens` draws: the twelve alignments at their marked points, a turned centred text, width
+// factors 0.6, 1 and 1.5, a masked text next to one without over a hatch and a line; the whole, then closer in.
+const TEXT_EXTRAS = readFileSync(new URL('../../../../fixtures/interaction/v1/text-extras.kcad', import.meta.url), 'utf8');
+const openTextExtras = async (ui) => {
+  await ui.eval(`(async () => {
+    const k = window.kentos;
+    k.files.ask = async () => 'drop';
+    if (!(await k.files.load(${JSON.stringify(TEXT_EXTRAS)}, null))) throw new Error('text-extras.kcad did not load');
+    k.selection.clear();
+    k.view.zoomExtents();
+    // Clear of the floating toolbox on the left.
+    const c = k.view.camera;
+    c.scale = c.scale * 0.85;
+    c.center = { x: c.center.x - 170 / c.scale, y: c.center.y };
+    c.panBy(0, 0);
+  })()`);
+  await ui.sleep(600);
+};
+/** Closer in: the view centred on `x`, `y` at `times` the whole scene's scale. */
+const closeIn = (x, y, times) => `(() => { const c = window.kentos.view.camera; c.center = { x: ${x}, y: ${y} }; c.scale = c.scale * ${times}; c.panBy(0, 0); window.kentos.view.requestRender(); })()`;
+SCENES.texts = [
+  { id: 'text-extras', open: openTextExtras },
+  { id: 'text-extras-mask', open: async (ui) => (await openTextExtras(ui), await ui.eval(closeIn(487108, 4419985, 2.5 / 0.85)), await ui.sleep(400)) },
+  { id: 'text-extras-turned', open: async (ui) => (await openTextExtras(ui), await ui.eval(closeIn(487118, 4420025, 5 / 0.85)), await ui.sleep(400)) },
+];
+
 /** The n-th rule's condition (0 is the first), typed and left. */
 const setRuleFilter = (n, text) =>
   `(() => { const i = document.querySelectorAll('.dialog--lstyle .rule input[aria-label="Koşul"]')[${n}]; i.value = ${JSON.stringify(text)}; i.dispatchEvent(new Event('change')); })()`;

@@ -15,7 +15,7 @@ use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::json::Json;
 use kentos_geometry_core::entity::{Attrs, HatchPattern, Part, Shape};
 use kentos_geometry_core::geom::arrangement::Ring;
-use kentos_geometry_core::text::Font;
+use kentos_geometry_core::text::{Font, TextAlign};
 
 fn v(p: &Point) -> Vec2 {
     Vec2::new(p.x, p.y)
@@ -147,6 +147,9 @@ pub fn shape(entity: &Entity) -> Shape {
             text: t.text.clone(),
             height: t.height,
             rotation: t.rotation,
+            align: t.align.and_then(|a| TextAlign::from_name(a.name())),
+            width_factor: t.width_factor,
+            mask: t.mask.then_some(true),
         },
         Entity::Dimension(d) => Shape::Dimension {
             a: v(&d.a),
@@ -364,12 +367,18 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
                 text,
                 height,
                 rotation,
+                align,
+                width_factor,
+                mask,
             },
         ) => {
             e.p = p(at);
             e.text = text;
             e.height = height;
             e.rotation = rotation;
+            e.align = align.and_then(|a| kentos_contracts::TextAlign::from_name(a.name()));
+            e.width_factor = width_factor;
+            e.mask = mask == Some(true);
         }
         (
             Entity::Dimension(e),
@@ -620,6 +629,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             text,
             height,
             rotation,
+            ..
         } => EntityGeometry::Text {
             p: p(at),
             text,

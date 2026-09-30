@@ -136,7 +136,7 @@ fn a_block_text_is_listed_where_it_is_placed() {
     let out = s.labels(&view, 20.0, None);
     assert_eq!(
         out,
-        [1.0, LABEL_PIECE_TEXT, 101.0, 200.5, 0.0, 1.0, 2.0, 0.0]
+        [1.0, LABEL_PIECE_TEXT, 101.0, 200.5, 0.0, 1.0, 2.0, 1.0, 0.0]
     );
     // Too small to draw at 2 px/m.
     assert!(s.labels(&view, 2.0, None).is_empty());
@@ -255,7 +255,7 @@ fn an_attribute_is_a_text_piece_of_its_tag_placed_as_the_insert_places_it() {
     // ADI (piece 2) shows nothing: no value, no default.
     assert_eq!(
         out,
-        [1.0, LABEL_PIECE_TEXT, 101.0, 200.4, 0.0, 0.5, 1.0, 0.0]
+        [1.0, LABEL_PIECE_TEXT, 101.0, 200.4, 0.0, 0.5, 1.0, 1.0, 0.0]
     );
     let pieces = s.block_pieces_json("k").unwrap();
     assert!(
@@ -376,5 +376,5 @@ fn an_attribute_that_shows_nothing_is_not_there() {
     let all = SnapKind::ALL.iter().fold(0, |k, s| k | s.bit());
     assert!(s.snap(Vec2::new(100.0, 199.0), 0.3, all, None).is_none());
     assert_eq!(s.extent(Some(&[1.0])).unwrap().min_y, 200.0);
-    assert_eq!(s.labels(&b(0.0, 0.0, 1000.0, 1000.0), 40.0, None).len(), 8);
+    assert_eq!(s.labels(&b(0.0, 0.0, 1000.0, 1000.0), 40.0, None).len(), 9);
 }

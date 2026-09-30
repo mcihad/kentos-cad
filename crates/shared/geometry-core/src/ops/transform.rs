@@ -280,11 +280,15 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
                 attrs: attrs.clone(),
             }
         }
+        // Its point moves; its alignment, width factor and mask stay (docs/adr/0145).
         Shape::Text {
             p,
             text,
             height,
             rotation,
+            align,
+            width_factor,
+            mask,
         } => {
             let rad = (rotation * PI) / 180.0;
             let dir = apply_linear(m, Vec2::new(cos(rad), sin(rad)));
@@ -299,6 +303,9 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
                 text: text.clone(),
                 height: height * s,
                 rotation: rot,
+                align: *align,
+                width_factor: *width_factor,
+                mask: *mask,
             }
         }
     }

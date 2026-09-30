@@ -303,6 +303,11 @@ export const insidePolygon = op<(e: Extract<EntityGeometry, { kind: 'polyline' |
  * (`font`, Barlow without one; geometry-core `text`), one line tall.
  */
 export const textBox = op<(e: { p: Vec2; text: string; height: number; rotation: number; font?: string }) => Vec2[]>('textBox');
+/**
+ * Where a text's `p` is on it (the core's `TextAlign::along` and `up`, docs/adr/0145): [a share of its width along
+ * it, a share of its height over its baseline]; [0, 0] without an alignment.
+ */
+export const textAlignShares = op<(align: TextAlign | null) => [number, number]>('textAlignShares');
 
 /** Whether the outline is a closed ring. */
 export const isClosedOutline = op<(e: EntityGeometry) => boolean>('isClosedOutline');

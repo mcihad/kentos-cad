@@ -265,14 +265,31 @@ fn same_shape(a: &Shape, b: &Shape) -> bool {
                 text,
                 height,
                 rotation,
+                align,
+                width_factor,
+                mask,
             },
             Shape::Text {
                 p: q,
                 text: t,
                 height: h,
                 rotation: r,
+                align: a,
+                width_factor: w,
+                mask: m,
             },
-        ) => same_pt(*p, *q) && text == t && same(*height, *h) && same(*rotation, *r),
+        ) => {
+            same_pt(*p, *q)
+                && text == t
+                && same(*height, *h)
+                && same(*rotation, *r)
+                && align == a
+                && match (width_factor, w) {
+                    (Some(x), Some(y)) => same(*x, *y),
+                    (x, y) => x.is_none() && y.is_none(),
+                }
+                && mask == m
+        }
         _ => a == b,
     }
 }
