@@ -19,14 +19,14 @@
   },
   "summary": {
     "commands": {
-      "total": 196,
-      "implemented": 183,
+      "total": 197,
+      "implemented": 184,
       "partial": 0,
       "pending": 13
     },
     "tools": {
-      "total": 81,
-      "implemented": 79,
+      "total": 82,
+      "implemented": 80,
       "partial": 0,
       "pending": 2
     },
@@ -74,19 +74,19 @@
     },
     "commandsWithoutPlace": [],
     "commandsWithoutTests": 62,
-    "commandsOnDesktop": 178,
+    "commandsOnDesktop": 179,
     "desktop": {
       "commands": {
-        "total": 196,
-        "implemented": 178,
+        "total": 197,
+        "implemented": 179,
         "partial": 0,
         "pending": 13,
         "none": 0,
         "n/a": 5
       },
       "tools": {
-        "total": 81,
-        "implemented": 79,
+        "total": 82,
+        "implemented": 80,
         "partial": 0,
         "pending": 2,
         "none": 0,
@@ -4731,6 +4731,39 @@
       ]
     },
     {
+      "id": "tool.readable",
+      "title": "Okunur yap",
+      "category": "Düzenle",
+      "icon": "readable",
+      "description": "Ters okunan yazıları (90°–270° dönük) kutularının ortası çevresinde yarım çevirir; kutu yerinde kalır, hiza korunur.",
+      "aliases": [
+        "OKUNURYAP",
+        "MAKEREADABLE",
+        "OKY"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Değiştir › Nesne"
+      ],
+      "ribbon": [
+        "Değiştir › Nesne",
+        "Seçim › Nesne"
+      ],
+      "quickAccess": false,
+      "toolbox": true,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/readable.json"
+      ]
+    },
+    {
       "id": "tool.rectangle",
       "title": "Dikdörtgen",
       "category": "Çizim",
@@ -8159,6 +8192,32 @@
       },
       "tests": [
         "fixtures/interaction/v1/construction-lines.json"
+      ]
+    },
+    {
+      "id": "readable",
+      "label": "Okunur yap",
+      "icon": "readable",
+      "group": "modify",
+      "section": "object",
+      "aliases": [
+        "OKUNURYAP",
+        "MAKEREADABLE",
+        "OKY"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 2,
+      "description": "Ters okunan yazıları (90°–270° dönük) kutularının ortası çevresinde yarım çevirir; kutu yerinde kalır, hiza korunur.",
+      "productCommand": "cad.entities.edit",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/readable.json"
       ]
     },
     {
@@ -14944,6 +15003,7 @@
               "tool.join",
               "tool.explode",
               "tool.erase",
+              "tool.readable",
               "tool.reverse",
               "tool.simplify",
               "tool.cleanup",
@@ -16218,6 +16278,10 @@
                 "size": "small"
               },
               {
+                "command": "tool.readable",
+                "size": "small"
+              },
+              {
                 "command": "tool.reverse",
                 "size": "small"
               },
@@ -16974,6 +17038,10 @@
               },
               {
                 "command": "tool.erase",
+                "size": "small"
+              },
+              {
+                "command": "tool.readable",
                 "size": "small"
               },
               {
@@ -18118,6 +18186,10 @@
                   "size": "small"
                 },
                 {
+                  "command": "tool.readable",
+                  "size": "small"
+                },
+                {
                   "command": "tool.reverse",
                   "size": "small"
                 },
@@ -18672,6 +18744,10 @@
                 },
                 {
                   "command": "tool.erase",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.readable",
                   "size": "small"
                 },
                 {
@@ -19610,6 +19686,10 @@
                   "size": "small"
                 },
                 {
+                  "command": "tool.readable",
+                  "size": "small"
+                },
+                {
                   "command": "tool.reverse",
                   "size": "small"
                 },
@@ -20336,6 +20416,10 @@
                   "size": "small"
                 },
                 {
+                  "command": "tool.readable",
+                  "size": "small"
+                },
+                {
                   "command": "tool.reverse",
                   "size": "small"
                 },
@@ -20470,6 +20554,7 @@
     "polygon": "<path d=\"m3.8 8 6-4.5 6.5 3.5-1.8 9H5.6z\" fill=\"currentColor\" fill-opacity=\".14\"/><rect x=\"2.3\" y=\"6.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"8.3\" y=\"2\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"14.8\" y=\"5.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"13\" y=\"14.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"4.1\" y=\"14.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "spline": "<path d=\"M3 15c2.6-8.5 5.8-8.5 7 0 1.2 8.2 4.5 4 7-9\"/><rect x=\"1.5\" y=\"13.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15.5\" y=\"4.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "text": "<path d=\"M4.5 5V3.8h11V5M10 3.8v12.4M7.5 16.2h5\"/>",
+    "readable": "<path d=\"M16 10.5A6 6 0 1 1 13.6 5.7\"/><path d=\"M14 2.6v3.5h-3.5\"/><path d=\"M7.5 8.3h5M10 8.3v5\"/>",
     "dimension": "<path d=\"M3.5 5v10M16.5 5v10M3.5 12h13\"/><path d=\"m5.8 10.5-2.3 1.5 2.3 1.5M14.2 10.5l2.3 1.5-2.3 1.5\"/><path d=\"M8 8.5h4\"/>",
     "hatch": "<rect x=\"3.5\" y=\"3.5\" width=\"13\" height=\"13\"/><path d=\"m3.5 9.5 6-6M3.5 15.5l12-12M9.5 16.5l7-7\"/>",
     "blockInsert": "<rect x=\"8.5\" y=\"3.5\" width=\"8\" height=\"8\" rx=\"1.2\"/><circle cx=\"12.5\" cy=\"7.5\" r=\"2\"/><path d=\"M3.5 16.5 8.5 11.5\"/><rect x=\"2\" y=\"15\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",

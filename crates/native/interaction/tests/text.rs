@@ -299,3 +299,73 @@ fn hiza_names_are_read_together_or_apart_with_or_without_marks() {
         ("sol taban", "orta", "sağ üst")
     );
 }
+
+const TEXTS: &str = include_str!("../../../../fixtures/interaction/v1/texts.kcad");
+
+/// A text of the Okunur yap drawing by its slot.
+fn text_at(b: &Bench, slot: u32) -> kentos_contracts::TextEntity {
+    match b.doc.get(kentos_domain::Slot(slot)) {
+        Some(Entity::Text(t)) => t.clone(),
+        other => panic!("a text at {slot}: {other:?}"),
+    }
+}
+
+/// Okunur yap (docs/adr/0145 §6) over the trace's drawing (texts.kcad):
+/// the upside-down texts of the selection turn half round about their box,
+/// what reads and what is locked stay, one step. The web's are
+/// apps/web/src/tools/readableTool.test.ts; centred alignments turn by
+/// amounts that need no width, worked out by hand.
+#[test]
+fn okunur_yap_turns_what_reads_upside_down_and_leaves_the_rest() {
+    let mut b = Bench::on(TEXTS);
+    let before = b.log.len();
+    b.selection
+        .set([1, 2, 3, 4].map(kentos_domain::Slot).to_vec());
+    b.start("readable");
+    assert!(!b.session.is_running(), "it acts at once and leaves");
+    let near = |t: &kentos_contracts::TextEntity, [x, y]: [f64; 2]| {
+        let [dx, dy] = rel(t.p);
+        assert!((dx - x).hypot(dy - y) < 1e-9, "{:?} ≠ {:?}", [dx, dy], [x, y]);
+    };
+    // Ada: middle centre at 180°, its point 0.08 of its height up; Yol: baseline
+    // centre at 200°, 0.92 heights along its old up.
+    let (sin20, cos20) = (20f64.to_radians().sin(), 20f64.to_radians().cos());
+    near(&text_at(&b, 1), [-10.0, 5.16]);
+    near(&text_at(&b, 2), [10.0 + 1.84 * sin20, 5.0 - 1.84 * cos20]);
+    near(&text_at(&b, 3), [0.0, -5.0]);
+    near(&text_at(&b, 4), [0.0, -12.0]);
+    let turns: Vec<f64> = (1..=4).map(|s| text_at(&b, s).rotation).collect();
+    assert_eq!(turns, [0.0, 20.0, 30.0, 180.0]);
+    assert_eq!(
+        text_at(&b, 1).align,
+        Some(kentos_contracts::TextAlign::MiddleCenter)
+    );
+    let said: Vec<&str> = b.said(before).into_iter().map(|(_, t)| t).collect();
+    assert_eq!(
+        said,
+        [
+            "1 nesne kilitli katmanda olduğu için atlandı.",
+            "2 yazı okunur yapıldı."
+        ]
+    );
+    assert_eq!(b.doc.undo().as_deref(), Some("Okunur yap"));
+    assert_eq!(text_at(&b, 1).rotation, 180.0);
+}
+
+/// Nothing upside down: said, nothing written; no text at all: said.
+#[test]
+fn okunur_yap_says_when_there_is_nothing_to_turn() {
+    let mut b = Bench::on(TEXTS);
+    let revision = b.doc.revision();
+    b.selection.set(vec![kentos_domain::Slot(3)]);
+    b.start("readable");
+    assert_eq!(b.last_text(), Some("Ters okunan yazı yok: 1 yazının hepsi okunuyor."));
+    assert_eq!(b.doc.revision(), revision);
+    let line = b.add_line("cizim", [0.0, 0.0], [5.0, 0.0]);
+    b.selection.set(vec![line]);
+    b.start("readable");
+    assert_eq!(
+        b.last_text(),
+        Some("Seçimde yazı yok. Okunur yap yazı nesnelerini çevirir; yazıları seçip yeniden deneyin.")
+    );
+}

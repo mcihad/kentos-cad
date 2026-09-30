@@ -56,6 +56,8 @@ pub struct Seen {
     pub align: Option<String>,
     pub width_factor: Option<f64>,
     pub mask: Option<bool>,
+    /// A text's turn in degrees.
+    pub rotation: Option<f64>,
 }
 
 impl Seen {
@@ -151,6 +153,10 @@ impl Seen {
             },
             mask: match e {
                 Entity::Text(t) => Some(t.mask),
+                _ => None,
+            },
+            rotation: match e {
+                Entity::Text(t) => Some(t.rotation),
                 _ => None,
             },
         }

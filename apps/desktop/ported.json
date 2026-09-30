@@ -138,6 +138,7 @@
     "tool.split",
     "tool.reverse",
     "tool.simplify",
+    "tool.readable",
     "tool.cleanup",
     "tool.matchProperties",
     "tool.sector",

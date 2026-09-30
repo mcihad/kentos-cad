@@ -185,6 +185,8 @@ pub struct Newest {
     #[serde(rename = "widthFactor")]
     pub(super) width_factor: Option<f64>,
     pub(super) mask: Option<bool>,
+    /// A text's turn in degrees, exact (Okunur yap, docs/adr/0145 §6).
+    pub(super) rotation: Option<f64>,
 }
 
 /// A JSON object's members in the order they are written (a `dialog` step's

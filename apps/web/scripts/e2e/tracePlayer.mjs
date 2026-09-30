@@ -447,6 +447,7 @@ const observe = (mark) =>
       align: e.kind === 'text' ? (e.align ?? null) : null,
       widthFactor: e.kind === 'text' ? (e.widthFactor ?? 1) : null,
       mask: e.kind === 'text' ? e.mask === true : null,
+      rotation: e.kind === 'text' ? e.rotation : null,
     });
     return {
       tool: k.tools.activeId.value,
@@ -502,8 +503,8 @@ function compareShape(name, have, want, t) {
     bad.push(`${name}.radius: ${have.radius}, beklenen ${want.radius} (±${t.clickTolerance} m)`);
   // A text's content is exact (docs/adr/0144 §7: an exploded attribute's value).
   if (want.text !== undefined && have.text !== want.text) bad.push(`${name}.text: ${JSON.stringify(have.text)}, beklenen ${JSON.stringify(want.text)}`);
-  // A text's alignment, width factor and mask (docs/adr/0145), exact.
-  for (const key of ['align', 'widthFactor', 'mask'])
+  // A text's alignment, width factor, mask and turn (docs/adr/0145), exact.
+  for (const key of ['align', 'widthFactor', 'mask', 'rotation'])
     if (want[key] !== undefined && have[key] !== want[key]) bad.push(`${name}.${key}: ${JSON.stringify(have[key])}, beklenen ${JSON.stringify(want[key])}`);
   if (want.arcs !== undefined) {
     const arcs = have.bulges.filter((bulge) => bulge !== 0).length;

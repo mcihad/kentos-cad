@@ -1,11 +1,16 @@
 import type { AppContext } from '../app/context';
-import { TEXT_ALIGN_ROWS, textAlignFromName, textAlignName, textAlignShares, widthFactorOk, MAX_WIDTH_FACTOR, type TextAlign } from '../model/entities';
+import type { EntityEdit } from '../contracts/generated/EntityEdit';
+import type { EntityGeometry as EditGeometry } from '../contracts/generated/EntityGeometry';
+import { TEXT_ALIGN_ROWS, textAlignFromName, textAlignName, textAlignShares, widthFactorOk, MAX_WIDTH_FACTOR, type Entity, type TextAlign, type TextEntity } from '../model/entities';
 import { angleDeg, dist, type Vec2 } from '../model/geometry';
-import { textIncrement } from '../model/textEdit';
+import { textIncrement, textReadable } from '../model/textEdit';
+import { geometryOf } from '../product/entitiesEdit';
 import type { ViewTransform } from '../viewport/Camera';
 import { textAngle } from './constructions';
 import { parseNumber } from './coordinateInput';
 import { PointInputTool } from './drawTools';
+import { uidOf, writeEdit } from './editCommand';
+import { SelectionActionTool } from './editTools';
 import { drawTag, strokePath } from './preview';
 import type { OptionChoice } from './Tool';
 
@@ -261,5 +266,36 @@ export class TextTool extends PointInputTool {
     g.arc(0, 0, 2.5, 0, Math.PI * 2);
     g.fill();
     g.restore();
+  }
+}
+
+// ── Okunur yap ─────────────────────────────────────────────────────────
+
+/**
+ * Okunur yap (docs/adr/0145 §6): the selected texts that read upside down (turned more than 90° and at most 270°)
+ * turned half round about their box's middle, the box where it was and the alignment kept (the core's
+ * `textReadable`, measured in the drawing's typeface). With texts selected it acts at once; otherwise the user picks
+ * and presses Enter. One step, “Okunur yap” (`cad.entities.edit`'s `readable`). The desktop's is
+ * `kentos_interaction::object` (`ObjectAction::readable`).
+ */
+export class ReadableTool extends SelectionActionTool {
+  readonly id = 'readable';
+  protected readonly label = 'Okunur yap';
+
+  protected run(targets: Entity[]): void {
+    const { log } = this.ctx;
+    const texts = targets.filter((e): e is TextEntity => e.kind === 'text');
+    if (!texts.length) return log.warn('Seçimde yazı yok. Okunur yap yazı nesnelerini çevirir; yazıları seçip yeniden deneyin.');
+    const font = this.ctx.doc.settings.drawingFont.value;
+    const changes: EntityEdit[] = [];
+    for (const t of texts) {
+      const turned = textReadable({ ...t, font });
+      if (!turned) continue;
+      const geometry = { ...geometryOf(t as unknown as EditGeometry), p: turned.p, rotation: turned.rotation } as unknown as EditGeometry;
+      changes.push({ kind: 'update', uid: uidOf(this.ctx, t), geometry });
+    }
+    if (!changes.length) return log.info(`Ters okunan yazı yok: ${texts.length} yazının hepsi okunuyor.`);
+    if (!writeEdit(this.ctx, 'readable', changes)) return;
+    log.success(`${changes.length} yazı okunur yapıldı.`);
   }
 }

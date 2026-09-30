@@ -297,6 +297,14 @@ fn compare_shape(name: &str, want: &Newest, seen: Option<&Seen>, trace: &Trace) 
     {
         bad.push(format!("{name}.mask: {:?}, beklenen {mask}", seen.mask));
     }
+    if let Some(rotation) = want.rotation
+        && seen.rotation != Some(rotation)
+    {
+        bad.push(format!(
+            "{name}.rotation: {:?}, beklenen {rotation}",
+            seen.rotation
+        ));
+    }
     if let Some(arcs) = want.arcs {
         let have = bulges.iter().filter(|b| **b != 0.0).count();
         if have != arcs {

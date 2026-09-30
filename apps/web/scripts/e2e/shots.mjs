@@ -2107,6 +2107,26 @@ function textToolScenes() {
   };
   const menuOpen = async (ui, sel) => (await ui.clickSel(sel), await ui.waitFor(`!!document.querySelector('.menu')`), await ui.sleep(300));
   const close = async (ui) => (await fold(ui, 'Genel', true), await ui.eval(UNDO_ALL), await ribbonOff(ui));
+  /** Okunur yap (4b): two texts upside down (centred, and on the baseline's centre) and one that reads, all selected. */
+  const UPSIDE = FIT(`
+    const P = (fx, fy) => ({ x: c.x + fx * u, y: c.y + fy * u });
+    const h = 0.16 * u;
+    add({ kind: 'line', a: P(-2.5, 0), b: P(2.5, 0) });
+    const ids = [
+      add({ kind: 'text', p: P(-1.2, 0.3), text: 'Ada 101', height: h, rotation: 180, align: 'middleCenter' }),
+      add({ kind: 'text', p: P(1.0, -0.2), text: 'Yol 12', height: h, rotation: 200, align: 'baselineCenter' }),
+      add({ kind: 'text', p: P(0, -0.8), text: 'Park', height: h, rotation: 30 }),
+    ].map((e) => e.id);
+    k.selection.set(ids);`);
+  const upside = async (ui) => {
+    await ribbonOn(ui, { ribbonTab: 'modify', ...LOGGED });
+    await ui.eval(CLEAR_VIEW);
+    await ui.sleep(300);
+    await ui.eval(UPSIDE);
+    await ui.eval(`window.kentos.log.clear()`);
+    await ui.move(2, 2);
+    await ui.sleep(300);
+  };
   return [
     { id: 'text-options', open: tool, close },
     {
@@ -2124,6 +2144,8 @@ function textToolScenes() {
     { id: 'text-props', open: async (ui) => props(ui, ['a']), close },
     { id: 'text-props-align-menu', open: async (ui) => (await props(ui, ['a']), await menuOpen(ui, '.panel--props [data-prop-key="geometry:Hiza"]')), close },
     { id: 'text-props-several', open: async (ui) => props(ui, ['a', 'b']), close },
+    { id: 'readable-selected', open: upside, close },
+    { id: 'readable-done', open: async (ui) => (await upside(ui), await startTool(ui, 'readable'), await ui.move(2, 2)), close },
   ];
 }
 

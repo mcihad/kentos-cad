@@ -18,13 +18,20 @@
 //!   its definition's objects, one level, each with its own layer, colour
 //!   and data (docs/adr/0144).
 //!
-//! Both write one undo step through `cad.entities.edit`. The chains and the
-//! pieces are the shared core's (`join_entities`, `explode_entity`).
+//! - Okunur yap (docs/adr/0145 §6): the texts that read upside down (turned
+//!   more than 90° and at most 270°) turn half round about their box's
+//!   middle, the box where it was and the alignment kept; a text that reads
+//!   stays, and when none reads upside down that is said and nothing is
+//!   written.
+//!
+//! Each writes one undo step through `cad.entities.edit`. The chains, the
+//! pieces and the turn are the shared core's (`join_entities`,
+//! `explode_entity`, `TextPlace::readable`).
 
-use kentos_contracts::{EditOperation, Entity, EntityEdit};
+use kentos_contracts::{EditOperation, Entity, EntityEdit, TextEntity};
 use kentos_domain::Slot;
 use kentos_geometry_core::api::json::Json;
-use kentos_geometry_core::entity::{Entity as CoreEntity, Shape, dimension_geom};
+use kentos_geometry_core::entity::{Entity as CoreEntity, Shape, TextPlace, dimension_geom};
 use kentos_geometry_core::geom::affine::Affine;
 use kentos_geometry_core::geom::dimension::layout_dimension;
 use kentos_geometry_core::ops::curve_cuts::Cut;
@@ -32,7 +39,7 @@ use kentos_geometry_core::ops::explode::explode_entity;
 use kentos_geometry_core::ops::join::join_entities;
 use kentos_geometry_core::tools::point_text::parse_number;
 use kentos_native_application::blocks::core_entity;
-use kentos_native_application::geometry::{drawing_font, shape};
+use kentos_native_application::geometry::{drawing_font, edit_geometry, shape};
 
 use crate::Vec2;
 use crate::edge;
@@ -46,11 +53,14 @@ use crate::tool::{Context, Flow, Memory};
 pub const JOIN_ID: &str = "join";
 /// The explode tool's id: its command is `tool.explode`.
 pub const EXPLODE_ID: &str = "explode";
+/// Okunur yap's id: its command is `tool.readable`.
+pub const READABLE_ID: &str = "readable";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Kind {
     Join,
     Explode,
+    Readable,
 }
 
 /// The join or the explode tool's part after the selection.
@@ -74,6 +84,74 @@ impl ObjectAction {
             kind: Kind::Explode,
             seen: None,
         })
+    }
+
+    pub fn readable() -> Modify<Self> {
+        Modify::with(Self {
+            kind: Kind::Readable,
+            seen: None,
+        })
+    }
+
+    /// Okunur yap (the web's `ReadableTool.run`, docs/adr/0145 §6): the texts
+    /// that read upside down, turned half round about their box's middle in
+    /// the drawing's typeface, in one step “Okunur yap”.
+    fn run_readable(targets: &[Slot], cx: &mut Context<'_>) {
+        let texts: Vec<(Slot, TextEntity)> = targets
+            .iter()
+            .filter_map(|slot| match cx.doc.get(*slot) {
+                Some(Entity::Text(t)) => Some((*slot, t.clone())),
+                _ => None,
+            })
+            .collect();
+        if texts.is_empty() {
+            cx.say(
+                Level::Warn,
+                "Seçimde yazı yok. Okunur yap yazı nesnelerini çevirir; yazıları seçip yeniden deneyin.",
+            );
+            return;
+        }
+        let font = drawing_font(cx.doc.settings().drawing_font);
+        let changes: Vec<EntityEdit> = texts
+            .iter()
+            .filter_map(|(slot, t)| {
+                let place = TextPlace {
+                    p: Vec2::new(t.p.x, t.p.y),
+                    text: &t.text,
+                    height: t.height,
+                    rotation: t.rotation,
+                    align: t
+                        .align
+                        .and_then(|a| kentos_geometry_core::text::TextAlign::from_name(a.name())),
+                    width_factor: t.width_factor,
+                };
+                let (p, rotation) = place.readable(font)?;
+                let turned = TextEntity {
+                    p: kentos_contracts::Vec2 { x: p.x, y: p.y },
+                    rotation,
+                    ..t.clone()
+                };
+                Some(EntityEdit::Update {
+                    uid: edge::uid(cx.doc, *slot),
+                    geometry: edit_geometry(shape(&Entity::Text(turned)))?,
+                })
+            })
+            .collect();
+        if changes.is_empty() {
+            cx.say(
+                Level::Info,
+                format!(
+                    "Ters okunan yazı yok: {} yazının hepsi okunuyor.",
+                    texts.len()
+                ),
+            );
+            return;
+        }
+        let turned = changes.len();
+        if edge::write(EditOperation::Readable, changes, cx).is_none() {
+            return;
+        }
+        cx.say(Level::Success, format!("{turned} yazı okunur yapıldı."));
     }
 
     /// An object's kind as the web names it in messages, lower case.
@@ -330,6 +408,7 @@ impl Stages for ObjectAction {
         match self.kind {
             Kind::Join => JOIN_ID,
             Kind::Explode => EXPLODE_ID,
+            Kind::Readable => READABLE_ID,
         }
     }
 
@@ -337,6 +416,7 @@ impl Stages for ObjectAction {
         match self.kind {
             Kind::Join => "Birleştir",
             Kind::Explode => "Patlat",
+            Kind::Readable => "Okunur yap",
         }
     }
 
@@ -347,6 +427,7 @@ impl Stages for ObjectAction {
             match self.kind {
                 Kind::Join => Self::run_join(&targets, cx),
                 Kind::Explode => Self::run_explode(&targets, cx),
+                Kind::Readable => Self::run_readable(&targets, cx),
             }
         }
         Flow::Exit

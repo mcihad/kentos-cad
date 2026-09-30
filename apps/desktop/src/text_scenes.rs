@@ -67,11 +67,32 @@ fn props(app: &mut App, slots: &[Slot]) {
     )));
 }
 
+/// Okunur yap (4b): two texts upside down (centred, and on the baseline's
+/// centre) and one that reads, all selected, Değiştir's tab open.
+fn upside(app: &mut App) {
+    let mut o = Objects::new();
+    o.line("cizim", [0.0, 12.0], [52.0, 12.0]);
+    let ada = o.text("cizim", [14.0, 14.0], "Ada 101", 1.6, 180.0);
+    o.text_extras(ada, Some("middleCenter"), None, false);
+    let yol = o.text("cizim", [34.0, 10.0], "Yol 12", 1.6, 200.0);
+    o.text_extras(yol, Some("baselineCenter"), None, false);
+    o.text("cizim", [24.0, 5.0], "Park", 1.6, 30.0);
+    open(app, o);
+    app.selection.set([Slot(2), Slot(3), Slot(4)]);
+    app.tab = "modify";
+    forget(app);
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
         ("yazi-secenekleri", tool),
         ("yazi-oznitelikler", |app| props(app, &[ADA])),
         ("yazi-oznitelikler-coklu", |app| props(app, &[ADA, YOL])),
+        ("okunur-yap-secim", upside),
+        ("okunur-yap-sonuc", |app| {
+            upside(app);
+            run(app, "tool.readable");
+        }),
     ]
 }
 

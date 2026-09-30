@@ -1,0 +1,27 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "readable",
+  "title": "Okunur yap (ADR 0145 §6): seçim yokken önce seçtirir; pencereyle seçilen yazılardan ters okunanlar kutuları yerinde kalarak yarım döner, okunan kalır, kilitli katmandaki atlanır; tek adımda geri alınır; seçimle hemen çalışır, ters okunan yoksa bunu söyler; yalnız kilitli yazıyla uyarır",
+  "source": "Web'in ReadableTool'u (annotateTools.ts), masaüstünün kentos_interaction::object (ObjectAction::readable); cad.entities.edit readable, ADR 0145",
+  "covers": ["UX-01", "UX-06", "CMD-04"],
+  "document": "texts.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.125 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.125,
+  "steps": [
+    { "move": [-20, 0] },
+    { "run": "tool.readable", "note": "Seçim yok: araç önce seçtirir.", "expect": { "tool": "readable", "options": [], "selected": [] } },
+    { "drag": [[-20, 10], [20, -16]], "note": "Soldan sağa pencere dört yazıyı seçer.", "expect": { "selected": [1, 2, 3, 4] } },
+    { "rightClick": [20, 12], "note": "Sağ tık çevirir: kilitli katmandaki yazı atlanır, okunan yazı kalır; ters okunan iki yazı kutuları yerinde kalarak yarım döner; araç biter.", "expect": { "tool": "select", "log": "success", "entities": 4, "logged": ["1 nesne kilitli katmanda olduğu için atlandı.", "2 yazı okunur yapıldı."], "objects": [{ "id": 1, "kind": "text", "points": [[-10, 5.16]], "rotation": 0 }, { "id": 2, "kind": "text", "points": [[10.6293, 3.271]], "rotation": 20 }, { "id": 3, "kind": "text", "points": [[0, -5]], "rotation": 30 }, { "id": 4, "kind": "text", "points": [[0, -12]], "rotation": 180 }] } },
+    { "key": "Ctrl+Z", "note": "Tek adımda geri alınır.", "expect": { "entities": 4, "canUndo": false, "objects": [{ "id": 1, "kind": "text", "points": [[-10, 5]], "rotation": 180 }, { "id": 2, "kind": "text", "points": [[10, 5]], "rotation": 200 }] } },
+    { "key": "Esc", "expect": { "selected": [] } },
+    { "click": [0.95, -3.64], "note": "Okunan yazı seçilir.", "expect": { "selected": [3] } },
+    { "run": "tool.readable", "note": "Seçimle hemen çalışır: ters okunan yazı yok, hiçbir şey yazılmaz.", "expect": { "tool": "select", "log": "info", "canUndo": false, "logged": ["Ters okunan yazı yok: 1 yazının hepsi okunuyor."] } },
+    { "key": "Esc", "expect": { "selected": [] } },
+    { "run": "tool.readable", "expect": { "tool": "readable" } },
+    { "click": [0, -12], "expect": { "selected": [4] } },
+    { "key": "Enter", "note": "Kilitli katmandaki yazı çevrilmez; söylenir.", "expect": { "tool": "select", "log": "warn", "canUndo": false, "objects": [{ "id": 4, "kind": "text", "points": [[0, -12]], "rotation": 180 }] } }
+  ]
+}

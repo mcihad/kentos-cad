@@ -218,6 +218,8 @@ pub const PORTED: &[&str] = &[
     "tool.split",
     "tool.reverse",
     "tool.simplify",
+    // Okunur yap: the texts that read upside down turned half round (docs/adr/0145 §6).
+    "tool.readable",
     "tool.cleanup",
     "tool.matchProperties",
     // Phase 2 and 3 of docs/adr/0140: the slice, points between two points, the point found from

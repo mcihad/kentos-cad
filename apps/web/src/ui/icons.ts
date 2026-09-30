@@ -32,6 +32,8 @@ export const ICONS = {
   polygon: `<path d="m3.8 8 6-4.5 6.5 3.5-1.8 9H5.6z" fill="currentColor" fill-opacity=".14"/>${grip(3.8, 8)}${grip(9.8, 3.5)}${grip(16.3, 7)}${grip(14.5, 16)}${grip(5.6, 16)}`,
   spline: `<path d="M3 15c2.6-8.5 5.8-8.5 7 0 1.2 8.2 4.5 4 7-9"/>${grip(3, 15)}${grip(17, 6)}`,
   text: '<path d="M4.5 5V3.8h11V5M10 3.8v12.4M7.5 16.2h5"/>',
+  // Okunur yap (docs/adr/0145 §6): a T inside the turning arrow.
+  readable: '<path d="M16 10.5A6 6 0 1 1 13.6 5.7"/><path d="M14 2.6v3.5h-3.5"/><path d="M7.5 8.3h5M10 8.3v5"/>',
   dimension: '<path d="M3.5 5v10M16.5 5v10M3.5 12h13"/><path d="m5.8 10.5-2.3 1.5 2.3 1.5M14.2 10.5l2.3 1.5-2.3 1.5"/><path d="M8 8.5h4"/>',
   hatch: '<rect x="3.5" y="3.5" width="13" height="13"/><path d="m3.5 9.5 6-6M3.5 15.5l12-12M9.5 16.5l7-7"/>',
   // Blocks (docs/adr/0144): a symbol placed at its grip; objects gathered round a base grip; a shelf of symbols;
