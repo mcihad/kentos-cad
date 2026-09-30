@@ -548,6 +548,18 @@ impl Session {
         self.settle(cx);
     }
 
+    /// The values window's answer for the running tool (Blok ekle).
+    pub fn values_given(
+        &mut self,
+        values: Option<&std::collections::BTreeMap<String, String>>,
+        cx: &mut Context<'_>,
+    ) {
+        if let Some(tool) = self.tool.as_mut() {
+            tool.values_given(values, cx);
+        }
+        self.settle(cx);
+    }
+
     pub fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
         let taken = match self.tool.as_mut() {
             Some(tool) => tool.input(text, cx),

@@ -97,6 +97,8 @@ impl App {
                 ViewChange::Text(field) => self.open_text_field(field),
                 // Blok oluştur's base point: the window that names the block (blocks.rs).
                 ViewChange::DefineBlock(base) => self.open_block_define(base),
+                // Blok ekle's point: the block's attribute values are asked (attribute_values.rs).
+                ViewChange::AttributeValues(block) => self.open_attribute_values(block),
                 // Çizimden: the point goes to the window that asked, which opens again (calc/).
                 ViewChange::Picked(p) => {
                     if !self.processing_picked(p) && !self.blocks_picked(p) {

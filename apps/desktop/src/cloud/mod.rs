@@ -929,6 +929,8 @@ impl App {
             Some(Dialog::SvgEditor) => self.svgedit_close_request(),
             Some(Dialog::BlockDefine) => self.block_define_closed(),
             Some(Dialog::BlockAttributes) => self.block_attributes = None,
+            // Blok ekle's point is dropped; the tool waits for the next.
+            Some(Dialog::AttributeValues) => self.attribute_values_closed(),
             _ => {}
         }
     }

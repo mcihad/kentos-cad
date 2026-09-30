@@ -10,6 +10,7 @@ mod appearance;
 #[cfg(test)]
 mod appearance_tokens_tests;
 mod attribute_table;
+mod attribute_values;
 mod block_attributes;
 mod blocks;
 mod blocks_panel;

@@ -17,8 +17,11 @@ import { strokePaths } from './preview';
  * (B) takes the next. Ölçek (Ö) and Dönüş (D, degrees counter-clockwise) are
  * typed, Aynala (A) mirrors in the block's x axis; the ghost is the block as
  * it would be placed. The block, scale, turn and mirror are remembered for as
- * long as the app lives. The desktop's `kentos_interaction::block_insert`
- * does the same, step for step.
+ * long as the app lives. A block with attribute definitions (§7) asks their
+ * values first (`ctx.blocks.values`, ui/blocks/AttributeValuesDialog.ts):
+ * Yerleştir writes the insert with them, Vazgeç drops the point and the tool
+ * waits for the next. The desktop's `kentos_interaction::block_insert` does
+ * the same, step for step.
  */
 
 const NO_BLOCK = 'Çizimde blok yok; önce Blok oluştur ile bir blok tanımlayın.';
@@ -97,16 +100,22 @@ export class BlockInsertTool extends PointInputTool {
   protected onPoint(p: Vec2): void {
     const block = BlockInsertTool.block;
     if (this.ask || !block) return;
-    this.writeObjects([
-      {
-        kind: 'insert',
-        block,
-        p,
-        scale: BlockInsertTool.scale,
-        rotation: turnOf(BlockInsertTool.rotation),
-        ...(BlockInsertTool.mirror && { mirror: true }),
-      },
-    ]);
+    const geometry = {
+      kind: 'insert' as const,
+      block,
+      p,
+      scale: BlockInsertTool.scale,
+      rotation: turnOf(BlockInsertTool.rotation),
+      ...(BlockInsertTool.mirror && { mirror: true }),
+    };
+    // A block with attribute definitions asks their values first (§7).
+    if (this.ctx.doc.block(block)?.attributes?.length) {
+      this.ctx.blocks.values(block, (values) => {
+        if (values) this.writeObjects([geometry], undefined, values);
+      });
+      return;
+    }
+    this.writeObjects([geometry]);
   }
 
   /** The block as it would be placed at the cursor; nothing while a value is asked for. */

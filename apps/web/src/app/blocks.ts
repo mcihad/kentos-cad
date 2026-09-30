@@ -20,13 +20,23 @@ export interface BlockService {
   define(base: Vec2, uids: readonly string[]): void;
   /** Opens the window of a block's attribute definitions (docs/adr/0144 §7). */
   attributes(id: string): void;
+  /**
+   * Blok ekle's question for a block with attribute definitions (§7): `done`
+   * gets the values to write (those not empty and not the default), or null
+   * when the user leaves it.
+   */
+  values(id: string, done: (values: Record<string, string> | null) => void): void;
   /** “Seçilenleri blokla değiştir”: the window's last choice, for as long as the app lives. */
   replace: boolean;
 }
 
 /** The service; `open` and `attributes` load and open the windows. */
-export function createBlocks(open: (base: Vec2, uids: readonly string[]) => void, attributes: (id: string) => void): BlockService {
-  return { define: open, attributes, replace: true };
+export function createBlocks(
+  open: (base: Vec2, uids: readonly string[]) => void,
+  attributes: (id: string) => void,
+  values: (id: string, done: (values: Record<string, string> | null) => void) => void,
+): BlockService {
+  return { define: open, attributes, values, replace: true };
 }
 
 const nameOf = (ctx: AppContext, id: string): string => ctx.doc.block(id)?.name ?? '';

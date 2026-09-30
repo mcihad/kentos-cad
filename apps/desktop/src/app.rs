@@ -146,6 +146,8 @@ pub enum Dialog {
     BlockDefine,
     /// Blok öznitelikleri (block_attributes.rs, docs/adr/0144 §7); the window is `App::block_attributes`.
     BlockAttributes,
+    /// Blok ekle's Öznitelik değerleri (attribute_values.rs); the window is `App::attribute_values`.
+    AttributeValues,
 }
 
 /// Where the app goes once the drawing on screen is left (cloud/leaving.rs).
@@ -250,6 +252,8 @@ pub enum Message {
     BlocksPanel(crate::blocks_panel::Event),
     /// Blok öznitelikleri's window (block_attributes.rs).
     BlockAttributes(crate::block_attributes::Event),
+    /// Blok ekle's Öznitelik değerleri (attribute_values.rs).
+    AttributeValues(crate::attribute_values::Event),
     /// The rollover card's wait is over, for this hover (hover_card.rs).
     HoverCard(u64),
     /// The pointer rested on a snap past the tracking dwell (tracking.rs).
@@ -394,6 +398,8 @@ pub struct App {
     pub(crate) blocks_panel: crate::blocks_panel::PanelState,
     /// Blok öznitelikleri's window, while it is open or away for a point (block_attributes.rs).
     pub(crate) block_attributes: Option<crate::block_attributes::Window>,
+    /// Blok ekle's Öznitelik değerleri, while it asks (attribute_values.rs).
+    pub(crate) attribute_values: Option<crate::attribute_values::Window>,
     pub(crate) text_field_select: bool,
     pub(crate) text_field_release: bool,
     /// Öznitelikler's closed sections, by id, while the app runs (the web's `collapsed`).
@@ -611,6 +617,7 @@ impl App {
             blocks: crate::blocks::Blocks::default(),
             blocks_panel: crate::blocks_panel::PanelState::default(),
             block_attributes: None,
+            attribute_values: None,
             text_field_select: false,
             text_field_release: false,
             props_closed: std::collections::HashSet::new(),
@@ -821,6 +828,7 @@ impl App {
             task,
             self.text_field_tasks(),
             self.blocks_tasks(),
+            self.attribute_values_tasks(),
             self.follow_hover(),
             self.follow_tracking(),
             self.follow_log(Instant::now()),
@@ -963,6 +971,7 @@ impl App {
             Message::Blocks(event) => self.blocks_event(event),
             Message::BlocksPanel(event) => return self.blocks_panel_event(event),
             Message::BlockAttributes(event) => return self.block_attributes_event(event),
+            Message::AttributeValues(event) => self.attribute_values_event(event),
             Message::HoverCard(version) => self.hover_card_due(version),
             Message::TrackDwell(number) => {
                 self.tracking.dwell_due(number);

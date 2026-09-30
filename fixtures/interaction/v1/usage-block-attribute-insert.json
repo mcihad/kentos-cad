@@ -1,0 +1,22 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "usage-block-attribute-insert",
+  "title": "Kullanım: Blok ekle öznitelikli rögarı yerleştirirken numarasını ve kotunu sorar; yeni rögar değerleriyle yazılır",
+  "source": "Kullanım senaryosu (kentos-cad kullan, apps/web/scripts/e2e/use.mjs); ADR 0144, 6b-3 adımı",
+  "covers": ["CAD-04"],
+  "document": "block-attributes.kcad",
+  "view": { "center": [487015, 4420008.5], "metresPerPixel": 0.03 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "clickTolerance": 0.03,
+  "steps": [
+    { "run": "tool.blockInsert", "expect": { "tool": "blockInsert" } },
+    { "click": [0, 4], "note": "Nokta verilince Öznitelik değerleri sorulur: alanlar soruların adıyla, varsayılan içlerinde.", "expect": { "dialog": "Öznitelik değerleri" } },
+    { "dialog": "Öznitelik değerleri", "fill": { "Rögar numarası": "R-21", "Kapak kotu": "101.9" } },
+    { "shot": "degerler" },
+    { "dialog": "Öznitelik değerleri", "press": "Yerleştir", "expect": { "dialog": null, "entities": 6 } },
+    { "key": "Enter", "expect": { "tool": "select" } },
+    { "move": [3, -2] },
+    { "shot": "yerlestirildi", "note": "Yeni rögar kendi numarasını ve kotunu yazar." }
+  ]
+}

@@ -13,11 +13,17 @@ import { entitiesCreate } from '../product/entitiesCreate';
  * refusal or warnings are the tool's messages (the locked and hidden layer
  * texts are the tools' own); one undo step, “Ekle” or the tool's name.
  */
-export function writeObjects(ctx: AppContext, geometries: readonly EntityGeometry[], operation?: CreateOperation): EntitiesCreated | null {
+export function writeObjects(ctx: AppContext, geometries: readonly EntityGeometry[], operation?: CreateOperation, attrs?: Record<string, string>): EntitiesCreated | null {
   const color = ctx.settings.color.value;
   // The current weight goes to what is drawn with lines (docs/adr/0139).
   const lineWeight = ctx.settings.lineWeight.value;
-  const objects = geometries.map((g) => ({ geometry: g as unknown as NewGeometry, ...(color !== null && { color }), ...(lineWeight !== null && drawsLines(g) && { lineWeight }) }));
+  // Blok ekle's values (docs/adr/0144 §7): the objects' attributes, when given.
+  const objects = geometries.map((g) => ({
+    geometry: g as unknown as NewGeometry,
+    ...(color !== null && { color }),
+    ...(lineWeight !== null && drawsLines(g) && { lineWeight }),
+    ...(attrs && Object.keys(attrs).length && { attrs: { ...attrs } }),
+  }));
   const result = entitiesCreate.execute({ doc: ctx.doc }, { layerId: ctx.doc.layers.active.value, objects, ...(operation && { operation }) });
   if (result.status !== 'completed') {
     if ('error' in result) ctx.log.warn(result.error.message);

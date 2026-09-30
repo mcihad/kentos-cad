@@ -10,7 +10,11 @@
 //!   the block's x axis. The block, scale, turn and mirror stay for as long
 //!   as the app lives ([`Memory`]);
 //! - the ghost is the block as it would be placed at the cursor, from the
-//!   geometry store (`insert_outlines`).
+//!   geometry store (`insert_outlines`);
+//! - a block with attribute definitions (§7) asks their values first: the
+//!   point waits while the host's window asks ([`ViewChange::AttributeValues`]);
+//!   Yerleştir writes the insert with them ([`Tool::values_given`]), Vazgeç
+//!   drops the point and the tool waits for the next.
 
 use kentos_contracts::blocks::turn_of;
 use kentos_contracts::{BlockId, EntityGeometry};
@@ -21,7 +25,7 @@ use crate::log::Level;
 use crate::modify::ghosts;
 use crate::points::{self, Taken, wire};
 use crate::prompt::{Prompt, upper_tr};
-use crate::tool::{Context, Flow, Memory, Pointer, Preview, Stroke, Tool};
+use crate::tool::{Context, Flow, Memory, Pointer, Preview, Stroke, Tool, ViewChange};
 
 /// The tool's id: its command is `tool.blockInsert`.
 pub const ID: &str = "blockInsert";
@@ -44,6 +48,8 @@ pub struct BlockInsert {
     /// The ghost at the cursor, as of the last pointer move.
     ghost: Vec<Stroke>,
     marks: Vec<Vec2>,
+    /// The point waiting for the block's attribute values (§7).
+    pending: Option<Vec2>,
 }
 
 impl BlockInsert {
@@ -106,11 +112,31 @@ impl BlockInsert {
 
     fn accept(&mut self, p: Vec2, cx: &mut Context<'_>) {
         self.d.begin(p, cx);
-        let (None, Some(block)) = (self.ask, cx.memory.block_insert) else {
+        let (None, None, Some(block)) = (self.ask, self.pending, cx.memory.block_insert) else {
             return;
         };
+        // A block with attribute definitions asks their values first (§7).
+        if cx
+            .doc
+            .block(block)
+            .is_some_and(|b| !b.attributes.is_empty())
+        {
+            self.pending = Some(p);
+            cx.view_changes.push(ViewChange::AttributeValues(block));
+            return;
+        }
+        self.write(block, p, None, cx);
+    }
+
+    fn write(
+        &mut self,
+        block: BlockId,
+        p: Vec2,
+        attrs: Option<std::collections::BTreeMap<String, String>>,
+        cx: &mut Context<'_>,
+    ) {
         let geometry = Self::geometry(block, p, cx.memory);
-        if let Some(out) = points::write_objects(vec![geometry], None, cx)
+        if let Some(out) = points::write_objects_with(vec![geometry], attrs, None, cx)
             && let Some(&id) = out.ids.first()
         {
             self.d.note(id, cx);
@@ -238,6 +264,23 @@ impl Tool for BlockInsert {
 
     fn undo_step(&mut self, cx: &mut Context<'_>) -> bool {
         self.d.undo_step(false, cx)
+    }
+
+    /// The values window's answer: Yerleştir writes the insert at the
+    /// waiting point with them (an empty map: none), Vazgeç drops the point.
+    fn values_given(
+        &mut self,
+        values: Option<&std::collections::BTreeMap<String, String>>,
+        cx: &mut Context<'_>,
+    ) {
+        let (Some(p), Some(values), Some(block)) =
+            (self.pending.take(), values, cx.memory.block_insert)
+        else {
+            return;
+        };
+        let attrs = (!values.is_empty()).then(|| values.clone());
+        self.write(block, p, attrs, cx);
+        self.see(cx);
     }
 
     fn preview(&self, _format: &crate::format::Format) -> Preview {

@@ -67,13 +67,13 @@
       "pending": 0
     },
     "screens": {
-      "total": 68,
-      "implemented": 68,
+      "total": 69,
+      "implemented": 69,
       "partial": 0,
       "pending": 0
     },
     "commandsWithoutPlace": [],
-    "commandsWithoutTests": 64,
+    "commandsWithoutTests": 63,
     "commandsOnDesktop": 178,
     "desktop": {
       "commands": {
@@ -141,11 +141,11 @@
         "n/a": 0
       },
       "screens": {
-        "total": 68,
-        "implemented": 61,
+        "total": 69,
+        "implemented": 63,
         "partial": 2,
         "pending": 0,
-        "none": 1,
+        "none": 0,
         "n/a": 4
       }
     },
@@ -241,7 +241,10 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/block-attribute-define.json",
+        "fixtures/interaction/v1/usage-block-attribute-define.json"
+      ]
     },
     {
       "id": "block.panel",
@@ -3190,8 +3193,10 @@
         "desktop": "implemented"
       },
       "tests": [
+        "fixtures/interaction/v1/block-attribute-insert.json",
         "fixtures/interaction/v1/block-define.json",
         "fixtures/interaction/v1/block-insert.json",
+        "fixtures/interaction/v1/usage-block-attribute-insert.json",
         "fixtures/interaction/v1/usage-blocks.json"
       ]
     },
@@ -3784,6 +3789,8 @@
       },
       "tests": [
         "apps/web/src/app/netcadNames.test.ts",
+        "fixtures/interaction/v1/block-attribute-define.json",
+        "fixtures/interaction/v1/block-attribute-insert.json",
         "fixtures/interaction/v1/block-attributes.json",
         "fixtures/interaction/v1/block-explode.json",
         "fixtures/interaction/v1/object-tools.json",
@@ -6996,8 +7003,10 @@
         "desktop": "implemented"
       },
       "tests": [
+        "fixtures/interaction/v1/block-attribute-insert.json",
         "fixtures/interaction/v1/block-define.json",
         "fixtures/interaction/v1/block-insert.json",
+        "fixtures/interaction/v1/usage-block-attribute-insert.json",
         "fixtures/interaction/v1/usage-blocks.json"
       ]
     },
@@ -7414,6 +7423,8 @@
       },
       "tests": [
         "apps/web/src/app/netcadNames.test.ts",
+        "fixtures/interaction/v1/block-attribute-define.json",
+        "fixtures/interaction/v1/block-attribute-insert.json",
         "fixtures/interaction/v1/block-attributes.json",
         "fixtures/interaction/v1/block-explode.json",
         "fixtures/interaction/v1/object-tools.json",
@@ -13677,6 +13688,18 @@
       "desktopWhere": "apps/desktop/src/app_menu/ (ADR 0050)"
     },
     {
+      "id": "apps/web/src/ui/blocks/AttributeValuesDialog.ts#openAttributeValuesDialog",
+      "name": "openAttributeValuesDialog",
+      "role": "window",
+      "source": "apps/web/src/ui/blocks/AttributeValuesDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/attribute_values.rs (ADR 0144 §7)"
+    },
+    {
       "id": "apps/web/src/ui/blocks/BlockAttributesDialog.ts#openBlockAttributesDialog",
       "name": "openBlockAttributesDialog",
       "role": "window",
@@ -13684,8 +13707,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/block_attributes.rs, attribute_table.rs (ADR 0144 §7)"
     },
     {
       "id": "apps/web/src/ui/blocks/BlockDefineDialog.ts#openBlockDefineDialog",

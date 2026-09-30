@@ -1,0 +1,50 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "block-attribute-insert",
+  "title": "Blok ekle ve öznitelik değerleri (ADR 0144 §7): öznitelikli blokta nokta verilince değerler sorulur; yazılanlarla, varsayılanla yerleştirilir; Vazgeç noktayı bırakır, araç bir sonrakini bekler; patlatılan yerleştirmeler değerleri yazar",
+  "source": "ADR 0144, 6b-3 adımı",
+  "covers": ["CAD-04"],
+  "document": "block-attributes.kcad",
+  "view": { "center": [487020, 4420008.5], "metresPerPixel": 0.0625 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "clickTolerance": 0.0625,
+  "steps": [
+    { "run": "tool.blockInsert", "note": "Çizimin tek bloğu Rögar: NO (varsayılanı R-?) ve KOT öznitelikleri var.", "expect": { "tool": "blockInsert" } },
+    { "click": [-5, 6], "note": "Nokta verilince değerler sorulur.", "expect": { "dialog": "Öznitelik değerleri" } },
+    {
+      "dialog": "Öznitelik değerleri",
+      "fill": { "Rögar numarası": "R-20", "Kapak kotu": "102.4" },
+      "press": "Yerleştir",
+      "expect": { "dialog": null, "tool": "blockInsert", "entities": 6, "newest": { "kind": "insert", "points": [[-5, 6], [-4, 6], [-5, 7]] } }
+    },
+    { "click": [5, 6], "expect": { "dialog": "Öznitelik değerleri" } },
+    { "dialog": "Öznitelik değerleri", "press": "Yerleştir", "note": "Değerler olduğu gibi: numara varsayılanda kalır, kot boş.", "expect": { "dialog": null, "entities": 7 } },
+    { "click": [0, 6], "expect": { "dialog": "Öznitelik değerleri" } },
+    { "dialog": "Öznitelik değerleri", "press": "Vazgeç", "note": "Nokta bırakılır; araç bir sonrakini bekler.", "expect": { "dialog": null, "tool": "blockInsert", "entities": 7 } },
+    { "key": "Enter", "expect": { "tool": "select" } },
+    { "click": [-5.75, 6], "note": "İlk yerleştirme.", "expect": { "selected": [6] } },
+    {
+      "run": "tool.explode",
+      "note": "Yazılan değerler yazı olur.",
+      "expect": {
+        "entities": 10,
+        "selected": [8, 9, 10, 11],
+        "logged": ["1 nesne patlatıldı: 4 parça."],
+        "newest": { "kind": "text", "points": [[-4.1, 5.45]], "text": "102.4" },
+        "objects": [{ "id": 10, "kind": "text", "points": [[-4.1, 6.15]], "text": "R-20" }]
+      }
+    },
+    { "key": "Esc", "expect": { "selected": [] } },
+    { "click": [4.25, 6], "note": "İkinci yerleştirme: değeri yok.", "expect": { "selected": [7] } },
+    {
+      "run": "tool.explode",
+      "note": "Numara varsayılanıyla yazılır, kot yazılmaz.",
+      "expect": { "entities": 12, "logged": ["1 nesne patlatıldı: 3 parça."], "newest": { "kind": "text", "points": [[5.9, 6.15]], "text": "R-?" } }
+    },
+    { "key": "Ctrl+Z", "expect": { "entities": 10 } },
+    { "key": "Ctrl+Z", "expect": { "entities": 7 } },
+    { "key": "Ctrl+Z", "expect": { "entities": 6 } },
+    { "key": "Ctrl+Z", "expect": { "entities": 5, "canUndo": false } }
+  ]
+}

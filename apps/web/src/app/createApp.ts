@@ -93,6 +93,7 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
     blocks: createBlocks(
       (base, uids) => lazy(ctx, import('../ui/blocks/BlockDefineDialog'), (m) => m.openBlockDefineDialog(ctx, base, uids)),
       (id) => lazy(ctx, import('../ui/blocks/BlockAttributesDialog'), (m) => m.openBlockAttributesDialog(ctx, id)),
+      (id, done) => lazy(ctx, import('../ui/blocks/AttributeValuesDialog'), (m) => m.openAttributeValuesDialog(ctx, id, done)),
     ),
     server: new ServerStatus(),
   } as AppContext & { tools: ToolManager; view: ViewportController; files: DocumentFiles; cloud: CloudSession; recovery: RecoveryCopies };

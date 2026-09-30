@@ -58,9 +58,10 @@ impl CommandLine {
     /// on its focus (a text selection, a custom operation) cannot be
     /// followed, and stops the trace rather than let the widget's state go
     /// wrong unseen. A window's field the app gives the keyboard to (Blok
-    /// oluştur's name) is there too: what an operation does to it (the
-    /// keyboard, its text chosen) is not the command line's, so it is let
-    /// be; a `dialog` step fills the field whatever it holds.
+    /// oluştur's name, Öznitelik değerleri's first) is there too: what an
+    /// operation does to it (the keyboard, its text chosen) is not the
+    /// command line's, so it is let be; a `dialog` step fills the field
+    /// whatever it holds.
     pub fn operate(&mut self, operation: &mut dyn Operation) -> Result<Option<Message>, String> {
         let mut text_box = TextBox {
             focused: self.focused,
@@ -69,15 +70,20 @@ impl CommandLine {
         };
         let id = Id::new(COMMAND_INPUT);
         let mut window_field = WindowField::default();
-        let window_id = Id::new(crate::blocks::NAME_FIELD);
+        let window_ids = [
+            Id::new(crate::blocks::NAME_FIELD),
+            Id::new(crate::attribute_values::FIRST_FIELD),
+        ];
         let mut visit = |operation: &mut dyn Operation| {
             let bounds = Rectangle::default();
             operation.container(None, bounds);
             operation.traverse(&mut |operation| {
                 operation.focusable(Some(&id), bounds, &mut text_box);
                 operation.text_input(Some(&id), bounds, &mut text_box);
-                operation.focusable(Some(&window_id), bounds, &mut window_field);
-                operation.text_input(Some(&window_id), bounds, &mut window_field);
+                for window_id in &window_ids {
+                    operation.focusable(Some(window_id), bounds, &mut window_field);
+                    operation.text_input(Some(window_id), bounds, &mut window_field);
+                }
             });
             match operation.finish() {
                 Outcome::Chain(next) => Some(next),

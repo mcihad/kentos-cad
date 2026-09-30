@@ -95,6 +95,10 @@ pub enum ViewChange {
     /// Blok oluştur's base point ([`crate::block_define`], docs/adr/0144): the
     /// host opens the window that names a block of the selected objects.
     DefineBlock(Vec2),
+    /// Blok ekle's point for a block with attribute definitions
+    /// ([`crate::block_insert`], docs/adr/0144 §7): the host asks their
+    /// values and gives them back with [`Tool::values_given`].
+    AttributeValues(kentos_contracts::BlockId),
 }
 
 /// Where a text field opens and how its text will look: its start, height in
@@ -719,6 +723,14 @@ pub trait Tool {
     /// The answer of a text field it asked for ([`ViewChange::Text`]): the
     /// typed text (Enter, a click elsewhere), or none (Esc).
     fn text_typed(&mut self, _text: Option<&str>, _cx: &mut Context<'_>) {}
+    /// The answer of the values it asked for ([`ViewChange::AttributeValues`]):
+    /// the attributes to write (Yerleştir), or none (Vazgeç, Esc).
+    fn values_given(
+        &mut self,
+        _values: Option<&std::collections::BTreeMap<String, String>>,
+        _cx: &mut Context<'_>,
+    ) {
+    }
     /// Esc while the tool runs: it steps back (drops the object it picked,
     /// leaves a sub-step) and returns true, or false when it has nothing to
     /// drop and the session leaves it (the web's `Tool.cancel`).

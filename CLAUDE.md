@@ -537,9 +537,9 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   web ve masaüstü istemcilerinde blok izleyicisi, olayda `GET …/blocks`, çakışma, “veri silmeden
   üstün”, taslak; masaüstünde yerel kopya). Geliştirme veritabanı `kentos_cad` 0012'de. 6. adım
   öznitelik tanımları: 6a (çekirdek, gösterim, Patlat, Öznitelikler'in “Blok öznitelikleri”; yerleştirmenin
-  öznitelikleri çekirdeğin şeklinde ve depo paketinde), 6b-1 (`cad.blocks.edit`'in `attributes` işlemi) ve
-  6b-2 (Blok öznitelikleri penceresi, `block.attributes`) tamam; sırada 6b-3 (Blok ekle'nin değer sorusu)
-  ve 6c (DXF ATTDEF ve ATTRIB; o adımda ATTRIB'in görünen yazısı ayrıca yazı olarak alınmayı bırakır).
+  öznitelikleri çekirdeğin şeklinde ve depo paketinde), 6b-1 (`cad.blocks.edit`'in `attributes` işlemi),
+  6b-2 (Blok öznitelikleri penceresi, `block.attributes`) ve 6b-3 (Blok ekle'nin Öznitelik değerleri sorusu)
+  tamam; sırada 6c (DXF ATTDEF ve ATTRIB; o adımda ATTRIB'in görünen yazısı ayrıca yazı olarak alınmayı bırakır).
   Ondan önce çok parçalı alan (ADR 0143, `CAD-14`) ve köşe kotu (ADR 0142, `CAD-13`).
 - Bloktan sonra, sahibin sırasıyla (ADR 0143 Bağlam): yazı ekleri, lider ve yeni ölçü türleri. Her biri
   `.kcad` şemasını değiştiren kendi özelliği ve şema adımıyla gelir; önce ADR yazılır, adımlar ADR 0142,

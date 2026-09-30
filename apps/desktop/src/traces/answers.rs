@@ -36,6 +36,7 @@ impl App {
         self.dialog.map(|d| match d {
             Dialog::BlockDefine => crate::blocks::DEFINE_TITLE.to_owned(),
             Dialog::BlockAttributes => crate::block_attributes::ATTRIBUTES_TITLE.to_owned(),
+            Dialog::AttributeValues => crate::attribute_values::VALUES_TITLE.to_owned(),
             other => format!("{other:?}"),
         })
     }
@@ -46,6 +47,7 @@ impl App {
         match self.dialog {
             Some(Dialog::BlockDefine) => self.block_define_control(control),
             Some(Dialog::BlockAttributes) => self.block_attributes_control(control),
+            Some(Dialog::AttributeValues) => self.attribute_values_control(control),
             Some(other) => Err(format!("{other:?} penceresi izden yanıtlanamıyor")),
             None => Err("açık pencere yok".to_owned()),
         }

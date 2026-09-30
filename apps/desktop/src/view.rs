@@ -1135,6 +1135,7 @@ impl App {
             Asking::SvgEditor => self.svgedit_view(),
             Asking::BlockDefine => self.block_define_view(),
             Asking::BlockAttributes => self.block_attributes_view(),
+            Asking::AttributeValues => self.attribute_values_view(),
         }
     }
 }

@@ -221,8 +221,8 @@ export abstract class PointInputTool implements Tool {
    * the tool's `operation`, noted for Ctrl+Z. The output, or null when
    * refused (the refusal said).
    */
-  protected writeObjects(geometries: EntityGeometry[], operation?: CreateOperation): EntitiesCreated | null {
-    const out = createCommand.writeObjects(this.ctx, geometries, operation);
+  protected writeObjects(geometries: EntityGeometry[], operation?: CreateOperation, attrs?: Record<string, string>): EntitiesCreated | null {
+    const out = createCommand.writeObjects(this.ctx, geometries, operation, attrs);
     if (out) this.noteMade(out.ids[0]);
     return out;
   }

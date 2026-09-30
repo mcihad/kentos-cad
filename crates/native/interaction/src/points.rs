@@ -120,6 +120,16 @@ pub(crate) fn write_objects(
     operation: Option<kentos_contracts::CreateOperation>,
     cx: &mut Context<'_>,
 ) -> Option<kentos_contracts::EntitiesCreated> {
+    write_objects_with(geometries, None, operation, cx)
+}
+
+/// `write_objects` with the objects' attributes (Blok ekle's values, docs/adr/0144 §7).
+pub(crate) fn write_objects_with(
+    geometries: Vec<kentos_contracts::EntityGeometry>,
+    attrs: Option<std::collections::BTreeMap<String, String>>,
+    operation: Option<kentos_contracts::CreateOperation>,
+    cx: &mut Context<'_>,
+) -> Option<kentos_contracts::EntitiesCreated> {
     use kentos_native_application::{ExecutionContext, create};
     let input = kentos_contracts::EntitiesCreate {
         layer_id: cx.doc.layers().active().to_owned(),
@@ -133,7 +143,7 @@ pub(crate) fn write_objects(
                     .flatten(),
                 geometry,
                 color: cx.draft.color.map(str::to_owned),
-                attrs: None,
+                attrs: attrs.clone(),
                 label: None,
             })
             .collect(),
