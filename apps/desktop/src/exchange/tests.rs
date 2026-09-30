@@ -89,12 +89,18 @@ fn another_coordinate_system_blocks_the_import_and_nothing_changes() {
     let before = count(&app);
     run(&mut app, "file.import.dxf");
     // ED50 / TM36 while the project is TUREF / TM36: a datum transformation that does not exist yet.
-    send(&mut app, Event::DrawingImport(drawing_import::Event::Crs(2322)));
+    send(
+        &mut app,
+        Event::DrawingImport(drawing_import::Event::Crs(2322)),
+    );
     send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
     assert_eq!(app.dialog, Some(Dialog::Exchange), "the window stays");
     assert_eq!(count(&app), before);
     // Back to the project's system, and it goes in.
-    send(&mut app, Event::DrawingImport(drawing_import::Event::Crs(5256)));
+    send(
+        &mut app,
+        Event::DrawingImport(drawing_import::Event::Crs(5256)),
+    );
     send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
     assert!(count(&app) > before);
 }
@@ -105,7 +111,10 @@ fn layers_left_out_bring_nothing_and_none_chosen_imports_nothing() {
     app.picker = Picker::File(fixture("entities.dxf"));
     let before = count(&app);
     run(&mut app, "file.import.dxf");
-    send(&mut app, Event::DrawingImport(drawing_import::Event::ToggleAll));
+    send(
+        &mut app,
+        Event::DrawingImport(drawing_import::Event::ToggleAll),
+    );
     send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
     assert_eq!(count(&app), before, "every layer left out");
     assert_eq!(app.dialog, Some(Dialog::Exchange));
@@ -215,8 +224,9 @@ fn a_dxfs_blocks_go_out_to_dxf_as_blocks() {
     );
     send(&mut app, Event::DxfExport(dxf_export::Event::Run));
     assert!(said(&app, "“bloklar.dxf” yazıldı:"), "{}", last_said(&app));
-    let back = kentos_formats::dxf::read(&std::fs::read(&path).expect("written"), &Default::default())
-        .expect("reads");
+    let back =
+        kentos_formats::dxf::read(&std::fs::read(&path).expect("written"), &Default::default())
+            .expect("reads");
     // The blocks the inserts place, in the order the objects place them, each after the ones it
     // holds (NO is inside KAPI); DAIRE, which nothing places, stays out.
     let names: Vec<&str> = back.blocks.iter().map(|b| b.name.as_str()).collect();
@@ -227,7 +237,10 @@ fn a_dxfs_blocks_go_out_to_dxf_as_blocks() {
         .filter(|e| matches!(e, Entity::Insert(_)))
         .count();
     assert_eq!(placed, 2);
-    assert_eq!(had, 4, "DAIRE came in though nothing places it; it does not go out");
+    assert_eq!(
+        had, 4,
+        "DAIRE came in though nothing places it; it does not go out"
+    );
     let _ = std::fs::remove_dir_all(&dir);
 }
 
@@ -313,7 +326,10 @@ fn screens() {
             app.picker = Picker::File(fixture("entities.dxf"));
             run(&mut app, "file.import.dxf");
             picture(&mut app, &format!("aktar-{mode}-1-dxf"));
-            send(&mut app, Event::DrawingImport(drawing_import::Event::Crs(2322)));
+            send(
+                &mut app,
+                Event::DrawingImport(drawing_import::Event::Crs(2322)),
+            );
             picture(&mut app, &format!("aktar-{mode}-2-dxf-baska-sistem"));
 
             let mut app = fresh();
@@ -338,7 +354,10 @@ fn screens() {
             app.picker = Picker::File(fixture("blocks.dxf"));
             run(&mut app, "file.import.dxf");
             picture(&mut app, &format!("aktar-{mode}-7-dxf-bloklar"));
-            send(&mut app, Event::DrawingImport(drawing_import::Event::Explode));
+            send(
+                &mut app,
+                Event::DrawingImport(drawing_import::Event::Explode),
+            );
             picture(&mut app, &format!("aktar-{mode}-8-dxf-bloklari-patlat"));
 
             // The drawing with the file's blocks going out to DXF: the window says how they are written.
@@ -352,8 +371,54 @@ fn screens() {
                 Event::DxfExport(dxf_export::Event::Scope(dxf_export::Scope::All)),
             );
             picture(&mut app, &format!("aktar-{mode}-9-dxf-ver-bloklar"));
+
+            // A block with attribute definitions (docs/adr/0144 §7): the window says what
+            // became of each ATTDEF and ATTRIB; in, the inserts show their values.
+            let mut app = fresh();
+            app.picker = Picker::File(fixture("attributes.dxf"));
+            run(&mut app, "file.import.dxf");
+            picture(&mut app, &format!("aktar-{mode}-10-dxf-oznitelikler"));
+            send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
+            app.selection.set(Vec::<kentos_domain::Slot>::new());
+            let frame = kentos_render_wgpu::Bounds {
+                min_x: 487089.0,
+                min_y: 4420197.5,
+                max_x: 487114.5,
+                max_y: 4420203.0,
+            };
+            app.viewport.camera.fit(&frame, 48.0);
+            let _ = app.update(Message::Run("block.panel"));
+            picture(
+                &mut app,
+                &format!("aktar-{mode}-11-dxf-oznitelikler-alindi"),
+            );
         }
     }
+}
+
+/// A DXF's attribute definitions come in with its blocks (docs/adr/0144 §7):
+/// ROGAR's NO, KOT and ORTA; its first insert holds the ATTRIBs' values.
+#[test]
+fn a_dxfs_attribute_definitions_come_in_with_its_blocks() {
+    let mut app = app_with_drawing();
+    app.picker = Picker::File(fixture("attributes.dxf"));
+    run(&mut app, "file.import.dxf");
+    send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
+    let model = &app.document.as_ref().expect("open").model;
+    let rogar = model
+        .blocks()
+        .iter()
+        .find(|b| b.name == "ROGAR")
+        .expect("ROGAR");
+    let tags: Vec<&str> = rogar.attributes.iter().map(|a| a.tag.as_str()).collect();
+    assert_eq!(tags, ["NO", "KOT", "ORTA"]);
+    let valued = model.entities().find_map(|e| match e {
+        Entity::Insert(i) if i.block == rogar.id && !i.base.attrs.is_empty() => {
+            i.base.attrs.get("NO").cloned()
+        }
+        _ => None,
+    });
+    assert_eq!(valued.as_deref(), Some("R-12"));
 }
 
 fn blocks_of(app: &App) -> Vec<String> {
@@ -380,10 +445,15 @@ fn a_dxfs_blocks_go_in_as_definitions_and_blokları_patlat_opens_them() {
     run(&mut app, "file.import.dxf");
     send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
     assert_eq!(app.dialog, None, "{:?}", app.exchange);
-    assert_eq!(blocks_of(&app)[had.len()..], ["NO", "KAPI", "DAIRE", "KENDI"]);
+    assert_eq!(
+        blocks_of(&app)[had.len()..],
+        ["NO", "KAPI", "DAIRE", "KENDI"]
+    );
     assert_eq!(inserts(&app), 2);
     assert!(
-        app.log.lines().any(|l| l.text.contains("; 4 blok tanımı eklendi. Tek adımda geri alınabilir.")),
+        app.log.lines().any(|l| l
+            .text
+            .contains("; 4 blok tanımı eklendi. Tek adımda geri alınabilir.")),
         "{}",
         last_said(&app)
     );
@@ -408,7 +478,10 @@ fn a_dxfs_blocks_go_in_as_definitions_and_blokları_patlat_opens_them() {
     assert_eq!((count(&app), blocks_of(&app)), (before, had.clone()));
     app.picker = Picker::File(fixture("blocks.dxf"));
     run(&mut app, "file.import.dxf");
-    send(&mut app, Event::DrawingImport(drawing_import::Event::Explode));
+    send(
+        &mut app,
+        Event::DrawingImport(drawing_import::Event::Explode),
+    );
     let Some(Window::DrawingImport(state)) = &app.exchange else {
         panic!("the DXF window");
     };
@@ -425,9 +498,15 @@ fn a_dxfs_blocks_go_in_as_definitions_and_blokları_patlat_opens_them() {
     app.picker = Picker::File(fixture("blocks.dxf"));
     run(&mut app, "file.import.dxf");
     assert!(!explode(&app));
-    send(&mut app, Event::DrawingImport(drawing_import::Event::Explode));
+    send(
+        &mut app,
+        Event::DrawingImport(drawing_import::Event::Explode),
+    );
     app.picker = Picker::File(fixture("entities.dxf"));
-    send(&mut app, Event::DrawingImport(drawing_import::Event::Another));
+    send(
+        &mut app,
+        Event::DrawingImport(drawing_import::Event::Another),
+    );
     assert!(explode(&app));
 }
 
@@ -436,7 +515,9 @@ fn many_lines(n: usize) -> String {
     let mut s = String::from("0\nSECTION\n2\nENTITIES\n");
     for i in 0..n {
         let y = 4_400_000.0 + i as f64;
-        s.push_str(&format!("0\nLINE\n8\nCIZGI\n10\n500000\n20\n{y}\n11\n500010\n21\n{y}\n"));
+        s.push_str(&format!(
+            "0\nLINE\n8\nCIZGI\n10\n500000\n20\n{y}\n11\n500010\n21\n{y}\n"
+        ));
     }
     s.push_str("0\nENDSEC\n0\nEOF\n");
     s
@@ -456,7 +537,11 @@ fn an_ncz_goes_in_with_its_smart_objects_drawn_as_symbols() {
     send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
     assert_eq!(app.dialog, None, "{:?}", app.exchange);
     let model = &app.document.as_ref().expect("open").model;
-    assert_eq!(model.len() - before, 41, "ten symbols drawn, an unknown class a point");
+    assert_eq!(
+        model.len() - before,
+        41,
+        "ten symbols drawn, an unknown class a point"
+    );
     let group = model
         .layers()
         .nodes()
@@ -464,7 +549,16 @@ fn an_ncz_goes_in_with_its_smart_objects_drawn_as_symbols() {
         .find(|n| n.name == "07-akilli-nesneler.ncz")
         .expect("a group named after the file");
     let names: Vec<&str> = group.children.iter().map(|c| c.name.as_str()).collect();
-    assert_eq!(names, ["SM_YERLESIM", "SM_YAPILASMA", "SM_YOL", "SM_NOT", "SM_FONKADI"]);
+    assert_eq!(
+        names,
+        [
+            "SM_YERLESIM",
+            "SM_YAPILASMA",
+            "SM_YOL",
+            "SM_NOT",
+            "SM_FONKADI"
+        ]
+    );
     // The settlement symbol's circle carries its values.
     let layer = &group.children[0].id;
     let circle = model
@@ -472,7 +566,10 @@ fn an_ncz_goes_in_with_its_smart_objects_drawn_as_symbols() {
         .find(|e| matches!(e, Entity::Circle(_)))
         .expect("a circle");
     let attrs = &circle.base().attrs;
-    assert_eq!(attrs.get("Akıllı nesne").map(String::as_str), Some("Yerleşim"));
+    assert_eq!(
+        attrs.get("Akıllı nesne").map(String::as_str),
+        Some("Yerleşim")
+    );
     assert_eq!(attrs.get("Nizam").map(String::as_str), Some("AYRIK"));
     assert_eq!(attrs.get("Ön bahçe").map(String::as_str), Some("5"));
     assert!(last_said(&app).contains("41 nesne"), "{}", last_said(&app));
@@ -491,7 +588,10 @@ fn an_ncz_in_another_zone_waits_for_the_user_to_say_its_system() {
     assert_eq!(count(&app), before, "nothing goes in");
     assert_eq!(app.dialog, Some(Dialog::Exchange));
     let project = app.document.as_ref().expect("open").settings().srid;
-    send(&mut app, Event::DrawingImport(drawing_import::Event::Crs(project)));
+    send(
+        &mut app,
+        Event::DrawingImport(drawing_import::Event::Crs(project)),
+    );
     send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
     assert_eq!(count(&app) - before, 18);
 }
@@ -505,11 +605,17 @@ fn a_large_import_goes_in_a_frame_at_a_time_as_one_step_and_durdur_takes_it_back
     let mut app = app_with_drawing();
     app.picker = Picker::File(path.clone());
     let before = count(&app);
-    assert!(!app.document.as_ref().expect("open").model.can_undo(), "a fresh drawing");
+    assert!(
+        !app.document.as_ref().expect("open").model.can_undo(),
+        "a fresh drawing"
+    );
 
     run(&mut app, "file.import.dxf");
     send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
-    assert!(app.importing.is_some(), "a large file goes in a frame at a time");
+    assert!(
+        app.importing.is_some(),
+        "a large file goes in a frame at a time"
+    );
     assert_eq!(app.dialog, None, "the window gives way to the panel");
     // Meanwhile nothing else edits the drawing: the command waits.
     let _ = app.update(Message::Run("edit.undo"));
@@ -528,7 +634,13 @@ fn a_large_import_goes_in_a_frame_at_a_time_as_one_step_and_durdur_takes_it_back
     assert!(!model.can_undo(), "one undo step");
     assert_eq!(count(&app), before);
     let model = &app.document.as_ref().expect("open").model;
-    assert!(!model.layers().nodes().iter().any(|n| n.name == "cizgiler.dxf"));
+    assert!(
+        !model
+            .layers()
+            .nodes()
+            .iter()
+            .any(|n| n.name == "cizgiler.dxf")
+    );
 
     // Durdur half way: every object and layer it made goes, and no step is left.
     app.picker = Picker::File(path);
@@ -541,7 +653,13 @@ fn a_large_import_goes_in_a_frame_at_a_time_as_one_step_and_durdur_takes_it_back
     assert_eq!(count(&app), before);
     let model = &app.document.as_ref().expect("open").model;
     assert!(!model.can_undo(), "no step recorded");
-    assert!(!model.layers().nodes().iter().any(|n| n.name == "cizgiler.dxf"));
+    assert!(
+        !model
+            .layers()
+            .nodes()
+            .iter()
+            .any(|n| n.name == "cizgiler.dxf")
+    );
     assert!(said(&app, "“cizgiler.dxf” içe aktarılması durduruldu"));
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -625,7 +743,10 @@ fn ncz_screens() {
     println!("{}", last_said(&app));
     shot(&mut snapshot, &out, &mut app, "ncz-3-bitti");
     if let Ok(at) = std::env::var("KENTOS_NCZ_AT") {
-        let v: Vec<f64> = at.split(',').filter_map(|s| s.trim().parse().ok()).collect();
+        let v: Vec<f64> = at
+            .split(',')
+            .filter_map(|s| s.trim().parse().ok())
+            .collect();
         if let [x, y] = v[..] {
             app.viewport.show(&Bounds {
                 min_x: x - 150.0,

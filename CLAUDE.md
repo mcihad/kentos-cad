@@ -538,8 +538,8 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   üstün”, taslak; masaüstünde yerel kopya). Geliştirme veritabanı `kentos_cad` 0012'de. 6. adım
   öznitelik tanımları: 6a (çekirdek, gösterim, Patlat, Öznitelikler'in “Blok öznitelikleri”; yerleştirmenin
   öznitelikleri çekirdeğin şeklinde ve depo paketinde), 6b-1 (`cad.blocks.edit`'in `attributes` işlemi),
-  6b-2 (Blok öznitelikleri penceresi, `block.attributes`) ve 6b-3 (Blok ekle'nin Öznitelik değerleri sorusu)
-  tamam; sırada 6c (DXF ATTDEF ve ATTRIB; o adımda ATTRIB'in görünen yazısı ayrıca yazı olarak alınmayı bırakır).
+  6b-2 (Blok öznitelikleri penceresi, `block.attributes`), 6b-3 (Blok ekle'nin Öznitelik değerleri sorusu) ve
+  6c-1 (DXF'ten ATTDEF ve ATTRIB okuma) tamam; sırada 6c-2 (DXF'e ATTDEF ve ATTRIB yazma, bağımsız Python denetimi).
   Ondan önce çok parçalı alan (ADR 0143, `CAD-14`) ve köşe kotu (ADR 0142, `CAD-13`).
 - Bloktan sonra, sahibin sırasıyla (ADR 0143 Bağlam): yazı ekleri, lider ve yeni ölçü türleri. Her biri
   `.kcad` şemasını değiştiren kendi özelliği ve şema adımıyla gelir; önce ADR yazılır, adımlar ADR 0142,

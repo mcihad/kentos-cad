@@ -454,7 +454,9 @@ fn an_anonymous_block_is_opened_and_said_why() {
     assert_eq!((l.a, l.b), (v(5.0, 5.0), v(6.0, 5.0)));
     let notes: Vec<&str> = r.report.notes.iter().map(|n| n.reason.as_str()).collect();
     assert!(
-        notes.contains(&"adsız blok (dinamik blok ya da grup) blok olarak tutulmaz; patlatılarak alındı"),
+        notes.contains(
+            &"adsız blok (dinamik blok ya da grup) blok olarak tutulmaz; patlatılarak alındı"
+        ),
         "{notes:?}"
     );
     assert!(
@@ -1182,4 +1184,137 @@ fn a_drawing_without_a_height_says_nothing_of_heights() {
         panic!("no line")
     };
     assert_eq!((l.za, l.zb), (Some(100.0), Some(100.0)));
+}
+
+/// A note of the report by what it is about.
+fn noted(r: &ImportResult, what: &str) -> Option<String> {
+    r.report
+        .notes
+        .iter()
+        .find(|s| s.what == what)
+        .map(|s| s.reason.clone())
+}
+
+/// ROGAR's attribute definitions (docs/adr/0144 §7, fixtures/formats/v1/attributes.dxf):
+/// NO (a default, left), KOT (none), ORTA (centred on 0, 1.2) become its
+/// attributes in the file's order; the invisible GIZLI is not taken, the
+/// constant SABIT is a text of the block, a second NO and one without a tag
+/// are left out, each said. The first insert's ATTRIBs are its attributes:
+/// NO and KOT shown by the insert itself (no text of their own), the hidden
+/// GIZLI kept as a value, EK (no definition) a value and a text as before.
+#[test]
+fn a_blocks_attribute_definitions_come_in_as_its_attributes() {
+    let r = read("attributes.dxf");
+    let [rogar] = r.blocks.as_slice() else {
+        panic!("{:?}", r.blocks)
+    };
+    /// An attribute as the test reads it: tag, prompt, default, place, height, turn.
+    type Attribute<'a> = (&'a str, Option<&'a str>, Option<&'a str>, Vec2, f64, f64);
+    let attributes: Vec<Attribute> = rogar
+        .attributes
+        .iter()
+        .map(|a| {
+            (
+                a.tag.as_str(),
+                a.prompt.as_deref(),
+                a.value.as_deref(),
+                a.p,
+                a.height,
+                a.rotation,
+            )
+        })
+        .collect();
+    // ORTA starts as the drawing's twin TEXT, justified the same way on (487130, 4420211.2), starts from its point.
+    let twin = r
+        .entities
+        .iter()
+        .find_map(|e| match e {
+            Entity::Text(t) if t.text == "MERKEZ" => Some(t.p),
+            _ => None,
+        })
+        .expect("the twin text");
+    let orta = v(twin.x - 487130.0, twin.y - 4420210.0);
+    assert!(orta.x < 0.0, "{twin:?}");
+    assert_eq!(
+        attributes[..2],
+        [
+            (
+                "NO",
+                Some("Rögar numarası"),
+                Some("R-?"),
+                v(0.9, 0.15),
+                0.5,
+                0.0
+            ),
+            ("KOT", Some("Kapak kotu"), None, v(0.9, -0.55), 0.4, 0.0),
+        ]
+    );
+    let (tag, prompt, value, p, height, rotation) = attributes[2];
+    assert_eq!(
+        (tag, prompt, value, height, rotation),
+        ("ORTA", Some("Orta"), Some("MERKEZ"), 0.3, 0.0)
+    );
+    assert!(near(p, orta), "{p:?} ≠ {orta:?}");
+    // The circle, and the constant SABIT as a text of the block.
+    let [Entity::Circle(c), Entity::Text(fixed)] = rogar.entities.as_slice() else {
+        panic!("{:?}", rogar.entities)
+    };
+    assert_eq!(c.r, 0.75);
+    assert_eq!((fixed.text.as_str(), fixed.p), ("SBT", v(-0.2, -1.2)));
+    assert!(noted(&r, "Sabit öznitelik (ATTDEF)").is_some());
+    assert!(skipped(&r, "Görünmez öznitelik tanımı (ATTDEF)").is_some());
+    let left_out: Vec<&str> = r
+        .report
+        .skipped
+        .iter()
+        .filter(|s| s.what == "Blok öznitelik tanımı (ATTDEF)")
+        .map(|s| s.reason.as_str())
+        .collect();
+    assert_eq!(
+        left_out,
+        [
+            "“NO” etiketi blokta ikinci kez var; ilki alındı",
+            "etiketi yok"
+        ]
+    );
+    // The inserts: the first with its four values, the second with none; EK's text between them.
+    let placed: Vec<String> = r
+        .entities
+        .iter()
+        .map(|e| match e {
+            Entity::Insert(i) => format!("insert {:?} {:?}", (i.p.x, i.p.y), i.base.attrs),
+            Entity::Text(t) => format!("text {} {:?}", t.text, (t.p.x, t.p.y)),
+            other => format!("{other:?}"),
+        })
+        .collect();
+    assert_eq!(
+        placed[..3],
+        [
+            r#"insert (487100.0, 4420200.0) {"EK": "ekstra", "GIZLI": "secret", "KOT": "101.35", "NO": "R-12"}"#,
+            "text ekstra (487100.0, 4420202.0)",
+            "insert (487110.0, 4420200.0) {}",
+        ]
+    );
+    assert!(noted(&r, "Blok özniteliği (ATTRIB)").is_some_and(|n| n.contains("karşılığı olmayan")));
+    // A hidden ATTRIB of a kept insert is its value: not a text left out.
+    assert!(skipped(&r, "Görünmez öznitelik (ATTRIB)").is_none());
+}
+
+/// With Blokları patlat the inserts open: the ATTRIBs come in as texts, as
+/// before (the hidden one said), the constant attribute as its text, the
+/// other definitions as nothing.
+#[test]
+fn an_opened_blocks_attributes_come_in_as_texts() {
+    let r = opened("attributes.dxf");
+    assert!(r.blocks.is_empty());
+    let texts: Vec<&str> = r
+        .entities
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Text(t) => Some(t.text.as_str()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(texts, ["SBT", "R-12", "101.35", "ekstra", "SBT", "MERKEZ"]);
+    assert!(skipped(&r, "Görünmez öznitelik (ATTRIB)").is_some());
 }

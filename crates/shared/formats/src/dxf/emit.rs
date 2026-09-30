@@ -6,13 +6,14 @@
 //! stretches them (then the arcs are sampled, and that is reported).
 //! Identity maps copy coordinates bit for bit.
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use kentos_contracts::blocks::{nesting, turn_of};
 use kentos_contracts::{
-    ArcEntity, BlockDefinition, BlockId, Bounds, CircleEntity, ConstructionEntity, EllipseEntity, Entity,
-    EntityBase, HatchEntity, HatchPattern, HatchPatternType, InsertEntity, LineEntity,
-    MAX_LINE_WEIGHT, PathEntity, PointEntity, RingGeometry, SplineEntity, TextEntity, Vec2,
+    ArcEntity, AttributeDefinition, BlockDefinition, BlockId, Bounds, CircleEntity,
+    ConstructionEntity, EllipseEntity, Entity, EntityBase, HatchEntity, HatchPattern,
+    HatchPatternType, InsertEntity, LineEntity, MAX_LINE_WEIGHT, PathEntity, PointEntity,
+    RingGeometry, SplineEntity, TextEntity, Vec2,
 };
 
 use super::aci;
@@ -136,6 +137,8 @@ pub struct Out {
     /// the polygons KentOS data names as holes of another (index, owner handle).
     pub handles: HashMap<u64, usize>,
     pub holes: Vec<(usize, u64)>,
+    /// The attribute definitions of the block being read (docs/adr/0144 §7).
+    pub attributes: Vec<AttributeDefinition>,
 }
 
 impl Out {
@@ -152,6 +155,7 @@ impl Out {
             exhausted: false,
             handles: HashMap::new(),
             holes: Vec::new(),
+            attributes: Vec::new(),
         }
     }
 
@@ -196,6 +200,55 @@ fn base(layer: &str, color: Option<String>, line_weight: Option<f64>) -> EntityB
 
 fn xy(p: P3) -> Vec2 {
     v(p[0], p[1])
+}
+
+
+/// A TEXT's, an ATTRIB's or an ATTDEF's groups that place it.
+struct Text<'a> {
+    ext: P3,
+    p: P3,
+    p2: Option<P3>,
+    height: f64,
+    rotation: f64,
+    text: &'a str,
+    halign: i64,
+    valign: i64,
+    width: f64,
+    style: &'a str,
+}
+
+/// A text at `anchor` whose baseline runs at `rotation` degrees (object
+/// coordinates) as `m` places it: its start, turn (degrees, from 0 up to 360)
+/// and height; none when `m` flattens it.
+fn mapped_text(m: Tf, anchor: Vec2, rotation: f64, height: f64) -> Option<(Vec2, f64, f64)> {
+    let (s, c) = sin_cos_deg(rotation);
+    let d = m.linear(v(c, s));
+    let u = m.linear(v(-s, c));
+    let ld = hypot(d.x, d.y);
+    if !(ld > 0.0) {
+        return None;
+    }
+    // The file's own angle when nothing turns it (bit for bit), else the mapped baseline's.
+    let mut rot = if m.is_identity() {
+        rotation
+    } else {
+        deg(atan2(d.y, d.x))
+    };
+    // Mirrored text stays readable, as the app's own mirror does (MIRRTEXT 0).
+    if m.det() < 0.0 {
+        rot += 180.0;
+    }
+    let rot = if (0.0..360.0).contains(&rot) {
+        rot
+    } else {
+        rot.rem_euclid(360.0)
+    };
+    let h = if m.is_identity() {
+        height
+    } else {
+        height * (d.x * u.y - d.y * u.x).abs() / ld
+    };
+    Some((m.apply(anchor), if rot >= 360.0 { 0.0 } else { rot }, h))
 }
 
 /// The world transform of an entity in object coordinates at `elevation`.
@@ -310,7 +363,12 @@ fn break_cycles(defs: &mut [BlockDefinition], report: &mut Report) {
 
 /// Whether the definition at `from` places the one at `to`, directly or
 /// through others.
-fn reaches(defs: &[BlockDefinition], index: &HashMap<BlockId, usize>, from: usize, to: usize) -> bool {
+fn reaches(
+    defs: &[BlockDefinition],
+    index: &HashMap<BlockId, usize>,
+    from: usize,
+    to: usize,
+) -> bool {
     let mut seen = vec![false; defs.len()];
     let mut stack = vec![from];
     while let Some(d) = stack.pop() {
@@ -434,14 +492,15 @@ impl<'l> Emitter<'l> {
                 name: block.name.clone(),
                 base: v(block.base[0], block.base[1]),
                 entities,
-                attributes: Vec::new(),
+                attributes: std::mem::take(&mut self.out.attributes),
                 description: (!block.description.trim().is_empty())
                     .then(|| block.description.clone()),
             });
         }
         break_cycles(&mut defs, &mut self.out.report);
         // Deeper than a drawing's blocks may nest (the rule of `blocks::nesting`).
-        let index: HashMap<BlockId, usize> = defs.iter().enumerate().map(|(i, d)| (d.id, i)).collect();
+        let index: HashMap<BlockId, usize> =
+            defs.iter().enumerate().map(|(i, d)| (d.id, i)).collect();
         nesting(&defs, &index).ok()?;
         for d in &mut defs {
             for (k, e) in d.entities.iter_mut().enumerate() {
@@ -832,8 +891,35 @@ impl<'l> Emitter<'l> {
                 width,
                 style,
                 hidden,
-                ..
+                tag,
+                prompt,
+                constant,
             } => {
+                // An attribute definition (ATTDEF, docs/adr/0144 §7).
+                if let Some(prompt) = prompt {
+                    let def = Text {
+                        ext,
+                        p: *p,
+                        p2: *p2,
+                        height: *height,
+                        rotation: *rotation,
+                        text,
+                        halign: *halign,
+                        valign: *valign,
+                        width: *width,
+                        style,
+                    };
+                    return self.attribute_definition(
+                        ctx,
+                        &def,
+                        tag,
+                        prompt,
+                        *hidden,
+                        *constant,
+                        b(),
+                        e,
+                    );
+                }
                 if *hidden {
                     return self.skip(
                         "Görünmez öznitelik (ATTRIB)",
@@ -949,10 +1035,24 @@ impl<'l> Emitter<'l> {
                     array: (*cols, *rows, *dc, *dr),
                 };
                 if self.keep_insert(ctx, e, &layer, name, &placed, attrs) {
-                    if attribs.iter().any(|a| matches!(&a.kind, Kind::Text { hidden: false, .. })) {
+                    // Its values are the insert's attributes (docs/adr/0144 §7): the insert shows
+                    // those its definition defines; any other shown one comes in as a text too.
+                    let defined = self.defined_tags(name);
+                    let mut other = false;
+                    for a in attribs {
+                        if let Kind::Text { tag, hidden, .. } = &a.kind
+                            && (*hidden || defined.contains(tag))
+                        {
+                            continue;
+                        }
+                        other = true;
+                        // Attributes are already placed in the insert's own frame.
+                        self.emit(a, ctx);
+                    }
+                    if other {
                         self.note(
                             "Blok özniteliği (ATTRIB)",
-                            "değeri yerleştirmenin özniteliği oldu; görünen yazısı ayrıca yazı olarak alındı",
+                            "tanımında karşılığı olmayan özniteliğin değeri yerleştirmenin özniteliği oldu; görünen yazısı ayrıca yazı olarak alındı",
                             e.line,
                         );
                     }
@@ -960,10 +1060,10 @@ impl<'l> Emitter<'l> {
                     self.insert(
                         ctx, e, &layer, name, *p, *scale, *rotation, *cols, *rows, *dc, *dr,
                     );
-                }
-                // Attributes are already placed in the insert's own frame.
-                for a in attribs {
-                    self.emit(a, ctx);
+                    // Attributes are already placed in the insert's own frame.
+                    for a in attribs {
+                        self.emit(a, ctx);
+                    }
                 }
                 for (reason, line) in bad_attribs {
                     self.skip("Blok özniteliği (ATTRIB)", reason, *line);
@@ -1053,12 +1153,9 @@ impl<'l> Emitter<'l> {
                     "VIEWPORT" => "görünüm pencereleri pafta düzenine aittir",
                     "SHAPE" => "şekil (SHAPE) yazı tipi dosyası gerektirir; alınmaz",
                     "TOLERANCE" => "geometrik tolerans çerçevesi alınmaz",
-                    "ATTDEF" => "blok öznitelik tanımı çizim nesnesi değildir",
                     _ => "bu nesne türü tanınmıyor",
                 };
-                if name != "ATTDEF" {
-                    self.skip(name, reason, e.line);
-                }
+                self.skip(name, reason, e.line);
             }
         }
     }
@@ -1442,34 +1539,64 @@ impl<'l> Emitter<'l> {
         b: EntityBase,
         e: &Parsed,
     ) {
-        let text = text_codes(&caret_decode(text));
-        if text.trim().is_empty() {
+        let words = text_codes(&caret_decode(text));
+        if words.trim().is_empty() {
             return self.skip(&e.name, "boş yazı", e.line);
         }
-        let height = if height > 0.0 {
-            height
+        let t = Text {
+            ext,
+            p,
+            p2,
+            height,
+            rotation,
+            text,
+            halign,
+            valign,
+            width,
+            style,
+        };
+        match self.text_frame(ctx, &t, &words, e) {
+            Ok((m, anchor, rot, height)) => self.push_text(m, anchor, rot, height, words, b),
+            Err(why) => self.skip(&e.name, why, e.line),
+        }
+    }
+
+    /// Where a text starts in object coordinates, its turn and its height
+    /// (`words` its decoded text, whose width places a justified one): KentOS
+    /// texts start at their lower left, so a justified text's start is worked
+    /// out from its estimated width, and said. Why not, when it cannot be placed.
+    fn text_frame(
+        &mut self,
+        ctx: &Ctx,
+        t: &Text<'_>,
+        words: &str,
+        e: &Parsed,
+    ) -> Result<(Tf, Vec2, f64, f64), &'static str> {
+        let height = if t.height > 0.0 {
+            t.height
         } else {
             self.lib
                 .style_heights
-                .get(&style.to_uppercase())
+                .get(&t.style.to_uppercase())
                 .copied()
                 .unwrap_or(0.0)
         };
         if !(height > 0.0) {
-            return self.skip(&e.name, "yazı yüksekliği yok", e.line);
+            return Err("yazı yüksekliği yok");
         }
-        let Some(m) = ocs(ctx, ext, p[2]) else {
-            return self.skip(&e.name, "doğrultusu (210) geçersiz", e.line);
+        let Some(m) = ocs(ctx, t.ext, t.p[2]) else {
+            return Err("doğrultusu (210) geçersiz");
         };
-        let (s, c) = sin_cos_deg(rotation);
-        let (mut anchor, mut rot) = (v(p[0], p[1]), rotation);
+        let (p, halign, valign) = (t.p, t.halign, t.valign);
+        let (s, c) = sin_cos_deg(t.rotation);
+        let (mut anchor, mut rot) = (v(p[0], p[1]), t.rotation);
         // Justified text: 11 is the anchor (AutoCAD puts the start point in 10 too, other writers may not).
         if (halign != 0 || valign != 0)
-            && let Some(q) = p2
+            && let Some(q) = t.p2
         {
             {
                 let q = v(q[0], q[1]);
-                let w = text_em(&text) * height * width.abs().max(0.01);
+                let w = text_em(words) * height * t.width.abs().max(0.01);
                 if halign == 3 || halign == 5 {
                     // Aligned and fit: the text runs from 10 to 11.
                     rot = deg(atan2(q.y - p[1], q.x - p[0]));
@@ -1490,7 +1617,106 @@ impl<'l> Emitter<'l> {
                 }
             }
         }
-        self.push_text(m, anchor, rot, height, text, b);
+        Ok((m, anchor, rot, height))
+    }
+
+    /// An attribute definition (ATTDEF, docs/adr/0144 §7). A constant one is
+    /// a text wherever it is (the block's fixed text). Otherwise, in a block
+    /// read as a definition it is one of the definition's attributes: its
+    /// tag, prompt and default, placed as a text is (a justified one's start
+    /// worked out from its default's width, else its tag's); an invisible
+    /// one is not taken (the inserts' values stay their attributes); one
+    /// without a tag, or with a tag taken before, is left out; each is said.
+    /// Outside a definition (the drawing, an opened block) it is no drawing
+    /// object: nothing, as ever (an insert's ATTRIBs carry the values).
+    #[allow(clippy::too_many_arguments)]
+    fn attribute_definition(
+        &mut self,
+        ctx: &Ctx,
+        t: &Text<'_>,
+        tag: &str,
+        prompt: &str,
+        hidden: bool,
+        constant: bool,
+        b: EntityBase,
+        e: &Parsed,
+    ) {
+        const WHAT: &str = "Blok öznitelik tanımı (ATTDEF)";
+        if constant {
+            self.note(
+                "Sabit öznitelik (ATTDEF)",
+                "değeri değişmeyen öznitelik yazı olarak alındı",
+                e.line,
+            );
+            return self.text(
+                ctx, t.ext, t.p, t.p2, t.height, t.rotation, t.text, t.halign, t.valign, t.width,
+                t.style, b, e,
+            );
+        }
+        if !(self.defining && ctx.definition && ctx.tf.is_identity()) {
+            return;
+        }
+        if hidden {
+            return self.skip(
+                "Görünmez öznitelik tanımı (ATTDEF)",
+                "tanıma alınmadı; yerleştirmelerdeki değerleri öznitelik olarak kalır",
+                e.line,
+            );
+        }
+        let tag = tag.trim();
+        if tag.is_empty() {
+            return self.skip(WHAT, "etiketi yok", e.line);
+        }
+        if self.out.attributes.iter().any(|a| a.tag == tag) {
+            let why = format!("“{tag}” etiketi blokta ikinci kez var; ilki alındı");
+            return self.skip(WHAT, &why, e.line);
+        }
+        let value = text_codes(&caret_decode(t.text));
+        let words = if value.trim().is_empty() {
+            tag.to_owned()
+        } else {
+            value.clone()
+        };
+        let placed = self
+            .text_frame(ctx, t, &words, e)
+            .map(|(m, anchor, rot, height)| mapped_text(m, anchor, rot, height));
+        match placed {
+            Err(why) => self.skip(WHAT, why, e.line),
+            Ok(None) => self.skip(WHAT, "doğrultusu (210) geçersiz", e.line),
+            Ok(Some((p, rotation, height))) => {
+                let prompt = text_codes(&caret_decode(prompt));
+                self.out.attributes.push(AttributeDefinition {
+                    tag: tag.to_owned(),
+                    prompt: (!prompt.trim().is_empty()).then_some(prompt),
+                    value: (!value.trim().is_empty()).then_some(value),
+                    p,
+                    height,
+                    rotation,
+                });
+            }
+        }
+    }
+
+    /// The tags a block's attribute definitions show (visible, not constant):
+    /// an insert of it shows their ATTRIBs itself (docs/adr/0144 §7).
+    fn defined_tags(&self, name: &str) -> HashSet<String> {
+        let Some(block) = self.lib.blocks.get(&name.to_uppercase()) else {
+            return HashSet::new();
+        };
+        block
+            .entities
+            .iter()
+            .filter_map(|x| match &x.kind {
+                Kind::Text {
+                    prompt: Some(_),
+                    hidden: false,
+                    constant: false,
+                    tag,
+                    ..
+                } if !tag.trim().is_empty() => Some(tag.trim().to_owned()),
+                _ => None,
+            })
+            .collect()
     }
 
     /// A text at `anchor` whose baseline runs at `rotation` degrees (object coordinates).
@@ -1503,39 +1729,15 @@ impl<'l> Emitter<'l> {
         text: String,
         b: EntityBase,
     ) {
-        let (s, c) = sin_cos_deg(rotation);
-        let d = m.linear(v(c, s));
-        let u = m.linear(v(-s, c));
-        let ld = hypot(d.x, d.y);
-        if !(ld > 0.0) {
+        let Some((p, rotation, height)) = mapped_text(m, anchor, rotation, height) else {
             return;
-        }
-        // The file's own angle when nothing turns it (bit for bit), else the mapped baseline's.
-        let mut rot = if m.is_identity() {
-            rotation
-        } else {
-            deg(atan2(d.y, d.x))
-        };
-        // Mirrored text stays readable, as the app's own mirror does (MIRRTEXT 0).
-        if m.det() < 0.0 {
-            rot += 180.0;
-        }
-        let rot = if (0.0..360.0).contains(&rot) {
-            rot
-        } else {
-            rot.rem_euclid(360.0)
-        };
-        let h = if m.is_identity() {
-            height
-        } else {
-            height * (d.x * u.y - d.y * u.x).abs() / ld
         };
         self.push(Entity::Text(TextEntity {
             base: b,
-            p: m.apply(anchor),
+            p,
             text,
-            height: h,
-            rotation: if rot >= 360.0 { 0.0 } else { rot },
+            height,
+            rotation,
         }));
     }
 
@@ -1795,7 +1997,11 @@ impl<'l> Emitter<'l> {
         let mirror = (sx < 0.0) != (sy < 0.0);
         let degrees = placed.rotation + if sx < 0.0 { 180.0 } else { 0.0 };
         if placed.p[2] != 0.0 && !ctx.definition {
-            self.note("Blok (INSERT)", "yerleştirmenin yüksekliği (Z) alınmadı", e.line);
+            self.note(
+                "Blok (INSERT)",
+                "yerleştirmenin yüksekliği (Z) alınmadı",
+                e.line,
+            );
         }
         // KentOS's exact turn while the file's degrees are still those it wrote (an edit elsewhere wins).
         let exact = e

@@ -1930,6 +1930,9 @@ const OPEN_DXF_BLOCKS = `import('/src/ui/io/DrawingImportDialog.ts').then((m) =>
 const DXF_READ = `!!document.querySelector('.dialog--io .io-table') && !document.querySelector('.dialog--io .io-reading')`;
 const dxfBlocksOpen = async (ui) => (await ui.eval(OPEN_DXF_BLOCKS), await ui.waitFor(DXF_READ, 15000));
 const dxfBlocksIn = async (ui) => (await dxfBlocksOpen(ui), await ui.clickText('.dialog--io .btn--primary', 'İçe aktar'), await ui.waitFor(`!document.querySelector('.dialog--io')`, 8000));
+const DXF_ATTRIBUTES = readFileSync(new URL('../../../../fixtures/formats/v1/attributes.dxf', import.meta.url)).toString('base64');
+const OPEN_DXF_ATTRIBUTES = `import('/src/ui/io/DrawingImportDialog.ts').then((m) => m.openDxfImport(window.kentos, { name: 'attributes.dxf', bytes: Uint8Array.from(atob('${DXF_ATTRIBUTES}'), (c) => c.charCodeAt(0)) }, { description: 'DXF', accept: { 'application/dxf': ['.dxf'] } }))`;
+const dxfAttributesOpen = async (ui) => (await ui.eval(OPEN_DXF_ATTRIBUTES), await ui.waitFor(DXF_READ, 15000));
 SCENES.blocks = [
   // Read a second time: the names are the drawing's now, and the window says which new names they take.
   { id: 'import-dxf-blocks', open: async (ui) => (await dxfBlocksIn(ui), await dxfBlocksOpen(ui), await ui.sleep(400)) },
@@ -1962,6 +1965,21 @@ SCENES.blocks = [
       await ui.waitFor(`!!document.querySelector('.dialog--io .io-summary')`, 15000);
       await ui.clickText('.dialog--io .seg__opt', 'Tümü');
       await ui.sleep(400);
+    },
+  },
+  // A block with attribute definitions (docs/adr/0144 §7, fixtures/formats/v1/attributes.dxf): the window says what
+  // became of each ATTDEF and ATTRIB; in, the inserts show their values (and the default), EK's value a text of its own.
+  { id: 'import-dxf-attributes', open: async (ui) => (await dxfAttributesOpen(ui), await ui.sleep(400)) },
+  {
+    id: 'import-dxf-attributes-done',
+    open: async (ui) => {
+      await ui.eval(`(() => { const u = window.kentos.ui; u.bottomHeight.set(190); u.bottomTab.set('history'); u.bottomExpanded.set(true); })()`);
+      await dxfAttributesOpen(ui);
+      await ui.clickText('.dialog--io .btn--primary', 'İçe aktar');
+      await ui.waitFor(`!document.querySelector('.dialog--io')`, 8000);
+      await ui.eval(`(() => { const k = window.kentos; k.selection.clear(); k.view.camera.fit({ minX: 487089, minY: 4420197.5, maxX: 487114.5, maxY: 4420203 }, 48); k.view.requestRender(); })()`);
+      await ui.eval(`window.kentos.commands.execute('block.panel')`);
+      await ui.sleep(600);
     },
   },
   // In: the drawing shows the inserts, the Bloklar panel the four definitions and the message log what went in.

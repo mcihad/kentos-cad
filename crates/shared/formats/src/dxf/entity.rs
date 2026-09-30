@@ -110,8 +110,14 @@ pub enum Kind {
         width: f64,
         style: String,
         hidden: bool,
-        /// An ATTRIB's tag (group 2): the insert's attribute it gives a value to; empty for a TEXT.
+        /// An ATTRIB's tag (group 2): the insert's attribute it gives a value to;
+        /// an ATTDEF's: the attribute it defines; empty for a TEXT.
         tag: String,
+        /// An ATTDEF's prompt (group 3; docs/adr/0144 §7): `Some` marks an
+        /// attribute definition, its text (group 1) the default.
+        prompt: Option<String>,
+        /// An ATTDEF whose value is fixed (flag 2): a text of the block.
+        constant: bool,
     },
     MText {
         p: P3,
@@ -301,7 +307,11 @@ fn common(list: &[Pair<'_>], dec: Decoder) -> Result<Common, Unreadable> {
         _ => Color::ByLayer,
     };
     // A weight that does not read as a whole number, or a negative other than the three, is the layer's.
-    let weight = match list.iter().find(|p| p.code == 370).and_then(|p| parse_int(p.text())) {
+    let weight = match list
+        .iter()
+        .find(|p| p.code == 370)
+        .and_then(|p| parse_int(p.text()))
+    {
         Some(-2) => Weight::ByBlock,
         Some(-3) => Weight::Default,
         Some(n) if (0..=10_000).contains(&n) => Weight::Mm(n as f64 / 100.0),
@@ -434,27 +444,28 @@ pub fn parse(
             ctrl: points(list, 10)?,
             fit: points(list, 11)?,
         },
-        "TEXT" | "ATTRIB" => Kind::Text {
-            p: g.point_or_zero(10)?,
-            p2: g.point(11)?,
-            height: g.num_or(40, 0.0)?,
-            rotation: g.num_or(50, 0.0)?,
-            text: g.string(1),
-            halign: g.int(72),
-            valign: if name == "ATTRIB" {
-                g.int(74)
-            } else {
-                g.int(73)
-            },
-            width: g.num_or(41, 1.0)?,
-            style: g.string(7),
-            hidden: name == "ATTRIB" && g.int(70) & 1 == 1,
-            tag: if name == "ATTRIB" {
-                g.string(2)
-            } else {
-                String::new()
-            },
-        },
+        "TEXT" | "ATTRIB" | "ATTDEF" => {
+            let attribute = name != "TEXT";
+            Kind::Text {
+                p: g.point_or_zero(10)?,
+                p2: g.point(11)?,
+                height: g.num_or(40, 0.0)?,
+                rotation: g.num_or(50, 0.0)?,
+                text: g.string(1),
+                halign: g.int(72),
+                valign: if attribute { g.int(74) } else { g.int(73) },
+                width: g.num_or(41, 1.0)?,
+                style: g.string(7),
+                hidden: attribute && g.int(70) & 1 == 1,
+                tag: if attribute {
+                    g.string(2)
+                } else {
+                    String::new()
+                },
+                prompt: (name == "ATTDEF").then(|| g.string(3)),
+                constant: name == "ATTDEF" && g.int(70) & 2 == 2,
+            }
+        }
         "MTEXT" => {
             // The text is split over 3 groups (250-character chunks) and a final 1.
             let mut text = String::new();

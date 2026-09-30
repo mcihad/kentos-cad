@@ -106,6 +106,20 @@ describe.skipIf(!loader)('DXF WASM module', () => {
       [id(4), { x: 0, y: 0 }, 1, 0, '0'],
     ]);
     expect(kept.report.source).toContainEqual({ label: 'Blok', value: '4 tanım (1 tanesi yerleştirilmemiş)' });
+    // Attribute definitions (docs/adr/0144 §7): the block's visible ones in the file's order; the insert holds the values
+    // and shows the defined ones itself (crates/shared/formats/tests/dxf.rs has the whole file).
+    const att = read('attributes.dxf');
+    expect(att.blocks?.[0].attributes?.map((a) => [a.tag, a.prompt, a.value ?? null])).toEqual([
+      ['NO', 'Rögar numarası', 'R-?'],
+      ['KOT', 'Kapak kotu', null],
+      ['ORTA', 'Orta', 'MERKEZ'],
+    ]);
+    expect(att.entities.flatMap((x): unknown[] => (x.kind === 'insert' ? [x.attrs] : x.kind === 'text' ? [x.text] : []))).toEqual([
+      { EK: 'ekstra', GIZLI: 'secret', KOT: '101.35', NO: 'R-12' },
+      'ekstra',
+      {},
+      'MERKEZ',
+    ]);
     // Blokları patlat: every insert opened into its objects.
     const b = read('blocks.dxf', true);
     expect(b.blocks).toBeUndefined();
