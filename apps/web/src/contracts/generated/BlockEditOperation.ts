@@ -3,4 +3,4 @@
 /**
  * What `cad.blocks.edit` does; it names the undo step.
  */
-export type BlockEditOperation = "rename" | "redefine" | "rebase" | "remove" | "purge";
+export type BlockEditOperation = "rename" | "redefine" | "rebase" | "remove" | "purge" | "attributes";

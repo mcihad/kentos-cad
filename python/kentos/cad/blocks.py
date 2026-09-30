@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any  # noqa: F401
 
 from ._runtime import CommandNote, LocalCommand, UNSET, Unset, _opt  # noqa: F401
 from .types import (  # noqa: F401
+    AttributeDefinition,
     BlockDefined,
     BlockEditOperation,
     BlockEditOperationName,
@@ -166,13 +167,15 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
     değiştirir; tek geri alma adımı, adı işlemin: rename yeni ad (Blok değiştir),
     redefine içindekileri kalıcı kimlikleriyle verilen nesnelerden yeniden kurar (Blok
     değiştir), rebase taban noktasını taşır (Blok değiştir), remove kullanılmayan tanımı
-    siler (Blok sil), purge kullanılmayan bütün tanımları siler (Blokları temizle).
-    Tanım değişince bütün yerleştirmeleri yenisini gösterir. Çizimde ya da başka bir
-    tanımda yerleştirmesi olan tanım silinmez; tanım kendini içeremez, en çok 16 düzey
-    iç içe olabilir. redefine'da replace ile nesneler silinir, yerine tanımın bir
-    yerleştirmesi konur. Bir şey değiştirmeyen istek hiçbir şey yazmaz. Bloklar paneli
-    bu komutla yazar. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
-    yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik
+    siler (Blok sil), purge kullanılmayan bütün tanımları siler (Blokları temizle),
+    attributes tanımın öznitelik listesini bütün yazar (Blok değiştir; etiket boş
+    olamaz, listede bir kez bulunur; boş liste öznitelikleri kaldırır). Tanım değişince
+    bütün yerleştirmeleri yenisini gösterir. Çizimde ya da başka bir tanımda
+    yerleştirmesi olan tanım silinmez; tanım kendini içeremez, en çok 16 düzey iç içe
+    olabilir. redefine'da replace ile nesneler silinir, yerine tanımın bir yerleştirmesi
+    konur. Bir şey değiştirmeyen istek hiçbir şey yazmaz. Bloklar paneli bu komutla
+    yazar. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz,
+    sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik
     project.changes ile gider.
     """
     __slots__ = ()
@@ -190,6 +193,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         /,
         *,
         operation: BlockEditOperation | BlockEditOperationName,
+        attributes: Sequence[AttributeDefinition] | None | Unset = UNSET,
         base: Vec2Like | None | Unset = UNSET,
         block: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
@@ -202,18 +206,21 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         adımı, adı işlemin: rename yeni ad (Blok değiştir), redefine içindekileri kalıcı
         kimlikleriyle verilen nesnelerden yeniden kurar (Blok değiştir), rebase taban
         noktasını taşır (Blok değiştir), remove kullanılmayan tanımı siler (Blok sil), purge
-        kullanılmayan bütün tanımları siler (Blokları temizle). Tanım değişince bütün
-        yerleştirmeleri yenisini gösterir. Çizimde ya da başka bir tanımda yerleştirmesi
-        olan tanım silinmez; tanım kendini içeremez, en çok 16 düzey iç içe olabilir.
-        redefine'da replace ile nesneler silinir, yerine tanımın bir yerleştirmesi konur.
-        Bir şey değiştirmeyen istek hiçbir şey yazmaz. Bloklar paneli bu komutla yazar.
-        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-        conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes
-        ile gider.
+        kullanılmayan bütün tanımları siler (Blokları temizle), attributes tanımın öznitelik
+        listesini bütün yazar (Blok değiştir; etiket boş olamaz, listede bir kez bulunur;
+        boş liste öznitelikleri kaldırır). Tanım değişince bütün yerleştirmeleri yenisini
+        gösterir. Çizimde ya da başka bir tanımda yerleştirmesi olan tanım silinmez; tanım
+        kendini içeremez, en çok 16 düzey iç içe olabilir. redefine'da replace ile nesneler
+        silinir, yerine tanımın bir yerleştirmesi konur. Bir şey değiştirmeyen istek hiçbir
+        şey yazmaz. Bloklar paneli bu komutla yazar. expectedRevision verilmişse ve çizim o
+        sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez;
+        bulut projesine değişiklik project.changes ile gider.
 
         Args:
             doc: The drawing it works on.
             operation:
+            attributes: `attributes`: the definition's attribute definitions, the whole list
+                in its order (empty: it has none).
             base: `rebase`: the new base point; `redefine`: the base point (absent: kept).
             block: The definition; every operation but `purge`.
             expected_revision: The document revision the input was prepared against, as decimal text.
@@ -231,6 +238,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         """
         return self.execute_input(doc, BlocksEdit(
             operation=operation,
+            attributes=_opt(attributes, lambda x: list(x)),
             base=_opt(base, lambda x: Vec2.of(x)),
             block=block,
             expected_revision=expected_revision,
@@ -246,6 +254,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         /,
         *,
         operation: BlockEditOperation | BlockEditOperationName,
+        attributes: Sequence[AttributeDefinition] | None | Unset = UNSET,
         base: Vec2Like | None | Unset = UNSET,
         block: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
@@ -259,6 +268,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         """
         return self.plan_input(doc, BlocksEdit(
             operation=operation,
+            attributes=_opt(attributes, lambda x: list(x)),
             base=_opt(base, lambda x: Vec2.of(x)),
             block=block,
             expected_revision=expected_revision,
@@ -274,6 +284,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         /,
         *,
         operation: BlockEditOperation | BlockEditOperationName,
+        attributes: Sequence[AttributeDefinition] | None | Unset = UNSET,
         base: Vec2Like | None | Unset = UNSET,
         block: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
@@ -287,6 +298,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         """
         return self.validate_input(doc, BlocksEdit(
             operation=operation,
+            attributes=_opt(attributes, lambda x: list(x)),
             base=_opt(base, lambda x: Vec2.of(x)),
             block=block,
             expected_revision=expected_revision,

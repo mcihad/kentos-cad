@@ -32,6 +32,7 @@ fn input(operation: BlockEditOperation, block: Option<BlockId>) -> BlocksEdit {
         base: None,
         replace: None,
         layer_id: None,
+        attributes: None,
         expected_revision: None,
     }
 }

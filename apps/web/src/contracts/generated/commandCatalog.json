@@ -30432,7 +30432,7 @@
       "id": "cad.blocks.edit",
       "version": 1,
       "title": "Blok tanımını değiştir",
-      "summary": "Bir blok tanımını kimliğiyle değiştirir; tek geri alma adımı, adı işlemin: rename yeni ad (Blok değiştir), redefine içindekileri kalıcı kimlikleriyle verilen nesnelerden yeniden kurar (Blok değiştir), rebase taban noktasını taşır (Blok değiştir), remove kullanılmayan tanımı siler (Blok sil), purge kullanılmayan bütün tanımları siler (Blokları temizle). Tanım değişince bütün yerleştirmeleri yenisini gösterir. Çizimde ya da başka bir tanımda yerleştirmesi olan tanım silinmez; tanım kendini içeremez, en çok 16 düzey iç içe olabilir. redefine'da replace ile nesneler silinir, yerine tanımın bir yerleştirmesi konur. Bir şey değiştirmeyen istek hiçbir şey yazmaz. Bloklar paneli bu komutla yazar. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
+      "summary": "Bir blok tanımını kimliğiyle değiştirir; tek geri alma adımı, adı işlemin: rename yeni ad (Blok değiştir), redefine içindekileri kalıcı kimlikleriyle verilen nesnelerden yeniden kurar (Blok değiştir), rebase taban noktasını taşır (Blok değiştir), remove kullanılmayan tanımı siler (Blok sil), purge kullanılmayan bütün tanımları siler (Blokları temizle), attributes tanımın öznitelik listesini bütün yazar (Blok değiştir; etiket boş olamaz, listede bir kez bulunur; boş liste öznitelikleri kaldırır). Tanım değişince bütün yerleştirmeleri yenisini gösterir. Çizimde ya da başka bir tanımda yerleştirmesi olan tanım silinmez; tanım kendini içeremez, en çok 16 düzey iç içe olabilir. redefine'da replace ile nesneler silinir, yerine tanımın bir yerleştirmesi konur. Bir şey değiştirmeyen istek hiçbir şey yazmaz. Bloklar paneli bu komutla yazar. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -30448,6 +30448,48 @@
       "cost": "instant",
       "input": {
         "$defs": {
+          "AttributeDefinition": {
+            "description": "One attribute an insert shows as text (docs/adr/0144 §7): the insert's\nattribute `tag`, else `value`, written at `p` in the definition's\ncoordinates, moved with the insert.",
+            "properties": {
+              "height": {
+                "description": "Metres, in the definition's size.",
+                "format": "double",
+                "type": "number"
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "prompt": {
+                "description": "What Blok ekle asks for it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "rotation": {
+                "description": "Degrees, counter-clockwise from east, as a text's.",
+                "format": "double",
+                "type": "number"
+              },
+              "tag": {
+                "type": "string"
+              },
+              "value": {
+                "description": "The default value.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "tag",
+              "p",
+              "height",
+              "rotation"
+            ],
+            "type": "object"
+          },
           "BlockEditOperation": {
             "description": "What `cad.blocks.edit` does; it names the undo step.",
             "oneOf": [
@@ -30474,6 +30516,11 @@
               {
                 "const": "purge",
                 "description": "Every definition no insert uses deleted (“Blokları temizle”).",
+                "type": "string"
+              },
+              {
+                "const": "attributes",
+                "description": "Its attribute definitions, the whole list (“Blok değiştir”): every\ninsert shows them (docs/adr/0144 §7).",
                 "type": "string"
               }
             ]
@@ -30503,8 +30550,18 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.blocks.edit` v1: one change of the drawing's definitions, as\none undo step named after the operation. A definition is named by its id.\n\n- `rename`: `block`, `name`;\n- `redefine`: `block`, `uids` (the objects it is made of now, copied as\n  `cad.blocks.define` copies them), `base` (absent: kept), `replace` and\n  `layerId` as `cad.blocks.define` has them;\n- `rebase`: `block`, `base`;\n- `remove`: `block`;\n- `purge`: nothing; a definition only unused ones use goes too.\n\nWhat would change nothing (the same name, base point or objects; nothing\nunused to purge) writes nothing: the answer is completed, with nothing in\n`changed` and `removed`.\n\nRefusals (`CommandError.code`), checked in this order: `no_block` (none\ngiven where the operation needs one); `rename`: `empty_name`; `redefine`:\n`no_entities`, `invalid_uid` (each id in order), `not_finite` (the base\npoint), `no_layer`; `rebase`: `no_base`, `not_finite`; then\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`unknown_block`; `rename`: `duplicate_block`; `redefine`:\n`entity_not_found`, `block_cycle` (an object is an\ninsert of this block or of one holding it), `block_too_deep`, with\n`replace` the layer checks of `cad.blocks.define`; `remove`: `block_in_use`\n(inserts of it in the drawing or in another definition).",
+        "description": "Input of `cad.blocks.edit` v1: one change of the drawing's definitions, as\none undo step named after the operation. A definition is named by its id.\n\n- `rename`: `block`, `name`;\n- `redefine`: `block`, `uids` (the objects it is made of now, copied as\n  `cad.blocks.define` copies them), `base` (absent: kept), `replace` and\n  `layerId` as `cad.blocks.define` has them;\n- `rebase`: `block`, `base`;\n- `remove`: `block`;\n- `purge`: nothing; a definition only unused ones use goes too;\n- `attributes`: `block`, `attributes` (the whole list, in its order;\n  empty: none).\n\nWhat would change nothing (the same name, base point, objects or\nattributes; nothing unused to purge) writes nothing: the answer is\ncompleted, with nothing in `changed` and `removed`.\n\nRefusals (`CommandError.code`), checked in this order: `no_block` (none\ngiven where the operation needs one); `rename`: `empty_name`; `redefine`:\n`no_entities`, `invalid_uid` (each id in order), `not_finite` (the base\npoint), `no_layer`; `rebase`: `no_base`, `not_finite`; `attributes`:\n`no_attributes`, then each attribute in order: `empty_tag` (empty or only\nwhite space), `duplicate_tag` (a tag an earlier one has, exactly),\n`not_finite` (its point, east first, then its turn), `invalid_height` (not\nabove zero); then\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`unknown_block`; `rename`: `duplicate_block`; `redefine`:\n`entity_not_found`, `block_cycle` (an object is an\ninsert of this block or of one holding it), `block_too_deep`, with\n`replace` the layer checks of `cad.blocks.define`; `remove`: `block_in_use`\n(inserts of it in the drawing or in another definition).",
         "properties": {
+          "attributes": {
+            "description": "`attributes`: the definition's attribute definitions, the whole list\nin its order (empty: it has none).",
+            "items": {
+              "$ref": "#/$defs/AttributeDefinition"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
           "base": {
             "anyOf": [
               {
@@ -30588,7 +30645,7 @@
         "description": "Output of `cad.blocks.edit` v1.",
         "properties": {
           "changed": {
-            "description": "The definitions changed (`rename`, `redefine`, `rebase`).",
+            "description": "The definitions changed (`rename`, `redefine`, `rebase`, `attributes`).",
             "items": {
               "$ref": "#/$defs/BlockId"
             },
@@ -32018,7 +32075,7 @@
         "description": "What `cad.blocks.edit` would write (plan mode); nothing is written.",
         "properties": {
           "changed": {
-            "description": "The definitions as execute would write them (`rename`, `redefine`, `rebase`).",
+            "description": "The definitions as execute would write them (`rename`, `redefine`, `rebase`, `attributes`).",
             "items": {
               "$ref": "#/$defs/BlockDefinition"
             },
@@ -32085,6 +32142,36 @@
           "title": "Kullanılmayan bütün blokları temizle",
           "input": {
             "operation": "purge"
+          }
+        },
+        {
+          "title": "Öznitelikler: rögarın numarası ve kotu, yazıları taban noktasının sağında",
+          "input": {
+            "attributes": [
+              {
+                "height": 0.5,
+                "p": {
+                  "x": 0.9,
+                  "y": 0.15
+                },
+                "prompt": "Rögar numarası",
+                "rotation": 0.0,
+                "tag": "NO",
+                "value": "R-?"
+              },
+              {
+                "height": 0.4,
+                "p": {
+                  "x": 0.9,
+                  "y": -0.55
+                },
+                "prompt": "Kapak kotu",
+                "rotation": 0.0,
+                "tag": "KOT"
+              }
+            ],
+            "block": "01925f3e-7c1c-7b22-8d33-4c5e6f708192",
+            "operation": "attributes"
           }
         }
       ]

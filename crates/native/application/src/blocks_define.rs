@@ -212,9 +212,20 @@ pub(crate) fn block_rules(next: &[&BlockDefinition]) -> Result<(), Stop> {
             rules::BlockFault::TooDeep { .. } => (codes::BLOCK_TOO_DEEP, "uids"),
             rules::BlockFault::BadScale { .. } => (codes::INVALID_SCALE, "uids"),
             rules::BlockFault::UnknownBlock { .. } => (codes::UNKNOWN_BLOCK, "uids"),
-            // The commands change no attribute definition: never expected.
-            rules::BlockFault::EmptyTag { .. } | rules::BlockFault::DuplicateTag { .. } => {
-                (codes::BLOCK_REFUSED, "block")
+            // `attributes` checks its list first: never expected.
+            rules::BlockFault::EmptyTag { attribute, .. } => {
+                return Stop::Failed(error(
+                    codes::EMPTY_TAG,
+                    message,
+                    Some(format!("attributes[{attribute}].tag")),
+                ));
+            }
+            rules::BlockFault::DuplicateTag { attribute, .. } => {
+                return Stop::Failed(error(
+                    codes::DUPLICATE_TAG,
+                    message,
+                    Some(format!("attributes[{attribute}].tag")),
+                ));
             }
         };
         Stop::Failed(error(code, message, Some(path.into())))

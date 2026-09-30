@@ -11,15 +11,15 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 use kentos_domain::contracts::{
-    BlockId, BlocksDefine, BlocksEdit, CAD_BLOCKS_DEFINE, CAD_BLOCKS_EDIT, CAD_ENTITIES_SET,
-    EntitiesCreate, EntitiesSetProperties,
-};
-use kentos_domain::contracts::{
     ArcCreate, ArrayLayout, CAD_ARC_CREATE, CAD_CIRCLE_CREATE, CAD_ENTITIES_ARRAY,
     CAD_ENTITIES_DELETE, CAD_ENTITIES_EDIT, CAD_ENTITIES_TRANSFORM, CAD_LINE_CREATE,
     CAD_POINT_CREATE, CAD_POLYGON_CREATE, CAD_POLYLINE_CREATE, CircleCreate, DocumentSnapshotV1,
     EntitiesArray, EntitiesDelete, EntitiesEdit, EntitiesTransform, EntityEdit, EntityGeometry,
     LineCreate, PointCreate, PolygonCreate, PolylineCreate, Transform,
+};
+use kentos_domain::contracts::{
+    BlockId, BlocksDefine, BlocksEdit, CAD_BLOCKS_DEFINE, CAD_BLOCKS_EDIT, CAD_ENTITIES_SET,
+    EntitiesCreate, EntitiesSetProperties,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::create;
@@ -283,9 +283,22 @@ impl Input for BlocksDefine {
 }
 
 impl Input for BlocksEdit {
-    /// `base.x`, `base.y` (which the step's input must give).
+    /// `base.x`, `base.y`; `attributes[0].p.x`, `attributes[1].rotation`,
+    /// `attributes[2].height` (which the step's input must give).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        coordinate(self.base.as_mut()?, "base", path)
+        let Some(rest) = path.strip_prefix("attributes[") else {
+            return coordinate(self.base.as_mut()?, "base", path);
+        };
+        let (i, field) = rest.split_once("].")?;
+        let a = self
+            .attributes
+            .as_mut()?
+            .get_mut(i.parse::<usize>().ok()?)?;
+        match field {
+            "rotation" => Some(&mut a.rotation),
+            "height" => Some(&mut a.height),
+            _ => coordinate(&mut a.p, "p", field),
+        }
     }
 }
 

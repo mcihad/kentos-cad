@@ -145,6 +145,9 @@ pub enum BlockEditOperation {
     Remove,
     /// Every definition no insert uses deleted (“Blokları temizle”).
     Purge,
+    /// Its attribute definitions, the whole list (“Blok değiştir”): every
+    /// insert shows them (docs/adr/0144 §7).
+    Attributes,
 }
 
 /// Input of `cad.blocks.edit` v1: one change of the drawing's definitions, as
@@ -156,16 +159,22 @@ pub enum BlockEditOperation {
 ///   `layerId` as `cad.blocks.define` has them;
 /// - `rebase`: `block`, `base`;
 /// - `remove`: `block`;
-/// - `purge`: nothing; a definition only unused ones use goes too.
+/// - `purge`: nothing; a definition only unused ones use goes too;
+/// - `attributes`: `block`, `attributes` (the whole list, in its order;
+///   empty: none).
 ///
-/// What would change nothing (the same name, base point or objects; nothing
-/// unused to purge) writes nothing: the answer is completed, with nothing in
-/// `changed` and `removed`.
+/// What would change nothing (the same name, base point, objects or
+/// attributes; nothing unused to purge) writes nothing: the answer is
+/// completed, with nothing in `changed` and `removed`.
 ///
 /// Refusals (`CommandError.code`), checked in this order: `no_block` (none
 /// given where the operation needs one); `rename`: `empty_name`; `redefine`:
 /// `no_entities`, `invalid_uid` (each id in order), `not_finite` (the base
-/// point), `no_layer`; `rebase`: `no_base`, `not_finite`; then
+/// point), `no_layer`; `rebase`: `no_base`, `not_finite`; `attributes`:
+/// `no_attributes`, then each attribute in order: `empty_tag` (empty or only
+/// white space), `duplicate_tag` (a tag an earlier one has, exactly),
+/// `not_finite` (its point, east first, then its turn), `invalid_height` (not
+/// above zero); then
 /// `invalid_revision`, `revision_conflict` (status `conflict`),
 /// `unknown_block`; `rename`: `duplicate_block`; `redefine`:
 /// `entity_not_found`, `block_cycle` (an object is an
@@ -203,6 +212,11 @@ pub struct BlocksEdit {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub layer_id: Option<String>,
+    /// `attributes`: the definition's attribute definitions, the whole list
+    /// in its order (empty: it has none).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub attributes: Option<Vec<crate::entity::AttributeDefinition>>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -217,7 +231,7 @@ pub struct BlocksEdit {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct BlocksEdited {
-    /// The definitions changed (`rename`, `redefine`, `rebase`).
+    /// The definitions changed (`rename`, `redefine`, `rebase`, `attributes`).
     pub changed: Vec<BlockId>,
     /// The definitions deleted (`remove`, `purge`), in the drawing's order.
     pub removed: Vec<BlockId>,
@@ -244,7 +258,7 @@ pub struct BlocksEdited {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct BlocksEditPlan {
-    /// The definitions as execute would write them (`rename`, `redefine`, `rebase`).
+    /// The definitions as execute would write them (`rename`, `redefine`, `rebase`, `attributes`).
     pub changed: Vec<BlockDefinition>,
     /// The definitions execute would delete (`remove`, `purge`).
     pub removed: Vec<BlockId>,

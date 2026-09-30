@@ -1538,7 +1538,7 @@ pub fn catalog() -> CommandCatalog {
             id: crate::CAD_BLOCKS_EDIT.into(),
             version: crate::CAD_BLOCKS_EDIT_VERSION,
             title: "Blok tanımını değiştir".into(),
-            summary: "Bir blok tanımını kimliğiyle değiştirir; tek geri alma adımı, adı işlemin: rename yeni ad (Blok değiştir), redefine içindekileri kalıcı kimlikleriyle verilen nesnelerden yeniden kurar (Blok değiştir), rebase taban noktasını taşır (Blok değiştir), remove kullanılmayan tanımı siler (Blok sil), purge kullanılmayan bütün tanımları siler (Blokları temizle). \
+            summary: "Bir blok tanımını kimliğiyle değiştirir; tek geri alma adımı, adı işlemin: rename yeni ad (Blok değiştir), redefine içindekileri kalıcı kimlikleriyle verilen nesnelerden yeniden kurar (Blok değiştir), rebase taban noktasını taşır (Blok değiştir), remove kullanılmayan tanımı siler (Blok sil), purge kullanılmayan bütün tanımları siler (Blokları temizle), attributes tanımın öznitelik listesini bütün yazar (Blok değiştir; etiket boş olamaz, listede bir kez bulunur; boş liste öznitelikleri kaldırır). \
                       Tanım değişince bütün yerleştirmeleri yenisini gösterir. Çizimde ya da başka bir tanımda yerleştirmesi olan tanım silinmez; tanım kendini içeremez, en çok 16 düzey iç içe olabilir. \
                       redefine'da replace ile nesneler silinir, yerine tanımın bir yerleştirmesi konur. Bir şey değiştirmeyen istek hiçbir şey yazmaz. \
                       Bloklar paneli bu komutla yazar. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
@@ -1573,6 +1573,18 @@ pub fn catalog() -> CommandCatalog {
                 CommandExample {
                     title: "Kullanılmayan bütün blokları temizle".into(),
                     input: json!({ "operation": "purge" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Öznitelikler: rögarın numarası ve kotu, yazıları taban noktasının sağında".into(),
+                    input: json!({
+                        "operation": "attributes",
+                        "block": "01925f3e-7c1c-7b22-8d33-4c5e6f708192",
+                        "attributes": [
+                            { "tag": "NO", "prompt": "Rögar numarası", "value": "R-?", "p": { "x": 0.9, "y": 0.15 }, "height": 0.5, "rotation": 0.0 },
+                            { "tag": "KOT", "prompt": "Kapak kotu", "p": { "x": 0.9, "y": -0.55 }, "height": 0.4, "rotation": 0.0 }
+                        ]
+                    }),
                     output: None,
                 },
             ],

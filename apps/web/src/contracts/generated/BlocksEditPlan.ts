@@ -8,7 +8,7 @@ import type { Entity } from "./Entity";
  */
 export type BlocksEditPlan = { 
 /**
- * The definitions as execute would write them (`rename`, `redefine`, `rebase`).
+ * The definitions as execute would write them (`rename`, `redefine`, `rebase`, `attributes`).
  */
 changed: Array<BlockDefinition>, 
 /**

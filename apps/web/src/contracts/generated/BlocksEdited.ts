@@ -6,7 +6,7 @@ import type { BlockId } from "./BlockId";
  */
 export type BlocksEdited = { 
 /**
- * The definitions changed (`rename`, `redefine`, `rebase`).
+ * The definitions changed (`rename`, `redefine`, `rebase`, `attributes`).
  */
 changed: Array<BlockId>, 
 /**

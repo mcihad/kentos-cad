@@ -730,6 +730,117 @@ edit.append({
     ],
 })
 
+# ── attributes (docs/adr/0144 §7) ─────────────────────────────────────
+
+
+def attribute(tag, p, height, rotation=0, prompt=None, value=None):
+    """An attribute definition as the contract writes it: the optional prompt and default only when given."""
+    a = {"tag": tag}
+    if prompt is not None:
+        a["prompt"] = prompt
+    if value is not None:
+        a["value"] = value
+    a.update({"p": p, "height": height, "rotation": rotation})
+    return a
+
+
+NO = attribute("NO", P(0.9, 0.15), 0.5, prompt="Rögar numarası", value="R-?")
+KOT = attribute("KOT", P(0.9, -0.55), 0.4, prompt="Kapak kotu")
+NO_ATTRIBUTES = "Öznitelik listesi verilmedi. Bloğun bütün özniteliklerini verin; boş liste hepsini kaldırır."
+EMPTY_TAG = "Öznitelik etiketi boş olamaz; her özniteliğe bir etiket verin."
+
+
+def with_attributes(block_id, attributes):
+    """The definition without its id, its attribute list `attributes` (none written when empty)."""
+    b = without_id(B(block_id))
+    b.pop("attributes", None)
+    if attributes:
+        b["attributes"] = attributes
+    return b
+
+
+def duplicate_tag(tag, at):
+    return failed("duplicate_tag", f"“{tag}” etiketi listede iki kez var; her etiket bir kez olmalı.", f"attributes[{at}].tag")
+
+
+def not_finite_place(tag, axis, at):
+    name = "doğu (Y)" if axis == "x" else "kuzey (X)"
+    return failed("not_finite", f"“{tag}” özniteliğinin yerinin {name} değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.", f"attributes[{at}].p.{axis}")
+
+
+def not_finite_turn(tag, at):
+    return failed("not_finite", f"“{tag}” özniteliğinin açısı sonlu bir sayı değil (NaN ya da sonsuz). Açıyı sonlu bir sayıyla verin.", f"attributes[{at}].rotation")
+
+
+def invalid_height(tag, at):
+    return failed("invalid_height", f"“{tag}” özniteliğinin yazı yüksekliği sıfırdan büyük, sonlu bir sayı olmalı (metre, bloğun kendi ölçüsünde).", f"attributes[{at}].height")
+
+
+def attributes_input(block_id, attributes):
+    return {"operation": "attributes", "block": block_id, "attributes": attributes}
+
+
+edit.append({
+    "name": "Öznitelikler: tanımın öznitelik listesi bütün yazılır, yerleştirmeler onu gösterir; adımı “Blok değiştir”, geri alınır",
+    "steps": [
+        {"op": "execute", "input": attributes_input(ROGAR, [NO, KOT]), "result": edited([ROGAR]),
+         "expect": {"ids": IDS, "entities": {"4": E(4)}, "blocks": blocks_after((ROGAR, with_attributes(ROGAR, [NO, KOT]))), "canUndo": True, "dirty": True, "revision": "changed"},
+         "note": "Yerleştirmenin kendisi değişmez: değerleri kendi özniteliklerindedir, tanım yalnız yazılarını tanımlar."},
+        {"op": "undo", "returns": "Blok değiştir", "expect": {"blocks": SETUP_BLOCKS, "canUndo": False, "canRedo": True}},
+        {"op": "redo", "returns": "Blok değiştir", "expect": {"blocks": blocks_after((ROGAR, with_attributes(ROGAR, [NO, KOT])))}},
+    ],
+})
+
+edit.append({
+    "name": "aynı liste bir şey değiştirmez; sıra bir değişikliktir; boş liste öznitelikleri kaldırır, özniteliksiz tanımda bir şey değiştirmez",
+    "steps": [
+        {"op": "execute", "input": attributes_input(ROGAR, []), "result": edited(), "expect": NOTHING},
+        {"op": "execute", "input": attributes_input(ROGAR, [NO, KOT]), "result": edited([ROGAR]), "expect": {"revision": "changed"}},
+        {"op": "execute", "input": attributes_input(ROGAR, [NO, KOT]), "result": edited(),
+         "expect": {"blocks": blocks_after((ROGAR, with_attributes(ROGAR, [NO, KOT]))), "revision": "same"}},
+        {"op": "execute", "input": attributes_input(ROGAR, [KOT, NO]), "result": edited([ROGAR]),
+         "expect": {"blocks": blocks_after((ROGAR, with_attributes(ROGAR, [KOT, NO]))), "revision": "changed"}},
+        {"op": "execute", "input": attributes_input(ROGAR, []), "result": edited([ROGAR]), "expect": {"blocks": SETUP_BLOCKS, "revision": "changed"}},
+    ],
+})
+
+edit.append({
+    "name": "liste verilmemiş; boş ya da yalnız boşluk etiket; listede ikinci kez aynı etiket (tam eşitlik: büyük küçük harf ayrı etikettir)",
+    "steps": [
+        {"op": "execute", "input": {"operation": "attributes", "block": ROGAR}, "result": failed("no_attributes", NO_ATTRIBUTES, "attributes"), "expect": NOTHING},
+        {"op": "execute", "input": attributes_input(ROGAR, [attribute("", P(0, 0), 0.5)]), "result": failed("empty_tag", EMPTY_TAG, "attributes[0].tag"), "expect": NOTHING},
+        {"op": "execute", "input": attributes_input(ROGAR, [NO, attribute(" 　", P(0, 0), 0.5)]), "result": failed("empty_tag", EMPTY_TAG, "attributes[1].tag"), "expect": NOTHING},
+        {"op": "execute", "input": attributes_input(ROGAR, [NO, KOT, attribute("NO", P(0, 1), 0.3)]), "result": duplicate_tag("NO", 2), "expect": NOTHING},
+        {"op": "execute", "input": attributes_input(ROGAR, [NO, attribute("no", P(0, 1), 0.3)]), "result": edited([ROGAR]),
+         "expect": {"blocks": blocks_after((ROGAR, with_attributes(ROGAR, [NO, attribute("no", P(0, 1), 0.3)]))), "revision": "changed"}},
+    ],
+})
+
+edit.append({
+    "name": "yer ve açı sonlu (önce doğu), yükseklik sıfırdan büyük ve sonlu; öznitelikler sırayla denetlenir",
+    "steps": [
+        {"op": "execute", "input": attributes_input(ROGAR, [NO]), "nonFinite": {"attributes[0].p.y": "NaN"}, "result": not_finite_place("NO", "y", 0), "expect": NOTHING},
+        {"op": "execute", "input": attributes_input(ROGAR, [NO]), "nonFinite": {"attributes[0].p.x": "Infinity", "attributes[0].rotation": "NaN"}, "result": not_finite_place("NO", "x", 0), "expect": NOTHING},
+        {"op": "execute", "input": attributes_input(ROGAR, [NO]), "nonFinite": {"attributes[0].rotation": "-Infinity"}, "result": not_finite_turn("NO", 0), "expect": NOTHING},
+        {"op": "execute", "input": attributes_input(ROGAR, [NO]), "nonFinite": {"attributes[0].height": "Infinity"}, "result": invalid_height("NO", 0), "expect": NOTHING},
+        {"op": "execute", "input": attributes_input(ROGAR, [attribute("NO", P(0, 0), 0)]), "result": invalid_height("NO", 0), "expect": NOTHING},
+        {"op": "execute", "input": attributes_input(ROGAR, [NO, attribute("KOT", P(0, 0), -0.4)]), "result": invalid_height("KOT", 1), "expect": NOTHING},
+        {"op": "execute", "input": attributes_input(ROGAR, [attribute("A", P(0, 0), 0), attribute("", P(0, 0), 0.5)]), "result": invalid_height("A", 0), "expect": NOTHING,
+         "note": "Birinci özniteliğin yüksekliği ikincinin etiketinden önce denetlenir."},
+    ],
+})
+
+edit.append({
+    "name": "öznitelikler: denetim sırası; liste bloktan sonra, sürüm ve çizimden önce",
+    "steps": [
+        {"op": "execute", "input": {"operation": "attributes", "attributes": [NO]}, "result": failed("no_block", NO_BLOCK, "block"), "expect": NOTHING},
+        {"op": "execute", "input": attributes_input(MISSING_BLOCK, [attribute(" ", P(0, 0), 0.5)]), "result": failed("empty_tag", EMPTY_TAG, "attributes[0].tag"), "expect": NOTHING},
+        {"op": "execute", "input": attributes_input(MISSING_BLOCK, [NO]), "result": unknown_block(MISSING_BLOCK), "expect": NOTHING},
+        {"op": "plan", "input": attributes_input(LAMBA, [NO]),
+         "result": {"status": "completed", "output": {"changed": [{**B(LAMBA), "attributes": [NO]}], "removed": [], "deleted": [], "revision": "$current"}, "warnings": []}, "expect": NOTHING},
+    ],
+})
+
 # White space other than the plain space, escaped so a reader sees it.
 INVISIBLE = "\u0085                 　﻿"
 
@@ -802,8 +913,8 @@ write(
 )
 write(
     "cad.blocks.edit",
-    "Blok tanımını değiştir: yeniden adlandır, yeniden tanımla, taban noktası, sil, temizle",
-    "ADR 0144 §4. Denetim sırası: blok verilmesi (temizle dışında; no_block); işlemin girdisi: rename adın boş olmaması (empty_name), redefine en az bir kimlik ve yazımları, verildiyse sonlu taban noktası, replace ile katman (no_layer), rebase taban noktası (no_base) ve sonluluğu; beklenen sürümün yazımı, sonra çizimin sürümü; bloğun çizimde olması (unknown_block); işlemin kendisi: rename ve rebase blok kuralları (duplicate_block), redefine nesnelerin çizimde olması, blok kuralları (block_cycle: blok kendini doğrudan ya da başka bloklar yoluyla içeremez; block_too_deep), replace ile katman denetimleri; remove bloğun çizimde ya da başka bir tanımda yerleştirmesi olmaması (block_in_use). Bir şey değiştirmeyen istek hiçbir şey yazmaz; sonuç tamamlanır, changed ve removed boş. Temizle kullanılmayan tanımları, yalnız onların kullandıklarıyla birlikte siler; removed çizimin sırasıyladır. Adımlar: rename, redefine, rebase “Blok değiştir”; remove “Blok sil”; purge “Blokları temizle”. Kurulumdaki en büyük nesne kimliği 8.",
+    "Blok tanımını değiştir: yeniden adlandır, yeniden tanımla, taban noktası, sil, temizle, öznitelikler",
+    "ADR 0144 §4. Denetim sırası: blok verilmesi (temizle dışında; no_block); işlemin girdisi: rename adın boş olmaması (empty_name), redefine en az bir kimlik ve yazımları, verildiyse sonlu taban noktası, replace ile katman (no_layer), rebase taban noktası (no_base) ve sonluluğu; beklenen sürümün yazımı, sonra çizimin sürümü; bloğun çizimde olması (unknown_block); işlemin kendisi: rename ve rebase blok kuralları (duplicate_block), redefine nesnelerin çizimde olması, blok kuralları (block_cycle: blok kendini doğrudan ya da başka bloklar yoluyla içeremez; block_too_deep), replace ile katman denetimleri; remove bloğun çizimde ya da başka bir tanımda yerleştirmesi olmaması (block_in_use). attributes (ADR 0144 §7) girdide listeyi ister (no_attributes; boş liste öznitelikleri kaldırır), sonra her özniteliği sırayla: etiketin boş ya da yalnız boşluk olmaması (empty_tag), listede önceki bir etiketin tam aynısı olmaması (duplicate_tag; büyük küçük harf ayrı etikettir), yerin sonlu olması (önce doğu), açının sonlu olması (not_finite), yüksekliğin sıfırdan büyük ve sonlu olması (invalid_height); bu denetimler blok verilmesinden sonra, sürümden ve bloğun çizimde olmasından önce yapılır. Bir şey değiştirmeyen istek hiçbir şey yazmaz; sonuç tamamlanır, changed ve removed boş. Temizle kullanılmayan tanımları, yalnız onların kullandıklarıyla birlikte siler; removed çizimin sırasıyladır. Adımlar: rename, redefine, rebase, attributes “Blok değiştir”; remove “Blok sil”; purge “Blokları temizle”. Kurulumdaki en büyük nesne kimliği 8.",
     edit,
 )
 print(f"{len(define)} + {len(edit)} cases" + (" match" if "--check" in sys.argv[1:] else " written"))

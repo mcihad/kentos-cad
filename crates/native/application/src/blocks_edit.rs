@@ -1,8 +1,8 @@
 //! `cad.blocks.edit` v1 (docs/adr/0144 §4): one change of the drawing's
 //! block definitions as one undo step named after it: a new name, new
-//! objects or a new base point (“Blok değiştir”), a definition deleted
-//! (“Blok sil”) or every unused one (“Blokları temizle”). Every insert shows
-//! a changed definition. The desktop's handler over the native document; the
+//! objects, a new base point or new attribute definitions (“Blok değiştir”),
+//! a definition deleted (“Blok sil”) or every unused one (“Blokları
+//! temizle”). Every insert shows a changed definition. The desktop's handler over the native document; the
 //! web's is `apps/web/src/product/blocksEdit.ts`. Both pass the shared cases
 //! in `fixtures/commands/v1/cad.blocks.edit.json`.
 //!
@@ -11,7 +11,8 @@
 //!
 //! The checks, in order (the first that fails answers):
 //! 1. the block given where the operation needs one; what the operation
-//!    needs from the input (a name, objects and a base point, a layer);
+//!    needs from the input (a name, objects and a base point, a layer, the
+//!    attribute definitions);
 //! 2. the expected revision;
 //! 3. the block is the drawing's;
 //! 4. the operation's own: the block rules with the definition as it would
@@ -20,8 +21,8 @@
 use std::collections::HashSet;
 
 use kentos_contracts::{
-    BlockDefinition, BlockEditOperation, BlockId, BlocksEdit, BlocksEditPlan, BlocksEdited,
-    CommandResult, CommandWarning, Entity,
+    AttributeDefinition, BlockDefinition, BlockEditOperation, BlockId, BlocksEdit, BlocksEditPlan,
+    BlocksEdited, CommandResult, CommandWarning, Entity,
 };
 use kentos_domain::{Document, Slot, labels};
 
@@ -109,9 +110,10 @@ fn in_drawing_order(doc: &Document, ids: &[BlockId]) -> Vec<BlockId> {
 /// The undo step's name (docs/adr/0144 §4).
 pub fn label(operation: BlockEditOperation) -> &'static str {
     match operation {
-        BlockEditOperation::Rename | BlockEditOperation::Redefine | BlockEditOperation::Rebase => {
-            labels::BLOCK_CHANGE
-        }
+        BlockEditOperation::Rename
+        | BlockEditOperation::Redefine
+        | BlockEditOperation::Rebase
+        | BlockEditOperation::Attributes => labels::BLOCK_CHANGE,
         BlockEditOperation::Remove => labels::BLOCK_REMOVE,
         BlockEditOperation::Purge => labels::BLOCK_PURGE,
     }
@@ -190,6 +192,7 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
             };
             checks::point(base, "Taban noktasının", "base")?;
         }
+        BlockEditOperation::Attributes => attributes(input.attributes.as_deref())?,
         BlockEditOperation::Remove | BlockEditOperation::Purge => {}
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
@@ -218,6 +221,10 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
         }
         BlockEditOperation::Rebase => {
             next.base = input.base.unwrap_or(old.base);
+            rules_with(doc, &next)?;
+        }
+        BlockEditOperation::Attributes => {
+            next.attributes = input.attributes.clone().unwrap_or_default();
             rules_with(doc, &next)?;
         }
         BlockEditOperation::Redefine => {
@@ -252,6 +259,58 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
         checked.changed = Some(next);
     }
     Ok(checked)
+}
+
+/// The attribute definitions `attributes` writes (docs/adr/0144 §7): the
+/// list given, then each in its order: a tag, not one an earlier one has
+/// (exactly), a finite point and turn, a height above zero.
+fn attributes(list: Option<&[AttributeDefinition]>) -> Result<(), Stop> {
+    let Some(list) = list else {
+        return Err(Stop::Failed(error(
+            codes::NO_ATTRIBUTES,
+            "Öznitelik listesi verilmedi. Bloğun bütün özniteliklerini verin; boş liste hepsini kaldırır.".into(),
+            Some("attributes".into()),
+        )));
+    };
+    for (i, a) in list.iter().enumerate() {
+        let at = format!("attributes[{i}]");
+        if checks::is_blank(&a.tag) {
+            return Err(Stop::Failed(error(
+                codes::EMPTY_TAG,
+                "Öznitelik etiketi boş olamaz; her özniteliğe bir etiket verin.".into(),
+                Some(format!("{at}.tag")),
+            )));
+        }
+        if list[..i].iter().any(|b| b.tag == a.tag) {
+            return Err(Stop::Failed(error(
+                codes::DUPLICATE_TAG,
+                format!(
+                    "“{}” etiketi listede iki kez var; her etiket bir kez olmalı.",
+                    a.tag
+                ),
+                Some(format!("{at}.tag")),
+            )));
+        }
+        let whose = format!("“{}” özniteliğinin yerinin", a.tag);
+        checks::point(a.p, &whose, &format!("{at}.p"))?;
+        checks::finite(
+            a.rotation,
+            &format!("“{}” özniteliğinin açısı", a.tag),
+            "Açıyı sonlu bir sayıyla verin.",
+            &format!("{at}.rotation"),
+        )?;
+        if !(a.height.is_finite() && a.height > 0.0) {
+            return Err(Stop::Failed(error(
+                codes::INVALID_HEIGHT,
+                format!(
+                    "“{}” özniteliğinin yazı yüksekliği sıfırdan büyük, sonlu bir sayı olmalı (metre, bloğun kendi ölçüsünde).",
+                    a.tag
+                ),
+                Some(format!("{at}.height")),
+            )));
+        }
+    }
+    Ok(())
 }
 
 /// The block rules with `block` in its definition's place.

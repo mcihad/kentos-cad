@@ -82,8 +82,8 @@ export function checkBlockRules(next: readonly BlockDefinition[]): Stop | null {
               ? ['invalid_scale', 'uids']
               : fault.kind === 'unknownBlock'
                 ? ['unknown_block', 'uids']
-                : // The commands change no attribute definition: never expected.
-                  ['block_refused', 'block'];
+                : // `attributes` checks its list first: never expected.
+                  [fault.kind === 'emptyTag' ? 'empty_tag' : 'duplicate_tag', `attributes[${fault.attribute}].tag`];
   return failed(error(code, message, path));
 }
 

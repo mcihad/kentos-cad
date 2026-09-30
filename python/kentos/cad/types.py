@@ -78,15 +78,17 @@ class BlockEditOperation(_StrEnum):
     - ``rebase``: A new base point (“Blok değiştir”): every insert shifts by the difference.
     - ``remove``: A definition no insert uses deleted (“Blok sil”).
     - ``purge``: Every definition no insert uses deleted (“Blokları temizle”).
+    - ``attributes``: Its attribute definitions, the whole list (“Blok değiştir”): every
     """
     RENAME = "rename"
     REDEFINE = "redefine"
     REBASE = "rebase"
     REMOVE = "remove"
     PURGE = "purge"
+    ATTRIBUTES = "attributes"
 
 
-BlockEditOperationName = Literal["rename", "redefine", "rebase", "remove", "purge"]
+BlockEditOperationName = Literal["rename", "redefine", "rebase", "remove", "purge", "attributes"]
 """The names of :class:`BlockEditOperation`, for a plain string."""
 
 
@@ -1186,16 +1188,22 @@ class BlocksEdit(_Model):
       `layerId` as `cad.blocks.define` has them;
     - `rebase`: `block`, `base`;
     - `remove`: `block`;
-    - `purge`: nothing; a definition only unused ones use goes too.
+    - `purge`: nothing; a definition only unused ones use goes too;
+    - `attributes`: `block`, `attributes` (the whole list, in its order;
+      empty: none).
 
-    What would change nothing (the same name, base point or objects; nothing
-    unused to purge) writes nothing: the answer is completed, with nothing in
-    `changed` and `removed`.
+    What would change nothing (the same name, base point, objects or
+    attributes; nothing unused to purge) writes nothing: the answer is
+    completed, with nothing in `changed` and `removed`.
 
     Refusals (`CommandError.code`), checked in this order: `no_block` (none
     given where the operation needs one); `rename`: `empty_name`; `redefine`:
     `no_entities`, `invalid_uid` (each id in order), `not_finite` (the base
-    point), `no_layer`; `rebase`: `no_base`, `not_finite`; then
+    point), `no_layer`; `rebase`: `no_base`, `not_finite`; `attributes`:
+    `no_attributes`, then each attribute in order: `empty_tag` (empty or only
+    white space), `duplicate_tag` (a tag an earlier one has, exactly),
+    `not_finite` (its point, east first, then its turn), `invalid_height` (not
+    above zero); then
     `invalid_revision`, `revision_conflict` (status `conflict`),
     `unknown_block`; `rename`: `duplicate_block`; `redefine`:
     `entity_not_found`, `block_cycle` (an object is an
@@ -1203,6 +1211,8 @@ class BlocksEdit(_Model):
     `replace` the layer checks of `cad.blocks.define`; `remove`: `block_in_use`
     (inserts of it in the drawing or in another definition).
     Attributes:
+        attributes: `attributes`: the definition's attribute definitions, the whole list
+            in its order (empty: it has none).
         base: `rebase`: the new base point; `redefine`: the base point (absent: kept).
         block: The definition; every operation but `purge`.
         expected_revision: The document revision the input was prepared against, as decimal text.
@@ -1212,6 +1222,7 @@ class BlocksEdit(_Model):
         uids: `redefine`: the objects it is made of now, by persistent id.
     """
     operation: BlockEditOperation | BlockEditOperationName
+    attributes: list[AttributeDefinition] | None | Unset = UNSET
     base: Vec2 | None | Unset = UNSET
     block: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
@@ -1223,6 +1234,8 @@ class BlocksEdit(_Model):
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["operation"] = _enum_out(self.operation)
+        if self.attributes is not UNSET:
+            out["attributes"] = None if self.attributes is None else [e0.to_json() for e0 in self.attributes]
         if self.base is not UNSET:
             out["base"] = None if self.base is None else _vec2_out(self.base)
         if self.block is not UNSET:
@@ -1243,6 +1256,7 @@ class BlocksEdit(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> BlocksEdit:
         return cls(
             operation=_enum_in(BlockEditOperation, data["operation"]),
+            attributes=UNSET if "attributes" not in data else None if data["attributes"] is None else [AttributeDefinition.from_json(e0) for e0 in data["attributes"]],
             base=UNSET if "base" not in data else None if data["base"] is None else Vec2.from_json(data["base"]),
             block=data.get("block", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
@@ -1257,7 +1271,7 @@ class BlocksEdit(_Model):
 class BlocksEditPlan(_Model):
     """What `cad.blocks.edit` would write (plan mode); nothing is written.
     Attributes:
-        changed: The definitions as execute would write them (`rename`, `redefine`, `rebase`).
+        changed: The definitions as execute would write them (`rename`, `redefine`, `rebase`, `attributes`).
         removed: The definitions execute would delete (`remove`, `purge`).
         deleted: `redefine` with `replace`: the objects execute would delete.
         revision: The document revision the plan was made against.
@@ -1294,7 +1308,7 @@ class BlocksEditPlan(_Model):
 class BlocksEdited(_Model):
     """Output of `cad.blocks.edit` v1.
     Attributes:
-        changed: The definitions changed (`rename`, `redefine`, `rebase`).
+        changed: The definitions changed (`rename`, `redefine`, `rebase`, `attributes`).
         removed: The definitions deleted (`remove`, `purge`), in the drawing's order.
         deleted: `redefine` with `replace`: the objects deleted, in the input's order.
         revision: The document's revision after the write (the same when nothing was
