@@ -132,6 +132,10 @@ pub fn router(state: AppState) -> Router {
             get(projects::features),
         )
         .route(
+            "/v1/tenants/{tenant}/projects/{project}/blocks",
+            get(projects::block_list),
+        )
+        .route(
             "/v1/tenants/{tenant}/projects/{project}/commands",
             post(projects::command),
         )

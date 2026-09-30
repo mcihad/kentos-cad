@@ -30,6 +30,7 @@ fn opened(storage: ProjectStorage) -> Opened {
         tenant: Uuid::parse_str("0199aaaa-0000-7000-8000-000000000002").unwrap(),
         project: Uuid::parse_str("0199aaaa-0000-7000-8000-000000000001").unwrap(),
         info: ProjectInfo {
+            blocks: Vec::new(),
             id: "0199aaaa-0000-7000-8000-000000000001".into(),
             tenant_id: "0199aaaa-0000-7000-8000-000000000002".into(),
             tenant_name: "Harita Bürosu".into(),

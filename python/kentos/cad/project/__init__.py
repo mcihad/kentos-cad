@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any  # noqa: F401
 
 from .._runtime import CommandNote, ServerCommand, UNSET, Unset, _opt  # noqa: F401
 from ..types import (  # noqa: F401
+    BlockChange,
     Bounds,
     CommitResult,
     EmptyInput,
@@ -129,6 +130,7 @@ class _ProjectChanges(ServerCommand[ProjectChanges, CommitResult]):
         /,
         *,
         features: Sequence[FeatureChange],
+        blocks: Sequence[BlockChange] | Unset = UNSET,
         project: ProjectPatch | None | Unset = UNSET,
         expected_versions: Mapping[str, str] | None = None,
         idempotency_key: str | None = None,
@@ -142,6 +144,9 @@ class _ProjectChanges(ServerCommand[ProjectChanges, CommitResult]):
         Args:
             target: The cloud project (``Connection.project``).
             features:
+            blocks: Block definitions made, replaced or removed (docs/adr/0144 §5), in
+                the same commit as the objects: an insert may place a block this
+                commit makes, and a block may go with the last insert placing it.
             project:
             expected_versions: The versions the change rests on (``@project``,
                 ``@file``, an object's id), as the server's envelope carries them.
@@ -158,6 +163,7 @@ class _ProjectChanges(ServerCommand[ProjectChanges, CommitResult]):
             target,
             ProjectChanges(
             features=list(features),
+            blocks=_opt(blocks, lambda x: list(x)),
             project=project,
         ),
             expected_versions=expected_versions,

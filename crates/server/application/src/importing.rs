@@ -6,7 +6,8 @@
 //!   once as uploads are verified.
 //! - [`objects`] turns its objects into feature rows (`cad.rs`), each under
 //!   its persistent id; the first one the server does not keep is refused
-//!   by its place (`entities[i]`).
+//!   by its place (`entities[i]`). Its block definitions (docs/adr/0144 §5)
+//!   go with them (`blocks::insert_all`), its inserts' geometry placed by them.
 //! - [`insert_objects`] writes up to [`BATCH`] of them in one statement, each
 //!   at version 1.
 
@@ -14,6 +15,7 @@ use kentos_contracts::{
     CommandEnvelope, DocumentSnapshotV2, PROJECT_IMPORT, PROJECT_IMPORT_VERSION, PROJECT_IMPORTED,
     ProjectDuplicated, ProjectImport, ProjectImported, ProjectPermission, ProjectStorage,
 };
+use kentos_formats::blocks::Placing;
 use kentos_postgres::{Scope, rescope};
 use serde_json::json;
 use sha2::{Digest, Sha256};
@@ -22,6 +24,7 @@ use uuid::Uuid;
 
 use crate::access::ProjectAccess;
 use crate::blobs::Blobs;
+use crate::blocks;
 use crate::cad::{PROJECTION_VERSION, Stored, to_stored};
 use crate::changes::{check_target, lock};
 use crate::commands::input;
@@ -71,25 +74,26 @@ pub(crate) async fn read(
         })
 }
 
-/// The file's objects as feature rows, each under its persistent id. A
-/// database project keeps no block definitions yet (docs/adr/0144 §5): a
-/// file with them is refused whole rather than lose them.
+/// The file's objects as feature rows, each under its persistent id, its
+/// block definitions checked with them (docs/adr/0144 §5) and its inserts'
+/// geometry placed by them.
 pub(crate) fn objects(doc: &DocumentSnapshotV2) -> AppResult<Vec<(Uuid, Stored)>> {
-    if !doc.blocks.is_empty() {
-        return Err(AppError::invalid_at(
+    kentos_contracts::blocks::check(&doc.blocks, &doc.entities).map_err(|fault| {
+        AppError::invalid_at(
             "blocks",
             format!(
-                "Dosyada {} blok tanımı var; veritabanı projesi blokları henüz saklayamıyor. Dosyayı dosya projesi olarak yükleyin.",
-                doc.blocks.len()
+                "Dosyanın blokları içe aktarılamadı: {}",
+                fault.message(|i| doc.blocks.get(i).map_or("", |b| b.name.as_str()))
             ),
-        ));
-    }
+        )
+    })?;
+    let placing = Placing::new(&doc.blocks);
     doc.uids
         .iter()
         .zip(&doc.entities)
         .enumerate()
         .map(|(i, (uid, e))| {
-            to_stored(e, doc.settings.srid)
+            to_stored(e, doc.settings.srid, &placing)
                 .map(|s| (Uuid::from_bytes(uid.0), s))
                 .map_err(|why| {
                     AppError::invalid_at(
@@ -265,6 +269,14 @@ pub async fn import(
         )
         .await?;
     }
+    blocks::insert_all(
+        &mut tx,
+        now.tenant,
+        now.project,
+        now.actor.user_id,
+        &doc.blocks,
+    )
+    .await?;
     sqlx::query(
         "delete from kentos.project_upload where tenant_id = $1 and project_id = $2 and id = $3",
     )
@@ -412,7 +424,8 @@ pub(crate) async fn create_from_drawing(
             for batch in rows.chunks(BATCH) {
                 insert_objects(tx, target, id, meta.settings.srid, actor, batch).await?;
             }
-            !rows.is_empty()
+            blocks::insert_all(tx, target, id, actor, &meta.blocks).await?;
+            !rows.is_empty() || !meta.blocks.is_empty()
         }
         Content::File {
             key,

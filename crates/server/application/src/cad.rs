@@ -9,12 +9,15 @@
 //! - Everything else: `cad_definition` (the entity's geometric fields exactly
 //!   as in the contract) is the source; the geometry is its linear projection
 //!   within `PROJECTION_TOLERANCE`, made by `geometry-core`, and null for
-//!   construction lines and rays, which have no finite geometry.
+//!   construction lines and rays, which have no finite geometry. A block
+//!   insert's is the collection of its block's objects placed, each
+//!   projected as that object is, flat (docs/adr/0144 §5).
 //!
 //! Negative zero becomes zero on the way in (PostgreSQL's numeric has none),
 //! so every kind round-trips to exactly the value that was accepted.
 
-use kentos_contracts::Entity;
+use kentos_contracts::{BlockDefinition, Entity};
+use kentos_formats::blocks::Placing;
 use kentos_geometry_core::Vec2 as P;
 use kentos_geometry_core::ewkb::{self, Geometry};
 use kentos_geometry_core::tessellate::{
@@ -113,11 +116,13 @@ fn positive(what: &str, v: f64) -> Result<(), String> {
     }
 }
 
-/// Rules the contract's types cannot say: point counts, positive sizes, text lengths.
-fn validate(e: &Entity) -> Result<(), String> {
+/// Rules the contract's types cannot say: point counts, positive sizes, text
+/// lengths. A block's object may have no layer of its own (`""`, the block's,
+/// docs/adr/0144).
+fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
     use Entity::*;
     let base = e.base();
-    if base.layer_id.is_empty() || base.layer_id.len() > 200 {
+    if (base.layer_id.is_empty() && !in_block) || base.layer_id.len() > 200 {
         return Err("katman kimliği boş ya da çok uzun".into());
     }
     if let Some(w) = base.line_weight
@@ -198,12 +203,11 @@ fn validate(e: &Entity) -> Result<(), String> {
             }
             positive("Tarama aralığı", x.pattern.spacing)?;
         }
-        // Its definition would have to be the project's (docs/adr/0144 §5): a later step.
-        Insert(_) => {
-            return Err(
-                "Blok yerleştirmesi veritabanı projesinde henüz saklanamıyor; bloğu patlatın ya da dosya projesi kullanın"
-                    .into(),
-            );
+        // Its block is the project's: the commit checks it is there (docs/adr/0144 §5).
+        Insert(x) => {
+            if !kentos_contracts::blocks::scale_ok(x.scale) {
+                return Err("Blok ölçeği pozitif bir sayı olmalı".into());
+            }
         }
         Point(_) | Line(_) => {}
     }
@@ -236,8 +240,17 @@ fn geometry_is_source(e: &Entity) -> bool {
     }
 }
 
-/// The linear PostGIS geometry of an object (`None`: nothing finite to draw).
-fn projection(e: &Entity) -> Option<Geometry> {
+/// A placed block object's projection in a collection, which is flat: a point's elevation stays in the source.
+fn flat(g: Geometry) -> Geometry {
+    match g {
+        Geometry::Point { p, .. } => Geometry::Point { p, z: None },
+        other => other,
+    }
+}
+
+/// The linear PostGIS geometry of an object (`None`: nothing finite to
+/// draw); a block insert's from the project's blocks.
+fn projection(e: &Entity, blocks: &Placing) -> Option<Geometry> {
     let tol = PROJECTION_TOLERANCE;
     let ring = |r: &[kentos_contracts::Vec2], b: &Option<Vec<f64>>| {
         bulge_path(&pts(r), b.as_deref(), true, tol)
@@ -299,17 +312,49 @@ fn projection(e: &Entity) -> Option<Geometry> {
             rings.extend(x.holes.iter().flatten().map(|h| pts(h)));
             Geometry::Polygon(rings)
         }
-        // Refused before (`validate`); its expansion's collection comes with blocks' server step.
-        Entity::Insert(_) => return None,
+        // Its block's objects placed (the core's expansion, nested blocks opened), each as it is projected.
+        Entity::Insert(i) => Geometry::Collection(
+            blocks
+                .placed(i)
+                .iter()
+                .filter_map(|piece| projection(piece, blocks).map(flat))
+                .collect(),
+        ),
     })
 }
 
-/// Checks an object and turns it into a feature row's content for SRID `srid`.
-pub fn to_stored(entity: &Entity, srid: u32) -> Result<Stored, String> {
+/// A block insert's geometry for SRID `srid` as the project's blocks place
+/// it now (a definition it places changed, docs/adr/0144 §5).
+pub fn insert_geometry(entity: &Entity, srid: u32, blocks: &Placing) -> Option<Vec<u8>> {
+    projection(entity, blocks).map(|g| ewkb::encode(&g, srid))
+}
+
+/// A block definition as it is stored (docs/adr/0144 §5): its numbers
+/// without the sign of zero and in range, each of its objects one the
+/// server keeps; the definition and its JSON. The rules over the project's
+/// definitions (names, known blocks, cycles, depth) are the commit's.
+pub fn to_stored_block(block: &BlockDefinition) -> Result<(BlockDefinition, Value), String> {
+    let mut value = serde_json::to_value(block).map_err(|e| e.to_string())?;
+    normalize(&mut value, "blok")?;
+    let block: BlockDefinition =
+        serde_json::from_value(value.clone()).map_err(|e| e.to_string())?;
+    if block.name.chars().count() > 255 {
+        return Err("Blok adı en çok 255 karakter olabilir".into());
+    }
+    for (i, e) in block.entities.iter().enumerate() {
+        validate(e, true).map_err(|why| format!("{}. nesnesi: {why}", i + 1))?;
+    }
+    Ok((block, value))
+}
+
+/// Checks an object and turns it into a feature row's content for SRID
+/// `srid`; a block insert's geometry from the project's `blocks` (whether its
+/// block is there is the commit's check).
+pub fn to_stored(entity: &Entity, srid: u32, blocks: &Placing) -> Result<Stored, String> {
     let mut value = serde_json::to_value(entity).map_err(|e| e.to_string())?;
     normalize(&mut value, "nesne")?;
     let entity: Entity = serde_json::from_value(value.clone()).map_err(|e| e.to_string())?;
-    validate(&entity)?;
+    validate(&entity, false)?;
     let Value::Object(mut map) = value else {
         unreachable!("an entity serializes to an object")
     };
@@ -331,7 +376,7 @@ pub fn to_stored(entity: &Entity, srid: u32) -> Result<Stored, String> {
         .get("attrs")
         .cloned()
         .unwrap_or_else(|| Value::Object(Map::new()));
-    let geom = projection(&entity).map(|g| ewkb::encode(&g, srid));
+    let geom = projection(&entity, blocks).map(|g| ewkb::encode(&g, srid));
     let (source_kind, cad_definition) = if geometry_is_source(&entity) {
         ("geom", None)
     } else {
@@ -446,13 +491,101 @@ mod tests {
         serde_json::from_value(json).unwrap()
     }
 
+    /// A project without block definitions.
+    fn none() -> Placing {
+        Placing::new(&[])
+    }
+
+    /// A block insert (docs/adr/0144 §5): its source is its definition, its
+    /// geometry its block's objects placed (a quarter turn, exact), flat;
+    /// an unknown block's is an empty collection (the commit refuses it).
+    #[test]
+    fn an_insert_is_its_blocks_objects_placed() {
+        let block: BlockDefinition = serde_json::from_value(serde_json::json!({
+            "id": "018f3a2b-0000-7000-8000-000000000001", "name": "Direk", "base": { "x": 1, "y": 2 },
+            "entities": [
+                { "kind": "point", "id": 1, "layerId": "", "attrs": {}, "p": { "x": 1, "y": 3 }, "z": 5 },
+                { "kind": "line", "id": 2, "layerId": "", "attrs": {}, "a": { "x": 1, "y": 2 }, "b": { "x": 3, "y": 2 } }
+            ]
+        }))
+        .unwrap();
+        let (block, _) = to_stored_block(&block).unwrap();
+        let placing = Placing::new(std::slice::from_ref(&block));
+        let insert = entity(
+            serde_json::json!({ "kind": "insert", "id": 9, "layerId": "cizim", "attrs": { "No": "7" },
+            "block": "018f3a2b-0000-7000-8000-000000000001", "p": { "x": 100, "y": 200 }, "scale": 2, "rotation": std::f64::consts::FRAC_PI_2 }),
+        );
+        let s = to_stored(&insert, 5256, &placing).unwrap();
+        assert_eq!((s.kind.as_str(), s.source_kind), ("insert", "cad"));
+        assert_eq!(s.properties, serde_json::json!({ "No": "7" }));
+        let (g, srid) = ewkb::decode(s.geom.as_deref().unwrap()).unwrap();
+        assert_eq!(srid, 5256);
+        // (1, 3) is (0, 1) from the base: scaled (0, 2), turned (−2, 0); the line (0, 0)–(2, 0): (0, 0)–(0, 4).
+        assert_eq!(
+            g,
+            Geometry::Collection(vec![
+                Geometry::Point {
+                    p: P::new(98.0, 200.0),
+                    z: None
+                },
+                Geometry::LineString(vec![P::new(100.0, 200.0), P::new(100.0, 204.0)]),
+            ])
+        );
+        assert_eq!(back(&s, 9), insert);
+        let (unknown, _) = ewkb::decode(
+            to_stored(&insert, 5256, &none())
+                .unwrap()
+                .geom
+                .as_deref()
+                .unwrap(),
+        )
+        .unwrap();
+        assert_eq!(unknown, Geometry::Collection(Vec::new()));
+        let zero = entity(
+            serde_json::json!({ "kind": "insert", "id": 9, "layerId": "cizim", "attrs": {},
+            "block": "018f3a2b-0000-7000-8000-000000000001", "p": { "x": 0, "y": 0 }, "scale": 0, "rotation": 0 }),
+        );
+        assert!(
+            to_stored(&zero, 5256, &placing)
+                .unwrap_err()
+                .contains("ölçeği")
+        );
+    }
+
+    /// A definition keeps its objects as a file does (the block's own layer
+    /// `""` too), its numbers without the sign of zero; a bad object is refused by its place.
+    #[test]
+    fn a_block_definition_is_stored_as_its_objects_are() {
+        let block: BlockDefinition = serde_json::from_value(serde_json::json!({
+            "id": "018f3a2b-0000-7000-8000-000000000002", "name": "Ağaç", "base": { "x": -0.0, "y": 0 },
+            "entities": [ { "kind": "circle", "id": 1, "layerId": "", "attrs": {}, "c": { "x": 0, "y": 0 }, "r": 1 } ]
+        }))
+        .unwrap();
+        let (stored, value) = to_stored_block(&block).unwrap();
+        assert_eq!(stored.name, "Ağaç");
+        assert!(value["base"]["x"].as_f64().unwrap().is_sign_positive());
+        let bad: BlockDefinition = serde_json::from_value(serde_json::json!({
+            "id": "018f3a2b-0000-7000-8000-000000000003", "name": "Bozuk", "base": { "x": 0, "y": 0 },
+            "entities": [
+                { "kind": "circle", "id": 1, "layerId": "", "attrs": {}, "c": { "x": 0, "y": 0 }, "r": 1 },
+                { "kind": "circle", "id": 2, "layerId": "", "attrs": {}, "c": { "x": 0, "y": 0 }, "r": 0 }
+            ]
+        }))
+        .unwrap();
+        assert!(
+            to_stored_block(&bad)
+                .unwrap_err()
+                .starts_with("2. nesnesi: ")
+        );
+    }
+
     #[test]
     fn simple_shapes_keep_their_geometry_as_source() {
         let line = entity(
             serde_json::json!({ "kind": "line", "id": 7, "layerId": "cizim", "attrs": { "Ad": "x" },
             "a": { "x": 486512.34, "y": 4420210.5 }, "b": { "x": 486520.0, "y": -0.0 } }),
         );
-        let s = to_stored(&line, 5256).unwrap();
+        let s = to_stored(&line, 5256, &none()).unwrap();
         assert_eq!((s.source_kind, s.kind.as_str()), ("geom", "line"));
         assert!(s.cad_definition.is_none());
         let back = from_stored(&s).unwrap();
@@ -469,7 +602,7 @@ mod tests {
             serde_json::json!({ "kind": "line", "id": 1, "layerId": "p", "attrs": {}, "lineWeight": 0.35,
             "a": { "x": 0, "y": 0 }, "b": { "x": 10, "y": 0 } }),
         );
-        let s = to_stored(&line, 5256).unwrap();
+        let s = to_stored(&line, 5256, &none()).unwrap();
         assert_eq!((s.source_kind, s.line_weight), ("geom", Some(0.35)));
         assert_eq!(from_stored(&s).unwrap().base().line_weight, Some(0.35));
         // A circle's definition does not hold it twice.
@@ -477,7 +610,7 @@ mod tests {
             serde_json::json!({ "kind": "circle", "id": 1, "layerId": "p", "attrs": {}, "lineWeight": 0.0,
             "c": { "x": 0, "y": 0 }, "r": 2 }),
         );
-        let s = to_stored(&circle, 5256).unwrap();
+        let s = to_stored(&circle, 5256, &none()).unwrap();
         assert_eq!(s.line_weight, Some(0.0));
         assert!(
             s.cad_definition
@@ -491,12 +624,12 @@ mod tests {
         let plain = entity(
             serde_json::json!({ "kind": "point", "id": 1, "layerId": "p", "attrs": {}, "p": { "x": 0, "y": 0 } }),
         );
-        assert_eq!(to_stored(&plain, 5256).unwrap().line_weight, None);
+        assert_eq!(to_stored(&plain, 5256, &none()).unwrap().line_weight, None);
         let heavy = entity(
             serde_json::json!({ "kind": "point", "id": 1, "layerId": "p", "attrs": {}, "lineWeight": 101.0, "p": { "x": 0, "y": 0 } }),
         );
         assert!(
-            to_stored(&heavy, 5256)
+            to_stored(&heavy, 5256, &none())
                 .unwrap_err()
                 .contains("çizgi kalınlığı")
         );
@@ -508,6 +641,7 @@ mod tests {
         match &mut again {
             Entity::Polygon(x) | Entity::Polyline(x) => x.base.id = id,
             Entity::Line(x) => x.base.id = id,
+            Entity::Insert(x) => x.base.id = id,
             _ => {}
         }
         again
@@ -522,7 +656,7 @@ mod tests {
             "parts": [{ "pts": [{ "x": 20, "y": 0 }, { "x": 30, "y": 0 }, { "x": 30, "y": 10 }],
                 "holes": [{ "pts": [{ "x": 25, "y": 1 }, { "x": 28, "y": 1 }, { "x": 28, "y": 4 }] }] }] }),
         );
-        let s = to_stored(&two, 5256).unwrap();
+        let s = to_stored(&two, 5256, &none()).unwrap();
         assert_eq!(s.source_kind, "geom");
         let (g, _) = ewkb::decode(s.geom.as_deref().unwrap()).unwrap();
         assert!(matches!(&g, Geometry::MultiPolygon(p) if p.len() == 2 && p[1].len() == 2));
@@ -533,7 +667,7 @@ mod tests {
             "pts": [{ "x": 0, "y": 0 }, { "x": 10, "y": 0 }, { "x": 10, "y": 10 }],
             "parts": [{ "pts": [{ "x": 20, "y": 0 }, { "x": 30, "y": 0 }, { "x": 30, "y": 10 }], "bulges": [0, 0.5, 0] }] }),
         );
-        let s = to_stored(&arced, 5256).unwrap();
+        let s = to_stored(&arced, 5256, &none()).unwrap();
         assert_eq!(s.source_kind, "cad");
         let (g, _) = ewkb::decode(s.geom.as_deref().unwrap()).unwrap();
         assert!(matches!(&g, Geometry::MultiPolygon(p) if p.len() == 2));
@@ -543,7 +677,7 @@ mod tests {
             "pts": [{ "x": 0, "y": 0 }, { "x": 10, "y": 0 }, { "x": 10, "y": 10 }],
             "parts": [{ "pts": [{ "x": 20, "y": 0 }, { "x": 30, "y": 0 }, { "x": 30, "y": 10 }], "zs": [1.5, null, 2.0] }] }),
         );
-        let s = to_stored(&high, 5256).unwrap();
+        let s = to_stored(&high, 5256, &none()).unwrap();
         assert_eq!(s.source_kind, "cad");
         assert_eq!(back(&s, 1), high);
         // An empty part list is kept as it is.
@@ -551,7 +685,7 @@ mod tests {
             serde_json::json!({ "kind": "polygon", "id": 1, "layerId": "p", "attrs": {},
             "pts": [{ "x": 0, "y": 0 }, { "x": 10, "y": 0 }, { "x": 10, "y": 10 }], "parts": [] }),
         );
-        assert_eq!(back(&to_stored(&empty, 5256).unwrap(), 1), empty);
+        assert_eq!(back(&to_stored(&empty, 5256, &none()).unwrap(), 1), empty);
         // A part is refused as the area's own ring would be; a polyline has none.
         let thin = entity(
             serde_json::json!({ "kind": "polygon", "id": 1, "layerId": "p", "attrs": {},
@@ -559,7 +693,7 @@ mod tests {
             "parts": [{ "pts": [{ "x": 20, "y": 0 }, { "x": 30, "y": 0 }] }] }),
         );
         assert!(
-            to_stored(&thin, 5256)
+            to_stored(&thin, 5256, &none())
                 .unwrap_err()
                 .contains("Alanın parçası")
         );
@@ -568,7 +702,7 @@ mod tests {
             "pts": [{ "x": 0, "y": 0 }, { "x": 10, "y": 0 }], "parts": [] }),
         );
         assert!(
-            to_stored(&path, 5256)
+            to_stored(&path, 5256, &none())
                 .unwrap_err()
                 .contains("parçası olamaz")
         );
@@ -587,7 +721,7 @@ mod tests {
                 "holes": [{ "pts": [{ "x": 5, "y": 1 }, { "x": 8, "y": 1 }, { "x": 8, "y": 4 }], "zs": [1, 2, 3] }] }),
         ] {
             let e = entity(json);
-            let s = to_stored(&e, 5256).unwrap();
+            let s = to_stored(&e, 5256, &none()).unwrap();
             assert_eq!(s.source_kind, "cad", "{e:?}");
             assert_eq!(back(&s, 1), e);
         }
@@ -599,7 +733,7 @@ mod tests {
             serde_json::json!({ "kind": "polygon", "id": 1, "layerId": "p", "attrs": {},
             "pts": [{ "x": 0, "y": 0 }, { "x": 10, "y": 0 }, { "x": 10, "y": 10 }], "bulges": [0, 0.5, 0] }),
         );
-        let s = to_stored(&bulged, 5256).unwrap();
+        let s = to_stored(&bulged, 5256, &none()).unwrap();
         assert_eq!(s.source_kind, "cad");
         assert!(s.geom.is_some());
         let def = s.cad_definition.as_ref().unwrap();
@@ -613,7 +747,10 @@ mod tests {
             serde_json::json!({ "kind": "polygon", "id": 1, "layerId": "p", "attrs": {},
             "pts": [{ "x": 0, "y": 0 }, { "x": 1, "y": 0 }, { "x": 1, "y": 1 }], "holes": [] }),
         );
-        assert_eq!(to_stored(&empty_holes, 5256).unwrap().source_kind, "cad");
+        assert_eq!(
+            to_stored(&empty_holes, 5256, &none()).unwrap().source_kind,
+            "cad"
+        );
     }
 
     #[test]
@@ -621,7 +758,7 @@ mod tests {
         let x = entity(
             serde_json::json!({ "kind": "xline", "id": 1, "layerId": "y", "attrs": {}, "p": { "x": 1, "y": 2 }, "dir": { "x": 1, "y": 0 } }),
         );
-        let s = to_stored(&x, 5256).unwrap();
+        let s = to_stored(&x, 5256, &none()).unwrap();
         assert!(s.geom.is_none() && s.source_kind == "cad");
     }
 
@@ -654,7 +791,7 @@ mod tests {
             ),
         ];
         for (json, why) in cases {
-            let err = to_stored(&entity(json), 5256).unwrap_err();
+            let err = to_stored(&entity(json), 5256, &none()).unwrap_err();
             assert!(err.contains(why), "{err}");
         }
     }

@@ -27,6 +27,7 @@ fn point(x: f64) -> Entity {
 
 fn one(change: FeatureChange) -> ProjectChanges {
     ProjectChanges {
+        blocks: Vec::new(),
         features: vec![change],
         project: None,
     }
@@ -242,6 +243,7 @@ async fn the_same_file_uploaded_twice_gives_two_projects_with_the_same_ids() {
             &ayse,
             project,
             ProjectChanges {
+                blocks: Vec::new(),
                 features,
                 project: None,
             },

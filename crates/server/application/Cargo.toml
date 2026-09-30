@@ -9,6 +9,9 @@ publish.workspace = true
 [dependencies]
 kentos-contracts = { path = "../../shared/contracts", default-features = false }
 kentos-geometry-core = { path = "../../shared/geometry-core" }
+# A block insert's geometry is its block's objects placed (docs/adr/0144 §5): the shared core's
+# expansion, objects crossing to it field for field (kentos_formats::blocks).
+kentos-formats = { path = "../../shared/formats" }
 kentos-postgres = { path = "../postgres" }
 # File projects (docs/adr/0031): uploads are verified as KCAD v2 with the shared codec,
 # hashed with SHA-256 and written to the object store with tokio's file system calls.

@@ -581,6 +581,7 @@ async fn a_database_checkpoint_is_restored_as_a_new_project() {
         })
         .collect();
     let batch = ProjectChanges {
+        blocks: Vec::new(),
         features,
         project: None,
     };
@@ -589,6 +590,7 @@ async fn a_database_checkpoint_is_restored_as_a_new_project() {
         .unwrap();
     let meta = projects::info(&db.app, &by).await.unwrap().meta_version;
     let lock = ProjectChanges {
+        blocks: Vec::new(),
         features: vec![],
         project: Some(ProjectPatch {
             layers: Some(source.layers.clone()),
@@ -615,6 +617,7 @@ async fn a_database_checkpoint_is_restored_as_a_new_project() {
     // The drawing goes on after the checkpoint.
     let later: kentos_contracts::Entity = serde_json::from_value(json!({ "kind": "point", "id": 1, "layerId": "parsel", "attrs": {}, "p": { "x": 486520.0, "y": 4420220.0 } })).unwrap();
     let more = ProjectChanges {
+        blocks: Vec::new(),
         features: vec![FeatureChange::Create {
             id: Uuid::now_v7().to_string(),
             entity: later,

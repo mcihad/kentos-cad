@@ -233,6 +233,7 @@ pub async fn revoke(db: &TestDb, by: &ProjectAccess, to: &Actor) -> ProjectAcces
 pub fn a_point(x: f64) -> ProjectChanges {
     let entity: Entity = serde_json::from_value(serde_json::json!({ "kind": "point", "id": 1, "layerId": "cizim", "attrs": {}, "p": { "x": x, "y": 4420210.0 } })).unwrap();
     ProjectChanges {
+        blocks: Vec::new(),
         features: vec![FeatureChange::Create {
             id: Uuid::new_v4().to_string(),
             entity,

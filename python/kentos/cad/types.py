@@ -520,6 +520,29 @@ class ArrayLayout(_Union):
         return _variant(_ARRAY_LAYOUT, "ArrayLayout", "kind", data).from_json(data)
 
 
+class BlockChange(_Union):
+    """A change of one block definition. An update replaces it whole and a
+    delete removes it, each guarded by `expectedVersions["block:<id>"]`.
+
+    One of:
+
+    - :class:`CreateBlockChange` (``op: create``)
+    - :class:`UpdateBlockChange` (``op: update``)
+    - :class:`DeleteBlockChange` (``op: delete``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "op"
+
+    @property
+    def op(self) -> str:
+        """The name of the variant (``op`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlockChange:
+        return _variant(_BLOCK_CHANGE, "BlockChange", "op", data).from_json(data)
+
+
 class Entity(_Union):
     """Any drawing object, tagged by `kind` as in the TypeScript model.
 
@@ -1023,6 +1046,26 @@ class BlockDefinition(_Model):
             entities=[Entity.from_json(e0) for e0 in data["entities"]],
             attributes=[AttributeDefinition.from_json(e0) for e0 in data["attributes"]] if "attributes" in data else UNSET,
             description=data.get("description", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlockRecord(_Model):
+    """One stored block definition (docs/adr/0144 §5) and its version."""
+    version: str
+    block: BlockDefinition
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["version"] = self.version
+        out["block"] = self.block.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlockRecord:
+        return cls(
+            version=data["version"],
+            block=BlockDefinition.from_json(data["block"]),
         )
 
 
@@ -3957,13 +4000,21 @@ class ProjectCatalogChange(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class ProjectChanges(_Model):
-    """Input of `project.changes` v1: one atomic commit of object changes and, optionally, metadata."""
+    """Input of `project.changes` v1: one atomic commit of object changes and, optionally, metadata.
+    Attributes:
+        blocks: Block definitions made, replaced or removed (docs/adr/0144 §5), in
+            the same commit as the objects: an insert may place a block this
+            commit makes, and a block may go with the last insert placing it.
+    """
     features: list[FeatureChange]
+    blocks: list[BlockChange] | Unset = UNSET
     project: ProjectPatch | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["features"] = [e0.to_json() for e0 in self.features]
+        if self.blocks is not UNSET:
+            out["blocks"] = [e0.to_json() for e0 in self.blocks]
         if self.project is not UNSET:
             out["project"] = None if self.project is None else self.project.to_json()
         return out
@@ -3972,6 +4023,7 @@ class ProjectChanges(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> ProjectChanges:
         return cls(
             features=[FeatureChange.from_json(e0) for e0 in data["features"]],
+            blocks=[BlockChange.from_json(e0) for e0 in data["blocks"]] if "blocks" in data else UNSET,
             project=UNSET if "project" not in data else None if data["project"] is None else ProjectPatch.from_json(data["project"]),
         )
 
@@ -4236,6 +4288,9 @@ class ProjectInfo(_Model):
         access: What the caller may do in it.
         state: Active or archived (an archived project opens read-only; one in the trash does not open).
         event_cursor: Event cursor at the moment this was read: subscribe after it to miss nothing.
+        blocks: A database project's block definitions with their versions
+            (docs/adr/0144 §5), in the order they were made. An older server's
+            answer without them has none.
         storage: How it keeps its content: a file project opens from its newest
             revision (`GET …/files`), not from `…/features` (docs/adr/0031). An
             older server's answer without it is a database project.
@@ -4256,6 +4311,7 @@ class ProjectInfo(_Model):
     data_revision: str
     feature_count: str
     event_cursor: str
+    blocks: list[BlockRecord] | Unset = UNSET
     home_view: Bounds | None | Unset = UNSET
     storage: ProjectStorage | ProjectStorageName = ProjectStorage.DATABASE
 
@@ -4277,6 +4333,8 @@ class ProjectInfo(_Model):
         out["dataRevision"] = self.data_revision
         out["featureCount"] = self.feature_count
         out["eventCursor"] = self.event_cursor
+        if self.blocks is not UNSET:
+            out["blocks"] = [e0.to_json() for e0 in self.blocks]
         if self.home_view is not UNSET:
             out["homeView"] = None if self.home_view is None else self.home_view.to_json()
         out["storage"] = _enum_out(self.storage)
@@ -4301,6 +4359,7 @@ class ProjectInfo(_Model):
             data_revision=data["dataRevision"],
             feature_count=data["featureCount"],
             event_cursor=data["eventCursor"],
+            blocks=[BlockRecord.from_json(e0) for e0 in data["blocks"]] if "blocks" in data else UNSET,
             home_view=UNSET if "homeView" not in data else None if data["homeView"] is None else Bounds.from_json(data["homeView"]),
             storage=_enum_in(ProjectStorage, data["storage"]) if "storage" in data else ProjectStorage.DATABASE,
         )
@@ -5006,6 +5065,58 @@ class PathArrayLayout(ArrayLayout):
             count=data["count"],
             align=data["align"],
             spacing=UNSET if "spacing" not in data else None if data["spacing"] is None else float(data["spacing"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CreateBlockChange(BlockChange):
+    """A new definition; its id is the client's, as an object's."""
+    TAG_VALUE: ClassVar[str] = "create"
+    block: BlockDefinition
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "create"}
+        out["block"] = self.block.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CreateBlockChange:
+        return cls(
+            block=BlockDefinition.from_json(data["block"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UpdateBlockChange(BlockChange):
+    TAG_VALUE: ClassVar[str] = "update"
+    block: BlockDefinition
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "update"}
+        out["block"] = self.block.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UpdateBlockChange:
+        return cls(
+            block=BlockDefinition.from_json(data["block"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DeleteBlockChange(BlockChange):
+    TAG_VALUE: ClassVar[str] = "delete"
+    id: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "delete"}
+        out["id"] = self.id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeleteBlockChange:
+        return cls(
+            id=data["id"],
         )
 
 
@@ -5759,6 +5870,9 @@ class AlignTransform(Transform):
 _ARRAY_LAYOUT: dict[str, type[ArrayLayout]] = {"grid": GridArrayLayout, "polar": PolarArrayLayout, "path": PathArrayLayout}
 
 
+_BLOCK_CHANGE: dict[str, type[BlockChange]] = {"create": CreateBlockChange, "update": UpdateBlockChange, "delete": DeleteBlockChange}
+
+
 _ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity}
 
 
@@ -5791,10 +5905,12 @@ __all__ = [
     "AreaUnitName",
     "ArrayLayout",
     "AttributeDefinition",
+    "BlockChange",
     "BlockDefined",
     "BlockDefinition",
     "BlockEditOperation",
     "BlockEditOperationName",
+    "BlockRecord",
     "BlocksDefine",
     "BlocksDefinePlan",
     "BlocksEdit",
@@ -5815,9 +5931,11 @@ __all__ = [
     "CirclePlan",
     "CommitResult",
     "ConstructionEntity",
+    "CreateBlockChange",
     "CreateFeatureChange",
     "CreateOperation",
     "CreateOperationName",
+    "DeleteBlockChange",
     "DeleteFeatureChange",
     "DimensionEntity",
     "DimensionEntityGeometry",
@@ -5959,6 +6077,7 @@ __all__ = [
     "TextEntity",
     "TextEntityGeometry",
     "Transform",
+    "UpdateBlockChange",
     "UpdateEntityEdit",
     "UpdateFeatureChange",
     "Vec2",

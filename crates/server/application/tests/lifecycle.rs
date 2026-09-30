@@ -15,6 +15,7 @@ use uuid::Uuid;
 
 fn renamed(name: &str) -> ProjectChanges {
     ProjectChanges {
+        blocks: Vec::new(),
         features: vec![],
         project: Some(ProjectPatch {
             name: Some(name.into()),

@@ -17,8 +17,8 @@
 //!   opens the file follows the project's events after it.
 
 use kentos_contracts::{
-    Bounds, DOCUMENT_FORMAT, DOCUMENT_VERSION_2, DocumentSnapshotV2, EntityId, LayerNode,
-    ProjectId, ProjectPermission, ProjectSettings, ProjectStorage, ProjectStyles, Vec2,
+    BlockDefinition, Bounds, DOCUMENT_FORMAT, DOCUMENT_VERSION_2, DocumentSnapshotV2, EntityId,
+    LayerNode, ProjectId, ProjectPermission, ProjectSettings, ProjectStorage, ProjectStyles, Vec2,
 };
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -30,7 +30,8 @@ use crate::files::verifying;
 use crate::projects::{FEATURE_COLUMNS, FeatureRow, gone, record, storage_of};
 
 /// What a new project takes from a drawing besides its objects: its
-/// settings, origin, view, layers, active layer and styles.
+/// settings, origin, view, layers, active layer, styles and block
+/// definitions (docs/adr/0144 §5).
 #[derive(Clone, Debug)]
 pub struct DrawingMeta {
     pub settings: ProjectSettings,
@@ -39,6 +40,7 @@ pub struct DrawingMeta {
     pub layers: Vec<LayerNode>,
     pub active_layer: String,
     pub styles: ProjectStyles,
+    pub blocks: Vec<BlockDefinition>,
 }
 
 impl DrawingMeta {
@@ -50,6 +52,7 @@ impl DrawingMeta {
             layers: doc.layers.clone(),
             active_layer: doc.active_layer.clone(),
             styles: doc.styles.clone(),
+            blocks: doc.blocks.clone(),
         }
     }
 }
@@ -209,8 +212,11 @@ pub async fn read(
         entities,
         uids,
         styles: serde_json::from_value(styles).map_err(bad)?,
-        // A database project keeps no block definitions yet (docs/adr/0144 §5).
-        blocks: Vec::new(),
+        blocks: crate::blocks::read(tx, access.tenant, access.project, false)
+            .await?
+            .into_iter()
+            .map(|s| s.block)
+            .collect(),
         project_id: Some(ProjectId(*access.project.as_bytes())),
         migrated_from: None,
     };

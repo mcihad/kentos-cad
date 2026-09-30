@@ -532,6 +532,7 @@ impl ProjectSync {
             expected.insert(PROJECT_KEY.to_string(), self.meta_version.clone());
         }
         let input = ProjectChanges {
+            blocks: Vec::new(),
             features: planned.iter().map(Planned::change).collect(),
             project: patch.clone(),
         };

@@ -21,6 +21,12 @@
 //! from the log. A new name is also a change of the catalog's metadata: it
 //! raises the project's catalog version and the audit records it.
 //!
+//! Block definitions (docs/adr/0144 §5) are made, replaced and removed in the
+//! same commit, each guarded by `expectedVersions["block:<id>"]`: the
+//! definitions it leaves pass the block rules, every insert it leaves places
+//! one of them (a definition in use is not removed), and the inserts a
+//! changed definition places get their geometry anew.
+//!
 //! An object's id is its persistent id, chosen by the client that made it
 //! (docs/adr/0014, 0026). A deleted object's row is removed, and the same id
 //! may be created again (an undone deletion, or "keep mine" over someone
@@ -34,16 +40,19 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 
 use kentos_contracts::{
-    CommandEnvelope, CommitResult, ConflictReason, EventFeature, EventRecord, FeatureChange,
-    FeatureConflict, FeatureOp, LayerNode, LayerNodeType, PROJECT_CHANGES, PROJECT_CHANGES_VERSION,
-    PROJECT_META_KEY, ProjectChanges, ProjectPermission,
+    BlockChange, BlockDefinition, BlockId, CommandEnvelope, CommitResult, ConflictReason,
+    EventBlock, EventFeature, EventRecord, FeatureChange, FeatureConflict, FeatureOp, LayerNode,
+    LayerNodeType, PROJECT_CHANGES, PROJECT_CHANGES_VERSION, PROJECT_META_KEY, ProjectChanges,
+    ProjectPermission, block_key,
 };
+use kentos_formats::blocks::Placing;
 use serde_json::Value;
 use sqlx::{Postgres, Transaction};
 use uuid::Uuid;
 
 use crate::access::{self, ProjectAccess, not_found};
-use crate::cad::{PROJECTION_VERSION, Stored, to_stored};
+use crate::blocks;
+use crate::cad::{PROJECTION_VERSION, Stored, to_stored, to_stored_block};
 use crate::error::{AppError, AppResult};
 use crate::idempotency;
 use crate::projects::{
@@ -157,6 +166,143 @@ pub(crate) async fn lock(
     access::recheck(tx, access).await
 }
 
+/// One planned change of a definition: which, what happens to it, and for a
+/// create or an update its stored name and JSON.
+type PlannedBlock = (BlockId, FeatureOp, Option<(String, Value)>);
+
+/// The block definitions a command changes (docs/adr/0144 §5), planned.
+struct BlockPlan {
+    /// The project's definitions as the command leaves them, in their order.
+    after: Vec<BlockDefinition>,
+    changes: Vec<PlannedBlock>,
+    /// Definitions whose placed objects change: the replaced ones, and every one placing them.
+    changed: HashSet<BlockId>,
+    /// Definitions removed, with their names and versions before the command.
+    removed: Vec<(BlockId, String, i64)>,
+}
+
+/// The command's block changes checked against the project's definitions
+/// (versions: a difference is a conflict, gathered in `conflicts`), each
+/// definition as the server keeps it, and the definitions it leaves checked
+/// against the block rules, in the documents' words.
+async fn plan_blocks(
+    tx: &mut Transaction<'static, Postgres>,
+    access: &ProjectAccess,
+    envelope: &CommandEnvelope,
+    changes: &[BlockChange],
+    conflicts: &mut Vec<FeatureConflict>,
+) -> AppResult<BlockPlan> {
+    let before = blocks::read(tx, access.tenant, access.project, true).await?;
+    let known: HashMap<BlockId, (i64, String)> = before
+        .iter()
+        .map(|s| (s.block.id, (s.version, s.block.name.clone())))
+        .collect();
+    let mut after: Vec<BlockDefinition> = before.into_iter().map(|s| s.block).collect();
+    let mut planned = Vec::with_capacity(changes.len());
+    let mut seen = HashSet::new();
+    let mut updated = HashSet::new();
+    let mut removed = Vec::new();
+    for (i, change) in changes.iter().enumerate() {
+        let (id, op, block) = match change {
+            BlockChange::Create { block } => (block.id, FeatureOp::Create, Some(block)),
+            BlockChange::Update { block } => (block.id, FeatureOp::Update, Some(block)),
+            BlockChange::Delete { id } => (*id, FeatureOp::Delete, None),
+        };
+        if !seen.insert(id) {
+            return Err(AppError::invalid_at(
+                format!("blocks[{i}]"),
+                format!("{id} bloğu komutta birden çok kez geçiyor."),
+            ));
+        }
+        let key = block_key(id);
+        let actual = known.get(&id).map(|(v, _)| *v);
+        let reason = match op {
+            FeatureOp::Create => actual.map(|_| ConflictReason::Exists),
+            FeatureOp::Update | FeatureOp::Delete => {
+                let want = expected(envelope, &key)?.ok_or_else(|| {
+                    AppError::invalid_at(
+                        format!("expectedVersions[{key}]"),
+                        format!("expectedVersions[{key}] eksik."),
+                    )
+                })?;
+                match actual {
+                    None => Some(ConflictReason::Deleted),
+                    Some(v) if v != want => Some(ConflictReason::Changed),
+                    Some(_) => None,
+                }
+            }
+        };
+        if let Some(reason) = reason {
+            conflicts.push(FeatureConflict {
+                id: key.clone(),
+                reason,
+                expected: envelope.expected_versions.get(&key).cloned(),
+                actual: actual.map(|v| v.to_string()),
+                current: None,
+            });
+        }
+        let stored = match block {
+            Some(b) => Some(to_stored_block(b).map_err(|why| {
+                AppError::invalid_at(
+                    format!("blocks[{i}]"),
+                    format!("Blok değişikliği {} (“{}”): {why}.", i + 1, b.name),
+                )
+            })?),
+            None => None,
+        };
+        // As the command leaves them, even past a conflict (which stops it later): its objects are checked against these.
+        match (op, &stored) {
+            (FeatureOp::Create, Some((b, _))) => after.push(b.clone()),
+            (FeatureOp::Update, Some((b, _))) => {
+                match after.iter_mut().find(|x| x.id == id) {
+                    Some(slot) => *slot = b.clone(),
+                    None => after.push(b.clone()),
+                }
+                updated.insert(id);
+            }
+            (FeatureOp::Delete, _) => {
+                after.retain(|x| x.id != id);
+                if let Some((version, name)) = known.get(&id) {
+                    removed.push((id, name.clone(), *version));
+                }
+            }
+            _ => {}
+        }
+        planned.push((id, op, stored.map(|(b, v)| (b.name, v))));
+    }
+    if !changes.is_empty() {
+        // A removed definition still placed by one the command leaves: said by name.
+        for (id, name, _) in &removed {
+            if let Some(holder) = after.iter().find(|b| {
+                b.entities
+                    .iter()
+                    .any(|e| matches!(e, kentos_contracts::Entity::Insert(i) if i.block == *id))
+            }) {
+                return Err(AppError::invalid_at(
+                    "blocks",
+                    format!(
+                        "“{name}” bloğu “{}” bloğunun içinde kullanılıyor; silinemez.",
+                        holder.name
+                    ),
+                ));
+            }
+        }
+        kentos_contracts::blocks::check(&after, &[]).map_err(|fault| {
+            AppError::invalid_at(
+                "blocks",
+                fault.message(|i| after.get(i).map_or("", |b| b.name.as_str())),
+            )
+        })?;
+    }
+    let changed = blocks::affected(&after, &updated);
+    Ok(BlockPlan {
+        after,
+        changes: planned,
+        changed,
+        removed,
+    })
+}
+
 pub async fn commit(
     db: &kentos_postgres::Db,
     access: &ProjectAccess,
@@ -179,7 +325,7 @@ pub async fn commit(
     let key = envelope.idempotency_key.as_str();
     let input: ProjectChanges = serde_json::from_value(envelope.input.clone())
         .map_err(|e| AppError::invalid(format!("Komut girdisi okunamadı: {e}")))?;
-    if input.features.len() > MAX_CHANGES {
+    if input.features.len() + input.blocks.len() > MAX_CHANGES {
         return Err(AppError::invalid(format!(
             "Bir komutta en çok {MAX_CHANGES} nesne değişikliği olabilir; değişiklikleri parçalara bölün."
         )));
@@ -220,8 +366,8 @@ pub async fn commit(
     if now.archived {
         return Err(access::archived(&now.name));
     }
-    // 3. The rights, as they are now.
-    if !input.features.is_empty() {
+    // 3. The rights, as they are now. Block definitions are the drawing's content, as its objects.
+    if !input.features.is_empty() || !input.blocks.is_empty() {
         now.require(ProjectPermission::FeatureWrite)?;
     }
     if input.project.is_some() {
@@ -280,6 +426,10 @@ pub async fn commit(
         }
     }
 
+    // Block definitions (docs/adr/0144 §5): the project's, and as this command leaves them.
+    let block_plan = plan_blocks(&mut tx, access, &envelope, &input.blocks, &mut conflicts).await?;
+    let placing = Placing::new(&block_plan.after);
+
     let mut plan = Vec::with_capacity(input.features.len());
     let mut seen = HashSet::new();
     for (i, change) in input.features.iter().enumerate() {
@@ -297,7 +447,18 @@ pub async fn commit(
         }
         let stored = match entity {
             Some(e) => {
-                let s = to_stored(e, new_srid).map_err(|why| {
+                if let kentos_contracts::Entity::Insert(x) = e
+                    && !block_plan.after.iter().any(|b| b.id == x.block)
+                {
+                    return Err(AppError::invalid_at(
+                        format!("features[{i}].entity"),
+                        format!(
+                            "Değişiklik {} ({id}): yerleştirilen blok projede tanımlı değil.",
+                            i + 1
+                        ),
+                    ));
+                }
+                let s = to_stored(e, new_srid, &placing).map_err(|why| {
                     AppError::invalid_at(
                         format!("features[{i}].entity"),
                         format!("Değişiklik {} ({id}): {why}.", i + 1),
@@ -381,6 +542,52 @@ pub async fn commit(
         });
     }
 
+    // A definition this command removes is placed by no object it leaves (someone else's, or one not sent).
+    if !block_plan.removed.is_empty() {
+        let names: Vec<String> = block_plan
+            .removed
+            .iter()
+            .map(|(id, _, _)| id.to_string())
+            .collect();
+        let placed: Vec<(Uuid, Option<String>)> = sqlx::query_as(
+            "select id, cad_definition->>'block' from kentos.feature
+              where tenant_id = $1 and project_id = $2 and kind = 'insert' and cad_definition->>'block' = any($3)",
+        )
+        .bind(access.tenant)
+        .bind(project)
+        .bind(&names)
+        .fetch_all(&mut *tx)
+        .await?;
+        let written: HashSet<Uuid> = plan.iter().map(|p| p.id).collect();
+        let left: Vec<String> = placed
+            .into_iter()
+            .filter(|(id, _)| !written.contains(id))
+            .filter_map(|(_, block)| block)
+            .collect();
+        if let Some((id, name, version)) = block_plan
+            .removed
+            .iter()
+            .find(|(id, _, _)| left.contains(&id.to_string()))
+        {
+            let n = left.iter().filter(|b| **b == id.to_string()).count();
+            drop(tx);
+            let key = block_key(*id);
+            return Err(AppError::Conflict {
+                message: format!(
+                    "“{name}” bloğu kullanılıyor (çizimde {n} yerleştirmesi; başka biri eklemiş olabilir); silinmedi. Sunucudaki hâli ile sizinkini karşılaştırın."
+                ),
+                conflicts: vec![FeatureConflict {
+                    expected: envelope.expected_versions.get(&key).cloned(),
+                    id: key,
+                    reason: ConflictReason::Changed,
+                    actual: Some(version.to_string()),
+                    current: None,
+                }],
+                revision: Some(data_revision),
+            });
+        }
+    }
+
     // 5. Write.
     let actor = access.actor.user_id;
     let mut versions = BTreeMap::new();
@@ -444,6 +651,54 @@ pub async fn commit(
             (_, None) => unreachable!("creates and updates carry an object"),
         }
     }
+    // The block definitions, each under its key.
+    let mut block_events = Vec::with_capacity(block_plan.changes.len());
+    for (id, op, stored) in &block_plan.changes {
+        let key = block_key(*id);
+        let row = Uuid::from_bytes(id.0);
+        match (op, stored) {
+            (FeatureOp::Delete, _) => {
+                sqlx::query("delete from kentos.block_definition where tenant_id = $1 and project_id = $2 and id = $3")
+                    .bind(access.tenant)
+                    .bind(project)
+                    .bind(row)
+                    .execute(&mut *tx)
+                    .await?;
+                deleted.push(key);
+                block_events.push(EventBlock {
+                    id: id.to_string(),
+                    op: FeatureOp::Delete,
+                    version: None,
+                });
+            }
+            (op, Some((name, value))) => {
+                let version: i64 = sqlx::query_scalar(
+                    "insert into kentos.block_definition (tenant_id, project_id, id, name, definition, version, created_by, updated_by)
+                     values ($1, $2, $3, $4, $5, $6, $7, $7)
+                     on conflict (tenant_id, project_id, id) do update set
+                       name = excluded.name, definition = excluded.definition, updated_by = excluded.updated_by,
+                       updated_at = now(), version = kentos.block_definition.version + 1
+                     returning version",
+                )
+                .bind(access.tenant)
+                .bind(project)
+                .bind(row)
+                .bind(name)
+                .bind(value)
+                .bind(created_version)
+                .bind(actor)
+                .fetch_one(&mut *tx)
+                .await?;
+                versions.insert(key, version.to_string());
+                block_events.push(EventBlock {
+                    id: id.to_string(),
+                    op: *op,
+                    version: Some(version.to_string()),
+                });
+            }
+            (_, None) => unreachable!("creates and updates carry a definition"),
+        }
+    }
     // A layer the new tree drops must be empty once this command's objects
     // are written: an object still on it (someone else's, or one not sent)
     // keeps the layer, and nothing of the command is written.
@@ -499,6 +754,18 @@ pub async fn commit(
             .execute(&mut *tx)
             .await?;
     }
+    // The inserts a changed definition places, which this command does not write itself: their geometry anew.
+    let written: HashSet<Uuid> = plan.iter().map(|p| p.id).collect();
+    blocks::reproject(
+        &mut tx,
+        access.tenant,
+        project,
+        new_srid,
+        &placing,
+        &block_plan.changed,
+        &written,
+    )
+    .await?;
     let (new_revision, new_meta): (i64, i64) = sqlx::query_as(
         "update kentos.project set
             data_revision = data_revision + 1,
@@ -544,11 +811,20 @@ pub async fn commit(
         if let Some(name) = &new_name {
             detail["rename"] = serde_json::json!({ "from": old_name, "to": name });
         }
+        if !block_plan.changes.is_empty() {
+            let count = |op: FeatureOp| block_plan.changes.iter().filter(|c| c.1 == op).count();
+            detail["blocks"] = serde_json::json!({
+                "created": count(FeatureOp::Create),
+                "updated": count(FeatureOp::Update),
+                "deleted": count(FeatureOp::Delete),
+            });
+        }
         detail
     })
     .execute(&mut *tx)
     .await?;
     let mut event = EventRecord {
+        blocks: block_events,
         seq: String::new(),
         data_revision: new_revision.to_string(),
         kind: PROJECT_CHANGES.into(),

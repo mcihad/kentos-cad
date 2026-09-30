@@ -10,13 +10,24 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use crate::document::{AreaUnit, Bounds, ProjectSettings, ProjectStyles};
-use crate::entity::{Entity, Vec2};
+use crate::entity::{BlockDefinition, Entity, Vec2};
+use crate::identity::BlockId;
 use crate::layer::LayerNode;
 use crate::project_catalog::{ProjectState, ProjectType};
 
 /// Name and version of the one lasting edit command of Faz B.
 pub const PROJECT_CHANGES: &str = "project.changes";
 pub const PROJECT_CHANGES_VERSION: u32 = 1;
+/// Prefix of a block definition's key in `expectedVersions`, `CommitResult`
+/// and conflicts (`block:<id>`, docs/adr/0144 §5): objects are named by
+/// their ids, the metadata by `@project`.
+pub const BLOCK_KEY_PREFIX: &str = "block:";
+
+/// A block definition's key (`block:<id>`).
+pub fn block_key(id: BlockId) -> String {
+    format!("{BLOCK_KEY_PREFIX}{id}")
+}
+
 /// Key of the project's metadata (name, settings, layer tree, styles) in `expectedVersions`.
 pub const PROJECT_META_KEY: &str = "@project";
 /// Event kind of a deleted project (`EventRecord.kind`): its editors stop
@@ -478,6 +489,34 @@ pub struct ProjectInfo {
     /// older server's answer without it is a database project.
     #[serde(default)]
     pub storage: ProjectStorage,
+    /// A database project's block definitions with their versions
+    /// (docs/adr/0144 §5), in the order they were made. An older server's
+    /// answer without them has none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockRecord>>", optional))]
+    pub blocks: Vec<BlockRecord>,
+}
+
+/// One stored block definition (docs/adr/0144 §5) and its version.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BlockRecord {
+    pub version: String,
+    pub block: BlockDefinition,
+}
+
+/// `GET …/blocks`: the project's block definitions, as `ProjectInfo.blocks`
+/// (a client asks after an event names changed blocks).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BlockList {
+    pub blocks: Vec<BlockRecord>,
 }
 
 /// One stored object. `entity.id` is meaningless on the wire (the browser numbers objects itself).
@@ -518,6 +557,32 @@ pub struct ProjectChanges {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub project: Option<ProjectPatch>,
+    /// Block definitions made, replaced or removed (docs/adr/0144 §5), in
+    /// the same commit as the objects: an insert may place a block this
+    /// commit makes, and a block may go with the last insert placing it.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockChange>>", optional))]
+    pub blocks: Vec<BlockChange>,
+}
+
+/// A change of one block definition. An update replaces it whole and a
+/// delete removes it, each guarded by `expectedVersions["block:<id>"]`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(tag = "op", rename_all = "lowercase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum BlockChange {
+    /// A new definition; its id is the client's, as an object's.
+    Create {
+        block: BlockDefinition,
+    },
+    Update {
+        block: BlockDefinition,
+    },
+    Delete {
+        id: BlockId,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -913,6 +978,25 @@ pub struct EventRecord {
     pub features: Vec<EventFeature>,
     /// Name, settings, layer tree or styles changed.
     pub meta: bool,
+    /// Block definitions made, changed or removed (docs/adr/0144 §5): a
+    /// client takes them with `GET …/blocks`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<EventBlock>>", optional))]
+    pub blocks: Vec<EventBlock>,
+}
+
+/// One block definition an event changed (docs/adr/0144 §5).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct EventBlock {
+    pub id: String,
+    pub op: FeatureOp,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub version: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

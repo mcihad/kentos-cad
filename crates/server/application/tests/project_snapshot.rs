@@ -98,6 +98,7 @@ async fn a_drawing_made_into_a_project_comes_back_as_the_same_drawing() {
             &ayse,
             project,
             ProjectChanges {
+                blocks: Vec::new(),
                 features,
                 project: None,
             },
@@ -129,6 +130,7 @@ async fn a_drawing_made_into_a_project_comes_back_as_the_same_drawing() {
             &ayse,
             project,
             ProjectChanges {
+                blocks: Vec::new(),
                 features,
                 project: None,
             },
@@ -139,6 +141,7 @@ async fn a_drawing_made_into_a_project_comes_back_as_the_same_drawing() {
     .unwrap();
     let meta = projects::info(&db.app, &by).await.unwrap().meta_version;
     let lock = ProjectChanges {
+        blocks: Vec::new(),
         features: vec![],
         project: Some(ProjectPatch {
             layers: Some(source.layers.clone()),

@@ -85,6 +85,7 @@ pub(crate) async fn event(
 ) -> AppResult<i64> {
     let at = at.into();
     let record = EventRecord {
+        blocks: Vec::new(),
         seq: String::new(),
         data_revision: revision.to_string(),
         kind: kind.into(),

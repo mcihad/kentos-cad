@@ -122,6 +122,7 @@ fn the_tab_asks_the_history_follows_its_events_and_lets_go_of_it() {
     let watch_now = catalog(&app).history.watching().expect("followed");
     assert_ne!(watch, watch_now, "a new wait for the new project");
     let event = |kind: &str| EventRecord {
+        blocks: Vec::new(),
         seq: "12".into(),
         data_revision: "1".into(),
         kind: kind.into(),

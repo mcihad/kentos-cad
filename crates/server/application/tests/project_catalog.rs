@@ -191,6 +191,7 @@ async fn catalog_metadata_is_checked_versioned_and_audited() {
             &pm,
             project,
             ProjectChanges {
+                blocks: Vec::new(),
                 features: vec![],
                 project: Some(ProjectPatch {
                     name: Some("Ada 101 (son)".into()),
@@ -646,6 +647,7 @@ async fn details_give_the_counts_and_the_exact_extent() {
             &pm,
             project,
             ProjectChanges {
+                blocks: Vec::new(),
                 features: vec![FeatureChange::Create {
                     id: Uuid::now_v7().to_string(),
                     entity: line,

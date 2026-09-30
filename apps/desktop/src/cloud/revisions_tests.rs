@@ -292,6 +292,7 @@ fn events_say_what_to_ask() {
             .expect("events")
             .iter()
             .map(|e| EventRecord {
+                blocks: Vec::new(),
                 seq: text(&e["seq"]).to_owned(),
                 data_revision: "0".to_owned(),
                 kind: text(&e["kind"]).to_owned(),

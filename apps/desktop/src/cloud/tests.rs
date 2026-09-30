@@ -103,6 +103,7 @@ fn permissions(write: bool) -> Vec<ProjectPermission> {
 pub(crate) fn info(storage: ProjectStorage, write: bool, state: ProjectState) -> ProjectInfo {
     let s = DocumentSnapshotV1::from_json(SAMPLE).expect("reads");
     ProjectInfo {
+        blocks: Vec::new(),
         id: PROJECT.into(),
         tenant_id: TENANT.into(),
         tenant_name: "Harita Bürosu".into(),
@@ -959,6 +960,7 @@ fn a_conflict_stops_sending_and_the_window_offers_both_choices() {
 
 fn event(seq: &str, request: &str, features: Vec<EventFeature>) -> EventRecord {
     EventRecord {
+        blocks: Vec::new(),
         seq: seq.into(),
         data_revision: seq.into(),
         kind: "project.changes".into(),

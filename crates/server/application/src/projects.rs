@@ -315,6 +315,8 @@ pub async fn info(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult
     .bind(access.project)
     .fetch_optional(&mut *tx)
     .await?;
+    // Its block definitions, in the same moment (docs/adr/0144 §5).
+    let blocks = crate::blocks::read(&mut tx, access.tenant, access.project, false).await?;
     tx.commit().await?;
     let (
         name,
@@ -337,6 +339,7 @@ pub async fn info(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult
     }
     let bad = |e: serde_json::Error| AppError::invalid(format!("Proje kaydı okunamadı: {e}"));
     Ok(ProjectInfo {
+        blocks: crate::blocks::records(blocks),
         id: access.project.to_string(),
         tenant_id: access.tenant.to_string(),
         tenant_name: access.tenant_name.clone(),

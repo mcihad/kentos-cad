@@ -144,6 +144,7 @@ async fn announce(
     .await?;
     // No objects and no names: open connections only learn that access changed and ask again.
     let event = EventRecord {
+        blocks: Vec::new(),
         seq: String::new(),
         data_revision: revision.to_string(),
         kind: PROJECT_ACCESS_CHANGED.into(),

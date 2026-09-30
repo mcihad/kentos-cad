@@ -125,6 +125,7 @@ fn with_id(mut e: Entity, id: u32) -> Entity {
 
 fn changes_of(list: Vec<FeatureChange>) -> ProjectChanges {
     ProjectChanges {
+        blocks: Vec::new(),
         features: list,
         project: None,
     }
@@ -177,6 +178,7 @@ async fn every_object_kind_comes_back_exactly() {
     assert!(result.versions.values().all(|v| v == "1"));
     // The upload ends by restoring the drawing's own layer tree, locks included.
     let restore = ProjectChanges {
+        blocks: Vec::new(),
         features: vec![],
         project: Some(ProjectPatch {
             layers: Some(sample().layers),
@@ -454,6 +456,7 @@ async fn locked_layers_rights_and_tenants() {
     }
     lock(&mut layers, &layer);
     let patch = ProjectChanges {
+        blocks: Vec::new(),
         features: vec![],
         project: Some(ProjectPatch {
             layers: Some(layers),
@@ -690,6 +693,7 @@ async fn a_layer_goes_with_its_objects_or_not_at_all() {
     .await
     .unwrap();
     let removal = ProjectChanges {
+        blocks: Vec::new(),
         features: vec![
             FeatureChange::Delete { id: p1.clone() },
             FeatureChange::Delete { id: p2.clone() },
@@ -737,6 +741,7 @@ async fn a_layer_goes_with_its_objects_or_not_at_all() {
     .unwrap();
     let after_bina = without(&tree, "bina");
     let tree_only = ProjectChanges {
+        blocks: Vec::new(),
         features: vec![],
         project: Some(ProjectPatch {
             layers: Some(without(&after_bina, "cizim")),
@@ -779,6 +784,7 @@ async fn a_layer_goes_with_its_objects_or_not_at_all() {
 
     // Moving the object off the layer in the same command lets the layer go.
     let moved = ProjectChanges {
+        blocks: Vec::new(),
         features: vec![FeatureChange::Update {
             id: q.clone(),
             entity: a_point("parsel", 486514.0),

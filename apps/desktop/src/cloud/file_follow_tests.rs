@@ -35,6 +35,7 @@ fn session(app: &App) -> u64 {
 
 fn event(seq: &str, kind: &str, request: Option<&str>) -> EventRecord {
     EventRecord {
+        blocks: Vec::new(),
         seq: seq.to_owned(),
         data_revision: "0".to_owned(),
         kind: kind.to_owned(),

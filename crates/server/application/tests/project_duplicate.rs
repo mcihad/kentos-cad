@@ -35,6 +35,7 @@ fn content() -> ProjectChanges {
         json!({ "kind": "circle", "id": 3, "layerId": "cizim", "attrs": {}, "c": { "x": 486510.0, "y": 4420205.0 }, "r": 3.25 }),
     ];
     ProjectChanges {
+        blocks: Vec::new(),
         features: entities
             .into_iter()
             .map(|e| FeatureChange::Create {
@@ -203,6 +204,7 @@ async fn a_copy_takes_the_content_and_ids_but_not_history_or_sharing() {
                 space.tenant,
                 id,
                 ProjectChanges {
+                    blocks: Vec::new(),
                     features: vec![FeatureChange::Delete { id: first.clone() }],
                     project: None,
                 },

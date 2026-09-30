@@ -129,6 +129,7 @@ fn opened(n: usize) -> Opened {
         tenant,
         project,
         info: ProjectInfo {
+            blocks: Vec::new(),
             id: project.to_string(),
             tenant_id: tenant.to_string(),
             tenant_name: "Ölçüm".into(),

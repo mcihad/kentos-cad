@@ -8,6 +8,7 @@
 pub mod access;
 pub mod admin;
 pub mod blobs;
+pub mod blocks;
 pub mod cad;
 pub mod catalog;
 pub mod changes;

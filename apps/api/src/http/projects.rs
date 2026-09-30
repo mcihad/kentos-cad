@@ -15,7 +15,9 @@ use axum::extract::{Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};
 use kentos_application::access::{self, ProjectAccess, not_found};
 use kentos_application::tenancy::{self, Access};
-use kentos_application::{AppError, commands, events, lifecycle, listing, people, projects};
+use kentos_application::{
+    AppError, blocks, commands, events, lifecycle, listing, people, projects,
+};
 use kentos_contracts::{
     CatalogSort, CatalogView, CommandEnvelope, EventPage, FeaturePage, ProjectAccessList,
     ProjectCreate, ProjectDetails, ProjectInfo, ProjectList, ProjectPage, ProjectType,
@@ -172,6 +174,22 @@ pub async fn features(
             })
             .transpose()?;
         projects::features(db, &a, after, q.limit.unwrap_or(projects::PAGE_MAX)).await
+    };
+    run.await.map(Json).map_err(|e| Failure::with(e, &headers))
+}
+
+/// `GET …/projects/{project}/blocks`: the project's block definitions with
+/// their versions (docs/adr/0144 §5), as a client asks after an event names
+/// changed blocks.
+pub async fn block_list(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    caller: Caller,
+    Path((tenant, project)): Path<(String, String)>,
+) -> Result<Json<kentos_contracts::BlockList>, Failure> {
+    let run = async {
+        let a = project_access(&state, &caller, &tenant, &project).await?;
+        blocks::list(state.db()?, &a).await
     };
     run.await.map(Json).map_err(|e| Failure::with(e, &headers))
 }

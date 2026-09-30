@@ -3,7 +3,8 @@
 //! comes back with every bit (text forms such as WKT round to 15 digits).
 //! Only what KentOS stores is supported: points (optionally with Z), line
 //! strings, polygons and multi-polygons (a multi-part area, docs/adr/0143),
-//! with an SRID.
+//! and a collection of them (a block insert's objects placed, docs/adr/0144
+//! §5), with an SRID.
 
 use crate::Vec2;
 
@@ -21,6 +22,8 @@ pub enum Geometry {
     Polygon(Vec<Vec<Vec2>>),
     /// Polygons as [`Geometry::Polygon`]'s rings.
     MultiPolygon(Vec<Vec<Vec<Vec2>>>),
+    /// Members of the kinds above (no collection in a collection).
+    Collection(Vec<Geometry>),
 }
 
 fn put_u32(out: &mut Vec<u8>, v: u32) {
@@ -47,37 +50,61 @@ fn put_rings(out: &mut Vec<u8>, rings: &[Vec<Vec2>]) {
     }
 }
 
-/// Little-endian EWKB with the SRID; a multi-polygon's members carry none,
-/// as PostGIS writes them.
-pub fn encode(geometry: &Geometry, srid: u32) -> Vec<u8> {
-    let mut out = vec![1u8];
-    let (kind, z) = match geometry {
+/// The WKB type number, and whether it has Z.
+fn kind_of(geometry: &Geometry) -> (u32, bool) {
+    match geometry {
         Geometry::Point { z, .. } => (1, z.is_some()),
         Geometry::LineString(_) => (2, false),
         Geometry::Polygon(_) => (3, false),
         Geometry::MultiPolygon(_) => (6, false),
-    };
-    put_u32(&mut out, kind | SRID_FLAG | if z { Z_FLAG } else { 0 });
-    put_u32(&mut out, srid);
+        Geometry::Collection(_) => (7, false),
+    }
+}
+
+/// A geometry's content after its head.
+fn put_body(out: &mut Vec<u8>, geometry: &Geometry) {
     match geometry {
         Geometry::Point { p, z } => {
-            put_f64(&mut out, p.x);
-            put_f64(&mut out, p.y);
+            put_f64(out, p.x);
+            put_f64(out, p.y);
             if let Some(z) = z {
-                put_f64(&mut out, *z);
+                put_f64(out, *z);
             }
         }
-        Geometry::LineString(pts) => put_points(&mut out, pts, false),
-        Geometry::Polygon(rings) => put_rings(&mut out, rings),
+        Geometry::LineString(pts) => put_points(out, pts, false),
+        Geometry::Polygon(rings) => put_rings(out, rings),
         Geometry::MultiPolygon(polygons) => {
-            put_u32(&mut out, polygons.len() as u32);
+            put_u32(out, polygons.len() as u32);
             for rings in polygons {
-                out.push(1);
-                put_u32(&mut out, 3);
-                put_rings(&mut out, rings);
+                put_member(out, &Geometry::Polygon(rings.clone()));
+            }
+        }
+        Geometry::Collection(members) => {
+            put_u32(out, members.len() as u32);
+            for m in members {
+                put_member(out, m);
             }
         }
     }
+}
+
+/// A member of a multi-geometry or collection: its own byte order and type,
+/// without an SRID, as PostGIS writes them.
+fn put_member(out: &mut Vec<u8>, geometry: &Geometry) {
+    out.push(1);
+    let (kind, z) = kind_of(geometry);
+    put_u32(out, kind | if z { Z_FLAG } else { 0 });
+    put_body(out, geometry);
+}
+
+/// Little-endian EWKB with the SRID; the members of a multi-polygon or a
+/// collection carry none, as PostGIS writes them.
+pub fn encode(geometry: &Geometry, srid: u32) -> Vec<u8> {
+    let mut out = vec![1u8];
+    let (kind, z) = kind_of(geometry);
+    put_u32(&mut out, kind | SRID_FLAG | if z { Z_FLAG } else { 0 });
+    put_u32(&mut out, srid);
+    put_body(&mut out, geometry);
     out
 }
 
@@ -144,17 +171,10 @@ impl Reader<'_> {
     }
 }
 
-/// Reads EWKB (either byte order); returns the geometry and its SRID (0 when absent).
-pub fn decode(bytes: &[u8]) -> Result<(Geometry, u32), String> {
-    let mut r = Reader {
-        bytes,
-        at: 1,
-        little: *bytes.first().ok_or("EWKB boş")? == 1,
-    };
-    let head = r.u32()?;
-    let srid = if head & SRID_FLAG != 0 { r.u32()? } else { 0 };
-    let z = head & Z_FLAG != 0;
-    let geometry = match head & 0x0fff_ffff {
+/// One geometry's content after its head (`kind`, `z`); `member`: inside a
+/// collection, where no collection may nest.
+fn body(r: &mut Reader, kind: u32, z: bool, member: bool) -> Result<Geometry, String> {
+    Ok(match kind {
         1 => {
             let (p, z) = r.point(z)?;
             Geometry::Point { p, z }
@@ -174,13 +194,42 @@ pub fn decode(bytes: &[u8]) -> Result<(Geometry, u32), String> {
             }
             Geometry::MultiPolygon(polygons)
         }
+        7 if !z && !member => {
+            let n = r.u32()? as usize;
+            if n > (r.bytes.len() - r.at) / 5 {
+                return Err("EWKB üye sayısı veriden büyük".into());
+            }
+            let mut members = Vec::with_capacity(n);
+            for _ in 0..n {
+                // Each member has its own byte order and type, without an SRID.
+                r.little = r.take::<1>()? == [1];
+                let head = r.u32()?;
+                if head & SRID_FLAG != 0 {
+                    return Err("EWKB koleksiyonunun üyesi SRID taşıyor".into());
+                }
+                members.push(body(r, head & 0x0fff_ffff, head & Z_FLAG != 0, true)?);
+            }
+            Geometry::Collection(members)
+        }
         other => {
             return Err(format!(
                 "EWKB türü desteklenmiyor: {other}{}",
                 if z { " (Z)" } else { "" }
             ));
         }
+    })
+}
+
+/// Reads EWKB (either byte order); returns the geometry and its SRID (0 when absent).
+pub fn decode(bytes: &[u8]) -> Result<(Geometry, u32), String> {
+    let mut r = Reader {
+        bytes,
+        at: 1,
+        little: *bytes.first().ok_or("EWKB boş")? == 1,
     };
+    let head = r.u32()?;
+    let srid = if head & SRID_FLAG != 0 { r.u32()? } else { 0 };
+    let geometry = body(&mut r, head & 0x0fff_ffff, head & Z_FLAG != 0, false)?;
     if r.at != bytes.len() {
         return Err("EWKB sonunda fazladan bayt var".into());
     }
@@ -190,6 +239,41 @@ pub fn decode(bytes: &[u8]) -> Result<(Geometry, u32), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A block insert's placed objects (docs/adr/0144 §5): the bytes PostGIS
+    /// writes for the same collection, and back.
+    #[test]
+    fn matches_postgis_bytes_for_a_collection() {
+        // SELECT encode(ST_AsEWKB('SRID=5256;GEOMETRYCOLLECTION(POINT(1 2),LINESTRING(0 0,1 1),
+        //   POLYGON((0 0,2 0,2 2,0 0)))'::geometry, 'NDR'), 'hex')   (PostGIS 3.6)
+        let g = Geometry::Collection(vec![
+            Geometry::Point {
+                p: Vec2::new(1.0, 2.0),
+                z: None,
+            },
+            Geometry::LineString(vec![Vec2::new(0.0, 0.0), Vec2::new(1.0, 1.0)]),
+            Geometry::Polygon(vec![vec![
+                Vec2::new(0.0, 0.0),
+                Vec2::new(2.0, 0.0),
+                Vec2::new(2.0, 2.0),
+            ]]),
+        ]);
+        let bytes = encode(&g, 5256);
+        let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+        assert_eq!(
+            hex,
+            "010700002088140000030000000101000000000000000000f03f000000000000004001020000000200000000000000000000000000000000000000000000000000f03f000000000000f03f0103000000010000000400000000000000000000000000000000000000000000000000004000000000000000000000000000000040000000000000004000000000000000000000000000000000"
+        );
+        assert_eq!(decode(&bytes), Ok((g, 5256)));
+        // An empty collection (a block that draws nothing finite), and no collection inside one.
+        let empty = Geometry::Collection(Vec::new());
+        assert_eq!(decode(&encode(&empty, 5256)), Ok((empty, 5256)));
+        let nested = encode(
+            &Geometry::Collection(vec![Geometry::Collection(Vec::new())]),
+            5256,
+        );
+        assert!(decode(&nested).is_err());
+    }
 
     #[test]
     fn matches_postgis_bytes_for_a_point() {
