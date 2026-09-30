@@ -148,6 +148,8 @@ pub enum Dialog {
     BlockAttributes,
     /// Blok ekle's Öznitelik değerleri (attribute_values.rs); the window is `App::attribute_values`.
     AttributeValues,
+    /// Bul ve değiştir (find_replace.rs, docs/adr/0145 §6); the window is `App::find_replace`.
+    FindReplace,
 }
 
 /// Where the app goes once the drawing on screen is left (cloud/leaving.rs).
@@ -254,6 +256,7 @@ pub enum Message {
     BlockAttributes(crate::block_attributes::Event),
     /// Blok ekle's Öznitelik değerleri (attribute_values.rs).
     AttributeValues(crate::attribute_values::Event),
+    FindReplace(crate::find_replace::Event),
     /// The rollover card's wait is over, for this hover (hover_card.rs).
     HoverCard(u64),
     /// The pointer rested on a snap past the tracking dwell (tracking.rs).
@@ -403,6 +406,8 @@ pub struct App {
     pub(crate) block_attributes: Option<crate::block_attributes::Window>,
     /// Blok ekle's Öznitelik değerleri, while it asks (attribute_values.rs).
     pub(crate) attribute_values: Option<crate::attribute_values::Window>,
+    /// Bul ve değiştir's window, while it is open (find_replace.rs).
+    pub(crate) find_replace: Option<crate::find_replace::Window>,
     pub(crate) text_field_select: bool,
     pub(crate) text_field_release: bool,
     /// Öznitelikler's closed sections, by id, while the app runs (the web's `collapsed`).
@@ -621,6 +626,7 @@ impl App {
             blocks_panel: crate::blocks_panel::PanelState::default(),
             block_attributes: None,
             attribute_values: None,
+            find_replace: None,
             text_field_select: false,
             text_field_release: false,
             props_closed: std::collections::HashSet::new(),
@@ -832,6 +838,7 @@ impl App {
             self.text_field_tasks(),
             self.blocks_tasks(),
             self.attribute_values_tasks(),
+            self.find_replace_tasks(),
             self.follow_hover(),
             self.follow_tracking(),
             self.follow_log(Instant::now()),
@@ -976,6 +983,7 @@ impl App {
             Message::BlocksPanel(event) => return self.blocks_panel_event(event),
             Message::BlockAttributes(event) => return self.block_attributes_event(event),
             Message::AttributeValues(event) => self.attribute_values_event(event),
+            Message::FindReplace(event) => return self.find_replace_event(event),
             Message::HoverCard(version) => self.hover_card_due(version),
             Message::TrackDwell(number) => {
                 self.tracking.dwell_due(number);
@@ -1391,6 +1399,8 @@ impl App {
             "block.panel" => self.show_blocks_panel(),
             "block.purge" => self.purge_blocks(),
             "block.attributes" => self.open_selected_block_attributes(),
+            // Bul ve değiştir (find_replace.rs, docs/adr/0145 §6).
+            "text.findReplace" => self.open_find_replace(),
             "edit.undo" => self.undo(),
             "edit.redo" => self.step_history(false),
             "tool.confirm" => return self.confirm(),

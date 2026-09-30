@@ -931,6 +931,7 @@ impl App {
             Some(Dialog::BlockAttributes) => self.block_attributes = None,
             // Blok ekle's point is dropped; the tool waits for the next.
             Some(Dialog::AttributeValues) => self.attribute_values_closed(),
+            Some(Dialog::FindReplace) => self.find_replace = None,
             _ => {}
         }
     }

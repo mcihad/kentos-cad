@@ -70,8 +70,9 @@ export const EDIT_LABEL: Record<EditOperation, string> = {
   elevation: 'Kot ver',
   partsJoin: 'Parçaları birleştir',
   partsSplit: 'Parçalara ayır',
-  // Okunur yap (docs/adr/0145).
+  // Okunur yap and Bul ve değiştir (docs/adr/0145).
   readable: 'Okunur yap',
+  replaceText: 'Bul ve değiştir',
 };
 
 /** The contract's geometry fields by kind (`EntityGeometry`): what the command writes of a geometry. */

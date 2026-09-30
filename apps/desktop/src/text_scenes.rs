@@ -20,6 +20,7 @@ use kentos_ui::snapshot::Input;
 
 use crate::app::{App, Message};
 use crate::files_testing::find_text;
+use crate::find_replace::Event as FindEvent;
 use crate::tools_scenes::{Objects, forget, hover, open, run, typed};
 use crate::tools_screens::{Pointed, Scene, press_caption};
 
@@ -83,11 +84,37 @@ fn upside(app: &mut App) {
     forget(app);
 }
 
+/// Bul ve değiştir (4c): four texts, one of them on a locked layer, and the
+/// window looking for `Ada *` to write `Parsel *` with Joker on.
+fn find_window(app: &mut App) {
+    let mut o = Objects::new();
+    for (words, y) in [
+        ("Ada 101", 30.0),
+        ("Ada 102", 26.0),
+        ("Ada 103", 22.0),
+        ("Yol 12", 18.0),
+    ] {
+        o.text("cizim", [10.0, y], words, 1.6, 0.0);
+    }
+    o.text("parsel", [30.0, 30.0], "Ada 9", 1.6, 0.0);
+    open(app, o);
+    let _ = app.update(Message::LayerLocked("parsel".into()));
+    run(app, "text.findReplace");
+    for event in [
+        FindEvent::Find("Ada *".into()),
+        FindEvent::Replace("Parsel *".into()),
+        FindEvent::Wildcard(true),
+    ] {
+        let _ = app.update(Message::FindReplace(event));
+    }
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
         ("yazi-secenekleri", tool),
         ("yazi-oznitelikler", |app| props(app, &[ADA])),
         ("yazi-oznitelikler-coklu", |app| props(app, &[ADA, YOL])),
+        ("bul-degistir", find_window),
         ("okunur-yap-secim", upside),
         ("okunur-yap-sonuc", |app| {
             upside(app);

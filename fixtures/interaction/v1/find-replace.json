@@ -1,0 +1,25 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "find-replace",
+  "title": "Bul ve değiştir (ADR 0145 §6): seçim yokken bütün çizimde; jokerli kalıp bütün yazıya uyar ve * yakaladığını taşır, hiza kalır; jokersiz, büyük küçük harf eşleşerek her geçtiği yer değişir, kilitli katmandaki yazı değişmez ve söylenir; pencere açık kalır; her değiştirme tek adımdır; seçim varken yalnız seçimde",
+  "source": "Web'in FindReplaceDialog'u (ui/text/), masaüstünün find_replace.rs'i ve kentos_interaction::find_replace; cad.entities.edit replaceText, ADR 0145",
+  "covers": ["UX-01", "UX-06", "CMD-04"],
+  "document": "texts.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.125 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.125,
+  "steps": [
+    { "run": "text.findReplace", "note": "Seçim yok: bütün çizimde aranır.", "expect": { "dialog": "Bul ve değiştir" } },
+    { "dialog": "Bul ve değiştir", "fill": { "Bul": "Ada *", "Değiştir": "Parsel *" }, "check": { "Joker (*)": true }, "press": "Hepsini değiştir", "note": "Jokerli kalıp bütün yazıya uyar, * yakaladığını taşır; pencere açık kalır.", "expect": { "dialog": "Bul ve değiştir", "log": "success", "logged": ["1 yazı değiştirildi."], "objects": [{ "id": 1, "kind": "text", "text": "Parsel 101", "align": "middleCenter" }] } },
+    { "dialog": "Bul ve değiştir", "fill": { "Bul": "l", "Değiştir": "L" }, "check": { "Joker (*)": false, "Büyük küçük harf eşleşsin": true }, "press": "Hepsini değiştir", "note": "Jokersiz her geçtiği yer değişir; kilitli katmandaki yazı listelenir ama değişmez, söylenir.", "expect": { "dialog": "Bul ve değiştir", "log": "warn", "logged": ["2 yazı değiştirildi.", "1 yazı değiştirilmedi: kilitli katmanda ya da boş kalacaktı."], "objects": [{ "id": 1, "kind": "text", "text": "ParseL 101" }, { "id": 2, "kind": "text", "text": "YoL 12" }, { "id": 3, "kind": "text", "text": "Park" }, { "id": 4, "kind": "text", "text": "Kilitli" }] } },
+    { "dialog": "Bul ve değiştir", "press": "Kapat", "expect": { "dialog": null } },
+    { "key": "Ctrl+Z", "note": "Her değiştirme tek adımdır.", "expect": { "objects": [{ "id": 1, "kind": "text", "text": "Parsel 101" }, { "id": 2, "kind": "text", "text": "Yol 12" }] } },
+    { "key": "Ctrl+Z", "expect": { "canUndo": false, "objects": [{ "id": 1, "kind": "text", "text": "Ada 101" }] } },
+    { "click": [0.95, -3.64], "note": "Park seçilir.", "expect": { "selected": [3] } },
+    { "run": "text.findReplace", "note": "Seçim varken yalnız seçimde aranır.", "expect": { "dialog": "Bul ve değiştir" } },
+    { "dialog": "Bul ve değiştir", "fill": { "Bul": "a", "Değiştir": "e" }, "press": "Hepsini değiştir", "note": "Yalnız seçili Park değişir; Ada 101 seçimde değil.", "expect": { "objects": [{ "id": 3, "kind": "text", "text": "Perk" }, { "id": 1, "kind": "text", "text": "Ada 101" }] } },
+    { "dialog": "Bul ve değiştir", "press": "Kapat", "expect": { "dialog": null } }
+  ]
+}

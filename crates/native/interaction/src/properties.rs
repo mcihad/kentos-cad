@@ -110,6 +110,37 @@ pub fn set_geometries(doc: &mut Document, changes: &[(Slot, Entity)]) -> Vec<Str
     said(edit::execute(&mut ExecutionContext::new(doc), input))
 }
 
+/// Texts given new words in one step “Bul ve değiştir” (`cad.entities.edit`'s
+/// `replaceText`, docs/adr/0145 §6), each keeping the rest of its geometry;
+/// what to say: the command's refusal.
+pub fn replace_texts(doc: &mut Document, words: &[(Slot, String)]) -> Vec<String> {
+    let changes: Vec<EntityEdit> = words
+        .iter()
+        .filter_map(|(slot, text)| {
+            let Some(Entity::Text(t)) = doc.get(*slot) else {
+                return None;
+            };
+            let renamed = Entity::Text(TextEntity {
+                text: text.clone(),
+                ..t.clone()
+            });
+            Some(EntityEdit::Update {
+                uid: doc.uid(*slot)?.to_string(),
+                geometry: edit_geometry(shape(&renamed))?,
+            })
+        })
+        .collect();
+    if changes.is_empty() {
+        return Vec::new();
+    }
+    let input = EntitiesEdit {
+        operation: EditOperation::ReplaceText,
+        changes,
+        expected_revision: None,
+    };
+    said(edit::execute(&mut ExecutionContext::new(doc), input))
+}
+
 /// The texts in `slots` changed by `change`, those it changes, in one step
 /// “Değiştir” (Öznitelikler's Hiza, Genişlik çarpanı and Zemin, docs/adr/0145
 /// §6); what to say: the command's refusal.

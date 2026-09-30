@@ -111,6 +111,9 @@ pub enum EditOperation {
     /// Okunur yap (docs/adr/0145): texts that read upside down turned half
     /// round, each box where it was.
     Readable,
+    /// Bul ve değiştir (docs/adr/0145 §6): texts given new words, the step
+    /// named after the window; otherwise as `Properties`.
+    ReplaceText,
 }
 
 /// A drawing object's geometry alone: its kind and the fields that place and

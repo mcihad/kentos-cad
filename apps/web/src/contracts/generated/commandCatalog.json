@@ -21630,6 +21630,11 @@
                 "const": "readable",
                 "description": "Okunur yap (docs/adr/0145): texts that read upside down turned half\nround, each box where it was.",
                 "type": "string"
+              },
+              {
+                "const": "replaceText",
+                "description": "Bul ve değiştir (docs/adr/0145 §6): texts given new words, the step\nnamed after the window; otherwise as `Properties`.",
+                "type": "string"
               }
             ]
           },

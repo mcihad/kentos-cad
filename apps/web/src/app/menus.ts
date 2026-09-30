@@ -105,6 +105,8 @@ export const MAIN_MENU: TopMenu[] = [
       'edit.selectAll',
       'edit.deselect',
       'edit.invertSelection',
+      sec('Bul'),
+      'text.findReplace',
     ],
   },
   {

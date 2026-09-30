@@ -163,8 +163,9 @@ pub fn label(operation: EditOperation) -> &'static str {
         EditOperation::Elevation => "Kot ver",
         EditOperation::PartsJoin => "Parçaları birleştir",
         EditOperation::PartsSplit => "Parçalara ayır",
-        // Okunur yap (docs/adr/0145).
+        // Okunur yap and Bul ve değiştir (docs/adr/0145).
         EditOperation::Readable => "Okunur yap",
+        EditOperation::ReplaceText => "Bul ve değiştir",
     }
 }
 

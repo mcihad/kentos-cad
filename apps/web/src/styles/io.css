@@ -91,6 +91,46 @@
 .io-check input {
   accent-color: var(--c-accent);
 }
+/* A box that does not apply now (Tam sözcük with Joker on) reads as off, as the desktop's. */
+.io-check:has(input:disabled) {
+  color: var(--c-text-3);
+  cursor: default;
+}
+
+/* Bul ve değiştir (docs/adr/0145 §6): the options in a row, the matches in a list of fixed height (VirtualRows),
+   long words cut with an ellipsis, a row that is not written muted, what a text becomes in the accent. */
+.find-options {
+  gap: 2px 18px;
+}
+.find-rows {
+  /* At most a third of the window: the window fits 1100×650 without scrolling. */
+  height: min(calc(260px * var(--ui-scale)), 32vh);
+}
+.find-rows td {
+  max-width: calc(230px * var(--ui-scale));
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.find-row {
+  cursor: pointer;
+}
+.find-row:hover td {
+  background: var(--c-hover);
+}
+.find-row--blocked td {
+  color: var(--c-text-3);
+}
+.find-row .icon {
+  display: inline-block;
+  margin-right: 4px;
+  vertical-align: -2px;
+}
+.find-check {
+  width: calc(28px * var(--ui-scale));
+}
+.find-new {
+  color: var(--c-accent-text);
+}
 
 /* Preview table: the first rows as written, a column role picker on each column. */
 .io-table-wrap {

@@ -2118,6 +2118,31 @@ function textToolScenes() {
       add({ kind: 'text', p: P(0, -0.8), text: 'Park', height: h, rotation: 30 }),
     ].map((e) => e.id);
     k.selection.set(ids);`);
+  /** Bul ve değiştir (4c) over the Okunur yap drawing and three more texts, one on the locked layer: Ada * → Parsel *. */
+  const TEXTS_KCAD = readFileSync(new URL('../../../../fixtures/interaction/v1/texts.kcad', import.meta.url), 'utf8');
+  const findWindow = async (ui) => {
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      k.files.ask = async () => 'drop';
+      if (!(await k.files.load(${JSON.stringify(TEXTS_KCAD)}, null))) throw new Error('texts.kcad did not load');
+      const add = (layerId, text, x, y) => k.doc.add({ kind: 'text', layerId, attrs: {}, p: { x: 487000 + x, y: 4420000 + y }, text, height: 2, rotation: 0 });
+      add('cizim', 'Ada 102', -24, -2);
+      add('cizim', 'Ada 103', -24, -7);
+      add('kilitli', 'Ada 9', 12, -12);
+      k.selection.clear();
+      k.view.zoomExtents();
+    })()`);
+    await ui.sleep(500);
+    await ui.eval(`window.kentos.commands.execute('text.findReplace')`);
+    await ui.waitFor(`!!document.querySelector('.dialog--find')`);
+    await ui.clickSel('.dialog--find input[aria-label="Bul"]');
+    await ui.type('Ada *');
+    await ui.clickSel('.dialog--find input[aria-label="Değiştir"]');
+    await ui.type('Parsel *');
+    await ui.clickText('.dialog--find label.io-check', 'Joker');
+    await ui.move(2, 2);
+    await ui.sleep(300);
+  };
   const upside = async (ui) => {
     await ribbonOn(ui, { ribbonTab: 'modify', ...LOGGED });
     await ui.eval(CLEAR_VIEW);
@@ -2144,6 +2169,7 @@ function textToolScenes() {
     { id: 'text-props', open: async (ui) => props(ui, ['a']), close },
     { id: 'text-props-align-menu', open: async (ui) => (await props(ui, ['a']), await menuOpen(ui, '.panel--props [data-prop-key="geometry:Hiza"]')), close },
     { id: 'text-props-several', open: async (ui) => props(ui, ['a', 'b']), close },
+    { id: 'find-replace', open: findWindow, close: async (ui) => (await ui.escapeAll(2), await ui.eval(UNDO_ALL)) },
     { id: 'readable-selected', open: upside, close },
     { id: 'readable-done', open: async (ui) => (await upside(ui), await startTool(ui, 'readable'), await ui.move(2, 2)), close },
   ];

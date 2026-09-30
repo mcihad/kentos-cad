@@ -93,7 +93,7 @@ export const RIBBON_TABS: readonly RibbonTabSpec[] = [
         more: 'modify',
         compact: true,
       },
-      { pick: 'Açıklama', icon: 'text', commands: ['tool.text', 'tool.dimension', 'tool.hatch'], more: 'draw' },
+      { pick: 'Açıklama', icon: 'text', commands: ['tool.text', 'tool.dimension', 'tool.hatch', 'text.findReplace'], more: 'draw' },
       { pick: 'Harita', icon: 'parcel', commands: ['tool.parcel', 'tool.boundary', 'tool.areaUnion', 'tool.measure', 'tool.area'], more: 'map', workspaces: ['gis'] },
       { builtin: 'layers' },
       { builtin: 'properties' },

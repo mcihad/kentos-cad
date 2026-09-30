@@ -209,6 +209,7 @@ class EditOperation(_StrEnum):
     - ``partsJoin``: Parçaları birleştir (docs/adr/0143): areas become one multi-part area
     - ``partsSplit``: Parçalara ayır (docs/adr/0143): a multi-part area becomes an area a
     - ``readable``: Okunur yap (docs/adr/0145): texts that read upside down turned half
+    - ``replaceText``: Bul ve değiştir (docs/adr/0145 §6): texts given new words, the step
     """
     OFFSET = "offset"
     TRIM = "trim"
@@ -240,9 +241,10 @@ class EditOperation(_StrEnum):
     PARTS_JOIN = "partsJoin"
     PARTS_SPLIT = "partsSplit"
     READABLE = "readable"
+    REPLACE_TEXT = "replaceText"
 
 
-EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable"]
+EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText"]
 """The names of :class:`EditOperation`, for a plain string."""
 
 

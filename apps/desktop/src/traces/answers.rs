@@ -37,6 +37,7 @@ impl App {
             Dialog::BlockDefine => crate::blocks::DEFINE_TITLE.to_owned(),
             Dialog::BlockAttributes => crate::block_attributes::ATTRIBUTES_TITLE.to_owned(),
             Dialog::AttributeValues => crate::attribute_values::VALUES_TITLE.to_owned(),
+            Dialog::FindReplace => crate::find_replace::FIND_TITLE.to_owned(),
             other => format!("{other:?}"),
         })
     }
@@ -48,6 +49,7 @@ impl App {
             Some(Dialog::BlockDefine) => self.block_define_control(control),
             Some(Dialog::BlockAttributes) => self.block_attributes_control(control),
             Some(Dialog::AttributeValues) => self.attribute_values_control(control),
+            Some(Dialog::FindReplace) => self.find_replace_control(control),
             Some(other) => Err(format!("{other:?} penceresi izden yanıtlanamıyor")),
             None => Err("açık pencere yok".to_owned()),
         }

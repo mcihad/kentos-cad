@@ -10,6 +10,7 @@ import type { ProjectSettingsSection } from '../ui/settings/ProjectSettingsDialo
 import { AppShell } from '../ui/shell/AppShell';
 import { ViewportController } from '../viewport/ViewportController';
 import { createBlocks, registerBlockCommands } from './blocks';
+import { registerTextCommands } from './texts';
 import { Clipboard } from './clipboard';
 import { registerCoreCommands, showTheme } from './commands';
 import type { AppContext } from './context';
@@ -138,6 +139,7 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
   });
   registerStyleCommands(ctx);
   registerBlockCommands(ctx);
+  registerTextCommands(ctx, { findReplace: () => lazy(ctx, import('../ui/text/FindReplaceDialog'), (m) => m.openFindReplaceDialog(ctx)) });
   registerFileExchangeCommands(ctx);
   registerCalcCommands(ctx);
   // The open cloud project as the rename and delete dialogs name it.

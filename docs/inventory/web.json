@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 197,
-      "implemented": 184,
+      "total": 198,
+      "implemented": 185,
       "partial": 0,
       "pending": 13
     },
@@ -67,18 +67,18 @@
       "pending": 0
     },
     "screens": {
-      "total": 69,
-      "implemented": 69,
+      "total": 70,
+      "implemented": 70,
       "partial": 0,
       "pending": 0
     },
     "commandsWithoutPlace": [],
     "commandsWithoutTests": 62,
-    "commandsOnDesktop": 179,
+    "commandsOnDesktop": 180,
     "desktop": {
       "commands": {
-        "total": 197,
-        "implemented": 179,
+        "total": 198,
+        "implemented": 180,
         "partial": 0,
         "pending": 13,
         "none": 0,
@@ -141,8 +141,8 @@
         "n/a": 0
       },
       "screens": {
-        "total": 69,
-        "implemented": 63,
+        "total": 70,
+        "implemented": 64,
         "partial": 2,
         "pending": 0,
         "none": 0,
@@ -2774,6 +2774,38 @@
       "tests": [
         "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
+      ]
+    },
+    {
+      "id": "text.findReplace",
+      "title": "Bul ve değiştir",
+      "category": "Düzen",
+      "icon": "findReplace",
+      "description": "Yazılarda arar ve değiştirir: joker (*), büyük küçük harf ve tam sözcük seçenekleri, seçimde ya da bütün çizimde; eşleşmeler listelenir, seçilenler ya da hepsi tek adımda değişir.",
+      "aliases": [
+        "BUL",
+        "FIND",
+        "BULDEGISTIR"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Bul"
+      ],
+      "ribbon": [
+        "Giriş › Açıklama"
+      ],
+      "quickAccess": false,
+      "toolbox": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/find-replace.json"
       ]
     },
     {
@@ -14636,6 +14668,18 @@
       "desktopWhere": "apps/desktop/src/style/svgedit/files/trace.rs (ADR 0095)"
     },
     {
+      "id": "apps/web/src/ui/text/FindReplaceDialog.ts#openFindReplaceDialog",
+      "name": "openFindReplaceDialog",
+      "role": "window",
+      "source": "apps/web/src/ui/text/FindReplaceDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/find_replace.rs (ADR 0145 §6)"
+    },
+    {
       "id": "apps/web/src/ui/toolbar/Toolbar.ts#Toolbar",
       "name": "Toolbar",
       "role": "panel",
@@ -14780,6 +14824,12 @@
               "edit.selectAll",
               "edit.deselect",
               "edit.invertSelection"
+            ]
+          },
+          {
+            "label": "Bul",
+            "items": [
+              "text.findReplace"
             ]
           }
         ]
@@ -15718,6 +15768,10 @@
               {
                 "command": "tool.hatch",
                 "size": "large"
+              },
+              {
+                "command": "text.findReplace",
+                "size": "small"
               }
             ],
             "overflow": [],
@@ -17626,6 +17680,10 @@
                 {
                   "command": "tool.hatch",
                   "size": "large"
+                },
+                {
+                  "command": "text.findReplace",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -19259,6 +19317,10 @@
                 {
                   "command": "tool.text",
                   "size": "large"
+                },
+                {
+                  "command": "text.findReplace",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -20554,6 +20616,7 @@
     "polygon": "<path d=\"m3.8 8 6-4.5 6.5 3.5-1.8 9H5.6z\" fill=\"currentColor\" fill-opacity=\".14\"/><rect x=\"2.3\" y=\"6.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"8.3\" y=\"2\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"14.8\" y=\"5.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"13\" y=\"14.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"4.1\" y=\"14.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "spline": "<path d=\"M3 15c2.6-8.5 5.8-8.5 7 0 1.2 8.2 4.5 4 7-9\"/><rect x=\"1.5\" y=\"13.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15.5\" y=\"4.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "text": "<path d=\"M4.5 5V3.8h11V5M10 3.8v12.4M7.5 16.2h5\"/>",
+    "findReplace": "<circle cx=\"8\" cy=\"8\" r=\"4.3\"/><path d=\"m11.1 11.1 2.4 2.4\"/><path d=\"M10.5 17h6.5m-2-2 2 2-2 2\"/>",
     "readable": "<path d=\"M16 10.5A6 6 0 1 1 13.6 5.7\"/><path d=\"M14 2.6v3.5h-3.5\"/><path d=\"M7.5 8.3h5M10 8.3v5\"/>",
     "dimension": "<path d=\"M3.5 5v10M16.5 5v10M3.5 12h13\"/><path d=\"m5.8 10.5-2.3 1.5 2.3 1.5M14.2 10.5l2.3 1.5-2.3 1.5\"/><path d=\"M8 8.5h4\"/>",
     "hatch": "<rect x=\"3.5\" y=\"3.5\" width=\"13\" height=\"13\"/><path d=\"m3.5 9.5 6-6M3.5 15.5l12-12M9.5 16.5l7-7\"/>",

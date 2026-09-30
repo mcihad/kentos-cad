@@ -113,6 +113,7 @@ pub mod ellipse;
 pub mod erase;
 mod faces;
 mod fence;
+pub mod find_replace;
 mod format;
 pub mod grip_menu;
 pub mod hatch;

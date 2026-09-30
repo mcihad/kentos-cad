@@ -29,6 +29,7 @@ mod elevation_scenes;
 #[cfg(test)]
 mod elevation_tests;
 mod exchange;
+mod find_replace;
 mod expression;
 #[cfg(test)]
 mod files_testing;

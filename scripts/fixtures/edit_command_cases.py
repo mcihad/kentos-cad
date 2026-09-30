@@ -676,6 +676,19 @@ cases.append({
     ],
 })
 
+renamed = {**dressed, "text": "Parsel 7"}
+cases.append({
+    "name": "Bul ve değiştir: yazının yeni metni yazılır; hizası, çarpanı ve zemini kalır; adım “Bul ve değiştir” (ADR 0145 §6)",
+    "setup": PROPS_SETUP,
+    "steps": [
+        {"op": "execute", "input": properties(2, dressed), "result": done(changed=[uid(2)]),
+         "expect": {"entities": {"2": reshaped(PE(2), dressed)}, "revision": "changed"}},
+        {"op": "execute", "input": {"operation": "replaceText", "changes": [{"kind": "update", "uid": uid(2), "geometry": renamed}]}, "result": done(changed=[uid(2)]),
+         "expect": {"entities": {"2": reshaped(PE(2), renamed)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Bul ve değiştir", "expect": {"entities": {"2": reshaped(PE(2), dressed)}}},
+    ],
+})
+
 cases.append({
     "name": "yazının genişlik çarpanı 0'dan büyük, en çok 100: invalid_width_factor; sonlu olmayan önce not_finite (ADR 0145)",
     "setup": PROPS_SETUP,

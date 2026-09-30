@@ -1160,6 +1160,7 @@ impl App {
             Asking::BlockDefine => self.block_define_view(),
             Asking::BlockAttributes => self.block_attributes_view(),
             Asking::AttributeValues => self.attribute_values_view(),
+            Asking::FindReplace => self.find_replace_view(),
         }
     }
 }
