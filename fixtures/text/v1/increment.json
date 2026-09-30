@@ -1,0 +1,83 @@
+{
+  "format": "kentos.text-cases",
+  "version": 1,
+  "title": "Artır: yazının sonundaki sayının bir fazlası (ADR 0145 §3)",
+  "note": "Yazının bittiği ASCII rakamları ondalık sayı olarak bir artar, en az eski basamak sayısıyla (sıfır dolgusu korunur, taşınca uzar). Sonu rakam olmayan yazının sonrakisi yoktur (null).",
+  "cases": [
+    {
+      "name": "sayı",
+      "text": "101",
+      "next": "102"
+    },
+    {
+      "name": "bölü: sondaki sayı",
+      "text": "101/12",
+      "next": "101/13"
+    },
+    {
+      "name": "harf ve sayı",
+      "text": "P9",
+      "next": "P10"
+    },
+    {
+      "name": "sıfır dolgusu korunur",
+      "text": "A-009",
+      "next": "A-010"
+    },
+    {
+      "name": "dolgu taşınca uzar",
+      "text": "099",
+      "next": "100"
+    },
+    {
+      "name": "dokuzlar bir basamak ekler",
+      "text": "999",
+      "next": "1000"
+    },
+    {
+      "name": "sıfır",
+      "text": "0",
+      "next": "1"
+    },
+    {
+      "name": "adada parsel",
+      "text": "Ada 1284",
+      "next": "Ada 1285"
+    },
+    {
+      "name": "uzun sayı",
+      "text": "12345678901234567890",
+      "next": "12345678901234567891"
+    },
+    {
+      "name": "ondalık sayının son basamağı",
+      "text": "1.5",
+      "next": "1.6"
+    },
+    {
+      "name": "sonu sayı değil",
+      "text": "R-?",
+      "next": null
+    },
+    {
+      "name": "boş yazı",
+      "text": "",
+      "next": null
+    },
+    {
+      "name": "sonda boşluk",
+      "text": "101 ",
+      "next": null
+    },
+    {
+      "name": "ASCII olmayan rakam sayı sayılmaz",
+      "text": "Parsel ٣",
+      "next": null
+    },
+    {
+      "name": "Türkçe harfler korunur",
+      "text": "Ağaç-07",
+      "next": "Ağaç-08"
+    }
+  ]
+}

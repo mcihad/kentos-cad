@@ -1,0 +1,218 @@
+{
+  "format": "kentos.text-cases",
+  "version": 1,
+  "title": "Bul ve değiştir: düz ve jokerli eşleme (ADR 0145 §3)",
+  "note": "Jokersiz: aranan her geçtiği yerde, soldan, örtüşmeden değişir; tam sözcükte önündeki ve ardındaki karakter harf, rakam ya da _ olamaz. Jokerli: kalıp bütün yazıya uyar, * boş da olabilen herhangi bir dizidir ve soldan en kısa olanı alır; değiştirmedeki i. * kalıbın i. *'ının aldığıdır (fazlası boş). Büyük küçük harf ayrılmazsa Türkçe katlama: I → ı, İ → i, öbürleri tek küçük harfleri. Uymayan: null.",
+  "cases": [
+    {
+      "name": "her geçen yer",
+      "text": "Ada 101 / Ada 102",
+      "find": "Ada",
+      "replace": "Parsel",
+      "wildcard": false,
+      "caseless": false,
+      "wholeWord": false,
+      "expect": "Parsel 101 / Parsel 102"
+    },
+    {
+      "name": "bulunamayan",
+      "text": "Ada 101",
+      "find": "Pafta",
+      "replace": "Parsel",
+      "wildcard": false,
+      "caseless": false,
+      "wholeWord": false,
+      "expect": null
+    },
+    {
+      "name": "büyük küçük harf ayrı",
+      "text": "ada 101",
+      "find": "Ada",
+      "replace": "Parsel",
+      "wildcard": false,
+      "caseless": false,
+      "wholeWord": false,
+      "expect": null
+    },
+    {
+      "name": "büyük küçük harf ayrılmaz: Türkçe I ve ı",
+      "text": "IŞIK 3",
+      "find": "ışık",
+      "replace": "Lamba",
+      "wildcard": false,
+      "caseless": true,
+      "wholeWord": false,
+      "expect": "Lamba 3"
+    },
+    {
+      "name": "Türkçe İ ve i",
+      "text": "İL SINIRI",
+      "find": "il",
+      "replace": "İlçe",
+      "wildcard": false,
+      "caseless": true,
+      "wholeWord": false,
+      "expect": "İlçe SINIRI"
+    },
+    {
+      "name": "tam sözcük",
+      "text": "Ada Adalar Ada",
+      "find": "Ada",
+      "replace": "Parsel",
+      "wildcard": false,
+      "caseless": false,
+      "wholeWord": true,
+      "expect": "Parsel Adalar Parsel"
+    },
+    {
+      "name": "tam sözcük: rakamla bitişik değil",
+      "text": "A1 A 1A",
+      "find": "A",
+      "replace": "B",
+      "wildcard": false,
+      "caseless": false,
+      "wholeWord": true,
+      "expect": "A1 B 1A"
+    },
+    {
+      "name": "örtüşmeyen, soldan",
+      "text": "aaaa",
+      "find": "aa",
+      "replace": "b",
+      "wildcard": false,
+      "caseless": false,
+      "wholeWord": false,
+      "expect": "bb"
+    },
+    {
+      "name": "boş aranan",
+      "text": "Ada",
+      "find": "",
+      "replace": "x",
+      "wildcard": false,
+      "caseless": false,
+      "wholeWord": false,
+      "expect": null
+    },
+    {
+      "name": "joker: önek",
+      "text": "Ada 101",
+      "find": "Ada *",
+      "replace": "Parsel *",
+      "wildcard": true,
+      "caseless": false,
+      "wholeWord": false,
+      "expect": "Parsel 101"
+    },
+    {
+      "name": "joker: bütün yazıya uyar",
+      "text": "Adalar 3",
+      "find": "Ada *",
+      "replace": "Parsel *",
+      "wildcard": true,
+      "caseless": false,
+      "wholeWord": false,
+      "expect": null
+    },
+    {
+      "name": "joker: iki yıldız",
+      "text": "101/12",
+      "find": "*/*",
+      "replace": "*-*",
+      "wildcard": true,
+      "caseless": false,
+      "wholeWord": false,
+      "expect": "101-12"
+    },
+    {
+      "name": "joker: kısa yakalar",
+      "text": "1/2/3",
+      "find": "*/*",
+      "replace": "*-*",
+      "wildcard": true,
+      "caseless": false,
+      "wholeWord": false,
+      "expect": "1-2/3"
+    },
+    {
+      "name": "joker: sonek",
+      "text": "R-12",
+      "find": "*-12",
+      "replace": "*-13",
+      "wildcard": true,
+      "caseless": false,
+      "wholeWord": false,
+      "expect": "R-13"
+    },
+    {
+      "name": "joker: yalnız yıldız",
+      "text": "Ada 5",
+      "find": "*",
+      "replace": "[*]",
+      "wildcard": true,
+      "caseless": false,
+      "wholeWord": false,
+      "expect": "[Ada 5]"
+    },
+    {
+      "name": "joker: değiştirmede yıldız yok",
+      "text": "Ada 5",
+      "find": "Ada *",
+      "replace": "Yok",
+      "wildcard": true,
+      "caseless": false,
+      "wholeWord": false,
+      "expect": "Yok"
+    },
+    {
+      "name": "joker: fazla yıldız boş kalır",
+      "text": "Ada 5",
+      "find": "Ada *",
+      "replace": "* / *",
+      "wildcard": true,
+      "caseless": false,
+      "wholeWord": false,
+      "expect": "5 / "
+    },
+    {
+      "name": "joker: harf ayrılmaz",
+      "text": "ADA 7",
+      "find": "ada *",
+      "replace": "Parsel *",
+      "wildcard": true,
+      "caseless": true,
+      "wholeWord": false,
+      "expect": "Parsel 7"
+    },
+    {
+      "name": "joker: yıldızsız kalıp bütün yazıdır",
+      "text": "Ada",
+      "find": "Ada",
+      "replace": "Parsel",
+      "wildcard": true,
+      "caseless": false,
+      "wholeWord": false,
+      "expect": "Parsel"
+    },
+    {
+      "name": "joker: yıldızsız kalıp parçaya uymaz",
+      "text": "Ada 1",
+      "find": "Ada",
+      "replace": "Parsel",
+      "wildcard": true,
+      "caseless": false,
+      "wholeWord": false,
+      "expect": null
+    },
+    {
+      "name": "joker: boş yakalama",
+      "text": "Ada ",
+      "find": "Ada *",
+      "replace": "P*",
+      "wildcard": true,
+      "caseless": false,
+      "wholeWord": false,
+      "expect": "P"
+    }
+  ]
+}

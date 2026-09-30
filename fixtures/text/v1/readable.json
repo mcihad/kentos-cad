@@ -1,0 +1,215 @@
+{
+  "format": "kentos.text-cases",
+  "version": 1,
+  "title": "Okunur yap: ters okunan yazı kutusunun ortası çevresinde yarım döner (ADR 0145 §3)",
+  "note": "Dönüşü 0–360'a getirilince 90°'den büyük, en çok 270° olan yazı ters okunur. Noktası eski taban çizgisi boyunca w·(1 − 2a), ona dik h·(0,92 − 2b) kayar (w genişlik, h yükseklik, a ve b hizanın boyuna ve yukarı payları; kutu taban çizgisinin 0,23 h altından 1,15 h üstüne); dönüşü 180° artar, 0–360'a getirilir. Öbürleri değişmez (null). Genişlik burada verilir: çekirdekte yazı tipinin ölçüsüdür.",
+  "cases": [
+    {
+      "name": "ters: 180°",
+      "p": {
+        "x": 487100.0,
+        "y": 4420200.0
+      },
+      "height": 2.0,
+      "rotation": 180.0,
+      "width": 10.0,
+      "expect": {
+        "p": {
+          "x": 487090.0,
+          "y": 4420198.16
+        },
+        "rotation": 0.0
+      }
+    },
+    {
+      "name": "ters: 200° → 20°",
+      "p": {
+        "x": 487100.0,
+        "y": 4420200.0
+      },
+      "height": 2.0,
+      "rotation": 200.0,
+      "width": 10.0,
+      "expect": {
+        "p": {
+          "x": 487091.23239085585,
+          "y": 4420194.850764145
+        },
+        "rotation": 20.0
+      }
+    },
+    {
+      "name": "dik yukarıdan aşağı: 270° → 90°",
+      "p": {
+        "x": 487100.0,
+        "y": 4420200.0
+      },
+      "height": 2.5,
+      "rotation": 270.0,
+      "width": 8.0,
+      "expect": {
+        "p": {
+          "x": 487102.3,
+          "y": 4420192.0
+        },
+        "rotation": 90.0
+      }
+    },
+    {
+      "name": "tam 90° okunur, değişmez",
+      "p": {
+        "x": 487100.0,
+        "y": 4420200.0
+      },
+      "height": 2.0,
+      "rotation": 90.0,
+      "width": 10.0,
+      "expect": null
+    },
+    {
+      "name": "90°'den biraz fazla",
+      "p": {
+        "x": 487100.0,
+        "y": 4420200.0
+      },
+      "height": 2.0,
+      "rotation": 90.5,
+      "width": 10.0,
+      "expect": {
+        "p": {
+          "x": 487098.0728047066,
+          "y": 4420209.983562405
+        },
+        "rotation": 270.5
+      }
+    },
+    {
+      "name": "okunur: 30°",
+      "p": {
+        "x": 487100.0,
+        "y": 4420200.0
+      },
+      "height": 2.0,
+      "rotation": 30.0,
+      "width": 10.0,
+      "expect": null
+    },
+    {
+      "name": "okunur: 300°",
+      "p": {
+        "x": 487100.0,
+        "y": 4420200.0
+      },
+      "height": 2.0,
+      "rotation": 300.0,
+      "width": 10.0,
+      "expect": null
+    },
+    {
+      "name": "eksi dönüş: −150° (210°)",
+      "p": {
+        "x": 487100.0,
+        "y": 4420200.0
+      },
+      "height": 2.0,
+      "rotation": -150.0,
+      "width": 10.0,
+      "expect": {
+        "p": {
+          "x": 487092.25974596216,
+          "y": 4420193.406513257
+        },
+        "rotation": 30.0
+      }
+    },
+    {
+      "name": "360'tan büyük: 560° (200°)",
+      "p": {
+        "x": 487100.0,
+        "y": 4420200.0
+      },
+      "height": 2.0,
+      "rotation": 560.0,
+      "width": 10.0,
+      "expect": {
+        "p": {
+          "x": 487091.23239085585,
+          "y": 4420194.850764145
+        },
+        "rotation": 20.0
+      }
+    },
+    {
+      "name": "ortalı yazı: kutunun ortası yerinde",
+      "p": {
+        "x": 487100.0,
+        "y": 4420200.0
+      },
+      "height": 2.0,
+      "rotation": 180.0,
+      "width": 10.0,
+      "expect": {
+        "p": {
+          "x": 487100.0,
+          "y": 4420200.16
+        },
+        "rotation": 0.0
+      },
+      "align": "middleCenter"
+    },
+    {
+      "name": "sağ üst hizalı, 210°",
+      "p": {
+        "x": 487100.0,
+        "y": 4420200.0
+      },
+      "height": 1.5,
+      "rotation": 210.0,
+      "width": 6.4,
+      "expect": {
+        "p": {
+          "x": 487104.7325625842,
+          "y": 4420204.602961155
+        },
+        "rotation": 30.0
+      },
+      "align": "topRight"
+    },
+    {
+      "name": "taban orta, 135°",
+      "p": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "height": 3.0,
+      "rotation": 135.0,
+      "width": 12.25,
+      "expect": {
+        "p": {
+          "x": -1.9516147160748714,
+          "y": -1.9516147160748711
+        },
+        "rotation": 315.0
+      },
+      "align": "baselineCenter"
+    },
+    {
+      "name": "sol alt, 250°",
+      "p": {
+        "x": 486512.34,
+        "y": 4420187.52
+      },
+      "height": 2.0,
+      "rotation": 250.0,
+      "width": 7.5,
+      "expect": {
+        "p": {
+          "x": 486512.2556374439,
+          "y": 4420179.569372165
+        },
+        "rotation": 70.0
+      },
+      "align": "bottomLeft"
+    }
+  ]
+}

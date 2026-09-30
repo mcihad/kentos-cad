@@ -694,6 +694,38 @@ impl<'a> TextPlace<'a> {
         self.frame(font, (0.0, -h * 0.2), (self.width(font), h))
     }
 
+    /// Okunur yap (docs/adr/0145 §3): a text that reads upside down (turned
+    /// more than 90° and at most 270°, its turn taken from 0 up to 360) is
+    /// turned half round about the middle of its box, so the box stays where
+    /// it was; its new point and turn. None for a text that reads.
+    pub fn readable(&self, font: Font) -> Option<(Vec2, f64)> {
+        self.readable_at(self.width(font))
+    }
+
+    /// `readable` with its width given (the shared cases give it,
+    /// fixtures/text/v1/readable.json). Its point moves w·(1 − 2a) along and
+    /// h·(0.92 − 2b) up its old baseline, a and b its alignment's shares
+    /// (0.92: its box is 0.23 of its height under the baseline and 1.15 over
+    /// it); its turn is 180° more.
+    pub fn readable_at(&self, width: f64) -> Option<(Vec2, f64)> {
+        let r = ((self.rotation % 360.0) + 360.0) % 360.0;
+        if !(r > 90.0 && r <= 270.0) {
+            return None;
+        }
+        let (a, b) = self.align.map_or((0.0, 0.0), |a| (a.along(), a.up()));
+        let t = (r * PI) / 180.0;
+        let (u, v) = (Vec2::new(cos(t), sin(t)), Vec2::new(-sin(t), cos(t)));
+        let along = width * (1.0 - 2.0 * a);
+        let up = self.height * (0.92 - 2.0 * b);
+        Some((
+            Vec2::new(
+                self.p.x + u.x * along + v.x * up,
+                self.p.y + u.y * along + v.y * up,
+            ),
+            (r + 180.0) % 360.0,
+        ))
+    }
+
     /// The box its mask fills (docs/adr/0145 §4): its outline with a tenth
     /// of its height around it.
     pub fn mask(&self, font: Font) -> Vec<Vec2> {
@@ -944,6 +976,18 @@ pub(crate) static OPS: &[Op] = &[
     // Where a text's point is on it (docs/adr/0145): [along its width, up of its height]; none: [0, 0].
     op!("textAlignShares", |a: Option<TextAlign>| a
         .map_or([0.0, 0.0], |a| [a.along(), a.up()])),
+    // Artır (docs/adr/0145 §3): the text with the number it ends with one more; none without one.
+    op!("textIncrement", |t: String| crate::text::edit::increment(&t)),
+    // Bul ve değiştir: each text as it becomes, none where nothing matched ({wildcard, caseless, wholeWord}).
+    op!("textReplace", |texts: Vec<String>,
+                        find: String,
+                        with: String,
+                        how: crate::text::edit::Find| texts
+        .iter()
+        .map(|t| crate::text::edit::replace(t, &find, &with, how))
+        .collect::<Vec<_>>()),
+    // Okunur yap: a text's new point and turn, none when it reads (`text_readable_json`).
+    op!("textReadable", |t: Json| text_readable_json(&t)),
     op!("isClosedOutline", |e: Entity| is_closed_outline(&e.shape)),
     op!("entityBounds", |e: Entity| entity_bounds(&e.shape)),
     op!("entityAnchor", |e: Entity| entity_anchor(&e.shape)),
@@ -951,6 +995,40 @@ pub(crate) static OPS: &[Op] = &[
     op!("entityArea", |e: Entity| entity_area(&e.shape)),
     op!("entityGeometry", |e: Entity| entity_geometry(&e)),
 ];
+
+/// A text turned to read (`TextPlace::readable`): its new point and turn.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Turned {
+    pub p: Vec2,
+    pub rotation: f64,
+}
+
+crate::json_struct!(out Turned { p, rotation });
+
+/// `textReadable` takes a text's p, height, rotation and, when it has them,
+/// its alignment and width factor, and its width in metres (`width`) or its
+/// `text` and the drawing typeface as `font` to measure it by.
+fn text_readable_json(v: &Json) -> Result<Option<Turned>, String> {
+    let font = match v.get("font") {
+        Json::Str(id) => Font::from_id(id),
+        _ => Font::DEFAULT,
+    };
+    let text: Option<String> = json::read_field(v, "text")?;
+    let place = TextPlace {
+        p: json::read_field(v, "p")?,
+        text: text.as_deref().unwrap_or(""),
+        height: json::read_field(v, "height")?,
+        rotation: json::read_field(v, "rotation")?,
+        align: json::read_field(v, "align")?,
+        width_factor: json::read_field(v, "widthFactor")?,
+    };
+    let width: Option<f64> = json::read_field(v, "width")?;
+    let turned = match width {
+        Some(w) => place.readable_at(w),
+        None => place.readable(font),
+    };
+    Ok(turned.map(|(p, rotation)| Turned { p, rotation }))
+}
 
 /// `textBox` takes any object with p, text, height and rotation, and an alignment and width factor
 /// when it has them (a text entity or a draft), and the drawing typeface as `font` (a `DrawingFont`
