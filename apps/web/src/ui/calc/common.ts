@@ -8,6 +8,7 @@ import { PickPointTool } from '../../tools/pickPointTool';
 import { h, replaceChildren, type Child } from '../dom';
 import { icon } from '../icons';
 import { field, select, summaryLine } from '../io/common';
+import { tooltip } from '../widgets/tooltip';
 import { readNumber, resolvePointIn, type Known, type Row } from './read';
 
 /**
@@ -87,10 +88,25 @@ export interface GridColumn {
 }
 
 
+/** A button of a row beside its delete button (the block attributes' Sahneden seç): its words name it. */
+export interface GridAction {
+  icon: string;
+  /** Its name, which a reader and a trace know it by (`1. satırın yerini seç`). */
+  label: string;
+  /** What it does; for an action that is off, why. */
+  tip: string;
+  disabled?: boolean;
+  run(): void;
+}
+
 /** The rows a table shows and what may be done to them. */
 export interface GridModel {
   columns: GridColumn[];
   rows(): Row[];
+  /** The add button's words; “Satır ekle” when not given. */
+  addLabel?: string;
+  /** A row's own buttons, before its delete button. */
+  actions?(row: number): GridAction[];
   /** A cell that cannot be typed in (a known station's name, a leg after the last point). */
   readonly(row: number, key: string): boolean;
   /** Whether a new row may follow this one, and adds it. */
@@ -157,21 +173,31 @@ export class Grid {
         h(
           'td',
           { class: 'calc-grid__act' },
-          model.canRemove(r)
-            ? (() => {
-                const b = h('button', { class: 'ibtn', type: 'button', title: 'Satırı sil', 'aria-label': `${r + 1}. satırı sil` }, icon('close', 12));
-                b.addEventListener('click', () => {
-                  model.remove(r);
-                  this.render();
-                  this.onChange();
-                });
-                return b;
-              })()
-            : null,
+          h(
+            'div',
+            { class: 'calc-grid__acts' },
+            (model.actions?.(r) ?? []).map((a) => {
+              const b = h('button', { class: 'ibtn', type: 'button', 'aria-label': a.label, disabled: a.disabled }, icon(a.icon, 14));
+              tooltip(b, () => ({ title: a.label, description: a.tip }), 'top');
+              b.addEventListener('click', () => a.run());
+              return b;
+            }),
+            model.canRemove(r)
+              ? (() => {
+                  const b = h('button', { class: 'ibtn', type: 'button', title: 'Satırı sil', 'aria-label': `${r + 1}. satırı sil` }, icon('close', 12));
+                  b.addEventListener('click', () => {
+                    model.remove(r);
+                    this.render();
+                    this.onChange();
+                  });
+                  return b;
+                })()
+              : null,
+          ),
         ),
       ),
     );
-    const add = h('button', { class: 'btn calc-grid__add', type: 'button' }, icon('plus', 14), 'Satır ekle');
+    const add = h('button', { class: 'btn calc-grid__add', type: 'button' }, icon('plus', 14), model.addLabel ?? 'Satır ekle');
     const last = rows.length - 1;
     const after = [...rows.keys()].reverse().find((r) => model.canInsertAfter(r)) ?? -1;
     add.disabled = after < 0 && last >= 0;

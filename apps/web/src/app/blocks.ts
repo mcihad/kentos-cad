@@ -18,13 +18,15 @@ import type { AppContext } from './context';
 export interface BlockService {
   /** Opens the window that names a new block of the objects `uids` with the base point `base`. */
   define(base: Vec2, uids: readonly string[]): void;
+  /** Opens the window of a block's attribute definitions (docs/adr/0144 §7). */
+  attributes(id: string): void;
   /** “Seçilenleri blokla değiştir”: the window's last choice, for as long as the app lives. */
   replace: boolean;
 }
 
-/** The service; `open` loads and opens the window. */
-export function createBlocks(open: (base: Vec2, uids: readonly string[]) => void): BlockService {
-  return { define: open, replace: true };
+/** The service; `open` and `attributes` load and open the windows. */
+export function createBlocks(open: (base: Vec2, uids: readonly string[]) => void, attributes: (id: string) => void): BlockService {
+  return { define: open, attributes, replace: true };
 }
 
 const nameOf = (ctx: AppContext, id: string): string => ctx.doc.block(id)?.name ?? '';
@@ -84,18 +86,34 @@ export function insertBlock(ctx: AppContext, id: string): void {
   ctx.commands.execute('tool.blockInsert');
 }
 
+/** The insert of a block a point is shown on: its selected one, or its only one; else none or many. */
+function shownOn(ctx: AppContext, id: string): number | 'none' | 'many' {
+  const all = insertsOf(ctx, id);
+  const chosen = all.filter((i) => ctx.selection.has(i));
+  if (chosen.length === 1) return chosen[0];
+  if (all.length === 1) return all[0];
+  return all.length ? 'many' : 'none';
+}
+
 /**
  * The insert a new base point is shown on: the selected insert of the block,
  * or its only one in the drawing; else why there is none to show it on.
  */
 export function rebaseInsert(ctx: AppContext, id: string): { insert: number } | { why: string } {
-  const all = insertsOf(ctx, id);
   const name = nameOf(ctx, id);
-  const chosen = all.filter((i) => ctx.selection.has(i));
-  if (chosen.length === 1) return { insert: chosen[0] };
-  if (all.length === 1) return { insert: all[0] };
-  if (!all.length) return { why: `“${name}” bloğu çizimde yerleştirilmemiş: yeni taban noktası bir yerleştirmesinde gösterilir. Önce Blok ekle ile yerleştirin.` };
+  const on = shownOn(ctx, id);
+  if (typeof on === 'number') return { insert: on };
+  if (on === 'none') return { why: `“${name}” bloğu çizimde yerleştirilmemiş: yeni taban noktası bir yerleştirmesinde gösterilir. Önce Blok ekle ile yerleştirin.` };
   return { why: `“${name}” bloğunun birden çok yerleştirmesi var: yeni taban noktasını göstereceğiniz yerleştirmeyi seçin.` };
+}
+
+/** The insert an attribute's place is shown on (Blok öznitelikleri), as the base point's; else why none. */
+export function attributesInsert(ctx: AppContext, id: string): { insert: number } | { why: string } {
+  const name = nameOf(ctx, id);
+  const on = shownOn(ctx, id);
+  if (typeof on === 'number') return { insert: on };
+  if (on === 'none') return { why: `“${name}” bloğu çizimde yerleştirilmemiş: özniteliğin yeri bir yerleştirmesinde gösterilir. Yeri yazın ya da önce Blok ekle ile yerleştirin.` };
+  return { why: `“${name}” bloğunun birden çok yerleştirmesi var: yeri göstereceğiniz yerleştirmeyi pencereyi açmadan önce seçin ya da yeri yazın.` };
 }
 
 /**
@@ -146,7 +164,17 @@ export function removeRefusal(ctx: AppContext, id: string): string | null {
   return `“${nameOf(ctx, id)}” bloğu kullanılıyor (${where}); önce onları silin ya da patlatın.`;
 }
 
-/** The block commands: the Bloklar panel and Blokları temizle (menus, the ribbon's Blok group, the command line). */
+/** The one block the selection's inserts place, or null (none, or inserts of several). */
+export function selectedBlock(ctx: AppContext): string | null {
+  const blocks = new Set<string>();
+  for (const i of ctx.selection.ids.value) {
+    const e = ctx.doc.get(i);
+    if (e?.kind === 'insert') blocks.add(e.block);
+  }
+  return blocks.size === 1 ? [...blocks][0] : null;
+}
+
+/** The block commands: the Bloklar panel, Blok öznitelikleri and Blokları temizle (menus, the ribbon's Blok group, the command line). */
 export function registerBlockCommands(ctx: AppContext): void {
   const cat = 'Blok';
   ctx.commands.register({
@@ -159,6 +187,21 @@ export function registerBlockCommands(ctx: AppContext): void {
     run: () => {
       ctx.ui.rightVisible.set(true);
       ctx.ui.dockTab.set('blocks');
+    },
+  });
+  ctx.commands.register({
+    id: 'block.attributes',
+    title: 'Blok öznitelikleri',
+    category: cat,
+    icon: 'blockAttributes',
+    aliases: ['BATTMAN', 'ATTDEF', 'OZNITELIKTANIMI'],
+    description: 'Seçili yerleştirmenin bloğunun öznitelik tanımlarını düzenleyen pencereyi açar: etiket, soru, varsayılan değer, yazının yüksekliği, açısı ve yeri. Bloklar panelinde bir bloğun menüsünden de açılır.',
+    isEnabled: () => selectedBlock(ctx) !== null,
+    whyDisabled: () => (selectedBlock(ctx) ? null : 'Önce bir bloğun yerleştirmesini seçin (Bloklar panelinde bloğun menüsünden de açılır).'),
+    watch: [ctx.selection.ids, ctx.doc.blocks],
+    run: () => {
+      const id = selectedBlock(ctx);
+      if (id) ctx.blocks.attributes(id);
     },
   });
   ctx.commands.register({

@@ -228,7 +228,11 @@ impl App {
             let place = doc
                 .cloud_source()
                 .map_or(String::new(), |s| format!("{} › ", s.workspace));
-            (format!("{place}{}", doc.name()), doc.dirty(), doc.settings().srid)
+            (
+                format!("{place}{}", doc.name()),
+                doc.dirty(),
+                doc.settings().srid,
+            )
         });
         // Built now, as the ribbon's elements own what they show.
         let help = catalog()
@@ -1130,6 +1134,7 @@ impl App {
             Asking::ModelDesigner => self.model_designer_view(),
             Asking::SvgEditor => self.svgedit_view(),
             Asking::BlockDefine => self.block_define_view(),
+            Asking::BlockAttributes => self.block_attributes_view(),
         }
     }
 }
@@ -1339,16 +1344,15 @@ fn crs_button(srid: u32, name: String, named: bool) -> Element<'static, Message>
         .spacing(6)
         .align_y(iced::Center);
     if named {
-        face = face.push(
-            label::caption(name.clone()).wrapping(iced::widget::text::Wrapping::None),
-        );
+        face = face.push(label::caption(name.clone()).wrapping(iced::widget::text::Wrapping::None));
     }
     kentos_ui::widget::tip(
         button(face)
             .on_press(Message::Run("crs.set"))
             .padding([4, 8])
             .style(style::button::flat),
-        Tip::new("Koordinat sistemi").body(format!("{name}, EPSG:{srid}. Değiştirmek için tıklayın.")),
+        Tip::new("Koordinat sistemi")
+            .body(format!("{name}, EPSG:{srid}. Değiştirmek için tıklayın.")),
         iced::widget::tooltip::Position::Bottom,
     )
 }

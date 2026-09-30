@@ -90,7 +90,10 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
     processing: createProcessing(doc, selection, () => ctx.view.camera.visibleBounds(), { inBox: (r) => ctx.view.inBox(r), measures: (ids) => ctx.view.measures(ids), evaluateExpression: (...a) => ctx.view.evaluateExpression(...a) }),
     styles: createStyles(doc, system),
     // Blok oluştur's window is loaded when first opened (CLAUDE.md §20).
-    blocks: createBlocks((base, uids) => lazy(ctx, import('../ui/blocks/BlockDefineDialog'), (m) => m.openBlockDefineDialog(ctx, base, uids))),
+    blocks: createBlocks(
+      (base, uids) => lazy(ctx, import('../ui/blocks/BlockDefineDialog'), (m) => m.openBlockDefineDialog(ctx, base, uids)),
+      (id) => lazy(ctx, import('../ui/blocks/BlockAttributesDialog'), (m) => m.openBlockAttributesDialog(ctx, id)),
+    ),
     server: new ServerStatus(),
   } as AppContext & { tools: ToolManager; view: ViewportController; files: DocumentFiles; cloud: CloudSession; recovery: RecoveryCopies };
   ctx.tools = new ToolManager(ctx);

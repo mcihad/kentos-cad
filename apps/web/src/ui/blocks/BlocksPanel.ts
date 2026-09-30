@@ -148,9 +148,11 @@ export class BlocksPanel extends Panel {
     const refusal = removeRefusal(ctx, r.id);
     const selected = ctx.selection.size;
     const inserts = insertsOf(ctx, r.id).length;
+    const attributes = ctx.doc.block(r.id)?.attributes?.length ?? 0;
     return [
       { label: 'Blok ekle', icon: 'blockInsert', shortcut: 'Enter', run: () => insertBlock(ctx, r.id) },
       { label: 'Yeniden adlandır', shortcut: 'F2', run: () => this.rename(r) },
+      { label: 'Öznitelikler…', hint: attributes ? String(attributes) : undefined, run: () => ctx.blocks.attributes(r.id) },
       { label: 'Taban noktasını değiştir…', disabled: 'why' in via, detail: 'why' in via ? via.why : undefined, run: () => rebaseBlock(ctx, r.id) },
       {
         label: 'Seçili nesnelerle yeniden tanımla…',

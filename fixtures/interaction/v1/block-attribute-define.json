@@ -1,0 +1,47 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "block-attribute-define",
+  "title": "Blok öznitelikleri penceresi (ADR 0144 §7): seçili rögarın bloğuna NO özniteliği eklenir, yeri yerleştirmede gösterilir; bütün rögarlar kendi numaralarını yazar, yazıya tıklamak rögarı seçer, Patlat numarayı yazı yapar; geri alınır",
+  "source": "ADR 0144, 6b-2 adımı",
+  "covers": ["CAD-04"],
+  "document": "blocks.kcad",
+  "view": { "center": [487020, 4420010], "metresPerPixel": 0.0625 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "clickTolerance": 0.0625,
+  "steps": [
+    { "click": [-0.75, -1.5], "note": "Ortadaki rögar (numarası R-2; bloğunda öznitelik yok, numara yazılmıyor).", "expect": { "tool": "select", "selected": [5] } },
+    { "run": "block.attributes", "note": "Seçili yerleştirmenin bloğunun öznitelikleri.", "expect": { "dialog": "Blok öznitelikleri" } },
+    { "dialog": "Blok öznitelikleri", "press": "Öznitelik ekle", "note": "İlk satır bloğun çiziminin sağına, Yazı'nın yüksekliğiyle gelir." },
+    {
+      "dialog": "Blok öznitelikleri",
+      "fill": { "1. satır Etiket": "NO", "1. satır Soru": "Rögar numarası", "1. satır Varsayılan": "R-?", "1. satır Yükseklik": "0.5" },
+      "press": "1. satırın yerini seç",
+      "note": "Yeri seçili yerleştirmede gösterilir: pencere nokta için gider.",
+      "expect": { "dialog": null }
+    },
+    { "click": [0.9, -1.35], "note": "Çemberin sağ üstü: tanımda (0.9, 0.15); pencere yeriyle geri gelir.", "expect": { "dialog": "Blok öznitelikleri" } },
+    {
+      "dialog": "Blok öznitelikleri",
+      "press": "Kaydet",
+      "note": "Tek adım: bütün rögarlar numaralarını yazar.",
+      "expect": { "dialog": null, "canUndo": true, "logged": ["“Rögar” bloğunun öznitelikleri kaydedildi: 1 öznitelik."] }
+    },
+    { "move": [11.5, -1.1], "note": "Doğudaki rögarın numarası (R-3) yazılı; yazının üstü rögarı vurgular.", "expect": { "hover": 6 } },
+    { "click": [11.5, -1.1], "expect": { "selected": [6] } },
+    {
+      "run": "tool.explode",
+      "note": "İki çember, bloğun R yazısı ve numara yazısı.",
+      "expect": {
+        "entities": 15,
+        "selected": [13, 14, 15, 16],
+        "logged": ["1 nesne patlatıldı: 4 parça."],
+        "newest": { "kind": "text", "points": [[10.9, -1.35]], "text": "R-3" }
+      }
+    },
+    { "key": "Ctrl+Z", "expect": { "entities": 12 } },
+    { "key": "Ctrl+Z", "note": "Öznitelik tanımı geri alınır: numaralar yazılmaz.", "expect": { "canUndo": false } },
+    { "key": "Esc", "expect": { "selected": [] } },
+    { "move": [11.5, -1.1], "expect": { "hover": null } }
+  ]
+}

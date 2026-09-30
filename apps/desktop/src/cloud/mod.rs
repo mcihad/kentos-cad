@@ -928,6 +928,7 @@ impl App {
             // A window over it, a question, then unsaved changes are asked about (style/svgedit/).
             Some(Dialog::SvgEditor) => self.svgedit_close_request(),
             Some(Dialog::BlockDefine) => self.block_define_closed(),
+            Some(Dialog::BlockAttributes) => self.block_attributes = None,
             _ => {}
         }
     }

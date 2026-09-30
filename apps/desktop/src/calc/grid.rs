@@ -4,7 +4,9 @@
 //! it. Enter goes down a column and adds a row at the end; several lines or
 //! cells pasted from a spreadsheet fill from the cell down and right, adding
 //! rows as needed. It looks as the web's does: a sheet in a framed box, the
-//! head fixed above its rows, which scroll past a height.
+//! head fixed above its rows, which scroll past a height. Blok öznitelikleri
+//! (block_attributes.rs) uses it too: its [`Owner`] names the cells and the
+//! messages, and its rows have a button of their own (Sahneden seç).
 
 use iced::widget::tooltip::Position;
 use iced::widget::{Column, Row, button, column, container, row, scrollable, text_input};
@@ -20,6 +22,42 @@ use kentos_ui::widget::{Tip, tip};
 use super::read::read_number;
 use super::{Event, Window, event};
 use crate::app::Message;
+
+/// Whose table it is: its cells' fields and the messages its controls send.
+pub trait Owner: Copy {
+    fn cell_id(self, row: usize, col: usize) -> iced::widget::Id;
+    fn cell(self, row: usize, col: usize, text: String) -> Message;
+    fn paste(self, row: usize, col: usize, text: String) -> Message;
+    fn submit(self, row: usize, col: usize) -> Message;
+    fn remove_row(self, row: usize) -> Message;
+    fn add_row(self) -> Message;
+    /// The add button's words.
+    fn add_label(self) -> &'static str {
+        "Satır ekle"
+    }
+}
+
+/// A Hesap window's table.
+impl Owner for Window {
+    fn cell_id(self, row: usize, col: usize) -> iced::widget::Id {
+        iced::widget::Id::from(format!("calc-{self:?}-{row}-{col}"))
+    }
+    fn cell(self, row: usize, col: usize, text: String) -> Message {
+        event(Event::Cell(row, col, text))
+    }
+    fn paste(self, row: usize, col: usize, text: String) -> Message {
+        event(Event::Paste(row, col, text))
+    }
+    fn submit(self, row: usize, col: usize) -> Message {
+        event(Event::Submit(row, col))
+    }
+    fn remove_row(self, row: usize) -> Message {
+        event(Event::RemoveRow(row))
+    }
+    fn add_row(self) -> Message {
+        event(Event::AddRow)
+    }
+}
 
 /// A column: its heading, the unit after it, whether its values are numbers.
 #[derive(Clone, Copy, Debug)]
@@ -45,26 +83,33 @@ pub trait Table {
     }
     /// A new row after the table's row `row`.
     fn insert_after(&mut self, row: usize);
+    /// Whether an empty table takes a first row from “Satır ekle” (the
+    /// Hesap tables always keep one; the web's add inserts after row −1).
+    fn can_insert_first(&self) -> bool {
+        false
+    }
+    /// The first row of an empty table.
+    fn insert_first(&mut self) {}
     fn can_remove(&self, row: usize) -> bool;
     fn remove(&mut self, row: usize);
 }
 
 /// A cell's field, for moving the keyboard to it.
-pub fn cell_id(window: Window, row: usize, col: usize) -> iced::widget::Id {
-    iced::widget::Id::from(format!("calc-{window:?}-{row}-{col}"))
+pub fn cell_id(owner: impl Owner, row: usize, col: usize) -> iced::widget::Id {
+    owner.cell_id(row, col)
 }
 
 /// Enter in a cell: the next row with this column open, or a new row after
 /// this one (the web's `key`).
-pub fn submit(table: &mut dyn Table, window: Window, row: usize, col: usize) -> Task<Message> {
+pub fn submit(table: &mut dyn Table, owner: impl Owner, row: usize, col: usize) -> Task<Message> {
     if let Some(next) = (row + 1..table.rows()).find(|&next| !table.readonly(next, col)) {
-        return iced::widget::operation::focus(cell_id(window, next, col));
+        return iced::widget::operation::focus(owner.cell_id(next, col));
     }
     if !table.can_insert_after(row) {
         return Task::none();
     }
     table.insert_after(row);
-    iced::widget::operation::focus(cell_id(window, row + 1, col))
+    iced::widget::operation::focus(owner.cell_id(row + 1, col))
 }
 
 /// ↑ or ↓ in the cell `from` (the web's `key`): ↓ is Enter (the next row
@@ -74,27 +119,27 @@ pub fn submit(table: &mut dyn Table, window: Window, row: usize, col: usize) -> 
 /// the table's cells.
 pub fn arrow(
     table: &mut dyn Table,
-    window: Window,
+    owner: impl Owner,
     from: &iced::widget::Id,
     up: bool,
 ) -> Task<Message> {
-    let Some((row, col)) = cell_of(table, window, from) else {
+    let Some((row, col)) = cell_of(table, owner, from) else {
         return Task::none();
     };
     if !up {
-        return submit(table, window, row, col);
+        return submit(table, owner, row, col);
     }
     match above(table, row, col) {
-        Some(r) => iced::widget::operation::focus(cell_id(window, r, col)),
+        Some(r) => iced::widget::operation::focus(owner.cell_id(r, col)),
         None => Task::none(),
     }
 }
 
 /// The table's cell whose field is `id`.
-fn cell_of(table: &dyn Table, window: Window, id: &iced::widget::Id) -> Option<(usize, usize)> {
+fn cell_of(table: &dyn Table, owner: impl Owner, id: &iced::widget::Id) -> Option<(usize, usize)> {
     (0..table.rows())
         .flat_map(|r| (0..table.columns()).map(move |c| (r, c)))
-        .find(|&(r, c)| cell_id(window, r, c) == *id)
+        .find(|&(r, c)| owner.cell_id(r, c) == *id)
 }
 
 /// The nearest row above `row` whose column `col` is typed in.
@@ -103,17 +148,25 @@ fn above(table: &dyn Table, row: usize, col: usize) -> Option<usize> {
 }
 
 /// “Satır ekle”: a row after the last one that may take one (the web's
-/// `add`), and the keyboard to its first open cell.
-pub fn add(table: &mut dyn Table, window: Window) -> Task<Message> {
-    let Some(after) = (0..table.rows()).rev().find(|&r| table.can_insert_after(r)) else {
-        return Task::none();
+/// `add`), and the keyboard to its first open cell. An empty table that
+/// takes rows gets its first one.
+pub fn add(table: &mut dyn Table, owner: impl Owner) -> Task<Message> {
+    let after = (0..table.rows()).rev().find(|&r| table.can_insert_after(r));
+    let row = match after {
+        Some(after) => {
+            table.insert_after(after);
+            after + 1
+        }
+        None if table.rows() == 0 && table.can_insert_first() => {
+            table.insert_first();
+            0
+        }
+        None => return Task::none(),
     };
-    table.insert_after(after);
-    let row = after + 1;
     let col = (0..table.columns())
         .find(|&c| !table.readonly(row, c))
         .unwrap_or(0);
-    iced::widget::operation::focus(cell_id(window, row, col))
+    iced::widget::operation::focus(owner.cell_id(row, col))
 }
 
 /// A pasted line's cells: the web's `/\t|;|\s{2,}|\s(?=[-+\d.])/` split
@@ -196,6 +249,20 @@ pub fn view<'a>(
     table: &'a dyn Table,
     placeholder: impl Fn(usize, usize) -> String,
 ) -> Element<'a, Message> {
+    view_with(window, columns, table, placeholder, 0, |_| Vec::new())
+}
+
+/// The table with `actions` buttons of each row's own before its delete
+/// button (the web's `GridModel.actions`).
+pub fn view_with<'a>(
+    owner: impl Owner + 'a,
+    columns: &'a [Col],
+    table: &'a dyn Table,
+    placeholder: impl Fn(usize, usize) -> String,
+    actions: usize,
+    row_actions: impl Fn(usize) -> Vec<Element<'a, Message>>,
+) -> Element<'a, Message> {
+    let act = ACT * (actions + 1) as f32;
     let number = |n: String| -> Element<'a, Message> {
         container(label::caption(n))
             .width(Length::Fixed(NO))
@@ -212,7 +279,7 @@ pub fn view<'a>(
         // Left, over numbers too, as the web's heads are.
         head = head.push(container(words).width(Fill).padding([5, 8]));
     }
-    head = head.push(container(label::caption("")).width(Length::Fixed(ACT)));
+    head = head.push(container(label::caption("")).width(Length::Fixed(act)));
     let mut body = Column::new();
     for r in 0..table.rows() {
         if r > 0 {
@@ -227,13 +294,13 @@ pub fn view<'a>(
             line = line.push(if table.readonly(r, c) {
                 fixed(value, col.numeric)
             } else {
-                cell(window, r, c, col, value, placeholder(r, c))
+                cell(owner, r, c, col, value, placeholder(r, c))
             });
         }
         let remove: Element<'a, Message> = if table.can_remove(r) {
             tip(
                 button(icon(Icon::Close).size(12.0))
-                    .on_press(event(Event::RemoveRow(r)))
+                    .on_press(owner.remove_row(r))
                     .padding(6)
                     .style(style::button::ghost),
                 Tip::new("Satırı sil"),
@@ -242,7 +309,12 @@ pub fn view<'a>(
         } else {
             iced::widget::space().into()
         };
-        body = body.push(line.push(container(remove).width(Length::Fixed(ACT)).align_x(Center)));
+        let mut buttons = Row::new().align_y(Center);
+        for b in row_actions(r) {
+            buttons = buttons.push(container(b).width(Length::Fixed(ACT)).align_x(Center));
+        }
+        buttons = buttons.push(container(remove).width(Length::Fixed(ACT)).align_x(Center));
+        body = body.push(line.push(container(buttons).width(Length::Fixed(act))));
     }
     let sheet = container(
         column![
@@ -260,13 +332,14 @@ pub fn view<'a>(
     .width(Fill)
     .padding(1)
     .style(style::container::field_box);
-    let can_add = (0..table.rows()).any(|r| table.can_insert_after(r));
+    let can_add = (0..table.rows()).any(|r| table.can_insert_after(r))
+        || (table.rows() == 0 && table.can_insert_first());
     let add = button(
-        row![icon(Icon::Plus).size(14.0), label::body("Satır ekle")]
+        row![icon(Icon::Plus).size(14.0), label::body(owner.add_label())]
             .spacing(6)
             .align_y(Center),
     )
-    .on_press_maybe(can_add.then(|| event(Event::AddRow)))
+    .on_press_maybe(can_add.then(|| owner.add_row()))
     .padding([5, 10])
     .style(style::button::secondary);
     column![sheet, add].spacing(6).into()
@@ -275,7 +348,7 @@ pub fn view<'a>(
 /// A cell that is typed in: borderless in the sheet, the accent edge while
 /// typed in, a red one while its number cannot be read.
 fn cell<'a>(
-    window: Window,
+    owner: impl Owner + 'a,
     r: usize,
     c: usize,
     col: &Col,
@@ -284,10 +357,10 @@ fn cell<'a>(
 ) -> Element<'a, Message> {
     let bad = col.numeric && read_number(value).is_some_and(f64::is_nan);
     let input = text_input(&placeholder, value)
-        .id(cell_id(window, r, c))
-        .on_input(move |t| event(Event::Cell(r, c, t)))
-        .on_paste(move |t| event(Event::Paste(r, c, t)))
-        .on_submit(event(Event::Submit(r, c)))
+        .id(owner.cell_id(r, c))
+        .on_input(move |t| owner.cell(r, c, t))
+        .on_paste(move |t| owner.paste(r, c, t))
+        .on_submit(owner.submit(r, c))
         .padding([4, 8])
         .width(Fill)
         .size(typography::body())

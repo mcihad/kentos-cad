@@ -187,6 +187,8 @@ pub const PORTED: &[&str] = &[
     "tool.blockInsert",
     "block.panel",
     "block.purge",
+    // Blok öznitelikleri: a block's attribute definitions (docs/adr/0144 §7).
+    "block.attributes",
     // Alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine
     // tıklayarak alan; into the document as the web's (docs/adr/0065).
     // Mesafe ölç, Alan hesapla and Parsel oluştur: the path tool's other

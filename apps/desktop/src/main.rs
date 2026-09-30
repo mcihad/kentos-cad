@@ -9,6 +9,8 @@ mod app_menu;
 mod appearance;
 #[cfg(test)]
 mod appearance_tokens_tests;
+mod attribute_table;
+mod block_attributes;
 mod blocks;
 mod blocks_panel;
 mod bottom;

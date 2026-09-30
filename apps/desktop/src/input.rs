@@ -471,6 +471,12 @@ impl App {
                 {
                     return crate::calc::arrow(key == Named::ArrowUp);
                 }
+                // So in Blok öznitelikleri's table (block_attributes.rs).
+                Some(key @ (Named::ArrowUp | Named::ArrowDown))
+                    if self.dialog == Some(crate::app::Dialog::BlockAttributes) =>
+                {
+                    return crate::block_attributes::arrow(key == Named::ArrowUp);
+                }
                 _ => {}
             }
             return Task::none();

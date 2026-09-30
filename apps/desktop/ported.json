@@ -117,6 +117,7 @@
     "tool.blockInsert",
     "block.panel",
     "block.purge",
+    "block.attributes",
     "tool.measure",
     "tool.area",
     "tool.parcel",

@@ -98,6 +98,11 @@
   width: 1%;
   padding: 0 2px;
 }
+.calc-grid__acts {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
 .calc-grid__unit {
   color: var(--c-text-3);
   font-weight: 400;

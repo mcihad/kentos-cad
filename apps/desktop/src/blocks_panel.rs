@@ -61,6 +61,8 @@ enum Picking {
     Rebase { block: BlockId, insert: Slot },
     /// The base point of the block made of these objects.
     Redefine { block: BlockId, uids: Vec<String> },
+    /// A row's place in Blok öznitelikleri, shown on this insert (block_attributes.rs).
+    AttributePlace { insert: Slot, row: usize },
 }
 
 #[derive(Debug, Clone)]
@@ -74,6 +76,8 @@ pub enum Event {
     RenameCancel,
     Rebase(BlockId),
     Redefine(BlockId),
+    /// Blok öznitelikleri for the block (block_attributes.rs).
+    Attributes(BlockId),
     SelectInserts(BlockId),
     Remove(BlockId),
 }
@@ -173,6 +177,7 @@ impl App {
             Event::RenameCancel => self.blocks_panel.renaming = None,
             Event::Rebase(id) => self.blocks_rebase(id),
             Event::Redefine(id) => self.blocks_redefine(id),
+            Event::Attributes(id) => self.open_block_attributes(id),
             Event::SelectInserts(id) => {
                 if let Some(doc) = &self.document {
                     let (level, line) =
@@ -294,6 +299,16 @@ impl App {
         );
     }
 
+    /// Blok öznitelikleri's Sahneden seç: a row's place shown on `insert`;
+    /// the window comes back with it (block_attributes.rs).
+    pub(crate) fn blocks_pick_place(&mut self, insert: Slot, row: usize, name: String) {
+        self.blocks_panel.picking = Some(Picking::AttributePlace { insert, row });
+        self.blocks_pick(
+            format!("Öznitelik yeri: {name}"),
+            format!("{}. özniteliğin yeri", row + 1),
+        );
+    }
+
     /// Asks for a point on the drawing (Çizimden), as the web's `PickPointTool`.
     fn blocks_pick(&mut self, command: String, field: String) {
         self.say(Level::Command, command);
@@ -309,6 +324,21 @@ impl App {
         let Some(picking) = self.blocks_panel.picking.take() else {
             return false;
         };
+        // A row's place goes back to Blok öznitelikleri, which comes back even when none was shown.
+        if let Picking::AttributePlace { insert, row } = picking {
+            let local = match (p, &self.document) {
+                (Some(p), Some(doc)) => {
+                    self.spatial.sync(&doc.model);
+                    self.spatial
+                        .store()
+                        .insert_local(f64::from(insert.0), p)
+                        .map(|q| kentos_contracts::Vec2 { x: q.x, y: q.y })
+                }
+                _ => None,
+            };
+            self.block_attributes_picked(row, local);
+            return true;
+        }
         let (Some(p), Some(doc)) = (p, self.document.as_mut()) else {
             return true;
         };
@@ -321,6 +351,7 @@ impl App {
                 }
             }
             Picking::Redefine { block, uids } => actions::redefine(&mut doc.model, block, uids, p),
+            Picking::AttributePlace { .. } => Vec::new(),
         };
         self.say_all(said);
         true
@@ -520,10 +551,15 @@ impl App {
             .shortcut("Enter")
             .item("Yeniden adlandır", msg(Event::Rename(id)))
             .shortcut("F2")
-            .item(
-                "Taban noktasını değiştir…",
-                via.is_ok().then(|| msg(Event::Rebase(id))),
-            );
+            .item("Öznitelikler…", msg(Event::Attributes(id)));
+        let attributes = model.block(id).map_or(0, |b| b.attributes.len());
+        if attributes > 0 {
+            menu = menu.hint(attributes.to_string());
+        }
+        menu = menu.item(
+            "Taban noktasını değiştir…",
+            via.is_ok().then(|| msg(Event::Rebase(id))),
+        );
         if let Err(why) = via {
             menu = menu.detail(why);
         }

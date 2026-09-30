@@ -144,6 +144,8 @@ pub enum Dialog {
     Share,
     /// Blok oluştur's window (blocks.rs, docs/adr/0144); the window is `App::blocks`.
     BlockDefine,
+    /// Blok öznitelikleri (block_attributes.rs, docs/adr/0144 §7); the window is `App::block_attributes`.
+    BlockAttributes,
 }
 
 /// Where the app goes once the drawing on screen is left (cloud/leaving.rs).
@@ -246,6 +248,8 @@ pub enum Message {
     Blocks(crate::blocks::Event),
     /// Bloklar panel (blocks_panel.rs).
     BlocksPanel(crate::blocks_panel::Event),
+    /// Blok öznitelikleri's window (block_attributes.rs).
+    BlockAttributes(crate::block_attributes::Event),
     /// The rollover card's wait is over, for this hover (hover_card.rs).
     HoverCard(u64),
     /// The pointer rested on a snap past the tracking dwell (tracking.rs).
@@ -388,6 +392,8 @@ pub struct App {
     pub(crate) blocks: crate::blocks::Blocks,
     /// The Bloklar panel (blocks_panel.rs).
     pub(crate) blocks_panel: crate::blocks_panel::PanelState,
+    /// Blok öznitelikleri's window, while it is open or away for a point (block_attributes.rs).
+    pub(crate) block_attributes: Option<crate::block_attributes::Window>,
     pub(crate) text_field_select: bool,
     pub(crate) text_field_release: bool,
     /// Öznitelikler's closed sections, by id, while the app runs (the web's `collapsed`).
@@ -576,7 +582,11 @@ impl App {
         crate::drawing_fonts::load();
         let mut app = Self {
             document: None,
-            tab: catalog().tabs().nth(1).or(catalog().tabs().next()).map_or("home", |tab| tab.id),
+            tab: catalog()
+                .tabs()
+                .nth(1)
+                .or(catalog().tabs().next())
+                .map_or("home", |tab| tab.id),
             ribbon_context: false,
             ribbon_collapsed: false,
             mode: Mode::Dark,
@@ -600,6 +610,7 @@ impl App {
             text_field_focus: false,
             blocks: crate::blocks::Blocks::default(),
             blocks_panel: crate::blocks_panel::PanelState::default(),
+            block_attributes: None,
             text_field_select: false,
             text_field_release: false,
             props_closed: std::collections::HashSet::new(),
@@ -951,6 +962,7 @@ impl App {
             Message::Properties(event) => self.properties_event(event),
             Message::Blocks(event) => self.blocks_event(event),
             Message::BlocksPanel(event) => return self.blocks_panel_event(event),
+            Message::BlockAttributes(event) => return self.block_attributes_event(event),
             Message::HoverCard(version) => self.hover_card_due(version),
             Message::TrackDwell(number) => {
                 self.tracking.dwell_due(number);
@@ -1365,6 +1377,7 @@ impl App {
             // The blocks (blocks_panel.rs, docs/adr/0144).
             "block.panel" => self.show_blocks_panel(),
             "block.purge" => self.purge_blocks(),
+            "block.attributes" => self.open_selected_block_attributes(),
             "edit.undo" => self.undo(),
             "edit.redo" => self.step_history(false),
             "tool.confirm" => return self.confirm(),
@@ -1449,6 +1462,9 @@ impl App {
             id if id.starts_with("cloud.") => self.cloud_available(id),
             "layer.new" | "layer.newGroup" => self.tree_locked().is_none(),
             "block.purge" => doc.is_some_and(|d| !d.blocks().is_empty()),
+            "block.attributes" => doc.is_some_and(|d| {
+                kentos_interaction::blocks::selected_block(d, &self.selection).is_some()
+            }),
             // Katman stili opens for the active layer: not for a group.
             "style.layerStyle" => doc.is_some_and(|d| {
                 d.layers()

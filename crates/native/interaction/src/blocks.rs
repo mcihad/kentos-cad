@@ -130,11 +130,10 @@ pub fn select_inserts(doc: &Document, selection: &mut Selection, id: BlockId) ->
     )
 }
 
-/// The insert a new base point is shown on: the selected insert of the
-/// block, or its only one in the drawing; else why there is none to show it on.
-pub fn rebase_insert(doc: &Document, selection: &Selection, id: BlockId) -> Result<Slot, String> {
+/// The insert of a block a point is shown on: its selected one, or its only
+/// one; else whether it has none (`Err(true)`) or several.
+fn shown_on(doc: &Document, selection: &Selection, id: BlockId) -> Result<Slot, bool> {
     let all = inserts_of(doc, id);
-    let name = name_of(doc, id);
     let chosen: Vec<Slot> = all
         .iter()
         .copied()
@@ -142,13 +141,116 @@ pub fn rebase_insert(doc: &Document, selection: &Selection, id: BlockId) -> Resu
         .collect();
     match (chosen.as_slice(), all.as_slice()) {
         ([one], _) | (_, [one]) => Ok(*one),
-        (_, []) => Err(format!(
-            "“{name}” bloğu çizimde yerleştirilmemiş: yeni taban noktası bir yerleştirmesinde gösterilir. Önce Blok ekle ile yerleştirin."
-        )),
-        _ => Err(format!(
-            "“{name}” bloğunun birden çok yerleştirmesi var: yeni taban noktasını göstereceğiniz yerleştirmeyi seçin."
-        )),
+        (_, []) => Err(true),
+        _ => Err(false),
     }
+}
+
+/// The insert a new base point is shown on: the selected insert of the
+/// block, or its only one in the drawing; else why there is none to show it on.
+pub fn rebase_insert(doc: &Document, selection: &Selection, id: BlockId) -> Result<Slot, String> {
+    let name = name_of(doc, id);
+    shown_on(doc, selection, id).map_err(|none| {
+        if none {
+            format!(
+                "“{name}” bloğu çizimde yerleştirilmemiş: yeni taban noktası bir yerleştirmesinde gösterilir. Önce Blok ekle ile yerleştirin."
+            )
+        } else {
+            format!(
+                "“{name}” bloğunun birden çok yerleştirmesi var: yeni taban noktasını göstereceğiniz yerleştirmeyi seçin."
+            )
+        }
+    })
+}
+
+/// The insert an attribute's place is shown on (Blok öznitelikleri, the
+/// web's `attributesInsert`), as the base point's; else why none.
+pub fn attributes_insert(
+    doc: &Document,
+    selection: &Selection,
+    id: BlockId,
+) -> Result<Slot, String> {
+    let name = name_of(doc, id);
+    shown_on(doc, selection, id).map_err(|none| {
+        if none {
+            format!(
+                "“{name}” bloğu çizimde yerleştirilmemiş: özniteliğin yeri bir yerleştirmesinde gösterilir. Yeri yazın ya da önce Blok ekle ile yerleştirin."
+            )
+        } else {
+            format!(
+                "“{name}” bloğunun birden çok yerleştirmesi var: yeri göstereceğiniz yerleştirmeyi pencereyi açmadan önce seçin ya da yeri yazın."
+            )
+        }
+    })
+}
+
+/// The one block the selection's inserts place (Blok öznitelikleri's
+/// command, the web's `selectedBlock`); none for none or several.
+pub fn selected_block(doc: &Document, selection: &Selection) -> Option<BlockId> {
+    let mut found: Option<BlockId> = None;
+    for slot in selection.ids() {
+        if let Some(kentos_contracts::Entity::Insert(i)) = doc.get(*slot) {
+            match found {
+                Some(b) if b != i.block => return None,
+                _ => found = Some(i.block),
+            }
+        }
+    }
+    found
+}
+
+/// What `cad.blocks.edit` answers for an attribute list now (Blok
+/// öznitelikleri's check at every change): nothing, or its refusal's words.
+pub fn check_attributes(
+    doc: &mut Document,
+    id: BlockId,
+    attributes: Vec<kentos_contracts::AttributeDefinition>,
+) -> Result<(), String> {
+    let input = BlocksEdit {
+        attributes: Some(attributes),
+        ..input(BlockEditOperation::Attributes, Some(id))
+    };
+    match blocks_edit::validate(&ExecutionContext::new(doc), &input) {
+        CommandResult::Failed { error }
+        | CommandResult::Conflict { error }
+        | CommandResult::NeedsInput { error } => Err(error.message),
+        _ => Ok(()),
+    }
+}
+
+/// Blok öznitelikleri's Kaydet: the definition's whole attribute list
+/// through `cad.blocks.edit` (`attributes`); what it said, and whether it
+/// completed. Nothing is said when the list was already so.
+pub fn set_attributes(
+    doc: &mut Document,
+    id: BlockId,
+    attributes: Vec<kentos_contracts::AttributeDefinition>,
+) -> (Vec<Said>, bool) {
+    let name = name_of(doc, id);
+    let n = attributes.len();
+    let mut said = Vec::new();
+    let out = edit(
+        doc,
+        BlocksEdit {
+            attributes: Some(attributes),
+            ..input(BlockEditOperation::Attributes, Some(id))
+        },
+        &mut said,
+    );
+    let Some(out) = out else {
+        return (said, false);
+    };
+    if !out.changed.is_empty() {
+        said.push((
+            Level::Success,
+            if n > 0 {
+                format!("“{name}” bloğunun öznitelikleri kaydedildi: {n} öznitelik.")
+            } else {
+                format!("“{name}” bloğunun öznitelikleri kaldırıldı.")
+            },
+        ));
+    }
+    (said, true)
 }
 
 /// A new base point, in the definition's own coordinates (the host takes the

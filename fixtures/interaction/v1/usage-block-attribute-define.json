@@ -1,0 +1,28 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "usage-block-attribute-define",
+  "title": "Kullanım: rögar bloğuna numara özniteliği tanımlanır; pencerede satır eklenir, yeri seçili rögarda gösterilir, kaydedilince bütün rögarlar kendi numaralarını yazar",
+  "source": "Kullanım senaryosu (kentos-cad kullan, apps/web/scripts/e2e/use.mjs); ADR 0144, 6b-2 adımı",
+  "covers": ["CAD-04"],
+  "document": "blocks.kcad",
+  "view": { "center": [487020, 4420010], "metresPerPixel": 0.035 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "clickTolerance": 0.035,
+  "steps": [
+    { "click": [-0.75, -1.5], "note": "Ortadaki rögar seçilir: numarası (R-2) öznitelik bilgilerinde, çizimde yazılmıyor.", "expect": { "selected": [5] } },
+    { "run": "block.attributes", "expect": { "dialog": "Blok öznitelikleri" } },
+    { "dialog": "Blok öznitelikleri", "press": "Öznitelik ekle" },
+    { "dialog": "Blok öznitelikleri", "fill": { "1. satır Etiket": "NO", "1. satır Soru": "Rögar numarası", "1. satır Varsayılan": "R-?", "1. satır Yükseklik": "0.5" } },
+    { "shot": "pencere", "note": "Etiket, soru, varsayılan, yükseklik; yer bloğun çiziminin sağında önerilir." },
+    { "dialog": "Blok öznitelikleri", "press": "1. satırın yerini seç", "expect": { "dialog": null } },
+    { "move": [0.9, -1.35] },
+    { "shot": "yer-sec", "note": "Pencere nokta için gider; istem satırın yerini sorar." },
+    { "click": [0.9, -1.35], "expect": { "dialog": "Blok öznitelikleri" } },
+    { "shot": "yer-secildi", "note": "Yer tanıma çevrildi: Y 0.9, X 0.15 (taban noktasına göre)." },
+    { "dialog": "Blok öznitelikleri", "press": "Kaydet", "expect": { "dialog": null, "logged": ["“Rögar” bloğunun öznitelikleri kaydedildi: 1 öznitelik."] } },
+    { "move": [3, 2] },
+    { "shot": "numaralar", "note": "Üç rögar kendi numarasını yazar: R-1, R-2, R-3." },
+    { "key": "Ctrl+Z", "expect": { "canUndo": false } }
+  ]
+}

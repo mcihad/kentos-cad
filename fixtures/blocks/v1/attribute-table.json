@@ -1,0 +1,383 @@
+{
+  "format": "kentos.attribute-table",
+  "version": 1,
+  "title": "Blok öznitelikleri penceresinin tablosu: tanım satıra, satır tanıma; yeni satırın yeri (ADR 0144 §7)",
+  "note": "Sayı hücrede JavaScript'in String(+n.toFixed(6)) yazdığı gibidir: ikili değerin altı ondalığı, sonra geri okunan en kısa yazı, “-0” değil. Yer taban noktasına göredir: Y doğu, X kuzey. Dokunulmamış hücre gösterdiği tam değeri verir; yazılan hücre Hesap tablolarının okuyucusuyla okunur (kırpılır, virgül noktadır; boş: yer ve açı 0, yükseklik yok; sayı değil: NaN). Etiket, soru ve varsayılan kırpılır; boş soru ve varsayılan yazılmaz. Yeni satır: öncekinin bir buçuk satır altında, onun yüksekliğiyle; ilk satır bloğun çiziminin (taban noktasında, dönmemiş) sağında, yüksekliğin beşte biri ötede, yazısının üstü çizimin üstüyle bir; çizim yoksa taban noktasında. JSON NaN taşıyamaz: \"NaN\" yazılır. Aritmetik IEEE çift duyarlıklı, kuralın sırasıyla.",
+  "numbers": [
+    [
+      0.0,
+      "0"
+    ],
+    [
+      0.5,
+      "0.5"
+    ],
+    [
+      -0.55,
+      "-0.55"
+    ],
+    [
+      0.9000000000232831,
+      "0.9"
+    ],
+    [
+      0.15000000037252903,
+      "0.15"
+    ],
+    [
+      -1e-09,
+      "0"
+    ],
+    [
+      12.5,
+      "12.5"
+    ],
+    [
+      1234567.1234567,
+      "1234567.123457"
+    ],
+    [
+      2.0000004,
+      "2"
+    ]
+  ],
+  "rows": [
+    {
+      "name": "tanımın satırı: sayılar tabana göre, altı ondalıkla",
+      "base": {
+        "x": 487010.0,
+        "y": 4420008.5
+      },
+      "definition": {
+        "tag": "NO",
+        "prompt": "Rögar numarası",
+        "value": "R-?",
+        "p": {
+          "x": 487010.9,
+          "y": 4420008.65
+        },
+        "height": 0.5,
+        "rotation": 0
+      },
+      "cells": {
+        "tag": "NO",
+        "prompt": "Rögar numarası",
+        "value": "R-?",
+        "height": "0.5",
+        "rotation": "0",
+        "y": "0.9",
+        "x": "0.15"
+      }
+    },
+    {
+      "name": "sorusu ve varsayılanı olmayan, dönük öznitelik",
+      "base": {
+        "x": 487010.0,
+        "y": 4420008.5
+      },
+      "definition": {
+        "tag": "KOT",
+        "prompt": "Kapak kotu",
+        "p": {
+          "x": 487010.9,
+          "y": 4420007.95
+        },
+        "height": 0.4,
+        "rotation": 12.5
+      },
+      "cells": {
+        "tag": "KOT",
+        "prompt": "Kapak kotu",
+        "value": "",
+        "height": "0.4",
+        "rotation": "12.5",
+        "y": "0.9",
+        "x": "-0.55"
+      }
+    }
+  ],
+  "definitions": [
+    {
+      "name": "dokunulmamış satır tanımı olduğu gibi verir (yer ve sayılar tam)",
+      "base": {
+        "x": 487010.0,
+        "y": 4420008.5
+      },
+      "from": {
+        "tag": "NO",
+        "prompt": "Rögar numarası",
+        "value": "R-?",
+        "p": {
+          "x": 487010.9,
+          "y": 4420008.65
+        },
+        "height": 0.5,
+        "rotation": 0
+      },
+      "cells": {
+        "tag": "NO",
+        "prompt": "Rögar numarası",
+        "value": "R-?",
+        "height": "0.5",
+        "rotation": "0",
+        "y": "0.9",
+        "x": "0.15"
+      },
+      "definition": {
+        "tag": "NO",
+        "prompt": "Rögar numarası",
+        "value": "R-?",
+        "p": {
+          "x": 487010.9,
+          "y": 4420008.65
+        },
+        "height": 0.5,
+        "rotation": 0
+      }
+    },
+    {
+      "name": "yazılanlar: etiket ve soru kırpılır, boş soru ve varsayılan yazılmaz, virgül ondalıktır",
+      "base": {
+        "x": 487010.0,
+        "y": 4420008.5
+      },
+      "from": {
+        "tag": "NO",
+        "prompt": "Rögar numarası",
+        "value": "R-?",
+        "p": {
+          "x": 487010.9,
+          "y": 4420008.65
+        },
+        "height": 0.5,
+        "rotation": 0
+      },
+      "cells": {
+        "tag": "  KAPAK ",
+        "prompt": "  ",
+        "value": " Açık ",
+        "height": "0,75",
+        "rotation": "0",
+        "y": "1.25",
+        "x": "-0.5"
+      },
+      "definition": {
+        "tag": "KAPAK",
+        "value": "Açık",
+        "p": {
+          "x": 487011.25,
+          "y": 4420008.0
+        },
+        "height": 0.75,
+        "rotation": 0
+      }
+    },
+    {
+      "name": "boş hücreler: yer ve açı 0 (taban noktası), yükseklik yok (NaN)",
+      "base": {
+        "x": 487010.0,
+        "y": 4420008.5
+      },
+      "from": {
+        "tag": "KOT",
+        "prompt": "Kapak kotu",
+        "p": {
+          "x": 487010.9,
+          "y": 4420007.95
+        },
+        "height": 0.4,
+        "rotation": 12.5
+      },
+      "cells": {
+        "tag": "KOT",
+        "prompt": "Kapak kotu",
+        "value": "",
+        "height": "",
+        "rotation": "",
+        "y": "",
+        "x": ""
+      },
+      "definition": {
+        "tag": "KOT",
+        "prompt": "Kapak kotu",
+        "p": {
+          "x": 487010.0,
+          "y": 4420008.5
+        },
+        "height": "NaN",
+        "rotation": 0
+      }
+    },
+    {
+      "name": "sayı olmayan hücre NaN verir",
+      "base": {
+        "x": 487010.0,
+        "y": 4420008.5
+      },
+      "from": {
+        "tag": "KOT",
+        "prompt": "Kapak kotu",
+        "p": {
+          "x": 487010.9,
+          "y": 4420007.95
+        },
+        "height": 0.4,
+        "rotation": 12.5
+      },
+      "cells": {
+        "tag": "KOT",
+        "prompt": "Kapak kotu",
+        "value": "",
+        "height": "abc",
+        "rotation": "1e1",
+        "y": "0.4.5",
+        "x": "-0.55"
+      },
+      "definition": {
+        "tag": "KOT",
+        "prompt": "Kapak kotu",
+        "p": {
+          "x": "NaN",
+          "y": 4420007.95
+        },
+        "height": "NaN",
+        "rotation": 10.0
+      }
+    }
+  ],
+  "newRows": [
+    {
+      "name": "ilk satır bloğun çiziminin sağında, yazısının üstü çizimin üstüyle bir",
+      "base": {
+        "x": 487010.0,
+        "y": 4420008.5
+      },
+      "above": [],
+      "extent": {
+        "minX": -0.75,
+        "minY": -0.75,
+        "maxX": 0.75,
+        "maxY": 0.75
+      },
+      "height": 1.25,
+      "cells": {
+        "tag": "",
+        "prompt": "",
+        "value": "",
+        "height": "1.25",
+        "rotation": "0",
+        "y": "1",
+        "x": "-0.5"
+      },
+      "p": {
+        "x": 487011.0,
+        "y": 4420008.0
+      },
+      "exactHeight": 1.25
+    },
+    {
+      "name": "çizimi olmayan blokta ilk satır taban noktasında",
+      "base": {
+        "x": 487010.0,
+        "y": 4420008.5
+      },
+      "above": [],
+      "extent": null,
+      "height": 1.25,
+      "cells": {
+        "tag": "",
+        "prompt": "",
+        "value": "",
+        "height": "1.25",
+        "rotation": "0",
+        "y": "0",
+        "x": "0"
+      },
+      "p": {
+        "x": 487010.0,
+        "y": 4420008.5
+      },
+      "exactHeight": 1.25
+    },
+    {
+      "name": "sonraki satır öncekinin bir buçuk satır altında, onun yüksekliğiyle",
+      "base": {
+        "x": 487010.0,
+        "y": 4420008.5
+      },
+      "above": [
+        {
+          "tag": "NO",
+          "prompt": "Rögar numarası",
+          "value": "R-?",
+          "p": {
+            "x": 487010.9,
+            "y": 4420008.65
+          },
+          "height": 0.5,
+          "rotation": 0
+        }
+      ],
+      "extent": {
+        "minX": -0.75,
+        "minY": -0.75,
+        "maxX": 0.75,
+        "maxY": 0.75
+      },
+      "height": 1.25,
+      "cells": {
+        "tag": "",
+        "prompt": "",
+        "value": "",
+        "height": "0.5",
+        "rotation": "0",
+        "y": "0.9",
+        "x": "-0.6"
+      },
+      "p": {
+        "x": 487010.9,
+        "y": 4420007.9
+      },
+      "exactHeight": 0.5
+    },
+    {
+      "name": "önceki satırın yüksekliği okunmuyorsa verilen yükseklik",
+      "base": {
+        "x": 487010.0,
+        "y": 4420008.5
+      },
+      "above": [
+        {
+          "tag": "A",
+          "p": {
+            "x": 487011.0,
+            "y": 4420009.0
+          },
+          "height": "NaN",
+          "rotation": 0
+        }
+      ],
+      "extent": {
+        "minX": -0.75,
+        "minY": -0.75,
+        "maxX": 0.75,
+        "maxY": 0.75
+      },
+      "height": 1.25,
+      "cells": {
+        "tag": "",
+        "prompt": "",
+        "value": "",
+        "height": "1.25",
+        "rotation": "0",
+        "y": "1",
+        "x": "-1.375"
+      },
+      "p": {
+        "x": 487011.0,
+        "y": 4420007.125
+      },
+      "exactHeight": 1.25
+    }
+  ]
+}
