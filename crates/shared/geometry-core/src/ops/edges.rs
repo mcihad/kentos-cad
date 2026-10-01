@@ -8,13 +8,34 @@ use crate::entity::{
 };
 use crate::geom::arc::sweep;
 use crate::geom::bulge::bulge_path_edges;
+use crate::geom::curve_outline::{
+    ellipse_edges_in, ellipse_outline, spline_edges_in, spline_outline,
+};
 use crate::geom::dimension::layout_dimension;
-use crate::geom::ellipse::{is_full_ellipse, tessellate_ellipse};
+use crate::geom::ellipse::is_full_ellipse;
 use crate::geom::intersect::{Edge, closest_on_edge, full_circle};
-use crate::geom::spline::catmull_rom;
+use crate::geometry::Bounds;
 use crate::jsmath::js_hypot;
 use crate::op;
 use crate::vec2::Vec2;
+
+/// The edges of `e` that can come into `area`: a fit-point curve's and an
+/// ellipse's only from the pieces that can reach it (docs/adr/0149 §5.3),
+/// every other kind's all, as [`entity_edges`] gives them. For queries
+/// about one place: a snap, a trim's boundaries near its target.
+pub fn entity_edges_in(e: &Shape, area: &Bounds) -> Vec<Edge> {
+    match e {
+        Shape::Spline { pts, closed } => spline_edges_in(pts, *closed, area),
+        Shape::Ellipse {
+            c,
+            major,
+            ratio,
+            t0,
+            t1,
+        } => ellipse_edges_in(&ellipse_geom(*c, *major, *ratio, *t0, *t1), area),
+        _ => entity_edges(e),
+    }
+}
 
 /// Decomposes an entity into primitive edges (points and text have none).
 pub fn entity_edges(e: &Shape) -> Vec<Edge> {
@@ -36,8 +57,13 @@ pub fn entity_edges(e: &Shape) -> Vec<Edge> {
             }
             out
         }
-        // The tessellated curve already ends on its first point when closed.
-        Shape::Spline { pts, closed } => path_edges(&catmull_rom(pts, *closed, 16.0), false),
+        // Chords within 0.1 mm of the curve (docs/adr/0149 §5.3); a closed ring does not repeat its
+        // first point. Fewer than three points are drawn straight, closed or not.
+        Shape::Spline { pts, closed } => {
+            let out = spline_outline(pts, *closed);
+            let ring = *closed && out.len() > 2;
+            path_edges(&out, ring)
+        }
         Shape::Hatch { ring, holes, .. } => {
             let mut out = path_edges(ring, true);
             for h in holes.iter().flatten() {
@@ -65,7 +91,7 @@ pub fn entity_edges(e: &Shape) -> Vec<Edge> {
             t1,
         } => {
             let g = ellipse_geom(*c, *major, *ratio, *t0, *t1);
-            path_edges(&tessellate_ellipse(&g, 256.0), is_full_ellipse(&g))
+            path_edges(&ellipse_outline(&g), is_full_ellipse(&g))
         }
         Shape::Xline { p, dir } | Shape::Ray { p, dir } => {
             let r = CONSTRUCTION_REACH;

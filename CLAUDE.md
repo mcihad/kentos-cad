@@ -170,6 +170,7 @@ python3 scripts/fixtures/dimension_cases.py --check   # yeni ölçü türlerinin
 python3 scripts/fixtures/quick_dimension_cases.py --check   # Hızlı ölçü'nün ölçülerini (taraf, uzaklık, ortak kenar) kurallardan denetle (ADR 0147 §7)
 python3 scripts/fixtures/numeric_display.py --check   # gösterim kuralının durumlarını (yarımlar, gürültü, işaret, taşma) kuraldan denetle (ADR 0149)
 python3 scripts/fixtures/measure_cases.py --check   # ölçülerin kesin değerlerini (uzunluk, alan, yay, elips, eğri, semt, açı, ölçü türleri) 50 basamaklı bağımsız başvuruyla denetle (ADR 0149)
+cargo test --release -p kentos-geometry-core --test curve_perf -- --ignored --nocapture   # 2 000 eğri ve 500 elips arasında kenet, tıklama ve kesişim penceresi süreleri (ADR 0149 §5.3)
 pnpm e2e:cloud           # gerçek API/PostGIS cloud akışı
 KENTOS_E2E_DB=scratch pnpm e2e:cloud   # aynı akış geçici veritabanında (bu yapının migration'ları), kentos_cad'e dokunmadan
 KENTOS_E2E_SERVER=…/target/debug node apps/web/scripts/e2e/cloud.mjs   # aynı akış başka bir yapının sunucusuyla (ADR 0038)
@@ -554,10 +555,10 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   ARC_DIMENSION ve LARGE_RADIAL_DIMENSION iki yönde, semt ve eğim hizalı ölçü olarak KentOS verisiyle, zemin DIMTFILL
   (`dimension-kinds.dxf`, `dxf-write/dimensions` bağımsız denetimle). Grupların anlamı AutoCAD'in kendi dosyasından
   doğrulandı; ezdxf'in ve LibreDWG'nin kırıklı yarıçap adları yanlıştır (ADR 0147 §10.5).
-- Sürmekte (1 Ekim, sahibin bildirimi üzerine `HYB-01`'den önce): ölçü doğruluğu ve gösterim yuvarlaması
-  ([ADR 0149](docs/adr/0149-measurement-accuracy-and-display-rounding.md), TODOS.md `NUM-11`). 1. adım (tek gösterim kuralı,
-  `display::fixed` ve `core/displayNumber.ts`) ve 2. adım (224 durumluk bağımsız ölçü denetimi; eğri uzunluğu ve basık elips
-  düzeltildi) tamam; sıradaki 3: kenet, kesişim, Patlat ve alan işlemlerinde eğrinin açık toleranslı ya da kesin temsili.
+- Bitti (1 Ekim, sahibin bildirimi üzerine): ölçü doğruluğu ve gösterim yuvarlaması
+  ([ADR 0149](docs/adr/0149-measurement-accuracy-and-display-rounding.md), TODOS.md `NUM-11`): tek gösterim kuralı
+  (`display::fixed`, `core/displayNumber.ts`), 224 durumluk bağımsız ölçü denetimi (eğri uzunluğu ve basık elips düzeltildi),
+  hesaplarda eğri ve elipsin 0,1 mm'lik açık sınırla temsili (`geom::curve_outline`).
 - Sonra: TODOS.md §16'nın sırası (sahibin kararı, 1 Ekim): önce hibrit (§16.0, `HYB-01` topolojik temizlik; ADR 0148
   yazıldı, henüz commit'lenmedi), sonra CAD (§16.1), sonra CBS (§16.2). PDF, yazdırma ve pafta çıktısı (§16.4) en sondadır,
   zamanını sahip söyleyecek. İşler ADR 0142–0147'deki gibi: önce ADR ve adımları, sonra adım adım iki platformda, ortak fixture'larla.

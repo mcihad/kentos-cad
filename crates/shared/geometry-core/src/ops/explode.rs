@@ -9,11 +9,11 @@ use crate::api::Op;
 use crate::entity::{Entity, HatchPattern, Shape, dimension_geom};
 use crate::geom::arc::norm_angle;
 use crate::geom::bulge::{bulge_arc, bulge_at};
+use crate::geom::curve_outline::spline_outline;
 use crate::geom::dimension::layout_dimension;
 use crate::geom::hatch::hatch_lines;
 use crate::geom::leader::{self, Head};
 use crate::geom::intersect::Edge;
-use crate::geom::spline::catmull_rom;
 use crate::jsmath::{PI, cos, js_hypot, js_max, sin};
 use crate::op;
 use crate::ops::curve_cuts::Cut;
@@ -58,10 +58,8 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
             }
         }
         Shape::Spline { pts, closed } => {
-            let mut out = catmull_rom(pts, *closed, 16.0);
-            if *closed {
-                out.pop(); // the tessellation repeats the first point
-            }
+            // Chords within 0.1 mm of the curve (docs/adr/0149 §5.3); a closed ring does not repeat its first point.
+            let out = spline_outline(pts, *closed);
             Cut::Pieces(vec![Entity::new(if *closed {
                 Shape::Polygon {
                     pts: out,

@@ -27,7 +27,7 @@ use crate::geom::intersect::Edge;
 use crate::geometry::{Bounds, empty_bounds, extend_bounds};
 use crate::jsmath::{js_hypot, js_max, js_min};
 use crate::ops::curve_cuts::{Cut, Geometry};
-use crate::ops::edges::entity_edges;
+use crate::ops::edges::{entity_edges, entity_edges_in};
 use crate::ops::stretch::stretch_entity;
 use crate::ops::transform::transform_shape;
 use crate::ops::trim::{extend_entity, trim_entity};
@@ -271,8 +271,9 @@ impl Store {
             if !loose_box(it) && !overlaps(&it.bounds, &whole) {
                 continue;
             }
-            // An insert's pieces cut and stop as objects of their own (docs/adr/0144).
-            for ed in it.shapes().flat_map(entity_edges) {
+            // An insert's pieces cut and stop as objects of their own (docs/adr/0144); a
+            // curve is split only where it can reach the target (docs/adr/0149 §5.3).
+            for ed in it.shapes().flat_map(|s| entity_edges_in(s, &whole)) {
                 hits.clear();
                 near.search(&edge_box(&ed), &mut hits);
                 if !hits.is_empty() {

@@ -19,7 +19,7 @@ use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges};
 use crate::geom::leader;
 use crate::geometry::{Bounds, point_in_polygon, signed_area};
 use crate::jsmath::{PI, js_cmp, js_hypot, js_max, js_min, stable_sort};
-use crate::ops::edges::entity_edges;
+use crate::ops::edges::{entity_edges, entity_edges_in};
 use crate::text::Font;
 use crate::vec2::Vec2;
 
@@ -255,7 +255,23 @@ fn crosses(e: &Shape, fence: &[Vec2], segs: &[Edge], tol: f64, font: Font) -> bo
                 })
         }
         _ => {
-            let edges = entity_edges(e);
+            // A curve is split only where the fence can meet it (docs/adr/0149 §5.3).
+            let mut area = crate::geometry::empty_bounds();
+            for s in segs {
+                if let Edge::Seg { a, b } = s {
+                    for q in [a, b] {
+                        area.min_x = js_min(area.min_x, q.x);
+                        area.min_y = js_min(area.min_y, q.y);
+                        area.max_x = js_max(area.max_x, q.x);
+                        area.max_y = js_max(area.max_y, q.y);
+                    }
+                }
+            }
+            let edges = if segs.iter().all(|s| matches!(s, Edge::Seg { .. })) {
+                entity_edges_in(e, &area)
+            } else {
+                entity_edges(e)
+            };
             segs.iter()
                 .any(|s| edges.iter().any(|ed| !intersect_edges(s, ed).is_empty()))
         }

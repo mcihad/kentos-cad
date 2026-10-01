@@ -12,13 +12,13 @@ use crate::geom::dimension::{is_new_kind, layout_dimension};
 use crate::geom::leader;
 use crate::geom::ellipse::{
     EllipseGeom, closest_param, ellipse_point, ellipse_tangent_points, is_full_ellipse,
-    line_ellipse, quadrant_params,
+    line_ellipse, quadrant_params, tessellate_ellipse,
 };
 use crate::geom::intersect::{
     Edge, closest_on_edge, intersect_edges, on_edge_arc, perpendicular_foot, tangent_points,
 };
 use crate::jsmath::{atan2, js_hypot};
-use crate::ops::edges::entity_edges;
+use crate::ops::edges::entity_edges_in;
 use crate::vec2::Vec2;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -152,6 +152,13 @@ impl Store {
         from: Option<Vec2>,
         crossings: impl Fn(&mut Choice, &[Nearby], Vec2),
     ) -> Option<SnapHit> {
+        // Where an edge can matter: a curve is split only near it (docs/adr/0149 §5.3).
+        let reach = crate::geometry::Bounds {
+            min_x: p.x - tol,
+            min_y: p.y - tol,
+            max_x: p.x + tol,
+            max_y: p.y + tol,
+        };
         let mut ch = Choice {
             p,
             tol,
@@ -202,7 +209,16 @@ impl Store {
                                 ch.consider(SnapKind::Tangent, t, id);
                             }
                         }
-                        for ed in entity_edges(e) {
+                        // Its chords only find crossings, which are then moved onto the curve
+                        // (`refine_crossing`): coarse ones do, and keep the pairs few.
+                        let chords = tessellate_ellipse(&g, 256.0);
+                        let n = chords.len();
+                        let count = if is_full_ellipse(&g) { n } else { n.saturating_sub(1) };
+                        for i in 0..count {
+                            let ed = Edge::Seg {
+                                a: chords[i],
+                                b: chords[(i + 1) % n],
+                            };
                             if closest_on_edge(&ed, p).d <= tol {
                                 nearby.push(Nearby {
                                     id,
@@ -337,7 +353,7 @@ impl Store {
                         }
                     }
                 }
-                for ed in entity_edges(e) {
+                for ed in entity_edges_in(e, &reach) {
                     // Out at the overview a contour of hundreds of segments crosses the aperture with a few:
                     // the rest are left out by their box before the closest point is worked out.
                     if let Edge::Seg { a, b } = ed

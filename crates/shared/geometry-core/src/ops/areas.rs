@@ -8,15 +8,13 @@ use crate::entity::{Entity, Shape, area_parts, ellipse_geom, entity_vertices, is
 use crate::geom::arc::{ArcGeom, arc_end, arc_start};
 use crate::geom::arrangement::{Area, Ring, Source};
 use crate::geom::bulge::{bulge_at, has_bulges};
-use crate::geom::ellipse::{is_full_ellipse, tessellate_ellipse};
-use crate::geom::spline::catmull_rom;
-use crate::jsmath::{PI, js_hypot, js_max, js_min};
+use crate::geom::curve_outline::{ellipse_outline, spline_outline};
+use crate::geom::ellipse::is_full_ellipse;
+use crate::jsmath::js_hypot;
 use crate::op;
 use crate::ops::edges::entity_edges;
 use crate::vec2::Vec2;
 
-/// Chord deviation allowed when a curve has to become straight edges (m).
-const CURVE_TOL: f64 = 1e-3;
 /// Polyline ends closer than this count as closed.
 const CLOSE_TOL: f64 = 1e-6;
 
@@ -70,23 +68,16 @@ pub fn area_of_entity(e: &Shape) -> Option<Area> {
             if !is_full_ellipse(&g) {
                 return None;
             }
-            let a = js_hypot(major.x, major.y);
-            // Sagitta a·(π/n)²/2 ≤ tolerance.
-            let n = js_min(
-                4096.0,
-                js_max(64.0, (PI / ((2.0 * CURVE_TOL) / a).sqrt()).ceil()),
-            );
             Some(Area {
                 outer: Ring {
-                    pts: tessellate_ellipse(&g, n),
+                    pts: ellipse_outline(&g),
                     bulges: None,
                 },
                 holes: Vec::new(),
             })
         }
         Shape::Spline { pts, closed } => (*closed && pts.len() >= 3).then(|| {
-            let mut ring = catmull_rom(pts, true, 32.0);
-            ring.pop();
+            let ring = spline_outline(pts, true);
             Area {
                 outer: Ring {
                     pts: ring,

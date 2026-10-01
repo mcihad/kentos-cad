@@ -90,6 +90,19 @@ Denetimde bulunan her sapma kaynağında düzeltilir. Tolerans büyütülmez, be
    - **Sorun:** kenet ve kesişimler (`ops::edges`), Patlat (`ops::explode`) ve kapalı eğrinin alan işlemleri (`ops::areas`) eğriyi hâlâ açıklık başına 16 ya da 32 kirişle temsil eder. Eğri üstünde alınan nokta gerçek eğriden santimetre düzeyinde sapabilir.
    - **Hedef:** yaklaşık temsil açık bir toleransa bağlanır, örneğin kirişin eğriden en büyük uzaklığı 0,1 mm. Ya da kesin eğri kullanılır. Bağımsız başvuruyla sınanır.
 
+   *(1 Ekim: tamam.)*
+   - **Temsil:** hesaplar eğriyi ve elipsi `geom::curve_outline` ile alır (`CURVE_TOL`, 0,1 mm).
+     - **Eğri:** her Bézier açıklığı, iki iç kontrol noktası kirişe 0,1 mm'den yakın olana dek ikiye bölünür (de Casteljau). Eğri kontrol noktalarının içbükey zarfında kaldığından bütün parça kirişe o kadar yakındır.
+     - **Elips:** her parça a·h²/8 ≤ 0,1 mm olana dek bölünür.
+   - **Kullananlar:** `entity_edges` (kenet, tıklama, seçme, budama ve uzatma sınırı, yol, Böl, Parçala), Patlat ve alan işlemleri. Tek bir yerin sorgusu (`entity_edges_in`: kenet, budamanın sınırları, kesişim penceresi) yalnız oraya erişebilen parçaları böler.
+   - **Elipste kenet:** kesişim adayları için kaba kirişler kalır; kesişim gerçek eğrilere taşınır (`refine_crossing`), en yakın nokta zaten kesindir.
+   - **Kanıt:**
+     - Özellik testleri, rastgele ve TM koordinatlı eğri ve elipslerde, gerçek eğrinin her yerde kırık çizgiye 0,1 mm'den yakın olduğunu gösterir.
+     - Dondurulmuş durumlardan değişen 14 çağrı ve 13 depo cevabı, bağımsız bir Python denetiminden geçtikten sonra güncellendi. Denetim: köşeler gerçek eğrinin üzerinde (2·10⁻⁹ m içinde), gerçek eğri kırık çizgiye 0,1 mm'den yakın, değişen kenet, budama ve uzatma uçları gerçek eğrinin üzerinde (en çok 5,9·10⁻⁵ m).
+     - Eski uçlar eğriden 2,27 cm'ye kadar uzaktı. Bir kesişim kenedi iki eğriden birinin 2,18 cm dışındaydı.
+     - Gözden geçirme araçları: `tests/calls_dump.rs`, depo testinde `KENTOS_DUMP_STORE`.
+   - **Başarım** (2 000 eğri ve 500 elips, TM koordinatları; `tests/curve_perf.rs`, release): kenet sorgusu 0,74 ms (önce 0,046 ms), tıklama 0,09 ms, 200 m'lik kesişim penceresi 0,04 ms.
+
 ## Sonuçlar
 
 - Aynı büyüklük her yerde aynı yazılır; yarımda biten değer yöne ya da yola göre değişmez.
