@@ -538,9 +538,11 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   Bul ve değiştir, Metin dosyası yerleştir); biçimler (DXF okuma ve yazma, NCZ çapaları; `texts.dxf` ve
   `dxf-write/texts` bağımsız denetimle). Ondan önce blok (ADR 0144, `CAD-04`), çok parçalı alan (ADR 0143,
   `CAD-14`) ve köşe kotu (ADR 0142, `CAD-13`).
-- Sırada, sahibin sırasıyla (ADR 0143 Bağlam): lider, sonra yeni ölçü türleri. Her biri `.kcad` şemasını
-  değiştiren kendi özelliği ve şema adımıyla gelir; önce ADR yazılır, adımlar ADR 0142–0145'teki gibi iki
-  platformda, ortak fixture'larla ilerler.
+- Sürmekte: lider ([ADR 0146](docs/adr/0146-leader.md), TODOS.md `CAD-16`, `.kcad` şema 8): ok, kırık çizgi,
+  kol ve not tek nesne (`leader`); ok türleri, ölçüler notun yüksekliğinden; Lider aracı, Öznitelikler; DXF
+  LEADER ve MULTILEADER. Sıradaki adım 1 (sözleşme ve şema 8). Ondan sonra, sahibin sırasıyla (ADR 0143
+  Bağlam): yeni ölçü türleri. Her biri `.kcad` şemasını değiştiren kendi özelliği ve şema adımıyla gelir;
+  önce ADR yazılır, adımlar ADR 0142–0146'daki gibi iki platformda, ortak fixture'larla ilerler.
 - Bilinen açık: web `pnpm e2e` duman testinde üç test ADR 0143'ten önce de düşüyordu: “toolbox
   shows every tool without scrolling” (79 araç kaydırma istiyor), nokta hesaplayıcının “yan nokta
   30/5” adımı ve “Layers panel: counts follow add, undo and redo”. Kök nedenleri araştırılmadı.
