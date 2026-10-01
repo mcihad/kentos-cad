@@ -128,7 +128,7 @@ Her ölçü değerin yüksekliği `h` cinsindendir, öbür ölçülerdeki gibi: 
 
 ### 7. Araç ve arayüz
 
-Bütün ölçüler şeritte, Çizim › Açıklama › **Ölçülendirme ▾** listesindedir. İki platformda aynı katalogdan gelir; web'de klasik araç kutusu ve menüler de oradan beslenir. Her biri komut satırının seçeneği ve takma adıyla da açılır.
+Bütün ölçüler şeritte, Çizim › Açıklama › **Ölçülendirme ▾** listesindedir. İki platformda aynı katalogdan gelir; web'de klasik araç kutusu ve menüler de oradan beslenir. Her biri komut satırının seçeneği ve takma adıyla da açılır. Her türün kendi simgesi vardır (DESIGN.md §6); düğmenin yüzü seçilen türünkini gösterir. Ölçülendirme Açıklama panelinin öncüsüdür: panel küçük düğmelere indiğinde de büyük kalır (sahibin isteği, 1 Ekim: “Her ölçü aracının ikonu tipine göre farklı ve şık olsun ayrıca ölçü butonu ribbon üzerinde büyük olsa iyi olur”).
 
 - **Ölçülendirme'nin yeni yöntemleri:**
   - **Koordinat** (O): önce nokta, sonra çizginin ucu. Ekseni imleç seçer: imleç noktadan daha çok düşey uzaklaştıysa Y, yatay uzaklaştıysa X. Y (Y) ve X (X) ekseni sabitler. Takma adlar: `KOORDINATOLCU`, `DIMORDINATE`, `DOR`.

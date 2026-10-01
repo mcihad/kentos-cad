@@ -140,7 +140,10 @@ impl App {
 
     /// A small command button of these panels, as the ribbon's own.
     fn small(&self, id: &'static str) -> Option<Button<'static, Message>> {
-        self.ribbon_button(&Item::Command { id, large: false })
+        self.ribbon_button(&Item::Command {
+            id,
+            size: crate::catalog::Size::Small,
+        })
     }
 
     /// Katmanlar: the active layer's field over two rows of two buttons.

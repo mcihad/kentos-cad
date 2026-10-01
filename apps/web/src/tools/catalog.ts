@@ -103,19 +103,21 @@ const defs: Def[] = [
   {
     id: 'dimension',
     primary: true,
+    // The annotation panel's lead: large while the panel shows labels (DESIGN.md §7.3.1).
+    lead: true,
     family: 'dimension',
-    // Each method starts the tool with its style's option; its own typed names do too (docs/adr/0147 §7).
+    // Each method starts the tool with its style's option and has its own icon; its own typed names start it too (docs/adr/0147 §7).
     methods: [
-      { label: 'Hizalı', option: 'H', description: 'İki nokta arası, kendi doğrultusunda', aliases: ['DIMALIGNED', 'DAL'] },
-      { label: 'Doğrusal', option: 'D', description: 'ΔY yatay ya da ΔX düşey', aliases: ['DIMLIN', 'DIMLINEAR', 'DLI'] },
-      { label: 'Açı', option: 'A', description: 'İki kenar ya da iki kol arası', aliases: ['DIMANG', 'DIMANGULAR', 'DAN'] },
-      { label: 'Yarıçap', option: 'R', description: 'Daire ya da yayın yarıçapı', aliases: ['DIMRAD', 'DIMRADIUS', 'DRA'] },
-      { label: 'Çap', option: 'Ç', description: 'Daire ya da yayın çapı', aliases: ['DIMDIA', 'DIMDIAMETER', 'DDI'] },
-      { label: 'Koordinat', option: 'O', description: 'Noktanın Y ya da X koordinatı', aliases: ['KOORDINATOLCU', 'DIMORDINATE', 'DOR'] },
-      { label: 'Yay uzunluğu', option: 'U', description: 'Yayın ya da iki noktasının arası', aliases: ['YAYUZUNLUGU', 'DIMARC', 'DAR'] },
-      { label: 'Kırıklı yarıçap', option: 'I', description: 'Merkezi uzak yayın yarıçapı', aliases: ['KIRIKLI', 'DIMJOGGED', 'DJO'] },
-      { label: 'Semt', option: 'T', description: 'Kenarın semti, yanında okla', aliases: ['SEMT', 'SEMTOLCU'] },
-      { label: 'Eğim', option: 'E', description: 'İki kot arası eğim, yüzde', aliases: ['EGIM', 'EGIMOLCU', 'SLOPE'] },
+      { label: 'Hizalı', option: 'H', icon: 'dimAligned', description: 'İki nokta arası, kendi doğrultusunda', aliases: ['DIMALIGNED', 'DAL'] },
+      { label: 'Doğrusal', option: 'D', icon: 'dimLinear', description: 'ΔY yatay ya da ΔX düşey', aliases: ['DIMLIN', 'DIMLINEAR', 'DLI'] },
+      { label: 'Açı', option: 'A', icon: 'dimAngular', description: 'İki kenar ya da iki kol arası', aliases: ['DIMANG', 'DIMANGULAR', 'DAN'] },
+      { label: 'Yarıçap', option: 'R', icon: 'dimRadius', description: 'Daire ya da yayın yarıçapı', aliases: ['DIMRAD', 'DIMRADIUS', 'DRA'] },
+      { label: 'Çap', option: 'Ç', icon: 'dimDiameter', description: 'Daire ya da yayın çapı', aliases: ['DIMDIA', 'DIMDIAMETER', 'DDI'] },
+      { label: 'Koordinat', option: 'O', icon: 'dimOrdinate', description: 'Noktanın Y ya da X koordinatı', aliases: ['KOORDINATOLCU', 'DIMORDINATE', 'DOR'] },
+      { label: 'Yay uzunluğu', option: 'U', icon: 'dimArcLength', description: 'Yayın ya da iki noktasının arası', aliases: ['YAYUZUNLUGU', 'DIMARC', 'DAR'] },
+      { label: 'Kırıklı yarıçap', option: 'I', icon: 'dimJogged', description: 'Merkezi uzak yayın yarıçapı', aliases: ['KIRIKLI', 'DIMJOGGED', 'DJO'] },
+      { label: 'Semt', option: 'T', icon: 'dimAzimuth', description: 'Kenarın semti, yanında okla', aliases: ['SEMT', 'SEMTOLCU'] },
+      { label: 'Eğim', option: 'E', icon: 'dimSlope', description: 'İki kot arası eğim, yüzde', aliases: ['EGIM', 'EGIMOLCU', 'SLOPE'] },
     ],
     label: 'Ölçülendirme',
     icon: 'dimension',

@@ -4,6 +4,7 @@ import { BUILTIN_MODELS } from '../processing/builtin/models';
 import { ProcessingRegistry } from '../processing/registry';
 import { TOOL_CATALOG } from '../tools/catalog';
 import type { ToolDescriptor } from '../tools/Tool';
+import { ICONS } from '../ui/icons';
 import { MAIN_MENU, menuBlocks, menuById, type MenuSpec } from './menus';
 import { modelCommandId, processingCommandId } from './processing';
 import { MAX_LARGE, panelCommands, QUICK_ACCESS, RIBBON_TABS, ribbonTabs, type RibbonInputs, type RibbonItem, type RibbonTab } from './ribbon';
@@ -104,13 +105,38 @@ describe('ribbon', () => {
 
   it('keeps a main tool the same size wherever its panel is not compact, and no panel has more than four large', () => {
     for (const t of tabs)
-      for (const p of t.panels) expect(p.items.filter((i) => i.kind !== 'builtin' && i.size === 'large').length, `${t.id} › ${p.label}`).toBeLessThanOrEqual(MAX_LARGE);
+      for (const p of t.panels) expect(p.items.filter((i) => i.kind !== 'builtin' && i.size !== 'small').length, `${t.id} › ${p.label}`).toBeLessThanOrEqual(MAX_LARGE);
     for (const tool of TOOL_CATALOG.filter((x) => x.primary)) {
       for (const t of tabs.filter((x) => x.id !== 'home' && !x.contextual)) {
         const item = t.panels.flatMap((p) => p.items).find((i) => (i.kind === 'command' && i.id === `tool.${tool.id}`) || (i.kind === 'split' && i.entries.some((e) => e.command === `tool.${tool.id}`)));
-        if (item && item.kind !== 'builtin') expect(item.size, `${t.id}: ${tool.id}`).toBe('large');
+        if (item && item.kind !== 'builtin') expect(item.size, `${t.id}: ${tool.id}`).toBe(tool.lead ? 'lead' : 'large');
       }
     }
+  });
+
+  it('makes Ölçülendirme its panel’s lead, each of its kinds with its own icon (DESIGN.md §7.3.1, docs/adr/0147 §7)', () => {
+    const notes = tabs.find((t) => t.id === 'draw')!.panels.find((p) => p.label === 'Açıklama')!;
+    const split = notes.items.find((i) => i.kind === 'split' && i.key === 'dimension');
+    expect(split?.kind === 'split' && split.size).toBe('lead');
+    if (split?.kind !== 'split') return;
+    expect(split.entries.map((e) => `${e.label}:${e.icon ?? '-'}`)).toEqual([
+      'Hizalı:dimAligned',
+      'Doğrusal:dimLinear',
+      'Açı:dimAngular',
+      'Yarıçap:dimRadius',
+      'Çap:dimDiameter',
+      'Koordinat:dimOrdinate',
+      'Yay uzunluğu:dimArcLength',
+      'Kırıklı yarıçap:dimJogged',
+      'Semt:dimAzimuth',
+      'Eğim:dimSlope',
+      // A family's other tools have their commands' icons.
+      'Zincir ölçü:-',
+      'Baz ölçü:-',
+      'Hızlı ölçü:-',
+    ]);
+    // Every icon is drawn.
+    for (const e of split.entries) if (e.icon) expect(ICONS, e.icon).toHaveProperty(e.icon);
   });
 
   it('puts a family in one split button and a tool with methods in its own, the ways listed in order', () => {

@@ -124,8 +124,9 @@ export function splitControl(ctx: AppContext, key: string, entries: readonly Spl
   const render = () => {
     const e = current();
     const cmd = ctx.commands.get(e.command);
-    const icon20 = icon(cmd?.icon ?? 'more', 20);
     const face = splitFace(e);
+    // A method with its own drawing shows it (Ölçülendirme's kinds); else the command's.
+    const icon20 = icon(face.icon ?? cmd?.icon ?? 'more', 20);
     main.replaceChildren(icon20, h('span', { class: 'rbtn__label rsplit__label' }, face.label));
     arrow.replaceChildren(h('span', { class: 'rbtn__label rsplit__label' }, face.label), h('span', { class: 'rbtn__caret' }, icon('chevronDown', 12)));
     main.dataset.command = e.command;
@@ -142,6 +143,8 @@ export function splitControl(ctx: AppContext, key: string, entries: readonly Spl
   render();
   sync();
   d.add(ctx.tools.activeId.subscribe(sync));
+  // The choice kept in the layout may change from elsewhere (a layout read again): the top follows it.
+  d.add(splits.subscribe(render));
   d.add(listen<PointerEvent>(main, 'pointerdown', (e) => e.button === 0 && e.preventDefault()));
   d.add(listen(main, 'click', () => runEntry(ctx, current()) && host.afterRun()));
   // The top and the arrow both stand for the choice on top: a right click offers it for the quick access bar.
@@ -170,6 +173,7 @@ export function splitControl(ctx: AppContext, key: string, entries: readonly Spl
     const menu = splitMenu(entries);
     const items: MenuItem[] = entries.map((e, i) => ({
       ...commandItem(ctx, e.command),
+      ...(menu.rows[i].icon && { icon: menu.rows[i].icon }),
       label: menu.rows[i].label,
       hint: menu.rows[i].hint,
       run: () => {

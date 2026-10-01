@@ -34,7 +34,7 @@ use kentos_ui::widget::{
 
 use crate::app::{App, COMMAND_INPUT, Dialog as Asking, Message, Panel};
 use crate::catalog::{
-    Command, Item, Launcher, LauncherTarget, Panel as RibbonPanel, Standing, catalog,
+    Command, Item, Launcher, LauncherTarget, Panel as RibbonPanel, Size, Standing, catalog,
 };
 use crate::document::{Document, crs_name};
 use crate::marks::Marks;
@@ -452,12 +452,8 @@ impl App {
             let menu = ribbon_plan::command_menu(id, &bar);
             move || rows_menu(&menu, folded)
         };
-        let make = |command: &Command, large: bool| {
-            let button = if large {
-                Button::large(command.icon, command.short)
-            } else {
-                Button::small(command.icon, command.short)
-            };
+        let make = |command: &Command, size: Size| {
+            let button = sized(size, command.icon, command.short);
             // An off command that says why has the reason in its tip (the web's `whyDisabled`).
             let tip_of = match self.why_disabled(command.id) {
                 Some(why) => Tip::new(command.title).body(why),
@@ -471,19 +467,15 @@ impl App {
                 .flash(self.ribbon_flash == Some(command.id))
         };
         match item {
-            Item::Command { id, large } => {
+            Item::Command { id, size } => {
                 let command = catalog.get(id)?;
                 Some(
-                    make(command, *large)
+                    make(command, *size)
                         .context(context(command.id))
                         .key_tips(self.key_tip(&TipKey::Command(command.id)), None),
                 )
             }
-            Item::Split {
-                key,
-                entries,
-                large,
-            } => {
+            Item::Split { key, entries, size } => {
                 // The entry last chosen from the list is on top (ribbonSplits, docs/adr/0117).
                 let top = self.split_on_top(key, entries)?;
                 let command = catalog.get(top.id)?;
@@ -492,12 +484,11 @@ impl App {
                 // one of it shown by Komut ara outlines the split.
                 let running = ids.iter().any(|id| self.running(id));
                 let flash = self.ribbon_flash.is_some_and(|id| ids.contains(&id));
-                let (label, aria) = ribbon_plan::split_face(&crate::ribbon_bar::split_entry(top));
-                let face = if *large {
-                    Button::large(command.icon, label)
-                } else {
-                    Button::small(command.icon, label)
-                };
+                let (label, aria, icon) =
+                    ribbon_plan::split_face(&crate::ribbon_bar::split_entry(top));
+                // A method with its own drawing shows it (Ölçülendirme's kinds); else the command's.
+                let icon = icon.map_or(command.icon, |name| crate::icons::from_web(Some(name)));
+                let face = sized(*size, icon, label);
                 // Pressing the top runs its entry and keeps the choice as it is.
                 let run = enabled(command)
                     .filter(|_| self.available(command.id))
@@ -544,16 +535,12 @@ impl App {
                 let menu = move || crate::ribbon_bar::split_list(key, &entries);
                 Some(with_family(button, &ids, command.title, menu))
             }
-            Item::Menu { label, ids, large } => {
+            Item::Menu { label, ids, size } => {
                 let icon = ids
                     .first()
                     .and_then(|id| catalog.get(id))
                     .map_or(Icon::More, |c| c.icon);
-                let button = if *large {
-                    Button::large(icon, *label)
-                } else {
-                    Button::small(icon, *label)
-                }
+                let button = sized(*size, icon, *label)
                 .flash(self.ribbon_flash.is_some_and(|id| ids.contains(&id)))
                 .menu_id(crate::ribbon_keys::menu_id(label))
                 .key_tips(self.key_tip(&TipKey::Menu(label)), None);
@@ -1162,6 +1149,20 @@ impl App {
             Asking::AttributeValues => self.attribute_values_view(),
             Asking::FindReplace => self.find_replace_view(),
         }
+    }
+}
+
+/// A ribbon button of this size: large, a panel's lead (large while the
+/// panel shows labels) or small.
+fn sized(
+    size: Size,
+    icon: Icon,
+    label: impl iced::widget::text::IntoFragment<'static>,
+) -> Button<'static, Message> {
+    match size {
+        Size::Large => Button::large(icon, label),
+        Size::Lead => Button::lead(icon, label),
+        Size::Small => Button::small(icon, label),
     }
 }
 

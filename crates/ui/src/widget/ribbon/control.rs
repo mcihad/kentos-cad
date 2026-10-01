@@ -22,6 +22,9 @@ use crate::widget::{Tip, brand_mark, tip};
 enum Size {
     /// Üç satır yüksekliğinde; ikon üstte, iki satıra kadar etiket altta.
     Large,
+    /// Panelin öncüsü: panel etiketlerini gösterdikçe büyük, yalnız ikon
+    /// seviyesinde küçük (DESIGN.md §7.3.1; Ölçülendirme).
+    Lead,
     /// Tek satır yüksekliğinde; ikon ve etiket yan yana.
     Small,
 }
@@ -106,6 +109,12 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
     /// Küçük düğme.
     pub fn small(icon: Icon, label: impl IntoFragment<'a>) -> Self {
         Self::new(icon, label, Size::Small)
+    }
+
+    /// Panelin öncüsü: büyük düğme, panel küçük etiketli düğmelere inince de
+    /// büyük kalır; yalnız ikon seviyesinde küçülür.
+    pub fn lead(icon: Icon, label: impl IntoFragment<'a>) -> Self {
+        Self::new(icon, label, Size::Lead)
     }
 
     fn new(icon: Icon, label: impl IntoFragment<'a>, size: Size) -> Self {
@@ -210,15 +219,20 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
     /// Çizileceği biçim: tasarlandığı boyut, küçükse ve istendiyse yalnız ikon.
     fn form(&self) -> Form {
         match self.size {
-            Size::Large => Form::Large,
+            Size::Large | Size::Lead => Form::Large,
             Size::Small if self.icon_only => Form::Icon,
             Size::Small => Form::Small,
         }
     }
 
-    /// Tasarlandığı boyut büyük mü.
-    pub(crate) fn is_large(&self) -> bool {
-        self.size == Size::Large
+    /// Bu seviyedeki panelde büyük mü çizilir: büyük düğme tasarlandığı
+    /// seviyede (0), öncü etiketler göründükçe (0 ve 1).
+    pub(crate) fn large_at(&self, level: u8) -> bool {
+        match self.size {
+            Size::Large => level == 0,
+            Size::Lead => level <= 1,
+            Size::Small => false,
+        }
     }
 
     /// Katlanmış panelin menüsündeki satırı: menülü düğme alt menü, öbürü

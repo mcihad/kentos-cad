@@ -191,6 +191,8 @@ pub(crate) struct SplitEntry<'a> {
     /// The list's text: the method, or the tool's name.
     pub label: &'a str,
     pub description: Option<&'a str>,
+    /// A method's own icon (Ölçülendirme's kinds, docs/adr/0147 §7); none: its command's.
+    pub icon: Option<&'a str>,
 }
 
 /// A row of a split button's list.
@@ -200,11 +202,13 @@ pub(crate) struct SplitRow<'a> {
     pub option: Option<&'a str>,
     pub label: &'a str,
     pub hint: Option<&'a str>,
+    /// The method's own icon; none: the command's.
+    pub icon: Option<&'a str>,
 }
 
 /// A split button's list: a tool's methods under the tool's name, or a
-/// family's tools without a title; each row the entry's words and its
-/// description as the hint.
+/// family's tools without a title; each row the entry's words, its
+/// description as the hint and a method's own icon.
 pub(crate) fn split_menu<'a>(entries: &[SplitEntry<'a>]) -> (Option<&'a str>, Vec<SplitRow<'a>>) {
     let methods = entries
         .first()
@@ -217,14 +221,16 @@ pub(crate) fn split_menu<'a>(entries: &[SplitEntry<'a>]) -> (Option<&'a str>, Ve
             option: e.option.filter(|o| !o.is_empty()),
             label: e.label,
             hint: e.description.filter(|d| !d.is_empty()),
+            icon: e.icon.filter(|i| !i.is_empty()),
         })
         .collect();
     (header, rows)
 }
 
 /// The top of a split button: its name (a method does not rename it, a
-/// trailing “…” goes) and what it says it does (`Daire: 3 nokta`).
-pub(crate) fn split_face(e: &SplitEntry<'_>) -> (String, String) {
+/// trailing “…” goes), what it says it does (`Daire: 3 nokta`) and the
+/// chosen method's own icon, when it has one (else its command's).
+pub(crate) fn split_face<'a>(e: &SplitEntry<'a>) -> (String, String, Option<&'a str>) {
     let label = e.title.strip_suffix('…').unwrap_or(e.title).to_owned();
     let option = e.option.is_some_and(|o| !o.is_empty());
     let aria = if option || e.label != e.title {
@@ -232,7 +238,7 @@ pub(crate) fn split_face(e: &SplitEntry<'_>) -> (String, String) {
     } else {
         e.title.to_owned()
     };
-    (label, aria)
+    (label, aria, e.icon.filter(|i| !i.is_empty()))
 }
 
 #[cfg(test)]
@@ -301,6 +307,7 @@ mod tests {
             title: opt(v, "title").unwrap_or_default(),
             label: opt(v, "label").unwrap_or_default(),
             description: opt(v, "description"),
+            icon: opt(v, "icon"),
         }
     }
 
@@ -405,19 +412,23 @@ mod tests {
                     if let Some(hint) = r.hint {
                         o.insert("hint".into(), json!(hint));
                     }
+                    if let Some(icon) = r.icon {
+                        o.insert("icon".into(), json!(icon));
+                    }
                     Value::Object(o)
                 })
                 .collect();
             assert_eq!(Value::Array(rows), case["menu"]["rows"], "{case}");
         }
         for case in f["splitFaces"].as_array().expect("cases") {
-            let (label, aria) = split_face(&entry(&case["entry"]));
+            let (label, aria, icon) = split_face(&entry(&case["entry"]));
             assert_eq!(
                 Some(label.as_str()),
                 case["face"]["label"].as_str(),
                 "{case}"
             );
             assert_eq!(Some(aria.as_str()), case["face"]["aria"].as_str(), "{case}");
+            assert_eq!(icon, case["face"]["icon"].as_str(), "{case}");
         }
     }
 }

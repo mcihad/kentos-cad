@@ -430,7 +430,8 @@ fn foot_size() -> f32 {
 /// ikon, 3 tek düğme.
 pub type Level = u8;
 
-/// Düğmeleri seviyede dizer: büyükler tek başına, küçükler sütunda üçer.
+/// Düğmeleri seviyede dizer: büyükler (öncü, etiketler göründükçe) tek
+/// başına, küçükler sütunda üçer.
 fn tools_row<'a, Message: Clone + 'a>(
     tools: &[Button<'a, Message>],
     level: Level,
@@ -444,7 +445,7 @@ fn tools_row<'a, Message: Clone + 'a>(
         row.push(Column::with_children(column.drain(..)).spacing(ROW_GAP))
     };
     for tool in tools {
-        if level == 0 && tool.is_large() {
+        if tool.large_at(level) {
             row = flush(row, &mut column);
             row = row.push(tool.render(Form::Large));
             continue;
@@ -461,7 +462,7 @@ fn tools_row<'a, Message: Clone + 'a>(
 fn tools_width<Message: Clone>(tools: &[Button<'_, Message>], level: Level) -> f32 {
     let (mut total, mut column, mut in_column, mut items) = (0.0_f32, 0.0_f32, 0_u32, 0_u32);
     for tool in tools {
-        if level == 0 && tool.is_large() {
+        if tool.large_at(level) {
             if in_column > 0 {
                 total += column;
                 items += 1;
@@ -928,4 +929,25 @@ fn grid<'a>(tiles: &[Tile], selected: Option<usize>) -> Element<'a, usize> {
         .padding(6)
         .style(style::container::popover)
         .into()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A panel's lead (Ölçülendirme) stays large while the panel shows its
+    /// labels; a large button is small from level 1 (DESIGN.md §7.3.1).
+    #[test]
+    fn a_lead_button_stays_large_while_labels_show() {
+        let lead = || Button::<()>::lead(Icon::Button, "Ölçülendirme");
+        let large = Button::<()>::large(Icon::Button, "Ölçülendirme");
+        let small = Button::<()>::small(Icon::Button, "Ölçülendirme");
+        assert!(lead().large_at(0) && lead().large_at(1) && !lead().large_at(2));
+        assert!(large.large_at(0) && !large.large_at(1));
+        assert_eq!(tools_width(&[lead()], 1), tools_width(&[lead()], 0));
+        assert_eq!(tools_width(&[large], 1), tools_width(&[small], 1));
+        // Among icons it is one as well.
+        let icon = Button::<()>::small(Icon::Button, "Ölçülendirme");
+        assert_eq!(tools_width(&[lead()], 2), tools_width(&[icon], 2));
+    }
 }

@@ -354,7 +354,7 @@ fn place_desktop_commands(tabs: &mut [Tab]) {
     for panel in komut {
         panel.items.push(Item::Command {
             id: PYTHON_CONSOLE,
-            large: true,
+            size: Size::Large,
         });
     }
 }
@@ -506,23 +506,33 @@ pub enum LauncherTarget {
     Command(&'static str),
 }
 
+/// How large a ribbon button is drawn (the web's `RibbonSize`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Size {
+    Large,
+    /// A panel's lead (Ölçülendirme): large while the panel shows labels,
+    /// small only when it is down to icons (DESIGN.md §7.3.1).
+    Lead,
+    Small,
+}
+
 #[derive(Debug, Clone)]
 pub enum Item {
-    /// A command button, large or small.
-    Command { id: &'static str, large: bool },
+    /// A command button.
+    Command { id: &'static str, size: Size },
     /// A family of tools behind one button (Dikdörtgen ▾), or one tool's
     /// methods (Daire ▾: 2 nokta, 3 nokta …): the last chosen is shown
     /// (the layout's `ribbonSplits`, by `key`: the family or the tool).
     Split {
         key: &'static str,
         entries: Vec<Entry>,
-        large: bool,
+        size: Size,
     },
     /// A drop-down button with a submenu of commands.
     Menu {
         label: &'static str,
         ids: Vec<&'static str>,
-        large: bool,
+        size: Size,
     },
     /// A panel the web draws itself, by its name: `layers` (the active
     /// layer), `properties` (the current properties, the plot scale),
@@ -547,6 +557,9 @@ pub struct Entry {
     /// Typed names that start the tool with this method (`DOR`: Ölçülendirme
     /// as Koordinat; the web's `ToolMethod.aliases`, docs/adr/0147 §7).
     pub aliases: &'static [&'static str],
+    /// The method's own icon (Ölçülendirme's kinds; the web's `ToolMethod.icon`);
+    /// none: its command's.
+    pub icon: Option<&'static str>,
 }
 
 /// The catalog: commands by id and the ribbon.
@@ -785,13 +798,17 @@ pub fn catalog() -> &'static Catalog {
 }
 
 fn item(raw: RawItem) -> Item {
-    let large = |size: &str| size == "large";
+    let size = |size: &str| match size {
+        "large" => Size::Large,
+        "lead" => Size::Lead,
+        _ => Size::Small,
+    };
     match raw {
-        RawItem::Command { command, size } => Item::Command {
+        RawItem::Command { command, size: s } => Item::Command {
             id: leak(command),
-            large: large(&size),
+            size: size(&s),
         },
-        RawItem::Split { split, key, size } => Item::Split {
+        RawItem::Split { split, key, size: s } => Item::Split {
             entries: split
                 .into_iter()
                 .map(|s| {
@@ -803,16 +820,21 @@ fn item(raw: RawItem) -> Item {
                         option: s.option.map(leak),
                         description: s.description.map(leak),
                         aliases: leak_list(s.aliases),
+                        icon: s.icon.map(leak),
                     }
                 })
                 .collect(),
             key: leak(key),
-            large: large(&size),
+            size: size(&s),
         },
-        RawItem::Menu { menu, size, blocks } => Item::Menu {
+        RawItem::Menu {
+            menu,
+            size: s,
+            blocks,
+        } => Item::Menu {
             label: leak(menu),
             ids: flatten(blocks),
-            large: large(&size),
+            size: size(&s),
         },
         RawItem::Builtin { builtin } => Item::Builtin(leak(builtin)),
     }
@@ -988,6 +1010,8 @@ struct RawSplit {
     description: Option<String>,
     #[serde(default)]
     aliases: Vec<String>,
+    #[serde(default)]
+    icon: Option<String>,
 }
 
 #[derive(Deserialize)]

@@ -243,6 +243,7 @@ fn quick(app: &mut App) {
 
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
+        ("olcu-dugme-aci", chosen),
         ("olcu-hizli", quick),
         ("olcu-hizli-sonuc", |app| {
             quick(app);
@@ -272,11 +273,26 @@ pub(crate) fn scenes() -> Vec<Scene> {
     ]
 }
 
-/// Ölçülendirme ▾: its methods and the family's tools.
+/// Ölçülendirme ▾: its methods, each with its own icon, and the family's
+/// tools; the button large, its panel's lead (DESIGN.md §7.3.1).
 pub(crate) fn pointed() -> Vec<Pointed> {
     vec![(
         "olcu-yontemleri",
         |app| app.tab = "draw",
         |s, app| open_split(s, app, "dimension"),
     )]
+}
+
+/// Ölçülendirme with Açı chosen from its list: the button's face shows
+/// Açı's icon; the tool stopped again.
+pub(crate) fn chosen(app: &mut App) {
+    app.tab = "draw";
+    let _ = app.update(Message::SplitChosen {
+        key: "dimension",
+        id: "tool.dimension",
+        option: Some("A"),
+        label: "Açı",
+    });
+    let _ = app.update(Message::Run("tool.cancel"));
+    forget(app);
 }

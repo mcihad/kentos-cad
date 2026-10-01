@@ -86,19 +86,23 @@ export function ribbonMenu(): RibbonRow[] {
 
 /**
  * A split button's list: a tool's methods under the tool's name, or a
- * family's tools without a title; each row the entry's words and its
- * description as the hint. Choosing one keeps it on top (`ribbonSplits`)
- * and runs it.
+ * family's tools without a title; each row the entry's words, its
+ * description as the hint and a method's own icon (Ölçülendirme's kinds;
+ * else its command's). Choosing one keeps it on top (`ribbonSplits`) and
+ * runs it.
  */
-export function splitMenu(entries: readonly SplitEntry[]): { header: string | null; rows: { command: string; option?: string; label: string; hint?: string }[] } {
+export function splitMenu(entries: readonly SplitEntry[]): { header: string | null; rows: { command: string; option?: string; label: string; hint?: string; icon?: string }[] } {
   const methods = entries.every((e) => e.command === entries[0].command);
   return {
     header: methods ? entries[0].title : null,
-    rows: entries.map((e) => ({ command: e.command, ...(e.option ? { option: e.option } : {}), label: e.label, ...(e.description ? { hint: e.description } : {}) })),
+    rows: entries.map((e) => ({ command: e.command, ...(e.option ? { option: e.option } : {}), label: e.label, ...(e.description ? { hint: e.description } : {}), ...(e.icon ? { icon: e.icon } : {}) })),
   };
 }
 
-/** The top of a split button: its name (a method does not rename it) and what it says it does (`Daire: 3 nokta`). */
-export function splitFace(e: SplitEntry): { label: string; aria: string } {
-  return { label: e.title.replace(/…$/, ''), aria: e.option || e.label !== e.title ? RIBBON_TEXTS.method(e.title, e.label) : e.title };
+/**
+ * The top of a split button: its name (a method does not rename it), what it says it does (`Daire: 3 nokta`) and the
+ * chosen method's own icon, when it has one (else its command's).
+ */
+export function splitFace(e: SplitEntry): { label: string; aria: string; icon?: string } {
+  return { label: e.title.replace(/…$/, ''), aria: e.option || e.label !== e.title ? RIBBON_TEXTS.method(e.title, e.label) : e.title, ...(e.icon ? { icon: e.icon } : {}) };
 }

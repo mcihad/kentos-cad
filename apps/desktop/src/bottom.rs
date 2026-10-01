@@ -457,7 +457,7 @@ mod tests {
             komut
                 .items
                 .iter()
-                .any(|i| matches!(i, Item::Command { id, large: true } if *id == PYTHON_CONSOLE))
+                .any(|i| matches!(i, Item::Command { id, size: crate::catalog::Size::Large } if *id == PYTHON_CONSOLE))
         );
         for mode in [
             kentos_contracts::Workspace::Cad,

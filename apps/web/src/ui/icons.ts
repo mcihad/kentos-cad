@@ -83,8 +83,29 @@ export const ICONS = {
   stationOffset: `<path d="M3 13h14"/><path d="M12 13V5.8" stroke-dasharray="2 1.5"/><path d="M12 10.8h2.2V13"/><circle cx="12" cy="4.6" r="1.4"/><path d="M3 16.2h9M3 15v2.4M12 15v2.4" stroke-width="1.1"/>${grip(3, 13)}${grip(17, 13)}`,
   dimContinue: '<path d="M3 5.5v10M10 5.5v10M17 5.5v10M3 12.5h14"/><path d="m5.1 11.3-2.1 1.2 2.1 1.2M7.9 11.3l2.1 1.2-2.1 1.2M12.1 11.3l-2.1 1.2 2.1 1.2M14.9 11.3l2.1 1.2-2.1 1.2"/>',
   dimBaseline: '<path d="M3.5 4v12.5M10 10v6.5M16.5 5.5v11M3.5 13h6.5M3.5 8h13"/><path d="m5.5 12-2 1 2 1M8 12l2 1-2 1M5.5 7l-2 1 2 1M14.5 7l2 1-2 1"/>',
+  // Ölçülendirme's methods, each its own drawing (docs/adr/0147 §7): the measured thing solid, the dimension's lines
+  // thin with open arrowheads, its value a short bar. Hizalı: a slanted edge, its dimension line parallel to it.
+  dimAligned: '<path d="M5 16.5 16.5 8.5"/><path d="M4.43 15.68 2.03 12.23M15.93 7.68 13.53 4.23M2.54 12.97 14.04 4.97" stroke-width="1.1"/><path d="M4.84 12.77 2.54 12.97 3.53 10.88M11.75 5.17 14.04 4.97 13.06 7.06" stroke-width="1.1"/><path d="M5.67 8.36 8.63 6.3" stroke-width="1.5"/>',
+  // Doğrusal: a slanted edge, its dimension line level (ΔY).
+  dimLinear: '<path d="M4 16.5 16 10.5"/><path d="M4 15V4.6M16 9V4.6M4 5.6h12" stroke-width="1.1"/><path d="M6 6.75 4 5.6 6 4.45M14 4.45 16 5.6 14 6.75" stroke-width="1.1"/><path d="M8.3 3.3 11.7 3.3" stroke-width="1.5"/>',
+  // Açı: two arms from a vertex, the dimension arc between them.
+  dimAngular: '<path d="M3.5 16.5H17.5M3.5 16.5 11.33 4.89"/><path d="M9.09 8.21A10 10 0 0 1 13.5 16.5" stroke-width="1.1"/><path d="M14.65 14.5 13.5 16.5 12.35 14.5M10.11 10.28 9.09 8.21 11.39 8.37" stroke-width="1.1"/><rect x="2" y="15" width="3" height="3" fill="currentColor" stroke="none"/>',
+  // Yarıçap: a circle, a line from its centre with one arrow on the circle.
+  dimRadius: '<circle cx="8" cy="12" r="5.8"/><path d="M8 12 15.43 5.31h2.6" stroke-width="1.1"/><path d="M10.05 8.6 12.31 8.12 11.59 10.31" stroke-width="1.1"/><rect x="6.5" y="10.5" width="3" height="3" fill="currentColor" stroke="none"/>',
+  // Çap: a circle, a line across it through its centre, an arrow at each end.
+  dimDiameter: '<circle cx="10" cy="10" r="6.6"/><path d="M4.59 13.79 15.41 6.21" stroke-width="1.1"/><path d="M6.89 13.58 4.59 13.79 5.57 11.7M13.11 6.42 15.41 6.21 14.43 8.3" stroke-width="1.1"/><circle cx="10" cy="10" r=".9" fill="currentColor" stroke="none"/>',
+  // Koordinat: a point, its Y line up and its X line left, each with its value.
+  dimOrdinate: '<path d="M12.5 11.6V3.5M10.6 13.5H2.5" stroke-width="1.1"/><path d="M10.2 4.2 10.2 8.6" stroke-width="1.5"/><path d="M3.4 11.2 7.8 11.2" stroke-width="1.5"/><rect x="11" y="12" width="3" height="3" fill="currentColor" stroke="none"/>',
+  // Yay uzunluğu: an arc, the dimension arc round it, the arc mark over the value.
+  dimArcLength: '<path d="M4.09 13.38A7.5 7.5 0 0 1 15.91 13.38"/><path d="M3.38 12.83 1.02 10.98M16.62 12.83 18.98 10.98M1.65 11.47A10.6 10.6 0 0 1 18.35 11.47" stroke-width="1.1"/><path d="M3.78 10.61 1.65 11.47 1.97 9.19M18.03 9.19 18.35 11.47 16.22 10.61" stroke-width="1.1"/><path d="M8.4 4.4a1.6 1.6 0 0 1 3.2 0" stroke-width="1.2"/>',
+  // Kırıklı yarıçap: a large arc, the radius from a centre shown near it, jogged.
+  dimJogged: '<path d="M10.5 2.8A14.5 14.5 0 0 1 17.3 15.4"/><path d="M3.5 16 7.6 13.6 7 11.1 11.3 8.9 15.1 6.8" stroke-width="1.1"/><path d="M12.79 6.76 15.1 6.8 13.91 8.77" stroke-width="1.1"/><rect x="2" y="14.5" width="3" height="3" fill="currentColor" stroke="none"/>',
+  // Semt: north up from a station, the edge, the bearing turning clockwise from north.
+  dimAzimuth: '<path d="M6.5 16.5 17.52 9.61"/><path d="M6.5 15V2.8" stroke-dasharray="1.6 1.4" stroke-width="1.1"/><path d="m4.6 5 1.9-2.6L8.4 5" stroke-width="1.2"/><path d="M6.5 9.1A7.4 7.4 0 0 1 12.78 12.58" stroke-width="1.1"/><path d="M12.69 10.27 12.78 12.58 10.74 11.49" stroke-width="1.1"/><rect x="5" y="15" width="3" height="3" fill="currentColor" stroke="none"/>',
+  // Eğim: the ground, an arrow down the slope over it, its percent.
+  dimSlope: '<path d="M2.5 9.5 17.5 16"/><path d="M5.6 6 14.6 9.9" stroke-width="1.1"/><path d="M13.22 8.05 14.6 9.9 12.31 10.16" stroke-width="1.1"/><path d="m13.2 6.9 4-5" stroke-width="1.1"/><circle cx="13.6" cy="2.6" r=".95" stroke-width="1.1"/><circle cx="16.9" cy="6.1" r=".95" stroke-width="1.1"/>',
   // Hızlı ölçü: an area dimensioned along two sides at once.
-  dimQuick: '<path d="M3.5 9h9.5v7.5H3.5z" fill="currentColor" fill-opacity=".14"/><path d="M3.5 5.5H13M16.5 9v7.5" stroke-width="1.1"/><path d="m5.3 4.3-1.8 1.2 1.8 1.2M11.2 4.3 13 5.5l-1.8 1.2M15.3 10.8l1.2-1.8 1.2 1.8M15.3 14.7l1.2 1.8 1.2-1.8" stroke-width="1.1"/>',
+  dimQuick: '<path d="M3.5 9h9.5v7.5H3.5z" fill="currentColor" fill-opacity=".14"/><path d="M3.5 5.5H13M16.5 9v7.5" stroke-width="1.1"/><path d="M5.3 6.6 3.5 5.5 5.3 4.4M11.2 4.4 13 5.5 11.2 6.6M15.4 10.8 16.5 9 17.6 10.8M17.6 14.7 16.5 16.5 15.4 14.7" stroke-width="1.1"/>',
   arrayPath: '<path d="M3 16c2.7-6.4 7.4-10.3 14-11" stroke-dasharray="2 1.6"/><rect x="2" y="12.5" width="3.2" height="3.2"/><rect x="7" y="7.6" width="3.2" height="3.2"/><rect x="13" y="4" width="3.2" height="3.2"/>',
   divide: `<path d="M3 13.5 17 6.5"/><circle cx="7.7" cy="11.2" r="1.3"/><circle cx="12.3" cy="8.8" r="1.3"/>${grip(3, 13.5)}${grip(17, 6.5)}`,
   array: '<rect x="3.5" y="3.5" width="5" height="5"/><rect x="11.5" y="3.5" width="5" height="5"/><rect x="3.5" y="11.5" width="5" height="5"/><rect x="11.5" y="11.5" width="5" height="5"/>',

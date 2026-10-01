@@ -109,6 +109,7 @@ pub(crate) fn split_entry(e: &Entry) -> SplitEntry<'static> {
         title: e.title,
         label: e.label,
         description: e.description,
+        icon: e.icon,
     }
 }
 
@@ -135,7 +136,11 @@ pub(crate) fn split_list(key: &'static str, entries: &[Entry]) -> Menu<Message> 
                 label: entry.label,
             },
         );
-        let menu = menu.item(row.label, run).icon(command.icon);
+        // A method with its own drawing shows it (Ölçülendirme's kinds); else the command's.
+        let icon = row
+            .icon
+            .map_or(command.icon, |name| crate::icons::from_web(Some(name)));
+        let menu = menu.item(row.label, run).icon(icon);
         let menu = match row.hint {
             Some(hint) => menu.hint(hint),
             None => menu,

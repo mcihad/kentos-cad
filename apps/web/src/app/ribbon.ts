@@ -170,6 +170,8 @@ export interface SplitEntry {
   readonly description?: string;
   /** Typed names that start the tool with this method (ToolMethod.aliases). */
   readonly aliases?: readonly string[];
+  /** The method's own icon (ToolMethod.icon); none: its command's. */
+  readonly icon?: string;
 }
 
 /** A split choice as the layout keeps it (`ribbonSplits`, by the button's key): its command and its method's option. */
@@ -187,7 +189,8 @@ export type RibbonItem =
   | { readonly kind: 'menu'; readonly menu: SubmenuSpec; readonly size: RibbonSize }
   | { readonly kind: 'builtin'; readonly name: BuiltinPanel };
 
-export type RibbonSize = 'large' | 'small';
+/** Large, small, or a panel's lead: large while the panel shows labels, small only among icons (DESIGN.md §7.3.1). */
+export type RibbonSize = 'large' | 'lead' | 'small';
 
 export interface RibbonPanel {
   readonly label: string;
@@ -306,9 +309,11 @@ export function ribbonTabs(inputs: RibbonInputs, specs: readonly RibbonTabSpec[]
         const primary = (x: Pre) =>
           x.kind === 'command' ? !!toolOf.get(x.id)?.primary || PRIMARY_COMMANDS.has(x.id) : x.kind === 'split' ? x.members.some((m) => m.primary) : x.kind === 'menu' ? !!x.menu.primary : false;
         const anyPrimary = shown.some(primary);
+        const lead = (x: Pre) => (x.kind === 'command' ? !!toolOf.get(x.id)?.lead : x.kind === 'split' ? x.members.some((m) => m.lead) : false);
         const items = shown.map((x): RibbonItem => {
           if (x.kind === 'builtin') return x;
-          const size: RibbonSize = !d.compact && (primary(x) || (!anyPrimary && shown.length <= 2)) ? 'large' : 'small';
+          const large = !d.compact && (primary(x) || (!anyPrimary && shown.length <= 2));
+          const size: RibbonSize = large ? (lead(x) ? 'lead' : 'large') : 'small';
           if (x.kind === 'command') return { kind: 'command', id: x.id, size };
           if (x.kind === 'menu') return { kind: 'menu', menu: x.menu, size };
           return { kind: 'split', key: x.key, entries: x.entries, size };
@@ -341,7 +346,7 @@ type Pre =
 function splitEntries(t: ToolDescriptor): SplitEntry[] {
   const command = `tool.${t.id}`;
   return t.methods?.length
-    ? t.methods.map((m) => ({ command, option: m.option, title: t.label, label: m.label, description: m.description, ...(m.aliases?.length && { aliases: m.aliases }) }))
+    ? t.methods.map((m) => ({ command, option: m.option, title: t.label, label: m.label, description: m.description, ...(m.aliases?.length && { aliases: m.aliases }), ...(m.icon && { icon: m.icon }) }))
     : [{ command, title: t.label, label: t.label }];
 }
 

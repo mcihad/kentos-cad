@@ -278,7 +278,7 @@ impl App {
                     return;
                 };
                 if usable(self, top.id) {
-                    let (_, aria) =
+                    let (_, aria, _) =
                         crate::ribbon_plan::split_face(&crate::ribbon_bar::split_entry(top));
                     let run = match top.option {
                         Some(option) => Message::RunMethod {

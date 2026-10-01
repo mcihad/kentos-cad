@@ -170,6 +170,9 @@ def split_menu(entries):
         r['label'] = e['label']
         if e.get('description'):
             r['hint'] = e['description']
+        # A method's own icon (Ölçülendirme's kinds, docs/adr/0147 §7); else its command's, which the plan does not know.
+        if e.get('icon'):
+            r['icon'] = e['icon']
         rows.append(r)
     return {'header': entries[0]['title'] if methods else None, 'rows': rows}
 
@@ -177,7 +180,10 @@ def split_menu(entries):
 def split_face(e):
     label = e['title'][:-1] if e['title'].endswith('…') else e['title']
     aria = f"{e['title']}: {e['label']}" if e.get('option') or e['label'] != e['title'] else e['title']
-    return {'label': label, 'aria': aria}
+    face = {'label': label, 'aria': aria}
+    if e.get('icon'):
+        face['icon'] = e['icon']
+    return face
 
 
 # ── Cases ───────────────────────────────────────────────────────────
@@ -225,7 +231,13 @@ FAMILY = [
     {'command': 'tool.rectangle3', 'title': 'Döndürülmüş dikdörtgen', 'label': 'Döndürülmüş dikdörtgen'},
     {'command': 'tool.regularPolygon', 'title': 'Düzgün çokgen', 'label': 'Düzgün çokgen'},
 ]
-FACES = [CIRCLE[0], CIRCLE[2], FAMILY[1], {'command': 'tool.hatch', 'title': 'Tarama…', 'label': 'Tarama…'}]
+# Ölçülendirme: its methods with their own icons, then a family's tool with its command's.
+DIMENSION = [
+    {'command': 'tool.dimension', 'option': 'H', 'title': 'Ölçülendirme', 'label': 'Hizalı', 'description': 'İki nokta arası, kendi doğrultusunda', 'icon': 'dimAligned'},
+    {'command': 'tool.dimension', 'option': 'A', 'title': 'Ölçülendirme', 'label': 'Açı', 'description': 'İki kenar ya da iki kol arası', 'icon': 'dimAngular'},
+    {'command': 'tool.quickDimension', 'title': 'Hızlı ölçü', 'label': 'Hızlı ölçü'},
+]
+FACES = [CIRCLE[0], CIRCLE[2], FAMILY[1], {'command': 'tool.hatch', 'title': 'Tarama…', 'label': 'Tarama…'}, DIMENSION[1], DIMENSION[2]]
 
 
 def fill(o):
@@ -257,7 +269,7 @@ file = {
     'toggles': [{'kept': k, 'command': c, 'on': on, 'result': with_quick_access(k, c, on)} for k, c, on in TOGGLES],
     'commandMenus': [{'command': c, 'bar': bar, 'rows': command_menu(c, bar)} for c, bar in RIGHT_CLICKS],
     'ribbonMenu': [{'kind': 'command', 'command': 'view.ribbonCollapse'}],
-    'splitMenus': [{'entries': e, 'menu': split_menu(e)} for e in [CIRCLE, FAMILY]],
+    'splitMenus': [{'entries': e, 'menu': split_menu(e)} for e in [CIRCLE, FAMILY, DIMENSION]],
     'splitFaces': [{'entry': e, 'face': split_face(e)} for e in FACES],
 }
 

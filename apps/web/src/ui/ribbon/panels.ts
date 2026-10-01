@@ -132,12 +132,12 @@ export class PanelView {
   }
 }
 
-/** Large buttons stand alone; small ones stack three to a column, in order. */
+/** Large buttons stand alone (a lead one while the panel shows labels); small ones stack three to a column, in order. */
 function arrangeSlots(body: HTMLElement, slots: readonly Slot[], level: Level): void {
   body.textContent = '';
   let column: HTMLElement | null = null;
   for (const { control, size } of slots) {
-    const large = level === 0 && size === 'large';
+    const large = size === 'lead' ? level <= 1 : level === 0 && size === 'large';
     control.el.classList.toggle('rbtn--large', large);
     control.el.classList.toggle('rbtn--small', !large);
     control.el.classList.toggle('rbtn--icon', level === 2);

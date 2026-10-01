@@ -2322,6 +2322,12 @@ function dimensionToolScenes() {
       id: 'dimension-methods',
       open: async (ui) => (await ribbonOn(ui, { ribbonTab: 'draw' }), await ui.clickSel('.ribbon__strip [data-split="dimension"] .rsplit__arrow'), await ui.waitFor(`!!document.querySelector('.menu')`), await ui.sleep(300)),
     },
+    // Açı chosen from Ölçülendirme ▾: the large button's face shows its icon (the desktop's `olcu-dugme-aci`).
+    {
+      id: 'dimension-chosen',
+      open: async (ui) => (await ribbonOn(ui, { ribbonTab: 'draw', ribbonSplits: { dimension: 'tool.dimension|A' } }), await ui.move(2, 2), await ui.sleep(300)),
+      close: async (ui) => ribbonOff(ui),
+    },
   ];
 }
 

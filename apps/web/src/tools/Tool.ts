@@ -142,6 +142,8 @@ export interface ToolMethod {
   readonly description?: string;
   /** Typed names that start the tool with this method (`DOR`: Ölçülendirme as Koordinat; docs/adr/0147 §7). */
   readonly aliases?: readonly string[];
+  /** Its own icon in the split button's list and on its face once chosen (Ölçülendirme's kinds); none: the tool's. */
+  readonly icon?: string;
 }
 
 export interface ToolDescriptor {
@@ -161,6 +163,11 @@ export interface ToolDescriptor {
    * large; the others are small, three to a column. At most four a panel.
    */
   primary?: boolean;
+  /**
+   * Ribbon: its panel's lead (Ölçülendirme): a main tool that stays large while the panel shows its labels, small
+   * only when the panel is down to icons (DESIGN.md §7.3.1).
+   */
+  lead?: boolean;
   /** Ribbon: tools of one family share a split button showing the one last chosen (Dikdörtgen ▾). */
   family?: string;
   /** Ribbon: the ways to start the tool, listed under its split button (Daire ▾: 2 nokta, 3 nokta …). */

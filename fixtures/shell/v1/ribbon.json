@@ -1704,6 +1704,54 @@
      }
     ]
    }
+  },
+  {
+   "entries": [
+    {
+     "command": "tool.dimension",
+     "option": "H",
+     "title": "Ölçülendirme",
+     "label": "Hizalı",
+     "description": "İki nokta arası, kendi doğrultusunda",
+     "icon": "dimAligned"
+    },
+    {
+     "command": "tool.dimension",
+     "option": "A",
+     "title": "Ölçülendirme",
+     "label": "Açı",
+     "description": "İki kenar ya da iki kol arası",
+     "icon": "dimAngular"
+    },
+    {
+     "command": "tool.quickDimension",
+     "title": "Hızlı ölçü",
+     "label": "Hızlı ölçü"
+    }
+   ],
+   "menu": {
+    "header": null,
+    "rows": [
+     {
+      "command": "tool.dimension",
+      "option": "H",
+      "label": "Hizalı",
+      "hint": "İki nokta arası, kendi doğrultusunda",
+      "icon": "dimAligned"
+     },
+     {
+      "command": "tool.dimension",
+      "option": "A",
+      "label": "Açı",
+      "hint": "İki kenar ya da iki kol arası",
+      "icon": "dimAngular"
+     },
+     {
+      "command": "tool.quickDimension",
+      "label": "Hızlı ölçü"
+     }
+    ]
+   }
   }
  ],
  "splitFaces": [
@@ -1751,6 +1799,32 @@
    "face": {
     "label": "Tarama",
     "aria": "Tarama…"
+   }
+  },
+  {
+   "entry": {
+    "command": "tool.dimension",
+    "option": "A",
+    "title": "Ölçülendirme",
+    "label": "Açı",
+    "description": "İki kenar ya da iki kol arası",
+    "icon": "dimAngular"
+   },
+   "face": {
+    "label": "Ölçülendirme",
+    "aria": "Ölçülendirme: Açı",
+    "icon": "dimAngular"
+   }
+  },
+  {
+   "entry": {
+    "command": "tool.quickDimension",
+    "title": "Hızlı ölçü",
+    "label": "Hızlı ölçü"
+   },
+   "face": {
+    "label": "Hızlı ölçü",
+    "aria": "Hızlı ölçü"
    }
   }
  ]
