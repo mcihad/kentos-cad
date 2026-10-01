@@ -66,7 +66,7 @@ export async function collectInPage() {
     i.kind === 'command'
       ? { command: i.id, size: i.size }
       : i.kind === 'split'
-        ? { split: i.entries.map((e) => ({ command: e.command, option: e.option, title: e.title, label: e.label, description: e.description })), key: i.key, size: i.size }
+        ? { split: i.entries.map((e) => ({ command: e.command, option: e.option, title: e.title, label: e.label, description: e.description, aliases: e.aliases })), key: i.key, size: i.size }
         : i.kind === 'menu'
           ? { menu: i.menu.label, size: i.size, blocks: menuLayout(i.menu.items) }
           : { builtin: i.name };

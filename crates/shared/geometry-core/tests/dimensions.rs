@@ -413,3 +413,56 @@ fn a_fault_says_why_exactly_when_there_is_no_layout() {
         );
     }
 }
+
+/// Koordinat's axis from the cursor and Yay uzunluğu's arc from a picked
+/// edge (docs/adr/0147 §7), worked out by hand.
+#[test]
+fn the_tools_take_an_ordinate_s_axis_and_an_arc_s_ends_as_the_rules_say() {
+    use kentos_geometry_core::geom::dimension::ordinate_axis_for;
+    use kentos_geometry_core::geom::intersect::Edge;
+    use kentos_geometry_core::tools::editing::arc_length_ends;
+    // Further up than across: its Y; further across: its X; a tie is its Y.
+    assert_eq!(ordinate_axis_for(v(10.0, 20.0), v(12.0, 30.0)), 0.0);
+    assert_eq!(ordinate_axis_for(v(10.0, 20.0), v(-5.0, 18.0)), 90.0);
+    assert_eq!(ordinate_axis_for(v(0.0, 0.0), v(3.0, -3.0)), 0.0);
+
+    let close = |p: Vec2, x: f64, y: f64| (p.x - x).abs() < 1e-12 && (p.y - y).abs() < 1e-12;
+    let quarter = Edge::Arc {
+        c: v(0.0, 0.0),
+        r: 10.0,
+        a0: 0.0,
+        sweep: std::f64::consts::FRAC_PI_2,
+    };
+    let whole = arc_length_ends(&quarter, None).expect("an arc");
+    assert!(close(whole.a, 10.0, 0.0) && close(whole.b, 0.0, 10.0), "{whole:?}");
+    // A clockwise edge (a path's arc drawn the other way): the same arc, its ends counter-clockwise.
+    let clockwise = Edge::Arc {
+        c: v(0.0, 0.0),
+        r: 10.0,
+        a0: std::f64::consts::FRAC_PI_2,
+        sweep: -std::f64::consts::FRAC_PI_2,
+    };
+    let back = arc_length_ends(&clockwise, None).expect("an arc");
+    assert!(close(back.a, 10.0, 0.0) && close(back.b, 0.0, 10.0), "{back:?}");
+    // Kısmi: two points, in either order, put on the circle.
+    let part = arc_length_ends(&quarter, Some((v(0.0, 20.0), v(5.0, 5.0)))).expect("a part");
+    let h = 10.0 * std::f64::consts::FRAC_1_SQRT_2;
+    assert!(close(part.a, h, h) && close(part.b, 0.0, 10.0), "{part:?}");
+    // A point off the arc goes to its nearer end: just below the start, to the start.
+    let off = arc_length_ends(&quarter, Some((v(10.0, -1.0), v(5.0, 5.0)))).expect("a part");
+    assert!(close(off.a, 10.0, 0.0) && close(off.b, h, h), "{off:?}");
+    // Nothing for one place twice, a point at the centre, a full turn or a straight edge.
+    assert_eq!(arc_length_ends(&quarter, Some((v(5.0, 5.0), v(7.0, 7.0)))), None);
+    assert_eq!(arc_length_ends(&quarter, Some((v(0.0, 0.0), v(7.0, 7.0)))), None);
+    let turn = Edge::Arc {
+        c: v(0.0, 0.0),
+        r: 10.0,
+        a0: 0.0,
+        sweep: std::f64::consts::TAU,
+    };
+    assert_eq!(arc_length_ends(&turn, None), None);
+    assert_eq!(
+        arc_length_ends(&Edge::Seg { a: v(0.0, 0.0), b: v(1.0, 0.0) }, None),
+        None
+    );
+}

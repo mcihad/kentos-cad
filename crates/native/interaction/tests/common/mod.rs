@@ -254,6 +254,28 @@ impl Bench {
         self.doc.add(entity).expect("a slot")
     }
 
+    /// A circle about `c` (east and north differences from (E, N)) on `layer`.
+    pub fn add_circle(&mut self, layer: &str, c: [f64; 2], r: f64) -> kentos_domain::Slot {
+        let circle = Entity::Circle(kentos_contracts::CircleEntity {
+            base: base(layer),
+            c: wire(c),
+            r,
+        });
+        self.doc.add(circle).expect("a slot")
+    }
+
+    /// An arc about `c` from `a0` counter-clockwise to `a1` (radians) on `layer`.
+    pub fn add_arc(&mut self, layer: &str, c: [f64; 2], r: f64, a0: f64, a1: f64) -> kentos_domain::Slot {
+        let arc = Entity::Arc(kentos_contracts::ArcEntity {
+            base: base(layer),
+            c: wire(c),
+            r,
+            a0,
+            a1,
+        });
+        self.doc.add(arc).expect("a slot")
+    }
+
     /// The vertices of a path or an area, east and north differences from (E, N).
     pub fn path_pts(&self, slot: kentos_domain::Slot) -> Vec<[f64; 2]> {
         let Some(Entity::Polyline(p) | Entity::Polygon(p)) = self.doc.get(slot) else {

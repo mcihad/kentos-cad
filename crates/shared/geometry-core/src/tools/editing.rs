@@ -11,9 +11,9 @@ use crate::geom::affine::{Affine, align, compose, rotation, translation};
 use crate::geom::arc::{ArcGeom, norm_angle};
 use crate::geom::bulge::bulge_at;
 use crate::geom::dimension::sector_arms;
-use crate::geom::intersect::line_line;
+use crate::geom::intersect::{Edge, line_line};
 use crate::geometry::{dist, empty_bounds, is_empty_bounds};
-use crate::jsmath::{PI, acos, atan2, cos, js_max, js_min, js_round, or, pow, sin, tan};
+use crate::jsmath::{PI, TAU, acos, atan2, cos, js_max, js_min, js_round, or, pow, sin, tan};
 use crate::op;
 use crate::ops::edges::entity_edges;
 use crate::ops::path::{path_of, point_at_s, tangent_at_s};
@@ -669,6 +669,64 @@ pub fn radial_dimension(c: Vec2, r: f64, loc: Vec2) -> Radial {
     }
 }
 
+/// An arc length's measured arc (docs/adr/0147 §7): its ends, counter-clockwise, and its centre.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ArcEnds {
+    pub a: Vec2,
+    pub b: Vec2,
+    pub c: Vec2,
+}
+
+crate::json_struct!(out ArcEnds { a, b, c });
+
+/// Yay uzunluğu's arc from a picked arc edge: its ends counter-clockwise (a
+/// clockwise edge's swapped); with Kısmi, the part between two points put
+/// on its circle, each taken to the arc's nearer end when it lies off the
+/// arc. None for a full turn, two points at one place, or a point at the
+/// centre.
+pub fn arc_length_ends(edge: &Edge, between: Option<(Vec2, Vec2)>) -> Option<ArcEnds> {
+    let Edge::Arc { c, r, a0, sweep } = *edge else {
+        return None;
+    };
+    let span = sweep.abs();
+    if !(span > 1e-9) || span >= TAU - 1e-9 {
+        return None;
+    }
+    // The counter-clockwise start.
+    let start = if sweep >= 0.0 { a0 } else { a0 + sweep };
+    let at = |t: f64| Vec2::new(c.x + cos(start + t) * r, c.y + sin(start + t) * r);
+    let Some((p, q)) = between else {
+        return Some(ArcEnds {
+            a: at(0.0),
+            b: at(span),
+            c,
+        });
+    };
+    let along = |p: Vec2| -> Option<f64> {
+        if dist(c, p) < 1e-9 {
+            return None;
+        }
+        let t = norm_angle(atan2(p.y - c.y, p.x - c.x) - start);
+        // Off the arc: to the nearer of its ends.
+        Some(if t <= span {
+            t
+        } else if t - span < TAU - t {
+            span
+        } else {
+            0.0
+        })
+    };
+    let (t1, t2) = (along(p)?, along(q)?);
+    if (t1 - t2).abs() < 1e-9 {
+        return None;
+    }
+    Some(ArcEnds {
+        a: at(js_min(t1, t2)),
+        b: at(js_max(t1, t2)),
+        c,
+    })
+}
+
 pub(crate) static OPS: &[Op] = &[
     op!("rotationAngle", |base: Vec2, p: Vec2, reference: f64| {
         rotation_angle(base, p, reference)
@@ -760,6 +818,9 @@ pub(crate) static OPS: &[Op] = &[
     }),
     op!("radialDimension", |c: Vec2, r: f64, loc: Vec2| {
         radial_dimension(c, r, loc)
+    }),
+    op!("arcLengthEnds", |edge: Edge, between: Option<[Vec2; 2]>| {
+        arc_length_ends(&edge, between.map(|[p, q]| (p, q)))
     }),
 ];
 

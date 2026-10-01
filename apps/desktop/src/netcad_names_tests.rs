@@ -105,3 +105,40 @@ fn no_other_command_answers_to_a_netcad_name() {
         assert_eq!(owners.len(), 1, "{name} is answered by {owners:?}");
     }
 }
+
+/// A tool's method by its own typed name (docs/adr/0147 §7): Ölçülendirme
+/// starts with the method's style, as its ribbon menu starts it; the tool's
+/// own names start it as it was.
+#[test]
+fn a_method_s_name_starts_its_tool_with_the_method() {
+    for (name, step) in [
+        ("DOR", "koordinat ölçüsünün noktasını belirtin"),
+        ("dimordinate", "koordinat ölçüsünün noktasını belirtin"),
+        ("KOORDINATOLCU", "koordinat ölçüsünün noktasını belirtin"),
+        ("DAR", "yay uzunluğu ölçülecek yaya tıklayın"),
+        ("YAYUZUNLUGU", "yay uzunluğu ölçülecek yaya tıklayın"),
+        ("DIMLIN", "doğrusal ölçünün (ΔY / ΔX) ilk noktasını belirtin"),
+        ("DIMRAD", "yarıçapı ölçülecek daireye ya da yaya tıklayın"),
+        ("DAL", "hizalı ölçünün ilk noktasını belirtin"),
+    ] {
+        let mut app = app();
+        type_name(&mut app, name);
+        assert!(app.session.is_running(), "{name} starts a tool");
+        assert_eq!(app.session.tool_id(), "dimension", "{name}");
+        let prompt = app.session.prompt().text();
+        assert!(prompt.starts_with(&format!("Ölçü: {step}")), "{name}: {prompt}");
+    }
+    // Every method's name answers to its method alone.
+    let methods = catalog()
+        .tabs()
+        .flat_map(|tab| tab.panels.iter())
+        .flat_map(|panel| panel.items.iter())
+        .filter_map(|item| match item {
+            crate::catalog::Item::Split { entries, .. } => Some(entries.iter()),
+            _ => None,
+        })
+        .flatten()
+        .filter(|e| !e.aliases.is_empty())
+        .count();
+    assert!(methods >= 7, "Ölçülendirme's seven methods have names: {methods}");
+}

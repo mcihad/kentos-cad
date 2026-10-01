@@ -177,7 +177,8 @@ pub const PORTED: &[&str] = &[
     // dimension's value on a double click (docs/adr/0060).
     "tool.text",
     // Ölçülendirme: aligned, linear, angular, radius and diameter dimensions
-    // through cad.entities.create (docs/adr/0061).
+    // through cad.entities.create (docs/adr/0061); ordinate and arc length, its
+    // methods by their own names too (docs/adr/0147 §7).
     "tool.dimension",
     // Tarama: the region by a closed object or by the line work, islands left
     // out, through cad.entities.create as “Tarama” (docs/adr/0062).
@@ -541,6 +542,9 @@ pub struct Entry {
     pub option: Option<&'static str>,
     /// What it does (the method's hint).
     pub description: Option<&'static str>,
+    /// Typed names that start the tool with this method (`DOR`: Ölçülendirme
+    /// as Koordinat; the web's `ToolMethod.aliases`, docs/adr/0147 §7).
+    pub aliases: &'static [&'static str],
 }
 
 /// The catalog: commands by id and the ribbon.
@@ -571,6 +575,21 @@ impl Catalog {
 
     pub fn get(&self, id: &str) -> Option<&Command> {
         self.by_id.get(id).map(|&i| &self.commands[i])
+    }
+
+    /// The tool's method a typed name starts (an entry of a ribbon split
+    /// with that alias and an option), folded as command names are.
+    pub fn method_by_alias(&self, text: &str) -> Option<&Entry> {
+        let folded = crate::app::fold(text);
+        self.tabs()
+            .flat_map(|tab| tab.panels.iter())
+            .flat_map(|panel| panel.items.iter())
+            .filter_map(|item| match item {
+                Item::Split { entries, .. } => Some(entries.iter()),
+                _ => None,
+            })
+            .flatten()
+            .find(|e| e.option.is_some() && e.aliases.iter().any(|a| crate::app::fold(a) == folded))
     }
 
     pub fn commands(&self) -> &[Command] {
@@ -781,6 +800,7 @@ fn item(raw: RawItem) -> Item {
                         label,
                         option: s.option.map(leak),
                         description: s.description.map(leak),
+                        aliases: leak_list(s.aliases),
                     }
                 })
                 .collect(),
@@ -964,6 +984,8 @@ struct RawSplit {
     option: Option<String>,
     #[serde(default)]
     description: Option<String>,
+    #[serde(default)]
+    aliases: Vec<String>,
 }
 
 #[derive(Deserialize)]

@@ -3,6 +3,7 @@ import type { Vec2 } from '../model/geometry';
 import type { Affine } from '../model/geom/affine';
 import type { ArcGeom } from '../model/geom/arc';
 import type { EllipseGeom } from '../model/geom/ellipse';
+import type { Edge } from '../model/geom/intersect';
 import { op } from '../wasm/core';
 
 /**
@@ -121,3 +122,9 @@ export const vertexArms = op<(c: Vec2, p1: Vec2, p2: Vec2, loc: Vec2) => { c: Ve
 export const edgeArms = op<(e1: { a: Vec2; b: Vec2; at: Vec2 }, e2: { a: Vec2; b: Vec2; at: Vec2 }, loc: Vec2) => { c: Vec2; a: Vec2; b: Vec2 } | null>('edgeArms');
 /** Radius or diameter dimension placed at `loc`: the point on the circle and the outward offset. */
 export const radialDimension = op<(c: Vec2, r: number, loc: Vec2) => { b: Vec2; offset: number }>('radialDimension');
+/**
+ * Yay uzunluğu's arc from a picked arc edge (docs/adr/0147 §7): its ends counter-clockwise and its centre; with
+ * Kısmi the part between two points put on its circle (a point off the arc to its nearer end). Null for a full
+ * turn, two points at one place or a point at the centre.
+ */
+export const arcLengthEnds = op<(edge: Extract<Edge, { kind: 'arc' }>, between: [Vec2, Vec2] | null) => { a: Vec2; b: Vec2; c: Vec2 } | null>('arcLengthEnds');

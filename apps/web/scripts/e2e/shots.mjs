@@ -2106,7 +2106,78 @@ SCENES.dimensions = [
       await ui.sleep(600);
     },
   },
+  ...dimensionToolScenes(),
 ];
+
+// Ölçülendirme's new methods at work (docs/adr/0147 §7), the desktop's `dimension_scenes`: Koordinat with the parcel's
+// corner taken and the cursor off to the right; Yay uzunluğu with the road's edge taken and the dimension arc on the
+// cursor; Kısmi with its first point on the arc and the part to the cursor lit; Ölçülendirme ▾'s methods.
+function dimensionToolScenes() {
+  const layer = (id, name, color, lineWeight) => ({ id, name, type: 'layer', visible: true, locked: false, expanded: true, style: { color, lineType: 'continuous', lineWeight }, children: [] });
+  const E = 487000;
+  const N = 4420000;
+  const P = (x, y) => ({ x: E + x, y: N + y });
+  const C = [20, -60];
+  const onEdge = (deg) => [C[0] + 50 * Math.cos((deg * Math.PI) / 180), C[1] + 50 * Math.sin((deg * Math.PI) / 180)];
+  const road = (id, r) => ({ kind: 'arc', id, layerId: 'yol', attrs: {}, c: P(...C), r, a0: (50 * Math.PI) / 180, a1: (130 * Math.PI) / 180 });
+  const GROUND = JSON.stringify({
+    format: 'kentos.document',
+    version: 1,
+    name: 'Ölçülendirme',
+    settings: { srid: 5256, lengthDecimals: 3, areaDecimals: 2, areaUnit: 'm2', angleUnit: 'grad', plotScale: 1000, workspace: 'hybrid', drawingFont: 'barlow' },
+    origin: { x: E, y: N },
+    layers: [layer('cizim', 'Çizim', 'fg', 0.25), layer('yol', 'Yol', '#E5484D', 0.5), layer('parsel', 'Parsel', '#3E63DD', 0.35)],
+    activeLayer: 'cizim',
+    entities: [{ kind: 'polygon', id: 1, layerId: 'parsel', attrs: {}, pts: [P(0, 0), P(40, 0), P(44, 32), P(2, 30)] }, road(2, 50), road(3, 42)],
+    styles: { items: [], categories: [] },
+  });
+  const pageAt = (ui, x, y) => ui.eval(PAGE_AT(E + x, N + y));
+  const clickAt = async (ui, x, y) => (await ui.clickAt(...(await pageAt(ui, x, y))), await ui.sleep(200));
+  /** The ground opened, Ölçülendirme started with a method's option, as Ölçülendirme ▾ starts it. */
+  const start = async (ui, option) => {
+    await ribbonOn(ui, { ribbonTab: 'draw', ...LOGGED });
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      k.files.ask = async () => 'drop';
+      if (!(await k.files.load(${JSON.stringify(GROUND)}, null))) throw new Error('the ground did not load');
+      k.view.zoomExtents();
+      // Clear of the toolbox.
+      const c = k.view.camera;
+      c.scale = c.scale * 0.85;
+      c.center = { x: c.center.x - 110 / c.scale, y: c.center.y };
+      c.panBy(0, 0);
+    })()`);
+    await ui.sleep(400);
+    await startTool(ui, 'dimension');
+    await ui.eval(`window.kentos.tools.active.input(${JSON.stringify(option)})`);
+  };
+  const hoverAt = async (ui, x, y) => (await ui.eval(`window.kentos.log.clear()`), await ui.move(...(await pageAt(ui, x, y))), await ui.sleep(350));
+  /** The tool's memory as it was (Hizalı; Kısmi off when `partial`), then the drawing back. */
+  const restore = (partial) => async (ui) => {
+    await ui.eval(`(() => { const t = window.kentos.tools.active; if (t?.id !== 'dimension') return; t.reset(); ${partial ? "t.input('K');" : ''} t.input('H'); })()`);
+    await ui.escapeAll(2);
+    await ui.eval(UNDO_ALL);
+  };
+  return [
+    { id: 'dimension-ordinate', open: async (ui) => (await start(ui, 'O'), await clickAt(ui, 44, 32), await hoverAt(ui, 66, 35)), close: restore(false) },
+    { id: 'dimension-arc-length', open: async (ui) => (await start(ui, 'U'), await clickAt(ui, ...onEdge(80)), await hoverAt(ui, 24, -4.8)), close: restore(false) },
+    {
+      id: 'dimension-partial',
+      open: async (ui) => {
+        await start(ui, 'U');
+        await ui.eval(`window.kentos.tools.active.input('K')`);
+        await clickAt(ui, ...onEdge(80));
+        await clickAt(ui, ...onEdge(90));
+        await hoverAt(ui, ...onEdge(115));
+      },
+      close: restore(true),
+    },
+    {
+      id: 'dimension-methods',
+      open: async (ui) => (await ribbonOn(ui, { ribbonTab: 'draw' }), await ui.clickSel('.ribbon__strip [data-split="dimension"] .rsplit__arrow'), await ui.waitFor(`!!document.querySelector('.menu')`), await ui.sleep(300)),
+    },
+  ];
+}
 
 // DXF içe aktar over the leaders' fixture (fixtures/formats/v1/leaders.dxf, docs/adr/0146 §8): the window says what
 // became of the LEADERs' MTEXTs, the hookline, the spline path, the MULTILEADERs' other lines and block content; in,

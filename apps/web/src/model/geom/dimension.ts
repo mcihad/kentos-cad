@@ -151,6 +151,9 @@ export function dimensionMeasure(style: DimensionStyle | undefined, angle: numbe
  */
 export const linearAngleFor = op<(a: Vec2, b: Vec2, p: Vec2) => 0 | 90>('linearAngleFor');
 
+/** An ordinate's axis for its line's end at p (docs/adr/0147 §7): its Y (0) when p is further up or down than across, else its X (90). */
+export const ordinateAxisFor = op<(a: Vec2, p: Vec2) => 0 | 90>('ordinateAxisFor');
+
 /**
  * The angle two lines make, chosen by where the arc goes: the two arm
  * directions bounding the sector around `p` (counter-clockwise order),

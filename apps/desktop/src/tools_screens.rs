@@ -50,7 +50,7 @@ fn caption_at(snapshot: &mut Snapshot, app: &App, caption: &str, arrow: bool) ->
 
 /// A split button's list opened, as its key tip opens it (ribbon_keys.rs): by the
 /// button's own key, the tools' family or the tool with methods.
-fn open_split(snapshot: &mut Snapshot, app: &mut App, key: &str) {
+pub(crate) fn open_split(snapshot: &mut Snapshot, app: &mut App, key: &str) {
     use iced::futures::StreamExt as _;
     let task: iced::Task<Message> =
         kentos_ui::widget::context_menu::open_menu(crate::ribbon_keys::split_menu_id(key));
@@ -87,6 +87,7 @@ pub(crate) fn press_caption(
 fn pointed_scenes() -> Vec<Pointed> {
     let mut all = crate::text_scenes::pointed();
     all.extend(crate::leader_scenes::pointed());
+    all.extend(crate::dimension_scenes::pointed());
     let menus: Vec<Pointed> = vec![
         (
             "katman-menu-katman",
@@ -143,6 +144,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::parts_scenes::scenes());
     all.extend(crate::text_scenes::scenes());
     all.extend(crate::leader_scenes::scenes());
+    all.extend(crate::dimension_scenes::scenes());
     all
 }
 

@@ -140,6 +140,8 @@ export interface ToolMethod {
   /** The prompt option sent after the tool starts (`2N`); none for the tool's own first step. */
   readonly option?: string;
   readonly description?: string;
+  /** Typed names that start the tool with this method (`DOR`: Ölçülendirme as Koordinat; docs/adr/0147 §7). */
+  readonly aliases?: readonly string[];
 }
 
 export interface ToolDescriptor {

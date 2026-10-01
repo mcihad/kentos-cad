@@ -337,6 +337,16 @@ pub fn dimension_offset_at(d: &DimensionGeom, p: Vec2) -> f64 {
     }
 }
 
+/// An ordinate's axis for its line's end at p (docs/adr/0147 §7): its Y (0)
+/// when p is further from the point up or down than across, else its X (90).
+pub fn ordinate_axis_for(a: Vec2, p: Vec2) -> f64 {
+    if (p.y - a.y).abs() >= (p.x - a.x).abs() {
+        0.0
+    } else {
+        90.0
+    }
+}
+
 /// Horizontal (ΔY, 0°) or vertical (ΔX, 90°) for a linear dimension placed at p (AutoCAD's rule).
 pub fn linear_angle_for(a: Vec2, b: Vec2, p: Vec2) -> f64 {
     let out_x = js_max_all([js_min(a.x, b.x) - p.x, p.x - js_max(a.x, b.x), 0.0]);
@@ -381,6 +391,7 @@ pub(crate) static OPS: &[Op] = &[
     op!("linearAngleFor", |a: Vec2, b: Vec2, p: Vec2| {
         linear_angle_for(a, b, p)
     }),
+    op!("ordinateAxisFor", |a: Vec2, p: Vec2| ordinate_axis_for(a, p)),
     op!("sectorArms", |c: Vec2, u1: Vec2, u2: Vec2, p: Vec2| {
         sector_arms(c, u1, u2, p)
     }),

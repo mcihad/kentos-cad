@@ -5,6 +5,7 @@ import { watchAll } from '../../core/signal';
 import { formatChord, isAltGrText, isTextInput } from '../../core/keymap';
 import { looksLikeCoordinate } from '../../tools/coordinateInput';
 import { CALC_KINDS, canCalcPoint, startPointCalc } from '../../tools/pointCalc';
+import { methodByAlias } from '../../tools/methods';
 import { takesTypedInput } from '../../tools/Tool';
 import { Component } from '../Component';
 import { h, replaceChildren } from '../dom';
@@ -272,6 +273,17 @@ export class CommandLine extends Component {
       const calc = CALC_KINDS.find((k) => k.alias === text.toLocaleUpperCase('tr-TR'));
       if (calc && canCalcPoint(this.ctx)) return startPointCalc(this.ctx, calc.kind);
       log.warn(`“${text}” anlaşılamadı. Koordinatı Y,X ya da @dY,dX biçiminde yazın.`);
+      return;
+    }
+    // A tool's method by its own name (DOR: Ölçülendirme as Koordinat; docs/adr/0147 §7): the tool, then its option.
+    const method = methodByAlias(text);
+    if (method && commands.get(method.command)) {
+      this.remember(text);
+      this.input.value = '';
+      this.hideList();
+      if (!commands.execute(method.command)) return;
+      if (!this.ctx.tools.active.input?.(method.option)) log.warn(`${method.title}: “${method.label}” şu an başlatılamıyor.`);
+      this.ctx.view.focus();
       return;
     }
     const cmd = commands.byAlias(text) ?? commands.search(text, 1)[0];

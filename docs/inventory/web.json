@@ -3604,14 +3604,30 @@
       "title": "Ölçülendirme",
       "category": "Açıklama",
       "icon": "dimension",
-      "description": "Ölçü ekler: hizalı, doğrusal (ΔY yatay / ΔX düşey), açı, yarıçap ve çap; değer proje birimini izler.",
+      "description": "Ölçü ekler: hizalı, doğrusal (ΔY yatay / ΔX düşey), açı, yarıçap, çap, bir noktanın koordinatı ve yay uzunluğu; değer proje birimini izler.",
       "aliases": [
         "DIM",
         "OLCU",
+        "DIMALIGNED",
+        "DAL",
         "DIMLIN",
+        "DIMLINEAR",
+        "DLI",
         "DIMANG",
+        "DIMANGULAR",
+        "DAN",
         "DIMRAD",
-        "DIMDIA"
+        "DIMRADIUS",
+        "DRA",
+        "DIMDIA",
+        "DIMDIAMETER",
+        "DDI",
+        "KOORDINATOLCU",
+        "DIMORDINATE",
+        "DOR",
+        "YAYUZUNLUGU",
+        "DIMARC",
+        "DAR"
       ],
       "kind": "toggle",
       "shortcuts": [
@@ -3637,6 +3653,7 @@
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/dimension-kinds.json",
         "fixtures/interaction/v1/dimensions.json",
         "fixtures/interaction/v1/usage-parcel.json"
       ]
@@ -7397,17 +7414,41 @@
       "aliases": [
         "DIM",
         "OLCU",
+        "DIMALIGNED",
+        "DAL",
         "DIMLIN",
+        "DIMLINEAR",
+        "DLI",
         "DIMANG",
+        "DIMANGULAR",
+        "DAN",
         "DIMRAD",
-        "DIMDIA"
+        "DIMRADIUS",
+        "DRA",
+        "DIMDIA",
+        "DIMDIAMETER",
+        "DDI",
+        "KOORDINATOLCU",
+        "DIMORDINATE",
+        "DOR",
+        "YAYUZUNLUGU",
+        "DIMARC",
+        "DAR"
       ],
       "primary": true,
       "family": "dimension",
       "rare": false,
-      "methods": [],
-      "steps": 3,
-      "description": "Ölçü ekler: hizalı, doğrusal (ΔY yatay / ΔX düşey), açı, yarıçap ve çap; değer proje birimini izler.",
+      "methods": [
+        "Hizalı",
+        "Doğrusal",
+        "Açı",
+        "Yarıçap",
+        "Çap",
+        "Koordinat",
+        "Yay uzunluğu"
+      ],
+      "steps": 4,
+      "description": "Ölçü ekler: hizalı, doğrusal (ΔY yatay / ΔX düşey), açı, yarıçap, çap, bir noktanın koordinatı ve yay uzunluğu; değer proje birimini izler.",
       "productCommand": "cad.entities.create",
       "status": "implemented",
       "platforms": {
@@ -7416,6 +7457,7 @@
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/dimension-kinds.json",
         "fixtures/interaction/v1/dimensions.json",
         "fixtures/interaction/v1/usage-parcel.json"
       ]
@@ -16100,8 +16142,86 @@
                 "split": [
                   {
                     "command": "tool.dimension",
+                    "option": "H",
                     "title": "Ölçülendirme",
-                    "label": "Ölçülendirme"
+                    "label": "Hizalı",
+                    "description": "İki nokta arası, kendi doğrultusunda",
+                    "aliases": [
+                      "DIMALIGNED",
+                      "DAL"
+                    ]
+                  },
+                  {
+                    "command": "tool.dimension",
+                    "option": "D",
+                    "title": "Ölçülendirme",
+                    "label": "Doğrusal",
+                    "description": "ΔY yatay ya da ΔX düşey",
+                    "aliases": [
+                      "DIMLIN",
+                      "DIMLINEAR",
+                      "DLI"
+                    ]
+                  },
+                  {
+                    "command": "tool.dimension",
+                    "option": "A",
+                    "title": "Ölçülendirme",
+                    "label": "Açı",
+                    "description": "İki kenar ya da iki kol arası",
+                    "aliases": [
+                      "DIMANG",
+                      "DIMANGULAR",
+                      "DAN"
+                    ]
+                  },
+                  {
+                    "command": "tool.dimension",
+                    "option": "R",
+                    "title": "Ölçülendirme",
+                    "label": "Yarıçap",
+                    "description": "Daire ya da yayın yarıçapı",
+                    "aliases": [
+                      "DIMRAD",
+                      "DIMRADIUS",
+                      "DRA"
+                    ]
+                  },
+                  {
+                    "command": "tool.dimension",
+                    "option": "Ç",
+                    "title": "Ölçülendirme",
+                    "label": "Çap",
+                    "description": "Daire ya da yayın çapı",
+                    "aliases": [
+                      "DIMDIA",
+                      "DIMDIAMETER",
+                      "DDI"
+                    ]
+                  },
+                  {
+                    "command": "tool.dimension",
+                    "option": "O",
+                    "title": "Ölçülendirme",
+                    "label": "Koordinat",
+                    "description": "Noktanın Y ya da X koordinatı",
+                    "aliases": [
+                      "KOORDINATOLCU",
+                      "DIMORDINATE",
+                      "DOR"
+                    ]
+                  },
+                  {
+                    "command": "tool.dimension",
+                    "option": "U",
+                    "title": "Ölçülendirme",
+                    "label": "Yay uzunluğu",
+                    "description": "Yayın ya da iki noktasının arası",
+                    "aliases": [
+                      "YAYUZUNLUGU",
+                      "DIMARC",
+                      "DAR"
+                    ]
                   },
                   {
                     "command": "tool.dimContinue",
@@ -16434,8 +16554,86 @@
                 "split": [
                   {
                     "command": "tool.dimension",
+                    "option": "H",
                     "title": "Ölçülendirme",
-                    "label": "Ölçülendirme"
+                    "label": "Hizalı",
+                    "description": "İki nokta arası, kendi doğrultusunda",
+                    "aliases": [
+                      "DIMALIGNED",
+                      "DAL"
+                    ]
+                  },
+                  {
+                    "command": "tool.dimension",
+                    "option": "D",
+                    "title": "Ölçülendirme",
+                    "label": "Doğrusal",
+                    "description": "ΔY yatay ya da ΔX düşey",
+                    "aliases": [
+                      "DIMLIN",
+                      "DIMLINEAR",
+                      "DLI"
+                    ]
+                  },
+                  {
+                    "command": "tool.dimension",
+                    "option": "A",
+                    "title": "Ölçülendirme",
+                    "label": "Açı",
+                    "description": "İki kenar ya da iki kol arası",
+                    "aliases": [
+                      "DIMANG",
+                      "DIMANGULAR",
+                      "DAN"
+                    ]
+                  },
+                  {
+                    "command": "tool.dimension",
+                    "option": "R",
+                    "title": "Ölçülendirme",
+                    "label": "Yarıçap",
+                    "description": "Daire ya da yayın yarıçapı",
+                    "aliases": [
+                      "DIMRAD",
+                      "DIMRADIUS",
+                      "DRA"
+                    ]
+                  },
+                  {
+                    "command": "tool.dimension",
+                    "option": "Ç",
+                    "title": "Ölçülendirme",
+                    "label": "Çap",
+                    "description": "Daire ya da yayın çapı",
+                    "aliases": [
+                      "DIMDIA",
+                      "DIMDIAMETER",
+                      "DDI"
+                    ]
+                  },
+                  {
+                    "command": "tool.dimension",
+                    "option": "O",
+                    "title": "Ölçülendirme",
+                    "label": "Koordinat",
+                    "description": "Noktanın Y ya da X koordinatı",
+                    "aliases": [
+                      "KOORDINATOLCU",
+                      "DIMORDINATE",
+                      "DOR"
+                    ]
+                  },
+                  {
+                    "command": "tool.dimension",
+                    "option": "U",
+                    "title": "Ölçülendirme",
+                    "label": "Yay uzunluğu",
+                    "description": "Yayın ya da iki noktasının arası",
+                    "aliases": [
+                      "YAYUZUNLUGU",
+                      "DIMARC",
+                      "DAR"
+                    ]
                   },
                   {
                     "command": "tool.dimContinue",
@@ -18020,8 +18218,86 @@
                   "split": [
                     {
                       "command": "tool.dimension",
+                      "option": "H",
                       "title": "Ölçülendirme",
-                      "label": "Ölçülendirme"
+                      "label": "Hizalı",
+                      "description": "İki nokta arası, kendi doğrultusunda",
+                      "aliases": [
+                        "DIMALIGNED",
+                        "DAL"
+                      ]
+                    },
+                    {
+                      "command": "tool.dimension",
+                      "option": "D",
+                      "title": "Ölçülendirme",
+                      "label": "Doğrusal",
+                      "description": "ΔY yatay ya da ΔX düşey",
+                      "aliases": [
+                        "DIMLIN",
+                        "DIMLINEAR",
+                        "DLI"
+                      ]
+                    },
+                    {
+                      "command": "tool.dimension",
+                      "option": "A",
+                      "title": "Ölçülendirme",
+                      "label": "Açı",
+                      "description": "İki kenar ya da iki kol arası",
+                      "aliases": [
+                        "DIMANG",
+                        "DIMANGULAR",
+                        "DAN"
+                      ]
+                    },
+                    {
+                      "command": "tool.dimension",
+                      "option": "R",
+                      "title": "Ölçülendirme",
+                      "label": "Yarıçap",
+                      "description": "Daire ya da yayın yarıçapı",
+                      "aliases": [
+                        "DIMRAD",
+                        "DIMRADIUS",
+                        "DRA"
+                      ]
+                    },
+                    {
+                      "command": "tool.dimension",
+                      "option": "Ç",
+                      "title": "Ölçülendirme",
+                      "label": "Çap",
+                      "description": "Daire ya da yayın çapı",
+                      "aliases": [
+                        "DIMDIA",
+                        "DIMDIAMETER",
+                        "DDI"
+                      ]
+                    },
+                    {
+                      "command": "tool.dimension",
+                      "option": "O",
+                      "title": "Ölçülendirme",
+                      "label": "Koordinat",
+                      "description": "Noktanın Y ya da X koordinatı",
+                      "aliases": [
+                        "KOORDINATOLCU",
+                        "DIMORDINATE",
+                        "DOR"
+                      ]
+                    },
+                    {
+                      "command": "tool.dimension",
+                      "option": "U",
+                      "title": "Ölçülendirme",
+                      "label": "Yay uzunluğu",
+                      "description": "Yayın ya da iki noktasının arası",
+                      "aliases": [
+                        "YAYUZUNLUGU",
+                        "DIMARC",
+                        "DAR"
+                      ]
                     },
                     {
                       "command": "tool.dimContinue",
@@ -18354,8 +18630,86 @@
                   "split": [
                     {
                       "command": "tool.dimension",
+                      "option": "H",
                       "title": "Ölçülendirme",
-                      "label": "Ölçülendirme"
+                      "label": "Hizalı",
+                      "description": "İki nokta arası, kendi doğrultusunda",
+                      "aliases": [
+                        "DIMALIGNED",
+                        "DAL"
+                      ]
+                    },
+                    {
+                      "command": "tool.dimension",
+                      "option": "D",
+                      "title": "Ölçülendirme",
+                      "label": "Doğrusal",
+                      "description": "ΔY yatay ya da ΔX düşey",
+                      "aliases": [
+                        "DIMLIN",
+                        "DIMLINEAR",
+                        "DLI"
+                      ]
+                    },
+                    {
+                      "command": "tool.dimension",
+                      "option": "A",
+                      "title": "Ölçülendirme",
+                      "label": "Açı",
+                      "description": "İki kenar ya da iki kol arası",
+                      "aliases": [
+                        "DIMANG",
+                        "DIMANGULAR",
+                        "DAN"
+                      ]
+                    },
+                    {
+                      "command": "tool.dimension",
+                      "option": "R",
+                      "title": "Ölçülendirme",
+                      "label": "Yarıçap",
+                      "description": "Daire ya da yayın yarıçapı",
+                      "aliases": [
+                        "DIMRAD",
+                        "DIMRADIUS",
+                        "DRA"
+                      ]
+                    },
+                    {
+                      "command": "tool.dimension",
+                      "option": "Ç",
+                      "title": "Ölçülendirme",
+                      "label": "Çap",
+                      "description": "Daire ya da yayın çapı",
+                      "aliases": [
+                        "DIMDIA",
+                        "DIMDIAMETER",
+                        "DDI"
+                      ]
+                    },
+                    {
+                      "command": "tool.dimension",
+                      "option": "O",
+                      "title": "Ölçülendirme",
+                      "label": "Koordinat",
+                      "description": "Noktanın Y ya da X koordinatı",
+                      "aliases": [
+                        "KOORDINATOLCU",
+                        "DIMORDINATE",
+                        "DOR"
+                      ]
+                    },
+                    {
+                      "command": "tool.dimension",
+                      "option": "U",
+                      "title": "Ölçülendirme",
+                      "label": "Yay uzunluğu",
+                      "description": "Yayın ya da iki noktasının arası",
+                      "aliases": [
+                        "YAYUZUNLUGU",
+                        "DIMARC",
+                        "DAR"
+                      ]
                     },
                     {
                       "command": "tool.dimContinue",

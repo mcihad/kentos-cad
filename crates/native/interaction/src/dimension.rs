@@ -10,7 +10,14 @@
 //!   each arm), then where the arc goes, or its radius typed (taken without
 //!   its sign); the sector follows where the arc is placed;
 //! - Yarıçap and Çap: a circle, an arc or a path's arc segment, then the
-//!   direction; they take no typed number.
+//!   direction; they take no typed number;
+//! - Koordinat (docs/adr/0147 §7): a point, then its line's end, or its
+//!   length typed (toward the cursor, as every point tool's); the axis
+//!   follows the cursor (further up or down: its Y, across: its X) unless
+//!   locked (Y koordinatı, X koordinatı; Eksen back to the cursor);
+//! - Yay uzunluğu: an arc or a path's arc segment (not a circle), with Kısmi
+//!   two points on it, then where the dimension arc goes, or its distance
+//!   from the arc typed (out positive).
 //!
 //! The style changes only while nothing is picked. The style, the lock and
 //! Köşeden stay for as long as the app lives (`Memory`). The text is 2.5
@@ -21,12 +28,15 @@ use kentos_contracts::{DimensionStyle, Entity, EntityGeometry};
 use kentos_domain::Document;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::dimension::{
-    DimensionGeom, dimension_offset_at, layout_dimension, linear_angle_for, signed_offset,
+    DimensionGeom, dimension_offset_at, layout_dimension, linear_angle_for, ordinate_axis_for,
+    signed_offset,
 };
 use kentos_geometry_core::geom::intersect::{Edge, closest_on_edge, line_line};
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::ops::edges::entity_edges;
-use kentos_geometry_core::tools::editing::{PickedEdge, edge_arms, radial_dimension, vertex_arms};
+use kentos_geometry_core::tools::editing::{
+    PickedEdge, arc_length_ends, edge_arms, radial_dimension, vertex_arms,
+};
 use kentos_geometry_core::tools::point_text::{js_trim, point_from_text};
 use kentos_native_application::geometry::shape;
 
@@ -49,12 +59,14 @@ pub const LABEL: &str = "Ölçü";
 const HEIGHT_MM: f64 = 2.5;
 
 /// The styles with their keys, in the web's order (`MODE_KEYS`).
-const MODES: [(Mode, &str); 5] = [
+const MODES: [(Mode, &str); 7] = [
     (Mode::Aligned, "H"),
     (Mode::Linear, "D"),
     (Mode::Angular, "A"),
     (Mode::Radius, "R"),
     (Mode::Diameter, "Ç"),
+    (Mode::Ordinate, "O"),
+    (Mode::ArcLength, "U"),
 ];
 
 impl Mode {
@@ -66,6 +78,8 @@ impl Mode {
             Mode::Angular => "Açı",
             Mode::Radius => "Yarıçap",
             Mode::Diameter => "Çap",
+            Mode::Ordinate => "Koordinat",
+            Mode::ArcLength => "Yay uzunluğu",
         }
     }
 
@@ -78,6 +92,8 @@ impl Mode {
             Mode::Angular => "Açı ölçüsü eklendi",
             Mode::Radius => "Yarıçap ölçüsü eklendi",
             Mode::Diameter => "Çap ölçüsü eklendi",
+            Mode::Ordinate => "Koordinat ölçüsü eklendi",
+            Mode::ArcLength => "Yay uzunluğu ölçüsü eklendi",
         }
     }
 
@@ -89,6 +105,8 @@ impl Mode {
             Mode::Angular => Some("angular"),
             Mode::Radius => Some("radius"),
             Mode::Diameter => Some("diameter"),
+            Mode::Ordinate => Some("ordinate"),
+            Mode::ArcLength => Some("arcLength"),
         }
     }
 
@@ -100,8 +118,39 @@ impl Mode {
             Mode::Angular => Some(DimensionStyle::Angular),
             Mode::Radius => Some(DimensionStyle::Radius),
             Mode::Diameter => Some(DimensionStyle::Diameter),
+            Mode::Ordinate => Some(DimensionStyle::Ordinate),
+            Mode::ArcLength => Some(DimensionStyle::ArcLength),
         }
     }
+
+    /// Why a dimension of this style does not form where the cursor is.
+    fn no_dimension(self) -> &'static str {
+        match self {
+            Mode::Ordinate => {
+                "Çizginin ucu noktaya çok yakın; imleci noktadan eksene dik yönde uzaklaştırın."
+            }
+            Mode::ArcLength => {
+                "Bu yerde ölçü oluşmuyor; ölçü yayı merkeze ulaşıyor ya da iki nokta aynı yerde."
+            }
+            _ => "Bu yerde ölçü oluşmuyor; ölçülen noktalar çakışıyor ya da yay yarıçapı sıfır.",
+        }
+    }
+}
+
+/// The arc of an arc, or the arc segment of a path nearest to `p`: Yay
+/// uzunluğu's pick (a circle has no ends to measure between).
+fn arc_edge_at(e: &Entity, p: Vec2) -> Option<Edge> {
+    let mut best: Option<(Edge, f64)> = None;
+    for edge in entity_edges(&shape(e)) {
+        if !matches!(edge, Edge::Arc { .. }) || arc_length_ends(&edge, None).is_none() {
+            continue;
+        }
+        let d = closest_on_edge(&edge, p).d;
+        if best.is_none_or(|(_, bd)| d < bd) {
+            best = Some((edge, d));
+        }
+    }
+    best.map(|(e, _)| e)
 }
 
 /// The straight edge of `e` nearest to `p` (the web's `straightEdgeAt`).
@@ -143,6 +192,27 @@ fn circle_at(e: &Entity, p: Vec2) -> Option<(Vec2, f64)> {
     best.map(|(c, _)| c)
 }
 
+/// An arc length's arc (or, with two points, its part between them) as strokes.
+fn arc_strokes(arc: &Edge, between: Option<(Vec2, Vec2)>, width: f32, tone: Tone) -> Vec<Stroke> {
+    let Some(ends) = arc_length_ends(arc, between) else {
+        return Vec::new();
+    };
+    let angle = |p: Vec2| kentos_geometry_core::jsmath::atan2(p.y - ends.c.y, p.x - ends.c.x);
+    let r = dist(ends.c, ends.a);
+    Outline::of(
+        &Shape::Arc {
+            c: ends.c,
+            r,
+            a0: angle(ends.a),
+            a1: angle(ends.b),
+        },
+        None,
+        width,
+        tone,
+    )
+    .strokes
+}
+
 /// Every object's edge can be picked, on any layer (the web's `pickEdge`).
 fn any(_: &Entity, _: &Document) -> bool {
     true
@@ -156,6 +226,8 @@ pub struct Dimension {
     edges: Vec<PickedEdge>,
     /// Yarıçap and Çap: the picked circle, its centre and radius.
     circle: Option<(Vec2, f64)>,
+    /// Yay uzunluğu: the picked arc (docs/adr/0147 §7).
+    arc: Option<Edge>,
     /// The text's height in metres, as of the last call.
     height: f64,
     /// What the session remembered, as of the last call.
@@ -178,7 +250,7 @@ impl Dimension {
 
     /// Nothing picked yet: the style can still change.
     fn fresh(&self) -> bool {
-        self.d.pts.is_empty() && self.edges.is_empty() && self.circle.is_none()
+        self.d.pts.is_empty() && self.edges.is_empty() && self.circle.is_none() && self.arc.is_none()
     }
 
     /// Stages where a click picks an edge or a circle rather than a point.
@@ -186,7 +258,8 @@ impl Dimension {
         match self.mode() {
             Mode::Angular => !self.memory.dimension_by_vertex && self.edges.len() < 2,
             Mode::Radius | Mode::Diameter => self.circle.is_none(),
-            Mode::Aligned | Mode::Linear => false,
+            Mode::ArcLength => self.arc.is_none(),
+            Mode::Aligned | Mode::Linear | Mode::Ordinate => false,
         }
     }
 
@@ -197,6 +270,10 @@ impl Dimension {
             Mode::Angular => self.edges.len() == 2,
             Mode::Radius | Mode::Diameter => self.circle.is_some(),
             Mode::Aligned | Mode::Linear => self.d.pts.len() == 2,
+            Mode::Ordinate => self.d.pts.len() == 1,
+            Mode::ArcLength => {
+                self.arc.is_some() && (!self.memory.arc_partial || self.d.pts.len() == 2)
+            }
         }
     }
 
@@ -215,6 +292,19 @@ impl Dimension {
                 cx.memory.dimension_by_vertex = !cx.memory.dimension_by_vertex;
                 return true;
             }
+            if key == "K" && cx.memory.dimension_mode == Mode::ArcLength {
+                cx.memory.arc_partial = !cx.memory.arc_partial;
+                return true;
+            }
+        }
+        if cx.memory.dimension_mode == Mode::Ordinate && self.d.pts.len() == 1 {
+            cx.memory.ordinate_lock = match key {
+                "Y" => Some(0.0),
+                "X" => Some(90.0),
+                "O" => None,
+                _ => return false,
+            };
+            return true;
         }
         if cx.memory.dimension_mode == Mode::Linear && self.d.pts.len() == 2 {
             cx.memory.dimension_lock = match key {
@@ -288,20 +378,35 @@ impl Dimension {
                 let radial = radial_dimension(c, r, loc);
                 Some(geom(c, radial.b, radial.offset, None, None))
             }
+            Mode::Ordinate => {
+                let &a = self.d.pts.first()?;
+                let angle = self
+                    .memory
+                    .ordinate_lock
+                    .unwrap_or_else(|| ordinate_axis_for(a, loc));
+                Some(geom(a, loc, 0.0, Some(angle), None))
+            }
+            Mode::ArcLength => {
+                let between = match self.d.pts.as_slice() {
+                    [p, q] => Some((*p, *q)),
+                    _ => None,
+                };
+                let ends = arc_length_ends(self.arc.as_ref()?, between)?;
+                let g = geom(ends.a, ends.b, 0.0, None, Some(ends.c));
+                let offset = typed.unwrap_or_else(|| dimension_offset_at(&g, loc));
+                Some(DimensionGeom { offset, ..g })
+            }
         }
     }
 
     /// Writes the dimension (the web's `commit`): a degenerate one is said and
     /// the tool waits; written or refused, the next one starts.
     fn commit(&mut self, g: Option<DimensionGeom>, cx: &mut Context<'_>) {
+        let mode = self.mode();
         let Some((g, layout)) = g.and_then(|g| layout_dimension(&g).map(|l| (g, l))) else {
-            cx.say(
-                Level::Warn,
-                "Bu yerde ölçü oluşmuyor; ölçülen noktalar çakışıyor ya da yay yarıçapı sıfır.",
-            );
+            cx.say(Level::Warn, mode.no_dimension());
             return;
         };
-        let mode = self.mode();
         let geometry = EntityGeometry::Dimension {
             a: wire(g.a),
             b: wire(g.b),
@@ -334,6 +439,7 @@ impl Dimension {
     fn reset(&mut self) {
         self.edges.clear();
         self.circle = None;
+        self.arc = None;
         self.d.reset();
     }
 }
@@ -382,6 +488,18 @@ impl Tool for Dimension {
             }
             Mode::Radius => "yarıçapı ölçülecek daireye ya da yaya tıklayın",
             Mode::Diameter => "çapı ölçülecek daireye ya da yaya tıklayın",
+            Mode::Ordinate => match n {
+                0 => "koordinat ölçüsünün noktasını belirtin",
+                _ => "çizginin ucunu gösterin ya da uzunluğunu yazın",
+            },
+            Mode::ArcLength if self.arc.is_none() => "yay uzunluğu ölçülecek yaya tıklayın",
+            Mode::ArcLength if self.placing() => {
+                "ölçü yayının yerini gösterin ya da uzaklık yazın"
+            }
+            Mode::ArcLength => match n {
+                0 => "yayın üstünde ölçünün başlangıcını gösterin",
+                _ => "yayın üstünde ölçünün sonunu gösterin",
+            },
             Mode::Aligned => match n {
                 0 => "hizalı ölçünün ilk noktasını belirtin",
                 1 => "ikinci ölçü noktasını belirtin",
@@ -400,7 +518,26 @@ impl Tool for Dimension {
                 .option("Düşey ΔX", "X")
                 .option_with("Yön", "O", way);
         }
+        if self.mode() == Mode::Ordinate && n == 1 {
+            let way = match self.memory.ordinate_lock {
+                Some(0.0) => "Y",
+                Some(_) => "X",
+                None => "imleçten",
+            };
+            prompt = prompt
+                .option("Y koordinatı", "Y")
+                .option("X koordinatı", "X")
+                .option_with("Eksen", "O", way);
+        }
         if self.fresh() {
+            if self.mode() == Mode::ArcLength {
+                let other = if self.memory.arc_partial {
+                    "Bütün yay"
+                } else {
+                    "Kısmi"
+                };
+                prompt = prompt.option(other, "K");
+            }
             if self.mode() == Mode::Angular {
                 let other = if self.memory.dimension_by_vertex {
                     "Kenarlardan"
@@ -453,6 +590,18 @@ impl Tool for Dimension {
             return;
         }
         let picked = edge::pick(p, cx, any).and_then(|slot| cx.doc.get(slot));
+        if self.mode() == Mode::ArcLength {
+            let Some(arc) = picked.and_then(|e| arc_edge_at(e, p.raw)) else {
+                cx.say(
+                    Level::Warn,
+                    "Bir yaya ya da çoklu çizginin ya da alanın yaylı kenarına tıklayın; tam daire için Yarıçap ya da Çap'ı kullanın.",
+                );
+                return;
+            };
+            self.arc = Some(arc);
+            cx.selection.set_hover(None);
+            return;
+        }
         if self.mode() == Mode::Angular {
             let Some((a, b)) = picked.and_then(|e| straight_edge_at(e, p.raw)) else {
                 cx.say(
@@ -488,7 +637,7 @@ impl Tool for Dimension {
         let done = if self.option(&upper_tr(js_trim(text)), cx) {
             true
         } else if let Some(n) = points::plain_number(text).filter(|_| {
-            self.placing() && !matches!(self.mode(), Mode::Radius | Mode::Diameter)
+            self.placing() && !matches!(self.mode(), Mode::Radius | Mode::Diameter | Mode::Ordinate)
         }) {
             let loc = self
                 .d
@@ -526,7 +675,12 @@ impl Tool for Dimension {
     /// last picked edge, then the points (the dimension starts over);
     /// otherwise the drawing's undo, which takes back a dimension just written.
     fn undo_step(&mut self, cx: &mut Context<'_>) -> bool {
-        if self.circle.take().is_some() || self.edges.pop().is_some() {
+        // Yay uzunluğu's points on the arc go before the arc (docs/adr/0147 §7).
+        if self.arc.is_some() && !self.d.pts.is_empty() {
+            self.d.pts.pop();
+            return true;
+        }
+        if self.circle.take().is_some() || self.edges.pop().is_some() || self.arc.take().is_some() {
             return true;
         }
         self.d.undo_step(false, cx)
@@ -540,6 +694,15 @@ impl Tool for Dimension {
         }
         if let Some((c, r)) = self.circle {
             strokes.extend(Outline::of(&Shape::Circle { c, r }, None, 2.0, Tone::Snap).strokes);
+        }
+        // Yay uzunluğu's arc, and with Kısmi the part between its first point and the cursor.
+        if let Some(arc) = &self.arc {
+            strokes.extend(arc_strokes(arc, None, 2.0, Tone::Snap));
+            if let (Some(&first), None, Some(hover)) =
+                (self.d.pts.first(), self.d.pts.get(1), self.d.hover)
+            {
+                strokes.extend(arc_strokes(arc, Some((first, hover)), 3.0, Tone::Accent));
+            }
         }
         let Some(hover) = self.d.hover else {
             return Preview {
@@ -566,6 +729,37 @@ impl Tool for Dimension {
         if self.picks_edge() {
             return Preview {
                 strokes,
+                ..Preview::default()
+            };
+        }
+        // Kısmi's points on the arc: the part lit above, its length by the cursor (no straight line).
+        if let Some(arc) = &self.arc {
+            let tag = self
+                .d
+                .pts
+                .first()
+                .and_then(|&first| arc_length_ends(arc, Some((first, hover))))
+                .map(|ends| {
+                    let g = DimensionGeom {
+                        a: ends.a,
+                        b: ends.b,
+                        offset: 0.0,
+                        height: self.height,
+                        style: Some("arcLength".into()),
+                        angle: None,
+                        c: Some(ends.c),
+                        za: None,
+                        zb: None,
+                    };
+                    let length = layout_dimension(&g).map_or(0.0, |l| l.value);
+                    Tag {
+                        at: hover,
+                        lines: vec![format.length(length)],
+                    }
+                });
+            return Preview {
+                strokes,
+                tag,
                 ..Preview::default()
             };
         }

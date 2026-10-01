@@ -168,6 +168,8 @@ export interface SplitEntry {
   /** The list's text: the method, or the tool's name. */
   readonly label: string;
   readonly description?: string;
+  /** Typed names that start the tool with this method (ToolMethod.aliases). */
+  readonly aliases?: readonly string[];
 }
 
 /** A split choice as the layout keeps it (`ribbonSplits`, by the button's key): its command and its method's option. */
@@ -339,7 +341,7 @@ type Pre =
 function splitEntries(t: ToolDescriptor): SplitEntry[] {
   const command = `tool.${t.id}`;
   return t.methods?.length
-    ? t.methods.map((m) => ({ command, option: m.option, title: t.label, label: m.label, description: m.description }))
+    ? t.methods.map((m) => ({ command, option: m.option, title: t.label, label: m.label, description: m.description, ...(m.aliases?.length && { aliases: m.aliases }) }))
     : [{ command, title: t.label, label: t.label }];
 }
 

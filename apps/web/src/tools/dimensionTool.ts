@@ -1,11 +1,11 @@
 import type { AppContext } from '../app/context';
 import type { Entity } from '../model/entities';
 import { dist, type Vec2 } from '../model/geometry';
-import { DIMENSION_STYLE_LABEL, dimensionOffsetAt, layoutDimension, linearAngleFor, signedOffset, type DimensionGeom, type DimensionStyle } from '../model/geom/dimension';
+import { DIMENSION_STYLE_LABEL, dimensionOffsetAt, layoutDimension, linearAngleFor, ordinateAxisFor, signedOffset, type DimensionGeom, type DimensionStyle } from '../model/geom/dimension';
 import { closestOnEdge, lineLine, type Edge } from '../model/geom/intersect';
 import { entityEdges } from '../model/ops/edges';
 import type { ViewTransform } from '../viewport/Camera';
-import { edgeArms, radialDimension, vertexArms } from './constructions';
+import { arcLengthEnds, edgeArms, radialDimension, vertexArms } from './constructions';
 import { parseNumber } from './coordinateInput';
 import { rememberDimension } from './dimChainTools';
 import { PointInputTool } from './drawTools';
@@ -35,7 +35,18 @@ const MODE_KEYS: [DimensionStyle, string][] = [
   ['angular', 'A'],
   ['radius', 'R'],
   ['diameter', 'Ç'],
+  ['ordinate', 'O'],
+  ['arcLength', 'U'],
 ];
+
+type ArcEdge = Extract<Edge, { kind: 'arc' }>;
+
+/** Why a dimension of a style does not form where the cursor is. */
+function noDimension(mode: DimensionStyle): string {
+  if (mode === 'ordinate') return 'Çizginin ucu noktaya çok yakın; imleci noktadan eksene dik yönde uzaklaştırın.';
+  if (mode === 'arcLength') return 'Bu yerde ölçü oluşmuyor; ölçü yayı merkeze ulaşıyor ya da iki nokta aynı yerde.';
+  return 'Bu yerde ölçü oluşmuyor; ölçülen noktalar çakışıyor ya da yay yarıçapı sıfır.';
+}
 
 type Seg = { a: Vec2; b: Vec2 };
 
@@ -62,11 +73,25 @@ function circleAt(e: Entity, p: Vec2): { c: Vec2; r: number } | null {
   return best ? { c: best.e.c, r: best.e.r } : null;
 }
 
+/** The arc of an arc, or the arc segment of a path nearest to p: Yay uzunluğu's pick (a circle has no ends to measure between). */
+function arcEdgeAt(e: Entity, p: Vec2): ArcEdge | null {
+  let best: { e: ArcEdge; d: number } | null = null;
+  for (const ed of entityEdges(e)) {
+    if (ed.kind !== 'arc' || !arcLengthEnds(ed, null)) continue;
+    const d = closestOnEdge(ed, p).d;
+    if (!best || d < best.d) best = { e: ed, d };
+  }
+  return best?.e ?? null;
+}
+
 /**
  * Ölçü: aligned (two points and the line's place), linear ΔY/ΔX (the
  * direction follows where the line is placed unless locked), angular (two
  * edges, or vertex and two arm points; the sector follows where the arc is
- * placed), radius and diameter (a circle or arc, then the direction).
+ * placed), radius and diameter (a circle or arc, then the direction);
+ * Koordinat (a point, then its line's end; the axis follows the cursor unless
+ * locked) and Yay uzunluğu (an arc or a path's arc segment, with Kısmi two
+ * points on it, then where the dimension arc goes; docs/adr/0147 §7).
  */
 export class DimensionTool extends PointInputTool {
   readonly id = 'dimension';
@@ -74,9 +99,14 @@ export class DimensionTool extends PointInputTool {
   private static mode: DimensionStyle = 'aligned';
   private static lock: 0 | 90 | null = null;
   private static byVertex = false;
+  /** Koordinat's axis lock (0 its Y, 90 its X; null: from the cursor) and Yay uzunluğu's Kısmi (docs/adr/0147 §7). */
+  private static ordinateLock: 0 | 90 | null = null;
+  private static arcPartial = false;
   /** Angular by edges: the two picked edges and where they were clicked. */
   private edges: (Seg & { at: Vec2 })[] = [];
   private circle: { c: Vec2; r: number } | null = null;
+  /** Yay uzunluğu: the picked arc. */
+  private arc: ArcEdge | null = null;
 
   private get mode(): DimensionStyle {
     return DimensionTool.mode;
@@ -84,12 +114,13 @@ export class DimensionTool extends PointInputTool {
 
   /** Nothing picked yet: the style can still change. */
   private get fresh(): boolean {
-    return !this.pts.length && !this.edges.length && !this.circle;
+    return !this.pts.length && !this.edges.length && !this.circle && !this.arc;
   }
 
   /** Stages where a click picks an edge or a circle rather than a point. */
   private get picksEdge(): boolean {
     if (this.mode === 'angular') return !DimensionTool.byVertex && this.edges.length < 2;
+    if (this.mode === 'arcLength') return !this.arc;
     return (this.mode === 'radius' || this.mode === 'diameter') && !this.circle;
   }
 
@@ -109,6 +140,10 @@ export class DimensionTool extends PointInputTool {
       case 'radius':
       case 'diameter':
         return !!this.circle;
+      case 'ordinate':
+        return this.pts.length === 1;
+      case 'arcLength':
+        return !!this.arc && (!DimensionTool.arcPartial || this.pts.length === 2);
       default:
         return this.pts.length === 2;
     }
@@ -141,6 +176,24 @@ export class DimensionTool extends PointInputTool {
           ? 'ölçünün doğrultusunu gösterin; daireden dışarı çekince yazı dışarı alınır'
           : `${this.mode === 'radius' ? 'yarıçapı' : 'çapı'} ölçülecek daireye ya da yaya tıklayın`;
         break;
+      case 'ordinate': {
+        step = n === 0 ? 'koordinat ölçüsünün noktasını belirtin' : 'çizginin ucunu gösterin ya da uzunluğunu yazın';
+        if (n === 1) {
+          const l = DimensionTool.ordinateLock;
+          opts = `Y koordinatı (Y) / X koordinatı (X) / Eksen (O): ${l === 0 ? 'Y' : l === 90 ? 'X' : 'imleçten'}`;
+        }
+        break;
+      }
+      case 'arcLength':
+        step = !this.arc
+          ? 'yay uzunluğu ölçülecek yaya tıklayın'
+          : this.placing
+            ? 'ölçü yayının yerini gösterin ya da uzaklık yazın'
+            : n === 0
+              ? 'yayın üstünde ölçünün başlangıcını gösterin'
+              : 'yayın üstünde ölçünün sonunu gösterin';
+        if (this.fresh) opts = DimensionTool.arcPartial ? 'Bütün yay (K)' : 'Kısmi (K)';
+        break;
       default:
         step = n === 0 ? 'hizalı ölçünün ilk noktasını belirtin' : n === 1 ? 'ikinci ölçü noktasını belirtin' : 'ölçü çizgisinin yerini gösterin ya da mesafe yazın';
     }
@@ -159,6 +212,17 @@ export class DimensionTool extends PointInputTool {
         DimensionTool.byVertex = !DimensionTool.byVertex;
         return this.changed();
       }
+      if (key === 'K' && this.mode === 'arcLength') {
+        DimensionTool.arcPartial = !DimensionTool.arcPartial;
+        return this.changed();
+      }
+    }
+    if (this.mode === 'ordinate' && this.pts.length === 1) {
+      if (key === 'Y') DimensionTool.ordinateLock = 0;
+      else if (key === 'X') DimensionTool.ordinateLock = 90;
+      else if (key === 'O') DimensionTool.ordinateLock = null;
+      else return false;
+      return this.changed();
     }
     if (this.mode === 'linear' && this.pts.length === 2) {
       if (key === 'Y') DimensionTool.lock = 0;
@@ -190,7 +254,11 @@ export class DimensionTool extends PointInputTool {
     if (p.button !== 0) return;
     if (!this.picksEdge) return super.pointerDown(p);
     const e = this.ctx.view.pickEdge(p.screen);
-    if (this.mode === 'angular') {
+    if (this.mode === 'arcLength') {
+      const arc = e && arcEdgeAt(e, p.raw);
+      if (!arc) return this.ctx.log.warn("Bir yaya ya da çoklu çizginin ya da alanın yaylı kenarına tıklayın; tam daire için Yarıçap ya da Çap'ı kullanın.");
+      this.arc = arc;
+    } else if (this.mode === 'angular') {
       const s = e && straightEdgeAt(e, p.raw);
       if (!s) return this.ctx.log.warn('Açının kenarı olarak düz bir çizgiye tıklayın; köşe noktasından ölçmek için “Köşeden” seçin.');
       if (this.edges.length === 1 && !lineLine(this.edges[0].a, this.edges[0].b, s.a, s.b)) return this.ctx.log.warn('Kenarlar paralel; aralarında açı yok.');
@@ -216,8 +284,9 @@ export class DimensionTool extends PointInputTool {
   override input(text: string): boolean {
     if (this.option(text.trim().toLocaleUpperCase('tr-TR'))) return true;
     const n = parseNumber(text);
-    // Radius and diameter are placed by pointing only (their prompt asks for no number).
-    if (this.placing && n !== null && !/[,;@<]/.test(text) && this.mode !== 'radius' && this.mode !== 'diameter') {
+    // Radius and diameter are placed by pointing only (their prompt asks for no number); an ordinate's typed
+    // number is its line's length toward the cursor, as every point tool takes one (docs/adr/0147 §7).
+    if (this.placing && n !== null && !/[,;@<]/.test(text) && this.mode !== 'radius' && this.mode !== 'diameter' && this.mode !== 'ordinate') {
       this.commit(this.geomAt(this.hover ?? this.pts[0] ?? this.edges[0]?.at ?? { x: 0, y: 0 }, n));
       return true;
     }
@@ -228,7 +297,7 @@ export class DimensionTool extends PointInputTool {
   }
 
   override confirm(): void {
-    if (this.edges.length || this.circle) return this.reset();
+    if (this.edges.length || this.circle || this.arc) return this.reset();
     super.confirm();
   }
 
@@ -239,8 +308,11 @@ export class DimensionTool extends PointInputTool {
    * drawing, was undone while the picks stayed.
    */
   override undoStep(): boolean {
-    if (this.circle) this.circle = null;
+    // Yay uzunluğu's points on the arc go before the arc (docs/adr/0147 §7).
+    if (this.arc && this.pts.length) this.pts.pop();
+    else if (this.circle) this.circle = null;
     else if (this.edges.length) this.edges.pop();
+    else if (this.arc) this.arc = null;
     else return super.undoStep();
     this.refreshPrompt();
     this.ctx.view.requestOverlay();
@@ -250,6 +322,7 @@ export class DimensionTool extends PointInputTool {
   protected override reset(): void {
     this.edges = [];
     this.circle = null;
+    this.arc = null;
     super.reset();
   }
 
@@ -275,6 +348,16 @@ export class DimensionTool extends PointInputTool {
         const pick = this.armsAt(loc);
         if (!pick) return null;
         return { ...pick, offset: typed === undefined ? dist(pick.c, loc) : Math.abs(typed), height, style: 'angular' };
+      }
+      case 'ordinate': {
+        const [a] = this.pts;
+        return { a, b: loc, offset: 0, height, style: 'ordinate', angle: DimensionTool.ordinateLock ?? ordinateAxisFor(a, loc) };
+      }
+      case 'arcLength': {
+        const ends = this.arc && arcLengthEnds(this.arc, this.pts.length === 2 ? [this.pts[0], this.pts[1]] : null);
+        if (!ends) return null;
+        const g: DimensionGeom = { ...ends, offset: 0, height, style: 'arcLength' };
+        return { ...g, offset: typed ?? dimensionOffsetAt(g, loc) };
       }
       default: {
         const circle = this.circle;
@@ -302,7 +385,7 @@ export class DimensionTool extends PointInputTool {
   private commit(g: DimensionGeom | null): void {
     const l = g && layoutDimension(g);
     if (!g || !l) {
-      this.ctx.log.warn('Bu yerde ölçü oluşmuyor; ölçülen noktalar çakışıyor ya da yay yarıçapı sıfır.');
+      this.ctx.log.warn(noDimension(this.mode));
       return;
     }
     const { style, ...rest } = g;
@@ -320,6 +403,17 @@ export class DimensionTool extends PointInputTool {
     const pal = this.ctx.view.palette;
     for (const s of this.edges) strokePath(g, view, [s.a, s.b], { color: pal.snap, width: 2 });
     if (this.circle) strokeGeometry(g, view, { kind: 'circle', ...this.circle }, { color: pal.snap, width: 2 });
+    // Yay uzunluğu's arc, and with Kısmi the part between its first point and the cursor, its length by the cursor.
+    if (this.arc) {
+      strokeArcEnds(g, view, arcLengthEnds(this.arc, null), pal.snap, 2);
+      if (this.pts.length === 1 && this.hover) {
+        const part = arcLengthEnds(this.arc, [this.pts[0], this.hover]);
+        strokeArcEnds(g, view, part, pal.accent, 3);
+        const l = part && layoutDimension({ ...part, offset: 0, height: this.height(), style: 'arcLength' });
+        if (l) drawTag(g, view.worldToScreen(this.hover), [this.ctx.format.length(l.value)], pal.accent, pal.labelHalo);
+      }
+      if (!this.placing) return;
+    }
     if (this.placing && this.hover) {
       const d = this.geomAt(this.hover);
       const l = d && layoutDimension(d);
@@ -330,4 +424,11 @@ export class DimensionTool extends PointInputTool {
     }
     if (!this.picksEdge) super.draw(g, view);
   }
+}
+
+/** An arc length's arc (or its part) drawn from its ends about its centre. */
+function strokeArcEnds(g: CanvasRenderingContext2D, view: ViewTransform, ends: { a: Vec2; b: Vec2; c: Vec2 } | null, color: string, width: number): void {
+  if (!ends) return;
+  const angle = (p: Vec2) => Math.atan2(p.y - ends.c.y, p.x - ends.c.x);
+  strokeGeometry(g, view, { kind: 'arc', c: ends.c, r: dist(ends.c, ends.a), a0: angle(ends.a), a1: angle(ends.b) }, { color, width });
 }

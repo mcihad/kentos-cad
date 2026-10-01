@@ -99,7 +99,7 @@ impl Objects {
         self.push(layer, json!({ "kind": kind, "pts": pts }))
     }
 
-    fn arc(&mut self, layer: &str, c: [f64; 2], r: f64, a0: f64, a1: f64) -> u32 {
+    pub(crate) fn arc(&mut self, layer: &str, c: [f64; 2], r: f64, a0: f64, a1: f64) -> u32 {
         self.push(
             layer,
             json!({ "kind": "arc", "c": xy(c), "r": r, "a0": a0, "a1": a1 }),
@@ -245,7 +245,7 @@ pub(crate) fn run(app: &mut App, id: &'static str) {
     let _ = app.update(Message::Run(id));
 }
 
-fn method(app: &mut App, id: &'static str, option: &'static str) {
+pub(crate) fn method(app: &mut App, id: &'static str, option: &'static str) {
     let _ = app.update(Message::RunMethod {
         id,
         option,

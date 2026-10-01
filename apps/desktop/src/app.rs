@@ -1526,6 +1526,19 @@ impl App {
         if text.is_empty() {
             return Task::none();
         }
+        // A tool's method by its own name (DOR: Ölçülendirme as Koordinat; docs/adr/0147 §7),
+        // as the ribbon's menu starts it: the tool, then its option.
+        if let Some(method) = catalog().method_by_alias(text)
+            && let Some(option) = method.option
+        {
+            self.remember(text);
+            let task = self.run_method(method.id, option, method.label);
+            if self.session.is_running() {
+                self.line_focused = false;
+                return Task::batch([task, release_keyboard()]);
+            }
+            return task;
+        }
         let folded = fold(text);
         let found = catalog().commands().iter().find(|c| {
             c.aliases.iter().any(|a| fold(a) == folded) || fold(c.title) == folded || c.id == text
@@ -1632,7 +1645,7 @@ impl App {
 }
 
 /// Turkish-aware case folding for command names: “çizgi”, “Cizgi” and “CIZGI” match.
-fn fold(text: &str) -> String {
+pub(crate) fn fold(text: &str) -> String {
     text.trim()
         .chars()
         .map(|c| match c {
