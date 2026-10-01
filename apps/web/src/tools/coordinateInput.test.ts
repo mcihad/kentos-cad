@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import cases from '../../../../fixtures/point-input/v1/cases.json?raw';
 import type { Vec2 } from '../model/geometry';
-import { looksLikeCoordinate, parseNumber, parsePointInput } from './coordinateInput';
+import { looksLikeCoordinate, parseNumber, parsePointInput, pointName } from './coordinateInput';
 
 describe('parsePointInput', () => {
   const last = { x: 100, y: 200 };
@@ -37,11 +37,11 @@ describe('parseNumber', () => {
 /** One shared grammar case (fixtures/point-input/v1/cases.json). */
 interface Case {
   name: string;
-  fn: 'point' | 'number' | 'looksLikeCoordinate';
+  fn: 'point' | 'number' | 'looksLikeCoordinate' | 'pointName';
   text: string;
   last?: Vec2 | null;
   cursor?: Vec2 | null;
-  expect: Vec2 | number | boolean | null;
+  expect: Vec2 | number | boolean | string | null;
   tolerance?: number;
 }
 
@@ -69,6 +69,8 @@ describe('shared point input cases (fixtures/point-input/v1)', () => {
         expect(near, `${JSON.stringify(got)}, beklenen ${JSON.stringify(want)}`).toBe(true);
       } else if (c.fn === 'number') {
         expect(parseNumber(c.text)).toBe(c.expect);
+      } else if (c.fn === 'pointName') {
+        expect(pointName(c.text)).toBe(c.expect);
       } else {
         expect(looksLikeCoordinate(c.text)).toBe(c.expect);
       }

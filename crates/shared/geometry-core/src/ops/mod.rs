@@ -22,3 +22,4 @@ pub mod topology;
 pub mod transform;
 pub mod trim;
 pub mod vertex;
+pub mod vertex_points;

@@ -174,6 +174,7 @@ python3 scripts/fixtures/numeric_display.py --check   # gösterim kuralının du
 python3 scripts/fixtures/measure_cases.py --check   # ölçülerin kesin değerlerini (uzunluk, alan, yay, elips, eğri, semt, açı, ölçü türleri) 50 basamaklı bağımsız başvuruyla denetle (ADR 0149)
 python3 scripts/fixtures/topology_cases.py --check   # Topolojik temizliğin durumlarını (birleştirme, uzatma, budama, kenara taşıma, kot) kurallardan denetle (ADR 0148)
 python3 scripts/fixtures/polygonize_cases.py --check   # Toplu alan'ın durumlarını (bölgeler, adalar, etiketler, var olan alan, boşta uçlar) kesin kesirlerle kurallardan denetle (ADR 0151)
+python3 scripts/fixtures/vertex_points_cases.py --check   # Köşelere nokta'nın durumlarını (paylaşılan köşe, var olan nokta, kot, ad artımı) kurallardan denetle (ADR 0152)
 cargo test --release -p kentos-geometry-core --test curve_perf -- --ignored --nocapture   # 2 000 eğri ve 500 elips arasında kenet, tıklama ve kesişim penceresi süreleri (ADR 0149 §5.3)
 pnpm e2e:cloud           # gerçek API/PostGIS cloud akışı
 KENTOS_E2E_DB=scratch pnpm e2e:cloud   # aynı akış geçici veritabanında (bu yapının migration'ları), kentos_cad'e dokunmadan
@@ -570,7 +571,9 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
 - Sürmekte: TODOS.md §16'nın sırası (sahibin kararı, 1 Ekim): önce hibrit (§16.0), sonra CAD (§16.1), sonra CBS (§16.2).
   `HYB-02` çizgi ağından toplu alan ([ADR 0151](docs/adr/0151-polygonize.md)) bitti: çekirdek `ops::polygonize` (bağımsız
   başvuru `polygonize_cases.py`, 58 ortak durum), `cad.entities.create`'in `polygonize` işlemi, Toplu alan aracı iki
-  platformda (ortak iz `polygonize.json`). Sıradaki `HYB-03` ölçü noktası. PDF, yazdırma ve pafta çıktısı (§16.4) en
+  platformda (ortak iz `polygonize.json`). Şimdi `HYB-03` ölçü noktası ([ADR 0152](docs/adr/0152-survey-points.md)): 1. adım
+  (`#ad` dilbilgisi, `ops::vertex_points` bağımsız başvurusuyla) tamam; sıradaki 2: `cad.entities.create`'in `vertexPoints`
+  işlemi, sonra 3: Nokta'nın seçenekleri, aynı yer sorusu, `#ad` çözümü ve Köşelere nokta iki platformda. PDF, yazdırma ve pafta çıktısı (§16.4) en
   sondadır, zamanını sahip söyleyecek. İşler ADR 0142–0148'deki gibi: önce ADR ve adımları, sonra adım adım iki platformda,
   ortak fixture'larla.
 - Bilinen açık: web `pnpm e2e` duman testinde üç test ADR 0143'ten önce de düşüyordu: “toolbox

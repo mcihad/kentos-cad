@@ -5,7 +5,7 @@
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::tools::point_text::{
-    looks_like_coordinate, parse_number, point_from_text,
+    looks_like_coordinate, parse_number, point_from_text, point_name,
 };
 use serde_json::Value;
 
@@ -44,6 +44,11 @@ fn every_shared_case_reads_as_the_web_reads_it() {
             Some("number") => {
                 let got = parse_number(text);
                 let want = case["expect"].as_f64();
+                (got != want).then(|| format!("{got:?}, beklenen {want:?}"))
+            }
+            Some("pointName") => {
+                let got = point_name(text);
+                let want = case["expect"].as_str();
                 (got != want).then(|| format!("{got:?}, beklenen {want:?}"))
             }
             Some("looksLikeCoordinate") => {

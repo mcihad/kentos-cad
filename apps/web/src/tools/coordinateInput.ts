@@ -40,4 +40,14 @@ export function parseNumber(text: string): number | null {
   return m ? +m[1] : null;
 }
 
-export const looksLikeCoordinate = (text: string) => /^[@\d.+-]/.test(text.trim());
+export const looksLikeCoordinate = (text: string) => /^[@\d.+#-]/.test(text.trim());
+
+/**
+ * `#ad`: a point's name typed for its place (docs/adr/0152 §4), the name after the `#` without the spaces round it;
+ * null for any other text or an empty name. The application finds the point.
+ */
+export function pointName(text: string): string | null {
+  const t = text.trim();
+  if (!t.startsWith('#')) return null;
+  return t.slice(1).trim() || null;
+}

@@ -83,13 +83,22 @@ pub fn parse_number(text: &str) -> Option<f64> {
     whole(&js_trim(text).replacen(',', ".", 1))
 }
 
-/// Whether text starts like a number or a coordinate: a digit, `.`, `@`, `+`
-/// or `-` (the web's `looksLikeCoordinate`).
+/// Whether text starts like a number or a coordinate: a digit, `.`, `@`,
+/// `+`, `-`, or `#` (a point's name, docs/adr/0152 §4; the web's
+/// `looksLikeCoordinate`).
 pub fn looks_like_coordinate(text: &str) -> bool {
     js_trim(text)
         .chars()
         .next()
-        .is_some_and(|c| c.is_ascii_digit() || matches!(c, '@' | '.' | '+' | '-'))
+        .is_some_and(|c| c.is_ascii_digit() || matches!(c, '@' | '.' | '+' | '-' | '#'))
+}
+
+/// `#ad`: a point's name typed for its place (docs/adr/0152 §4), the name
+/// after the `#` without the spaces round it; none for any other text or an
+/// empty name (the web's `pointName`). The application finds the point.
+pub fn point_name(text: &str) -> Option<&str> {
+    let name = js_trim(js_trim(text).strip_prefix('#')?);
+    (!name.is_empty()).then_some(name)
 }
 
 /// ECMAScript's white space and line terminators: what `trim()` removes and
