@@ -13,6 +13,8 @@ use crate::vec2::Vec2;
 
 mod kinds;
 
+pub use kinds::DimensionFault;
+
 const SQRT1_2: f64 = std::f64::consts::FRAC_1_SQRT_2;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -114,6 +116,13 @@ pub fn layout_dimension(d: &DimensionGeom) -> Option<DimensionLayout> {
         "slope" => kinds::arrowed(d, true),
         _ => aligned(d),
     }
+}
+
+/// Why a dimension of docs/adr/0147 cannot be drawn (`layout_dimension`
+/// gives none exactly then, for finite numbers); none when it can, and for
+/// the older kinds.
+pub fn dimension_fault(d: &DimensionGeom) -> Option<DimensionFault> {
+    kinds::fault(d)
 }
 
 /// Whether a style is one of docs/adr/0147's: drawn without the measured
@@ -367,6 +376,8 @@ pub(crate) static OPS: &[Op] = &[
     op!("dimensionOffsetAt", |d: DimensionGeom, p: Vec2| {
         dimension_offset_at(&d, p)
     }),
+    op!("dimensionFault", |d: DimensionGeom| dimension_fault(&d)
+        .map(DimensionFault::name)),
     op!("linearAngleFor", |a: Vec2, b: Vec2, p: Vec2| {
         linear_angle_for(a, b, p)
     }),

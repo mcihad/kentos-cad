@@ -94,6 +94,22 @@ export const signedOffset = op<(a: Vec2, b: Vec2, p: Vec2) => number>('signedOff
 /** The `offset` that puts the dimension line (arc, leader end) through p. */
 export const dimensionOffsetAt = op<(d: DimensionGeom, p: Vec2) => number>('dimensionOffsetAt');
 
+/** Why a dimension of docs/adr/0147 cannot be drawn (the core's `DimensionFault`). */
+export type DimensionFault =
+  | 'ordinateTooShort'
+  | 'arcNoCentre'
+  | 'arcNoRadius'
+  | 'arcNoSweep'
+  | 'arcInside'
+  | 'joggedNoCentre'
+  | 'joggedNoRadius'
+  | 'joggedCentre'
+  | 'edgeTooShort'
+  | 'slopeNoElevations';
+
+/** Why a new kind cannot be drawn, exactly when `layoutDimension` gives none (finite numbers); null when it can and for the older kinds. */
+export const dimensionFault = op<(d: DimensionGeom) => DimensionFault | null>('dimensionFault');
+
 /**
  * The text a dimension shows: its override, or prefix + value in project units; a coordinate is written as a length
  * without its unit (the formatter's `coord`), a slope as a percentage.

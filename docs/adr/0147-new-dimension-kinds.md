@@ -117,13 +117,13 @@ Her ölçü değerin yüksekliği `h` cinsindendir, öbür ölçülerdeki gibi: 
 
 ### 6. Komutlar
 
-- **`cad.entities.create`:** ölçü geometrisi yeni biçimleri ve alanları alır. Denetimler:
-  - koordinatta `a` ile `b` ayrı;
-  - yay uzunluğunda yarıçap, açı ve ölçü yayının yarıçapı sıfırdan büyük;
-  - kırıklı yarıçapta yarıçap sıfırdan büyük;
-  - semt ve eğimde `a` ile `b` ayrı;
-  - eğimde iki kot sonlu.
-- **`cad.entities.edit`:** `properties` işlemi koordinatı (Y ya da X), kotları ve zemini değiştirir; tutamaçlar `grip`'le yazar.
+- **`cad.entities.create`:** ölçü geometrisi yeni biçimleri ve alanları alır. Denetimler, `cad.entities.edit`'in geometri kurallarıyla ve onların sırasında (sonlu sayılardan sonra, yarıçaptan önce), hepsi `invalid_dimension`, düzeltilecek alanın yoluyla:
+  - kot yalnız eğimde (`za`, `zb`);
+  - koordinatın ekseni (`angle`) 0 ya da 90;
+  - sonra çekirdeğin çizemediği ölçü (`dimension_fault`; yerleşim yalnız o zaman yoktur): koordinatın çizgisi noktadan eksene dik yarım yazı yüksekliğinden kısa (`b`); yay uzunluğunun merkezi yok (`c`), yarıçapı (`a`), açısı (`b`) sıfır, ölçü yayı merkeze ulaşıyor (`offset`); kırıklı yarıçapın gösterilen merkezi yok (`c`), yarıçapı sıfır (`b`), gösterilen merkez yarıçap boyunca yaydaki noktadan geride değil ya da yarıçaptan uzaklığı bu geriliği aşıyor (`c`); semt ve eğimin iki ucu aynı (`b`); eğimin bir kotu yok (`za` ya da `zb`).
+  - Kotlar da sonlu sayıdır (`not_finite`). `mask: false` ve null kot alan değildir.
+- **`cad.entities.edit`:** `properties` işlemi koordinatı (Y ya da X), kotları ve zemini değiştirir; tutamaçlar `grip`'le yazar; ikisi de aynı kurallarla denetlenir.
+- **`cad.entities.transform`:** §4'ün dönüşüm kurallarıyla; bağımsız dönüşüm başvurusu (`affine_reference.py`) yeni türleri bilir.
 - **Ortak durumlar:** bağımsız Python üreticileriyle, üç koşucuda.
 
 ### 7. Araç ve arayüz
@@ -179,7 +179,7 @@ Bütün ölçüler şeritte, Çizim › Açıklama › **Ölçülendirme ▾** l
 
 1. **Sözleşme ve `.kcad` şema 9.** Beş biçim, `mask`, `za`, `zb`; kodek ve tipli sütunlar, belirtim, Python okuyucusu ve yazıcısı, örnekler; iki belge; sunucu. *(1 Ekim: tamam. Sözleşmede `DimensionStyle`'ın beş yeni değeri (`ALL`, `name`, `from_name`, `is_schema_9`; adlar artık camelCase, eski beşi aynı) ve `DimensionEntity`'nin `mask`, `za`, `zb`'si; komutların geometrisi (`EntityGeometry::Dimension`) ve çekirdeğin şekli (`Shape::Dimension`) bunları taşır, dönüşüm, tutamaç, esnetme ve blok yolları düşürmez; deponun paket kaydı (iki tarafta) üç sayı aldı. KCAD şema 9 yalnız bunlar kullanılınca yazılır; okuyucu ve yazıcı aynı kuralları yeriyle uygular (`missing_field`, `bad_value`, eski şemada `bad_value` ve `unknown_field`). Tipli sütunlarda yeni bayraklar (`FORMATS_VERSION` 18). Bağımsız Python yazıcısı ve okuyucusuyla `dimensions.kcad` (beş tür, zeminli ölçü, blok tanımında eğim) ve sekiz bozuk örnek; desteklenmeyen şema örneği artık 10. Web açılışta aynı kuralları denetler. İki belge yeni ölçüleri taşır (`document-ops` senaryosu). Sunucu denetler ve saklar. Python SDK'sının tipleri yeniden üretildi. Bilinen ara durum: yerleşim 2. adıma dek yeni türleri hizalı ölçü gibi çizer; DXF yazıcısı 5. adıma dek onları KentOS verisi olmadan, çizgileri ve değeriyle yazar ve söyler.)*
 2. **Çekirdek ve çizim.** Beş yerleşim bağımsız başvurusuyla; depo, tutamaçlar, dönüşümler, Patlat; iki çizicide değer, önek, yüzde ve zemin. *(1 Ekim: tamam. Çekirdekte `geom/dimension/kinds.rs`: koordinat (çizgi eksene dik, yer varsa AutoCAD'in kırığıyla), yay uzunluğu (ölçü yayı, uzatma çizgileri, çizgi olarak yay simgesi), kırıklı yarıçap (45°'lik kırık, değer yaya varan parçada ya da ilkinde), semt ve eğim (3h'lik açık oklu ok; eğimde ok inişe, düzde oksuz). Bağımsız başvuru `scripts/fixtures/dimension_cases.py` 25 örneği `fixtures/dimension/v1/layout.json`'a yazar; çekirdek (`tests/dimensions.rs`) ve web WASM'ı (`dimension.test.ts`) 1e-9 m içinde aynı. Birim ve önek biçimden de bulunur (`dimension_measure`, web'de `dimensionMeasure`, ikisi her biçim için sınanır). Tutamaçlar türe göre (koordinatta yalnız çizginin ucu; yay uzunluğunun uçları yayda, kırıklı yarıçapın noktası çemberde kalır; yeni tür çizilemeyeceği yere gitmez), kenet ve kapsam §4'teki gibi; dönüşümlerde yay uzunluğu açı, kırıklı yarıçap ve koordinat yarıçap gibidir. Etiket kaydının birim (uzunluk, açı, yüzde, koordinat), önek ve zemin kodları; bloktaki ölçünün etiketi biçiminden. İki çizici değeri yeni birimlerle yazar (yüzde iki ondalıkla) ve zeminini kutusundan, yanlarda paylı çizer. Öznitelikler'de “Ölçülen …” satırı türe göre, ötelenmenin adı (kırıklı yarıçapta “Kırık uzaklığı”, koordinatta yok). Resim sahnesi `fixtures/interaction/v1/dimensions.kcad`: masaüstü `labels::dimension_screens`, web `shots.mjs dimensions`.)*
-3. **Komutlar.** `create` ve `edit`; ortak durumlar üç koşucuda.
+3. **Komutlar.** `create` ve `edit`; ortak durumlar üç koşucuda. *(1 Ekim: tamam. Çekirdekte `dimension_fault` (`DimensionFault`, WASM'da `dimensionFault`): yeni bir ölçü neden çizilemez; yerleşimle birebir (ortak örnekler, elle seçilmiş hatalar ve 20 000 rastgele ölçü). İki işleyicide aynı denetimler ve iletiler (masaüstü `dimension.rs`, web `product/dimension.ts`); masaüstünün sonluluk denetimi kotları da kapsar (web zaten kapsıyordu); web `mask: false`'u ve null kotları alan olarak yazmaz. Ortak durumlar: `create` beş türü ve zemini yazar, on beş reddi yoluyla verir; `edit` Öznitelikler'den ekseni, kotları ve zemini yazar, tutamaçla koordinatın ucunu, kuralları ve kilitli katmanı denetler; `transform` dört yeni türü aynada, döndürmede ve ölçekte bağımsız başvuruyla (`affine_reference.py`). Web, masaüstü ve Python SDK'sı hepsini geçer.)*
 4. **Araç ve arayüz.** İki platformda izler ve resimlerle, dört parça:
    1. Koordinat ve Yay uzunluğu;
    2. Kırıklı yarıçap, Semt ve Eğim;

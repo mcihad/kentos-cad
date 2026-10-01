@@ -11,6 +11,7 @@ import type { CadDocument } from '../model/document';
 import { MAX_WIDTH_FACTOR, widthFactorOk, type Entity, type NewEntity } from '../model/entities';
 import { geometryIsFinite, SHAPE_FIELDS } from '../model/ops/transform';
 import { checkLayer, checkLineWeight, checkRevision, error, failed, isBlank, validated, type Stop } from './checks';
+import { checkDimension } from './dimension';
 import type { ProductCommand } from './command';
 import { carryInto, elevatedPaths, hasElevation } from './elevation';
 
@@ -125,6 +126,12 @@ export function geometryOf(g: EntityGeometry): Record<string, unknown> {
     if (out.mask !== true) delete out.mask;
     if (out.arrow === null) delete out.arrow;
     if (out.text === null) delete out.text;
+  }
+  // And a dimension's mask (docs/adr/0147 §1); a null elevation is no value.
+  if (g.kind === 'dimension') {
+    if (out.mask !== true) delete out.mask;
+    if (out.za === null) delete out.za;
+    if (out.zb === null) delete out.zb;
   }
   return out;
 }
@@ -249,6 +256,9 @@ export function checkGeometry(g: EntityGeometry, i: number, list = 'changes', wh
       return failed(error('invalid_elevations', `Kotların sayısı köşelerin sayısıyla aynı olmalı; ${n} köşeye ${zs.length} kot verildi. Her köşeye bir kot verin; kotsuz köşeye null.`, at(path)));
   if (!geometryIsFinite(g as unknown as Entity) || elevations.some(([zs]) => zs.some((z) => z !== null && !Number.isFinite(z))))
     return failed(error('not_finite', `${i + 1}. ${whose} geometrisinde sonlu olmayan bir değer var (NaN ya da sonsuz). Geometriyi sonlu sayılarla verin.`, at('')));
+  // A dimension its kind's rules and the core can draw (docs/adr/0147 §6).
+  const dimension = checkDimension(g, at);
+  if (dimension) return dimension;
   if ((g.kind === 'circle' || g.kind === 'arc') && !(g.r > 0)) return failed(error('invalid_radius', 'Yarıçap sıfırdan büyük olmalı. Pozitif bir yarıçap verin.', at('.r')));
   // An insert's scale (docs/adr/0144).
   if (g.kind === 'insert' && !(g.scale > 0)) return failed(error('invalid_scale', 'Blok ölçeği sıfırdan büyük olmalı. Pozitif bir ölçek verin.', at('.scale')));

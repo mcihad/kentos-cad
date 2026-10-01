@@ -148,10 +148,20 @@ def moved(e, m, new_id=None):
         e["height"] = e["height"] * s
         e["rotation"] = text_turn(e["rotation"], m)
     elif k == "dimension":
-        assert e.get("style", "aligned") == "aligned"
+        style = e.get("style", "aligned")
+        assert style in ("aligned", "ordinate", "arcLength", "jogged", "azimuth", "slope"), style
         e["a"] = pt(apply(m, xy(e["a"])))
         e["b"] = pt(apply(m, xy(e["b"])))
-        e["offset"] = e["offset"] * s * (-1.0 if reflects(m) else 1.0)
+        if "c" in e:
+            e["c"] = pt(apply(m, xy(e["c"])))
+        # docs/adr/0147 §4: an arc length mirrored measures the same arc, its ends swapped; its offset, a
+        # jogged radius's (along the radius) and an ordinate's keep their sign; an ordinate's axis is the
+        # world's; a slope keeps its elevations. Aligned, azimuth and slope offsets are sideways: a
+        # reflection swaps their sides.
+        if style == "arcLength" and reflects(m):
+            e["a"], e["b"] = e["b"], e["a"]
+        sideways = style in ("aligned", "azimuth", "slope")
+        e["offset"] = e["offset"] * s * (-1.0 if sideways and reflects(m) else 1.0)
         e["height"] = e["height"] * s
     elif k == "hatch":
         # The pattern's lines keep their direction on the object, modulo a half turn; their spacing scales.

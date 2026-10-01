@@ -78,7 +78,7 @@ GEOMETRY = {
     "xline": ["p", "dir"],
     "ray": ["p", "dir"],
     "text": ["p", "text", "height", "rotation", "align", "widthFactor", "mask"],
-    "dimension": ["a", "b", "offset", "height", "text", "style", "angle", "c"],
+    "dimension": ["a", "b", "offset", "height", "text", "style", "angle", "c", "mask", "za", "zb"],
     "hatch": ["ring", "holes", "pattern"],
     "insert": ["block", "p", "scale", "rotation", "mirror"],
     "leader": ["pts", "text", "height", "rotation", "arrow", "mask"],
@@ -102,8 +102,8 @@ def reshaped(e, geometry):
             out.pop("mask", None)
         if out.get("widthFactor") == 1:
             out.pop("widthFactor")
-    # So is a leader's mask (docs/adr/0146 §1).
-    if out.get("kind") == "leader" and out.get("mask") is not True:
+    # So is a leader's mask (docs/adr/0146 §1), and a dimension's (docs/adr/0147).
+    if out.get("kind") in ("leader", "dimension") and out.get("mask") is not True:
         out.pop("mask", None)
     return out
 
@@ -1486,10 +1486,97 @@ cases.append({
     ],
 })
 
+# ── Yeni ölçü türleri (docs/adr/0147 §6): Öznitelikler'in ekseni, kotları ve zemini, tutamaç, kurallar ──
+
+# Their own drawing: an ordinate's Y, a slope between two elevations, an aligned dimension, and a jogged radius on the locked layer.
+DIMENSION_ENTITIES = [
+    {"kind": "dimension", "id": 1, "layerId": "yapi", "attrs": {"Tür": "Köşe"}, "a": P(487000, 4420130), "b": P(487006, 4420150), "offset": 0, "height": 2.5,
+     "style": "ordinate", "angle": 0},
+    {"kind": "dimension", "id": 2, "layerId": "yapi", "color": "#E5484D", "attrs": {}, "a": P(487040, 4420160), "b": P(487080, 4420160), "offset": 1.5,
+     "height": 2, "style": "slope", "za": 105.25, "zb": 104.75},
+    {"kind": "dimension", "id": 3, "layerId": "yapi", "attrs": {}, "a": P(487000, 4420210), "b": P(487020, 4420210), "offset": 3, "height": 0.5},
+    {"kind": "dimension", "id": 4, "layerId": "kilitli", "attrs": {}, "a": P(487100, 4419830), "b": P(487100, 4420130), "c": P(487104, 4420110), "offset": 5,
+     "height": 2, "style": "jogged"},
+]
+DIMENSION_SETUP = {**SETUP, "entities": DIMENSION_ENTITIES}
+DIMENSION_BY_ID = {e["id"]: e for e in DIMENSION_ENTITIES}
+DIMENSION_NOTHING = {"ids": [e["id"] for e in DIMENSION_ENTITIES], "canUndo": False, "canRedo": False, "dirty": False, "revision": "same"}
+
+
+def DE(i):
+    return json.loads(json.dumps(DIMENSION_BY_ID[i]))
+
+
+def dimension_geometry(i, **fields):
+    """The dimension's geometry with some of its fields changed; a field given None is left out."""
+    e = DE(i)
+    g = {k: v for k, v in e.items() if k == "kind" or k in GEOMETRY["dimension"]}
+    g.update(fields)
+    return {k: v for k, v in g.items() if v is not None}
+
+
+AXIS_X = dimension_geometry(1, angle=90, b=P(486980, 4420136))
+LOWER = dimension_geometry(2, za=106, zb=103.5)
+MASKED = dimension_geometry(3, mask=True)
+UNMASKED = dimension_geometry(3, mask=False)
+cases.append({
+    "name": "properties (Öznitelikler): koordinat ölçüsünün ekseni (Y'den X'e, çizginin ucuyla), eğimin kotları ve ölçünün zemini yazılır; zeminsizlik alan değildir; rengi ve öznitelikleri kalır; her biri “Değiştir” (ADR 0147)",
+    "setup": DIMENSION_SETUP,
+    "steps": [
+        {"op": "captureUid", "id": 1, "as": "koordinat"},
+        {"op": "execute", "input": properties(1, AXIS_X), "result": done(changed=[uid(1)]),
+         "expect": {"entities": {"1": reshaped(DE(1), AXIS_X)}, "uids": {"1": "koordinat"}, "revision": "changed"}},
+        {"op": "execute", "input": properties(2, LOWER), "result": done(changed=[uid(2)]),
+         "expect": {"entities": {"2": reshaped(DE(2), LOWER)}, "revision": "changed"}},
+        {"op": "execute", "input": properties(3, MASKED), "result": done(changed=[uid(3)]),
+         "expect": {"entities": {"3": reshaped(DE(3), MASKED)}, "revision": "changed"}},
+        {"op": "execute", "input": properties(3, UNMASKED), "result": done(changed=[uid(3)]),
+         "expect": {"entities": {"3": DE(3)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Değiştir", "expect": {"entities": {"3": reshaped(DE(3), MASKED)}}},
+        {"op": "undo", "returns": "Değiştir"},
+        {"op": "undo", "returns": "Değiştir"},
+        {"op": "undo", "returns": "Değiştir", "expect": {"entities": {"1": DE(1), "2": DE(2), "3": DE(3)}, "uids": {"1": "koordinat"}, "canUndo": False}},
+    ],
+})
+
+GRIPPED_END = dimension_geometry(1, b=P(487012, 4420156))
+cases.append({
+    "name": "Tutamaçla düzenle koordinat ölçüsünün çizgisinin ucunu yazar, noktası kalır (ADR 0147 §4)",
+    "setup": DIMENSION_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "grip", "changes": [{"kind": "update", "uid": uid(1), "geometry": GRIPPED_END}]}, "result": done(changed=[uid(1)]),
+         "expect": {"entities": {"1": reshaped(DE(1), GRIPPED_END)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Tutamaçla düzenle", "expect": {"entities": {"1": DE(1)}, "canUndo": False}},
+    ],
+})
+
+cases.append({
+    "name": "düzenlemede de ölçünün kuralları (ADR 0147 §6): koordinatın ekseni 0 ya da 90, çizgisi yarım yazı yüksekliğinden uzun; kot yalnız eğimde; eğimin iki kotu; kilitli katmandaki ölçü değişmez",
+    "setup": DIMENSION_SETUP,
+    "steps": [
+        {"op": "execute", "input": properties(1, dimension_geometry(1, angle=45)),
+         "result": failed("invalid_dimension", "Koordinat ölçüsünün ekseni 0 (Y) ya da 90 (X) olmalı; 45 verildi. Y için 0, X için 90 verin.", "changes[0].geometry.angle"),
+         "expect": DIMENSION_NOTHING},
+        {"op": "execute", "input": {"operation": "grip", "changes": [{"kind": "update", "uid": uid(1), "geometry": dimension_geometry(1, b=P(487012, 4420131))}]},
+         "result": failed("invalid_dimension", "Koordinat ölçüsünün çizgisi noktadan eksene dik yönde yazı yüksekliğinin yarısından uzun olmalı. Çizginin ucunu (b) noktadan daha uzağa verin.",
+                          "changes[0].geometry.b"), "expect": DIMENSION_NOTHING},
+        {"op": "execute", "input": properties(3, dimension_geometry(3, za=10, zb=9)),
+         "result": failed("invalid_dimension", "Kot yalnız eğim ölçüsünde olur. Kotları (za, zb) kaldırın ya da ölçünün biçimini eğim yapın.", "changes[0].geometry.za"),
+         "expect": DIMENSION_NOTHING},
+        {"op": "execute", "input": properties(2, dimension_geometry(2, za=None)),
+         "result": failed("invalid_dimension", "Eğim ölçüsünün iki ucunun da kotu verilmeli. Eksik kotu (za ya da zb) metre olarak verin.", "changes[0].geometry.za"),
+         "expect": DIMENSION_NOTHING},
+        {"op": "execute", "input": properties(2, LOWER), "nonFinite": {"changes[0].geometry.zb": "-Infinity"},
+         "result": failed("not_finite", not_finite_message(1), "changes[0].geometry"), "note": "Kotlar da sonlu sayıdır.", "expect": DIMENSION_NOTHING},
+        {"op": "execute", "input": properties(4, dimension_geometry(4, offset=8)),
+         "result": failed("layer_locked", locked_message("Kilitli katman"), "changes[0].uid"), "note": "Kilitli katmandaki ölçü değişmez.", "expect": DIMENSION_NOTHING},
+    ],
+})
+
 write(
     "cad.entities.edit",
     "Nesneleri düzenle: doğrulama, plan, yazma, geri alma",
-    "ADR 0047. Denetim sırası: en az bir değişiklik; her değişikliğin kimliğinin yazımı (add'de from); her geometrinin nokta sayısı, yazının boş olmayan metni, sonlu sayıları ve yarıçapı; beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması; bir nesnenin tek değişiklikle değişmesi; hiçbir nesnenin kilitli katmanda olmaması (düzenleme bütün yazılır ya da hiç). update yalnız geometriyi değiştirir; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır, simgesi gelmez; add bir nesneden yeni nesne yapar, onun katmanını ve rengini alır. Adım işlemin adıdır: Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle, Köşe sil, Esnet; Öznitelikler'in (properties) adımı Değiştir; alan araçlarınınki Alan birleştir, Alan kesiştir, Alan çıkar, Alan böl, Alana çevir, Çizgiye çevir, Parçaları birleştir, Parçalara ayır; ADR 0140'ın araçlarınınki Parçala, Yönü çevir, Sadeleştir, Çizimi temizle (Tüm köşeleri yuvarla ve Tüm köşelere pah Köşe yuvarla ve Pah'tır). Kapalı alanın halkası (dış halka ya da delik) en az 3 köşelidir; iki kenarından biri yaysa (yay değeri 0 değil; verilmeyen 0 sayılır) 2 köşeli olabilir. Taramanın halkası en az 3 köşelidir. add'e verilen katman, renk, kalınlık, öznitelik ve etiket yeni nesnenin kendisinindir; katmanı çizimde olmalı, grup ve kilitli olmamalı; kalınlığı 0 ile 100 mm arasındadır; yerleştirmenin bloğu çizimin olmalı (unknown_block), ölçeği sıfırdan büyük (invalid_scale), aynalama yalnız true yazılır (ADR 0144). Kurulumdaki en büyük kimlik 8; yeni nesneler 9'dan başlar; properties ve blok durumlarının kendi kurulumu vardır. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+    "ADR 0047. Denetim sırası: en az bir değişiklik; her değişikliğin kimliğinin yazımı (add'de from); her geometrinin nokta sayısı, yazının boş olmayan metni, sonlu sayıları, ölçünün kuralları (ADR 0147: kot yalnız eğimde, koordinatın ekseni 0 ya da 90, sonra çekirdeğin çizebildiği ölçü; invalid_dimension) ve yarıçapı; beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması; bir nesnenin tek değişiklikle değişmesi; hiçbir nesnenin kilitli katmanda olmaması (düzenleme bütün yazılır ya da hiç). update yalnız geometriyi değiştirir; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır, simgesi gelmez; add bir nesneden yeni nesne yapar, onun katmanını ve rengini alır. Adım işlemin adıdır: Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle, Köşe sil, Esnet; Öznitelikler'in (properties) adımı Değiştir; alan araçlarınınki Alan birleştir, Alan kesiştir, Alan çıkar, Alan böl, Alana çevir, Çizgiye çevir, Parçaları birleştir, Parçalara ayır; ADR 0140'ın araçlarınınki Parçala, Yönü çevir, Sadeleştir, Çizimi temizle (Tüm köşeleri yuvarla ve Tüm köşelere pah Köşe yuvarla ve Pah'tır). Kapalı alanın halkası (dış halka ya da delik) en az 3 köşelidir; iki kenarından biri yaysa (yay değeri 0 değil; verilmeyen 0 sayılır) 2 köşeli olabilir. Taramanın halkası en az 3 köşelidir. add'e verilen katman, renk, kalınlık, öznitelik ve etiket yeni nesnenin kendisinindir; katmanı çizimde olmalı, grup ve kilitli olmamalı; kalınlığı 0 ile 100 mm arasındadır; yerleştirmenin bloğu çizimin olmalı (unknown_block), ölçeği sıfırdan büyük (invalid_scale), aynalama yalnız true yazılır (ADR 0144). Kurulumdaki en büyük kimlik 8; yeni nesneler 9'dan başlar; properties ve blok durumlarının kendi kurulumu vardır. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
     cases,
 )
 print(f"{len(cases)} cases" + (" match" if "--check" in sys.argv[1:] else " written"))

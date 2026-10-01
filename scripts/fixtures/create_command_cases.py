@@ -74,6 +74,9 @@ def made(obj, slot, layer_id="yapi"):
     # So is a leader's mask (docs/adr/0146 §1); a filled arrow and no note are the fields' absence too.
     if out["kind"] == "leader" and out.get("mask") is not True:
         out.pop("mask", None)
+    # And a dimension's (docs/adr/0147).
+    if out["kind"] == "dimension" and out.get("mask") is not True:
+        out.pop("mask", None)
     out["id"] = slot
     out["layerId"] = layer_id
     if "color" in obj:
@@ -692,6 +695,81 @@ cases.append({
 })
 
 
+# ── Yeni ölçü türleri (docs/adr/0147 §6) ────────────────────────────────
+
+ORD_Y = {"kind": "dimension", "a": P(487000, 4420130), "b": P(487006, 4420150), "offset": 0, "height": 2.5, "style": "ordinate", "angle": 0}
+ORD_X = {"kind": "dimension", "a": P(487000, 4420130), "b": P(486980, 4420136), "offset": 0, "height": 2.5, "style": "ordinate", "angle": 90, "mask": True}
+ARC_LENGTH = {"kind": "dimension", "a": P(487060, 4420130), "b": P(487050, 4420140), "c": P(487050, 4420130), "offset": 2, "height": 2, "style": "arcLength"}
+# The radius from (487100, 4419830) to (487100, 4420130): the centre shown 20 m back along it and 4 m aside.
+JOGGED = {"kind": "dimension", "a": P(487100, 4419830), "b": P(487100, 4420130), "c": P(487104, 4420110), "offset": 5, "height": 2, "style": "jogged"}
+AZIMUTH = {"kind": "dimension", "a": P(487000, 4420160), "b": P(487030, 4420200), "offset": 2, "height": 2.5, "style": "azimuth"}
+SLOPE = {"kind": "dimension", "a": P(487040, 4420160), "b": P(487080, 4420160), "offset": 1.5, "height": 2, "style": "slope", "za": 105.25, "zb": 104.75, "mask": True}
+PLAIN = {"kind": "dimension", "a": P(487000, 4420210), "b": P(487020, 4420210), "offset": 3, "height": 0.5, "mask": False}
+dimensions = [O(ORD_Y), O(ORD_X), O(ARC_LENGTH), O(JOGGED), O(AZIMUTH), O(SLOPE), O(PLAIN)]
+
+
+def without(g, key):
+    return {k: v for k, v in g.items() if k != key}
+
+
+def dimension_message(kind, given=None):
+    return {
+        "elevations": "Kot yalnız eğim ölçüsünde olur. Kotları (za, zb) kaldırın ya da ölçünün biçimini eğim yapın.",
+        "axis": f"Koordinat ölçüsünün ekseni 0 (Y) ya da 90 (X) olmalı; {given} verildi. Y için 0, X için 90 verin.",
+        "ordinateTooShort": "Koordinat ölçüsünün çizgisi noktadan eksene dik yönde yazı yüksekliğinin yarısından uzun olmalı. Çizginin ucunu (b) noktadan daha uzağa verin.",
+        "arcNoCentre": "Yay uzunluğu ölçüsünün merkezi (c) verilmeli. Ölçülen yayın merkezini verin.",
+        "arcNoRadius": "Yay uzunluğu ölçüsünde yayın başlangıcı (a) merkezde (c); yarıçap sıfır. Başlangıcı yayın üstünde verin.",
+        "arcNoSweep": "Yay uzunluğu ölçüsünde yayın iki ucu merkezden aynı doğrultuda; yayın açısı sıfır. Sonu (b) başka bir doğrultuda verin.",
+        "arcInside": "Yay uzunluğu ölçüsünün ölçü yayı merkeze ulaşıyor: içe ötelenme yarıçaptan küçük olmalı. Ötelenmeyi büyütün.",
+        "joggedNoCentre": "Kırıklı yarıçap ölçüsünün gösterilen merkezi (c) verilmeli. Çizginin başlayacağı noktayı verin.",
+        "joggedNoRadius": "Kırıklı yarıçap ölçüsünde yaydaki nokta (b) merkezde (a); yarıçap sıfır. Noktayı yayın üstünde verin.",
+        "joggedCentre": "Kırıklı yarıçap ölçüsünde gösterilen merkez (c) yarıçap boyunca yaydaki noktadan (b) geride olmalı; yarıçap çizgisinden uzaklığı bu geriliği aşmamalı. Gösterilen merkezi yayın içinde, yarıçapa yakın verin.",
+        "edgeTooShort": f"{given} ölçüsünün iki ucu aynı nokta; ölçülecek kenar yok. Kenarın öbür ucunu (b) verin.",
+        "slopeNoElevations": "Eğim ölçüsünün iki ucunun da kotu verilmeli. Eksik kotu (za ya da zb) metre olarak verin.",
+    }[kind]
+
+
+def bad_dimension(geometry, kind, field, given=None, at=0, before=()):
+    objects = [O(g) for g in before] + [O(geometry)]
+    return {"op": "execute", "input": {"layerId": "yapi", "objects": objects},
+            "result": failed("invalid_dimension", dimension_message(kind, given), f"objects[{at}].geometry.{field}"), "expect": NOTHING}
+
+
+cases.append({
+    "name": "yeni ölçü türleri (ADR 0147): koordinat (Y ve zeminli X), yay uzunluğu, kırıklı yarıçap, semt ve eğim (kotlarıyla, zeminli) verildiği gibi tek adımda yazılır; zeminsizlik alan değildir",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": dimensions}, "result": done(list(range(3, 10))),
+         "expect": {"ids": IDS + list(range(3, 10)), "entities": {str(3 + i): made(o, 3 + i) for i, o in enumerate(dimensions)},
+                    "uids": {str(3 + i): "new" for i in range(len(dimensions))}, "revision": "changed"}},
+        {"op": "undo", "returns": "Ekle", "expect": {"ids": IDS, "canUndo": False, "canRedo": True}},
+    ],
+})
+
+cases.append({
+    "name": "yeni ölçü türlerinin kuralları (ADR 0147 §6): kot yalnız eğimde, koordinatın ekseni 0 ya da 90, sonra çekirdeğin çizemediği ölçü; her biri invalid_dimension, düzeltilecek alanın yoluyla; sonlu olmayan sayı önce",
+    "steps": [
+        bad_dimension({**PLAIN, "za": 10}, "elevations", "za"),
+        bad_dimension({**PLAIN, "zb": 10}, "elevations", "zb"),
+        bad_dimension({**ORD_Y, "angle": 45}, "axis", "angle", 45, at=1, before=[ORD_Y]),
+        bad_dimension({**ORD_Y, "b": P(487005, 4420131)}, "ordinateTooShort", "b"),
+        bad_dimension(without(ARC_LENGTH, "c"), "arcNoCentre", "c"),
+        bad_dimension({**ARC_LENGTH, "a": P(487050, 4420130)}, "arcNoRadius", "a"),
+        bad_dimension({**ARC_LENGTH, "b": P(487070, 4420130)}, "arcNoSweep", "b"),
+        bad_dimension({**ARC_LENGTH, "offset": -10}, "arcInside", "offset"),
+        bad_dimension(without(JOGGED, "c"), "joggedNoCentre", "c"),
+        bad_dimension({**JOGGED, "b": P(487100, 4419830)}, "joggedNoRadius", "b"),
+        bad_dimension({**JOGGED, "c": P(487104, 4420131)}, "joggedCentre", "c"),
+        bad_dimension({**AZIMUTH, "b": P(487000, 4420160)}, "edgeTooShort", "b", "Semt"),
+        bad_dimension({**SLOPE, "b": P(487040, 4420160)}, "edgeTooShort", "b", "Eğim"),
+        bad_dimension(without(SLOPE, "zb"), "slopeNoElevations", "zb"),
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(SLOPE)]}, "nonFinite": {"objects[0].geometry.za": "NaN"},
+         "result": not_finite(1), "note": "Kotlar da sonlu sayıdır.", "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**ARC_LENGTH, "offset": -10})]}, "nonFinite": {"objects[0].geometry.c.x": "Infinity"},
+         "result": not_finite(1), "note": "Sonlu olmayan sayı ölçünün kurallarından önce.", "expect": NOTHING},
+    ],
+})
+
+
 # White space other than the plain space, escaped so a reader sees it (the empty text case).
 INVISIBLE = "\u0085\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000\ufeff"
 
@@ -749,7 +827,7 @@ def write(command, title, note, cases):
 write(
     "cad.entities.create",
     "Nesneleri ekle: doğrulama, plan, yazma, geri alma",
-    "ADR 0057. Denetim sırası: en az bir nesne; her nesnenin geometrisi, sırayla, cad.entities.edit'in kurallarıyla (nokta ve köşe sayısı: kapalı alanın halkası en az 3 köşeli, iki kenarından biri yaysa 2; yazının boş olmayan metni, sonlu sayılar, yarıçap); beklenen sürümün yazımı, sonra çizimin sürümü; katman (var, grup değil, kilitli değil; gizliyse uyarı). Nesne verilen geometrisi, girdinin katmanı ve verildiyse rengi, öznitelikleri (yoksa boş) ve etiketiyle yazılır. Adım “Ekle” ya da işlemin adıdır: Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan oluştur. Blok yerleştirmesi (ADR 0144) çizimde tanımlı bir bloğu adlandırır (unknown_block, katmandan sonra, sırayla), ölçeği sıfırdan büyüktür (invalid_scale); aynalama yalnız true yazılır; blok durumlarının kendi kurulumu vardır. Kurulumdaki en büyük kimlik 2; yeni nesneler 3'ten başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+    "ADR 0057. Denetim sırası: en az bir nesne; her nesnenin geometrisi, sırayla, cad.entities.edit'in kurallarıyla (nokta ve köşe sayısı: kapalı alanın halkası en az 3 köşeli, iki kenarından biri yaysa 2; yazının boş olmayan metni, sonlu sayılar, ölçünün kuralları (ADR 0147: kot yalnız eğimde, koordinatın ekseni 0 ya da 90, sonra çekirdeğin çizebildiği ölçü; invalid_dimension), yarıçap); beklenen sürümün yazımı, sonra çizimin sürümü; katman (var, grup değil, kilitli değil; gizliyse uyarı). Nesne verilen geometrisi, girdinin katmanı ve verildiyse rengi, öznitelikleri (yoksa boş) ve etiketiyle yazılır. Adım “Ekle” ya da işlemin adıdır: Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan oluştur. Blok yerleştirmesi (ADR 0144) çizimde tanımlı bir bloğu adlandırır (unknown_block, katmandan sonra, sırayla), ölçeği sıfırdan büyüktür (invalid_scale); aynalama yalnız true yazılır; blok durumlarının kendi kurulumu vardır. Kurulumdaki en büyük kimlik 2; yeni nesneler 3'ten başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
     cases,
 )
 print(f"{len(cases)} cases" + (" match" if "--check" in sys.argv[1:] else " written"))

@@ -13,6 +13,102 @@ use crate::geom::intersect::Edge;
 use crate::jsmath::{PI, TAU, atan2, cos, js_hypot, js_max, js_min, sin};
 use crate::vec2::Vec2;
 
+/// Why a dimension of docs/adr/0147 cannot be laid out: `layout_dimension`
+/// gives none exactly when `dimension_fault` gives one (for finite numbers).
+/// The product commands refuse it with the place to mend (docs/adr/0147 §6).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DimensionFault {
+    /// An ordinate's line end not more than h/2 across its axis from its point.
+    OrdinateTooShort,
+    /// An arc length without its arc's centre.
+    ArcNoCentre,
+    /// An arc length whose start is its centre.
+    ArcNoRadius,
+    /// An arc length whose two ends are in the same direction from its centre.
+    ArcNoSweep,
+    /// An arc length whose dimension arc reaches its centre (offset ≤ −r).
+    ArcInside,
+    /// A jogged radius without the centre it is drawn from.
+    JoggedNoCentre,
+    /// A jogged radius whose point on the arc is its true centre.
+    JoggedNoRadius,
+    /// A jogged radius whose centre shown is not before its point on the arc
+    /// along the radius by more than it is across.
+    JoggedCentre,
+    /// An azimuth's or a slope's two ends the same point.
+    EdgeTooShort,
+    /// A slope without one of its two elevations.
+    SlopeNoElevations,
+}
+
+impl DimensionFault {
+    /// Its name in the core's JSON calls (`dimensionFault`).
+    pub fn name(self) -> &'static str {
+        match self {
+            DimensionFault::OrdinateTooShort => "ordinateTooShort",
+            DimensionFault::ArcNoCentre => "arcNoCentre",
+            DimensionFault::ArcNoRadius => "arcNoRadius",
+            DimensionFault::ArcNoSweep => "arcNoSweep",
+            DimensionFault::ArcInside => "arcInside",
+            DimensionFault::JoggedNoCentre => "joggedNoCentre",
+            DimensionFault::JoggedNoRadius => "joggedNoRadius",
+            DimensionFault::JoggedCentre => "joggedCentre",
+            DimensionFault::EdgeTooShort => "edgeTooShort",
+            DimensionFault::SlopeNoElevations => "slopeNoElevations",
+        }
+    }
+}
+
+/// Why a new kind cannot be laid out, by the layouts' own tests in their
+/// order; none for one that can (and for the older kinds).
+pub(super) fn fault(d: &DimensionGeom) -> Option<DimensionFault> {
+    use DimensionFault::*;
+    let (a, b) = (d.a, d.b);
+    match d.style.as_deref() {
+        Some("ordinate") => {
+            let (_, prefix) = dimension_measure(Some("ordinate"), d.angle);
+            let n = if prefix == "Y=" {
+                Vec2::new(0.0, 1.0)
+            } else {
+                Vec2::new(1.0, 0.0)
+            };
+            let l = dot(Vec2::new(b.x - a.x, b.y - a.y), n).abs();
+            (l <= d.height / 2.0).then_some(OrdinateTooShort)
+        }
+        Some("arcLength") => {
+            let Some(c) = d.c else {
+                return Some(ArcNoCentre);
+            };
+            let r = js_hypot(a.x - c.x, a.y - c.y);
+            if r < 1e-9 {
+                return Some(ArcNoRadius);
+            }
+            let t0 = atan2(a.y - c.y, a.x - c.x);
+            if norm_angle(atan2(b.y - c.y, b.x - c.x) - t0) < 1e-9 {
+                return Some(ArcNoSweep);
+            }
+            (r + d.offset < 1e-9).then_some(ArcInside)
+        }
+        Some("jogged") => {
+            if d.c.is_none() {
+                return Some(JoggedNoCentre);
+            }
+            if js_hypot(b.x - a.x, b.y - a.y) < 1e-9 {
+                return Some(JoggedNoRadius);
+            }
+            jogged_frame(d).is_none().then_some(JoggedCentre)
+        }
+        Some("azimuth" | "slope") => {
+            if js_hypot(b.x - a.x, b.y - a.y) < 1e-9 {
+                return Some(EdgeTooShort);
+            }
+            (d.style.as_deref() == Some("slope") && (d.za.is_none() || d.zb.is_none()))
+                .then_some(SlopeNoElevations)
+        }
+        _ => None,
+    }
+}
+
 fn mid(p: Vec2, q: Vec2) -> Vec2 {
     Vec2::new((p.x + q.x) / 2.0, (p.y + q.y) / 2.0)
 }

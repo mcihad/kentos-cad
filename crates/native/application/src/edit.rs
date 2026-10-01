@@ -607,6 +607,8 @@ pub(crate) fn check_geometry(
             at(""),
         )));
     }
+    // A dimension its kind's rules and the core can draw (docs/adr/0147 §6).
+    crate::dimension::check(g, &at)?;
     if let EntityGeometry::Circle { r, .. } | EntityGeometry::Arc { r, .. } = g
         && *r <= 0.0
     {
@@ -804,6 +806,8 @@ fn finite(g: &EntityGeometry) -> bool {
             height,
             angle,
             c,
+            za,
+            zb,
             ..
         } => {
             pt(a)
@@ -812,6 +816,8 @@ fn finite(g: &EntityGeometry) -> bool {
                 && height.is_finite()
                 && angle.is_none_or(f64::is_finite)
                 && c.as_ref().is_none_or(pt)
+                && za.is_none_or(f64::is_finite)
+                && zb.is_none_or(f64::is_finite)
         }
         EntityGeometry::Hatch {
             ring,

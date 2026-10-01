@@ -40,6 +40,7 @@ pub mod codes;
 mod context;
 pub mod create;
 pub mod delete;
+mod dimension;
 pub mod edit;
 pub mod elevation;
 pub mod geometry;

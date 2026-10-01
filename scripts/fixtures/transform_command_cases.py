@@ -584,6 +584,39 @@ cases.append({
     ],
 })
 
+# ── Yeni ölçü türleri (docs/adr/0147 §4): their own drawing ──
+NEW_DIMENSIONS = [
+    {"kind": "dimension", "id": 1, "layerId": "yapi", "attrs": {}, "a": P(487000, 4420030), "b": P(487006, 4420050), "offset": 0, "height": 2.5,
+     "style": "ordinate", "angle": 0},
+    {"kind": "dimension", "id": 2, "layerId": "yapi", "attrs": {}, "a": P(487060, 4420030), "b": P(487050, 4420040), "c": P(487050, 4420030), "offset": 2,
+     "height": 2, "style": "arcLength"},
+    {"kind": "dimension", "id": 3, "layerId": "yapi", "attrs": {}, "a": P(487100, 4419730), "b": P(487100, 4420030), "c": P(487104, 4420010), "offset": 5,
+     "height": 2, "style": "jogged"},
+    {"kind": "dimension", "id": 4, "layerId": "yapi", "attrs": {}, "a": P(487040, 4420060), "b": P(487080, 4420060), "offset": 1.5, "height": 2,
+     "style": "slope", "za": 105.25, "zb": 104.75, "mask": True},
+]
+NEW_SETUP = {**SETUP, "entities": NEW_DIMENSIONS}
+NEW_BY_ID = {e["id"]: e for e in NEW_DIMENSIONS}
+NEW_UIDS = [U(i) for i in NEW_BY_ID]
+M_NEW_MIRROR = mirror((487025, 4420000), (487025, 4420010))
+M_NEW_TURN = rotation(HALF_PI, (487000, 4420000))
+M_NEW_DOUBLE = scaling(2, (487000, 4420000))
+cases.append({
+    "name": "yeni ölçü türleri (ADR 0147 §4): aynada yay uzunluğu aynı yayı ölçer (uçları yer değiştirir), kırıklı yarıçapın ve koordinatın ötelenmesi işaret değiştirmez, eğiminki değiştirir; döndürmede koordinatın ekseni dünyanındır; ölçek uzaklığı ve yüksekliği çarpar, kotlar kalır",
+    "setup": NEW_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"uids": NEW_UIDS, "transform": mirror_t(487025, 4420000, 487025, 4420010)}, "result": done(changed=NEW_UIDS),
+         "expect": {"entities": entities(*((i, moved(NEW_BY_ID[i], M_NEW_MIRROR)) for i in NEW_BY_ID)), "revision": "changed"}},
+        {"op": "undo", "returns": "Aynala", "expect": {"entities": entities(*((i, NEW_BY_ID[i]) for i in NEW_BY_ID))}},
+        {"op": "execute", "input": {"uids": NEW_UIDS, "transform": rotate(487000, 4420000, HALF_PI)}, "result": done(changed=NEW_UIDS),
+         "expect": {"entities": entities(*((i, moved(NEW_BY_ID[i], M_NEW_TURN)) for i in NEW_BY_ID)), "revision": "changed"}},
+        {"op": "undo", "returns": "Döndür"},
+        {"op": "execute", "input": {"uids": NEW_UIDS, "transform": scale(487000, 4420000, 2)}, "result": done(changed=NEW_UIDS),
+         "expect": {"entities": entities(*((i, moved(NEW_BY_ID[i], M_NEW_DOUBLE)) for i in NEW_BY_ID)), "revision": "changed"}},
+    ],
+})
+
+
 def compact(v):
     return json.dumps(v, ensure_ascii=False, separators=(", ", ": "))
 
@@ -612,6 +645,8 @@ def write(command, title, note, cases):
         lines = ["    {", f'      "name": {compact(c["name"])},']
         if "note" in c:
             lines.append(f'      "note": {compact(c["note"])},')
+        if "setup" in c:
+            lines.append(f'      "setup": {compact(c["setup"])},')
         lines.append('      "steps": [')
         lines.append(",\n".join(f"        {compact(st)}" for st in c["steps"]))
         lines.append("      ]")

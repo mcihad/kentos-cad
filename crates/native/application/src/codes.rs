@@ -94,6 +94,9 @@ pub const DUPLICATE_TAG: &str = "duplicate_tag";
 pub const INVALID_HEIGHT: &str = "invalid_height";
 /// A text's width factor not over 0 or over 100 (docs/adr/0145).
 pub const INVALID_WIDTH_FACTOR: &str = "invalid_width_factor";
+/// A dimension the core cannot draw, or a field its kind does not take
+/// (a slope's elevations elsewhere, an ordinate's axis but 0 or 90; docs/adr/0147 §6).
+pub const INVALID_DIMENSION: &str = "invalid_dimension";
 /// A block rule the checks before it did not see, as the document said it
 /// (never expected: the commands check the document's own rules first).
 pub const BLOCK_REFUSED: &str = "block_refused";

@@ -550,16 +550,24 @@ fn geometry_number<'a>(geometry: &'a mut EntityGeometry, rest: &str) -> Option<&
             "widthFactor" => width_factor.as_mut(),
             _ => coordinate(p, "p", rest),
         },
+        // A slope's elevations and an arc length's or jogged radius's centre too (docs/adr/0147).
         EntityGeometry::Dimension {
             a,
             b,
             offset,
             height,
+            c,
+            za,
+            zb,
             ..
         } => match rest {
             "offset" => Some(offset),
             "height" => Some(height),
-            _ => coordinate(a, "a", rest).or_else(|| coordinate(b, "b", rest)),
+            "za" => za.as_mut(),
+            "zb" => zb.as_mut(),
+            _ => coordinate(a, "a", rest)
+                .or_else(|| coordinate(b, "b", rest))
+                .or_else(|| c.as_mut().and_then(|c| coordinate(c, "c", rest))),
         },
         EntityGeometry::Insert {
             p, scale, rotation, ..

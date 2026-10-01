@@ -340,3 +340,76 @@ fn the_label_record_says_the_unit_the_prefix_and_the_mask() {
         ]
     );
 }
+
+/// A fault exactly when there is no layout (docs/adr/0147 §6): over the
+/// shared cases, every fault by hand, and thousands of random dimensions of
+/// every new kind near their edges.
+#[test]
+fn a_fault_says_why_exactly_when_there_is_no_layout() {
+    use kentos_geometry_core::geom::dimension::{DimensionFault, DimensionGeom, dimension_fault};
+    let fault = |s: &Shape| dimension_fault(&dimension_geom(s).expect("a dimension"));
+    let file: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/dimension/v1/layout.json"
+    ))
+    .expect("the cases are JSON");
+    for case in file["cases"].as_array().expect("cases") {
+        let mut d = case["dimension"].clone();
+        d["kind"] = "dimension".into();
+        let s = Entity::from_json(&Json::parse(&d.to_string()).expect("JSON"))
+            .expect("a dimension")
+            .shape;
+        assert_eq!(fault(&s).is_some(), case["want"].is_null(), "{}", case["name"]);
+    }
+    use DimensionFault::*;
+    for (fields, want) in [
+        (r#""a":{"x":0,"y":0},"b":{"x":5,"y":1},"offset":0,"height":2.5,"style":"ordinate""#, Some(OrdinateTooShort)),
+        (r#""a":{"x":0,"y":0},"b":{"x":5,"y":1},"offset":0,"height":2.5,"style":"ordinate","angle":90"#, None),
+        (r#""a":{"x":10,"y":0},"b":{"x":0,"y":10},"offset":2,"height":1,"style":"arcLength""#, Some(ArcNoCentre)),
+        (r#""a":{"x":0,"y":0},"b":{"x":0,"y":10},"c":{"x":0,"y":0},"offset":2,"height":1,"style":"arcLength""#, Some(ArcNoRadius)),
+        (r#""a":{"x":10,"y":0},"b":{"x":20,"y":0},"c":{"x":0,"y":0},"offset":2,"height":1,"style":"arcLength""#, Some(ArcNoSweep)),
+        (r#""a":{"x":10,"y":0},"b":{"x":0,"y":10},"c":{"x":0,"y":0},"offset":-10,"height":1,"style":"arcLength""#, Some(ArcInside)),
+        (r#""a":{"x":0,"y":0},"b":{"x":300,"y":0},"offset":5,"height":1,"style":"jogged""#, Some(JoggedNoCentre)),
+        (r#""a":{"x":0,"y":0},"b":{"x":0,"y":0},"c":{"x":280,"y":4},"offset":5,"height":1,"style":"jogged""#, Some(JoggedNoRadius)),
+        (r#""a":{"x":0,"y":0},"b":{"x":300,"y":0},"c":{"x":296,"y":5},"offset":5,"height":1,"style":"jogged""#, Some(JoggedCentre)),
+        (r#""a":{"x":3,"y":3},"b":{"x":3,"y":3},"offset":1,"height":1,"style":"azimuth""#, Some(EdgeTooShort)),
+        (r#""a":{"x":0,"y":0},"b":{"x":10,"y":0},"offset":1,"height":1,"style":"slope","za":10"#, Some(SlopeNoElevations)),
+        (r#""a":{"x":0,"y":0},"b":{"x":10,"y":0},"offset":1,"height":1,"style":"linear","angle":0"#, None),
+    ] {
+        assert_eq!(fault(&dim(fields)), want, "{fields}");
+    }
+    // Random dimensions: small whole coordinates, so that points meet, line up and fall on the edges' thresholds.
+    let mut seed = 0x2545_f491_4f6c_dd1du64;
+    let mut next = |n: u64| {
+        seed ^= seed << 13;
+        seed ^= seed >> 7;
+        seed ^= seed << 17;
+        (seed % n) as f64
+    };
+    for _ in 0..20_000 {
+        let style = ["ordinate", "arcLength", "jogged", "azimuth", "slope"][next(5) as usize];
+        let (a, b, c) = (
+            v(next(9) - 4.0, next(9) - 4.0),
+            v(next(9) - 4.0, next(9) - 4.0),
+            v(next(9) - 4.0, next(9) - 4.0),
+        );
+        let (offset, height, axis) = (next(9) - 4.0, 1.0 + next(3), next(2) * 90.0);
+        let (has_c, za, zb) = (next(4) != 0.0, next(5), next(5));
+        let (has_za, has_zb) = (next(4) != 0.0, next(4) != 0.0);
+        let d = DimensionGeom {
+            a,
+            b,
+            offset,
+            height,
+            style: Some(style.into()),
+            angle: Some(axis),
+            c: has_c.then_some(c),
+            za: has_za.then_some(za),
+            zb: has_zb.then_some(zb),
+        };
+        assert_eq!(
+            dimension_fault(&d).is_some(),
+            layout_dimension(&d).is_none(),
+            "{d:?}"
+        );
+    }
+}

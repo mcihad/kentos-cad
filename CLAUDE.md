@@ -546,10 +546,12 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
 - Sürmekte: yeni ölçü türleri ([ADR 0147](docs/adr/0147-new-dimension-kinds.md), TODOS.md `CAD-17`, `.kcad`
   şema 9): Koordinat, Yay uzunluğu, Kırıklı yarıçap, Semt, Eğim; ölçü değerinin zemini; Açı'nın yaydan ve daireden
   yolları, döndürülmüş doğrusal, Hızlı ölçü; hepsi şeritte Ölçülendirme ▾. Sahibin istekleri (1 Ekim): “Açı ölçüsü
-  de ekle”, “Başka ne ölçüler olabilirse ekle”. 1. adım (sözleşme ve şema 9) ve 2. adım (beş yerleşim
+  de ekle”, “Başka ne ölçüler olabilirse ekle”. 1. adım (sözleşme ve şema 9), 2. adım (beş yerleşim
   bağımsız başvurusuyla `fixtures/dimension/v1`, depo, tutamaçlar, dönüşümler, değerin öneki ve zemini, resim sahnesi
-  `fixtures/interaction/v1/dimensions.kcad`) tamam; sıradaki adım 3: komutlar (`create` ve `edit`'in denetimleri,
-  ortak durumlar üç koşucuda). Adımlar ADR 0142–0146'daki gibi iki platformda, ortak fixture'larla ilerler.
+  `fixtures/interaction/v1/dimensions.kcad`) ve 3. adım (komutlar: `invalid_dimension` denetimleri çekirdeğin
+  `dimension_fault`'uyla, ortak durumlar üç koşucuda) tamam; sıradaki adım 4: araçlar ve arayüz, dört parça (Koordinat ve
+  Yay uzunluğu; Kırıklı yarıçap, Semt ve Eğim; Açı'nın yolları, döndürülmüş doğrusal, Zemin ve Öznitelikler; Hızlı
+  ölçü). Adımlar ADR 0142–0146'daki gibi iki platformda, ortak fixture'larla ilerler.
 - Bilinen açık: web `pnpm e2e` duman testinde üç test ADR 0143'ten önce de düşüyordu: “toolbox
   shows every tool without scrolling” (79 araç kaydırma istiyor), nokta hesaplayıcının “yan nokta
   30/5” adımı ve “Layers panel: counts follow add, undo and redo”. Kök nedenleri araştırılmadı.
