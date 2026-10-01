@@ -1,6 +1,6 @@
 # ADR 0145: Yazı ekleri
 
-- **Durum:** kabul edildi (2026-09-30). Yön sahibin kararıdır (biçim değişiklikleri özellikleriyle; sıra köşe kotu, çok parçalı alan, blok, yazı ekleri, lider, yeni ölçü türleri). Ayrıntılar bu ADR'nin varsayılanlarıdır.
+- **Durum:** kabul edildi (2026-09-30). Yön sahibin kararıdır (biçim değişiklikleri özellikleriyle; sıra köşe kotu, çok parçalı alan, blok, yazı ekleri, kılavuz, yeni ölçü türleri). Ayrıntılar bu ADR'nin varsayılanlarıdır.
 - **Tarih:** 2026-09-30
 - **Bağlam belgesi:** ADR 0025 (KCAD v2), ADR 0144 (şema 6: blok, §7 öznitelik tanımları), ADR 0055 (çizimin yazıları), ADR 0060 (Yazı aracı ve yerinde düzenleme), ADR 0066 (Öznitelikler), ADR 0009 ve 0138 (DXF, NCZ); `docs/specs/kcad-v2.md` §6.1, §6.6, §6.9; PiriCAD `netcad_plan.md` N-12.
 

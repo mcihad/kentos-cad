@@ -61,7 +61,7 @@ KentOS'ta bir araç şöyle yapılır:
   - Alım, poligon, aplikasyon: Hesap pencereleri.
   - Nokta listesi: koordinat listesi al ve ver.
   - Bul-değiştir: şimdilik yok; yazı düzenleme var.
-- **Sözleşmede yeni nesne türü isteyenler:** kılavuz çizgi (lider), koordinat ölçüsü, yay uzunluğu ölçüsü. `.kcad` şeması, sunucunun `cad.rs`'i ve iki okuyucuyla birlikte ayrı bir kararla yapılır.
+- **Sözleşmede yeni nesne türü isteyenler:** kılavuz (leader), koordinat ölçüsü, yay uzunluğu ölçüsü. `.kcad` şeması, sunucunun `cad.rs`'i ve iki okuyucuyla birlikte ayrı bir kararla yapılır.
 - **Alan ve parsel işi:** ifraz ve tevhit (`tool.subdivide` bekliyor; tevhit Alan birleştir'dir).
 
 ### Mekanik (KentOS'un)
@@ -212,7 +212,7 @@ Her fazda:
   - Yol boyunca dizi: A, N, H.
   - Zincir ve baz ölçü: S.
   - Daire diliminin yazılan açıları doğudan saat yönünün tersine ölçülür (yay aracının kuralı). Kesişim noktasının doğrultuları ise kuzeyden saat yönüne semttir.
-- **Açık kalanlar:** lider, koordinat ve yay uzunluğu ölçüleri (yeni nesne türü), bul-değiştir, ifraz.
+- **Açık kalanlar:** kılavuz, koordinat ve yay uzunluğu ölçüleri (yeni nesne türü), bul-değiştir, ifraz.
 
 ## Doğrulama
 

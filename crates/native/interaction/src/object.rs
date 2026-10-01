@@ -171,6 +171,7 @@ impl ObjectAction {
             Shape::Dimension { .. } => "ölçü",
             Shape::Hatch { .. } => "tarama",
             Shape::Insert { .. } => "blok",
+            Shape::Leader { .. } => "kılavuz",
         }
     }
 

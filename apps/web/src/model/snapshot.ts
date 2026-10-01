@@ -279,7 +279,7 @@ const numbersAt = (v: unknown, w: string, f: string): number => {
   return v.length;
 };
 
-const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'spline', 'xline', 'ray', 'text', 'dimension', 'hatch', 'insert'] as const;
+const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'spline', 'xline', 'ray', 'text', 'dimension', 'hatch', 'insert', 'leader'] as const;
 const LINE_TYPES = ['continuous', 'dashed', 'dashdot', 'dotted'] as const;
 
 function parse(data: unknown, version = DOCUMENT_VERSION): DocumentContent {
@@ -588,6 +588,15 @@ function entity(v: unknown, where: string, layers: ReadonlySet<string> | null, i
       if (numAt(v.scale, w, 'ölçek') <= 0) fail(at(w, 'ölçek'), 'pozitif olmalı');
       numAt(v.rotation, w, 'dönüş');
       if (v.mirror !== undefined && v.mirror !== true) fail(at(w, 'aynalı'), 'yalnız true yazılır; aynalı olmayanda alan yoktur');
+      break;
+    // A leader (docs/adr/0146): two vertices or more, a positive height, a note that is not empty, a known arrowhead.
+    case 'leader':
+      pointsAt(v.pts, w, 'köşeler', 2);
+      if (numAt(v.height, w, 'yükseklik') <= 0) fail(at(w, 'yükseklik'), 'pozitif olmalı');
+      numAt(v.rotation, w, 'açı');
+      if (v.text !== undefined && strAt(v.text, w, 'not') === '') fail(at(w, 'not'), 'boş olamaz; notsuz kılavuzda alan yoktur');
+      if (v.arrow !== undefined) oneOf(v.arrow, ['open', 'dot', 'none'] as const, at(w, 'ok'));
+      if (v.mask !== undefined && v.mask !== true) fail(at(w, 'zemin'), 'yalnız true yazılır; zeminsiz kılavuzda alan yoktur');
       break;
   }
   // Checked field by field above; the object is kept as read (optional fields included).

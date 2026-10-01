@@ -894,6 +894,71 @@
           }
         }
       ]
+    },
+    {
+      "name": "Kılavuzun notu, oku ve zemini değişiklikte ve geri almada kalır; notsuz kılavuz notsuz kalır",
+      "note": "ADR 0146: iki belge kılavuzu olduğu gibi taşır; köşeleri değiştiren yama öbür alanlara dokunmaz, null not alanını siler (notsuz kılavuz).",
+      "steps": [
+        {
+          "op": "add",
+          "entity": {"kind": "leader", "layerId": "b", "pts": [{"x": 486570.5, "y": 4420150.25}, {"x": 486578.5, "y": 4420156.25}], "text": "Ø150 PVC", "height": 2, "rotation": 30, "arrow": "open", "mask": true, "attrs": {}},
+          "returns": 6,
+          "expect": {
+            "entities": {
+              "6": {"id": 6, "kind": "leader", "layerId": "b", "pts": [{"x": 486570.5, "y": 4420150.25}, {"x": 486578.5, "y": 4420156.25}], "text": "Ø150 PVC", "height": 2, "rotation": 30, "arrow": "open", "mask": true, "attrs": {}}
+            }
+          }
+        },
+        {
+          "op": "update",
+          "id": 6,
+          "patch": {"pts": [{"x": 486570.5, "y": 4420150.25}, {"x": 486574.5, "y": 4420154.25}, {"x": 486580.5, "y": 4420154.25}]},
+          "expect": {
+            "entities": {
+              "6": {"id": 6, "kind": "leader", "layerId": "b", "pts": [{"x": 486570.5, "y": 4420150.25}, {"x": 486574.5, "y": 4420154.25}, {"x": 486580.5, "y": 4420154.25}], "text": "Ø150 PVC", "height": 2, "rotation": 30, "arrow": "open", "mask": true, "attrs": {}}
+            }
+          }
+        },
+        {
+          "op": "update",
+          "id": 6,
+          "patch": {"text": null},
+          "expect": {
+            "entities": {
+              "6": {"id": 6, "kind": "leader", "layerId": "b", "pts": [{"x": 486570.5, "y": 4420150.25}, {"x": 486574.5, "y": 4420154.25}, {"x": 486580.5, "y": 4420154.25}], "height": 2, "rotation": 30, "arrow": "open", "mask": true, "attrs": {}}
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Değiştir",
+          "expect": {
+            "entities": {
+              "6": {"id": 6, "kind": "leader", "layerId": "b", "pts": [{"x": 486570.5, "y": 4420150.25}, {"x": 486574.5, "y": 4420154.25}, {"x": 486580.5, "y": 4420154.25}], "text": "Ø150 PVC", "height": 2, "rotation": 30, "arrow": "open", "mask": true, "attrs": {}}
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Değiştir",
+          "expect": {
+            "entities": {
+              "6": {"id": 6, "kind": "leader", "layerId": "b", "pts": [{"x": 486570.5, "y": 4420150.25}, {"x": 486578.5, "y": 4420156.25}], "text": "Ø150 PVC", "height": 2, "rotation": 30, "arrow": "open", "mask": true, "attrs": {}}
+            }
+          }
+        },
+        {
+          "op": "add",
+          "entity": {"kind": "leader", "layerId": "a", "pts": [{"x": 486510, "y": 4420110}, {"x": 486515, "y": 4420114}], "height": 2.5, "rotation": 0, "arrow": "none", "attrs": {}},
+          "returns": 7,
+          "expect": {
+            "ids": [1, 2, 5, 6, 7],
+            "entities": {
+              "7": {"id": 7, "kind": "leader", "layerId": "a", "pts": [{"x": 486510, "y": 4420110}, {"x": 486515, "y": 4420114}], "height": 2.5, "rotation": 0, "arrow": "none", "attrs": {}}
+            }
+          }
+        }
+      ]
     }
   ]
 }

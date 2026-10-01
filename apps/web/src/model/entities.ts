@@ -2,7 +2,7 @@ import { op } from '../wasm/core';
 import type { Bounds, Vec2 } from './geometry';
 import type { DimensionStyle } from './geom/dimension';
 
-export type EntityKind = 'point' | 'line' | 'polyline' | 'polygon' | 'circle' | 'arc' | 'ellipse' | 'spline' | 'xline' | 'ray' | 'text' | 'dimension' | 'hatch' | 'insert';
+export type EntityKind = 'point' | 'line' | 'polyline' | 'polygon' | 'circle' | 'arc' | 'ellipse' | 'spline' | 'xline' | 'ray' | 'text' | 'dimension' | 'hatch' | 'insert' | 'leader';
 
 /**
  * Half-length (1000 km) used when an infinite line meets finite geometry on
@@ -275,6 +275,33 @@ export interface InsertEntity extends EntityBase {
   mirror?: boolean;
 }
 
+/**
+ * A leader (docs/adr/0146): an arrowhead at its first vertex, a line through its vertices and, with a note, a
+ * landing from its last vertex along the note's direction and the note past the landing's end; one object. The
+ * arrowhead and the landing are measured by the note's height.
+ */
+export interface LeaderEntity extends EntityBase {
+  kind: 'leader';
+  /** At least two: the arrow's tip first, where the landing starts last. */
+  pts: Vec2[];
+  /** The note, one line; absent: the arrow alone (no landing, no note). Never empty. */
+  text?: string;
+  /** The note's height in metres, over 0; the arrowhead and the landing are measured by it. */
+  height: number;
+  /** The note's and the landing's direction, degrees counter-clockwise from east. */
+  rotation: number;
+  /** The arrowhead; absent: a filled arrow. */
+  arrow?: LeaderArrow;
+  /** The note's box filled with the drawing area's colour, as a text's mask (docs/adr/0145). */
+  mask?: boolean;
+}
+
+/** A leader's arrowhead other than the filled arrow, which is the field's absence (docs/adr/0146 §1). */
+export type LeaderArrow = 'open' | 'dot' | 'none';
+
+/** Every arrowhead name, in the contract's order (`LeaderArrow::ALL`). */
+export const LEADER_ARROWS: readonly LeaderArrow[] = ['open', 'dot', 'none'];
+
 export type Entity =
   | PointEntity
   | LineEntity
@@ -287,7 +314,8 @@ export type Entity =
   | TextEntity
   | DimensionEntity
   | HatchEntity
-  | InsertEntity;
+  | InsertEntity
+  | LeaderEntity;
 
 /** An object of a drawing, as `CadDocument` gives it out: always with its persistent id. */
 export type DrawingEntity = Entity & { uid: string };
@@ -310,6 +338,7 @@ export const ENTITY_KIND_LABEL: Record<EntityKind, string> = {
   dimension: 'Ölçü',
   hatch: 'Tarama',
   insert: 'Blok',
+  leader: 'Kılavuz',
 };
 
 export const HATCH_PATTERN_LABEL: Record<HatchPatternType, string> = {

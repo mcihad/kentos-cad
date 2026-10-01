@@ -6,6 +6,7 @@ import type { DimensionEntity } from "./DimensionEntity";
 import type { EllipseEntity } from "./EllipseEntity";
 import type { HatchEntity } from "./HatchEntity";
 import type { InsertEntity } from "./InsertEntity";
+import type { LeaderEntity } from "./LeaderEntity";
 import type { LineEntity } from "./LineEntity";
 import type { PathEntity } from "./PathEntity";
 import type { PointEntity } from "./PointEntity";
@@ -15,4 +16,4 @@ import type { TextEntity } from "./TextEntity";
 /**
  * Any drawing object, tagged by `kind` as in the TypeScript model.
  */
-export type Entity = { "kind": "point" } & PointEntity | { "kind": "line" } & LineEntity | { "kind": "polyline" } & PathEntity | { "kind": "polygon" } & PathEntity | { "kind": "circle" } & CircleEntity | { "kind": "arc" } & ArcEntity | { "kind": "ellipse" } & EllipseEntity | { "kind": "spline" } & SplineEntity | { "kind": "xline" } & ConstructionEntity | { "kind": "ray" } & ConstructionEntity | { "kind": "text" } & TextEntity | { "kind": "dimension" } & DimensionEntity | { "kind": "hatch" } & HatchEntity | { "kind": "insert" } & InsertEntity;
+export type Entity = { "kind": "point" } & PointEntity | { "kind": "line" } & LineEntity | { "kind": "polyline" } & PathEntity | { "kind": "polygon" } & PathEntity | { "kind": "circle" } & CircleEntity | { "kind": "arc" } & ArcEntity | { "kind": "ellipse" } & EllipseEntity | { "kind": "spline" } & SplineEntity | { "kind": "xline" } & ConstructionEntity | { "kind": "ray" } & ConstructionEntity | { "kind": "text" } & TextEntity | { "kind": "dimension" } & DimensionEntity | { "kind": "hatch" } & HatchEntity | { "kind": "insert" } & InsertEntity | { "kind": "leader" } & LeaderEntity;

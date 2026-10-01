@@ -558,6 +558,7 @@ fn finite(e: &Entity) -> bool {
                     && e.pattern.spacing.is_finite()
             }
             Entity::Insert(e) => p(&e.p) && fs(&[e.scale, e.rotation]),
+            Entity::Leader(e) => ps(&e.pts) && fs(&[e.height, e.rotation]),
         }
 }
 

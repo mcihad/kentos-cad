@@ -221,6 +221,22 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
                 return Err("Blok ölçeği pozitif bir sayı olmalı".into());
             }
         }
+        // The file's rules (docs/adr/0146 §3): two vertices, a height, a note that is not empty.
+        Leader(x) => {
+            check_len("Kılavuz", x.pts.len(), 2)?;
+            positive("Kılavuz yüksekliği", x.height)?;
+            match &x.text {
+                Some(t) if t.is_empty() => {
+                    return Err(
+                        "Kılavuzun notu boş olamaz; notsuz kılavuzda not alanı yazılmaz".into(),
+                    );
+                }
+                Some(t) if t.len() > 10_000 => {
+                    return Err("Kılavuzun notu en çok 10 000 karakter olabilir".into());
+                }
+                _ => {}
+            }
+        }
         Point(_) | Line(_) => {}
     }
     Ok(())
@@ -324,6 +340,8 @@ fn projection(e: &Entity, blocks: &Placing) -> Option<Geometry> {
             rings.extend(x.holes.iter().flatten().map(|h| pts(h)));
             Geometry::Polygon(rings)
         }
+        // Its line; the arrowhead, the landing and the note are not projected (docs/adr/0146 §3).
+        Entity::Leader(x) => Geometry::LineString(pts(&x.pts)),
         // Its block's objects placed (the core's expansion, nested blocks opened), each as it is projected.
         Entity::Insert(i) => Geometry::Collection(
             blocks
@@ -653,12 +671,7 @@ mod tests {
     /// The object read back, its id as it went in (the browser numbers objects itself).
     fn back(s: &Stored, id: u32) -> Entity {
         let mut again = from_stored(s).unwrap();
-        match &mut again {
-            Entity::Polygon(x) | Entity::Polyline(x) => x.base.id = id,
-            Entity::Line(x) => x.base.id = id,
-            Entity::Insert(x) => x.base.id = id,
-            _ => {}
-        }
+        again.base_mut().id = id;
         again
     }
 
@@ -840,5 +853,45 @@ mod tests {
             err.contains("1. özniteliği") && err.contains("genişlik çarpanı"),
             "{err}"
         );
+    }
+
+    /// A leader (docs/adr/0146): its definition is the source, every field
+    /// kept; its geometry the line through its vertices; the file's rules.
+    #[test]
+    fn a_leader_is_kept_and_projected_as_its_line() {
+        let l = entity(
+            serde_json::json!({ "kind": "leader", "id": 1, "layerId": "p", "attrs": {},
+            "pts": [{ "x": 0, "y": 0 }, { "x": 4, "y": 3 }, { "x": 9, "y": 3 }], "text": "Ø150 PVC",
+            "height": 2, "rotation": 30, "arrow": "open", "mask": true }),
+        );
+        let s = to_stored(&l, 5256, &none()).unwrap();
+        assert_eq!(s.source_kind, "cad");
+        let (g, srid) = ewkb::decode(s.geom.as_deref().unwrap()).unwrap();
+        assert_eq!(srid, 5256);
+        assert!(
+            matches!(&g, Geometry::LineString(p) if p.len() == 3 && p[2].x == 9.0 && p[2].y == 3.0),
+            "{g:?}"
+        );
+        assert_eq!(back(&s, 1), l);
+        for (json, words) in [
+            (
+                serde_json::json!({ "kind": "leader", "id": 1, "layerId": "p", "attrs": {},
+                "pts": [{ "x": 0, "y": 0 }], "height": 2, "rotation": 0 }),
+                "Kılavuz",
+            ),
+            (
+                serde_json::json!({ "kind": "leader", "id": 1, "layerId": "p", "attrs": {},
+                "pts": [{ "x": 0, "y": 0 }, { "x": 4, "y": 3 }], "height": 0, "rotation": 0 }),
+                "Kılavuz yüksekliği",
+            ),
+            (
+                serde_json::json!({ "kind": "leader", "id": 1, "layerId": "p", "attrs": {},
+                "pts": [{ "x": 0, "y": 0 }, { "x": 4, "y": 3 }], "text": "", "height": 2, "rotation": 0 }),
+                "notu boş",
+            ),
+        ] {
+            let err = to_stored(&entity(json), 5256, &none()).unwrap_err();
+            assert!(err.contains(words), "{words}: {err}");
+        }
     }
 }

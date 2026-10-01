@@ -15,7 +15,7 @@ KentOS'ta bugün bir kapalı alan tek bir dış halka ve onun delikleridir. Bu y
 - **GeoJSON:** MultiPolygon'un parçaları ayrı nesnelere bölünür ve her parça özelliğin özniteliklerini kopya olarak taşır. Tek kayıt birden çok nesne olur; geri yazılınca MultiPolygon'a dönmez.
 - **Shapefile:** birden çok dış halkalı Polygon kaydı da ayrı nesnelere bölünür.
 
-Sahibin kararı (29 Eylül): `.kcad` şemasını değiştiren işler kendi özellikleriyle ve kendi şema adımlarıyla gelir. Sıra köşe kotu (ADR 0142), çok parçalı alan, blok, yazı ekleri, lider ve yeni ölçü türleridir.
+Sahibin kararı (29 Eylül): `.kcad` şemasını değiştiren işler kendi özellikleriyle ve kendi şema adımlarıyla gelir. Sıra köşe kotu (ADR 0142), çok parçalı alan, blok, yazı ekleri, kılavuz ve yeni ölçü türleridir.
 
 ## Karar
 

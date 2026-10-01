@@ -117,6 +117,14 @@ pub fn shape(entity: &Entity) -> Shape {
             parts: p.parts.as_ref().map(|ps| ps.iter().map(part).collect()),
         },
         Entity::Circle(c) => Shape::Circle { c: v(&c.c), r: c.r },
+        Entity::Leader(l) => Shape::Leader {
+            pts: points(&l.pts),
+            text: l.text.clone(),
+            height: l.height,
+            rotation: l.rotation,
+            arrow: l.arrow.map(|a| a.name().to_owned()),
+            mask: l.mask.then_some(true),
+        },
         Entity::Arc(a) => Shape::Arc {
             c: v(&a.c),
             r: a.r,
@@ -416,6 +424,24 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
             e.pattern.angle = pattern.angle;
             e.pattern.spacing = pattern.spacing;
         }
+        (
+            Entity::Leader(e),
+            Shape::Leader {
+                pts,
+                text,
+                height,
+                rotation,
+                arrow: _,
+                mask,
+            },
+        ) => {
+            // The arrowhead is the object's own: the core carries its name through unchanged.
+            e.pts = back(pts);
+            e.text = text;
+            e.height = height;
+            e.rotation = rotation;
+            e.mask = mask == Some(true);
+        }
         _ => return None,
     }
     Some(out)
@@ -680,6 +706,8 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
                 spacing: pattern.spacing,
             },
         },
+        // A leader's geometry is written by the commands' step (docs/adr/0146 §10, step 3).
+        Shape::Leader { .. } => return None,
         // A block's id the contract does not read is none of the drawing's.
         Shape::Insert {
             block,

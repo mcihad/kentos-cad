@@ -9,8 +9,8 @@
 use kentos_contracts::{
     ArcEntity, AreaPart, BlockDefinition, CircleEntity, ConstructionEntity, DimensionEntity,
     DimensionStyle, EllipseEntity, Entity, EntityBase, HatchEntity, HatchPattern, HatchPatternType,
-    InsertEntity, LineEntity, PathEntity, PointEntity, RingGeometry, SplineEntity, TextEntity,
-    Vec2,
+    InsertEntity, LeaderArrow, LeaderEntity, LineEntity, PathEntity, PointEntity, RingGeometry,
+    SplineEntity, TextEntity, Vec2,
 };
 use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::api::json::Json;
@@ -258,6 +258,14 @@ fn shape(e: &Entity) -> Shape {
             c: core(c.c),
             r: c.r,
         },
+        Entity::Leader(l) => Shape::Leader {
+            pts: points(&l.pts),
+            text: l.text.clone(),
+            height: l.height,
+            rotation: l.rotation,
+            arrow: l.arrow.map(|a| a.name().to_owned()),
+            mask: l.mask.then_some(true),
+        },
         Entity::Arc(a) => Shape::Arc {
             c: core(a.c),
             r: a.r,
@@ -421,6 +429,22 @@ fn entity(s: &Shape) -> Option<Entity> {
             base,
             pts: points_back(pts),
             closed: *closed,
+        }),
+        Shape::Leader {
+            pts,
+            text,
+            height,
+            rotation,
+            arrow,
+            mask,
+        } => Entity::Leader(LeaderEntity {
+            base,
+            pts: points_back(pts),
+            text: text.clone(),
+            height: *height,
+            rotation: *rotation,
+            arrow: arrow.as_deref().and_then(LeaderArrow::from_name),
+            mask: *mask == Some(true),
         }),
         Shape::Text {
             p,

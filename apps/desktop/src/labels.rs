@@ -1029,6 +1029,57 @@ fn text_extras_screens() {
     }
 }
 
+/// Leaders (docs/adr/0146) as the drawing shows them: the four arrowheads,
+/// one without a note, one masked, one turned and one in a block
+/// (fixtures/interaction/v1/leaders.kcad, the web's `shots.mjs leaders`),
+/// the second selected so that Öznitelikler shows it, dark and light, at
+/// 1440×900 and 1100×650; `.run/shots/kilavuz-*`:
+///
+/// ```text
+/// cargo test -p kentos-desktop labels::leader_screens -- --ignored --nocapture
+/// ```
+#[cfg(test)]
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn leader_screens() {
+    use kentos_ui::snapshot::Snapshot;
+
+    use crate::app::App;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let drawing = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/interaction/v1/leaders.kcad"
+    );
+    for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
+        for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
+            let (mut app, _) = App::boot(None);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+            app.apply_settings();
+            let doc =
+                crate::document::Document::read(std::path::Path::new(drawing)).expect("opens");
+            let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+            let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+            let mut update = |app: &mut App, message| {
+                let _ = app.update(message);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let _ = app.update(Message::Run("view.zoomExtents"));
+            app.selection.set([kentos_domain::Slot(2)]);
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("kilavuz-{width}x{height}{suffix}.png"));
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
+            println!("{}", file.display());
+        }
+    }
+}
+
 /// Frame times with thousands of labels on screen, in release:
 ///
 /// ```text

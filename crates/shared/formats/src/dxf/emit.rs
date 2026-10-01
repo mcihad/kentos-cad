@@ -443,6 +443,7 @@ fn anchor_points(e: &Entity) -> Vec<Vec2> {
         Entity::Xline(x) | Entity::Ray(x) => vec![x.p],
         Entity::Text(t) => vec![t.p],
         Entity::Dimension(d) => vec![d.a, d.b],
+        Entity::Leader(l) => l.pts.clone(),
         Entity::Hatch(h) => h.ring.clone(),
         Entity::Insert(i) => vec![i.p],
     }

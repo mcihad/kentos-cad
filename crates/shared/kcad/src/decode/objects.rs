@@ -1,11 +1,12 @@
-//! The objects of document schemas 2 to 7 read from a payload
+//! The objects of document schemas 2 to 8 read from a payload
 //! (docs/specs/kcad-v2.md §6.6): each a one-key map, its kind and then its
 //! fields, read into the contract's `Entity` with the persistent id the file
 //! gives it; the ids are unique in a file. Schema 3 adds an object's own line
 //! weight (`lineWeight`, docs/adr/0139), schema 4 the vertex elevations (`za`,
 //! `zb`, `zs`, docs/adr/0142), schema 5 an area's parts (`parts`,
 //! docs/adr/0143), schema 6 the `insert` kind (docs/adr/0144), schema 7 a
-//! text's `align`, `widthFactor` and `mask` (docs/adr/0145); in an older
+//! text's `align`, `widthFactor` and `mask` (docs/adr/0145), schema 8 the
+//! `leader` kind (docs/adr/0146); in an older
 //! schema they are unknown fields or kinds. A block definition's objects are
 //! read the same way, without persistent ids.
 
@@ -14,9 +15,9 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use kentos_contracts::{
     ArcEntity, AreaPart, BlockDefinition, BlockId, CircleEntity, ConstructionEntity,
     DimensionEntity, DimensionStyle, EllipseEntity, Entity, EntityBase, EntityId, HatchEntity,
-    HatchPattern, HatchPatternType, InsertEntity, LineEntity, MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR,
-    PathEntity, PointEntity, RingGeometry, SplineEntity, TextAlign, TextEntity, Vec2,
-    width_factor_ok,
+    HatchPattern, HatchPatternType, InsertEntity, LeaderArrow, LeaderEntity, LineEntity,
+    MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, PathEntity, PointEntity, RingGeometry, SplineEntity,
+    TextAlign, TextEntity, Vec2, width_factor_ok,
 };
 
 use super::{PREALLOCATE, floats, id16, list, map, named, point, points, required, text, unknown};
@@ -24,8 +25,8 @@ use crate::cbor::{Reader, Seg};
 use crate::error::{Code, KcadError};
 use crate::watch::{EVERY, Step};
 use crate::{
-    SCHEMA_WITH_BLOCKS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_PARTS,
-    SCHEMA_WITH_TEXT_EXTRAS,
+    SCHEMA_WITH_BLOCKS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_WEIGHTS,
+    SCHEMA_WITH_PARTS, SCHEMA_WITH_TEXT_EXTRAS,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -44,6 +45,7 @@ enum Kind {
     Dimension,
     Hatch,
     Insert,
+    Leader,
 }
 
 const KINDS: &[(&str, Kind)] = &[
@@ -61,6 +63,7 @@ const KINDS: &[(&str, Kind)] = &[
     ("dimension", Kind::Dimension),
     ("hatch", Kind::Hatch),
     ("insert", Kind::Insert),
+    ("leader", Kind::Leader),
 ];
 
 /// What a payload's schema lets an object hold beyond schema 2's fields.
@@ -74,9 +77,11 @@ pub(super) struct Features {
     parts: bool,
     /// Schema 6 and up: block definitions and the `insert` kind.
     pub(super) blocks: bool,
-    /// Schema 7: a text's alignment, width factor and mask, an attribute
-    /// definition's alignment and width factor.
+    /// Schema 7 and up: a text's alignment, width factor and mask, an
+    /// attribute definition's alignment and width factor.
     pub(super) texts: bool,
+    /// Schema 8: the `leader` kind.
+    leaders: bool,
     /// Whether an object has its persistent id (`uid`): the drawing's do, a
     /// block definition's do not.
     uids: bool,
@@ -90,6 +95,7 @@ impl Features {
             parts: schema >= SCHEMA_WITH_PARTS,
             blocks: schema >= SCHEMA_WITH_BLOCKS,
             texts: schema >= SCHEMA_WITH_TEXT_EXTRAS,
+            leaders: schema >= SCHEMA_WITH_LEADERS,
             uids: true,
         }
     }
@@ -135,6 +141,10 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
             ),
             Kind::Hatch => matches!(key, "ring" | "holes" | "pattern"),
             Kind::Insert => matches!(key, "block" | "p" | "scale" | "rotation" | "mirror"),
+            Kind::Leader => matches!(
+                key,
+                "pts" | "text" | "height" | "rotation" | "arrow" | "mask"
+            ),
         }
 }
 
@@ -186,6 +196,7 @@ struct Fields {
     scale: Option<f64>,
     mirror: Option<bool>,
     align: Option<TextAlign>,
+    arrow: Option<LeaderArrow>,
     width_factor: Option<f64>,
     mask: Option<bool>,
 }
@@ -273,7 +284,9 @@ pub(super) fn object(
     let Some(&(_, kind)) = KINDS
         .iter()
         .find(|(k, _)| *k == name)
-        .filter(|(_, kind)| has.blocks || *kind != Kind::Insert)
+        .filter(|(_, kind)| {
+            (has.blocks || *kind != Kind::Insert) && (has.leaders || *kind != Kind::Leader)
+        })
     else {
         return Err(r.fail(
             Code::UnknownKind,
@@ -326,10 +339,34 @@ pub(super) fn object(
             "ratio" => f.ratio = Some(r.float()?),
             "t0" => f.t0 = Some(r.float()?),
             "t1" => f.t1 = Some(r.float()?),
+            "height" if kind == Kind::Leader => {
+                let at = r.position();
+                let h = r.float()?;
+                if h <= 0.0 {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        &format!("kılavuzun yüksekliği {h}; 0'dan büyük olmalı"),
+                    ));
+                }
+                f.height = Some(h);
+            }
             "height" => f.height = Some(r.float()?),
             "rotation" => f.rotation = Some(r.float()?),
             "offset" => f.offset = Some(r.float()?),
             "angle" => f.angle = Some(r.float()?),
+            "pts" if kind == Kind::Leader => {
+                let at = r.position();
+                let pts = points(r)?;
+                if pts.len() < 2 {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        &format!("kılavuzun {} köşesi var; en az iki olmalı", pts.len()),
+                    ));
+                }
+                f.pts = Some(pts);
+            }
             "pts" => f.pts = Some(points(r)?),
             "ring" => f.ring = Some(points(r)?),
             "bulges" => f.bulges = Some(floats(r)?),
@@ -341,6 +378,18 @@ pub(super) fn object(
             "holes" => f.loops = Some(list(r, |r, _| points(r))?),
             "parts" => f.parts = Some(list(r, |r, _| part(r, has))?),
             "closed" => f.closed = Some(r.bool()?),
+            "text" if kind == Kind::Leader => {
+                let at = r.position();
+                let note = text(r)?;
+                if note.is_empty() {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "kılavuzun notu boş; notsuz kılavuzun not alanı yazılmaz",
+                    ));
+                }
+                f.text = Some(note);
+            }
             "text" => f.text = Some(text(r)?),
             "style" => {
                 f.style = Some(named(
@@ -383,6 +432,7 @@ pub(super) fn object(
                 f.mirror = Some(true);
             }
             "align" => f.align = Some(text_align(r)?),
+            "arrow" => f.arrow = Some(leader_arrow(r)?),
             "widthFactor" => f.width_factor = Some(width_factor(r)?),
             "mask" => {
                 let at = r.position();
@@ -529,6 +579,15 @@ fn build(
             rotation: required(r, f.rotation, "rotation")?,
             mirror: f.mirror.unwrap_or(false),
         }),
+        Kind::Leader => Entity::Leader(LeaderEntity {
+            base,
+            pts: required(r, f.pts.take(), "pts")?,
+            text: f.text.take(),
+            height: required(r, f.height, "height")?,
+            rotation: required(r, f.rotation, "rotation")?,
+            arrow: f.arrow,
+            mask: f.mask.unwrap_or(false),
+        }),
     })
 }
 
@@ -639,6 +698,12 @@ fn pattern(r: &mut Reader<'_>) -> Result<HatchPattern, KcadError> {
 }
 
 /// A text's alignment by its name (§6.6); an unknown name is `bad_value`.
+/// A leader's arrowhead (§6.6, docs/adr/0146): its name; the filled arrow has none.
+fn leader_arrow(r: &mut Reader<'_>) -> Result<LeaderArrow, KcadError> {
+    let names: Vec<(&str, LeaderArrow)> = LeaderArrow::ALL.iter().map(|a| (a.name(), *a)).collect();
+    super::named(r, &names)
+}
+
 pub(super) fn text_align(r: &mut Reader<'_>) -> Result<TextAlign, KcadError> {
     let names: Vec<(&str, TextAlign)> = TextAlign::ALL.iter().map(|a| (a.name(), *a)).collect();
     super::named(r, &names)

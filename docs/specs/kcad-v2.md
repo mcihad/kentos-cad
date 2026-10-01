@@ -185,7 +185,7 @@ Profil hiçbir CBOR etiketi kullanmaz. ADR 0014 kimlikler için UUID etiketini (
 - Etiket her nesneye 2 bayt ekler ve profile “bu etiket nerede geçerli” kuralını getirir.
 - Genel CBOR araçları etiketsiz dosyayı da çözer; kimlik 16 baytlık bayt dizgisi olarak görünür.
 
-## 6. Belge şeması 2, 3, 4, 5 ve 6
+## 6. Belge şeması 2–8
 
 ### 6.1 Kök
 
@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`, `3`, `4`, `5`, `6` ya da `7`; değilse `schema_version` |
+| `version` | tam sayı | `2`, `3`, `4`, `5`, `6`, `7` ya da `8`; değilse `schema_version` |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -209,7 +209,9 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 
 **Şema 7**, şema 6'nın kendisi ve yazı ekleridir: yazının `align`, `widthFactor` ve `mask`'ı (§6.6), öznitelik tanımının `align` ve `widthFactor`'ı (§6.9; ADR 0145). Yazıcı `7`'yi **yalnız bir yazıda ya da öznitelik tanımında bu alanlardan biri varken** yazar, belgenin ya da bir blok tanımının yazısında. Başka her çizim şema 2–6'dır ve eskisiyle bayt bayt aynıdır. Şema 2–6 yükünde bu alanlar bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/text-align-in-schema-6.kcad`, `attribute-align-in-schema-6.kcad`): eski okuyucu hizalı yazıyı sessizce sol alt noktasına taşımaz, dosyayı açmaz. Şema 7 şema 6'yı kapsar.
 
-Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: yazı eki olan çizim 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
+**Şema 8**, şema 7'nin kendisi ve kılavuzdur: `leader` nesne türü (§6.6; ADR 0146). Yazıcı `8`'i **yalnız çizimde ya da bir blok tanımında kılavuz varken** yazar. Başka her çizim şema 2–7'dir ve eskisiyle bayt bayt aynıdır. Şema 2–7 yükünde `leader` bilinmeyen türdür (`unknown_kind`, `fixtures/kcad/v2/broken/leader-in-schema-7.kcad`): eski okuyucu kılavuzu sessizce düşürmez, dosyayı açmaz. Şema 8 şema 7'yi kapsar.
+
+Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: kılavuz olan çizim 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
 
 ### 6.2 Belge
 
@@ -337,10 +339,11 @@ Yanlış CBOR türü (float yerine tam sayı, nokta yerine harita) `wrong_type`'
 | `ellipse` | `c`, `major` nokta; `ratio`, `t0`, `t1` float |
 | `spline` | `pts` nokta listesi; `closed` bool |
 | `xline`, `ray` | `p`, `dir` nokta |
-| `text` | `p` nokta; `text` metin; `height` float (m); `rotation` float (derece, doğudan saat yönünün tersine); yalnız şema 7: `align` numaralı metin, `widthFactor` float, `mask` bool (isteğe bağlı; aşağıda) |
+| `text` | `p` nokta; `text` metin; `height` float (m); `rotation` float (derece, doğudan saat yönünün tersine); yalnız şema 7 ve sonrası: `align` numaralı metin, `widthFactor` float, `mask` bool (isteğe bağlı; aşağıda) |
 | `dimension` | `a`, `b` nokta; `offset`, `height` float; isteğe bağlı: `c` nokta, `text` metin, `angle` float, `style` numaralı metin (`aligned`, `linear`, `angular`, `radius`, `diameter`) |
 | `hatch` | `ring` nokta listesi; `holes` nokta listesi dizisi (isteğe bağlı); `pattern` harita: `type` (`solid`, `lines`, `cross`), `angle` float, `spacing` float |
 | `insert` | yalnız şema 6 (§6.9): `block` kimlik (tanımın `id`'si); `p` nokta; `scale` float (pozitif; değilse `bad_value`); `rotation` float (radyan, doğudan saat yönünün tersine); `mirror` bool (isteğe bağlı; yalnız `true` yazılır, `false` `bad_value`) |
+| `leader` | yalnız şema 8 (ADR 0146): `pts` nokta listesi (en az iki); `height` float (m, pozitif); `rotation` float (derece, doğudan saat yönünün tersine); isteğe bağlı: `text` metin, `arrow` numaralı metin, `mask` bool (aşağıda) |
 
 - **Halka** (`polygon`'un ya da parçanın deliği): `pts` nokta listesi (zorunlu), `bulges` float dizisi (isteğe bağlı), `zs` kot listesi (isteğe bağlı; yalnız şema 4 ve sonrası). Halkanın anahtarları kodlanmış sırasıyla `zs` < `pts` < `bulges`'tir.
 - **Parça** (şema 5; ADR 0143): çok parçalı alanın ilk parçasının ötesindeki bir parçası. Alanın kendi `pts`, `bulges`, `holes` ve `zs`'i ilk parçadır; `parts` öbürlerini sırasıyla tutar. Parça haritası: `pts` nokta listesi (zorunlu), `bulges` float dizisi, `holes` halka dizisi, `zs` kot listesi (isteğe bağlı); alanlarının kuralları alanın kendi alanlarınınkiyle aynıdır. Anahtarları kodlanmış sırasıyla `zs` < `pts` < `holes` < `bulges`'tir.
@@ -362,6 +365,14 @@ Yanlış CBOR türü (float yerine tam sayı, nokta yerine harita) `wrong_type`'
   - **`widthFactor`**: harflerin eni bununla çarpılır, yükseklik değişmez. `0`'dan büyük, en çok `100`; değilse `bad_value`, sonlu değilse `non_finite`. Alan yoksa 1'dir; yazıcı verileni yazar, 1'i üretmemek üreticinin işidir.
   - **`mask`**: yazının kutusu yazıdan önce çizim alanının zemin rengiyle doldurulur. Yalnız `true` yazılır; `false` `bad_value`'dur.
   - Yazının anahtarları kodlanmış sırasıyla `p` < `mask` < `text` < `align` < `height` < `rotation` < `widthFactor`'dır (ortak alanlarla birlikte sıralanır).
+- **Kılavuz** (`leader`, şema 8; ADR 0146): ok başı, kırık çizgi, kol ve not tek nesnedir.
+  - **`pts`**: köşeler; ilki okun ucu, sonuncusu kolun başladığı yer. İkiden az köşe `bad_value`'dur.
+  - **`text`**: tek satırlık not. Yoksa kılavuz yalnız oktur: kol ve not yoktur. Boş metin `bad_value`'dur; notsuzluk alanın yokluğudur.
+  - **`height`**: notun yüksekliği, metre. Ok başı ve kol bundan ölçülür (ADR 0146 §2). 0 ya da eksi `bad_value`, sonlu değilse `non_finite`.
+  - **`rotation`**: notun ve kolun doğrultusu, derece (yazınınki gibi).
+  - **`arrow`**: ok başı. Değerler: `open` (açık ok), `dot` (dolu nokta), `none` (ok başı yok). Alan yoksa dolu oktur; bu bir değer değildir, `filled` bilinmeyen değerdir (`bad_value`).
+  - **`mask`**: notun kutusu nottan önce çizim alanının zemin rengiyle doldurulur (yazınınki gibi). Yalnız `true` yazılır; `false` `bad_value`'dur.
+  - Kılavuzun anahtarları kodlanmış sırasıyla `pts` < `mask` < `text` < `arrow` < `height` < `rotation`'dır (ortak alanlarla birlikte sıralanır). Kılavuz kot almaz.
 - Dış başvuru, yüzey ve katı gibi yeni türler ileride şemaya ya da zorunlu bir uzantıya eklenir; eski okuyucu onları tanımadığını söyler.
 
 ### 6.7 Proje stilleri ve opak değerler
@@ -408,7 +419,7 @@ Yanlış CBOR türü (float yerine tam sayı, nokta yerine harita) `wrong_type`'
 | `attributes` | dizi: öznitelik tanımı | | yerleştirmenin yazı olarak gösterdiği öznitelikler; boş dizi yazılmaz (`bad_value`) |
 | `description` | metin | | açıklama |
 
-**Öznitelik tanımı** haritası: `p` nokta (evet), `tag` metin (evet), `align` numaralı metin (yalnız şema 7), `value` metin (varsayılan değer), `height` float (evet, m), `prompt` metin (Blok ekle'nin sorusu), `rotation` float (evet, derece, bir yazınınki gibi), `widthFactor` float (yalnız şema 7). Anahtarları bu sıradadır. `align` ve `widthFactor`'ın anlamı ve kuralları yazınınkidir (§6.6, yazı ekleri).
+**Öznitelik tanımı** haritası: `p` nokta (evet), `tag` metin (evet), `align` numaralı metin (yalnız şema 7 ve sonrası), `value` metin (varsayılan değer), `height` float (evet, m), `prompt` metin (Blok ekle'nin sorusu), `rotation` float (evet, derece, bir yazınınki gibi), `widthFactor` float (yalnız şema 7 ve sonrası). Anahtarları bu sıradadır. `align` ve `widthFactor`'ın anlamı ve kuralları yazınınkidir (§6.6, yazı ekleri).
 
 - **Tanımın nesneleri** belgenin nesneleriyle aynı biçimdedir (§6.6), yalnız `uid` taşımazlar: kimlikleri tanımın içinde yereldir. Okuyucu onlara tanımın içinde 1, 2, 3, … yuvalarını verir. Katmanları saklanır ama ağaçta bulunmaları gerekmez: yerleştirme onları kendi katmanıyla çizer.
 - **Kurallar** (okuyucu ve yazıcı aynı sırayla denetler; web ve masaüstü belgeleri de aynı kurallarla, `kentos_contracts::blocks`):

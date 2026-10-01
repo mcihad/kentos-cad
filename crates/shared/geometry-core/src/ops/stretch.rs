@@ -63,6 +63,22 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
             pts: pts.iter().map(|&p| mv(p)).collect(),
             closed: *closed,
         })?,
+        // Its vertices in the window move; the landing and the note follow the last (docs/adr/0146 §4).
+        Shape::Leader {
+            pts,
+            text,
+            height,
+            rotation,
+            arrow,
+            mask,
+        } => any(pts).then(|| Shape::Leader {
+            pts: pts.iter().map(|&p| mv(p)).collect(),
+            text: text.clone(),
+            height: *height,
+            rotation: *rotation,
+            arrow: arrow.clone(),
+            mask: *mask,
+        })?,
         Shape::Polygon {
             pts,
             bulges,

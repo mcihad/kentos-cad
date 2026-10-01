@@ -149,6 +149,7 @@ export const OBJECT_FIELDS: Record<string, ReadonlySet<string>> = Object.fromEnt
     dimension: ['a', 'b', 'offset', 'height', 'text', 'style', 'angle', 'c'],
     hatch: ['ring', 'holes', 'pattern'],
     insert: ['block', 'p', 'scale', 'rotation', 'mirror'],
+    leader: ['pts', 'text', 'height', 'rotation', 'arrow', 'mask'],
   }).map(([k, f]) => [k, new Set([...COMMON, ...f])]),
 );
 

@@ -9,7 +9,7 @@
  * This only packs and reads: no coordinate is computed here.
  */
 
-const KIND: Record<string, number> = { point: 0, line: 1, polyline: 2, polygon: 3, circle: 4, arc: 5, ellipse: 6, xline: 7, ray: 8, spline: 9, text: 10, dimension: 11, hatch: 12, insert: 14 };
+const KIND: Record<string, number> = { point: 0, line: 1, polyline: 2, polygon: 3, circle: 4, arc: 5, ellipse: 6, xline: 7, ray: 8, spline: 9, text: 10, dimension: 11, hatch: 12, insert: 14, leader: 15 };
 /** A text's alignments, numbered as the store numbers them (`TextAlign::ALL`, docs/adr/0145). */
 const TEXT_ALIGNS = ['baselineCenter', 'baselineRight', 'bottomLeft', 'bottomCenter', 'bottomRight', 'middleLeft', 'middleCenter', 'middleRight', 'topLeft', 'topCenter', 'topRight'] as const;
 /** Kinds by their number (`KIND` the other way). */
@@ -24,6 +24,8 @@ const MULTI_PART = 13;
  * (a count, −1 for none, of tag and value strings: what its block's attribute texts show, §7).
  */
 const INSERT = 14;
+/** A leader (docs/adr/0146): its vertices, height and turn, its note and arrowhead's name (−1 none), its mask flag. */
+const LEADER = 15;
 
 interface XY {
   x: number;
@@ -191,6 +193,12 @@ export function packEntities(list: Iterable<object>): Packed {
         }
         break;
       }
+      case LEADER:
+        points(e.pts);
+        num(e.height);
+        num(e.rotation);
+        out.push(str(e.text), str(e.arrow), e.mask === true ? 1 : 0);
+        break;
     }
   }
   return { nums: Float64Array.from(out), strings: JSON.stringify(strings) };
@@ -270,7 +278,7 @@ export function unpackEntities(p: Packed): Unpacked[] {
     const layerId = str() ?? '';
     const labelled = flag();
     const code = num();
-    const kind = code === MULTI_PART ? 'polygon' : code === INSERT ? 'insert' : KINDS[code];
+    const kind = code === MULTI_PART ? 'polygon' : code === INSERT ? 'insert' : code === LEADER ? 'leader' : KINDS[code];
     let g: Geometry;
     switch (kind) {
       case 'point': {
@@ -378,6 +386,21 @@ export function unpackEntities(p: Packed): Unpacked[] {
         if (mirror) g.mirror = true;
         // Its attributes are the object's data, not its geometry: read past.
         for (let n = num(); n > 0; n--) at += 2;
+        break;
+      }
+      case 'leader': {
+        const pts = points();
+        const height = num();
+        const rotation = num();
+        const text = str();
+        const arrow = str();
+        const mask = flag();
+        g = { kind, pts };
+        if (text !== undefined) g.text = text;
+        g.height = height;
+        g.rotation = rotation;
+        if (arrow !== undefined) g.arrow = arrow;
+        if (mask) g.mask = true;
         break;
       }
       default:

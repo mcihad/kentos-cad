@@ -73,6 +73,7 @@ pub fn defining_bounds(e: &Entity) -> Option<Bounds> {
         Entity::Hatch(e) => e.ring.iter().for_each(&mut add),
         // Its insertion point: the extent of its definition is the store's (docs/adr/0144).
         Entity::Insert(e) => add(&e.p),
+        Entity::Leader(e) => e.pts.iter().for_each(&mut add),
     }
     b
 }

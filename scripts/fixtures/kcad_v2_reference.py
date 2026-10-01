@@ -42,6 +42,8 @@ MAGIC = b"\x89KCAD\r\n\x1a\n"
 
 # A text's alignments (spec §6.6, docs/adr/0145); the left of the baseline is the field's absence.
 TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", "bottomRight", "middleLeft", "middleCenter", "middleRight", "topLeft", "topCenter", "topRight")
+# A leader's arrowheads (spec §6.6, docs/adr/0146); the filled arrow is the field's absence.
+LEADER_ARROWS = ("open", "dot", "none")
 
 
 def head(major, arg):
@@ -314,6 +316,15 @@ KINDS = {
     },
     # Schema 6 (docs/adr/0144): the definition's id; `mirror` only when true.
     "insert": {"block": (lambda u: blob(uid_bytes(u)), True), "p": (point, True), "scale": (f64, True), "rotation": (f64, True), "mirror": (lambda b: boolean(b) if b is True else None, False)},
+    # Schema 8 (docs/adr/0146): two vertices or more, a note only when there is one, an arrowhead by name, `mask` only when true.
+    "leader": {
+        "pts": (points, True),
+        "text": (text, False),
+        "height": (f64, True),
+        "rotation": (f64, True),
+        "arrow": (enum(LEADER_ARROWS), False),
+        "mask": (lambda b: boolean(b) if b is True else None, False),
+    },
 }
 
 
@@ -390,10 +401,13 @@ def document(d):
 
 
 def schema_of(entities, blocks=None):
-    """The oldest schema that holds the drawing: 7 with a text's or an attribute definition's alignment, width
-    factor or mask (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts
-    (docs/adr/0143), 4 with a vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139),
-    else 2: a drawing without any stays as it was, byte for byte."""
+    """The oldest schema that holds the drawing: 8 with a leader, in the drawing or a block definition
+    (docs/adr/0146), 7 with a text's or an attribute definition's alignment, width factor or mask
+    (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
+    vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
+    any stays as it was, byte for byte."""
+    if any(e["kind"] == "leader" for e in entities) or any(e["kind"] == "leader" for b in blocks or [] for e in b["entities"]):
+        return 8
     extras = ("align", "widthFactor", "mask")
 
     def texts(es):
@@ -585,7 +599,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-8.kcad"] = container(root(cmap(parts), version=b"\x08"))
+    files["schema-version-9.kcad"] = container(root(cmap(parts), version=b"\x09"))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -684,6 +698,19 @@ def broken(minimal_content, minimal_file):
     files["text-width-factor-nan.kcad"] = in_schema(7, text_of(widthFactor=b"\xfb\x7f\xf8\x00\x00\x00\x00\x00\x00"))
     files["text-mask-false.kcad"] = in_schema(7, text_of(mask=boolean(False)))
     files["attribute-width-factor-negative.kcad"] = with_blocks([block(1, "Rögar", attributes=array([cmap({"p": point({"x": 0.0, "y": 0.0}), "tag": text("NO"), "height": f64(0.5), "rotation": f64(0.0), "widthFactor": f64(-1.0)})]))], version=7)
+    # A leader is schema 8's (docs/adr/0146): in schema 7 an unknown kind; two vertices or more, a positive height,
+    # a note that is not empty, an arrowhead by one of its names (the filled arrow has none), `mask` only when true.
+    def leader_of(**extra):
+        tip = point(one["p"])
+        end = point({"x": one["p"]["x"] + 8.0, "y": one["p"]["y"] + 6.0})
+        return cmap({"leader": cmap({**common, "pts": array([tip, end]), "text": text("Mevcut bina"), "height": f64(2.5), "rotation": f64(0.0), **extra})})
+
+    files["leader-in-schema-7.kcad"] = in_schema(7, leader_of())
+    files["leader-one-vertex.kcad"] = in_schema(8, leader_of(pts=array([point(one["p"])])))
+    files["leader-zero-height.kcad"] = in_schema(8, leader_of(height=f64(0.0)))
+    files["leader-empty-note.kcad"] = in_schema(8, leader_of(text=text("")))
+    files["leader-filled-arrow.kcad"] = in_schema(8, leader_of(arrow=text("filled")))
+    files["leader-mask-false.kcad"] = in_schema(8, leader_of(mask=boolean(False)))
     files["unknown-kind.kcad"] = container(with_parts({**parts, "entities": array([cmap({"block": cmap({**body, "uid": blob(uid_bytes(m["uids"][0]))})})])}))
     files["two-kinds.kcad"] = container(with_parts({**parts, "entities": array([cmap({"line": cmap({}), "point": cmap({**body, "uid": blob(uid_bytes(m["uids"][0]))})})])}))
     files["point-three-numbers.kcad"] = container(with_parts({**parts, "origin": array([f64(1.0), f64(2.0), f64(3.0)])}))
@@ -739,6 +766,7 @@ def build():
     out["parts.kcad"] = container(document(load("parts.json")))
     out["blocks.kcad"] = container(document(load("blocks.json")))
     out["texts.kcad"] = container(document(load("texts.json")))
+    out["leaders.kcad"] = container(document(load("leaders.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

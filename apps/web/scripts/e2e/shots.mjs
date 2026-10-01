@@ -2054,6 +2054,32 @@ const openTextExtras = async (ui) => {
   })()`);
   await ui.sleep(600);
 };
+// Leaders (docs/adr/0146) on fixtures/interaction/v1/leaders.kcad, the scene the desktop's `labels::leader_screens`
+// draws: the four arrowheads, one without a note, one masked, one turned and one in a block; the second selected so
+// that Öznitelikler shows it.
+const LEADERS = readFileSync(new URL('../../../../fixtures/interaction/v1/leaders.kcad', import.meta.url), 'utf8');
+SCENES.leaders = [
+  {
+    id: 'leaders',
+    open: async (ui) => {
+      await ui.eval(`(async () => {
+        const k = window.kentos;
+        k.files.ask = async () => 'drop';
+        if (!(await k.files.load(${JSON.stringify(LEADERS)}, null))) throw new Error('leaders.kcad did not load');
+        k.view.zoomExtents();
+        // Clear of the toolbox, the block on the right still in view.
+        const c = k.view.camera;
+        c.scale = c.scale * 0.8;
+        c.center = { x: c.center.x - 110 / c.scale, y: c.center.y };
+        c.panBy(0, 0);
+        k.selection.set([2]);
+      })()`);
+      await ui.move(2, 2);
+      await ui.sleep(600);
+    },
+  },
+];
+
 /** Closer in: the view centred on `x`, `y` at `times` the whole scene's scale. */
 const closeIn = (x, y, times) => `(() => { const c = window.kentos.view.camera; c.center = { x: ${x}, y: ${y} }; c.scale = c.scale * ${times}; c.panBy(0, 0); window.kentos.view.requestRender(); })()`;
 SCENES.texts = [

@@ -1009,6 +1009,14 @@ fn shape(entity: &Entity) -> Shape {
             }),
         },
         Entity::Circle(c) => Shape::Circle { c: v(&c.c), r: c.r },
+        Entity::Leader(l) => Shape::Leader {
+            pts: points(&l.pts),
+            text: l.text.clone(),
+            height: l.height,
+            rotation: l.rotation,
+            arrow: l.arrow.map(|a| a.name().to_owned()),
+            mask: l.mask.then_some(true),
+        },
         Entity::Arc(a) => Shape::Arc {
             c: v(&a.c),
             r: a.r,

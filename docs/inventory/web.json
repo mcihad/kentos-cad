@@ -61,8 +61,8 @@
       "pending": 0
     },
     "fileFields": {
-      "total": 245,
-      "implemented": 245,
+      "total": 259,
+      "implemented": 259,
       "partial": 0,
       "pending": 0
     },
@@ -133,8 +133,8 @@
         "n/a": 2
       },
       "fileFields": {
-        "total": 245,
-        "implemented": 245,
+        "total": 259,
+        "implemented": 259,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -12114,6 +12114,10 @@
         {
           "kind": "insert",
           "type": "InsertEntity"
+        },
+        {
+          "kind": "leader",
+          "type": "LeaderEntity"
         }
       ],
       "status": "implemented",
@@ -12849,6 +12853,190 @@
       "rust": "crates/shared/contracts/src/layer.rs",
       "field": "renderer",
       "type": "unknown",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LeaderArrow",
+      "contract": "LeaderArrow",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "values": [
+        "open",
+        "dot",
+        "none"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LeaderEntity.arrow",
+      "contract": "LeaderEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "arrow",
+      "type": "LeaderArrow",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LeaderEntity.attrs",
+      "contract": "LeaderEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "attrs",
+      "type": "{ [key in string]: string }",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LeaderEntity.color",
+      "contract": "LeaderEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "color",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LeaderEntity.height",
+      "contract": "LeaderEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "height",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LeaderEntity.id",
+      "contract": "LeaderEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "id",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LeaderEntity.label",
+      "contract": "LeaderEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "label",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LeaderEntity.layerId",
+      "contract": "LeaderEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "layerId",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LeaderEntity.lineWeight",
+      "contract": "LeaderEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "lineWeight",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LeaderEntity.mask",
+      "contract": "LeaderEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "mask",
+      "type": "boolean",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LeaderEntity.pts",
+      "contract": "LeaderEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "pts",
+      "type": "Array<Vec2>",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LeaderEntity.rotation",
+      "contract": "LeaderEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "rotation",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LeaderEntity.symbol",
+      "contract": "LeaderEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "symbol",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LeaderEntity.text",
+      "contract": "LeaderEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "text",
+      "type": "string",
       "optional": true,
       "status": "implemented",
       "platforms": {

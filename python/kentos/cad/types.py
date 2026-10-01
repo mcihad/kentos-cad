@@ -320,6 +320,23 @@ LayerNodeTypeName = Literal["group", "layer"]
 """The names of :class:`LayerNodeType`, for a plain string."""
 
 
+class LeaderArrow(_StrEnum):
+    """A leader's arrowhead other than the filled arrow, which is no value but
+    the field's absence: a leader has one spelling (docs/adr/0146 §1).
+
+    - ``open``: The filled arrow's two sides.
+    - ``dot``: A filled dot.
+    - ``none``: No arrowhead: the line ends at the tip.
+    """
+    OPEN = "open"
+    DOT = "dot"
+    NONE = "none"
+
+
+LeaderArrowName = Literal["open", "dot", "none"]
+"""The names of :class:`LeaderArrow`, for a plain string."""
+
+
 class LineType(_StrEnum):
     CONTINUOUS = "continuous"
     DASHED = "dashed"
@@ -595,6 +612,7 @@ class Entity(_Union):
     - :class:`DimensionEntity` (``kind: dimension``)
     - :class:`HatchEntity` (``kind: hatch``)
     - :class:`InsertEntity` (``kind: insert``)
+    - :class:`LeaderEntity` (``kind: leader``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -3183,6 +3201,88 @@ class LayerStyle(_Model):
             pick_interior=data.get("pickInterior", UNSET),
             point=UNSET if "point" not in data else None if data["point"] is None else PointStyle.from_json(data["point"]),
             renderer=data.get("renderer", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LeaderEntity(Entity):
+    """A leader (docs/adr/0146): an arrowhead at its first vertex, a line
+    through its vertices and, with a note, a landing from its last vertex
+    along the note's direction and the note past the landing's end; one
+    object. The arrowhead and the landing are measured by the note's height.
+    Attributes:
+        attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        pts: At least two: the arrow's tip first, where the landing starts last.
+        height: The note's height, metres, finite and over 0; the arrowhead and the
+            landing are measured by it.
+        rotation: The note's and the landing's direction, degrees counter-clockwise from east.
+        arrow: The arrowhead; absent: a filled arrow.
+        color: Colour override; absent = the layer's colour ("katmana göre").
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139).
+        mask: The note's box is filled with the drawing area's colour before the
+            note is drawn, as a text's mask (docs/adr/0145).
+        symbol: Library symbol overriding the layer's style.
+        text: The note, one line; absent: the arrow alone, no landing and no note.
+            Never empty: no note is the field's absence.
+    """
+    TAG_VALUE: ClassVar[str] = "leader"
+    id: int
+    layer_id: str
+    attrs: dict[str, str]
+    pts: list[Vec2]
+    height: float
+    rotation: float
+    arrow: LeaderArrow | LeaderArrowName | None | Unset = UNSET
+    color: str | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    mask: bool | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+    text: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "leader"}
+        out["id"] = self.id
+        out["layerId"] = self.layer_id
+        out["attrs"] = dict(self.attrs)
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        out["height"] = float(self.height)
+        out["rotation"] = float(self.rotation)
+        if self.arrow is not UNSET:
+            out["arrow"] = None if self.arrow is None else _enum_out(self.arrow)
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.mask is not UNSET:
+            out["mask"] = self.mask
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        if self.text is not UNSET:
+            out["text"] = self.text
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LeaderEntity:
+        return cls(
+            id=data["id"],
+            layer_id=data["layerId"],
+            attrs=dict(data["attrs"]),
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            height=float(data["height"]),
+            rotation=float(data["rotation"]),
+            arrow=UNSET if "arrow" not in data else None if data["arrow"] is None else _enum_in(LeaderArrow, data["arrow"]),
+            color=data.get("color", UNSET),
+            label=data.get("label", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            mask=data.get("mask", UNSET),
+            symbol=data.get("symbol", UNSET),
+            text=data.get("text", UNSET),
         )
 
 
@@ -5962,7 +6062,7 @@ _ARRAY_LAYOUT: dict[str, type[ArrayLayout]] = {"grid": GridArrayLayout, "polar":
 _BLOCK_CHANGE: dict[str, type[BlockChange]] = {"create": CreateBlockChange, "update": UpdateBlockChange, "delete": DeleteBlockChange}
 
 
-_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity}
+_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity}
 
 
 _ENTITY_EDIT: dict[str, type[EntityEdit]] = {"update": UpdateEntityEdit, "replace": ReplaceEntityEdit, "add": AddEntityEdit, "remove": RemoveEntityEdit}
@@ -6084,6 +6184,9 @@ __all__ = [
     "LayerNodeType",
     "LayerNodeTypeName",
     "LayerStyle",
+    "LeaderArrow",
+    "LeaderArrowName",
+    "LeaderEntity",
     "LineCreate",
     "LineCreated",
     "LineEntity",

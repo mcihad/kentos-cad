@@ -23,6 +23,7 @@
 //! | 12 hatch | points, hatch holes, pattern type, angle, spacing |
 //! | 13 multi-part polygon | path, holes, part count, then per part: path, holes |
 //! | 14 insert | p.x, p.y, scale, rotation, mirror, block, attributes |
+//! | 15 leader | points, height, rotation, text?, arrow?, mask |
 //!
 //! `layer`, `text` and `style` are indices into the strings (−1: none);
 //! `label` is 1 for a non-empty label. `points` is a count n and 2n
@@ -30,7 +31,8 @@
 //! the values); `holes` is a count (−1 for none) of paths; `hatch holes` a
 //! count (−1 for none) of point lists; an insert's `attributes` a count
 //! (−1 for none) of tag and value pairs of strings, its text values (docs/adr/0144
-//! §7: what its block's attribute texts show). A field left out (`z`, `angle`, `c`)
+//! §7: what its block's attribute texts show); a leader's `arrow` (docs/adr/0146)
+//! its name, −1 for the filled arrow. A field left out (`z`, `angle`, `c`)
 //! still takes its numbers, NaN. A multi-part area (docs/adr/0143) is kind
 //! 13, its first part as a polygon's fields and its other parts after them;
 //! a one-part area stays kind 3, laid out as it always was.
@@ -148,7 +150,7 @@ impl Reader<'_> {
     }
 
     fn shape(&mut self, kind: f64) -> Result<Shape, String> {
-        if !(kind >= 0.0 && kind <= 14.0 && kind.fract() == 0.0) {
+        if !(kind >= 0.0 && kind <= 15.0 && kind.fract() == 0.0) {
             return Err(format!(
                 "paketin {}. sayısı bilinmeyen bir nesne türü ({kind})",
                 self.at
@@ -318,6 +320,14 @@ impl Reader<'_> {
                     },
                 }
             }
+            15 => Shape::Leader {
+                pts: self.points()?,
+                height: self.num()?,
+                rotation: self.num()?,
+                text: self.string()?,
+                arrow: self.string()?,
+                mask: self.flag()?.then_some(true),
+            },
             _ => {
                 return Err(format!(
                     "paketin {}. sayısı bilinmeyen bir nesne türü ({kind})",
@@ -552,6 +562,21 @@ impl Packer {
                         }
                     }
                 }
+            }
+            // docs/adr/0146: the vertices, height and turn, the note and the arrowhead's name, the mask.
+            Shape::Leader {
+                pts,
+                text,
+                height,
+                rotation,
+                arrow,
+                mask,
+            } => {
+                self.put(&[15.0]);
+                self.points(pts);
+                let t = self.maybe_string(text.as_deref());
+                let a = self.maybe_string(arrow.as_deref());
+                self.put(&[*height, *rotation, t, a, flag(*mask == Some(true))]);
             }
         }
     }
@@ -801,6 +826,8 @@ mod tests {
         r#"{"kind":"dimension","a":{"x":10,"y":0},"b":{"x":0,"y":10},"offset":5,"height":1,"text":"","style":"angular","c":{"x":0,"y":0}}"#,
         r#"{"kind":"hatch","ring":[{"x":0,"y":0},{"x":4,"y":0},{"x":4,"y":4}],"holes":[[{"x":1,"y":1},{"x":2,"y":1},{"x":2,"y":2}],[]],"pattern":{"type":"cross","angle":30,"spacing":0.5}}"#,
         r#"{"kind":"hatch","ring":[{"x":486520,"y":4420200},{"x":486530,"y":4420200},{"x":486525,"y":4420210}],"pattern":{"type":"solid","angle":0,"spacing":1}}"#,
+        r#"{"kind":"leader","pts":[{"x":486520,"y":4420200},{"x":486528,"y":4420206}],"text":"Ø150 PVC","height":2,"rotation":30,"arrow":"open","mask":true}"#,
+        r#"{"kind":"leader","pts":[{"x":-0,"y":0},{"x":4,"y":3},{"x":9,"y":3}],"height":0.5,"rotation":0}"#,
     ];
 
     #[test]

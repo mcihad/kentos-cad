@@ -45,7 +45,9 @@ use crate::layer::LineType;
 /// 16: a text's alignment, width factor and mask (docs/adr/0145): `.kcad` document schema 7,
 ///    the text's optional fields in the typed columns (align an int, width factor a float, mask
 ///    a flag) and an attribute definition's alignment and width factor in the drawing's JSON.
-pub const FORMATS_VERSION: u32 = 16;
+/// 17: the leader (docs/adr/0146): `.kcad` document schema 8, a new kind in the typed columns
+///    (its vertices, height and turn; the note a text, the arrowhead an int, the mask a flag).
+pub const FORMATS_VERSION: u32 = 17;
 
 // ── Every import ────────────────────────────────────────────────────────
 

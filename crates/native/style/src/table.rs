@@ -36,6 +36,7 @@ pub fn kind_label(e: &Entity) -> &'static str {
         Entity::Dimension(_) => "Ölçü",
         Entity::Hatch(_) => "Tarama",
         Entity::Insert(_) => "Blok",
+        Entity::Leader(_) => "Kılavuz",
     }
 }
 
@@ -58,6 +59,7 @@ pub fn vertex_count(e: &Entity) -> Option<f64> {
         Entity::Line(_) => 2,
         Entity::Spline(s) => s.pts.len(),
         Entity::Point(_) => 1,
+        Entity::Leader(l) => l.pts.len(),
         _ => return None,
     };
     Some(n as f64)

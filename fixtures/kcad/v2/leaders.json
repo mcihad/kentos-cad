@@ -1,0 +1,207 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Kılavuz",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "kilavuz",
+      "name": "Kılavuz",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#3A7BD5",
+        "lineType": "continuous",
+        "lineWeight": 0.18
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "kilavuz",
+  "entities": [
+    {
+      "kind": "leader",
+      "id": 1,
+      "layerId": "kilavuz",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 500000.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500008.0,
+          "y": 4400006.0
+        }
+      ],
+      "text": "Mevcut bina",
+      "height": 2.5,
+      "rotation": 0.0
+    },
+    {
+      "kind": "leader",
+      "id": 2,
+      "layerId": "kilavuz",
+      "attrs": {
+        "Not": "kanal"
+      },
+      "pts": [
+        {
+          "x": 500030.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500026.0,
+          "y": 4400004.0
+        },
+        {
+          "x": 500020.0,
+          "y": 4400006.0
+        }
+      ],
+      "text": "Ø150 PVC",
+      "height": 2.0,
+      "rotation": 0.0,
+      "arrow": "open",
+      "mask": true
+    },
+    {
+      "kind": "leader",
+      "id": 3,
+      "layerId": "kilavuz",
+      "attrs": {},
+      "color": "#E5484D",
+      "lineWeight": 0.35,
+      "pts": [
+        {
+          "x": 500040.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500046.0,
+          "y": 4400008.0
+        }
+      ],
+      "text": "Ada 101 Parsel 5",
+      "height": 1.5,
+      "rotation": 30.0,
+      "arrow": "dot"
+    },
+    {
+      "kind": "leader",
+      "id": 4,
+      "layerId": "kilavuz",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 500000.0,
+          "y": 4399990.0
+        },
+        {
+          "x": 500005.0,
+          "y": 4399994.0
+        },
+        {
+          "x": 500009.0,
+          "y": 4399994.0
+        }
+      ],
+      "height": 2.5,
+      "rotation": 0.0,
+      "arrow": "none"
+    },
+    {
+      "kind": "insert",
+      "id": 5,
+      "layerId": "kilavuz",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0146",
+      "p": {
+        "x": 500060.0,
+        "y": 4400000.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+    }
+  ],
+  "uids": [
+    "0192f5a1-2222-7000-8000-000000000101",
+    "0192f5a1-2222-7000-8000-000000000102",
+    "0192f5a1-2222-7000-8000-000000000103",
+    "0192f5a1-2222-7000-8000-000000000104",
+    "0192f5a1-2222-7000-8000-000000000105"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "blocks": [
+    {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0146",
+      "name": "Vana",
+      "base": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "entities": [
+        {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "c": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "r": 0.5
+        },
+        {
+          "kind": "leader",
+          "id": 2,
+          "layerId": "0",
+          "attrs": {},
+          "pts": [
+            {
+              "x": 0.4,
+              "y": 0.4
+            },
+            {
+              "x": 2.0,
+              "y": 2.0
+            }
+          ],
+          "text": "V",
+          "height": 0.5,
+          "rotation": 0.0
+        }
+      ]
+    }
+  ]
+}

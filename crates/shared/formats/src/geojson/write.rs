@@ -296,6 +296,15 @@ fn geometry(e: &Entity, blocks: &Placing, rep: &mut Report) -> Option<Geometry> 
             rep.skip("Ölçü", "GeoJSON'da ölçü nesnesi yok; yazılmadı", 0);
             return None;
         }
+        // Its line, as the server projects it (docs/adr/0146 §8).
+        Entity::Leader(l) => {
+            rep.note(
+                "Kılavuz",
+                "kırık çizgisi çizgi (LineString) olarak yazıldı; ok başı ve not GeoJSON'da gösterilemez",
+                0,
+            );
+            Some(Geometry::Line(Ring::flat(l.pts.clone())))
+        }
         Entity::Insert(i) => {
             let pieces = blocks.placed(i);
             if pieces.is_empty() {

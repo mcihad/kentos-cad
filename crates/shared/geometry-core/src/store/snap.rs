@@ -267,7 +267,8 @@ impl Store {
                     | Shape::Polyline { .. }
                     | Shape::Polygon { .. }
                     | Shape::Xline { .. }
-                    | Shape::Ray { .. } => {
+                    | Shape::Ray { .. }
+                    | Shape::Leader { .. } => {
                         // A multi-part area part by part, each as one area (docs/adr/0143).
                         for s in area_parts(e).iter() {
                             let pts = entity_vertices(s);

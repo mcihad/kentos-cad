@@ -65,12 +65,16 @@ SCHEMA_WITH_BLOCKS = 6
 # Schema 7: schema 6 and a text's `align`, `widthFactor` and `mask`, an attribute definition's `align` and
 # `widthFactor` (docs/adr/0145).
 SCHEMA_WITH_TEXT_EXTRAS = 7
+# Schema 8: schema 7 and the `leader` kind (docs/adr/0146).
+SCHEMA_WITH_LEADERS = 8
+# A leader's arrowheads (spec §6.6); the filled arrow is the field's absence, no value.
+LEADER_ARROWS = ("open", "dot", "none")
 # A text's alignments (spec §6.6); the left of the baseline is the field's absence, no value.
 TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", "bottomRight", "middleLeft", "middleCenter", "middleRight", "topLeft", "topCenter", "topRight")
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -462,6 +466,7 @@ class _Schema:
         self.parts = version >= SCHEMA_WITH_PARTS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
         self.texts = version >= SCHEMA_WITH_TEXT_EXTRAS
+        self.leaders = version >= SCHEMA_WITH_LEADERS
         checked = self.fields({"format": (self.text, True), "version": (self.uint(32), True), "document": (self.document, True)})(v)
         return checked["document"]
 
@@ -581,7 +586,7 @@ class _Schema:
         if len(v) != 1:
             self.fail("bad_value", f"nesne haritasında tek anahtar (tür) olmalı, {len(v)} var")
         ((kind, body),) = v.items()
-        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks):
+        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders):
             self.path.append(kind)
             self.fail("unknown_kind", f"“{kind}” nesne türü bilinmiyor")
         table = dict(self.common())
@@ -662,6 +667,24 @@ class _Schema:
         if self.bool(v) is not True:
             self.fail("bad_value", "zemin false yazılmaz; zeminsiz yazıda alan yoktur")
         return True
+
+    def leader_points(self, v):
+        pts = self.array(self.point)(v)
+        if len(pts) < 2:
+            self.fail("bad_value", f"kılavuzun {len(pts)} köşesi var; en az iki olmalı")
+        return pts
+
+    def leader_height(self, v):
+        x = self.float(v)
+        if not x > 0.0:
+            self.fail("bad_value", f"kılavuzun yüksekliği {x}; 0'dan büyük olmalı")
+        return x
+
+    def note(self, v):
+        t = self.text(v)
+        if t == "":
+            self.fail("bad_value", "kılavuzun notu boş; notsuz kılavuzun not alanı yazılmaz")
+        return t
 
     def scale(self, v):
         x = self.float(v)
@@ -829,6 +852,15 @@ ENTITY_KINDS = {
     },
     # Schema 6 (docs/adr/0144): `mirror` only when true.
     "insert": lambda s: {"block": (s.id16, True), "p": (s.point, True), "scale": (s.scale, True), "rotation": (s.float, True), "mirror": (s.mirror, False)},
+    # Schema 8 (docs/adr/0146): two vertices or more, a positive height, a note that is not empty, `mask` only when true.
+    "leader": lambda s: {
+        "pts": (s.leader_points, True),
+        "text": (s.note, False),
+        "height": (s.leader_height, True),
+        "rotation": (s.float, True),
+        "arrow": (s.enum(LEADER_ARROWS), False),
+        "mask": (s.mask, False),
+    },
 }
 
 

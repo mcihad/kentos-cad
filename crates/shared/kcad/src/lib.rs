@@ -100,14 +100,22 @@ pub const SCHEMA_WITH_BLOCKS: u32 = 6;
 /// of those refuses a drawing that has them rather than move its texts.
 pub const SCHEMA_WITH_TEXT_EXTRAS: u32 = 7;
 
+/// Document schema 8 (docs/specs/kcad-v2.md §6.1): schema 7 and the `leader`
+/// kind (docs/adr/0146). A writer writes it only when the drawing or a block
+/// definition has a leader: any other drawing stays 7 or older, byte for
+/// byte, and a reader of those still opens it; one of those refuses a drawing
+/// that has one rather than drop it.
+pub const SCHEMA_WITH_LEADERS: u32 = 8;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 6] = [
+pub const SCHEMAS: [u32; 7] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
     SCHEMA_WITH_PARTS,
     SCHEMA_WITH_BLOCKS,
     SCHEMA_WITH_TEXT_EXTRAS,
+    SCHEMA_WITH_LEADERS,
 ];
 
 /// The file a drawing is saved as.

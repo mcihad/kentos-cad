@@ -146,6 +146,11 @@ fn drawn_record(s: &Shape, oriented: bool, clip: Option<&Bounds>, refs: bool, ou
                 path(out, false, &[*a, *b]);
             }
         }
+        // Its line through its vertices (docs/adr/0146); the arrowhead, landing and note come with the layout.
+        Shape::Leader { pts, .. } => {
+            out.extend([LINE, 1.0]);
+            path(out, false, pts);
+        }
         Shape::Polyline { pts, bulges, .. } => {
             out.extend([LINE, 1.0]);
             // As the TypeScript tested it: any bulge list (even all zero) is tessellated.

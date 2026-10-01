@@ -27,8 +27,8 @@ use crate::cbor::{MAX_DEPTH, MAX_ITEMS, MAX_STRING, Seg, Writer, key_order, rend
 use crate::error::{Code, KcadError};
 use crate::watch::{Step, Watch, report};
 use crate::{
-    SCHEMA_WITH_BLOCKS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_PARTS,
-    SCHEMA_WITH_TEXT_EXTRAS,
+    SCHEMA_WITH_BLOCKS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_WEIGHTS,
+    SCHEMA_WITH_PARTS, SCHEMA_WITH_TEXT_EXTRAS,
 };
 use names::{
     angle_unit, area_unit, drawing_font, label_ink, label_placement, line_type, point_symbol,
@@ -501,13 +501,18 @@ impl<'d> Encoder<'d> {
     }
 }
 
-/// The oldest schema that holds the drawing: 7 when a text or an attribute
-/// definition has an alignment, a width factor or a mask, 6 when it has
-/// block definitions, 5 when an area has parts, 4 when an object has a vertex
-/// elevation, 3 when one has its own line weight, else 2. A drawing without
-/// any stays as it always was, byte for byte. (An insert needs a definition:
-/// one without is refused before the schema is written.)
+/// The oldest schema that holds the drawing: 8 when it or a block
+/// definition has a leader, 7 when a text or an attribute definition has an
+/// alignment, a width factor or a mask, 6 when it has block definitions, 5
+/// when an area has parts, 4 when an object has a vertex elevation, 3 when
+/// one has its own line weight, else 2. A drawing without any stays as it
+/// always was, byte for byte. (An insert needs a definition: one without is
+/// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
+    let leaders = |list: &[Entity]| list.iter().any(|e| matches!(e, Entity::Leader(_)));
+    if leaders(&doc.entities) || doc.blocks.iter().any(|b| leaders(&b.entities)) {
+        return SCHEMA_WITH_LEADERS;
+    }
     let extras = |list: &[Entity]| {
         list.iter().any(|e| {
             matches!(e, Entity::Text(t) if t.align.is_some() || t.width_factor.is_some() || t.mask)

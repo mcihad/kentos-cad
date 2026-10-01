@@ -20,6 +20,8 @@ pub fn entity_edges(e: &Shape) -> Vec<Edge> {
     match e {
         Shape::Line { a, b } => vec![Edge::Seg { a: *a, b: *b }],
         Shape::Polyline { pts, bulges, .. } => bulge_path_edges(pts, bulges.as_deref(), false),
+        // Its line (docs/adr/0146): the vertices from the arrow's tip.
+        Shape::Leader { pts, .. } => path_edges(pts, false),
         // Part after part, each its ring's then its holes' (docs/adr/0143).
         Shape::Polygon { .. } if is_multi_part(e) => {
             area_parts(e).iter().flat_map(entity_edges).collect()

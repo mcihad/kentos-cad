@@ -100,6 +100,7 @@ export const expressionError = (r: Extract<CompileResult, { ok: false }>) => (r.
 export function vertexCount(e: Entity): number | null {
   switch (e.kind) {
     case 'polyline':
+    case 'leader':
       return e.pts.length;
     case 'polygon': {
       let n = e.pts.length;

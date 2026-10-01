@@ -188,6 +188,7 @@ fn base_mut(e: &mut Entity) -> &mut EntityBase {
         Entity::Dimension(x) => &mut x.base,
         Entity::Hatch(x) => &mut x.base,
         Entity::Insert(x) => &mut x.base,
+        Entity::Leader(x) => &mut x.base,
     }
 }
 

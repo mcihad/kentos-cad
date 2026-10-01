@@ -523,6 +523,78 @@ pub struct HatchEntity {
     pub pattern: HatchPattern,
 }
 
+/// A leader (docs/adr/0146): an arrowhead at its first vertex, a line
+/// through its vertices and, with a note, a landing from its last vertex
+/// along the note's direction and the note past the landing's end; one
+/// object. The arrowhead and the landing are measured by the note's height.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LeaderEntity {
+    #[serde(flatten)]
+    #[cfg_attr(feature = "ts", ts(flatten))]
+    pub base: EntityBase,
+    /// At least two: the arrow's tip first, where the landing starts last.
+    pub pts: Vec<Vec2>,
+    /// The note, one line; absent: the arrow alone, no landing and no note.
+    /// Never empty: no note is the field's absence.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub text: Option<String>,
+    /// The note's height, metres, finite and over 0; the arrowhead and the
+    /// landing are measured by it.
+    pub height: f64,
+    /// The note's and the landing's direction, degrees counter-clockwise from east.
+    pub rotation: f64,
+    /// The arrowhead; absent: a filled arrow.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub arrow: Option<LeaderArrow>,
+    /// The note's box is filled with the drawing area's colour before the
+    /// note is drawn, as a text's mask (docs/adr/0145).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub mask: bool,
+}
+
+/// A leader's arrowhead other than the filled arrow, which is no value but
+/// the field's absence: a leader has one spelling (docs/adr/0146 §1).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum LeaderArrow {
+    /// The filled arrow's two sides.
+    Open,
+    /// A filled dot.
+    Dot,
+    /// No arrowhead: the line ends at the tip.
+    None,
+}
+
+impl LeaderArrow {
+    /// Every arrowhead, in the order of the enum.
+    pub const ALL: [LeaderArrow; 3] = [LeaderArrow::Open, LeaderArrow::Dot, LeaderArrow::None];
+
+    /// The name files and the wire use.
+    pub fn name(self) -> &'static str {
+        match self {
+            LeaderArrow::Open => "open",
+            LeaderArrow::Dot => "dot",
+            LeaderArrow::None => "none",
+        }
+    }
+
+    /// The arrowhead a name names; none for a name it does not know (the
+    /// filled arrow has no name).
+    pub fn from_name(name: &str) -> Option<LeaderArrow> {
+        Self::ALL.into_iter().find(|a| a.name() == name)
+    }
+}
+
 /// Any drawing object, tagged by `kind` as in the TypeScript model.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -545,6 +617,8 @@ pub enum Entity {
     Hatch(HatchEntity),
     /// A block placed in the drawing (docs/adr/0144).
     Insert(InsertEntity),
+    /// An arrow with a note (docs/adr/0146).
+    Leader(LeaderEntity),
 }
 
 impl Entity {
@@ -577,6 +651,7 @@ impl Entity {
             Entity::Dimension(e) => &e.base,
             Entity::Hatch(e) => &e.base,
             Entity::Insert(e) => &e.base,
+            Entity::Leader(e) => &e.base,
         }
     }
 
@@ -596,6 +671,7 @@ impl Entity {
             Entity::Dimension(e) => &mut e.base,
             Entity::Hatch(e) => &mut e.base,
             Entity::Insert(e) => &mut e.base,
+            Entity::Leader(e) => &mut e.base,
         }
     }
 
@@ -616,6 +692,7 @@ impl Entity {
             Entity::Dimension(_) => "dimension",
             Entity::Hatch(_) => "hatch",
             Entity::Insert(_) => "insert",
+            Entity::Leader(_) => "leader",
         }
     }
 }

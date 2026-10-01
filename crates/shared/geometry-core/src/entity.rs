@@ -180,6 +180,21 @@ pub enum Shape {
         /// fields, where they were, and are read into it as well.
         attrs: Option<Attrs>,
     },
+    /// A leader (docs/adr/0146): an arrowhead at `pts[0]`, a line through
+    /// `pts` and, with a note, a landing from the last vertex along the
+    /// note's direction (`rotation`, degrees) and the note past it. The
+    /// arrowhead and the landing are measured by the note's `height`.
+    Leader {
+        pts: Vec<Vec2>,
+        /// The note; none: the arrow alone. Never empty.
+        text: Option<String>,
+        height: f64,
+        rotation: f64,
+        /// The arrowhead's name (`open`, `dot`, `none`); none: a filled arrow.
+        arrow: Option<String>,
+        /// `Some(true)`: the note's box is filled with the drawing area's colour first.
+        mask: Option<bool>,
+    },
 }
 
 crate::json_tagged!(Shape, "kind",
@@ -197,6 +212,7 @@ crate::json_tagged!(Shape, "kind",
     Dimension => "dimension" { a, b, offset, height, text, style, angle, c },
     Hatch => "hatch" { ring, holes, pattern },
     Insert => "insert" { block, p, scale, rotation, mirror; attrs },
+    Leader => "leader" { pts, text, height, rotation, arrow, mask },
 );
 
 /// An entity: its geometry and every other field, untouched and in order.
@@ -321,7 +337,7 @@ pub fn entity_vertices(e: &Shape) -> Vec<Vec2> {
     match e {
         Shape::Point { p, .. } | Shape::Text { p, .. } | Shape::Insert { p, .. } => vec![*p],
         Shape::Line { a, b } => vec![*a, *b],
-        Shape::Polyline { pts, .. } => pts.clone(),
+        Shape::Polyline { pts, .. } | Shape::Leader { pts, .. } => pts.clone(),
         // Part after part, each its ring's then its holes' (docs/adr/0143).
         Shape::Polygon { .. } if is_multi_part(e) => {
             area_parts(e).iter().flat_map(entity_vertices).collect()
@@ -874,7 +890,7 @@ pub fn entity_anchor(e: &Shape) -> Option<Vec2> {
             a1: *a1,
         }),
         Shape::Line { a, b } => Vec2::new((a.x + b.x) / 2.0, (a.y + b.y) / 2.0),
-        Shape::Polyline { pts, .. } | Shape::Spline { pts, .. } => {
+        Shape::Polyline { pts, .. } | Shape::Spline { pts, .. } | Shape::Leader { pts, .. } => {
             return pts.get(pts.len() / 2).copied();
         }
         Shape::Dimension { a, .. } => layout_of(e).map_or(*a, |l| l.text_at),
@@ -920,6 +936,8 @@ pub fn entity_length(e: &Shape) -> Option<f64> {
             t1,
         } => Some(ellipse_length(&ellipse_geom(*c, *major, *ratio, *t0, *t1))),
         Shape::Spline { pts, closed } => Some(path_length(&catmull_rom(pts, *closed, 16.0), false)),
+        // Its vertices' length; the landing does not count (docs/adr/0146 §2).
+        Shape::Leader { pts, .. } => Some(path_length(pts, false)),
         // The measured value when it is a length (an angle has none).
         Shape::Dimension { .. } => layout_of(e).filter(|l| l.unit == "length").map(|l| l.value),
         _ => None,

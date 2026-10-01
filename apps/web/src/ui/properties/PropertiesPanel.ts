@@ -458,6 +458,10 @@ export class PropertiesPanel extends Panel {
         );
         break;
       }
+      // Its corners and length; its note's rows come with the Kılavuz tool (docs/adr/0146 §7). The desktop's are the same.
+      case 'leader':
+        geo.push({ label: 'Köşe sayısı', value: String(e.pts.length), numeric: true }, num('Uzunluk', entityLength(e) ?? 0, 'm'));
+        break;
     }
 
     const sections: PropSection[] = [general, { id: 'geometry', title: 'Geometri', rows: geo }];

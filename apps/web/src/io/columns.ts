@@ -42,12 +42,14 @@ export type DrawingHead = Omit<DocumentSnapshotV2, 'entities' | 'uids'>;
 export type PageEntity = ContractEntity & { uid?: string };
 
 /** The kinds, numbered as `kinds` holds them. */
-export const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'spline', 'xline', 'ray', 'text', 'dimension', 'hatch', 'insert'] as const;
+export const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'spline', 'xline', 'ray', 'text', 'dimension', 'hatch', 'insert', 'leader'] as const;
 const KIND = new Map<string, number>(KINDS.map((k, i) => [k, i]));
 const DIMENSION_STYLES = ['aligned', 'linear', 'angular', 'radius', 'diameter'] as const;
 /** A text's alignments, numbered as the columns hold them (the contract's `TextAlign::ALL`). */
 const TEXT_ALIGNS = ['baselineCenter', 'baselineRight', 'bottomLeft', 'bottomCenter', 'bottomRight', 'middleLeft', 'middleCenter', 'middleRight', 'topLeft', 'topCenter', 'topRight'] as const;
 const HATCH_PATTERNS = ['solid', 'lines', 'cross'] as const;
+/** A leader's arrowheads, numbered as the columns hold them (the contract's `LeaderArrow::ALL`; the filled arrow is none). */
+const LEADER_ARROWS = ['open', 'dot', 'none'] as const;
 
 const COLOR = 1;
 const LABEL = 2;
@@ -428,6 +430,21 @@ class Packer {
         if (e.mirror === true) flags |= OPT[0];
         else if (e.mirror !== undefined) throw unwritable('bad_value', `${this.where}/mirror`, 'aynalama yalnız true yazılır; aynalı olmayanda alan yoktur');
         break;
+      // docs/adr/0146: the vertices, height and turn; the note a text, the arrowhead its place in LEADER_ARROWS, the mask a flag.
+      case 'leader':
+        this.points(e.pts, 'pts', kind);
+        this.float(e.height, 'height');
+        this.float(e.rotation, 'rotation');
+        if (e.text !== undefined) (flags |= OPT[0]), this.text(e.text, 'text');
+        if (e.arrow !== undefined) {
+          const at = LEADER_ARROWS.indexOf(e.arrow);
+          if (at < 0) throw unwritable('bad_value', `${this.where}/arrow`, `“${String(e.arrow)}” kılavuz oku bilinmiyor`);
+          flags |= OPT[1];
+          this.int(at);
+        }
+        if (e.mask === true) flags |= OPT[2];
+        else if (e.mask !== undefined) throw unwritable('bad_value', `${this.where}/mask`, 'zemin yalnız true yazılır; zeminsiz kılavuzda alan yoktur');
+        break;
     }
     return flags;
   }
@@ -691,6 +708,14 @@ export class ColumnsReader {
         e.rotation = this.num();
         e.block = this.readText();
         if (has(0)) e.mirror = true;
+        break;
+      case 'leader':
+        e.pts = this.pts();
+        e.height = this.num();
+        e.rotation = this.num();
+        if (has(0)) e.text = this.readText();
+        if (has(1)) e.arrow = LEADER_ARROWS[this.readInt()];
+        if (has(2)) e.mask = true;
         break;
     }
     return e as unknown as ContractEntity & { uid: string };

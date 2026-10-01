@@ -1,8 +1,8 @@
 //! The objects written in document schema 2, 3 when one has its own line
 //! weight, 4 when one has vertex elevations, 5 when an area has parts, 6
-//! with blocks, or 7 when a text has an alignment, a width factor or a mask
-//! (docs/specs/kcad-v2.md §6.6, docs/adr/0139, docs/adr/0142, docs/adr/0143,
-//! docs/adr/0144, docs/adr/0145): each a one-key map, its kind and then its
+//! with blocks, 7 when a text has an alignment, a width factor or a mask, or
+//! 8 with a leader (docs/specs/kcad-v2.md §6.6, docs/adr/0139, docs/adr/0142,
+//! docs/adr/0143, docs/adr/0144, docs/adr/0145, docs/adr/0146): each a one-key map, its kind and then its
 //! fields, whose keys are sorted per object (they depend on the kind); every
 //! object of the drawing with its persistent id, unique and not nil, a block
 //! definition's objects without one.
@@ -238,6 +238,41 @@ impl<'d> Encoder<'d> {
                 f.push(("rotation", Val::Float(e.rotation)));
                 if e.mirror {
                     f.push(("mirror", Val::Bool(true)));
+                }
+            }
+            Entity::Leader(e) => {
+                let refuse = |this: &mut Self, field: &'static str, words: &str| {
+                    this.path.push(Seg::Name(kind));
+                    this.path.push(Seg::Name(field));
+                    Err(this.fail(Code::BadValue, words))
+                };
+                if e.pts.len() < 2 {
+                    let words = format!("kılavuzun {} köşesi var; en az iki olmalı", e.pts.len());
+                    return refuse(self, "pts", &words);
+                }
+                // Not finite: the float's own refusal (`non_finite`), with its place.
+                if e.height.is_finite() && e.height <= 0.0 {
+                    let words = format!("kılavuzun yüksekliği {}; 0'dan büyük olmalı", e.height);
+                    return refuse(self, "height", &words);
+                }
+                f.push(("pts", Val::Points(&e.pts)));
+                f.push(("height", Val::Float(e.height)));
+                f.push(("rotation", Val::Float(e.rotation)));
+                if let Some(t) = &e.text {
+                    if t.is_empty() {
+                        return refuse(
+                            self,
+                            "text",
+                            "kılavuzun notu boş; notsuz kılavuzun not alanı yazılmaz",
+                        );
+                    }
+                    f.push(("text", Val::Text(t)));
+                }
+                if let Some(a) = e.arrow {
+                    f.push(("arrow", Val::Name(a.name())));
+                }
+                if e.mask {
+                    f.push(("mask", Val::Bool(true)));
                 }
             }
         }

@@ -810,6 +810,11 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 Row::text("Aynalı", yes_no(i.mirror)).editor(edit(mirror)),
             ]);
         }
+        // Its corners and length; its note's rows come with the Kılavuz tool (docs/adr/0146 §7).
+        Entity::Leader(l) => {
+            geo.push(Row::figure("Köşe sayısı", l.pts.len().to_string()));
+            geo.push(metres("Uzunluk", length_of.unwrap_or(0.0)));
+        }
     }
 
     let mut sections = vec![

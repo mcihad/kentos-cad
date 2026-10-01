@@ -447,6 +447,12 @@ pub(crate) fn finite_shape(s: &Shape) -> bool {
             rotation,
             ..
         } => pt(p) && height.is_finite() && rotation.is_finite(),
+        Shape::Leader {
+            pts: p,
+            height,
+            rotation,
+            ..
+        } => pts(p) && height.is_finite() && rotation.is_finite(),
         Shape::Dimension {
             a,
             b,

@@ -852,6 +852,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/LeaderEntity",
+                "description": "An arrow with a note (docs/adr/0146).",
+                "properties": {
+                  "kind": {
+                    "const": "leader",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -1307,6 +1321,124 @@
               "color",
               "lineType",
               "lineWeight"
+            ],
+            "type": "object"
+          },
+          "LeaderArrow": {
+            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "oneOf": [
+              {
+                "const": "open",
+                "description": "The filled arrow's two sides.",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled dot.",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "No arrowhead: the line ends at the tip.",
+                "type": "string"
+              }
+            ]
+          },
+          "LeaderEntity": {
+            "description": "A leader (docs/adr/0146): an arrowhead at its first vertex, a line\nthrough its vertices and, with a note, a landing from its last vertex\nalong the note's direction and the note past the landing's end; one\nobject. The arrowhead and the landing are measured by the note's height.",
+            "properties": {
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LeaderArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The arrowhead; absent: a filled arrow."
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "The note's height, metres, finite and over 0; the arrowhead and the\nlanding are measured by it.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mask": {
+                "description": "The note's box is filled with the drawing area's colour before the\nnote is drawn, as a text's mask (docs/adr/0145).",
+                "type": "boolean"
+              },
+              "pts": {
+                "description": "At least two: the arrow's tip first, where the landing starts last.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "rotation": {
+                "description": "The note's and the landing's direction, degrees counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "description": "The note, one line; absent: the arrow alone, no landing and no note.\nNever empty: no note is the field's absence.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "pts",
+              "height",
+              "rotation"
             ],
             "type": "object"
           },
@@ -3755,6 +3887,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/LeaderEntity",
+                "description": "An arrow with a note (docs/adr/0146).",
+                "properties": {
+                  "kind": {
+                    "const": "leader",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -4148,6 +4294,124 @@
               "color",
               "lineType",
               "lineWeight"
+            ],
+            "type": "object"
+          },
+          "LeaderArrow": {
+            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "oneOf": [
+              {
+                "const": "open",
+                "description": "The filled arrow's two sides.",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled dot.",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "No arrowhead: the line ends at the tip.",
+                "type": "string"
+              }
+            ]
+          },
+          "LeaderEntity": {
+            "description": "A leader (docs/adr/0146): an arrowhead at its first vertex, a line\nthrough its vertices and, with a note, a landing from its last vertex\nalong the note's direction and the note past the landing's end; one\nobject. The arrowhead and the landing are measured by the note's height.",
+            "properties": {
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LeaderArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The arrowhead; absent: a filled arrow."
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "The note's height, metres, finite and over 0; the arrowhead and the\nlanding are measured by it.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mask": {
+                "description": "The note's box is filled with the drawing area's colour before the\nnote is drawn, as a text's mask (docs/adr/0145).",
+                "type": "boolean"
+              },
+              "pts": {
+                "description": "At least two: the arrow's tip first, where the landing starts last.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "rotation": {
+                "description": "The note's and the landing's direction, degrees counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "description": "The note, one line; absent: the arrow alone, no landing and no note.\nNever empty: no note is the field's absence.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "pts",
+              "height",
+              "rotation"
             ],
             "type": "object"
           },
@@ -11135,6 +11399,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/LeaderEntity",
+                "description": "An arrow with a note (docs/adr/0146).",
+                "properties": {
+                  "kind": {
+                    "const": "leader",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -11326,6 +11604,124 @@
               "block",
               "p",
               "scale",
+              "rotation"
+            ],
+            "type": "object"
+          },
+          "LeaderArrow": {
+            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "oneOf": [
+              {
+                "const": "open",
+                "description": "The filled arrow's two sides.",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled dot.",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "No arrowhead: the line ends at the tip.",
+                "type": "string"
+              }
+            ]
+          },
+          "LeaderEntity": {
+            "description": "A leader (docs/adr/0146): an arrowhead at its first vertex, a line\nthrough its vertices and, with a note, a landing from its last vertex\nalong the note's direction and the note past the landing's end; one\nobject. The arrowhead and the landing are measured by the note's height.",
+            "properties": {
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LeaderArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The arrowhead; absent: a filled arrow."
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "The note's height, metres, finite and over 0; the arrowhead and the\nlanding are measured by it.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mask": {
+                "description": "The note's box is filled with the drawing area's colour before the\nnote is drawn, as a text's mask (docs/adr/0145).",
+                "type": "boolean"
+              },
+              "pts": {
+                "description": "At least two: the arrow's tip first, where the landing starts last.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "rotation": {
+                "description": "The note's and the landing's direction, degrees counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "description": "The note, one line; absent: the arrow alone, no landing and no note.\nNever empty: no note is the field's absence.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "pts",
+              "height",
               "rotation"
             ],
             "type": "object"
@@ -12703,6 +13099,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/LeaderEntity",
+                "description": "An arrow with a note (docs/adr/0146).",
+                "properties": {
+                  "kind": {
+                    "const": "leader",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -12894,6 +13304,124 @@
               "block",
               "p",
               "scale",
+              "rotation"
+            ],
+            "type": "object"
+          },
+          "LeaderArrow": {
+            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "oneOf": [
+              {
+                "const": "open",
+                "description": "The filled arrow's two sides.",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled dot.",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "No arrowhead: the line ends at the tip.",
+                "type": "string"
+              }
+            ]
+          },
+          "LeaderEntity": {
+            "description": "A leader (docs/adr/0146): an arrowhead at its first vertex, a line\nthrough its vertices and, with a note, a landing from its last vertex\nalong the note's direction and the note past the landing's end; one\nobject. The arrowhead and the landing are measured by the note's height.",
+            "properties": {
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LeaderArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The arrowhead; absent: a filled arrow."
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "The note's height, metres, finite and over 0; the arrowhead and the\nlanding are measured by it.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mask": {
+                "description": "The note's box is filled with the drawing area's colour before the\nnote is drawn, as a text's mask (docs/adr/0145).",
+                "type": "boolean"
+              },
+              "pts": {
+                "description": "At least two: the arrow's tip first, where the landing starts last.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "rotation": {
+                "description": "The note's and the landing's direction, degrees counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "description": "The note, one line; absent: the arrow alone, no landing and no note.\nNever empty: no note is the field's absence.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "pts",
+              "height",
               "rotation"
             ],
             "type": "object"
@@ -14232,6 +14760,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/LeaderEntity",
+                "description": "An arrow with a note (docs/adr/0146).",
+                "properties": {
+                  "kind": {
+                    "const": "leader",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -14423,6 +14965,124 @@
               "block",
               "p",
               "scale",
+              "rotation"
+            ],
+            "type": "object"
+          },
+          "LeaderArrow": {
+            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "oneOf": [
+              {
+                "const": "open",
+                "description": "The filled arrow's two sides.",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled dot.",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "No arrowhead: the line ends at the tip.",
+                "type": "string"
+              }
+            ]
+          },
+          "LeaderEntity": {
+            "description": "A leader (docs/adr/0146): an arrowhead at its first vertex, a line\nthrough its vertices and, with a note, a landing from its last vertex\nalong the note's direction and the note past the landing's end; one\nobject. The arrowhead and the landing are measured by the note's height.",
+            "properties": {
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LeaderArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The arrowhead; absent: a filled arrow."
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "The note's height, metres, finite and over 0; the arrowhead and the\nlanding are measured by it.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mask": {
+                "description": "The note's box is filled with the drawing area's colour before the\nnote is drawn, as a text's mask (docs/adr/0145).",
+                "type": "boolean"
+              },
+              "pts": {
+                "description": "At least two: the arrow's tip first, where the landing starts last.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "rotation": {
+                "description": "The note's and the landing's direction, degrees counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "description": "The note, one line; absent: the arrow alone, no landing and no note.\nNever empty: no note is the field's absence.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "pts",
+              "height",
               "rotation"
             ],
             "type": "object"
@@ -15903,6 +16563,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/LeaderEntity",
+                "description": "An arrow with a note (docs/adr/0146).",
+                "properties": {
+                  "kind": {
+                    "const": "leader",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -16094,6 +16768,124 @@
               "block",
               "p",
               "scale",
+              "rotation"
+            ],
+            "type": "object"
+          },
+          "LeaderArrow": {
+            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "oneOf": [
+              {
+                "const": "open",
+                "description": "The filled arrow's two sides.",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled dot.",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "No arrowhead: the line ends at the tip.",
+                "type": "string"
+              }
+            ]
+          },
+          "LeaderEntity": {
+            "description": "A leader (docs/adr/0146): an arrowhead at its first vertex, a line\nthrough its vertices and, with a note, a landing from its last vertex\nalong the note's direction and the note past the landing's end; one\nobject. The arrowhead and the landing are measured by the note's height.",
+            "properties": {
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LeaderArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The arrowhead; absent: a filled arrow."
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "The note's height, metres, finite and over 0; the arrowhead and the\nlanding are measured by it.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mask": {
+                "description": "The note's box is filled with the drawing area's colour before the\nnote is drawn, as a text's mask (docs/adr/0145).",
+                "type": "boolean"
+              },
+              "pts": {
+                "description": "At least two: the arrow's tip first, where the landing starts last.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "rotation": {
+                "description": "The note's and the landing's direction, degrees counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "description": "The note, one line; absent: the arrow alone, no landing and no note.\nNever empty: no note is the field's absence.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "pts",
+              "height",
               "rotation"
             ],
             "type": "object"
@@ -17417,6 +18209,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/LeaderEntity",
+                "description": "An arrow with a note (docs/adr/0146).",
+                "properties": {
+                  "kind": {
+                    "const": "leader",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -17608,6 +18414,124 @@
               "block",
               "p",
               "scale",
+              "rotation"
+            ],
+            "type": "object"
+          },
+          "LeaderArrow": {
+            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "oneOf": [
+              {
+                "const": "open",
+                "description": "The filled arrow's two sides.",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled dot.",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "No arrowhead: the line ends at the tip.",
+                "type": "string"
+              }
+            ]
+          },
+          "LeaderEntity": {
+            "description": "A leader (docs/adr/0146): an arrowhead at its first vertex, a line\nthrough its vertices and, with a note, a landing from its last vertex\nalong the note's direction and the note past the landing's end; one\nobject. The arrowhead and the landing are measured by the note's height.",
+            "properties": {
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LeaderArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The arrowhead; absent: a filled arrow."
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "The note's height, metres, finite and over 0; the arrowhead and the\nlanding are measured by it.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mask": {
+                "description": "The note's box is filled with the drawing area's colour before the\nnote is drawn, as a text's mask (docs/adr/0145).",
+                "type": "boolean"
+              },
+              "pts": {
+                "description": "At least two: the arrow's tip first, where the landing starts last.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "rotation": {
+                "description": "The note's and the landing's direction, degrees counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "description": "The note, one line; absent: the arrow alone, no landing and no note.\nNever empty: no note is the field's absence.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "pts",
+              "height",
               "rotation"
             ],
             "type": "object"
@@ -18941,6 +19865,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/LeaderEntity",
+                "description": "An arrow with a note (docs/adr/0146).",
+                "properties": {
+                  "kind": {
+                    "const": "leader",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -19132,6 +20070,124 @@
               "block",
               "p",
               "scale",
+              "rotation"
+            ],
+            "type": "object"
+          },
+          "LeaderArrow": {
+            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "oneOf": [
+              {
+                "const": "open",
+                "description": "The filled arrow's two sides.",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled dot.",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "No arrowhead: the line ends at the tip.",
+                "type": "string"
+              }
+            ]
+          },
+          "LeaderEntity": {
+            "description": "A leader (docs/adr/0146): an arrowhead at its first vertex, a line\nthrough its vertices and, with a note, a landing from its last vertex\nalong the note's direction and the note past the landing's end; one\nobject. The arrowhead and the landing are measured by the note's height.",
+            "properties": {
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LeaderArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The arrowhead; absent: a filled arrow."
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "The note's height, metres, finite and over 0; the arrowhead and the\nlanding are measured by it.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mask": {
+                "description": "The note's box is filled with the drawing area's colour before the\nnote is drawn, as a text's mask (docs/adr/0145).",
+                "type": "boolean"
+              },
+              "pts": {
+                "description": "At least two: the arrow's tip first, where the landing starts last.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "rotation": {
+                "description": "The note's and the landing's direction, degrees counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "description": "The note, one line; absent: the arrow alone, no landing and no note.\nNever empty: no note is the field's absence.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "pts",
+              "height",
               "rotation"
             ],
             "type": "object"
@@ -20586,6 +21642,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/LeaderEntity",
+                "description": "An arrow with a note (docs/adr/0146).",
+                "properties": {
+                  "kind": {
+                    "const": "leader",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -20777,6 +21847,124 @@
               "block",
               "p",
               "scale",
+              "rotation"
+            ],
+            "type": "object"
+          },
+          "LeaderArrow": {
+            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "oneOf": [
+              {
+                "const": "open",
+                "description": "The filled arrow's two sides.",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled dot.",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "No arrowhead: the line ends at the tip.",
+                "type": "string"
+              }
+            ]
+          },
+          "LeaderEntity": {
+            "description": "A leader (docs/adr/0146): an arrowhead at its first vertex, a line\nthrough its vertices and, with a note, a landing from its last vertex\nalong the note's direction and the note past the landing's end; one\nobject. The arrowhead and the landing are measured by the note's height.",
+            "properties": {
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LeaderArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The arrowhead; absent: a filled arrow."
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "The note's height, metres, finite and over 0; the arrowhead and the\nlanding are measured by it.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mask": {
+                "description": "The note's box is filled with the drawing area's colour before the\nnote is drawn, as a text's mask (docs/adr/0145).",
+                "type": "boolean"
+              },
+              "pts": {
+                "description": "At least two: the arrow's tip first, where the landing starts last.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "rotation": {
+                "description": "The note's and the landing's direction, degrees counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "description": "The note, one line; absent: the arrow alone, no landing and no note.\nNever empty: no note is the field's absence.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "pts",
+              "height",
               "rotation"
             ],
             "type": "object"
@@ -23113,6 +24301,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/LeaderEntity",
+                "description": "An arrow with a note (docs/adr/0146).",
+                "properties": {
+                  "kind": {
+                    "const": "leader",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -23304,6 +24506,124 @@
               "block",
               "p",
               "scale",
+              "rotation"
+            ],
+            "type": "object"
+          },
+          "LeaderArrow": {
+            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "oneOf": [
+              {
+                "const": "open",
+                "description": "The filled arrow's two sides.",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled dot.",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "No arrowhead: the line ends at the tip.",
+                "type": "string"
+              }
+            ]
+          },
+          "LeaderEntity": {
+            "description": "A leader (docs/adr/0146): an arrowhead at its first vertex, a line\nthrough its vertices and, with a note, a landing from its last vertex\nalong the note's direction and the note past the landing's end; one\nobject. The arrowhead and the landing are measured by the note's height.",
+            "properties": {
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LeaderArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The arrowhead; absent: a filled arrow."
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "The note's height, metres, finite and over 0; the arrowhead and the\nlanding are measured by it.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mask": {
+                "description": "The note's box is filled with the drawing area's colour before the\nnote is drawn, as a text's mask (docs/adr/0145).",
+                "type": "boolean"
+              },
+              "pts": {
+                "description": "At least two: the arrow's tip first, where the landing starts last.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "rotation": {
+                "description": "The note's and the landing's direction, degrees counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "description": "The note, one line; absent: the arrow alone, no landing and no note.\nNever empty: no note is the field's absence.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "pts",
+              "height",
               "rotation"
             ],
             "type": "object"
@@ -24773,6 +26093,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/LeaderEntity",
+                "description": "An arrow with a note (docs/adr/0146).",
+                "properties": {
+                  "kind": {
+                    "const": "leader",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -24964,6 +26298,124 @@
               "block",
               "p",
               "scale",
+              "rotation"
+            ],
+            "type": "object"
+          },
+          "LeaderArrow": {
+            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "oneOf": [
+              {
+                "const": "open",
+                "description": "The filled arrow's two sides.",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled dot.",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "No arrowhead: the line ends at the tip.",
+                "type": "string"
+              }
+            ]
+          },
+          "LeaderEntity": {
+            "description": "A leader (docs/adr/0146): an arrowhead at its first vertex, a line\nthrough its vertices and, with a note, a landing from its last vertex\nalong the note's direction and the note past the landing's end; one\nobject. The arrowhead and the landing are measured by the note's height.",
+            "properties": {
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LeaderArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The arrowhead; absent: a filled arrow."
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "The note's height, metres, finite and over 0; the arrowhead and the\nlanding are measured by it.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mask": {
+                "description": "The note's box is filled with the drawing area's colour before the\nnote is drawn, as a text's mask (docs/adr/0145).",
+                "type": "boolean"
+              },
+              "pts": {
+                "description": "At least two: the arrow's tip first, where the landing starts last.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "rotation": {
+                "description": "The note's and the landing's direction, degrees counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "description": "The note, one line; absent: the arrow alone, no landing and no note.\nNever empty: no note is the field's absence.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "pts",
+              "height",
               "rotation"
             ],
             "type": "object"
@@ -27097,6 +28549,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/LeaderEntity",
+                "description": "An arrow with a note (docs/adr/0146).",
+                "properties": {
+                  "kind": {
+                    "const": "leader",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -27288,6 +28754,124 @@
               "block",
               "p",
               "scale",
+              "rotation"
+            ],
+            "type": "object"
+          },
+          "LeaderArrow": {
+            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "oneOf": [
+              {
+                "const": "open",
+                "description": "The filled arrow's two sides.",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled dot.",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "No arrowhead: the line ends at the tip.",
+                "type": "string"
+              }
+            ]
+          },
+          "LeaderEntity": {
+            "description": "A leader (docs/adr/0146): an arrowhead at its first vertex, a line\nthrough its vertices and, with a note, a landing from its last vertex\nalong the note's direction and the note past the landing's end; one\nobject. The arrowhead and the landing are measured by the note's height.",
+            "properties": {
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LeaderArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The arrowhead; absent: a filled arrow."
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "The note's height, metres, finite and over 0; the arrowhead and the\nlanding are measured by it.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mask": {
+                "description": "The note's box is filled with the drawing area's colour before the\nnote is drawn, as a text's mask (docs/adr/0145).",
+                "type": "boolean"
+              },
+              "pts": {
+                "description": "At least two: the arrow's tip first, where the landing starts last.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "rotation": {
+                "description": "The note's and the landing's direction, degrees counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "description": "The note, one line; absent: the arrow alone, no landing and no note.\nNever empty: no note is the field's absence.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "pts",
+              "height",
               "rotation"
             ],
             "type": "object"
@@ -28753,6 +30337,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/LeaderEntity",
+                "description": "An arrow with a note (docs/adr/0146).",
+                "properties": {
+                  "kind": {
+                    "const": "leader",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -28944,6 +30542,124 @@
               "block",
               "p",
               "scale",
+              "rotation"
+            ],
+            "type": "object"
+          },
+          "LeaderArrow": {
+            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "oneOf": [
+              {
+                "const": "open",
+                "description": "The filled arrow's two sides.",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled dot.",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "No arrowhead: the line ends at the tip.",
+                "type": "string"
+              }
+            ]
+          },
+          "LeaderEntity": {
+            "description": "A leader (docs/adr/0146): an arrowhead at its first vertex, a line\nthrough its vertices and, with a note, a landing from its last vertex\nalong the note's direction and the note past the landing's end; one\nobject. The arrowhead and the landing are measured by the note's height.",
+            "properties": {
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LeaderArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The arrowhead; absent: a filled arrow."
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "The note's height, metres, finite and over 0; the arrowhead and the\nlanding are measured by it.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mask": {
+                "description": "The note's box is filled with the drawing area's colour before the\nnote is drawn, as a text's mask (docs/adr/0145).",
+                "type": "boolean"
+              },
+              "pts": {
+                "description": "At least two: the arrow's tip first, where the landing starts last.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "rotation": {
+                "description": "The note's and the landing's direction, degrees counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "description": "The note, one line; absent: the arrow alone, no landing and no note.\nNever empty: no note is the field's absence.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "pts",
+              "height",
               "rotation"
             ],
             "type": "object"
@@ -30410,6 +32126,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/LeaderEntity",
+                "description": "An arrow with a note (docs/adr/0146).",
+                "properties": {
+                  "kind": {
+                    "const": "leader",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -30601,6 +32331,124 @@
               "block",
               "p",
               "scale",
+              "rotation"
+            ],
+            "type": "object"
+          },
+          "LeaderArrow": {
+            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "oneOf": [
+              {
+                "const": "open",
+                "description": "The filled arrow's two sides.",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled dot.",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "No arrowhead: the line ends at the tip.",
+                "type": "string"
+              }
+            ]
+          },
+          "LeaderEntity": {
+            "description": "A leader (docs/adr/0146): an arrowhead at its first vertex, a line\nthrough its vertices and, with a note, a landing from its last vertex\nalong the note's direction and the note past the landing's end; one\nobject. The arrowhead and the landing are measured by the note's height.",
+            "properties": {
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LeaderArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The arrowhead; absent: a filled arrow."
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "The note's height, metres, finite and over 0; the arrowhead and the\nlanding are measured by it.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mask": {
+                "description": "The note's box is filled with the drawing area's colour before the\nnote is drawn, as a text's mask (docs/adr/0145).",
+                "type": "boolean"
+              },
+              "pts": {
+                "description": "At least two: the arrow's tip first, where the landing starts last.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "rotation": {
+                "description": "The note's and the landing's direction, degrees counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "description": "The note, one line; absent: the arrow alone, no landing and no note.\nNever empty: no note is the field's absence.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "pts",
+              "height",
               "rotation"
             ],
             "type": "object"
@@ -32231,6 +34079,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/LeaderEntity",
+                "description": "An arrow with a note (docs/adr/0146).",
+                "properties": {
+                  "kind": {
+                    "const": "leader",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -32422,6 +34284,124 @@
               "block",
               "p",
               "scale",
+              "rotation"
+            ],
+            "type": "object"
+          },
+          "LeaderArrow": {
+            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "oneOf": [
+              {
+                "const": "open",
+                "description": "The filled arrow's two sides.",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled dot.",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "No arrowhead: the line ends at the tip.",
+                "type": "string"
+              }
+            ]
+          },
+          "LeaderEntity": {
+            "description": "A leader (docs/adr/0146): an arrowhead at its first vertex, a line\nthrough its vertices and, with a note, a landing from its last vertex\nalong the note's direction and the note past the landing's end; one\nobject. The arrowhead and the landing are measured by the note's height.",
+            "properties": {
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LeaderArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The arrowhead; absent: a filled arrow."
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "The note's height, metres, finite and over 0; the arrowhead and the\nlanding are measured by it.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mask": {
+                "description": "The note's box is filled with the drawing area's colour before the\nnote is drawn, as a text's mask (docs/adr/0145).",
+                "type": "boolean"
+              },
+              "pts": {
+                "description": "At least two: the arrow's tip first, where the landing starts last.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "rotation": {
+                "description": "The note's and the landing's direction, degrees counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "description": "The note, one line; absent: the arrow alone, no landing and no note.\nNever empty: no note is the field's absence.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "pts",
+              "height",
               "rotation"
             ],
             "type": "object"

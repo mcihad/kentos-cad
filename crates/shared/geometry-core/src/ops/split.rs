@@ -301,9 +301,10 @@ fn anchor(s: &Shape) -> Option<f64> {
     let x = match s {
         Shape::Line { a, b } => js_min(a.x, b.x),
         Shape::Point { p, .. } | Shape::Text { p, .. } | Shape::Insert { p, .. } => p.x,
-        Shape::Polyline { pts, .. } | Shape::Polygon { pts, .. } | Shape::Spline { pts, .. } => {
-            pts.first()?.x
-        }
+        Shape::Polyline { pts, .. }
+        | Shape::Polygon { pts, .. }
+        | Shape::Spline { pts, .. }
+        | Shape::Leader { pts, .. } => pts.first()?.x,
         Shape::Circle { c, .. } | Shape::Arc { c, .. } | Shape::Ellipse { c, .. } => c.x,
         Shape::Xline { p, .. } | Shape::Ray { p, .. } => p.x,
         Shape::Dimension { a, .. } => a.x,

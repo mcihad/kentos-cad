@@ -43,6 +43,8 @@ export const SHAPE_FIELDS: Record<EntityKind, readonly string[]> = {
   hatch: ['ring', 'holes', 'pattern'],
   // A block's placement (docs/adr/0144); `mirror` only when true.
   insert: ['block', 'p', 'scale', 'rotation', 'mirror'],
+  // Its vertices, note, height, turn, arrowhead and mask (docs/adr/0146).
+  leader: ['pts', 'text', 'height', 'rotation', 'arrow', 'mask'],
 };
 
 /**

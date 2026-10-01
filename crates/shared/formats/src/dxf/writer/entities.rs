@@ -64,6 +64,7 @@ fn kind_label(e: &Entity) -> &'static str {
         Entity::Dimension(_) => "Ölçü",
         Entity::Hatch(_) => "Tarama",
         Entity::Insert(_) => "Blok",
+        Entity::Leader(_) => "Kılavuz",
     }
 }
 
@@ -144,6 +145,7 @@ fn finite(e: &Entity) -> bool {
                 && nums_ok(&[h.pattern.angle, h.pattern.spacing])
         }
         Entity::Insert(i) => ok(i.p) && nums_ok(&[i.scale, i.rotation]),
+        Entity::Leader(l) => all_ok(&l.pts) && nums_ok(&[l.height, l.rotation]),
     }
 }
 
@@ -423,6 +425,23 @@ impl Writer<'_> {
             Entity::Dimension(d) => self.dimension(d),
             Entity::Hatch(h) => self.hatch(h),
             Entity::Insert(i) => self.insert(i),
+            // Its line until a leader goes out as a LEADER with its note (docs/adr/0146 §8).
+            Entity::Leader(l) => {
+                self.report.note(
+                    "Kılavuz",
+                    "kırık çizgisi çoklu çizgi olarak yazıldı; ok başı ve not yazılmadı",
+                    0,
+                );
+                let line = PathEntity {
+                    base: l.base.clone(),
+                    pts: l.pts.clone(),
+                    bulges: None,
+                    holes: None,
+                    zs: None,
+                    parts: None,
+                };
+                self.path(&line, false)
+            }
         };
         if written && !self.defining {
             self.report.count(e.kind());

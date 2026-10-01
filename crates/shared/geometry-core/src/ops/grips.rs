@@ -85,6 +85,12 @@ pub fn entity_grips(e: &Shape) -> Vec<Vec2> {
             Vec2::new(p.x + dir.x * DIRECTION_GRIP, p.y + dir.y * DIRECTION_GRIP),
         ],
         Shape::Spline { pts, .. } => pts.clone(),
+        // Its vertices, then the middle of each segment, as a polyline's (docs/adr/0146 §4).
+        Shape::Leader { pts, .. } => {
+            let mut out = pts.clone();
+            out.extend(pts.windows(2).map(|s| segment_mid(s[0], s[1], 0.0)));
+            out
+        }
         Shape::Hatch { ring, .. } => ring.clone(),
         Shape::Dimension { a, b, c, .. } => {
             match dimension_geom(e).and_then(|d| layout_dimension(&d)) {
@@ -102,7 +108,9 @@ pub fn entity_grips(e: &Shape) -> Vec<Vec2> {
 fn segment_count(e: &Shape) -> Option<usize> {
     match e {
         Shape::Polygon { pts, .. } => Some(pts.len()),
-        Shape::Polyline { pts, .. } => Some(pts.len().saturating_sub(1)),
+        Shape::Polyline { pts, .. } | Shape::Leader { pts, .. } => {
+            Some(pts.len().saturating_sub(1))
+        }
         _ => None,
     }
 }
@@ -114,7 +122,8 @@ pub fn mid_grip_segment(e: &Shape, index: usize) -> Option<usize> {
         let (k, local) = grip_part(e, index)?;
         return mid_grip_segment(&area_parts(e)[k], local);
     }
-    let (Shape::Polyline { pts, .. } | Shape::Polygon { pts, .. }) = e else {
+    let (Shape::Polyline { pts, .. } | Shape::Polygon { pts, .. } | Shape::Leader { pts, .. }) = e
+    else {
         return None;
     };
     let n = pts.len();
@@ -215,6 +224,34 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             width_factor: *width_factor,
             mask: *mask,
         },
+        // A vertex moves; a segment's middle becomes a new vertex there (docs/adr/0146 §4).
+        Shape::Leader {
+            pts,
+            text,
+            height,
+            rotation,
+            arrow,
+            mask,
+        } => {
+            let pts = match mid_grip_segment(&e.shape, index) {
+                Some(seg) => {
+                    let mut out = pts[..seg + 1].to_vec();
+                    out.push(p);
+                    out.extend_from_slice(&pts[seg + 1..]);
+                    out
+                }
+                None if index < pts.len() => replace_at(pts, index, p),
+                None => return None,
+            };
+            Shape::Leader {
+                pts,
+                text: text.clone(),
+                height: *height,
+                rotation: *rotation,
+                arrow: arrow.clone(),
+                mask: *mask,
+            }
+        }
         Shape::Line { a, b } => {
             if index == 0 {
                 Shape::Line { a: p, b: *b }

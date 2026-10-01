@@ -289,26 +289,45 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
             align,
             width_factor,
             mask,
-        } => {
-            let rad = (rotation * PI) / 180.0;
-            let dir = apply_linear(m, Vec2::new(cos(rad), sin(rad)));
-            let mut rot = (atan2(dir.y, dir.x) * 180.0) / PI;
-            // Mirrored text stays readable (like AutoCAD MIRRTEXT = 0).
-            if is_reflection(m) {
-                rot += 180.0;
-            }
-            rot = ((rot % 360.0) + 360.0) % 360.0;
-            Shape::Text {
-                p: apply(m, *p),
-                text: text.clone(),
-                height: height * s,
-                rotation: rot,
-                align: *align,
-                width_factor: *width_factor,
-                mask: *mask,
-            }
-        }
+        } => Shape::Text {
+            p: apply(m, *p),
+            text: text.clone(),
+            height: height * s,
+            rotation: text_turn(*rotation, m),
+            align: *align,
+            width_factor: *width_factor,
+            mask: *mask,
+        },
+        // Its vertices move; its note turns as a text does (docs/adr/0146 §4).
+        Shape::Leader {
+            pts,
+            text,
+            height,
+            rotation,
+            arrow,
+            mask,
+        } => Shape::Leader {
+            pts: pts.iter().map(|&p| apply(m, p)).collect(),
+            text: text.clone(),
+            height: height * s,
+            rotation: text_turn(*rotation, m),
+            arrow: arrow.clone(),
+            mask: *mask,
+        },
     }
+}
+
+/// A text's turn (degrees) under `m`, from 0 up to 360: its baseline's
+/// direction mapped; mirrored, a half turn more, so that it stays readable
+/// (like AutoCAD's MIRRTEXT = 0).
+fn text_turn(rotation: f64, m: &Affine) -> f64 {
+    let rad = (rotation * PI) / 180.0;
+    let dir = apply_linear(m, Vec2::new(cos(rad), sin(rad)));
+    let mut rot = (atan2(dir.y, dir.x) * 180.0) / PI;
+    if is_reflection(m) {
+        rot += 180.0;
+    }
+    ((rot % 360.0) + 360.0) % 360.0
 }
 
 pub fn transform_entity(e: &Entity, m: &Affine) -> Entity {
