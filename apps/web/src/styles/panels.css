@@ -526,6 +526,128 @@
   white-space: pre;
 }
 
+/* ── Point editor (Noktalar, docs/adr/0153) ──────────────────────── */
+.ptable {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+.ptable__bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--c-line);
+  background: var(--c-panel);
+}
+.ptable__search {
+  width: calc(220px * var(--ui-scale));
+  height: calc(28px * var(--ui-scale));
+}
+.ptable__only {
+  white-space: nowrap;
+}
+.ptable__gap {
+  flex: 1;
+}
+.ptable__count {
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  white-space: nowrap;
+}
+.ptable__show {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.ptable__scroll {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.ptable table {
+  width: 100%;
+  min-width: calc(720px * var(--ui-scale));
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+.ptable th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  height: 26px;
+  padding: 0;
+  background: var(--c-panel);
+  border-bottom: 1px solid var(--c-line);
+  text-align: left;
+}
+.ptable__sort {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  height: 26px;
+  padding: 0 12px;
+  border: 0;
+  background: none;
+  color: var(--c-text-2);
+  font: inherit;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  cursor: pointer;
+}
+.ptable th.num .ptable__sort {
+  justify-content: flex-end;
+}
+.ptable__sort:hover,
+.ptable th.is-sorted .ptable__sort {
+  color: var(--c-text);
+}
+.ptable__sort:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: -2px;
+}
+.ptable__arrow {
+  display: inline-flex;
+  width: 12px;
+  color: var(--c-accent);
+}
+.ptable th.num .ptable__arrow {
+  order: -1;
+}
+.ptable td {
+  height: 24px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--c-line-soft);
+  white-space: nowrap;
+  cursor: default;
+}
+.ptable .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.ptable th:first-child,
+.ptable td:first-child {
+  width: calc(56px * var(--ui-scale));
+  color: var(--c-text-3);
+}
+.ptable td:nth-child(2) {
+  font-weight: 500;
+}
+.ptable tbody tr:hover {
+  background: var(--c-hover);
+}
+.ptable tbody tr.is-selected {
+  background: var(--c-accent-soft);
+  box-shadow: inset 2px 0 0 var(--c-accent);
+}
+.ptable__empty {
+  padding-top: 16px;
+}
+
 /* ── Shortcut sheet ──────────────────────────────────────────────── */
 .shortcuts {
   display: grid;

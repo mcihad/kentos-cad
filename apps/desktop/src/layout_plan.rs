@@ -129,7 +129,10 @@ pub(crate) const FIELDS: [(&str, Rule); 21] = [
             max: None,
         },
     ),
-    ("bottomTab", Rule::Enum(&["history", "coords", "messages"])),
+    (
+        "bottomTab",
+        Rule::Enum(&["history", "coords", "points", "messages"]),
+    ),
     ("toolboxVisible", Rule::Boolean),
     ("toolboxDocked", Rule::Boolean),
     (

@@ -158,7 +158,7 @@ export const MAIN_MENU: TopMenu[] = [
   {
     id: 'crs',
     label: 'Koordinat',
-    items: [sec('Koordinat sistemi'), 'crs.set', 'crs.transform', sec('Koordinatlar'), 'crs.query', 'crs.points', 'view.coords'],
+    items: [sec('Koordinat sistemi'), 'crs.set', 'crs.transform', sec('Koordinatlar'), 'crs.query', 'crs.points', 'view.coords', 'point.editor'],
   },
   {
     id: 'calc',

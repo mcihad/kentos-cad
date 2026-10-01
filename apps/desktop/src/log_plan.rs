@@ -15,6 +15,8 @@ use crate::cloud::local_time::Zone;
 /// The panel's tabs, in order: their names.
 pub(crate) const TAB_HISTORY: &str = "Komut geçmişi";
 pub(crate) const TAB_COORDS: &str = "Koordinat listesi";
+/// Nokta editörü (points/, docs/adr/0153).
+pub(crate) const TAB_POINTS: &str = "Noktalar";
 pub(crate) const TAB_MESSAGES: &str = "Uyarılar";
 
 /// The panel's words: its two buttons, the command line's button, the empty lists.

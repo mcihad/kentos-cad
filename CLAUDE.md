@@ -153,6 +153,7 @@ KENTOS_SNAPSHOT_BACKEND=wgpu cargo test -p kentos-desktop style::screens::legend
 KENTOS_SHOTS_ONLY=tarama,soru cargo test -p kentos-desktop style::designer::screens -- --ignored --nocapture   # Sembol tasarımcısı resimleri, .run/shots/sdes-* (değişken yoksa bütün durumlar; web'inkiler: node apps/web/scripts/e2e/shots.mjs symboldesigner; ADR 0094)
 GOLDEN_WRITE=1 pnpm -C apps/web exec vitest run scripts/fixtures/record-designer.test.ts   # sembol tasarımcısının modelini fixtures/style/v1/designer.json'a yeniden yaz; farkı okuyun (ADR 0094)
 cargo test -p kentos-desktop processing::designer::tests::screens -- --ignored --nocapture   # Model tasarımcısı resimleri, .run/shots/model-* (KENTOS_SHOTS_ONLY=yeni,adim; web'inkiler: node apps/web/scripts/e2e/shots.mjs modeldesigner; ADR 0116)
+cargo test -p kentos-desktop points::tests::screens -- --ignored --nocapture   # alt panelin Noktalar sekmesi (nokta editörü), .run/shots/noktalar-* (web'inkiler: node apps/web/scripts/e2e/shots.mjs pointeditor; ADR 0153)
 cargo test -p kentos-desktop ribbon_bar::screens -- --ignored --nocapture   # şeridin hızlı erişim menüsü, sağ tık menüleri ve bölünmüş düğme listeleri, .run/shots/serit-* (web'inkiler: node apps/web/scripts/e2e/shots.mjs ribbon; ADR 0117)
 cargo test -p kentos-desktop ribbon_keys::screens -- --ignored --nocapture   # şeridin harf ipuçları ve daraltılmış şeridin açılışı, .run/shots/serit-ipucu-*, serit-katli-* (ADR 0118)
 KENTOS_SNAPSHOT_BACKEND=wgpu KENTOS_SHOTS_ONLY=olc,izle cargo test -p kentos-desktop style::svgedit::screens -- --ignored --nocapture   # SVG düzenleyicisi resimleri, .run/shots/svge-* (değişken yoksa bütün durumlar; altlık ve izleme wgpu ister; web'inkiler: node apps/web/scripts/e2e/shots.mjs svgedit; ADR 0095)
@@ -578,7 +579,8 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   ve Kot'u, aynı yer sorusu, `#ad` çözümü (adlı noktanın yeri araca tıklanmış gibi verilir) ve Köşelere nokta iki platformda
   (ortak izler `survey-points.json`, `vertex-points.json`; iz biçimi etiketi, öznitelikleri ve kotu da denetler). Sıradaki
   `HYB-04` nokta editörü ([ADR 0153](docs/adr/0153-point-editor.md)): 1. adım (çekirdek: doğal sıra, tablo, çift noktalar, bağlı
-  köşeler, bağımsız başvurusuyla) tamam; sıradaki 2: Noktalar sekmesi. PDF, yazdırma ve pafta çıktısı (§16.4) en
+  köşeler, bağımsız başvurusuyla) ve 2. adım (alt panelin Noktalar sekmesi: sıralama, süzgeç, seçim, Göster) tamam; sıradaki 3:
+  yerinde düzenleme (Bağlı çizgiler izler, Satır ekle, Sil). PDF, yazdırma ve pafta çıktısı (§16.4) en
   sondadır, zamanını sahip söyleyecek. İşler ADR 0142–0148'deki gibi: önce ADR ve adımları, sonra adım adım iki platformda,
   ortak fixture'larla.
 - Bilinen açık: web `pnpm e2e` duman testinde üç test ADR 0143'ten önce de düşüyordu: “toolbox

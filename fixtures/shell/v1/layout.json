@@ -59,6 +59,7 @@
    "values": [
     "history",
     "coords",
+    "points",
     "messages"
    ]
   },

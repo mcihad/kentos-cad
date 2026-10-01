@@ -226,6 +226,8 @@ pub enum Message {
     CommandHistoryToggled,
     /// A tab of the bottom panel chosen: the panel opens on it.
     BottomTab(crate::bottom::BottomTab),
+    /// The Noktalar tab (points/, docs/adr/0153).
+    Points(crate::points::Event),
     /// The bottom panel's top edge dragged: the open history's new height.
     BottomResized(f32),
     /// The bottom panel's top edge double-clicked: its first height again.
@@ -418,6 +420,8 @@ pub struct App {
     pub(crate) props_closed: std::collections::HashSet<&'static str>,
     /// Öznitelikler for a selection of several objects, as last worked out (properties/).
     pub(crate) properties_cache: crate::properties::PanelCache,
+    /// The bottom panel's Noktalar tab: its query and rows (points/, docs/adr/0153).
+    pub(crate) points: crate::points::PointsPanel,
     /// The labels the view shows, as last asked of the geometry store (labels.rs).
     pub(crate) label_spots: crate::labels::Spots,
     /// The last left press's object with no command running, and when (a double click edits a text).
@@ -636,6 +640,7 @@ impl App {
             text_field_release: false,
             props_closed: std::collections::HashSet::new(),
             properties_cache: Default::default(),
+            points: Default::default(),
             label_spots: Default::default(),
             last_click: None,
             log: {
@@ -940,6 +945,7 @@ impl App {
             }
             Message::CommandHistoryToggled => self.toggle_bottom(),
             Message::BottomTab(tab) => self.show_bottom(tab),
+            Message::Points(event) => self.points_event(event),
             Message::BottomResized(height) => self.bottom_dragged(Some(height), Instant::now()),
             Message::BottomReset => self.bottom_dragged(None, Instant::now()),
             Message::HistoryCleared => self.clear_history(),
@@ -1382,6 +1388,8 @@ impl App {
             // The bottom panel (bottom.rs): F2, and the coordinate list.
             "view.bottomPanel" => self.toggle_bottom(),
             "view.coords" => self.show_bottom(crate::bottom::BottomTab::Coords),
+            // Nokta editörü: the bottom panel's Noktalar tab (points/, docs/adr/0153).
+            "point.editor" => self.show_bottom(crate::bottom::BottomTab::Points),
             crate::catalog::PYTHON_CONSOLE => self.toggle_python(),
             // The navigation commands keep the view they leave (navigation.rs, docs/adr/0141).
             "view.zoomIn" => self.navigating(Self::zoom_in),

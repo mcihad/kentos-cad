@@ -13,6 +13,7 @@ import { tooltip } from '../widgets/tooltip';
 import { tableSpacer, VirtualRows } from '../widgets/VirtualRows';
 import { CommandLine } from './CommandLine';
 import { vertexListing } from './coordinates';
+import { PointTable } from './PointTable';
 import { BOTTOM_TABS, BOTTOM_TEXTS, FOLLOW_WITHIN, ICON_SIZE, LEVEL_ICON, listedIn, logTime } from './logPlan';
 import { seenNow, unseenWarnings } from './warnings';
 
@@ -33,6 +34,8 @@ export class BottomPanel extends Component {
   private log: { tab: BottomTab; list: HTMLElement; shown: LogEntry[] } | null = null;
   /** The coordinate table's rows, built only in its scroll window. */
   private rows: VirtualRows | null = null;
+  /** Noktalar, the point editor (docs/adr/0153), while its tab is on screen. */
+  private points: PointTable | null = null;
 
   constructor(ctx: AppContext) {
     super();
@@ -113,6 +116,7 @@ export class BottomPanel extends Component {
     this.d.add(watchAll([ctx.selection.ids, ctx.format.changed], () => ui.bottomTab.value === 'coords' && this.renderContent()));
     this.d.add(ctx.doc.events.on('changed', () => ui.bottomTab.value === 'coords' && this.renderContent()));
     this.d.add(() => this.rows?.dispose());
+    this.d.add(() => this.points?.dispose());
   }
 
   /**
@@ -164,10 +168,16 @@ export class BottomPanel extends Component {
   private renderContent(): void {
     this.rows?.dispose();
     this.rows = null;
+    this.points?.dispose();
+    this.points = null;
     this.log = null;
     if (!this.ctx.ui.bottomExpanded.value) return;
     const tab = this.ctx.ui.bottomTab.value;
     if (tab === 'coords') return replaceChildren(this.content, this.coordinateTable());
+    if (tab === 'points') {
+      this.points = new PointTable(this.ctx);
+      return replaceChildren(this.content, this.points.el);
+    }
     const entries = this.entriesOf(tab);
     if (!entries.length) {
       return replaceChildren(

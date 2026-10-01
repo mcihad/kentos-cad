@@ -4,6 +4,8 @@
 //!
 //! - Komut geçmişi: every line of the log with its time and level
 //!   (message_log.rs, docs/adr/0114);
+//! - Noktalar (`point.editor` opens it on this tab): every point of the
+//!   drawing in a table, sorted, searched and filtered (points/, docs/adr/0153);
 //! - Koordinat listesi (`view.coords` opens it on this tab): the selection's
 //!   points with Y, X, Z and layer, or the first object's vertices with each
 //!   edge's length and bearing, and the outline's area or length; rows are
@@ -39,14 +41,17 @@ pub enum BottomTab {
     #[default]
     History,
     Coords,
+    /// Nokta editörü (points/, docs/adr/0153).
+    Points,
     Messages,
     Python,
 }
 
 impl BottomTab {
-    const ALL: [BottomTab; 4] = [
+    const ALL: [BottomTab; 5] = [
         BottomTab::History,
         BottomTab::Coords,
+        BottomTab::Points,
         BottomTab::Messages,
         BottomTab::Python,
     ];
@@ -111,6 +116,9 @@ impl App {
                 Tab::new(plan::TAB_COORDS)
                     .icon(from_web(Some("table")))
                     .closable(false),
+                Tab::new(plan::TAB_POINTS)
+                    .icon(from_web(Some("pointEditor")))
+                    .closable(false),
                 Tab::new(plan::TAB_MESSAGES)
                     .icon(from_web(Some("warning")))
                     .closable(false)
@@ -138,6 +146,7 @@ impl App {
         let panel = match self.bottom_tab {
             BottomTab::History => self.log_list(LogListing::History),
             BottomTab::Coords => self.coordinate_list(),
+            BottomTab::Points => self.points_tab(),
             BottomTab::Messages => self.log_list(LogListing::Messages),
             BottomTab::Python => self.python_tab(),
         };

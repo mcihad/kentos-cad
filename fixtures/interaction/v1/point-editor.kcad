@@ -1,0 +1,638 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "Etkileşim izi: Nokta editörü",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000,
+  "workspace": "hybrid",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 487000,
+  "y": 4420000
+ },
+ "layers": [
+  {
+   "id": "parsel",
+   "name": "Parsel",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#3E63DD",
+    "lineType": "continuous",
+    "lineWeight": 0.35
+   },
+   "children": []
+  },
+  {
+   "id": "nokta",
+   "name": "Nokta",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#E5484D",
+    "lineType": "continuous",
+    "lineWeight": 0.25,
+    "point": {
+     "symbol": "ring",
+     "size": 7
+    }
+   },
+   "children": []
+  },
+  {
+   "id": "kot",
+   "name": "Kot",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#30A46C",
+    "lineType": "continuous",
+    "lineWeight": 0.25,
+    "point": {
+     "symbol": "cross",
+     "size": 7
+    }
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "nokta",
+ "entities": [
+  {
+   "kind": "polygon",
+   "id": 1,
+   "layerId": "parsel",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 487000,
+     "y": 4420000
+    },
+    {
+     "x": 487024,
+     "y": 4420000
+    },
+    {
+     "x": 487024,
+     "y": 4420018
+    },
+    {
+     "x": 487000,
+     "y": 4420018
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 2,
+   "layerId": "parsel",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 487024,
+     "y": 4420000
+    },
+    {
+     "x": 487046,
+     "y": 4420000
+    },
+    {
+     "x": 487046,
+     "y": 4420018
+    },
+    {
+     "x": 487024,
+     "y": 4420018
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 3,
+   "layerId": "parsel",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 486994,
+     "y": 4419994
+    },
+    {
+     "x": 487052,
+     "y": 4419994
+    }
+   ]
+  },
+  {
+   "kind": "point",
+   "id": 4,
+   "layerId": "nokta",
+   "attrs": {
+    "Kod": "ST"
+   },
+   "p": {
+    "x": 487000,
+    "y": 4420000
+   },
+   "label": "101",
+   "z": 100.0
+  },
+  {
+   "kind": "point",
+   "id": 5,
+   "layerId": "nokta",
+   "attrs": {
+    "Kod": "ST"
+   },
+   "p": {
+    "x": 487024,
+    "y": 4420000
+   },
+   "label": "102",
+   "z": 101.2
+  },
+  {
+   "kind": "point",
+   "id": 6,
+   "layerId": "nokta",
+   "attrs": {
+    "Kod": "ST"
+   },
+   "p": {
+    "x": 487046,
+    "y": 4420000
+   },
+   "label": "103",
+   "z": 102.3
+  },
+  {
+   "kind": "point",
+   "id": 7,
+   "layerId": "nokta",
+   "attrs": {
+    "Kod": "ST"
+   },
+   "p": {
+    "x": 487046,
+    "y": 4420018
+   },
+   "label": "104",
+   "z": 102.84
+  },
+  {
+   "kind": "point",
+   "id": 8,
+   "layerId": "nokta",
+   "attrs": {
+    "Kod": "ST"
+   },
+   "p": {
+    "x": 487024,
+    "y": 4420018
+   },
+   "label": "105",
+   "z": 101.74
+  },
+  {
+   "kind": "point",
+   "id": 9,
+   "layerId": "nokta",
+   "attrs": {
+    "Kod": "ST"
+   },
+   "p": {
+    "x": 487000,
+    "y": 4420018
+   },
+   "label": "106",
+   "z": 100.54
+  },
+  {
+   "kind": "point",
+   "id": 10,
+   "layerId": "nokta",
+   "attrs": {
+    "Kod": "YOL"
+   },
+   "p": {
+    "x": 487014.621,
+    "y": 4419996.621
+   },
+   "label": "101/1",
+   "z": 100.927
+  },
+  {
+   "kind": "point",
+   "id": 11,
+   "layerId": "nokta",
+   "attrs": {
+    "Kod": "SN"
+   },
+   "p": {
+    "x": 487017.772,
+    "y": 4419998.222
+   },
+   "label": "P2",
+   "z": 100.696
+  },
+  {
+   "kind": "point",
+   "id": 12,
+   "layerId": "kot",
+   "attrs": {
+    "Kod": "SN"
+   },
+   "p": {
+    "x": 487013.108,
+    "y": 4420014.503
+   },
+   "label": "112",
+   "z": 100.9
+  },
+  {
+   "kind": "point",
+   "id": 13,
+   "layerId": "kot",
+   "attrs": {
+    "Kod": "SN"
+   },
+   "p": {
+    "x": 487046.824,
+    "y": 4420001.78
+   },
+   "label": "101/4",
+   "z": 102.277
+  },
+  {
+   "kind": "point",
+   "id": 14,
+   "layerId": "kot",
+   "attrs": {
+    "Kod": "YOL"
+   },
+   "p": {
+    "x": 487036.109,
+    "y": 4420005.703
+   },
+   "label": "P5",
+   "z": 102.025
+  },
+  {
+   "kind": "point",
+   "id": 15,
+   "layerId": "kot",
+   "attrs": {
+    "Kod": "BK"
+   },
+   "p": {
+    "x": 487023.378,
+    "y": 4419994.685
+   },
+   "label": "P6",
+   "z": 100.8
+  },
+  {
+   "kind": "point",
+   "id": 16,
+   "layerId": "kot",
+   "attrs": {
+    "Kod": "BK"
+   },
+   "p": {
+    "x": 487034.734,
+    "y": 4420008.985
+   },
+   "label": "P7",
+   "z": 102.012
+  },
+  {
+   "kind": "point",
+   "id": 17,
+   "layerId": "kot",
+   "attrs": {
+    "Kod": "SN"
+   },
+   "p": {
+    "x": 487003.809,
+    "y": 4419995.66
+   },
+   "label": "P8",
+   "z": 99.853
+  },
+  {
+   "kind": "point",
+   "id": 18,
+   "layerId": "nokta",
+   "attrs": {
+    "Kod": "SN"
+   },
+   "p": {
+    "x": 487019.074,
+    "y": 4420009.525
+   },
+   "label": "101/9"
+  },
+  {
+   "kind": "point",
+   "id": 19,
+   "layerId": "kot",
+   "attrs": {
+    "Kod": "BK"
+   },
+   "p": {
+    "x": 487013.033,
+    "y": 4420001.501
+   },
+   "label": "101/10",
+   "z": 100.844
+  },
+  {
+   "kind": "point",
+   "id": 20,
+   "layerId": "nokta",
+   "attrs": {
+    "Kod": "BK"
+   },
+   "p": {
+    "x": 487036.459,
+    "y": 4420003.579
+   },
+   "label": "101/11"
+  },
+  {
+   "kind": "point",
+   "id": 21,
+   "layerId": "kot",
+   "attrs": {
+    "Kod": "SN"
+   },
+   "p": {
+    "x": 487041.535,
+    "y": 4420003.027
+   },
+   "label": "101/12",
+   "z": 101.892
+  },
+  {
+   "kind": "point",
+   "id": 22,
+   "layerId": "nokta",
+   "attrs": {
+    "Kod": "AĞAÇ"
+   },
+   "p": {
+    "x": 487006.348,
+    "y": 4420012.415
+   },
+   "label": "P13",
+   "z": 100.43
+  },
+  {
+   "kind": "point",
+   "id": 23,
+   "layerId": "kot",
+   "attrs": {
+    "Kod": "BK"
+   },
+   "p": {
+    "x": 487033.553,
+    "y": 4420008.129
+   },
+   "label": "101/14",
+   "z": 101.632
+  },
+  {
+   "kind": "point",
+   "id": 24,
+   "layerId": "nokta",
+   "attrs": {
+    "Kod": "SN"
+   },
+   "p": {
+    "x": 487011.564,
+    "y": 4420020.595
+   },
+   "label": "P15",
+   "z": 101.008
+  },
+  {
+   "kind": "point",
+   "id": 25,
+   "layerId": "nokta",
+   "attrs": {
+    "Kod": "AĞAÇ"
+   },
+   "p": {
+    "x": 487005.865,
+    "y": 4419997.457
+   },
+   "label": "P16",
+   "z": 100.003
+  },
+  {
+   "kind": "point",
+   "id": 26,
+   "layerId": "nokta",
+   "attrs": {
+    "Kod": "YOL"
+   },
+   "p": {
+    "x": 487039.218,
+    "y": 4419994.547
+   },
+   "label": "101/17",
+   "z": 101.734
+  },
+  {
+   "kind": "point",
+   "id": 27,
+   "layerId": "nokta",
+   "attrs": {
+    "Kod": "SN"
+   },
+   "p": {
+    "x": 487001.828,
+    "y": 4420007.18
+   },
+   "label": "P18",
+   "z": 100.547
+  },
+  {
+   "kind": "point",
+   "id": 28,
+   "layerId": "kot",
+   "attrs": {
+    "Kod": "KOT"
+   },
+   "p": {
+    "x": 487024.766,
+    "y": 4420003.16
+   },
+   "label": "K1",
+   "z": 101.33
+  },
+  {
+   "kind": "point",
+   "id": 29,
+   "layerId": "kot",
+   "attrs": {
+    "Kod": "KOT"
+   },
+   "p": {
+    "x": 487017.344,
+    "y": 4420004.208
+   },
+   "label": "K2",
+   "z": 100.99
+  },
+  {
+   "kind": "point",
+   "id": 30,
+   "layerId": "kot",
+   "attrs": {
+    "Kod": "KOT"
+   },
+   "p": {
+    "x": 487023.16,
+    "y": 4420020.153
+   },
+   "label": "K3",
+   "z": 101.76
+  },
+  {
+   "kind": "point",
+   "id": 31,
+   "layerId": "kot",
+   "attrs": {
+    "Kod": "KOT"
+   },
+   "p": {
+    "x": 487038.068,
+    "y": 4419994.67
+   },
+   "label": "K4",
+   "z": 101.74
+  },
+  {
+   "kind": "point",
+   "id": 32,
+   "layerId": "kot",
+   "attrs": {
+    "Kod": "KOT"
+   },
+   "p": {
+    "x": 487035.63,
+    "y": 4420000.256
+   },
+   "label": "K5",
+   "z": 101.79
+  },
+  {
+   "kind": "point",
+   "id": 33,
+   "layerId": "kot",
+   "attrs": {
+    "Kod": "KOT"
+   },
+   "p": {
+    "x": 486996.271,
+    "y": 4420006.215
+   },
+   "label": "K6",
+   "z": 100.0
+  },
+  {
+   "kind": "point",
+   "id": 34,
+   "layerId": "kot",
+   "attrs": {
+    "Kod": "KOT"
+   },
+   "p": {
+    "x": 487005.794,
+    "y": 4420007.161
+   },
+   "label": "K7",
+   "z": 100.5
+  },
+  {
+   "kind": "point",
+   "id": 35,
+   "layerId": "kot",
+   "attrs": {
+    "Kod": "KOT"
+   },
+   "p": {
+    "x": 487009.255,
+    "y": 4420020.894
+   },
+   "label": "K8",
+   "z": 101.09
+  },
+  {
+   "kind": "point",
+   "id": 36,
+   "layerId": "nokta",
+   "attrs": {},
+   "p": {
+    "x": 487030.5,
+    "y": 4420009.5
+   }
+  },
+  {
+   "kind": "point",
+   "id": 37,
+   "layerId": "nokta",
+   "attrs": {
+    "Kod": "SN"
+   },
+   "p": {
+    "x": 487012.25,
+    "y": 4420007.75
+   },
+   "z": 100.9
+  },
+  {
+   "kind": "point",
+   "id": 38,
+   "layerId": "nokta",
+   "attrs": {
+    "Kod": "ST"
+   },
+   "p": {
+    "x": 487046.0,
+    "y": 4420000.0
+   },
+   "label": "103",
+   "z": 102.301
+  },
+  {
+   "kind": "point",
+   "id": 39,
+   "layerId": "nokta",
+   "attrs": {
+    "Kod": "ST"
+   },
+   "p": {
+    "x": 487024.0,
+    "y": 4420018.0
+   },
+   "label": "S9"
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

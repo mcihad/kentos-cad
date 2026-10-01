@@ -513,6 +513,20 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
         ui.bottomExpanded.set(true);
       },
     },
+    {
+      // Nokta editörü (docs/adr/0153 §1): the bottom panel's Noktalar tab.
+      id: 'point.editor',
+      title: 'Nokta editörü',
+      short: 'Noktalar',
+      category: 'Koordinat',
+      icon: 'pointEditor',
+      aliases: ['NOKTAEDITORU', 'NE', 'NOKTALAR'],
+      description: 'Çizimdeki bütün noktalar alt panelde bir tabloda: ad, Y, X, Z, kod ve katman; sıralanır, aranır, süzülür. Satıra tıklamak noktayı seçer, Göster ona yakınlaştırır.',
+      run: () => {
+        ui.bottomTab.set('points');
+        ui.bottomExpanded.set(true);
+      },
+    },
 
     // Çizim yardımcıları
     toggle('draft.snap', 'Kenetleme', settings.snap, {

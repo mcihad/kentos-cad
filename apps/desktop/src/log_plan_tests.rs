@@ -39,7 +39,12 @@ fn the_panels_words_tabs_and_levels_are_the_webs() {
         .collect();
     assert_eq!(
         tabs,
-        [plan::TAB_HISTORY, plan::TAB_COORDS, plan::TAB_MESSAGES]
+        [
+            plan::TAB_HISTORY,
+            plan::TAB_COORDS,
+            plan::TAB_POINTS,
+            plan::TAB_MESSAGES
+        ]
     );
     let t = &f["texts"];
     assert_eq!(text(&t["clear"]), plan::CLEAR);

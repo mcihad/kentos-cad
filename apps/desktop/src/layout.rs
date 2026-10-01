@@ -184,6 +184,7 @@ fn tab_key(tab: BottomTab) -> &'static str {
     match tab {
         BottomTab::History => "history",
         BottomTab::Coords => "coords",
+        BottomTab::Points => "points",
         BottomTab::Messages => "messages",
         BottomTab::Python => "python",
     }
@@ -209,6 +210,7 @@ impl App {
         self.command_expanded = keeper.flag("bottomExpanded");
         self.bottom_tab = match keeper.text("bottomTab") {
             "coords" => BottomTab::Coords,
+            "points" => BottomTab::Points,
             "messages" => BottomTab::Messages,
             "python" => BottomTab::Python,
             _ => BottomTab::History,

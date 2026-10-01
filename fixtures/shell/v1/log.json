@@ -14,6 +14,11 @@
    "icon": "table"
   },
   {
+   "id": "points",
+   "label": "Noktalar",
+   "icon": "pointEditor"
+  },
+  {
    "id": "messages",
    "label": "Uyarılar",
    "icon": "warning"

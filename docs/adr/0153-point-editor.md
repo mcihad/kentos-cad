@@ -128,7 +128,16 @@ Python ve MCP aynısını betiğin tek adımlık grubuyla yapar.
    - **Tablo:** `ops::point_editor::point_table` (WASM `pointTable`): süzgeç ve sıralama iki platformda tek yerden. Arama `text::edit::search`'tür (Türkçe katlama, `*` joker).
    - **Çift noktalar ve bağlı köşeler:** `duplicate_points` (WASM `duplicatePoints`), `follow_point` (WASM `followPoint`).
    - **Başvuru:** `point_editor_cases.py` 197 durum yazar (19 sıra, 114 tablo, 34 çift, 30 bağlı köşe; elle kurulanlar başlangıçta ve TM koordinatlarında, gerisi rastgele). Çekirdek (`tests/point_editor.rs`) ve web WASM'ı (`model/ops/pointEditor.test.ts`) aynı; bozulan kuralları yakalar.
-2. **Tablo:** Noktalar sekmesi, sütunlar, sıralama, süzgeç, seçimin eşlenmesi, Göster; iki platformda ortak tablo modeli (`fixtures/point-editor/v1/table.json`), resimler.
+2. **Tablo:** Noktalar sekmesi, sütunlar, sıralama, süzgeç, seçimin eşlenmesi, Göster; tablonun kuralları iki platformda aynı durumlarla, resimler.
+
+   *(2 Ekim: tamam.)*
+   - **Sekme:** web'de `ui/bottom/PointTable.ts`, masaüstünde `points/`. Süzgeç ve sıralama çekirdeğin `point_table`'ından.
+   - **Sorgu:** arama, katman, Yalnız seçililer ve sıralama oturum boyunca tutulur.
+   - **Katman listesi:** yalnız nokta taşıyan katmanlar, katman listesinin sırasıyla ve nokta sayılarıyla. Seçilen katman nokta taşımaz olursa bütün katmanlar gösterilir.
+   - **Seçim:** ilk seçili satır değişince bir kez görünür yere kaydırılır; kullanıcı kaydırırsa öyle kalır.
+   - **Komut:** `point.editor` Harita › Koordinatlar'da; ikonu kendi çizimi (satırlar ve Nokta'nın artı halkası).
+   - **Yerleşim:** alt panelin kalıcı sekmesi `points` olabilir (`fixtures/shell/v1/layout.json`).
+   - **Sınama ve resimler:** başlık döngüsü, tıklamayla seçim ve satırın okunuşu iki platformda aynı durumlarla (`PointTable.test.ts`, `points/tests.rs`). Masaüstünde sekmenin sorguyu izlemesi ve çift tıkla yakınlaştırma da sınanır. Resimler `fixtures/interaction/v1/point-editor.kcad` üzerinde: web `shots.mjs pointeditor`, masaüstü `points::tests::screens`.
 3. **Düzenleme:** hücreler, Bağlı çizgiler izler, Satır ekle, Sil; ortak durumlar ve iz.
 4. **Toplu işlemler:** Yeniden adlandır, Sıralı numara ver, Katmana taşı, Çift noktaları ayıkla, Dışa aktar, İçe aktar; ortak durumlar ve iz.
 

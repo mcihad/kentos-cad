@@ -61,6 +61,7 @@ mod opening;
 #[cfg(test)]
 mod perf;
 mod point_calc;
+mod points;
 mod preview;
 mod processing;
 mod project;

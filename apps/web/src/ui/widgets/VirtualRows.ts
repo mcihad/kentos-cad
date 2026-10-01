@@ -64,6 +64,20 @@ export class VirtualRows {
     }
   }
 
+  /** Scrolls row `i` into the scroll window when it is out of it (the point editor's selection from the drawing). */
+  reveal(i: number): void {
+    if (i < 0 || i >= this.count) return;
+    if (!this.rowH) this.render();
+    const h = this.rowH || 24;
+    const top = this.before.offsetTop + i * h;
+    const view = this.scroller.clientHeight;
+    // The table's sticky head covers the top of the window.
+    const head = this.before.offsetTop;
+    if (top - head < this.scroller.scrollTop) this.scroller.scrollTop = top - head;
+    else if (top + h > this.scroller.scrollTop + view) this.scroller.scrollTop = top + h - view;
+    this.render();
+  }
+
   /** Whether the list shows its last row (a log keeps following its end only then). */
   atEnd(): boolean {
     return this.scroller.scrollHeight - this.scroller.scrollTop - this.scroller.clientHeight < Math.max(4, this.rowH);

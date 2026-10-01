@@ -2035,6 +2035,62 @@ SCENES.blocks = [
   ...s,
 }));
 
+// Nokta editörü (docs/adr/0153) on fixtures/interaction/v1/point-editor.kcad, the scene the desktop's
+// `points::tests::screens` draws: the Noktalar tab with three points selected in the drawing; sorted by Ad; a search;
+// the layer list open.
+const POINT_EDITOR = readFileSync(new URL('../../../../fixtures/interaction/v1/point-editor.kcad', import.meta.url), 'utf8');
+const openPointEditor = async (ui) => {
+  await ui.eval(`(async () => {
+    const k = window.kentos;
+    k.files.ask = async () => 'drop';
+    if (!(await k.files.load(${JSON.stringify(POINT_EDITOR)}, null))) throw new Error('point-editor.kcad did not load');
+    (await import('/src/ui/bottom/PointTable.ts')).resetPointTable();
+    k.ui.bottomHeight.set(300);
+    k.commands.execute('point.editor');
+    k.view.zoomExtents();
+    // Clear of the floating toolbox on the left.
+    const c = k.view.camera;
+    c.scale = c.scale * 0.8;
+    c.center = { x: c.center.x - 120 / c.scale, y: c.center.y };
+    c.panBy(0, 0);
+    k.selection.set([4, 5, 6]);
+  })()`);
+  await ui.sleep(700);
+};
+SCENES.pointeditor = [
+  { id: 'noktalar', open: openPointEditor },
+  {
+    id: 'noktalar-ad-sirali',
+    open: async (ui) => {
+      await openPointEditor(ui);
+      await ui.clickText('.ptable__sort', 'Ad');
+      await ui.sleep(300);
+    },
+  },
+  {
+    id: 'noktalar-ara',
+    open: async (ui) => {
+      await openPointEditor(ui);
+      await ui.clickText('.ptable__sort', 'Ad');
+      await ui.clickSel('.ptable__search');
+      await ui.type('p1');
+      await ui.move(2, 2);
+      await ui.sleep(400);
+    },
+  },
+  {
+    id: 'noktalar-katman',
+    open: async (ui) => {
+      await openPointEditor(ui);
+      await ui.clickSel('.ptable__layer');
+      await ui.sleep(300);
+    },
+  },
+].map((s) => ({
+  close: async (ui) => (await ui.escapeAll(2), await ui.eval(`(() => { const k = window.kentos; k.selection.clear(); k.ui.bottomExpanded.set(false); })()`)),
+  ...s,
+}));
+
 // Text extras (docs/adr/0145) on fixtures/interaction/v1/text-extras.kcad, the scene the desktop's
 // `labels::text_extras_screens` draws: the twelve alignments at their marked points, a turned centred text, width
 // factors 0.6, 1 and 1.5, a masked text next to one without over a hatch and a line; the whole, then closer in.

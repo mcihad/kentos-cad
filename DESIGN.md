@@ -367,7 +367,8 @@ Bir komut çalışırken çizim alanının üst ortasında yüzen şerittir (`ui
 - **Komut satırı her zaman görünür.** Solunda istem durur: kalın araç adı ve ardından ne beklendiği, ör. "**Çizgi**: sonraki noktayı belirtin [Kapat (K) / Bitir (Enter)]".
 - Girdi mono yazıyla gösterilir. Odaklanınca solda 2 px amber çubuk belirir.
 - Yazarken öneri listesi çıkar: simge, başlık, takma ad (mono) ve kısayol.
-- **Alt panel isteğe bağlıdır** (F2). Sekmeleri: Komut geçmişi (zaman, simge, metin), Koordinat listesi (Köşe, Y (sağa), X (yukarı), Kenar, Semt; dipte alan ve çevre), Uyarılar (okunmamış sayısı rozetle).
+- **Alt panel isteğe bağlıdır** (F2). Sekmeleri: Komut geçmişi (zaman, simge, metin), Koordinat listesi (Köşe, Y (sağa), X (yukarı), Kenar, Semt; dipte alan ve çevre), Noktalar, Uyarılar (okunmamış sayısı rozetle).
+- **Noktalar** (nokta editörü, [ADR 0153](docs/adr/0153-point-editor.md)): üstte araç çubuğu: arama kutusu (220 px), katman seçici (190 px; "Bütün katmanlar" ve nokta taşıyan katmanlar sayılarıyla), "Yalnız seçililer", sağda sayaç (`128 / 1204 nokta`, ikincil renk) ve Göster. Altında yapışkan başlıklı tablo: Sıra (üçüncül), Ad (yarı kalın), Y (sağa), X (yukarı), Z (kot), Kod, Katman; sayılar sağa dayalı ve tabular. Başlık tıklanınca sıralar, sıralı sütunun başlığında vurgu renginde ok. Seçili satır vurgu tonunda zemin ve solda 2 px vurgu çubuğuyla gösterilir (masaüstünde vurgu zemini).
 
 ### 7.7 Durum çubuğu
 

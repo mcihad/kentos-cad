@@ -140,6 +140,8 @@ pub const PORTED: &[&str] = &[
     // The bottom panel's tabs (bottom.rs): F2, the history, the coordinate list, warnings.
     "view.bottomPanel",
     "view.coords",
+    // Nokta editörü: the bottom panel's Noktalar tab (points/, docs/adr/0153).
+    "point.editor",
     // The clipboard and the view tools (docs/adr/0056): cut, copy and the pastes over the
     // session's clipboard, written through the document as on the web; pan, zoom window,
     // zoom to the selection and repeating the last command.
