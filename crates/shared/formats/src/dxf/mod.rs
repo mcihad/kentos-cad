@@ -19,6 +19,7 @@ mod emit;
 mod entity;
 mod hatch;
 mod justify;
+mod leaders;
 mod lexer;
 mod strings;
 mod writer;
@@ -242,6 +243,16 @@ impl<'a> Reader<'a> {
                 "STYLE" => {
                     let h = g(40).and_then(|x| parse_real(x.text())).unwrap_or(0.0);
                     self.lib.style_heights.insert(name().to_uppercase(), h);
+                }
+                // A leader's arrow size and arrow block (docs/adr/0146 §8).
+                "DIMSTYLE" => {
+                    let style = leaders::table_style(&groups);
+                    self.lib.dim_styles.insert(name().to_uppercase(), style);
+                }
+                "BLOCK_RECORD" => {
+                    if let Some(h) = g(5).and_then(|x| u64::from_str_radix(x.text(), 16).ok()) {
+                        self.lib.block_records.insert(h, name());
+                    }
                 }
                 _ => {}
             }
@@ -518,6 +529,7 @@ fn read_once(
             }
         }
     }
+    em.notes_done();
     em.merge_holes();
     let blocks = if opts.explode_blocks {
         Vec::new()

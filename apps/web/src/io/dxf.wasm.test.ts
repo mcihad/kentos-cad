@@ -230,7 +230,7 @@ describe.skipIf(!loader)('DXF WASM module', () => {
   });
 
   // Both platforms write the same bytes (crates/shared/formats/tests/dxf_write.rs; scripts/fixtures/dxf_write_reference.py checks them).
-  it.each(['blocks', 'texts'])('writes the %s fixture to its committed bytes, as the native writer does', async (name) => {
+  it.each(['blocks', 'texts', 'leaders'])('writes the %s fixture to its committed bytes, as the native writer does', async (name) => {
     const w = await load();
     const out = w.writeDxf(new TextDecoder().decode(fixture(`dxf-write/${name}.input.json`)));
     const bytes = out.takeBytes();
@@ -250,6 +250,22 @@ describe.skipIf(!loader)('DXF WASM module', () => {
     expect(texts[26]).toEqual(['OLCEK', { x: 200, y: 20 }, null, 1.5, false]);
     const etiket = r.blocks?.find((b) => b.name === 'ETIKET');
     expect(etiket?.attributes?.map((a) => [a.tag, a.p, a.align, a.widthFactor])).toEqual([['NO', { x: 1.5, y: 0 }, 'middleCenter', 0.9]]);
+  });
+
+  // docs/adr/0146 §8: a LEADER and its MTEXT, in either order, cross the columns as one leader; a MULTILEADER too
+  // (crates/shared/formats/tests/dxf.rs has the whole file).
+  it('reads leaders with their notes, arrowheads and heights', async () => {
+    const w = await load();
+    const r = imported(w.readDxf(fixture('leaders.dxf'), JSON.stringify({ maxEntities: 0 }), quiet));
+    const leaders = r.entities.flatMap((x) => (x.kind === 'leader' ? [[x.pts, x.text ?? null, x.height, x.arrow ?? null, x.mask ?? false]] : []));
+    expect(leaders).toHaveLength(9);
+    expect(leaders[0]).toEqual([[{ x: 0, y: 0 }, { x: 6, y: 5 }], 'Mevcut bina', 2.5, null, false]);
+    expect(leaders[1]).toEqual([[{ x: 40, y: -10 }, { x: 36, y: -6 }], 'Ø150 PVC', 2, 'dot', true]);
+    expect(leaders[2]).toEqual([[{ x: 60, y: 0 }, { x: 64, y: 4 }], null, 3.6, 'none', false]);
+    expect(leaders[7]).toEqual([[{ x: 100, y: 0 }, { x: 104, y: 4 }, { x: 106, y: 6 }], 'Ada 101', 2, 'open', true]);
+    expect(r.entities.flatMap((x) => (x.kind === 'text' ? [x.text] : []))).toEqual(['DN 150', 'Parsel 5']);
+    const vana = r.blocks?.find((b) => b.name === 'VANA');
+    expect(vana?.entities.flatMap((x) => (x.kind === 'leader' ? [x.text] : []))).toEqual(['V']);
   });
 
   it('says how far a read is, to its end', async () => {

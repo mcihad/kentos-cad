@@ -2113,3 +2113,60 @@ fn an_attribute_text_on_more_lines_is_written_on_one_and_said() {
     let back = r.blocks.iter().find(|b| b.name == "Direk").expect("Direk");
     assert_eq!(back.attributes[0].prompt.as_deref(), Some("Direk numarası"));
 }
+
+/// The leaders' fixture (`fixtures/formats/v1/dxf-write/leaders.input.json`,
+/// docs/adr/0146 §8) goes out as its committed bytes, which
+/// `scripts/fixtures/dxf_write_reference.py` checks without KentOS's code;
+/// the open and dot arrowheads are said.
+#[test]
+fn the_leaders_fixture_is_written_to_its_committed_bytes() {
+    let report = written_as_committed("leaders");
+    let notes: Vec<(&str, &str, u32)> = report
+        .notes
+        .iter()
+        .map(|n| (n.what.as_str(), n.reason.as_str(), n.count))
+        .collect();
+    assert_eq!(
+        notes,
+        [(
+            "Kılavuz oku",
+            "açık ve nokta ok KentOS verisi olarak yazıldı; başka programlar dolu ok gösterir, KentOS geri okur",
+            2
+        )]
+    );
+    assert!(report.skipped.is_empty(), "{:?}", report.skipped);
+}
+
+/// Leaders go out as LEADERs with their notes' MTEXTs and come back as they
+/// were: their vertices (the landing's end written as a hookline goes
+/// again), notes (one with an escaped backslash and braces, one with a tab
+/// MTEXT cannot hold), heights, turns exactly, arrowheads, masks, colour and
+/// weight; the block's leader with its note. No note comes as a text of its
+/// own (docs/adr/0146 §8).
+#[test]
+fn leaders_read_back_as_they_were() {
+    let input = fixture_input("leaders");
+    let (text, _) = write(&input);
+    let r = read(&text);
+    let leaders = |entities: &[Entity]| -> Vec<Entity> {
+        entities
+            .iter()
+            .filter(|e| matches!(e, Entity::Leader(_)))
+            .map(|e| {
+                let mut e = e.clone();
+                let b = e.base_mut();
+                b.id = 0;
+                b.layer_id.clear();
+                e
+            })
+            .collect()
+    };
+    assert_eq!(leaders(&r.entities).len(), 7);
+    assert_eq!(leaders(&r.entities), leaders(&input.entities));
+    assert!(r.report.notes.is_empty(), "{:?}", r.report.notes);
+    assert!(r.entities.iter().all(|e| !matches!(e, Entity::Text(_))));
+    let [vana] = r.blocks.as_slice() else {
+        panic!("{:?}", r.blocks)
+    };
+    assert_eq!(leaders(&vana.entities), leaders(&input.blocks[0].entities));
+}

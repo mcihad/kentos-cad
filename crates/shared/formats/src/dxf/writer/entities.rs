@@ -19,7 +19,8 @@
 //!
 //! An insert is an INSERT of its block (docs/adr/0144 §5, `blocks.rs`); a
 //! definition's objects are written by a writer of their own, into their
-//! block.
+//! block. A leader is a LEADER and the MTEXT of its note (`leader.rs`,
+//! docs/adr/0146 §8).
 
 use std::collections::{BTreeMap, HashMap};
 
@@ -38,6 +39,8 @@ use super::super::xdata::{self, DimMeta, Meta};
 use super::blocks::{self, Written};
 use super::layers::Layers;
 use super::{Handles, Justified, Out};
+
+mod leader;
 use crate::geom::{has_arcs, v};
 use crate::gis::Zs;
 use crate::math::{PI, TAU, atan2, deg, hypot, norm_angle, rad, sin_cos_deg};
@@ -231,8 +234,20 @@ impl Writer<'_> {
     /// The entity's head: type, handle, owner, layer and colour. Returns its handle.
     fn begin(&mut self, kind: &str, base: &EntityBase) -> u64 {
         let h = self.handles.take();
+        self.head(kind, base, h, None);
+        h
+    }
+
+    /// `begin` with the handle `h` taken before, and the object this one
+    /// reacts to, when there is one (a leader's MTEXT its LEADER, docs/adr/0146 §8).
+    fn head(&mut self, kind: &str, base: &EntityBase, h: u64, reactor: Option<u64>) {
         self.out.str(0, kind);
         self.out.handle(5, h);
+        if let Some(r) = reactor {
+            self.out.str(102, "{ACAD_REACTORS");
+            self.out.handle(330, r);
+            self.out.str(102, "}");
+        }
         self.out.handle(330, self.owner);
         self.out.str(100, "AcDbEntity");
         let layers = self.layers;
@@ -278,7 +293,6 @@ impl Writer<'_> {
             }
             self.out.int(370, dxf);
         }
-        h
     }
 
     /// What of the object's base DXF cannot hold.
@@ -425,23 +439,7 @@ impl Writer<'_> {
             Entity::Dimension(d) => self.dimension(d),
             Entity::Hatch(h) => self.hatch(h),
             Entity::Insert(i) => self.insert(i),
-            // Its line until a leader goes out as a LEADER with its note (docs/adr/0146 §8).
-            Entity::Leader(l) => {
-                self.report.note(
-                    "Kılavuz",
-                    "kırık çizgisi çoklu çizgi olarak yazıldı; ok başı ve not yazılmadı",
-                    0,
-                );
-                let line = PathEntity {
-                    base: l.base.clone(),
-                    pts: l.pts.clone(),
-                    bulges: None,
-                    holes: None,
-                    zs: None,
-                    parts: None,
-                };
-                self.path(&line, false)
-            }
+            Entity::Leader(l) => self.leader(l),
         };
         if written && !self.defining {
             self.report.count(e.kind());

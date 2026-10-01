@@ -21,6 +21,9 @@
 //! 1002 {  1000 z                                 1002 }   the object's elevations are data, even when all 0 (a point's, a line's, a path's)
 //! 1002 {  1000 noz      <hex string>             1002 }   the vertices with no elevation, while the others have one: a bit each (docs/adr/0142)
 //! 1002 {  1000 mask                              1002 }   the text is drawn over a mask of the drawing's background (docs/adr/0145; DXF's TEXT has none)
+//! 1002 {  1000 arrow    <string>                 1002 }   a LEADER's arrowhead DXF cannot name ("open", "dot"; docs/adr/0146 §8)
+//! 1002 {  1000 note     <string>                 1002 }   a LEADER's note, exactly (when its MTEXT's notation cannot say it)
+//! 1002 {  1000 noteturn 1040 <degrees>           1002 }   a LEADER's note's turn, exactly (its MTEXT's direction rounds it)
 //! 1002 {  1000 dimension <style> 1040 <offset> 1040 <height>
 //!         [1002 { 1000 text <string> 1002 }] [1002 { 1000 center 1040 <x> 1040 <y> 1002 }]
 //!                                                1002 }   a DIMENSION is this KentOS dimension
@@ -76,6 +79,11 @@ pub struct Meta {
     pub dimension: Option<DimMeta>,
     /// The TEXT is drawn over a mask (docs/adr/0145 §7).
     pub mask: bool,
+    /// A LEADER's arrowhead by the app's name, when DXF cannot say it
+    /// (docs/adr/0146 §8), its note and the note's turn (degrees), exactly.
+    pub arrow: Option<String>,
+    pub note: Option<String>,
+    pub note_turn: Option<f64>,
 }
 
 /// What a DXF dimension does not say of a KentOS dimension. The reader
@@ -235,6 +243,15 @@ pub fn groups(meta: &Meta) -> Vec<(i32, String)> {
     }
     if meta.mask {
         item("mask", &mut out, |_| {});
+    }
+    if let Some(a) = &meta.arrow {
+        item("arrow", &mut out, |o| string(a, o));
+    }
+    if let Some(n) = &meta.note {
+        item("note", &mut out, |o| string(n, o));
+    }
+    if let Some(t) = meta.note_turn {
+        item("noteturn", &mut out, |o| o.push((1040, dxf_real(t))));
     }
     if let Some(d) = &meta.dimension {
         item("dimension", &mut out, |o| {
@@ -439,6 +456,9 @@ pub fn read(groups: &[(i32, String)]) -> Option<Meta> {
             "z" => m.z = true,
             "noz" => m.no_z = text(a).map(|t| mask_decode(&t)).unwrap_or_default(),
             "mask" => m.mask = true,
+            "arrow" => m.arrow = text(a).or(m.arrow),
+            "note" => m.note = text(a).or(m.note),
+            "noteturn" => m.note_turn = real(a).or(m.note_turn),
             "dimension" => m.dimension = dimension(&values).or(m.dimension),
             _ => {}
         }
@@ -503,6 +523,9 @@ mod tests {
                 center: Some((452_345.123, 4_412_345.678)),
             }),
             mask: true,
+            arrow: Some("dot".into()),
+            note: Some("Ø150 \\ {PVC}".into()),
+            note_turn: Some(29.999_999_999_999_996),
         };
         let out = groups(&meta);
         assert_eq!(out[0], (1001, "KENTOS".to_string()));

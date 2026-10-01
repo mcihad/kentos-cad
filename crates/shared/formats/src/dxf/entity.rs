@@ -167,9 +167,25 @@ pub enum Kind {
         dir: P3,
         ray: bool,
     },
+    /// A LEADER (docs/adr/0146 §8): its vertices (world coordinates), whether
+    /// its arrowhead is drawn (71), its path is a spline (72 = 1) and its last
+    /// vertex is a hookline's end (75 = 1); how it was made (73: 0 with an
+    /// MTEXT, 1 a tolerance, 2 a block, 3 nothing) and the annotation's handle
+    /// (340); its text height (40), the direction its text runs (211),
+    /// dimension style (3) and its own changes to that style (ACAD's DSTYLE data).
     Leader {
         pts: Vec<P3>,
+        horizontal: Option<P3>,
+        arrow: bool,
+        spline: bool,
+        hook: bool,
+        made_with: Option<i64>,
+        annotation: Option<u64>,
+        height: f64,
+        style: String,
+        own_style: super::leaders::LeaderStyle,
     },
+    MLeader(Box<super::leaders::MLeader>),
     Unsupported(String),
 }
 
@@ -190,7 +206,7 @@ pub struct Unreadable {
     pub reason: String,
 }
 
-fn bad(reason: &str) -> Unreadable {
+pub(super) fn bad(reason: &str) -> Unreadable {
     Unreadable {
         reason: reason.to_string(),
     }
@@ -349,6 +365,7 @@ pub fn parse(
     fit_data_in_hatch_splines: bool,
 ) -> Result<Parsed, Unreadable> {
     let meta = xdata_of(list, dec);
+    let all = list;
     let list = own_groups(list);
     let common = common(list, dec)?;
     let g = Groups { list, dec };
@@ -559,7 +576,23 @@ pub fn parse(
         },
         "LEADER" => Kind::Leader {
             pts: points(list, 10)?,
+            horizontal: g.point(211)?,
+            arrow: !g.has(71) || g.int(71) != 0,
+            spline: g.int(72) == 1,
+            hook: g.int(75) == 1,
+            made_with: g.has(73).then(|| g.int(73)),
+            annotation: list
+                .iter()
+                .find(|p| p.code == 340)
+                .and_then(|p| u64::from_str_radix(p.text(), 16).ok())
+                .filter(|h| *h != 0),
+            height: g.num_or(40, 0.0)?,
+            style: g.string(3),
+            own_style: super::leaders::own_style(all),
         },
+        "MULTILEADER" | "MLEADER" => {
+            Kind::MLeader(Box::new(super::leaders::mleader(list, dec)?))
+        }
         other => Kind::Unsupported(other.to_string()),
     };
     Ok(Parsed {

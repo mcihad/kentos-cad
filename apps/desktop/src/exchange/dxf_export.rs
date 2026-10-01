@@ -482,6 +482,23 @@ impl App {
             .iter()
             .filter(|e| matches!(e, kentos_contracts::Entity::Text(t) if t.mask))
             .count();
+        // A leader is a LEADER and its note's MTEXT; its open and dot arrowheads KentOS's data (docs/adr/0146 §8).
+        let leaders: Vec<&kentos_contracts::LeaderEntity> = list
+            .iter()
+            .filter_map(|e| match e {
+                kentos_contracts::Entity::Leader(l) => Some(l),
+                _ => None,
+            })
+            .collect();
+        let own_arrows = leaders
+            .iter()
+            .filter(|l| {
+                matches!(
+                    l.arrow,
+                    Some(kentos_contracts::LeaderArrow::Open | kentos_contracts::LeaderArrow::Dot)
+                )
+            })
+            .count();
         let themed = nodes
             .iter()
             .any(|l| THEMED.contains(&l.style.color.as_str()))
@@ -549,6 +566,14 @@ impl App {
         }
         if masked > 0 {
             lines.push(words::text_line(Line::Info, format!("{masked} yazının zemini KentOS verisi olarak yazılır: DXF yazısında zemin yoktur, başka programlar göstermez; KentOS geri okur.")));
+        }
+        if !leaders.is_empty() {
+            let arrows = if own_arrows > 0 {
+                format!(" {own_arrows} kılavuzun açık ya da nokta oku KentOS verisidir: başka programlar dolu ok gösterir.")
+            } else {
+                String::new()
+            };
+            lines.push(words::text_line(Line::Info, format!("{} kılavuz LEADER olarak, notları da onlara bağlı MTEXT'ler olarak yazılır; KentOS'a kılavuz olarak geri okunur.{arrows}", leaders.len())));
         }
         if themed {
             lines.push(words::text_line(Line::Info, "Tema renkleri DXF'te sabit renk olur (ana mürekkep 7, ikincil 8); KentOS'a geri okununca yine tema rengidir."));

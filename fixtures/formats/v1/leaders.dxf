@@ -1,0 +1,938 @@
+999
+Leaders of docs/adr/0146 §8; crates/shared/formats/tests/dxf.rs works each out from this file.
+999
+Tables: block records _Open (1F), _Dot (20), _ArchTick (21); dimension styles Standard (DIMASZ 2.5, DIMSCALE 1)
+999
+and Harita (DIMASZ 1.8, DIMSCALE 2, DIMLDRBLK _Dot). Block VANA: a circle, an MTEXT V, then the LEADER naming it.
+999
+ENTITIES in order: A, a LEADER with a hookline and its MTEXT after it; B, an MTEXT on two lines at 30 degrees
+999
+over a background, then the LEADER (style Harita) naming it; C, a LEADER without an annotation or an arrowhead
+999
+(style Harita, no 40); D, a spline LEADER and its formatted MTEXT; F, a LEADER naming an MTEXT the file lacks;
+999
+G, a LEADER whose DSTYLE data gives _Open and DIMASZ 3; K, one whose DSTYLE data gives _ArchTick;
+999
+H, a MULTILEADER with two leader lines and a two-line MTEXT content, arrow _Open; I, a MULTILEADER with a
+999
+block content and a spline line; an INSERT of VANA.
+  0
+SECTION
+  2
+HEADER
+  9
+$ACADVER
+  1
+AC1027
+  9
+$INSUNITS
+ 70
+6
+  0
+ENDSEC
+  0
+SECTION
+  2
+TABLES
+  0
+TABLE
+  2
+APPID
+ 70
+1
+  0
+APPID
+  2
+KENTOS
+ 70
+0
+  0
+ENDTAB
+  0
+TABLE
+  2
+BLOCK_RECORD
+ 70
+3
+  0
+BLOCK_RECORD
+  5
+1F
+100
+AcDbSymbolTableRecord
+100
+AcDbBlockTableRecord
+  2
+_Open
+  0
+BLOCK_RECORD
+  5
+20
+100
+AcDbSymbolTableRecord
+100
+AcDbBlockTableRecord
+  2
+_Dot
+  0
+BLOCK_RECORD
+  5
+21
+100
+AcDbSymbolTableRecord
+100
+AcDbBlockTableRecord
+  2
+_ArchTick
+  0
+ENDTAB
+  0
+TABLE
+  2
+DIMSTYLE
+ 70
+2
+  0
+DIMSTYLE
+105
+30
+100
+AcDbSymbolTableRecord
+100
+AcDbDimStyleTableRecord
+  2
+Standard
+ 70
+0
+ 40
+1.0
+ 41
+2.5
+  0
+DIMSTYLE
+105
+31
+100
+AcDbSymbolTableRecord
+100
+AcDbDimStyleTableRecord
+  2
+Harita
+ 70
+0
+ 40
+2.0
+ 41
+1.8
+341
+20
+  0
+ENDTAB
+  0
+ENDSEC
+  0
+SECTION
+  2
+BLOCKS
+  0
+BLOCK
+  8
+0
+  2
+VANA
+ 70
+0
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+  3
+VANA
+  0
+CIRCLE
+  8
+0
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 40
+1.0
+  0
+MTEXT
+  5
+50
+  8
+0
+ 10
+4.0
+ 20
+2.0
+ 30
+0.0
+ 40
+0.5
+ 71
+4
+  1
+V
+  0
+LEADER
+  5
+51
+  8
+0
+100
+AcDbEntity
+100
+AcDbLeader
+  3
+Standard
+ 71
+1
+ 72
+0
+ 73
+0
+ 75
+0
+ 40
+0.5
+ 76
+2
+ 10
+1.0
+ 20
+0.0
+ 30
+0.0
+ 10
+3.0
+ 20
+2.0
+ 30
+0.0
+340
+50
+  0
+ENDBLK
+  8
+0
+  0
+ENDSEC
+  0
+SECTION
+  2
+ENTITIES
+  0
+LEADER
+  5
+100
+100
+AcDbEntity
+  8
+KILAVUZ
+100
+AcDbLeader
+  3
+Standard
+ 71
+1
+ 72
+0
+ 73
+0
+ 74
+1
+ 75
+1
+ 40
+2.5
+ 41
+14.0
+ 76
+3
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 10
+6.0
+ 20
+5.0
+ 30
+0.0
+ 10
+8.5
+ 20
+5.0
+ 30
+0.0
+340
+101
+211
+1.0
+221
+0.0
+231
+0.0
+  0
+MTEXT
+  5
+101
+102
+{ACAD_REACTORS
+330
+100
+102
+}
+100
+AcDbEntity
+  8
+KILAVUZ
+100
+AcDbMText
+ 10
+9.75
+ 20
+5.0
+ 30
+0.0
+ 40
+2.5
+ 41
+0.0
+ 71
+4
+ 72
+1
+  1
+Mevcut bina
+ 11
+1.0
+ 21
+0.0
+ 31
+0.0
+  0
+MTEXT
+  5
+110
+100
+AcDbEntity
+  8
+KILAVUZ
+100
+AcDbMText
+ 10
+31.0
+ 20
+-6.0
+ 30
+0.0
+ 40
+2.0
+ 71
+6
+ 72
+1
+  1
+Ø150 PVC\PDN 150
+ 11
+0.8660254037844387
+ 21
+0.5
+ 31
+0.0
+ 90
+3
+ 63
+256
+ 45
+1.5
+  0
+LEADER
+  5
+111
+100
+AcDbEntity
+  8
+KILAVUZ
+100
+AcDbLeader
+  3
+Harita
+ 71
+1
+ 72
+0
+ 73
+0
+ 75
+0
+ 40
+2.0
+ 76
+2
+ 10
+40.0
+ 20
+-10.0
+ 30
+0.0
+ 10
+36.0
+ 20
+-6.0
+ 30
+0.0
+340
+110
+  0
+LEADER
+  5
+120
+100
+AcDbEntity
+  8
+KILAVUZ
+100
+AcDbLeader
+  3
+Harita
+ 71
+0
+ 73
+3
+ 76
+2
+ 10
+60.0
+ 20
+0.0
+ 30
+0.0
+ 10
+64.0
+ 20
+4.0
+ 30
+0.0
+  0
+LEADER
+  5
+130
+100
+AcDbEntity
+  8
+KILAVUZ
+100
+AcDbLeader
+  3
+Standard
+ 71
+1
+ 72
+1
+ 73
+0
+ 75
+0
+ 40
+1.5
+ 76
+3
+ 10
+80.0
+ 20
+0.0
+ 30
+0.0
+ 10
+84.0
+ 20
+3.0
+ 30
+0.0
+ 10
+88.0
+ 20
+3.0
+ 30
+0.0
+340
+131
+  0
+MTEXT
+  5
+131
+100
+AcDbEntity
+  8
+KILAVUZ
+100
+AcDbMText
+ 10
+89.5
+ 20
+3.0
+ 30
+0.0
+ 40
+1.5
+ 71
+4
+  1
+{\fArial|b1;Vana}
+  0
+LEADER
+  5
+140
+100
+AcDbEntity
+  8
+KILAVUZ
+100
+AcDbLeader
+ 71
+1
+ 73
+0
+ 40
+2.0
+ 76
+2
+ 10
+100.0
+ 20
+-20.0
+ 30
+0.0
+ 10
+104.0
+ 20
+-16.0
+ 30
+0.0
+340
+999
+  0
+LEADER
+  5
+150
+100
+AcDbEntity
+  8
+KILAVUZ
+100
+AcDbLeader
+  3
+Standard
+ 71
+1
+ 73
+3
+ 76
+2
+ 10
+120.0
+ 20
+-20.0
+ 30
+0.0
+ 10
+116.0
+ 20
+-16.0
+ 30
+0.0
+1001
+ACAD
+1000
+DSTYLE
+1002
+{
+1070
+41
+1040
+3.0
+1070
+341
+1005
+1F
+1002
+}
+  0
+LEADER
+  5
+160
+100
+AcDbEntity
+  8
+KILAVUZ
+100
+AcDbLeader
+ 71
+1
+ 73
+3
+ 40
+1.0
+ 76
+2
+ 10
+140.0
+ 20
+-20.0
+ 30
+0.0
+ 10
+144.0
+ 20
+-16.0
+ 30
+0.0
+1001
+ACAD
+1000
+DSTYLE
+1002
+{
+1070
+341
+1005
+21
+1002
+}
+  0
+MULTILEADER
+  5
+170
+100
+AcDbEntity
+  8
+KILAVUZ
+100
+AcDbMLeader
+270
+2
+300
+CONTEXT_DATA{
+ 40
+1.0
+ 10
+109.0
+ 20
+7.0
+ 30
+0.0
+ 41
+2.0
+140
+1.0
+145
+0.5
+174
+1
+175
+1
+176
+0
+177
+0
+290
+1
+304
+Ada 101\PParsel 5
+ 11
+0.0
+ 21
+0.0
+ 31
+1.0
+340
+11
+ 12
+109.0
+ 22
+7.0
+ 32
+0.0
+ 13
+1.0
+ 23
+0.0
+ 33
+0.0
+ 42
+0.0
+ 43
+0.0
+ 44
+0.0
+ 45
+1.0
+170
+1
+ 90
+-1056964608
+171
+1
+172
+1
+ 91
+-939524096
+141
+1.5
+ 92
+0
+291
+0
+292
+1
+173
+0
+293
+0
+142
+0.0
+143
+0.0
+294
+0
+295
+0
+296
+0
+110
+0.0
+120
+0.0
+130
+0.0
+111
+1.0
+121
+0.0
+131
+0.0
+112
+0.0
+122
+1.0
+132
+0.0
+297
+0
+302
+LEADER{
+290
+1
+291
+1
+ 10
+106.0
+ 20
+6.0
+ 30
+0.0
+ 11
+1.0
+ 21
+0.0
+ 31
+0.0
+ 90
+0
+ 40
+2.5
+304
+LEADER_LINE{
+ 10
+100.0
+ 20
+0.0
+ 30
+0.0
+ 10
+104.0
+ 20
+4.0
+ 30
+0.0
+ 91
+0
+305
+}
+304
+LEADER_LINE{
+ 10
+110.0
+ 20
+0.0
+ 30
+0.0
+ 91
+1
+305
+}
+271
+0
+303
+}
+272
+9
+273
+9
+301
+}
+340
+12
+ 90
+0
+170
+1
+ 91
+-1056964608
+341
+13
+171
+-2
+290
+1
+291
+1
+ 41
+2.5
+342
+1F
+ 42
+1.0
+172
+2
+343
+11
+173
+1
+ 95
+1
+174
+1
+175
+0
+ 92
+-1056964608
+292
+0
+ 93
+-1056964608
+ 10
+1.0
+ 20
+1.0
+ 30
+1.0
+ 43
+0.0
+176
+0
+293
+0
+294
+0
+178
+0
+179
+1
+ 45
+1.0
+271
+0
+272
+9
+273
+9
+  0
+MULTILEADER
+  5
+180
+100
+AcDbEntity
+  8
+KILAVUZ
+100
+AcDbMLeader
+270
+2
+300
+CONTEXT_DATA{
+ 40
+1.0
+ 41
+2.0
+140
+1.5
+290
+0
+296
+1
+302
+LEADER{
+290
+1
+ 10
+126.0
+ 20
+4.0
+ 30
+0.0
+ 40
+2.5
+304
+LEADER_LINE{
+ 10
+120.0
+ 20
+0.0
+ 30
+0.0
+ 10
+124.0
+ 20
+4.0
+ 30
+0.0
+305
+}
+303
+}
+301
+}
+170
+2
+ 42
+0.0
+172
+1
+  0
+INSERT
+  8
+KILAVUZ
+  2
+VANA
+ 10
+160.0
+ 20
+0.0
+ 30
+0.0
+  0
+ENDSEC
+  0
+EOF

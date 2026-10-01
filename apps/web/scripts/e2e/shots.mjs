@@ -2079,7 +2079,54 @@ SCENES.leaders = [
     },
   },
   ...leaderToolScenes(),
+  ...dxfLeaderScenes(),
 ];
+
+// DXF içe aktar over the leaders' fixture (fixtures/formats/v1/leaders.dxf, docs/adr/0146 §8): the window says what
+// became of the LEADERs' MTEXTs, the hookline, the spline path, the MULTILEADERs' other lines and block content; in,
+// every leader with its note (a note's other lines under it); out again, the window says how leaders are written.
+// The desktop's are `exchange::tests::leader_screens` (aktar-*-19…21).
+function dxfLeaderScenes() {
+  const bytes = readFileSync(new URL('../../../../fixtures/formats/v1/leaders.dxf', import.meta.url)).toString('base64');
+  const open = `import('/src/ui/io/DrawingImportDialog.ts').then((m) => m.openDxfImport(window.kentos, { name: 'leaders.dxf', bytes: Uint8Array.from(atob('${bytes}'), (c) => c.charCodeAt(0)) }, { description: 'DXF', accept: { 'application/dxf': ['.dxf'] } }))`;
+  const read = async (ui) => (await ui.eval(open), await ui.waitFor(DXF_READ, 15000));
+  const into = async (ui) => (await read(ui), await ui.clickText('.dialog--io .btn--primary', 'İçe aktar'), await ui.waitFor(`!document.querySelector('.dialog--io')`, 8000));
+  const close = async (ui) => (await ui.escapeAll(2), await ui.eval(UNDO_ALL));
+  return [
+    { id: 'import-dxf-leaders', open: async (ui) => (await read(ui), await ui.sleep(400)), close },
+    {
+      id: 'import-dxf-leaders-in',
+      open: async (ui) => {
+        await into(ui);
+        // Clear of the toolbox.
+        await ui.eval(`(() => {
+          const k = window.kentos;
+          k.selection.clear();
+          const c = k.view.camera;
+          c.fit({ minX: -6, minY: -24, maxX: 170, maxY: 14 }, 24);
+          c.scale = c.scale * 0.72;
+          c.center = { x: c.center.x - 105 / c.scale, y: c.center.y };
+          c.panBy(0, 0);
+          k.view.requestRender();
+        })()`);
+        await ui.move(2, 2);
+        await ui.sleep(600);
+      },
+      close,
+    },
+    {
+      id: 'export-dxf-leaders',
+      open: async (ui) => {
+        await into(ui);
+        await ui.eval(`window.kentos.commands.execute('file.export.dxf')`);
+        await ui.waitFor(`!!document.querySelector('.dialog--io .io-summary')`, 15000);
+        await ui.clickText('.dialog--io .seg__opt', 'Tümü');
+        await ui.sleep(400);
+      },
+      close,
+    },
+  ];
+}
 
 /**
  * Kılavuz at work (docs/adr/0146 §7) over the desktop's ground (`apps/desktop/src/leader_scenes.rs`): a parcel, a

@@ -21,7 +21,8 @@ use super::dimension;
 use super::entity::{Color, Kind, P3, Parsed, Vertex, Weight};
 use super::hatch::{Edge, Hatch, Path};
 use super::justify;
-use super::strings::{mtext_lines, text_codes};
+use super::leaders::LeaderStyle;
+use super::strings::{has_formatting, mtext_lines, text_codes};
 use super::xdata::{Meta, caret_decode};
 use crate::geom::{
     Similarity, Tf, arc_points, arc_steps, bulge_path_points, bulge_path_zs, dist, ellipse_from,
@@ -31,6 +32,8 @@ use crate::gis::CLOSING_Z;
 use crate::math::{TAU, atan2, cos, deg, hypot, norm_angle, rad, sin, sin_cos_deg};
 use crate::nurbs;
 use crate::report::Report;
+
+mod notes;
 
 /// Blocks nest at most this deep (a block that inserts itself is caught earlier).
 const MAX_DEPTH: usize = 24;
@@ -69,6 +72,10 @@ pub struct Library {
     pub layer_names: HashMap<String, String>,
     /// Upper-case text style name → fixed height (0: none).
     pub style_heights: HashMap<String, f64>,
+    /// Upper-case dimension style name → what it says of a leader (docs/adr/0146 §8).
+    pub dim_styles: HashMap<String, LeaderStyle>,
+    /// A block record's handle → its block's name (a leader's arrowhead block).
+    pub block_records: HashMap<u64, String>,
 }
 
 /// Where an entity lives: the transform down to world XY, the Z map of
@@ -470,6 +477,8 @@ pub struct Emitter<'l> {
     explode: bool,
     /// A definition's objects are being read: they are not the drawing's.
     defining: bool,
+    /// Leaders and notes waiting for each other (docs/adr/0146 §8).
+    pending: notes::Pending,
 }
 
 impl<'l> Emitter<'l> {
@@ -481,6 +490,7 @@ impl<'l> Emitter<'l> {
             off_layer: HashMap::new(),
             explode,
             defining: false,
+            pending: notes::Pending::default(),
         }
     }
 
@@ -515,17 +525,20 @@ impl<'l> Emitter<'l> {
             let drawing = std::mem::take(&mut self.out.entities);
             let handles = std::mem::take(&mut self.out.handles);
             let holes = std::mem::take(&mut self.out.holes);
+            let pending = std::mem::take(&mut self.pending);
             self.defining = true;
             let ctx = Ctx::definition(n);
             for x in &block.entities {
                 self.emit(x, &ctx);
             }
+            self.notes_done();
             // The rings KentOS wrote as polylines of their own go back into their polygons, as in the drawing.
             self.merge_holes();
             self.defining = false;
             let entities = std::mem::replace(&mut self.out.entities, drawing);
             self.out.handles = handles;
             self.out.holes = holes;
+            self.pending = pending;
             defs.push(BlockDefinition {
                 id: self.kept[n],
                 name: block.name.clone(),
@@ -992,21 +1005,28 @@ impl<'l> Emitter<'l> {
                 spacing,
                 fill,
                 style,
-            } => self.mtext(
-                ctx,
-                ext,
-                *p,
-                *height,
-                *attach,
-                *xdir,
-                *rotation,
-                text,
-                *spacing,
-                *fill,
-                style,
-                b(),
-                e,
-            ),
+            } => {
+                let start = self.out.entities.len();
+                self.mtext(
+                    ctx,
+                    ext,
+                    *p,
+                    *height,
+                    *attach,
+                    *xdir,
+                    *rotation,
+                    text,
+                    *spacing,
+                    *fill,
+                    style,
+                    b(),
+                    e,
+                );
+                // A leader's note (docs/adr/0146 §8).
+                if let Some(h) = e.handle {
+                    self.mtext_written(h, start);
+                }
+            }
             Kind::Face { pts, solid } => {
                 // SOLID and TRACE are in object coordinates and run 1 2 4 3; 3DFACE is in world coordinates.
                 let m = if *solid {
@@ -1157,25 +1177,8 @@ impl<'l> Emitter<'l> {
                     Entity::Xline(c)
                 });
             }
-            Kind::Leader { pts } => {
-                let pts: Vec<Vec2> = pts.iter().map(|p| ctx.tf.apply(xy(*p))).collect();
-                if pts.len() < 2 {
-                    return self.skip("Kılavuz (LEADER)", "iki noktası yok", e.line);
-                }
-                self.push(Entity::Polyline(PathEntity {
-                    base: b(),
-                    pts,
-                    bulges: None,
-                    holes: None,
-                    zs: None,
-                    parts: None,
-                }));
-                self.note(
-                    "Kılavuz (LEADER)",
-                    "çoklu çizgi olarak alındı; ok başı ve bağlı yazı ayrı",
-                    e.line,
-                );
-            }
+            Kind::Leader { .. } => self.leader(ctx, b(), e),
+            Kind::MLeader(m) => self.mleader(ctx, m, b(), e),
             Kind::Unsupported(name) => {
                 let reason = match name.as_str() {
                     "IMAGE" | "WIPEOUT" | "OLE2FRAME" | "OLEFRAME" | "PDFUNDERLAY"
@@ -1187,9 +1190,6 @@ impl<'l> Emitter<'l> {
                     | "MESH" | "POLYFACE" => "3B katı, yüzey ve bölge nesneleri alınmaz",
                     "MLINE" => {
                         "çoklu çizgi (MLINE) alınmaz; AutoCAD'de patlatıp (EXPLODE) yeniden kaydedin"
-                    }
-                    "MULTILEADER" | "MLEADER" => {
-                        "çok kılavuzlu açıklama (MLEADER) alınmaz; AutoCAD'de patlatıp yeniden kaydedin"
                     }
                     "VIEWPORT" => "görünüm pencereleri pafta düzenine aittir",
                     "SHAPE" => "şekil (SHAPE) yazı tipi dosyası gerektirir; alınmaz",
@@ -1900,10 +1900,14 @@ impl<'l> Emitter<'l> {
         if kept > 1 {
             self.note(
                 "Çok satırlı yazı (MTEXT)",
-                "satırlarına bölündü; biçimlendirme kaldırıldı",
+                if has_formatting(text) {
+                    "satırlarına bölündü; biçimlendirme kaldırıldı"
+                } else {
+                    "satırlarına bölündü"
+                },
                 e.line,
             );
-        } else if text.contains('\\') || text.contains('{') {
+        } else if has_formatting(text) {
             self.note(
                 "Çok satırlı yazı (MTEXT)",
                 "biçimlendirme (yazı tipi, renk, boyut) kaldırıldı",

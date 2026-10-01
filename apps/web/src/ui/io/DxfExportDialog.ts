@@ -156,6 +156,9 @@ class DxfExportDialog {
     const data = list.some((e) => e.label || e.symbol || Object.keys(e.attrs).length);
     // A text's mask is KentOS's alone: DXF's TEXT has none (docs/adr/0145 §7).
     const masked = list.filter((e) => e.kind === 'text' && e.mask).length;
+    // A leader is a LEADER and its note's MTEXT; its open and dot arrowheads KentOS's data (docs/adr/0146 §8).
+    const leaders = list.filter((e) => e.kind === 'leader');
+    const ownArrows = leaders.filter((e) => e.kind === 'leader' && (e.arrow === 'open' || e.arrow === 'dot')).length;
     const themed = layers.some((l) => THEMED.has(l.style.color)) || list.some((e) => e.color && THEMED.has(e.color));
     const styled = layers.filter((l) => l.style.renderer || l.style.fill).length;
     const hidden = layers.filter((l) => !ctx.doc.layers.isVisible(l.id)).length;
@@ -179,6 +182,12 @@ class DxfExportDialog {
       islands ? summaryLine('info', `${islands} adalı alanın adaları ayrı kapalı çoklu çizgiler olarak yazılır; KentOS'a geri okununca yine adalı alan olur.`) : null,
       data ? summaryLine('info', 'Etiketler, öznitelikler ve semboller nesnelerle birlikte KentOS verisi olarak yazılır: başka programlar göstermez, KentOS geri okur.') : null,
       masked ? summaryLine('info', `${masked} yazının zemini KentOS verisi olarak yazılır: DXF yazısında zemin yoktur, başka programlar göstermez; KentOS geri okur.`) : null,
+      leaders.length
+        ? summaryLine(
+            'info',
+            `${leaders.length} kılavuz LEADER olarak, notları da onlara bağlı MTEXT'ler olarak yazılır; KentOS'a kılavuz olarak geri okunur.${ownArrows ? ` ${ownArrows} kılavuzun açık ya da nokta oku KentOS verisidir: başka programlar dolu ok gösterir.` : ''}`,
+          )
+        : null,
       themed ? summaryLine('info', "Tema renkleri DXF'te sabit renk olur (ana mürekkep 7, ikincil 8); KentOS'a geri okununca yine tema rengidir.") : null,
       styled ? summaryLine('info', `${styled} katmanın stili (semboller, dolgular) DXF'e yazılmaz; rengi, çizgi tipi ve kalınlığı yazılır.`) : null,
       repeated ? summaryLine('info', "Aynı adlı katmanlar DXF'te grup adlarıyla ayrılır (“Grup - Katman”); DXF katmanları düz bir listedir.") : null,

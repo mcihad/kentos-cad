@@ -465,6 +465,114 @@ fn screens() {
     }
 }
 
+/// A DXF's leaders come into the drawing as leaders with their notes, the
+/// MTEXTs they name no texts of their own; the block's leader in its
+/// definition (docs/adr/0146 §8, fixtures/formats/v1/leaders.dxf).
+#[test]
+fn a_dxfs_leaders_come_in_with_their_notes() {
+    let mut app = app_with_drawing();
+    let before = count(&app);
+    app.picker = Picker::File(fixture("leaders.dxf"));
+    run(&mut app, "file.import.dxf");
+    send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
+    let model = &app.document.as_ref().expect("open").model;
+    assert_eq!(model.len() - before, 12);
+    let notes: Vec<Option<String>> = model
+        .entities()
+        .filter_map(|e| match e {
+            Entity::Leader(l) => Some(l.text.clone()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        notes,
+        [
+            Some("Mevcut bina"),
+            Some("Ø150 PVC"),
+            None,
+            Some("Vana"),
+            None,
+            None,
+            None,
+            Some("Ada 101"),
+            None,
+        ]
+        .map(|n| n.map(str::to_owned))
+    );
+    let vana = model
+        .blocks()
+        .iter()
+        .find(|b| b.name == "VANA")
+        .expect("VANA");
+    assert!(
+        vana.entities
+            .iter()
+            .any(|e| matches!(e, Entity::Leader(l) if l.text.as_deref() == Some("V")))
+    );
+}
+
+/// One picture of the exchange windows in `out` (`name`-WxH.png).
+fn shot(app: &mut App, out: &std::path::Path, name: &str, (width, height): (f32, f32)) {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+    let mut update = |app: &mut App, message| {
+        let _ = app.update(message);
+    };
+    snapshot.settle(app, App::view, &mut update);
+    let file = out.join(format!("{name}-{width}x{height}.png"));
+    snapshot
+        .render(app.view(), &app.theme())
+        .save(&file)
+        .expect("writes the picture");
+    println!("{}", file.display());
+}
+
+/// Leaders (docs/adr/0146 §8): the window says what became of the LEADERs'
+/// MTEXTs, the hookline, the spline path, the MULTILEADERs' other lines and
+/// block content; in, every leader with its note; out again, the window
+/// says how leaders are written. The web's are `shots.mjs leaders`
+/// (import-dxf-leaders…, export-dxf-leaders).
+///
+/// ```text
+/// cargo test -p kentos-desktop exchange::tests::leader_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn leader_screens() {
+    let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for size in [(1440.0, 900.0), (1100.0, 650.0)] {
+        for mode in ["dark", "light"] {
+            let mut app = app_with_drawing();
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+            app.apply_settings();
+            app.picker = Picker::File(fixture("leaders.dxf"));
+            run(&mut app, "file.import.dxf");
+            shot(&mut app, &out, &format!("aktar-{mode}-19-dxf-kilavuzlar"), size);
+            send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
+            app.selection.set(Vec::<kentos_domain::Slot>::new());
+            let frame = kentos_render_wgpu::Bounds {
+                min_x: -6.0,
+                min_y: -24.0,
+                max_x: 170.0,
+                max_y: 14.0,
+            };
+            app.viewport.camera.fit(&frame, 24.0);
+            shot(&mut app, &out, &format!("aktar-{mode}-20-dxf-kilavuzlar-alindi"), size);
+            run(&mut app, "file.export.dxf");
+            send(
+                &mut app,
+                Event::DxfExport(dxf_export::Event::Scope(dxf_export::Scope::All)),
+            );
+            shot(&mut app, &out, &format!("aktar-{mode}-21-dxf-ver-kilavuzlar"), size);
+        }
+    }
+}
+
 /// A DXF's attribute definitions come in with its blocks (docs/adr/0144 §7):
 /// ROGAR's NO, KOT and ORTA; its first insert holds the ATTRIBs' values.
 #[test]

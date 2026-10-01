@@ -25,7 +25,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   (ADR 0021, 0027), nokta, daire, yay, dikdörtgen, döndürülmüş dikdörtgen ve düzgün
   çokgendir (ADR 0032); elips, eğri, yardımcı çizgi, ışın, paralel çizgi, dik in ve dik çık, halka,
   revizyon bulutu, kot noktası ve böl (ADR 0057); yazı ve çizimin üstündeki yazı kutusu (ADR 0060);
-  ölçülendirme: hizalı, doğrusal, açı, yarıçap ve çap (ADR 0061); tarama: kapalı nesneyle ya da çizgilerle, adalarıyla (ADR 0062); köşe kotu: çizginin, çoklu çizginin ve alanın köşe kotları, Kot ver, Öznitelikler'in kot ve 3B uzunluk satırları (ADR 0142); çok parçalı alan: parçalar ve delikleri, Parçaları birleştir, Parçalara ayır, alan işlemlerinde Tek nesne (ADR 0143); blok: Blok oluştur, Blok ekle, Bloklar paneli, Blok öznitelikleri penceresi, Öznitelikler'de yerleştirme ve blok öznitelikleri, Patlat; DXF'in blokları tanım ve yerleştirme olarak gelir ve gider, öznitelikleri ATTDEF ve ATTRIB olarak, “Blokları patlat” seçeneğiyle (ADR 0144); yazı ekleri: yazının ve öznitelik tanımının on iki noktalı hizası ve genişlik çarpanı, yazının zemini, Yazı'nın Hiza, Genişlik, Zemin ve Artır seçenekleri, Okunur yap, Bul ve değiştir, Metin dosyası yerleştir; DXF'in 72/73'ü, 41'i, MTEXT'in yerleşim noktası ve zemini, NCZ'nin çapaları tahminsiz (ADR 0145); kılavuz: ok, kırık çizgi, kol ve not tek nesne, Kılavuz aracı (Ok, Yükseklik, Zemin), Öznitelikler'in Kılavuz bölümü, notun yerinde düzenlenmesi (ADR 0146);
+  ölçülendirme: hizalı, doğrusal, açı, yarıçap ve çap (ADR 0061); tarama: kapalı nesneyle ya da çizgilerle, adalarıyla (ADR 0062); köşe kotu: çizginin, çoklu çizginin ve alanın köşe kotları, Kot ver, Öznitelikler'in kot ve 3B uzunluk satırları (ADR 0142); çok parçalı alan: parçalar ve delikleri, Parçaları birleştir, Parçalara ayır, alan işlemlerinde Tek nesne (ADR 0143); blok: Blok oluştur, Blok ekle, Bloklar paneli, Blok öznitelikleri penceresi, Öznitelikler'de yerleştirme ve blok öznitelikleri, Patlat; DXF'in blokları tanım ve yerleştirme olarak gelir ve gider, öznitelikleri ATTDEF ve ATTRIB olarak, “Blokları patlat” seçeneğiyle (ADR 0144); yazı ekleri: yazının ve öznitelik tanımının on iki noktalı hizası ve genişlik çarpanı, yazının zemini, Yazı'nın Hiza, Genişlik, Zemin ve Artır seçenekleri, Okunur yap, Bul ve değiştir, Metin dosyası yerleştir; DXF'in 72/73'ü, 41'i, MTEXT'in yerleşim noktası ve zemini, NCZ'nin çapaları tahminsiz (ADR 0145); kılavuz: ok, kırık çizgi, kol ve not tek nesne, Kılavuz aracı (Ok, Yükseklik, Zemin), Öznitelikler'in Kılavuz bölümü, notun yerinde düzenlenmesi; DXF'in LEADER'ı bağlı MTEXT notuyla ve MULTILEADER gelir, kılavuz LEADER ve MTEXT olarak gider (ADR 0146);
   alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine tıklayarak alan (ADR 0065);
   mesafe ölç, alan hesapla ve parsel oluştur (ADR 0067); seçili nesnelerin tutamaçları ve üzerine gelme kartı (ADR 0068);
   Hesap pencereleri: poligon hesabı, kutupsal alım, önden ve geriden kestirme, aplikasyon (ADR 0070, 0071);
@@ -163,7 +163,7 @@ python3 scripts/fonts/drawing_fonts.py --check   # masaüstünün çizim yazı t
 python3 scripts/fonts/ui_fonts.py --check   # KentOS UI'ın Noto Sans ve Roboto'sunu web'in WOFF2'lerinden denetle; --advance genişlik tahminlerini ölçer
 KENTOS_WRITE_GIS_EXPORTS=1 cargo test -p kentos-formats --test gis   # GeoJSON yazıcısının örnek çıktısını yeniden yaz; farkı okuyun
 KENTOS_WRITE_DXF=1 cargo test -p kentos-formats --test dxf_write   # DXF yazıcısının örnek çıktısını (fixtures/formats/v1/dxf-write) yeniden yaz; farkı okuyun
-python3 scripts/fixtures/dxf_write_reference.py --check   # DXF yazıcısının blok, öznitelik ve yazı örneklerini KentOS kodu olmadan denetle (ADR 0144, 0145)
+python3 scripts/fixtures/dxf_write_reference.py --check   # DXF yazıcısının blok, öznitelik, yazı ve kılavuz örneklerini KentOS kodu olmadan denetle (ADR 0144, 0145, 0146)
 python3 scripts/fixtures/text_cases.py --check   # yazı kurallarını (Artır, Bul ve değiştir, Okunur yap) kurallardan denetle (ADR 0145)
 python3 scripts/fixtures/leader_cases.py --check   # kılavuzun yerleşimini (ok başı, kol, not) kuraldan denetle (ADR 0146)
 pnpm e2e:cloud           # gerçek API/PostGIS cloud akışı
@@ -529,7 +529,7 @@ Tek ayrıntılı yol haritası [TODOS.md](TODOS.md)'dir. Buraya ikinci checkbox
 listesi, eski Faz A–F sırası veya her tamamlanan commit'in dökümünü eklemeyin.
 Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde saklayın.
 
-### 10.1 Devir notu (30 Eylül 2026)
+### 10.1 Devir notu (1 Ekim 2026)
 
 İşi devralan için kalınan yer; bir sonraki devirde bu bölümü yenileyin.
 
@@ -539,15 +539,13 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   Bul ve değiştir, Metin dosyası yerleştir); biçimler (DXF okuma ve yazma, NCZ çapaları; `texts.dxf` ve
   `dxf-write/texts` bağımsız denetimle). Ondan önce blok (ADR 0144, `CAD-04`), çok parçalı alan (ADR 0143,
   `CAD-14`) ve köşe kotu (ADR 0142, `CAD-13`).
-- Sürmekte: kılavuz ([ADR 0146](docs/adr/0146-leader.md), TODOS.md `CAD-16`, `.kcad` şema 8): ok, kırık çizgi,
-  kol ve not tek nesne (`leader`; arayüzde AutoCAD'in Türkçesi gibi “Kılavuz”, sahibin seçimi); ok türleri, ölçüler notun yüksekliğinden; Kılavuz aracı, Öznitelikler; DXF
-  LEADER ve MULTILEADER. 1. adım (sözleşme ve şema 8, çekirdeğin `Shape::Leader`'ı) ve 2. adım (yerleşim, çizim
-  kaydı `MIXED`, not etiketi, seçme, kenet, Patlat) ve 3. adım (komutlar: `EntityGeometry::Leader`, `create`'in
-  `leader` işlemi, ortak durumlar) ve 4. adım (Kılavuz aracı, Öznitelikler'in “Kılavuz” bölümü, notun yerinde
-  düzenlenmesi; ortak iz `leader.json`) tamam; sıradaki adım 5: biçimler (DXF LEADER, bağlı MTEXT'iyle, ve
-  MULTILEADER okuma; LEADER ve MTEXT yazma). Ondan sonra, sahibin sırasıyla (ADR 0143
-  Bağlam): yeni ölçü türleri. Her biri `.kcad` şemasını değiştiren kendi özelliği ve şema adımıyla gelir;
-  önce ADR yazılır, adımlar ADR 0142–0146'daki gibi iki platformda, ortak fixture'larla ilerler.
+- Bitti (1 Ekim): kılavuz ([ADR 0146](docs/adr/0146-leader.md), TODOS.md `CAD-16`, `.kcad` şema 8), 1–5. adımlar iki
+  platformda: sözleşme ve şema 8; yerleşim ve çizim; komutlar; Kılavuz aracı, Öznitelikler ve notun yerinde
+  düzenlenmesi (ortak iz `leader.json`); DXF LEADER (bağlı MTEXT'iyle) ve MULTILEADER okuma, LEADER ve MTEXT yazma
+  (`leaders.dxf`, `dxf-write/leaders` bağımsız denetimle). Arayüzdeki adı “Kılavuz”dur (sahibin seçimi).
+- Sıradaki, sahibin sırasıyla (ADR 0143 Bağlam): yeni ölçü türleri. Her biri `.kcad` şemasını değiştiren kendi
+  özelliği ve şema adımıyla gelir; önce ADR yazılır, adımlar ADR 0142–0146'daki gibi iki platformda, ortak
+  fixture'larla ilerler.
 - Bilinen açık: web `pnpm e2e` duman testinde üç test ADR 0143'ten önce de düşüyordu: “toolbox
   shows every tool without scrolling” (79 araç kaydırma istiyor), nokta hesaplayıcının “yan nokta
   30/5” adımı ve “Layers panel: counts follow add, undo and redo”. Kök nedenleri araştırılmadı.

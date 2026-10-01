@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Independent check of the DXF writer's blocks (docs/adr/0144 §5) and texts (docs/adr/0145 §7).
+"""Independent check of the DXF writer's blocks (docs/adr/0144 §5), texts (docs/adr/0145 §7) and leaders (docs/adr/0146 §8).
 
 Reads `fixtures/formats/v1/dxf-write/<name>.input.json` (the writer's input,
 written by hand) and `<name>.dxf` (what the writer made of it, committed) and
@@ -40,6 +40,24 @@ library and no KentOS code:
   and width factor implies being one (within 1e-8 m) and an average letter
   of 0.3 to 0.9 of its height; its width factor is 41 (none for 1); a
   masked TEXT has KentOS's "mask" item, no other has;
+- a leader (docs/adr/0146 §8) is a LEADER of the dimension style Standard:
+  its arrowhead drawn (71 1) unless it has none, straight (72 0); with a
+  note made with an MTEXT (73 0) and a hookline (75 1): its vertices, then
+  the landing's end, 2 heights from the last vertex along the note's
+  direction on the side the last segment goes (its projection on that
+  direction 0 or more: along it, 74 1; else against it, 74 0); without one
+  made with nothing (73 3, 75 0), its vertices alone (76 their count); its
+  height (40); the note's direction (211, its turn's cosine and sine, within
+  1e-12). With a note the next entity is its MTEXT: the LEADER names it
+  (340), it names the LEADER first among its owners (its reactor), on the
+  same layer; it stands 2.5 heights past the last vertex on that side
+  (within 1e-8 m), the middle of its left there (71 4) or of its right (71
+  6), left to right (72 1), as high as the leader, in MTEXT's notation
+  (control characters spaces, a backslash, brace or caret escaped), in the
+  note's direction (11), over the drawing's background exactly when masked
+  (90 3). KentOS's data names an open or dot arrowhead ("arrow"), no other;
+  it holds the note exactly when MTEXT cannot (a control character in it),
+  and the turn, when it does, exactly;
 - every handle is unique and every owner names a handle of the file.
 
     python3 scripts/fixtures/dxf_write_reference.py --check
@@ -50,6 +68,7 @@ from __future__ import annotations
 import json
 import math
 import sys
+import unicodedata
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -192,8 +211,97 @@ def written_kinds(e: dict) -> list[str]:
     kind = e["kind"]
     if kind == "polygon":
         return ["LWPOLYLINE"] * (1 + len(e.get("holes") or []))
+    if kind == "leader":
+        return ["LEADER", "MTEXT"] if note_of(e) else ["LEADER"]
     # The fixture's blocks hold only these kinds.
     return [{"line": "LINE", "circle": "CIRCLE", "point": "POINT", "insert": "INSERT"}[kind]]
+
+
+def note_of(e: dict) -> str | None:
+    """A leader's note, when it has one that is not empty."""
+    t = e.get("text")
+    return t if t and t.strip() else None
+
+
+def control(c: str) -> bool:
+    return unicodedata.category(c) == "Cc"
+
+
+def caret_decode(s: str) -> str:
+    """DXF's caret notation back to characters ("^ " a caret, "^I" a tab)."""
+    out, i = [], 0
+    while i < len(s):
+        if s[i] == "^" and i + 1 < len(s) and (s[i + 1] == " " or "@" <= s[i + 1] <= "_"):
+            out.append("^" if s[i + 1] == " " else chr(ord(s[i + 1]) - 64))
+            i += 2
+        else:
+            out.append(s[i])
+            i += 1
+    return "".join(out)
+
+
+def mtext_notation(s: str) -> str:
+    """A plain text in MTEXT's notation."""
+    escape = {"\\": "\\\\", "{": "\\{", "}": "\\}", "^": "^ "}
+    return "".join(" " if control(c) else escape.get(c, c) for c in s)
+
+
+def check_leader(o: list[tuple[int, str]], m: list[tuple[int, str]] | None, e: dict, where: str) -> None:
+    note = note_of(e)
+    h = e["height"]
+    r = math.radians(e["rotation"])
+    u = (math.cos(r), math.sin(r))
+    pts = [(p["x"], p["y"]) for p in e["pts"]]
+    last = pts[-1]
+    side = 1.0
+    for q in reversed(pts[:-1]):
+        d = (last[0] - q[0], last[1] - q[1])
+        if d != (0.0, 0.0):
+            side = 1.0 if d[0] * u[0] + d[1] * u[1] >= 0 else -1.0
+            break
+    along = lambda k: (last[0] + side * u[0] * k * h, last[1] + side * u[1] * k * h)
+    ensure(o[0] == (0, "LEADER") and group(o, 3) == "Standard", f"{where}: a LEADER of Standard")
+    ensure(group(o, 71) == ("0" if e.get("arrow") == "none" else "1"), f"{where}: its arrowhead drawn or not (71)")
+    ensure(group(o, 72) == "0", f"{where}: straight (72 0)")
+    ensure(group(o, 73) == ("0" if note else "3"), f"{where}: made with an MTEXT or with nothing (73)")
+    ensure(group(o, 75) == ("1" if note else "0"), f"{where}: a hookline with a note (75)")
+    if note:
+        ensure(group(o, 74) == ("1" if side > 0 else "0"), f"{where}: the landing's side (74)")
+    ensure(float(group(o, 40)) == h, f"{where}: its height")
+    xs = [float(v) for c, v in o if c == 10]
+    ys = [float(v) for c, v in o if c == 20]
+    ensure(int(group(o, 76)) == len(xs) == len(pts) + (1 if note else 0), f"{where}: its vertices' count (76)")
+    ensure(list(zip(xs, ys))[: len(pts)] == pts, f"{where}: its vertices exactly")
+    if note:
+        end = along(2.0)
+        ensure(abs(xs[-1] - end[0]) <= 1e-8 and abs(ys[-1] - end[1]) <= 1e-8, f"{where}: the landing's end last ({end})")
+    ensure(abs(float(group(o, 211)) - u[0]) <= 1e-12 and abs(float(group(o, 221)) - u[1]) <= 1e-12, f"{where}: the note's direction (211)")
+    items = kentos(o)
+    arrow = e.get("arrow")
+    ensure(items.get("arrow") == ([arrow] if arrow in ("open", "dot") else None), f"{where}: KentOS's arrow item exactly for open and dot")
+    if "noteturn" in items:
+        ensure(float(items["noteturn"][0]) == e["rotation"], f"{where}: KentOS's turn is the leader's exactly")
+    exact = bool(note) and any(control(c) for c in note)
+    ensure(("note" in items) == exact, f"{where}: KentOS's note item exactly when MTEXT cannot say the note")
+    if exact:
+        ensure(caret_decode("".join(items["note"])) == note, f"{where}: KentOS's note exactly")
+    if not note:
+        ensure(group(o, 340) is None and m is None, f"{where}: no note, no MTEXT")
+        return
+    ensure(m is not None and m[0] == (0, "MTEXT"), f"{where}: its MTEXT next")
+    ensure(group(o, 340) == group(m, 5), f"{where}: the LEADER names its MTEXT (340)")
+    k = m.index((102, "{ACAD_REACTORS"))
+    ensure(m[k + 1] == (330, group(o, 5)) and m[k + 2] == (102, "}"), f"{where}: the MTEXT's reactor names its LEADER")
+    owners = [v for c, v in m if c == 330]
+    ensure(owners == [group(o, 5), group(o, 330)], f"{where}: the MTEXT's owner is the LEADER's")
+    ensure(group(m, 8) == group(o, 8), f"{where}: the MTEXT on the LEADER's layer")
+    at = along(2.5)
+    ensure(abs(float(group(m, 10)) - at[0]) <= 1e-8 and abs(float(group(m, 20)) - at[1]) <= 1e-8, f"{where}: the note 2.5 heights past the last vertex ({at})")
+    ensure(float(group(m, 40)) == h, f"{where}: the note as high as the leader")
+    ensure(group(m, 71) == ("4" if side > 0 else "6") and group(m, 72) == "1", f"{where}: the note's middle left or right (71), left to right")
+    ensure(group(m, 1) == mtext_notation(note), f"{where}: the note in MTEXT's notation")
+    ensure(abs(float(group(m, 11)) - u[0]) <= 1e-12 and abs(float(group(m, 21)) - u[1]) <= 1e-12, f"{where}: the note's direction (11)")
+    ensure((group(m, 90) == "3") == bool(e.get("mask")), f"{where}: the background exactly when masked (90 3)")
 
 
 def check_look(o: list[tuple[int, str]], e: dict, layers: dict[str, str], where: str) -> None:
@@ -412,6 +520,10 @@ def check(name: str) -> list[str]:
             check_look(o, e, layers, where)
             if e["kind"] == "insert":
                 check_insert(o, e, names[e["block"]], where)
+            if e["kind"] == "leader":
+                check_leader(o, objects[k + 1] if note_of(e) else None, e, where)
+                if note_of(e):
+                    check_look(objects[k + 1], e, layers, f"{where} › MTEXT")
             if e["kind"] == "polygon":
                 own = group(o, 5)
                 for h in objects[k + 1 : k + len(written_kinds(e))]:
@@ -462,6 +574,21 @@ def check(name: str) -> list[str]:
     if texts:
         aligned = sum(1 for e in texts if e.get("align"))
         said.append(f"{len(texts)} yazı ({aligned} hizalı, {sum(1 for e in texts if e.get('mask'))} zeminli)")
+
+    # The drawing's leaders (docs/adr/0146 §8), in the input's order, each with its MTEXT after it.
+    leaders = [e for e in spec["entities"] if e["kind"] == "leader"]
+    at = [k for k, e in enumerate(drawn) if e[0] == (0, "LEADER")]
+    ensure(len(at) == len(leaders), f"{len(leaders)} LEADERs")
+    for n, (k, e) in enumerate(zip(at, leaders)):
+        where = f"kılavuz {n + 1}"
+        o = drawn[k]
+        ensure(group(o, 330) == "17" and group(o, 8) == layers[e["layerId"]], f"{where}: in model space, on its layer")
+        if e.get("color"):
+            ensure(group(o, 420) == str(int(e["color"][1:], 16)), f"{where}: its true colour")
+        check_leader(o, drawn[k + 1] if note_of(e) else None, e, where)
+    if leaders:
+        noted = sum(1 for e in leaders if note_of(e))
+        said.append(f"{len(leaders)} kılavuz ({noted} notlu MTEXT'iyle)")
 
     # Handles unique; owners name handles of the file.
     body = p[next(k for k, g in enumerate(p) if g == (2, "CLASSES")) :]

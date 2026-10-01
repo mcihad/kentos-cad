@@ -97,6 +97,24 @@ pub fn text_codes(s: &str) -> String {
     out
 }
 
+/// Whether MTEXT content has formatting a plain text drops: a code other
+/// than a line break (`\P`, `\X`, `\N`), a hard space (`\~`) or an escaped
+/// backslash or brace, or a `{…}` group.
+pub fn has_formatting(s: &str) -> bool {
+    let mut chars = s.chars();
+    while let Some(c) = chars.next() {
+        match c {
+            '\\' => match chars.next() {
+                Some('P' | 'X' | 'N' | '~' | '\\' | '{' | '}') | None => {}
+                Some(_) => return true,
+            },
+            '{' | '}' => return true,
+            _ => {}
+        }
+    }
+    false
+}
+
 /// MTEXT content as plain lines: paragraphs (`\P`), column breaks (`\N`)
 /// and dimension line breaks (`\X`) split lines; formatting codes, font and
 /// colour switches and `{…}` groups are removed; stacked fractions
@@ -163,6 +181,16 @@ pub fn mtext_lines(s: &str) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn formatting_is_a_code_or_a_group_not_a_line_break_or_an_escape() {
+        for plain in ["Ada 101", "a\\\\b \\{c\\} ^d", "UST\\PALT", "A\\~B"] {
+            assert!(!has_formatting(plain), "{plain}");
+        }
+        for formatted in ["{\\fArial|b1;Vana}", "\\H2.5;Bina", "x{y}", "\\LAlt"] {
+            assert!(has_formatting(formatted), "{formatted}");
+        }
+    }
 
     #[test]
     fn turkish_code_page_and_unicode_escapes() {

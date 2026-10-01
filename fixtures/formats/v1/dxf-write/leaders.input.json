@@ -1,0 +1,70 @@
+{
+  "entities": [
+    {"kind": "leader", "id": 1, "layerId": "kilavuz", "attrs": {}, "pts": [{"x": 452345.123, "y": 4412345.678}, {"x": 452351.123, "y": 4412350.678}], "height": 2.5, "rotation": 0, "text": "Mevcut bina"},
+    {"kind": "leader", "id": 2, "layerId": "kilavuz", "attrs": {}, "pts": [{"x": 452389.123, "y": 4412333.678}, {"x": 452385.123, "y": 4412338.678}, {"x": 452381.123, "y": 4412338.678}], "height": 2.5, "rotation": 0, "text": "Ø150 PVC", "arrow": "open", "mask": true},
+    {"kind": "leader", "id": 3, "layerId": "kilavuz", "attrs": {}, "pts": [{"x": 452393.123, "y": 4412345.678}, {"x": 452397.123, "y": 4412351.678}], "height": 2, "rotation": 30, "text": "Ada 101 Parsel 5", "arrow": "dot", "color": "#E5484D", "lineWeight": 0.35},
+    {"kind": "leader", "id": 4, "layerId": "kilavuz", "attrs": {}, "pts": [{"x": 452345.123, "y": 4412333.678}, {"x": 452354.123, "y": 4412337.678}], "height": 2.5, "rotation": 0, "arrow": "none"},
+    {"kind": "leader", "id": 5, "layerId": "kilavuz", "attrs": {}, "pts": [{"x": 452415.123, "y": 4412345.678}, {"x": 452419.123, "y": 4412349.678}], "height": 1.5, "rotation": 0, "text": "a\\b {c} ^d"},
+    {"kind": "leader", "id": 6, "layerId": "kilavuz", "attrs": {}, "pts": [{"x": 452435.123, "y": 4412345.678}, {"x": 452439.123, "y": 4412349.678}], "height": 1.5, "rotation": 90, "text": "Kot\t105.20"},
+    {"kind": "insert", "id": 7, "layerId": "kilavuz", "attrs": {}, "block": "018f3a2b-0000-7000-8000-00000000000a", "p": {"x": 452455.123, "y": 4412345.678}, "scale": 1, "rotation": 0},
+    {"kind": "leader", "id": 8, "layerId": "kilavuz", "attrs": {}, "pts": [{"x": 452475.123, "y": 4412345.678}, {"x": 452471.123, "y": 4412348.678}], "height": 2, "rotation": 330, "text": "Sol"}
+  ],
+  "layers": [
+    {
+      "id": "kilavuz",
+      "name": "Kılavuz",
+      "path": [],
+      "color": "#7FB2E5",
+      "visible": true,
+      "locked": false,
+      "lineType": "continuous",
+      "lineWeight": 0.25
+    }
+  ],
+  "scale": 1000,
+  "lengthDecimals": 3,
+  "grads": true,
+  "dimensionValues": {},
+  "blocks": [
+    {
+      "id": "018f3a2b-0000-7000-8000-00000000000a",
+      "name": "Vana",
+      "base": {
+        "x": 0,
+        "y": 0
+      },
+      "entities": [
+        {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+            "x": 0,
+            "y": 0
+          },
+          "r": 1
+        },
+        {
+          "kind": "leader",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+            {
+              "x": 1,
+              "y": 0
+            },
+            {
+              "x": 3,
+              "y": 2
+            }
+          ],
+          "text": "V",
+          "height": 0.5,
+          "rotation": 0
+        }
+      ]
+    }
+  ]
+}

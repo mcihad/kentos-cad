@@ -5,7 +5,8 @@
 //! DXF at all. Expected values are worked out by hand from the file.
 
 use kentos_contracts::{
-    BlockId, DxfReadOptions, Entity, HatchPatternType, ImportResult, LineType, TextAlign, Vec2,
+    BlockId, DxfReadOptions, Entity, HatchPatternType, ImportResult, LeaderArrow, LineType,
+    TextAlign, Vec2,
 };
 use kentos_formats::dxf;
 use kentos_formats::math::{cos, sin};
@@ -1437,4 +1438,138 @@ fn texts_take_their_alignment_width_factor_and_mask() {
     assert_eq!(e.len(), 30);
     // Nothing is placed by a guess of its width any more.
     assert!(r.report.notes.iter().all(|n| !n.reason.contains("tahmin")), "{:?}", r.report.notes);
+}
+
+/// A leader's vertices, note, height, turn, arrowhead and mask.
+type Leader<'a> = (Vec<Vec2>, Option<&'a str>, f64, f64, Option<LeaderArrow>, bool);
+
+fn leader(e: &Entity) -> Leader<'_> {
+    let Entity::Leader(l) = e else {
+        panic!("not a leader: {e:?}")
+    };
+    (l.pts.clone(), l.text.as_deref(), l.height, l.rotation, l.arrow, l.mask)
+}
+
+/// The leaders of fixtures/formats/v1/leaders.dxf (docs/adr/0146 §8): a
+/// LEADER's MTEXT, after it or before it in the file, is its note (the
+/// first line; the others stay texts); a hookline's end gives way to the
+/// leader's own landing; the arrowhead comes from the arrow block's name
+/// (the style's, or the entity's own DSTYLE data); without a note the
+/// height is 40, else the style's arrow; a MULTILEADER is its first line
+/// with its content as the note.
+#[test]
+fn leaders_come_with_their_notes_arrowheads_and_heights() {
+    let r = read("leaders.dxf");
+    let e = &r.entities;
+    let dot = Some(LeaderArrow::Dot);
+    let open = Some(LeaderArrow::Open);
+    // A: its MTEXT after it; the hookline's end (8.5, 5) gives way to the leader's own landing.
+    assert_eq!(
+        leader(&e[0]),
+        (vec![v(0.0, 0.0), v(6.0, 5.0)], Some("Mevcut bina"), 2.5, 0.0, None, false)
+    );
+    // B: its MTEXT before it, at 30° over a background; Harita's arrow block is _Dot.
+    let (pts, note, height, turn, arrow, mask) = leader(&e[1]);
+    assert_eq!(
+        (pts, note, height, arrow, mask),
+        (vec![v(40.0, -10.0), v(36.0, -6.0)], Some("Ø150 PVC"), 2.0, dot, true)
+    );
+    assert!((turn - 30.0).abs() < 1e-9, "{turn}");
+    // Its second line stays a text, under the note as it was under the first line, 2 × 5/3
+    // along the note's up; the note 2.5 heights from the last vertex, its landing to the left.
+    let Entity::Text(dn) = &e[2] else {
+        panic!("{:?}", e[2])
+    };
+    assert_eq!(
+        (dn.text.as_str(), dn.height, dn.mask, dn.align, dn.rotation),
+        ("DN 150", 2.0, true, Some(TextAlign::MiddleRight), turn)
+    );
+    let (s, c) = (sin(turn * PI / 180.0), cos(turn * PI / 180.0));
+    let note = v(36.0 - 5.0 * c, -6.0 - 5.0 * s);
+    let gap = 2.0 * 5.0 / 3.0;
+    assert!(near(dn.p, v(note.x + s * gap, note.y - c * gap)), "{:?}", dn.p);
+    // C: neither an annotation nor an arrowhead; no 40: Harita's arrow, 1.8 × 2.
+    assert_eq!(
+        leader(&e[3]),
+        (vec![v(60.0, 0.0), v(64.0, 4.0)], None, 3.6, 0.0, Some(LeaderArrow::None), false)
+    );
+    // D: a spline path read straight; its MTEXT's formatting dropped.
+    assert_eq!(
+        leader(&e[4]),
+        (vec![v(80.0, 0.0), v(84.0, 3.0), v(88.0, 3.0)], Some("Vana"), 1.5, 0.0, None, false)
+    );
+    // F: the MTEXT it names is not in the file.
+    assert_eq!(
+        leader(&e[5]),
+        (vec![v(100.0, -20.0), v(104.0, -16.0)], None, 2.0, 0.0, None, false)
+    );
+    // G: its own DSTYLE data gives _Open and an arrow of 3 (Standard's scale, 1).
+    assert_eq!(
+        leader(&e[6]),
+        (vec![v(120.0, -20.0), v(116.0, -16.0)], None, 3.0, 0.0, open, false)
+    );
+    // K: _ArchTick is no arrowhead KentOS has: filled.
+    assert_eq!(
+        leader(&e[7]),
+        (vec![v(140.0, -20.0), v(144.0, -16.0)], None, 1.0, 0.0, None, false)
+    );
+    // H: its first leader line to its leader's last point; the content's first line its note.
+    assert_eq!(
+        leader(&e[8]),
+        (vec![v(100.0, 0.0), v(104.0, 4.0), v(106.0, 6.0)], Some("Ada 101"), 2.0, 0.0, open, true)
+    );
+    let Entity::Text(parsel) = &e[9] else {
+        panic!("{:?}", e[9])
+    };
+    // Under its note (106 + 2.5 × 2, 6), one line pitch down, aligned as the note.
+    assert_eq!(
+        (parsel.text.as_str(), parsel.height, parsel.align),
+        ("Parsel 5", 2.0, Some(TextAlign::MiddleLeft))
+    );
+    assert!(near(parsel.p, v(111.0, 6.0 - 2.0 * 5.0 / 3.0)), "{:?}", parsel.p);
+    // I: its block content is not taken; its height is the context's arrow, 1.5.
+    assert_eq!(
+        leader(&e[10]),
+        (vec![v(120.0, 0.0), v(124.0, 4.0), v(126.0, 4.0)], None, 1.5, 0.0, None, false)
+    );
+    assert!(matches!(&e[11], Entity::Insert(_)));
+    assert_eq!(e.len(), 12);
+    // VANA's leader took the MTEXT that came before it in the block.
+    let vana = r.blocks.iter().find(|b| b.name == "VANA").expect("VANA");
+    assert_eq!(vana.entities.len(), 2);
+    assert_eq!(
+        leader(&vana.entities[1]),
+        (vec![v(1.0, 0.0), v(3.0, 2.0)], Some("V"), 0.5, 0.0, None, false)
+    );
+    assert_eq!(
+        (count(&r, "leader"), count(&r, "text"), count(&r, "insert")),
+        (9, 2, 1)
+    );
+    let said = |what: &str, part: &str| {
+        r.report
+            .notes
+            .iter()
+            .any(|n| n.what == what && n.reason.contains(part))
+    };
+    assert!(said("Kılavuz (LEADER)", "ilk satırı kılavuzun notu oldu"));
+    assert!(said("Kılavuz (LEADER)", "eğri yolu"));
+    assert!(said("Kılavuz (LEADER)", "bağlı notu (340) dosyada yok"));
+    assert!(said("Kılavuz (LEADER)", "“_ArchTick” KentOS'ta yok"));
+    assert!(said("Çoklu kılavuz (MULTILEADER)", "öbür 1 ok çizgisi alınmadı"));
+    assert!(said("Çoklu kılavuz (MULTILEADER)", "blok içeriği alınmadı"));
+    assert!(said("Çoklu kılavuz (MULTILEADER)", "eğri ok çizgisi"));
+    assert!(r.report.skipped.is_empty(), "{:?}", r.report.skipped);
+    // Blokları patlat: VANA's leader comes into the drawing with its note, where the insert puts it.
+    let o = opened("leaders.dxf");
+    let opened: Vec<Leader<'_>> = o
+        .entities
+        .iter()
+        .filter(|e| matches!(e, Entity::Leader(l) if l.text.as_deref() == Some("V")))
+        .map(leader)
+        .collect();
+    assert_eq!(
+        opened,
+        vec![(vec![v(161.0, 0.0), v(163.0, 2.0)], Some("V"), 0.5, 0.0, None, false)]
+    );
+    assert_eq!((count(&o, "leader"), count(&o, "text")), (10, 2));
 }

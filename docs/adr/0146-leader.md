@@ -122,17 +122,27 @@ Her ölçü notun yüksekliği `h` cinsindendir. Bunlar AutoCAD'in varsayılan o
 
 - **DXF okuma:**
   - **LEADER:**
-    - köşeleri (10) kılavuzun köşeleridir; ok başı (71) varsa dolu oktur, yoksa ok başı yoktur;
-    - bağlı notu (340'ın gösterdiği MTEXT) kılavuza katılır, ayrı yazı olmaz: ilk satırı not, yüksekliği ve dönüşü kılavuzunkidir;
-    - bağlı notu olmayan kılavuz notsuzdur;
-    - eğri yollu (72 = 1) kılavuz kırık çizgi olur ve söylenir.
+    - köşeleri (10) kılavuzun köşeleridir.
+    - Kolu varsa (75 = 1) son köşe kolun ucudur. Notu olan kılavuzda bu köşe atılır, yerini KentOS'un kolu alır. KentOS'un yazdığı kılavuz böylece aynen geri gelir.
+    - Ok başı yoksa (71 = 0) ok yoktur. Varsa türü ok bloğunun adından gelir: önce nesnenin boyut stili değişikliği (ACAD DSTYLE, 341), sonra boyut stilinin DIMLDRBLK'i (341). `_Open…` açık, `_Dot…` ve `_Small` nokta, `_None` yok olur; öbür adlar dolu oktur ve söylenir. KentOS'un verisi açık ve nokta oku geri verir.
+    - Bağlı notu 340'ın gösterdiği MTEXT'tir. Dosyada LEADER'dan önce ya da sonra gelebilir, iki durumda da kılavuza katılır, ayrı yazı olmaz.
+      - MTEXT'in ilk satırı not olur. Yüksekliği, dönüşü ve zemini (90) kılavuzunkidir.
+      - MTEXT'in öbür satırları ayrı yazı olarak notun altına gelir: ilk satırdan uzaklıkları korunur, notun hizasını ve dönüşünü alırlar. Rapor bunu söyler.
+      - KentOS'un verisi, MTEXT hâlâ aynısını söylüyorsa notu ve dönüşü tam verir.
+    - Bağlı notu olmayan kılavuz notsuzdur: 73 = 3; ya da 340 bir bloğu ya da toleransı gösterir; ya da gösterdiği nesne dosyada yoktur (son durumu rapor söyler).
+      - Yüksekliği 40'tır. 40 yoksa boyut stilinin ok boyudur (DIMASZ × DIMSCALE, nesnenin değişikliğiyle). O da yoksa 2,5 alınır ve söylenir.
+    - Eğri yollu kılavuz (72 = 1) kırık çizgi olur; rapor söyler.
   - **MULTILEADER:**
-    - ilk ok çizgisinin köşeleri, kolu ve MTEXT içeriğinin ilk satırı kılavuz olur;
-    - öbür kılavuz çizgileri ve blok içerik alınmaz, söylenir.
+    - İlk ok çizgisinin köşeleri ve son noktası (kolun başı) kılavuzun köşeleridir.
+    - MTEXT içeriği, yeri (12), yüksekliği (41), doğrultusu (13) ve zemini (292) ile LEADER'ın notu gibi kılavuza katılır. Ok başı bloğu 342'dir, adı LEADER'ınki gibi okunur.
+    - Öbür ok çizgileri ve blok içerik alınmaz; rapor söyler. Blok içerikli ya da içeriksiz kılavuz notsuzdur, yüksekliği ok boyudur (42).
+    - Eğri ok çizgisi (170 = 2) kırık çizgi olur; rapor söyler.
 - **DXF yazma:**
-  - kılavuz, bağlı bir MTEXT'li LEADER olarak yazılır: köşeler, son köşe olarak kolun ucu ve ok başı (71);
-  - MTEXT notun hizasıyla yazılır (71 = 4 ya da 6) ve LEADER'ı 340 ile gösterir;
-  - ok türü ve zemin KentOS verisidir; başka programlar dolu oku gösterir, KentOS geri okur. Dışa aktarma penceresi ve rapor bunu söyler.
+  - Kılavuz bir LEADER'dır. Köşeleri yazılır; notu varsa son köşe olarak kolun ucu da yazılır (75 = 1; 74 kolun yanı; 211 notun doğrultusu). Ok başı 71'dir (yok için 0), yükseklik 40'tır.
+  - Notu, bağlı bir MTEXT'tir. Notun yerinde, hizasıyla (71 = 4 sol orta, 6 sağ orta), yüksekliği ve doğrultusuyla yazılır. LEADER onu 340 ile, o LEADER'ı reaktörüyle gösterir.
+  - Zemin MTEXT'in kendi zeminidir (90 = 3, çizimin zemin rengi); başka programlar da gösterir.
+  - Açık ve nokta ok KentOS verisidir. Başka programlar dolu oku gösterir, KentOS geri okur; dışa aktarma raporu bunu söyler.
+  - MTEXT'in yazımı notu ya da doğrultusu tam söyleyemediğinde KentOS verisi tam değeri taşır.
 - **GeoJSON yazma:** köşelerin LineString'i yazılır. Not, yazılarda olduğu gibi yazılmaz; rapor söyler.
 - **NCZ ve Shapefile:** kılavuzları yoktur, değişmez.
 
@@ -151,7 +161,7 @@ Her ölçü notun yüksekliği `h` cinsindendir. Bunlar AutoCAD'in varsayılan o
 2. **Çekirdek ve çizim.** Yerleşim işlevi ortak durumlarıyla; depo (seçme, kenet, kapsam, not etiketi), dönüşümler, tutamaçlar, Patlat'ın parçaları; iki çizici. *(1 Ekim: tamam. Yerleşim `geom::leader::layout` (web'e `leaderLayout`); bağımsız Python başvurusu `scripts/fixtures/leader_cases.py` on durumu `fixtures/leader/v1/layout.json`'a yazar, çekirdek ve web WASM'ı 1e-9 m içinde aynısını verir. Çizim kaydında yeni tür `MIXED`: çizgi kolun ucuna dek ve açık okun kolları, ardından dolu okun ya da noktanın alanı; stil motoru çizgileri katmanın çizgi simgesiyle (nesnenin rengi ve kalınlığı), alanı düz dolguyla çizer; iki platformun seçim ve üzerine gelme vurgusu aynı parçaları çizer. Not, yazının yolundan: `LABEL_LEADER` ve bloktaki kılavuz için `LABEL_PIECE_LEADER`; 5 pikselden küçük not çizilmez, kılavuzun etiketi çizilmez. Depo: tıklama çizgide, kolda ve notun kutusunda; pencere bütün kapsamla, kesişim ve çit notun kutusuyla da; kenet köşeler ve kolun ucu; kapsam köşeler, ok başı, kol ve notun kutusu; `entity_edges` kolu da sayar. Patlat: çoklu çizgi (köşeler ve kolun ucu), dolu ok ya da nokta için dolu tarama, açık ok için çoklu çizgi, not için hizası, yüksekliği, dönüşü ve zeminiyle yazı. Masaüstünün “Tümünü göster”i, orta tuşa çift tıklama ve açılıştaki görünüm artık web'inki gibi deponun kapsamını kullanır (blok yerleştirmesi parçalarıyla). Bilinen ara durum: bloktaki kılavuz masaüstünün seçim vurgusuna 3. adımda (`EntityGeometry::Leader`) girer; web'in blok parçası türü de kılavuzu o adımda öğrenir.)*
 3. **Komutlar.** `create`, `edit` ve `transform`; ortak durumlar üç koşucuda. *(1 Ekim: tamam. Sözleşmede `EntityGeometry::Leader` (köşeler, isteğe bağlı not, yükseklik, dönüş, isteğe bağlı ok, zemin) ve `cad.entities.create`'in `leader` işlemi (adımı “Kılavuz”); TypeScript türleri, katalog ve Python SDK'sı yeniden üretildi. İki işleyici aynı kurallarla denetler: en az 2 köşe (`too_few_points`) ve boş olmayan not (`empty_text`) sayılardan önce, sıfırdan büyük yükseklik (`invalid_height`) sonlu sayılardan sonra; null not ve ok alanın yokluğudur. Ortak durumlar: `cad.entities.create` (yazma, redler, sıra), `cad.entities.edit` (Öznitelikler'den not, yükseklik, dönüş, ok ve zemin; tutamaç, köşe ekleme ve silme; redler; kilitli katman; Patlat'ın parçaları bağımsız yerleşim kuralından), `cad.entities.transform` (döndür, ölçekle, aynala; bağımsız dönüşüm başvurusu `affine_reference.py` kılavuzu da dönüştürür). Çekirdeğin Buda, Uzat, Kır ve Ötele'si kılavuzu “önce Patlat” iletisiyle reddeder. Komutlar kılavuzu yazabildiği için tutamaç, pano ve bloktaki kılavuzun masaüstü vurgusu da çalışır.)*
 4. **Araç ve arayüz.** Kılavuz aracı, Öznitelikler, yerinde düzenleme; iki platformda izler ve resimler. *(1 Ekim: tamam. Kılavuz aracı web'de `tools/leaderTool.ts`, masaüstünde `kentos_interaction::leader`; istemler, iletiler, seçenekler (Ok, Yükseklik, Zemin, Geri) ve ok menüsünün ikonlu satırları iki platformda aynı. Yükseklik Yazı'nınkiyle ortaktır; Ok ve Zemin oturum boyunca hatırlanır. Kolun ucunda açılan yazı kutusu notun yanına göre hizalanır; boş kutuda Enter notsuz kılavuz yazar, Esc köşelere döner. Yazı kutusunun isteği bunun için boş girdi, yer tutucu ve ipucu taşır (web `TextInputRequest`, masaüstü `TextField`). Ortak iz `fixtures/interaction/v1/leader.json` (üç kılavuz: dolu ok ve not, açık ok ve zeminli not, notsuz nokta; Geri, Esc ile geri dönüş ve en az iki köşe uyarısı) iki platformda geçer. Öznitelikler web'de `leaderRows`, masaüstünde `properties::leader_rows`: Not, Yükseklik, Dönüş, Ok ve Zemin, çoklu seçimde “Çeşitli”, değeri zaten olan kılavuz yazılmadan tek “Değiştir” adımı. Yerinde düzenleme iki platformda; notsuz kılavuzun kutusu notun duracağı yerde açılır. Resimler: masaüstü `kilavuz-*`, web `shots.mjs leaders`.)*
-5. **Biçimler.** DXF okuma ve yazma, GeoJSON; örnek dosyalar ve bağımsız denetim.
+5. **Biçimler.** DXF okuma ve yazma, GeoJSON; örnek dosyalar ve bağımsız denetim. *(1 Ekim: tamam. Okuyucu LEADER'ı ve 340'ın gösterdiği MTEXT'i dosyadaki sıraları ne olursa olsun birleştirir: önce gelen öbürünü bekler, kılavuz notun ilk satırının yerini alır ya da sonradan gelen notun ilk satırı kılavuza geçer; başka hiçbir nesne yer değiştirmez (`dxf/emit/notes.rs`). Boyut stilleri ve blok kayıtları tablolardan okunur (`DIMSTYLE`'ın 40, 41, 341'i; `BLOCK_RECORD`'un adı); nesnenin ACAD DSTYLE değişikliği önce gelir (`dxf/leaders.rs`). MULTILEADER iç içe bölümleriyle okunur. Blok tanımındaki ve Blokları patlat ile açılan kılavuz da notunu alır. Yazıcı LEADER ve MTEXT'i birbirini gösterecek biçimde yazar (`writer/entities/leader.rs`); web'in JSON okuyucusu kılavuzu okur. Okuma örneği `fixtures/formats/v1/leaders.dxf` (dokuz kılavuz, iki MULTILEADER, blok) elle hesaplı beklentilerle Rust'ta ve WASM'da; yazma örneği `dxf-write/leaders` iki platformda aynı baytlarla, bağımsız Python denetimiyle, geri okununca aynı kılavuzlar. MTEXT'in “biçimlendirme kaldırıldı” notu artık yalnız gerçek biçimlendirmede söylenir. Resimler: masaüstü `aktar-*-19…21`, web `shots.mjs leaders` (import-dxf-leaders…, export-dxf-leaders).)*
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
 

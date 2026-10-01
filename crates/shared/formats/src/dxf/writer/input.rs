@@ -13,8 +13,9 @@ use std::fmt;
 use kentos_contracts::{
     ArcEntity, AreaPart, AttributeDefinition, BlockDefinition, BlockId, CircleEntity,
     ConstructionEntity, DimensionEntity, DimensionStyle, DxfWriteInput, DxfWriteLayer,
-    EllipseEntity, Entity, EntityBase, HatchEntity, HatchPattern, InsertEntity, LineEntity,
-    PathEntity, PointEntity, RingGeometry, SplineEntity, TextAlign, TextEntity, Vec2,
+    EllipseEntity, Entity, EntityBase, HatchEntity, HatchPattern, InsertEntity, LeaderArrow,
+    LeaderEntity, LineEntity, PathEntity, PointEntity, RingGeometry, SplineEntity, TextAlign,
+    TextEntity, Vec2,
 };
 use serde::de::value::{MapAccessDeserializer, SeqAccessDeserializer};
 use serde::de::{self, Deserialize, Deserializer, IgnoredAny, MapAccess, SeqAccess, Visitor};
@@ -85,6 +86,7 @@ struct Fields {
     align: Option<TextAlign>,
     width_factor: Option<f64>,
     mask: Option<bool>,
+    arrow: Option<LeaderArrow>,
     offset: Option<f64>,
     style: Option<DimensionStyle>,
     angle: Option<f64>,
@@ -236,6 +238,15 @@ impl Fields {
                 rotation: need(self.rotation, "rotation")?,
                 mirror: self.mirror.unwrap_or(false),
             }),
+            "leader" => Entity::Leader(LeaderEntity {
+                base,
+                pts: need(self.pts, "pts")?,
+                text: self.text,
+                height: need(self.height, "height")?,
+                rotation: need(self.rotation, "rotation")?,
+                arrow: self.arrow,
+                mask: self.mask.unwrap_or(false),
+            }),
             other => {
                 return Err(E::unknown_variant(
                     other,
@@ -254,6 +265,7 @@ impl Fields {
                         "dimension",
                         "hatch",
                         "insert",
+                        "leader",
                     ],
                 ));
             }
@@ -308,6 +320,7 @@ impl<'de> Deserialize<'de> for Wire {
                         "align" => f.align = map.next_value()?,
                         "widthFactor" => f.width_factor = map.next_value()?,
                         "mask" => f.mask = map.next_value()?,
+                        "arrow" => f.arrow = map.next_value()?,
                         "offset" => f.offset = Some(map.next_value()?),
                         "style" => f.style = map.next_value()?,
                         "angle" => f.angle = map.next_value()?,
@@ -449,7 +462,10 @@ mod tests {
         "holes":[{"pts":[{"x":21,"y":1},{"x":22,"y":1},{"x":22,"y":2}]}]}]},
       {"kind":"insert","id":20,"layerId":"a","attrs":{"No":"7"},"color":"#e5484d","block":"018f3a2b-0000-7000-8000-000000000001",
        "p":{"x":452345.5,"y":4412345.25},"scale":2.5,"rotation":0.1,"mirror":true},
-      {"kind":"insert","id":21,"layerId":"a","attrs":{},"block":"018f3a2b-0000-7000-8000-000000000001","p":{"x":1,"y":1},"scale":1,"rotation":0}
+      {"kind":"insert","id":21,"layerId":"a","attrs":{},"block":"018f3a2b-0000-7000-8000-000000000001","p":{"x":1,"y":1},"scale":1,"rotation":0},
+      {"kind":"leader","id":22,"layerId":"a","attrs":{},"pts":[{"x":0,"y":0},{"x":6,"y":5}],"text":"Mevcut bina","height":2.5,"rotation":30,
+       "arrow":"dot","mask":true},
+      {"kind":"leader","id":23,"layerId":"a","attrs":{},"pts":[{"x":0,"y":0},{"x":-4,"y":2},{"x":-8,"y":2}],"height":1,"rotation":0}
     ]"##;
 
     /// A definition holding a line and a nested insert, and the one it nests.
@@ -475,7 +491,15 @@ mod tests {
         let ours = input_from_json(&text).expect("input");
         let derived: DxfWriteInput = serde_json::from_str(&text).expect("contract");
         assert_eq!(ours, derived);
-        assert_eq!(ours.entities.len(), 21);
+        assert_eq!(ours.entities.len(), 23);
+        // A leader with every field, and one with none of the optional ones (docs/adr/0146 §8).
+        let Entity::Leader(l) = &ours.entities[21] else {
+            panic!("{:?}", ours.entities[21])
+        };
+        assert_eq!(
+            (l.text.as_deref(), l.arrow, l.mask),
+            (Some("Mevcut bina"), Some(kentos_contracts::LeaderArrow::Dot), true)
+        );
         // Inserts and the definitions they place, nested ones in them (docs/adr/0144 §5).
         let Entity::Insert(i) = &ours.entities[19] else {
             panic!("{:?}", ours.entities[19])
