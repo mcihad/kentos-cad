@@ -170,6 +170,7 @@ python3 scripts/fixtures/dimension_cases.py --check   # yeni ölçü türlerinin
 python3 scripts/fixtures/quick_dimension_cases.py --check   # Hızlı ölçü'nün ölçülerini (taraf, uzaklık, ortak kenar) kurallardan denetle (ADR 0147 §7)
 python3 scripts/fixtures/numeric_display.py --check   # gösterim kuralının durumlarını (yarımlar, gürültü, işaret, taşma) kuraldan denetle (ADR 0149)
 python3 scripts/fixtures/measure_cases.py --check   # ölçülerin kesin değerlerini (uzunluk, alan, yay, elips, eğri, semt, açı, ölçü türleri) 50 basamaklı bağımsız başvuruyla denetle (ADR 0149)
+python3 scripts/fixtures/topology_cases.py --check   # Topolojik temizliğin durumlarını (birleştirme, uzatma, budama, kenara taşıma, kot) kurallardan denetle (ADR 0148)
 cargo test --release -p kentos-geometry-core --test curve_perf -- --ignored --nocapture   # 2 000 eğri ve 500 elips arasında kenet, tıklama ve kesişim penceresi süreleri (ADR 0149 §5.3)
 pnpm e2e:cloud           # gerçek API/PostGIS cloud akışı
 KENTOS_E2E_DB=scratch pnpm e2e:cloud   # aynı akış geçici veritabanında (bu yapının migration'ları), kentos_cad'e dokunmadan
@@ -559,8 +560,9 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   ([ADR 0149](docs/adr/0149-measurement-accuracy-and-display-rounding.md), TODOS.md `NUM-11`): tek gösterim kuralı
   (`display::fixed`, `core/displayNumber.ts`), 224 durumluk bağımsız ölçü denetimi (eğri uzunluğu ve basık elips düzeltildi),
   hesaplarda eğri ve elipsin 0,1 mm'lik açık sınırla temsili (`geom::curve_outline`).
-- Sonra: TODOS.md §16'nın sırası (sahibin kararı, 1 Ekim): önce hibrit (§16.0, `HYB-01` topolojik temizlik; ADR 0148
-  yazıldı, henüz commit'lenmedi), sonra CAD (§16.1), sonra CBS (§16.2). PDF, yazdırma ve pafta çıktısı (§16.4) en sondadır,
+- Sürmekte: TODOS.md §16'nın sırası (sahibin kararı, 1 Ekim): önce hibrit (§16.0), sonra CAD (§16.1), sonra CBS (§16.2).
+  İlk iş `HYB-01` topolojik temizlik ([ADR 0148](docs/adr/0148-topology-cleanup.md)): 1. adım (çekirdek `ops::topology`,
+  bağımsız başvuru `topology_cases.py`, 74 ortak durum) tamam; sıradaki 2: `cad.entities.edit`'in `topology` işlemi, sonra 3: araç. PDF, yazdırma ve pafta çıktısı (§16.4) en sondadır,
   zamanını sahip söyleyecek. İşler ADR 0142–0147'deki gibi: önce ADR ve adımları, sonra adım adım iki platformda, ortak fixture'larla.
 - Bilinen açık: web `pnpm e2e` duman testinde üç test ADR 0143'ten önce de düşüyordu: “toolbox
   shows every tool without scrolling” (79 araç kaydırma istiyor), nokta hesaplayıcının “yan nokta

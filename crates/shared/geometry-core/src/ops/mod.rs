@@ -17,6 +17,7 @@ pub mod path;
 pub mod reshape;
 pub mod split;
 pub mod stretch;
+pub mod topology;
 pub mod transform;
 pub mod trim;
 pub mod vertex;
