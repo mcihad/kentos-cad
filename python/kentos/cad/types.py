@@ -126,6 +126,7 @@ class CreateOperation(_StrEnum):
     - ``dimensionBaseline``: Baz ölçü: a dimension measured from the base dimension's first point.
     - ``textFile``: Metin dosyası yerleştir (docs/adr/0145 §6): a text file's lines as texts.
     - ``leader``: Kılavuz (docs/adr/0146 §6): a leader drawn by its tool.
+    - ``polygonize``: Toplu alan (docs/adr/0151): the regions line work closes, as areas.
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -143,9 +144,10 @@ class CreateOperation(_StrEnum):
     DIMENSION_BASELINE = "dimensionBaseline"
     TEXT_FILE = "textFile"
     LEADER = "leader"
+    POLYGONIZE = "polygonize"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 

@@ -102,7 +102,7 @@ Netcad bunu Topoloji › Otomatik Alan Kapat ve Obje Aktar ile yapar. ArcGIS Pro
    - **Başvuru:** `polygonize_cases.py` 58 durum yazar: 17 elle kurulmuş (her biri başlangıçta ve TM koordinatlarında: dört parsellik ada, T kavşağı, taşan çizgiler, sarkan çizgi, köprü, ada açık ve kapalı, sınırdaki, dışarıdaki, iki ve sıfır etiket, var olan alan (ters yönde, fazladan köşeyle, delikli), açık kalan çerçeve, kendi üstünde biten çoklu çizgi, köşe olan kesişmeler, iç içe üç bölge) ve 24 rastgele sokak ağı (eksik çizgi, sarkan çizgiler, yapılar, var olan alanlar, rastgele etiketler).
    - **Sonuç:** çekirdek (`tests/polygonize.rs`) ve web WASM'ı (`model/ops/polygonize.test.ts`) hepsinde başvuruyla aynı (noktalar 1e-8 m içinde); değiştirilmiş beklentileri yakalar.
    - **Başarım:** TM koordinatlarında 202 uzun çizgilik 100 × 100 parsellik ağ, dörtte biri var olan alan, 10 000 etiketle 0,24 saniyede (release, `tests/polygonize.rs`'in elle çalıştırılan testi).
-2. **Komut:** `CreateOperation::Polygonize`; iki işleyici, ortak durum, katalog ve Python SDK'sı.
+2. **Komut:** `CreateOperation::Polygonize`; iki işleyici, ortak durum, katalog ve Python SDK'sı. *(1 Ekim: tamam. Sözleşmede `polygonize` işlemi; adım adı iki işleyicide “Toplu alan”. Ortak durum (`create_command_cases.py`): iki bölge tek adımda, birincisi `Ad` özniteliği ve köşe kotlarıyla, ikincisi deliğiyle; geri alma ve yineleme adıyla; masaüstü, web ve Python SDK'sı geçer. TypeScript tipi, katalog ve SDK'nın tipleri üretildi.)*
 3. **Araç ve arayüz:** iki platformda araç, şerit, takma adlar, önizleme, ortak iz (`fixtures/interaction/v1/polygonize.json`), testler ve resimler.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.

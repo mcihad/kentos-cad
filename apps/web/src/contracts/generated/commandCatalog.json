@@ -27824,6 +27824,11 @@
                 "const": "leader",
                 "description": "Kılavuz (docs/adr/0146 §6): a leader drawn by its tool.",
                 "type": "string"
+              },
+              {
+                "const": "polygonize",
+                "description": "Toplu alan (docs/adr/0151): the regions line work closes, as areas.",
+                "type": "string"
               }
             ]
           },

@@ -69,6 +69,8 @@ pub enum CreateOperation {
     TextFile,
     /// Kılavuz (docs/adr/0146 §6): a leader drawn by its tool.
     Leader,
+    /// Toplu alan (docs/adr/0151): the regions line work closes, as areas.
+    Polygonize,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

@@ -568,8 +568,8 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   imlecin yanında sayılar; ortak iz `topology.json`).
 - Sürmekte: TODOS.md §16'nın sırası (sahibin kararı, 1 Ekim): önce hibrit (§16.0), sonra CAD (§16.1), sonra CBS (§16.2).
   Şimdi `HYB-02` çizgi ağından toplu alan ([ADR 0151](docs/adr/0151-polygonize.md)): 1. adım (çekirdek `ops::polygonize`,
-  bağımsız başvuru `polygonize_cases.py`, 58 ortak durum) tamam; sıradaki 2: `cad.entities.create`'in `polygonize`
-  işlemi, sonra 3: araç ve arayüz iki platformda. PDF, yazdırma ve pafta çıktısı (§16.4) en
+  bağımsız başvuru `polygonize_cases.py`, 58 ortak durum) ve 2. adım (`cad.entities.create`'in `polygonize` işlemi)
+  tamam; sıradaki 3: araç ve arayüz iki platformda. PDF, yazdırma ve pafta çıktısı (§16.4) en
   sondadır, zamanını sahip söyleyecek. İşler ADR 0142–0148'deki gibi: önce ADR ve adımları, sonra adım adım iki platformda,
   ortak fixture'larla.
 - Bilinen açık: web `pnpm e2e` duman testinde üç test ADR 0143'ten önce de düşüyordu: “toolbox

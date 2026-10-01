@@ -274,6 +274,23 @@ cases.append({
     ],
 })
 
+# Toplu alan (docs/adr/0151): two regions of a block, the first with its number and its corners' elevations
+# carried from the lines, the second with a building as its hole and no label.
+PARCEL = {"kind": "polygon", "pts": [P(487100, 4420000), P(487120, 4420000), P(487120, 4420015), P(487100, 4420015)],
+          "zs": [101.2, 101.4, None, 101.0]}
+COURT = {"kind": "polygon", "pts": [P(487120, 4420000), P(487140, 4420000), P(487140, 4420015), P(487120, 4420015)],
+         "holes": [{"pts": [P(487125, 4420005), P(487125, 4420010), P(487130, 4420010), P(487130, 4420005)]}]}
+
+cases.append({
+    "name": "Toplu alan: bölgeler öznitelikleri ve kotlarıyla tek adımda yazılır, adı “Toplu alan”",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "polygonize", "objects": [O(PARCEL, attrs={"Ad": "101/1"}), O(COURT)]}, "result": done([3, 4]),
+         "expect": {"ids": IDS + [3, 4], "entities": {"3": made(O(PARCEL, attrs={"Ad": "101/1"}), 3), "4": made(O(COURT), 4)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Toplu alan", "expect": {"ids": IDS, "canUndo": False, "canRedo": True}},
+        {"op": "redo", "returns": "Toplu alan", "expect": {"ids": IDS + [3, 4]}},
+    ],
+})
+
 cases.append({
     "name": "kapalı alanın halkası 2 köşeli olabilir, iki kenarından biri yaysa; iki kenarı düzse reddedilir, delik de öyle; taramanın halkası en az 3 köşelidir",
     "steps": [
@@ -827,7 +844,7 @@ def write(command, title, note, cases):
 write(
     "cad.entities.create",
     "Nesneleri ekle: doğrulama, plan, yazma, geri alma",
-    "ADR 0057. Denetim sırası: en az bir nesne; her nesnenin geometrisi, sırayla, cad.entities.edit'in kurallarıyla (nokta ve köşe sayısı: kapalı alanın halkası en az 3 köşeli, iki kenarından biri yaysa 2; yazının boş olmayan metni, sonlu sayılar, ölçünün kuralları (ADR 0147: kot yalnız eğimde, koordinatın ekseni 0 ya da 90, sonra çekirdeğin çizebildiği ölçü; invalid_dimension), yarıçap); beklenen sürümün yazımı, sonra çizimin sürümü; katman (var, grup değil, kilitli değil; gizliyse uyarı). Nesne verilen geometrisi, girdinin katmanı ve verildiyse rengi, öznitelikleri (yoksa boş) ve etiketiyle yazılır. Adım “Ekle” ya da işlemin adıdır: Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan oluştur. Blok yerleştirmesi (ADR 0144) çizimde tanımlı bir bloğu adlandırır (unknown_block, katmandan sonra, sırayla), ölçeği sıfırdan büyüktür (invalid_scale); aynalama yalnız true yazılır; blok durumlarının kendi kurulumu vardır. Kurulumdaki en büyük kimlik 2; yeni nesneler 3'ten başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+    "ADR 0057. Denetim sırası: en az bir nesne; her nesnenin geometrisi, sırayla, cad.entities.edit'in kurallarıyla (nokta ve köşe sayısı: kapalı alanın halkası en az 3 köşeli, iki kenarından biri yaysa 2; yazının boş olmayan metni, sonlu sayılar, ölçünün kuralları (ADR 0147: kot yalnız eğimde, koordinatın ekseni 0 ya da 90, sonra çekirdeğin çizebildiği ölçü; invalid_dimension), yarıçap); beklenen sürümün yazımı, sonra çizimin sürümü; katman (var, grup değil, kilitli değil; gizliyse uyarı). Nesne verilen geometrisi, girdinin katmanı ve verildiyse rengi, öznitelikleri (yoksa boş) ve etiketiyle yazılır. Adım “Ekle” ya da işlemin adıdır: Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan oluştur, Toplu alan. Blok yerleştirmesi (ADR 0144) çizimde tanımlı bir bloğu adlandırır (unknown_block, katmandan sonra, sırayla), ölçeği sıfırdan büyüktür (invalid_scale); aynalama yalnız true yazılır; blok durumlarının kendi kurulumu vardır. Kurulumdaki en büyük kimlik 2; yeni nesneler 3'ten başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
     cases,
 )
 print(f"{len(cases)} cases" + (" match" if "--check" in sys.argv[1:] else " written"))

@@ -119,6 +119,8 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         Some(CreateOperation::TextFile) => "Metin dosyası yerleştir",
         // Kılavuz (docs/adr/0146 §6).
         Some(CreateOperation::Leader) => "Kılavuz",
+        // Toplu alan (docs/adr/0151).
+        Some(CreateOperation::Polygonize) => "Toplu alan",
     }
 }
 
