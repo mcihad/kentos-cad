@@ -51,7 +51,7 @@ crate::json_struct!(Find {
 
 /// A character as a caseless match takes it: Turkish I → ı, İ → i, any other
 /// its lowercase when that is one character.
-fn fold(c: char) -> char {
+pub(crate) fn fold(c: char) -> char {
     match c {
         'I' => 'ı',
         'İ' => 'i',
@@ -126,6 +126,20 @@ pub fn replace(text: &str, find: &str, with: &str, how: Find) -> Option<String> 
         i += 1;
     }
     hit.then_some(out)
+}
+
+/// Whether `text` answers a search for `pattern` (the point editor's
+/// search box, docs/adr/0153 §2): caseless the Turkish way; with a `*` the
+/// pattern matches the whole text (`*` any run of characters), without one
+/// it is somewhere in it. An empty pattern is in every text.
+pub fn search(text: &str, pattern: &str) -> bool {
+    let text: Vec<char> = text.chars().collect();
+    let pattern: Vec<char> = pattern.chars().collect();
+    if pattern.contains(&'*') {
+        return glob(&text, &pattern, true).is_some();
+    }
+    pattern.len() <= text.len()
+        && (0..=text.len() - pattern.len()).any(|i| at(&text, i, &pattern, true))
 }
 
 /// What each `*` of `pattern` takes when it matches all of `text`, each as

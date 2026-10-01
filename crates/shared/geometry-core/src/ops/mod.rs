@@ -14,6 +14,7 @@ pub mod lengthen;
 pub mod offset;
 pub mod parts;
 pub mod path;
+pub mod point_editor;
 pub mod polygonize;
 pub mod reshape;
 pub mod split;

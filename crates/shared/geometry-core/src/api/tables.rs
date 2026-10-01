@@ -55,4 +55,5 @@ pub(super) static TABLES: &[&[Op]] = &[
     crate::ops::topology::OPS,
     crate::ops::polygonize::OPS,
     crate::ops::vertex_points::OPS,
+    crate::ops::point_editor::OPS,
 ];

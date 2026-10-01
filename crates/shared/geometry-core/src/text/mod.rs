@@ -4,6 +4,7 @@
 //! face's average lowercase letter.
 
 pub mod edit;
+pub mod natural;
 #[rustfmt::skip]
 mod metrics;
 
