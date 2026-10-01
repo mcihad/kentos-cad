@@ -178,6 +178,7 @@ python3 scripts/fixtures/topology_cases.py --check   # Topolojik temizliğin dur
 python3 scripts/fixtures/polygonize_cases.py --check   # Toplu alan'ın durumlarını (bölgeler, adalar, etiketler, var olan alan, boşta uçlar) kesin kesirlerle kurallardan denetle (ADR 0151)
 python3 scripts/fixtures/vertex_points_cases.py --check   # Köşelere nokta'nın durumlarını (paylaşılan köşe, var olan nokta, kot, ad artımı) kurallardan denetle (ADR 0152)
 python3 scripts/fixtures/point_editor_cases.py --check   # Nokta editörünün hesaplarını (doğal sıra, tablonun süzgeç ve sıralaması, çift noktalar, bağlı köşeler) kurallardan denetle (ADR 0153)
+python3 scripts/fixtures/point_edit_cases.py --check   # Nokta editörünün düzenlemelerini (hücreler, bağlı çizgiler, taslak satır) kurallardan denetle (ADR 0153 §3–§4)
 cargo test --release -p kentos-geometry-core --test curve_perf -- --ignored --nocapture   # 2 000 eğri ve 500 elips arasında kenet, tıklama ve kesişim penceresi süreleri (ADR 0149 §5.3)
 pnpm e2e:cloud           # gerçek API/PostGIS cloud akışı
 KENTOS_E2E_DB=scratch pnpm e2e:cloud   # aynı akış geçici veritabanında (bu yapının migration'ları), kentos_cad'e dokunmadan
@@ -579,8 +580,9 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   ve Kot'u, aynı yer sorusu, `#ad` çözümü (adlı noktanın yeri araca tıklanmış gibi verilir) ve Köşelere nokta iki platformda
   (ortak izler `survey-points.json`, `vertex-points.json`; iz biçimi etiketi, öznitelikleri ve kotu da denetler). Sıradaki
   `HYB-04` nokta editörü ([ADR 0153](docs/adr/0153-point-editor.md)): 1. adım (çekirdek: doğal sıra, tablo, çift noktalar, bağlı
-  köşeler, bağımsız başvurusuyla) ve 2. adım (alt panelin Noktalar sekmesi: sıralama, süzgeç, seçim, Göster) tamam; sıradaki 3:
-  yerinde düzenleme (Bağlı çizgiler izler, Satır ekle, Sil). PDF, yazdırma ve pafta çıktısı (§16.4) en
+  köşeler, bağımsız başvurusuyla), 2. adım (alt panelin Noktalar sekmesi: sıralama, süzgeç, seçim, Göster) ve 3. adım (yerinde
+  düzenleme, Bağlı çizgiler izler, Satır ekle, Sil; ortak durumlar `edits.json`) tamam; sıradaki 4: toplu işlemler (Yeniden
+  adlandır, Sıralı numara ver, Katmana taşı, Çift noktaları ayıkla, Dışa ve İçe aktar). PDF, yazdırma ve pafta çıktısı (§16.4) en
   sondadır, zamanını sahip söyleyecek. İşler ADR 0142–0148'deki gibi: önce ADR ve adımları, sonra adım adım iki platformda,
   ortak fixture'larla.
 - Bilinen açık: web `pnpm e2e` duman testinde üç test ADR 0143'ten önce de düşüyordu: “toolbox

@@ -3834,6 +3834,7 @@
       "toolbox": true,
       "hiddenIn": [],
       "uiSources": [
+        "apps/web/src/ui/bottom/PointTable.ts",
         "apps/web/src/ui/shell/viewportMenus.ts"
       ],
       "status": "implemented",

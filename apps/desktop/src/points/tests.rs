@@ -2,9 +2,11 @@
 //! (docs/adr/0153 §2): the cases of the web's `ui/bottom/PointTable.test.ts`,
 //! then the tab as the app runs it, and pictures for the owner.
 
+use iced::Task;
 use kentos_domain::Slot;
 
-use super::{COLUMNS, Event, click_pick, next_sort, row_of};
+use super::edit::{Draft, EditColumn, write_cell, write_draft};
+use super::{COLUMNS, Event, Walk, click_pick, focus_field, next_cell, next_sort, row_of};
 use crate::app::{App, Message};
 use crate::bottom::BottomTab;
 
@@ -38,7 +40,7 @@ fn ev(app: &mut App, e: Event) {
 
 #[test]
 fn the_columns_are_the_adrs_sira_the_drawings_order() {
-    let got: Vec<(&str, Option<&str>)> = COLUMNS.iter().map(|(l, s, _)| (*l, *s)).collect();
+    let got: Vec<(&str, Option<&str>)> = COLUMNS.iter().map(|(l, s, _, _)| (*l, *s)).collect();
     assert_eq!(
         got,
         [
@@ -201,10 +203,316 @@ fn a_click_selects_the_point_and_a_double_click_on_its_number_zooms_to_it() {
     assert_ne!(app.viewport.camera.center, before, "zoomed to the point");
 }
 
+#[test]
+fn the_editor_walks_down_right_and_left_as_the_web_does() {
+    let ids: Vec<Slot> = [11, 12, 13].into_iter().map(Slot).collect();
+    let at = |s: u32, c: EditColumn| Some((Slot(s), c));
+    assert_eq!(
+        next_cell(&ids, Slot(12), EditColumn::East, Walk::Down),
+        at(13, EditColumn::East)
+    );
+    assert_eq!(
+        next_cell(&ids, Slot(13), EditColumn::East, Walk::Down),
+        None
+    );
+    assert_eq!(
+        next_cell(&ids, Slot(11), EditColumn::Name, Walk::Right),
+        at(11, EditColumn::East)
+    );
+    assert_eq!(
+        next_cell(&ids, Slot(11), EditColumn::Code, Walk::Right),
+        at(12, EditColumn::Name)
+    );
+    assert_eq!(
+        next_cell(&ids, Slot(13), EditColumn::Code, Walk::Right),
+        None
+    );
+    assert_eq!(
+        next_cell(&ids, Slot(12), EditColumn::Name, Walk::Left),
+        at(11, EditColumn::Code)
+    );
+    assert_eq!(
+        next_cell(&ids, Slot(11), EditColumn::Name, Walk::Left),
+        None
+    );
+    assert_eq!(
+        next_cell(&ids, Slot(99), EditColumn::Name, Walk::Down),
+        None
+    );
+}
+
+/// Numbers within 1e-9 (a missing field is null), everything else exactly.
+fn same(a: &serde_json::Value, e: &serde_json::Value, path: &str) -> Result<(), String> {
+    use serde_json::Value;
+    match (a, e) {
+        (Value::Number(x), Value::Number(y)) => {
+            let (x, y) = (
+                x.as_f64().unwrap_or(f64::NAN),
+                y.as_f64().unwrap_or(f64::NAN),
+            );
+            if (x - y).abs() <= 1e-9 {
+                Ok(())
+            } else {
+                Err(format!("{path}: {x} ≠ {y}"))
+            }
+        }
+        (Value::Array(x), Value::Array(y)) => {
+            if x.len() != y.len() {
+                return Err(format!("{path}: {} öğe ≠ {} öğe", x.len(), y.len()));
+            }
+            for (i, (p, q)) in x.iter().zip(y).enumerate() {
+                same(p, q, &format!("{path}[{i}]"))?;
+            }
+            Ok(())
+        }
+        (Value::Object(x), Value::Object(y)) => {
+            let mut keys: Vec<&String> = x.keys().chain(y.keys()).collect();
+            keys.sort();
+            keys.dedup();
+            for k in keys {
+                same(
+                    x.get(k).unwrap_or(&Value::Null),
+                    y.get(k).unwrap_or(&Value::Null),
+                    &format!("{path}.{k}"),
+                )?;
+            }
+            Ok(())
+        }
+        _ if a == e => Ok(()),
+        _ => Err(format!("{path}: {a} ≠ {e}")),
+    }
+}
+
+/// An object as the cases compare it: its kind, label, attributes, and a
+/// point's place and elevation or line work's paths.
+fn view(e: &kentos_contracts::Entity) -> serde_json::Value {
+    use serde_json::json;
+    let b = e.base();
+    let mut v = json!({ "kind": e.kind(), "label": b.label, "attrs": b.attrs });
+    match e {
+        kentos_contracts::Entity::Point(p) => {
+            v["at"] = json!([p.p.x, p.p.y]);
+            v["z"] = json!(p.z);
+        }
+        _ => {
+            v["paths"] = kentos_native_application::elevation::paths(e)
+                .iter()
+                .map(|p| json!({ "pts": p.pts.iter().map(|q| [q.x, q.y]).collect::<Vec<_>>(), "zs": p.zs }))
+                .collect();
+        }
+    }
+    v
+}
+
+/// Every case of `fixtures/point-editor/v1/edits.json` on its own drawing,
+/// through the editor's writes: the drawing after, the messages said, the
+/// undo step and the next draft's name, as the web's `pointEdit.test.ts`.
+#[test]
+fn every_edit_is_written_as_the_reference_writes_it() {
+    use serde_json::{Value, json};
+    let file: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/point-editor/v1/edits.json"
+    ))
+    .expect("edits.json reads");
+    assert_eq!(file["format"], "kentos.point-editor-edits");
+    let layers: Vec<Value> = file["layers"]
+        .as_array()
+        .expect("layers")
+        .iter()
+        .map(|l| {
+            json!({ "id": l["id"], "name": l["name"], "type": "layer", "visible": true, "locked": l["locked"], "expanded": true,
+                "style": { "color": "fg", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] })
+        })
+        .collect();
+    let cases = file["cases"].as_array().expect("cases");
+    assert!(cases.len() >= 30, "{} cases", cases.len());
+    let mut off = Vec::new();
+    for c in cases {
+        let name = c["name"].as_str().unwrap_or_default();
+        let snapshot = json!({
+            "format": "kentos.document", "version": 1, "name": name,
+            "settings": { "srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
+                "plotScale": 1000, "workspace": "hybrid", "drawingFont": "barlow" },
+            "origin": { "x": 0, "y": 0 }, "layers": layers, "activeLayer": c["active"], "entities": c["objects"],
+            "styles": { "items": [], "categories": [] }
+        });
+        let snapshot = kentos_contracts::DocumentSnapshotV1::from_json(&snapshot.to_string())
+            .expect("the case's drawing");
+        let mut doc = kentos_domain::Document::from_snapshot(snapshot).expect("opens");
+        let text = |v: &Value| v.as_str().unwrap_or_default().to_owned();
+        let (said, step, next) = if let Some(a) = c.get("cell") {
+            let col =
+                EditColumn::from_key(a["column"].as_str().unwrap_or_default()).expect("a column");
+            let slot = Slot(a["id"].as_u64().unwrap_or_default() as u32);
+            let out = write_cell(
+                &mut doc,
+                slot,
+                col,
+                &text(&a["text"]),
+                a["follow"].as_bool().unwrap_or(false),
+            );
+            (out.said, out.step, None)
+        } else {
+            let a = &c["draft"];
+            let d = Draft {
+                name: text(&a["name"]),
+                east: text(&a["east"]),
+                north: text(&a["north"]),
+                z: text(&a["z"]),
+                code: text(&a["code"]),
+            };
+            let active = text(&c["active"]);
+            let out = write_draft(&mut doc, &d, &active, None);
+            (out.outcome.said, out.outcome.step, Some(out.next))
+        };
+        let objects: Vec<Value> = doc.entities().map(view).collect();
+        let undone = match step {
+            Some(_) => doc.undo(),
+            None => doc.can_undo().then(|| "yazıldı".to_owned()),
+        };
+        let mut seen = json!({ "said": said, "step": undone, "objects": objects });
+        if let Some(next) = next {
+            seen["next"] = json!(next);
+        }
+        if let Err(e) = same(&seen, &c["expected"], name) {
+            off.push(e);
+        }
+    }
+    assert!(
+        off.is_empty(),
+        "{} durum farklı:\n{}",
+        off.len(),
+        off.join("\n")
+    );
+}
+
+/// The editor in the app: a double click opens a cell with its whole value,
+/// Enter writes it and goes down the column, Tab right, a refused value keeps
+/// the cell open with what was typed, Esc gives up; Satır ekle writes a row
+/// and opens the next with the name one more.
+#[test]
+fn a_cell_is_edited_in_place_and_satir_ekle_writes_rows() {
+    use super::Target;
+    let mut app = app_with_points();
+    let _ = app.update(Message::Run("point.editor"));
+    let shown = {
+        let doc = app.document.as_ref().expect("a drawing");
+        app.point_rows(doc).shown
+    };
+    let point = |app: &App, slot: Slot| match app.document.as_ref().and_then(|d| d.model.get(slot))
+    {
+        Some(kentos_contracts::Entity::Point(p)) => p.clone(),
+        _ => panic!("a point"),
+    };
+    // Y of the first row: its whole value.
+    ev(&mut app, Event::Edit(0, 2));
+    assert_eq!(
+        app.points.editing,
+        Some((Target::Point(shown[0]), EditColumn::East))
+    );
+    assert_eq!(app.points.text, "487000");
+    ev(&mut app, Event::Input("487000.5".into()));
+    ev(&mut app, Event::Finish(Some(Walk::Down)));
+    assert_eq!(point(&app, shown[0]).p.x, 487000.5);
+    assert_eq!(
+        app.points.editing,
+        Some((Target::Point(shown[1]), EditColumn::East))
+    );
+    // A value refused stays with what was typed.
+    ev(&mut app, Event::Input("abc".into()));
+    ev(&mut app, Event::Finish(Some(Walk::Right)));
+    assert_eq!(
+        app.points.editing,
+        Some((Target::Point(shown[1]), EditColumn::East))
+    );
+    assert_eq!(app.points.text, "abc");
+    assert_eq!(
+        crate::files_testing::last_said(&app),
+        "Nokta editörü: Y bir sayı olmalı."
+    );
+    // Tab writes and goes right.
+    ev(&mut app, Event::Input("487024.25".into()));
+    ev(&mut app, Event::Finish(Some(Walk::Right)));
+    assert_eq!(point(&app, shown[1]).p.x, 487024.25);
+    assert_eq!(
+        app.points.editing,
+        Some((Target::Point(shown[1]), EditColumn::North))
+    );
+    // Esc gives up.
+    ev(&mut app, Event::Input("1".into()));
+    ev(&mut app, Event::Cancel);
+    assert_eq!(app.points.editing, None);
+    assert_eq!(point(&app, shown[1]).p.y, 4420000.0);
+    // Satır ekle: Ad first; Enter writes and opens the next, its Y.
+    ev(&mut app, Event::AddRow);
+    assert_eq!(app.points.editing, Some((Target::Draft, EditColumn::Name)));
+    ev(&mut app, Event::Input("201".into()));
+    ev(&mut app, Event::Finish(Some(Walk::Right)));
+    ev(&mut app, Event::Input("487030".into()));
+    ev(&mut app, Event::Finish(Some(Walk::Right)));
+    ev(&mut app, Event::Input("4420030".into()));
+    let before = app
+        .document
+        .as_ref()
+        .map(|d| d.model.len())
+        .unwrap_or_default();
+    ev(&mut app, Event::Finish(Some(Walk::Down)));
+    assert_eq!(
+        app.document.as_ref().map(|d| d.model.len()),
+        Some(before + 1)
+    );
+    assert_eq!(app.points.editing, Some((Target::Draft, EditColumn::East)));
+    assert_eq!(
+        app.points.draft.as_ref().map(|d| d.name.as_str()),
+        Some("202")
+    );
+    // Esc drops the draft.
+    ev(&mut app, Event::Cancel);
+    assert_eq!(app.points.draft, None);
+}
+
+/// Sil: the selected rows' points go in one step, as the Sil tool takes a
+/// selection (the web's `noktalar-sil` scene).
+#[test]
+fn sil_removes_the_selected_rows_in_one_step() {
+    let mut app = app_with_points();
+    let _ = app.update(Message::Run("point.editor"));
+    let size = |app: &App| app.document.as_ref().map(|d| d.model.len());
+    let before = size(&app).expect("a drawing");
+    // A click, then Shift and a click: the first two rows.
+    ev(&mut app, Event::Press(0));
+    app.modifiers = iced::keyboard::Modifiers::SHIFT;
+    ev(&mut app, Event::Press(1));
+    app.modifiers = iced::keyboard::Modifiers::default();
+    assert_eq!(app.selection.len(), 2);
+    ev(&mut app, Event::Remove);
+    assert_eq!(size(&app), Some(before - 2));
+    assert_eq!(names(&app)[..2], ["103", "104"]);
+    assert_eq!(crate::files_testing::last_said(&app), "2 nesne silindi.");
+    // One step back brings both.
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(size(&app), Some(before));
+    assert_eq!(names(&app)[..2], ["101", "102"]);
+}
+
+/// The task's widget operations run in the picture, as iced's runtime runs
+/// them.
+fn operate(snapshot: &mut kentos_ui::snapshot::Snapshot, app: &App, task: Task<Message>) {
+    use iced::futures::StreamExt as _;
+    if let Some(mut stream) = iced_runtime::task::into_stream(task) {
+        while let Some(action) = iced::futures::executor::block_on(stream.next()) {
+            if let iced_runtime::Action::Widget(operation) = action {
+                snapshot.operate(app.view(), operation);
+            }
+        }
+    }
+}
+
 /// Pictures of Noktalar for the owner, the scenes the web's
 /// `node apps/web/scripts/e2e/shots.mjs pointeditor` takes: three points
-/// selected in the drawing; sorted by Ad; a search; one layer. Dark and
-/// light, at 1440×900 and 1100×650; `.run/shots/noktalar-*`:
+/// selected in the drawing; sorted by Ad; a search; one layer; a cell
+/// written with Enter; two rows added; two rows removed. Dark and light, at
+/// 1440×900 and 1100×650; `.run/shots/noktalar-*`:
 ///
 /// ```text
 /// cargo test -p kentos-desktop points::tests::screens -- --ignored --nocapture
@@ -224,6 +532,9 @@ fn screens() {
                 "noktalar-ad-sirali",
                 "noktalar-ara",
                 "noktalar-katman",
+                "noktalar-duzenle",
+                "noktalar-satir-ekle",
+                "noktalar-sil",
             ] {
                 let mut app = app_with_points();
                 let _ = app
@@ -233,6 +544,13 @@ fn screens() {
                 let _ = app.update(Message::Run("point.editor"));
                 let _ = app.update(Message::BottomResized(300.0));
                 app.selection.set([Slot(4), Slot(5), Slot(6)]);
+                // The window laid out before the owner acts, as in the app: the bar knows its
+                // width and the table its height when a row is to be shown.
+                let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+                let mut update = |app: &mut App, message| {
+                    let _ = app.update(message);
+                };
+                snapshot.settle(&mut app, App::view, &mut update);
                 match name {
                     "noktalar-ad-sirali" => ev(&mut app, Event::Sort(1)),
                     "noktalar-ara" => {
@@ -240,13 +558,45 @@ fn screens() {
                         ev(&mut app, Event::Search("p1".into()));
                     }
                     "noktalar-katman" => ev(&mut app, Event::Layer(Some("Kot".into()))),
+                    // The second row's Y opened by a double click (its first press selects the
+                    // row), written with Enter: the row below open (the web's scene).
+                    "noktalar-duzenle" => {
+                        ev(&mut app, Event::Press(1));
+                        ev(&mut app, Event::Edit(1, 2));
+                        ev(&mut app, Event::Input("487024.5".into()));
+                        ev(&mut app, Event::Finish(Some(Walk::Down)));
+                    }
+                    // Two rows typed and written, the third open with the name one more.
+                    "noktalar-satir-ekle" => {
+                        ev(&mut app, Event::AddRow);
+                        for (text, walk) in [
+                            ("201", Walk::Right),
+                            ("487030.25", Walk::Right),
+                            ("4420030.5", Walk::Down),
+                            ("487031.75", Walk::Right),
+                            ("4420031", Walk::Down),
+                        ] {
+                            ev(&mut app, Event::Input(text.into()));
+                            ev(&mut app, Event::Finish(Some(walk)));
+                        }
+                    }
+                    // The first two rows selected and removed (the web's scene).
+                    "noktalar-sil" => {
+                        ev(&mut app, Event::Press(0));
+                        app.modifiers = iced::keyboard::Modifiers::SHIFT;
+                        ev(&mut app, Event::Press(1));
+                        app.modifiers = iced::keyboard::Modifiers::default();
+                        ev(&mut app, Event::Remove);
+                    }
                     _ => {}
                 }
-                let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
-                let mut update = |app: &mut App, message| {
-                    let _ = app.update(message);
-                };
                 snapshot.settle(&mut app, App::view, &mut update);
+                if app.points.editing() {
+                    // The field takes the keyboard with its text selected, as the app's task
+                    // gives it when the edit opens.
+                    operate(&mut snapshot, &app, focus_field());
+                    snapshot.settle(&mut app, App::view, &mut update);
+                }
                 let file = out.join(format!("{name}-{width}x{height}{suffix}.png"));
                 snapshot
                     .render(app.view(), &app.theme())

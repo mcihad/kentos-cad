@@ -10,25 +10,30 @@ import { Dropdown } from '../widgets/Dropdown';
 import type { MenuItem } from '../widgets/PopupMenu';
 import { tooltip } from '../widgets/tooltip';
 import { tableSpacer, VirtualRows } from '../widgets/VirtualRows';
+import { cellText, EDIT_COLUMNS, emptyDraft, nextCell, writeCell, writeDraft, type Draft, type EditColumn, type Outcome } from './pointEdit';
 
 /**
- * Noktalar, the bottom panel's point editor (docs/adr/0153 §1–§2): every point of the drawing in a table, its search,
+ * Noktalar, the bottom panel's point editor (docs/adr/0153 §1–§4): every point of the drawing in a table, its search,
  * layer and selection filters and its column sort the shared core's (`pointTable`, the same order the desktop shows).
  * A click selects the point in the drawing (Ctrl turns one over, Shift takes the run from the last click); the
  * drawing's selection shows in the rows, the first selected row scrolled into view when it changes (once: scrolling
- * away stays). Göster, or a double click on a row's number, zooms to the selected points. The desktop's is
+ * away stays). Göster, or a double click on a row's number, zooms to the selected points.
+ *
+ * A double click on Ad, Y, X, Z or Kod edits it in place (./pointEdit.ts writes it): Enter writes and goes down the
+ * column, Tab right, Shift+Tab left, a click elsewhere writes and stops, Esc gives up. Satır ekle opens a draft row at
+ * the bottom; Enter writes it and opens the next, its name one more. Sil deletes the selected points. The desktop's is
  * `apps/desktop/src/points/`.
  */
 
-/** The columns: their header, the core's sort key (none: Sıra, the drawing's order) and whether they hold numbers. */
-export const POINT_COLUMNS: readonly { label: string; sort: SortColumn | null; numeric: boolean }[] = [
-  { label: 'Sıra', sort: null, numeric: true },
-  { label: 'Ad', sort: 'name', numeric: false },
-  { label: 'Y (sağa)', sort: 'east', numeric: true },
-  { label: 'X (yukarı)', sort: 'north', numeric: true },
-  { label: 'Z (kot)', sort: 'z', numeric: true },
-  { label: 'Kod', sort: 'code', numeric: false },
-  { label: 'Katman', sort: 'layer', numeric: false },
+/** The columns: their header, the core's sort key (none: Sıra, the drawing's order), whether they hold numbers, the cell edited. */
+export const POINT_COLUMNS: readonly { label: string; sort: SortColumn | null; numeric: boolean; edit: EditColumn | null }[] = [
+  { label: 'Sıra', sort: null, numeric: true, edit: null },
+  { label: 'Ad', sort: 'name', numeric: false, edit: 'name' },
+  { label: 'Y (sağa)', sort: 'east', numeric: true, edit: 'east' },
+  { label: 'X (yukarı)', sort: 'north', numeric: true, edit: 'north' },
+  { label: 'Z (kot)', sort: 'z', numeric: true, edit: 'z' },
+  { label: 'Kod', sort: 'code', numeric: false, edit: 'code' },
+  { label: 'Katman', sort: 'layer', numeric: false, edit: null },
 ];
 
 export const POINT_TEXTS = {
@@ -36,18 +41,25 @@ export const POINT_TEXTS = {
   searchHint: 'Adda ya da kodda arar; * herhangi bir dizi: P1*, *0',
   allLayers: 'Bütün katmanlar',
   onlySelected: 'Yalnız seçililer',
+  follow: 'Bağlı çizgiler izler',
+  followHint: 'Nokta taşınınca ya da kotu değişince, o yerde köşesi olan çizgi, çoklu çizgi ve alanların köşeleri de izler.',
+  add: 'Satır ekle',
+  addHint: 'Tablonun sonunda yeni satır: Ad, Y, X, Z ve Kod yazılır, Enter etkin katmana yazar ve sonrakini açar.',
+  remove: 'Sil',
+  removeHint: 'Seçili noktaları siler',
   show: 'Göster',
   showHint: 'Seçili noktalara yakınlaştırır',
-  none: 'Çizimde nokta yok. Nokta aracıyla ya da Nokta listesi içe aktar ile ekleyin.',
+  draft: 'Yeni',
+  none: 'Çizimde nokta yok. Nokta aracıyla, Satır ekle ile ya da Nokta listesi içe aktar ile ekleyin.',
   noMatch: 'Süzgece uyan nokta yok.',
 } as const;
 
-/** The table's query, kept for the session: leaving the tab and coming back keeps it. */
-const kept: TableQuery = { search: '', layer: null, onlySelected: false, sort: null, descending: false };
+/** The table's query and Bağlı çizgiler izler, kept for the session: leaving the tab and coming back keeps them. */
+const kept: TableQuery & { follow: boolean } = { search: '', layer: null, onlySelected: false, sort: null, descending: false, follow: true };
 
 /** The query as a new session starts it (the pictures start each scene from it). */
 export function resetPointTable(): void {
-  Object.assign(kept, { search: '', layer: null, onlySelected: false, sort: null, descending: false });
+  Object.assign(kept, { search: '', layer: null, onlySelected: false, sort: null, descending: false, follow: true });
 }
 
 /** A header click (docs/adr/0153 §2): ascending, then descending, then the drawing's order; Sıra is the drawing's order. */
@@ -75,6 +87,9 @@ export function rowOf(e: PointEntity, layerName: string, selected: boolean): Tab
   return { name: e.label ?? null, east: e.p.x, north: e.p.y, z: e.z ?? null, code: e.attrs.Kod ?? null, layer: layerName, selected };
 }
 
+/** The cell edited: a point's (by id) or the draft's. */
+type Editing = { id: number | 'draft'; col: EditColumn };
+
 export class PointTable extends Component {
   readonly el: HTMLElement;
   private readonly ctx: AppContext;
@@ -85,7 +100,9 @@ export class PointTable extends Component {
   private readonly empty = h('div', { class: 'empty empty--inline ptable__empty' });
   private readonly layerPick: Dropdown;
   private readonly onlyBox: HTMLInputElement;
+  private readonly followBox: HTMLInputElement;
   private readonly showBtn: HTMLButtonElement;
+  private readonly removeBtn: HTMLButtonElement;
   private readonly rows: VirtualRows;
   /** The points in the drawing's order and, in the order shown, their indices. */
   private points: PointEntity[] = [];
@@ -97,6 +114,12 @@ export class PointTable extends Component {
   /** The first selected row last scrolled to (its id and place): a change of it scrolls, once. */
   private revealed: string | null = null;
   private pending = false;
+  private editing: Editing | null = null;
+  /** What was typed in the cell edited, kept when its value was refused (the cell opens again with it). */
+  private typed: string | null = null;
+  /** The open editor's field, while it is on screen; its blur writes unless a key already did. */
+  private field: HTMLInputElement | null = null;
+  private draft: Draft | null = null;
 
   constructor(ctx: AppContext) {
     super();
@@ -109,7 +132,7 @@ export class PointTable extends Component {
         this.schedule();
       }),
     );
-    this.layerPick = new Dropdown({ ariaLabel: 'Katman', width: 190, className: 'ptable__layer', items: () => this.layerItems() });
+    this.layerPick = new Dropdown({ ariaLabel: 'Katman', width: 170, className: 'ptable__layer', items: () => this.layerItems() });
     this.onlyBox = h('input', { type: 'checkbox', checked: kept.onlySelected });
     this.d.add(
       listen(this.onlyBox, 'change', () => {
@@ -117,9 +140,19 @@ export class PointTable extends Component {
         this.schedule();
       }),
     );
-    this.showBtn = h('button', { class: 'btn btn--small ptable__show', type: 'button' }, icon('zoomSelection', 14), h('span', null, POINT_TEXTS.show));
-    this.d.add(listen(this.showBtn, 'click', () => ctx.commands.execute('view.zoomSelection')));
-    this.d.add(tooltip(this.showBtn, () => ({ title: POINT_TEXTS.show, description: POINT_TEXTS.showHint }), 'top'));
+    this.followBox = h('input', { type: 'checkbox', checked: kept.follow });
+    this.d.add(listen(this.followBox, 'change', () => (kept.follow = this.followBox.checked)));
+    const follow = h('label', { class: 'io-check ptable__only' }, this.followBox, POINT_TEXTS.follow);
+    this.d.add(tooltip(follow, () => ({ title: POINT_TEXTS.follow, description: POINT_TEXTS.followHint }), 'top'));
+    const button = (iconName: string, text: string, hint: string, run: () => void) => {
+      const b = h('button', { class: 'btn btn--small ptable__btn', type: 'button' }, icon(iconName, 14), h('span', null, text));
+      this.d.add(listen(b, 'click', run));
+      this.d.add(tooltip(b, () => ({ title: text, description: hint }), 'top'));
+      return b;
+    };
+    const add = button('plus', POINT_TEXTS.add, POINT_TEXTS.addHint, () => this.addRow());
+    this.removeBtn = button('erase', POINT_TEXTS.remove, POINT_TEXTS.removeHint, () => ctx.commands.execute('tool.erase'));
+    this.showBtn = button('zoomSelection', POINT_TEXTS.show, POINT_TEXTS.showHint, () => ctx.commands.execute('view.zoomSelection'));
 
     const head = h(
       'tr',
@@ -140,26 +173,24 @@ export class PointTable extends Component {
     this.el = h(
       'div',
       { class: 'ptable' },
+      // Two groups: the filters on the left, the count and the buttons on the right; a narrow panel takes the right
+      // group to a second line rather than cut it (the desktop's bar does the same).
       h(
         'div',
         { class: 'ptable__bar' },
-        search,
-        this.layerPick.el,
-        h('label', { class: 'io-check ptable__only' }, this.onlyBox, POINT_TEXTS.onlySelected),
-        h('span', { class: 'ptable__gap' }),
-        this.count,
-        this.showBtn,
+        h('div', { class: 'ptable__group' }, search, this.layerPick.el, h('label', { class: 'io-check ptable__only' }, this.onlyBox, POINT_TEXTS.onlySelected), follow),
+        h('div', { class: 'ptable__group ptable__group--end' }, this.count, add, this.removeBtn, this.showBtn),
       ),
       this.scroller,
     );
     this.rows = new VirtualRows({ parent: this.body, scroller: this.scroller, row: (i) => this.row(i), spacer: tableSpacer(POINT_COLUMNS.length) });
     this.d.add(() => this.rows.dispose());
 
-    // A click selects; a double click on the number zooms to it.
+    // A click selects; a double click on the number zooms to it, on a value edits it.
     this.d.add(
       listen<MouseEvent>(this.body, 'click', (e) => {
         const at = this.rowAt(e);
-        if (at === null) return;
+        if (at === null || at >= this.ids.length || (e.target as HTMLElement).closest('input')) return;
         const how = { ctrl: e.ctrlKey || e.metaKey, shift: e.shiftKey };
         const ids = clickPick(ctx.selection.ids.value, this.ids, at, this.anchor, how);
         if (!how.shift) this.anchor = at;
@@ -169,9 +200,17 @@ export class PointTable extends Component {
     this.d.add(
       listen<MouseEvent>(this.body, 'dblclick', (e) => {
         const at = this.rowAt(e);
-        if (at === null || !(e.target as HTMLElement).closest('td:first-child')) return;
-        ctx.selection.set([this.ids[at]]);
-        ctx.commands.execute('view.zoomSelection');
+        const td = (e.target as HTMLElement).closest('td');
+        if (at === null || !td || td.querySelector('input')) return;
+        const col = POINT_COLUMNS[td.cellIndex]?.edit ?? null;
+        if (at >= this.ids.length) {
+          if (col && this.draft) this.edit({ id: 'draft', col });
+          return;
+        }
+        if (td.cellIndex === 0) {
+          ctx.selection.set([this.ids[at]]);
+          ctx.commands.execute('view.zoomSelection');
+        } else if (col) this.edit({ id: this.ids[at], col });
       }),
     );
     this.d.add(watchAll([ctx.selection.ids, ctx.format.changed], () => this.schedule()));
@@ -181,7 +220,7 @@ export class PointTable extends Component {
     queueMicrotask(() => this.refresh());
   }
 
-  /** The row index (in the order shown) under a mouse event, or null. */
+  /** The row index (in the order shown, the draft last) under a mouse event, or null. */
   private rowAt(e: MouseEvent): number | null {
     const tr = (e.target as HTMLElement).closest<HTMLElement>('tr[data-at]');
     return tr ? Number(tr.dataset.at) : null;
@@ -224,9 +263,13 @@ export class PointTable extends Component {
     const data = this.points.map((e) => rowOf(e, name(e.layerId), selected.has(e.id)));
     this.shown = pointTable(data, kept);
     this.ids = this.shown.map((i) => this.points[i].id);
+    // A point edited that went away (an undo) closes its editor.
+    if (typeof this.editing?.id === 'number' && !this.ids.includes(this.editing.id)) this.editing = null;
     this.layerPick.set(kept.layer ?? POINT_TEXTS.allLayers);
     this.onlyBox.checked = kept.onlySelected;
+    this.followBox.checked = kept.follow;
     this.showBtn.disabled = selection.size === 0;
+    this.removeBtn.disabled = selection.size === 0;
     this.count.textContent = `${this.shown.length} / ${this.points.length} nokta`;
     this.heads.forEach((th, i) => {
       const sorted = kept.sort !== null && POINT_COLUMNS[i].sort === kept.sort;
@@ -234,29 +277,146 @@ export class PointTable extends Component {
       th.classList.toggle('is-sorted', sorted);
       th.querySelector('.ptable__arrow')?.replaceChildren(sorted ? icon(kept.descending ? 'chevronDown' : 'chevronUp', 12) : '');
     });
-    this.empty.hidden = this.shown.length > 0;
+    this.empty.hidden = this.shown.length > 0 || this.draft !== null;
     replaceChildren(this.empty, this.points.length ? POINT_TEXTS.noMatch : POINT_TEXTS.none);
     if (this.anchor !== null && this.anchor >= this.shown.length) this.anchor = null;
-    this.rows.set(this.shown.length);
+    // The rows go: a blur of the editor they hold is no click elsewhere.
+    this.field = null;
+    this.rows.set(this.shown.length + (this.draft ? 1 : 0));
+    const editing = this.editing;
+    if (editing) {
+      const at = editing.id === 'draft' ? this.shown.length : this.ids.indexOf(editing.id);
+      if (at >= 0) this.rows.reveal(at);
+    }
     // The selection shows: when its first row changes it is scrolled into view, once (scrolling away stays), as the
     // desktop's table reveals it.
     const first = this.ids.findIndex((id) => selected.has(id));
     const key = first >= 0 ? `${this.ids[first]}@${first}` : null;
     if (key !== this.revealed) {
       this.revealed = key;
-      if (first >= 0) this.rows.reveal(first);
+      if (first >= 0 && !editing) this.rows.reveal(first);
     }
   }
 
   private row(i: number): HTMLElement {
+    if (i >= this.shown.length) return this.draftRow(i);
     const e = this.points[this.shown[i]];
     const { format: f, doc, selection } = this.ctx;
     const cells = [String(i + 1), e.label ?? '', f.coord(e.p.x), f.coord(e.p.y), e.z !== undefined ? f.length(e.z, false) : '', e.attrs.Kod ?? '', doc.layers.get(e.layerId)?.name ?? ''];
     const on = selection.has(e.id);
+    const ed = this.editing?.id === e.id ? this.editing.col : null;
     return h(
       'tr',
       { class: on ? 'is-selected' : null, 'data-at': String(i), 'aria-selected': String(on) },
-      cells.map((c, j) => h('td', { class: POINT_COLUMNS[j].numeric ? 'num' : null }, c)),
+      cells.map((c, j) => {
+        const col = POINT_COLUMNS[j];
+        const editing = col.edit !== null && col.edit === ed;
+        return h('td', { class: `${col.numeric ? 'num' : ''}${editing ? ' is-editing' : ''}` || null }, editing ? this.editor(this.typed ?? cellText(e, col.edit!), col.numeric) : c);
+      }),
     );
+  }
+
+  /** Satır ekle's row: its cells as typed, the one edited open. */
+  private draftRow(i: number): HTMLElement {
+    const d = this.draft ?? emptyDraft();
+    const ed = this.editing?.id === 'draft' ? this.editing.col : null;
+    const text: Record<EditColumn, string> = { name: d.name, east: d.east, north: d.north, z: d.z, code: d.code };
+    return h(
+      'tr',
+      { class: 'ptable__draft', 'data-at': String(i) },
+      POINT_COLUMNS.map((col, j) => {
+        const editing = col.edit !== null && col.edit === ed;
+        const value = j === 0 ? POINT_TEXTS.draft : col.edit ? text[col.edit] : '';
+        return h('td', { class: `${col.numeric ? 'num' : ''}${editing ? ' is-editing' : ''}` || null }, editing ? this.editor(value, col.numeric) : value);
+      }),
+    );
+  }
+
+  /** The editor in a cell: the value in it chosen; its keys and its blur end the edit. */
+  private editor(value: string, numeric: boolean): HTMLInputElement {
+    const input = h('input', { class: `ptable__edit${numeric ? ' num' : ''}`, value, spellcheck: 'false', 'aria-label': 'Değer' });
+    this.field = input;
+    input.addEventListener('keydown', (e) => {
+      e.stopPropagation();
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        this.finish(input.value, 'down');
+      } else if (e.key === 'Tab') {
+        e.preventDefault();
+        this.finish(input.value, e.shiftKey ? 'left' : 'right');
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        this.cancel();
+      }
+    });
+    input.addEventListener('blur', () => {
+      // A key that ended the edit has taken the field away already.
+      if (this.field === input) this.finish(input.value, null);
+    });
+    queueMicrotask(() => {
+      if (!input.isConnected) return;
+      input.focus({ preventScroll: true });
+      input.select();
+    });
+    return input;
+  }
+
+  /** The cell edited from now (none: no editor); `typed`, what it opens with when a value was refused. */
+  private edit(to: Editing | null, typed: string | null = null): void {
+    this.editing = to;
+    this.typed = typed;
+    this.refresh();
+  }
+
+  /** Satır ekle: a draft row at the bottom, its Ad open. */
+  private addRow(): void {
+    this.draft ??= emptyDraft();
+    this.edit({ id: 'draft', col: 'name' });
+  }
+
+  private cancel(): void {
+    this.field = null;
+    if (this.editing?.id === 'draft') this.draft = null;
+    this.edit(null);
+    this.ctx.view.focus();
+  }
+
+  private say(out: Outcome): void {
+    for (const line of out.said) this.ctx.log.warn(line);
+  }
+
+  /** The edit ends with `value`: written, then the editor goes `how` (Enter down, Tab right, Shift+Tab left; null stops). */
+  private finish(value: string, how: 'down' | 'right' | 'left' | null): void {
+    const editing = this.editing;
+    this.field = null;
+    if (!editing) return;
+    const { doc, settings } = this.ctx;
+    if (editing.id === 'draft') {
+      const d = { ...(this.draft ?? emptyDraft()), [editing.col]: value };
+      this.draft = d;
+      if (how === 'down') {
+        const out = writeDraft(doc, d, doc.layers.active.value, settings.color.value);
+        this.say(out);
+        // Written: the next row, its name one more, its Y open.
+        if (out.next !== null) {
+          this.draft = emptyDraft(out.next);
+          return this.edit({ id: 'draft', col: 'east' });
+        }
+        return this.edit(editing);
+      }
+      if (how === null) return this.edit(null);
+      const c = EDIT_COLUMNS.indexOf(editing.col) + (how === 'right' ? 1 : -1);
+      return this.edit({ id: 'draft', col: EDIT_COLUMNS[(c + EDIT_COLUMNS.length) % EDIT_COLUMNS.length] });
+    }
+    const e = doc.get(editing.id);
+    if (!e || e.kind !== 'point') return this.edit(null);
+    // Where to go next, by the rows' order before the write (a sort may move the row).
+    const next = how ? nextCell(this.ids, editing.id, editing.col, how) : null;
+    const out = writeCell(doc, e, editing.col, value, kept.follow);
+    this.say(out);
+    // A value refused: the cell stays open with what was typed (a click elsewhere gives it up).
+    if (out.stay) return this.edit(how ? editing : null, how ? value : null);
+    this.edit(next);
+    if (!next) this.ctx.view.focus();
   }
 }

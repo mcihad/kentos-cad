@@ -945,7 +945,7 @@ impl App {
             }
             Message::CommandHistoryToggled => self.toggle_bottom(),
             Message::BottomTab(tab) => self.show_bottom(tab),
-            Message::Points(event) => self.points_event(event),
+            Message::Points(event) => return self.points_event(event),
             Message::BottomResized(height) => self.bottom_dragged(Some(height), Instant::now()),
             Message::BottomReset => self.bottom_dragged(None, Instant::now()),
             Message::HistoryCleared => self.clear_history(),

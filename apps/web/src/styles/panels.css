@@ -535,32 +535,33 @@
 }
 .ptable__bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: 6px 10px;
   flex: none;
   padding: 6px 10px;
   border-bottom: 1px solid var(--c-line);
   background: var(--c-panel);
 }
+.ptable__group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ptable__group--end {
+  margin-left: auto;
+}
 .ptable__search {
-  width: calc(220px * var(--ui-scale));
+  width: calc(200px * var(--ui-scale));
   height: calc(28px * var(--ui-scale));
 }
 .ptable__only {
   white-space: nowrap;
 }
-.ptable__gap {
-  flex: 1;
-}
 .ptable__count {
   color: var(--c-text-2);
   font-size: var(--fs-xs);
   white-space: nowrap;
-}
-.ptable__show {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
 }
 .ptable__scroll {
   position: relative;
@@ -646,6 +647,39 @@
 }
 .ptable__empty {
   padding-top: 16px;
+}
+.ptable__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+/* A cell edited in place: the field fills it, the accent line marks it. */
+.ptable td.is-editing {
+  padding: 0 2px;
+}
+.ptable__edit {
+  width: 100%;
+  height: 22px;
+  padding: 0 9px;
+  border: 1px solid var(--c-accent-line);
+  border-radius: 3px;
+  background: var(--c-field);
+  color: var(--c-text);
+  font: inherit;
+  outline: none;
+}
+.ptable__edit.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+/* Satır ekle's row: below the points, its number cell says Yeni. */
+.ptable tbody tr.ptable__draft td {
+  background: var(--c-accent-soft);
+  color: var(--c-text-2);
+}
+.ptable tbody tr.ptable__draft td:first-child {
+  color: var(--c-accent-text);
+  font-weight: 600;
 }
 
 /* ── Shortcut sheet ──────────────────────────────────────────────── */

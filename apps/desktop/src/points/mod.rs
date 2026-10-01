@@ -1,4 +1,4 @@
-//! Noktalar, the bottom panel's point editor (docs/adr/0153 §1–§2; the web's
+//! Noktalar, the bottom panel's point editor (docs/adr/0153 §1–§4; the web's
 //! `ui/bottom/PointTable.ts`): every point of the drawing in a table. Its
 //! search, layer and selection filters and its column sort are the shared
 //! core's (`point_table`), so both platforms show the same order.
@@ -8,45 +8,54 @@
 //! - The drawing's selection shows in the rows; when its first row changes
 //!   it is scrolled into view (once: scrolling away stays).
 //! - Göster, or a double click on a row's number, zooms to the selected points.
-//! - The query (search, layer, only the selected, sort) is kept for as long
-//!   as the app lives.
+//! - A double click on Ad, Y, X, Z or Kod edits it in place (`edit.rs` writes
+//!   it): Enter writes and goes down the column, Tab right, Shift+Tab left, a
+//!   press elsewhere writes and stops, Esc gives up. Satır ekle opens a draft
+//!   row at the bottom; Enter writes it and opens the next, its name one more.
+//!   Sil deletes the selected points.
+//! - The query (search, layer, only the selected, sort) and Bağlı çizgiler
+//!   izler are kept for as long as the app lives.
 //!
 //! The rows are worked out once for the drawing, the selection and the query
-//! as they are, not at every frame (docs/adr/0120).
+//! as they are, not at every frame (docs/adr/0120). The view is `view.rs`.
 
 use std::cell::RefCell;
 
-use iced::widget::{button, container, mouse_area, row, space};
-use iced::{Center, Element, Fill, Length};
+use iced::Task;
 use kentos_contracts::Entity;
 use kentos_domain::Slot;
 use kentos_geometry_core::ops::point_editor::{TableQuery, TableRow, point_table};
-use kentos_interaction::Format;
-use kentos_ui::icon::icon;
-use kentos_ui::label;
-use kentos_ui::style;
-use kentos_ui::widget::search_box::SearchBox;
-use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::switch::Switch;
-use kentos_ui::widget::table::{Column as TableColumn, Row as TableLine, SortOrder, Table};
 
 use crate::app::{App, Message};
 use crate::document::Document;
-use crate::icons::from_web;
 
+mod cell;
+pub mod edit;
 #[cfg(test)]
 mod tests;
+mod view;
+
+use edit::{Draft, EditColumn};
 
 /// The columns: their header, the core's sort key (none: Sıra, the drawing's
-/// order) and whether they hold numbers (the web's `POINT_COLUMNS`).
-pub const COLUMNS: [(&str, Option<&str>, bool); 7] = [
-    ("Sıra", None, true),
-    ("Ad", Some("name"), false),
-    ("Y (sağa)", Some("east"), true),
-    ("X (yukarı)", Some("north"), true),
-    ("Z (kot)", Some("z"), true),
-    ("Kod", Some("code"), false),
-    ("Katman", Some("layer"), false),
+/// order), whether they hold numbers and the cell edited (the web's `POINT_COLUMNS`).
+pub const COLUMNS: [(&str, Option<&str>, bool, Option<EditColumn>); 7] = [
+    ("Sıra", None, true, None),
+    ("Ad", Some("name"), false, Some(EditColumn::Name)),
+    ("Y (sağa)", Some("east"), true, Some(EditColumn::East)),
+    ("X (yukarı)", Some("north"), true, Some(EditColumn::North)),
+    ("Z (kot)", Some("z"), true, Some(EditColumn::Z)),
+    ("Kod", Some("code"), false, Some(EditColumn::Code)),
+    ("Katman", Some("layer"), false, None),
+];
+
+/// The cells the editor walks, in the order Tab takes them.
+pub const EDIT_COLUMNS: [EditColumn; 5] = [
+    EditColumn::Name,
+    EditColumn::East,
+    EditColumn::North,
+    EditColumn::Z,
+    EditColumn::Code,
 ];
 
 /// The tab's words (the web's `POINT_TEXTS`).
@@ -54,9 +63,12 @@ pub mod texts {
     pub const SEARCH: &str = "Ad ya da kod ara";
     pub const ALL_LAYERS: &str = "Bütün katmanlar";
     pub const ONLY_SELECTED: &str = "Yalnız seçililer";
+    pub const FOLLOW: &str = "Bağlı çizgiler izler";
+    pub const ADD: &str = "Satır ekle";
+    pub const REMOVE: &str = "Sil";
     pub const SHOW: &str = "Göster";
-    pub const NONE: &str =
-        "Çizimde nokta yok. Nokta aracıyla ya da Nokta listesi içe aktar ile ekleyin.";
+    pub const DRAFT: &str = "Yeni";
+    pub const NONE: &str = "Çizimde nokta yok. Nokta aracıyla, Satır ekle ile ya da Nokta listesi içe aktar ile ekleyin.";
     pub const NO_MATCH: &str = "Süzgece uyan nokta yok.";
 }
 
@@ -104,6 +116,30 @@ pub fn click_pick(
     vec![id]
 }
 
+/// Where the editor goes after a cell of the row `id` (docs/adr/0153 §3; the
+/// web's `nextCell`), in `ids`, the rows' order before the write: down the
+/// column, right (Kod to the next row's Ad), left (Ad to the row above's
+/// Kod); none past the ends.
+pub fn next_cell(ids: &[Slot], id: Slot, col: EditColumn, how: Walk) -> Option<(Slot, EditColumn)> {
+    let at = ids.iter().position(|&s| s == id)?;
+    if how == Walk::Down {
+        return ids.get(at + 1).map(|&s| (s, col));
+    }
+    let c = EDIT_COLUMNS.iter().position(|&c| c == col)?;
+    let right = how == Walk::Right;
+    let next = if right { c + 1 } else { c.wrapping_sub(1) };
+    if next < EDIT_COLUMNS.len() {
+        return Some((id, EDIT_COLUMNS[next]));
+    }
+    let row = if right { at + 1 } else { at.checked_sub(1)? };
+    let col = if right {
+        EDIT_COLUMNS[0]
+    } else {
+        EDIT_COLUMNS[EDIT_COLUMNS.len() - 1]
+    };
+    ids.get(row).map(|&s| (s, col))
+}
+
 /// A point as the table reads it (the core's `TableRow`; the web's `rowOf`).
 pub fn row_of(p: &kentos_contracts::PointEntity, layer: &str, selected: bool) -> TableRow {
     TableRow {
@@ -117,6 +153,21 @@ pub fn row_of(p: &kentos_contracts::PointEntity, layer: &str, selected: bool) ->
     }
 }
 
+/// Which way an edit ends: Enter, Tab, Shift+Tab.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Walk {
+    Down,
+    Right,
+    Left,
+}
+
+/// The cell edited: a point's, or the draft's.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Target {
+    Point(Slot),
+    Draft,
+}
+
 /// The tab's messages.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Event {
@@ -124,6 +175,7 @@ pub enum Event {
     /// A layer by name; none: all.
     Layer(Option<String>),
     OnlySelected(bool),
+    Follow(bool),
     /// A header pressed, by its column.
     Sort(usize),
     /// A row pressed, by its place in the order shown.
@@ -132,6 +184,19 @@ pub enum Event {
     Zoom(usize),
     /// Göster: the selected points zoomed to.
     Show,
+    /// A value cell double-clicked: the row (the draft after the points) and the column.
+    Edit(usize, usize),
+    /// The editor's text typed.
+    Input(String),
+    /// The edit ends: written and gone a way (Enter, Tab, Shift+Tab), or
+    /// stopped (a press elsewhere).
+    Finish(Option<Walk>),
+    /// Esc: the edit given up (the draft with it).
+    Cancel,
+    /// Satır ekle.
+    AddRow,
+    /// Sil: the selected points deleted.
+    Remove,
 }
 
 /// The rows as worked out for a drawing, a selection and a query.
@@ -151,18 +216,42 @@ pub(crate) struct Rows {
 type Key = (u64, u64, u64, u64);
 
 /// The tab's state, kept for as long as the app lives.
-#[derive(Default)]
 pub(crate) struct PointsPanel {
     search: String,
     layer: Option<String>,
     only_selected: bool,
     sort: Option<&'static str>,
     descending: bool,
+    /// Bağlı çizgiler izler.
+    follow: bool,
     /// The last click without Shift, in the order shown.
     anchor: Option<usize>,
+    /// The cell edited and the editor's text.
+    editing: Option<(Target, EditColumn)>,
+    text: String,
+    draft: Option<Draft>,
     /// Bumped at every change of the query.
     version: u64,
     cache: RefCell<Option<(Key, Rows)>>,
+}
+
+impl Default for PointsPanel {
+    fn default() -> Self {
+        Self {
+            search: String::new(),
+            layer: None,
+            only_selected: false,
+            sort: None,
+            descending: false,
+            follow: true,
+            anchor: None,
+            editing: None,
+            text: String::new(),
+            draft: None,
+            version: 0,
+            cache: RefCell::default(),
+        }
+    }
 }
 
 impl PointsPanel {
@@ -179,12 +268,26 @@ impl PointsPanel {
     fn changed(&mut self) {
         self.version += 1;
     }
+
+    /// Whether a cell is being edited: Tab is its key then.
+    pub(crate) fn editing(&self) -> bool {
+        self.editing.is_some()
+    }
 }
 
 fn layer_name(doc: &kentos_domain::Document, id: &str) -> String {
     doc.layers()
         .get(id)
         .map_or_else(|| id.to_owned(), |n| n.name.clone())
+}
+
+/// The keyboard to the editor's field, its text chosen.
+fn focus_field() -> Task<Message> {
+    let id = iced::widget::Id::new(cell::FIELD);
+    Task::batch([
+        iced::widget::operation::focus(id.clone()),
+        iced::widget::operation::select_all(id),
+    ])
 }
 
 impl App {
@@ -256,7 +359,15 @@ impl App {
         rows
     }
 
-    pub(crate) fn points_event(&mut self, event: Event) {
+    /// The rows shown now (none without a drawing).
+    fn shown_points(&self) -> Vec<Slot> {
+        self.document
+            .as_ref()
+            .map(|doc| self.point_rows(doc).shown)
+            .unwrap_or_default()
+    }
+
+    pub(crate) fn points_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Search(text) => {
                 self.points.search = text;
@@ -270,23 +381,21 @@ impl App {
                 self.points.only_selected = on;
                 self.points.changed();
             }
+            Event::Follow(on) => self.points.follow = on,
             Event::Sort(column) => {
                 let p = &mut self.points;
                 (p.sort, p.descending) = next_sort(p.sort, p.descending, COLUMNS[column].1);
                 p.changed();
             }
             Event::Press(at) => {
-                let Some(doc) = &self.document else {
-                    return;
-                };
-                let rows = self.point_rows(doc);
-                if at >= rows.shown.len() {
-                    return;
+                let shown = self.shown_points();
+                if at >= shown.len() {
+                    return Task::none();
                 }
                 let (ctrl, shift) = (self.modifiers.control(), self.modifiers.shift());
                 let ids = click_pick(
                     self.selection.ids(),
-                    &rows.shown,
+                    &shown,
                     at,
                     self.points.anchor,
                     ctrl,
@@ -298,147 +407,148 @@ impl App {
                 self.selection.set(ids);
             }
             Event::Zoom(at) => {
-                let Some(doc) = &self.document else {
-                    return;
-                };
-                if let Some(&slot) = self.point_rows(doc).shown.get(at) {
+                if let Some(&slot) = self.shown_points().get(at) {
                     self.selection.set([slot]);
                     self.navigating(Self::zoom_selection);
                 }
             }
             Event::Show => self.navigating(Self::zoom_selection),
+            Event::Edit(at, column) => {
+                let Some(col) = COLUMNS.get(column).and_then(|c| c.3) else {
+                    return Task::none();
+                };
+                let shown = self.shown_points();
+                let target = match shown.get(at) {
+                    Some(&slot) => Target::Point(slot),
+                    None if self.points.draft.is_some() => Target::Draft,
+                    None => return Task::none(),
+                };
+                return self.edit_cell(Some((target, col)));
+            }
+            Event::Input(text) => self.points.text = text,
+            Event::Finish(walk) => return self.finish_cell(walk),
+            Event::Cancel => {
+                if matches!(self.points.editing, Some((Target::Draft, _))) {
+                    self.points.draft = None;
+                }
+                self.points.editing = None;
+            }
+            Event::AddRow => {
+                if self.points.draft.is_none() {
+                    self.points.draft = Some(Draft::default());
+                }
+                return self.edit_cell(Some((Target::Draft, EditColumn::Name)));
+            }
+            Event::Remove => return self.update(Message::Run("tool.erase")),
         }
+        Task::none()
     }
 
-    /// The Noktalar tab: its bar (search, layer, only the selected, the
-    /// count, Göster) over the table.
-    pub(crate) fn points_tab(&self) -> Element<'_, Message> {
-        let Some(doc) = &self.document else {
-            return container(label::muted(texts::NONE)).padding(12).into();
+    /// The cell edited from now (none: no editor), its text the value's.
+    fn edit_cell(&mut self, to: Option<(Target, EditColumn)>) -> Task<Message> {
+        self.points.editing = to;
+        let Some((target, col)) = to else {
+            return Task::none();
         };
-        let rows = self.point_rows(doc);
-        let format = Format::of(doc.model.settings());
-        let panel = &self.points;
-        let msg = |e: Event| Message::Points(e);
-
-        let search = SearchBox::new(panel.search.clone(), texts::SEARCH, move |t| {
-            Message::Points(Event::Search(t))
-        })
-        .height(28.0);
-        let mut choices = vec![Choice::new(texts::ALL_LAYERS)];
-        choices.extend(
-            rows.layers
-                .iter()
-                .map(|(name, n)| Choice::new(format!("{name} ({n})"))),
-        );
-        let chosen = match &panel.layer {
-            None => Some(0),
-            Some(l) => rows
-                .layers
-                .iter()
-                .position(|(name, _)| name == l)
-                .map(|i| i + 1),
-        };
-        let names: Vec<String> = rows.layers.iter().map(|(name, _)| name.clone()).collect();
-        let layer = Select::new(choices, chosen.or(Some(0)), move |i| {
-            Message::Points(Event::Layer(if i == 0 {
-                None
-            } else {
-                names.get(i - 1).cloned()
-            }))
-        });
-        let only = Switch::new(panel.only_selected, move |on| {
-            Message::Points(Event::OnlySelected(on))
-        })
-        .label(texts::ONLY_SELECTED);
-        let count = label::muted(format!(
-            "{} / {} nokta",
-            rows.shown.len(),
-            rows.points.len()
-        ));
-        let show = button(
-            row![
-                icon(from_web(Some("zoomSelection"))).size(14.0),
-                label::body(texts::SHOW)
-            ]
-            .spacing(6)
-            .align_y(Center),
-        )
-        .style(style::button::secondary)
-        .padding([4, 10])
-        .on_press_maybe((!self.selection.is_empty()).then(|| msg(Event::Show)));
-        let bar = row![
-            container(search).width(Length::Fixed(220.0)),
-            container(layer).width(Length::Fixed(190.0)),
-            only,
-            space::horizontal(),
-            count,
-            show,
-        ]
-        .spacing(10)
-        .padding([6, 10])
-        .align_y(Center);
-
-        let columns = COLUMNS
-            .iter()
-            .enumerate()
-            .map(|(i, (title, key, numeric))| {
-                let order = key.filter(|k| panel.sort == Some(k)).map(|_| {
-                    if panel.descending {
-                        SortOrder::Descending
-                    } else {
-                        SortOrder::Ascending
-                    }
-                });
-                let width = match i {
-                    0 => Length::Fixed(56.0),
-                    1 | 5 => Length::FillPortion(2),
-                    6 => Length::FillPortion(2),
-                    _ => Length::FillPortion(3),
-                };
-                let column = TableColumn::new(*title)
-                    .width(width)
-                    .sortable(order, msg(Event::Sort(i)));
-                if *numeric {
-                    column.align_right()
-                } else {
-                    column
+        self.points.text = match target {
+            Target::Draft => {
+                let d = self.points.draft.clone().unwrap_or_default();
+                match col {
+                    EditColumn::Name => d.name,
+                    EditColumn::East => d.east,
+                    EditColumn::North => d.north,
+                    EditColumn::Z => d.z,
+                    EditColumn::Code => d.code,
                 }
-            });
-        let model = &doc.model;
-        let selection = &self.selection;
-        let shown = rows.shown.clone();
-        let table = Table::new(columns)
-            .virtualized(shown.len(), move |i| {
-                let slot = shown[i];
-                let Some(Entity::Point(p)) = model.get(slot) else {
-                    return TableLine::new([label::muted("").into()]);
+            }
+            Target::Point(slot) => match self.document.as_ref().and_then(|d| d.model.get(slot)) {
+                Some(Entity::Point(p)) => edit::cell_text(p, col),
+                _ => String::new(),
+            },
+        };
+        focus_field()
+    }
+
+    /// The edit ends with the editor's text: written, then the editor goes
+    /// `walk`'s way (none: it stops). A value refused keeps the cell open
+    /// with what was typed when a key ended it.
+    fn finish_cell(&mut self, walk: Option<Walk>) -> Task<Message> {
+        let Some((target, col)) = self.points.editing else {
+            return Task::none();
+        };
+        let text = std::mem::take(&mut self.points.text);
+        match target {
+            Target::Draft => {
+                let mut d = self.points.draft.clone().unwrap_or_default();
+                match col {
+                    EditColumn::Name => d.name = text,
+                    EditColumn::East => d.east = text,
+                    EditColumn::North => d.north = text,
+                    EditColumn::Z => d.z = text,
+                    EditColumn::Code => d.code = text,
+                }
+                self.points.draft = Some(d.clone());
+                match walk {
+                    None => {
+                        self.points.editing = None;
+                        Task::none()
+                    }
+                    Some(Walk::Down) => {
+                        let layer = self
+                            .document
+                            .as_ref()
+                            .map(|doc| doc.model.layers().active().to_owned())
+                            .unwrap_or_default();
+                        let color = self.draft.color.map(str::to_owned);
+                        let Some(doc) = self.document.as_mut() else {
+                            return Task::none();
+                        };
+                        let out = edit::write_draft(&mut doc.model, &d, &layer, color.as_deref());
+                        for line in out.outcome.said {
+                            self.warn(line);
+                        }
+                        match out.next {
+                            // Written: the next row, its name one more, its Y open.
+                            Some(next) => {
+                                self.points.draft = Some(Draft {
+                                    name: next,
+                                    ..Draft::default()
+                                });
+                                self.edit_cell(Some((Target::Draft, EditColumn::East)))
+                            }
+                            None => self.edit_cell(Some((target, col))),
+                        }
+                    }
+                    Some(walk) => {
+                        let c = EDIT_COLUMNS.iter().position(|&c| c == col).unwrap_or(0);
+                        let n = EDIT_COLUMNS.len();
+                        let next = if walk == Walk::Right {
+                            (c + 1) % n
+                        } else {
+                            (c + n - 1) % n
+                        };
+                        self.edit_cell(Some((Target::Draft, EDIT_COLUMNS[next])))
+                    }
+                }
+            }
+            Target::Point(slot) => {
+                // Where to go next, by the rows' order before the write (a sort may move the row).
+                let next = walk.and_then(|w| next_cell(&self.shown_points(), slot, col, w));
+                let follow = self.points.follow;
+                let Some(doc) = self.document.as_mut() else {
+                    return Task::none();
                 };
-                let number = mouse_area(label::muted((i + 1).to_string()))
-                    .on_double_click(Message::Points(Event::Zoom(i)));
-                TableLine::new([
-                    number.into(),
-                    label::strong(p.base.label.clone().unwrap_or_default()).into(),
-                    label::mono(format.coord(p.p.x)).into(),
-                    label::mono(format.coord(p.p.y)).into(),
-                    label::mono(p.z.map(|z| format.length_bare(z)).unwrap_or_default()).into(),
-                    label::body(p.base.attrs.get("Kod").cloned().unwrap_or_default()).into(),
-                    label::body(layer_name(model, &p.base.layer_id)).into(),
-                ])
-                .selected(selection.contains(slot))
-                // Every selected row alike, as the web shows them: no primary one.
-                .current(false)
-                .on_press(Message::Points(Event::Press(i)))
-            })
-            .reveal(rows.first_selected)
-            .empty(if rows.points.is_empty() {
-                texts::NONE
-            } else {
-                texts::NO_MATCH
-            });
-        iced::widget::column![bar, kentos_ui::widget::horizontal_divider(), table]
-            .width(Fill)
-            .height(Fill)
-            .into()
+                let out = edit::write_cell(&mut doc.model, slot, col, &text, follow);
+                for line in out.said {
+                    self.warn(line);
+                }
+                if out.stay && walk.is_some() {
+                    self.points.editing = Some((target, col));
+                    self.points.text = text;
+                    return focus_field();
+                }
+                self.edit_cell(next.map(|(s, c)| (Target::Point(s), c)))
+            }
+        }
     }
 }

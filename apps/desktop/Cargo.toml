@@ -21,6 +21,8 @@ kentos-domain = { path = "../../crates/native/domain" }
 kentos-render-wgpu = { path = "../../crates/render/wgpu" }
 # The tool session: tools, prompts and typed input over the document (docs/adr/0021).
 kentos-interaction = { path = "../../crates/native/interaction" }
+# Nokta editörü writes through the product commands themselves: it tells a refusal by its path (points/edit.rs, docs/adr/0153).
+kentos-native-application = { path = "../../crates/native/application" }
 # İşlemler (docs/PROCESSING.md): the processing tools and models over the document, held to
 # the web's by fixtures/processing/v1 (docs/adr/0084).
 kentos-processing = { path = "../../crates/native/processing" }

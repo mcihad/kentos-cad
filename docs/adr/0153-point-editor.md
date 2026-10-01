@@ -46,14 +46,20 @@ Nokta editörü alt panelin yeni sekmesidir: **Noktalar** (Komut geçmişi, Koor
 
 Ad, Y, X, Z ve Kod düzenlenir; Sıra ve Katman düzenlenmez (katmanı Katmana taşı değiştirir).
 
-- **Başlatma:** hücreye çift tık, ya da seçili hücrede F2 veya Enter.
-- **Bitirme:** Enter yazar ve alttaki satırın aynı hücresine geçer. Tab yazar ve sağdaki hücreye geçer. Esc vazgeçer.
-- **Yanlış değer:** sayı olmayan Y, X ya da Z yazılmaz; hücre düzenlemede kalır ve nedeni söylenir (“Y bir sayı olmalı.”).
+- **Başlatma:** hücreye çift tık. (F2 alt paneli açıp kapatır; düzenlemeyi başlatmaz.)
+- **Bitirme:**
+  - Enter yazar ve düzenleme, düzenlemeden önceki sırayla alttaki satırın aynı hücresine geçer; son satırda biter.
+  - Tab yazar ve sağdaki düzenlenen hücreye geçer (Kod'dan sonra alttaki satırın Ad'ı); Shift+Tab soldakine.
+  - Başka yere tıklamak yazar ve bitirir. Esc vazgeçer.
+- **Değer:** Ad ve Kod baştaki ve sondaki boşluklar atılarak yazılır. Y, X ve Z nokta girişinin sayı dilbilgisiyle okunur (`parse_number`).
+- **Yanlış değer:** sayı olmayan Y, X ya da Z yazılmaz; hücre düzenlemede kalır ve nedeni söylenir (“Y bir sayı olmalı.”). Boş Y ya da X da sayı değildir.
+- **Değişmeyen değer** hiçbir şey yazmaz.
 - **Her hücre bir geri alma adımıdır: “Nokta düzenle”.**
   - Ad: `cad.entities.set` (etiket); boş ad adı kaldırır.
   - Kod: `cad.entities.set` (`Kod` özniteliği); boş kod özniteliği kaldırır.
   - Y, X: `cad.entities.edit`, `properties` işlemi (noktanın yeri).
   - Z: `cad.entities.edit`, `elevation` işlemi; boş Z kotu kaldırır.
+- **Kilitli katman:** noktanın katmanı kilitliyse komutun reddi söylenir; hiçbir şey yazılmaz.
 - **Bağlı çizgiler izler** (tablonun araç çubuğunda kutu; açık; oturum boyunca):
   - Nokta taşınınca, eski yerinde (1 µm) köşesi olan çizgi, çoklu çizgi ve alanların o köşeleri de taşınır.
   - Z değişince o köşeler noktanın yeni kotunu alır; kot kaldırılırsa onlarınki de kalkar.
@@ -63,11 +69,13 @@ Ad, Y, X, Z ve Kod düzenlenir; Sıra ve Katman düzenlenmez (katmanı Katmana t
 
 ### 4. Satır ekleme ve silme
 
-- **Satır ekle:** tablonun sonunda taslak satır açılır; sıralama ne olursa olsun en alttadır.
-  - Ad, Y, X, Z ve Kod yazılır. Taslaktaki bir hücrede Enter, Y ve X geçerliyse noktayı `cad.point.create` ile etkin katmana yazar; satır olağan satır olur.
-  - Y ya da X eksikse Enter eksik olanı söyler ve taslak kalır.
+- **Satır ekle:** tablonun sonunda taslak satır açılır; sıralama ne olursa olsun en alttadır. Düzenleme Ad'dan başlar.
+  - Ad, Y, X, Z ve Kod yazılır; Tab ve Shift+Tab taslağın hücreleri arasında yazmadan gezer.
+  - Taslaktaki bir hücrede Enter, Y ve X geçerliyse noktayı `cad.point.create` ile etkin katmana, geçerli renkle yazar (adım “Ekle”). Sonra yeni bir taslak açılır: adı yazılanın Artır'la bir sonrakidir (sayıyla bitmeyen ad boş kalır), düzenleme Y'dedir. Böylece bir koordinat listesi satır satır yazılır.
+  - Y ya da X eksikse Enter eksik olanı söyler (“Y ve X yazılmalı.”, “X yazılmalı.”) ve taslak kalır; sayı olmayan değer düzenlemedeki gibi söylenir.
   - Esc taslağı bırakır. Nokta aracının Ad, Kod ve Kot'u kullanılmaz: satırda ne yazıyorsa odur.
-- **Sil:** seçili satırların noktaları tek adımda silinir (`cad.entities.delete`); tabloda Delete tuşu da siler. Kilitli katmandakiler silinmez, silmenin kuralıyla söylenir.
+- **Sil:** seçili satırların noktaları tek adımda silinir (`cad.entities.delete`, Sil'in kuralıyla: kilitli katmandakiler kalır ve söylenir). Seçim tablo ile çizim arasında ortak olduğundan Delete tuşu da aynı işi yapar.
+- **Ortak durumlar:** hücre düzenlemeleri, bağlı çizgiler ve taslak `fixtures/point-editor/v1/edits.json`'dadır (`scripts/fixtures/point_edit_cases.py`, kurallardan); iki platform aynı sonuçları, iletileri ve adım adlarını verir.
 
 ### 5. Toplu işlemler
 
@@ -139,6 +147,13 @@ Python ve MCP aynısını betiğin tek adımlık grubuyla yapar.
    - **Yerleşim:** alt panelin kalıcı sekmesi `points` olabilir (`fixtures/shell/v1/layout.json`).
    - **Sınama ve resimler:** başlık döngüsü, tıklamayla seçim ve satırın okunuşu iki platformda aynı durumlarla (`PointTable.test.ts`, `points/tests.rs`). Masaüstünde sekmenin sorguyu izlemesi ve çift tıkla yakınlaştırma da sınanır. Resimler `fixtures/interaction/v1/point-editor.kcad` üzerinde: web `shots.mjs pointeditor`, masaüstü `points::tests::screens`.
 3. **Düzenleme:** hücreler, Bağlı çizgiler izler, Satır ekle, Sil; ortak durumlar ve iz.
+
+   *(2 Ekim: tamam.)*
+   - **Kurallar:** hücrenin yazılması ve taslak satır web'de `ui/bottom/pointEdit.ts`, masaüstünde `points/edit.rs`. İki platform `fixtures/point-editor/v1/edits.json`'un 35 durumunu (24 hücre, 11 taslak) geçer: belge, ileti, adımın adı, bağlı çizgilerin köşeleri ve kotları. Durumları `scripts/fixtures/point_edit_cases.py` kurallardan yazar; bozulan kuralları yakalar.
+   - **Gezinme:** Enter, Tab ve Shift+Tab'ın gideceği hücre yazmadan önceki sırayla bulunur (`nextCell`, `next_cell`; iki platformda aynı durumlar).
+   - **Alan:** web'de hücrenin içinde `input`; masaüstünde `points/cell.rs`'in alanı (Esc ve başka yere basma onda yakalanır, Tab uygulamanın tuşudur). Açılınca değer seçilidir.
+   - **Araç çubuğu:** iki grup: solda arama, katman, Yalnız seçililer ve Bağlı çizgiler izler; sağda sayaç, Satır ekle, Sil ve Göster. Dar panelde sağ grup ikinci satıra geçer, düğme kesilmez.
+   - **Sınama ve resimler:** tarayıcıda `shots.mjs pointeditor`'ın sahneleri klavye ve fareyle sınar: çift tıkla açma ve değerin tamamı, Enter'la yazma ve alttaki satıra geçme, iki satır ekleme ve sonraki ad, iki satır silme ve tek adımda geri alma. Masaüstünde `points::tests` aynı akışları sınar. Etkileşim izi yoktur: izler çizim alanının araçları içindir, tablo alt paneldedir.
 4. **Toplu işlemler:** Yeniden adlandır, Sıralı numara ver, Katmana taşı, Çift noktaları ayıkla, Dışa aktar, İçe aktar; ortak durumlar ve iz.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.

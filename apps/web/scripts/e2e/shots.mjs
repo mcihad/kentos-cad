@@ -2086,6 +2086,67 @@ SCENES.pointeditor = [
       await ui.sleep(300);
     },
   },
+  // A double click on the second row's Y opens it with its whole value; Enter writes it and opens the row below.
+  {
+    id: 'noktalar-duzenle',
+    open: async (ui) => {
+      await openPointEditor(ui);
+      const at = await ui.eval(`(() => { const td = document.querySelectorAll('.ptable tbody tr[data-at="1"] td')[2]; const r = td.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+      await ui.clickAt(...at);
+      await ui.clickAt(...at, { clickCount: 2 });
+      await ui.waitFor(`document.activeElement?.classList.contains('ptable__edit')`, 3000);
+      const opened = await ui.eval(`document.activeElement.value`);
+      if (opened !== '487024') throw new Error(`Y açıldı: ${opened}`);
+      await ui.type('487024.5');
+      await ui.key('Enter');
+      await ui.sleep(300);
+      const written = await ui.eval(`window.kentos.doc.get(5).p.x`);
+      if (written !== 487024.5) throw new Error(`Y yazılmadı: ${written}`);
+      const next = await ui.eval(`document.activeElement?.closest('tr')?.dataset.at`);
+      if (next !== '2') throw new Error(`Enter alttaki satıra geçmedi: ${next}`);
+      await ui.sleep(300);
+    },
+  },
+  // Satır ekle: two rows typed and written, the third open with the name one more.
+  {
+    id: 'noktalar-satir-ekle',
+    open: async (ui) => {
+      await openPointEditor(ui);
+      const before = await ui.eval(`window.kentos.doc.size`);
+      await ui.clickText('.ptable__btn', 'Satır ekle');
+      await ui.waitFor(`document.activeElement?.classList.contains('ptable__edit')`, 3000);
+      for (const [text, key] of [['201', 'Tab'], ['487030.25', 'Tab'], ['4420030.5', 'Enter'], ['487031.75', 'Tab'], ['4420031', 'Enter']]) {
+        await ui.type(text);
+        await ui.key(key);
+        await ui.sleep(150);
+      }
+      const after = await ui.eval(`[window.kentos.doc.size, [...window.kentos.doc.all()].slice(-2).map((e) => e.label)]`);
+      if (after[0] !== before + 2 || after[1][0] !== '201' || after[1][1] !== '202') throw new Error(`Satır ekle: ${JSON.stringify(after)}`);
+      const draft = await ui.eval(`document.querySelector('.ptable__draft td:nth-child(2)')?.textContent`);
+      if (draft !== '203') throw new Error(`Sonraki taslağın adı: ${draft}`);
+      await ui.sleep(300);
+    },
+  },
+  // Sil: the first two rows selected (a click, then Shift and a click) go in one step; undone and done again.
+  {
+    id: 'noktalar-sil',
+    open: async (ui) => {
+      await openPointEditor(ui);
+      const cell = (i) => ui.eval(`(() => { const td = document.querySelectorAll('.ptable tbody tr[data-at="${i}"] td')[1]; const r = td.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+      const before = await ui.eval(`window.kentos.doc.size`);
+      await ui.clickAt(...(await cell(0)));
+      await ui.clickAt(...(await cell(1)), { modifiers: 8 });
+      await ui.clickText('.ptable__btn', 'Sil');
+      await ui.sleep(300);
+      const after = await ui.eval(`[window.kentos.doc.size, document.querySelector('.ptable__count').textContent, document.querySelector('.ptable tbody tr[data-at="0"] td:nth-child(2)').textContent]`);
+      if (after[0] !== before - 2 || after[1] !== '34 / 34 nokta' || after[2] !== '103') throw new Error(`Sil: ${JSON.stringify(after)}`);
+      const undone = await ui.eval(`[window.kentos.doc.undo(), window.kentos.doc.size]`);
+      if (undone[1] !== before) throw new Error(`Sil tek adımda geri alınmadı: ${JSON.stringify(undone)}`);
+      await ui.eval(`window.kentos.doc.redo()`);
+      await ui.move(2, 2);
+      await ui.sleep(300);
+    },
+  },
 ].map((s) => ({
   close: async (ui) => (await ui.escapeAll(2), await ui.eval(`(() => { const k = window.kentos; k.selection.clear(); k.ui.bottomExpanded.set(false); })()`)),
   ...s,

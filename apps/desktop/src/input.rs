@@ -374,6 +374,15 @@ impl App {
         if self.alt_tap(&press) {
             return Task::none();
         }
+        // Noktalar's cell editor: Tab and Shift+Tab write the cell and go right or left (points/).
+        if self.points.editing() && press.named() == Some(Named::Tab) {
+            let walk = if press.modifiers.shift() {
+                crate::points::Walk::Left
+            } else {
+                crate::points::Walk::Right
+            };
+            return self.points_event(crate::points::Event::Finish(Some(walk)));
+        }
         // Esc closes the folded ribbon open over the drawing first (the web's).
         if self.ribbon_peek && press.named() == Some(Named::Escape) {
             self.ribbon_peek = false;

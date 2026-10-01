@@ -138,6 +138,7 @@ export async function launch(url, { width = 1600, height = 900, args = [] } = {}
       const named = {
         Enter: [13, 'Enter', '\r'],
         Escape: [27, 'Escape'],
+        Tab: [9, 'Tab'],
         ' ': [32, 'Space', ' '],
         Delete: [46, 'Delete'],
         Backspace: [8, 'Backspace'],

@@ -2474,6 +2474,7 @@ dependencies = [
  "kentos-headless",
  "kentos-interaction",
  "kentos-kcad",
+ "kentos-native-application",
  "kentos-native-style",
  "kentos-ncz",
  "kentos-processing",
