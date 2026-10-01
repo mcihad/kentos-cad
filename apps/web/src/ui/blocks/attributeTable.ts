@@ -1,13 +1,14 @@
 import type { AttributeDefinition } from '../../contracts/generated/AttributeDefinition';
 import type { Vec2 } from '../../model/geometry';
 import { readNumber, type Row } from '../calc/read';
+import { fixed } from '../../core/displayNumber';
 
 /**
  * The Blok öznitelikleri window's table (docs/adr/0144 §7) as texts: each
  * attribute definition is a row of its tag, prompt, default, text height,
  * turn (degrees) and place as east (Y) and north (X) of the base point, in
  * the block's own units. A number is written as a prompt writes it
- * (`+n.toFixed(6)`); a cell left as it was shown gives back the exact value
+ * (`+fixed(n, 6)`, the display rule); a cell left as it was shown gives back the exact value
  * it showed, so a list saved unchanged is the list it was. A definition's
  * alignment and width factor (docs/adr/0145) have no cells: the row keeps
  * them. The desktop's `apps/desktop/src/attribute_table.rs` is the same.
@@ -31,7 +32,7 @@ export interface AttributeRow {
 }
 
 /** A number as a cell shows it: at most six decimals, no trailing zeros, never “-0”. */
-export const numberText = (n: number): string => String(+n.toFixed(6));
+export const numberText = (n: number): string => String(+fixed(n, 6));
 
 /** A row showing `a` of a block whose base point is `base`. */
 export function rowOf(a: AttributeDefinition, base: Vec2): AttributeRow {

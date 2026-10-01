@@ -22,6 +22,7 @@
 
 pub mod api;
 pub mod block;
+pub mod display;
 pub mod entity;
 pub mod ewkb;
 pub mod geom;

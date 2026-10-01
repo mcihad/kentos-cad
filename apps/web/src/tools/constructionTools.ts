@@ -4,6 +4,7 @@ import { unitToward, xlineDirection } from './constructions';
 import { parseNumber } from './coordinateInput';
 import { PointInputTool } from './drawTools';
 import { drawTag, strokePath } from './preview';
+import { fixed } from '../core/displayNumber';
 
 /** Preview of an infinite line: long enough to cross any view. */
 function strokeInfinite(g: CanvasRenderingContext2D, view: ViewTransform, p: Vec2, dir: Vec2, ray: boolean, color: string): void {
@@ -32,7 +33,7 @@ export class XlineTool extends PointInputTool {
       case 'vertical':
         return `geçeceği noktayı belirtin (${this.mode === 'horizontal' ? 'yatay' : 'düşey'}) [Bitir (Enter)]`;
       case 'angle':
-        return `geçeceği noktayı belirtin (${+XlineTool.angle.toFixed(4)}°) [Bitir (Enter)]`;
+        return `geçeceği noktayı belirtin (${+fixed(XlineTool.angle, 4)}°) [Bitir (Enter)]`;
       case 'bisect':
         return n === 0 ? 'açının köşesini belirtin' : n === 1 ? 'açının başlangıç kolunda bir nokta belirtin' : 'açının bitiş kolunda bir nokta belirtin [Bitir (Enter)]';
       default:
@@ -99,7 +100,7 @@ export class XlineTool extends PointInputTool {
       strokeInfinite(g, view, this.baseFor(h), dir, false, pal.accent);
       // A line has no sense of direction: show its angle in 0–180°.
       const a = ((angleDeg({ x: 0, y: 0 }, dir) % 180) + 180) % 180;
-      drawTag(g, view.worldToScreen(h), [`Açı ${a.toFixed(2)}°`], pal.accent, pal.labelHalo);
+      drawTag(g, view.worldToScreen(h), [`Açı ${fixed(a, 2)}°`], pal.accent, pal.labelHalo);
     }
     this.drawTracking(g, view);
   }

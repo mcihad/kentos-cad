@@ -20,7 +20,7 @@ use crate::geom::ellipse::{
     EllipseGeom, ellipse_area, ellipse_length, ellipse_point, is_full_ellipse, quadrant_params,
     tessellate_ellipse,
 };
-use crate::geom::spline::catmull_rom;
+use crate::geom::spline::{catmull_rom, spline_length};
 use crate::geometry::{
     Bounds, centroid, empty_bounds, extend_bounds, path_length, point_in_polygon, signed_area,
 };
@@ -973,7 +973,8 @@ pub fn entity_length(e: &Shape) -> Option<f64> {
             t0,
             t1,
         } => Some(ellipse_length(&ellipse_geom(*c, *major, *ratio, *t0, *t1))),
-        Shape::Spline { pts, closed } => Some(path_length(&catmull_rom(pts, *closed, 16.0), false)),
+        // The curve itself, not the outline it is drawn with (docs/adr/0149 §3).
+        Shape::Spline { pts, closed } => Some(spline_length(pts, *closed)),
         // Its vertices' length; the landing does not count (docs/adr/0146 §2).
         Shape::Leader { pts, .. } => Some(path_length(pts, false)),
         // The measured value when it is a length (an angle has none).

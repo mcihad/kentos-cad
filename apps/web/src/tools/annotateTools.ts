@@ -13,6 +13,7 @@ import { uidOf, writeEdit } from './editCommand';
 import { SelectionActionTool } from './editTools';
 import { drawTag, strokePath } from './preview';
 import type { OptionChoice } from './Tool';
+import { fixed } from '../core/displayNumber';
 
 /** Paper sizes (mm) converted to world metres at the project's plot scale. */
 const paper = (ctx: AppContext, mm: number) => (mm / 1000) * ctx.doc.settings.plotScale.value;
@@ -81,8 +82,8 @@ export class TextTool extends PointInputTool {
         return 'yazıyı tıkladığınız yere yazın; Enter ekler, Esc vazgeçer';
       default:
         return (
-          `yazının başlangıcına tıklayın [Yükseklik (Y): ${S.heightMm} mm / Açı (A): ${+S.angle.toFixed(4)}° / ` +
-          `Hiza (H): ${textAlignName(S.align)} / Genişlik (G): ${+S.widthFactor.toFixed(4)} / ` +
+          `yazının başlangıcına tıklayın [Yükseklik (Y): ${S.heightMm} mm / Açı (A): ${+fixed(S.angle, 4)}° / ` +
+          `Hiza (H): ${textAlignName(S.align)} / Genişlik (G): ${+fixed(S.widthFactor, 4)} / ` +
           `Zemin (Z): ${S.mask ? 'açık' : 'kapalı'} / Artır (R): ${S.increment ? 'açık' : 'kapalı'}]`
         );
     }
@@ -254,7 +255,7 @@ export class TextTool extends PointInputTool {
     const pal = this.ctx.view.palette;
     if (this.stage === 'angle' && this.angleFrom && this.hover) {
       strokePath(g, view, [this.angleFrom, this.hover], { color: pal.accent, dash: [3, 3] });
-      drawTag(g, view.worldToScreen(this.hover), [`Açı ${angleDeg(this.angleFrom, this.hover).toFixed(2)}°`], pal.accent, pal.labelHalo);
+      drawTag(g, view.worldToScreen(this.hover), [`Açı ${fixed(angleDeg(this.angleFrom, this.hover), 2)}°`], pal.accent, pal.labelHalo);
       return;
     }
     // Where the text will sit: a box of its height along its angle, four heights wide times its width factor,

@@ -24,9 +24,11 @@ pub fn js_number(x: f64) -> String {
     kentos_style_core::js::number::to_string(x)
 }
 
-/// `x.toFixed(digits)`.
+/// `x` with `digits` decimals by the display rule (docs/adr/0149), the
+/// web's `fixed` (`core/displayNumber.ts`): what a tool writes into the
+/// drawing is rounded as every shown value is.
 pub fn to_fixed(x: f64, digits: u32) -> String {
-    kentos_style_core::js::number::to_fixed(x, digits)
+    kentos_geometry_core::display::fixed(x, digits as usize)
 }
 
 /// `s.toLocaleUpperCase('tr-TR')`: i → İ, ı → I, the rest as Unicode says.

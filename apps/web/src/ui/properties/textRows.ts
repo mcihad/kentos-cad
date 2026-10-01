@@ -4,6 +4,7 @@ import { textRealign } from '../../model/textEdit';
 import type { MenuItem } from '../widgets/PopupMenu';
 import type { PropRow } from '../widgets/PropertyGrid';
 import { setGeometries } from './write';
+import { fixed } from '../../core/displayNumber';
 
 /**
  * A text's Hiza, Genişlik çarpanı and Zemin rows in Öznitelikler (docs/adr/0145 §6), for one text or the texts of a
@@ -62,7 +63,7 @@ export function textRows(ctx: AppContext, texts: readonly TextEntity[], locked: 
     },
     {
       label: 'Genişlik çarpanı',
-      value: factor === MIXED ? MIXED : String(+factor.toFixed(4)),
+      value: factor === MIXED ? MIXED : String(+fixed(factor, 4)),
       numeric: factor !== MIXED,
       editor: locked
         ? undefined

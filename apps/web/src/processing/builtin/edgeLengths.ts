@@ -1,5 +1,6 @@
 import type { NewEntity } from '../../model/entities';
 import { defineTool, type DefaultsContext } from '../types';
+import { fixed } from '../../core/displayNumber';
 
 /**
  * Kenar uzunluklarını yaz: every edge of the chosen areas, paths and lines
@@ -45,7 +46,7 @@ export const edgeLengths = defineTool({
     { name: 'labels', label: 'Kenar yazıları', type: 'features' },
     { name: 'count', label: 'Yazı sayısı', type: 'number' },
   ],
-  preview: (v) => `${v.prefix}${(12.3456).toFixed(v.decimals)}${v.suffix}`,
+  preview: (v) => `${v.prefix}${fixed(12.3456, v.decimals)}${v.suffix}`,
   run: (v, ctx) => {
     const height = (v.textHeight / 1000) * ctx.units.plotScale;
     // Lines, polylines and polygons have edges; one key per edge whichever way it runs (1 mm grid: parcels share exact corners).
@@ -60,10 +61,10 @@ export const edgeLengths = defineTool({
       kind: 'text',
       layerId: v.layer.id,
       p: l.p,
-      text: `${v.prefix}${l.length.toFixed(v.decimals)}${v.suffix}`,
+      text: `${v.prefix}${fixed(l.length, v.decimals)}${v.suffix}`,
       height,
       rotation: l.rotation,
-      attrs: { Tür: 'Kenar ölçüsü', 'Uzunluk (m)': l.length.toFixed(3) },
+      attrs: { Tür: 'Kenar ölçüsü', 'Uzunluk (m)': fixed(l.length, 3) },
     }));
     return {
       changes: { add },

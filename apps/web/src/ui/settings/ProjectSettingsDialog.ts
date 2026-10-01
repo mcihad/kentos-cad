@@ -10,6 +10,7 @@ import { crsPicker } from './crsPicker';
 import { workspacePicker } from './workspacePicker';
 import { drawingFontPicker } from './appearancePickers';
 import { group, SettingsShell, type DraftApi, type SectionDef } from './SettingsShell';
+import { fixed } from '../../core/displayNumber';
 
 /** Project settings: stored in the project file, shared by everyone who opens it. */
 interface ProjectDraft extends ProjectSettingsData {
@@ -63,7 +64,7 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
           settingRow(
             'Yerel çizim orijini',
             'Büyük TM koordinatları ekran kartında bu noktaya göre çizilir; hassasiyet kaybını önler.',
-            h('span', { class: 'srow__value num' }, `Y ${doc.origin.x.toFixed(0)}  X ${doc.origin.y.toFixed(0)}`),
+            h('span', { class: 'srow__value num' }, `Y ${fixed(doc.origin.x, 0)}  X ${fixed(doc.origin.y, 0)}`),
           ),
         ),
       ],

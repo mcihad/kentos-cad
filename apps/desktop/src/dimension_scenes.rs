@@ -211,6 +211,41 @@ fn props(app: &mut App, slots: &[u32]) {
     )));
 }
 
+/// A circle typed with a radius of 50.0005 m, a half at the three decimals
+/// shown (50.000499999… in binary): eight radius dimensions round it and a
+/// diameter, each placed as the tool places it (the centre plus the radius
+/// along a direction, at TM coordinates, so each carries its own 10⁻¹⁰ m of
+/// noise), and the circle selected. By the display rule all read R 50.001
+/// and Ø 100.001, as the circle's own radius and diameter in Öznitelikler
+/// (docs/adr/0149); before it, some read 50.000.
+fn half_radius(app: &mut App) {
+    use crate::tools_scenes::{E, N};
+    const R: f64 = 50.0005;
+    let c = [20.0, 10.0];
+    let mut o = Objects::new();
+    let circle = o.circle("parsel", c, R);
+    let on = |t: f64| {
+        // Absolute, as the tool computes it; back to the scene's offsets exactly.
+        let (x, y) = ((E + c[0]) + t.cos() * R, (N + c[1]) + t.sin() * R);
+        [x - E, y - N]
+    };
+    // Values 5 m high, to read at the whole circle's scale.
+    let high = json!({ "height": 5.0 });
+    for k in 0..8 {
+        let t = f64::from(k) * PI / 4.0 + 0.3;
+        o.dimension("parsel", Some("radius"), [c, on(t)], None, 12.0, high.clone());
+    }
+    o.dimension("parsel", Some("diameter"), [c, on(-0.6)], None, 0.0, high);
+    open(app, o);
+    app.selection.set([kentos_domain::Slot(circle)]);
+    // Öznitelikler with the circle's radius and diameter in view: the layers folded, Genel closed.
+    let upper = docking::Slot::Docked(docking::Side::Right, 0);
+    let _ = app.update(Message::Dock(docking::Event::Collapsed(upper, true)));
+    let _ = app.update(Message::Properties(crate::properties::Event::Toggle(
+        "general",
+    )));
+}
+
 /// Hızlı ölçü's ground (as `fixtures/interaction/v1/quick-dimension.kcad`,
 /// the road 6 m further south so that its dimensions stand clear of the
 /// parcels'): two parcels side by side sharing their 30 m edge, a road edge
@@ -244,6 +279,7 @@ fn quick(app: &mut App) {
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
         ("olcu-dugme-aci", chosen),
+        ("olcu-yarim-yaricap", half_radius),
         ("olcu-hizli", quick),
         ("olcu-hizli-sonuc", |app| {
             quick(app);

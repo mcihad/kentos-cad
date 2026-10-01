@@ -19,6 +19,7 @@ import { dimensionRows } from './dimensionRows';
 import { leaderRows } from './leaderRows';
 import { textRows } from './textRows';
 import { setGeometry, setProperties, uidsOf } from './write';
+import { fixed } from '../../core/displayNumber';
 
 /**
  * Öznitelikler: geometry and GIS attributes of the selection, editable. It
@@ -220,7 +221,7 @@ export class PropertiesPanel extends Panel {
       this.ctx.doc.settings.areaUnit.value === 'm2'
         ? [{ label: 'Alan', value: f.area(m2, false), numeric: true, unit: 'm²' }]
         : [
-            { label: 'Alan', value: m2.toFixed(this.ctx.doc.settings.areaDecimals.value), numeric: true, unit: 'm²' },
+            { label: 'Alan', value: fixed(m2, this.ctx.doc.settings.areaDecimals.value), numeric: true, unit: 'm²' },
             { label: 'Alan', value: f.area(m2, false), numeric: true, unit: f.areaUnitLabel },
           ];
     switch (e.kind) {
@@ -268,7 +269,7 @@ export class PropertiesPanel extends Panel {
         geo.push(num('Merkez Y', e.c.x), num('Merkez X', e.c.y), num('Yarıçap', e.r, 'm'), ...area(entityArea(e)!));
         break;
       case 'arc': {
-        const d = (rad: number) => ((rad * 180) / Math.PI).toFixed(4);
+        const d = (rad: number) => fixed((rad * 180) / Math.PI, 4);
         geo.push(
           num('Merkez Y', e.c.x),
           num('Merkez X', e.c.y),
@@ -281,7 +282,7 @@ export class PropertiesPanel extends Panel {
         break;
       }
       case 'ellipse': {
-        const d = (rad: number) => ((((rad * 180) / Math.PI) % 360 + 360) % 360).toFixed(4);
+        const d = (rad: number) => fixed(((((rad * 180) / Math.PI) % 360) + 360) % 360, 4);
         const a = majorLength(e);
         const full = isFullEllipse(e);
         geo.push(
@@ -289,7 +290,7 @@ export class PropertiesPanel extends Panel {
           num('Merkez X', e.c.y),
           num('Büyük yarı eksen', a, 'm'),
           num('Küçük yarı eksen', a * e.ratio, 'm'),
-          { label: 'Eksen açısı', value: (((angleDeg({ x: 0, y: 0 }, e.major) % 360) + 360) % 360).toFixed(4), numeric: true, unit: '°' },
+          { label: 'Eksen açısı', value: fixed(((angleDeg({ x: 0, y: 0 }, e.major) % 360) + 360) % 360, 4), numeric: true, unit: '°' },
           ...(full
             ? [num('Çevre', entityLength(e)!, 'm'), ...area(entityArea(e)!)]
             : [
@@ -305,7 +306,7 @@ export class PropertiesPanel extends Panel {
         geo.push(
           num(e.kind === 'ray' ? 'Başlangıç Y' : 'Geçtiği nokta Y', e.p.x),
           num(e.kind === 'ray' ? 'Başlangıç X' : 'Geçtiği nokta X', e.p.y),
-          { label: 'Doğrultu', value: (((angleDeg({ x: 0, y: 0 }, e.dir) % 360) + 360) % 360).toFixed(4), numeric: true, unit: '°' },
+          { label: 'Doğrultu', value: fixed(((angleDeg({ x: 0, y: 0 }, e.dir) % 360) + 360) % 360, 4), numeric: true, unit: '°' },
           { label: 'Semt', value: f.bearing(bearingGrad(e.p, { x: e.p.x + e.dir.x, y: e.p.y + e.dir.y }), false), numeric: true, unit: f.angleUnitLabel },
         );
         break;
@@ -377,7 +378,7 @@ export class PropertiesPanel extends Panel {
                   items: () => types.map((t) => ({ label: HATCH_PATTERN_LABEL[t], radio: true, checked: t === e.pattern.type, run: () => setPattern({ type: t }) })),
                 },
           },
-          { label: 'Açı', value: e.pattern.angle.toFixed(2), numeric: true, unit: '°', editor: numEdit('angle') },
+          { label: 'Açı', value: fixed(e.pattern.angle, 2), numeric: true, unit: '°', editor: numEdit('angle') },
           { label: 'Aralık', value: f.length(e.pattern.spacing, false), numeric: true, unit: 'm', editor: numEdit('spacing') },
           ...area(entityArea(e)!),
         );
@@ -401,7 +402,7 @@ export class PropertiesPanel extends Panel {
           },
           {
             label: 'Açı',
-            value: e.rotation.toFixed(2),
+            value: fixed(e.rotation, 2),
             numeric: true,
             unit: '°',
             editor: locked
@@ -450,8 +451,8 @@ export class PropertiesPanel extends Panel {
           },
           { ...num('Konum Y', e.p.x), editor: numEdit((x) => ({ p: { ...e.p, x } })) },
           { ...num('Konum X', e.p.y), editor: numEdit((y) => ({ p: { ...e.p, y } })) },
-          { label: 'Ölçek', value: e.scale.toFixed(4), numeric: true, editor: numEdit((x) => (x > 0 ? { scale: x } : null)) },
-          { label: 'Dönüş', value: ((e.rotation * 180) / Math.PI).toFixed(4), numeric: true, unit: '°', editor: numEdit((x) => ({ rotation: turnOf(x) })) },
+          { label: 'Ölçek', value: fixed(e.scale, 4), numeric: true, editor: numEdit((x) => (x > 0 ? { scale: x } : null)) },
+          { label: 'Dönüş', value: fixed((e.rotation * 180) / Math.PI, 4), numeric: true, unit: '°', editor: numEdit((x) => ({ rotation: turnOf(x) })) },
           {
             label: 'Aynalı',
             value: mirrored ? 'Evet' : 'Hayır',

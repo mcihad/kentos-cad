@@ -10,6 +10,7 @@ import { icon } from '../icons';
 import { field, select, summaryLine } from '../io/common';
 import { tooltip } from '../widgets/tooltip';
 import { readNumber, resolvePointIn, type Known, type Row } from './read';
+import { fixed } from '../../core/displayNumber';
 
 /**
  * Parts the Hesap windows share (poligon, kutupsal alım, aplikasyon,
@@ -274,21 +275,18 @@ export function resultTable(head: string[], rows: Child[][], numeric: readonly b
 
 /** An angle already in the project's unit, with its unit mark. */
 export function angleText(ctx: AppContext, v: number): string {
-  return `${v.toFixed(4)}${ctx.format.angleUnitLabel === '°' ? '°' : ' g'}`;
+  return `${fixed(v, 4)}${ctx.format.angleUnitLabel === '°' ? '°' : ' g'}`;
 }
 
 /** A small angle (a misclosure) with its fine unit: grad with cc (10⁻⁴ g), degrees with seconds. */
 export function smallAngleText(ctx: AppContext, v: number): string {
-  if (ctx.format.angleUnitLabel === '°') return `${unsigned(v.toFixed(5))}° (${unsigned((v * 3600).toFixed(1))}″)`;
-  return `${unsigned(v.toFixed(5))} g (${unsigned((v * 10000).toFixed(1))} cc)`;
+  if (ctx.format.angleUnitLabel === '°') return `${fixed(v, 5)}° (${fixed(v * 3600, 1)}″)`;
+  return `${fixed(v, 5)} g (${fixed(v * 10000, 1)} cc)`;
 }
 
-/** A rounded value that came out as −0 reads as 0. */
-const unsigned = (text: string): string => (/^-0(\.0*)?$/.test(text) ? text.slice(1) : text);
-
-/** A small length (a misclosure) in millimetres; a rounded −0 reads as 0. */
+/** A small length (a misclosure) in millimetres; a value that rounds to zero has no sign (the display rule). */
 export function mmText(m: number): string {
-  return `${unsigned((m * 1000).toFixed(1))} mm`;
+  return `${fixed(m * 1000, 1)} mm`;
 }
 
 /** A new point for the drawing. */
@@ -334,7 +332,7 @@ export function addPoints(ctx: AppContext, layerId: string, points: readonly New
   const objects: NewObject[] = points.map((pt) => ({
     geometry: { kind: 'point', p: pt.p, ...(pt.z != null ? { z: pt.z } : {}) },
     label: pt.name,
-    attrs: { Ad: pt.name, Tür: kind, ...(pt.z != null ? { 'Z (m)': pt.z.toFixed(3) } : {}) },
+    attrs: { Ad: pt.name, Tür: kind, ...(pt.z != null ? { 'Z (m)': fixed(pt.z, 3) } : {}) },
   }));
   const result = entitiesCreate.execute({ doc: ctx.doc }, { layerId, objects, operation });
   if (result.status !== 'completed') {

@@ -6,6 +6,7 @@ import { textFileLines } from '../model/textFile';
 import type { ViewTransform } from '../viewport/Camera';
 import { TextTool } from './annotateTools';
 import { PointInputTool } from './drawTools';
+import { fixed } from '../core/displayNumber';
 
 /** The text files Metin dosyası yerleştir offers to open. */
 export const TEXT_FILES: FileKind = { description: 'Metin dosyası (UTF-8)', accept: { 'text/plain': ['.txt', '.csv', '.lst'] } };
@@ -54,7 +55,7 @@ export class PlaceTextFileTool extends PointInputTool {
     if (!this.file) return 'metin dosyasını seçin';
     const o = TextTool.options();
     const texts = this.file.lines.filter(Boolean).length;
-    return `ilk satırın başlangıcına tıklayın [“${this.file.name}”: ${texts} yazı; Yazı'nın seçenekleriyle: ${o.heightMm} mm, ${+o.angle.toFixed(4)}°, ${textAlignName(o.align)}]`;
+    return `ilk satırın başlangıcına tıklayın [“${this.file.name}”: ${texts} yazı; Yazı'nın seçenekleriyle: ${o.heightMm} mm, ${+fixed(o.angle, 4)}°, ${textAlignName(o.align)}]`;
   }
 
   protected onPoint(p: Vec2): void {

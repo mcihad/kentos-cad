@@ -2112,6 +2112,52 @@ SCENES.dimensions = [
 // The new dimensions in DXF (docs/adr/0147 §8), as the desktop's `exchange::dimension_tests::screens` (aktar-*-22…25).
 SCENES.dimensionsdxf = dxfDimensionScenes();
 
+// The display rule (docs/adr/0149), the desktop's `olcu-yarim-yaricap`: a circle typed with a radius of 50.0005 m (a
+// half at the three decimals shown, 50.000499999… in binary), eight radius dimensions round it and a diameter, each
+// placed as the tool places it (the centre plus the radius along a direction, at TM coordinates, so each carries its
+// own 1e-10 m of noise), the circle selected: all read R 50.001 and Ø 100.001, as Öznitelikler's radius.
+SCENES.rounding = [
+  {
+    id: 'half-radius',
+    open: async (ui) => {
+      const E = 487000;
+      const N = 4420000;
+      const R = 50.0005;
+      const c = { x: E + 20, y: N + 10 };
+      const on = (t) => ({ x: c.x + Math.cos(t) * R, y: c.y + Math.sin(t) * R });
+      const layer = (id, name, color, lineWeight) => ({ id, name, type: 'layer', visible: true, locked: false, expanded: true, style: { color, lineType: 'continuous', lineWeight }, children: [] });
+      const entities = [{ kind: 'circle', id: 1, layerId: 'parsel', attrs: {}, c, r: R }];
+      for (let k = 0; k < 8; k++) entities.push({ kind: 'dimension', id: entities.length + 1, layerId: 'parsel', attrs: {}, a: c, b: on((k * Math.PI) / 4 + 0.3), offset: 12, height: 5, style: 'radius' });
+      entities.push({ kind: 'dimension', id: entities.length + 1, layerId: 'parsel', attrs: {}, a: c, b: on(-0.6), offset: 0, height: 5, style: 'diameter' });
+      const doc = JSON.stringify({
+        format: 'kentos.document',
+        version: 1,
+        name: 'Yarım yarıçap',
+        settings: { srid: 5256, lengthDecimals: 3, areaDecimals: 2, areaUnit: 'm2', angleUnit: 'grad', plotScale: 1000, workspace: 'hybrid', drawingFont: 'barlow' },
+        origin: { x: E, y: N },
+        layers: [layer('cizim', 'Çizim', 'fg', 0.25), layer('parsel', 'Parsel', '#3E63DD', 0.35)],
+        activeLayer: 'cizim',
+        entities,
+        styles: { items: [], categories: [] },
+      });
+      await ui.eval(`(async () => {
+        const k = window.kentos;
+        k.files.ask = async () => 'drop';
+        if (!(await k.files.load(${JSON.stringify(doc)}, null))) throw new Error('the drawing did not load');
+        k.view.zoomExtents();
+        // Clear of the toolbox.
+        const cam = k.view.camera;
+        cam.scale = cam.scale * 0.85;
+        cam.center = { x: cam.center.x - 60 / cam.scale, y: cam.center.y };
+        cam.panBy(0, 0);
+        k.selection.set([1]);
+      })()`);
+      await ui.move(2, 2);
+      await ui.sleep(600);
+    },
+  },
+];
+
 // Ölçülendirme's new methods at work (docs/adr/0147 §7), the desktop's `dimension_scenes`: Koordinat with the parcel's
 // corner taken and the cursor off to the right; Yay uzunluğu with the road's edge taken and the dimension arc on the
 // cursor; Kısmi with its first point on the arc and the part to the cursor lit; Kırıklı yarıçap with its jog on the

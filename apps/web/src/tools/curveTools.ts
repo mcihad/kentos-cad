@@ -22,6 +22,7 @@ import { parseNumber } from './coordinateInput';
 import { PointInputTool } from './drawTools';
 import { drawTag, strokePath } from './preview';
 import type { ToolPointer } from './Tool';
+import { fixed } from '../core/displayNumber';
 
 const deg = (rad: number) => (rad * 180) / Math.PI;
 
@@ -180,7 +181,7 @@ export class ArcTool extends PointInputTool {
     }
     // Written by the product command `cad.arc.create` (docs/adr/0032): the arc as stored, the active layer, colour and line weight explicit.
     const written = this.written(arcCreate.execute({ doc: this.ctx.doc }, { layerId: this.ctx.doc.layers.active.value, c: g.c, r: g.r, a0: g.a0, a1: g.a1, ...this.colour(), ...this.weight() }));
-    if (written) this.ctx.log.success(`Yay eklendi: r = ${this.ctx.format.length(g.r)}, açı ${deg(normAngle(g.a1 - g.a0) || 2 * Math.PI).toFixed(4)}°`);
+    if (written) this.ctx.log.success(`Yay eklendi: r = ${this.ctx.format.length(g.r)}, açı ${fixed(deg(normAngle(g.a1 - g.a0) || 2 * Math.PI), 4)}°`);
     this.pts = [];
     this.mode = 'three';
     this.sub = 'end';
@@ -208,7 +209,7 @@ export class ArcTool extends PointInputTool {
       } else if (this.mode === 'startEnd' && this.sub !== 'center') strokePath(g, view, [this.sub === 'radius' ? p1 : p0, h], { color: pal.accent, dash: [3, 3] });
       if (arc) {
         strokePath(g, view, tessellateArc(arc), { color: pal.accent, width: 1.5 });
-        drawTag(g, view.worldToScreen(h), [`r ${this.ctx.format.length(arc.r)}`, `Açı ${deg(normAngle(arc.a1 - arc.a0) || 2 * Math.PI).toFixed(2)}°`], pal.accent, pal.labelHalo);
+        drawTag(g, view.worldToScreen(h), [`r ${this.ctx.format.length(arc.r)}`, `Açı ${fixed(deg(normAngle(arc.a1 - arc.a0) || 2 * Math.PI), 2)}°`], pal.accent, pal.labelHalo);
       }
       return;
     }

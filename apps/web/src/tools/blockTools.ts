@@ -6,6 +6,7 @@ import { parseNumber } from './coordinateInput';
 import { PointInputTool } from './drawTools';
 import { SelectionFirstTool } from './modifyTools';
 import { strokePaths } from './preview';
+import { fixed } from '../core/displayNumber';
 
 /**
  * The block tools (docs/adr/0144 §6).
@@ -59,7 +60,7 @@ export class BlockInsertTool extends PointInputTool {
   }
 
   protected promptFor(): string {
-    const opts = `[Blok (B) / Ölçek (Ö): ${BlockInsertTool.scale.toFixed(4)} / Dönüş (D): ${BlockInsertTool.rotation.toFixed(4)}° / Aynala (A): ${BlockInsertTool.mirror ? 'açık' : 'kapalı'}]`;
+    const opts = `[Blok (B) / Ölçek (Ö): ${fixed(BlockInsertTool.scale, 4)} / Dönüş (D): ${fixed(BlockInsertTool.rotation, 4)}° / Aynala (A): ${BlockInsertTool.mirror ? 'açık' : 'kapalı'}]`;
     if (this.ask === 'scale') return `ölçeği yazın ${opts}`;
     if (this.ask === 'rotation') return `dönüş açısını derece olarak yazın ${opts}`;
     return `“${this.name}” için yerleştirme noktasına tıklayın ${opts}`;

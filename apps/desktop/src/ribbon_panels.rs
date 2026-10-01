@@ -71,9 +71,9 @@ pub enum Event {
     Scale(f64),
 }
 
-/// A line weight as the web writes it: “0.25 mm”.
+/// A line weight as the web writes it: “0.25 mm” (the display rule, docs/adr/0149).
 pub(crate) fn weight_text(weight: f64) -> String {
-    format!("{weight:.2} mm")
+    format!("{} mm", kentos_interaction::fixed(weight, 2))
 }
 
 /// The current colour's name, “Katmana göre” without one.

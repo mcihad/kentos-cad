@@ -13,6 +13,7 @@ import { parseNumber } from './coordinateInput';
 import { drawSelectionBox, drawTag, strokePath, strokePaths } from './preview';
 import type { Tool, ToolPointer } from './Tool';
 import { constrainPoint, drawTracking, pointFromText, type Tracking } from './tracking';
+import { fixed } from '../core/displayNumber';
 
 export const MAX_GHOSTS = 400;
 const deg = (rad: number) => (rad * 180) / Math.PI;
@@ -344,7 +345,7 @@ export class RotateTool extends SelectionFirstTool {
   }
   private rotate(angle: number): void {
     const n = this.transformSelection({ kind: 'rotate', center: { x: this.base!.x, y: this.base!.y }, angle }, this.copy);
-    if (n !== null) this.ctx.log.success(`${n} nesne ${deg(angle).toFixed(4)}° döndürüldü${this.copy ? ' (kopya)' : ''}.`);
+    if (n !== null) this.ctx.log.success(`${n} nesne ${fixed(deg(angle), 4)}° döndürüldü${this.copy ? ' (kopya)' : ''}.`);
     this.ctx.tools.exit();
   }
   private turn(): number | null {
@@ -358,7 +359,7 @@ export class RotateTool extends SelectionFirstTool {
   }
   protected override previewTag(): string[] {
     const a = this.turn();
-    return a === null ? [] : [`Açı ${deg(a).toFixed(2)}°`];
+    return a === null ? [] : [`Açı ${fixed(deg(a), 2)}°`];
   }
 }
 
@@ -443,7 +444,7 @@ export class ScaleTool extends SelectionFirstTool {
   private scale(f: number): void {
     if (!(f > 0) || !Number.isFinite(f)) return;
     const n = this.transformSelection({ kind: 'scale', center: { x: this.base!.x, y: this.base!.y }, factor: f }, this.copy);
-    if (n !== null) this.ctx.log.success(`${n} nesne ${f.toFixed(4)} faktörüyle ölçeklendi${this.copy ? ' (kopya)' : ''}.`);
+    if (n !== null) this.ctx.log.success(`${n} nesne ${fixed(f, 4)} faktörüyle ölçeklendi${this.copy ? ' (kopya)' : ''}.`);
     this.ctx.tools.exit();
   }
   private factor(): number | null {
@@ -457,7 +458,7 @@ export class ScaleTool extends SelectionFirstTool {
   }
   protected override previewTag(): string[] {
     const f = this.factor();
-    return f ? [`Faktör ${f.toFixed(4)}`] : [];
+    return f ? [`Faktör ${fixed(f, 4)}`] : [];
   }
 }
 

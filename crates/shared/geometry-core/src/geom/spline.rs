@@ -2,6 +2,7 @@
 //! Barry–Goldman evaluation, α = 0.5).
 
 use crate::api::Op;
+use crate::geom::quadrature::integrate;
 use crate::jsmath::{js_hypot, or};
 use crate::op;
 use crate::vec2::Vec2;
@@ -146,6 +147,37 @@ pub fn catmull_rom_beziers(pts: &[Vec2], closed: bool) -> Vec<BezierSpan> {
         });
     }
     out
+}
+
+/// The curve's length (docs/adr/0149 §3): each span's cubic Bézier, the
+/// length of the curve itself, ∫|B′(s)|ds by adaptive Gauss–Legendre to
+/// 10⁻¹⁴ of it; not the length of the outline it is drawn with. The
+/// derivative is taken from differences of the control points, so
+/// TM-sized coordinates lose nothing.
+pub fn spline_length(pts: &[Vec2], closed: bool) -> f64 {
+    catmull_rom_beziers(pts, closed)
+        .iter()
+        .map(|span| bezier_length(&span.ctrl))
+        .sum()
+}
+
+/// A cubic Bézier's length.
+fn bezier_length(b: &[Vec2; 4]) -> f64 {
+    let d = [
+        Vec2::new(b[1].x - b[0].x, b[1].y - b[0].y),
+        Vec2::new(b[2].x - b[1].x, b[2].y - b[1].y),
+        Vec2::new(b[3].x - b[2].x, b[3].y - b[2].y),
+    ];
+    // B′(s) = 3[(1 − s)²·d0 + 2s(1 − s)·d1 + s²·d2].
+    let speed = |s: f64| {
+        let r = 1.0 - s;
+        let (k0, k1, k2) = (3.0 * r * r, 6.0 * r * s, 3.0 * s * s);
+        js_hypot(
+            d[0].x * k0 + d[1].x * k1 + d[2].x * k2,
+            d[0].y * k0 + d[1].y * k1 + d[2].y * k2,
+        )
+    };
+    integrate(&speed, 0.0, 1.0, 1e-14)
 }
 
 pub(crate) static OPS: &[Op] = &[op!(

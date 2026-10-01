@@ -159,76 +159,11 @@ impl Format {
     }
 }
 
-/// JavaScript's `v.toFixed(d)`, so the desktop shows the web's digits: an
-/// exact half rounds away from zero (Rust's formatting rounds it to even:
-/// 487012.0625 is `…063` on the web, `…062` in Rust), and a negative zero
-/// is written without its sign. Display only (CLAUDE.md §23.2).
+/// `v` with `d` decimals by the display rule (docs/adr/0149): seven
+/// decimals first, then the digits shown, a half away from zero; no sign on
+/// zero. The shared core's `display::fixed`, the web's `core/displayNumber.ts`.
 pub fn fixed(v: f64, d: usize) -> String {
-    if v.is_nan() {
-        return "NaN".to_owned();
-    }
-    if v.is_infinite() {
-        return if v > 0.0 { "Infinity" } else { "-Infinity" }.to_owned();
-    }
-    let x = v.abs();
-    let body = if exact_half(x, d) {
-        // The digits up to the half are exact; drop the 5 and add one in the last place.
-        let long = format!("{x:.prec$}", prec = d + 1);
-        up_one(long[..long.len() - 1].trim_end_matches('.'))
-    } else {
-        format!("{x:.d$}")
-    };
-    if v < 0.0 { format!("-{body}") } else { body }
-}
-
-/// Whether `x` (finite, not negative) lies exactly halfway between two
-/// multiples of 10^-d: `x × 10^d` has a fractional part of exactly one half.
-fn exact_half(x: f64, d: usize) -> bool {
-    if x == 0.0 || d > 12 {
-        return false;
-    }
-    let bits = x.to_bits();
-    let exponent = ((bits >> 52) & 0x7ff) as i64;
-    let fraction = bits & ((1 << 52) - 1);
-    // x = mantissa × 2^power, exactly.
-    let (mantissa, power) = if exponent == 0 {
-        (fraction, -1074)
-    } else {
-        (fraction | (1 << 52), exponent - 1075)
-    };
-    if power >= 0 {
-        return false;
-    }
-    // mantissa < 2^53 and 10^12 < 2^40: the product fits in 93 bits, so a
-    // half (2^(k-1)) is out of reach once k exceeds 93.
-    let k = -power;
-    if k > 93 {
-        return false;
-    }
-    let scaled = u128::from(mantissa) * 10u128.pow(d as u32);
-    scaled % (1u128 << k) == 1u128 << (k - 1)
-}
-
-/// A decimal string plus one unit in its last place: `9.99` → `10.00`.
-fn up_one(digits: &str) -> String {
-    let mut chars: Vec<char> = digits.chars().collect();
-    let mut i = chars.len();
-    loop {
-        if i == 0 {
-            chars.insert(0, '1');
-            break;
-        }
-        i -= 1;
-        match chars[i] {
-            '.' => {}
-            '9' => chars[i] = '0',
-            c => {
-                chars[i] = char::from(c as u8 + 1);
-                break;
-            }
-        }
-    }
-    chars.into_iter().collect()
+    kentos_geometry_core::display::fixed(v, d)
 }
 
 /// A number as JavaScript writes it (`String(n)`), for the values the tools
@@ -291,26 +226,29 @@ mod tests {
         assert_eq!(other.bearing(100.0), "90.0000°");
     }
 
-    /// Values from `Number.prototype.toFixed` in V8.
+    /// The display rule (docs/adr/0149); every case of it is the core's
+    /// `fixtures/numeric/v1/display.json`.
     #[test]
-    fn fixed_rounds_as_javascript_does() {
-        for (v, d, js) in [
+    fn fixed_writes_by_the_display_rule() {
+        for (v, d, shown) in [
             (487012.0625, 3, "487012.063"),
             (0.125, 2, "0.13"),
             (-0.125, 2, "-0.13"),
             (2.5, 0, "3"),
             (0.5, 0, "1"),
-            (9.995, 2, "9.99"),
+            // 9.995 and 1.005 are just under a half in binary; written as typed, rounded as on paper.
+            (9.995, 2, "10.00"),
             (99.5, 0, "100"),
-            (9.9995, 3, "9.999"),
-            (1.005, 2, "1.00"),
-            (-0.001, 2, "-0.00"),
+            (9.9995, 3, "10.000"),
+            (1.005, 2, "1.01"),
+            // A value that rounds to zero has no sign.
+            (-0.001, 2, "0.00"),
             (-0.0, 3, "0.000"),
             (12.0, 3, "12.000"),
             (1234.5678, 2, "1234.57"),
             (5e-324, 3, "0.000"),
         ] {
-            assert_eq!(fixed(v, d), js, "({v}).toFixed({d})");
+            assert_eq!(fixed(v, d), shown, "{v} with {d}");
         }
         assert_eq!(fixed(f64::NAN, 2), "NaN");
         assert_eq!(fixed(f64::NEG_INFINITY, 2), "-Infinity");

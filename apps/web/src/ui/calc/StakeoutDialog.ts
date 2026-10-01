@@ -17,6 +17,7 @@ import {
   type Row,
 } from './common';
 import { readStakeout } from './read';
+import { fixed } from '../../core/displayNumber';
 
 /**
  * Aplikasyon: the values to set out known points from a station: bearing
@@ -137,7 +138,7 @@ class StakeoutDialog implements Picker {
     if (!res) return;
     const f = this.ctx.format;
     const lines: string[][] = [[TITLE], ['Nokta', 'Semt', 'Yatay uzunluk', 'Açı']];
-    res.stakes.forEach((s, i) => lines.push([res.names[i], s.bearing.toFixed(4), f.length(s.distance, false), s.angle != null ? s.angle.toFixed(4) : '']));
+    res.stakes.forEach((s, i) => lines.push([res.names[i], fixed(s.bearing, 4), f.length(s.distance, false), s.angle != null ? fixed(s.angle, 4) : '']));
     copyReport(this.ctx, TITLE, lines);
   }
 }

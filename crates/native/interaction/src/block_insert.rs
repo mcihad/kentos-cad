@@ -21,6 +21,7 @@ use kentos_contracts::{BlockId, EntityGeometry};
 use kentos_geometry_core::tools::point_text::{js_trim, point_from_text};
 
 use crate::Vec2;
+use crate::format::fixed;
 use crate::log::Level;
 use crate::modify::ghosts;
 use crate::points::{self, Taken, wire};
@@ -194,8 +195,8 @@ impl Tool for BlockInsert {
         };
         Prompt::new(LABEL, step)
             .option("Blok", "B")
-            .option_with("Ölçek", "Ö", format!("{:.4}", m.block_scale))
-            .option_with("Dönüş", "D", format!("{:.4}°", m.block_rotation))
+            .option_with("Ölçek", "Ö", fixed(m.block_scale, 4))
+            .option_with("Dönüş", "D", format!("{}°", fixed(m.block_rotation, 4)))
             .option_with(
                 "Aynala",
                 "A",

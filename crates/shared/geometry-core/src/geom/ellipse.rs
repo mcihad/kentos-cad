@@ -4,6 +4,7 @@
 use crate::api::Op;
 use crate::geom::arc::{norm_angle, sweep};
 use crate::geom::intersect::{line_circle_params, tangent_points};
+use crate::geom::quadrature::integrate;
 use crate::jsmath::{PI, TAU, atan2, cos, js_hypot, js_max, js_min, sin};
 use crate::op;
 use crate::vec2::Vec2;
@@ -107,20 +108,22 @@ pub fn tessellate_ellipse(e: &EllipseGeom, per_turn: f64) -> Vec<Vec2> {
     out
 }
 
-/// Arc length by composite Simpson (2048 intervals).
+/// The arc's length along the curve itself.
 pub fn ellipse_length(e: &EllipseGeom) -> f64 {
     let sw = ellipse_sweep(e);
-    let n = 2048;
-    let h = sw / n as f64;
     let f = |t: f64| {
         let d = ellipse_derivative(e, t);
         js_hypot(d.x, d.y)
     };
-    let mut s = f(e.t0) + f(e.t0 + sw);
-    for i in 1..n {
-        s += f(e.t0 + i as f64 * h) * if i % 2 == 1 { 4.0 } else { 2.0 };
+    // ∫|C′(t)|dt by adaptive Gauss–Legendre to 10⁻¹⁴ of it (docs/adr/0149
+    // §3), in eight pieces so a flat ellipse's sharp turns each get theirs.
+    let mut total = 0.0;
+    for k in 0..8 {
+        let a = e.t0 + (sw * k as f64) / 8.0;
+        let b = e.t0 + (sw * (k + 1) as f64) / 8.0;
+        total += integrate(&f, a, b, 1e-14);
     }
-    (s * h) / 3.0
+    total
 }
 
 /// Area of a whole ellipse (π·a·b).

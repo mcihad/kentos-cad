@@ -12,6 +12,7 @@ pub mod leader;
 pub mod offset;
 pub mod overlay;
 pub mod parallel;
+pub mod quadrature;
 pub mod region;
 pub mod shapes;
 pub mod spline;

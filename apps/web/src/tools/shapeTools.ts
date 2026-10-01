@@ -9,9 +9,10 @@ import { parseNumber } from './coordinateInput';
 import { PointInputTool } from './drawTools';
 import { drawTag, strokePath } from './preview';
 import type { ToolPointer } from './Tool';
+import { fixed } from '../core/displayNumber';
 
 const DEG = Math.PI / 180;
-const fmtDeg = (rad: number) => `${+((rad / DEG) % 360).toFixed(4)}°`;
+const fmtDeg = (rad: number) => `${+fixed((rad / DEG) % 360, 4)}°`;
 
 // ── Dikdörtgen (AutoCAD RECTANG) ───────────────────────────────────────
 

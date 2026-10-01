@@ -13,6 +13,7 @@ import { TreeView } from '../widgets/TreeView';
 import { objectsOfNode, zoomItem } from './layerZoom';
 import { colorSwatch, layerSwatch } from './swatch';
 import { treeLocked } from './treeRights';
+import { fixed } from '../../core/displayNumber';
 
 /**
  * A row on screen: the cells that edits and layer state change, and what
@@ -317,7 +318,7 @@ export class LayersPanel extends Panel {
         },
         {
           label: 'Kalınlık',
-          items: () => LINE_WEIGHTS.map((w) => ({ label: `${w.toFixed(2)} mm`, radio: true, checked: n.style.lineWeight === w, run: () => this.ctx.doc.setLayerStyle(n.id, { lineWeight: w }, 'Çizgi kalınlığı') })),
+          items: () => LINE_WEIGHTS.map((w) => ({ label: `${fixed(w, 2)} mm`, radio: true, checked: n.style.lineWeight === w, run: () => this.ctx.doc.setLayerStyle(n.id, { lineWeight: w }, 'Çizgi kalınlığı') })),
         },
         {
           label: n.style.renderer ? 'Katman stili… (özel)' : 'Katman stili…',

@@ -1,5 +1,6 @@
 import { Signal, type ReadonlySignal } from '../core/signal';
 import type { AngleUnit, AreaUnit } from '../model/projectSettings';
+import { fixed } from '../core/displayNumber';
 
 /** The unit fields formatting depends on (ProjectSettings satisfies it). */
 export interface UnitSettings {
@@ -33,11 +34,11 @@ export class Formatter {
 
   /** Grid coordinate (Y or X) without unit. */
   coord(v: number): string {
-    return v.toFixed(this.prefs.lengthDecimals.value);
+    return fixed(v, this.prefs.lengthDecimals.value);
   }
 
   length(m: number, unit = true): string {
-    const s = m.toFixed(this.prefs.lengthDecimals.value);
+    const s = fixed(m, this.prefs.lengthDecimals.value);
     return unit ? `${s} m` : s;
   }
 
@@ -45,17 +46,17 @@ export class Formatter {
     const d = this.prefs.areaDecimals.value;
     switch (this.prefs.areaUnit.value) {
       case 'donum':
-        return unit ? `${(m2 / 1000).toFixed(d)} dönüm` : (m2 / 1000).toFixed(d);
+        return unit ? `${fixed(m2 / 1000, d)} dönüm` : fixed(m2 / 1000, d);
       case 'ha':
-        return unit ? `${(m2 / 10_000).toFixed(d)} ha` : (m2 / 10_000).toFixed(d);
+        return unit ? `${fixed(m2 / 10_000, d)} ha` : fixed(m2 / 10_000, d);
       default:
-        return unit ? `${m2.toFixed(d)} m²` : m2.toFixed(d);
+        return unit ? `${fixed(m2, d)} m²` : fixed(m2, d);
     }
   }
 
   /** A slope in percent, two decimals (docs/adr/0147 §2). */
   percent(v: number): string {
-    return v.toFixed(2);
+    return fixed(v, 2);
   }
 
   get areaUnitLabel(): string {
@@ -65,10 +66,10 @@ export class Formatter {
   /** Bearing given in grads (surveying semt), shown in the chosen angle unit. */
   bearing(grad: number, unit = true): string {
     if (this.prefs.angleUnit.value === 'deg') {
-      const s = (grad / GRAD_PER_DEG).toFixed(4);
+      const s = fixed(grad / GRAD_PER_DEG, 4);
       return unit ? `${s}°` : s;
     }
-    const s = grad.toFixed(4);
+    const s = fixed(grad, 4);
     return unit ? `${s} g` : s;
   }
 

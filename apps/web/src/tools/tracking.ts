@@ -5,6 +5,7 @@ import { op } from '../wasm/core';
 import { parsePointInput } from './coordinateInput';
 import { drawTag } from './preview';
 import type { ToolPointer } from './Tool';
+import { fixed } from '../core/displayNumber';
 
 /** A polar-tracking ray the cursor is currently locked to. */
 export interface Tracking {
@@ -52,7 +53,7 @@ export function drawTracking(g: CanvasRenderingContext2D, view: ViewTransform, t
   g.stroke();
   g.restore();
   const s = view.worldToScreen(at);
-  drawTag(g, { x: s.x - 8, y: s.y - 44 }, [`Kutupsal ${t.angle.toFixed(0)}°`], color, bg);
+  drawTag(g, { x: s.x - 8, y: s.y - 44 }, [`Kutupsal ${fixed(t.angle, 0)}°`], color, bg);
 }
 
 /**

@@ -24,6 +24,7 @@ import {
   type Picker,
   type Row,
 } from './common';
+import { fixed } from '../../core/displayNumber';
 
 /**
  * Poligon hesabı: from a known point oriented on a known back point, through
@@ -303,12 +304,12 @@ class TraverseDialog implements Picker {
       const p = endPts[i];
       lines.push([
         i < res.names.length ? res.names[i] : (res.endName ?? ''),
-        leg.bearing.toFixed(4),
+        fixed(leg.bearing, 4),
         f.length(leg.distance, false),
         f.length(leg.dy, false),
         f.length(leg.dx, false),
-        leg.vy.toFixed(4),
-        leg.vx.toFixed(4),
+        fixed(leg.vy, 4),
+        fixed(leg.vx, 4),
         p ? f.coord(p.x) : '',
         p ? f.coord(p.y) : '',
       ]);

@@ -15,8 +15,9 @@ use crate::tools_screens::Scene;
 use crate::viewport::Event;
 
 const EMPTY: &str = include_str!("../../../fixtures/interaction/v1/empty.kcad");
-const E: f64 = 487_000.0;
-const N: f64 = 4_420_000.0;
+/// Where the scenes' drawings lie: a TM zone's coordinates (Y, X).
+pub(crate) const E: f64 = 487_000.0;
+pub(crate) const N: f64 = 4_420_000.0;
 
 fn xy(p: [f64; 2]) -> Value {
     json!({ "x": E + p[0], "y": N + p[1] })

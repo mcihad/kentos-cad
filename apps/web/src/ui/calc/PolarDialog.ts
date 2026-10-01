@@ -22,6 +22,7 @@ import {
   type Row,
 } from './common';
 import { readPolar } from './read';
+import { fixed } from '../../core/displayNumber';
 
 /**
  * Kutupsal alım (takeometri): points surveyed from a known station. The
@@ -178,7 +179,7 @@ class PolarDialog implements Picker {
     if (!res) return;
     const f = this.ctx.format;
     const lines: string[][] = [[TITLE], ['Nokta', 'Semt', 'Yatay uzunluk', 'Y', 'X', 'Z']];
-    res.points.forEach((p, i) => lines.push([res.names[i], p.bearing.toFixed(4), f.length(p.horizontal, false), f.coord(p.p.x), f.coord(p.p.y), p.z != null ? f.length(p.z, false) : '']));
+    res.points.forEach((p, i) => lines.push([res.names[i], fixed(p.bearing, 4), f.length(p.horizontal, false), f.coord(p.p.x), f.coord(p.p.y), p.z != null ? f.length(p.z, false) : '']));
     copyReport(this.ctx, TITLE, lines);
   }
 }

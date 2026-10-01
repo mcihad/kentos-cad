@@ -4,6 +4,7 @@ import { LEADER_ARROW_ROWS } from '../../tools/leaderTool';
 import type { MenuItem } from '../widgets/PopupMenu';
 import type { PropRow } from '../widgets/PropertyGrid';
 import { setGeometries } from './write';
+import { fixed } from '../../core/displayNumber';
 
 /**
  * A leader's Not, Yükseklik, Dönüş, Ok and Zemin rows in Öznitelikler (docs/adr/0146 §7), for one leader or the
@@ -76,7 +77,7 @@ export function leaderRows(ctx: AppContext, leaders: readonly LeaderEntity[], lo
     },
     {
       label: 'Dönüş',
-      value: rotation === MIXED ? MIXED : rotation.toFixed(2),
+      value: rotation === MIXED ? MIXED : fixed(rotation, 2),
       numeric: rotation !== MIXED,
       unit: '°',
       editor: number((x) => {

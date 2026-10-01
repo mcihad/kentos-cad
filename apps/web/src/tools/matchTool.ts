@@ -7,6 +7,7 @@ import type { ViewTransform } from '../viewport/Camera';
 import { uidOf } from './editCommand';
 import { drawSelectionBox, drawTag, strokeGeometry } from './preview';
 import type { Tool, ToolPointer } from './Tool';
+import { fixed } from '../core/displayNumber';
 
 /**
  * Özellik kopyala (docs/adr/0140): click the object whose look is wanted,
@@ -60,7 +61,7 @@ export class MatchPropertiesTool implements Tool {
   /** What a target takes from `e`, in words: "“Yol” katmanı, renk #E5484D, 0.50 mm, sembol". */
   private what(e: Entity): string {
     const layer = this.ctx.doc.layers.get(e.layerId)?.name ?? e.layerId;
-    return [`“${layer}” katmanı`, e.color ? `renk ${e.color}` : 'katman rengi', e.lineWeight !== undefined ? `${e.lineWeight.toFixed(2)} mm` : 'katman kalınlığı', e.symbol ? 'sembol' : 'katman stili'].join(', ');
+    return [`“${layer}” katmanı`, e.color ? `renk ${e.color}` : 'katman rengi', e.lineWeight !== undefined ? `${fixed(e.lineWeight, 2)} mm` : 'katman kalınlığı', e.symbol ? 'sembol' : 'katman stili'].join(', ');
   }
 
   pointerMove(p: ToolPointer): void {

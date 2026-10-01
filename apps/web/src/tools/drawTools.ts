@@ -17,6 +17,7 @@ import type { Tool, ToolPointer } from './Tool';
 import { writeOnStandardLayer } from './standardLayer';
 import { writableLayer } from './targetLayer';
 import { constrainPoint, drawTracking, pointFromText, type Tracking } from './tracking';
+import { fixed } from '../core/displayNumber';
 
 /**
  * Base for tools driven by a sequence of points (click or typed). Handles
@@ -384,7 +385,7 @@ export class PointTool extends PointInputTool {
     if (this.pendingZ) {
       const z = parseNumber(text);
       if (z === null) return false;
-      this.writePoint({ p: this.pendingZ, z, label: z.toFixed(2), attrs: { Tür: 'Kot noktası', 'Z (m)': z.toFixed(3) } });
+      this.writePoint({ p: this.pendingZ, z, label: fixed(z, 2), attrs: { Tür: 'Kot noktası', 'Z (m)': fixed(z, 3) } });
       this.pendingZ = null;
       this.refreshPrompt();
       this.ctx.view.requestOverlay();

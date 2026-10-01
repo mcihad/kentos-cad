@@ -6,6 +6,7 @@ import { h } from '../dom';
 import { colorSwatch, layerSwatch } from '../layers/swatch';
 import { Dropdown } from '../widgets/Dropdown';
 import type { MenuItem } from '../widgets/PopupMenu';
+import { fixed } from '../../core/displayNumber';
 
 /**
  * Current-property fields: the active layer, colour, line type and weight
@@ -109,7 +110,7 @@ export function lineTypeItems(ctx: AppContext): MenuItem[] {
 }
 
 /** A line weight as the lists write it: “0.25 mm”. */
-export const weightText = (w: number) => `${w.toFixed(2)} mm`;
+export const weightText = (w: number) => `${fixed(w, 2)} mm`;
 
 /** The current line weight for new objects, or “Katmana göre”. */
 export function currentWeight(ctx: AppContext): string {
