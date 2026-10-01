@@ -66,6 +66,7 @@ src/                     kentos-ui kütüphanesi
 │   ├── segmented.rs     parçalı seçim
 │   ├── property_grid.rs salt okunur özellik ızgarası
 │   ├── command_line.rs  komut kutusu: geçmiş, istem, otomatik tamamlama
+│   ├── python/          JetBrains Mono editör, renklendirilmiş REPL, girinti ve geçmiş
 │   ├── status_bar.rs    durum çubuğu: menülü göstergeler ve anahtarlar
 │   ├── dialog.rs        iletişim kutusu, onay kutusu, kısayol listesi
 │   ├── navigation_bar.rs, overlay.rs, tip.rs
@@ -100,8 +101,63 @@ assets/fonts/            gömülü yazı tipleri ve lisansları (SIL Open Font L
 
 Vitrindeki **Galeri** sekmesi kütüphanenin kataloğudur: renkler, yazı, ikonlar,
 düğmeler, veri bileşenleri, çerçeve, yerleşim, girdiler, geri bildirim,
-öznitelikler ve CBS/CAD bileşenleri; her biri canlı örneği, modül yolu ve
+Python, öznitelikler ve CBS/CAD bileşenleri; her biri canlı örneği, modül yolu ve
 kullanım koduyla.
+
+## Python editörü ve REPL
+
+**Galeri → Python** gerçek, kalıcı bir `python3` oturumunu gösterir. Editör ve
+REPL aynı değişkenleri kullanır; Geometri, Veri, Hata ve Uzun işlem örnekleri
+çalıştırılabilir. Durdur, süreci kapatır; sonraki çalıştırmada yeni oturum açılır.
+
+```rust,ignore
+use kentos_ui::widget::python::{EditorState, PythonEditor, PythonRepl, ReplState};
+
+PythonEditor::new(&editor.content, Message::Edit)
+    .title("analysis.py")
+    .modified(editor.modified())
+    .revision(editor.revision())
+    .on_run(Message::Run)
+    .on_undo(Message::Undo)
+    .on_redo(Message::Redo);
+
+PythonRepl::new(&repl, Message::Repl).height(320);
+```
+
+- `EditorState::perform` akıllı dört boşluklu girinti, seçili satırların Tab /
+  Shift+Tab ile girintilenmesi, UTF-8 imleçleri ve geri alma/yinelemeyi yönetir.
+- Sözdizimi renklendirme çok satırlı dizeleri, f-string ifadelerini, dekoratörleri,
+  tanımları, sayıları ve yorumları kapsar. Uzun satırlar yatay kaydırılır;
+  satır numaraları dikey kaydırma ve klavyeyle imleci takip eder.
+- Kod ve REPL her zaman gömülü **JetBrains Mono** kullanır. Uygulama başlangıcında
+  `typography::load()` çağrılır; `fonts` özelliği kapalıysa aileyi uygulama yükler.
+- `ReplState::update` bir `Request` döndürür. Çalıştırıcı uygulamaya aittir;
+  `append(request.id, …)` akış çıktısını, `finish(request.id, result)` sonucu işler.
+  Durdurulmuş çalıştırmaların geç çıktıları yok sayılır. Editörden betik çalıştırma
+  REPL'deki taslağı korur. Geçmiş 200 komut, çıktı 400 girdiyle sınırlıdır.
+- F5 / Ctrl+Enter betiği çalıştırır. REPL'de Enter çalıştırır, Shift+Enter satır
+  açar, ↑↓ geçmişi getirir. Ctrl+Z / Ctrl+Shift+Z geri alma/yinelemedir.
+
+**IntelliSense:** `PythonEditor::completions(&editor.completion, Message::Complete)`
+imleç altında öneri listesini açar. `EditorState::complete(event)` seçimi/yerine
+eklemeyi yönetir; tek geri alma adımıyla eski kod ve imleç geri gelir. Ctrl+Space
+açıkça ister, ↑↓ seçer, Tab / Enter tamamlar, Esc kapatır. Listede fonksiyon,
+metot, parametre, sınıf, modül, paket, değişken, özellik, anahtar ve sabit için
+ayrı vektör ikonları; imza, kısa doküman ve soluk satır içi önizleme bulunur.
+
+Kütüphane anahtar/builtin ve kaynak tanımları için yerel öneri verir.
+`completion.request` bir `CompletionRequest` taşır; uygulama sonuçları
+`completion.receive(request.generation, items)` ile besler. Showcase bunu Python
+AST analizi ve canlı namespace ile yapar: `import`, `from … import`, takma ad,
+kurulu paket/modüller, literal türler, sınıf üyeleri ve çağrının isimli parametreleri
+tamamlanır. Örneğin `points.ap` → `points.append`, `from pathlib import Po` →
+`PosixPath`. Üye sorgusu property getter'larını çalıştırmaz. Kaynak/cursor değiştiğinde
+eski öneriler uygulanmaz. Bu standart kütüphane sağlayıcısı karmaşık dinamik
+dönüş türlerini ve proje içindeki göreli importları çıkarmaz; uygulama aynı API'ye
+bir dil sunucusu bağlayabilir.
+
+Showcase standart Python kütüphanesini kullanır; `input()` için hata gösterir.
+Bu sayfanın çalıştırıcısı çizim belgesine veya `kentos.cad` SDK'sına bağlanmaz.
 
 ## Öznitelikler ve seçim
 

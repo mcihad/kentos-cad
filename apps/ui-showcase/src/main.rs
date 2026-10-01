@@ -11,6 +11,7 @@ mod jobs;
 mod layer_tree;
 mod message;
 mod properties;
+mod python;
 mod sample;
 mod settings;
 mod sheets;

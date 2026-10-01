@@ -9,6 +9,7 @@
 //! Hepsi uygulamanın `Message` türünden bağımsızdır ve renklerini temadan
 //! okur.
 
+mod animated_surface;
 pub mod app_menu;
 pub mod assets;
 mod axis;
@@ -44,6 +45,7 @@ pub mod pairs;
 pub mod progress;
 pub mod properties;
 pub mod property_grid;
+pub mod python;
 pub mod query_builder;
 pub mod radial;
 pub mod radio;
@@ -57,6 +59,8 @@ pub mod select;
 pub mod severity;
 pub mod status_bar;
 pub mod suggest;
+#[cfg(all(test, feature = "snapshot"))]
+mod surface_tests;
 pub mod switch;
 pub mod table;
 pub mod tabs;
@@ -101,6 +105,7 @@ pub use pairs::Pairs;
 pub use progress::{Task, TaskList};
 pub use properties::PropertiesDialog;
 pub use property_grid::{PropertyGrid, PropertySheet};
+pub use python::{PythonEditor, PythonRepl};
 pub use query_builder::QueryBuilder;
 pub use radial::RadialMenu;
 pub use radio::RadioGroup;

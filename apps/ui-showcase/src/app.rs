@@ -134,6 +134,7 @@ pub struct Showcase {
     pub(crate) pending: Option<Pending>,
 
     pub(crate) gallery: Gallery,
+    pub(crate) python_studio: crate::python::Studio,
 
     /// Harita üstündeki kayan araç pencereleri.
     pub(crate) windows: Windows<Pane>,
@@ -326,6 +327,7 @@ impl Showcase {
             command_expanded: false,
             pending: None,
             gallery: Gallery::default(),
+            python_studio: crate::python::Studio::default(),
             windows: Windows::new(),
             go_to: GoTo::default(),
             toasts: Toasts::new(),
@@ -369,6 +371,15 @@ impl Showcase {
 
     pub fn subscription(&self) -> Subscription<Message> {
         let mut subscriptions = vec![event::listen_with(keyboard_event)];
+        if self.ribbon_tab == RibbonTab::Gallery
+            && self.gallery.page == Page::Python
+            && self.python_studio.wants_completion()
+        {
+            subscriptions.push(
+                iced::time::every(Duration::from_millis(90))
+                    .map(|_| Message::PythonStudio(crate::python::Event::CompletionTick)),
+            );
+        }
 
         if self.view_cube {
             subscriptions.push(iced::time::every(Duration::from_millis(33)).map(|_| Message::Tick));
@@ -785,6 +796,7 @@ impl Showcase {
                 return command_line::show_commands(COMMAND_INPUT);
             }
 
+            Message::PythonStudio(event) => return self.python_studio.update(event),
             Message::GalleryPageSelected(page) => self.gallery.page = page,
             Message::Gallery(demo) => {
                 if let Demo::Notify(index) = demo {

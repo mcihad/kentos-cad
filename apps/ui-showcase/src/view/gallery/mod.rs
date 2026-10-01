@@ -17,6 +17,7 @@ mod foundations;
 mod frame;
 mod inputs;
 mod layout;
+mod python;
 pub(crate) mod scene;
 mod spatial;
 
@@ -48,6 +49,7 @@ impl Showcase {
             Page::Frame => self.frame_page(),
             Page::Layout => self.layout_page(),
             Page::Inputs => self.inputs_page(),
+            Page::Python => self.python_page(),
             Page::Feedback => self.feedback_page(),
             Page::Attributes => self.attributes_page(),
             Page::Spatial => self.spatial_page(),
@@ -59,11 +61,16 @@ impl Showcase {
         ]
         .spacing(4);
 
+        let width = if page == Page::Python {
+            1280.0
+        } else {
+            PAGE_WIDTH
+        };
         let content = column![header]
             .extend(entries)
             .spacing(16)
             .padding(20)
-            .max_width(typography::scaled(PAGE_WIDTH));
+            .max_width(typography::scaled(width));
 
         container(
             scrollable(content)

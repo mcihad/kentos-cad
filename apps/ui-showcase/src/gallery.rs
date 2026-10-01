@@ -40,6 +40,7 @@ pub enum Page {
     Frame,
     Layout,
     Inputs,
+    Python,
     Feedback,
     Attributes,
     Spatial,
@@ -56,6 +57,7 @@ impl Page {
             Page::Frame => "Çerçeve",
             Page::Layout => "Yerleşim",
             Page::Inputs => "Girdiler",
+            Page::Python => "Python",
             Page::Feedback => "Geri bildirim",
             Page::Attributes => "Öznitelikler",
             Page::Spatial => "Mekânsal",
@@ -72,6 +74,7 @@ impl Page {
             Page::Frame => Icon::Layout,
             Page::Layout => Icon::Tabs,
             Page::Inputs => Icon::Slider,
+            Page::Python => Icon::Terminal,
             Page::Feedback => Icon::Info,
             Page::Attributes => Icon::Properties,
             Page::Spatial => Icon::Globe,
@@ -99,6 +102,9 @@ impl Page {
             Page::Inputs => {
                 "Birimli sayı, vektör ve açı girişleri; renk seçici ve rampa; anahtar, radyo \
                  grubu, aralık kaydırıcısı, etiket girişi, zaman çizelgesi ve form düzeni."
+            }
+            Page::Python => {
+                "JetBrains Mono ile Python editörü ve canlı REPL: renkli kod, komut geçmişi ve animasyonlu çalıştırma."
             }
             Page::Feedback => {
                 "Bildirimler, ilerleme ve görevler, onay kutusu, uyarı şeridi, boş ve hata \
