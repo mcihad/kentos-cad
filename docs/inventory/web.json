@@ -3653,6 +3653,7 @@
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
+        "apps/web/src/tools/methods.test.ts",
         "fixtures/interaction/v1/dimension-kinds.json",
         "fixtures/interaction/v1/dimensions.json",
         "fixtures/interaction/v1/usage-parcel.json"
@@ -7457,6 +7458,7 @@
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
+        "apps/web/src/tools/methods.test.ts",
         "fixtures/interaction/v1/dimension-kinds.json",
         "fixtures/interaction/v1/dimensions.json",
         "fixtures/interaction/v1/usage-parcel.json"
