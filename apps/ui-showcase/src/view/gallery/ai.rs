@@ -1,10 +1,10 @@
-use iced::widget::{button, column, container, responsive, row, space, text};
+use iced::widget::{button, column, container, row, space, text};
 use iced::{Element, Fill, Length};
 
 use kentos_ui::style;
 use kentos_ui::theme::{motion, typography};
-use kentos_ui::widget::Switch;
 use kentos_ui::widget::ai::{AiActivity, AiConversation, AiQuestion, AiThinking, AiToolCall};
+use kentos_ui::widget::{Responsive, Switch};
 
 use crate::ai::{Event, OUTPUT, Scenario};
 use crate::app::Showcase;
@@ -38,7 +38,7 @@ impl Showcase {
             })
             .label("Hareketi azalt"),
         );
-        let stage = responsive(move |bounds| {
+        let stage = Responsive::new(move |bounds| {
             let conversation =
                 AiConversation::new(&studio.conversation, |e| event(Event::Conversation(e)))
                     .title("KentOS Asistan")

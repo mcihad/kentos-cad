@@ -51,6 +51,14 @@ kullanıcı hareketi olarak işlenmez. Kullanıcı geçmişi okurken konumu sabi
 Kart dolguları ve tablo satırları biçim ayarının yarıçapını kullanır; yüzey
 ışık izi yuvarlak köşelerin düz kenar aralığında kalır.
 
+Yerel animasyon sırasında yeniden yerleşim de gerekir. Iced'in standart
+`responsive` bileşeni her yerleşimde çocuğunu yeniden oluşturduğu için düğmelerin
+yalnız widget değerinde duran çizim durumu kaybolur ve bir kareliğine devre
+dışı renkte çizilebilir. `widget::Responsive` aynı ölçülerde kurulu çocuğu
+korur; yeni uygulama görünümü ve değişen ölçüler yeni içerik kurar. AI sahnesi
+ve prompt kontrolleri bunu kullanır. Gerçek çizicide bir yeniden yerleşimden
+önce/sonra düğmenin piksel çıktısının aynı kaldığı test edilir.
+
 ## Showcase ve doğrulama
 
 Galeri → AI Surface yerel, belirlenmiş örnek veri üretir. Metin akışı, soru,

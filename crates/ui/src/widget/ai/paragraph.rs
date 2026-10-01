@@ -17,6 +17,7 @@ pub(super) struct StreamingParagraph<'a, Message> {
     active: bool,
     link: Option<Rc<dyn Fn(String) -> Message + 'a>>,
     child: Element<'a, Message>,
+    child_shown: usize,
 }
 impl<'a, Message: 'a> StreamingParagraph<'a, Message> {
     pub fn new(
@@ -28,6 +29,7 @@ impl<'a, Message: 'a> StreamingParagraph<'a, Message> {
             source,
             active,
             child: super::content::rich_paragraph(source, link.clone(), active),
+            child_shown: source.len(),
             link,
         }
     }
@@ -80,8 +82,14 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for StreamingParagraph<'a
         limits: &layout::Limits,
     ) -> layout::Node {
         let shown = tree.state.downcast_ref::<State>().shown;
-        self.child =
-            super::content::rich_paragraph(&self.source[..shown], self.link.clone(), self.active);
+        if self.child_shown != shown {
+            self.child = super::content::rich_paragraph(
+                &self.source[..shown],
+                self.link.clone(),
+                self.active,
+            );
+            self.child_shown = shown;
+        }
         tree.children[0].diff(&self.child);
         let child = self
             .child

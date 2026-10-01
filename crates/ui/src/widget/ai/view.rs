@@ -4,8 +4,7 @@ use iced::advanced::text::{LineHeight, Wrapping};
 use iced::keyboard::{Key, key::Named};
 use iced::widget::text_editor::{Binding, Status};
 use iced::widget::{
-    Column, button, column, container, responsive, row, scrollable, space, text, text_editor,
-    text_input,
+    Column, button, column, container, row, scrollable, space, text, text_editor, text_input,
 };
 use iced::{Border, Element, Fill, Length, Padding, Theme};
 
@@ -194,7 +193,7 @@ impl<'a, Message: Clone + 'a> AiPrompt<'a, Message> {
                 }
             });
         body = body.push(input);
-        let controls = responsive(move |bounds| {
+        let controls = crate::widget::Responsive::new(move |bounds| {
             let mut model = row![tag(self.model)].spacing(8).align_y(iced::Center);
             if self.attach {
                 model = model.push(small(Icon::Plus, "Ekle", (self.on_event)(AiEvent::Attach)));

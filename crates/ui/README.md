@@ -223,6 +223,8 @@ Renkler dört temaya, boyutlar uygulamanın yazı ölçeğine uyar.
 Akış bitince aynı rich-text bileşeni ve genişliği korunur; son paragraf
 başka bir bileşene dönüşmez. Köşe dolguları, ışık izleri ve tablo satırları
 `shape` ayarındaki yarıçaplara uyar.
+`widget::Responsive` aynı ölçülerdeki animasyon yerleşimlerinde kurulu çocuğu
+korur; AI sahnesi ve prompt düğmeleri yeniden yerleşirken soluklaşmaz.
 
 ```sh
 cargo run -p kentos-ui-showcase -- snapshot python.png --senaryo galeri --sayfa python --boyut 1440x1050
