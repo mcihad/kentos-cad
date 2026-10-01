@@ -150,14 +150,34 @@ CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut",
 
 
 class DimensionStyle(_StrEnum):
+    """A dimension's kind (none: aligned). The last five came with KCAD schema 9
+    (docs/adr/0147): what `a`, `b`, `c`, `offset`, `angle`, `za` and `zb`
+    mean for each is the ADR's table.
+
+    - ``aligned``
+    - ``linear``
+    - ``angular``
+    - ``radius``
+    - ``diameter``
+    - ``ordinate``: Koordinat: the point's Y (`angle` 0) or X (`angle` 90).
+    - ``arcLength``: Yay uzunluğu: the arc about `c` from `a` to `b`, counter-clockwise.
+    - ``jogged``: Kırıklı yarıçap: the radius about `a` through `b`, drawn from `c`.
+    - ``azimuth``: Semt: the direction from `a` to `b`, from north clockwise.
+    - ``slope``: Eğim: the slope between `a` at `za` and `b` at `zb`.
+    """
     ALIGNED = "aligned"
     LINEAR = "linear"
     ANGULAR = "angular"
     RADIUS = "radius"
     DIAMETER = "diameter"
+    ORDINATE = "ordinate"
+    ARC_LENGTH = "arcLength"
+    JOGGED = "jogged"
+    AZIMUTH = "azimuth"
+    SLOPE = "slope"
 
 
-DimensionStyleName = Literal["aligned", "linear", "angular", "radius", "diameter"]
+DimensionStyleName = Literal["aligned", "linear", "angular", "radius", "diameter", "ordinate", "arcLength", "jogged", "azimuth", "slope"]
 """The names of :class:`DimensionStyle`, for a plain string."""
 
 
@@ -1877,13 +1897,17 @@ class DimensionEntity(Entity):
     Attributes:
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
         angle: Linear: measured direction in degrees (0 = ΔY, 90 = ΔX).
-        c: Angular: the vertex.
+        c: Angular: the vertex. Arc length: the arc's centre. Jogged: the centre
+            the line starts from (docs/adr/0147).
         color: Colour override; absent = the layer's colour ("katmana göre").
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
             object (docs/adr/0139).
+        mask: The value is drawn over the drawing's background (docs/adr/0147, as a
+            text's mask, docs/adr/0145).
         symbol: Library symbol overriding the layer's style.
+        za: Slope: the two points' elevations, metres (docs/adr/0147).
     """
     TAG_VALUE: ClassVar[str] = "dimension"
     id: int
@@ -1898,9 +1922,12 @@ class DimensionEntity(Entity):
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
+    mask: bool | Unset = UNSET
     style: DimensionStyle | DimensionStyleName | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     text: str | None | Unset = UNSET
+    za: float | None | Unset = UNSET
+    zb: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "dimension"}
@@ -1921,12 +1948,18 @@ class DimensionEntity(Entity):
             out["label"] = self.label
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.mask is not UNSET:
+            out["mask"] = self.mask
         if self.style is not UNSET:
             out["style"] = None if self.style is None else _enum_out(self.style)
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         if self.text is not UNSET:
             out["text"] = self.text
+        if self.za is not UNSET:
+            out["za"] = None if self.za is None else float(self.za)
+        if self.zb is not UNSET:
+            out["zb"] = None if self.zb is None else float(self.zb)
         return out
 
     @classmethod
@@ -1944,9 +1977,12 @@ class DimensionEntity(Entity):
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            mask=data.get("mask", UNSET),
             style=UNSET if "style" not in data else None if data["style"] is None else _enum_in(DimensionStyle, data["style"]),
             symbol=data.get("symbol", UNSET),
             text=data.get("text", UNSET),
+            za=UNSET if "za" not in data else None if data["za"] is None else float(data["za"]),
+            zb=UNSET if "zb" not in data else None if data["zb"] is None else float(data["zb"]),
         )
 
 
@@ -5774,7 +5810,13 @@ class DimensionEntityGeometry(EntityGeometry):
     """A dimension from `a` to `b` (an angular one's vertex is `c`), its line
     `offset` metres away, its text `height` metres high; `text` replaces
     the measured value, `angle` is a linear one's measured direction in
-    degrees counter-clockwise from east (0 = ΔY, 90 = ΔX).
+    degrees counter-clockwise from east (0 = ΔY, 90 = ΔX). What the fields
+    mean for the styles of docs/adr/0147 (an ordinate's `angle`, an arc
+    length's and a jogged one's `c`, a slope's `za` and `zb`) is that ADR's
+    table.
+    Attributes:
+        mask: The value over the drawing's background (docs/adr/0147).
+        za: A slope's two elevations, metres (docs/adr/0147).
     """
     TAG_VALUE: ClassVar[str] = "dimension"
     a: Vec2
@@ -5783,8 +5825,11 @@ class DimensionEntityGeometry(EntityGeometry):
     height: float
     angle: float | None | Unset = UNSET
     c: Vec2 | None | Unset = UNSET
+    mask: bool | Unset = UNSET
     style: DimensionStyle | DimensionStyleName | None | Unset = UNSET
     text: str | None | Unset = UNSET
+    za: float | None | Unset = UNSET
+    zb: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "dimension"}
@@ -5796,10 +5841,16 @@ class DimensionEntityGeometry(EntityGeometry):
             out["angle"] = None if self.angle is None else float(self.angle)
         if self.c is not UNSET:
             out["c"] = None if self.c is None else _vec2_out(self.c)
+        if self.mask is not UNSET:
+            out["mask"] = self.mask
         if self.style is not UNSET:
             out["style"] = None if self.style is None else _enum_out(self.style)
         if self.text is not UNSET:
             out["text"] = self.text
+        if self.za is not UNSET:
+            out["za"] = None if self.za is None else float(self.za)
+        if self.zb is not UNSET:
+            out["zb"] = None if self.zb is None else float(self.zb)
         return out
 
     @classmethod
@@ -5811,8 +5862,11 @@ class DimensionEntityGeometry(EntityGeometry):
             height=float(data["height"]),
             angle=UNSET if "angle" not in data else None if data["angle"] is None else float(data["angle"]),
             c=UNSET if "c" not in data else None if data["c"] is None else Vec2.from_json(data["c"]),
+            mask=data.get("mask", UNSET),
             style=UNSET if "style" not in data else None if data["style"] is None else _enum_in(DimensionStyle, data["style"]),
             text=data.get("text", UNSET),
+            za=UNSET if "za" not in data else None if data["za"] is None else float(data["za"]),
+            zb=UNSET if "zb" not in data else None if data["zb"] is None else float(data["zb"]),
         )
 
 

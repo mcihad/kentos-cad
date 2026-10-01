@@ -144,6 +144,9 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
             style,
             angle,
             c,
+            mask,
+            za,
+            zb,
         } => {
             let touched = match c {
                 Some(c) => any(&[*a, *b, *c]),
@@ -158,6 +161,9 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
                 style: style.clone(),
                 angle: *angle,
                 c: c.map(&mv),
+                mask: *mask,
+                za: *za,
+                zb: *zb,
             })?
         }
         Shape::Circle { c, r: radius } => inside(*c, r).then(|| Shape::Circle {

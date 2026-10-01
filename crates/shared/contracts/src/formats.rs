@@ -47,7 +47,9 @@ use crate::layer::LineType;
 ///    a flag) and an attribute definition's alignment and width factor in the drawing's JSON.
 /// 17: the leader (docs/adr/0146): `.kcad` document schema 8, a new kind in the typed columns
 ///    (its vertices, height and turn; the note a text, the arrowhead an int, the mask a flag).
-pub const FORMATS_VERSION: u32 = 17;
+/// 18: the new dimensions (docs/adr/0147): `.kcad` document schema 9, five more dimension styles
+///    in the typed columns' numbering and the dimension's mask (a flag), `za` and `zb` (floats).
+pub const FORMATS_VERSION: u32 = 18;
 
 // ── Every import ────────────────────────────────────────────────────────
 

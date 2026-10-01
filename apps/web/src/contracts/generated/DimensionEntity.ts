@@ -8,9 +8,19 @@ export type DimensionEntity = { a: Vec2, b: Vec2, offset: number, height: number
  */
 angle?: number, 
 /**
- * Angular: the vertex.
+ * Angular: the vertex. Arc length: the arc's centre. Jogged: the centre
+ * the line starts from (docs/adr/0147).
  */
-c?: Vec2, id: number, layerId: string, 
+c?: Vec2, 
+/**
+ * The value is drawn over the drawing's background (docs/adr/0147, as a
+ * text's mask, docs/adr/0145).
+ */
+mask?: boolean, 
+/**
+ * Slope: the two points' elevations, metres (docs/adr/0147).
+ */
+za?: number, zb?: number, id: number, layerId: string, 
 /**
  * Colour override; absent = the layer's colour ("katmana göre").
  */

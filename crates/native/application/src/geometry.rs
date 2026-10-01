@@ -43,13 +43,7 @@ fn part(p: &AreaPart) -> Part {
 
 /// A dimension style as the core names it (as files write it).
 fn style_name(style: DimensionStyle) -> &'static str {
-    match style {
-        DimensionStyle::Aligned => "aligned",
-        DimensionStyle::Linear => "linear",
-        DimensionStyle::Angular => "angular",
-        DimensionStyle::Radius => "radius",
-        DimensionStyle::Diameter => "diameter",
-    }
+    style.name()
 }
 
 fn pattern_name(kind: HatchPatternType) -> &'static str {
@@ -62,14 +56,7 @@ fn pattern_name(kind: HatchPatternType) -> &'static str {
 
 /// A dimension style by the name the core carries; None for a name the contract does not know.
 fn style_of(name: &str) -> Option<DimensionStyle> {
-    Some(match name {
-        "aligned" => DimensionStyle::Aligned,
-        "linear" => DimensionStyle::Linear,
-        "angular" => DimensionStyle::Angular,
-        "radius" => DimensionStyle::Radius,
-        "diameter" => DimensionStyle::Diameter,
-        _ => return None,
-    })
+    DimensionStyle::from_name(name)
 }
 
 /// A hatch pattern's type by the name the core carries; None for a name the contract does not know.
@@ -168,6 +155,9 @@ pub fn shape(entity: &Entity) -> Shape {
             style: d.style.map(|s| style_name(s).to_owned()),
             angle: d.angle,
             c: d.c.as_ref().map(v),
+            mask: d.mask.then_some(true),
+            za: d.za,
+            zb: d.zb,
         },
         Entity::Hatch(h) => Shape::Hatch {
             ring: points(&h.ring),
@@ -399,6 +389,9 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
                 style: _,
                 angle,
                 c,
+                mask,
+                za,
+                zb,
             },
         ) => {
             // The style is the object's own: the core carries its name through unchanged.
@@ -409,6 +402,9 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
             e.text = text;
             e.angle = angle;
             e.c = c.map(p);
+            e.mask = mask == Some(true);
+            e.za = za;
+            e.zb = zb;
         }
         (
             Entity::Hatch(e),
@@ -560,6 +556,9 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             style,
             angle,
             c,
+            mask,
+            za,
+            zb,
         } => Entity::Dimension(DimensionEntity {
             base,
             a,
@@ -570,6 +569,9 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             style,
             angle,
             c,
+            mask,
+            za,
+            zb,
         }),
         EntityGeometry::Hatch {
             ring,
@@ -696,6 +698,9 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             style,
             angle,
             c,
+            mask,
+            za,
+            zb,
         } => EntityGeometry::Dimension {
             a: p(a),
             b: p(b),
@@ -708,6 +713,9 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             },
             angle,
             c: c.map(p),
+            mask: mask == Some(true),
+            za,
+            zb,
         },
         Shape::Hatch {
             ring,

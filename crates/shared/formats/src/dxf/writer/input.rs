@@ -223,6 +223,9 @@ impl Fields {
                 style: self.style,
                 angle: self.angle,
                 c: self.c,
+                mask: self.mask.unwrap_or(false),
+                za: self.za,
+                zb: self.zb,
             }),
             "hatch" => Entity::Hatch(HatchEntity {
                 base,
@@ -465,7 +468,10 @@ mod tests {
       {"kind":"insert","id":21,"layerId":"a","attrs":{},"block":"018f3a2b-0000-7000-8000-000000000001","p":{"x":1,"y":1},"scale":1,"rotation":0},
       {"kind":"leader","id":22,"layerId":"a","attrs":{},"pts":[{"x":0,"y":0},{"x":6,"y":5}],"text":"Mevcut bina","height":2.5,"rotation":30,
        "arrow":"dot","mask":true},
-      {"kind":"leader","id":23,"layerId":"a","attrs":{},"pts":[{"x":0,"y":0},{"x":-4,"y":2},{"x":-8,"y":2}],"height":1,"rotation":0}
+      {"kind":"leader","id":23,"layerId":"a","attrs":{},"pts":[{"x":0,"y":0},{"x":-4,"y":2},{"x":-8,"y":2}],"height":1,"rotation":0},
+      {"kind":"dimension","id":24,"layerId":"a","attrs":{},"a":{"x":0,"y":0},"b":{"x":10,"y":0},"offset":2,"height":0.5,"style":"slope",
+       "za":105.25,"zb":104.5,"mask":true},
+      {"kind":"dimension","id":25,"layerId":"a","attrs":{},"a":{"x":5,"y":0},"b":{"x":0,"y":5},"offset":1,"height":0.5,"style":"arcLength","c":{"x":0,"y":0}}
     ]"##;
 
     /// A definition holding a line and a nested insert, and the one it nests.
@@ -491,7 +497,7 @@ mod tests {
         let ours = input_from_json(&text).expect("input");
         let derived: DxfWriteInput = serde_json::from_str(&text).expect("contract");
         assert_eq!(ours, derived);
-        assert_eq!(ours.entities.len(), 23);
+        assert_eq!(ours.entities.len(), 25);
         // A leader with every field, and one with none of the optional ones (docs/adr/0146 §8).
         let Entity::Leader(l) = &ours.entities[21] else {
             panic!("{:?}", ours.entities[21])

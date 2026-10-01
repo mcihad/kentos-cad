@@ -50,7 +50,15 @@ widthFactor?: number,
 /**
  * Its box filled with the drawing area's colour before it is drawn.
  */
-mask?: boolean, } | { "kind": "dimension", a: Vec2, b: Vec2, offset: number, height: number, text?: string, style?: DimensionStyle, angle?: number, c?: Vec2, } | { "kind": "hatch", ring: Array<Vec2>, holes?: Array<Array<Vec2>>, pattern: HatchPattern, } | { "kind": "insert", block: BlockId, p: Vec2, scale: number, rotation: number, mirror?: boolean, } | { "kind": "leader", 
+mask?: boolean, } | { "kind": "dimension", a: Vec2, b: Vec2, offset: number, height: number, text?: string, style?: DimensionStyle, angle?: number, c?: Vec2, 
+/**
+ * The value over the drawing's background (docs/adr/0147).
+ */
+mask?: boolean, 
+/**
+ * A slope's two elevations, metres (docs/adr/0147).
+ */
+za?: number, zb?: number, } | { "kind": "hatch", ring: Array<Vec2>, holes?: Array<Array<Vec2>>, pattern: HatchPattern, } | { "kind": "insert", block: BlockId, p: Vec2, scale: number, rotation: number, mirror?: boolean, } | { "kind": "leader", 
 /**
  * At least two: the arrow's tip first.
  */

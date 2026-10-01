@@ -959,6 +959,71 @@
           }
         }
       ]
+    },
+    {
+      "name": "Yeni ölçülerin türü, zemini ve kotları değişiklikte ve geri almada kalır",
+      "note": "ADR 0147: iki belge yeni ölçüleri olduğu gibi taşır; kotu değiştiren yama öbür alanlara dokunmaz, null zemin alanını siler.",
+      "steps": [
+        {
+          "op": "add",
+          "entity": {"kind": "dimension", "layerId": "b", "a": {"x": 486570.5, "y": 4420150.25}, "b": {"x": 486610.5, "y": 4420150.25}, "offset": 1.5, "height": 2, "style": "slope", "za": 105.25, "zb": 104.75, "mask": true, "attrs": {}},
+          "returns": 6,
+          "expect": {
+            "entities": {
+              "6": {"id": 6, "kind": "dimension", "layerId": "b", "a": {"x": 486570.5, "y": 4420150.25}, "b": {"x": 486610.5, "y": 4420150.25}, "offset": 1.5, "height": 2, "style": "slope", "za": 105.25, "zb": 104.75, "mask": true, "attrs": {}}
+            }
+          }
+        },
+        {
+          "op": "update",
+          "id": 6,
+          "patch": {"zb": 103.5},
+          "expect": {
+            "entities": {
+              "6": {"id": 6, "kind": "dimension", "layerId": "b", "a": {"x": 486570.5, "y": 4420150.25}, "b": {"x": 486610.5, "y": 4420150.25}, "offset": 1.5, "height": 2, "style": "slope", "za": 105.25, "zb": 103.5, "mask": true, "attrs": {}}
+            }
+          }
+        },
+        {
+          "op": "update",
+          "id": 6,
+          "patch": {"mask": null},
+          "expect": {
+            "entities": {
+              "6": {"id": 6, "kind": "dimension", "layerId": "b", "a": {"x": 486570.5, "y": 4420150.25}, "b": {"x": 486610.5, "y": 4420150.25}, "offset": 1.5, "height": 2, "style": "slope", "za": 105.25, "zb": 103.5, "attrs": {}}
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Değiştir",
+          "expect": {
+            "entities": {
+              "6": {"id": 6, "kind": "dimension", "layerId": "b", "a": {"x": 486570.5, "y": 4420150.25}, "b": {"x": 486610.5, "y": 4420150.25}, "offset": 1.5, "height": 2, "style": "slope", "za": 105.25, "zb": 103.5, "mask": true, "attrs": {}}
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Değiştir",
+          "expect": {
+            "entities": {
+              "6": {"id": 6, "kind": "dimension", "layerId": "b", "a": {"x": 486570.5, "y": 4420150.25}, "b": {"x": 486610.5, "y": 4420150.25}, "offset": 1.5, "height": 2, "style": "slope", "za": 105.25, "zb": 104.75, "mask": true, "attrs": {}}
+            }
+          }
+        },
+        {
+          "op": "add",
+          "entity": {"kind": "dimension", "layerId": "a", "a": {"x": 486510, "y": 4420110}, "b": {"x": 486530, "y": 4420116}, "offset": 0, "height": 2.5, "style": "ordinate", "angle": 90, "attrs": {}},
+          "returns": 7,
+          "expect": {
+            "ids": [1, 2, 5, 6, 7],
+            "entities": {
+              "7": {"id": 7, "kind": "dimension", "layerId": "a", "a": {"x": 486510, "y": 4420110}, "b": {"x": 486530, "y": 4420116}, "offset": 0, "height": 2.5, "style": "ordinate", "angle": 90, "attrs": {}}
+            }
+          }
+        }
+      ]
     }
   ]
 }

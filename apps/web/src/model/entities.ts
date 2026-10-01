@@ -154,10 +154,15 @@ export interface DimensionEntity extends EntityBase {
   height: number;
   text?: string;
   style?: DimensionStyle;
-  /** linear: measured direction, degrees CCW from east (0 = ΔY, 90 = ΔX). */
+  /** linear: measured direction, degrees CCW from east (0 = ΔY, 90 = ΔX); ordinate: 0 its Y, 90 its X. */
   angle?: number;
-  /** angular: the vertex. */
+  /** angular: the vertex; arc length: the arc's centre; jogged: the centre its line starts from. */
   c?: Vec2;
+  /** The value over the drawing's background (docs/adr/0147); only `true` is written. */
+  mask?: boolean;
+  /** slope: the two points' elevations, metres (docs/adr/0147). */
+  za?: number;
+  zb?: number;
 }
 export type HatchPatternType = 'solid' | 'lines' | 'cross';
 export interface HatchPattern {

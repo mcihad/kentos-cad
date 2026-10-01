@@ -177,8 +177,12 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
             style,
             angle,
             c,
+            mask,
+            za,
+            zb,
         } => {
             let st = style.as_deref().unwrap_or("aligned");
+            let (mask, za, zb) = (*mask, *za, *zb);
             let flip = is_reflection(m);
             let na = apply(m, *a);
             let nb = apply(m, *b);
@@ -197,6 +201,9 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
                     style,
                     angle: *angle,
                     c,
+                    mask,
+                    za,
+                    zb,
                 }
             } else if st == "radius" || st == "diameter" {
                 Shape::Dimension {
@@ -208,6 +215,9 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
                     style,
                     angle: *angle,
                     c,
+                    mask,
+                    za,
+                    zb,
                 }
             } else {
                 // Aligned and linear: a reflection swaps left and right, so the offset changes sign.
@@ -228,6 +238,9 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
                     style,
                     angle,
                     c,
+                    mask,
+                    za,
+                    zb,
                 }
             }
         }

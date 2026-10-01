@@ -51,25 +51,14 @@ fn app(p: CoreVec2) -> Vec2 {
 
 /// The style's name as the core's layout takes it (None: aligned).
 pub fn style_name(s: Option<DimensionStyle>) -> Option<&'static str> {
-    s.map(|s| match s {
-        DimensionStyle::Aligned => "aligned",
-        DimensionStyle::Linear => "linear",
-        DimensionStyle::Angular => "angular",
-        DimensionStyle::Radius => "radius",
-        DimensionStyle::Diameter => "diameter",
-    })
+    s.map(DimensionStyle::name)
 }
 
 pub fn style_from_name(s: &str) -> Option<Option<DimensionStyle>> {
-    Some(match s {
-        "" => None,
-        "aligned" => Some(DimensionStyle::Aligned),
-        "linear" => Some(DimensionStyle::Linear),
-        "angular" => Some(DimensionStyle::Angular),
-        "radius" => Some(DimensionStyle::Radius),
-        "diameter" => Some(DimensionStyle::Diameter),
-        _ => return None,
-    })
+    if s.is_empty() {
+        return Some(None);
+    }
+    DimensionStyle::from_name(s).map(Some)
 }
 
 /// The dimension as the core lays it out (lines, ticks, where the value goes).
@@ -127,6 +116,14 @@ pub fn definition(d: &DimensionEntity, l: &DimensionLayout) -> Definition {
             leader: Some(d.offset.max(0.0)),
             angle: None,
         },
+        // Until docs/adr/0147 step 5 they go out as aligned ones, without KentOS's data.
+        Some(
+            DimensionStyle::Ordinate
+            | DimensionStyle::ArcLength
+            | DimensionStyle::Jogged
+            | DimensionStyle::Azimuth
+            | DimensionStyle::Slope,
+        ) => plain,
     }
 }
 
@@ -159,6 +156,14 @@ pub fn read_back(g: &Groups, k: &DimMeta, base: EntityBase) -> Option<DimensionE
             let (x, y) = k.center?;
             (v(x, y), g.p15?, None, None)
         }
+        // docs/adr/0147's kinds are not written with KentOS's data before its step 5.
+        Some(
+            DimensionStyle::Ordinate
+            | DimensionStyle::ArcLength
+            | DimensionStyle::Jogged
+            | DimensionStyle::Azimuth
+            | DimensionStyle::Slope,
+        ) => return None,
     };
     // The text as KentOS had it, while group 1 still says it; else what group 1 says now.
     let text = match &k.text {
@@ -176,6 +181,9 @@ pub fn read_back(g: &Groups, k: &DimMeta, base: EntityBase) -> Option<DimensionE
         style,
         angle,
         c,
+        mask: false,
+        za: None,
+        zb: None,
     };
     let def = definition(&d, &layout(&d)?);
     let same = |p: Vec2, q: Vec2| p.x == q.x && p.y == q.y;

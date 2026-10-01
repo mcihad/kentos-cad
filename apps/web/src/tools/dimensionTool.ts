@@ -22,6 +22,11 @@ const ADDED: Record<DimensionStyle, string> = {
   angular: 'Açı ölçüsü eklendi',
   radius: 'Yarıçap ölçüsü eklendi',
   diameter: 'Çap ölçüsü eklendi',
+  ordinate: 'Koordinat ölçüsü eklendi',
+  arcLength: 'Yay uzunluğu ölçüsü eklendi',
+  jogged: 'Kırıklı yarıçap ölçüsü eklendi',
+  azimuth: 'Semt ölçüsü eklendi',
+  slope: 'Eğim ölçüsü eklendi',
 };
 
 const MODE_KEYS: [DimensionStyle, string][] = [

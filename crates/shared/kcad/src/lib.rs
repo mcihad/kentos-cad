@@ -107,8 +107,17 @@ pub const SCHEMA_WITH_TEXT_EXTRAS: u32 = 7;
 /// that has one rather than drop it.
 pub const SCHEMA_WITH_LEADERS: u32 = 8;
 
+/// Document schema 9 (docs/specs/kcad-v2.md §6.1): schema 8 and the
+/// dimension's new kinds (`ordinate`, `arcLength`, `jogged`, `azimuth`,
+/// `slope`), its value's `mask` and a slope's `za`, `zb` (docs/adr/0147). A
+/// writer writes it only when a dimension of the drawing or of a block
+/// definition has one of them: any other drawing stays 8 or older, byte for
+/// byte, and a reader of those still opens it; one of those refuses a drawing
+/// that has them rather than draw them as another dimension.
+pub const SCHEMA_WITH_DIMENSIONS: u32 = 9;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 7] = [
+pub const SCHEMAS: [u32; 8] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -116,6 +125,7 @@ pub const SCHEMAS: [u32; 7] = [
     SCHEMA_WITH_BLOCKS,
     SCHEMA_WITH_TEXT_EXTRAS,
     SCHEMA_WITH_LEADERS,
+    SCHEMA_WITH_DIMENSIONS,
 ];
 
 /// The file a drawing is saved as.

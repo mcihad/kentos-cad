@@ -2,7 +2,7 @@
 //! weight, 4 when one has vertex elevations, 5 when an area has parts, 6
 //! with blocks, 7 when a text has an alignment, a width factor or a mask, or
 //! 8 with a leader (docs/specs/kcad-v2.md §6.6, docs/adr/0139, docs/adr/0142,
-//! docs/adr/0143, docs/adr/0144, docs/adr/0145, docs/adr/0146): each a one-key map, its kind and then its
+//! docs/adr/0143, docs/adr/0144, docs/adr/0145, docs/adr/0146, docs/adr/0147): each a one-key map, its kind and then its
 //! fields, whose keys are sorted per object (they depend on the kind); every
 //! object of the drawing with its persistent id, unique and not nil, a block
 //! definition's objects without one.
@@ -10,8 +10,8 @@
 use std::collections::{BTreeMap, HashSet};
 
 use kentos_contracts::{
-    AreaPart, BlockId, DocumentSnapshotV2, Entity, EntityId, HatchPattern, MAX_LINE_WEIGHT,
-    MAX_WIDTH_FACTOR, RingGeometry, Vec2, width_factor_ok,
+    AreaPart, BlockId, DimensionStyle, DocumentSnapshotV2, Entity, EntityId, HatchPattern,
+    MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, RingGeometry, Vec2, width_factor_ok,
 };
 
 use super::Encoder;
@@ -206,6 +206,38 @@ impl<'d> Encoder<'d> {
                 }
             }
             Entity::Dimension(e) => {
+                // What a style needs, and what only a slope has (docs/adr/0147).
+                let refuse = |this: &mut Self, code: Code, field: &'static str, words: &str| {
+                    this.path.push(Seg::Name(kind));
+                    this.path.push(Seg::Name(field));
+                    Err(this.fail(code, words))
+                };
+                let slope = e.style == Some(DimensionStyle::Slope);
+                let centred = matches!(
+                    e.style,
+                    Some(DimensionStyle::ArcLength | DimensionStyle::Jogged)
+                );
+                if centred && e.c.is_none() {
+                    return refuse(self, Code::MissingField, "c", "zorunlu alan yok (c)");
+                }
+                if slope && (e.za.is_none() || e.zb.is_none()) {
+                    let field = if e.za.is_none() { "za" } else { "zb" };
+                    let words = format!("zorunlu alan yok ({field})");
+                    return refuse(self, Code::MissingField, field, &words);
+                }
+                if !slope && (e.za.is_some() || e.zb.is_some()) {
+                    let field = if e.za.is_some() { "za" } else { "zb" };
+                    let words = "kot (za, zb) yalnız eğim ölçüsünde yazılır";
+                    return refuse(self, Code::BadValue, field, words);
+                }
+                if e.style == Some(DimensionStyle::Ordinate)
+                    && let Some(a) = e.angle
+                    && a != 0.0
+                    && a != 90.0
+                {
+                    let words = format!("koordinat ölçüsünün ekseni {a}; 0 (Y) ya da 90 (X) olmalı");
+                    return refuse(self, Code::BadValue, "angle", &words);
+                }
                 f.push(("a", Val::Point(&e.a)));
                 f.push(("b", Val::Point(&e.b)));
                 f.push(("offset", Val::Float(e.offset)));
@@ -221,6 +253,15 @@ impl<'d> Encoder<'d> {
                 }
                 if let Some(c) = &e.c {
                     f.push(("c", Val::Point(c)));
+                }
+                if e.mask {
+                    f.push(("mask", Val::Bool(true)));
+                }
+                if let Some(z) = e.za {
+                    f.push(("za", Val::Float(z)));
+                }
+                if let Some(z) = e.zb {
+                    f.push(("zb", Val::Float(z)));
                 }
             }
             Entity::Hatch(e) => {

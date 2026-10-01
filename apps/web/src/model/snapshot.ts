@@ -280,6 +280,8 @@ const numbersAt = (v: unknown, w: string, f: string): number => {
 };
 
 const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'spline', 'xline', 'ray', 'text', 'dimension', 'hatch', 'insert', 'leader'] as const;
+/** The dimension's kinds; KCAD schema 9 added the last five (docs/adr/0147). */
+const DIMENSION_STYLES = ['aligned', 'linear', 'angular', 'radius', 'diameter', 'ordinate', 'arcLength', 'jogged', 'azimuth', 'slope'] as const;
 const LINE_TYPES = ['continuous', 'dashed', 'dashdot', 'dotted'] as const;
 
 function parse(data: unknown, version = DOCUMENT_VERSION): DocumentContent {
@@ -559,16 +561,25 @@ function entity(v: unknown, where: string, layers: ReadonlySet<string> | null, i
       // The mask only when true (docs/adr/0145), as an insert's mirror.
       if (v.mask !== undefined && v.mask !== true) fail(at(w, 'zemin'), 'yalnız true yazılır; zeminsiz yazıda alan yoktur');
       break;
-    case 'dimension':
+    case 'dimension': {
       pointAt(v.a, w, 'a');
       pointAt(v.b, w, 'b');
       numAt(v.offset, w, 'ötelenme');
       numAt(v.height, w, 'yazı yüksekliği');
       if (v.text !== undefined) strAt(v.text, w, 'metin');
-      if (v.style !== undefined) oneOf(v.style, ['aligned', 'linear', 'angular', 'radius', 'diameter'] as const, at(w, 'ölçü türü'));
+      const style = v.style === undefined ? undefined : oneOf(v.style, DIMENSION_STYLES, at(w, 'ölçü türü'));
       if (v.angle !== undefined) numAt(v.angle, w, 'açı');
       if (v.c !== undefined) pointAt(v.c, w, 'köşe');
+      // docs/adr/0147: what a style needs, and what only a slope has.
+      if ((style === 'arcLength' || style === 'jogged') && v.c === undefined) fail(at(w, 'merkez'), 'eksik');
+      if (style === 'ordinate' && v.angle !== undefined && v.angle !== 0 && v.angle !== 90) fail(at(w, 'eksen'), '0 (Y) ya da 90 (X) olmalı');
+      if (style === 'slope') {
+        numAt(v.za, w, 'birinci kot');
+        numAt(v.zb, w, 'ikinci kot');
+      } else if (v.za !== undefined || v.zb !== undefined) fail(at(w, 'kot'), 'yalnız eğim ölçüsünde yazılır');
+      if (v.mask !== undefined && v.mask !== true) fail(at(w, 'zemin'), 'yalnız true yazılır; zeminsiz ölçüde alan yoktur');
       break;
+    }
     case 'hatch': {
       pointsAt(v.ring, w, 'sınır', 3);
       if (v.holes !== undefined) {

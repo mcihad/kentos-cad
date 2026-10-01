@@ -26,6 +26,10 @@ describe('packEntities', () => {
       { id: 5005, layerId: 'b', attrs: {}, kind: 'polygon', pts: [{ x: 0, y: 0 }, { x: 4, y: 0 }, { x: 4, y: 4 }], bulges: [0.2, 0, 0], holes: [{ pts: [{ x: 1, y: 1 }, { x: 2, y: 1 }, { x: 2, y: 2 }], bulges: [0, 0.3, 0] }], label: '12' },
       { id: 5006, layerId: 'b', attrs: {}, kind: 'polyline', pts: [] },
       { id: 5007, layerId: 'b', attrs: {}, kind: 'text', p: { x: 1, y: 1 }, text: 'Ada 104 😀', height: 2, rotation: -30 },
+      // docs/adr/0147: the new kinds, a mask and a slope's elevations.
+      { id: 5008, layerId: 'a', attrs: {}, kind: 'dimension', a: { x: 0, y: 0 }, b: { x: 40, y: 0 }, offset: 1.5, height: 2, style: 'slope', za: 105.25, zb: 104.75, mask: true },
+      { id: 5009, layerId: 'a', attrs: {}, kind: 'dimension', a: { x: 10, y: 20 }, b: { x: 30, y: 26 }, offset: 0, height: 2.5, style: 'ordinate', angle: 90 },
+      { id: 5010, layerId: 'a', attrs: {}, kind: 'dimension', a: { x: 60, y: 0 }, b: { x: 50, y: 10 }, c: { x: 50, y: 0 }, offset: 2, height: 2, style: 'arcLength' },
     );
     const packed = new CoreStore();
     const p = packEntities(list);

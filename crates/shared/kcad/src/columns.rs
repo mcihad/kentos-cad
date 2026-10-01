@@ -39,7 +39,7 @@
 //! | spline | n, closed (0 or 1) | pts (2n) | |
 //! | xline, ray | | p, dir | |
 //! | text | align if any (its place in `TextAlign::ALL`) | p, height, rotation, width factor if any | text |
-//! | dimension | style if any | a, b, offset, height, angle if any, c if any | text if any |
+//! | dimension | style if any | a, b, offset, height, angle if any, c if any, za if any, zb if any | text if any |
 //! | hatch | n, pattern type; h if holes, then k per hole | ring (2n), pattern angle, spacing, per hole: pts (2k) | |
 //! | insert | | p, scale, rotation | block (its id as UUID text) |
 //! | leader | n; arrow if any (its place in `LeaderArrow::ALL`) | pts (2n), height, rotation | text if any |
@@ -49,8 +49,9 @@
 //! kind's optional fields from bit 8 up, in the order the table names them
 //! (point: z; line: za, zb; polyline and polygon: bulges, holes, zs; polygon:
 //! parts; text: align, width factor, mask (no value; docs/adr/0145);
-//! dimension: text, style, angle, c; hatch: holes; insert: mirror; leader:
-//! text, arrow, mask (no value; docs/adr/0146)). A
+//! dimension: text, style, angle, c, mask (no value), za, zb (docs/adr/0147);
+//! hatch: holes; insert: mirror; leader: text, arrow, mask (no value;
+//! docs/adr/0146)). A
 //! hole's flags: 1 bulges, 2 elevations; a part's: 1 bulges, 2 elevations, 4
 //! holes. Dimension styles and hatch pattern types are numbered in the
 //! contract's order.
@@ -108,20 +109,14 @@ const LABEL: u32 = 2;
 const SYMBOL: u32 = 4;
 const WEIGHT: u32 = 8;
 /// A kind's optional fields, in the order the module's table names them.
-const OPT: [u32; 4] = [1 << 8, 1 << 9, 1 << 10, 1 << 11];
+const OPT: [u32; 7] = [1 << 8, 1 << 9, 1 << 10, 1 << 11, 1 << 12, 1 << 13, 1 << 14];
 const HOLE_BULGES: u32 = 1;
 const HOLE_ELEVATIONS: u32 = 2;
 const PART_BULGES: u32 = 1;
 const PART_ELEVATIONS: u32 = 2;
 const PART_HOLES: u32 = 4;
 
-const DIMENSION_STYLES: [DimensionStyle; 5] = [
-    DimensionStyle::Aligned,
-    DimensionStyle::Linear,
-    DimensionStyle::Angular,
-    DimensionStyle::Radius,
-    DimensionStyle::Diameter,
-];
+const DIMENSION_STYLES: [DimensionStyle; 10] = DimensionStyle::ALL;
 const HATCH_PATTERNS: [HatchPatternType; 3] = [
     HatchPatternType::Solid,
     HatchPatternType::Lines,
@@ -454,6 +449,9 @@ impl Packer {
                 style,
                 angle,
                 c,
+                mask,
+                za,
+                zb,
             }) => {
                 self.point(a);
                 self.point(b);
@@ -474,6 +472,17 @@ impl Packer {
                 if let Some(c) = c {
                     flags |= OPT[3];
                     self.point(c);
+                }
+                if *mask {
+                    flags |= OPT[4];
+                }
+                if let Some(z) = za {
+                    flags |= OPT[5];
+                    self.float(*z);
+                }
+                if let Some(z) = zb {
+                    flags |= OPT[6];
+                    self.float(*z);
                 }
             }
             Entity::Hatch(HatchEntity {
@@ -826,7 +835,8 @@ fn allowed(kind: u8) -> u32 {
         2 => OPT[0] | OPT[1] | OPT[2],
         3 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
         10 | 14 => OPT[0] | OPT[1] | OPT[2],
-        11 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
+        // A dimension: text, style, angle, c, then schema 9's mask, za, zb (docs/adr/0147).
+        11 => OPT[0] | OPT[1] | OPT[2] | OPT[3] | OPT[4] | OPT[5] | OPT[6],
         12 | 13 => OPT[0],
         _ => 0,
     }
@@ -996,6 +1006,8 @@ fn geometry(
             };
             let angle = if has(2) { Some(c.float()?) } else { None };
             let corner = if has(3) { Some(c.point()?) } else { None };
+            let za = if has(5) { Some(c.float()?) } else { None };
+            let zb = if has(6) { Some(c.float()?) } else { None };
             Entity::Dimension(DimensionEntity {
                 base,
                 a,
@@ -1006,6 +1018,9 @@ fn geometry(
                 style,
                 angle,
                 c: corner,
+                mask: has(4),
+                za,
+                zb,
             })
         }
         12 => {

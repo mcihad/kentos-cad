@@ -309,6 +309,9 @@ impl Dimension {
             style: mode.contract(),
             angle: g.angle,
             c: g.c.map(wire),
+            mask: false,
+            za: None,
+            zb: None,
         };
         if let Some(out) = points::write_objects(vec![geometry], None, cx) {
             // Zincir ölçü and Baz ölçü start from the newest straight one (docs/adr/0140).

@@ -39,7 +39,8 @@ export const SHAPE_FIELDS: Record<EntityKind, readonly string[]> = {
   spline: ['pts', 'closed'],
   // Its alignment, width factor and mask (docs/adr/0145) go with its geometry.
   text: ['p', 'text', 'height', 'rotation', 'align', 'widthFactor', 'mask'],
-  dimension: ['a', 'b', 'offset', 'height', 'text', 'style', 'angle', 'c'],
+  // The value's mask and a slope's elevations (docs/adr/0147) go with its geometry.
+  dimension: ['a', 'b', 'offset', 'height', 'text', 'style', 'angle', 'c', 'mask', 'za', 'zb'],
   hatch: ['ring', 'holes', 'pattern'],
   // A block's placement (docs/adr/0144); `mirror` only when true.
   insert: ['block', 'p', 'scale', 'rotation', 'mirror'],

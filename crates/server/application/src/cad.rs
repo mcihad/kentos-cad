@@ -207,7 +207,10 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
             }
             width_factor(x.width_factor)?;
         }
-        Dimension(x) => positive("Ölçü yazısı yüksekliği", x.height)?,
+        Dimension(x) => {
+            positive("Ölçü yazısı yüksekliği", x.height)?;
+            dimension_rules(x)?;
+        }
         Hatch(x) => {
             check_len("Tarama sınırı", x.ring.len(), 3)?;
             for h in x.holes.iter().flatten() {
@@ -238,6 +241,30 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
             }
         }
         Point(_) | Line(_) => {}
+    }
+    Ok(())
+}
+
+/// The file's rules for a dimension's style (docs/adr/0147 §3): what a style
+/// needs, and what only a slope has.
+fn dimension_rules(x: &kentos_contracts::DimensionEntity) -> Result<(), String> {
+    use kentos_contracts::DimensionStyle::{ArcLength, Jogged, Ordinate, Slope};
+    match x.style {
+        Some(ArcLength | Jogged) if x.c.is_none() => {
+            return Err(
+                "Yay uzunluğu ve kırıklı yarıçap ölçüsünün merkezi (c) olmalı".into(),
+            );
+        }
+        Some(Slope) if x.za.is_none() || x.zb.is_none() => {
+            return Err("Eğim ölçüsünün iki kotu (za, zb) olmalı".into());
+        }
+        Some(Ordinate) if x.angle.is_some_and(|a| a != 0.0 && a != 90.0) => {
+            return Err("Koordinat ölçüsünün ekseni 0 (Y) ya da 90 (X) olmalı".into());
+        }
+        _ => {}
+    }
+    if x.style != Some(Slope) && (x.za.is_some() || x.zb.is_some()) {
+        return Err("Kot (za, zb) yalnız eğim ölçüsünde yazılır".into());
     }
     Ok(())
 }
@@ -888,6 +915,46 @@ mod tests {
                 serde_json::json!({ "kind": "leader", "id": 1, "layerId": "p", "attrs": {},
                 "pts": [{ "x": 0, "y": 0 }, { "x": 4, "y": 3 }], "text": "", "height": 2, "rotation": 0 }),
                 "notu boş",
+            ),
+        ] {
+            let err = to_stored(&entity(json), 5256, &none()).unwrap_err();
+            assert!(err.contains(words), "{words}: {err}");
+        }
+    }
+
+    /// The new dimensions (docs/adr/0147): kept with every field, projected
+    /// as their defining points; the file's rules.
+    #[test]
+    fn the_new_dimensions_are_kept_and_checked() {
+        let d = entity(
+            serde_json::json!({ "kind": "dimension", "id": 1, "layerId": "p", "attrs": {},
+            "a": { "x": 0, "y": 0 }, "b": { "x": 40, "y": 0 }, "offset": 1.5, "height": 2,
+            "style": "slope", "za": 105.25, "zb": 104.75, "mask": true }),
+        );
+        let s = to_stored(&d, 5256, &none()).unwrap();
+        assert_eq!(s.source_kind, "cad");
+        assert_eq!(back(&s, 1), d);
+        for (json, words) in [
+            (
+                serde_json::json!({ "kind": "dimension", "id": 1, "layerId": "p", "attrs": {},
+                "a": { "x": 0, "y": 0 }, "b": { "x": 4, "y": 3 }, "offset": 1, "height": 2, "style": "arcLength" }),
+                "merkezi (c)",
+            ),
+            (
+                serde_json::json!({ "kind": "dimension", "id": 1, "layerId": "p", "attrs": {},
+                "a": { "x": 0, "y": 0 }, "b": { "x": 4, "y": 3 }, "offset": 1, "height": 2, "style": "slope", "za": 1 }),
+                "iki kotu",
+            ),
+            (
+                serde_json::json!({ "kind": "dimension", "id": 1, "layerId": "p", "attrs": {},
+                "a": { "x": 0, "y": 0 }, "b": { "x": 4, "y": 3 }, "offset": 1, "height": 2, "za": 1 }),
+                "yalnız eğim",
+            ),
+            (
+                serde_json::json!({ "kind": "dimension", "id": 1, "layerId": "p", "attrs": {},
+                "a": { "x": 0, "y": 0 }, "b": { "x": 4, "y": 3 }, "offset": 0, "height": 2,
+                "style": "ordinate", "angle": 45 }),
+                "0 (Y) ya da 90 (X)",
             ),
         ] {
             let err = to_stored(&entity(json), 5256, &none()).unwrap_err();

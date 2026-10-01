@@ -67,6 +67,10 @@ SCHEMA_WITH_BLOCKS = 6
 SCHEMA_WITH_TEXT_EXTRAS = 7
 # Schema 8: schema 7 and the `leader` kind (docs/adr/0146).
 SCHEMA_WITH_LEADERS = 8
+# Schema 9: schema 8 and the dimension's new kinds, its `mask`, a slope's `za` and `zb` (docs/adr/0147).
+SCHEMA_WITH_DIMENSIONS = 9
+# A dimension's kinds; schema 9 added the last five.
+DIMENSION_STYLES = ("aligned", "linear", "angular", "radius", "diameter", "ordinate", "arcLength", "jogged", "azimuth", "slope")
 # A leader's arrowheads (spec §6.6); the filled arrow is the field's absence, no value.
 LEADER_ARROWS = ("open", "dot", "none")
 # A text's alignments (spec §6.6); the left of the baseline is the field's absence, no value.
@@ -74,7 +78,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -296,7 +300,7 @@ def decode_payload(payload):
     return value
 
 
-# ── Document schemas 2 to 7 (spec §6) ───────────────────────────────────
+# ── Document schemas 2 to 9 (spec §6) ───────────────────────────────────
 
 
 class _Schema:
@@ -467,6 +471,7 @@ class _Schema:
         self.blocks = version >= SCHEMA_WITH_BLOCKS
         self.texts = version >= SCHEMA_WITH_TEXT_EXTRAS
         self.leaders = version >= SCHEMA_WITH_LEADERS
+        self.dimensions = version >= SCHEMA_WITH_DIMENSIONS
         checked = self.fields({"format": (self.text, True), "version": (self.uint(32), True), "document": (self.document, True)})(v)
         return checked["document"]
 
@@ -596,6 +601,8 @@ class _Schema:
             fields = self.fields(table)(body)
             if kind in ("polyline", "polygon"):
                 self.same_length(fields)
+            if kind == "dimension":
+                self.dimension_rules(fields)
             # The drawing's own insert names a definition read before it (`blocks` comes before `entities`).
             if kind == "insert" and self.inside is None and fields["block"] not in self.index:
                 self.path.append("block")
@@ -667,6 +674,28 @@ class _Schema:
         if self.bool(v) is not True:
             self.fail("bad_value", "zemin false yazılmaz; zeminsiz yazıda alan yoktur")
         return True
+
+    def dimension_mask(self, v):
+        if self.bool(v) is not True:
+            self.fail("bad_value", "zemin false yazılmaz; zeminsiz ölçüde alan yoktur")
+        return True
+
+    def dimension_rules(self, d):
+        """What a dimension's style needs, and what only a slope has (docs/adr/0147)."""
+        style = d.get("style")
+        needs = ["c"] if style in ("arcLength", "jogged") else ["za", "zb"] if style == "slope" else []
+        for key in needs:
+            if key not in d:
+                self.path.append(key)
+                self.fail("missing_field", "zorunlu alan yok")
+        if style != "slope":
+            for key in ("za", "zb"):
+                if key in d:
+                    self.path.append(key)
+                    self.fail("bad_value", "kot (za, zb) yalnız eğim ölçüsünde yazılır")
+        if style == "ordinate" and "angle" in d and d["angle"] not in (0.0, 90.0):
+            self.path.append("angle")
+            self.fail("bad_value", f"koordinat ölçüsünün ekseni {d['angle']}; 0 (Y) ya da 90 (X) olmalı")
 
     def leader_points(self, v):
         pts = self.array(self.point)(v)
@@ -835,15 +864,17 @@ ENTITY_KINDS = {
         "rotation": (s.float, True),
         **(text_extras(s, mask=True) if s.texts else {}),
     },
+    # Schema 9 (docs/adr/0147): five more kinds, `mask` only when true, a slope's two elevations.
     "dimension": lambda s: {
         "a": (s.point, True),
         "b": (s.point, True),
         "c": (s.point, False),
         "text": (s.text, False),
         "angle": (s.float, False),
-        "style": (s.enum(("aligned", "linear", "angular", "radius", "diameter")), False),
+        "style": (s.enum(DIMENSION_STYLES if s.dimensions else DIMENSION_STYLES[:5]), False),
         "height": (s.float, True),
         "offset": (s.float, True),
+        **({"mask": (s.dimension_mask, False), "za": (s.float, False), "zb": (s.float, False)} if s.dimensions else {}),
     },
     "hatch": lambda s: {
         "ring": (s.array(s.point), True),

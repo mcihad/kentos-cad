@@ -70,6 +70,10 @@ function objects(g: Gen, n: number): Entity[] {
 const SPECIAL: NewEntity[] = [
   { layerId: 'a', attrs: {}, kind: 'dimension', a: { x: 486520, y: 4420200 }, b: { x: 486530, y: 4420207 }, offset: -2, height: 0.5, style: 'linear' },
   { layerId: 'a', attrs: { Not: 'x' }, kind: 'dimension', a: { x: 0, y: 0 }, b: { x: 3, y: 4 }, offset: 2, height: 0.5, text: '', style: 'radius', c: { x: 1, y: 1 } },
+  // docs/adr/0147: the new kinds, a mask and a slope's elevations ride through every transform.
+  { layerId: 'a', attrs: {}, kind: 'dimension', a: { x: 0, y: 0 }, b: { x: 40, y: 0 }, offset: 1.5, height: 2, style: 'slope', za: 105.25, zb: 104.75, mask: true },
+  { layerId: 'a', attrs: {}, kind: 'dimension', a: { x: 10, y: 20 }, b: { x: 30, y: 26 }, offset: 0, height: 2.5, style: 'ordinate', angle: 90 },
+  { layerId: 'a', attrs: {}, kind: 'dimension', a: { x: 60, y: 0 }, b: { x: 50, y: 10 }, c: { x: 50, y: 0 }, offset: 2, height: 2, style: 'jogged', mask: true },
   { layerId: 'a', attrs: {}, kind: 'polyline', pts: [{ x: 0, y: 0 }, { x: 4, y: 0 }], holes: [{ pts: [{ x: 1, y: 1 }], bulges: [0.5] }] },
   { layerId: 'a', attrs: {}, kind: 'polygon', pts: [{ x: 0, y: 0 }, { x: 4, y: 0 }, { x: 4, y: 4 }], bulges: [], holes: [] },
   { layerId: 'a', attrs: {}, kind: 'polyline', pts: [] },

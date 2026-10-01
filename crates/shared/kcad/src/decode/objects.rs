@@ -1,4 +1,4 @@
-//! The objects of document schemas 2 to 8 read from a payload
+//! The objects of document schemas 2 to 9 read from a payload
 //! (docs/specs/kcad-v2.md §6.6): each a one-key map, its kind and then its
 //! fields, read into the contract's `Entity` with the persistent id the file
 //! gives it; the ids are unique in a file. Schema 3 adds an object's own line
@@ -6,8 +6,9 @@
 //! `zb`, `zs`, docs/adr/0142), schema 5 an area's parts (`parts`,
 //! docs/adr/0143), schema 6 the `insert` kind (docs/adr/0144), schema 7 a
 //! text's `align`, `widthFactor` and `mask` (docs/adr/0145), schema 8 the
-//! `leader` kind (docs/adr/0146); in an older
-//! schema they are unknown fields or kinds. A block definition's objects are
+//! `leader` kind (docs/adr/0146), schema 9 the dimension's new kinds, its
+//! `mask` and a slope's `za`, `zb` (docs/adr/0147); in an older schema they
+//! are unknown fields, kinds or values. A block definition's objects are
 //! read the same way, without persistent ids.
 
 use std::collections::{BTreeMap, HashMap, HashSet};
@@ -25,8 +26,8 @@ use crate::cbor::{Reader, Seg};
 use crate::error::{Code, KcadError};
 use crate::watch::{EVERY, Step};
 use crate::{
-    SCHEMA_WITH_BLOCKS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_WEIGHTS,
-    SCHEMA_WITH_PARTS, SCHEMA_WITH_TEXT_EXTRAS,
+    SCHEMA_WITH_BLOCKS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_LEADERS,
+    SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_PARTS, SCHEMA_WITH_TEXT_EXTRAS,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -47,6 +48,9 @@ enum Kind {
     Insert,
     Leader,
 }
+
+/// The dimension's kinds in the contract's order: schema 9 added the last five.
+const DIMENSION_STYLES: [DimensionStyle; 10] = DimensionStyle::ALL;
 
 const KINDS: &[(&str, Kind)] = &[
     ("point", Kind::Point),
@@ -80,8 +84,10 @@ pub(super) struct Features {
     /// Schema 7 and up: a text's alignment, width factor and mask, an
     /// attribute definition's alignment and width factor.
     pub(super) texts: bool,
-    /// Schema 8: the `leader` kind.
+    /// Schema 8 and up: the `leader` kind.
     leaders: bool,
+    /// Schema 9: the dimension's new kinds, `mask`, `za` and `zb`.
+    dimensions: bool,
     /// Whether an object has its persistent id (`uid`): the drawing's do, a
     /// block definition's do not.
     uids: bool,
@@ -96,6 +102,7 @@ impl Features {
             blocks: schema >= SCHEMA_WITH_BLOCKS,
             texts: schema >= SCHEMA_WITH_TEXT_EXTRAS,
             leaders: schema >= SCHEMA_WITH_LEADERS,
+            dimensions: schema >= SCHEMA_WITH_DIMENSIONS,
             uids: true,
         }
     }
@@ -135,10 +142,12 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                 matches!(key, "p" | "text" | "height" | "rotation")
                     || (has.texts && matches!(key, "align" | "widthFactor" | "mask"))
             }
-            Kind::Dimension => matches!(
-                key,
-                "a" | "b" | "c" | "text" | "angle" | "style" | "height" | "offset"
-            ),
+            Kind::Dimension => {
+                matches!(
+                    key,
+                    "a" | "b" | "c" | "text" | "angle" | "style" | "height" | "offset"
+                ) || (has.dimensions && matches!(key, "mask" | "za" | "zb"))
+            }
             Kind::Hatch => matches!(key, "ring" | "holes" | "pattern"),
             Kind::Insert => matches!(key, "block" | "p" | "scale" | "rotation" | "mirror"),
             Kind::Leader => matches!(
@@ -167,6 +176,10 @@ struct Fields {
     z: Option<f64>,
     za: Option<f64>,
     zb: Option<f64>,
+    /// Where a dimension's `angle`, `za` and `zb` are (for a refusal).
+    angle_at: usize,
+    za_at: usize,
+    zb_at: usize,
     r: Option<f64>,
     a0: Option<f64>,
     a1: Option<f64>,
@@ -331,8 +344,14 @@ pub(super) fn object(
             "major" => f.major = Some(point(r)?),
             "dir" => f.dir = Some(point(r)?),
             "z" => f.z = Some(r.float()?),
-            "za" => f.za = Some(r.float()?),
-            "zb" => f.zb = Some(r.float()?),
+            "za" => {
+                f.za_at = r.position();
+                f.za = Some(r.float()?);
+            }
+            "zb" => {
+                f.zb_at = r.position();
+                f.zb = Some(r.float()?);
+            }
             "r" => f.r = Some(r.float()?),
             "a0" => f.a0 = Some(r.float()?),
             "a1" => f.a1 = Some(r.float()?),
@@ -354,7 +373,10 @@ pub(super) fn object(
             "height" => f.height = Some(r.float()?),
             "rotation" => f.rotation = Some(r.float()?),
             "offset" => f.offset = Some(r.float()?),
-            "angle" => f.angle = Some(r.float()?),
+            "angle" => {
+                f.angle_at = r.position();
+                f.angle = Some(r.float()?);
+            }
             "pts" if kind == Kind::Leader => {
                 let at = r.position();
                 let pts = points(r)?;
@@ -392,16 +414,10 @@ pub(super) fn object(
             }
             "text" => f.text = Some(text(r)?),
             "style" => {
-                f.style = Some(named(
-                    r,
-                    &[
-                        ("aligned", DimensionStyle::Aligned),
-                        ("linear", DimensionStyle::Linear),
-                        ("angular", DimensionStyle::Angular),
-                        ("radius", DimensionStyle::Radius),
-                        ("diameter", DimensionStyle::Diameter),
-                    ],
-                )?)
+                // Schema 9's kinds after the first five (docs/adr/0147).
+                let styles = DIMENSION_STYLES.map(|s| (s.name(), s));
+                let known = if has.dimensions { &styles[..] } else { &styles[..5] };
+                f.style = Some(named(r, known)?)
             }
             "pattern" => f.pattern = Some(pattern(r)?),
             "block" => {
@@ -437,11 +453,12 @@ pub(super) fn object(
             "mask" => {
                 let at = r.position();
                 if !r.bool()? {
-                    return Err(r.fail_at(
-                        Code::BadValue,
-                        at,
-                        "zemin false yazılmaz; zeminsiz yazıda alan yoktur",
-                    ));
+                    let words = if kind == Kind::Dimension {
+                        "zemin false yazılmaz; zeminsiz ölçüde alan yoktur"
+                    } else {
+                        "zemin false yazılmaz; zeminsiz yazıda alan yoktur"
+                    };
+                    return Err(r.fail_at(Code::BadValue, at, words));
                 }
                 f.mask = Some(true);
             }
@@ -554,17 +571,61 @@ fn build(
             width_factor: f.width_factor,
             mask: f.mask.unwrap_or(false),
         }),
-        Kind::Dimension => Entity::Dimension(DimensionEntity {
-            base,
-            a: required(r, f.a, "a")?,
-            b: required(r, f.b, "b")?,
-            offset: required(r, f.offset, "offset")?,
-            height: required(r, f.height, "height")?,
-            text: f.text.take(),
-            style: f.style,
-            angle: f.angle,
-            c: f.c,
-        }),
+        Kind::Dimension => {
+            // What a style needs, and what only a slope has (docs/adr/0147).
+            let style = f.style;
+            let c = if matches!(
+                style,
+                Some(DimensionStyle::ArcLength | DimensionStyle::Jogged)
+            ) {
+                Some(required(r, f.c, "c")?)
+            } else {
+                f.c
+            };
+            let (za, zb) = if style == Some(DimensionStyle::Slope) {
+                (Some(required(r, f.za, "za")?), Some(required(r, f.zb, "zb")?))
+            } else if f.za.is_some() || f.zb.is_some() {
+                let (key, at) = if f.za.is_some() {
+                    ("za", f.za_at)
+                } else {
+                    ("zb", f.zb_at)
+                };
+                return Err(field_fail(
+                    r,
+                    key,
+                    at,
+                    "kot (za, zb) yalnız eğim ölçüsünde yazılır",
+                ));
+            } else {
+                (None, None)
+            };
+            if style == Some(DimensionStyle::Ordinate)
+                && let Some(a) = f.angle
+                && a != 0.0
+                && a != 90.0
+            {
+                return Err(field_fail(
+                    r,
+                    "angle",
+                    f.angle_at,
+                    &format!("koordinat ölçüsünün ekseni {a}; 0 (Y) ya da 90 (X) olmalı"),
+                ));
+            }
+            Entity::Dimension(DimensionEntity {
+                base,
+                a: required(r, f.a, "a")?,
+                b: required(r, f.b, "b")?,
+                offset: required(r, f.offset, "offset")?,
+                height: required(r, f.height, "height")?,
+                text: f.text.take(),
+                style,
+                angle: f.angle,
+                c,
+                mask: f.mask.unwrap_or(false),
+                za,
+                zb,
+            })
+        }
         Kind::Hatch => Entity::Hatch(HatchEntity {
             base,
             ring: required(r, f.ring.take(), "ring")?,
@@ -589,6 +650,14 @@ fn build(
             mask: f.mask.unwrap_or(false),
         }),
     })
+}
+
+/// A refusal of the field `key` (at byte `at`) once its object's map is read: its place names it.
+fn field_fail(r: &mut Reader<'_>, key: &'static str, at: usize, words: &str) -> KcadError {
+    r.push(Seg::Name(key));
+    let e = r.fail_at(Code::BadValue, at, words);
+    r.pop();
+    e
 }
 
 /// A hole of a polygon; `has`: whether the payload's schema gives it elevations.

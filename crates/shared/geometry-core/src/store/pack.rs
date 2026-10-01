@@ -19,7 +19,7 @@
 //! | 7 xline, 8 ray | p.x, p.y, dir.x, dir.y |
 //! | 9 spline | points, closed |
 //! | 10 text | p.x, p.y, height, rotation, text, align, widthFactor, mask |
-//! | 11 dimension | a.x, a.y, b.x, b.y, offset, height, text?, style?, hasAngle, angle, hasC, c.x, c.y |
+//! | 11 dimension | a.x, a.y, b.x, b.y, offset, height, text?, style?, hasAngle, angle, hasC, c.x, c.y, mask, za, zb |
 //! | 12 hatch | points, hatch holes, pattern type, angle, spacing |
 //! | 13 multi-part polygon | path, holes, part count, then per part: path, holes |
 //! | 14 insert | p.x, p.y, scale, rotation, mirror, block, attributes |
@@ -32,7 +32,8 @@
 //! count (−1 for none) of point lists; an insert's `attributes` a count
 //! (−1 for none) of tag and value pairs of strings, its text values (docs/adr/0144
 //! §7: what its block's attribute texts show); a leader's `arrow` (docs/adr/0146)
-//! its name, −1 for the filled arrow. A field left out (`z`, `angle`, `c`)
+//! its name, −1 for the filled arrow. A field left out (`z`, `angle`, `c`, a
+//! dimension's `za` and `zb`, docs/adr/0147)
 //! still takes its numbers, NaN. A multi-part area (docs/adr/0143) is kind
 //! 13, its first part as a polygon's fields and its other parts after them;
 //! a one-part area stays kind 3, laid out as it always was.
@@ -289,6 +290,9 @@ impl Reader<'_> {
                 let angle = self.num()?;
                 let has_c = self.flag()?;
                 let c = self.pt()?;
+                // docs/adr/0147: the mask a flag, the slope's elevations (NaN none).
+                let mask = self.flag()?.then_some(true);
+                let (za, zb) = (self.num()?, self.num()?);
                 Shape::Dimension {
                     a,
                     b,
@@ -298,6 +302,9 @@ impl Reader<'_> {
                     style,
                     angle: has_angle.then_some(angle),
                     c: has_c.then_some(c),
+                    mask,
+                    za: (!za.is_nan()).then_some(za),
+                    zb: (!zb.is_nan()).then_some(zb),
                 }
             }
             12 => {
@@ -490,6 +497,9 @@ impl Packer {
                 style,
                 angle,
                 c,
+                mask,
+                za,
+                zb,
             } => {
                 let t = self.maybe_string(text.as_deref());
                 let st = self.maybe_string(style.as_deref());
@@ -509,6 +519,9 @@ impl Packer {
                     flag(c.is_some()),
                     at.x,
                     at.y,
+                    flag(*mask == Some(true)),
+                    za.unwrap_or(f64::NAN),
+                    zb.unwrap_or(f64::NAN),
                 ]);
             }
             Shape::Hatch {
@@ -726,7 +739,7 @@ mod tests {
             -1.0,
             f64::NAN,
             0.0,
-            // A linear dimension with an angle and no centre.
+            // A linear dimension with an angle and no centre, mask or elevations (docs/adr/0147).
             3.0,
             0.0,
             0.0,
@@ -741,6 +754,9 @@ mod tests {
             2.0,
             1.0,
             90.0,
+            0.0,
+            f64::NAN,
+            f64::NAN,
             0.0,
             f64::NAN,
             f64::NAN,
@@ -824,6 +840,8 @@ mod tests {
         r#"{"kind":"dimension","a":{"x":486520,"y":4420200},"b":{"x":486530,"y":4420200},"offset":2,"height":0.5}"#,
         r#"{"kind":"dimension","a":{"x":0,"y":0},"b":{"x":3,"y":4},"offset":-2,"height":0.5,"text":"12,5 m","style":"linear","angle":90}"#,
         r#"{"kind":"dimension","a":{"x":10,"y":0},"b":{"x":0,"y":10},"offset":5,"height":1,"text":"","style":"angular","c":{"x":0,"y":0}}"#,
+        r#"{"kind":"dimension","a":{"x":486520,"y":4420200},"b":{"x":486540,"y":4420210},"offset":1.5,"height":0.5,"style":"slope","mask":true,"za":105.25,"zb":-0}"#,
+        r#"{"kind":"dimension","a":{"x":0,"y":10},"b":{"x":10,"y":0},"offset":-3,"height":1,"style":"arcLength","c":{"x":0,"y":0}}"#,
         r#"{"kind":"hatch","ring":[{"x":0,"y":0},{"x":4,"y":0},{"x":4,"y":4}],"holes":[[{"x":1,"y":1},{"x":2,"y":1},{"x":2,"y":2}],[]],"pattern":{"type":"cross","angle":30,"spacing":0.5}}"#,
         r#"{"kind":"hatch","ring":[{"x":486520,"y":4420200},{"x":486530,"y":4420200},{"x":486525,"y":4420210}],"pattern":{"type":"solid","angle":0,"spacing":1}}"#,
         r#"{"kind":"leader","pts":[{"x":486520,"y":4420200},{"x":486528,"y":4420206}],"text":"Ø150 PVC","height":2,"rotation":30,"arrow":"open","mask":true}"#,

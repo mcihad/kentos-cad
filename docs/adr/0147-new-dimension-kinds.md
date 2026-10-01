@@ -76,12 +76,13 @@ Her ölçü değerin yüksekliği `h` cinsindendir, öbür ölçülerdeki gibi: 
 ### 3. `.kcad`: belge şeması 9
 
 - **Yenilikler:** beş biçim ile `mask`, `za`, `zb` alanları şema 9'dadır. Yazıcı 9'u yalnız bunlardan biri kullanılınca yazar; öbür çizimler eski şemalarıyla, bayt bayt aynı kalır. Şema 9 şema 8'i kapsar.
-- **Eski şema:** şema 8 ve öncesinde bunlar bilinmez (`bad_value`, yeriyle). Eski okuyucu ölçüyü sessizce başka bir ölçüye çevirmez, dosyayı açmaz.
-- **Okuyucu reddi (`bad_value`):**
-  - yay uzunluğu ve kırıklı yarıçapta `c` yoksa;
-  - koordinatta `angle` 0 ya da 90 değilse;
-  - eğimde `za` ya da `zb` yoksa; öbür biçimlerde varsa;
-  - `mask: false`.
+- **Eski şema:** şema 8 ve öncesinde yeni türler bilinmeyen değer (`bad_value`), yeni alanlar bilinmeyen alandır (`unknown_field`), yeriyle. Eski okuyucu ölçüyü sessizce başka bir ölçüye çevirmez, dosyayı açmaz.
+- **Okuyucu reddi:**
+  - yay uzunluğu ve kırıklı yarıçapta `c`, eğimde `za` ya da `zb` yoksa `missing_field`;
+  - öbür biçimlerde `za` ya da `zb` varsa `bad_value`;
+  - koordinatta `angle` 0 ya da 90 değilse `bad_value`;
+  - `mask: false` `bad_value`.
+  - Yazıcı aynılarını yazmaz, yeriyle reddeder.
 - **Birlikte değişenler (ADR 0025'in kuralı):**
   - spesifikasyon ve şema 9'un paragrafı;
   - Rust kodeği ve tipli sütunlar (`FORMATS_VERSION` artar);
@@ -174,7 +175,7 @@ Bütün ölçüler şeritte, Çizim › Açıklama › **Ölçülendirme ▾** l
 
 ### 10. İş sırası
 
-1. **Sözleşme ve `.kcad` şema 9.** Beş biçim, `mask`, `za`, `zb`; kodek ve tipli sütunlar, belirtim, Python okuyucusu ve yazıcısı, örnekler; iki belge; sunucu.
+1. **Sözleşme ve `.kcad` şema 9.** Beş biçim, `mask`, `za`, `zb`; kodek ve tipli sütunlar, belirtim, Python okuyucusu ve yazıcısı, örnekler; iki belge; sunucu. *(1 Ekim: tamam. Sözleşmede `DimensionStyle`'ın beş yeni değeri (`ALL`, `name`, `from_name`, `is_schema_9`; adlar artık camelCase, eski beşi aynı) ve `DimensionEntity`'nin `mask`, `za`, `zb`'si; komutların geometrisi (`EntityGeometry::Dimension`) ve çekirdeğin şekli (`Shape::Dimension`) bunları taşır, dönüşüm, tutamaç, esnetme ve blok yolları düşürmez; deponun paket kaydı (iki tarafta) üç sayı aldı. KCAD şema 9 yalnız bunlar kullanılınca yazılır; okuyucu ve yazıcı aynı kuralları yeriyle uygular (`missing_field`, `bad_value`, eski şemada `bad_value` ve `unknown_field`). Tipli sütunlarda yeni bayraklar (`FORMATS_VERSION` 18). Bağımsız Python yazıcısı ve okuyucusuyla `dimensions.kcad` (beş tür, zeminli ölçü, blok tanımında eğim) ve sekiz bozuk örnek; desteklenmeyen şema örneği artık 10. Web açılışta aynı kuralları denetler. İki belge yeni ölçüleri taşır (`document-ops` senaryosu). Sunucu denetler ve saklar. Python SDK'sının tipleri yeniden üretildi. Bilinen ara durum: yerleşim 2. adıma dek yeni türleri hizalı ölçü gibi çizer; DXF yazıcısı 5. adıma dek onları KentOS verisi olmadan, çizgileri ve değeriyle yazar ve söyler.)*
 2. **Çekirdek ve çizim.** Beş yerleşim bağımsız başvurusuyla; depo, tutamaçlar, dönüşümler, Patlat; iki çizicide değer, önek, yüzde ve zemin.
 3. **Komutlar.** `create` ve `edit`; ortak durumlar üç koşucuda.
 4. **Araç ve arayüz.** İki platformda izler ve resimlerle, dört parça:

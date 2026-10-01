@@ -455,6 +455,9 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             style,
             angle,
             c,
+            mask,
+            za,
+            zb,
         } => {
             let d = |a: Vec2, b: Vec2, offset: f64, c: Option<Vec2>| Shape::Dimension {
                 a,
@@ -465,6 +468,9 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
                 style: style.clone(),
                 angle: *angle,
                 c,
+                mask: *mask,
+                za: *za,
+                zb: *zb,
             };
             match index {
                 0 => {

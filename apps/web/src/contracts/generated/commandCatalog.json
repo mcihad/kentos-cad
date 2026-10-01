@@ -489,7 +489,7 @@
                     "type": "null"
                   }
                 ],
-                "description": "Angular: the vertex."
+                "description": "Angular: the vertex. Arc length: the arc's centre. Jogged: the centre\nthe line starts from (docs/adr/0147)."
               },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
@@ -526,6 +526,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The value is drawn over the drawing's background (docs/adr/0147, as a\ntext's mask, docs/adr/0145).",
+                "type": "boolean"
+              },
               "offset": {
                 "format": "double",
                 "type": "number"
@@ -552,6 +556,21 @@
                   "string",
                   "null"
                 ]
+              },
+              "za": {
+                "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "zb": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -566,14 +585,44 @@
             "type": "object"
           },
           "DimensionStyle": {
-            "enum": [
-              "aligned",
-              "linear",
-              "angular",
-              "radius",
-              "diameter"
-            ],
-            "type": "string"
+            "description": "A dimension's kind (none: aligned). The last five came with KCAD schema 9\n(docs/adr/0147): what `a`, `b`, `c`, `offset`, `angle`, `za` and `zb`\nmean for each is the ADR's table.",
+            "oneOf": [
+              {
+                "enum": [
+                  "aligned",
+                  "linear",
+                  "angular",
+                  "radius",
+                  "diameter"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "ordinate",
+                "description": "Koordinat: the point's Y (`angle` 0) or X (`angle` 90).",
+                "type": "string"
+              },
+              {
+                "const": "arcLength",
+                "description": "Yay uzunluğu: the arc about `c` from `a` to `b`, counter-clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "jogged",
+                "description": "Kırıklı yarıçap: the radius about `a` through `b`, drawn from `c`.",
+                "type": "string"
+              },
+              {
+                "const": "azimuth",
+                "description": "Semt: the direction from `a` to `b`, from north clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "slope",
+                "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              }
+            ]
           },
           "DrawingFont": {
             "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
@@ -3524,7 +3573,7 @@
                     "type": "null"
                   }
                 ],
-                "description": "Angular: the vertex."
+                "description": "Angular: the vertex. Arc length: the arc's centre. Jogged: the centre\nthe line starts from (docs/adr/0147)."
               },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
@@ -3561,6 +3610,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The value is drawn over the drawing's background (docs/adr/0147, as a\ntext's mask, docs/adr/0145).",
+                "type": "boolean"
+              },
               "offset": {
                 "format": "double",
                 "type": "number"
@@ -3587,6 +3640,21 @@
                   "string",
                   "null"
                 ]
+              },
+              "za": {
+                "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "zb": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -3601,14 +3669,44 @@
             "type": "object"
           },
           "DimensionStyle": {
-            "enum": [
-              "aligned",
-              "linear",
-              "angular",
-              "radius",
-              "diameter"
-            ],
-            "type": "string"
+            "description": "A dimension's kind (none: aligned). The last five came with KCAD schema 9\n(docs/adr/0147): what `a`, `b`, `c`, `offset`, `angle`, `za` and `zb`\nmean for each is the ADR's table.",
+            "oneOf": [
+              {
+                "enum": [
+                  "aligned",
+                  "linear",
+                  "angular",
+                  "radius",
+                  "diameter"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "ordinate",
+                "description": "Koordinat: the point's Y (`angle` 0) or X (`angle` 90).",
+                "type": "string"
+              },
+              {
+                "const": "arcLength",
+                "description": "Yay uzunluğu: the arc about `c` from `a` to `b`, counter-clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "jogged",
+                "description": "Kırıklı yarıçap: the radius about `a` through `b`, drawn from `c`.",
+                "type": "string"
+              },
+              {
+                "const": "azimuth",
+                "description": "Semt: the direction from `a` to `b`, from north clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "slope",
+                "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              }
+            ]
           },
           "DrawingFont": {
             "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
@@ -11049,7 +11147,7 @@
                     "type": "null"
                   }
                 ],
-                "description": "Angular: the vertex."
+                "description": "Angular: the vertex. Arc length: the arc's centre. Jogged: the centre\nthe line starts from (docs/adr/0147)."
               },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
@@ -11086,6 +11184,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The value is drawn over the drawing's background (docs/adr/0147, as a\ntext's mask, docs/adr/0145).",
+                "type": "boolean"
+              },
               "offset": {
                 "format": "double",
                 "type": "number"
@@ -11112,6 +11214,21 @@
                   "string",
                   "null"
                 ]
+              },
+              "za": {
+                "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "zb": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -11126,14 +11243,44 @@
             "type": "object"
           },
           "DimensionStyle": {
-            "enum": [
-              "aligned",
-              "linear",
-              "angular",
-              "radius",
-              "diameter"
-            ],
-            "type": "string"
+            "description": "A dimension's kind (none: aligned). The last five came with KCAD schema 9\n(docs/adr/0147): what `a`, `b`, `c`, `offset`, `angle`, `za` and `zb`\nmean for each is the ADR's table.",
+            "oneOf": [
+              {
+                "enum": [
+                  "aligned",
+                  "linear",
+                  "angular",
+                  "radius",
+                  "diameter"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "ordinate",
+                "description": "Koordinat: the point's Y (`angle` 0) or X (`angle` 90).",
+                "type": "string"
+              },
+              {
+                "const": "arcLength",
+                "description": "Yay uzunluğu: the arc about `c` from `a` to `b`, counter-clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "jogged",
+                "description": "Kırıklı yarıçap: the radius about `a` through `b`, drawn from `c`.",
+                "type": "string"
+              },
+              {
+                "const": "azimuth",
+                "description": "Semt: the direction from `a` to `b`, from north clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "slope",
+                "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -12749,7 +12896,7 @@
                     "type": "null"
                   }
                 ],
-                "description": "Angular: the vertex."
+                "description": "Angular: the vertex. Arc length: the arc's centre. Jogged: the centre\nthe line starts from (docs/adr/0147)."
               },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
@@ -12786,6 +12933,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The value is drawn over the drawing's background (docs/adr/0147, as a\ntext's mask, docs/adr/0145).",
+                "type": "boolean"
+              },
               "offset": {
                 "format": "double",
                 "type": "number"
@@ -12812,6 +12963,21 @@
                   "string",
                   "null"
                 ]
+              },
+              "za": {
+                "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "zb": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -12826,14 +12992,44 @@
             "type": "object"
           },
           "DimensionStyle": {
-            "enum": [
-              "aligned",
-              "linear",
-              "angular",
-              "radius",
-              "diameter"
-            ],
-            "type": "string"
+            "description": "A dimension's kind (none: aligned). The last five came with KCAD schema 9\n(docs/adr/0147): what `a`, `b`, `c`, `offset`, `angle`, `za` and `zb`\nmean for each is the ADR's table.",
+            "oneOf": [
+              {
+                "enum": [
+                  "aligned",
+                  "linear",
+                  "angular",
+                  "radius",
+                  "diameter"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "ordinate",
+                "description": "Koordinat: the point's Y (`angle` 0) or X (`angle` 90).",
+                "type": "string"
+              },
+              {
+                "const": "arcLength",
+                "description": "Yay uzunluğu: the arc about `c` from `a` to `b`, counter-clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "jogged",
+                "description": "Kırıklı yarıçap: the radius about `a` through `b`, drawn from `c`.",
+                "type": "string"
+              },
+              {
+                "const": "azimuth",
+                "description": "Semt: the direction from `a` to `b`, from north clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "slope",
+                "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -14410,7 +14606,7 @@
                     "type": "null"
                   }
                 ],
-                "description": "Angular: the vertex."
+                "description": "Angular: the vertex. Arc length: the arc's centre. Jogged: the centre\nthe line starts from (docs/adr/0147)."
               },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
@@ -14447,6 +14643,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The value is drawn over the drawing's background (docs/adr/0147, as a\ntext's mask, docs/adr/0145).",
+                "type": "boolean"
+              },
               "offset": {
                 "format": "double",
                 "type": "number"
@@ -14473,6 +14673,21 @@
                   "string",
                   "null"
                 ]
+              },
+              "za": {
+                "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "zb": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -14487,14 +14702,44 @@
             "type": "object"
           },
           "DimensionStyle": {
-            "enum": [
-              "aligned",
-              "linear",
-              "angular",
-              "radius",
-              "diameter"
-            ],
-            "type": "string"
+            "description": "A dimension's kind (none: aligned). The last five came with KCAD schema 9\n(docs/adr/0147): what `a`, `b`, `c`, `offset`, `angle`, `za` and `zb`\nmean for each is the ADR's table.",
+            "oneOf": [
+              {
+                "enum": [
+                  "aligned",
+                  "linear",
+                  "angular",
+                  "radius",
+                  "diameter"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "ordinate",
+                "description": "Koordinat: the point's Y (`angle` 0) or X (`angle` 90).",
+                "type": "string"
+              },
+              {
+                "const": "arcLength",
+                "description": "Yay uzunluğu: the arc about `c` from `a` to `b`, counter-clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "jogged",
+                "description": "Kırıklı yarıçap: the radius about `a` through `b`, drawn from `c`.",
+                "type": "string"
+              },
+              {
+                "const": "azimuth",
+                "description": "Semt: the direction from `a` to `b`, from north clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "slope",
+                "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -16213,7 +16458,7 @@
                     "type": "null"
                   }
                 ],
-                "description": "Angular: the vertex."
+                "description": "Angular: the vertex. Arc length: the arc's centre. Jogged: the centre\nthe line starts from (docs/adr/0147)."
               },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
@@ -16250,6 +16495,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The value is drawn over the drawing's background (docs/adr/0147, as a\ntext's mask, docs/adr/0145).",
+                "type": "boolean"
+              },
               "offset": {
                 "format": "double",
                 "type": "number"
@@ -16276,6 +16525,21 @@
                   "string",
                   "null"
                 ]
+              },
+              "za": {
+                "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "zb": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -16290,14 +16554,44 @@
             "type": "object"
           },
           "DimensionStyle": {
-            "enum": [
-              "aligned",
-              "linear",
-              "angular",
-              "radius",
-              "diameter"
-            ],
-            "type": "string"
+            "description": "A dimension's kind (none: aligned). The last five came with KCAD schema 9\n(docs/adr/0147): what `a`, `b`, `c`, `offset`, `angle`, `za` and `zb`\nmean for each is the ADR's table.",
+            "oneOf": [
+              {
+                "enum": [
+                  "aligned",
+                  "linear",
+                  "angular",
+                  "radius",
+                  "diameter"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "ordinate",
+                "description": "Koordinat: the point's Y (`angle` 0) or X (`angle` 90).",
+                "type": "string"
+              },
+              {
+                "const": "arcLength",
+                "description": "Yay uzunluğu: the arc about `c` from `a` to `b`, counter-clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "jogged",
+                "description": "Kırıklı yarıçap: the radius about `a` through `b`, drawn from `c`.",
+                "type": "string"
+              },
+              {
+                "const": "azimuth",
+                "description": "Semt: the direction from `a` to `b`, from north clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "slope",
+                "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -17859,7 +18153,7 @@
                     "type": "null"
                   }
                 ],
-                "description": "Angular: the vertex."
+                "description": "Angular: the vertex. Arc length: the arc's centre. Jogged: the centre\nthe line starts from (docs/adr/0147)."
               },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
@@ -17896,6 +18190,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The value is drawn over the drawing's background (docs/adr/0147, as a\ntext's mask, docs/adr/0145).",
+                "type": "boolean"
+              },
               "offset": {
                 "format": "double",
                 "type": "number"
@@ -17922,6 +18220,21 @@
                   "string",
                   "null"
                 ]
+              },
+              "za": {
+                "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "zb": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -17936,14 +18249,44 @@
             "type": "object"
           },
           "DimensionStyle": {
-            "enum": [
-              "aligned",
-              "linear",
-              "angular",
-              "radius",
-              "diameter"
-            ],
-            "type": "string"
+            "description": "A dimension's kind (none: aligned). The last five came with KCAD schema 9\n(docs/adr/0147): what `a`, `b`, `c`, `offset`, `angle`, `za` and `zb`\nmean for each is the ADR's table.",
+            "oneOf": [
+              {
+                "enum": [
+                  "aligned",
+                  "linear",
+                  "angular",
+                  "radius",
+                  "diameter"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "ordinate",
+                "description": "Koordinat: the point's Y (`angle` 0) or X (`angle` 90).",
+                "type": "string"
+              },
+              {
+                "const": "arcLength",
+                "description": "Yay uzunluğu: the arc about `c` from `a` to `b`, counter-clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "jogged",
+                "description": "Kırıklı yarıçap: the radius about `a` through `b`, drawn from `c`.",
+                "type": "string"
+              },
+              {
+                "const": "azimuth",
+                "description": "Semt: the direction from `a` to `b`, from north clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "slope",
+                "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -19515,7 +19858,7 @@
                     "type": "null"
                   }
                 ],
-                "description": "Angular: the vertex."
+                "description": "Angular: the vertex. Arc length: the arc's centre. Jogged: the centre\nthe line starts from (docs/adr/0147)."
               },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
@@ -19552,6 +19895,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The value is drawn over the drawing's background (docs/adr/0147, as a\ntext's mask, docs/adr/0145).",
+                "type": "boolean"
+              },
               "offset": {
                 "format": "double",
                 "type": "number"
@@ -19578,6 +19925,21 @@
                   "string",
                   "null"
                 ]
+              },
+              "za": {
+                "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "zb": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -19592,14 +19954,44 @@
             "type": "object"
           },
           "DimensionStyle": {
-            "enum": [
-              "aligned",
-              "linear",
-              "angular",
-              "radius",
-              "diameter"
-            ],
-            "type": "string"
+            "description": "A dimension's kind (none: aligned). The last five came with KCAD schema 9\n(docs/adr/0147): what `a`, `b`, `c`, `offset`, `angle`, `za` and `zb`\nmean for each is the ADR's table.",
+            "oneOf": [
+              {
+                "enum": [
+                  "aligned",
+                  "linear",
+                  "angular",
+                  "radius",
+                  "diameter"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "ordinate",
+                "description": "Koordinat: the point's Y (`angle` 0) or X (`angle` 90).",
+                "type": "string"
+              },
+              {
+                "const": "arcLength",
+                "description": "Yay uzunluğu: the arc about `c` from `a` to `b`, counter-clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "jogged",
+                "description": "Kırıklı yarıçap: the radius about `a` through `b`, drawn from `c`.",
+                "type": "string"
+              },
+              {
+                "const": "azimuth",
+                "description": "Semt: the direction from `a` to `b`, from north clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "slope",
+                "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -21292,7 +21684,7 @@
                     "type": "null"
                   }
                 ],
-                "description": "Angular: the vertex."
+                "description": "Angular: the vertex. Arc length: the arc's centre. Jogged: the centre\nthe line starts from (docs/adr/0147)."
               },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
@@ -21329,6 +21721,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The value is drawn over the drawing's background (docs/adr/0147, as a\ntext's mask, docs/adr/0145).",
+                "type": "boolean"
+              },
               "offset": {
                 "format": "double",
                 "type": "number"
@@ -21355,6 +21751,21 @@
                   "string",
                   "null"
                 ]
+              },
+              "za": {
+                "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "zb": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -21369,14 +21780,44 @@
             "type": "object"
           },
           "DimensionStyle": {
-            "enum": [
-              "aligned",
-              "linear",
-              "angular",
-              "radius",
-              "diameter"
-            ],
-            "type": "string"
+            "description": "A dimension's kind (none: aligned). The last five came with KCAD schema 9\n(docs/adr/0147): what `a`, `b`, `c`, `offset`, `angle`, `za` and `zb`\nmean for each is the ADR's table.",
+            "oneOf": [
+              {
+                "enum": [
+                  "aligned",
+                  "linear",
+                  "angular",
+                  "radius",
+                  "diameter"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "ordinate",
+                "description": "Koordinat: the point's Y (`angle` 0) or X (`angle` 90).",
+                "type": "string"
+              },
+              {
+                "const": "arcLength",
+                "description": "Yay uzunluğu: the arc about `c` from `a` to `b`, counter-clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "jogged",
+                "description": "Kırıklı yarıçap: the radius about `a` through `b`, drawn from `c`.",
+                "type": "string"
+              },
+              {
+                "const": "azimuth",
+                "description": "Semt: the direction from `a` to `b`, from north clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "slope",
+                "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -22657,14 +23098,44 @@
             "type": "string"
           },
           "DimensionStyle": {
-            "enum": [
-              "aligned",
-              "linear",
-              "angular",
-              "radius",
-              "diameter"
-            ],
-            "type": "string"
+            "description": "A dimension's kind (none: aligned). The last five came with KCAD schema 9\n(docs/adr/0147): what `a`, `b`, `c`, `offset`, `angle`, `za` and `zb`\nmean for each is the ADR's table.",
+            "oneOf": [
+              {
+                "enum": [
+                  "aligned",
+                  "linear",
+                  "angular",
+                  "radius",
+                  "diameter"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "ordinate",
+                "description": "Koordinat: the point's Y (`angle` 0) or X (`angle` 90).",
+                "type": "string"
+              },
+              {
+                "const": "arcLength",
+                "description": "Yay uzunluğu: the arc about `c` from `a` to `b`, counter-clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "jogged",
+                "description": "Kırıklı yarıçap: the radius about `a` through `b`, drawn from `c`.",
+                "type": "string"
+              },
+              {
+                "const": "azimuth",
+                "description": "Semt: the direction from `a` to `b`, from north clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "slope",
+                "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              }
+            ]
           },
           "EditOperation": {
             "description": "The modify tool an edit comes from; it names the undo step.",
@@ -23348,7 +23819,7 @@
                 "type": "object"
               },
               {
-                "description": "A dimension from `a` to `b` (an angular one's vertex is `c`), its line\n`offset` metres away, its text `height` metres high; `text` replaces\nthe measured value, `angle` is a linear one's measured direction in\ndegrees counter-clockwise from east (0 = ΔY, 90 = ΔX).",
+                "description": "A dimension from `a` to `b` (an angular one's vertex is `c`), its line\n`offset` metres away, its text `height` metres high; `text` replaces\nthe measured value, `angle` is a linear one's measured direction in\ndegrees counter-clockwise from east (0 = ΔY, 90 = ΔX). What the fields\nmean for the styles of docs/adr/0147 (an ordinate's `angle`, an arc\nlength's and a jogged one's `c`, a slope's `za` and `zb`) is that ADR's\ntable.",
                 "properties": {
                   "a": {
                     "$ref": "#/$defs/Vec2"
@@ -23381,6 +23852,10 @@
                     "const": "dimension",
                     "type": "string"
                   },
+                  "mask": {
+                    "description": "The value over the drawing's background (docs/adr/0147).",
+                    "type": "boolean"
+                  },
                   "offset": {
                     "format": "double",
                     "type": "number"
@@ -23398,6 +23873,21 @@
                   "text": {
                     "type": [
                       "string",
+                      "null"
+                    ]
+                  },
+                  "za": {
+                    "description": "A slope's two elevations, metres (docs/adr/0147).",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "zb": {
+                    "format": "double",
+                    "type": [
+                      "number",
                       "null"
                     ]
                   }
@@ -24024,7 +24514,7 @@
                     "type": "null"
                   }
                 ],
-                "description": "Angular: the vertex."
+                "description": "Angular: the vertex. Arc length: the arc's centre. Jogged: the centre\nthe line starts from (docs/adr/0147)."
               },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
@@ -24061,6 +24551,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The value is drawn over the drawing's background (docs/adr/0147, as a\ntext's mask, docs/adr/0145).",
+                "type": "boolean"
+              },
               "offset": {
                 "format": "double",
                 "type": "number"
@@ -24087,6 +24581,21 @@
                   "string",
                   "null"
                 ]
+              },
+              "za": {
+                "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "zb": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -24101,14 +24610,44 @@
             "type": "object"
           },
           "DimensionStyle": {
-            "enum": [
-              "aligned",
-              "linear",
-              "angular",
-              "radius",
-              "diameter"
-            ],
-            "type": "string"
+            "description": "A dimension's kind (none: aligned). The last five came with KCAD schema 9\n(docs/adr/0147): what `a`, `b`, `c`, `offset`, `angle`, `za` and `zb`\nmean for each is the ADR's table.",
+            "oneOf": [
+              {
+                "enum": [
+                  "aligned",
+                  "linear",
+                  "angular",
+                  "radius",
+                  "diameter"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "ordinate",
+                "description": "Koordinat: the point's Y (`angle` 0) or X (`angle` 90).",
+                "type": "string"
+              },
+              {
+                "const": "arcLength",
+                "description": "Yay uzunluğu: the arc about `c` from `a` to `b`, counter-clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "jogged",
+                "description": "Kırıklı yarıçap: the radius about `a` through `b`, drawn from `c`.",
+                "type": "string"
+              },
+              {
+                "const": "azimuth",
+                "description": "Semt: the direction from `a` to `b`, from north clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "slope",
+                "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -25816,7 +26355,7 @@
                     "type": "null"
                   }
                 ],
-                "description": "Angular: the vertex."
+                "description": "Angular: the vertex. Arc length: the arc's centre. Jogged: the centre\nthe line starts from (docs/adr/0147)."
               },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
@@ -25853,6 +26392,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The value is drawn over the drawing's background (docs/adr/0147, as a\ntext's mask, docs/adr/0145).",
+                "type": "boolean"
+              },
               "offset": {
                 "format": "double",
                 "type": "number"
@@ -25879,6 +26422,21 @@
                   "string",
                   "null"
                 ]
+              },
+              "za": {
+                "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "zb": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -25893,14 +26451,44 @@
             "type": "object"
           },
           "DimensionStyle": {
-            "enum": [
-              "aligned",
-              "linear",
-              "angular",
-              "radius",
-              "diameter"
-            ],
-            "type": "string"
+            "description": "A dimension's kind (none: aligned). The last five came with KCAD schema 9\n(docs/adr/0147): what `a`, `b`, `c`, `offset`, `angle`, `za` and `zb`\nmean for each is the ADR's table.",
+            "oneOf": [
+              {
+                "enum": [
+                  "aligned",
+                  "linear",
+                  "angular",
+                  "radius",
+                  "diameter"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "ordinate",
+                "description": "Koordinat: the point's Y (`angle` 0) or X (`angle` 90).",
+                "type": "string"
+              },
+              {
+                "const": "arcLength",
+                "description": "Yay uzunluğu: the arc about `c` from `a` to `b`, counter-clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "jogged",
+                "description": "Kırıklı yarıçap: the radius about `a` through `b`, drawn from `c`.",
+                "type": "string"
+              },
+              {
+                "const": "azimuth",
+                "description": "Semt: the direction from `a` to `b`, from north clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "slope",
+                "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -27235,14 +27823,44 @@
             ]
           },
           "DimensionStyle": {
-            "enum": [
-              "aligned",
-              "linear",
-              "angular",
-              "radius",
-              "diameter"
-            ],
-            "type": "string"
+            "description": "A dimension's kind (none: aligned). The last five came with KCAD schema 9\n(docs/adr/0147): what `a`, `b`, `c`, `offset`, `angle`, `za` and `zb`\nmean for each is the ADR's table.",
+            "oneOf": [
+              {
+                "enum": [
+                  "aligned",
+                  "linear",
+                  "angular",
+                  "radius",
+                  "diameter"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "ordinate",
+                "description": "Koordinat: the point's Y (`angle` 0) or X (`angle` 90).",
+                "type": "string"
+              },
+              {
+                "const": "arcLength",
+                "description": "Yay uzunluğu: the arc about `c` from `a` to `b`, counter-clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "jogged",
+                "description": "Kırıklı yarıçap: the radius about `a` through `b`, drawn from `c`.",
+                "type": "string"
+              },
+              {
+                "const": "azimuth",
+                "description": "Semt: the direction from `a` to `b`, from north clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "slope",
+                "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              }
+            ]
           },
           "EntityGeometry": {
             "description": "A drawing object's geometry alone: its kind and the fields that place and\nshape it, without the fields every object has (layer, colour, attributes,\nlabel, symbol). Coordinates are x east (Y), y north (X), in the project's\nunits (m), float64; angles in radians unless said otherwise.",
@@ -27622,7 +28240,7 @@
                 "type": "object"
               },
               {
-                "description": "A dimension from `a` to `b` (an angular one's vertex is `c`), its line\n`offset` metres away, its text `height` metres high; `text` replaces\nthe measured value, `angle` is a linear one's measured direction in\ndegrees counter-clockwise from east (0 = ΔY, 90 = ΔX).",
+                "description": "A dimension from `a` to `b` (an angular one's vertex is `c`), its line\n`offset` metres away, its text `height` metres high; `text` replaces\nthe measured value, `angle` is a linear one's measured direction in\ndegrees counter-clockwise from east (0 = ΔY, 90 = ΔX). What the fields\nmean for the styles of docs/adr/0147 (an ordinate's `angle`, an arc\nlength's and a jogged one's `c`, a slope's `za` and `zb`) is that ADR's\ntable.",
                 "properties": {
                   "a": {
                     "$ref": "#/$defs/Vec2"
@@ -27655,6 +28273,10 @@
                     "const": "dimension",
                     "type": "string"
                   },
+                  "mask": {
+                    "description": "The value over the drawing's background (docs/adr/0147).",
+                    "type": "boolean"
+                  },
                   "offset": {
                     "format": "double",
                     "type": "number"
@@ -27672,6 +28294,21 @@
                   "text": {
                     "type": [
                       "string",
+                      "null"
+                    ]
+                  },
+                  "za": {
+                    "description": "A slope's two elevations, metres (docs/adr/0147).",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "zb": {
+                    "format": "double",
+                    "type": [
+                      "number",
                       "null"
                     ]
                   }
@@ -28350,7 +28987,7 @@
                     "type": "null"
                   }
                 ],
-                "description": "Angular: the vertex."
+                "description": "Angular: the vertex. Arc length: the arc's centre. Jogged: the centre\nthe line starts from (docs/adr/0147)."
               },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
@@ -28387,6 +29024,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The value is drawn over the drawing's background (docs/adr/0147, as a\ntext's mask, docs/adr/0145).",
+                "type": "boolean"
+              },
               "offset": {
                 "format": "double",
                 "type": "number"
@@ -28413,6 +29054,21 @@
                   "string",
                   "null"
                 ]
+              },
+              "za": {
+                "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "zb": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -28427,14 +29083,44 @@
             "type": "object"
           },
           "DimensionStyle": {
-            "enum": [
-              "aligned",
-              "linear",
-              "angular",
-              "radius",
-              "diameter"
-            ],
-            "type": "string"
+            "description": "A dimension's kind (none: aligned). The last five came with KCAD schema 9\n(docs/adr/0147): what `a`, `b`, `c`, `offset`, `angle`, `za` and `zb`\nmean for each is the ADR's table.",
+            "oneOf": [
+              {
+                "enum": [
+                  "aligned",
+                  "linear",
+                  "angular",
+                  "radius",
+                  "diameter"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "ordinate",
+                "description": "Koordinat: the point's Y (`angle` 0) or X (`angle` 90).",
+                "type": "string"
+              },
+              {
+                "const": "arcLength",
+                "description": "Yay uzunluğu: the arc about `c` from `a` to `b`, counter-clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "jogged",
+                "description": "Kırıklı yarıçap: the radius about `a` through `b`, drawn from `c`.",
+                "type": "string"
+              },
+              {
+                "const": "azimuth",
+                "description": "Semt: the direction from `a` to `b`, from north clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "slope",
+                "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -30138,7 +30824,7 @@
                     "type": "null"
                   }
                 ],
-                "description": "Angular: the vertex."
+                "description": "Angular: the vertex. Arc length: the arc's centre. Jogged: the centre\nthe line starts from (docs/adr/0147)."
               },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
@@ -30175,6 +30861,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The value is drawn over the drawing's background (docs/adr/0147, as a\ntext's mask, docs/adr/0145).",
+                "type": "boolean"
+              },
               "offset": {
                 "format": "double",
                 "type": "number"
@@ -30201,6 +30891,21 @@
                   "string",
                   "null"
                 ]
+              },
+              "za": {
+                "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "zb": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -30215,14 +30920,44 @@
             "type": "object"
           },
           "DimensionStyle": {
-            "enum": [
-              "aligned",
-              "linear",
-              "angular",
-              "radius",
-              "diameter"
-            ],
-            "type": "string"
+            "description": "A dimension's kind (none: aligned). The last five came with KCAD schema 9\n(docs/adr/0147): what `a`, `b`, `c`, `offset`, `angle`, `za` and `zb`\nmean for each is the ADR's table.",
+            "oneOf": [
+              {
+                "enum": [
+                  "aligned",
+                  "linear",
+                  "angular",
+                  "radius",
+                  "diameter"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "ordinate",
+                "description": "Koordinat: the point's Y (`angle` 0) or X (`angle` 90).",
+                "type": "string"
+              },
+              {
+                "const": "arcLength",
+                "description": "Yay uzunluğu: the arc about `c` from `a` to `b`, counter-clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "jogged",
+                "description": "Kırıklı yarıçap: the radius about `a` through `b`, drawn from `c`.",
+                "type": "string"
+              },
+              {
+                "const": "azimuth",
+                "description": "Semt: the direction from `a` to `b`, from north clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "slope",
+                "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -31927,7 +32662,7 @@
                     "type": "null"
                   }
                 ],
-                "description": "Angular: the vertex."
+                "description": "Angular: the vertex. Arc length: the arc's centre. Jogged: the centre\nthe line starts from (docs/adr/0147)."
               },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
@@ -31964,6 +32699,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The value is drawn over the drawing's background (docs/adr/0147, as a\ntext's mask, docs/adr/0145).",
+                "type": "boolean"
+              },
               "offset": {
                 "format": "double",
                 "type": "number"
@@ -31990,6 +32729,21 @@
                   "string",
                   "null"
                 ]
+              },
+              "za": {
+                "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "zb": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -32004,14 +32758,44 @@
             "type": "object"
           },
           "DimensionStyle": {
-            "enum": [
-              "aligned",
-              "linear",
-              "angular",
-              "radius",
-              "diameter"
-            ],
-            "type": "string"
+            "description": "A dimension's kind (none: aligned). The last five came with KCAD schema 9\n(docs/adr/0147): what `a`, `b`, `c`, `offset`, `angle`, `za` and `zb`\nmean for each is the ADR's table.",
+            "oneOf": [
+              {
+                "enum": [
+                  "aligned",
+                  "linear",
+                  "angular",
+                  "radius",
+                  "diameter"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "ordinate",
+                "description": "Koordinat: the point's Y (`angle` 0) or X (`angle` 90).",
+                "type": "string"
+              },
+              {
+                "const": "arcLength",
+                "description": "Yay uzunluğu: the arc about `c` from `a` to `b`, counter-clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "jogged",
+                "description": "Kırıklı yarıçap: the radius about `a` through `b`, drawn from `c`.",
+                "type": "string"
+              },
+              {
+                "const": "azimuth",
+                "description": "Semt: the direction from `a` to `b`, from north clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "slope",
+                "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -33880,7 +34664,7 @@
                     "type": "null"
                   }
                 ],
-                "description": "Angular: the vertex."
+                "description": "Angular: the vertex. Arc length: the arc's centre. Jogged: the centre\nthe line starts from (docs/adr/0147)."
               },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
@@ -33917,6 +34701,10 @@
                   "null"
                 ]
               },
+              "mask": {
+                "description": "The value is drawn over the drawing's background (docs/adr/0147, as a\ntext's mask, docs/adr/0145).",
+                "type": "boolean"
+              },
               "offset": {
                 "format": "double",
                 "type": "number"
@@ -33943,6 +34731,21 @@
                   "string",
                   "null"
                 ]
+              },
+              "za": {
+                "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "zb": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -33957,14 +34760,44 @@
             "type": "object"
           },
           "DimensionStyle": {
-            "enum": [
-              "aligned",
-              "linear",
-              "angular",
-              "radius",
-              "diameter"
-            ],
-            "type": "string"
+            "description": "A dimension's kind (none: aligned). The last five came with KCAD schema 9\n(docs/adr/0147): what `a`, `b`, `c`, `offset`, `angle`, `za` and `zb`\nmean for each is the ADR's table.",
+            "oneOf": [
+              {
+                "enum": [
+                  "aligned",
+                  "linear",
+                  "angular",
+                  "radius",
+                  "diameter"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "ordinate",
+                "description": "Koordinat: the point's Y (`angle` 0) or X (`angle` 90).",
+                "type": "string"
+              },
+              {
+                "const": "arcLength",
+                "description": "Yay uzunluğu: the arc about `c` from `a` to `b`, counter-clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "jogged",
+                "description": "Kırıklı yarıçap: the radius about `a` through `b`, drawn from `c`.",
+                "type": "string"
+              },
+              {
+                "const": "azimuth",
+                "description": "Semt: the direction from `a` to `b`, from north clockwise.",
+                "type": "string"
+              },
+              {
+                "const": "slope",
+                "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",

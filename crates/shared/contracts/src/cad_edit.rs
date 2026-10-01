@@ -234,7 +234,10 @@ pub enum EntityGeometry {
     /// A dimension from `a` to `b` (an angular one's vertex is `c`), its line
     /// `offset` metres away, its text `height` metres high; `text` replaces
     /// the measured value, `angle` is a linear one's measured direction in
-    /// degrees counter-clockwise from east (0 = ΔY, 90 = ΔX).
+    /// degrees counter-clockwise from east (0 = ΔY, 90 = ΔX). What the fields
+    /// mean for the styles of docs/adr/0147 (an ordinate's `angle`, an arc
+    /// length's and a jogged one's `c`, a slope's `za` and `zb`) is that ADR's
+    /// table.
     Dimension {
         a: Vec2,
         b: Vec2,
@@ -252,6 +255,17 @@ pub enum EntityGeometry {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         c: Option<Vec2>,
+        /// The value over the drawing's background (docs/adr/0147).
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        mask: bool,
+        /// A slope's two elevations, metres (docs/adr/0147).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        za: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        zb: Option<f64>,
     },
     /// A hatched area: its ring, its holes when it has any, and its pattern.
     Hatch {

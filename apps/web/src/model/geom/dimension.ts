@@ -18,7 +18,8 @@ import type { Edge } from './intersect';
  *
  * The layout is computed by the geometry core (docs/adr/0008).
  */
-export type DimensionStyle = 'aligned' | 'linear' | 'angular' | 'radius' | 'diameter';
+/** The last five came with KCAD schema 9 (docs/adr/0147): Koordinat, Yay uzunluğu, Kırıklı yarıçap, Semt, Eğim. */
+export type DimensionStyle = 'aligned' | 'linear' | 'angular' | 'radius' | 'diameter' | 'ordinate' | 'arcLength' | 'jogged' | 'azimuth' | 'slope';
 
 export interface DimensionGeom {
   /** Measured points (radius, diameter: a is the centre, b on the circle). */
@@ -33,10 +34,13 @@ export interface DimensionGeom {
   /** Text height in metres; gaps and ticks are proportional to it. */
   height: number;
   style?: DimensionStyle;
-  /** linear: direction measured along, degrees CCW from east. */
+  /** linear: direction measured along, degrees CCW from east; ordinate: 0 its Y, 90 its X. */
   angle?: number;
-  /** angular: the vertex. */
+  /** angular: the vertex; arc length: the arc's centre; jogged: the centre the line starts from. */
   c?: Vec2;
+  /** slope: the two points' elevations, metres (docs/adr/0147). */
+  za?: number;
+  zb?: number;
 }
 
 export interface DimensionLayout {
@@ -65,6 +69,11 @@ export const DIMENSION_STYLE_LABEL: Record<DimensionStyle, string> = {
   angular: 'Açı',
   radius: 'Yarıçap',
   diameter: 'Çap',
+  ordinate: 'Koordinat',
+  arcLength: 'Yay uzunluğu',
+  jogged: 'Kırıklı yarıçap',
+  azimuth: 'Semt',
+  slope: 'Eğim',
 };
 
 /** Extension and dimension lines, ticks, text place and pick edges of a dimension; null when degenerate. */

@@ -42,6 +42,9 @@ MAGIC = b"\x89KCAD\r\n\x1a\n"
 
 # A text's alignments (spec §6.6, docs/adr/0145); the left of the baseline is the field's absence.
 TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", "bottomRight", "middleLeft", "middleCenter", "middleRight", "topLeft", "topCenter", "topRight")
+# A dimension's kinds (spec §6.6); schema 9 added the last five (docs/adr/0147).
+DIMENSION_STYLES = ("aligned", "linear", "angular", "radius", "diameter", "ordinate", "arcLength", "jogged", "azimuth", "slope")
+SCHEMA_9_STYLES = DIMENSION_STYLES[5:]
 # A leader's arrowheads (spec §6.6, docs/adr/0146); the filled arrow is the field's absence.
 LEADER_ARROWS = ("open", "dot", "none")
 
@@ -299,15 +302,19 @@ KINDS = {
         "widthFactor": (f64, False),
         "mask": (lambda b: boolean(b) if b is True else None, False),
     },
+    # Schema 9 (docs/adr/0147): five more kinds by name, `mask` only when true, a slope's two elevations.
     "dimension": {
         "a": (point, True),
         "b": (point, True),
         "offset": (f64, True),
         "height": (f64, True),
         "text": (text, False),
-        "style": (enum(("aligned", "linear", "angular", "radius", "diameter")), False),
+        "style": (enum(DIMENSION_STYLES), False),
         "angle": (f64, False),
         "c": (point, False),
+        "mask": (lambda b: boolean(b) if b is True else None, False),
+        "za": (f64, False),
+        "zb": (f64, False),
     },
     "hatch": {
         "ring": (points, True),
@@ -401,11 +408,20 @@ def document(d):
 
 
 def schema_of(entities, blocks=None):
-    """The oldest schema that holds the drawing: 8 with a leader, in the drawing or a block definition
-    (docs/adr/0146), 7 with a text's or an attribute definition's alignment, width factor or mask
+    """The oldest schema that holds the drawing: 9 with one of schema 9's dimension kinds, a dimension's mask or a
+    slope's elevations, in the drawing or a block definition (docs/adr/0147), 8 with a leader, in the drawing or a
+    block definition (docs/adr/0146), 7 with a text's or an attribute definition's alignment, width factor or mask
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    def new_dimensions(es):
+        return any(
+            e["kind"] == "dimension" and (e.get("style") in SCHEMA_9_STYLES or any(k in e for k in ("mask", "za", "zb")))
+            for e in es
+        )
+
+    if new_dimensions(entities) or any(new_dimensions(b["entities"]) for b in blocks or []):
+        return 9
     if any(e["kind"] == "leader" for e in entities) or any(e["kind"] == "leader" for b in blocks or [] for e in b["entities"]):
         return 8
     extras = ("align", "widthFactor", "mask")
@@ -599,7 +615,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-9.kcad"] = container(root(cmap(parts), version=b"\x09"))
+    files["schema-version-10.kcad"] = container(root(cmap(parts), version=b"\x0a"))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -711,6 +727,23 @@ def broken(minimal_content, minimal_file):
     files["leader-empty-note.kcad"] = in_schema(8, leader_of(text=text("")))
     files["leader-filled-arrow.kcad"] = in_schema(8, leader_of(arrow=text("filled")))
     files["leader-mask-false.kcad"] = in_schema(8, leader_of(mask=boolean(False)))
+    # The new dimensions are schema 9's (docs/adr/0147): in schema 8 the kinds are unknown values and the fields
+    # unknown fields; an arc length and a jogged radius have their centre, a slope its two elevations and nothing
+    # else has them; an ordinate's axis is 0 or 90; `mask` is written only when true.
+    def dimension_of(**extra):
+        a = point(one["p"])
+        b = point({"x": one["p"]["x"] + 10.0, "y": one["p"]["y"]})
+        return cmap({"dimension": cmap({**common, "a": a, "b": b, "offset": f64(2.0), "height": f64(2.5), **extra})})
+
+    centre = point({"x": one["p"]["x"] + 5.0, "y": one["p"]["y"] - 5.0})
+    files["dimension-ordinate-in-schema-8.kcad"] = in_schema(8, dimension_of(style=text("ordinate"), angle=f64(0.0)))
+    files["dimension-mask-in-schema-8.kcad"] = in_schema(8, dimension_of(mask=boolean(True)))
+    files["dimension-arc-length-without-centre.kcad"] = in_schema(9, dimension_of(style=text("arcLength")))
+    files["dimension-jogged-without-centre.kcad"] = in_schema(9, dimension_of(style=text("jogged")))
+    files["dimension-slope-without-elevations.kcad"] = in_schema(9, dimension_of(style=text("slope"), za=f64(105.0)))
+    files["dimension-elevations-off-slope.kcad"] = in_schema(9, dimension_of(style=text("arcLength"), c=centre, za=f64(105.0)))
+    files["dimension-ordinate-axis.kcad"] = in_schema(9, dimension_of(style=text("ordinate"), angle=f64(45.0)))
+    files["dimension-mask-false.kcad"] = in_schema(9, dimension_of(mask=boolean(False)))
     files["unknown-kind.kcad"] = container(with_parts({**parts, "entities": array([cmap({"block": cmap({**body, "uid": blob(uid_bytes(m["uids"][0]))})})])}))
     files["two-kinds.kcad"] = container(with_parts({**parts, "entities": array([cmap({"line": cmap({}), "point": cmap({**body, "uid": blob(uid_bytes(m["uids"][0]))})})])}))
     files["point-three-numbers.kcad"] = container(with_parts({**parts, "origin": array([f64(1.0), f64(2.0), f64(3.0)])}))
@@ -767,6 +800,7 @@ def build():
     out["blocks.kcad"] = container(document(load("blocks.json")))
     out["texts.kcad"] = container(document(load("texts.json")))
     out["leaders.kcad"] = container(document(load("leaders.json")))
+    out["dimensions.kcad"] = container(document(load("dimensions.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

@@ -1,0 +1,230 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Ölçüler",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "olcu",
+      "name": "Ölçü",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.18
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "olcu",
+  "entities": [
+    {
+      "kind": "dimension",
+      "id": 1,
+      "layerId": "olcu",
+      "attrs": {},
+      "a": {
+        "x": 500010.0,
+        "y": 4400020.0
+      },
+      "b": {
+        "x": 500010.0,
+        "y": 4400035.0
+      },
+      "offset": 0.0,
+      "height": 2.5,
+      "style": "ordinate",
+      "angle": 0.0
+    },
+    {
+      "kind": "dimension",
+      "id": 2,
+      "layerId": "olcu",
+      "attrs": {},
+      "a": {
+        "x": 500010.0,
+        "y": 4400020.0
+      },
+      "b": {
+        "x": 500030.0,
+        "y": 4400026.0
+      },
+      "offset": 0.0,
+      "height": 2.5,
+      "style": "ordinate",
+      "angle": 90.0,
+      "mask": true
+    },
+    {
+      "kind": "dimension",
+      "id": 3,
+      "layerId": "olcu",
+      "attrs": {},
+      "a": {
+        "x": 500060.0,
+        "y": 4400000.0
+      },
+      "b": {
+        "x": 500050.0,
+        "y": 4400010.0
+      },
+      "offset": 2.0,
+      "height": 2.0,
+      "style": "arcLength",
+      "c": {
+        "x": 500050.0,
+        "y": 4400000.0
+      }
+    },
+    {
+      "kind": "dimension",
+      "id": 4,
+      "layerId": "olcu",
+      "attrs": {},
+      "a": {
+        "x": 500380.0,
+        "y": 4399740.0
+      },
+      "b": {
+        "x": 500100.0,
+        "y": 4400040.0
+      },
+      "offset": 3.0,
+      "height": 2.0,
+      "style": "jogged",
+      "c": {
+        "x": 500110.0,
+        "y": 4400030.0
+      }
+    },
+    {
+      "kind": "dimension",
+      "id": 5,
+      "layerId": "olcu",
+      "attrs": {
+        "Not": "poligon kenarı"
+      },
+      "a": {
+        "x": 500000.0,
+        "y": 4400050.0
+      },
+      "b": {
+        "x": 500030.0,
+        "y": 4400070.0
+      },
+      "offset": 2.0,
+      "height": 2.5,
+      "style": "azimuth"
+    },
+    {
+      "kind": "dimension",
+      "id": 6,
+      "layerId": "olcu",
+      "attrs": {},
+      "a": {
+        "x": 500000.0,
+        "y": 4400080.0
+      },
+      "b": {
+        "x": 500040.0,
+        "y": 4400080.0
+      },
+      "offset": 1.5,
+      "height": 2.0,
+      "style": "slope",
+      "za": 105.25,
+      "zb": 104.75,
+      "mask": true,
+      "text": "%1.25 ↓"
+    },
+    {
+      "kind": "dimension",
+      "id": 7,
+      "layerId": "olcu",
+      "attrs": {},
+      "a": {
+        "x": 500000.0,
+        "y": 4400100.0
+      },
+      "b": {
+        "x": 500025.0,
+        "y": 4400100.0
+      },
+      "offset": 3.0,
+      "height": 2.5,
+      "mask": true
+    }
+  ],
+  "uids": [
+    "0192f5a1-3333-7000-8000-000000000101",
+    "0192f5a1-3333-7000-8000-000000000102",
+    "0192f5a1-3333-7000-8000-000000000103",
+    "0192f5a1-3333-7000-8000-000000000104",
+    "0192f5a1-3333-7000-8000-000000000105",
+    "0192f5a1-3333-7000-8000-000000000106",
+    "0192f5a1-3333-7000-8000-000000000107"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "blocks": [
+    {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0147",
+      "name": "Eğim oku",
+      "base": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "entities": [
+        {
+          "kind": "dimension",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "a": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "b": {
+            "x": 10.0,
+            "y": 0.0
+          },
+          "offset": 1.0,
+          "height": 1.0,
+          "style": "slope",
+          "za": 12.0,
+          "zb": 11.8
+        }
+      ]
+    }
+  ]
+}

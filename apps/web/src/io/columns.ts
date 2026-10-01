@@ -44,7 +44,8 @@ export type PageEntity = ContractEntity & { uid?: string };
 /** The kinds, numbered as `kinds` holds them. */
 export const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'spline', 'xline', 'ray', 'text', 'dimension', 'hatch', 'insert', 'leader'] as const;
 const KIND = new Map<string, number>(KINDS.map((k, i) => [k, i]));
-const DIMENSION_STYLES = ['aligned', 'linear', 'angular', 'radius', 'diameter'] as const;
+/** The dimension's kinds in the contract's order (`DimensionStyle::ALL`); KCAD schema 9 added the last five (docs/adr/0147). */
+const DIMENSION_STYLES = ['aligned', 'linear', 'angular', 'radius', 'diameter', 'ordinate', 'arcLength', 'jogged', 'azimuth', 'slope'] as const;
 /** A text's alignments, numbered as the columns hold them (the contract's `TextAlign::ALL`). */
 const TEXT_ALIGNS = ['baselineCenter', 'baselineRight', 'bottomLeft', 'bottomCenter', 'bottomRight', 'middleLeft', 'middleCenter', 'middleRight', 'topLeft', 'topCenter', 'topRight'] as const;
 const HATCH_PATTERNS = ['solid', 'lines', 'cross'] as const;
@@ -63,7 +64,7 @@ const WEIGHT = 8;
  * text, style, angle, c; hatch: holes; insert: mirror). A block's definitions
  * travel in the head, not here (docs/adr/0144).
  */
-const OPT = [1 << 8, 1 << 9, 1 << 10, 1 << 11] as const;
+const OPT = [1 << 8, 1 << 9, 1 << 10, 1 << 11, 1 << 12, 1 << 13, 1 << 14] as const;
 /** A hole's flags: its bulges, its elevations (docs/adr/0142). */
 const HOLE_BULGES = 1;
 const HOLE_ELEVATIONS = 2;
@@ -401,6 +402,11 @@ class Packer {
         }
         if (e.angle !== undefined) (flags |= OPT[2]), this.float(e.angle, 'angle');
         if (e.c !== undefined) (flags |= OPT[3]), this.point(e.c, 'c', kind);
+        // docs/adr/0147: the mask a flag (only true is written), a slope's elevations.
+        if (e.mask === true) flags |= OPT[4];
+        else if (e.mask !== undefined) throw unwritable('bad_value', `${this.where}/mask`, 'zemin yalnız true yazılır; zeminsiz ölçüde alan yoktur');
+        if (e.za !== undefined) (flags |= OPT[5]), this.float(e.za, 'za');
+        if (e.zb !== undefined) (flags |= OPT[6]), this.float(e.zb, 'zb');
         break;
       }
       case 'hatch': {
@@ -689,6 +695,9 @@ export class ColumnsReader {
         if (has(1)) e.style = DIMENSION_STYLES[this.readInt()];
         if (has(2)) e.angle = this.num();
         if (has(3)) e.c = this.pt();
+        if (has(4)) e.mask = true;
+        if (has(5)) e.za = this.num();
+        if (has(6)) e.zb = this.num();
         break;
       case 'hatch': {
         e.ring = this.pts();

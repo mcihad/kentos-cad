@@ -78,13 +78,7 @@ pub(crate) fn label_placement(p: LabelPlacement) -> &'static str {
 }
 
 pub(crate) fn dimension_style(s: DimensionStyle) -> &'static str {
-    match s {
-        DimensionStyle::Aligned => "aligned",
-        DimensionStyle::Linear => "linear",
-        DimensionStyle::Angular => "angular",
-        DimensionStyle::Radius => "radius",
-        DimensionStyle::Diameter => "diameter",
-    }
+    s.name()
 }
 
 pub(crate) fn hatch_pattern(t: HatchPatternType) -> &'static str {
@@ -159,13 +153,7 @@ mod tests {
         ] {
             assert_eq!(label_placement(p), serde_name(p));
         }
-        for s in [
-            DimensionStyle::Aligned,
-            DimensionStyle::Linear,
-            DimensionStyle::Angular,
-            DimensionStyle::Radius,
-            DimensionStyle::Diameter,
-        ] {
+        for s in DimensionStyle::ALL {
             assert_eq!(dimension_style(s), serde_name(s));
         }
         for t in [

@@ -179,24 +179,11 @@ fn ring_back(r: &Ring) -> RingGeometry {
 }
 
 fn style_name(s: DimensionStyle) -> &'static str {
-    match s {
-        DimensionStyle::Aligned => "aligned",
-        DimensionStyle::Linear => "linear",
-        DimensionStyle::Angular => "angular",
-        DimensionStyle::Radius => "radius",
-        DimensionStyle::Diameter => "diameter",
-    }
+    s.name()
 }
 
 fn style_of(name: &str) -> Option<DimensionStyle> {
-    Some(match name {
-        "aligned" => DimensionStyle::Aligned,
-        "linear" => DimensionStyle::Linear,
-        "angular" => DimensionStyle::Angular,
-        "radius" => DimensionStyle::Radius,
-        "diameter" => DimensionStyle::Diameter,
-        _ => return None,
-    })
+    DimensionStyle::from_name(name)
 }
 
 fn pattern_name(k: HatchPatternType) -> &'static str {
@@ -309,6 +296,9 @@ fn shape(e: &Entity) -> Shape {
             style: d.style.map(|s| style_name(s).to_owned()),
             angle: d.angle,
             c: d.c.map(core),
+            mask: d.mask.then_some(true),
+            za: d.za,
+            zb: d.zb,
         },
         Entity::Hatch(h) => Shape::Hatch {
             ring: points(&h.ring),
@@ -473,6 +463,9 @@ fn entity(s: &Shape) -> Option<Entity> {
             style,
             angle,
             c,
+            mask,
+            za,
+            zb,
         } => Entity::Dimension(DimensionEntity {
             base,
             a: back(*a),
@@ -483,6 +476,9 @@ fn entity(s: &Shape) -> Option<Entity> {
             style: style.as_deref().and_then(style_of),
             angle: *angle,
             c: c.map(back),
+            mask: *mask == Some(true),
+            za: *za,
+            zb: *zb,
         }),
         Shape::Hatch {
             ring,

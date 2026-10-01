@@ -210,6 +210,9 @@ impl DimensionChain {
             style: Some(DimensionStyle::Linear),
             angle: g.angle,
             c: None,
+            mask: false,
+            za: None,
+            zb: None,
         };
         let operation = match self.kind {
             Kind::Continue => kentos_contracts::CreateOperation::DimensionChain,

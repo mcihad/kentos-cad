@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`, `3`, `4`, `5`, `6`, `7` ya da `8`; değilse `schema_version` |
+| `version` | tam sayı | `2`, `3`, `4`, `5`, `6`, `7`, `8` ya da `9`; değilse `schema_version` |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -211,7 +211,9 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 
 **Şema 8**, şema 7'nin kendisi ve kılavuzdur: `leader` nesne türü (§6.6; ADR 0146). Yazıcı `8`'i **yalnız çizimde ya da bir blok tanımında kılavuz varken** yazar. Başka her çizim şema 2–7'dir ve eskisiyle bayt bayt aynıdır. Şema 2–7 yükünde `leader` bilinmeyen türdür (`unknown_kind`, `fixtures/kcad/v2/broken/leader-in-schema-7.kcad`): eski okuyucu kılavuzu sessizce düşürmez, dosyayı açmaz. Şema 8 şema 7'yi kapsar.
 
-Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: kılavuz olan çizim 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
+**Şema 9**, şema 8'in kendisi ve yeni ölçülerdir: ölçünün (`dimension`) beş yeni türü (`ordinate`, `arcLength`, `jogged`, `azimuth`, `slope`), zemini (`mask`) ve eğim ölçüsünün iki kotu (`za`, `zb`; §6.6; ADR 0147). Yazıcı `9`'u **yalnız belgenin ya da bir blok tanımının bir ölçüsünde bunlardan biri varken** yazar. Başka her çizim şema 2–8'dir ve eskisiyle bayt bayt aynıdır. Şema 2–8 yükünde yeni türler bilinmeyen değerdir (`bad_value`, `fixtures/kcad/v2/broken/dimension-ordinate-in-schema-8.kcad`), yeni alanlar bilinmeyen alandır (`unknown_field`, `dimension-mask-in-schema-8.kcad`): eski okuyucu yeni ölçüyü sessizce başka bir ölçü olarak çizmez, dosyayı açmaz. Şema 9 şema 8'i kapsar.
+
+Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: yeni ölçüsü olan çizim 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
 
 ### 6.2 Belge
 
@@ -340,7 +342,7 @@ Yanlış CBOR türü (float yerine tam sayı, nokta yerine harita) `wrong_type`'
 | `spline` | `pts` nokta listesi; `closed` bool |
 | `xline`, `ray` | `p`, `dir` nokta |
 | `text` | `p` nokta; `text` metin; `height` float (m); `rotation` float (derece, doğudan saat yönünün tersine); yalnız şema 7 ve sonrası: `align` numaralı metin, `widthFactor` float, `mask` bool (isteğe bağlı; aşağıda) |
-| `dimension` | `a`, `b` nokta; `offset`, `height` float; isteğe bağlı: `c` nokta, `text` metin, `angle` float, `style` numaralı metin (`aligned`, `linear`, `angular`, `radius`, `diameter`) |
+| `dimension` | `a`, `b` nokta; `offset`, `height` float; isteğe bağlı: `c` nokta, `text` metin, `angle` float, `style` numaralı metin (`aligned`, `linear`, `angular`, `radius`, `diameter`; şema 9'da `ordinate`, `arcLength`, `jogged`, `azimuth`, `slope`), şema 9'da `mask` bool, `za`, `zb` float (aşağıda) |
 | `hatch` | `ring` nokta listesi; `holes` nokta listesi dizisi (isteğe bağlı); `pattern` harita: `type` (`solid`, `lines`, `cross`), `angle` float, `spacing` float |
 | `insert` | yalnız şema 6 (§6.9): `block` kimlik (tanımın `id`'si); `p` nokta; `scale` float (pozitif; değilse `bad_value`); `rotation` float (radyan, doğudan saat yönünün tersine); `mirror` bool (isteğe bağlı; yalnız `true` yazılır, `false` `bad_value`) |
 | `leader` | yalnız şema 8 (ADR 0146): `pts` nokta listesi (en az iki); `height` float (m, pozitif); `rotation` float (derece, doğudan saat yönünün tersine); isteğe bağlı: `text` metin, `arrow` numaralı metin, `mask` bool (aşağıda) |
@@ -373,6 +375,14 @@ Yanlış CBOR türü (float yerine tam sayı, nokta yerine harita) `wrong_type`'
   - **`arrow`**: ok başı. Değerler: `open` (açık ok), `dot` (dolu nokta), `none` (ok başı yok). Alan yoksa dolu oktur; bu bir değer değildir, `filled` bilinmeyen değerdir (`bad_value`).
   - **`mask`**: notun kutusu nottan önce çizim alanının zemin rengiyle doldurulur (yazınınki gibi). Yalnız `true` yazılır; `false` `bad_value`'dur.
   - Kılavuzun anahtarları kodlanmış sırasıyla `pts` < `mask` < `text` < `arrow` < `height` < `rotation`'dır (ortak alanlarla birlikte sıralanır). Kılavuz kot almaz.
+- **Yeni ölçüler** (`dimension`, şema 9; ADR 0147). Alanların türe göre anlamı ADR 0147 §1'in tablosundadır:
+  - **`ordinate`** (koordinat): `a` nokta, `b` çizginin ucu; `angle` 0 (Y, noktanın doğusu) ya da 90 (X, kuzeyi), yoksa 0. Başka bir `angle` `bad_value`'dur.
+  - **`arcLength`** (yay uzunluğu): `c` yayın merkezi, `a`'dan `b`'ye saat yönünün tersine yay; `offset` ölçü yayının yaydan uzaklığı. `c` yoksa `missing_field`.
+  - **`jogged`** (kırıklı yarıçap): `a` gerçek merkez, `b` yayın üstünde, `c` çizginin başladığı gösterilen merkez, `offset` kırığın `c`'den uzaklığı. `c` yoksa `missing_field`.
+  - **`azimuth`** (semt): `a`'dan `b`'ye doğrultu; `offset` yazının kenardan işaretli uzaklığı.
+  - **`slope`** (eğim): `a` ile `b` arasındaki eğim; `za` ve `zb` iki noktanın kotu, metre, ikisi de zorunlu (`missing_field`). Başka bir türde `za` ya da `zb` `bad_value`'dur.
+  - **`mask`**: ölçünün değeri çizim alanının zemin rengiyle doldurulan kutusunun üstünde çizilir, her türde. Yalnız `true` yazılır; `false` `bad_value`'dur.
+  - Ölçünün anahtarları kodlanmış sırasıyla `a` < `b` < `c` < `za` < `zb` < `mask` < `text` < `angle` < `style` < `height` < `offset`'tir (ortak alanlarla birlikte sıralanır).
 - Dış başvuru, yüzey ve katı gibi yeni türler ileride şemaya ya da zorunlu bir uzantıya eklenir; eski okuyucu onları tanımadığını söyler.
 
 ### 6.7 Proje stilleri ve opak değerler

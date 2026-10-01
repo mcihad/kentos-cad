@@ -156,6 +156,7 @@ export function packEntities(list: Iterable<object>): Packed {
         num(e.widthFactor);
         out.push(e.mask === true ? 1 : 0);
         break;
+      // docs/adr/0147: the mask a flag, the slope's elevations (NaN none).
       case 11:
         pt(e.a);
         pt(e.b);
@@ -165,6 +166,9 @@ export function packEntities(list: Iterable<object>): Packed {
         num(e.angle);
         out.push(e.c == null ? 0 : 1);
         pt(e.c);
+        out.push(e.mask === true ? 1 : 0);
+        num(e.za);
+        num(e.zb);
         break;
       case 12: {
         points(e.ring);
@@ -359,11 +363,17 @@ export function unpackEntities(p: Packed): Unpacked[] {
         const angle = num();
         const hasC = flag();
         const c = pt();
+        const mask = flag();
+        const za = num();
+        const zb = num();
         g = { kind, a, b, offset, height };
         if (text !== undefined) g.text = text;
         if (style !== undefined) g.style = style;
         if (hasAngle) g.angle = angle;
         if (hasC) g.c = c;
+        if (mask) g.mask = true;
+        if (!Number.isNaN(za)) g.za = za;
+        if (!Number.isNaN(zb)) g.zb = zb;
         break;
       }
       case 'hatch': {

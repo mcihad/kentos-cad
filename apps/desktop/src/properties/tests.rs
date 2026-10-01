@@ -331,6 +331,9 @@ fn texts_dimensions_and_hatches_take_what_the_web_takes() {
             style: None,
             angle: None,
             c: None,
+            mask: false,
+            za: None,
+            zb: None,
         }),
     );
     let s = Slot(dim);

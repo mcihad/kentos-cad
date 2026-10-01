@@ -26,8 +26,8 @@ use std::collections::{BTreeMap, HashMap};
 
 use kentos_contracts::blocks::turn_of;
 use kentos_contracts::{
-    BlockId, Bounds, DimensionEntity, Entity, EntityBase, HatchEntity, HatchPatternType,
-    InsertEntity, PathEntity, SplineEntity, TextEntity, Vec2,
+    BlockId, Bounds, DimensionEntity, DimensionStyle, Entity, EntityBase, HatchEntity,
+    HatchPatternType, InsertEntity, PathEntity, SplineEntity, TextEntity, Vec2,
 };
 use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::geom::intersect::Edge;
@@ -1027,14 +1027,24 @@ impl Writer<'_> {
         self.out
             .xdata(&dim_overrides(d.height, self.decimals, self.grads));
         let mut m = Self::base_meta(&d.base);
-        m.dimension = Some(DimMeta {
-            style: dim::style_name(d.style).unwrap_or("").to_string(),
-            offset: d.offset,
-            height: d.height,
-            // Only when MTEXT's notation cannot say it exactly (the reader compares).
-            text: own.filter(|t| dim::mtext_value(t) != *t),
-            center: (def.kind == dim::DIAMETER).then_some((d.a.x, d.a.y)),
-        });
+        // docs/adr/0147's kinds go out as their drawing until its step 5: no KentOS data, so a
+        // reader takes their block's lines and value, never another dimension.
+        if d.style.is_some_and(DimensionStyle::is_schema_9) {
+            self.report.note(
+                "Ölçü",
+                "koordinat, yay uzunluğu, kırıklı yarıçap, semt ve eğim ölçüleri şimdilik çizgileri ve değeriyle yazıldı",
+                0,
+            );
+        } else {
+            m.dimension = Some(DimMeta {
+                style: dim::style_name(d.style).unwrap_or("").to_string(),
+                offset: d.offset,
+                height: d.height,
+                // Only when MTEXT's notation cannot say it exactly (the reader compares).
+                text: own.filter(|t| dim::mtext_value(t) != *t),
+                center: (def.kind == dim::DIAMETER).then_some((d.a.x, d.a.y)),
+            });
+        }
         self.end(m);
         true
     }

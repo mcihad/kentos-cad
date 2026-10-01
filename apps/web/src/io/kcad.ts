@@ -146,7 +146,7 @@ export const OBJECT_FIELDS: Record<string, ReadonlySet<string>> = Object.fromEnt
     xline: ['p', 'dir'],
     ray: ['p', 'dir'],
     text: ['p', 'text', 'height', 'rotation', 'align', 'widthFactor', 'mask'],
-    dimension: ['a', 'b', 'offset', 'height', 'text', 'style', 'angle', 'c'],
+    dimension: ['a', 'b', 'offset', 'height', 'text', 'style', 'angle', 'c', 'mask', 'za', 'zb'],
     hatch: ['ring', 'holes', 'pattern'],
     insert: ['block', 'p', 'scale', 'rotation', 'mirror'],
     leader: ['pts', 'text', 'height', 'rotation', 'arrow', 'mask'],

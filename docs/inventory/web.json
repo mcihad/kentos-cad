@@ -61,8 +61,8 @@
       "pending": 0
     },
     "fileFields": {
-      "total": 259,
-      "implemented": 259,
+      "total": 262,
+      "implemented": 262,
       "partial": 0,
       "pending": 0
     },
@@ -133,8 +133,8 @@
         "n/a": 2
       },
       "fileFields": {
-        "total": 259,
-        "implemented": 259,
+        "total": 262,
+        "implemented": 262,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -11547,6 +11547,19 @@
       }
     },
     {
+      "id": "DimensionEntity.mask",
+      "contract": "DimensionEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "mask",
+      "type": "boolean",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "DimensionEntity.offset",
       "contract": "DimensionEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -11599,6 +11612,32 @@
       }
     },
     {
+      "id": "DimensionEntity.za",
+      "contract": "DimensionEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "za",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionEntity.zb",
+      "contract": "DimensionEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "zb",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "DimensionStyle",
       "contract": "DimensionStyle",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -11607,7 +11646,12 @@
         "linear",
         "angular",
         "radius",
-        "diameter"
+        "diameter",
+        "ordinate",
+        "arcLength",
+        "jogged",
+        "azimuth",
+        "slope"
       ],
       "status": "implemented",
       "platforms": {

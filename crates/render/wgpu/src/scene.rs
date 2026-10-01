@@ -31,8 +31,8 @@ use std::ops::Range;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use kentos_contracts::{
-    DimensionStyle, DocumentSnapshotV1, DrawingFont, Entity, HatchEntity, HatchPatternType,
-    LayerNode, LayerNodeType, PathEntity, PointSymbol, RingGeometry,
+    DocumentSnapshotV1, DrawingFont, Entity, HatchEntity, HatchPatternType, LayerNode,
+    LayerNodeType, PathEntity, PointSymbol, RingGeometry,
 };
 use kentos_geometry_core::entity::{HatchPattern, Part, Shape, dimension_geom, entity_bounds_in};
 use kentos_geometry_core::geom::arc::sweep;
@@ -1079,18 +1079,12 @@ fn shape(entity: &Entity) -> Shape {
             offset: d.offset,
             height: d.height,
             text: d.text.clone(),
-            style: d.style.map(|s| {
-                match s {
-                    DimensionStyle::Aligned => "aligned",
-                    DimensionStyle::Linear => "linear",
-                    DimensionStyle::Angular => "angular",
-                    DimensionStyle::Radius => "radius",
-                    DimensionStyle::Diameter => "diameter",
-                }
-                .to_owned()
-            }),
+            style: d.style.map(|s| s.name().to_owned()),
             angle: d.angle,
             c: d.c.as_ref().map(v),
+            mask: d.mask.then_some(true),
+            za: d.za,
+            zb: d.zb,
         },
         Entity::Hatch(h) => Shape::Hatch {
             ring: points(&h.ring),

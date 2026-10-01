@@ -679,6 +679,11 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                     DimensionStyle::Angular => "Açı",
                     DimensionStyle::Radius => "Yarıçap",
                     DimensionStyle::Diameter => "Çap",
+                    DimensionStyle::Ordinate => "Koordinat",
+                    DimensionStyle::ArcLength => "Yay uzunluğu",
+                    DimensionStyle::Jogged => "Kırıklı yarıçap",
+                    DimensionStyle::Azimuth => "Semt",
+                    DimensionStyle::Slope => "Eğim",
                 },
             ));
             match dimension_layout(e) {

@@ -348,6 +348,9 @@ fn dimensions() -> Vec<Entity> {
             style,
             angle,
             c,
+            mask: false,
+            za: None,
+            zb: None,
         })
     };
     vec![

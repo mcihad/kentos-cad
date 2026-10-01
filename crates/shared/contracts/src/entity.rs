@@ -443,10 +443,13 @@ pub struct AttributeDefinition {
 /// definitions holding inserts, and so on (docs/adr/0144).
 pub const MAX_BLOCK_DEPTH: usize = 16;
 
+/// A dimension's kind (none: aligned). The last five came with KCAD schema 9
+/// (docs/adr/0147): what `a`, `b`, `c`, `offset`, `angle`, `za` and `zb`
+/// mean for each is the ADR's table.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum DimensionStyle {
     Aligned,
@@ -454,6 +457,65 @@ pub enum DimensionStyle {
     Angular,
     Radius,
     Diameter,
+    /// Koordinat: the point's Y (`angle` 0) or X (`angle` 90).
+    Ordinate,
+    /// Yay uzunluğu: the arc about `c` from `a` to `b`, counter-clockwise.
+    ArcLength,
+    /// Kırıklı yarıçap: the radius about `a` through `b`, drawn from `c`.
+    Jogged,
+    /// Semt: the direction from `a` to `b`, from north clockwise.
+    Azimuth,
+    /// Eğim: the slope between `a` at `za` and `b` at `zb`.
+    Slope,
+}
+
+impl DimensionStyle {
+    /// Every style, in the contract's order (the typed columns number them so).
+    pub const ALL: [DimensionStyle; 10] = [
+        DimensionStyle::Aligned,
+        DimensionStyle::Linear,
+        DimensionStyle::Angular,
+        DimensionStyle::Radius,
+        DimensionStyle::Diameter,
+        DimensionStyle::Ordinate,
+        DimensionStyle::ArcLength,
+        DimensionStyle::Jogged,
+        DimensionStyle::Azimuth,
+        DimensionStyle::Slope,
+    ];
+
+    /// Its name in the contract and the file (`arcLength`).
+    pub fn name(self) -> &'static str {
+        match self {
+            DimensionStyle::Aligned => "aligned",
+            DimensionStyle::Linear => "linear",
+            DimensionStyle::Angular => "angular",
+            DimensionStyle::Radius => "radius",
+            DimensionStyle::Diameter => "diameter",
+            DimensionStyle::Ordinate => "ordinate",
+            DimensionStyle::ArcLength => "arcLength",
+            DimensionStyle::Jogged => "jogged",
+            DimensionStyle::Azimuth => "azimuth",
+            DimensionStyle::Slope => "slope",
+        }
+    }
+
+    /// The style named `name`; none for any other name.
+    pub fn from_name(name: &str) -> Option<DimensionStyle> {
+        DimensionStyle::ALL.into_iter().find(|s| s.name() == name)
+    }
+
+    /// Whether it came with KCAD schema 9 (docs/adr/0147).
+    pub fn is_schema_9(self) -> bool {
+        matches!(
+            self,
+            DimensionStyle::Ordinate
+                | DimensionStyle::ArcLength
+                | DimensionStyle::Jogged
+                | DimensionStyle::Azimuth
+                | DimensionStyle::Slope
+        )
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -478,10 +540,23 @@ pub struct DimensionEntity {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub angle: Option<f64>,
-    /// Angular: the vertex.
+    /// Angular: the vertex. Arc length: the arc's centre. Jogged: the centre
+    /// the line starts from (docs/adr/0147).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub c: Option<Vec2>,
+    /// The value is drawn over the drawing's background (docs/adr/0147, as a
+    /// text's mask, docs/adr/0145).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub mask: bool,
+    /// Slope: the two points' elevations, metres (docs/adr/0147).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub za: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub zb: Option<f64>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
