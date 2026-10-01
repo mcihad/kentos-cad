@@ -71,6 +71,8 @@ pub fn layout(d: &DimensionEntity) -> Option<DimensionLayout> {
         style: style_name(d.style).map(str::to_string),
         angle: d.angle,
         c: d.c.map(core),
+        za: d.za,
+        zb: d.zb,
     })
 }
 

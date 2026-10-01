@@ -135,13 +135,13 @@ describe('dimension', () => {
   it('radius and diameter with their prefixes', () => {
     const r = layoutDimension({ a: { x: 0, y: 0 }, b: { x: 3, y: 4 }, offset: 0, height: 1, style: 'radius' })!;
     expect(r.value).toBeCloseTo(5, 12);
-    expect(dimensionLabel(undefined, r, { length: (m) => m.toFixed(2), angle: String })).toBe('R 5.00');
+    expect(dimensionLabel(undefined, r, { length: (m) => m.toFixed(2), angle: String, percent: String })).toBe('R 5.00');
     const d = layoutDimension({ a: { x: 0, y: 0 }, b: { x: 3, y: 4 }, offset: 2, height: 1, style: 'diameter' })!;
     expect(d.value).toBeCloseTo(10, 12);
     expect(d.d1.x).toBeCloseTo(-3, 12);
     // The leader runs 2 m past the circle.
     expect(Math.hypot(d.d2.x, d.d2.y)).toBeCloseTo(7, 12);
-    expect(dimensionLabel('Ø 10', d, { length: String, angle: String })).toBe('Ø 10');
+    expect(dimensionLabel('Ø 10', d, { length: String, angle: String, percent: String })).toBe('Ø 10');
   });
   it('computes a signed offset', () => {
     expect(signedOffset({ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 5, y: 2 })).toBeCloseTo(2);

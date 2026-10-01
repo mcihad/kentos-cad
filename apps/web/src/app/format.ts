@@ -53,6 +53,11 @@ export class Formatter {
     }
   }
 
+  /** A slope in percent, two decimals (docs/adr/0147 §2). */
+  percent(v: number): string {
+    return v.toFixed(2);
+  }
+
   get areaUnitLabel(): string {
     return { m2: 'm²', donum: 'dönüm', ha: 'ha' }[this.prefs.areaUnit.value];
   }

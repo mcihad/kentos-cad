@@ -8,7 +8,7 @@ use super::Store;
 use crate::entity::{Shape, area_parts, dimension_geom, ellipse_geom, entity_vertices};
 use crate::geom::arc::{ArcGeom, arc_end, arc_mid, arc_start};
 use crate::geom::bulge::{bulge_arc, bulge_at, segment_mid};
-use crate::geom::dimension::layout_dimension;
+use crate::geom::dimension::{is_new_kind, layout_dimension};
 use crate::geom::leader;
 use crate::geom::ellipse::{
     EllipseGeom, closest_param, ellipse_point, ellipse_tangent_points, is_full_ellipse,
@@ -251,6 +251,35 @@ impl Store {
                             );
                         }
                     }
+                    // The new kinds where docs/adr/0147 §4 says: an ordinate's point
+                    // and its line's end, an arc length's ends and centre, a jogged
+                    // radius's point on the arc and its line's start, an azimuth's
+                    // and a slope's ends.
+                    Shape::Dimension {
+                        a,
+                        b,
+                        c,
+                        style: Some(style),
+                        ..
+                    } if is_new_kind(Some(style)) => match style.as_str() {
+                        "ordinate" => {
+                            ch.consider(SnapKind::Node, *a, id);
+                            ch.consider(SnapKind::Endpoint, *b, id);
+                        }
+                        "jogged" => {
+                            ch.consider(SnapKind::Node, *b, id);
+                            if let Some(c) = c {
+                                ch.consider(SnapKind::Endpoint, *c, id);
+                            }
+                        }
+                        _ => {
+                            ch.consider(SnapKind::Node, *a, id);
+                            ch.consider(SnapKind::Node, *b, id);
+                            if let Some(c) = c {
+                                ch.consider(SnapKind::Node, *c, id);
+                            }
+                        }
+                    },
                     Shape::Dimension { a, b, c, .. } => {
                         ch.consider(SnapKind::Node, *a, id);
                         ch.consider(SnapKind::Node, *b, id);

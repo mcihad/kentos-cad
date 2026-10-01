@@ -15,6 +15,12 @@ import type { Edge } from './intersect';
  *   radius    a = centre, b = point on the circle; `offset` extends the
  *             line past the circle (leader)
  *   diameter  as radius, the line running through the centre
+ *   ordinate  a point's Y (`angle` 0) or X (90), its line across the axis to b
+ *   arcLength the arc about `c` from a counter-clockwise to b's direction
+ *   jogged    a radius (a the true centre, b on the arc) drawn from the centre shown `c`
+ *   azimuth   the bearing from a to b, an arrow beside the edge
+ *   slope     the slope from a to b between their elevations `za`, `zb`
+ *             (the last five: docs/adr/0147)
  *
  * The layout is computed by the geometry core (docs/adr/0008).
  */
@@ -43,6 +49,9 @@ export interface DimensionGeom {
   zb?: number;
 }
 
+/** What a dimension's value is: a length, an angle, a percentage (a slope) or a coordinate (a point's Y or X). */
+export type DimensionUnit = 'length' | 'angle' | 'percent' | 'coordinate';
+
 export interface DimensionLayout {
   /** Extension lines, dimension line (an arc as chords) and oblique ticks. */
   lines: [Vec2, Vec2][];
@@ -52,10 +61,10 @@ export interface DimensionLayout {
   /** Text anchor (centre of text baseline area) and readable rotation in degrees. */
   textAt: Vec2;
   rotation: number;
-  /** Measured value: metres, or radians for an angle. */
+  /** Measured value: metres (a length, a point's Y or X), radians for an angle, a slope in percent. */
   value: number;
-  unit: 'length' | 'angle';
-  /** Written before the value: "R " for a radius, "Ø " for a diameter. */
+  unit: DimensionUnit;
+  /** Written before the value: "R " for a radius, "Ø " for a diameter; "Y=", "X=", "t=", "%" (docs/adr/0147). */
   prefix: string;
   /** Edges that pick and snap: the dimension line or arc. */
   pick: Edge[];
@@ -85,10 +94,38 @@ export const signedOffset = op<(a: Vec2, b: Vec2, p: Vec2) => number>('signedOff
 /** The `offset` that puts the dimension line (arc, leader end) through p. */
 export const dimensionOffsetAt = op<(d: DimensionGeom, p: Vec2) => number>('dimensionOffsetAt');
 
-/** The text a dimension shows: its override, or prefix + value in project units. */
-export function dimensionLabel(text: string | undefined, l: Pick<DimensionLayout, 'prefix' | 'unit' | 'value'>, fmt: { length: (m: number) => string; angle: (rad: number) => string }): string {
+/**
+ * The text a dimension shows: its override, or prefix + value in project units; a coordinate is written as a length
+ * without its unit (the formatter's `coord`), a slope as a percentage.
+ */
+export function dimensionLabel(text: string | undefined, l: Pick<DimensionLayout, 'prefix' | 'unit' | 'value'>, fmt: { length: (m: number) => string; angle: (rad: number) => string; percent: (v: number) => string }): string {
   if (text) return text;
-  return `${l.prefix}${l.unit === 'angle' ? fmt.angle(l.value) : fmt.length(l.value)}`;
+  return `${l.prefix}${l.unit === 'angle' ? fmt.angle(l.value) : l.unit === 'percent' ? fmt.percent(l.value) : fmt.length(l.value)}`;
+}
+
+/**
+ * What a style measures and writes before its value, as the core's layout says (`dimension_measure`, docs/adr/0147
+ * §2): for a block's dimension pieces, whose label records carry no unit. An ordinate's axis is its `angle`: 0 (or
+ * none) its Y, else its X. `dimension.test.ts` holds it to the core for every style.
+ */
+export function dimensionMeasure(style: DimensionStyle | undefined, angle: number | undefined): Pick<DimensionLayout, 'unit' | 'prefix'> {
+  switch (style) {
+    case 'angular':
+      return { unit: 'angle', prefix: '' };
+    case 'radius':
+    case 'jogged':
+      return { unit: 'length', prefix: 'R ' };
+    case 'diameter':
+      return { unit: 'length', prefix: 'Ø ' };
+    case 'ordinate':
+      return { unit: 'coordinate', prefix: (angle ?? 0) === 0 ? 'Y=' : 'X=' };
+    case 'azimuth':
+      return { unit: 'angle', prefix: 't=' };
+    case 'slope':
+      return { unit: 'percent', prefix: '%' };
+    default:
+      return { unit: 'length', prefix: '' };
+  }
 }
 
 /**

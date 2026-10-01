@@ -2,13 +2,13 @@ import type { CrosshairSize } from '../app/state';
 import { pieceText, type BlockPiece } from '../model/blocks';
 import type { CadDocument } from '../model/document';
 import { dist, type Vec2 } from '../model/geometry';
-import type { DimensionLayout } from '../model/geom/dimension';
+import { dimensionMeasure, type DimensionLayout } from '../model/geom/dimension';
 import { resolveColor, type CanvasPalette } from '../render/color';
 import type { ToolCursor } from '../tools/Tool';
 import type { Camera } from './Camera';
 import type { TrackHit } from './objectTracking';
 import { SNAP_LABEL, type SnapHit } from './picking';
-import { DEFAULT_LABELS, DIMENSION_PREFIX, LABEL, LABEL_STRIDE, type GripSet } from './storeRecords';
+import { DEFAULT_LABELS, DIMENSION_PREFIX, DIMENSION_UNIT, LABEL, LABEL_STRIDE, type GripSet } from './storeRecords';
 
 // Text that is part of the drawing (text objects, dimension values, labels) is drawn in the project's typeface
 // (CanvasPalette.drawingFont), whatever the interface's is; the overlay's own marks (snap names, scale bar,
@@ -96,13 +96,31 @@ function baselineText(g: CanvasRenderingContext2D, pal: CanvasPalette, s: Vec2, 
   g.restore();
 }
 
-function maskText(g: CanvasRenderingContext2D, width: number, px: number, paper: string): void {
+/**
+ * A text's mask from `x0` (where it starts) `width` along, a tenth of its height wider all round (docs/adr/0145); a
+ * dimension's value's (`along`) wider on its sides only, so that it leaves its dimension line and an arc length's
+ * symbol, 0.12h off its box, in view (docs/adr/0147).
+ */
+function maskText(g: CanvasRenderingContext2D, width: number, px: number, paper: string, x0 = 0, along = false): void {
   if (!(width > 0)) return;
   const m = px * 0.1;
+  const v = along ? 0 : m;
   g.save();
   g.fillStyle = paper;
-  g.fillRect(-m, -px * 1.15 - m, width + 2 * m, px * 1.38 + 2 * m);
+  g.fillRect(x0 - m, -px * 1.15 - v, width + 2 * m, px * 1.38 + 2 * v);
   g.restore();
+}
+
+/** A dimension's value centred on its baseline (the context turned to it), over its mask when it has one (docs/adr/0147). */
+function dimensionValue(g: CanvasRenderingContext2D, pal: CanvasPalette, px: number, text: string, color: string, mask: boolean): void {
+  g.font = `500 ${px.toFixed(1)}px ${pal.drawingFont}`;
+  g.textAlign = 'center';
+  g.textBaseline = 'alphabetic';
+  if (mask) {
+    const w = textWidth(g, text);
+    maskText(g, w, px, pal.paper, -w / 2, true);
+  }
+  haloText(g, text, 0, 0, color, pal.labelHalo);
 }
 
 /**
@@ -140,17 +158,13 @@ export function drawLabels(
     const x = spots[i + 2];
     const y = spots[i + 3];
     if (what === LABEL.dimension && e.kind === 'dimension') {
-      const px = e.height * cam.scale;
       const s = cam.worldToScreen({ x, y });
       g.save();
       g.translate(s.x, s.y);
       g.rotate((-spots[i + 4] * Math.PI) / 180);
-      g.font = `500 ${px.toFixed(1)}px ${pal.drawingFont}`;
-      g.textAlign = 'center';
-      g.textBaseline = 'alphabetic';
       const color = e.color ?? layers.get(e.layerId)?.style.color;
-      const measured = { value: spots[i + 5], unit: spots[i + 6] ? ('angle' as const) : ('length' as const), prefix: DIMENSION_PREFIX[spots[i + 7]] ?? '' };
-      haloText(g, e.text || dimensionText(measured), 0, 0, !color || color === 'fg' || color === 'fg-dim' ? pal.label : resolveColor(color, pal), pal.labelHalo);
+      const measured = { value: spots[i + 5], unit: DIMENSION_UNIT[spots[i + 6]] ?? 'length', prefix: DIMENSION_PREFIX[spots[i + 7]] ?? '' };
+      dimensionValue(g, pal, e.height * cam.scale, e.text || dimensionText(measured), !color || color === 'fg' || color === 'fg-dim' ? pal.label : resolveColor(color, pal), spots[i + 8] === 1);
       g.restore();
       continue;
     }
@@ -177,16 +191,12 @@ export function drawLabels(
         // A leader's note (docs/adr/0146 §5), as a text piece's.
         baselineText(g, pal, s, spots[i + 4], spots[i + 5] * cam.scale, 1, spots[i + 8] * cam.scale, piece.text);
       } else if (what === LABEL.pieceDimension && piece?.kind === 'dimension') {
-        const px = spots[i + 7] * cam.scale;
         g.save();
         g.translate(s.x, s.y);
         g.rotate((-spots[i + 4] * Math.PI) / 180);
-        g.font = `500 ${px.toFixed(1)}px ${pal.drawingFont}`;
-        g.textAlign = 'center';
-        g.textBaseline = 'alphabetic';
         const color = e.color ?? layers.get(e.layerId)?.style.color;
-        const measured = { value: spots[i + 5], unit: piece.style === 'angular' ? ('angle' as const) : ('length' as const), prefix: piece.style === 'radius' ? 'R ' : piece.style === 'diameter' ? 'Ø ' : '' };
-        haloText(g, piece.text || dimensionText(measured), 0, 0, !color || color === 'fg' || color === 'fg-dim' ? pal.label : resolveColor(color, pal), pal.labelHalo);
+        const measured = { value: spots[i + 5], ...dimensionMeasure(piece.style, piece.angle) };
+        dimensionValue(g, pal, spots[i + 7] * cam.scale, piece.text || dimensionText(measured), !color || color === 'fg' || color === 'fg-dim' ? pal.label : resolveColor(color, pal), spots[i + 8] === 1);
         g.restore();
       }
       continue;

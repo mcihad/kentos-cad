@@ -79,7 +79,8 @@ pub const LABEL_ALONG: f64 = 5.0;
 /// its width factor, e its mask's width (as a text's).
 pub const LABEL_PIECE_TEXT: f64 = 6.0;
 /// A dimension among a block's pieces: x, y its value's place, a its angle,
-/// b the value, c the piece's place, d its text height as placed.
+/// b the value, c the piece's place, d its text height as placed, e 1 for a
+/// mask (docs/adr/0147; its unit and prefix from its style, `dimension_measure`).
 pub const LABEL_PIECE_DIMENSION: f64 = 7.0;
 /// A leader's note (docs/adr/0146 §5), as a text's: x, y where its baseline
 /// starts, a its rotation, b 1 (it has no width factor), c its mask's width.
@@ -89,6 +90,24 @@ pub const LABEL_PIECE_LEADER: f64 = 9.0;
 
 /// Numbers per label record.
 pub const LABEL_STRIDE: usize = 9;
+
+/// A dimension's unit as its label record says it (c): length, angle,
+/// percent, coordinate (docs/adr/0147).
+pub const DIMENSION_UNITS: [&str; 4] = ["length", "angle", "percent", "coordinate"];
+/// A dimension's prefix as its label record says it (d).
+pub const DIMENSION_PREFIXES: [&str; 7] = ["", "R ", "Ø ", "Y=", "X=", "t=", "%"];
+
+fn code(of: &[&str], s: &str) -> f64 {
+    of.iter().position(|x| *x == s).unwrap_or(0) as f64
+}
+
+/// 1 for a dimension with a mask, else 0.
+fn masked(s: &Shape) -> f64 {
+    match s {
+        Shape::Dimension { mask: Some(true), .. } => 1.0,
+        _ => 0.0,
+    }
+}
 
 impl Store {
     /// Label defaults by kind when the layer has no label style
@@ -118,7 +137,10 @@ impl Store {
     /// What the overlay draws in `view` at `scale` px/m, in the document's
     /// order, `LABEL_STRIDE` numbers each: `id, what, x, y, a, b, c, d, e`.
     /// - dimension: x, y the value's place, a its angle (degrees), b the
-    ///   value, c 1 for an angle (0 length), d the prefix (0 none, 1 "R ", 2 "Ø ");
+    ///   value, c its unit (`DIMENSION_UNITS`: 0 length, 1 angle, 2 percent,
+    ///   3 coordinate), d its prefix (`DIMENSION_PREFIXES`: 0 none, 1 "R ",
+    ///   2 "Ø ", 3 "Y=", 4 "X=", 5 "t=", 6 "%"), e 1 for a mask (docs/adr/0147:
+    ///   the overlay fills the value's measured box, as a text's);
     /// - text: x, y where its baseline starts (its `p` moved by its
     ///   alignment, docs/adr/0145), a its rotation, b its width factor (1
     ///   without one), c its mask's width, metres (0 without a mask: the
@@ -217,7 +239,7 @@ impl Store {
                                 l.value,
                                 i as f64,
                                 *height,
-                                0.0,
+                                masked(s),
                             ]);
                         }
                         _ => {}
@@ -234,12 +256,6 @@ impl Store {
                     if px < 5.0 || px > 240.0 {
                         continue;
                     }
-                    let unit = if l.unit == "angle" { 1.0 } else { 0.0 };
-                    let prefix = match l.prefix {
-                        "R " => 1.0,
-                        "Ø " => 2.0,
-                        _ => 0.0,
-                    };
                     out.extend([
                         it.id,
                         LABEL_DIMENSION,
@@ -247,9 +263,9 @@ impl Store {
                         l.text_at.y,
                         l.rotation,
                         l.value,
-                        unit,
-                        prefix,
-                        0.0,
+                        code(&DIMENSION_UNITS, l.unit),
+                        code(&DIMENSION_PREFIXES, l.prefix),
+                        masked(&it.shape),
                     ]);
                     continue;
                 }

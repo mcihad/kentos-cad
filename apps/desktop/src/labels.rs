@@ -208,7 +208,8 @@ enum Anchor {
 /// One text to draw: at a point on screen, turned by `angle` radians
 /// clockwise on screen, `size` pixels high, its letters `width_factor`
 /// wide; `mask` pixels long, the box filled with the drawing area's colour
-/// under it first (a text object's, docs/adr/0145), 0 for none.
+/// under it first (a text object's, docs/adr/0145; a dimension value's,
+/// docs/adr/0147), 0 for none.
 struct Piece<'t> {
     text: &'t str,
     at: Point,
@@ -272,38 +273,36 @@ impl Labels<'_> {
                         at,
                         angle,
                         value,
-                        angular,
+                        unit,
                         prefix,
+                        mask,
                         ..
                     },
                     Entity::Dimension(d),
                 ) => {
                     let text = match d.text.as_deref().filter(|t| !t.is_empty()) {
                         Some(own) => own.to_owned(),
-                        None => dimension_text(
-                            &self.format,
-                            prefix,
-                            if *angular { "angle" } else { "length" },
-                            *value,
-                        ),
+                        None => dimension_text(&self.format, prefix, unit, *value),
                     };
                     let color = self.ink_of(
                         base.color
                             .as_deref()
                             .or(layer.map(|l| l.style.color.as_str())),
                     );
+                    let size = (d.height * self.camera.scale) as f32;
+                    let font = drawing_fonts::font(self.font, 500, false);
                     draw(
                         frame,
                         &Piece {
                             text: &text,
                             at: self.screen(*at),
                             angle: (-angle.to_radians()) as f32,
-                            size: (d.height * self.camera.scale) as f32,
-                            font: drawing_fonts::font(self.font, 500, false),
+                            size,
+                            font,
                             anchor: Anchor::CenterBaseline,
                             color,
                             width_factor: 1.0,
-                            mask: 0.0,
+                            mask: value_mask(*mask, &text, font, size),
                         },
                         self.colors.halo,
                     );
@@ -404,38 +403,36 @@ impl Labels<'_> {
                         value,
                         height,
                         text,
-                        angular,
+                        unit,
                         prefix,
+                        mask,
                         ..
                     },
                     _,
                 ) => {
                     let text = match text {
                         Some(own) => own.clone(),
-                        None => dimension_text(
-                            &self.format,
-                            prefix,
-                            if *angular { "angle" } else { "length" },
-                            *value,
-                        ),
+                        None => dimension_text(&self.format, prefix, unit, *value),
                     };
                     let color = self.ink_of(
                         base.color
                             .as_deref()
                             .or(layer.map(|l| l.style.color.as_str())),
                     );
+                    let size = (height * self.camera.scale) as f32;
+                    let font = drawing_fonts::font(self.font, 500, false);
                     draw(
                         frame,
                         &Piece {
                             text: &text,
                             at: self.screen(*at),
                             angle: (-angle.to_radians()) as f32,
-                            size: (height * self.camera.scale) as f32,
-                            font: drawing_fonts::font(self.font, 500, false),
+                            size,
+                            font,
                             anchor: Anchor::CenterBaseline,
                             color,
                             width_factor: 1.0,
-                            mask: 0.0,
+                            mask: value_mask(*mask, &text, font, size),
                         },
                         self.colors.halo,
                     );
@@ -643,6 +640,15 @@ fn measure(text: &str, font: Font) -> Measure {
 }
 
 /// Draws a text with its halo: upright through the glyph cache, turned as outlines.
+/// A dimension value's mask (docs/adr/0147): its measured width on screen when it has one, else 0.
+fn value_mask(mask: bool, text: &str, font: Font, size: f32) -> f32 {
+    if mask {
+        measure(text, font).width * size / REFERENCE
+    } else {
+        0.0
+    }
+}
+
 fn draw(frame: &mut Frame, piece: &Piece<'_>, halo: Color) {
     if piece.size < SMALLEST || piece.text.is_empty() {
         return;
@@ -688,13 +694,20 @@ fn draw(frame: &mut Frame, piece: &Piece<'_>, halo: Color) {
         frame.translate(Vector::new(piece.at.x, piece.at.y));
         frame.rotate(piece.angle);
         // The mask (docs/adr/0145): the text's box a tenth of its height wider all round,
-        // 1.15 of it over the baseline and 0.23 under (`TextPlace::mask`), in the area's colour.
+        // 1.15 of it over the baseline and 0.23 under (`TextPlace::mask`), in the area's colour;
+        // from where the text starts. A dimension's value (centred) is wider on its sides only,
+        // leaving its dimension line and an arc length's symbol in view (docs/adr/0147).
         if piece.mask > 0.0 {
             let m = piece.size * 0.1;
+            let v = if piece.anchor == Anchor::CenterBaseline {
+                0.0
+            } else {
+                m
+            };
             frame.fill(
                 &Path::rectangle(
-                    Point::new(-m, -piece.size * 1.15 - m),
-                    Size::new(piece.mask + 2.0 * m, piece.size * 1.38 + 2.0 * m),
+                    Point::new(dx - m, -piece.size * 1.15 - v),
+                    Size::new(piece.mask + 2.0 * m, piece.size * 1.38 + 2.0 * v),
                 ),
                 halo,
             );
@@ -1097,6 +1110,60 @@ fn leader_screens() {
             app.selection.set([kentos_domain::Slot(2)]);
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("kilavuz-{width}x{height}{suffix}.png"));
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
+            println!("{}", file.display());
+        }
+    }
+}
+
+/// The dimensions of docs/adr/0147 as the drawing shows them, over a parcel
+/// and a curved road (fixtures/interaction/v1/dimensions.kcad, the web's
+/// `shots.mjs dimensions`): the north-west corner's Y and X, the road
+/// edge's arc length and its jogged radius, the west edge's azimuth, the
+/// east edge's slope between its corners' elevations, the north edge's
+/// value masked over the hatch and a slope in a block; the arc length
+/// selected so that Öznitelikler shows it, dark and light, at 1440×900 and
+/// 1100×650; `.run/shots/olcu-turleri-*`:
+///
+/// ```text
+/// cargo test -p kentos-desktop labels::dimension_screens -- --ignored --nocapture
+/// ```
+#[cfg(test)]
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn dimension_screens() {
+    use kentos_ui::snapshot::Snapshot;
+
+    use crate::app::App;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let drawing = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/interaction/v1/dimensions.kcad"
+    );
+    for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
+        for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
+            let (mut app, _) = App::boot(None);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+            app.apply_settings();
+            let doc =
+                crate::document::Document::read(std::path::Path::new(drawing)).expect("opens");
+            let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+            let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+            let mut update = |app: &mut App, message| {
+                let _ = app.update(message);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let _ = app.update(Message::Run("view.zoomExtents"));
+            app.selection.set([kentos_domain::Slot(9)]);
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("olcu-turleri-{width}x{height}{suffix}.png"));
             snapshot
                 .render(app.view(), &app.theme())
                 .save(&file)

@@ -189,8 +189,8 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
             let height = height * s;
             let c = c.map(|c| apply(m, c));
             let (text, style) = (text.clone(), style.clone());
-            if st == "angular" {
-                // An angle stays counter-clockwise from a to b: a reflection swaps the arms.
+            if st == "angular" || st == "arcLength" {
+                // An angle (an arc) stays counter-clockwise from a to b: a reflection swaps the arms (ends).
                 let (a, b) = if flip { (nb, na) } else { (na, nb) };
                 Shape::Dimension {
                     a,
@@ -205,7 +205,9 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
                     za,
                     zb,
                 }
-            } else if st == "radius" || st == "diameter" {
+            } else if matches!(st, "radius" | "diameter" | "jogged" | "ordinate") {
+                // Along the radius (the jog's from the centre shown): no side to swap. An
+                // ordinate's axis is the world's and stays (docs/adr/0147 §4).
                 Shape::Dimension {
                     a: na,
                     b: nb,

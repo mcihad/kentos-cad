@@ -34,10 +34,11 @@ use kentos_contracts::{BlockDefinition, Entity, LabelPlacement, LabelStyle, Laye
 use kentos_domain::{ChangeMark, Changes, Document, LayerTree, Slot};
 use kentos_geometry_core::entity::{Shape, entity_area, entity_length, entity_vertices};
 use kentos_geometry_core::geometry::Bounds;
+use kentos_geometry_core::geom::dimension::dimension_measure;
 use kentos_geometry_core::store::labels::{
-    LABEL_ALONG, LABEL_BESIDE, LABEL_CENTER, LABEL_CORNER, LABEL_DIMENSION, LABEL_LEADER,
-    LABEL_PIECE_DIMENSION, LABEL_PIECE_LEADER, LABEL_PIECE_TEXT, LABEL_STRIDE, LABEL_TEXT,
-    LabelRule, Placement,
+    DIMENSION_PREFIXES, DIMENSION_UNITS, LABEL_ALONG, LABEL_BESIDE, LABEL_CENTER, LABEL_CORNER,
+    LABEL_DIMENSION, LABEL_LEADER, LABEL_PIECE_DIMENSION, LABEL_PIECE_LEADER, LABEL_PIECE_TEXT,
+    LABEL_STRIDE, LABEL_TEXT, LabelRule, Placement,
 };
 use kentos_geometry_core::store::snap::SnapHit;
 use kentos_geometry_core::store::{LayerFlags, Store};
@@ -319,12 +320,9 @@ impl Spatial {
                         at,
                         angle: r[4],
                         value: r[5],
-                        angular: r[6] == 1.0,
-                        prefix: match r[7] as u8 {
-                            1 => "R ",
-                            2 => "Ø ",
-                            _ => "",
-                        },
+                        unit: DIMENSION_UNITS.get(r[6] as usize).copied().unwrap_or("length"),
+                        prefix: DIMENSION_PREFIXES.get(r[7] as usize).copied().unwrap_or(""),
+                        mask: r[8] == 1.0,
                     }
                 } else if what == LABEL_TEXT || what == LABEL_LEADER {
                     LabelSpot::Text {
@@ -367,9 +365,13 @@ impl Spatial {
                         mask: r[8],
                     }
                 } else if what == LABEL_PIECE_DIMENSION {
-                    let Shape::Dimension { text, style, .. } = self.piece(r[0], r[6])?.shape else {
+                    let Shape::Dimension {
+                        text, style, angle, ..
+                    } = self.piece(r[0], r[6])?.shape
+                    else {
                         return None;
                     };
+                    let (unit, prefix) = dimension_measure(style.as_deref(), angle);
                     LabelSpot::PieceDimension {
                         slot,
                         at,
@@ -377,12 +379,9 @@ impl Spatial {
                         value: r[5],
                         height: r[7],
                         text: text.filter(|t| !t.is_empty()),
-                        angular: style.as_deref() == Some("angular"),
-                        prefix: match style.as_deref() {
-                            Some("radius") => "R ",
-                            Some("diameter") => "Ø ",
-                            _ => "",
-                        },
+                        unit,
+                        prefix,
+                        mask: r[8] == 1.0,
                     }
                 } else {
                     return None;
@@ -420,15 +419,18 @@ impl Spatial {
 /// Points are in world units; angles in degrees, counter-clockwise.
 #[derive(Clone, Debug, PartialEq)]
 pub enum LabelSpot {
-    /// A dimension's value at its place, turned by `angle`; `angular`: an
-    /// angle (else a length); `prefix` "R " or "Ø " for a radius or diameter.
+    /// A dimension's value at its place, turned by `angle`; its `unit`
+    /// ("length", "angle", "percent" or "coordinate") and `prefix` ("R ",
+    /// "Ø ", "Y=", "X=", "t=", "%" or none), as the core's layout says; `mask`
+    /// fills its measured box first (docs/adr/0147).
     Dimension {
         slot: Slot,
         at: Vec2,
         angle: f64,
         value: f64,
-        angular: bool,
+        unit: &'static str,
         prefix: &'static str,
+        mask: bool,
     },
     /// A text object from where its baseline starts (its point moved by its
     /// alignment, docs/adr/0145), turned by `rotation`, its letters
@@ -474,8 +476,9 @@ pub enum LabelSpot {
         value: f64,
         height: f64,
         text: Option<String>,
-        angular: bool,
+        unit: &'static str,
         prefix: &'static str,
+        mask: bool,
     },
 }
 

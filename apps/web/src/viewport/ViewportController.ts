@@ -404,7 +404,7 @@ export class ViewportController {
   /** A dimension's measured value as drawn: prefix and value in project units (length without unit). */
   dimensionText(l: Pick<DimensionLayout, 'prefix' | 'unit' | 'value'>): string {
     const f = this.ctx.format;
-    return dimensionLabel(undefined, l, { length: (m) => f.length(m, false), angle: (a) => f.angle(a) });
+    return dimensionLabel(undefined, l, { length: (m) => f.length(m, false), angle: (a) => f.angle(a), percent: (v) => f.percent(v) });
   }
 
   /** Visible entities whose bounds overlap `r` (candidates for boundaries and cut lines). */

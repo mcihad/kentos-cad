@@ -28,11 +28,14 @@ export const LABEL = { dimension: 0, text: 1, center: 2, corner: 3, beside: 4, a
 /**
  * Numbers per label record: `id, what, x, y, a, b, c, d, e`. A text's x, y are where its baseline starts (its
  * point moved by its alignment), b its width factor, c its mask's width (0 none); a block's text piece's d and e
- * (docs/adr/0145).
+ * (docs/adr/0145). A dimension's c is its unit code, d its prefix code, e 1 for a mask; a block's dimension
+ * piece's e too (docs/adr/0147).
  */
 export const LABEL_STRIDE = 9;
-/** A dimension record's prefix code. */
-export const DIMENSION_PREFIX = ['', 'R ', 'Ø '] as const;
+/** A dimension record's unit code (the core's `DIMENSION_UNITS`). */
+export const DIMENSION_UNIT = ['length', 'angle', 'percent', 'coordinate'] as const;
+/** A dimension record's prefix code (the core's `DIMENSION_PREFIXES`). */
+export const DIMENSION_PREFIX = ['', 'R ', 'Ø ', 'Y=', 'X=', 't=', '%'] as const;
 
 /** The grips of one object: points, the segment of each mid grip (−1 for other grips), a path's vertex count. */
 export interface GripSet {

@@ -1,6 +1,8 @@
 //! Dimension layout (`apps/web/src/model/geom/dimension.ts`): extension lines with a
 //! gap, the dimension line or arc with oblique ticks, the value readable
-//! left to right. `dimensionLabel` (formatting) stays in TypeScript.
+//! left to right. `dimensionLabel` (formatting) stays in TypeScript. The
+//! kinds of docs/adr/0147 (ordinate, arc length, jogged radius, azimuth and
+//! slope) are laid out in `kinds`.
 
 use crate::api::Op;
 use crate::geom::arc::norm_angle;
@@ -8,6 +10,8 @@ use crate::geom::intersect::Edge;
 use crate::jsmath::{PI, atan2, cos, js_hypot, js_max, js_max_all, js_min, or, sin};
 use crate::op;
 use crate::vec2::Vec2;
+
+mod kinds;
 
 const SQRT1_2: f64 = std::f64::consts::FRAC_1_SQRT_2;
 
@@ -20,6 +24,9 @@ pub struct DimensionGeom {
     pub style: Option<String>,
     pub angle: Option<f64>,
     pub c: Option<Vec2>,
+    /// A slope's two elevations (docs/adr/0147).
+    pub za: Option<f64>,
+    pub zb: Option<f64>,
 }
 
 crate::json_struct!(DimensionGeom {
@@ -29,7 +36,9 @@ crate::json_struct!(DimensionGeom {
     height,
     style,
     angle,
-    c
+    c,
+    za,
+    zb
 });
 
 #[derive(Clone, Debug, PartialEq)]
@@ -40,6 +49,7 @@ pub struct DimensionLayout {
     pub text_at: Vec2,
     pub rotation: f64,
     pub value: f64,
+    /// "length", "angle" (radians), "percent" or "coordinate" (a point's Y or X, metres).
     pub unit: &'static str,
     pub prefix: &'static str,
     pub pick: Vec<Edge>,
@@ -97,7 +107,38 @@ pub fn layout_dimension(d: &DimensionGeom) -> Option<DimensionLayout> {
         "angular" => angular(d),
         "radius" => radial(d, false),
         "diameter" => radial(d, true),
+        "ordinate" => kinds::ordinate(d),
+        "arcLength" => kinds::arc_length(d),
+        "jogged" => kinds::jogged(d),
+        "azimuth" => kinds::arrowed(d, false),
+        "slope" => kinds::arrowed(d, true),
         _ => aligned(d),
+    }
+}
+
+/// Whether a style is one of docs/adr/0147's: drawn without the measured
+/// points it is defined by (a jogged radius's true centre, an azimuth's
+/// ends), snapped and gripped where its own rules say.
+pub fn is_new_kind(style: Option<&str>) -> bool {
+    matches!(
+        style,
+        Some("ordinate" | "arcLength" | "jogged" | "azimuth" | "slope")
+    )
+}
+
+/// What a style measures and writes before its value: the layout's `unit`
+/// and `prefix` (docs/adr/0147 §2). An ordinate's axis is its `angle`: 0
+/// (or none) its Y, else its X.
+pub fn dimension_measure(style: Option<&str>, angle: Option<f64>) -> (&'static str, &'static str) {
+    match style {
+        Some("angular") => ("angle", ""),
+        Some("radius" | "jogged") => ("length", "R "),
+        Some("diameter") => ("length", "Ø "),
+        Some("ordinate") if angle.unwrap_or(0.0) == 0.0 => ("coordinate", "Y="),
+        Some("ordinate") => ("coordinate", "X="),
+        Some("azimuth") => ("angle", "t="),
+        Some("slope") => ("percent", "%"),
+        _ => ("length", ""),
     }
 }
 
@@ -275,6 +316,14 @@ pub fn dimension_offset_at(d: &DimensionGeom, p: Vec2) -> f64 {
             0.0,
             js_hypot(p.x - d.a.x, p.y - d.a.y) - js_hypot(d.b.x - d.a.x, d.b.y - d.a.y),
         ),
+        // docs/adr/0147: an ordinate has none; the dimension arc's distance
+        // from the arc; the jog's along the radius from the centre shown, where it can be.
+        "ordinate" => d.offset,
+        "arcLength" => match d.c {
+            Some(c) => js_hypot(p.x - c.x, p.y - c.y) - js_hypot(d.a.x - c.x, d.a.y - c.y),
+            None => d.offset,
+        },
+        "jogged" => kinds::jog_at(d, p).unwrap_or(d.offset),
         _ => signed_offset(d.a, d.b, p),
     }
 }

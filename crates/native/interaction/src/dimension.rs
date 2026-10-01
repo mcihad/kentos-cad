@@ -253,6 +253,8 @@ impl Dimension {
             style: mode.layout_style().map(str::to_owned),
             angle,
             c,
+            za: None,
+            zb: None,
         };
         match mode {
             Mode::Aligned => {

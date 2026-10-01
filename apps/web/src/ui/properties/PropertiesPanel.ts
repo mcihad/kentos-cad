@@ -331,11 +331,15 @@ export class PropertiesPanel extends Panel {
         const style = e.style ?? 'aligned';
         const l = layoutDimension(e);
         geo.push({ label: 'Tür', value: DIMENSION_STYLE_LABEL[style] });
-        if (l?.unit === 'angle') geo.push({ label: 'Ölçülen açı', value: f.angle(l.value, false), numeric: true, unit: f.angleUnitLabel });
-        else if (l) geo.push(num(style === 'diameter' ? 'Ölçülen çap' : style === 'radius' ? 'Ölçülen yarıçap' : 'Ölçülen uzunluk', l.value, 'm'));
+        // What it measured, by its unit (docs/adr/0147 §2).
+        if (l?.unit === 'angle') geo.push({ label: style === 'azimuth' ? 'Ölçülen semt' : 'Ölçülen açı', value: f.angle(l.value, false), numeric: true, unit: f.angleUnitLabel });
+        else if (l?.unit === 'percent') geo.push({ label: 'Ölçülen eğim', value: f.percent(l.value), numeric: true, unit: '%' });
+        else if (l?.unit === 'coordinate') geo.push(num(l.prefix === 'Y=' ? 'Ölçülen Y' : 'Ölçülen X', l.value, 'm'));
+        else if (l) geo.push(num(style === 'diameter' ? 'Ölçülen çap' : style === 'radius' || style === 'jogged' ? 'Ölçülen yarıçap' : 'Ölçülen uzunluk', l.value, 'm'));
         if (style === 'aligned') geo.push({ label: 'Semt', value: f.bearing(bearingGrad(e.a, e.b), false), numeric: true, unit: f.angleUnitLabel });
+        // An ordinate has no offset; a jogged radius's is where its jog is.
+        if (style !== 'ordinate') geo.push(n(style === 'angular' ? 'Yay yarıçapı' : style === 'radius' || style === 'diameter' ? 'Dışa uzantı' : style === 'jogged' ? 'Kırık uzaklığı' : 'Ötelenme', 'offset', e.offset));
         geo.push(
-          n(style === 'angular' ? 'Yay yarıçapı' : style === 'radius' || style === 'diameter' ? 'Dışa uzantı' : 'Ötelenme', 'offset', e.offset),
           n('Yazı yüksekliği', 'height', e.height),
           {
             label: 'Yazı',

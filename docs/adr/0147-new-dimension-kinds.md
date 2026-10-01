@@ -63,15 +63,16 @@ Her ölçü değerin yüksekliği `h` cinsindendir, öbür ölçülerdeki gibi: 
 - **Yay uzunluğu:**
   - Ölçü yayı ölçülen yayla eş merkezli, aynı açıdadır; uçlarında çentik vardır.
   - Uzatma çizgileri yayın uçlarından, merkezden dışarı ya da içeri, ölçü yayına dek ve `h/2` ötesine uzanır. Ölçü yayı yaya `h/2`'den yakınsa çizilmezler.
-  - Değer ölçü yayının ortasında, teğet doğrultusunda, yayın dışındadır.
-  - Değerin üstünde küçük bir yay simgesi vardır (AutoCAD'in “yazının üstünde” seçeneği). Simge yazı tipine bağlı değildir, ölçünün çizgileri gibi çizilir.
+  - Değer ölçü yayının ortasında, teğet doğrultusunda, okunur yönde ve ölçülen yaydan uzak yanındadır: okuma yönünde üstü yaya bakıyorsa (yayın alt yarısı gibi) değer, simgesiyle birlikte, çizginin öbür yanına üstteki boşluğu kadar geçer; yayın üstüne binmez.
+  - Değerin üstünde küçük bir yay simgesi vardır (AutoCAD'in “yazının üstünde” seçeneği): 0,6h genişliğinde yarım daire, merkezi tabanın 1,3h üstünde, zeminin üstünde kalır. Simge yazı tipine bağlı değildir, ölçünün çizgileri gibi çizilir.
 - **Kırıklı yarıçap:**
   - Çizgi gösterilen merkezden yarıçap doğrultusunda başlar, `offset`'te 45°'lik bir kırıkla gerçek yarıçap çizgisine geçer, yaya varır; yayda çentik vardır.
   - Değer yaya varan parçanın üstündedir; o parça kısaysa gösterilen merkezden başlayanın.
 - **Semt ve eğim:**
   - Uzatma çizgisi ve çentik yoktur. Kenarın ortasının `offset` kadar yanında, kenara paralel, `3h` boyunda bir ok vardır, açık ok başlı.
-  - Değer okun üstündedir.
-- **Zemin:** değerin kutusu yazınınki gibi ölçülür; zemin onun çevresindedir.
+  - Değer okun kenardan uzak yanındadır (ok kenarın üstündeyse okun üstünde); okuma yönünde üstü kenara bakıyorsa okun altına, üstteki boşluğu kadar geçer.
+- **Zemin:** değerin kutusu yazınınki gibi ölçülür (tabanın 1,15h üstünden 0,23h altına); zemin onun çevresinde, yanlarda 0,1h payla, üstte ve altta paysızdır: ölçü çizgisi ve yay simgesi açıkta kalır.
+- **Kutu ve çizgi:** değerin kutusu çizgiden iki yanda da 0,12h uzaktır: üstte taban çizginin 0,35h üstünde, altta kutunun tepesi çizginin 0,12h altında (simgeli yay uzunluğunda taban 1,72h, öbürlerinde 1,27h altta).
 
 ### 3. `.kcad`: belge şeması 9
 
@@ -92,8 +93,8 @@ Her ölçü değerin yüksekliği `h` cinsindendir, öbür ölçülerdeki gibi: 
 
 ### 4. Hesap (ortak çekirdek)
 
-- **Yerleşim:** `geom::dimension`'ın `layout_dimension`'ı yeni biçimlerin çizgilerini, değerin yerini ve dönüşünü, değeri, birimini ve önekini verir. Yeni birim yüzdedir. Bağımsız Python başvurusuyla sınanır (`fixtures/dimension/v1/layout.json`, `scripts/fixtures/dimension_cases.py`).
-- **Depo:** seçme, kenet ve kapsam öbür ölçülerin yolundandır. Kenet noktaları:
+- **Yerleşim:** `geom::dimension`'ın `layout_dimension`'ı yeni biçimlerin çizgilerini, değerin yerini ve dönüşünü, değeri, birimini ve önekini verir. Yeni birimler yüzde ve koordinattır: koordinat ölçüsünün değeri uzunluk gibi yazılır ama uzunluk sayılmaz (`$uzunluk`, Öznitelikler'in toplamları). Birim ve önek biçimden de bulunur (`dimension_measure`; bloktaki ölçünün etiketi böyle yazılır). Bağımsız Python başvurusuyla sınanır (`fixtures/dimension/v1/layout.json`, `scripts/fixtures/dimension_cases.py`).
+- **Depo:** seçme, kenet ve kapsam öbür ölçülerin yolundandır; kırıklı yarıçapın kapsamı gerçek merkezi içermez (çizilmez, yüzlerce metre uzakta olabilir), semt ve eğiminki kenarın uçlarını içerir (tutamaçları ve kenet noktaları oradadır). Kenet noktaları:
   - koordinatta nokta ve çizginin ucu;
   - yay uzunluğunda yayın uçları ve merkezi;
   - kırıklı yarıçapta yaydaki nokta ve gösterilen merkez;
@@ -105,7 +106,8 @@ Her ölçü değerin yüksekliği `h` cinsindendir, öbür ölçülerdeki gibi: 
   - semt ve eğimde uçlar ve ok.
 - **Dönüşümler:** noktalar taşınır; ölçek yüksekliği ve uzaklığı çarpar.
   - Koordinat ölçüsünün ekseni dünyanındır, döndürmede değişmez; çizgi yine eksene dik kurulur.
-  - Semt yeni doğrultuyu, eğim aynı kotları gösterir.
+  - Semt yeni doğrultuyu, eğim aynı kotları gösterir (ölçeklenen bloktaki eğim de: yatay uzaklık büyür, kotlar aynı kalır).
+  - Yansımada yay uzunluğu aynı yayı ölçer (uçları yer değiştirir, ölçü yayı aynı yanda kalır); kırıklı yarıçapın kırığı yarıçap boyuncadır, yansımada değişmez.
 - **Patlat:** ölçü çizgilerine ve değerine ayrılır; yay simgesi ve oklar çizgi olur.
 
 ### 5. Çizim
@@ -176,7 +178,7 @@ Bütün ölçüler şeritte, Çizim › Açıklama › **Ölçülendirme ▾** l
 ### 10. İş sırası
 
 1. **Sözleşme ve `.kcad` şema 9.** Beş biçim, `mask`, `za`, `zb`; kodek ve tipli sütunlar, belirtim, Python okuyucusu ve yazıcısı, örnekler; iki belge; sunucu. *(1 Ekim: tamam. Sözleşmede `DimensionStyle`'ın beş yeni değeri (`ALL`, `name`, `from_name`, `is_schema_9`; adlar artık camelCase, eski beşi aynı) ve `DimensionEntity`'nin `mask`, `za`, `zb`'si; komutların geometrisi (`EntityGeometry::Dimension`) ve çekirdeğin şekli (`Shape::Dimension`) bunları taşır, dönüşüm, tutamaç, esnetme ve blok yolları düşürmez; deponun paket kaydı (iki tarafta) üç sayı aldı. KCAD şema 9 yalnız bunlar kullanılınca yazılır; okuyucu ve yazıcı aynı kuralları yeriyle uygular (`missing_field`, `bad_value`, eski şemada `bad_value` ve `unknown_field`). Tipli sütunlarda yeni bayraklar (`FORMATS_VERSION` 18). Bağımsız Python yazıcısı ve okuyucusuyla `dimensions.kcad` (beş tür, zeminli ölçü, blok tanımında eğim) ve sekiz bozuk örnek; desteklenmeyen şema örneği artık 10. Web açılışta aynı kuralları denetler. İki belge yeni ölçüleri taşır (`document-ops` senaryosu). Sunucu denetler ve saklar. Python SDK'sının tipleri yeniden üretildi. Bilinen ara durum: yerleşim 2. adıma dek yeni türleri hizalı ölçü gibi çizer; DXF yazıcısı 5. adıma dek onları KentOS verisi olmadan, çizgileri ve değeriyle yazar ve söyler.)*
-2. **Çekirdek ve çizim.** Beş yerleşim bağımsız başvurusuyla; depo, tutamaçlar, dönüşümler, Patlat; iki çizicide değer, önek, yüzde ve zemin.
+2. **Çekirdek ve çizim.** Beş yerleşim bağımsız başvurusuyla; depo, tutamaçlar, dönüşümler, Patlat; iki çizicide değer, önek, yüzde ve zemin. *(1 Ekim: tamam. Çekirdekte `geom/dimension/kinds.rs`: koordinat (çizgi eksene dik, yer varsa AutoCAD'in kırığıyla), yay uzunluğu (ölçü yayı, uzatma çizgileri, çizgi olarak yay simgesi), kırıklı yarıçap (45°'lik kırık, değer yaya varan parçada ya da ilkinde), semt ve eğim (3h'lik açık oklu ok; eğimde ok inişe, düzde oksuz). Bağımsız başvuru `scripts/fixtures/dimension_cases.py` 25 örneği `fixtures/dimension/v1/layout.json`'a yazar; çekirdek (`tests/dimensions.rs`) ve web WASM'ı (`dimension.test.ts`) 1e-9 m içinde aynı. Birim ve önek biçimden de bulunur (`dimension_measure`, web'de `dimensionMeasure`, ikisi her biçim için sınanır). Tutamaçlar türe göre (koordinatta yalnız çizginin ucu; yay uzunluğunun uçları yayda, kırıklı yarıçapın noktası çemberde kalır; yeni tür çizilemeyeceği yere gitmez), kenet ve kapsam §4'teki gibi; dönüşümlerde yay uzunluğu açı, kırıklı yarıçap ve koordinat yarıçap gibidir. Etiket kaydının birim (uzunluk, açı, yüzde, koordinat), önek ve zemin kodları; bloktaki ölçünün etiketi biçiminden. İki çizici değeri yeni birimlerle yazar (yüzde iki ondalıkla) ve zeminini kutusundan, yanlarda paylı çizer. Öznitelikler'de “Ölçülen …” satırı türe göre, ötelenmenin adı (kırıklı yarıçapta “Kırık uzaklığı”, koordinatta yok). Resim sahnesi `fixtures/interaction/v1/dimensions.kcad`: masaüstü `labels::dimension_screens`, web `shots.mjs dimensions`.)*
 3. **Komutlar.** `create` ve `edit`; ortak durumlar üç koşucuda.
 4. **Araç ve arayüz.** İki platformda izler ve resimlerle, dört parça:
    1. Koordinat ve Yay uzunluğu;

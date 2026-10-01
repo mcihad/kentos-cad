@@ -191,6 +191,8 @@ fn linear_through(
         style: Some("linear".into()),
         angle: Some(deg),
         c: None,
+        za: None,
+        zb: None,
     };
     layout_dimension(&d).map(|_| d)
 }
@@ -333,6 +335,8 @@ mod tests {
             style: None,
             angle: None,
             c: None,
+            za: None,
+            zb: None,
         }
     }
 

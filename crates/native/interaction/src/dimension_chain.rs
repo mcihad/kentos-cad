@@ -88,6 +88,8 @@ fn straight(d: &DimensionEntity) -> Option<DimensionGeom> {
         style,
         angle: d.angle,
         c: None,
+        za: None,
+        zb: None,
     };
     layout_dimension(&g).map(|_| g)
 }

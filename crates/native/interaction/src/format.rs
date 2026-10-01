@@ -135,14 +135,21 @@ impl Format {
         self.bearing_bare((rad * 200.0) / std::f64::consts::PI)
     }
 
+    /// A slope in percent, two decimals (docs/adr/0147 §2; the web's `percent`).
+    pub fn percent(&self, v: f64) -> String {
+        fixed(v, 2)
+    }
+
     /// A dimension's measured value as drawn (the web's `dimensionText`): its
-    /// prefix (“R ”, “Ø ”), then a length without its unit or an angle in the
-    /// project's angle unit.
+    /// prefix (“R ”, “Ø ”, “Y=”, “X=”, “t=”, “%”), then a length or a
+    /// coordinate without its unit, an angle in the project's angle unit or a
+    /// percentage.
     pub fn dimension(&self, prefix: &str, unit: &str, value: f64) -> String {
-        if unit == "angle" {
-            format!("{prefix}{}", self.angle(value))
-        } else {
-            format!("{prefix}{}", self.length_bare(value))
+        match unit {
+            "angle" => format!("{prefix}{}", self.angle(value)),
+            "percent" => format!("{prefix}{}", self.percent(value)),
+            "coordinate" => format!("{prefix}{}", self.coord(value)),
+            _ => format!("{prefix}{}", self.length_bare(value)),
         }
     }
 

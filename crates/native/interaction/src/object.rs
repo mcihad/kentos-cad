@@ -282,12 +282,7 @@ impl ObjectAction {
         let Some(l) = dimension_geom(&s).and_then(|g| layout_dimension(&g)) else {
             return String::new();
         };
-        let value = if l.unit == "angle" {
-            f.angle(l.value)
-        } else {
-            f.length_bare(l.value)
-        };
-        format!("{}{value}", l.prefix)
+        f.dimension(l.prefix, l.unit, l.value)
     }
 
     /// Patlat (the web's `ExplodeTool.run`).

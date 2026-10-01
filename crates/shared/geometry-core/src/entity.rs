@@ -14,7 +14,7 @@ use crate::geom::arc::{
 };
 use crate::geom::arrangement::Ring;
 use crate::geom::bulge::{bulge_path_length, bulge_path_outline, bulge_ring_area, has_bulges};
-use crate::geom::dimension::{DimensionGeom, DimensionLayout, layout_dimension};
+use crate::geom::dimension::{DimensionGeom, DimensionLayout, is_new_kind, layout_dimension};
 use crate::geom::leader;
 use crate::geom::ellipse::{
     EllipseGeom, ellipse_area, ellipse_length, ellipse_point, is_full_ellipse, quadrant_params,
@@ -298,6 +298,8 @@ pub fn dimension_geom(s: &Shape) -> Option<DimensionGeom> {
             style,
             angle,
             c,
+            za,
+            zb,
             ..
         } => Some(DimensionGeom {
             a: *a,
@@ -307,6 +309,8 @@ pub fn dimension_geom(s: &Shape) -> Option<DimensionGeom> {
             style: style.clone(),
             angle: *angle,
             c: *c,
+            za: *za,
+            zb: *zb,
         }),
         _ => None,
     }
@@ -452,17 +456,18 @@ pub fn entity_outline(e: &Shape, segments: f64) -> Vec<Vec2> {
         }
         Shape::Dimension { a, b, style, .. } => match layout_of(e) {
             None => vec![*a, *b],
-            Some(l) => {
-                let style = style.as_deref().unwrap_or("aligned");
-                if style == "aligned" || style == "linear" {
-                    vec![*a, l.d1, l.d2, *b]
-                } else {
+            Some(l) => match style.as_deref().unwrap_or("aligned") {
+                "aligned" | "linear" => vec![*a, l.d1, l.d2, *b],
+                // What is drawn: a jogged radius's true centre is not, and it
+                // may lie hundreds of metres off (docs/adr/0147 §4).
+                "jogged" => l.lines.iter().flatten().copied().collect(),
+                _ => {
                     let mut out = vec![*a];
                     out.extend(l.lines.iter().flatten().copied());
                     out.push(*b);
                     out
                 }
-            }
+            },
         },
         // Its line on to its landing's end (docs/adr/0146 §4).
         Shape::Leader { pts, .. } => match leader::layout_of(e) {
@@ -877,14 +882,19 @@ pub fn entity_bounds_in(e: &Shape, font: Font) -> Bounds {
             extend_bounds(&mut b, q, 0.0);
         }
         if let Shape::Dimension {
-            a, b: bb, height, ..
+            a,
+            b: bb,
+            height,
+            style,
+            ..
         } = e
         {
-            extend_bounds(
-                &mut b,
-                Vec2::new((a.x + bb.x) / 2.0, (a.y + bb.y) / 2.0),
-                height * 2.0,
-            );
+            // The new kinds' values stand away from their points (docs/adr/0147).
+            let at = is_new_kind(style.as_deref())
+                .then(|| layout_of(e).map(|l| l.text_at))
+                .flatten()
+                .unwrap_or(Vec2::new((a.x + bb.x) / 2.0, (a.y + bb.y) / 2.0));
+            extend_bounds(&mut b, at, height * 2.0);
         }
         return b;
     }

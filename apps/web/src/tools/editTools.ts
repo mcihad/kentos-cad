@@ -121,7 +121,7 @@ export class ExplodeTool extends SelectionActionTool {
       const r =
         e.kind === 'insert'
           ? this.ctx.view.explodeInsert(e)
-          : explodeEntity(e, (l) => dimensionLabel(undefined, l, { length: (m) => format.length(m, false), angle: (a) => format.angle(a) }), this.ctx.doc.settings.drawingFont.value);
+          : explodeEntity(e, (l) => dimensionLabel(undefined, l, { length: (m) => format.length(m, false), angle: (a) => format.angle(a), percent: (v) => format.percent(v) }), this.ctx.doc.settings.drawingFont.value);
       if ('error' in r) {
         firstError ??= r.error;
         continue;

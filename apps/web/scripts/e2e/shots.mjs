@@ -2082,6 +2082,32 @@ SCENES.leaders = [
   ...dxfLeaderScenes(),
 ];
 
+// The new dimensions (docs/adr/0147) on fixtures/interaction/v1/dimensions.kcad, the scene the desktop's
+// `labels::dimension_screens` draws: a corner's Y and X, a road edge's arc length and jogged radius, an edge's azimuth
+// and slope, a value masked over a hatch and a slope in a block; the arc length selected so that Öznitelikler shows it.
+const DIMENSIONS = readFileSync(new URL('../../../../fixtures/interaction/v1/dimensions.kcad', import.meta.url), 'utf8');
+SCENES.dimensions = [
+  {
+    id: 'dimension-kinds',
+    open: async (ui) => {
+      await ui.eval(`(async () => {
+        const k = window.kentos;
+        k.files.ask = async () => 'drop';
+        if (!(await k.files.load(${JSON.stringify(DIMENSIONS)}, null))) throw new Error('dimensions.kcad did not load');
+        k.view.zoomExtents();
+        // Clear of the toolbox.
+        const c = k.view.camera;
+        c.scale = c.scale * 0.85;
+        c.center = { x: c.center.x - 90 / c.scale, y: c.center.y };
+        c.panBy(0, 0);
+        k.selection.set([9]);
+      })()`);
+      await ui.move(2, 2);
+      await ui.sleep(600);
+    },
+  },
+];
+
 // DXF içe aktar over the leaders' fixture (fixtures/formats/v1/leaders.dxf, docs/adr/0146 §8): the window says what
 // became of the LEADERs' MTEXTs, the hookline, the spline path, the MULTILEADERs' other lines and block content; in,
 // every leader with its note (a note's other lines under it); out again, the window says how leaders are written.

@@ -686,14 +686,34 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                     DimensionStyle::Slope => "Eğim",
                 },
             ));
+            // What it measured, by its unit (docs/adr/0147 §2).
             match dimension_layout(e) {
                 Some(l) if l.unit == "angle" => geo.push(
-                    Row::figure("Ölçülen açı", f.angle_bare(l.value)).unit(f.angle_unit_label()),
+                    Row::figure(
+                        if style == DimensionStyle::Azimuth {
+                            "Ölçülen semt"
+                        } else {
+                            "Ölçülen açı"
+                        },
+                        f.angle_bare(l.value),
+                    )
+                    .unit(f.angle_unit_label()),
                 ),
+                Some(l) if l.unit == "percent" => {
+                    geo.push(Row::figure("Ölçülen eğim", f.percent(l.value)).unit("%"))
+                }
+                Some(l) if l.unit == "coordinate" => geo.push(metres(
+                    if l.prefix == "Y=" {
+                        "Ölçülen Y"
+                    } else {
+                        "Ölçülen X"
+                    },
+                    l.value,
+                )),
                 Some(l) => geo.push(metres(
                     match style {
                         DimensionStyle::Diameter => "Ölçülen çap",
-                        DimensionStyle::Radius => "Ölçülen yarıçap",
+                        DimensionStyle::Radius | DimensionStyle::Jogged => "Ölçülen yarıçap",
                         _ => "Ölçülen uzunluk",
                     },
                     l.value,
@@ -703,16 +723,22 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             if style == DimensionStyle::Aligned {
                 geo.push(bearing(v(d.a), v(d.b)));
             }
+            // An ordinate has no offset; a jogged radius's is where its jog is.
+            if style != DimensionStyle::Ordinate {
+                geo.push(
+                    metres(
+                        match style {
+                            DimensionStyle::Angular => "Yay yarıçapı",
+                            DimensionStyle::Radius | DimensionStyle::Diameter => "Dışa uzantı",
+                            DimensionStyle::Jogged => "Kırık uzaklığı",
+                            _ => "Ötelenme",
+                        },
+                        d.offset,
+                    )
+                    .editor(number(Field::DimensionOffset(slot))),
+                );
+            }
             geo.extend([
-                metres(
-                    match style {
-                        DimensionStyle::Angular => "Yay yarıçapı",
-                        DimensionStyle::Radius | DimensionStyle::Diameter => "Dışa uzantı",
-                        _ => "Ötelenme",
-                    },
-                    d.offset,
-                )
-                .editor(number(Field::DimensionOffset(slot))),
                 metres("Yazı yüksekliği", d.height).editor(number(Field::DimensionHeight(slot))),
                 Row::text("Yazı", d.text.clone().unwrap_or_default())
                     .editor(edit(Editor::Text(Field::DimensionText(slot)))),

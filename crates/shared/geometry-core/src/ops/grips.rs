@@ -10,7 +10,7 @@ use crate::geom::affine::translation;
 use crate::geom::arc::{ArcGeom, arc_end, arc_mid, arc_start, arc_through};
 use crate::geom::arrangement::Ring;
 use crate::geom::bulge::{bulge_at, bulge_through, is_arc_bulge, segment_mid};
-use crate::geom::dimension::{dimension_offset_at, layout_dimension};
+use crate::geom::dimension::{dimension_offset_at, is_new_kind, layout_dimension};
 use crate::geom::ellipse::{closest_param, ellipse_from_center, ellipse_point, is_full_ellipse};
 use crate::jsmath::{PI, js_hypot};
 use crate::op;
@@ -92,15 +92,45 @@ pub fn entity_grips(e: &Shape) -> Vec<Vec2> {
             out
         }
         Shape::Hatch { ring, .. } => ring.clone(),
-        Shape::Dimension { a, b, c, .. } => {
-            match dimension_geom(e).and_then(|d| layout_dimension(&d)) {
-                Some(l) => {
-                    let mut out = vec![*a, *b, l.handle];
-                    out.extend(*c);
-                    out
-                }
-                None => vec![*a, *b],
-            }
+        Shape::Dimension { .. } => dimension_grips(e).into_iter().map(|(p, _)| p).collect(),
+    }
+}
+
+/// What a dimension's grip moves.
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum DimensionGrip {
+    A,
+    B,
+    /// The vertex, the arc's centre or the centre shown.
+    C,
+    /// The dimension line, arc or arrow (`offset`).
+    Line,
+}
+
+/// A dimension's grips in order: a, b, the line's handle and c; the kinds
+/// of docs/adr/0147 §4 their own: an ordinate its line's end (the point
+/// stays), an arc length the arc's ends and the dimension arc, a jogged
+/// radius the point on the arc, the jog and the centre shown.
+fn dimension_grips(e: &Shape) -> Vec<(Vec2, DimensionGrip)> {
+    use DimensionGrip::*;
+    let Shape::Dimension { a, b, c, style, .. } = e else {
+        return Vec::new();
+    };
+    let Some(l) = dimension_geom(e).and_then(|d| layout_dimension(&d)) else {
+        return vec![(*a, A), (*b, B)];
+    };
+    match style.as_deref() {
+        Some("ordinate") => vec![(*b, B)],
+        Some("arcLength") => vec![(*a, A), (*b, B), (l.handle, Line)],
+        Some("jogged") => {
+            let mut out = vec![(*b, B), (l.handle, Line)];
+            out.extend(c.map(|c| (c, C)));
+            out
+        }
+        _ => {
+            let mut out = vec![(*a, A), (*b, B), (l.handle, Line)];
+            out.extend(c.map(|c| (c, C)));
+            out
         }
     }
 }
@@ -472,27 +502,57 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
                 za: *za,
                 zb: *zb,
             };
-            match index {
-                0 => {
+            let grip = dimension_grips(&e.shape).get(index)?.1;
+            // An arc length's ends stay on its arc, a jogged radius's point on its circle (docs/adr/0147 §4).
+            let onto = |centre: Vec2, r: f64| {
+                let l = js_hypot(p.x - centre.x, p.y - centre.y);
+                (l > 1e-9).then(|| {
+                    Vec2::new(
+                        centre.x + ((p.x - centre.x) / l) * r,
+                        centre.y + ((p.y - centre.y) / l) * r,
+                    )
+                })
+            };
+            let moved = match (style.as_deref(), grip) {
+                (Some("arcLength"), DimensionGrip::A | DimensionGrip::B) => {
+                    let centre = (*c)?;
+                    let q = onto(centre, js_hypot(a.x - centre.x, a.y - centre.y))?;
+                    if grip == DimensionGrip::A {
+                        d(q, *b, *offset, *c)
+                    } else {
+                        d(*a, q, *offset, *c)
+                    }
+                }
+                (Some("jogged"), DimensionGrip::B) => {
+                    d(*a, onto(*a, js_hypot(b.x - a.x, b.y - a.y))?, *offset, *c)
+                }
+                (_, DimensionGrip::A) => {
                     if !(js_hypot(b.x - p.x, b.y - p.y) > 1e-9) {
                         return None;
                     }
                     d(p, *b, *offset, *c)
                 }
-                1 => {
+                (_, DimensionGrip::B) => {
                     if !(js_hypot(p.x - a.x, p.y - a.y) > 1e-9) {
                         return None;
                     }
                     d(*a, p, *offset, *c)
                 }
-                3 => d(*a, *b, *offset, Some(p)),
-                _ => d(
+                (_, DimensionGrip::C) => d(*a, *b, *offset, Some(p)),
+                (_, DimensionGrip::Line) => d(
                     *a,
                     *b,
                     dimension_offset_at(&dimension_geom(&e.shape)?, p),
                     *c,
                 ),
+            };
+            // A new kind's grip may not take it where it cannot be drawn.
+            if is_new_kind(style.as_deref())
+                && dimension_geom(&moved).and_then(|g| layout_dimension(&g)).is_none()
+            {
+                return None;
             }
+            moved
         }
     };
     Some(e.with(shape))
