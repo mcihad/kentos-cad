@@ -23,7 +23,7 @@
     { "key": "R", "expect": { "options": ["Ç"] } },
     { "text": "2" },
     { "key": "Enter", "expect": { "entities": 10, "newest": { "kind": "circle", "center": [22, 8], "radius": 2 } } },
-    { "text": "2N", "note": "Rakamla başlayan seçenek değer alanında yazılır; harf Shift'siz gelir, araç büyük harfle okur.", "expect": { "dynamicInput": "2n" } },
+    { "text": "2n", "note": "Rakamla başlayan seçenek değer alanında yazılır; harf Shift'siz gelir, araç büyük harfle okur.", "expect": { "dynamicInput": "2n" } },
     { "key": "Enter", "expect": { "options": [], "points": 0, "dynamicInput": null } },
     { "click": [-20, -4] },
     { "click": [-12, -4], "note": "Çapın iki ucu.", "expect": { "entities": 11, "newest": { "kind": "circle", "center": [-16, -4], "radius": 4 } } },

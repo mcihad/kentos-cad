@@ -323,6 +323,28 @@ fn compare_shape(name: &str, want: &Newest, seen: Option<&Seen>, trace: &Trace) 
             seen.rotation
         ));
     }
+    // A survey point's name, attributes and elevation (docs/adr/0152), exact.
+    if let Some(label) = &want.label
+        && seen.label != *label
+    {
+        bad.push(format!(
+            "{name}.label: {:?}, beklenen {label:?}",
+            seen.label
+        ));
+    }
+    if let Some(attrs) = &want.attrs
+        && seen.attrs != *attrs
+    {
+        bad.push(format!(
+            "{name}.attrs: {:?}, beklenen {attrs:?}",
+            seen.attrs
+        ));
+    }
+    if let Some(z) = want.z
+        && seen.z != z
+    {
+        bad.push(format!("{name}.z: {:?}, beklenen {z:?}", seen.z));
+    }
     if let Some(arcs) = want.arcs {
         let have = bulges.iter().filter(|b| **b != 0.0).count();
         if have != arcs {

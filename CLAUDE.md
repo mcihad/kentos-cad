@@ -29,6 +29,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine tıklayarak alan (ADR 0065);
   topolojik temizlik: uçlar ve köşeler var olan köşede birleşir, kısa uç uzar, taşan uç budanır, yazılan toleransla, önizlemeli tek adım (ADR 0148);
   toplu alan: çizgilerin kapattığı bütün bölgeler tek adımda alan olur, içteki yazı ya da adlı nokta özniteliği; etiketsiz, çok etiketli bölgeler ve boşta uçlar söylenir (ADR 0151);
+  ölçü noktası: Nokta'nın Ad, Kod ve Kot'u, ad her noktada artar, aynı yerde nokta varsa Düzelt, Ekle ya da Atla, `#ad` ile adlı noktanın yeri, Köşelere nokta (ADR 0152);
   mesafe ölç, alan hesapla ve parsel oluştur (ADR 0067); seçili nesnelerin tutamaçları ve üzerine gelme kartı (ADR 0068);
   Hesap pencereleri: poligon hesabı, kutupsal alım, önden ve geriden kestirme, aplikasyon (ADR 0070, 0071);
   İşlemler: dört yerleşik araç ve Parsel ölçü yazıları modeli, tanımdan üretilen penceresiyle (ADR 0084);
@@ -539,7 +540,7 @@ Tek ayrıntılı yol haritası [TODOS.md](TODOS.md)'dir. Buraya ikinci checkbox
 listesi, eski Faz A–F sırası veya her tamamlanan commit'in dökümünü eklemeyin.
 Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde saklayın.
 
-### 10.1 Devir notu (1 Ekim 2026)
+### 10.1 Devir notu (2 Ekim 2026)
 
 İşi devralan için kalınan yer; bir sonraki devirde bu bölümü yenileyin.
 
@@ -571,9 +572,11 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
 - Sürmekte: TODOS.md §16'nın sırası (sahibin kararı, 1 Ekim): önce hibrit (§16.0), sonra CAD (§16.1), sonra CBS (§16.2).
   `HYB-02` çizgi ağından toplu alan ([ADR 0151](docs/adr/0151-polygonize.md)) bitti: çekirdek `ops::polygonize` (bağımsız
   başvuru `polygonize_cases.py`, 58 ortak durum), `cad.entities.create`'in `polygonize` işlemi, Toplu alan aracı iki
-  platformda (ortak iz `polygonize.json`). Şimdi `HYB-03` ölçü noktası ([ADR 0152](docs/adr/0152-survey-points.md)): 1. adım
-  (`#ad` dilbilgisi, `ops::vertex_points` bağımsız başvurusuyla) ve 2. adım (`cad.entities.create`'in `vertexPoints` işlemi)
-  tamam; sıradaki 3: Nokta'nın seçenekleri, aynı yer sorusu, `#ad` çözümü ve Köşelere nokta iki platformda. PDF, yazdırma ve pafta çıktısı (§16.4) en
+  platformda (ortak iz `polygonize.json`). `HYB-03` ölçü noktası ([ADR 0152](docs/adr/0152-survey-points.md)) bitti (2 Ekim):
+  `#ad` dilbilgisi ve `ops::vertex_points` bağımsız başvurusuyla, `cad.entities.create`'in `vertexPoints` işlemi, Nokta'nın Ad, Kod
+  ve Kot'u, aynı yer sorusu, `#ad` çözümü (adlı noktanın yeri araca tıklanmış gibi verilir) ve Köşelere nokta iki platformda
+  (ortak izler `survey-points.json`, `vertex-points.json`; iz biçimi etiketi, öznitelikleri ve kotu da denetler). Sıradaki
+  `HYB-04` nokta editörü. PDF, yazdırma ve pafta çıktısı (§16.4) en
   sondadır, zamanını sahip söyleyecek. İşler ADR 0142–0148'deki gibi: önce ADR ve adımları, sonra adım adım iki platformda,
   ortak fixture'larla.
 - Bilinen açık: web `pnpm e2e` duman testinde üç test ADR 0143'ten önce de düşüyordu: “toolbox

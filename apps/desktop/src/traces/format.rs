@@ -197,6 +197,14 @@ pub struct Newest {
     /// ordinate's axis; docs/adr/0147), within 1e-9: a typed angle in grads
     /// comes back through radians.
     pub(super) angle: Option<f64>,
+    /// The text beside it (a survey point's name), `null` none; its
+    /// attributes, all of them; a point's elevation, `null` none
+    /// (docs/adr/0152). Exact; absent, not compared.
+    #[serde(default, deserialize_with = "present")]
+    pub(super) label: Option<Option<String>>,
+    pub(super) attrs: Option<std::collections::BTreeMap<String, String>>,
+    #[serde(default, deserialize_with = "present")]
+    pub(super) z: Option<Option<f64>>,
 }
 
 /// A JSON object's members in the order they are written (a `dialog` step's

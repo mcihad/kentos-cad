@@ -11,7 +11,7 @@
   "prefs": { "cursorInput": true },
   "clickTolerance": 0.125,
   "steps": [
-    { "run": "tool.point", "expect": { "tool": "point", "points": 0, "options": [], "entities": 7 } },
+    { "run": "tool.point", "expect": { "tool": "point", "points": 0, "options": ["A", "K", "Z"], "entities": 7 } },
     { "move": [-23.5, -11.625], "note": "Nokta aracı kenetlenir: 1 numaralı çizginin başlangıcı.", "expect": { "snap": "endpoint" } },
     { "click": [-23.5, -11.625], "note": "Nokta kenet noktasına tam oturur; tek ileti noktanın yankısıdır.", "expect": { "entities": 8, "newest": { "kind": "point", "points": [[-24, -12]] }, "points": 0, "log": "info", "canUndo": true } },
     { "click": [12, -6], "expect": { "entities": 9, "newest": { "kind": "point", "points": [[12, -6]] }, "points": 0, "tool": "point" } },

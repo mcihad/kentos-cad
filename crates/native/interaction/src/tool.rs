@@ -415,6 +415,13 @@ pub struct Memory {
     /// (`PolygonizeTool.islands`, `.attribute`; docs/adr/0151 §3, §4).
     pub polygonize_islands: bool,
     pub polygonize_attribute: Name,
+    /// Nokta's Ad, Kod and Kot: the next point's name (it moves on by
+    /// Artır), the points' code and elevation; Köşelere nokta starts from
+    /// the name and gives its code (`SurveyPointTool.next`, `.code`, `.z`;
+    /// docs/adr/0152 §2, §5).
+    pub point_name: Name,
+    pub point_code: Name,
+    pub point_z: Option<f64>,
 }
 
 /// A short text kept in [`Memory`], which is `Copy`: at most
@@ -428,6 +435,11 @@ pub struct Name {
 impl Name {
     pub const MAX_CHARS: usize = 60;
     const MAX_BYTES: usize = Self::MAX_CHARS * 4;
+    /// The empty text.
+    pub const EMPTY: Self = Self {
+        len: 0,
+        bytes: [0; Self::MAX_BYTES],
+    };
 
     /// The text, or `None` when it is longer than [`Name::MAX_CHARS`] characters.
     pub fn new(text: &str) -> Option<Self> {
@@ -574,10 +586,11 @@ impl Default for Memory {
             topology_tolerance: crate::topology::FIRST_TOLERANCE,
             topology_works: crate::topology::FIRST_WORKS,
             polygonize_islands: true,
-            polygonize_attribute: Name::new(crate::polygonize::FIRST_ATTRIBUTE).unwrap_or(Name {
-                len: 0,
-                bytes: [0; Name::MAX_BYTES],
-            }),
+            polygonize_attribute: Name::new(crate::polygonize::FIRST_ATTRIBUTE)
+                .unwrap_or(Name::EMPTY),
+            point_name: Name::EMPTY,
+            point_code: Name::EMPTY,
+            point_z: None,
         }
     }
 }

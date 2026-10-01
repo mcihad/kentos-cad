@@ -126,6 +126,8 @@ pub(super) fn stroke_for(ch: &str, layout: Layout) -> Result<Stroke, String> {
             ..plain("+", Code::NumpadAdd)
         }),
         (Layout::Us, '@') => Some(shifted("2", Code::Digit2)),
+        // A point's name starts with # (docs/adr/0152 §4).
+        (Layout::Us, '#') => Some(shifted("3", Code::Digit3)),
         (Layout::Us, '<') => Some(plain("<", Code::IntlBackslash)),
         (Layout::Us, '/') => Some(plain("/", Code::Slash)),
         // Turkish Q: + is Shift+4, − sits right of *, @ is AltGr+Q (Ctrl+Alt on Windows).
@@ -137,6 +139,11 @@ pub(super) fn stroke_for(ch: &str, layout: Layout) -> Result<Stroke, String> {
         (Layout::TurkishQ, '@') => Some(Stroke {
             modifiers: Modifiers::CTRL | Modifiers::ALT,
             ..plain("q", Code::KeyQ)
+        }),
+        // Turkish Q: # is AltGr+3.
+        (Layout::TurkishQ, '#') => Some(Stroke {
+            modifiers: Modifiers::CTRL | Modifiers::ALT,
+            ..plain("3", Code::Digit3)
         }),
         (Layout::TurkishQ, '<') => Some(plain("<", Code::IntlBackslash)),
         // Turkish Q: / is Shift+7.

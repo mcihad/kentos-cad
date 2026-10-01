@@ -15,6 +15,7 @@ import { echo } from './logPlan';
 import { calcMenuItems } from '../shell/calcMenu';
 import { SNAP_LABEL } from '../../viewport/picking';
 import { PopupMenu, type MenuItem } from '../widgets/PopupMenu';
+import { namedPoint } from '../../tools/namedPoint';
 
 /** The least of the step's words kept before an option gives way to “Diğer”, CSS px at type scale 1 (the desktop's `STEP_MIN`). */
 const STEP_MIN = 120;
@@ -98,7 +99,8 @@ export class CommandLine extends Component {
       if ((e.ctrlKey || e.altKey) && !isAltGrText(e)) return;
       if (isTextInput(document.activeElement)) return;
       e.preventDefault();
-      if (/[\d@.+-]/.test(e.key) && this.direct?.accepts()) this.direct.show(e.key);
+      // # starts a point's name (docs/adr/0152 §4).
+      if (/[\d@.+#-]/.test(e.key) && this.direct?.accepts()) this.direct.show(e.key);
       else this.typeFirst(e.key);
     };
     this.d.add(() => (ctx.keymap.fallback = null));
@@ -268,6 +270,8 @@ export class CommandLine extends Component {
       log.command(echo(text));
       this.remember(text);
       this.input.value = '';
+      // #ad: a point's place by its name (docs/adr/0152 §4).
+      if (namedPoint(this.ctx, text)) return;
       if (tool.input(text)) return;
       // Point calculator by its alias (YAN, KKES, DKES, HAT, AM, ORTA) while a point is expected.
       const calc = CALC_KINDS.find((k) => k.alias === text.toLocaleUpperCase('tr-TR'));

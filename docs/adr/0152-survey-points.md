@@ -34,8 +34,9 @@ Var olan **Nokta** aracı (`tool.point`) üç seçenek alır; seçeneksiz kullan
 | Kod | K | boş | Noktaların `Kod` özniteliği. Yazı kutusunda sorulur. |
 | Kot | Z | yok | Noktaların kotu: yazılan sayı. Boş Enter kotu kaldırır. |
 
-- Ad, kod ve kot oturum boyunca hatırlanır; ad her yazılan noktayla ilerler.
-- İstem: `Nokta: nokta konumunu belirtin [Ad (A): 101 / Kod (K): SN / Kot (Z): 102.350 m]`; boş değer `—`, kotsuz `yok` yazılır.
+- Ad, kod ve kot oturum boyunca hatırlanır; ad her yazılan noktayla ilerler. Ad ve kod en çok 60 harftir (oturum belleğinin sınırı); yazı kutusunda boş Enter onları, Kot'ta boş Enter kotu kaldırır.
+- İstem: `Nokta: nokta konumunu belirtin [Ad (A): 101 / Kod (K): SN / Kot (Z): 102.350 m]`; boş değer `—`, kotsuz `yok` yazılır. Sıradaki ad imlecin yanında görünür.
+- Komut sürerken Ctrl+Z en yeni noktayı (ya da Düzelt'i) çizim o zamandan beri değişmediyse geri alır ve adını geri verir: 105 geri alınınca sıradaki ad yine 105'tir. Elle verilen ad geri alınmaz.
 - Kot noktası aracı olduğu gibi kalır (her nokta için kot sorar).
 
 ### 3. Aynı yerde nokta
@@ -49,6 +50,7 @@ Yeni noktanın yerinde (1 µm içinde) bir nokta varsa nokta yazılmadan sorulur
 - **Atla:** hiçbir şey yazılmaz.
 - Düzelt ve Ekle'den sonra ad ilerler, Atla'dan sonra ilerlemez.
 - Var olan noktanın adı yoksa soru “bu yerde adsız bir nokta var” der.
+- Soru sürerken tıklama ve Enter cevabı bekler; Ctrl+Z soruyu Esc gibi kapatır. Ad, kod ve kot verilmemişse Düzelt “düzeltilecek değer yok” der ve soru kalır.
 
 ### 4. Ada göre nokta girişi
 
@@ -57,7 +59,9 @@ Her nokta isteminde `#ad` yazmak o adlı noktanın yerini verir: `#101`, `#101/1
 - Ad, çizimdeki noktaların etiketleriyle tam (baştaki ve sondaki boşluklar atılarak) karşılaştırılır. Gizli katmandakiler de sayılır: ad bir kimliktir.
 - **Bulunmazsa:** “#101: bu adda nokta yok.” Nokta alınmaz.
 - **Birden çoksa:** “#101: bu adda 2 nokta var; koordinatı yazın.” Nokta alınmaz.
-- Dilbilgisi: `#` ve ardından boş olmayan ad (`fixtures/point-input/v1`'e eklenir). Çözüm uygulamanın işidir: komut satırı ya da imleç yanındaki değer alanı yazılanı araca vermeden önce adı noktanın tam koordinatlarıyla (`Y,X`, en kısa geri dönen yazımla) değiştirir. Böylece her nokta alan araç bunu kendiliğinden alır.
+- Dilbilgisi: `#` ve ardından boş olmayan ad (`fixtures/point-input/v1`'e eklenir). `#` imleç yanındaki değer alanını açar.
+- Çözüm uygulamanın işidir: komut satırı ya da değer alanı yazılanı araca metin olarak vermez; o adlı noktanın tam yerini çalışan araca tıklanmış gibi verir. Nokta hesaplayıcının yolu budur: web'de `acceptPoint`, masaüstünde `accept_point`. Yer metne çevrilmediği için yuvarlanmaz; nokta alan her araç onu kendiliğinden alır, tutamaç taşınırken tutamaç da.
+- **Nokta beklenmiyorsa:** “#101: bu adımda nokta istenmiyor.” (seçim sürerken, Kot yazılırken, Köşelere nokta'da).
 - Kot taşınmaz: ada göre alınan nokta yalnız yerdir (kot kuralları ADR 0142'ninkidir).
 
 ### 5. Köşelere nokta
@@ -69,7 +73,8 @@ Her nokta isteminde `#ad` yazmak o adlı noktanın yerini verir: `#101`, `#101/1
 - **Ad:** Nokta aracının Ad'ından başlar, her noktada artar; araç biterken Nokta'nın Ad'ı sıradaki ada geçer. Ad boşsa noktalar adsızdır.
 - **Kod:** Nokta aracının Kod'u.
 - **Kot:** köşenin kotu (ADR 0142); kotsuz köşenin noktası kotsuz.
-- **Akış:** seçimden önce ya da sonra seçilir; noktalar adlarıyla önizlenir; Enter, Uygula ya da hızlı sağ tık yazar ve çıkar. A ve K Nokta'nın seçenekleridir.
+- **Akış:** seçimden önce ya da sonra seçilir; noktalar halka işareti ve adlarıyla önizlenir, imlecin yanında bulgu (`5 nokta; 1 köşede zaten nokta var`); tıklama nokta koymaz; Enter, Uygula ya da hızlı sağ tık yazar ve çıkar. A ve K Nokta'nın seçenekleridir.
+- **İleti:** `Köşelere nokta: 5 nokta eklendi (201 – 205); 1 köşede zaten nokta vardı.`
 - Şeritte Çizim › Nokta ▾, Nokta'nın yanında. Takma adlar: KOSELERENOKTA, NOKTAURET (Netcad'in Otomatik Nokta Üret'i), EXTRACTVERTICES (QGIS).
 
 ### 6. Hesap (ortak çekirdek)
@@ -102,6 +107,13 @@ Her nokta isteminde `#ad` yazmak o adlı noktanın yerini verir: `#101`, `#101/1
    - **Başvuru:** `vertex_points_cases.py` 48 durum yazar: 14 elle kurulmuş (her biri başlangıçta ve TM koordinatlarında: ad artımları, adsız, sayıyla bitmeyen ad, paylaşılan köşe, var olan nokta ve bir kez sayılması, kot, delik ve parça, kendine dönen çizgi, 1 µm sınırı, boş girdi) ve 20 rastgele parsel ağı. Çekirdek (`tests/vertex_points.rs`) ve web WASM'ı (`model/ops/vertexPoints.test.ts`) aynı; değiştirilmiş beklentileri yakalar.
 2. **Komut:** `CreateOperation::VertexPoints`; iki işleyici, ortak durum, katalog ve Python SDK'sı. *(1 Ekim: tamam. Sözleşmede `vertexPoints` işlemi; adım adı iki işleyicide “Köşelere nokta”. Ortak durum (`create_command_cases.py`): üç adlı nokta `Kod` özniteliği ve kotlarıyla (biri kotsuz) tek adımda, adıyla geri alınır; masaüstü, web ve Python SDK'sı geçer. TypeScript tipi, katalog ve SDK'nın tipleri üretildi.)*
 3. **Araç ve arayüz:** Nokta'nın seçenekleri ve aynı yer sorusu, `#ad` çözümü iki uygulamada, Köşelere nokta; ortak izler, testler, resimler.
+
+   *(2 Ekim: tamam.)*
+   - **Nokta:** web'in `SurveyPointTool`'u, masaüstünün `point.rs`'i; değerler oturum belleğinde (web'de araç sınıfının alanları, masaüstünde `Memory::point_name`, `point_code`, `point_z`).
+   - **`#ad`:** web'de `namedPoint` (komut satırı ve değer alanı), masaüstünde `Session::input`; iki uygulamada `#` değer alanını açar.
+   - **Köşelere nokta:** web'in `VertexPointsTool`'u, masaüstünün `vertex_points.rs`'i (Değiştir tabanı, yazı kutusunun cevabı aşamaya iletilir); ikonu kendi çizimi (köşelerde noktalı halkalar).
+   - **İzler:** iz biçimi en yeni nesnenin etiketini, özniteliklerini ve kotunu da denetler (`label`, `attrs`, `z`). Ortak izler `survey-points.json` ve `vertex-points.json` (`survey-points.kcad` üzerinde), `point-series.json`'un seçenekleri; iki platformda üç varyantta.
+   - **Testler:** iki platformda aynı durumlar, web'de `surveyPointTool.test.ts` ve `vertexPointsTool.test.ts`, masaüstünde `tests/survey_points.rs` ve `tests/vertex_points.rs`; adın ilerlemesini ve geri verilmesini bozan değişikliği yakalarlar.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
 

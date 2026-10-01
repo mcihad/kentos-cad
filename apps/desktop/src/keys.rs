@@ -226,15 +226,16 @@ pub fn is_chorded(chord: &str) -> bool {
 }
 
 /// The character that starts a typed value (the web's `keymap.fallback`):
-/// a digit, `.`, `@`, `+` or `-`. `+` and `-` get here only when no
-/// shortcut took them, that is while a command runs (ADR 0018).
+/// a digit, `.`, `@`, `+`, `-` or `#` (a point by its name, docs/adr/0152
+/// §4). `+` and `-` get here only when no shortcut took them, that is while
+/// a command runs (ADR 0018).
 pub fn value_start(press: &KeyPress) -> Option<char> {
     if press.chorded() {
         return None;
     }
     press
         .character()
-        .filter(|c| c.is_ascii_digit() || matches!(c, '@' | '.' | '+' | '-'))
+        .filter(|c| c.is_ascii_digit() || matches!(c, '@' | '.' | '+' | '-' | '#'))
 }
 
 /// An option letter of the running command: a plain letter, upper-cased the
@@ -338,6 +339,15 @@ mod tests {
         assert_eq!(chord(&at), None);
         assert_eq!(value_start(&at), Some('@'));
         assert_eq!(typed(&at), Some("@"));
+        // # is AltGr+3: a point's name starts a value too (docs/adr/0152 §4).
+        let hash = press(
+            ch("#"),
+            Code::Digit3,
+            Modifiers::CTRL | Modifiers::ALT,
+            Some("#"),
+        );
+        assert_eq!(chord(&hash), None);
+        assert_eq!(value_start(&hash), Some('#'));
         // Ctrl+Alt with a letter stays a chord.
         let new = press(
             ch("n"),

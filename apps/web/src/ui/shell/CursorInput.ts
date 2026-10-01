@@ -5,6 +5,7 @@ import { echo } from '../bottom/logPlan';
 import { Component } from '../Component';
 import { h } from '../dom';
 import { besidePointer, type Size } from '../widgets/placeBeside';
+import { namedPoint } from '../../tools/namedPoint';
 
 /**
  * Dynamic input: while a command runs and the mouse is over the drawing,
@@ -85,6 +86,8 @@ export class CursorInput extends Component {
     this.close();
     if (!text) return void ctx.commands.execute('tool.confirm');
     ctx.log.command(echo(text));
+    // #ad: a point's place by its name (docs/adr/0152 §4).
+    if (namedPoint(ctx, text)) return;
     if (!ctx.tools.active.input?.(text)) ctx.log.warn(`“${text}” anlaşılamadı. Mesafe, Y,X, @dY,dX ya da @mesafe<açı yazın.`);
   }
 

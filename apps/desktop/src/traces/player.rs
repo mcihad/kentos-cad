@@ -63,6 +63,11 @@ pub struct Seen {
     /// A dimension's direction in degrees: a linear one's measured, an
     /// ordinate's axis (docs/adr/0147).
     pub angle: Option<f64>,
+    /// The text beside it (a survey point's name), its attributes and a
+    /// point's elevation (docs/adr/0152).
+    pub label: Option<String>,
+    pub attrs: std::collections::BTreeMap<String, String>,
+    pub z: Option<f64>,
 }
 
 impl Seen {
@@ -176,6 +181,12 @@ impl Seen {
             },
             angle: match e {
                 Entity::Dimension(d) => d.angle,
+                _ => None,
+            },
+            label: e.base().label.clone(),
+            attrs: e.base().attrs.clone(),
+            z: match e {
+                Entity::Point(p) => p.z,
                 _ => None,
             },
         }
@@ -385,6 +396,19 @@ impl<'a> Player<'a> {
             if key == "Enter" && self.app.text_field.is_some() {
                 return self.apply(Message::TextField(crate::text_field::Event::Keep));
             }
+            // Backspace in it takes the chosen text away when it opened with one (Nokta's
+            // Ad and Kod emptied, docs/adr/0152 §2), else the last character.
+            if key == "Backspace"
+                && let Some(open) = &self.app.text_field
+            {
+                let mut now = open.text.clone();
+                if std::mem::take(&mut self.field_fresh) {
+                    now.clear();
+                } else {
+                    now.pop();
+                }
+                return self.apply(Message::TextField(crate::text_field::Event::Input(now)));
+            }
             return self.press(&chord_stroke(key, self.variant.layout)?);
         }
         if let Some(text) = &step.text {
@@ -398,7 +422,15 @@ impl<'a> Player<'a> {
                 return self.apply(Message::TextField(crate::text_field::Event::Input(now)));
             }
             for ch in text.chars() {
-                self.press(&stroke_for(&ch.to_string(), self.variant.layout)?)?;
+                // A capital typed into the value field is Shift and the letter, as a keyboard
+                // types it (a point's name, docs/adr/0152 §4); on the drawing an option letter
+                // goes without Shift (the web runner's rule).
+                let stroke = if ch.is_uppercase() && self.app.field.is_some() {
+                    chord_stroke(&format!("Shift+{ch}"), self.variant.layout)?
+                } else {
+                    stroke_for(&ch.to_string(), self.variant.layout)?
+                };
+                self.press(&stroke)?;
             }
             return Ok(());
         }

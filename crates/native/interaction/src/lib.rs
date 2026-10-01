@@ -178,6 +178,7 @@ pub mod topology;
 mod tool;
 pub mod trim;
 pub mod vertex;
+pub mod vertex_points;
 pub mod view_history;
 
 pub use clipboard::Clipboard;
@@ -203,6 +204,6 @@ pub use tool::{Area, Label};
 pub use view_history::{ViewHistory, Viewpoint};
 pub use tool::{
     Context, Corners, Cursor, DimensionMode, Draft, Flow, LengthenMode, Marker, MarkerShape,
-    Memory, OptionChoice, Pointer, Preview, Stroke, Tag, TextField, Tone, Tool, View, ViewChange,
-    snap_kinds,
+    Memory, Name, OptionChoice, Pointer, Preview, Stroke, Tag, TextField, Tone, Tool, View,
+    ViewChange, snap_kinds,
 };

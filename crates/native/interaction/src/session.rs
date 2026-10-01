@@ -18,6 +18,7 @@
 //! ([`Session::run`]: Yapıştır), as on the web (docs/adr/0056).
 
 use kentos_geometry_core::store::snap::SnapHit;
+use kentos_geometry_core::tools::point_text::point_name;
 
 use crate::Vec2;
 use crate::align::{self, Align};
@@ -59,6 +60,7 @@ use crate::{
     dimension, dimension_chain, divide, donut, ellipse, hatch, leader, match_properties, meeting,
     parallel, polygonize, quick_dimension, revcloud, sector, select_circle, select_containing,
     select_fence, set_elevation, spline, split, station_offset, text, text_file, topology,
+    vertex_points,
 };
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
@@ -160,6 +162,8 @@ pub const TOOLS: &[&str] = &[
     topology::ID,
     // docs/adr/0151: Toplu alan.
     polygonize::ID,
+    // docs/adr/0152: Köşelere nokta.
+    vertex_points::ID,
 ];
 
 /// What a tool running over another one suspended (docs/adr/0083).
@@ -289,6 +293,7 @@ impl Session {
             set_elevation::ID => Box::new(set_elevation::SetElevation::tool()),
             topology::ID => Box::new(crate::topology::Topology::new()),
             polygonize::ID => Box::new(crate::polygonize::Polygonize::new()),
+            vertex_points::ID => Box::new(crate::vertex_points::VertexPoints::tool()),
             _ => return false,
         };
         // Kaydır is not repeated: Enter while panning repeats the command
@@ -576,6 +581,12 @@ impl Session {
     }
 
     pub fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
+        // #ad: a point's place by its name (docs/adr/0152 §4).
+        if let Some(name) = point_name(text) {
+            self.named_point(name, cx);
+            self.settle(cx);
+            return true;
+        }
         let taken = match self.tool.as_mut() {
             Some(tool) => tool.input(text, cx),
             // A typed point places a grip being moved.
@@ -583,6 +594,46 @@ impl Session {
         };
         self.settle(cx);
         taken
+    }
+
+    /// `#ad` typed where a point is asked (docs/adr/0152 §4; the web's
+    /// `namedPoint`): the place of the point named so, given to the running
+    /// tool as if clicked (as the point calculator gives one), or to a grip
+    /// being moved. The name is matched with the points' labels, the spaces
+    /// round them dropped; hidden layers count too: a name is an identity.
+    /// Why no point was taken is said.
+    fn named_point(&mut self, name: &str, cx: &mut Context<'_>) {
+        let found: Vec<Vec2> = cx
+            .doc
+            .entities()
+            .filter_map(|e| match e {
+                kentos_contracts::Entity::Point(q)
+                    if q.base.label.as_deref().map(crate::js_trim) == Some(name) =>
+                {
+                    Some(Vec2::new(q.p.x, q.p.y))
+                }
+                _ => None,
+            })
+            .collect();
+        let line = match found.as_slice() {
+            [] => format!("#{name}: bu adda nokta yok."),
+            [p] => {
+                // A tool that takes computed points (the web's `acceptPoint` is there).
+                let taken = match &mut self.tool {
+                    Some(tool) => tool.accepts_points() && tool.accept_point(*p, cx),
+                    None => self.select.accept_point(*p, cx),
+                };
+                if taken {
+                    return;
+                }
+                format!("#{name}: bu adımda nokta istenmiyor.")
+            }
+            more => format!(
+                "#{name}: bu adda {} nokta var; koordinatı yazın.",
+                more.len()
+            ),
+        };
+        cx.say(Level::Warn, line);
     }
 
     /// The file the running tool asked for (Metin dosyası yerleştir): its

@@ -19,14 +19,14 @@
   },
   "summary": {
     "commands": {
-      "total": 203,
-      "implemented": 190,
+      "total": 204,
+      "implemented": 191,
       "partial": 0,
       "pending": 13
     },
     "tools": {
-      "total": 87,
-      "implemented": 85,
+      "total": 88,
+      "implemented": 86,
       "partial": 0,
       "pending": 2
     },
@@ -74,19 +74,19 @@
     },
     "commandsWithoutPlace": [],
     "commandsWithoutTests": 62,
-    "commandsOnDesktop": 185,
+    "commandsOnDesktop": 186,
     "desktop": {
       "commands": {
-        "total": 203,
-        "implemented": 185,
+        "total": 204,
+        "implemented": 186,
         "partial": 0,
         "pending": 13,
         "none": 0,
         "n/a": 5
       },
       "tools": {
-        "total": 87,
-        "implemented": 85,
+        "total": 88,
+        "implemented": 86,
         "partial": 0,
         "pending": 2,
         "none": 0,
@@ -4178,6 +4178,7 @@
         "fixtures/interaction/v1/line-chain.json",
         "fixtures/interaction/v1/navigation.json",
         "fixtures/interaction/v1/point-calc.json",
+        "fixtures/interaction/v1/survey-points.json",
         "fixtures/interaction/v1/usage-blocks-view.json",
         "fixtures/interaction/v1/usage-blocks.json"
       ]
@@ -4684,7 +4685,7 @@
       "title": "Nokta",
       "category": "Çizim",
       "icon": "point",
-      "description": "Tek tek nokta yerleştirir.",
+      "description": "Ölçü noktası yerleştirir: adı, kodu ve kotuyla; ad her noktada bir artar. Aynı yerde nokta varsa önce sorar.",
       "aliases": [
         "PO",
         "POINT",
@@ -4711,7 +4712,9 @@
       },
       "tests": [
         "fixtures/interaction/v1/object-tracking.json",
-        "fixtures/interaction/v1/point-series.json"
+        "fixtures/interaction/v1/point-series.json",
+        "fixtures/interaction/v1/survey-points.json",
+        "fixtures/interaction/v1/vertex-points.json"
       ]
     },
     {
@@ -5893,6 +5896,38 @@
       },
       "tests": [
         "fixtures/interaction/v1/path-edit-tools.json"
+      ]
+    },
+    {
+      "id": "tool.vertexPoints",
+      "title": "Köşelere nokta",
+      "category": "Çizim",
+      "icon": "vertexPoints",
+      "description": "Seçili çizgilerin, çoklu çizgilerin ve alanların köşelerine adlı nokta koyar; adlar Nokta aracının Ad’ından başlayıp artar, ortak köşe bir kez, noktası olan köşe atlanır.",
+      "aliases": [
+        "KOSELERENOKTA",
+        "NOKTAURET",
+        "EXTRACTVERTICES"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Çizim › Nokta"
+      ],
+      "ribbon": [
+        "Çizim › Nokta"
+      ],
+      "quickAccess": false,
+      "toolbox": true,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/vertex-points.json"
       ]
     },
     {
@@ -7982,6 +8017,7 @@
         "fixtures/interaction/v1/line-chain.json",
         "fixtures/interaction/v1/navigation.json",
         "fixtures/interaction/v1/point-calc.json",
+        "fixtures/interaction/v1/survey-points.json",
         "fixtures/interaction/v1/usage-blocks-view.json",
         "fixtures/interaction/v1/usage-blocks.json"
       ]
@@ -8378,8 +8414,8 @@
       "primary": false,
       "rare": false,
       "methods": [],
-      "steps": 2,
-      "description": "Tek tek nokta yerleştirir.",
+      "steps": 3,
+      "description": "Ölçü noktası yerleştirir: adı, kodu ve kotuyla; ad her noktada bir artar. Aynı yerde nokta varsa önce sorar.",
       "productCommand": "cad.point.create",
       "status": "implemented",
       "platforms": {
@@ -8388,7 +8424,9 @@
       },
       "tests": [
         "fixtures/interaction/v1/object-tracking.json",
-        "fixtures/interaction/v1/point-series.json"
+        "fixtures/interaction/v1/point-series.json",
+        "fixtures/interaction/v1/survey-points.json",
+        "fixtures/interaction/v1/vertex-points.json"
       ]
     },
     {
@@ -9300,6 +9338,32 @@
       },
       "tests": [
         "fixtures/interaction/v1/path-edit-tools.json"
+      ]
+    },
+    {
+      "id": "vertexPoints",
+      "label": "Köşelere nokta",
+      "icon": "vertexPoints",
+      "group": "draw",
+      "section": "point",
+      "aliases": [
+        "KOSELERENOKTA",
+        "NOKTAURET",
+        "EXTRACTVERTICES"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 3,
+      "description": "Seçili çizgilerin, çoklu çizgilerin ve alanların köşelerine adlı nokta koyar; adlar Nokta aracının Ad’ından başlayıp artar, ortak köşe bir kez, noktası olan köşe atlanır.",
+      "productCommand": "cad.entities.create",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/vertex-points.json"
       ]
     },
     {
@@ -15564,6 +15628,7 @@
             "label": "Nokta",
             "items": [
               "tool.point",
+              "tool.vertexPoints",
               "tool.divide",
               "tool.pointsBetween",
               "tool.intersectPoint"
@@ -16725,6 +16790,10 @@
             "items": [
               {
                 "command": "tool.point",
+                "size": "small"
+              },
+              {
+                "command": "tool.vertexPoints",
                 "size": "small"
               },
               {
@@ -18914,6 +18983,10 @@
                   "size": "small"
                 },
                 {
+                  "command": "tool.vertexPoints",
+                  "size": "small"
+                },
+                {
                   "command": "tool.divide",
                   "size": "small"
                 },
@@ -20646,6 +20719,10 @@
                   "size": "small"
                 },
                 {
+                  "command": "tool.vertexPoints",
+                  "size": "small"
+                },
+                {
                   "command": "tool.divide",
                   "size": "small"
                 },
@@ -21863,6 +21940,7 @@
     "revcloud": "<path d=\"M5 8.2a2.2 2.2 0 0 1 3.5-2 2.4 2.4 0 0 1 4-.2 2.2 2.2 0 0 1 3.4 1.9 2.2 2.2 0 0 1 .3 4.2 2.3 2.3 0 0 1-3 3 2.4 2.4 0 0 1-4 .3 2.3 2.3 0 0 1-3.6-1.9A2.2 2.2 0 0 1 5 8.2z\"/>",
     "boundary": "<path d=\"M3 15h14M5 17 11 3M9 3l6 14\"/><path d=\"M5.86 15h8.28L10 5.33z\" fill=\"currentColor\" fill-opacity=\".3\" stroke=\"none\"/><circle cx=\"10\" cy=\"11.8\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/>",
     "polygonize": "<path d=\"M2.5 4.5 17.5 3v14L2.5 16zM9 3.8 10.5 16.5M2.5 10.5l15-1\"/><path d=\"M2.5 4.5 9 3.8l.66 6.1-7.16.6zM10.5 16.5l7 .5v-7.5l-7.6.5z\" fill=\"currentColor\" fill-opacity=\".3\" stroke=\"none\"/><circle cx=\"5.8\" cy=\"7.3\" r=\".95\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"13.8\" cy=\"13.2\" r=\".95\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"13.6\" cy=\"6.4\" r=\".95\" fill=\"currentColor\" stroke=\"none\"/>",
+    "vertexPoints": "<path d=\"M3.99 13.23 5.01 6.97M7.79 4.38 13.81 3.82M16.28 6 16.52 12.8M14.2 15.27 6 15.53\" stroke-width=\"1.1\"/><circle cx=\"3.6\" cy=\"15.6\" r=\"2\" fill=\"currentColor\" fill-opacity=\".25\"/><circle cx=\"3.6\" cy=\"15.6\" r=\".55\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"5.4\" cy=\"4.6\" r=\"2\" fill=\"currentColor\" fill-opacity=\".25\"/><circle cx=\"5.4\" cy=\"4.6\" r=\".55\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"16.2\" cy=\"3.6\" r=\"2\" fill=\"currentColor\" fill-opacity=\".25\"/><circle cx=\"16.2\" cy=\"3.6\" r=\".55\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"16.6\" cy=\"15.2\" r=\"2\" fill=\"currentColor\" fill-opacity=\".25\"/><circle cx=\"16.6\" cy=\"15.2\" r=\".55\" fill=\"currentColor\" stroke=\"none\"/>",
     "toArea": "<path d=\"m3.8 8 6-4.5 6.5 3.5-1.8 9H5.6z\" fill=\"currentColor\" fill-opacity=\".3\" stroke-dasharray=\"2.2 1.5\"/>",
     "areaUnion": "<path d=\"M3 3h9v5h5v9H8v-5H3z\" fill=\"currentColor\" fill-opacity=\".22\"/>",
     "areaIntersect": "<path d=\"M3 3h9v9H3zM8 8h9v9H8z\" stroke-dasharray=\"2 1.6\"/><path d=\"M8 8h4v4H8z\" fill=\"currentColor\" fill-opacity=\".55\"/>",

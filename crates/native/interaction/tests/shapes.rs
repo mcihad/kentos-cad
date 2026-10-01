@@ -46,7 +46,11 @@ fn polygon(b: &Bench) -> (Vec<[f64; 2]>, Vec<f64>) {
 #[test]
 fn points_are_written_one_by_one_and_enter_leaves() {
     let mut b = Bench::new("point");
-    assert_eq!(b.session.prompt().text(), "Nokta: nokta konumunu belirtin");
+    // Without a name, a code or an elevation (docs/adr/0152 §2): plain points.
+    assert_eq!(
+        b.session.prompt().text(),
+        "Nokta: nokta konumunu belirtin [Ad (A): — / Kod (K): — / Kot (Z): yok]"
+    );
     b.click(1.0, 2.0);
     b.click(3.0, 4.0);
     assert!(b.type_text("487005,4420006"), "a typed Y,X");

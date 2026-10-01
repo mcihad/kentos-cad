@@ -134,6 +134,7 @@
     "tool.toPolyline",
     "tool.boundary",
     "tool.polygonize",
+    "tool.vertexPoints",
     "tool.filletAll",
     "tool.chamferAll",
     "tool.split",

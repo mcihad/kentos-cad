@@ -93,11 +93,13 @@ const LAYOUTS = {
     '-': { code: 'Minus', vk: 189 },
     '+': { code: 'NumpadAdd', vk: 107 },
     '@': { code: 'Digit2', vk: 50, shift: true },
+    // A point's name starts with # (docs/adr/0152 §4).
+    '#': { code: 'Digit3', vk: 51, shift: true },
     '<': { code: 'IntlBackslash', vk: 226 },
     '/': { code: 'Slash', vk: 191 },
     ' ': { code: 'Space', vk: 32 },
   },
-  // Turkish Q: + is Shift+4, - sits right of *, / is Shift+7, @ is AltGr+Q. Windows
+  // Turkish Q: + is Shift+4, - sits right of *, / is Shift+7, @ is AltGr+Q, # AltGr+3. Windows
   // reports AltGr as Ctrl+Alt, so that is what the page receives.
   'tr-q': {
     '.': { code: 'Slash', vk: 191 },
@@ -106,6 +108,7 @@ const LAYOUTS = {
     '-': { code: 'Equal', vk: 187 },
     '+': { code: 'Digit4', vk: 52, shift: true },
     '@': { code: 'KeyQ', vk: 81, altGr: true },
+    '#': { code: 'Digit3', vk: 51, altGr: true },
     '<': { code: 'IntlBackslash', vk: 226 },
     '/': { code: 'Digit7', vk: 55, shift: true },
     ' ': { code: 'Space', vk: 32 },
@@ -456,6 +459,10 @@ const observe = (mark) =>
       arrow: e.kind === 'leader' ? (e.arrow ?? null) : null,
       // A dimension's direction in degrees: a linear one's measured, an ordinate's axis (docs/adr/0147).
       angle: e.kind === 'dimension' ? (e.angle ?? null) : null,
+      // The text beside it (a survey point's name), its attributes, a point's elevation (docs/adr/0152).
+      label: e.label ?? null,
+      attrs: e.attrs ?? {},
+      z: e.kind === 'point' ? (e.z ?? null) : null,
     });
     return {
       tool: k.tools.activeId.value,
@@ -512,8 +519,12 @@ function compareShape(name, have, want, t) {
   // A text's content is exact (docs/adr/0144 §7: an exploded attribute's value).
   if (want.text !== undefined && have.text !== want.text) bad.push(`${name}.text: ${JSON.stringify(have.text)}, beklenen ${JSON.stringify(want.text)}`);
   // A text's alignment, width factor, mask and turn (docs/adr/0145), exact.
-  for (const key of ['align', 'widthFactor', 'mask', 'rotation', 'arrow'])
+  // A survey point's name and elevation (docs/adr/0152), exact.
+  for (const key of ['align', 'widthFactor', 'mask', 'rotation', 'arrow', 'label', 'z'])
     if (want[key] !== undefined && have[key] !== want[key]) bad.push(`${name}.${key}: ${JSON.stringify(have[key])}, beklenen ${JSON.stringify(want[key])}`);
+  // Its attributes, all of them, exact.
+  const sorted = (o) => JSON.stringify(Object.entries(o).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
+  if (want.attrs !== undefined && sorted(have.attrs) !== sorted(want.attrs)) bad.push(`${name}.attrs: ${JSON.stringify(have.attrs)}, beklenen ${JSON.stringify(want.attrs)}`);
   // A dimension's direction (docs/adr/0147), within 1e-9: a typed angle in grads comes back through radians.
   if (want.angle !== undefined && (have.angle === null || Math.abs(have.angle - want.angle) > 1e-9))
     bad.push(`${name}.angle: ${JSON.stringify(have.angle)}, beklenen ${want.angle}`);

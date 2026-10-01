@@ -1,0 +1,145 @@
+{
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Etkileşim izi: Ölçü noktası",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "workspace": "hybrid",
+    "drawingFont": "barlow"
+  },
+  "origin": {
+    "x": 487000,
+    "y": 4420000
+  },
+  "layers": [
+    {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#3E63DD",
+        "lineType": "continuous",
+        "lineWeight": 0.35
+      },
+      "children": []
+    },
+    {
+      "id": "nokta",
+      "name": "Nokta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.25,
+        "point": {
+          "symbol": "ring",
+          "size": 7
+        }
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "nokta",
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+        "Parsel": "12"
+      },
+      "pts": [
+        {
+          "x": 487000,
+          "y": 4420000
+        },
+        {
+          "x": 487020,
+          "y": 4420000
+        },
+        {
+          "x": 487020,
+          "y": 4420014
+        },
+        {
+          "x": 487000,
+          "y": 4420014
+        }
+      ],
+      "zs": [
+        100.12,
+        100.48,
+        null,
+        101.05
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+        "Parsel": "13"
+      },
+      "pts": [
+        {
+          "x": 487020,
+          "y": 4420000
+        },
+        {
+          "x": 487036,
+          "y": 4420000
+        },
+        {
+          "x": 487036,
+          "y": 4420014
+        },
+        {
+          "x": 487020,
+          "y": 4420014
+        }
+      ]
+    },
+    {
+      "kind": "point",
+      "id": 3,
+      "layerId": "nokta",
+      "attrs": {
+        "Kod": "ST"
+      },
+      "label": "S1",
+      "p": {
+        "x": 487020,
+        "y": 4420014
+      }
+    },
+    {
+      "kind": "point",
+      "id": 4,
+      "layerId": "nokta",
+      "attrs": {
+        "Kod": "ST"
+      },
+      "label": "S2",
+      "p": {
+        "x": 486998,
+        "y": 4420007
+      },
+      "z": 99.8
+    }
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

@@ -143,6 +143,9 @@ pub trait Stages {
     fn takes_points(&self) -> bool {
         true
     }
+    /// The answer of a text field the stage asked for (Köşelere nokta's Ad
+    /// and Kod): the typed text, or none (Esc).
+    fn text_typed(&mut self, _text: Option<&str>, _cx: &mut Context<'_>) {}
     /// After a call in the stages: whether the tool goes back to picking its
     /// objects (Kot ver after a write, and on Esc). Asked once per call; the
     /// selection is the stage's to keep or to clear.
@@ -429,6 +432,14 @@ impl<S: Stages> Tool for Modify<S> {
         self.picking = self.stages.repick();
         self.refresh(cx);
         Flow::Stay
+    }
+
+    fn text_typed(&mut self, text: Option<&str>, cx: &mut Context<'_>) {
+        if self.picking {
+            return;
+        }
+        self.stages.text_typed(text, cx);
+        self.refresh(cx);
     }
 
     /// Ctrl+Z undoes the drawing: the web's modify tools take no step back.
