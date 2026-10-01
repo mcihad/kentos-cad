@@ -472,6 +472,16 @@ impl App {
             .iter()
             .find(|(k, _)| *k == "dimension")
             .map_or(0, |(_, n)| *n);
+        // Semt and Eğim have no DXF kind: aligned dimensions with their own block (docs/adr/0147 §8).
+        let without_kind = list
+            .iter()
+            .filter(|e| {
+                matches!(e, kentos_contracts::Entity::Dimension(d) if matches!(
+                    d.style,
+                    Some(kentos_contracts::DimensionStyle::Azimuth | kentos_contracts::DimensionStyle::Slope)
+                ))
+            })
+            .count();
         let islands = list.iter().filter(|e| islanded(e)).count();
         let data = list.iter().any(|e| {
             let b = e.base();
@@ -536,6 +546,9 @@ impl App {
         }];
         if dimensions > 0 {
             lines.push(words::text_line(Line::Info, format!("{dimensions} ölçü DXF ölçüsü olarak yazılır ve KentOS'taki gibi görünür; başka bir program ölçüyü düzenlerse kendi kurallarıyla yeniden çizer. KentOS'a ölçü olarak geri okunur.")));
+        }
+        if without_kind > 0 {
+            lines.push(words::text_line(Line::Info, format!("{without_kind} semt ve eğim ölçüsünün DXF'te karşılığı yoktur: hizalı ölçü olarak, kendi çizgileri ve değeriyle yazılır; başka programlar çizgilerini gösterir, KentOS ölçü olarak geri okur.")));
         }
         let inserts = kinds
             .iter()

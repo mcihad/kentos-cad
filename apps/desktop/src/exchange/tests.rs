@@ -512,7 +512,7 @@ fn a_dxfs_leaders_come_in_with_their_notes() {
 }
 
 /// One picture of the exchange windows in `out` (`name`-WxH.png).
-fn shot(app: &mut App, out: &std::path::Path, name: &str, (width, height): (f32, f32)) {
+pub(super) fn shot(app: &mut App, out: &std::path::Path, name: &str, (width, height): (f32, f32)) {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 

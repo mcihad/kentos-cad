@@ -156,11 +156,16 @@ pub enum Kind {
         block: String,
         what: &'static str,
     },
-    /// A DIMENSION: drawn by its anonymous block; its definition points
-    /// give a KentOS dimension back (`dimension.rs`).
+    /// A DIMENSION, an ARC_DIMENSION or a LARGE_RADIAL_DIMENSION: drawn by
+    /// its anonymous block; its definition points give a KentOS dimension
+    /// back, or another program's ordinate, arc length or jogged radius as
+    /// KentOS's own (`dimension.rs`); its style (3) and the entity's own
+    /// changes to it give that one's text height and fill.
     Dimension {
         block: String,
         groups: super::dimension::Groups,
+        style: String,
+        own_style: super::leaders::DimStyle,
     },
     Xline {
         p: P3,
@@ -183,7 +188,7 @@ pub enum Kind {
         annotation: Option<u64>,
         height: f64,
         style: String,
-        own_style: super::leaders::LeaderStyle,
+        own_style: super::leaders::DimStyle,
     },
     MLeader(Box<super::leaders::MLeader>),
     Unsupported(String),
@@ -539,19 +544,26 @@ pub fn parse(
         "HATCH" => Kind::Hatch(Box::new(
             parse_hatch(list, fit_data_in_hatch_splines).map_err(|r| bad(&r))?,
         )),
-        "DIMENSION" => {
-            // Only KentOS's read-back uses the definition points: one that
-            // cannot be read leaves the dimension to its block, as any other's.
+        "DIMENSION" | "ARC_DIMENSION" | "LARGE_RADIAL_DIMENSION" => {
+            // A definition point that cannot be read leaves the dimension to its block, as any other's.
             let xy = |x: i32| {
                 g.point(x)
                     .ok()
                     .flatten()
                     .map(|p| crate::geom::v(p[0], p[1]))
             };
+            // Group 70 is the dimension's type in its first subclass (AcDbDimension);
+            // an ARC_DIMENSION's second (AcDbArcDimension) says whether it is partial.
+            let flags = list
+                .iter()
+                .find(|p| p.code == 70)
+                .and_then(|p| crate::num::parse_int(p.text()))
+                .unwrap_or(0);
             Kind::Dimension {
                 block: g.string(2),
                 groups: super::dimension::Groups {
-                    flags: g.int(70),
+                    entity: name.to_string(),
+                    flags,
                     p10: xy(10),
                     p13: xy(13),
                     p14: xy(14),
@@ -559,12 +571,10 @@ pub fn parse(
                     angle: g.num(50).ok().flatten(),
                     text: g.string(1),
                 },
+                style: g.string(3),
+                own_style: super::leaders::own_style(all),
             }
         }
-        "ARC_DIMENSION" | "LARGE_RADIAL_DIMENSION" => Kind::Block {
-            block: g.string(2),
-            what: "Ölçü (DIMENSION)",
-        },
         "ACAD_TABLE" => Kind::Block {
             block: g.string(2),
             what: "Tablo (ACAD_TABLE)",

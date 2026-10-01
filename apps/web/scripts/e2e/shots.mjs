@@ -2109,6 +2109,9 @@ SCENES.dimensions = [
   ...dimensionToolScenes(),
 ];
 
+// The new dimensions in DXF (docs/adr/0147 §8), as the desktop's `exchange::dimension_tests::screens` (aktar-*-22…25).
+SCENES.dimensionsdxf = dxfDimensionScenes();
+
 // Ölçülendirme's new methods at work (docs/adr/0147 §7), the desktop's `dimension_scenes`: Koordinat with the parcel's
 // corner taken and the cursor off to the right; Yay uzunluğu with the road's edge taken and the dimension arc on the
 // cursor; Kısmi with its first point on the arc and the part to the cursor lit; Kırıklı yarıçap with its jog on the
@@ -2370,6 +2373,54 @@ function dxfLeaderScenes() {
         await ui.eval(`window.kentos.commands.execute('file.export.dxf')`);
         await ui.waitFor(`!!document.querySelector('.dialog--io .io-summary')`, 15000);
         await ui.clickText('.dialog--io .seg__opt', 'Tümü');
+        await ui.sleep(400);
+      },
+      close,
+    },
+  ];
+}
+
+// DXF içe aktar over another program's new dimensions (fixtures/formats/v1/dimension-kinds.dxf, docs/adr/0147 §8):
+// the window says what came in by its block and why; in, the ordinates, the arc length (masked) and the jogged radius
+// as KentOS's own. Then KentOS's own file (fixtures/formats/v1/dxf-write/dimensions.dxf): every kind back; out again,
+// the window says how Semt and Eğim are written.
+function dxfDimensionScenes() {
+  const file = (name) => readFileSync(new URL(`../../../../fixtures/formats/v1/${name}`, import.meta.url)).toString('base64');
+  const open = (name, bytes) =>
+    `import('/src/ui/io/DrawingImportDialog.ts').then((m) => m.openDxfImport(window.kentos, { name: '${name}', bytes: Uint8Array.from(atob('${bytes}'), (c) => c.charCodeAt(0)) }, { description: 'DXF', accept: { 'application/dxf': ['.dxf'] } }))`;
+  const foreign = open('dimension-kinds.dxf', file('dimension-kinds.dxf'));
+  const own = open('dimensions.dxf', file('dxf-write/dimensions.dxf'));
+  const read = async (ui, what) => (await ui.eval(what), await ui.waitFor(DXF_READ, 15000));
+  const into = async (ui, what) => (await read(ui, what), await ui.clickText('.dialog--io .btn--primary', 'İçe aktar'), await ui.waitFor(`!document.querySelector('.dialog--io')`, 8000));
+  // The desktop's frame, clear of the toolbox.
+  const frame = async (ui) => {
+    await ui.eval(`(() => {
+      const k = window.kentos;
+      k.selection.clear();
+      const c = k.view.camera;
+      c.fit({ minX: 452262, minY: 4412278, maxX: 452482, maxY: 4412350 }, 24);
+      c.scale = c.scale * 0.8;
+      c.center = { x: c.center.x - 100 / c.scale, y: c.center.y };
+      c.panBy(0, 0);
+      k.view.requestRender();
+    })()`);
+    await ui.move(2, 2);
+    await ui.sleep(600);
+  };
+  const close = async (ui) => (await ui.escapeAll(2), await ui.eval(UNDO_ALL));
+  return [
+    { id: 'import-dxf-dimensions', open: async (ui) => (await read(ui, foreign), await ui.sleep(400)), close },
+    { id: 'import-dxf-dimensions-in', open: async (ui) => (await into(ui, foreign), await frame(ui)), close },
+    { id: 'import-dxf-dimensions-own', open: async (ui) => (await into(ui, own), await frame(ui)), close },
+    {
+      id: 'export-dxf-dimensions',
+      open: async (ui) => {
+        await into(ui, own);
+        await ui.eval(`window.kentos.commands.execute('file.export.dxf')`);
+        await ui.waitFor(`!!document.querySelector('.dialog--io .io-summary')`, 15000);
+        await ui.clickText('.dialog--io .seg__opt', 'Tümü');
+        // The summary in view in a short window too (the window's body scrolls).
+        await ui.eval(`document.querySelector('.dialog--io .io-summary').scrollIntoView({ block: 'end' })`);
         await ui.sleep(400);
       },
       close,

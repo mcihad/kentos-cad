@@ -15,6 +15,8 @@
 pub mod apply;
 mod coord_export;
 mod coord_import;
+#[cfg(test)]
+mod dimension_tests;
 pub(crate) mod drawing_import;
 mod dxf_export;
 mod geojson_export;

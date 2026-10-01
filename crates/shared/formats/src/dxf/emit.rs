@@ -21,7 +21,7 @@ use super::dimension;
 use super::entity::{Color, Kind, P3, Parsed, Vertex, Weight};
 use super::hatch::{Edge, Hatch, Path};
 use super::justify;
-use super::leaders::LeaderStyle;
+use super::leaders::DimStyle;
 use super::strings::{has_formatting, mtext_lines, text_codes};
 use super::xdata::{Meta, caret_decode};
 use crate::geom::{
@@ -37,6 +37,8 @@ mod notes;
 
 /// Blocks nest at most this deep (a block that inserts itself is caught earlier).
 const MAX_DEPTH: usize = 24;
+/// A dimension's text height when its style gives none (DIMTXT's metric default, drawing units).
+const DIMENSION_HEIGHT: f64 = 2.5;
 /// Columns and rows of a MINSERT array opened at most.
 const MAX_ARRAY: i64 = 10_000;
 /// Curves sampled into points stay within this of the true curve (1 mm).
@@ -73,7 +75,7 @@ pub struct Library {
     /// Upper-case text style name → fixed height (0: none).
     pub style_heights: HashMap<String, f64>,
     /// Upper-case dimension style name → what it says of a leader (docs/adr/0146 §8).
-    pub dim_styles: HashMap<String, LeaderStyle>,
+    pub dim_styles: HashMap<String, DimStyle>,
     /// A block record's handle → its block's name (a leader's arrowhead block).
     pub block_records: HashMap<u64, String>,
 }
@@ -1132,25 +1134,53 @@ impl<'l> Emitter<'l> {
             }
             Kind::Hatch(h) => self.hatch(ctx, ext, h, b(), e),
             Kind::Block { block, what } => self.anonymous_block(ctx, e, &layer, block, what),
-            Kind::Dimension { block, groups } => {
+            Kind::Dimension {
+                block,
+                groups,
+                style,
+                own_style,
+            } => {
                 // A dimension KentOS wrote comes back as the same dimension, while nothing moved it
-                // (at the top of the file, in the plane); otherwise its block draws it, as any other's.
-                let own = e.meta.as_ref().and_then(|m| m.dimension.as_ref());
+                // (at the top of the file, in the plane); another program's ordinate (from the
+                // origin), arc length and jogged radius come in as KentOS's own (docs/adr/0147 §8);
+                // otherwise its block draws it, as any other's.
+                let what = match groups.entity.as_str() {
+                    "ARC_DIMENSION" => "Yay uzunluğu ölçüsü (ARC_DIMENSION)",
+                    "LARGE_RADIAL_DIMENSION" => "Kırıklı yarıçap ölçüsü (LARGE_RADIAL_DIMENSION)",
+                    _ => "Ölçü (DIMENSION)",
+                };
+                let meta = e.meta.as_ref();
+                let own = meta.and_then(|m| m.dimension.as_ref());
                 let flat = ctx.tf.is_identity() && ext == [0.0, 0.0, 1.0];
-                match own
-                    .filter(|_| flat)
-                    .and_then(|k| dimension::read_back(groups, k, b()))
-                {
-                    Some(d) => self.push(Entity::Dimension(d)),
-                    None => {
-                        if own.is_some() {
+                if let Some(k) = own {
+                    let mask = meta.is_some_and(|m| m.mask);
+                    match dimension::read_back(groups, k, b(), mask).filter(|_| flat) {
+                        Some(d) => self.push(Entity::Dimension(d)),
+                        None => {
                             self.note(
-                                "Ölçü (DIMENSION)",
+                                what,
                                 "KentOS ölçüsü başka bir programda değiştirilmiş; ölçü olarak geri alınamadı",
                                 e.line,
                             );
+                            self.anonymous_block(ctx, e, &layer, block, what);
                         }
-                        self.anonymous_block(ctx, e, &layer, block, "Ölçü (DIMENSION)");
+                    }
+                    return;
+                }
+                // Its style's text height (DIMTXT × DIMSCALE, the entity's own changes first) and fill.
+                let style = own_style.over(self.dim_style(style));
+                let height = style.text_length().unwrap_or(DIMENSION_HEIGHT);
+                let mask = style.fill == Some(1);
+                match dimension::foreign(groups, b(), height, mask) {
+                    dimension::Foreign::Taken(d) if flat => self.push(Entity::Dimension(*d)),
+                    dimension::Foreign::Taken(_) => {
+                        self.anonymous_block(ctx, e, &layer, block, what);
+                    }
+                    dimension::Foreign::Block(why) => {
+                        if let Some(why) = why {
+                            self.note(what, why, e.line);
+                        }
+                        self.anonymous_block(ctx, e, &layer, block, what);
                     }
                 }
             }

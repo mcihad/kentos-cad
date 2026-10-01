@@ -9,6 +9,7 @@ library and no KentOS code:
 - the blocks the objects place, and those nested in them, are BLOCKs with a
   BLOCK_RECORD each, in the order of a depth-first walk from the drawing's
   inserts (a block after the ones it holds); an unused block is not written;
+  each dimension's own anonymous block (*D1, *D2 …) follows them;
 - a name keeps its letters, a character DXF refuses becomes "_", a name
   DXF's case-blind comparison takes for another's gets " (2)";
 - a BLOCK and everything in it belong to its record (group 330); its base
@@ -58,6 +59,25 @@ library and no KentOS code:
   (90 3). KentOS's data names an open or dot arrowhead ("arrow"), no other;
   it holds the note exactly when MTEXT cannot (a control character in it),
   and the turn, when it does, exactly;
+- a dimension of docs/adr/0147 §8 (Koordinat, Yay uzunluğu, Kırıklı
+  yarıçap, Semt, Eğim, and an aligned one with Zemin): an ordinate is a
+  DIMENSION of type 6 (70: 6 + 32, + 64 when it gives the east, its angle 0)
+  measured from (0, 0) (10), its point (13) and its line's end (14); an arc
+  length an ARC_DIMENSION of type 5 (70 37): the arc's ends (13, 14) and
+  centre (15) exactly, 10 on the dimension arc (its radius the arc's plus
+  the offset) halfway round it, 40 and 41 the ends' angles in [0, 2π), not
+  partial (70 0) and without a leader (71 0); a jogged radius a
+  LARGE_RADIAL_DIMENSION of type 9 (70 41): the true centre (10), the
+  centre shown (13), the point on the arc (15) exactly, the jog's middle
+  (14) the offset (within the room the centre shown leaves) and half the
+  jog along the radius from the centre shown, half its sideways step back
+  (within 1e-8 m), 40 0 and the jog's 45° in its overrides (DSTYLE 50);
+  Semt, Eğim and the aligned one are aligned DIMENSIONs (70 33) of their two
+  points (13, 14). Each has KentOS's "dimension" item: its style, offset and
+  height exactly, a slope's two elevations ("za", "zb") and no other's; a
+  masked one has KentOS's "mask" item, DIMTFILL 1 in its overrides and its
+  block's MTEXT over the background (90 3), no other has; its block's MTEXT
+  says the value the input gives it;
 - every handle is unique and every owner names a handle of the file.
 
     python3 scripts/fixtures/dxf_write_reference.py --check
@@ -459,6 +479,124 @@ def check_insert(o: list[tuple[int, str]], e: dict, name: str, where: str) -> No
         ensure(turn is not None and float(turn[0]) == e["rotation"], f"{where}: KentOS's exact turn {e['rotation']}")
 
 
+def dim_item(o: list[tuple[int, str]]) -> dict | None:
+    """KentOS's "dimension" item: its style, offset and height, then its tagged lists (tag -> values)."""
+    at = next((i for i, g in enumerate(o) if g == (1001, "KENTOS")), None)
+    if at is None:
+        return None
+    k = next((i for i in range(at, len(o) - 1) if o[i] == (1002, "{") and o[i + 1] == (1000, "dimension")), None)
+    if k is None:
+        return None
+    style, offset, height = o[k + 2][1], float(o[k + 3][1]), float(o[k + 4][1])
+    lists: dict[str, list[str]] = {}
+    i = k + 5
+    while i < len(o) and o[i] != (1002, "}"):
+        if o[i] == (1002, "{"):
+            tag = o[i + 1][1]
+            values = []
+            i += 2
+            while o[i] != (1002, "}"):
+                values.append(o[i][1])
+                i += 1
+            lists[tag] = values
+        i += 1
+    return {"style": style, "offset": offset, "height": height, "lists": lists}
+
+
+def dstyle(o: list[tuple[int, str]]) -> dict[int, str]:
+    """ACAD's DSTYLE overrides of an entity: a variable's code -> its value."""
+    at = next((i for i, g in enumerate(o) if g == (1000, "DSTYLE")), None)
+    out: dict[int, str] = {}
+    if at is None:
+        return out
+    i = at + 2
+    while o[i] != (1002, "}"):
+        out[int(o[i][1])] = o[i + 1][1]
+        i += 2
+    return out
+
+
+def point(o: list[tuple[int, str]], code: int, marker: str | None = None) -> tuple[float, float]:
+    """The point of group `code` (x) and `code + 10` (y), after the subclass `marker` when given."""
+    k = after(o, marker) if marker else 0
+    x = next(float(v) for c, v in o[k:] if c == code)
+    y = next(float(v) for c, v in o[k:] if c == code + 10)
+    return (x, y)
+
+
+def xy(p: dict) -> tuple[float, float]:
+    return (p["x"], p["y"])
+
+
+def check_dimension(o: list[tuple[int, str]], e: dict, value: str | None, blocks: list, where: str) -> None:
+    style = e.get("style")
+    a, b = xy(e["a"]), xy(e["b"])
+    entity = {"arcLength": "ARC_DIMENSION", "jogged": "LARGE_RADIAL_DIMENSION"}.get(style, "DIMENSION")
+    ensure(o[0] == (0, entity), f"{where}: an {entity}")
+    common = o[after(o, "AcDbDimension") :]
+    flags = int(next(v for c, v in common if c == 70))
+    over = dstyle(o)
+    if style == "ordinate":
+        east = (e.get("angle") or 0) == 0
+        ensure(flags == 6 + 32 + (64 if east else 0), f"{where}: type 6, of the {'east' if east else 'north'} (70 {flags})")
+        ensure(point(o, 10, "AcDbDimension") == (0.0, 0.0), f"{where}: measured from (0, 0)")
+        ensure(point(o, 13, "AcDbOrdinateDimension") == a and point(o, 14, "AcDbOrdinateDimension") == b, f"{where}: its point and its line's end")
+    elif style == "arcLength":
+        c = xy(e["c"])
+        ensure(flags == 5 + 32, f"{where}: type 5 (70 {flags})")
+        m = "AcDbArcDimension"
+        ensure(point(o, 13, m) == a and point(o, 14, m) == b and point(o, 15, m) == c, f"{where}: the arc's ends and centre")
+        r = math.hypot(a[0] - c[0], a[1] - c[1])
+        p10 = point(o, 10, "AcDbDimension")
+        ensure(close(math.hypot(p10[0] - c[0], p10[1] - c[1]), r + e["offset"], 1e-9 * (r + 1)), f"{where}: 10 on the dimension arc")
+        ta = math.atan2(a[1] - c[1], a[0] - c[0]) % math.tau
+        tb = math.atan2(b[1] - c[1], b[0] - c[0]) % math.tau
+        mid = ta + ((tb - ta) % math.tau) / 2
+        t10 = math.atan2(p10[1] - c[1], p10[0] - c[0])
+        ensure(close(math.cos(t10), math.cos(mid), 1e-9) and close(math.sin(t10), math.sin(mid), 1e-9), f"{where}: 10 halfway round")
+        sub = o[after(o, m) :]
+        ensure(close(float(group(sub, 40)), ta, 1e-12) and close(float(group(sub, 41)), tb, 1e-12), f"{where}: its ends' angles (40, 41)")
+        ensure(group(sub, 70) == "0" and group(sub, 71) == "0", f"{where}: not partial, no leader")
+    elif style == "jogged":
+        c = xy(e["c"])
+        ensure(flags == 9 + 32, f"{where}: type 9 (70 {flags})")
+        m = "AcDbRadialDimensionLarge"
+        ensure(point(o, 10, "AcDbDimension") == a, f"{where}: the true centre (10)")
+        ensure(point(o, 13, m) == c and point(o, 15, m) == b, f"{where}: the centre shown (13), the point on the arc (15)")
+        r = math.hypot(b[0] - a[0], b[1] - a[1])
+        u = ((b[0] - a[0]) / r, (b[1] - a[1]) / r)
+        nrm = (-u[1], u[0])
+        side = (c[0] - b[0]) * nrm[0] + (c[1] - b[1]) * nrm[1]
+        room = (b[0] - c[0]) * u[0] + (b[1] - c[1]) * u[1] - abs(side)
+        along = min(max(e["offset"], 0.0), max(room, 0.0)) + abs(side) / 2
+        jog = (c[0] + u[0] * along - nrm[0] * side / 2, c[1] + u[1] * along - nrm[1] * side / 2)
+        got = point(o, 14, m)
+        ensure(close(got[0], jog[0], 1e-8) and close(got[1], jog[1], 1e-8), f"{where}: the jog's middle (14)")
+        ensure(float(group(o[after(o, m):], 40)) == 0.0, f"{where}: 40 0")
+        ensure(close(float(over.get(50, "nan")), math.pi / 4, 1e-15), f"{where}: the jog's 45° (DSTYLE 50)")
+    else:
+        ensure(flags == 1 + 32, f"{where}: an aligned one (70 {flags})")
+        ensure(point(o, 13, "AcDbAlignedDimension") == a and point(o, 14, "AcDbAlignedDimension") == b, f"{where}: its two points")
+    if style != "jogged":
+        ensure(50 not in over, f"{where}: no jog")
+    item = dim_item(o)
+    ensure(item is not None, f"{where}: KentOS's dimension item")
+    ensure(item["style"] == (style or "") and item["offset"] == e["offset"] and item["height"] == e["height"], f"{where}: its style, offset and height")
+    zs = {k: float(v[0]) for k, v in item["lists"].items() if k in ("za", "zb")}
+    want = {k: e[k] for k in ("za", "zb") if style == "slope" and e.get(k) is not None}
+    ensure(zs == want, f"{where}: its elevations {want}")
+    masked = bool(e.get("mask"))
+    ensure(("mask" in kentos(o)) == masked, f"{where}: KentOS's mask item exactly when masked")
+    ensure((over.get(69) == "1") == masked, f"{where}: DIMTFILL 1 exactly when masked")
+    name = group(o, 2)
+    k = next(i for i, x in enumerate(blocks) if x[0] == (0, "BLOCK") and group(x, 2) == name)
+    end = next(i for i in range(k, len(blocks)) if blocks[i][0] == (0, "ENDBLK"))
+    mtexts = [x for x in blocks[k + 1 : end] if x[0] == (0, "MTEXT")]
+    ensure(len(mtexts) == 1, f"{where}: its block's value")
+    ensure((group(mtexts[0], 90) == "3") == masked, f"{where}: its value over the background exactly when masked")
+    ensure(value is None or group(mtexts[0], 1) == value, f"{where}: its value {value!r}")
+
+
 def check(name: str) -> list[str]:
     spec = json.loads((DIR / f"{name}.input.json").read_text(encoding="utf-8"))
     p = pairs((DIR / f"{name}.dxf").read_bytes())
@@ -472,7 +610,9 @@ def check(name: str) -> list[str]:
     tables = section(p, "TABLES")
     records = [r for r in split(tables) if r[0] == (0, "BLOCK_RECORD")]
     record_of = {group(r, 2): group(r, 5) for r in records}
-    want = ["*Model_Space", "*Paper_Space"] + [names[b["id"]] for b in order]
+    # Each dimension's own anonymous block (*D1, *D2 …) after the drawing's blocks (docs/adr/0147 §8).
+    dimensioned = sum(1 for e in spec["entities"] + [x for b in spec["blocks"] for x in b["entities"]] if e["kind"] == "dimension")
+    want = ["*Model_Space", "*Paper_Space"] + [names[b["id"]] for b in order] + [f"*D{k + 1}" for k in range(dimensioned)]
     ensure([group(r, 2) for r in records] == want, f"block records {want}")
     blocks = split(section(p, "BLOCKS"))
     heads = [e for e in blocks if e[0] == (0, "BLOCK")]
@@ -589,6 +729,17 @@ def check(name: str) -> list[str]:
     if leaders:
         noted = sum(1 for e in leaders if note_of(e))
         said.append(f"{len(leaders)} kılavuz ({noted} notlu MTEXT'iyle)")
+
+    # The drawing's dimensions (docs/adr/0147 §8), in the input's order.
+    dims = [e for e in spec["entities"] if e["kind"] == "dimension"]
+    kinds = ("DIMENSION", "ARC_DIMENSION", "LARGE_RADIAL_DIMENSION")
+    written = [e for e in drawn if e[0][0] == 0 and e[0][1] in kinds]
+    ensure(len(written) == len(dims), f"{len(dims)} dimensions")
+    by_name = {group(b, 2): b for b in blocks if b[0] == (0, "BLOCK")}
+    for n, (e, o) in enumerate(zip(dims, written)):
+        check_dimension(o, e, spec["dimensionValues"].get(str(e["id"])), blocks, f"ölçü {n + 1} ({e.get('style', 'aligned')})")
+    if dims:
+        said.append(f"{len(dims)} ölçü ({sum(1 for e in dims if e.get('mask'))} zeminli)")
 
     # Handles unique; owners name handles of the file.
     body = p[next(k for k, g in enumerate(p) if g == (2, "CLASSES")) :]

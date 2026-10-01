@@ -3,15 +3,29 @@
 //! from, taken from the shared core's layout of the dimension. The writer
 //! and the reader compute them the same way, so the reader can tell a
 //! dimension as KentOS wrote it from one another program has changed.
+//!
+//! The kinds of docs/adr/0147 §8, as AutoCAD writes them (read from its own
+//! files): an ordinate is a DIMENSION of type 6 measured from (0, 0) (10),
+//! its point (13) and its line's end (14), bit 64 when it gives the east
+//! (AutoCAD's X, KentOS's Y); an arc length an ARC_DIMENSION of type 5, a
+//! point on its dimension arc (10), the arc's ends counter-clockwise (13,
+//! 14), its centre (15) and their angles (40, 41); a jogged radius a
+//! LARGE_RADIAL_DIMENSION of type 9, the true centre (10), the centre shown
+//! (13), the jog's middle (14) and the point on the arc (15). Semt and Eğim
+//! have no DXF kind: an aligned DIMENSION drawn by its block, KentOS's data
+//! giving it back. Another program's ordinate (from the origin), arc length
+//! and jogged radius come in as KentOS's own (`foreign`).
 
 use kentos_contracts::{DimensionEntity, DimensionStyle, EntityBase, Vec2};
 use kentos_geometry_core::Vec2 as CoreVec2;
-use kentos_geometry_core::geom::dimension::{DimensionGeom, DimensionLayout, layout_dimension};
+use kentos_geometry_core::geom::dimension::{
+    DimensionGeom, DimensionLayout, dimension_fault, layout_dimension,
+};
 
 use super::strings::mtext_lines;
 use super::xdata::{DimMeta, caret_decode};
 use crate::geom::v;
-use crate::math::sin_cos_deg;
+use crate::math::{atan2, hypot, norm_angle, sin_cos_deg};
 
 /// DXF dimension types (group 70, low bits).
 pub const ROTATED: i64 = 0;
@@ -19,14 +33,33 @@ pub const ALIGNED: i64 = 1;
 pub const DIAMETER: i64 = 3;
 pub const RADIUS: i64 = 4;
 pub const ANGULAR_3P: i64 = 5;
+/// An ordinate (a DIMENSION), and the bit that makes it measure the east
+/// (AutoCAD's X type; KentOS's Y).
+pub const ORDINATE: i64 = 6;
+pub const ORDINATE_EAST: i64 = 64;
+/// An ARC_DIMENSION's type (AutoCAD writes 5, as an angle's).
+pub const ARC_LENGTH: i64 = 5;
+/// A LARGE_RADIAL_DIMENSION's type.
+pub const LARGE_RADIAL: i64 = 9;
 /// Group 70 bit: the block is this dimension's alone.
 pub const OWN_BLOCK: i64 = 32;
+/// Group 70: the type without its bits (32 and up).
+const TYPE: i64 = 31;
+
+/// What the report says when another program's ordinate is not measured
+/// from the drawing's origin.
+pub const ORDINATE_ORIGIN: &str =
+    "koordinat ölçüsünün başlangıcı (0, 0) değil; değeri göreli olduğundan bloğunun çizgileri ve değeriyle alındı";
 
 /// Where a DIMENSION puts a KentOS dimension.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Definition {
+    /// The DXF entity: DIMENSION, ARC_DIMENSION or LARGE_RADIAL_DIMENSION.
+    pub entity: &'static str,
     /// The DXF type (group 70 without the flags).
     pub kind: i64,
+    /// An ordinate of the east (bit 64 of group 70).
+    pub east: bool,
     /// Group 10: on the dimension line at the second extension line (linear
     /// kinds), on the arc (angular), the centre (radius), the far side of the
     /// circle (diameter).
@@ -39,6 +72,8 @@ pub struct Definition {
     pub angle: Option<f64>,
     /// Group 40: the radius or diameter dimension's leader past the circle.
     pub leader: Option<f64>,
+    /// An ARC_DIMENSION's arc: its ends' angles, radians (40, 41).
+    pub angles: Option<(f64, f64)>,
 }
 
 fn core(p: Vec2) -> CoreVec2 {
@@ -79,13 +114,16 @@ pub fn layout(d: &DimensionEntity) -> Option<DimensionLayout> {
 /// The DXF type and definition points of a dimension laid out as `l`.
 pub fn definition(d: &DimensionEntity, l: &DimensionLayout) -> Definition {
     let plain = Definition {
+        entity: "DIMENSION",
         kind: ALIGNED,
+        east: false,
         p10: app(l.d2),
         p13: Some(d.a),
         p14: Some(d.b),
         p15: None,
         angle: None,
         leader: None,
+        angles: None,
     };
     match d.style {
         None | Some(DimensionStyle::Aligned) => plain,
@@ -108,6 +146,7 @@ pub fn definition(d: &DimensionEntity, l: &DimensionLayout) -> Definition {
             p15: Some(d.b),
             leader: Some(d.offset.max(0.0)),
             angle: None,
+            ..plain
         },
         Some(DimensionStyle::Diameter) => Definition {
             kind: DIAMETER,
@@ -117,21 +156,66 @@ pub fn definition(d: &DimensionEntity, l: &DimensionLayout) -> Definition {
             p15: Some(d.b),
             leader: Some(d.offset.max(0.0)),
             angle: None,
+            ..plain
         },
-        // Until docs/adr/0147 step 5 they go out as aligned ones, without KentOS's data.
-        Some(
-            DimensionStyle::Ordinate
-            | DimensionStyle::ArcLength
-            | DimensionStyle::Jogged
-            | DimensionStyle::Azimuth
-            | DimensionStyle::Slope,
-        ) => plain,
+        // From the drawing's origin: its point, its line's end.
+        Some(DimensionStyle::Ordinate) => Definition {
+            kind: ORDINATE,
+            east: d.angle.unwrap_or(0.0) == 0.0,
+            p10: v(0.0, 0.0),
+            ..plain
+        },
+        // A point on the dimension arc (its middle), the arc's ends, its centre and their angles.
+        Some(DimensionStyle::ArcLength) => {
+            let c = d.c.unwrap_or(d.a);
+            let angle = |p: Vec2| norm_angle(atan2(p.y - c.y, p.x - c.x));
+            Definition {
+                entity: "ARC_DIMENSION",
+                kind: ARC_LENGTH,
+                p10: app(l.handle),
+                p15: d.c,
+                angles: Some((angle(d.a), angle(d.b))),
+                ..plain
+            }
+        }
+        // The true centre, the centre shown, the jog's middle, the point on the arc.
+        Some(DimensionStyle::Jogged) => Definition {
+            entity: "LARGE_RADIAL_DIMENSION",
+            kind: LARGE_RADIAL,
+            p10: d.a,
+            p13: d.c,
+            p14: Some(jog_middle(d)),
+            p15: Some(d.b),
+            ..plain
+        },
+        // No DXF kind: an aligned one that its block draws, KentOS's data giving it back.
+        Some(DimensionStyle::Azimuth | DimensionStyle::Slope) => plain,
     }
 }
 
-/// What a DIMENSION says, as the reader found it.
+/// A jogged radius's jog, its middle (where AutoCAD keeps it): from the
+/// centre shown along the radius for the offset (kept within its room), then
+/// halfway across the jog (docs/adr/0147 §2).
+fn jog_middle(d: &DimensionEntity) -> Vec2 {
+    let (a, b) = (d.a, d.b);
+    let c = d.c.unwrap_or(a);
+    let r = hypot(b.x - a.x, b.y - a.y);
+    if !(r > 0.0) {
+        return b;
+    }
+    let u = v((b.x - a.x) / r, (b.y - a.y) / r);
+    let n = v(-u.y, u.x);
+    let s = (c.x - b.x) * n.x + (c.y - b.y) * n.y;
+    let t = (b.x - c.x) * u.x + (b.y - c.y) * u.y;
+    let along = d.offset.max(0.0).min((t - s.abs()).max(0.0)) + s.abs() / 2.0;
+    v(c.x + u.x * along - n.x * s / 2.0, c.y + u.y * along - n.y * s / 2.0)
+}
+
+/// What a DIMENSION (an ARC_DIMENSION, a LARGE_RADIAL_DIMENSION) says, as the reader found it.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Groups {
+    /// The entity's name.
+    pub entity: String,
     /// Group 70 as written (type and flags).
     pub flags: i64,
     /// Points as found; None when missing or unreadable.
@@ -145,9 +229,10 @@ pub struct Groups {
 }
 
 /// The KentOS dimension a DIMENSION with KentOS's data is, while the
-/// DIMENSION still has the type and definition point KentOS wrote for it
-/// (to the bit); None when another program changed it.
-pub fn read_back(g: &Groups, k: &DimMeta, base: EntityBase) -> Option<DimensionEntity> {
+/// DIMENSION still has the entity, type and definition point KentOS wrote
+/// for it (to the bit); None when another program changed it. `mask`: KentOS's
+/// data says its value is drawn over the background.
+pub fn read_back(g: &Groups, k: &DimMeta, base: EntityBase, mask: bool) -> Option<DimensionEntity> {
     let style = style_from_name(&k.style)?;
     let (a, b, c, angle) = match style {
         None | Some(DimensionStyle::Aligned) => (g.p13?, g.p14?, None, None),
@@ -158,14 +243,13 @@ pub fn read_back(g: &Groups, k: &DimMeta, base: EntityBase) -> Option<DimensionE
             let (x, y) = k.center?;
             (v(x, y), g.p15?, None, None)
         }
-        // docs/adr/0147's kinds are not written with KentOS's data before its step 5.
-        Some(
-            DimensionStyle::Ordinate
-            | DimensionStyle::ArcLength
-            | DimensionStyle::Jogged
-            | DimensionStyle::Azimuth
-            | DimensionStyle::Slope,
-        ) => return None,
+        Some(DimensionStyle::Ordinate) => {
+            let east = g.flags & ORDINATE_EAST != 0;
+            (g.p13?, g.p14?, None, Some(if east { 0.0 } else { 90.0 }))
+        }
+        Some(DimensionStyle::ArcLength) => (g.p13?, g.p14?, Some(g.p15?), None),
+        Some(DimensionStyle::Jogged) => (g.p10?, g.p15?, Some(g.p13?), None),
+        Some(DimensionStyle::Azimuth | DimensionStyle::Slope) => (g.p13?, g.p14?, None, None),
     };
     // The text as KentOS had it, while group 1 still says it; else what group 1 says now.
     let text = match &k.text {
@@ -173,6 +257,7 @@ pub fn read_back(g: &Groups, k: &DimMeta, base: EntityBase) -> Option<DimensionE
         _ if g.text.is_empty() => None,
         _ => Some(mtext_lines(&caret_decode(&g.text)).join("\n")),
     };
+    let slope = style == Some(DimensionStyle::Slope);
     let d = DimensionEntity {
         base,
         a,
@@ -183,13 +268,107 @@ pub fn read_back(g: &Groups, k: &DimMeta, base: EntityBase) -> Option<DimensionE
         style,
         angle,
         c,
-        mask: false,
-        za: None,
-        zb: None,
+        mask,
+        za: k.za.filter(|_| slope),
+        zb: k.zb.filter(|_| slope),
     };
     let def = definition(&d, &layout(&d)?);
     let same = |p: Vec2, q: Vec2| p.x == q.x && p.y == q.y;
-    (def.kind == g.flags & 7 && same(def.p10, g.p10?)).then_some(d)
+    (def.entity == g.entity
+        && def.kind == g.flags & TYPE
+        && def.east == (g.flags & ORDINATE_EAST != 0 && def.kind == ORDINATE)
+        && same(def.p10, g.p10?))
+    .then_some(d)
+}
+
+/// What becomes of another program's dimension (docs/adr/0147 §8).
+#[derive(Clone, Debug, PartialEq)]
+pub enum Foreign {
+    /// KentOS's own of it.
+    Taken(Box<DimensionEntity>),
+    /// Its block draws it; what the report says, when it says something.
+    Block(Option<&'static str>),
+}
+
+/// Another program's dimension as KentOS's own, from its groups: an ordinate
+/// measured from the drawing's origin (its point 13, its line's end 14, the
+/// east when bit 64 is set), an arc length (its arc's ends 13 and 14, its
+/// centre 15, the dimension arc through 10) and a jogged radius (the true
+/// centre 10, the point on the arc 15, the centre shown 13, the jog's
+/// middle 14). `height` is its style's text height, `mask` its fill. Any
+/// other kind, or one KentOS cannot draw, is left to its block.
+pub fn foreign(g: &Groups, base: EntityBase, height: f64, mask: bool) -> Foreign {
+    let made = |a: Vec2, b: Vec2, offset: f64, style: DimensionStyle, angle: Option<f64>, c: Option<Vec2>| {
+        DimensionEntity {
+            base: base.clone(),
+            a,
+            b,
+            offset,
+            height,
+            // "" is the measured value, and so is a text around it ("<>", "R<>"): KentOS writes its own
+            // value with its own prefix; another text is the dimension's own.
+            text: (!g.text.is_empty() && !g.text.contains("<>"))
+                .then(|| mtext_lines(&caret_decode(&g.text)).join("\n")),
+            style: Some(style),
+            angle,
+            c,
+            mask,
+            za: None,
+            zb: None,
+        }
+    };
+    let dist = |p: Vec2, q: Vec2| hypot(p.x - q.x, p.y - q.y);
+    let d = match (g.entity.as_str(), g.flags & TYPE) {
+        ("DIMENSION", ORDINATE) => {
+            let (Some(o), Some(a), Some(b)) = (g.p10, g.p13, g.p14) else {
+                return Foreign::Block(None);
+            };
+            if o.x != 0.0 || o.y != 0.0 {
+                return Foreign::Block(Some(ORDINATE_ORIGIN));
+            }
+            let east = g.flags & ORDINATE_EAST != 0;
+            made(a, b, 0.0, DimensionStyle::Ordinate, Some(if east { 0.0 } else { 90.0 }), None)
+        }
+        ("ARC_DIMENSION", _) => {
+            let (Some(p), Some(a), Some(b), Some(c)) = (g.p10, g.p13, g.p14, g.p15) else {
+                return Foreign::Block(None);
+            };
+            made(a, b, dist(p, c) - dist(a, c), DimensionStyle::ArcLength, None, Some(c))
+        }
+        ("LARGE_RADIAL_DIMENSION", _) => {
+            let (Some(a), Some(shown), Some(jog), Some(b)) = (g.p10, g.p13, g.p14, g.p15) else {
+                return Foreign::Block(None);
+            };
+            let r = dist(a, b);
+            if !(r > 0.0) {
+                return Foreign::Block(None);
+            }
+            // The jog's distance from the centre shown, along the radius (`jog_middle` backwards).
+            let u = v((b.x - a.x) / r, (b.y - a.y) / r);
+            let n = v(-u.y, u.x);
+            let s = (shown.x - b.x) * n.x + (shown.y - b.y) * n.y;
+            let t = (b.x - shown.x) * u.x + (b.y - shown.y) * u.y;
+            let along = (jog.x - shown.x) * u.x + (jog.y - shown.y) * u.y - s.abs() / 2.0;
+            let offset = along.max(0.0).min((t - s.abs()).max(0.0));
+            made(a, b, offset, DimensionStyle::Jogged, None, Some(shown))
+        }
+        _ => return Foreign::Block(None),
+    };
+    let geom = DimensionGeom {
+        a: core(d.a),
+        b: core(d.b),
+        offset: d.offset,
+        height: d.height,
+        style: style_name(d.style).map(str::to_string),
+        angle: d.angle,
+        c: d.c.map(core),
+        za: None,
+        zb: None,
+    };
+    if !(d.height > 0.0) || dimension_fault(&geom).is_some() || layout_dimension(&geom).is_none() {
+        return Foreign::Block(Some("KentOS bu ölçüyü çizemiyor; bloğunun çizgileri ve değeriyle alındı"));
+    }
+    Foreign::Taken(Box::new(d))
 }
 
 /// Where the value's middle is (group 11, the MTEXT in the block): the

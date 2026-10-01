@@ -11,24 +11,40 @@ use super::lexer::Pair;
 use super::strings::Decoder;
 use crate::num::{parse_int, parse_real};
 
-/// What a dimension style says of a leader: the arrow size (DIMASZ, 41),
-/// the overall scale (DIMSCALE, 40) and the leader's arrow block (DIMLDRBLK,
-/// 341, a block record's handle). An entity's own changes say the same.
+/// What a dimension style says of a leader or a dimension: the arrow size
+/// (DIMASZ, 41), the overall scale (DIMSCALE, 40), the leader's arrow block
+/// (DIMLDRBLK, 341, a block record's handle), the text height (DIMTXT, 140)
+/// and the text's fill (DIMTFILL, 69: 1 the drawing's background, 2 a
+/// colour; docs/adr/0147 §8). An entity's own changes say the same.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
-pub struct LeaderStyle {
+pub struct DimStyle {
     pub arrow_size: Option<f64>,
     pub scale: Option<f64>,
     pub arrow_block: Option<u64>,
+    pub text_height: Option<f64>,
+    pub fill: Option<i64>,
 }
 
-impl LeaderStyle {
+impl DimStyle {
     /// `self`'s values, `under`'s where `self` has none.
-    pub fn over(self, under: LeaderStyle) -> LeaderStyle {
-        LeaderStyle {
+    pub fn over(self, under: DimStyle) -> DimStyle {
+        DimStyle {
             arrow_size: self.arrow_size.or(under.arrow_size),
             scale: self.scale.or(under.scale),
             arrow_block: self.arrow_block.or(under.arrow_block),
+            text_height: self.text_height.or(under.text_height),
+            fill: self.fill.or(under.fill),
         }
+    }
+
+    /// The text's height in drawing units (DIMTXT × DIMSCALE; a scale of 0
+    /// or none is 1), when the style gives one over 0.
+    pub fn text_length(&self) -> Option<f64> {
+        let scale = self.scale.filter(|s| *s > 0.0).unwrap_or(1.0);
+        self.text_height
+            .filter(|h| *h > 0.0)
+            .map(|h| h * scale)
+            .filter(|l| l.is_finite())
     }
 
     /// The arrow's length in drawing units (DIMASZ × DIMSCALE; a scale of 0
@@ -47,20 +63,22 @@ fn handle(p: &Pair<'_>) -> Option<u64> {
 }
 
 /// A dimension style's table record (DIMSTYLE).
-pub fn table_style(groups: &[Pair<'_>]) -> LeaderStyle {
+pub fn table_style(groups: &[Pair<'_>]) -> DimStyle {
     let find = |code: i32| groups.iter().find(|p| p.code == code);
-    LeaderStyle {
+    DimStyle {
         arrow_size: find(41).and_then(|p| parse_real(p.text())),
         scale: find(40).and_then(|p| parse_real(p.text())),
         arrow_block: find(341).and_then(handle),
+        text_height: find(140).and_then(|p| parse_real(p.text())),
+        fill: find(69).and_then(|p| parse_int(p.text())),
     }
 }
 
 /// An entity's own changes to its dimension style, in ACAD's extended data:
 /// `1001 ACAD`, `1000 DSTYLE`, `1002 {`, then a variable's code (1070) and
-/// its value, … `1002 }`. Only a leader's three are kept.
-pub fn own_style(groups: &[Pair<'_>]) -> LeaderStyle {
-    let mut s = LeaderStyle::default();
+/// its value, … `1002 }`. Only the ones `DimStyle` holds are kept.
+pub fn own_style(groups: &[Pair<'_>]) -> DimStyle {
+    let mut s = DimStyle::default();
     let Some(start) = groups
         .iter()
         .position(|p| p.code == 1001 && p.text().eq_ignore_ascii_case("ACAD"))
@@ -88,6 +106,8 @@ pub fn own_style(groups: &[Pair<'_>]) -> LeaderStyle {
             Some(41) => s.arrow_size = parse_real(p.text()),
             Some(40) => s.scale = parse_real(p.text()),
             Some(341) => s.arrow_block = handle(p),
+            Some(140) => s.text_height = parse_real(p.text()),
+            Some(69) => s.fill = parse_int(p.text()),
             Some(_) => {}
         }
     }
@@ -265,24 +285,31 @@ mod tests {
     #[test]
     fn an_entity_s_own_style_comes_from_acad_s_dstyle_list() {
         let g = groups(
-            "1001\nKENTOS\n1002\n{\n1000\nlabel\n1000\nP\n1002\n}\n1001\nACAD\n1000\nDSTYLE\n1002\n{\n1070\n77\n1070\n1\n1070\n41\n1040\n3.0\n1070\n341\n1005\n1F\n1002\n}\n",
+            "1001\nKENTOS\n1002\n{\n1000\nlabel\n1000\nP\n1002\n}\n1001\nACAD\n1000\nDSTYLE\n1002\n{\n1070\n77\n1070\n1\n1070\n41\n1040\n3.0\n1070\n341\n1005\n1F\n1070\n140\n1040\n2.5\n1070\n69\n1070\n1\n1002\n}\n",
         );
         assert_eq!(
             own_style(&g),
-            LeaderStyle {
+            DimStyle {
                 arrow_size: Some(3.0),
                 scale: None,
                 arrow_block: Some(0x1F),
+                text_height: Some(2.5),
+                fill: Some(1),
             }
         );
-        let style = LeaderStyle {
+        let style = DimStyle {
             arrow_size: Some(1.8),
             scale: Some(2.0),
-            arrow_block: None,
+            text_height: Some(1.25),
+            ..DimStyle::default()
         };
         assert_eq!(own_style(&g).over(style).arrow_length(), Some(3.0 * 2.0));
         assert_eq!(style.arrow_length(), Some(3.6));
-        assert_eq!(LeaderStyle::default().arrow_length(), None);
+        assert_eq!(DimStyle::default().arrow_length(), None);
+        // A dimension's text: its own 2.5 over the style's 1.25, times the style's scale.
+        assert_eq!(own_style(&g).over(style).text_length(), Some(2.5 * 2.0));
+        assert_eq!(style.text_length(), Some(2.5));
+        assert_eq!(DimStyle::default().text_length(), None);
     }
 
     #[test]

@@ -230,7 +230,7 @@ describe.skipIf(!loader)('DXF WASM module', () => {
   });
 
   // Both platforms write the same bytes (crates/shared/formats/tests/dxf_write.rs; scripts/fixtures/dxf_write_reference.py checks them).
-  it.each(['blocks', 'texts', 'leaders'])('writes the %s fixture to its committed bytes, as the native writer does', async (name) => {
+  it.each(['blocks', 'texts', 'leaders', 'dimensions'])('writes the %s fixture to its committed bytes, as the native writer does', async (name) => {
     const w = await load();
     const out = w.writeDxf(new TextDecoder().decode(fixture(`dxf-write/${name}.input.json`)));
     const bytes = out.takeBytes();
@@ -266,6 +266,47 @@ describe.skipIf(!loader)('DXF WASM module', () => {
     expect(r.entities.flatMap((x) => (x.kind === 'text' ? [x.text] : []))).toEqual(['DN 150', 'Parsel 5']);
     const vana = r.blocks?.find((b) => b.name === 'VANA');
     expect(vana?.entities.flatMap((x) => (x.kind === 'leader' ? [x.text] : []))).toEqual(['V']);
+  });
+
+  // docs/adr/0147 §8: another program's ordinate, arc length and jogged radius come in as KentOS's own, with their
+  // points, heights and masks; what has no KentOS form, as its block's lines and values (crates/shared/formats/tests/dxf.rs
+  // has the whole file).
+  it('reads the new dimension kinds as KentOS dimensions', async () => {
+    const w = await load();
+    const r = imported(w.readDxf(fixture('dimension-kinds.dxf'), JSON.stringify({ maxEntities: 0 }), quiet));
+    const dims = r.entities.flatMap((x) => (x.kind === 'dimension' ? [x] : []));
+    expect(dims.map((d) => [d.style, d.angle ?? null, d.text ?? null, d.mask ?? false, d.layerId])).toEqual([
+      ['ordinate', 0, null, false, 'OLCU'],
+      ['ordinate', 90, 'X=4412320.00', false, 'OLCU'],
+      ['arcLength', null, null, true, 'OLCU'],
+      ['jogged', null, null, false, 'OLCU'],
+    ]);
+    const [east, north, arc, jogged] = dims;
+    expect([east.a, east.b, east.offset, east.height]).toEqual([{ x: 452310, y: 4412320 }, { x: 452310, y: 4412345 }, 0, 3]);
+    expect(north.b).toEqual({ x: 452275, y: 4412320 });
+    expect([arc.a, arc.b, arc.c]).toEqual([{ x: 452360, y: 4412300 }, { x: 452350, y: 4412310 }, { x: 452350, y: 4412300 }]);
+    expect(Math.abs(arc.offset - 3)).toBeLessThan(1e-9);
+    expect([jogged.a, jogged.b, jogged.c]).toEqual([{ x: 452400, y: 4412100 }, { x: 452475.244432, y: 4412306.732377 }, { x: 452465.584951, y: 4412288.964585 }]);
+    expect(Math.abs(jogged.offset - 8)).toBeLessThan(1e-5);
+    expect(r.entities.filter((x) => x.kind === 'line')).toHaveLength(4);
+    expect(r.entities.filter((x) => x.kind === 'text')).toHaveLength(2);
+    expect(r.report.notes.filter((n) => n.what === 'Ölçü (DIMENSION)' && n.reason.startsWith('koordinat ölçüsünün başlangıcı (0, 0) değil')).map((n) => n.count)).toEqual([1]);
+  });
+
+  // The writer's dimensions come back as they went, on the web's columns too (dxf_write.rs reads them natively).
+  it('reads its own new dimensions back as they were written', async () => {
+    const w = await load();
+    const input = JSON.parse(new TextDecoder().decode(fixture('dxf-write/dimensions.input.json'))) as DxfWriteInput;
+    const r = imported(w.readDxf(fixture('dxf-write/dimensions.dxf'), JSON.stringify({ maxEntities: 0 }), quiet));
+    const bare = (entities: readonly Entity[]) =>
+      entities.flatMap((x) => {
+        if (x.kind !== 'dimension') return [];
+        const { id: _id, layerId: _layer, ...rest } = x;
+        return [rest];
+      });
+    expect(bare(r.entities)).toHaveLength(7);
+    expect(bare(r.entities)).toEqual(bare(input.entities));
+    expect(r.report.notes).toEqual([]);
   });
 
   it('says how far a read is, to its end', async () => {

@@ -1573,3 +1573,75 @@ fn leaders_come_with_their_notes_arrowheads_and_heights() {
     );
     assert_eq!((count(&o, "leader"), count(&o, "text")), (10, 2));
 }
+
+/// Another program's new dimensions (docs/adr/0147 §8;
+/// `fixtures/formats/v1/dimension-kinds.dxf`, written as AutoCAD 2007 writes
+/// them): the ordinates measured from the origin, the arc length and the
+/// jogged radius come in as KentOS's own, as high as their style's text
+/// (DIMTXT 2 × DIMSCALE 1.5), the arc length's value over the background by
+/// its own DIMTFILL; an ordinate measured from another origin is its block,
+/// and said; another program's aligned dimension is its block, as before.
+#[test]
+fn another_program_s_new_dimensions_come_in_as_kentos_s_own() {
+    use kentos_contracts::DimensionStyle;
+    let r = read("dimension-kinds.dxf");
+    let dims: Vec<_> = r
+        .entities
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Dimension(d) => Some(d),
+            _ => None,
+        })
+        .collect();
+    let [east, north, arc, jogged] = dims.as_slice() else {
+        panic!("four dimensions: {dims:?}")
+    };
+    // The east (AutoCAD's X type, bit 64): its point, its line's end; no offset, the style's height.
+    assert_eq!(
+        (east.style, east.angle, east.a, east.b, east.offset, east.height),
+        (
+            Some(DimensionStyle::Ordinate),
+            Some(0.0),
+            v(452310.0, 4412320.0),
+            v(452310.0, 4412345.0),
+            0.0,
+            3.0
+        )
+    );
+    assert_eq!((east.text.as_deref(), east.mask, east.base.layer_id.as_str()), (None, false, "OLCU"));
+    // The north, with its own words.
+    assert_eq!(
+        (north.angle, north.b, north.text.as_deref()),
+        (Some(90.0), v(452275.0, 4412320.0), Some("X=4412320.00"))
+    );
+    // The arc from the east to the north about (452350, 4412300), its dimension arc 3 m out, masked.
+    assert_eq!(
+        (arc.style, arc.a, arc.b, arc.c, arc.mask),
+        (
+            Some(DimensionStyle::ArcLength),
+            v(452360.0, 4412300.0),
+            v(452350.0, 4412310.0),
+            Some(v(452350.0, 4412300.0)),
+            true
+        )
+    );
+    assert!((arc.offset - 3.0).abs() < 1e-9, "{arc:?}");
+    // The jogged radius: the true centre, the point on the arc, the centre shown; its jog 8 m
+    // from the centre shown; "R<>" is the measured value.
+    assert_eq!(
+        (jogged.style, jogged.a, jogged.b, jogged.c, jogged.text.as_deref()),
+        (
+            Some(DimensionStyle::Jogged),
+            v(452400.0, 4412100.0),
+            v(452475.244432, 4412306.732377),
+            Some(v(452465.584951, 4412288.964585)),
+            None
+        )
+    );
+    assert!((jogged.offset - 8.0).abs() < 1e-5, "{jogged:?}");
+    // The ordinate from another origin and the aligned one: their blocks' lines and values.
+    assert_eq!((count(&r, "line"), count(&r, "text")), (4, 2));
+    assert!(r.report.notes.iter().any(|n| n.what == "Ölçü (DIMENSION)"
+        && n.reason.starts_with("koordinat ölçüsünün başlangıcı (0, 0) değil")
+        && n.count == 1));
+}

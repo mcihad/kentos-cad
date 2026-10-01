@@ -23,7 +23,7 @@ use kentos_geometry_core::geom::leader::layout;
 
 use super::super::dimension::mtext_value;
 use super::super::entity::{Kind, Parsed};
-use super::super::leaders::{LeaderStyle, MLeader, arrow_of_block};
+use super::super::leaders::{DimStyle, MLeader, arrow_of_block};
 use super::super::strings::mtext_lines;
 use super::super::xdata::caret_decode;
 use super::{Ctx, Emitter, anchor_points, apply_meta, mapped_text, xy};
@@ -110,8 +110,8 @@ fn give_note(l: &mut LeaderEntity, first: &TextEntity, hook: bool, exact: &Exact
 }
 
 impl Emitter<'_> {
-    /// What a dimension style says of a leader: the one named, else Standard.
-    fn leader_style(&self, name: &str) -> LeaderStyle {
+    /// What a dimension style says of a leader or a dimension: the one named, else Standard.
+    pub(super) fn dim_style(&self, name: &str) -> DimStyle {
         let lib = self.lib;
         lib.dim_styles
             .get(&name.trim().to_uppercase())
@@ -225,7 +225,7 @@ impl Emitter<'_> {
         if *spline {
             self.note(LEADER, "eğri yolu kırık çizgi olarak alındı", e.line);
         }
-        let style = own_style.over(self.leader_style(style));
+        let style = own_style.over(self.dim_style(style));
         let meta = e.meta.as_ref();
         let arrow = if *arrow {
             // KentOS's own arrowhead, while the file still draws one.

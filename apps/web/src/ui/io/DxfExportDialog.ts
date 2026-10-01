@@ -152,6 +152,8 @@ class DxfExportDialog {
     const layers = [...chosen.keys()].map((id) => ctx.doc.layers.get(id)).filter((l) => !!l);
     const dimensions = kinds.get('dimension') ?? 0;
     const inserts = kinds.get('insert') ?? 0;
+    // Semt and Eğim have no DXF kind: aligned dimensions with their own block (docs/adr/0147 §8).
+    const withoutKind = list.filter((e) => e.kind === 'dimension' && (e.style === 'azimuth' || e.style === 'slope')).length;
     const islands = list.filter(hasIslands).length;
     const data = list.some((e) => e.label || e.symbol || Object.keys(e.attrs).length);
     // A text's mask is KentOS's alone: DXF's TEXT has none (docs/adr/0145 §7).
@@ -173,6 +175,12 @@ class DxfExportDialog {
         ? summaryLine('ok', `${list.length} nesne ${chosen.size} katmanla yazılacak: ${kindCounts(kinds)}.`)
         : summaryLine('warn', 'Yazılacak nesne yok. Başka bir kapsam ya da en az bir katman seçin.'),
       dimensions ? summaryLine('info', `${dimensions} ölçü DXF ölçüsü olarak yazılır ve KentOS'taki gibi görünür; başka bir program ölçüyü düzenlerse kendi kurallarıyla yeniden çizer. KentOS'a ölçü olarak geri okunur.`) : null,
+      withoutKind
+        ? summaryLine(
+            'info',
+            `${withoutKind} semt ve eğim ölçüsünün DXF'te karşılığı yoktur: hizalı ölçü olarak, kendi çizgileri ve değeriyle yazılır; başka programlar çizgilerini gösterir, KentOS ölçü olarak geri okur.`,
+          )
+        : null,
       inserts
         ? summaryLine(
             'info',

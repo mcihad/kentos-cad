@@ -26,7 +26,9 @@
 //! 1002 {  1000 noteturn 1040 <degrees>           1002 }   a LEADER's note's turn, exactly (its MTEXT's direction rounds it)
 //! 1002 {  1000 dimension <style> 1040 <offset> 1040 <height>
 //!         [1002 { 1000 text <string> 1002 }] [1002 { 1000 center 1040 <x> 1040 <y> 1002 }]
-//!                                                1002 }   a DIMENSION is this KentOS dimension
+//!         [1002 { 1000 za 1040 <metres> 1002 }] [1002 { 1000 zb 1040 <metres> 1002 }]
+//!                                                1002 }   a DIMENSION (an ARC_DIMENSION, a LARGE_RADIAL_DIMENSION)
+//!                                                         is this KentOS dimension; a slope's elevations (docs/adr/0147 §8)
 //! ```
 //!
 //! A string is one 1000 group, or its pieces in a nested 1002 list when it
@@ -98,6 +100,9 @@ pub struct DimMeta {
     pub text: Option<String>,
     /// A diameter dimension's centre (the DIMENSION holds two points on the circle).
     pub center: Option<(f64, f64)>,
+    /// A slope's two elevations, metres (docs/adr/0147 §8): DXF has no slope dimension.
+    pub za: Option<f64>,
+    pub zb: Option<f64>,
 }
 
 impl Meta {
@@ -266,6 +271,11 @@ pub fn groups(meta: &Meta) -> Vec<(i32, String)> {
                     o.push((1040, dxf_real(x)));
                     o.push((1040, dxf_real(y)));
                 });
+            }
+            for (tag, z) in [("za", d.za), ("zb", d.zb)] {
+                if let Some(z) = z {
+                    item(tag, o, |o| o.push((1040, dxf_real(z))));
+                }
             }
         });
     }
@@ -474,6 +484,8 @@ fn dimension(values: &[Value]) -> Option<DimMeta> {
         height: real(values.get(3))?,
         text: None,
         center: None,
+        za: None,
+        zb: None,
     };
     for v in values.iter().skip(4) {
         let Value::List(inner) = v else { continue };
@@ -482,6 +494,8 @@ fn dimension(values: &[Value]) -> Option<DimMeta> {
             Some(Value::Str(tag)) if tag == "center" => {
                 d.center = real(inner.get(1)).zip(real(inner.get(2)));
             }
+            Some(Value::Str(tag)) if tag == "za" => d.za = real(inner.get(1)),
+            Some(Value::Str(tag)) if tag == "zb" => d.zb = real(inner.get(1)),
             _ => {}
         }
     }
@@ -521,6 +535,8 @@ mod tests {
                 height: 2.5,
                 text: Some("Ø {12} \\P ^".into()),
                 center: Some((452_345.123, 4_412_345.678)),
+                za: Some(102.4),
+                zb: Some(101.15),
             }),
             mask: true,
             arrow: Some("dot".into()),

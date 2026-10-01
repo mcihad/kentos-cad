@@ -11,7 +11,10 @@
 //!   (the shared core's Bézier form), with the app's points as fit points;
 //! - a dimension is a DXF DIMENSION drawn by an anonymous block of its own
 //!   (the app's lines and ticks, the value as MTEXT), with the definition
-//!   points another program measures from (`dimension.rs`);
+//!   points another program measures from (`dimension.rs`); an ordinate a
+//!   DIMENSION of type 6, an arc length an ARC_DIMENSION, a jogged radius a
+//!   LARGE_RADIAL_DIMENSION, Semt and Eğim aligned ones; Zemin is DIMTFILL
+//!   and the block's MTEXT over the background (docs/adr/0147 §8);
 //! - a polyline or polygon with elevations is a 3D POLYLINE, one Z at each
 //!   vertex (a LWPOLYLINE holds a single elevation); a line's are the Z of
 //!   its LINE. A vertex with no elevation is written as 0 and KentOS's data
@@ -1000,7 +1003,7 @@ impl Writer<'_> {
         }
         match shown.as_deref() {
             Some(t) if !t.trim().is_empty() => {
-                self.block_mtext(record, middle, d.height, l.rotation, t);
+                self.block_mtext(record, middle, d.height, l.rotation, t, d.mask);
                 self.grow(middle);
             }
             _ => self.report.note(
@@ -1011,40 +1014,51 @@ impl Writer<'_> {
         }
         self.block_end(record);
 
-        // The DIMENSION (its common groups, then its kind's).
-        self.begin("DIMENSION", &d.base);
+        // The DIMENSION (an ARC_DIMENSION, a LARGE_RADIAL_DIMENSION): its common groups, then its kind's.
+        self.begin(def.entity, &d.base);
         self.out.str(100, "AcDbDimension");
         self.out.str(2, &name);
         self.out.xyz(10, def.p10);
         self.out.xyz(11, middle);
-        self.out.int(70, def.kind | dim::OWN_BLOCK);
+        let east = if def.east { dim::ORDINATE_EAST } else { 0 };
+        self.out.int(70, def.kind | dim::OWN_BLOCK | east);
         self.out.int(71, 5);
         self.out.real(42, l.value);
         self.out
             .str(1, &own.as_deref().map(dim::mtext_value).unwrap_or_default());
         self.out.str(3, "Standard");
         self.dimension_kind(&def);
-        self.out
-            .xdata(&dim_overrides(d.height, self.decimals, self.grads));
-        let mut m = Self::base_meta(&d.base);
-        // docs/adr/0147's kinds go out as their drawing until its step 5: no KentOS data, so a
-        // reader takes their block's lines and value, never another dimension.
-        if d.style.is_some_and(DimensionStyle::is_schema_9) {
+        let jogged = d.style == Some(DimensionStyle::Jogged);
+        self.out.xdata(&dim_overrides(
+            d.height,
+            self.decimals,
+            self.grads,
+            d.mask,
+            jogged,
+        ));
+        // Semt and Eğim have no DXF kind (docs/adr/0147 §8): an aligned one, drawn by its block.
+        if matches!(d.style, Some(DimensionStyle::Azimuth | DimensionStyle::Slope)) {
             self.report.note(
                 "Ölçü",
-                "koordinat, yay uzunluğu, kırıklı yarıçap, semt ve eğim ölçüleri şimdilik çizgileri ve değeriyle yazıldı",
+                "semt ve eğim ölçüleri DXF'te hizalı ölçü olarak, kendi çizgileri ve değeriyle yazıldı; başka programlar çizgilerini gösterir, KentOS ölçü olarak geri okur",
                 0,
             );
-        } else {
-            m.dimension = Some(DimMeta {
-                style: dim::style_name(d.style).unwrap_or("").to_string(),
-                offset: d.offset,
-                height: d.height,
-                // Only when MTEXT's notation cannot say it exactly (the reader compares).
-                text: own.filter(|t| dim::mtext_value(t) != *t),
-                center: (def.kind == dim::DIAMETER).then_some((d.a.x, d.a.y)),
-            });
         }
+        let mut m = Self::base_meta(&d.base);
+        let slope = d.style == Some(DimensionStyle::Slope);
+        m.dimension = Some(DimMeta {
+            style: dim::style_name(d.style).unwrap_or("").to_string(),
+            offset: d.offset,
+            height: d.height,
+            // Only when MTEXT's notation cannot say it exactly (the reader compares).
+            text: own.filter(|t| dim::mtext_value(t) != *t),
+            center: (def.entity == "DIMENSION" && def.kind == dim::DIAMETER)
+                .then_some((d.a.x, d.a.y)),
+            za: d.za.filter(|_| slope),
+            zb: d.zb.filter(|_| slope),
+        });
+        // The value over the drawing's background (also DIMTFILL in its overrides).
+        m.mask = d.mask;
         self.end(m);
         true
     }
@@ -1056,8 +1070,33 @@ impl Writer<'_> {
                 out.xyz(code, p);
             }
         };
-        match def.kind {
-            dim::ROTATED | dim::ALIGNED => {
+        match (def.entity, def.kind) {
+            // The arc's ends and centre, their angles; not partial, no leader (docs/adr/0147 §8).
+            ("ARC_DIMENSION", _) => {
+                self.out.str(100, "AcDbArcDimension");
+                point(self.out, 13, def.p13);
+                point(self.out, 14, def.p14);
+                point(self.out, 15, def.p15);
+                self.out.int(70, 0);
+                let (start, end) = def.angles.unwrap_or((0.0, 0.0));
+                self.out.real(40, start);
+                self.out.real(41, end);
+                self.out.int(71, 0);
+            }
+            // The centre shown, the jog's middle, the point on the arc; the jog's angle in the overrides.
+            ("LARGE_RADIAL_DIMENSION", _) => {
+                self.out.str(100, "AcDbRadialDimensionLarge");
+                point(self.out, 13, def.p13);
+                point(self.out, 14, def.p14);
+                point(self.out, 15, def.p15);
+                self.out.real(40, 0.0);
+            }
+            (_, dim::ORDINATE) => {
+                self.out.str(100, "AcDbOrdinateDimension");
+                point(self.out, 13, def.p13);
+                point(self.out, 14, def.p14);
+            }
+            (_, dim::ROTATED | dim::ALIGNED) => {
                 self.out.str(100, "AcDbAlignedDimension");
                 point(self.out, 13, def.p13);
                 point(self.out, 14, def.p14);
@@ -1071,7 +1110,7 @@ impl Writer<'_> {
                     self.out.real(50, deg(atan2(b.y - a.y, b.x - a.x)));
                 }
             }
-            dim::ANGULAR_3P => {
+            (_, dim::ANGULAR_3P) => {
                 self.out.str(100, "AcDb3PointAngularDimension");
                 point(self.out, 13, def.p13);
                 point(self.out, 14, def.p14);
@@ -1151,8 +1190,17 @@ impl Writer<'_> {
         o.real(51, deg(norm_angle(a1)));
     }
 
-    /// The value, centred on `middle` along `rotation` (degrees).
-    fn block_mtext(&mut self, record: u64, middle: Vec2, height: f64, rotation: f64, text: &str) {
+    /// The value, centred on `middle` along `rotation` (degrees); over the
+    /// drawing's background when `mask` (Zemin, docs/adr/0147 §8).
+    fn block_mtext(
+        &mut self,
+        record: u64,
+        middle: Vec2,
+        height: f64,
+        rotation: f64,
+        text: &str,
+        mask: bool,
+    ) {
         self.block_head("MTEXT", record);
         let (s, c) = sin_cos_deg(rotation);
         let o = &mut *self.blocks;
@@ -1166,6 +1214,13 @@ impl Writer<'_> {
         mtext_chunks(o, &dim::mtext_value(text));
         o.str(7, "Standard");
         o.xyz(11, v(c, s));
+        if mask {
+            // The drawing's background behind it, a tenth of its height round (the app's margin).
+            o.int(90, 3);
+            o.int(63, 256);
+            o.real(45, 1.1);
+            o.int(441, 0);
+        }
     }
 
     /// A HATCH: the ring and its holes as polyline boundaries, solid or a
@@ -1268,8 +1323,16 @@ fn mtext_chunks(o: &mut Out, text: &str) {
 /// Standard's sizes overridden to the app's for one dimension (AutoCAD's
 /// DSTYLE data): text height, oblique ticks, the extension lines' gap and
 /// overshoot, the text above the line with the app's gap, aligned with it,
-/// and the project's decimals and angle unit, for a program that redraws it.
-fn dim_overrides(height: f64, decimals: u32, grads: bool) -> Vec<(i32, String)> {
+/// and the project's decimals and angle unit, for a program that redraws it;
+/// a jogged radius's 45° jog, and the value's fill when it has Zemin
+/// (docs/adr/0147 §8).
+fn dim_overrides(
+    height: f64,
+    decimals: u32,
+    grads: bool,
+    mask: bool,
+    jogged: bool,
+) -> Vec<(i32, String)> {
     let mut g: Vec<(i32, String)> = vec![
         (1001, "ACAD".into()),
         (1000, "DSTYLE".into()),
@@ -1284,6 +1347,15 @@ fn dim_overrides(height: f64, decimals: u32, grads: bool) -> Vec<(i32, String)> 
     real("42", 0.5 * height);
     real("44", 0.5 * height);
     real("147", 0.35 * height);
+    // A jogged radius's jog: 45° (DIMJOGANG, radians; docs/adr/0147 §2).
+    if jogged {
+        real("50", std::f64::consts::FRAC_PI_4);
+    }
+    // Zemin: the value over the drawing's background (DIMTFILL 1).
+    if mask {
+        g.push((1070, "69".into()));
+        g.push((1070, "1".into()));
+    }
     for (code, value) in [
         ("77", 1),
         ("73", 0),

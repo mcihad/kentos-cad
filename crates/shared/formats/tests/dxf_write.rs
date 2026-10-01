@@ -2173,3 +2173,54 @@ fn leaders_read_back_as_they_were() {
     };
     assert_eq!(leaders(&vana.entities), leaders(&input.blocks[0].entities));
 }
+
+/// The new dimensions' fixture (`fixtures/formats/v1/dxf-write/dimensions.input.json`,
+/// docs/adr/0147 §8) goes out as its committed bytes, which
+/// `scripts/fixtures/dxf_write_reference.py` checks without KentOS's code:
+/// an ordinate of the east and one of the north (DIMENSION type 6), an arc
+/// length (ARC_DIMENSION), a jogged radius (LARGE_RADIAL_DIMENSION), Semt
+/// and Eğim as aligned ones, a masked aligned one; Semt and Eğim are said.
+#[test]
+fn the_dimensions_fixture_is_written_to_its_committed_bytes() {
+    let report = written_as_committed("dimensions");
+    let notes: Vec<(&str, &str, u32)> = report
+        .notes
+        .iter()
+        .map(|n| (n.what.as_str(), n.reason.as_str(), n.count))
+        .collect();
+    assert_eq!(
+        notes,
+        [(
+            "Ölçü",
+            "semt ve eğim ölçüleri DXF'te hizalı ölçü olarak, kendi çizgileri ve değeriyle yazıldı; başka programlar çizgilerini gösterir, KentOS ölçü olarak geri okur",
+            2
+        )]
+    );
+    assert!(report.skipped.is_empty(), "{:?}", report.skipped);
+}
+
+/// The new dimensions come back as they were (docs/adr/0147 §8): their
+/// kinds, points, centres, offsets, heights, an ordinate's axis, a slope's
+/// elevations and the mask; nothing is said.
+#[test]
+fn the_new_dimensions_read_back_as_they_were() {
+    let input = fixture_input("dimensions");
+    let (text, _) = write(&input);
+    let r = read(&text);
+    let dims = |entities: &[Entity]| -> Vec<Entity> {
+        entities
+            .iter()
+            .filter(|e| matches!(e, Entity::Dimension(_)))
+            .map(|e| {
+                let mut e = e.clone();
+                let b = e.base_mut();
+                b.id = 0;
+                b.layer_id.clear();
+                e
+            })
+            .collect()
+    };
+    assert_eq!(dims(&r.entities).len(), 7);
+    assert_eq!(dims(&r.entities), dims(&input.entities));
+    assert!(r.report.notes.is_empty(), "{:?}", r.report.notes);
+}
