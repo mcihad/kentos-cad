@@ -3,7 +3,8 @@
 
 use crate::api::Op;
 use crate::entity::{
-    CONSTRUCTION_REACH, Entity, Shape, area_parts, dimension_geom, ellipse_geom, is_multi_part,
+    CONSTRUCTION_REACH, Entity, Shape, area_parts, dimension_geom, ellipse_geom, entity_outline,
+    is_multi_part,
 };
 use crate::geom::arc::sweep;
 use crate::geom::bulge::bulge_path_edges;
@@ -20,8 +21,8 @@ pub fn entity_edges(e: &Shape) -> Vec<Edge> {
     match e {
         Shape::Line { a, b } => vec![Edge::Seg { a: *a, b: *b }],
         Shape::Polyline { pts, bulges, .. } => bulge_path_edges(pts, bulges.as_deref(), false),
-        // Its line (docs/adr/0146): the vertices from the arrow's tip.
-        Shape::Leader { pts, .. } => path_edges(pts, false),
+        // Its line from the arrow's tip on to its landing's end (docs/adr/0146 §4).
+        Shape::Leader { .. } => path_edges(&entity_outline(e, 72.0), false),
         // Part after part, each its ring's then its holes' (docs/adr/0143).
         Shape::Polygon { .. } if is_multi_part(e) => {
             area_parts(e).iter().flat_map(entity_edges).collect()

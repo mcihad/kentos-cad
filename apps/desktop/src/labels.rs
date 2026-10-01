@@ -332,6 +332,32 @@ impl Labels<'_> {
                     },
                     self.colors.halo,
                 ),
+                // A leader's note, as a text (docs/adr/0146 §5).
+                (
+                    LabelSpot::Text {
+                        at, rotation, mask, ..
+                    },
+                    Entity::Leader(l),
+                ) => {
+                    let Some(note) = l.text.as_deref() else {
+                        continue;
+                    };
+                    draw(
+                        frame,
+                        &Piece {
+                            text: note,
+                            at: self.screen(*at),
+                            angle: (-rotation.to_radians()) as f32,
+                            size: (l.height * self.camera.scale) as f32,
+                            font: drawing_fonts::font(self.font, 400, true),
+                            anchor: Anchor::LeftBaseline,
+                            color: self.colors.label,
+                            width_factor: 1.0,
+                            mask: (mask * self.camera.scale) as f32,
+                        },
+                        self.colors.halo,
+                    );
+                }
                 // A block's texts and dimension values (docs/adr/0144), as its own objects draw theirs;
                 // an attribute's text the insert's value, else its default (§7).
                 (

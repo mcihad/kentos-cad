@@ -190,6 +190,9 @@ pub struct Viewport {
     sized: bool,
     /// A drawing was opened and waits for the area's size to be fitted.
     fit_pending: bool,
+    /// The opened drawing's box as its store has it (a block's insert by its
+    /// pieces), for the fit an opening waits to make.
+    opened_extent: Option<Bounds>,
     /// Bumped when a drawing is opened: its scene is built even if its changes count matches.
     generation: u64,
     id: ViewId,
@@ -291,6 +294,7 @@ impl Viewport {
             bounds: Rectangle::default(),
             sized: false,
             fit_pending: false,
+            opened_extent: None,
             generation: 0,
             id: NEXT_VIEW.fetch_add(1, Ordering::Relaxed),
             scene: RefCell::new(None),
@@ -345,11 +349,13 @@ impl Viewport {
     }
 
     /// A drawing was opened: its scene is built afresh and the view goes to
-    /// its start view, else to its extents (the web's `replaceDrawing`).
-    pub fn opened(&mut self, doc: &Document) {
+    /// its start view, else to `extent`, its box as its store has it (the
+    /// web's `replaceDrawing`); without one, to its objects' boxes.
+    pub fn opened(&mut self, doc: &Document, extent: Option<Bounds>) {
         self.generation += 1;
         self.cursor = None;
         self.fit_pending = true;
+        self.opened_extent = extent;
         if self.sized {
             self.fit(doc);
         }
@@ -380,6 +386,7 @@ impl Viewport {
                 self.cursor = Some(self.world(at));
                 self.zoomed_at = Some(Instant::now());
             }
+            // The app fits the store's box (`App::zoom_extents`); this is its objects' boxes.
             Event::Extents => {
                 if let Some(extents) = doc.and_then(scene::extents) {
                     self.camera.fit(&extents, FIT_PADDING);
@@ -727,7 +734,10 @@ impl Viewport {
     /// The document's start view, else its extents; its origin when it has neither.
     fn fit(&mut self, doc: &Document) {
         self.fit_pending = false;
-        match start_view(doc).or_else(|| scene::extents(doc)) {
+        match start_view(doc)
+            .or(self.opened_extent)
+            .or_else(|| scene::extents(doc))
+        {
             Some(b) => self.camera.fit(&b, FIT_PADDING),
             None => self.camera.center_on(scene::scene_origin(doc)),
         }
@@ -1531,7 +1541,7 @@ mod tests {
     fn opening_fits_the_start_view_once_the_area_has_a_size() {
         let doc = sample();
         let mut viewport = Viewport::new();
-        viewport.opened(&doc);
+        viewport.opened(&doc, None);
         assert_eq!(viewport.camera, Camera::default(), "no size yet: no fit");
         viewport.update(
             Event::Resized(Rectangle::new(Point::ORIGIN, Size::new(1000.0, 800.0))),

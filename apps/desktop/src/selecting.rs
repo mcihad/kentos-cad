@@ -62,6 +62,19 @@ impl App {
         self.zoom_to_objects(&ids);
     }
 
+    /// The whole drawing in view (Tümünü göster, the middle button's double
+    /// click): the store's box, a block's insert by its pieces and a leader
+    /// by its note, as the web's `PickIndex.extent` takes it.
+    pub(crate) fn zoom_extents(&mut self) {
+        let Some(doc) = &self.document else {
+            return;
+        };
+        self.spatial.sync(&doc.model);
+        if let Some(bounds) = self.spatial.extent() {
+            self.viewport.show(&bounds);
+        }
+    }
+
     /// The view on the box of these objects (by slot), as large as it fits,
     /// 96 px in from the edges: Seçime yakınlaştır's and Katmana yakınlaştır's.
     pub(crate) fn zoom_to_objects(&mut self, ids: &[f64]) {

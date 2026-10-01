@@ -595,3 +595,41 @@ fn one_symbol_draws_nothing_on_text_and_dimensions() {
         empty
     );
 }
+
+/// A leader (docs/adr/0146 §5) through its set: its line and landing
+/// stroked with the line symbol, its filled arrowhead with the fill symbol,
+/// solid; an open arrowhead's sides are strokes, no fill.
+#[test]
+fn a_leader_strokes_its_lines_and_fills_its_arrowhead() {
+    let p = format!(
+        r##"{{"symbols":{{}},"renderer":null,"sets":[{{"line":{RED},"fill":{{"type":"fill","layers":[{{"id":"s","type":"simpleFill","color":"#FF0000"}}]}}}}],"refs":[],"colors":["#FF0000"],"assets":{{}}}}"##
+    );
+    let leader = |arrow: Option<&str>| Obj {
+        shape: Shape::Leader {
+            pts: vec![v(0.0, 0.0), v(0.0, 4.0)],
+            text: Some("Not".into()),
+            height: 3.0,
+            rotation: 0.0,
+            arrow: arrow.map(str::to_owned),
+            mask: None,
+        },
+        attrs: &[],
+        how: [MODE_SET, 0, 0, 0],
+    };
+    let kinds = |batches: &[Json]| {
+        batches
+            .iter()
+            .map(|b| text(b.get("kind")).to_owned())
+            .collect::<Vec<_>>()
+    };
+    // Fills before lines; one stroke batch holds the line and the landing.
+    let (filled, data) = build(&p, &[leader(None)], v(0.0, 0.0));
+    assert_eq!(kinds(&filled), ["fill", "stroke"]);
+    assert_eq!(text(filled[0].get("style").get("color")), "#FF0000");
+    // The triangle: three corners, two numbers each.
+    assert_eq!(number(filled[0].get("len")), Some(6.0));
+    assert!(!data.is_empty());
+    let (open, _) = build(&p, &[leader(Some("open"))], v(0.0, 0.0));
+    assert_eq!(kinds(&open), ["stroke"]);
+    assert_eq!(strokes(&open), [("#FF0000".into(), None, None)]);
+}

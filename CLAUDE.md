@@ -165,6 +165,7 @@ KENTOS_WRITE_GIS_EXPORTS=1 cargo test -p kentos-formats --test gis   # GeoJSON y
 KENTOS_WRITE_DXF=1 cargo test -p kentos-formats --test dxf_write   # DXF yazıcısının örnek çıktısını (fixtures/formats/v1/dxf-write) yeniden yaz; farkı okuyun
 python3 scripts/fixtures/dxf_write_reference.py --check   # DXF yazıcısının blok, öznitelik ve yazı örneklerini KentOS kodu olmadan denetle (ADR 0144, 0145)
 python3 scripts/fixtures/text_cases.py --check   # yazı kurallarını (Artır, Bul ve değiştir, Okunur yap) kurallardan denetle (ADR 0145)
+python3 scripts/fixtures/leader_cases.py --check   # kılavuzun yerleşimini (ok başı, kol, not) kuraldan denetle (ADR 0146)
 pnpm e2e:cloud           # gerçek API/PostGIS cloud akışı
 KENTOS_E2E_DB=scratch pnpm e2e:cloud   # aynı akış geçici veritabanında (bu yapının migration'ları), kentos_cad'e dokunmadan
 KENTOS_E2E_SERVER=…/target/debug node apps/web/scripts/e2e/cloud.mjs   # aynı akış başka bir yapının sunucusuyla (ADR 0038)
@@ -540,8 +541,9 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   `CAD-14`) ve köşe kotu (ADR 0142, `CAD-13`).
 - Sürmekte: kılavuz ([ADR 0146](docs/adr/0146-leader.md), TODOS.md `CAD-16`, `.kcad` şema 8): ok, kırık çizgi,
   kol ve not tek nesne (`leader`; arayüzde AutoCAD'in Türkçesi gibi “Kılavuz”, sahibin seçimi); ok türleri, ölçüler notun yüksekliğinden; Kılavuz aracı, Öznitelikler; DXF
-  LEADER ve MULTILEADER. 1. adım (sözleşme ve şema 8, çekirdeğin `Shape::Leader`'ı) tamam; sıradaki adım 2:
-  çekirdek ve çizim (yerleşim: ok başı, kol, not; etiket kaydı, Patlat). Ondan sonra, sahibin sırasıyla (ADR 0143
+  LEADER ve MULTILEADER. 1. adım (sözleşme ve şema 8, çekirdeğin `Shape::Leader`'ı) ve 2. adım (yerleşim, çizim
+  kaydı `MIXED`, not etiketi, seçme, kenet, Patlat) tamam; sıradaki adım 3: komutlar (`EntityGeometry::Leader`;
+  `create`, `edit`, `transform`). Ondan sonra, sahibin sırasıyla (ADR 0143
   Bağlam): yeni ölçü türleri. Her biri `.kcad` şemasını değiştiren kendi özelliği ve şema adımıyla gelir;
   önce ADR yazılır, adımlar ADR 0142–0146'daki gibi iki platformda, ortak fixture'larla ilerler.
 - Bilinen açık: web `pnpm e2e` duman testinde üç test ADR 0143'ten önce de düşüyordu: “toolbox

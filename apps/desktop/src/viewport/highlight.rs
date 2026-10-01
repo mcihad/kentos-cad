@@ -325,7 +325,7 @@ mod tests {
                 )),
                 Some(&doc),
             );
-            viewport.opened(&doc);
+            viewport.opened(&doc, None);
             viewport.update(Event::Extents, Some(&doc));
             let palette = palette(Mode::Dark);
             let settings = RenderSettings::new(palette.background);

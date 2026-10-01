@@ -4,7 +4,7 @@ import { exprTable, type ExprNeeds, type ExprTable } from '../model/expression/e
 import type { Bounds, Vec2 } from '../model/geometry';
 import type { LayerStyle } from '../model/layers';
 import type { LayerRenderer, LibraryAsset, Rule, Symbol, SymbolSet } from '../model/style';
-import { hatchSymbolOf, symbolsOfLayerStyle } from '../style/fromLayer';
+import { hatchSymbolOf, leaderSymbolsOf, symbolsOfLayerStyle } from '../style/fromLayer';
 import { CoreStyleProgram } from '../wasm/core';
 import type { CanvasPalette } from './color';
 import { styledBatches } from './styledBatches';
@@ -151,7 +151,10 @@ export function buildStyledLayer(id: string, entities: readonly Entity[], style:
       table?.forEach((p, k) => {
         const own = placed?.[k] ?? p;
         const pieceColor = p.color ?? color;
-        pieces.push(own.kind === 'hatch' ? setOf({ fill: hatchSymbolOf(own as HatchEntity, pieceColor) }) : simpleOf(pieceColor, p.lineWeight ?? weight));
+        if (own.kind === 'hatch') pieces.push(setOf({ fill: hatchSymbolOf(own as HatchEntity, pieceColor) }));
+        // A leader its own look (docs/adr/0146 §5).
+        else if (own.kind === 'leader') pieces.push(setOf(leaderSymbolsOf(style, pieceColor, opts.hairlines, p.lineWeight ?? weight)));
+        else pieces.push(simpleOf(pieceColor, p.lineWeight ?? weight));
       });
     }
     let mode = RENDERER;
@@ -161,6 +164,10 @@ export function buildStyledLayer(id: string, entities: readonly Entity[], style:
     else if (e.kind === 'hatch') {
       mode = SET;
       a = setOf({ fill: hatchSymbolOf(e, color) });
+    } else if (e.kind === 'leader') {
+      // Its lines in its colour and weight, its arrowhead solid (docs/adr/0146 §5); as a hatch, never another symbol.
+      mode = SET;
+      a = setOf(leaderSymbolsOf(style, color, opts.hairlines, weight));
     } else if (e.symbol) {
       mode = OWN;
       let r = refIndex.get(e.symbol);

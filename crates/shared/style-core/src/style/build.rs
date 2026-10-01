@@ -17,7 +17,7 @@ use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::store::Store;
 use kentos_geometry_core::store::draw::{
-    FILL, FILLS, LINE, MARKER, REVERSED, SOURCE, drawn, measure_record,
+    FILL, FILLS, LINE, MARKER, MIXED, REVERSED, SOURCE, drawn, measure_record,
 };
 
 use super::batch::{BatchSink, Batches};
@@ -122,11 +122,36 @@ impl Record<'_> {
         }
         out
     }
+
+    /// A `LINE` record's paths, each with whether it is closed.
+    fn paths(&mut self) -> Vec<(Vec<Vec2>, bool)> {
+        let count = self.next() as usize;
+        let mut paths = Vec::with_capacity(count.min(1 << 16));
+        for k in 0..count {
+            let closed = self.next() == 1.0;
+            paths.push((self.points(k), closed));
+        }
+        paths
+    }
+
+    /// A `FILL` record's rings: the outer ring first, its holes after.
+    fn rings(&mut self) -> Vec<Vec<Vec2>> {
+        let count = self.next() as usize;
+        (0..count).map(|k| self.points(k)).collect()
+    }
 }
 
 /// What an object draws for the style engine (`drawn`, oriented): None for
-/// text, and for a construction line outside `clip`.
+/// text, and for a construction line outside `clip`; a leader's lines (its
+/// arrowhead's area is `styled_parts`').
 pub fn styled_geometry(s: &Shape, clip: Option<&Bounds>, buf: &mut Vec<f64>) -> Option<Geom> {
+    styled_parts(s, clip, buf).into_iter().next()
+}
+
+/// `styled_geometry`, every part: one geometry for most objects; a
+/// leader's lines, then its filled arrowhead's or dot's area when it has
+/// one (`MIXED`, docs/adr/0146 §5), each through its own kind of symbol.
+pub fn styled_parts(s: &Shape, clip: Option<&Bounds>, buf: &mut Vec<f64>) -> Vec<Geom> {
     buf.clear();
     drawn(s, true, clip, buf);
     let mut r = Record {
@@ -135,21 +160,23 @@ pub fn styled_geometry(s: &Shape, clip: Option<&Bounds>, buf: &mut Vec<f64>) -> 
         shape: s,
     };
     let kind = r.next();
-    if kind == MARKER {
+    if kind == MIXED {
+        let lines = Geom::Line(r.paths());
+        let rings = r.rings();
+        return if rings.is_empty() {
+            vec![lines]
+        } else {
+            vec![lines, Geom::Fill(rings)]
+        };
+    }
+    let one = if kind == MARKER {
         let x = r.next();
         let y = r.next();
         Some(Geom::Marker(Vec2::new(x, y)))
     } else if kind == LINE {
-        let count = r.next() as usize;
-        let mut paths = Vec::with_capacity(count);
-        for k in 0..count {
-            let closed = r.next() == 1.0;
-            paths.push((r.points(k), closed));
-        }
-        Some(Geom::Line(paths))
+        Some(Geom::Line(r.paths()))
     } else if kind == FILL {
-        let count = r.next() as usize;
-        Some(Geom::Fill((0..count).map(|k| r.points(k)).collect()))
+        Some(Geom::Fill(r.rings()))
     } else if kind == FILLS {
         // A multi-part area's parts, each its rings, their points always given (docs/adr/0143).
         let parts = r.next() as usize;
@@ -161,7 +188,8 @@ pub fn styled_geometry(s: &Shape, clip: Option<&Bounds>, buf: &mut Vec<f64>) -> 
         Some(Geom::Fills(out))
     } else {
         None
-    }
+    };
+    one.into_iter().collect()
 }
 
 // ── The program: a layer's symbols and expressions ─────────────────────
@@ -443,11 +471,11 @@ fn draw_object(
     buf: &mut Vec<f64>,
     sink: &mut BatchSink,
 ) {
-    let geom = styled_geometry(shape, clip, buf);
+    let parts = styled_parts(shape, clip, buf);
     if mode == MODE_DIMENSION {
         // Dimensions keep their own hairline look: their layout lines. Drawn at every scale
         // (the TypeScript kept the previous object's rule range here).
-        if let Some(Geom::Line(paths)) = &geom {
+        if let Some(Geom::Line(paths)) = parts.first() {
             let hair = StrokeStyle {
                 color: usize::try_from(color)
                     .ok()
@@ -471,10 +499,22 @@ fn draw_object(
         }
         return;
     }
-    let Some(geom) = geom else {
-        return;
-    };
-    let cls = class_of(&geom);
+    // A leader's lines through the line symbol, its arrowhead through the fill symbol (docs/adr/0146 §5).
+    for geom in &parts {
+        draw_part(geom, [mode, a, simple], program, values, env, sink);
+    }
+}
+
+/// One geometry of an object through its symbols, by its kind of geometry.
+fn draw_part(
+    geom: &Geom,
+    [mode, a, simple]: [i32; 3],
+    program: &Program,
+    values: &RowValues<'_, '_>,
+    env: &Env<'_>,
+    sink: &mut BatchSink,
+) {
+    let cls = class_of(geom);
     let set_at = |k: i32| usize::try_from(k).ok().and_then(|k| program.sets.get(k));
     let own;
     let sets: Vec<Resolved> = match mode {
@@ -520,14 +560,14 @@ fn draw_object(
     for r in &sets {
         sink.set_scale(r.scale);
         if let Some(symbol) = program.symbol(slot(r.symbols, cls)) {
-            compile_symbol(symbol, &geom, values, env, sink, level_base(symbol.kind));
+            compile_symbol(symbol, geom, values, env, sink, level_base(symbol.kind));
             drew = true;
         } else if cls == SymbolType::Fill {
             // An area without a fill symbol takes the line symbol on its edges.
             let Some(edge) = program.symbol(r.symbols.line.as_ref()) else {
                 continue;
             };
-            compile_symbol(edge, &geom, values, env, sink, LEVEL_LINE);
+            compile_symbol(edge, geom, values, env, sink, LEVEL_LINE);
             drew = true;
         }
     }
@@ -537,7 +577,7 @@ fn draw_object(
     {
         sink.set_scale(first.scale);
         if let Some(fallback) = set_at(simple).and_then(|s| program.symbol(slot(s, cls))) {
-            compile_symbol(fallback, &geom, values, env, sink, level_base(cls));
+            compile_symbol(fallback, geom, values, env, sink, level_base(cls));
         }
     }
 }

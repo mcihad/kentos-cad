@@ -28,7 +28,7 @@ use serde_json::{Map, Value, json};
 use kentos_native_application::geometry::{edit_geometry, entity_of};
 
 use crate::library::StyleLibrary;
-use crate::simple::{hatch_symbol_of, symbols_of_layer_style};
+use crate::simple::{hatch_symbol_of, leader_symbols_of, symbols_of_layer_style};
 use crate::table::{ExprTable, expr_table};
 
 /// Metres of paper per CSS pixel at 96 dpi (0.26458 mm), as the web's `METRES_PER_PX`.
@@ -244,8 +244,14 @@ pub fn layer_call(
                         .map(|g| entity_of(&g, base.clone())),
                     _ => None,
                 };
-                pieces.push(match hatch {
-                    Some(Entity::Hatch(h)) => it.set(json!({ "fill": hatch_symbol_of(&h, color) })),
+                pieces.push(match (hatch, shape) {
+                    (Some(Entity::Hatch(h)), _) => {
+                        it.set(json!({ "fill": hatch_symbol_of(&h, color) }))
+                    }
+                    // A leader its own look (docs/adr/0146 §5).
+                    (_, Shape::Leader { .. }) => {
+                        it.set(leader_symbols_of(style, color, weight, opts.hairlines))
+                    }
                     _ => it.simple(style, color, weight, opts.hairlines),
                 });
             }
@@ -256,6 +262,11 @@ pub fn layer_call(
             Entity::Hatch(h) => (
                 MODE_SET,
                 it.set(json!({ "fill": hatch_symbol_of(h, color) })),
+            ),
+            // Its lines in its colour and weight, its arrowhead solid (docs/adr/0146 §5); as a hatch, never another symbol.
+            Entity::Leader(_) => (
+                MODE_SET,
+                it.set(leader_symbols_of(style, color, weight, opts.hairlines)),
             ),
             _ => match &base.symbol {
                 Some(id) => (MODE_OWN, it.own(id)),

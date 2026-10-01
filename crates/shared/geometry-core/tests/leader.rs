@@ -60,3 +60,168 @@ fn its_note_turns_as_a_text_does() {
     assert!((pts[1].x + 8.0).abs() < 1e-12 && (pts[1].y - 6.0).abs() < 1e-12);
     assert!((rot - 330.0).abs() < 1e-9, "{rot}");
 }
+
+/// The shared cases (fixtures/leader/v1/layout.json), written from
+/// docs/adr/0146 §2 alone by scripts/fixtures/leader_cases.py: the core lays
+/// every leader out as the independent reference does, within 1e-9 m. The
+/// web runs the same file through its WASM (`leader.wasm.test.ts`).
+#[test]
+fn every_shared_layout_case_is_laid_out_as_the_reference_lays_it_out() {
+    use kentos_geometry_core::api::json::{FromJson, Json};
+    use kentos_geometry_core::entity::Entity;
+    use kentos_geometry_core::geom::leader::{Head, layout_of};
+    use serde_json::Value;
+
+    let file: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/leader/v1/layout.json"
+    ))
+    .expect("the cases are JSON");
+    assert_eq!(file["format"], "kentos.leader-cases");
+    let cases = file["cases"].as_array().expect("a case list");
+    assert_eq!(cases.len(), 10, "the cases are all there");
+    let near = |a: f64, e: &Value| {
+        let e = e.as_f64().expect("a number");
+        (a - e).abs() <= 1e-9 + 1e-15 * e.abs()
+    };
+    let at = |p: Vec2, e: &Value| near(p.x, &e["x"]) && near(p.y, &e["y"]);
+    let all = |ps: &[Vec2], e: &Value| {
+        let e = e.as_array().expect("points");
+        ps.len() == e.len() && ps.iter().zip(e).all(|(p, q)| at(*p, q))
+    };
+    let mut wrong = Vec::new();
+    for case in cases {
+        let name = case["name"].as_str().unwrap_or("?");
+        let mut leader = case["leader"].clone();
+        leader["kind"] = "leader".into();
+        let json = Json::parse(&leader.to_string()).expect("the leader reads");
+        let shape = Entity::from_json(&json).expect("a leader").shape;
+        let Some(got) = layout_of(&shape) else {
+            wrong.push(format!("{name}: no layout"));
+            continue;
+        };
+        let want = &case["want"];
+        let head = &want["head"];
+        let head_ok = match (&got.head, head["kind"].as_str()) {
+            (Head::Filled { triangle }, Some("filled")) => all(triangle, &head["triangle"]),
+            (Head::Open { lines }, Some("open")) => all(lines, &head["lines"]),
+            (Head::Dot { center, radius }, Some("dot")) => {
+                at(*center, &head["center"]) && near(*radius, &head["radius"])
+            }
+            (Head::None {}, Some("none")) => true,
+            _ => false,
+        };
+        let note_ok = match (got.landing, got.note_point, got.note_align) {
+            (Some(landing), Some(p), Some(align)) => {
+                all(&landing, &want["landing"])
+                    && at(p, &want["notePoint"])
+                    && want["noteAlign"] == align.name()
+            }
+            (None, None, None) => want.get("landing").is_none() && want.get("notePoint").is_none(),
+            _ => false,
+        };
+        if !(head_ok && near(got.side, &want["side"]) && note_ok) {
+            wrong.push(format!("{name}: {got:?}"));
+        }
+    }
+    assert!(wrong.is_empty(), "{}", wrong.join("\n"));
+}
+
+/// Two leaders by hand (docs/adr/0146 §4), h = 2: from (0, 0) up to (4, 3)
+/// with a note, its landing on to (8, 3), its note's middle left at (9, 3);
+/// from (20, 0) to (24, 3) without a note.
+fn store() -> kentos_geometry_core::store::Store {
+    let mut s = kentos_geometry_core::store::Store::new();
+    s.put_json(
+        r#"[{"id":1,"layerId":"k","kind":"leader","pts":[{"x":0,"y":0},{"x":4,"y":3}],"text":"Mevcut bina","height":2,"rotation":0},
+            {"id":2,"layerId":"k","kind":"leader","pts":[{"x":20,"y":0},{"x":24,"y":3}],"height":2,"rotation":0,"arrow":"dot"}]"#,
+    )
+    .expect("the leaders go in");
+    s
+}
+
+#[test]
+fn it_snaps_to_its_vertices_and_its_landing_s_end() {
+    use kentos_geometry_core::store::snap::SnapKind;
+    let s = store();
+    let end = SnapKind::Endpoint.bit();
+    let hit = |x: f64, y: f64| s.snap(Vec2::new(x, y), 0.3, end, None).map(|h| (h.point, h.id));
+    assert_eq!(hit(0.1, 0.1), Some((Vec2::new(0.0, 0.0), 1.0)));
+    assert_eq!(hit(4.1, 3.1), Some((Vec2::new(4.0, 3.0), 1.0)));
+    assert_eq!(hit(7.9, 3.2), Some((Vec2::new(8.0, 3.0), 1.0)));
+    // Without a note there is no landing: nothing past its last vertex.
+    assert_eq!(hit(28.0, 3.0), None);
+    assert_eq!(hit(24.0, 3.1), Some((Vec2::new(24.0, 3.0), 2.0)));
+}
+
+#[test]
+fn a_window_takes_it_whole_and_a_crossing_by_any_part() {
+    use kentos_geometry_core::geometry::Bounds;
+    let s = store();
+    let b = |min_x, min_y, max_x, max_y| Bounds {
+        min_x,
+        min_y,
+        max_x,
+        max_y,
+    };
+    // Wholly inside only with its note's box; the arrowhead's reach stays inside the line's box here.
+    assert_eq!(s.in_rect(&b(-1.0, -1.0, 9.5, 5.0), false), Vec::<f64>::new());
+    assert_eq!(s.in_rect(&b(-1.0, -1.0, 40.0, 5.0), false), vec![1.0, 2.0]);
+    // A crossing box over the note alone, over the landing alone.
+    assert_eq!(s.in_rect(&b(10.0, 2.5, 11.0, 3.5), true), vec![1.0]);
+    assert_eq!(s.in_rect(&b(6.0, 2.5, 7.0, 3.5), true), vec![1.0]);
+    // A fence across the note, across the landing.
+    let fence = |a: (f64, f64), b: (f64, f64)| s.in_fence(&[Vec2::new(a.0, a.1), Vec2::new(b.0, b.1)], 0.01);
+    assert_eq!(fence((10.0, 1.0), (10.0, 5.0)), vec![1.0]);
+    assert_eq!(fence((6.0, 2.0), (6.0, 4.0)), vec![1.0]);
+    assert_eq!(fence((30.0, 0.0), (30.0, 5.0)), Vec::<f64>::new());
+}
+
+#[test]
+fn it_explodes_into_a_polyline_its_arrowhead_and_its_note() {
+    use kentos_geometry_core::ops::curve_cuts::Cut;
+    use kentos_geometry_core::ops::explode::explode_entity;
+    use kentos_geometry_core::text::{Font, TextAlign};
+    let filled = Shape::Leader {
+        pts: vec![Vec2::new(0.0, 0.0), Vec2::new(4.0, 3.0)],
+        text: Some("Mevcut bina".into()),
+        height: 2.0,
+        rotation: 0.0,
+        arrow: None,
+        mask: Some(true),
+    };
+    let Cut::Pieces(pieces) = explode_entity(&filled, "", Font::DEFAULT) else {
+        panic!("a leader explodes");
+    };
+    let shapes: Vec<&Shape> = pieces.iter().map(|e| &e.shape).collect();
+    assert_eq!(shapes.len(), 3);
+    assert!(
+        matches!(shapes[0], Shape::Polyline { pts, .. } if pts == &[Vec2::new(0.0, 0.0), Vec2::new(4.0, 3.0), Vec2::new(8.0, 3.0)]),
+        "{:?}",
+        shapes[0]
+    );
+    assert!(
+        matches!(shapes[1], Shape::Hatch { ring, pattern, .. } if ring.len() == 3 && ring[0] == Vec2::new(0.0, 0.0) && pattern.kind == "solid"),
+        "{:?}",
+        shapes[1]
+    );
+    assert!(
+        matches!(shapes[2], Shape::Text { p, text, height, align: Some(TextAlign::MiddleLeft), mask: Some(true), .. }
+            if *p == Vec2::new(9.0, 3.0) && text == "Mevcut bina" && *height == 2.0),
+        "{:?}",
+        shapes[2]
+    );
+    // An open arrowhead: its sides a polyline of their own; no note, no text.
+    let open = Shape::Leader {
+        pts: vec![Vec2::new(0.0, 0.0), Vec2::new(4.0, 3.0)],
+        text: None,
+        height: 2.0,
+        rotation: 0.0,
+        arrow: Some("open".into()),
+        mask: None,
+    };
+    let Cut::Pieces(pieces) = explode_entity(&open, "", Font::DEFAULT) else {
+        panic!("a leader explodes");
+    };
+    assert_eq!(pieces.len(), 2);
+    assert!(matches!(&pieces[1].shape, Shape::Polyline { pts, .. } if pts.len() == 3 && pts[1] == Vec2::new(0.0, 0.0)));
+}

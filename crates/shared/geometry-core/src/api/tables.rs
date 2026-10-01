@@ -50,4 +50,5 @@ pub(super) static TABLES: &[&[Op]] = &[
     crate::processing::edge_lengths::OPS,
     crate::ops::elevation::OPS,
     crate::ops::parts::OPS,
+    crate::geom::leader::OPS,
 ];

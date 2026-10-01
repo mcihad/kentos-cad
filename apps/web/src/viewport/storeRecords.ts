@@ -24,7 +24,7 @@ export function labelRule(st: LabelStyle): { placement: LabelStyle['placement'];
 }
 
 /** A label record's second number. */
-export const LABEL = { dimension: 0, text: 1, center: 2, corner: 3, beside: 4, along: 5, pieceText: 6, pieceDimension: 7 } as const;
+export const LABEL = { dimension: 0, text: 1, center: 2, corner: 3, beside: 4, along: 5, pieceText: 6, pieceDimension: 7, leader: 8, pieceLeader: 9 } as const;
 /**
  * Numbers per label record: `id, what, x, y, a, b, c, d, e`. A text's x, y are where its baseline starts (its
  * point moved by its alignment), b its width factor, c its mask's width (0 none); a block's text piece's d and e

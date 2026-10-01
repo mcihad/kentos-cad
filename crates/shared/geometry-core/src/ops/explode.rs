@@ -1,16 +1,17 @@
 //! Explode (`apps/web/src/model/ops/explode.ts`): a compound entity breaks into simple
 //! ones. Paths become lines and arcs (holes included), a spline a polyline
 //! through its curve, a dimension lines, an arc and its text, a patterned
-//! hatch its lines. The dimension's value text comes in already formatted
-//! (project units belong to the app), and is used only when the dimension
-//! has no text of its own.
+//! hatch its lines, a leader its line, its arrowhead and its note. The
+//! dimension's value text comes in already formatted (project units belong
+//! to the app), and is used only when the dimension has no text of its own.
 
 use crate::api::Op;
-use crate::entity::{Entity, Shape, dimension_geom};
+use crate::entity::{Entity, HatchPattern, Shape, dimension_geom};
 use crate::geom::arc::norm_angle;
 use crate::geom::bulge::{bulge_arc, bulge_at};
 use crate::geom::dimension::layout_dimension;
 use crate::geom::hatch::hatch_lines;
+use crate::geom::leader::{self, Head};
 use crate::geom::intersect::Edge;
 use crate::geom::spline::catmull_rom;
 use crate::jsmath::{PI, cos, js_hypot, js_max, sin};
@@ -141,6 +142,53 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
                 );
             }
             Cut::Pieces(segs.into_iter().map(|[a, b]| line(a, b)).collect())
+        }
+        // Its line on to its landing's end a polyline, its note a text, its arrowhead a solid
+        // hatch (a filled one, a dot) or a polyline (an open one) (docs/adr/0146 §4).
+        Shape::Leader {
+            pts,
+            text,
+            height,
+            rotation,
+            mask,
+            ..
+        } => {
+            let Some(l) = leader::layout_of(e) else {
+                return Cut::Error("Kılavuzun köşesi yok.".into());
+            };
+            let path = |pts: Vec<Vec2>| {
+                Entity::new(Shape::Polyline {
+                    pts,
+                    bulges: None,
+                    holes: None,
+                })
+            };
+            let mut pieces = vec![path(leader::drawn_path(pts, &l))];
+            if let Head::Open { lines } = &l.head {
+                pieces.push(path(lines.to_vec()));
+            } else if let Some(ring) = leader::head_ring(&l.head) {
+                pieces.push(Entity::new(Shape::Hatch {
+                    ring,
+                    holes: None,
+                    pattern: HatchPattern {
+                        kind: "solid".into(),
+                        angle: 0.0,
+                        spacing: *height,
+                    },
+                }));
+            }
+            if let (Some(text), Some(p)) = (text, l.note_point) {
+                pieces.push(Entity::new(Shape::Text {
+                    p,
+                    text: text.clone(),
+                    height: *height,
+                    rotation: *rotation,
+                    align: l.note_align,
+                    width_factor: None,
+                    mask: *mask,
+                }));
+            }
+            Cut::Pieces(pieces)
         }
         Shape::Circle { .. } => {
             Cut::Error("Daire patlatılamaz; parçalamak için Kır (B) kullanın.".into())

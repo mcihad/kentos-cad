@@ -40,6 +40,7 @@ use kentos_geometry_core::geom::arrangement::Ring;
 use kentos_geometry_core::geom::bulge::has_bulges;
 use kentos_geometry_core::geom::dimension::layout_dimension;
 use kentos_geometry_core::geom::hatch::hatch_lines;
+use kentos_geometry_core::geom::leader::{self, Head};
 use kentos_geometry_core::store::draw::clip_line;
 use kentos_geometry_core::tessellate::{
     arc_points, bulge_path, catmull_rom, circle_ring, ellipse_points,
@@ -178,6 +179,8 @@ pub fn build_fixed<D: Drawing + ?Sized>(doc: &D, palette: &Palette, origin: Vec2
                         *not_drawn.entry(entity.kind()).or_insert(0) += 1;
                     }
                 }
+                // Its arrowhead solid in its colour (docs/adr/0146 §5).
+                Entity::Leader(_) => leader_parts(&mut b, entity, color, Some(color)),
                 // Text over the scene (the host's); curves and bulged paths in the
                 // curves part; construction lines in theirs.
                 _ => {}
@@ -198,6 +201,22 @@ fn dimension_lines(b: &mut Builder, entity: &Entity, color: Rgba8) -> bool {
         b.segment(from, to, color);
     }
     true
+}
+
+/// A leader's line on to its landing's end and its arrowhead (docs/adr/0146
+/// §5): an open one's sides; a filled one's or a dot's outline, filled with
+/// `fill` when given.
+fn leader_parts(b: &mut Builder, entity: &Entity, color: Rgba8, fill: Option<Rgba8>) {
+    let s = shape(entity);
+    let (Shape::Leader { pts, .. }, Some(l)) = (&s, leader::layout_of(&s)) else {
+        return;
+    };
+    b.path(&leader::drawn_path(pts, &l), false, color);
+    if let Head::Open { lines } = &l.head {
+        b.path(lines, false, color);
+    } else if let Some(ring) = leader::head_ring(&l.head) {
+        b.polygon(&[ring], color, fill);
+    }
 }
 
 /// A construction line's part inside `clip` (`clip_line`), when it crosses it.
@@ -561,6 +580,7 @@ fn highlight_one(b: &mut Builder, entity: &Entity, style: &Highlight, tol: f64, 
         Entity::Dimension(_) => {
             dimension_lines(b, entity, color);
         }
+        Entity::Leader(_) => leader_parts(b, entity, color, style.fill),
         Entity::Xline(_) | Entity::Ray(_) => construction_line(b, entity, clip, color),
         _ => {}
     }

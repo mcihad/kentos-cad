@@ -10,6 +10,7 @@ use super::Store;
 use crate::api::json::Json;
 use crate::entity::{Shape, TextPlace, dimension_geom, entity_anchor, entity_vertices};
 use crate::geom::dimension::layout_dimension;
+use crate::geom::leader::note_place;
 use crate::geometry::Bounds;
 use crate::jsmath::js_min;
 use crate::ops::grips::{entity_grips, mid_grip_segment};
@@ -80,6 +81,11 @@ pub const LABEL_PIECE_TEXT: f64 = 6.0;
 /// A dimension among a block's pieces: x, y its value's place, a its angle,
 /// b the value, c the piece's place, d its text height as placed.
 pub const LABEL_PIECE_DIMENSION: f64 = 7.0;
+/// A leader's note (docs/adr/0146 §5), as a text's: x, y where its baseline
+/// starts, a its rotation, b 1 (it has no width factor), c its mask's width.
+pub const LABEL_LEADER: f64 = 8.0;
+/// A leader's note among a block's pieces, as `LABEL_PIECE_TEXT`.
+pub const LABEL_PIECE_LEADER: f64 = 9.0;
 
 /// Numbers per label record.
 pub const LABEL_STRIDE: usize = 9;
@@ -120,8 +126,9 @@ impl Store {
     ///   a line and a tenth of the height around);
     /// - centre and beside: x, y the anchor; corner: x, y the box's top left;
     /// - along: x, y and a, b the two vertices the label sits between;
-    /// - a block's text or dimension pieces (`LABEL_PIECE_TEXT`,
-    ///   `LABEL_PIECE_DIMENSION`), before the insert's own label.
+    /// - a leader's note (`LABEL_LEADER`), as a text's;
+    /// - a block's text, dimension or leader pieces (`LABEL_PIECE_TEXT`,
+    ///   `LABEL_PIECE_DIMENSION`, `LABEL_PIECE_LEADER`), before the insert's own label.
     ///
     /// `editing` is left out (the inline editor draws it).
     pub fn labels(&self, view: &Bounds, scale: f64, editing: Option<f64>) -> Vec<f64> {
@@ -167,6 +174,28 @@ impl Store {
                                 *height,
                                 i as f64,
                                 factor,
+                                mask,
+                            ]);
+                        }
+                        Shape::Leader {
+                            height, rotation, ..
+                        } => {
+                            let px = height * scale;
+                            let Some((o, mask)) = self.note_label(s) else {
+                                continue;
+                            };
+                            if px < 5.0 || px > 240.0 {
+                                continue;
+                            }
+                            out.extend([
+                                it.id,
+                                LABEL_PIECE_LEADER,
+                                o.x,
+                                o.y,
+                                *rotation,
+                                *height,
+                                i as f64,
+                                1.0,
                                 mask,
                             ]);
                         }
@@ -235,6 +264,28 @@ impl Store {
                     out.extend([
                         it.id, LABEL_TEXT, o.x, o.y, *rotation, factor, mask, 0.0, 0.0,
                     ]);
+                    continue;
+                }
+                // Its note, as a text's; under 5 px it is not drawn, its line and arrowhead are (docs/adr/0146 §5).
+                Shape::Leader {
+                    height, rotation, ..
+                } => {
+                    let px = height * scale;
+                    if let Some((o, mask)) = self.note_label(&it.shape)
+                        && (5.0..=240.0).contains(&px)
+                    {
+                        out.extend([
+                            it.id,
+                            LABEL_LEADER,
+                            o.x,
+                            o.y,
+                            *rotation,
+                            1.0,
+                            mask,
+                            0.0,
+                            0.0,
+                        ]);
+                    }
                     continue;
                 }
                 _ => {}
@@ -307,6 +358,24 @@ impl Store {
         out
     }
 
+    /// A leader's note (docs/adr/0146 §5): where its baseline starts and its
+    /// mask's width (0 without a mask), in the drawing's typeface; none
+    /// without a note.
+    fn note_label(&self, s: &Shape) -> Option<(crate::vec2::Vec2, f64)> {
+        let t = note_place(s)?;
+        let masked = matches!(
+            s,
+            Shape::Leader {
+                mask: Some(true),
+                ..
+            }
+        );
+        Some((
+            t.origin(self.font),
+            if masked { t.width(self.font) } else { 0.0 },
+        ))
+    }
+
     /// A text's label (docs/adr/0145): where its baseline starts, its width
     /// factor (1 without one) and its mask's width (0 without a mask), in the
     /// drawing's typeface.
@@ -338,7 +407,9 @@ impl Store {
             let Some(it) = self.get(id) else { continue };
             let grips = entity_grips(&it.shape);
             let vertices = match &it.shape {
-                Shape::Polyline { pts, .. } | Shape::Polygon { pts, .. } => pts.len(),
+                Shape::Polyline { pts, .. }
+                | Shape::Polygon { pts, .. }
+                | Shape::Leader { pts, .. } => pts.len(),
                 _ => 0,
             };
             out.extend([id, grips.len() as f64, vertices as f64]);
@@ -443,6 +514,43 @@ mod tests {
             None,
         );
         assert_eq!(out, [8.0, LABEL_TEXT, 30.0, 30.0, 0.0, 1.0, 0.0, 0.0, 0.0]);
+    }
+
+    /// A leader's note (docs/adr/0146 §2, §5): half its height under the
+    /// landing's level, from h/2 past the landing's end; to the left, its
+    /// width back from there. By hand, h = 2: the landing 4 m, the note 1 m
+    /// on; to the right from (4, 3) its baseline starts at (9, 2), to the
+    /// left from (26, 3) at (21 − w, 2).
+    #[test]
+    fn a_leaders_note_is_labelled_past_its_landing() {
+        let mut s = Store::new();
+        let font = crate::text::Font::from_id("courier-prime");
+        s.set_font(font);
+        s.put_json(
+            r#"[{"id":3,"layerId":"k","kind":"leader","pts":[{"x":0,"y":0},{"x":4,"y":3}],"text":"Not","height":2,"rotation":0,"mask":true},
+                {"id":4,"layerId":"k","kind":"leader","pts":[{"x":30,"y":0},{"x":26,"y":3}],"text":"Not","height":2,"rotation":0,"label":"K-1"},
+                {"id":5,"layerId":"k","kind":"leader","pts":[{"x":40,"y":0},{"x":44,"y":3}],"height":2,"rotation":0}]"#,
+        )
+        .unwrap();
+        let w = crate::text::width_em("Not", font) * 2.0;
+        let view = Bounds {
+            min_x: -10.0,
+            min_y: -10.0,
+            max_x: 60.0,
+            max_y: 20.0,
+        };
+        // Masked: its width; its etiket is not drawn, a text's is not either; without a note nothing.
+        let right = [3.0, LABEL_LEADER, 9.0, 2.0, 0.0, 1.0, w, 0.0, 0.0];
+        let left = [4.0, LABEL_LEADER, 21.0 - w, 2.0, 0.0, 1.0, 0.0, 0.0, 0.0];
+        assert_eq!(s.labels(&view, 3.0, None), [right, left].concat());
+        // Under 5 px its note is not drawn.
+        assert!(s.labels(&view, 2.0, None).is_empty());
+        // It is picked on its note, on its landing and on its line; not past the note.
+        let at = |x: f64, y: f64| s.hit(crate::vec2::Vec2::new(x, y), 0.01);
+        assert_eq!(at(9.5, 2.5), Some(3.0));
+        assert_eq!(at(6.0, 3.0), Some(3.0));
+        assert_eq!(at(2.0, 1.5), Some(3.0));
+        assert_eq!(at(9.0 + w + 1.0, 2.5), None);
     }
 
     #[test]

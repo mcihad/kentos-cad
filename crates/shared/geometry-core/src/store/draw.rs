@@ -20,7 +20,12 @@
 //!   and the piece's own record (never `NONE` nor another `GROUP`), a
 //!   block's insert (docs/adr/0144): its pieces placed, their points always
 //!   given. The host draws each with the piece's own colour and line weight
-//!   when it has them (`Store::block_pieces_json`), else the insert's.
+//!   when it has them (`Store::block_pieces_json`), else the insert's;
+//! - `MIXED`, then a `LINE` record's paths and a `FILL` record's rings (0
+//!   for none), their points always given: a leader's (docs/adr/0146 §5),
+//!   its line on to its landing's end and an open arrowhead's sides, then
+//!   its filled arrowhead or dot. The host strokes the paths and fills the
+//!   area solid in the object's colour.
 //!
 //! Points are `n, x0, y0, …`, or `SOURCE` / `REVERSED`: the object's own
 //! points for that path or ring (a line's two ends; a polyline's or
@@ -35,6 +40,7 @@ use crate::entity::{
 };
 use crate::geom::bulge::has_bulges;
 use crate::geom::dimension::layout_dimension;
+use crate::geom::leader::{self, Head};
 use crate::geometry::{Bounds, signed_area};
 use crate::jsmath::{js_max, js_min};
 use crate::op;
@@ -48,6 +54,8 @@ pub const FILL: f64 = 3.0;
 pub const FILLS: f64 = 4.0;
 /// A block's insert: its pieces' records, each after its place (docs/adr/0144).
 pub const GROUP: f64 = 5.0;
+/// Lines and a solid area in one record: a leader's (docs/adr/0146).
+pub const MIXED: f64 = 6.0;
 /// The object's own points, as they are.
 pub const SOURCE: f64 = -1.0;
 /// The object's own points, last to first.
@@ -146,11 +154,28 @@ fn drawn_record(s: &Shape, oriented: bool, clip: Option<&Bounds>, refs: bool, ou
                 path(out, false, &[*a, *b]);
             }
         }
-        // Its line through its vertices (docs/adr/0146); the arrowhead, landing and note come with the layout.
-        Shape::Leader { pts, .. } => {
-            out.extend([LINE, 1.0]);
-            path(out, false, pts);
-        }
+        // Its line on to its landing's end, an open arrowhead's sides, a filled one's or a dot's area (docs/adr/0146 §5).
+        Shape::Leader { pts, .. } => match leader::layout_of(s) {
+            Some(l) => {
+                let open = match &l.head {
+                    Head::Open { lines } => Some(lines),
+                    _ => None,
+                };
+                out.extend([MIXED, if open.is_some() { 2.0 } else { 1.0 }]);
+                path(out, false, &leader::drawn_path(pts, &l));
+                if let Some(lines) = open {
+                    path(out, false, lines);
+                }
+                match leader::head_ring(&l.head) {
+                    Some(r) => {
+                        out.push(1.0);
+                        ring(out, &r, false, oriented.then_some(true));
+                    }
+                    None => out.push(0.0),
+                }
+            }
+            None => out.push(NONE),
+        },
         Shape::Polyline { pts, bulges, .. } => {
             out.extend([LINE, 1.0]);
             // As the TypeScript tested it: any bulge list (even all zero) is tessellated.
@@ -437,6 +462,36 @@ mod tests {
         let hatch = r#"{"kind":"hatch","ring":[{"x":0,"y":0},{"x":4,"y":0},{"x":4,"y":4}],
             "holes":[[{"x":1,"y":1},{"x":2,"y":1},{"x":2,"y":2}]],"pattern":{"type":"solid","angle":0,"spacing":1}}"#;
         assert_eq!(record(hatch, true, None), [FILL, 2.0, SOURCE, REVERSED]);
+    }
+
+    #[test]
+    fn a_leader_draws_its_lines_and_its_arrowhead_in_one_record() {
+        // Up 4 m from the tip, the note 3 m high: the landing runs 6 m east from the last vertex.
+        let leader = |extra: &str| {
+            format!(
+                r#"{{"kind":"leader","pts":[{{"x":0,"y":0}},{{"x":0,"y":4}}],"height":3,"rotation":0{extra}}}"#
+            )
+        };
+        let line = [0.0, 3.0, 0.0, 0.0, 0.0, 4.0, 6.0, 4.0];
+        // A filled arrow: its triangle (tip, base corners) turned counter-clockwise for the style engine.
+        let filled = record(&leader(r#","text":"Not""#), true, None);
+        assert_eq!(&filled[..2], [MIXED, 1.0]);
+        assert_eq!(&filled[2..10], line);
+        assert_eq!(&filled[10..], [1.0, 3.0, 0.5, 3.0, -0.5, 3.0, 0.0, 0.0]);
+        // Unoriented (the highlight layers): as the layout has it.
+        let plain = record(&leader(r#","text":"Not""#), false, None);
+        assert_eq!(&plain[10..], [1.0, 3.0, 0.0, 0.0, -0.5, 3.0, 0.5, 3.0]);
+        // An open arrow: its two sides a path of their own, no area.
+        let open = record(&leader(r#","text":"Not","arrow":"open""#), true, None);
+        assert_eq!(&open[..2], [MIXED, 2.0]);
+        assert_eq!(&open[10..], [0.0, 3.0, -0.5, 3.0, 0.0, 0.0, 0.5, 3.0, 0.0]);
+        // Without a note no landing; a dot is its outline, a full turn's 72 points about the tip.
+        let dot = record(&leader(r#","arrow":"dot""#), true, None);
+        assert_eq!(&dot[..9], [MIXED, 1.0, 0.0, 2.0, 0.0, 0.0, 0.0, 4.0, 1.0]);
+        assert_eq!((dot[9], dot.len()), (72.0, 10 + 2 * 72));
+        assert_eq!((dot[10], dot[11]), (0.75, 0.0));
+        let bare = record(&leader(r#","arrow":"none""#), true, None);
+        assert_eq!(bare, [MIXED, 1.0, 0.0, 2.0, 0.0, 0.0, 0.0, 4.0, 0.0]);
     }
 
     #[test]

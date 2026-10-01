@@ -16,6 +16,7 @@ use crate::entity::{
 };
 use crate::geom::ellipse::{ellipse_area, inside_ellipse, is_full_ellipse};
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges};
+use crate::geom::leader;
 use crate::geometry::{Bounds, point_in_polygon, signed_area};
 use crate::jsmath::{PI, js_cmp, js_hypot, js_max, js_min, stable_sort};
 use crate::ops::edges::entity_edges;
@@ -198,6 +199,19 @@ fn outline(e: &Shape, font: Font) -> Vec<Vec2> {
         Shape::Text { .. } => TextPlace::of(e)
             .map(|t| t.outline(font))
             .unwrap_or_default(),
+        // A leader's line, landing, arrowhead and note's body (docs/adr/0146 §4).
+        Shape::Leader { .. } => {
+            let mut out = entity_outline(e, 64.0);
+            if let Some(l) = leader::layout_of(e) {
+                out.extend(leader::head_reach(&l.head));
+            }
+            out.extend(
+                leader::note_place(e)
+                    .map(|t| t.outline(font))
+                    .unwrap_or_default(),
+            );
+            out
+        }
         // Every part of a multi-part area: all of them must be inside (docs/adr/0143).
         _ if is_multi_part(e) => area_parts(e)
             .iter()
@@ -214,10 +228,21 @@ fn crosses(e: &Shape, fence: &[Vec2], segs: &[Edge], tol: f64, font: Font) -> bo
         Shape::Point { p, .. } | Shape::Insert { p, .. } => {
             segs.iter().any(|s| closest_on_edge(s, *p).d <= tol)
         }
-        Shape::Text { .. } => {
+        Shape::Text { .. } | Shape::Leader { .. } => {
             let body = TextPlace::of(e)
+                .or_else(|| leader::note_place(e))
                 .map(|t| t.outline(font))
                 .unwrap_or_default();
+            // A leader also by its line and landing (docs/adr/0146 §4).
+            if matches!(e, Shape::Leader { .. }) {
+                let edges = entity_edges(e);
+                if segs
+                    .iter()
+                    .any(|s| edges.iter().any(|ed| !intersect_edges(s, ed).is_empty()))
+                {
+                    return true;
+                }
+            }
             fence.iter().any(|q| point_in_polygon(*q, &body))
                 || segs.iter().any(|s| {
                     (0..body.len()).any(|i| {

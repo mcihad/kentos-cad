@@ -79,6 +79,23 @@ class LabelRoom {
  * its height wider all round, 1.15 of the height over the baseline and 0.23 under (the store's `TextPlace::mask`),
  * `width` pixels along, in the sheet's colour. Nothing when `width` is 0 (no mask).
  */
+/**
+ * A text from where its baseline starts, at `s` on the screen: turned `rotation` degrees, `px` high, its letters
+ * `factor` wide, over a mask `mask` px wide (none at 0; docs/adr/0145). Text objects, block texts, leaders' notes.
+ */
+function baselineText(g: CanvasRenderingContext2D, pal: CanvasPalette, s: Vec2, rotation: number, px: number, factor: number, mask: number, text: string): void {
+  g.save();
+  g.translate(s.x, s.y);
+  g.rotate((-rotation * Math.PI) / 180);
+  maskText(g, mask, px, pal.paper);
+  if (factor !== 1) g.scale(factor, 1);
+  g.font = `italic 400 ${px.toFixed(1)}px ${pal.drawingFont}`;
+  g.textAlign = 'left';
+  g.textBaseline = 'alphabetic';
+  haloText(g, text, 0, 0, pal.label, pal.labelHalo);
+  g.restore();
+}
+
 function maskText(g: CanvasRenderingContext2D, width: number, px: number, paper: string): void {
   if (!(width > 0)) return;
   const m = px * 0.1;
@@ -139,39 +156,28 @@ export function drawLabels(
     }
     // x, y where the text's baseline starts (its point moved by its alignment); its width factor and mask (docs/adr/0145).
     if (what === LABEL.text && e.kind === 'text') {
-      const px = e.height * cam.scale;
-      const s = cam.worldToScreen({ x, y });
-      g.save();
-      g.translate(s.x, s.y);
-      g.rotate((-spots[i + 4] * Math.PI) / 180);
-      maskText(g, spots[i + 6] * cam.scale, px, pal.paper);
-      if (spots[i + 5] !== 1) g.scale(spots[i + 5], 1);
-      g.font = `italic 400 ${px.toFixed(1)}px ${pal.drawingFont}`;
-      g.textAlign = 'left';
-      g.textBaseline = 'alphabetic';
-      haloText(g, e.text, 0, 0, pal.label, pal.labelHalo);
-      g.restore();
+      baselineText(g, pal, cam.worldToScreen({ x, y }), spots[i + 4], e.height * cam.scale, spots[i + 5], spots[i + 6] * cam.scale, e.text);
       continue;
     }
-    // A block's texts and dimension values (docs/adr/0144), as its own objects draw theirs.
-    if ((what === LABEL.pieceText || what === LABEL.pieceDimension) && e.kind === 'insert') {
+    // A leader's note, as a text (docs/adr/0146 §5).
+    if (what === LABEL.leader && e.kind === 'leader') {
+      if (e.text) baselineText(g, pal, cam.worldToScreen({ x, y }), spots[i + 4], e.height * cam.scale, 1, spots[i + 6] * cam.scale, e.text);
+      continue;
+    }
+    // A block's texts, dimension values and leaders' notes (docs/adr/0144), as its own objects draw theirs.
+    if ((what === LABEL.pieceText || what === LABEL.pieceDimension || what === LABEL.pieceLeader) && e.kind === 'insert') {
       const piece = pieces(e.block)?.[spots[i + 6]];
       const s = cam.worldToScreen({ x, y });
       if (what === LABEL.pieceText && piece?.kind === 'text') {
         // An attribute's piece shows the insert's value, else its default (docs/adr/0144 §7).
         const text = pieceText(piece, e.attrs);
         if (!text) continue;
-        const px = spots[i + 5] * cam.scale;
-        g.save();
-        g.translate(s.x, s.y);
-        g.rotate((-spots[i + 4] * Math.PI) / 180);
-        maskText(g, spots[i + 8] * cam.scale, px, pal.paper);
-        if (spots[i + 7] !== 1) g.scale(spots[i + 7], 1);
-        g.font = `italic 400 ${px.toFixed(1)}px ${pal.drawingFont}`;
-        g.textAlign = 'left';
-        g.textBaseline = 'alphabetic';
-        haloText(g, text, 0, 0, pal.label, pal.labelHalo);
-        g.restore();
+        baselineText(g, pal, s, spots[i + 4], spots[i + 5] * cam.scale, spots[i + 7], spots[i + 8] * cam.scale, text);
+      } else if (what === LABEL.pieceLeader) {
+        // The store gives this record only for a leader piece with a note; the pieces' type learns leaders with the
+        // commands' geometry (docs/adr/0146, step 3).
+        const note = (piece as { text?: unknown } | undefined)?.text;
+        if (typeof note === 'string' && note) baselineText(g, pal, s, spots[i + 4], spots[i + 5] * cam.scale, 1, spots[i + 8] * cam.scale, note);
       } else if (what === LABEL.pieceDimension && piece?.kind === 'dimension') {
         const px = spots[i + 7] * cam.scale;
         g.save();

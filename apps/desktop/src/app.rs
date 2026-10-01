@@ -1260,10 +1260,10 @@ impl App {
         self.close_cloud_project();
         self.cancel();
         self.selected_layer = None;
-        self.viewport.opened(&doc);
+        self.spatial.reload(&doc.model);
+        self.viewport.opened(&doc, self.spatial.extent());
         // The views left belong to the drawing they were left on (docs/adr/0141).
         self.view_history.clear();
-        self.spatial.reload(&doc.model);
         self.styles.follow_project(Some(doc.model.styles()));
         self.selection = Selection::new();
         self.followed = Some((doc.session, doc.model.generation()));
@@ -1386,10 +1386,7 @@ impl App {
             // The navigation commands keep the view they leave (navigation.rs, docs/adr/0141).
             "view.zoomIn" => self.navigating(Self::zoom_in),
             "view.zoomOut" => self.navigating(Self::zoom_out),
-            "view.zoomExtents" => self.navigating(|app| {
-                app.viewport
-                    .update(viewport::Event::Extents, app.document.as_ref());
-            }),
+            "view.zoomExtents" => self.navigating(Self::zoom_extents),
             "view.zoomSelection" => self.navigating(Self::zoom_selection),
             "commandline.focus" => return operation::focus(COMMAND_INPUT),
             "help.about" => self.dialog = Some(Dialog::About),

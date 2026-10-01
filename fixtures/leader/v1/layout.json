@@ -1,0 +1,518 @@
+{
+  "format": "kentos.leader-cases",
+  "version": 1,
+  "note": "Written by scripts/fixtures/leader_cases.py from docs/adr/0146 §2 alone; the geometry core gives the same within 1e-9 m.",
+  "cases": [
+    {
+      "name": "iki köşe, sağa giden",
+      "leader": {
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 8.0,
+            "y": 6.0
+          }
+        ],
+        "height": 2.5,
+        "rotation": 0.0,
+        "text": "Not"
+      },
+      "want": {
+        "head": {
+          "kind": "filled",
+          "triangle": [
+            {
+              "x": 0.0,
+              "y": 0.0
+            },
+            {
+              "x": 1.75,
+              "y": 1.8333333333333333
+            },
+            {
+              "x": 2.25,
+              "y": 1.1666666666666667
+            }
+          ]
+        },
+        "side": 1,
+        "landing": [
+          {
+            "x": 8.0,
+            "y": 6.0
+          },
+          {
+            "x": 13.0,
+            "y": 6.0
+          }
+        ],
+        "notePoint": {
+          "x": 14.25,
+          "y": 6.0
+        },
+        "noteAlign": "middleLeft"
+      }
+    },
+    {
+      "name": "iki köşe, sola giden",
+      "leader": {
+        "pts": [
+          {
+            "x": 30.0,
+            "y": 0.0
+          },
+          {
+            "x": 22.0,
+            "y": 6.0
+          }
+        ],
+        "height": 2.0,
+        "rotation": 0.0,
+        "arrow": "open",
+        "text": "Not"
+      },
+      "want": {
+        "head": {
+          "kind": "open",
+          "lines": [
+            {
+              "x": 28.2,
+              "y": 0.9333333333333333
+            },
+            {
+              "x": 30.0,
+              "y": 0.0
+            },
+            {
+              "x": 28.599999999999998,
+              "y": 1.4666666666666666
+            }
+          ]
+        },
+        "side": -1,
+        "landing": [
+          {
+            "x": 22.0,
+            "y": 6.0
+          },
+          {
+            "x": 18.0,
+            "y": 6.0
+          }
+        ],
+        "notePoint": {
+          "x": 17.0,
+          "y": 6.0
+        },
+        "noteAlign": "middleRight"
+      }
+    },
+    {
+      "name": "kırık, son parça sola",
+      "leader": {
+        "pts": [
+          {
+            "x": 30.0,
+            "y": 0.0
+          },
+          {
+            "x": 26.0,
+            "y": 4.0
+          },
+          {
+            "x": 20.0,
+            "y": 6.0
+          }
+        ],
+        "height": 2.0,
+        "rotation": 0.0,
+        "arrow": "open",
+        "text": "Not"
+      },
+      "want": {
+        "head": {
+          "kind": "open",
+          "lines": [
+            {
+              "x": 28.350084177231388,
+              "y": 1.178511301977579
+            },
+            {
+              "x": 30.0,
+              "y": 0.0
+            },
+            {
+              "x": 28.82148869802242,
+              "y": 1.6499158227686108
+            }
+          ]
+        },
+        "side": -1,
+        "landing": [
+          {
+            "x": 20.0,
+            "y": 6.0
+          },
+          {
+            "x": 16.0,
+            "y": 6.0
+          }
+        ],
+        "notePoint": {
+          "x": 15.0,
+          "y": 6.0
+        },
+        "noteAlign": "middleRight"
+      }
+    },
+    {
+      "name": "30° dönük not, nokta",
+      "leader": {
+        "pts": [
+          {
+            "x": 40.0,
+            "y": 0.0
+          },
+          {
+            "x": 46.0,
+            "y": 8.0
+          }
+        ],
+        "height": 1.5,
+        "rotation": 30.0,
+        "arrow": "dot",
+        "text": "Not"
+      },
+      "want": {
+        "head": {
+          "kind": "dot",
+          "center": {
+            "x": 40.0,
+            "y": 0.0
+          },
+          "radius": 0.375
+        },
+        "side": 1,
+        "landing": [
+          {
+            "x": 46.0,
+            "y": 8.0
+          },
+          {
+            "x": 48.598076211353316,
+            "y": 9.5
+          }
+        ],
+        "notePoint": {
+          "x": 49.247595264191645,
+          "y": 9.875
+        },
+        "noteAlign": "middleLeft"
+      }
+    },
+    {
+      "name": "notsuz, oksuz",
+      "leader": {
+        "pts": [
+          {
+            "x": 0.0,
+            "y": -10.0
+          },
+          {
+            "x": 5.0,
+            "y": -6.0
+          },
+          {
+            "x": 9.0,
+            "y": -6.0
+          }
+        ],
+        "height": 2.5,
+        "rotation": 0.0,
+        "arrow": "none"
+      },
+      "want": {
+        "head": {
+          "kind": "none"
+        },
+        "side": 1
+      }
+    },
+    {
+      "name": "son parça dik: izdüşüm sıfır, sağa",
+      "leader": {
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 0.0,
+            "y": 5.0
+          }
+        ],
+        "height": 1.0,
+        "rotation": 0.0,
+        "text": "Not"
+      },
+      "want": {
+        "head": {
+          "kind": "filled",
+          "triangle": [
+            {
+              "x": 0.0,
+              "y": 0.0
+            },
+            {
+              "x": -0.16666666666666666,
+              "y": 1.0
+            },
+            {
+              "x": 0.16666666666666666,
+              "y": 1.0
+            }
+          ]
+        },
+        "side": 1,
+        "landing": [
+          {
+            "x": 0.0,
+            "y": 5.0
+          },
+          {
+            "x": 2.0,
+            "y": 5.0
+          }
+        ],
+        "notePoint": {
+          "x": 2.5,
+          "y": 5.0
+        },
+        "noteAlign": "middleLeft"
+      }
+    },
+    {
+      "name": "ilk köşe ucun üstünde: ilk uzunluklu parça",
+      "leader": {
+        "pts": [
+          {
+            "x": 1.0,
+            "y": 1.0
+          },
+          {
+            "x": 1.0,
+            "y": 1.0
+          },
+          {
+            "x": 4.0,
+            "y": 5.0
+          }
+        ],
+        "height": 1.0,
+        "rotation": 0.0,
+        "text": "Not"
+      },
+      "want": {
+        "head": {
+          "kind": "filled",
+          "triangle": [
+            {
+              "x": 1.0,
+              "y": 1.0
+            },
+            {
+              "x": 1.4666666666666668,
+              "y": 1.9000000000000001
+            },
+            {
+              "x": 1.7333333333333334,
+              "y": 1.7
+            }
+          ]
+        },
+        "side": 1,
+        "landing": [
+          {
+            "x": 4.0,
+            "y": 5.0
+          },
+          {
+            "x": 6.0,
+            "y": 5.0
+          }
+        ],
+        "notePoint": {
+          "x": 6.5,
+          "y": 5.0
+        },
+        "noteAlign": "middleLeft"
+      }
+    },
+    {
+      "name": "son köşe tekrar: önceki uzunluklu parça",
+      "leader": {
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": -6.0,
+            "y": 2.0
+          },
+          {
+            "x": -6.0,
+            "y": 2.0
+          }
+        ],
+        "height": 1.0,
+        "rotation": 0.0,
+        "text": "Not"
+      },
+      "want": {
+        "head": {
+          "kind": "filled",
+          "triangle": [
+            {
+              "x": 0.0,
+              "y": 0.0
+            },
+            {
+              "x": -1.0013879257199867,
+              "y": 0.15811388300841897
+            },
+            {
+              "x": -0.8959786703810407,
+              "y": 0.4743416490252569
+            }
+          ]
+        },
+        "side": -1,
+        "landing": [
+          {
+            "x": -6.0,
+            "y": 2.0
+          },
+          {
+            "x": -8.0,
+            "y": 2.0
+          }
+        ],
+        "notePoint": {
+          "x": -8.5,
+          "y": 2.0
+        },
+        "noteAlign": "middleRight"
+      }
+    },
+    {
+      "name": "bütün köşeler aynı: notun doğrultusu",
+      "leader": {
+        "pts": [
+          {
+            "x": 3.0,
+            "y": 3.0
+          },
+          {
+            "x": 3.0,
+            "y": 3.0
+          }
+        ],
+        "height": 1.0,
+        "rotation": 90.0,
+        "text": "Not"
+      },
+      "want": {
+        "head": {
+          "kind": "filled",
+          "triangle": [
+            {
+              "x": 3.0,
+              "y": 3.0
+            },
+            {
+              "x": 2.8333333333333335,
+              "y": 4.0
+            },
+            {
+              "x": 3.1666666666666665,
+              "y": 4.0
+            }
+          ]
+        },
+        "side": 1,
+        "landing": [
+          {
+            "x": 3.0,
+            "y": 3.0
+          },
+          {
+            "x": 3.0,
+            "y": 5.0
+          }
+        ],
+        "notePoint": {
+          "x": 3.0,
+          "y": 5.5
+        },
+        "noteAlign": "middleLeft"
+      }
+    },
+    {
+      "name": "büyük koordinat, 200° dönük",
+      "leader": {
+        "pts": [
+          {
+            "x": 487000.125,
+            "y": 4420000.5
+          },
+          {
+            "x": 487012.375,
+            "y": 4419994.25
+          }
+        ],
+        "height": 3.0,
+        "rotation": 200.0,
+        "text": "Not"
+      },
+      "want": {
+        "head": {
+          "kind": "filled",
+          "triangle": [
+            {
+              "x": 487000.125,
+              "y": 4420000.5
+            },
+            {
+              "x": 487003.02452077996,
+              "y": 4419999.581969909
+            },
+            {
+              "x": 487002.5700504383,
+              "y": 4419998.69120804
+            }
+          ]
+        },
+        "side": -1,
+        "landing": [
+          {
+            "x": 487012.375,
+            "y": 4419994.25
+          },
+          {
+            "x": 487018.01315572474,
+            "y": 4419996.30212086
+          }
+        ],
+        "notePoint": {
+          "x": 487019.4226946559,
+          "y": 4419996.815151075
+        },
+        "noteAlign": "middleRight"
+      }
+    }
+  ]
+}

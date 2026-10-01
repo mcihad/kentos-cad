@@ -35,8 +35,9 @@ use kentos_domain::{ChangeMark, Changes, Document, LayerTree, Slot};
 use kentos_geometry_core::entity::{Shape, entity_area, entity_length, entity_vertices};
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::store::labels::{
-    LABEL_ALONG, LABEL_BESIDE, LABEL_CENTER, LABEL_CORNER, LABEL_DIMENSION, LABEL_PIECE_DIMENSION,
-    LABEL_PIECE_TEXT, LABEL_STRIDE, LABEL_TEXT, LabelRule, Placement,
+    LABEL_ALONG, LABEL_BESIDE, LABEL_CENTER, LABEL_CORNER, LABEL_DIMENSION, LABEL_LEADER,
+    LABEL_PIECE_DIMENSION, LABEL_PIECE_LEADER, LABEL_PIECE_TEXT, LABEL_STRIDE, LABEL_TEXT,
+    LabelRule, Placement,
 };
 use kentos_geometry_core::store::snap::SnapHit;
 use kentos_geometry_core::store::{LayerFlags, Store};
@@ -325,7 +326,7 @@ impl Spatial {
                             _ => "",
                         },
                     }
-                } else if what == LABEL_TEXT {
+                } else if what == LABEL_TEXT || what == LABEL_LEADER {
                     LabelSpot::Text {
                         slot,
                         at,
@@ -345,10 +346,15 @@ impl Spatial {
                         a: at,
                         b: Vec2::new(r[4], r[5]),
                     }
-                } else if what == LABEL_PIECE_TEXT {
+                } else if what == LABEL_PIECE_TEXT || what == LABEL_PIECE_LEADER {
                     let piece = self.piece(r[0], r[6])?;
-                    let Shape::Text { text, .. } = piece.shape else {
-                        return None;
+                    let (text, attribute) = match piece.shape {
+                        Shape::Text { text, .. } => (text, piece.attribute),
+                        // A leader's note among a block's pieces (docs/adr/0146 §5).
+                        Shape::Leader {
+                            text: Some(text), ..
+                        } => (text, None),
+                        _ => return None,
                     };
                     LabelSpot::PieceText {
                         slot,
@@ -356,7 +362,7 @@ impl Spatial {
                         rotation: r[4],
                         height: r[5],
                         text,
-                        attribute: piece.attribute,
+                        attribute,
                         width_factor: r[7],
                         mask: r[8],
                     }
@@ -427,7 +433,8 @@ pub enum LabelSpot {
     /// A text object from where its baseline starts (its point moved by its
     /// alignment, docs/adr/0145), turned by `rotation`, its letters
     /// `width_factor` wide; `mask` the width of the box filled under it
-    /// (`TextPlace::mask`), 0 without a mask.
+    /// (`TextPlace::mask`), 0 without a mask. A leader's note too (its
+    /// object's `text` and `height`, docs/adr/0146 §5).
     Text {
         slot: Slot,
         at: Vec2,
@@ -443,9 +450,9 @@ pub enum LabelSpot {
     Beside { slot: Slot, at: Vec2 },
     /// A label along the edge from `a` to `b`.
     Along { slot: Slot, a: Vec2, b: Vec2 },
-    /// A text among a block's pieces (docs/adr/0144): from where its placed
-    /// baseline starts, turned by `rotation`, `height` as placed, its width
-    /// factor and mask as a text's.
+    /// A text among a block's pieces (docs/adr/0144), or a leader's note
+    /// (docs/adr/0146): from where its placed baseline starts, turned by
+    /// `rotation`, `height` as placed, its width factor and mask as a text's.
     PieceText {
         slot: Slot,
         at: Vec2,

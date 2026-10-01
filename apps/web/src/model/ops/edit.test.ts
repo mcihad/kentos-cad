@@ -157,6 +157,22 @@ describe('explodeEntity', () => {
   it('refuses simple entities', () => {
     expect('error' in explodeEntity(line(0, 0, 1, 1), String)).toBe(true);
   });
+  it('takes a leader apart into its line on to its landing, its arrowhead and its note (docs/adr/0146 §4)', () => {
+    // 2.5 m high, from (0, 0) to (6, 5): the landing 5 m east, the note 1.25 m on, its middle left there.
+    const leader = withId({ kind: 'leader', pts: [v(0, 0), v(6, 5)], text: 'Mevcut bina', height: 2.5, rotation: 0, mask: true });
+    const r = explodeEntity(leader, String);
+    if (!('pieces' in r)) throw new Error('expected pieces');
+    expect(r.pieces.map((p) => p.kind)).toEqual(['polyline', 'hatch', 'text']);
+    const [line, head, note] = r.pieces;
+    expect(line.kind === 'polyline' && line.pts).toEqual([v(0, 0), v(6, 5), v(11, 5)]);
+    expect(head.kind === 'hatch' && [head.pattern.type, head.ring.length, head.ring[0]]).toEqual(['solid', 3, v(0, 0)]);
+    expect(note.kind === 'text' && [note.text, note.p, note.align, note.mask]).toEqual(['Mevcut bina', v(12.25, 5), 'middleLeft', true]);
+    // An open arrowhead: its sides a path through the tip; no note, no text.
+    const open = explodeEntity(withId({ kind: 'leader', pts: [v(0, 0), v(6, 5)], height: 2.5, rotation: 0, arrow: 'open' }), String);
+    if (!('pieces' in open)) throw new Error('expected pieces');
+    expect(open.pieces.map((p) => p.kind)).toEqual(['polyline', 'polyline']);
+    expect(open.pieces[1].kind === 'polyline' && open.pieces[1].pts[1]).toEqual(v(0, 0));
+  });
 });
 
 describe('breakEntity', () => {

@@ -9,6 +9,7 @@ use crate::entity::{Shape, area_parts, dimension_geom, ellipse_geom, entity_vert
 use crate::geom::arc::{ArcGeom, arc_end, arc_mid, arc_start};
 use crate::geom::bulge::{bulge_arc, bulge_at, segment_mid};
 use crate::geom::dimension::layout_dimension;
+use crate::geom::leader;
 use crate::geom::ellipse::{
     EllipseGeom, closest_param, ellipse_point, ellipse_tangent_points, is_full_ellipse,
     line_ellipse, quadrant_params,
@@ -280,6 +281,10 @@ impl Store {
                             };
                             for q in &pts {
                                 ch.consider(SnapKind::Endpoint, *q, id);
+                            }
+                            // A leader's landing ends where its note begins (docs/adr/0146 §4).
+                            if let Some([_, end]) = leader::layout_of(s).and_then(|l| l.landing) {
+                                ch.consider(SnapKind::Endpoint, end, id);
                             }
                             // A polygon's vertices include its holes', as the TypeScript walked them.
                             let n = if matches!(s, Shape::Polygon { .. }) {

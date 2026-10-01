@@ -41,6 +41,17 @@ export function symbolsOfLayerStyle(style: LayerStyle, color = style.color, hair
   return { line, fill, marker };
 }
 
+/**
+ * A leader's look (docs/adr/0146 §5): its lines as its layer's simple line in its own colour and weight, its filled
+ * arrowhead or dot solid in that colour. The desktop's is `leader_symbols_of` (crates/native/style/src/simple.rs).
+ */
+export function leaderSymbolsOf(style: LayerStyle, color: string, hairlines = false, weight = style.lineWeight): SymbolSet {
+  return {
+    line: lineSymbolOf(color, style.lineType, hairlines ? 0 : weight),
+    fill: { type: 'fill', layers: [{ id: 's', type: 'simpleFill', color }] },
+  };
+}
+
 /** A hatch object carries its own pattern: solid, lines or crossed lines (spacing in metres). */
 export function hatchSymbolOf(e: Extract<Entity, { kind: 'hatch' }>, color: string): FillSymbol {
   const { type, angle, spacing } = e.pattern;

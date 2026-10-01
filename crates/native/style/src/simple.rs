@@ -42,6 +42,17 @@ fn line_layer(id: &str, color: &str, line_type: LineType, weight: f64) -> Value 
     })
 }
 
+/// A leader's look (docs/adr/0146 §5, the web's `leaderSymbolsOf`): its
+/// lines as its layer's simple line in its own colour and weight, its
+/// filled arrowhead or dot solid in that colour.
+pub fn leader_symbols_of(style: &LayerStyle, color: &str, weight: f64, hairlines: bool) -> Value {
+    let weight = if hairlines { 0.0 } else { weight };
+    json!({
+        "line": line_symbol_of(color, style.line_type, weight),
+        "fill": { "type": "fill", "layers": [{ "id": "s", "type": "simpleFill", "color": color }] },
+    })
+}
+
 /// A line symbol of a colour, line type and weight in mm (`lineSymbolOf`).
 pub fn line_symbol_of(color: &str, line_type: LineType, weight: f64) -> Value {
     json!({ "type": "line", "layers": [line_layer("l", color, line_type, weight)] })

@@ -32,7 +32,16 @@ export type StyledGeometry =
    * A block's insert (docs/adr/0144): its pieces placed, each its place among
    * the block's pieces (`PickIndex.blockPieces`) and its own geometry.
    */
-  | { readonly cls: 'group'; readonly items: readonly { readonly piece: number; readonly geometry: StyledGeometry }[] };
+  | { readonly cls: 'group'; readonly items: readonly { readonly piece: number; readonly geometry: StyledGeometry }[] }
+  /**
+   * A leader (docs/adr/0146 §5): its line on to its landing's end and an open arrowhead's sides, then its filled
+   * arrowhead's or dot's area (`rings`: one area, empty for none), filled solid in the object's colour.
+   */
+  | {
+      readonly cls: 'mixed';
+      readonly paths: readonly { readonly pts: readonly Vec2[]; readonly closed: boolean }[];
+      readonly rings: readonly (readonly Vec2[])[];
+    };
 
 /**
  * Areas are polygons and hatches; circles and ellipses stay curves (as in
@@ -61,6 +70,7 @@ const LINE = 2;
 const FILL = 3;
 const FILLS = 4;
 const GROUP = 5;
+const MIXED = 6;
 const SOURCE = -1;
 const REVERSED = -2;
 
@@ -109,6 +119,25 @@ export class DrawnReader {
     return this.written(n);
   }
 
+  /** A `LINE` record's paths. */
+  private paths(e: Entity): { pts: readonly Vec2[]; closed: boolean }[] {
+    const count = this.buf[this.at++];
+    const paths: { pts: readonly Vec2[]; closed: boolean }[] = [];
+    for (let k = 0; k < count; k++) {
+      const closed = this.buf[this.at++] === 1;
+      paths.push({ pts: this.points(e, k), closed });
+    }
+    return paths;
+  }
+
+  /** A `FILL` record's rings: the outer ring first, its holes after. */
+  private rings(e: Entity): (readonly Vec2[])[] {
+    const count = this.buf[this.at++];
+    const rings: (readonly Vec2[])[] = [];
+    for (let k = 0; k < count; k++) rings.push(this.points(e, k));
+    return rings;
+  }
+
   /** The next record, for `e`: the object it was asked for. */
   read(e: Entity): StyledGeometry | null {
     const b = this.buf;
@@ -118,20 +147,14 @@ export class DrawnReader {
         this.at += 2;
         return { cls: 'marker', point };
       }
-      case LINE: {
-        const count = b[this.at++];
-        const paths: { pts: readonly Vec2[]; closed: boolean }[] = [];
-        for (let k = 0; k < count; k++) {
-          const closed = b[this.at++] === 1;
-          paths.push({ pts: this.points(e, k), closed });
-        }
-        return { cls: 'line', paths };
-      }
-      case FILL: {
-        const count = b[this.at++];
-        const rings: (readonly Vec2[])[] = [];
-        for (let k = 0; k < count; k++) rings.push(this.points(e, k));
-        return { cls: 'fill', rings };
+      case LINE:
+        return { cls: 'line', paths: this.paths(e) };
+      case FILL:
+        return { cls: 'fill', rings: this.rings(e) };
+      // A leader's lines, then its arrowhead's area (docs/adr/0146 §5); their points always written out.
+      case MIXED: {
+        const paths = this.paths(e);
+        return { cls: 'mixed', paths, rings: this.rings(e) };
       }
       case FILLS: {
         // A multi-part area (docs/adr/0143): its parts, each a fill with its holes.

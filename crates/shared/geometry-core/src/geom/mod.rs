@@ -8,6 +8,7 @@ pub mod dimension;
 pub mod ellipse;
 pub mod hatch;
 pub mod intersect;
+pub mod leader;
 pub mod offset;
 pub mod overlay;
 pub mod parallel;

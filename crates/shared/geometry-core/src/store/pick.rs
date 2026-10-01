@@ -10,6 +10,7 @@ use crate::entity::{
     inside_polygon, is_closed_outline, is_multi_part, polygon_holes, polygon_ring,
 };
 use crate::geom::dimension::layout_dimension;
+use crate::geom::leader::note_place;
 use crate::geom::ellipse::{ellipse_area, inside_ellipse, is_full_ellipse, tessellate_ellipse};
 use crate::geom::intersect::{Edge, closest_on_edge, seg_seg};
 use crate::geometry::{Bounds, point_in_polygon, signed_area};
@@ -237,7 +238,7 @@ impl Store {
                     && b.max_x >= r.min_x
                     && b.min_y <= r.max_y
                     && b.max_y >= r.min_y);
-            if over && it.shapes().any(|s| touches_rect(s, r)) {
+            if over && it.shapes().any(|s| touches_rect(s, r, self.font)) {
                 out.push(it.id);
             }
         }
@@ -271,6 +272,26 @@ pub fn edge_distance(e: &Shape, p: Vec2, font: Font) -> f64 {
             }
             return d;
         }
+        // Its note's body counts as a text's; its line and landing as edges (docs/adr/0146 §4).
+        Shape::Leader { .. } => {
+            if let Some(b) = note_place(e).map(|t| t.outline(font)) {
+                if point_in_polygon(p, &b) {
+                    return 0.0;
+                }
+                let mut d = f64::INFINITY;
+                for i in 0..4 {
+                    let side = Edge::Seg {
+                        a: b[i],
+                        b: b[(i + 1) % 4],
+                    };
+                    d = js_min(d, closest_on_edge(&side, p).d);
+                }
+                for ed in entity_edges(e) {
+                    d = js_min(d, closest_on_edge(&ed, p).d);
+                }
+                return d;
+            }
+        }
         _ => {}
     }
     let mut d = f64::INFINITY;
@@ -295,16 +316,36 @@ fn rect_corner(r: &Bounds, i: usize) -> Vec2 {
 }
 
 /// Whether an object touches a box: a point of its outline inside, the box's
-/// centre inside its area, or an edge (a hole's included) crossing the box.
-pub fn touches_rect(e: &Shape, r: &Bounds) -> bool {
+/// centre inside its area, or an edge (a hole's included) crossing the box;
+/// a leader also by its note's body, measured in `font`.
+pub fn touches_rect(e: &Shape, r: &Bounds, font: Font) -> bool {
     // A multi-part area touches it when one of its parts does (docs/adr/0143).
     if is_multi_part(e) {
-        return area_parts(e).iter().any(|part| touches_rect(part, r));
+        return area_parts(e).iter().any(|part| touches_rect(part, r, font));
     }
     let pts = entity_outline(e, 32.0);
     let in_r = |q: &Vec2| q.x >= r.min_x && q.x <= r.max_x && q.y >= r.min_y && q.y <= r.max_y;
     if pts.iter().any(in_r) {
         return true;
+    }
+    // A leader's note as its box: a corner in the window, the window's middle in it, or a side across it (docs/adr/0146 §4).
+    if let Some(body) = note_place(e).map(|t| t.outline(font)) {
+        let centre = Vec2::new((r.min_x + r.max_x) / 2.0, (r.min_y + r.max_y) / 2.0);
+        let across = (0..4).any(|i| {
+            (0..4).any(|j| {
+                seg_seg(
+                    body[i],
+                    body[(i + 1) % 4],
+                    rect_corner(r, j),
+                    rect_corner(r, j + 1),
+                    1e-9,
+                )
+                .is_some()
+            })
+        });
+        if body.iter().any(in_r) || point_in_polygon(centre, &body) || across {
+            return true;
+        }
     }
     let centre = Vec2::new((r.min_x + r.max_x) / 2.0, (r.min_y + r.max_y) / 2.0);
     let inside = match e {

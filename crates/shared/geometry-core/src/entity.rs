@@ -15,6 +15,7 @@ use crate::geom::arc::{
 use crate::geom::arrangement::Ring;
 use crate::geom::bulge::{bulge_path_length, bulge_path_outline, bulge_ring_area, has_bulges};
 use crate::geom::dimension::{DimensionGeom, DimensionLayout, layout_dimension};
+use crate::geom::leader;
 use crate::geom::ellipse::{
     EllipseGeom, ellipse_area, ellipse_length, ellipse_point, is_full_ellipse, quadrant_params,
     tessellate_ellipse,
@@ -459,6 +460,11 @@ pub fn entity_outline(e: &Shape, segments: f64) -> Vec<Vec2> {
                 }
             }
         },
+        // Its line on to its landing's end (docs/adr/0146 §4).
+        Shape::Leader { pts, .. } => match leader::layout_of(e) {
+            Some(l) => leader::drawn_path(pts, &l),
+            None => pts.clone(),
+        },
         _ => entity_vertices(e),
     }
 }
@@ -821,6 +827,17 @@ pub fn entity_bounds_in(e: &Shape, font: Font) -> Bounds {
         // Construction lines count by their base point only (zoom extents ignores their reach).
         Shape::Xline { p, .. } | Shape::Ray { p, .. } => {
             extend_bounds(&mut b, *p, 0.0);
+            return b;
+        }
+        // Its vertices, its arrowhead, its landing and its note's box (docs/adr/0146 §4).
+        Shape::Leader { pts, .. } => {
+            let laid = leader::layout_of(e);
+            let reach = laid.iter().flat_map(|l| leader::head_reach(&l.head));
+            let landing = laid.iter().filter_map(|l| l.landing.map(|[_, end]| end));
+            let note = leader::note_place(e).map(|t| t.outline(font));
+            for q in pts.iter().copied().chain(reach).chain(landing).chain(note.into_iter().flatten()) {
+                extend_bounds(&mut b, q, 0.0);
+            }
             return b;
         }
         Shape::Ellipse {

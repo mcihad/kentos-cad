@@ -256,8 +256,11 @@ impl App {
         // The wheel, the middle button and its double click move the view: the
         // history keeps what they leave (navigation.rs, docs/adr/0141).
         let (before, was_panning) = (self.viewpoint(), self.panning);
-        let doc = self.document.as_ref();
-        self.viewport.update(event.clone(), doc);
+        if matches!(event, viewport::Event::Extents) {
+            self.zoom_extents();
+        } else {
+            self.viewport.update(event.clone(), self.document.as_ref());
+        }
         self.keep_view(&event, before, was_panning);
         // No crosshair while the middle button pans (the web's `panFrom`): a
         // pan reports itself, and the first plain move after it ends it.

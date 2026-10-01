@@ -2,7 +2,7 @@ import type { Entity } from '../model/entities';
 import { hatchLines } from '../model/geom/hatch';
 import type { Bounds, Vec2 } from '../model/geometry';
 import type { LayerStyle, LineType } from '../model/layers';
-import { DrawnReader } from '../style/geometry';
+import { DrawnReader, type StyledGeometry } from '../style/geometry';
 import { parseHex, resolveColor, withAlpha, type CanvasPalette } from './color';
 import { FillQueue } from './fillQueue';
 import type { GeometrySource } from './styledLayer';
@@ -61,11 +61,24 @@ export interface BuildOptions {
   clip?: Bounds;
 }
 
+type Bucket = { lines: LineAccumulator; fill: number[]; solid: number[]; points: number[] };
+
+/**
+ * A leader's highlight (docs/adr/0146 §5): its line, landing and open arrowhead, its filled arrowhead's or dot's
+ * outline, and that area in the highlight's fill when there is one.
+ */
+function leaderLines(b: Bucket, g: Extract<StyledGeometry, { cls: 'mixed' }>, origin: Vec2, fills: FillQueue, opts: BuildOptions): void {
+  for (const p of g.paths) b.lines.path(p.pts, origin, p.closed);
+  if (!g.rings.length) return;
+  for (const r of g.rings) b.lines.path(r, origin, true);
+  if (opts.overrideFill) fills.add(b.fill, g.rings);
+}
+
 /** Converts entities of one layer (or a highlight set) into GPU-ready batches. */
 export function buildSceneLayer(id: string, entities: readonly Entity[], style: LayerStyle, opts: BuildOptions): SceneLayer {
   const layer: SceneLayer = { id, lines: [], fills: [], points: [] };
   // Solid hatches get their own, stronger fill than the layer's polygon fill.
-  const byColor = new Map<string, { lines: LineAccumulator; fill: number[]; solid: number[]; points: number[] }>();
+  const byColor = new Map<string, Bucket>();
   const bucket = (color: string) => {
     let b = byColor.get(color);
     if (!b) byColor.set(color, (b = { lines: new LineAccumulator(), fill: [], solid: [], points: [] }));
@@ -117,12 +130,15 @@ export function buildSceneLayer(id: string, entities: readonly Entity[], style: 
           else if (geometry.cls === 'fill') {
             for (const r of geometry.rings) pb.lines.path(r, origin, true);
             if (style.fill || opts.overrideFill) for (const part of geometry.parts ?? [geometry.rings]) fills.add(pb.fill, part);
-          }
+          } else if (geometry.cls === 'mixed') leaderLines(pb, geometry, origin, fills, opts);
         }
         break;
       }
       case 'text':
         break; // text is drawn by the overlay for now (SDF text is a later milestone)
+      case 'leader':
+        if (g?.cls === 'mixed') leaderLines(b, g, origin, fills, opts);
+        break;
       default:
         // Lines, paths, curves, construction lines (clipped) and dimensions (their layout lines).
         if (g?.cls === 'line') for (const p of g.paths) b.lines.path(p.pts, origin, p.closed);
