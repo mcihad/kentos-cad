@@ -562,7 +562,8 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   hesaplarda eğri ve elipsin 0,1 mm'lik açık sınırla temsili (`geom::curve_outline`).
 - Sürmekte: TODOS.md §16'nın sırası (sahibin kararı, 1 Ekim): önce hibrit (§16.0), sonra CAD (§16.1), sonra CBS (§16.2).
   İlk iş `HYB-01` topolojik temizlik ([ADR 0148](docs/adr/0148-topology-cleanup.md)): 1. adım (çekirdek `ops::topology`,
-  bağımsız başvuru `topology_cases.py`, 74 ortak durum) tamam; sıradaki 2: `cad.entities.edit`'in `topology` işlemi, sonra 3: araç. PDF, yazdırma ve pafta çıktısı (§16.4) en sondadır,
+  bağımsız başvuru `topology_cases.py`, 74 ortak durum) ve 2. adım (`cad.entities.edit`'in `topology` işlemi) tamam;
+  sıradaki 3: araç ve arayüz iki platformda. PDF, yazdırma ve pafta çıktısı (§16.4) en sondadır,
   zamanını sahip söyleyecek. İşler ADR 0142–0147'deki gibi: önce ADR ve adımları, sonra adım adım iki platformda, ortak fixture'larla.
 - Bilinen açık: web `pnpm e2e` duman testinde üç test ADR 0143'ten önce de düşüyordu: “toolbox
   shows every tool without scrolling” (79 araç kaydırma istiyor), nokta hesaplayıcının “yan nokta

@@ -74,6 +74,8 @@ export const EDIT_LABEL: Record<EditOperation, string> = {
   // Okunur yap and Bul ve değiştir (docs/adr/0145).
   readable: 'Okunur yap',
   replaceText: 'Bul ve değiştir',
+  // Topolojik temizlik (docs/adr/0148).
+  topology: 'Topolojik temizlik',
 };
 
 /** The contract's geometry fields by kind (`EntityGeometry`): what the command writes of a geometry. */

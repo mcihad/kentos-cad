@@ -234,6 +234,7 @@ class EditOperation(_StrEnum):
     - ``partsSplit``: Parçalara ayır (docs/adr/0143): a multi-part area becomes an area a
     - ``readable``: Okunur yap (docs/adr/0145): texts that read upside down turned half
     - ``replaceText``: Bul ve değiştir (docs/adr/0145 §6): texts given new words, the step
+    - ``topology``: Topolojik temizlik (docs/adr/0148): line work and area outlines put
     """
     OFFSET = "offset"
     TRIM = "trim"
@@ -266,9 +267,10 @@ class EditOperation(_StrEnum):
     PARTS_SPLIT = "partsSplit"
     READABLE = "readable"
     REPLACE_TEXT = "replaceText"
+    TOPOLOGY = "topology"
 
 
-EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText"]
+EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology"]
 """The names of :class:`EditOperation`, for a plain string."""
 
 

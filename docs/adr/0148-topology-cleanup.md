@@ -145,7 +145,7 @@ Yazma `cad.entities.edit`'in yeni `topology` işlemiyledir (adım adı “Topolo
    - **Başvuru:** `topology_cases.py` kuralları başvurunun kendi geometri işlevleriyle (doğru parçası ve yay kesişimleri, ışın, en yakın nokta) uygular. 74 durum yazar: 25 elle kurulmuş, başlangıçta ve TM koordinatlarında. Bunlar uçların buluşması, noktaya ve iç köşeye gitme, zincirlenmeme, en yakın temsilci, aynı nesne kuralları, yolun kapanması, uzatma, budama, ikisi birden, kenara taşıma, yay, dayanak, köşeler, halka, kot ve elipsin kirişleri gibi sınırları sınar. Kalan 24'ü rastgele çizgi ağlarıdır (T kavşakları, titreşimli ortak kenarlar, yaylı uçlar).
    - **Sonuç:** çekirdek (`tests/topology.rs`) ve web WASM'ı (`model/ops/topology.test.ts`) hepsinde başvuruyla 1e-9 m içinde aynı. 1 µm altındaki tolerans reddedilir.
    - **Başarım:** TM koordinatlarında 49 928 çizgilik ağ 0,2 saniyede temizlenir (release, `tests/topology.rs`'in elle çalıştırılan testi).
-2. **Komut.** `EditOperation::Topology`; iki işleyici, ortak durumlar, katalog ve Python SDK'sı.
+2. **Komut.** `EditOperation::Topology`; iki işleyici, ortak durumlar, katalog ve Python SDK'sı. *(1 Ekim: tamam. Sözleşmede `topology` işlemi; adım adı iki işleyicide “Topolojik temizlik”. Ortak durum (`edit_command_cases.py`, 85. durum): bir çizginin ve bir çoklu çizginin geometrisi kotlarıyla yerinde yazılır, tek adımda geri alınır; masaüstü, web ve Python SDK'sı geçer. TypeScript tipi, katalog ve SDK'nın tipleri üretildi.)*
 3. **Araç ve arayüz.** İki platformda araç, şerit, takma adlar, önizleme, ortak iz (`fixtures/interaction/v1/topology.json`), testler ve resimler.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.

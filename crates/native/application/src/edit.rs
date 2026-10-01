@@ -166,6 +166,8 @@ pub fn label(operation: EditOperation) -> &'static str {
         // Okunur yap and Bul ve değiştir (docs/adr/0145).
         EditOperation::Readable => "Okunur yap",
         EditOperation::ReplaceText => "Bul ve değiştir",
+        // Topolojik temizlik (docs/adr/0148).
+        EditOperation::Topology => "Topolojik temizlik",
     }
 }
 

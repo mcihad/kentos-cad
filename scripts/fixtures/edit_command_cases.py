@@ -1086,6 +1086,21 @@ cases.append({
     ],
 })
 
+# Topolojik temizlik (docs/adr/0148): the cleanup computes every geometry with its elevations; the command writes
+# them as given, in place, one step named after the tool.
+TOPO_LINE = {**line(487000, 4420050, 487020.03, 4420050), "zs": [10, 20.03]}
+TOPO_PATH = {"kind": "polyline", "pts": [P(487000, 4420060), P(487010, 4420060), P(487010, 4420070.02)], "zs": [1, 2, None]}
+cases.append({
+    "name": "Topolojik temizlik: nesneler yerinde değişir, kotları yazıldığı gibi; tek adım, adı işlemin",
+    "setup": Z_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "topology", "changes": [{"kind": "update", "uid": uid(1), "geometry": TOPO_LINE}, {"kind": "update", "uid": uid(2), "geometry": TOPO_PATH}]},
+         "result": done(changed=[uid(1), uid(2)]),
+         "expect": {"entities": {"1": z_updated(1, line(487000, 4420050, 487020.03, 4420050), za=10, zb=20.03), "2": z_updated(2, {"kind": "polyline", "pts": TOPO_PATH["pts"]}, zs=[1, 2, None])}, "canUndo": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Topolojik temizlik", "expect": {"entities": {"1": ZE(1), "2": ZE(2)}, "canUndo": False}},
+    ],
+})
+
 ELEVATIONS_MESSAGE = "Kotların sayısı köşelerin sayısıyla aynı olmalı; {} köşeye {} kot verildi. Her köşeye bir kot verin; kotsuz köşeye null."
 cases.append({
     "name": "Kot ver, ret: kotlar köşe sayısı kadar değilse ya da sonlu değilse hiçbir şey yazılmaz",

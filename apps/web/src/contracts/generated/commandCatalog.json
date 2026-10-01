@@ -23294,6 +23294,11 @@
                 "const": "replaceText",
                 "description": "Bul ve değiştir (docs/adr/0145 §6): texts given new words, the step\nnamed after the window; otherwise as `Properties`.",
                 "type": "string"
+              },
+              {
+                "const": "topology",
+                "description": "Topolojik temizlik (docs/adr/0148): line work and area outlines put\nright within a tolerance, objects updated in place, each geometry with\nits elevations as the cleanup carried them.",
+                "type": "string"
               }
             ]
           },

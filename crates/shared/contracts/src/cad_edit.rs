@@ -114,6 +114,10 @@ pub enum EditOperation {
     /// Bul ve değiştir (docs/adr/0145 §6): texts given new words, the step
     /// named after the window; otherwise as `Properties`.
     ReplaceText,
+    /// Topolojik temizlik (docs/adr/0148): line work and area outlines put
+    /// right within a tolerance, objects updated in place, each geometry with
+    /// its elevations as the cleanup carried them.
+    Topology,
 }
 
 /// A drawing object's geometry alone: its kind and the fields that place and

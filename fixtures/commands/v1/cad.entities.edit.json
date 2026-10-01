@@ -987,6 +987,32 @@
       ]
     },
     {
+      "name": "Topolojik temizlik: nesneler yerinde değişir, kotları yazıldığı gibi; tek adım, adı işlemin",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ürün komutu",
+        "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "hybrid", "drawingFont": "barlow"},
+        "origin": {"x": 487000, "y": 4420000},
+        "layers": [
+          {"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {"kind": "line", "id": 1, "layerId": "yapi", "attrs": {}, "a": {"x": 487000, "y": 4420050}, "b": {"x": 487020, "y": 4420050}, "za": 10, "zb": 20},
+          {"kind": "polyline", "id": 2, "layerId": "yapi", "attrs": {}, "pts": [{"x": 487000, "y": 4420060}, {"x": 487010, "y": 4420060}, {"x": 487010, "y": 4420070}], "zs": [1, 2, null]}
+        ],
+        "styles": {"items": [], "categories": []}
+      },
+      "steps": [
+        {"op": "execute", "input": {"operation": "topology", "changes": [{"kind": "update", "uid": "$uidOf:1", "geometry": {"kind": "line", "a": {"x": 487000, "y": 4420050}, "b": {"x": 487020.03, "y": 4420050}, "zs": [10, 20.03]}}, {"kind": "update", "uid": "$uidOf:2", "geometry": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420060}, {"x": 487010, "y": 4420060}, {"x": 487010, "y": 4420070.02}], "zs": [1, 2, null]}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:1", "$uidOf:2"], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"1": {"id": 1, "layerId": "yapi", "attrs": {}, "kind": "line", "a": {"x": 487000, "y": 4420050}, "b": {"x": 487020.03, "y": 4420050}, "za": 10, "zb": 20.03}, "2": {"id": 2, "layerId": "yapi", "attrs": {}, "kind": "polyline", "pts": [{"x": 487000, "y": 4420060}, {"x": 487010, "y": 4420060}, {"x": 487010, "y": 4420070.02}], "zs": [1, 2, null]}}, "canUndo": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Topolojik temizlik", "expect": {"entities": {"1": {"kind": "line", "id": 1, "layerId": "yapi", "attrs": {}, "a": {"x": 487000, "y": 4420050}, "b": {"x": 487020, "y": 4420050}, "za": 10, "zb": 20}, "2": {"kind": "polyline", "id": 2, "layerId": "yapi", "attrs": {}, "pts": [{"x": 487000, "y": 4420060}, {"x": 487010, "y": 4420060}, {"x": 487010, "y": 4420070}], "zs": [1, 2, null]}}, "canUndo": false}}
+      ]
+    },
+    {
       "name": "Kot ver, ret: kotlar köşe sayısı kadar değilse ya da sonlu değilse hiçbir şey yazılmaz",
       "setup": {
         "format": "kentos.document",
