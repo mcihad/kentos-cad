@@ -32,7 +32,7 @@ export abstract class SelectionFirstTool implements Tool {
   protected abstract readonly label: string;
   readonly prompt = new Signal('');
   readonly cursor = 'cross' as const;
-  readonly snaps = true;
+  readonly snaps: boolean = true;
   protected picking = true;
   protected hover: Vec2 | null = null;
   private box: { a: Vec2; aw: Vec2; b: Vec2; bw: Vec2; dragging: boolean } | null = null;

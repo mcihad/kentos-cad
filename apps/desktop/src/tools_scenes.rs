@@ -99,6 +99,15 @@ impl Objects {
         self.push(layer, json!({ "kind": kind, "pts": pts }))
     }
 
+    /// An open polyline with a bulge on each segment (an arc where it is not 0).
+    pub(crate) fn bulged(&mut self, layer: &str, pts: &[[f64; 2]], bulges: &[f64]) -> u32 {
+        let pts: Vec<Value> = pts.iter().map(|p| xy(*p)).collect();
+        self.push(
+            layer,
+            json!({ "kind": "polyline", "pts": pts, "bulges": bulges }),
+        )
+    }
+
     pub(crate) fn arc(&mut self, layer: &str, c: [f64; 2], r: f64, a0: f64, a1: f64) -> u32 {
         self.push(
             layer,

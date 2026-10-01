@@ -238,6 +238,8 @@ pub const PORTED: &[&str] = &[
     "tool.measureAngle",
     "tool.dimContinue",
     "tool.dimBaseline",
+    // docs/adr/0147 §7: Hızlı ölçü.
+    "tool.quickDimension",
     "crs.query",
     "tool.arrayPath",
     // İşlemler (docs/adr/0084): each tool's and model's window, and Harita's

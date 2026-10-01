@@ -160,3 +160,17 @@ export const ordinateAxisFor = op<(a: Vec2, p: Vec2) => 0 | 90>('ordinateAxisFor
  * from the vertex `c`. Lines are given by a direction each.
  */
 export const sectorArms = op<(c: Vec2, u1: Vec2, u2: Vec2, p: Vec2) => [Vec2, Vec2]>('sectorArms');
+
+/** What Hızlı ölçü writes (docs/adr/0147 §7): the dimensions, and how many objects were neither a line, a polyline nor an area. */
+export interface QuickDimensions {
+  dimensions: DimensionGeom[];
+  skipped: number;
+}
+
+/**
+ * Hızlı ölçü's dimensions for `objects` in this order (docs/adr/0147 §7): an aligned one along each straight edge, an
+ * arc length about each arc's centre; out of an area, into a hole, on the cursor's side of an open path; `typed` the
+ * distance typed (its size), else the cursor's distance to the nearest edge; an edge two objects share once. Computed
+ * by the geometry core (`geom::dimension::quick`).
+ */
+export const quickDimensions = op<(objects: readonly { kind: string }[], at: Vec2, typed: number | null, height: number) => QuickDimensions>('quickDimensions');

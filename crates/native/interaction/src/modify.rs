@@ -66,6 +66,11 @@ pub trait Stages {
     /// Where ortho, polar tracking, perpendicular snaps and typed `@` points
     /// are measured from (the web's `anchor`).
     fn anchor(&self) -> Option<Vec2>;
+    /// Whether object snaps apply (the web's `snaps`): not for Hızlı ölçü,
+    /// whose cursor's distance to the nearest edge places its dimensions.
+    fn snaps(&self) -> bool {
+        true
+    }
     /// The stage's prompt; `n` is the selection's size.
     fn prompt(&self, n: usize) -> Prompt;
     /// A point, clicked or typed. [`Flow::Exit`] once the tool is done.
@@ -242,6 +247,10 @@ impl<S: Stages> Modify<S> {
 }
 
 impl<S: Stages> Tool for Modify<S> {
+    fn snaps(&self) -> bool {
+        self.stages.snaps()
+    }
+
     /// A computed point in the stages, not while picking (the web's
     /// `SelectionFirstTool.acceptPoint`).
     fn accepts_points(&self) -> bool {

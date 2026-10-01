@@ -7,12 +7,14 @@
 //! points with elevations, and its question for a bare corner's elevation;
 //! Açı from the road's edge (Yaydan) and from a manhole (Daireden, Zemin on);
 //! Doğrusal along a typed direction; Öznitelikler's rows of a slope and of
-//! two ordinates; Ölçülendirme ▾'s methods. The web's are `shots.mjs dimensions`
+//! two ordinates; Hızlı ölçü over two parcels and a road edge, as the cursor
+//! places them and as written; Ölçülendirme ▾'s methods. The web's are `shots.mjs dimensions`
 //! (`dimension-ordinate`, `dimension-arc-length`, `dimension-partial`,
 //! `dimension-jogged`, `dimension-azimuth`, `dimension-slope`,
 //! `dimension-slope-ask`, `dimension-angle-arc`, `dimension-angle-circle`,
 //! `dimension-linear-angle`, `dimension-properties`,
-//! `dimension-properties-many`, `dimension-methods`).
+//! `dimension-properties-many`, `dimension-quick`, `dimension-quick-result`,
+//! `dimension-methods`).
 //! `tools_screens` takes them in the dark and the light theme at 1440×900
 //! and 1100×650:
 //!
@@ -209,8 +211,51 @@ fn props(app: &mut App, slots: &[u32]) {
     )));
 }
 
+/// Hızlı ölçü's ground (as `fixtures/interaction/v1/quick-dimension.kcad`,
+/// the road 6 m further south so that its dimensions stand clear of the
+/// parcels'): two parcels side by side sharing their 30 m edge, a road edge
+/// 10 m straight then a clockwise quarter arc, all selected, Hızlı ölçü running.
+fn quick(app: &mut App) {
+    let mut o = Objects::new();
+    let west = o.path(
+        "parsel",
+        &[[0.0, 0.0], [20.0, 0.0], [20.0, 30.0], [0.0, 30.0]],
+        true,
+    );
+    let east = o.path(
+        "parsel",
+        &[[20.0, 0.0], [40.0, 0.0], [40.0, 30.0], [20.0, 30.0]],
+        true,
+    );
+    let road = o.bulged(
+        "yol",
+        &[[0.0, -16.0], [10.0, -16.0], [20.0, -26.0]],
+        &[0.0, -(PI / 8.0).tan()],
+    );
+    open(app, o);
+    app.selection
+        .set([west, east, road].map(kentos_domain::Slot));
+    crate::tools_scenes::run(app, "tool.quickDimension");
+    forget(app);
+    // 4 m over the parcels' north edge.
+    hover(app, [10.0, 34.0]);
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
+        ("olcu-hizli", quick),
+        ("olcu-hizli-sonuc", |app| {
+            quick(app);
+            click(app, [10.0, 34.0]);
+            app.selection.clear();
+            // Drawn back so that the dimensions over the parcels show whole.
+            let centre = crate::tools_scenes::at(app, [20.0, 4.0]);
+            let _ = app.update(Message::Viewport(crate::viewport::Event::Zoomed {
+                factor: 0.85,
+                at: centre,
+            }));
+            hover(app, [60.0, -30.0]);
+        }),
         ("olcu-aci-yaydan", angle_arc),
         ("olcu-aci-daireden", angle_circle),
         ("olcu-dogrusal-aci", linear_angle),

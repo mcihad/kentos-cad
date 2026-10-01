@@ -1,0 +1,152 @@
+{
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Etkileşim izi: Hızlı ölçü",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "workspace": "hybrid",
+    "drawingFont": "barlow"
+  },
+  "origin": {
+    "x": 487000,
+    "y": 4420000
+  },
+  "layers": [
+    {
+      "id": "olcu",
+      "name": "Ölçü",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#3E63DD",
+        "lineType": "continuous",
+        "lineWeight": 0.35
+      },
+      "children": []
+    },
+    {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.5
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "olcu",
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 487000,
+          "y": 4420000
+        },
+        {
+          "x": 487020,
+          "y": 4420000
+        },
+        {
+          "x": 487020,
+          "y": 4420030
+        },
+        {
+          "x": 487000,
+          "y": 4420030
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 487020,
+          "y": 4420000
+        },
+        {
+          "x": 487040,
+          "y": 4420000
+        },
+        {
+          "x": 487040,
+          "y": 4420030
+        },
+        {
+          "x": 487020,
+          "y": 4420030
+        }
+      ]
+    },
+    {
+      "kind": "polyline",
+      "id": 3,
+      "layerId": "yol",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 487000,
+          "y": 4419990
+        },
+        {
+          "x": 487010,
+          "y": 4419990
+        },
+        {
+          "x": 487020,
+          "y": 4419980
+        }
+      ],
+      "bulges": [
+        0,
+        -0.41421356237309503
+      ]
+    },
+    {
+      "kind": "point",
+      "id": 4,
+      "layerId": "parsel",
+      "attrs": {},
+      "p": {
+        "x": 487050,
+        "y": 4420050
+      }
+    }
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

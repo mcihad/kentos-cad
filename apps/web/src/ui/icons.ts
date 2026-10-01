@@ -83,6 +83,8 @@ export const ICONS = {
   stationOffset: `<path d="M3 13h14"/><path d="M12 13V5.8" stroke-dasharray="2 1.5"/><path d="M12 10.8h2.2V13"/><circle cx="12" cy="4.6" r="1.4"/><path d="M3 16.2h9M3 15v2.4M12 15v2.4" stroke-width="1.1"/>${grip(3, 13)}${grip(17, 13)}`,
   dimContinue: '<path d="M3 5.5v10M10 5.5v10M17 5.5v10M3 12.5h14"/><path d="m5.1 11.3-2.1 1.2 2.1 1.2M7.9 11.3l2.1 1.2-2.1 1.2M12.1 11.3l-2.1 1.2 2.1 1.2M14.9 11.3l2.1 1.2-2.1 1.2"/>',
   dimBaseline: '<path d="M3.5 4v12.5M10 10v6.5M16.5 5.5v11M3.5 13h6.5M3.5 8h13"/><path d="m5.5 12-2 1 2 1M8 12l2 1-2 1M5.5 7l-2 1 2 1M14.5 7l2 1-2 1"/>',
+  // Hızlı ölçü: an area dimensioned along two sides at once.
+  dimQuick: '<path d="M3.5 9h9.5v7.5H3.5z" fill="currentColor" fill-opacity=".14"/><path d="M3.5 5.5H13M16.5 9v7.5" stroke-width="1.1"/><path d="m5.3 4.3-1.8 1.2 1.8 1.2M11.2 4.3 13 5.5l-1.8 1.2M15.3 10.8l1.2-1.8 1.2 1.8M15.3 14.7l1.2 1.8 1.2-1.8" stroke-width="1.1"/>',
   arrayPath: '<path d="M3 16c2.7-6.4 7.4-10.3 14-11" stroke-dasharray="2 1.6"/><rect x="2" y="12.5" width="3.2" height="3.2"/><rect x="7" y="7.6" width="3.2" height="3.2"/><rect x="13" y="4" width="3.2" height="3.2"/>',
   divide: `<path d="M3 13.5 17 6.5"/><circle cx="7.7" cy="11.2" r="1.3"/><circle cx="12.3" cy="8.8" r="1.3"/>${grip(3, 13.5)}${grip(17, 6.5)}`,
   array: '<rect x="3.5" y="3.5" width="5" height="5"/><rect x="11.5" y="3.5" width="5" height="5"/><rect x="3.5" y="11.5" width="5" height="5"/><rect x="11.5" y="11.5" width="5" height="5"/>',

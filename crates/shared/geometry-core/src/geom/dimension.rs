@@ -2,7 +2,7 @@
 //! gap, the dimension line or arc with oblique ticks, the value readable
 //! left to right. `dimensionLabel` (formatting) stays in TypeScript. The
 //! kinds of docs/adr/0147 (ordinate, arc length, jogged radius, azimuth and
-//! slope) are laid out in `kinds`.
+//! slope) are laid out in `kinds`; Hızlı ölçü's dimensions come from `quick`.
 
 use crate::api::Op;
 use crate::geom::arc::norm_angle;
@@ -12,8 +12,10 @@ use crate::op;
 use crate::vec2::Vec2;
 
 mod kinds;
+mod quick;
 
 pub use kinds::DimensionFault;
+pub use quick::{QuickDimensions, quick_dimensions};
 
 const SQRT1_2: f64 = std::f64::consts::FRAC_1_SQRT_2;
 
@@ -394,5 +396,12 @@ pub(crate) static OPS: &[Op] = &[
     op!("ordinateAxisFor", |a: Vec2, p: Vec2| ordinate_axis_for(a, p)),
     op!("sectorArms", |c: Vec2, u1: Vec2, u2: Vec2, p: Vec2| {
         sector_arms(c, u1, u2, p)
+    }),
+    op!("quickDimensions", |objects: Vec<crate::entity::Entity>,
+                            at: Vec2,
+                            typed: Option<f64>,
+                            height: f64| {
+        let shapes: Vec<_> = objects.into_iter().map(|e| e.shape).collect();
+        quick_dimensions(&shapes, at, typed, height)
     }),
 ];

@@ -1,0 +1,31 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "quick-dimension",
+  "title": "Hızlı ölçü (ADR 0147 §7): iki komşu parsel ve yaylı yol kenarı seçilir, imleçle ya da yazılan uzaklıkla dokuz ölçü tek adımda: parsellerde dışarıda, ortak kenar bir kez, yolda imlecin tarafında, yaya yay uzunluğu; kenet yok; Zemin (Z); Ctrl+Z tek adımı geri alır; bellek başladığı gibi bırakılır",
+  "source": "Web'in QuickDimensionTool'u (quickDimensionTool.ts), masaüstünün kentos_interaction::quick_dimension'ı; çekirdeğin quick_dimensions'ı; cad.entities.create, ADR 0147",
+  "covers": ["UX-01", "UX-06", "CMD-04"],
+  "document": "quick-dimension.kcad",
+  "view": { "center": [487020, 4420005], "metresPerPixel": 0.125 },
+  "draft": { "snap": true, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.125,
+  "steps": [
+    { "run": "tool.quickDimension", "note": "Seçim yokken önce nesneler seçilir.", "expect": { "tool": "quickDimension", "options": [], "prompt": "Hızlı ölçü: nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın (0 seçili)", "entities": 4 } },
+    { "click": [-20, 10], "note": "Batı parselin batı kenarı.", "expect": { "selected": [1] } },
+    { "click": [20, 10], "note": "Doğu parselin doğu kenarı.", "expect": { "selected": [1, 2] } },
+    { "click": [-15, -15], "note": "Yolun düz kısmı.", "expect": { "selected": [1, 2, 3], "prompt": "Hızlı ölçü: nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın (3 seçili)" } },
+    { "key": "Enter", "note": "Seçim biter; ölçülerin yeri sorulur, kenetsiz.", "expect": { "options": ["Z"], "prompt": "Hızlı ölçü: ölçülerin yerini gösterin ya da uzaklık yazın [Zemin (Z): kapalı]" } },
+    { "move": [-10, 29], "note": "İmleç parsellerin kuzey kenarının 4 m üstünde: ölçüler imlecin en yakın kenara uzaklığında önizlenir." },
+    { "click": [-10, 29], "note": "Dokuz ölçü tek adımda: batı parselin dört, doğununki üç kenarı (ortak kenar bir kez), parsellerin dışında; yolun düz kısmına hizalı, yayına yay uzunluğu, imlecin tarafında (sol). Son yazılan yayınki: uçları saatin tersine, merkezi (10, −20).", "expect": { "entities": 13, "newest": { "kind": "dimension", "points": [[0, -25], [-10, -15], [-10, -25]], "mask": false }, "log": "success", "tool": "select" } },
+    { "key": "Ctrl+Z", "note": "Tek adımda geri alınır.", "expect": { "entities": 4, "canRedo": true } },
+    { "run": "tool.quickDimension", "note": "Seçim duruyor: ölçülerin yeri hemen sorulur.", "expect": { "options": ["Z"], "selected": [1, 2, 3] } },
+    { "key": "Z", "note": "Zemin açılır.", "expect": { "prompt": "Hızlı ölçü: ölçülerin yerini gösterin ya da uzaklık yazın [Zemin (Z): açık]" } },
+    { "move": [-10, 20] },
+    { "text": "3" },
+    { "key": "Enter", "note": "Yazılan uzaklık: ölçüler kenarlardan 3 m'de, değerleri zeminli.", "expect": { "entities": 13, "newest": { "kind": "dimension", "points": [[0, -25], [-10, -15], [-10, -25]], "mask": true }, "log": "success", "tool": "select" } },
+    { "run": "tool.quickDimension" },
+    { "key": "Z", "note": "Zemin kapanır: bellek başladığı gibi.", "expect": { "prompt": "Hızlı ölçü: ölçülerin yerini gösterin ya da uzaklık yazın [Zemin (Z): kapalı]" } },
+    { "key": "Esc", "note": "Esc araçtan çıkar; çizim değişmez.", "expect": { "tool": "select", "entities": 13 } }
+  ]
+}

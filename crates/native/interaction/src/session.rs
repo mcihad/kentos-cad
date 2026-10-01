@@ -57,8 +57,8 @@ use crate::vertex::{self, Vertex};
 use crate::{
     angle, area, between, block_define, block_insert, boundary, cleanup, construction, coordinate,
     dimension, dimension_chain, divide, donut, ellipse, hatch, leader, match_properties, meeting,
-    parallel, revcloud, sector, select_circle, select_containing, select_fence, set_elevation,
-    spline, split, station_offset, text, text_file,
+    parallel, quick_dimension, revcloud, sector, select_circle, select_containing, select_fence,
+    set_elevation, spline, split, station_offset, text, text_file,
 };
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
@@ -145,6 +145,8 @@ pub const TOOLS: &[&str] = &[
     coordinate::ID,
     dimension_chain::CONTINUE_ID,
     dimension_chain::BASELINE_ID,
+    // docs/adr/0147 §7: Hızlı ölçü.
+    quick_dimension::ID,
     // Phase 3: the array along a path (Çit, İki yana and Kaynağı sil are options of existing tools).
     array_path::ID,
     // docs/adr/0141: Dik ayak ölç, then the selecting tools that go back to Seç.
@@ -274,6 +276,7 @@ impl Session {
             dimension_chain::BASELINE_ID => {
                 Box::new(crate::dimension_chain::DimensionChain::baseline())
             }
+            quick_dimension::ID => Box::new(crate::quick_dimension::QuickDimension::tool()),
             array_path::ID => Box::new(crate::array_path::ArrayPath::tool()),
             station_offset::ID => Box::new(station_offset::StationOffset::new()),
             select_fence::ID => Box::new(select_fence::SelectFence::new()),

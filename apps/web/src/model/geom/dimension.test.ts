@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import layout from '../../../../../fixtures/dimension/v1/layout.json?raw';
+import quick from '../../../../../fixtures/dimension/v1/quick.json?raw';
 import type { Vec2 } from '../geometry';
-import { dimensionLabel, dimensionMeasure, layoutDimension, type DimensionGeom, type DimensionStyle } from './dimension';
+import { dimensionLabel, dimensionMeasure, layoutDimension, quickDimensions, type DimensionGeom, type DimensionStyle } from './dimension';
 
 /**
  * The dimensions of docs/adr/0147 through WASM against the shared cases (fixtures/dimension/v1/layout.json, written
@@ -70,5 +71,32 @@ describe('the new dimensions (fixtures/dimension/v1)', () => {
     expect(dimensionLabel(undefined, { unit: 'percent', prefix: '%', value: 1.25 }, fmt)).toBe('%1.25');
     expect(dimensionLabel(undefined, { unit: 'angle', prefix: 't=', value: Math.PI / 2 }, fmt)).toBe('t=100.0000 g');
     expect(dimensionLabel('Kot farkı', { unit: 'percent', prefix: '%', value: 1.25 }, fmt)).toBe('Kot farkı');
+  });
+});
+
+describe('Hızlı ölçü (fixtures/dimension/v1/quick.json)', () => {
+  interface QuickCase {
+    name: string;
+    objects: { kind: string }[];
+    at: Vec2;
+    typed: number | null;
+    height: number;
+    want: { dimensions: (Pick<DimensionGeom, 'a' | 'b' | 'offset' | 'c'> & { style?: string })[]; skipped: number };
+  }
+
+  it("gives every shared case's dimensions as the independent reference does", () => {
+    const file = JSON.parse(quick) as { format: string; version: number; cases: QuickCase[] };
+    expect([file.format, file.version]).toEqual(['kentos.quick-dimension-cases', 1]);
+    expect(file.cases).toHaveLength(31);
+    for (const c of file.cases) {
+      const got = quickDimensions(c.objects, c.at, c.typed, c.height);
+      expect(got.skipped, c.name).toBe(c.want.skipped);
+      expect(got.dimensions.length, c.name).toBe(c.want.dimensions.length);
+      got.dimensions.forEach((g, i) => {
+        const w = c.want.dimensions[i];
+        expect(at(g.a, w.a) && at(g.b, w.b) && near(g.offset, w.offset) && g.height === c.height, `${c.name} #${i}`).toBe(true);
+        expect([g.style ?? undefined, !!g.c && !!w.c && at(g.c, w.c), !g.c && !w.c], `${c.name} #${i}`).toEqual([w.style, !!w.c, !w.c]);
+      });
+    }
   });
 });

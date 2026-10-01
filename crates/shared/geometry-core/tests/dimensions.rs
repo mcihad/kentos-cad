@@ -466,3 +466,63 @@ fn the_tools_take_an_ordinate_s_axis_and_an_arc_s_ends_as_the_rules_say() {
         None
     );
 }
+
+/// Hızlı ölçü's shared cases (fixtures/dimension/v1/quick.json), written
+/// from docs/adr/0147 §7 alone by scripts/fixtures/quick_dimension_cases.py:
+/// for each selection, cursor and typed distance, the core gives the same
+/// dimensions in the same order, within 1e-9 m, and the same count skipped.
+/// The web runs the same file through its WASM (`dimension.test.ts`).
+#[test]
+fn quick_dimensions_are_the_references() {
+    use kentos_geometry_core::geom::dimension::quick_dimensions;
+    let file: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/dimension/v1/quick.json"
+    ))
+    .expect("the cases are JSON");
+    assert_eq!(file["format"], "kentos.quick-dimension-cases");
+    let cases = file["cases"].as_array().expect("a case list");
+    assert_eq!(cases.len(), 31, "the cases are all there");
+    let near = |a: f64, e: &Value| {
+        let e = e.as_f64().expect("a number");
+        (a - e).abs() <= 1e-9 + 1e-15 * e.abs()
+    };
+    let at = |p: Vec2, e: &Value| near(p.x, &e["x"]) && near(p.y, &e["y"]);
+    let mut wrong = Vec::new();
+    for case in cases {
+        let name = case["name"].as_str().unwrap_or("?");
+        let shapes: Vec<Shape> = case["objects"]
+            .as_array()
+            .expect("objects")
+            .iter()
+            .map(|o| {
+                let json = Json::parse(&o.to_string()).expect("the object reads");
+                Entity::from_json(&json).expect("an object").shape
+            })
+            .collect();
+        let cursor = v(
+            case["at"]["x"].as_f64().expect("x"),
+            case["at"]["y"].as_f64().expect("y"),
+        );
+        let got = quick_dimensions(&shapes, cursor, case["typed"].as_f64(), 2.5);
+        let want = &case["want"];
+        let dims = want["dimensions"].as_array().expect("dimensions");
+        let same = got.skipped as u64 == want["skipped"].as_u64().expect("skipped")
+            && got.dimensions.len() == dims.len()
+            && got.dimensions.iter().zip(dims).all(|(g, w)| {
+                at(g.a, &w["a"])
+                    && at(g.b, &w["b"])
+                    && near(g.offset, &w["offset"])
+                    && g.height == 2.5
+                    && g.style.as_deref() == w["style"].as_str()
+                    && match (g.c, w.get("c")) {
+                        (Some(c), Some(wc)) => at(c, wc),
+                        (None, None) => true,
+                        _ => false,
+                    }
+            });
+        if !same {
+            wrong.push(format!("{name}: {got:?}"));
+        }
+    }
+    assert!(wrong.is_empty(), "{}", wrong.join("\n"));
+}

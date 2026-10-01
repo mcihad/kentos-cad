@@ -105,6 +105,7 @@ pub mod coordinate;
 pub mod corner;
 pub mod dimension;
 pub mod dimension_chain;
+pub mod quick_dimension;
 pub mod divide;
 pub mod donut;
 mod edge;

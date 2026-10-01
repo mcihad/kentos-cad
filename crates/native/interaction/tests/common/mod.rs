@@ -254,6 +254,19 @@ impl Bench {
         self.doc.add(entity).expect("a slot")
     }
 
+    /// An open polyline through `pts` with a bulge on each segment (docs/adr/0147: Hızlı ölçü's arcs).
+    pub fn add_bulged(&mut self, layer: &str, pts: &[[f64; 2]], bulges: &[f64]) -> kentos_domain::Slot {
+        let path = kentos_contracts::PathEntity {
+            base: base(layer),
+            pts: pts.iter().map(|p| wire(*p)).collect(),
+            bulges: Some(bulges.to_vec()),
+            holes: None,
+            zs: None,
+            parts: None,
+        };
+        self.doc.add(Entity::Polyline(path)).expect("a slot")
+    }
+
     /// A point with an elevation at `at` (east and north differences from (E, N)) on `layer`.
     pub fn add_point_z(&mut self, layer: &str, at: [f64; 2], z: f64) -> kentos_domain::Slot {
         let point = Entity::Point(kentos_contracts::PointEntity {

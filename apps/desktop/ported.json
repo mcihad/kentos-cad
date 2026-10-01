@@ -150,6 +150,7 @@
     "tool.measureAngle",
     "tool.dimContinue",
     "tool.dimBaseline",
+    "tool.quickDimension",
     "crs.query",
     "tool.arrayPath",
     "processing.run.points.numberVertices",

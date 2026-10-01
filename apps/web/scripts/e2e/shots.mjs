@@ -2114,7 +2114,8 @@ SCENES.dimensions = [
 // cursor; Kısmi with its first point on the arc and the part to the cursor lit; Kırıklı yarıçap with its jog on the
 // cursor; Semt on the parcel's west edge; Eğim between two levelled points, and its question for a bare corner's
 // elevation; Açı from the road's edge (Yaydan) and from a manhole (Daireden, Zemin on); Doğrusal along a typed
-// direction; Öznitelikler's rows of a slope and of two ordinates; Ölçülendirme ▾'s methods.
+// direction; Öznitelikler's rows of a slope and of two ordinates; Hızlı ölçü over two parcels and a road edge, as the
+// cursor places them and as written; Ölçülendirme ▾'s methods.
 function dimensionToolScenes() {
   const layer = (id, name, color, lineWeight) => ({ id, name, type: 'layer', visible: true, locked: false, expanded: true, style: { color, lineType: 'continuous', lineWeight }, children: [] });
   const E = 487000;
@@ -2148,6 +2149,33 @@ function dimensionToolScenes() {
   const WITH_MANHOLE = ground([{ kind: 'circle', id: 6, layerId: 'yol', attrs: {}, c: P(...MANHOLE), r: 5 }]);
   // A slope between the levelled points (4 m east), the north-west corner's Y (up), the south-west corner's X (left, with Zemin).
   const dim = (id, style, a, b, more) => ({ kind: 'dimension', id, layerId: 'parsel', attrs: {}, a: P(...a), b: P(...b), offset: 0, height: 2.5, style, ...more });
+  // Hızlı ölçü's ground (as fixtures/interaction/v1/quick-dimension.kcad, the road 6 m further south so that its
+  // dimensions stand clear of the parcels'): two parcels sharing their 30 m edge, a road edge 10 m straight then a
+  // clockwise quarter arc.
+  const QUICK = JSON.parse(GROUND);
+  QUICK.entities = [
+    { kind: 'polygon', id: 1, layerId: 'parsel', attrs: {}, pts: [P(0, 0), P(20, 0), P(20, 30), P(0, 30)] },
+    { kind: 'polygon', id: 2, layerId: 'parsel', attrs: {}, pts: [P(20, 0), P(40, 0), P(40, 30), P(20, 30)] },
+    { kind: 'polyline', id: 3, layerId: 'yol', attrs: {}, pts: [P(0, -16), P(10, -16), P(20, -26)], bulges: [0, -Math.tan(Math.PI / 8)] },
+  ];
+  /** Hızlı ölçü over the three, all selected, the cursor 4 m over the parcels' north edge (the desktop's `quick`). */
+  const quick = async (ui) => {
+    await ribbonOn(ui, { ribbonTab: 'draw', ...LOGGED });
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      k.files.ask = async () => 'drop';
+      if (!(await k.files.load(${JSON.stringify(JSON.stringify(QUICK))}, null))) throw new Error('the ground did not load');
+      k.view.zoomExtents();
+      const c = k.view.camera;
+      c.scale = c.scale * 0.85;
+      c.center = { x: c.center.x - 110 / c.scale, y: c.center.y };
+      c.panBy(0, 0);
+      k.selection.set([1, 2, 3]);
+    })()`);
+    await ui.sleep(300);
+    await startTool(ui, 'quickDimension');
+    await hoverAt(ui, 10, 34);
+  };
   const MEASURED = ground([
     dim(6, 'slope', [50, 0], [54, 32], { offset: -4, za: 102.4, zb: 101.15 }),
     dim(7, 'ordinate', [2, 30], [2, 40], { angle: 0 }),
@@ -2267,6 +2295,26 @@ function dimensionToolScenes() {
         await hoverAt(ui, 40, -8);
       },
       close: restore(false, "t.input('O');"),
+    },
+    { id: 'dimension-quick', open: quick, close: restore(false) },
+    {
+      id: 'dimension-quick-result',
+      open: async (ui) => {
+        await quick(ui);
+        await clickAt(ui, 10, 34);
+        // Drawn back so that the dimensions over the parcels show whole (the desktop's zoom of 0.85 about (20, 4)).
+        await ui.eval(`(() => {
+          const k = window.kentos;
+          k.selection.set([]);
+          const c = k.view.camera;
+          const at = { x: ${E} + 20, y: ${N} + 4 };
+          c.center = { x: at.x + (c.center.x - at.x) / 0.85, y: at.y + (c.center.y - at.y) / 0.85 };
+          c.scale = c.scale * 0.85;
+          c.panBy(0, 0);
+        })()`);
+        await hoverAt(ui, 60, -30);
+      },
+      close: restore(false),
     },
     { id: 'dimension-properties', open: async (ui) => propsOf(ui, [6]), close: propsClose },
     { id: 'dimension-properties-many', open: async (ui) => propsOf(ui, [7, 8]), close: propsClose },

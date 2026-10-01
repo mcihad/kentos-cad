@@ -15,7 +15,13 @@ import { drawTag, strokeGeometry, strokePath } from './preview';
 import type { ToolPointer } from './Tool';
 
 /** Paper sizes (mm) converted to world metres at the project's plot scale. */
-const paper = (ctx: AppContext, mm: number) => (mm / 1000) * ctx.doc.settings.plotScale.value;
+export const paper = (ctx: AppContext, mm: number) => (mm / 1000) * ctx.doc.settings.plotScale.value;
+
+/**
+ * Zemin (Z) of Ölçülendirme and Hızlı ölçü: the value written over the drawing's background, kept for the app's life
+ * (docs/adr/0147 §7; the desktop's `Memory::dimension_mask`).
+ */
+export const dimensionZemin = { on: false };
 
 /** What the log says when a dimension is added (a compound noun takes -sü: “Açı ölçüsü”, not “Açı ölçü”). */
 const ADDED: Record<DimensionStyle, string> = {
@@ -110,8 +116,6 @@ export class DimensionTool extends PointInputTool {
   /** Doğrusal's measuring direction, degrees counter-clockwise from east: 0 ΔY, 90 ΔX, another typed with Açı (A); null from the cursor. */
   private static lock: number | null = null;
   private static byVertex = false;
-  /** Zemin (Z): the value written over the drawing's background, kept for the app's life (docs/adr/0147 §7). */
-  private static mask = false;
   /** Koordinat's axis lock (0 its Y, 90 its X; null: from the cursor) and Yay uzunluğu's Kısmi (docs/adr/0147 §7). */
   private static ordinateLock: 0 | 90 | null = null;
   private static arcPartial = false;
@@ -260,14 +264,14 @@ export class DimensionTool extends PointInputTool {
         step = n === 0 ? 'hizalı ölçünün ilk noktasını belirtin' : n === 1 ? 'ikinci ölçü noktasını belirtin' : 'ölçü çizgisinin yerini gösterin ya da mesafe yazın';
     }
     // Zemin while nothing is picked and while the dimension is placed (docs/adr/0147 §7).
-    const zemin = (this.fresh || this.placing) && !this.askingAngle ? `Zemin (Z): ${DimensionTool.mask ? 'açık' : 'kapalı'}` : '';
+    const zemin = (this.fresh || this.placing) && !this.askingAngle ? `Zemin (Z): ${dimensionZemin.on ? 'açık' : 'kapalı'}` : '';
     const all = [opts, zemin, modes].filter(Boolean).join(' / ');
     return all ? `${step} [${all}]` : step;
   }
 
   protected override option(key: string): boolean {
     if (key === 'Z' && !this.askingAngle) {
-      DimensionTool.mask = !DimensionTool.mask;
+      dimensionZemin.on = !dimensionZemin.on;
       return this.changed();
     }
     if (this.fresh) {
@@ -588,7 +592,7 @@ export class DimensionTool extends PointInputTool {
     }
     const { style, ...rest } = g;
     // Written by `cad.entities.create` (step “Ekle”); a refusal (a locked layer) is said by it, nothing is added.
-    const out = this.writeObjects([{ kind: 'dimension', ...rest, ...(style && style !== 'aligned' && { style }), ...(DimensionTool.mask && { mask: true }) }]);
+    const out = this.writeObjects([{ kind: 'dimension', ...rest, ...(style && style !== 'aligned' && { style }), ...(dimensionZemin.on && { mask: true }) }]);
     if (out) {
       // Zincir ölçü and Baz ölçü continue from the newest aligned or linear one (docs/adr/0140).
       rememberDimension(this.ctx.doc.uidOf(out.ids[0]), style);
