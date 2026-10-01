@@ -1,0 +1,140 @@
+{
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Ölçülendirme zemini",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0
+  },
+  "origin": {
+    "x": 487000.0,
+    "y": 4420000.0
+  },
+  "layers": [
+    {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.5
+      },
+      "children": []
+    },
+    {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#3E63DD",
+        "lineType": "continuous",
+        "lineWeight": 0.35
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 487000.0,
+          "y": 4420000.0
+        },
+        {
+          "x": 487040.0,
+          "y": 4420000.0
+        },
+        {
+          "x": 487044.0,
+          "y": 4420032.0
+        },
+        {
+          "x": 487002.0,
+          "y": 4420030.0
+        }
+      ]
+    },
+    {
+      "kind": "arc",
+      "id": 2,
+      "layerId": "yol",
+      "attrs": {},
+      "c": {
+        "x": 487020.0,
+        "y": 4419940.0
+      },
+      "r": 50.0,
+      "a0": 0.8726646259971648,
+      "a1": 2.2689280275926285
+    },
+    {
+      "kind": "arc",
+      "id": 3,
+      "layerId": "yol",
+      "attrs": {},
+      "c": {
+        "x": 487020.0,
+        "y": 4419940.0
+      },
+      "r": 42.0,
+      "a0": 0.8726646259971648,
+      "a1": 2.2689280275926285
+    },
+    {
+      "kind": "point",
+      "id": 4,
+      "layerId": "parsel",
+      "attrs": {},
+      "p": {
+        "x": 487050.0,
+        "y": 4420000.0
+      },
+      "z": 102.4
+    },
+    {
+      "kind": "point",
+      "id": 5,
+      "layerId": "parsel",
+      "attrs": {},
+      "p": {
+        "x": 487054.0,
+        "y": 4420032.0
+      },
+      "z": 101.15
+    }
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

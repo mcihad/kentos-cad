@@ -2,9 +2,13 @@
 //! a parcel beside a curved road: Koordinat with the parcel's corner taken and
 //! the cursor off to the right (its X and its jogged line); Yay uzunluğu with the road's
 //! edge taken and the dimension arc following the cursor; Kısmi with its first
-//! point on the arc and the part to the cursor lit; Ölçülendirme ▾'s methods.
-//! The web's are `shots.mjs dimensions` (`dimension-ordinate`,
-//! `dimension-arc-length`, `dimension-partial`, `dimension-methods`).
+//! point on the arc and the part to the cursor lit; Kırıklı yarıçap with the
+//! jog following the cursor; Semt on the parcel's west edge; Eğim between two
+//! points with elevations, and its question for a bare corner's elevation;
+//! Ölçülendirme ▾'s methods. The web's are `shots.mjs dimensions`
+//! (`dimension-ordinate`, `dimension-arc-length`, `dimension-partial`,
+//! `dimension-jogged`, `dimension-azimuth`, `dimension-slope`,
+//! `dimension-slope-ask`, `dimension-methods`).
 //! `tools_screens` takes them in the dark and the light theme at 1440×900
 //! and 1100×650:
 //!
@@ -40,6 +44,9 @@ fn ground() -> Objects {
     for r in [50.0, 42.0] {
         o.arc("yol", C, r, 50.0 * PI / 180.0, 130.0 * PI / 180.0);
     }
+    // Two levelled points east of the parcel.
+    o.point("parsel", [50.0, 0.0], Some(102.4));
+    o.point("parsel", [54.0, 32.0], Some(101.15));
     o
 }
 
@@ -72,11 +79,56 @@ fn partial(app: &mut App) {
     hover(app, on_edge(115.0));
 }
 
+/// Kırıklı yarıçap: the road's edge, the centre shown 20 m back along the
+/// radius and 3 m aside, the point on the edge, the jog with the cursor.
+fn jogged(app: &mut App) {
+    open(app, ground());
+    method(app, "tool.dimension", "I");
+    click(app, on_edge(60.0));
+    click(app, [32.402, -32.519]);
+    click(app, on_edge(60.0));
+    forget(app);
+    hover(app, [38.0, -24.0]);
+}
+
+/// Semt: the parcel's west edge, the arrow 4 m out to the west.
+fn azimuth(app: &mut App) {
+    open(app, ground());
+    method(app, "tool.dimension", "T");
+    click(app, [0.0, 0.0]);
+    click(app, [2.0, 30.0]);
+    forget(app);
+    hover(app, [-3.0, 15.0]);
+}
+
+/// Eğim: between the two levelled points, the arrow east of them.
+fn slope(app: &mut App) {
+    open(app, ground());
+    method(app, "tool.dimension", "E");
+    click(app, [50.0, 0.0]);
+    click(app, [54.0, 32.0]);
+    forget(app);
+    hover(app, [57.0, 16.0]);
+}
+
+/// Eğim on the parcel's bare corner: its elevation asked for.
+fn slope_ask(app: &mut App) {
+    open(app, ground());
+    method(app, "tool.dimension", "E");
+    click(app, [0.0, 0.0]);
+    forget(app);
+    hover(app, [20.0, 4.0]);
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
         ("olcu-koordinat", ordinate),
         ("olcu-yay-uzunlugu", arc_length),
         ("olcu-kismi", partial),
+        ("olcu-kirikli", jogged),
+        ("olcu-semt", azimuth),
+        ("olcu-egim", slope),
+        ("olcu-egim-kot", slope_ask),
     ]
 }
 

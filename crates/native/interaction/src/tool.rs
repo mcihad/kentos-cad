@@ -252,9 +252,12 @@ pub enum DimensionMode {
     Angular,
     Radius,
     Diameter,
-    /// Koordinat and Yay uzunluğu (docs/adr/0147 §7).
+    /// Koordinat, Yay uzunluğu, Kırıklı yarıçap, Semt and Eğim (docs/adr/0147 §7).
     Ordinate,
     ArcLength,
+    Jogged,
+    Azimuth,
+    Slope,
 }
 
 /// What the web's drawing tools keep from one run to the next for as long as
@@ -360,6 +363,9 @@ pub struct Memory {
     /// `.arcPartial`; docs/adr/0147 §7).
     pub ordinate_lock: Option<f64>,
     pub arc_partial: bool,
+    /// Semt's and Eğim's Kenardan: an edge clicked gives the two points
+    /// (`DimensionTool.byEdge`; docs/adr/0147 §7).
+    pub dimension_by_edge: bool,
     /// Sadeleştir's tolerance, metres (docs/adr/0140). Tüm köşeleri yuvarla and
     /// Tüm köşelere pah keep their values in `fillet_radius` and `chamfer`,
     /// as the one-corner tools do.
@@ -500,6 +506,7 @@ impl Default for Memory {
             dimension_by_vertex: false,
             ordinate_lock: None,
             arc_partial: false,
+            dimension_by_edge: false,
             simplify_tolerance: 0.01,
             split_parts: 4,
             split_length: 10.0,

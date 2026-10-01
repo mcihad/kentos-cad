@@ -16,7 +16,7 @@ describe('Ölçülendirme: Koordinat', () => {
     const tool = h.use(new DimensionTool(h.ctx));
     tool.activate();
     expect(tool.input('O')).toBe(true);
-    expect(tool.prompt.value).toBe('Ölçü: koordinat ölçüsünün noktasını belirtin [Hizalı (H) / Doğrusal (D) / Açı (A) / Yarıçap (R) / Çap (Ç) / Yay uzunluğu (U)]');
+    expect(tool.prompt.value).toBe('Ölçü: koordinat ölçüsünün noktasını belirtin [Hizalı (H) / Doğrusal (D) / Açı (A) / Yarıçap (R) / Çap (Ç) / Yay uzunluğu (U) / Kırıklı yarıçap (I) / Semt (T) / Eğim (E)]');
     tool.pointerDown(at(10, 20));
     expect(tool.prompt.value).toBe('Ölçü: çizginin ucunu gösterin ya da uzunluğunu yazın [Y koordinatı (Y) / X koordinatı (X) / Eksen (O): imleçten]');
     // A typed length goes toward the cursor, as every point tool's: straight up 12 m.
@@ -58,7 +58,7 @@ describe('Ölçülendirme: Yay uzunluğu', () => {
     const tool = h.use(new DimensionTool(h.ctx));
     tool.activate();
     expect(tool.input('U')).toBe(true);
-    expect(tool.prompt.value).toBe('Ölçü: yay uzunluğu ölçülecek yaya tıklayın [Kısmi (K) / Hizalı (H) / Doğrusal (D) / Açı (A) / Yarıçap (R) / Çap (Ç) / Koordinat (O)]');
+    expect(tool.prompt.value).toBe('Ölçü: yay uzunluğu ölçülecek yaya tıklayın [Kısmi (K) / Hizalı (H) / Doğrusal (D) / Açı (A) / Yarıçap (R) / Çap (Ç) / Koordinat (O) / Kırıklı yarıçap (I) / Semt (T) / Eğim (E)]');
     h.state.hit = circle;
     tool.pointerDown(at(45, 0));
     expect(h.said().at(-1)).toBe("Bir yaya ya da çoklu çizginin ya da alanın yaylı kenarına tıklayın; tam daire için Yarıçap ya da Çap'ı kullanın.");
@@ -90,5 +90,87 @@ describe('Ölçülendirme: Yay uzunluğu', () => {
     expect(near(part.offset, 2)).toBe(true);
     // Its ends counter-clockwise whatever the clicks' order.
     expect(near(part.a.x, 10) && near(part.b.y, 10)).toBe(true);
+  });
+});
+
+describe('Ölçülendirme: Kırıklı yarıçap, Semt ve Eğim', () => {
+  it('Kırıklı yarıçap: a circle, the centre shown, the point on the arc, then its jog; a point leaving no room is refused', () => {
+    const h = toolHarness();
+    const circle = h.add({ kind: 'circle', c: pt(-290, 0), r: 300 });
+    const tool = h.use(new DimensionTool(h.ctx));
+    tool.activate();
+    expect(tool.input('I')).toBe(true);
+    expect(tool.prompt.value.startsWith('Ölçü: kırıklı yarıçapı ölçülecek daireye ya da yaya tıklayın [')).toBe(true);
+    h.state.hit = circle;
+    tool.pointerDown(at(10, 0));
+    h.state.hit = null;
+    expect(tool.prompt.value).toBe('Ölçü: çizginin başlayacağı merkezi gösterin');
+    tool.pointerDown(at(-10, 4));
+    expect(tool.prompt.value).toBe('Ölçü: yaydaki noktayı gösterin');
+    tool.pointerDown(at(-12, 30));
+    expect(h.said().at(-1)).toBe('Gösterilen merkez, yarıçap boyunca yaydaki noktadan geride ve yarıçapa yakın olmalı; başka bir yer gösterin.');
+    tool.pointerDown(at(10.5, 0));
+    expect(tool.prompt.value).toBe('Ölçü: kırığın yerini gösterin ya da uzaklığını yazın');
+    expect(tool.input('6')).toBe(true);
+    const d = dims(h).at(-1)!;
+    expect(d).toMatchObject({ style: 'jogged', a: pt(-290, 0), c: pt(-10, 4), offset: 6 });
+    expect(near(d.b.x, 10) && near(d.b.y, 0)).toBe(true);
+    // Ctrl+Z: the points first, then the circle.
+    h.state.hit = circle;
+    tool.pointerDown(at(10, 0));
+    h.state.hit = null;
+    tool.pointerDown(at(-10, 4));
+    expect(tool.undoStep()).toBe(true);
+    expect(tool.prompt.value).toBe('Ölçü: çizginin başlayacağı merkezi gösterin');
+    expect(tool.undoStep()).toBe(true);
+    expect(tool.prompt.value.startsWith('Ölçü: kırıklı yarıçapı ölçülecek')).toBe(true);
+    expect(tool.input('H')).toBe(true);
+  });
+
+  it('Semt: two points, or an edge with Kenardan, then its arrow (left positive)', () => {
+    const h = toolHarness();
+    const line = h.add({ kind: 'line', a: pt(0, 0), b: pt(30, 40) });
+    const tool = h.use(new DimensionTool(h.ctx));
+    tool.activate();
+    expect(tool.input('T')).toBe(true);
+    expect(tool.prompt.value.startsWith('Ölçü: semt ölçüsünün başlangıcını gösterin [Kenardan (K) / Hizalı (H)')).toBe(true);
+    tool.pointerDown(at(0, 0));
+    expect(tool.prompt.value).toBe('Ölçü: kenarın sonunu gösterin');
+    tool.pointerDown(at(30, 40));
+    expect(tool.prompt.value).toBe('Ölçü: okun yerini gösterin ya da uzaklık yazın');
+    tool.pointerDown(at(11, 23));
+    expect(dims(h).at(-1)).toMatchObject({ style: 'azimuth', a: pt(0, 0), b: pt(30, 40) });
+    expect(near(dims(h).at(-1)!.offset, 5)).toBe(true);
+    expect(tool.input('K')).toBe(true);
+    expect(tool.prompt.value.startsWith('Ölçü: semti ölçülecek kenara tıklayın [Noktalardan (K)')).toBe(true);
+    h.state.hit = line;
+    tool.pointerDown(at(15, 20));
+    h.state.hit = null;
+    expect(tool.prompt.value).toBe('Ölçü: okun yerini gösterin ya da uzaklık yazın');
+    expect(tool.input('-3')).toBe(true);
+    expect(dims(h).at(-1)).toMatchObject({ a: pt(0, 0), b: pt(30, 40), offset: -3 });
+    expect(tool.input('K')).toBe(true);
+    expect(tool.input('H')).toBe(true);
+  });
+
+  it('Eğim: each point’s elevation from the vertex it snapped to, else asked; then its arrow', () => {
+    const h = toolHarness();
+    const point = h.add({ kind: 'point', p: pt(0, 0), z: 105.25 });
+    const tool = h.use(new DimensionTool(h.ctx));
+    tool.activate();
+    expect(tool.input('E')).toBe(true);
+    expect(tool.prompt.value.startsWith('Ölçü: eğim ölçüsünün birinci noktasını gösterin [Kenardan (K)')).toBe(true);
+    tool.pointerDown(at(0, 0, { snap: { kind: 'node', point: pt(0, 0), entityId: point.id } }));
+    expect(tool.prompt.value).toBe('Ölçü: ikinci noktayı gösterin');
+    tool.pointerDown(at(40, 0));
+    expect(tool.prompt.value).toBe('Ölçü: ikinci noktanın kotunu yazın (m)');
+    tool.pointerDown(at(20, 5));
+    expect(h.said().at(-1)).toBe('Önce noktanın kotunu metre olarak yazın; geri almak için Ctrl+Z.');
+    expect(tool.input('abc')).toBe(false);
+    expect(tool.input('104.75')).toBe(true);
+    expect(tool.prompt.value).toBe('Ölçü: okun yerini gösterin ya da uzaklık yazın');
+    expect(tool.input('1.5')).toBe(true);
+    expect(dims(h).at(-1)).toMatchObject({ style: 'slope', a: pt(0, 0), b: pt(40, 0), za: 105.25, zb: 104.75, offset: 1.5 });
+    expect(tool.input('H')).toBe(true);
   });
 });

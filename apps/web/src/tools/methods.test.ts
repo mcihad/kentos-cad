@@ -12,6 +12,10 @@ describe('methods by their typed names', () => {
     expect(methodByAlias('DIMLIN')).toMatchObject({ option: 'D' });
     expect(methodByAlias('DIMRAD')).toMatchObject({ option: 'R' });
     expect(methodByAlias('DAL')).toMatchObject({ option: 'H' });
+    expect(methodByAlias('DJO')).toMatchObject({ option: 'I', label: 'Kırıklı yarıçap' });
+    expect(methodByAlias('semt')).toMatchObject({ option: 'T', label: 'Semt' });
+    expect(methodByAlias('EGIM')).toMatchObject({ option: 'E', label: 'Eğim' });
+    expect(methodByAlias('SLOPE')).toMatchObject({ option: 'E' });
     expect(methodByAlias('DIM')).toBeUndefined();
     expect(methodByAlias('CIRCLE')).toBeUndefined();
   });

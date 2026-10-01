@@ -2111,7 +2111,9 @@ SCENES.dimensions = [
 
 // Ölçülendirme's new methods at work (docs/adr/0147 §7), the desktop's `dimension_scenes`: Koordinat with the parcel's
 // corner taken and the cursor off to the right; Yay uzunluğu with the road's edge taken and the dimension arc on the
-// cursor; Kısmi with its first point on the arc and the part to the cursor lit; Ölçülendirme ▾'s methods.
+// cursor; Kısmi with its first point on the arc and the part to the cursor lit; Kırıklı yarıçap with its jog on the
+// cursor; Semt on the parcel's west edge; Eğim between two levelled points, and its question for a bare corner's
+// elevation; Ölçülendirme ▾'s methods.
 function dimensionToolScenes() {
   const layer = (id, name, color, lineWeight) => ({ id, name, type: 'layer', visible: true, locked: false, expanded: true, style: { color, lineType: 'continuous', lineWeight }, children: [] });
   const E = 487000;
@@ -2128,7 +2130,14 @@ function dimensionToolScenes() {
     origin: { x: E, y: N },
     layers: [layer('cizim', 'Çizim', 'fg', 0.25), layer('yol', 'Yol', '#E5484D', 0.5), layer('parsel', 'Parsel', '#3E63DD', 0.35)],
     activeLayer: 'cizim',
-    entities: [{ kind: 'polygon', id: 1, layerId: 'parsel', attrs: {}, pts: [P(0, 0), P(40, 0), P(44, 32), P(2, 30)] }, road(2, 50), road(3, 42)],
+    entities: [
+      { kind: 'polygon', id: 1, layerId: 'parsel', attrs: {}, pts: [P(0, 0), P(40, 0), P(44, 32), P(2, 30)] },
+      road(2, 50),
+      road(3, 42),
+      // Two levelled points east of the parcel.
+      { kind: 'point', id: 4, layerId: 'parsel', attrs: {}, p: P(50, 0), z: 102.4 },
+      { kind: 'point', id: 5, layerId: 'parsel', attrs: {}, p: P(54, 32), z: 101.15 },
+    ],
     styles: { items: [], categories: [] },
   });
   const pageAt = (ui, x, y) => ui.eval(PAGE_AT(E + x, N + y));
@@ -2172,6 +2181,20 @@ function dimensionToolScenes() {
       },
       close: restore(true),
     },
+    {
+      id: 'dimension-jogged',
+      open: async (ui) => {
+        await start(ui, 'I');
+        await clickAt(ui, ...onEdge(60));
+        await clickAt(ui, 32.402, -32.519);
+        await clickAt(ui, ...onEdge(60));
+        await hoverAt(ui, 38, -24);
+      },
+      close: restore(false),
+    },
+    { id: 'dimension-azimuth', open: async (ui) => (await start(ui, 'T'), await clickAt(ui, 0, 0), await clickAt(ui, 2, 30), await hoverAt(ui, -3, 15)), close: restore(false) },
+    { id: 'dimension-slope', open: async (ui) => (await start(ui, 'E'), await clickAt(ui, 50, 0), await clickAt(ui, 54, 32), await hoverAt(ui, 57, 16)), close: restore(false) },
+    { id: 'dimension-slope-ask', open: async (ui) => (await start(ui, 'E'), await clickAt(ui, 0, 0), await hoverAt(ui, 20, 4)), close: restore(false) },
     {
       id: 'dimension-methods',
       open: async (ui) => (await ribbonOn(ui, { ribbonTab: 'draw' }), await ui.clickSel('.ribbon__strip [data-split="dimension"] .rsplit__arrow'), await ui.waitFor(`!!document.querySelector('.menu')`), await ui.sleep(300)),

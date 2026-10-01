@@ -254,6 +254,16 @@ impl Bench {
         self.doc.add(entity).expect("a slot")
     }
 
+    /// A point with an elevation at `at` (east and north differences from (E, N)) on `layer`.
+    pub fn add_point_z(&mut self, layer: &str, at: [f64; 2], z: f64) -> kentos_domain::Slot {
+        let point = Entity::Point(kentos_contracts::PointEntity {
+            base: base(layer),
+            p: wire(at),
+            z: Some(z),
+        });
+        self.doc.add(point).expect("a slot")
+    }
+
     /// A circle about `c` (east and north differences from (E, N)) on `layer`.
     pub fn add_circle(&mut self, layer: &str, c: [f64; 2], r: f64) -> kentos_domain::Slot {
         let circle = Entity::Circle(kentos_contracts::CircleEntity {

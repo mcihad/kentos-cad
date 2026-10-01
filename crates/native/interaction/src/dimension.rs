@@ -17,7 +17,12 @@
 //!   locked (Y koordinatı, X koordinatı; Eksen back to the cursor);
 //! - Yay uzunluğu: an arc or a path's arc segment (not a circle), with Kısmi
 //!   two points on it, then where the dimension arc goes, or its distance
-//!   from the arc typed (out positive).
+//!   from the arc typed (out positive);
+//! - Kırıklı yarıçap: a circle or an arc, the centre the line starts from,
+//!   the point on the arc, then where the jog goes, or its distance typed;
+//! - Semt and Eğim: two points, or with Kenardan a straight edge, then where
+//!   the arrow goes, or its distance typed (left positive); Eğim takes each
+//!   point's elevation from the vertex it snapped to, else asks for it.
 //!
 //! The style changes only while nothing is picked. The style, the lock and
 //! Köşeden stay for as long as the app lives (`Memory`). The text is 2.5
@@ -40,8 +45,11 @@ use kentos_geometry_core::tools::editing::{
 use kentos_geometry_core::tools::point_text::{js_trim, point_from_text};
 use kentos_native_application::geometry::shape;
 
+use kentos_geometry_core::store::snap::SnapHit;
+
 use crate::Vec2;
 use crate::edge::{self, Outline};
+use crate::elevation;
 use crate::format::Format;
 use crate::log::Level;
 use crate::points::{self, Taken, wire};
@@ -59,7 +67,7 @@ pub const LABEL: &str = "Ölçü";
 const HEIGHT_MM: f64 = 2.5;
 
 /// The styles with their keys, in the web's order (`MODE_KEYS`).
-const MODES: [(Mode, &str); 7] = [
+const MODES: [(Mode, &str); 10] = [
     (Mode::Aligned, "H"),
     (Mode::Linear, "D"),
     (Mode::Angular, "A"),
@@ -67,6 +75,9 @@ const MODES: [(Mode, &str); 7] = [
     (Mode::Diameter, "Ç"),
     (Mode::Ordinate, "O"),
     (Mode::ArcLength, "U"),
+    (Mode::Jogged, "I"),
+    (Mode::Azimuth, "T"),
+    (Mode::Slope, "E"),
 ];
 
 impl Mode {
@@ -80,6 +91,9 @@ impl Mode {
             Mode::Diameter => "Çap",
             Mode::Ordinate => "Koordinat",
             Mode::ArcLength => "Yay uzunluğu",
+            Mode::Jogged => "Kırıklı yarıçap",
+            Mode::Azimuth => "Semt",
+            Mode::Slope => "Eğim",
         }
     }
 
@@ -94,6 +108,9 @@ impl Mode {
             Mode::Diameter => "Çap ölçüsü eklendi",
             Mode::Ordinate => "Koordinat ölçüsü eklendi",
             Mode::ArcLength => "Yay uzunluğu ölçüsü eklendi",
+            Mode::Jogged => "Kırıklı yarıçap ölçüsü eklendi",
+            Mode::Azimuth => "Semt ölçüsü eklendi",
+            Mode::Slope => "Eğim ölçüsü eklendi",
         }
     }
 
@@ -107,6 +124,9 @@ impl Mode {
             Mode::Diameter => Some("diameter"),
             Mode::Ordinate => Some("ordinate"),
             Mode::ArcLength => Some("arcLength"),
+            Mode::Jogged => Some("jogged"),
+            Mode::Azimuth => Some("azimuth"),
+            Mode::Slope => Some("slope"),
         }
     }
 
@@ -120,7 +140,15 @@ impl Mode {
             Mode::Diameter => Some(DimensionStyle::Diameter),
             Mode::Ordinate => Some(DimensionStyle::Ordinate),
             Mode::ArcLength => Some(DimensionStyle::ArcLength),
+            Mode::Jogged => Some(DimensionStyle::Jogged),
+            Mode::Azimuth => Some(DimensionStyle::Azimuth),
+            Mode::Slope => Some(DimensionStyle::Slope),
         }
+    }
+
+    /// Semt and Eğim: an arrow beside two points, or an edge.
+    fn arrowed(self) -> bool {
+        matches!(self, Mode::Azimuth | Mode::Slope)
     }
 
     /// Why a dimension of this style does not form where the cursor is.
@@ -131,6 +159,12 @@ impl Mode {
             }
             Mode::ArcLength => {
                 "Bu yerde ölçü oluşmuyor; ölçü yayı merkeze ulaşıyor ya da iki nokta aynı yerde."
+            }
+            Mode::Jogged => {
+                "Gösterilen merkez, yarıçap boyunca yaydaki noktadan geride ve yarıçapa yakın olmalı; başka bir yer gösterin."
+            }
+            Mode::Azimuth | Mode::Slope => {
+                "Kenarın iki ucu aynı nokta; ölçülecek kenar yok. Başka bir nokta gösterin."
             }
             _ => "Bu yerde ölçü oluşmuyor; ölçülen noktalar çakışıyor ya da yay yarıçapı sıfır.",
         }
@@ -213,6 +247,16 @@ fn arc_strokes(arc: &Edge, between: Option<(Vec2, Vec2)>, width: f32, tone: Tone
     .strokes
 }
 
+/// The elevation of the point, or of the vertex of a line, a polyline or an
+/// area, a snap stands on (docs/adr/0142): Eğim's, else it asks.
+fn snapped_elevation(snap: Option<SnapHit>, p: Vec2, cx: &Context<'_>) -> Option<f64> {
+    let hit = snap?;
+    if !(0.0..=f64::from(u32::MAX)).contains(&hit.id) || dist(hit.point, p) > points::SAME {
+        return None;
+    }
+    elevation::elevation_at(cx.doc.get(kentos_domain::Slot(hit.id as u32))?, hit.point)
+}
+
 /// Every object's edge can be picked, on any layer (the web's `pickEdge`).
 fn any(_: &Entity, _: &Document) -> bool {
     true
@@ -228,6 +272,10 @@ pub struct Dimension {
     circle: Option<(Vec2, f64)>,
     /// Yay uzunluğu: the picked arc (docs/adr/0147 §7).
     arc: Option<Edge>,
+    /// Eğim: each point's elevation, beside `d.pts`; none while it is asked for.
+    zs: Vec<Option<f64>>,
+    /// The snap under the pointer as it went down: where Eğim's elevation comes from.
+    snap: Option<SnapHit>,
     /// The text's height in metres, as of the last call.
     height: f64,
     /// What the session remembered, as of the last call.
@@ -257,10 +305,21 @@ impl Dimension {
     fn picks_edge(&self) -> bool {
         match self.mode() {
             Mode::Angular => !self.memory.dimension_by_vertex && self.edges.len() < 2,
-            Mode::Radius | Mode::Diameter => self.circle.is_none(),
+            Mode::Radius | Mode::Diameter | Mode::Jogged => self.circle.is_none(),
             Mode::ArcLength => self.arc.is_none(),
+            Mode::Azimuth | Mode::Slope => {
+                self.memory.dimension_by_edge && self.d.pts.is_empty()
+            }
             Mode::Aligned | Mode::Linear | Mode::Ordinate => false,
         }
+    }
+
+    /// Eğim's point whose elevation is asked for (0 or 1), if any.
+    fn asking(&self) -> Option<usize> {
+        if self.mode() != Mode::Slope {
+            return None;
+        }
+        self.zs.iter().position(Option::is_none)
     }
 
     /// Whether the next point places the dimension line (or arc, or leader).
@@ -274,6 +333,9 @@ impl Dimension {
             Mode::ArcLength => {
                 self.arc.is_some() && (!self.memory.arc_partial || self.d.pts.len() == 2)
             }
+            Mode::Jogged => self.circle.is_some() && self.d.pts.len() == 2,
+            Mode::Azimuth => self.d.pts.len() == 2,
+            Mode::Slope => self.d.pts.len() == 2 && self.asking().is_none(),
         }
     }
 
@@ -294,6 +356,15 @@ impl Dimension {
             }
             if key == "K" && cx.memory.dimension_mode == Mode::ArcLength {
                 cx.memory.arc_partial = !cx.memory.arc_partial;
+                return true;
+            }
+            if key == "K" && cx.memory.dimension_mode.arrowed() {
+                cx.memory.dimension_by_edge = !cx.memory.dimension_by_edge;
+                return true;
+            }
+            // Kırıklı yarıçap's I, typed dotted on a Turkish keyboard's English layout.
+            if key == "İ" {
+                cx.memory.dimension_mode = Mode::Jogged;
                 return true;
             }
         }
@@ -320,10 +391,32 @@ impl Dimension {
 
     /// A point given (the web's `accept`, then `onPoint`).
     fn accept(&mut self, p: Vec2, cx: &mut Context<'_>) {
+        let snap = self.snap.take();
+        // Eğim waits for the elevation it asked for.
+        if self.asking().is_some() {
+            cx.say(
+                Level::Warn,
+                "Önce noktanın kotunu metre olarak yazın; geri almak için Ctrl+Z.",
+            );
+            return;
+        }
         self.d.begin(p, cx);
         if !self.placing() {
             if self.d.last().is_none_or(|last| dist(last, p) > points::SAME) {
+                // Kırıklı yarıçap's point on the arc must leave room for a jog from the centre shown.
+                if self.mode() == Mode::Jogged && self.d.pts.len() == 1 {
+                    let ok = self.jogged_at(self.d.pts[0], p, 0.0).is_some_and(|g| {
+                        kentos_geometry_core::geom::dimension::dimension_fault(&g).is_none()
+                    });
+                    if !ok {
+                        cx.say(Level::Warn, Mode::Jogged.no_dimension());
+                        return;
+                    }
+                }
                 self.d.pts.push(p);
+                if self.mode() == Mode::Slope {
+                    self.zs.push(snapped_elevation(snap, p, cx));
+                }
             }
             return;
         }
@@ -396,7 +489,45 @@ impl Dimension {
                 let offset = typed.unwrap_or_else(|| dimension_offset_at(&g, loc));
                 Some(DimensionGeom { offset, ..g })
             }
+            Mode::Jogged => {
+                let (&shown, &on) = (self.d.pts.first()?, self.d.pts.get(1)?);
+                let g = self.jogged_at(shown, on, 0.0)?;
+                let offset = typed.unwrap_or_else(|| dimension_offset_at(&g, loc));
+                Some(DimensionGeom { offset, ..g })
+            }
+            Mode::Azimuth | Mode::Slope => {
+                let (&a, &b) = (self.d.pts.first()?, self.d.pts.get(1)?);
+                let offset = typed.unwrap_or_else(|| signed_offset(a, b, loc));
+                let mut g = geom(a, b, offset, None, None);
+                if mode == Mode::Slope {
+                    g.za = *self.zs.first()?;
+                    g.zb = *self.zs.get(1)?;
+                }
+                Some(g)
+            }
         }
+    }
+
+    /// Kırıklı yarıçap from the centre shown to the circle's point toward
+    /// `on`, its jog `offset` along the radius from the centre shown.
+    fn jogged_at(&self, shown: Vec2, on: Vec2, offset: f64) -> Option<DimensionGeom> {
+        let (c, r) = self.circle?;
+        let l = dist(c, on);
+        if l < 1e-9 {
+            return None;
+        }
+        let b = Vec2::new(c.x + (on.x - c.x) / l * r, c.y + (on.y - c.y) / l * r);
+        Some(DimensionGeom {
+            a: c,
+            b,
+            offset,
+            height: self.height,
+            style: Some("jogged".to_owned()),
+            angle: None,
+            c: Some(shown),
+            za: None,
+            zb: None,
+        })
     }
 
     /// Writes the dimension (the web's `commit`): a degenerate one is said and
@@ -417,8 +548,8 @@ impl Dimension {
             angle: g.angle,
             c: g.c.map(wire),
             mask: false,
-            za: None,
-            zb: None,
+            za: g.za,
+            zb: g.zb,
         };
         if let Some(out) = points::write_objects(vec![geometry], None, cx) {
             // Zincir ölçü and Baz ölçü start from the newest straight one (docs/adr/0140).
@@ -440,6 +571,8 @@ impl Dimension {
         self.edges.clear();
         self.circle = None;
         self.arc = None;
+        self.zs.clear();
+        self.snap = None;
         self.d.reset();
     }
 }
@@ -500,6 +633,30 @@ impl Tool for Dimension {
                 0 => "yayın üstünde ölçünün başlangıcını gösterin",
                 _ => "yayın üstünde ölçünün sonunu gösterin",
             },
+            Mode::Jogged if self.circle.is_none() => {
+                "kırıklı yarıçapı ölçülecek daireye ya da yaya tıklayın"
+            }
+            Mode::Jogged => match n {
+                0 => "çizginin başlayacağı merkezi gösterin",
+                1 => "yaydaki noktayı gösterin",
+                _ => "kırığın yerini gösterin ya da uzaklığını yazın",
+            },
+            Mode::Azimuth | Mode::Slope if self.picks_edge() => {
+                if self.mode() == Mode::Slope {
+                    "eğimi ölçülecek kenara tıklayın"
+                } else {
+                    "semti ölçülecek kenara tıklayın"
+                }
+            }
+            Mode::Slope if self.asking() == Some(0) => "birinci noktanın kotunu yazın (m)",
+            Mode::Slope if self.asking() == Some(1) => "ikinci noktanın kotunu yazın (m)",
+            Mode::Azimuth | Mode::Slope => match n {
+                0 if self.mode() == Mode::Slope => "eğim ölçüsünün birinci noktasını gösterin",
+                0 => "semt ölçüsünün başlangıcını gösterin",
+                1 if self.mode() == Mode::Slope => "ikinci noktayı gösterin",
+                1 => "kenarın sonunu gösterin",
+                _ => "okun yerini gösterin ya da uzaklık yazın",
+            },
             Mode::Aligned => match n {
                 0 => "hizalı ölçünün ilk noktasını belirtin",
                 1 => "ikinci ölçü noktasını belirtin",
@@ -530,6 +687,14 @@ impl Tool for Dimension {
                 .option_with("Eksen", "O", way);
         }
         if self.fresh() {
+            if self.mode().arrowed() {
+                let other = if self.memory.dimension_by_edge {
+                    "Noktalardan"
+                } else {
+                    "Kenardan"
+                };
+                prompt = prompt.option(other, "K");
+            }
             if self.mode() == Mode::ArcLength {
                 let other = if self.memory.arc_partial {
                     "Bütün yay"
@@ -564,8 +729,9 @@ impl Tool for Dimension {
         Flow::Stay
     }
 
+    /// No snapping while an edge is picked or Eğim waits for an elevation.
     fn snaps(&self) -> bool {
-        !self.picks_edge()
+        !self.picks_edge() && self.asking().is_none()
     }
 
     fn snap_from(&self) -> Option<Vec2> {
@@ -586,10 +752,28 @@ impl Tool for Dimension {
         self.see(cx);
         if !self.picks_edge() {
             let point = self.d.constrain(p, cx);
+            self.snap = p.snap;
             self.accept(point, cx);
             return;
         }
         let picked = edge::pick(p, cx, any).and_then(|slot| cx.doc.get(slot));
+        // Semt and Eğim by an edge: its two ends, Eğim their elevations (docs/adr/0147 §7).
+        if self.mode().arrowed() {
+            let Some((e, (a, b))) = picked.and_then(|e| straight_edge_at(e, p.raw).map(|s| (e, s)))
+            else {
+                cx.say(
+                    Level::Warn,
+                    "Bir çizgiye ya da çoklu çizginin ya da alanın düz kenarına tıklayın; iki nokta göstermek için “Noktalardan” seçin.",
+                );
+                return;
+            };
+            if self.mode() == Mode::Slope {
+                self.zs = vec![elevation::elevation_at(e, a), elevation::elevation_at(e, b)];
+            }
+            self.d.pts = vec![a, b];
+            cx.selection.set_hover(None);
+            return;
+        }
         if self.mode() == Mode::ArcLength {
             let Some(arc) = picked.and_then(|e| arc_edge_at(e, p.raw)) else {
                 cx.say(
@@ -634,7 +818,16 @@ impl Tool for Dimension {
     /// are placed by pointing only; a typed point does not pick an edge.
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
         self.see(cx);
-        let done = if self.option(&upper_tr(js_trim(text)), cx) {
+        let done = if let Some(i) = self.asking() {
+            // Eğim's elevation asked for: a number, metres.
+            match points::plain_number(text) {
+                Some(z) => {
+                    self.zs[i] = Some(z);
+                    true
+                }
+                None => false,
+            }
+        } else if self.option(&upper_tr(js_trim(text)), cx) {
             true
         } else if let Some(n) = points::plain_number(text).filter(|_| {
             self.placing() && !matches!(self.mode(), Mode::Radius | Mode::Diameter | Mode::Ordinate)
@@ -675,9 +868,20 @@ impl Tool for Dimension {
     /// last picked edge, then the points (the dimension starts over);
     /// otherwise the drawing's undo, which takes back a dimension just written.
     fn undo_step(&mut self, cx: &mut Context<'_>) -> bool {
-        // Yay uzunluğu's points on the arc go before the arc (docs/adr/0147 §7).
-        if self.arc.is_some() && !self.d.pts.is_empty() {
+        // Yay uzunluğu's points on the arc go before the arc, Kırıklı yarıçap's before its circle;
+        // Eğim's with their elevations, an edge's two ends together (docs/adr/0147 §7).
+        if (self.arc.is_some() || self.circle.is_some()) && !self.d.pts.is_empty() {
             self.d.pts.pop();
+            return true;
+        }
+        if self.mode().arrowed() && !self.d.pts.is_empty() {
+            if self.memory.dimension_by_edge {
+                self.d.pts.clear();
+                self.zs.clear();
+            } else {
+                self.d.pts.pop();
+                self.zs.truncate(self.d.pts.len());
+            }
             return true;
         }
         if self.circle.take().is_some() || self.edges.pop().is_some() || self.arc.take().is_some() {
@@ -729,6 +933,35 @@ impl Tool for Dimension {
         if self.picks_edge() {
             return Preview {
                 strokes,
+                ..Preview::default()
+            };
+        }
+        // Eğim waiting for an elevation: its points, nothing on the cursor (no next point is asked for).
+        if self.asking().is_some() {
+            return Preview {
+                strokes,
+                path: self.d.pts.clone(),
+                ..Preview::default()
+            };
+        }
+        // Kırıklı yarıçap's point on the arc: the dimension as it would be, its jog at the centre shown.
+        if self.mode() == Mode::Jogged
+            && let (Some(&shown), None) = (self.d.pts.first(), self.d.pts.get(1))
+        {
+            let mut tag = None;
+            if let Some(l) = self
+                .jogged_at(shown, hover, 0.0)
+                .and_then(|g| layout_dimension(&g))
+            {
+                strokes.extend(l.lines.iter().map(|&[p, q]| Stroke::solid(vec![p, q], false)));
+                tag = Some(Tag {
+                    at: hover,
+                    lines: vec![format.dimension(l.prefix, l.unit, l.value)],
+                });
+            }
+            return Preview {
+                strokes,
+                tag,
                 ..Preview::default()
             };
         }

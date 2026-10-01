@@ -3604,7 +3604,7 @@
       "title": "Ölçülendirme",
       "category": "Açıklama",
       "icon": "dimension",
-      "description": "Ölçü ekler: hizalı, doğrusal (ΔY yatay / ΔX düşey), açı, yarıçap, çap, bir noktanın koordinatı ve yay uzunluğu; değer proje birimini izler.",
+      "description": "Ölçü ekler: hizalı, doğrusal (ΔY yatay / ΔX düşey), açı, yarıçap, çap, bir noktanın koordinatı, yay uzunluğu, kırıklı yarıçap, semt ve eğim; değer proje birimini izler.",
       "aliases": [
         "DIM",
         "OLCU",
@@ -3627,7 +3627,15 @@
         "DOR",
         "YAYUZUNLUGU",
         "DIMARC",
-        "DAR"
+        "DAR",
+        "KIRIKLI",
+        "DIMJOGGED",
+        "DJO",
+        "SEMT",
+        "SEMTOLCU",
+        "EGIM",
+        "EGIMOLCU",
+        "SLOPE"
       ],
       "kind": "toggle",
       "shortcuts": [
@@ -3655,6 +3663,7 @@
         "apps/web/src/app/workspaces.test.ts",
         "apps/web/src/tools/methods.test.ts",
         "fixtures/interaction/v1/dimension-kinds.json",
+        "fixtures/interaction/v1/dimension-more-kinds.json",
         "fixtures/interaction/v1/dimensions.json",
         "fixtures/interaction/v1/usage-parcel.json"
       ]
@@ -7434,7 +7443,15 @@
         "DOR",
         "YAYUZUNLUGU",
         "DIMARC",
-        "DAR"
+        "DAR",
+        "KIRIKLI",
+        "DIMJOGGED",
+        "DJO",
+        "SEMT",
+        "SEMTOLCU",
+        "EGIM",
+        "EGIMOLCU",
+        "SLOPE"
       ],
       "primary": true,
       "family": "dimension",
@@ -7446,10 +7463,13 @@
         "Yarıçap",
         "Çap",
         "Koordinat",
-        "Yay uzunluğu"
+        "Yay uzunluğu",
+        "Kırıklı yarıçap",
+        "Semt",
+        "Eğim"
       ],
-      "steps": 4,
-      "description": "Ölçü ekler: hizalı, doğrusal (ΔY yatay / ΔX düşey), açı, yarıçap, çap, bir noktanın koordinatı ve yay uzunluğu; değer proje birimini izler.",
+      "steps": 5,
+      "description": "Ölçü ekler: hizalı, doğrusal (ΔY yatay / ΔX düşey), açı, yarıçap, çap, bir noktanın koordinatı, yay uzunluğu, kırıklı yarıçap, semt ve eğim; değer proje birimini izler.",
       "productCommand": "cad.entities.create",
       "status": "implemented",
       "platforms": {
@@ -7460,6 +7480,7 @@
         "apps/web/src/app/workspaces.test.ts",
         "apps/web/src/tools/methods.test.ts",
         "fixtures/interaction/v1/dimension-kinds.json",
+        "fixtures/interaction/v1/dimension-more-kinds.json",
         "fixtures/interaction/v1/dimensions.json",
         "fixtures/interaction/v1/usage-parcel.json"
       ]
@@ -16226,6 +16247,41 @@
                     ]
                   },
                   {
+                    "command": "tool.dimension",
+                    "option": "I",
+                    "title": "Ölçülendirme",
+                    "label": "Kırıklı yarıçap",
+                    "description": "Merkezi uzak yayın yarıçapı",
+                    "aliases": [
+                      "KIRIKLI",
+                      "DIMJOGGED",
+                      "DJO"
+                    ]
+                  },
+                  {
+                    "command": "tool.dimension",
+                    "option": "T",
+                    "title": "Ölçülendirme",
+                    "label": "Semt",
+                    "description": "Kenarın semti, yanında okla",
+                    "aliases": [
+                      "SEMT",
+                      "SEMTOLCU"
+                    ]
+                  },
+                  {
+                    "command": "tool.dimension",
+                    "option": "E",
+                    "title": "Ölçülendirme",
+                    "label": "Eğim",
+                    "description": "İki kot arası eğim, yüzde",
+                    "aliases": [
+                      "EGIM",
+                      "EGIMOLCU",
+                      "SLOPE"
+                    ]
+                  },
+                  {
                     "command": "tool.dimContinue",
                     "title": "Zincir ölçü",
                     "label": "Zincir ölçü"
@@ -16635,6 +16691,41 @@
                       "YAYUZUNLUGU",
                       "DIMARC",
                       "DAR"
+                    ]
+                  },
+                  {
+                    "command": "tool.dimension",
+                    "option": "I",
+                    "title": "Ölçülendirme",
+                    "label": "Kırıklı yarıçap",
+                    "description": "Merkezi uzak yayın yarıçapı",
+                    "aliases": [
+                      "KIRIKLI",
+                      "DIMJOGGED",
+                      "DJO"
+                    ]
+                  },
+                  {
+                    "command": "tool.dimension",
+                    "option": "T",
+                    "title": "Ölçülendirme",
+                    "label": "Semt",
+                    "description": "Kenarın semti, yanında okla",
+                    "aliases": [
+                      "SEMT",
+                      "SEMTOLCU"
+                    ]
+                  },
+                  {
+                    "command": "tool.dimension",
+                    "option": "E",
+                    "title": "Ölçülendirme",
+                    "label": "Eğim",
+                    "description": "İki kot arası eğim, yüzde",
+                    "aliases": [
+                      "EGIM",
+                      "EGIMOLCU",
+                      "SLOPE"
                     ]
                   },
                   {
@@ -18302,6 +18393,41 @@
                       ]
                     },
                     {
+                      "command": "tool.dimension",
+                      "option": "I",
+                      "title": "Ölçülendirme",
+                      "label": "Kırıklı yarıçap",
+                      "description": "Merkezi uzak yayın yarıçapı",
+                      "aliases": [
+                        "KIRIKLI",
+                        "DIMJOGGED",
+                        "DJO"
+                      ]
+                    },
+                    {
+                      "command": "tool.dimension",
+                      "option": "T",
+                      "title": "Ölçülendirme",
+                      "label": "Semt",
+                      "description": "Kenarın semti, yanında okla",
+                      "aliases": [
+                        "SEMT",
+                        "SEMTOLCU"
+                      ]
+                    },
+                    {
+                      "command": "tool.dimension",
+                      "option": "E",
+                      "title": "Ölçülendirme",
+                      "label": "Eğim",
+                      "description": "İki kot arası eğim, yüzde",
+                      "aliases": [
+                        "EGIM",
+                        "EGIMOLCU",
+                        "SLOPE"
+                      ]
+                    },
+                    {
                       "command": "tool.dimContinue",
                       "title": "Zincir ölçü",
                       "label": "Zincir ölçü"
@@ -18711,6 +18837,41 @@
                         "YAYUZUNLUGU",
                         "DIMARC",
                         "DAR"
+                      ]
+                    },
+                    {
+                      "command": "tool.dimension",
+                      "option": "I",
+                      "title": "Ölçülendirme",
+                      "label": "Kırıklı yarıçap",
+                      "description": "Merkezi uzak yayın yarıçapı",
+                      "aliases": [
+                        "KIRIKLI",
+                        "DIMJOGGED",
+                        "DJO"
+                      ]
+                    },
+                    {
+                      "command": "tool.dimension",
+                      "option": "T",
+                      "title": "Ölçülendirme",
+                      "label": "Semt",
+                      "description": "Kenarın semti, yanında okla",
+                      "aliases": [
+                        "SEMT",
+                        "SEMTOLCU"
+                      ]
+                    },
+                    {
+                      "command": "tool.dimension",
+                      "option": "E",
+                      "title": "Ölçülendirme",
+                      "label": "Eğim",
+                      "description": "İki kot arası eğim, yüzde",
+                      "aliases": [
+                        "EGIM",
+                        "EGIMOLCU",
+                        "SLOPE"
                       ]
                     },
                     {

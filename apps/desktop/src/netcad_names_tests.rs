@@ -120,6 +120,9 @@ fn a_method_s_name_starts_its_tool_with_the_method() {
         ("DIMLIN", "doğrusal ölçünün (ΔY / ΔX) ilk noktasını belirtin"),
         ("DIMRAD", "yarıçapı ölçülecek daireye ya da yaya tıklayın"),
         ("DAL", "hizalı ölçünün ilk noktasını belirtin"),
+        ("DJO", "kırıklı yarıçapı ölçülecek daireye ya da yaya tıklayın"),
+        ("semt", "semt ölçüsünün başlangıcını gösterin"),
+        ("EGIM", "eğim ölçüsünün birinci noktasını gösterin"),
     ] {
         let mut app = app();
         type_name(&mut app, name);
@@ -140,5 +143,5 @@ fn a_method_s_name_starts_its_tool_with_the_method() {
         .flatten()
         .filter(|e| !e.aliases.is_empty())
         .count();
-    assert!(methods >= 7, "Ölçülendirme's seven methods have names: {methods}");
+    assert!(methods >= 10, "Ölçülendirme's ten methods have names: {methods}");
 }

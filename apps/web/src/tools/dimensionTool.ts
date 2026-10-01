@@ -1,10 +1,12 @@
 import type { AppContext } from '../app/context';
 import type { Entity } from '../model/entities';
 import { dist, type Vec2 } from '../model/geometry';
-import { DIMENSION_STYLE_LABEL, dimensionOffsetAt, layoutDimension, linearAngleFor, ordinateAxisFor, signedOffset, type DimensionGeom, type DimensionStyle } from '../model/geom/dimension';
+import { DIMENSION_STYLE_LABEL, dimensionFault, dimensionOffsetAt, layoutDimension, linearAngleFor, ordinateAxisFor, signedOffset, type DimensionGeom, type DimensionStyle } from '../model/geom/dimension';
 import { closestOnEdge, lineLine, type Edge } from '../model/geom/intersect';
 import { entityEdges } from '../model/ops/edges';
+import { elevationAt } from '../product/elevationValues';
 import type { ViewTransform } from '../viewport/Camera';
+import type { SnapHit } from '../viewport/picking';
 import { arcLengthEnds, edgeArms, radialDimension, vertexArms } from './constructions';
 import { parseNumber } from './coordinateInput';
 import { rememberDimension } from './dimChainTools';
@@ -37,7 +39,13 @@ const MODE_KEYS: [DimensionStyle, string][] = [
   ['diameter', 'Ç'],
   ['ordinate', 'O'],
   ['arcLength', 'U'],
+  ['jogged', 'I'],
+  ['azimuth', 'T'],
+  ['slope', 'E'],
 ];
+
+/** Semt and Eğim: an arrow beside two points, or an edge. */
+const arrowed = (mode: DimensionStyle) => mode === 'azimuth' || mode === 'slope';
 
 type ArcEdge = Extract<Edge, { kind: 'arc' }>;
 
@@ -45,6 +53,8 @@ type ArcEdge = Extract<Edge, { kind: 'arc' }>;
 function noDimension(mode: DimensionStyle): string {
   if (mode === 'ordinate') return 'Çizginin ucu noktaya çok yakın; imleci noktadan eksene dik yönde uzaklaştırın.';
   if (mode === 'arcLength') return 'Bu yerde ölçü oluşmuyor; ölçü yayı merkeze ulaşıyor ya da iki nokta aynı yerde.';
+  if (mode === 'jogged') return 'Gösterilen merkez, yarıçap boyunca yaydaki noktadan geride ve yarıçapa yakın olmalı; başka bir yer gösterin.';
+  if (arrowed(mode)) return 'Kenarın iki ucu aynı nokta; ölçülecek kenar yok. Başka bir nokta gösterin.';
   return 'Bu yerde ölçü oluşmuyor; ölçülen noktalar çakışıyor ya da yay yarıçapı sıfır.';
 }
 
@@ -102,11 +112,17 @@ export class DimensionTool extends PointInputTool {
   /** Koordinat's axis lock (0 its Y, 90 its X; null: from the cursor) and Yay uzunluğu's Kısmi (docs/adr/0147 §7). */
   private static ordinateLock: 0 | 90 | null = null;
   private static arcPartial = false;
+  /** Semt's and Eğim's Kenardan: an edge clicked gives the two points (docs/adr/0147 §7). */
+  private static byEdge = false;
   /** Angular by edges: the two picked edges and where they were clicked. */
   private edges: (Seg & { at: Vec2 })[] = [];
   private circle: { c: Vec2; r: number } | null = null;
   /** Yay uzunluğu: the picked arc. */
   private arc: ArcEdge | null = null;
+  /** Eğim: each point's elevation, beside `pts`; null while it is asked for. */
+  private zs: (number | null)[] = [];
+  /** The snap under the pointer as it went down: where Eğim's elevation comes from. */
+  private snap: SnapHit | null = null;
 
   private get mode(): DimensionStyle {
     return DimensionTool.mode;
@@ -121,11 +137,18 @@ export class DimensionTool extends PointInputTool {
   private get picksEdge(): boolean {
     if (this.mode === 'angular') return !DimensionTool.byVertex && this.edges.length < 2;
     if (this.mode === 'arcLength') return !this.arc;
-    return (this.mode === 'radius' || this.mode === 'diameter') && !this.circle;
+    if (arrowed(this.mode)) return DimensionTool.byEdge && !this.pts.length;
+    return (this.mode === 'radius' || this.mode === 'diameter' || this.mode === 'jogged') && !this.circle;
   }
 
+  /** Eğim's point whose elevation is asked for (0 or 1), or −1. */
+  private get asking(): number {
+    return this.mode === 'slope' ? this.zs.indexOf(null) : -1;
+  }
+
+  /** No snapping while an edge is picked or Eğim waits for an elevation. */
   override get snaps(): boolean {
-    return !this.picksEdge;
+    return !this.picksEdge && this.asking < 0;
   }
 
   private height(): number {
@@ -144,6 +167,12 @@ export class DimensionTool extends PointInputTool {
         return this.pts.length === 1;
       case 'arcLength':
         return !!this.arc && (!DimensionTool.arcPartial || this.pts.length === 2);
+      case 'jogged':
+        return !!this.circle && this.pts.length === 2;
+      case 'azimuth':
+        return this.pts.length === 2;
+      case 'slope':
+        return this.pts.length === 2 && this.asking < 0;
       default:
         return this.pts.length === 2;
     }
@@ -194,6 +223,23 @@ export class DimensionTool extends PointInputTool {
               : 'yayın üstünde ölçünün sonunu gösterin';
         if (this.fresh) opts = DimensionTool.arcPartial ? 'Bütün yay (K)' : 'Kısmi (K)';
         break;
+      case 'jogged':
+        step = !this.circle
+          ? 'kırıklı yarıçapı ölçülecek daireye ya da yaya tıklayın'
+          : ['çizginin başlayacağı merkezi gösterin', 'yaydaki noktayı gösterin', 'kırığın yerini gösterin ya da uzaklığını yazın'][Math.min(n, 2)];
+        break;
+      case 'azimuth':
+      case 'slope': {
+        const slope = this.mode === 'slope';
+        if (this.picksEdge) step = slope ? 'eğimi ölçülecek kenara tıklayın' : 'semti ölçülecek kenara tıklayın';
+        else if (this.asking === 0) step = 'birinci noktanın kotunu yazın (m)';
+        else if (this.asking === 1) step = 'ikinci noktanın kotunu yazın (m)';
+        else if (n === 0) step = slope ? 'eğim ölçüsünün birinci noktasını gösterin' : 'semt ölçüsünün başlangıcını gösterin';
+        else if (n === 1) step = slope ? 'ikinci noktayı gösterin' : 'kenarın sonunu gösterin';
+        else step = 'okun yerini gösterin ya da uzaklık yazın';
+        if (this.fresh) opts = DimensionTool.byEdge ? 'Noktalardan (K)' : 'Kenardan (K)';
+        break;
+      }
       default:
         step = n === 0 ? 'hizalı ölçünün ilk noktasını belirtin' : n === 1 ? 'ikinci ölçü noktasını belirtin' : 'ölçü çizgisinin yerini gösterin ya da mesafe yazın';
     }
@@ -214,6 +260,15 @@ export class DimensionTool extends PointInputTool {
       }
       if (key === 'K' && this.mode === 'arcLength') {
         DimensionTool.arcPartial = !DimensionTool.arcPartial;
+        return this.changed();
+      }
+      if (key === 'K' && arrowed(this.mode)) {
+        DimensionTool.byEdge = !DimensionTool.byEdge;
+        return this.changed();
+      }
+      // Kırıklı yarıçap's I, typed dotted on an English layout.
+      if (key === 'İ') {
+        DimensionTool.mode = 'jogged';
         return this.changed();
       }
     }
@@ -252,8 +307,22 @@ export class DimensionTool extends PointInputTool {
 
   override pointerDown(p: ToolPointer): void {
     if (p.button !== 0) return;
-    if (!this.picksEdge) return super.pointerDown(p);
+    if (!this.picksEdge) {
+      this.snap = p.snap;
+      return super.pointerDown(p);
+    }
     const e = this.ctx.view.pickEdge(p.screen);
+    // Semt and Eğim by an edge: its two ends, Eğim their elevations (docs/adr/0147 §7).
+    if (arrowed(this.mode)) {
+      const s = e && straightEdgeAt(e, p.raw);
+      if (!e || !s) return this.ctx.log.warn('Bir çizgiye ya da çoklu çizginin ya da alanın düz kenarına tıklayın; iki nokta göstermek için “Noktalardan” seçin.');
+      if (this.mode === 'slope') this.zs = [elevationAt(e, s.a), elevationAt(e, s.b)];
+      this.pts = [s.a, s.b];
+      this.ctx.selection.hover.set(null);
+      this.refreshPrompt();
+      this.ctx.view.requestOverlay();
+      return;
+    }
     if (this.mode === 'arcLength') {
       const arc = e && arcEdgeAt(e, p.raw);
       if (!arc) return this.ctx.log.warn("Bir yaya ya da çoklu çizginin ya da alanın yaylı kenarına tıklayın; tam daire için Yarıçap ya da Çap'ı kullanın.");
@@ -274,14 +343,52 @@ export class DimensionTool extends PointInputTool {
   }
 
   protected onPoint(p: Vec2): void {
+    const snap = this.snap;
+    this.snap = null;
+    // Eğim waits for the elevation it asked for.
+    if (this.asking >= 0) return this.ctx.log.warn('Önce noktanın kotunu metre olarak yazın; geri almak için Ctrl+Z.');
     if (!this.placing) {
-      if (!this.last || dist(this.last, p) > 1e-9) this.pts.push(p);
+      if (!this.last || dist(this.last, p) > 1e-9) {
+        // Kırıklı yarıçap's point on the arc must leave room for a jog from the centre shown.
+        if (this.mode === 'jogged' && this.pts.length === 1) {
+          const g = this.joggedAt(this.pts[0], p, 0);
+          if (!g || dimensionFault(g)) return this.ctx.log.warn(noDimension('jogged'));
+        }
+        this.pts.push(p);
+        if (this.mode === 'slope') this.zs.push(this.snappedElevation(snap, p));
+      }
       return;
     }
     this.commit(this.geomAt(p));
   }
 
+  /** The elevation of the point, or of the vertex of a line, a polyline or an area, a snap stands on (docs/adr/0142). */
+  private snappedElevation(snap: SnapHit | null, p: Vec2): number | null {
+    if (!snap || dist(snap.point, p) > 1e-9) return null;
+    const e = this.ctx.doc.get(snap.entityId);
+    return e ? elevationAt(e, snap.point) : null;
+  }
+
+  /** Kırıklı yarıçap from the centre shown to the circle's point toward `on`, its jog `offset` along the radius. */
+  private joggedAt(shown: Vec2, on: Vec2, offset: number): DimensionGeom | null {
+    const circle = this.circle;
+    if (!circle) return null;
+    const l = dist(circle.c, on);
+    if (l < 1e-9) return null;
+    const b = { x: circle.c.x + ((on.x - circle.c.x) / l) * circle.r, y: circle.c.y + ((on.y - circle.c.y) / l) * circle.r };
+    return { a: circle.c, b, c: shown, offset, height: this.height(), style: 'jogged' };
+  }
+
   override input(text: string): boolean {
+    // Eğim's elevation asked for: a number, metres.
+    if (this.asking >= 0) {
+      const z = parseNumber(text);
+      if (z === null || /[,;@<]/.test(text)) return false;
+      this.zs[this.asking] = z;
+      this.refreshPrompt();
+      this.ctx.view.requestOverlay();
+      return true;
+    }
     if (this.option(text.trim().toLocaleUpperCase('tr-TR'))) return true;
     const n = parseNumber(text);
     // Radius and diameter are placed by pointing only (their prompt asks for no number); an ordinate's typed
@@ -308,8 +415,14 @@ export class DimensionTool extends PointInputTool {
    * drawing, was undone while the picks stayed.
    */
   override undoStep(): boolean {
-    // Yay uzunluğu's points on the arc go before the arc (docs/adr/0147 §7).
-    if (this.arc && this.pts.length) this.pts.pop();
+    // Yay uzunluğu's points on the arc go before the arc, Kırıklı yarıçap's before its circle; Eğim's with their
+    // elevations, an edge's two ends together (docs/adr/0147 §7).
+    if ((this.arc || this.circle) && this.pts.length) this.pts.pop();
+    else if (arrowed(this.mode) && this.pts.length) {
+      if (DimensionTool.byEdge) this.pts = [];
+      else this.pts.pop();
+      this.zs = this.zs.slice(0, this.pts.length);
+    }
     else if (this.circle) this.circle = null;
     else if (this.edges.length) this.edges.pop();
     else if (this.arc) this.arc = null;
@@ -323,6 +436,8 @@ export class DimensionTool extends PointInputTool {
     this.edges = [];
     this.circle = null;
     this.arc = null;
+    this.zs = [];
+    this.snap = null;
     super.reset();
   }
 
@@ -358,6 +473,17 @@ export class DimensionTool extends PointInputTool {
         if (!ends) return null;
         const g: DimensionGeom = { ...ends, offset: 0, height, style: 'arcLength' };
         return { ...g, offset: typed ?? dimensionOffsetAt(g, loc) };
+      }
+      case 'jogged': {
+        const g = this.pts.length === 2 ? this.joggedAt(this.pts[0], this.pts[1], 0) : null;
+        return g && { ...g, offset: typed ?? dimensionOffsetAt(g, loc) };
+      }
+      case 'azimuth':
+      case 'slope': {
+        const [a, b] = this.pts;
+        const g: DimensionGeom = { a, b, offset: typed ?? signedOffset(a, b, loc), height, style: this.mode };
+        if (this.mode === 'slope') return this.zs[0] == null || this.zs[1] == null ? null : { ...g, za: this.zs[0], zb: this.zs[1] };
+        return g;
       }
       default: {
         const circle = this.circle;
@@ -403,6 +529,16 @@ export class DimensionTool extends PointInputTool {
     const pal = this.ctx.view.palette;
     for (const s of this.edges) strokePath(g, view, [s.a, s.b], { color: pal.snap, width: 2 });
     if (this.circle) strokeGeometry(g, view, { kind: 'circle', ...this.circle }, { color: pal.snap, width: 2 });
+    // Kırıklı yarıçap's point on the arc: the dimension as it would be, its jog at the centre shown.
+    if (this.mode === 'jogged' && this.circle && this.pts.length === 1 && this.hover) {
+      const jog = this.joggedAt(this.pts[0], this.hover, 0);
+      const l = jog && layoutDimension(jog);
+      if (l) {
+        for (const [p, q] of l.lines) strokePath(g, view, [p, q], { color: pal.accent });
+        drawTag(g, view.worldToScreen(this.hover), [this.ctx.view.dimensionText(l)], pal.accent, pal.labelHalo);
+      }
+      return;
+    }
     // Yay uzunluğu's arc, and with Kısmi the part between its first point and the cursor, its length by the cursor.
     if (this.arc) {
       strokeArcEnds(g, view, arcLengthEnds(this.arc, null), pal.snap, 2);
@@ -422,6 +558,8 @@ export class DimensionTool extends PointInputTool {
       drawTag(g, view.worldToScreen(this.hover), [this.ctx.view.dimensionText(l)], pal.accent, pal.labelHalo);
       return;
     }
+    // Eğim waiting for an elevation: nothing on the cursor (no next point is asked for).
+    if (this.asking >= 0) return;
     if (!this.picksEdge) super.draw(g, view);
   }
 }
