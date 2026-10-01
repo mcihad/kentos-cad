@@ -88,7 +88,77 @@ fn every_case_is_cleaned_as_the_reference_cleans_it() {
 fn a_tolerance_below_a_micrometre_is_refused() {
     let args = json!([[], 1e-7, { "ends": true, "vertices": false, "extend": true, "trim": true }]);
     let e = run_named("topologyClean", &args.to_string()).expect_err("refused");
-    assert!(e.contains("0,000001"), "{e}");
+    assert!(e.contains("0.000001"), "{e}");
+}
+
+/// An arc goes to the cleanup as its two ends and a bulge, and comes back
+/// as the same arc (docs/adr/0148 §2): counter-clockwise, angles in
+/// [0, 2π), whatever turn they were given in; a whole turn has no ends.
+#[test]
+fn an_arc_goes_as_two_ends_and_a_bulge_and_comes_back() {
+    let (e, n) = (487_000.0, 4_420_000.0);
+    let pi = std::f64::consts::PI;
+    for (a0, a1) in [
+        (0.0, pi / 2.0),
+        (5.5, 0.4),
+        (-pi / 3.0, pi / 4.0),
+        (1.0, 1.0 + 2.0 * pi - 0.5),
+    ] {
+        let arc = json!({ "c": { "x": e + 3.0, "y": n - 2.0 }, "r": 12.5, "a0": a0, "a1": a1 });
+        let path: Value =
+            serde_json::from_str(&run_named("topologyArcPath", &json!([arc]).to_string()).unwrap())
+                .unwrap();
+        let sweep = (a1 - a0).rem_euclid(2.0 * pi);
+        let end = |a: f64| [e + 3.0 + 12.5 * a.cos(), n - 2.0 + 12.5 * a.sin()];
+        let pts: Vec<[f64; 2]> = path["pts"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|p| [p["x"].as_f64().unwrap(), p["y"].as_f64().unwrap()])
+            .collect();
+        for (have, want) in pts.iter().zip([end(a0), end(a1)]) {
+            assert!(
+                (have[0] - want[0]).abs() < 1e-9 && (have[1] - want[1]).abs() < 1e-9,
+                "{have:?} {want:?}"
+            );
+        }
+        let bulge = path["bulges"][0].as_f64().unwrap();
+        assert!((bulge - (sweep / 4.0).tan()).abs() < 1e-12, "{bulge}");
+        assert_eq!(path["bulges"][1], 0.0);
+        assert_eq!(path["zs"], json!([null, null]));
+        let back: Value = serde_json::from_str(
+            &run_named("topologyPathArc", &json!([path]).to_string()).unwrap(),
+        )
+        .unwrap();
+        // Ends at TM coordinates carry their last bit (1e-9 m): the centre comes back within a few.
+        assert!(
+            (back["c"]["x"].as_f64().unwrap() - (e + 3.0)).abs() < 1e-7,
+            "{back}"
+        );
+        assert!(
+            (back["c"]["y"].as_f64().unwrap() - (n - 2.0)).abs() < 1e-7,
+            "{back}"
+        );
+        assert!((back["r"].as_f64().unwrap() - 12.5).abs() < 1e-7, "{back}");
+        for (k, want) in [("a0", a0), ("a1", a1)] {
+            let have = back[k].as_f64().unwrap();
+            assert!((0.0..2.0 * pi).contains(&have), "{k} {have}");
+            assert!(
+                (have - want.rem_euclid(2.0 * pi)).abs() < 1e-9,
+                "{k} {have} {want}"
+            );
+        }
+    }
+    let whole = json!({ "c": { "x": 0.0, "y": 0.0 }, "r": 1.0, "a0": 1.0, "a1": 1.0 });
+    assert_eq!(
+        run_named("topologyArcPath", &json!([whole]).to_string()).unwrap(),
+        "null"
+    );
+    let straight = json!({ "pts": [{ "x": 0.0, "y": 0.0 }, { "x": 1.0, "y": 0.0 }], "bulges": [0.0, 0.0], "closed": false, "zs": [null, null] });
+    assert_eq!(
+        run_named("topologyPathArc", &json!([straight]).to_string()).unwrap(),
+        "null"
+    );
 }
 
 /// 50 000 lines of a street network at TM coordinates, every second end a

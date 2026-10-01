@@ -143,6 +143,7 @@
     "tool.placeTextFile",
     "tool.leader",
     "tool.cleanup",
+    "tool.topology",
     "tool.matchProperties",
     "tool.sector",
     "tool.pointsBetween",

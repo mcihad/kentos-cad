@@ -2158,6 +2158,54 @@ SCENES.rounding = [
   },
 ];
 
+// Topolojik temizlik (docs/adr/0148 §9) on fixtures/interaction/v1/topology.kcad, the desktop's `topology_scenes`:
+// Değiştir › Nesne ▾ with the tool beside Çizimi temizle; the finding at 0.05 m with Köşeler on over the whole block;
+// then close up, at 2 500 px a metre, the node three ends go to, the end cut where it runs past and the end extended to
+// the locked road.
+const TOPOLOGY = readFileSync(new URL('../../../../fixtures/interaction/v1/topology.kcad', import.meta.url), 'utf8');
+SCENES.topology = topologyScenes();
+function topologyScenes() {
+  const E = 487000;
+  const N = 4420000;
+  /** The drawing open and the tool at 0.05 m with Köşeler on, as the trace leaves it before Enter; the view at `look` (east, north, px a metre) if given. */
+  const found = async (ui, look) => {
+    await ribbonOn(ui, { ribbonTab: 'modify', ...LOGGED });
+    // Close up, the lines as hairlines: at 2 500 px a metre a 0.25 mm weight at 1:1000 would be 625 px wide.
+    const view = look
+      ? `c.center = { x: ${E + look[0]}, y: ${N + look[1]} }; c.scale = ${look[2]}; if (k.prefs.lineWeights.value) k.commands.execute('view.lineWeights');`
+      : 'c.scale = c.scale * 0.85; c.center = { x: c.center.x - 110 / c.scale, y: c.center.y };';
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      k.files.ask = async () => 'drop';
+      if (!(await k.files.load(${JSON.stringify(TOPOLOGY)}, null))) throw new Error('topology.kcad did not load');
+      k.view.zoomExtents();
+      const c = k.view.camera;
+      ${view}
+      c.panBy(0, 0);
+    })()`);
+    await ui.sleep(400);
+    await startTool(ui, 'topology');
+    await typeValue(ui, '0.05');
+    await ui.eval(`window.kentos.tools.active.input('K')`);
+  };
+  const at = async (ui, x, y) => (await ui.move(...(await ui.eval(PAGE_AT(E + x, N + y)))), await ui.sleep(350));
+  /** The tool's memory as it was (0.01 m, Köşeler off), the drawing back. */
+  const restore = async (ui) => {
+    await ui.eval(`(() => { const k = window.kentos; if (!k.prefs.lineWeights.value) k.commands.execute('view.lineWeights'); const t = k.tools.active; if (t?.id !== 'topology') return; t.input('K'); t.input('0.01'); })()`);
+    await ui.escapeAll(2);
+    await ui.eval(UNDO_ALL);
+    await ribbonOff(ui);
+  };
+  const CLOSE = 2500;
+  return [
+    { id: 'topology-list', open: async (ui) => (await ribbonOn(ui, { ribbonTab: 'modify' }), await ui.clickSel('.rpanel__more[data-commands~="tool.topology"]'), await ui.sleep(400)), close: async (ui) => (await ui.escapeAll(2), await ribbonOff(ui)) },
+    { id: 'topology-preview', open: async (ui) => (await found(ui), await at(ui, -4, -14)), close: restore },
+    { id: 'topology-node', open: async (ui) => (await found(ui, [0.01, 0, CLOSE]), await at(ui, -0.11, -0.05)), close: restore },
+    { id: 'topology-trim', open: async (ui) => (await found(ui, [-10, 15, CLOSE]), await at(ui, -10.12, 14.95)), close: restore },
+    { id: 'topology-extend', open: async (ui) => (await found(ui, [10, -9.99, CLOSE]), await at(ui, 9.88, -10.04)), close: restore },
+  ];
+}
+
 // Ölçülendirme's new methods at work (docs/adr/0147 §7), the desktop's `dimension_scenes`: Koordinat with the parcel's
 // corner taken and the cursor off to the right; Yay uzunluğu with the road's edge taken and the dimension arc on the
 // cursor; Kısmi with its first point on the arc and the part to the cursor lit; Kırıklı yarıçap with its jog on the

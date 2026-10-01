@@ -50,6 +50,6 @@ describe('Topolojik temizlik', () => {
   });
 
   it('refuses a tolerance below a micrometre', () => {
-    expect(() => topologyClean([], 1e-7, { ends: true, vertices: false, extend: true, trim: true })).toThrow(/0,000001/);
+    expect(() => topologyClean([], 1e-7, { ends: true, vertices: false, extend: true, trim: true })).toThrow(/0\.000001/);
   });
 });

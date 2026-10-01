@@ -115,15 +115,17 @@ Yazma `cad.entities.edit`'in yeni `topology` işlemiyledir (adım adı “Topolo
 ### 9. Araç ve arayüz
 
 - **Akış:** araç açılınca kapsamı alır (§2) ve hatırlanan toleransla önizlemeyi hemen gösterir.
-  - Yazılan sayı toleranstır: önizleme yenilenir, yazmaz.
+  - Yazılan sayı toleranstır: önizleme yenilenir, yazmaz. Tolerans (T) da toleransı sorar (“toleransı yazın, metre (Enter: 0.010 m)”); Esc ya da Enter eski değerle geri döner.
   - U, K, Z ve B işleri açıp kapatır.
   - Enter (ya da Uygula, ya da hızlı sağ tık) yazar ve araçtan çıkar.
   - Esc çıkar.
-  - Düzeltilecek bir şey yoksa söyler, araçta kalır; tolerans değiştirilebilir.
+  - Düzeltilecek bir şey yoksa söyler, araçta kalır; tolerans değiştirilebilir. Bu durumda Enter “hiçbir şey değişmedi” der ve çıkar.
 - **Önizleme:**
-  - her değişikliğin yerinde ekran boyutu sabit bir işaret (santimlik değişiklik her yakınlıkta görünür): birleşme ve kenara taşıma vurgu renginde, uzatma başarı renginde, budama tehlike renginde;
-  - uzayan parça çizilir, budanan parça kesikli çizilir.
-- **İstem:** sayılar ve en büyük yer değiştirme, örneğin “7 uç birleşir, 2 uç uzar, 1 uç kısalır; en büyük kayma 0,042 m”; seçenekler komut satırında tıklanır.
+  - değişen her nesnenin eski hâli kesikli tehlike renginde, yenisi üstünde vurgu renginde;
+  - her değişikliğin yerinde ekran boyutu sabit bir işaret (santimlik değişiklik her yakınlıkta görünür): birleşme ve kenara taşıma vurgu renginde halka, eski yerinde küçük tehlike renginde halka ve oradan ince kesikli çizgi; uzatma yeşil (kenet rengi; çizimin renklerinde başarı rengi yoktur) halka ve uzayan parça; budama tehlike renginde halka ve çarpı, budanan parça eski hâlin kesikli çizgisinde görünür;
+  - imlecin yanında etiket: sayılar satır satır, en büyük kayma ve “Enter: uygula”.
+- **İstem:** sayılar ve en büyük yer değiştirme, örneğin “7 uç birleşir, 2 uç uzar, 1 uç kısalır; en büyük kayma 0.042 m”; seçenekler komut satırında tıklanır: Tolerans (T) değeriyle, Uçlar (U), Köşeler (K), Uzat (Z) ve Buda (B) açık ya da kapalı yazılı, Uygula (Enter).
+- **İletiler:** açılışta bulgu, kapsamla (“bütün çizim: 10 nesne, 2 dayanak” ya da “seçili 3 nesne, 9 dayanak”); seçimde kilitli katmandaki ve katılmayan nesneler sayılarıyla. Her yeni bulgu (tolerans ya da iş değişince) ayrı bir iletiyle söylenir; geçmiş ve durum çubuğu güncel bulguyu gösterir.
 - **Sonuç iletisi:** aynı sayılar ve değişen nesne sayısı.
 
 ### 10. Kapsam dışı
@@ -147,6 +149,13 @@ Yazma `cad.entities.edit`'in yeni `topology` işlemiyledir (adım adı “Topolo
    - **Başarım:** TM koordinatlarında 49 928 çizgilik ağ 0,2 saniyede temizlenir (release, `tests/topology.rs`'in elle çalıştırılan testi).
 2. **Komut.** `EditOperation::Topology`; iki işleyici, ortak durumlar, katalog ve Python SDK'sı. *(1 Ekim: tamam. Sözleşmede `topology` işlemi; adım adı iki işleyicide “Topolojik temizlik”. Ortak durum (`edit_command_cases.py`, 85. durum): bir çizginin ve bir çoklu çizginin geometrisi kotlarıyla yerinde yazılır, tek adımda geri alınır; masaüstü, web ve Python SDK'sı geçer. TypeScript tipi, katalog ve SDK'nın tipleri üretildi.)*
 3. **Araç ve arayüz.** İki platformda araç, şerit, takma adlar, önizleme, ortak iz (`fixtures/interaction/v1/topology.json`), testler ve resimler.
+
+   *(1 Ekim: tamam.)*
+   - **Araç:** web `tools/topologyTool.ts`, masaüstü `kentos_interaction::topology`; nesneler çekirdeğe çizim sırasıyla, kotlarıyla (`elevatedPaths` / `elevation::paths`), yay iki ucu ve kabarıklığıyla (çekirdeğin `topologyArcPath`'i ve `topologyPathArc`'ı, iki platform aynı bitleri versin diye), daire iki yarım dönüş, elips ve eğri 0,1 mm'lik kirişleri olarak gider; dönen yollar `cad.entities.edit`'in `topology` işlemine kotları açık geometri olarak yazılır, değişmeyen nesne yazılmaz.
+   - **Bellek:** tolerans ve işler oturum boyunca (web'de statik alanlar, masaüstünde `Memory`).
+   - **Şerit:** Değiştir › Nesne ▾, Çizimi temizle'nin altında, kendi simgesiyle (üç ucun bir düğüme gelişi); takma adlar TOPOLOJI, TOPOLOJIKTEMIZLIK, MAPCLEAN.
+   - **Sınama:** iki platformda aynı durumlar (`topologyTool.test.ts`, `tests/topology.rs`: bütün çizim, yazılan tolerans ve işler, seçim ve dayanaklar, gizli katman, boş kapsam, yay, alanın köşeleri, dönüşümler); ortak iz `topology.json` üç varyantta iki platformda geçer.
+   - **Resimler:** `kentos-cad kullan topology` ve `e2e:use topology` (önizleme, sonuç); yakın planlar `tools_screens` (`topoloji-*`) ve `shots.mjs topology`.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
 

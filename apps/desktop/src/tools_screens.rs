@@ -88,6 +88,7 @@ fn pointed_scenes() -> Vec<Pointed> {
     let mut all = crate::text_scenes::pointed();
     all.extend(crate::leader_scenes::pointed());
     all.extend(crate::dimension_scenes::pointed());
+    all.extend(crate::topology_scenes::pointed());
     let menus: Vec<Pointed> = vec![
         (
             "katman-menu-katman",
@@ -145,6 +146,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::text_scenes::scenes());
     all.extend(crate::leader_scenes::scenes());
     all.extend(crate::dimension_scenes::scenes());
+    all.extend(crate::topology_scenes::scenes());
     all
 }
 

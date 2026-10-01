@@ -16,6 +16,9 @@
 //! (`fixtures/topology/v1/clean.json`).
 
 use crate::api::Op;
+use crate::geom::arc::{ArcGeom, norm_angle, point_on_circle, sweep};
+use crate::geom::bulge::bulge_arc;
+use crate::jsmath::{TAU, tan};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -195,7 +198,7 @@ pub fn topology_clean(
     works: TopoWorks,
 ) -> Result<TopoResult, String> {
     if !(tol.is_finite() && tol >= TOUCH) {
-        return Err("Tolerans en az 0,000001 m olmalı.".into());
+        return Err("Tolerans en az 0.000001 m olmalı.".into());
     }
     let mut work = Vec::with_capacity(objects.len());
     for (i, o) in objects.iter().enumerate() {
@@ -244,9 +247,49 @@ pub fn topology_clean(
     })
 }
 
-pub(crate) static OPS: &[Op] = &[op!(
-    "topologyClean",
-    |objects: Vec<TopoObject>, tolerance: f64, works: TopoWorks| topology_clean(
-        &objects, tolerance, works
-    )
-)];
+/// An arc as the cleanup takes it (docs/adr/0148 §2): its two ends,
+/// counter-clockwise, and the bulge of the edge between them, so a moved end
+/// keeps the arc's angle (§4.6). A whole turn has no ends: none (it is a
+/// boundary, as a circle is). Both platforms take an arc this way, so the
+/// same drawing gives the cleanup the same bits.
+pub fn arc_path(arc: &ArcGeom) -> Option<TopoPath> {
+    let sw = sweep(arc.a0, arc.a1);
+    if sw >= TAU {
+        return None;
+    }
+    Some(TopoPath {
+        pts: vec![
+            point_on_circle(arc.c, arc.r, arc.a0),
+            point_on_circle(arc.c, arc.r, arc.a1),
+        ],
+        bulges: Some(vec![tan(sw / 4.0), 0.0]),
+        closed: false,
+        zs: vec![None, None],
+    })
+}
+
+/// The arc a cleaned arc's path stands for: its centre, its radius and its
+/// angles counter-clockwise from the first vertex, normalized to [0, 2π);
+/// none when the path is no arc (no bulge, or ends too close to bend).
+pub fn path_arc(p: &TopoPath) -> Option<ArcGeom> {
+    let (a, b) = (*p.pts.first()?, *p.pts.get(1)?);
+    let bulge = p.bulges.as_ref().and_then(|bs| bs.first().copied())?;
+    let arc = bulge_arc(a, b, bulge)?;
+    Some(ArcGeom {
+        c: arc.c,
+        r: arc.r,
+        a0: norm_angle(arc.a0),
+        a1: norm_angle(arc.a0 + arc.sweep),
+    })
+}
+
+pub(crate) static OPS: &[Op] = &[
+    op!(
+        "topologyClean",
+        |objects: Vec<TopoObject>, tolerance: f64, works: TopoWorks| topology_clean(
+            &objects, tolerance, works
+        )
+    ),
+    op!("topologyArcPath", |arc: ArcGeom| arc_path(&arc)),
+    op!("topologyPathArc", |path: TopoPath| path_arc(&path)),
+];

@@ -1,0 +1,241 @@
+{
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Etkileşim izi: Topolojik temizlik",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "workspace": "hybrid",
+    "drawingFont": "barlow"
+  },
+  "origin": {
+    "x": 487000,
+    "y": 4420000
+  },
+  "layers": [
+    {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.5
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+    {
+      "kind": "line",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+        "x": 486980,
+        "y": 4420000
+      },
+      "b": {
+        "x": 487000,
+        "y": 4420000
+      }
+    },
+    {
+      "kind": "line",
+      "id": 2,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+        "x": 487000.006,
+        "y": 4420000
+      },
+      "b": {
+        "x": 487020,
+        "y": 4420000
+      }
+    },
+    {
+      "kind": "line",
+      "id": 3,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+        "x": 486980,
+        "y": 4420000
+      },
+      "b": {
+        "x": 486980,
+        "y": 4420015
+      }
+    },
+    {
+      "kind": "line",
+      "id": 4,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+        "x": 486980,
+        "y": 4420015
+      },
+      "b": {
+        "x": 487019.97,
+        "y": 4420015
+      }
+    },
+    {
+      "kind": "line",
+      "id": 5,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+        "x": 487020,
+        "y": 4420000
+      },
+      "b": {
+        "x": 487020,
+        "y": 4420014.98
+      }
+    },
+    {
+      "kind": "line",
+      "id": 6,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+        "x": 487000,
+        "y": 4420015
+      },
+      "b": {
+        "x": 487000,
+        "y": 4420000.03
+      }
+    },
+    {
+      "kind": "line",
+      "id": 7,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+        "x": 486990,
+        "y": 4420000
+      },
+      "b": {
+        "x": 486990,
+        "y": 4420015.02
+      }
+    },
+    {
+      "kind": "line",
+      "id": 8,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+        "x": 487010,
+        "y": 4420000
+      },
+      "b": {
+        "x": 487010,
+        "y": 4419990.03
+      }
+    },
+    {
+      "kind": "line",
+      "id": 9,
+      "layerId": "yol",
+      "attrs": {},
+      "a": {
+        "x": 486975,
+        "y": 4419990
+      },
+      "b": {
+        "x": 487025,
+        "y": 4419990
+      }
+    },
+    {
+      "kind": "point",
+      "id": 10,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+        "x": 487020,
+        "y": 4420015
+      },
+      "z": 102.5
+    },
+    {
+      "kind": "polygon",
+      "id": 11,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 487004,
+          "y": 4420004
+        },
+        {
+          "x": 487009,
+          "y": 4420004
+        },
+        {
+          "x": 487009,
+          "y": 4420010
+        },
+        {
+          "x": 487004,
+          "y": 4420010
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 12,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 487009.004,
+          "y": 4420004
+        },
+        {
+          "x": 487014,
+          "y": 4420004
+        },
+        {
+          "x": 487014,
+          "y": 4420010
+        },
+        {
+          "x": 487009.003,
+          "y": 4420010
+        }
+      ]
+    }
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

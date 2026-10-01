@@ -228,6 +228,8 @@ pub const PORTED: &[&str] = &[
     // Kılavuz: the arrow, its line, landing and note (leader.rs, docs/adr/0146 §7).
     "tool.leader",
     "tool.cleanup",
+    // Topolojik temizlik: ends, vertices, extend and trim within a tolerance (topology.rs, docs/adr/0148).
+    "tool.topology",
     "tool.matchProperties",
     // Phase 2 and 3 of docs/adr/0140: the slice, points between two points, the point found from
     // distances, bearings or lines, the angle, the chained and stacked dimensions, the coordinate

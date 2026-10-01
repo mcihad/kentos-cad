@@ -407,6 +407,10 @@ pub struct Memory {
     pub block_scale: f64,
     pub block_rotation: f64,
     pub block_mirror: bool,
+    /// Topolojik temizlik's tolerance, metres, and its four works
+    /// (`TopologyTool.tolerance`, `.works`; docs/adr/0148 §3).
+    pub topology_tolerance: f64,
+    pub topology_works: kentos_geometry_core::ops::topology::TopoWorks,
 }
 
 /// A short list of numbers typed as one answer (Ara nokta's distances and
@@ -532,6 +536,8 @@ impl Default for Memory {
             block_scale: 1.0,
             block_rotation: 0.0,
             block_mirror: false,
+            topology_tolerance: crate::topology::FIRST_TOLERANCE,
+            topology_works: crate::topology::FIRST_WORKS,
         }
     }
 }

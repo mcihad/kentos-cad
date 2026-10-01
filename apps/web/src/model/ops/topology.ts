@@ -1,4 +1,5 @@
 import { op } from '../../wasm/core';
+import type { ArcGeom } from '../geom/arc';
 import type { Vec2 } from '../geometry';
 
 /**
@@ -49,3 +50,13 @@ export interface TopoResult {
 
 /** Topolojik temizlik over `objects` (in the drawing's order); throws on a tolerance below 1 µm. */
 export const topologyClean = op<(objects: TopoObject[], tolerance: number, works: TopoWorks) => TopoResult>('topologyClean');
+
+/**
+ * An arc as the cleanup takes it (docs/adr/0148 §2): its two ends counter-clockwise and the bulge between them, so a
+ * moved end keeps its angle; null for a whole turn (a boundary, as a circle is). The core's, so the web and the
+ * desktop hand the cleanup the same bits.
+ */
+export const topologyArcPath = op<(arc: ArcGeom) => TopoPath | null>('topologyArcPath');
+
+/** The arc a cleaned arc's path stands for, counter-clockwise from its first vertex, angles in [0, 2π); null when it is no arc. */
+export const topologyPathArc = op<(path: TopoPath) => ArcGeom | null>('topologyPathArc');

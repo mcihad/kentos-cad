@@ -70,6 +70,9 @@
 //!   Sıfırla) through `cad.entities.edit`; [`elevation`] reads them for
 //!   Öznitelikler, the grip's tag, Koordinat oku and the hover card, and
 //!   builds what Kot ver and Öznitelikler write;
+//! - docs/adr/0148: Topolojik temizlik ([`topology`]), which puts line work
+//!   and area outlines right within a typed tolerance through
+//!   `cad.entities.edit`;
 //! - the geometry store kept in step with the document ([`Spatial`]): what
 //!   a click picks, a box selects and a point snaps to;
 //! - [`Format`]: numbers as the web shows them in messages and the tag.
@@ -167,6 +170,7 @@ pub mod station_offset;
 pub mod stretch;
 pub mod text;
 pub mod text_file;
+pub mod topology;
 mod tool;
 pub mod trim;
 pub mod vertex;

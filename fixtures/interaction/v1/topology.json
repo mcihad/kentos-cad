@@ -1,0 +1,33 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "topology",
+  "title": "Topolojik temizlik (ADR 0148 §9): seçim yokken bütün çizim; hatırlanan 0,01 m toleransla bir uç birleşir; 0,05 m yazılınca dört uç birleşir (ikisi noktaya, kotunu alarak), kısa kalan uç kilitli yola uzar, taşan uç budanır; Uzat kapalıyken uç yola taşınır; Köşeler açılınca komşu alanın iki köşesi birleşir; Enter tek adımda yazar, Ctrl+Z geri alır; T ile tolerans yazılır; bellek başladığı gibi bırakılır",
+  "source": "Web'in TopologyTool'u (topologyTool.ts), masaüstünün kentos_interaction::topology'si; çekirdeğin topology_clean'i; cad.entities.edit topology, ADR 0148",
+  "covers": ["UX-01", "UX-06", "CMD-04"],
+  "document": "topology.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.125 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.0001,
+  "steps": [
+    { "move": [-5, -15] },
+    { "run": "tool.topology", "note": "Seçim yok: görünen ve kilitsiz katmanlardaki on nesne düzeltilir, kilitli yol ve nokta dayanaktır. 0,01 m'de yalnız 6 mm ötedeki uç birleşir.", "expect": { "tool": "topology", "options": ["T", "U", "K", "Z", "B", "Enter"], "prompt": "Topolojik temizlik: 1 uç birleşir; en büyük kayma 0.006 m [Tolerans (T): 0.010 m / Uçlar (U): açık / Köşeler (K): kapalı / Uzat (Z): açık / Buda (B): açık / Uygula (Enter)]", "logged": ["Topolojik temizlik: 1 uç birleşir; en büyük kayma 0.006 m. Enter ile uygulayın (bütün çizim: 10 nesne, 2 dayanak)."], "entities": 12 } },
+    { "move": [-4, -14], "note": "İmlecin yanındaki etiket bulunanları sayar." },
+    { "text": "0.05" },
+    { "key": "Enter", "note": "Yazılan sayı toleranstır: önizleme yenilenir, bir şey yazılmaz.", "expect": { "tool": "topology", "prompt": "Topolojik temizlik: 4 uç birleşir, 1 uç uzar, 1 uç kısalır; en büyük kayma 0.030 m [Tolerans (T): 0.050 m / Uçlar (U): açık / Köşeler (K): kapalı / Uzat (Z): açık / Buda (B): açık / Uygula (Enter)]", "logged": ["Topolojik temizlik: 4 uç birleşir, 1 uç uzar, 1 uç kısalır; en büyük kayma 0.030 m."], "canUndo": false } },
+    { "key": "Z", "note": "Uzat kapanır: yola varmayan uç, uzamak yerine yolun en yakın noktasına taşınır.", "expect": { "prompt": "Topolojik temizlik: 4 uç birleşir, 1 uç kısalır, 1 uç kenara taşınır; en büyük kayma 0.030 m [Tolerans (T): 0.050 m / Uçlar (U): açık / Köşeler (K): kapalı / Uzat (Z): kapalı / Buda (B): açık / Uygula (Enter)]", "logged": ["Topolojik temizlik: 4 uç birleşir, 1 uç kısalır, 1 uç kenara taşınır; en büyük kayma 0.030 m."] } },
+    { "key": "Z", "note": "Uzat yeniden açık." },
+    { "key": "K", "note": "Köşeler açılır: komşu alanın 4 ve 3 mm ötedeki iki köşesi öbür alanın köşelerine gider.", "expect": { "prompt": "Topolojik temizlik: 4 uç birleşir, 2 köşe birleşir, 1 uç uzar, 1 uç kısalır; en büyük kayma 0.030 m [Tolerans (T): 0.050 m / Uçlar (U): açık / Köşeler (K): açık / Uzat (Z): açık / Buda (B): açık / Uygula (Enter)]", "logged": ["Topolojik temizlik: 4 uç birleşir, 2 köşe birleşir, 1 uç uzar, 1 uç kısalır; en büyük kayma 0.030 m."] } },
+    { "shot": "topoloji-onizleme" },
+    { "key": "Enter", "note": "Tek adımda yazılır: uçlar var olan köşelerde, kısa uç yolda, taşan uç kesişimde; alanın köşeleri komşusununkilerde.", "expect": { "tool": "select", "log": "success", "logged": ["Topolojik temizlik: 4 uç birleşti, 2 köşe birleşti, 1 uç uzadı, 1 uç kısaldı; 7 nesne değişti, en büyük kayma 0.030 m."], "entities": 12, "canUndo": true, "objects": [{ "id": 1, "kind": "line", "points": [[-20, 0], [0, 0]] }, { "id": 2, "kind": "line", "points": [[0, 0], [20, 0]] }, { "id": 4, "kind": "line", "points": [[-20, 15], [20, 15]] }, { "id": 5, "kind": "line", "points": [[20, 0], [20, 15]] }, { "id": 6, "kind": "line", "points": [[0, 15], [0, 0]] }, { "id": 7, "kind": "line", "points": [[-10, 0], [-10, 15]] }, { "id": 8, "kind": "line", "points": [[10, 0], [10, -10]] }, { "id": 9, "kind": "line", "points": [[-25, -10], [25, -10]] }, { "id": 12, "kind": "polygon", "points": [[9, 4], [14, 4], [14, 10], [9, 10]] }] } },
+    { "shot": "topoloji-sonuc" },
+    { "key": "Ctrl+Z", "note": "Tek adımda geri alınır.", "expect": { "canRedo": true, "objects": [{ "id": 2, "kind": "line", "points": [[0.006, 0], [20, 0]] }, { "id": 8, "kind": "line", "points": [[10, 0], [10, -9.97]] }, { "id": 12, "kind": "polygon", "points": [[9.004, 4], [14, 4], [14, 10], [9.003, 10]] }] } },
+    { "run": "tool.topology", "note": "Tolerans ve işler oturum boyunca hatırlanır.", "expect": { "prompt": "Topolojik temizlik: 4 uç birleşir, 2 köşe birleşir, 1 uç uzar, 1 uç kısalır; en büyük kayma 0.030 m [Tolerans (T): 0.050 m / Uçlar (U): açık / Köşeler (K): açık / Uzat (Z): açık / Buda (B): açık / Uygula (Enter)]", "logged": ["Topolojik temizlik: 4 uç birleşir, 2 köşe birleşir, 1 uç uzar, 1 uç kısalır; en büyük kayma 0.030 m. Enter ile uygulayın (bütün çizim: 10 nesne, 2 dayanak)."] } },
+    { "key": "K", "note": "Köşeler kapanır: bellek başladığı gibi." },
+    { "key": "T", "note": "T toleransı sorar.", "expect": { "options": [], "prompt": "Topolojik temizlik: toleransı yazın, metre (Enter: 0.050 m)" } },
+    { "text": "0.01" },
+    { "key": "Enter", "note": "Tolerans 0,01 m'ye döner.", "expect": { "options": ["T", "U", "K", "Z", "B", "Enter"], "prompt": "Topolojik temizlik: 1 uç birleşir; en büyük kayma 0.006 m [Tolerans (T): 0.010 m / Uçlar (U): açık / Köşeler (K): kapalı / Uzat (Z): açık / Buda (B): açık / Uygula (Enter)]", "logged": ["Topolojik temizlik: 1 uç birleşir; en büyük kayma 0.006 m."] } },
+    { "key": "Esc", "note": "Esc araçtan çıkar; çizim değişmez.", "expect": { "tool": "select", "entities": 12, "objects": [{ "id": 2, "kind": "line", "points": [[0.006, 0], [20, 0]] }] } }
+  ]
+}

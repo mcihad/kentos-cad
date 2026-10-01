@@ -74,6 +74,8 @@ export const ICONS = {
   simplify: `<path d="m3 12 2.2-2.6 1.6 1.4 2.4-3.3 1.6 1.2 2.2-3 1.6 1.1L17 5.5" stroke-dasharray="1.5 1.3"/><path d="M3 16 17 8.5"/>${grip(3, 16)}${grip(17, 8.5)}`,
   split: `<path d="M3 14.5 7.3 12.2M9.2 11.2l1.6-.8M12.7 9.4 17 7.1"/><path d="m7.4 9.4 1.9 4M10.6 7.6l1.9 4" stroke-width="1.1"/>${grip(3, 14.5)}${grip(17, 7.1)}`,
   cleanup: '<path d="M14.5 2.8 10.4 9"/><path d="M6.4 9.4h7.2l1.2 7.1H5.2z"/><path d="M8.1 12.2v4.3M10 12.2v4.3M11.9 12.2v4.3"/>',
+  // Topolojik temizlik (docs/adr/0148): three line ends brought to one node.
+  topology: '<circle cx="10" cy="10.5" r="2.3"/><path d="M10 2.8v5.4M3.2 16.6l5.1-4.6M16.8 16.6l-5.1-4.6"/><circle cx="10" cy="10.5" r=".9" fill="currentColor" stroke="none"/>',
   matchProperties: '<path d="m11.4 3.2 5.4 5.4-5.1 5.1-5.4-5.4z"/><path d="M6.3 8.3 3.2 16.8l8.5-3.1"/><path d="M4.6 12.9 7 15.4"/>',
   setElevation: `<path d="M3 16.5h14"/><path d="M10 13.5V3.5"/><path d="m7 6.5 3-3 3 3"/><path d="M13.5 13.5h3M13.5 10.5h2" stroke-width="1.1"/>${grip(10, 13.5)}`,
   sector: `<path d="M5 15.5V4.5a11 11 0 0 1 11 11z" fill="currentColor" fill-opacity=".14"/>${grip(5, 15.5)}${grip(5, 4.5)}${grip(16, 15.5)}`,
