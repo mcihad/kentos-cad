@@ -3,6 +3,7 @@
 //! Uygulama yalnızca durumu, mesajları, komut yorumlayıcısını ve örnek
 //! veriyi tutar; arayüzün tamamı kentos-ui bileşenleriyle kurulur.
 
+mod ai;
 mod app;
 mod command;
 mod gallery;

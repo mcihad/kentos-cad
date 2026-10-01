@@ -100,6 +100,7 @@ impl Showcase {
                         Page::Layout,
                         Page::Inputs,
                         Page::Python,
+                        Page::Ai,
                         Page::Feedback,
                     ],
                 ))

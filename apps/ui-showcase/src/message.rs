@@ -25,6 +25,7 @@ use crate::table::Column;
 /// Kullanıcının yaptığı her şey.
 #[derive(Debug, Clone)]
 pub enum Message {
+    AiStudio(crate::ai::Event),
     PythonStudio(crate::python::Event),
     ModelSpace(model_space::Event),
     ToolSelected(Tool),

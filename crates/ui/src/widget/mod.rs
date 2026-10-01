@@ -9,6 +9,7 @@
 //! Hepsi uygulamanın `Message` türünden bağımsızdır ve renklerini temadan
 //! okur.
 
+pub mod ai;
 mod animated_surface;
 pub mod app_menu;
 pub mod assets;
@@ -74,6 +75,10 @@ pub mod wizard;
 
 mod tip;
 
+pub use ai::{
+    AiActivity, AiContent, AiConversation, AiMessage, AiPrompt, AiQuestion, AiStream, AiThinking,
+    AiToolCall,
+};
 pub use app_menu::AppMenu;
 pub use assets::AssetBrowser;
 pub use beside::{beside, beside_pointer};
