@@ -133,6 +133,7 @@
     "tool.toArea",
     "tool.toPolyline",
     "tool.boundary",
+    "tool.polygonize",
     "tool.filletAll",
     "tool.chamferAll",
     "tool.split",

@@ -25,7 +25,7 @@ Netcad bunu Topoloji › Otomatik Alan Kapat ve Obje Aktar ile yapar. ArcGIS Pro
 
 - **Seçim varsa:** seçimdeki çizgi işleri bölgeleri kapatır, seçimdeki yazılar ve noktalar etikettir.
 - **Seçim yoksa:** görünen katmanlardaki bütün çizgi işleri, yazılar ve noktalar.
-- **Çizgi işi:** İçine tıklayarak alan'ın kuralıyla (`isBoundaryKind`): nokta, yazı, ölçü ve tarama dışındaki her nesne. Bunlar çizgi, çoklu çizgi, yay, daire, elips, eğri ve var olan alanların sınırlarıdır. Elips ve eğri 0,1 mm'lik kirişleriyle girer (ADR 0149).
+- **Çizgi işi:** çizgi, çoklu çizgi, yay, daire, elips, eğri ve var olan alanların sınırları. Elips ve eğri 0,1 mm'lik kirişleriyle girer (ADR 0149). Yardımcı çizgi, ışın, kılavuz ve blok yerleştirmesi bölge kapatmaz.
 - **Etiket:**
   - yazı: değeri metni (baştaki ve sondaki boşluklar atılır), yeri kutusunun ortası (projenin çizim yazı tipiyle, hizasıyla; ADR 0145);
   - nokta: değeri etiketi, yeri kendisi. Etiketi olmayan nokta etiket değildir.
@@ -76,7 +76,7 @@ Netcad bunu Topoloji › Otomatik Alan Kapat ve Obje Aktar ile yapar. ArcGIS Pro
 ### 8. Araç ve arayüz
 
 - **Akış:** araç açılınca girdiyi alır (§2) ve önizlemeyi hemen gösterir.
-  - A adaları açıp kapatır; Ö öznitelik adını sorar.
+  - A adaları açıp kapatır; Ö (Ö tuşu olmayan klavyede O) öznitelik adını imlecin yanındaki yazı kutusunda sorar (Yazı'nın ve Kılavuz'un kutusu: çizimin üstünde yazılan harfler komut adı sayılmaz); eski ad seçili gelir, Enter yazılanı, Esc eskisini tutar.
   - Enter, Uygula ya da hızlı sağ tık yazar ve araçtan çıkar; Esc çıkar.
   - Yazılacak alan yoksa söyler, araçta kalır.
 - **Önizleme:**
@@ -104,6 +104,14 @@ Netcad bunu Topoloji › Otomatik Alan Kapat ve Obje Aktar ile yapar. ArcGIS Pro
    - **Başarım:** TM koordinatlarında 202 uzun çizgilik 100 × 100 parsellik ağ, dörtte biri var olan alan, 10 000 etiketle 0,24 saniyede (release, `tests/polygonize.rs`'in elle çalıştırılan testi).
 2. **Komut:** `CreateOperation::Polygonize`; iki işleyici, ortak durum, katalog ve Python SDK'sı. *(1 Ekim: tamam. Sözleşmede `polygonize` işlemi; adım adı iki işleyicide “Toplu alan”. Ortak durum (`create_command_cases.py`): iki bölge tek adımda, birincisi `Ad` özniteliği ve köşe kotlarıyla, ikincisi deliğiyle; geri alma ve yineleme adıyla; masaüstü, web ve Python SDK'sı geçer. TypeScript tipi, katalog ve SDK'nın tipleri üretildi.)*
 3. **Araç ve arayüz:** iki platformda araç, şerit, takma adlar, önizleme, ortak iz (`fixtures/interaction/v1/polygonize.json`), testler ve resimler.
+
+   *(1 Ekim: tamam.)*
+   - **Araç:** web `tools/polygonizeTool.ts`, masaüstü `kentos_interaction::polygonize`. Çizgi işi ve etiketler çekirdeğe çizim sırasıyla gider; yazının yeri kutusunun (`textBox` / `TextPlace::outline`) dört köşesinin ortalaması. Kotlar `carryElevations` ile; alanlar `cad.entities.create`'e (`polygonize`) etkin katmanla, geçerli renk ve kalınlıkla, tek etiketlinin değeri özniteliğiyle.
+   - **Çizgi işi** çekirdekte de dar tutuldu: çizgi, çoklu çizgi, yay, daire, elips, eğri ve alan (yardımcı çizgi, ışın, kılavuz ve blok bölge kapatmaz).
+   - **Bellek:** Adalar ve öznitelik adı oturum boyunca (web'de statik alanlar, masaüstünde `Memory`; ad en çok 60 harf).
+   - **Şerit:** Değiştir › Oluştur ve çevir, İçine tıklayarak alan'ın yanında, kendi simgesiyle (düzensiz parsel ağı, iki bölmesi dolgulu, numaraları noktayla).
+   - **Sınama:** iki platformda aynı durumlar (`polygonizeTool.test.ts`, `tests/polygonize.rs`: dört parsellik ada, ayrıntılar ve ad, var olan alan ve seçim, çizgisiz girdi, kot, etiketin değeri); ortak iz `polygonize.json` üç varyantta iki platformda geçer.
+   - **Resimler:** `kentos-cad kullan polygonize` ve `e2e:use polygonize` (önizleme, sonuç), şeritte yeri (`tools_screens`'in `serit-degistir`'i).
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
 

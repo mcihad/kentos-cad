@@ -1,0 +1,281 @@
+{
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Etkileşim izi: Toplu alan",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "workspace": "hybrid",
+    "drawingFont": "barlow"
+  },
+  "origin": {
+    "x": 487000,
+    "y": 4420000
+  },
+  "layers": [
+    {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#3E63DD",
+        "lineType": "continuous",
+        "lineWeight": 0.35
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+    {
+      "kind": "polyline",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 487000,
+          "y": 4420000
+        },
+        {
+          "x": 487060,
+          "y": 4420000
+        },
+        {
+          "x": 487060,
+          "y": 4420030
+        },
+        {
+          "x": 487000,
+          "y": 4420030
+        },
+        {
+          "x": 487000,
+          "y": 4420000
+        }
+      ]
+    },
+    {
+      "kind": "line",
+      "id": 2,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+        "x": 487020,
+        "y": 4420000
+      },
+      "b": {
+        "x": 487020,
+        "y": 4420030
+      }
+    },
+    {
+      "kind": "line",
+      "id": 3,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+        "x": 487040,
+        "y": 4420000
+      },
+      "b": {
+        "x": 487040,
+        "y": 4420030
+      }
+    },
+    {
+      "kind": "line",
+      "id": 4,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+        "x": 487000,
+        "y": 4420015
+      },
+      "b": {
+        "x": 487060,
+        "y": 4420015
+      }
+    },
+    {
+      "kind": "polyline",
+      "id": 5,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 487005,
+          "y": 4420019
+        },
+        {
+          "x": 487013,
+          "y": 4420019
+        },
+        {
+          "x": 487013,
+          "y": 4420026
+        },
+        {
+          "x": 487005,
+          "y": 4420026
+        },
+        {
+          "x": 487005,
+          "y": 4420019
+        }
+      ]
+    },
+    {
+      "kind": "line",
+      "id": 6,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+        "x": 487062,
+        "y": 4420010
+      },
+      "b": {
+        "x": 487070,
+        "y": 4420005
+      }
+    },
+    {
+      "kind": "text",
+      "id": 7,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+        "x": 487006,
+        "y": 4420006
+      },
+      "text": "101/1",
+      "height": 2,
+      "rotation": 0
+    },
+    {
+      "kind": "text",
+      "id": 8,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+        "x": 487026,
+        "y": 4420006
+      },
+      "text": "101/2",
+      "height": 2,
+      "rotation": 0
+    },
+    {
+      "kind": "text",
+      "id": 9,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+        "x": 487046,
+        "y": 4420006
+      },
+      "text": "101/3",
+      "height": 2,
+      "rotation": 0
+    },
+    {
+      "kind": "text",
+      "id": 10,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+        "x": 487001,
+        "y": 4420016.3
+      },
+      "text": "101/4",
+      "height": 2,
+      "rotation": 0
+    },
+    {
+      "kind": "text",
+      "id": 11,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+        "x": 487026,
+        "y": 4420024
+      },
+      "text": "101/5",
+      "height": 2,
+      "rotation": 0
+    },
+    {
+      "kind": "text",
+      "id": 12,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+        "x": 487026,
+        "y": 4420019
+      },
+      "text": "523.45",
+      "height": 2,
+      "rotation": 0
+    },
+    {
+      "kind": "point",
+      "id": 13,
+      "layerId": "cizim",
+      "attrs": {},
+      "label": "S1",
+      "p": {
+        "x": 487040,
+        "y": 4420008
+      }
+    },
+    {
+      "kind": "polygon",
+      "id": 14,
+      "layerId": "parsel",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 487040,
+          "y": 4420000
+        },
+        {
+          "x": 487060,
+          "y": 4420000
+        },
+        {
+          "x": 487060,
+          "y": 4420015
+        },
+        {
+          "x": 487040,
+          "y": 4420015
+        }
+      ]
+    }
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

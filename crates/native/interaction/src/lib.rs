@@ -73,6 +73,9 @@
 //! - docs/adr/0148: Topolojik temizlik ([`topology`]), which puts line work
 //!   and area outlines right within a typed tolerance through
 //!   `cad.entities.edit`;
+//! - docs/adr/0151: Toplu alan ([`polygonize`]), which makes every region
+//!   the line work closes an area, its label the attribute, through
+//!   `cad.entities.create`;
 //! - the geometry store kept in step with the document ([`Spatial`]): what
 //!   a click picks, a box selects and a point snaps to;
 //! - [`Format`]: numbers as the web shows them in messages and the tag.
@@ -143,6 +146,7 @@ pub mod pick;
 pub mod pick_objects;
 pub mod point;
 pub mod point_calc;
+pub mod polygonize;
 mod points;
 pub mod polar;
 mod prompt;

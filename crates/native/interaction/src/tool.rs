@@ -411,6 +411,41 @@ pub struct Memory {
     /// (`TopologyTool.tolerance`, `.works`; docs/adr/0148 §3).
     pub topology_tolerance: f64,
     pub topology_works: kentos_geometry_core::ops::topology::TopoWorks,
+    /// Toplu alan's Adalar and the attribute its labels go to
+    /// (`PolygonizeTool.islands`, `.attribute`; docs/adr/0151 §3, §4).
+    pub polygonize_islands: bool,
+    pub polygonize_attribute: Name,
+}
+
+/// A short text kept in [`Memory`], which is `Copy`: at most
+/// [`Name::MAX_CHARS`] characters (an attribute's name).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Name {
+    len: u16,
+    bytes: [u8; Name::MAX_BYTES],
+}
+
+impl Name {
+    pub const MAX_CHARS: usize = 60;
+    const MAX_BYTES: usize = Self::MAX_CHARS * 4;
+
+    /// The text, or `None` when it is longer than [`Name::MAX_CHARS`] characters.
+    pub fn new(text: &str) -> Option<Self> {
+        if text.chars().count() > Self::MAX_CHARS {
+            return None;
+        }
+        let mut bytes = [0; Self::MAX_BYTES];
+        bytes[..text.len()].copy_from_slice(text.as_bytes());
+        Some(Self {
+            len: text.len() as u16,
+            bytes,
+        })
+    }
+
+    pub fn as_str(&self) -> &str {
+        // Written from a `&str` in `new`: always UTF-8.
+        std::str::from_utf8(&self.bytes[..usize::from(self.len)]).unwrap_or_default()
+    }
 }
 
 /// A short list of numbers typed as one answer (Ara nokta's distances and
@@ -538,6 +573,11 @@ impl Default for Memory {
             block_mirror: false,
             topology_tolerance: crate::topology::FIRST_TOLERANCE,
             topology_works: crate::topology::FIRST_WORKS,
+            polygonize_islands: true,
+            polygonize_attribute: Name::new(crate::polygonize::FIRST_ATTRIBUTE).unwrap_or(Name {
+                len: 0,
+                bytes: [0; Name::MAX_BYTES],
+            }),
         }
     }
 }

@@ -1,0 +1,32 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "polygonize",
+  "title": "Toplu alan (ADR 0151 §8): seçim yokken bütün çizim okunur; altı parsellik adanın bölgeleri, numaraları içlerinde: altı alan yazılacak, ikisi etiketsiz, biri iki etiketli, bir etiket sınırda, var olan alan yinelenmez, iki uç boşta; Adalar (A) açılıp kapanır, Öznitelik (Ö) “Parsel” olur; Enter alanları etkin katmana tek adımda yazar, Ctrl+Z geri alır; bellek başladığı gibi bırakılır",
+  "source": "Web'in PolygonizeTool'u (polygonizeTool.ts), masaüstünün kentos_interaction::polygonize'ı; çekirdeğin polygonize'ı; cad.entities.create polygonize, ADR 0151",
+  "covers": ["UX-01", "UX-06", "CMD-04"],
+  "document": "polygonize.kcad",
+  "view": { "center": [487035, 4420015], "metresPerPixel": 0.25 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.25,
+  "steps": [
+    { "move": [-30, -25] },
+    { "run": "tool.polygonize", "note": "Seçim yok: yedi çizgi işi ve yedi etiket okunur. Sağ alttaki parsel zaten alan; yapı kendi bölgesidir; S1 noktası çizginin üstündedir; çerçevenin dışındaki çizginin iki ucu boştadır.", "expect": { "tool": "polygonize", "options": ["A", "Ö", "Enter"], "prompt": "Toplu alan: 6 alan; 2 etiketsiz, 1 çok etiketli, 1 etiket sınırda, 1 zaten alan, 2 uç boşta [Adalar (A): açık / Öznitelik (Ö): Ad / Uygula (Enter)]", "logged": ["Toplu alan: 6 alan; 2 etiketsiz, 1 çok etiketli, 1 etiket sınırda, 1 zaten alan, 2 uç boşta. Enter ile uygulayın (bütün çizim: 7 çizgi, 7 etiket).", "Toplu alan: 2 çizgi ucu boşta; kapanmayan bölge alan olmaz. Önce Topolojik temizlik'i deneyin.", "Toplu alan: bir bölgede 2 etiket: “101/5”, “523.45”.", "Toplu alan: “S1” etiketi bir sınırın üstünde; hiçbir bölgeye verilmedi."], "entities": 14 } },
+    { "move": [-29, -24], "note": "İmlecin yanındaki etiket bulunanları sayar." },
+    { "key": "A", "note": "Adalar kapanır: sol üstteki parsel yapıyı da kapsar; bulgunun sayıları değişmez.", "expect": { "prompt": "Toplu alan: 6 alan; 2 etiketsiz, 1 çok etiketli, 1 etiket sınırda, 1 zaten alan, 2 uç boşta [Adalar (A): kapalı / Öznitelik (Ö): Ad / Uygula (Enter)]" } },
+    { "key": "A", "note": "Adalar yeniden açık." },
+    { "key": "O", "note": "Ö (Ö tuşu olmayan klavyede O) özniteliğin adını imlecin yanındaki yazı kutusunda sorar; eski ad seçili.", "expect": { "options": [], "prompt": "Toplu alan: öznitelik adını yazın (şimdi: Ad)" } },
+    { "text": "Parsel" },
+    { "key": "Enter", "note": "Yazılan, eskisinin yerine özniteliğin adıdır.", "expect": { "options": ["A", "Ö", "Enter"], "prompt": "Toplu alan: 6 alan; 2 etiketsiz, 1 çok etiketli, 1 etiket sınırda, 1 zaten alan, 2 uç boşta [Adalar (A): açık / Öznitelik (Ö): Parsel / Uygula (Enter)]" } },
+    { "shot": "toplu-alan-onizleme" },
+    { "key": "Enter", "note": "Altı alan etkin katmana (Parsel) tek adımda yazılır; üçüne numarası “Parsel” özniteliğiyle.", "expect": { "tool": "select", "log": "success", "logged": ["Toplu alan: 6 alan oluşturuldu; “Parsel” 3 alana yazıldı. Özniteliği boş kalan: 2 etiketsiz, 1 çok etiketli."], "entities": 20, "canUndo": true } },
+    { "shot": "toplu-alan-sonuc" },
+    { "key": "Ctrl+Z", "note": "Tek adımda geri alınır.", "expect": { "entities": 14, "canRedo": true } },
+    { "run": "tool.polygonize", "note": "Adalar ve özniteliğin adı oturum boyunca hatırlanır.", "expect": { "prompt": "Toplu alan: 6 alan; 2 etiketsiz, 1 çok etiketli, 1 etiket sınırda, 1 zaten alan, 2 uç boşta [Adalar (A): açık / Öznitelik (Ö): Parsel / Uygula (Enter)]" } },
+    { "key": "O" },
+    { "text": "Ad" },
+    { "key": "Enter", "note": "Özniteliğin adı “Ad”a döner: bellek başladığı gibi.", "expect": { "prompt": "Toplu alan: 6 alan; 2 etiketsiz, 1 çok etiketli, 1 etiket sınırda, 1 zaten alan, 2 uç boşta [Adalar (A): açık / Öznitelik (Ö): Ad / Uygula (Enter)]" } },
+    { "key": "Esc", "note": "Esc araçtan çıkar; çizim değişmez.", "expect": { "tool": "select", "entities": 14 } }
+  ]
+}

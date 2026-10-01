@@ -212,6 +212,8 @@ pub const PORTED: &[&str] = &[
     "tool.toArea",
     "tool.toPolyline",
     "tool.boundary",
+    // Toplu alan: every region the line work closes, its label the attribute (polygonize.rs, docs/adr/0151).
+    "tool.polygonize",
     // Drawing and editing tools, phase 1 (docs/adr/0140): every corner at once, Parçala
     // with its three methods, direction, thinning, cleaning and property copying.
     "tool.filletAll",

@@ -57,8 +57,8 @@ use crate::vertex::{self, Vertex};
 use crate::{
     angle, area, between, block_define, block_insert, boundary, cleanup, construction, coordinate,
     dimension, dimension_chain, divide, donut, ellipse, hatch, leader, match_properties, meeting,
-    parallel, quick_dimension, revcloud, sector, select_circle, select_containing, select_fence,
-    set_elevation, spline, split, station_offset, text, text_file, topology,
+    parallel, polygonize, quick_dimension, revcloud, sector, select_circle, select_containing,
+    select_fence, set_elevation, spline, split, station_offset, text, text_file, topology,
 };
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
@@ -158,6 +158,8 @@ pub const TOOLS: &[&str] = &[
     set_elevation::ID,
     // docs/adr/0148: Topolojik temizlik.
     topology::ID,
+    // docs/adr/0151: Toplu alan.
+    polygonize::ID,
 ];
 
 /// What a tool running over another one suspended (docs/adr/0083).
@@ -286,6 +288,7 @@ impl Session {
             select_containing::ID => Box::new(select_containing::SelectContaining::new()),
             set_elevation::ID => Box::new(set_elevation::SetElevation::tool()),
             topology::ID => Box::new(crate::topology::Topology::new()),
+            polygonize::ID => Box::new(crate::polygonize::Polygonize::new()),
             _ => return false,
         };
         // Kaydır is not repeated: Enter while panning repeats the command

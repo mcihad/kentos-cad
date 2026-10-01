@@ -133,6 +133,8 @@ export const ICONS = {
   revcloud: '<path d="M5 8.2a2.2 2.2 0 0 1 3.5-2 2.4 2.4 0 0 1 4-.2 2.2 2.2 0 0 1 3.4 1.9 2.2 2.2 0 0 1 .3 4.2 2.3 2.3 0 0 1-3 3 2.4 2.4 0 0 1-4 .3 2.3 2.3 0 0 1-3.6-1.9A2.2 2.2 0 0 1 5 8.2z"/>',
   // Alan işlemleri
   boundary: '<path d="M3 15h14M5 17 11 3M9 3l6 14"/><path d="M5.86 15h8.28L10 5.33z" fill="currentColor" fill-opacity=".3" stroke="none"/><circle cx="10" cy="11.8" r="1" fill="currentColor" stroke="none"/>',
+  // Toplu alan (docs/adr/0151): a parcel network's cells made areas, each with its number.
+  polygonize: '<path d="M2.5 4.5 17.5 3v14L2.5 16zM9 3.8 10.5 16.5M2.5 10.5l15-1"/><path d="M2.5 4.5 9 3.8l.66 6.1-7.16.6zM10.5 16.5l7 .5v-7.5l-7.6.5z" fill="currentColor" fill-opacity=".3" stroke="none"/><circle cx="5.8" cy="7.3" r=".95" fill="currentColor" stroke="none"/><circle cx="13.8" cy="13.2" r=".95" fill="currentColor" stroke="none"/><circle cx="13.6" cy="6.4" r=".95" fill="currentColor" stroke="none"/>',
   toArea: '<path d="m3.8 8 6-4.5 6.5 3.5-1.8 9H5.6z" fill="currentColor" fill-opacity=".3" stroke-dasharray="2.2 1.5"/>',
   areaUnion: '<path d="M3 3h9v5h5v9H8v-5H3z" fill="currentColor" fill-opacity=".22"/>',
   areaIntersect: '<path d="M3 3h9v9H3zM8 8h9v9H8z" stroke-dasharray="2 1.6"/><path d="M8 8h4v4H8z" fill="currentColor" fill-opacity=".55"/>',

@@ -384,7 +384,7 @@ export const insidePolygon = op<(e: Extract<EntityGeometry, { kind: 'polyline' |
  * Rotated box of a text: its letters' advances measured in the drawing typeface
  * (`font`, Barlow without one; geometry-core `text`), one line tall.
  */
-export const textBox = op<(e: { p: Vec2; text: string; height: number; rotation: number; font?: string }) => Vec2[]>('textBox');
+export const textBox = op<(e: { p: Vec2; text: string; height: number; rotation: number; align?: TextAlign; widthFactor?: number; font?: string }) => Vec2[]>('textBox');
 /**
  * Where a text's `p` is on it (the core's `TextAlign::along` and `up`, docs/adr/0145): [a share of its width along
  * it, a share of its height over its baseline]; [0, 0] without an alignment.

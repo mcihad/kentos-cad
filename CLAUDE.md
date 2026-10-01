@@ -28,6 +28,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   ölçülendirme: hizalı, doğrusal, açı, yarıçap ve çap (ADR 0061), koordinat, yay uzunluğu, kırıklı yarıçap, semt ve eğim, Açı'nın yaydan ve daireden yolları, döndürülmüş doğrusal, ölçü değerinin zemini, Hızlı ölçü; DXF'in koordinat ölçüsü, ARC_DIMENSION'ı ve LARGE_RADIAL_DIMENSION'ı gelir ve gider, semt ve eğim hizalı ölçü olarak KentOS verisiyle (ADR 0147); tarama: kapalı nesneyle ya da çizgilerle, adalarıyla (ADR 0062); köşe kotu: çizginin, çoklu çizginin ve alanın köşe kotları, Kot ver, Öznitelikler'in kot ve 3B uzunluk satırları (ADR 0142); çok parçalı alan: parçalar ve delikleri, Parçaları birleştir, Parçalara ayır, alan işlemlerinde Tek nesne (ADR 0143); blok: Blok oluştur, Blok ekle, Bloklar paneli, Blok öznitelikleri penceresi, Öznitelikler'de yerleştirme ve blok öznitelikleri, Patlat; DXF'in blokları tanım ve yerleştirme olarak gelir ve gider, öznitelikleri ATTDEF ve ATTRIB olarak, “Blokları patlat” seçeneğiyle (ADR 0144); yazı ekleri: yazının ve öznitelik tanımının on iki noktalı hizası ve genişlik çarpanı, yazının zemini, Yazı'nın Hiza, Genişlik, Zemin ve Artır seçenekleri, Okunur yap, Bul ve değiştir, Metin dosyası yerleştir; DXF'in 72/73'ü, 41'i, MTEXT'in yerleşim noktası ve zemini, NCZ'nin çapaları tahminsiz (ADR 0145); kılavuz: ok, kırık çizgi, kol ve not tek nesne, Kılavuz aracı (Ok, Yükseklik, Zemin), Öznitelikler'in Kılavuz bölümü, notun yerinde düzenlenmesi; DXF'in LEADER'ı bağlı MTEXT notuyla ve MULTILEADER gelir, kılavuz LEADER ve MTEXT olarak gider (ADR 0146);
   alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine tıklayarak alan (ADR 0065);
   topolojik temizlik: uçlar ve köşeler var olan köşede birleşir, kısa uç uzar, taşan uç budanır, yazılan toleransla, önizlemeli tek adım (ADR 0148);
+  toplu alan: çizgilerin kapattığı bütün bölgeler tek adımda alan olur, içteki yazı ya da adlı nokta özniteliği; etiketsiz, çok etiketli bölgeler ve boşta uçlar söylenir (ADR 0151);
   mesafe ölç, alan hesapla ve parsel oluştur (ADR 0067); seçili nesnelerin tutamaçları ve üzerine gelme kartı (ADR 0068);
   Hesap pencereleri: poligon hesabı, kutupsal alım, önden ve geriden kestirme, aplikasyon (ADR 0070, 0071);
   İşlemler: dört yerleşik araç ve Parsel ölçü yazıları modeli, tanımdan üretilen penceresiyle (ADR 0084);
@@ -567,9 +568,9 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   `topology` işlemi; Topolojik temizlik aracı (Değiştir › Nesne ▾; tolerans, Uçlar, Köşeler, Uzat, Buda; önizleme ve
   imlecin yanında sayılar; ortak iz `topology.json`).
 - Sürmekte: TODOS.md §16'nın sırası (sahibin kararı, 1 Ekim): önce hibrit (§16.0), sonra CAD (§16.1), sonra CBS (§16.2).
-  Şimdi `HYB-02` çizgi ağından toplu alan ([ADR 0151](docs/adr/0151-polygonize.md)): 1. adım (çekirdek `ops::polygonize`,
-  bağımsız başvuru `polygonize_cases.py`, 58 ortak durum) ve 2. adım (`cad.entities.create`'in `polygonize` işlemi)
-  tamam; sıradaki 3: araç ve arayüz iki platformda. PDF, yazdırma ve pafta çıktısı (§16.4) en
+  `HYB-02` çizgi ağından toplu alan ([ADR 0151](docs/adr/0151-polygonize.md)) bitti: çekirdek `ops::polygonize` (bağımsız
+  başvuru `polygonize_cases.py`, 58 ortak durum), `cad.entities.create`'in `polygonize` işlemi, Toplu alan aracı iki
+  platformda (ortak iz `polygonize.json`). Sıradaki `HYB-03` ölçü noktası. PDF, yazdırma ve pafta çıktısı (§16.4) en
   sondadır, zamanını sahip söyleyecek. İşler ADR 0142–0148'deki gibi: önce ADR ve adımları, sonra adım adım iki platformda,
   ortak fixture'larla.
 - Bilinen açık: web `pnpm e2e` duman testinde üç test ADR 0143'ten önce de düşüyordu: “toolbox

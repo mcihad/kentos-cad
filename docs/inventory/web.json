@@ -19,14 +19,14 @@
   },
   "summary": {
     "commands": {
-      "total": 202,
-      "implemented": 189,
+      "total": 203,
+      "implemented": 190,
       "partial": 0,
       "pending": 13
     },
     "tools": {
-      "total": 86,
-      "implemented": 84,
+      "total": 87,
+      "implemented": 85,
       "partial": 0,
       "pending": 2
     },
@@ -74,19 +74,19 @@
     },
     "commandsWithoutPlace": [],
     "commandsWithoutTests": 62,
-    "commandsOnDesktop": 184,
+    "commandsOnDesktop": 185,
     "desktop": {
       "commands": {
-        "total": 202,
-        "implemented": 184,
+        "total": 203,
+        "implemented": 185,
         "partial": 0,
         "pending": 13,
         "none": 0,
         "n/a": 5
       },
       "tools": {
-        "total": 86,
-        "implemented": 84,
+        "total": 87,
+        "implemented": 85,
         "partial": 0,
         "pending": 2,
         "none": 0,
@@ -4783,6 +4783,39 @@
       ]
     },
     {
+      "id": "tool.polygonize",
+      "title": "Toplu alan",
+      "category": "Alan",
+      "icon": "polygonize",
+      "description": "Çizgilerin kapattığı bütün bölgeleri tek işlemde alan yapar; bölgenin içindeki yazı ya da adlı nokta alanın özniteliği olur. Etiketsiz, çok etiketli bölgeleri ve boşta kalan uçları söyler.",
+      "aliases": [
+        "TOPLUALAN",
+        "ALANKAPAT",
+        "POLYGONIZE"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Değiştir › Alan işlemleri › Oluştur ve çevir"
+      ],
+      "ribbon": [
+        "Değiştir › Oluştur ve çevir",
+        "Seçim › Oluştur ve çevir"
+      ],
+      "quickAccess": false,
+      "toolbox": true,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/polygonize.json"
+      ]
+    },
+    {
       "id": "tool.polyline",
       "title": "Çoklu çizgi",
       "category": "Çizim",
@@ -8416,6 +8449,32 @@
         "fixtures/interaction/v1/snap-polygon.json"
       ],
       "acceptance": "TODOS.md §5 kabul izi: polygon başlat → tıkla → 12 yaz → imleç yanındaki alan açılır ve “12” görünür → Enter → sonraki nokta → kapat → tek undo → redo → kaydet/aç. Web e2e ile native etkileşim fixture'ının ortak başvurusudur (UX-01, UX-04, UX-06). Otomatik: `fixtures/interaction/v1/polygon-accept.json`, web `pnpm e2e:interaction`, masaüstü `cargo test -p kentos-desktop traces` (ADR 0018, 0021)."
+    },
+    {
+      "id": "polygonize",
+      "label": "Toplu alan",
+      "icon": "polygonize",
+      "group": "area",
+      "section": "create",
+      "aliases": [
+        "TOPLUALAN",
+        "ALANKAPAT",
+        "POLYGONIZE"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 3,
+      "description": "Çizgilerin kapattığı bütün bölgeleri tek işlemde alan yapar; bölgenin içindeki yazı ya da adlı nokta alanın özniteliği olur. Etiketsiz, çok etiketli bölgeleri ve boşta kalan uçları söyler.",
+      "productCommand": "cad.entities.create",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/polygonize.json"
+      ]
     },
     {
       "id": "polyline",
@@ -15611,6 +15670,7 @@
                     "label": "Oluştur ve çevir",
                     "items": [
                       "tool.boundary",
+                      "tool.polygonize",
                       "tool.toArea",
                       "tool.toPolyline"
                     ]
@@ -17192,6 +17252,10 @@
                 "size": "large"
               },
               {
+                "command": "tool.polygonize",
+                "size": "small"
+              },
+              {
                 "command": "tool.toArea",
                 "size": "small"
               }
@@ -17921,6 +17985,10 @@
               {
                 "command": "tool.boundary",
                 "size": "large"
+              },
+              {
+                "command": "tool.polygonize",
+                "size": "small"
               },
               {
                 "command": "tool.toArea",
@@ -19370,6 +19438,10 @@
                   "size": "large"
                 },
                 {
+                  "command": "tool.polygonize",
+                  "size": "small"
+                },
+                {
                   "command": "tool.toArea",
                   "size": "small"
                 }
@@ -19897,6 +19969,10 @@
                 {
                   "command": "tool.boundary",
                   "size": "large"
+                },
+                {
+                  "command": "tool.polygonize",
+                  "size": "small"
                 },
                 {
                   "command": "tool.toArea",
@@ -20889,6 +20965,10 @@
                   "size": "large"
                 },
                 {
+                  "command": "tool.polygonize",
+                  "size": "small"
+                },
+                {
                   "command": "tool.toArea",
                   "size": "small"
                 }
@@ -21587,6 +21667,10 @@
                   "size": "large"
                 },
                 {
+                  "command": "tool.polygonize",
+                  "size": "small"
+                },
+                {
                   "command": "tool.toArea",
                   "size": "small"
                 }
@@ -21778,6 +21862,7 @@
     "donut": "<path d=\"M10 3.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 1 1 0-13zm0 3.5a3 3 0 1 0 0 6 3 3 0 1 0 0-6z\" fill=\"currentColor\" fill-opacity=\".35\" fill-rule=\"evenodd\"/>",
     "revcloud": "<path d=\"M5 8.2a2.2 2.2 0 0 1 3.5-2 2.4 2.4 0 0 1 4-.2 2.2 2.2 0 0 1 3.4 1.9 2.2 2.2 0 0 1 .3 4.2 2.3 2.3 0 0 1-3 3 2.4 2.4 0 0 1-4 .3 2.3 2.3 0 0 1-3.6-1.9A2.2 2.2 0 0 1 5 8.2z\"/>",
     "boundary": "<path d=\"M3 15h14M5 17 11 3M9 3l6 14\"/><path d=\"M5.86 15h8.28L10 5.33z\" fill=\"currentColor\" fill-opacity=\".3\" stroke=\"none\"/><circle cx=\"10\" cy=\"11.8\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/>",
+    "polygonize": "<path d=\"M2.5 4.5 17.5 3v14L2.5 16zM9 3.8 10.5 16.5M2.5 10.5l15-1\"/><path d=\"M2.5 4.5 9 3.8l.66 6.1-7.16.6zM10.5 16.5l7 .5v-7.5l-7.6.5z\" fill=\"currentColor\" fill-opacity=\".3\" stroke=\"none\"/><circle cx=\"5.8\" cy=\"7.3\" r=\".95\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"13.8\" cy=\"13.2\" r=\".95\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"13.6\" cy=\"6.4\" r=\".95\" fill=\"currentColor\" stroke=\"none\"/>",
     "toArea": "<path d=\"m3.8 8 6-4.5 6.5 3.5-1.8 9H5.6z\" fill=\"currentColor\" fill-opacity=\".3\" stroke-dasharray=\"2.2 1.5\"/>",
     "areaUnion": "<path d=\"M3 3h9v5h5v9H8v-5H3z\" fill=\"currentColor\" fill-opacity=\".22\"/>",
     "areaIntersect": "<path d=\"M3 3h9v9H3zM8 8h9v9H8z\" stroke-dasharray=\"2 1.6\"/><path d=\"M8 8h4v4H8z\" fill=\"currentColor\" fill-opacity=\".55\"/>",

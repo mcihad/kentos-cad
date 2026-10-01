@@ -63,12 +63,19 @@ crate::json_struct!(PolyResult {
     free_ends => "freeEnds"
 });
 
-/// Kinds whose line work bounds regions: fills, texts, dimensions and points
-/// do not (the web's `isBoundaryKind`).
+/// The kinds that close regions (docs/adr/0151 §2): lines, polylines,
+/// arcs, circles, ellipses, curves and areas; construction lines, leaders,
+/// blocks, texts, dimensions, hatches and points do not.
 fn bounds(shape: &Shape) -> bool {
-    !matches!(
+    matches!(
         shape,
-        Shape::Point { .. } | Shape::Text { .. } | Shape::Dimension { .. } | Shape::Hatch { .. }
+        Shape::Line { .. }
+            | Shape::Polyline { .. }
+            | Shape::Arc { .. }
+            | Shape::Circle { .. }
+            | Shape::Ellipse { .. }
+            | Shape::Spline { .. }
+            | Shape::Polygon { .. }
     )
 }
 
