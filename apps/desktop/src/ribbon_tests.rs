@@ -175,7 +175,7 @@ fn screens() {
             .settings
             .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
         app.apply_settings();
-        for tab in ["home", "modify", "view"] {
+        for tab in ["home", "draw", "modify", "view"] {
             app.tab = tab;
             for width in [1440.0, 1100.0] {
                 picture(&mut app, &format!("serit-{tab}-{width}{suffix}"), width);

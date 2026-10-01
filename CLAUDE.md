@@ -543,9 +543,11 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   platformda: sözleşme ve şema 8; yerleşim ve çizim; komutlar; Kılavuz aracı, Öznitelikler ve notun yerinde
   düzenlenmesi (ortak iz `leader.json`); DXF LEADER (bağlı MTEXT'iyle) ve MULTILEADER okuma, LEADER ve MTEXT yazma
   (`leaders.dxf`, `dxf-write/leaders` bağımsız denetimle). Arayüzdeki adı “Kılavuz”dur (sahibin seçimi).
-- Sıradaki, sahibin sırasıyla (ADR 0143 Bağlam): yeni ölçü türleri. Her biri `.kcad` şemasını değiştiren kendi
-  özelliği ve şema adımıyla gelir; önce ADR yazılır, adımlar ADR 0142–0146'daki gibi iki platformda, ortak
-  fixture'larla ilerler.
+- Sürmekte: yeni ölçü türleri ([ADR 0147](docs/adr/0147-new-dimension-kinds.md), TODOS.md `CAD-17`, `.kcad`
+  şema 9): Koordinat, Yay uzunluğu, Kırıklı yarıçap, Semt, Eğim; ölçü değerinin zemini; Açı'nın yaydan ve daireden
+  yolları, döndürülmüş doğrusal, Hızlı ölçü; hepsi şeritte Ölçülendirme ▾. Sahibin istekleri (1 Ekim): “Açı ölçüsü
+  de ekle”, “Başka ne ölçüler olabilirse ekle”. Sıradaki adım 1: sözleşme ve şema 9. Adımlar ADR 0142–0146'daki
+  gibi iki platformda, ortak fixture'larla ilerler.
 - Bilinen açık: web `pnpm e2e` duman testinde üç test ADR 0143'ten önce de düşüyordu: “toolbox
   shows every tool without scrolling” (79 araç kaydırma istiyor), nokta hesaplayıcının “yan nokta
   30/5” adımı ve “Layers panel: counts follow add, undo and redo”. Kök nedenleri araştırılmadı.
