@@ -36,7 +36,7 @@ fn aligned_takes_two_points_then_where_the_line_goes() {
     let mut b = Bench::new("dimension");
     assert_eq!(
         b.session.prompt().text(),
-        "Ölçü: hizalı ölçünün ilk noktasını belirtin [Doğrusal (D) / Açı (A) / Yarıçap (R) / Çap (Ç) / Koordinat (O) / Yay uzunluğu (U) / Kırıklı yarıçap (I) / Semt (T) / Eğim (E)]"
+        "Ölçü: hizalı ölçünün ilk noktasını belirtin [Zemin (Z): kapalı / Doğrusal (D) / Açı (A) / Yarıçap (R) / Çap (Ç) / Koordinat (O) / Yay uzunluğu (U) / Kırıklı yarıçap (I) / Semt (T) / Eğim (E)]"
     );
     b.click(0.0, 0.0);
     // A point is in: the style no longer changes.
@@ -45,7 +45,7 @@ fn aligned_takes_two_points_then_where_the_line_goes() {
     b.click(10.0, 0.0);
     assert_eq!(
         b.session.prompt().text(),
-        "Ölçü: ölçü çizgisinin yerini gösterin ya da mesafe yazın"
+        "Ölçü: ölçü çizgisinin yerini gösterin ya da mesafe yazın [Zemin (Z): kapalı]"
     );
     // Three metres left of the measured direction.
     b.click(5.0, 3.0);
@@ -81,13 +81,13 @@ fn linear_follows_where_the_line_goes_unless_locked() {
     assert!(b.type_text("D"));
     assert_eq!(
         b.session.prompt().text(),
-        "Ölçü: doğrusal ölçünün (ΔY / ΔX) ilk noktasını belirtin [Hizalı (H) / Açı (A) / Yarıçap (R) / Çap (Ç) / Koordinat (O) / Yay uzunluğu (U) / Kırıklı yarıçap (I) / Semt (T) / Eğim (E)]"
+        "Ölçü: doğrusal ölçünün (ΔY / ΔX) ilk noktasını belirtin [Zemin (Z): kapalı / Hizalı (H) / Açı (A) / Yarıçap (R) / Çap (Ç) / Koordinat (O) / Yay uzunluğu (U) / Kırıklı yarıçap (I) / Semt (T) / Eğim (E)]"
     );
     b.click(0.0, 0.0);
     b.click(10.0, 5.0);
     assert_eq!(
         b.session.prompt().text(),
-        "Ölçü: ölçü çizgisinin yerini gösterin ya da mesafe yazın [Yatay ΔY (Y) / Düşey ΔX (X) / Yön (O): imleçten]"
+        "Ölçü: ölçü çizgisinin yerini gösterin ya da mesafe yazın [Yatay ΔY (Y) / Düşey ΔX (X) / Yön (O): imleçten / Açı (A) / Zemin (Z): kapalı]"
     );
     // Above the measured points: horizontal, ΔY; the line through the cursor.
     b.click(5.0, 9.0);
@@ -99,7 +99,7 @@ fn linear_follows_where_the_line_goes_unless_locked() {
     b.click(0.0, 0.0);
     b.click(10.0, 5.0);
     assert!(b.type_text("X"));
-    assert!(b.session.prompt().text().ends_with("[Yatay ΔY (Y) / Düşey ΔX (X) / Yön (O): düşey]"));
+    assert!(b.session.prompt().text().ends_with("[Yatay ΔY (Y) / Düşey ΔX (X) / Yön (O): düşey / Açı (A) / Zemin (Z): kapalı]"));
     b.move_to(5.0, 9.0);
     assert!(b.type_text("3"));
     let d = newest(&b);
@@ -150,18 +150,22 @@ fn an_angle_between_two_edges_goes_where_the_arc_is_placed() {
     assert!(b.type_text("A"));
     assert_eq!(
         b.session.prompt().text(),
-        "Ölçü: açı ölçüsü için birinci kenara tıklayın [Köşeden (K) / Hizalı (H) / Doğrusal (D) / Yarıçap (R) / Çap (Ç) / Koordinat (O) / Yay uzunluğu (U) / Kırıklı yarıçap (I) / Semt (T) / Eğim (E)]"
+        "Ölçü: açı ölçüsü için bir kenara, yaya ya da daireye tıklayın [Köşeden (K) / Zemin (Z): kapalı / Hizalı (H) / Doğrusal (D) / Yarıçap (R) / Çap (Ç) / Koordinat (O) / Yay uzunluğu (U) / Kırıklı yarıçap (I) / Semt (T) / Eğim (E)]"
     );
-    // Nothing there, then a circle: no straight edge.
-    for [e, n] in [[0.0, -30.0], [20.0, -8.0]] {
-        b.click(e, n);
-        assert_eq!(
-            b.last_text(),
-            Some("Açının kenarı olarak düz bir çizgiye tıklayın; köşe noktasından ölçmek için “Köşeden” seçin.")
-        );
-    }
+    // Nothing there: what to pick is said.
+    b.click(0.0, -30.0);
+    assert_eq!(
+        b.last_text(),
+        Some("Açı için düz bir kenara, yaya ya da daireye tıklayın; köşe noktasından ölçmek için “Köşeden” seçin.")
+    );
     b.click(-10.0, 10.0);
     assert_eq!(b.session.prompt().text(), "Ölçü: ikinci kenara tıklayın");
+    // The second pick is a straight edge only: not the circle.
+    b.click(20.0, -8.0);
+    assert_eq!(
+        b.last_text(),
+        Some("Açının kenarı olarak düz bir çizgiye tıklayın; köşe noktasından ölçmek için “Köşeden” seçin.")
+    );
     // Line 2 runs beside line 1.
     b.click(-16.0, -12.0);
     assert_eq!(b.last_text(), Some("Kenarlar paralel; aralarında açı yok."));
@@ -172,7 +176,7 @@ fn an_angle_between_two_edges_goes_where_the_arc_is_placed() {
     assert_eq!(b.selection.hover(), None);
     assert_eq!(
         b.session.prompt().text(),
-        "Ölçü: yayın yerini gösterin ya da yarıçap yazın"
+        "Ölçü: yayın yerini gösterin ya da yarıçap yazın [Zemin (Z): kapalı]"
     );
     // Up and left of where the lines cross, (24, 10): the quarter between
     // the side (up) and line 1 (left), each arm as far as it was clicked.
@@ -195,7 +199,7 @@ fn an_angle_from_its_vertex_takes_a_typed_radius_without_its_sign() {
     assert!(b.type_text("K"));
     assert_eq!(
         b.session.prompt().text(),
-        "Ölçü: açının köşesini gösterin [Kenarlardan (K) / Hizalı (H) / Doğrusal (D) / Yarıçap (R) / Çap (Ç) / Koordinat (O) / Yay uzunluğu (U) / Kırıklı yarıçap (I) / Semt (T) / Eğim (E)]"
+        "Ölçü: açının köşesini gösterin [Kenarlardan (K) / Zemin (Z): kapalı / Hizalı (H) / Doğrusal (D) / Yarıçap (R) / Çap (Ç) / Koordinat (O) / Yay uzunluğu (U) / Kırıklı yarıçap (I) / Semt (T) / Eğim (E)]"
     );
     b.click(0.0, 0.0);
     assert_eq!(b.session.prompt().text(), "Ölçü: birinci kolun üzerinde bir nokta gösterin");
@@ -204,7 +208,7 @@ fn an_angle_from_its_vertex_takes_a_typed_radius_without_its_sign() {
     b.click(0.0, 10.0);
     assert_eq!(
         b.session.prompt().text(),
-        "Ölçü: yayın yerini gösterin ya da yarıçap yazın"
+        "Ölçü: yayın yerini gösterin ya da yarıçap yazın [Zemin (Z): kapalı]"
     );
     // Between the arms, counter-clockwise from the first.
     b.move_to(3.0, 3.0);
@@ -231,7 +235,7 @@ fn radius_and_diameter_pick_a_circle_and_take_no_number() {
     assert!(b.type_text("R"));
     assert_eq!(
         b.session.prompt().text(),
-        "Ölçü: yarıçapı ölçülecek daireye ya da yaya tıklayın [Hizalı (H) / Doğrusal (D) / Açı (A) / Çap (Ç) / Koordinat (O) / Yay uzunluğu (U) / Kırıklı yarıçap (I) / Semt (T) / Eğim (E)]"
+        "Ölçü: yarıçapı ölçülecek daireye ya da yaya tıklayın [Zemin (Z): kapalı / Hizalı (H) / Doğrusal (D) / Açı (A) / Çap (Ç) / Koordinat (O) / Yay uzunluğu (U) / Kırıklı yarıçap (I) / Semt (T) / Eğim (E)]"
     );
     b.click(-10.0, 10.0);
     assert_eq!(
@@ -241,7 +245,7 @@ fn radius_and_diameter_pick_a_circle_and_take_no_number() {
     b.click(20.0, -8.0);
     assert_eq!(
         b.session.prompt().text(),
-        "Ölçü: ölçünün doğrultusunu gösterin; daireden dışarı çekince yazı dışarı alınır"
+        "Ölçü: ölçünün doğrultusunu gösterin; daireden dışarı çekince yazı dışarı alınır [Zemin (Z): kapalı]"
     );
     let count = b.doc.entities().count();
     b.move_to(16.0, -1.0);
@@ -277,7 +281,7 @@ fn ctrl_z_drops_the_newest_pick_first_and_enter_starts_over() {
     assert!(b.undo_step());
     assert_eq!(b.session.prompt().text(), "Ölçü: ikinci kenara tıklayın");
     assert!(b.undo_step());
-    assert!(b.session.prompt().text().starts_with("Ölçü: açı ölçüsü için birinci kenara"));
+    assert!(b.session.prompt().text().starts_with("Ölçü: açı ölçüsü için bir kenara"));
     assert!(!b.undo_step());
     assert_eq!(b.doc.entities().count(), count);
     // Points: Ctrl+Z starts the dimension over.
@@ -319,7 +323,7 @@ fn a_typed_point_does_not_pick_an_edge() {
     assert!(b.type_text("A"));
     assert!(!b.type_text("@5,5"));
     assert_eq!(b.points(), 0);
-    assert!(b.session.prompt().text().starts_with("Ölçü: açı ölçüsü için birinci kenara"));
+    assert!(b.session.prompt().text().starts_with("Ölçü: açı ölçüsü için bir kenara"));
 }
 
 /// Koordinat (docs/adr/0147 §7): a point, then its line's end (or its
@@ -331,12 +335,12 @@ fn an_ordinate_takes_its_point_then_its_line_s_end() {
     assert!(b.type_text("O"));
     assert_eq!(
         b.session.prompt().text(),
-        "Ölçü: koordinat ölçüsünün noktasını belirtin [Hizalı (H) / Doğrusal (D) / Açı (A) / Yarıçap (R) / Çap (Ç) / Yay uzunluğu (U) / Kırıklı yarıçap (I) / Semt (T) / Eğim (E)]"
+        "Ölçü: koordinat ölçüsünün noktasını belirtin [Zemin (Z): kapalı / Hizalı (H) / Doğrusal (D) / Açı (A) / Yarıçap (R) / Çap (Ç) / Yay uzunluğu (U) / Kırıklı yarıçap (I) / Semt (T) / Eğim (E)]"
     );
     b.click(10.0, 20.0);
     assert_eq!(
         b.session.prompt().text(),
-        "Ölçü: çizginin ucunu gösterin ya da uzunluğunu yazın [Y koordinatı (Y) / X koordinatı (X) / Eksen (O): imleçten]"
+        "Ölçü: çizginin ucunu gösterin ya da uzunluğunu yazın [Y koordinatı (Y) / X koordinatı (X) / Eksen (O): imleçten / Zemin (Z): kapalı]"
     );
     // A typed length goes toward the cursor, as every point tool's: straight up 12 m.
     b.move_to(10.0, 40.0);
@@ -360,7 +364,7 @@ fn an_ordinate_takes_its_point_then_its_line_s_end() {
     assert_eq!(newest(&b).angle, Some(90.0));
     b.click(10.0, 20.0);
     assert!(b.type_text("Y"));
-    assert!(b.session.prompt().text().ends_with("Eksen (O): Y]"), "{}", b.session.prompt().text());
+    assert!(b.session.prompt().text().ends_with("Eksen (O): Y / Zemin (Z): kapalı]"), "{}", b.session.prompt().text());
     b.click(-10.0, 22.0);
     assert_eq!(newest(&b).angle, Some(0.0), "locked to its Y");
     b.click(10.0, 20.0);
@@ -391,7 +395,7 @@ fn an_arc_length_picks_an_arc_then_where_its_dimension_arc_goes() {
     assert!(b.type_text("U"));
     assert_eq!(
         b.session.prompt().text(),
-        "Ölçü: yay uzunluğu ölçülecek yaya tıklayın [Kısmi (K) / Hizalı (H) / Doğrusal (D) / Açı (A) / Yarıçap (R) / Çap (Ç) / Koordinat (O) / Kırıklı yarıçap (I) / Semt (T) / Eğim (E)]"
+        "Ölçü: yay uzunluğu ölçülecek yaya tıklayın [Kısmi (K) / Zemin (Z): kapalı / Hizalı (H) / Doğrusal (D) / Açı (A) / Yarıçap (R) / Çap (Ç) / Koordinat (O) / Kırıklı yarıçap (I) / Semt (T) / Eğim (E)]"
     );
     // A circle has no ends to measure between.
     b.click(45.0, 0.0);
@@ -399,7 +403,7 @@ fn an_arc_length_picks_an_arc_then_where_its_dimension_arc_goes() {
     b.click(10.0 * std::f64::consts::FRAC_1_SQRT_2, 10.0 * std::f64::consts::FRAC_1_SQRT_2);
     assert_eq!(
         b.session.prompt().text(),
-        "Ölçü: ölçü yayının yerini gösterin ya da uzaklık yazın"
+        "Ölçü: ölçü yayının yerini gösterin ya da uzaklık yazın [Zemin (Z): kapalı]"
     );
     // 3 m out from the arc, typed.
     b.move_to(0.0, 14.0);
@@ -459,7 +463,7 @@ fn a_jogged_radius_takes_a_circle_a_centre_shown_a_point_and_its_jog() {
     b.click(10.5, 0.0);
     assert_eq!(
         b.session.prompt().text(),
-        "Ölçü: kırığın yerini gösterin ya da uzaklığını yazın"
+        "Ölçü: kırığın yerini gösterin ya da uzaklığını yazın [Zemin (Z): kapalı]"
     );
     assert!(b.type_text("6"));
     let d = newest(&b);
@@ -483,11 +487,11 @@ fn an_azimuth_takes_two_points_or_an_edge_then_its_arrow() {
     let mut b = Bench::new("dimension");
     b.add_line("cizim", [0.0, 0.0], [30.0, 40.0]);
     assert!(b.type_text("T"));
-    assert!(b.session.prompt().text().starts_with("Ölçü: semt ölçüsünün başlangıcını gösterin [Kenardan (K) / Hizalı (H)"));
+    assert!(b.session.prompt().text().starts_with("Ölçü: semt ölçüsünün başlangıcını gösterin [Kenardan (K) / Zemin (Z): kapalı / Hizalı (H)"));
     b.click(0.0, 0.0);
     assert_eq!(b.session.prompt().text(), "Ölçü: kenarın sonunu gösterin");
     b.click(30.0, 40.0);
-    assert_eq!(b.session.prompt().text(), "Ölçü: okun yerini gösterin ya da uzaklık yazın");
+    assert_eq!(b.session.prompt().text(), "Ölçü: okun yerini gösterin ya da uzaklık yazın [Zemin (Z): kapalı]");
     // 5 m left of the edge, by the cursor.
     b.click(15.0 - 4.0, 20.0 + 3.0);
     let d = newest(&b);
@@ -499,7 +503,7 @@ fn an_azimuth_takes_two_points_or_an_edge_then_its_arrow() {
     assert!(b.type_text("K"));
     assert!(b.session.prompt().text().starts_with("Ölçü: semti ölçülecek kenara tıklayın [Noktalardan (K)"));
     b.click(15.0, 20.0);
-    assert_eq!(b.session.prompt().text(), "Ölçü: okun yerini gösterin ya da uzaklık yazın");
+    assert_eq!(b.session.prompt().text(), "Ölçü: okun yerini gösterin ya da uzaklık yazın [Zemin (Z): kapalı]");
     assert!(b.type_text("-3"));
     let d = newest(&b);
     assert_eq!((rel(d.a), rel(d.b)), ([0.0, 0.0], [30.0, 40.0]));
@@ -529,7 +533,7 @@ fn a_slope_takes_its_points_elevations_from_their_vertices_or_asks() {
     assert_eq!(b.last_level(), Some(Level::Warn));
     assert!(!b.type_text("abc"));
     assert!(b.type_text("104.75"));
-    assert_eq!(b.session.prompt().text(), "Ölçü: okun yerini gösterin ya da uzaklık yazın");
+    assert_eq!(b.session.prompt().text(), "Ölçü: okun yerini gösterin ya da uzaklık yazın [Zemin (Z): kapalı]");
     assert!(b.type_text("1.5"));
     let d = newest(&b);
     assert_eq!(d.style, Some(DimensionStyle::Slope));
@@ -539,3 +543,123 @@ fn a_slope_takes_its_points_elevations_from_their_vertices_or_asks() {
     assert_eq!(b.last_text(), Some("Eğim ölçüsü eklendi: %1.25"));
 }
 
+/// Açı from an arc or a circle (docs/adr/0147 §7): Yaydan, the arc's own
+/// angle about its centre, its ends counter-clockwise; Daireden, from the
+/// point clicked, put on the circle, to a second point. Ctrl+Z takes the
+/// second point back, then the circle.
+#[test]
+fn an_angle_from_an_arc_or_a_circle() {
+    let mut b = Bench::new("dimension");
+    // A quarter arc of radius 10 about (0, 0), from east to north; a circle of 5 about (40, 0).
+    b.add_arc("cizim", [0.0, 0.0], 10.0, 0.0, std::f64::consts::FRAC_PI_2);
+    b.add_circle("cizim", [40.0, 0.0], 5.0);
+    assert!(b.type_text("A"));
+    b.click(10.0 * std::f64::consts::FRAC_1_SQRT_2, 10.0 * std::f64::consts::FRAC_1_SQRT_2);
+    assert_eq!(
+        b.session.prompt().text(),
+        "Ölçü: yayın yerini gösterin ya da yarıçap yazın [Zemin (Z): kapalı]"
+    );
+    // The arc's own angle wherever the cursor is; the radius typed, its sign dropped.
+    b.move_to(-3.0, -3.0);
+    assert!(b.type_text("-6"));
+    let d = newest(&b);
+    assert_eq!(d.style, Some(DimensionStyle::Angular));
+    assert_eq!(d.c.map(rel), Some([0.0, 0.0]));
+    assert!(near(rel(d.a)[0], 10.0) && near(rel(d.a)[1], 0.0), "{d:?}");
+    assert!(near(rel(d.b)[0], 0.0) && near(rel(d.b)[1], 10.0), "{d:?}");
+    assert!(near(d.offset, 6.0), "{d:?}");
+    assert_eq!(b.last_text(), Some("Açı ölçüsü eklendi: 100.0000 g"));
+    // Daireden: the click is put on the circle (east of its centre), then a second point north of it.
+    b.click(45.2, 0.0);
+    assert_eq!(b.session.prompt().text(), "Ölçü: açının ikinci noktasını gösterin");
+    b.click(40.0, 10.0);
+    assert_eq!(
+        b.session.prompt().text(),
+        "Ölçü: yayın yerini gösterin ya da yarıçap yazın [Zemin (Z): kapalı]"
+    );
+    // Ctrl+Z: the second point, then the circle.
+    assert!(b.undo_step());
+    assert_eq!(b.session.prompt().text(), "Ölçü: açının ikinci noktasını gösterin");
+    assert!(b.undo_step());
+    assert!(b.session.prompt().text().starts_with("Ölçü: açı ölçüsü için bir kenara"));
+    b.click(45.2, 0.0);
+    b.click(40.0, 10.0);
+    // Between the two, counter-clockwise from the first.
+    b.click(43.0, 3.0);
+    let d = newest(&b);
+    assert_eq!(d.c.map(rel), Some([40.0, 0.0]));
+    assert_eq!((rel(d.a), rel(d.b)), ([45.0, 0.0], [40.0, 10.0]));
+    assert!(near(d.offset, 18f64.sqrt()), "{d:?}");
+    assert_eq!(b.last_text(), Some("Açı ölçüsü eklendi: 100.0000 g"));
+}
+
+/// Zemin (Z, docs/adr/0147 §7): offered while nothing is picked and while
+/// the dimension is placed; the dimension is written with its value over the
+/// drawing's background, and the choice stays for the next ones.
+#[test]
+fn zemin_writes_the_value_over_the_background() {
+    let mut b = Bench::new("dimension");
+    assert!(b.type_text("Z"));
+    assert!(
+        b.session.prompt().text().contains("[Zemin (Z): açık / Doğrusal (D)"),
+        "{}",
+        b.session.prompt().text()
+    );
+    b.click(0.0, 0.0);
+    b.click(10.0, 0.0);
+    assert_eq!(
+        b.session.prompt().text(),
+        "Ölçü: ölçü çizgisinin yerini gösterin ya da mesafe yazın [Zemin (Z): açık]"
+    );
+    b.click(5.0, 3.0);
+    assert!(newest(&b).mask);
+    // Off while the next is placed: written without.
+    b.click(0.0, 10.0);
+    b.click(10.0, 10.0);
+    assert!(b.type_text("Z"));
+    assert_eq!(
+        b.session.prompt().text(),
+        "Ölçü: ölçü çizgisinin yerini gösterin ya da mesafe yazın [Zemin (Z): kapalı]"
+    );
+    b.click(5.0, 13.0);
+    assert!(!newest(&b).mask);
+}
+
+/// Doğrusal's Açı (A, docs/adr/0147 §7): the measuring direction typed in
+/// the project's angle unit, counter-clockwise from east; kept like the
+/// Y and X locks.
+#[test]
+fn linear_measures_along_a_typed_direction() {
+    let mut b = Bench::new("dimension");
+    assert!(b.type_text("D"));
+    b.click(0.0, 0.0);
+    b.click(10.0, 10.0);
+    assert!(b.type_text("A"));
+    assert_eq!(
+        b.session.prompt().text(),
+        "Ölçü: ölçme doğrultusunu yazın (grad, doğudan saatin tersine)"
+    );
+    // Not a number: refused, still asked.
+    assert!(!b.type_text("Y"));
+    assert!(b.session.prompt().text().starts_with("Ölçü: ölçme doğrultusunu"));
+    // 50 grads: 45°.
+    assert!(b.type_text("50"));
+    assert!(
+        b.session
+            .prompt()
+            .text()
+            .ends_with("[Yatay ΔY (Y) / Düşey ΔX (X) / Yön (O): 50.0000 g / Açı (A) / Zemin (Z): kapalı]"),
+        "{}",
+        b.session.prompt().text()
+    );
+    b.click(0.0, 10.0);
+    let d = newest(&b);
+    assert_eq!(d.style, Some(DimensionStyle::Linear));
+    assert!(d.angle.is_some_and(|a| near(a, 45.0)), "{d:?}");
+    // The whole diagonal lies along 45°: 10√2.
+    assert_eq!(b.last_text(), Some("Doğrusal ölçü eklendi: 14.142"));
+    // Kept: the next linear dimension is measured along it too.
+    b.click(0.0, 0.0);
+    b.click(10.0, 0.0);
+    assert!(b.session.prompt().text().contains("Yön (O): 50.0000 g"));
+}

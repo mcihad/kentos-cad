@@ -2113,7 +2113,8 @@ SCENES.dimensions = [
 // corner taken and the cursor off to the right; Yay uzunluğu with the road's edge taken and the dimension arc on the
 // cursor; Kısmi with its first point on the arc and the part to the cursor lit; Kırıklı yarıçap with its jog on the
 // cursor; Semt on the parcel's west edge; Eğim between two levelled points, and its question for a bare corner's
-// elevation; Ölçülendirme ▾'s methods.
+// elevation; Açı from the road's edge (Yaydan) and from a manhole (Daireden, Zemin on); Doğrusal along a typed
+// direction; Öznitelikler's rows of a slope and of two ordinates; Ölçülendirme ▾'s methods.
 function dimensionToolScenes() {
   const layer = (id, name, color, lineWeight) => ({ id, name, type: 'layer', visible: true, locked: false, expanded: true, style: { color, lineType: 'continuous', lineWeight }, children: [] });
   const E = 487000;
@@ -2122,7 +2123,7 @@ function dimensionToolScenes() {
   const C = [20, -60];
   const onEdge = (deg) => [C[0] + 50 * Math.cos((deg * Math.PI) / 180), C[1] + 50 * Math.sin((deg * Math.PI) / 180)];
   const road = (id, r) => ({ kind: 'arc', id, layerId: 'yol', attrs: {}, c: P(...C), r, a0: (50 * Math.PI) / 180, a1: (130 * Math.PI) / 180 });
-  const GROUND = JSON.stringify({
+  const ground = (extra = []) => JSON.stringify({
     format: 'kentos.document',
     version: 1,
     name: 'Ölçülendirme',
@@ -2137,18 +2138,30 @@ function dimensionToolScenes() {
       // Two levelled points east of the parcel.
       { kind: 'point', id: 4, layerId: 'parsel', attrs: {}, p: P(50, 0), z: 102.4 },
       { kind: 'point', id: 5, layerId: 'parsel', attrs: {}, p: P(54, 32), z: 101.15 },
+      ...extra,
     ],
     styles: { items: [], categories: [] },
   });
+  const GROUND = ground();
+  // A manhole east of the road, 5 m across its centre (Açı's Daireden).
+  const MANHOLE = [62, -22];
+  const WITH_MANHOLE = ground([{ kind: 'circle', id: 6, layerId: 'yol', attrs: {}, c: P(...MANHOLE), r: 5 }]);
+  // A slope between the levelled points (4 m east), the north-west corner's Y (up), the south-west corner's X (left, with Zemin).
+  const dim = (id, style, a, b, more) => ({ kind: 'dimension', id, layerId: 'parsel', attrs: {}, a: P(...a), b: P(...b), offset: 0, height: 2.5, style, ...more });
+  const MEASURED = ground([
+    dim(6, 'slope', [50, 0], [54, 32], { offset: -4, za: 102.4, zb: 101.15 }),
+    dim(7, 'ordinate', [2, 30], [2, 40], { angle: 0 }),
+    dim(8, 'ordinate', [0, 0], [-12, 0], { angle: 90, mask: true }),
+  ]);
   const pageAt = (ui, x, y) => ui.eval(PAGE_AT(E + x, N + y));
   const clickAt = async (ui, x, y) => (await ui.clickAt(...(await pageAt(ui, x, y))), await ui.sleep(200));
   /** The ground opened, Ölçülendirme started with a method's option, as Ölçülendirme ▾ starts it. */
-  const start = async (ui, option) => {
+  const start = async (ui, option, drawing = GROUND) => {
     await ribbonOn(ui, { ribbonTab: 'draw', ...LOGGED });
     await ui.eval(`(async () => {
       const k = window.kentos;
       k.files.ask = async () => 'drop';
-      if (!(await k.files.load(${JSON.stringify(GROUND)}, null))) throw new Error('the ground did not load');
+      if (!(await k.files.load(${JSON.stringify(drawing)}, null))) throw new Error('the ground did not load');
       k.view.zoomExtents();
       // Clear of the toolbox.
       const c = k.view.camera;
@@ -2161,12 +2174,41 @@ function dimensionToolScenes() {
     await ui.eval(`window.kentos.tools.active.input(${JSON.stringify(option)})`);
   };
   const hoverAt = async (ui, x, y) => (await ui.eval(`window.kentos.log.clear()`), await ui.move(...(await pageAt(ui, x, y))), await ui.sleep(350));
-  /** The tool's memory as it was (Hizalı; Kısmi off when `partial`), then the drawing back. */
-  const restore = (partial) => async (ui) => {
-    await ui.eval(`(() => { const t = window.kentos.tools.active; if (t?.id !== 'dimension') return; t.reset(); ${partial ? "t.input('K');" : ''} t.input('H'); })()`);
+  /**
+   * The tool's memory as it was (Hizalı; Kısmi off when `partial`; `before` runs while the dimension is still being
+   * placed, `after` once it starts over), then the drawing back.
+   */
+  const restore = (partial, before = '', after = '') => async (ui) => {
+    await ui.eval(`(() => { const t = window.kentos.tools.active; if (t?.id !== 'dimension') return; ${before} t.reset(); ${after} ${partial ? "t.input('K');" : ''} t.input('H'); })()`);
     await ui.escapeAll(2);
     await ui.eval(UNDO_ALL);
   };
+  /** Öznitelikler's Genel section folded (or opened again). */
+  const general = async (ui, open) => {
+    const head = `[...document.querySelectorAll('.panel--props .props__section')].find((b) => b.textContent.includes('Genel'))`;
+    if (await ui.eval(`(() => { const b = ${head}; return !!b && (b.getAttribute('aria-expanded') === 'true') !== ${open}; })()`)) await ui.clickText('.panel--props .props__section', 'Genel');
+  };
+  /** Öznitelikler over `ids` of the measured ground, the layer tree at its least and Genel folded (the desktop's `props`). */
+  const propsOf = async (ui, ids) => {
+    await ribbonOn(ui, { ribbonTab: 'draw', ...LOGGED, layersFraction: 0.15 });
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      k.files.ask = async () => 'drop';
+      if (!(await k.files.load(${JSON.stringify(MEASURED)}, null))) throw new Error('the ground did not load');
+      k.view.zoomExtents();
+      const c = k.view.camera;
+      c.scale = c.scale * 0.85;
+      c.center = { x: c.center.x - 110 / c.scale, y: c.center.y };
+      c.panBy(0, 0);
+      k.selection.set(${JSON.stringify(ids)});
+    })()`);
+    await ui.move(2, 2);
+    await ui.sleep(400);
+    await general(ui, false);
+    await ui.move(2, 2);
+    await ui.sleep(300);
+  };
+  const propsClose = async (ui) => (await general(ui, true), await ui.eval(UNDO_ALL), await ribbonOff(ui));
   return [
     { id: 'dimension-ordinate', open: async (ui) => (await start(ui, 'O'), await clickAt(ui, 44, 32), await hoverAt(ui, 66, 35)), close: restore(false) },
     { id: 'dimension-arc-length', open: async (ui) => (await start(ui, 'U'), await clickAt(ui, ...onEdge(80)), await hoverAt(ui, 24, -4.8)), close: restore(false) },
@@ -2195,6 +2237,39 @@ function dimensionToolScenes() {
     { id: 'dimension-azimuth', open: async (ui) => (await start(ui, 'T'), await clickAt(ui, 0, 0), await clickAt(ui, 2, 30), await hoverAt(ui, -3, 15)), close: restore(false) },
     { id: 'dimension-slope', open: async (ui) => (await start(ui, 'E'), await clickAt(ui, 50, 0), await clickAt(ui, 54, 32), await hoverAt(ui, 57, 16)), close: restore(false) },
     { id: 'dimension-slope-ask', open: async (ui) => (await start(ui, 'E'), await clickAt(ui, 0, 0), await hoverAt(ui, 20, 4)), close: restore(false) },
+    { id: 'dimension-angle-arc', open: async (ui) => (await start(ui, 'A'), await clickAt(ui, ...onEdge(90)), await hoverAt(ui, 20, -6)), close: restore(false) },
+    {
+      id: 'dimension-angle-circle',
+      open: async (ui) => {
+        await start(ui, 'A', WITH_MANHOLE);
+        // Snapping off, as the desktop's scene has nothing to snap to here: the second point and the cursor exactly where given.
+        await ui.eval(`(() => { const k = window.kentos; window.__snapWas = k.settings.snap.value; k.settings.snap.set(false); k.tools.active.input('Z'); })()`);
+        await clickAt(ui, MANHOLE[0] + 5, MANHOLE[1]);
+        // A click lands on a whole pixel, so the first point sits a little off east on a 5 m circle: the second point
+        // is typed a right angle round from where it landed, 12 m out, so the angle reads 100 g as on the desktop.
+        await ui.eval(`(() => {
+          const t = window.kentos.tools.active;
+          const { c, p1 } = t.angleCircle;
+          const a = Math.atan2(p1.y - c.y, p1.x - c.x) + Math.PI / 2;
+          t.input((c.x + 12 * Math.cos(a)).toFixed(6) + ',' + (c.y + 12 * Math.sin(a)).toFixed(6));
+        })()`);
+        await hoverAt(ui, MANHOLE[0] + 6, MANHOLE[1] + 6);
+      },
+      close: async (ui) => (await restore(false, '', "t.input('Z');")(ui), await ui.eval(`window.kentos.settings.snap.set(window.__snapWas ?? true)`)),
+    },
+    {
+      id: 'dimension-linear-angle',
+      open: async (ui) => {
+        await start(ui, 'D');
+        await clickAt(ui, 0, 0);
+        await clickAt(ui, 44, 32);
+        await ui.eval(`(() => { const t = window.kentos.tools.active; t.input('A'); t.input('60'); })()`);
+        await hoverAt(ui, 40, -8);
+      },
+      close: restore(false, "t.input('O');"),
+    },
+    { id: 'dimension-properties', open: async (ui) => propsOf(ui, [6]), close: propsClose },
+    { id: 'dimension-properties-many', open: async (ui) => propsOf(ui, [7, 8]), close: propsClose },
     {
       id: 'dimension-methods',
       open: async (ui) => (await ribbonOn(ui, { ribbonTab: 'draw' }), await ui.clickSel('.ribbon__strip [data-split="dimension"] .rsplit__arrow'), await ui.waitFor(`!!document.querySelector('.menu')`), await ui.sleep(300)),

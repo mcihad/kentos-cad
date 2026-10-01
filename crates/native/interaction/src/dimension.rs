@@ -276,6 +276,14 @@ pub struct Dimension {
     zs: Vec<Option<f64>>,
     /// The snap under the pointer as it went down: where Eğim's elevation comes from.
     snap: Option<SnapHit>,
+    /// Doğrusal's Açı (A): the next number is the measuring direction.
+    asking_angle: bool,
+    /// Açı from an arc: its vertex and ends; from a circle: its centre and
+    /// the point clicked on it (docs/adr/0147 §7).
+    angle_arc: Option<(Vec2, Vec2, Vec2)>,
+    angle_circle: Option<(Vec2, Vec2)>,
+    /// The project's units, as of the last call.
+    format: Format,
     /// The text's height in metres, as of the last call.
     height: f64,
     /// What the session remembered, as of the last call.
@@ -290,6 +298,7 @@ impl Dimension {
     fn see(&mut self, cx: &Context<'_>) {
         self.height = HEIGHT_MM / 1000.0 * cx.doc.settings().plot_scale;
         self.memory = *cx.memory;
+        self.format = cx.format();
     }
 
     fn mode(&self) -> Mode {
@@ -298,13 +307,23 @@ impl Dimension {
 
     /// Nothing picked yet: the style can still change.
     fn fresh(&self) -> bool {
-        self.d.pts.is_empty() && self.edges.is_empty() && self.circle.is_none() && self.arc.is_none()
+        self.d.pts.is_empty()
+            && self.edges.is_empty()
+            && self.circle.is_none()
+            && self.arc.is_none()
+            && self.angle_arc.is_none()
+            && self.angle_circle.is_none()
     }
 
     /// Stages where a click picks an edge or a circle rather than a point.
     fn picks_edge(&self) -> bool {
         match self.mode() {
-            Mode::Angular => !self.memory.dimension_by_vertex && self.edges.len() < 2,
+            Mode::Angular => {
+                !self.memory.dimension_by_vertex
+                    && self.edges.len() < 2
+                    && self.angle_arc.is_none()
+                    && self.angle_circle.is_none()
+            }
             Mode::Radius | Mode::Diameter | Mode::Jogged => self.circle.is_none(),
             Mode::ArcLength => self.arc.is_none(),
             Mode::Azimuth | Mode::Slope => {
@@ -326,7 +345,11 @@ impl Dimension {
     fn placing(&self) -> bool {
         match self.mode() {
             Mode::Angular if self.memory.dimension_by_vertex => self.d.pts.len() == 3,
-            Mode::Angular => self.edges.len() == 2,
+            Mode::Angular => {
+                self.edges.len() == 2
+                    || self.angle_arc.is_some()
+                    || (self.angle_circle.is_some() && self.d.pts.len() == 1)
+            }
             Mode::Radius | Mode::Diameter => self.circle.is_some(),
             Mode::Aligned | Mode::Linear => self.d.pts.len() == 2,
             Mode::Ordinate => self.d.pts.len() == 1,
@@ -342,6 +365,10 @@ impl Dimension {
     /// Letter options (the web's `option`): a style while nothing is
     /// picked, Köşeden for the angle, the linear lock once two points are in.
     fn option(&mut self, key: &str, cx: &mut Context<'_>) -> bool {
+        if key == "Z" && !self.asking_angle {
+            cx.memory.dimension_mask = !cx.memory.dimension_mask;
+            return true;
+        }
         if self.fresh() {
             if let Some(&(mode, _)) = MODES
                 .iter()
@@ -377,11 +404,15 @@ impl Dimension {
             };
             return true;
         }
-        if cx.memory.dimension_mode == Mode::Linear && self.d.pts.len() == 2 {
+        if cx.memory.dimension_mode == Mode::Linear && self.d.pts.len() == 2 && !self.asking_angle {
             cx.memory.dimension_lock = match key {
                 "Y" => Some(0.0),
                 "X" => Some(90.0),
                 "O" => None,
+                "A" => {
+                    self.asking_angle = true;
+                    return true;
+                }
                 _ => return false,
             };
             return true;
@@ -456,7 +487,11 @@ impl Dimension {
                 Some(DimensionGeom { offset, ..g })
             }
             Mode::Angular => {
-                let arms = if self.memory.dimension_by_vertex {
+                let arms = if let Some((c, a, b)) = self.angle_arc {
+                    kentos_geometry_core::tools::editing::Arms { c, a, b }
+                } else if let Some((c, p1)) = self.angle_circle {
+                    vertex_arms(c, p1, *self.d.pts.first()?, loc)
+                } else if self.memory.dimension_by_vertex {
                     let (&c, &p1, &p2) =
                         (self.d.pts.first()?, self.d.pts.get(1)?, self.d.pts.get(2)?);
                     vertex_arms(c, p1, p2, loc)
@@ -508,6 +543,47 @@ impl Dimension {
         }
     }
 
+    /// Açı's first pick on an arc or a circle (docs/adr/0147 §7): Yaydan,
+    /// the arc's own angle about its centre (its ends counter-clockwise);
+    /// Daireden, from the point clicked, put on the circle, to a second
+    /// point. False for a straight edge nearer the click.
+    fn angle_from(&mut self, e: &Entity, at: Vec2) -> bool {
+        let mut best: Option<(Edge, f64)> = None;
+        for edge in entity_edges(&shape(e)) {
+            if !matches!(edge, Edge::Arc { .. }) {
+                continue;
+            }
+            let d = closest_on_edge(&edge, at).d;
+            if best.as_ref().is_none_or(|(_, bd)| d < *bd) {
+                best = Some((edge, d));
+            }
+        }
+        let Some((edge, d)) = best else {
+            return false;
+        };
+        if straight_edge_at(e, at)
+            .is_some_and(|(a, b)| closest_on_edge(&Edge::Seg { a, b }, at).d < d)
+        {
+            return false;
+        }
+        if let Some(ends) = arc_length_ends(&edge, None) {
+            self.angle_arc = Some((ends.c, ends.a, ends.b));
+            return true;
+        }
+        let Edge::Arc { c, r, .. } = edge else {
+            return false;
+        };
+        let l = dist(c, at);
+        if l < 1e-9 {
+            return false;
+        }
+        self.angle_circle = Some((
+            c,
+            Vec2::new(c.x + (at.x - c.x) / l * r, c.y + (at.y - c.y) / l * r),
+        ));
+        true
+    }
+
     /// Kırıklı yarıçap from the centre shown to the circle's point toward
     /// `on`, its jog `offset` along the radius from the centre shown.
     fn jogged_at(&self, shown: Vec2, on: Vec2, offset: f64) -> Option<DimensionGeom> {
@@ -547,7 +623,7 @@ impl Dimension {
             style: mode.contract(),
             angle: g.angle,
             c: g.c.map(wire),
-            mask: false,
+            mask: self.memory.dimension_mask,
             za: g.za,
             zb: g.zb,
         };
@@ -573,6 +649,9 @@ impl Dimension {
         self.arc = None;
         self.zs.clear();
         self.snap = None;
+        self.asking_angle = false;
+        self.angle_arc = None;
+        self.angle_circle = None;
         self.d.reset();
     }
 }
@@ -599,6 +678,16 @@ impl Tool for Dimension {
     /// the other styles while nothing is picked.
     fn prompt(&self) -> Prompt {
         let n = self.d.pts.len();
+        // Doğrusal's Açı (A): its measuring direction asked for.
+        if self.mode() == Mode::Linear && n == 2 && self.asking_angle {
+            return Prompt::new(
+                LABEL,
+                format!(
+                    "ölçme doğrultusunu yazın ({}, doğudan saatin tersine)",
+                    self.format.angle_unit_name()
+                ),
+            );
+        }
         let step = match self.mode() {
             Mode::Linear => match n {
                 0 => "doğrusal ölçünün (ΔY / ΔX) ilk noktasını belirtin",
@@ -611,10 +700,11 @@ impl Tool for Dimension {
                 2 => "ikinci kolun üzerinde bir nokta gösterin",
                 _ => "yayın yerini gösterin ya da yarıçap yazın",
             },
+            Mode::Angular if self.placing() => "yayın yerini gösterin ya da yarıçap yazın",
+            Mode::Angular if self.angle_circle.is_some() => "açının ikinci noktasını gösterin",
             Mode::Angular => match self.edges.len() {
-                0 => "açı ölçüsü için birinci kenara tıklayın",
-                1 => "ikinci kenara tıklayın",
-                _ => "yayın yerini gösterin ya da yarıçap yazın",
+                0 => "açı ölçüsü için bir kenara, yaya ya da daireye tıklayın",
+                _ => "ikinci kenara tıklayın",
             },
             Mode::Radius | Mode::Diameter if self.circle.is_some() => {
                 "ölçünün doğrultusunu gösterin; daireden dışarı çekince yazı dışarı alınır"
@@ -666,14 +756,16 @@ impl Tool for Dimension {
         let mut prompt = Prompt::new(LABEL, step);
         if self.mode() == Mode::Linear && n == 2 {
             let way = match self.memory.dimension_lock {
-                Some(0.0) => "yatay",
-                Some(_) => "düşey",
-                None => "imleçten",
+                Some(0.0) => "yatay".to_owned(),
+                Some(90.0) => "düşey".to_owned(),
+                Some(deg) => self.format.angle(deg * std::f64::consts::PI / 180.0),
+                None => "imleçten".to_owned(),
             };
             prompt = prompt
                 .option("Yatay ΔY", "Y")
                 .option("Düşey ΔX", "X")
-                .option_with("Yön", "O", way);
+                .option_with("Yön", "O", way)
+                .option("Açı", "A");
         }
         if self.mode() == Mode::Ordinate && n == 1 {
             let way = match self.memory.ordinate_lock {
@@ -711,6 +803,17 @@ impl Tool for Dimension {
                 };
                 prompt = prompt.option(other, "K");
             }
+        }
+        // Zemin while nothing is picked and while the dimension is placed (docs/adr/0147 §7).
+        if self.fresh() || self.placing() {
+            let on = if self.memory.dimension_mask {
+                "açık"
+            } else {
+                "kapalı"
+            };
+            prompt = prompt.option_with("Zemin", "Z", on);
+        }
+        if self.fresh() {
             for (mode, key) in MODES {
                 if mode != self.mode() {
                     prompt = prompt.option(mode.label(), key);
@@ -786,11 +889,25 @@ impl Tool for Dimension {
             cx.selection.set_hover(None);
             return;
         }
+        // Açı's first pick on an arc or a circle: Yaydan, the arc's own angle; Daireden, a second point to come.
+        if self.mode() == Mode::Angular
+            && self.edges.is_empty()
+            && let Some(e) = picked
+            && self.angle_from(e, p.raw)
+        {
+            cx.selection.set_hover(None);
+            return;
+        }
         if self.mode() == Mode::Angular {
+            // The first pick also takes an arc or a circle (`angle_from`); the second is a straight edge only.
             let Some((a, b)) = picked.and_then(|e| straight_edge_at(e, p.raw)) else {
                 cx.say(
                     Level::Warn,
-                    "Açının kenarı olarak düz bir çizgiye tıklayın; köşe noktasından ölçmek için “Köşeden” seçin.",
+                    if self.edges.is_empty() {
+                        "Açı için düz bir kenara, yaya ya da daireye tıklayın; köşe noktasından ölçmek için “Köşeden” seçin."
+                    } else {
+                        "Açının kenarı olarak düz bir çizgiye tıklayın; köşe noktasından ölçmek için “Köşeden” seçin."
+                    },
                 );
                 return;
             };
@@ -818,7 +935,19 @@ impl Tool for Dimension {
     /// are placed by pointing only; a typed point does not pick an edge.
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
         self.see(cx);
-        let done = if let Some(i) = self.asking() {
+        let done = if self.asking_angle {
+            // Doğrusal's measuring direction, in the project's angle unit.
+            match points::plain_number(text) {
+                Some(a) => {
+                    // The web's `(rad * 180) / π`, not `to_degrees`: the stored angle is the same bits on both.
+                    cx.memory.dimension_lock =
+                        Some(cx.format().angle_from_typed(a) * 180.0 / std::f64::consts::PI);
+                    self.asking_angle = false;
+                    true
+                }
+                None => false,
+            }
+        } else if let Some(i) = self.asking() {
             // Eğim's elevation asked for: a number, metres.
             match points::plain_number(text) {
                 Some(z) => {
@@ -870,8 +999,13 @@ impl Tool for Dimension {
     fn undo_step(&mut self, cx: &mut Context<'_>) -> bool {
         // Yay uzunluğu's points on the arc go before the arc, Kırıklı yarıçap's before its circle;
         // Eğim's with their elevations, an edge's two ends together (docs/adr/0147 §7).
-        if (self.arc.is_some() || self.circle.is_some()) && !self.d.pts.is_empty() {
+        if (self.arc.is_some() || self.circle.is_some() || self.angle_circle.is_some())
+            && !self.d.pts.is_empty()
+        {
             self.d.pts.pop();
+            return true;
+        }
+        if self.angle_arc.take().is_some() || self.angle_circle.take().is_some() {
             return true;
         }
         if self.mode().arrowed() && !self.d.pts.is_empty() {
@@ -898,6 +1032,15 @@ impl Tool for Dimension {
         }
         if let Some((c, r)) = self.circle {
             strokes.extend(Outline::of(&Shape::Circle { c, r }, None, 2.0, Tone::Snap).strokes);
+        }
+        // Daireden: the arm to the point clicked on the circle, and to the cursor until the second point is given.
+        if let Some((c, p1)) = self.angle_circle
+            && !self.placing()
+        {
+            strokes.push(Stroke::solid(vec![c, p1], false).width(2.0).tone(Tone::Snap));
+            if let Some(hover) = self.d.hover {
+                strokes.push(Stroke::solid(vec![c, hover], false));
+            }
         }
         // Yay uzunluğu's arc, and with Kısmi the part between its first point and the cursor.
         if let Some(arc) = &self.arc {

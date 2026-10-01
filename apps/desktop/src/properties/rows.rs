@@ -16,6 +16,10 @@ use kentos_interaction::{
 use kentos_ui::icon::Icon;
 
 use super::{Event, Field, Spot};
+
+mod dimension;
+
+pub(super) use dimension::is_y_axis;
 use crate::app::Message;
 use crate::document::{Document, crs_name};
 use crate::selecting::kind_title;
@@ -743,6 +747,8 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 Row::text("Yazı", d.text.clone().unwrap_or_default())
                     .editor(edit(Editor::Text(Field::DimensionText(slot)))),
             ]);
+            // Zemin, an ordinate's axis, a slope's elevations, an arc length's radius and angle (docs/adr/0147 §7).
+            geo.extend(dimension::rows(&[d], &ids, locked, &f));
         }
         Entity::Hatch(h) => {
             let name = |t: HatchPatternType| {
@@ -1176,6 +1182,26 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
                 format!("Kılavuzlar ({})", leaders.len()).into()
             },
             rows: leader_rows(&leaders, &slots, any_locked, &f),
+        });
+    }
+    // The selection's dimensions: their Zemin, and an ordinate's axis, a slope's elevations, common or “Çeşitli” (docs/adr/0147 §7).
+    let dims: Vec<&kentos_contracts::DimensionEntity> = objects
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Dimension(d) => Some(d),
+            _ => None,
+        })
+        .collect();
+    if !dims.is_empty() {
+        let slots: Vec<Slot> = dims.iter().map(|d| Slot(d.base.id)).collect();
+        sections.push(Section {
+            id: "dimensions",
+            title: if dims.len() == objects.len() {
+                "Ölçü".into()
+            } else {
+                format!("Ölçüler ({})", dims.len()).into()
+            },
+            rows: dimension::rows(&dims, &slots, any_locked, &f),
         });
     }
     let mut totals = Vec::new();

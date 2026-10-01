@@ -450,10 +450,12 @@ const observe = (mark) =>
       // A text's alignment (null: the left of the baseline), width factor and mask (docs/adr/0145).
       align: e.kind === 'text' ? (e.align ?? null) : null,
       widthFactor: e.kind === 'text' ? (e.widthFactor ?? 1) : null,
-      mask: e.kind === 'text' || e.kind === 'leader' ? e.mask === true : null,
+      mask: e.kind === 'text' || e.kind === 'leader' || e.kind === 'dimension' ? e.mask === true : null,
       rotation: e.kind === 'text' || e.kind === 'leader' ? e.rotation : null,
       // A leader's arrowhead (null: the filled arrow; docs/adr/0146).
       arrow: e.kind === 'leader' ? (e.arrow ?? null) : null,
+      // A dimension's direction in degrees: a linear one's measured, an ordinate's axis (docs/adr/0147).
+      angle: e.kind === 'dimension' ? (e.angle ?? null) : null,
     });
     return {
       tool: k.tools.activeId.value,
@@ -512,6 +514,9 @@ function compareShape(name, have, want, t) {
   // A text's alignment, width factor, mask and turn (docs/adr/0145), exact.
   for (const key of ['align', 'widthFactor', 'mask', 'rotation', 'arrow'])
     if (want[key] !== undefined && have[key] !== want[key]) bad.push(`${name}.${key}: ${JSON.stringify(have[key])}, beklenen ${JSON.stringify(want[key])}`);
+  // A dimension's direction (docs/adr/0147), within 1e-9: a typed angle in grads comes back through radians.
+  if (want.angle !== undefined && (have.angle === null || Math.abs(have.angle - want.angle) > 1e-9))
+    bad.push(`${name}.angle: ${JSON.stringify(have.angle)}, beklenen ${want.angle}`);
   if (want.arcs !== undefined) {
     const arcs = have.bulges.filter((bulge) => bulge !== 0).length;
     if (arcs !== want.arcs) bad.push(`${name}.arcs: ${arcs}, beklenen ${want.arcs}`);

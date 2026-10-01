@@ -551,9 +551,11 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   `fixtures/interaction/v1/dimensions.kcad`) ve 3. adım (komutlar: `invalid_dimension` denetimleri çekirdeğin
   `dimension_fault`'uyla, ortak durumlar üç koşucuda) tamam; 4. adımın (araçlar ve arayüz) ilk parçası tamam: Ölçülendirme'nin
   yöntemleri şeritte ve kendi takma adlarıyla (`ToolMethod.aliases`), Koordinat ve Yay uzunluğu (ortak iz
-  `dimension-kinds.json`) ve 4.2 (Kırıklı yarıçap, Semt, Eğim; `dimension-more-kinds.json`) tamam; sıradaki parça 4.3:
-  Açı'nın yolları, döndürülmüş doğrusal, Zemin ve Öznitelikler; sonra 4.4 Hızlı ölçü, 5. adım DXF. CAD-17 bitince sahibe
-  sıradaki iş sorulacak (öneri: CAD-06 ölçü ilişkilendirme, sonra CAD-07 pafta ve çıktı). Adımlar ADR 0142–0146'daki gibi iki platformda, ortak fixture'larla ilerler.
+  `dimension-kinds.json`), 4.2 (Kırıklı yarıçap, Semt, Eğim; `dimension-more-kinds.json`) ve 4.3 (Açı'nın Yaydan ve
+  Daireden yolları, Doğrusal'ın yazılan doğrultusu, Zemin (Z), Öznitelikler'in ölçü satırları) tamam; sıradaki parça 4.4
+  Hızlı ölçü, sonra 5. adım DXF. CAD-17 bitince TODOS.md §16'nın sırasıyla devam edilir: önce hibrit, sonra CAD, sonra
+  GIS; PDF, yazdırma ve pafta çıktısı en sondadır, zamanını sahip söyleyecek (sahibin kararı, 1 Ekim). Adımlar ADR
+  0142–0146'daki gibi iki platformda, ortak fixture'larla ilerler.
 - Bilinen açık: web `pnpm e2e` duman testinde üç test ADR 0143'ten önce de düşüyordu: “toolbox
   shows every tool without scrolling” (79 araç kaydırma istiyor), nokta hesaplayıcının “yan nokta
   30/5” adımı ve “Layers panel: counts follow add, undo and redo”. Kök nedenleri araştırılmadı.

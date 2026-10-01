@@ -118,6 +118,34 @@ impl Objects {
         self.push(layer, json!({ "kind": "circle", "c": xy(c), "r": r }))
     }
 
+    /// A dimension of `style` (none: aligned) between `a` and `b`, `offset`
+    /// out, 2.5 m high, with the centre `c` of the kinds that have one; `more`
+    /// gives its other fields (angle, mask, za, zb; docs/adr/0147).
+    pub(crate) fn dimension(
+        &mut self,
+        layer: &str,
+        style: Option<&str>,
+        [a, b]: [[f64; 2]; 2],
+        c: Option<[f64; 2]>,
+        offset: f64,
+        more: Value,
+    ) -> u32 {
+        let mut fields =
+            json!({ "kind": "dimension", "a": xy(a), "b": xy(b), "offset": offset, "height": 2.5 });
+        if let Some(style) = style {
+            fields["style"] = json!(style);
+        }
+        if let Some(c) = c {
+            fields["c"] = xy(c);
+        }
+        if let Value::Object(more) = more {
+            for (key, value) in more {
+                fields[key] = value;
+            }
+        }
+        self.push(layer, fields)
+    }
+
     /// An area of several parts, each its ring and holes, the first the
     /// area's own (docs/adr/0143).
     pub(crate) fn parts(&mut self, layer: &str, parts: &[Part<'_>]) -> u32 {

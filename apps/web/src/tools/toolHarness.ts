@@ -4,6 +4,7 @@ import { MessageLog } from '../app/state';
 import { Signal } from '../core/signal';
 import { CadDocument } from '../model/document';
 import type { Entity, NewEntity } from '../model/entities';
+import { dimensionLabel } from '../model/geom/dimension';
 import { LayerStore } from '../model/layers';
 import { entityEdges } from '../model/ops/edges';
 import { extendEntity, trimEntity } from '../model/ops/trim';
@@ -46,11 +47,12 @@ export function toolHarness() {
   const palette = { accent: '#0af', snap: '#fa0', danger: '#f33', fg: '#eee', labelHalo: '#000' };
   /** The edges of every object but `except`: the boundaries the store hands trim and extend. */
   const boundaries = (except: Entity) => [...doc.all()].filter((e) => e.id !== except.id).flatMap((e) => entityEdges(e));
+  const format = new Formatter({ lengthDecimals: new Signal(3), areaDecimals: new Signal(2), areaUnit: new Signal('m2' as const), angleUnit: new Signal('grad' as const) });
   const ctx = {
     doc,
     log,
     selection: new Selection(),
-    format: new Formatter({ lengthDecimals: new Signal(3), areaDecimals: new Signal(2), areaUnit: new Signal('m2' as const), angleUnit: new Signal('grad' as const) }),
+    format,
     settings: { color: new Signal<string | null>(null), lineWeight: new Signal<number | null>(null), ortho: new Signal(false), polar: new Signal(false) },
     prefs: { snapAperture: new Signal(8), pickAperture: new Signal(8), polarIncrement: new Signal(15) },
     view: {
@@ -66,7 +68,8 @@ export function toolHarness() {
       trim: (target: Entity, at: { x: number; y: number }) => trimEntity(target, at, boundaries(target)),
       extend: (target: Entity, at: { x: number; y: number }) => extendEntity(target, at, boundaries(target)),
       ghosts: () => new Float64Array(),
-      dimensionText: (l: { value: number }) => l.value.toFixed(3),
+      // The app's (ViewportController.dimensionText): prefix and value in the project's units.
+      dimensionText: (l: Parameters<typeof dimensionLabel>[1]) => dimensionLabel(undefined, l, { length: (m) => format.length(m, false), angle: (a) => format.angle(a), percent: (v) => format.percent(v) }),
       requestTextInput: (req: TextInputRequest) => void state.textInputs.push(req),
       focus: () => {},
     },

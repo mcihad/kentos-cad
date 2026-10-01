@@ -2,7 +2,7 @@ import type { AppContext } from '../../app/context';
 import { watchAll } from '../../core/signal';
 import { attributeRows, turnOf } from '../../model/blocks';
 import { DIMENSION_STYLE_LABEL, layoutDimension } from '../../model/geom/dimension';
-import { ENTITY_KIND_LABEL, HATCH_PATTERN_LABEL, drawsLines, entityArea, entityLength, type Entity, type HatchPatternType, type LeaderEntity, type TextEntity } from '../../model/entities';
+import { ENTITY_KIND_LABEL, HATCH_PATTERN_LABEL, drawsLines, entityArea, entityLength, type DimensionEntity, type Entity, type HatchPatternType, type LeaderEntity, type TextEntity } from '../../model/entities';
 import { angleDeg, bearingGrad, dist } from '../../model/geometry';
 import { sweep } from '../../model/geom/arc';
 import { isFullEllipse, majorLength } from '../../model/geom/ellipse';
@@ -15,6 +15,7 @@ import type { MenuItem } from '../widgets/PopupMenu';
 import { PropertyGrid, type PropRow, type PropSection } from '../widgets/PropertyGrid';
 import { commonElevationRow, lineEndRow, pathElevationRow, spaceRow } from './elevationRows';
 import { cornerRows, holeRows } from './pathRows';
+import { dimensionRows } from './dimensionRows';
 import { leaderRows } from './leaderRows';
 import { textRows } from './textRows';
 import { setGeometry, setProperties, uidsOf } from './write';
@@ -346,6 +347,8 @@ export class PropertiesPanel extends Panel {
             value: e.text ?? '',
             editor: locked ? undefined : { type: 'text', commit: (v) => setGeometry(this.ctx, e, { text: v.trim() || undefined }) },
           },
+          // Zemin, an ordinate's axis, a slope's elevations, an arc length's radius and angle (docs/adr/0147 §7).
+          ...dimensionRows(this.ctx, [e], locked),
         );
         break;
       }
@@ -543,6 +546,9 @@ export class PropertiesPanel extends Panel {
     const leaders = ents.filter((e): e is LeaderEntity => e.kind === 'leader');
     if (leaders.length)
       sections.push({ id: 'leaders', title: leaders.length === ents.length ? 'Kılavuz' : `Kılavuzlar (${leaders.length})`, rows: leaderRows(this.ctx, leaders, anyLocked) });
+    // The selection's dimensions: their Zemin, and an ordinate's axis, a slope's elevations, common or “Çeşitli” (docs/adr/0147 §7).
+    const dims = ents.filter((e): e is DimensionEntity => e.kind === 'dimension');
+    if (dims.length) sections.push({ id: 'dimensions', title: dims.length === ents.length ? 'Ölçü' : `Ölçüler (${dims.length})`, rows: dimensionRows(this.ctx, dims, anyLocked) });
     if (totals.length) sections.push({ id: 'totals', title: 'Toplamlar', rows: totals });
     return sections;
   }

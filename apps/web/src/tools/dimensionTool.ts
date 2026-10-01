@@ -107,8 +107,11 @@ export class DimensionTool extends PointInputTool {
   readonly id = 'dimension';
   protected readonly label = 'Ölçü';
   private static mode: DimensionStyle = 'aligned';
-  private static lock: 0 | 90 | null = null;
+  /** Doğrusal's measuring direction, degrees counter-clockwise from east: 0 ΔY, 90 ΔX, another typed with Açı (A); null from the cursor. */
+  private static lock: number | null = null;
   private static byVertex = false;
+  /** Zemin (Z): the value written over the drawing's background, kept for the app's life (docs/adr/0147 §7). */
+  private static mask = false;
   /** Koordinat's axis lock (0 its Y, 90 its X; null: from the cursor) and Yay uzunluğu's Kısmi (docs/adr/0147 §7). */
   private static ordinateLock: 0 | 90 | null = null;
   private static arcPartial = false;
@@ -123,6 +126,11 @@ export class DimensionTool extends PointInputTool {
   private zs: (number | null)[] = [];
   /** The snap under the pointer as it went down: where Eğim's elevation comes from. */
   private snap: SnapHit | null = null;
+  /** Doğrusal's Açı (A): the next number is the measuring direction. */
+  private askingAngle = false;
+  /** Açı from an arc: its vertex and ends; from a circle: its centre and the point clicked on it (docs/adr/0147 §7). */
+  private angleArc: { c: Vec2; a: Vec2; b: Vec2 } | null = null;
+  private angleCircle: { c: Vec2; p1: Vec2 } | null = null;
 
   private get mode(): DimensionStyle {
     return DimensionTool.mode;
@@ -130,12 +138,12 @@ export class DimensionTool extends PointInputTool {
 
   /** Nothing picked yet: the style can still change. */
   private get fresh(): boolean {
-    return !this.pts.length && !this.edges.length && !this.circle && !this.arc;
+    return !this.pts.length && !this.edges.length && !this.circle && !this.arc && !this.angleArc && !this.angleCircle;
   }
 
   /** Stages where a click picks an edge or a circle rather than a point. */
   private get picksEdge(): boolean {
-    if (this.mode === 'angular') return !DimensionTool.byVertex && this.edges.length < 2;
+    if (this.mode === 'angular') return !DimensionTool.byVertex && this.edges.length < 2 && !this.angleArc && !this.angleCircle;
     if (this.mode === 'arcLength') return !this.arc;
     if (arrowed(this.mode)) return DimensionTool.byEdge && !this.pts.length;
     return (this.mode === 'radius' || this.mode === 'diameter' || this.mode === 'jogged') && !this.circle;
@@ -159,7 +167,8 @@ export class DimensionTool extends PointInputTool {
   private get placing(): boolean {
     switch (this.mode) {
       case 'angular':
-        return DimensionTool.byVertex ? this.pts.length === 3 : this.edges.length === 2;
+        if (DimensionTool.byVertex) return this.pts.length === 3;
+        return this.edges.length === 2 || !!this.angleArc || (!!this.angleCircle && this.pts.length === 1);
       case 'radius':
       case 'diameter':
         return !!this.circle;
@@ -189,14 +198,21 @@ export class DimensionTool extends PointInputTool {
     switch (this.mode) {
       case 'linear':
         step = n === 0 ? 'doğrusal ölçünün (ΔY / ΔX) ilk noktasını belirtin' : n === 1 ? 'ikinci ölçü noktasını belirtin' : 'ölçü çizgisinin yerini gösterin ya da mesafe yazın';
+        if (n === 2 && this.askingAngle) {
+          step = `ölçme doğrultusunu yazın (${this.ctx.format.angleUnitName}, doğudan saatin tersine)`;
+          break;
+        }
         if (n === 2) {
           const l = DimensionTool.lock;
-          opts = `Yatay ΔY (Y) / Düşey ΔX (X) / Yön (O): ${l === 0 ? 'yatay' : l === 90 ? 'düşey' : 'imleçten'}`;
+          const way = l === null ? 'imleçten' : l === 0 ? 'yatay' : l === 90 ? 'düşey' : this.ctx.format.angle((l * Math.PI) / 180);
+          opts = `Yatay ΔY (Y) / Düşey ΔX (X) / Yön (O): ${way} / Açı (A)`;
         }
         break;
       case 'angular':
         if (DimensionTool.byVertex) step = ['açının köşesini gösterin', 'birinci kolun üzerinde bir nokta gösterin', 'ikinci kolun üzerinde bir nokta gösterin', 'yayın yerini gösterin ya da yarıçap yazın'][Math.min(n, 3)];
-        else step = ['açı ölçüsü için birinci kenara tıklayın', 'ikinci kenara tıklayın', 'yayın yerini gösterin ya da yarıçap yazın'][this.edges.length];
+        else if (this.placing) step = 'yayın yerini gösterin ya da yarıçap yazın';
+        else if (this.angleCircle) step = 'açının ikinci noktasını gösterin';
+        else step = this.edges.length ? 'ikinci kenara tıklayın' : 'açı ölçüsü için bir kenara, yaya ya da daireye tıklayın';
         if (this.fresh) opts = DimensionTool.byVertex ? 'Kenarlardan (K)' : 'Köşeden (K)';
         break;
       case 'radius':
@@ -243,11 +259,17 @@ export class DimensionTool extends PointInputTool {
       default:
         step = n === 0 ? 'hizalı ölçünün ilk noktasını belirtin' : n === 1 ? 'ikinci ölçü noktasını belirtin' : 'ölçü çizgisinin yerini gösterin ya da mesafe yazın';
     }
-    const all = [opts, modes].filter(Boolean).join(' / ');
+    // Zemin while nothing is picked and while the dimension is placed (docs/adr/0147 §7).
+    const zemin = (this.fresh || this.placing) && !this.askingAngle ? `Zemin (Z): ${DimensionTool.mask ? 'açık' : 'kapalı'}` : '';
+    const all = [opts, zemin, modes].filter(Boolean).join(' / ');
     return all ? `${step} [${all}]` : step;
   }
 
   protected override option(key: string): boolean {
+    if (key === 'Z' && !this.askingAngle) {
+      DimensionTool.mask = !DimensionTool.mask;
+      return this.changed();
+    }
     if (this.fresh) {
       const m = MODE_KEYS.find(([, k]) => k === key || (k === 'Ç' && key === 'C'));
       if (m) {
@@ -279,10 +301,11 @@ export class DimensionTool extends PointInputTool {
       else return false;
       return this.changed();
     }
-    if (this.mode === 'linear' && this.pts.length === 2) {
+    if (this.mode === 'linear' && this.pts.length === 2 && !this.askingAngle) {
       if (key === 'Y') DimensionTool.lock = 0;
       else if (key === 'X') DimensionTool.lock = 90;
       else if (key === 'O') DimensionTool.lock = null;
+      else if (key === 'A') this.askingAngle = true;
       else return false;
       return this.changed();
     }
@@ -327,9 +350,17 @@ export class DimensionTool extends PointInputTool {
       const arc = e && arcEdgeAt(e, p.raw);
       if (!arc) return this.ctx.log.warn("Bir yaya ya da çoklu çizginin ya da alanın yaylı kenarına tıklayın; tam daire için Yarıçap ya da Çap'ı kullanın.");
       this.arc = arc;
+    } else if (this.mode === 'angular' && !this.edges.length && e && this.angleFrom(e, p.raw)) {
+      // Yaydan: the arc's own angle; Daireden: from the point clicked on the circle to a second point.
     } else if (this.mode === 'angular') {
       const s = e && straightEdgeAt(e, p.raw);
-      if (!s) return this.ctx.log.warn('Açının kenarı olarak düz bir çizgiye tıklayın; köşe noktasından ölçmek için “Köşeden” seçin.');
+      // The first pick also takes an arc or a circle (angleFrom); the second is a straight edge only.
+      if (!s)
+        return this.ctx.log.warn(
+          this.edges.length
+            ? 'Açının kenarı olarak düz bir çizgiye tıklayın; köşe noktasından ölçmek için “Köşeden” seçin.'
+            : 'Açı için düz bir kenara, yaya ya da daireye tıklayın; köşe noktasından ölçmek için “Köşeden” seçin.',
+        );
       if (this.edges.length === 1 && !lineLine(this.edges[0].a, this.edges[0].b, s.a, s.b)) return this.ctx.log.warn('Kenarlar paralel; aralarında açı yok.');
       this.edges.push({ ...s, at: p.raw });
     } else {
@@ -362,6 +393,30 @@ export class DimensionTool extends PointInputTool {
     this.commit(this.geomAt(p));
   }
 
+  /**
+   * Açı's first pick on an arc or a circle (docs/adr/0147 §7): Yaydan, the arc's own angle about its centre (its ends
+   * counter-clockwise); Daireden, from the point clicked, put on the circle, to a second point. False for another edge.
+   */
+  private angleFrom(e: Entity, at: Vec2): boolean {
+    let best: { ed: ArcEdge; d: number } | null = null;
+    for (const ed of entityEdges(e)) {
+      if (ed.kind !== 'arc') continue;
+      const d = closestOnEdge(ed, at).d;
+      if (!best || d < best.d) best = { ed, d };
+    }
+    const straight = straightEdgeAt(e, at);
+    if (!best || (straight && closestOnEdge({ kind: 'seg', a: straight.a, b: straight.b }, at).d < best.d)) return false;
+    const ends = arcLengthEnds(best.ed, null);
+    if (ends) this.angleArc = ends;
+    else {
+      const { c, r } = best.ed;
+      const l = dist(c, at);
+      if (l < 1e-9) return false;
+      this.angleCircle = { c, p1: { x: c.x + ((at.x - c.x) / l) * r, y: c.y + ((at.y - c.y) / l) * r } };
+    }
+    return true;
+  }
+
   /** The elevation of the point, or of the vertex of a line, a polyline or an area, a snap stands on (docs/adr/0142). */
   private snappedElevation(snap: SnapHit | null, p: Vec2): number | null {
     if (!snap || dist(snap.point, p) > 1e-9) return null;
@@ -389,6 +444,14 @@ export class DimensionTool extends PointInputTool {
       this.ctx.view.requestOverlay();
       return true;
     }
+    // Doğrusal's measuring direction asked for, in the project's angle unit.
+    if (this.askingAngle) {
+      const a = parseNumber(text);
+      if (a === null || /[,;@<]/.test(text)) return false;
+      DimensionTool.lock = (this.ctx.format.angleFromTyped(a) * 180) / Math.PI;
+      this.askingAngle = false;
+      return this.changed();
+    }
     if (this.option(text.trim().toLocaleUpperCase('tr-TR'))) return true;
     const n = parseNumber(text);
     // Radius and diameter are placed by pointing only (their prompt asks for no number); an ordinate's typed
@@ -404,7 +467,7 @@ export class DimensionTool extends PointInputTool {
   }
 
   override confirm(): void {
-    if (this.edges.length || this.circle || this.arc) return this.reset();
+    if (this.edges.length || this.circle || this.arc || this.angleArc || this.angleCircle) return this.reset();
     super.confirm();
   }
 
@@ -417,7 +480,11 @@ export class DimensionTool extends PointInputTool {
   override undoStep(): boolean {
     // Yay uzunluğu's points on the arc go before the arc, Kırıklı yarıçap's before its circle; Eğim's with their
     // elevations, an edge's two ends together (docs/adr/0147 §7).
-    if ((this.arc || this.circle) && this.pts.length) this.pts.pop();
+    if ((this.arc || this.circle || this.angleCircle) && this.pts.length) this.pts.pop();
+    else if (this.angleArc || this.angleCircle) {
+      this.angleArc = null;
+      this.angleCircle = null;
+    }
     else if (arrowed(this.mode) && this.pts.length) {
       if (DimensionTool.byEdge) this.pts = [];
       else this.pts.pop();
@@ -438,6 +505,9 @@ export class DimensionTool extends PointInputTool {
     this.arc = null;
     this.zs = [];
     this.snap = null;
+    this.askingAngle = false;
+    this.angleArc = null;
+    this.angleCircle = null;
     super.reset();
   }
 
@@ -500,6 +570,8 @@ export class DimensionTool extends PointInputTool {
    * edges, each arm as far as its edge was clicked (at least a little).
    */
   private armsAt(loc: Vec2): { c: Vec2; a: Vec2; b: Vec2 } | null {
+    if (this.angleArc) return this.angleArc;
+    if (this.angleCircle) return this.pts.length ? vertexArms(this.angleCircle.c, this.angleCircle.p1, this.pts[0], loc) : null;
     if (DimensionTool.byVertex) {
       const [c, p1, p2] = this.pts;
       return vertexArms(c, p1, p2, loc);
@@ -516,7 +588,7 @@ export class DimensionTool extends PointInputTool {
     }
     const { style, ...rest } = g;
     // Written by `cad.entities.create` (step “Ekle”); a refusal (a locked layer) is said by it, nothing is added.
-    const out = this.writeObjects([{ kind: 'dimension', ...rest, ...(style && style !== 'aligned' && { style }) }]);
+    const out = this.writeObjects([{ kind: 'dimension', ...rest, ...(style && style !== 'aligned' && { style }), ...(DimensionTool.mask && { mask: true }) }]);
     if (out) {
       // Zincir ölçü and Baz ölçü continue from the newest aligned or linear one (docs/adr/0140).
       rememberDimension(this.ctx.doc.uidOf(out.ids[0]), style);
@@ -529,6 +601,11 @@ export class DimensionTool extends PointInputTool {
     const pal = this.ctx.view.palette;
     for (const s of this.edges) strokePath(g, view, [s.a, s.b], { color: pal.snap, width: 2 });
     if (this.circle) strokeGeometry(g, view, { kind: 'circle', ...this.circle }, { color: pal.snap, width: 2 });
+    // Daireden: the arm to the point clicked on the circle, and to the cursor until the second point is given.
+    if (this.angleCircle && !this.placing) {
+      strokePath(g, view, [this.angleCircle.c, this.angleCircle.p1], { color: pal.snap, width: 2 });
+      if (this.hover) strokePath(g, view, [this.angleCircle.c, this.hover], { color: pal.accent });
+    }
     // Kırıklı yarıçap's point on the arc: the dimension as it would be, its jog at the centre shown.
     if (this.mode === 'jogged' && this.circle && this.pts.length === 1 && this.hover) {
       const jog = this.joggedAt(this.pts[0], this.hover, 0);

@@ -5,10 +5,14 @@
 //! point on the arc and the part to the cursor lit; Kırıklı yarıçap with the
 //! jog following the cursor; Semt on the parcel's west edge; Eğim between two
 //! points with elevations, and its question for a bare corner's elevation;
-//! Ölçülendirme ▾'s methods. The web's are `shots.mjs dimensions`
+//! Açı from the road's edge (Yaydan) and from a manhole (Daireden, Zemin on);
+//! Doğrusal along a typed direction; Öznitelikler's rows of a slope and of
+//! two ordinates; Ölçülendirme ▾'s methods. The web's are `shots.mjs dimensions`
 //! (`dimension-ordinate`, `dimension-arc-length`, `dimension-partial`,
 //! `dimension-jogged`, `dimension-azimuth`, `dimension-slope`,
-//! `dimension-slope-ask`, `dimension-methods`).
+//! `dimension-slope-ask`, `dimension-angle-arc`, `dimension-angle-circle`,
+//! `dimension-linear-angle`, `dimension-properties`,
+//! `dimension-properties-many`, `dimension-methods`).
 //! `tools_screens` takes them in the dark and the light theme at 1440×900
 //! and 1100×650:
 //!
@@ -20,7 +24,10 @@
 
 use std::f64::consts::PI;
 
-use crate::app::App;
+use serde_json::json;
+
+use crate::app::{App, Message};
+use kentos_ui::widget::docking;
 use crate::tools_scenes::{Objects, click, forget, hover, method, open, typed};
 use crate::tools_screens::{Pointed, Scene, open_split};
 
@@ -120,8 +127,96 @@ fn slope_ask(app: &mut App) {
     hover(app, [20.0, 4.0]);
 }
 
+/// A manhole east of the road, 5 m across its centre.
+const MANHOLE: [f64; 2] = [62.0, -22.0];
+
+/// Açı, Yaydan: the road's outer edge taken, its own angle drawn 4 m out of it with the cursor.
+fn angle_arc(app: &mut App) {
+    open(app, ground());
+    method(app, "tool.dimension", "A");
+    click(app, on_edge(90.0));
+    forget(app);
+    hover(app, [20.0, -6.0]);
+}
+
+/// Açı, Daireden: Zemin on, the manhole's east point, a second point north
+/// of its centre, the arc with the cursor between them.
+fn angle_circle(app: &mut App) {
+    let mut o = ground();
+    o.circle("yol", MANHOLE, 5.0);
+    open(app, o);
+    method(app, "tool.dimension", "A");
+    typed(app, "Z");
+    click(app, [MANHOLE[0] + 5.0, MANHOLE[1]]);
+    click(app, [MANHOLE[0], MANHOLE[1] + 12.0]);
+    forget(app);
+    hover(app, [MANHOLE[0] + 6.0, MANHOLE[1] + 6.0]);
+}
+
+/// Doğrusal along a typed direction: the parcel's south-west and north-east
+/// corners, 60 grads typed (54°), the dimension line south-east of them.
+fn linear_angle(app: &mut App) {
+    open(app, ground());
+    method(app, "tool.dimension", "D");
+    click(app, [0.0, 0.0]);
+    click(app, [44.0, 32.0]);
+    typed(app, "A");
+    typed(app, "60");
+    forget(app);
+    hover(app, [40.0, -8.0]);
+}
+
+/// The ground with a slope between the levelled points (4 m east), the
+/// north-west corner's Y (up) and the south-west corner's X (left, with Zemin).
+fn measured() -> Objects {
+    let mut o = ground();
+    o.dimension(
+        "parsel",
+        Some("slope"),
+        [[50.0, 0.0], [54.0, 32.0]],
+        None,
+        -4.0,
+        json!({ "za": 102.4, "zb": 101.15 }),
+    );
+    o.dimension(
+        "parsel",
+        Some("ordinate"),
+        [[2.0, 30.0], [2.0, 40.0]],
+        None,
+        0.0,
+        json!({ "angle": 0.0 }),
+    );
+    o.dimension(
+        "parsel",
+        Some("ordinate"),
+        [[0.0, 0.0], [-12.0, 0.0]],
+        None,
+        0.0,
+        json!({ "angle": 90.0, "mask": true }),
+    );
+    o
+}
+
+/// Öznitelikler over `slots` of `measured`, the layers' dock folded and Genel closed.
+fn props(app: &mut App, slots: &[u32]) {
+    open(app, measured());
+    app.selection
+        .set(slots.iter().map(|&s| kentos_domain::Slot(s)));
+    let upper = docking::Slot::Docked(docking::Side::Right, 0);
+    let _ = app.update(Message::Dock(docking::Event::Collapsed(upper, true)));
+    let _ = app.update(Message::Properties(crate::properties::Event::Toggle(
+        "general",
+    )));
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
+        ("olcu-aci-yaydan", angle_arc),
+        ("olcu-aci-daireden", angle_circle),
+        ("olcu-dogrusal-aci", linear_angle),
+        // The slope is the drawing's 6th object, the ordinates the 7th and 8th.
+        ("olcu-oznitelikler", |app| props(app, &[6])),
+        ("olcu-oznitelikler-coklu", |app| props(app, &[7, 8])),
         ("olcu-koordinat", ordinate),
         ("olcu-yay-uzunlugu", arc_length),
         ("olcu-kismi", partial),

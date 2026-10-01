@@ -60,6 +60,9 @@ pub struct Seen {
     pub rotation: Option<f64>,
     /// A leader's arrowhead's name; none the filled arrow (docs/adr/0146).
     pub arrow: Option<String>,
+    /// A dimension's direction in degrees: a linear one's measured, an
+    /// ordinate's axis (docs/adr/0147).
+    pub angle: Option<f64>,
 }
 
 impl Seen {
@@ -159,6 +162,7 @@ impl Seen {
             mask: match e {
                 Entity::Text(t) => Some(t.mask),
                 Entity::Leader(l) => Some(l.mask),
+                Entity::Dimension(d) => Some(d.mask),
                 _ => None,
             },
             rotation: match e {
@@ -168,6 +172,10 @@ impl Seen {
             },
             arrow: match e {
                 Entity::Leader(l) => l.arrow.map(|a| a.name().to_owned()),
+                _ => None,
+            },
+            angle: match e {
+                Entity::Dimension(d) => d.angle,
                 _ => None,
             },
         }

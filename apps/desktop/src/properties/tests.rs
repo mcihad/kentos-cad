@@ -1670,3 +1670,129 @@ fn a_leaders_rows_write_its_note_height_turn_arrowhead_and_mask() {
     assert_eq!(undo_label(&mut app).as_deref(), Some("Değiştir"));
     assert_eq!(leader_of(&app, b).text, None);
 }
+
+/// A dimension of `style` from (E + a, N) to (E + b, N), on Çizim.
+fn dimension(style: kentos_contracts::DimensionStyle, a: [f64; 2], b: [f64; 2]) -> DimensionEntity {
+    DimensionEntity {
+        base: base("cizim"),
+        a: Wire { x: E + a[0], y: N + a[1] },
+        b: Wire { x: E + b[0], y: N + b[1] },
+        offset: 3.0,
+        height: 2.5,
+        text: None,
+        style: Some(style),
+        angle: None,
+        c: None,
+        mask: false,
+        za: None,
+        zb: None,
+    }
+}
+
+fn dimension_of(app: &App, slot: u32) -> DimensionEntity {
+    match entity(app, slot) {
+        Entity::Dimension(d) => d,
+        other => panic!("a dimension: {other:?}"),
+    }
+}
+
+/// A dimension's rows (docs/adr/0147 §7): Zemin; an ordinate's Koordinat; a
+/// slope's two elevations; an arc length's radius and angle, shown only.
+/// Over a selection, Ölçü with Çeşitli where they differ, the kind's rows
+/// only when all are of it; every change one step “Değiştir”, those that
+/// have the value left out. The web's `dimensionRows.test.ts`.
+#[test]
+fn a_dimensions_rows_write_its_mask_axis_and_elevations() {
+    use kentos_contracts::DimensionStyle::{ArcLength, Ordinate, Slope};
+    let mut app = objects();
+    // A quarter arc of radius 10 about (E, N + 40), east to north, 3 m out.
+    let arc = add(
+        &mut app,
+        Entity::Dimension(DimensionEntity {
+            c: Some(Wire { x: E, y: N + 40.0 }),
+            ..dimension(ArcLength, [10.0, 40.0], [0.0, 50.0])
+        }),
+    );
+    select(&mut app, &[arc]);
+    assert_eq!(value(&app, "Geometri", "Zemin"), "Kapalı");
+    assert_eq!(value(&app, "Geometri", "Yarıçap"), "10.000 m");
+    assert_eq!(value(&app, "Geometri", "Açı"), "100.0000 g");
+    // Two ordinates, the Y's and the X's.
+    let oy = add(
+        &mut app,
+        Entity::Dimension(DimensionEntity {
+            angle: Some(0.0),
+            ..dimension(Ordinate, [0.0, 60.0], [5.0, 70.0])
+        }),
+    );
+    let ox = add(
+        &mut app,
+        Entity::Dimension(DimensionEntity {
+            angle: Some(90.0),
+            mask: true,
+            ..dimension(Ordinate, [0.0, 80.0], [-10.0, 85.0])
+        }),
+    );
+    select(&mut app, &[oy, ox]);
+    assert_eq!(value(&app, "Ölçü", "Zemin"), "Çeşitli");
+    assert_eq!(value(&app, "Ölçü", "Koordinat"), "Çeşitli");
+    let revision = |app: &App| app.document.as_ref().map_or(0, |d| d.model.revision());
+    event(&mut app, Event::DimensionAxis(vec![Slot(oy), Slot(ox)], 90.0));
+    assert_eq!(
+        (dimension_of(&app, oy).angle, dimension_of(&app, ox).angle),
+        (Some(90.0), Some(90.0))
+    );
+    assert_eq!(value(&app, "Ölçü", "Koordinat"), "X");
+    let before = revision(&app);
+    event(&mut app, Event::DimensionAxis(vec![Slot(oy), Slot(ox)], 90.0));
+    assert_eq!(revision(&app), before, "nothing written when both have it");
+    // Zemin on: the X's has it already, the Y's alone is written.
+    event(&mut app, Event::DimensionMask(vec![Slot(oy), Slot(ox)], true));
+    assert!(dimension_of(&app, oy).mask && dimension_of(&app, ox).mask);
+    assert_eq!(undo_label(&mut app).as_deref(), Some("Değiştir"));
+    assert!(!dimension_of(&app, oy).mask);
+    // Two slopes: one first elevation, two second ones.
+    let s1 = add(
+        &mut app,
+        Entity::Dimension(DimensionEntity {
+            za: Some(100.0),
+            zb: Some(99.0),
+            ..dimension(Slope, [0.0, 100.0], [40.0, 100.0])
+        }),
+    );
+    let s2 = add(
+        &mut app,
+        Entity::Dimension(DimensionEntity {
+            za: Some(100.0),
+            zb: Some(98.0),
+            ..dimension(Slope, [0.0, 110.0], [40.0, 110.0])
+        }),
+    );
+    select(&mut app, &[s1, s2]);
+    assert_eq!(value(&app, "Ölçü", "Birinci kot"), "100.000 m");
+    assert_eq!(value(&app, "Ölçü", "İkinci kot"), "Çeşitli");
+    event(
+        &mut app,
+        Event::Commit(Field::DimensionZb(vec![Slot(s1), Slot(s2)]), "97,5".to_owned()),
+    );
+    assert_eq!(
+        (dimension_of(&app, s1).zb, dimension_of(&app, s2).zb),
+        (Some(97.5), Some(97.5))
+    );
+    assert_eq!(value(&app, "Ölçü", "İkinci kot"), "97.500 m");
+    let before = revision(&app);
+    event(
+        &mut app,
+        Event::Commit(Field::DimensionZa(vec![Slot(s1)]), "kot".to_owned()),
+    );
+    assert_eq!(revision(&app), before, "not a number: nothing written");
+    // An ordinate and a slope: Zemin only; beside another object, counted.
+    select(&mut app, &[oy, s1]);
+    let titles: Vec<String> = rows(&app).into_iter().map(|(t, _)| t).collect();
+    assert!(titles.contains(&"Ölçü".to_owned()), "{titles:?}");
+    let section = rows(&app).into_iter().find(|(t, _)| t == "Ölçü").expect("Ölçü");
+    let labels: Vec<String> = section.1.iter().map(|r| r.label.to_string()).collect();
+    assert_eq!(labels, ["Zemin"]);
+    select(&mut app, &[oy, 1]);
+    assert_eq!(value(&app, "Ölçüler (1)", "Zemin"), "Kapalı");
+}

@@ -366,6 +366,9 @@ pub struct Memory {
     /// Semt's and Eğim's Kenardan: an edge clicked gives the two points
     /// (`DimensionTool.byEdge`; docs/adr/0147 §7).
     pub dimension_by_edge: bool,
+    /// Ölçülendirme's Zemin (Z): the value written over the drawing's
+    /// background (`DimensionTool.mask`; docs/adr/0147 §7).
+    pub dimension_mask: bool,
     /// Sadeleştir's tolerance, metres (docs/adr/0140). Tüm köşeleri yuvarla and
     /// Tüm köşelere pah keep their values in `fillet_radius` and `chamfer`,
     /// as the one-corner tools do.
@@ -507,6 +510,7 @@ impl Default for Memory {
             ordinate_lock: None,
             arc_partial: false,
             dimension_by_edge: false,
+            dimension_mask: false,
             simplify_tolerance: 0.01,
             split_parts: 4,
             split_length: 10.0,

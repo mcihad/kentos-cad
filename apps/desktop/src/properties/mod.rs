@@ -33,7 +33,8 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 
 use kentos_contracts::{
-    BlockId, Entity, EntitiesSetProperties, HatchPatternType, LeaderEntity, PropertiesOperation,
+    BlockId, DimensionEntity, Entity, EntitiesSetProperties, HatchPatternType, LeaderEntity,
+    PropertiesOperation,
 };
 use kentos_domain::Slot;
 use kentos_interaction::elevation::{self, Change};
@@ -74,6 +75,10 @@ pub enum Event {
     /// Ok ▾ of leaders (none: the filled arrow) and their Zemin ▾ (docs/adr/0146 §7).
     LeaderArrow(Vec<Slot>, Option<kentos_contracts::LeaderArrow>),
     LeaderMask(Vec<Slot>, bool),
+    /// Zemin ▾ of dimensions, and Koordinat ▾ of ordinates: the axis's
+    /// angle, 0 for Y and 90 for X (docs/adr/0147 §7).
+    DimensionMask(Vec<Slot>, bool),
+    DimensionAxis(Vec<Slot>, f64),
 }
 
 /// The value a cell edits.
@@ -111,6 +116,9 @@ pub enum Field {
     LeaderNote(Vec<Slot>),
     LeaderHeight(Vec<Slot>),
     LeaderTurn(Vec<Slot>),
+    /// Slopes' first and second elevation, metres (docs/adr/0147 §7).
+    DimensionZa(Vec<Slot>),
+    DimensionZb(Vec<Slot>),
 }
 
 /// Which vertices of an object a Kot cell sets.
@@ -407,6 +415,20 @@ impl App {
             Event::LeaderMask(slots, mask) => properties::change_leaders(model, &slots, |l| {
                 (l.mask != mask).then(|| LeaderEntity { mask, ..l.clone() })
             }),
+            Event::DimensionMask(slots, mask) => {
+                properties::change_dimensions(model, &slots, |d| {
+                    (d.mask != mask).then(|| DimensionEntity { mask, ..d.clone() })
+                })
+            }
+            Event::DimensionAxis(slots, angle) => {
+                let y = angle == 0.0;
+                properties::change_dimensions(model, &slots, |d| {
+                    (rows::is_y_axis(d.angle) != y).then(|| DimensionEntity {
+                        angle: Some(angle),
+                        ..d.clone()
+                    })
+                })
+            }
             Event::Commit(field, text) => commit(model, &field, &text),
         };
         for text in said {
@@ -492,6 +514,21 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 })
             });
         }
+        Field::DimensionZa(slots) | Field::DimensionZb(slots) => {
+            let n = web_number(text);
+            if !n.is_finite() {
+                return Vec::new();
+            }
+            let second = matches!(field, Field::DimensionZb(_));
+            return properties::change_dimensions(model, slots, |d| {
+                let z = if second { d.zb } else { d.za };
+                (z != Some(n)).then(|| {
+                    let mut d = d.clone();
+                    *(if second { &mut d.zb } else { &mut d.za }) = Some(n);
+                    d
+                })
+            });
+        }
         Field::LeaderTurn(slots) => {
             let n = web_number(text);
             if !n.is_finite() {
@@ -544,7 +581,9 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::TextWidth(_)
         | Field::LeaderNote(_)
         | Field::LeaderHeight(_)
-        | Field::LeaderTurn(_) => return Vec::new(),
+        | Field::LeaderTurn(_)
+        | Field::DimensionZa(_)
+        | Field::DimensionZb(_) => return Vec::new(),
     };
     let Some(mut e) = model.get(slot).cloned() else {
         return Vec::new();

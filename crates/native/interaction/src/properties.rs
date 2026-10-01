@@ -10,8 +10,8 @@
 //! operation `elevation`, the step “Kot ver”.
 
 use kentos_contracts::{
-    CommandResult, EditOperation, EntitiesEdit, EntitiesSetProperties, Entity, EntityEdit,
-    LeaderEntity, TextAlign, TextEntity,
+    CommandResult, DimensionEntity, EditOperation, EntitiesEdit, EntitiesSetProperties, Entity,
+    EntityEdit, LeaderEntity, TextAlign, TextEntity,
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::TextPlace;
@@ -215,6 +215,25 @@ pub fn change_leaders(
         .iter()
         .filter_map(|&slot| match doc.get(slot) {
             Some(Entity::Leader(l)) => Some((slot, Entity::Leader(change(l)?))),
+            _ => None,
+        })
+        .collect();
+    set_geometries(doc, &changes)
+}
+
+/// The dimensions in `slots`, each changed by `change` (none: it has the
+/// value already and is left out), in one step “Değiştir” (Öznitelikler's
+/// Ölçü rows, docs/adr/0147 §7; the web's `dimensionRows`); what to say: the
+/// command's refusal.
+pub fn change_dimensions(
+    doc: &mut Document,
+    slots: &[Slot],
+    change: impl Fn(&DimensionEntity) -> Option<DimensionEntity>,
+) -> Vec<String> {
+    let changes: Vec<(Slot, Entity)> = slots
+        .iter()
+        .filter_map(|&slot| match doc.get(slot) {
+            Some(Entity::Dimension(d)) => Some((slot, Entity::Dimension(change(d)?))),
             _ => None,
         })
         .collect();
