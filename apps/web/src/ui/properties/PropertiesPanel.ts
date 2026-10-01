@@ -2,7 +2,7 @@ import type { AppContext } from '../../app/context';
 import { watchAll } from '../../core/signal';
 import { attributeRows, turnOf } from '../../model/blocks';
 import { DIMENSION_STYLE_LABEL, layoutDimension } from '../../model/geom/dimension';
-import { ENTITY_KIND_LABEL, HATCH_PATTERN_LABEL, drawsLines, entityArea, entityLength, type Entity, type HatchPatternType, type TextEntity } from '../../model/entities';
+import { ENTITY_KIND_LABEL, HATCH_PATTERN_LABEL, drawsLines, entityArea, entityLength, type Entity, type HatchPatternType, type LeaderEntity, type TextEntity } from '../../model/entities';
 import { angleDeg, bearingGrad, dist } from '../../model/geometry';
 import { sweep } from '../../model/geom/arc';
 import { isFullEllipse, majorLength } from '../../model/geom/ellipse';
@@ -15,6 +15,7 @@ import type { MenuItem } from '../widgets/PopupMenu';
 import { PropertyGrid, type PropRow, type PropSection } from '../widgets/PropertyGrid';
 import { commonElevationRow, lineEndRow, pathElevationRow, spaceRow } from './elevationRows';
 import { cornerRows, holeRows } from './pathRows';
+import { leaderRows } from './leaderRows';
 import { textRows } from './textRows';
 import { setGeometry, setProperties, uidsOf } from './write';
 
@@ -458,9 +459,9 @@ export class PropertiesPanel extends Panel {
         );
         break;
       }
-      // Its corners and length; its note's rows come with the Kılavuz tool (docs/adr/0146 §7). The desktop's are the same.
+      // Its note, height, turn, arrowhead and mask, its corners and length (docs/adr/0146 §7). The desktop's are the same.
       case 'leader':
-        geo.push({ label: 'Köşe sayısı', value: String(e.pts.length), numeric: true }, num('Uzunluk', entityLength(e) ?? 0, 'm'));
+        geo.push(...leaderRows(this.ctx, [e], locked), { label: 'Köşe sayısı', value: String(e.pts.length), numeric: true }, num('Uzunluk', entityLength(e) ?? 0, 'm'));
         break;
     }
 
@@ -534,6 +535,10 @@ export class PropertiesPanel extends Panel {
     // The selection's texts: their Hiza, Genişlik çarpanı and Zemin, common or “Çeşitli” (docs/adr/0145 §6).
     const texts = ents.filter((e): e is TextEntity => e.kind === 'text');
     if (texts.length) sections.push({ id: 'texts', title: texts.length === ents.length ? 'Yazı' : `Yazılar (${texts.length})`, rows: textRows(this.ctx, texts, anyLocked) });
+    // The selection's leaders: their note, height, turn, arrowhead and mask, common or “Çeşitli” (docs/adr/0146 §7).
+    const leaders = ents.filter((e): e is LeaderEntity => e.kind === 'leader');
+    if (leaders.length)
+      sections.push({ id: 'leaders', title: leaders.length === ents.length ? 'Kılavuz' : `Kılavuzlar (${leaders.length})`, rows: leaderRows(this.ctx, leaders, anyLocked) });
     if (totals.length) sections.push({ id: 'totals', title: 'Toplamlar', rows: totals });
     return sections;
   }

@@ -297,6 +297,15 @@ fn compare_shape(name: &str, want: &Newest, seen: Option<&Seen>, trace: &Trace) 
     {
         bad.push(format!("{name}.mask: {:?}, beklenen {mask}", seen.mask));
     }
+    // A leader's arrowhead (docs/adr/0146), exact.
+    if let Some(arrow) = &want.arrow
+        && seen.arrow != *arrow
+    {
+        bad.push(format!(
+            "{name}.arrow: {:?}, beklenen {arrow:?}",
+            seen.arrow
+        ));
+    }
     if let Some(rotation) = want.rotation
         && seen.rotation != Some(rotation)
     {

@@ -2078,7 +2078,120 @@ SCENES.leaders = [
       await ui.sleep(600);
     },
   },
+  ...leaderToolScenes(),
 ];
+
+/**
+ * Kılavuz at work (docs/adr/0146 §7) over the desktop's ground (`apps/desktop/src/leader_scenes.rs`): a parcel, a
+ * building in it and a road below, in metres from the drawing's origin. The tip on the building's corner, a vertex,
+ * the pointer where the landing starts; the note's field with the note typed; Ok's menu from the command line's chip;
+ * the leaders written (a filled arrow with its note, an open one from the road going left with a masked note, a dot);
+ * the first's note edited in place after a double click.
+ */
+function leaderToolScenes() {
+  const layer = (id, name, color, lineWeight) => ({ id, name, type: 'layer', visible: true, locked: false, expanded: true, style: { color, lineType: 'continuous', lineWeight }, children: [] });
+  const E = 487000;
+  const N = 4420000;
+  const P = (x, y) => ({ x: E + x, y: N + y });
+  const box = (id, layerId, x0, y0, x1, y1) => ({ kind: 'polygon', id, layerId, attrs: {}, pts: [P(x0, y0), P(x1, y0), P(x1, y1), P(x0, y1)] });
+  const GROUND = JSON.stringify({
+    format: 'kentos.document',
+    version: 1,
+    name: 'Kılavuz',
+    settings: { srid: 5256, lengthDecimals: 3, areaDecimals: 2, areaUnit: 'm2', angleUnit: 'grad', plotScale: 1000, workspace: 'hybrid', drawingFont: 'barlow' },
+    origin: { x: E, y: N },
+    layers: [layer('cizim', 'Çizim', 'fg', 0.25), layer('yol', 'Yol', '#E5484D', 0.5), layer('parsel', 'Parsel', '#3E63DD', 0.35)],
+    activeLayer: 'cizim',
+    entities: [box(1, 'parsel', 0, 0, 40, 30), box(2, 'cizim', 8, 6, 22, 18), { kind: 'line', id: 3, layerId: 'yol', attrs: {}, a: P(-6, -4), b: P(60, -4) }],
+    styles: { items: [], categories: [] },
+  });
+  const pageAt = (ui, x, y) => ui.eval(PAGE_AT(E + x, N + y));
+  const clickAt = async (ui, x, y) => (await ui.clickAt(...(await pageAt(ui, x, y))), await ui.sleep(200));
+  const enter = (ui) => ui.eval(`window.kentos.tools.active.confirm()`);
+  const field = '.inline-text:not([hidden]) .inline-text__input';
+  /** The note typed into its field, as a user types it. */
+  const typeNote = async (ui, text) => (await ui.waitFor(`!!document.querySelector('${field}')`), await ui.clickSel(field), await ui.type(text), await ui.sleep(200));
+  const keep = async (ui) => (await ui.key('Enter'), await ui.sleep(250));
+  const tool = async (ui) => {
+    await ribbonOn(ui, { ribbonTab: 'draw', ...LOGGED });
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      k.files.ask = async () => 'drop';
+      if (!(await k.files.load(${JSON.stringify(GROUND)}, null))) throw new Error('the ground did not load');
+      k.view.zoomExtents();
+      // Clear of the toolbox.
+      const c = k.view.camera;
+      c.scale = c.scale * 0.85;
+      c.center = { x: c.center.x - 110 / c.scale, y: c.center.y };
+      c.panBy(0, 0);
+      k.log.clear();
+    })()`);
+    await ui.sleep(400);
+    await startTool(ui, 'leader');
+    await clickAt(ui, 22, 18);
+    await clickAt(ui, 28, 24);
+    await ui.eval(`window.kentos.log.clear()`);
+    await ui.move(...(await pageAt(ui, 36, 25)));
+    await ui.sleep(350);
+  };
+  const note = async (ui) => {
+    await tool(ui);
+    await clickAt(ui, 36, 25);
+    await enter(ui);
+    await typeNote(ui, 'Mevcut bina');
+  };
+  const written = async (ui) => {
+    await note(ui);
+    await keep(ui);
+    await ui.eval(`(() => { const t = window.kentos.tools.active; t.chooseOption('O', 'açık'); t.input('Z'); })()`);
+    for (const [x, y] of [[50, -4], [46, 4], [38, 6]]) await clickAt(ui, x, y);
+    await enter(ui);
+    await typeNote(ui, 'Ø150 PVC');
+    await keep(ui);
+    await ui.eval(`(() => { const t = window.kentos.tools.active; t.chooseOption('O', 'nokta'); t.input('Z'); })()`);
+    for (const [x, y] of [[8, 18], [3, 23]]) await clickAt(ui, x, y);
+    await enter(ui);
+    await ui.waitFor(`!!document.querySelector('${field}')`);
+    await keep(ui);
+    await ui.move(...(await pageAt(ui, 52, 12)));
+    await ui.sleep(350);
+  };
+  /** Kılavuz left, a double click on the first leader's note: its field over it, the note's words changed (the building is to be pulled down). */
+  const edit = async (ui) => {
+    await written(ui);
+    await ui.escapeAll(2);
+    const [x, y] = await pageAt(ui, 46, 25);
+    await ui.clickAt(x, y);
+    await ui.clickAt(x, y);
+    await ui.waitFor(`!!document.querySelector('${field}')`);
+    // The field chooses its text once it is shown; typing then replaces it.
+    await ui.sleep(300);
+    await ui.eval(`document.querySelector('${field}').select()`);
+    await ui.type('Yıkılacak bina');
+    await ui.sleep(300);
+  };
+  const close = async (ui) => (await ui.escapeAll(3), await ribbonOff(ui));
+  return [
+    { id: 'leader-tool', open: tool, close },
+    { id: 'leader-note', open: note, close },
+    {
+      id: 'leader-arrows',
+      // Ok's chip, or in a narrow window Diğer's menu with Ok's open over it.
+      open: async (ui) => {
+        await tool(ui);
+        const chip = '.cmdline__chip[aria-haspopup="menu"]:not(.cmdline__more):not([hidden])';
+        if (await ui.eval(`!!document.querySelector('${chip}')`)) return (await ui.clickSel(chip), await ui.waitFor(`!!document.querySelector('.menu')`), await ui.sleep(300));
+        await ui.clickSel('.cmdline__more');
+        await ui.waitFor(`!!document.querySelector('.menu')`);
+        await ui.hoverText('.menu .menu__item', 'Ok');
+        await ui.sleep(300);
+      },
+      close,
+    },
+    { id: 'leader-written', open: written, close },
+    { id: 'leader-edit', open: edit, close },
+  ];
+}
 
 /** Closer in: the view centred on `x`, `y` at `times` the whole scene's scale. */
 const closeIn = (x, y, times) => `(() => { const c = window.kentos.view.camera; c.center = { x: ${x}, y: ${y} }; c.scale = c.scale * ${times}; c.panBy(0, 0); window.kentos.view.requestRender(); })()`;

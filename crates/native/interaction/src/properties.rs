@@ -11,7 +11,7 @@
 
 use kentos_contracts::{
     CommandResult, EditOperation, EntitiesEdit, EntitiesSetProperties, Entity, EntityEdit,
-    TextAlign, TextEntity,
+    LeaderEntity, TextAlign, TextEntity,
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::TextPlace;
@@ -200,6 +200,25 @@ pub fn set_text_mask(doc: &mut Document, slots: &[Slot], mask: bool) -> Vec<Stri
     change_texts(doc, slots, |t, _| {
         (t.mask != mask).then(|| TextEntity { mask, ..t.clone() })
     })
+}
+
+/// The leaders in `slots`, each changed by `change` (none: it has the value
+/// already and is left out), in one step “Değiştir” (Öznitelikler's Kılavuz
+/// rows, docs/adr/0146 §7; the web's `leaderRows`); what to say: the
+/// command's refusal.
+pub fn change_leaders(
+    doc: &mut Document,
+    slots: &[Slot],
+    change: impl Fn(&LeaderEntity) -> Option<LeaderEntity>,
+) -> Vec<String> {
+    let changes: Vec<(Slot, Entity)> = slots
+        .iter()
+        .filter_map(|&slot| match doc.get(slot) {
+            Some(Entity::Leader(l)) => Some((slot, Entity::Leader(change(l)?))),
+            _ => None,
+        })
+        .collect();
+    set_geometries(doc, &changes)
 }
 
 /// The contract's alignment as the geometry core names it (the same names).

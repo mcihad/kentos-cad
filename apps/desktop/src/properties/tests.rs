@@ -1558,3 +1558,112 @@ fn width_factor_and_mask_are_written_to_the_texts() {
     assert_eq!(undo_label(&mut app).as_deref(), Some("Değiştir"));
     assert_eq!((text_of(&app, a).mask, text_of(&app, b).mask), (true, true));
 }
+
+/// Two leaders: a filled arrow with its note, an open one masked, on Çizim.
+fn two_leaders(app: &mut App) -> (u32, u32) {
+    let leader = |x: f64, text: &str, arrow, mask| kentos_contracts::LeaderEntity {
+        base: base("cizim"),
+        pts: vec![
+            Wire {
+                x: 487000.0 + x,
+                y: 4420020.0,
+            },
+            Wire {
+                x: 487004.0 + x,
+                y: 4420023.0,
+            },
+        ],
+        text: Some(text.to_owned()),
+        height: 2.0,
+        rotation: 0.0,
+        arrow,
+        mask,
+    };
+    let a = add(app, Entity::Leader(leader(0.0, "Mevcut bina", None, false)));
+    let b = add(
+        app,
+        Entity::Leader(leader(
+            20.0,
+            "Ø150 PVC",
+            Some(kentos_contracts::LeaderArrow::Open),
+            true,
+        )),
+    );
+    (a, b)
+}
+
+fn leader_of(app: &App, slot: u32) -> kentos_contracts::LeaderEntity {
+    match entity(app, slot) {
+        Entity::Leader(l) => l,
+        other => panic!("a leader: {other:?}"),
+    }
+}
+
+/// A leader's rows (docs/adr/0146 §7): its note, height, turn, arrowhead and
+/// mask under Geometri; over a selection, Kılavuz with Çeşitli where they
+/// differ, every change one step “Değiştir”, nothing written when nothing
+/// changes, an emptied note the arrow alone, a height not over 0 not taken.
+#[test]
+fn a_leaders_rows_write_its_note_height_turn_arrowhead_and_mask() {
+    let mut app = objects();
+    let (a, b) = two_leaders(&mut app);
+    select(&mut app, &[a]);
+    assert_eq!(value(&app, "Geometri", "Not"), "Mevcut bina");
+    assert_eq!(value(&app, "Geometri", "Yükseklik"), "2.000 m");
+    assert_eq!(value(&app, "Geometri", "Dönüş"), "0.00 °");
+    assert_eq!(value(&app, "Geometri", "Ok"), "Dolu");
+    assert_eq!(value(&app, "Geometri", "Zemin"), "Kapalı");
+    assert_eq!(value(&app, "Geometri", "Köşe sayısı"), "2");
+    assert_eq!(value(&app, "Geometri", "Uzunluk"), "5.000 m");
+    select(&mut app, &[a, b]);
+    for label in ["Not", "Ok", "Zemin"] {
+        assert_eq!(value(&app, "Kılavuz", label), "Çeşitli");
+    }
+    assert_eq!(value(&app, "Kılavuz", "Yükseklik"), "2.000 m");
+    let (sa, sb) = (Slot(a), Slot(b));
+    event(
+        &mut app,
+        Event::LeaderArrow(vec![sa, sb], Some(kentos_contracts::LeaderArrow::Dot)),
+    );
+    assert_eq!(
+        (leader_of(&app, a).arrow, leader_of(&app, b).arrow),
+        (
+            Some(kentos_contracts::LeaderArrow::Dot),
+            Some(kentos_contracts::LeaderArrow::Dot)
+        )
+    );
+    assert_eq!(value(&app, "Kılavuz", "Ok"), "Nokta");
+    assert_eq!(undo_label(&mut app).as_deref(), Some("Değiştir"));
+    // Zemin on: b has it already, a alone is written.
+    event(&mut app, Event::LeaderMask(vec![sa, sb], true));
+    assert_eq!((leader_of(&app, a).mask, leader_of(&app, b).mask), (true, true));
+    event(
+        &mut app,
+        Event::Commit(Field::LeaderTurn(vec![sa, sb]), "370".to_owned()),
+    );
+    assert_eq!(leader_of(&app, b).rotation, 10.0);
+    let revision = |app: &App| app.document.as_ref().map_or(0, |d| d.model.revision());
+    let before = revision(&app);
+    event(
+        &mut app,
+        Event::Commit(Field::LeaderHeight(vec![sa]), "0".to_owned()),
+    );
+    assert_eq!(revision(&app), before, "a height not over 0 is not taken");
+    event(
+        &mut app,
+        Event::Commit(Field::LeaderHeight(vec![sa]), "3,5".to_owned()),
+    );
+    assert_eq!(leader_of(&app, a).height, 3.5);
+    event(
+        &mut app,
+        Event::Commit(Field::LeaderNote(vec![sb]), "  ".to_owned()),
+    );
+    assert_eq!(leader_of(&app, b).text, None, "the arrow alone");
+    event(
+        &mut app,
+        Event::Commit(Field::LeaderNote(vec![sb]), " Ø200 PVC ".to_owned()),
+    );
+    assert_eq!(leader_of(&app, b).text.as_deref(), Some("Ø200 PVC"));
+    assert_eq!(undo_label(&mut app).as_deref(), Some("Değiştir"));
+    assert_eq!(leader_of(&app, b).text, None);
+}

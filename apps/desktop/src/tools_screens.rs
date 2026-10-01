@@ -86,6 +86,7 @@ pub(crate) fn press_caption(
 /// Pictures of menus the new commands are in (docs/adr/0141): the layer tree's, and Seç ▾.
 fn pointed_scenes() -> Vec<Pointed> {
     let mut all = crate::text_scenes::pointed();
+    all.extend(crate::leader_scenes::pointed());
     let menus: Vec<Pointed> = vec![
         (
             "katman-menu-katman",
@@ -141,6 +142,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::elevation_scenes::scenes());
     all.extend(crate::parts_scenes::scenes());
     all.extend(crate::text_scenes::scenes());
+    all.extend(crate::leader_scenes::scenes());
     all
 }
 

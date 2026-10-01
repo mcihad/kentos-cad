@@ -44,7 +44,12 @@ export interface TextInputRequest {
   widthFactor?: number;
   /** What the field opens with, selected (Yazı's Artır); none: empty. */
   initial?: string;
+  /** What the empty field shows, and the hint under it; none: Yazı's. */
+  placeholder?: string;
+  hint?: string;
   commit(text: string): void;
+  /** Enter in the empty field (Kılavuz: the arrow without a note, docs/adr/0146 §7); none: as Esc. */
+  empty?(): void;
   cancel(): void;
 }
 

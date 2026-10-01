@@ -19,14 +19,14 @@
   },
   "summary": {
     "commands": {
-      "total": 199,
-      "implemented": 186,
+      "total": 200,
+      "implemented": 187,
       "partial": 0,
       "pending": 13
     },
     "tools": {
-      "total": 83,
-      "implemented": 81,
+      "total": 84,
+      "implemented": 82,
       "partial": 0,
       "pending": 2
     },
@@ -74,19 +74,19 @@
     },
     "commandsWithoutPlace": [],
     "commandsWithoutTests": 62,
-    "commandsOnDesktop": 181,
+    "commandsOnDesktop": 182,
     "desktop": {
       "commands": {
-        "total": 199,
-        "implemented": 181,
+        "total": 200,
+        "implemented": 182,
         "partial": 0,
         "pending": 13,
         "none": 0,
         "n/a": 5
       },
       "tools": {
-        "total": 83,
-        "implemented": 81,
+        "total": 84,
+        "implemented": 82,
         "partial": 0,
         "pending": 2,
         "none": 0,
@@ -4042,6 +4042,40 @@
       ]
     },
     {
+      "id": "tool.leader",
+      "title": "Kılavuz",
+      "category": "Açıklama",
+      "icon": "leader",
+      "description": "Oklu not: okun ucundan köşelerden geçen çizgi, kol ve kolun ucunda not. Ok başı, not yüksekliği ve zemin seçilir.",
+      "aliases": [
+        "KILAVUZ",
+        "LEADER",
+        "LE",
+        "MLEADER",
+        "MLD"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Çizim › Açıklama"
+      ],
+      "ribbon": [
+        "Çizim › Açıklama"
+      ],
+      "quickAccess": false,
+      "toolbox": true,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/leader.json"
+      ]
+    },
+    {
       "id": "tool.lengthen",
       "title": "Uzat-kısalt",
       "category": "Düzenle",
@@ -7697,6 +7731,33 @@
       },
       "tests": [
         "fixtures/interaction/v1/object-tools.json"
+      ]
+    },
+    {
+      "id": "leader",
+      "label": "Kılavuz",
+      "icon": "leader",
+      "group": "annotate",
+      "aliases": [
+        "KILAVUZ",
+        "LEADER",
+        "LE",
+        "MLEADER",
+        "MLD"
+      ],
+      "primary": true,
+      "rare": false,
+      "methods": [],
+      "steps": 3,
+      "description": "Oklu not: okun ucundan köşelerden geçen çizgi, kol ve kolun ucunda not. Ok başı, not yüksekliği ve zemin seçilir.",
+      "productCommand": "cad.entities.create",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/leader.json"
       ]
     },
     {
@@ -15228,6 +15289,7 @@
             "label": "Açıklama",
             "items": [
               "tool.text",
+              "tool.leader",
               "tool.placeTextFile",
               "tool.dimension",
               "tool.dimContinue",
@@ -16314,6 +16376,10 @@
             "items": [
               {
                 "command": "tool.text",
+                "size": "large"
+              },
+              {
+                "command": "tool.leader",
                 "size": "large"
               },
               {
@@ -18233,6 +18299,10 @@
                   "size": "large"
                 },
                 {
+                  "command": "tool.leader",
+                  "size": "large"
+                },
+                {
                   "command": "tool.placeTextFile",
                   "size": "small"
                 },
@@ -19823,6 +19893,10 @@
                   "size": "large"
                 },
                 {
+                  "command": "tool.leader",
+                  "size": "large"
+                },
+                {
                   "command": "tool.placeTextFile",
                   "size": "small"
                 },
@@ -20875,6 +20949,11 @@
     "spline": "<path d=\"M3 15c2.6-8.5 5.8-8.5 7 0 1.2 8.2 4.5 4 7-9\"/><rect x=\"1.5\" y=\"13.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15.5\" y=\"4.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "text": "<path d=\"M4.5 5V3.8h11V5M10 3.8v12.4M7.5 16.2h5\"/>",
     "textFile": "<path d=\"M5 2.5h7l3 3v12H5z\"/><path d=\"M12 2.5v3h3\"/><path d=\"M7.5 9.5h5M10 9.5v5\"/>",
+    "leader": "<path d=\"M4 16 10 9.5h2.5\"/><path d=\"M4 16 7 14.2 5.6 12.8z\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M14 8.2h3.2M14 10.8h2.4\" stroke-width=\"1.2\"/>",
+    "leaderArrowFilled": "<path d=\"M6.5 10H17\"/><path d=\"M2.5 10 7.2 7.6v4.8z\" fill=\"currentColor\" stroke=\"none\"/>",
+    "leaderArrowOpen": "<path d=\"M2.5 10H17\"/><path d=\"M7.2 7.6 2.5 10l4.7 2.4\"/>",
+    "leaderArrowDot": "<path d=\"M6.5 10H17\"/><circle cx=\"4.3\" cy=\"10\" r=\"2.1\" fill=\"currentColor\" stroke=\"none\"/>",
+    "leaderArrowNone": "<path d=\"M2.5 10H17\"/>",
     "findReplace": "<circle cx=\"8\" cy=\"8\" r=\"4.3\"/><path d=\"m11.1 11.1 2.4 2.4\"/><path d=\"M10.5 17h6.5m-2-2 2 2-2 2\"/>",
     "readable": "<path d=\"M16 10.5A6 6 0 1 1 13.6 5.7\"/><path d=\"M14 2.6v3.5h-3.5\"/><path d=\"M7.5 8.3h5M10 8.3v5\"/>",
     "dimension": "<path d=\"M3.5 5v10M16.5 5v10M3.5 12h13\"/><path d=\"m5.8 10.5-2.3 1.5 2.3 1.5M14.2 10.5l2.3 1.5-2.3 1.5\"/><path d=\"M8 8.5h4\"/>",

@@ -116,3 +116,199 @@ fn a_dragged_grip_moves_a_leader_s_vertex_and_a_mid_grip_adds_one() {
     };
     assert_eq!(l.text.as_deref(), Some("Mevcut bina"), "the note stays");
 }
+
+// ── The tool (docs/adr/0146 §7): the web's tests in apps/web/src/tools/leaderTool.test.ts, the same words ──
+
+/// The tool on the empty drawing, snapping off (the traces' default).
+fn tool() -> Bench {
+    let mut b = Bench::new("leader");
+    b.draft.snap = false;
+    b
+}
+
+/// The text field the tool asked for last.
+fn field(b: &Bench) -> kentos_interaction::TextField {
+    let Some(kentos_interaction::ViewChange::Text(field)) = b.views.last().cloned() else {
+        panic!("a text field asked for: {:?}", b.views);
+    };
+    field
+}
+
+fn leaders_drawn(b: &Bench) -> Vec<kentos_contracts::LeaderEntity> {
+    b.doc
+        .entities()
+        .filter_map(|e| match e {
+            Entity::Leader(l) => Some(l.clone()),
+            _ => None,
+        })
+        .collect()
+}
+
+fn at(p: kentos_contracts::Vec2) -> [f64; 2] {
+    [p.x - E, p.y - N]
+}
+
+#[test]
+fn the_tool_opens_the_note_past_the_landing_and_writes_the_leader_in_one_step() {
+    let mut b = tool();
+    assert_eq!(
+        b.session.prompt().text(),
+        "Kılavuz: okun ucuna tıklayın [Ok (O): dolu / Yükseklik (Y): 2.5 mm / Zemin (Z): kapalı]"
+    );
+    b.click(0.0, 0.0);
+    b.click(6.0, 5.0);
+    assert_eq!(
+        b.session.prompt().text(),
+        "Kılavuz: sonraki köşeye tıklayın; Enter ya da sağ tık notu yazdırır [Ok (O): dolu / Yükseklik (Y): 2.5 mm / Zemin (Z): kapalı / Geri (G)]"
+    );
+    b.confirm();
+    // The landing 5 m east of (6, 5), the note 1.25 m on: its middle left at (12.25, 5).
+    let f = field(&b);
+    assert_eq!(at(kentos_contracts::Vec2 { x: f.at.x, y: f.at.y }), [12.25, 5.0]);
+    assert_eq!((f.height, f.rotation), (2.5, 0.0));
+    assert_eq!(f.align, Some(kentos_contracts::TextAlign::MiddleLeft));
+    assert!(f.empty, "an empty field's Enter answers");
+    assert_eq!(
+        b.session.prompt().text(),
+        "Kılavuz: notu kolun ucuna yazın; Enter ekler, boş Enter notsuz ekler, Esc köşelere döner"
+    );
+    b.run(|s, cx| s.text_typed(Some("Mevcut bina"), cx));
+    let [l] = &leaders_drawn(&b)[..] else {
+        panic!("one leader");
+    };
+    assert_eq!(
+        l.pts.iter().map(|p| at(*p)).collect::<Vec<_>>(),
+        [[0.0, 0.0], [6.0, 5.0]]
+    );
+    assert_eq!(
+        (l.text.as_deref(), l.height, l.rotation, l.arrow, l.mask),
+        (Some("Mevcut bina"), 2.5, 0.0, None, false)
+    );
+    assert_eq!(b.last_text(), Some("Kılavuz eklendi: “Mevcut bina”"));
+    assert_eq!(
+        b.session.prompt().text(),
+        "Kılavuz: okun ucuna tıklayın [Ok (O): dolu / Yükseklik (Y): 2.5 mm / Zemin (Z): kapalı]"
+    );
+    assert_eq!(b.doc.undo().as_deref(), Some("Kılavuz"));
+}
+
+#[test]
+fn a_note_to_the_left_opens_on_its_middle_right_and_the_empty_field_writes_the_arrow_alone() {
+    let mut b = tool();
+    assert!(b.type_text("Z"));
+    b.click(30.0, 0.0);
+    b.click(26.0, 4.0);
+    b.click(20.0, 6.0);
+    b.confirm();
+    // The landing 5 m west of (20, 6), the note 1.25 m on: its middle right at (13.75, 6).
+    let f = field(&b);
+    assert_eq!(at(kentos_contracts::Vec2 { x: f.at.x, y: f.at.y }), [13.75, 6.0]);
+    assert_eq!(f.align, Some(kentos_contracts::TextAlign::MiddleRight));
+    b.run(|s, cx| s.text_typed(Some(""), cx));
+    let [l] = &leaders_drawn(&b)[..] else {
+        panic!("one leader");
+    };
+    assert_eq!((l.pts.len(), l.text.as_deref(), l.mask), (3, None, false));
+    assert_eq!(b.last_text(), Some("Kılavuz eklendi (notsuz)."));
+}
+
+#[test]
+fn ok_chooses_the_arrowhead_zemin_masks_the_note_geri_takes_the_last_vertex_back() {
+    let mut b = tool();
+    let menu = b.session.option_choices("O");
+    assert_eq!(
+        menu.iter()
+            .map(|c| (c.label, c.icon, c.checked))
+            .collect::<Vec<_>>(),
+        [
+            ("Dolu", "leaderArrowFilled", true),
+            ("Açık", "leaderArrowOpen", false),
+            ("Nokta", "leaderArrowDot", false),
+            ("Yok", "leaderArrowNone", false),
+        ]
+    );
+    assert!(b.run(|s, cx| s.choose_option("O", "nokta", cx)));
+    assert!(b.type_text("O"));
+    assert_eq!(
+        b.session.prompt().text(),
+        "Kılavuz: ok başını seçin ya da adını yazın: dolu, açık, nokta, yok [Ok (O): nokta]"
+    );
+    assert!(b.type_text("Acik"));
+    assert!(b.type_text("Z"));
+    b.click(0.0, 0.0);
+    b.click(3.0, 3.0);
+    b.click(9.0, 3.0);
+    assert!(b.type_text("G"));
+    b.click(8.0, 6.0);
+    b.confirm();
+    b.run(|s, cx| s.text_typed(Some("Ø150 PVC"), cx));
+    let [l] = &leaders_drawn(&b)[..] else {
+        panic!("one leader");
+    };
+    assert_eq!(
+        l.pts.iter().map(|p| at(*p)).collect::<Vec<_>>(),
+        [[0.0, 0.0], [3.0, 3.0], [8.0, 6.0]]
+    );
+    assert_eq!(
+        (l.arrow, l.mask),
+        (Some(kentos_contracts::LeaderArrow::Open), true)
+    );
+    // A name that names none is said, and the tool waits on.
+    assert!(b.type_text("O"));
+    assert!(b.type_text("üçgen"));
+    assert_eq!(
+        b.last_text(),
+        Some("“üçgen” bir ok başı adı değil. Ok başını menüden seçin ya da adını yazın: dolu, açık, nokta, yok.")
+    );
+}
+
+#[test]
+fn yukseklik_is_yazis_and_esc_steps_back() {
+    let mut b = tool();
+    assert!(b.type_text("Y"));
+    assert_eq!(
+        b.session.prompt().text(),
+        "Kılavuz: kâğıt üzerindeki not yüksekliğini mm olarak yazın (Yazı ile ortak)"
+    );
+    assert!(b.type_text("4"));
+    assert_eq!(b.memory.text_height_mm, 4.0, "Yazı's own");
+    b.click(0.0, 0.0);
+    b.click(4.0, 3.0);
+    b.confirm();
+    assert_eq!(field(&b).height, 4.0);
+    // Esc in the field: back to the vertices; then the leader drawn; then out of the tool.
+    b.run(|s, cx| s.text_typed(None, cx));
+    assert!(
+        b.session
+            .prompt()
+            .text()
+            .starts_with("Kılavuz: sonraki köşeye tıklayın; Enter ya da sağ tık notu yazdırır")
+    );
+    assert!(b.run(|s, cx| s.cancel(cx)));
+    assert_eq!(b.points(), 0);
+    assert!(!b.run(|s, cx| s.cancel(cx)));
+    assert!(leaders_drawn(&b).is_empty());
+}
+
+#[test]
+fn with_the_tip_alone_enter_says_what_is_missing_and_a_locked_layer_is_said_at_the_tip() {
+    let mut b = tool();
+    b.click(0.0, 0.0);
+    b.confirm();
+    assert_eq!(
+        b.last_text(),
+        Some("Kılavuzun en az 2 köşesi olur: okun ucundan sonra bir köşeye daha tıklayın.")
+    );
+    assert!(b.views.is_empty());
+    // The tools' drawing has a locked layer.
+    let mut b = Bench::on(include_str!("../../../../fixtures/interaction/v1/tools.kcad"));
+    b.draft.snap = false;
+    assert!(b.doc.set_active_layer("kilitli"), "the locked layer");
+    b.start("leader");
+    b.click(0.0, 0.0);
+    assert_eq!(b.points(), 0);
+    assert_eq!(
+        b.last_text(),
+        Some("“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.")
+    );
+}

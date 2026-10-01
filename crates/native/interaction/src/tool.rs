@@ -116,6 +116,12 @@ pub struct TextField {
     pub align: Option<kentos_contracts::TextAlign>,
     pub width_factor: f64,
     pub initial: Option<String>,
+    /// What the empty field shows, and the hint under it; none: Yazı's.
+    pub placeholder: Option<&'static str>,
+    pub hint: Option<&'static str>,
+    /// Enter in the empty field answers with an empty text (Kılavuz: the
+    /// arrow without a note, docs/adr/0146 §7); otherwise it is as Esc.
+    pub empty: bool,
 }
 
 /// One value an option offers in its menu (Yazı's Hiza, docs/adr/0145 §6;
@@ -321,6 +327,10 @@ pub struct Memory {
     pub text_width_factor: f64,
     pub text_mask: bool,
     pub text_increment: bool,
+    /// Kılavuz's arrowhead (none: the filled arrow) and Zemin
+    /// (`LeaderTool.arrow`, `.mask`; docs/adr/0146 §7); its height is Yazı's.
+    pub leader_arrow: Option<kentos_contracts::LeaderArrow>,
+    pub leader_mask: bool,
     /// Tarama's pattern (an index into its presets), whether the region is
     /// found by the line work rather than a closed object, and whether closed
     /// objects inside are left out (`HatchTool.preset`, `.byLines`, `.islands`).
@@ -468,6 +478,8 @@ impl Default for Memory {
             text_width_factor: 1.0,
             text_mask: false,
             text_increment: false,
+            leader_arrow: None,
+            leader_mask: false,
             hatch_preset: 0,
             hatch_by_lines: false,
             hatch_islands: true,

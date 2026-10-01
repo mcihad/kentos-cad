@@ -117,6 +117,7 @@ pub mod find_replace;
 mod format;
 pub mod grip_menu;
 pub mod hatch;
+pub mod leader;
 pub mod lengthen;
 pub mod line;
 mod log;

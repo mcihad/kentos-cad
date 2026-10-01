@@ -157,7 +157,7 @@ pub fn align_icon(a: Option<TextAlign>) -> &'static str {
 
 /// A name as typed, folded (the web's `foldName`): lower case, Turkish
 /// letters without their marks, nothing but letters (“Sağ-üst” → “sagust”).
-fn fold_name(s: &str) -> String {
+pub(crate) fn fold_name(s: &str) -> String {
     s.chars()
         .flat_map(|c| match c {
             'I' => vec!['ı'],
@@ -335,6 +335,9 @@ impl Text {
                     align: m.text_align,
                     width_factor: m.text_width_factor,
                     initial,
+                    placeholder: None,
+                    hint: None,
+                    empty: false,
                 }));
             }
             Stage::Height | Stage::Align | Stage::Width | Stage::Typing => {}

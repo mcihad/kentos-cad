@@ -3,6 +3,7 @@ import { listen } from '../../core/disposable';
 import { textAlignShares, type Entity } from '../../model/entities';
 import type { Vec2 } from '../../model/geometry';
 import { layoutDimension, type DimensionLayout } from '../../model/geom/dimension';
+import { leaderLayout } from '../../model/geom/leader';
 import type { TextInputRequest } from '../../viewport/ViewportController';
 import { Component } from '../Component';
 import { h } from '../dom';
@@ -42,7 +43,7 @@ export class InlineTextEditor extends Component {
         e.stopPropagation(); // typing must not trigger tool shortcuts
         if (e.key === 'Enter') {
           e.preventDefault();
-          this.close(true);
+          this.close(true, true);
         } else if (e.key === 'Escape') {
           e.preventDefault();
           this.close(false);
@@ -56,13 +57,14 @@ export class InlineTextEditor extends Component {
 
   private openEdit(id: number): void {
     const e = this.ctx.doc.get(id);
-    if (!e || (e.kind !== 'text' && e.kind !== 'dimension')) return;
+    if (!e || (e.kind !== 'text' && e.kind !== 'dimension' && e.kind !== 'leader')) return;
     this.close(true);
     const place = placementOf(e, this.ctx.view);
     if (!place) return;
     this.session = { kind: 'edit', id };
     this.input.value = e.kind === 'text' ? e.text : (e.text ?? '');
-    this.input.placeholder = place.measured ?? '';
+    // A leader without a note gets one typed here (docs/adr/0146 §7).
+    this.input.placeholder = place.measured ?? (e.kind === 'leader' ? 'Notu yazın' : '');
     this.hint.textContent = 'Enter: kaydet · Esc: vazgeç';
     this.show(place);
     this.ctx.view.setEditing(id);
@@ -73,8 +75,8 @@ export class InlineTextEditor extends Component {
     this.session = { kind: 'new', req };
     // Artır's next number, selected: typing replaces it, Enter keeps it (docs/adr/0145 §6).
     this.input.value = req.initial ?? '';
-    this.input.placeholder = 'Yazıyı yazın';
-    this.hint.textContent = 'Enter: ekle · Esc: vazgeç';
+    this.input.placeholder = req.placeholder ?? 'Yazıyı yazın';
+    this.hint.textContent = req.hint ?? 'Enter: ekle · Esc: vazgeç';
     // The field stands where the text will, by its alignment and width factor.
     const [along, up] = textAlignShares(req.align ?? null);
     this.show({ at: req.at, height: req.height, rotation: req.rotation, along, up, widthFactor: req.widthFactor ?? 1 });
@@ -111,7 +113,8 @@ export class InlineTextEditor extends Component {
     });
   }
 
-  private close(commit: boolean): void {
+  /** `enter`: closed by Enter, not by a click elsewhere (an empty field's Enter may mean something, docs/adr/0146 §7). */
+  private close(commit: boolean, enter = false): void {
     const session = this.session;
     if (!session) return;
     this.session = null;
@@ -120,6 +123,7 @@ export class InlineTextEditor extends Component {
     const value = this.input.value.trim();
     if (session.kind === 'new') {
       if (commit && value) session.req.commit(value);
+      else if (commit && enter && session.req.empty) session.req.empty();
       else session.req.cancel();
       return;
     }
@@ -129,6 +133,8 @@ export class InlineTextEditor extends Component {
     if (commit && e) {
       if (e.kind === 'text' && value && value !== e.text) setGeometry(this.ctx, e, { text: value });
       if (e.kind === 'dimension' && value !== (e.text ?? '')) setGeometry(this.ctx, e, { text: value || undefined });
+      // A leader's note; emptied, the arrow alone (docs/adr/0146 §7).
+      if (e.kind === 'leader' && value !== (e.text ?? '')) setGeometry(this.ctx, e, { text: value || undefined });
     }
     this.ctx.view.focus();
   }
@@ -154,6 +160,14 @@ function placementOf(e: Entity, view: { dimensionText(l: DimensionLayout): strin
   if (e.kind === 'dimension') {
     const l = layoutDimension(e);
     return l ? { at: l.textAt, height: e.height, rotation: l.rotation, along: 0.5, up: 0, widthFactor: 1, measured: view.dimensionText(l) } : null;
+  }
+  // A leader's note stands past its landing, on the side its last segment goes (docs/adr/0146 §2); one without a
+  // note is laid out as if it had one, so the field opens where its note will be.
+  if (e.kind === 'leader') {
+    const l = leaderLayout({ ...e, text: e.text ?? 'Not' });
+    if (!l?.notePoint) return null;
+    const [along, up] = textAlignShares(l.noteAlign ?? null);
+    return { at: l.notePoint, height: e.height, rotation: e.rotation, along, up, widthFactor: 1 };
   }
   return null;
 }

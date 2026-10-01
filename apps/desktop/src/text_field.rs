@@ -4,9 +4,9 @@
 //! - Yazı: the tool asks for it where the text will start
 //!   (`ViewChange::Text`); what is typed goes back to the tool
 //!   (`Tool::text_typed`);
-//! - a double click on a text or a dimension, no command running, edits its
-//!   value in place (the web's `SelectTool.maybeEditText`); the drawn text
-//!   is hidden meanwhile.
+//! - a double click on a text, a dimension or a leader (its note, docs/adr/0146
+//!   §7), no command running, edits its value in place (the web's
+//!   `SelectTool.maybeEditText`); the drawn text is hidden meanwhile.
 //!
 //! Enter keeps what is typed (trimmed), Esc drops it. As the web's blur, a
 //! press on the drawing or a command from the ribbon or a menu keeps it
@@ -49,6 +49,9 @@ pub struct Open {
     pub hint: &'static str,
     /// The text or dimension being edited; none for Yazı's new text.
     pub editing: Option<Slot>,
+    /// Enter in the empty field answers the tool with an empty text (Kılavuz,
+    /// docs/adr/0146 §7); otherwise an empty field's Enter is as Esc.
+    pub empty: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -72,9 +75,10 @@ impl App {
             along,
             up,
             text,
-            placeholder: "Yazıyı yazın".to_owned(),
-            hint: "Enter: ekle · Esc: vazgeç",
+            placeholder: field.placeholder.unwrap_or("Yazıyı yazın").to_owned(),
+            hint: field.hint.unwrap_or("Enter: ekle · Esc: vazgeç"),
             editing: None,
+            empty: field.empty,
         });
         self.text_field_focus = true;
     }
@@ -101,7 +105,10 @@ impl App {
         let Some(entity) = doc.model.get(slot) else {
             return;
         };
-        if !matches!(entity, Entity::Text(_) | Entity::Dimension(_)) {
+        if !matches!(
+            entity,
+            Entity::Text(_) | Entity::Dimension(_) | Entity::Leader(_)
+        ) {
             return;
         }
         if doc.model.layers().is_locked(&entity.base().layer_id) {
@@ -120,7 +127,26 @@ impl App {
                 placeholder: String::new(),
                 hint: "Enter: kaydet · Esc: vazgeç",
                 editing: Some(slot),
+                empty: false,
             },
+            // A leader's note past its landing; one without a note gets one
+            // typed where it will stand (docs/adr/0146 §7).
+            Entity::Leader(l) => {
+                let Some((at, align)) = kentos_interaction::leader::note_place(entity) else {
+                    return;
+                };
+                Open {
+                    at,
+                    height: l.height,
+                    along: align.along(),
+                    up: align.up(),
+                    text: l.text.clone().unwrap_or_default(),
+                    placeholder: "Notu yazın".to_owned(),
+                    hint: "Enter: kaydet · Esc: vazgeç",
+                    editing: Some(slot),
+                    empty: false,
+                }
+            }
             Entity::Dimension(d) => {
                 let Some(layout) = dimension_layout(entity) else {
                     return;
@@ -140,6 +166,7 @@ impl App {
                     ),
                     hint: "Enter: kaydet · Esc: vazgeç",
                     editing: Some(slot),
+                    empty: false,
                 }
             }
             _ => return,
@@ -156,13 +183,19 @@ impl App {
                     open.text = text;
                 }
             }
-            Event::Keep => self.close_text_field(true),
+            Event::Keep => self.close_field(true, true),
         }
     }
 
     /// Closes the field: `keep`, what is typed goes where it belongs (the
     /// web's `close(commit)`); otherwise nothing changes.
     pub(crate) fn close_text_field(&mut self, keep: bool) {
+        self.close_field(keep, false);
+    }
+
+    /// `close_text_field`, `enter` when Enter closed it: an empty field's
+    /// Enter answers a tool that takes it (Kılavuz) with an empty text.
+    fn close_field(&mut self, keep: bool, enter: bool) {
         let Some(open) = self.text_field.take() else {
             return;
         };
@@ -170,7 +203,13 @@ impl App {
         let value = open.text.trim().to_owned();
         match open.editing {
             None => {
-                let typed = (keep && !value.is_empty()).then_some(value.as_str());
+                let typed = if keep && !value.is_empty() {
+                    Some(value.as_str())
+                } else if keep && enter && open.empty {
+                    Some("")
+                } else {
+                    None
+                };
                 self.with_tool(|s, cx| s.text_typed(typed, cx));
             }
             Some(slot) if keep => {
@@ -187,6 +226,12 @@ impl App {
                         let mut d = d.clone();
                         d.text = (!value.is_empty()).then_some(value);
                         Some(Entity::Dimension(d))
+                    }
+                    // A leader's note; emptied, the arrow alone (docs/adr/0146 §7).
+                    Some(Entity::Leader(l)) if value != l.text.clone().unwrap_or_default() => {
+                        let mut l = l.clone();
+                        l.text = (!value.is_empty()).then_some(value);
+                        Some(Entity::Leader(l))
                     }
                     _ => None,
                 };
@@ -359,6 +404,85 @@ mod tests {
             crate::files_testing::last_said(&app),
             "Kilitli katmandaki yazı düzenlenemez."
         );
+    }
+
+    /// The sample with a leader on `cizim` (shown) away from its other
+    /// objects: the tip, a vertex up and to the right, the note “Mevcut bina”.
+    fn with_leader(app: &mut App) -> kentos_domain::Slot {
+        let at = |x: f64, y: f64| kentos_contracts::Vec2 { x, y };
+        let doc = app.document.as_mut().expect("open");
+        if !doc.model.layers().is_visible("cizim") {
+            doc.model.toggle_layer_visible("cizim");
+        }
+        let slot = doc
+            .model
+            .add(Entity::Leader(kentos_contracts::LeaderEntity {
+                base: kentos_contracts::EntityBase {
+                    id: 0,
+                    layer_id: "cizim".to_owned(),
+                    color: None,
+                    attrs: Default::default(),
+                    label: None,
+                    symbol: None,
+                    line_weight: None,
+                },
+                pts: vec![at(486_600.0, 4_420_150.0), at(486_606.0, 4_420_155.0)],
+                text: Some("Mevcut bina".into()),
+                height: 2.0,
+                rotation: 0.0,
+                arrow: None,
+                mask: false,
+            }))
+            .expect("a slot");
+        app.spatial.sync(&app.document.as_ref().expect("open").model);
+        slot
+    }
+
+    fn note_of(app: &App, slot: kentos_domain::Slot) -> Option<String> {
+        match app.document.as_ref().expect("open").model.get(slot) {
+            Some(Entity::Leader(l)) => l.text.clone(),
+            other => panic!("a leader: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn a_double_click_on_a_leader_s_note_edits_it_and_emptied_the_arrow_is_alone() {
+        let mut app = app_with_drawing();
+        let slot = with_leader(&mut app);
+        // Its note past the landing, 2h + h/2 to the right of its last vertex.
+        let note = kentos_interaction::Vec2::new(486_611.0, 4_420_155.0);
+        let inside = kentos_interaction::Vec2::new(486_614.0, 4_420_155.0);
+        app.maybe_edit_text(inside);
+        app.maybe_edit_text(inside);
+        let open = app.text_field.clone().expect("the field opened on the note");
+        assert_eq!(open.editing, Some(slot));
+        assert_eq!((open.at, open.along, open.up), (note, 0.0, 0.5));
+        assert_eq!((open.text.as_str(), open.height), ("Mevcut bina", 2.0));
+        assert_eq!(open.placeholder, "Notu yazın");
+        let _ = app.update(Message::TextField(Event::Input("Bina A ".into())));
+        let _ = app.update(Message::TextField(Event::Keep));
+        assert_eq!(note_of(&app, slot).as_deref(), Some("Bina A"), "trimmed");
+        assert_eq!(
+            app.document.as_mut().expect("open").model.undo().as_deref(),
+            Some("Değiştir")
+        );
+        assert_eq!(note_of(&app, slot).as_deref(), Some("Mevcut bina"));
+        // Emptied: the arrow alone, its line still opens a field where the note will stand.
+        app.spatial.sync(&app.document.as_ref().expect("open").model);
+        app.maybe_edit_text(inside);
+        app.maybe_edit_text(inside);
+        let _ = app.update(Message::TextField(Event::Input("  ".into())));
+        let _ = app.update(Message::TextField(Event::Keep));
+        assert_eq!(note_of(&app, slot), None);
+        app.spatial.sync(&app.document.as_ref().expect("open").model);
+        let on_line = kentos_interaction::Vec2::new(486_603.0, 4_420_152.5);
+        app.maybe_edit_text(on_line);
+        app.maybe_edit_text(on_line);
+        let open = app.text_field.clone().expect("the field opened on the line");
+        assert_eq!((open.editing, open.at, open.text.as_str()), (Some(slot), note, ""));
+        let _ = app.update(Message::TextField(Event::Input("Depo".into())));
+        let _ = app.update(Message::TextField(Event::Keep));
+        assert_eq!(note_of(&app, slot).as_deref(), Some("Depo"));
     }
 }
 

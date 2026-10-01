@@ -51,14 +51,14 @@ export class SelectTool implements Tool {
     this.ctx = ctx;
   }
 
-  /** Double click on text or a dimension opens the inline editor. */
+  /** Double click on text, a dimension or a leader (its note, docs/adr/0146 §7) opens the inline editor. */
   private maybeEditText(id: number): boolean {
     const now = performance.now();
     const prev = this.lastClick;
     this.lastClick = { id, time: now };
     if (!prev || prev.id !== id || now - prev.time > 450) return false;
     const e = this.ctx.doc.get(id);
-    if (!e || (e.kind !== 'text' && e.kind !== 'dimension')) return false;
+    if (!e || (e.kind !== 'text' && e.kind !== 'dimension' && e.kind !== 'leader')) return false;
     if (this.ctx.doc.layers.isLocked(e.layerId)) {
       this.ctx.log.warn('Kilitli katmandaki yazı düzenlenemez.');
       return true;

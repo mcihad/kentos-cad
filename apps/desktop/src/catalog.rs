@@ -224,6 +224,8 @@ pub const PORTED: &[&str] = &[
     "text.findReplace",
     // Metin dosyası yerleştir: a text file's lines as texts (text_file.rs, docs/adr/0145 §6).
     "tool.placeTextFile",
+    // Kılavuz: the arrow, its line, landing and note (leader.rs, docs/adr/0146 §7).
+    "tool.leader",
     "tool.cleanup",
     "tool.matchProperties",
     // Phase 2 and 3 of docs/adr/0140: the slice, points between two points, the point found from

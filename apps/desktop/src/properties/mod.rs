@@ -33,7 +33,7 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 
 use kentos_contracts::{
-    BlockId, Entity, EntitiesSetProperties, HatchPatternType, PropertiesOperation,
+    BlockId, Entity, EntitiesSetProperties, HatchPatternType, LeaderEntity, PropertiesOperation,
 };
 use kentos_domain::Slot;
 use kentos_interaction::elevation::{self, Change};
@@ -71,6 +71,9 @@ pub enum Event {
     TextAlign(Vec<Slot>, Option<kentos_contracts::TextAlign>),
     /// Zemin ▾ of texts.
     TextMask(Vec<Slot>, bool),
+    /// Ok ▾ of leaders (none: the filled arrow) and their Zemin ▾ (docs/adr/0146 §7).
+    LeaderArrow(Vec<Slot>, Option<kentos_contracts::LeaderArrow>),
+    LeaderMask(Vec<Slot>, bool),
 }
 
 /// The value a cell edits.
@@ -103,6 +106,11 @@ pub enum Field {
     InsertY(Slot),
     InsertScale(Slot),
     InsertTurn(Slot),
+    /// Leaders' note (trimmed; emptied, the arrow alone), height (above zero)
+    /// and turn (degrees) (docs/adr/0146 §7).
+    LeaderNote(Vec<Slot>),
+    LeaderHeight(Vec<Slot>),
+    LeaderTurn(Vec<Slot>),
 }
 
 /// Which vertices of an object a Kot cell sets.
@@ -393,6 +401,12 @@ impl App {
             },
             Event::TextAlign(slots, to) => properties::realign_texts(model, &slots, to),
             Event::TextMask(slots, on) => properties::set_text_mask(model, &slots, on),
+            Event::LeaderArrow(slots, arrow) => properties::change_leaders(model, &slots, |l| {
+                (l.arrow != arrow).then(|| LeaderEntity { arrow, ..l.clone() })
+            }),
+            Event::LeaderMask(slots, mask) => properties::change_leaders(model, &slots, |l| {
+                (l.mask != mask).then(|| LeaderEntity { mask, ..l.clone() })
+            }),
             Event::Commit(field, text) => commit(model, &field, &text),
         };
         for text in said {
@@ -456,6 +470,41 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 Vec::new()
             };
         }
+        Field::LeaderNote(slots) => {
+            let note = kentos_interaction::js_trim(text);
+            let to = (!note.is_empty()).then(|| note.to_owned());
+            return properties::change_leaders(model, slots, |l| {
+                (l.text != to).then(|| LeaderEntity {
+                    text: to.clone(),
+                    ..l.clone()
+                })
+            });
+        }
+        Field::LeaderHeight(slots) => {
+            let n = web_number(text);
+            if !(n.is_finite() && n > 0.0) {
+                return Vec::new();
+            }
+            return properties::change_leaders(model, slots, |l| {
+                (l.height != n).then(|| LeaderEntity {
+                    height: n,
+                    ..l.clone()
+                })
+            });
+        }
+        Field::LeaderTurn(slots) => {
+            let n = web_number(text);
+            if !n.is_finite() {
+                return Vec::new();
+            }
+            let turn = ((n % 360.0) + 360.0) % 360.0;
+            return properties::change_leaders(model, slots, |l| {
+                (l.rotation != turn).then(|| LeaderEntity {
+                    rotation: turn,
+                    ..l.clone()
+                })
+            });
+        }
         _ => {}
     }
     if let Field::Attribute(slot, key) = field {
@@ -490,7 +539,12 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::InsertTurn(s)
         | Field::Attribute(s, _) => *s,
         // Taken above.
-        Field::Elevation(..) | Field::Elevations(_) | Field::TextWidth(_) => return Vec::new(),
+        Field::Elevation(..)
+        | Field::Elevations(_)
+        | Field::TextWidth(_)
+        | Field::LeaderNote(_)
+        | Field::LeaderHeight(_)
+        | Field::LeaderTurn(_) => return Vec::new(),
     };
     let Some(mut e) = model.get(slot).cloned() else {
         return Vec::new();

@@ -55,6 +55,11 @@ export class TextTool extends PointInputTool {
   /** The last text this run wrote: Artır's next field starts from it. */
   private lastText: string | null = null;
 
+  /** Yükseklik, shared with Kılavuz (docs/adr/0146 §7): the paper height of both tools' texts. */
+  static setHeight(mm: number): void {
+    TextTool.heightMm = mm;
+  }
+
   /** Yazı's options as they are now: Metin dosyası yerleştir writes its lines with them (docs/adr/0145 §6). */
   static options(): { heightMm: number; angle: number; align: TextAlign | null; widthFactor: number; mask: boolean } {
     const S = TextTool;

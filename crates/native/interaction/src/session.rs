@@ -56,9 +56,9 @@ use crate::trim::{self, Boundary};
 use crate::vertex::{self, Vertex};
 use crate::{
     angle, area, between, block_define, block_insert, boundary, cleanup, construction, coordinate,
-    dimension, dimension_chain, divide, donut, ellipse, hatch, match_properties, meeting, parallel,
-    revcloud, sector, select_circle, select_containing, select_fence, set_elevation, spline, split,
-    station_offset, text, text_file,
+    dimension, dimension_chain, divide, donut, ellipse, hatch, leader, match_properties, meeting,
+    parallel, revcloud, sector, select_circle, select_containing, select_fence, set_elevation,
+    spline, split, station_offset, text, text_file,
 };
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
@@ -113,6 +113,7 @@ pub const TOOLS: &[&str] = &[
     divide::ID,
     text::ID,
     text_file::ID,
+    leader::ID,
     dimension::ID,
     hatch::ID,
     // Blocks (docs/adr/0144).
@@ -241,6 +242,7 @@ impl Session {
             divide::ID => Box::new(crate::divide::Divide::new()),
             text::ID => Box::new(crate::text::Text::new()),
             text_file::ID => Box::new(crate::text_file::PlaceTextFile::new()),
+            leader::ID => Box::new(crate::leader::Leader::new()),
             dimension::ID => Box::new(crate::dimension::Dimension::new()),
             hatch::ID => Box::new(crate::hatch::Hatch::new()),
             block_define::ID => Box::new(crate::block_define::BlockDefine::tool()),

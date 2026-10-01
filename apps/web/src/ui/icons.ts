@@ -34,6 +34,13 @@ export const ICONS = {
   text: '<path d="M4.5 5V3.8h11V5M10 3.8v12.4M7.5 16.2h5"/>',
   // Metin dosyası yerleştir (docs/adr/0145 §6): a page with its corner turned, a T on it.
   textFile: '<path d="M5 2.5h7l3 3v12H5z"/><path d="M12 2.5v3h3"/><path d="M7.5 9.5h5M10 9.5v5"/>',
+  // Kılavuz (docs/adr/0146): the arrow at the tip, the line, the landing and the note's lines.
+  leader: '<path d="M4 16 10 9.5h2.5"/><path d="M4 16 7 14.2 5.6 12.8z" fill="currentColor" stroke="none"/><path d="M14 8.2h3.2M14 10.8h2.4" stroke-width="1.2"/>',
+  // Its arrowheads (Ok's menu): filled, open, a dot, none.
+  leaderArrowFilled: '<path d="M6.5 10H17"/><path d="M2.5 10 7.2 7.6v4.8z" fill="currentColor" stroke="none"/>',
+  leaderArrowOpen: '<path d="M2.5 10H17"/><path d="M7.2 7.6 2.5 10l4.7 2.4"/>',
+  leaderArrowDot: '<path d="M6.5 10H17"/><circle cx="4.3" cy="10" r="2.1" fill="currentColor" stroke="none"/>',
+  leaderArrowNone: '<path d="M2.5 10H17"/>',
   // Bul ve değiştir (docs/adr/0145 §6): the looking glass, and an arrow to what the words become.
   findReplace: '<circle cx="8" cy="8" r="4.3"/><path d="m11.1 11.1 2.4 2.4"/><path d="M10.5 17h6.5m-2-2 2 2-2 2"/>',
   // Okunur yap (docs/adr/0145 §6): a T inside the turning arrow.

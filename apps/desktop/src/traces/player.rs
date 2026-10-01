@@ -58,6 +58,8 @@ pub struct Seen {
     pub mask: Option<bool>,
     /// A text's turn in degrees.
     pub rotation: Option<f64>,
+    /// A leader's arrowhead's name; none the filled arrow (docs/adr/0146).
+    pub arrow: Option<String>,
 }
 
 impl Seen {
@@ -73,6 +75,8 @@ impl Seen {
             Entity::Line(l) => (vec![[l.a.x, l.a.y], [l.b.x, l.b.y]], Vec::new()),
             Entity::Point(p) => (vec![[p.p.x, p.p.y]], Vec::new()),
             Entity::Text(t) => (vec![[t.p.x, t.p.y]], Vec::new()),
+            // A leader's vertices, the tip first (docs/adr/0146).
+            Entity::Leader(l) => (l.pts.iter().map(|v| [v.x, v.y]).collect(), Vec::new()),
             Entity::Arc(a) => (
                 [a.a0, a.a1]
                     .iter()
@@ -141,6 +145,7 @@ impl Seen {
             radius,
             text: match e {
                 Entity::Text(t) => Some(t.text.clone()),
+                Entity::Leader(l) => l.text.clone(),
                 _ => None,
             },
             align: match e {
@@ -153,10 +158,16 @@ impl Seen {
             },
             mask: match e {
                 Entity::Text(t) => Some(t.mask),
+                Entity::Leader(l) => Some(l.mask),
                 _ => None,
             },
             rotation: match e {
                 Entity::Text(t) => Some(t.rotation),
+                Entity::Leader(l) => Some(l.rotation),
+                _ => None,
+            },
+            arrow: match e {
+                Entity::Leader(l) => l.arrow.map(|a| a.name().to_owned()),
                 _ => None,
             },
         }

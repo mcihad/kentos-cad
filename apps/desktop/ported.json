@@ -141,6 +141,7 @@
     "tool.readable",
     "text.findReplace",
     "tool.placeTextFile",
+    "tool.leader",
     "tool.cleanup",
     "tool.matchProperties",
     "tool.sector",

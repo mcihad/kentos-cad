@@ -8,7 +8,7 @@ use std::borrow::Cow;
 use kentos_contracts::{DimensionStyle, Entity, HatchPatternType};
 use kentos_domain::{LayerTree, Slot};
 use kentos_interaction::elevation::{self, Summary as Elevations};
-use kentos_interaction::text;
+use kentos_interaction::{leader, text};
 use kentos_interaction::{
     Format, Vec2, angle_deg, arc_sweep, bearing_grad, dimension_layout, dist, fixed, full_ellipse,
     measures,
@@ -810,8 +810,9 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 Row::text("Aynalı", yes_no(i.mirror)).editor(edit(mirror)),
             ]);
         }
-        // Its corners and length; its note's rows come with the Kılavuz tool (docs/adr/0146 §7).
+        // Its note, height, turn, arrowhead and mask, its corners and length (docs/adr/0146 §7).
         Entity::Leader(l) => {
+            geo.extend(leader_rows(&[l], &ids, locked, &f));
             geo.push(Row::figure("Köşe sayısı", l.pts.len().to_string()));
             geo.push(metres("Uzunluk", length_of.unwrap_or(0.0)));
         }
@@ -957,6 +958,77 @@ fn text_rows(texts: &[&kentos_contracts::TextEntity], slots: &[Slot], locked: bo
     ]
 }
 
+/// A leader's Not, Yükseklik, Dönüş, Ok and Zemin rows (docs/adr/0146 §7),
+/// for one leader or the leaders of a selection: their common value, or
+/// “Çeşitli”; each change is one step “Değiştir”. The web's `leaderRows`.
+fn leader_rows(
+    leaders: &[&kentos_contracts::LeaderEntity],
+    slots: &[Slot],
+    locked: bool,
+    f: &Format,
+) -> Vec<Row> {
+    const MIXED: &str = "Çeşitli";
+    let first = leaders[0];
+    let same = |of: &dyn Fn(&kentos_contracts::LeaderEntity) -> bool| leaders.iter().all(|l| of(l));
+    let note = same(&|l| l.text == first.text).then(|| first.text.clone().unwrap_or_default());
+    let height = same(&|l| l.height == first.height).then_some(first.height);
+    let turn = same(&|l| l.rotation == first.rotation).then_some(first.rotation);
+    let arrow = same(&|l| l.arrow == first.arrow).then_some(first.arrow);
+    let mask = same(&|l| l.mask == first.mask).then_some(first.mask);
+    let on_off = |on: bool| if on { "Açık" } else { "Kapalı" };
+    let edit = |editor: Editor| (!locked).then_some(editor);
+    let arrow_text = arrow.map_or_else(|| MIXED.to_owned(), |a| leader::arrow_label(a).to_owned());
+    let arrows = Editor::Select {
+        text: arrow_text.clone(),
+        swatch: None,
+        icon: arrow.map(leader::arrow_icon),
+        items: leader::ARROWS
+            .iter()
+            .map(|&(a, _, label, icon)| Choice::Pick {
+                label: label.to_owned(),
+                swatch: None,
+                icon: Some(icon),
+                chosen: arrow == Some(a),
+                enabled: true,
+                message: Message::Properties(Event::LeaderArrow(slots.to_vec(), a)),
+            })
+            .collect(),
+    };
+    let mask_text = mask.map_or(MIXED, on_off).to_owned();
+    let masks = Editor::Select {
+        text: mask_text.clone(),
+        swatch: None,
+        icon: None,
+        items: [true, false]
+            .into_iter()
+            .map(|on| Choice::Pick {
+                label: on_off(on).to_owned(),
+                swatch: None,
+                icon: None,
+                chosen: mask == Some(on),
+                enabled: true,
+                message: Message::Properties(Event::LeaderMask(slots.to_vec(), on)),
+            })
+            .collect(),
+    };
+    let height_row = match height {
+        Some(h) => Row::figure("Yükseklik", f.length_bare(h)).unit("m"),
+        None => Row::text("Yükseklik", MIXED),
+    };
+    let turn_row = match turn {
+        Some(t) => Row::figure("Dönüş", fixed(t, 2)).unit("°"),
+        None => Row::text("Dönüş", MIXED),
+    };
+    vec![
+        Row::text("Not", note.unwrap_or_else(|| MIXED.to_owned()))
+            .editor(edit(Editor::Text(Field::LeaderNote(slots.to_vec())))),
+        height_row.editor(edit(Editor::Number(Field::LeaderHeight(slots.to_vec())))),
+        turn_row.editor(edit(Editor::Number(Field::LeaderTurn(slots.to_vec())))),
+        Row::text("Ok", arrow_text).editor(edit(arrows)),
+        Row::text("Zemin", mask_text).editor(edit(masks)),
+    ]
+}
+
 fn looks_numeric(value: &str) -> bool {
     let digits = value.strip_prefix('-').unwrap_or(value);
     let mut parts = digits.splitn(2, ['.', ',']);
@@ -1053,6 +1125,26 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
                 format!("Yazılar ({})", texts.len()).into()
             },
             rows: text_rows(&texts, &slots, any_locked),
+        });
+    }
+    // The selection's leaders: their note, height, turn, arrowhead and mask, common or “Çeşitli” (docs/adr/0146 §7).
+    let leaders: Vec<&kentos_contracts::LeaderEntity> = objects
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Leader(l) => Some(l),
+            _ => None,
+        })
+        .collect();
+    if !leaders.is_empty() {
+        let slots: Vec<Slot> = leaders.iter().map(|l| Slot(l.base.id)).collect();
+        sections.push(Section {
+            id: "leaders",
+            title: if leaders.len() == objects.len() {
+                "Kılavuz".into()
+            } else {
+                format!("Kılavuzlar ({})", leaders.len()).into()
+            },
+            rows: leader_rows(&leaders, &slots, any_locked, &f),
         });
     }
     let mut totals = Vec::new();
