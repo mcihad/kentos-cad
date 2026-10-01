@@ -172,6 +172,7 @@ python3 scripts/fixtures/quick_dimension_cases.py --check   # Hızlı ölçü'n�
 python3 scripts/fixtures/numeric_display.py --check   # gösterim kuralının durumlarını (yarımlar, gürültü, işaret, taşma) kuraldan denetle (ADR 0149)
 python3 scripts/fixtures/measure_cases.py --check   # ölçülerin kesin değerlerini (uzunluk, alan, yay, elips, eğri, semt, açı, ölçü türleri) 50 basamaklı bağımsız başvuruyla denetle (ADR 0149)
 python3 scripts/fixtures/topology_cases.py --check   # Topolojik temizliğin durumlarını (birleştirme, uzatma, budama, kenara taşıma, kot) kurallardan denetle (ADR 0148)
+python3 scripts/fixtures/polygonize_cases.py --check   # Toplu alan'ın durumlarını (bölgeler, adalar, etiketler, var olan alan, boşta uçlar) kesin kesirlerle kurallardan denetle (ADR 0151)
 cargo test --release -p kentos-geometry-core --test curve_perf -- --ignored --nocapture   # 2 000 eğri ve 500 elips arasında kenet, tıklama ve kesişim penceresi süreleri (ADR 0149 §5.3)
 pnpm e2e:cloud           # gerçek API/PostGIS cloud akışı
 KENTOS_E2E_DB=scratch pnpm e2e:cloud   # aynı akış geçici veritabanında (bu yapının migration'ları), kentos_cad'e dokunmadan
@@ -566,7 +567,9 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   `topology` işlemi; Topolojik temizlik aracı (Değiştir › Nesne ▾; tolerans, Uçlar, Köşeler, Uzat, Buda; önizleme ve
   imlecin yanında sayılar; ortak iz `topology.json`).
 - Sürmekte: TODOS.md §16'nın sırası (sahibin kararı, 1 Ekim): önce hibrit (§16.0), sonra CAD (§16.1), sonra CBS (§16.2).
-  Sıradaki `HYB-02` çizgi ağından toplu alan (topolojik temizliğin üstüne). PDF, yazdırma ve pafta çıktısı (§16.4) en
+  Şimdi `HYB-02` çizgi ağından toplu alan ([ADR 0151](docs/adr/0151-polygonize.md)): 1. adım (çekirdek `ops::polygonize`,
+  bağımsız başvuru `polygonize_cases.py`, 58 ortak durum) tamam; sıradaki 2: `cad.entities.create`'in `polygonize`
+  işlemi, sonra 3: araç ve arayüz iki platformda. PDF, yazdırma ve pafta çıktısı (§16.4) en
   sondadır, zamanını sahip söyleyecek. İşler ADR 0142–0148'deki gibi: önce ADR ve adımları, sonra adım adım iki platformda,
   ortak fixture'larla.
 - Bilinen açık: web `pnpm e2e` duman testinde üç test ADR 0143'ten önce de düşüyordu: “toolbox

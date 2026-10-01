@@ -5,7 +5,7 @@
 use crate::api::Op;
 use crate::geom::arrangement::{Area, Ring, Rule, Source, winding};
 use crate::geom::bulge::{bulge_path_edges, bulge_ring_area, has_bulges, reverse_bulge_path};
-use crate::geom::intersect::Edge;
+use crate::geom::intersect::{Edge, closest_on_edge};
 use crate::geom::overlay::{FaceRing, face_rings, overlay};
 use crate::jsmath::{js_cmp, stable_sort};
 use crate::op;
@@ -201,13 +201,44 @@ impl FaceIndex {
 
     /// Every bounded face, each with the groups inside it as holes.
     pub fn all(&self) -> Vec<Area> {
+        self.faces(true)
+    }
+
+    /// Every bounded face, smallest first; with `islands`, the closed groups
+    /// inside each as its holes (Toplu alan, docs/adr/0151 §3).
+    pub fn faces(&self, islands: bool) -> Vec<Area> {
         self.outers
             .iter()
             .map(|&o| Area {
                 outer: self.rings[o].ring.clone(),
-                holes: self.holes_of(o),
+                holes: if islands {
+                    self.holes_of(o)
+                } else {
+                    Vec::new()
+                },
             })
             .collect()
+    }
+
+    /// The smallest bounded face whose outer ring holds `p`: its place in
+    /// [`FaceIndex::faces`]' order.
+    pub fn smallest_at(&self, p: Vec2) -> Option<usize> {
+        self.outers
+            .iter()
+            .position(|&o| in_box(&self.rings[o], p) && self.rings[o].contains(p))
+    }
+
+    /// Whether `p` lies within `d` of a face's or a group's ring.
+    pub fn near_ring(&self, p: Vec2, d: f64) -> bool {
+        self.rings.iter().any(|r| {
+            p.x >= r.bx.min_x - d
+                && p.x <= r.bx.max_x + d
+                && p.y >= r.bx.min_y - d
+                && p.y <= r.bx.max_y + d
+                && r.edges.iter().any(|e| {
+                    closest_on_edge(e, Vec2::new(p.x - r.origin.x, p.y - r.origin.y)).d <= d
+                })
+        })
     }
 }
 

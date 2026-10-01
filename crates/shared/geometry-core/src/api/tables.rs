@@ -53,4 +53,5 @@ pub(super) static TABLES: &[&[Op]] = &[
     crate::geom::leader::OPS,
     crate::display::OPS,
     crate::ops::topology::OPS,
+    crate::ops::polygonize::OPS,
 ];
