@@ -163,7 +163,7 @@ python3 scripts/fonts/drawing_fonts.py --check   # masaüstünün çizim yazı t
 python3 scripts/fonts/ui_fonts.py --check   # KentOS UI'ın Noto Sans ve Roboto'sunu web'in WOFF2'lerinden denetle; --advance genişlik tahminlerini ölçer
 KENTOS_WRITE_GIS_EXPORTS=1 cargo test -p kentos-formats --test gis   # GeoJSON yazıcısının örnek çıktısını yeniden yaz; farkı okuyun
 KENTOS_WRITE_DXF=1 cargo test -p kentos-formats --test dxf_write   # DXF yazıcısının örnek çıktısını (fixtures/formats/v1/dxf-write) yeniden yaz; farkı okuyun
-python3 scripts/fixtures/dxf_write_reference.py --check   # DXF yazıcısının blok ve öznitelik örneğini KentOS kodu olmadan denetle (ADR 0144)
+python3 scripts/fixtures/dxf_write_reference.py --check   # DXF yazıcısının blok, öznitelik ve yazı örneklerini KentOS kodu olmadan denetle (ADR 0144, 0145)
 python3 scripts/fixtures/text_cases.py --check   # yazı kurallarını (Artır, Bul ve değiştir, Okunur yap) kurallardan denetle (ADR 0145)
 pnpm e2e:cloud           # gerçek API/PostGIS cloud akışı
 KENTOS_E2E_DB=scratch pnpm e2e:cloud   # aynı akış geçici veritabanında (bu yapının migration'ları), kentos_cad'e dokunmadan
