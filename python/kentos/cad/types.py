@@ -127,6 +127,7 @@ class CreateOperation(_StrEnum):
     - ``textFile``: Metin dosyası yerleştir (docs/adr/0145 §6): a text file's lines as texts.
     - ``leader``: Kılavuz (docs/adr/0146 §6): a leader drawn by its tool.
     - ``polygonize``: Toplu alan (docs/adr/0151): the regions line work closes, as areas.
+    - ``vertexPoints``: Köşelere nokta (docs/adr/0152): named points at the vertices of lines and areas.
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -145,9 +146,10 @@ class CreateOperation(_StrEnum):
     TEXT_FILE = "textFile"
     LEADER = "leader"
     POLYGONIZE = "polygonize"
+    VERTEX_POINTS = "vertexPoints"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 

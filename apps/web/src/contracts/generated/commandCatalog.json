@@ -27829,6 +27829,11 @@
                 "const": "polygonize",
                 "description": "Toplu alan (docs/adr/0151): the regions line work closes, as areas.",
                 "type": "string"
+              },
+              {
+                "const": "vertexPoints",
+                "description": "Köşelere nokta (docs/adr/0152): named points at the vertices of lines and areas.",
+                "type": "string"
               }
             ]
           },

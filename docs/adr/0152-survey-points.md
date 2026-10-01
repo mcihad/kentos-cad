@@ -100,7 +100,7 @@ Her nokta isteminde `#ad` yazmak o adlı noktanın yerini verir: `#101`, `#101/1
    - **Dilbilgisi:** `point_name` (web `pointName`): `#` ve boş olmayan ad, çevresindeki boşluklar atılır; `#` ile başlayan yazı değer alanını açar (`looks_like_coordinate`). `fixtures/point-input/v1`'e 11 durum; iki okuyucu geçer.
    - **Köşelere nokta:** `ops::vertex_points` (WASM `vertexPoints`): 1 µm'lik ızgarayla paylaşılan köşe ve var olan nokta; ad Artır'la ilerler, `next` sıradaki adı verir.
    - **Başvuru:** `vertex_points_cases.py` 48 durum yazar: 14 elle kurulmuş (her biri başlangıçta ve TM koordinatlarında: ad artımları, adsız, sayıyla bitmeyen ad, paylaşılan köşe, var olan nokta ve bir kez sayılması, kot, delik ve parça, kendine dönen çizgi, 1 µm sınırı, boş girdi) ve 20 rastgele parsel ağı. Çekirdek (`tests/vertex_points.rs`) ve web WASM'ı (`model/ops/vertexPoints.test.ts`) aynı; değiştirilmiş beklentileri yakalar.
-2. **Komut:** `CreateOperation::VertexPoints`; iki işleyici, ortak durum, katalog ve Python SDK'sı.
+2. **Komut:** `CreateOperation::VertexPoints`; iki işleyici, ortak durum, katalog ve Python SDK'sı. *(1 Ekim: tamam. Sözleşmede `vertexPoints` işlemi; adım adı iki işleyicide “Köşelere nokta”. Ortak durum (`create_command_cases.py`): üç adlı nokta `Kod` özniteliği ve kotlarıyla (biri kotsuz) tek adımda, adıyla geri alınır; masaüstü, web ve Python SDK'sı geçer. TypeScript tipi, katalog ve SDK'nın tipleri üretildi.)*
 3. **Araç ve arayüz:** Nokta'nın seçenekleri ve aynı yer sorusu, `#ad` çözümü iki uygulamada, Köşelere nokta; ortak izler, testler, resimler.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.

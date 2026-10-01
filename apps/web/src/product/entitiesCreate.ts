@@ -48,6 +48,7 @@ export const CREATE_LABEL: Record<CreateOperation, string> = {
   textFile: 'Metin dosyası yerleştir',
   leader: 'Kılavuz',
   polygonize: 'Toplu alan',
+  vertexPoints: 'Köşelere nokta',
 };
 
 /** The checks in the contract's order: why nothing may be written, or the warnings when it may. */

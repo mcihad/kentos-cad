@@ -121,6 +121,8 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         Some(CreateOperation::Leader) => "Kılavuz",
         // Toplu alan (docs/adr/0151).
         Some(CreateOperation::Polygonize) => "Toplu alan",
+        // Köşelere nokta (docs/adr/0152).
+        Some(CreateOperation::VertexPoints) => "Köşelere nokta",
     }
 }
 

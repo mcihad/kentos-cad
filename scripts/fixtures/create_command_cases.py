@@ -291,6 +291,23 @@ cases.append({
     ],
 })
 
+# Köşelere nokta (docs/adr/0152): named points at a parcel's corners, the code as an attribute, the corners'
+# elevations; one without an elevation.
+VERTEX_POINTS = [
+    {"kind": "point", "p": P(487100, 4420040), "z": 101.25},
+    {"kind": "point", "p": P(487120, 4420040)},
+    {"kind": "point", "p": P(487120, 4420055), "z": 101.8},
+]
+
+cases.append({
+    "name": "Köşelere nokta: adlı noktalar kodları ve kotlarıyla tek adımda yazılır, adı “Köşelere nokta”",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "vertexPoints", "objects": [O(g, label=f"10{i + 1}", attrs={"Kod": "SN"}) for i, g in enumerate(VERTEX_POINTS)]}, "result": done([3, 4, 5]),
+         "expect": {"ids": IDS + [3, 4, 5], "entities": {str(3 + i): made(O(g, label=f"10{i + 1}", attrs={"Kod": "SN"}), 3 + i) for i, g in enumerate(VERTEX_POINTS)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Köşelere nokta", "expect": {"ids": IDS, "canUndo": False, "canRedo": True}},
+    ],
+})
+
 cases.append({
     "name": "kapalı alanın halkası 2 köşeli olabilir, iki kenarından biri yaysa; iki kenarı düzse reddedilir, delik de öyle; taramanın halkası en az 3 köşelidir",
     "steps": [
@@ -844,7 +861,7 @@ def write(command, title, note, cases):
 write(
     "cad.entities.create",
     "Nesneleri ekle: doğrulama, plan, yazma, geri alma",
-    "ADR 0057. Denetim sırası: en az bir nesne; her nesnenin geometrisi, sırayla, cad.entities.edit'in kurallarıyla (nokta ve köşe sayısı: kapalı alanın halkası en az 3 köşeli, iki kenarından biri yaysa 2; yazının boş olmayan metni, sonlu sayılar, ölçünün kuralları (ADR 0147: kot yalnız eğimde, koordinatın ekseni 0 ya da 90, sonra çekirdeğin çizebildiği ölçü; invalid_dimension), yarıçap); beklenen sürümün yazımı, sonra çizimin sürümü; katman (var, grup değil, kilitli değil; gizliyse uyarı). Nesne verilen geometrisi, girdinin katmanı ve verildiyse rengi, öznitelikleri (yoksa boş) ve etiketiyle yazılır. Adım “Ekle” ya da işlemin adıdır: Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan oluştur, Toplu alan. Blok yerleştirmesi (ADR 0144) çizimde tanımlı bir bloğu adlandırır (unknown_block, katmandan sonra, sırayla), ölçeği sıfırdan büyüktür (invalid_scale); aynalama yalnız true yazılır; blok durumlarının kendi kurulumu vardır. Kurulumdaki en büyük kimlik 2; yeni nesneler 3'ten başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+    "ADR 0057. Denetim sırası: en az bir nesne; her nesnenin geometrisi, sırayla, cad.entities.edit'in kurallarıyla (nokta ve köşe sayısı: kapalı alanın halkası en az 3 köşeli, iki kenarından biri yaysa 2; yazının boş olmayan metni, sonlu sayılar, ölçünün kuralları (ADR 0147: kot yalnız eğimde, koordinatın ekseni 0 ya da 90, sonra çekirdeğin çizebildiği ölçü; invalid_dimension), yarıçap); beklenen sürümün yazımı, sonra çizimin sürümü; katman (var, grup değil, kilitli değil; gizliyse uyarı). Nesne verilen geometrisi, girdinin katmanı ve verildiyse rengi, öznitelikleri (yoksa boş) ve etiketiyle yazılır. Adım “Ekle” ya da işlemin adıdır: Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan oluştur, Toplu alan, Köşelere nokta. Blok yerleştirmesi (ADR 0144) çizimde tanımlı bir bloğu adlandırır (unknown_block, katmandan sonra, sırayla), ölçeği sıfırdan büyüktür (invalid_scale); aynalama yalnız true yazılır; blok durumlarının kendi kurulumu vardır. Kurulumdaki en büyük kimlik 2; yeni nesneler 3'ten başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
     cases,
 )
 print(f"{len(cases)} cases" + (" match" if "--check" in sys.argv[1:] else " written"))

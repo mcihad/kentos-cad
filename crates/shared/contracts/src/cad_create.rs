@@ -71,6 +71,8 @@ pub enum CreateOperation {
     Leader,
     /// Toplu alan (docs/adr/0151): the regions line work closes, as areas.
     Polygonize,
+    /// Köşelere nokta (docs/adr/0152): named points at the vertices of lines and areas.
+    VertexPoints,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

@@ -572,8 +572,8 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   `HYB-02` çizgi ağından toplu alan ([ADR 0151](docs/adr/0151-polygonize.md)) bitti: çekirdek `ops::polygonize` (bağımsız
   başvuru `polygonize_cases.py`, 58 ortak durum), `cad.entities.create`'in `polygonize` işlemi, Toplu alan aracı iki
   platformda (ortak iz `polygonize.json`). Şimdi `HYB-03` ölçü noktası ([ADR 0152](docs/adr/0152-survey-points.md)): 1. adım
-  (`#ad` dilbilgisi, `ops::vertex_points` bağımsız başvurusuyla) tamam; sıradaki 2: `cad.entities.create`'in `vertexPoints`
-  işlemi, sonra 3: Nokta'nın seçenekleri, aynı yer sorusu, `#ad` çözümü ve Köşelere nokta iki platformda. PDF, yazdırma ve pafta çıktısı (§16.4) en
+  (`#ad` dilbilgisi, `ops::vertex_points` bağımsız başvurusuyla) ve 2. adım (`cad.entities.create`'in `vertexPoints` işlemi)
+  tamam; sıradaki 3: Nokta'nın seçenekleri, aynı yer sorusu, `#ad` çözümü ve Köşelere nokta iki platformda. PDF, yazdırma ve pafta çıktısı (§16.4) en
   sondadır, zamanını sahip söyleyecek. İşler ADR 0142–0148'deki gibi: önce ADR ve adımları, sonra adım adım iki platformda,
   ortak fixture'larla.
 - Bilinen açık: web `pnpm e2e` duman testinde üç test ADR 0143'ten önce de düşüyordu: “toolbox
