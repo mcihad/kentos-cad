@@ -88,6 +88,17 @@ def pt(t):
     return {"x": t[0], "y": t[1]}
 
 
+def text_turn(rotation, m):
+    """A text's turn (degrees) under `m`, from 0 up to 360: its baseline's direction mapped; mirrored, a half
+    turn more, so that it stays readable (AutoCAD's MIRRTEXT = 0)."""
+    rad = (rotation * math.pi) / 180.0
+    d = linear(m, (math.cos(rad), math.sin(rad)))
+    rot = (math.atan2(d[1], d[0]) * 180.0) / math.pi
+    if reflects(m):
+        rot += 180.0
+    return math.fmod(math.fmod(rot, 360.0) + 360.0, 360.0)
+
+
 def moved(e, m, new_id=None):
     """`e` under `m`: the geometry by the transforms' definitions, every other field kept."""
     e = json.loads(json.dumps(e))
@@ -128,15 +139,14 @@ def moved(e, m, new_id=None):
     elif k == "spline":
         e["pts"] = [pt(apply(m, xy(p))) for p in e["pts"]]
     elif k == "text":
-        rad = (e["rotation"] * math.pi) / 180.0
-        d = linear(m, (math.cos(rad), math.sin(rad)))
-        rot = (math.atan2(d[1], d[0]) * 180.0) / math.pi
-        if reflects(m):
-            rot += 180.0
-        rot = math.fmod(math.fmod(rot, 360.0) + 360.0, 360.0)
         e["p"] = pt(apply(m, xy(e["p"])))
         e["height"] = e["height"] * s
-        e["rotation"] = rot
+        e["rotation"] = text_turn(e["rotation"], m)
+    elif k == "leader":
+        # Its vertices move; its note turns as a text does, readable when mirrored (docs/adr/0146 §4).
+        e["pts"] = [pt(apply(m, xy(p))) for p in e["pts"]]
+        e["height"] = e["height"] * s
+        e["rotation"] = text_turn(e["rotation"], m)
     elif k == "dimension":
         assert e.get("style", "aligned") == "aligned"
         e["a"] = pt(apply(m, xy(e["a"])))

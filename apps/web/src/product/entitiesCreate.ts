@@ -46,6 +46,7 @@ export const CREATE_LABEL: Record<CreateOperation, string> = {
   dimensionChain: 'Zincir ölçü',
   dimensionBaseline: 'Baz ölçü',
   textFile: 'Metin dosyası yerleştir',
+  leader: 'Kılavuz',
 };
 
 /** The checks in the contract's order: why nothing may be written, or the warnings when it may. */

@@ -542,8 +542,9 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
 - Sürmekte: kılavuz ([ADR 0146](docs/adr/0146-leader.md), TODOS.md `CAD-16`, `.kcad` şema 8): ok, kırık çizgi,
   kol ve not tek nesne (`leader`; arayüzde AutoCAD'in Türkçesi gibi “Kılavuz”, sahibin seçimi); ok türleri, ölçüler notun yüksekliğinden; Kılavuz aracı, Öznitelikler; DXF
   LEADER ve MULTILEADER. 1. adım (sözleşme ve şema 8, çekirdeğin `Shape::Leader`'ı) ve 2. adım (yerleşim, çizim
-  kaydı `MIXED`, not etiketi, seçme, kenet, Patlat) tamam; sıradaki adım 3: komutlar (`EntityGeometry::Leader`;
-  `create`, `edit`, `transform`). Ondan sonra, sahibin sırasıyla (ADR 0143
+  kaydı `MIXED`, not etiketi, seçme, kenet, Patlat) ve 3. adım (komutlar: `EntityGeometry::Leader`, `create`'in
+  `leader` işlemi, ortak durumlar) tamam; sıradaki adım 4: Kılavuz aracı, Öznitelikler'in “Kılavuz” bölümü ve
+  notun yerinde düzenlenmesi, iki platformda. Ondan sonra, sahibin sırasıyla (ADR 0143
   Bağlam): yeni ölçü türleri. Her biri `.kcad` şemasını değiştiren kendi özelliği ve şema adımıyla gelir;
   önce ADR yazılır, adımlar ADR 0142–0146'daki gibi iki platformda, ortak fixture'larla ilerler.
 - Bilinen açık: web `pnpm e2e` duman testinde üç test ADR 0143'ten önce de düşüyordu: “toolbox

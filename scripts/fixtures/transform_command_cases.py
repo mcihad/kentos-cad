@@ -53,6 +53,8 @@ ENTITIES = [
     {"kind": "ellipse", "id": 16, "layerId": "yapi", "attrs": {}, "c": P(487050, 4420050), "major": P(8, 0), "ratio": 0.5, "t0": 0.5, "t1": 1.5},
     {"kind": "dimension", "id": 17, "layerId": "yapi", "attrs": {}, "a": P(487000, 4420040), "b": P(487010, 4420040), "offset": 2, "height": 0.5},
     {"kind": "spline", "id": 18, "layerId": "yapi", "attrs": {}, "pts": [P(487060, 4420000), P(487064, 4420004), P(487068, 4420000)], "closed": False},
+    {"kind": "leader", "id": 19, "layerId": "yapi", "attrs": {}, "pts": [P(487070, 4420010), P(487074, 4420014), P(487080, 4420014)], "text": "Ø150 PVC",
+     "height": 2, "rotation": 15, "arrow": "open", "mask": True},
     {"kind": "line", "id": 20, "layerId": "gizli", "attrs": {}, "a": P(487005, 4420015), "b": P(487015, 4420015)},
     {"kind": "point", "id": 21, "layerId": "notlar", "attrs": {"Ad": "N2"}, "p": P(487002, 4420002)},
 ]
@@ -565,6 +567,22 @@ assert not (math.isfinite(big["c"]["x"]) and math.isfinite(big["r"])), big
 far = moved(ORIG(13), translation(1e308, 0))
 assert math.isfinite(far["c"]["x"]), far
 
+
+cases.append({
+    "name": "kılavuz: köşeleri döner ve ölçeklenir, notu yazı gibi döner, yüksekliği ölçekle çarpılır; aynalamada not okunur kalır; oku, notu ve zemini kalır (ADR 0146)",
+    "note": "Beklenen değerler dönüşümlerin tanımından ve yazının dönüş kuralından çift duyarlıkla hesaplandı.",
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(19)], "transform": rotate(487010, 4420010, HALF_PI)}, "result": done(changed=[U(19)]),
+         "expect": {"entities": entities((19, moved(ORIG(19), M_ROT))), "revision": "changed"}},
+        {"op": "undo", "returns": "Döndür", "expect": {"entities": entities((19, ORIG(19)))}},
+        {"op": "execute", "input": {"uids": [U(19)], "transform": scale(487000, 4420000, 2)}, "result": done(changed=[U(19)]),
+         "expect": {"entities": entities((19, moved(ORIG(19), M_SCALE2))), "revision": "changed"}},
+        {"op": "undo", "returns": "Ölçekle", "expect": {"entities": entities((19, ORIG(19)))}},
+        {"op": "execute", "input": {"uids": [U(19)], "transform": mirror_t(*AX)}, "result": done(changed=[U(19)]),
+         "expect": {"entities": entities((19, moved(ORIG(19), M_MIRROR))), "revision": "changed"}},
+        {"op": "undo", "returns": "Aynala", "expect": {"entities": entities((19, ORIG(19))), "canUndo": False}},
+    ],
+})
 
 def compact(v):
     return json.dumps(v, ensure_ascii=False, separators=(", ", ": "))

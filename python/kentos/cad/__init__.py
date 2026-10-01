@@ -158,6 +158,7 @@ __all__ = [
     "LeaderArrow",
     "LeaderArrowName",
     "LeaderEntity",
+    "LeaderEntityGeometry",
     "LineCreate",
     "LineCreated",
     "LineEntity",

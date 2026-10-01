@@ -568,6 +568,17 @@ fn geometry_number<'a>(geometry: &'a mut EntityGeometry, rest: &str) -> Option<&
             "rotation" => Some(rotation),
             _ => coordinate(p, "p", rest),
         },
+        // A leader's height, turn and vertices (docs/adr/0146).
+        EntityGeometry::Leader {
+            pts,
+            height,
+            rotation,
+            ..
+        } => match rest {
+            "height" => Some(height),
+            "rotation" => Some(rotation),
+            _ => point_number(pts, rest),
+        },
         EntityGeometry::Hatch { ring, pattern, .. } => match rest {
             "pattern.angle" => Some(&mut pattern.angle),
             "pattern.spacing" => Some(&mut pattern.spacing),

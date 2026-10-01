@@ -524,6 +524,13 @@ pub fn area_parts(e: &Shape) -> Cow<'_, [Shape]> {
 pub const MULTI_PART_REFUSED: &str =
     "Bu işlem çok parçalı alanda çalışmaz; önce Parçalara ayır ile alanı parçalarına ayırın.";
 
+/// What an edge edit (Buda, Uzat, Kır, Ötele) says of a leader: its
+/// arrowhead, line, landing and note are one object (docs/adr/0146 §4).
+/// `verb`: “budanamaz”, “uzatılamaz” …
+pub fn leader_refused(verb: &str) -> String {
+    format!("Kılavuz {verb}; önce Patlat (X) ile çizgisine, ok başına ve notuna ayırın.")
+}
+
 /// Whether an area has parts past its first.
 pub fn is_multi_part(e: &Shape) -> bool {
     matches!(e, Shape::Polygon { parts: Some(p), .. } if !p.is_empty())

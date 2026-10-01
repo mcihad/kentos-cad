@@ -23480,6 +23480,59 @@
                   "rotation"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A leader (docs/adr/0146): an arrowhead at `pts[0]`, a line through\n`pts` and, with a note, a landing from the last vertex and the note\npast it; `height` (metres, over 0) measures the note, the arrowhead\nand the landing, `rotation` (degrees counter-clockwise from east)\nturns the note and the landing.",
+                "properties": {
+                  "arrow": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/LeaderArrow"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The arrowhead; absent: a filled arrow."
+                  },
+                  "height": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "kind": {
+                    "const": "leader",
+                    "type": "string"
+                  },
+                  "mask": {
+                    "description": "The note's box filled with the drawing area's colour before it is drawn.",
+                    "type": "boolean"
+                  },
+                  "pts": {
+                    "description": "At least two: the arrow's tip first.",
+                    "items": {
+                      "$ref": "#/$defs/Vec2"
+                    },
+                    "type": "array"
+                  },
+                  "rotation": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "text": {
+                    "description": "The note, one line; absent: the arrow alone. Never empty.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind",
+                  "pts",
+                  "height",
+                  "rotation"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -23513,6 +23566,26 @@
               "cross"
             ],
             "type": "string"
+          },
+          "LeaderArrow": {
+            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "oneOf": [
+              {
+                "const": "open",
+                "description": "The filled arrow's two sides.",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled dot.",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "No arrowhead: the line ends at the tip.",
+                "type": "string"
+              }
+            ]
           },
           "RingGeometry": {
             "description": "A closed ring in vertex + bulge form (a polygon hole).",
@@ -27153,6 +27226,11 @@
                 "const": "textFile",
                 "description": "Metin dosyası yerleştir (docs/adr/0145 §6): a text file's lines as texts.",
                 "type": "string"
+              },
+              {
+                "const": "leader",
+                "description": "Kılavuz (docs/adr/0146 §6): a leader drawn by its tool.",
+                "type": "string"
               }
             ]
           },
@@ -27676,6 +27754,59 @@
                   "rotation"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A leader (docs/adr/0146): an arrowhead at `pts[0]`, a line through\n`pts` and, with a note, a landing from the last vertex and the note\npast it; `height` (metres, over 0) measures the note, the arrowhead\nand the landing, `rotation` (degrees counter-clockwise from east)\nturns the note and the landing.",
+                "properties": {
+                  "arrow": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/LeaderArrow"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The arrowhead; absent: a filled arrow."
+                  },
+                  "height": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "kind": {
+                    "const": "leader",
+                    "type": "string"
+                  },
+                  "mask": {
+                    "description": "The note's box filled with the drawing area's colour before it is drawn.",
+                    "type": "boolean"
+                  },
+                  "pts": {
+                    "description": "At least two: the arrow's tip first.",
+                    "items": {
+                      "$ref": "#/$defs/Vec2"
+                    },
+                    "type": "array"
+                  },
+                  "rotation": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "text": {
+                    "description": "The note, one line; absent: the arrow alone. Never empty.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind",
+                  "pts",
+                  "height",
+                  "rotation"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -27709,6 +27840,26 @@
               "cross"
             ],
             "type": "string"
+          },
+          "LeaderArrow": {
+            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "oneOf": [
+              {
+                "const": "open",
+                "description": "The filled arrow's two sides.",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled dot.",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "No arrowhead: the line ends at the tip.",
+                "type": "string"
+              }
+            ]
           },
           "NewObject": {
             "description": "One new object: its geometry and what else it carries. The layer is the\ninput's; the persistent id and the slot are given when it is written.",

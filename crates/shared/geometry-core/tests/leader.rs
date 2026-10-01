@@ -225,3 +225,34 @@ fn it_explodes_into_a_polyline_its_arrowhead_and_its_note() {
     assert_eq!(pieces.len(), 2);
     assert!(matches!(&pieces[1].shape, Shape::Polyline { pts, .. } if pts.len() == 3 && pts[1] == Vec2::new(0.0, 0.0)));
 }
+
+#[test]
+fn the_edge_edits_refuse_it_until_it_is_exploded() {
+    use kentos_geometry_core::entity::Entity;
+    use kentos_geometry_core::geom::intersect::Edge;
+    use kentos_geometry_core::ops::breaking::break_entity;
+    use kentos_geometry_core::ops::curve_cuts::{Cut, Geometry};
+    use kentos_geometry_core::ops::offset::offset_entity;
+    use kentos_geometry_core::ops::trim::{extend_entity, trim_entity};
+
+    let e = Entity::new(leader(&[(0.0, 0.0), (3.0, 4.0), (9.0, 4.0)], 0.0));
+    let wall = [Edge::Seg {
+        a: Vec2::new(2.0, -10.0),
+        b: Vec2::new(2.0, 10.0),
+    }];
+    let refused = |verb: &str| {
+        format!("Kılavuz {verb}; önce Patlat (X) ile çizgisine, ok başına ve notuna ayırın.")
+    };
+    let cut = |c: Cut| match c {
+        Cut::Error(m) => m,
+        Cut::Pieces(p) => panic!("{} pieces", p.len()),
+    };
+    let geometry = |g: Geometry| match g {
+        Geometry::Error(m) => m,
+        Geometry::Ok(_) => panic!("a geometry"),
+    };
+    assert_eq!(cut(trim_entity(&e, Vec2::new(1.0, 1.0), &wall)), refused("budanamaz"));
+    assert_eq!(geometry(extend_entity(&e, Vec2::new(9.0, 4.0), &wall)), refused("uzatılamaz"));
+    assert_eq!(cut(break_entity(&e, Vec2::new(1.0, 1.0), Vec2::new(2.0, 2.0))), refused("kırılamaz"));
+    assert_eq!(geometry(offset_entity(&e.shape, 1.0, Vec2::new(0.0, 5.0))), refused("ötelenemez"));
+}

@@ -3,7 +3,9 @@
 //! ellipses and construction lines by their own rules.
 
 use crate::api::Op;
-use crate::entity::{Entity, Shape, area_parts, inside_polygon, is_multi_part, join_parts};
+use crate::entity::{
+    Entity, Shape, area_parts, inside_polygon, is_multi_part, join_parts, leader_refused,
+};
 use crate::geom::arrangement::{Area, Ring};
 use crate::geom::bulge::{bulge_ring_area, has_bulges};
 use crate::geom::region::union_areas;
@@ -143,6 +145,7 @@ pub fn offset_entity(e: &Shape, distance: f64, through: Vec2) -> Geometry {
                 _ => Shape::Circle { c: *c, r },
             }))
         }
+        Shape::Leader { .. } => Geometry::Error(leader_refused("ötelenemez")),
         _ => {
             if let Some(g) = ellipse_of(e) {
                 return offset_ellipse(&g, distance, through);

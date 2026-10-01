@@ -71,6 +71,9 @@ def made(obj, slot, layer_id="yapi"):
             out.pop("mask", None)
         if out.get("widthFactor") == 1:
             out.pop("widthFactor")
+    # So is a leader's mask (docs/adr/0146 §1); a filled arrow and no note are the fields' absence too.
+    if out["kind"] == "leader" and out.get("mask") is not True:
+        out.pop("mask", None)
     out["id"] = slot
     out["layerId"] = layer_id
     if "color" in obj:
@@ -632,6 +635,59 @@ cases.append({
          "result": failed("invalid_width_factor", width_factor_message(101), "objects[0].geometry.widthFactor"), "expect": NOTHING},
         {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TEXT, "widthFactor": 0.8})]}, "nonFinite": {"objects[0].geometry.widthFactor": "Infinity"},
          "result": not_finite(1), "expect": NOTHING},
+    ],
+})
+
+
+# ── Kılavuz (docs/adr/0146) ─────────────────────────────────────────────
+
+LEADER = {"kind": "leader", "pts": [P(487060, 4420110), P(487066, 4420115)], "text": "Mevcut bina", "height": 2.5, "rotation": 0}
+leaders = [
+    O(LEADER),
+    O({"kind": "leader", "pts": [P(487090, 4420110), P(487086, 4420114), P(487080, 4420116)], "text": "Ø150 PVC", "height": 2,
+       "rotation": 0, "arrow": "open", "mask": True}),
+    O({"kind": "leader", "pts": [P(487100, 4420110), P(487106, 4420118)], "text": "Ada 101 Parsel 5", "height": 1.5, "rotation": 30,
+       "arrow": "dot", "mask": False}, color="#E5484D"),
+    O({"kind": "leader", "pts": [P(487060, 4420100), P(487065, 4420104), P(487069, 4420104)], "height": 2.5, "rotation": 0, "arrow": "none"}),
+]
+
+
+def leader_message(kind, given):
+    return {
+        "few": f"Kılavuzun en az 2 köşesi olmalı; {given} köşe verildi. Okun ucunu ve en az bir köşe daha verin.",
+        "empty": "Kılavuzun notu boş olamaz; yalnız boşluktan oluşan not da boştur. Notu yazın ya da notsuz kılavuz için alanı kaldırın.",
+        "height": f"Kılavuzun yüksekliği sıfırdan büyük olmalı; {given} verildi. Notun yüksekliğini metre olarak, pozitif verin.",
+    }[kind]
+
+
+cases.append({
+    "name": "Kılavuz: köşeleri, notu, yüksekliği, dönüşü, oku ve zemini tek adımda yazılır, adı “Kılavuz”; dolu ok, zeminsizlik ve notsuzluk alan değildir (ADR 0146)",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "leader", "objects": leaders}, "result": done([3, 4, 5, 6]),
+         "expect": {"ids": IDS + [3, 4, 5, 6], "entities": {str(3 + i): made(o, 3 + i) for i, o in enumerate(leaders)}, "uids": {"3": "new", "4": "new", "5": "new", "6": "new"},
+                    "revision": "changed"}},
+        {"op": "undo", "returns": "Kılavuz", "expect": {"ids": IDS, "canUndo": False, "canRedo": True}},
+        {"op": "redo", "returns": "Kılavuz", "expect": {"ids": IDS + [3, 4, 5, 6]}},
+    ],
+})
+
+cases.append({
+    "name": "kılavuzun en az 2 köşesi, boş olmayan notu ve sıfırdan büyük yüksekliği olur; köşe ve not sayılardan önce, yükseklik sonlu sayılardan sonra denetlenir (ADR 0146)",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(LEADER), O({**LEADER, "pts": [P(487060, 4420110)]})]},
+         "result": failed("too_few_points", leader_message("few", 1), "objects[1].geometry.pts"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**LEADER, "text": ""})]},
+         "result": failed("empty_text", leader_message("empty", None), "objects[0].geometry.text"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**LEADER, "text": " \t\u00a0"})]},
+         "result": failed("empty_text", leader_message("empty", None), "objects[0].geometry.text"), "note": "Yalnız boşluk da boştur.", "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**LEADER, "height": 0})]},
+         "result": failed("invalid_height", leader_message("height", 0), "objects[0].geometry.height"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**LEADER, "height": -2.5})]},
+         "result": failed("invalid_height", leader_message("height", -2.5), "objects[0].geometry.height"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**LEADER, "height": 0})]}, "nonFinite": {"objects[0].geometry.rotation": "NaN"},
+         "result": not_finite(1), "note": "Sonlu olmayan sayı yükseklikten önce.", "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**LEADER, "pts": [P(487060, 4420110)]})]}, "nonFinite": {"objects[0].geometry.height": "NaN"},
+         "result": failed("too_few_points", leader_message("few", 1), "objects[0].geometry.pts"), "note": "Köşe sayısı sayılardan önce.", "expect": NOTHING},
     ],
 })
 

@@ -3,7 +3,7 @@
 //! arc length; cuts are the s values where boundaries cross it.
 
 use crate::api::Op;
-use crate::entity::{Entity, MULTI_PART_REFUSED, Shape, is_multi_part};
+use crate::entity::{Entity, MULTI_PART_REFUSED, Shape, is_multi_part, leader_refused};
 use crate::geom::arc::norm_angle;
 use crate::geom::bulge::{bulge_arc, bulge_at, bulge_of_sweep};
 use crate::geom::intersect::{
@@ -29,6 +29,7 @@ pub fn trim_entity(target: &Entity, pick: Vec2, boundaries: &[Edge]) -> Cut {
         Shape::Dimension { .. } | Shape::Hatch { .. } => {
             return Cut::Error("Ölçü ve tarama budanamaz.".into());
         }
+        Shape::Leader { .. } => return Cut::Error(leader_refused("budanamaz")),
         _ => {}
     }
     if let Some(g) = ellipse_of(s) {
@@ -83,6 +84,9 @@ pub fn trim_entity(target: &Entity, pick: Vec2, boundaries: &[Edge]) -> Cut {
 /// Extends the end of `target` nearest to `pick` to the first boundary it meets.
 pub fn extend_entity(target: &Entity, pick: Vec2, boundaries: &[Edge]) -> Geometry {
     let s = &target.shape;
+    if let Shape::Leader { .. } = s {
+        return Geometry::Error(leader_refused("uzatılamaz"));
+    }
     if let Some(g) = ellipse_of(s) {
         return extend_ellipse(&g, pick, boundaries);
     }

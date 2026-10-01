@@ -81,6 +81,7 @@ GEOMETRY = {
     "dimension": ["a", "b", "offset", "height", "text", "style", "angle", "c"],
     "hatch": ["ring", "holes", "pattern"],
     "insert": ["block", "p", "scale", "rotation", "mirror"],
+    "leader": ["pts", "text", "height", "rotation", "arrow", "mask"],
 }
 
 
@@ -101,6 +102,9 @@ def reshaped(e, geometry):
             out.pop("mask", None)
         if out.get("widthFactor") == 1:
             out.pop("widthFactor")
+    # So is a leader's mask (docs/adr/0146 §1).
+    if out.get("kind") == "leader" and out.get("mask") is not True:
+        out.pop("mask", None)
     return out
 
 
@@ -1338,6 +1342,147 @@ cases.append({
          "result": failed("invalid_scale", "Blok ölçeği sıfırdan büyük olmalı. Pozitif bir ölçek verin.", "changes[0].geometry.scale"), "expect": B_NOTHING},
         {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": uid(9), "geometry": placement(P(487080, 4420000), 2, 0)}]},
          "nonFinite": {"changes[0].geometry.scale": "NaN"}, "result": failed("not_finite", "1. değişikliğin geometrisinde sonlu olmayan bir değer var (NaN ya da sonsuz). Geometriyi sonlu sayılarla verin.", "changes[0].geometry"), "expect": B_NOTHING},
+    ],
+})
+
+# ── Kılavuz (docs/adr/0146 §6): its geometry rows, grips and vertices, Patlat ──
+
+from leader_cases import layout as leader_layout  # noqa: E402  (the layout's rule, written once, independently)
+
+# Their own drawing: a leader with a note, a broken one with an open arrow and a mask, and one on the locked layer.
+LEADER_ENTITIES = [
+    {"kind": "leader", "id": 1, "layerId": "yapi", "color": "#E5484D", "attrs": {"Tür": "Not"}, "pts": [P(487060, 4420110), P(487066, 4420115)],
+     "text": "Mevcut bina", "height": 2.5, "rotation": 0},
+    {"kind": "leader", "id": 2, "layerId": "yapi", "attrs": {}, "pts": [P(487090, 4420110), P(487086, 4420114), P(487080, 4420116)],
+     "text": "Ø150 PVC", "height": 2, "rotation": 0, "arrow": "open", "mask": True},
+    {"kind": "leader", "id": 3, "layerId": "kilitli", "attrs": {}, "pts": [P(487100, 4420110), P(487106, 4420118)], "height": 1.5, "rotation": 30, "arrow": "dot"},
+]
+LEADER_SETUP = {**SETUP, "entities": LEADER_ENTITIES}
+LEADER_BY_ID = {e["id"]: e for e in LEADER_ENTITIES}
+LEADER_NOTHING = {"ids": [e["id"] for e in LEADER_ENTITIES], "canUndo": False, "canRedo": False, "dirty": False, "revision": "same"}
+
+
+def LE(i):
+    return json.loads(json.dumps(LEADER_BY_ID[i]))
+
+
+def leader_geometry(i, **fields):
+    """The leader's geometry with some of its fields changed; a field given None is left out."""
+    e = LE(i)
+    g = {k: v for k, v in e.items() if k == "kind" or k in GEOMETRY["leader"]}
+    g.update(fields)
+    return {k: v for k, v in g.items() if v is not None}
+
+
+def leader_message(kind, given=None):
+    return {
+        "few": f"Kılavuzun en az 2 köşesi olmalı; {given} köşe verildi. Okun ucunu ve en az bir köşe daha verin.",
+        "empty": "Kılavuzun notu boş olamaz; yalnız boşluktan oluşan not da boştur. Notu yazın ya da notsuz kılavuz için alanı kaldırın.",
+        "height": f"Kılavuzun yüksekliği sıfırdan büyük olmalı; {given} verildi. Notun yüksekliğini metre olarak, pozitif verin.",
+    }[kind]
+
+
+renoted = leader_geometry(1, text="Yeni bina", height=3, rotation=15, arrow="dot", mask=True)
+bare = leader_geometry(1, text=None, height=3, rotation=15, arrow=None, mask=False)
+cases.append({
+    "name": "properties (Öznitelikler): kılavuzun notu, yüksekliği, dönüşü, oku ve zemini yazılır; verilmeyen not kalkar (notsuz kılavuz), dolu ok ve zeminsizlik alan değildir; rengi ve öznitelikleri kalır (ADR 0146)",
+    "setup": LEADER_SETUP,
+    "steps": [
+        {"op": "captureUid", "id": 1, "as": "kilavuz"},
+        {"op": "execute", "input": properties(1, renoted), "result": done(changed=[uid(1)]),
+         "expect": {"entities": {"1": reshaped(LE(1), renoted)}, "uids": {"1": "kilavuz"}, "revision": "changed"}},
+        {"op": "execute", "input": properties(1, bare), "result": done(changed=[uid(1)]),
+         "expect": {"entities": {"1": reshaped(LE(1), bare)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Değiştir", "expect": {"entities": {"1": reshaped(LE(1), renoted)}, "uids": {"1": "kilavuz"}, "canUndo": True}},
+    ],
+})
+
+moved_end = leader_geometry(1, pts=[P(487060, 4420110), P(487070, 4420118)])
+inserted = leader_geometry(1, pts=[P(487060, 4420110), P(487063, 4420114), P(487070, 4420118)])
+straightened = leader_geometry(2, pts=[P(487090, 4420110), P(487080, 4420116)])
+cases.append({
+    "name": "Tutamaçla düzenle, Köşe ekle ve Köşe sil kılavuzun köşelerini yazar; notu, oku ve zemini kalır; her yazma kendi adımıdır (ADR 0146)",
+    "setup": LEADER_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "grip", "changes": [{"kind": "update", "uid": uid(1), "geometry": moved_end}]}, "result": done(changed=[uid(1)]),
+         "expect": {"entities": {"1": reshaped(LE(1), moved_end)}, "revision": "changed"}},
+        {"op": "execute", "input": {"operation": "vertexAdd", "changes": [{"kind": "update", "uid": uid(1), "geometry": inserted}]}, "result": done(changed=[uid(1)]),
+         "expect": {"entities": {"1": reshaped(LE(1), inserted)}, "revision": "changed"}},
+        {"op": "execute", "input": {"operation": "vertexRemove", "changes": [{"kind": "update", "uid": uid(2), "geometry": straightened}]}, "result": done(changed=[uid(2)]),
+         "expect": {"entities": {"2": reshaped(LE(2), straightened)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Köşe sil"},
+        {"op": "undo", "returns": "Köşe ekle"},
+        {"op": "undo", "returns": "Tutamaçla düzenle", "expect": {"entities": {"1": LE(1), "2": LE(2)}, "canUndo": False}},
+    ],
+})
+
+cases.append({
+    "name": "kılavuz iki köşenin altına inmez, notu boş olmaz, yüksekliği sıfırdan büyüktür; köşe ve not sayılardan önce, yükseklik sonlu sayılardan sonra denetlenir (ADR 0146)",
+    "setup": LEADER_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "vertexRemove", "changes": [{"kind": "update", "uid": uid(1), "geometry": leader_geometry(1, pts=[P(487060, 4420110)])}]},
+         "result": failed("too_few_points", leader_message("few", 1), "changes[0].geometry.pts"), "expect": LEADER_NOTHING},
+        {"op": "execute", "input": properties(1, leader_geometry(1, text=" ")), "result": failed("empty_text", leader_message("empty"), "changes[0].geometry.text"), "expect": LEADER_NOTHING},
+        {"op": "execute", "input": properties(1, leader_geometry(1, height=0)), "result": failed("invalid_height", leader_message("height", 0), "changes[0].geometry.height"), "expect": LEADER_NOTHING},
+        {"op": "execute", "input": properties(2, leader_geometry(2, height=-1)), "result": failed("invalid_height", leader_message("height", -1), "changes[0].geometry.height"), "expect": LEADER_NOTHING},
+        {"op": "execute", "input": properties(1, leader_geometry(1, height=0)), "nonFinite": {"changes[0].geometry.rotation": "NaN"},
+         "result": failed("not_finite", not_finite_message(1), "changes[0].geometry"), "expect": LEADER_NOTHING},
+        {"op": "execute", "input": properties(3, leader_geometry(3, rotation=45)),
+         "result": failed("layer_locked", locked_message("Kilitli katman"), "changes[0].uid"), "note": "Kilitli katmandaki kılavuz değişmez.", "expect": LEADER_NOTHING},
+    ],
+})
+
+
+def leader_pieces(i):
+    """Patlat's pieces (docs/adr/0146 §4), from the layout's rule: its line on to the landing's end a polyline,
+    its filled arrowhead or dot a solid hatch, an open one's sides a polyline, its note a text."""
+    e = LE(i)
+    pts = [(q["x"], q["y"]) for q in e["pts"]]
+    got = leader_layout(pts, e["height"], e["rotation"], e.get("arrow"), "text" in e)
+    xy = lambda q: P(q[0], q[1])  # noqa: E731
+    line = [xy(q) for q in pts] + ([xy(got["landing"][1])] if "landing" in got else [])
+    pieces = [{"kind": "polyline", "pts": line}]
+    head = got["head"]
+    if head["kind"] == "open":
+        pieces.append({"kind": "polyline", "pts": [xy(q) for q in head["lines"]]})
+    elif head["kind"] == "filled":
+        pieces.append({"kind": "hatch", "ring": [xy(q) for q in head["triangle"]], "pattern": {"type": "solid", "angle": 0, "spacing": e["height"]}})
+    if "notePoint" in got:
+        text = {"kind": "text", "p": xy(got["notePoint"]), "text": e["text"], "height": e["height"], "rotation": e["rotation"], "align": got["noteAlign"]}
+        if e.get("mask"):
+            text["mask"] = True
+        pieces.append(text)
+    return pieces
+
+
+def leader_piece(i, geometry, slot):
+    """An `add` from leader i: its layer and colour, no attributes."""
+    e = LE(i)
+    out = json.loads(json.dumps(geometry))
+    out["id"] = slot
+    out["layerId"] = e["layerId"]
+    if "color" in e:
+        out["color"] = e["color"]
+    out["attrs"] = {}
+    return out
+
+
+filled_pieces = leader_pieces(1)
+open_pieces = leader_pieces(2)
+cases.append({
+    "name": "Patlat: kılavuz çoklu çizgi (köşeler ve kolun ucu), dolu ok için dolu tarama, açık ok için çoklu çizgi ve notu için hizalı yazı olur; parçalar katmanını ve rengini alır, tek adımdır (ADR 0146 §4)",
+    "setup": LEADER_SETUP,
+    "steps": [
+        {"op": "captureUid", "id": 1, "as": "dolu"},
+        {"op": "captureUid", "id": 2, "as": "acik"},
+        {"op": "execute", "input": {"operation": "explode", "changes": [{"kind": "remove", "uid": uid(1)}] + [{"kind": "add", "from": uid(1), "geometry": g} for g in filled_pieces]
+                                    + [{"kind": "remove", "uid": uid(2)}] + [{"kind": "add", "from": uid(2), "geometry": g} for g in open_pieces]},
+         "result": done(created=[uid(4 + k) for k in range(len(filled_pieces) + len(open_pieces))], removed=["$uid:dolu", "$uid:acik"]),
+         "expect": {"ids": [3] + [4 + k for k in range(len(filled_pieces) + len(open_pieces))],
+                    "entities": {**{str(4 + k): leader_piece(1, g, 4 + k) for k, g in enumerate(filled_pieces)},
+                                 **{str(4 + len(filled_pieces) + k): leader_piece(2, g, 4 + len(filled_pieces) + k) for k, g in enumerate(open_pieces)}},
+                    "revision": "changed"}},
+        {"op": "undo", "returns": "Patlat", "expect": {"ids": [1, 2, 3], "entities": {"1": LE(1), "2": LE(2)}, "uids": {"1": "dolu", "2": "acik"}, "canUndo": False}},
     ],
 })
 

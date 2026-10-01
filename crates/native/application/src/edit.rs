@@ -562,6 +562,26 @@ pub(crate) fn check_geometry(
                 at(".text"),
             )));
         }
+        // A leader (docs/adr/0146 §1): its tip and one vertex more; no note is the field's absence.
+        EntityGeometry::Leader { pts, .. } if pts.len() < 2 => {
+            return Err(Stop::Failed(error(
+                codes::TOO_FEW_POINTS,
+                format!(
+                    "Kılavuzun en az 2 köşesi olmalı; {} köşe verildi. Okun ucunu ve en az bir köşe daha verin.",
+                    pts.len()
+                ),
+                at(".pts"),
+            )));
+        }
+        EntityGeometry::Leader {
+            text: Some(text), ..
+        } if is_blank(text) => {
+            return Err(Stop::Failed(error(
+                codes::EMPTY_TEXT,
+                "Kılavuzun notu boş olamaz; yalnız boşluktan oluşan not da boştur. Notu yazın ya da notsuz kılavuz için alanı kaldırın.".into(),
+                at(".text"),
+            )));
+        }
         _ => {}
     }
     // Elevations as written (docs/adr/0142): one for each vertex.
@@ -604,6 +624,18 @@ pub(crate) fn check_geometry(
             codes::INVALID_SCALE,
             "Blok ölçeği sıfırdan büyük olmalı. Pozitif bir ölçek verin.".into(),
             at(".scale"),
+        )));
+    }
+    // A leader's height measures its note, arrowhead and landing (docs/adr/0146 §1).
+    if let EntityGeometry::Leader { height, .. } = g
+        && *height <= 0.0
+    {
+        return Err(Stop::Failed(error(
+            codes::INVALID_HEIGHT,
+            format!(
+                "Kılavuzun yüksekliği sıfırdan büyük olmalı; {height} verildi. Notun yüksekliğini metre olarak, pozitif verin."
+            ),
+            at(".height"),
         )));
     }
     // A text's width factor (docs/adr/0145).
@@ -794,5 +826,11 @@ fn finite(g: &EntityGeometry) -> bool {
         EntityGeometry::Insert {
             p, scale, rotation, ..
         } => pt(p) && scale.is_finite() && rotation.is_finite(),
+        EntityGeometry::Leader {
+            pts: p,
+            height,
+            rotation,
+            ..
+        } => pts(p) && height.is_finite() && rotation.is_finite(),
     }
 }

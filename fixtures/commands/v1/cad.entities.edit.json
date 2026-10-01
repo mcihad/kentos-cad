@@ -1392,6 +1392,126 @@
         {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": "$uidOf:9", "geometry": {"kind": "insert", "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001", "p": {"x": 487080, "y": 4420000}, "scale": -2, "rotation": 0}}]}, "result": {"status": "failed", "error": {"code": "invalid_scale", "message": "Blok ölçeği sıfırdan büyük olmalı. Pozitif bir ölçek verin.", "path": "changes[0].geometry.scale"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
         {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": "$uidOf:9", "geometry": {"kind": "insert", "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001", "p": {"x": 487080, "y": 4420000}, "scale": 2, "rotation": 0}}]}, "nonFinite": {"changes[0].geometry.scale": "NaN"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "1. değişikliğin geometrisinde sonlu olmayan bir değer var (NaN ya da sonsuz). Geometriyi sonlu sayılarla verin.", "path": "changes[0].geometry"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
       ]
+    },
+    {
+      "name": "properties (Öznitelikler): kılavuzun notu, yüksekliği, dönüşü, oku ve zemini yazılır; verilmeyen not kalkar (notsuz kılavuz), dolu ok ve zeminsizlik alan değildir; rengi ve öznitelikleri kalır (ADR 0146)",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ürün komutu",
+        "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "hybrid", "drawingFont": "barlow"},
+        "origin": {"x": 487000, "y": 4420000},
+        "layers": [
+          {"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {"kind": "leader", "id": 1, "layerId": "yapi", "color": "#E5484D", "attrs": {"Tür": "Not"}, "pts": [{"x": 487060, "y": 4420110}, {"x": 487066, "y": 4420115}], "text": "Mevcut bina", "height": 2.5, "rotation": 0},
+          {"kind": "leader", "id": 2, "layerId": "yapi", "attrs": {}, "pts": [{"x": 487090, "y": 4420110}, {"x": 487086, "y": 4420114}, {"x": 487080, "y": 4420116}], "text": "Ø150 PVC", "height": 2, "rotation": 0, "arrow": "open", "mask": true},
+          {"kind": "leader", "id": 3, "layerId": "kilitli", "attrs": {}, "pts": [{"x": 487100, "y": 4420110}, {"x": 487106, "y": 4420118}], "height": 1.5, "rotation": 30, "arrow": "dot"}
+        ],
+        "styles": {"items": [], "categories": []}
+      },
+      "steps": [
+        {"op": "captureUid", "id": 1, "as": "kilavuz"},
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": "$uidOf:1", "geometry": {"kind": "leader", "pts": [{"x": 487060, "y": 4420110}, {"x": 487066, "y": 4420115}], "text": "Yeni bina", "height": 3, "rotation": 15, "arrow": "dot", "mask": true}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:1"], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"1": {"id": 1, "layerId": "yapi", "color": "#E5484D", "attrs": {"Tür": "Not"}, "kind": "leader", "pts": [{"x": 487060, "y": 4420110}, {"x": 487066, "y": 4420115}], "text": "Yeni bina", "height": 3, "rotation": 15, "arrow": "dot", "mask": true}}, "uids": {"1": "kilavuz"}, "revision": "changed"}},
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": "$uidOf:1", "geometry": {"kind": "leader", "pts": [{"x": 487060, "y": 4420110}, {"x": 487066, "y": 4420115}], "height": 3, "rotation": 15, "mask": false}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:1"], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"1": {"id": 1, "layerId": "yapi", "color": "#E5484D", "attrs": {"Tür": "Not"}, "kind": "leader", "pts": [{"x": 487060, "y": 4420110}, {"x": 487066, "y": 4420115}], "height": 3, "rotation": 15}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Değiştir", "expect": {"entities": {"1": {"id": 1, "layerId": "yapi", "color": "#E5484D", "attrs": {"Tür": "Not"}, "kind": "leader", "pts": [{"x": 487060, "y": 4420110}, {"x": 487066, "y": 4420115}], "text": "Yeni bina", "height": 3, "rotation": 15, "arrow": "dot", "mask": true}}, "uids": {"1": "kilavuz"}, "canUndo": true}}
+      ]
+    },
+    {
+      "name": "Tutamaçla düzenle, Köşe ekle ve Köşe sil kılavuzun köşelerini yazar; notu, oku ve zemini kalır; her yazma kendi adımıdır (ADR 0146)",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ürün komutu",
+        "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "hybrid", "drawingFont": "barlow"},
+        "origin": {"x": 487000, "y": 4420000},
+        "layers": [
+          {"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {"kind": "leader", "id": 1, "layerId": "yapi", "color": "#E5484D", "attrs": {"Tür": "Not"}, "pts": [{"x": 487060, "y": 4420110}, {"x": 487066, "y": 4420115}], "text": "Mevcut bina", "height": 2.5, "rotation": 0},
+          {"kind": "leader", "id": 2, "layerId": "yapi", "attrs": {}, "pts": [{"x": 487090, "y": 4420110}, {"x": 487086, "y": 4420114}, {"x": 487080, "y": 4420116}], "text": "Ø150 PVC", "height": 2, "rotation": 0, "arrow": "open", "mask": true},
+          {"kind": "leader", "id": 3, "layerId": "kilitli", "attrs": {}, "pts": [{"x": 487100, "y": 4420110}, {"x": 487106, "y": 4420118}], "height": 1.5, "rotation": 30, "arrow": "dot"}
+        ],
+        "styles": {"items": [], "categories": []}
+      },
+      "steps": [
+        {"op": "execute", "input": {"operation": "grip", "changes": [{"kind": "update", "uid": "$uidOf:1", "geometry": {"kind": "leader", "pts": [{"x": 487060, "y": 4420110}, {"x": 487070, "y": 4420118}], "text": "Mevcut bina", "height": 2.5, "rotation": 0}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:1"], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"1": {"id": 1, "layerId": "yapi", "color": "#E5484D", "attrs": {"Tür": "Not"}, "kind": "leader", "pts": [{"x": 487060, "y": 4420110}, {"x": 487070, "y": 4420118}], "text": "Mevcut bina", "height": 2.5, "rotation": 0}}, "revision": "changed"}},
+        {"op": "execute", "input": {"operation": "vertexAdd", "changes": [{"kind": "update", "uid": "$uidOf:1", "geometry": {"kind": "leader", "pts": [{"x": 487060, "y": 4420110}, {"x": 487063, "y": 4420114}, {"x": 487070, "y": 4420118}], "text": "Mevcut bina", "height": 2.5, "rotation": 0}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:1"], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"1": {"id": 1, "layerId": "yapi", "color": "#E5484D", "attrs": {"Tür": "Not"}, "kind": "leader", "pts": [{"x": 487060, "y": 4420110}, {"x": 487063, "y": 4420114}, {"x": 487070, "y": 4420118}], "text": "Mevcut bina", "height": 2.5, "rotation": 0}}, "revision": "changed"}},
+        {"op": "execute", "input": {"operation": "vertexRemove", "changes": [{"kind": "update", "uid": "$uidOf:2", "geometry": {"kind": "leader", "pts": [{"x": 487090, "y": 4420110}, {"x": 487080, "y": 4420116}], "text": "Ø150 PVC", "height": 2, "rotation": 0, "arrow": "open", "mask": true}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:2"], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"id": 2, "layerId": "yapi", "attrs": {}, "kind": "leader", "pts": [{"x": 487090, "y": 4420110}, {"x": 487080, "y": 4420116}], "text": "Ø150 PVC", "height": 2, "rotation": 0, "arrow": "open", "mask": true}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Köşe sil"},
+        {"op": "undo", "returns": "Köşe ekle"},
+        {"op": "undo", "returns": "Tutamaçla düzenle", "expect": {"entities": {"1": {"kind": "leader", "id": 1, "layerId": "yapi", "color": "#E5484D", "attrs": {"Tür": "Not"}, "pts": [{"x": 487060, "y": 4420110}, {"x": 487066, "y": 4420115}], "text": "Mevcut bina", "height": 2.5, "rotation": 0}, "2": {"kind": "leader", "id": 2, "layerId": "yapi", "attrs": {}, "pts": [{"x": 487090, "y": 4420110}, {"x": 487086, "y": 4420114}, {"x": 487080, "y": 4420116}], "text": "Ø150 PVC", "height": 2, "rotation": 0, "arrow": "open", "mask": true}}, "canUndo": false}}
+      ]
+    },
+    {
+      "name": "kılavuz iki köşenin altına inmez, notu boş olmaz, yüksekliği sıfırdan büyüktür; köşe ve not sayılardan önce, yükseklik sonlu sayılardan sonra denetlenir (ADR 0146)",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ürün komutu",
+        "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "hybrid", "drawingFont": "barlow"},
+        "origin": {"x": 487000, "y": 4420000},
+        "layers": [
+          {"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {"kind": "leader", "id": 1, "layerId": "yapi", "color": "#E5484D", "attrs": {"Tür": "Not"}, "pts": [{"x": 487060, "y": 4420110}, {"x": 487066, "y": 4420115}], "text": "Mevcut bina", "height": 2.5, "rotation": 0},
+          {"kind": "leader", "id": 2, "layerId": "yapi", "attrs": {}, "pts": [{"x": 487090, "y": 4420110}, {"x": 487086, "y": 4420114}, {"x": 487080, "y": 4420116}], "text": "Ø150 PVC", "height": 2, "rotation": 0, "arrow": "open", "mask": true},
+          {"kind": "leader", "id": 3, "layerId": "kilitli", "attrs": {}, "pts": [{"x": 487100, "y": 4420110}, {"x": 487106, "y": 4420118}], "height": 1.5, "rotation": 30, "arrow": "dot"}
+        ],
+        "styles": {"items": [], "categories": []}
+      },
+      "steps": [
+        {"op": "execute", "input": {"operation": "vertexRemove", "changes": [{"kind": "update", "uid": "$uidOf:1", "geometry": {"kind": "leader", "pts": [{"x": 487060, "y": 4420110}], "text": "Mevcut bina", "height": 2.5, "rotation": 0}}]}, "result": {"status": "failed", "error": {"code": "too_few_points", "message": "Kılavuzun en az 2 köşesi olmalı; 1 köşe verildi. Okun ucunu ve en az bir köşe daha verin.", "path": "changes[0].geometry.pts"}}, "expect": {"ids": [1, 2, 3], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": "$uidOf:1", "geometry": {"kind": "leader", "pts": [{"x": 487060, "y": 4420110}, {"x": 487066, "y": 4420115}], "text": " ", "height": 2.5, "rotation": 0}}]}, "result": {"status": "failed", "error": {"code": "empty_text", "message": "Kılavuzun notu boş olamaz; yalnız boşluktan oluşan not da boştur. Notu yazın ya da notsuz kılavuz için alanı kaldırın.", "path": "changes[0].geometry.text"}}, "expect": {"ids": [1, 2, 3], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": "$uidOf:1", "geometry": {"kind": "leader", "pts": [{"x": 487060, "y": 4420110}, {"x": 487066, "y": 4420115}], "text": "Mevcut bina", "height": 0, "rotation": 0}}]}, "result": {"status": "failed", "error": {"code": "invalid_height", "message": "Kılavuzun yüksekliği sıfırdan büyük olmalı; 0 verildi. Notun yüksekliğini metre olarak, pozitif verin.", "path": "changes[0].geometry.height"}}, "expect": {"ids": [1, 2, 3], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": "$uidOf:2", "geometry": {"kind": "leader", "pts": [{"x": 487090, "y": 4420110}, {"x": 487086, "y": 4420114}, {"x": 487080, "y": 4420116}], "text": "Ø150 PVC", "height": -1, "rotation": 0, "arrow": "open", "mask": true}}]}, "result": {"status": "failed", "error": {"code": "invalid_height", "message": "Kılavuzun yüksekliği sıfırdan büyük olmalı; -1 verildi. Notun yüksekliğini metre olarak, pozitif verin.", "path": "changes[0].geometry.height"}}, "expect": {"ids": [1, 2, 3], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": "$uidOf:1", "geometry": {"kind": "leader", "pts": [{"x": 487060, "y": 4420110}, {"x": 487066, "y": 4420115}], "text": "Mevcut bina", "height": 0, "rotation": 0}}]}, "nonFinite": {"changes[0].geometry.rotation": "NaN"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "1. değişikliğin geometrisinde sonlu olmayan bir değer var (NaN ya da sonsuz). Geometriyi sonlu sayılarla verin.", "path": "changes[0].geometry"}}, "expect": {"ids": [1, 2, 3], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": "$uidOf:3", "geometry": {"kind": "leader", "pts": [{"x": 487100, "y": 4420110}, {"x": 487106, "y": 4420118}], "height": 1.5, "rotation": 45, "arrow": "dot"}}]}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "“Kilitli katman” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın.", "path": "changes[0].uid"}}, "note": "Kilitli katmandaki kılavuz değişmez.", "expect": {"ids": [1, 2, 3], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Patlat: kılavuz çoklu çizgi (köşeler ve kolun ucu), dolu ok için dolu tarama, açık ok için çoklu çizgi ve notu için hizalı yazı olur; parçalar katmanını ve rengini alır, tek adımdır (ADR 0146 §4)",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ürün komutu",
+        "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "hybrid", "drawingFont": "barlow"},
+        "origin": {"x": 487000, "y": 4420000},
+        "layers": [
+          {"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {"kind": "leader", "id": 1, "layerId": "yapi", "color": "#E5484D", "attrs": {"Tür": "Not"}, "pts": [{"x": 487060, "y": 4420110}, {"x": 487066, "y": 4420115}], "text": "Mevcut bina", "height": 2.5, "rotation": 0},
+          {"kind": "leader", "id": 2, "layerId": "yapi", "attrs": {}, "pts": [{"x": 487090, "y": 4420110}, {"x": 487086, "y": 4420114}, {"x": 487080, "y": 4420116}], "text": "Ø150 PVC", "height": 2, "rotation": 0, "arrow": "open", "mask": true},
+          {"kind": "leader", "id": 3, "layerId": "kilitli", "attrs": {}, "pts": [{"x": 487100, "y": 4420110}, {"x": 487106, "y": 4420118}], "height": 1.5, "rotation": 30, "arrow": "dot"}
+        ],
+        "styles": {"items": [], "categories": []}
+      },
+      "steps": [
+        {"op": "captureUid", "id": 1, "as": "dolu"},
+        {"op": "captureUid", "id": 2, "as": "acik"},
+        {"op": "execute", "input": {"operation": "explode", "changes": [{"kind": "remove", "uid": "$uidOf:1"}, {"kind": "add", "from": "$uidOf:1", "geometry": {"kind": "polyline", "pts": [{"x": 487060, "y": 4420110}, {"x": 487066, "y": 4420115}, {"x": 487071.0, "y": 4420115.0}]}}, {"kind": "add", "from": "$uidOf:1", "geometry": {"kind": "hatch", "ring": [{"x": 487060, "y": 4420110}, {"x": 487061.6538096992, "y": 4420111.920553198}, {"x": 487062.18729669886, "y": 4420111.280368799}], "pattern": {"type": "solid", "angle": 0, "spacing": 2.5}}}, {"kind": "add", "from": "$uidOf:1", "geometry": {"kind": "text", "p": {"x": 487072.25, "y": 4420115.0}, "text": "Mevcut bina", "height": 2.5, "rotation": 0, "align": "middleLeft"}}, {"kind": "remove", "uid": "$uidOf:2"}, {"kind": "add", "from": "$uidOf:2", "geometry": {"kind": "polyline", "pts": [{"x": 487090, "y": 4420110}, {"x": 487086, "y": 4420114}, {"x": 487080, "y": 4420116}, {"x": 487076.0, "y": 4420116.0}]}}, {"kind": "add", "from": "$uidOf:2", "geometry": {"kind": "polyline", "pts": [{"x": 487088.3500841772, "y": 4420111.178511302}, {"x": 487090, "y": 4420110}, {"x": 487088.821488698, "y": 4420111.649915823}]}}, {"kind": "add", "from": "$uidOf:2", "geometry": {"kind": "text", "p": {"x": 487075.0, "y": 4420116.0}, "text": "Ø150 PVC", "height": 2, "rotation": 0, "align": "middleRight", "mask": true}}]}, "result": {"status": "completed", "output": {"changed": [], "created": ["$uidOf:4", "$uidOf:5", "$uidOf:6", "$uidOf:7", "$uidOf:8", "$uidOf:9"], "removed": ["$uid:dolu", "$uid:acik"], "revision": "$current"}, "warnings": []}, "expect": {"ids": [3, 4, 5, 6, 7, 8, 9], "entities": {"4": {"kind": "polyline", "pts": [{"x": 487060, "y": 4420110}, {"x": 487066, "y": 4420115}, {"x": 487071.0, "y": 4420115.0}], "id": 4, "layerId": "yapi", "color": "#E5484D", "attrs": {}}, "5": {"kind": "hatch", "ring": [{"x": 487060, "y": 4420110}, {"x": 487061.6538096992, "y": 4420111.920553198}, {"x": 487062.18729669886, "y": 4420111.280368799}], "pattern": {"type": "solid", "angle": 0, "spacing": 2.5}, "id": 5, "layerId": "yapi", "color": "#E5484D", "attrs": {}}, "6": {"kind": "text", "p": {"x": 487072.25, "y": 4420115.0}, "text": "Mevcut bina", "height": 2.5, "rotation": 0, "align": "middleLeft", "id": 6, "layerId": "yapi", "color": "#E5484D", "attrs": {}}, "7": {"kind": "polyline", "pts": [{"x": 487090, "y": 4420110}, {"x": 487086, "y": 4420114}, {"x": 487080, "y": 4420116}, {"x": 487076.0, "y": 4420116.0}], "id": 7, "layerId": "yapi", "attrs": {}}, "8": {"kind": "polyline", "pts": [{"x": 487088.3500841772, "y": 4420111.178511302}, {"x": 487090, "y": 4420110}, {"x": 487088.821488698, "y": 4420111.649915823}], "id": 8, "layerId": "yapi", "attrs": {}}, "9": {"kind": "text", "p": {"x": 487075.0, "y": 4420116.0}, "text": "Ø150 PVC", "height": 2, "rotation": 0, "align": "middleRight", "mask": true, "id": 9, "layerId": "yapi", "attrs": {}}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Patlat", "expect": {"ids": [1, 2, 3], "entities": {"1": {"kind": "leader", "id": 1, "layerId": "yapi", "color": "#E5484D", "attrs": {"Tür": "Not"}, "pts": [{"x": 487060, "y": 4420110}, {"x": 487066, "y": 4420115}], "text": "Mevcut bina", "height": 2.5, "rotation": 0}, "2": {"kind": "leader", "id": 2, "layerId": "yapi", "attrs": {}, "pts": [{"x": 487090, "y": 4420110}, {"x": 487086, "y": 4420114}, {"x": 487080, "y": 4420116}], "text": "Ø150 PVC", "height": 2, "rotation": 0, "arrow": "open", "mask": true}}, "uids": {"1": "dolu", "2": "acik"}, "canUndo": false}}
+      ]
     }
   ]
 }

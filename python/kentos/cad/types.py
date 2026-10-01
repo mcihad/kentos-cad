@@ -125,6 +125,7 @@ class CreateOperation(_StrEnum):
     - ``dimensionChain``: Zincir ölçü: the next dimension of a chain.
     - ``dimensionBaseline``: Baz ölçü: a dimension measured from the base dimension's first point.
     - ``textFile``: Metin dosyası yerleştir (docs/adr/0145 §6): a text file's lines as texts.
+    - ``leader``: Kılavuz (docs/adr/0146 §6): a leader drawn by its tool.
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -141,9 +142,10 @@ class CreateOperation(_StrEnum):
     DIMENSION_CHAIN = "dimensionChain"
     DIMENSION_BASELINE = "dimensionBaseline"
     TEXT_FILE = "textFile"
+    LEADER = "leader"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -683,6 +685,7 @@ class EntityGeometry(_Union):
     - :class:`DimensionEntityGeometry` (``kind: dimension``)
     - :class:`HatchEntityGeometry` (``kind: hatch``)
     - :class:`InsertEntityGeometry` (``kind: insert``)
+    - :class:`LeaderEntityGeometry` (``kind: leader``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -5874,6 +5877,52 @@ class InsertEntityGeometry(EntityGeometry):
 
 
 @dataclass(kw_only=True, slots=True)
+class LeaderEntityGeometry(EntityGeometry):
+    """A leader (docs/adr/0146): an arrowhead at `pts[0]`, a line through
+    `pts` and, with a note, a landing from the last vertex and the note
+    past it; `height` (metres, over 0) measures the note, the arrowhead
+    and the landing, `rotation` (degrees counter-clockwise from east)
+    turns the note and the landing.
+    Attributes:
+        pts: At least two: the arrow's tip first.
+        arrow: The arrowhead; absent: a filled arrow.
+        mask: The note's box filled with the drawing area's colour before it is drawn.
+        text: The note, one line; absent: the arrow alone. Never empty.
+    """
+    TAG_VALUE: ClassVar[str] = "leader"
+    pts: list[Vec2]
+    height: float
+    rotation: float
+    arrow: LeaderArrow | LeaderArrowName | None | Unset = UNSET
+    mask: bool | Unset = UNSET
+    text: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "leader"}
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        out["height"] = float(self.height)
+        out["rotation"] = float(self.rotation)
+        if self.arrow is not UNSET:
+            out["arrow"] = None if self.arrow is None else _enum_out(self.arrow)
+        if self.mask is not UNSET:
+            out["mask"] = self.mask
+        if self.text is not UNSET:
+            out["text"] = self.text
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LeaderEntityGeometry:
+        return cls(
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            height=float(data["height"]),
+            rotation=float(data["rotation"]),
+            arrow=UNSET if "arrow" not in data else None if data["arrow"] is None else _enum_in(LeaderArrow, data["arrow"]),
+            mask=data.get("mask", UNSET),
+            text=data.get("text", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CreateFeatureChange(FeatureChange):
     """A new object; the client picks the UUID so a retry cannot create it twice."""
     TAG_VALUE: ClassVar[str] = "create"
@@ -6068,7 +6117,7 @@ _ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "p
 _ENTITY_EDIT: dict[str, type[EntityEdit]] = {"update": UpdateEntityEdit, "replace": ReplaceEntityEdit, "add": AddEntityEdit, "remove": RemoveEntityEdit}
 
 
-_ENTITY_GEOMETRY: dict[str, type[EntityGeometry]] = {"point": PointEntityGeometry, "line": LineEntityGeometry, "polyline": PolylineEntityGeometry, "polygon": PolygonEntityGeometry, "circle": CircleEntityGeometry, "arc": ArcEntityGeometry, "ellipse": EllipseEntityGeometry, "spline": SplineEntityGeometry, "xline": XlineEntityGeometry, "ray": RayEntityGeometry, "text": TextEntityGeometry, "dimension": DimensionEntityGeometry, "hatch": HatchEntityGeometry, "insert": InsertEntityGeometry}
+_ENTITY_GEOMETRY: dict[str, type[EntityGeometry]] = {"point": PointEntityGeometry, "line": LineEntityGeometry, "polyline": PolylineEntityGeometry, "polygon": PolygonEntityGeometry, "circle": CircleEntityGeometry, "arc": ArcEntityGeometry, "ellipse": EllipseEntityGeometry, "spline": SplineEntityGeometry, "xline": XlineEntityGeometry, "ray": RayEntityGeometry, "text": TextEntityGeometry, "dimension": DimensionEntityGeometry, "hatch": HatchEntityGeometry, "insert": InsertEntityGeometry, "leader": LeaderEntityGeometry}
 
 
 _FEATURE_CHANGE: dict[str, type[FeatureChange]] = {"create": CreateFeatureChange, "update": UpdateFeatureChange, "delete": DeleteFeatureChange}
@@ -6187,6 +6236,7 @@ __all__ = [
     "LeaderArrow",
     "LeaderArrowName",
     "LeaderEntity",
+    "LeaderEntityGeometry",
     "LineCreate",
     "LineCreated",
     "LineEntity",

@@ -23,7 +23,7 @@ use ts_rs::TS;
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
 use crate::entity::{
-    AreaPart, DimensionStyle, Entity, HatchPattern, RingGeometry, TextAlign, Vec2,
+    AreaPart, DimensionStyle, Entity, HatchPattern, LeaderArrow, RingGeometry, TextAlign, Vec2,
 };
 use crate::identity::BlockId;
 
@@ -273,6 +273,29 @@ pub enum EntityGeometry {
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
         #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         mirror: bool,
+    },
+    /// A leader (docs/adr/0146): an arrowhead at `pts[0]`, a line through
+    /// `pts` and, with a note, a landing from the last vertex and the note
+    /// past it; `height` (metres, over 0) measures the note, the arrowhead
+    /// and the landing, `rotation` (degrees counter-clockwise from east)
+    /// turns the note and the landing.
+    Leader {
+        /// At least two: the arrow's tip first.
+        pts: Vec<Vec2>,
+        /// The note, one line; absent: the arrow alone. Never empty.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        text: Option<String>,
+        height: f64,
+        rotation: f64,
+        /// The arrowhead; absent: a filled arrow.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        arrow: Option<LeaderArrow>,
+        /// The note's box filled with the drawing area's colour before it is drawn.
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        mask: bool,
     },
 }
 

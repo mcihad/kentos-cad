@@ -6,7 +6,7 @@
 
 mod common;
 
-use common::Bench;
+use common::{Bench, E, N, base};
 use kentos_contracts::{Entity, HatchPatternType, TextAlign};
 use kentos_domain::Slot;
 
@@ -72,4 +72,47 @@ fn an_open_arrow_comes_apart_as_a_path_and_a_masked_note_keeps_its_mask() {
     assert_eq!(rel(note.p), [31.0, -7.0]);
     assert_eq!(note.align, Some(TextAlign::MiddleRight));
     assert!(note.mask, "the mask goes with the note");
+}
+
+/// A leader added to the grips' drawing (fixtures/interaction/v1/objects.kcad), near (E, N):
+/// from (0, 20) up to (6, 25), its note 2 m high.
+fn with_leader() -> (Bench, Slot) {
+    let mut b = Bench::on(include_str!("../../../../fixtures/interaction/v1/objects.kcad"));
+    b.draft.snap = false;
+    let at = |x: f64, y: f64| kentos_contracts::Vec2 { x: E + x, y: N + y };
+    let leader = Entity::Leader(kentos_contracts::LeaderEntity {
+        base: base("cizim"),
+        pts: vec![at(0.0, 20.0), at(6.0, 25.0)],
+        text: Some("Mevcut bina".into()),
+        height: 2.0,
+        rotation: 0.0,
+        arrow: None,
+        mask: false,
+    });
+    let slot = b.doc.add(leader).expect("a slot");
+    b.selection.set([slot]);
+    (b, slot)
+}
+
+fn leader_pts(b: &Bench, slot: Slot) -> Vec<[f64; 2]> {
+    let Some(Entity::Leader(l)) = b.doc.get(slot) else {
+        panic!("a leader: {:?}", b.doc.get(slot));
+    };
+    l.pts.iter().map(|q| [q.x - E, q.y - N]).collect()
+}
+
+#[test]
+fn a_dragged_grip_moves_a_leader_s_vertex_and_a_mid_grip_adds_one() {
+    let (mut b, slot) = with_leader();
+    // Its last vertex, where the landing starts: the note goes with it.
+    b.drag([6.0, 25.0], [8.0, 27.0]);
+    assert_eq!(leader_pts(&b, slot), [[0.0, 20.0], [8.0, 27.0]]);
+    assert_eq!(b.doc.undo().as_deref(), Some("Tutamaçla düzenle"));
+    // The segment's middle grip adds a vertex there.
+    b.drag([3.0, 22.5], [2.0, 24.0]);
+    assert_eq!(leader_pts(&b, slot), [[0.0, 20.0], [2.0, 24.0], [6.0, 25.0]]);
+    let Some(Entity::Leader(l)) = b.doc.get(slot) else {
+        panic!("a leader");
+    };
+    assert_eq!(l.text.as_deref(), Some("Mevcut bina"), "the note stays");
 }

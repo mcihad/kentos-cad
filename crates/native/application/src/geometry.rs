@@ -8,8 +8,8 @@
 use kentos_contracts::{
     ArcEntity, AreaPart, BlockId, CircleEntity, ConstructionEntity, DimensionEntity,
     DimensionStyle, DrawingFont, EllipseEntity, Entity, EntityBase, EntityGeometry, HatchEntity,
-    HatchPattern as ContractPattern, HatchPatternType, InsertEntity, LineEntity, PathEntity,
-    PointEntity, RingGeometry, SplineEntity, TextEntity, Vec2 as Point,
+    HatchPattern as ContractPattern, HatchPatternType, InsertEntity, LeaderArrow, LeaderEntity,
+    LineEntity, PathEntity, PointEntity, RingGeometry, SplineEntity, TextEntity, Vec2 as Point,
 };
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::json::Json;
@@ -595,6 +595,22 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             rotation,
             mirror,
         }),
+        EntityGeometry::Leader {
+            pts,
+            text,
+            height,
+            rotation,
+            arrow,
+            mask,
+        } => Entity::Leader(LeaderEntity {
+            base,
+            pts,
+            text,
+            height,
+            rotation,
+            arrow,
+            mask,
+        }),
     }
 }
 
@@ -706,8 +722,25 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
                 spacing: pattern.spacing,
             },
         },
-        // A leader's geometry is written by the commands' step (docs/adr/0146 §10, step 3).
-        Shape::Leader { .. } => return None,
+        // An arrowhead the contract does not name is none of a leader's (docs/adr/0146 §1).
+        Shape::Leader {
+            pts,
+            text,
+            height,
+            rotation,
+            arrow,
+            mask,
+        } => EntityGeometry::Leader {
+            pts: back(pts),
+            text,
+            height,
+            rotation,
+            arrow: match arrow {
+                Some(name) => Some(LeaderArrow::from_name(&name)?),
+                None => None,
+            },
+            mask: mask == Some(true),
+        },
         // A block's id the contract does not read is none of the drawing's.
         Shape::Insert {
             block,
@@ -789,6 +822,8 @@ mod tests {
             r#"{"kind":"dimension","id":12,"layerId":"a","attrs":{},"a":{"x":0,"y":0},"b":{"x":3,"y":4},"offset":-2,"height":0.5,"text":"12,5 m","style":"linear","angle":90}"#,
             r#"{"kind":"dimension","id":14,"layerId":"a","attrs":{},"a":{"x":0,"y":0},"b":{"x":3,"y":4},"offset":2,"height":0.5,"style":"angular","c":{"x":1,"y":1}}"#,
             r#"{"kind":"hatch","id":13,"layerId":"a","attrs":{},"ring":[{"x":0,"y":0},{"x":4,"y":0},{"x":4,"y":4}],"holes":[[{"x":1,"y":1},{"x":2,"y":1},{"x":2,"y":2}]],"pattern":{"type":"cross","angle":30,"spacing":0.5}}"#,
+            r#"{"kind":"leader","id":15,"layerId":"a","attrs":{},"pts":[{"x":0,"y":0},{"x":4,"y":3},{"x":9,"y":3}],"text":"Ø150 PVC","height":2,"rotation":-15,"arrow":"open","mask":true}"#,
+            r#"{"kind":"leader","id":16,"layerId":"a","attrs":{},"pts":[{"x":0,"y":0},{"x":4,"y":3}],"height":2.5,"rotation":0}"#,
         ];
         for text in objects {
             let e = entity(text);

@@ -117,6 +117,8 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         Some(CreateOperation::DimensionBaseline) => "Baz ölçü",
         // Metin dosyası yerleştir (docs/adr/0145 §6).
         Some(CreateOperation::TextFile) => "Metin dosyası yerleştir",
+        // Kılavuz (docs/adr/0146 §6).
+        Some(CreateOperation::Leader) => "Kılavuz",
     }
 }
 

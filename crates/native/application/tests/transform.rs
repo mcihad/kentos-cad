@@ -104,7 +104,7 @@ fn copies_in_a_document_out_of_slots_take_nothing_and_say_so() {
 #[test]
 fn inside_a_transaction_the_transforms_join_it() {
     let mut doc = drawing(|_| {});
-    let before = doc.revision();
+    let (before, count) = (doc.revision(), doc.len());
     let (line, circle) = (uid(&doc, 10), uid(&doc, 13));
     let results = doc
         .transact("Model", |doc| {
@@ -147,7 +147,7 @@ fn inside_a_transaction_the_transforms_join_it() {
         Some("Model"),
         "one step, the transaction's"
     );
-    assert_eq!(doc.len(), 13, "the copy is gone");
+    assert_eq!(doc.len(), count, "the copy is gone");
     let Some(Entity::Line(l)) = doc.get(Slot(10)) else {
         panic!("the line");
     };

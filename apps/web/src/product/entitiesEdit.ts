@@ -91,6 +91,7 @@ const FIELDS: Record<EntityGeometry['kind'], readonly string[]> = {
   dimension: ['a', 'b', 'offset', 'height', 'text', 'style', 'angle', 'c'],
   hatch: ['ring', 'holes', 'pattern'],
   insert: ['block', 'p', 'scale', 'rotation', 'mirror'],
+  leader: ['pts', 'text', 'height', 'rotation', 'arrow', 'mask'],
 };
 
 interface Checked {
@@ -118,6 +119,12 @@ export function geometryOf(g: EntityGeometry): Record<string, unknown> {
   if (g.kind === 'text') {
     if (out.mask !== true) delete out.mask;
     if (out.widthFactor === 1) delete out.widthFactor;
+  }
+  // So are a leader's (docs/adr/0146 §1): no mask, a filled arrow, no note; a null is no value, as serde reads it.
+  if (g.kind === 'leader') {
+    if (out.mask !== true) delete out.mask;
+    if (out.arrow === null) delete out.arrow;
+    if (out.text === null) delete out.text;
   }
   return out;
 }
@@ -230,6 +237,11 @@ export function checkGeometry(g: EntityGeometry, i: number, list = 'changes', wh
   }
   if (g.kind === 'text' && isBlank(g.text))
     return failed(error('empty_text', 'Yazının metni boş olamaz; yalnız boşluktan oluşan metin de boştur. Yazıya bir metin verin.', at('.text')));
+  // A leader (docs/adr/0146 §1): its tip and one vertex more; no note is the field's absence.
+  if (g.kind === 'leader' && g.pts.length < 2)
+    return failed(error('too_few_points', `Kılavuzun en az 2 köşesi olmalı; ${g.pts.length} köşe verildi. Okun ucunu ve en az bir köşe daha verin.`, at('.pts')));
+  if (g.kind === 'leader' && typeof g.text === 'string' && isBlank(g.text))
+    return failed(error('empty_text', 'Kılavuzun notu boş olamaz; yalnız boşluktan oluşan not da boştur. Notu yazın ya da notsuz kılavuz için alanı kaldırın.', at('.text')));
   // Elevations as written (docs/adr/0142): one for each vertex.
   const elevations = writtenElevations(g);
   for (const [zs, n, path] of elevations)
@@ -240,6 +252,9 @@ export function checkGeometry(g: EntityGeometry, i: number, list = 'changes', wh
   if ((g.kind === 'circle' || g.kind === 'arc') && !(g.r > 0)) return failed(error('invalid_radius', 'Yarıçap sıfırdan büyük olmalı. Pozitif bir yarıçap verin.', at('.r')));
   // An insert's scale (docs/adr/0144).
   if (g.kind === 'insert' && !(g.scale > 0)) return failed(error('invalid_scale', 'Blok ölçeği sıfırdan büyük olmalı. Pozitif bir ölçek verin.', at('.scale')));
+  // A leader's height measures its note, arrowhead and landing (docs/adr/0146 §1).
+  if (g.kind === 'leader' && !(g.height > 0))
+    return failed(error('invalid_height', `Kılavuzun yüksekliği sıfırdan büyük olmalı; ${g.height} verildi. Notun yüksekliğini metre olarak, pozitif verin.`, at('.height')));
   // A text's width factor (docs/adr/0145).
   if (g.kind === 'text' && g.widthFactor != null && !widthFactorOk(g.widthFactor))
     return failed(

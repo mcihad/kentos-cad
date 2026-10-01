@@ -173,11 +173,9 @@ export function drawLabels(
         const text = pieceText(piece, e.attrs);
         if (!text) continue;
         baselineText(g, pal, s, spots[i + 4], spots[i + 5] * cam.scale, spots[i + 7], spots[i + 8] * cam.scale, text);
-      } else if (what === LABEL.pieceLeader) {
-        // The store gives this record only for a leader piece with a note; the pieces' type learns leaders with the
-        // commands' geometry (docs/adr/0146, step 3).
-        const note = (piece as { text?: unknown } | undefined)?.text;
-        if (typeof note === 'string' && note) baselineText(g, pal, s, spots[i + 4], spots[i + 5] * cam.scale, 1, spots[i + 8] * cam.scale, note);
+      } else if (what === LABEL.pieceLeader && piece?.kind === 'leader' && piece.text) {
+        // A leader's note (docs/adr/0146 §5), as a text piece's.
+        baselineText(g, pal, s, spots[i + 4], spots[i + 5] * cam.scale, 1, spots[i + 8] * cam.scale, piece.text);
       } else if (what === LABEL.pieceDimension && piece?.kind === 'dimension') {
         const px = spots[i + 7] * cam.scale;
         g.save();
