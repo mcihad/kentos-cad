@@ -9,8 +9,8 @@ use std::collections::HashMap;
 
 use crate::geom::arc::norm_angle;
 use crate::geom::arrangement::{
-    Area, Built, DirPiece, Ring, Rule, Source, TOL, Vertices, build, classify, edge_box, edge_len,
-    reverse_edge, translate_edge, winding,
+    Area, Built, DirPiece, Ring, Rule, Source, TOL, Vertices, build, classify, dir, edge_box,
+    edge_len, reverse_edge, translate_edge, winding,
 };
 use crate::geom::bulge::{bulge_of_sweep, bulge_ring_area};
 use crate::geom::intersect::{Edge, point_at};
@@ -549,6 +549,162 @@ pub fn face_rings(sources: &[Source]) -> Vec<FaceRing> {
             }
         })
         .collect()
+}
+
+// ── Bitişik alan ──────────────────────────────────────────────────────
+
+fn edges_box(list: &[Edge]) -> Bounds {
+    list.iter().fold(
+        Bounds {
+            min_x: f64::INFINITY,
+            min_y: f64::INFINITY,
+            max_x: f64::NEG_INFINITY,
+            max_y: f64::NEG_INFINITY,
+        },
+        |b, e| {
+            let x = edge_box(e);
+            Bounds {
+                min_x: js_min(b.min_x, x.min_x),
+                min_y: js_min(b.min_y, x.min_y),
+                max_x: js_max(b.max_x, x.max_x),
+                max_y: js_max(b.max_y, x.max_y),
+            }
+        },
+    )
+}
+
+fn box_holds(b: &Bounds, p: Vec2) -> bool {
+    p.x >= b.min_x && p.x <= b.max_x && p.y >= b.min_y && p.y <= b.max_y
+}
+
+/// A point a hair to the left of a piece's middle (as a ring's probe is taken).
+fn hair_left(e: &Edge) -> Vec2 {
+    let m = point_at(e, 0.5);
+    let q = point_at(e, 0.5 + 1e-6);
+    let l = or(js_hypot(q.x - m.x, q.y - m.y), 1.0);
+    let eps = js_min(edge_len(e) * 1e-4, 1e-4);
+    Vec2::new(m.x - ((q.y - m.y) / l) * eps, m.y + ((q.x - m.x) / l) * eps)
+}
+
+/// Bitişik alan's region (docs/adr/0162 §3): the bounded faces of the
+/// arrangement of the path and the neighbours' rings that lie outside every
+/// neighbour and whose own walk runs along the path on a piece it shares
+/// with another face; their union, a neighbour inside it a hole. Each
+/// neighbour is an area source (an object's areas); the path is line work.
+///
+/// One pass over one arrangement: every piece is walked both ways (the
+/// walks of positive area are the bounded faces; any other is a connected
+/// group's outline, which belongs to the smallest face around a point a
+/// hair to its left), the faces are chosen, and the pieces between chosen
+/// faces and the others are chained into rings as the overlay chains its
+/// result. The independent reference is `scripts/fixtures/adjoin_cases.py`.
+pub fn adjoin_faces(neighbours: &[Source], path: &Source) -> Vec<Area> {
+    let mut sources: Vec<Source> = neighbours
+        .iter()
+        .map(|s| Source {
+            edges: s.edges.clone(),
+            points: s.points.clone(),
+            cut: None,
+        })
+        .collect();
+    sources.push(Source {
+        edges: path.edges.clone(),
+        points: path.points.clone(),
+        cut: Some(true),
+    });
+    let o = origin_of(&sources);
+    let local = localize(&sources, o);
+    let built = build(&local, &sources, o);
+    let dps: Vec<DirPiece> = built
+        .pieces
+        .iter()
+        .enumerate()
+        .flat_map(|(i, p)| [dir(p, i, true), dir(p, i, false)])
+        .collect();
+    let walks = trace(&dps, &built.verts);
+    let mut walk_of: HashMap<(usize, bool), usize> = HashMap::new();
+    for (w, walk) in walks.iter().enumerate() {
+        for d in walk {
+            walk_of.insert((d.piece, d.fwd), w);
+        }
+    }
+    let edges: Vec<Vec<Edge>> = walks
+        .iter()
+        .map(|walk| walk.iter().map(|d| d.edge).collect())
+        .collect();
+    let sizes: Vec<f64> = walks
+        .iter()
+        .map(|walk| {
+            let pts: Vec<Vec2> = walk.iter().map(|d| built.verts.pos[d.from]).collect();
+            let bulges: Vec<f64> = walk
+                .iter()
+                .map(|d| match d.edge {
+                    Edge::Arc { sweep, .. } => bulge_of_sweep(sweep),
+                    Edge::Seg { .. } => 0.0,
+                })
+                .collect();
+            bulge_ring_area(&pts, Some(&bulges))
+        })
+        .collect();
+    // A walk is a face when it encloses more than dust; a group's outline
+    // (a tree of line work too) sums to nothing or less.
+    let is_face: Vec<bool> = (0..walks.len())
+        .map(|w| sizes[w] > edges[w].iter().fold(0.0, |s, e| s + edge_len(e)) * TOL)
+        .collect();
+    let probe = |w: usize| -> Vec2 {
+        let walk = &walks[w];
+        let spike = |d: &DirPiece| walk_of.get(&(d.piece, !d.fwd)) == Some(&w);
+        let mut best: Option<&DirPiece> = None;
+        for d in walk.iter().filter(|d| !spike(d)) {
+            if best.is_none_or(|b| edge_len(&d.edge) > edge_len(&b.edge)) {
+                best = Some(d);
+            }
+        }
+        best.or_else(|| walk.first())
+            .map_or(Vec2::new(0.0, 0.0), |d| hair_left(&d.edge))
+    };
+    let probes: Vec<Vec2> = (0..walks.len()).map(probe).collect();
+    let mut faces: Vec<usize> = (0..walks.len()).filter(|&w| is_face[w]).collect();
+    stable_sort(&mut faces, &mut |&a, &b| js_cmp(sizes[a] - sizes[b], 0.0));
+    let boxes: Vec<Bounds> = edges.iter().map(|list| edges_box(list)).collect();
+    let face_of: Vec<Option<usize>> = (0..walks.len())
+        .map(|w| {
+            if is_face[w] {
+                Some(w)
+            } else {
+                faces.iter().copied().find(|&f| {
+                    box_holds(&boxes[f], probes[w]) && winding(&edges[f], probes[w]) != 0.0
+                })
+            }
+        })
+        .collect();
+    let twin_face = |d: &DirPiece| walk_of.get(&(d.piece, !d.fwd)).and_then(|&t| face_of[t]);
+    // Parted from another face by the path (few are), then outside every
+    // neighbour: a neighbour's box first, its winding only when it holds.
+    let theirs: Vec<Bounds> = local[..neighbours.len()]
+        .iter()
+        .map(|s| edges_box(&s.edges))
+        .collect();
+    let inside = |p: Vec2| {
+        (0..neighbours.len())
+            .any(|k| box_holds(&theirs[k], p) && winding(&local[k].edges, p) != 0.0)
+    };
+    let mut kept = vec![false; walks.len()];
+    for &f in &faces {
+        kept[f] = walks[f]
+            .iter()
+            .any(|d| built.pieces[d.piece].cut && twin_face(d) != Some(f))
+            && !inside(probes[f]);
+    }
+    let chosen = |f: Option<usize>| f.is_some_and(|f| kept[f]);
+    let boundary: Vec<DirPiece> = walks
+        .iter()
+        .enumerate()
+        .flat_map(|(w, walk)| walk.iter().map(move |d| (w, d)))
+        .filter(|&(w, d)| chosen(face_of[w]) && !chosen(twin_face(d)))
+        .map(|(_, d)| *d)
+        .collect();
+    assemble(rings(&boundary, &built.verts, o))
 }
 
 #[cfg(test)]

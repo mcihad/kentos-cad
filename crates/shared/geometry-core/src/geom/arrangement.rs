@@ -675,7 +675,7 @@ impl PieceGrid {
     }
 }
 
-fn dir(p: &Piece, index: usize, fwd: bool) -> DirPiece {
+pub(crate) fn dir(p: &Piece, index: usize, fwd: bool) -> DirPiece {
     if fwd {
         DirPiece {
             piece: index,

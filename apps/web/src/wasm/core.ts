@@ -1,4 +1,5 @@
 import {
+  AdjoinWork,
   angleDeg as wasmAngleDeg,
   arrayObjects as wasmArrayObjects,
   bearingGrad as wasmBearingGrad,
@@ -394,6 +395,46 @@ export class CoreTraceGraph {
 
   private get(): TraceGraph {
     if (!this.raw) throw new Error('İzleme çizgesi bırakıldı.');
+    return this.raw;
+  }
+}
+
+/**
+ * Bitişik alan's neighbours kept in the core between calls (docs/adr/0162 §5): taken once per view and drawing, asked
+ * for the region on every pointer move. Results come back parsed.
+ */
+export class CoreAdjoinWork {
+  private raw: AdjoinWork | null;
+
+  private constructor(raw: AdjoinWork) {
+    this.raw = raw;
+  }
+
+  /** From the entities (a JSON array) that enclose an area. */
+  static ofEntities(entitiesJson: string): CoreAdjoinWork {
+    return new CoreAdjoinWork(typed(() => AdjoinWork.ofEntities(entitiesJson)));
+  }
+
+  edgeCount(): number {
+    return typed(() => this.get().edgeCount());
+  }
+
+  fill(xy: Float64Array, bulges: Float64Array): unknown {
+    return readResult(typed(() => this.get().fill(xy, bulges)));
+  }
+
+  avoid(areaJson: string): unknown {
+    return readResult(typed(() => this.get().avoid(areaJson)));
+  }
+
+  /** Releases the core's copy now instead of when the object is collected. */
+  free(): void {
+    this.raw?.free();
+    this.raw = null;
+  }
+
+  private get(): AdjoinWork {
+    if (!this.raw) throw new Error('Bitişik alanın komşuları bırakıldı.');
     return this.raw;
   }
 }

@@ -15,6 +15,7 @@ use kentos_geometry_core::processing::numbering::corner_text_at;
 use kentos_geometry_core::triangulate::triangulate_many;
 use wasm_bindgen::prelude::*;
 
+pub mod adjoin;
 pub mod faces;
 pub mod store;
 pub mod trace;

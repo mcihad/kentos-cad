@@ -1,5 +1,6 @@
 //! Entity operations (`apps/web/src/model/ops`), one Rust module per TypeScript file.
 
+pub mod adjoin;
 pub mod areas;
 pub mod breaking;
 pub mod curve_cuts;
