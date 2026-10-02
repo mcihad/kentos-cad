@@ -23,6 +23,7 @@ pub mod rubber;
 pub mod split;
 pub mod stretch;
 pub mod topology;
+pub mod topology_edit;
 pub mod transform;
 pub mod trim;
 pub mod vertex;
