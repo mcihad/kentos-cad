@@ -25,9 +25,10 @@ pub const CAD_ENTITIES_TRANSFORM: &str = "cad.entities.transform";
 pub const CAD_ENTITIES_TRANSFORM_VERSION: u32 = 1;
 
 /// One transform of the plane: a similarity as the modify tools ask for it
-/// (docs/adr/0037, 0047), or Vektör oturtma's similarity, affine or
-/// projective transform in centred form (docs/adr/0156 §6). Coordinates are
-/// x east (Y), y north (X), in the project's units (m), float64.
+/// (docs/adr/0037, 0047), Vektör oturtma's similarity, affine or projective
+/// transform in centred form (docs/adr/0156 §6), or Kauçuk levha's links
+/// (docs/adr/0158). Coordinates are x east (Y), y north (X), in the
+/// project's units (m), float64.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -80,6 +81,26 @@ pub enum Transform {
     /// curves become straight vertices within 0.1 mm; a point where w is
     /// 1e-9 or less lies beyond the horizon.
     Projective { from: Vec2, to: Vec2, h: [f64; 8] },
+    /// Kauçuk levha (docs/adr/0158): the thin plate spline of the links'
+    /// displacements, through every link exactly (a link whose `to` is its
+    /// `from` holds its point), following their affine trend far from them.
+    /// Only vertices move: straight edges stay straight, an arc segment keeps
+    /// its bulge; a circle, an arc and an ellipse move by the nearest
+    /// similarity at their centre; texts, notes, blocks, dimensions and hatch
+    /// patterns keep their shape at their anchor. 3 to 1000 links, their
+    /// sources apart and not all on one line.
+    Rubbersheet { links: Vec<RubberLink> },
+}
+
+/// A link of Kauçuk levha: a point of the drawing and where it is to go.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RubberLink {
+    pub from: Vec2,
+    pub to: Vec2,
 }
 
 /// Input of `cad.entities.transform` v1: objects named by their persistent
@@ -109,6 +130,9 @@ pub enum Transform {
 /// within a nanometre of the first's), `invalid_transform` (an affine or
 /// projective transform whose linear part squashes the plane: its
 /// determinant under 1e-12 of its columns' lengths' product),
+/// `invalid_links` (Kauçuk levha's links: fewer than 3 or more than 1000,
+/// two from one point, all their sources on one line, or equations with no
+/// single solution; path `transform.links`),
 /// `invalid_revision`, `revision_conflict` (status `conflict`),
 /// `entity_not_found` (each id in order), `layer_locked`, `beyond_horizon`
 /// (a point of an object beyond a projective transform's horizon), then
@@ -117,10 +141,12 @@ pub enum Transform {
 /// `slots_exhausted` for copies.
 ///
 /// The undo step of the similarity, affine and projective transforms is
-/// “Oturt”. When the transform is not a similarity the output warns with
-/// `warp_curves` (objects whose curves became straight vertices) and
-/// `warp_shapes` (texts, notes, blocks, dimensions and hatch patterns that
-/// kept their shape), each with its count.
+/// “Oturt”, of the rubber sheet “Kauçuk levha”. When the transform is not a
+/// similarity the output warns with `warp_curves` (objects whose curves
+/// became straight vertices) and `warp_shapes` (texts, notes, blocks,
+/// dimensions and hatch patterns that kept their shape), each with its
+/// count; a rubber sheet with `rubber_bends` (objects whose kept edges or
+/// curves lie over 0.1 mm from their true image, and the largest, mm).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

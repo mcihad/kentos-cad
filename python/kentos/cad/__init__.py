@@ -248,6 +248,8 @@ __all__ = [
     "RevisionConflict",
     "RingGeometry",
     "RotateTransform",
+    "RubberLink",
+    "RubbersheetTransform",
     "Saved",
     "ScaleTransform",
     "ServerCommand",

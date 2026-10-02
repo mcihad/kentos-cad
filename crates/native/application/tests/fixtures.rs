@@ -402,6 +402,13 @@ impl Input for EntitiesTransform {
             Transform::Projective { from, to, h } => indexed(h, "h", rest)
                 .or_else(|| coordinate(from, "from", rest))
                 .or_else(|| coordinate(to, "to", rest)),
+            // Kauçuk levha (docs/adr/0158): `transform.links[1].to.x` …
+            Transform::Rubbersheet { links } => {
+                let (at, field) = rest.strip_prefix("links[")?.split_once("].")?;
+                let link = links.get_mut(at.parse::<usize>().ok()?)?;
+                coordinate(&mut link.from, "from", field)
+                    .or_else(|| coordinate(&mut link.to, "to", field))
+            }
         }
     }
 }

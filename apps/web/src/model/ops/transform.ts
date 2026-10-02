@@ -158,6 +158,9 @@ function similarityOf(t: Transform): [string, number[]] {
     case 'projective':
       // Oturt's transforms are the core's warp (./warp.ts, docs/adr/0156), not a similarity's matrix.
       throw new Error(`“${t.kind}” dönüşümü çekirdeğin warpShapes'iyle yapılır.`);
+    case 'rubbersheet':
+      // Kauçuk levha is the core's sheet (./warp.ts `rubberShapes`, docs/adr/0158).
+      throw new Error("Kauçuk levha çekirdeğin rubberShapes'iyle yapılır.");
   }
 }
 

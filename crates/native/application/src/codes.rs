@@ -50,6 +50,13 @@ pub const WARP_CURVES: &str = "warp_curves";
 /// Texts, notes, blocks, dimensions and hatch patterns that kept their shape
 /// under a transform that is not a similarity (`cad.entities.transform`, a warning).
 pub const WARP_SHAPES: &str = "warp_shapes";
+/// A rubber sheet's links that give no sheet: fewer than 3 or more than 1000,
+/// two from one point, their sources on one line, no single solution
+/// (`cad.entities.transform`, docs/adr/0158).
+pub const INVALID_LINKS: &str = "invalid_links";
+/// Shapes on a rubber sheet whose kept edges or curves lie over 0.1 mm from
+/// their true image (`cad.entities.transform`, a warning, docs/adr/0158).
+pub const RUBBER_BENDS: &str = "rubber_bends";
 /// Rows and columns, or a polar array's count, out of their range (`cad.entities.array`).
 pub const INVALID_COUNT: &str = "invalid_count";
 /// A grid direction with more than one place and no spacing (`cad.entities.array`).

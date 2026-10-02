@@ -133,6 +133,22 @@ Rapor bağları, Helmert artıklarını ve yöntemi yazar.
      - bir doğru üstündeki bağlar.
    - **Sonuç:** çekirdek (yerli) ve web (WASM) geometriyi 1e-9 m, öbür sayıları göreli 1e-12, sayımları bire bir, en büyük sapmayı 1e-9 m içinde verir. Dönüşümlerin ortak durumları (`warp.json`) değişmedi.
 3. Komut: `rubbersheet` türü iki platformda, ortak komut durumlarıyla.
+
+   *(2 Ekim: tamam.)*
+   - **Sözleşme:** `Transform`'un `rubbersheet` türü ve `RubberLink` (katalog, TS tipleri, Python SDK'sının tipleri yeniden üretildi); ret `invalid_links`, uyarı `rubber_bends`, adım “Kauçuk levha”.
+   - **İşleyiciler:** masaüstü `crates/native/application/src/transform.rs`, web `product/entitiesTransform.ts`. Bağların sayıları sırayla denetlenir ("2. bağın hedefinin kuzey (X) değeri …", yolu `transform.links[1].to.y`), sonra levha çekirdekte çözülür.
+   - **Durumlar:** `scripts/fixtures/transform_command_cases.py` 4 durum ekler:
+     - sekiz nesne: nokta, çizgi, delikli alan, yaylı çoklu çizgi, daire, yay, yazı ve kilitli katmanda çizgi; doğrulama, yazma ve geri alma;
+     - kopya;
+     - retler: sonlu olmayan sayı (sayılar az bağdan önce), 3'ten az bağ, aynı kaynak, bir doğru, ülke koordinatında bir bit aralıklı iki kaynakla tek çözümsüz takım.
+   - **Beklenen değerler:** bit bit karşılaştırılır. Levhanın bitleri çözümünün aritmetiğidir. `scripts/fixtures/sheet_f64.py` levhayı çekirdekle aynı işlem sırasıyla çözer:
+     - V8'in `Math.hypot`'u;
+     - eşit pivotta sonuncuyu seçen kısmi pivotlama;
+     - libm'in `log`'u. Python'a taşındı: 150 000 girdide libm ile bit bit aynıdır; glibc'nin `log`'u bunların %5,6'sında son bitte ayrılır.
+
+     Doğruluğu 50 basamaklı başvuruya bağlıdır: `rubber.json`'un durumlarında 1e-12 m içindedir.
+   - **Uyarı:** sapma uyarısının sayımı ve gösterilen milimetresi, eşiğe ve yuvarlama sınırına uzaklığı denetlenerek yazılır.
+   - **Sonuç:** masaüstünün, web'in ve Python SDK'sının çalıştırıcıları 48 durumu geçer.
 4. Pencere: dördüncü dönüşüm iki platformda; resimler.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.

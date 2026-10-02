@@ -23,6 +23,8 @@ import sys
 
 sys.dont_write_bytecode = True  # no __pycache__ in the tree
 from affine_reference import alignment, assert_no_negative_zero, mirror, moved, rotation, scaling, translation  # noqa: E402  (the maps, beside this file)
+from numeric_display import shown  # noqa: E402  (the display rule, docs/adr/0149)
+import sheet_f64  # noqa: E402  (Kauçuk levha's sheet in the core's arithmetic, docs/adr/0158)
 
 style = {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}
 
@@ -770,6 +772,130 @@ cases.append({
          "result": failed("invalid_transform", SINGULAR, "transform"), "expect": {"ids": OTURT_IDS, "canUndo": False, "revision": "same"}},
         {"op": "execute", "input": {"uids": [U(2), U(1)], "transform": projective_t([1.0, 0.0, 0.0, 0.0, 1.0, 0.0, -0.05, 0.0])},
          "result": failed("beyond_horizon", HORIZON, "transform"), "expect": {"ids": OTURT_IDS, "canUndo": False, "revision": "same"}},
+    ],
+})
+
+
+# ── Kauçuk levha (docs/adr/0158 §3–§4): only vertices move by the sheet ──
+# A sheet's bits are its solution's arithmetic: sheet_f64.py (beside this file) solves it in the core's
+# order of operations and is held to the 50-digit reference (rubber_cases.py). Points, ends and vertices
+# go to their image, bulges and elevations stay; a circle and an arc move by the nearest similarity at
+# their centre, as the modify tools move them (moved()). The text is in the input for `warp_shapes`, its
+# geometry checked by fixtures/fit/v1/rubber-warp.json. `rubber_bends` counts the shapes bent over 0.1 mm
+# and shows the largest in mm with one decimal (the display rule).
+
+
+def link(fx, fy, tx, ty):
+    return {"from": P(fx, fy), "to": P(tx, ty)}
+
+
+# Two fixed corners, two corners and the middle moved by centimetres: what is left after Oturt.
+LINKS = [
+    link(486990.0, 4419990.0, 486990.0, 4419990.0),
+    link(487050.0, 4419990.0, 487050.02, 4419990.01),
+    link(487050.0, 4420060.0, 487050.0, 4420060.0),
+    link(486990.0, 4420060.0, 486989.985, 4420060.02),
+    link(487020.0, 4420025.0, 487020.035, 4420024.98),
+]
+SHEET = sheet_f64.Sheet(LINKS)
+assert SHEET.error is None
+sheet_f64.assert_near_reference(LINKS, [l["from"] for l in LINKS] + [P(487010.5, 4420020.25), P(487040, 4420030), P(487100, 4420100)])
+
+
+def rubber_t(links=LINKS):
+    return {"kind": "rubbersheet", "links": links}
+
+
+def on_sheet(e, new_id=None):
+    """An object on the sheet: its vertices by the map; a circle or an arc by the nearest similarity at its centre."""
+    if e["kind"] in ("circle", "arc"):
+        c = e["c"]
+        to = SHEET.map(c)
+        step = moved(e, translation(-c["x"], -c["y"]))
+        step = moved(step, sheet_f64.nearest_similarity(SHEET.jacobian(c)))
+        return moved(step, translation(to["x"], to["y"]), new_id)
+    out = json.loads(json.dumps(e))
+    if new_id is not None:
+        out["id"] = new_id
+    if e["kind"] == "point":
+        out["p"] = SHEET.map(e["p"])
+    elif e["kind"] == "line":
+        out["a"], out["b"] = SHEET.map(e["a"]), SHEET.map(e["b"])
+    else:
+        out["pts"] = [SHEET.map(q) for q in e["pts"]]
+        for h in out.get("holes") or []:
+            h["pts"] = [SHEET.map(q) for q in h["pts"]]
+    return out
+
+
+def BENDS(ids):
+    """The bend warning of these objects on SHEET: how many over 0.1 mm, the largest in mm (one decimal, a decimal comma)."""
+    bends = [sheet_f64.bend(O(i), SHEET) for i in ids]
+    sheet_f64.margins(bends)
+    bent = sum(1 for b in bends if b > sheet_f64.CHORD)
+    mm = shown(max(bends) * 1000, 1).replace(".", ",")
+    message = f"{bent} nesne gerçek görüntüsünden 0,1 mm'den çok sapıyor (en çok {mm} mm): kauçuk levha yalnız köşeleri taşır, kenarlar doğru, yaylar şişkinliğiyle kalır."
+    return {"code": "rubber_bends", "message": message, "path": "transform"}
+
+
+def LINKS_REFUSED(why):
+    return failed("invalid_links", why, "transform.links")
+
+
+TOO_FEW = "Kauçuk levha için en az 3 bağ gerekir. Bağ ekleyin."
+DUPLICATE = "İki bağın kaynağı aynı nokta. Birini çıkarın ya da Kullan'dan bırakın."
+COLLINEAR = "Bağların kaynakları bir doğru üstünde; levha kurulamaz. Doğrunun dışında bir bağ ekleyin."
+SINGULAR_LINKS = "Bağların denklem takımının tek çözümü yok. Birbirine çok yakın kaynakları birleştirin."
+# Two sources a last bit apart at national coordinates: not one point, but no single solution.
+NEXT = math.nextafter(487000.0, math.inf)
+NEAR = [link(487000.0, 4420000.0, 487000.0, 4420000.0), link(NEXT, 4420000.0, NEXT, 4420000.01), link(487100.0, 4420000.0, 487100.0, 4420000.0), link(487000.0, 4420100.0, 487000.0, 4420100.0)]
+assert sheet_f64.Sheet(NEAR).error == "singular"
+SHEET_IDS = (1, 2, 3, 4, 5, 6, 8)
+RUBBER_UNTOUCHED = {"ids": OTURT_IDS, "canUndo": False, "revision": "same"}
+
+cases.append({
+    "name": "Kauçuk levha: nokta, çizgi, delikli alan ve yaylı çoklu çizgi yalnız köşeleriyle taşınır, şişkinlik ve kotlar kalır; daire ve yay türünü korur; yazı biçimini korur; kilitli katmandaki çizgi kalır; 0,1 mm'den çok sapanlar sayılır; adım Kauçuk levha",
+    "note": "Bağlar: iki köşe sabit, iki köşe ve orta santimetrelerle kayar. Beklenen değerler levhanın çekirdekle aynı işlem sırasıyla çözümünden (sheet_f64.py, 50 basamaklı başvuruya bağlı).",
+    "setup": OTURT_SETUP,
+    "steps": [
+        {"op": "captureUid", "id": 3, "as": "ada"},
+        {"op": "validate", "input": {"uids": [U(i) for i in OTURT_IDS], "transform": rubber_t()},
+         "result": valid([locked_warning(1), SHAPES(1), BENDS(SHEET_IDS)]), "expect": RUBBER_UNTOUCHED},
+        {"op": "execute", "input": {"uids": [U(i) for i in OTURT_IDS], "transform": rubber_t()},
+         "result": done(changed=[U(i) for i in SHEET_IDS], locked=[U(7)], warnings=[locked_warning(1), SHAPES(1), BENDS(SHEET_IDS)]),
+         "expect": {"ids": OTURT_IDS, "entities": entities(*((i, on_sheet(O(i))) for i in (1, 2, 3, 5, 6, 8)), (7, O(7))), "uids": {"3": "ada"},
+                    "canUndo": True, "dirty": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Kauçuk levha", "note": "Vektör oturtma penceresinin Kauçuk levha adımı.",
+         "expect": {"entities": entities(*((i, O(i)) for i in OTURT_IDS)), "canUndo": False}},
+    ],
+})
+
+cases.append({
+    "name": "Kauçuk levha kopyası: kopyalar yeni kalıcı kimlik alır, asıllar yerinde kalır; adım yine Kauçuk levha",
+    "setup": OTURT_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(2), U(3)], "transform": rubber_t(), "copy": True}, "result": done(created=[U(9), U(10)], warnings=[BENDS((2, 3))]),
+         "expect": {"ids": OTURT_IDS + [9, 10], "entities": entities((2, O(2)), (3, O(3)), (9, on_sheet(O(2), 9)), (10, on_sheet(O(3), 10))),
+                    "uids": {"9": "new", "10": "new"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Kauçuk levha", "expect": {"ids": OTURT_IDS}},
+    ],
+})
+
+cases.append({
+    "name": "Kauçuk levha'nın retleri: bağın sonlu olmayan sayısı (yolu, sayılar önce), 3'ten az bağ, aynı kaynak, bir doğru üstündeki kaynaklar, tek çözümü olmayan takım; hiçbiri yazılmaz",
+    "setup": OTURT_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(2)], "transform": rubber_t()}, "nonFinite": {"transform.links[1].to.y": "NaN", "transform.links[3].from.x": "Infinity"},
+         "result": failed("not_finite", NFC("2. bağın hedefinin", "y"), "transform.links[1].to.y"), "expect": RUBBER_UNTOUCHED},
+        {"op": "execute", "input": {"uids": [U(2)], "transform": rubber_t(LINKS[:2])}, "nonFinite": {"transform.links[0].from.x": "-Infinity"},
+         "result": failed("not_finite", NFC("1. bağın kaynağının", "x"), "transform.links[0].from.x"), "expect": RUBBER_UNTOUCHED},
+        {"op": "execute", "input": {"uids": [U(2)], "transform": rubber_t([])}, "result": LINKS_REFUSED(TOO_FEW), "expect": RUBBER_UNTOUCHED},
+        {"op": "execute", "input": {"uids": [U(2)], "transform": rubber_t(LINKS[:2])}, "result": LINKS_REFUSED(TOO_FEW), "expect": RUBBER_UNTOUCHED},
+        {"op": "execute", "input": {"uids": [U(2)], "transform": rubber_t(LINKS[:3] + [link(487050.0, 4419990.0, 487050.5, 4419990.5)])},
+         "result": LINKS_REFUSED(DUPLICATE), "expect": RUBBER_UNTOUCHED},
+        {"op": "execute", "input": {"uids": [U(2)], "transform": rubber_t([link(487000.0, 4420000.0, 487000.0, 4420000.0), link(487010.0, 4420010.0, 487010.02, 4420010.0), link(487030.0, 4420030.0, 487030.0, 4420030.0)])},
+         "result": LINKS_REFUSED(COLLINEAR), "expect": RUBBER_UNTOUCHED},
+        {"op": "execute", "input": {"uids": [U(2)], "transform": rubber_t(NEAR)}, "result": LINKS_REFUSED(SINGULAR_LINKS), "expect": RUBBER_UNTOUCHED},
     ],
 })
 

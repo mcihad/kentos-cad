@@ -29,6 +29,9 @@ import type { Transform } from "./Transform";
  * within a nanometre of the first's), `invalid_transform` (an affine or
  * projective transform whose linear part squashes the plane: its
  * determinant under 1e-12 of its columns' lengths' product),
+ * `invalid_links` (Kauçuk levha's links: fewer than 3 or more than 1000,
+ * two from one point, all their sources on one line, or equations with no
+ * single solution; path `transform.links`),
  * `invalid_revision`, `revision_conflict` (status `conflict`),
  * `entity_not_found` (each id in order), `layer_locked`, `beyond_horizon`
  * (a point of an object beyond a projective transform's horizon), then
@@ -37,10 +40,12 @@ import type { Transform } from "./Transform";
  * `slots_exhausted` for copies.
  *
  * The undo step of the similarity, affine and projective transforms is
- * “Oturt”. When the transform is not a similarity the output warns with
- * `warp_curves` (objects whose curves became straight vertices) and
- * `warp_shapes` (texts, notes, blocks, dimensions and hatch patterns that
- * kept their shape), each with its count.
+ * “Oturt”, of the rubber sheet “Kauçuk levha”. When the transform is not a
+ * similarity the output warns with `warp_curves` (objects whose curves
+ * became straight vertices) and `warp_shapes` (texts, notes, blocks,
+ * dimensions and hatch patterns that kept their shape), each with its
+ * count; a rubber sheet with `rubber_bends` (objects whose kept edges or
+ * curves lie over 0.1 mm from their true image, and the largest, mm).
  */
 export type EntitiesTransform = { 
 /**

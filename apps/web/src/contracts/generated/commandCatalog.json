@@ -21155,8 +21155,24 @@
       "cost": "instant",
       "input": {
         "$defs": {
+          "RubberLink": {
+            "description": "A link of Kauçuk levha: a point of the drawing and where it is to go.",
+            "properties": {
+              "from": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "to": {
+                "$ref": "#/$defs/Vec2"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "type": "object"
+          },
           "Transform": {
-            "description": "One transform of the plane: a similarity as the modify tools ask for it\n(docs/adr/0037, 0047), or Vektör oturtma's similarity, affine or\nprojective transform in centred form (docs/adr/0156 §6). Coordinates are\nx east (Y), y north (X), in the project's units (m), float64.",
+            "description": "One transform of the plane: a similarity as the modify tools ask for it\n(docs/adr/0037, 0047), Vektör oturtma's similarity, affine or projective\ntransform in centred form (docs/adr/0156 §6), or Kauçuk levha's links\n(docs/adr/0158). Coordinates are x east (Y), y north (X), in the\nproject's units (m), float64.",
             "oneOf": [
               {
                 "description": "Move (taşı) by a displacement: `dx` east, `dy` north.",
@@ -21385,6 +21401,26 @@
                   "h"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "Kauçuk levha (docs/adr/0158): the thin plate spline of the links'\ndisplacements, through every link exactly (a link whose `to` is its\n`from` holds its point), following their affine trend far from them.\nOnly vertices move: straight edges stay straight, an arc segment keeps\nits bulge; a circle, an arc and an ellipse move by the nearest\nsimilarity at their centre; texts, notes, blocks, dimensions and hatch\npatterns keep their shape at their anchor. 3 to 1000 links, their\nsources apart and not all on one line.",
+                "properties": {
+                  "kind": {
+                    "const": "rubbersheet",
+                    "type": "string"
+                  },
+                  "links": {
+                    "items": {
+                      "$ref": "#/$defs/RubberLink"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "links"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -21408,7 +21444,7 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.entities.transform` v1: objects named by their persistent\nids (docs/adr/0014) moved by one transform as one undo step, in place or\nas copies. The modify tools make the selection explicit here (TODOS.md\nCMD-07): they give the selected objects' ids; the command reads no\nselection, layer or view.\n\nIn place, each object keeps its slot, its persistent id and every other\nfield; only its geometry changes. As copies, each new object takes every\nfield of its original (layer, colour, attributes, label, symbol) and a new\npersistent id; the originals stay. The undo step is the tool's name:\n“Taşı” (a move), “Kopyala” (a move as copies), “Döndür”, “Ölçekle”,\n“Aynala”, “Hizala”.\n\nObjects on a locked layer (by itself or a group above it) stay where they\nare and are not copied: with others to transform they are named in the\noutput's `locked` with a `layer_locked` warning; when every one is locked\nnothing is written and the answer is `layer_locked`. A repeated id counts\nonce.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`,\n`invalid_uid` (each id in order), `not_finite` (the transform's numbers,\nin their order), `invalid_factor` (a scale not above zero),\n`invalid_axis` (a mirror axis without a direction), `invalid_align` (an\nalignment's second pair given by half, or its source or target points\nwithin a nanometre of the first's), `invalid_transform` (an affine or\nprojective transform whose linear part squashes the plane: its\ndeterminant under 1e-12 of its columns' lengths' product),\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`entity_not_found` (each id in order), `layer_locked`, `beyond_horizon`\n(a point of an object beyond a projective transform's horizon), then\n`not_finite` again (path `transform`) when the transform would carry a\ncoordinate past the largest float64; on the desktop also\n`slots_exhausted` for copies.\n\nThe undo step of the similarity, affine and projective transforms is\n“Oturt”. When the transform is not a similarity the output warns with\n`warp_curves` (objects whose curves became straight vertices) and\n`warp_shapes` (texts, notes, blocks, dimensions and hatch patterns that\nkept their shape), each with its count.",
+        "description": "Input of `cad.entities.transform` v1: objects named by their persistent\nids (docs/adr/0014) moved by one transform as one undo step, in place or\nas copies. The modify tools make the selection explicit here (TODOS.md\nCMD-07): they give the selected objects' ids; the command reads no\nselection, layer or view.\n\nIn place, each object keeps its slot, its persistent id and every other\nfield; only its geometry changes. As copies, each new object takes every\nfield of its original (layer, colour, attributes, label, symbol) and a new\npersistent id; the originals stay. The undo step is the tool's name:\n“Taşı” (a move), “Kopyala” (a move as copies), “Döndür”, “Ölçekle”,\n“Aynala”, “Hizala”.\n\nObjects on a locked layer (by itself or a group above it) stay where they\nare and are not copied: with others to transform they are named in the\noutput's `locked` with a `layer_locked` warning; when every one is locked\nnothing is written and the answer is `layer_locked`. A repeated id counts\nonce.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`,\n`invalid_uid` (each id in order), `not_finite` (the transform's numbers,\nin their order), `invalid_factor` (a scale not above zero),\n`invalid_axis` (a mirror axis without a direction), `invalid_align` (an\nalignment's second pair given by half, or its source or target points\nwithin a nanometre of the first's), `invalid_transform` (an affine or\nprojective transform whose linear part squashes the plane: its\ndeterminant under 1e-12 of its columns' lengths' product),\n`invalid_links` (Kauçuk levha's links: fewer than 3 or more than 1000,\ntwo from one point, all their sources on one line, or equations with no\nsingle solution; path `transform.links`),\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`entity_not_found` (each id in order), `layer_locked`, `beyond_horizon`\n(a point of an object beyond a projective transform's horizon), then\n`not_finite` again (path `transform`) when the transform would carry a\ncoordinate past the largest float64; on the desktop also\n`slots_exhausted` for copies.\n\nThe undo step of the similarity, affine and projective transforms is\n“Oturt”, of the rubber sheet “Kauçuk levha”. When the transform is not a\nsimilarity the output warns with `warp_curves` (objects whose curves\nbecame straight vertices) and `warp_shapes` (texts, notes, blocks,\ndimensions and hatch patterns that kept their shape), each with its\ncount; a rubber sheet with `rubber_bends` (objects whose kept edges or\ncurves lie over 0.1 mm from their true image, and the largest, mm).",
         "properties": {
           "copy": {
             "description": "True: copies are made and the originals stay (Kopyala, Kopya (K),\nAynala keeping its source). Absent or false: the objects themselves change.",

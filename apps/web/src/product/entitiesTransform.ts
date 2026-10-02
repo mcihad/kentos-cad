@@ -7,7 +7,9 @@ import type { Transform } from '../contracts/generated/Transform';
 import type { CadDocument } from '../model/document';
 import type { Entity, NewEntity } from '../model/entities';
 import { geometryIsFinite, transformObjects, withGeometry } from '../model/ops/transform';
-import { warpShapes, type Warp } from '../model/ops/warp';
+import { rubberSheet } from '../model/ops/rubber';
+import { rubberShapes, warpShapes, type Warp } from '../model/ops/warp';
+import { fixed } from '../core/displayNumber';
 import type { Geometry } from '../wasm/pack';
 import { checkRevision, checkUids, error, failed, findObjects, notFinite, notFiniteValue, validated, type Stop } from './checks';
 import type { ProductCommand } from './command';
@@ -46,6 +48,11 @@ import { assignElevations, elevatedPaths } from './elevation';
  * transform that is not a similarity warns how many curves became straight
  * vertices and how many texts, notes, blocks, dimensions and hatch patterns
  * kept their shape.
+ *
+ * Kauçuk levha (docs/adr/0158) is the core's sheet (`rubberSheet`) and its
+ * rules (`rubberShapes`): only vertices move, kinds stay. Its checks add,
+ * after the links' numbers, links that give no sheet (`invalid_links`); it
+ * warns how many shapes bend over 0.1 mm from their true image.
  */
 
 interface Checked {
@@ -77,6 +84,8 @@ export function transformLabel(t: Transform, copy: boolean): string {
     case 'affine':
     case 'projective':
       return 'Oturt';
+    case 'rubbersheet':
+      return 'Kauçuk levha';
   }
 }
 
@@ -142,6 +151,30 @@ function checkAlign(t: Extract<Transform, { kind: 'align' }>): Stop | null {
   return null;
 }
 
+/** Why a rubber sheet's links give no sheet, in the user's words (the desktop's `links_message`). */
+const LINKS: Record<string, string> = {
+  too_few: 'Kauçuk levha için en az 3 bağ gerekir. Bağ ekleyin.',
+  duplicate: "İki bağın kaynağı aynı nokta. Birini çıkarın ya da Kullan'dan bırakın.",
+  collinear: 'Bağların kaynakları bir doğru üstünde; levha kurulamaz. Doğrunun dışında bir bağ ekleyin.',
+  singular: 'Bağların denklem takımının tek çözümü yok. Birbirine çok yakın kaynakları birleştirin.',
+  too_many: 'En çok 1000 bağ alınır. Bağları azaltın.',
+};
+
+/** Kauçuk levha's links: finite (named by their place), then one sheet (the core's own solution). */
+function checkLinks(t: Extract<Transform, { kind: 'rubbersheet' }>): Stop | null {
+  for (let i = 0; i < t.links.length; i++) {
+    const l = t.links[i];
+    const stop = notFinite(l.from, `${i + 1}. bağın kaynağının`, `transform.links[${i}].from`) ?? notFinite(l.to, `${i + 1}. bağın hedefinin`, `transform.links[${i}].to`);
+    if (stop) return stop;
+  }
+  const answer = rubberSheet(t.links, []);
+  return 'error' in answer ? failed(error('invalid_links', LINKS[answer.error] ?? LINKS.singular, 'transform.links')) : null;
+}
+
+/** The rubber sheet's warning: how many shapes bend over 0.1 mm and the largest, mm with one decimal (the display rule), a decimal comma. */
+export const bendsMessage = (bent: number, bend: number) =>
+  `${bent} nesne gerçek görüntüsünden 0,1 mm'den çok sapıyor (en çok ${fixed(bend * 1000, 1).replace('.', ',')} mm): kauçuk levha yalnız köşeleri taşır, kenarlar doğru, yaylar şişkinliğiyle kalır.`;
+
 /** The transform's own checks, in its fields' order: finite numbers, then what they mean. */
 function checkTransform(t: Transform): Stop | null {
   switch (t.kind) {
@@ -177,6 +210,8 @@ function checkTransform(t: Transform): Stop | null {
     case 'affine':
     case 'projective':
       return checkWarp(t);
+    case 'rubbersheet':
+      return checkLinks(t);
   }
 }
 
@@ -202,6 +237,22 @@ function warped(sources: readonly Entity[], warp: Warp): Stop | { moved: Entity[
   return { moved, curves: answer.curves, kept: answer.kept };
 }
 
+/** The objects on a rubber sheet (the core's `rubberShapes`), each keeping its kind and fields; the warnings' counts. */
+function onSheet(sources: readonly Entity[], links: Extract<Transform, { kind: 'rubbersheet' }>['links']): Stop | { moved: Entity[]; kept: number; bent: number; bend: number } {
+  const answer = rubberShapes(
+    sources,
+    sources.map((e) => elevatedPaths(e).map((p) => p.zs)),
+    links,
+  );
+  if ('error' in answer) return failed(error('invalid_links', LINKS[answer.error] ?? LINKS.singular, 'transform.links'));
+  const moved = answer.shapes.map((shape, i) => {
+    const e = withGeometry(sources[i], shape as unknown as Geometry);
+    assignElevations(e, answer.zs[i]);
+    return e;
+  });
+  return { moved, kept: answer.kept, bent: answer.bent, bend: answer.bend };
+}
+
 /** The checks in the contract's order: why nothing may be written, or what may. */
 function check(doc: CadDocument, input: EntitiesTransform): Stop | Checked {
   const stop = checkUids(input.uids, 'Dönüştürülecek nesne verilmedi.') ?? checkTransform(input.transform) ?? checkRevision(doc, input.expectedRevision);
@@ -218,23 +269,29 @@ function check(doc: CadDocument, input: EntitiesTransform): Stop | Checked {
   const t = input.transform;
   const warp = t.kind === 'similarity' || t.kind === 'affine' || t.kind === 'projective' ? warped(sources.map((s) => s.entity), t) : null;
   if (warp && 'status' in warp) return warp;
+  const sheet = t.kind === 'rubbersheet' ? onSheet(sources.map((s) => s.entity), t.links) : null;
+  if (sheet && 'status' in sheet) return sheet;
   const moved = warp
     ? warp.moved
-    : transformObjects(
-        sources.map((s) => s.entity),
-        t,
-      );
+    : sheet
+      ? sheet.moved
+      : transformObjects(
+          sources.map((s) => s.entity),
+          t,
+        );
   if (sources.some((s, i) => geometryIsFinite(s.entity) && !geometryIsFinite(moved[i])))
     return failed(error('not_finite', 'Dönüşüm sonucunda sonlu olmayan bir değer çıktı (sayı taşması). Daha küçük bir değer verin.', 'transform'));
   const warnings: CommandWarning[] = locked.length ? [{ code: 'layer_locked', message: lockedMessage(locked.length), path: 'uids' }] : [];
   if (warp?.curves)
     warnings.push({ code: 'warp_curves', message: `${warp.curves} nesnenin eğrileri 0,1 mm'lik köşelere açıldı; dönüşüm benzerlik değil, eğri olarak kalamazlar.`, path: 'transform' });
-  if (warp?.kept)
+  const kept = warp?.kept ?? sheet?.kept ?? 0;
+  if (kept)
     warnings.push({
       code: 'warp_shapes',
-      message: `${warp.kept} yazı, not, blok, ölçü ya da tarama deseni yerinde döndürülüp ölçeklendi; dönüşüm benzerlik değil, biçimleri eğilmez.`,
+      message: `${kept} yazı, not, blok, ölçü ya da tarama deseni yerinde döndürülüp ölçeklendi; dönüşüm benzerlik değil, biçimleri eğilmez.`,
       path: 'transform',
     });
+  if (sheet?.bent) warnings.push({ code: 'rubber_bends', message: bendsMessage(sheet.bent, sheet.bend), path: 'transform' });
   return { sources, moved, locked, warnings };
 }
 

@@ -752,9 +752,10 @@ class FeatureChange(_Union):
 
 class Transform(_Union):
     """One transform of the plane: a similarity as the modify tools ask for it
-    (docs/adr/0037, 0047), or Vektör oturtma's similarity, affine or
-    projective transform in centred form (docs/adr/0156 §6). Coordinates are
-    x east (Y), y north (X), in the project's units (m), float64.
+    (docs/adr/0037, 0047), Vektör oturtma's similarity, affine or projective
+    transform in centred form (docs/adr/0156 §6), or Kauçuk levha's links
+    (docs/adr/0158). Coordinates are x east (Y), y north (X), in the
+    project's units (m), float64.
 
     One of:
 
@@ -766,6 +767,7 @@ class Transform(_Union):
     - :class:`SimilarityTransform` (``kind: similarity``)
     - :class:`AffineTransform` (``kind: affine``)
     - :class:`ProjectiveTransform` (``kind: projective``)
+    - :class:`RubbersheetTransform` (``kind: rubbersheet``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -2739,6 +2741,9 @@ class EntitiesTransform(_Model):
     within a nanometre of the first's), `invalid_transform` (an affine or
     projective transform whose linear part squashes the plane: its
     determinant under 1e-12 of its columns' lengths' product),
+    `invalid_links` (Kauçuk levha's links: fewer than 3 or more than 1000,
+    two from one point, all their sources on one line, or equations with no
+    single solution; path `transform.links`),
     `invalid_revision`, `revision_conflict` (status `conflict`),
     `entity_not_found` (each id in order), `layer_locked`, `beyond_horizon`
     (a point of an object beyond a projective transform's horizon), then
@@ -2747,10 +2752,12 @@ class EntitiesTransform(_Model):
     `slots_exhausted` for copies.
 
     The undo step of the similarity, affine and projective transforms is
-    “Oturt”. When the transform is not a similarity the output warns with
-    `warp_curves` (objects whose curves became straight vertices) and
-    `warp_shapes` (texts, notes, blocks, dimensions and hatch patterns that
-    kept their shape), each with its count.
+    “Oturt”, of the rubber sheet “Kauçuk levha”. When the transform is not a
+    similarity the output warns with `warp_curves` (objects whose curves
+    became straight vertices) and `warp_shapes` (texts, notes, blocks,
+    dimensions and hatch patterns that kept their shape), each with its
+    count; a rubber sheet with `rubber_bends` (objects whose kept edges or
+    curves lie over 0.1 mm from their true image, and the largest, mm).
     Attributes:
         uids: The objects' persistent ids (lowercase UUID text with hyphens), at least one.
         transform: What happens to them.
@@ -5034,6 +5041,26 @@ class RingGeometry(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RubberLink(_Model):
+    """A link of Kauçuk levha: a point of the drawing and where it is to go."""
+    from_: Vec2
+    to: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = _vec2_out(self.from_)
+        out["to"] = _vec2_out(self.to)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RubberLink:
+        return cls(
+            from_=Vec2.from_json(data["from"]),
+            to=Vec2.from_json(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SplineEntity(Entity):
     """Fields every object has. `id` is the object's local id inside a v1 file.
     v1 keeps no persistent id: it is derived from the file's content when the
@@ -6269,6 +6296,32 @@ class ProjectiveTransform(Transform):
         )
 
 
+@dataclass(kw_only=True, slots=True)
+class RubbersheetTransform(Transform):
+    """Kauçuk levha (docs/adr/0158): the thin plate spline of the links'
+    displacements, through every link exactly (a link whose `to` is its
+    `from` holds its point), following their affine trend far from them.
+    Only vertices move: straight edges stay straight, an arc segment keeps
+    its bulge; a circle, an arc and an ellipse move by the nearest
+    similarity at their centre; texts, notes, blocks, dimensions and hatch
+    patterns keep their shape at their anchor. 3 to 1000 links, their
+    sources apart and not all on one line.
+    """
+    TAG_VALUE: ClassVar[str] = "rubbersheet"
+    links: list[RubberLink]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "rubbersheet"}
+        out["links"] = [e0.to_json() for e0 in self.links]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RubbersheetTransform:
+        return cls(
+            links=[RubberLink.from_json(e0) for e0 in data["links"]],
+        )
+
+
 _ARRAY_LAYOUT: dict[str, type[ArrayLayout]] = {"grid": GridArrayLayout, "polar": PolarArrayLayout, "path": PathArrayLayout}
 
 
@@ -6287,7 +6340,7 @@ _ENTITY_GEOMETRY: dict[str, type[EntityGeometry]] = {"point": PointEntityGeometr
 _FEATURE_CHANGE: dict[str, type[FeatureChange]] = {"create": CreateFeatureChange, "update": UpdateFeatureChange, "delete": DeleteFeatureChange}
 
 
-_TRANSFORM: dict[str, type[Transform]] = {"move": MoveTransform, "rotate": RotateTransform, "scale": ScaleTransform, "mirror": MirrorTransform, "align": AlignTransform, "similarity": SimilarityTransform, "affine": AffineTransform, "projective": ProjectiveTransform}
+_TRANSFORM: dict[str, type[Transform]] = {"move": MoveTransform, "rotate": RotateTransform, "scale": ScaleTransform, "mirror": MirrorTransform, "align": AlignTransform, "similarity": SimilarityTransform, "affine": AffineTransform, "projective": ProjectiveTransform, "rubbersheet": RubbersheetTransform}
 
 
 __all__ = [
@@ -6477,6 +6530,8 @@ __all__ = [
     "ReplaceEntityEdit",
     "RingGeometry",
     "RotateTransform",
+    "RubberLink",
+    "RubbersheetTransform",
     "ScaleTransform",
     "SimilarityTransform",
     "SplineEntity",

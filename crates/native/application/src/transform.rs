@@ -13,14 +13,16 @@
 //! Oturt's similarity, affine and projective transforms (docs/adr/0156)
 //! are the core's warp (`ops::warp`): what it does to each kind, with the
 //! paths' elevations; an object may change its kind (a circle becomes an
-//! ellipse or a polyline).
+//! ellipse or a polyline). Kauçuk levha (docs/adr/0158) is the core's sheet
+//! (`ops::rubber`) and its rules (`ops::warp::sheet_shape`): only vertices
+//! move, kinds stay, how far a shape bends from its true image is counted.
 //!
 //! The checks, in order (the first that fails answers):
 //! 1. at least one id; every id lowercase UUID text with hyphens (in order);
 //! 2. the transform's numbers finite, in their order; a scale factor above
 //!    zero; a mirror axis with a direction; an alignment's second pair whole,
 //!    its points apart from the first pair's; an affine or projective
-//!    transform not singular;
+//!    transform not singular; a rubber sheet's links giving one sheet;
 //! 3. the expected revision (every command's, `checks.rs`);
 //! 4. every id names an object of the document (in order);
 //! 5. not every object on a locked layer (with others, a warning);
@@ -40,9 +42,11 @@ use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::arrangement::Ring;
 use kentos_geometry_core::geom::affine::{Affine, similarity};
 use kentos_geometry_core::geometry::dist;
-use kentos_geometry_core::jsmath::js_hypot;
+use kentos_geometry_core::jsmath::{js_hypot, js_max};
+use kentos_geometry_core::display::fixed;
+use kentos_geometry_core::ops::rubber::{Link, RubberError, Sheet};
 use kentos_geometry_core::ops::transform::transform_shape;
-use kentos_geometry_core::ops::warp::{Warp, warp_shape};
+use kentos_geometry_core::ops::warp::{CHORD, Warp, sheet_shape, warp_shape};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop};
@@ -162,6 +166,7 @@ pub fn label(transform: &Transform, copy: bool) -> &'static str {
         Transform::Similarity { .. } | Transform::Affine { .. } | Transform::Projective { .. } => {
             "Oturt"
         }
+        Transform::Rubbersheet { .. } => "Kauçuk levha",
     }
 }
 
@@ -170,7 +175,10 @@ pub fn label(transform: &Transform, copy: bool) -> &'static str {
 /// would refuse first, and for Oturt's transforms (the core's warp).
 pub fn affine(transform: &Transform) -> Option<Affine> {
     match *transform {
-        Transform::Similarity { .. } | Transform::Affine { .. } | Transform::Projective { .. } => None,
+        Transform::Similarity { .. }
+        | Transform::Affine { .. }
+        | Transform::Projective { .. }
+        | Transform::Rubbersheet { .. } => None,
         Transform::Move { dx, dy } => similarity("move", &[dx, dy]),
         Transform::Rotate { center, angle } => similarity("rotate", &[center.x, center.y, angle]),
         Transform::Scale { center, factor } => similarity("scale", &[center.x, center.y, factor]),
@@ -258,11 +266,71 @@ fn locked_message(n: usize) -> String {
     )
 }
 
-/// What a transform does once checked: the modify tools' matrix, or
-/// Oturt's warp (docs/adr/0156).
+/// What a transform does once checked: the modify tools' matrix, Oturt's
+/// warp (docs/adr/0156) or Kauçuk levha's sheet (docs/adr/0158).
 enum How {
     Matrix(Affine),
     Warp(Warp),
+    Sheet(Box<Sheet>),
+}
+
+/// Why a rubber sheet's links give no sheet, in the user's words.
+fn links_message(e: RubberError) -> String {
+    match e {
+        RubberError::TooFew => "Kauçuk levha için en az 3 bağ gerekir. Bağ ekleyin.",
+        RubberError::Duplicate => {
+            "İki bağın kaynağı aynı nokta. Birini çıkarın ya da Kullan'dan bırakın."
+        }
+        RubberError::Collinear => {
+            "Bağların kaynakları bir doğru üstünde; levha kurulamaz. Doğrunun dışında bir bağ ekleyin."
+        }
+        RubberError::Singular => {
+            "Bağların denklem takımının tek çözümü yok. Birbirine çok yakın kaynakları birleştirin."
+        }
+        RubberError::TooMany => "En çok 1000 bağ alınır. Bağları azaltın.",
+    }
+    .into()
+}
+
+/// Kauçuk levha's links: finite (named by their place), then one sheet.
+fn check_sheet(links: &[kentos_contracts::RubberLink]) -> Result<Sheet, Stop> {
+    for (i, l) in links.iter().enumerate() {
+        let n = i + 1;
+        checks::point(
+            l.from,
+            &format!("{n}. bağın kaynağının"),
+            &format!("transform.links[{i}].from"),
+        )?;
+        checks::point(
+            l.to,
+            &format!("{n}. bağın hedefinin"),
+            &format!("transform.links[{i}].to"),
+        )?;
+    }
+    let core: Vec<Link> = links
+        .iter()
+        .map(|l| Link {
+            from: Vec2::new(l.from.x, l.from.y),
+            to: Vec2::new(l.to.x, l.to.y),
+        })
+        .collect();
+    Sheet::solve(&core).map_err(|e| {
+        Stop::Failed(checks::error(
+            codes::INVALID_LINKS,
+            links_message(e),
+            Some("transform.links".into()),
+        ))
+    })
+}
+
+/// The rubber sheet's warning: how many shapes bend over [`CHORD`] and the
+/// largest bend, millimetres with one decimal by the display rule
+/// (docs/adr/0149), a decimal comma.
+pub fn bends_message(bent: usize, bend: f64) -> String {
+    let mm = fixed(bend * 1000.0, 1).replace('.', ",");
+    format!(
+        "{bent} nesne gerçek görüntüsünden 0,1 mm'den çok sapıyor (en çok {mm} mm): kauçuk levha yalnız köşeleri taşır, kenarlar doğru, yaylar şişkinliğiyle kalır."
+    )
 }
 
 const NUMBER_FIX: &str = "Dönüşümün sayılarını sonlu verin.";
@@ -351,6 +419,9 @@ fn check_warp(transform: &Transform) -> Result<Option<Warp>, Stop> {
 /// The transform's own checks, in its fields' order: finite numbers, then
 /// what they mean. Its matrix or warp when they pass.
 fn check_transform(transform: &Transform) -> Result<How, Stop> {
+    if let Transform::Rubbersheet { links } = transform {
+        return check_sheet(links).map(|s| How::Sheet(Box::new(s)));
+    }
     if let Some(warp) = check_warp(transform)? {
         return Ok(How::Warp(warp));
     }
@@ -417,7 +488,10 @@ fn check_transform(transform: &Transform) -> Result<How, Stop> {
             }
             check_align(source, target, source2, target2)?;
         }
-        Transform::Similarity { .. } | Transform::Affine { .. } | Transform::Projective { .. } => {}
+        Transform::Similarity { .. }
+        | Transform::Affine { .. }
+        | Transform::Projective { .. }
+        | Transform::Rubbersheet { .. } => {}
     }
     affine(transform).map(How::Matrix).ok_or_else(|| {
         Stop::Failed(checks::error(
@@ -438,6 +512,7 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
     let mut locked = Vec::new();
     let (mut overflow, mut beyond) = (false, false);
     let (mut curves, mut kept) = (0, 0);
+    let (mut bent, mut bend) = (0, 0.0_f64);
     for (slot, entity, uid) in checks::objects(doc, &input.uids)? {
         if doc.layers().is_locked(&entity.base().layer_id) {
             locked.push(uid.clone());
@@ -449,6 +524,21 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
                 let after = transform_shape(&before, m);
                 overflow |= finite_shape(&before) && !finite_shape(&after);
                 with_shape(entity, after)
+            }
+            How::Sheet(sheet) => {
+                let zs: Vec<Vec<Option<f64>>> =
+                    elevation::paths(entity).into_iter().map(|p| p.zs).collect();
+                let (w, b) = sheet_shape(&before, &zs, sheet);
+                overflow |= finite_shape(&before) && !finite_shape(&w.shape);
+                kept += usize::from(w.kept);
+                bent += usize::from(b > CHORD);
+                bend = js_max(bend, b);
+                // Kinds stay on a sheet; the elevations stay with their vertices.
+                let mut e = with_shape(entity, w.shape);
+                if let Some(e) = e.as_mut() {
+                    elevation::assign(e, &w.zs);
+                }
+                e
             }
             How::Warp(warp) => {
                 let zs: Vec<Vec<Option<f64>>> =
@@ -526,6 +616,13 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
         warnings.push(CommandWarning {
             code: codes::WARP_SHAPES.into(),
             message: format!("{kept} yazı, not, blok, ölçü ya da tarama deseni yerinde döndürülüp ölçeklendi; dönüşüm benzerlik değil, biçimleri eğilmez."),
+            path: Some("transform".into()),
+        });
+    }
+    if bent > 0 {
+        warnings.push(CommandWarning {
+            code: codes::RUBBER_BENDS.into(),
+            message: bends_message(bent, bend),
             path: Some("transform".into()),
         });
     }
