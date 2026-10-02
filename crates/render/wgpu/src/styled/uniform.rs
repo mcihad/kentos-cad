@@ -8,11 +8,12 @@ use kentos_native_style::batches::{
     BatchKind, Cap, FillPaintBatch, MarkerLook, StyledBatch, Unit, shape_index,
 };
 
-/// The frame uniform (WGSL `Frame`, 32 bytes).
+/// The frame uniform (WGSL `Frame`, 40 bytes).
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
 pub struct StyledFrameUniform {
-    /// Camera centre relative to the layers' origin, metres.
+    /// Camera centre relative to the layers' origin, metres: the float32
+    /// high part; `offset_lo` holds the rest (docs/adr/0157 §2).
     pub offset: [f32; 2],
     /// Clip units per metre (unused by the styled shaders; kept for the contract).
     pub scale: [f32; 2],
@@ -22,16 +23,23 @@ pub struct StyledFrameUniform {
     pub dpr: f32,
     /// The drawing area in device pixels.
     pub viewport: [f32; 2],
+    /// The camera centre's low part: `offset + offset_lo` is it to about
+    /// 2⁻⁴⁸ of its size.
+    pub offset_lo: [f32; 2],
 }
 
-/// Bytes of one style block (WGSL `SStyle`: eight `vec4f` and a `vec4u`).
-pub const STYLE_BYTES: usize = 144;
+/// Bytes of one style block (WGSL `SStyle`: eight `vec4f`, a `vec4u` and the
+/// tile's `origin`).
+pub const STYLE_BYTES: usize = 160;
 
-/// A batch's style block: 36 four-byte words, floats and the four flags last.
+/// A batch's style block: 36 four-byte words, floats and the four flags,
+/// then its tile's origin (docs/adr/0157: x, y in metres from the layers'
+/// origin, exact in float32; two words unused).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct StyleBlock {
     pub f: [f32; 32],
     pub u: [u32; 4],
+    pub origin: [f32; 4],
 }
 
 impl Default for StyleBlock {
@@ -39,6 +47,7 @@ impl Default for StyleBlock {
         Self {
             f: [0.0; 32],
             u: [0; 4],
+            origin: [0.0; 4],
         }
     }
 }
@@ -47,7 +56,8 @@ impl StyleBlock {
     pub fn bytes(&self) -> [u8; STYLE_BYTES] {
         let mut out = [0u8; STYLE_BYTES];
         out[..128].copy_from_slice(bytemuck::cast_slice(&self.f));
-        out[128..].copy_from_slice(bytemuck::cast_slice(&self.u));
+        out[128..144].copy_from_slice(bytemuck::cast_slice(&self.u));
+        out[144..].copy_from_slice(bytemuck::cast_slice(&self.origin));
         out
     }
 
@@ -120,7 +130,11 @@ const NONE: [f64; 4] = [0.0; 4];
 
 /// A batch's style block; atlas rectangles are filled in when the image is placed.
 pub fn style_block(b: &StyledBatch) -> StyleBlock {
-    let mut s = StyleBlock::default();
+    let mut s = StyleBlock {
+        // Whole multiples of 2¹⁶ m: exact in float32.
+        origin: [b.origin[0] as f32, b.origin[1] as f32, 0.0, 0.0],
+        ..StyleBlock::default()
+    };
     match &b.kind {
         BatchKind::Stroke {
             color,
@@ -261,6 +275,6 @@ mod tests {
     #[test]
     fn a_block_is_the_contract_s_size() {
         assert_eq!(StyleBlock::default().bytes().len(), STYLE_BYTES);
-        assert_eq!(std::mem::size_of::<StyledFrameUniform>(), 32);
+        assert_eq!(std::mem::size_of::<StyledFrameUniform>(), 40);
     }
 }

@@ -313,6 +313,10 @@ pub struct StyledBatch {
     pub key: u64,
     /// Origin-relative box of the geometry: min x, min y, max x, max y.
     pub bounds: [f64; 4],
+    /// The origin of the tile its numbers are relative to, from the layers'
+    /// origin (docs/adr/0157): [0, 0] around the anchor, a whole multiple of
+    /// `TILE` far from it, exact in float32.
+    pub origin: [f64; 2],
     /// How far drawing reaches past the geometry, in `reach_unit`.
     pub reach: f64,
     pub reach_unit: Unit,
@@ -944,6 +948,7 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
         let len = n(d, "len") as usize;
         let range = from..(from + len).min(out.data.len());
         let bounds = quad(d, "bounds");
+        let origin = pair(d, "origin");
         let (dw, dh) = (n(d, "w"), n(d, "h"));
         let style = d.get("style").unwrap_or(&Value::Null);
         let min_scale = d.get("minScale").and_then(Value::as_f64);
@@ -966,6 +971,7 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
                     level,
                     key,
                     bounds,
+                    origin,
                     reach: dw + 1.0,
                     reach_unit: unit,
                     min_scale,
@@ -975,11 +981,12 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
             "fill" => StyledBatch {
                 range,
                 kind: BatchKind::Fill {
-                    paint: looks.paint(style),
+                    paint: fold(looks.paint(style), origin),
                 },
                 level,
                 key,
                 bounds,
+                origin,
                 reach: 0.0,
                 reach_unit: Unit::World,
                 min_scale,
@@ -1018,6 +1025,7 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
                     level,
                     key,
                     bounds,
+                    origin,
                     reach: w.max(dh).max(dw) * 1.5 + offset[0].hypot(offset[1]) + 2.0,
                     reach_unit: unit,
                     min_scale,
@@ -1061,7 +1069,143 @@ fn order_of(d: &Value, style: &Value) -> (f64, u64) {
     keyed.to_string().hash(&mut hasher);
     d.get("minScale").map(Value::to_string).hash(&mut hasher);
     d.get("maxScale").map(Value::to_string).hash(&mut hasher);
+    // A style's batches in two tiles are two (docs/adr/0157); the anchor's
+    // tile says none, and its keys stay as they were.
+    if let Some(origin) = d.get("origin") {
+        origin.to_string().hash(&mut hasher);
+    }
     (level, hasher.finish())
+}
+
+/// A paint whose phase comes from the world (a hatch, a tile or a pattern
+/// in metres) drawn from its tile's origin `o` rather than the anchor: its
+/// offsets folded so that the shader, given positions from the tile, draws
+/// the very pattern it would from the anchor (docs/adr/0157 §3). The rest
+/// of the period is the whole: a remainder is never below zero.
+fn fold(paint: FillPaintBatch, o: [f64; 2]) -> FillPaintBatch {
+    use kentos_geometry_core::jsmath::{cos, sin};
+    if o == [0.0, 0.0] {
+        return paint;
+    }
+    let rest = |v: f64, period: f64| {
+        if period > 0.0 {
+            v.rem_euclid(period)
+        } else {
+            0.0
+        }
+    };
+    match paint {
+        FillPaintBatch::Hatch {
+            color,
+            angle,
+            spacing,
+            width,
+            offset,
+            dash,
+            dash_offset,
+            unit: Unit::World,
+        } => {
+            // The lines run along (cos, sin); the offset is across them.
+            let (c, s) = (cos(angle), sin(angle));
+            let along = dash.as_deref().map_or(0.0, dash_period);
+            FillPaintBatch::Hatch {
+                color,
+                angle,
+                spacing,
+                width,
+                offset: offset - rest(-s * o[0] + c * o[1], spacing),
+                dash,
+                dash_offset: dash_offset + rest(c * o[0] + s * o[1], along),
+                unit: Unit::World,
+            }
+        }
+        FillPaintBatch::Tile {
+            image,
+            size,
+            angle,
+            offset,
+            opacity,
+            unit: Unit::World,
+        } => {
+            let (c, s) = (cos(angle), sin(angle));
+            let turned = [c * o[0] + s * o[1], -s * o[0] + c * o[1]];
+            FillPaintBatch::Tile {
+                image,
+                size,
+                angle,
+                offset: [
+                    offset[0] - rest(turned[0], size[0]),
+                    offset[1] - rest(turned[1], size[1]),
+                ],
+                opacity,
+                unit: Unit::World,
+            }
+        }
+        FillPaintBatch::Pattern {
+            angle,
+            offset,
+            size,
+            stagger,
+            unit: Unit::World,
+            shape,
+            fill,
+            stroke,
+            stroke_width,
+            half,
+            mark_offset,
+            mark_rotation,
+            params,
+            jitter,
+            coverage,
+            seed,
+            tint,
+            opacity,
+        } => {
+            let (c, s) = (cos(angle), sin(angle));
+            let turned = [c * o[0] + s * o[1], -s * o[0] + c * o[1]];
+            // Staggered rows alternate: two rows make the period, so a row keeps its kind.
+            let rows = if stagger { 2.0 * size[1] } else { size[1] };
+            FillPaintBatch::Pattern {
+                angle,
+                offset: [
+                    offset[0] - rest(turned[0], size[0]),
+                    offset[1] - rest(turned[1], rows),
+                ],
+                size,
+                stagger,
+                unit: Unit::World,
+                shape,
+                fill,
+                stroke,
+                stroke_width,
+                half,
+                mark_offset,
+                mark_rotation,
+                params,
+                jitter,
+                coverage,
+                seed,
+                tint,
+                opacity,
+            }
+        }
+        paint => paint,
+    }
+}
+
+/// A dash pattern's length as the shader repeats it: an odd pattern twice,
+/// cut to eight values (the renderer's `dash_values`, the web's `dashValues`).
+fn dash_period(dash: &[f64]) -> f64 {
+    let even: Vec<f64> = if dash.len() % 2 == 1 {
+        dash.iter().chain(dash).copied().collect()
+    } else {
+        dash.to_vec()
+    };
+    let mut d = [0.0; 8];
+    for (slot, v) in d.iter_mut().zip(even.iter()) {
+        *slot = *v;
+    }
+    d.iter().sum()
 }
 
 /// Where a batch's kind draws within its level: fills, then lines, then marks (the core's `Kind`).
@@ -1243,6 +1387,9 @@ impl StyledLayer {
         };
         if let Value::Object(o) = &mut v {
             o.insert("bounds".into(), json!(b.bounds));
+            if b.origin != [0.0, 0.0] {
+                o.insert("origin".into(), json!(b.origin));
+            }
             o.insert("reach".into(), json!(b.reach));
             o.insert("reachUnit".into(), json!(b.reach_unit.name()));
             if let Some(m) = b.min_scale {
@@ -1341,4 +1488,163 @@ fn paint_json(p: &FillPaintBatch) -> Value {
 /// A colour read straight from hex, for tests and legends.
 pub fn hex_rgba(hex: &str) -> [f64; 4] {
     parse_hex(hex, 1.0)
+}
+
+#[cfg(test)]
+mod fold_tests {
+    //! Folding a paint's phase into its tile (docs/adr/0157 §3), checked on
+    //! the shader's own formulas in float64: from a far tile the hatch line,
+    //! the tile's cell and the pattern's cell fall where they fall from the
+    //! anchor. The platforms' agreement is `fixtures/style/v1/batches.json`'s;
+    //! this is the rule itself.
+    use super::*;
+    use kentos_geometry_core::jsmath::{cos, sin};
+
+    /// The far tile of `fixtures/interaction/v1/vector-fit.kcad`'s local survey.
+    const O: [f64; 2] = [-458_752.0, -4_390_912.0];
+    /// Points from that tile's origin, to its corners.
+    const POINTS: [[f64; 2]; 5] = [
+        [-27_285.0, -27_285.0],
+        [12.25, -40.5],
+        [30_000.5, 1.0],
+        [-5.0, 31_000.125],
+        [32_767.0, -32_767.0],
+    ];
+
+    /// Whether two phases (in periods) are one modulo a whole period.
+    fn same_phase(a: f64, b: f64) -> bool {
+        let d = (a - b).rem_euclid(1.0);
+        d < 1e-9 || 1.0 - d < 1e-9
+    }
+
+    fn from_anchor(p: [f64; 2]) -> [f64; 2] {
+        [p[0] + O[0], p[1] + O[1]]
+    }
+
+    #[test]
+    fn a_hatch_and_its_dashes_continue_from_their_tile() {
+        let (angle, spacing, offset, dash_offset) = (0.6, 1.5, 0.25, 0.75);
+        let dash = vec![2.0, 1.0, 0.5];
+        let paint = FillPaintBatch::Hatch {
+            color: [0.0; 4],
+            angle,
+            spacing,
+            width: 0.1,
+            offset,
+            dash: Some(dash.clone()),
+            dash_offset,
+            unit: Unit::World,
+        };
+        let FillPaintBatch::Hatch {
+            offset: folded,
+            dash_offset: dash_folded,
+            ..
+        } = fold(paint, O)
+        else {
+            panic!("a hatch stays a hatch");
+        };
+        let (c, s) = (cos(angle), sin(angle));
+        // An odd pattern repeats twice: 7 m.
+        let total = dash_period(&dash);
+        assert_eq!(total, 7.0);
+        for p in POINTS {
+            let w = from_anchor(p);
+            // Across the lines (`hatchFs`: dot(p, n) − offset over the spacing).
+            assert!(same_phase(
+                (-s * w[0] + c * w[1] - offset) / spacing,
+                (-s * p[0] + c * p[1] - folded) / spacing
+            ));
+            // Along them (`dashCover`: dot(p, dir) + dash offset over the pattern).
+            assert!(same_phase(
+                (c * w[0] + s * w[1] + dash_offset) / total,
+                (c * p[0] + s * p[1] + dash_folded) / total
+            ));
+        }
+    }
+
+    #[test]
+    fn a_tile_and_a_staggered_pattern_continue_from_their_tile() {
+        let (angle, size, offset) = (0.3, [5.0, 3.5], [0.4, -0.2]);
+        let turned = |p: [f64; 2]| {
+            let (c, s) = (cos(angle), sin(angle));
+            [c * p[0] + s * p[1], -s * p[0] + c * p[1]]
+        };
+        let tile = FillPaintBatch::Tile {
+            image: AtlasImage::Raster {
+                key: "t".into(),
+                url: String::new(),
+                width: 1.0,
+                height: 1.0,
+            },
+            size,
+            angle,
+            offset,
+            opacity: 1.0,
+            unit: Unit::World,
+        };
+        let FillPaintBatch::Tile { offset: folded, .. } = fold(tile, O) else {
+            panic!("a tile stays a tile");
+        };
+        for p in POINTS {
+            let (a, t) = (turned(from_anchor(p)), turned(p));
+            for k in 0..2 {
+                assert!(same_phase(
+                    (a[k] - offset[k]) / size[k],
+                    (t[k] - folded[k]) / size[k]
+                ));
+            }
+        }
+        let pattern = FillPaintBatch::Pattern {
+            shape: "circle".into(),
+            fill: None,
+            stroke: None,
+            stroke_width: 0.0,
+            half: [0.5, 0.5],
+            mark_offset: [0.0, 0.0],
+            mark_rotation: 0.0,
+            params: [0.0; 4],
+            size,
+            stagger: true,
+            angle,
+            offset,
+            jitter: 0.0,
+            coverage: 1.0,
+            seed: 0.0,
+            tint: 0.0,
+            opacity: 1.0,
+            unit: Unit::World,
+        };
+        let FillPaintBatch::Pattern { offset: folded, .. } = fold(pattern, O) else {
+            panic!("a pattern stays a pattern");
+        };
+        // Staggered rows: two rows make the period, so a row keeps its kind.
+        let period = [size[0], 2.0 * size[1]];
+        for p in POINTS {
+            let (a, t) = (turned(from_anchor(p)), turned(p));
+            for k in 0..2 {
+                assert!(same_phase(
+                    (a[k] - offset[k]) / period[k],
+                    (t[k] - folded[k]) / period[k]
+                ));
+            }
+        }
+    }
+
+    #[test]
+    fn screen_paints_and_the_anchor_s_tile_are_left_as_they_are() {
+        let hatch = |unit| FillPaintBatch::Hatch {
+            color: [0.0; 4],
+            angle: 0.6,
+            spacing: 1.5,
+            width: 0.1,
+            offset: 0.25,
+            dash: None,
+            dash_offset: 0.0,
+            unit,
+        };
+        assert_eq!(fold(hatch(Unit::Px), O), hatch(Unit::Px));
+        assert_eq!(fold(hatch(Unit::World), [0.0, 0.0]), hatch(Unit::World));
+        let solid = FillPaintBatch::Solid { color: [1.0; 4] };
+        assert_eq!(fold(solid.clone(), O), solid);
+    }
 }

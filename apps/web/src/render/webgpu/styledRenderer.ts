@@ -17,7 +17,8 @@ const BUFFER = { VERTEX: 0x20, UNIFORM: 0x40, COPY_DST: 0x08 } as const;
 const TEXTURE = { COPY_DST: 0x02, TEXTURE_BINDING: 0x04, RENDER_ATTACHMENT: 0x10 } as const;
 const STAGE = { VERTEX: 0x1, FRAGMENT: 0x2 } as const;
 /** SStyle: 8 vec4f + 1 vec4u. */
-const STYLE_BYTES = 144;
+/** A batch's style block (WGSL `SStyle`, contract version 3): eight vec4f, the flags, then its tile's origin. */
+const STYLE_BYTES = 160;
 const SHAPE_INDEX = new Map<string, number>(SHAPE_IDS.map((s, i) => [s, i]));
 
 interface GpuStyled {
@@ -44,7 +45,7 @@ export class WebGPUStyledRenderer {
   private readonly module: GPUShaderModule;
   private readonly layout: GPUPipelineLayout;
   private readonly styleLayout: GPUBindGroupLayout;
-  /** Group 0 of the styled pipelines: the frame uniform with the atlas beside it (contract version 2). */
+  /** Group 0 of the styled pipelines: the frame uniform with the atlas beside it (contract version 3). */
   private readonly frameBind: GPUBindGroup;
   private readonly texture: GPUTexture;
   /** Pipelines by sample count (the backend's multisampled passes need their own). */
@@ -57,7 +58,7 @@ export class WebGPUStyledRenderer {
     this.format = format;
     this.module = device.createShaderModule({ code: STYLED_WGSL });
     this.styleLayout = device.createBindGroupLayout({ entries: [{ binding: 0, visibility: STAGE.VERTEX | STAGE.FRAGMENT, buffer: { type: 'uniform' } }] });
-    // shaders/wgsl/styled.layout.json v2: group 0 is the frame, the atlas texture and its sampler; group 1 the batch's style.
+    // shaders/wgsl/styled.layout.json v3: group 0 is the frame, the atlas texture and its sampler; group 1 the batch's style.
     const frameLayout = device.createBindGroupLayout({
       entries: [
         { binding: 0, visibility: STAGE.VERTEX | STAGE.FRAGMENT, buffer: { type: 'uniform' } },
@@ -176,6 +177,8 @@ export class WebGPUStyledRenderer {
     const data = new ArrayBuffer(STYLE_BYTES);
     const f = new Float32Array(data);
     const u = new Uint32Array(data);
+    // The tile the batch's numbers are from (docs/adr/0157): whole multiples of 2¹⁶ m, exact in float32.
+    f.set([b.origin?.[0] ?? 0, b.origin?.[1] ?? 0, 0, 0], 36);
     const dash = (d: readonly number[] | null) => {
       const v = dashValues(d);
       f.set(v.d, 8);

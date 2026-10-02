@@ -20,6 +20,9 @@ interface Program {
   a: Record<string, number>;
   /** Frame whose shared uniforms this program already has. */
   frame: number;
+  /** The tile origin its camera was last set from (docs/adr/0157). */
+  camX: number;
+  camY: number;
 }
 
 export interface GpuStyled {
@@ -40,7 +43,7 @@ export interface StyledFrame {
   scaleDenominator: number;
 }
 
-const FRAME_UNIFORMS = ['u_cam', 'u_pxPerM', 'u_dpr', 'u_viewPx'];
+const FRAME_UNIFORMS = ['u_cam', 'u_camLo', 'u_pxPerM', 'u_dpr', 'u_viewPx'];
 const DASH_UNIFORMS = ['u_dash0', 'u_dash1', 'u_dashTotal', 'u_dashOn', 'u_dashOffset'];
 const PATTERN_UNIFORMS = ['u_size', 'u_rot', 'u_shift', 'u_stagger', 'u_jitter', 'u_coverage', 'u_seed', 'u_reach', 'u_unit', 'u_shape', 'u_sp', 'u_half', 'u_markOff', 'u_markRot', 'u_fill', 'u_stroke', 'u_strokeW', 'u_tint', 'u_opacity'];
 const SHAPE_INDEX = new Map<string, number>(SHAPE_IDS.map((s, i) => [s, i]));
@@ -84,9 +87,9 @@ export class StyledRenderer {
   private current: Program | null = null;
   private premul: boolean | null = null;
 
-  constructor(gl: WebGL2RenderingContext, compile: (vs: string, fs: string, attribs: string[], uniforms: string[]) => Omit<Program, 'frame'>) {
+  constructor(gl: WebGL2RenderingContext, compile: (vs: string, fs: string, attribs: string[], uniforms: string[]) => Omit<Program, 'frame' | 'camX' | 'camY'>) {
     this.gl = gl;
-    const make = (vs: string, fs: string, attribs: string[], uniforms: string[]): Program => ({ ...compile(vs, fs, attribs, uniforms), frame: -1 });
+    const make = (vs: string, fs: string, attribs: string[], uniforms: string[]): Program => ({ ...compile(vs, fs, attribs, uniforms), frame: -1, camX: 0, camY: 0 });
     this.stroke = make(STROKE_VS, STROKE_FS, ['a_seg', 'a_meta'], [...FRAME_UNIFORMS, ...DASH_UNIFORMS, 'u_width', 'u_blur', 'u_unit', 'u_color', 'u_cap']);
     const SOLID_FS = `#version 300 es
 precision highp float;
@@ -206,18 +209,30 @@ void main() { outColor = u_color; }`;
     }
   }
 
-  private use(p: Program, f: StyledFrame): void {
+  /**
+   * The program with the frame's uniforms; the camera from the batch's tile (docs/adr/0157), worked out here in
+   * float64 so that the shader's positions, which are from the tile, meet it without losing digits.
+   */
+  private use(p: Program, f: StyledFrame, b: StyledBatch): void {
     const gl = this.gl;
     if (this.current !== p) {
       gl.useProgram(p.program);
       this.current = p;
     }
-    if (p.frame === this.frameNo) return;
-    p.frame = this.frameNo;
-    gl.uniform2f(p.u.u_cam, f.cam[0], f.cam[1]);
-    gl.uniform1f(p.u.u_pxPerM, f.pxPerM);
-    gl.uniform1f(p.u.u_dpr, f.dpr);
-    gl.uniform2f(p.u.u_viewPx, f.viewPx[0], f.viewPx[1]);
+    const [ox, oy] = b.origin ?? [0, 0];
+    if (p.frame !== this.frameNo) {
+      p.frame = this.frameNo;
+      gl.uniform1f(p.u.u_pxPerM, f.pxPerM);
+      gl.uniform1f(p.u.u_dpr, f.dpr);
+      gl.uniform2f(p.u.u_viewPx, f.viewPx[0], f.viewPx[1]);
+    } else if (p.camX === ox && p.camY === oy) return;
+    p.camX = ox;
+    p.camY = oy;
+    // The camera from the tile in float64, sent as a float32 high part and the rest.
+    const [cx, cy] = [f.cam[0] - ox, f.cam[1] - oy];
+    const [hx, hy] = [Math.fround(cx), Math.fround(cy)];
+    gl.uniform2f(p.u.u_cam, hx, hy);
+    gl.uniform2f(p.u.u_camLo, cx - hx, cy - hy);
   }
 
   private dash(p: Program, dash: readonly number[] | null, offset: number): void {
@@ -254,7 +269,7 @@ void main() { outColor = u_color; }`;
       gl.bindVertexArray(s.vao);
       if (b.kind === 'stroke') {
         const p = this.stroke;
-        this.use(p, f);
+        this.use(p, f, b);
         this.premultiplied(false);
         gl.uniform1f(p.u.u_width, b.width);
         gl.uniform1f(p.u.u_blur, b.blur);
@@ -266,12 +281,12 @@ void main() { outColor = u_color; }`;
       } else if (b.kind === 'fill') {
         const paint = b.paint;
         if (paint.kind === 'solid') {
-          this.use(this.solid, f);
+          this.use(this.solid, f, b);
           this.premultiplied(false);
           gl.uniform4fv(this.solid.u.u_color, paint.color);
         } else if (paint.kind === 'hatch') {
           const p = this.hatch;
-          this.use(p, f);
+          this.use(p, f, b);
           this.premultiplied(false);
           gl.uniform4fv(p.u.u_color, paint.color);
           gl.uniform2f(p.u.u_dir, Math.cos(paint.angle), Math.sin(paint.angle));
@@ -282,7 +297,7 @@ void main() { outColor = u_color; }`;
           this.dash(p, paint.dash, paint.dashOffset);
         } else if (paint.kind === 'pattern') {
           const p = this.pattern;
-          this.use(p, f);
+          this.use(p, f, b);
           this.premultiplied(true);
           const r = patternReach(paint);
           gl.uniform2f(p.u.u_size, paint.size[0], paint.size[1]);
@@ -307,7 +322,7 @@ void main() { outColor = u_color; }`;
         } else {
           const hit = s.hit!;
           const p = this.tile;
-          this.use(p, f);
+          this.use(p, f, b);
           this.premultiplied(true);
           gl.uniform1i(p.u.u_atlas, 0);
           gl.uniform4f(p.u.u_rect, hit.uv[0], hit.uv[1], hit.uv[2], hit.uv[3]);
@@ -321,7 +336,7 @@ void main() { outColor = u_color; }`;
       } else {
         const p = this.marker;
         const look = b.look;
-        this.use(p, f);
+        this.use(p, f, b);
         this.premultiplied(true);
         gl.uniform1i(p.u.u_unit, b.unit === 'world' ? 0 : 1);
         gl.uniform2f(p.u.u_offset, b.offset[0], b.offset[1]);

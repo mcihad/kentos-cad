@@ -45,6 +45,11 @@ export interface ScaleRange {
 export interface BatchExtent extends ScaleRange {
   /** Origin-relative box of the batch's geometry: minX, minY, maxX, maxY. */
   bounds: readonly [number, number, number, number];
+  /**
+   * The origin of the tile the batch's numbers are relative to, from the layers' origin (docs/adr/0157): absent
+   * around the anchor, a whole multiple of 2¹⁶ m far from it, exact in float32.
+   */
+  origin?: readonly [number, number];
   /** How far drawing reaches past the geometry (half a stroke, a marker's size), in `reachUnit`. */
   reach: number;
   reachUnit: StyleUnit;

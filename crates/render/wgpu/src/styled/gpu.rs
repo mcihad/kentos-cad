@@ -493,8 +493,15 @@ impl StyledGpu {
         view.under = scene.under;
         view.order = scene.order.clone();
         let px_per_m = frame.scale * frame.dpr;
+        // The camera centre in two float32 parts (docs/adr/0157 §2): the
+        // shader takes it from each batch's tile without losing its digits.
+        let hi = [frame.center[0] as f32, frame.center[1] as f32];
         let uniform = StyledFrameUniform {
-            offset: [frame.center[0] as f32, frame.center[1] as f32],
+            offset: hi,
+            offset_lo: [
+                (frame.center[0] - f64::from(hi[0])) as f32,
+                (frame.center[1] - f64::from(hi[1])) as f32,
+            ],
             scale: [
                 (2.0 * frame.scale / f64::from(frame.size_px[0].max(1.0)) * frame.dpr) as f32,
                 (2.0 * frame.scale / f64::from(frame.size_px[1].max(1.0)) * frame.dpr) as f32,

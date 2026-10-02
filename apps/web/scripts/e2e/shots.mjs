@@ -3,7 +3,9 @@
 // A scene opens what it shows through the app's own commands and the dev-only window.kentos handle, and leaves
 // the app as it found it (closing windows, undoing runs).
 //
-//   node scripts/e2e/shots.mjs <group> [--only a,b] [--sizes 1440x900,1100x650] [--themes dark,light]
+//   node scripts/e2e/shots.mjs <group> [--only a,b] [--sizes 1440x900,1100x650] [--themes dark,light] [--renderer webgpu]
+//
+// --renderer webgpu draws with WebGPU (Chrome's SwiftShader adapter); the pictures' names end in -webgpu.
 //
 // Groups: processing (İşlemler: the dock, the menu, the tool and model dialogs and their states); layerstyle (Katman
 // stili: each renderer, its classes, the symbol slot, errors, applied); stylemanager (Stil yöneticisi: the tree, a
@@ -24,7 +26,7 @@
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createServer } from 'vite';
-import { launch, OUT, sleep } from './cdp.mjs';
+import { launch, OUT, sleep, WEBGPU_ARGS } from './cdp.mjs';
 
 const args = process.argv.slice(2);
 const group = args.find((a) => !a.startsWith('--') && !args[args.indexOf(a) - 1]?.startsWith('--'));
@@ -32,6 +34,7 @@ const opt = (name) => (args.includes(`--${name}`) ? args[args.indexOf(`--${name}
 const only = opt('only');
 const sizes = (opt('sizes') ?? ['1440x900', '1100x650']).map((s) => s.split('x').map(Number));
 const themes = opt('themes') ?? ['dark', 'light'];
+const renderer = opt('renderer')?.[0] ?? 'webgl2';
 
 /** A point of the drawing area, as fractions of its box, on the screen. */
 const inView = (ui, fx, fy) => ui.eval(`(() => { const r = window.kentos.view.clientRect(); return [Math.round(r.left + r.width * ${fx}), Math.round(r.top + r.height * ${fy})]; })()`);
@@ -3311,10 +3314,10 @@ const failed = [];
 
 for (const [w, hgt] of sizes) {
   for (const theme of themes) {
-    const b = await launch('about:blank', { width: w, height: hgt });
+    const b = await launch('about:blank', { width: w, height: hgt, ...(renderer === 'webgpu' ? { args: WEBGPU_ARGS } : {}) });
     const ui = helpers(b);
     try {
-      await b.send('Page.navigate', { url: `${url}?renderer=webgl2&start=0` });
+      await b.send('Page.navigate', { url: `${url}?renderer=${renderer}&start=0` });
       const ready = 'window.kentos && window.kentos.view.backendKind.value';
       await b.waitFor(ready, 30000);
       await sleep(1200);
@@ -3324,7 +3327,7 @@ for (const [w, hgt] of sizes) {
       await sleep(300);
       for (const scene of SCENES[group]) {
         if (only && !only.includes(scene.id)) continue;
-        const name = `${scene.id}-${theme}-${w}`;
+        const name = `${scene.id}-${theme}-${w}${renderer === 'webgl2' ? '' : `-${renderer}`}`;
         try {
           await scene.open(ui);
           await sleep(250);

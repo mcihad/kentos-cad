@@ -19,10 +19,11 @@ export interface BatchOptions {
 }
 
 /** One batch as the core describes it: the first style it was made for, its numbers and extent. */
-type Described =
-  | { kind: 'stroke'; style: StrokeStyle; minScale?: number; maxScale?: number; from: number; len: number; bounds: [number, number, number, number]; w: number; h: number }
-  | { kind: 'fill'; style: FillPaint; minScale?: number; maxScale?: number; from: number; len: number; bounds: [number, number, number, number]; w: number; h: number }
-  | { kind: 'marker'; style: MarkerStyle; minScale?: number; maxScale?: number; from: number; len: number; bounds: [number, number, number, number]; w: number; h: number };
+type Described = (
+  | { kind: 'stroke'; style: StrokeStyle }
+  | { kind: 'fill'; style: FillPaint }
+  | { kind: 'marker'; style: MarkerStyle }
+) & { minScale?: number; maxScale?: number; from: number; len: number; bounds: [number, number, number, number]; origin?: [number, number]; w: number; h: number };
 
 const ANCHOR: Record<string, readonly [number, number]> = {
   center: [0, 0],
@@ -171,8 +172,41 @@ class Looks {
   }
 }
 
-/** A batch's scale range, only where the rule gave one. */
-const scaleOf = (d: Described) => ({ ...(d.minScale !== undefined ? { minScale: d.minScale } : {}), ...(d.maxScale !== undefined ? { maxScale: d.maxScale } : {}) });
+/** A batch's scale range, only where the rule gave one; its tile's origin, only away from the anchor (docs/adr/0157). */
+const scaleOf = (d: Described) => ({
+  ...(d.minScale !== undefined ? { minScale: d.minScale } : {}),
+  ...(d.maxScale !== undefined ? { maxScale: d.maxScale } : {}),
+  ...(d.origin ? { origin: d.origin } : {}),
+});
+
+/** The rest of `v` over `period`, never below zero (Rust's `rem_euclid`); 0 for no period. */
+function rest(v: number, period: number): number {
+  if (!(period > 0)) return 0;
+  const r = v % period;
+  return r < 0 ? r + period : r;
+}
+
+/** A dash pattern's length as the shader repeats it: an odd pattern twice, cut to eight values (`dashValues`). */
+function dashPeriod(dash: readonly number[]): number {
+  const even = dash.length % 2 ? [...dash, ...dash] : [...dash];
+  return even.slice(0, 8).reduce((s, v) => s + v, 0);
+}
+
+/**
+ * A paint whose phase comes from the world (a hatch, a tile or a pattern in metres) drawn from its tile's origin `o`
+ * rather than the anchor: its offsets folded so that the shader, given positions from the tile, draws the very
+ * pattern it would from the anchor (docs/adr/0157 §3). The desktop's `fold` (native style `batches.rs`) is its twin.
+ */
+function fold(paint: FillPaintBatch, o: readonly [number, number] | undefined): FillPaintBatch {
+  if (!o || (o[0] === 0 && o[1] === 0) || paint.kind === 'solid' || paint.unit !== 'world') return paint;
+  const [c, s] = [Math.cos(paint.angle), Math.sin(paint.angle)];
+  if (paint.kind === 'hatch')
+    return { ...paint, offset: paint.offset - rest(-s * o[0] + c * o[1], paint.spacing), dashOffset: paint.dashOffset + rest(c * o[0] + s * o[1], paint.dash ? dashPeriod(paint.dash) : 0) };
+  const turned = [c * o[0] + s * o[1], -s * o[0] + c * o[1]];
+  // Staggered rows alternate: two rows make the period, so a row keeps its kind.
+  const rows = paint.kind === 'pattern' && paint.stagger ? 2 * paint.size[1] : paint.size[1];
+  return { ...paint, offset: [paint.offset[0] - rest(turned[0], paint.size[0]), paint.offset[1] - rest(turned[1], rows)] };
+}
 
 /** The core's batches of a layer as GPU batches, in the core's (draw) order. */
 export function styledBatches(json: string, data: Float32Array, opts: BatchOptions): StyledBatch[] {
@@ -185,7 +219,7 @@ export function styledBatches(json: string, data: Float32Array, opts: BatchOptio
         return { kind: 'stroke', segments: nums, color: looks.rgba(s.color, s.opacity), width: s.width, unit: s.unit, dash: s.dash ? s.dash.slice(0, 8) : null, dashOffset: s.dashOffset, cap: s.cap, blur: s.blur, bounds: d.bounds, reach: d.w + 1, reachUnit: s.unit, ...scaleOf(d) };
       }
       case 'fill':
-        return { kind: 'fill', positions: nums, paint: looks.paint(d.style), bounds: d.bounds, reach: 0, reachUnit: 'world', ...scaleOf(d) };
+        return { kind: 'fill', positions: nums, paint: fold(looks.paint(d.style), d.origin), bounds: d.bounds, reach: 0, reachUnit: 'world', ...scaleOf(d) };
       case 'marker': {
         const s = d.style;
         const look = looks.look(s);

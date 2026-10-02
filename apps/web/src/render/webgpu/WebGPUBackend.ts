@@ -30,7 +30,8 @@ interface GpuLayer {
 
 const SHAPES = { ring: 0, cross: 1, triangle: 2 } as const;
 /** Frame uniform: offset, scale, pxPerUnit, dpr, viewport (8 floats). */
-const FRAME_BYTES = 32;
+/** The frame uniform: the styled contract's `Frame` (version 3, docs/adr/0157), which the plain pipelines read the head of. */
+const FRAME_BYTES = 40;
 /** Style uniform: color, dash, size, shape, pad (12 × 4 bytes). */
 const STYLE_BYTES = 48;
 /**
@@ -311,10 +312,12 @@ export class WebGPUBackend implements RenderBackend {
     this.overlayIds = new Set(frame.overlays);
     const key = `${view.center.x},${view.center.y},${view.scale},${w}x${h},${frame.scaleDenominator},${frame.clearColor.join()},${frame.underlays.join()}|${frame.order.join()}`;
     const drawBase = !frame.keepBase || key !== this.baseKey;
+    // The camera centre's float32 high part first, its low part last: the styled shaders take it from each batch's tile.
+    const [cx, cy] = [Math.fround(view.center.x), Math.fround(view.center.y)];
     device.queue.writeBuffer(
       this.frameBuffer,
       0,
-      new Float32Array([view.center.x, view.center.y, (2 * view.scale) / view.width, (2 * view.scale) / view.height, view.scale * this.dpr, this.dpr, w, h]),
+      new Float32Array([cx, cy, (2 * view.scale) / view.width, (2 * view.scale) / view.height, view.scale * this.dpr, this.dpr, w, h, view.center.x - cx, view.center.y - cy]),
     );
     const [r, g, b] = frame.clearColor;
     const encoder = device.createCommandEncoder();

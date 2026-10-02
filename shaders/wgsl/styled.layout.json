@@ -1,8 +1,8 @@
 {
   "format": "kentos.wgsl-layout",
-  "version": 2,
+  "version": 3,
   "module": "styled",
-  "description": "KentOS styled drawing (docs/STYLE.md §6): the style engine's batches (render/types.ts StyledBatch) as strokes, fills with a per-pixel paint and markers. The web's WebGPU backend joins these sources in this order (apps/web/src/render/webgpu/styledShaders.ts) and scripts/wgsl/browser-check.mjs compiles them in a browser's WebGPU and builds these pipelines; the native renderer is to be checked against the same file. The WebGL2 twin is apps/web/src/render/webgl2/styledShaders.ts. Any change to a struct, attribute, binding or packing raises the version. Version 2 binds the atlas in group 0 beside the frame: a native wgpu device may offer only two bind groups (Iced’s does).",
+  "description": "KentOS styled drawing (docs/STYLE.md §6): the style engine's batches (render/types.ts StyledBatch) as strokes, fills with a per-pixel paint and markers. The web's WebGPU backend joins these sources in this order (apps/web/src/render/webgpu/styledShaders.ts) and scripts/wgsl/browser-check.mjs compiles them in a browser's WebGPU and builds these pipelines; the native renderer is to be checked against the same file. The WebGL2 twin is apps/web/src/render/webgl2/styledShaders.ts. Any change to a struct, attribute, binding or packing raises the version. Version 2 binds the atlas in group 0 beside the frame: a native wgpu device may offer only two bind groups (Iced’s does). Version 3 (docs/adr/0157) packs a batch's positions from its tile: the frame carries the camera centre's low part (offsetLo) and each style block its tile's origin.",
   "sources": [
     "styled/common.wgsl",
     "styled/shapes.wgsl",
@@ -28,18 +28,19 @@
   ],
   "structs": {
     "Frame": {
-      "size": 32,
+      "size": 40,
       "align": 8,
       "fields": [
         { "name": "offset", "type": "vec2<f32>", "offset": 0 },
         { "name": "scale", "type": "vec2<f32>", "offset": 8 },
         { "name": "pxPerM", "type": "f32", "offset": 16 },
         { "name": "dpr", "type": "f32", "offset": 20 },
-        { "name": "viewport", "type": "vec2<f32>", "offset": 24 }
+        { "name": "viewport", "type": "vec2<f32>", "offset": 24 },
+        { "name": "offsetLo", "type": "vec2<f32>", "offset": 32 }
       ]
     },
     "SStyle": {
-      "size": 144,
+      "size": 160,
       "align": 16,
       "fields": [
         { "name": "color", "type": "vec4<f32>", "offset": 0 },
@@ -50,7 +51,8 @@
         { "name": "a", "type": "vec4<f32>", "offset": 80 },
         { "name": "b", "type": "vec4<f32>", "offset": 96 },
         { "name": "c", "type": "vec4<f32>", "offset": 112 },
-        { "name": "flags", "type": "vec4<u32>", "offset": 128 }
+        { "name": "flags", "type": "vec4<u32>", "offset": 128 },
+        { "name": "origin", "type": "vec4<f32>", "offset": 144 }
       ]
     }
   },

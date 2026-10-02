@@ -1,10 +1,11 @@
 // Styled drawing (docs/STYLE.md §6): the frame and batch style uniforms, the atlas, and helpers every styled pipeline uses.
 struct Frame {
-  offset: vec2f,     // camera centre, origin-relative metres
+  offset: vec2f,     // camera centre, origin-relative metres: the float32 high part
   scale: vec2f,
   pxPerM: f32,       // device px per metre
   dpr: f32,
   viewport: vec2f,   // device px
+  offsetLo: vec2f,   // the camera centre's low part (contract version 3)
 };
 struct SStyle {
   color: vec4f,
@@ -16,6 +17,7 @@ struct SStyle {
   b: vec4f,
   c: vec4f,
   flags: vec4u,      // unit, cap | kind, shape, fit
+  origin: vec4f,     // xy: the batch's tile from the layers' origin, metres, exact (zw unused)
 };
 // Two groups (contract version 2): the frame and the atlas together, then the batch's style. A native wgpu
 // device may offer only two bind groups (Iced's does), so the atlas sits beside the frame.
@@ -24,7 +26,10 @@ struct SStyle {
 @group(0) @binding(2) var atlasSmp: sampler;
 @group(1) @binding(0) var<uniform> st: SStyle;
 
-fn toPx(p: vec2f) -> vec2f { return (p - frame.offset) * frame.pxPerM; }
+// A position is from its batch's tile (docs/adr/0157). The camera's high part less the tile's origin is exact (the
+// origin is a whole multiple of 2^16 m near it); a position near the camera less that is exact too, and small; the
+// camera's low part comes off last, so no step of the camera is lost however far the tile lies from the anchor.
+fn toPx(p: vec2f) -> vec2f { return ((p - (frame.offset - st.origin.xy)) - frame.offsetLo) * frame.pxPerM; }
 fn pxToClip(px: vec2f) -> vec4f { return vec4f(px / (0.5 * frame.viewport), 0.0, 1.0); }
 fn unitK() -> f32 { if (st.flags.x == 0u) { return frame.pxPerM; } return frame.dpr; }
 fn fmod(x: f32, y: f32) -> f32 { return x - y * floor(x / y); }

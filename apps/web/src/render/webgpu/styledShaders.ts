@@ -13,7 +13,7 @@ import stroke from '../../../../../shaders/wgsl/styled/stroke.wgsl?raw';
  * styled.layout.json): joined here in the contract's order, each under a
  * `// ── path ──` line, the way scripts/wgsl/browser-check.mjs joins them.
  * Group 0 is the frame with the atlas beside it (the styled pipelines' own
- * group; contract version 2), group 1 the batch style. The atlas has one level (images are drawn at
+ * group; contract version 3), group 1 the batch style with its tile's origin. The atlas has one level (images are drawn at
  * their shown size), so it is sampled with textureSampleLevel, which needs
  * no uniform control flow.
  */

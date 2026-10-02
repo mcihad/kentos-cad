@@ -80,6 +80,21 @@ const WEIGHTS: NewEntity[] = [
   { kind: 'polyline', layerId: 'k', attrs: {}, pts: [P(0, 25), P(20, 25)] },
 ];
 
+/**
+ * Objects at the anchor and the same ones 4 400 km from it, in a local survey's coordinates (docs/adr/0157): the far
+ * objects make batches of their own, packed from their tile, the world paints' phases (hatch, pattern, tile) folded.
+ */
+const L = (x: number, y: number) => ({ x: 1000 + x, y: 2000 + y });
+const FAR: NewEntity[] = [
+  ...OWN,
+  { kind: 'polygon', layerId: 'k', attrs: {}, symbol: 'alan-tarama', pts: [L(0, 0), L(20, 0), L(20, 15), L(0, 15)] },
+  { kind: 'polygon', layerId: 'k', attrs: {}, symbol: 'alan-desen', pts: [L(25, 0), L(45, 0), L(45, 15), L(25, 15)] },
+  { kind: 'polygon', layerId: 'k', attrs: {}, symbol: 'alan-doku', pts: [L(50, 0), L(60, 0), L(60, 10), L(50, 10)] },
+  { kind: 'polyline', layerId: 'k', attrs: {}, symbol: 'cizgi-oklu', pts: [L(0, 20), L(30, 20), L(30, 35)] },
+  { kind: 'point', layerId: 'k', attrs: {}, symbol: 'nokta-agac', p: L(40, 25) },
+  { kind: 'point', layerId: 'k', attrs: {}, p: L(50, 25) },
+];
+
 const CATEGORIZED: LayerStyle = {
   ...SIMPLE,
   renderer: {
@@ -140,6 +155,7 @@ const INPUTS: Input[] = [
   { id: 'categorized-off', title: 'Kategorili işleyici, Arsa kapalı: Arsa çizilmez, diğer değerlere de düşmez', style: CATEGORIZED_OFF, entities: DRAWING, plotScale: 500, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true } },
   { id: 'own-weights', title: 'Kendi kalınlığı olan nesneler: en ince, DXF’in en kalını, kendi rengiyle biri ve kalınlığı olmayan (katmanınki)', style: SIMPLE, entities: WEIGHTS, plotScale: 1000, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true } },
   { id: 'own-weights-hairlines', title: 'Kendi kalınlığı olan nesneler, kalınlıklar kapalı: hepsi bir piksel', style: SIMPLE, entities: WEIGHTS, plotScale: 1000, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: false } },
+  { id: 'far-tile', title: 'Çapada ve 4 400 km ötede, yerel koordinatlarda aynı nesneler: uzaktakiler kendi karolarının toplulukları, dünyaya bağlı desenlerin evresi katlanmış', style: SIMPLE, entities: FAR, plotScale: 1000, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true } },
 ];
 
 it.runIf(!!process.env.GOLDEN_WRITE)('records the styled layers’ way to the GPU', () => {

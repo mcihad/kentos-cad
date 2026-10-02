@@ -5,11 +5,19 @@
 //! finished. Batches come out in symbol-level order: by level, and within a
 //! level fills, lines, markers, each with its box so a frame can skip what
 //! is out of view. The page gives them their colours and atlas images.
+//!
+//! Positions are relative to their tile (docs/adr/0157): a grid of
+//! [`TILE`]-metre squares centred on the drawing's anchor. A primitive takes
+//! the tile of its first point, and a style's primitives in two tiles are two
+//! batches; a batch outside the anchor's tile says its tile's origin
+//! (`origin`, from the anchor). So float32 loses no more than a tile's size
+//! allows, however far the drawing lies from its anchor; around the anchor
+//! (±32 km) nothing changes.
 
 use std::collections::HashMap;
 
 use kentos_geometry_core::Vec2;
-use kentos_geometry_core::jsmath::{js_cmp, js_hypot, js_max, stable_sort};
+use kentos_geometry_core::jsmath::{js_cmp, js_hypot, js_max, js_round, stable_sort};
 use kentos_geometry_core::triangulate::triangulate_many;
 
 use super::prim::{FillPaint, Look, MarkerStyle, Sink, StrokeStyle, num};
@@ -18,6 +26,10 @@ use crate::js::number;
 
 /// Height of a text marker's box relative to its font size (`TEXT_BOX`).
 pub const TEXT_BOX: f64 = 1.25;
+
+/// The side of the tiles positions are packed against, metres (docs/adr/0157):
+/// a tile's origin is a whole multiple of it from the anchor, exact in float32.
+pub const TILE: f64 = 65536.0;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Kind {
@@ -39,6 +51,9 @@ impl Kind {
 /// A batch while it is being filled.
 struct Entry {
     kind: Kind,
+    /// Its tile, and the tile's origin (absolute) its numbers are relative to.
+    tile: [f64; 2],
+    base: Vec2,
     /// The first style's JSON (the page builds the batch's look from it).
     style: String,
     scale: Scale,
@@ -88,9 +103,10 @@ pub struct BatchSink {
 /// How many styles of a kind are remembered.
 const RECENT: usize = 16;
 
-/// The latest styles seen (with their scale range) and their batches, newest replacing the oldest.
+/// The latest styles seen (with their scale range and tile) and their
+/// batches, newest replacing the oldest.
 struct Recent<T> {
-    list: Vec<(T, Scale, usize)>,
+    list: Vec<(T, Scale, [f64; 2], usize)>,
     next: usize,
 }
 
@@ -102,15 +118,15 @@ impl<T: PartialEq + Clone> Recent<T> {
         }
     }
 
-    fn find(&self, style: &T, scale: Scale) -> Option<usize> {
+    fn find(&self, style: &T, scale: Scale, tile: [f64; 2]) -> Option<usize> {
         self.list
             .iter()
-            .find(|(s, sc, _)| *sc == scale && s == style)
-            .map(|&(_, _, e)| e)
+            .find(|(s, sc, t, _)| *sc == scale && *t == tile && s == style)
+            .map(|&(_, _, _, e)| e)
     }
 
-    fn remember(&mut self, style: &T, scale: Scale, e: usize) {
-        let item = (style.clone(), scale, e);
+    fn remember(&mut self, style: &T, scale: Scale, tile: [f64; 2], e: usize) {
+        let item = (style.clone(), scale, tile, e);
         if self.list.len() < RECENT {
             self.list.push(item);
         } else {
@@ -150,23 +166,42 @@ impl BatchSink {
         self.scale = scale;
     }
 
+    /// The tile of a primitive whose first point is `p`: whole tiles from
+    /// the anchor, the anchor's own tile reaching ±`TILE`/2.
+    fn tile_of(&self, p: Vec2) -> [f64; 2] {
+        let t = |v: f64| {
+            let i = js_round(v / TILE);
+            // A coordinate that is no number stays with the anchor.
+            if i.is_finite() { i } else { 0.0 }
+        };
+        [t(p.x - self.origin.x), t(p.y - self.origin.y)]
+    }
+
     fn entry(
         &mut self,
         key: &str,
         kind: Kind,
         level: f64,
+        tile: [f64; 2],
         style: impl FnOnce() -> String,
     ) -> usize {
         let k = format!(
-            "{key}|{}|{}",
+            "{key}|{}|{}|{}|{}",
             scale_key(self.scale.min),
-            scale_key(self.scale.max)
+            scale_key(self.scale.max),
+            number::to_string(tile[0]),
+            number::to_string(tile[1])
         );
         if let Some(&i) = self.index.get(&k) {
             return i;
         }
         self.entries.push(Entry {
             kind,
+            tile,
+            base: Vec2::new(
+                self.origin.x + tile[0] * TILE,
+                self.origin.y + tile[1] * TILE,
+            ),
             style: style(),
             scale: self.scale,
             level,
@@ -186,7 +221,7 @@ impl BatchSink {
     }
 
     /// Triangulates the queued fills in one call, appending each fill's
-    /// triangles (x, y relative to the origin) to its batch in queue order.
+    /// triangles (x, y relative to its tile) to its batch in queue order.
     fn triangulate(&mut self) {
         if self.fills.is_empty() {
             return;
@@ -204,7 +239,6 @@ impl BatchSink {
             ends.push(pts.len());
         }
         let idx = triangulate_many(&pts, &ring_sizes, &poly_rings);
-        let (ox, oy) = (self.origin.x, self.origin.y);
         let mut poly = 0;
         for t in idx.chunks_exact(3) {
             let [a, b, c] = [t[0] as usize, t[1] as usize, t[2] as usize];
@@ -214,6 +248,7 @@ impl BatchSink {
             let Some(&(entry, _)) = self.fills.get(poly) else {
                 break;
             };
+            let (ox, oy) = (self.entries[entry].base.x, self.entries[entry].base.y);
             self.entries[entry].data.extend([
                 pts[a].x - ox,
                 pts[a].y - oy,
@@ -273,7 +308,15 @@ impl BatchSink {
                 }
                 num(&mut json, *b);
             }
-            json.push_str("],\"w\":");
+            json.push(']');
+            if e.tile != [0.0, 0.0] {
+                json.push_str(",\"origin\":[");
+                num(&mut json, e.tile[0] * TILE);
+                json.push(',');
+                num(&mut json, e.tile[1] * TILE);
+                json.push(']');
+            }
+            json.push_str(",\"w\":");
             num(&mut json, e.w);
             json.push_str(",\"h\":");
             num(&mut json, e.h);
@@ -287,18 +330,24 @@ impl BatchSink {
 
 impl Sink for BatchSink {
     fn stroke(&mut self, style: &StrokeStyle, path: &[Vec2], closed: bool) {
-        let e = match self.recent_strokes.find(style, self.scale) {
+        // An empty path still makes its batch, as before tiles (the batches' order).
+        let tile = path.first().map_or([0.0, 0.0], |&p| self.tile_of(p));
+        let e = match self.recent_strokes.find(style, self.scale, tile) {
             Some(e) => e,
             None => {
                 let mut key = String::from("s|");
                 style.write_json(&mut key);
-                let e = self.entry(&key, Kind::Stroke, style.level, || key[2..].to_string());
-                self.recent_strokes.remember(style, self.scale, e);
+                let e = self.entry(&key, Kind::Stroke, style.level, tile, || {
+                    key[2..].to_string()
+                });
+                self.recent_strokes.remember(style, self.scale, tile, e);
                 e
             }
         };
+        // The numbers from the tile's origin; the box from the anchor.
         let (ox, oy) = (self.origin.x, self.origin.y);
         let e = &mut self.entries[e];
+        let (tx, ty) = (e.base.x, e.base.y);
         e.w = js_max(e.w, style.width / 2.0 + style.blur);
         let n = path.len();
         let count = if closed { n } else { n.saturating_sub(1) };
@@ -312,9 +361,9 @@ impl Sink for BatchSink {
             }
             let ends = if !closed && i == 0 { 1.0 } else { 0.0 }
                 + if !closed && i + 1 == count { 2.0 } else { 0.0 };
-            let (ax, ay) = (a.x - ox, a.y - oy);
-            e.data.extend([ax, ay, b.x - ox, b.y - oy, d, ends]);
-            e.grow(ax, ay);
+            e.data
+                .extend([a.x - tx, a.y - ty, b.x - tx, b.y - ty, d, ends]);
+            e.grow(a.x - ox, a.y - oy);
             d += len;
         }
         // The last point of an open path is no segment's start.
@@ -328,13 +377,16 @@ impl Sink for BatchSink {
         if rings.first().is_none_or(|r| r.len() < 3) {
             return;
         }
-        let e = match self.recent_fills.find(paint, self.scale) {
+        let tile = self.tile_of(rings[0][0]);
+        let e = match self.recent_fills.find(paint, self.scale, tile) {
             Some(e) => e,
             None => {
                 let mut key = String::from("f|");
                 paint.write_json(&mut key);
-                let e = self.entry(&key, Kind::Fill, paint.level(), || key[2..].to_string());
-                self.recent_fills.remember(paint, self.scale, e);
+                let e = self.entry(&key, Kind::Fill, paint.level(), tile, || {
+                    key[2..].to_string()
+                });
+                self.recent_fills.remember(paint, self.scale, tile, e);
                 e
             }
         };
@@ -346,16 +398,17 @@ impl Sink for BatchSink {
     }
 
     fn marker(&mut self, style: &MarkerStyle, at: Vec2, angle: f64) {
-        let e = match self.recent_markers.find(style, self.scale) {
+        let tile = self.tile_of(at);
+        let e = match self.recent_markers.find(style, self.scale, tile) {
             Some(e) => e,
             None => {
                 let key = style.key();
-                let e = self.entry(&key, Kind::Marker, style.common.level, || {
+                let e = self.entry(&key, Kind::Marker, style.common.level, tile, || {
                     let mut s = String::new();
                     style.write_json(&mut s);
                     s
                 });
-                self.recent_markers.remember(style, self.scale, e);
+                self.recent_markers.remember(style, self.scale, tile, e);
                 e
             }
         };
@@ -366,7 +419,13 @@ impl Sink for BatchSink {
         };
         let (x, y) = (at.x - self.origin.x, at.y - self.origin.y);
         let e = &mut self.entries[e];
-        e.data.extend([x, y, angle + style.common.rotation, w, h]);
+        e.data.extend([
+            at.x - e.base.x,
+            at.y - e.base.y,
+            angle + style.common.rotation,
+            w,
+            h,
+        ]);
         e.grow(x, y);
         if w > e.w {
             e.w = w;
@@ -374,5 +433,86 @@ impl Sink for BatchSink {
         if h > e.h {
             e.h = h;
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    //! Tiles (docs/adr/0157): a style's primitives near the anchor and
+    //! 4 400 km from it are two batches, the far one packed from its tile and
+    //! saying the tile's origin; near the anchor nothing changes.
+    use super::*;
+    use crate::style::prim::PrimUnit;
+
+    fn line() -> StrokeStyle {
+        StrokeStyle {
+            color: "#2E7D32".into(),
+            opacity: 1.0,
+            width: 0.35,
+            unit: PrimUnit::World,
+            dash: None,
+            dash_offset: 0.0,
+            cap: "butt".into(),
+            join: "miter".into(),
+            blur: 0.0,
+            level: 0.0,
+        }
+    }
+
+    const ANCHOR: Vec2 = Vec2 {
+        x: 487_100.0,
+        y: 4_420_200.0,
+    };
+
+    #[test]
+    fn far_primitives_make_a_batch_of_their_own_packed_from_its_tile() {
+        let mut sink = BatchSink::new(ANCHOR);
+        let near = [
+            Vec2::new(487_110.0, 4_420_210.0),
+            Vec2::new(487_130.5, 4_420_210.0),
+        ];
+        let far = [Vec2::new(1062.5, 2003.25), Vec2::new(1060.75, 2041.5)];
+        sink.stroke(&line(), &near, false);
+        sink.stroke(&line(), &far, false);
+        sink.stroke(&line(), &near, false);
+        let out = sink.finish();
+        let batches: serde_json::Value = serde_json::from_str(&out.json).expect("reads");
+        let batches = batches.as_array().expect("an array");
+        assert_eq!(batches.len(), 2, "one style, two tiles");
+        // The anchor's tile: no origin, numbers from the anchor as before.
+        assert!(batches[0].get("origin").is_none());
+        assert_eq!(&out.data[..4], &[10.0, 10.0, 30.5, 10.0]);
+        assert_eq!(batches[0]["len"], 12, "both near lines");
+        // The far tile: (−7, −67) tiles from the anchor; its numbers from there.
+        assert_eq!(
+            batches[1]["origin"],
+            serde_json::json!([-458_752, -4_390_912])
+        );
+        let base = [ANCHOR.x - 458_752.0, ANCHOR.y - 4_390_912.0];
+        let from = batches[1]["from"].as_u64().expect("from") as usize;
+        assert_eq!(
+            &out.data[from..from + 4],
+            &[
+                (1062.5 - base[0]) as f32,
+                (2003.25 - base[1]) as f32,
+                (1060.75 - base[0]) as f32,
+                (2041.5 - base[1]) as f32,
+            ]
+        );
+        // The box is from the anchor, as every batch's.
+        assert_eq!(batches[1]["bounds"][0].as_f64(), Some(1060.75 - ANCHOR.x));
+    }
+
+    #[test]
+    fn the_anchor_s_tile_reaches_half_a_tile_each_way() {
+        let sink = BatchSink::new(ANCHOR);
+        let at = |dx: f64, dy: f64| sink.tile_of(Vec2::new(ANCHOR.x + dx, ANCHOR.y + dy));
+        assert_eq!(at(0.0, 0.0), [0.0, 0.0]);
+        assert_eq!(at(32_767.9, -32_767.9), [0.0, 0.0]);
+        // A half rounds up (`Math.round`).
+        assert_eq!(at(32_768.0, -32_768.0), [1.0, 0.0]);
+        assert_eq!(at(-98_304.1, 0.0), [-2.0, 0.0]);
+        // A coordinate that is no number stays with the anchor.
+        assert_eq!(sink.tile_of(Vec2::new(f64::NAN, f64::INFINITY)), [0.0, 0.0]);
     }
 }

@@ -9,11 +9,13 @@
 
 /** Frame transform shared by the styled programs: origin-relative metres → device px → clip. */
 const FRAME = /* glsl */ `
-uniform vec2 u_cam;       // camera centre, origin-relative metres
+uniform vec2 u_cam;       // camera centre from the batch's tile, metres: the float32 high part
+uniform vec2 u_camLo;     // and its low part (docs/adr/0157)
 uniform float u_pxPerM;   // device px per metre
 uniform float u_dpr;
 uniform vec2 u_viewPx;    // viewport size in device px
-vec2 toPx(vec2 p) { return (p - u_cam) * u_pxPerM; }
+// A position near the camera less its high part is exact and small; the low part comes off last.
+vec2 toPx(vec2 p) { return ((p - u_cam) - u_camLo) * u_pxPerM; }
 vec4 pxToClip(vec2 px) { return vec4(px / (0.5 * u_viewPx), 0.0, 1.0); }
 `;
 
