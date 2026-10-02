@@ -17,6 +17,7 @@ use wasm_bindgen::prelude::*;
 
 pub mod faces;
 pub mod store;
+pub mod trace;
 
 fn points(xy: &[f64]) -> Vec<Vec2> {
     xy.chunks_exact(2).map(|c| Vec2::new(c[0], c[1])).collect()

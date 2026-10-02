@@ -61,4 +61,5 @@ pub(super) static TABLES: &[&[Op]] = &[
     crate::ops::rubber::OPS,
     crate::ops::edgematch::OPS,
     crate::ops::topology_edit::OPS,
+    crate::ops::trace::OPS,
 ];

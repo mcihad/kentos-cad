@@ -224,6 +224,110 @@ pub fn join_entities(list: &[Entity], tol: f64) -> Result<Joined, String> {
     Ok(Joined { groups, skipped })
 }
 
-pub(crate) static OPS: &[Op] = &[op!("joinEntities", |list: Vec<Entity>, tol: f64| {
-    join_entities(&list, tol)
-})];
+/// An object Zincir may walk through: its shape and whether its layer is locked.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ChainObject {
+    pub shape: Shape,
+    pub locked: bool,
+}
+
+impl crate::api::json::FromJson for ChainObject {
+    fn from_json(v: &Json) -> Result<ChainObject, String> {
+        Ok(ChainObject {
+            shape: crate::api::json::read_field(v, "shape")?,
+            locked: crate::api::json::read_field::<Option<bool>>(v, "locked")?.unwrap_or(false),
+        })
+    }
+}
+
+/// The chain found from an object: its members from one end to the other
+/// (their places among the objects), whether a locked object stopped it,
+/// and whether it came back round to its start.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct ChainFound {
+    pub members: Vec<usize>,
+    pub locked: bool,
+    pub closed: bool,
+}
+
+crate::json_struct!(out ChainFound {
+    members,
+    locked,
+    closed
+});
+
+/// Zincir (docs/adr/0161 §2): the objects joined end to end with the one at
+/// `seed`, walking out from both its ends (its last end first) as long as
+/// exactly one other end lies within `tol` of where the walk is: a free end
+/// (none), a junction (two or more), a locked object or the start again
+/// stops it. Only lines, arcs and polylines have ends; a locked seed is no
+/// chain.
+pub fn chain(objects: &[ChainObject], seed: usize, tol: f64) -> ChainFound {
+    let ends: Vec<Option<[Vec2; 2]>> = objects
+        .iter()
+        .map(|o| {
+            let c = chain_of(&o.shape)?;
+            Some([*c.pts.first()?, *c.pts.last()?])
+        })
+        .collect();
+    let mut found = ChainFound::default();
+    let Some(Some(seed_ends)) = ends.get(seed) else {
+        return found;
+    };
+    if objects[seed].locked {
+        return found;
+    }
+    // From the last end, then (unless the walk came round) from the first.
+    let mut sides: [Vec<usize>; 2] = [Vec::new(), Vec::new()];
+    for (side, arrived) in [(1usize, 1usize), (0, 0)] {
+        if found.closed {
+            break;
+        }
+        let (mut current, mut end) = (seed, arrived);
+        let mut at = seed_ends[side];
+        loop {
+            let others: Vec<(usize, usize)> = ends
+                .iter()
+                .enumerate()
+                .filter_map(|(j, e)| e.map(|e| (j, e)))
+                .flat_map(|(j, e)| [(j, 0usize, e[0]), (j, 1, e[1])])
+                .filter(|&(j, k, p)| !(j == current && k == end) && near(p, at, tol))
+                .map(|(j, k, _)| (j, k))
+                .collect();
+            let [(j, k)] = others[..] else {
+                break;
+            };
+            if j == seed {
+                found.closed = true;
+                break;
+            }
+            if sides.iter().flatten().any(|&m| m == j) {
+                break;
+            }
+            if objects[j].locked {
+                found.locked = true;
+                break;
+            }
+            sides[side].push(j);
+            current = j;
+            end = 1 - k;
+            at = ends[j].map_or(at, |e| e[end]);
+        }
+    }
+    let [before, after] = sides;
+    found.members = before.into_iter().rev().collect();
+    found.members.push(seed);
+    found.members.extend(after);
+    found
+}
+
+pub(crate) static OPS: &[Op] = &[
+    op!("joinEntities", |list: Vec<Entity>, tol: f64| {
+        join_entities(&list, tol)
+    }),
+    op!("joinChain", |objects: Vec<ChainObject>,
+                      seed: usize,
+                      tol: f64| {
+        chain(&objects, seed, tol)
+    }),
+];

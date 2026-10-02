@@ -298,7 +298,7 @@ fn merge_straight(cycle: &[DirPiece], verts: &Vertices) -> (Vec<Edge>, Vec<usize
     (edges, from)
 }
 
-fn joinable(a: &Edge, b: &Edge) -> Option<Edge> {
+pub(crate) fn joinable(a: &Edge, b: &Edge) -> Option<Edge> {
     match (*a, *b) {
         (Edge::Seg { a: aa, b: ab }, Edge::Seg { a: ba, b: bb }) => {
             let ux = ab.x - aa.x;
@@ -446,7 +446,7 @@ fn assemble(local: Vec<LocalRing>) -> Vec<Area> {
 
 // ── Entry points ──────────────────────────────────────────────────────
 
-fn origin_of(sources: &[Source]) -> Vec2 {
+pub(crate) fn origin_of(sources: &[Source]) -> Vec2 {
     for s in sources {
         if let Some(e) = s.edges.first() {
             return point_at(e, 0.0);
@@ -456,7 +456,7 @@ fn origin_of(sources: &[Source]) -> Vec2 {
 }
 
 /// Moves everything near the origin: intersections are computed on small numbers.
-fn localize(sources: &[Source], o: Vec2) -> Vec<Source> {
+pub(crate) fn localize(sources: &[Source], o: Vec2) -> Vec<Source> {
     sources
         .iter()
         .map(|s| Source {

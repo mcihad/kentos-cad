@@ -19,6 +19,7 @@ import {
   scratchPathLength as wasmScratchPathLength,
   scratchPointInPolygon as wasmScratchPointInPolygon,
   scratchSignedArea as wasmScratchSignedArea,
+  TraceGraph,
   transformObjects as wasmTransformObjects,
   triangulateMany as wasmTriangulateMany,
 } from './pkg/kentos_geometry_wasm.js';
@@ -357,6 +358,38 @@ export class CoreFaceIndex {
 
   private get(): FaceIndex {
     if (!this.raw) throw new Error('Yüz dizini bırakıldı.');
+    return this.raw;
+  }
+}
+
+/**
+ * İzle's graph of line work kept in the core between calls (docs/adr/0161 §5): built once per view, asked for the
+ * way to the cursor on every pointer move. Results come back parsed.
+ */
+export class CoreTraceGraph {
+  private raw: TraceGraph | null;
+
+  private constructor(raw: TraceGraph) {
+    this.raw = raw;
+  }
+
+  /** From the line work of entities (a JSON array). */
+  static ofEntities(entitiesJson: string): CoreTraceGraph {
+    return new CoreTraceGraph(typed(() => TraceGraph.ofEntities(entitiesJson)));
+  }
+
+  path(ax: number, ay: number, bx: number, by: number): unknown {
+    return readResult(typed(() => this.get().path(ax, ay, bx, by)));
+  }
+
+  /** Releases the core's copy now instead of when the object is collected. */
+  free(): void {
+    this.raw?.free();
+    this.raw = null;
+  }
+
+  private get(): TraceGraph {
+    if (!this.raw) throw new Error('İzleme çizgesi bırakıldı.');
     return this.raw;
   }
 }
