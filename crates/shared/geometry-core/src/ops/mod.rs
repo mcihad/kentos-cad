@@ -8,6 +8,7 @@ pub mod edges;
 pub mod elevation;
 pub mod explode;
 pub mod fillet;
+pub mod fit;
 pub mod grips;
 pub mod join;
 pub mod lengthen;
