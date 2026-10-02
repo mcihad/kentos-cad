@@ -160,7 +160,10 @@ impl App {
         };
         let count = format!("{} / {} nokta", rows.shown.len(), rows.points.len());
         {
+            // As wide as its place: the box's own width (206 px, more with a
+            // larger interface text) ran under the layer choice beside it.
             let search = SearchBox::new(search.clone(), texts::SEARCH, |t| msg(Event::Search(t)))
+                .fill()
                 .height(28.0);
             let mut choices = vec![Choice::new(texts::ALL_LAYERS)];
             choices.extend(labels.iter().map(Choice::new));
