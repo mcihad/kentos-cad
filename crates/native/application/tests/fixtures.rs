@@ -390,8 +390,31 @@ impl Input for EntitiesTransform {
                 .or_else(|| coordinate(target, "target", rest))
                 .or_else(|| coordinate(source2.as_mut()?, "source2", rest))
                 .or_else(|| coordinate(target2.as_mut()?, "target2", rest)),
+            // Oturt (docs/adr/0156): `transform.from.x`, `transform.a`, `transform.m[2]`, `transform.h[6]` …
+            Transform::Similarity { from, to, a, b } => match rest {
+                "a" => Some(a),
+                "b" => Some(b),
+                _ => coordinate(from, "from", rest).or_else(|| coordinate(to, "to", rest)),
+            },
+            Transform::Affine { from, to, m } => indexed(m, "m", rest)
+                .or_else(|| coordinate(from, "from", rest))
+                .or_else(|| coordinate(to, "to", rest)),
+            Transform::Projective { from, to, h } => indexed(h, "h", rest)
+                .or_else(|| coordinate(from, "from", rest))
+                .or_else(|| coordinate(to, "to", rest)),
         }
     }
+}
+
+/// `name[i]` of a fixed list of numbers.
+fn indexed<'a>(values: &'a mut [f64], name: &str, path: &str) -> Option<&'a mut f64> {
+    let i: usize = path
+        .strip_prefix(name)?
+        .strip_prefix('[')?
+        .strip_suffix(']')?
+        .parse()
+        .ok()?;
+    values.get_mut(i)
 }
 
 impl Input for EntitiesArray {

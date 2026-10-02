@@ -751,9 +751,10 @@ class FeatureChange(_Union):
 
 
 class Transform(_Union):
-    """One similarity of the plane, given as the modify tools ask for it
-    (docs/adr/0037, 0047). Coordinates are x east (Y), y north (X), in the
-    project's units (m), float64.
+    """One transform of the plane: a similarity as the modify tools ask for it
+    (docs/adr/0037, 0047), or Vektör oturtma's similarity, affine or
+    projective transform in centred form (docs/adr/0156 §6). Coordinates are
+    x east (Y), y north (X), in the project's units (m), float64.
 
     One of:
 
@@ -762,6 +763,9 @@ class Transform(_Union):
     - :class:`ScaleTransform` (``kind: scale``)
     - :class:`MirrorTransform` (``kind: mirror``)
     - :class:`AlignTransform` (``kind: align``)
+    - :class:`SimilarityTransform` (``kind: similarity``)
+    - :class:`AffineTransform` (``kind: affine``)
+    - :class:`ProjectiveTransform` (``kind: projective``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -2732,11 +2736,21 @@ class EntitiesTransform(_Model):
     in their order), `invalid_factor` (a scale not above zero),
     `invalid_axis` (a mirror axis without a direction), `invalid_align` (an
     alignment's second pair given by half, or its source or target points
-    within a nanometre of the first's), `invalid_revision`,
-    `revision_conflict` (status `conflict`), `entity_not_found` (each id in
-    order), `layer_locked`, then `not_finite` again (path `transform`) when
-    the transform would carry a coordinate past the largest float64; on the
-    desktop also `slots_exhausted` for copies.
+    within a nanometre of the first's), `invalid_transform` (an affine or
+    projective transform whose linear part squashes the plane: its
+    determinant under 1e-12 of its columns' lengths' product),
+    `invalid_revision`, `revision_conflict` (status `conflict`),
+    `entity_not_found` (each id in order), `layer_locked`, `beyond_horizon`
+    (a point of an object beyond a projective transform's horizon), then
+    `not_finite` again (path `transform`) when the transform would carry a
+    coordinate past the largest float64; on the desktop also
+    `slots_exhausted` for copies.
+
+    The undo step of the similarity, affine and projective transforms is
+    “Oturt”. When the transform is not a similarity the output warns with
+    `warp_curves` (objects whose curves became straight vertices) and
+    `warp_shapes` (texts, notes, blocks, dimensions and hatch patterns that
+    kept their shape), each with its count.
     Attributes:
         uids: The objects' persistent ids (lowercase UUID text with hyphens), at least one.
         transform: What happens to them.
@@ -6165,6 +6179,96 @@ class AlignTransform(Transform):
         )
 
 
+@dataclass(kw_only=True, slots=True)
+class SimilarityTransform(Transform):
+    """Oturt (docs/adr/0156): a similarity between centred frames, `from`
+    the source centre, `to` the target's: x′ = to.x + a·x̄ − b·ȳ,
+    y′ = to.y + b·x̄ + a·ȳ, x̄ = x − from.x, ȳ = y − from.y. Every kind
+    moves as the modify tools move it.
+    """
+    TAG_VALUE: ClassVar[str] = "similarity"
+    from_: Vec2
+    to: Vec2
+    a: float
+    b: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "similarity"}
+        out["from"] = _vec2_out(self.from_)
+        out["to"] = _vec2_out(self.to)
+        out["a"] = float(self.a)
+        out["b"] = float(self.b)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SimilarityTransform:
+        return cls(
+            from_=Vec2.from_json(data["from"]),
+            to=Vec2.from_json(data["to"]),
+            a=float(data["a"]),
+            b=float(data["b"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AffineTransform(Transform):
+    """Oturt: an affine transform between centred frames, `m` = [a, b, c, d]:
+    x′ = to.x + a·x̄ + c·ȳ, y′ = to.y + b·x̄ + d·ȳ. Not a similarity: a
+    circle, an arc or an ellipse becomes the ellipse of its image (an
+    object may change its kind), a path's arc segments straight vertices
+    within 0.1 mm; texts, notes, blocks, dimensions and hatch patterns
+    keep their shape at their anchor (docs/adr/0156 §4, §5).
+    """
+    TAG_VALUE: ClassVar[str] = "affine"
+    from_: Vec2
+    to: Vec2
+    m: list[float]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "affine"}
+        out["from"] = _vec2_out(self.from_)
+        out["to"] = _vec2_out(self.to)
+        out["m"] = [float(e0) for e0 in self.m]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AffineTransform:
+        return cls(
+            from_=Vec2.from_json(data["from"]),
+            to=Vec2.from_json(data["to"]),
+            m=[float(e0) for e0 in data["m"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProjectiveTransform(Transform):
+    """Oturt: a projective transform between centred frames, `h` = [a1, a2,
+    a3, b1, b2, b3, c1, c2]: w = c1·x̄ + c2·ȳ + 1, x′ = to.x + (a1·x̄ +
+    a2·ȳ + a3)/w, y′ = to.y + (b1·x̄ + b2·ȳ + b3)/w. Lines stay straight;
+    curves become straight vertices within 0.1 mm; a point where w is
+    1e-9 or less lies beyond the horizon.
+    """
+    TAG_VALUE: ClassVar[str] = "projective"
+    from_: Vec2
+    to: Vec2
+    h: list[float]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "projective"}
+        out["from"] = _vec2_out(self.from_)
+        out["to"] = _vec2_out(self.to)
+        out["h"] = [float(e0) for e0 in self.h]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProjectiveTransform:
+        return cls(
+            from_=Vec2.from_json(data["from"]),
+            to=Vec2.from_json(data["to"]),
+            h=[float(e0) for e0 in data["h"]],
+        )
+
+
 _ARRAY_LAYOUT: dict[str, type[ArrayLayout]] = {"grid": GridArrayLayout, "polar": PolarArrayLayout, "path": PathArrayLayout}
 
 
@@ -6183,13 +6287,14 @@ _ENTITY_GEOMETRY: dict[str, type[EntityGeometry]] = {"point": PointEntityGeometr
 _FEATURE_CHANGE: dict[str, type[FeatureChange]] = {"create": CreateFeatureChange, "update": UpdateFeatureChange, "delete": DeleteFeatureChange}
 
 
-_TRANSFORM: dict[str, type[Transform]] = {"move": MoveTransform, "rotate": RotateTransform, "scale": ScaleTransform, "mirror": MirrorTransform, "align": AlignTransform}
+_TRANSFORM: dict[str, type[Transform]] = {"move": MoveTransform, "rotate": RotateTransform, "scale": ScaleTransform, "mirror": MirrorTransform, "align": AlignTransform, "similarity": SimilarityTransform, "affine": AffineTransform, "projective": ProjectiveTransform}
 
 
 __all__ = [
     "AccessSource",
     "AccessSourceName",
     "AddEntityEdit",
+    "AffineTransform",
     "AlignTransform",
     "AngleUnit",
     "AngleUnitName",
@@ -6363,6 +6468,7 @@ __all__ = [
     "ProjectSummary",
     "ProjectType",
     "ProjectTypeName",
+    "ProjectiveTransform",
     "PropertiesOperation",
     "PropertiesOperationName",
     "RayEntity",
@@ -6372,6 +6478,7 @@ __all__ = [
     "RingGeometry",
     "RotateTransform",
     "ScaleTransform",
+    "SimilarityTransform",
     "SplineEntity",
     "SplineEntityGeometry",
     "TenantKind",

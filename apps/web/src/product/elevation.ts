@@ -59,6 +59,46 @@ export function withoutElevations<T extends object>(g: T): T {
 export const hasElevation = (paths: readonly Elevated[]): boolean => paths.some((p) => p.zs.some((z) => z !== null));
 
 /**
+ * `e` with its paths given the elevations `zs`, in `elevatedPaths`' order (a line's two ends); a path where no
+ * vertex has one keeps none. What Oturt writes: the core warps the paths with their elevations (docs/adr/0156 §4).
+ * The desktop's is `crates/native/application/src/elevation.rs` `assign`.
+ */
+export function assignElevations(e: NewEntity, zs: readonly (number | null)[][]): void {
+  const take = (k: number) => (zs[k]?.some((z) => z !== null) ? [...zs[k]] : undefined);
+  const out = e as unknown as Record<string, unknown>;
+  switch (e.kind) {
+    case 'line': {
+      const ends = zs[0];
+      if (ends?.[0] != null) out.za = ends[0];
+      else delete out.za;
+      if (ends?.[1] != null) out.zb = ends[1];
+      else delete out.zb;
+      return;
+    }
+    case 'polyline':
+    case 'polygon': {
+      const outer = take(0);
+      if (outer) out.zs = outer;
+      else delete out.zs;
+      let k = 1;
+      const ring = (h: RingGeometry) => {
+        const { zs: _old, ...rest } = h;
+        const hz = take(k++);
+        return hz ? { ...rest, zs: hz } : rest;
+      };
+      if (e.kind === 'polygon' && e.holes) e.holes = e.holes.map(ring);
+      if (e.kind === 'polygon' && e.parts)
+        e.parts = e.parts.map((part) => {
+          const { zs: _z, holes: _h, bulges, ...rest } = part;
+          const pz = take(k++);
+          return { ...rest, ...(bulges && { bulges }), ...(pz && { zs: pz }), ...(part.holes && { holes: part.holes.map(ring) }) };
+        });
+      return;
+    }
+  }
+}
+
+/**
  * `e` with the elevations its vertices take from `sources` and from `same`,
  * the paths of the object it replaces (in `elevatedPaths`' order); a field
  * without any is left out. Whether any vertex got one: an object of a kind

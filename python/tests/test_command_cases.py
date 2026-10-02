@@ -13,6 +13,7 @@ reaches the command (`InvalidInput`, `not_finite`), and nothing is written.
 from __future__ import annotations
 
 import json
+import keyword
 import math
 import re
 import unittest
@@ -252,7 +253,9 @@ def _set(value: Any, part: str, new: Any) -> None:
 
 
 def _py(name: str) -> str:
-    return re.sub(r"(?<=[a-z0-9])([A-Z])", r"_\1", name).lower()
+    """`layerId` → `layer_id`; a Python keyword gets a trailing underscore, as the generated types name it (`from_`)."""
+    s = re.sub(r"(?<=[a-z0-9])([A-Z])", r"_\1", name).lower()
+    return s + "_" if keyword.iskeyword(s) else s
 
 
 class CommandCases(unittest.TestCase):

@@ -24,9 +24,10 @@ use crate::entity::{Entity, Vec2};
 pub const CAD_ENTITIES_TRANSFORM: &str = "cad.entities.transform";
 pub const CAD_ENTITIES_TRANSFORM_VERSION: u32 = 1;
 
-/// One similarity of the plane, given as the modify tools ask for it
-/// (docs/adr/0037, 0047). Coordinates are x east (Y), y north (X), in the
-/// project's units (m), float64.
+/// One transform of the plane: a similarity as the modify tools ask for it
+/// (docs/adr/0037, 0047), or Vektör oturtma's similarity, affine or
+/// projective transform in centred form (docs/adr/0156 §6). Coordinates are
+/// x east (Y), y north (X), in the project's units (m), float64.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -61,6 +62,24 @@ pub enum Transform {
         #[cfg_attr(feature = "ts", ts(optional))]
         scale: Option<bool>,
     },
+    /// Oturt (docs/adr/0156): a similarity between centred frames, `from`
+    /// the source centre, `to` the target's: x′ = to.x + a·x̄ − b·ȳ,
+    /// y′ = to.y + b·x̄ + a·ȳ, x̄ = x − from.x, ȳ = y − from.y. Every kind
+    /// moves as the modify tools move it.
+    Similarity { from: Vec2, to: Vec2, a: f64, b: f64 },
+    /// Oturt: an affine transform between centred frames, `m` = [a, b, c, d]:
+    /// x′ = to.x + a·x̄ + c·ȳ, y′ = to.y + b·x̄ + d·ȳ. Not a similarity: a
+    /// circle, an arc or an ellipse becomes the ellipse of its image (an
+    /// object may change its kind), a path's arc segments straight vertices
+    /// within 0.1 mm; texts, notes, blocks, dimensions and hatch patterns
+    /// keep their shape at their anchor (docs/adr/0156 §4, §5).
+    Affine { from: Vec2, to: Vec2, m: [f64; 4] },
+    /// Oturt: a projective transform between centred frames, `h` = [a1, a2,
+    /// a3, b1, b2, b3, c1, c2]: w = c1·x̄ + c2·ȳ + 1, x′ = to.x + (a1·x̄ +
+    /// a2·ȳ + a3)/w, y′ = to.y + (b1·x̄ + b2·ȳ + b3)/w. Lines stay straight;
+    /// curves become straight vertices within 0.1 mm; a point where w is
+    /// 1e-9 or less lies beyond the horizon.
+    Projective { from: Vec2, to: Vec2, h: [f64; 8] },
 }
 
 /// Input of `cad.entities.transform` v1: objects named by their persistent
@@ -87,11 +106,21 @@ pub enum Transform {
 /// in their order), `invalid_factor` (a scale not above zero),
 /// `invalid_axis` (a mirror axis without a direction), `invalid_align` (an
 /// alignment's second pair given by half, or its source or target points
-/// within a nanometre of the first's), `invalid_revision`,
-/// `revision_conflict` (status `conflict`), `entity_not_found` (each id in
-/// order), `layer_locked`, then `not_finite` again (path `transform`) when
-/// the transform would carry a coordinate past the largest float64; on the
-/// desktop also `slots_exhausted` for copies.
+/// within a nanometre of the first's), `invalid_transform` (an affine or
+/// projective transform whose linear part squashes the plane: its
+/// determinant under 1e-12 of its columns' lengths' product),
+/// `invalid_revision`, `revision_conflict` (status `conflict`),
+/// `entity_not_found` (each id in order), `layer_locked`, `beyond_horizon`
+/// (a point of an object beyond a projective transform's horizon), then
+/// `not_finite` again (path `transform`) when the transform would carry a
+/// coordinate past the largest float64; on the desktop also
+/// `slots_exhausted` for copies.
+///
+/// The undo step of the similarity, affine and projective transforms is
+/// “Oturt”. When the transform is not a similarity the output warns with
+/// `warp_curves` (objects whose curves became straight vertices) and
+/// `warp_shapes` (texts, notes, blocks, dimensions and hatch patterns that
+/// kept their shape), each with its count.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

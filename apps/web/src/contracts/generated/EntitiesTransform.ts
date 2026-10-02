@@ -26,11 +26,21 @@ import type { Transform } from "./Transform";
  * in their order), `invalid_factor` (a scale not above zero),
  * `invalid_axis` (a mirror axis without a direction), `invalid_align` (an
  * alignment's second pair given by half, or its source or target points
- * within a nanometre of the first's), `invalid_revision`,
- * `revision_conflict` (status `conflict`), `entity_not_found` (each id in
- * order), `layer_locked`, then `not_finite` again (path `transform`) when
- * the transform would carry a coordinate past the largest float64; on the
- * desktop also `slots_exhausted` for copies.
+ * within a nanometre of the first's), `invalid_transform` (an affine or
+ * projective transform whose linear part squashes the plane: its
+ * determinant under 1e-12 of its columns' lengths' product),
+ * `invalid_revision`, `revision_conflict` (status `conflict`),
+ * `entity_not_found` (each id in order), `layer_locked`, `beyond_horizon`
+ * (a point of an object beyond a projective transform's horizon), then
+ * `not_finite` again (path `transform`) when the transform would carry a
+ * coordinate past the largest float64; on the desktop also
+ * `slots_exhausted` for copies.
+ *
+ * The undo step of the similarity, affine and projective transforms is
+ * “Oturt”. When the transform is not a similarity the output warns with
+ * `warp_curves` (objects whose curves became straight vertices) and
+ * `warp_shapes` (texts, notes, blocks, dimensions and hatch patterns that
+ * kept their shape), each with its count.
  */
 export type EntitiesTransform = { 
 /**

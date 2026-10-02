@@ -10,15 +10,22 @@
 //! matrix of the transform (`similarity`) and what it does to each kind of
 //! object (`transform_shape`); nothing is computed here.
 //!
+//! Oturt's similarity, affine and projective transforms (docs/adr/0156)
+//! are the core's warp (`ops::warp`): what it does to each kind, with the
+//! paths' elevations; an object may change its kind (a circle becomes an
+//! ellipse or a polyline).
+//!
 //! The checks, in order (the first that fails answers):
 //! 1. at least one id; every id lowercase UUID text with hyphens (in order);
 //! 2. the transform's numbers finite, in their order; a scale factor above
 //!    zero; a mirror axis with a direction; an alignment's second pair whole,
-//!    its points apart from the first pair's;
+//!    its points apart from the first pair's; an affine or projective
+//!    transform not singular;
 //! 3. the expected revision (every command's, `checks.rs`);
 //! 4. every id names an object of the document (in order);
 //! 5. not every object on a locked layer (with others, a warning);
-//! 6. no coordinate carried past the largest float64 by the transform.
+//! 6. no point of an object beyond a projective transform's horizon;
+//! 7. no coordinate carried past the largest float64 by the transform.
 //!
 //! Objects on a locked layer are neither changed nor copied. The web's tools
 //! used to copy them onto their locked layer; ADR 0037 records the change.
@@ -33,13 +40,16 @@ use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::arrangement::Ring;
 use kentos_geometry_core::geom::affine::{Affine, similarity};
 use kentos_geometry_core::geometry::dist;
+use kentos_geometry_core::jsmath::js_hypot;
 use kentos_geometry_core::ops::transform::transform_shape;
+use kentos_geometry_core::ops::warp::{Warp, warp_shape};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop};
 /// The stable codes of the answers (`CommandError.code`, `CommandWarning.code`).
 pub use crate::codes;
-use crate::geometry::{shape, with_shape};
+use crate::elevation;
+use crate::geometry::{edit_geometry, entity_of, shape, with_shape};
 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &EntitiesTransform) -> CommandResult<()> {
@@ -149,14 +159,18 @@ pub fn label(transform: &Transform, copy: bool) -> &'static str {
         Transform::Scale { .. } => "Ölçekle",
         Transform::Mirror { .. } => "Aynala",
         Transform::Align { .. } => "Hizala",
+        Transform::Similarity { .. } | Transform::Affine { .. } | Transform::Projective { .. } => {
+            "Oturt"
+        }
     }
 }
 
 /// The affine of a transform, built by the shared core (`similarity`), as
-/// the web's handler builds it through WASM. None only for numbers the
-/// checks would refuse first.
+/// the web's handler builds it through WASM. None for numbers the checks
+/// would refuse first, and for Oturt's transforms (the core's warp).
 pub fn affine(transform: &Transform) -> Option<Affine> {
     match *transform {
+        Transform::Similarity { .. } | Transform::Affine { .. } | Transform::Projective { .. } => None,
         Transform::Move { dx, dy } => similarity("move", &[dx, dy]),
         Transform::Rotate { center, angle } => similarity("rotate", &[center.x, center.y, angle]),
         Transform::Scale { center, factor } => similarity("scale", &[center.x, center.y, factor]),
@@ -244,9 +258,102 @@ fn locked_message(n: usize) -> String {
     )
 }
 
+/// What a transform does once checked: the modify tools' matrix, or
+/// Oturt's warp (docs/adr/0156).
+enum How {
+    Matrix(Affine),
+    Warp(Warp),
+}
+
+const NUMBER_FIX: &str = "Dönüşümün sayılarını sonlu verin.";
+
+/// Whether a linear part [a, b, c, d] (columns (a, b) and (c, d)) squashes
+/// the plane: its determinant within 1e-12 of its columns' lengths' product.
+fn singular([a, b, c, d]: [f64; 4]) -> bool {
+    (a * d - b * c).abs() <= 1e-12 * js_hypot(a, b) * js_hypot(c, d)
+}
+
+fn refuse_singular() -> Stop {
+    Stop::Failed(checks::error(
+        codes::INVALID_TRANSFORM,
+        "Dönüşüm tekil: doğrusal kısmı nesneleri bir doğruya ya da noktaya ezer. Dönüşümün sayılarını denetleyin ya da başka bir dönüşüm türü seçin.".into(),
+        Some("transform".into()),
+    ))
+}
+
+fn core(p: kentos_contracts::Vec2) -> Vec2 {
+    Vec2::new(p.x, p.y)
+}
+
+/// Oturt's centres and numbers, in their order: finite (named by their
+/// place), then not singular.
+fn check_warp(transform: &Transform) -> Result<Option<Warp>, Stop> {
+    let centres = |from, to| -> Result<(), Stop> {
+        checks::point(from, "Kaynak merkezinin", "transform.from")?;
+        checks::point(to, "Hedef merkezinin", "transform.to")
+    };
+    let numbers = |values: &[f64], field: &str| -> Result<(), Stop> {
+        for (i, &v) in values.iter().enumerate() {
+            checks::finite(
+                v,
+                &format!("Dönüşümün {}. sayısı", i + 1),
+                NUMBER_FIX,
+                &format!("transform.{field}[{i}]"),
+            )?;
+        }
+        Ok(())
+    };
+    Ok(Some(match *transform {
+        Transform::Similarity { from, to, a, b } => {
+            centres(from, to)?;
+            checks::finite(a, "Dönüşümün a sayısı", NUMBER_FIX, "transform.a")?;
+            checks::finite(b, "Dönüşümün b sayısı", NUMBER_FIX, "transform.b")?;
+            if singular([a, b, -b, a]) {
+                return Err(refuse_singular());
+            }
+            Warp::Similarity {
+                from: core(from),
+                to: core(to),
+                a,
+                b,
+            }
+        }
+        Transform::Affine { from, to, m } => {
+            centres(from, to)?;
+            numbers(&m, "m")?;
+            if singular(m) {
+                return Err(refuse_singular());
+            }
+            Warp::Affine {
+                from: core(from),
+                to: core(to),
+                m,
+            }
+        }
+        Transform::Projective { from, to, h } => {
+            centres(from, to)?;
+            numbers(&h, "h")?;
+            // The derivative at the source centre (w = 1 there).
+            let [a1, a2, a3, b1, b2, b3, c1, c2] = h;
+            if singular([a1 - a3 * c1, b1 - b3 * c1, a2 - a3 * c2, b2 - b3 * c2]) {
+                return Err(refuse_singular());
+            }
+            Warp::Projective {
+                from: core(from),
+                to: core(to),
+                h,
+            }
+        }
+        _ => return Ok(None),
+    }))
+}
+
 /// The transform's own checks, in its fields' order: finite numbers, then
-/// what they mean. Its affine when they pass.
-fn check_transform(transform: &Transform) -> Result<Affine, Stop> {
+/// what they mean. Its matrix or warp when they pass.
+fn check_transform(transform: &Transform) -> Result<How, Stop> {
+    if let Some(warp) = check_warp(transform)? {
+        return Ok(How::Warp(warp));
+    }
     let finite =
         |value: f64, what: &str, fix: &str, path: &str| checks::finite(value, what, fix, path);
     match *transform {
@@ -310,8 +417,9 @@ fn check_transform(transform: &Transform) -> Result<Affine, Stop> {
             }
             check_align(source, target, source2, target2)?;
         }
+        Transform::Similarity { .. } | Transform::Affine { .. } | Transform::Projective { .. } => {}
     }
-    affine(transform).ok_or_else(|| {
+    affine(transform).map(How::Matrix).ok_or_else(|| {
         Stop::Failed(checks::error(
             codes::NOT_FINITE,
             "Dönüşüm kurulamadı.".into(),
@@ -323,22 +431,52 @@ fn check_transform(transform: &Transform) -> Result<Affine, Stop> {
 /// The checks in the contract's order.
 fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
     checks::uids(&input.uids, "Dönüştürülecek nesne verilmedi.")?;
-    let m = check_transform(&input.transform)?;
+    let how = check_transform(&input.transform)?;
     checks::revision(doc, input.expected_revision.as_deref())?;
     let mut sources = Vec::new();
     let mut moved = Vec::new();
     let mut locked = Vec::new();
-    let mut overflow = false;
+    let (mut overflow, mut beyond) = (false, false);
+    let (mut curves, mut kept) = (0, 0);
     for (slot, entity, uid) in checks::objects(doc, &input.uids)? {
         if doc.layers().is_locked(&entity.base().layer_id) {
             locked.push(uid.clone());
             continue;
         }
         let before = shape(entity);
-        let after = transform_shape(&before, &m);
-        overflow |= finite_shape(&before) && !finite_shape(&after);
-        // The core keeps an object's kind; a shape of another kind would be its fault, not the input's.
-        let Some(e) = with_shape(entity, after) else {
+        let e = match &how {
+            How::Matrix(m) => {
+                let after = transform_shape(&before, m);
+                overflow |= finite_shape(&before) && !finite_shape(&after);
+                with_shape(entity, after)
+            }
+            How::Warp(warp) => {
+                let zs: Vec<Vec<Option<f64>>> =
+                    elevation::paths(entity).into_iter().map(|p| p.zs).collect();
+                match warp_shape(&before, &zs, warp) {
+                    Err(_) => {
+                        beyond = true;
+                        sources.push((slot, uid.clone()));
+                        continue;
+                    }
+                    Ok(w) => {
+                        overflow |= finite_shape(&before) && !finite_shape(&w.shape);
+                        curves += usize::from(w.curves);
+                        kept += usize::from(w.kept);
+                        // A curve may come back of another kind: the object takes it, its own fields kept.
+                        let mut e = with_shape(entity, w.shape.clone()).or_else(|| {
+                            edit_geometry(w.shape).map(|g| entity_of(&g, entity.base().clone()))
+                        });
+                        if let Some(e) = e.as_mut() {
+                            elevation::assign(e, &w.zs);
+                        }
+                        e
+                    }
+                }
+            }
+        };
+        // The core keeps an object's kind for the modify tools; a shape it cannot write would be its fault.
+        let Some(e) = e else {
             return Err(Stop::Failed(checks::error(
                 codes::NOT_FINITE,
                 "Nesne dönüştürülemedi.".into(),
@@ -355,6 +493,13 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
             Some("uids".into()),
         )));
     }
+    if beyond {
+        return Err(Stop::Failed(checks::error(
+            codes::BEYOND_HORIZON,
+            "Projektif dönüşümün ufku nesnelerin arasından geçiyor: bir nesnenin noktası ufkun ötesinde kalıyor, dönüştürülemez. O nesneleri dışarıda bırakın ya da kontrol noktalarını denetleyin.".into(),
+            Some("transform".into()),
+        )));
+    }
     if overflow {
         return Err(Stop::Failed(checks::error(
             codes::NOT_FINITE,
@@ -368,6 +513,20 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
             code: codes::LAYER_LOCKED.into(),
             message: locked_message(locked.len()),
             path: Some("uids".into()),
+        });
+    }
+    if curves > 0 {
+        warnings.push(CommandWarning {
+            code: codes::WARP_CURVES.into(),
+            message: format!("{curves} nesnenin eğrileri 0,1 mm'lik köşelere açıldı; dönüşüm benzerlik değil, eğri olarak kalamazlar."),
+            path: Some("transform".into()),
+        });
+    }
+    if kept > 0 {
+        warnings.push(CommandWarning {
+            code: codes::WARP_SHAPES.into(),
+            message: format!("{kept} yazı, not, blok, ölçü ya da tarama deseni yerinde döndürülüp ölçeklendi; dönüşüm benzerlik değil, biçimleri eğilmez."),
+            path: Some("transform".into()),
         });
     }
     Ok(Checked {

@@ -2,8 +2,9 @@
 import type { Vec2 } from "./Vec2";
 
 /**
- * One similarity of the plane, given as the modify tools ask for it
- * (docs/adr/0037, 0047). Coordinates are x east (Y), y north (X), in the
- * project's units (m), float64.
+ * One transform of the plane: a similarity as the modify tools ask for it
+ * (docs/adr/0037, 0047), or Vektör oturtma's similarity, affine or
+ * projective transform in centred form (docs/adr/0156 §6). Coordinates are
+ * x east (Y), y north (X), in the project's units (m), float64.
  */
-export type Transform = { "kind": "move", dx: number, dy: number, } | { "kind": "rotate", center: Vec2, angle: number, } | { "kind": "scale", center: Vec2, factor: number, } | { "kind": "mirror", a: Vec2, b: Vec2, } | { "kind": "align", source: Vec2, target: Vec2, source2?: Vec2, target2?: Vec2, scale?: boolean, };
+export type Transform = { "kind": "move", dx: number, dy: number, } | { "kind": "rotate", center: Vec2, angle: number, } | { "kind": "scale", center: Vec2, factor: number, } | { "kind": "mirror", a: Vec2, b: Vec2, } | { "kind": "align", source: Vec2, target: Vec2, source2?: Vec2, target2?: Vec2, scale?: boolean, } | { "kind": "similarity", from: Vec2, to: Vec2, a: number, b: number, } | { "kind": "affine", from: Vec2, to: Vec2, m: [number, number, number, number], } | { "kind": "projective", from: Vec2, to: Vec2, h: [number, number, number, number, number, number, number, number], };

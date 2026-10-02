@@ -63,6 +63,43 @@ pub fn paths(e: &Entity) -> Vec<Elevated> {
     }
 }
 
+/// `entity`'s paths given the elevations `zs`, in [`paths`]' order (a
+/// line's two ends); a path where no vertex has one keeps none
+/// (docs/adr/0142). What Oturt writes: the core warps the paths with their
+/// elevations (docs/adr/0156 §4).
+pub fn assign(entity: &mut Entity, zs: &[Vec<Option<f64>>]) {
+    let take = |k: usize| {
+        zs.get(k)
+            .filter(|z| z.iter().any(Option::is_some))
+            .cloned()
+    };
+    match entity {
+        Entity::Line(l) => {
+            let ends = zs.first();
+            l.za = ends.and_then(|z| z.first().copied().flatten());
+            l.zb = ends.and_then(|z| z.get(1).copied().flatten());
+        }
+        Entity::Polyline(p) => p.zs = take(0),
+        Entity::Polygon(p) => {
+            p.zs = take(0);
+            let mut k = 1;
+            for h in p.holes.iter_mut().flatten() {
+                h.zs = take(k);
+                k += 1;
+            }
+            for part in p.parts.iter_mut().flatten() {
+                part.zs = take(k);
+                k += 1;
+                for h in part.holes.iter_mut().flatten() {
+                    h.zs = take(k);
+                    k += 1;
+                }
+            }
+        }
+        _ => {}
+    }
+}
+
 /// Whether a vertex of the paths has an elevation.
 pub fn elevated(paths: &[Elevated]) -> bool {
     paths.iter().any(|p| p.zs.iter().any(Option::is_some))

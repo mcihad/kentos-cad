@@ -38,6 +38,18 @@ pub const REPEATED_ENTITY: &str = "repeated_entity";
 /// An alignment's second pair given by half, or its points within a nanometre
 /// of the first pair's (`cad.entities.transform`).
 pub const INVALID_ALIGN: &str = "invalid_align";
+/// An affine or projective transform whose linear part squashes the plane
+/// (`cad.entities.transform`, docs/adr/0156).
+pub const INVALID_TRANSFORM: &str = "invalid_transform";
+/// A point of an object beyond a projective transform's horizon
+/// (`cad.entities.transform`, docs/adr/0156).
+pub const BEYOND_HORIZON: &str = "beyond_horizon";
+/// Objects whose curves became straight vertices under a transform that is
+/// not a similarity (`cad.entities.transform`, a warning).
+pub const WARP_CURVES: &str = "warp_curves";
+/// Texts, notes, blocks, dimensions and hatch patterns that kept their shape
+/// under a transform that is not a similarity (`cad.entities.transform`, a warning).
+pub const WARP_SHAPES: &str = "warp_shapes";
 /// Rows and columns, or a polar array's count, out of their range (`cad.entities.array`).
 pub const INVALID_COUNT: &str = "invalid_count";
 /// A grid direction with more than one place and no spacing (`cad.entities.array`).

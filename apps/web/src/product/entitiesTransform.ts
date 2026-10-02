@@ -6,9 +6,12 @@ import type { Entity as PlannedEntity } from '../contracts/generated/Entity';
 import type { Transform } from '../contracts/generated/Transform';
 import type { CadDocument } from '../model/document';
 import type { Entity, NewEntity } from '../model/entities';
-import { geometryIsFinite, transformObjects } from '../model/ops/transform';
+import { geometryIsFinite, transformObjects, withGeometry } from '../model/ops/transform';
+import { warpShapes, type Warp } from '../model/ops/warp';
+import type { Geometry } from '../wasm/pack';
 import { checkRevision, checkUids, error, failed, findObjects, notFinite, notFiniteValue, validated, type Stop } from './checks';
 import type { ProductCommand } from './command';
+import { assignElevations, elevatedPaths } from './elevation';
 
 /**
  * `cad.entities.transform` v1 (docs/adr/0037, 0047): objects named by their
@@ -33,6 +36,16 @@ import type { ProductCommand } from './command';
  *
  * Objects on a locked layer are neither changed nor copied. The tools used
  * to copy them onto their locked layer; ADR 0037 records the change.
+ *
+ * Oturt's similarity, affine and projective transforms (docs/adr/0156) are
+ * the core's warp (`warpShapes`): what it does to each kind, with the paths'
+ * elevations; an object may change its kind (a circle becomes an ellipse or
+ * a polyline). Their checks add, after the numbers, a transform that
+ * squashes the plane (`invalid_transform`) and, after the locked layers, a
+ * point beyond a projective transform's horizon (`beyond_horizon`); a
+ * transform that is not a similarity warns how many curves became straight
+ * vertices and how many texts, notes, blocks, dimensions and hatch patterns
+ * kept their shape.
  */
 
 interface Checked {
@@ -60,6 +73,45 @@ export function transformLabel(t: Transform, copy: boolean): string {
       return 'Aynala';
     case 'align':
       return 'Hizala';
+    case 'similarity':
+    case 'affine':
+    case 'projective':
+      return 'Oturt';
+  }
+}
+
+const NUMBER_FIX = 'Dönüşümün sayılarını sonlu verin.';
+
+/** Whether a linear part [a, b, c, d] squashes the plane: its determinant within 1e-12 of its columns' lengths' product. */
+const singular = ([a, b, c, d]: readonly number[]) => Math.abs(a * d - b * c) <= 1e-12 * Math.hypot(a, b) * Math.hypot(c, d);
+
+const SINGULAR = failed(
+  error('invalid_transform', 'Dönüşüm tekil: doğrusal kısmı nesneleri bir doğruya ya da noktaya ezer. Dönüşümün sayılarını denetleyin ya da başka bir dönüşüm türü seçin.', 'transform'),
+);
+
+/** Oturt's centres and numbers, in their order: finite (named by their place), then not singular. */
+function checkWarp(t: Extract<Transform, { kind: 'similarity' | 'affine' | 'projective' }>): Stop | null {
+  const centres = notFinite(t.from, 'Kaynak merkezinin', 'transform.from') ?? notFinite(t.to, 'Hedef merkezinin', 'transform.to');
+  if (centres) return centres;
+  const numbers = (values: readonly number[], field: string) => {
+    for (let i = 0; i < values.length; i++) {
+      const stop = notFiniteValue(values[i], `Dönüşümün ${i + 1}. sayısı`, NUMBER_FIX, `transform.${field}[${i}]`);
+      if (stop) return stop;
+    }
+    return null;
+  };
+  switch (t.kind) {
+    case 'similarity':
+      return notFiniteValue(t.a, 'Dönüşümün a sayısı', NUMBER_FIX, 'transform.a') ?? notFiniteValue(t.b, 'Dönüşümün b sayısı', NUMBER_FIX, 'transform.b') ?? (singular([t.a, t.b, -t.b, t.a]) ? SINGULAR : null);
+    case 'affine':
+      return numbers(t.m, 'm') ?? (singular(t.m) ? SINGULAR : null);
+    case 'projective': {
+      const stop = numbers(t.h, 'h');
+      if (stop) return stop;
+      // The derivative at the source centre (w = 1 there).
+      const [a1, a2, a3, b1, b2, b3, c1, c2] = t.h;
+      return singular([a1 - a3 * c1, b1 - b3 * c1, a2 - a3 * c2, b2 - b3 * c2]) ? SINGULAR : null;
+    }
   }
 }
 
@@ -121,7 +173,33 @@ function checkTransform(t: Transform): Stop | null {
         (t.target2 ? notFinite(t.target2, 'İkinci hedef noktasının', 'transform.target2') : null) ??
         checkAlign(t)
       );
+    case 'similarity':
+    case 'affine':
+    case 'projective':
+      return checkWarp(t);
   }
+}
+
+const HORIZON =
+  'Projektif dönüşümün ufku nesnelerin arasından geçiyor: bir nesnenin noktası ufkun ötesinde kalıyor, dönüştürülemez. O nesneleri dışarıda bırakın ya da kontrol noktalarını denetleyin.';
+
+/**
+ * The objects under Oturt's warp (the core's `warpShapes`, with their paths' elevations), each keeping its own
+ * fields; a curve may come back of another kind. The counts of the warnings, or why nothing may be written.
+ */
+function warped(sources: readonly Entity[], warp: Warp): Stop | { moved: Entity[]; curves: number; kept: number } {
+  const answer = warpShapes(
+    sources,
+    sources.map((e) => elevatedPaths(e).map((p) => p.zs)),
+    warp,
+  );
+  if ('error' in answer) return failed(error('beyond_horizon', HORIZON, 'transform'));
+  const moved = answer.shapes.map((shape, i) => {
+    const e = withGeometry(sources[i], shape as unknown as Geometry);
+    assignElevations(e, answer.zs[i]);
+    return e;
+  });
+  return { moved, curves: answer.curves, kept: answer.kept };
 }
 
 /** The checks in the contract's order: why nothing may be written, or what may. */
@@ -137,13 +215,26 @@ function check(doc: CadDocument, input: EntitiesTransform): Stop | Checked {
     else sources.push(f);
   }
   if (!sources.length) return failed(error('layer_locked', lockedMessage(locked.length), 'uids'));
-  const moved = transformObjects(
-    sources.map((s) => s.entity),
-    input.transform,
-  );
+  const t = input.transform;
+  const warp = t.kind === 'similarity' || t.kind === 'affine' || t.kind === 'projective' ? warped(sources.map((s) => s.entity), t) : null;
+  if (warp && 'status' in warp) return warp;
+  const moved = warp
+    ? warp.moved
+    : transformObjects(
+        sources.map((s) => s.entity),
+        t,
+      );
   if (sources.some((s, i) => geometryIsFinite(s.entity) && !geometryIsFinite(moved[i])))
     return failed(error('not_finite', 'Dönüşüm sonucunda sonlu olmayan bir değer çıktı (sayı taşması). Daha küçük bir değer verin.', 'transform'));
   const warnings: CommandWarning[] = locked.length ? [{ code: 'layer_locked', message: lockedMessage(locked.length), path: 'uids' }] : [];
+  if (warp?.curves)
+    warnings.push({ code: 'warp_curves', message: `${warp.curves} nesnenin eğrileri 0,1 mm'lik köşelere açıldı; dönüşüm benzerlik değil, eğri olarak kalamazlar.`, path: 'transform' });
+  if (warp?.kept)
+    warnings.push({
+      code: 'warp_shapes',
+      message: `${warp.kept} yazı, not, blok, ölçü ya da tarama deseni yerinde döndürülüp ölçeklendi; dönüşüm benzerlik değil, biçimleri eğilmez.`,
+      path: 'transform',
+    });
   return { sources, moved, locked, warnings };
 }
 

@@ -18,8 +18,8 @@ Netcad bunu Dönüşümler (N noktadan Helmert ve Afin) ve XY Yönünde Ölçekl
 
 Bir kontrol noktası (eşlenik nokta) bir çifttir: **kaynak** (çizimdeki yeri: Y, X) ve **hedef** (oturtulacağı yer: Y, X). Her çiftin bir adı ve **Kullan** işareti vardır.
 
-- **Kaynak:** çizimden seçilir (Sahneden seç, kenet ile), yazılır ya da adlı noktadan alınır (`#ad`, ADR 0152).
-- **Hedef:** yazılır, elektronik tablodan yapıştırılır ya da adlı noktadan alınır.
+- **Kaynak:** çizimden seçilir (Sahneden seç, kenet ile: bir noktaya kenetlenince adı da gelir) ya da yazılır.
+- **Hedef:** yazılır, elektronik tablodan yapıştırılır ya da çizimden seçilir (ülke sistemindeki noktalar çizimdeyse).
 - **Adla eşleme:** iki katman seçilir (kaynak noktaların ve hedef noktaların katmanı); aynı adı taşıyan noktalar çift olur (adlar baştaki ve sondaki boşluklar atılarak, tam). Bir katmanda aynı ad birden çok noktadaysa o ad eşlenmez ve söylenir.
 - Kullan'ı kapalı çift çözüme girmez; artığı yine hesaplanır ve gösterilir (denetim noktası).
 
@@ -94,14 +94,14 @@ Retler, var olanlardan sonra: `not_finite` (sayılar), `invalid_transform` (doğ
 
 ### 7. Pencere: Vektör oturtma
 
-Hesap pencereleri gibi (ADR 0070, 0075):
+Hesap pencereleri gibi (ADR 0070, 0075); yazılanlar oturum boyunca kalır, pencere çizime bakmak için kapatılıp yeniden açılabilir:
 
-- **Üstte:** dönüşüm türü (Helmert, Afin, Projektif) ve kaynak ve hedef katmanından **Adla eşle**.
-- **Tablo:** Ad, Kaynak Y, Kaynak X, Hedef Y, Hedef X, Kullan, vY, vX, v; Enter, ↑/↓, satır ekle ve sil, elektronik tablodan yapıştırma; kaynak hücresinde Sahneden seç.
-- **Sonuç:** m0, parametreler ve en büyük artık; çözüm yoksa nedeni.
-- **Uygula:** kapsam (Seçili, Katman, Tümü) ve Kopya; Uygula `cad.entities.transform` ile tek adımda yazar, iletileri ve uyarıları söyler.
-- **Rapor:** sistem panosuna metin olarak (çiftler, artıklar, m0, parametreler).
-- **Parametrelerle:** dönüşüm sayılarla da verilebilir: taban noktası, X ve Y ölçeği, dönüklük, öteleme (Netcad'in XY Yönünde Ölçekle'si); tablo kapanır, Uygula aynı komutla yazar.
+- **Üstte:** dönüşüm türü (Helmert, Afin, Projektif; altında en az kaç çift gerektiği) ve **Adla eşle**: kaynak ve hedef katmanı seçilir, Eşle tabloyu aynı adlı nokta çiftleriyle doldurur; eşlenmeyen ve birden çok noktada geçen adlar sayısıyla söylenir.
+- **Tablo:** Kullan (onay kutusu), Ad, Kaynak Y, Kaynak X, Hedef Y, Hedef X, vY, vX, v (artıklar mm, değiştirilemez); Enter, ↑/↓, satır ekle ve sil, elektronik tablodan yapıştırma; satırın düğmeleri kaynağı ve hedefi çizimden seçer. Kullanılan çiftlerin en büyük artıklısı uyarı rengiyle vurgulanır; kullanılmayan satır soluk gösterilir, artığı yine hesaplanır.
+- **Sonuç:** m0 (kullanılan çift sayısı ve serbestlik derecesiyle), parametreler (Helmert: ölçek ve dönüklük; afin: X ve Y ölçeği, dönüklük, kayma; projektif: merkezleriyle sekiz sayı) ve en büyük artık; çözüm yoksa nedeni.
+- **Uygula:** nesneler (Seçili, bir Katman, Tümü) ve Kopya olarak; Uygula `cad.entities.transform` ile tek adımda yazar, iletiyi ve uyarıları söyler, pencere kapanır.
+- **Rapor:** sistem panosuna metin olarak (dönüşüm, çiftler, artıklar, m0, parametreler).
+- **Parametrelerle:** dönüşüm sayılarla da verilebilir: taban noktası, X ve Y ölçeği, dönüklük, öteleme (Netcad'in XY Yönünde Ölçekle'si); tablo kapanır, Uygula aynı komutla afin olarak yazar.
 
 Komut `transform.fit` (Harita › Koordinatlar; takma adlar OTURT, DONUSUM, HELMERT, AFIN), ikonu kendinindir.
 
@@ -134,7 +134,14 @@ Kauçuk levha (kontrol noktalarına göre parça parça dönüşüm, sabit nokta
    - **Çekirdek:** `ops::warp` (`Warp`, `warp_shape`, `warp_shapes`); WASM `warpShapes`, web cephesi `model/ops/warp.ts`.
    - **Başvuru:** `scripts/fixtures/warp_cases.py` kurallardan 6 durum yazar (`fixtures/fit/v1/warp.json`): güçlü bir afin ve aynalı afin altında on beş türün hepsi (daire, yay ve elips tam elips; yaylı kenarlar köşelere; yazı, blok, ölçü, tarama, kılavuz kuralıyla), projektif (eğriler köşelere), ufka koşan ışının ve ufkun ötesindeki noktanın reddi. Çekirdek (yerli) ve web (WASM) koordinatları 1e-9 m, öbür sayıları göreli 1e-12 içinde, köşeleri bire bir verir; kiriş sınırını %10 gevşetmek ya da genişlik çarpanını bozmak yakalanır.
 3. **Komut:** `cad.entities.transform`'un üç türü, iki platformda ortak durumlar.
-4. **Pencere:** Vektör oturtma iki platformda: tablo, Adla eşle, sonuç, Uygula, rapor, Parametrelerle; resimler.
+
+   *(2 Ekim: tamam.)*
+   - **Sözleşme:** `Transform`'un `similarity`, `affine`, `projective` türleri (katalog, TS tipleri, Python SDK'sının tipleri yeniden üretildi); retler `invalid_transform`, `beyond_horizon`; uyarılar `warp_curves`, `warp_shapes`; adım “Oturt”.
+   - **İşleyiciler:** masaüstü `crates/native/application/src/transform.rs`, web `product/entitiesTransform.ts`: çekirdeğin `warp_shape`'iyle, yolların kotlarıyla (`elevation::assign`, `assignElevations`); türü değişen nesne kendi alanlarını korur.
+   - **Ortak durumlar:** `cad.entities.transform.json`'a beş durum (benzerlik her türle; afin, kilitli katman ve iki uyarıyla; afin kopyası; projektif; retler: sonlu olmayan sayı yolu ve sırası, tekil afin, ufuk). Beklenen değerler dönüşümlerin tanımından, aynı işlem sırasıyla çift duyarlıkla; iki platform bit bit geçer. Eğrilerin ve yazıların kuralları `warp.json`'da. `affine_reference.py` artık alanın deliklerini ve parçalarını da taşır (önceki durumlarda delikli alan yoktu, hiçbiri değişmedi).
+4. **Pencere:** Vektör oturtma iki platformda; resimler. İki parçada:
+   1. tablo (Kullan sütunuyla; Hesap pencerelerinin tablosuna onay kutusu sütunu eklenir), Adla eşle, canlı çözüm ve artıklar, Uygula (kapsam, Kopya), rapor;
+   2. Parametrelerle.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
 

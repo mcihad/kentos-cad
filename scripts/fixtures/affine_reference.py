@@ -112,9 +112,21 @@ def moved(e, m, new_id=None):
         e["a"] = pt(apply(m, xy(e["a"])))
         e["b"] = pt(apply(m, xy(e["b"])))
     elif k in ("polyline", "polygon"):
-        e["pts"] = [pt(apply(m, xy(p))) for p in e["pts"]]
-        if "bulges" in e and reflects(m):
-            e["bulges"] = [-b for b in e["bulges"]]
+        # The outer ring, an area's holes and its other parts with theirs (docs/adr/0143): every ring by the
+        # same map, its arc segments turned the other way under a reflection; elevations stay with their vertices.
+        def ring(r):
+            r["pts"] = [pt(apply(m, xy(p))) for p in r["pts"]]
+            if "bulges" in r and reflects(m):
+                r["bulges"] = [-b for b in r["bulges"]]
+
+        ring(e)
+        if k == "polygon":
+            for h in e.get("holes") or []:
+                ring(h)
+            for part in e.get("parts") or []:
+                ring(part)
+                for h in part.get("holes") or []:
+                    ring(h)
     elif k == "circle":
         e["c"] = pt(apply(m, xy(e["c"])))
         e["r"] = e["r"] * s

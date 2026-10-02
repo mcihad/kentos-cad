@@ -617,6 +617,163 @@ cases.append({
 })
 
 
+# ── Oturt (docs/adr/0156 §6): the similarity, affine and projective transforms in centred form ──
+# Their geometry is the core's warp (ops::warp; its rules have their own reference, warp_cases.py): a
+# similarity moves every kind as the modify tools do, in three passes (to the source centre, the linear
+# part, to the target centre); otherwise a point goes to `to + g(p − from)`. The cases compare only what
+# that arithmetic gives bit for bit (points, lines, straight areas with their elevations, and the
+# similarity's every kind); texts and curves are in the input for the warnings, their geometry checked
+# by fixtures/fit/v1/warp.json.
+OTURT_FROM, OTURT_TO = (487000, 4420000), (487100.25, 4420050.5)
+
+
+def similarity_t(a, b):
+    return {"kind": "similarity", "from": P(*OTURT_FROM), "to": P(*OTURT_TO), "a": a, "b": b}
+
+
+def affine_t(m):
+    return {"kind": "affine", "from": P(*OTURT_FROM), "to": P(*OTURT_TO), "m": m}
+
+
+def projective_t(h):
+    return {"kind": "projective", "from": P(*OTURT_FROM), "to": P(*OTURT_TO), "h": h}
+
+
+def similar(e, a, b, new_id=None):
+    """The core's similarity: to the source centre, the linear part, to the target centre."""
+    step = moved(e, translation(-OTURT_FROM[0], -OTURT_FROM[1]))
+    step = moved(step, [a, b, -b, a, 0.0, 0.0])
+    return moved(step, translation(OTURT_TO[0], OTURT_TO[1]), new_id)
+
+
+def warp_point(p, t):
+    x, y = p["x"] - OTURT_FROM[0], p["y"] - OTURT_FROM[1]
+    if t["kind"] == "affine":
+        a, b, c, d = t["m"]
+        gx, gy = a * x + c * y, b * x + d * y
+    else:
+        a1, a2, a3, b1, b2, b3, c1, c2 = t["h"]
+        w = c1 * x + c2 * y + 1.0
+        gx, gy = (a1 * x + a2 * y + a3) / w, (b1 * x + b2 * y + b3) / w
+    return P(OTURT_TO[0] + gx, OTURT_TO[1] + gy)
+
+
+def warped(e, t, new_id=None):
+    """A point, a line or a straight path under a non-similar warp: its vertices by f, its elevations kept."""
+    out = json.loads(json.dumps(e))
+    if new_id is not None:
+        out["id"] = new_id
+    if e["kind"] == "point":
+        out["p"] = warp_point(e["p"], t)
+    elif e["kind"] == "line":
+        out["a"], out["b"] = warp_point(e["a"], t), warp_point(e["b"], t)
+    else:
+        out["pts"] = [warp_point(q, t) for q in e["pts"]]
+        for h in out.get("holes") or []:
+            h["pts"] = [warp_point(q, t) for q in h["pts"]]
+    return out
+
+
+OTURT = [
+    {"kind": "point", "id": 1, "layerId": "yapi", "attrs": {"Ad": "101"}, "label": "101", "p": P(487010.5, 4420020.25), "z": 101.5},
+    {"kind": "line", "id": 2, "layerId": "yapi", "attrs": {}, "a": P(487000, 4420000), "b": P(487030, 4420010), "za": 100.0, "zb": 102.0},
+    {"kind": "polygon", "id": 3, "layerId": "sinir", "attrs": {"Ada": "101"}, "pts": [P(487000, 4420000), P(487040, 4420000), P(487040, 4420030), P(487000, 4420030)],
+     "zs": [100.0, 100.5, None, 101.0], "holes": [{"pts": [P(487010, 4420010), P(487015, 4420010), P(487015, 4420015)], "zs": [99.0, 99.5, 99.25]}]},
+    {"kind": "text", "id": 4, "layerId": "yapi", "attrs": {}, "p": P(487005, 4420025), "text": "Ada 101", "height": 2, "rotation": 0},
+    {"kind": "circle", "id": 5, "layerId": "yapi", "attrs": {}, "c": P(487030, 4420010), "r": 2.5},
+    {"kind": "polyline", "id": 6, "layerId": "yapi", "attrs": {}, "pts": [P(487000, 4420040), P(487010, 4420040), P(487020, 4420050)], "bulges": [0.0, 0.4, 0.0],
+     "zs": [100.0, 101.0, 102.0]},
+    {"kind": "line", "id": 7, "layerId": "kilitli", "attrs": {}, "a": P(487005, 4420005), "b": P(487015, 4420005)},
+    {"kind": "arc", "id": 8, "layerId": "yapi", "attrs": {}, "c": P(487020, 4420020), "r": 4, "a0": 0, "a1": HALF_PI},
+]
+OTURT_SETUP = {**SETUP, "entities": OTURT}
+OTURT_BY_ID = {e["id"]: e for e in OTURT}
+OTURT_IDS = [e["id"] for e in OTURT]
+O = lambda i: OTURT_BY_ID[i]
+SIM_A, SIM_B = 0.9998, 0.0175
+AFFINE = [1.002, -0.0004, 0.0007, 0.999]
+PROJECTIVE = [1.0, 0.002, 0.25, -0.001, 0.998, -0.5, 1e-6, -2e-6]
+
+
+def CURVES(n):
+    return {"code": "warp_curves", "message": f"{n} nesnenin eğrileri 0,1 mm'lik köşelere açıldı; dönüşüm benzerlik değil, eğri olarak kalamazlar.", "path": "transform"}
+
+
+def SHAPES(n):
+    return {"code": "warp_shapes", "message": f"{n} yazı, not, blok, ölçü ya da tarama deseni yerinde döndürülüp ölçeklendi; dönüşüm benzerlik değil, biçimleri eğilmez.", "path": "transform"}
+
+
+SINGULAR = "Dönüşüm tekil: doğrusal kısmı nesneleri bir doğruya ya da noktaya ezer. Dönüşümün sayılarını denetleyin ya da başka bir dönüşüm türü seçin."
+HORIZON = "Projektif dönüşümün ufku nesnelerin arasından geçiyor: bir nesnenin noktası ufkun ötesinde kalıyor, dönüştürülemez. O nesneleri dışarıda bırakın ya da kontrol noktalarını denetleyin."
+NUMBER_FIX = "Dönüşümün sayılarını sonlu verin."
+
+cases.append({
+    "name": "Oturt, benzerlik (Helmert): her tür taşı ve döndür gibi; daire daire kalır, kotlar kalır; adım Oturt",
+    "note": "Merkezli biçim: kaynak merkezine taşı, doğrusal kısım, hedef merkezine taşı; beklenen değerler bu üç adımın tanımından.",
+    "setup": OTURT_SETUP,
+    "steps": [
+        {"op": "captureUid", "id": 3, "as": "ada"},
+        {"op": "execute", "input": {"uids": [U(i) for i in (1, 2, 3, 4, 5, 6, 8)], "transform": similarity_t(SIM_A, SIM_B)},
+         "result": done(changed=[U(i) for i in (1, 2, 3, 4, 5, 6, 8)]),
+         "expect": {"ids": OTURT_IDS, "entities": entities(*((i, similar(O(i), SIM_A, SIM_B)) for i in (1, 2, 3, 4, 5, 6, 8))), "uids": {"3": "ada"},
+                    "canUndo": True, "dirty": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Oturt", "note": "Vektör oturtma penceresinin adımı.", "expect": {"entities": entities(*((i, O(i)) for i in (1, 2, 3, 4, 5, 6, 8))), "canUndo": False}},
+    ],
+})
+
+cases.append({
+    "name": "Oturt, afin: nokta, çizgi ve düz alan (deliği ve kotlarıyla) tam; yazı biçimini korur, yaylar köşelere açılır, ikisi de sayısıyla söylenir; kilitli katmandaki çizgi kalır",
+    "setup": OTURT_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(i) for i in (1, 2, 3, 4, 5, 6, 7)], "transform": affine_t(AFFINE)},
+         "result": done(changed=[U(i) for i in (1, 2, 3, 4, 5, 6)], locked=[U(7)], warnings=[locked_warning(1), CURVES(1), SHAPES(1)]),
+         "expect": {"ids": OTURT_IDS, "entities": entities(*((i, warped(O(i), affine_t(AFFINE))) for i in (1, 2, 3)), (7, O(7))), "revision": "changed"}},
+        {"op": "undo", "returns": "Oturt", "expect": {"entities": entities(*((i, O(i)) for i in (1, 2, 3, 4, 5, 6))), "canUndo": False}},
+    ],
+})
+
+cases.append({
+    "name": "Oturt, afin kopyası: kopyalar yeni kalıcı kimlik alır, asıllar yerinde kalır; adım yine Oturt",
+    "setup": OTURT_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(2), U(3)], "transform": affine_t(AFFINE), "copy": True}, "result": done(created=[U(9), U(10)]),
+         "expect": {"ids": OTURT_IDS + [9, 10], "entities": entities((2, O(2)), (3, O(3)), (9, warped(O(2), affine_t(AFFINE), 9)), (10, warped(O(3), affine_t(AFFINE), 10))),
+                    "uids": {"9": "new", "10": "new"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Oturt", "expect": {"ids": OTURT_IDS}},
+    ],
+})
+
+cases.append({
+    "name": "Oturt, projektif: nokta, çizgi ve düz alan tam (doğru doğruya gider); daire köşelere açılır",
+    "setup": OTURT_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(i) for i in (1, 2, 3, 5)], "transform": projective_t(PROJECTIVE)},
+         "result": done(changed=[U(i) for i in (1, 2, 3, 5)], warnings=[CURVES(1)]),
+         "expect": {"ids": OTURT_IDS, "entities": entities(*((i, warped(O(i), projective_t(PROJECTIVE))) for i in (1, 2, 3))), "revision": "changed"}},
+        {"op": "undo", "returns": "Oturt", "expect": {"entities": entities(*((i, O(i)) for i in (1, 2, 3, 5)))}},
+    ],
+})
+
+cases.append({
+    "name": "Oturt'un retleri: sonlu olmayan sayı (yolu ve sırası), tekil afin, ufkun ötesinde kalan nesne; hiçbiri yazılmaz",
+    "setup": OTURT_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(2)], "transform": similarity_t(SIM_A, SIM_B)}, "nonFinite": {"transform.from.y": "NaN", "transform.a": "Infinity"},
+         "result": failed("not_finite", NFC("Kaynak merkezinin", "y"), "transform.from.y"), "expect": {"ids": OTURT_IDS, "canUndo": False, "revision": "same"}},
+        {"op": "execute", "input": {"uids": [U(2)], "transform": similarity_t(SIM_A, SIM_B)}, "nonFinite": {"transform.b": "NaN"},
+         "result": failed("not_finite", NFV("Dönüşümün b sayısı", NUMBER_FIX), "transform.b"), "expect": {"ids": OTURT_IDS, "canUndo": False, "revision": "same"}},
+        {"op": "execute", "input": {"uids": [U(2)], "transform": affine_t(AFFINE)}, "nonFinite": {"transform.m[2]": "-Infinity"},
+         "result": failed("not_finite", NFV("Dönüşümün 3. sayısı", NUMBER_FIX), "transform.m[2]"), "expect": {"ids": OTURT_IDS, "canUndo": False, "revision": "same"}},
+        {"op": "execute", "input": {"uids": [U(2)], "transform": projective_t(PROJECTIVE)}, "nonFinite": {"transform.to.x": "NaN", "transform.h[6]": "NaN"},
+         "result": failed("not_finite", NFC("Hedef merkezinin", "x"), "transform.to.x"), "expect": {"ids": OTURT_IDS, "canUndo": False, "revision": "same"}},
+        {"op": "execute", "input": {"uids": [U(2)], "transform": affine_t([1.0, 2.0, 0.5, 1.0])},
+         "result": failed("invalid_transform", SINGULAR, "transform"), "expect": {"ids": OTURT_IDS, "canUndo": False, "revision": "same"}},
+        {"op": "execute", "input": {"uids": [U(2), U(1)], "transform": projective_t([1.0, 0.0, 0.0, 0.0, 1.0, 0.0, -0.05, 0.0])},
+         "result": failed("beyond_horizon", HORIZON, "transform"), "expect": {"ids": OTURT_IDS, "canUndo": False, "revision": "same"}},
+    ],
+})
+
+
 def compact(v):
     return json.dumps(v, ensure_ascii=False, separators=(", ", ": "))
 

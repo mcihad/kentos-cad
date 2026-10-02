@@ -153,6 +153,11 @@ function similarityOf(t: Transform): [string, number[]] {
       if (!t.source2 || !t.target2) return ['align', first];
       return [t.scale === true ? 'alignScale' : 'align', [...first, t.source2.x, t.source2.y, t.target2.x, t.target2.y]];
     }
+    case 'similarity':
+    case 'affine':
+    case 'projective':
+      // Oturt's transforms are the core's warp (./warp.ts, docs/adr/0156), not a similarity's matrix.
+      throw new Error(`“${t.kind}” dönüşümü çekirdeğin warpShapes'iyle yapılır.`);
   }
 }
 
