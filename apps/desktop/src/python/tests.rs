@@ -4,20 +4,25 @@
 //! Python runs in `real_python_writes_the_open_drawing` when one with the
 //! kentos package is at hand (KENTOS_PYTHON, or the checkout's .run/py).
 
+use std::time::{Duration, Instant};
+
+use iced::Task;
+use iced::widget::text_editor::{Action, Motion};
+use kentos_ui::widget::python::{CompletionEvent, EditorState, EntryKind, ReplEvent, RunResult};
 use serde_json::{Value, json};
 
-use super::{Event, Kind, Said};
+use super::{Event, Said};
 use crate::app::{App, Message};
 use crate::files_testing::app_with_drawing;
 
 const SQUARE: &str = r#"[{"x": 423500, "y": 4512300}, {"x": 423520, "y": 4512300}, {"x": 423520, "y": 4512312.5}, {"x": 423500, "y": 4512312.5}]"#;
 
-/// A run under way with no process: its messages are fed by the test.
+/// A run under way with no process: the console's request for it, its
+/// messages fed by the test.
 fn running(app: &mut App) -> u64 {
-    app.python.runs += 1;
-    let id = app.python.runs;
+    let request = app.python.repl.submit("test".into()).expect("a request");
     app.python.running = Some(super::Run {
-        id,
+        id: request.id,
         session: app.document.as_ref().map_or(0, |d| d.session),
         group: None,
         label: None,
@@ -25,8 +30,24 @@ fn running(app: &mut App) -> u64 {
         poisoned: false,
         told: false,
         title: "test".into(),
+        started: Instant::now(),
     });
-    id
+    request.id
+}
+
+/// The console's lines: each entry's kind and text.
+fn entries(app: &App) -> Vec<(EntryKind, String)> {
+    app.python
+        .repl
+        .entries()
+        .map(|e| (e.kind, e.text.clone()))
+        .collect()
+}
+
+/// `code` in the console's box, sent as Enter sends it.
+fn submit(app: &mut App, code: &str) -> Task<Message> {
+    app.python.repl.input = EditorState::with_text(code);
+    app.python_repl(ReplEvent::Submit)
 }
 
 fn said(app: &mut App, message: Value) {
@@ -100,19 +121,17 @@ fn a_run_that_raises_takes_back_what_it_wrote_and_shows_the_traceback() {
         could_undo,
         "nothing recorded"
     );
-    let errors: Vec<&str> = app
-        .python
-        .lines
+    let lines = entries(&app);
+    let traceback = lines
         .iter()
-        .filter(|l| l.kind == Kind::Error)
-        .map(|l| l.text.as_str())
-        .collect();
-    assert_eq!(errors.last().copied(), Some("ValueError: bozuk"));
+        .rfind(|(kind, _)| *kind == EntryKind::Error)
+        .map(|(_, text)| text.as_str())
+        .expect("the traceback");
+    assert!(traceback.ends_with("ValueError: bozuk\n"), "{traceback}");
     assert!(
-        app.python
-            .lines
+        lines
             .iter()
-            .any(|l| l.kind == Kind::Note && l.text.contains("geri alındı"))
+            .any(|(kind, text)| *kind == EntryKind::Note && text.contains("geri alındı"))
     );
 }
 
@@ -149,7 +168,13 @@ fn stopping_takes_the_run_back_and_later_messages_of_that_process_are_dropped() 
     assert_eq!(objects(&app), before);
     assert!(app.python.running.is_none());
     assert_ne!(app.python.generation, old);
-    let lines = app.python.lines.len();
+    let lines = app.python.repl.entries().len();
+    assert!(
+        entries(&app)
+            .iter()
+            .any(|(_, text)| text == "Çalıştırma durduruldu."),
+        "the console says it stopped"
+    );
     let _ = app.update(Message::Python(Event::Host(
         old,
         Said::Message(json!({"type": "out", "stream": "out", "text": "geç kalan\n"})),
@@ -159,7 +184,7 @@ fn stopping_takes_the_run_back_and_later_messages_of_that_process_are_dropped() 
         Said::Message(json!({"type": "done", "id": id, "ok": true})),
     )));
     assert_eq!(
-        app.python.lines.len(),
+        app.python.repl.entries().len(),
         lines,
         "a stopped process is not heard"
     );
@@ -202,10 +227,9 @@ fn a_run_that_fails_before_writing_says_nothing_was_taken_back() {
     );
     assert_eq!(app.log.unseen(), warned, "no warning: nothing was written");
     assert!(
-        !app.python
-            .lines
+        !entries(&app)
             .iter()
-            .any(|l| l.text.contains("geri alındı"))
+            .any(|(_, text)| text.contains("geri alındı"))
     );
 }
 
@@ -231,96 +255,102 @@ fn requests_are_answered_on_the_open_drawing() {
 }
 
 #[test]
-fn output_is_kept_in_lines_and_the_oldest_go() {
+fn a_runs_output_joins_it_and_the_consoles_own_words_need_no_run() {
     let mut app = app_with_drawing();
+    let id = running(&mut app);
     said(
         &mut app,
-        json!({"type": "out", "stream": "out", "text": "bir\niki\n"}),
+        json!({"type": "out", "stream": "out", "text": "bir\r\n"}),
+    );
+    said(
+        &mut app,
+        json!({"type": "out", "stream": "out", "text": "iki\n"}),
     );
     said(
         &mut app,
         json!({"type": "out", "stream": "err", "text": "uyarı"}),
     );
-    let tail: Vec<(Kind, &str)> = app
-        .python
-        .lines
-        .iter()
-        .map(|l| (l.kind, l.text.as_str()))
-        .collect();
+    said(&mut app, json!({"type": "done", "id": id, "ok": true}));
+    let _ = app.update(Message::Python(Event::Restart));
     assert_eq!(
-        tail,
-        [(Kind::Out, "bir"), (Kind::Out, "iki"), (Kind::Err, "uyarı")]
+        entries(&app),
+        [
+            (EntryKind::Input, "test".to_owned()),
+            (EntryKind::Output, "bir\niki\n".to_owned()),
+            (EntryKind::Error, "uyarı".to_owned()),
+            (
+                EntryKind::Note,
+                "Yeni oturum: tanımlanan adlar silindi; sonraki çalıştırma yeni bir Python'da."
+                    .to_owned()
+            ),
+        ]
     );
-    for i in 0..super::MOST_LINES {
-        app.python.push(Kind::Out, format!("{i}"));
-    }
-    assert_eq!(app.python.lines.len(), super::MOST_LINES);
-    assert_eq!(app.python.lines[0].text, "0");
-}
-
-#[test]
-fn enter_runs_whole_code_and_waits_for_the_rest_of_a_block() {
-    use super::view::whole;
-    assert!(whole("1 + 1"));
-    assert!(whole("doc.measure(u)"));
-    assert!(!whole("f(1,"));
-    assert!(!whole("for p in pts:"));
-    assert!(!whole("for p in pts:\n    print(p)"));
-    assert!(whole("for p in pts:\n    print(p)\n"));
-    assert!(!whole("s = 'açık"));
-    assert!(whole("s = 'a(' # (yorum"));
-    assert!(!whole("x = 1 + \\"));
-    assert!(!whole("   "));
 }
 
 /// The code box with `code` and the cursor at its end.
 fn typed(app: &mut App, code: &str) {
-    use iced::widget::text_editor::{Action, Motion};
-    app.python.input = iced::widget::text_editor::Content::with_text(code);
-    app.python.input.perform(Action::Move(Motion::DocumentEnd));
+    app.python.repl.input = EditorState::with_text(code);
+    app.python
+        .repl
+        .input
+        .content
+        .perform(Action::Move(Motion::DocumentEnd));
 }
 
 #[test]
-fn an_answered_list_is_shown_narrowed_and_taken_and_a_late_answer_is_dropped() {
+fn typing_keeps_the_list_to_the_codes_names_and_an_answer_fills_it() {
     let mut app = app_with_drawing();
-    typed(&mut app, "x = cad.poly");
-    app.python.asked_completion = 2;
+    // Typing alone starts no Python: the list keeps the names the code has.
+    typed(&mut app, "polygons = 1\npoly");
+    let _ = app.update(Message::Python(Event::Repl(ReplEvent::Edit(Action::Edit(
+        iced::widget::text_editor::Edit::Insert('g'),
+    )))));
+    assert!(!app.python.started(), "no process for typing");
+    let list = &app.python.repl.input.completion;
+    assert!(list.open && !list.loading);
+    assert_eq!(
+        list.items
+            .iter()
+            .map(|i| i.name.as_str())
+            .collect::<Vec<_>>(),
+        ["polygons"]
+    );
+    // An answer for the list's request fills it; an older one is dropped.
+    let generation = list.request.as_ref().expect("a request").generation;
+    app.python.repl.input.completion.loading = true;
+    app.python.asked_completion = Some((super::Target::Console, generation));
     let items = json!([
-        {"text": "polygon", "kind": "module", "detail": ""},
-        {"text": "polyline", "kind": "module", "detail": ""},
-        {"text": "point", "kind": "module", "detail": ""}
+        {"text": "polygon", "kind": "module", "detail": "Kapalı alan"},
+        {"text": "polygons", "kind": "value", "detail": "int"}
     ]);
     said(
         &mut app,
-        json!({"type": "completions", "id": 1, "start": 8, "items": items}),
+        json!({"type": "completions", "id": generation - 1, "start": 13, "items": items}),
     );
     assert!(
-        app.python.completion.is_none(),
+        app.python.repl.input.completion.loading,
         "an older question's answer"
     );
     said(
         &mut app,
-        json!({"type": "completions", "id": 2, "start": 8, "items": items}),
+        json!({"type": "completions", "id": generation, "start": 13, "items": items}),
     );
-    let shown = |app: &App| {
-        app.python
-            .completion
-            .as_ref()
-            .map(|l| l.entries().map(|c| c.text.clone()).collect::<Vec<_>>())
-    };
+    let list = &app.python.repl.input.completion;
+    assert!(!list.loading);
     assert_eq!(
-        shown(&app),
-        Some(vec!["polygon".to_owned(), "polyline".to_owned()]),
-        "narrowed to what is typed"
+        list.items
+            .iter()
+            .map(|i| i.name.as_str())
+            .collect::<Vec<_>>(),
+        ["polygon", "polygons"]
     );
-    let _ = app.update(Message::Python(Event::Step(1)));
-    let _ = app.update(Message::Python(Event::Accept(None)));
-    assert_eq!(app.python.input.text().trim_end(), "x = cad.polyline");
-    assert!(app.python.completion.is_none());
-    // Tab where nothing is to complete: four spaces.
-    typed(&mut app, "");
-    let _ = app.update(Message::Python(Event::Indent));
-    assert_eq!(app.python.input.text().trim_end_matches('\n'), "    ");
+    let _ = app.update(Message::Python(Event::Repl(ReplEvent::Complete(
+        CompletionEvent::Accept,
+    ))));
+    assert_eq!(
+        app.python.repl.input.content.text().trim_end(),
+        "polygons = 1\npolygon"
+    );
 }
 
 #[test]
@@ -341,19 +371,33 @@ fn a_signature_answer_is_shown_and_running_code_hides_it() {
 #[test]
 fn up_and_down_go_through_the_runs() {
     let mut app = app_with_drawing();
-    app.python.remember("a = 1");
-    app.python.remember("a + 1");
-    app.python.input = iced::widget::text_editor::Content::with_text("yarım");
-    let text = |app: &App| app.python.input.text().trim_end().to_owned();
-    app.python_history(-1);
+    for code in ["a = 1", "a + 1"] {
+        let request = app.python.repl.submit(code.into()).expect("a request");
+        app.python.repl.finish(
+            request.id,
+            RunResult {
+                stdout: String::new(),
+                stderr: String::new(),
+                success: true,
+                incomplete: false,
+                elapsed: Duration::ZERO,
+            },
+        );
+    }
+    typed(&mut app, "yarım");
+    let text = |app: &App| app.python.repl.input.content.text().trim_end().to_owned();
+    let go = |app: &mut App, step: i8| {
+        let _ = app.update(Message::Python(Event::Repl(ReplEvent::History(step))));
+    };
+    go(&mut app, -1);
     assert_eq!(text(&app), "a + 1");
-    app.python_history(-1);
+    go(&mut app, -1);
     assert_eq!(text(&app), "a = 1");
-    app.python_history(-1);
+    go(&mut app, -1);
     assert_eq!(text(&app), "a = 1");
-    app.python_history(1);
+    go(&mut app, 1);
     assert_eq!(text(&app), "a + 1");
-    app.python_history(1);
+    go(&mut app, 1);
     assert_eq!(text(&app), "yarım", "back to what was typed");
 }
 
@@ -371,11 +415,11 @@ fn real_python_writes_the_open_drawing() {
         .as_ref()
         .map(|d| d.model.layers().active().to_owned())
         .expect("a drawing");
-    let task = app.python_run(
-        format!(
+    let task = submit(
+        &mut app,
+        &format!(
             "made = cad.polygon.create(doc, layer_id={layer:?}, pts=[(423500, 4512300), (423520, 4512300), (423520, 4512312.5), (423500, 4512312.5)])\nprint(doc.measure(made.uid).area)"
         ),
-        None,
     );
     let mut stream = iced_runtime::task::into_stream(task).expect("the console's messages");
     while app.python.running.is_some() {
@@ -387,14 +431,12 @@ fn real_python_writes_the_open_drawing() {
             None => break,
         }
     }
-    let out: Vec<&str> = app
-        .python
-        .lines
-        .iter()
-        .filter(|l| l.kind == Kind::Out)
-        .map(|l| l.text.as_str())
+    let out: Vec<String> = entries(&app)
+        .into_iter()
+        .filter(|(kind, _)| *kind == EntryKind::Output)
+        .map(|(_, text)| text)
         .collect();
-    assert_eq!(out, ["250.0"], "{:?}", app.python.lines);
+    assert_eq!(out, ["250.0\n"], "{:?}", entries(&app));
     assert!(
         app.python
             .ready
@@ -413,7 +455,7 @@ type Heard = iced::futures::stream::BoxStream<'static, iced_runtime::Action<Mess
 /// Runs `code` in the real console to its end, its messages driven here.
 fn run_real(app: &mut App, code: &str, heard: &mut Option<Heard>) {
     use iced::futures::StreamExt as _;
-    let task = app.python_run(code.to_owned(), None);
+    let task = submit(app, code);
     // The first run's task carries the process's messages; a later one's only scrolls.
     if heard.is_none() {
         *heard = iced_runtime::task::into_stream(task);
@@ -461,17 +503,23 @@ fn real_python_completes_and_shows_signatures() {
     let mut app = app_with_drawing();
     let mut heard = None;
     typed(&mut app, "cad.polygon.cr");
-    ask_real(&mut app, Event::Complete, &mut heard, |app| {
-        app.python.completion.is_some()
-    });
-    let _ = app.update(Message::Python(Event::Accept(None)));
-    assert_eq!(app.python.input.text().trim_end(), "cad.polygon.create");
+    ask_real(
+        &mut app,
+        Event::Repl(ReplEvent::Complete(CompletionEvent::Request)),
+        &mut heard,
+        |app| !app.python.repl.input.completion.loading,
+    );
+    let _ = app.update(Message::Python(Event::Repl(ReplEvent::Complete(
+        CompletionEvent::Accept,
+    ))));
+    assert_eq!(
+        app.python.repl.input.content.text().trim_end(),
+        "cad.polygon.create"
+    );
     typed(&mut app, "cad.polygon.create(doc, layer_id=");
     ask_real(
         &mut app,
-        Event::Edit(iced::widget::text_editor::Action::Move(
-            iced::widget::text_editor::Motion::DocumentEnd,
-        )),
+        Event::Repl(ReplEvent::Edit(Action::Move(Motion::DocumentEnd))),
         &mut heard,
         |app| app.python.signature.is_some(),
     );
@@ -483,6 +531,19 @@ fn real_python_completes_and_shows_signatures() {
         s.label
     );
     assert_eq!(s.argument.as_deref(), Some("layer_id: str"));
+    // A name in another case still finds its own (ADR 0135); `cad.Polyg`
+    // would not show it, `PolygonCreate` starting with it as written.
+    typed(&mut app, "doc.MEAS");
+    ask_real(
+        &mut app,
+        Event::Repl(ReplEvent::Complete(CompletionEvent::Request)),
+        &mut heard,
+        |app| !app.python.repl.input.completion.loading,
+    );
+    let _ = app.update(Message::Python(Event::Repl(ReplEvent::Complete(
+        CompletionEvent::Accept,
+    ))));
+    assert_eq!(app.python.repl.input.content.text().trim_end(), "doc.measure");
     let _ = app.update(Message::Python(Event::Stop));
 }
 
@@ -565,7 +626,8 @@ fn screens() {
                         "cad.polygon.create(doc, layer_id=\"yok\", pts=[(0, 0), (1, 0), (1, 1)])",
                         &mut heard,
                     );
-                    app.python.input = iced::widget::text_editor::Content::with_text(
+                    typed(
+                        &mut app,
                         "cad.point.create(doc, layer_id=doc.active_layer, p=(486510.25, 4420180.5))",
                     );
                 }
@@ -573,16 +635,15 @@ fn screens() {
                     running(&mut app);
                 }
                 if name == "betik" {
-                    app.python.script.content =
-                        iced::widget::text_editor::Content::with_text(SCRIPT);
+                    app.python.script.editor = EditorState::with_text(SCRIPT);
                     app.python.script.dirty = true;
-                    app.python.lines.clear();
+                    let _ = app.update(Message::Python(Event::Repl(ReplEvent::Clear)));
                     let _ = app.update(Message::Python(Event::Mode(super::Mode::Script)));
                     ask_real(
                         &mut app,
                         Event::Script(super::script::Event::RunAll),
                         &mut heard,
-                        |app| app.python.running.is_none() && app.python.lines.len() > 2,
+                        |app| app.python.running.is_none() && app.python.repl.entries().len() > 1,
                     );
                 }
                 #[cfg(unix)]
@@ -593,9 +654,9 @@ fn screens() {
                         Message::Python(Event::Agent(heard))
                     })
                     .expect("the link");
-                    app.python.lines.clear();
+                    let _ = app.update(Message::Python(Event::Repl(ReplEvent::Clear)));
                     app.python.push(
-                        Kind::Note,
+                        super::Kind::Note,
                         "Ajan bağlantısı açık: /run/user/1000/kentos-cad/masaustu.sock. Bu kullanıcının programları (MCP'de desktop.attach) açık çizimi okuyup komutlarla yazabilir; her yazma bir geri alma adımıdır.",
                     );
                     app.python.link = Some(open);
@@ -622,17 +683,18 @@ fn screens() {
                 };
                 if name == "tamamlama" {
                     typed(&mut app, "cad.poly");
-                    ask_real(&mut app, Event::Complete, &mut heard, |app| {
-                        app.python.completion.is_some()
-                    });
+                    ask_real(
+                        &mut app,
+                        Event::Repl(ReplEvent::Complete(CompletionEvent::Request)),
+                        &mut heard,
+                        |app| !app.python.repl.input.completion.loading,
+                    );
                 }
                 if name == "imza" {
                     typed(&mut app, "cad.polygon.create(doc, layer_id=");
                     ask_real(
                         &mut app,
-                        Event::Edit(iced::widget::text_editor::Action::Move(
-                            iced::widget::text_editor::Motion::DocumentEnd,
-                        )),
+                        Event::Repl(ReplEvent::Edit(Action::Move(Motion::DocumentEnd))),
                         &mut heard,
                         |app| app.python.signature.is_some(),
                     );
@@ -641,6 +703,24 @@ fn screens() {
                 let mut update = |app: &mut App, message| {
                     let _ = app.update(message);
                 };
+                snapshot.settle(&mut app, App::view, &mut update);
+                // At its newest line, as the console scrolls it after a run (`view::follow`).
+                snapshot.operate(
+                    app.view(),
+                    Box::new(iced::advanced::widget::operation::scrollable::snap_to(
+                        "python-cikti".into(),
+                        iced::widget::scrollable::RelativeOffset::END.into(),
+                    )),
+                );
+                // The list shows while the code box has the keyboard.
+                if name == "tamamlama" {
+                    snapshot.operate(
+                        app.view(),
+                        Box::new(iced::advanced::widget::operation::focusable::focus(
+                            super::view::INPUT.into(),
+                        )),
+                    );
+                }
                 snapshot.settle(&mut app, App::view, &mut update);
                 let file = out.join(format!("python-konsol-{name}-{width}x{height}{suffix}.png"));
                 snapshot
@@ -674,12 +754,10 @@ fn round_trips() {
         &mut heard,
     );
     let took = started.elapsed();
-    let errors: Vec<&str> = app
-        .python
-        .lines
-        .iter()
-        .filter(|l| l.kind == Kind::Error)
-        .map(|l| l.text.as_str())
+    let errors: Vec<String> = entries(&app)
+        .into_iter()
+        .filter(|(kind, _)| *kind == EntryKind::Error)
+        .map(|(_, text)| text)
         .collect();
     assert!(errors.is_empty(), "{errors:?}");
     println!(
@@ -691,7 +769,7 @@ fn round_trips() {
 }
 
 fn script_text(app: &App) -> String {
-    app.python.script.content.text()
+    app.python.script.editor.content.text()
 }
 
 fn script_event(app: &mut App, event: super::script::Event) {
@@ -713,7 +791,7 @@ fn the_script_is_kept_as_a_draft_and_comes_back() {
     );
     assert!(app.python.script.dirty);
     let again = super::script::Script::load(&dir);
-    assert_eq!(again.content.text().trim_end(), "print('taslak')");
+    assert_eq!(again.editor.content.text().trim_end(), "print('taslak')");
     assert!(again.dirty, "unsaved, as it was left");
     let _ = std::fs::remove_dir_all(dir);
 }
@@ -756,7 +834,10 @@ fn saving_writes_the_file_and_a_new_line_keeps_its_indentation() {
         &mut app,
         super::script::Event::Edit(Action::Move(Motion::DocumentEnd)),
     );
-    script_event(&mut app, super::script::Event::Newline);
+    script_event(
+        &mut app,
+        super::script::Event::Edit(Action::Edit(Edit::Enter)),
+    );
     assert_eq!(script_text(&app), "for p in x:\n    ");
     script_event(&mut app, super::script::Event::SavedAs(Some(path.clone())));
     assert_eq!(
@@ -773,29 +854,29 @@ fn saving_writes_the_file_and_a_new_line_keeps_its_indentation() {
 #[test]
 #[ignore = "needs a Python with the kentos package (pnpm py:test)"]
 fn real_python_runs_the_script_and_shows_where_it_failed() {
-    use iced::widget::text_editor::Content;
     let mut app = app_with_drawing();
-    app.python.script.content =
-        Content::with_text("n = len(doc)\nprint(n)\nraise ValueError('dur')\n");
+    app.python.script.editor =
+        EditorState::with_text("n = len(doc)\nprint(n)\nraise ValueError('dur')\n");
     let mut heard = None;
     ask_real(
         &mut app,
         Event::Script(super::script::Event::RunAll),
         &mut heard,
         |app| {
-            app.python.running.is_none() && app.python.lines.iter().any(|l| l.kind == Kind::Error)
+            app.python.running.is_none()
+                && entries(app)
+                    .iter()
+                    .any(|(kind, _)| *kind == EntryKind::Error)
         },
     );
-    let out: Vec<&str> = app
-        .python
-        .lines
-        .iter()
-        .filter(|l| l.kind == Kind::Out)
-        .map(|l| l.text.as_str())
+    let out: Vec<String> = entries(&app)
+        .into_iter()
+        .filter(|(kind, _)| *kind == EntryKind::Output)
+        .map(|(_, text)| text)
         .collect();
-    assert_eq!(out, ["13"]);
+    assert_eq!(out, ["13\n"]);
     assert_eq!(
-        app.python.script.content.cursor().position.line,
+        app.python.script.editor.content.cursor().position.line,
         2,
         "the failed line"
     );

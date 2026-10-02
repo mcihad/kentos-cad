@@ -171,10 +171,21 @@ impl CompletionState {
             .user_selected
             .then(|| self.selected().map(|item| item.name.clone()))
             .flatten();
+        // The names that start with what was typed; when none does, those
+        // that do with letters compared without case (a host may offer them
+        // as its fallback: `cad.Poly` still finds `polygon`).
+        let prefix = &self.prefix;
+        let usable = |item: &CompletionItem| !item.insert.is_empty() && item.insert != *prefix;
+        let exact = items
+            .iter()
+            .any(|item| usable(item) && item.name.starts_with(prefix.as_str()));
         items.retain(|item| {
-            item.name.starts_with(&self.prefix)
-                && !item.insert.is_empty()
-                && item.insert != self.prefix
+            usable(item)
+                && if exact {
+                    item.name.starts_with(prefix.as_str())
+                } else {
+                    starts_with_folded(&item.name, prefix)
+                }
         });
         items.sort_by_key(|item| {
             (
@@ -228,6 +239,15 @@ impl CompletionState {
             },
         ))
     }
+}
+
+/// Whether `name` starts with `prefix`, letters compared without case.
+fn starts_with_folded(name: &str, prefix: &str) -> bool {
+    let mut name = name.chars().flat_map(char::to_lowercase);
+    prefix
+        .chars()
+        .flat_map(char::to_lowercase)
+        .all(|c| name.next() == Some(c))
 }
 
 fn local_items(source: &str, prefix: &str) -> Vec<CompletionItem> {
@@ -312,5 +332,31 @@ mod tests {
         state.refresh(&content, false);
         assert_eq!(state.selected().unwrap().name, "ölçü");
         assert_eq!(state.range(&content).unwrap().0.column, 0);
+    }
+
+    #[test]
+    fn names_differing_only_in_case_come_when_none_matches_exactly() {
+        let mut state = CompletionState::default();
+        let mut content = Content::with_text("cad.Poly");
+        content.perform(Action::Move(Motion::DocumentEnd));
+        state.refresh(&content, true);
+        let asked = state.request.clone().unwrap();
+        let offered = |names: &[&str]| {
+            names
+                .iter()
+                .map(|n| CompletionItem::new(*n, SymbolKind::Module))
+                .collect::<Vec<_>>()
+        };
+        assert!(state.receive(asked.generation, offered(&["polygon", "polyline", "point"])));
+        let names: Vec<&str> = state.items.iter().map(|i| i.name.as_str()).collect();
+        assert_eq!(names, ["polygon", "polyline"]);
+        // One that starts with it exactly keeps the others out.
+        state.refresh(&content, true);
+        let asked = state.request.clone().unwrap();
+        assert!(state.receive(asked.generation, offered(&["polygon", "PolyNet"])));
+        let names: Vec<&str> = state.items.iter().map(|i| i.name.as_str()).collect();
+        assert_eq!(names, ["PolyNet"]);
+        assert!(starts_with_folded("İl", "i\u{307}l"));
+        assert!(!starts_with_folded("ab", "abc"));
     }
 }

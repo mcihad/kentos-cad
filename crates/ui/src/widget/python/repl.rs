@@ -22,6 +22,10 @@ pub struct PythonRepl<'a, Message> {
     height: Length,
     output_id: Option<iced::widget::Id>,
     title: &'a str,
+    toolbar: Option<Element<'a, Message>>,
+    placeholder: &'a str,
+    input_id: Option<iced::widget::Id>,
+    compact: bool,
 }
 
 impl<'a, Message: Clone + 'a> PythonRepl<'a, Message> {
@@ -32,7 +36,33 @@ impl<'a, Message: Clone + 'a> PythonRepl<'a, Message> {
             height: Fill,
             output_id: None,
             title: "Python REPL",
+            toolbar: None,
+            placeholder: "print(\"Merhaba, KentOS\")",
+            input_id: None,
+            compact: false,
         }
+    }
+    /// The code box's id: an application can focus it (`focusable::focus`).
+    pub fn input_id(mut self, id: impl Into<iced::widget::Id>) -> Self {
+        self.input_id = Some(id.into());
+        self
+    }
+    /// For a short place (a bottom panel): the code box starts at one line,
+    /// Çalıştır sits beside it and the footer of hints goes.
+    pub fn compact(mut self, compact: bool) -> Self {
+        self.compact = compact;
+        self
+    }
+    /// The host's own controls (a mode switch, its buttons), in the header
+    /// after the title.
+    pub fn toolbar(mut self, toolbar: impl Into<Element<'a, Message>>) -> Self {
+        self.toolbar = Some(toolbar.into());
+        self
+    }
+    /// What the empty code box shows.
+    pub fn placeholder(mut self, placeholder: &'a str) -> Self {
+        self.placeholder = placeholder;
+        self
     }
     pub fn height(mut self, height: impl Into<Length>) -> Self {
         self.height = height.into();
@@ -62,32 +92,45 @@ impl<'a, Message: Clone + 'a> PythonRepl<'a, Message> {
         let redo = (on_event)(ReplEvent::Redo);
         let ready = syntax::ready(&state.input.content.text());
         let one_line = state.input.content.line_count() == 1;
-        let header = row![
+        let mut header = row![
             icon(Icon::Terminal).size(16.0),
             text(self.title)
                 .font(strong_font())
                 .size(typography::body()),
-            space::horizontal(),
-            text(format!("●  {}", status.label()))
-                .font(font())
-                .size(typography::caption())
-                .style(move |theme: &Theme| text::Style {
-                    color: Some(status_color(status, &Tokens::of(theme)))
-                }),
-            button(
-                row![
-                    icon(Icon::Eraser).size(13.0),
-                    text("Temizle").font(font()).size(typography::caption())
-                ]
-                .spacing(5)
-                .align_y(iced::Center)
+        ];
+        // The host's controls take the room between the title and the status
+        // (and give it up first); without them, a space does.
+        header = match self.toolbar {
+            Some(toolbar) => header.push(container(toolbar).width(Fill)),
+            None => header.push(space::horizontal()),
+        };
+        // A compact header's Temizle is its icon alone.
+        let clear = if self.compact {
+            row![icon(Icon::Eraser).size(13.0)]
+        } else {
+            row![
+                icon(Icon::Eraser).size(13.0),
+                text("Temizle").font(font()).size(typography::caption())
+            ]
+        };
+        let header = header
+            .push(
+                text(format!("●  {}", status.label()))
+                    .font(font())
+                    .size(typography::caption())
+                    .wrapping(advanced_text::Wrapping::None)
+                    .style(move |theme: &Theme| text::Style {
+                        color: Some(status_color(status, &Tokens::of(theme))),
+                    }),
             )
-            .on_press((on_event)(ReplEvent::Clear))
-            .padding([4, 8])
-            .style(style::button::flat),
-        ]
-        .spacing(10)
-        .align_y(iced::Center);
+            .push(
+                button(clear.spacing(5).align_y(iced::Center))
+                    .on_press((on_event)(ReplEvent::Clear))
+                    .padding([4, 8])
+                    .style(style::button::flat),
+            )
+            .spacing(10)
+            .align_y(iced::Center);
         let mut transcript = Column::new().spacing(8).padding([14, 16]);
         if state.entries().len() == 0 {
             transcript = transcript.push(
@@ -161,53 +204,63 @@ impl<'a, Message: Clone + 'a> PythonRepl<'a, Message> {
             output = output.id(id);
         }
         let size = typography::body() + 1.0;
-        let rows = state.input.content.line_count().clamp(2, 7);
+        let rows = if self.compact {
+            state.input.content.line_count().clamp(1, 5)
+        } else {
+            state.input.content.line_count().clamp(2, 7)
+        };
         let edit_event = on_event.clone();
         let key_event = on_event.clone();
         let completion_event = on_event.clone();
-        let input = PythonEditor::new(&state.input.content, move |action| {
+        let mut input = PythonEditor::new(&state.input.content, move |action| {
             (edit_event)(ReplEvent::Edit(action))
-        })
-        .header(false)
-        .footer(false)
-        .prompt()
-        .size(size)
-        .placeholder("print(\"Merhaba, KentOS\")")
-        .height(rows as f32 * size * 1.65 + 26.0)
-        .completions(&state.input.completion, move |event| {
-            completion_event(ReplEvent::Complete(event))
-        })
-        .key_binding(move |kp| {
-            if !matches!(kp.status, Status::Focused { .. }) {
-                return None;
-            }
-            let command = kp.modifiers.command();
-            let shift = kp.modifiers.shift();
-            let custom = |message| Some(Binding::Custom(message));
-            match kp.key.as_ref() {
-                Key::Named(Named::Enter) if !running && (command || (!shift && ready)) => {
-                    custom(submit.clone())
-                }
-                Key::Named(Named::ArrowUp) if !shift && (command || one_line) => custom(up.clone()),
-                Key::Named(Named::ArrowDown) if !shift && (command || one_line) => {
-                    custom(down.clone())
-                }
-                Key::Character(ch) if command && ch.eq_ignore_ascii_case("z") => {
-                    custom(if shift { redo.clone() } else { undo.clone() })
-                }
-                Key::Character(ch) if command && ch.eq_ignore_ascii_case("y") => {
-                    custom(redo.clone())
-                }
-                Key::Named(Named::Tab) => custom((key_event)(ReplEvent::Edit(
-                    iced::widget::text_editor::Action::Edit(if shift {
-                        iced::widget::text_editor::Edit::Unindent
-                    } else {
-                        iced::widget::text_editor::Edit::Indent
-                    }),
-                ))),
-                _ => Binding::from_key_press(kp),
-            }
         });
+        if let Some(id) = self.input_id.clone() {
+            input = input.id(id);
+        }
+        let input = input
+            .header(false)
+            .footer(false)
+            .prompt()
+            .size(size)
+            .placeholder(self.placeholder)
+            .height(rows as f32 * size * 1.65 + if self.compact { 34.0 } else { 26.0 })
+            .completions(&state.input.completion, move |event| {
+                completion_event(ReplEvent::Complete(event))
+            })
+            .key_binding(move |kp| {
+                if !matches!(kp.status, Status::Focused { .. }) {
+                    return None;
+                }
+                let command = kp.modifiers.command();
+                let shift = kp.modifiers.shift();
+                let custom = |message| Some(Binding::Custom(message));
+                match kp.key.as_ref() {
+                    Key::Named(Named::Enter) if !running && (command || (!shift && ready)) => {
+                        custom(submit.clone())
+                    }
+                    Key::Named(Named::ArrowUp) if !shift && (command || one_line) => {
+                        custom(up.clone())
+                    }
+                    Key::Named(Named::ArrowDown) if !shift && (command || one_line) => {
+                        custom(down.clone())
+                    }
+                    Key::Character(ch) if command && ch.eq_ignore_ascii_case("z") => {
+                        custom(if shift { redo.clone() } else { undo.clone() })
+                    }
+                    Key::Character(ch) if command && ch.eq_ignore_ascii_case("y") => {
+                        custom(redo.clone())
+                    }
+                    Key::Named(Named::Tab) => custom((key_event)(ReplEvent::Edit(
+                        iced::widget::text_editor::Action::Edit(if shift {
+                            iced::widget::text_editor::Edit::Unindent
+                        } else {
+                            iced::widget::text_editor::Edit::Indent
+                        }),
+                    ))),
+                    _ => Binding::from_key_press(kp),
+                }
+            });
         let action = if running {
             interrupt
         } else {
@@ -233,32 +286,59 @@ impl<'a, Message: Clone + 'a> PythonRepl<'a, Message> {
         let timing = state.elapsed().map_or_else(String::new, |duration| {
             format!("{:.1} ms", duration.as_secs_f64() * 1000.0)
         });
-        let footer = row![
-            text("Enter çalıştır · Shift+Enter satır · ↑↓ geçmiş")
-                .font(font())
-                .size(typography::caption())
-                .width(Fill)
-                .style(style::text::muted),
-            text(timing)
-                .font(font())
-                .size(typography::caption())
-                .style(style::text::muted),
-            go,
-        ]
-        .spacing(8)
-        .align_y(iced::Center);
-        let content = column![
-            container(header).padding([9, 14]).width(Fill),
-            super::super::horizontal_divider(),
-            output,
-            super::super::horizontal_divider(),
-            container(input).padding([8, 10]).width(Fill),
-            container(footer)
-                .padding([0, 14])
-                .padding(iced::Padding::new(0.0).left(14.0).right(14.0).bottom(12.0))
+        let content = if self.compact {
+            // Çalıştır and the time beside the box; the hints go.
+            let side = column![
+                go,
+                text(timing)
+                    .font(font())
+                    .size(typography::caption())
+                    .style(style::text::muted)
+            ]
+            .spacing(4)
+            .align_x(iced::Center);
+            column![
+                container(header).padding([6, 12]).width(Fill),
+                super::super::horizontal_divider(),
+                output,
+                super::super::horizontal_divider(),
+                container(
+                    row![container(input).width(Fill), side]
+                        .spacing(8)
+                        .align_y(iced::Center)
+                )
+                .padding([6, 10])
                 .width(Fill),
-        ]
-        .height(self.height);
+            ]
+            .height(self.height)
+        } else {
+            let footer = row![
+                text("Enter çalıştır · Shift+Enter satır · ↑↓ geçmiş")
+                    .font(font())
+                    .size(typography::caption())
+                    .width(Fill)
+                    .style(style::text::muted),
+                text(timing)
+                    .font(font())
+                    .size(typography::caption())
+                    .style(style::text::muted),
+                go,
+            ]
+            .spacing(8)
+            .align_y(iced::Center);
+            column![
+                container(header).padding([9, 14]).width(Fill),
+                super::super::horizontal_divider(),
+                output,
+                super::super::horizontal_divider(),
+                container(input).padding([8, 10]).width(Fill),
+                container(footer)
+                    .padding([0, 14])
+                    .padding(iced::Padding::new(0.0).left(14.0).right(14.0).bottom(12.0))
+                    .width(Fill),
+            ]
+            .height(self.height)
+        };
         Surface::new(
             container(content)
                 .padding(1)

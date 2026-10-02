@@ -377,6 +377,12 @@ impl ReplState {
         self.push(EntryKind::Note, text.into(), 0);
     }
 
+    /// A line of the host's own outside a run: a note, or an error such as a
+    /// file that could not be read.
+    pub fn message(&mut self, kind: EntryKind, text: impl Into<String>) {
+        self.push(kind, text.into(), 0);
+    }
+
     fn push(&mut self, kind: EntryKind, mut text: String, execution: u64) {
         if text.len() > OUTPUT_LIMIT {
             let mut end = OUTPUT_LIMIT;
@@ -397,11 +403,24 @@ impl ReplState {
         self.revision = self.revision.wrapping_add(1);
     }
 
-    /// Append streaming output only if the request is still current.
+    /// Append streaming output only if the request is still current. Output
+    /// following output of the same kind joins it: a run that prints line by
+    /// line is one entry, not one per line.
     pub fn append(&mut self, id: u64, kind: EntryKind, text: impl Into<String>) {
-        if self.pending.as_ref().is_some_and(|r| r.id == id) {
-            self.push(kind, text.into(), id);
+        if self.pending.as_ref().is_none_or(|r| r.id != id) {
+            return;
         }
+        let text = text.into();
+        if let Some(last) = self.entries.back_mut()
+            && last.execution == id
+            && last.kind == kind
+            && last.text.len() + text.len() <= OUTPUT_LIMIT
+        {
+            last.text.push_str(&text);
+            self.revision = self.revision.wrapping_add(1);
+            return;
+        }
+        self.push(kind, text, id);
     }
 
     pub fn update(&mut self, event: ReplEvent) -> Option<Request> {
@@ -445,6 +464,25 @@ impl ReplState {
             }
         }
         None
+    }
+
+    /// A script run in the REPL's interpreter, shown in the transcript by
+    /// `title` (a comment line) instead of its whole source, and kept out of
+    /// the command history.
+    pub fn submit_titled(&mut self, source: String, title: &str) -> Option<Request> {
+        if self.pending.is_some() || source.trim().is_empty() {
+            return None;
+        }
+        self.serial = self.serial.checked_add(1)?;
+        let request = Request {
+            id: self.serial,
+            source,
+        };
+        self.push(EntryKind::Input, format!("# {title}"), request.id);
+        self.elapsed = None;
+        self.status = RunStatus::Running;
+        self.pending = Some(request.clone());
+        Some(request)
     }
 
     /// Also used by a script editor sharing the REPL's interpreter.
@@ -548,6 +586,47 @@ mod tests {
             incomplete: false,
             elapsed: Duration::from_millis(12),
         }
+    }
+
+    #[test]
+    fn streamed_output_joins_its_entry_and_host_lines_need_no_run() {
+        let mut repl = ReplState::default();
+        repl.message(EntryKind::Error, "betik.py okunamadı");
+        let request = repl
+            .submit("for i in range(3): print(i)".into())
+            .expect("submitted");
+        repl.append(request.id, EntryKind::Output, "0\n");
+        repl.append(request.id, EntryKind::Output, "1\n");
+        repl.append(request.id, EntryKind::Error, "uyarı\n");
+        repl.append(request.id, EntryKind::Output, "2\n");
+        repl.append(request.id + 1, EntryKind::Output, "başkasının\n");
+        let shown: Vec<(EntryKind, &str)> =
+            repl.entries().map(|e| (e.kind, e.text.as_str())).collect();
+        assert_eq!(
+            shown,
+            [
+                (EntryKind::Error, "betik.py okunamadı"),
+                (EntryKind::Input, "for i in range(3): print(i)"),
+                (EntryKind::Output, "0\n1\n"),
+                (EntryKind::Error, "uyarı\n"),
+                (EntryKind::Output, "2\n"),
+            ]
+        );
+    }
+
+    #[test]
+    fn a_titled_run_shows_its_title_and_stays_out_of_the_history() {
+        let mut repl = ReplState::default();
+        let request = repl
+            .submit_titled("print(1)\nprint(2)".into(), "betik.py")
+            .expect("submitted");
+        assert_eq!(request.source, "print(1)\nprint(2)");
+        let shown: Vec<&str> = repl.entries().map(|e| e.text.as_str()).collect();
+        assert_eq!(shown, ["# betik.py"]);
+        assert_eq!(repl.status(), RunStatus::Running);
+        assert!(repl.finish(request.id, result()));
+        repl.update(ReplEvent::History(-1));
+        assert_eq!(repl.input.content.text(), "", "nothing to browse back to");
     }
 
     #[test]

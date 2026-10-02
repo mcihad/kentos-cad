@@ -41,8 +41,7 @@ Konsol kodu satır satır çalıştırır. Birkaç düzine satırlık bir iş i�
 
 - Betik yazmak, saklamak ve çalıştırmak masaüstünün içinde; konsol, tamamlama ve imza yardımıyla birlikte.
 - **Açık kalanlar:**
-  - betik düzenleyicisinde tamamlama (konsoldaki kutuda var);
-  - satır numarası sütunu;
+  - ~~betik düzenleyicisinde tamamlama~~ ve ~~satır numarası sütunu~~: KentOS UI'ın `PythonEditor`'üyle geldi (2 Ekim, ADR 0132'nin eki);
   - birden çok betik sekmesi;
   - betiği bir düğmeye ya da komuta bağlamak;
   - taslak birden çok pencerede son yazanındır.

@@ -46,6 +46,7 @@ pub struct PythonEditor<'a, Message> {
     redo: Option<Message>,
     binding: Option<KeyBinding<'a, Message>>,
     completions: Option<(&'a CompletionState, completion_menu::Events<'a, Message>)>,
+    id: Option<iced::widget::Id>,
 }
 
 impl<'a, Message: Clone + 'a> PythonEditor<'a, Message> {
@@ -72,7 +73,14 @@ impl<'a, Message: Clone + 'a> PythonEditor<'a, Message> {
             redo: None,
             binding: None,
             completions: None,
+            id: None,
         }
+    }
+
+    /// The text box's id: an application can focus it (`focusable::focus`).
+    pub fn id(mut self, id: impl Into<iced::widget::Id>) -> Self {
+        self.id = Some(id.into());
+        self
     }
 
     pub fn title(mut self, title: &'a str) -> Self {
@@ -165,7 +173,11 @@ impl<'a, Message: Clone + 'a> PythonEditor<'a, Message> {
         let redo_key = self.redo.clone();
         let custom = self.binding;
         let completion_keys = self.completions.clone();
-        let child = TextEditor::new(self.content)
+        let mut child = TextEditor::new(self.content);
+        if let Some(id) = self.id.clone() {
+            child = child.id(id);
+        }
+        let child = child
             .font(font())
             .size(self.size)
             .line_height(advanced_text::LineHeight::Relative(1.65))

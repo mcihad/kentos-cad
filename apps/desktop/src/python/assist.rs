@@ -1,113 +1,39 @@
-//! The console's help while code is typed (docs/adr/0135): the completion
-//! list and the signature line the Python process answers with
-//! (`kentos._assist`), and the code box's cursor as the character offset
-//! Python counts in.
+//! The console's help while code is typed (docs/adr/0135): the names the
+//! Python process answers with (`kentos._assist`) as KentOS UI's completion
+//! items, the signature line, and the code box's cursor as the character
+//! offset Python counts in.
 
-use std::sync::Arc;
-
-use iced::widget::text_editor::{self, Action, Cursor, Edit, Position};
+use iced::widget::text_editor;
+use kentos_ui::widget::python::{CompletionItem, SymbolKind};
 use serde_json::Value;
 
-/// One entry of the list: a name, what it is, and a hint (a signature, a type).
-#[derive(Clone, Debug, PartialEq)]
-pub struct Choice {
-    pub text: String,
-    pub kind: String,
-    pub detail: String,
-}
-
-/// The names that can end the word that starts at `start` (a character offset).
-#[derive(Clone, Debug, PartialEq)]
-pub struct List {
-    pub start: usize,
-    all: Vec<Choice>,
-    /// The entries that still fit what was typed, by their place in `all`.
-    pub shown: Vec<usize>,
-    pub active: usize,
-}
-
-impl List {
-    /// The process's answer as a list; none when nothing can end the word.
-    pub fn of(answer: &Value) -> Option<Self> {
-        let start = usize::try_from(answer.get("start")?.as_u64()?).ok()?;
-        let all: Vec<Choice> = answer
-            .get("items")?
-            .as_array()?
-            .iter()
-            .filter_map(|i| {
-                Some(Choice {
-                    text: i.get("text")?.as_str()?.to_owned(),
-                    kind: i
-                        .get("kind")
-                        .and_then(Value::as_str)
-                        .unwrap_or_default()
-                        .to_owned(),
-                    detail: i
-                        .get("detail")
-                        .and_then(Value::as_str)
-                        .unwrap_or_default()
-                        .to_owned(),
-                })
-            })
-            .collect();
-        if all.is_empty() {
-            return None;
-        }
-        let shown = (0..all.len()).collect();
-        Some(Self {
-            start,
-            all,
-            shown,
-            active: 0,
+/// The process's answer as the completion list's items: each name, what it
+/// is (the process's kinds: keyword, module, class, function, property,
+/// value) and its hint (a signature, a type).
+pub fn items(answer: &Value) -> Vec<CompletionItem> {
+    let Some(list) = answer.get("items").and_then(Value::as_array) else {
+        return Vec::new();
+    };
+    list.iter()
+        .filter_map(|i| {
+            let name = i.get("text")?.as_str()?;
+            let kind = match i.get("kind").and_then(Value::as_str).unwrap_or_default() {
+                "keyword" => SymbolKind::Keyword,
+                "module" => SymbolKind::Module,
+                "class" => SymbolKind::Class,
+                "function" => SymbolKind::Function,
+                "property" => SymbolKind::Property,
+                _ => SymbolKind::Variable,
+            };
+            let mut item = CompletionItem::new(name, kind);
+            item.detail = i
+                .get("detail")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .to_owned();
+            Some(item)
         })
-    }
-
-    /// What was typed since the list opened narrows it; false when the word
-    /// ended or nothing fits any more.
-    pub fn follow(&mut self, code: &str, cursor: usize) -> bool {
-        if cursor < self.start {
-            return false;
-        }
-        let typed: String = code
-            .chars()
-            .skip(self.start)
-            .take(cursor - self.start)
-            .collect();
-        if typed.chars().any(|c| !(c.is_alphanumeric() || c == '_')) {
-            return false;
-        }
-        let lower = typed.to_lowercase();
-        self.shown = self
-            .all
-            .iter()
-            .enumerate()
-            .filter(|(_, c)| {
-                c.text.starts_with(&typed) || c.text.to_lowercase().starts_with(&lower)
-            })
-            .map(|(i, _)| i)
-            .collect();
-        self.active = self.active.min(self.shown.len().saturating_sub(1));
-        !self.shown.is_empty()
-    }
-
-    pub fn step(&mut self, by: i32) {
-        let n = self.shown.len();
-        if n > 0 {
-            let at = (self.active as i64 + i64::from(by)).rem_euclid(n as i64);
-            self.active = usize::try_from(at).unwrap_or(0);
-        }
-    }
-
-    /// The entry taken: the one clicked (its place among those shown), or the active one.
-    pub fn chosen(&self, which: Option<usize>) -> Option<&Choice> {
-        let at = which.unwrap_or(self.active);
-        self.shown.get(at).and_then(|i| self.all.get(*i))
-    }
-
-    /// The entries shown, in order.
-    pub fn entries(&self) -> impl Iterator<Item = &Choice> {
-        self.shown.iter().filter_map(|i| self.all.get(*i))
-    }
+        .collect()
 }
 
 /// The call the cursor is in: its label, the first paragraph of its help,
@@ -157,45 +83,6 @@ pub fn offset(code: &str, line: usize, column: usize) -> usize {
     chars.saturating_sub(1)
 }
 
-/// A character offset as a line and its byte column.
-pub fn position(code: &str, offset: usize) -> (usize, usize) {
-    let mut left = offset;
-    let mut last = (0, 0);
-    for (i, l) in code.split('\n').enumerate() {
-        let n = l.chars().count();
-        if left <= n {
-            let byte = l.char_indices().nth(left).map_or(l.len(), |(b, _)| b);
-            return (i, byte);
-        }
-        left -= n + 1;
-        last = (i, l.len());
-    }
-    last
-}
-
-/// Replaces the characters `start..end` of the box's code with `text`.
-pub fn replace(
-    content: &mut text_editor::Content,
-    code: &str,
-    start: usize,
-    end: usize,
-    text: &str,
-) {
-    let (l0, c0) = position(code, start);
-    let (l1, c1) = position(code, end.max(start));
-    content.move_to(Cursor {
-        position: Position {
-            line: l1,
-            column: c1,
-        },
-        selection: (start != end).then_some(Position {
-            line: l0,
-            column: c0,
-        }),
-    });
-    content.perform(Action::Edit(Edit::Paste(Arc::new(text.to_owned()))));
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -206,34 +93,31 @@ mod tests {
         let code = "ığ = 1\ncad.poly";
         assert_eq!(offset(code, 0, 2), 1, "ı is two bytes, one character");
         assert_eq!(offset(code, 1, 8), 15);
-        assert_eq!(position(code, 15), (1, 8));
-        assert_eq!(position(code, 1), (0, 2));
-        assert_eq!(position(code, 99), (1, 8));
+        assert_eq!(offset(code, 1, 3), 10);
     }
 
     #[test]
-    fn the_list_narrows_as_the_word_grows_and_closes_when_it_ends() {
-        let mut list = List::of(&json!({"start": 4, "items": [
-            {"text": "polygon", "kind": "module", "detail": ""},
-            {"text": "polyline", "kind": "module", "detail": ""},
-            {"text": "point", "kind": "module", "detail": ""}]}))
-        .expect("a list");
-        assert!(list.follow("cad.poly", 8));
+    fn the_answer_becomes_the_lists_items_with_their_kinds() {
+        let items = items(&json!({"start": 4, "items": [
+            {"text": "polygon", "kind": "module", "detail": "Kapalı alan"},
+            {"text": "Document", "kind": "class", "detail": ""},
+            {"text": "create", "kind": "function", "detail": "(doc, layer_id, pts)"},
+            {"text": "pts", "kind": "value", "detail": "list"},
+            {"text": "if", "kind": "keyword", "detail": ""}]}));
+        let seen: Vec<(&str, SymbolKind, &str)> = items
+            .iter()
+            .map(|i| (i.name.as_str(), i.kind, i.detail.as_str()))
+            .collect();
         assert_eq!(
-            list.entries().map(|c| c.text.as_str()).collect::<Vec<_>>(),
-            ["polygon", "polyline"]
+            seen,
+            [
+                ("polygon", SymbolKind::Module, "Kapalı alan"),
+                ("Document", SymbolKind::Class, ""),
+                ("create", SymbolKind::Function, "(doc, layer_id, pts)"),
+                ("pts", SymbolKind::Variable, "list"),
+                ("if", SymbolKind::Keyword, ""),
+            ]
         );
-        list.step(1);
-        assert_eq!(list.chosen(None).map(|c| c.text.as_str()), Some("polyline"));
-        list.step(1);
-        assert_eq!(
-            list.chosen(None).map(|c| c.text.as_str()),
-            Some("polygon"),
-            "round"
-        );
-        assert!(list.follow("cad.POLYG", 9), "the case need not match");
-        assert!(!list.follow("cad.polygon.", 12), "a dot ends the word");
-        assert!(!list.follow("cad", 3), "back before the word");
-        assert!(List::of(&json!({"start": 0, "items": []})).is_none());
+        assert!(super::items(&json!({"start": 0})).is_empty());
     }
 }

@@ -8,20 +8,20 @@
 //! there after a restart; Yeni and Aç over unsaved work ask first.
 
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 
 use iced::keyboard::Key;
 use iced::keyboard::key::Named;
 use iced::widget::text_editor::{self, Action, Binding, Cursor, Edit, KeyPress, Position, Status};
-use iced::widget::{Column, button, container, row, text, text_editor as editor};
+use iced::widget::{Column, button, container, row, text};
 use iced::{Element, Fill, Length, Padding, Task, Theme};
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::style;
 use kentos_ui::theme::{Tokens, typography};
+use kentos_ui::widget::python::{CompletionEvent, EditorState, PythonEditor};
 use kentos_ui::widget::{Tip, tip};
 use serde::{Deserialize, Serialize};
 
-use super::{Kind, assist, code};
+use super::{Kind, assist};
 use crate::app::{App, Message};
 
 const DRAFT: &str = "python-betik.json";
@@ -34,10 +34,11 @@ pub enum Pending {
     Open,
 }
 
-/// The script being written.
+/// The script being written: KentOS UI's editor state (Python's
+/// indentation, undo and redo, the completion list).
 #[derive(Default)]
 pub struct Script {
-    pub content: text_editor::Content,
+    pub editor: EditorState,
     pub path: Option<PathBuf>,
     pub dirty: bool,
     pub asking: Option<Pending>,
@@ -66,7 +67,7 @@ impl Script {
             ..Self::default()
         };
         if let Some(d) = draft {
-            script.content = text_editor::Content::with_text(&d.text);
+            script.editor = EditorState::with_text(&d.text);
             script.path = d.path;
             script.dirty = d.dirty;
         }
@@ -82,7 +83,7 @@ impl Script {
             format: FORMAT.to_owned(),
             version: 1,
             path: self.path.clone(),
-            text: self.content.text(),
+            text: self.editor.content.text(),
             dirty: self.dirty,
         };
         if let Ok(json) = serde_json::to_string(&draft) {
@@ -107,11 +108,11 @@ impl Script {
 
     /// Puts the cursor on `line` (from 1), the line selected.
     pub fn show_line(&mut self, line: usize) {
-        let code = self.content.text();
+        let code = self.editor.content.text();
         let Some(text) = code.split('\n').nth(line.saturating_sub(1)) else {
             return;
         };
-        self.content.move_to(Cursor {
+        self.editor.content.move_to(Cursor {
             position: Position {
                 line: line - 1,
                 column: text.len(),
@@ -127,10 +128,13 @@ impl Script {
 /// What the Betik side asked for.
 #[derive(Debug, Clone)]
 pub enum Event {
+    /// The editor's typing and moves (Enter keeps the indentation and adds
+    /// after a `:`, Tab indents: KentOS UI's editor state).
     Edit(text_editor::Action),
-    /// Enter: a new line indented as this one, and more after a `:`.
-    Newline,
-    Indent,
+    /// The completion list (Ctrl+Space, the arrows, Enter or Tab, Esc).
+    Complete(CompletionEvent),
+    Undo,
+    Redo,
     New,
     Open,
     Opened(Option<PathBuf>),
@@ -147,20 +151,6 @@ pub enum Event {
 
 fn ev(e: Event) -> Message {
     Message::Python(super::Event::Script(e))
-}
-
-/// The indentation a new line after the cursor's line takes.
-pub(super) fn indentation(code: &str, cursor: usize) -> String {
-    let before: String = code.chars().take(cursor).collect();
-    let line = before.rsplit('\n').next().unwrap_or_default();
-    let mut indent: String = line
-        .chars()
-        .take_while(|c| *c == ' ' || *c == '\t')
-        .collect();
-    if line.trim_end().ends_with(':') {
-        indent.push_str("    ");
-    }
-    indent
 }
 
 /// The last line of `error` that names `name`: where a failed run stopped in the script.
@@ -181,25 +171,30 @@ impl App {
         let s = &mut self.python.script;
         match event {
             Event::Edit(action) => {
-                let writes = matches!(action, Action::Edit(_));
-                s.content.perform(action);
+                let writes = action.is_edit();
+                s.editor.perform(action);
                 if writes {
                     s.dirty = true;
                     s.keep();
                 }
-                Task::none()
+                self.python_ask_completion(super::Target::Script, false)
             }
-            Event::Newline => {
-                let (code, cursor) = assist::caret(&s.content);
-                let text = format!("\n{}", indentation(&code, cursor));
-                s.content.perform(Action::Edit(Edit::Paste(Arc::new(text))));
-                s.dirty = true;
-                s.keep();
-                Task::none()
+            Event::Complete(event) => {
+                let explicit = matches!(event, CompletionEvent::Request);
+                let before = s.editor.revision();
+                let _ = s.editor.complete(event);
+                if s.editor.revision() != before {
+                    s.dirty = true;
+                    s.keep();
+                }
+                self.python_ask_completion(super::Target::Script, explicit)
             }
-            Event::Indent => {
-                s.content
-                    .perform(Action::Edit(Edit::Paste(Arc::new("    ".to_owned()))));
+            Event::Undo | Event::Redo => {
+                if matches!(event, Event::Undo) {
+                    s.editor.undo();
+                } else {
+                    s.editor.redo();
+                }
                 s.dirty = true;
                 s.keep();
                 Task::none()
@@ -235,7 +230,7 @@ impl App {
             Event::Opened(Some(path)) => {
                 match std::fs::read_to_string(&path) {
                     Ok(text) => {
-                        s.content = text_editor::Content::with_text(&text);
+                        s.editor = EditorState::with_text(&text);
                         s.path = Some(path);
                         s.dirty = false;
                         s.keep();
@@ -285,19 +280,23 @@ impl App {
                 Task::none()
             }
             Event::RunAll => {
-                let (code, name) = (s.content.text(), s.run_name());
-                self.python_run(code, Some(name))
+                let (code, name) = (s.editor.content.text(), s.run_name());
+                self.python_run_titled(code, name)
             }
             Event::RunSelection => {
-                let chosen = s.content.selection().filter(|t| !t.trim().is_empty());
+                let chosen = s
+                    .editor
+                    .content
+                    .selection()
+                    .filter(|t| !t.trim().is_empty());
                 let code = chosen.unwrap_or_else(|| {
-                    let (code, cursor) = assist::caret(&s.content);
+                    let (code, cursor) = assist::caret(&s.editor.content);
                     let before: String = code.chars().take(cursor).collect();
                     let line = before.split('\n').count() - 1;
                     code.split('\n').nth(line).unwrap_or_default().to_owned()
                 });
                 // A selection runs as its own code: its lines count from its first.
-                self.python_run(dedent(&code), Some("<betik seçimi>".to_owned()))
+                self.python_run_titled(dedent(&code), "<betik seçimi>".to_owned())
             }
             Event::KeepAndGo => match s.path.clone() {
                 Some(path) => {
@@ -321,7 +320,7 @@ impl App {
 
     /// Writes the script to `path`; whether it was written.
     fn script_write(&mut self, path: &Path) -> bool {
-        let text = self.python.script.content.text();
+        let text = self.python.script.editor.content.text();
         match std::fs::write(path, text.as_bytes()) {
             Ok(()) => {
                 let s = &mut self.python.script;
@@ -353,10 +352,12 @@ impl App {
     }
 
     /// The Betik side: the script and its bar on the left, the output on the right.
+    /// The Betik side: the script and its bar on the left, the console's
+    /// REPL (what the runs printed, and code to try) on the right.
     pub(crate) fn python_script_view<'a>(
         &'a self,
         mode_switch: Element<'a, Message>,
-        output: Element<'a, Message>,
+        console: Element<'a, Message>,
     ) -> Element<'a, Message> {
         let s = &self.python.script;
         let running = self.python.running.is_some();
@@ -477,16 +478,13 @@ impl App {
                     .style(style::container::popover),
             );
         }
-        let area = editor(&s.content)
+        let area = PythonEditor::new(&s.editor.content, |a| ev(Event::Edit(a)))
+            .header(false)
             .placeholder("# Python betiği: doc açık çizim, cad kentos.cad")
-            .on_action(|a| ev(Event::Edit(a)))
-            .font(typography::mono())
-            .size(typography::body())
-            .height(Fill)
-            .padding(Padding::from([8, 12]))
-            .highlight_with::<code::Python>((), code::format)
-            .key_binding(keys)
-            .style(style::field::text_area);
+            .status(self.python.repl.status())
+            .revision(s.editor.revision())
+            .completions(&s.editor.completion, |e| ev(Event::Complete(e)))
+            .key_binding(keys);
         left = left.push(
             container(area)
                 .padding(Padding::new(0.0).left(12.0).right(6.0).bottom(8.0))
@@ -494,9 +492,12 @@ impl App {
         );
         row![
             left.width(Length::FillPortion(3)),
-            kentos_ui::widget::vertical_divider(),
-            container(output).width(Length::FillPortion(2)).height(Fill),
+            container(console)
+                .padding(Padding::new(0.0).right(8.0).bottom(8.0))
+                .width(Length::FillPortion(2))
+                .height(Fill),
         ]
+        .spacing(4)
         .height(Fill)
         .into()
     }
@@ -516,6 +517,9 @@ fn dedent(code: &str) -> String {
         .join("\n")
 }
 
+/// The editor's keys: F5 runs the script, Ctrl+Enter its selection (or
+/// the cursor's line), Ctrl+S saves, Ctrl+Shift+S saves as; Ctrl+Z and
+/// Ctrl+Y (Ctrl+Shift+Z) undo and redo; Tab and Shift+Tab indent.
 fn keys(kp: KeyPress) -> Option<Binding<Message>> {
     if !matches!(kp.status, Status::Focused { .. }) {
         return None;
@@ -526,26 +530,27 @@ fn keys(kp: KeyPress) -> Option<Binding<Message>> {
     match kp.key.as_ref() {
         Key::Named(Named::F5) => custom(Event::RunAll),
         Key::Named(Named::Enter) if control => custom(Event::RunSelection),
-        Key::Named(Named::Enter) if !shift && !kp.modifiers.alt() => custom(Event::Newline),
-        Key::Named(Named::Tab) if !shift => custom(Event::Indent),
+        Key::Named(Named::Tab) if !control && !kp.modifiers.alt() => {
+            custom(Event::Edit(Action::Edit(if shift {
+                Edit::Unindent
+            } else {
+                Edit::Indent
+            })))
+        }
         Key::Character(c) if control && c.eq_ignore_ascii_case("s") => {
             custom(if shift { Event::SaveAs } else { Event::Save })
         }
+        Key::Character(c) if control && c.eq_ignore_ascii_case("z") => {
+            custom(if shift { Event::Redo } else { Event::Undo })
+        }
+        Key::Character(c) if control && c.eq_ignore_ascii_case("y") => custom(Event::Redo),
         _ => Binding::from_key_press(kp),
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{dedent, failed_line, indentation};
-
-    #[test]
-    fn a_new_line_keeps_the_indentation_and_adds_after_a_colon() {
-        assert_eq!(indentation("x = 1", 5), "");
-        assert_eq!(indentation("for p in pts:", 13), "    ");
-        assert_eq!(indentation("def f():\n    if a:", 18), "        ");
-        assert_eq!(indentation("def f():\n    y = 2", 18), "    ");
-    }
+    use super::{dedent, failed_line};
 
     #[test]
     fn a_failed_run_names_its_line_in_the_script() {

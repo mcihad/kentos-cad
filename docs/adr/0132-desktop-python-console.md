@@ -127,3 +127,27 @@ Sahibin kararı (28 Eylül): **ayrı süreç**. Gömülü yolun bedeli ağırdı
 - **Resimler:** `cargo test -p kentos-desktop python::tests::screens -- --ignored`, gerçek çalıştırmalarla, `.run/shots/python-konsol-*`, iki tema ve iki boyut.
 - **Belge:** `cargo test -p kentos-domain --test document` (`group_changes`).
 - **Genel:** `cargo test -p kentos-desktop` (516), clippy, `mypy --strict`, `node scripts/arch/deps.mjs`.
+
+## Ek (2 Ekim): KentOS UI'ın Python konsolu
+
+Sahibin isteğiyle sekmenin konsolu KentOS UI'ın `PythonRepl`'i, betik düzenleyicisi `PythonEditor`'üdür (`crates/ui/src/widget/python/`). Masaüstünün kendi çıktı listesi, giriş kutusu ve renklendiricisi (`python/code.rs`) kalktı. Süreç, kanal, tek geri alma adımı, çalışırken çizimin beklemesi ve kayıt kuralları değişmedi.
+
+- **Çıktı:** çalıştırma başına bir kayıt: girilen kod, çıktısı, hata dökümü, süresi. En çok 400 kayıt tutulur, kaydın metni 128 KiB'dir. Aynı çalıştırmanın ardışık çıktısı tek blokta birleşir.
+  - Betik aç… ve Betik yüzünün çalıştırmaları kayıtta `# <dosya adı>` başlığıyla görünür, geçmişe girmez (`ReplState::submit_titled`).
+  - Konsolun notları ve masaüstünün iletileri kayıt dışı satırlardır (`ReplState::message`).
+- **Kısa kip** (`PythonRepl::compact`; alt panel alçaktır):
+  - Giriş 1 ile 5 satırdır; Çalıştır (çalışırken Durdur) ve süre girişin yanındadır.
+  - Başlıkta Python, masaüstünün düğmeleri (Konsol | Betik, Betik aç…, Yeniden başlat, Ajanlara aç) ve imza satırı durur; Temizle yalnız ikondur.
+- **Tuşlar:** Enter bütünlenmiş kodu çalıştırır, Shift+Enter yeni satır açar, Ctrl+Enter her zaman çalıştırır. ↑ ve ↓ tek satırda ya da Ctrl ile son 200 kodu getirir. Tab girintiler, Shift+Tab geri alır; Ctrl+Z ve Ctrl+Y girişte geri alır ve yineler.
+- **Tamamlama** KentOS UI'ın listesiyledir: imlecin yanında, türün ikonu ve ipucuyla.
+  - Ctrl+Boşluk açar; iki harf, nokta ya da açılan parantezden sonra yazdıkça kendiliğinden açılır. ↑ ve ↓ gezinir, Enter ya da Tab alır, Esc kapatır.
+  - Adları yine konsolun Python'u verir (`kentos._assist`, ADR 0135). Python başlamamışken ya da kod çalışırken liste kodun kendi adlarıyla kalır: anahtar sözcükler, yerleşikler, kodda tanımlananlar. Açık istek Python'u başlatır.
+  - Tam eşleşen ad yoksa büyük-küçük harf gözetmeden eşleşenler gelir (ADR 0135'in kuralı; `doc.MEAS` → `measure`).
+- **Betik yüzü** (ADR 0136): düzenleyicide satır numaraları, akıllı girinti, geri alma ve tamamlama vardır. F5, Ctrl+Enter, Ctrl+S, Ctrl+Shift+S, hata satırına gitme ve taslak aynen kaldı.
+
+**Doğrulama.**
+
+- `cargo test -p kentos-ui python`: 14 test (`state`, `completion`; büyük-küçük harf gözetmeyen eşleşme dahil).
+- `cargo test -p kentos-desktop python:: -- --include-ignored`: 25 test, gerçek Python ve MCP ajanıyla. Çıktının birleşmesi, yazarak ve açık istekle tamamlama, geçmiş, betiğin `editor.content`'i ve `doc.MEAS` → `doc.measure` dahil.
+- Resimler: `python::tests::screens` (`python-konsol-*`).
+- Genel: `pnpm rust:test:desktop` ve clippy. Vitrinin anlık resimleri değişmedi: 37'nin 34'ü bayt bayt aynı, kalan üçü saati gösterir.

@@ -17,7 +17,6 @@
 
 mod agents;
 mod assist;
-mod code;
 mod host;
 pub(crate) mod link;
 pub(crate) mod script;
@@ -27,10 +26,13 @@ mod view;
 mod tests;
 
 use std::path::PathBuf;
+use std::time::{Duration, Instant};
 
 use iced::Task;
-use iced::widget::text_editor;
 use kentos_headless::HeadlessError;
+use kentos_ui::widget::python::{
+    CompletionEvent, EditorState, EntryKind, ReplEvent, ReplState, Request, RunResult,
+};
 use serde_json::{Value, json};
 
 use crate::app::{App, Message};
@@ -40,16 +42,10 @@ pub use host::Said;
 
 /// The undo step of a run that names none.
 pub const STEP: &str = "Python";
-/// The most lines the console keeps; the oldest go.
-const MOST_LINES: usize = 4000;
-/// The most runs the history keeps.
-const HISTORY: usize = 200;
 
 /// What a line of the console is.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Kind {
-    /// The code run, as it was typed.
-    Input,
     /// What the code printed.
     Out,
     /// What it wrote to its errors (warnings, a C library).
@@ -60,10 +56,11 @@ pub enum Kind {
     Note,
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct Line {
-    pub kind: Kind,
-    pub text: String,
+/// The code box a completion was asked for.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Target {
+    Console,
+    Script,
 }
 
 /// Code running now.
@@ -82,6 +79,8 @@ pub struct Run {
     told: bool,
     /// For the command history: the file, or the first line typed.
     title: String,
+    /// When it was sent: the console shows how long it ran.
+    started: Instant,
 }
 
 /// The Python tab's two sides.
@@ -99,25 +98,21 @@ pub struct Console {
     pub mode: Mode,
     /// The Betik side's script (script.rs).
     pub script: script::Script,
-    pub lines: Vec<Line>,
-    pub input: text_editor::Content,
-    history: Vec<String>,
-    /// Where ↑ and ↓ are in the history, and what was typed before.
-    browsing: Option<(usize, String)>,
+    /// The console (KentOS UI's REPL): what ran and what it printed, the
+    /// code box, the runs to go back through with ↑ and ↓, the completion list.
+    pub repl: ReplState,
     host: Option<host::Host>,
     /// The process messages belong to: a stopped one's late ones are dropped.
     generation: u64,
     /// “Python 3.14.4 · kentos 0.1.0” once the process said it is ready.
     pub ready: Option<String>,
     pub running: Option<Run>,
-    runs: u64,
     python: PathBuf,
-    /// The names that can end the word at the cursor, while the list is open (assist.rs).
-    pub completion: Option<assist::List>,
-    /// The call the cursor is in.
+    /// The call the console's cursor is in.
     pub signature: Option<assist::Signature>,
     /// The last questions asked of the process: older answers are dropped.
-    asked_completion: u64,
+    /// A completion is a box's list's request (its generation).
+    asked_completion: Option<(Target, u64)>,
     asked_signature: u64,
     /// The agents' link, while the user keeps it open (link.rs, agents.rs).
     pub link: Option<link::Link>,
@@ -130,19 +125,14 @@ impl Default for Console {
         Self {
             mode: Mode::Console,
             script: script::Script::default(),
-            lines: Vec::new(),
-            input: text_editor::Content::new(),
-            history: Vec::new(),
-            browsing: None,
+            repl: ReplState::default(),
             host: None,
             generation: 0,
             ready: None,
             running: None,
-            runs: 0,
             python: PathBuf::new(),
-            completion: None,
             signature: None,
-            asked_completion: 0,
+            asked_completion: None,
             asked_signature: 0,
             link: None,
             agents: std::collections::BTreeMap::new(),
@@ -151,33 +141,31 @@ impl Default for Console {
 }
 
 impl Console {
+    /// A line of the console: the running code's output joins its run;
+    /// anything else is the console's own word.
     fn push(&mut self, kind: Kind, text: impl Into<String>) {
-        self.lines.push(Line {
-            kind,
-            text: text.into(),
-        });
-        if self.lines.len() > MOST_LINES {
-            let over = self.lines.len() - MOST_LINES;
-            self.lines.drain(..over);
+        let entry = match kind {
+            Kind::Out => EntryKind::Output,
+            Kind::Err | Kind::Error => EntryKind::Error,
+            Kind::Note => EntryKind::Note,
+        };
+        let run = self
+            .running
+            .as_ref()
+            .map(|r| r.id)
+            .filter(|id| self.repl.pending().is_some_and(|p| p.id == *id));
+        match run {
+            Some(id) => self.repl.append(id, entry, text),
+            None => self.repl.message(entry, text),
         }
     }
 
-    /// Text in lines (a chunk of output may hold several, or end without one).
-    fn push_text(&mut self, kind: Kind, text: &str) {
-        let text = text.strip_suffix('\n').unwrap_or(text);
-        for line in text.split('\n') {
-            self.push(kind, line.trim_end_matches('\r'));
+    /// The code box a completion is for.
+    fn editor(&mut self, target: Target) -> &mut EditorState {
+        match target {
+            Target::Console => &mut self.repl.input,
+            Target::Script => &mut self.script.editor,
         }
-    }
-
-    fn remember(&mut self, code: &str) {
-        if self.history.last().map(String::as_str) != Some(code) {
-            self.history.push(code.to_owned());
-            if self.history.len() > HISTORY {
-                self.history.remove(0);
-            }
-        }
-        self.browsing = None;
     }
 
     /// Whether the process is running (not whether code is).
@@ -189,26 +177,15 @@ impl Console {
 /// What the Python tab asked for, or what its process said.
 #[derive(Debug, Clone)]
 pub enum Event {
-    Edit(text_editor::Action),
-    /// Çalıştır (Enter when the code is whole, Ctrl+Enter).
-    Run,
+    /// The console (KentOS UI's REPL): typing, Enter, ↑ and ↓, the
+    /// completion list, Temizle, Durdur.
+    Repl(ReplEvent),
+    /// Durdur from elsewhere (the Betik side's bar).
     Stop,
     Restart,
-    Clear,
     /// Betik aç…; the file picked, or none when the dialog was cancelled.
     Open,
     Picked(Option<PathBuf>),
-    /// ↑ (-1) and ↓ (+1) through the runs.
-    History(i32),
-    /// Ctrl+Space, or Tab after a name or a dot: the names that can end it.
-    Complete,
-    /// ↑ (-1) and ↓ (+1) in the open list.
-    Step(i32),
-    /// An entry of the list taken: the one shown active, or the one clicked.
-    Accept(Option<usize>),
-    CloseList,
-    /// Tab where nothing is to complete: four spaces.
-    Indent,
     /// Konsol or Betik.
     Mode(Mode),
     /// The Betik side (script.rs).
@@ -221,6 +198,17 @@ pub enum Event {
     Host(u64, Said),
 }
 
+/// A run that could not start or reach the process: its error, at once.
+fn failed(error: impl Into<String>) -> RunResult {
+    RunResult {
+        stdout: String::new(),
+        stderr: error.into(),
+        success: false,
+        incomplete: false,
+        elapsed: Duration::ZERO,
+    }
+}
+
 fn no_document() -> HeadlessError {
     HeadlessError::new(
         "no_document",
@@ -231,19 +219,12 @@ fn no_document() -> HeadlessError {
 impl App {
     pub(crate) fn python_event(&mut self, event: Event) -> Task<Message> {
         match event {
-            Event::Edit(action) => {
-                let moved = !matches!(action, text_editor::Action::Scroll { .. });
-                self.python.input.perform(action);
-                if moved {
-                    self.python_refilter();
-                    return self.python_ask_signature();
-                }
-                Task::none()
-            }
-            Event::Complete => self.python_ask_completion(),
+            Event::Repl(event) => self.python_repl(event),
             Event::Mode(mode) => {
                 self.python.mode = mode;
-                self.python.completion = None;
+                if mode == Mode::Console {
+                    return iced::widget::operation::focus(view::INPUT);
+                }
                 Task::none()
             }
             Event::Script(event) => self.script_event(event),
@@ -252,35 +233,9 @@ impl App {
                 self.agents_heard(heard);
                 view::follow()
             }
-            Event::Step(step) => {
-                if let Some(list) = &mut self.python.completion {
-                    list.step(step);
-                }
-                Task::none()
-            }
-            Event::Accept(which) => {
-                self.python_accept(which);
-                self.python_ask_signature()
-            }
-            Event::CloseList => {
-                self.python.completion = None;
-                Task::none()
-            }
-            Event::Indent => {
-                self.python
-                    .input
-                    .perform(text_editor::Action::Edit(text_editor::Edit::Paste(
-                        std::sync::Arc::new("    ".to_owned()),
-                    )));
-                Task::none()
-            }
-            Event::Run => {
-                let code = self.python.input.text();
-                self.python_run(code, None)
-            }
             Event::Stop => {
                 self.python_stop();
-                Task::none()
+                view::follow()
             }
             Event::Restart => {
                 self.python_stop();
@@ -288,11 +243,7 @@ impl App {
                     Kind::Note,
                     "Yeni oturum: tanımlanan adlar silindi; sonraki çalıştırma yeni bir Python'da.",
                 );
-                Task::none()
-            }
-            Event::Clear => {
-                self.python.lines.clear();
-                Task::none()
+                view::follow()
             }
             Event::Open => Task::perform(
                 async {
@@ -307,17 +258,13 @@ impl App {
             ),
             Event::Picked(None) => Task::none(),
             Event::Picked(Some(path)) => match std::fs::read_to_string(&path) {
-                Ok(code) => self.python_run(code, Some(path.display().to_string())),
+                Ok(code) => self.python_run_titled(code, path.display().to_string()),
                 Err(e) => {
                     self.python
                         .push(Kind::Error, format!("{} okunamadı: {e}", path.display()));
-                    Task::none()
+                    view::follow()
                 }
             },
-            Event::History(step) => {
-                self.python_history(step);
-                Task::none()
-            }
             Event::Host(generation, said) => {
                 if generation != self.python.generation {
                     return Task::none();
@@ -327,57 +274,93 @@ impl App {
         }
     }
 
-    /// Runs code typed in, or a file's (`file` names it in the tracebacks).
-    pub(crate) fn python_run(&mut self, code: String, file: Option<String>) -> Task<Message> {
+    /// The console's own events: Enter sends the code to the process, Durdur
+    /// stops it; the rest is the REPL's (its box, history and list), after
+    /// which the process is asked for the list's names and the call's signature.
+    fn python_repl(&mut self, event: ReplEvent) -> Task<Message> {
+        match event {
+            ReplEvent::Interrupt => {
+                self.python_stop();
+                view::follow()
+            }
+            ReplEvent::Submit => {
+                if self.python.running.is_some() {
+                    return Task::none();
+                }
+                let Some(request) = self.python.repl.update(ReplEvent::Submit) else {
+                    return Task::none();
+                };
+                self.python.signature = None;
+                self.python_exec(request, None)
+            }
+            other => {
+                let moved = matches!(
+                    other,
+                    ReplEvent::Edit(_) | ReplEvent::History(_) | ReplEvent::Undo | ReplEvent::Redo
+                );
+                let explicit = matches!(other, ReplEvent::Complete(CompletionEvent::Request));
+                let _ = self.python.repl.update(other);
+                let asked = self.python_ask_completion(Target::Console, explicit);
+                if moved {
+                    return Task::batch([asked, self.python_ask_signature()]);
+                }
+                asked
+            }
+        }
+    }
+
+    /// Runs a file's code (Betik aç…, the Betik side) in the console's
+    /// Python: the console shows it by its name (`file` names it in the
+    /// tracebacks too), and it stays out of the console's history.
+    pub(crate) fn python_run_titled(&mut self, code: String, file: String) -> Task<Message> {
         let code = code.trim_end().to_owned();
         if code.trim().is_empty() || self.python.running.is_some() {
             return Task::none();
         }
-        self.python.completion = None;
-        self.python.signature = None;
-        let title = match &file {
-            Some(name) => {
-                self.python
-                    .push(Kind::Note, format!("{name} çalıştırılıyor…"));
-                name.clone()
-            }
-            None => {
-                for (i, line) in code.lines().enumerate() {
-                    let prompt = if i == 0 { ">>>" } else { "..." };
-                    self.python.push(Kind::Input, format!("{prompt} {line}"));
-                }
-                self.python.remember(&code);
-                self.python.input = text_editor::Content::new();
-                code.lines().next().unwrap_or_default().trim().to_owned()
-            }
+        let Some(request) = self.python.repl.submit_titled(code, &file) else {
+            return Task::none();
         };
+        self.python.signature = None;
+        self.python_exec(request, Some(file))
+    }
+
+    /// Sends the REPL's request to the process (started when there is none);
+    /// the run is one undo step from its first write.
+    fn python_exec(&mut self, request: Request, file: Option<String>) -> Task<Message> {
         let mut started = Task::none();
         if self.python.host.is_none() {
             match self.python_start() {
                 Ok(task) => started = task,
                 Err(e) => {
-                    self.python.push(Kind::Error, e);
+                    self.python.repl.finish(request.id, failed(e));
                     return view::follow();
                 }
             }
         }
-        self.python.runs += 1;
-        let id = self.python.runs;
-        let mut exec = json!({"type": "exec", "id": id, "code": code});
+        let mut exec = json!({"type": "exec", "id": request.id, "code": request.source});
         if let Some(name) = &file {
             exec["name"] = json!(name);
         }
         let sent = self.python.host.as_ref().is_some_and(|h| h.send(&exec));
         if !sent {
             self.python.host = None;
-            self.python.push(
-                Kind::Error,
-                "Python'a ulaşılamadı: yeniden başlatıldı, kodu yeniden çalıştırın.",
+            self.python.repl.finish(
+                request.id,
+                failed("Python'a ulaşılamadı: yeniden başlatıldı, kodu yeniden çalıştırın."),
             );
             return Task::batch([started, view::follow()]);
         }
+        let title = file.unwrap_or_else(|| {
+            request
+                .source
+                .lines()
+                .next()
+                .unwrap_or_default()
+                .trim()
+                .to_owned()
+        });
         self.python.running = Some(Run {
-            id,
+            id: request.id,
             session: self.document.as_ref().map_or(0, |d| d.session),
             group: None,
             label: None,
@@ -385,6 +368,7 @@ impl App {
             poisoned: false,
             told: false,
             title,
+            started: Instant::now(),
         });
         Task::batch([started, view::follow()])
     }
@@ -416,7 +400,7 @@ impl App {
                         _ => Kind::Out,
                     };
                     let text = m.get("text").and_then(Value::as_str).unwrap_or_default();
-                    self.python.push_text(kind, text);
+                    self.python.push(kind, text.replace("\r\n", "\n"));
                     view::follow()
                 }
                 Some("call") => {
@@ -428,9 +412,16 @@ impl App {
                     view::follow()
                 }
                 Some("completions") => {
-                    if m.get("id").and_then(Value::as_u64) == Some(self.python.asked_completion) {
-                        self.python.completion = assist::List::of(&m);
-                        self.python_refilter();
+                    let id = m.get("id").and_then(Value::as_u64);
+                    if let Some((target, generation)) = self.python.asked_completion
+                        && id == Some(generation)
+                    {
+                        self.python.asked_completion = None;
+                        let items = assist::items(&m);
+                        self.python
+                            .editor(target)
+                            .completion
+                            .receive(generation, items);
                     }
                     Task::none()
                 }
@@ -447,7 +438,7 @@ impl App {
                 view::follow()
             }
             Said::Stderr(text) => {
-                self.python.push_text(Kind::Err, &text);
+                self.python.push(Kind::Err, text);
                 view::follow()
             }
             Said::Closed => {
@@ -529,15 +520,24 @@ impl App {
             return;
         };
         let ok = m.get("ok").and_then(Value::as_bool) == Some(true);
-        if !ok {
-            let error = m.get("error").and_then(Value::as_str).unwrap_or_default();
-            self.python.push_text(Kind::Error, error);
-            // The script run whole: the cursor goes to the line it stopped on.
-            if run.title == self.python.script.run_name()
-                && let Some(line) = script::failed_line(error, &run.title)
-            {
-                self.python.script.show_line(line);
-            }
+        let error = m.get("error").and_then(Value::as_str).unwrap_or_default();
+        // The run's end in the console: its traceback, and how long it ran.
+        self.python.repl.finish(
+            run.id,
+            RunResult {
+                stdout: String::new(),
+                stderr: if ok { String::new() } else { error.to_owned() },
+                success: ok,
+                incomplete: false,
+                elapsed: run.started.elapsed(),
+            },
+        );
+        // The script run whole: the cursor goes to the line it stopped on.
+        if !ok
+            && run.title == self.python.script.run_name()
+            && let Some(line) = script::failed_line(error, &run.title)
+        {
+            self.python.script.show_line(line);
         }
         let poisoned = run.poisoned;
         let title = run.title.clone();
@@ -587,22 +587,20 @@ impl App {
     }
 
     /// Durdur: the process goes (a new one for the next run) and what the
-    /// running code wrote is taken back.
+    /// running code wrote is taken back. The console says it stopped.
     pub(crate) fn python_stop(&mut self) {
         let run = self.python.running.take();
         self.python.host = None;
         self.python.generation += 1;
         self.python.ready = None;
         if let Some(run) = run {
-            let wrote = self.python_close(run, false);
-            self.python.push(
-                Kind::Note,
-                if wrote {
-                    "Durduruldu: bu çalıştırmanın çizime yazdıkları geri alındı."
-                } else {
-                    "Durduruldu."
-                },
-            );
+            let _ = self.python.repl.update(ReplEvent::Interrupt);
+            if self.python_close(run, false) {
+                self.python.push(
+                    Kind::Note,
+                    "Bu çalıştırmanın çizime yazdıkları geri alındı.",
+                );
+            }
         }
     }
 
@@ -612,14 +610,15 @@ impl App {
         self.python.host = None;
         self.python.ready = None;
         if let Some(run) = self.python.running.take() {
+            let id = run.id;
             let wrote = self.python_close(run, false);
-            self.python.push(
-                Kind::Error,
-                if wrote {
+            self.python.repl.finish(
+                id,
+                failed(if wrote {
                     "Python beklenmedik biçimde kapandı; bu çalıştırmanın çizime yazdıkları geri alındı."
                 } else {
                     "Python beklenmedik biçimde kapandı."
-                },
+                }),
             );
         }
         if !was_ready {
@@ -633,10 +632,32 @@ impl App {
         }
     }
 
-    /// Asks the process what can end the word at the cursor (it starts the
-    /// process when there is none yet); not while code runs.
-    fn python_ask_completion(&mut self) -> Task<Message> {
-        if self.python.running.is_some() {
+    /// Asks the process for the names that can end the word at a box's
+    /// cursor, when its list waits for them (the REPL and the script editor
+    /// open the list as code is typed, or with Ctrl+Space). Ctrl+Space
+    /// (`explicit`) starts the process when there is none yet; typing alone
+    /// does not, nor is a running one asked while code runs: the list keeps
+    /// the names in the code.
+    pub(crate) fn python_ask_completion(
+        &mut self,
+        target: Target,
+        explicit: bool,
+    ) -> Task<Message> {
+        let completion = &self.python.editor(target).completion;
+        let Some(request) = completion
+            .request
+            .clone()
+            .filter(|_| completion.open && completion.loading)
+        else {
+            return Task::none();
+        };
+        if self.python.asked_completion == Some((target, request.generation)) {
+            return Task::none();
+        }
+        if self.python.running.is_some() || (self.python.host.is_none() && !explicit) {
+            let completion = &mut self.python.editor(target).completion;
+            let local = completion.items.clone();
+            completion.receive(request.generation, local);
             return Task::none();
         }
         let mut started = Task::none();
@@ -649,18 +670,18 @@ impl App {
                 }
             }
         }
-        let (code, cursor) = assist::caret(&self.python.input);
-        self.python.asked_completion += 1;
-        let ask = json!({"type": "complete", "id": self.python.asked_completion, "code": code, "cursor": cursor});
+        let cursor = assist::offset(&request.source, request.line, request.column);
+        self.python.asked_completion = Some((target, request.generation));
+        let ask = json!({"type": "complete", "id": request.generation, "code": request.source, "cursor": cursor});
         if let Some(h) = &self.python.host {
             h.send(&ask);
         }
         started
     }
 
-    /// Asks for the call the cursor is in, when it is in one and the process runs idle.
+    /// Asks for the call the console's cursor is in, when it is in one and the process runs idle.
     fn python_ask_signature(&mut self) -> Task<Message> {
-        let (code, cursor) = assist::caret(&self.python.input);
+        let (code, cursor) = assist::caret(&self.python.repl.input.content);
         let before: String = code.chars().take(cursor).collect();
         if !before.contains('(') || self.python.running.is_some() {
             self.python.signature = None;
@@ -672,64 +693,6 @@ impl App {
         self.python.asked_signature += 1;
         h.send(&json!({"type": "signature", "id": self.python.asked_signature, "code": code, "cursor": cursor}));
         Task::none()
-    }
-
-    /// The open list follows what is typed; it closes when the word ends.
-    fn python_refilter(&mut self) {
-        let Some(list) = &mut self.python.completion else {
-            return;
-        };
-        let (code, cursor) = assist::caret(&self.python.input);
-        if !list.follow(&code, cursor) {
-            self.python.completion = None;
-        }
-    }
-
-    /// Puts the entry in place of the word it ends.
-    fn python_accept(&mut self, which: Option<usize>) {
-        let Some(list) = self.python.completion.take() else {
-            return;
-        };
-        let Some(choice) = list.chosen(which) else {
-            return;
-        };
-        let (code, cursor) = assist::caret(&self.python.input);
-        assist::replace(
-            &mut self.python.input,
-            &code,
-            list.start,
-            cursor,
-            &choice.text,
-        );
-    }
-
-    fn python_history(&mut self, step: i32) {
-        let c = &mut self.python;
-        if c.history.is_empty() {
-            return;
-        }
-        let last = c.history.len() - 1;
-        let (at, draft) = match c.browsing.take() {
-            Some((at, draft)) => (Some(at), draft),
-            None => (None, c.input.text()),
-        };
-        let next = match (at, step < 0) {
-            (None, true) => Some(last),
-            (None, false) => None,
-            (Some(0), true) => Some(0),
-            (Some(i), true) => Some(i - 1),
-            (Some(i), false) if i < last => Some(i + 1),
-            (Some(_), false) => None,
-        };
-        match next {
-            Some(i) => {
-                c.input = text_editor::Content::with_text(&c.history[i]);
-                c.browsing = Some((i, draft));
-            }
-            None => {
-                c.input = text_editor::Content::with_text(draft.trim_end());
-            }
-        }
     }
 
     /// While code runs the drawing takes no other edit; the first refusal is
