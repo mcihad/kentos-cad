@@ -12,8 +12,8 @@ mod objects;
 use kentos_contracts::{
     AngleUnit, AreaUnit, Bounds, DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2,
     DocumentSnapshotV2, DrawingFont, LabelInk, LabelPlacement, LabelStyle, LayerNode,
-    LayerNodeType, LayerStyle, LineType, MigrationSource, PointStyle, PointSymbol, ProjectId,
-    ProjectSettings, ProjectStyles, Vec2, Workspace,
+    LayerNodeType, LayerSnap, LayerStyle, LineType, MigrationSource, PointStyle, PointSymbol,
+    ProjectId, ProjectSettings, ProjectStyles, Vec2, Workspace,
 };
 
 use crate::SCHEMAS;
@@ -244,7 +244,7 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
         match key {
             "name" => name = Some(text(r)?),
             "blocks" if has.blocks => blocks = Some(blocks::definitions(r, has)?),
-            "layers" => layers = Some(list(r, |r, _| layer(r))?),
+            "layers" => layers = Some(list(r, |r, _| layer(r, has))?),
             "origin" => origin = Some(point(r)?),
             "styles" => styles = Some(project_styles(r)?),
             // Name, blocks and layers come first in the encoded order: the project and its
@@ -426,13 +426,15 @@ fn project_styles(r: &mut Reader<'_>) -> Result<ProjectStyles, KcadError> {
 
 // ── The layer tree (§6.5) ───────────────────────────────────────────────
 
-fn layer(r: &mut Reader<'_>) -> Result<LayerNode, KcadError> {
+fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
     let (mut id, mut name, mut kind, mut style) = (None, None, None, None);
     let (mut locked, mut visible, mut children, mut expanded) = (None, None, None, None);
+    let mut snap = None;
     map(r, |r, key| {
         match key {
             "id" => id = Some(text(r)?),
             "name" => name = Some(text(r)?),
+            "snap" if has.layer_snap => snap = Some(layer_snap(r)?),
             "type" => {
                 kind = Some(named(
                     r,
@@ -445,7 +447,7 @@ fn layer(r: &mut Reader<'_>) -> Result<LayerNode, KcadError> {
             "style" => style = Some(layer_style(r)?),
             "locked" => locked = Some(r.bool()?),
             "visible" => visible = Some(r.bool()?),
-            "children" => children = Some(list(r, |r, _| layer(r))?),
+            "children" => children = Some(list(r, |r, _| layer(r, has))?),
             "expanded" => expanded = Some(r.bool()?),
             _ => return Err(unknown(r)),
         }
@@ -460,7 +462,41 @@ fn layer(r: &mut Reader<'_>) -> Result<LayerNode, KcadError> {
         expanded: required(r, expanded, "expanded")?,
         style: required(r, style, "style")?,
         children: required(r, children, "children")?,
+        snap: match (snap, kind) {
+            (Some(_), Some(LayerNodeType::Group)) => {
+                return Err(r.fail(
+                    Code::BadValue,
+                    "grubun keneti olmaz; kenet yalnız katmanındır",
+                ));
+            }
+            (snap, _) => snap,
+        },
     })
+}
+
+/// A layer's own snapping (docs/adr/0163 §4): `off` (true only) or `kinds`.
+fn layer_snap(r: &mut Reader<'_>) -> Result<LayerSnap, KcadError> {
+    let mut snap = LayerSnap::default();
+    let mut off = None;
+    map(r, |r, key| {
+        match key {
+            "off" => off = Some(r.bool()?),
+            "kinds" => snap.kinds = Some(list(r, |r, _| text(r))?),
+            _ => return Err(unknown(r)),
+        }
+        Ok(())
+    })?;
+    if off == Some(false) {
+        return Err(r.fail(
+            Code::BadValue,
+            "off yalnız true yazılır; kenet kapalı değilse alan yazılmaz",
+        ));
+    }
+    snap.off = off == Some(true);
+    match snap.problem() {
+        Some(problem) => Err(r.fail(Code::BadValue, &problem)),
+        None => Ok(snap),
+    }
 }
 
 fn layer_style(r: &mut Reader<'_>) -> Result<LayerStyle, KcadError> {

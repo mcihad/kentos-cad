@@ -8,7 +8,7 @@ import { crsBySrid } from '../geo/crs';
 import { blockFaultMessage, definitionsFault, type AttributeDefinition, type BlockDefinition } from './blocks';
 import type { CadDocument, DocumentContent } from './document';
 import { MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, TEXT_ALIGNS, widthFactorOk, type Entity, type TextAlign } from './entities';
-import type { LayerInit } from './layers';
+import type { LayerInit, LayerSnap } from './layers';
 import { DRAWING_FONT_IDS, WORKSPACE_IDS } from './projectSettings';
 
 /**
@@ -426,7 +426,32 @@ function layer(v: unknown, where: string): LayerInit {
     // The simple look is checked; label, point and renderer are kept as they are (the style layer reads them).
     style: { ...(s as object), color: str(s.color, `${w} › renk`), lineType: oneOf(s.lineType, LINE_TYPES, `${w} › çizgi tipi`), lineWeight: num(s.lineWeight, `${w} › kalınlık`) },
     children,
+    ...(v.snap !== undefined && { snap: layerSnap(v.snap, type, `${w} › kenet`) }),
   };
+}
+
+/** The snap kinds a layer can keep to (contracts' `LAYER_SNAP_KINDS`; Uç nokta brings Çeyrek with it). */
+const LAYER_SNAP_KINDS = ['endpoint', 'midpoint', 'center', 'node', 'intersection', 'perpendicular', 'tangent', 'nearest', 'centroid', 'extension', 'parallel', 'grid'] as const;
+
+/**
+ * A layer's own snapping (docs/adr/0163 §4), checked as the KCAD readers check it: on a layer only, exactly one of
+ * `off` (true only) and a non-empty list of known, distinct kinds.
+ */
+function layerSnap(v: unknown, type: 'group' | 'layer', where: string): LayerSnap {
+  if (type === 'group') return fail(where, 'grubun keneti olmaz; kenet yalnız katmanındır');
+  if (!isObj(v)) return fail(where, 'nesne olmalı');
+  const keys = Object.keys(v);
+  if (keys.some((k) => k !== 'off' && k !== 'kinds')) return fail(where, 'yalnız off ya da kinds olabilir');
+  if (v.off !== undefined && v.off !== true) return fail(where, 'off yalnız true olabilir');
+  if ((v.off === true) === (v.kinds !== undefined)) return fail(where, 'ya off ya kinds, tam biri olmalı');
+  if (v.off === true) return { off: true };
+  const kinds = Array.isArray(v.kinds) ? v.kinds : fail(`${where} › türler`, 'liste olmalı');
+  if (!kinds.length) return fail(`${where} › türler`, 'boş olamaz');
+  kinds.forEach((k, i) => {
+    oneOf(k, LAYER_SNAP_KINDS, `${where} › türler › ${i + 1}`);
+    if (kinds.indexOf(k) !== i) fail(`${where} › türler`, `${String(k)} iki kez yazılmış`);
+  });
+  return { kinds: kinds as string[] };
 }
 
 /**

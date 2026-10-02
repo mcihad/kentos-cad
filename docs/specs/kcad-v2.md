@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`, `3`, `4`, `5`, `6`, `7`, `8` ya da `9`; değilse `schema_version` |
+| `version` | tam sayı | `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9` ya da `10`; değilse `schema_version` |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -213,7 +213,9 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 
 **Şema 9**, şema 8'in kendisi ve yeni ölçülerdir: ölçünün (`dimension`) beş yeni türü (`ordinate`, `arcLength`, `jogged`, `azimuth`, `slope`), zemini (`mask`) ve eğim ölçüsünün iki kotu (`za`, `zb`; §6.6; ADR 0147). Yazıcı `9`'u **yalnız belgenin ya da bir blok tanımının bir ölçüsünde bunlardan biri varken** yazar. Başka her çizim şema 2–8'dir ve eskisiyle bayt bayt aynıdır. Şema 2–8 yükünde yeni türler bilinmeyen değerdir (`bad_value`, `fixtures/kcad/v2/broken/dimension-ordinate-in-schema-8.kcad`), yeni alanlar bilinmeyen alandır (`unknown_field`, `dimension-mask-in-schema-8.kcad`): eski okuyucu yeni ölçüyü sessizce başka bir ölçü olarak çizmez, dosyayı açmaz. Şema 9 şema 8'i kapsar.
 
-Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: yeni ölçüsü olan çizim 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
+**Şema 10**, şema 9'un kendisi ve katmanın kendi kenetidir: katman düğümünün `snap` alanı (§6.5; ADR 0163 §4). Yazıcı `10`'u **yalnız bir katmanın `snap`'ı varken** yazar. Başka her çizim şema 2–9'dur ve eskisiyle bayt bayt aynıdır. Şema 2–9 yükünde `snap` bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/layer-snap-in-schema-9.kcad`): eski okuyucu, yazarının kenedini kapattığı katmana sessizce kenetlenmez, dosyayı açmaz. Şema 10 şema 9'u kapsar.
+
+Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: kendi keneti olan bir katmanı olan çizim 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
 
 ### 6.2 Belge
 
@@ -272,12 +274,22 @@ Yanlış CBOR türü (float yerine tam sayı, nokta yerine harita) `wrong_type`'
 |---|---|---|---|
 | `id` | metin | evet | proje içinde benzersiz kimlik; ad değişince değişmez |
 | `name` | metin | evet | görünen ad |
+| `snap` | katman keneti | | şema 10'da: katmanın kendi keneti (aşağıda); yalnız katmanda, grupta `bad_value` |
 | `type` | numaralı metin | evet | `group`, `layer` |
 | `style` | katman stili | evet | |
 | `locked` | bool | evet | |
 | `visible` | bool | evet | |
 | `children` | dizi: katman | evet | alt düğümler (katmanda boş dizi) |
 | `expanded` | bool | evet | ağaçta açık mı |
+
+**Katman keneti** (şema 10; ADR 0163 §4): iki biçimden **tam biri**.
+
+| Anahtar | Tür | Zorunlu | Anlamı |
+|---|---|---|---|
+| `off` | bool | | yalnız `true`: katmanın nesnelerine kenetlenilmez |
+| `kinds` | dizi: numaralı metin | | yalnız bu türlerle kenetlenilir (genel türlerle kesişimi): `endpoint` (çeyrek noktalarını da getirir), `midpoint`, `center`, `node`, `intersection`, `perpendicular`, `tangent`, `nearest`, `centroid`, `extension`, `parallel`, `grid` |
+
+İkisi birden, ikisi de yok, `off: false`, boş, yinelenen ya da bilinmeyen tür `bad_value`'dur (`fixtures/kcad/v2/broken/layer-snap-*.kcad`). Kesişim kenedi iki nesneden birinin katmanında kesişim türü açıksa çalışır.
 
 **Katman stili:**
 

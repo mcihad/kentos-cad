@@ -65,12 +65,36 @@ pub fn check_tree(tree: &[LayerNode], active: &str) -> AppResult<()> {
             "Katman ağacında aynı kimlik birden çok kez var.",
         ));
     }
+    snaps(tree)?;
     match find_layer(tree, active) {
         Some((n, _)) if n.kind == LayerNodeType::Layer => Ok(()),
         _ => Err(AppError::invalid(format!(
             "Etkin katman “{active}” ağaçta bir katman değil."
         ))),
     }
+}
+
+/// A layer's own snapping as the KCAD readers take it (docs/adr/0163 §4):
+/// on a layer only, exactly one of `off` and a list of known kinds.
+fn snaps(nodes: &[LayerNode]) -> AppResult<()> {
+    for n in nodes {
+        if let Some(snap) = &n.snap {
+            if n.kind == LayerNodeType::Group {
+                return Err(AppError::invalid(format!(
+                    "“{}” bir grup; grubun keneti olmaz, kenet yalnız katmanındır.",
+                    n.name
+                )));
+            }
+            if let Some(problem) = snap.problem() {
+                return Err(AppError::invalid(format!(
+                    "“{}” katmanının keneti: {problem}.",
+                    n.name
+                )));
+            }
+        }
+        snaps(&n.children)?;
+    }
+    Ok(())
 }
 
 /// The stored name of a storage mode (`project.storage`, migration 0006).
@@ -497,4 +521,78 @@ pub async fn features_by_id(
     .await?;
     tx.commit().await?;
     rows.into_iter().map(record).collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use kentos_contracts::{LayerSnap, LayerStyle, LineType};
+
+    use super::*;
+
+    fn node(
+        id: &str,
+        kind: LayerNodeType,
+        snap: Option<LayerSnap>,
+        children: Vec<LayerNode>,
+    ) -> LayerNode {
+        LayerNode {
+            id: id.to_owned(),
+            name: id.to_owned(),
+            kind,
+            visible: true,
+            locked: false,
+            expanded: true,
+            style: LayerStyle {
+                color: "fg".to_owned(),
+                line_type: LineType::Continuous,
+                line_weight: 0.25,
+                fill: None,
+                point: None,
+                label: None,
+                pick_interior: None,
+                renderer: None,
+            },
+            children,
+            snap,
+        }
+    }
+
+    /// A layer's own snapping is checked as the files' readers check it (docs/adr/0163 §4).
+    #[test]
+    fn a_layers_snapping_is_one_of_off_and_known_kinds_on_a_layer() {
+        let off = || {
+            Some(LayerSnap {
+                off: true,
+                kinds: None,
+            })
+        };
+        let kinds = |k: &[&str]| {
+            Some(LayerSnap {
+                off: false,
+                kinds: Some(k.iter().map(|s| (*s).to_owned()).collect()),
+            })
+        };
+        let tree = |snap| vec![node("a", LayerNodeType::Layer, snap, Vec::new())];
+        assert!(check_tree(&tree(off()), "a").is_ok());
+        assert!(check_tree(&tree(kinds(&["endpoint", "grid"])), "a").is_ok());
+        for bad in [
+            kinds(&[]),
+            kinds(&["quadrant"]),
+            kinds(&["endpoint", "endpoint"]),
+            Some(LayerSnap {
+                off: true,
+                kinds: Some(vec!["node".to_owned()]),
+            }),
+            Some(LayerSnap::default()),
+        ] {
+            assert!(check_tree(&tree(bad.clone()), "a").is_err(), "{bad:?}");
+        }
+        let group = vec![node(
+            "g",
+            LayerNodeType::Group,
+            off(),
+            vec![node("a", LayerNodeType::Layer, None, Vec::new())],
+        )];
+        assert!(check_tree(&group, "a").is_err(), "a group keeps none");
+    }
 }

@@ -57,6 +57,17 @@ export interface LayerNode {
   expanded: boolean;
   style: LayerStyle;
   children: LayerNode[];
+  /** A layer's own snapping (docs/adr/0163 §4): off, or only these kinds; absent, the general kinds. Never a group's. */
+  snap?: LayerSnap;
+}
+
+/** A layer's own snapping: `{ off: true }` or `{ kinds: [...] }` (contracts' `LayerSnap`, exactly one of the two). */
+export type LayerSnap = { off: true; kinds?: never } | { kinds: string[]; off?: never };
+
+/** Whether two layer snaps are the same: both none, both off, or the same kinds in the same order. */
+export function sameSnap(a: LayerSnap | undefined | null, b: LayerSnap | undefined | null): boolean {
+  if (!a || !b) return !a && !b;
+  return !!a.off === !!b.off && (a.kinds ?? []).join() === (b.kinds ?? []).join();
 }
 
 export type LayerInit = Partial<Omit<LayerNode, 'children' | 'style'>> & {
@@ -122,6 +133,8 @@ export class LayerStore {
       expanded: n.expanded ?? true,
       style: { ...defaultStyle, ...n.style },
       children: [],
+      // A layer's own snapping (docs/adr/0163 §4); a group keeps none.
+      ...(n.snap && (n.type ?? (n.children ? 'group' : 'layer')) === 'layer' && { snap: n.snap.kinds ? { kinds: [...n.snap.kinds] } : { off: true } }),
     };
     node.children = (n.children ?? []).map((c) => this.make(c));
     return node;
@@ -216,6 +229,21 @@ export class LayerStore {
     if (!n) return;
     n.locked = !n.locked;
     this.changedState(id);
+  }
+
+  /**
+   * A layer's own snapping (docs/adr/0163 §4): `snap` on the layer, or on every layer of the group (a group keeps
+   * none); null takes it off, back to the general kinds. An edit when anything changed, not an undo step (as a lock).
+   */
+  setSnap(id: string, snap: LayerSnap | null): void {
+    let changed = false;
+    for (const l of this.leavesOf(id)) {
+      if (sameSnap(l.snap, snap)) continue;
+      if (snap) l.snap = snap.kinds ? { kinds: [...snap.kinds] } : { off: true };
+      else delete l.snap;
+      changed = true;
+    }
+    if (changed) this.changedState(id);
   }
 
   /** Show only this node (and its ancestors); hide every other leaf. */

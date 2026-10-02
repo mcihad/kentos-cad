@@ -5,7 +5,7 @@ import type { Entity, EntityGeometry } from '../model/entities';
 import type { Bounds, Vec2 } from '../model/geometry';
 import type { Affine } from '../model/geom/affine';
 import type { Edge } from '../model/geom/intersect';
-import type { LayerNode, LayerStore } from '../model/layers';
+import type { LayerNode, LayerSnap, LayerStore } from '../model/layers';
 import { transformedFrom } from '../model/ops/transform';
 import type { ExtendResult, TrimResult } from '../model/ops/trim';
 import type { ExprTable } from '../model/expression/expression';
@@ -104,7 +104,18 @@ export const extensionAlong = op<(x: Extension, p: Vec2) => number | null>('exte
 /** The point `d` along an acquired extension from its end; null before the end or past an arc's remainder. */
 export const extensionAt = op<(x: Extension, d: number) => Vec2 | null>('extensionAt');
 
-type LayerRow = { id: string; visible: boolean; locked: boolean; pickInterior: boolean; label?: ReturnType<typeof labelRule> };
+type LayerRow = { id: string; visible: boolean; locked: boolean; pickInterior: boolean; label?: ReturnType<typeof labelRule>; snapKinds?: number };
+
+/**
+ * A layer's own snapping as the store's kinds (docs/adr/0163 §4): none when off; Uç nokta brings Çeyrek with it, as
+ * the settings do. The desktop's is `layer_snap_mask` (crates/native/interaction/src/spatial.rs).
+ */
+export function layerSnapMask(snap: LayerSnap): number {
+  if (snap.off) return 0;
+  const kinds = new Set(snap.kinds as SnapKind[]);
+  if (kinds.has('endpoint')) kinds.add('quadrant');
+  return snapMask(kinds);
+}
 
 /** Every layer node with its flags resolved through its ancestors, as the store reads them. */
 export function layerTable(layers: LayerStore): LayerRow[] {
@@ -112,7 +123,14 @@ export function layerTable(layers: LayerStore): LayerRow[] {
   const walk = (nodes: readonly LayerNode[]) => {
     for (const n of nodes) {
       const label = n.style.label ? labelRule(n.style.label) : undefined;
-      out.push({ id: n.id, visible: layers.isVisible(n.id), locked: layers.isLocked(n.id), pickInterior: n.style.pickInterior !== false, ...(label ? { label } : {}) });
+      out.push({
+        id: n.id,
+        visible: layers.isVisible(n.id),
+        locked: layers.isLocked(n.id),
+        pickInterior: n.style.pickInterior !== false,
+        ...(label ? { label } : {}),
+        ...(n.snap ? { snapKinds: layerSnapMask(n.snap) } : {}),
+      });
       walk(n.children);
     }
   };

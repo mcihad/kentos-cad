@@ -176,6 +176,14 @@ impl<Message> Toggle<Message> {
             message,
         )
     }
+
+    /// İkonu güçlü çizilen, öne çıkan durum (web'in `aria-pressed`'i):
+    /// verilmezse kapalı olan durumdur (ör. bir katmanın kendi kenet türleri
+    /// açıkken de öne çıkar).
+    pub fn pressed(mut self, pressed: bool) -> Self {
+        self.pressed = pressed;
+        self
+    }
 }
 
 /// Ağacın bir düğümü.

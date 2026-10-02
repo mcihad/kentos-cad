@@ -235,13 +235,29 @@ def boolean(b):
     return b"\xf5" if b else b"\xf4"
 
 
+LAYER_SNAP_KINDS = ("endpoint", "midpoint", "center", "node", "intersection", "perpendicular", "tangent", "nearest", "centroid", "extension", "parallel", "grid")
+
+
+def layer_snap(s):
+    """A layer's own snapping (schema 10, docs/adr/0163 §4): exactly one of `off` (true only) and a non-empty list of
+    known, distinct kinds."""
+    assert set(s) <= {"off", "kinds"} and (s.get("off") is True) != ("kinds" in s) and s.get("off", True) is True, f"katman keneti: {s}"
+    if "kinds" in s:
+        k = s["kinds"]
+        assert k and len(set(k)) == len(k) and all(x in LAYER_SNAP_KINDS for x in k), f"katman keneti: {k}"
+        return cmap({"kinds": array([text(x) for x in k])})
+    return cmap({"off": boolean(True)})
+
+
 def layer(n):
+    assert "snap" not in n or n["type"] == "layer", f"layer {n.get('id')}: grubun keneti olmaz"
     return cmap(
         fields(
             n,
             {
                 "id": (text, True),
                 "name": (text, True),
+                "snap": (layer_snap, False),
                 "type": (enum(("group", "layer")), True),
                 "visible": (boolean, True),
                 "locked": (boolean, True),
@@ -404,16 +420,23 @@ def document(d):
         "belge",
     )
     assert d.get("blocks", [None]), "boş blok listesi yazılmaz"
-    return root(cmap(body), version=uint(schema_of(d["entities"], d.get("blocks"))))
+    return root(cmap(body), version=uint(schema_of(d["entities"], d.get("blocks"), d["layers"])))
 
 
-def schema_of(entities, blocks=None):
-    """The oldest schema that holds the drawing: 9 with one of schema 9's dimension kinds, a dimension's mask or a
+def schema_of(entities, blocks=None, layers=()):
+    """The oldest schema that holds the drawing: 10 with a layer's own snapping (docs/adr/0163 §4), 9 with one of
+    schema 9's dimension kinds, a dimension's mask or a
     slope's elevations, in the drawing or a block definition (docs/adr/0147), 8 with a leader, in the drawing or a
     block definition (docs/adr/0146), 7 with a text's or an attribute definition's alignment, width factor or mask
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    def snaps(nodes):
+        return any("snap" in n or snaps(n["children"]) for n in nodes)
+
+    if snaps(layers):
+        return 10
+
     def new_dimensions(es):
         return any(
             e["kind"] == "dimension" and (e.get("style") in SCHEMA_9_STYLES or any(k in e for k in ("mask", "za", "zb")))
@@ -615,7 +638,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-10.kcad"] = container(root(cmap(parts), version=b"\x0a"))
+    files["schema-version-11.kcad"] = container(root(cmap(parts), version=b"\x0b"))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -761,6 +784,31 @@ def broken(minimal_content, minimal_file):
         }
     )
     files["null-renderer.kcad"] = container(with_parts({**parts, "layers": array([nulled])}))
+    # A layer's own snapping is schema 10's (docs/adr/0163 §4): in schema 9 an unknown field; on a group, `off: false`,
+    # both or neither, an empty list, a repeated or an unknown kind (quadrant comes with endpoint) a bad value.
+    def snapped(snap, kind="layer"):
+        node = {
+            "id": text(top["id"]),
+            "name": text(top["name"]),
+            "snap": snap,
+            "type": text(kind),
+            "visible": boolean(top["visible"]),
+            "locked": boolean(top["locked"]),
+            "expanded": boolean(top["expanded"]),
+            "style": cmap(layer_style_parts(top["style"])),
+            "children": array([]),
+        }
+        return cmap({**parts, "layers": array([cmap(node)])})
+
+    off = cmap({"off": boolean(True)})
+    files["layer-snap-in-schema-9.kcad"] = container(root(snapped(off), version=uint(9)))
+    files["layer-snap-on-group.kcad"] = container(root(snapped(off, "group"), version=uint(10)))
+    files["layer-snap-off-false.kcad"] = container(root(snapped(cmap({"off": boolean(False)})), version=uint(10)))
+    files["layer-snap-both.kcad"] = container(root(snapped(cmap({"off": boolean(True), "kinds": array([text("endpoint")])})), version=uint(10)))
+    files["layer-snap-empty.kcad"] = container(root(snapped(cmap({})), version=uint(10)))
+    files["layer-snap-empty-kinds.kcad"] = container(root(snapped(cmap({"kinds": array([])})), version=uint(10)))
+    files["layer-snap-unknown-kind.kcad"] = container(root(snapped(cmap({"kinds": array([text("quadrant")])})), version=uint(10)))
+    files["layer-snap-repeated-kind.kcad"] = container(root(snapped(cmap({"kinds": array([text("endpoint"), text("endpoint")])})), version=uint(10)))
     files["big-negative.kcad"] = container(with_parts({**parts, "styles": cmap({"items": array([b"\x3b" + b"\xff" * 8]), "categories": array([])})}))
     files["bytes-in-opaque.kcad"] = container(with_parts({**parts, "styles": cmap({"items": array([blob(b"\x01")]), "categories": array([])})}))
     files["bad-enum.kcad"] = container(with_parts({**parts, "settings": cmap({**settings_parts(m["settings"]), "areaUnit": text("acre")})}))
@@ -801,6 +849,7 @@ def build():
     out["texts.kcad"] = container(document(load("texts.json")))
     out["leaders.kcad"] = container(document(load("leaders.json")))
     out["dimensions.kcad"] = container(document(load("dimensions.json")))
+    out["layer-snap.kcad"] = container(document(load("layer-snap.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

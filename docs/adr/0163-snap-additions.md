@@ -170,6 +170,15 @@ Web WASM'dan (`PickIndex.snap`), masaüstü yerli çağırır. İki platform ayn
    - Ortak iz `snap-acquire.json` (sahne `snap-acquire.kcad`), kullanım senaryosu `usage-snap-acquire.json`. Masaüstü önizlemeyi (ölçü etiketi) işaretlerin üstüne çizer, web altına; etiket kutusu bir işaretin üstüne düşerse masaüstünde onu örter. Bu, kenet işaretinde de önceden var olan bir farktır.
 4. Katman başına kenet: `.kcad` şema 10 (spesifikasyon, bağımsız Python yazıcısı ve okuyucusu, kodek), Katmanlar panelinin mıknatısı ve menüsü iki platformda, bulutta katman ağacı; ortak iz; resimler.
 
+   *(2 Ekim: tamam; HYB-09 bitti.)*
+   - **Sözleşme:** `LayerNode.snap: Option<LayerSnap>`, `LayerSnap { off, kinds }`: ikisinden tam biri (`off` yalnız true), boş olmayan, yinelenmeyen, bilinen türlerden bir liste (`LAYER_SNAP_KINDS`, on iki tür; Uç nokta Çeyrek'i de getirir, bu yüzden `quadrant` listede yoktur), yalnız katmanda. `LayerSnap::problem` kuralı söyler; kodek, web'in dosya okuyucusu ve sunucunun `check_tree`'si onu uygular.
+   - **`.kcad` şema 10:** yazıcı yalnız bir katmanın `snap`'ı varken yazar; şema 9'da `snap` bilinmeyen alandır. Spesifikasyon §6.1 ve §6.5; bağımsız Python yazıcısı `layer-snap.kcad`'i ve sekiz bozuk örneği yazar (şema 9'da, grupta, `off: false`, ikisi birden, ikisi de yok, boş liste, bilinmeyen tür, yinelenen tür), bağımsız okuyucu ve Rust kodeği hepsini aynı okur; eski `schema-version-10.kcad` `schema-version-11.kcad` oldu.
+   - **Belge:** web `LayerStore.setSnap`, masaüstü `Document::set_layer_snap`; grupta içindeki her katmana yazar, grup kenet taşımaz. Kilit gibi düzenlemedir, geri alma adımı değildir. Ortak belge işlemleri `layers.json`'da bir senaryo (aynısını yazmak ve bilinmeyen katman düzenleme değildir).
+   - **Depo:** katmanın keneti tür maskesi olarak gider (web `layerSnapMask`, masaüstü `layer_snap_mask`): kapalıysa 0, türleriyse bitleri (Uç nokta Çeyrek'i de getirir).
+   - **Arayüz** iki platformda: Katmanlar'da kilidin yanında mıknatıs (genel türlerde düz, kapalıyken üstü çizili, kendi türleriyle kesikli; ikisi de satırda hep görünür, göz ve kilit gibi), tıklamak kapatır, kapalıyken genel türlere döndürür; grubun mıknatısı katmanlarından (hepsi kapalıysa kapalı, hepsi genelse genel, yoksa kesikli) ve hepsine yazar. Sağ tık › Kenet ▸: Genel türler, Kapalı ve “Yalnız bu türler”; bir tür işaretlenince katmanın şimdi aldığından (genelse genel türlerden, kapalıysa hiçbirinden) kendi listesi olur, sonuncusu kaldırılınca kapanır. Web `ui/layers/layerSnap.ts`, masaüstü `layer_snap.rs`; KentOS UI'ın ağaç düğmesine `Toggle::pressed` eklendi.
+   - **Bulut:** sunucu katman ağacını JSON olarak saklar; alan ağaçla gider, göç gerekmez.
+   - Ortak iz `layer-snap.json` (sahne `layer-snap.kcad`).
+
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
 
 ## Sonuçlar

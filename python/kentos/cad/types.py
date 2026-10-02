@@ -3191,7 +3191,11 @@ class LabelStyle(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class LayerNode(_Model):
-    """A node of the layer tree: a group or a layer."""
+    """A node of the layer tree: a group or a layer.
+    Attributes:
+        snap: A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;
+            absent, the general kinds. Only a layer has it, never a group.
+    """
     id: str
     name: str
     type: LayerNodeType | LayerNodeTypeName
@@ -3200,6 +3204,7 @@ class LayerNode(_Model):
     expanded: bool
     style: LayerStyle
     children: list[LayerNode]
+    snap: LayerSnap | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -3211,6 +3216,8 @@ class LayerNode(_Model):
         out["expanded"] = self.expanded
         out["style"] = self.style.to_json()
         out["children"] = [e0.to_json() for e0 in self.children]
+        if self.snap is not UNSET:
+            out["snap"] = None if self.snap is None else self.snap.to_json()
         return out
 
     @classmethod
@@ -3224,6 +3231,36 @@ class LayerNode(_Model):
             expanded=data["expanded"],
             style=LayerStyle.from_json(data["style"]),
             children=[LayerNode.from_json(e0) for e0 in data["children"]],
+            snap=UNSET if "snap" not in data else None if data["snap"] is None else LayerSnap.from_json(data["snap"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayerSnap(_Model):
+    """A layer's own snapping (docs/adr/0163 §4): `{ "off": true }`, no
+    snapping to its objects; or `{ "kinds": [...] }`, only these kinds (as
+    far as the general kinds take them). Exactly one of the two, and a list
+    that is not empty: the readers refuse anything else ([`LayerSnap::problem`]).
+    Attributes:
+        kinds: Only these kinds ([`LAYER_SNAP_KINDS`]' names).
+        off: No snapping to the layer's objects; written only as `true`.
+    """
+    kinds: list[str] | None | Unset = UNSET
+    off: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.kinds is not UNSET:
+            out["kinds"] = None if self.kinds is None else list(self.kinds)
+        if self.off is not UNSET:
+            out["off"] = self.off
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerSnap:
+        return cls(
+            kinds=UNSET if "kinds" not in data else None if data["kinds"] is None else list(data["kinds"]),
+            off=data.get("off", UNSET),
         )
 
 
@@ -6454,6 +6491,7 @@ __all__ = [
     "LayerNode",
     "LayerNodeType",
     "LayerNodeTypeName",
+    "LayerSnap",
     "LayerStyle",
     "LeaderArrow",
     "LeaderArrowName",

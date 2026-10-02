@@ -220,6 +220,11 @@ export const ICONS = {
   eyeOff: '<path d="M4.2 6.3C2.6 7.8 1.8 10 1.8 10S5 15.4 10 15.4c1.4 0 2.6-.4 3.7-1M8 4.8c.6-.1 1.3-.2 2-.2 5 0 8.2 5.4 8.2 5.4s-.7 1.3-2 2.6M3 3l14 14"/>',
   lock: '<rect x="4.5" y="9" width="11" height="8" rx="1.2"/><path d="M7 9V6.5a3 3 0 0 1 6 0V9"/>',
   unlock: '<rect x="4.5" y="9" width="11" height="8" rx="1.2"/><path d="M7 9V6.5a3 3 0 0 1 5.8-1.1"/>',
+  // A layer's own snapping (docs/adr/0163 §4): a horseshoe magnet, its poles marked; struck through when off.
+  magnet: '<path d="M4.5 3.5h3.3v6.4a2.2 2.2 0 0 0 4.4 0V3.5h3.3v6.6a5.5 5.5 0 0 1-11 0z"/><path d="M4.5 6.8h3.3M12.2 6.8h3.3"/>',
+  magnetOff: '<path d="M4.5 3.5h3.3v6.4a2.2 2.2 0 0 0 4.4 0V3.5h3.3v6.6a5.5 5.5 0 0 1-11 0z"/><path d="M4.5 6.8h3.3M12.2 6.8h3.3M3 3l14 14"/>',
+  // Kinds of its own: the magnet dashed.
+  magnetKinds: '<g stroke-dasharray="2.2 1.6"><path d="M4.5 3.5h3.3v6.4a2.2 2.2 0 0 0 4.4 0V3.5h3.3v6.6a5.5 5.5 0 0 1-11 0z"/></g><path d="M4.5 6.8h3.3M12.2 6.8h3.3"/>',
   chevronRight: '<path d="m8 5 5 5-5 5"/>',
   chevronDown: '<path d="m5 8 5 5 5-5"/>',
   chevronUp: '<path d="m5 12 5-5 5 5"/>',

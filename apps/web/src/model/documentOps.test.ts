@@ -3,7 +3,7 @@ import { isUuid } from '../core/uuid';
 import type { BlockDefinition } from './blocks';
 import { CadDocument, Refusal } from './document';
 import type { Entity, NewEntity } from './entities';
-import { LayerStore, type LayerInit, type LayerStyle } from './layers';
+import { LayerStore, type LayerInit, type LayerSnap, type LayerStyle } from './layers';
 import type { ProjectSettingsData } from './projectSettings';
 import { readSnapshot } from './snapshot';
 
@@ -27,6 +27,8 @@ interface LayerExpect {
   style?: Json;
   isVisible?: boolean;
   isLocked?: boolean;
+  /** A layer's own snapping; null when it has none (docs/adr/0163 §4). */
+  snap?: Json;
 }
 
 interface Expect {
@@ -200,6 +202,8 @@ class Run {
         return layers.toggleVisible(layerId);
       case 'toggleLocked':
         return layers.toggleLocked(layerId);
+      case 'setSnap':
+        return layers.setSnap(layerId, (s.snap ?? null) as LayerSnap | null);
       case 'isolate':
         return layers.isolate(layerId);
       case 'showAll':
@@ -289,6 +293,7 @@ class Run {
         style: node?.style as unknown as Json,
         isVisible: doc.layers.isVisible(id),
         isLocked: doc.layers.isLocked(id),
+        snap: (node?.snap ?? null) as Json,
       };
       for (const key of Object.keys(want) as (keyof LayerExpect)[]) {
         expect(key in got, `${where}: “${id}” katmanı › bilinmeyen alan ${key}`).toBe(true);

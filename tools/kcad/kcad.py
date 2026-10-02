@@ -69,6 +69,10 @@ SCHEMA_WITH_TEXT_EXTRAS = 7
 SCHEMA_WITH_LEADERS = 8
 # Schema 9: schema 8 and the dimension's new kinds, its `mask`, a slope's `za` and `zb` (docs/adr/0147).
 SCHEMA_WITH_DIMENSIONS = 9
+# Schema 10: schema 9 and a layer's own snapping, a layer node's `snap` (docs/adr/0163 §4).
+SCHEMA_WITH_LAYER_SNAP = 10
+# The kinds a layer may keep to; `endpoint` brings the quadrants with it, so `quadrant` is none of them.
+LAYER_SNAP_KINDS = ("endpoint", "midpoint", "center", "node", "intersection", "perpendicular", "tangent", "nearest", "centroid", "extension", "parallel", "grid")
 # A dimension's kinds; schema 9 added the last five.
 DIMENSION_STYLES = ("aligned", "linear", "angular", "radius", "diameter", "ordinate", "arcLength", "jogged", "azimuth", "slope")
 # A leader's arrowheads (spec §6.6); the filled arrow is the field's absence, no value.
@@ -78,7 +82,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -300,7 +304,7 @@ def decode_payload(payload):
     return value
 
 
-# ── Document schemas 2 to 9 (spec §6) ───────────────────────────────────
+# ── Document schemas 2 to 10 (spec §6) ──────────────────────────────────
 
 
 class _Schema:
@@ -472,6 +476,7 @@ class _Schema:
         self.texts = version >= SCHEMA_WITH_TEXT_EXTRAS
         self.leaders = version >= SCHEMA_WITH_LEADERS
         self.dimensions = version >= SCHEMA_WITH_DIMENSIONS
+        self.layer_snap = version >= SCHEMA_WITH_LAYER_SNAP
         checked = self.fields({"format": (self.text, True), "version": (self.uint(32), True), "document": (self.document, True)})(v)
         return checked["document"]
 
@@ -534,10 +539,11 @@ class _Schema:
         return s
 
     def layer(self, v):
-        return self.fields(
+        n = self.fields(
             {
                 "id": (self.text, True),
                 "name": (self.text, True),
+                **({"snap": (self.layer_snap_, False)} if self.layer_snap else {}),
                 "type": (self.enum(("group", "layer")), True),
                 "style": (self.layer_style, True),
                 "locked": (self.bool, True),
@@ -546,6 +552,27 @@ class _Schema:
                 "expanded": (self.bool, True),
             }
         )(v)
+        if "snap" in n and n["type"] == "group":
+            self.fail("bad_value", "grubun keneti olmaz; kenet yalnız katmanındır")
+        return n
+
+    def layer_snap_(self, v):
+        """A layer's own snapping (schema 10): exactly one of `off` (true only) and a non-empty list of known,
+        distinct kinds."""
+        s = self.fields({"off": (self.bool, False), "kinds": (self.array(self.text), False)})(v)
+        if s.get("off") is False:
+            self.fail("bad_value", "off yalnız true yazılır")
+        if ("off" in s) == ("kinds" in s):
+            self.fail("bad_value", "katmanın keneti ya off ya kinds taşır, tam biri")
+        kinds = s.get("kinds", [])
+        if "kinds" in s and not kinds:
+            self.fail("bad_value", "kenet türleri boş olamaz")
+        for i, k in enumerate(kinds):
+            if k not in LAYER_SNAP_KINDS:
+                self.fail("bad_value", f"bilinmeyen kenet türü: {k}")
+            if k in kinds[:i]:
+                self.fail("bad_value", f"kenet türü iki kez yazılmış: {k}")
+        return s
 
     def layer_style(self, v):
         return self.fields(

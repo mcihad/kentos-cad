@@ -90,6 +90,19 @@ const ITEMS = [
   { id: 'status-account', open: (ui) => ui.click('.status__server') },
   { id: 'layer-row', open: (ui) => ui.rightClick('.panel--layers .tree__row[data-id="taslak"] .tree__name') },
   { id: 'layer-color', open: (ui) => ui.click('.panel--layers .tree__row[data-id="taslak"] .swatch--btn') },
+  // A layer's own snapping (docs/adr/0163 §4): the magnets off and dashed, and Kenet ▸ open on a row.
+  {
+    id: 'layer-snap',
+    open: async (ui) => (
+      await ui.eval(`(() => { const L = window.kentos.doc.layers; const [a, b] = L.leaves().slice(1, 3); L.setSnap(a.id, { off: true }); L.setSnap(b.id, { kinds: ['endpoint', 'intersection'] }); })()`),
+      await ui.rightClick('.panel--layers .tree__row[data-id="taslak"] .tree__name'),
+      await ui.clickText('.menu__item', 'Kenet')
+    ),
+    close: async (ui) => (
+      await ui.escapeAll(2),
+      await ui.eval(`(() => { const L = window.kentos.doc.layers; for (const l of L.leaves()) L.setSnap(l.id, null); })()`)
+    ),
+  },
   { id: 'viewport-idle', open: (ui) => ui.viewportRight({}) },
   { id: 'viewport-snap', open: (ui) => ui.viewportRight({ shift: true }) },
   { id: 'viewport-command', open: (ui) => ui.viewportRight({ tool: 'tool.line', hold: true }), close: (ui) => ui.escapeAll(3) },

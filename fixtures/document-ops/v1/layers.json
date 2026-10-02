@@ -235,6 +235,43 @@
       ]
     },
     {
+      "name": "Katmanın kendi keneti: katmana ya da grubun her katmanına yazılır; düzenlemedir ama geri alınmaz",
+      "note": "docs/adr/0163 §4. Grup kenet taşımaz; düğmesi içindeki katmanların hepsine yazar. Aynı değeri yeniden yazmak ve bilinmeyen katman düzenleme değildir.",
+      "steps": [
+        {
+          "op": "setSnap",
+          "id": "a",
+          "snap": {"off": true},
+          "expect": {"dirty": true, "revision": "changed", "canUndo": false, "layers": {"a": {"snap": {"off": true}}, "b": {"snap": null}, "g": {"snap": null}}}
+        },
+        {
+          "op": "setSnap",
+          "id": "a",
+          "snap": {"off": true},
+          "note": "Aynısı: düzenleme değildir.",
+          "expect": {"revision": "same"}
+        },
+        {
+          "op": "setSnap",
+          "id": "g",
+          "snap": {"kinds": ["endpoint", "intersection"]},
+          "note": "Grubun düğmesi: içindeki her katmana; grup kenet taşımaz.",
+          "expect": {
+            "revision": "changed",
+            "layers": {"a": {"snap": {"kinds": ["endpoint", "intersection"]}}, "b": {"snap": {"kinds": ["endpoint", "intersection"]}}, "g": {"snap": null}, "c": {"snap": null}}
+          }
+        },
+        {
+          "op": "setSnap",
+          "id": "b",
+          "snap": null,
+          "note": "Genel türlere döner.",
+          "expect": {"revision": "changed", "layers": {"a": {"snap": {"kinds": ["endpoint", "intersection"]}}, "b": {"snap": null}}}
+        },
+        {"op": "setSnap", "id": "yok", "snap": {"off": true}, "expect": {"revision": "same"}}
+      ]
+    },
+    {
       "name": "Klasörü açıp kapamak ve etkin katmanı seçmek düzenleme değildir",
       "note": "İkisi de dosyaya yazılır (expanded, activeLayer), ama belgeyi kirletmez (web bugün böyle).",
       "steps": [

@@ -35,6 +35,7 @@ fn layer(id: &str, style: LayerStyle) -> LayerNode {
         expanded: true,
         style,
         children: Vec::new(),
+        snap: None,
     }
 }
 

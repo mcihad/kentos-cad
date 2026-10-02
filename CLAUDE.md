@@ -30,7 +30,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   topolojik temizlik: uçlar ve köşeler var olan köşede birleşir, kısa uç uzar, taşan uç budanır, yazılan toleransla, önizlemeli tek adım (ADR 0148);
   topolojik düzenleme: durum çubuğundaki Topoloji açıkken tutamaç, tutamaç menüsü ve Esnet görünen ve kilitsiz komşuların ortak köşe ve kenarlarını da tek adımda değiştirir, kart ortak köşeyi sayar, Noktalar da seçeneğiyle (ADR 0160);
   çakışma denetimi: durum çubuğundaki Çakışma açıkken yeni alan (Kapalı alan, Parsel oluştur, Dikdörtgen, Düzgün çokgen, Daire dilimi, Alan olarak çiz) kendi katmanındaki ya da seçili katmanlardaki görünen alanlarla örtüşen kısmı çıkarılarak yazılır; Bitişik alan: yalnız yeni sınır çizilir, yolun görünümdeki komşu alanlarla kapattığı bölge imleçle dolar ve tek alan olarak yazılır, komşuların içindekiler delik; Topoloji açıkken yeni alan komşularıyla köşe köşe bağlanır, aynı adımda (ADR 0162);
-  kenet ekleri: Ağırlık merkezi, Uzantı, Paralel ve Karelaj türleri (karelaj aralığı doğu ve kuzey), çizilmekte olan yola kenet, ölçek aralığında kenet; durum çubuğundaki Kenet hücresinin sağ tık menüsünde türler tek tek ve karelaj aralıkları; uçta durmak uzantısını, kenarda durmak doğrultusunu alır, yazılan mesafe uzantı ve paralel boyuncadır (ADR 0163);
+  kenet ekleri: Ağırlık merkezi, Uzantı, Paralel ve Karelaj türleri (karelaj aralığı doğu ve kuzey), çizilmekte olan yola kenet, ölçek aralığında kenet; durum çubuğundaki Kenet hücresinin sağ tık menüsünde türler tek tek ve karelaj aralıkları; uçta durmak uzantısını, kenarda durmak doğrultusunu alır, yazılan mesafe uzantı ve paralel boyuncadır; Katmanlar'da katmanın kendi keneti (mıknatıs, Kenet ▸; `.kcad` şema 10) (ADR 0163);
   izleyerek çizim: yol aracının İzle (İ) düğmesi açıkken çizgiye yakın tık çizginin üstüne oturur, iki nokta arası görünen çizgiler boyunca kısa yoldan, köşeleri ve yaylarıyla; Birleştir'in Zincir (Z) seçeneği tıklanan çizginin bağlı zincirini tek çoklu çizgi yapar; yol aracının Akış (A) düğmesi açıkken imleç Adım boyu (B) kadar ilerledikçe köşe bırakır (ADR 0161);
   toplu alan: çizgilerin kapattığı bütün bölgeler tek adımda alan olur, içteki yazı ya da adlı nokta özniteliği; etiketsiz, çok etiketli bölgeler ve boşta uçlar söylenir (ADR 0151);
   ölçü noktası: Nokta'nın Ad, Kod ve Kot'u, ad her noktada artar, aynı yerde nokta varsa Düzelt, Ekle ya da Atla, `#ad` ile adlı noktanın yeri, Köşelere nokta (ADR 0152);
@@ -637,8 +637,9 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   konsolu KentOS UI'ın `PythonRepl` ve `PythonEditor`'ü oldu (ADR 0132'nin eki), nokta editörünün arama kutusu düzeldi. `HYB-09`
   kenet ekleri ([ADR 0163](docs/adr/0163-snap-additions.md)): 1. adım (çekirdek: dört tür, `snap_ex`, çizilmekte olan yol, katman
   maskesi; `snap_cases.py`) ve 2. adım (ayarlar, türlerin komutları, Kenet hücresinin menüsü, karelaj aralıkları, ölçek aralığı, yol
-  araçlarının taslağı, işaretler; ortak iz `snap-additions.json`) ve 3. adım (Uzantı ve Paralel'in alınması, yazılan mesafe; ortak iz
-  `snap-acquire.json`) tamam; sırada 4. adım (katman başına kenet, `.kcad` şema 10). 2 Ekim: web'in klasik arayüzü kaldırıldı, iki platformda yalnız şerit var (sahibin
+  araçlarının taslağı, işaretler; ortak iz `snap-additions.json`), 3. adım (Uzantı ve Paralel'in alınması, yazılan mesafe; ortak iz
+  `snap-acquire.json`) ve 4. adım (katman başına kenet, `.kcad` şema 10; ortak iz `layer-snap.json`) tamam; `HYB-09` bitti. Sahibin
+  isteğiyle burada ara verilir: başka bir dal sahibin sözüyle birleştirilecek, ondan önce yeni iş başlamaz. 2 Ekim: web'in klasik arayüzü kaldırıldı, iki platformda yalnız şerit var (sahibin
   kararı, [ADR 0155](docs/adr/0155-web-ribbon-only.md)). PDF, yazdırma ve pafta çıktısı (§16.4) en
   sondadır, zamanını sahip söyleyecek. İşler ADR 0142–0148'deki gibi: önce ADR ve adımları, sonra adım adım iki platformda,
   ortak fixture'larla.

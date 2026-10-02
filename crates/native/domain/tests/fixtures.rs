@@ -302,6 +302,17 @@ fn apply(doc: &mut Document, state: &mut State, step: &Value, at: &str) -> Outco
             doc.toggle_layer_locked(id()?);
             Value::Null
         }
+        "setSnap" => {
+            let snap = match step.get("snap") {
+                None | Some(Value::Null) => None,
+                Some(v) => match serde_json::from_value::<kentos_contracts::LayerSnap>(v.clone()) {
+                    Ok(snap) => Some(snap),
+                    Err(e) => return fail(format!("{at}: kenet: {e}")),
+                },
+            };
+            doc.set_layer_snap(id()?, snap);
+            Value::Null
+        }
         "isolate" => {
             doc.isolate_layer(id()?);
             Value::Null
@@ -539,6 +550,7 @@ fn check(
                             "style" => serde_json::to_value(&node.style).unwrap_or(Value::Null),
                             "isVisible" => json!(doc.layers().is_visible(id)),
                             "isLocked" => json!(doc.layers().is_locked(id)),
+                            "snap" => serde_json::to_value(&node.snap).unwrap_or(Value::Null),
                             other => {
                                 return fail(format!("{at}: bilinmeyen katman alanı “{other}”"));
                             }

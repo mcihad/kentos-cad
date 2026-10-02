@@ -26,8 +26,8 @@ use crate::cbor::{Reader, Seg};
 use crate::error::{Code, KcadError};
 use crate::watch::{EVERY, Step};
 use crate::{
-    SCHEMA_WITH_BLOCKS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_LEADERS,
-    SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_PARTS, SCHEMA_WITH_TEXT_EXTRAS,
+    SCHEMA_WITH_BLOCKS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_LAYER_SNAP,
+    SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_PARTS, SCHEMA_WITH_TEXT_EXTRAS,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -88,6 +88,8 @@ pub(super) struct Features {
     leaders: bool,
     /// Schema 9: the dimension's new kinds, `mask`, `za` and `zb`.
     dimensions: bool,
+    /// Schema 10: a layer's own snapping (`snap`).
+    pub(super) layer_snap: bool,
     /// Whether an object has its persistent id (`uid`): the drawing's do, a
     /// block definition's do not.
     uids: bool,
@@ -103,6 +105,7 @@ impl Features {
             texts: schema >= SCHEMA_WITH_TEXT_EXTRAS,
             leaders: schema >= SCHEMA_WITH_LEADERS,
             dimensions: schema >= SCHEMA_WITH_DIMENSIONS,
+            layer_snap: schema >= SCHEMA_WITH_LAYER_SNAP,
             uids: true,
         }
     }

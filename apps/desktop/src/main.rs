@@ -39,6 +39,7 @@ mod input;
 mod keys;
 mod keytips;
 mod labels;
+mod layer_snap;
 mod layer_tree;
 mod layering;
 mod layout;

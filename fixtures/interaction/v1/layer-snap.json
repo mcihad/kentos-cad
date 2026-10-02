@@ -1,0 +1,93 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "layer-snap",
+  "title": "Katmanın kendi keneti: keneti kapalı katmanın noktalarına kenetlenilmez; yalnız kesişim alan katmanın ucuna kenetlenilmez, kesişimine kenetlenilir; kesişim iki katmandan biri alıyorsa sayılır; genel türlerdeki katman her türle",
+  "source": "ADR 0163 §4; web layerTable, masaüstü layer_rows (katmanın tür maskesi)",
+  "covers": [
+    "HYB-09"
+  ],
+  "document": "layer-snap.kcad",
+  "view": {
+    "center": [
+      487000,
+      4420000
+    ],
+    "metresPerPixel": 0.125
+  },
+  "draft": {
+    "snap": true,
+    "grid": false,
+    "ortho": false,
+    "polar": false,
+    "tracking": false
+  },
+  "prefs": {
+    "cursorInput": true
+  },
+  "clickTolerance": 0.125,
+  "steps": [
+    {
+      "run": "tool.line",
+      "expect": {
+        "tool": "line"
+      }
+    },
+    {
+      "move": [
+        -19.8,
+        0.2
+      ],
+      "note": "Parsel'in keneti kapalı: 1 numaralı çizginin ucu kenetlenmez.",
+      "expect": {
+        "snap": null
+      }
+    },
+    {
+      "move": [
+        8.2,
+        7.8
+      ],
+      "note": "Bina yalnız kesişim alır: 2 numaralı çizginin ucu kenetlenmez.",
+      "expect": {
+        "snap": null
+      }
+    },
+    {
+      "move": [
+        8.1,
+        3.3
+      ],
+      "note": "Bina ile Çizim'in kesişimi (8; 3,2).",
+      "expect": {
+        "snap": "intersection"
+      }
+    },
+    {
+      "move": [
+        0.1,
+        0.1
+      ],
+      "note": "Parsel ile Çizim'in kesişimi (0; 0): Çizim kesişim alır, sayılır.",
+      "expect": {
+        "snap": "intersection"
+      }
+    },
+    {
+      "move": [
+        14.8,
+        6.1
+      ],
+      "note": "Çizim genel türlerde: ucu kenetlenir.",
+      "expect": {
+        "snap": "endpoint"
+      }
+    },
+    {
+      "key": "Esc",
+      "expect": {
+        "tool": "select"
+      }
+    }
+  ]
+}

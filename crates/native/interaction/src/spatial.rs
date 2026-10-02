@@ -30,7 +30,7 @@
 
 use std::sync::Arc;
 
-use kentos_contracts::{BlockDefinition, Entity, LabelPlacement, LabelStyle, LayerNode};
+use kentos_contracts::{BlockDefinition, Entity, LabelPlacement, LabelStyle, LayerNode, LayerSnap};
 use kentos_domain::{ChangeMark, Changes, Document, LayerTree, Slot};
 use kentos_geometry_core::entity::{Shape, entity_area, entity_length, entity_vertices};
 use kentos_geometry_core::geometry::Bounds;
@@ -660,8 +660,7 @@ pub fn layer_rows(tree: &LayerTree) -> Vec<(String, LayerFlags)> {
                     locked: tree.is_locked(&node.id),
                     pick_interior: node.style.pick_interior != Some(false),
                     label: node.style.label.as_ref().map(label_rule),
-                    // Per-layer snapping comes with docs/adr/0163 §4 (step 4).
-                    snap: u32::MAX,
+                    snap: node.snap.as_ref().map_or(u32::MAX, layer_snap_mask),
                 },
             ));
             walk(&node.children, tree, out);
@@ -670,6 +669,20 @@ pub fn layer_rows(tree: &LayerTree) -> Vec<(String, LayerFlags)> {
     let mut out = Vec::new();
     walk(tree.nodes(), tree, &mut out);
     out
+}
+
+/// A layer's own snapping as the store's kinds (docs/adr/0163 §4): none
+/// when off; Uç nokta brings Çeyrek with it, as the settings do (the web's
+/// `layerSnapMask`).
+pub fn layer_snap_mask(snap: &LayerSnap) -> u32 {
+    if snap.off {
+        return 0;
+    }
+    let kinds = snap.kinds.as_deref().unwrap_or_default();
+    crate::tool::snap_kinds(|key| {
+        key.strip_prefix("snap.")
+            .is_some_and(|k| kinds.iter().any(|n| n == k))
+    })
 }
 
 /// The kinds with a label style of their own, in the store's order (`set_label_defaults`).

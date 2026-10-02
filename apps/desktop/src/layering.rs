@@ -66,6 +66,9 @@ pub enum Event {
     AddBeside(String),
     /// Sil: the layer, or the group with everything under it, and their objects.
     Remove(String),
+    /// A layer's own snapping, a group's on all its layers (the magnet, Kenet ▸;
+    /// layer_snap.rs, docs/adr/0163 §4); none for the general kinds.
+    Snap(String, Option<kentos_contracts::LayerSnap>),
 }
 
 impl App {
@@ -179,6 +182,7 @@ impl App {
                 model.set_active_layer(&id);
             }
             Event::Isolate(id) => model.isolate_layer(&id),
+            Event::Snap(id, snap) => model.set_layer_snap(&id, snap),
             Event::SelectObjects(id) => {
                 let Some(node) = model.layers().get(&id) else {
                     return Task::none();
@@ -375,7 +379,14 @@ impl App {
                 Icon::Unlock
             } else {
                 Icon::Lock
-            })
+            });
+        // Kenet ▸ (layer_snap.rs, docs/adr/0163 §4).
+        if let Some(doc) = &self.document {
+            menu = menu
+                .submenu("Kenet", self.layer_snap_menu(doc.model.layers(), node))
+                .icon(crate::icons::from_web(Some("magnet")));
+        }
+        menu = menu
             .item("Yalnızca bunu göster", event(Event::Isolate(id.clone())))
             .item("Tüm katmanları göster", Message::Run("layer.showAll"))
             .separator()

@@ -733,6 +733,8 @@ impl App {
                 node.locked,
                 Message::LayerLocked(node.id.clone()),
             ))
+            // The layer's own snapping (layer_snap.rs, docs/adr/0163 §4).
+            .toggle(self.layer_snap_toggle(doc.model.layers(), node))
             .menu(move |_| self.layer_menu(node, active));
         if let Some((id, name)) = &self.renaming
             && *id == node.id

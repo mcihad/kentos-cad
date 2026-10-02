@@ -2,6 +2,7 @@ import type { AppContext } from '../../app/context';
 import { listen } from '../../core/disposable';
 import { watchAll } from '../../core/signal';
 import { LINE_TYPE_LABEL, type LayerNode, type LineType } from '../../model/layers';
+import { layerSnapItems, SNAP_TIP, snapState, toggledSnap, type SnapState } from './layerSnap';
 import { h } from '../dom';
 import { icon } from '../icons';
 import { Panel } from '../dock/Panel';
@@ -28,9 +29,11 @@ interface Row {
   readonly count: HTMLElement;
   readonly eye: HTMLElement;
   readonly lock: HTMLElement;
+  /** The layer's own snapping (docs/adr/0163 §4); a group's writes to all its layers. */
+  readonly magnet: HTMLElement;
   /** A layer's colour swatch; a group shows a folder. */
   readonly swatch: HTMLElement | null;
-  readonly shown: { count?: number; visible?: boolean; locked?: boolean; hidden?: boolean; active?: boolean; color?: string };
+  readonly shown: { count?: number; visible?: boolean; locked?: boolean; hidden?: boolean; active?: boolean; color?: string; snap?: SnapState };
 }
 
 /**
@@ -234,6 +237,13 @@ export class LayersPanel extends Panel {
       r.lock.setAttribute('aria-pressed', String(n.locked));
       r.lock.toggleAttribute('data-on', n.locked);
     }
+    const snap = snapState(layers, n);
+    if (shown.snap !== snap) {
+      shown.snap = snap;
+      r.magnet.replaceChildren(icon(snap === 'off' ? 'magnetOff' : snap === 'kinds' ? 'magnetKinds' : 'magnet', 15));
+      r.magnet.setAttribute('aria-label', SNAP_TIP[snap]);
+      r.magnet.setAttribute('aria-pressed', String(snap !== 'none'));
+    }
     const hidden = !layers.isVisible(n.id);
     if (shown.hidden !== hidden) {
       shown.hidden = hidden;
@@ -261,6 +271,8 @@ export class LayersPanel extends Panel {
 
     const eye = rowButton('ibtn ibtn--row', () => layers.toggleVisible(n.id));
     const lock = rowButton('ibtn ibtn--row', () => layers.toggleLocked(n.id));
+    // Off and on again: off goes back to the general kinds; a group's writes to all its layers.
+    const magnet = rowButton('ibtn ibtn--row', () => layers.setSnap(n.id, toggledSnap(layers, n)));
     let swatch: HTMLElement | null = null;
     if (isLayer) {
       const s = rowButton('swatch swatch--btn', () => PopupMenu.open(this.colorItems(n), s.getBoundingClientRect(), { minWidth: 180 }));
@@ -269,9 +281,9 @@ export class LayersPanel extends Panel {
     }
     const name = h('span', { class: 'tree__name', title: layers.path(n.id) }, n.name);
     const count = h('span', { class: 'tree__count num' });
-    content.append(swatch ?? h('span', { class: 'tree__folder' }, icon('folder', 15)), name, count, eye, lock);
+    content.append(swatch ?? h('span', { class: 'tree__folder' }, icon('folder', 15)), name, count, eye, lock, magnet);
 
-    const row: Row = { node: n, item, name, count, eye, lock, swatch, shown: {} };
+    const row: Row = { node: n, item, name, count, eye, lock, magnet, swatch, shown: {} };
     this.rows.set(n.id, row);
     this.writeCount(row);
     this.writeState(row);
@@ -294,6 +306,7 @@ export class LayersPanel extends Panel {
     items.push(
       { label: n.visible ? 'Gizle' : 'Göster', icon: n.visible ? 'eyeOff' : 'eye', shortcut: 'Space', run: () => layers.toggleVisible(n.id) },
       { label: n.locked ? 'Kilidi aç' : 'Kilitle', icon: n.locked ? 'unlock' : 'lock', run: () => layers.toggleLocked(n.id) },
+      { label: 'Kenet', icon: 'magnet', items: () => layerSnapItems(this.ctx, n) },
       { label: 'Yalnızca bunu göster', run: () => layers.isolate(n.id) },
       { label: 'Tüm katmanları göster', run: () => layers.showAll() },
       { kind: 'separator' },

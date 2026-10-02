@@ -8,7 +8,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use kentos_contracts::{LayerNode, LayerNodeType, LayerStyle, LineType};
+use kentos_contracts::{LayerNode, LayerNodeType, LayerSnap, LayerStyle, LineType};
 
 #[derive(Clone, Debug)]
 pub struct LayerTree {
@@ -201,6 +201,22 @@ impl LayerTree {
             .is_some()
     }
 
+    /// A layer's own snapping on the layer, or on every layer of the group (a
+    /// group keeps none); `None` takes it off (docs/adr/0163 §4). Whether any changed.
+    pub(crate) fn set_snap(&mut self, id: &str, snap: Option<LayerSnap>) -> bool {
+        let ids: Vec<String> = self.leaves_of(id).iter().map(|n| n.id.clone()).collect();
+        let mut changed = false;
+        for leaf in ids {
+            if let Some(node) = self.node_mut(&leaf)
+                && node.snap != snap
+            {
+                node.snap = snap.clone();
+                changed = true;
+            }
+        }
+        changed
+    }
+
     /// Shows the node, the groups above it and everything below it; hides the
     /// rest. An unknown id changes nothing (the web hides every node then).
     pub(crate) fn isolate(&mut self, id: &str) -> bool {
@@ -337,6 +353,7 @@ impl LayerTree {
             expanded: true,
             style: new.style,
             children: Vec::new(),
+            snap: None,
         }
     }
 

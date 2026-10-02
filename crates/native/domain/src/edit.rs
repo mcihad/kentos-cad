@@ -16,7 +16,7 @@ use std::fmt;
 use std::sync::Arc;
 
 use kentos_contracts::{
-    Entity, EntityBase, LayerNodeType, LayerStyle, ProjectSettings, ProjectStyles,
+    Entity, EntityBase, LayerNodeType, LayerSnap, LayerStyle, ProjectSettings, ProjectStyles,
 };
 
 use crate::document::Document;
@@ -278,6 +278,14 @@ impl Document {
 
     pub fn toggle_layer_locked(&mut self, id: &str) {
         if self.layers.toggle_locked(id) {
+            self.mark_edited();
+        }
+    }
+
+    /// A layer's own snapping, on a group's every layer (docs/adr/0163 §4):
+    /// an edit, not an undo step, as a lock is.
+    pub fn set_layer_snap(&mut self, id: &str, snap: Option<LayerSnap>) {
+        if self.layers.set_snap(id, snap) {
             self.mark_edited();
         }
     }

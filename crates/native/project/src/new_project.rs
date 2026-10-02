@@ -180,6 +180,7 @@ fn node(id: &str, name: &str, style: LayerStyle) -> LayerNode {
         expanded: true,
         style,
         children: Vec::new(),
+        snap: None,
     }
 }
 

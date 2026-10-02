@@ -1,0 +1,139 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Katman keneti",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "kadastro",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [
+        {
+          "id": "parsel",
+          "name": "Parsel sınırı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "#3E63DD",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": [],
+          "snap": {
+            "off": true
+          }
+        },
+        {
+          "id": "bina",
+          "name": "Bina",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "#F76B15",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": [],
+          "snap": {
+            "kinds": [
+              "endpoint",
+              "intersection"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+    {
+      "kind": "line",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {},
+      "a": {
+        "x": 500000.0,
+        "y": 4400000.0
+      },
+      "b": {
+        "x": 500020.0,
+        "y": 4400000.0
+      }
+    },
+    {
+      "kind": "line",
+      "id": 2,
+      "layerId": "bina",
+      "attrs": {},
+      "a": {
+        "x": 500005.0,
+        "y": 4400005.0
+      },
+      "b": {
+        "x": 500015.0,
+        "y": 4400005.0
+      }
+    },
+    {
+      "kind": "line",
+      "id": 3,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+        "x": 500000.0,
+        "y": 4400010.0
+      },
+      "b": {
+        "x": 500020.0,
+        "y": 4400010.0
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a1-4444-7000-8000-000000000101",
+    "0192f5a1-4444-7000-8000-000000000102",
+    "0192f5a1-4444-7000-8000-000000000103"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

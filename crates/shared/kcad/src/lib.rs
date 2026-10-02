@@ -116,8 +116,15 @@ pub const SCHEMA_WITH_LEADERS: u32 = 8;
 /// that has them rather than draw them as another dimension.
 pub const SCHEMA_WITH_DIMENSIONS: u32 = 9;
 
+/// Document schema 10 (docs/specs/kcad-v2.md §6.1): schema 9 and a layer's
+/// own snapping, a layer node's `snap` (docs/adr/0163 §4). A writer writes it
+/// only when a layer has one: any other drawing stays 9 or older, byte for
+/// byte, and a reader of those still opens it; one of those refuses a
+/// drawing that has one rather than snap to a layer its author turned off.
+pub const SCHEMA_WITH_LAYER_SNAP: u32 = 10;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 8] = [
+pub const SCHEMAS: [u32; 9] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -126,6 +133,7 @@ pub const SCHEMAS: [u32; 8] = [
     SCHEMA_WITH_TEXT_EXTRAS,
     SCHEMA_WITH_LEADERS,
     SCHEMA_WITH_DIMENSIONS,
+    SCHEMA_WITH_LAYER_SNAP,
 ];
 
 /// The file a drawing is saved as.

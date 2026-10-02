@@ -155,6 +155,7 @@ __all__ = [
     "LayerNode",
     "LayerNodeType",
     "LayerNodeTypeName",
+    "LayerSnap",
     "LayerStyle",
     "LeaderArrow",
     "LeaderArrowName",

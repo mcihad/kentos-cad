@@ -19,8 +19,8 @@ mod objects;
 
 use kentos_contracts::{
     DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2, DimensionStyle, DocumentSnapshotV2,
-    Entity, LabelStyle, LayerNode, LayerNodeType, LayerStyle, MigrationSource, ProjectSettings,
-    Vec2,
+    Entity, LabelStyle, LayerNode, LayerNodeType, LayerSnap, LayerStyle, MigrationSource,
+    ProjectSettings, Vec2,
 };
 use serde_json::Value;
 
@@ -28,8 +28,8 @@ use crate::cbor::{MAX_DEPTH, MAX_ITEMS, MAX_STRING, Seg, Writer, key_order, rend
 use crate::error::{Code, KcadError};
 use crate::watch::{Step, Watch, report};
 use crate::{
-    SCHEMA_WITH_BLOCKS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_LEADERS,
-    SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_PARTS, SCHEMA_WITH_TEXT_EXTRAS,
+    SCHEMA_WITH_BLOCKS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_LAYER_SNAP,
+    SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_PARTS, SCHEMA_WITH_TEXT_EXTRAS,
 };
 use names::{
     angle_unit, area_unit, drawing_font, label_ink, label_placement, line_type, point_symbol,
@@ -326,12 +326,16 @@ impl<'d> Encoder<'d> {
     }
 
     fn layer(&mut self, n: &'d LayerNode) -> Result<(), KcadError> {
-        self.open(8, true)?;
-        // id (2), name type (4), style (5), locked (6), visible (7), children expanded (8).
+        self.open(if n.snap.is_some() { 9 } else { 8 }, true)?;
+        // id (2), name snap type (4), style (5), locked (6), visible (7), children expanded (8).
         self.key("id");
         self.at(Seg::Name("id"), |e| e.text(&n.id))?;
         self.key("name");
         self.at(Seg::Name("name"), |e| e.text(&n.name))?;
+        if let Some(snap) = &n.snap {
+            self.key("snap");
+            self.at(Seg::Name("snap"), |e| e.layer_snap(n.kind, snap))?;
+        }
         self.key("type");
         self.w.text(match n.kind {
             LayerNodeType::Group => "group",
@@ -347,6 +351,36 @@ impl<'d> Encoder<'d> {
         self.at(Seg::Name("children"), |e| e.layers(&n.children))?;
         self.key("expanded");
         self.w.bool(n.expanded);
+        self.close();
+        Ok(())
+    }
+
+    /// A layer's own snapping (docs/adr/0163 §4): `off` or `kinds`, on a layer only.
+    fn layer_snap(&mut self, kind: LayerNodeType, snap: &'d LayerSnap) -> Result<(), KcadError> {
+        if kind == LayerNodeType::Group {
+            return Err(self.fail(
+                Code::BadValue,
+                "grubun keneti yazılmaz; kenet yalnız katmanındır",
+            ));
+        }
+        if let Some(problem) = snap.problem() {
+            return Err(self.fail(Code::BadValue, &problem));
+        }
+        self.open(1, true)?;
+        match &snap.kinds {
+            None => {
+                self.key("off");
+                self.w.bool(true);
+            }
+            Some(kinds) => {
+                self.key("kinds");
+                self.open(kinds.len(), false)?;
+                for (i, k) in kinds.iter().enumerate() {
+                    self.at(Seg::Index(i), |e| e.text(k))?;
+                }
+                self.close();
+            }
+        }
         self.close();
         Ok(())
     }
@@ -502,7 +536,8 @@ impl<'d> Encoder<'d> {
     }
 }
 
-/// The oldest schema that holds the drawing: 9 when a dimension of it or of
+/// The oldest schema that holds the drawing: 10 when a layer has its own
+/// snapping, 9 when a dimension of it or of
 /// a block definition has one of schema 9's kinds or fields, 8 when it or a
 /// block definition has a leader, 7 when a text or an attribute definition has an
 /// alignment, a width factor or a mask, 6 when it has block definitions, 5
@@ -511,6 +546,12 @@ impl<'d> Encoder<'d> {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
+    fn snaps(nodes: &[LayerNode]) -> bool {
+        nodes.iter().any(|n| n.snap.is_some() || snaps(&n.children))
+    }
+    if snaps(&doc.layers) {
+        return SCHEMA_WITH_LAYER_SNAP;
+    }
     let dimensions = |list: &[Entity]| {
         list.iter().any(|e| {
             matches!(e, Entity::Dimension(d) if d.mask
@@ -599,7 +640,7 @@ mod tests {
     #[test]
     fn the_fixed_keys_are_in_encoded_order() {
         // The maps whose keys the writer writes by hand, in the order it writes them.
-        let maps: [&[&str]; 13] = [
+        let maps: [&[&str]; 14] = [
             &["format", "version", "document"],
             &[
                 "name",
@@ -626,8 +667,9 @@ mod tests {
             ],
             &["format", "version", "sourceSha256"],
             &[
-                "id", "name", "type", "style", "locked", "visible", "children", "expanded",
+                "id", "name", "snap", "type", "style", "locked", "visible", "children", "expanded",
             ],
+            &["off", "kinds"],
             &[
                 "fill",
                 "color",
