@@ -37,3 +37,20 @@ export interface WarpRefusal {
 }
 
 export const warpShapes = op<<S>(shapes: readonly S[], zs: readonly PathElevations[], warp: Warp) => Warped<S> | WarpRefusal>('warpShapes');
+
+/**
+ * Objects on a rubber sheet (docs/adr/0158 §3): only vertices move by the sheet (straight edges stay straight, an arc
+ * segment keeps its bulge), a circle, an arc and an ellipse by the nearest similarity at their centre, the rest as a
+ * transform moves it; how many kept their shape, how many bent more than 0.1 mm from their true image, and the largest
+ * bend (metres). Or why there is no sheet. The reference is scripts/fixtures/rubber_warp_cases.py.
+ */
+export interface OnSheet<S> {
+  shapes: S[];
+  zs: PathElevations[];
+  kept: number;
+  bent: number;
+  bend: number;
+}
+
+export const rubberShapes = op<<S>(shapes: readonly S[], zs: readonly PathElevations[], links: readonly { from: { x: number; y: number }; to: { x: number; y: number } }[]) => OnSheet<S> | { error: string }>('rubberShapes');
+

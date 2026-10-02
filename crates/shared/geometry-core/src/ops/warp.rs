@@ -17,6 +17,7 @@ use crate::geom::arrangement::Ring;
 use crate::geom::bulge::bulge_arc;
 use crate::jsmath::{PI, TAU, atan2, cos, js_hypot, js_max, sin};
 use crate::op;
+use crate::ops::rubber::{Link, RubberError, Sheet};
 use crate::ops::transform::transform_shape;
 use crate::vec2::Vec2;
 
@@ -148,6 +149,31 @@ impl Warp {
             }
             _ => Ok(self.linear().unwrap_or([1.0, 0.0, 0.0, 1.0])),
         }
+    }
+}
+
+/// What gives a point's image and the derivative there: a transform, or a
+/// rubber sheet (docs/adr/0158).
+trait Map {
+    fn at(&self, p: Vec2) -> Result<Vec2, Beyond>;
+    fn jac(&self, p: Vec2) -> Result<Jacobian, Beyond>;
+}
+
+impl Map for Warp {
+    fn at(&self, p: Vec2) -> Result<Vec2, Beyond> {
+        self.point(p)
+    }
+    fn jac(&self, p: Vec2) -> Result<Jacobian, Beyond> {
+        self.jacobian(p)
+    }
+}
+
+impl Map for Sheet {
+    fn at(&self, p: Vec2) -> Result<Vec2, Beyond> {
+        Ok(self.map(p))
+    }
+    fn jac(&self, p: Vec2) -> Result<Jacobian, Beyond> {
+        Ok(self.jacobian(p))
     }
 }
 
@@ -331,27 +357,17 @@ pub fn warp_shape(shape: &Shape, zs: &[Vec<Option<f64>>], warp: &Warp) -> Result
     if warp.is_similarity() {
         return Ok(similar(shape, zs, warp));
     }
-    let kept = |shape: Shape| Warped {
-        shape,
-        zs: zs.to_vec(),
-        curves: false,
-        kept: true,
-    };
-    let plain = |shape: Shape| Warped {
-        shape,
-        zs: zs.to_vec(),
-        curves: false,
-        kept: false,
-    };
+    // A ray that runs to a projective transform's horizon.
+    if let Shape::Ray { dir, .. } = shape
+        && let Warp::Projective { h, .. } = warp
+        && h[6] * dir.x + h[7] * dir.y < 0.0
+    {
+        return Err(Beyond);
+    }
+    if let Some(done) = common(shape, zs, warp)? {
+        return Ok(done);
+    }
     Ok(match shape {
-        Shape::Point { p, z } => plain(Shape::Point {
-            p: warp.point(*p)?,
-            z: *z,
-        }),
-        Shape::Line { a, b } => plain(Shape::Line {
-            a: warp.point(*a)?,
-            b: warp.point(*b)?,
-        }),
         Shape::Polyline { pts, bulges, holes } => {
             let (pts2, z, dense) = warp_ring(warp, pts, bulges, zs.first(), false)?;
             Warped {
@@ -448,25 +464,59 @@ pub fn warp_shape(shape: &Shape, zs: &[Vec<Option<f64>>], warp: &Warp) -> Result
             let span = (sw < TAU - 1e-12).then_some((*t0, *t0 + sw));
             curve(warp, *c, *major, n, span)?
         }
+        // Every other kind is `common`'s.
+        _ => Warped {
+            shape: shape.clone(),
+            zs: zs.to_vec(),
+            curves: false,
+            kept: false,
+        },
+    })
+}
+
+/// The kinds a transform and a rubber sheet move alike (docs/adr/0156
+/// §4–§5, docs/adr/0158 §3): points, lines, a spline's fit points, an xline
+/// or a ray by their point and J·dir; texts, notes, blocks, dimensions and
+/// hatch patterns kept in shape at their anchor's derivative. None for a
+/// path or a curve, which each map moves its own way.
+fn common<M: Map + ?Sized>(
+    shape: &Shape,
+    zs: &[Vec<Option<f64>>],
+    m: &M,
+) -> Result<Option<Warped>, Beyond> {
+    let kept = |shape: Shape| Warped {
+        shape,
+        zs: zs.to_vec(),
+        curves: false,
+        kept: true,
+    };
+    let plain = |shape: Shape| Warped {
+        shape,
+        zs: zs.to_vec(),
+        curves: false,
+        kept: false,
+    };
+    Ok(Some(match shape {
+        Shape::Point { p, z } => plain(Shape::Point {
+            p: m.at(*p)?,
+            z: *z,
+        }),
+        Shape::Line { a, b } => plain(Shape::Line {
+            a: m.at(*a)?,
+            b: m.at(*b)?,
+        }),
         Shape::Spline { pts, closed } => plain(Shape::Spline {
             pts: pts
                 .iter()
-                .map(|&p| warp.point(p))
+                .map(|&p| m.at(p))
                 .collect::<Result<Vec<_>, _>>()?,
             closed: *closed,
         }),
         Shape::Xline { p, dir } | Shape::Ray { p, dir } => {
-            let ray = matches!(shape, Shape::Ray { .. });
-            if ray
-                && let Warp::Projective { h, .. } = warp
-                && h[6] * dir.x + h[7] * dir.y < 0.0
-            {
-                return Err(Beyond);
-            }
-            let d = lin(&warp.jacobian(*p)?, *dir);
+            let d = lin(&m.jac(*p)?, *dir);
             let l = js_hypot(d.x, d.y);
-            let (p, dir) = (warp.point(*p)?, Vec2::new(d.x / l, d.y / l));
-            plain(if ray {
+            let (p, dir) = (m.at(*p)?, Vec2::new(d.x / l, d.y / l));
+            plain(if matches!(shape, Shape::Ray { .. }) {
                 Shape::Ray { p, dir }
             } else {
                 Shape::Xline { p, dir }
@@ -482,9 +532,9 @@ pub fn warp_shape(shape: &Shape, zs: &[Vec<Option<f64>>], warp: &Warp) -> Result
             mask,
         } => {
             let (height, rotation, width) =
-                text_rule(&warp.jacobian(*p)?, *height, *rotation, *width_factor);
+                text_rule(&m.jac(*p)?, *height, *rotation, *width_factor);
             kept(Shape::Text {
-                p: warp.point(*p)?,
+                p: m.at(*p)?,
                 text: text.clone(),
                 height,
                 rotation,
@@ -502,11 +552,11 @@ pub fn warp_shape(shape: &Shape, zs: &[Vec<Option<f64>>], warp: &Warp) -> Result
             mask,
         } => {
             let last = *pts.last().unwrap_or(&Vec2::new(0.0, 0.0));
-            let (height, rotation, _) = text_rule(&warp.jacobian(last)?, *height, *rotation, None);
+            let (height, rotation, _) = text_rule(&m.jac(last)?, *height, *rotation, None);
             kept(Shape::Leader {
                 pts: pts
                     .iter()
-                    .map(|&p| warp.point(p))
+                    .map(|&p| m.at(p))
                     .collect::<Result<Vec<_>, _>>()?,
                 text: text.clone(),
                 height,
@@ -518,8 +568,8 @@ pub fn warp_shape(shape: &Shape, zs: &[Vec<Option<f64>>], warp: &Warp) -> Result
         Shape::Insert { p, .. } => {
             // The modify tools' similarity at the point: scale √|det J|, turn
             // the angle of J's first column, mirrored when J mirrors.
-            let at = warp.point(*p)?;
-            let mut out = transform_shape(shape, &nearest_similarity(&warp.jacobian(*p)?));
+            let at = m.at(*p)?;
+            let mut out = transform_shape(shape, &nearest_similarity(&m.jac(*p)?));
             if let Shape::Insert { p, .. } = &mut out {
                 *p = at;
             }
@@ -534,10 +584,10 @@ pub fn warp_shape(shape: &Shape, zs: &[Vec<Option<f64>>], warp: &Warp) -> Result
             ..
         } => {
             let mid = Vec2::new((a.x + b.x) / 2.0, (a.y + b.y) / 2.0);
-            let j = warp.jacobian(mid)?;
-            let (na, nb) = (warp.point(*a)?, warp.point(*b)?);
+            let j = m.jac(mid)?;
+            let (na, nb) = (m.at(*a)?, m.at(*b)?);
             let nc = match c {
-                Some(c) => Some(warp.point(*c)?),
+                Some(c) => Some(m.at(*c)?),
                 None => None,
             };
             let linear_angle = (style.as_deref() == Some("linear")).then(|| {
@@ -576,17 +626,13 @@ pub fn warp_shape(shape: &Shape, zs: &[Vec<Option<f64>>], warp: &Warp) -> Result
                 ring.iter().map(|p| p.x).sum::<f64>() / n,
                 ring.iter().map(|p| p.y).sum::<f64>() / n,
             );
-            let j = warp.jacobian(mean)?;
+            let j = m.jac(mean)?;
             let rad = pattern.angle * PI / 180.0;
             let d = lin(&j, Vec2::new(cos(rad), sin(rad)));
             let mut pattern = pattern.clone();
             pattern.angle = (((atan2(d.y, d.x) * 180.0 / PI) % 180.0) + 180.0) % 180.0;
             pattern.spacing *= det(&j).abs().sqrt();
-            let map = |ps: &Vec<Vec2>| {
-                ps.iter()
-                    .map(|&p| warp.point(p))
-                    .collect::<Result<Vec<_>, _>>()
-            };
+            let map = |ps: &Vec<Vec2>| ps.iter().map(|&p| m.at(p)).collect::<Result<Vec<_>, _>>();
             kept(Shape::Hatch {
                 ring: map(ring)?,
                 holes: match holes {
@@ -596,7 +642,8 @@ pub fn warp_shape(shape: &Shape, zs: &[Vec<Option<f64>>], warp: &Warp) -> Result
                 pattern,
             })
         }
-    })
+        _ => return Ok(None),
+    }))
 }
 
 /// The similarity of the modify tools nearest J for a block or a dimension:
@@ -739,12 +786,258 @@ pub fn warp_shapes(shapes: &[Shape], zs: &[Vec<Vec<Option<f64>>>], warp: &Warp) 
     WarpedAll(Ok((out, curves, kept)))
 }
 
-pub(crate) static OPS: &[Op] =
-    &[op!("warpShapes", |shapes: Vec<Shape>,
-                         zs: Vec<Vec<Vec<Option<f64>>>>,
-                         warp: Warp| {
+// ── Kauçuk levha (docs/adr/0158 §3) ─────────────────────────────────────
+
+/// A shape on a rubber sheet and how far it bends from its true image
+/// (metres; [`bend_of`]). Only vertices move by the sheet: straight edges
+/// stay straight and gain no vertex, an arc segment keeps its bulge, a
+/// circle, an arc and an ellipse move by the nearest similarity at their
+/// centre (their kind stays); the rest moves as a transform moves it, at its
+/// anchor's derivative. Elevations stay with their vertices.
+pub fn sheet_shape(shape: &Shape, zs: &[Vec<Option<f64>>], sheet: &Sheet) -> (Warped, f64) {
+    let plain = |shape: Shape| Warped {
+        shape,
+        zs: zs.to_vec(),
+        curves: false,
+        kept: false,
+    };
+    let map = |ps: &[Vec2]| ps.iter().map(|&p| sheet.map(p)).collect::<Vec<_>>();
+    let ring = |r: &Ring| Ring {
+        pts: map(&r.pts),
+        bulges: r.bulges.clone(),
+    };
+    let warped = match shape {
+        Shape::Polyline { pts, bulges, holes } => plain(Shape::Polyline {
+            pts: map(pts),
+            bulges: bulges.clone(),
+            // Only a polygon's holes move (as `transform_shape`).
+            holes: holes.clone(),
+        }),
+        Shape::Polygon {
+            pts,
+            bulges,
+            holes,
+            parts,
+        } => plain(Shape::Polygon {
+            pts: map(pts),
+            bulges: bulges.clone(),
+            holes: holes.as_ref().map(|hs| hs.iter().map(ring).collect()),
+            parts: parts.as_ref().map(|ps| {
+                ps.iter()
+                    .map(|part| crate::entity::Part {
+                        pts: map(&part.pts),
+                        bulges: part.bulges.clone(),
+                        holes: part.holes.as_ref().map(|hs| hs.iter().map(ring).collect()),
+                    })
+                    .collect()
+            }),
+        }),
+        Shape::Circle { c, .. } | Shape::Arc { c, .. } | Shape::Ellipse { c, .. } => {
+            plain(near_similar(shape, *c, sheet))
+        }
+        _ => match common(shape, zs, sheet) {
+            Ok(Some(w)) => w,
+            // A sheet has no horizon, and `common` takes every other kind.
+            _ => plain(shape.clone()),
+        },
+    };
+    (warped, bend_of(shape, sheet))
+}
+
+/// A curve moved by the sheet's nearest similarity at its centre `c`, in
+/// frames centred on `c` and on its image (no national coordinate is
+/// multiplied).
+fn near_similar(shape: &Shape, c: Vec2, sheet: &Sheet) -> Shape {
+    let to = sheet.map(c);
+    let moved = transform_shape(shape, &translation(-c.x, -c.y));
+    let turned = transform_shape(&moved, &nearest_similarity(&sheet.jacobian(c)));
+    transform_shape(&turned, &translation(to.x, to.y))
+}
+
+/// How far a shape on the sheet lies from its true image (docs/adr/0158
+/// §3): the largest distance, metres, between the sheet's image of a point
+/// and the kept shape's point at the same parameter. Straight edges and arc
+/// segments (of lines, paths, rings, hatch rings and leaders) at a quarter,
+/// a half and three quarters; a circle, an arc and an ellipse at the middles
+/// of eight equal parts of their span. Points, splines, xlines, rays,
+/// texts, blocks and dimensions: 0.
+fn bend_of(shape: &Shape, sheet: &Sheet) -> f64 {
+    let ring = |pts: &[Vec2], bulges: Option<&Vec<f64>>, closed: bool| {
+        let n = pts.len();
+        let edges = if closed { n } else { n.saturating_sub(1) };
+        let mut worst: f64 = 0.0;
+        for i in 0..edges {
+            let j = (i + 1) % n;
+            let bulge = bulges.and_then(|b| b.get(i)).copied().unwrap_or(0.0);
+            worst = js_max(worst, edge_bend(pts[i], pts[j], bulge, sheet));
+        }
+        worst
+    };
+    match shape {
+        Shape::Line { a, b } => edge_bend(*a, *b, 0.0, sheet),
+        Shape::Polyline { pts, bulges, .. } => ring(pts, bulges.as_ref(), false),
+        Shape::Leader { pts, .. } => ring(pts, None, false),
+        Shape::Polygon {
+            pts,
+            bulges,
+            holes,
+            parts,
+        } => {
+            let mut worst = ring(pts, bulges.as_ref(), true);
+            for h in holes.iter().flatten() {
+                worst = js_max(worst, ring(&h.pts, h.bulges.as_ref(), true));
+            }
+            for part in parts.iter().flatten() {
+                worst = js_max(worst, ring(&part.pts, part.bulges.as_ref(), true));
+                for h in part.holes.iter().flatten() {
+                    worst = js_max(worst, ring(&h.pts, h.bulges.as_ref(), true));
+                }
+            }
+            worst
+        }
+        Shape::Hatch { ring: r, holes, .. } => {
+            let mut worst = ring(r, None, true);
+            for h in holes.iter().flatten() {
+                worst = js_max(worst, ring(h, None, true));
+            }
+            worst
+        }
+        Shape::Circle { c, r } => curve_bend(
+            *c,
+            Vec2::new(*r, 0.0),
+            Vec2::new(0.0, *r),
+            (0.0, TAU),
+            sheet,
+        ),
+        Shape::Arc { c, r, a0, a1 } => curve_bend(
+            *c,
+            Vec2::new(*r, 0.0),
+            Vec2::new(0.0, *r),
+            (*a0, *a0 + sweep(*a0, *a1)),
+            sheet,
+        ),
+        Shape::Ellipse {
+            c,
+            major,
+            ratio,
+            t0,
+            t1,
+        } => curve_bend(
+            *c,
+            *major,
+            Vec2::new(-major.y * ratio, major.x * ratio),
+            (*t0, *t0 + sweep(*t0, *t1)),
+            sheet,
+        ),
+        _ => 0.0,
+    }
+}
+
+/// The parameters a bend is measured at along an edge.
+const QUARTERS: [f64; 3] = [0.25, 0.5, 0.75];
+
+/// An edge's bend: the sheet's image of its point at each quarter against
+/// the kept edge's (a straight edge between the images of its ends, or the
+/// arc of the same bulge between them).
+fn edge_bend(a: Vec2, b: Vec2, bulge: f64, sheet: &Sheet) -> f64 {
+    let (na, nb) = (sheet.map(a), sheet.map(b));
+    let mut worst: f64 = 0.0;
+    match (bulge_arc(a, b, bulge), bulge_arc(na, nb, bulge)) {
+        (Some(arc), Some(kept)) => {
+            for t in QUARTERS {
+                let (u, v) = (arc.a0 + arc.sweep * t, kept.a0 + kept.sweep * t);
+                let real = sheet.map(Vec2::new(
+                    arc.c.x + arc.r * cos(u),
+                    arc.c.y + arc.r * sin(u),
+                ));
+                let here = Vec2::new(kept.c.x + kept.r * cos(v), kept.c.y + kept.r * sin(v));
+                worst = js_max(worst, js_hypot(real.x - here.x, real.y - here.y));
+            }
+        }
+        _ => {
+            for t in QUARTERS {
+                let real = sheet.map(Vec2::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t));
+                let here = Vec2::new(na.x + (nb.x - na.x) * t, na.y + (nb.y - na.y) * t);
+                worst = js_max(worst, js_hypot(real.x - here.x, real.y - here.y));
+            }
+        }
+    }
+    worst
+}
+
+/// A curve's bend (c + M·cos t + N·sin t over `span`): the sheet's image of
+/// its point at the middles of eight equal parts against the nearest
+/// similarity's image of it.
+fn curve_bend(c: Vec2, m: Vec2, n: Vec2, span: (f64, f64), sheet: &Sheet) -> f64 {
+    let [sa, sb, sc, sd, ..] = nearest_similarity(&sheet.jacobian(c));
+    let to = sheet.map(c);
+    let mut worst: f64 = 0.0;
+    for k in 0..8 {
+        let t = span.0 + (span.1 - span.0) * (f64::from(k) + 0.5) / 8.0;
+        let v = Vec2::new(m.x * cos(t) + n.x * sin(t), m.y * cos(t) + n.y * sin(t));
+        let real = sheet.map(Vec2::new(c.x + v.x, c.y + v.y));
+        let here = Vec2::new(to.x + sa * v.x + sc * v.y, to.y + sb * v.x + sd * v.y);
+        worst = js_max(worst, js_hypot(real.x - here.x, real.y - here.y));
+    }
+    worst
+}
+
+/// Shapes on a sheet together: theirs, their elevations, how many kept their
+/// shape, how many bent more than [`CHORD`] and the largest bend; or why
+/// there is no sheet (docs/adr/0158 §3–§4).
+pub struct SheetAll(pub Result<(Vec<Warped>, usize, usize, f64), RubberError>);
+
+impl ToJson for SheetAll {
+    fn write_json(&self, out: &mut String) {
+        out.push('{');
+        let mut first = true;
+        match &self.0 {
+            Ok((all, kept, bent, bend)) => {
+                let shapes: Vec<Shape> = all.iter().map(|w| w.shape.clone()).collect();
+                let zs: Vec<Vec<Vec<Option<f64>>>> = all.iter().map(|w| w.zs.clone()).collect();
+                field(out, &mut first, "shapes", &shapes);
+                field(out, &mut first, "zs", &zs);
+                field(out, &mut first, "kept", &(*kept as f64));
+                field(out, &mut first, "bent", &(*bent as f64));
+                field(out, &mut first, "bend", bend);
+            }
+            Err(e) => field(out, &mut first, "error", &e.code()),
+        }
+        out.push('}');
+    }
+}
+
+/// Every shape on the sheet through `links`, with its elevations.
+pub fn sheet_shapes(shapes: &[Shape], zs: &[Vec<Vec<Option<f64>>>], links: &[Link]) -> SheetAll {
+    let sheet = match Sheet::solve(links) {
+        Ok(s) => s,
+        Err(e) => return SheetAll(Err(e)),
+    };
+    let none = Vec::new();
+    let mut out = Vec::with_capacity(shapes.len());
+    let (mut kept, mut bent, mut bend) = (0, 0, 0.0_f64);
+    for (i, s) in shapes.iter().enumerate() {
+        let (w, b) = sheet_shape(s, zs.get(i).unwrap_or(&none), &sheet);
+        kept += usize::from(w.kept);
+        bent += usize::from(b > CHORD);
+        bend = js_max(bend, b);
+        out.push(w);
+    }
+    SheetAll(Ok((out, kept, bent, bend)))
+}
+
+pub(crate) static OPS: &[Op] = &[
+    op!("warpShapes", |shapes: Vec<Shape>,
+                       zs: Vec<Vec<Vec<Option<f64>>>>,
+                       warp: Warp| {
         warp_shapes(&shapes, &zs, &warp)
-    })];
+    }),
+    op!("rubberShapes", |shapes: Vec<Shape>,
+                         zs: Vec<Vec<Vec<Option<f64>>>>,
+                         links: Vec<Link>| {
+        sheet_shapes(&shapes, &zs, &links)
+    }),
+];
 
 #[cfg(test)]
 mod tests {
@@ -786,10 +1079,47 @@ mod tests {
         );
     }
 
+    /// The reference's sheets (scripts/fixtures/rubber_warp_cases.py; the
+    /// sheet's map from the mpmath reference): every shape, its elevations,
+    /// the counts and the largest bend, or the same refusal.
+    #[test]
+    fn every_case_on_a_sheet_is_as_the_reference_puts_it() {
+        let file = Json::parse(include_str!(
+            "../../../../../fixtures/fit/v1/rubber-warp.json"
+        ))
+        .expect("rubber-warp.json reads");
+        let tolerance = file.get("tolerance");
+        let metres = f64::from_json(tolerance.get("metres")).expect("metres");
+        let relative = f64::from_json(tolerance.get("relative")).expect("relative");
+        let Json::Arr(cases) = file.get("cases") else {
+            panic!("cases")
+        };
+        assert!(cases.len() >= 3, "{} cases", cases.len());
+        let mut off = Vec::new();
+        for case in cases {
+            let name = String::from_json(case.get("name")).unwrap_or_default();
+            let key = String::from_json(case.get("sheet")).expect("a sheet");
+            let links = Vec::<Link>::from_json(file.get("sheets").get(&key)).expect("links");
+            let shapes = Vec::<Shape>::from_json(case.get("objects")).expect("objects read");
+            let zs = Vec::<Vec<Vec<Option<f64>>>>::from_json(case.get("zs")).expect("zs read");
+            let got = Json::parse(&to_string(&sheet_shapes(&shapes, &zs, &links))).expect("reads");
+            if let Err(e) = close(&got, case.get("expected"), metres, relative, "") {
+                off.push(format!("{name}: {e}"));
+            }
+        }
+        assert!(
+            off.is_empty(),
+            "{} durum farklı:\n{}",
+            off.len(),
+            off.join("\n")
+        );
+    }
+
     fn close(a: &Json, e: &Json, metres: f64, relative: f64, path: &str) -> Result<(), String> {
         match (a, e) {
             (Json::Num(x), Json::Num(y)) => {
-                let limit = if path.ends_with(".x") || path.ends_with(".y") {
+                // Coordinates and a sheet's bend are metres.
+                let limit = if path.ends_with(".x") || path.ends_with(".y") || path == ".bend" {
                     metres
                 } else {
                     relative * js_max(y.abs(), 1.0)

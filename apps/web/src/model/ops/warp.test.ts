@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { warpShapes, type PathElevations, type Warp } from './warp';
+import { rubberShapes, warpShapes, type PathElevations, type Warp } from './warp';
 
 /**
  * Vektör oturtma's warping of objects (docs/adr/0156 §4–§5) through the WASM core, against the independent reference
@@ -19,7 +19,8 @@ interface File {
 
 function differ(a: unknown, e: unknown, path: string, tol: File['tolerance']): string | null {
   if (typeof a === 'number' && typeof e === 'number') {
-    const limit = path.endsWith('.x') || path.endsWith('.y') ? tol.metres : tol.relative * Math.max(Math.abs(e), 1);
+    // Coordinates and a sheet's bend are metres.
+    const limit = path.endsWith('.x') || path.endsWith('.y') || path === '.bend' ? tol.metres : tol.relative * Math.max(Math.abs(e), 1);
     return Math.abs(a - e) <= limit ? null : `${path}: ${a} ≠ ${e}`;
   }
   if (Array.isArray(a) || Array.isArray(e)) {
@@ -51,6 +52,22 @@ describe('Vektör oturtma: nesnelerin dönüşmesi', () => {
   it('warps every case as the reference does', () => {
     const off = file.cases.flatMap((c) => {
       const d = differ(warpShapes(c.objects, c.zs, file.warps[c.warp]), c.expected, '', file.tolerance);
+      return d ? [`${c.name}: ${d}`] : [];
+    });
+    expect(off).toEqual([]);
+  });
+});
+
+describe('Kauçuk levha: nesneler', () => {
+  const file = JSON.parse(fs.readFileSync(new URL('../../../../../fixtures/fit/v1/rubber-warp.json', import.meta.url), 'utf8')) as Omit<File, 'warps'> & {
+    sheets: Record<string, { from: { x: number; y: number }; to: { x: number; y: number } }[]>;
+  };
+
+  it('puts every case on its sheet as the reference does', () => {
+    expect(file.format).toBe('kentos.fit-rubber-warp');
+    expect(file.cases.length).toBeGreaterThanOrEqual(3);
+    const off = file.cases.flatMap((c) => {
+      const d = differ(rubberShapes(c.objects, c.zs, file.sheets[(c as unknown as { sheet: string }).sheet]), c.expected, '', file.tolerance);
       return d ? [`${c.name}: ${d}`] : [];
     });
     expect(off).toEqual([]);

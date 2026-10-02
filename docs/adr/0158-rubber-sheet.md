@@ -65,7 +65,7 @@ Kauçuk levha küçük, yerel düzeltmedir. Nesnelerin biçimi korunur, köşele
   - Daire, yay ve elipsin merkezi haritayla taşınır. Biçimi merkezdeki en yakın benzerlikle değişir (√|det J| ölçek, J'nin ilk sütununun dönüklüğü); türü değişmez.
 - **Yazı, not, blok, ölçü ve tarama:** ADR 0156 §4'teki gibi, yerindeki en yakın benzerlikle.
 
-Gerçek görüntüden sapma sayılır ve söylenir. Doğru kenarın ve yayın gerçek görüntüsü eğridir; tutulan kenar ve yay bundan sapar. Her kenar ve yay için orta ve çeyrek noktalarda sapma ölçülür. 0,1 mm'yi aşan nesneler uyarıyla sayılır (`rubber_bends`): kaç nesne ve en çok kaç mm saptığı. Kauçuk levhanın santimetrelik düzeltmelerinde sapma genellikle mikrometrelerdir.
+Gerçek görüntüden sapma sayılır ve söylenir. Doğru kenarın ve yayın gerçek görüntüsü eğridir; tutulan kenar ve yay bundan sapar. Her kenar ve yay için orta ve çeyrek noktalarda sapma ölçülür. 0,1 mm'yi aşan nesneler uyarıyla sayılır (`rubber_bends`): kaç nesne ve en çok kaç mm saptığı. Sapma kenarın boyuna ve düzeltmenin değişimine bağlıdır. Ortak durumlardaki 40 × 25 m'lik ızgarada santimetrelik düzeltmeler 30 m'lik kenarı 8 mm'ye kadar büker. Köşe eklemek parsel kenarına sahte köşe getireceğinden kenar doğru kalır, sapma söylenir.
 
 ### 4. Komut
 
@@ -124,6 +124,14 @@ Rapor bağları, Helmert artıklarını ve yöntemi yazar.
    - **Sonuç:** çekirdek (yerli) ve web (WASM) görüntüleri 1e-9 m, türevleri 1e-9 içinde verir.
    - **Koşullanma:** 200 m'de 1 mm'lik "neredeyse doğru" bağlar kasıtlı kötü koşullu bir sınamaydı: float64 60 nm farka düşüyordu. Şeridin 3,5 m genişliği gerçekçi durumu sınar; yalnız tam doğru reddedilir.
 2. Nesneler: `ops::warp`'ın `Sheet`'i, §3'ün kuralları ve sapma; ortak durumlar.
+
+   *(2 Ekim: tamam.)*
+   - **Çekirdek:** `ops::warp`'ta harita bir arayüzdür (`point`, türev). Dönüşüm ve levha yazı, not, blok, ölçü, tarama, nokta, çizgi, eğri, sonsuz doğru ve ışın kurallarını paylaşır (`common`). Levhanın kendi kuralları `sheet_shape`'tedir: yollar ve halkalar yalnız köşeler, daire, yay ve elips merkezdeki en yakın benzerlik. `bend_of` sapmayı ölçer, `sheet_shapes` hepsini birlikte işler. WASM `rubberShapes`, web cephesi `model/ops/warp.ts`.
+   - **Başvuru:** `scripts/fixtures/rubber_warp_cases.py`. Haritayı ve türevi mpmath başvurusundan (`rubber_cases.py`), ortak türlerin kurallarını `warp_cases.py`'den alır. 3 durum yazar (`fixtures/fit/v1/rubber-warp.json`):
+     - 5×5 pafta ızgarası, santimetrelik kaymalar: 17 tür, delikli ve çok parçalı alan dahil; 10 nesne 0,1 mm'den çok sapar, en çok 8,1 mm;
+     - metrelerce güçlü levha: en çok 0,81 m;
+     - bir doğru üstündeki bağlar.
+   - **Sonuç:** çekirdek (yerli) ve web (WASM) geometriyi 1e-9 m, öbür sayıları göreli 1e-12, sayımları bire bir, en büyük sapmayı 1e-9 m içinde verir. Dönüşümlerin ortak durumları (`warp.json`) değişmedi.
 3. Komut: `rubbersheet` türü iki platformda, ortak komut durumlarıyla.
 4. Pencere: dördüncü dönüşüm iki platformda; resimler.
 
