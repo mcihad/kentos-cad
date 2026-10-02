@@ -49,6 +49,7 @@ export const CREATE_LABEL: Record<CreateOperation, string> = {
   leader: 'Kılavuz',
   polygonize: 'Toplu alan',
   vertexPoints: 'Köşelere nokta',
+  adjoin: 'Bitişik alan',
 };
 
 /** The checks in the contract's order: why nothing may be written, or the warnings when it may. */

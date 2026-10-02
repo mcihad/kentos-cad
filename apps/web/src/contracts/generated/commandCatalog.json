@@ -27968,6 +27968,11 @@
                 "const": "vertexPoints",
                 "description": "Köşelere nokta (docs/adr/0152): named points at the vertices of lines and areas.",
                 "type": "string"
+              },
+              {
+                "const": "adjoin",
+                "description": "Bitişik alan (docs/adr/0162 §3): the region a drawn path closes with\nthe neighbouring areas, as one area (its parts and holes as they are).",
+                "type": "string"
               }
             ]
           },
@@ -28800,7 +28805,7 @@
                 "type": "null"
               }
             ],
-            "description": "The drawing tool or Hesap window the objects come from, when its step\nhas its own name: Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan\noluştur, Poligon hesabı, Kutupsal alım, Önden kestirme, Geriden\nkestirme. Absent: “Ekle”."
+            "description": "The drawing tool or Hesap window the objects come from, when its step\nhas its own name: Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan\noluştur, Poligon hesabı, Kutupsal alım, Önden kestirme, Geriden\nkestirme, Toplu alan, Köşelere nokta, Bitişik alan. Absent: “Ekle”."
           }
         },
         "required": [

@@ -73,6 +73,9 @@ pub enum CreateOperation {
     Polygonize,
     /// Köşelere nokta (docs/adr/0152): named points at the vertices of lines and areas.
     VertexPoints,
+    /// Bitişik alan (docs/adr/0162 §3): the region a drawn path closes with
+    /// the neighbouring areas, as one area (its parts and holes as they are).
+    Adjoin,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the
@@ -138,7 +141,7 @@ pub struct EntitiesCreate {
     /// The drawing tool or Hesap window the objects come from, when its step
     /// has its own name: Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan
     /// oluştur, Poligon hesabı, Kutupsal alım, Önden kestirme, Geriden
-    /// kestirme. Absent: “Ekle”.
+    /// kestirme, Toplu alan, Köşelere nokta, Bitişik alan. Absent: “Ekle”.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub operation: Option<CreateOperation>,

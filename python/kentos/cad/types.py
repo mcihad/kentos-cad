@@ -128,6 +128,7 @@ class CreateOperation(_StrEnum):
     - ``leader``: Kılavuz (docs/adr/0146 §6): a leader drawn by its tool.
     - ``polygonize``: Toplu alan (docs/adr/0151): the regions line work closes, as areas.
     - ``vertexPoints``: Köşelere nokta (docs/adr/0152): named points at the vertices of lines and areas.
+    - ``adjoin``: Bitişik alan (docs/adr/0162 §3): the region a drawn path closes with
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -147,9 +148,10 @@ class CreateOperation(_StrEnum):
     LEADER = "leader"
     POLYGONIZE = "polygonize"
     VERTEX_POINTS = "vertexPoints"
+    ADJOIN = "adjoin"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -2237,7 +2239,7 @@ class EntitiesCreate(_Model):
         operation: The drawing tool or Hesap window the objects come from, when its step
             has its own name: Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan
             oluştur, Poligon hesabı, Kutupsal alım, Önden kestirme, Geriden
-            kestirme. Absent: “Ekle”.
+            kestirme, Toplu alan, Köşelere nokta, Bitişik alan. Absent: “Ekle”.
     """
     layer_id: str
     objects: list[NewObject]
