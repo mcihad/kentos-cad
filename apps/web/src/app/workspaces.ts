@@ -4,8 +4,8 @@ import type { AppContext } from './context';
 
 /**
  * Work modes (Çalışma modu): one project, one data model, several ways of
- * presenting it. A mode decides which main menus, ribbon tabs and panels,
- * and toolbox tools are shown; it never changes what the data means, and
+ * presenting it. A mode decides which menus (the ribbon's sources), ribbon
+ * tabs, panels and tools are shown; it never changes what the data means, and
  * every command still runs from the command line and its shortcut in every
  * mode. The mode is a project setting (`ProjectSettings.workspace`), asked
  * when a project is created and changed from the status bar or
@@ -126,7 +126,7 @@ export function effectiveWorkspace(id: Workspace): WorkspaceSpec {
   return w.status === 'ready' ? w : workspaceById('hybrid');
 }
 
-/** What a mode shows: the menus, ribbon and toolbox ask it item by item. */
+/** What a mode shows: the ribbon and its menus ask it item by item. */
 export interface WorkspaceFilter {
   readonly id: Workspace;
   menu(id: string): boolean;
@@ -158,7 +158,7 @@ export function workspaceFilter(spec: WorkspaceSpec, tools: readonly ToolDescrip
   };
 }
 
-/** The filter of the open project's mode (menus, ribbon and toolbox rebuild when the setting changes). */
+/** The filter of the open project's mode (the ribbon and its menus rebuild when the setting changes). */
 export function filterOf(ctx: AppContext): WorkspaceFilter {
   return workspaceFilter(effectiveWorkspace(ctx.doc.settings.workspace.value), ctx.tools.list());
 }

@@ -4,7 +4,7 @@ import { Signal } from '../../core/signal';
 import { crsBySrid } from '../../geo/crs';
 import { PROJECT_SETTINGS_DEFAULTS, type ProjectSettingsData } from '../../model/projectSettings';
 import { h, type Child } from '../dom';
-import { PLOT_SCALES } from '../toolbar/fields';
+import { PLOT_SCALES } from '../ribbon/fields';
 import { note, segmented, settingRow, stepper, textField } from '../widgets/controls';
 import { crsPicker } from './crsPicker';
 import { workspacePicker } from './workspacePicker';

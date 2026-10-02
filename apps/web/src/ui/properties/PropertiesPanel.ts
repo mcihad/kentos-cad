@@ -10,7 +10,7 @@ import { Panel } from '../dock/Panel';
 import { h, replaceChildren } from '../dom';
 import { geometryClassOf } from '../../style/geometry';
 import { colorSwatch, layerSwatch } from '../layers/swatch';
-import { DRAW_COLORS, LINE_WEIGHTS, weightText } from '../toolbar/fields';
+import { DRAW_COLORS, LINE_WEIGHTS, weightText } from '../ribbon/fields';
 import type { MenuItem } from '../widgets/PopupMenu';
 import { PropertyGrid, type PropRow, type PropSection } from '../widgets/PropertyGrid';
 import { commonElevationRow, lineEndRow, pathElevationRow, spaceRow } from './elevationRows';

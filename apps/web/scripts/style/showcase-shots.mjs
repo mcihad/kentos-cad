@@ -62,7 +62,6 @@ try {
         await b.waitFor(ready, 30000);
         await sleep(1200);
         await b.eval(`window.kentos.commands.execute('view.theme.${theme}')`);
-        await b.eval(`window.kentos.prefs.shell.set('ribbon')`);
         await b.waitFor(`document.querySelector('.ribbon__strip .rpanel')`, 10000).catch(() => {});
         await b.eval('document.fonts.ready');
         await sleep(600);

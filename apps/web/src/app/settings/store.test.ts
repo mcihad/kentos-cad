@@ -60,6 +60,7 @@ const OLD_PREFS = JSON.stringify({
   symbolSize: 'screen',
   lineWeights: false,
   startScreen: false,
+  // The classic shell's choice: left behind without a report (docs/adr/0155).
   shell: 'ribbon',
 });
 
@@ -97,7 +98,6 @@ const MIGRATED: PreferencesData = {
   symbolSize: 'screen',
   lineWeights: false,
   startScreen: false,
-  shell: 'ribbon',
 };
 
 const values = (store: SettingsStore): PreferencesData => Object.fromEntries(Object.entries(PREF_KEYS).map(([f, k]) => [f, store.requested(k)])) as unknown as PreferencesData;
@@ -107,7 +107,7 @@ describe('the one migration of kentos.prefs.v1', () => {
     const storage = new MemoryStorage({ [LEGACY_PREFS]: OLD_PREFS });
     const store = SettingsStore.open(storage, () => AT);
     expect(values(store)).toEqual(MIGRATED);
-    expect(store.report.migrated).toEqual({ from: `localStorage ${LEGACY_PREFS}`, at: '2026-09-25T20:00:00.000Z', moved: 27, dropped: [] });
+    expect(store.report.migrated).toEqual({ from: `localStorage ${LEGACY_PREFS}`, at: '2026-09-25T20:00:00.000Z', moved: 26, dropped: [] });
     expect(storage.getItem(LEGACY_PREFS)).toBe(OLD_PREFS);
     const saved = JSON.parse(storage.getItem(SETTINGS_STORAGE)!);
     expect(saved.device).toEqual({ 'graphics.backend': 'webgpu', 'graphics.hiDpi': true, 'graphics.msaa': 1 });

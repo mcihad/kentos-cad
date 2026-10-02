@@ -51,14 +51,15 @@ try {
     await b.eval(`window.kentos.ui.bottomExpanded.set(true)`);
     await sleep(100);
     const centre = (sel) => b.eval(`(() => { const r = document.querySelector(${JSON.stringify(sel)}).getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
-    const tab = (i) => centre(`.bottom__tabs [role=tab]:nth-child(${i})`);
+    // By name: the tabs' order changes as tabs are added (Noktalar, docs/adr/0153).
+    const tab = (label) => b.eval(`(() => { const t = [...document.querySelectorAll('.bottom__tabs [role=tab]')].find((e) => e.textContent.includes(${JSON.stringify(label)})); const r = t.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
     const badgeText = () => b.eval(`(() => { const e = document.querySelector('.bottom__tabs .badge'); return e && !e.hidden ? e.textContent : ''; })()`);
-    await b.click(...(await tab(1)));
+    await b.click(...(await tab('Komut geçmişi')));
     await b.eval(`(() => { const k = window.kentos; k.log.clear(); k.log.warn('e2e: birinci uyarı'); k.log.error('e2e: ikinci uyarı'); })()`);
     const two = await badgeText();
-    await b.click(...(await tab(3)));
+    await b.click(...(await tab('Uyarılar')));
     const opened = await badgeText();
-    await b.click(...(await tab(1)));
+    await b.click(...(await tab('Komut geçmişi')));
     await b.click(...(await centre('[aria-label="Geçmişi temizle"]')));
     await b.eval(`window.kentos.log.warn('e2e: temizledikten sonra')`);
     const afterClear = await badgeText();
@@ -285,21 +286,18 @@ try {
     );
   }
 
-  // The classic bars fit the shell's narrowest window (DESIGN.md §7.1, §7.3, §7.7): nothing is cut off or
-  // left to an invisible scroll, at the standard and the largest type scale.
+  // The ribbon and the status bar fit the shell's narrowest window (DESIGN.md §7.7, docs/specs/ribbon.md): nothing is
+  // cut off or left to an invisible scroll, at the standard and the largest type scale (docs/adr/0155).
   {
     const bars = () =>
       b.eval(`(() => {
         const over = (el) => !!el && el.scrollWidth > el.clientWidth + 1;
         const s = document.querySelector('.status');
         const shown = [...s.children].filter((c) => !c.hidden && getComputedStyle(c).display !== 'none');
-        const scale = document.querySelector('.toolbar [aria-label="Çizim ölçeği"] .dropdown__text');
         return {
-          menus: over(document.querySelector('.menubar__menus')),
-          toolbar: over(document.querySelector('.toolbar')),
+          tabs: over(document.querySelector('.ribbon__bar')),
+          strip: over(document.querySelector('.ribbon__strip')),
           status: over(s) || Math.max(...shown.map((c) => c.getBoundingClientRect().right)) > innerWidth + 1,
-          scale: scale.scrollWidth <= scale.clientWidth,
-          fit: document.querySelector('.toolbar').dataset.fit,
         };
       })()`);
     const scaleTo = (px) => b.eval(`window.kentos.prefs.textSize.set(${px})`);
@@ -313,10 +311,10 @@ try {
     await b.send('Emulation.setDeviceMetricsOverride', { width: 1600, height: 900, deviceScaleFactor: 1, mobile: false });
     await sleep(300);
     const wide = await bars();
-    const whole = (r) => !r.menus && !r.toolbar && !r.status && r.scale;
+    const whole = (r) => !r.tabs && !r.strip && !r.status;
     check(
-      'at 1100 px the classic menu bar, toolbar and status bar fit, at the standard and the largest type; at 1600 px the toolbar is whole',
-      whole(standard) && whole(largest) && whole(wide) && standard.fit !== '0' && wide.fit === '0',
+      'at 1100 px the ribbon and the status bar fit, at the standard and the largest type; at 1600 px too',
+      whole(standard) && whole(largest) && whole(wide),
       JSON.stringify({ standard, largest, wide }),
     );
   }
@@ -532,15 +530,6 @@ try {
   check('copy and paste-in-place duplicate the selection as a new object', (await b.eval('window.kentos.doc.size')) === beforePaste + 1 && /^[0-9a-f]{8}-[0-9a-f]{4}-7/.test(pastedCopy.uid) && pastedCopy.uid !== rect.uid, pastedCopy.uid);
   await b.eval('window.kentos.selection.clear()');
 
-  // Toolbox: every tool visible without scrolling; a group title folds its tools.
-  const box = await b.eval(`(() => { const body = document.querySelector('.toolbox__body'); return { scroll: body.scrollHeight > body.clientHeight, tools: document.querySelectorAll('.toolbox__tool').length }; })()`);
-  check('toolbox shows every tool without scrolling', !box.scroll && box.tools === (await b.eval('window.kentos.tools.list().length')), JSON.stringify(box));
-  const titleAt = await b.eval(`(() => { const r = document.querySelector('.toolbox__title').getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
-  await b.click(...titleAt);
-  const folded = await b.eval(`document.querySelector('.toolbox__grid').hidden`);
-  await b.click(...titleAt);
-  check('a toolbox group folds and opens from its title', folded && !(await b.eval(`document.querySelector('.toolbox__grid').hidden`)));
-
   // Mouse only: the command line's "Yay" button, then a corner rounded by pulling the mouse.
   const chip = async (label) => {
     const at = await b.eval(`(() => { const el = [...document.querySelectorAll('.cmdline__chip')].find((x) => x.textContent.startsWith(${JSON.stringify(label)})); if (!el) return null; const r = el.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
@@ -562,7 +551,7 @@ try {
   // snap. Turned on there, the strip shows them too, and the command line keeps its options.
   {
     const strip = () =>
-      b.eval(`({ hidden: document.querySelector('.cmdbar').hidden, opts: document.querySelectorAll('.cmdbar__opts .cmdbar__opt').length, chips: document.querySelectorAll('.cmdline__chip:not(.cmdbar__calc)').length, calc: !!document.querySelector('.cmdline .cmdbar__calc'), snap: document.querySelector('.cmdline .cmdline__snap')?.textContent ?? null })`);
+      b.eval(`({ hidden: document.querySelector('.cmdbar').hidden, opts: document.querySelectorAll('.cmdbar__opts .cmdbar__opt').length, chips: document.querySelectorAll('.cmdline__chip:not(.cmdbar__calc):not(.cmdline__more)').length, calc: !!document.querySelector('.cmdline .cmdbar__calc'), snap: document.querySelector('.cmdline .cmdline__snap')?.textContent ?? null })`);
     const middle = (js) => b.eval(`(() => { const e = ${js}; if (!e) return null; e.scrollIntoView({ block: 'center' }); const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
     const drawnBefore = await b.eval('window.kentos.doc.size');
     await key('p');
@@ -1771,10 +1760,9 @@ try {
       await sleep(150);
     };
     await b.eval(`(() => { const k = window.kentos; k.selection.set(k.doc.byLayer('parsel').filter((e) => e.kind === 'polygon').slice(0, 4).map((e) => e.id)); })()`);
-    await press('.menubar__item', 'İşlemler');
-    await press('.menu__item', 'Nokta işlemleri');
-    await press('.menu__item', 'Köşe noktalarını numarala');
-    check('processing: dialog opens from the İşlemler menu', !!(await center('.dialog--ptool')));
+    await press('.ribbon__tab', 'İşlemler');
+    await press('.ribbon__strip .rbtn', 'Köşe noktalarını numarala');
+    check('processing: dialog opens from the ribbon’s İşlemler tab', !!(await center('.dialog--ptool')));
     const count = await b.eval(`document.querySelector('.pfield__count')?.textContent ?? ''`);
     check('processing: input shows what it will read', /^4 kapalı alan; seçili nesneler/.test(count), count);
     await b.eval(`(() => { const i = document.querySelector('[data-param="prefix"] input'); i.focus(); i.select(); })()`);
@@ -2076,8 +2064,9 @@ try {
   }
 
   // DXF (fixtures/formats/v1/blocks.dxf, Windows-1254 bytes as they are): the file's layers become new layers in a
-  // group named after it, a layer the user leaves out stays out, nested inserts arrive exploded with exact
-  // coordinates, and the whole import is one undo step.
+  // group named after it, a layer the user leaves out stays out, and the whole import is one undo step. By default the
+  // blocks come in as block definitions and their inserts stay inserts (docs/adr/0144); with Blokları patlat the
+  // nested inserts arrive exploded with exact coordinates.
   {
     const raw = readFileSync(new URL('../../../../fixtures/formats/v1/blocks.dxf', import.meta.url)).toString('base64');
     await b.eval(`(() => {
@@ -2094,9 +2083,19 @@ try {
     const box = await b.eval(`(() => { const row = [...document.querySelectorAll('.dialog--io tbody tr')].find((r) => r.children[1].textContent.trim() === 'DIZI'); const e = row?.querySelector('input'); if (!e) return null; const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
     if (box) await b.click(...box);
     await sleep(150);
+    const summaryText = () => b.eval(`document.querySelector('.dialog--io .io-summary')?.textContent ?? ''`);
+    const kept = await summaryText();
+    // Blokları patlat: the same file is read again, its inserts opened into their objects; DIZI stays left out.
+    const explode = await b.eval(`(() => { const e = document.querySelector('.dialog--io input[data-key="explode"]'); if (!e) return null; const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    if (explode) await b.click(...explode);
+    await b.waitFor(`/8 nesne alınacak/.test(document.querySelector('.dialog--io .io-summary')?.textContent ?? '')`, 20000).catch(() => {});
     await b.shot('io-dxf-import');
-    const summary = await b.eval(`document.querySelector('.dialog--io .io-summary')?.textContent ?? ''`);
-    check('DXF import: the layers table lists the file\'s layers and the report names what was left out', JSON.stringify(rows) === '["0","DETAY","DIZI","KAPILAR"]' && /8 nesne alınacak/.test(summary) && /kendini içeriyor/.test(summary), `${JSON.stringify(rows)} ${summary.slice(0, 160)}`);
+    const summary = await summaryText();
+    check(
+      'DXF import: the layers table lists the file\'s layers and the report names what was left out; Blokları patlat reads the file again with the inserts opened',
+      JSON.stringify(rows) === '["0","DETAY","DIZI","KAPILAR"]' && /7 nesne alınacak/.test(kept) && /4 blok tanımı da alınacak/.test(kept) && /8 nesne alınacak/.test(summary) && /kendini içeriyor/.test(summary),
+      `${JSON.stringify(rows)} ${kept.slice(0, 100)} | ${summary.slice(0, 160)}`,
+    );
     await ioPress('.dialog--io .dialog__foot .btn--primary', 'İçe aktar');
     await b.waitFor(`!document.querySelector('.dialog--io')`, 10000).catch(() => {});
     const got = await b.eval(`(() => {
@@ -2525,17 +2524,21 @@ try {
     await b.eval(`(() => { window.kentos.files.picker = window.__files.original; window.kentos.files.handle = null; })()`);
     await b.shot('newproject-drawn');
 
-    // CAD mode: no map, coordinate or processing menus and no parcel tool in the toolbox; the parcel command still runs by name.
+    // CAD mode: no processing tab on the ribbon, and what is left of the map tab is measuring (Ölçme), without the
+    // parcel tool; the parcel command still runs by name.
     const ui = () =>
-      b.eval(`({ menus: [...document.querySelectorAll('.menubar__item')].map((m) => m.dataset.menu), parcel: !!document.querySelector('.toolbox [data-tool="parcel"]'), line: !!document.querySelector('.toolbox [data-tool="line"]'), status: document.querySelector('.status__mode').textContent, mode: window.kentos.doc.settings.workspace.value, dirty: window.kentos.doc.dirty.value })`);
+      b.eval(`({ tabs: [...document.querySelectorAll('.ribbon__tab')].filter((t) => !t.hidden).map((t) => t.dataset.tab), map: document.querySelector('.ribbon__tab[data-tab="map"]')?.textContent.trim() ?? null, status: document.querySelector('.status__mode').textContent, mode: window.kentos.doc.settings.workspace.value, dirty: window.kentos.doc.dirty.value })`);
     const cadUi = await ui();
+    await press('.ribbon__tab', 'Ölçme');
+    const measuring = await b.eval(`({ commands: document.querySelectorAll('.ribbon__strip [data-command]').length, parcel: !!document.querySelector('.ribbon__strip [data-command="tool.parcel"]') })`);
+    await press('.ribbon__tab', 'Giriş');
     await cmd('PARSEL');
     const byName = await b.eval('window.kentos.tools.activeId.value');
     await key('Escape');
     check(
-      'CAD mode hides the map, coordinate and processing menus and the parcel tool, whose command still runs by name',
-      !cadUi.menus.includes('map') && !cadUi.menus.includes('crs') && !cadUi.menus.includes('processing') && cadUi.menus.includes('draw') && !cadUi.parcel && cadUi.line && cadUi.status === 'CAD' && byName === 'parcel',
-      JSON.stringify({ ...cadUi, byName }),
+      'CAD mode hides the ribbon’s processing tab and keeps measuring on the map tab (Ölçme), without the parcel tool; the parcel command still runs by name',
+      !cadUi.tabs.includes('processing') && cadUi.tabs.includes('draw') && cadUi.map === 'Ölçme' && measuring.commands > 0 && !measuring.parcel && cadUi.status === 'CAD' && byName === 'parcel',
+      JSON.stringify({ ...cadUi, measuring, byName }),
     );
     // Back to Hibrit from the status bar's mode cell; announced modes are listed with Yakında.
     await press('.status__mode');
@@ -2545,14 +2548,14 @@ try {
     const hybridUi = await ui();
     check(
       'the status bar switches the work mode back to Hibrit (the project is unsaved); 3D Plan and Afet Analizi say Yakında',
-      hybridUi.mode === 'hybrid' && hybridUi.menus.includes('map') && hybridUi.parcel && hybridUi.status === 'Hibrit' && hybridUi.dirty && modeMenu.some((t) => t.includes('3D Plan') && t.includes('Yakında')) && modeMenu.some((t) => t.includes('Afet Analizi') && t.includes('Yakında')),
+      hybridUi.mode === 'hybrid' && hybridUi.tabs.includes('map') && hybridUi.status === 'Hibrit' && hybridUi.dirty && modeMenu.some((t) => t.includes('3D Plan') && t.includes('Yakında')) && modeMenu.some((t) => t.includes('Afet Analizi') && t.includes('Yakında')),
       JSON.stringify({ ...hybridUi, modeMenu }),
     );
   }
 
-  // Şerit (Uygulama ayarları → Görünüm → Arayüz düzeni): built from the same menu model and tool catalog as the
-  // classic shell, switched live. Panels shrink to the window, a selection brings its own tab, the tabs holding the
-  // running tool carry a dot, and folded (Ctrl+F1) a tab opens over the drawing until a command runs.
+  // Şerit, the only chrome (docs/adr/0155): built from the menu model and the tool catalog. Panels shrink to the window,
+  // a selection brings its own tab, the tabs holding the running tool carry a dot, and folded (Ctrl+F1) a tab opens
+  // over the drawing until a command runs.
   {
     const at = (sel) =>
       b.eval(`(() => { const e = [...document.querySelectorAll(${JSON.stringify(sel)})].find((x) => x.offsetParent); if (!e) return null; e.scrollIntoView({ block: 'nearest' }); const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
@@ -2564,17 +2567,10 @@ try {
     };
     const tab = (id) => click(`.ribbon__tab[data-tab="${id}"]`);
     const viewportH = () => b.eval(`window.kentos.view.clientRect().height`);
-    const classicH = await viewportH();
+    const openH = await viewportH();
 
-    await key(',', { ctrl: true });
-    await b.waitFor(`document.querySelector('.layout-card[data-shell="ribbon"]')`, 3000).catch(() => {});
-    await click('.layout-card[data-shell="ribbon"]');
-    await b.shot('ribbon-settings');
-    const save = await b.eval(`(() => { const e = [...document.querySelectorAll('.dialog__foot .btn')].find((x) => x.textContent === 'Kaydet'); const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
-    await b.click(...save);
-    await b.waitFor(`!!document.querySelector('.ribbon .ribbon__strip .rpanel')`, 15000).catch(() => {});
-    const swapped = await b.eval(`({ ribbon: !!document.querySelector('.ribbon'), menubar: !!document.querySelector('.menubar'), toolbar: !!document.querySelector('.toolbar'), toolbox: document.querySelector('.toolbox').hidden, pref: window.kentos.prefs.shell.value })`);
-    check('Şerit chosen in Uygulama ayarları replaces the menu bar, toolbar and toolbox at once', swapped.ribbon && !swapped.menubar && !swapped.toolbar && swapped.toolbox && swapped.pref === 'ribbon', JSON.stringify(swapped));
+    const only = await b.eval(`({ ribbon: !!document.querySelector('.ribbon .ribbon__strip .rpanel'), menubar: !!document.querySelector('.menubar'), toolbar: !!document.querySelector('.toolbar'), toolbox: !!document.querySelector('.toolbox') })`);
+    check('the ribbon is the only chrome: no menu bar, toolbar or toolbox', only.ribbon && !only.menubar && !only.toolbar && !only.toolbox, JSON.stringify(only));
 
     // Every tool of the catalog and every menu command has a button; the tabs are derived, nothing lists tools twice.
     const tabIds = await b.eval(`[...document.querySelectorAll('.ribbon__tab')].filter((t) => !t.hidden).map((t) => t.dataset.tab)`);
@@ -2670,7 +2666,7 @@ try {
     const closed = await b.eval(`getComputedStyle(document.querySelector('.ribbon__strip')).display`);
     await key('F1', { ctrl: true });
     await sleep(200);
-    check('Ctrl+F1 folds the ribbon to its tabs; a tab opens it over the drawing until a command runs', foldedH > classicH && peek === 'absolute' && closed === 'none' && (await viewportH()) < foldedH, `${classicH} → ${foldedH}, ${peek}, ${closed}`);
+    check('Ctrl+F1 folds the ribbon to its tabs; a tab opens it over the drawing until a command runs', foldedH > openH && peek === 'absolute' && closed === 'none' && (await viewportH()) < foldedH, `${openH} → ${foldedH}, ${peek}, ${closed}`);
 
     // Komut ara (Alt+Q): a typed name, Enter runs it.
     await key('q', { alt: true });
@@ -2787,12 +2783,6 @@ try {
     await sleep(150);
     await b.shot('ribbon-light');
     await b.eval(`window.kentos.commands.execute('view.theme.dark')`);
-
-    // Back to the classic shell from the ribbon's own Şerit arayüzü button: menus and toolbox return.
-    await click('.ribbon__strip [data-command="view.ribbon"]');
-    await b.waitFor(`!!document.querySelector('.menubar')`, 3000).catch(() => {});
-    const back = await b.eval(`({ ribbon: !!document.querySelector('.ribbon'), menubar: !!document.querySelector('.menubar'), toolbox: !document.querySelector('.toolbox').hidden })`);
-    check('the Şerit arayüzü button returns to menus and toolbox', !back.ribbon && back.menubar && back.toolbox && (await viewportH()) === classicH, JSON.stringify(back));
   }
 
   // The KentOS mark opens the application menu (loaded on first use): files on the left, formats and the cloud on
@@ -2957,11 +2947,11 @@ try {
       }
     }
 
-    // Tam ekran from the menu bar's button, and back.
-    await press('.menubar__icon[data-command="view.fullscreen"]');
+    // Tam ekran from the ribbon's tab row button, and back.
+    await press('.ribbon__icon[data-command="view.fullscreen"]');
     await sleep(400);
     const full = await b.eval('!!document.fullscreenElement');
-    await press('.menubar__icon[data-command="view.fullscreen"]');
+    await press('.ribbon__icon[data-command="view.fullscreen"]');
     await sleep(400);
     const back = await b.eval('!!document.fullscreenElement');
     check('the Tam ekran button fills the screen and leaves it', full && !back, JSON.stringify({ full, back }));

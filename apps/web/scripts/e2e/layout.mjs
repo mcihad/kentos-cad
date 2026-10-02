@@ -55,13 +55,20 @@ const LONGEST_TEXT = `(k) => {
 
 /** What each item opens, and how. `b` is the page; `ui` the helpers below. `must`: what has to be showing. */
 const ITEMS = [
-  // The shell itself: the bars at this width.
+  // The shell itself: the ribbon (the only chrome, docs/adr/0155) and the bars at this width.
   { id: 'shell', open: async () => {} },
   { id: 'appmenu', open: (ui) => ui.click('.brand') },
-  ...['file', 'edit', 'view', 'draw', 'modify', 'map', 'crs', 'calc', 'analysis', 'processing', 'tools', 'help'].map((m) => ({ id: `menu-${m}`, open: (ui) => ui.click(`.menubar__item[data-menu="${m}"]`) })),
-  { id: 'toolbar-layer', open: (ui) => ui.click('.toolbar .dropdown--layer') },
-  { id: 'toolbar-properties', open: (ui) => ui.clickFirst(['.toolbar [aria-label^="Geçerli özellikler:"]:not([hidden])', '.toolbar [aria-label="Renk"]']) },
-  { id: 'toolbar-more', open: (ui) => ui.clickFirst(['.toolbar__more:not([hidden])']), when: (ui) => ui.visible('.toolbar__more') },
+  // Every tab of the ribbon in the hybrid mode (fixtures/shell/v1/ribbon.json), the file tab being the app menu.
+  ...['home', 'draw', 'modify', 'map', 'view', 'processing', 'tools'].map((t) => ({ id: `tab-${t}`, open: (ui) => ui.click(`.ribbon__tab[data-tab="${t}"]`), close: (ui) => ui.click('.ribbon__tab[data-tab="home"]') })),
+  { id: 'ribbon-layer', open: (ui) => ui.click('.ribbon__strip .dropdown--layer') },
+  // The Özellikler panel's colour list: in the panel, or under the panel's button when the window folds it (1100 wide).
+  {
+    id: 'ribbon-properties',
+    open: async (ui) => {
+      if (!(await ui.visible('.ribbon__strip [aria-label="Renk"]'))) await ui.click('.ribbon__strip .rpanel__collapsed[aria-label="Özellikler"]');
+      await ui.clickFirst(['.ribbon__strip [aria-label="Renk"]', '.ribbon-pop [aria-label="Renk"]']);
+    },
+  },
   { id: 'status-renderer', open: (ui) => ui.click('.status__renderer') },
   { id: 'status-mode', open: (ui) => ui.click('.status__mode') },
   { id: 'status-account', open: (ui) => ui.click('.status__server') },
@@ -70,9 +77,8 @@ const ITEMS = [
   { id: 'viewport-idle', open: (ui) => ui.viewportRight({}) },
   { id: 'viewport-snap', open: (ui) => ui.viewportRight({ shift: true }) },
   { id: 'viewport-command', open: (ui) => ui.viewportRight({ tool: 'tool.line', hold: true }), close: (ui) => ui.escapeAll(3) },
-  { id: 'ribbon', open: (ui) => ui.shell('ribbon'), close: (ui) => ui.shell('classic') },
-  { id: 'ribbon-qat', open: async (ui) => (await ui.shell('ribbon'), await ui.click('.ribbon__qat-more')), close: async (ui) => (await ui.escapeAll(2), await ui.shell('classic')) },
-  { id: 'ribbon-help', open: async (ui) => (await ui.shell('ribbon'), await ui.click('.ribbon__icon[aria-label="Yardım"]')), close: async (ui) => (await ui.escapeAll(2), await ui.shell('classic')) },
+  { id: 'ribbon-qat', open: (ui) => ui.click('.ribbon__qat-more'), close: (ui) => ui.escapeAll(2) },
+  { id: 'ribbon-help', open: (ui) => ui.click('.ribbon__icon[aria-label="Yardım"]'), close: (ui) => ui.escapeAll(2) },
   { id: 'shortcuts', open: (ui) => ui.run('help.shortcuts') },
   { id: 'about', open: (ui) => ui.run('help.about') },
   ...['appearance', 'snap', 'newProjects', 'engine', 'file'].map((s) => ({ id: `app-settings-${s}`, open: (ui) => ui.run('tools.options', s) })),
@@ -157,9 +163,9 @@ const ITEMS = [
   // A tooltip at the window's right edge: the ribbon's last button, and a row of the processing tree in the right dock.
   {
     id: 'tooltip-ribbon-edge',
-    open: async (ui) => (await ui.shell('ribbon'), await ui.hoverRightmost('.ribbon__strip button')),
+    open: (ui) => ui.hoverRightmost('.ribbon__strip button'),
     must: '.tooltip[data-open]',
-    close: async (ui) => (await ui.escapeAll(2), await ui.shell('classic')),
+    close: (ui) => ui.escapeAll(2),
   },
   // Last: it leaves the drawing unsaved.
   { id: 'question-unsaved', open: async (ui) => (await ui.eval(`window.kentos.doc.name.set('Soru')`), await ui.run('file.new'), await ui.clickText('.dialog__foot .btn--primary', 'Oluştur')), ready: '.dialog--confirm' },
@@ -174,7 +180,7 @@ const FAULTS = `(() => {
   const off = (r) => r.left < -0.5 || r.top < -0.5 || r.right > W + 0.5 || r.bottom > H + 0.5;
   const cut = (el) => el.scrollWidth > el.clientWidth + 1;
   const words = (el) => el.textContent.trim().replace(/\\s+/g, ' ').slice(0, 40);
-  for (const bar of ['.menubar__menus', '.toolbar', '.status', '.ribbon__strip']) {
+  for (const bar of ['.ribbon__bar', '.ribbon__strip', '.status']) {
     const el = document.querySelector(bar);
     if (seen(el) && cut(el)) out.push('çubuk taşıyor: ' + bar);
   }
@@ -283,12 +289,6 @@ function helpers(b, w, h) {
   const ui = {
     eval: (expr) => b.eval(expr),
     visible: (sel) => b.eval(`(() => { const el = document.querySelector(${JSON.stringify(sel)}); return !!el && el.getClientRects().length > 0; })()`),
-    /** The interface layout (Klasik or Şerit), as Uygulama ayarları sets it; the ribbon loads on first use. */
-    shell: async (kind) => {
-      await b.eval(`window.kentos.prefs.shell.set(${JSON.stringify(kind)})`);
-      await b.waitFor(kind === 'ribbon' ? `document.querySelector('.ribbon__strip .rpanel')` : `document.querySelector('.menubar')`, 10000).catch(() => {});
-      await sleep(400);
-    },
     run: async (id, arg) => {
       await b.eval(`window.kentos.commands.execute(${JSON.stringify(id)}${arg === undefined ? '' : `, ${JSON.stringify(arg)}`})`);
       await sleep(350);

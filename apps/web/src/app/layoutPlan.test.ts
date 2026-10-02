@@ -55,7 +55,7 @@ describe('the kept layout (fixtures/shell/v1/layout.json)', () => {
     expect({ dockWidth: DOCK_WIDTH, layersFraction: LAYERS_FRACTION, bottomHeight: BOTTOM_HEIGHT }).toEqual(F.limits);
   });
 
-  it('reads what was stored by each field’s rule, and moves an old toolbox to three columns', () => {
+  it('reads what was stored by each field’s rule, and drops what it no longer keeps', () => {
     for (const c of F.reads) expect(readLayout(c.stored), c.title).toEqual(c.layout);
   });
 

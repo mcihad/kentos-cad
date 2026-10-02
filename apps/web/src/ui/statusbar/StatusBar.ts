@@ -139,7 +139,7 @@ export class StatusBar extends Component {
       }, true),
     );
     this.d.add(ctx.view.camera.changed.subscribe(() => (zoom.textContent = `Ekran 1:${fmtScale(screenScale(ctx.view.camera.scale))}`), true));
-    this.d.add(tooltip(zoom, () => ({ title: 'Ekran ölçeği', description: 'Görünümün 96 dpi ekrandaki yaklaşık ölçeği. Çizim ölçeği araç çubuğundan seçilir.' }), 'top'));
+    this.d.add(tooltip(zoom, () => ({ title: 'Ekran ölçeği', description: 'Görünümün 96 dpi ekrandaki yaklaşık ölçeği. Çizim ölçeği şeritten seçilir.' }), 'top'));
     this.d.add(
       ctx.doc.crs.subscribe((c) => {
         crs.querySelector('span')!.textContent = c.name;

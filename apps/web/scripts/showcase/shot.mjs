@@ -27,8 +27,8 @@ mkdirSync(outDir, { recursive: true });
 const b = await launch(`http://localhost:${port}/?renderer=${renderer}`, { width: 1600, height: 1000, args: renderer === 'webgpu' ? WEBGPU_ARGS : [] });
 try {
   await b.waitFor('window.kentos && window.kentos.view.backendKind.value', 20000);
-  // Paper (light theme) by default, as the regulation prints; the toolbox out of the way.
-  await b.eval(`(() => { window.kentos.commands.execute('view.theme.${theme}'); window.kentos.settings.grid.set(false); for (const e of document.querySelectorAll('.toolbox')) e.style.visibility = 'hidden'; return document.documentElement.dataset.theme; })()`).then((t) => console.log('theme', t));
+  // Paper (light theme) by default, as the regulation prints.
+  await b.eval(`(() => { window.kentos.commands.execute('view.theme.${theme}'); window.kentos.settings.grid.set(false); return document.documentElement.dataset.theme; })()`).then((t) => console.log('theme', t));
   await sleep(600);
   const cells = await b.eval(`(() => {
     const k = window.kentos;

@@ -129,7 +129,7 @@ export interface CommandHooks {
   /** Yeni proje — an empty drawing with the standard layers, a CRS and a plot scale. */
   openNewProject: () => void;
   focusCommandLine: () => void;
-  /** Komut ara — the ribbon's search box, or the command line in the classic shell. */
+  /** Komut ara — the ribbon's search box. */
   searchCommands: () => void;
   /** Klavye ipuçları — letters over the ribbon's tabs and controls. */
   keyTips: () => void;
@@ -140,7 +140,6 @@ export interface CommandHooks {
 export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void {
   const { commands, doc, selection, settings, ui, view, tools, log } = ctx;
   const selected = () => [...selection.ids.value].map((id) => doc.get(id)).filter((e): e is Entity => !!e);
-  const toolboxShown = () => (ctx.prefs.shell.value === 'ribbon' ? ui.ribbonToolbox : ui.toolboxVisible);
   const F = 'Dosya';
   const E = 'Düzen';
   const V = 'Görünüm';
@@ -395,17 +394,6 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       isEnabled: () => selection.size > 0,
       watch: [selection.ids],
     },
-    {
-      id: 'view.toolbox',
-      title: 'Araç kutusu',
-      category: V,
-      icon: 'toolbox',
-      // The ribbon holds every tool: next to it the toolbox stays off until asked for, remembered apart.
-      run: () => toolboxShown().set(!toolboxShown().value),
-      isChecked: () => toolboxShown().value,
-      watch: [ui.toolboxVisible, ui.ribbonToolbox, ctx.prefs.shell],
-    },
-    toggle('view.toolboxDock', 'Araç kutusunu kenara sabitle', ui.toolboxDocked, { category: V, icon: 'dock', short: 'Kenara sabitle' }),
     toggle('view.rightPanel', 'Katman ve öznitelik paneli', ui.rightVisible, { category: V, icon: 'panelRight', short: 'Katman paneli' }),
     toggle('view.bottomPanel', 'Komut geçmişi paneli', ui.bottomExpanded, { category: V, icon: 'panelBottom', short: 'Komut geçmişi' }),
     {
@@ -459,17 +447,6 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
     // Between the light theme and the dark ones (night and high contrast are dark).
     { id: 'view.theme.toggle', title: 'Temayı değiştir', category: V, run: () => applyTheme(ctx, ctx.prefs.theme.value === 'light' ? 'dark' : 'light') },
     {
-      id: 'view.ribbon',
-      title: 'Şerit arayüzü',
-      category: V,
-      icon: 'ribbon',
-      aliases: ['SERIT', 'RIBBON'],
-      description: 'Menüler, araç çubuğu ve araç kutusu yerine sekmeli şerit: aynı araçlar ve komutlar. Uygulama ayarları → Görünüm’den de seçilir.',
-      run: () => ctx.prefs.shell.set(ctx.prefs.shell.value === 'ribbon' ? 'classic' : 'ribbon'),
-      isChecked: () => ctx.prefs.shell.value === 'ribbon',
-      watch: [ctx.prefs.shell],
-    },
-    {
       id: 'view.ribbonCollapse',
       title: 'Şeridi daralt',
       category: V,
@@ -477,9 +454,8 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       aliases: ['SERITDARALT'],
       description: 'Şeritte yalnız sekmeler kalır; bir sekmeye tıklayınca şerit çizimin üstünde açılır, komuttan sonra kapanır. Sekmeye çift tıklamak da daraltır ya da açar.',
       run: () => ui.ribbonCollapsed.set(!ui.ribbonCollapsed.value),
-      isEnabled: () => ctx.prefs.shell.value === 'ribbon',
       isChecked: () => ui.ribbonCollapsed.value,
-      watch: [ctx.prefs.shell, ui.ribbonCollapsed],
+      watch: [ui.ribbonCollapsed],
     },
     {
       id: 'view.commandSearch',
@@ -487,7 +463,7 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       category: V,
       icon: 'search',
       aliases: ['ARA', 'SEARCH'],
-      description: 'Bir komutu adıyla ya da takma adıyla bulup çalıştırır: şeritte arama kutusu, klasik arayüzde komut satırı.',
+      description: 'Bir komutu adıyla ya da takma adıyla bulup çalıştırır: şeridin sekme satırındaki arama kutusu.',
       run: hooks.searchCommands,
     },
     {
@@ -499,8 +475,6 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       aliases: ['KEYTIPS', 'HARFLER'],
       description: 'Şeridin sekmelerinde ve düğmelerinde harfler gösterir: sekmenin harfine, sonra düğmenin harflerine basınca çalışır. Alt tuşuna tek başına basıp bırakmak da açar; Esc bir düzey geri gider.',
       run: hooks.keyTips,
-      isEnabled: () => ctx.prefs.shell.value === 'ribbon',
-      watch: [ctx.prefs.shell],
     },
     fullscreen(),
     {
@@ -641,7 +615,7 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
     },
   ]);
 
-  // Every tool becomes a command: menus, toolbox, keymap and command line share it.
+  // Every tool becomes a command: the ribbon, menus, keymap and command line share it.
   for (const d of tools.list()) {
     commands.register({
       id: `tool.${d.id}`,

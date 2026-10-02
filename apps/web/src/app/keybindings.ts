@@ -34,7 +34,6 @@ export function registerDefaultKeybindings(ctx: AppContext): void {
   keymap.bind('Ctrl+Shift+F', 'view.zoomSelection');
   keymap.bind('F2', 'view.bottomPanel', global);
   keymap.bind('F4', 'view.rightPanel', global);
-  keymap.bind('F9', 'view.toolbox', global);
 
   keymap.bind('F3', 'draft.snap', global);
   keymap.bind('F7', 'draft.grid', global);

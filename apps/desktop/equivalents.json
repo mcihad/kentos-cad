@@ -22,18 +22,6 @@
     "tool.subdivide": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
     "workspace.disaster": { "desktop": "pending", "where": "apps/desktop/src/modes.rs (menüde “Yakında”)" },
     "workspace.plan3d": { "desktop": "pending", "where": "apps/desktop/src/modes.rs (menüde “Yakında”)" },
-    "view.ribbon": {
-      "desktop": "n/a",
-      "reason": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
-    },
-    "view.toolbox": {
-      "desktop": "n/a",
-      "reason": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
-    },
-    "view.toolboxDock": {
-      "desktop": "n/a",
-      "reason": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
-    },
     "view.renderer.webgl2": {
       "desktop": "n/a",
       "reason": "Masaüstü çizimi wgpu ile yapar; arka ucu (Vulkan, Metal, DirectX 12, OpenGL) wgpu seçer (ADR 0019). WebGL2 ile WebGPU tarayıcının seçenekleridir."
@@ -52,38 +40,6 @@
     "plan3d": { "desktop": "pending", "where": "apps/desktop/src/modes.rs (menüde “Yakında”)" }
   },
   "settings": {
-    "user.shell": {
-      "desktop": "n/a",
-      "reason": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
-    },
-    "layout.ribbonToolbox": {
-      "desktop": "n/a",
-      "reason": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
-    },
-    "layout.toolboxColumns": {
-      "desktop": "n/a",
-      "reason": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
-    },
-    "layout.toolboxDocked": {
-      "desktop": "n/a",
-      "reason": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
-    },
-    "layout.toolboxFolded": {
-      "desktop": "n/a",
-      "reason": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
-    },
-    "layout.toolboxVisible": {
-      "desktop": "n/a",
-      "reason": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
-    },
-    "layout.toolboxX": {
-      "desktop": "n/a",
-      "reason": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
-    },
-    "layout.toolboxY": {
-      "desktop": "n/a",
-      "reason": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
-    },
     "device.rendererPreference": {
       "desktop": "n/a",
       "reason": "WebGL2 ya da WebGPU seçimi tarayıcınındır; masaüstünün arka ucunu wgpu seçer (ADR 0019)."
@@ -171,18 +127,6 @@
     }
   },
   "screens": {
-    "apps/web/src/ui/menu/MenuBar.ts#MenuBar": {
-      "desktop": "n/a",
-      "reason": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
-    },
-    "apps/web/src/ui/toolbar/Toolbar.ts#Toolbar": {
-      "desktop": "n/a",
-      "reason": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
-    },
-    "apps/web/src/ui/toolbox/Toolbox.ts#Toolbox": {
-      "desktop": "n/a",
-      "reason": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
-    },
     "apps/web/src/ui/appmenu/AppMenu.ts#openAppMenu": { "desktop": "implemented", "where": "apps/desktop/src/app_menu/ (ADR 0050)" },
     "apps/web/src/ui/blocks/BlockDefineDialog.ts#openBlockDefineDialog": { "desktop": "implemented", "where": "apps/desktop/src/blocks.rs (ADR 0144)" },
     "apps/web/src/ui/blocks/BlockAttributesDialog.ts#openBlockAttributesDialog": { "desktop": "implemented", "where": "apps/desktop/src/block_attributes.rs, attribute_table.rs (ADR 0144 §7)" },

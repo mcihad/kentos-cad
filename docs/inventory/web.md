@@ -4,15 +4,15 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 205 | 192 | 0 | 13 |
+| Komutlar | 202 | 189 | 0 | 13 |
 | Araçlar | 88 | 86 | 0 | 2 |
 | İşlem araçları | 4 | 4 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
 | Çalışma modları | 5 | 3 | 0 | 2 |
-| Ayarlar | 68 | 68 | 0 | 0 |
+| Ayarlar | 60 | 60 | 0 | 0 |
 | Tarayıcı depoları | 10 | 10 | 0 | 0 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 262 | 262 | 0 | 0 |
-| Pencereler ve paneller | 72 | 72 | 0 | 0 |
+| Pencereler ve paneller | 69 | 69 | 0 | 0 |
 
 ## Kısmi (0)
 
@@ -40,7 +40,7 @@ Yok.
 
 ## Arayüzde yeri görünmeyen komutlar (0)
 
-Menüde, şeritte ve araç kutusunda yoklar; kimlikleri `src/ui` altındaki hiçbir dosyada geçmiyor. Kısayolla, komut satırından ya da başka bir yoldan çalışıyor olabilirler. Her biri fareyle bulunabilirlik açısından gözden geçirilir.
+Menüde ve şeritte yoklar; kimlikleri `src/ui` altındaki hiçbir dosyada geçmiyor. Kısayolla, komut satırından ya da başka bir yoldan çalışıyor olabilirler. Her biri fareyle bulunabilirlik açısından gözden geçirilir.
 
 Yok.
 
@@ -50,48 +50,34 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 187 | 0 | 0 | 13 | 5 | 205 |
+| Komutlar | 187 | 0 | 0 | 13 | 2 | 202 |
 | Araçlar | 86 | 0 | 0 | 2 | 0 | 88 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
 | Çalışma modları | 3 | 0 | 0 | 2 | 0 | 5 |
-| Ayarlar | 59 | 0 | 0 | 0 | 9 | 68 |
+| Ayarlar | 59 | 0 | 0 | 0 | 1 | 60 |
 | Tarayıcı depoları | 8 | 0 | 0 | 0 | 2 | 10 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 262 | 0 | 0 | 0 | 0 | 262 |
-| Pencereler ve paneller | 66 | 2 | 0 | 0 | 4 | 72 |
+| Pencereler ve paneller | 66 | 2 | 0 | 0 | 1 | 69 |
 
 Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
 
 - `.kcad` alanları (v1 okunur, v2 yazılır), bütünüyle: implemented — Masaüstü .kcad'i web'le aynı Rust kodeğiyle (crates/shared/kcad) okur ve yazar: v2 yazılır, v1 okunur; belge (kentos-domain) göçü web'in örnek dosyasıyla aynı çıkarır (crates/native/domain/tests/snapshot_v2.rs, ADR 0025).
 
-### Masaüstünde anlamsız (20)
+### Masaüstünde anlamsız (6)
 
 - Komutlar: `view.renderer.webgl2` WebGL2 — Masaüstü çizimi wgpu ile yapar; arka ucu (Vulkan, Metal, DirectX 12, OpenGL) wgpu seçer (ADR 0019). WebGL2 ile WebGPU tarayıcının seçenekleridir.
 - Komutlar: `view.renderer.webgpu` WebGPU — Masaüstü çizimi wgpu ile yapar; arka ucu (Vulkan, Metal, DirectX 12, OpenGL) wgpu seçer (ADR 0019). WebGL2 ile WebGPU tarayıcının seçenekleridir.
-- Komutlar: `view.ribbon` Şerit arayüzü — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
-- Komutlar: `view.toolbox` Araç kutusu — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
-- Komutlar: `view.toolboxDock` Araç kutusunu kenara sabitle — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
 - Ayarlar: `device.rendererPreference`  — WebGL2 ya da WebGPU seçimi tarayıcınındır; masaüstünün arka ucunu wgpu seçer (ADR 0019).
-- Ayarlar: `layout.ribbonToolbox`  — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
-- Ayarlar: `layout.toolboxColumns`  — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
-- Ayarlar: `layout.toolboxDocked`  — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
-- Ayarlar: `layout.toolboxFolded`  — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
-- Ayarlar: `layout.toolboxVisible`  — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
-- Ayarlar: `layout.toolboxX`  — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
-- Ayarlar: `layout.toolboxY`  — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
-- Ayarlar: `user.shell`  — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
 - Tarayıcı depoları: `kentos.invitation`  — Davet bağlantısı web uygulamasının adresidir; belirteci yalnız o tarayıcı sekmesinde tutulur (ADR 0042). Masaüstü davet eder, bağlantıyı açmaz; kabul edilen proje masaüstünün kataloğunda da görünür.
 - Tarayıcı depoları: `kentos.prefs.v1`  — Web'in tipli ayarlardan önceki deposudur; masaüstünün böyle eski bir deposu olmadı, ayarları baştan ayarlar.json'dadır.
 - Pencereler ve paneller: `apps/web/src/ui/cloud/InvitationDialog.ts#openInvitationDialog` openInvitationDialog — Davet bağlantısı web uygulamasının adresidir: açılır ve orada kabul edilir; kabul edilen proje masaüstünün kataloğunda da görünür. Masaüstü davet eder, bağlantı açmaz.
-- Pencereler ve paneller: `apps/web/src/ui/menu/MenuBar.ts#MenuBar` MenuBar — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
-- Pencereler ve paneller: `apps/web/src/ui/toolbar/Toolbar.ts#Toolbar` Toolbar — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
-- Pencereler ve paneller: `apps/web/src/ui/toolbox/Toolbox.ts#Toolbox` Toolbox — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
 
 ### Web'de olup masaüstünde olmayanlar
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (0 / 205; ayrıca 13 iki platformda da bekliyor)
+#### Komutlar (0 / 202; ayrıca 13 iki platformda da bekliyor)
 
 - `analysis.slope` Eğim analizi… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `analysis.volume` Hacim hesabı… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
@@ -125,7 +111,7 @@ Yok.
 - `disaster` Afet ve risk analizi (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 - `plan3d` İmar planından 3D kent tasarımı (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 
-#### Ayarlar (0 / 68)
+#### Ayarlar (0 / 60)
 
 Yok.
 
@@ -137,11 +123,11 @@ Yok.
 
 Yok.
 
-#### Pencereler ve paneller (2 / 72)
+#### Pencereler ve paneller (2 / 69)
 
 - `apps/web/src/ui/svgedit/svgExport.ts#openExportDialog` openExportDialog (kısmi) (masaüstünde: apps/desktop/src/style/svgedit/files/export.rs (ADR 0095)) — PNG panoya kopyalanamaz: masaüstünün panosu yalnız metin tutar (SVG kopyalanır). PNG dosyaya yazılır.
 - `apps/web/src/ui/svgedit/svgImport.ts#openImportDialog` openImportDialog (kısmi) (masaüstünde: apps/desktop/src/style/svgedit/files/import.rs, read.rs (ADR 0095)) — Katı XML olarak okunamayan ve onarılamayan dosya ayrıştırıcının nedeniyle (satır, sütun) reddedilir; web'in son çaresi tarayıcının hoşgörülü HTML ayrıştırıcısıdır.
 
 ## Test başvurusu
 
-63 / 205 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+61 / 202 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

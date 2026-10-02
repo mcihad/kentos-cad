@@ -1,12 +1,13 @@
 /**
  * The workbench's layout as the web keeps it (`ctx.ui`, localStorage
  * `kentos.ui.v1`; CLAUDE.md §4.4 “Yerleşim”): which panels are open, their
- * sizes, the toolbox's place and columns, the dock's and the ribbon's
- * states. What is kept, its defaults, how a stored value is read (a value
- * of the wrong type or out of its domain is not taken), the one migration,
- * and the sizes as shown: a kept size is the user's wish, shown within
- * what the window allows. Apart from the DOM; fixtures/shell/v1/layout.json
- * holds it for the desktop (format in fixtures/shell/README.md).
+ * sizes, the dock's and the ribbon's states. What is kept, its defaults, how
+ * a stored value is read (a value of the wrong type or out of its domain is
+ * not taken; a field no longer kept, the toolbox's, is dropped:
+ * docs/adr/0155), and the sizes as shown: a kept size is the user's wish,
+ * shown within what the window allows. Apart from the DOM;
+ * fixtures/shell/v1/layout.json holds it for the desktop (format in
+ * fixtures/shell/README.md).
  */
 
 export type Theme = 'dark' | 'light';
@@ -23,17 +24,10 @@ export interface UiLayoutData {
   bottomExpanded: boolean;
   bottomHeight: number;
   bottomTab: BottomTab;
-  toolboxVisible: boolean;
-  toolboxDocked: boolean;
-  toolboxX: number;
-  toolboxY: number;
-  toolboxColumns: 2 | 3;
-  /** Toolbox groups folded by the user (ToolGroup ids). */
-  toolboxFolded: string[];
   /** Right dock's upper slot: the layer tree, the processing toolbox or the blocks (attributes below). */
   dockTab: DockTab;
   processingTab: ProcessingTab;
-  /** Processing categories folded in the toolbox. */
+  /** Processing categories folded in the processing toolbox. */
   processingFolded: string[];
   /** Ribbon (Şerit): the open tab, folded to its tab row, and commands added to its quick access bar. */
   ribbonTab: string;
@@ -41,8 +35,6 @@ export interface UiLayoutData {
   ribbonQuickAccess: string[];
   /** The entry last chosen on each split button (Daire ▾: 3 nokta), by button key. */
   ribbonSplits: Record<string, string>;
-  /** The floating toolbox next to the ribbon (off by default: the ribbon holds every tool). */
-  ribbonToolbox: boolean;
 }
 
 /** Where the web keeps the layout. */
@@ -56,12 +48,6 @@ export const LAYOUT_DEFAULTS: UiLayoutData = {
   bottomExpanded: false,
   bottomHeight: 190,
   bottomTab: 'history',
-  toolboxVisible: true,
-  toolboxDocked: false,
-  toolboxX: 12,
-  toolboxY: 12,
-  toolboxColumns: 3,
-  toolboxFolded: [],
   dockTab: 'layers',
   processingTab: 'tools',
   processingFolded: [],
@@ -69,7 +55,6 @@ export const LAYOUT_DEFAULTS: UiLayoutData = {
   ribbonCollapsed: false,
   ribbonQuickAccess: [],
   ribbonSplits: {},
-  ribbonToolbox: false,
 };
 
 /** The right dock's width (CSS px): dragged between `min` and the lesser of `max` and `maxShare` of the window's width. */
@@ -85,8 +70,6 @@ export type FieldRule =
   | { kind: 'boolean' }
   /** A finite number, brought within `min` and `max` when it is outside them. */
   | { kind: 'number'; min?: number; max?: number }
-  /** A number: 3 is three columns, any other two (as the toolbox reads it, ui/shell/shellPlan.ts). */
-  | { kind: 'columns' }
   | { kind: 'text' }
   /** A list: its texts are kept, anything else in it dropped. */
   | { kind: 'texts' }
@@ -101,12 +84,6 @@ export const LAYOUT_FIELDS: { readonly [K in keyof UiLayoutData]: FieldRule } = 
   bottomExpanded: { kind: 'boolean' },
   bottomHeight: { kind: 'number', min: BOTTOM_HEIGHT.min },
   bottomTab: { kind: 'enum', values: ['history', 'coords', 'points', 'messages'] },
-  toolboxVisible: { kind: 'boolean' },
-  toolboxDocked: { kind: 'boolean' },
-  toolboxX: { kind: 'number' },
-  toolboxY: { kind: 'number' },
-  toolboxColumns: { kind: 'columns' },
-  toolboxFolded: { kind: 'texts' },
   dockTab: { kind: 'enum', values: ['layers', 'processing', 'blocks'] },
   processingTab: { kind: 'enum', values: ['tools', 'history'] },
   processingFolded: { kind: 'texts' },
@@ -114,7 +91,6 @@ export const LAYOUT_FIELDS: { readonly [K in keyof UiLayoutData]: FieldRule } = 
   ribbonCollapsed: { kind: 'boolean' },
   ribbonQuickAccess: { kind: 'texts' },
   ribbonSplits: { kind: 'textMap' },
-  ribbonToolbox: { kind: 'boolean' },
 };
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -128,8 +104,6 @@ function readField(rule: FieldRule, v: unknown): unknown {
       return typeof v === 'boolean' ? v : undefined;
     case 'number':
       return typeof v === 'number' && Number.isFinite(v) ? Math.min(Math.max(v, rule.min ?? -Infinity), rule.max ?? Infinity) : undefined;
-    case 'columns':
-      return typeof v === 'number' && Number.isFinite(v) ? (v === 3 ? 3 : 2) : undefined;
     case 'text':
       return typeof v === 'string' ? v : undefined;
     case 'texts':
@@ -143,9 +117,8 @@ function readField(rule: FieldRule, v: unknown): unknown {
  * The layout from what was stored (`null`: nothing): every field the store
  * holds and its rule takes; the default for the rest, and for everything
  * when the text is not a JSON object. Fields the layout does not know are
- * dropped (the next save leaves them out). Migration: a layout stored before
- * the toolbox had titled groups (no `toolboxFolded`) used one or two
- * columns; the grouped toolbox is laid out for three.
+ * dropped (the next save leaves them out): the toolbox's among them, since
+ * the web shows the ribbon only (docs/adr/0155).
  */
 export function readLayout(text: string | null): UiLayoutData {
   let stored: unknown = null;
@@ -160,7 +133,6 @@ export function readLayout(text: string | null): UiLayoutData {
     const v = key in saved ? readField(rule, saved[key]) : undefined;
     if (v !== undefined) out[key] = v;
   }
-  if (isObject(stored) && !('toolboxFolded' in stored)) out.toolboxColumns = 3;
   return out as unknown as UiLayoutData;
 }
 

@@ -1827,5 +1827,206 @@
     "aria": "Hızlı ölçü"
    }
   }
+ ],
+ "fields": {
+  "byLayer": "Katmana göre",
+  "colors": [
+   {
+    "name": "Siyah",
+    "value": "ink"
+   },
+   {
+    "name": "Kırmızı",
+    "value": "#E5484D"
+   },
+   {
+    "name": "Sarı",
+    "value": "#F2C94C"
+   },
+   {
+    "name": "Yeşil",
+    "value": "#5FBF77"
+   },
+   {
+    "name": "Camgöbeği",
+    "value": "#4CC3D9"
+   },
+   {
+    "name": "Mavi",
+    "value": "#4F8EF7"
+   },
+   {
+    "name": "Eflatun",
+    "value": "#C86DD7"
+   },
+   {
+    "name": "Gri",
+    "value": "#8C9AAA"
+   }
+  ],
+  "lineTypes": {
+   "continuous": "Sürekli",
+   "dashed": "Kesikli",
+   "dashdot": "Noktalı kesik",
+   "dotted": "Noktalı"
+  },
+  "weights": [
+   {
+    "mm": 0.13,
+    "text": "0.13 mm"
+   },
+   {
+    "mm": 0.18,
+    "text": "0.18 mm"
+   },
+   {
+    "mm": 0.25,
+    "text": "0.25 mm"
+   },
+   {
+    "mm": 0.35,
+    "text": "0.35 mm"
+   },
+   {
+    "mm": 0.5,
+    "text": "0.50 mm"
+   },
+   {
+    "mm": 0.7,
+    "text": "0.70 mm"
+   }
+  ],
+  "scales": [
+   {
+    "denominator": 500,
+    "text": "1:500"
+   },
+   {
+    "denominator": 1000,
+    "text": "1:1000"
+   },
+   {
+    "denominator": 2000,
+    "text": "1:2000"
+   },
+   {
+    "denominator": 5000,
+    "text": "1:5000"
+   },
+   {
+    "denominator": 25000,
+    "text": "1:25000"
+   }
+  ]
+ },
+ "menuRows": [
+  {
+   "id": "file.save",
+   "checked": null,
+   "expect": {
+    "icon": true,
+    "checked": null,
+    "radio": false
+   }
+  },
+  {
+   "id": "view.rightPanel",
+   "checked": true,
+   "expect": {
+    "icon": false,
+    "checked": true,
+    "radio": false
+   }
+  },
+  {
+   "id": "view.rightPanel",
+   "checked": false,
+   "expect": {
+    "icon": false,
+    "checked": false,
+    "radio": false
+   }
+  },
+  {
+   "id": "view.theme.dark",
+   "checked": true,
+   "expect": {
+    "icon": true,
+    "checked": true,
+    "radio": true
+   }
+  },
+  {
+   "id": "view.theme.light",
+   "checked": false,
+   "expect": {
+    "icon": true,
+    "checked": false,
+    "radio": true
+   }
+  },
+  {
+   "id": "view.theme.toggle",
+   "checked": null,
+   "expect": {
+    "icon": true,
+    "checked": null,
+    "radio": false
+   }
+  },
+  {
+   "id": "view.renderer.webgpu",
+   "checked": false,
+   "expect": {
+    "icon": true,
+    "checked": false,
+    "radio": true
+   }
+  },
+  {
+   "id": "view.symbols.plain",
+   "checked": true,
+   "expect": {
+    "icon": true,
+    "checked": true,
+    "radio": true
+   }
+  },
+  {
+   "id": "workspace.cad",
+   "checked": true,
+   "expect": {
+    "icon": true,
+    "checked": true,
+    "radio": true
+   }
+  },
+  {
+   "id": "tool.line",
+   "checked": true,
+   "expect": {
+    "icon": true,
+    "checked": null,
+    "radio": false
+   }
+  },
+  {
+   "id": "tool.select",
+   "checked": false,
+   "expect": {
+    "icon": true,
+    "checked": null,
+    "radio": false
+   }
+  },
+  {
+   "id": "view.lineWeights",
+   "checked": false,
+   "expect": {
+    "icon": false,
+    "checked": false,
+    "radio": false
+   }
+  }
  ]
 }

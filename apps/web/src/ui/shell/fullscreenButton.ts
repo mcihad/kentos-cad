@@ -6,8 +6,8 @@ import { icon } from '../icons';
 import { tooltip } from '../widgets/tooltip';
 
 /**
- * The Tam ekran button at the right of the menu bar and of the ribbon's tab
- * row: four corners out, or in while the app fills the screen.
+ * The Tam ekran button at the right of the ribbon's tab row: four corners
+ * out, or in while the app fills the screen.
  */
 export function fullscreenButton(ctx: AppContext, d: DisposableStore, className: string): HTMLButtonElement {
   const b = h('button', { class: className, type: 'button', dataset: { command: 'view.fullscreen' } });

@@ -112,7 +112,7 @@ export function persistedSignals<T extends object>(key: string, defaults: T, rea
   return state;
 }
 
-/** Workspace layout (panels, sizes, toolbox, dock and ribbon states, theme): app/layoutPlan.ts reads it. */
+/** Workspace layout (panels, sizes, dock and ribbon states): app/layoutPlan.ts reads it. */
 export function createUiState(): Signals<UiLayoutData> {
   return persistedSignals<UiLayoutData>(LAYOUT_KEY, LAYOUT_DEFAULTS, readLayout);
 }
@@ -126,8 +126,6 @@ export type UiState = Signals<UiLayoutData>;
 // Anything a colleague opening the same project must also see belongs in
 // model/projectSettings.ts instead.
 
-/** Workbench chrome: menu bar, toolbar and floating toolbox, or the tabbed ribbon (Şerit). */
-export type ShellKind = 'classic' | 'ribbon';
 export type CrosshairSize = 'small' | 'medium' | 'full';
 
 export interface PreferencesData {
@@ -192,11 +190,6 @@ export interface PreferencesData {
   lineWeights: boolean;
   /** The start screen (Başlangıç: new, open, cloud, recent files) shows when the app opens. */
   startScreen: boolean;
-  /**
-   * Workbench chrome. Both are built from the same tool catalog and menu
-   * model (app/menus.ts), so a new tool or command appears in either.
-   */
-  shell: ShellKind;
 }
 
 /** The typed setting behind each preference (settingsSchema.json). */
@@ -231,7 +224,6 @@ export const PREF_KEYS = {
   symbolSize: 'graphics.symbolSize',
   lineWeights: 'graphics.lineWeights',
   startScreen: 'appearance.startScreen',
-  shell: 'appearance.shell',
 } as const satisfies Record<keyof PreferencesData, string>;
 
 /** The defaults, from the settings schema. */

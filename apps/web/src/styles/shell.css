@@ -12,33 +12,16 @@
   background: var(--c-panel);
 }
 
-/* Menu bar and toolbar, or the ribbon (prefs.shell). */
+/* The ribbon: the only chrome, as on the desktop (docs/adr/0155). */
 .shell__chrome {
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
-/* Holds the ribbon's place while its chunk loads, so the drawing does not jump. */
-.ribbon-placeholder {
-  height: calc(var(--menubar-h) + var(--ribbon-h) + 2px);
-  background: var(--c-toolbar);
-  border-bottom: 1px solid var(--c-line);
-  box-shadow: inset 0 var(--menubar-h) 0 var(--c-menubar);
-}
 
 .shell__body {
   display: flex;
   min-height: 0;
-}
-
-.shell__left {
-  flex: none;
-  display: flex;
-  border-right: 1px solid var(--c-line);
-  background: var(--c-panel);
-}
-.shell__left[data-empty] {
-  display: none;
 }
 
 .shell__center {
@@ -60,20 +43,6 @@
   margin-left: -3px;
   margin-right: -2px;
   z-index: 3;
-}
-
-/* ── Menubar ─────────────────────────────────────────────────────── */
-.menubar {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  height: var(--menubar-h);
-  flex: none;
-  padding: 0 6px 0 10px;
-  background: var(--c-menubar);
-  border-bottom: 1px solid var(--c-line);
-  font-size: var(--fs-sm);
-  min-width: 0;
 }
 
 /* ── Brand button (the KentOS mark: opens the application menu) ──── */
@@ -119,127 +88,6 @@
   transform: rotate(180deg);
 }
 
-.menubar__menus {
-  display: flex;
-  height: 100%;
-  align-items: center;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.menubar__menus::-webkit-scrollbar {
-  display: none;
-}
-
-.menubar__item {
-  height: calc(26px * var(--ui-scale));
-  /* The bar's fold step sets it (MenuBar.ts, shellPlan.ts MENUBAR_FOLD). */
-  padding: 0 var(--menubar-item-pad, 9px);
-  border-radius: var(--r-sm);
-  color: var(--c-text);
-  white-space: nowrap;
-}
-.menubar__item:hover {
-  background: var(--c-hover);
-}
-.menubar__item[aria-expanded='true'] {
-  background: var(--c-press);
-}
-
-.menubar__doc {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  color: var(--c-text-2);
-  overflow: hidden;
-}
-.menubar__doc-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.menubar__dirty {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--c-accent);
-  flex: none;
-}
-
-.menubar__right {
-  display: flex;
-  align-items: center;
-}
-.menubar__crs {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  height: calc(24px * var(--ui-scale));
-  padding: 0 8px;
-  border-radius: var(--r-sm);
-  color: var(--c-text-2);
-  font-size: var(--fs-xs);
-  white-space: nowrap;
-}
-.menubar__crs:hover {
-  background: var(--c-hover);
-  color: var(--c-text);
-}
-.menubar__icon {
-  display: grid;
-  place-items: center;
-  width: calc(26px * var(--ui-scale));
-  height: calc(24px * var(--ui-scale));
-  margin-left: 2px;
-  border-radius: var(--r-sm);
-  color: var(--c-text-3);
-}
-.menubar__icon:hover {
-  background: var(--c-hover);
-  color: var(--c-text);
-}
-
-/* ── Toolbar ─────────────────────────────────────────────────────── */
-.toolbar {
-  display: flex;
-  align-items: center;
-  height: var(--toolbar-h);
-  flex: none;
-  padding: 0 6px;
-  background: var(--c-toolbar);
-  border-bottom: 1px solid var(--c-line);
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
-  min-width: 0;
-}
-.toolbar::-webkit-scrollbar {
-  display: none;
-}
-
-.toolbar__group {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 0 6px;
-  flex: none;
-}
-.toolbar__group + .toolbar__group {
-  border-left: 1px solid var(--c-line);
-}
-.toolbar__spacer {
-  flex: 1;
-  min-width: 12px;
-}
-.toolbar__spacer + .toolbar__group {
-  border-left: 0;
-}
-.toolbar__group:has(.dropdown) {
-  gap: 6px;
-}
-
 /* ── Viewport ────────────────────────────────────────────────────── */
 .viewport {
   position: relative;
@@ -257,7 +105,7 @@
  * sides: the viewport's clipping cuts it square at the panels. It lies over
  * the drawing, under the overlay (labels, cursor) and everything floating.
  */
-.shell[data-shell='ribbon'] .viewport::before {
+.shell .viewport::before {
   content: '';
   position: absolute;
   z-index: 1;
@@ -303,186 +151,6 @@
   place-items: center;
   color: var(--c-text-2);
   font-size: var(--fs-md);
-}
-
-/* ── Floating toolbox ────────────────────────────────────────────── */
-.toolbox {
-  --cols: 3;
-  --tool: 34px;
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 5;
-  display: flex;
-  flex-direction: column;
-  max-height: calc(100% - 16px);
-  background: var(--c-panel);
-  border: 1px solid var(--c-line-strong);
-  border-radius: 8px;
-  box-shadow: var(--shadow-float);
-  will-change: transform;
-}
-.toolbox[data-columns='2'] {
-  --cols: 2;
-}
-.toolbox[data-dragging] {
-  box-shadow: var(--shadow-pop);
-  opacity: 0.96;
-}
-
-.toolbox__head {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 18px;
-  flex: none;
-}
-.toolbox__grip {
-  display: grid;
-  place-items: center;
-  width: 100%;
-  height: 100%;
-  color: var(--c-text-3);
-  cursor: grab;
-}
-/* Rotate only the glyph: rotating the element would swing its hit area
-   over the header buttons. */
-.toolbox__grip .icon {
-  transform: rotate(90deg);
-}
-.toolbox[data-dragging] .toolbox__grip {
-  cursor: grabbing;
-}
-.toolbox__hactions {
-  position: absolute;
-  right: 3px;
-  top: 2px;
-  display: flex;
-  gap: 1px;
-  opacity: 0;
-  transition: opacity var(--dur);
-}
-.toolbox:hover .toolbox__hactions,
-.toolbox:focus-within .toolbox__hactions {
-  opacity: 1;
-}
-.toolbox__hbtn {
-  display: grid;
-  place-items: center;
-  width: 16px;
-  height: 16px;
-  border-radius: 3px;
-  color: var(--c-text-3);
-}
-.toolbox__hbtn:hover {
-  background: var(--c-hover);
-  color: var(--c-text);
-}
-
-.toolbox__body {
-  padding: 0 4px 4px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-width: thin;
-  scrollbar-gutter: auto;
-}
-.toolbox__body::-webkit-scrollbar {
-  width: 4px;
-}
-
-.toolbox__section + .toolbox__section {
-  margin-top: 3px;
-  border-top: 1px solid var(--c-line);
-}
-/* Group title: short, quiet, and a fold toggle. */
-.toolbox__title {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  width: 100%;
-  height: calc(18px * var(--ui-scale));
-  padding: 0 2px;
-  border-radius: 4px;
-  color: var(--c-text-3);
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-}
-.toolbox__title:hover {
-  color: var(--c-text);
-  background: var(--c-hover);
-}
-.toolbox__title .icon {
-  flex: none;
-  transition: transform var(--dur);
-}
-.toolbox__section[data-folded] .toolbox__title .icon {
-  transform: rotate(-90deg);
-}
-.toolbox__grid {
-  display: grid;
-  grid-template-columns: repeat(var(--cols), var(--tool));
-  gap: 2px;
-  padding-bottom: 2px;
-}
-
-.toolbox__tool {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: var(--tool);
-  height: 32px;
-  border-radius: 5px;
-  color: var(--c-text-2);
-}
-.toolbox__tool:hover {
-  background: var(--c-hover);
-  color: var(--c-text);
-}
-.toolbox__tool:active {
-  background: var(--c-press);
-}
-.toolbox__tool[data-ready='false'] .icon {
-  opacity: 0.62;
-}
-.toolbox__tool[aria-pressed='true'] {
-  background: var(--c-accent);
-  color: var(--c-accent-ink);
-}
-.toolbox__tool[aria-pressed='true'] .icon {
-  opacity: 1;
-}
-.toolbox__tool:focus-visible {
-  outline-offset: -1px;
-}
-.toolbox__key {
-  position: absolute;
-  right: 2px;
-  bottom: 1px;
-  font: 600 calc(9px * var(--ui-scale)) / 1 var(--font-ui);
-  letter-spacing: 0.02em;
-  color: var(--c-text-3);
-  pointer-events: none;
-}
-.toolbox__tool:hover .toolbox__key {
-  color: var(--c-text-2);
-}
-.toolbox__tool[aria-pressed='true'] .toolbox__key {
-  color: var(--c-accent-ink);
-  opacity: 0.7;
-}
-
-.toolbox[data-docked='true'] {
-  position: static;
-  transform: none !important;
-  max-height: none;
-  height: 100%;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  background: transparent;
 }
 
 /* ── Command bar (top of the drawing while a command runs) ─────────── */

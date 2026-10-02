@@ -40,7 +40,6 @@ fn the_fields_their_defaults_rules_and_limits_are_the_webs() {
                 }
                 o
             }
-            Rule::Columns => json!({ "kind": "columns" }),
             Rule::Text => json!({ "kind": "text" }),
             Rule::Texts => json!({ "kind": "texts" }),
             Rule::TextMap => json!({ "kind": "textMap" }),

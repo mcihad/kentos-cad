@@ -1,7 +1,7 @@
 {
   "format": "kentos.settings-cases",
   "version": 1,
-  "note": "Tipli ayarların ortak durumları (TODOS.md SET-01..05; docs/adr/0023). Web apps/web/src/core/settings (settings.test.ts), masaüstü ve ileride sunucu crates/shared/contracts/src/settings (tests/settings.rs) bu dosyayı okur; iki taraf aynı hata kodunu vermelidir. values: bir değerin doğrulanması (anahtar yoksa unknown_key). writes: bir katmana yazma (anahtar, sonra katman, sonra değer). resolve: katmanlar, kurum politikası ve aygıt kısıtlarıyla istenen ve etkin değer; expect yalnız adı geçen ayarları, diagnostics bütün tanıları sırasız karşılaştırır. files: saklanan ayar belgesi; text ham metin, document JSON nesnesi olarak yazılır; eski anahtarlar bugünkülerine okunur (ADR 0126). presets: hazır ayarın tanınması ve doldurduğu değerler. Kod değişikliği iki uygulamada ve burada birlikte yapılır.",
+  "note": "Tipli ayarların ortak durumları (TODOS.md SET-01..05; docs/adr/0023). Web apps/web/src/core/settings (settings.test.ts), masaüstü ve ileride sunucu crates/shared/contracts/src/settings (tests/settings.rs) bu dosyayı okur; iki taraf aynı hata kodunu vermelidir. values: bir değerin doğrulanması (anahtar yoksa unknown_key). writes: bir katmana yazma (anahtar, sonra katman, sonra değer). resolve: katmanlar, kurum politikası ve aygıt kısıtlarıyla istenen ve etkin değer; expect yalnız adı geçen ayarları, diagnostics bütün tanıları sırasız karşılaştırır. files: saklanan ayar belgesi; text ham metin, document JSON nesnesi olarak yazılır; eski anahtarlar bugünkülerine okunur (ADR 0126), emekli anahtarlar sessizce düşer (ADR 0155). presets: hazır ayarın tanınması ve doldurduğu değerler. Kod değişikliği iki uygulamada ve burada birlikte yapılır.",
   "values": [
     { "name": "anahtar açık", "key": "drafting.ortho", "value": true, "expect": { "value": true } },
     { "name": "vurgu: hazır renk", "key": "appearance.accent", "value": "navy", "expect": { "value": "navy" } },
@@ -351,6 +351,11 @@
       "name": "bugünkü anahtardaki değer eskisini geçer",
       "document": { "format": "kentos.settings", "version": 1, "user": { "appearance.accent": "bordeaux", "appearance.accentColor": "mor", "appearance.textSize": 17, "appearance.uiScale": "small" } },
       "expect": { "user": { "appearance.accent": "bordeaux", "appearance.textSize": 17 }, "device": {}, "migrations": 0, "diagnostics": [] }
+    },
+    {
+      "name": "emekli anahtar sessizce düşer: web'in kabuk seçimi (ADR 0155)",
+      "document": { "format": "kentos.settings", "version": 1, "user": { "appearance.shell": "classic", "drafting.snapAperture": 14 }, "device": { "appearance.shell": "ribbon" } },
+      "expect": { "user": { "drafting.snapAperture": 14 }, "device": {}, "migrations": 0, "diagnostics": [] }
     },
     {
       "name": "okunamayan eski değer eski adıyla söylenir; çevrilen değer bugünkü adıyla denetlenir",

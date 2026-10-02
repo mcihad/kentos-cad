@@ -1,5 +1,5 @@
 //! The ribbon's own panels, which the web draws itself (`ui/ribbon/panels.ts`'s
-//! builtin panels with the fields of `ui/toolbar/fields.ts`; docs/adr/0089):
+//! builtin panels with the fields of `ui/ribbon/fields.ts`; docs/adr/0089):
 //!
 //! - **Katmanlar** (Giriş): the active layer, a drop-down of the tree's
 //!   layers under their groups, with their colours and object counts (a

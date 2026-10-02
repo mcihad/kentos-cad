@@ -8,7 +8,8 @@ import { filterOf, SHOW_ALL, type WorkspaceFilter } from './workspaces';
 
 /**
  * Declarative main menu: the single source for where commands live. The
- * classic menu bar and the ribbon (app/ribbon.ts) are both built from it.
+ * ribbon (app/ribbon.ts) is built from it, its tabs and the menus the app
+ * menu and the context menus show (docs/adr/0155).
  *
  * - A string is a command id, or a reference expanded on use:
  *   `@tools:draw` (every tool of a group, one section per tool section),
@@ -124,12 +125,9 @@ export const MAIN_MENU: TopMenu[] = [
       'view.zoomOut',
       'tool.pan',
       sec('Paneller'),
-      'view.toolbox',
-      'view.toolboxDock',
       'view.rightPanel',
       'view.bottomPanel',
       'view.coords',
-      'view.ribbon',
       'view.keyTips',
       'view.fullscreen',
       sec('Görünüş'),
@@ -198,7 +196,7 @@ export const MAIN_MENU: TopMenu[] = [
   {
     id: 'help',
     label: 'Yardım',
-    // Komut ara is here for the mouse (Alt+Q): the ribbon's search field, the command line in the classic shell.
+    // Komut ara is here for the mouse (Alt+Q): the ribbon's search field.
     items: ['view.commandSearch', 'help.shortcuts', '-', 'help.about'],
   },
 ];

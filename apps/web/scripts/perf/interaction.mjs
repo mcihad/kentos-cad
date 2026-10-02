@@ -203,14 +203,13 @@ async function openApp() {
   await b.waitFor(ready, 20000);
   // Timer-driven helpers depend on how long events take (resting 350 ms acquires a tracking
   // point, 500 ms opens the hover card): off, so a faster core does not do different work.
-  // The pointer stays clear of the toolbox (left) and of the command bar a running command shows at the top.
+  // The pointer stays clear of the command bar a running command shows at the top.
   return b.eval(`(() => {
     const k = window.kentos;
     k.settings.tracking.set(false);
     k.prefs.hoverInfo.set(false);
     const r = k.view.clientRect();
-    const tb = document.querySelector('.toolbox')?.getBoundingClientRect();
-    const left = tb && tb.right > r.left && tb.left < r.right && tb.bottom > r.top ? tb.right - r.left + 16 : 16;
+    const left = 16;
     let top = 16;
     for (const tool of ['line', 'trim']) {
       k.tools.activate(tool);

@@ -35,7 +35,7 @@ Hepsi iki platformun (`hosts: web, desktop`), kullanıcı tercihidir:
   - Web'in beş adımı hazır değer olarak kalır: Küçük 12, Standart 13, Büyük 14, Çok büyük 15, En büyük 16.
   - Web'in bütün ölçüleri `--ui-scale = textSize / 13` ile büyür.
 
-Yalnız bir platformun kalanlar: `appearance.drawingBackground` (masaüstü), `appearance.shell` (web'in klasik arayüzü).
+Yalnız bir platformun kalanlar: `appearance.drawingBackground` (masaüstü), `appearance.shell` (web'in klasik arayüzü; [ADR 0155](0155-web-ribbon-only.md)'te emekliye ayrıldı).
 
 ### Renk kuralı ortak doğrulamada
 

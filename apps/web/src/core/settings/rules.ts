@@ -301,6 +301,13 @@ export const RENAMED: readonly (readonly [string, string])[] = [
   ['appearance.uiScale', 'appearance.textSize'],
 ];
 
+/**
+ * Keys earlier versions kept settings under that no longer mean anything, as `RETIRED` has them: dropped as they are
+ * read, without a report (a key from a newer version is kept and reported). The web's shell, since it shows the
+ * ribbon only (docs/adr/0155).
+ */
+export const RETIRED: readonly string[] = ['appearance.shell'];
+
 /** The web's five text sizes before they were pixels. */
 const OLDER_TEXT_SIZES: Readonly<Record<string, number>> = { small: 12, standard: 13, large: 14, xlarge: 15, xxlarge: 16 };
 
@@ -337,6 +344,7 @@ export function renamedSetting(key: string, value: unknown): Renamed | undefined
 /** A layer's older keys under today's: a value already under today's key wins; one with no reading is reported under its older key. */
 function renamedLayer(layer: 'user' | 'device', values: Record<string, unknown>, diagnostics: SettingDiagnostic[]): Record<string, unknown> {
   const out: Record<string, unknown> = { ...values };
+  for (const key of RETIRED) delete out[key];
   for (const [from] of RENAMED) {
     if (!Object.hasOwn(out, from)) continue;
     const value = out[from];

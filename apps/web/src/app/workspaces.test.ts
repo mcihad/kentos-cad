@@ -45,7 +45,7 @@ describe('work modes', () => {
       const hidden = TOOL_CATALOG.filter((t) => !filter.tool(t)).map((t) => `tool.${t.id}`);
       const menus = new Set(menusOf(filter));
       const ribbon = new Set(ribbonOf(filter));
-      // The select tool is Esc and the toolbox's first button, not a menu item.
+      // The select tool is Esc and the ribbon's first tool, not a menu item.
       expect(shown.filter((id) => !menus.has(id) && id !== 'tool.select'), `${w.id} menus`).toEqual([]);
       expect(shown.filter((id) => !ribbon.has(id)), `${w.id} ribbon`).toEqual([]);
       expect(hidden.filter((id) => menus.has(id) || ribbon.has(id)), `${w.id} hidden`).toEqual([]);

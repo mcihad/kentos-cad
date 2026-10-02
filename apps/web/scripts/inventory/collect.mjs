@@ -107,7 +107,6 @@ export async function collectInPage() {
     push(shortcuts, b.command, chord);
     if (b.allowInInput) push(inInput, b.command, chord);
   }
-  const toolCommands = new Set(tools.map((t) => `tool.${t.id}`));
 
   const commands = k.commands.all().map((c) => ({
     id: c.id,
@@ -126,7 +125,6 @@ export async function collectInPage() {
     menus: menuPaths[c.id] ?? [],
     ribbon: ribbonPlaces[c.id] ?? [],
     quickAccess: ribbon.QUICK_ACCESS.includes(c.id),
-    toolbox: toolCommands.has(c.id),
     hiddenIn: modes.filter((m) => !m.filter.command(c.id)).map((m) => m.id),
   }));
 

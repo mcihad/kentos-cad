@@ -12,9 +12,8 @@
 // form, the add menus, a child marker, ƒ on, the preview geometry, the unsaved question, inline and library symbols);
 // svgedit (SVG düzenleyicisi: a new and a library drawing, shapes, the tabs, the menus, a polyline in progress, text,
 // node editing, measuring, the XML source, document properties, export, the unsaved question);
-// shell (the classic shell: the bars, and the toolbox docked, in two columns, folded, widened, its tip, a snapping drag);
 // log (the bottom panel's lines with their times and levels, Uyarılar with its badge, a warning in the status bar, the
-// empty history); layout (panels, sizes and toolbox as kept, sizes kept larger than the window shown within it, the
+// empty history); layout (panels and sizes as kept, sizes kept larger than the window shown within it, the
 // ribbon's kept tab, quick access and split choices, folded); modeldesigner (Model tasarımcısı: a new model, the
 // built-in model's copy, an input, a step and a source list, a wire dragged and its menu, a step with problems, a chain,
 // a number input, the tools searched and one carried, the unsaved question); ribbon (the key tips on the tabs, on
@@ -119,8 +118,6 @@ const SCENES = {
       },
       close: async (ui) => (await ui.eval(`(() => { const k = window.kentos; while (k.doc.canUndo.value) k.doc.undo(); k.ui.processingTab.set('tools'); })()`), await ui.escapeAll(1)),
     },
-    { id: 'menu-models', open: async (ui) => (await ui.clickSel('.menubar__item[data-menu="processing"]'), await ui.hoverText('.menu .menu__item', 'Modeller')) },
-    { id: 'menu-category', open: async (ui) => (await ui.clickSel('.menubar__item[data-menu="processing"]'), await ui.hoverText('.menu .menu__item', 'Nokta işlemleri')) },
     { id: 'dialog-numbering', open: async (ui) => (await ui.eval(SELECT_PARCELS), await ui.eval(openTool('points.numberVertices')), await ui.sleep(500)) },
     { id: 'dialog-edge-lengths', open: async (ui) => (await ui.eval(SELECT_PARCELS), await ui.eval(openTool('annotation.edgeLengths')), await ui.sleep(500)) },
     { id: 'dialog-calculate', open: async (ui) => (await ui.eval(SELECT_PARCELS), await ui.eval(openTool('attributes.calculate')), await ui.sleep(500)) },
@@ -610,38 +607,8 @@ SCENES.symboldesigner = [
   },
 ];
 
-// The classic shell (ui/shell/shellPlan.ts, fixtures/shell/v1/shell.json): the bars at rest, and the toolbox docked, in
-// two columns, with a folded group, widened to fit the height (1100×650), a tool's tip with its steps, and snapping to
-// an edge in the middle of a drag.
-const TOOLBOX_RESET = `(() => { const u = window.kentos.ui; u.toolboxDocked.set(false); u.toolboxColumns.set(3); u.toolboxFolded.set([]); u.toolboxX.set(12); u.toolboxY.set(12); u.toolboxVisible.set(true); })()`;
+/** The middle of an element on the screen. */
 const centreOf = (sel) => `(() => { const r = document.querySelector(${JSON.stringify(sel)}).getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`;
-SCENES.shell = [
-  { id: 'classic', open: async (ui) => (await ui.eval(TOOLBOX_RESET), await ui.sleep(400)) },
-  { id: 'toolbox-docked', open: async (ui) => (await ui.eval(`window.kentos.commands.execute('view.toolboxDock')`), await ui.sleep(400)) },
-  { id: 'toolbox-two-columns', open: async (ui) => (await ui.eval(`window.kentos.ui.toolboxColumns.set(2)`), await ui.sleep(400)) },
-  { id: 'toolbox-folded-group', open: async (ui) => (await ui.eval(`window.kentos.ui.toolboxFolded.set(['draw', 'annotate'])`), await ui.sleep(400)) },
-  {
-    id: 'toolbox-tip',
-    open: async (ui) => {
-      await ui.move(...(await ui.eval(centreOf('.toolbox__tool[data-tool="line"]'))));
-      await ui.waitFor(`!!document.querySelector('.tooltip[data-open]')`);
-      await ui.sleep(300);
-    },
-  },
-  {
-    id: 'toolbox-snap-drag',
-    open: async (ui) => {
-      // Held by the grip and dragged towards the drawing's right edge: within 14 px it sits on the margin.
-      const [x, y] = await ui.eval(centreOf('.toolbox__grip'));
-      const right = await ui.eval(`(() => { const r = window.kentos.view.clientRect(); const t = document.querySelector('.toolbox').getBoundingClientRect(); return Math.round(r.right - t.width / 2 - 12); })()`);
-      await ui.move(x, y);
-      await ui.pressAt(x, y);
-      for (let i = 1; i <= 8; i++) await ui.moveHeld(x + ((right - x) * i) / 8, y + 60 * (i / 8));
-      await ui.sleep(300);
-    },
-    close: async (ui) => (await ui.releaseAt(2, 2), await ui.eval(TOOLBOX_RESET)),
-  },
-].map((s) => ({ close: async (ui) => (await ui.escapeAll(1), await ui.eval(TOOLBOX_RESET)), ...s }));
 
 // The log (ui/bottom/logPlan.ts, fixtures/shell/v1/log.json): a short session's lines in Komut geçmişi with their
 // times and levels (a tool's name, what was typed, the points it took, a value not understood, a mistyped command, a
@@ -728,17 +695,16 @@ SCENES.log = [
   },
 ].map((s) => ({ close: async (ui) => (await ui.escapeAll(1), await ui.eval(LOG_RESTORE), await ui.sleep(200)), ...s }));
 
-// The kept layout (app/layoutPlan.ts, fixtures/shell/v1/layout.json): panels, sizes and the toolbox as kept; a dock and
-// a bottom panel kept larger than this window allows, shown within it; the ribbon with its kept tab, quick access
-// commands and split choices, and folded. Each scene sets the live layout and puts it back after.
+// The kept layout (app/layoutPlan.ts, fixtures/shell/v1/layout.json): panels and sizes as kept; a dock and a bottom
+// panel kept larger than this window allows, shown within it; the ribbon with its kept tab, quick access commands and
+// split choices, and folded. Each scene sets the live layout and puts it back after.
 const LAYOUT_KEEP = `window.__shotLayout = Object.fromEntries(Object.entries(window.kentos.ui).map(([k, s]) => [k, s.value]))`;
 const LAYOUT_BACK = `(() => { const ui = window.kentos.ui; for (const [k, v] of Object.entries(window.__shotLayout ?? {})) ui[k].set(v); })()`;
 /** Layout fields set on the live layout (the kept ones first saved aside). */
 const layoutSet = (fields) => `(() => { ${LAYOUT_KEEP}; const ui = window.kentos.ui; for (const [k, v] of Object.entries(${JSON.stringify(fields)})) ui[k].set(v); })()`;
-/** The shell as Uygulama ayarları sets it; the ribbon loads on first use. */
-async function shellTo(ui, kind) {
-  await ui.eval(`window.kentos.prefs.shell.set(${JSON.stringify(kind)})`);
-  await ui.waitFor(kind === 'ribbon' ? `!!document.querySelector('.ribbon__strip .rpanel')` : `!!document.querySelector('.menubar')`, 10000);
+/** The ribbon laid out again after its kept fields changed. */
+async function ribbonSettled(ui) {
+  await ui.waitFor(`!!document.querySelector('.ribbon__strip .rpanel') || !!document.querySelector('.ribbon[data-collapsed]')`, 10000);
   await ui.sleep(500);
 }
 const RIBBON_KEPT = { ribbonTab: 'draw', ribbonQuickAccess: ['view.zoomExtents', 'tool.line'], ribbonSplits: { circle: 'tool.circle|3N', rectangle: 'tool.regularPolygon|' } };
@@ -746,7 +712,7 @@ SCENES.layout = [
   {
     id: 'kept',
     open: async (ui) => {
-      await ui.eval(layoutSet({ dockWidth: 400, layersFraction: 0.35, bottomExpanded: true, bottomTab: 'coords', toolboxDocked: true, toolboxColumns: 2, toolboxFolded: ['annotate'] }));
+      await ui.eval(layoutSet({ dockWidth: 400, layersFraction: 0.35, bottomExpanded: true, bottomTab: 'coords' }));
       await ui.sleep(500);
     },
   },
@@ -761,17 +727,15 @@ SCENES.layout = [
     id: 'ribbon-kept',
     open: async (ui) => {
       await ui.eval(layoutSet(RIBBON_KEPT));
-      await shellTo(ui, 'ribbon');
+      await ribbonSettled(ui);
     },
-    close: async (ui) => (await shellTo(ui, 'classic'), await ui.eval(LAYOUT_BACK)),
   },
   {
     id: 'ribbon-collapsed',
     open: async (ui) => {
       await ui.eval(layoutSet({ ...RIBBON_KEPT, ribbonCollapsed: true }));
-      await shellTo(ui, 'ribbon');
+      await ribbonSettled(ui);
     },
-    close: async (ui) => (await shellTo(ui, 'classic'), await ui.eval(LAYOUT_BACK)),
   },
 ].map((s) => ({ close: async (ui) => (await ui.escapeAll(1), await ui.eval(LAYOUT_BACK), await ui.sleep(300)), ...s }));
 
@@ -922,15 +886,14 @@ SCENES.modeldesigner = [
 // access bar, then on Giriş's controls, then narrowed by a typed letter; the bar's menu; a right click on a command
 // off the bar, on one added to it, on a fixed one and on a tab; a tool's methods and a family under their split
 // buttons; the folded ribbon open over the drawing. Each scene starts from a bar with two added commands and puts
-// the classic shell and the layout back after.
+// the layout back after.
 const RIBBON_BAR = { ribbonQuickAccess: ['view.zoomExtents', 'tool.line'], ribbonTab: 'home', ribbonCollapsed: false };
 async function ribbonOn(ui, fields = {}) {
   await ui.eval(layoutSet({ ...RIBBON_BAR, ...fields }));
-  await shellTo(ui, 'ribbon');
+  await ribbonSettled(ui);
 }
 async function ribbonOff(ui) {
   await ui.escapeAll(3);
-  await shellTo(ui, 'classic');
   await ui.eval(LAYOUT_BACK);
   await ui.sleep(200);
 }
@@ -2048,10 +2011,9 @@ const openPointEditor = async (ui) => {
     k.ui.bottomHeight.set(300);
     k.commands.execute('point.editor');
     k.view.zoomExtents();
-    // Clear of the floating toolbox on the left.
+    // A little room round the drawing.
     const c = k.view.camera;
     c.scale = c.scale * 0.8;
-    c.center = { x: c.center.x - 120 / c.scale, y: c.center.y };
     c.panBy(0, 0);
     k.selection.set([4, 5, 6]);
   })()`);
@@ -2309,10 +2271,9 @@ const openTextExtras = async (ui) => {
     if (!(await k.files.load(${JSON.stringify(TEXT_EXTRAS)}, null))) throw new Error('text-extras.kcad did not load');
     k.selection.clear();
     k.view.zoomExtents();
-    // Clear of the floating toolbox on the left.
+    // A little room round the drawing.
     const c = k.view.camera;
     c.scale = c.scale * 0.85;
-    c.center = { x: c.center.x - 170 / c.scale, y: c.center.y };
     c.panBy(0, 0);
   })()`);
   await ui.sleep(600);
@@ -2330,10 +2291,9 @@ SCENES.leaders = [
         k.files.ask = async () => 'drop';
         if (!(await k.files.load(${JSON.stringify(LEADERS)}, null))) throw new Error('leaders.kcad did not load');
         k.view.zoomExtents();
-        // Clear of the toolbox, the block on the right still in view.
+        // A little room round the drawing, the block on the right still in view.
         const c = k.view.camera;
         c.scale = c.scale * 0.8;
-        c.center = { x: c.center.x - 110 / c.scale, y: c.center.y };
         c.panBy(0, 0);
         k.selection.set([2]);
       })()`);
@@ -2358,10 +2318,9 @@ SCENES.dimensions = [
         k.files.ask = async () => 'drop';
         if (!(await k.files.load(${JSON.stringify(DIMENSIONS)}, null))) throw new Error('dimensions.kcad did not load');
         k.view.zoomExtents();
-        // Clear of the toolbox.
+        // A little room round the drawing.
         const c = k.view.camera;
         c.scale = c.scale * 0.85;
-        c.center = { x: c.center.x - 90 / c.scale, y: c.center.y };
         c.panBy(0, 0);
         k.selection.set([9]);
       })()`);
@@ -2408,10 +2367,9 @@ SCENES.rounding = [
         k.files.ask = async () => 'drop';
         if (!(await k.files.load(${JSON.stringify(doc)}, null))) throw new Error('the drawing did not load');
         k.view.zoomExtents();
-        // Clear of the toolbox.
+        // A little room round the drawing.
         const cam = k.view.camera;
         cam.scale = cam.scale * 0.85;
-        cam.center = { x: cam.center.x - 60 / cam.scale, y: cam.center.y };
         cam.panBy(0, 0);
         k.selection.set([1]);
       })()`);
@@ -2551,10 +2509,9 @@ function dimensionToolScenes() {
       k.files.ask = async () => 'drop';
       if (!(await k.files.load(${JSON.stringify(drawing)}, null))) throw new Error('the ground did not load');
       k.view.zoomExtents();
-      // Clear of the toolbox.
+      // A little room round the drawing.
       const c = k.view.camera;
       c.scale = c.scale * 0.85;
-      c.center = { x: c.center.x - 110 / c.scale, y: c.center.y };
       c.panBy(0, 0);
     })()`);
     await ui.sleep(400);
@@ -2707,14 +2664,13 @@ function dxfLeaderScenes() {
       id: 'import-dxf-leaders-in',
       open: async (ui) => {
         await into(ui);
-        // Clear of the toolbox.
+        // A little room round the drawing.
         await ui.eval(`(() => {
           const k = window.kentos;
           k.selection.clear();
           const c = k.view.camera;
           c.fit({ minX: -6, minY: -24, maxX: 170, maxY: 14 }, 24);
           c.scale = c.scale * 0.72;
-          c.center = { x: c.center.x - 105 / c.scale, y: c.center.y };
           c.panBy(0, 0);
           k.view.requestRender();
         })()`);
@@ -2749,7 +2705,7 @@ function dxfDimensionScenes() {
   const own = open('dimensions.dxf', file('dxf-write/dimensions.dxf'));
   const read = async (ui, what) => (await ui.eval(what), await ui.waitFor(DXF_READ, 15000));
   const into = async (ui, what) => (await read(ui, what), await ui.clickText('.dialog--io .btn--primary', 'İçe aktar'), await ui.waitFor(`!document.querySelector('.dialog--io')`, 8000));
-  // The desktop's frame, clear of the toolbox.
+  // The desktop's frame.
   const frame = async (ui) => {
     await ui.eval(`(() => {
       const k = window.kentos;
@@ -2757,7 +2713,6 @@ function dxfDimensionScenes() {
       const c = k.view.camera;
       c.fit({ minX: 452262, minY: 4412278, maxX: 452482, maxY: 4412350 }, 24);
       c.scale = c.scale * 0.8;
-      c.center = { x: c.center.x - 100 / c.scale, y: c.center.y };
       c.panBy(0, 0);
       k.view.requestRender();
     })()`);
@@ -2823,10 +2778,9 @@ function leaderToolScenes() {
       k.files.ask = async () => 'drop';
       if (!(await k.files.load(${JSON.stringify(GROUND)}, null))) throw new Error('the ground did not load');
       k.view.zoomExtents();
-      // Clear of the toolbox.
+      // A little room round the drawing.
       const c = k.view.camera;
       c.scale = c.scale * 0.85;
-      c.center = { x: c.center.x - 110 / c.scale, y: c.center.y };
       c.panBy(0, 0);
       k.log.clear();
     })()`);

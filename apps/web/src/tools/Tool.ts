@@ -105,7 +105,7 @@ export function takesTypedInput(activeId: string, tool: Pick<Tool, 'activeGrip'>
 
 export type ToolGroup = 'select' | 'draw' | 'annotate' | 'block' | 'transform' | 'modify' | 'area' | 'map';
 
-/** Short on purpose: these are the toolbox section headings. */
+/** Short on purpose: the tool groups' names, as menus and the ribbon's panels use them. */
 export const TOOL_GROUP_LABEL: Record<ToolGroup, string> = {
   select: 'Seçim',
   draw: 'Çizim',
@@ -119,7 +119,7 @@ export const TOOL_GROUP_LABEL: Record<ToolGroup, string> = {
 
 /**
  * Sub-headings inside a group, in display order: the separators of the
- * classic menus and the panels of the ribbon. A tool names its section in
+ * menus and the panels of the ribbon. A tool names its section in
  * the catalog; a group without sections (or a tool without one) is shown
  * under the group's own name, so a new tool always appears somewhere.
  */
@@ -156,7 +156,7 @@ export interface ToolDescriptor {
   shortcut?: string;
   aliases?: readonly string[];
   description: string;
-  /** Mouse-first "how to use" steps, shown in the toolbox tooltip. */
+  /** Mouse-first "how to use" steps, shown in the ribbon button's tooltip. */
   steps?: readonly string[];
   /**
    * Ribbon presentation (app/ribbon.ts): a main tool of its panel, drawn

@@ -252,6 +252,46 @@ def tabs_of(mode, selection):
     return [label for tid, label in TABS[mode] if tid != 'selection' or selection]
 
 
+# ── The Özellikler panel's lists and a command's row in a menu ──────
+# Moved here from the classic shell's file (docs/adr/0155): the ribbon's
+# Özellikler panel offers these values, and its menus show commands so.
+
+DRAW_COLORS = [
+    {'name': 'Siyah', 'value': 'ink'},
+    {'name': 'Kırmızı', 'value': '#E5484D'},
+    {'name': 'Sarı', 'value': '#F2C94C'},
+    {'name': 'Yeşil', 'value': '#5FBF77'},
+    {'name': 'Camgöbeği', 'value': '#4CC3D9'},
+    {'name': 'Mavi', 'value': '#4F8EF7'},
+    {'name': 'Eflatun', 'value': '#C86DD7'},
+    {'name': 'Gri', 'value': '#8C9AAA'},
+]
+LINE_TYPES = {'continuous': 'Sürekli', 'dashed': 'Kesikli', 'dashdot': 'Noktalı kesik', 'dotted': 'Noktalı'}
+LINE_WEIGHTS = [0.13, 0.18, 0.25, 0.35, 0.5, 0.7]
+PLOT_SCALES = [500, 1000, 2000, 5000, 25000]
+RADIO_PREFIXES = ('view.renderer.', 'view.symbols.', 'workspace.')
+
+
+def row_look(cid, checked):
+    """A toggle shows a check instead of its icon; the themes (but the toggle), the drawing engines, the symbol sizes and
+    the work modes are radios and keep their icons; a tool reads as an action (its icon, no check)."""
+    radio = (cid.startswith('view.theme.') and cid != 'view.theme.toggle') or cid.startswith(RADIO_PREFIXES)
+    tool = cid.startswith('tool.')
+    return {'icon': checked is None or radio or tool, 'checked': None if tool else checked, 'radio': radio}
+
+
+def num(v):
+    """A number as JSON writes it from JavaScript: whole numbers without a decimal point."""
+    return int(v) if float(v).is_integer() else v
+
+
+ROWS = [
+    ('file.save', None), ('view.rightPanel', True), ('view.rightPanel', False), ('view.theme.dark', True),
+    ('view.theme.light', False), ('view.theme.toggle', None), ('view.renderer.webgpu', False), ('view.symbols.plain', True),
+    ('workspace.cad', True), ('tool.line', True), ('tool.select', False), ('view.lineWeights', False),
+]
+
+
 file = {
     'format': 'kentos.ribbon',
     'version': 1,
@@ -271,6 +311,14 @@ file = {
     'ribbonMenu': [{'kind': 'command', 'command': 'view.ribbonCollapse'}],
     'splitMenus': [{'entries': e, 'menu': split_menu(e)} for e in [CIRCLE, FAMILY, DIMENSION]],
     'splitFaces': [{'entry': e, 'face': split_face(e)} for e in FACES],
+    'fields': {
+        'byLayer': 'Katmana göre',
+        'colors': DRAW_COLORS,
+        'lineTypes': LINE_TYPES,
+        'weights': [{'mm': num(w), 'text': f'{w:.2f} mm'} for w in LINE_WEIGHTS],
+        'scales': [{'denominator': s, 'text': f'1:{s}'} for s in PLOT_SCALES],
+    },
+    'menuRows': [{'id': i, 'checked': c, 'expect': row_look(i, c)} for i, c in ROWS],
 }
 
 text = json.dumps(file, ensure_ascii=False, indent=1) + '\n'

@@ -43,8 +43,10 @@ export const LEGACY_FIELDS: Readonly<Record<string, string>> = {
   symbolSize: 'graphics.symbolSize',
   lineWeights: 'graphics.lineWeights',
   startScreen: 'appearance.startScreen',
-  shell: 'appearance.shell',
 };
+
+/** Older fields that no longer mean anything, left behind without a report: the classic shell's choice (docs/adr/0155). */
+const LEGACY_RETIRED: ReadonlySet<string> = new Set(['shell']);
 
 /** The older drawing quality: 4× anti-aliasing at full resolution, full resolution alone, or neither. */
 const QUALITY: Readonly<Record<string, { msaa: number; hiDpi: boolean }>> = {
@@ -101,6 +103,7 @@ export function migrateLegacyPrefs(text: string, at: Date): Migrated {
         } else dropped.push({ layer: 'device', key: field, code: typeof value === 'string' ? 'not_allowed' : 'wrong_type' });
         continue;
       }
+      if (LEGACY_RETIRED.has(field)) continue;
       const key = Object.prototype.hasOwnProperty.call(LEGACY_FIELDS, field) ? LEGACY_FIELDS[field] : undefined;
       if (key) put(field, key, value);
       else dropped.push({ layer: 'user', key: field, code: 'unknown_key' });

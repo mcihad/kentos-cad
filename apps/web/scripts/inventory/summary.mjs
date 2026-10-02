@@ -39,7 +39,7 @@ export function summaryMarkdown(inv) {
   lines.push(
     `## Arayüzde yeri görünmeyen komutlar (${s.commandsWithoutPlace.length})`,
     '',
-    'Menüde, şeritte ve araç kutusunda yoklar; kimlikleri `src/ui` altındaki hiçbir dosyada geçmiyor. Kısayolla, komut satırından ya da başka bir yoldan çalışıyor olabilirler. Her biri fareyle bulunabilirlik açısından gözden geçirilir.',
+    'Menüde ve şeritte yoklar; kimlikleri `src/ui` altındaki hiçbir dosyada geçmiyor. Kısayolla, komut satırından ya da başka bir yoldan çalışıyor olabilirler. Her biri fareyle bulunabilirlik açısından gözden geçirilir.',
     '',
     s.commandsWithoutPlace.map((id) => `\`${id}\``).join(', ') || 'Yok.',
     '',

@@ -56,9 +56,8 @@ export function commandTip(ctx: AppContext, id: string): TooltipContent {
 }
 
 /**
- * A command button. Tools show "active" as the toolbox does (filled
- * amber), toggles as pressed (soft amber); disabled and pending follow the
- * command.
+ * A command button. Tools show "active" filled (amber), toggles as pressed
+ * (soft amber); disabled and pending follow the command.
  */
 export function commandControl(ctx: AppContext, id: string, d: DisposableStore, host: ControlHost, extraClass = ''): Control {
   const cmd = ctx.commands.get(id);
@@ -84,7 +83,7 @@ export function commandControl(ctx: AppContext, id: string, d: DisposableStore, 
   d.add(
     listen(b, 'click', () => {
       if (!ctx.commands.execute(id)) return;
-      // Typed coordinates go to the drawing, as after a toolbox click.
+      // Typed coordinates go to the drawing, as after a click in it.
       if (isTool) ctx.view.focus();
       host.afterRun();
     }),

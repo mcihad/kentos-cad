@@ -5,7 +5,7 @@ import { LINE_TYPE_LABEL, type LayerNode, type LineType } from '../../model/laye
 import { h } from '../dom';
 import { icon } from '../icons';
 import { Panel } from '../dock/Panel';
-import { DRAW_COLORS, LINE_WEIGHTS } from '../toolbar/fields';
+import { DRAW_COLORS, LINE_WEIGHTS } from '../ribbon/fields';
 import { commandButton } from '../widgets/CommandButton';
 import { askRemove } from '../widgets/confirm';
 import { PopupMenu, type MenuItem } from '../widgets/PopupMenu';

@@ -4,7 +4,7 @@ import { listen, type DisposableStore } from '../../core/disposable';
 import { ENTITY_KIND_LABEL, type EntityKind } from '../../model/entities';
 import { h, replaceChildren } from '../dom';
 import { icon } from '../icons';
-import { colorField, layerField, lineTypeField, scaleField, weightField } from '../toolbar/fields';
+import { colorField, layerField, lineTypeField, scaleField, weightField } from './fields';
 import { tooltip } from '../widgets/tooltip';
 import { commandControl, menuControl, overflowMenu, splitControl, type Control, type ControlHost } from './controls';
 import { RIBBON_TEXTS } from './ribbonPlan';

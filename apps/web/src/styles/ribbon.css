@@ -478,7 +478,7 @@
 .rbtn:disabled {
   opacity: 0.38;
 }
-/* Not built yet: dimmed like the toolbox; the tooltip says “Geliştirme aşamasında”. */
+/* Not built yet: dimmed; the tooltip says “Geliştirme aşamasında”. */
 .rbtn[data-pending] .icon {
   opacity: 0.62;
 }
@@ -490,7 +490,7 @@
 .rbtn[aria-pressed='true']:not([data-tool]) .icon {
   color: var(--c-accent-text);
 }
-/* The running tool: filled amber, as in the toolbox. */
+/* The running tool: filled amber. */
 .rbtn[data-tool][aria-pressed='true'] {
   background: var(--c-accent);
   color: var(--c-accent-ink);
@@ -747,4 +747,13 @@
 }
 .keytips__tip[data-off] {
   opacity: 0.25;
+}
+
+/* The unsaved changes' dot beside the drawing's name. */
+.ribbon__dirty {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--c-accent);
+  flex: none;
 }

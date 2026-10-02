@@ -1,17 +1,14 @@
 import type { AppContext } from '../../app/context';
 import { DOCK_WIDTH, dockWidthOn } from '../../app/layoutPlan';
-import type { ProcessingTab, ShellKind } from '../../app/state';
+import type { ProcessingTab } from '../../app/state';
 import { listen } from '../../core/disposable';
 import { watchAll } from '../../core/signal';
 import { BottomPanel } from '../bottom/BottomPanel';
 import { Component } from '../Component';
 import { RightDock } from '../dock/RightDock';
 import { h } from '../dom';
-import { MenuBar } from '../menu/MenuBar';
-import type { Ribbon } from '../ribbon/Ribbon';
+import { Ribbon } from '../ribbon/Ribbon';
 import { StatusBar } from '../statusbar/StatusBar';
-import { Toolbar } from '../toolbar/Toolbar';
-import { Toolbox } from '../toolbox/Toolbox';
 import { CommandBar } from './CommandBar';
 import { CursorInput } from './CursorInput';
 import { HoverCard } from './HoverCard';
@@ -21,11 +18,12 @@ import { splitter } from '../widgets/Splitter';
 
 /**
  * Workbench layout. Regions are slots; each is filled by an independent
- * component that only knows AppContext.
+ * component that only knows AppContext. The ribbon is the only chrome, as on
+ * the desktop (docs/adr/0155).
  *
- *   menubar + toolbar  (classic)  |  ribbon  (prefs.shell = 'ribbon')
- *   [dock-left] [viewport + floating toolbox] | [right dock]
- *               [bottom: panel + command line] |
+ *   ribbon
+ *   [viewport]                     | [right dock]
+ *   [bottom: panel + command line] |
  *   status bar
  */
 export class AppShell extends Component {
@@ -35,12 +33,7 @@ export class AppShell extends Component {
   private readonly ctx: AppContext;
   private readonly dock: RightDock;
   private readonly parts: Component[] = [];
-  /** The top of the workbench: menu bar and toolbar, or the ribbon. */
-  private readonly chrome: HTMLElement;
-  private chromeParts: Component[] = [];
-  private ribbon: Ribbon | null = null;
-  /** Bumped on every switch, so a ribbon that finishes loading after the user switched back is dropped. */
-  private chromeGen = 0;
+  private readonly ribbon: Ribbon;
 
   constructor(ctx: AppContext) {
     super();
@@ -51,7 +44,6 @@ export class AppShell extends Component {
     const status = this.own(new StatusBar(ctx));
 
     this.viewportHost = h('div', { class: 'viewport' });
-    const left = h('div', { class: 'shell__left', 'data-empty': '' });
 
     // A drag starts from the width shown (the kept one may be wider than this window allows).
     let startW = 0;
@@ -65,17 +57,15 @@ export class AppShell extends Component {
     this.d.add(split.dispose);
     const right = h('div', { class: 'shell__right' }, split.el, dock.el);
 
-    this.chrome = h('div', { class: 'shell__chrome' });
+    this.ribbon = this.own(new Ribbon(ctx));
     this.el = h(
       'div',
       { class: 'shell' },
-      this.chrome,
-      h('div', { class: 'shell__body' }, left, h('main', { class: 'shell__center' }, this.viewportHost, this.bottom.el), right),
+      h('div', { class: 'shell__chrome' }, this.ribbon.el),
+      h('div', { class: 'shell__body' }, h('main', { class: 'shell__center' }, this.viewportHost, this.bottom.el), right),
       status.el,
     );
-    this.d.add(ctx.prefs.shell.subscribe((kind) => this.mountChrome(kind), true));
 
-    this.own(new Toolbox(ctx, { float: this.viewportHost, dock: left }));
     this.own(new InlineTextEditor(ctx, this.viewportHost));
     this.own(new CommandBar(ctx, this.viewportHost));
     this.own(new HoverCard(ctx, this.viewportHost));
@@ -92,51 +82,14 @@ export class AppShell extends Component {
     this.d.add(bindViewportMenus(ctx));
   }
 
-  /** Klavye ipuçları: the ribbon's letters (the command is off in the classic shell). */
+  /** Klavye ipuçları: the ribbon's letters. */
   keyTips(): void {
-    this.ribbon?.showKeyTips();
+    this.ribbon.showKeyTips();
   }
 
-  /** Komut ara: the ribbon's search field, or the command line (which also suggests commands) in the classic shell. */
+  /** Komut ara: the ribbon's search field. */
   searchCommands(): void {
-    if (this.ribbon) this.ribbon.focusSearch();
-    else this.bottom.commandLine.focus();
-  }
-
-  /**
-   * Puts the chosen chrome on top, live. The ribbon is a chunk of its own
-   * (CLAUDE.md §20): it loads when first chosen, a placeholder of its height
-   * holds the place meanwhile, and a failed load falls back to the classic
-   * shell and says so.
-   */
-  private mountChrome(kind: ShellKind): void {
-    const gen = ++this.chromeGen;
-    this.chromeParts.forEach((p) => p.dispose());
-    this.chromeParts = [];
-    this.ribbon = null;
-    this.el.dataset.shell = kind;
-    if (kind === 'classic') {
-      const menubar = new MenuBar(this.ctx);
-      const toolbar = new Toolbar(this.ctx);
-      this.chromeParts = [menubar, toolbar];
-      this.chrome.replaceChildren(menubar.el, toolbar.el);
-      return;
-    }
-    this.chrome.replaceChildren(h('div', { class: 'ribbon-placeholder', 'aria-hidden': 'true' }));
-    import('../ribbon/Ribbon').then(
-      ({ Ribbon }) => {
-        if (gen !== this.chromeGen) return;
-        const ribbon = new Ribbon(this.ctx);
-        this.ribbon = ribbon;
-        this.chromeParts = [ribbon];
-        this.chrome.replaceChildren(ribbon.el);
-      },
-      (e: Error) => {
-        if (gen !== this.chromeGen) return;
-        this.ctx.log.error(`Şerit yüklenemedi (${e.message}). Klasik arayüz açıldı; ağ bağlantısını denetleyip Görünüm → Şerit arayüzü ile yeniden deneyin.`);
-        this.ctx.prefs.shell.set('classic');
-      },
-    );
+    this.ribbon.focusSearch();
   }
 
   /** Brings the processing toolbox (or its history) forward in the right dock. */
@@ -154,8 +107,6 @@ export class AppShell extends Component {
   }
 
   override dispose(): void {
-    this.chromeGen++;
-    this.chromeParts.forEach((p) => p.dispose());
     this.parts.forEach((p) => p.dispose());
     super.dispose();
   }

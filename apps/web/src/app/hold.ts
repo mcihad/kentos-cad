@@ -61,7 +61,7 @@ export function holdDrawing(ctx: AppContext, opts: { why: string; keep: HTMLElem
       view.addEventListener(type, press, true);
       undo.push(() => view.removeEventListener(type, press, true));
     }
-    // Everything round the drawing: the parts over it (the toolbox, the command bar), then each level's siblings up to the page.
+    // Everything round the drawing: the parts over it (the command bar among them), then each level's siblings up to the page.
     const inert: HTMLElement[] = [];
     const mark = (el: Element) => {
       if (el instanceof HTMLElement && !el.inert && !(el instanceof HTMLCanvasElement) && !el.contains(opts.keep)) {

@@ -1,6 +1,6 @@
 """The workbench's kept layout, for both platforms: what is kept, its
-defaults, how a stored value is read, the one migration, the sizes as the
-window allows them, the dock's split as it is dragged, and the ribbon's kept
+defaults, how a stored value is read (a field no longer kept, the toolbox's,
+is dropped: docs/adr/0155), the sizes as the window allows them, the dock's split as it is dragged, and the ribbon's kept
 tab, quick access bar and split choices (format in fixtures/shell/README.md;
 CLAUDE.md §4.4 “Yerleşim”).
 
@@ -33,12 +33,6 @@ DEFAULTS = {
     'bottomExpanded': False,
     'bottomHeight': 190,
     'bottomTab': 'history',
-    'toolboxVisible': True,
-    'toolboxDocked': False,
-    'toolboxX': 12,
-    'toolboxY': 12,
-    'toolboxColumns': 3,
-    'toolboxFolded': [],
     'dockTab': 'layers',
     'processingTab': 'tools',
     'processingFolded': [],
@@ -46,7 +40,6 @@ DEFAULTS = {
     'ribbonCollapsed': False,
     'ribbonQuickAccess': [],
     'ribbonSplits': {},
-    'ribbonToolbox': False,
 }
 DOCK = {'min': 240, 'max': 560, 'maxShare': 0.5, 'reset': 312}
 LAYERS = {'min': 0.15, 'max': 0.85, 'reset': 0.5}
@@ -59,12 +52,6 @@ FIELDS = {
     'bottomExpanded': {'kind': 'boolean'},
     'bottomHeight': {'kind': 'number', 'min': BOTTOM['min']},
     'bottomTab': {'kind': 'enum', 'values': ['history', 'coords', 'points', 'messages']},
-    'toolboxVisible': {'kind': 'boolean'},
-    'toolboxDocked': {'kind': 'boolean'},
-    'toolboxX': {'kind': 'number'},
-    'toolboxY': {'kind': 'number'},
-    'toolboxColumns': {'kind': 'columns'},
-    'toolboxFolded': {'kind': 'texts'},
     'dockTab': {'kind': 'enum', 'values': ['layers', 'processing', 'blocks']},
     'processingTab': {'kind': 'enum', 'values': ['tools', 'history']},
     'processingFolded': {'kind': 'texts'},
@@ -72,7 +59,6 @@ FIELDS = {
     'ribbonCollapsed': {'kind': 'boolean'},
     'ribbonQuickAccess': {'kind': 'texts'},
     'ribbonSplits': {'kind': 'textMap'},
-    'ribbonToolbox': {'kind': 'boolean'},
 }
 QUICK_FIXED = ['file.save', 'edit.undo', 'edit.redo']
 
@@ -101,10 +87,6 @@ def read_field(rule, v):
         if not is_number(v) or not math.isfinite(v):
             return MISSING
         return min(max(v, rule.get('min', -math.inf)), rule.get('max', math.inf))
-    if kind == 'columns':
-        if not is_number(v) or not math.isfinite(v):
-            return MISSING
-        return 3 if v == 3 else 2
     if kind == 'text':
         return v if isinstance(v, str) else MISSING
     if kind == 'texts':
@@ -116,7 +98,7 @@ def read_field(rule, v):
 
 def read_layout(text):
     """Each field the store holds and its rule takes; the default otherwise, and for all when it is not a JSON object.
-    A layout without toolboxFolded is from before the titled toolbox groups: three columns."""
+    A field the layout does not know is dropped."""
     stored = None
     if text is not None:
         try:
@@ -130,8 +112,6 @@ def read_layout(text):
             v = read_field(rule, saved[key])
             if v is not MISSING:
                 out[key] = v
-    if isinstance(stored, dict) and 'toolboxFolded' not in stored:
-        out['toolboxColumns'] = 3
     return out
 
 
@@ -169,10 +149,9 @@ def start_tab(kept, tabs):
 
 FULL = {
     'theme': 'light', 'rightVisible': False, 'dockWidth': 400, 'layersFraction': 0.35, 'bottomExpanded': True, 'bottomHeight': 260,
-    'bottomTab': 'messages', 'toolboxVisible': False, 'toolboxDocked': True, 'toolboxX': 240, 'toolboxY': 80, 'toolboxColumns': 2,
-    'toolboxFolded': ['draw', 'annotate'], 'dockTab': 'processing', 'processingTab': 'history', 'processingFolded': ['points'],
+    'bottomTab': 'messages', 'dockTab': 'processing', 'processingTab': 'history', 'processingFolded': ['points'],
     'ribbonTab': 'draw', 'ribbonCollapsed': True, 'ribbonQuickAccess': ['view.zoomExtents', 'tool.line'],
-    'ribbonSplits': {'circle': 'tool.circle|3N', 'rectangle': 'tool.regularPolygon|'}, 'ribbonToolbox': True,
+    'ribbonSplits': {'circle': 'tool.circle|3N', 'rectangle': 'tool.regularPolygon|'},
 }
 compact = lambda o: json.dumps(o, ensure_ascii=False, separators=(',', ':'))
 READS = [
@@ -181,29 +160,29 @@ READS = [
     ('a JSON list, not an object', '["light"]'),
     ('a JSON number', '42'),
     ('JSON null', 'null'),
-    ('an empty object: a store from before the titled toolbox groups', '{}'),
+    ('an empty object', '{}'),
     ('every field kept, none a default', compact(FULL)),
     ('values of the wrong type are not taken', compact({
-        'theme': 'blue', 'rightVisible': 'yes', 'dockWidth': '300', 'bottomTab': 'log', 'ribbonTab': 5, 'toolboxFolded': 'draw',
-        'ribbonSplits': ['circle'], 'ribbonQuickAccess': {'0': 'tool.line'}, 'toolboxColumns': '2', 'layersFraction': None, 'bottomExpanded': 1,
+        'theme': 'blue', 'rightVisible': 'yes', 'dockWidth': '300', 'bottomTab': 'log', 'ribbonTab': 5, 'processingFolded': 'points',
+        'ribbonSplits': ['circle'], 'ribbonQuickAccess': {'0': 'tool.line'}, 'layersFraction': None, 'bottomExpanded': 1,
     })),
-    ('sizes out of their limits are brought within them; the toolbox place and a tall panel wait for the window', compact({
-        'dockWidth': 100, 'layersFraction': 0.95, 'bottomHeight': 20, 'toolboxX': -40, 'toolboxY': 5000, 'toolboxFolded': [],
+    ('sizes out of their limits are brought within them; a tall panel waits for the window', compact({
+        'dockWidth': 100, 'layersFraction': 0.95, 'bottomHeight': 20,
     })),
-    ('a size too large, a share too small, a very tall panel', compact({'dockWidth': 900, 'layersFraction': 0.05, 'bottomHeight': 5000, 'toolboxFolded': []})),
-    ('a number too large for a double is not finite', '{"dockWidth":1e999,"bottomHeight":-1e999,"toolboxFolded":[]}'),
+    ('a size too large, a share too small, a very tall panel', compact({'dockWidth': 900, 'layersFraction': 0.05, 'bottomHeight': 5000})),
+    ('a number too large for a double is not finite', '{"dockWidth":1e999,"bottomHeight":-1e999}'),
     ('lists keep their texts, maps their text values', compact({
-        'toolboxFolded': ['draw', 3, None, 'edit', True], 'processingFolded': [{'id': 'x'}, 'points'],
+        'processingFolded': [{'id': 'x'}, 'points', 3, None, 'tables', True],
         'ribbonQuickAccess': ['tool.line', ['tool.arc']], 'ribbonSplits': {'circle': 'tool.circle|2N', 'rectangle': 5, 'arc': None},
     })),
-    ('the Bloklar tab in front is kept (docs/adr/0144)', compact({'dockTab': 'blocks', 'toolboxFolded': []})),
-    ('a dock tab the dock does not have is not taken', compact({'dockTab': 'styles', 'toolboxFolded': []})),
-    ('three columns stay three, any other number is two', compact({'toolboxColumns': 4, 'toolboxFolded': []})),
-    ('a column count that is not whole is two', compact({'toolboxColumns': 2.5, 'toolboxFolded': []})),
-    ('before the titled toolbox groups: two columns become three', compact({'toolboxColumns': 2, 'theme': 'light'})),
-    ('with the titled groups, two columns stay two', compact({'toolboxColumns': 2, 'toolboxFolded': []})),
-    ('fields the layout does not know are dropped', compact({'theme': 'light', 'toolboxFolded': [], 'oldPanel': True, 'ribbonTabs': ['home']})),
-    ('a fraction and sizes that are not whole are kept as they are', compact({'layersFraction': 0.333, 'dockWidth': 313.5, 'bottomHeight': 200.25, 'toolboxFolded': []})),
+    ('the Bloklar tab in front is kept (docs/adr/0144)', compact({'dockTab': 'blocks'})),
+    ('a dock tab the dock does not have is not taken', compact({'dockTab': 'styles'})),
+    ('fields the layout does not know are dropped', compact({'theme': 'light', 'oldPanel': True, 'ribbonTabs': ['home']})),
+    ('the toolbox of the classic shell is no longer kept: its fields are dropped (docs/adr/0155)', compact({
+        'theme': 'light', 'toolboxVisible': False, 'toolboxDocked': True, 'toolboxX': 240, 'toolboxY': 80, 'toolboxColumns': 2,
+        'toolboxFolded': ['draw'], 'ribbonToolbox': True, 'ribbonTab': 'draw',
+    })),
+    ('a fraction and sizes that are not whole are kept as they are', compact({'layersFraction': 0.333, 'dockWidth': 313.5, 'bottomHeight': 200.25})),
 ]
 DOCK_WIDTHS = [(312, 1440), (560, 1440), (560, 1100), (560, 1101), (200, 1440), (313.5, 1440), (400, 400), (1000, 2560)]
 BOTTOM_HEIGHTS = [(190, 900), (600, 900), (600, 650), (50, 900), (400, 651), (190, 150), (5000, 1440)]

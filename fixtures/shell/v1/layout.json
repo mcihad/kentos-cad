@@ -11,20 +11,13 @@
   "bottomExpanded": false,
   "bottomHeight": 190,
   "bottomTab": "history",
-  "toolboxVisible": true,
-  "toolboxDocked": false,
-  "toolboxX": 12,
-  "toolboxY": 12,
-  "toolboxColumns": 3,
-  "toolboxFolded": [],
   "dockTab": "layers",
   "processingTab": "tools",
   "processingFolded": [],
   "ribbonTab": "home",
   "ribbonCollapsed": false,
   "ribbonQuickAccess": [],
-  "ribbonSplits": {},
-  "ribbonToolbox": false
+  "ribbonSplits": {}
  },
  "fields": {
   "theme": {
@@ -63,24 +56,6 @@
     "messages"
    ]
   },
-  "toolboxVisible": {
-   "kind": "boolean"
-  },
-  "toolboxDocked": {
-   "kind": "boolean"
-  },
-  "toolboxX": {
-   "kind": "number"
-  },
-  "toolboxY": {
-   "kind": "number"
-  },
-  "toolboxColumns": {
-   "kind": "columns"
-  },
-  "toolboxFolded": {
-   "kind": "texts"
-  },
   "dockTab": {
    "kind": "enum",
    "values": [
@@ -110,9 +85,6 @@
   },
   "ribbonSplits": {
    "kind": "textMap"
-  },
-  "ribbonToolbox": {
-   "kind": "boolean"
   }
  },
  "limits": {
@@ -145,20 +117,13 @@
     "bottomExpanded": false,
     "bottomHeight": 190,
     "bottomTab": "history",
-    "toolboxVisible": true,
-    "toolboxDocked": false,
-    "toolboxX": 12,
-    "toolboxY": 12,
-    "toolboxColumns": 3,
-    "toolboxFolded": [],
     "dockTab": "layers",
     "processingTab": "tools",
     "processingFolded": [],
     "ribbonTab": "home",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {},
-    "ribbonToolbox": false
+    "ribbonSplits": {}
    }
   },
   {
@@ -172,20 +137,13 @@
     "bottomExpanded": false,
     "bottomHeight": 190,
     "bottomTab": "history",
-    "toolboxVisible": true,
-    "toolboxDocked": false,
-    "toolboxX": 12,
-    "toolboxY": 12,
-    "toolboxColumns": 3,
-    "toolboxFolded": [],
     "dockTab": "layers",
     "processingTab": "tools",
     "processingFolded": [],
     "ribbonTab": "home",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {},
-    "ribbonToolbox": false
+    "ribbonSplits": {}
    }
   },
   {
@@ -199,20 +157,13 @@
     "bottomExpanded": false,
     "bottomHeight": 190,
     "bottomTab": "history",
-    "toolboxVisible": true,
-    "toolboxDocked": false,
-    "toolboxX": 12,
-    "toolboxY": 12,
-    "toolboxColumns": 3,
-    "toolboxFolded": [],
     "dockTab": "layers",
     "processingTab": "tools",
     "processingFolded": [],
     "ribbonTab": "home",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {},
-    "ribbonToolbox": false
+    "ribbonSplits": {}
    }
   },
   {
@@ -226,20 +177,13 @@
     "bottomExpanded": false,
     "bottomHeight": 190,
     "bottomTab": "history",
-    "toolboxVisible": true,
-    "toolboxDocked": false,
-    "toolboxX": 12,
-    "toolboxY": 12,
-    "toolboxColumns": 3,
-    "toolboxFolded": [],
     "dockTab": "layers",
     "processingTab": "tools",
     "processingFolded": [],
     "ribbonTab": "home",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {},
-    "ribbonToolbox": false
+    "ribbonSplits": {}
    }
   },
   {
@@ -253,24 +197,17 @@
     "bottomExpanded": false,
     "bottomHeight": 190,
     "bottomTab": "history",
-    "toolboxVisible": true,
-    "toolboxDocked": false,
-    "toolboxX": 12,
-    "toolboxY": 12,
-    "toolboxColumns": 3,
-    "toolboxFolded": [],
     "dockTab": "layers",
     "processingTab": "tools",
     "processingFolded": [],
     "ribbonTab": "home",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {},
-    "ribbonToolbox": false
+    "ribbonSplits": {}
    }
   },
   {
-   "title": "an empty object: a store from before the titled toolbox groups",
+   "title": "an empty object",
    "stored": "{}",
    "layout": {
     "theme": "dark",
@@ -280,25 +217,18 @@
     "bottomExpanded": false,
     "bottomHeight": 190,
     "bottomTab": "history",
-    "toolboxVisible": true,
-    "toolboxDocked": false,
-    "toolboxX": 12,
-    "toolboxY": 12,
-    "toolboxColumns": 3,
-    "toolboxFolded": [],
     "dockTab": "layers",
     "processingTab": "tools",
     "processingFolded": [],
     "ribbonTab": "home",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {},
-    "ribbonToolbox": false
+    "ribbonSplits": {}
    }
   },
   {
    "title": "every field kept, none a default",
-   "stored": "{\"theme\":\"light\",\"rightVisible\":false,\"dockWidth\":400,\"layersFraction\":0.35,\"bottomExpanded\":true,\"bottomHeight\":260,\"bottomTab\":\"messages\",\"toolboxVisible\":false,\"toolboxDocked\":true,\"toolboxX\":240,\"toolboxY\":80,\"toolboxColumns\":2,\"toolboxFolded\":[\"draw\",\"annotate\"],\"dockTab\":\"processing\",\"processingTab\":\"history\",\"processingFolded\":[\"points\"],\"ribbonTab\":\"draw\",\"ribbonCollapsed\":true,\"ribbonQuickAccess\":[\"view.zoomExtents\",\"tool.line\"],\"ribbonSplits\":{\"circle\":\"tool.circle|3N\",\"rectangle\":\"tool.regularPolygon|\"},\"ribbonToolbox\":true}",
+   "stored": "{\"theme\":\"light\",\"rightVisible\":false,\"dockWidth\":400,\"layersFraction\":0.35,\"bottomExpanded\":true,\"bottomHeight\":260,\"bottomTab\":\"messages\",\"dockTab\":\"processing\",\"processingTab\":\"history\",\"processingFolded\":[\"points\"],\"ribbonTab\":\"draw\",\"ribbonCollapsed\":true,\"ribbonQuickAccess\":[\"view.zoomExtents\",\"tool.line\"],\"ribbonSplits\":{\"circle\":\"tool.circle|3N\",\"rectangle\":\"tool.regularPolygon|\"}}",
    "layout": {
     "theme": "light",
     "rightVisible": false,
@@ -307,15 +237,6 @@
     "bottomExpanded": true,
     "bottomHeight": 260,
     "bottomTab": "messages",
-    "toolboxVisible": false,
-    "toolboxDocked": true,
-    "toolboxX": 240,
-    "toolboxY": 80,
-    "toolboxColumns": 2,
-    "toolboxFolded": [
-     "draw",
-     "annotate"
-    ],
     "dockTab": "processing",
     "processingTab": "history",
     "processingFolded": [
@@ -330,13 +251,12 @@
     "ribbonSplits": {
      "circle": "tool.circle|3N",
      "rectangle": "tool.regularPolygon|"
-    },
-    "ribbonToolbox": true
+    }
    }
   },
   {
    "title": "values of the wrong type are not taken",
-   "stored": "{\"theme\":\"blue\",\"rightVisible\":\"yes\",\"dockWidth\":\"300\",\"bottomTab\":\"log\",\"ribbonTab\":5,\"toolboxFolded\":\"draw\",\"ribbonSplits\":[\"circle\"],\"ribbonQuickAccess\":{\"0\":\"tool.line\"},\"toolboxColumns\":\"2\",\"layersFraction\":null,\"bottomExpanded\":1}",
+   "stored": "{\"theme\":\"blue\",\"rightVisible\":\"yes\",\"dockWidth\":\"300\",\"bottomTab\":\"log\",\"ribbonTab\":5,\"processingFolded\":\"points\",\"ribbonSplits\":[\"circle\"],\"ribbonQuickAccess\":{\"0\":\"tool.line\"},\"layersFraction\":null,\"bottomExpanded\":1}",
    "layout": {
     "theme": "dark",
     "rightVisible": true,
@@ -345,25 +265,18 @@
     "bottomExpanded": false,
     "bottomHeight": 190,
     "bottomTab": "history",
-    "toolboxVisible": true,
-    "toolboxDocked": false,
-    "toolboxX": 12,
-    "toolboxY": 12,
-    "toolboxColumns": 3,
-    "toolboxFolded": [],
     "dockTab": "layers",
     "processingTab": "tools",
     "processingFolded": [],
     "ribbonTab": "home",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {},
-    "ribbonToolbox": false
+    "ribbonSplits": {}
    }
   },
   {
-   "title": "sizes out of their limits are brought within them; the toolbox place and a tall panel wait for the window",
-   "stored": "{\"dockWidth\":100,\"layersFraction\":0.95,\"bottomHeight\":20,\"toolboxX\":-40,\"toolboxY\":5000,\"toolboxFolded\":[]}",
+   "title": "sizes out of their limits are brought within them; a tall panel waits for the window",
+   "stored": "{\"dockWidth\":100,\"layersFraction\":0.95,\"bottomHeight\":20}",
    "layout": {
     "theme": "dark",
     "rightVisible": true,
@@ -372,25 +285,18 @@
     "bottomExpanded": false,
     "bottomHeight": 96,
     "bottomTab": "history",
-    "toolboxVisible": true,
-    "toolboxDocked": false,
-    "toolboxX": -40,
-    "toolboxY": 5000,
-    "toolboxColumns": 3,
-    "toolboxFolded": [],
     "dockTab": "layers",
     "processingTab": "tools",
     "processingFolded": [],
     "ribbonTab": "home",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {},
-    "ribbonToolbox": false
+    "ribbonSplits": {}
    }
   },
   {
    "title": "a size too large, a share too small, a very tall panel",
-   "stored": "{\"dockWidth\":900,\"layersFraction\":0.05,\"bottomHeight\":5000,\"toolboxFolded\":[]}",
+   "stored": "{\"dockWidth\":900,\"layersFraction\":0.05,\"bottomHeight\":5000}",
    "layout": {
     "theme": "dark",
     "rightVisible": true,
@@ -399,25 +305,18 @@
     "bottomExpanded": false,
     "bottomHeight": 5000,
     "bottomTab": "history",
-    "toolboxVisible": true,
-    "toolboxDocked": false,
-    "toolboxX": 12,
-    "toolboxY": 12,
-    "toolboxColumns": 3,
-    "toolboxFolded": [],
     "dockTab": "layers",
     "processingTab": "tools",
     "processingFolded": [],
     "ribbonTab": "home",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {},
-    "ribbonToolbox": false
+    "ribbonSplits": {}
    }
   },
   {
    "title": "a number too large for a double is not finite",
-   "stored": "{\"dockWidth\":1e999,\"bottomHeight\":-1e999,\"toolboxFolded\":[]}",
+   "stored": "{\"dockWidth\":1e999,\"bottomHeight\":-1e999}",
    "layout": {
     "theme": "dark",
     "rightVisible": true,
@@ -426,25 +325,18 @@
     "bottomExpanded": false,
     "bottomHeight": 190,
     "bottomTab": "history",
-    "toolboxVisible": true,
-    "toolboxDocked": false,
-    "toolboxX": 12,
-    "toolboxY": 12,
-    "toolboxColumns": 3,
-    "toolboxFolded": [],
     "dockTab": "layers",
     "processingTab": "tools",
     "processingFolded": [],
     "ribbonTab": "home",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {},
-    "ribbonToolbox": false
+    "ribbonSplits": {}
    }
   },
   {
    "title": "lists keep their texts, maps their text values",
-   "stored": "{\"toolboxFolded\":[\"draw\",3,null,\"edit\",true],\"processingFolded\":[{\"id\":\"x\"},\"points\"],\"ribbonQuickAccess\":[\"tool.line\",[\"tool.arc\"]],\"ribbonSplits\":{\"circle\":\"tool.circle|2N\",\"rectangle\":5,\"arc\":null}}",
+   "stored": "{\"processingFolded\":[{\"id\":\"x\"},\"points\",3,null,\"tables\",true],\"ribbonQuickAccess\":[\"tool.line\",[\"tool.arc\"]],\"ribbonSplits\":{\"circle\":\"tool.circle|2N\",\"rectangle\":5,\"arc\":null}}",
    "layout": {
     "theme": "dark",
     "rightVisible": true,
@@ -453,19 +345,11 @@
     "bottomExpanded": false,
     "bottomHeight": 190,
     "bottomTab": "history",
-    "toolboxVisible": true,
-    "toolboxDocked": false,
-    "toolboxX": 12,
-    "toolboxY": 12,
-    "toolboxColumns": 3,
-    "toolboxFolded": [
-     "draw",
-     "edit"
-    ],
     "dockTab": "layers",
     "processingTab": "tools",
     "processingFolded": [
-     "points"
+     "points",
+     "tables"
     ],
     "ribbonTab": "home",
     "ribbonCollapsed": false,
@@ -474,13 +358,12 @@
     ],
     "ribbonSplits": {
      "circle": "tool.circle|2N"
-    },
-    "ribbonToolbox": false
+    }
    }
   },
   {
    "title": "the Bloklar tab in front is kept (docs/adr/0144)",
-   "stored": "{\"dockTab\":\"blocks\",\"toolboxFolded\":[]}",
+   "stored": "{\"dockTab\":\"blocks\"}",
    "layout": {
     "theme": "dark",
     "rightVisible": true,
@@ -489,25 +372,18 @@
     "bottomExpanded": false,
     "bottomHeight": 190,
     "bottomTab": "history",
-    "toolboxVisible": true,
-    "toolboxDocked": false,
-    "toolboxX": 12,
-    "toolboxY": 12,
-    "toolboxColumns": 3,
-    "toolboxFolded": [],
     "dockTab": "blocks",
     "processingTab": "tools",
     "processingFolded": [],
     "ribbonTab": "home",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {},
-    "ribbonToolbox": false
+    "ribbonSplits": {}
    }
   },
   {
    "title": "a dock tab the dock does not have is not taken",
-   "stored": "{\"dockTab\":\"styles\",\"toolboxFolded\":[]}",
+   "stored": "{\"dockTab\":\"styles\"}",
    "layout": {
     "theme": "dark",
     "rightVisible": true,
@@ -516,133 +392,18 @@
     "bottomExpanded": false,
     "bottomHeight": 190,
     "bottomTab": "history",
-    "toolboxVisible": true,
-    "toolboxDocked": false,
-    "toolboxX": 12,
-    "toolboxY": 12,
-    "toolboxColumns": 3,
-    "toolboxFolded": [],
     "dockTab": "layers",
     "processingTab": "tools",
     "processingFolded": [],
     "ribbonTab": "home",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {},
-    "ribbonToolbox": false
-   }
-  },
-  {
-   "title": "three columns stay three, any other number is two",
-   "stored": "{\"toolboxColumns\":4,\"toolboxFolded\":[]}",
-   "layout": {
-    "theme": "dark",
-    "rightVisible": true,
-    "dockWidth": 312,
-    "layersFraction": 0.5,
-    "bottomExpanded": false,
-    "bottomHeight": 190,
-    "bottomTab": "history",
-    "toolboxVisible": true,
-    "toolboxDocked": false,
-    "toolboxX": 12,
-    "toolboxY": 12,
-    "toolboxColumns": 2,
-    "toolboxFolded": [],
-    "dockTab": "layers",
-    "processingTab": "tools",
-    "processingFolded": [],
-    "ribbonTab": "home",
-    "ribbonCollapsed": false,
-    "ribbonQuickAccess": [],
-    "ribbonSplits": {},
-    "ribbonToolbox": false
-   }
-  },
-  {
-   "title": "a column count that is not whole is two",
-   "stored": "{\"toolboxColumns\":2.5,\"toolboxFolded\":[]}",
-   "layout": {
-    "theme": "dark",
-    "rightVisible": true,
-    "dockWidth": 312,
-    "layersFraction": 0.5,
-    "bottomExpanded": false,
-    "bottomHeight": 190,
-    "bottomTab": "history",
-    "toolboxVisible": true,
-    "toolboxDocked": false,
-    "toolboxX": 12,
-    "toolboxY": 12,
-    "toolboxColumns": 2,
-    "toolboxFolded": [],
-    "dockTab": "layers",
-    "processingTab": "tools",
-    "processingFolded": [],
-    "ribbonTab": "home",
-    "ribbonCollapsed": false,
-    "ribbonQuickAccess": [],
-    "ribbonSplits": {},
-    "ribbonToolbox": false
-   }
-  },
-  {
-   "title": "before the titled toolbox groups: two columns become three",
-   "stored": "{\"toolboxColumns\":2,\"theme\":\"light\"}",
-   "layout": {
-    "theme": "light",
-    "rightVisible": true,
-    "dockWidth": 312,
-    "layersFraction": 0.5,
-    "bottomExpanded": false,
-    "bottomHeight": 190,
-    "bottomTab": "history",
-    "toolboxVisible": true,
-    "toolboxDocked": false,
-    "toolboxX": 12,
-    "toolboxY": 12,
-    "toolboxColumns": 3,
-    "toolboxFolded": [],
-    "dockTab": "layers",
-    "processingTab": "tools",
-    "processingFolded": [],
-    "ribbonTab": "home",
-    "ribbonCollapsed": false,
-    "ribbonQuickAccess": [],
-    "ribbonSplits": {},
-    "ribbonToolbox": false
-   }
-  },
-  {
-   "title": "with the titled groups, two columns stay two",
-   "stored": "{\"toolboxColumns\":2,\"toolboxFolded\":[]}",
-   "layout": {
-    "theme": "dark",
-    "rightVisible": true,
-    "dockWidth": 312,
-    "layersFraction": 0.5,
-    "bottomExpanded": false,
-    "bottomHeight": 190,
-    "bottomTab": "history",
-    "toolboxVisible": true,
-    "toolboxDocked": false,
-    "toolboxX": 12,
-    "toolboxY": 12,
-    "toolboxColumns": 2,
-    "toolboxFolded": [],
-    "dockTab": "layers",
-    "processingTab": "tools",
-    "processingFolded": [],
-    "ribbonTab": "home",
-    "ribbonCollapsed": false,
-    "ribbonQuickAccess": [],
-    "ribbonSplits": {},
-    "ribbonToolbox": false
+    "ribbonSplits": {}
    }
   },
   {
    "title": "fields the layout does not know are dropped",
-   "stored": "{\"theme\":\"light\",\"toolboxFolded\":[],\"oldPanel\":true,\"ribbonTabs\":[\"home\"]}",
+   "stored": "{\"theme\":\"light\",\"oldPanel\":true,\"ribbonTabs\":[\"home\"]}",
    "layout": {
     "theme": "light",
     "rightVisible": true,
@@ -651,25 +412,38 @@
     "bottomExpanded": false,
     "bottomHeight": 190,
     "bottomTab": "history",
-    "toolboxVisible": true,
-    "toolboxDocked": false,
-    "toolboxX": 12,
-    "toolboxY": 12,
-    "toolboxColumns": 3,
-    "toolboxFolded": [],
     "dockTab": "layers",
     "processingTab": "tools",
     "processingFolded": [],
     "ribbonTab": "home",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {},
-    "ribbonToolbox": false
+    "ribbonSplits": {}
+   }
+  },
+  {
+   "title": "the toolbox of the classic shell is no longer kept: its fields are dropped (docs/adr/0155)",
+   "stored": "{\"theme\":\"light\",\"toolboxVisible\":false,\"toolboxDocked\":true,\"toolboxX\":240,\"toolboxY\":80,\"toolboxColumns\":2,\"toolboxFolded\":[\"draw\"],\"ribbonToolbox\":true,\"ribbonTab\":\"draw\"}",
+   "layout": {
+    "theme": "light",
+    "rightVisible": true,
+    "dockWidth": 312,
+    "layersFraction": 0.5,
+    "bottomExpanded": false,
+    "bottomHeight": 190,
+    "bottomTab": "history",
+    "dockTab": "layers",
+    "processingTab": "tools",
+    "processingFolded": [],
+    "ribbonTab": "draw",
+    "ribbonCollapsed": false,
+    "ribbonQuickAccess": [],
+    "ribbonSplits": {}
    }
   },
   {
    "title": "a fraction and sizes that are not whole are kept as they are",
-   "stored": "{\"layersFraction\":0.333,\"dockWidth\":313.5,\"bottomHeight\":200.25,\"toolboxFolded\":[]}",
+   "stored": "{\"layersFraction\":0.333,\"dockWidth\":313.5,\"bottomHeight\":200.25}",
    "layout": {
     "theme": "dark",
     "rightVisible": true,
@@ -678,20 +452,13 @@
     "bottomExpanded": false,
     "bottomHeight": 200.25,
     "bottomTab": "history",
-    "toolboxVisible": true,
-    "toolboxDocked": false,
-    "toolboxX": 12,
-    "toolboxY": 12,
-    "toolboxColumns": 3,
-    "toolboxFolded": [],
     "dockTab": "layers",
     "processingTab": "tools",
     "processingFolded": [],
     "ribbonTab": "home",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {},
-    "ribbonToolbox": false
+    "ribbonSplits": {}
    }
   }
  ],

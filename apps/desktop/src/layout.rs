@@ -10,8 +10,7 @@
 //! put on its quick access bar and each split button's choice. A kept size
 //! is the user's wish: the window shows it within what it allows now, and a
 //! narrower window does not change what is kept. The fields the desktop has
-//! no part for (the classic toolbox, the theme, a setting here) are written
-//! back as read.
+//! no part for (the theme, a setting here) are written back as read.
 //! A file that cannot be written is passed over, as the web's storage.
 
 use std::path::{Path, PathBuf};

@@ -835,13 +835,14 @@ mod tests {
 
     /// A web settings file: its values the desktop has are taken, the look
     /// too (docs/adr/0126; an older one's five text sizes as pixels); its own
-    /// (the classic interface) are said by name, not dropped in silence
-    /// (docs/inventory/parity-audit.md A1).
+    /// (the drawing engine) are said by name, not dropped in silence
+    /// (docs/inventory/parity-audit.md A1); a retired one (the classic
+    /// shell's, docs/adr/0155) is dropped without a word.
     #[test]
     fn a_web_settings_file_says_what_has_no_place_here() {
         let (mut app, _) = App::boot(None);
         let _ = app.run("tools.options");
-        let body = r#"{"format":"kentos.settings","version":1,"user":{"drafting.snapAperture":16,"appearance.accent":"teal","appearance.uiFont":"inter","appearance.uiScale":"large","appearance.shell":"ribbon"}}"#;
+        let body = r#"{"format":"kentos.settings","version":1,"user":{"drafting.snapAperture":16,"appearance.accent":"teal","appearance.uiFont":"inter","appearance.uiScale":"large","appearance.shell":"ribbon"},"device":{"graphics.backend":"webgpu"}}"#;
         edit(
             &mut app,
             Edit::Imported(Some(Ok((
@@ -865,7 +866,7 @@ mod tests {
         assert!(!warn, "nothing invalid");
         assert_eq!(
             note,
-            "“kentos-ayarlar.json” okundu. Değerleri pencerede; Kaydet ile uygulanır. Web uygulamasına özgü 1 değerin masaüstünde karşılığı yok, alınmadı: Arayüz düzeni."
+            "“kentos-ayarlar.json” okundu. Değerleri pencerede; Kaydet ile uygulanır. Web uygulamasına özgü 1 değerin masaüstünde karşılığı yok, alınmadı: Çizim arka ucu."
         );
     }
 

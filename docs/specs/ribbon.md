@@ -129,7 +129,7 @@ Bir araç ailesi (Dikdörtgen, Döndürülmüş dikdörtgen, Düzgün çokgen) y
 
 ## 5. Ne ne zaman saklanır
 
-Hepsi yerleşimdedir (web'de `kentos.ui.v1`). Web'in şerit arayüzünde kayan araç kutusunu da açıp kapatabilirsiniz (`ribbonToolbox`, `view.toolbox`); bu web'e özgüdür, şeridin kendisini etkilemez. Masaüstünde klasik arayüz ve kayan araç kutusu yoktur (sahibin kararı, 27 Eylül). Son değişiklikten 250 ms sonra bütün alanlar birlikte yazılır ([`layout.json`](../../fixtures/shell/v1/layout.json)).
+Hepsi yerleşimdedir (web'de `kentos.ui.v1`). İki platformda da şerit tek arayüzdür; klasik arayüz ve kayan araç kutusu yoktur (sahibin kararları, 27 Eylül ve 2 Ekim; [ADR 0155](../adr/0155-web-ribbon-only.md)). Son değişiklikten 250 ms sonra bütün alanlar birlikte yazılır ([`layout.json`](../../fixtures/shell/v1/layout.json)).
 
 | Alan | Ne zaman değişir |
 |---|---|

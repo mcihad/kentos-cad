@@ -4,8 +4,8 @@ import type { ReadonlySignal } from './signal';
 import { foldTurkish } from './text';
 
 /**
- * Everything the user can trigger — from a menu, toolbar, shortcut or the
- * command line — is a Command. UI never calls features directly.
+ * Everything the user can trigger — from the ribbon, a menu, a shortcut or
+ * the command line — is a Command. UI never calls features directly.
  */
 export interface Command {
   id: string;

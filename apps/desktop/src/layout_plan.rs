@@ -2,8 +2,9 @@
 //! and the ribbon's parts of app/ribbon.ts; docs/adr/0115): which panels are
 //! open, their sizes, the dock's and the ribbon's states. What is kept, its
 //! defaults, how a stored value is read (a value of the wrong type or out
-//! of its domain is not taken), the one migration, and the sizes as shown:
-//! a kept size is the user's wish, shown within what the window allows.
+//! of its domain is not taken; a field no longer kept, the web's toolbox's,
+//! is dropped: docs/adr/0155), and the sizes as shown: a kept size is the
+//! user's wish, shown within what the window allows.
 //! fixtures/shell/v1/layout.json holds every answer; both platforms play it
 //! (`layout_plan_tests.rs`). The web keeps it in localStorage `kentos.ui.v1`,
 //! the desktop in its own file with the same rules (layout.rs).
@@ -28,12 +29,6 @@ pub(crate) fn defaults() -> Map<String, Value> {
         "bottomExpanded": false,
         "bottomHeight": 190,
         "bottomTab": "history",
-        "toolboxVisible": true,
-        "toolboxDocked": false,
-        "toolboxX": 12,
-        "toolboxY": 12,
-        "toolboxColumns": 3,
-        "toolboxFolded": [],
         "dockTab": "layers",
         "processingTab": "tools",
         "processingFolded": [],
@@ -41,7 +36,6 @@ pub(crate) fn defaults() -> Map<String, Value> {
         "ribbonCollapsed": false,
         "ribbonQuickAccess": [],
         "ribbonSplits": {},
-        "ribbonToolbox": false,
     }) else {
         unreachable!("an object")
     };
@@ -94,8 +88,6 @@ pub(crate) enum Rule {
         min: Option<f64>,
         max: Option<f64>,
     },
-    /// A number: 3 is three columns, any other two.
-    Columns,
     Text,
     /// A list: its texts are kept, anything else in it dropped.
     Texts,
@@ -104,7 +96,7 @@ pub(crate) enum Rule {
 }
 
 /// Every field's rule, in the web's order.
-pub(crate) const FIELDS: [(&str, Rule); 21] = [
+pub(crate) const FIELDS: [(&str, Rule); 14] = [
     ("theme", Rule::Enum(&["dark", "light"])),
     ("rightVisible", Rule::Boolean),
     (
@@ -133,24 +125,6 @@ pub(crate) const FIELDS: [(&str, Rule); 21] = [
         "bottomTab",
         Rule::Enum(&["history", "coords", "points", "messages"]),
     ),
-    ("toolboxVisible", Rule::Boolean),
-    ("toolboxDocked", Rule::Boolean),
-    (
-        "toolboxX",
-        Rule::Number {
-            min: None,
-            max: None,
-        },
-    ),
-    (
-        "toolboxY",
-        Rule::Number {
-            min: None,
-            max: None,
-        },
-    ),
-    ("toolboxColumns", Rule::Columns),
-    ("toolboxFolded", Rule::Texts),
     ("dockTab", Rule::Enum(&["layers", "processing", "blocks"])),
     ("processingTab", Rule::Enum(&["tools", "history"])),
     ("processingFolded", Rule::Texts),
@@ -158,16 +132,12 @@ pub(crate) const FIELDS: [(&str, Rule); 21] = [
     ("ribbonCollapsed", Rule::Boolean),
     ("ribbonQuickAccess", Rule::Texts),
     ("ribbonSplits", Rule::TextMap),
-    ("ribbonToolbox", Rule::Boolean),
 ];
 
 /// A stored value read by its field's rule; `None` when it cannot be taken.
 fn read_field(rule: Rule, v: &Value) -> Option<Value> {
     match rule {
-        Rule::Enum(values) => v
-            .as_str()
-            .filter(|s| values.contains(s))
-            .map(Value::from),
+        Rule::Enum(values) => v.as_str().filter(|s| values.contains(s)).map(Value::from),
         Rule::Boolean => v.as_bool().map(Value::from),
         Rule::Number { min, max } => {
             let n = v.as_f64().filter(|n| n.is_finite())?;
@@ -175,10 +145,6 @@ fn read_field(rule: Rule, v: &Value) -> Option<Value> {
                 .max(min.unwrap_or(f64::NEG_INFINITY))
                 .min(max.unwrap_or(f64::INFINITY));
             Some(number(n))
-        }
-        Rule::Columns => {
-            let n = v.as_f64().filter(|n| n.is_finite())?;
-            Some(Value::from(if n == 3.0 { 3 } else { 2 }))
         }
         Rule::Text => v.as_str().map(Value::from),
         Rule::Texts => v
@@ -207,9 +173,7 @@ pub(crate) fn number(n: f64) -> Value {
 /// The layout from what was stored (`None`: nothing): every field the store
 /// holds and its rule takes; the default for the rest, and for everything
 /// when the text is not a JSON object. Fields the layout does not know are
-/// dropped. Migration: a layout stored before the toolbox had titled groups
-/// (no `toolboxFolded`) used one or two columns; the grouped toolbox is laid
-/// out for three.
+/// dropped: the web's toolbox's among them (docs/adr/0155).
 pub(crate) fn read_layout(text: Option<&str>) -> Map<String, Value> {
     let stored = text.and_then(|t| serde_json::from_str::<Value>(&finite_numbers(t)).ok());
     let mut out = defaults();
@@ -220,9 +184,6 @@ pub(crate) fn read_layout(text: Option<&str>) -> Map<String, Value> {
         if let Some(v) = saved.get(key).and_then(|v| read_field(rule, v)) {
             out.insert(key.to_owned(), v);
         }
-    }
-    if !saved.contains_key("toolboxFolded") {
-        out.insert("toolboxColumns".to_owned(), Value::from(3));
     }
     out
 }

@@ -42,9 +42,9 @@ class TabView {
 }
 
 /**
- * The ribbon (Şerit): tabs of panels in place of the menu bar, toolbar and
- * toolbox. Its content is derived (app/ribbon.ts) from the menu model and
- * the tool catalog, so it always offers what the classic shell offers.
+ * The ribbon (Şerit): tabs of panels, the web's only chrome as the desktop's
+ * (docs/adr/0155). Its content is derived (app/ribbon.ts) from the menu model
+ * and the tool catalog, so a new tool or command appears in it by itself.
  *
  * It adapts: panels shrink step by step to the window (large buttons, then
  * small, then icons, then one button per panel); a contextual “Seçim” tab
@@ -96,7 +96,7 @@ export class Ribbon extends Component {
       afterRun: () => this.afterRun(),
     });
     const docName = h('span', { class: 'ribbon__doc-name' });
-    const dirty = h('span', { class: 'menubar__dirty', title: 'Kaydedilmemiş değişiklikler var' });
+    const dirty = h('span', { class: 'ribbon__dirty', title: 'Kaydedilmemiş değişiklikler var' });
     const crs = h('button', { class: 'ribbon__crs', type: 'button' }, icon('crs', 14), h('span', { class: 'ribbon__crs-name' }));
     const help = h('button', { class: 'ribbon__icon', type: 'button', 'aria-label': 'Yardım', 'aria-haspopup': 'menu' }, icon('help', 16));
     const fold = h('button', { class: 'ribbon__icon', type: 'button', 'aria-label': RIBBON_TEXTS.fold }, icon('chevronUp', 16));
@@ -123,7 +123,7 @@ export class Ribbon extends Component {
     this.d.add(() => this.qatD.dispose());
     this.select(startTab(ui.ribbonTab.value, this.tabs), { focus: false });
 
-    // Document name, unsaved dot and the project's coordinate system, as in the menu bar.
+    // Document name, unsaved dot and the project's coordinate system.
     this.d.add(ctx.doc.name.subscribe((n) => (docName.textContent = n), true));
     this.d.add(ctx.doc.dirty.subscribe((v) => dirty.toggleAttribute('hidden', !v), true));
     this.d.add(ctx.doc.crs.subscribe((c) => (crs.querySelector('.ribbon__crs-name')!.textContent = c.name), true));

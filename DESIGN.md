@@ -12,7 +12,7 @@ olduğunu ve nasıl kullanılacağını anlatır.
 1. **Çizim alanı önce gelir.** Arayüz sakin, yoğun ve geri planda kalır. Göz, pafta üzerindeki veride durmalıdır.
 2. **Tek vurgu, tek anlam.** Vurgu rengi yalnızca şunları işaretler: etkin araç, seçim, odak, birincil eylem ve "değişecek" durumu. Başka hiçbir şey vurgu renginde değildir. Vurgu rengini kullanıcı seçer (§3.5; varsayılan **lacivert**); bu belgede geçen “amber” sözü vurgu rengi demektir.
 3. **Sahanın dili.** Terimler, birimler ve işaretler harita mühendisinin kullandığı gibidir: Y sağa ve X yukarı, semt (grad), ada ve parsel, pafta, kot, poligon noktası, "K" kuzey oku.
-4. **Klavye birinci sınıftır.** Her araç ve komutun kısayolu vardır ve görünür durumdadır (araç kutusundaki tuş etiketi, ipucu, menü, F1 listesi).
+4. **Klavye birinci sınıftır.** Her araç ve komutun kısayolu vardır ve görünür durumdadır (şeridin ve komut aramanın ipucu, menü, F1 listesi).
 5. **Dürüst arayüz.** Yapılmamış özellik "geliştirme aşamasında" yazar. Koordinat dönüştürülmüyorsa bunu açıkça söyler. Sessiz başarısızlık yoktur.
 6. **Masaüstü iş istasyonu.** Uzun oturumlar için tasarlanır: yüksek bilgi yoğunluğu, düşük göz yorgunluğu, sabit yerleşim. Mobil hedeflenmez.
 
@@ -23,7 +23,7 @@ olduğunu ve nasıl kullanılacağını anlatır.
 | Öğe | Kural |
 |---|---|
 | Ürün adı | **KentOS CAD** (sayfa başlığı, Hakkında penceresi) |
-| Menü çubuğundaki yazı | **KentOS** (arayüz yazı tipi, 700, `--fs-md`, marka laciverti `--c-brand-text`; “OS” 500) ve ▾ |
+| Sekme satırındaki yazı | **KentOS** (arayüz yazı tipi, 700, `--fs-md`, marka laciverti `--c-brand-text`; “OS” 500) ve ▾ |
 | Logo | **Lacivert karo üstünde K.** 22×22 yuvarlak köşeli karo (r 6), açık maviden (`--c-brand-hi`) laciverte (`--c-brand`) çapraz geçişli, içte ince açık çizgi; üstünde beyaz (`--c-brand-ink`) K: dikey gövde ve kollar, birleştikleri yerde bir ölçme noktası (dolu daire) bulunur. 20×20 ızgara, 2,1 px çizgi, yuvarlak uçlar. |
 | Favicon | `public/favicon.svg`: `#1E252E` zemin üstünde aynı K |
 
@@ -48,9 +48,9 @@ derindir. Yakın siyah değildir, belirgin biçimde mavi-gridir.
 
 | Jeton | Değer | Rol |
 |---|---|---|
-| `--c-menubar` | `#181e26` | Menü çubuğu, durum çubuğu (en koyu kabuk) |
-| `--c-toolbar` | `#1e252e` | Araç çubuğu |
-| `--c-panel` | `#212932` | Paneller, araç kutusu, pencereler |
+| `--c-menubar` | `#181e26` | Şeridin sekme satırı, durum çubuğu (en koyu kabuk) |
+| `--c-toolbar` | `#1e252e` | Şeridin panelleri |
+| `--c-panel` | `#212932` | Paneller, pencereler |
 | `--c-panel-head` | `#252e38` | Panel başlıkları, alt çubuklar, ayar menüsü |
 | `--c-popover` | `#27303b` | Açılır menüler, öneri listesi |
 | `--c-field` | `#171c23` | Giriş alanları, komut satırı, liste zeminleri |
@@ -85,7 +85,7 @@ Serin, kâğıt paftayı andıran griler. Krem ya da sıcak kâğıt tonu kullan
 
 - **Dolu amber** (`--c-accent`) yalnızca üç yerde: etkin araç düğmesi, birincil düğme (Kaydet) ve açık switch.
 - **Kırmızı** (`--c-danger`) arayüzde hata metni ve simgesi, çizim alanında yalnızca budama önizlemesinde "silinecek parça" içindir.
-- **Yumuşak amber** (`--c-accent-soft`) seçili liste satırı, basılı araç çubuğu düğmesi ve menü vurgusudur.
+- **Yumuşak amber** (`--c-accent-soft`) seçili liste satırı, şeritte açık anahtar düğme ve menü vurgusudur.
 - **Amber çizgi** (`--c-accent-line`) odak ve "değişecek" kenarlığıdır.
 - **Amber metin** için her zaman `--c-accent-text` kullanılır, `--c-accent` değil; açık temada fark vardır.
 - Uyarı rengi (`--c-warn`) amber'e yakındır. Bu yüzden uyarılar her zaman ⚠ simgesiyle birlikte gelir; renk tek başına anlam taşımaz.
@@ -165,24 +165,20 @@ Bütün boyutlar `--ui-scale` ile çarpılır. **Uygulama ayarları → Görün�
 
 ### 5.1 Kabuk
 
-```
-┌ Menü çubuğu (32) ─ K KentOS  Dosya Düzen Görünüm Çizim Değiştir Harita Koordinat Analiz İşlemler Araçlar Yardım ─ proje adı ─ TUREF / TM36 ┐
-├ Araç çubuğu (44) ─ dosya │ geçmiş │ görünüm │ [■ Katman ▾] [Renk ▾] [Tip ▾] [Kalınlık ▾] ······ [Ölçek 1:1000 ▾] │ paneller ┤
-│ ┌──┐                                                                           K │ Katmanlar (ağaç)                   │
-│ │  │ kayan araç kutusu                                                        ↑  │ [Katmanlar | İşlemler] sekmeleri    │
-│ │  │                    Çizim alanı (WebGL2 + 2B üst katman)                     ├──────────── ayırıcı ────────────────┤
-│ └──┘                                                               0 ─── 50 m   │ Öznitelikler                       │
-├ [alt panel: Komut geçmişi | Koordinat listesi | Uyarılar] (F2, isteğe bağlı)    │                                     │
-├ Komut satırı (36) ─ İstem: [girdi……]                                          ⌃ │                                     │
-├ Durum çubuğu (28) ─ Y … X … │ mesaj │ n seçili │ ▪Kenet ▪Izgara ▫Orto ▫Kutupsal │ Ekran 1:2.470 │ TUREF / TM36 │ ● Buluta kaydedildi │ ○ Sunucu: yok │ WebGL2  ┤
-```
-
-**Şerit düzeni** (Uygulama ayarları → Görünüm → Arayüz düzeni: Şerit): menü çubuğu, araç çubuğu ve araç kutusunun yerini tek bir şerit alır; gövde aynı kalır. **Masaüstünde yalnız şerit düzeni vardır** (sahibin kararı, 27 Eylül); klasik düzen web'dedir.
+İki platformda da tek kabuk şerittir ([ADR 0155](docs/adr/0155-web-ribbon-only.md); masaüstünde 27 Eylül'den, web'de 2 Ekim'den beri, sahibin kararları). Menü çubuğu, araç çubuğu ve kayan araç kutusu yoktur.
 
 ```
 ┌ Sekme satırı (32) ─ K KentOS [💾 ↶ ↷ ▾] │ Dosya  Giriş  Çizim  Değiştir  Harita  Görünüm  İşlemler  Araçlar  [Seçim 3] ─ proje adı ─ [⌕ Komut ara… Alt+Q] TUREF / TM36 ? ⌃ ┐
 ├ Paneller (96) ─ [Yapıştır│kes kopyala …] │ [seç, tümünü seç …] │ [Çizgi Çoklu çizgi│kapalı alan daire …] │ … │ [■ Katman ▾]│[Renk ▾ Tip ▾ Kalınlık ▾] ┤
 │                                       Pano          Seçim                     Çizim ↘                         Katmanlar ↘   Özellikler ↘                  │
+├──────────────────────────────────────────────────────────────────────────────────┬──────────────────────────────────────┤
+│                                                                               K │ Katmanlar (ağaç)                   │
+│                                                                               ↑  │ [Katmanlar | İşlemler] sekmeleri    │
+│                         Çizim alanı (WebGL2 + 2B üst katman)                     ├──────────── ayırıcı ────────────────┤
+│                                                                   0 ─── 50 m   │ Öznitelikler                       │
+├ [alt panel: Komut geçmişi | Koordinat listesi | Noktalar | Uyarılar] (F2)       │                                     │
+├ Komut satırı (36) ─ İstem: [girdi……]                                          ⌃ │                                     │
+├ Durum çubuğu (28) ─ Y … X … │ mesaj │ n seçili │ ▪Kenet ▪Izgara ▫Orto ▫Kutupsal │ Ekran 1:2.470 │ TUREF / TM36 │ ● Buluta kaydedildi │ ○ Sunucu: yok │ WebGL2  ┤
 ```
 
 - En küçük kabuk boyutu 1100×600 px. Daha küçük pencerede sayfa kayar, yerleşim bozulmaz.
@@ -193,8 +189,7 @@ Bütün boyutlar `--ui-scale` ile çarpılır. **Uygulama ayarları → Görün�
 
 | Jeton | Değer | Öğe |
 |---|---|---|
-| `--menubar-h` | 32 | Menü çubuğu |
-| `--toolbar-h` | 44 | Araç çubuğu |
+| `--menubar-h` | 32 | Şeridin sekme satırı |
 | `--ribbon-h` | 96 | Şeridin panelleri (sekme satırı `--menubar-h`) |
 | `--status-h` | 28 | Durum çubuğu |
 | `--cmd-h` | 36 | Komut satırı |
@@ -208,7 +203,6 @@ Bütün boyutlar `--ui-scale` ile çarpılır. **Uygulama ayarları → Görün�
 | `--r-xs` | 2 | Renk örneği |
 | `--r-sm` | 4 | Düğme, alan, açılır liste |
 | `--r-md` | 6 | Menü, not kutusu, kart |
-| 8 px | | Kayan araç kutusu |
 | `--r-lg` | 10 | Pencereler, tema kartı |
 
 Dok içine yerleşik paneller köşesizdir (0).
@@ -217,7 +211,7 @@ Dok içine yerleşik paneller köşesizdir (0).
 
 ### 5.4 Gölge
 
-Yalnızca **yüzen** öğeler gölge alır: araç kutusu (`--shadow-float`); menü, ipucu ve pencere (`--shadow-pop`). Paneller ve kartlar gölgesizdir; ayrım kenarlıkla yapılır. **Görünüm → Biçim → Gölgeler** (`appearance.shadows`): Kapalı, Hafif (varsayılan), Belirgin; yerleşik paneller her seçenekte düzdür.
+Yalnızca **yüzen** öğeler gölge alır: komut şeridi, imleç yanındaki değer girişi ve şeridin harf ipuçları (`--shadow-float`); menü, ipucu ve pencere (`--shadow-pop`). Paneller ve kartlar gölgesizdir; ayrım kenarlıkla yapılır. **Görünüm → Biçim → Gölgeler** (`appearance.shadows`): Kapalı, Hafif (varsayılan), Belirgin; yerleşik paneller her seçenekte düzdür.
 
 Tek istisna şeridin gölgesidir (§7.3.1): şeridin altında yalnız çizim alanına düşen hafif bir gölge (`--shadow-bar`) şeridi çizimin üstünde duran bir yüzey gibi ayırır. Yandaki paneller şeritle aynı düzlemdedir, gölge almaz. Koyu temada gölge daha yoğundur, çünkü koyu zeminde az görünür.
 
@@ -229,7 +223,7 @@ Tek istisna şeridin gölgesidir (§7.3.1): şeridin altında yalnız çizim ala
 - **Tutamaçlar:** çizim aracı simgelerinde tıklamaların düştüğü noktalar 3×3 px dolu karelerle gösterilir (çizgi: iki uç; dikdörtgen: iki karşı köşe). Bu, aracın nasıl kullanıldığını anlatır.
 - Harita araçlarının kendi simgeleri vardır: parsel (köşe taşlı çokgen), ifraz (kesikli bölme), aplikasyon (jalon ve sehpa), kot (üçgen ve taban), mesafe (cetvel), alan (kesikli çerçeve ve dolgu).
 - Her ölçü türünün kendi simgesi vardır: ölçülen şey kalın çizgi, ölçü ve uzatma çizgileri ince (1,1) ve açık uçlu oklu, değer kısa bir çubuk. Hizalı (eğik kenara paralel ölçü), Doğrusal (eğik kenar, yatay ölçü), Açı (iki kol, aralarında yay), Yarıçap (merkezden çembere tek ok), Çap (merkezden geçen, iki oklu), Koordinat (noktadan yukarı Y, sola X), Yay uzunluğu (yay, çevresinde ölçü yayı ve ⌒ işareti), Kırıklı yarıçap (kırıklı çizgi, büyük yay), Semt (kuzey oku, kenar, saat yönünde yay), Eğim (eğik zemin, iniş oku, %), Zincir, Baz ve Hızlı ölçü.
-- Boyutlar: araç kutusu 20, araç çubuğu 18, menü ve panel 16, ağaç satırı 15, küçük düğmeler 14. Şeritte büyük düğme 28 (çizgi kalınlığı büyümez: `vector-effect: non-scaling-stroke`, 1,55 px), küçük düğme 16.
+- Boyutlar: menü ve panel 16, ağaç satırı 15, küçük düğmeler 14. Şeritte büyük düğme 28 (çizgi kalınlığı büyümez: `vector-effect: non-scaling-stroke`, 1,55 px), küçük düğme 16.
 - Yeni simge `ui/icons.ts`'e eklenir ve mevcut ağırlığa uyar. Dış simge kütüphanesi kullanılmaz.
 
 ---
@@ -238,13 +232,11 @@ Tek istisna şeridin gölgesidir (§7.3.1): şeridin altında yalnız çizim ala
 
 ### 7.1 Menü çubuğu
 
-- **Solda:** logo, KentOS ve menüler. **Ortada:** proje adı; kaydedilmemiş değişiklik varsa önünde amber nokta. **Sağda:** koordinat sistemi düğmesi (tıklayınca Proje ayarları → Koordinat sistemi) ve **Tam ekran** düğmesi (dört köşe dışa; tam ekrandayken içe, Esc de çıkar). Şeritte aynı düğme Yardım'ın solundadır; komut Görünüm → Paneller'dedir (`view.fullscreen`).
-- Menü tıklayınca açılır. Açıkken fare başka bir menünün üstüne gelince o menüye geçer. ←/→ menüler arasında gezer, Esc kapatır.
-- **Pencere daralınca** proje adı önce kendiliğinden kısalır. Menüler yine sığmazsa (büyük yazı boyutunda) çubuk adım adım yer açar: önce “KentOS” yazısı, sonra koordinat sisteminin adı (düğmesi ve ipucu kalır), en sonda menülerin iç boşluğu. 1100 px'te, En büyük yazıda da her menü görünür.
+Kaldırıldı (2 Ekim, [ADR 0155](docs/adr/0155-web-ribbon-only.md)): menüler şeridin sekmeleridir; proje adı, kaydedilmemiş noktası, koordinat sistemi düğmesi ve **Tam ekran** düğmesi şeridin sekme satırındadır (§7.3.1).
 
 ### 7.1.1 Uygulama menüsü
 
-KentOS logosuna (klasik arayüzde menü çubuğunda, şeritte sekme satırında) tıklayınca açılır; AutoCAD'in uygulama menüsünün karşılığıdır (`ui/appmenu/AppMenu.ts`, ilk kullanımda yüklenir).
+Şeridin sekme satırındaki KentOS logosuna tıklayınca açılır; AutoCAD'in uygulama menüsünün karşılığıdır (`ui/appmenu/AppMenu.ts`, ilk kullanımda yüklenir).
 
 - **Panel:** logonun altında, ~780 px genişliğinde, `--c-popover` zeminli, `--r-lg` köşeli ve `--shadow-pop` gölgeli. **Başlık:** 28 px logo, lacivert “KentOS” ve ikincil “CAD”, altında çizimin adı (kaydedilmemişse sonunda •); başlığın zemini laciverten saydama hafif bir geçiştir.
 - **Sol sütun:** Yeni, Aç, Kaydet, Farklı kaydet, İçe aktar ▸, Dışa aktar ▸, Bulut ▸, Yazdır ve pafta, Proje ayarları. Satırda 34 px zeminli simge, ad (600) ve altında durumu söyleyen üçüncül satır (Kaydet'te dosyanın adı ya da “İlk kayıtta yer sorulur”, Bulut'ta hesap ya da açık proje); sağda kısayol ya da ›.
@@ -265,21 +257,13 @@ KentOS logosuna (klasik arayüzde menü çubuğunda, şeritte sekme satırında)
 
 ### 7.3 Araç çubuğu
 
-- **Gruplar ve aralarındaki ayırıcılar:** dosya │ geçmiş │ görünüm │ geçerli özellikler (katman, renk, tip, kalınlık) ··· çizim ölçeği │ panel düğmeleri.
-- Düğme 30×30'dur; basılıyken yumuşak amber zemin ve amber simge gösterir.
-- Açılır listelerin önünde küçük üçüncül bir etiket bulunur ("Renk", "Tip"). Etkin katman listesi renk örneğiyle başlar ve katmanları grup başlıklarıyla gösterir.
-- **Pencere daralınca** araç çubuğu adım adım küçülür; sığan ilk adımda kalır, hiçbir şey kesilmez ya da görünmez kaydırmaya kalmaz:
-  1. katman, renk, tip ve kalınlık listeleri daralır (değerleri üç noktayla kısalır; ölçek listesi daralmaz, "1:1000" tam okunur);
-  2. Görünüm grubunda Yakınlaştır, Uzaklaştır ve Kaydır grubun sonundaki ⋯ düğmesinin menüsüne girer (tekerlek ve orta tuş aynı işi yapar);
-  3. Renk, Tip ve Kalınlık tek bir “Özellikler” listesine katlanır; menüsünde üçü birer alt menüdür ve güncel değerlerini sağda gösterir; katman listesi genişliğine döner;
-  4. katman listesi yeniden daralır (en büyük yazı boyutları).
-  Standart yazıda 1280 px'te 1. adım, 1100 px'te 3. adım yeter.
+Kaldırıldı (2 Ekim, [ADR 0155](docs/adr/0155-web-ribbon-only.md)): geçerli özellikler (katman, renk, tip, kalınlık) ve çizim ölçeği şeridin Giriş sekmesindeki Katmanlar ve Özellikler panellerindedir (§7.3.1).
 
 ### 7.3.1 Şerit
 
-Menü çubuğu, araç çubuğu ve araç kutusunun sekmeli karşılığıdır; Uygulama ayarları → Görünüm → **Arayüz düzeni**'nden ya da Görünüm → Şerit arayüzü'nden seçilir ve hemen yerleşir. Sekmeleri menü modelinden ve araç kataloğundan türer (CLAUDE.md §4.5): **klasik arayüzde olan her araç ve komut şeritte de vardır**, yeni bir araç ikisinde birden kendiliğinden çıkar.
+İki platformun tek kabuğudur ([ADR 0155](docs/adr/0155-web-ribbon-only.md)). Sekmeleri menü modelinden ve araç kataloğundan türer (CLAUDE.md §4.5): her araç ve komut şeritte vardır, yeni bir araç kendiliğinden çıkar.
 
-- **Sekme satırı** (`--menubar-h`, menü çubuğu zemini): logo ve KentOS; **hızlı erişim** (Kaydet, Geri al, Yinele her zaman; şeritteki bir düğmeye sağ tıklayarak eklenen komutlar ve ▾ özelleştir menüsü); sekmeler; ortada proje adı ve kaydedilmemiş noktası; sağda **Komut ara** kutusu (`Alt+Q`), koordinat sistemi, Yardım (?) ve daraltma düğmesi.
+- **Sekme satırı** (`--menubar-h`, `--c-menubar` zemini): logo ve KentOS; **hızlı erişim** (Kaydet, Geri al, Yinele her zaman; şeritteki bir düğmeye sağ tıklayarak eklenen komutlar ve ▾ özelleştir menüsü); sekmeler; ortada proje adı ve kaydedilmemiş noktası; sağda **Komut ara** kutusu (`Alt+Q`), koordinat sistemi (tıklayınca Proje ayarları → Koordinat sistemi), **Tam ekran** (dört köşe dışa; tam ekrandayken içe, Esc de çıkar), Yardım (?) ve daraltma düğmesi.
 - **Sekmeler:** Dosya, Giriş, Çizim, Değiştir, Harita, Görünüm, İşlemler, Araçlar. Açık sekme ana metin rengi, 600 ağırlık ve 2 px amber alt çizgidir (dok sekmeleriyle aynı, §7.5). Giriş gündelik araçları, pano, seçim, katmanlar ve geçerli özellikleri bir arada tutar; diğerleri menülerin karşılığıdır (Koordinat ve Analiz menüleri Harita sekmesindedir, Düzen'in geçmişi hızlı erişimde).
 - **Bağlamsal Seçim sekmesi:** yalnız seçili nesne varken sekmelerin sonunda görünür; seçimin rengindedir (amber metin, üstte amber çizgi, sayı yumuşak amber hapta). İçinde seçimin özeti (büyük amber sayı, “nesne seçili”, türlere göre sayılar), seçime uygulanan dönüştürme, dizi, nesne, alan, pano ve sembol komutları vardır. Seçim bitince kaybolur ve önceki sekmeye dönülür; kendiliğinden açılmaz.
 - **Çalışan araç noktası:** çalışan araç açık olmayan bir sekmede de bulunuyorsa o sekmenin sağ üstünde 5 px amber nokta vardır; ipucu aracın adını söyler.
@@ -289,13 +273,12 @@ Menü çubuğu, araç çubuğu ve araç kutusunun sekmeli karşılığıdır; Uy
 - **Boyut anlamdan gelir, sıradan değil** (AutoCAD ve Netcad gibi): panelin **ana araçları** büyüktür (katalogda `primary`: Çizgi, Çoklu çizgi, Daire, Yay; Taşı, Kopyala, Döndür; Ötele, Buda; Köşe yuvarla; Yazı, Ölçü, Tarama; alan birleştir/kesiştir/çıkar/böl; Parsel, Kot noktası; araç olmayan komutlarda `PRIMARY_COMMANDS`: Yapıştır, Yeni, Aç, Kaydet, Tümünü göster, Stil yöneticisi …), geri kalanı küçüktür. Bir ana araç, sıkışık olmayan her panelde aynı boydadır. Panelde en çok dört büyük düğme olur. Ana aracı olmayan bir ya da iki öğeli panelin düğmeleri büyüktür. Panelin **öncüsü** (katalogda `lead`: Açıklama'nın Ölçülendirme'si, sahibin isteği 1 Ekim 2026) panel küçük etiketli düğmelere indiğinde de büyük kalır; yalnız ikon seviyesinde küçülür. Giriş'in Değiştir paneli AutoCAD'in Modify paneli gibi **sıkışıktır** (`compact`): hepsi küçük.
 - **Bölünmüş düğme (aile ve yöntemler):** bir araç ailesi (`family`: Dikdörtgen / Döndürülmüş dikdörtgen / Düzgün çokgen; Yardımcı çizgi / Işın; Dik in / Dik çık; Dizi / Kutupsal dizi; Köşe yuvarla / Pah) ve yöntemleri olan bir araç (`methods`: Daire ▾ merkez-yarıçap, 2 nokta, 3 nokta, TTY, TTT; Yay ▾ 3 nokta, merkez, devam) tek düğmedir. Üst parça (büyükte simge) son seçileni çalıştırır; alt parça (büyükte etiket ve ▾, küçükte ▾) listeyi açar. Kendi simgesi olan yöntem (ölçü türleri) listede o simgeyle görünür; seçilince düğmenin yüzü de onu gösterir. Yöntem aracı o seçenekle başlatır (istemde tuşa basılmış gibi). Son seçim oturum boyunca hatırlanır. İki parça üzerine gelince ayrı ayrı aydınlanır, çevresinde ince çizgi çıkar; ailenin aracı çalışırken üst parça dolu amberdir.
 - **Panel ▾ (seyrek araçlar):** az kullanılan araçlar (`rare`: Halka, Revizyon bulutu, Uzat-kısalt, Köşe ekle/sil, Çizgiye çevir) panelde durmaz; panel başlığının yanındaki ▾ ile açılan listededir (AutoCAD'in panel genişletmesi). Arama onları bulur ve ▾'yi gösterir.
-- **Durumlar:** çalışan araç **dolu amber** (araç kutusundaki gibi; hızlı erişimde yumuşak amber, çünkü dolu amber tek olmalı); açık anahtar komut (Kenetleme, Katman paneli) yumuşak amber; devre dışı %38; yapılmamış özelliğin simgesi %62 ve ipucunda “Geliştirme aşamasında”. Aramada bulunan düğme bir an 2 px amber çerçeve alır.
+- **Durumlar:** çalışan araç **dolu amber** (hızlı erişimde yumuşak amber, çünkü dolu amber tek olmalı); açık anahtar komut (Kenetleme, Katman paneli) yumuşak amber; devre dışı %38; yapılmamış özelliğin simgesi %62 ve ipucunda “Geliştirme aşamasında”. Aramada bulunan düğme bir an 2 px amber çerçeve alır.
 - **Pencere daralınca** paneller sağdan sola, her biri bir adım inerek küçülür: büyük → küçük etiketli → yalnız simge → panelin adını taşıyan tek düğme (tıklayınca panel altında açılır). Genişlik kazandırmayan adım atlanır. Son adımdan artan yer geri verilir: önce Çizim ve Değiştir, sonra soldan sağa her panel hâlâ sığan en büyük hâline döner; dar pencerede de adıyla görünen düğme çoğalır. Giriş'te Çizim ve Değiştir büyük düğmelerini ve etiketlerini öbür paneller yalnız simgeye inene kadar korur (1600 px'te Çizim'in dört ana aracı büyüktür); yalnız bir paneli tek düğmeye katlamak onlardan önce gelir. Sekme satırı da adım adım yer açar: önce “KentOS” yazısı ve `Alt+Q` etiketi, sonra koordinat sisteminin adı, en sonda arama kutusu büyütece döner. 1100 px'te her sekme sığar; hiçbir düğme kesilmez ya da kaydırmaya kalmaz.
 - **Daraltma:** `Ctrl+F1`, sekmeye çift tık ya da sağdaki ⌃ düğmesi şeridi sekme satırına indirir; çizim büyür. Daraltılmışken bir sekmeye tıklamak şeridi çizimin **üstünde** açar (gölgeli, `--shadow-pop`); bir komut çalışınca, dışarı tıklayınca ya da Esc ile kapanır.
 - **Komut ara:** komutun adını ya da komut satırı takma adını (ör. `L`, `CIZGI`) arar; satırda simge, ad, şeritteki yeri (“Çizim › Eğri”) ya da “Geliştirme aşamasında”, kısayol ve “Şeritte göster” düğmesi vardır. Enter ilkini çalıştırır, Alt+Enter yerini gösterir, Esc temizler.
 - **Klavye:** sekmelerde ←/→, Home/End; ↓ panellere iner; panellerde oklar düğmeler arasında gezer, Esc sekmeye döner. Düğmeye fareyle tıklamak odağı almaz: Enter son komutu yinelemeye devam eder.
 - Hareket yoktur: açılma, daralma ve panel küçülmesi anlıktır (§12).
-- Şeritle birlikte araç kutusu kapalıdır (Görünüm → Araç kutusu ya da F9 ile açılır ve ayrı hatırlanır).
 - **Masaüstü** (KentOS UI, ADR 0051): aynı sığdırma kuralı ve seviyeler; genişlikler yazı ölçümünden hesaplanır. Katlanmış panel tıklayınca araçlarını menüde açar (aileler alt menü, seyrek araçlar “Diğer araçlar”). Düğmeler web'in ölçülerindedir ve web'in ikonlarını taşır (envanterden, [ADR 0054](docs/adr/0054-desktop-draws-the-web-icons.md)): satır 24 px, büyük ikon 28 px ve sabit 1,55 px çizgi; ikon dinlenirken ikincil, üzerine gelince ana renk; çalışan araç dolu vurgu, açık anahtar yumuşak vurgu. Görünüm sekmesinde web panellerinden sonra arayüzün kendi grupları durur: Tema (Koyu, Aydınlık, Gece, Yüksek karşıtlık; on vurgu ve özel renk), Çizim zemini (temaya uy, arduvaz, siyah, kâğıt), Yazı tipi (IBM Plex Sans, Inter, Plus Jakarta Sans), Eş aralıklı (IBM Plex Mono, JetBrains Mono) ve Yazı boyutu (11–18 px). Web'in Tema ve Çizim motoru menüleri masaüstünde yoktur.
 
 ### 7.3.2 Çalışma modları
@@ -305,21 +288,12 @@ Bir projenin arayüzü **çalışma moduna** göre sadeleşir (`app/workspaces.t
 - **Mod kartları** (`ui/settings/workspacePicker.ts`; Yeni proje, Proje ayarları → Genel, Uygulama ayarları → Yeni projeler): seçilebilen üç mod yan yana kartlardır. Kartta 40 px zeminli resim (mod simgesi 28 px), ad (`--fs-md`, 600), amber alt başlık (ne olduğu), açıklama ve üç maddelik liste; sağ üstte seçim halkası. Seçilen kart amber çerçeve, yumuşak amber zemin, amber resim zemini ve dolu onay halkasıdır. Ayar pencerelerinde kartlar kısadır (açıklama ve liste yok). Klavye: ←/→ seçilebilen modlar arasında gezer.
 - **Yakında:** seçilebilen kartların altında, kesikli bir çizgiyle ayrılmış “Yakında” başlığı ve daha alçak, kesikli çerçeveli, saydam kartlar; sağda amber çizgili hap “Yakında”. Tıklanmaz; ipucu ne olacağını söyler.
 - **Durum çubuğu:** koordinat sisteminin solunda amber mod simgesi ve modun adı (600). Tıklayınca menü: başlık “Çalışma modu”, seçilebilen modlar (radyo), ayırıcı, duyurulanlar soluk ve sağda “Yakında”. Aynı menü Görünüm → Çalışma modu'dadır.
-- Mod değişince menü çubuğu, şerit ve araç kutusu yerinde yeniden kurulur; açık sekme kalıyorsa açık kalır. CAD'de sağ dokun İşlemler sekmesi gizlenir.
-- **Masaüstü** (ADR 0052): her modun şeridi web'in kurduğu hâliyle envanterden gelir; durum çubuğunda mod işareti ve adı, tıklayınca aynı menü. Menü çubuğu ve araç kutusu masaüstünde yoktur.
+- Mod değişince şerit yerinde yeniden kurulur; açık sekme kalıyorsa açık kalır. CAD'de sağ dokun İşlemler sekmesi gizlenir.
+- **Masaüstü** (ADR 0052): her modun şeridi web'in kurduğu hâliyle envanterden gelir; durum çubuğunda mod işareti ve adı, tıklayınca aynı menü.
 
 ### 7.4 Kayan araç kutusu
 
-Arayüzün **tek cesur öğesi**dir.
-
-- Varsayılan üç sütun (isteğe bağlı iki), 34×32 düğmeler. **Çalışma modunun gösterdiği tüm araçlar her zaman görünür** (§7.3.2); gizli alt menü (yığın) kullanılmaz, çünkü fareyle aracı arayan kullanıcı onu görmelidir.
-- Gruplar kısa başlık taşır: Seçim, Çizim, Açıklama, Dönüştür, Düzenle, Alan, Harita. Başlık küçük (`--fs-xs`, 600, üçüncül renk) ve bir katlama düğmesidir: tıklamak grubu katlar, ok 90° döner. Katlanan gruplar çalışma alanı yerleşimiyle saklanır (`ui.toolboxFolded`).
-- **Kaydırma çubuğu çıkmaz.** Seçilen sütun sayısı (2 ya da 3) yüksekliğe sığmıyorsa araç kutusu bir sütun daha genişler (en çok 6); araçlar gizlenmez ve kaydırılmaz. 900 px yüksekliğindeki pencerede 58 araç 5 sütunda sığar. Pencere büyüyünce seçilen sütun sayısına döner.
-- **Etkin araç dolu amber zemin** ve koyu mürekkeple gösterilir.
-- Her düğmenin sağ alt köşesinde **tuş etiketi** vardır: `L`, `⇧M`, `⌥P`, `Esc`, `Del`.
-- İpucu: ad, kısayol, kısa açıklama ve **fareyle kullanım adımları** (numaralı liste, amber numaralar). Adımlar katalogdaki `steps` alanından gelir ve "tıklayın, sürükleyin, sağ tıklayın" diliyle yazılır.
-- Hazır olmayan araçların simgesi %62 saydamdır; ipucunda "Geliştirme aşamasında" yazar.
-- Tutamaçtan sürüklenir, kenara 14 px yaklaşınca yapışır ve sol sütuna sabitlenebilir. Sütun ve sabitleme düğmeleri üzerine gelince görünür.
+Kaldırıldı (2 Ekim, [ADR 0155](docs/adr/0155-web-ribbon-only.md)): her araç şeridin sekmelerindedir; aracın kısayolu, açıklaması ve fareyle kullanım adımları şerit düğmesinin ipucunda ve Komut ara'da görünür.
 
 ### 7.4.1 Komut şeridi
 
@@ -380,7 +354,7 @@ Bir komut çalışırken çizim alanının üst ortasında yüzen şerittir (`ui
 
 - Hücreler: Y/X imleç koordinatı (tabular) │ son mesaj (5–9 sn görünür) │ seçim sayısı (amber) │ çizim yardımcıları │ ekran ölçeği │ koordinat sistemi │ sunucu │ çizim motoru (en sağda; çip simgesi ve "WebGL2" / "WebGPU"; WebGPU'da simge amber; tıklayınca motor seçme menüsü).
 - **Çizim yardımcısı düğmeleri** bir gösterge lambası taşır: kapalıyken boş kare, açıkken dolu amber kare. Metin kapalıyken üçüncül renktedir.
-- **Pencere daralınca** hücreler, son mesaja kısa bir ileti sığacak yer (yazı boyunun 15 katı) kalana dek sırayla yer açar; her hücre ipucunu ve tıklamasını korur: çizim motorunun adı (çip simgesi kalır), koordinat sistemi hücresi (menü çubuğunda da vardır), ekran ölçeği, sunucu ve kayıt hücrelerinin yazısı (lambaları kalır), çalışma modunun adı (simgesi kalır), en sonda yardımcı düğmelerinin iç boşluğu. Koordinat, seçim sayısı ve yardımcıların adları her zaman görünür.
+- **Pencere daralınca** hücreler, son mesaja kısa bir ileti sığacak yer (yazı boyunun 15 katı) kalana dek sırayla yer açar; her hücre ipucunu ve tıklamasını korur: çizim motorunun adı (çip simgesi kalır), koordinat sistemi hücresi (sekme satırında da vardır), ekran ölçeği, sunucu ve kayıt hücrelerinin yazısı (lambaları kalır), çalışma modunun adı (simgesi kalır), en sonda yardımcı düğmelerinin iç boşluğu. Koordinat, seçim sayısı ve yardımcıların adları her zaman görünür.
 - **Sunucu hücresi** yuvarlak bir lamba taşır (yardımcıların kare lambasından ayrılsın diye): bağlıyken dolu yeşil (`--c-ok`), sunucu yokken boş halka ve üçüncül metin (Faz A'da olağan durumdur, hata rengi kullanılmaz), sözleşme sürümü uyuşmazken dolu amber (`--c-warn`). Tıklamak yeniden denetler; ipucu sürümü ya da nedeni yazar.
 - **Kayıt hücresi** yalnızca bir bulut projesi açıkken görünür, sunucu hücresinin solunda durur ve aynı yuvarlak lambayı taşır. Yazısı ve lambası:
   - dolu yeşil “Buluta kaydedildi”: yalnızca sunucu yanıtladıktan sonra ve bekleyen bir şey yokken;
@@ -407,7 +381,7 @@ Bir komut çalışırken çizim alanının üst ortasında yüzen şerittir (`ui
 
 - Başlık (600), kısayol tuşu ve açıklama (ikincil renk). Hazır değilse amber not eklenir.
 - En çok 280 px × yazı ölçeği genişliğindedir; uzun başlık ve açıklama bu genişlikte, gerekirse kelime içinden satır atlar, kısayol tuşu bölünmez. İstenen yanda yer yoksa karşı yana geçer (sağ dokun satırı soluna, alttaki üstüne), sonra pencerenin kenarından 8 px içeride tutulur.
-- 450 ms gecikmeyle açılır; bir ipucu kapandıktan sonraki 600 ms içinde komşu öğelerde anında açılır (araç çubuğunda gezinirken).
+- 450 ms gecikmeyle açılır; bir ipucu kapandıktan sonraki 600 ms içinde komşu öğelerde anında açılır (şeritte gezinirken).
 - Tıklamada ve basılı tutmada kapanır; öğenin açılır menüsü açıkken görünmez.
 - Masaüstünde KentOS UI'nin `tip`'i aynı kurallarla çalışır ([ADR 0054](docs/adr/0054-desktop-draws-the-web-icons.md)).
 
@@ -450,7 +424,7 @@ Uygulama bir şeyi yapmadan önce sorduğunda **tek yol budur** (`ui/widgets/con
   - Sağda parametre kartı: tür, datum, elipsoid, projeksiyon, orta meridyen, ölçek faktörü, sağa öteleme, kapsam ve eksen sırası notu.
   - Tam bir SRID yazılınca odak kaybolmadan seçilir. Tanımsız SRID için açık bir mesaj gösterilir.
   - Proje sistemini değiştirmek **"Koordinatlar dönüştürülmez"** uyarı notunu gösterir.
-- **Kontroller:** bölümlü seçici (segmented; seçili dilim kabarık), switch (açıkken amber), adımlayıcı (− değer + birim), tema kartları (etkin temadan bağımsız renkli mini çalışma alanı), vurgu örnekleri (30 px daire: sol üst yarısı koyu, sağ alt yarısı açık temanın tonu; seçili olan işaretli ve halkalı, adı altında), yazı tipi kartları (kendi harfleriyle “Ağ Şı İ 123”, adı ve iki satırlık not), arayüz düzeni kartları (etkin temanın renklerinde klasik ve şerit mini çalışma alanı, altında bir satır açıklama), motor kartları (radyo, rozet: Varsayılan / Deneysel / Desteklenmiyor).
+- **Kontroller:** bölümlü seçici (segmented; seçili dilim kabarık), switch (açıkken amber), adımlayıcı (− değer + birim), tema kartları (etkin temadan bağımsız renkli mini çalışma alanı), vurgu örnekleri (30 px daire: sol üst yarısı koyu, sağ alt yarısı açık temanın tonu; seçili olan işaretli ve halkalı, adı altında), yazı tipi kartları (kendi harfleriyle “Ağ Şı İ 123”, adı ve iki satırlık not), motor kartları (radyo, rozet: Varsayılan / Deneysel / Desteklenmiyor).
 - **Birimler bölümünde "Önizleme" kartı** vardır: kesikli kenarlıkla koordinat, kenar, alan ve semt örneklerini canlı gösterir.
 - **Yeni proje** (Dosya → Yeni proje…, `Ctrl+Alt+N`) aynı satırları ve koordinat sistemi seçicisini düz bir pencerede kullanır (760 px, bölüm menüsü yok): Proje adı (açılışta seçili, yazmak yerine geçer), çizim ölçeği, koordinat sistemi. Seçicinin kartı “Yeni projenin koordinat sistemi” der; amber “değişecek” çerçevesi ve “Koordinatlar dönüştürülmez” notu yoktur, çünkü değişen bir şey yoktur. Altta bir bilgi notu ne açılacağını (katman grupları, varsayılan birimler), gerekirse ikinci not açık çizime ne olacağını söyler. Alt çubukta “Vazgeç” ve birincil “Oluştur”. Kaydedilmemiş değişiklik sorusu pencerenin üstünde açılır; oradaki Vazgeç Yeni proje penceresine döner.
 
@@ -572,7 +546,7 @@ Uygulama bir şeyi yapmadan önce sorduğunda **tek yol budur** (`ui/widgets/con
 | Nokta simgeleri | Poligon noktası: üçgen. Kot noktası: artı. Genel nokta: halka ve merkez noktası. Ekran boyutu sabittir. |
 | Çizgi tipleri | Sürekli; kesikli 9/5; noktalı kesik 14/4/2/4; noktalı 2/4 (ekran pikseli) |
 | Izgara | Uyarlamalı 1-2-5 aralık, ana çizgiler yuvarlak TM değerlerinde |
-| Ölçek çubuğu | **Sağ altta**, dört bölmeli siyah-beyaz çubuk, "0" ve "50 m". Araç kutusu solda durduğu için sağdadır. |
+| Ölçek çubuğu | **Sağ altta**, dört bölmeli siyah-beyaz çubuk, "0" ve "50 m". |
 | Kuzey oku | Sağ üstte, yarısı dolu ok ve **"K"** (Kuzey) |
 
 ---
@@ -581,7 +555,7 @@ Uygulama bir şeyi yapmadan önce sorduğunda **tek yol budur** (`ui/widgets/con
 
 | Girdi | Davranış |
 |---|---|
-| Harf / Shift+harf / Alt+harf | Araç (tuş etiketi araç kutusunda) |
+| Harf / Shift+harf / Alt+harf | Araç (tuşu şerit düğmesinin ipucunda ve Komut ara'da) |
 | Esc | Araçtan çık; seçim aracındaysa seçimi temizle; metin kutusunda önce metni temizle |
 | Enter, sağ tık | Geçerli nesneyi bitir; seçim aracında son aracı tekrarla |
 | Boşluk | Komut satırına git |
@@ -594,9 +568,9 @@ Uygulama bir şeyi yapmadan önce sorduğunda **tek yol budur** (`ui/widgets/con
 | Kenar ortası tutamacını sürükleme | Düz kenara yeni köşe ekler, yay kenarını sürüklenen noktadan geçecek biçimde büker. |
 | Değiştirme araçlarında sayı | Aşamaya göre açı (Döndür), faktör (Ölçekle), mesafe (Ötele), yarıçap (Köşe yuvarla), "satır,sütun" ve "dY,dX" (Dizi) |
 | Değiştirme araçlarında harf | `K` kopya (Döndür), `S` kaynağı sil (Aynala). Seçeneğin güncel durumu istem metninde yazar: "[Kopya (K): kapalı]" |
-| F1 / F2 / F3 / F4 / F7 / F8 / F9 / F10 | Kısayollar / alt panel / kenet / sağ panel / ızgara / orto / araç kutusu / kutupsal |
+| F1 / F2 / F3 / F4 / F7 / F8 / F10 | Kısayollar / alt panel / kenet / sağ panel / ızgara / orto / kutupsal |
 | `Ctrl+F1`, sekmeye çift tık | Şeridi daralt ya da aç |
-| `Alt+Q` | Komut ara (şeritte arama kutusu, klasik arayüzde komut satırı) |
+| `Alt+Q` | Komut ara (şeridin arama kutusu) |
 | `Ctrl+,` | Uygulama ayarları |
 
 - **Odak:** Görünür odak halkası 2 px amber'dir. Programla odaklanan kapsayıcılarda (pencere kartı, çizim alanı) halka çizilmez.

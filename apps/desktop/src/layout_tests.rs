@@ -56,8 +56,7 @@ fn a_kept_layout_is_shown_at_start() {
             "processingTab": "history",
             "processingFolded": ["points"],
             "ribbonTab": "modify",
-            "ribbonCollapsed": true,
-            "toolboxFolded": []
+            "ribbonCollapsed": true
         })
         .to_string(),
     )
@@ -87,10 +86,12 @@ fn a_kept_layout_is_shown_at_start() {
 #[test]
 fn changes_are_written_together_a_quarter_second_after_the_last() {
     let dir = scratch("yazma");
-    // A field the desktop has no part for yet is written back as it was read.
+    // A field the desktop has no part for (the theme is a setting here) is
+    // written back as it was read; the web's toolbox is no longer kept
+    // (docs/adr/0155).
     std::fs::write(
         dir.join(FILE_NAME),
-        json!({ "toolboxX": 240, "ribbonQuickAccess": ["tool.line"], "oldPanel": true, "toolboxFolded": [] })
+        json!({ "theme": "light", "ribbonQuickAccess": ["tool.line"], "oldPanel": true, "toolboxX": 240 })
             .to_string(),
     )
     .expect("a kept layout");
@@ -110,11 +111,11 @@ fn changes_are_written_together_a_quarter_second_after_the_last() {
     assert_eq!(read["bottomTab"], "coords");
     assert_eq!(read["ribbonTab"], "view");
     assert_eq!(read["rightVisible"], false);
-    assert_eq!(read["toolboxX"], 240);
+    assert_eq!(read["theme"], "light");
     assert_eq!(read["ribbonQuickAccess"], json!(["tool.line"]));
     let written: Value = serde_json::from_str(&text).expect("JSON");
     assert!(
-        written.get("oldPanel").is_none(),
+        written.get("oldPanel").is_none() && written.get("toolboxX").is_none(),
         "unknown fields are dropped"
     );
     assert_eq!(app.layout.due(), None);
@@ -147,8 +148,7 @@ fn a_narrower_window_shows_less_and_keeps_the_wish() {
     let dir = scratch("dar");
     std::fs::write(
         dir.join(FILE_NAME),
-        json!({ "dockWidth": 560, "bottomHeight": 600, "bottomExpanded": true, "toolboxFolded": [] })
-            .to_string(),
+        json!({ "dockWidth": 560, "bottomHeight": 600, "bottomExpanded": true }).to_string(),
     )
     .expect("a kept layout");
     let mut app = opened(&dir);
@@ -212,7 +212,7 @@ fn screens() {
             for scene in ["varsayilan", "kayitli"] {
                 let dir = scratch(&format!("resim-{scene}"));
                 let kept = match scene {
-                    "varsayilan" => json!({ "bottomExpanded": true, "toolboxFolded": [] }),
+                    "varsayilan" => json!({ "bottomExpanded": true }),
                     _ => json!({
                         "dockWidth": 480,
                         "layersFraction": 0.4,
@@ -220,8 +220,7 @@ fn screens() {
                         "bottomExpanded": true,
                         "bottomHeight": 300,
                         "bottomTab": "messages",
-                        "ribbonCollapsed": true,
-                        "toolboxFolded": []
+                        "ribbonCollapsed": true
                     }),
                 };
                 std::fs::write(dir.join(FILE_NAME), kept.to_string()).expect("a kept layout");

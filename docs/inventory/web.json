@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 205,
-      "implemented": 192,
+      "total": 202,
+      "implemented": 189,
       "partial": 0,
       "pending": 13
     },
@@ -49,8 +49,8 @@
       "pending": 2
     },
     "settings": {
-      "total": 68,
-      "implemented": 68,
+      "total": 60,
+      "implemented": 60,
       "partial": 0,
       "pending": 0
     },
@@ -67,22 +67,22 @@
       "pending": 0
     },
     "screens": {
-      "total": 72,
-      "implemented": 72,
+      "total": 69,
+      "implemented": 69,
       "partial": 0,
       "pending": 0
     },
     "commandsWithoutPlace": [],
-    "commandsWithoutTests": 63,
+    "commandsWithoutTests": 61,
     "commandsOnDesktop": 187,
     "desktop": {
       "commands": {
-        "total": 205,
+        "total": 202,
         "implemented": 187,
         "partial": 0,
         "pending": 13,
         "none": 0,
-        "n/a": 5
+        "n/a": 2
       },
       "tools": {
         "total": 88,
@@ -117,12 +117,12 @@
         "n/a": 0
       },
       "settings": {
-        "total": 68,
+        "total": 60,
         "implemented": 59,
         "partial": 0,
         "pending": 0,
         "none": 0,
-        "n/a": 9
+        "n/a": 1
       },
       "storage": {
         "total": 10,
@@ -141,12 +141,12 @@
         "n/a": 0
       },
       "screens": {
-        "total": 72,
+        "total": 69,
         "implemented": 66,
         "partial": 2,
         "pending": 0,
         "none": 0,
-        "n/a": 4
+        "n/a": 1
       }
     },
     "desktopSections": {
@@ -172,7 +172,6 @@
         "Harita › Arazi analizi"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [
         "cad"
       ],
@@ -200,7 +199,6 @@
         "Harita › Arazi analizi"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [
         "cad"
       ],
@@ -233,7 +231,6 @@
         "Çizim › Blok"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -266,7 +263,6 @@
         "Çizim › Blok"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -297,7 +293,6 @@
         "Çizim › Blok"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/blocks/BlocksPanel.ts"
@@ -332,7 +327,6 @@
         "Harita › Kestirme"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -366,7 +360,6 @@
         "Harita › Nokta alımı"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -401,7 +394,6 @@
         "Harita › Kestirme"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -436,7 +428,6 @@
         "Harita › Nokta alımı"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -471,7 +462,6 @@
         "Harita › Poligon"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -502,7 +492,6 @@
         "Dosya › Bulut"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/statusbar/cellsPlan.ts"
@@ -535,7 +524,6 @@
         "Dosya › Bulut"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
@@ -564,7 +552,6 @@
       "menus": [],
       "ribbon": [],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
@@ -596,7 +583,6 @@
         "Dosya › Bulut"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
@@ -626,7 +612,6 @@
       "menus": [],
       "ribbon": [],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/statusbar/cellsPlan.ts"
@@ -660,7 +645,6 @@
         "Dosya › Bulut"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
@@ -693,7 +677,6 @@
         "Dosya › Bulut"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
@@ -723,7 +706,6 @@
       "menus": [],
       "ribbon": [],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
@@ -753,7 +735,6 @@
       "menus": [],
       "ribbon": [],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
@@ -787,7 +768,6 @@
         "Dosya › Bulut"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
@@ -819,7 +799,6 @@
       "menus": [],
       "ribbon": [],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/cloud/ProjectsDialog.ts",
@@ -849,7 +828,6 @@
         "Araçlar › Komut"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -881,7 +859,6 @@
         "Harita › Koordinatlar"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -913,7 +890,6 @@
         "Harita › Koordinatlar"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -943,10 +919,8 @@
         "Harita › Koordinat sistemi"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
-        "apps/web/src/ui/menu/MenuBar.ts",
         "apps/web/src/ui/ribbon/Ribbon.ts",
         "apps/web/src/ui/statusbar/StatusBar.ts"
       ],
@@ -977,7 +951,6 @@
         "Harita › Koordinat sistemi"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "pending",
@@ -1008,7 +981,6 @@
         "Araçlar › Çizim yardımcıları"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/statusbar/StatusBar.ts"
@@ -1041,7 +1013,6 @@
         "Araçlar › Çizim yardımcıları"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/shell/viewportMenus.ts",
@@ -1075,7 +1046,6 @@
         "Araçlar › Çizim yardımcıları"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/shell/viewportMenus.ts",
@@ -1109,7 +1079,6 @@
         "Araçlar › Çizim yardımcıları"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/shell/viewportMenus.ts",
@@ -1143,7 +1112,6 @@
         "Araçlar › Çizim yardımcıları"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/shell/viewportMenus.ts",
@@ -1174,7 +1142,6 @@
         "Seçim › Pano"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/shell/viewportMenus.ts"
@@ -1206,7 +1173,6 @@
         "Seçim › Pano"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -1233,7 +1199,6 @@
         "Giriş › Seçim"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/ribbon/panels.ts",
@@ -1261,7 +1226,6 @@
         "Giriş › Seçim"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/ribbon/panels.ts"
@@ -1294,7 +1258,6 @@
         "Seçim › Pano"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/ribbon/ribbonPlan.ts",
@@ -1332,7 +1295,6 @@
         "Seçim › Pano"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -1360,11 +1322,8 @@
       ],
       "ribbon": [],
       "quickAccess": true,
-      "toolbox": false,
       "hiddenIn": [],
-      "uiSources": [
-        "apps/web/src/ui/shell/shellPlan.ts"
-      ],
+      "uiSources": [],
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -1392,7 +1351,6 @@
         "Giriş › Seçim"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/shell/viewportMenus.ts"
@@ -1419,11 +1377,9 @@
       ],
       "ribbon": [],
       "quickAccess": true,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
-        "apps/web/src/ui/processing/ToolDialog.ts",
-        "apps/web/src/ui/shell/shellPlan.ts"
+        "apps/web/src/ui/processing/ToolDialog.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -1455,7 +1411,6 @@
         "Dosya › Dosya alışverişi"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts"
@@ -1490,7 +1445,6 @@
         "Dosya › Dosya alışverişi"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts"
@@ -1525,7 +1479,6 @@
         "Dosya › Dosya alışverişi"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts"
@@ -1554,7 +1507,6 @@
         "Dosya › Dosya alışverişi"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts"
@@ -1587,7 +1539,6 @@
         "Dosya › Dosya alışverişi"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
@@ -1623,7 +1574,6 @@
         "Dosya › Dosya alışverişi"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts"
@@ -1659,7 +1609,6 @@
         "Dosya › Dosya alışverişi"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts"
@@ -1694,7 +1643,6 @@
         "Dosya › Dosya alışverişi"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts"
@@ -1726,7 +1674,6 @@
         "Dosya › Dosya alışverişi"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts"
@@ -1765,12 +1712,10 @@
         "Dosya › Proje"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
         "apps/web/src/ui/ribbon/ribbonPlan.ts",
-        "apps/web/src/ui/shell/shellPlan.ts",
         "apps/web/src/ui/start/StartScreen.ts"
       ],
       "status": "implemented",
@@ -1806,12 +1751,10 @@
         "Dosya › Proje"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
         "apps/web/src/ui/ribbon/ribbonPlan.ts",
-        "apps/web/src/ui/shell/shellPlan.ts",
         "apps/web/src/ui/start/StartScreen.ts"
       ],
       "status": "implemented",
@@ -1843,7 +1786,6 @@
         "Dosya › Çıktı"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts"
@@ -1880,11 +1822,9 @@
         "Dosya › Kaydet"
       ],
       "quickAccess": true,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
-        "apps/web/src/ui/shell/shellPlan.ts",
         "apps/web/src/ui/statusbar/cellsPlan.ts"
       ],
       "status": "implemented",
@@ -1922,7 +1862,6 @@
         "Dosya › Kaydet"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
@@ -1956,7 +1895,6 @@
         "Dosya › Ayarlar"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
@@ -1993,7 +1931,6 @@
         "Dosya › Proje"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -2022,7 +1959,6 @@
         "Araçlar › Yardım"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts"
@@ -2060,7 +1996,6 @@
         "Araçlar › Uygulama"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts"
@@ -2085,7 +2020,6 @@
       "menus": [],
       "ribbon": [],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/layers/LayersPanel.ts",
@@ -2112,7 +2046,6 @@
       "menus": [],
       "ribbon": [],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/layers/LayersPanel.ts",
@@ -2139,7 +2072,6 @@
       "menus": [],
       "ribbon": [],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/ribbon/panels.ts"
@@ -2166,7 +2098,6 @@
         "Harita › Arazi"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "pending",
@@ -2197,7 +2128,6 @@
         "Harita › Parsel"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -2226,7 +2156,6 @@
         "Harita › Parsel"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "pending",
@@ -2254,7 +2183,6 @@
         "Harita › Arazi"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "pending",
@@ -2280,7 +2208,6 @@
         "Harita › Pafta"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "pending",
@@ -2312,7 +2239,6 @@
         "Harita › Koordinatlar"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -2338,7 +2264,6 @@
         "İşlemler › İşlemler"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -2366,7 +2291,6 @@
         "İşlemler › Modeller"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -2397,7 +2321,6 @@
         "İşlemler › Modeller"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/processing/ProcessingPanel.ts",
@@ -2434,7 +2357,6 @@
         "İşlemler › Yazı ve etiket"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -2463,7 +2385,6 @@
         "İşlemler › Öznitelik"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -2493,7 +2414,6 @@
         "İşlemler › Nokta işlemleri"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -2522,7 +2442,6 @@
         "İşlemler › Seçim"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -2556,7 +2475,6 @@
         "İşlemler › İşlemler"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -2588,7 +2506,6 @@
         "Araçlar › Uygulama"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
@@ -2624,7 +2541,6 @@
         "Seçim › Sembol"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/properties/PropertiesPanel.ts"
@@ -2659,7 +2575,6 @@
         "Seçim › Sembol"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/properties/PropertiesPanel.ts"
@@ -2692,7 +2607,6 @@
         "Araçlar › Stil"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/properties/PropertiesPanel.ts"
@@ -2727,7 +2641,6 @@
         "Araçlar › Stil"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -2760,7 +2673,6 @@
         "Araçlar › Stil"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -2794,7 +2706,6 @@
         "Araçlar › Stil"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -2827,7 +2738,6 @@
         "Giriş › Açıklama"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -2860,7 +2770,6 @@
         "Seçim › Dönüştür"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -2895,7 +2804,6 @@
         "Çizim › Eğri"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -2930,7 +2838,6 @@
         "Harita › Ölçme"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -2967,7 +2874,6 @@
         "Seçim › Birleştir ve böl"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -2999,7 +2905,6 @@
         "Seçim › Birleştir ve böl"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -3034,7 +2939,6 @@
         "Seçim › Birleştir ve böl"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -3070,7 +2974,6 @@
         "Seçim › Birleştir ve böl"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -3106,7 +3009,6 @@
         "Seçim › Dizi"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [
         "gis"
       ],
@@ -3141,7 +3043,6 @@
         "Seçim › Dizi"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [
         "gis"
       ],
@@ -3175,7 +3076,6 @@
         "Seçim › Dizi"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [
         "gis"
       ],
@@ -3210,7 +3110,6 @@
         "Çizim › Blok"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/blocks/BlocksPanel.ts"
@@ -3245,7 +3144,6 @@
         "Çizim › Blok"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/blocks/BlocksPanel.ts"
@@ -3287,7 +3185,6 @@
         "Seçim › Oluştur ve çevir"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -3322,7 +3219,6 @@
         "Değiştir › Kenar"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -3346,7 +3242,6 @@
       "menus": [],
       "ribbon": [],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/promptOptions.ts",
@@ -3382,7 +3277,6 @@
         "Değiştir › Köşe"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [
         "gis"
       ],
@@ -3417,7 +3311,6 @@
         "Değiştir › Köşe"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [
         "gis"
       ],
@@ -3452,7 +3345,6 @@
         "Çizim › Eğri"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -3488,7 +3380,6 @@
         "Seçim › Nesne"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -3512,7 +3403,6 @@
       "menus": [],
       "ribbon": [],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/bottom/CommandLine.ts",
@@ -3553,7 +3443,6 @@
         "Seçim › Dönüştür"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/shell/viewportMenus.ts"
@@ -3589,7 +3478,6 @@
         "Çizim › Açıklama"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -3620,7 +3508,6 @@
         "Çizim › Açıklama"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -3680,7 +3567,6 @@
         "Çizim › Açıklama"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [
         "gis"
       ],
@@ -3723,7 +3609,6 @@
         "Çizim › Nokta"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -3755,7 +3640,6 @@
         "Çizim › Eğri"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [
         "gis"
       ],
@@ -3792,7 +3676,6 @@
         "Çizim › Eğri"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [
         "gis"
       ],
@@ -3831,7 +3714,6 @@
         "Seçim › Nesne"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/bottom/PointTable.ts",
@@ -3870,7 +3752,6 @@
         "Seçim › Nesne"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -3912,7 +3793,6 @@
         "Değiştir › Kenar"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -3948,7 +3828,6 @@
         "Değiştir › Köşe"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [
         "gis"
       ],
@@ -3985,7 +3864,6 @@
         "Değiştir › Köşe"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [
         "gis"
       ],
@@ -4020,7 +3898,6 @@
         "Çizim › Açıklama"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [
         "gis"
       ],
@@ -4055,7 +3932,6 @@
         "Çizim › Nokta"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -4088,7 +3964,6 @@
         "Seçim › Nesne"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -4122,7 +3997,6 @@
         "Çizim › Açıklama"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -4156,7 +4030,6 @@
         "Değiştir › Kenar"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [
         "gis"
       ],
@@ -4193,7 +4066,6 @@
         "Çizim › Çizgi"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -4238,7 +4110,6 @@
         "Seçim › Nesne"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -4274,7 +4145,6 @@
         "Harita › Ölçme"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -4309,7 +4179,6 @@
         "Harita › Ölçme"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -4345,7 +4214,6 @@
         "Seçim › Dönüştür"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -4382,7 +4250,6 @@
         "Seçim › Dönüştür"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/shell/viewportMenus.ts"
@@ -4421,7 +4288,6 @@
         "Değiştir › Kenar"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -4455,11 +4321,9 @@
         "Görünüm › Yakınlaştır"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/ribbon/ribbonPlan.ts",
-        "apps/web/src/ui/shell/shellPlan.ts",
         "apps/web/src/ui/shell/viewportMenus.ts"
       ],
       "status": "implemented",
@@ -4496,7 +4360,6 @@
         "Çizim › Çizgi"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [
         "gis"
       ],
@@ -4530,7 +4393,6 @@
         "Harita › Parsel"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [
         "cad"
       ],
@@ -4543,6 +4405,7 @@
       "tests": [
         "apps/web/src/app/menus.test.ts",
         "apps/web/src/app/workspaces.test.ts",
+        "apps/web/scripts/e2e/smoke.mjs",
         "fixtures/interaction/v1/measure-parcel.json",
         "fixtures/interaction/v1/usage-parcel.json"
       ]
@@ -4567,7 +4430,6 @@
         "Seçim › Birleştir ve böl"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -4599,7 +4461,6 @@
         "Seçim › Birleştir ve böl"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -4632,7 +4493,6 @@
         "Çizim › Yardımcı"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [
         "gis"
       ],
@@ -4666,7 +4526,6 @@
         "Çizim › Yardımcı"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [
         "gis"
       ],
@@ -4700,7 +4559,6 @@
         "Çizim › Açıklama"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -4734,7 +4592,6 @@
         "Çizim › Nokta"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -4767,7 +4624,6 @@
         "Çizim › Nokta"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -4800,7 +4656,6 @@
         "Çizim › Çizgi"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -4838,7 +4693,6 @@
         "Seçim › Oluştur ve çevir"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -4874,7 +4728,6 @@
         "Çizim › Çizgi"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -4908,7 +4761,6 @@
         "Çizim › Açıklama"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -4941,7 +4793,6 @@
         "Çizim › Yardımcı"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [
         "gis"
       ],
@@ -4976,7 +4827,6 @@
         "Seçim › Nesne"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -5012,7 +4862,6 @@
         "Çizim › Şekil"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [
         "gis"
       ],
@@ -5052,7 +4901,6 @@
         "Çizim › Şekil"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [
         "gis"
       ],
@@ -5090,7 +4938,6 @@
         "Çizim › Şekil"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [
         "gis"
       ],
@@ -5115,7 +4962,6 @@
       "menus": [],
       "ribbon": [],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/shell/viewportMenus.ts"
@@ -5148,7 +4994,6 @@
         "Çizim › Açıklama"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [
         "gis"
       ],
@@ -5183,7 +5028,6 @@
         "Seçim › Nesne"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -5217,7 +5061,6 @@
         "Seçim › Dönüştür"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -5254,7 +5097,6 @@
         "Seçim › Dönüştür"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -5287,7 +5129,6 @@
         "Çizim › Eğri"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -5314,7 +5155,6 @@
         "Giriş › Seçim"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -5348,7 +5188,6 @@
         "Giriş › Seçim"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -5380,7 +5219,6 @@
         "Giriş › Seçim"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -5412,7 +5250,6 @@
         "Giriş › Seçim"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -5445,7 +5282,6 @@
         "Değiştir › Kot"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -5475,7 +5311,6 @@
         "Seçim › Nesne"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -5507,7 +5342,6 @@
         "Çizim › Eğri"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [
         "gis"
       ],
@@ -5541,7 +5375,6 @@
         "Değiştir › Kenar"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -5573,7 +5406,6 @@
         "Harita › Arazi"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [
         "cad"
       ],
@@ -5608,7 +5440,6 @@
         "Harita › Arazi"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [
         "cad"
       ],
@@ -5642,7 +5473,6 @@
         "Harita › Ölçme"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -5678,7 +5508,6 @@
         "Seçim › Dönüştür"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [
         "gis"
       ],
@@ -5712,7 +5541,6 @@
         "Harita › Parsel"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [
         "cad"
       ],
@@ -5750,7 +5578,6 @@
         "Çizim › Açıklama"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -5785,7 +5612,6 @@
         "Seçim › Oluştur ve çevir"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -5815,7 +5641,6 @@
         "Seçim › Oluştur ve çevir"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -5848,7 +5673,6 @@
         "Seçim › Nesne"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -5883,7 +5707,6 @@
         "Değiştir › Kenar"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -5916,7 +5739,6 @@
         "Değiştir › Köşe"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [
         "gis"
       ],
@@ -5950,7 +5772,6 @@
         "Çizim › Nokta"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -5984,7 +5805,6 @@
         "Çizim › Yardımcı"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [
         "gis"
       ],
@@ -6023,11 +5843,9 @@
         "Görünüm › Yakınlaştır"
       ],
       "quickAccess": false,
-      "toolbox": true,
       "hiddenIn": [],
       "uiSources": [
-        "apps/web/src/ui/ribbon/ribbonPlan.ts",
-        "apps/web/src/ui/shell/shellPlan.ts"
+        "apps/web/src/ui/ribbon/ribbonPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -6063,7 +5881,6 @@
         "Araçlar › Uygulama"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
@@ -6104,11 +5921,9 @@
         "Görünüm › Paneller"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
-        "apps/web/src/ui/bottom/BottomPanel.ts",
-        "apps/web/src/ui/shell/shellPlan.ts"
+        "apps/web/src/ui/bottom/BottomPanel.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -6122,7 +5937,7 @@
       "title": "Komut ara",
       "category": "Görünüm",
       "icon": "search",
-      "description": "Bir komutu adıyla ya da takma adıyla bulup çalıştırır: şeritte arama kutusu, klasik arayüzde komut satırı.",
+      "description": "Bir komutu adıyla ya da takma adıyla bulup çalıştırır: şeridin sekme satırındaki arama kutusu.",
       "aliases": [
         "ARA",
         "SEARCH"
@@ -6141,7 +5956,6 @@
         "Araçlar › Yardım"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -6168,7 +5982,6 @@
         "Görünüm › Paneller"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/shell/viewportMenus.ts"
@@ -6200,7 +6013,6 @@
         "Görünüm › Yakınlaştır"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -6231,7 +6043,6 @@
         "Görünüm › Paneller"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/shell/fullscreenButton.ts"
@@ -6270,7 +6081,6 @@
         "Görünüm › Paneller"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -6301,7 +6111,6 @@
         "Görünüm › Görünüş"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/statusbar/StatusBar.ts"
@@ -6333,7 +6142,6 @@
         "Görünüm › Yakınlaştır"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -6365,7 +6173,6 @@
         "Görünüm › Yakınlaştır"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -6394,7 +6201,6 @@
         "Görünüm › Görünüş"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/statusbar/StatusBar.ts"
@@ -6426,7 +6232,6 @@
         "Görünüm › Görünüş"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/statusbar/StatusBar.ts"
@@ -6438,38 +6243,6 @@
       },
       "tests": [],
       "desktopNote": "Masaüstü çizimi wgpu ile yapar; arka ucu (Vulkan, Metal, DirectX 12, OpenGL) wgpu seçer (ADR 0019). WebGL2 ile WebGPU tarayıcının seçenekleridir."
-    },
-    {
-      "id": "view.ribbon",
-      "title": "Şerit arayüzü",
-      "category": "Görünüm",
-      "icon": "ribbon",
-      "description": "Menüler, araç çubuğu ve araç kutusu yerine sekmeli şerit: aynı araçlar ve komutlar. Uygulama ayarları → Görünüm’den de seçilir.",
-      "aliases": [
-        "SERIT",
-        "RIBBON"
-      ],
-      "kind": "toggle",
-      "shortcuts": [],
-      "menus": [
-        "Görünüm › Paneller"
-      ],
-      "ribbon": [
-        "Görünüm › Paneller"
-      ],
-      "quickAccess": false,
-      "toolbox": false,
-      "hiddenIn": [],
-      "uiSources": [],
-      "status": "implemented",
-      "platforms": {
-        "web": "implemented",
-        "desktop": "n/a"
-      },
-      "tests": [
-        "apps/web/scripts/e2e/smoke.mjs"
-      ],
-      "desktopNote": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
     },
     {
       "id": "view.ribbonCollapse",
@@ -6490,7 +6263,6 @@
       "menus": [],
       "ribbon": [],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/ribbon/Ribbon.ts",
@@ -6524,11 +6296,9 @@
         "Görünüm › Paneller"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
-        "apps/web/src/ui/ribbon/panels.ts",
-        "apps/web/src/ui/shell/shellPlan.ts"
+        "apps/web/src/ui/ribbon/panels.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -6554,7 +6324,6 @@
         "Görünüm › Görünüş"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -6581,7 +6350,6 @@
         "Görünüm › Görünüş"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -6606,7 +6374,6 @@
         "Görünüm › Görünüş"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -6634,7 +6401,6 @@
         "Görünüm › Görünüş"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -6657,7 +6423,6 @@
       "menus": [],
       "ribbon": [],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/ribbon/ribbonPlan.ts"
@@ -6668,66 +6433,6 @@
         "desktop": "implemented"
       },
       "tests": []
-    },
-    {
-      "id": "view.toolbox",
-      "title": "Araç kutusu",
-      "category": "Görünüm",
-      "icon": "toolbox",
-      "aliases": [],
-      "kind": "toggle",
-      "shortcuts": [
-        "F9"
-      ],
-      "shortcutsInInput": [
-        "F9"
-      ],
-      "menus": [
-        "Görünüm › Paneller"
-      ],
-      "ribbon": [
-        "Görünüm › Paneller"
-      ],
-      "quickAccess": false,
-      "toolbox": false,
-      "hiddenIn": [],
-      "uiSources": [
-        "apps/web/src/ui/shell/shellPlan.ts"
-      ],
-      "status": "implemented",
-      "platforms": {
-        "web": "implemented",
-        "desktop": "n/a"
-      },
-      "tests": [],
-      "desktopNote": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
-    },
-    {
-      "id": "view.toolboxDock",
-      "title": "Araç kutusunu kenara sabitle",
-      "short": "Kenara sabitle",
-      "category": "Görünüm",
-      "icon": "dock",
-      "aliases": [],
-      "kind": "toggle",
-      "shortcuts": [],
-      "menus": [
-        "Görünüm › Paneller"
-      ],
-      "ribbon": [
-        "Görünüm › Paneller"
-      ],
-      "quickAccess": false,
-      "toolbox": false,
-      "hiddenIn": [],
-      "uiSources": [],
-      "status": "implemented",
-      "platforms": {
-        "web": "implemented",
-        "desktop": "n/a"
-      },
-      "tests": [],
-      "desktopNote": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
     },
     {
       "id": "view.zoomExtents",
@@ -6750,11 +6455,9 @@
         "Görünüm › Yakınlaştır"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/ribbon/ribbonPlan.ts",
-        "apps/web/src/ui/shell/shellPlan.ts",
         "apps/web/src/ui/shell/viewportMenus.ts"
       ],
       "status": "implemented",
@@ -6785,11 +6488,8 @@
         "Görünüm › Yakınlaştır"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
-      "uiSources": [
-        "apps/web/src/ui/shell/shellPlan.ts"
-      ],
+      "uiSources": [],
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -6814,11 +6514,8 @@
         "Görünüm › Yakınlaştır"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
-      "uiSources": [
-        "apps/web/src/ui/shell/shellPlan.ts"
-      ],
+      "uiSources": [],
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -6843,12 +6540,10 @@
         "Görünüm › Yakınlaştır"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/bottom/PointTable.ts",
         "apps/web/src/ui/ribbon/panels.ts",
-        "apps/web/src/ui/shell/shellPlan.ts",
         "apps/web/src/ui/shell/viewportMenus.ts"
       ],
       "status": "implemented",
@@ -6878,7 +6573,6 @@
         "Görünüm › Görünüş"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -6907,7 +6601,6 @@
         "Görünüm › Görünüş"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "pending",
@@ -6936,7 +6629,6 @@
         "Görünüm › Görünüş"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -6964,7 +6656,6 @@
         "Görünüm › Görünüş"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "implemented",
@@ -6993,7 +6684,6 @@
         "Görünüm › Görünüş"
       ],
       "quickAccess": false,
-      "toolbox": false,
       "hiddenIn": [],
       "uiSources": [],
       "status": "pending",
@@ -10173,20 +9863,6 @@
       "desktopWhere": "apps/desktop/src/modes.rs, layout.rs (açılışta saklanan sekme, yoksa Giriş; yerlesim.json, ADR 0115)"
     },
     {
-      "id": "layout.ribbonToolbox",
-      "key": "ribbonToolbox",
-      "scope": "layout",
-      "persistence": "localStorage kentos.ui.v1",
-      "type": "boolean",
-      "default": false,
-      "status": "implemented",
-      "platforms": {
-        "web": "implemented",
-        "desktop": "n/a"
-      },
-      "desktopNote": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
-    },
-    {
       "id": "layout.rightVisible",
       "key": "rightVisible",
       "scope": "layout",
@@ -10213,90 +9889,6 @@
         "desktop": "implemented"
       },
       "desktopWhere": "ayarlar.json appearance.theme (Görünüm sekmesi, ADR 0051)"
-    },
-    {
-      "id": "layout.toolboxColumns",
-      "key": "toolboxColumns",
-      "scope": "layout",
-      "persistence": "localStorage kentos.ui.v1",
-      "type": "number",
-      "default": 3,
-      "status": "implemented",
-      "platforms": {
-        "web": "implemented",
-        "desktop": "n/a"
-      },
-      "desktopNote": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
-    },
-    {
-      "id": "layout.toolboxDocked",
-      "key": "toolboxDocked",
-      "scope": "layout",
-      "persistence": "localStorage kentos.ui.v1",
-      "type": "boolean",
-      "default": false,
-      "status": "implemented",
-      "platforms": {
-        "web": "implemented",
-        "desktop": "n/a"
-      },
-      "desktopNote": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
-    },
-    {
-      "id": "layout.toolboxFolded",
-      "key": "toolboxFolded",
-      "scope": "layout",
-      "persistence": "localStorage kentos.ui.v1",
-      "type": "array",
-      "default": [],
-      "status": "implemented",
-      "platforms": {
-        "web": "implemented",
-        "desktop": "n/a"
-      },
-      "desktopNote": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
-    },
-    {
-      "id": "layout.toolboxVisible",
-      "key": "toolboxVisible",
-      "scope": "layout",
-      "persistence": "localStorage kentos.ui.v1",
-      "type": "boolean",
-      "default": true,
-      "status": "implemented",
-      "platforms": {
-        "web": "implemented",
-        "desktop": "n/a"
-      },
-      "desktopNote": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
-    },
-    {
-      "id": "layout.toolboxX",
-      "key": "toolboxX",
-      "scope": "layout",
-      "persistence": "localStorage kentos.ui.v1",
-      "type": "number",
-      "default": 12,
-      "status": "implemented",
-      "platforms": {
-        "web": "implemented",
-        "desktop": "n/a"
-      },
-      "desktopNote": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
-    },
-    {
-      "id": "layout.toolboxY",
-      "key": "toolboxY",
-      "scope": "layout",
-      "persistence": "localStorage kentos.ui.v1",
-      "type": "number",
-      "default": 12,
-      "status": "implemented",
-      "platforms": {
-        "web": "implemented",
-        "desktop": "n/a"
-      },
-      "desktopNote": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
     },
     {
       "id": "project.angleUnit",
@@ -10706,21 +10298,6 @@
         "desktop": "implemented"
       },
       "desktopWhere": "ayarlar.json appearance.shadows: iki platformun ortak anahtarı; KentOS UI theme::shape (Uygulama ayarları → Görünüm → Biçim, ADR 0127)"
-    },
-    {
-      "id": "user.shell",
-      "key": "shell",
-      "setting": "appearance.shell",
-      "scope": "user",
-      "persistence": "localStorage kentos.settings.v1",
-      "type": "string",
-      "default": "classic",
-      "status": "implemented",
-      "platforms": {
-        "web": "implemented",
-        "desktop": "n/a"
-      },
-      "desktopNote": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
     },
     {
       "id": "user.snapAperture",
@@ -15063,18 +14640,6 @@
       "desktopWhere": "apps/desktop/src/layer_tree.rs (ADR 0072, 0075)"
     },
     {
-      "id": "apps/web/src/ui/menu/MenuBar.ts#MenuBar",
-      "name": "MenuBar",
-      "role": "panel",
-      "source": "apps/web/src/ui/menu/MenuBar.ts",
-      "status": "implemented",
-      "platforms": {
-        "web": "implemented",
-        "desktop": "n/a"
-      },
-      "desktopNote": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
-    },
-    {
       "id": "apps/web/src/ui/processing/ProcessingPanel.ts#ProcessingPanel",
       "name": "ProcessingPanel",
       "role": "panel",
@@ -15389,30 +14954,6 @@
         "desktop": "implemented"
       },
       "desktopWhere": "apps/desktop/src/find_replace.rs (ADR 0145 §6)"
-    },
-    {
-      "id": "apps/web/src/ui/toolbar/Toolbar.ts#Toolbar",
-      "name": "Toolbar",
-      "role": "panel",
-      "source": "apps/web/src/ui/toolbar/Toolbar.ts",
-      "status": "implemented",
-      "platforms": {
-        "web": "implemented",
-        "desktop": "n/a"
-      },
-      "desktopNote": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
-    },
-    {
-      "id": "apps/web/src/ui/toolbox/Toolbox.ts#Toolbox",
-      "name": "Toolbox",
-      "role": "panel",
-      "source": "apps/web/src/ui/toolbox/Toolbox.ts",
-      "status": "implemented",
-      "platforms": {
-        "web": "implemented",
-        "desktop": "n/a"
-      },
-      "desktopNote": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
     }
   ],
   "layout": {
@@ -15566,12 +15107,9 @@
           {
             "label": "Paneller",
             "items": [
-              "view.toolbox",
-              "view.toolboxDock",
               "view.rightPanel",
               "view.bottomPanel",
               "view.coords",
-              "view.ribbon",
               "view.keyTips",
               "view.fullscreen"
             ]
@@ -17673,14 +17211,6 @@
             "icon": "more",
             "items": [
               {
-                "command": "view.toolbox",
-                "size": "small"
-              },
-              {
-                "command": "view.toolboxDock",
-                "size": "small"
-              },
-              {
                 "command": "view.rightPanel",
                 "size": "small"
               },
@@ -17690,10 +17220,6 @@
               },
               {
                 "command": "view.coords",
-                "size": "small"
-              },
-              {
-                "command": "view.ribbon",
                 "size": "small"
               },
               {
@@ -19747,14 +19273,6 @@
               "icon": "more",
               "items": [
                 {
-                  "command": "view.toolbox",
-                  "size": "small"
-                },
-                {
-                  "command": "view.toolboxDock",
-                  "size": "small"
-                },
-                {
                   "command": "view.rightPanel",
                   "size": "small"
                 },
@@ -19764,10 +19282,6 @@
                 },
                 {
                   "command": "view.coords",
-                  "size": "small"
-                },
-                {
-                  "command": "view.ribbon",
                   "size": "small"
                 },
                 {
@@ -21398,14 +20912,6 @@
               "icon": "more",
               "items": [
                 {
-                  "command": "view.toolbox",
-                  "size": "small"
-                },
-                {
-                  "command": "view.toolboxDock",
-                  "size": "small"
-                },
-                {
                   "command": "view.rightPanel",
                   "size": "small"
                 },
@@ -21415,10 +20921,6 @@
                 },
                 {
                   "command": "view.coords",
-                  "size": "small"
-                },
-                {
-                  "command": "view.ribbon",
                   "size": "small"
                 },
                 {

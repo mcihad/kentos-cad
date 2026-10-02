@@ -139,7 +139,7 @@ const inventory = {
   vocabulary: { status: STATUS, platform: PLATFORM },
   summary: {
     ...Object.fromEntries(Object.entries(sections).map(([name, list]) => [name, count(list)])),
-    commandsWithoutPlace: commands.filter((c) => !c.menus.length && !c.ribbon.length && !c.quickAccess && !c.toolbox && !c.uiSources.length).map((c) => c.id),
+    commandsWithoutPlace: commands.filter((c) => !c.menus.length && !c.ribbon.length && !c.quickAccess && !c.uiSources.length).map((c) => c.id),
     commandsWithoutTests: commands.filter((c) => !c.tests.length).length,
     commandsOnDesktop: commands.filter((c) => c.platforms.desktop === 'implemented').length,
     // Per section, how many items the desktop has, partly has, lacks, or has no use for.

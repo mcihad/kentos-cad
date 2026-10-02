@@ -42,9 +42,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   sağ tık menüleri ve tek seferlik kenet vardır (ADR 0059); çizimin
   yazıları (yazı nesnesi, ölçü değeri, etiket; projenin yazı tipiyle), ölçü çizgileri ve yardımcı
   çizgiler çizilir (ADR 0055).
-  Web özellikleri envanter üzerinden adım adım masaüstüne taşınır. Masaüstünde yalnız şerit arayüzü
-  vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir (sahibin kararı,
-  27 Eylül); envanterde masaüstü için anlamsızdır.
+  Web özellikleri envanter üzerinden adım adım masaüstüne taşınır. İki platformda da yalnız şerit
+  arayüzü vardır; web'in klasik arayüzü (menü çubuğu, araç çubuğu, kayan araç kutusu) kaldırıldı
+  (sahibin kararları, 27 Eylül ve 2 Ekim; ADR 0155).
 - Web WebGPU/WebGL2 renderer'larını korur. Uygun WGSL kaynakları native ile
   paylaşılabilir; native Iced/application/wgpu runtime'ı web'e derlenmez.
 - Server'ın ana görevi kişisel/kurumsal proje saklama, erişim, yetkilendirme,
@@ -585,12 +585,16 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   köşeler, bağımsız başvurusuyla), 2. adım (alt panelin Noktalar sekmesi: sıralama, süzgeç, seçim, Göster) ve 3. adım (yerinde
   düzenleme, Bağlı çizgiler izler, Satır ekle, Sil; ortak durumlar `edits.json`) ve 4.1 (İşlemler ▾ ve satırın menüsü:
   Yeniden adlandır, Sıralı numara ver, Katmana taşı; ortak durumlar `batch.json`) ve 4.2 (Çift noktaları ayıkla, Çiftleri
-  göster; ortak durumlar `dedupe.json`) tamam; sıradaki 4.3: Dışa ve İçe aktar. PDF, yazdırma ve pafta çıktısı (§16.4) en
+  göster; ortak durumlar `dedupe.json`) tamam; sıradaki 4.3: Dışa ve İçe aktar. 2 Ekim: web'in klasik arayüzü
+  kaldırıldı, iki platformda yalnız şerit var (sahibin kararı, [ADR 0155](docs/adr/0155-web-ribbon-only.md)). PDF, yazdırma ve pafta çıktısı (§16.4) en
   sondadır, zamanını sahip söyleyecek. İşler ADR 0142–0148'deki gibi: önce ADR ve adımları, sonra adım adım iki platformda,
   ortak fixture'larla.
-- Bilinen açık: web `pnpm e2e` duman testinde üç test ADR 0143'ten önce de düşüyordu: “toolbox
-  shows every tool without scrolling” (79 araç kaydırma istiyor), nokta hesaplayıcının “yan nokta
-  30/5” adımı ve “Layers panel: counts follow add, undo and redo”. Kök nedenleri araştırılmadı.
+- Web `pnpm e2e` duman testi 2 Ekim'de bütünüyle geçiyor (203 denetim). ADR 0143'ten önce de düşen
+  üç testten araç kutusununki araç kutusuyla kalktı (ADR 0155); nokta hesaplayıcının “yan nokta 30/5”
+  adımı ve “Layers panel: counts follow add, undo and redo” araç kutusu kalkınca iki koşuda geçti (kök
+  nedenleri araştırılmadı). Önceki dilimlerin bozduğu dört denetim aynı gün düzeltildi: Uyarılar
+  sekmesinin yeri (Noktalar), gizli “Diğer” çipi, DXF içe aktarmada Blokları patlat, CAD modunun
+  Ölçme sekmesi.
 - Çalışma düzeni: çekirdek, masaüstü ve web aynı oturumda (29 Eylül akşamından beri alt ajan yok); her
   iş iki platformda kullanılarak resimlenir, commit'lenir; main belli noktalarda (tamamlanan adımlardan sonra) push'lanır (sahibin isteği, 30 Eylül).
 

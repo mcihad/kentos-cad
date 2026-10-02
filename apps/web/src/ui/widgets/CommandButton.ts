@@ -7,7 +7,7 @@ import { tooltip } from './tooltip';
 
 /**
  * Icon button bound to a command: reflects enabled / pressed state and shows
- * title + shortcut in its tooltip. Used by toolbar, toolbox and panels.
+ * title + shortcut in its tooltip. Used by the panels.
  */
 export function commandButton(
   ctx: AppContext,

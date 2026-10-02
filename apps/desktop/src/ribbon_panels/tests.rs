@@ -247,3 +247,41 @@ fn screens() {
         );
     }
 }
+
+/// Özellikler's lists hold the web's values (fixtures/shell/v1/ribbon.json
+/// `fields`, moved there from the classic shell's file: docs/adr/0155): the
+/// colours by name, the line types' names, the weights and the scales as
+/// written.
+#[test]
+fn ozellikler_offers_the_webs_values() {
+    let file: serde_json::Value =
+        serde_json::from_str(include_str!("../../../../fixtures/shell/v1/ribbon.json"))
+            .expect("ribbon.json reads");
+    let fields = &file["fields"];
+    let colors: Vec<serde_json::Value> = DRAW_COLORS
+        .iter()
+        .map(|(name, value)| serde_json::json!({ "name": name, "value": value }))
+        .collect();
+    assert_eq!(serde_json::Value::from(colors), fields["colors"]);
+    let types: serde_json::Map<String, serde_json::Value> = LINE_TYPES
+        .iter()
+        .map(|(t, name)| {
+            let id = serde_json::to_value(t).expect("a line type's id");
+            (
+                id.as_str().unwrap_or_default().to_owned(),
+                serde_json::Value::from(*name),
+            )
+        })
+        .collect();
+    assert_eq!(serde_json::Value::from(types), fields["lineTypes"]);
+    let weights: Vec<serde_json::Value> = LINE_WEIGHTS
+        .iter()
+        .map(|&w| serde_json::json!({ "mm": w, "text": weight_text(w) }))
+        .collect();
+    assert_eq!(serde_json::Value::from(weights), fields["weights"]);
+    let scales: Vec<serde_json::Value> = PLOT_SCALES
+        .iter()
+        .map(|&s| serde_json::json!({ "denominator": s as u64, "text": format!("1:{s}") }))
+        .collect();
+    assert_eq!(serde_json::Value::from(scales), fields["scales"]);
+}

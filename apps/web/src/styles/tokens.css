@@ -26,8 +26,8 @@
   --fs-lg: calc(16px * var(--ui-scale));
   --fs-xl: calc(19px * var(--ui-scale));
 
+  /* The ribbon's tab row (the name is the classic menu bar's, docs/adr/0155). */
   --menubar-h: calc(32px * var(--ui-scale));
-  --toolbar-h: calc(44px * var(--ui-scale));
   /* Ribbon panels under its tab row (the tab row is --menubar-h). */
   --ribbon-h: calc(96px * var(--ui-scale));
   --status-h: calc(28px * var(--ui-scale));

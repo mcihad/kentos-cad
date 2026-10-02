@@ -10,8 +10,9 @@ import { fixed } from '../../core/displayNumber';
 
 /**
  * Current-property fields: the active layer, colour, line type and weight
- * for new objects, and the project's plot scale. The classic toolbar and
- * the ribbon show the same fields; each keeps itself current.
+ * for new objects, and the project's plot scale. The ribbon's Katmanlar and
+ * Özellikler panels show them; each keeps itself current. The lists are
+ * the panels' too (Katmanlar, Öznitelikler, the project settings).
  */
 
 /** Drawing colours. `ink` is CAD colour 7: black, drawn white on the dark theme. */
@@ -162,34 +163,6 @@ export function weightField(ctx: AppContext, d: DisposableStore, opts: FieldOpti
     items: () => weightItems(ctx),
   });
   d.add(ctx.settings.lineWeight.subscribe(() => dd.set(h('span', { class: 'dropdown__text' }, currentWeight(ctx))), true));
-  return dd.el;
-}
-
-/**
- * The colour, line type and weight fields folded into one (the classic
- * toolbar at its narrowest, DESIGN.md §7.3): each is a submenu showing its
- * current value, the same lists as the fields.
- */
-export function propertiesField(ctx: AppContext, d: DisposableStore, opts: FieldOptions = {}): HTMLElement {
-  const dd = new Dropdown({
-    ariaLabel: 'Geçerli özellikler: renk, çizgi tipi, kalınlık',
-    width: opts.width ?? 128,
-    items: () => {
-      const c = currentColor(ctx);
-      return [
-        { kind: 'header', label: 'Yeni nesnelerin özellikleri' },
-        { label: 'Renk', swatch: c.swatch, hint: c.text, items: () => colorItems(ctx) },
-        { label: 'Çizgi tipi', hint: currentLineType(ctx), items: () => lineTypeItems(ctx) },
-        { label: 'Çizgi kalınlığı', hint: currentWeight(ctx), items: () => weightItems(ctx) },
-      ];
-    },
-  });
-  const sync = () => {
-    const c = currentColor(ctx);
-    dd.set(c.swatch ? h('span', { class: 'swatch', style: `--swatch:${c.swatch}` }) : null, h('span', { class: 'dropdown__text' }, 'Özellikler'));
-  };
-  d.add(watchAll([ctx.settings.color, ctx.prefs.theme], sync));
-  sync();
   return dd.el;
 }
 

@@ -356,11 +356,11 @@ impl SettingsFile {
     /// Reads a stored or exported settings document (TODOS.md SET-04). A
     /// leading byte order mark is skipped. The format and version are checked
     /// first; another format or version is refused, not guessed. Within the
-    /// layers, an older key is read under today's ([`RENAMED`]); a value
-    /// that is invalid, sensitive or in a layer that cannot hold it is
-    /// dropped and reported; the others are kept. An unknown key (from a
-    /// newer version) is kept as it is and reported, so saving here does
-    /// not lose it.
+    /// layers, an older key is read under today's ([`RENAMED`]) and a
+    /// retired one dropped ([`RETIRED`]); a value that is invalid, sensitive
+    /// or in a layer that cannot hold it is dropped and reported; the others
+    /// are kept. An unknown key (from a newer version) is kept as it is and
+    /// reported, so saving here does not lose it.
     pub fn from_json(
         text: &str,
         schema: &SettingsSchema,
@@ -442,6 +442,12 @@ pub const RENAMED: &[(&str, &str)] = &[
     ("appearance.uiScale", "appearance.textSize"),
 ];
 
+/// Keys earlier versions kept settings under that no longer mean anything:
+/// dropped as they are read, without a report (a key from a newer version is
+/// kept and reported). The web's shell, since it shows the ribbon only
+/// (docs/adr/0155).
+pub const RETIRED: &[&str] = &["appearance.shell"];
+
 /// An older key's value under today's key: `None` when `key` is not an
 /// older key; an error when its value has no reading today.
 ///
@@ -504,6 +510,9 @@ fn renamed_layer(
     scope: SettingScope,
     diagnostics: &mut Vec<SettingDiagnostic>,
 ) -> Map<String, Value> {
+    for key in RETIRED {
+        values.remove(*key);
+    }
     for (from, _) in RENAMED {
         let Some(value) = values.remove(*from) else {
             continue;

@@ -5,8 +5,8 @@ import { icon } from '../icons';
 import { tooltip } from '../widgets/tooltip';
 
 /**
- * The KentOS mark and wordmark at the left of the menu bar and of the
- * ribbon's tab row (DESIGN.md §2). A button: it opens the application menu
+ * The KentOS mark and wordmark at the left of the ribbon's tab row
+ * (DESIGN.md §2). A button: it opens the application menu
  * (ui/appmenu/AppMenu.ts, loaded on first use), the place for files,
  * import and export, the cloud and the settings.
  */

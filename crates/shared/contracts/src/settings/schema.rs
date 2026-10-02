@@ -58,7 +58,7 @@ fn groups() -> Vec<SettingGroup> {
         group(
             "appearance",
             "Görünüm",
-            "Tema, vurgu rengi, yazı tipi, arayüz düzeni ve yazı boyutu.",
+            "Tema, vurgu rengi, yazı tipi ve yazı boyutu.",
         ),
         group(
             "newProjects",
@@ -329,16 +329,6 @@ fn settings() -> Vec<SettingDescriptor> {
         .text(
             "Çizim zemini",
             "Çizim alanının zemini, arayüzün temasından bağımsız: temaya uyar, arduvaz, siyah (klasik AutoCAD) ya da kâğıt.",
-        ),
-        choice(
-            "appearance.shell",
-            "classic",
-            &[("classic", "Klasik"), ("ribbon", "Şerit")],
-        )
-        .hosts(&[Web])
-        .text(
-            "Arayüz düzeni",
-            "Menüler, araç çubuğu ve kayan araç kutusu ya da sekmeli şerit; ikisi aynı araç ve komutları sunar.",
         ),
         choice(
             "appearance.crosshair",

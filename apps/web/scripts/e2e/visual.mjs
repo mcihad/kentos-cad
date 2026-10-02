@@ -1,5 +1,5 @@
-// Visual comparison of the interface (pnpm e2e:visual): screenshots of the chrome (menu bar, ribbon,
-// panels, status bar, dialogs, the start screen, the application menu) in both themes, every accent
+// Visual comparison of the interface (pnpm e2e:visual): screenshots of the chrome (the ribbon, panels,
+// status bar, dialogs, the start screen, the application menu) in both themes, every accent
 // colour and the large type size, compared pixel by pixel with the reference images in
 // scripts/e2e/visual/. The drawing itself is left out: it depends on the GPU (WebGL2 on SwiftShader here,
 // a real card elsewhere), and the smoke test checks what it draws.
@@ -103,7 +103,7 @@ async function region(b, name, clip) {
   results.push({ name, ok, note: `${cmp.bad} / ${cmp.total} piksel farklı (%${(share * 100).toFixed(2)})` });
 }
 
-/** The chrome of a page: the top bar (menu and toolbar, or ribbon), the right dock, the status bar. */
+/** The chrome of a page: the ribbon (the only top bar, docs/adr/0155), the right dock, the status bar. */
 async function chrome(b, prefix) {
   const top = (await rect(b, '.ribbon')) ?? (await rect(b, '.shell__chrome'));
   await region(b, `${prefix}-top`, top);
@@ -115,19 +115,17 @@ async function chrome(b, prefix) {
 }
 
 try {
-  // Classic shell and ribbon, dark and light.
+  // The ribbon, dark and light.
   for (const theme of ['dark', 'light']) {
-    for (const shell of ['classic', 'ribbon']) {
-      const b = await page({ shell }, { theme });
-      if (shell === 'ribbon') await b.waitFor(`!!document.querySelector('.ribbon .rpanel')`, 20000);
-      await sleep(400);
-      await chrome(b, `${shell}-${theme}`);
-      b.close();
-    }
+    const b = await page({}, { theme });
+    await b.waitFor(`!!document.querySelector('.ribbon .rpanel')`, 20000);
+    await sleep(400);
+    await chrome(b, `ribbon-${theme}`);
+    b.close();
   }
   // Accent colours: a running tool (filled accent button) and a checked toggle show them.
   for (const accent of ['navy', 'amber', 'teal', 'bordeaux']) {
-    const b = await page({ shell: 'ribbon', accent }, { theme: 'dark' });
+    const b = await page({ accent }, { theme: 'dark' });
     await b.waitFor(`!!document.querySelector('.ribbon .rpanel')`, 20000);
     await b.eval(`window.kentos.commands.execute('tool.line')`);
     await sleep(400);
@@ -136,7 +134,7 @@ try {
   }
   // Large type.
   {
-    const b = await page({ shell: 'ribbon', uiScale: 'large' }, { theme: 'dark' });
+    const b = await page({ uiScale: 'large' }, { theme: 'dark' });
     await b.waitFor(`!!document.querySelector('.ribbon .rpanel')`, 20000);
     await sleep(400);
     await chrome(b, 'large');
@@ -144,7 +142,7 @@ try {
   }
   // Windows: application settings, the start screen, the application menu (dark and light).
   for (const theme of ['dark', 'light']) {
-    const b = await page({ shell: 'classic' }, { theme });
+    const b = await page({}, { theme });
     await b.eval(`window.kentos.commands.execute('tools.options')`);
     await b.waitFor(`!!document.querySelector('.dialog')`, 10000);
     await sleep(500);
@@ -157,7 +155,7 @@ try {
     await region(b, `start-${theme}`, await rect(b, '.start'));
     await b.key('Escape');
     await sleep(200);
-    const brand = await rect(b, '.menubar .brand');
+    const brand = await rect(b, '.ribbon .brand');
     await b.click(brand.x + brand.width / 2, brand.y + brand.height / 2);
     await b.waitFor(`!!document.querySelector('.appmenu')`, 10000);
     await b.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 1, y: 858, button: 'none' });
