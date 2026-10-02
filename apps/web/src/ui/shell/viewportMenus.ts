@@ -22,6 +22,11 @@ const SNAP_ICON: Record<SnapKind, string> = {
   perpendicular: 'snapPerpendicular',
   tangent: 'snapTangent',
   nearest: 'snapNearest',
+  // docs/adr/0163 §1: offered once their markers and icons are drawn (step 2).
+  centroid: 'snapCentroid',
+  extension: 'snapExtension',
+  parallel: 'snapParallel',
+  grid: 'snapGrid',
 };
 
 /**

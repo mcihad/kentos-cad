@@ -13,7 +13,20 @@ import { CoreStore, type CoreStyleProgram, type ExprColumnData } from '../wasm/c
 import { packEntities } from '../wasm/pack';
 import { DEFAULT_LABELS, labelRule, readGrips, type GripSet } from './storeRecords';
 
-export type SnapKind = 'endpoint' | 'midpoint' | 'center' | 'node' | 'quadrant' | 'intersection' | 'perpendicular' | 'tangent' | 'nearest';
+export type SnapKind =
+  | 'endpoint'
+  | 'midpoint'
+  | 'center'
+  | 'node'
+  | 'quadrant'
+  | 'intersection'
+  | 'perpendicular'
+  | 'tangent'
+  | 'nearest'
+  | 'centroid'
+  | 'extension'
+  | 'parallel'
+  | 'grid';
 
 export interface SnapHit {
   kind: SnapKind;
@@ -31,10 +44,55 @@ export const SNAP_LABEL: Record<SnapKind, string> = {
   perpendicular: 'Dik',
   tangent: 'Teğet',
   nearest: 'En yakın',
+  centroid: 'Ağırlık merkezi',
+  extension: 'Uzantı',
+  parallel: 'Paralel',
+  grid: 'Karelaj',
 };
 
 /** The core's snap kinds by bit number (crates/shared/geometry-core/src/store/snap.rs). */
-const SNAP_BITS: readonly SnapKind[] = ['endpoint', 'midpoint', 'center', 'node', 'quadrant', 'intersection', 'perpendicular', 'tangent', 'nearest'];
+export const SNAP_BITS: readonly SnapKind[] = ['endpoint', 'midpoint', 'center', 'node', 'quadrant', 'intersection', 'perpendicular', 'tangent', 'nearest', 'centroid', 'extension', 'parallel', 'grid'];
+
+/** Where an acquired end goes on (docs/adr/0163 §1): a straight edge's line beyond the end, or the rest of an arc's circle. */
+export type Extension = { kind: 'line'; end: Vec2; dir: Vec2 } | { kind: 'arc'; c: Vec2; r: number; a0: number; sweep: number };
+
+/** What a snap takes besides the drawing (docs/adr/0163 §1–§3). */
+export interface SnapExtras {
+  extensions?: readonly Extension[];
+  /** Acquired directions, unit. */
+  parallels?: readonly Vec2[];
+  /** The object being drawn: an open path, one bulge per segment. */
+  draft?: { pts: readonly Vec2[]; bulges?: readonly number[] } | null;
+  /** Karelaj's spacings along x and y, metres. */
+  grid?: readonly [number, number] | null;
+}
+
+/** The kinds as the core's bits. */
+export function snapMask(kinds: ReadonlySet<SnapKind>): number {
+  let mask = 0;
+  for (let i = 0; i < SNAP_BITS.length; i++) if (kinds.has(SNAP_BITS[i])) mask |= 1 << i;
+  return mask;
+}
+
+/** Extensions as the core's records. */
+export function extensionRecords(list: readonly Extension[]): Float64Array {
+  return Float64Array.from(list.flatMap((x) => (x.kind === 'line' ? [0, x.end.x, x.end.y, x.dir.x, x.dir.y] : [1, x.c.x, x.c.y, x.r, x.a0, x.sweep])));
+}
+
+/** The core's extension records read back. */
+export function readExtensions(f: ArrayLike<number>): Extension[] {
+  const out: Extension[] = [];
+  for (let i = 0; i < f.length; ) {
+    if (f[i] === 0) {
+      out.push({ kind: 'line', end: { x: f[i + 1], y: f[i + 2] }, dir: { x: f[i + 3], y: f[i + 4] } });
+      i += 5;
+    } else {
+      out.push({ kind: 'arc', c: { x: f[i + 1], y: f[i + 2] }, r: f[i + 3], a0: f[i + 4], sweep: f[i + 5] });
+      i += 6;
+    }
+  }
+  return out;
+}
 
 type LayerRow = { id: string; visible: boolean; locked: boolean; pickInterior: boolean; label?: ReturnType<typeof labelRule> };
 
@@ -254,10 +312,44 @@ export class PickIndex {
 
   snap(p: Vec2, tol: number, kinds: ReadonlySet<SnapKind>, from: Vec2 | null = null): SnapHit | null {
     this.sync();
-    let mask = 0;
-    for (let i = 0; i < SNAP_BITS.length; i++) if (kinds.has(SNAP_BITS[i])) mask |= 1 << i;
-    const r = this.store.snap(p.x, p.y, tol, mask, from);
+    const r = this.store.snap(p.x, p.y, tol, snapMask(kinds), from);
     return r.length ? { kind: SNAP_BITS[r[0]], point: { x: r[1], y: r[2] }, entityId: r[3] } : null;
+  }
+
+  /**
+   * `snap` with what the drawing does not hold (docs/adr/0163): acquired extensions and parallels, the object being
+   * drawn, Karelaj. A hit on none of the drawing's objects has `entityId` −1.
+   */
+  snapEx(p: Vec2, tol: number, kinds: ReadonlySet<SnapKind>, from: Vec2 | null, extras: SnapExtras): SnapHit | null {
+    this.sync();
+    const draft = extras.draft;
+    const r = this.store.snapEx(
+      p.x,
+      p.y,
+      tol,
+      snapMask(kinds),
+      from,
+      extensionRecords(extras.extensions ?? []),
+      Float64Array.from((extras.parallels ?? []).flatMap((u) => [u.x, u.y])),
+      Float64Array.from((draft?.pts ?? []).flatMap((q) => [q.x, q.y])),
+      Float64Array.from(draft?.bulges ?? []),
+      extras.grid?.[0] ?? 0,
+      extras.grid?.[1] ?? 0,
+    );
+    return r.length ? { kind: SNAP_BITS[r[0]], point: { x: r[1], y: r[2] }, entityId: r[3] } : null;
+  }
+
+  /** The extensions of object `id`'s edges ending at `at` (Uzantı's acquisition, docs/adr/0163 §2). */
+  extensionsAt(id: number, at: Vec2): Extension[] {
+    this.sync();
+    return readExtensions(this.store.extensionsAt(id, at.x, at.y));
+  }
+
+  /** The direction of the straight edge nearest `p` within `tol`, unit (Paralel's acquisition). */
+  directionAt(p: Vec2, tol: number): Vec2 | null {
+    this.sync();
+    const u = this.store.directionAt(p.x, p.y, tol);
+    return u.length ? { x: u[0], y: u[1] } : null;
   }
 
   /**

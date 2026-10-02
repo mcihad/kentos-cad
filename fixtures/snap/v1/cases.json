@@ -1,0 +1,2660 @@
+{
+ "format": "kentos.snap",
+ "version": 1,
+ "source": "scripts/fixtures/snap_cases.py (docs/adr/0163 §1–§4, §7)",
+ "kinds": [
+  "endpoint",
+  "midpoint",
+  "center",
+  "node",
+  "quadrant",
+  "intersection",
+  "perpendicular",
+  "tangent",
+  "nearest",
+  "centroid",
+  "extension",
+  "parallel",
+  "grid"
+ ],
+ "snap": [
+  {
+   "name": "kare: ağırlık merkezi",
+   "entities": [
+    {
+     "kind": "polygon",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 10.0,
+       "y": 0.0
+      },
+      {
+       "x": 10.0,
+       "y": 10.0
+      },
+      {
+       "x": 0.0,
+       "y": 10.0
+      }
+     ]
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    5.2,
+    4.9
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "centroid"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "centroid",
+    "point": [
+     5.0,
+     5.0
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "L biçimli alan",
+   "entities": [
+    {
+     "kind": "polygon",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 10.0,
+       "y": 0.0
+      },
+      {
+       "x": 10.0,
+       "y": 4.0
+      },
+      {
+       "x": 4.0,
+       "y": 4.0
+      },
+      {
+       "x": 4.0,
+       "y": 10.0
+      },
+      {
+       "x": 0.0,
+       "y": 10.0
+      }
+     ]
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    4.175,
+    3.875
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "centroid"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "centroid",
+    "point": [
+     3.875,
+     3.875
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "delikli alan: delik çıkarılır",
+   "entities": [
+    {
+     "kind": "polygon",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 10.0,
+       "y": 0.0
+      },
+      {
+       "x": 10.0,
+       "y": 10.0
+      },
+      {
+       "x": 0.0,
+       "y": 10.0
+      }
+     ],
+     "holes": [
+      {
+       "pts": [
+        {
+         "x": 6.0,
+         "y": 6.0
+        },
+        {
+         "x": 6.0,
+         "y": 9.0
+        },
+        {
+         "x": 9.0,
+         "y": 9.0
+        },
+        {
+         "x": 9.0,
+         "y": 6.0
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    4.752747252747253,
+    5.002747252747253
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "centroid"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "centroid",
+    "point": [
+     4.752747252747253,
+     4.752747252747253
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "iki parçalı alan: parçalar alanlarıyla",
+   "entities": [
+    {
+     "kind": "polygon",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 4.0,
+       "y": 0.0
+      },
+      {
+       "x": 4.0,
+       "y": 4.0
+      },
+      {
+       "x": 0.0,
+       "y": 4.0
+      }
+     ],
+     "parts": [
+      {
+       "pts": [
+        {
+         "x": 10.0,
+         "y": 0.0
+        },
+        {
+         "x": 12.0,
+         "y": 0.0
+        },
+        {
+         "x": 12.0,
+         "y": 2.0
+        },
+        {
+         "x": 10.0,
+         "y": 2.0
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    3.6,
+    1.8
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "centroid"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "centroid",
+    "point": [
+     3.8,
+     1.8
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "ağırlık merkezi uçtan önce (uzaklık × ağırlık)",
+   "entities": [
+    {
+     "kind": "polygon",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 2.0,
+       "y": 0.0
+      },
+      {
+       "x": 2.0,
+       "y": 2.0
+      },
+      {
+       "x": 0.0,
+       "y": 2.0
+      }
+     ]
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    0.9,
+    0.9
+   ],
+   "tol": 2.0,
+   "kinds": [
+    "endpoint",
+    "centroid"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "centroid",
+    "point": [
+     1.0,
+     1.0
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "açıklığın dışında ağırlık merkezi yok",
+   "entities": [
+    {
+     "kind": "polygon",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 10.0,
+       "y": 0.0
+      },
+      {
+       "x": 10.0,
+       "y": 10.0
+      },
+      {
+       "x": 0.0,
+       "y": 10.0
+      }
+     ]
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    5.0,
+    3.5
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "centroid"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": null
+  },
+  {
+   "name": "yarım daire: yayın dilimi tam",
+   "entities": [
+    {
+     "kind": "polygon",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "pts": [
+      {
+       "x": -5.0,
+       "y": 0.0
+      },
+      {
+       "x": 5.0,
+       "y": 0.0
+      }
+     ],
+     "bulges": [
+      0,
+      1
+     ]
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    0.25,
+    2.1220659078919377
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "centroid"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "centroid",
+    "point": [
+     0.0,
+     2.1220659078919377
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "kare: ağırlık merkezi, TM koordinatlarında",
+   "entities": [
+    {
+     "kind": "polygon",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 487000.0,
+       "y": 4420000.0
+      },
+      {
+       "x": 487010.0,
+       "y": 4420000.0
+      },
+      {
+       "x": 487010.0,
+       "y": 4420010.0
+      },
+      {
+       "x": 487000.0,
+       "y": 4420010.0
+      }
+     ]
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    487005.2,
+    4420004.9
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "centroid"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "centroid",
+    "point": [
+     487005.0,
+     4420005.0
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "L biçimli alan, TM koordinatlarında",
+   "entities": [
+    {
+     "kind": "polygon",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 487000.0,
+       "y": 4420000.0
+      },
+      {
+       "x": 487010.0,
+       "y": 4420000.0
+      },
+      {
+       "x": 487010.0,
+       "y": 4420004.0
+      },
+      {
+       "x": 487004.0,
+       "y": 4420004.0
+      },
+      {
+       "x": 487004.0,
+       "y": 4420010.0
+      },
+      {
+       "x": 487000.0,
+       "y": 4420010.0
+      }
+     ]
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    487004.175,
+    4420003.875
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "centroid"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "centroid",
+    "point": [
+     487003.875,
+     4420003.875
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "delikli alan: delik çıkarılır, TM koordinatlarında",
+   "entities": [
+    {
+     "kind": "polygon",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 487000.0,
+       "y": 4420000.0
+      },
+      {
+       "x": 487010.0,
+       "y": 4420000.0
+      },
+      {
+       "x": 487010.0,
+       "y": 4420010.0
+      },
+      {
+       "x": 487000.0,
+       "y": 4420010.0
+      }
+     ],
+     "holes": [
+      {
+       "pts": [
+        {
+         "x": 487006.0,
+         "y": 4420006.0
+        },
+        {
+         "x": 487006.0,
+         "y": 4420009.0
+        },
+        {
+         "x": 487009.0,
+         "y": 4420009.0
+        },
+        {
+         "x": 487009.0,
+         "y": 4420006.0
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    487004.75274725276,
+    4420005.002747253
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "centroid"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "centroid",
+    "point": [
+     487004.75274725276,
+     4420004.752747253
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "iki parçalı alan: parçalar alanlarıyla, TM koordinatlarında",
+   "entities": [
+    {
+     "kind": "polygon",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 487000.0,
+       "y": 4420000.0
+      },
+      {
+       "x": 487004.0,
+       "y": 4420000.0
+      },
+      {
+       "x": 487004.0,
+       "y": 4420004.0
+      },
+      {
+       "x": 487000.0,
+       "y": 4420004.0
+      }
+     ],
+     "parts": [
+      {
+       "pts": [
+        {
+         "x": 487010.0,
+         "y": 4420000.0
+        },
+        {
+         "x": 487012.0,
+         "y": 4420000.0
+        },
+        {
+         "x": 487012.0,
+         "y": 4420002.0
+        },
+        {
+         "x": 487010.0,
+         "y": 4420002.0
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    487003.6,
+    4420001.8
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "centroid"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "centroid",
+    "point": [
+     487003.8,
+     4420001.8
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "ağırlık merkezi uçtan önce (uzaklık × ağırlık), TM koordinatlarında",
+   "entities": [
+    {
+     "kind": "polygon",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 487000.0,
+       "y": 4420000.0
+      },
+      {
+       "x": 487002.0,
+       "y": 4420000.0
+      },
+      {
+       "x": 487002.0,
+       "y": 4420002.0
+      },
+      {
+       "x": 487000.0,
+       "y": 4420002.0
+      }
+     ]
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    487000.9,
+    4420000.9
+   ],
+   "tol": 2.0,
+   "kinds": [
+    "endpoint",
+    "centroid"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "centroid",
+    "point": [
+     487001.0,
+     4420001.0
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "açıklığın dışında ağırlık merkezi yok, TM koordinatlarında",
+   "entities": [
+    {
+     "kind": "polygon",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 487000.0,
+       "y": 4420000.0
+      },
+      {
+       "x": 487010.0,
+       "y": 4420000.0
+      },
+      {
+       "x": 487010.0,
+       "y": 4420010.0
+      },
+      {
+       "x": 487000.0,
+       "y": 4420010.0
+      }
+     ]
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    487005.0,
+    4420003.5
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "centroid"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": null
+  },
+  {
+   "name": "yarım daire: yayın dilimi tam, TM koordinatlarında",
+   "entities": [
+    {
+     "kind": "polygon",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 486995.0,
+       "y": 4420000.0
+      },
+      {
+       "x": 487005.0,
+       "y": 4420000.0
+      }
+     ],
+     "bulges": [
+      0,
+      1
+     ]
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    487000.25,
+    4420002.122065908
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "centroid"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "centroid",
+    "point": [
+     487000.0,
+     4420002.122065908
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "karelaj 1 × 1 m: en yakın düğüm",
+   "entities": [],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    12.4,
+    7.6
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "grid"
+   ],
+   "from": null,
+   "extras": {
+    "grid": [
+     1,
+     1
+    ]
+   },
+   "expect": {
+    "kind": "grid",
+    "point": [
+     12.0,
+     8.0
+    ],
+    "id": -1
+   }
+  },
+  {
+   "name": "karelaj 0,1 × 0,25 m, TM koordinatlarında: ondalık düğüm",
+   "entities": [],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    487012.437,
+    4420007.61
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "grid"
+   ],
+   "from": null,
+   "extras": {
+    "grid": [
+     0.1,
+     0.25
+    ]
+   },
+   "expect": {
+    "kind": "grid",
+    "point": [
+     487012.4,
+     4420007.5
+    ],
+    "id": -1
+   }
+  },
+  {
+   "name": "karelaj 0,1 m: düğüm ondalık sayının double'ı (3 × 0,1 değil)",
+   "entities": [],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    0.31,
+    0.69
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "grid"
+   ],
+   "from": null,
+   "extras": {
+    "grid": [
+     0.1,
+     0.1
+    ]
+   },
+   "expect": {
+    "kind": "grid",
+    "point": [
+     0.3,
+     0.7
+    ],
+    "id": -1
+   }
+  },
+  {
+   "name": "karelaj 5 × 2,5 m",
+   "entities": [],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    12.4,
+    7.6
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "grid"
+   ],
+   "from": null,
+   "extras": {
+    "grid": [
+     5,
+     2.5
+    ]
+   },
+   "expect": {
+    "kind": "grid",
+    "point": [
+     10.0,
+     7.5
+    ],
+    "id": -1
+   }
+  },
+  {
+   "name": "karelaj: yarımlar yukarı (JavaScript'in yuvarlaması)",
+   "entities": [],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    -12.5,
+    7.5
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "grid"
+   ],
+   "from": null,
+   "extras": {
+    "grid": [
+     1,
+     1
+    ]
+   },
+   "expect": {
+    "kind": "grid",
+    "point": [
+     -12.0,
+     8.0
+    ],
+    "id": -1
+   }
+  },
+  {
+   "name": "karelaj: açıklıktaki uç önce",
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 10.3,
+      "y": 0.0
+     },
+     "b": {
+      "x": 20.0,
+      "y": 0.0
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    10.2,
+    0.1
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "endpoint",
+    "grid"
+   ],
+   "from": null,
+   "extras": {
+    "grid": [
+     1,
+     1
+    ]
+   },
+   "expect": {
+    "kind": "endpoint",
+    "point": [
+     10.3,
+     0.0
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "karelaj: açıklıktaki en yakın önce",
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 10.3,
+      "y": 0.0
+     },
+     "b": {
+      "x": 20.0,
+      "y": 0.0
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    15.2,
+    0.3
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "nearest",
+    "grid"
+   ],
+   "from": null,
+   "extras": {
+    "grid": [
+     1,
+     1
+    ]
+   },
+   "expect": {
+    "kind": "nearest",
+    "point": [
+     15.2,
+     0.0
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "karelaj: açıklıkta bir şey yoksa düğüm",
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 10.3,
+      "y": 0.0
+     },
+     "b": {
+      "x": 20.0,
+      "y": 0.0
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    15.2,
+    3.3
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "nearest",
+    "grid"
+   ],
+   "from": null,
+   "extras": {
+    "grid": [
+     1,
+     1
+    ]
+   },
+   "expect": {
+    "kind": "grid",
+    "point": [
+     15.0,
+     3.0
+    ],
+    "id": -1
+   }
+  },
+  {
+   "name": "karelaj kapalıyken düğüm yok",
+   "entities": [],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    12.4,
+    7.6
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "endpoint"
+   ],
+   "from": null,
+   "extras": {
+    "grid": [
+     1,
+     1
+    ]
+   },
+   "expect": null
+  },
+  {
+   "name": "uzantı: uçtan ötede izdüşüm",
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 10.0,
+      "y": 0.0
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    15.0,
+    0.3
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "extension"
+   ],
+   "from": null,
+   "extras": {
+    "extensions": [
+     [
+      0,
+      10.0,
+      0.0,
+      1.0,
+      0.0
+     ]
+    ]
+   },
+   "expect": {
+    "kind": "extension",
+    "point": [
+     15.0,
+     0.0
+    ],
+    "id": -1
+   }
+  },
+  {
+   "name": "uzantı: ucun gerisinde yok",
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 10.0,
+      "y": 0.0
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    5.0,
+    0.3
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "extension"
+   ],
+   "from": null,
+   "extras": {
+    "extensions": [
+     [
+      0,
+      10.0,
+      0.0,
+      1.0,
+      0.0
+     ]
+    ]
+   },
+   "expect": null
+  },
+  {
+   "name": "uzantının bir kenarla kesişimi",
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 10.0,
+      "y": 0.0
+     }
+    },
+    {
+     "kind": "line",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 14.0,
+      "y": -5.0
+     },
+     "b": {
+      "x": 14.0,
+      "y": 5.0
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    14.05,
+    0.3
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "extension"
+   ],
+   "from": null,
+   "extras": {
+    "extensions": [
+     [
+      0,
+      10.0,
+      0.0,
+      1.0,
+      0.0
+     ]
+    ]
+   },
+   "expect": {
+    "kind": "extension",
+    "point": [
+     14.0,
+     0.0
+    ],
+    "id": -1
+   }
+  },
+  {
+   "name": "iki uzantının kesişimi",
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 10.0,
+      "y": 0.0
+     }
+    },
+    {
+     "kind": "line",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 20.0,
+      "y": -10.0
+     },
+     "b": {
+      "x": 20.0,
+      "y": -2.0
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    19.9,
+    0.1
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "extension"
+   ],
+   "from": null,
+   "extras": {
+    "extensions": [
+     [
+      0,
+      10.0,
+      0.0,
+      1.0,
+      0.0
+     ],
+     [
+      0,
+      20.0,
+      -2.0,
+      0.0,
+      1.0
+     ]
+    ]
+   },
+   "expect": {
+    "kind": "extension",
+    "point": [
+     20.0,
+     0.0
+    ],
+    "id": -1
+   }
+  },
+  {
+   "name": "uzantının yanındaki uç önce",
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 10.0,
+      "y": 0.0
+     }
+    },
+    {
+     "kind": "line",
+     "id": 4,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 15.2,
+      "y": 0.2
+     },
+     "b": {
+      "x": 16.0,
+      "y": 5.0
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    15.0,
+    0.3
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "endpoint",
+    "extension"
+   ],
+   "from": null,
+   "extras": {
+    "extensions": [
+     [
+      0,
+      10.0,
+      0.0,
+      1.0,
+      0.0
+     ]
+    ]
+   },
+   "expect": {
+    "kind": "endpoint",
+    "point": [
+     15.2,
+     0.2
+    ],
+    "id": 4
+   }
+  },
+  {
+   "name": "yayın uzantısı: çemberinin kalanı",
+   "entities": [
+    {
+     "kind": "arc",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "c": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "r": 10.0,
+     "a0": 0.0,
+     "a1": 1.5707963267948966
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    -7.2,
+    7.0
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "extension"
+   ],
+   "from": null,
+   "extras": {
+    "extensions": [
+     [
+      1,
+      0.0,
+      0.0,
+      10.0,
+      1.5707963267948966,
+      4.71238898038469
+     ]
+    ]
+   },
+   "expect": {
+    "kind": "extension",
+    "point": [
+     -7.169949188144306,
+     6.970783932918076
+    ],
+    "id": -1
+   }
+  },
+  {
+   "name": "paralel: son noktadan geçen doğruya izdüşüm",
+   "entities": [],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    6.1,
+    7.9
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "parallel"
+   ],
+   "from": [
+    0.0,
+    0.0
+   ],
+   "extras": {
+    "parallels": [
+     [
+      0.6,
+      0.8
+     ]
+    ]
+   },
+   "expect": {
+    "kind": "parallel",
+    "point": [
+     5.988,
+     7.984
+    ],
+    "id": -1
+   }
+  },
+  {
+   "name": "paralel: son nokta yoksa yok",
+   "entities": [],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    6.1,
+    7.9
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "parallel"
+   ],
+   "from": null,
+   "extras": {
+    "parallels": [
+     [
+      0.6,
+      0.8
+     ]
+    ]
+   },
+   "expect": null
+  },
+  {
+   "name": "paralelin yanındaki uç",
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 6.2,
+      "y": 8.1
+     },
+     "b": {
+      "x": 12.0,
+      "y": 20.0
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    6.1,
+    7.9
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "endpoint",
+    "parallel"
+   ],
+   "from": [
+    0.0,
+    0.0
+   ],
+   "extras": {
+    "parallels": [
+     [
+      0.6,
+      0.8
+     ]
+    ]
+   },
+   "expect": {
+    "kind": "endpoint",
+    "point": [
+     6.2,
+     8.1
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "katmanın türleri: A'nın ucu alınmaz, B'ninki alınır",
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 10.0,
+      "y": 0.0
+     }
+    },
+    {
+     "kind": "line",
+     "id": 2,
+     "layerId": "b",
+     "attrs": {},
+     "a": {
+      "x": 10.4,
+      "y": 0.3
+     },
+     "b": {
+      "x": 20.0,
+      "y": 5.0
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 258
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    10.1,
+    0.1
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "endpoint"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "endpoint",
+    "point": [
+     10.4,
+     0.3
+    ],
+    "id": 2
+   }
+  },
+  {
+   "name": "katmanın türleri: A'nın ortası alınır",
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 10.0,
+      "y": 0.0
+     }
+    },
+    {
+     "kind": "line",
+     "id": 2,
+     "layerId": "b",
+     "attrs": {},
+     "a": {
+      "x": 10.4,
+      "y": 0.3
+     },
+     "b": {
+      "x": 20.0,
+      "y": 5.0
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 258
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    5.0,
+    0.2
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "endpoint",
+    "midpoint"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "midpoint",
+    "point": [
+     5.0,
+     0.0
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "kesişim: iki katman da almıyorsa yok",
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 10.0,
+      "y": 0.0
+     }
+    },
+    {
+     "kind": "line",
+     "id": 3,
+     "layerId": "b",
+     "attrs": {},
+     "a": {
+      "x": 5.0,
+      "y": -5.0
+     },
+     "b": {
+      "x": 5.0,
+      "y": 5.0
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    5.1,
+    0.1
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "intersection"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": null
+  },
+  {
+   "name": "kesişim: birinin katmanı alıyorsa var",
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 10.0,
+      "y": 0.0
+     }
+    },
+    {
+     "kind": "line",
+     "id": 3,
+     "layerId": "b",
+     "attrs": {},
+     "a": {
+      "x": 5.0,
+      "y": -5.0
+     },
+     "b": {
+      "x": 5.0,
+      "y": 5.0
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 32
+    }
+   ],
+   "p": [
+    5.1,
+    0.1
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "intersection"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "intersection",
+    "point": [
+     5.0,
+     0.0
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "çizilmekte olan: köşesi",
+   "entities": [],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    10.2,
+    0.1
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "endpoint"
+   ],
+   "from": null,
+   "extras": {
+    "draft": {
+     "pts": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       10.0,
+       0.0
+      ],
+      [
+       10.0,
+       10.0
+      ]
+     ]
+    }
+   },
+   "expect": {
+    "kind": "endpoint",
+    "point": [
+     10.0,
+     0.0
+    ],
+    "id": -1
+   }
+  },
+  {
+   "name": "çizilmekte olan: kenarının ortası",
+   "entities": [],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    5.0,
+    0.2
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "midpoint"
+   ],
+   "from": null,
+   "extras": {
+    "draft": {
+     "pts": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       10.0,
+       0.0
+      ],
+      [
+       10.0,
+       10.0
+      ]
+     ]
+    }
+   },
+   "expect": {
+    "kind": "midpoint",
+    "point": [
+     5.0,
+     0.0
+    ],
+    "id": -1
+   }
+  },
+  {
+   "name": "çizilmekte olan: çizimdeki çizgiyle kesişimi",
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 5.0,
+      "y": -5.0
+     },
+     "b": {
+      "x": 5.0,
+      "y": 5.0
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    5.1,
+    0.1
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "intersection"
+   ],
+   "from": null,
+   "extras": {
+    "draft": {
+     "pts": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       10.0,
+       0.0
+      ],
+      [
+       10.0,
+       10.0
+      ]
+     ]
+    }
+   },
+   "expect": {
+    "kind": "intersection",
+    "point": [
+     5.0,
+     0.0
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "çizilmekte olan yoksa köşesi yok",
+   "entities": [],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    10.2,
+    0.1
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "endpoint"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": null
+  }
+ ],
+ "extensionsAt": [
+  {
+   "name": "çizginin ucu",
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 10.0,
+      "y": 0.0
+     }
+    }
+   ],
+   "id": 1,
+   "at": [
+    10.0,
+    0.0
+   ],
+   "expect": [
+    0,
+    10.0,
+    0.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "name": "çoklu çizginin köşesi: iki kenarın uzantısı",
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 10.0,
+       "y": 0.0
+      },
+      {
+       "x": 10.0,
+       "y": 10.0
+      }
+     ]
+    }
+   ],
+   "id": 1,
+   "at": [
+    10.0,
+    0.0
+   ],
+   "expect": [
+    0,
+    10.0,
+    0.0,
+    1.0,
+    0.0,
+    0,
+    10.0,
+    0.0,
+    0.0,
+    -1.0
+   ]
+  },
+  {
+   "name": "kapalı alanın köşesi",
+   "entities": [
+    {
+     "kind": "polygon",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 10.0,
+       "y": 0.0
+      },
+      {
+       "x": 10.0,
+       "y": 10.0
+      },
+      {
+       "x": 0.0,
+       "y": 10.0
+      }
+     ]
+    }
+   ],
+   "id": 1,
+   "at": [
+    0.0,
+    0.0
+   ],
+   "expect": [
+    0,
+    0.0,
+    0.0,
+    -1.0,
+    0.0,
+    0,
+    0.0,
+    0.0,
+    0.0,
+    -1.0
+   ]
+  },
+  {
+   "name": "yayın ucu: çemberin kalanı",
+   "entities": [
+    {
+     "kind": "arc",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "c": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "r": 10.0,
+     "a0": 0.0,
+     "a1": 1.5707963267948966
+    }
+   ],
+   "id": 1,
+   "at": [
+    0.0,
+    10.0
+   ],
+   "expect": [
+    1,
+    0.0,
+    0.0,
+    10.0,
+    1.5707963267948966,
+    4.71238898038469
+   ]
+  },
+  {
+   "name": "uç olmayan nokta",
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 10.0,
+      "y": 0.0
+     }
+    }
+   ],
+   "id": 1,
+   "at": [
+    5.0,
+    0.0
+   ],
+   "expect": []
+  }
+ ],
+ "directionAt": [
+  {
+   "name": "eğik çizginin doğrultusu",
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 10.0,
+      "y": 5.0
+     }
+    }
+   ],
+   "p": [
+    5.0,
+    2.6
+   ],
+   "tol": 1.0,
+   "expect": [
+    0.8944271909999159,
+    0.4472135954999579
+   ]
+  },
+  {
+   "name": "yakında kenar yok",
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 10.0,
+      "y": 5.0
+     }
+    }
+   ],
+   "p": [
+    5.0,
+    9.0
+   ],
+   "tol": 1.0,
+   "expect": null
+  },
+  {
+   "name": "iki kenardan yakını",
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 10.0,
+      "y": 0.0
+     }
+    },
+    {
+     "kind": "line",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 1.0
+     },
+     "b": {
+      "x": 10.0,
+      "y": 3.0
+     }
+    }
+   ],
+   "p": [
+    5.0,
+    0.3
+   ],
+   "tol": 2.0,
+   "expect": [
+    1.0,
+    0.0
+   ]
+  }
+ ]
+}

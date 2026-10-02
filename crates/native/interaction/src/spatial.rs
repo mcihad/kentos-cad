@@ -634,6 +634,8 @@ pub fn layer_rows(tree: &LayerTree) -> Vec<(String, LayerFlags)> {
                     locked: tree.is_locked(&node.id),
                     pick_interior: node.style.pick_interior != Some(false),
                     label: node.style.label.as_ref().map(label_rule),
+                    // Per-layer snapping comes with docs/adr/0163 §4 (step 4).
+                    snap: u32::MAX,
                 },
             ));
             walk(&node.children, tree, out);

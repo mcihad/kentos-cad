@@ -53,6 +53,9 @@ pub struct LayerFlags {
     pub pick_interior: bool,
     /// The layer's label style; `None` takes the kind's default.
     pub label: Option<labels::LabelRule>,
+    /// The snap kinds its objects are snapped to (`SnapKind::bit`s; all of
+    /// them unless the layer has its own, docs/adr/0163 §4).
+    pub snap: u32,
 }
 
 /// A layer the table does not list behaves as in TypeScript: visible, unlocked, interior picking on.
@@ -61,6 +64,7 @@ const UNLISTED: LayerFlags = LayerFlags {
     locked: false,
     pick_interior: true,
     label: None,
+    snap: u32::MAX,
 };
 
 /// An insert's pieces in the drawing's coordinates, and the colour and line
@@ -453,10 +457,11 @@ impl Store {
         }
     }
 
-    /// Replaces the layer table: `[{ id, visible, locked, pickInterior, label? }]`,
+    /// Replaces the layer table: `[{ id, visible, locked, pickInterior, label?, snapKinds? }]`,
     /// the flags already resolved with the ancestors (every node of the
-    /// tree); `label` is the layer's label style, when it has one. A table
-    /// that does not read changes nothing.
+    /// tree); `label` is the layer's label style, when it has one;
+    /// `snapKinds` the snap kinds its objects take (`SnapKind::bit`s), all
+    /// when absent (docs/adr/0163 §4). A table that does not read changes nothing.
     pub fn set_layers_json(&mut self, text: &str) -> Result<(), String> {
         let Json::Arr(list) = Json::parse(text)? else {
             return Err("katman dizisi bekleniyordu".into());
@@ -473,11 +478,20 @@ impl Store {
                 Json::Null => None,
                 r => Some(labels::read_rule(r).map_err(|e| format!("[{i}].label: {e}"))?),
             };
+            let snap = match v.get("snapKinds") {
+                Json::Null => u32::MAX,
+                k => f64::from_json(k)
+                    .ok()
+                    .filter(|n| n.fract() == 0.0 && *n >= 0.0 && *n <= f64::from(u32::MAX))
+                    .map(|n| n as u32)
+                    .ok_or_else(|| format!("[{i}].snapKinds: tür bitlerinin sayısı bekleniyordu"))?,
+            };
             let flags = LayerFlags {
                 visible: field("visible")?,
                 locked: field("locked")?,
                 pick_interior: field("pickInterior")?,
                 label,
+                snap,
             };
             rows.push((id.as_str(), flags));
         }
@@ -884,6 +898,7 @@ mod tests {
             locked: true,
             pick_interior: false,
             label: None,
+            snap: u32::MAX,
         };
         typed.set_layers([("a", hidden), ("b", UNLISTED)]);
         assert_eq!(typed.ids(), json.ids());
@@ -921,7 +936,8 @@ mod tests {
                 visible: false,
                 locked: true,
                 pick_interior: false,
-                label: None
+                label: None,
+                snap: u32::MAX,
             }
         );
         s.set_layers_json("[]").unwrap();

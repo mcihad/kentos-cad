@@ -733,6 +733,37 @@ export class CoreStore {
     return typed(() => this.raw.snap(x, y, tol, kinds, !!from, from?.x ?? 0, from?.y ?? 0));
   }
 
+  /**
+   * `snap` with what the drawing does not hold (docs/adr/0163): acquired extensions as records (`[0, endX, endY, dirX,
+   * dirY]` a line, `[1, cx, cy, r, a0, sweep]` an arc), parallel directions (`[ux, uy]` each), the object being drawn
+   * as an open path, Karelaj's spacings (0: none).
+   */
+  snapEx(
+    x: number,
+    y: number,
+    tol: number,
+    kinds: number,
+    from: { x: number; y: number } | null,
+    extensions: Float64Array,
+    parallels: Float64Array,
+    draftXy: Float64Array,
+    draftBulges: Float64Array,
+    gridX: number,
+    gridY: number,
+  ): Float64Array {
+    return typed(() => this.raw.snapEx(x, y, tol, kinds, !!from, from?.x ?? 0, from?.y ?? 0, extensions, parallels, draftXy, draftBulges, gridX, gridY));
+  }
+
+  /** The extensions of object `id`'s edges ending at the point, as `snapEx` takes them. */
+  extensionsAt(id: number, x: number, y: number): Float64Array {
+    return typed(() => this.raw.extensionsAt(id, x, y));
+  }
+
+  /** The direction `[ux, uy]` of the straight edge nearest the point within `tol`, or nothing. */
+  directionAt(x: number, y: number, tol: number): Float64Array {
+    return typed(() => this.raw.directionAt(x, y, tol));
+  }
+
   near(x: number, y: number, tol: number): Float64Array {
     return typed(() => this.raw.near(x, y, tol));
   }

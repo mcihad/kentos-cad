@@ -29,14 +29,16 @@ Türler bit sırasıyla eklenir (`SnapKind::ALL` dokuzdan on üçe). Var olanlar
 | Tür | Ad | Ağırlık | İşaret |
 |---|---|---|---|
 | `centroid` | Ağırlık merkezi | 1,08 (merkezinki) | içinde nokta olan küçük karo |
-| `extension` | Uzantı | 1,3 | kesikli çizgi üstünde artı |
-| `parallel` | Paralel | 1,3 | iki eğik paralel çizgi |
+| `extension` | Uzantı | 2 (kesişimleri 1,02) | kesikli çizgi üstünde artı |
+| `parallel` | Paralel | 2 | iki eğik paralel çizgi |
 | `grid` | Karelaj | yalnız başka tür yokken | küçük artı |
 
 - **Ağırlık merkezi:** kapalı alanın (deliklerden ve parçalardan arınmış, yaylarıyla) ve kapalı çoklu çizginin alan ağırlık merkezi. Kutusu imlecin kenet kutusuna değen alanlar adaydır; merkez kenet yarıçapındaysa kenetlenir. Daire ve elipsin merkezi Merkez türündedir.
 - **Uzantı:** alınmış bir uç noktanın (§2) kenarının devamı: düz kenarda uçtan dışarı giden ışın, yayda yayın çemberi (uçtan dışarı, yayın yönünde). İmleç bir uzantının kenet yarıçapındaysa uzantıdaki en yakın noktaya; iki uzantı kesişiyorsa kesişimine (kesişimin ağırlığıyla) kenetlenir.
 - **Paralel:** komut bir son nokta veriyorsa (dik ve teğetin kaynağı), son noktadan alınmış bir kenara (§2) paralel doğru. İmleç bu doğrunun kenet yarıçapındaysa doğru üstündeki izdüşümüne kenetlenir.
 - **Karelaj:** düğümler projenin koordinatlarında `snap.gridX` ve `snap.gridY` metrenin katlarıdır (yuvarlak koordinatlar; yerel sıfır yoktur). Başka bir tür kenet yarıçapında değilse (en yakın dahil) imleç en yakın düğüme gider; nerede olursa olsun, Netcad'in Karelaj'ı ve AutoCAD'in SNAP'i gibi. Varsayılan aralıklar 1 m.
+
+Uzantı ve Paralel'in ağırlığı yüksektir: imleç bir uzantının ya da paralelin üstündeyken yakındaki nesnenin kendi noktası (uç, orta, kesişim) ve iki uzantının ya da uzantıyla bir kenarın kesişimi önce gelir. 1,3 ile iki dik uzantının kesişimi, imleç tam yanındayken bile izdüşümlerine yenilirdi.
 
 Varsayılanlar: yeni dört tür kapalıdır. Bugünkü çizim, siz açmadıkça değişmez.
 
@@ -131,6 +133,17 @@ Web WASM'dan (`PickIndex.snap`), masaüstü yerli çağırır. İki platform ayn
 ### 9. İş sırası
 
 1. Çekirdek: dört tür, çizilmekte olan yol, katman maskeleri, `extras`; WASM; bağımsız başvuru ve ortak durumlar.
+
+   *(2 Ekim: tamam.)*
+   - **Türler:** `SnapKind`'e `Centroid`, `Extension`, `Parallel`, `Grid` (bit 9–12) eklendi; eski bitler aynı. Ağırlıklar: ağırlık merkezi 1,08, uzantı ve paralel 2 (izdüşüm; uzantının kesişimleri 1,02), karelaj en yakından da sonra.
+   - **`Store::snap_ex(p, tol, kinds, from, &SnapExtras)`:** `snap` artık boş `SnapExtras` ile onu çağırır. `SnapExtras`: alınmış uzantılar (`Extension::Line { end, dir }`, `Extension::Arc { c, r, a0, sweep }`: çemberin kalanı), paralel doğrultular, çizilmekte olan yol (şekiller, kimliği `NO_OBJECT` = −1), karelaj aralıkları.
+   - **Alınma yardımcıları:** `Store::extensions_at(id, at)` (ucu `at`'te biten her kenarın uzantısı; köşede iki kenar ikisini verir) ve `Store::direction_at(p, tol)` (en yakın düz kenarın doğrultusu).
+   - **Katman maskesi:** `LayerFlags::snap` (tür bitleri; yoksa hepsi), depo tablosunda isteğe bağlı `snapKinds`. Bir nesnenin noktaları katmanının türleriyle; iki kenarın kesişimi katmanlarından biri kesişimi alıyorsa.
+   - **Ağırlık merkezi** ifade dilindeki hesaptan çekirdeğe taşındı (`geom::centroid`: `shape_centroid`, `area_centroid`, `areas_centroid`); ifade dili oradan okur, bağımsız başvurusu (`expression_geometry.py`) aynı.
+   - **Biçim başına kenet** `shape_snaps` işlevine ayrıldı: çizimdeki nesne ve çizilmekte olan yol aynı yoldan geçer.
+   - **Karelaj düğümü** ondalık düğümün en yakın double'ıdır: aralık metrenin tam bölümüyse (0,1; 0,25; 0,5) bölünerek (`round(v · n) / n`), değilse çarpılarak.
+   - **WASM:** `GeometryStore.snapEx` (uzantılar kayıt kayıt, doğrultular, yol ve aralıklar tipli dizilerle), `extensionsAt`, `directionAt`; web `PickIndex.snapEx`, `extensionsAt`, `directionAt`, `SnapKind`'in dört yeni adı.
+   - **Başvuru:** `scripts/fixtures/snap_cases.py` (`fixtures/snap/v1/cases.json`): 40 kenet durumu (ağırlık merkezi başlangıçta ve TM koordinatlarında, delik, parça, yarım daire; karelaj aralıkları, yarımlar, öncelikler; uzantı, kesişimleri, yay; paralel; katman maskeleri; çizilmekte olan yol), 5 uzantı alma, 3 doğrultu alma. Çekirdek (yerli) ve web (WASM) aynı; karelaj düğümü bit bit. Kuralı bozan üç deneme (katman maskesi yok, uzantı ve paralel 1,3, karelaj hep çarpımla) durumları düşürür.
 2. Ayarlar ve Kenet hücresinin menüsü iki platformda: türlerin komutları, karelaj aralığı, `snap.self`, ölçek aralığı; araçların taslağı; işaretler; ortak iz; resimler.
 3. Uzantı ve Paralel'in alınması iki platformda (bekleme, işaretler, kilit); ortak iz; resimler.
 4. Katman başına kenet: `.kcad` şema 10 (spesifikasyon, bağımsız Python yazıcısı ve okuyucusu, kodek), Katmanlar panelinin mıknatısı ve menüsü iki platformda, bulutta katman ağacı; ortak iz; resimler.

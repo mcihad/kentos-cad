@@ -6,12 +6,13 @@
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::json::{self, FromJson, Json};
-use kentos_geometry_core::entity::Entity;
+use kentos_geometry_core::entity::{Entity, Shape};
 use kentos_geometry_core::geom::affine::similarity;
 use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::processing::numbering::{CornerWalk, StartCorner};
 use kentos_geometry_core::store::{Store, array_packed_objects, transform_packed_objects};
+use kentos_geometry_core::store::snap::{Extension, SnapExtras};
 use kentos_geometry_core::text::Font;
 use kentos_geometry_core::tools::editing::array_transforms;
 use kentos_style_core::style::build::{LayerObjects, Program, build_layer};
@@ -380,6 +381,71 @@ impl GeometryStore {
             .map_or_else(Vec::new, |h| {
                 vec![f64::from(h.kind as u32), h.point.x, h.point.y, h.id]
             })
+    }
+
+    /// `snap` with what the drawing does not hold (docs/adr/0163): acquired
+    /// extensions as records (`[0, endX, endY, dirX, dirY]` a line,
+    /// `[1, cx, cy, r, a0, sweep]` an arc), parallel directions (`[ux, uy]`
+    /// each), the object being drawn as an open path (`draftXy`, its bulges or
+    /// none), Karelaj's spacings (0: none).
+    #[wasm_bindgen(js_name = snapEx)]
+    #[allow(clippy::too_many_arguments)]
+    pub fn snap_ex(
+        &self,
+        x: f64,
+        y: f64,
+        tol: f64,
+        kinds: u32,
+        has_from: bool,
+        fx: f64,
+        fy: f64,
+        extensions: &[f64],
+        parallels: &[f64],
+        draft_xy: &[f64],
+        draft_bulges: &[f64],
+        grid_x: f64,
+        grid_y: f64,
+    ) -> Vec<f64> {
+        let from = has_from.then(|| Vec2::new(fx, fy));
+        let extras = SnapExtras {
+            extensions: read_extensions(extensions),
+            parallels: parallels
+                .chunks_exact(2)
+                .map(|u| Vec2::new(u[0], u[1]))
+                .collect(),
+            draft: draft_path(draft_xy, draft_bulges),
+            grid: (grid_x > 0.0 && grid_y > 0.0).then_some([grid_x, grid_y]),
+        };
+        self.inner
+            .snap_ex(Vec2::new(x, y), tol, kinds, from, &extras)
+            .map_or_else(Vec::new, |h| {
+                vec![f64::from(h.kind as u32), h.point.x, h.point.y, h.id]
+            })
+    }
+
+    /// The extensions of object `id`'s edges ending at the point, as
+    /// `snapEx` takes them (docs/adr/0163 §2).
+    #[wasm_bindgen(js_name = extensionsAt)]
+    pub fn extensions_at(&self, id: f64, x: f64, y: f64) -> Vec<f64> {
+        let mut out = Vec::new();
+        for e in self.inner.extensions_at(id, Vec2::new(x, y)) {
+            match e {
+                Extension::Line { end, dir } => out.extend([0.0, end.x, end.y, dir.x, dir.y]),
+                Extension::Arc { c, r, a0, sweep } => {
+                    out.extend([1.0, c.x, c.y, r, a0, sweep]);
+                }
+            }
+        }
+        out
+    }
+
+    /// The direction (`[ux, uy]`) of the straight edge nearest the point
+    /// within `tol`, or nothing (Paralel's acquisition, docs/adr/0163 §2).
+    #[wasm_bindgen(js_name = directionAt)]
+    pub fn direction_at(&self, x: f64, y: f64, tol: f64) -> Vec<f64> {
+        self.inner
+            .direction_at(Vec2::new(x, y), tol)
+            .map_or_else(Vec::new, |u| vec![u.x, u.y])
     }
 
     /// Ids of visible objects whose boxes come within `tol` of the point.
@@ -816,4 +882,46 @@ impl GeometryStore {
             has_except.then_some(except),
         ))
     }
+}
+
+/// Acquired extensions from `snapEx`'s records.
+fn read_extensions(f: &[f64]) -> Vec<Extension> {
+    let mut out = Vec::new();
+    let mut i = 0;
+    while i < f.len() {
+        match f[i] {
+            0.0 if i + 5 <= f.len() => {
+                out.push(Extension::Line {
+                    end: Vec2::new(f[i + 1], f[i + 2]),
+                    dir: Vec2::new(f[i + 3], f[i + 4]),
+                });
+                i += 5;
+            }
+            1.0 if i + 6 <= f.len() => {
+                out.push(Extension::Arc {
+                    c: Vec2::new(f[i + 1], f[i + 2]),
+                    r: f[i + 3],
+                    a0: f[i + 4],
+                    sweep: f[i + 5],
+                });
+                i += 6;
+            }
+            _ => break,
+        }
+    }
+    out
+}
+
+/// The object being drawn as an open path (none without a point).
+fn draft_path(xy: &[f64], bulges: &[f64]) -> Vec<Shape> {
+    let pts: Vec<Vec2> = xy.chunks_exact(2).map(|p| Vec2::new(p[0], p[1])).collect();
+    if pts.is_empty() {
+        return Vec::new();
+    }
+    let bulges = (!bulges.is_empty()).then(|| bulges.to_vec());
+    vec![Shape::Polyline {
+        pts,
+        bulges,
+        holes: None,
+    }]
 }

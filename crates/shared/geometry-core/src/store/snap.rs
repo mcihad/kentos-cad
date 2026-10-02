@@ -1,8 +1,12 @@
 //! Object snap on the store (`PickIndex.snap`, `apps/web/src/viewport/picking.ts`):
 //! endpoints, midpoints, centres, nodes, quadrants, intersections,
-//! perpendicular and tangent points from the last point, nearest. At equal
-//! distance the more meaningful kind wins; "nearest" only when nothing else
-//! does. Candidates come in the document's order, as the TypeScript's did.
+//! perpendicular and tangent points from the last point, nearest; a closed
+//! area's centroid, an acquired end's extension, the parallel through the
+//! last point to an acquired edge, Karelaj's grid nodes (docs/adr/0163). At
+//! equal distance the more meaningful kind wins; "nearest" only when nothing
+//! else does, a grid node only when not even that. A layer's objects take its
+//! own kinds; the object being drawn is snapped to as one more object.
+//! Candidates come in the document's order, as the TypeScript's did.
 
 use super::Store;
 use crate::entity::{Shape, area_parts, dimension_geom, ellipse_geom, entity_vertices};
@@ -17,8 +21,10 @@ use crate::geom::ellipse::{
 use crate::geom::intersect::{
     Edge, closest_on_edge, intersect_edges, on_edge_arc, perpendicular_foot, tangent_points,
 };
-use crate::jsmath::{atan2, js_hypot};
-use crate::ops::edges::entity_edges_in;
+use crate::geom::centroid::areas_centroid;
+use crate::jsmath::{PI, atan2, js_hypot, js_round, js_sign};
+use crate::ops::areas::areas_of_entity;
+use crate::ops::edges::{entity_edges, entity_edges_in};
 use crate::vec2::Vec2;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -32,11 +38,19 @@ pub enum SnapKind {
     Perpendicular,
     Tangent,
     Nearest,
+    /// Ağırlık merkezi: a closed area's centroid (docs/adr/0163 §1).
+    Centroid,
+    /// Uzantı: on an acquired end's extension.
+    Extension,
+    /// Paralel: on the line through the last point parallel to an acquired edge.
+    Parallel,
+    /// Karelaj: the nearest node of the grid, wherever the cursor is.
+    Grid,
 }
 
 impl SnapKind {
     /// Kinds in bit order: the TypeScript names them, the bits carry a set across the boundary.
-    pub const ALL: [SnapKind; 9] = [
+    pub const ALL: [SnapKind; 13] = [
         SnapKind::Endpoint,
         SnapKind::Midpoint,
         SnapKind::Center,
@@ -46,6 +60,10 @@ impl SnapKind {
         SnapKind::Perpendicular,
         SnapKind::Tangent,
         SnapKind::Nearest,
+        SnapKind::Centroid,
+        SnapKind::Extension,
+        SnapKind::Parallel,
+        SnapKind::Grid,
     ];
 
     pub fn bit(self) -> u32 {
@@ -62,7 +80,12 @@ impl SnapKind {
             SnapKind::Midpoint => 1.15,
             SnapKind::Perpendicular => 1.25,
             SnapKind::Tangent => 1.2,
-            SnapKind::Nearest => f64::INFINITY,
+            SnapKind::Centroid => 1.08,
+            // On an extension or a parallel: soft, so that their crossings
+            // (weighed as crossings) and the objects' own points win near them.
+            SnapKind::Extension | SnapKind::Parallel => 2.0,
+            // Taken only when nothing else is (`Store::snap_ex`).
+            SnapKind::Nearest | SnapKind::Grid => f64::INFINITY,
         }
     }
 }
@@ -71,7 +94,31 @@ impl SnapKind {
 pub struct SnapHit {
     pub kind: SnapKind,
     pub point: Vec2,
+    /// The object snapped to; [`NO_OBJECT`] for the object being drawn, an
+    /// acquired extension or parallel and a grid node.
     pub id: f64,
+}
+
+/// The id of a snap to no object of the drawing (docs/adr/0163).
+pub const NO_OBJECT: f64 = -1.0;
+
+/// Where an acquired end goes on (docs/adr/0163 §1): a straight edge's line
+/// beyond the end, or the rest of an arc's circle as an arc of its own.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Extension {
+    Line { end: Vec2, dir: Vec2 },
+    Arc { c: Vec2, r: f64, a0: f64, sweep: f64 },
+}
+
+/// What a snap takes besides the drawing (docs/adr/0163 §1–§3): the acquired
+/// extensions and parallel directions (unit), the object being drawn, and
+/// Karelaj's spacing along x and y (metres).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct SnapExtras {
+    pub extensions: Vec<Extension>,
+    pub parallels: Vec<Vec2>,
+    pub draft: Vec<Shape>,
+    pub grid: Option<[f64; 2]>,
 }
 
 /// An edge near the cursor, for crossings; `ell` when it is one of an ellipse's chords.
@@ -79,6 +126,8 @@ struct Nearby {
     id: f64,
     ed: Edge,
     ell: Option<EllipseGeom>,
+    /// Its layer's snap kinds (`LayerFlags::snap`).
+    mask: u32,
 }
 
 impl Nearby {
@@ -96,13 +145,20 @@ struct Choice {
     p: Vec2,
     tol: f64,
     kinds: u32,
+    /// The snap kinds of the layer whose object is being considered.
+    mask: u32,
     best: Option<(SnapHit, f64)>,
     nearest: Option<(SnapHit, f64)>,
 }
 
 impl Choice {
     fn consider(&mut self, kind: SnapKind, q: Vec2, id: f64) {
-        if self.kinds & kind.bit() == 0 {
+        self.consider_as(kind, q, id, kind.weight());
+    }
+
+    /// `consider` with its own weight: an extension's crossing weighs as a crossing.
+    fn consider_as(&mut self, kind: SnapKind, q: Vec2, id: f64, weight: f64) {
+        if self.kinds & self.mask & kind.bit() == 0 {
             return;
         }
         // Farther than the aperture along an axis is farther in all (the hypotenuse is never shorter
@@ -121,7 +177,7 @@ impl Choice {
             }
             return;
         }
-        let w = d * kind.weight();
+        let w = d * weight;
         if self.best.is_none_or(|(_, b)| w < b) {
             self.best = Some((hit, w));
         }
@@ -140,16 +196,30 @@ impl Store {
     /// The snap point near `p` among `kinds` (a set of `SnapKind::bit`s);
     /// `from` is the running command's last point (perpendicular, tangent).
     pub fn snap(&self, p: Vec2, tol: f64, kinds: u32, from: Option<Vec2>) -> Option<SnapHit> {
-        self.snap_with(p, tol, kinds, from, crossings)
+        self.snap_with(p, tol, kinds, from, &SnapExtras::default(), crossings)
     }
 
-    /// `snap` with the pairwise crossings given (the tests compare every pair).
+    /// `snap` with what the drawing does not hold (docs/adr/0163): the
+    /// acquired extensions and parallels, the object being drawn, Karelaj.
+    pub fn snap_ex(
+        &self,
+        p: Vec2,
+        tol: f64,
+        kinds: u32,
+        from: Option<Vec2>,
+        extras: &SnapExtras,
+    ) -> Option<SnapHit> {
+        self.snap_with(p, tol, kinds, from, extras, crossings)
+    }
+
+    /// `snap_ex` with the pairwise crossings given (the tests compare every pair).
     fn snap_with(
         &self,
         p: Vec2,
         tol: f64,
         kinds: u32,
         from: Option<Vec2>,
+        extras: &SnapExtras,
         crossings: impl Fn(&mut Choice, &[Nearby], Vec2),
     ) -> Option<SnapHit> {
         // Where an edge can matter: a curve is split only near it (docs/adr/0149 §5.3).
@@ -163,12 +233,14 @@ impl Store {
             p,
             tol,
             kinds,
+            mask: u32::MAX,
             best: None,
             nearest: None,
         };
         let mut nearby: Vec<Nearby> = Vec::new();
         for it in self.near(p, tol) {
             let id = it.id;
+            ch.mask = self.flags(it).snap;
             // A block's insertion point, then its pieces as objects of their own (docs/adr/0144).
             if it.expanded.is_some()
                 && let Shape::Insert { p: q, .. } = &it.shape
@@ -176,217 +248,184 @@ impl Store {
                 ch.consider(SnapKind::Node, *q, id);
             }
             for e in it.shapes() {
-                match e {
-                    Shape::Ellipse {
-                        c,
-                        major,
-                        ratio,
-                        t0,
-                        t1,
-                    } => {
-                        let g = ellipse_geom(*c, *major, *ratio, *t0, *t1);
-                        ch.consider(SnapKind::Center, *c, id);
-                        for t in quadrant_params(&g) {
-                            ch.consider(SnapKind::Quadrant, ellipse_point(&g, t), id);
-                        }
-                        if !is_full_ellipse(&g) {
-                            ch.consider(SnapKind::Endpoint, ellipse_point(&g, *t0), id);
-                            ch.consider(SnapKind::Endpoint, ellipse_point(&g, *t1), id);
-                        }
-                        // Exact on the curve (its chords only serve crossings).
-                        ch.consider(
-                            SnapKind::Nearest,
-                            ellipse_point(&g, closest_param(&g, p)),
-                            id,
-                        );
-                        if let Some(f) = from {
-                            ch.consider(
-                                SnapKind::Perpendicular,
-                                ellipse_point(&g, closest_param(&g, f)),
-                                id,
-                            );
-                            for t in ellipse_tangent_points(&g, f) {
-                                ch.consider(SnapKind::Tangent, t, id);
-                            }
-                        }
-                        // Its chords only find crossings, which are then moved onto the curve
-                        // (`refine_crossing`): coarse ones do, and keep the pairs few.
-                        let chords = tessellate_ellipse(&g, 256.0);
-                        let n = chords.len();
-                        let count = if is_full_ellipse(&g) { n } else { n.saturating_sub(1) };
-                        for i in 0..count {
-                            let ed = Edge::Seg {
-                                a: chords[i],
-                                b: chords[(i + 1) % n],
-                            };
-                            if closest_on_edge(&ed, p).d <= tol {
-                                nearby.push(Nearby {
-                                    id,
-                                    ed,
-                                    ell: Some(g),
-                                });
-                            }
-                        }
-                        continue;
-                    }
-                    Shape::Point { p: q, .. }
-                    | Shape::Text { p: q, .. }
-                    | Shape::Insert { p: q, .. } => {
-                        ch.consider(SnapKind::Node, *q, id);
-                        continue;
-                    }
-                    Shape::Circle { c, .. } => {
-                        ch.consider(SnapKind::Center, *c, id);
-                        for q in entity_vertices(e).into_iter().skip(1) {
-                            ch.consider(SnapKind::Quadrant, q, id);
-                        }
-                    }
-                    Shape::Arc { c, r, a0, a1 } => {
-                        let g = ArcGeom {
-                            c: *c,
-                            r: *r,
-                            a0: *a0,
-                            a1: *a1,
-                        };
-                        ch.consider(SnapKind::Center, *c, id);
-                        ch.consider(SnapKind::Endpoint, arc_start(&g), id);
-                        ch.consider(SnapKind::Endpoint, arc_end(&g), id);
-                        ch.consider(SnapKind::Midpoint, arc_mid(&g), id);
-                    }
-                    Shape::Spline { pts, closed } => {
-                        for (i, q) in pts.iter().enumerate() {
-                            let end = !closed && (i == 0 || i == pts.len() - 1);
-                            ch.consider(
-                                if end {
-                                    SnapKind::Endpoint
-                                } else {
-                                    SnapKind::Node
-                                },
-                                *q,
-                                id,
-                            );
-                        }
-                    }
-                    // The new kinds where docs/adr/0147 §4 says: an ordinate's point
-                    // and its line's end, an arc length's ends and centre, a jogged
-                    // radius's point on the arc and its line's start, an azimuth's
-                    // and a slope's ends.
-                    Shape::Dimension {
-                        a,
-                        b,
-                        c,
-                        style: Some(style),
-                        ..
-                    } if is_new_kind(Some(style)) => match style.as_str() {
-                        "ordinate" => {
-                            ch.consider(SnapKind::Node, *a, id);
-                            ch.consider(SnapKind::Endpoint, *b, id);
-                        }
-                        "jogged" => {
-                            ch.consider(SnapKind::Node, *b, id);
-                            if let Some(c) = c {
-                                ch.consider(SnapKind::Endpoint, *c, id);
-                            }
-                        }
-                        _ => {
-                            ch.consider(SnapKind::Node, *a, id);
-                            ch.consider(SnapKind::Node, *b, id);
-                            if let Some(c) = c {
-                                ch.consider(SnapKind::Node, *c, id);
-                            }
-                        }
-                    },
-                    Shape::Dimension { a, b, c, .. } => {
-                        ch.consider(SnapKind::Node, *a, id);
-                        ch.consider(SnapKind::Node, *b, id);
-                        if let Some(c) = c {
-                            ch.consider(SnapKind::Node, *c, id);
-                        }
-                        if let Some(l) = dimension_geom(e).and_then(|g| layout_dimension(&g)) {
-                            ch.consider(SnapKind::Endpoint, l.d1, id);
-                            ch.consider(SnapKind::Endpoint, l.d2, id);
-                        }
-                    }
-                    // Its boundary is snapped through the outline object itself.
-                    Shape::Hatch { .. } => continue,
-                    Shape::Line { .. }
-                    | Shape::Polyline { .. }
-                    | Shape::Polygon { .. }
-                    | Shape::Xline { .. }
-                    | Shape::Ray { .. }
-                    | Shape::Leader { .. } => {
-                        // A multi-part area part by part, each as one area (docs/adr/0143).
-                        for s in area_parts(e).iter() {
-                            let pts = entity_vertices(s);
-                            let bulges = match s {
-                                Shape::Polyline { bulges, .. } | Shape::Polygon { bulges, .. } => {
-                                    bulges.as_deref()
-                                }
-                                _ => None,
-                            };
-                            for q in &pts {
-                                ch.consider(SnapKind::Endpoint, *q, id);
-                            }
-                            // A leader's landing ends where its note begins (docs/adr/0146 §4).
-                            if let Some([_, end]) = leader::layout_of(s).and_then(|l| l.landing) {
-                                ch.consider(SnapKind::Endpoint, end, id);
-                            }
-                            // A polygon's vertices include its holes', as the TypeScript walked them.
-                            let n = if matches!(s, Shape::Polygon { .. }) {
-                                pts.len()
-                            } else {
-                                pts.len().saturating_sub(1)
-                            };
-                            for i in 0..n {
-                                let a = pts[i];
-                                let b = pts[(i + 1) % pts.len()];
-                                let bulge = bulge_at(bulges, i);
-                                // A straight segment's midpoint lies in its box; a far box cannot offer one.
-                                if bulge == 0.0 && box_out_of_reach(a, b, p, tol) {
-                                    continue;
-                                }
-                                ch.consider(SnapKind::Midpoint, segment_mid(a, b, bulge), id);
-                                if let Some(arc) = bulge_arc(a, b, bulge) {
-                                    ch.consider(SnapKind::Center, arc.c, id);
-                                }
-                            }
-                        }
-                    }
-                }
-                for ed in entity_edges_in(e, &reach) {
-                    // Out at the overview a contour of hundreds of segments crosses the aperture with a few:
-                    // the rest are left out by their box before the closest point is worked out.
-                    if let Edge::Seg { a, b } = ed
-                        && box_out_of_reach(a, b, p, tol)
-                    {
-                        continue;
-                    }
-                    let c = closest_on_edge(&ed, p);
-                    if c.d > tol {
-                        continue;
-                    }
-                    nearby.push(Nearby { id, ed, ell: None });
-                    ch.consider(SnapKind::Nearest, c.p, id);
-                    if let Some(f) = from {
-                        if let Some(foot) = perpendicular_foot(&ed, f) {
-                            ch.consider(SnapKind::Perpendicular, foot, id);
-                        }
-                        if let Edge::Arc { c, r, a0, sweep } = ed {
-                            for t in tangent_points(f, c, r) {
-                                if on_edge_arc(a0, sweep, atan2(t.y - c.y, t.x - c.x)) {
-                                    ch.consider(SnapKind::Tangent, t, id);
-                                }
-                            }
-                        }
-                    }
-                }
+                shape_snaps(&mut ch, &mut nearby, e, id, from, &reach);
+            }
+            // Ağırlık merkezi (docs/adr/0163 §1): a closed area's, holes and parts weighed.
+            if kinds & SnapKind::Centroid.bit() != 0
+                && matches!(it.shape, Shape::Polygon { .. } | Shape::Polyline { .. })
+                && let Some(c) = areas_centroid(&areas_of_entity(&it.shape))
+            {
+                ch.consider(SnapKind::Centroid, c, id);
+            }
+        }
+        // The object being drawn, as one more object (docs/adr/0163 §3).
+        ch.mask = u32::MAX;
+        for e in &extras.draft {
+            shape_snaps(&mut ch, &mut nearby, e, NO_OBJECT, from, &reach);
+        }
+        // Acquired extensions and parallels (§1–§2).
+        extension_snaps(&mut ch, &nearby, &extras.extensions);
+        if let Some(f) = from {
+            for u in &extras.parallels {
+                let t = (p.x - f.x) * u.x + (p.y - f.y) * u.y;
+                ch.consider(
+                    SnapKind::Parallel,
+                    Vec2::new(f.x + u.x * t, f.y + u.y * t),
+                    NO_OBJECT,
+                );
             }
         }
 
         if kinds & SnapKind::Intersection.bit() != 0 {
             crossings(&mut ch, &nearby, p);
         }
-        ch.best.or(ch.nearest).map(|(h, _)| h)
+        let found = ch.best.or(ch.nearest).map(|(h, _)| h);
+        // Karelaj: the nearest grid node when nothing else is (§1).
+        found.or_else(|| {
+            let [gx, gy] = extras.grid?;
+            (kinds & SnapKind::Grid.bit() != 0).then(|| SnapHit {
+                kind: SnapKind::Grid,
+                point: Vec2::new(grid_coord(p.x, gx), grid_coord(p.y, gy)),
+                id: NO_OBJECT,
+            })
+        })
+    }
+
+    /// The extensions of object `id`'s edges that end at `at`, within 1 µm
+    /// (docs/adr/0163 §2): a straight edge's line beyond the end, an arc's
+    /// circle beyond it (the rest of the circle). A corner where two edges
+    /// meet gives both; a closed shape's every corner is such a corner.
+    pub fn extensions_at(&self, id: f64, at: Vec2) -> Vec<Extension> {
+        const SAME: f64 = 1e-6;
+        let mut out = Vec::new();
+        let Some(it) = self.get(id) else {
+            return out;
+        };
+        let near = |q: Vec2| js_hypot(q.x - at.x, q.y - at.y) <= SAME;
+        for e in it.shapes() {
+            for ed in entity_edges(e) {
+                match ed {
+                    Edge::Seg { a, b } => {
+                        let l = js_hypot(b.x - a.x, b.y - a.y);
+                        if l <= SAME {
+                            continue;
+                        }
+                        let u = Vec2::new((b.x - a.x) / l, (b.y - a.y) / l);
+                        if near(b) {
+                            out.push(Extension::Line { end: b, dir: u });
+                        }
+                        if near(a) {
+                            out.push(Extension::Line {
+                                end: a,
+                                dir: Vec2::new(-u.x, -u.y),
+                            });
+                        }
+                    }
+                    Edge::Arc { c, r, a0, sweep } => {
+                        let rest = (2.0 * PI - sweep.abs()) * js_sign(sweep);
+                        let (s, f) = (point_on(c, r, a0), point_on(c, r, a0 + sweep));
+                        if (near(s) || near(f)) && rest.abs() > 1e-12 {
+                            out.push(Extension::Arc {
+                                c,
+                                r,
+                                a0: a0 + sweep,
+                                sweep: rest,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        out
+    }
+
+    /// The direction of the straight edge nearest `p` within `tol` (Paralel's
+    /// acquisition, docs/adr/0163 §2), its own way (a to b), unit.
+    pub fn direction_at(&self, p: Vec2, tol: f64) -> Option<Vec2> {
+        let reach = crate::geometry::Bounds {
+            min_x: p.x - tol,
+            min_y: p.y - tol,
+            max_x: p.x + tol,
+            max_y: p.y + tol,
+        };
+        let mut best: Option<(f64, Vec2)> = None;
+        for it in self.near(p, tol) {
+            for e in it.shapes() {
+                for ed in entity_edges_in(e, &reach) {
+                    let Edge::Seg { a, b } = ed else {
+                        continue;
+                    };
+                    let c = closest_on_edge(&ed, p);
+                    let l = js_hypot(b.x - a.x, b.y - a.y);
+                    if c.d > tol || l <= 0.0 || best.is_some_and(|(d, _)| d <= c.d) {
+                        continue;
+                    }
+                    best = Some((c.d, Vec2::new((b.x - a.x) / l, (b.y - a.y) / l)));
+                }
+            }
+        }
+        best.map(|(_, u)| u)
+    }
+}
+
+/// A point of a circle at an angle.
+fn point_on(c: Vec2, r: f64, a: f64) -> Vec2 {
+    Vec2::new(c.x + r * crate::jsmath::cos(a), c.y + r * crate::jsmath::sin(a))
+}
+
+/// The grid coordinate nearest `v` at spacing `g`: a whole number of steps,
+/// divided out when the spacing is a whole fraction of a metre (0.1, 0.5,
+/// 0.25: the decimal coordinate's nearest double, not its product).
+fn grid_coord(v: f64, g: f64) -> f64 {
+    let per = js_round(1.0 / g);
+    if per >= 1.0 && (1.0 / g - per).abs() < 1e-9 {
+        js_round(v * per) / per
+    } else {
+        js_round(v / g) * g
+    }
+}
+
+/// Snaps on the acquired extensions: the nearest point of each beyond its
+/// end, and their crossings with the edges near the cursor and with each
+/// other, weighed as crossings (docs/adr/0163 §1).
+fn extension_snaps(ch: &mut Choice, nearby: &[Nearby], extensions: &[Extension]) {
+    if extensions.is_empty() || ch.kinds & SnapKind::Extension.bit() == 0 {
+        return;
+    }
+    let (p, tol) = (ch.p, ch.tol);
+    let edges: Vec<Edge> = extensions
+        .iter()
+        .map(|x| match *x {
+            Extension::Line { end, dir } => {
+                let reach = js_hypot(p.x - end.x, p.y - end.y) + 2.0 * tol;
+                Edge::Seg {
+                    a: end,
+                    b: Vec2::new(end.x + dir.x * reach, end.y + dir.y * reach),
+                }
+            }
+            Extension::Arc { c, r, a0, sweep } => Edge::Arc { c, r, a0, sweep },
+        })
+        .collect();
+    for (k, ed) in edges.iter().enumerate() {
+        // Beyond the end only: the edge itself is the object's own.
+        if let Extension::Line { end, dir } = extensions[k]
+            && (p.x - end.x) * dir.x + (p.y - end.y) * dir.y <= 0.0
+        {
+            continue;
+        }
+        let c = closest_on_edge(ed, p);
+        ch.consider(SnapKind::Extension, c.p, NO_OBJECT);
+        let crossing = SnapKind::Intersection.weight();
+        for n in nearby {
+            for h in intersect_edges(ed, &n.ed) {
+                ch.consider_as(SnapKind::Extension, h.p, NO_OBJECT, crossing);
+            }
+        }
+        for other in &edges[k + 1..] {
+            for h in intersect_edges(ed, other) {
+                ch.consider_as(SnapKind::Extension, h.p, NO_OBJECT, crossing);
+            }
+        }
     }
 }
 
@@ -446,6 +485,10 @@ fn crossings(ch: &mut Choice, nearby: &[Nearby], p: Vec2) {
             let Some(b) = nearby.get(j) else { break };
             j += 1;
             if a.id == b.id && shares_vertex(&a.ed, &b.ed) {
+                continue;
+            }
+            // Either object's layer must take crossings (docs/adr/0163 §4).
+            if (a.mask | b.mask) & SnapKind::Intersection.bit() == 0 {
                 continue;
             }
             // The crossing of two plain segments lies in the partner's box too, within its own margin
@@ -539,6 +582,231 @@ fn shares_vertex(a: &Edge, b: &Edge) -> bool {
     eq(a1, b1) || eq(a1, b2) || eq(a2, b1) || eq(a2, b2)
 }
 
+/// One shape's snap points near the cursor, and its edges near it for the
+/// crossings, with the running choice's layer mask (`Choice::mask`).
+fn shape_snaps(
+    ch: &mut Choice,
+    nearby: &mut Vec<Nearby>,
+    e: &Shape,
+    id: f64,
+    from: Option<Vec2>,
+    reach: &crate::geometry::Bounds,
+) {
+    let (p, tol) = (ch.p, ch.tol);
+    match e {
+        Shape::Ellipse {
+            c,
+            major,
+            ratio,
+            t0,
+            t1,
+        } => {
+            let g = ellipse_geom(*c, *major, *ratio, *t0, *t1);
+            ch.consider(SnapKind::Center, *c, id);
+            for t in quadrant_params(&g) {
+                ch.consider(SnapKind::Quadrant, ellipse_point(&g, t), id);
+            }
+            if !is_full_ellipse(&g) {
+                ch.consider(SnapKind::Endpoint, ellipse_point(&g, *t0), id);
+                ch.consider(SnapKind::Endpoint, ellipse_point(&g, *t1), id);
+            }
+            // Exact on the curve (its chords only serve crossings).
+            ch.consider(
+                SnapKind::Nearest,
+                ellipse_point(&g, closest_param(&g, p)),
+                id,
+            );
+            if let Some(f) = from {
+                ch.consider(
+                    SnapKind::Perpendicular,
+                    ellipse_point(&g, closest_param(&g, f)),
+                    id,
+                );
+                for t in ellipse_tangent_points(&g, f) {
+                    ch.consider(SnapKind::Tangent, t, id);
+                }
+            }
+            // Its chords only find crossings, which are then moved onto the curve
+            // (`refine_crossing`): coarse ones do, and keep the pairs few.
+            let chords = tessellate_ellipse(&g, 256.0);
+            let n = chords.len();
+            let count = if is_full_ellipse(&g) {
+                n
+            } else {
+                n.saturating_sub(1)
+            };
+            for i in 0..count {
+                let ed = Edge::Seg {
+                    a: chords[i],
+                    b: chords[(i + 1) % n],
+                };
+                if closest_on_edge(&ed, p).d <= tol {
+                    nearby.push(Nearby {
+                        id,
+                        ed,
+                        ell: Some(g),
+                        mask: ch.mask,
+                    });
+                }
+            }
+            return;
+        }
+        Shape::Point { p: q, .. } | Shape::Text { p: q, .. } | Shape::Insert { p: q, .. } => {
+            ch.consider(SnapKind::Node, *q, id);
+            return;
+        }
+        Shape::Circle { c, .. } => {
+            ch.consider(SnapKind::Center, *c, id);
+            for q in entity_vertices(e).into_iter().skip(1) {
+                ch.consider(SnapKind::Quadrant, q, id);
+            }
+        }
+        Shape::Arc { c, r, a0, a1 } => {
+            let g = ArcGeom {
+                c: *c,
+                r: *r,
+                a0: *a0,
+                a1: *a1,
+            };
+            ch.consider(SnapKind::Center, *c, id);
+            ch.consider(SnapKind::Endpoint, arc_start(&g), id);
+            ch.consider(SnapKind::Endpoint, arc_end(&g), id);
+            ch.consider(SnapKind::Midpoint, arc_mid(&g), id);
+        }
+        Shape::Spline { pts, closed } => {
+            for (i, q) in pts.iter().enumerate() {
+                let end = !closed && (i == 0 || i == pts.len() - 1);
+                ch.consider(
+                    if end {
+                        SnapKind::Endpoint
+                    } else {
+                        SnapKind::Node
+                    },
+                    *q,
+                    id,
+                );
+            }
+        }
+        // The new kinds where docs/adr/0147 §4 says: an ordinate's point
+        // and its line's end, an arc length's ends and centre, a jogged
+        // radius's point on the arc and its line's start, an azimuth's
+        // and a slope's ends.
+        Shape::Dimension {
+            a,
+            b,
+            c,
+            style: Some(style),
+            ..
+        } if is_new_kind(Some(style)) => match style.as_str() {
+            "ordinate" => {
+                ch.consider(SnapKind::Node, *a, id);
+                ch.consider(SnapKind::Endpoint, *b, id);
+            }
+            "jogged" => {
+                ch.consider(SnapKind::Node, *b, id);
+                if let Some(c) = c {
+                    ch.consider(SnapKind::Endpoint, *c, id);
+                }
+            }
+            _ => {
+                ch.consider(SnapKind::Node, *a, id);
+                ch.consider(SnapKind::Node, *b, id);
+                if let Some(c) = c {
+                    ch.consider(SnapKind::Node, *c, id);
+                }
+            }
+        },
+        Shape::Dimension { a, b, c, .. } => {
+            ch.consider(SnapKind::Node, *a, id);
+            ch.consider(SnapKind::Node, *b, id);
+            if let Some(c) = c {
+                ch.consider(SnapKind::Node, *c, id);
+            }
+            if let Some(l) = dimension_geom(e).and_then(|g| layout_dimension(&g)) {
+                ch.consider(SnapKind::Endpoint, l.d1, id);
+                ch.consider(SnapKind::Endpoint, l.d2, id);
+            }
+        }
+        // Its boundary is snapped through the outline object itself.
+        Shape::Hatch { .. } => return,
+        Shape::Line { .. }
+        | Shape::Polyline { .. }
+        | Shape::Polygon { .. }
+        | Shape::Xline { .. }
+        | Shape::Ray { .. }
+        | Shape::Leader { .. } => {
+            // A multi-part area part by part, each as one area (docs/adr/0143).
+            for s in area_parts(e).iter() {
+                let pts = entity_vertices(s);
+                let bulges = match s {
+                    Shape::Polyline { bulges, .. } | Shape::Polygon { bulges, .. } => {
+                        bulges.as_deref()
+                    }
+                    _ => None,
+                };
+                for q in &pts {
+                    ch.consider(SnapKind::Endpoint, *q, id);
+                }
+                // A leader's landing ends where its note begins (docs/adr/0146 §4).
+                if let Some([_, end]) = leader::layout_of(s).and_then(|l| l.landing) {
+                    ch.consider(SnapKind::Endpoint, end, id);
+                }
+                // A polygon's vertices include its holes', as the TypeScript walked them.
+                let n = if matches!(s, Shape::Polygon { .. }) {
+                    pts.len()
+                } else {
+                    pts.len().saturating_sub(1)
+                };
+                for i in 0..n {
+                    let a = pts[i];
+                    let b = pts[(i + 1) % pts.len()];
+                    let bulge = bulge_at(bulges, i);
+                    // A straight segment's midpoint lies in its box; a far box cannot offer one.
+                    if bulge == 0.0 && box_out_of_reach(a, b, p, tol) {
+                        continue;
+                    }
+                    ch.consider(SnapKind::Midpoint, segment_mid(a, b, bulge), id);
+                    if let Some(arc) = bulge_arc(a, b, bulge) {
+                        ch.consider(SnapKind::Center, arc.c, id);
+                    }
+                }
+            }
+        }
+    }
+    for ed in entity_edges_in(e, reach) {
+        // Out at the overview a contour of hundreds of segments crosses the aperture with a few:
+        // the rest are left out by their box before the closest point is worked out.
+        if let Edge::Seg { a, b } = ed
+            && box_out_of_reach(a, b, p, tol)
+        {
+            continue;
+        }
+        let c = closest_on_edge(&ed, p);
+        if c.d > tol {
+            continue;
+        }
+        nearby.push(Nearby {
+            id,
+            ed,
+            ell: None,
+            mask: ch.mask,
+        });
+        ch.consider(SnapKind::Nearest, c.p, id);
+        if let Some(f) = from {
+            if let Some(foot) = perpendicular_foot(&ed, f) {
+                ch.consider(SnapKind::Perpendicular, foot, id);
+            }
+            if let Edge::Arc { c, r, a0, sweep } = ed {
+                for t in tangent_points(f, c, r) {
+                    if on_edge_arc(a0, sweep, atan2(t.y - c.y, t.x - c.x)) {
+                        ch.consider(SnapKind::Tangent, t, id);
+                    }
+                }
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -552,6 +820,9 @@ mod tests {
         for (i, a) in nearby.iter().enumerate() {
             for b in &nearby[i + 1..] {
                 if a.id == b.id && shares_vertex(&a.ed, &b.ed) {
+                    continue;
+                }
+                if (a.mask | b.mask) & SnapKind::Intersection.bit() == 0 {
                     continue;
                 }
                 for h in intersect_edges(&a.ed, &b.ed) {
@@ -823,7 +1094,7 @@ mod tests {
                 let from = (rng.next() < 0.6)
                     .then(|| Vec2::new(o.x + rng.range(-60.0, 60.0), o.y + rng.range(-60.0, 60.0)));
                 let skippable = Cell::new(0);
-                let want = s.snap_with(p, tol, kinds, from, |ch, nearby, p| {
+                let want = s.snap_with(p, tol, kinds, from, &SnapExtras::default(), |ch, nearby, p| {
                     let far = nearby.iter().filter(|a| {
                         a.segment()
                             .is_some_and(|(u, w)| ch.out_of_reach(crossing_gap(u, w, p)))
@@ -898,7 +1169,7 @@ mod tests {
             assert_eq!(hit.id, 31.0);
             assert_eq!(
                 bits(Some(hit)),
-                bits(s.snap_with(p, 25.0, kinds, from, every_pair))
+                bits(s.snap_with(p, 25.0, kinds, from, &SnapExtras::default(), every_pair))
             );
         }
         // Parcels' shared corners: crossings that tie at distance 0 go to the first pair.
@@ -924,7 +1195,7 @@ mod tests {
         let hit = t.snap(corner, 30.0, kinds, None);
         assert_eq!(
             bits(hit),
-            bits(t.snap_with(corner, 30.0, kinds, None, every_pair))
+            bits(t.snap_with(corner, 30.0, kinds, None, &SnapExtras::default(), every_pair))
         );
         assert_eq!(
             hit.map(|h| (h.kind, h.point, h.id)),
