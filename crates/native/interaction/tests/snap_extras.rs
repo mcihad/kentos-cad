@@ -10,9 +10,10 @@
 
 mod common;
 
-use common::{Bench, Camera, E, N};
+use common::{Bench, Camera, E, N, rel};
+use kentos_contracts::Entity;
 use kentos_geometry_core::store::snap::NO_OBJECT;
-use kentos_interaction::{SnapKind, View, default_snap_kinds, screen_scale};
+use kentos_interaction::{SnapKind, Vec2, View, default_snap_kinds, screen_scale};
 
 fn bench() -> Bench {
     let mut b = Bench::on(include_str!(
@@ -124,4 +125,64 @@ fn out_of_the_scale_range_nothing_snaps() {
     b.draft.snap_scale = [500.0, 0.0];
     b.draft.snap_kinds = SnapKind::Endpoint.bit();
     assert_eq!(snap_at(&mut b, corner.0, corner.1), None);
+}
+
+/// The scene of the acquisitions (docs/adr/0163 §2):
+/// `fixtures/interaction/v1/snap-acquire.kcad`, line 1 from (−20, −10) to
+/// (−6, −10), line 2 from (4, −14) to (16, −5) (along (0.8, 0.6)).
+fn acquire_bench() -> Bench {
+    let mut b = Bench::on(include_str!(
+        "../../../../fixtures/interaction/v1/snap-acquire.kcad"
+    ));
+    b.draft.snap = true;
+    b.draft.tracking = false;
+    b.draft.snap_kinds |= SnapKind::Extension.bit() | SnapKind::Parallel.bit();
+    b.start("polyline");
+    b
+}
+
+#[test]
+fn an_end_rested_on_gives_its_extension_and_a_typed_distance_goes_along_it() {
+    let mut b = acquire_bench();
+    b.click(-12.0, 6.0);
+    assert_eq!(snap_at(&mut b, 3.0, -9.9), None, "nothing acquired yet");
+    b.rest(-6.0, -10.0);
+    assert_eq!(b.tracking.points(), [Vec2::new(E - 6.0, N - 10.0)]);
+    let (kind, at, _) = snap_at(&mut b, -1.0, -9.8).expect("the extension");
+    assert_eq!((kind, at), (SnapKind::Extension, [-1.0, -10.0]));
+    assert!(b.type_text("4"));
+    assert_eq!(b.points(), 2);
+    // Resting on the end again lets it go.
+    b.rest(-6.0, -10.0);
+    assert!(b.tracking.points().is_empty());
+    assert_eq!(snap_at(&mut b, 3.0, -9.9), None);
+    b.confirm();
+    let Entity::Polyline(path) = b.newest() else {
+        panic!("a polyline");
+    };
+    assert_eq!(
+        path.pts.iter().map(|q| rel(*q)).collect::<Vec<_>>(),
+        [[-12.0, 6.0], [-2.0, -10.0]]
+    );
+}
+
+#[test]
+fn an_edge_rested_on_gives_its_direction_and_a_typed_distance_goes_along_the_parallel() {
+    let mut b = acquire_bench();
+    b.click(-2.0, -10.0);
+    // A quarter of the way along line 2: no point snaps there, the edge is rested on.
+    b.rest(7.0, -11.75);
+    assert!(b.tracking.points().is_empty());
+    assert_eq!(b.tracking.parallels().len(), 1);
+    let (kind, at, _) = snap_at(&mut b, 1.91, -6.88).expect("the parallel");
+    assert_eq!(kind, SnapKind::Parallel);
+    assert!(near(at, [2.0, -7.0]), "{at:?}");
+    assert!(b.type_text("5"));
+    b.confirm();
+    let Entity::Polyline(path) = b.newest() else {
+        panic!("a polyline");
+    };
+    let pts: Vec<[f64; 2]> = path.pts.iter().map(|q| rel(*q)).collect();
+    assert_eq!(pts[0], [-2.0, -10.0]);
+    assert!(near(pts[1], [2.0, -7.0]), "{:?}", pts[1]);
 }

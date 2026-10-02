@@ -17,7 +17,7 @@
 //! is not remembered for repeat, nor is a tool that is not in the catalog
 //! ([`Session::run`]: Yapıştır), as on the web (docs/adr/0056).
 
-use kentos_geometry_core::store::snap::{SnapExtras, SnapHit};
+use kentos_geometry_core::store::snap::{SnapExtras, SnapHit, SnapKind};
 use kentos_geometry_core::tools::point_text::point_name;
 
 use crate::Vec2;
@@ -37,6 +37,7 @@ use crate::mirror::{self, Mirror};
 use crate::move_copy::{self, Move};
 use crate::navigate::{self, Pan, ZoomWindow};
 use crate::object::{self, ObjectAction};
+use crate::object_tracking::{Aids, ObjectTracking, TRACK_PX};
 use crate::offset::{self, Offset};
 use crate::path::{self, Path};
 use crate::perpendicular::{self, Perpendicular};
@@ -514,6 +515,7 @@ impl Session {
         at: Vec2,
         view: &dyn View,
         draft: &Draft,
+        tracking: &ObjectTracking,
     ) -> Option<SnapHit> {
         let (from, path) = match &self.tool {
             Some(tool) if tool.snaps() => (tool.snap_from(), tool.draft_path()),
@@ -526,6 +528,9 @@ impl Session {
         }
         let tol = view.world_length(draft.snap_aperture);
         let extras = SnapExtras {
+            // What rests acquired: ends' extensions and edges' directions (§2).
+            extensions: tracking.extensions(),
+            parallels: tracking.parallels(),
             // The object being drawn, with `snap.self` (§3).
             draft: path.filter(|_| draft.snap_self).into_iter().collect(),
             grid: draft
@@ -533,9 +538,41 @@ impl Session {
                 .iter()
                 .all(|&g| g > 0.0)
                 .then_some(draft.snap_grid),
-            ..SnapExtras::default()
         };
         spatial.snap_ex(at, tol, draft.snap_kinds, from, &extras)
+    }
+
+    /// After the snap for the cursor at `at`: object tracking and the snap
+    /// additions' rests follow it (docs/adr/0085, 0163 §2), as the desktop's
+    /// pointer does. `draft` is the one the snap was taken with (a one-shot
+    /// snap's kinds); Paralel rests on the straight edge under the cursor
+    /// when no point is snapped there.
+    pub fn follow(
+        &self,
+        tracking: &mut ObjectTracking,
+        spatial: &Spatial,
+        at: Vec2,
+        view: &dyn View,
+        draft: &Draft,
+        snap: Option<&SnapHit>,
+    ) {
+        let aids = if self.tracks() {
+            draft.aids(screen_scale(view.world_length(1.0)))
+        } else {
+            Aids::default()
+        };
+        let edge = (aids.parallel && snap.is_none_or(|s| s.kind == SnapKind::Nearest))
+            .then(|| spatial.direction_at(at, view.world_length(draft.snap_aperture)))
+            .flatten();
+        tracking.update(
+            aids,
+            snap,
+            at,
+            self.snap_from(),
+            draft.polar,
+            view.world_length(TRACK_PX),
+            edge,
+        );
     }
 
     pub fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {

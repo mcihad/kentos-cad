@@ -21,9 +21,10 @@ The rules, as the ADR gives them:
   cursor is: round(v / g) · g with JavaScript's rounding (halves up), the
   decimal node's nearest double.
 - Uzantı: on an acquired end's line beyond the end (the projection, when it
-  lies beyond), on the rest of an arc's circle; where an extension crosses
-  an edge near the cursor or another extension, the crossing (weighed as a
-  crossing).
+  lies more than the aperture beyond: nearer, the end itself is the snap),
+  on the rest of an arc's circle (as far along it); where an extension
+  crosses an edge near the cursor or another extension that far beyond the
+  ends, the crossing (weighed as a crossing).
 - Paralel: from the last point, on the line through it along an acquired
   direction (the projection).
 - A layer's objects take only its own kinds; a crossing counts when either
@@ -33,8 +34,17 @@ The rules, as the ADR gives them:
 
 The acquisitions: `extensionsAt` gives, for every edge of the object that
 ends at the point, the line beyond the end (a straight edge) or the rest of
-the circle (an arc); `directionAt` the direction of the nearest straight
-edge within the aperture, from its first point to its second.
+the circle (an arc), from the end rested on away from the arc (at the arc's
+start it goes the other way round); `directionAt` the direction of the
+nearest straight edge within the aperture, from its first point to its
+second.
+
+Along an extension (step 3, the snap's tag and a typed distance):
+`extensionAlong` is how far a point lies from the end, a line's distance
+beyond it or an arc's length around the rest of the circle, when the point
+lies on the extension within 1 µm (none behind the end, off the line, or on
+the arc itself); `extensionAt` is the point a distance along (none before
+the end or past an arc's remainder).
 """
 
 import argparse
@@ -218,6 +228,11 @@ def extension_cases():
     ext = {"extensions": [ext_line((10, 0), (1, 0))]}
     out.append(snap_case("uzantı: uçtan ötede izdüşüm", [a], (15, F("0.3")), 1, ["extension"], hit("extension", (15, 0), -1), extras=ext))
     out.append(snap_case("uzantı: ucun gerisinde yok", [a], (5, F("0.3")), 1, ["extension"], None, extras=ext))
+    # Within the aperture of the end the end itself is the snap (resting on it again releases it).
+    out.append(snap_case("uzantı: ucun kenet yarıçapında uç kendisidir", [a], (F("10.4"), 0), 1, ["endpoint", "extension"], hit("endpoint", (10, 0), 1), extras=ext))
+    out.append(snap_case("uzantı: ucun kenet yarıçapında uzantı yok", [a], (F("10.4"), F("0.1")), 1, ["extension"], None, extras=ext))
+    # Just past the aperture: the extension; the end lies out of reach.
+    out.append(snap_case("uzantı: kenet yarıçapının ötesinde", [a], (F("11.2"), F("0.1")), 1, ["endpoint", "extension"], hit("extension", (F("11.2"), 0), -1), extras=ext))
     # A crossing with an edge near the cursor wins over the projection when the cursor is near both.
     b = line(2, (14, -5), (14, 5))
     p = (F("14.05"), F("0.3"))
@@ -301,6 +316,8 @@ def acquisitions():
                 "expect": [0, 0.0, 0.0, -1.0, 0.0, 0, 0.0, 0.0, 0.0, -1.0]})
     ext.append({"name": "yayın ucu: çemberin kalanı", "entities": [{"kind": "arc", "id": 1, "layerId": "a", "attrs": {}, "c": P(0, 0), "r": 10.0, "a0": 0.0, "a1": float(mp.pi / 2)}], "id": 1, "at": [0.0, 10.0],
                 "expect": [1, 0.0, 0.0, 10.0, float(mp.pi / 2), float(3 * mp.pi / 2)]})
+    ext.append({"name": "yayın başı: çemberin kalanı öbür yönde", "entities": [{"kind": "arc", "id": 1, "layerId": "a", "attrs": {}, "c": P(0, 0), "r": 10.0, "a0": 0.0, "a1": float(mp.pi / 2)}], "id": 1, "at": [10.0, 0.0],
+                "expect": [1, 0.0, 0.0, 10.0, 0.0, float(-3 * mp.pi / 2)]})
     ext.append({"name": "uç olmayan nokta", "entities": [line(1, (0, 0), (10, 0))], "id": 1, "at": [5.0, 0.0], "expect": []})
     dirs = []
     l = mp.sqrt(125)
@@ -310,9 +327,45 @@ def acquisitions():
     return ext, dirs
 
 
+def along_cases():
+    """How far along an extension a point lies, and the point a distance along (mpmath, 50 digits)."""
+    pi = mp.pi
+    fwd = [1, 0.0, 0.0, 10.0, float(pi / 2), float(3 * pi / 2)]
+    back = [1, 0.0, 0.0, 10.0, 0.0, float(-3 * pi / 2)]
+    line_x = [0, 10.0, 0.0, 1.0, 0.0]
+    slant = [0, 0.0, 0.0, 0.6, 0.8]
+    along = [
+        {"name": "çizginin uzantısında 5 m", "ext": line_x, "p": [15.0, 0.0], "expect": 5.0},
+        {"name": "uçta 0", "ext": line_x, "p": [10.0, 0.0], "expect": 0.0},
+        {"name": "ucun gerisinde değil", "ext": line_x, "p": [5.0, 0.0], "expect": None},
+        {"name": "doğrunun yanında değil", "ext": line_x, "p": [15.0, 0.5], "expect": None},
+        {"name": "eğik uzantıda 5 m", "ext": slant, "p": [3.0, 4.0], "expect": 5.0},
+        {"name": "yayın uzantısında çeyrek çember", "ext": fwd, "p": [-10.0, 0.0], "expect": float(10 * pi / 2)},
+        {"name": "yayın uzantısının sonu: yayın başı", "ext": fwd, "p": [10.0, 0.0], "expect": float(10 * 3 * pi / 2)},
+        {"name": "yayın kendisinde değil", "ext": fwd, "p": [float(10 * mp.cos(pi / 4)), float(10 * mp.sin(pi / 4))], "expect": None},
+        {"name": "geriye dönen uzantıda çeyrek çember", "ext": back, "p": [0.0, -10.0], "expect": float(10 * pi / 2)},
+    ]
+    at = [
+        {"name": "çizginin uzantısında 6 m", "ext": line_x, "d": 6.0, "expect": [16.0, 0.0]},
+        {"name": "ucun gerisi yok", "ext": line_x, "d": -1.0, "expect": None},
+        {"name": "eğik uzantıda 5 m", "ext": slant, "d": 5.0, "expect": [3.0, 4.0]},
+        {"name": "yayın uzantısında çeyrek çember", "ext": fwd, "d": float(10 * pi / 2), "expect": [-10.0, 0.0]},
+        {"name": "yayın kalanından öte yok", "ext": fwd, "d": float(16 * pi), "expect": None},
+        {"name": "geriye dönen uzantıda çeyrek çember", "ext": back, "d": float(10 * pi / 2), "expect": [0.0, -10.0]},
+    ]
+    # The arcs' points from mpmath at 50 digits, then to doubles.
+    for c in at:
+        if c["expect"] is not None and c["ext"][0] == 1:
+            _, cx, cy, r, a0, sweep = c["ext"]
+            a = mp.mpf(a0) + mp.sign(sweep) * mp.mpf(c["d"]) / r
+            c["expect"] = [float(cx + r * mp.cos(a)), float(cy + r * mp.sin(a))]
+    return along, at
+
+
 def build():
     snaps = centroid_cases(0, 0, "") + centroid_cases(E0, N0, ", TM koordinatlarında") + grid_cases() + extension_cases() + parallel_cases() + layer_cases() + draft_cases()
     ext, dirs = acquisitions()
+    along, at = along_cases()
     return {
         "format": "kentos.snap",
         "version": 1,
@@ -321,6 +374,8 @@ def build():
         "snap": snaps,
         "extensionsAt": ext,
         "directionAt": dirs,
+        "extensionAlong": along,
+        "extensionAt": at,
     }
 
 
@@ -338,7 +393,7 @@ def main():
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(text)
     d = json.loads(text)
-    print(f"{OUT}: {len(d['snap'])} kenet, {len(d['extensionsAt'])} uzantı alma, {len(d['directionAt'])} doğrultu alma")
+    print(f"{OUT}: {len(d['snap'])} kenet, {len(d['extensionsAt'])} uzantı alma, {len(d['directionAt'])} doğrultu alma, {len(d['extensionAlong'])} + {len(d['extensionAt'])} uzantıda yer")
 
 
 if __name__ == "__main__":

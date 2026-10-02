@@ -310,7 +310,8 @@ export function drawGrips(g: CanvasRenderingContext2D, sets: readonly GripSet[],
   g.restore();
 }
 
-export function drawSnap(g: CanvasRenderingContext2D, hit: SnapHit, cam: Camera, pal: CanvasPalette): void {
+/** The snap marker; `label` is what it says instead of its kind's name (“Uzantı 12.063 m”, docs/adr/0163 §2). */
+export function drawSnap(g: CanvasRenderingContext2D, hit: SnapHit, cam: Camera, pal: CanvasPalette, label?: string): void {
   const s = cam.worldToScreen(hit.point);
   const x = Math.round(s.x) + 0.5;
   const y = Math.round(s.y) + 0.5;
@@ -407,7 +408,7 @@ export function drawSnap(g: CanvasRenderingContext2D, hit: SnapHit, cam: Camera,
   g.font = `500 10.5px ${pal.font}`;
   g.textBaseline = 'bottom';
   // Above-right, so it never collides with the tool's measurement tag (below-right).
-  haloText(g, SNAP_LABEL[hit.kind], x + 9, y - 7, pal.snap, pal.labelHalo);
+  haloText(g, label ?? SNAP_LABEL[hit.kind], x + 9, y - 7, pal.snap, pal.labelHalo);
   g.restore();
 }
 
@@ -510,12 +511,62 @@ export function midGripVisible(set: GripSet, index: number, cam: Camera): boolea
  * the cursor is locked to (dashed, through the whole view) and a tag with
  * the distance and angle from the tracked point.
  */
-export function drawObjectTracking(g: CanvasRenderingContext2D, acquired: readonly Vec2[], track: TrackHit | null, cam: Camera, pal: CanvasPalette, formatLength: (m: number) => string): void {
-  if (!acquired.length) return;
+/**
+ * What object tracking and the snap additions show (docs/adr/0085, 0163 §2): the acquired points, the acquired edges,
+ * and the extensions or the parallel the snap lies on, dashed.
+ */
+export interface TrackingMarks {
+  points: readonly Vec2[];
+  edges: readonly { at: Vec2; dir: Vec2 }[];
+  /** An extension from its end to the snap: the segment, or points around an arc. */
+  paths: readonly (readonly Vec2[])[];
+  /** The parallel's whole line through the last point. */
+  lines: readonly { through: Vec2; dir: Vec2 }[];
+}
+
+export function drawObjectTracking(g: CanvasRenderingContext2D, marks: TrackingMarks, track: TrackHit | null, cam: Camera, pal: CanvasPalette, formatLength: (m: number) => string): void {
+  if (!marks.points.length && !marks.edges.length) return;
   g.save();
   g.strokeStyle = pal.snap;
+  // The snap additions' guides under the marks.
+  if (marks.paths.length || marks.lines.length) {
+    g.lineWidth = 1;
+    g.globalAlpha = 0.85;
+    g.setLineDash([3, 4]);
+    for (const path of marks.paths) {
+      g.beginPath();
+      path.forEach((p, i) => {
+        const s = cam.worldToScreen(p);
+        if (i) g.lineTo(s.x, s.y);
+        else g.moveTo(s.x, s.y);
+      });
+      g.stroke();
+    }
+    for (const l of marks.lines) {
+      const o = cam.worldToScreen(l.through);
+      g.beginPath();
+      g.moveTo(o.x - l.dir.x * 1e4, o.y + l.dir.y * 1e4);
+      g.lineTo(o.x + l.dir.x * 1e4, o.y - l.dir.y * 1e4);
+      g.stroke();
+    }
+    g.setLineDash([]);
+    g.globalAlpha = 1;
+  }
   g.lineWidth = 1.5;
-  for (const p of acquired) {
+  // An acquired edge: two short strokes along it where it was rested on.
+  for (const e of marks.edges) {
+    const c = cam.worldToScreen(e.at);
+    const [ux, uy] = [e.dir.x, -e.dir.y];
+    const [nx, ny] = [-uy * 2.5, ux * 2.5];
+    g.beginPath();
+    for (const side of [-1, 1]) {
+      const [ox, oy] = [c.x + nx * side, c.y + ny * side];
+      g.moveTo(ox - ux * 5, oy - uy * 5);
+      g.lineTo(ox + ux * 5, oy + uy * 5);
+    }
+    g.stroke();
+  }
+  for (const p of marks.points) {
     const s = cam.worldToScreen(p);
     const x = Math.round(s.x) + 0.5;
     const y = Math.round(s.y) + 0.5;

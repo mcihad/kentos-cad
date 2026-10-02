@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Vec2 } from '../model/geometry';
 import { CoreStore } from '../wasm/core';
-import { extensionRecords, readExtensions, SNAP_BITS, type Extension } from './picking';
+import { extensionAlong, extensionAt, extensionRecords, readExtensions, SNAP_BITS, type Extension } from './picking';
 
 /**
  * The snap additions (docs/adr/0163) through the WASM core, against the independent reference in
@@ -29,6 +29,8 @@ interface File {
   snap: Case[];
   extensionsAt: { name: string; entities: unknown[]; id: number; at: Pt; expect: number[] }[];
   directionAt: { name: string; entities: unknown[]; p: Pt; tol: number; expect: Pt | null }[];
+  extensionAlong: { name: string; ext: number[]; p: Pt; expect: number | null }[];
+  extensionAt: { name: string; ext: number[]; d: number; expect: Pt | null }[];
 }
 
 function store(entities: unknown[], layers?: unknown[]): CoreStore {
@@ -98,6 +100,19 @@ describe('Kenet ekleri', () => {
       }
       const want: Vec2 = { x: c.expect[0], y: c.expect[1] };
       expect(close(u[0], want.x, 1e-12) && close(u[1], want.y, 1e-12), c.name).toBe(true);
+    }
+  });
+
+  it('measures along an extension and finds the point a distance along, as the reference does', () => {
+    for (const c of file.extensionAlong) {
+      const got = extensionAlong(readExtensions(c.ext)[0], { x: c.p[0], y: c.p[1] });
+      if (c.expect === null) expect(got, c.name).toBeNull();
+      else expect(got !== null && close(got, c.expect, 1e-9), `${c.name}: ${got}`).toBe(true);
+    }
+    for (const c of file.extensionAt) {
+      const got = extensionAt(readExtensions(c.ext)[0], c.d);
+      if (c.expect === null) expect(got, c.name).toBeNull();
+      else expect(got !== null && close(got.x, c.expect[0], 1e-9) && close(got.y, c.expect[1], 1e-9), `${c.name}: ${JSON.stringify(got)}`).toBe(true);
     }
   });
 });

@@ -24,7 +24,7 @@ use iced::keyboard::key::Named;
 use iced::widget::operation as widget_operation;
 
 use kentos_interaction::{
-    Context, Draft, Level, Pointer, Session, Vec2, View, ViewChange, js_trim,
+    Context, Draft, Level, Pointer, Session, SnapKind, Vec2, View, ViewChange, js_trim,
 };
 use kentos_render_wgpu::Camera;
 
@@ -332,9 +332,15 @@ impl App {
         // A one-shot snap works even with running snaps off (F3), and only
         // for its own kind (the web's `updateSnap`, drawing_menus.rs).
         let draft = match self.snap_once() {
+            // A one-shot Uzantı snaps to ends too: an end is rested on to
+            // acquire its extension (docs/adr/0163 §2).
             Some(kind) => Draft {
                 snap: true,
-                snap_kinds: kind.bit(),
+                snap_kinds: if kind == SnapKind::Extension {
+                    kind.bit() | SnapKind::Endpoint.bit()
+                } else {
+                    kind.bit()
+                },
                 ..self.draft
             },
             None => self.draft,
@@ -343,19 +349,21 @@ impl App {
             Some(doc) => {
                 self.spatial.sync(&doc.model);
                 let view = CameraView(&self.viewport.camera);
-                self.session.snap(&self.spatial, raw, &view, &draft)
+                self.session
+                    .snap(&self.spatial, raw, &view, &draft, &self.tracking)
             }
             None => None,
         };
-        // Nesne izleme (tracking.rs): a rest on a snap, and with no snap the lock.
+        // Nesne izleme and Uzantı's and Paralel's rests (tracking.rs): a rest
+        // on a snap or an edge, and with no snap the lock.
         let view = CameraView(&self.viewport.camera);
-        self.tracking.update(
-            self.draft.tracking && self.session.tracks(),
-            self.snap.as_ref(),
+        self.session.follow(
+            &mut self.tracking,
+            &self.spatial,
             raw,
-            self.session.snap_from(),
-            self.draft.polar,
-            view.world_length(kentos_interaction::object_tracking::TRACK_PX),
+            &view,
+            &draft,
+            self.snap.as_ref(),
         );
         let pointer = Pointer::new(
             raw,

@@ -1019,7 +1019,9 @@ impl App {
             Message::TextFile(file) => self.text_file_given(file),
             Message::HoverCard(version) => self.hover_card_due(version),
             Message::TrackDwell(number) => {
-                self.tracking.dwell_due(number);
+                let spatial = &self.spatial;
+                self.tracking
+                    .dwell_due(number, |id, at| spatial.extensions_at(id, at));
             }
             Message::Calc(event) => return self.calc_event(event),
             Message::Processing(event) => return self.processing_event(event),

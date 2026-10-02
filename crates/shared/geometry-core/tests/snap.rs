@@ -209,3 +209,33 @@ fn extensions_and_directions_are_acquired_as_the_reference_says() {
         }
     }
 }
+
+#[test]
+fn along_an_extension_as_the_reference_says() {
+    let file = fixture();
+    let one = |v: &Value| extensions(v.as_array().unwrap())[0];
+    for c in file["extensionAlong"].as_array().unwrap() {
+        let name = c["name"].as_str().unwrap();
+        let got = one(&c["ext"]).along(pt(&c["p"]));
+        match (got, c["expect"].as_f64()) {
+            (None, None) => {}
+            (Some(d), Some(w)) => assert!((d - w).abs() <= 1e-9, "{name}: {d} ≠ {w}"),
+            (got, _) => panic!("{name}: {got:?}, beklenen {}", c["expect"]),
+        }
+    }
+    for c in file["extensionAt"].as_array().unwrap() {
+        let name = c["name"].as_str().unwrap();
+        let got = one(&c["ext"]).at(num(&c["d"]));
+        match (got, c["expect"].is_null()) {
+            (None, true) => {}
+            (Some(q), false) => {
+                let w = pt(&c["expect"]);
+                assert!(
+                    (q.x - w.x).abs() <= 1e-9 && (q.y - w.y).abs() <= 1e-9,
+                    "{name}: {q:?} ≠ {w:?}"
+                );
+            }
+            (got, _) => panic!("{name}: {got:?}, beklenen {}", c["expect"]),
+        }
+    }
+}

@@ -792,7 +792,7 @@ impl<'a> Player<'a> {
                 d.model.entities().map(|e| e.base().id).collect()
             }),
             objects,
-            track_points: app.tracking.acquired().iter().map(|p| [p.x, p.y]).collect(),
+            track_points: app.tracking.points().iter().map(|p| [p.x, p.y]).collect(),
             // The web reads the lock only while no snap wins over it.
             track: app
                 .tracking

@@ -1322,7 +1322,9 @@
         "desktop": "implemented"
       },
       "tests": [
-        "apps/web/src/ui/statusbar/snapMenu.test.ts"
+        "apps/web/src/ui/statusbar/snapMenu.test.ts",
+        "fixtures/interaction/v1/snap-acquire.json",
+        "fixtures/interaction/v1/usage-snap-acquire.json"
       ]
     },
     {
@@ -1476,7 +1478,9 @@
         "desktop": "implemented"
       },
       "tests": [
-        "apps/web/src/ui/statusbar/snapMenu.test.ts"
+        "apps/web/src/ui/statusbar/snapMenu.test.ts",
+        "fixtures/interaction/v1/snap-acquire.json",
+        "fixtures/interaction/v1/usage-snap-acquire.json"
       ]
     },
     {
@@ -5312,8 +5316,10 @@
         "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/polyline-arc.json",
+        "fixtures/interaction/v1/snap-acquire.json",
         "fixtures/interaction/v1/stream-draw.json",
         "fixtures/interaction/v1/trace-draw.json",
+        "fixtures/interaction/v1/usage-snap-acquire.json",
         "fixtures/interaction/v1/usage-stream-draw.json",
         "fixtures/interaction/v1/usage-trace-draw.json"
       ]
@@ -8954,8 +8960,10 @@
         "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/polyline-arc.json",
+        "fixtures/interaction/v1/snap-acquire.json",
         "fixtures/interaction/v1/stream-draw.json",
         "fixtures/interaction/v1/trace-draw.json",
+        "fixtures/interaction/v1/usage-snap-acquire.json",
         "fixtures/interaction/v1/usage-stream-draw.json",
         "fixtures/interaction/v1/usage-trace-draw.json"
       ]

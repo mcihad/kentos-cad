@@ -9,7 +9,7 @@ import type { LayerNode, LayerStore } from '../model/layers';
 import { transformedFrom } from '../model/ops/transform';
 import type { ExtendResult, TrimResult } from '../model/ops/trim';
 import type { ExprTable } from '../model/expression/expression';
-import { CoreStore, type CoreStyleProgram, type ExprColumnData } from '../wasm/core';
+import { CoreStore, op, type CoreStyleProgram, type ExprColumnData } from '../wasm/core';
 import { packEntities } from '../wasm/pack';
 import { DEFAULT_LABELS, labelRule, readGrips, type GripSet } from './storeRecords';
 
@@ -93,6 +93,16 @@ export function readExtensions(f: ArrayLike<number>): Extension[] {
   }
   return out;
 }
+
+/**
+ * How far `p` lies along an acquired extension from its end (a line's distance beyond the end, an arc's length around
+ * the rest of the circle) when it lies on the extension within 1 µm; the snap's tag and a typed distance read it
+ * (docs/adr/0163 §2).
+ */
+export const extensionAlong = op<(x: Extension, p: Vec2) => number | null>('extensionAlong');
+
+/** The point `d` along an acquired extension from its end; null before the end or past an arc's remainder. */
+export const extensionAt = op<(x: Extension, d: number) => Vec2 | null>('extensionAt');
 
 type LayerRow = { id: string; visible: boolean; locked: boolean; pickInterior: boolean; label?: ReturnType<typeof labelRule> };
 

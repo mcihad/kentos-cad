@@ -40,7 +40,7 @@ use kentos_geometry_core::store::labels::{
     LABEL_DIMENSION, LABEL_LEADER, LABEL_PIECE_DIMENSION, LABEL_PIECE_LEADER, LABEL_PIECE_TEXT,
     LABEL_STRIDE, LABEL_TEXT, LabelRule, Placement,
 };
-use kentos_geometry_core::store::snap::{SnapExtras, SnapHit};
+use kentos_geometry_core::store::snap::{Extension, SnapExtras, SnapHit};
 use kentos_geometry_core::store::{LayerFlags, Store};
 use kentos_native_application::blocks::{core_blocks, piece_entities};
 use kentos_native_application::geometry::{drawing_font, shape};
@@ -272,6 +272,18 @@ impl Spatial {
         extras: &SnapExtras,
     ) -> Option<SnapHit> {
         self.store.snap_ex(at, tol, kinds, from, extras)
+    }
+
+    /// The extensions of object `id`'s edges that end at `at` (Uzantı's
+    /// acquisition, docs/adr/0163 §2; the web's `PickIndex.extensionsAt`).
+    pub fn extensions_at(&self, id: f64, at: Vec2) -> Vec<Extension> {
+        self.store.extensions_at(id, at)
+    }
+
+    /// The direction of the straight edge nearest `p` within `tol`, unit
+    /// (Paralel's acquisition; the web's `PickIndex.directionAt`).
+    pub fn direction_at(&self, p: Vec2, tol: f64) -> Option<Vec2> {
+        self.store.direction_at(p, tol)
     }
 
     /// The grips of these objects, unknown ones left out, in the given order

@@ -24,7 +24,7 @@ import { alongTrack, trackAngles, trackPoint, type TrackHit } from './objectTrac
 import { ViewNavigation } from './viewHistory';
 import { symbolScaleOf } from './symbolScale';
 import type { ExprColumnData } from '../wasm/core';
-import { PickIndex, type SnapHit, type SnapKind } from './picking';
+import { extensionAlong, extensionAt, PickIndex, type Extension, type SnapHit, type SnapKind } from './picking';
 import { screenScale, snapInRange } from './snapRange';
 
 /** Right-button menus the UI draws: idle selection, a running command, or snap overrides. */
@@ -58,9 +58,29 @@ export interface TextInputRequest {
 /** The label picture reaches this share of the view beyond each edge, so a pan copies it instead of drawing the labels. */
 const LABEL_MARGIN = 0.35;
 const RIGHT_HOLD_MS = 300;
-/** Resting on a snap this long acquires (or releases) it as a tracking point. */
+/** Resting on a snap (or an edge, Paralel) this long acquires (or releases) it. */
 const TRACK_DWELL_MS = 350;
+/** Acquisitions kept at most, the oldest going first. */
 const MAX_TRACK_POINTS = 3;
+/** How near a point lies to a parallel line through the last point to be on it, metres. */
+const ON = 1e-6;
+
+/** What rests acquire (docs/adr/0085, 0163 §2): each aid on its own. */
+interface Aids {
+  tracking: boolean;
+  extension: boolean;
+  parallel: boolean;
+}
+
+/** An acquisition: a point rested on (a tracking point, and an end's extensions with Uzantı), or an edge's direction (Paralel). */
+type Acquired = { kind: 'point'; at: Vec2; extensions: Extension[] } | { kind: 'edge'; at: Vec2; dir: Vec2 };
+
+/** What the cursor rests on: a snap point (`end`, the object whose end it is when Uzantı takes its extensions), or an edge by its direction. */
+type Rest = { kind: 'point'; p: Vec2; track: boolean; end: number | null } | { kind: 'edge'; at: Vec2; dir: Vec2 };
+
+/** The same rest goes on: the same point, or an edge of the same direction. */
+const sameRest = (a: Rest, b: Rest) =>
+  a.kind === 'point' ? b.kind === 'point' && a.p.x === b.p.x && a.p.y === b.p.y : b.kind === 'edge' && a.dir.x === b.dir.x && a.dir.y === b.dir.y;
 /** How close (px) the cursor must come to an alignment line to lock onto it. */
 const TRACK_PX = 8;
 /** Snaps that make sense as tracking origins. */
@@ -743,43 +763,62 @@ export class ViewportController {
     const prefs = this.ctx.prefs;
     // A one-shot snap works even with running snaps off (F3), and only for its own kind; neither out of the scale range.
     const on = tool.snaps && (this.ctx.settings.snap.value || !!override) && this.snapScaleOk();
-    const kinds = override ? new Set<SnapKind>([override]) : this.snapKinds();
+    // A one-shot Uzantı snaps to ends too: an end is rested on to acquire its extension (docs/adr/0163 §2).
+    const kinds = override ? new Set<SnapKind>(override === 'extension' ? ['extension', 'endpoint'] : [override]) : this.snapKinds();
     const extras = {
+      // What rests acquired: ends' extensions and edges' directions (docs/adr/0163 §2).
+      extensions: this.extensions(),
+      parallels: this.parallels(),
       draft: prefs.snapSelf.value ? (tool.draftPath?.() ?? null) : null,
       grid: [prefs.snapGridEast.value, prefs.snapGridNorth.value] as const,
     };
     this.snap = on ? this.picker.snapEx(this.camera.screenToWorld(screen), prefs.snapAperture.value / this.camera.scale, kinds, tool.snapFrom?.() ?? null, extras) : null;
-    this.updateTracking(screen);
+    this.updateTracking(screen, { tracking: this.ctx.settings.tracking.value, extension: on && kinds.has('extension'), parallel: on && kinds.has('parallel') });
   }
 
-  // ── Object tracking ─────────────────────────────────────────────────
+  // ── Object tracking and the snap additions' rests ──────────────────
 
-  private acquired: Vec2[] = [];
+  private acquired: Acquired[] = [];
   private track: TrackHit | null = null;
-  /** Snap point being rested on; `done` once it has toggled, so resting longer does not toggle back. */
-  private dwell: { x: number; y: number; timer: number; done: boolean } | null = null;
+  /** What is being rested on; `done` once it has toggled, so resting longer does not toggle back. */
+  private dwell: { rest: Rest; timer: number; done: boolean } | null = null;
 
-  private updateTracking(screen: Vec2): void {
+  /**
+   * After the snap: a rest on what the aids take begins (or goes on), and with no snap the cursor's lock is found
+   * (docs/adr/0085, 0163 §2). Paralel rests on the straight edge under the cursor when no point is snapped there. The
+   * desktop's is `ObjectTracking::update` through `Session::follow`.
+   */
+  private updateTracking(screen: Vec2, aids: Aids): void {
     const { settings, prefs } = this.ctx;
     const tool = this.ctx.tools.active;
-    if (!tool.snaps || tool.id === 'select' || !settings.tracking.value) {
+    if (!tool.snaps || tool.id === 'select' || !(aids.tracking || aids.extension || aids.parallel)) {
       this.track = null;
       return this.clearDwell();
     }
     const s = this.snap;
-    if (s && TRACKABLE.has(s.kind)) this.restOn(s.point);
+    const raw = this.camera.screenToWorld(screen);
+    const edge = aids.parallel && (!s || s.kind === 'nearest') ? this.picker.directionAt(raw, prefs.snapAperture.value / this.camera.scale) : null;
+    let rest: Rest | null = null;
+    if (s) {
+      const track = aids.tracking && TRACKABLE.has(s.kind);
+      // An end of the drawing's own objects (the path being drawn has none to give).
+      const end = aids.extension && s.kind === 'endpoint' && s.entityId >= 0 ? s.entityId : null;
+      if (track || end !== null) rest = { kind: 'point', p: s.point, track, end };
+      else if (edge) rest = { kind: 'edge', at: raw, dir: edge };
+    } else if (edge) rest = { kind: 'edge', at: raw, dir: edge };
+    if (rest) this.restOn(rest);
     else this.clearDwell();
     const angles = trackAngles(settings.polar.value ? prefs.polarIncrement.value : null);
-    this.track = s ? null : trackPoint(this.camera.screenToWorld(screen), this.acquired, tool.snapFrom?.() ?? null, angles, this.worldTolerance(TRACK_PX));
+    this.track = !s && aids.tracking ? trackPoint(raw, this.trackPoints, tool.snapFrom?.() ?? null, angles, this.worldTolerance(TRACK_PX)) : null;
   }
 
-  private restOn(p: Vec2): void {
-    if (this.dwell && this.dwell.x === p.x && this.dwell.y === p.y) return;
+  private restOn(rest: Rest): void {
+    if (this.dwell && sameRest(this.dwell.rest, rest)) return;
     this.clearDwell();
-    const dwell = { x: p.x, y: p.y, timer: 0, done: false };
+    const dwell = { rest, timer: 0, done: false };
     dwell.timer = window.setTimeout(() => {
       dwell.done = true;
-      this.toggleTrackPoint(p);
+      this.dwellDue(rest);
     }, TRACK_DWELL_MS);
     this.dwell = dwell;
   }
@@ -789,24 +828,93 @@ export class ViewportController {
     this.dwell = null;
   }
 
-  private toggleTrackPoint(p: Vec2): void {
-    const i = this.acquired.findIndex((q) => q.x === p.x && q.y === p.y);
-    if (i >= 0) this.acquired.splice(i, 1);
-    else {
-      this.acquired.push(p);
-      if (this.acquired.length > MAX_TRACK_POINTS) this.acquired.shift();
-    }
+  /** The rest lasted: what was rested on is acquired, or released when it was. */
+  private dwellDue(rest: Rest): void {
+    const held = this.acquired.findIndex((a) =>
+      rest.kind === 'point' ? a.kind === 'point' && a.at.x === rest.p.x && a.at.y === rest.p.y : a.kind === 'edge' && a.dir.x === rest.dir.x && a.dir.y === rest.dir.y,
+    );
+    if (held >= 0) this.acquired.splice(held, 1);
+    else if (rest.kind === 'point') {
+      const extensions = rest.end !== null ? this.picker.extensionsAt(rest.end, rest.p) : [];
+      if (!rest.track && !extensions.length) return;
+      this.acquire({ kind: 'point', at: rest.p, extensions });
+    } else this.acquire({ kind: 'edge', at: rest.at, dir: rest.dir });
     this.requestOverlay();
   }
 
-  /** Point `distance` along the active tracking line (typed distance while tracking), else null. */
-  trackAlong(distance: number): Vec2 | null {
-    return this.track ? alongTrack(this.track, distance) : null;
+  private acquire(a: Acquired): void {
+    this.acquired.push(a);
+    if (this.acquired.length > MAX_TRACK_POINTS) this.acquired.shift();
   }
 
-  /** Acquired tracking points (read-only view, for tests and the UI). */
+  /** The acquired ends' extensions, for the snap (Uzantı). */
+  private extensions(): Extension[] {
+    return this.acquired.flatMap((a) => (a.kind === 'point' ? a.extensions : []));
+  }
+
+  /** The acquired edges' directions, for the snap (Paralel). */
+  private parallels(): Vec2[] {
+    return this.acquired.flatMap((a) => (a.kind === 'edge' ? [a.dir] : []));
+  }
+
+  /** The acquired extensions `p` lies on, each with how far along from its end. */
+  private extensionsThrough(p: Vec2): { x: Extension; d: number }[] {
+    return this.extensions().flatMap((x) => {
+      const d = extensionAlong(x, p);
+      return d === null ? [] : [{ x, d }];
+    });
+  }
+
+  /** The acquired direction whose line through `from` holds `p`. */
+  private parallelThrough(p: Vec2, from: Vec2): Vec2 | null {
+    return this.parallels().find((u) => Math.abs((p.x - from.x) * u.y - (p.y - from.y) * u.x) <= ON) ?? null;
+  }
+
+  /**
+   * The point `distance` along what the cursor is on (a typed distance): the tracking lock's single line from its
+   * origin, or the one extension snapped to from its end, or the parallel snapped to from the last point toward the
+   * cursor (docs/adr/0163 §2); else null.
+   */
+  trackAlong(distance: number): Vec2 | null {
+    if (this.track) return alongTrack(this.track, distance);
+    const s = this.snap;
+    if (s?.kind === 'extension') {
+      const on = this.extensionsThrough(s.point);
+      return on.length === 1 ? extensionAt(on[0].x, distance) : null;
+    }
+    if (s?.kind === 'parallel') {
+      const from = this.ctx.tools.active.snapFrom?.() ?? null;
+      const u = from && this.parallelThrough(s.point, from);
+      if (!from || !u) return null;
+      const side = (s.point.x - from.x) * u.x + (s.point.y - from.y) * u.y < 0 ? -1 : 1;
+      return { x: from.x + u.x * side * distance, y: from.y + u.y * side * distance };
+    }
+    return null;
+  }
+
+  /** Acquired points, tracking points and ends (read-only view, for tests and the UI). */
   get trackPoints(): readonly Vec2[] {
-    return this.acquired;
+    return this.acquired.flatMap((a) => (a.kind === 'point' ? [a.at] : []));
+  }
+
+  /**
+   * The extensions or the parallel the snap lies on, as dashed guides, and what the snap marker says then: “Uzantı
+   * 12.063 m”, “Uzantı: kesişim” (docs/adr/0163 §2). The desktop's is `App::snap_guides`.
+   */
+  private snapGuides(): { paths: Vec2[][]; lines: { through: Vec2; dir: Vec2 }[]; label: string | null } {
+    const s = this.snap;
+    const none = { paths: [], lines: [], label: null };
+    if (s?.kind === 'extension') {
+      const on = this.extensionsThrough(s.point);
+      const label = on.length === 1 ? `Uzantı ${this.ctx.format.length(on[0].d)}` : on.length ? 'Uzantı: kesişim' : null;
+      return { paths: on.map(({ x, d }) => guide(x, d)), lines: [], label };
+    }
+    if (s?.kind === 'parallel') {
+      const from = this.ctx.tools.active.snapFrom?.() ?? null;
+      const dir = from && this.parallelThrough(s.point, from);
+      return { paths: [], lines: from && dir ? [{ through: from, dir }] : [], label: null };
+    }
+    return none;
   }
 
   /**
@@ -1220,10 +1328,24 @@ export class ViewportController {
     const d0 = import.meta.env.DEV ? performance.now() : 0;
     this.ctx.tools.active.draw?.(g, cam);
     if (import.meta.env.DEV && this.probe) this.probe.overlay = { labels: l1 - l0, tool: performance.now() - d0 };
-    if (this.snap) drawSnap(g, this.snap, cam, pal);
-    drawObjectTracking(g, this.acquired, this.snap ? null : this.track, cam, pal, (m) => this.ctx.format.length(m));
+    // Tracking and the snap additions' guides under the snap marker, as the desktop draws them.
+    const guides = this.snapGuides();
+    const edges = this.acquired.flatMap((a) => (a.kind === 'edge' ? [{ at: a.at, dir: a.dir }] : []));
+    drawObjectTracking(g, { points: this.trackPoints, edges, paths: guides.paths, lines: guides.lines }, this.snap ? null : this.track, cam, pal, (m) => this.ctx.format.length(m));
+    if (this.snap) drawSnap(g, this.snap, cam, pal, guides.label ?? undefined);
     drawNorthArrow(g, cam, pal);
     drawScaleBar(g, cam, pal);
     if (this.screenCursor && !this.panFrom) drawCrosshair(g, this.screenCursor, this.ctx.tools.active.cursor, pal, this.ctx.prefs.crosshair.value);
   }
+}
+
+/** An extension from its end to `d` along it, to draw: the segment, or an arc's points at most 5° apart. */
+function guide(x: Extension, d: number): Vec2[] {
+  if (x.kind === 'line') return [x.end, { x: x.end.x + x.dir.x * d, y: x.end.y + x.dir.y * d }];
+  const turn = d / x.r;
+  const steps = Math.max(1, Math.ceil(turn / ((5 * Math.PI) / 180)));
+  return Array.from({ length: steps + 1 }, (_, i) => {
+    const a = x.a0 + Math.sign(x.sweep) * turn * (i / steps);
+    return { x: x.c.x + x.r * Math.cos(a), y: x.c.y + x.r * Math.sin(a) };
+  });
 }

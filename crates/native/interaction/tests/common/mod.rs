@@ -122,8 +122,32 @@ impl Bench {
     pub fn snapped(&mut self, de: f64, dn: f64) -> Pointer {
         self.spatial.sync(&self.doc);
         let raw = Vec2::new(E + de, N + dn);
-        let snap = self.session.snap(&self.spatial, raw, &Camera, &self.draft);
+        let snap = self
+            .session
+            .snap(&self.spatial, raw, &Camera, &self.draft, &self.tracking);
+        // Tracking and the snap additions' rests follow, as on the desktop.
+        self.session.follow(
+            &mut self.tracking,
+            &self.spatial,
+            raw,
+            &Camera,
+            &self.draft,
+            snap.as_ref(),
+        );
         Pointer::new(raw, Camera.to_screen(raw), self.shift, snap)
+            .tracked(self.tracking.track().map(|t| t.point))
+    }
+
+    /// The pointer rests at a point past the dwell (the traces' `rest`):
+    /// what is rested on is acquired, or released (docs/adr/0085, 0163 §2).
+    pub fn rest(&mut self, de: f64, dn: f64) {
+        let p = self.snapped(de, dn);
+        self.run(|s, cx| s.pointer_move(&p, cx));
+        if let Some(n) = self.tracking.dwell() {
+            let spatial = &self.spatial;
+            self.tracking
+                .dwell_due(n, |id, at| spatial.extensions_at(id, at));
+        }
     }
 
     /// A click: the snap is taken again where the button goes down and up.

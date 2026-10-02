@@ -12,8 +12,8 @@ use super::Store;
 use crate::entity::{Shape, area_parts, dimension_geom, ellipse_geom, entity_vertices};
 use crate::geom::arc::{ArcGeom, arc_end, arc_mid, arc_start};
 use crate::geom::bulge::{bulge_arc, bulge_at, segment_mid};
+use crate::geom::centroid::areas_centroid;
 use crate::geom::dimension::{is_new_kind, layout_dimension};
-use crate::geom::leader;
 use crate::geom::ellipse::{
     EllipseGeom, closest_param, ellipse_point, ellipse_tangent_points, is_full_ellipse,
     line_ellipse, quadrant_params, tessellate_ellipse,
@@ -21,8 +21,8 @@ use crate::geom::ellipse::{
 use crate::geom::intersect::{
     Edge, closest_on_edge, intersect_edges, on_edge_arc, perpendicular_foot, tangent_points,
 };
-use crate::geom::centroid::areas_centroid;
-use crate::jsmath::{PI, atan2, js_hypot, js_round, js_sign};
+use crate::geom::leader;
+use crate::jsmath::{PI, atan2, js_hypot, js_max, js_round, js_sign};
 use crate::ops::areas::areas_of_entity;
 use crate::ops::edges::{entity_edges, entity_edges_in};
 use crate::vec2::Vec2;
@@ -103,11 +103,71 @@ pub struct SnapHit {
 pub const NO_OBJECT: f64 = -1.0;
 
 /// Where an acquired end goes on (docs/adr/0163 §1): a straight edge's line
-/// beyond the end, or the rest of an arc's circle as an arc of its own.
+/// beyond the end, or the rest of an arc's circle as an arc of its own that
+/// starts at the end rested on and goes away from the arc.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Extension {
-    Line { end: Vec2, dir: Vec2 },
-    Arc { c: Vec2, r: f64, a0: f64, sweep: f64 },
+    Line {
+        end: Vec2,
+        dir: Vec2,
+    },
+    Arc {
+        c: Vec2,
+        r: f64,
+        a0: f64,
+        sweep: f64,
+    },
+}
+
+crate::json_tagged!(Extension, "kind", Line => "line" { end, dir }, Arc => "arc" { c, r, a0, sweep });
+
+/// How near a point must lie to an extension to be on it, metres.
+const ON: f64 = 1e-6;
+
+impl Extension {
+    /// How far `p` lies along it from its end (a line's distance beyond the
+    /// end, an arc's length around the rest of the circle), when `p` is on
+    /// it within 1 µm (docs/adr/0163 §2: the snap's tag and a typed
+    /// distance).
+    pub fn along(&self, p: Vec2) -> Option<f64> {
+        match *self {
+            Extension::Line { end, dir } => {
+                let (dx, dy) = (p.x - end.x, p.y - end.y);
+                let t = dx * dir.x + dy * dir.y;
+                let off = dx * dir.y - dy * dir.x;
+                (t >= -ON && off.abs() <= ON).then_some(js_max(t, 0.0))
+            }
+            Extension::Arc { c, r, a0, sweep } => {
+                if (js_hypot(p.x - c.x, p.y - c.y) - r).abs() > ON {
+                    return None;
+                }
+                // The angle travelled from the end in the sweep's sense, 0..2π.
+                let a = atan2(p.y - c.y, p.x - c.x);
+                let mut t = (a - a0) * js_sign(sweep);
+                while t < 0.0 {
+                    t += 2.0 * PI;
+                }
+                while t >= 2.0 * PI {
+                    t -= 2.0 * PI;
+                }
+                (t * r <= sweep.abs() * r + ON).then_some(t * r)
+            }
+        }
+    }
+
+    /// The point `d` along it from its end; none before the end or past an
+    /// arc's remainder.
+    pub fn at(&self, d: f64) -> Option<Vec2> {
+        if !d.is_finite() || d < 0.0 {
+            return None;
+        }
+        match *self {
+            Extension::Line { end, dir } => Some(Vec2::new(end.x + dir.x * d, end.y + dir.y * d)),
+            Extension::Arc { c, r, a0, sweep } => {
+                (d <= sweep.abs() * r).then(|| point_on(c, r, a0 + js_sign(sweep) * d / r))
+            }
+        }
+    }
 }
 
 /// What a snap takes besides the drawing (docs/adr/0163 §1–§3): the acquired
@@ -322,14 +382,25 @@ impl Store {
                         }
                     }
                     Edge::Arc { c, r, a0, sweep } => {
+                        // The rest of the circle, from the end rested on away from the arc.
                         let rest = (2.0 * PI - sweep.abs()) * js_sign(sweep);
                         let (s, f) = (point_on(c, r, a0), point_on(c, r, a0 + sweep));
-                        if (near(s) || near(f)) && rest.abs() > 1e-12 {
+                        if rest.abs() <= 1e-12 {
+                            continue;
+                        }
+                        if near(f) {
                             out.push(Extension::Arc {
                                 c,
                                 r,
                                 a0: a0 + sweep,
                                 sweep: rest,
+                            });
+                        } else if near(s) {
+                            out.push(Extension::Arc {
+                                c,
+                                r,
+                                a0,
+                                sweep: -rest,
                             });
                         }
                     }
@@ -370,7 +441,10 @@ impl Store {
 
 /// A point of a circle at an angle.
 fn point_on(c: Vec2, r: f64, a: f64) -> Vec2 {
-    Vec2::new(c.x + r * crate::jsmath::cos(a), c.y + r * crate::jsmath::sin(a))
+    Vec2::new(
+        c.x + r * crate::jsmath::cos(a),
+        c.y + r * crate::jsmath::sin(a),
+    )
 }
 
 /// The grid coordinate nearest `v` at spacing `g`: a whole number of steps,
@@ -406,24 +480,29 @@ fn extension_snaps(ch: &mut Choice, nearby: &[Nearby], extensions: &[Extension])
             Extension::Arc { c, r, a0, sweep } => Edge::Arc { c, r, a0, sweep },
         })
         .collect();
+    // Beyond the end by more than the aperture: nearer, the end itself is the
+    // snap, so resting on it again releases it (docs/adr/0163 §2); behind the
+    // end, the edge is the object's own.
+    let beyond = |x: &Extension, q: Vec2| x.along(q).is_some_and(|t| t > tol);
     for (k, ed) in edges.iter().enumerate() {
-        // Beyond the end only: the edge itself is the object's own.
-        if let Extension::Line { end, dir } = extensions[k]
-            && (p.x - end.x) * dir.x + (p.y - end.y) * dir.y <= 0.0
-        {
-            continue;
-        }
+        let x = &extensions[k];
         let c = closest_on_edge(ed, p);
-        ch.consider(SnapKind::Extension, c.p, NO_OBJECT);
+        if beyond(x, c.p) {
+            ch.consider(SnapKind::Extension, c.p, NO_OBJECT);
+        }
         let crossing = SnapKind::Intersection.weight();
         for n in nearby {
             for h in intersect_edges(ed, &n.ed) {
-                ch.consider_as(SnapKind::Extension, h.p, NO_OBJECT, crossing);
+                if beyond(x, h.p) {
+                    ch.consider_as(SnapKind::Extension, h.p, NO_OBJECT, crossing);
+                }
             }
         }
-        for other in &edges[k + 1..] {
+        for (j, other) in edges.iter().enumerate().skip(k + 1) {
             for h in intersect_edges(ed, other) {
-                ch.consider_as(SnapKind::Extension, h.p, NO_OBJECT, crossing);
+                if beyond(x, h.p) && beyond(&extensions[j], h.p) {
+                    ch.consider_as(SnapKind::Extension, h.p, NO_OBJECT, crossing);
+                }
             }
         }
     }
@@ -1094,14 +1173,21 @@ mod tests {
                 let from = (rng.next() < 0.6)
                     .then(|| Vec2::new(o.x + rng.range(-60.0, 60.0), o.y + rng.range(-60.0, 60.0)));
                 let skippable = Cell::new(0);
-                let want = s.snap_with(p, tol, kinds, from, &SnapExtras::default(), |ch, nearby, p| {
-                    let far = nearby.iter().filter(|a| {
-                        a.segment()
-                            .is_some_and(|(u, w)| ch.out_of_reach(crossing_gap(u, w, p)))
-                    });
-                    skippable.set(far.count());
-                    every_pair(ch, nearby, p);
-                });
+                let want = s.snap_with(
+                    p,
+                    tol,
+                    kinds,
+                    from,
+                    &SnapExtras::default(),
+                    |ch, nearby, p| {
+                        let far = nearby.iter().filter(|a| {
+                            a.segment()
+                                .is_some_and(|(u, w)| ch.out_of_reach(crossing_gap(u, w, p)))
+                        });
+                        skippable.set(far.count());
+                        every_pair(ch, nearby, p);
+                    },
+                );
                 let got = s.snap(p, tol, kinds, from);
                 assert_eq!(
                     bits(got),
@@ -1195,7 +1281,14 @@ mod tests {
         let hit = t.snap(corner, 30.0, kinds, None);
         assert_eq!(
             bits(hit),
-            bits(t.snap_with(corner, 30.0, kinds, None, &SnapExtras::default(), every_pair))
+            bits(t.snap_with(
+                corner,
+                30.0,
+                kinds,
+                None,
+                &SnapExtras::default(),
+                every_pair
+            ))
         );
         assert_eq!(
             hit.map(|h| (h.kind, h.point, h.id)),

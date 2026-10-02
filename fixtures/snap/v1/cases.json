@@ -1482,6 +1482,184 @@
    "expect": null
   },
   {
+   "name": "uzantı: ucun kenet yarıçapında uç kendisidir",
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 10.0,
+      "y": 0.0
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    10.4,
+    0.0
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "endpoint",
+    "extension"
+   ],
+   "from": null,
+   "extras": {
+    "extensions": [
+     [
+      0,
+      10.0,
+      0.0,
+      1.0,
+      0.0
+     ]
+    ]
+   },
+   "expect": {
+    "kind": "endpoint",
+    "point": [
+     10.0,
+     0.0
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "uzantı: ucun kenet yarıçapında uzantı yok",
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 10.0,
+      "y": 0.0
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    10.4,
+    0.1
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "extension"
+   ],
+   "from": null,
+   "extras": {
+    "extensions": [
+     [
+      0,
+      10.0,
+      0.0,
+      1.0,
+      0.0
+     ]
+    ]
+   },
+   "expect": null
+  },
+  {
+   "name": "uzantı: kenet yarıçapının ötesinde",
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 10.0,
+      "y": 0.0
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "b",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    11.2,
+    0.1
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "endpoint",
+    "extension"
+   ],
+   "from": null,
+   "extras": {
+    "extensions": [
+     [
+      0,
+      10.0,
+      0.0,
+      1.0,
+      0.0
+     ]
+    ]
+   },
+   "expect": {
+    "kind": "extension",
+    "point": [
+     11.2,
+     0.0
+    ],
+    "id": -1
+   }
+  },
+  {
    "name": "uzantının bir kenarla kesişimi",
    "entities": [
     {
@@ -2535,6 +2713,37 @@
    ]
   },
   {
+   "name": "yayın başı: çemberin kalanı öbür yönde",
+   "entities": [
+    {
+     "kind": "arc",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "c": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "r": 10.0,
+     "a0": 0.0,
+     "a1": 1.5707963267948966
+    }
+   ],
+   "id": 1,
+   "at": [
+    10.0,
+    0.0
+   ],
+   "expect": [
+    1,
+    0.0,
+    0.0,
+    10.0,
+    0.0,
+    -4.71238898038469
+   ]
+  },
+  {
    "name": "uç olmayan nokta",
    "entities": [
     {
@@ -2654,6 +2863,236 @@
    "expect": [
     1.0,
     0.0
+   ]
+  }
+ ],
+ "extensionAlong": [
+  {
+   "name": "çizginin uzantısında 5 m",
+   "ext": [
+    0,
+    10.0,
+    0.0,
+    1.0,
+    0.0
+   ],
+   "p": [
+    15.0,
+    0.0
+   ],
+   "expect": 5.0
+  },
+  {
+   "name": "uçta 0",
+   "ext": [
+    0,
+    10.0,
+    0.0,
+    1.0,
+    0.0
+   ],
+   "p": [
+    10.0,
+    0.0
+   ],
+   "expect": 0.0
+  },
+  {
+   "name": "ucun gerisinde değil",
+   "ext": [
+    0,
+    10.0,
+    0.0,
+    1.0,
+    0.0
+   ],
+   "p": [
+    5.0,
+    0.0
+   ],
+   "expect": null
+  },
+  {
+   "name": "doğrunun yanında değil",
+   "ext": [
+    0,
+    10.0,
+    0.0,
+    1.0,
+    0.0
+   ],
+   "p": [
+    15.0,
+    0.5
+   ],
+   "expect": null
+  },
+  {
+   "name": "eğik uzantıda 5 m",
+   "ext": [
+    0,
+    0.0,
+    0.0,
+    0.6,
+    0.8
+   ],
+   "p": [
+    3.0,
+    4.0
+   ],
+   "expect": 5.0
+  },
+  {
+   "name": "yayın uzantısında çeyrek çember",
+   "ext": [
+    1,
+    0.0,
+    0.0,
+    10.0,
+    1.5707963267948966,
+    4.71238898038469
+   ],
+   "p": [
+    -10.0,
+    0.0
+   ],
+   "expect": 15.707963267948966
+  },
+  {
+   "name": "yayın uzantısının sonu: yayın başı",
+   "ext": [
+    1,
+    0.0,
+    0.0,
+    10.0,
+    1.5707963267948966,
+    4.71238898038469
+   ],
+   "p": [
+    10.0,
+    0.0
+   ],
+   "expect": 47.1238898038469
+  },
+  {
+   "name": "yayın kendisinde değil",
+   "ext": [
+    1,
+    0.0,
+    0.0,
+    10.0,
+    1.5707963267948966,
+    4.71238898038469
+   ],
+   "p": [
+    7.0710678118654755,
+    7.0710678118654755
+   ],
+   "expect": null
+  },
+  {
+   "name": "geriye dönen uzantıda çeyrek çember",
+   "ext": [
+    1,
+    0.0,
+    0.0,
+    10.0,
+    0.0,
+    -4.71238898038469
+   ],
+   "p": [
+    0.0,
+    -10.0
+   ],
+   "expect": 15.707963267948966
+  }
+ ],
+ "extensionAt": [
+  {
+   "name": "çizginin uzantısında 6 m",
+   "ext": [
+    0,
+    10.0,
+    0.0,
+    1.0,
+    0.0
+   ],
+   "d": 6.0,
+   "expect": [
+    16.0,
+    0.0
+   ]
+  },
+  {
+   "name": "ucun gerisi yok",
+   "ext": [
+    0,
+    10.0,
+    0.0,
+    1.0,
+    0.0
+   ],
+   "d": -1.0,
+   "expect": null
+  },
+  {
+   "name": "eğik uzantıda 5 m",
+   "ext": [
+    0,
+    0.0,
+    0.0,
+    0.6,
+    0.8
+   ],
+   "d": 5.0,
+   "expect": [
+    3.0,
+    4.0
+   ]
+  },
+  {
+   "name": "yayın uzantısında çeyrek çember",
+   "ext": [
+    1,
+    0.0,
+    0.0,
+    10.0,
+    1.5707963267948966,
+    4.71238898038469
+   ],
+   "d": 15.707963267948966,
+   "expect": [
+    -10.0,
+    1.2246467991473533e-15
+   ]
+  },
+  {
+   "name": "yayın kalanından öte yok",
+   "ext": [
+    1,
+    0.0,
+    0.0,
+    10.0,
+    1.5707963267948966,
+    4.71238898038469
+   ],
+   "d": 50.26548245743669,
+   "expect": null
+  },
+  {
+   "name": "geriye dönen uzantıda çeyrek çember",
+   "ext": [
+    1,
+    0.0,
+    0.0,
+    10.0,
+    0.0,
+    -4.71238898038469
+   ],
+   "d": 15.707963267948966,
+   "expect": [
+    6.123233995736766e-16,
+    -10.0
    ]
   }
  ]

@@ -128,11 +128,26 @@ pub struct Crosshair {
 
 /// What object tracking shows (the web's `drawObjectTracking`).
 pub struct TrackingMarks {
+    /// The acquired points (tracking points and ends).
     pub acquired: Vec<Vec2>,
+    /// The acquired edges (Paralel): where they were rested on and their directions.
+    pub edges: Vec<(Vec2, Vec2)>,
     /// The lock, when no snap wins over it.
     pub track: Option<TrackHit>,
     /// “İzleme 12.500 m < 0°” or “İzleme: kesişim”.
     pub label: Option<String>,
+    /// The extensions or the parallel the snap lies on, dashed (docs/adr/0163 §2).
+    pub paths: Vec<Guide>,
+    /// What the snap marker says instead of its kind's name (“Uzantı 12.063 m”).
+    pub snap_label: Option<String>,
+}
+
+/// A dashed guide of the snap additions: an extension from its end to the
+/// snap (a line, or points around an arc), or the parallel's whole line.
+#[derive(Clone, Debug, PartialEq)]
+pub enum Guide {
+    Path(Vec<Vec2>),
+    Line { through: Vec2, dir: Vec2 },
 }
 
 impl Marks {
@@ -169,7 +184,12 @@ impl<Message> canvas::Program<Message> for Marks {
             let [x, y] = self.camera.world_to_screen(hit.point);
             // On the pixel's middle, as the web strokes it.
             let at = Point::new(x.round() as f32 + 0.5, y.round() as f32 + 0.5);
-            snap_marker(&mut frame, hit.kind, at, &self.colors);
+            let label = self
+                .tracking
+                .as_ref()
+                .and_then(|t| t.snap_label.as_deref())
+                .unwrap_or(snap_label(hit.kind));
+            snap_marker(&mut frame, hit.kind, at, label, &self.colors);
         }
         // Last, over the rest, as the web draws it.
         if let (Some(c), Some(at)) = (self.crosshair, cursor.position_in(bounds)) {
@@ -304,6 +324,63 @@ fn select_box(frame: &mut canvas::Frame, b: SelectBox, colors: &MarkColors) {
 /// point with the area's colour as a halo.
 fn tracking(frame: &mut canvas::Frame, t: &TrackingMarks, camera: &Camera, colors: &MarkColors) {
     let cross = Stroke::default().with_color(colors.snap).with_width(1.5);
+    let dashed = Stroke {
+        line_dash: LineDash {
+            segments: &[3.0, 4.0],
+            offset: 0,
+        },
+        ..Stroke::default()
+            .with_color(iced::Color {
+                a: colors.snap.a * 0.85,
+                ..colors.snap
+            })
+            .with_width(1.0)
+    };
+    let screen = |p: Vec2| {
+        let [x, y] = camera.world_to_screen(p);
+        Point::new(x as f32, y as f32)
+    };
+    // The snap additions' guides under the marks (docs/adr/0163 §2).
+    for guide in &t.paths {
+        match guide {
+            Guide::Path(points) => {
+                let path = Path::new(|b| {
+                    for (i, &p) in points.iter().enumerate() {
+                        if i == 0 {
+                            b.move_to(screen(p));
+                        } else {
+                            b.line_to(screen(p));
+                        }
+                    }
+                });
+                frame.stroke(&path, dashed);
+            }
+            Guide::Line { through, dir } => {
+                let o = screen(*through);
+                let (dx, dy) = (dir.x as f32 * 1e4, -dir.y as f32 * 1e4);
+                frame.stroke(
+                    &Path::line(o - Vector::new(dx, dy), o + Vector::new(dx, dy)),
+                    dashed,
+                );
+            }
+        }
+    }
+    // An acquired edge: two short strokes along it where it was rested on.
+    for &(at, dir) in &t.edges {
+        let c = screen(at);
+        let (ux, uy) = (dir.x as f32, -dir.y as f32);
+        let (nx, ny) = (-uy * 2.5, ux * 2.5);
+        frame.stroke(
+            &Path::new(|b| {
+                for side in [-1.0, 1.0] {
+                    let o = c + Vector::new(nx * side, ny * side);
+                    b.move_to(o - Vector::new(ux * 5.0, uy * 5.0));
+                    b.line_to(o + Vector::new(ux * 5.0, uy * 5.0));
+                }
+            }),
+            cross,
+        );
+    }
     for &p in &t.acquired {
         let [x, y] = camera.world_to_screen(p);
         let (x, y) = (x.round() as f32 + 0.5, y.round() as f32 + 0.5);
@@ -319,18 +396,6 @@ fn tracking(frame: &mut canvas::Frame, t: &TrackingMarks, camera: &Camera, color
     }
     let Some(track) = &t.track else {
         return;
-    };
-    let dashed = Stroke {
-        line_dash: LineDash {
-            segments: &[3.0, 4.0],
-            offset: 0,
-        },
-        ..Stroke::default()
-            .with_color(iced::Color {
-                a: colors.snap.a * 0.85,
-                ..colors.snap
-            })
-            .with_width(1.0)
     };
     for line in &track.lines {
         let [ox, oy] = camera.world_to_screen(line.origin);
@@ -382,7 +447,13 @@ fn halo_label(frame: &mut canvas::Frame, content: &str, at: Point, colors: &Mark
     });
 }
 
-fn snap_marker(frame: &mut canvas::Frame, kind: SnapKind, at: Point, colors: &MarkColors) {
+fn snap_marker(
+    frame: &mut canvas::Frame,
+    kind: SnapKind,
+    at: Point,
+    text: &str,
+    colors: &MarkColors,
+) {
     let (x, y) = (at.x, at.y);
     let p = |dx: f32, dy: f32| Point::new(x + dx, y + dy);
     let glyph = Path::new(|b| match kind {
@@ -475,7 +546,7 @@ fn snap_marker(frame: &mut canvas::Frame, kind: SnapKind, at: Point, colors: &Ma
     }
     // Above-right; bottom of the text at y − 7, with the area's colour as a halo.
     let label = Text {
-        content: snap_label(kind).to_owned(),
+        content: text.to_owned(),
         position: p(9.0, -7.0),
         color: colors.halo,
         size: Pixels(typography::scaled(10.5)),

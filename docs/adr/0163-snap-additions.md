@@ -159,6 +159,15 @@ Web WASM'dan (`PickIndex.snap`), masaüstü yerli çağırır. İki platform ayn
    - **Karelaj aralığı alanı** masaüstünde noktalı ondalıkla yazar (KentOS UI `NumberInput::point`: “1”, “0.25”; DESIGN.md §10.3); alan virgülle “1,000” yazıyordu.
    - **Testler:** resim üretmeyen masaüstü testleri yazılım çiziciyle açar (`files_testing::offscreen`); aynı anda açılan wgpu örnekleri Vulkan yükleyicisini düşürüyordu (SIGSEGV, `vkEnumerateInstanceExtensionProperties`). Elle çalıştırılan resim testleri GPU'nun çizicisinde kalır.
 3. Uzantı ve Paralel'in alınması iki platformda (bekleme, işaretler, kilit); ortak iz; resimler.
+
+   *(2 Ekim: tamam.)*
+   - **Alınanlar** nesne izlemenin listesindedir (en çok 3, en eskisi önce gider, aynısında yeniden durmak bırakır, komut değişince gider): durulan nokta (izleme noktası; Uzantı açıksa ve bir nesnenin ucuysa kenarlarının uzantılarıyla) ya da durulan düz kenarın doğrultusu (Paralel; imlecin altında nokta kenedi yokken). İzleme kapalıyken de alınır; izlemenin hizaları yalnız izleme açıkken. Masaüstünde `ObjectTracking` (`Aids`, `Acquired`; `Session::follow` kabuk ile test düzeneğinin ortak yolu), web'de `ViewportController.updateTracking`.
+   - **Kural inceltmesi:** uzantının noktaları (izdüşüm ve kesişimler) uçtan kenet yarıçapı kadar ötede başlar; yakınında uç kendisi kenetlenir. Böylece aynı uçta yeniden durmak her zaman bırakır; önceden imleç ucun yarım piksel ötesinde, uzantının tam üstünde durunca uzantı kazanıyordu. Bağımsız başvuruya üç durum eklendi.
+   - **Yayın uzantısı** durulan uçtan, yaydan uzaklaşarak yönlenir: yayın başında durulunca çemberin kalanı öbür yöndedir (başvuruda bir durum). Böylece uzunluk ve yazılan mesafe durulan uçtan ölçülür.
+   - **Yazılan mesafe:** imleç bir uzantıdayken yalın sayı uçtan uzantı boyunca (yayda yay uzunluğu), bir paralel üstündeyken son noktadan imlecin yanına doğru paralel boyuncadır (`Extension::along`, `Extension::at`; WASM `extensionAlong`, `extensionAt`; başvuruda 15 durum).
+   - **İşaretler** iki platformda: alınan uçta artı, alınan kenarda iki kısa çizgi; kenetlenilen uzantı uçtan noktaya kesikli (yayda yay boyunca), işaret “Uzantı 5.000 m” ya da “Uzantı: kesişim” der; kenetlenilen paralelin bütün doğrusu son noktadan kesikli.
+   - **Tek seferlik Uzantı** uç kenedini de açar: ucu almak için uçta durulur.
+   - Ortak iz `snap-acquire.json` (sahne `snap-acquire.kcad`), kullanım senaryosu `usage-snap-acquire.json`. Masaüstü önizlemeyi (ölçü etiketi) işaretlerin üstüne çizer, web altına; etiket kutusu bir işaretin üstüne düşerse masaüstünde onu örter. Bu, kenet işaretinde de önceden var olan bir farktır.
 4. Katman başına kenet: `.kcad` şema 10 (spesifikasyon, bağımsız Python yazıcısı ve okuyucusu, kodek), Katmanlar panelinin mıknatısı ve menüsü iki platformda, bulutta katman ağacı; ortak iz; resimler.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.

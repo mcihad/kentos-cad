@@ -7,13 +7,19 @@
 //! points. Resting on an acquired point again releases it; at most three
 //! are kept, the oldest going first; they belong to one command.
 //!
+//! The same rests acquire for the snap additions (docs/adr/0163 §2), in the
+//! same list: an end rested on with Uzantı on brings the extensions of its
+//! edges, a straight edge rested on with Paralel on gives its direction;
+//! each works with tracking off too. A typed distance goes along the
+//! extension or the parallel snapped to.
+//!
 //! The lines and the crossing are the shared core's
 //! (`kentos_geometry_core::tools::object_tracking`); this keeps the state
 //! the web keeps in its viewport. The waiting itself is the host's: it
 //! calls [`ObjectTracking::dwell_due`] once the dwell has passed with the
 //! number [`ObjectTracking::dwell`] gave.
 
-use kentos_geometry_core::store::snap::{SnapHit, SnapKind};
+use kentos_geometry_core::store::snap::{Extension, SnapHit, SnapKind};
 pub use kentos_geometry_core::tools::object_tracking::{TrackHit, TrackLine};
 use kentos_geometry_core::tools::object_tracking::{along_track, track_angles, track_point};
 
@@ -21,11 +27,13 @@ use crate::Vec2;
 
 /// Resting on a snap this long acquires (or releases) it, milliseconds (the web's `TRACK_DWELL_MS`).
 pub const DWELL_MS: u64 = 350;
-/// Points kept at most (the web's `MAX_TRACK_POINTS`).
+/// Acquisitions kept at most (the web's `MAX_TRACK_POINTS`).
 pub const MAX_POINTS: usize = 3;
 /// How close the cursor must come to an alignment line to lock onto it,
 /// logical pixels (the web's `TRACK_PX`).
 pub const TRACK_PX: f64 = 8.0;
+/// How near a point lies to a parallel line through the last point to be on it, metres.
+const ON: f64 = 1e-6;
 
 /// The snaps that make sense as tracking points (the web's `TRACKABLE`).
 fn trackable(kind: SnapKind) -> bool {
@@ -40,11 +48,65 @@ fn trackable(kind: SnapKind) -> bool {
     )
 }
 
-/// The snap point being rested on; `done` once it toggled, so resting
-/// longer does not toggle it back.
+/// What rests acquire (docs/adr/0085, 0163 §2): each aid on its own.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Aids {
+    /// Nesne izleme: a snap rested on becomes a tracking point.
+    pub tracking: bool,
+    /// Uzantı: an end rested on brings the extensions of its edges.
+    pub extension: bool,
+    /// Paralel: a straight edge rested on gives its direction.
+    pub parallel: bool,
+}
+
+impl Aids {
+    fn any(self) -> bool {
+        self.tracking || self.extension || self.parallel
+    }
+}
+
+/// An acquisition, oldest first in the list (docs/adr/0085, 0163 §2).
+#[derive(Clone, Debug, PartialEq)]
+pub enum Acquired {
+    /// A point rested on: a tracking point, and an end's extensions when Uzantı was on.
+    Point {
+        at: Vec2,
+        extensions: Vec<Extension>,
+    },
+    /// A straight edge rested on (Paralel): where, and its direction, unit.
+    Edge { at: Vec2, dir: Vec2 },
+}
+
+/// What the cursor rests on.
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum Rest {
+    /// A snap point; `track` when it is a tracking point, `end` the object
+    /// whose end it is when Uzantı takes its extensions.
+    Point {
+        p: Vec2,
+        track: bool,
+        end: Option<f64>,
+    },
+    /// A straight edge, by its direction; `at` where the rest began.
+    Edge { at: Vec2, dir: Vec2 },
+}
+
+impl Rest {
+    /// The same rest goes on: the same point, or an edge of the same direction.
+    fn same(&self, other: &Rest) -> bool {
+        match (self, other) {
+            (Rest::Point { p, .. }, Rest::Point { p: q, .. }) => p == q,
+            (Rest::Edge { dir, .. }, Rest::Edge { dir: d, .. }) => dir == d,
+            _ => false,
+        }
+    }
+}
+
+/// The rest being waited on; `done` once it toggled, so resting longer does
+/// not toggle it back.
 #[derive(Clone, Copy, Debug, PartialEq)]
 struct Dwell {
-    p: Vec2,
+    rest: Rest,
     number: u64,
     done: bool,
 }
@@ -52,11 +114,15 @@ struct Dwell {
 /// The tracking state of the drawing area.
 #[derive(Clone, Debug, Default)]
 pub struct ObjectTracking {
-    acquired: Vec<Vec2>,
+    acquired: Vec<Acquired>,
     track: Option<TrackHit>,
     dwell: Option<Dwell>,
     /// Counts the dwells begun, so a late wait is told from the current one.
     dwells: u64,
+    /// The snap and the command's last point as of the last update: a typed
+    /// distance goes along the extension or the parallel snapped to.
+    snap: Option<SnapHit>,
+    from: Option<Vec2>,
 }
 
 impl ObjectTracking {
@@ -64,43 +130,73 @@ impl ObjectTracking {
         Self::default()
     }
 
-    /// After the object snap was taken for the cursor at `raw`: the rest on
-    /// a trackable snap begins (or goes on), and with no snap the cursor's
-    /// lock is found. `on`: tracking is on and the running command snaps;
-    /// `from`: the command's last point (it takes part in crossings only);
-    /// `polar`: polar tracking's step when it is on; `tol`: the world length
-    /// of [`TRACK_PX`].
+    /// After the object snap was taken for the cursor at `raw`: a rest on
+    /// what the aids take begins (or goes on), and with no snap the cursor's
+    /// lock is found. `aids`: what is on, for a command that snaps (all off
+    /// otherwise); `from`: the command's last point (it takes part in
+    /// crossings only); `polar`: polar tracking's step when it is on; `tol`:
+    /// the world length of [`TRACK_PX`]; `edge`: the direction of the
+    /// straight edge under the cursor (Paralel's rest), when the host found
+    /// one with no point snapped there.
+    #[allow(clippy::too_many_arguments)]
     pub fn update(
         &mut self,
-        on: bool,
+        aids: Aids,
         snap: Option<&SnapHit>,
         raw: Vec2,
         from: Option<Vec2>,
         polar: Option<f64>,
         tol: f64,
+        edge: Option<Vec2>,
     ) {
-        if !on {
+        self.snap = snap.copied();
+        self.from = from;
+        if !aids.any() {
             self.track = None;
             self.dwell = None;
             return;
         }
-        match snap.filter(|s| trackable(s.kind)) {
-            Some(s) => self.rest_on(s.point),
+        let rest = match snap {
+            Some(s) => {
+                let track = aids.tracking && trackable(s.kind);
+                // An end of the drawing's own objects (the path being drawn has none to give).
+                let end =
+                    (aids.extension && s.kind == SnapKind::Endpoint && s.id >= 0.0).then_some(s.id);
+                let edge = (s.kind == SnapKind::Nearest).then_some(edge).flatten();
+                if track || end.is_some() {
+                    Some(Rest::Point {
+                        p: s.point,
+                        track,
+                        end,
+                    })
+                } else {
+                    edge.filter(|_| aids.parallel)
+                        .map(|dir| Rest::Edge { at: raw, dir })
+                }
+            }
+            None => edge
+                .filter(|_| aids.parallel)
+                .map(|dir| Rest::Edge { at: raw, dir }),
+        };
+        match rest {
+            Some(rest) => self.rest_on(rest),
             None => self.dwell = None,
         }
         self.track = match snap {
-            Some(_) => None,
-            None => track_point(raw, &self.acquired, from, &track_angles(polar), tol),
+            None if aids.tracking => {
+                track_point(raw, &self.points(), from, &track_angles(polar), tol)
+            }
+            _ => None,
         };
     }
 
-    fn rest_on(&mut self, p: Vec2) {
-        if self.dwell.is_some_and(|d| d.p == p) {
+    fn rest_on(&mut self, rest: Rest) {
+        if self.dwell.is_some_and(|d| d.rest.same(&rest)) {
             return;
         }
         self.dwells += 1;
         self.dwell = Some(Dwell {
-            p,
+            rest,
             number: self.dwells,
             done: false,
         });
@@ -112,9 +208,15 @@ impl ObjectTracking {
         self.dwell.filter(|d| !d.done).map(|d| d.number)
     }
 
-    /// The dwell has passed: if the cursor still rests where it did, that
-    /// point is acquired, or released when it was. Returns whether it toggled.
-    pub fn dwell_due(&mut self, number: u64) -> bool {
+    /// The dwell has passed: if the cursor still rests where it did, that is
+    /// acquired, or released when it was. `ends` gives the extensions of an
+    /// object's edges ending at a point (`Spatial::extensions_at`). Returns
+    /// whether it toggled.
+    pub fn dwell_due(
+        &mut self,
+        number: u64,
+        ends: impl FnOnce(f64, Vec2) -> Vec<Extension>,
+    ) -> bool {
         let Some(dwell) = self
             .dwell
             .as_mut()
@@ -123,31 +225,107 @@ impl ObjectTracking {
             return false;
         };
         dwell.done = true;
-        let p = dwell.p;
-        match self.acquired.iter().position(|q| *q == p) {
-            Some(i) => {
-                self.acquired.remove(i);
+        match dwell.rest {
+            Rest::Point { p, track, end } => {
+                let held = self
+                    .acquired
+                    .iter()
+                    .position(|a| matches!(a, Acquired::Point { at, .. } if *at == p));
+                match held {
+                    Some(i) => {
+                        self.acquired.remove(i);
+                    }
+                    None => {
+                        let extensions = end.map(|id| ends(id, p)).unwrap_or_default();
+                        if !track && extensions.is_empty() {
+                            return false;
+                        }
+                        self.push(Acquired::Point { at: p, extensions });
+                    }
+                }
             }
-            None => {
-                self.acquired.push(p);
-                if self.acquired.len() > MAX_POINTS {
-                    self.acquired.remove(0);
+            Rest::Edge { at, dir } => {
+                let held = self
+                    .acquired
+                    .iter()
+                    .position(|a| matches!(a, Acquired::Edge { dir: d, .. } if *d == dir));
+                match held {
+                    Some(i) => {
+                        self.acquired.remove(i);
+                    }
+                    None => self.push(Acquired::Edge { at, dir }),
                 }
             }
         }
         true
     }
 
-    /// Another command: its points go (they belong to one command).
+    fn push(&mut self, a: Acquired) {
+        self.acquired.push(a);
+        if self.acquired.len() > MAX_POINTS {
+            self.acquired.remove(0);
+        }
+    }
+
+    /// Another command: its acquisitions go (they belong to one command).
     pub fn clear(&mut self) {
         self.acquired.clear();
         self.track = None;
         self.dwell = None;
     }
 
-    /// The acquired points, oldest first.
-    pub fn acquired(&self) -> &[Vec2] {
+    /// The acquisitions, oldest first.
+    pub fn acquired(&self) -> &[Acquired] {
         &self.acquired
+    }
+
+    /// The acquired points (tracking points and ends), oldest first.
+    pub fn points(&self) -> Vec<Vec2> {
+        self.acquired
+            .iter()
+            .filter_map(|a| match a {
+                Acquired::Point { at, .. } => Some(*at),
+                Acquired::Edge { .. } => None,
+            })
+            .collect()
+    }
+
+    /// The acquired ends' extensions, for the snap (Uzantı).
+    pub fn extensions(&self) -> Vec<Extension> {
+        self.acquired
+            .iter()
+            .flat_map(|a| match a {
+                Acquired::Point { extensions, .. } => extensions.clone(),
+                Acquired::Edge { .. } => Vec::new(),
+            })
+            .collect()
+    }
+
+    /// The acquired edges' directions, for the snap (Paralel).
+    pub fn parallels(&self) -> Vec<Vec2> {
+        self.acquired
+            .iter()
+            .filter_map(|a| match a {
+                Acquired::Edge { dir, .. } => Some(*dir),
+                Acquired::Point { .. } => None,
+            })
+            .collect()
+    }
+
+    /// The acquired extensions `p` lies on, each with how far along from
+    /// its end (a snap's tag: “Uzantı 12.063 m”, or a crossing of two).
+    pub fn extensions_through(&self, p: Vec2) -> Vec<(Extension, f64)> {
+        self.extensions()
+            .into_iter()
+            .filter_map(|x| x.along(p).map(|d| (x, d)))
+            .collect()
+    }
+
+    /// The acquired direction whose line through `from` holds `p`.
+    pub fn parallel_through(&self, p: Vec2, from: Vec2) -> Option<Vec2> {
+        self.parallels()
+            .into_iter()
+            .find(|u| ((p.x - from.x) * u.y - (p.y - from.y) * u.x).abs() <= ON)
     }
 
     /// The alignment the cursor is locked to now, if any.
@@ -155,10 +333,35 @@ impl ObjectTracking {
         self.track.as_ref()
     }
 
-    /// The point `distance` along the lock's single line from its origin:
-    /// a distance typed while the cursor is on an alignment (the web's `trackAlong`).
+    /// The point `distance` along what the cursor is on: the lock's single
+    /// line from its origin (the web's `trackAlong`), or the one extension
+    /// snapped to from its end, or the parallel snapped to from the last
+    /// point toward the cursor (docs/adr/0163 §2).
     pub fn along(&self, distance: f64) -> Option<Vec2> {
-        along_track(self.track.as_ref()?, distance)
+        if let Some(t) = &self.track {
+            return along_track(t, distance);
+        }
+        let s = self.snap?;
+        match s.kind {
+            SnapKind::Extension => match self.extensions_through(s.point).as_slice() {
+                [(x, _)] => x.at(distance),
+                _ => None,
+            },
+            SnapKind::Parallel => {
+                let from = self.from?;
+                let u = self.parallel_through(s.point, from)?;
+                let side = if (s.point.x - from.x) * u.x + (s.point.y - from.y) * u.y < 0.0 {
+                    -1.0
+                } else {
+                    1.0
+                };
+                Some(Vec2::new(
+                    from.x + u.x * side * distance,
+                    from.y + u.y * side * distance,
+                ))
+            }
+            _ => None,
+        }
     }
 }
 
@@ -174,48 +377,56 @@ mod tests {
         }
     }
 
+    const TRACKING: Aids = Aids {
+        tracking: true,
+        extension: false,
+        parallel: false,
+    };
+
     fn acquire(t: &mut ObjectTracking, x: f64, y: f64) {
         t.update(
-            true,
+            TRACKING,
             Some(&snap(SnapKind::Endpoint, x, y)),
             Vec2::new(x, y),
             None,
             None,
             1.0,
+            None,
         );
         let number = t.dwell().expect("a rest waits");
-        assert!(t.dwell_due(number));
+        assert!(t.dwell_due(number, |_, _| Vec::new()));
     }
 
     #[test]
     fn a_rest_acquires_a_second_releases_and_three_are_kept() {
         let mut t = ObjectTracking::new();
         acquire(&mut t, 0.0, 0.0);
-        assert_eq!(t.acquired(), &[Vec2::new(0.0, 0.0)]);
+        assert_eq!(t.points(), &[Vec2::new(0.0, 0.0)]);
         // Resting on and on does not toggle it back.
         t.update(
-            true,
+            TRACKING,
             Some(&snap(SnapKind::Endpoint, 0.0, 0.0)),
             Vec2::new(0.0, 0.0),
             None,
             None,
             1.0,
+            None,
         );
         assert_eq!(t.dwell(), None);
         // Level with it, the cursor locks onto its horizontal.
-        t.update(true, None, Vec2::new(10.0, 0.3), None, None, 1.0);
+        t.update(TRACKING, None, Vec2::new(10.0, 0.3), None, None, 1.0, None);
         let hit = t.track().expect("locked");
         assert_eq!(hit.point, Vec2::new(10.0, 0.0));
         assert_eq!(t.along(4.0), Some(Vec2::new(4.0, 0.0)));
         // Away from it, and back: it goes.
         acquire(&mut t, 0.0, 0.0);
-        assert!(t.acquired().is_empty());
+        assert!(t.points().is_empty());
         for (x, y) in [(1.0, 1.0), (2.0, 2.0), (3.0, 3.0), (4.0, 4.0)] {
-            t.update(true, None, Vec2::new(50.0, 50.0), None, None, 1.0);
+            t.update(TRACKING, None, Vec2::new(50.0, 50.0), None, None, 1.0, None);
             acquire(&mut t, x, y);
         }
         assert_eq!(
-            t.acquired(),
+            t.points(),
             &[
                 Vec2::new(2.0, 2.0),
                 Vec2::new(3.0, 3.0),
@@ -229,41 +440,146 @@ mod tests {
     fn a_late_wait_a_nearest_snap_or_tracking_off_acquires_nothing() {
         let mut t = ObjectTracking::new();
         t.update(
-            true,
+            TRACKING,
             Some(&snap(SnapKind::Endpoint, 0.0, 0.0)),
             Vec2::new(0.0, 0.0),
             None,
             None,
             1.0,
+            None,
         );
         let first = t.dwell().expect("waits");
         t.update(
-            true,
+            TRACKING,
             Some(&snap(SnapKind::Endpoint, 5.0, 0.0)),
             Vec2::new(5.0, 0.0),
             None,
             None,
             1.0,
+            None,
         );
-        assert!(!t.dwell_due(first), "the cursor moved on");
+        assert!(
+            !t.dwell_due(first, |_, _| Vec::new()),
+            "the cursor moved on"
+        );
         t.update(
-            true,
+            TRACKING,
             Some(&snap(SnapKind::Nearest, 7.0, 0.0)),
             Vec2::new(7.0, 0.0),
             None,
             None,
             1.0,
+            None,
         );
         assert_eq!(t.dwell(), None, "a nearest point is no tracking point");
         t.update(
-            false,
+            Aids::default(),
             Some(&snap(SnapKind::Endpoint, 0.0, 0.0)),
             Vec2::new(0.0, 0.0),
             None,
             None,
             1.0,
+            None,
         );
         assert_eq!(t.dwell(), None);
-        assert!(t.acquired().is_empty());
+        assert!(t.points().is_empty());
+    }
+
+    /// Uzantı and Paralel acquire with tracking off (docs/adr/0163 §2): an
+    /// end of an object brings its extensions, an edge under the cursor its
+    /// direction; the same edge again releases it; a typed distance goes
+    /// along the extension or the parallel snapped to.
+    #[test]
+    fn extensions_and_parallels_are_acquired_and_typed_along() {
+        use kentos_geometry_core::store::snap::NO_OBJECT;
+        let aids = Aids {
+            tracking: false,
+            extension: true,
+            parallel: true,
+        };
+        let mut t = ObjectTracking::new();
+        let ext = Extension::Line {
+            end: Vec2::new(10.0, 0.0),
+            dir: Vec2::new(1.0, 0.0),
+        };
+        let end = snap(SnapKind::Endpoint, 10.0, 0.0);
+        t.update(
+            aids,
+            Some(&end),
+            Vec2::new(10.0, 0.1),
+            None,
+            None,
+            1.0,
+            None,
+        );
+        let n = t.dwell().expect("a rest on the end waits");
+        assert!(t.dwell_due(n, |id, at| {
+            assert_eq!((id, at), (1.0, Vec2::new(10.0, 0.0)));
+            vec![ext]
+        }));
+        assert_eq!(t.extensions(), [ext]);
+        assert!(t.track().is_none(), "no alignments with tracking off");
+        // A middle snap is no end: nothing to rest on with tracking off.
+        t.update(
+            aids,
+            Some(&snap(SnapKind::Midpoint, 5.0, 0.0)),
+            Vec2::new(5.0, 0.1),
+            None,
+            None,
+            1.0,
+            None,
+        );
+        assert_eq!(t.dwell(), None);
+        // An edge with no point under the cursor: its direction; moving along it is the same rest.
+        let u = Vec2::new(0.6, 0.8);
+        t.update(aids, None, Vec2::new(3.0, 4.1), None, None, 1.0, Some(u));
+        let n = t.dwell().expect("a rest on the edge waits");
+        t.update(aids, None, Vec2::new(6.0, 8.1), None, None, 1.0, Some(u));
+        assert_eq!(t.dwell(), Some(n), "the same edge goes on resting");
+        assert!(t.dwell_due(n, |_, _| Vec::new()));
+        assert_eq!(t.parallels(), [u]);
+        // Typed along the extension snapped to, from its end.
+        let on = SnapHit {
+            kind: SnapKind::Extension,
+            point: Vec2::new(15.0, 0.0),
+            id: NO_OBJECT,
+        };
+        t.update(aids, Some(&on), Vec2::new(15.0, 0.2), None, None, 1.0, None);
+        assert_eq!(t.along(6.0), Some(Vec2::new(16.0, 0.0)));
+        // Typed along the parallel from the last point, toward the cursor's side.
+        let from = Vec2::new(0.0, 10.0);
+        let par = SnapHit {
+            kind: SnapKind::Parallel,
+            point: Vec2::new(-3.0, 6.0),
+            id: NO_OBJECT,
+        };
+        t.update(
+            aids,
+            Some(&par),
+            Vec2::new(-3.1, 6.0),
+            Some(from),
+            None,
+            1.0,
+            None,
+        );
+        assert_eq!(t.along(10.0), Some(Vec2::new(-6.0, 2.0)));
+        // The same edge rested on again releases its direction.
+        t.update(aids, None, Vec2::new(9.0, 12.1), None, None, 1.0, Some(u));
+        let n = t.dwell().expect("a new rest");
+        assert!(t.dwell_due(n, |_, _| Vec::new()));
+        assert!(t.parallels().is_empty());
+        // An end whose object gives no extension, tracking off: nothing is kept.
+        t.update(
+            aids,
+            Some(&snap(SnapKind::Endpoint, 0.0, 0.0)),
+            Vec2::new(0.0, 0.0),
+            None,
+            None,
+            1.0,
+            None,
+        );
+        let n = t.dwell().expect("a rest");
+        assert!(!t.dwell_due(n, |_, _| Vec::new()));
+        assert_eq!(t.points(), [Vec2::new(10.0, 0.0)]);
     }
 }

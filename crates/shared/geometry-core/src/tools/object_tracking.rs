@@ -8,6 +8,7 @@
 use crate::api::Op;
 use crate::jsmath::{PI, cos, js_hypot, js_round, sin, truthy};
 use crate::op;
+use crate::store::snap::Extension;
 use crate::vec2::Vec2;
 
 /// An alignment line: its origin and direction in degrees, counter-clockwise from east.
@@ -211,6 +212,10 @@ pub(crate) static OPS: &[Op] = &[
     op!("alongTrack", |hit: TrackHit, distance: f64| along_track(
         &hit, distance
     )),
+    // An acquired extension (docs/adr/0163 §2): how far a point lies along
+    // it from its end, and the point a typed distance along.
+    op!("extensionAlong", |x: Extension, p: Vec2| x.along(p)),
+    op!("extensionAt", |x: Extension, d: f64| x.at(d)),
 ];
 
 #[cfg(test)]

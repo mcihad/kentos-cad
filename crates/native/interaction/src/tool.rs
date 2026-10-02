@@ -13,7 +13,7 @@ use kentos_geometry_core::tools::point_input::Tracking;
 use crate::Vec2;
 use crate::format::Format;
 use crate::log::{Level, Line};
-use crate::object_tracking::ObjectTracking;
+use crate::object_tracking::{Aids, ObjectTracking};
 use crate::prompt::Prompt;
 use crate::select::SelectBox;
 use crate::selection::Selection;
@@ -314,6 +314,18 @@ impl Draft {
     pub fn snap_in_range(&self, n: f64) -> bool {
         let [min, max] = self.snap_scale;
         (min <= 0.0 || n >= min) && (max <= 0.0 || n <= max)
+    }
+
+    /// What rests acquire at screen scale 1:`n` (docs/adr/0085, 0163 §2):
+    /// tracking points while tracking is on; ends' extensions and edges'
+    /// directions while snapping takes Uzantı and Paralel there.
+    pub fn aids(&self, n: f64) -> Aids {
+        let snapping = self.snap && self.snap_in_range(n);
+        Aids {
+            tracking: self.tracking,
+            extension: snapping && self.snap_kinds & SnapKind::Extension.bit() != 0,
+            parallel: snapping && self.snap_kinds & SnapKind::Parallel.bit() != 0,
+        }
     }
 }
 
